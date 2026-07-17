@@ -188,7 +188,7 @@ CREATE TABLE IF NOT EXISTS strategy_health_scores (
   evaluated_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   composite_score             REAL,
   verdict                     TEXT,
-  subsystem_scores            JSONB NOT NULL DEFAULT '{}',
+  subsystem_scores            JSONB NOT NULL,  -- goalscan-r2: no DEFAULT (matches prod 0149/0169) — a test omitting this must fail like prod, not silently default '{}'
   computed_from_n_subsystems  INTEGER NOT NULL,
   weights_version_id          TEXT NOT NULL,
   staleness_age_hours         REAL,

@@ -525,6 +525,19 @@ const ALWAYS_RUN_JOBS = new Set([
   "pipeline-resume-drain",
   // Pass 6 / Track C F-6: observability scraper — never gate
   "n8n-execution-scrape",
+  // R2FIX CRIT-2: weekly-drift-2sigma-check is a live-capital auto-HALT safety
+  // check (>2σ live-vs-backtest drift → kill-switch). It was listed in
+  // _PIPELINE_GATE_EXEMPT (below, ~:670) and its handler's own comment claimed
+  // that made pipelineGate() "a no-op" for this job — but _PIPELINE_GATE_EXEMPT
+  // is ONLY consulted by reconcileMissedRuns() (boot catch-up, ~:849), NOT by
+  // pipelineGate() itself (which only bypasses ALWAYS_RUN_JOBS). So the
+  // handler's own `if (!(await pipelineGate(...))) return;` call silently
+  // no-op'd the safety HALT during ANY pipeline pause (PAUSED / VACATION /
+  // AUTOPAUSE_DD_VELOCITY) — exactly when a drifting live strategy most needs
+  // the auto-HALT. Adding it here makes the exemption real by making
+  // pipelineGate() itself return true for this job, matching what the
+  // handler's comment already (incorrectly) assumed was happening.
+  "weekly-drift-2sigma-check",
 ]);
 
 // ─── Pipeline mode tracker (drives resume-drain) ─────────────
@@ -814,6 +827,15 @@ export const _testOnly = {
   },
   getScoutFailureState(): { consecutiveFailures: number; lastAlertAt: number } {
     return { consecutiveFailures: _scoutConsecutiveFailures, lastAlertAt: _scoutLastFailureAlertAt };
+  },
+  /**
+   * R2FIX CRIT-2 (2026-07-16): expose pipelineGate() directly so regression
+   * tests can assert its return value for a specific job name without
+   * exercising a full cron tick. Used to prove weekly-drift-2sigma-check
+   * bypasses the gate (returns true) even while the pipeline is paused.
+   */
+  pipelineGateForTest(jobName: string): Promise<boolean> {
+    return pipelineGate(jobName);
   },
 };
 
@@ -3407,10 +3429,24 @@ except Exception as e:
     await resolveAbTests();
   });
 
-  scheduleUtc("0 23 * * 0", async () => {
+  // R2FIX MED-3 (2026-07-16): was `scheduleUtc("0 23 * * 0")` with NO ET-hour
+  // guard — that fires Sunday 23:00 UTC, which is 19:00 ET (EDT) / 18:00 ET
+  // (EST), never the documented 23:00 ET, and had no guard to catch the drift.
+  // 23:00 ET crosses into Monday UTC (03:00 UTC EDT / 04:00 UTC EST), so the
+  // cron day-of-week must be Monday (1) with an isSundayAtEtHour ET-side guard
+  // that checks the actual (Sunday) ET weekday — mirrors the sibling weekly
+  // jobs weekly-drift-2sigma-check (~:4358, isSundayAtEtHour(now, 18)) and
+  // n8n-drift-detector-weekly (~:4586, isSundayAtEtHour(now, 19)).
+  scheduleUtc("0 3,4 * * 1", async () => {
     if (!_tryAcquireJobLock("prompt-ab-resolution")) return;
     try {
+    const now = new Date();
+    if (!isSundayAtEtHour(now, 23)) {
+      logger.debug("Scheduler: prompt-ab-resolution cron fired but not Sunday 23:00 ET — skipping");
+      return;
+    }
     if (!(await pipelineGate("prompt-ab-resolution"))) return;
+    logger.info("Scheduler: Prompt A/B test resolution (Sunday 11 PM ET confirmed)");
     const t0pab = Date.now();
     await withRetry("prompt-ab-resolution", SCHEDULER_JOBS["prompt-ab-resolution"].run);
     markJobRun("prompt-ab-resolution");
@@ -4349,10 +4385,15 @@ except Exception as e:
         return;
       }
       // Wave 25 Pass 2 Y-1: defensive log BEFORE pipelineGate — proves the job
-      // actually reached this point regardless of pipeline state. The gate is
-      // now a no-op (weekly-drift-2sigma-check is in _PIPELINE_GATE_EXEMPT), but
-      // this log ensures audit trails always show the job ran even if a future
-      // refactor changes the exemption list without updating the handler.
+      // actually reached this point regardless of pipeline state. R2FIX CRIT-2
+      // (2026-07-16): the gate is NOW genuinely a no-op — "weekly-drift-2sigma-check"
+      // was added to ALWAYS_RUN_JOBS (~:522), which is the set pipelineGate()
+      // actually reads. It was PREVIOUSLY only in _PIPELINE_GATE_EXEMPT (~:670),
+      // a list consulted solely by reconcileMissedRuns() boot catch-up — NOT by
+      // pipelineGate() itself — so this call used to silently no-op the safety
+      // HALT during any pipeline pause. This log ensures audit trails always
+      // show the job ran even if a future refactor changes ALWAYS_RUN_JOBS
+      // without updating this handler.
       logger.info({ job: "weekly-drift-2sigma-check" }, "running pipeline-gate-exempt drift check");
       if (!(await pipelineGate("weekly-drift-2sigma-check"))) return;
       logger.info("Scheduler: Weekly drift 2σ check (Sunday 18:00 ET confirmed)");
@@ -4639,12 +4680,21 @@ except Exception as e:
     if (!_tryAcquireJobLock("n8n-data-backup-daily")) return;
     try {
       const now = new Date();
-      const etHour = now.toLocaleString("en-US", {
-        timeZone: "America/New_York",
-        hour: "numeric",
-        hour12: false,
-      });
-      if (etHour !== "3") {
+      // R2FIX CRIT-1: ICU zero-pads single-digit hours ("03"), which never
+      // strict-equals the bare string "3" — this guard returned early on
+      // EVERY fire since the job was wired, so the ONLY recovery net for a
+      // bad n8n workflow import (F-4) or a dropped/wiped n8n schema had never
+      // actually run. Number()-wrap to match every sibling ET-hour guard in
+      // this file (see regen-declining-sweep ~:3390, weekly-drift-2sigma-check
+      // uses isSundayAtEtHour, composite-health-daily-digest ~:5382, etc.).
+      const etHour = Number(
+        now.toLocaleString("en-US", {
+          timeZone: "America/New_York",
+          hour: "numeric",
+          hour12: false,
+        }),
+      );
+      if (etHour !== 3) {
         logger.debug({ etHour }, "Scheduler: n8n-data-backup-daily — not 03:00 ET, skipping (DST guard)");
         return;
       }

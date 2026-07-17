@@ -3557,6 +3557,65 @@ async function runGraduation(
     //
     // For INSERT failure and gate rejection: revert bucket to pending so the next
     // cron cycle can retry. Do NOT mark `graduated` with a null strategy id.
+    //
+    // ─── DEDUP-HIT PATH (R2 fix 2026-07-16) ──────────────────────────────────
+    // MUST be checked BEFORE the success path. The graduator returns
+    // `skipped:true` with a NON-NULL `strategyId` when it did NOT insert a new row
+    // but found an existing strategy for this edge — either a wide-fingerprint
+    // textual duplicate (`reason: textual_duplicate_of: <name>`) or an exact
+    // derived-name match (`reason: name_already_exists`). The old code checked ONLY
+    // `graduatedStrategyId !== null`, so a dedup hit fell into the SUCCESS path and
+    // (1) fired `strategy.cross_validated` status=success + the Discord "new
+    // strategy graduated" ping as if a brand-new edge had been created, and (2) —
+    // the real hazard — marked THIS bucket graduated pointing at a strategy it did
+    // not create. Combined with the R2 name-canonicalization fix in the graduator
+    // (the leader name now derives from the routing `market`, so the dedup key is
+    // market-consistent and an MES bucket can no longer dedup against an unrelated
+    // MNQ strategy), we now record a dedup as a dedup — not a fresh graduation.
+    //
+    // Idempotency preserved: a true same-edge duplicate still drains cleanly. We
+    // mark the bucket graduated pointing at the existing strategy (reverting to
+    // pending would infinite-retry — the next cron re-derives the same name and
+    // re-hits the same dedup) but with a `graduation.deduped_to_existing` audit
+    // (status=skipped), NOT a success "new strategy" audit + Discord ping.
+    if (grad.skipped === true && graduatedStrategyId !== null) {
+      await db.update(strategyPendingBuckets).set({
+        status:              "graduated",
+        graduatedAt:         sql`NOW()`,
+        graduatedStrategyId: graduatedStrategyId,
+      }).where(eq(strategyPendingBuckets.id, bucketId));
+
+      logger.info(
+        { bucketId, conceptName, existingStrategyId: graduatedStrategyId, reason: grad.reason },
+        "graduation: dedup hit — bucket drained to existing strategy (no new edge created)"
+      );
+
+      db.insert(auditLog).values({
+        action:            "graduation.deduped_to_existing",
+        entityType:        "strategy_pending_bucket",
+        entityId:          bucketId,
+        input:             {
+          bucket_id:    bucketId,
+          concept_name: conceptName,
+          market:       bucketMeta?.market,
+        } as unknown as Record<string, unknown>,
+        result:            {
+          existing_strategy_id: graduatedStrategyId,
+          dedup_reason:         grad.reason ?? null,
+          strategy_name:        grad.strategyName,
+        } as unknown as Record<string, unknown>,
+        status:            "skipped",
+        decisionAuthority: "system",
+        correlationId,
+      }).catch((err) => {
+        logger.warn({ err, bucketId }, "graduation: deduped_to_existing audit_log write failed");
+      });
+
+      // Return early — this was a dedup, not a new graduation. Do NOT fire the
+      // SSE `pending_bucket.graduated` event or the Discord "new strategy" notify.
+      return;
+    }
+
     if (graduatedStrategyId !== null) {
       // ─── SUCCESS PATH ───────────────────────────────────────────────────────
       // INSERT confirmed — only now mark the bucket graduated.

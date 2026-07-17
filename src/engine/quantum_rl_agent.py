@@ -1683,6 +1683,15 @@ def train_regime_conditioned_policies(
               db_write_failed=True on any regime whose quantum_rl_runs persistence
               failed for one or more training batches (F-1 fix — see write_failures
               tracking below).
+
+              False-green closure fix (scope-locked r2fix, 2026-07-16): when bars
+              were loaded (non-empty) but NOT ONE carried a recognized
+              institutional_regime grouping key, this returns a DISTINCT sentinel
+              shape instead of the regime-keyed dict above:
+                  {"status": "regime_grouping_failed", "reason": <str>, "n_bars": <int>}
+              Callers (see __main__ CLI below) MUST check for this shape before
+              treating an empty/zero-regime result as a legitimate data-scarcity
+              skip — it signals a bar-loader/grouping defect, not thin evidence.
     """
     import hashlib
 
@@ -1743,6 +1752,71 @@ def train_regime_conditioned_policies(
         regime = bar.get("state", {}).get("institutional_regime") if isinstance(bar.get("state"), dict) else bar.get("institutional_regime")
         if regime and regime in _INSTITUTIONAL_REGIMES:
             regime_bars.setdefault(regime, []).append(bar)
+
+    # RATIFY-PACKET false-green closure fix (2026-07-16, scope-locked r2fix):
+    # `load_backtest_bar_data()` (src/engine/replay/db_loader.py) returns flat
+    # bar dicts with NO `state` sub-dict and NO `institutional_regime` key at
+    # all (it only carries `macro_regime`/`session_type`). Every real
+    # invocation therefore hit `regime=None` for every bar, so `regime_bars`
+    # came out completely empty even though real bars were loaded — a
+    # non-data-scarcity grouping failure, NOT the same thing as "each of the
+    # 6 regimes individually had <100 bars" (that legitimate scarcity case
+    # still leaves at least one regime with a partial bar list). Previously
+    # this silently fell through to the ordinary per-regime "insufficient
+    # data" skip path for all 6 regimes, producing an empty {} result that
+    # was indistinguishable from a clean, low-data run — the training
+    # program had produced zero evidence since it shipped, every run
+    # logging as clean "completed success" (see __main__ CLI below, which
+    # now surfaces this as a non-zero exit instead of exit 0).
+    #
+    # Deliberately OUT OF SCOPE here: actually wiring a real per-bar
+    # institutional_regime onto historical training bars. Investigated
+    # 2026-07-16 (operator RL-readiness review) — making RL regime-conditioned
+    # training REAL is a multi-part instrument project, not a one-line join,
+    # for THREE stacked reasons (all evidenced by live-DB inspection):
+    #   (1) load_backtest_bar_data() builds bars from backtest_trades and never
+    #       enriches them (this false-green closure surfaces that, above).
+    #   (2) The enrichment fn that WOULD fix it, _load_production_state_at(),
+    #       SELECTs bias_state columns {state, confluence_score, structure_state,
+    #       institutional_regime} that DO NOT EXIST in the live bias_state schema
+    #       (live cols: regime_label TEXT, regime_evidence/evidence JSONB, ...);
+    #       it would throw "column does not exist" if wired in. Its unit tests
+    #       pass only because they mock the cursor (fabricated-schema false-green).
+    #   (3) Live bias_state holds ~82 rows over ~3 days (2026-05-20..23), so even
+    #       a schema-fixed loader has almost no historical regime coverage to
+    #       train on until the live bias engine accumulates real history.
+    # This is RL-internal + challenger-only + advisory (ZERO live-capital impact),
+    # but it means the "is quantum RL better?" A/B evidence is not yet trustworthy.
+    # Requires a ratify packet + independent grade + an operator product call
+    # (institutional 6-regime path vs group-by-macro_regime path vs keep parked).
+    # NOT built on this wave's momentum.
+    bars_present_but_ungrouped = bool(bars) and not regime_bars
+    if bars_present_but_ungrouped:
+        _rl_logger.warning(
+            "train_regime_conditioned_policies: %d bars loaded but NONE carried "
+            "a recognized institutional_regime grouping key — this is a "
+            "grouping/bar-loader defect, not genuine per-regime data scarcity. "
+            "Returning status=regime_grouping_failed instead of silently "
+            "skipping all 6 regimes as if evidence were merely thin.",
+            len(bars),
+        )
+        _emit_audit_row(
+            action="quantum_rl.regime_grouping_failed",
+            entity_type="strategy",
+            entity_id=str(strategy_id),
+            status="warning",
+            result={
+                "n_bars": len(bars),
+                "reason": "bars_present_but_no_institutional_regime_key",
+                "strategy_id": strategy_id,
+                "governance_labels": RL_RUNS_GOVERNANCE,
+            },
+        )
+        return {
+            "status": "regime_grouping_failed",
+            "reason": "bars present but no institutional_regime key on any bar",
+            "n_bars": len(bars),
+        }
 
     # ── 4. IBM cloud opt-in wiring ────────────────────────────────────────────
     cloud_engaged = False
@@ -2390,6 +2464,86 @@ def compute_rl_kill_switch_state(
     return result
 
 
+def build_train_cli_payload(training_results: dict, strategy_id: str) -> tuple[dict, int]:
+    """Build the `--mode train` CLI's JSON payload + process exit code from
+    train_regime_conditioned_policies()'s return value.
+
+    Extracted to a pure function (RATIFY-PACKET false-green closure fix,
+    2026-07-16, scope-locked r2fix) so this dispatch logic is unit-testable
+    without spawning a subprocess.
+
+    A regime_grouping_failed sentinel (bars were loaded but NOT ONE carried a
+    recognized institutional_regime key — a real grouping/bar-loader defect,
+    not genuine per-regime data scarcity) must be detected BEFORE the
+    write-failure scan below. The sentinel is a flat
+    {"status", "reason", "n_bars"} dict, not a regime->info map — iterating
+    `.values()` over it is harmless (none of its values are dicts, so
+    `_any_write_failed` would silently evaluate False) but would make this
+    look like an ordinary clean, zero-regime run.
+
+    THREE-WAY EXIT CONTRACT (r2fix round-2 refinement, 2026-07-16 — operator
+    "aint quatum rl autopilot?" review):
+      * exit 0  = clean success (real per-regime training OR honest zero-data).
+      * exit 1  = REAL runtime failure (a per-regime quantum_rl_runs write
+                  failed, F-1 precedent). quantum-rl-training-runner.ts routes
+                  this through _recordRlFailure → after N consecutive, opens the
+                  circuit breaker AND fires a Discord CRITICAL. Correct for a
+                  genuine incident.
+      * exit 3  = DEGRADED / known-gap (regime_grouping_failed). The regime
+                  wiring for historical training bars is a DOCUMENTED, DEFERRED
+                  design decision — every auto-fire hits it until it ships, so
+                  routing it through the exit-1 incident path would open the
+                  breaker every N runs and page the operator for a feature that
+                  isn't built yet (alert-fatigue anti-pattern). The runner's
+                  code===3 branch instead: does NOT _recordRlSuccess (kills the
+                  false-green — no breaker RESET, no status="completed"), does
+                  NOT _recordRlFailure (no page, breaker counter untouched),
+                  finalizes the run row status="skipped_regime_unwired", and
+                  emits a distinct quantum_rl.training_skipped_regime_unwired
+                  audit row so the degraded state stays VISIBLE without paging.
+
+    Returns:
+        (payload_dict, exit_code) — 3 on a grouping failure (degraded/known-gap),
+        1 on any per-regime quantum_rl_runs write failure (real incident),
+        0 otherwise.
+    """
+    _grouping_failed = (
+        isinstance(training_results, dict)
+        and training_results.get("status") == "regime_grouping_failed"
+    )
+    # F-1 fix: surface any regime's quantum_rl_runs persistence failure as
+    # a non-zero CLI exit code instead of a swallowed warning — previously
+    # a totally-broken INSERT looked identical to a clean training run.
+    _any_write_failed = (
+        not _grouping_failed
+        and any(
+            isinstance(info, dict) and info.get("db_write_failed")
+            for info in training_results.values()
+        )
+    )
+    payload = {
+        "mode": "train",
+        "strategy_id": strategy_id,
+        # "results" always stays a regime->info dict (empty on grouping
+        # failure) for backward-compat with any consumer that expects it.
+        "results": {} if _grouping_failed else training_results,
+        "regime_grouping_failed": _grouping_failed,
+        "grouping_failure_detail": training_results if _grouping_failed else None,
+        "write_failures_present": _any_write_failed,
+    }
+    # Distinct exit codes: 3 = degraded/known-gap (grouping failure — visible,
+    # non-paging), 1 = real runtime write failure (incident — pages), 0 = clean.
+    # _grouping_failed and _any_write_failed are mutually exclusive by construction
+    # (_any_write_failed is gated on `not _grouping_failed`).
+    if _grouping_failed:
+        exit_code = 3
+    elif _any_write_failed:
+        exit_code = 1
+    else:
+        exit_code = 0
+    return payload, exit_code
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
@@ -2412,20 +2566,9 @@ if __name__ == "__main__":
             cpcv_purge=True,
             seed=args.seed,
         )
-        # F-1 fix: surface any regime's quantum_rl_runs persistence failure as
-        # a non-zero CLI exit code instead of a swallowed warning — previously
-        # a totally-broken INSERT looked identical to a clean training run.
-        _any_write_failed = any(
-            isinstance(info, dict) and info.get("db_write_failed")
-            for info in training_results.values()
-        )
-        print(json.dumps({
-            "mode": "train",
-            "strategy_id": args.strategy_id,
-            "results": training_results,
-            "write_failures_present": _any_write_failed,
-        }, indent=2))
-        sys.exit(1 if _any_write_failed else 0)
+        _payload, _exit_code = build_train_cli_payload(training_results, args.strategy_id)
+        print(json.dumps(_payload, indent=2))
+        sys.exit(_exit_code)
 
     # ── Legacy modes (backward-compat) ────────────────────────────────────────
     if args.input_json is None:

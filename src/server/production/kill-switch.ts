@@ -58,6 +58,19 @@ import {
   getAccountSessionCumulativePnL,
   evaluateCrossSymbolDll,
 } from "../services/cross-symbol-pnl.js";
+// deep-scan round 2 MED-3: both Layer 2 and Layer 3 previously inlined their OWN
+// copy of the CME-ET trading-day (+7h shift then en-CA Intl format) formula
+// instead of importing a shared single source of truth. Byte-identical
+// behavior today, but two independent copies of the same day-key formula is a
+// drift class. Imports the sibling production/ implementation
+// (reconciliation-service.ts::toCmeTradingDayString) rather than
+// paper-risk-gate.ts's identical toFuturesTradingDayString() — the latter
+// transitively imports the full server bootstrap (`../index.js`), which
+// regressed this file's narrow unit-test mocks (verified empirically while
+// implementing this fix). See the block comment in reconciliation-service.ts
+// next to toCmeTradingDayString() for the full story; the two functions stay
+// byte-identical by construction (same +7h-shift/en-CA-Intl formula).
+import { toCmeTradingDayString } from "./reconciliation-service.js";
 
 // ─── deepscan18 (2026-07-05) Track 1 — Multi-Account Isolation ────────────────
 // deepscan17's C-1 fix scoped the force-close ACTION (forceCloseAllPositions)
@@ -510,8 +523,9 @@ async function checkLayer2DailyLoss(correlationId?: string, scopeAccountKey?: st
 
   let decision: HaltDecision;
   try {
-    const _cmeEtFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
-    const today = _cmeEtFormatter.format(new Date(Date.now() + 7 * 3_600_000));
+    // deep-scan round 2 MED-3: canonical CME-ET trading-day string — was an
+    // inline copy of this exact formula (Intl.DateTimeFormat + 7h shift).
+    const today = toCmeTradingDayString(new Date());
 
     const activeSessions = await db
       .select({
@@ -808,13 +822,19 @@ async function checkLayer3TrailingDD(correlationId?: string, scopeAccountKey?: s
 
     for (const session of sessionsToEvaluate) {
       const firmId = session.firmId ?? "mffu";
-      let firmAccount: { maxDrawdown?: number; maxDailyDrawdown?: number } | null = null;
+      // deep-scan round 2 LOW-4: getFirmAccount() returns FirmAccountConfig
+      // (src/shared/firm-config.ts), whose `maxDrawdown` field is NON-OPTIONAL
+      // (always populated) and which has no `maxDailyDrawdown` field at all —
+      // that field only ever existed in test mocks (mock-fabricates-a-field
+      // smell), never the real producer. The `?? firmAccount?.maxDailyDrawdown`
+      // fallback was dead code reading a field that never exists at runtime.
+      let firmAccount: { maxDrawdown: number } | null = null;
       try {
-        firmAccount = getFirmAccount(firmId) as { maxDrawdown?: number; maxDailyDrawdown?: number };
+        firmAccount = getFirmAccount(firmId) as { maxDrawdown: number };
       } catch {
         continue;
       }
-      const maxDrawdown = firmAccount?.maxDrawdown ?? firmAccount?.maxDailyDrawdown;
+      const maxDrawdown = firmAccount?.maxDrawdown;
       if (!maxDrawdown || maxDrawdown <= 0) continue;
 
       const currentEquity = parseFloat(String(session.currentEquity ?? "0"));
@@ -834,7 +854,9 @@ async function checkLayer3TrailingDD(correlationId?: string, scopeAccountKey?: s
         // MED#8 backoff was DEFEATED by its own delete-on-success (which reopened the storm on the next
         // eval). Mirror L2's day-dedup: once L3 has COMPLETED a force-close for this account today, stay
         // HALTED silently for the rest of the day. Keyed `l3:` so it never collides with the L2 dedup.
-        const _l3Today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(new Date(Date.now() + 7 * 3_600_000));
+        // deep-scan round 2 MED-3: canonical CME-ET trading-day string — was an
+        // inline copy of the same formula Layer 2 (above) also duplicated.
+        const _l3Today = toCmeTradingDayString(new Date());
         if (_forceClosedTodayByAccount.get(`l3:${l3AccountKey}`) === _l3Today) {
           decision = {
             halted: true,

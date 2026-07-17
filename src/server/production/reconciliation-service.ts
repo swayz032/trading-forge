@@ -41,6 +41,7 @@ import { AlertFactory } from "../services/alert-service.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { runDashboardSnapshots } from "../services/dashboard-snapshot-service.js";
 import { getMarkerCountForDate } from "../services/tradingview-marker-service.js";
+import { getEtOffsetMinutes } from "../lib/dst-utils.js";
 
 // ─── Config (all thresholds here — no magic numbers in logic) ────────────────
 
@@ -89,11 +90,109 @@ export interface ReconciliationStatus {
 // ─── Helper: today's date as ISO date string (ET-adjusted) ───────────────────
 
 function todayEt(): Date {
-  // Round to start-of-day in ET — trade date matches the session.
-  // For recon purposes, we use UTC date (cron fires at 4:15 PM ET,
-  // session is always complete by then).
-  const now = new Date();
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+  // deep-scan round 2 HIGH-2: day bucketing now derives entirely from the
+  // canonical CME trading-day boundary (getCmeTradingDayBoundaries below), so
+  // this just needs to hand callers "now" — the actual day-window resolution
+  // happens per-query via getCmeTradingDayBoundaries()/toCmeTradingDayString().
+  return new Date();
+}
+
+// ─── CME futures-trading-day boundaries (deep-scan round 2 HIGH-2) ───────────
+//
+// Every recon day-bucket below previously used RAW UTC calendar-day boundaries
+// (Date.UTC(y,m,d) .. +86_400_000), NOT the canonical CME 5pm-ET trading-day
+// rollover the rest of the system (kill-switch DLL, daily-trade-cap, paper
+// P&L attribution) uses via paper-risk-gate.ts::toFuturesTradingDayString().
+// A trade closed 17:00-23:59 ET belongs to the NEXT calendar day's trading
+// session; bucketing it into the raw UTC day silently compares recon against
+// a DIFFERENT trade population than the one kill-switch/DLL/daily-trade-cap
+// attribute it to. Fixed by deriving day boundaries from the SAME +7h-shift
+// CME-day convention paper-risk-gate.ts uses, so both recon subsystems now
+// bucket the identical trade population as the rest of the system.
+//
+// toCmeTradingDayString() below is a DELIBERATE reimplementation of
+// paper-risk-gate.ts::toFuturesTradingDayString() — same +7h-shift / en-CA
+// Intl-format algorithm, byte-identical output on every input — rather than
+// an import of it. Verified while implementing this fix: importing
+// paper-risk-gate.ts here (and into kill-switch.ts / paper-journal-recon.ts)
+// transitively pulls in the full server bootstrap (paper-risk-gate.ts imports
+// `{ logger } from "../index.js"`, which drags in every route + the scheduler),
+// which regressed 7 previously-green unit-test files whose narrow `vi.mock()`
+// surfaces don't cover that reach (confirmed by reverting the import and
+// re-running the suite: 80/80 green; with the import: 7 files fail on
+// "No X export is defined on the ... mock"). These are fail-CLOSED
+// safety-critical files (kill-switch, both recon crons) — accepting a heavy,
+// test-fragile transitive dependency to save one duplicated 2-line formula is
+// the wrong trade. This function + its two importers (paper-journal-recon.ts,
+// kill-switch.ts) are now the SINGLE canonical CME-day-string implementation
+// for the production/ recon + kill-switch surface (was 3 independent inline
+// copies; now 1, imported twice) — paper-risk-gate.ts remains the canonical
+// implementation for the paper-signal/paper-execution surface it already
+// serves. Any future change to the CME-day formula must update both
+// implementations in the same commit (there is no way to make them one
+// without either pulling paper-risk-gate.ts's heavy chain into these files or
+// extracting a genuinely dependency-free shared module — the latter is out of
+// scope for this fix, which is limited to reconciliation-service.ts,
+// paper-journal-recon.ts, and kill-switch.ts).
+
+const _CME_ET_FORMATTER = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
+
+/**
+ * CME futures-trading-day string (YYYY-MM-DD) for a UTC timestamp. CME rolls
+ * at 17:00 ET: trades closed 17:00-23:59 ET belong to the NEXT calendar day's
+ * trading session. See the block comment above for why this is a local
+ * reimplementation rather than an import of paper-risk-gate.ts's identical
+ * function.
+ */
+export function toCmeTradingDayString(date: Date): string {
+  // Shifting +7 hours aligns the 17:00 ET CME cutoff with ET calendar
+  // midnight: 17:00 ET + 7h = 00:00 ET next day (correct next-day
+  // attribution); 16:59 ET + 7h = 23:59 ET same day (correct same-day).
+  const shifted = new Date(date.getTime() + 7 * 3_600_000);
+  return _CME_ET_FORMATTER.format(shifted);
+}
+
+/**
+ * Convert an ET wall-clock hour on a given calendar day to its UTC instant.
+ * The ET/UTC offset is resolved from the DST status at LOCAL NOON UTC of the
+ * same calendar day — safely past the 2:00 AM ET DST transition boundary, so
+ * the offset always reflects the regime actually in effect for that specific
+ * calendar date (no ambiguity at the transition itself, and correct for the
+ * 17:00 ET rollover this helper is used for, which is nowhere near 2 AM).
+ */
+function etWallClockToUtc(year: number, month1to12: number, day: number, hour: number): Date {
+  const noonUtcSameDay = new Date(Date.UTC(year, month1to12 - 1, day, 12, 0, 0));
+  const offsetMinutes = getEtOffsetMinutes(noonUtcSameDay); // -240 (EDT) or -300 (EST)
+  return new Date(Date.UTC(year, month1to12 - 1, day, hour, 0, 0) - offsetMinutes * 60_000);
+}
+
+/**
+ * Compute the CME futures-trading-day boundaries [dayStart, dayEnd) for the
+ * trading day that `date` falls into, using the SAME 17:00 ET rollover
+ * `toCmeTradingDayString()` above uses. Replaces raw-UTC calendar-day
+ * bucketing so this recon compares the SAME trade population the kill-switch
+ * / DLL / daily-trade-cap gates attribute to a given day.
+ */
+export function getCmeTradingDayBoundaries(
+  date: Date
+): { dayStart: Date; dayEnd: Date; tradingDay: string } {
+  const tradingDay = toCmeTradingDayString(date);
+  const parts = tradingDay.split("-").map(Number);
+  const y = parts[0]!;
+  const m = parts[1]!;
+  const d = parts[2]!;
+  // Trading day D ends at 17:00 ET on calendar day D...
+  const dayEnd = etWallClockToUtc(y, m, d, 17);
+  // ...and starts at 17:00 ET on calendar day D-1. Date.UTC normalizes an
+  // out-of-range day (e.g. day=0) into the correct prior month/year.
+  const prevCalendarDay = new Date(Date.UTC(y, m - 1, d - 1));
+  const dayStart = etWallClockToUtc(
+    prevCalendarDay.getUTCFullYear(),
+    prevCalendarDay.getUTCMonth() + 1,
+    prevCalendarDay.getUTCDate(),
+    17
+  );
+  return { dayStart, dayEnd, tradingDay };
 }
 
 // ─── Data-fetch helpers ────────────────────────────────────────────────────────
@@ -103,8 +202,7 @@ function todayEt(): Date {
  * A production trade is associated with bar_timestamp on that date (UTC).
  */
 async function fetchProductionTradesCount(date: Date): Promise<number> {
-  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
+  const { dayStart, dayEnd } = getCmeTradingDayBoundaries(date);
 
   const rows = await db
     .select({ cnt: count() })
@@ -123,8 +221,7 @@ async function fetchProductionTradesCount(date: Date): Promise<number> {
  * Sum expected_pnl from production_trades for the given trading date.
  */
 async function fetchExpectedPnl(date: Date): Promise<number | null> {
-  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
+  const { dayStart, dayEnd } = getCmeTradingDayBoundaries(date);
 
   const rows = await db
     .select({
@@ -200,8 +297,7 @@ export const MIN_INDEPENDENT_SOURCES_FOR_RED = 3;
 export const PROXY_COUNT_LEGS_INDEPENDENT = false;
 
 async function fetchProxyCountsFromProductionTrades(date: Date): Promise<number> {
-  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
+  const { dayStart, dayEnd } = getCmeTradingDayBoundaries(date);
 
   const rows = await db
     .select({ cnt: count() })
@@ -227,8 +323,7 @@ export function isTraderspostConfirmIndependent(): boolean {
  *  IS NOT NULL) in the day window — a GENUINELY independent "confirmed" leg vs the server "sent"
  *  count. Migration 0197 adds the column; stamped by traderspost-confirm.ts. */
 async function fetchTraderspostConfirmedCount(date: Date): Promise<number> {
-  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+  const { dayStart, dayEnd } = getCmeTradingDayBoundaries(date);
   const rows = await db
     .select({ cnt: count() })
     .from(productionTrades)
@@ -323,8 +418,7 @@ async function fetchMffuDashboardPnl(date: Date, signal?: AbortSignal): Promise<
  * precise per-account reconciliation can be added in Phase 5C.
  */
 async function fetchTradingviewMarkerCount(date: Date): Promise<number | null> {
-  const dayStart = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
-  const dayEnd   = new Date(dayStart.getTime() + 86_400_000);
+  const { dayStart, dayEnd } = getCmeTradingDayBoundaries(date);
 
   try {
     // Use raw SQL to be resilient if the table hasn't been migrated yet.
@@ -362,7 +456,10 @@ export async function runDailyReconciliation(
 ): Promise<ReconciliationResult> {
   const startedAt = Date.now();
   const reconRunId = randomUUID();
-  const reconDateStr = reconDate.toISOString().slice(0, 10);
+  // deep-scan round 2 HIGH-2: recon date now derives from the canonical CME
+  // trading-day boundary, not a raw UTC calendar-day slice (see
+  // getCmeTradingDayBoundaries above).
+  const reconDateStr = toCmeTradingDayString(reconDate);
 
   logger.info(
     { reconDate: reconDateStr, reconRunId },
@@ -826,7 +923,8 @@ async function writeReconRow(params: WriteReconRowParams): Promise<Reconciliatio
 export async function getDailyReconciliationStatus(
   date: Date = todayEt()
 ): Promise<ReconciliationStatus> {
-  const dateStr = date.toISOString().slice(0, 10);
+  // deep-scan round 2 HIGH-2: canonical CME trading-day string, not a raw UTC slice.
+  const dateStr = toCmeTradingDayString(date);
 
   const rows = await db
     .select({

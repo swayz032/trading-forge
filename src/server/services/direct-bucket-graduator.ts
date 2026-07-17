@@ -1385,15 +1385,28 @@ export async function graduateBucketDirectly(opts: {
   // De-dup level 1: if a strategy with this name already exists, skip.
   const conceptName = bucketMeta.conceptName;
   const timeframe = deriveTimeframe(extractedIdea, conceptName);
-  // W23F.L.2 (2026-05-19) — canonicalize name from symbols[0] when present.
-  // The LLM may extract a name containing the source's example market (e.g.
-  // "orb_mes_15m" from a YouTube tutorial that used MES as the example) while
-  // symbols[] carries the actual routing market for this cycle (e.g. ["MNQ"]).
-  // Source of truth: symbols[0]. Name must reflect routing market, not source-text market.
-  const symbolsForName: string[] = Array.isArray((extractedIdea as any)?.symbols) && (extractedIdea as any).symbols.length > 0
-    ? (extractedIdea as any).symbols
-    : [market];
-  const canonicalMarketForName = symbolsForName[0];
+  // W23F.L.2 (2026-05-19) → R2 fix (2026-07-16): canonicalize the leader name
+  // from the bucket's ROUTING `market`, NOT the best-mention LLM `symbols[0]`.
+  //
+  // §2b invariant: "name derives from symbols[0] = routing market." The value the
+  // leader row is ACTUALLY inserted with is `market` — the leader INSERT below sets
+  // `symbol: market` and `symbols: [leaderSymbol]` where
+  // `leaderSymbol = wave25Defaults.symbols[0] ?? market`, and
+  // `wave25Defaults.symbols = inferSymbolSet(..., originalMarket=market)` always
+  // places `market` first — so the leader's routing market IS `market`.
+  //
+  // The prior code derived the name from `extractedIdea.symbols[0]` (the richest
+  // mention's LLM-extracted symbols). Since W23F.C dropped market from the bucket
+  // fingerprint (concept-only hash), cross-market mentions of one concept converge
+  // into ONE bucket whose `market` is the FIRST mention's, while `bestMention` is
+  // chosen by richness — so `extractedIdea.symbols[0]` could be e.g. "MNQ" while the
+  // routing `market` is "MES". That produced a leader NAMED `..._mnq_...` but
+  // SIZED/inserted as MES, colliding with the real MNQ fan-out variant
+  // (`deriveStrategyName(concept,"MNQ",tf)`); and if that MNQ name pre-existed, the
+  // name-dedup below returned the unrelated MNQ id with skipped:true and the legit
+  // MES edge was silently dropped. Deriving from `market` keeps the name consistent
+  // with the row's routing market and confines the dedup key to the same market.
+  const canonicalMarketForName = market;
   let strategyName = deriveStrategyName(conceptName, canonicalMarketForName, timeframe);
   // Pass 21 v3 corrected³ (2026-05-17): exclude archived strategies from
   // name-dedup. Archived row with this name should not block re-graduation;
@@ -2731,10 +2744,10 @@ export async function graduateBucketDirectly(opts: {
     factor_quality,
   };
 
-  // Symbols array: prefer LLM-extracted symbols, fallback to bucket primary market
-  const symbolsArray: string[] = Array.isArray((extractedIdea as any)?.symbols) && (extractedIdea as any).symbols.length > 0
-    ? (extractedIdea as any).symbols
-    : [market];
+  // R2 fix (2026-07-16): the provenance audits/SSE now report `createdMarkets`
+  // (the leader routing market + the variant markets actually created), computed
+  // after the fan-out loop below — NOT the best-mention's `extractedIdea.symbols`,
+  // which is decoupled from the real per-market fan-out driven by wave25Defaults.symbols.
 
   try {
     // Wave 26 Pass E (2026-05-25) — auto-apply Wave 25 institutional defaults
@@ -3113,6 +3126,11 @@ export async function graduateBucketDirectly(opts: {
     // correct base_contracts (MES 6 / MNQ 6 / MCL 18) + liquidity_cap.
     const fanOutMarkets = wave25Defaults.symbols.slice(1) as Array<"MES" | "MNQ" | "MCL">;
     const fanOutStrategyIds: string[] = [];
+    // R2 fix (2026-07-16) — track the markets for which a variant row was ACTUALLY
+    // created (auditor-rejected / insert-failed variants are excluded), so the
+    // provenance audits below report the real per-market fan-out set rather than
+    // the best-mention's decoupled extractedIdea.symbols.
+    const createdVariantMarkets: string[] = [];
     for (const variantMarket of fanOutMarkets) {
       try {
         const variantName = deriveStrategyName(conceptName, variantMarket, timeframe).slice(0, 80);
@@ -3235,6 +3253,7 @@ export async function graduateBucketDirectly(opts: {
           WHERE id = ${variantInserted.id}::uuid
         `);
         fanOutStrategyIds.push(variantInserted.id);
+        createdVariantMarkets.push(variantMarket);
         await db.insert(auditLog).values({
           action: "graduation.market_variant_created",
           entityType: "strategy",
@@ -3270,6 +3289,14 @@ export async function graduateBucketDirectly(opts: {
       }
     }
 
+    // R2 fix (2026-07-16) — the REAL per-market fan-out set: the leader's actual
+    // routing market plus every variant market for which a row was actually created.
+    // The MED finding: the provenance audits below previously reported
+    // `symbolsArray` (= extractedIdea.symbols, the best-mention's LLM symbols), which
+    // is decoupled from the actual routing/fan-out driven by wave25Defaults.symbols.
+    // `createdMarkets` matches the strategies that truly exist after this graduation.
+    const createdMarkets: string[] = [leaderSymbol, ...createdVariantMarkets];
+
     logger.info(
       {
         strategyId: inserted.id,
@@ -3282,7 +3309,7 @@ export async function graduateBucketDirectly(opts: {
         overlayWarnings: overlayed.warnings,
         entryQualityProvenance: entryQualityBlock.extraction_provenance,
         confluenceFactorCount: finalConfluenceFactors.length,
-        symbolsCount: symbolsArray.length,
+        symbolsCount: createdMarkets.length,
       },
       "direct-graduator: strategy created from bucket"
     );
@@ -3298,7 +3325,7 @@ export async function graduateBucketDirectly(opts: {
         strategy_id: inserted.id,
         name: strategyName,
         symbol: market,
-        symbols: symbolsArray,
+        symbols: createdMarkets,
         source: "graduated_bucket",
         bucket_id: bucketId,
         concept_name: conceptName,
@@ -3320,8 +3347,10 @@ export async function graduateBucketDirectly(opts: {
         confluence_factor_count: entryQualityBlock.confluence_factors.length,
         min_factors_satisfied: entryQualityBlock.min_factors_satisfied,
         provenance: entryQualityBlock.extraction_provenance,
-        symbols_count: symbolsArray.length,
-        symbols: symbolsArray,
+        // R2 fix (2026-07-16): report the REAL fan-out set actually created, not
+        // the best-mention's decoupled extractedIdea.symbols.
+        symbols_count: createdMarkets.length,
+        symbols: createdMarkets,
         has_source_claim_win_rate: entryQualityBlock.source_claim_win_rate !== null,
         has_source_claim_avg_r: entryQualityBlock.source_claim_avg_r !== null,
       } as Record<string, unknown>,
@@ -3362,7 +3391,7 @@ export async function graduateBucketDirectly(opts: {
       broadcastSSE("factory:graduation_entry_quality", {
         strategy_id: inserted.id,
         name: strategyName,
-        symbols: symbolsArray,
+        symbols: createdMarkets,
         confluence_factor_count: entryQualityBlock.confluence_factors.length,
         extraction_provenance: entryQualityBlock.extraction_provenance,
         has_source_claim_win_rate: entryQualityBlock.source_claim_win_rate !== null,
@@ -3373,16 +3402,20 @@ export async function graduateBucketDirectly(opts: {
       logger.warn({ sseErr }, "direct-graduator: factory:graduation_entry_quality SSE broadcast failed (non-blocking)");
     }
 
-    // Wave 23F Track D: additional audit row for multi-market graduations
-    if (symbolsArray.length > 1) {
+    // Wave 23F Track D: additional audit row for multi-market graduations.
+    // R2 fix (2026-07-16): gate + report on the REAL fan-out set actually created
+    // (leader routing market + variant markets that inserted a row), not the
+    // best-mention's decoupled extractedIdea.symbols. `primary_market` = `market`
+    // is the true leader routing market (the value the leader row is inserted with).
+    if (createdMarkets.length > 1) {
       await db.insert(auditLog).values({
         action: "graduation.symbols_multi_market",
         entityType: "strategy",
         entityId: inserted.id,
         input: { bucket_id: bucketId, concept_name: conceptName } as Record<string, unknown>,
         result: {
-          symbols: symbolsArray,
-          symbols_count: symbolsArray.length,
+          symbols: createdMarkets,
+          symbols_count: createdMarkets.length,
           primary_market: market,
         } as Record<string, unknown>,
         status: "success",
@@ -3397,7 +3430,7 @@ export async function graduateBucketDirectly(opts: {
         broadcastSSE("factory:multi_market_bucket", {
           bucket_fingerprint: wideFingerprint,
           concept_name: conceptName,
-          symbols: symbolsArray,
+          symbols: createdMarkets,
           layer_coverage: {
             web:     opts.webUrls.length > 0,
             youtube: opts.youtubeUrls.length > 0,

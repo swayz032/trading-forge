@@ -369,7 +369,7 @@ export function _writeStderrAuditEvents(
 // ── Output type ───────────────────────────────────────────────────────────────
 
 export interface RlTrainingAutoFireResult {
-  status: "completed" | "failed" | "circuit_open" | "skipped_rth";
+  status: "completed" | "failed" | "circuit_open" | "skipped_rth" | "degraded_regime_unwired";
   regimesTrained: number;
   durationMs: number;
   stdoutSnippet: string;
@@ -384,7 +384,7 @@ export interface RlTrainingAutoFireResult {
  */
 function _finalizeRlTrainingRunRow(
   rlTrainingRunId: string | null,
-  status: "completed" | "failed",
+  status: "completed" | "failed" | "skipped_regime_unwired",
   extra: { executionTimeMs?: number; comparisonResult?: Record<string, unknown> } = {},
 ): void {
   if (!rlTrainingRunId) return;
@@ -640,6 +640,55 @@ export async function runRlTrainingForStrategy(
           "quantum-rl-training-runner: subprocess completed successfully",
         );
         resolve({ status: "completed", regimesTrained, durationMs, stdoutSnippet });
+      } else if (code === 3) {
+        // ── DEGRADED / known-gap (exit 3 = regime_grouping_failed) ────────────
+        // The Python CLI signals that bars loaded but NOT ONE carried an
+        // institutional_regime key — regime wiring for historical training bars
+        // is a DOCUMENTED, DEFERRED design decision, not a runtime incident.
+        // Treat as a THIRD outcome distinct from both success and failure:
+        //   * NOT _recordRlSuccess → kills the false-green (no breaker RESET,
+        //     no status="completed" — the original r2fix bug closure holds).
+        //   * NOT _recordRlFailure → does NOT page the operator or advance the
+        //     circuit breaker for a feature that isn't built yet (alert-fatigue
+        //     anti-pattern — every auto-fire hits this until regime wiring ships).
+        // The degraded state stays VISIBLE via a distinct audit row + the run
+        // row status, so the operator can see it without a Discord CRITICAL.
+        let groupingDetail: Record<string, unknown> | null = null;
+        try {
+          const parsed = JSON.parse(stdout.trim());
+          if (parsed?.grouping_failure_detail && typeof parsed.grouping_failure_detail === "object") {
+            groupingDetail = parsed.grouping_failure_detail as Record<string, unknown>;
+          }
+        } catch { /* non-JSON stdout — detail unknown */ }
+        logger.warn(
+          { strategyId, correlationId, durationMs, groupingDetail },
+          "quantum-rl-training-runner: subprocess reported DEGRADED regime_grouping_failed (known deferred design gap — not paging)",
+        );
+        db.insert(auditLog)
+          .values({
+            action: "quantum_rl.training_skipped_regime_unwired",
+            entityType: "strategy",
+            entityId: String(strategyId),
+            status: "warning",
+            correlationId: correlationId ?? null,
+            result: {
+              reason: "regime_grouping_failed",
+              detail: groupingDetail,
+              note:
+                "Historical training bars carry no institutional_regime key; " +
+                "regime wiring is a deferred design decision. Advisory challenger — " +
+                "no live impact. Surfaced without paging by design.",
+              governance_labels: { experimental: true, authoritative: false, decision_role: "challenger_only", degraded: true },
+            },
+          })
+          .catch((auditErr: unknown) =>
+            logger.warn(
+              { err: String(auditErr), strategyId },
+              "quantum-rl-training-runner: regime_unwired degraded audit write failed (non-blocking)",
+            ),
+          );
+        _finalizeRlTrainingRunRow(rlTrainingRunId, "skipped_regime_unwired", { executionTimeMs: durationMs });
+        resolve({ status: "degraded_regime_unwired", regimesTrained: 0, durationMs, stdoutSnippet });
       } else {
         const errMsg = stderr.trim() || `exit code ${code}`;
         logger.error(

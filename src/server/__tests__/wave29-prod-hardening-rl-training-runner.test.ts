@@ -293,6 +293,102 @@ describe("Circuit breaker — resets on success", () => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// Group 4b — DEGRADED regime_grouping_failed (exit 3) — r2fix round-2 refinement
+//
+// Operator "aint quatum rl autopilot?" review: the false-green closure must NOT
+// page the operator for a KNOWN, DEFERRED design gap (regime wiring). Exit 3 is
+// a THIRD outcome — neither success (which would reset the breaker / re-open the
+// false-green) nor failure (which would advance the breaker + Discord CRITICAL).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+describe("Degraded exit 3 — regime_grouping_failed does NOT page or reset breaker", () => {
+  beforeEach(() => {
+    _resetRlCircuitBreakerForTests();
+    vi.clearAllMocks();
+  });
+
+  const makeDegradedProc = () => {
+    const EventEmitter = require("events");
+    const proc = new EventEmitter();
+    proc.stdout = new EventEmitter();
+    proc.stderr = new EventEmitter();
+    proc.kill = vi.fn();
+    setImmediate(() => {
+      proc.stdout.emit(
+        "data",
+        Buffer.from(
+          '{"regime_grouping_failed":true,"results":{},"grouping_failure_detail":{"status":"regime_grouping_failed","reason":"no institutional_regime key","n_bars":500}}',
+        ),
+      );
+      proc.emit("close", 3);
+    });
+    return proc;
+  };
+
+  const makeFailProc = () => {
+    const EventEmitter = require("events");
+    const proc = new EventEmitter();
+    proc.stdout = new EventEmitter();
+    proc.stderr = new EventEmitter();
+    proc.kill = vi.fn();
+    setImmediate(() => proc.emit("close", 1));
+    return proc;
+  };
+
+  it("resolves with status 'degraded_regime_unwired' instead of rejecting", async () => {
+    const restore = freezeEtHour(7);
+    try {
+      (childProcessMock.spawn as ReturnType<typeof vi.fn>).mockImplementationOnce(makeDegradedProc);
+      const result = await runRlTrainingForStrategy("42", 2);
+      expect(result.status).toBe("degraded_regime_unwired");
+      expect(result.regimesTrained).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  it("does NOT advance the circuit-breaker failure counter (no page)", async () => {
+    const restore = freezeEtHour(7);
+    try {
+      // A degraded run from a clean breaker state must leave the counter at 0 —
+      // it must not be treated as a failure (which would advance toward the
+      // Discord-CRITICAL breaker-open threshold).
+      (childProcessMock.spawn as ReturnType<typeof vi.fn>).mockImplementationOnce(makeDegradedProc);
+      await runRlTrainingForStrategy("42", 2);
+      expect(_getRlConsecutiveFailuresForTests()).toBe(0);
+    } finally {
+      restore();
+    }
+  });
+
+  it("does NOT reset an existing failure count (no false-green success path)", async () => {
+    const restore = freezeEtHour(7);
+    try {
+      const mockSpawn = childProcessMock.spawn as ReturnType<typeof vi.fn>;
+
+      // 1 real failure first → counter ≥ 1
+      mockSpawn.mockImplementationOnce(makeFailProc);
+      try {
+        await runRlTrainingForStrategy("42", 2);
+      } catch {
+        /* expected */
+      }
+      const afterFailure = _getRlConsecutiveFailuresForTests();
+      expect(afterFailure).toBeGreaterThanOrEqual(1);
+
+      // A degraded run must NOT call _recordRlSuccess (which would zero the
+      // counter and reset the breaker — the exact false-green the r2fix closes).
+      mockSpawn.mockImplementationOnce(makeDegradedProc);
+      const result = await runRlTrainingForStrategy("42", 2);
+      expect(result.status).toBe("degraded_regime_unwired");
+      expect(_getRlConsecutiveFailuresForTests()).toBe(afterFailure);
+    } finally {
+      restore();
+    }
+  });
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // Group 5 — TestTimeoutSIGKILL
 // ═══════════════════════════════════════════════════════════════════════════════
 

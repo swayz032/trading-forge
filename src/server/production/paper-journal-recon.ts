@@ -60,6 +60,15 @@ import {
 import { logger } from "../lib/logger.js";
 import { notifyCritical, notifyWarning } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+// deep-scan round 2 HIGH-2/MED-3: import the canonical CME-day helpers from
+// the SIBLING production/ file rather than paper-risk-gate.ts directly —
+// paper-risk-gate.ts transitively imports the full server bootstrap
+// (`../index.js`), which regressed this file's + kill-switch.ts's narrow
+// unit-test mocks (verified empirically; see the block comment in
+// reconciliation-service.ts next to toCmeTradingDayString() for the full
+// story). reconciliation-service.ts's toCmeTradingDayString() is a
+// byte-identical reimplementation of paper-risk-gate.ts::toFuturesTradingDayString().
+import { getCmeTradingDayBoundaries, toCmeTradingDayString } from "./reconciliation-service.js";
 
 // ─── Config (no magic numbers) ────────────────────────────────────────────────
 
@@ -116,6 +125,16 @@ export interface PaperReconStrategyResult {
   // When true, P&L reconciliation was not performed — drift is null, never a mismatch.
   brokerPnlUnavailable: boolean;
   tradeIds: string[];
+  // deep-scan round 2 HIGH-1: per-trade windowed join results. Independent of
+  // countMismatch/pnlDriftExceedsTolerance (both day-level SUM aggregates) —
+  // catches offsetting per-trade errors that net to zero in the day-sum (trade A
+  // paper +$500 vs broker +$300 = +$200 error; trade B paper -$200 vs broker $0 =
+  // -$200 error; day-sum delta = $0, both individually wrong).
+  perTradeCheckedCount: number;
+  perTradeMismatchCount: number;
+  perTradeMismatchTradeIds: string[];
+  perTradeUnmatchedCount: number;
+  perTradeMismatchDetected: boolean;
 }
 
 export interface PaperJournalReconResult {
@@ -186,14 +205,127 @@ export function computePnlTolerance(symbol: string, filledQty: number): number {
   return Math.max(PAPER_RECON_CONFIG.PNL_FLOOR_DOLLARS, 2 * tick * filledQty);
 }
 
+// ─── Per-trade windowed join (deep-scan round 2 HIGH-1) ───────────────────────
+
+/** A production_trades row shaped for the per-trade join (bigserial id → number). */
+export interface PerTradeBrokerRow {
+  id: number;
+  barTimestamp: Date;
+  expectedPnl: string | null;
+}
+
+/** A paper_trades row shaped for the per-trade join. */
+export interface PerTradeCandidate {
+  id: string;
+  pnl: string;
+  contracts: number;
+  entryTime: Date;
+  symbol: string;
+}
+
+export interface PerTradeMatchResult {
+  perTradeCheckedCount: number;
+  perTradeMismatchCount: number;
+  perTradeMismatchTradeIds: string[];
+  perTradeUnmatchedCount: number;
+}
+
 /**
- * Today's date as UTC midnight (recon date boundary).
+ * Per-trade windowed join between paper trades and their broker-tape
+ * (production_trades) counterpart, within ±BAR_WINDOW_MINUTES of the paper
+ * trade's entry bar_timestamp — the check this file's header docstring has
+ * always described, but which the day-level SUM aggregate in evaluateStrategy()
+ * did NOT actually implement (`barWindowMs` was computed and never referenced).
+ *
+ * Why this matters: the day-SUM aggregate nets offsetting per-trade errors to
+ * zero. Trade A paper +$500 vs broker +$300 (+$200 error) and trade B paper
+ * -$200 vs broker $0 (-$200 error) sum to a $0 day-level delta — a clean
+ * "success" while BOTH trades are individually wrong by more than tolerance.
+ * This function evaluates each trade's OWN tolerance
+ * (MAX(0.50, 2*tick*qty), same formula as the day-aggregate) independently, so
+ * an offsetting-error pair is caught even when the aggregate looks clean.
+ *
+ * Greedy nearest-match: each production_trades row is consumed by at most one
+ * paper trade (closest in time, sorted by paper trade entryTime ascending —
+ * deterministic run-to-run), so one broker row can never silently "cover" for
+ * more than one paper trade's drift. A trade with no production_trades row
+ * within the window counts as `perTradeUnmatchedCount` (distinct from a
+ * mismatch — nothing was compared, so nothing can be asserted wrong).
+ */
+export function matchPerTradeBrokerRows(
+  paperTrades: PerTradeCandidate[],
+  productionRows: PerTradeBrokerRow[],
+  barWindowMs: number
+): PerTradeMatchResult {
+  const used = new Set<number>();
+  let perTradeMismatchCount = 0;
+  const perTradeMismatchTradeIds: string[] = [];
+  let perTradeUnmatchedCount = 0;
+  let perTradeCheckedCount = 0;
+
+  const sortedTrades = [...paperTrades].sort(
+    (a, b) => a.entryTime.getTime() - b.entryTime.getTime()
+  );
+
+  for (const trade of sortedTrades) {
+    let best: PerTradeBrokerRow | null = null;
+    let bestDeltaMs = Infinity;
+
+    for (const row of productionRows) {
+      if (used.has(row.id)) continue;
+      // expected_pnl unpopulated by design (broker-router pre server-mediated
+      // execution) — cannot compare; skip rather than coalesce NULL→$0, which
+      // would turn any real paper P&L into a false per-trade mismatch.
+      if (row.expectedPnl === null) continue;
+      const deltaMs = Math.abs(row.barTimestamp.getTime() - trade.entryTime.getTime());
+      if (deltaMs <= barWindowMs && deltaMs < bestDeltaMs) {
+        best = row;
+        bestDeltaMs = deltaMs;
+      }
+    }
+
+    if (!best) {
+      perTradeUnmatchedCount++;
+      continue;
+    }
+
+    used.add(best.id);
+    perTradeCheckedCount++;
+
+    const paperPnl = Number(trade.pnl);
+    const brokerPnl = Number(best.expectedPnl);
+    const delta = Math.abs(paperPnl - brokerPnl);
+    const tolerance = computePnlTolerance(trade.symbol, trade.contracts || 1);
+
+    if (delta > tolerance) {
+      perTradeMismatchCount++;
+      perTradeMismatchTradeIds.push(trade.id);
+    }
+  }
+
+  return {
+    perTradeCheckedCount,
+    perTradeMismatchCount,
+    perTradeMismatchTradeIds,
+    perTradeUnmatchedCount,
+  };
+}
+
+/**
+ * CME futures-trading-day boundaries for the day `reconDate` falls into.
+ *
+ * deep-scan round 2 HIGH-2: this previously bucketed by RAW UTC calendar day
+ * (Date.UTC(y,m,d)..+86_400_000), NOT the canonical CME 5pm-ET trading-day
+ * rollover the rest of the system (kill-switch DLL, daily-trade-cap, paper
+ * P&L attribution via paper-risk-gate.ts::toFuturesTradingDayString()) uses.
+ * A trade closed 17:00-23:59 ET belongs to the NEXT calendar day's trading
+ * session — raw-UTC bucketing compared this recon against a DIFFERENT trade
+ * population than the one every other daily gate attributes it to. Delegates
+ * to reconciliation-service.ts's getCmeTradingDayBoundaries() (single source
+ * of truth shared by both recon subsystems) instead of re-deriving locally.
  */
 function reconDayBoundaries(reconDate: Date): { dayStart: Date; dayEnd: Date } {
-  const dayStart = new Date(
-    Date.UTC(reconDate.getUTCFullYear(), reconDate.getUTCMonth(), reconDate.getUTCDate())
-  );
-  const dayEnd = new Date(dayStart.getTime() + 86_400_000);
+  const { dayStart, dayEnd } = getCmeTradingDayBoundaries(reconDate);
   return { dayStart, dayEnd };
 }
 
@@ -655,7 +787,8 @@ export async function runPaperJournalRecon(
   reconDate: Date = new Date()
 ): Promise<PaperJournalReconResult> {
   const correlationId = randomUUID();
-  const reconDateStr = reconDate.toISOString().slice(0, 10);
+  // deep-scan round 2 HIGH-2: canonical CME trading-day string, not a raw UTC slice.
+  const reconDateStr = toCmeTradingDayString(reconDate);
   const { dayStart, dayEnd } = reconDayBoundaries(reconDate);
 
   logger.info(
@@ -759,37 +892,86 @@ export async function runPaperJournalRecon(
     ]);
 
   // ── Aggregate ─────────────────────────────────────────────────────────────
+  // deep-scan round 2 HIGH-1: strategiesWithMismatch/hasDrift now ALSO trip on
+  // perTradeMismatchDetected — an offsetting-error pair can leave countMismatch
+  // and pnlDriftExceedsTolerance both false (the day-SUM aggregates cancel out)
+  // while individual trades are genuinely wrong. Without this, hasDrift=false
+  // would still read as "clean" even though the per-trade join below caught it.
   const strategiesWithMismatch = results.filter(
-    (r) => r.countMismatch || r.pnlDriftExceedsTolerance
+    (r) => r.countMismatch || r.pnlDriftExceedsTolerance || r.perTradeMismatchDetected
   ).length;
   const strategiesWithMissingBrokerData = results.filter((r) => r.missingBrokerData).length;
   const hasDrift = strategiesWithMismatch > 0;
 
   // ── Write audit rows ──────────────────────────────────────────────────────
-  if (hasDrift) {
-    const mismatchedResults = results.filter((r) => r.countMismatch || r.pnlDriftExceedsTolerance);
+  // Preserves the ORIGINAL if/else-if/else-if exclusivity (hasDrift vs missing-
+  // broker-data branches) — hasDrift now ALSO trips on perTradeMismatchDetected
+  // (see strategiesWithMismatch above), so this outer branch's gating is
+  // unchanged; only its INSIDE is split into two DISTINCT audit/alert writers
+  // per HIGH-1 (day-aggregate mismatch and per-trade offsetting-error mismatch
+  // are independent signals — a day can have one, the other, or both).
+  const aggregateMismatchedResults = results.filter(
+    (r) => r.countMismatch || r.pnlDriftExceedsTolerance
+  );
+  const perTradeMismatchedResults = results.filter((r) => r.perTradeMismatchDetected);
 
-    for (const r of mismatchedResults) {
-      await writeAuditRow({
-        action: "paper_reconciliation.mismatch_detected",
-        status: "critical",
-        correlationId,
-        payload: {
-          reconDate: reconDateStr,
-          strategy_id: r.strategyId,
-          symbol: r.symbol,
-          expected_count: r.paperTradeCount,
-          actual_count: r.brokerTradeCount,
-          pnl_diff_dollars: r.pnlDriftDollars,
-          drift_threshold: r.pnlTolerance,
-          count_mismatch: r.countMismatch,
-          pnl_drift_exceeds_tolerance: r.pnlDriftExceedsTolerance,
-          trade_ids: r.tradeIds,
-        },
-      });
+  if (hasDrift) {
+    // Day-aggregate mismatch (count parity + day-SUM P&L drift) — the ORIGINAL
+    // recon signal. Still meaningful (whole-day count drift, non-offsetting
+    // P&L drift) but no longer the only one contributing to hasDrift.
+    if (aggregateMismatchedResults.length > 0) {
+      for (const r of aggregateMismatchedResults) {
+        await writeAuditRow({
+          action: "paper_reconciliation.mismatch_detected",
+          status: "critical",
+          correlationId,
+          payload: {
+            reconDate: reconDateStr,
+            strategy_id: r.strategyId,
+            symbol: r.symbol,
+            expected_count: r.paperTradeCount,
+            actual_count: r.brokerTradeCount,
+            pnl_diff_dollars: r.pnlDriftDollars,
+            drift_threshold: r.pnlTolerance,
+            count_mismatch: r.countMismatch,
+            pnl_drift_exceeds_tolerance: r.pnlDriftExceedsTolerance,
+            trade_ids: r.tradeIds,
+          },
+        });
+      }
+
+      fireCriticalAlert(reconDateStr, aggregateMismatchedResults);
     }
 
-    fireCriticalAlert(reconDateStr, mismatchedResults);
+    // deep-scan round 2 HIGH-1: per-trade windowed-join mismatch — DISTINCT
+    // audit action + alert from the day-aggregate above. Fires whenever ANY
+    // individual trade's |paper_pnl - broker_pnl| exceeds its OWN per-trade
+    // tolerance — exactly the offsetting-error case the day-SUM aggregate
+    // cannot see (it can be non-empty even when aggregateMismatchedResults is
+    // empty, since that's the whole point of this fix).
+    if (perTradeMismatchedResults.length > 0) {
+      for (const r of perTradeMismatchedResults) {
+        await writeAuditRow({
+          action: "paper_reconciliation.per_trade_mismatch_detected",
+          status: "critical",
+          correlationId,
+          payload: {
+            reconDate: reconDateStr,
+            strategy_id: r.strategyId,
+            symbol: r.symbol,
+            per_trade_checked_count: r.perTradeCheckedCount,
+            per_trade_mismatch_count: r.perTradeMismatchCount,
+            per_trade_mismatch_trade_ids: r.perTradeMismatchTradeIds,
+            per_trade_unmatched_count: r.perTradeUnmatchedCount,
+            day_aggregate_pnl_drift_dollars: r.pnlDriftDollars,
+            day_aggregate_exceeds_tolerance: r.pnlDriftExceedsTolerance,
+            bar_window_minutes: PAPER_RECON_CONFIG.BAR_WINDOW_MINUTES,
+          },
+        });
+      }
+
+      firePerTradeCriticalAlert(reconDateStr, perTradeMismatchedResults);
+    }
   } else if (strategiesWithMissingBrokerData > 0 && !brokerTapeSourceActive) {
     // deepscan14 C1: production_trades has NEVER been populated (checked once,
     // system-wide, above) — every "missing broker data" result below is a
@@ -1010,6 +1192,11 @@ async function evaluateStrategy(
       brokerPnlUnavailable: false,
       missingBrokerData: false,
       tradeIds: [],
+      perTradeCheckedCount: 0,
+      perTradeMismatchCount: 0,
+      perTradeMismatchTradeIds: [],
+      perTradeUnmatchedCount: 0,
+      perTradeMismatchDetected: false,
     };
   }
 
@@ -1125,6 +1312,55 @@ async function evaluateStrategy(
     }
   }
 
+  // ── 6. Per-trade windowed join (deep-scan round 2 HIGH-1) ───────────────
+  // Independent of missingBrokerData/countMismatch/pnlDriftExceedsTolerance
+  // above (all day-level SUM aggregates, which offsetting per-trade errors
+  // can net to zero). Runs whenever there are paper trades to check —
+  // production_trades rows outside the ±barWindowMs window from a given
+  // trade's entryTime simply won't match, correctly surfacing as "unmatched"
+  // rather than a false pass. Padding the query window by ±barWindowMs
+  // around [dayStart, dayEnd) catches trades whose entryTime sits near the
+  // trading-day boundary but whose broker counterpart landed just outside it.
+  let perTradeResult: PerTradeMatchResult = {
+    perTradeCheckedCount: 0,
+    perTradeMismatchCount: 0,
+    perTradeMismatchTradeIds: [],
+    perTradeUnmatchedCount: 0,
+  };
+  try {
+    const productionRowsForJoin = await db
+      .select({
+        id: productionTrades.id,
+        barTimestamp: productionTrades.barTimestamp,
+        expectedPnl: productionTrades.expectedPnl,
+      })
+      .from(productionTrades)
+      .where(
+        and(
+          eq(productionTrades.strategyId, strategy.id),
+          gte(productionTrades.barTimestamp, new Date(dayStart.getTime() - barWindowMs)),
+          lt(productionTrades.barTimestamp, new Date(dayEnd.getTime() + barWindowMs))
+        )
+      );
+
+    perTradeResult = matchPerTradeBrokerRows(
+      paperTradeRows.map((t) => ({
+        id: t.id,
+        pnl: t.pnl,
+        contracts: t.contracts,
+        entryTime: t.entryTime,
+        symbol: strategy.symbol,
+      })),
+      productionRowsForJoin as unknown as PerTradeBrokerRow[],
+      barWindowMs
+    );
+  } catch (err) {
+    logger.warn({ err, strategyId: strategy.id }, "paper-journal-recon: per-trade broker join failed");
+    // Fail-soft on the per-trade check specifically — the day-aggregate check
+    // above already ran and remains the fallback signal; a per-trade query
+    // error must not mask an otherwise-successful day-level evaluation.
+  }
+
   return {
     strategyId: strategy.id,
     strategyName: strategy.name,
@@ -1139,6 +1375,11 @@ async function evaluateStrategy(
     brokerPnlUnavailable,
     missingBrokerData,
     tradeIds,
+    perTradeCheckedCount: perTradeResult.perTradeCheckedCount,
+    perTradeMismatchCount: perTradeResult.perTradeMismatchCount,
+    perTradeMismatchTradeIds: perTradeResult.perTradeMismatchTradeIds,
+    perTradeUnmatchedCount: perTradeResult.perTradeUnmatchedCount,
+    perTradeMismatchDetected: perTradeResult.perTradeMismatchCount > 0,
   };
 }
 
@@ -1162,6 +1403,11 @@ function buildErrorResult(
     brokerPnlUnavailable: true,
     missingBrokerData: true,
     tradeIds: [],
+    perTradeCheckedCount: 0,
+    perTradeMismatchCount: 0,
+    perTradeMismatchTradeIds: [],
+    perTradeUnmatchedCount: 0,
+    perTradeMismatchDetected: false,
   };
 }
 
@@ -1228,5 +1474,56 @@ function fireCriticalAlert(
     `[PAPER RECON] Drift detected on ${reconDateStr}`,
     body,
     { reconDate: reconDateStr, mismatchCount: count, strategies: strategyList }
+  );
+}
+
+/**
+ * deep-scan round 2 HIGH-1: distinct Discord CRITICAL for per-trade offsetting-
+ * error drift — separate from fireCriticalAlert (the day-aggregate signal)
+ * because the whole point of this check is that it can fire when the
+ * day-aggregate looks clean (offsetting errors net to $0 in the day-SUM).
+ * The operator needs to know THAT distinction, not just "drift detected".
+ */
+function firePerTradeCriticalAlert(
+  reconDateStr: string,
+  perTradeMismatchedResults: ReadonlyArray<{
+    strategyId: string;
+    symbol: string;
+    perTradeMismatchCount: number;
+    perTradeMismatchTradeIds: string[];
+  }>
+): void {
+  const strategyCount = perTradeMismatchedResults.length;
+  const totalMismatchedTrades = perTradeMismatchedResults.reduce(
+    (sum, r) => sum + r.perTradeMismatchCount,
+    0
+  );
+  const strategyList = perTradeMismatchedResults.map((r) => r.strategyId).join(", ");
+
+  const operatorBody =
+    `Paper journal PER-TRADE reconciliation drift on ${reconDateStr}. ` +
+    `${totalMismatchedTrades} individual trade(s) across ${strategyCount} strategy/strategies exceeded ` +
+    `per-trade P&L tolerance vs the broker tape, within a ${PAPER_RECON_CONFIG.BAR_WINDOW_MINUTES}-minute ` +
+    `bar_timestamp window: ${strategyList}. This check exists specifically because OFFSETTING per-trade ` +
+    `errors can net to zero in the day-level sum — the day-aggregate check may show no drift even while ` +
+    `this fires. Review audit_log action=paper_reconciliation.per_trade_mismatch_detected for full payload.`;
+
+  const body = appendFamilyGradePostscript(
+    operatorBody,
+    "The bot's recorded trades don't match the broker's numbers on a trade-by-trade basis, " +
+    "even though the daily total looked fine. Some individual trades may be wrong in ways that cancel out overall.",
+    "Don't panic — no money has been lost yet. " +
+    "Tell the operator (Tonio) so he can check the bot's individual trade history vs the broker dashboard."
+  );
+
+  notifyCritical(
+    `[PAPER RECON] Per-trade drift detected on ${reconDateStr}`,
+    body,
+    {
+      reconDate: reconDateStr,
+      strategyCount,
+      totalMismatchedTrades,
+      strategies: strategyList,
+    }
   );
 }
