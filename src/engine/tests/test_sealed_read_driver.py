@@ -20,6 +20,9 @@ import pytest
 from src.engine.extraction import sealed_read_driver as srd
 from src.engine.extraction.sealed_read_driver import (
     ECONOMICS_CEILING,
+    FUSED_WITNESS_CID,
+    IYF_WITNESS_CID,
+    REHEARSAL_SPENT_VIDEOS,
     SCOPE_LINES,
     VIDEO_CLEAN_BAR,
     ArtifactsMissingError,
@@ -27,16 +30,21 @@ from src.engine.extraction.sealed_read_driver import (
     ExtractionSourceMissing,
     RaterLayerNotReady,
     ReaderIdentityMismatch,
+    RehearsalManifestMismatch,
     SealedReadDriver,
     VerdictNotReady,
     _dispatch_two_stage_packet,
     _enum_stability,
     _stage1_view,
+    _write_spent_rehearsal_manifest,
     assert_dispatch_identity,
     assert_reader_identity,
     certified_reader_identity,
+    rehearsal_drift_guard,
+    rehearsal_instrument_shas,
     require_artifacts_on_disk,
     run_extraction_stage,
+    run_full_dress_rehearsal,
     run_panels_and_certify_stage,
     run_rater_layer_stage,
     run_verdict_stage,
@@ -1871,3 +1879,263 @@ def test_e_full_compose_missing_validity_input_is_invalid(tmp_path):
     assert set(res["verdict"]["validity"]["missing_or_unverified"]) >= {
         "registration_pre_check", "engagement_pre_check", "epoch_read_once", "instrument_sha_stamps",
     }
+
+
+# =========================================================================== #
+# MODULE F — FULL-DRESS REHEARSAL + INDEPENDENT RE-VERIFY + DRIFT GUARD
+#   (ratify-packet items 7/10/11). THE CAPSTONE. Drives the REAL A->E driver over
+#   the 3 spent videos, threads BOTH witnesses BOTH axes through the pipeline,
+#   demonstrates mixed-video rollup, re-verifies, and guards drift. No live call.
+# =========================================================================== #
+
+
+def _spent_manifest(tmp_path):
+    """A spent-video manifest listing exactly the 3 design-pool videos (what
+    run_full_dress_rehearsal drives A->E)."""
+    return _write_spent_rehearsal_manifest(
+        str(tmp_path / "spent-rehearsal.json"), list(REHEARSAL_SPENT_VIDEOS)
+    )
+
+
+# --------------------------------------------------------------------------- #
+# (a) ★ full-dress rehearsal A->E over the 3 spent videos: every stage exercised,
+#     a verdict produced, rehearsal_pass computed.
+# --------------------------------------------------------------------------- #
+
+
+def test_f_full_dress_rehearsal_exercises_every_stage(tmp_path):
+    rep = run_full_dress_rehearsal(
+        _spent_manifest(tmp_path), mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    receipts = rep["stage_receipts"]
+    # EVERY stage provably exercised (a missing stage would leave exercised=False).
+    for stage in ("gate", "extraction", "panels_and_certificate", "rater_layer", "verdict"):
+        assert receipts[stage]["exercised"] is True, f"stage {stage} not exercised"
+    assert receipts["all_exercised"] is True
+    # the real A->E verdict over the 3 spent videos (each yields >=1 CLEAN -> 3/3).
+    v = rep["verdict"]
+    assert v["validity_valid"] is True
+    assert v["verdict"] == "FIDELITY_PASS"
+    assert v["video_unit"]["n_videos"] == 3
+    assert v["video_unit"]["clean_videos"] == 3
+    assert v["video_unit"]["video_clean_fraction"] == 1.0
+    assert v["meets_bar"] is True
+    assert v["scope_lines"] == list(SCOPE_LINES)
+    # extraction stamped the certified reader tag; C produced 7 certificates.
+    assert receipts["extraction"]["evidence"]["reader_tag"] == "efa377d6"
+    assert receipts["panels_and_certificate"]["evidence"]["n_certificates"] == 7
+    assert rep["rehearsal_pass"] is True
+    assert rep["failures"] == []
+
+
+def test_f_rehearsal_rejects_wrong_manifest(tmp_path):
+    """The capstone drives the 3 spent design-pool videos; a manifest that is not
+    those 3 fails closed (never silently rehearsed)."""
+    wrong = _write_spent_rehearsal_manifest(
+        str(tmp_path / "wrong.json"), ["2DXQqwKSwJE", "DLwVqcLRcfw"]  # only 2
+    )
+    with pytest.raises(RehearsalManifestMismatch):
+        run_full_dress_rehearsal(wrong, mode="rehearsal", out_dir=str(tmp_path / "out"))
+
+
+# --------------------------------------------------------------------------- #
+# (b) ★ R5L890-FUSED witness -> conflation REJECT, reaches verdict not-clean.
+# --------------------------------------------------------------------------- #
+
+
+def test_f_fused_witness_conflation_reject_reaches_verdict_not_clean(tmp_path):
+    rep = run_full_dress_rehearsal(
+        _spent_manifest(tmp_path), mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    fused = rep["witnesses"]["fused_conflation_axis"]
+    assert fused["cid"] == FUSED_WITNESS_CID
+    assert fused["axis"] == "conflation"
+    # certificate REJECTED on the CONFLATION axis through the real C->D->E path.
+    assert fused["conflation_disposition"] == "REJECT"
+    assert fused["terminal_read_grade"] == "REJECTED"
+    # reaches the verdict stage as not-clean.
+    assert fused["reached_verdict"] is True
+    assert fused["reached_verdict_not_clean"] is True
+    assert fused["rejected_on_axis"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (c) ★ IyF witness -> enum FAIL, not-clean (conflation axis isolated PASS).
+# --------------------------------------------------------------------------- #
+
+
+def test_f_iyf_witness_enum_reject_reaches_verdict_not_clean(tmp_path):
+    rep = run_full_dress_rehearsal(
+        _spent_manifest(tmp_path), mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    iyf = rep["witnesses"]["iyf_enum_axis"]
+    assert iyf["cid"] == IYF_WITNESS_CID
+    assert iyf["axis"] == "enumeration_consistency"
+    # conflation axis ISOLATED (PASS) while the enum axis ALONE fails -> REJECTED,
+    # through the FULL A->E pipeline (not just the fence).
+    assert iyf["conflation_disposition"] == "PASS"
+    assert iyf["enum_disposition"] == "FAIL"
+    assert iyf["terminal_read_grade"] == "REJECTED"
+    assert iyf["reached_verdict"] is True
+    assert iyf["reached_verdict_not_clean"] is True
+    assert iyf["rejected_on_axis"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (d) ★ mixed-video rollup end-to-end: >=2 strategies, exactly one clean -> CLEAN.
+# --------------------------------------------------------------------------- #
+
+
+def test_f_mixed_video_rollup_exactly_one_clean_counts_clean(tmp_path):
+    rep = run_full_dress_rehearsal(
+        _spent_manifest(tmp_path), mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    mixed = rep["mixed_video_rollup"]
+    assert mixed["available"] is True
+    # constructed from REAL spent certs: 2 strategies, exactly ONE clean.
+    assert mixed["n_strategies"] == 2
+    assert mixed["n_clean_strategies"] == 1
+    # the >=1 rule (R-017 pin-2) -> the video rolls up CLEAN through run_verdict_stage.
+    assert mixed["rolls_up_clean"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (e) independent re-verify: recompute-from-artifacts == first verdict.
+# --------------------------------------------------------------------------- #
+
+
+def test_f_independent_reverify_matches_first_verdict(tmp_path):
+    rep = run_full_dress_rehearsal(
+        _spent_manifest(tmp_path), mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    rv = rep["independent_reverify"]
+    # a full REPLAY of A->E reproduces the verdict (determinism), AND an independent
+    # recompute of the fraction/bar from the persisted per-video rows matches.
+    assert rv["replay_match"] is True
+    assert rv["independent_recompute_match"] is True
+    assert rv["recomputed_video_clean_fraction"] == rep["verdict"]["video_unit"]["video_clean_fraction"]
+    assert rv["ok"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (f) drift guard: identical SHAs -> ok; a changed instrument SHA -> drifted=True.
+# --------------------------------------------------------------------------- #
+
+
+def test_f_drift_guard_identical_ok_changed_flags_drift():
+    shas = rehearsal_instrument_shas(driver_commit="abc123", frozen_scan_commit="def456")
+    # identical green vs read-day -> ok, no drift, witness re-run NOT required.
+    same = rehearsal_drift_guard(shas, shas)
+    assert same["ok"] is True
+    assert same["drifted"] is False
+    assert same["drifted_surfaces"] == []
+    assert same["witness_rerun_required"] is False
+    # flip ONE instrument-surface SHA (the certified reader prompt) -> drift flagged.
+    mutated = dict(shas)
+    mutated["frontier_prompt_sha"] = "CHANGED-" + str(mutated["frontier_prompt_sha"])
+    changed = rehearsal_drift_guard(shas, mutated)
+    assert changed["drifted"] is True
+    assert changed["ok"] is False
+    assert "frontier_prompt_sha" in changed["drifted_surfaces"]
+    # a changed SHA MANDATES re-running the witness pair before the seal breaks.
+    assert changed["witness_rerun_required"] is True
+
+
+def test_f_drift_guard_dropped_surface_is_drift():
+    """Fail-closed: a surface present at green but ABSENT at read-day (a dropped /
+    renamed instrument) counts as drift, never a silent match."""
+    shas = rehearsal_instrument_shas(driver_commit="abc123", frozen_scan_commit="def456")
+    dropped = dict(shas)
+    del dropped["enumerator_prompt_sha"]
+    res = rehearsal_drift_guard(shas, dropped)
+    assert res["drifted"] is True
+    assert "enumerator_prompt_sha" in res["drifted_surfaces"]
+
+
+def test_f_rehearsal_report_carries_both_drift_polarities(tmp_path):
+    """The rehearsal report itself demonstrates BOTH drift polarities (non-vacuous):
+    green==read-day is ok, and a changed-SHA negative probe flags drift."""
+    rep = run_full_dress_rehearsal(
+        _spent_manifest(tmp_path), mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    drift = rep["drift_guard"]
+    assert drift["green_vs_read_day_identical"]["ok"] is True
+    assert drift["green_vs_read_day_identical"]["drifted"] is False
+    assert drift["negative_probe_changed_sha"]["drifted"] is True
+    assert drift["negative_probe_changed_sha"]["ok"] is False
+    assert drift["ok"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (g) NO live call in the rehearsal path: spies threaded through every stage
+#     must NEVER fire (the deterministic rehearsal uses cached inputs only).
+# --------------------------------------------------------------------------- #
+
+
+def test_f_no_live_call_in_rehearsal(tmp_path):
+    rep = run_full_dress_rehearsal(
+        _spent_manifest(tmp_path), mode="rehearsal", out_dir=str(tmp_path / "out")
+    )
+    guard = rep["live_call_guard"]
+    assert guard["no_live_call"] is True
+    assert guard["live_extract_calls"] == 0
+    assert guard["live_panel_calls"] == 0
+    assert guard["rater_calls"] == 0
+    assert guard["violations"] == []
+
+
+def test_f_rehearsal_refuses_sealed_mode(tmp_path):
+    """A full-dress rehearsal is a rehearsal/staging run by construction — the
+    sealed read is NEVER a rehearsal (fail-closed on mode='sealed')."""
+    with pytest.raises(ValueError):
+        run_full_dress_rehearsal(_spent_manifest(tmp_path), mode="sealed", out_dir=str(tmp_path / "o"))
+
+
+def test_f_rehearsal_is_deterministic(tmp_path):
+    """Two independent full-dress rehearsals produce the identical verdict + witness
+    dispositions + mixed rollup (deterministic, replayable)."""
+    a = run_full_dress_rehearsal(_spent_manifest(tmp_path), out_dir=str(tmp_path / "a"))
+    b = run_full_dress_rehearsal(_spent_manifest(tmp_path), out_dir=str(tmp_path / "b"))
+    assert a["verdict"]["video_unit"]["video_clean_fraction"] == b["verdict"]["video_unit"]["video_clean_fraction"]
+    assert a["verdict"]["verdict"] == b["verdict"]["verdict"]
+    assert a["witnesses"]["iyf_enum_axis"]["enum_disposition"] == b["witnesses"]["iyf_enum_axis"]["enum_disposition"]
+    assert a["witnesses"]["fused_conflation_axis"]["conflation_disposition"] == b["witnesses"]["fused_conflation_axis"]["conflation_disposition"]
+    assert a["mixed_video_rollup"]["rolls_up_clean"] == b["mixed_video_rollup"]["rolls_up_clean"]
+    assert a["rehearsal_pass"] == b["rehearsal_pass"] is True
+
+
+def test_f_stage_receipt_is_derived_not_hardcoded():
+    """Regression witness (grader F-1, CRITICAL): the per-stage `exercised` receipt
+    -- the mechanism proving 'no faked stage' -- MUST be derived from each stage's
+    real output marker, never hardcoded. A composed A->E result MISSING a stage's
+    marker => that stage exercised=False => all_exercised=False. If a refactor ever
+    hardcodes exercised=True, this goes RED (the gap that shipped a false 'clean')."""
+    from src.engine.extraction.sealed_read_driver import _stage_receipts
+
+    valid = {
+        "gate": {"allowed": True, "verified": True, "record": {"verify": {"video_ids": ["v1"]}}},
+        "extraction": {
+            "ready": True, "artifact_paths": ["a.json"],
+            "reader_identity": {"source_refs": {"certified_reader_tag": "efa377d6"}},
+        },
+        "panels": {"module": "C", "certificates": [{}]},
+        "rater_layer": {"module": "D", "rater_verdicts": [{}], "n_halted": 0},
+        "verdict": {"module": "E", "verdict": "FIDELITY_PASS", "validity": {"valid": True}},
+    }
+    r = _stage_receipts(valid)
+    assert r["all_exercised"] is True
+    for s in r["stages"]:
+        assert r[s]["exercised"] is True, s
+
+    # Each stage's real marker removed in turn -> exercised False -> all_exercised False.
+    negatives = {
+        "gate": {**valid, "gate": {"allowed": False}},
+        "extraction": {**valid, "extraction": {"ready": False, "artifact_paths": []}},
+        "panels_and_certificate": {**valid, "panels": {"certificates": [{}]}},  # no module=="C"
+        "rater_layer": {**valid, "rater_layer": {"rater_verdicts": [{}]}},       # no module=="D"
+        "verdict": {**valid, "verdict": {"verdict": "FIDELITY_PASS"}},           # no module=="E"
+    }
+    for stage_key, composed in negatives.items():
+        rr = _stage_receipts(composed)
+        assert rr[stage_key]["exercised"] is False, f"{stage_key} should be un-exercised"
+        assert rr["all_exercised"] is False, f"all_exercised must fail when {stage_key} is missing"

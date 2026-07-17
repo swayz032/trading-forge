@@ -71,6 +71,7 @@ import hashlib
 import json
 import os
 import re
+import tempfile
 from collections import Counter
 from collections.abc import Callable
 
@@ -2610,3 +2611,693 @@ def run_verdict_stage(video_certificates, instrument_stamps: dict, mode: str) ->
             "only, read once from Module D's persisted certificates)"
         ),
     }
+
+
+# =========================================================================== #
+# MODULE F — FULL-DRESS REHEARSAL + INDEPENDENT RE-VERIFY + DRIFT GUARD
+#            (ratify-packet items 7, 10, 11).  THE CAPSTONE.
+#
+# Spec: docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md (Module F) +
+# ADVISOR-RULINGS R-015 items 7/10/11 + R-017 pin-2 (BOTH witnesses, BOTH axes,
+# rollup-on-mixed-video).
+#
+# WHAT THIS MODULE DOES — it DRIVES the complete A->E driver end-to-end on the 3
+# spent design-pool videos in staging/rehearsal (no SEAL-GO.token, no live LLM,
+# no network — every stage's rehearsal path uses cached/deterministic inputs) and
+# adds the three capstone guards the earlier fence-only harness
+# (docs/replay-results/h1-scripts/claude-rung-v32/run_dress_rehearsal.py) could
+# not: it supersedes that harness by driving the REAL SealedReadDriver instead of
+# calling pilot_conveyor.finalize_certificate directly.
+#
+#   * item 10 — FULL-DRESS REHEARSAL. run_verdict (gate A -> extraction B ->
+#     panels+cert C -> raters D -> verdict E) over the 3 spent videos, with a
+#     per-stage "exercised" receipt so a MISSING stage is visible (a stage that
+#     never ran leaves receipt.exercised=False -> rehearsal_pass=False).
+#   * ★ R-017 pin-2 BOTH WITNESSES BOTH AXES through the COMPLETE pipeline (not
+#     just the fence): the IyF re-promotion (conflation PASS but SEMANTIC enum
+#     FAIL) drives full A->E and must REJECT on the ENUM axis + reach the verdict
+#     not-clean; the R5L890-FUSED merge-silencing fixture drives C->D->E (it is a
+#     synthetic adversarial, not a pool video, so it enters at Module B's on-disk
+#     artifact exactly as the reference harness threads it) and must REJECT on the
+#     CONFLATION axis + reach the verdict not-clean. Each disposition axis asserted.
+#   * ★ ROLLUP-ON-MIXED-VIDEO end-to-end: a video with 2 strategies where EXACTLY
+#     ONE grades CLEAN — CONSTRUCTED FROM THE SPENT CERTS (a real spent CLEAN
+#     Module-D cert + the real IyF REJECTED Module-D cert grouped under one
+#     video) — rolls up CLEAN through run_verdict_stage (the >=1 rule).
+#   * item 7 — INDEPENDENT RE-VERIFY. The rehearsal verdict is RECOMPUTED from the
+#     persisted stage artifacts two ways (0.5-exam fresh-eyes): a full REPLAY of
+#     A->E (determinism) and an INDEPENDENT recompute of the video-unit fraction /
+#     >=60% bar from the primary verdict's own per-video rows (not re-calling the
+#     verdict stage). Both must match the first verdict.
+#   * item 11 — DRIFT GUARD. :func:`rehearsal_drift_guard` pins the certified
+#     instrument-surface SHAs (reader tag efa377d6, frontier + enumerator prompt
+#     SHAs, reader model id, frozen-scan / driver commits); ANY surface that
+#     differs between "green" and "read-day" => drift => the witness pair MUST be
+#     re-run before the seal breaks.
+#
+# FROZEN INSTRUMENTS reused READ-ONLY (never rewritten): Modules A-E above,
+# ``terminal_read_grade`` / ``pilot_conveyor`` / the certified reader /
+# ``h1_pilot_phase3_finalize.py``. The injected live seams (live_extract_fn /
+# live_panel_fn / rater_fn) stay UNUSED in rehearsal — spies threaded here MUST
+# NOT fire (test (g)).
+# =========================================================================== #
+
+#: The 3 spent design-pool videos the capstone rehearsal drives A->E (ratify
+#: packet Module F: 2DX, DLwVqc, R5L890). Deterministic, already-spent.
+REHEARSAL_SPENT_VIDEOS = ("2DXQqwKSwJE", "DLwVqcLRcfw", "R5L890juvRw")
+
+#: The five pipeline stages a full-dress rehearsal must PROVABLY exercise.
+_PIPELINE_STAGES = ("gate", "extraction", "panels_and_certificate", "rater_layer", "verdict")
+
+#: The standing adversarial witnesses (R-017 pin-2: both witnesses, both axes).
+#: IyF re-promotion — a REAL spent video (conflation PASS, SEMANTIC enum FAIL) ->
+#: REJECT on the ENUM axis through the full A->E path.
+IYF_WITNESS_VIDEO = "IyFioFkRgWo"
+IYF_WITNESS_CID = "IyFioFkRgWo__s0"
+#: R5L890-FUSED merge-silencing fixture — a SYNTHETIC adversarial (conflation
+#: REJECT) -> REJECT on the CONFLATION axis through C->D->E (it is not a pool
+#: video, so it enters at Module B's on-disk artifact, as the reference harness
+#: threads it). Its calibrated conflation grade cid is CAL_R5L890_FUSED.
+FUSED_WITNESS_CID = "CAL_R5L890_FUSED"
+FUSED_FIXTURE_BASENAME = "R5L890_FUSED_reject.json"
+_CONFLATION_FIXTURES_SUBDIR = "conflation_fixtures"
+
+
+class RehearsalManifestMismatch(RuntimeError):
+    """Raised (fail-closed) when the rehearsal manifest is not exactly the 3 spent
+    design-pool videos — the capstone drives A->E on THOSE videos; a wrong manifest
+    is never silently rehearsed."""
+
+
+# --------------------------------------------------------------------------- #
+# Small deterministic helpers (no network, no wall-clock).
+# --------------------------------------------------------------------------- #
+
+
+def _write_spent_rehearsal_manifest(path: str, video_ids: list[str]) -> str:
+    """Write a staging-mode manifest (non-sealed basename, sha-self-consistent per
+    Module A's frozen method) for SPENT videos — the kind Module A's staging gate
+    accepts. Never writes the sealed-12 basename; never used for a sealed read."""
+    ids = sorted(video_ids)
+    payload = "\n".join(ids).encode("utf-8")
+    manifest = {
+        "artifact": "h1-rehearsal-spent-manifest",
+        "sealed_sha256": hashlib.sha256(payload).hexdigest(),
+        "sealed_sha256_method": "sha256 over the newline-joined sorted video_id list.",
+        "videos": [{"video_id": v} for v in ids],
+    }
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as fh:
+        json.dump(manifest, fh)
+    return path
+
+
+def _write_witness_extraction_artifact(out_dir: str, video_id: str, cid: str, strategy: dict) -> str:
+    """Write a minimal Module-B on-disk extraction artifact (``per_strategy_artifacts``
+    shape :func:`_strategy_pairs` consumes) so a SYNTHETIC witness (the FUSED
+    fixture, not a pool video) enters the REAL Module C->D->E path exactly as a
+    pool video's Module-B output would. Never fabricates a grade — only the
+    extraction the certified panels are then read against."""
+    os.makedirs(out_dir, exist_ok=True)
+    path = os.path.join(out_dir, f"{video_id}.extraction.json")
+    art = {
+        "artifact": "h1-sealed-read-extraction",
+        "video_id": video_id,
+        "per_strategy_artifacts": [{"cid": cid, "extraction": {"strategies": [strategy]}}],
+    }
+    _atomic_write(path, art)
+    return path
+
+
+def _module_d_stage(per_video: dict, mode: str) -> dict:
+    """Wrap a per-video map of REAL Module-D rows into a ready Module-D stage dict
+    (the exact shape :func:`run_rater_layer_stage` returns and
+    :func:`run_verdict_stage` consumes) — used to roll a CONSTRUCTED mixed video
+    (real spent certs) up through the REAL verdict stage."""
+    flat = [r for rows in per_video.values() for r in rows]
+    return {
+        "stage": "rater_layer",
+        "module": "D",
+        "mode": mode,
+        "ready": True,
+        "n_strategies": len(flat),
+        "rater_verdicts": flat,
+        "per_video_rater_verdicts": per_video,
+    }
+
+
+def _make_live_call_spies() -> tuple[dict, Callable, Callable, Callable]:
+    """Build the NO-LIVE-CALL spies (test (g)): live_extract_fn / live_panel_fn /
+    rater_fn that RAISE if ever invoked. Threaded through every rehearsal call; the
+    rehearsal/staging code paths use cached/deterministic inputs, so a spy firing
+    means a live seam leaked into the deterministic rehearsal (a HARD failure)."""
+    counters = {"live_extract": 0, "live_panel": 0, "rater": 0, "violations": []}
+
+    def _spy(kind: str) -> Callable:
+        def fn(*_args, **_kwargs):  # pragma: no cover - firing IS the failure
+            counters[kind] += 1
+            counters["violations"].append(kind)
+            raise AssertionError(
+                f"LIVE-CALL VIOLATION: {kind} seam invoked in the deterministic "
+                "rehearsal path (rehearsal must be cached/deterministic — no network)"
+            )
+
+        return fn
+
+    return counters, _spy("live_extract"), _spy("live_panel"), _spy("rater")
+
+
+def _stage_receipts(composed: dict) -> dict:
+    """Per-stage EXERCISED receipt over a composed A->E ``run_verdict`` result so a
+    MISSING stage is visible (item 10). Each stage records whether it provably ran
+    + terse evidence; ``all_exercised`` is the AND over the five stages."""
+    gate = composed.get("gate") or {}
+    extraction = composed.get("extraction") or {}
+    panels = composed.get("panels") or {}
+    rater = composed.get("rater_layer") or {}
+    verdict = composed.get("verdict") or {}
+    receipts = {
+        "gate": {
+            "exercised": bool(gate.get("allowed")),
+            "evidence": {
+                "allowed": gate.get("allowed"),
+                "verified": gate.get("verified"),
+                "n_videos": len((((gate.get("record") or {}).get("verify") or {}).get("video_ids")) or []),
+            },
+        },
+        "extraction": {
+            "exercised": bool(extraction.get("ready") and extraction.get("artifact_paths")),
+            "evidence": {
+                "ready": extraction.get("ready"),
+                "n_artifacts_on_disk": len(extraction.get("artifact_paths") or []),
+                "reader_tag": ((extraction.get("reader_identity") or {}).get("source_refs") or {}).get(
+                    "certified_reader_tag"
+                ),
+            },
+        },
+        "panels_and_certificate": {
+            "exercised": bool(panels.get("module") == "C" and panels.get("certificates")),
+            "evidence": {
+                "module": panels.get("module"),
+                "n_certificates": len(panels.get("certificates") or []),
+            },
+        },
+        "rater_layer": {
+            "exercised": bool(rater.get("module") == "D" and rater.get("rater_verdicts")),
+            "evidence": {
+                "module": rater.get("module"),
+                "n_adjudicated": len(rater.get("rater_verdicts") or []),
+                "n_halted": rater.get("n_halted"),
+            },
+        },
+        "verdict": {
+            "exercised": bool(verdict.get("module") == "E"),
+            "evidence": {
+                "module": verdict.get("module"),
+                "verdict": verdict.get("verdict"),
+                "validity_valid": (verdict.get("validity") or {}).get("valid"),
+            },
+        },
+    }
+    receipts["all_exercised"] = all(
+        receipts[s]["exercised"] for s in _PIPELINE_STAGES
+    )
+    receipts["stages"] = list(_PIPELINE_STAGES)
+    return receipts
+
+
+def _per_video_clean_map(composed: dict) -> dict:
+    """The {video_id: clean-bool} map from a composed verdict's video-unit rollup —
+    the deterministic fingerprint the replay re-verify compares."""
+    per_video = ((composed.get("verdict") or {}).get("video_unit") or {}).get("per_video") or []
+    return {e["video_id"]: e["clean"] for e in per_video}
+
+
+def rehearsal_instrument_shas(
+    driver_commit: str | None = None, frozen_scan_commit: str | None = None
+) -> dict:
+    """The instrument-surface SHA map the drift guard pins (item 11). Reads the
+    certified-reader identity AT RUNTIME from the frozen files (R-016/R-018 law:
+    pointed-at, never hand-transcribed) — the certified reader tag (efa377d6), the
+    frontier + enumerator prompt SHAs (sha256 of the on-disk prompt files), and the
+    reader model id — plus the frozen-scan / driver commits (seal-day injected)."""
+    ri = certified_reader_identity()
+    return {
+        "certified_reader_tag": (ri.get("source_refs") or {}).get("certified_reader_tag"),
+        "reader_model_id": ri.get("model_id"),
+        "frontier_prompt_sha": ri.get("prompt_sha"),
+        "enumerator_prompt_sha": ri.get("enumerator_sha"),
+        "frozen_scan_commit": frozen_scan_commit,
+        "driver_commit": driver_commit,
+    }
+
+
+def rehearsal_drift_guard(pinned_shas: dict, current_shas: dict) -> dict:
+    """DRIFT GUARD (ratify-packet item 11): compare the pinned certified
+    instrument-surface SHAs ("green") against the read-day SHAs. ANY surface whose
+    SHA differs => drift => the standing witness pair (IyF enum REJECT +
+    R5L890-FUSED conflation REJECT) MUST be re-run before the seal breaks.
+
+    Returns ``{ok, drifted, drifted_surfaces, detail, witness_rerun_required}``:
+    ``drifted`` is the boolean the caller gates on (True iff >=1 surface changed);
+    ``drifted_surfaces`` names which. Fail-closed: a surface present on one side but
+    absent on the other counts as drift (a dropped/renamed instrument is drift)."""
+    pinned = pinned_shas if isinstance(pinned_shas, dict) else {}
+    current = current_shas if isinstance(current_shas, dict) else {}
+    surfaces = sorted(set(pinned) | set(current))
+    detail: dict = {}
+    drifted_surfaces: list[str] = []
+    for name in surfaces:
+        p = pinned.get(name)
+        c = current.get(name)
+        changed = p != c
+        detail[name] = {"pinned": p, "current": c, "changed": changed}
+        if changed:
+            drifted_surfaces.append(name)
+    ok = not drifted_surfaces
+    return {
+        "ok": ok,
+        "drifted": bool(drifted_surfaces),
+        "drifted_surfaces": drifted_surfaces,
+        "n_surfaces": len(surfaces),
+        "detail": detail,
+        "witness_rerun_required": bool(drifted_surfaces),
+        "note": (
+            "all instrument-surface SHAs match between green and read-day"
+            if ok
+            else (
+                "instrument-surface SHA drift detected — the witness pair (IyF enum "
+                "REJECT + R5L890-FUSED conflation REJECT) MUST be re-run before the "
+                "seal breaks (ratify-packet item 11)"
+            )
+        ),
+    }
+
+
+def _thread_iyf_witness(
+    driver: SealedReadDriver,
+    out_dir: str,
+    mode: str,
+    validity_inputs: dict,
+    spies: tuple[Callable, Callable, Callable],
+) -> dict:
+    """IyF re-promotion witness through the COMPLETE A->E pipeline (it is a REAL
+    spent video). Asserts conflation axis ISOLATED (PASS) + enum axis REJECT +
+    reaches the verdict not-clean."""
+    extract_spy, panel_spy, rater_spy = spies
+    manifest = _write_spent_rehearsal_manifest(
+        os.path.join(out_dir, "iyf-witness-manifest.json"), [IYF_WITNESS_VIDEO]
+    )
+    res = driver.run_verdict(
+        manifest,
+        mode=mode,
+        out_dir=os.path.join(out_dir, "iyf-witness"),
+        live_extract_fn=extract_spy,
+        live_panel_fn=panel_spy,
+        rater_fn=rater_spy,
+        **validity_inputs,
+    )
+    cert = next(
+        (r for r in (res["panels"] or {}).get("certificates", []) if r["cid"] == IYF_WITNESS_CID),
+        None,
+    )
+    disp = (cert or {}).get("terminal_read_disposition") or {}
+    video_entry = next(
+        (
+            e
+            for e in ((res["verdict"] or {}).get("video_unit") or {}).get("per_video", [])
+            if e["video_id"] == IYF_WITNESS_VIDEO
+        ),
+        None,
+    )
+    return {
+        "witness": "IyF re-promotion (variant re-promotion of an enumeration-EXCLUDED mention)",
+        "axis": "enumeration_consistency",
+        "path": "full A->E (real spent video through the composed driver)",
+        "cid": IYF_WITNESS_CID,
+        "conflation_disposition": disp.get("conflation_check"),
+        "enum_disposition": disp.get("enumeration_consistency"),
+        "terminal_read_grade": (cert or {}).get("terminal_read_grade"),
+        "reached_verdict": (res["verdict"] or {}).get("module") == "E",
+        "video_clean_at_verdict": (video_entry or {}).get("clean"),
+        "rejected_on_axis": (
+            disp.get("conflation_check") == "PASS"
+            and disp.get("enumeration_consistency") == "FAIL"
+            and (cert or {}).get("terminal_read_grade") == "REJECTED"
+        ),
+        "reached_verdict_not_clean": (video_entry or {}).get("clean") is False,
+    }
+
+
+def _thread_fused_witness(
+    driver: SealedReadDriver,
+    out_dir: str,
+    mode: str,
+    instrument_stamps: dict,
+    spies: tuple[Callable, Callable, Callable],
+) -> dict:
+    """R5L890-FUSED merge-silencing witness through C->D->E (SYNTHETIC adversarial:
+    enters at Module B's on-disk artifact, as the reference harness threads it).
+    Asserts conflation axis REJECT + reaches the verdict not-clean."""
+    _extract_spy, panel_spy, rater_spy = spies
+    fixture_path = os.path.join(
+        driver.panel_cache_dir, _CONFLATION_FIXTURES_SUBDIR, FUSED_FIXTURE_BASENAME
+    )
+    with open(fixture_path, encoding="utf-8") as fh:
+        fused_strategy = json.load(fh)["strategies"][0]
+    ext_path = _write_witness_extraction_artifact(
+        os.path.join(out_dir, "fused-witness"), FUSED_WITNESS_CID, FUSED_WITNESS_CID, fused_strategy
+    )
+    extraction = {"ready": True, "artifact_paths": [ext_path]}
+    # Module C -> D -> E on the REAL stage functions (no gate/extraction stage: the
+    # fixture is not a pool video, so it enters at B's output — same path the
+    # reference harness uses to thread this adversarial).
+    panels = run_panels_and_certify_stage(
+        extraction, mode=mode, cache_dir=driver.panel_cache_dir, live_panel_fn=panel_spy
+    )
+    rater = run_rater_layer_stage(
+        panels,
+        mode=mode,
+        cache_dir=driver.panel_cache_dir,
+        extraction_result=extraction,
+        rater_fn=rater_spy if mode == "sealed" else None,
+    )
+    verdict = run_verdict_stage(rater, instrument_stamps, mode)
+    cert = panels["certificates"][0]
+    disp = cert["terminal_read_disposition"]
+    video_entry = next(
+        (
+            e
+            for e in verdict["video_unit"]["per_video"]
+            if e["video_id"] == FUSED_WITNESS_CID
+        ),
+        None,
+    )
+    return {
+        "witness": "R5L890-FUSED (merge-silencing: two distinct trades fused into one)",
+        "axis": "conflation",
+        "path": "C->D->E (synthetic adversarial entering at Module B's on-disk artifact)",
+        "cid": FUSED_WITNESS_CID,
+        "conflation_disposition": disp["conflation_check"],
+        "terminal_read_grade": cert["terminal_read_grade"],
+        "reached_verdict": verdict.get("module") == "E",
+        "video_clean_at_verdict": (video_entry or {}).get("clean"),
+        "rejected_on_axis": (
+            disp["conflation_check"] == "REJECT" and cert["terminal_read_grade"] == "REJECTED"
+        ),
+        "reached_verdict_not_clean": (video_entry or {}).get("clean") is False,
+    }
+
+
+def run_full_dress_rehearsal(
+    rehearsal_manifest: str,
+    mode: str = "rehearsal",
+    *,
+    out_dir: str | None = None,
+    driver: SealedReadDriver | None = None,
+    validity_inputs: dict | None = None,
+    driver_commit: str = "rehearsal-driver-commit",
+    frozen_scan_commit: str = "rehearsal-frozen-scan-commit",
+    epoch: object = "rehearsal-epoch-0",
+) -> dict:
+    """MODULE F — the FULL-DRESS REHEARSAL capstone (ratify-packet items 7/10/11).
+
+    Drives the COMPLETE driver A->E (gate -> extraction -> panels+cert -> raters ->
+    verdict) on the 3 spent design-pool videos in staging/rehearsal mode (no
+    SEAL-GO.token, deterministic raters, cached panels, NO live LLM / network), then
+    runs the three capstone guards: the R-017 pin-2 BOTH-WITNESSES-BOTH-AXES pair
+    through the pipeline, the rollup-on-mixed-video demonstration (constructed from
+    the spent certs), the item-7 independent re-verify, and the item-11 drift guard.
+
+    ``rehearsal_manifest``: path to a SPENT-video manifest listing exactly the 3
+    design-pool videos (Module A's staging gate accepts it; a sealed-12 manifest is
+    refused by construction). ``mode`` is ``"rehearsal"`` (or ``"staging"``).
+
+    Returns a report dict carrying: the per-stage EXERCISED receipts; the full
+    rehearsal verdict (video-unit fraction, meets_bar, economics, validity, scope
+    lines); both witness dispositions; the mixed-video rollup; the re-verify match;
+    the drift-guard result (both polarities); ``failures`` + ``rehearsal_pass``.
+    Deterministic; the injected live seams are threaded as spies that MUST NOT fire.
+    """
+    if mode not in _REHEARSAL_MODES:
+        raise ValueError(
+            f"full-dress rehearsal runs in a rehearsal/staging mode only, got {mode!r} "
+            "(the sealed read is never a rehearsal)"
+        )
+    owns_tmp = out_dir is None
+    out_dir = out_dir or tempfile.mkdtemp(prefix="h1-dress-rehearsal-")
+    driver = driver or SealedReadDriver()
+    if validity_inputs is None:
+        validity_inputs = {
+            "registration_pre_check": {
+                "ok": True,
+                "n_registered": len(REHEARSAL_SPENT_VIDEOS),
+                "rehearsal": True,
+            },
+            "engagement_pre_check": {"ok": True, "rehearsal": True},
+            "frozen_scan_commit": frozen_scan_commit,
+            "driver_commit": driver_commit,
+            "epoch": epoch,
+        }
+
+    counters, extract_spy, panel_spy, rater_spy = _make_live_call_spies()
+    spies = (extract_spy, panel_spy, rater_spy)
+    failures: list[str] = []
+
+    # ------------------------------------------------------------------ #
+    # 1. PRIMARY FULL-DRESS RUN: the COMPLETE A->E over the 3 spent videos.
+    # ------------------------------------------------------------------ #
+    composed = driver.run_verdict(
+        rehearsal_manifest,
+        mode=mode,
+        out_dir=os.path.join(out_dir, "primary"),
+        live_extract_fn=extract_spy,
+        live_panel_fn=panel_spy,
+        rater_fn=rater_spy,
+        **validity_inputs,
+    )
+    if not composed.get("ok"):
+        raise RehearsalManifestMismatch(
+            f"rehearsal gate refused the manifest: {composed.get('halt_reason')!r} "
+            "(the capstone drives A->E on the 3 spent design-pool videos)"
+        )
+    verified_ids = set(
+        (((composed.get("gate") or {}).get("record") or {}).get("verify") or {}).get("video_ids") or []
+    )
+    if verified_ids != set(REHEARSAL_SPENT_VIDEOS):
+        raise RehearsalManifestMismatch(
+            f"rehearsal manifest videos {sorted(verified_ids)} != the 3 spent "
+            f"design-pool videos {sorted(REHEARSAL_SPENT_VIDEOS)}"
+        )
+
+    receipts = _stage_receipts(composed)
+    if not receipts["all_exercised"]:
+        missing = [s for s in _PIPELINE_STAGES if not receipts[s]["exercised"]]
+        failures.append(f"STAGE: not every pipeline stage exercised (missing={missing})")
+
+    verdict = composed["verdict"]
+    if not (verdict.get("validity") or {}).get("valid"):
+        failures.append("VERDICT: validity block INVALID in the rehearsal (seal-day inputs missing)")
+    if verdict.get("verdict") not in ("FIDELITY_PASS", "FIDELITY_MISS"):
+        failures.append(f"VERDICT: unexpected top-line verdict {verdict.get('verdict')!r}")
+
+    # Assemble the validity-block instrument_stamps ONCE from the composed result +
+    # the injected seal-day inputs; reused for the FUSED witness + mixed rollup.
+    instrument_stamps = _assemble_instrument_stamps(composed, **validity_inputs)
+
+    # ------------------------------------------------------------------ #
+    # 2. ★ BOTH WITNESSES BOTH AXES through the pipeline (R-017 pin-2).
+    # ------------------------------------------------------------------ #
+    iyf = _thread_iyf_witness(driver, out_dir, mode, validity_inputs, spies)
+    if not (iyf["rejected_on_axis"] and iyf["reached_verdict_not_clean"]):
+        failures.append(
+            "WITNESS(IyF): enum-axis REJECT did not reach the verdict not-clean "
+            f"(enum_disposition={iyf['enum_disposition']!r}, "
+            f"grade={iyf['terminal_read_grade']!r}, clean={iyf['video_clean_at_verdict']!r})"
+        )
+    fused = _thread_fused_witness(driver, out_dir, mode, instrument_stamps, spies)
+    if not (fused["rejected_on_axis"] and fused["reached_verdict_not_clean"]):
+        failures.append(
+            "WITNESS(FUSED): conflation-axis REJECT did not reach the verdict not-clean "
+            f"(conflation_disposition={fused['conflation_disposition']!r}, "
+            f"grade={fused['terminal_read_grade']!r}, clean={fused['video_clean_at_verdict']!r})"
+        )
+
+    # ------------------------------------------------------------------ #
+    # 3. ★ ROLLUP-ON-MIXED-VIDEO end-to-end, CONSTRUCTED FROM THE SPENT CERTS:
+    #    a real spent CLEAN Module-D cert + the real IyF REJECTED Module-D cert
+    #    under ONE video -> rolls up CLEAN (the >=1 rule) through run_verdict_stage.
+    # ------------------------------------------------------------------ #
+    spent_clean_row = next(
+        (
+            r
+            for rows in (composed["rater_layer"]["per_video_rater_verdicts"]).values()
+            for r in rows
+            if _row_is_clean(r)
+        ),
+        None,
+    )
+    iyf_rejected_row = next(
+        iter(_iyf_rejected_rows(driver, out_dir, mode, validity_inputs, spies)), None
+    )
+    mixed_video_id = "MIXED_ONE_CLEAN_REHEARSAL"
+    mixed_report: dict
+    if spent_clean_row is None or iyf_rejected_row is None:
+        failures.append("MIXED: could not source a real CLEAN + a real REJECTED spent cert")
+        mixed_report = {"available": False}
+    else:
+        mixed_per_video = {mixed_video_id: [spent_clean_row, iyf_rejected_row]}
+        mixed_verdict = run_verdict_stage(_module_d_stage(mixed_per_video, mode), instrument_stamps, mode)
+        entry = next(
+            e for e in mixed_verdict["video_unit"]["per_video"] if e["video_id"] == mixed_video_id
+        )
+        mixed_report = {
+            "available": True,
+            "video_id": mixed_video_id,
+            "n_strategies": entry["n_strategies"],
+            "n_clean_strategies": entry["n_clean_strategies"],
+            "rolls_up_clean": entry["clean"] is True,
+            "rule": mixed_verdict["video_unit"]["rule"],
+            "source": (
+                "1 real spent CLEAN Module-D cert + 1 real IyF REJECTED Module-D cert "
+                "(constructed from spent certs; >=2 strategies, exactly one clean)"
+            ),
+        }
+        if not (entry["clean"] is True and entry["n_strategies"] == 2 and entry["n_clean_strategies"] == 1):
+            failures.append(
+                "MIXED: exactly-one-clean video did NOT roll up CLEAN via the >=1 rule "
+                f"(n_strategies={entry['n_strategies']}, n_clean={entry['n_clean_strategies']}, "
+                f"clean={entry['clean']})"
+            )
+
+    # ------------------------------------------------------------------ #
+    # 4. INDEPENDENT RE-VERIFY (item 7): a full REPLAY of A->E (determinism) +
+    #    an INDEPENDENT recompute of the video-unit fraction / >=60% bar from the
+    #    primary verdict's OWN per-video rows (fresh-eyes, not re-calling E).
+    # ------------------------------------------------------------------ #
+    replay = driver.run_verdict(
+        rehearsal_manifest,
+        mode=mode,
+        out_dir=os.path.join(out_dir, "replay"),
+        live_extract_fn=extract_spy,
+        live_panel_fn=panel_spy,
+        rater_fn=rater_spy,
+        **validity_inputs,
+    )
+    replay_vu = replay["verdict"]["video_unit"]
+    primary_vu = verdict["video_unit"]
+    replay_match = (
+        replay_vu["video_clean_fraction"] == primary_vu["video_clean_fraction"]
+        and replay["verdict"]["meets_bar"] == verdict["meets_bar"]
+        and _per_video_clean_map(replay) == _per_video_clean_map(composed)
+    )
+    pv_rows = primary_vu["per_video"]
+    recomputed_clean = sum(1 for e in pv_rows if e["clean"])
+    recomputed_fraction = round(recomputed_clean / len(pv_rows), 4) if pv_rows else None
+    recomputed_meets = bool(recomputed_fraction is not None and recomputed_fraction >= VIDEO_CLEAN_BAR)
+    independent_match = (
+        recomputed_fraction == primary_vu["video_clean_fraction"]
+        and recomputed_meets == verdict["measured_meets_bar"]
+    )
+    reverify = {
+        "replay_match": replay_match,
+        "independent_recompute_match": independent_match,
+        "recomputed_video_clean_fraction": recomputed_fraction,
+        "recomputed_meets_bar": recomputed_meets,
+        "primary_video_clean_fraction": primary_vu["video_clean_fraction"],
+        "ok": bool(replay_match and independent_match),
+        "note": "0.5-exam fresh-eyes: replay A->E (determinism) + independent recompute from persisted per-video rows",
+    }
+    if not reverify["ok"]:
+        failures.append(
+            "RE-VERIFY: recompute-from-artifacts did NOT match the first verdict "
+            f"(replay_match={replay_match}, independent_match={independent_match})"
+        )
+
+    # ------------------------------------------------------------------ #
+    # 5. DRIFT GUARD (item 11): green==read-day is OK; a changed instrument SHA
+    #    flags drift (negative probe proves the guard is non-vacuous).
+    # ------------------------------------------------------------------ #
+    shas = rehearsal_instrument_shas(
+        driver_commit=validity_inputs["driver_commit"],
+        frozen_scan_commit=validity_inputs["frozen_scan_commit"],
+    )
+    drift_green = rehearsal_drift_guard(shas, shas)
+    mutated = dict(shas)
+    mutated["frontier_prompt_sha"] = "DRIFTED-" + str(mutated.get("frontier_prompt_sha"))
+    drift_negative = rehearsal_drift_guard(shas, mutated)
+    drift = {
+        "pinned_surfaces": sorted(shas),
+        "green_vs_read_day_identical": drift_green,
+        "negative_probe_changed_sha": drift_negative,
+        "ok": bool(drift_green["ok"] and drift_negative["drifted"] and not drift_negative["ok"]),
+    }
+    if not drift["ok"]:
+        failures.append("DRIFT-GUARD: guard did not behave in both polarities (vacuous)")
+
+    # ------------------------------------------------------------------ #
+    # 6. NO LIVE CALL (test (g)): the spies must never have fired.
+    # ------------------------------------------------------------------ #
+    live_call_guard = {
+        "live_extract_calls": counters["live_extract"],
+        "live_panel_calls": counters["live_panel"],
+        "rater_calls": counters["rater"],
+        "violations": counters["violations"],
+        "no_live_call": not counters["violations"],
+    }
+    if counters["violations"]:
+        failures.append(f"LIVE-CALL: a live seam fired in the rehearsal ({counters['violations']})")
+
+    report = {
+        "artifact": "h1-sealed12-driver-full-dress-rehearsal",
+        "module": "F",
+        "packet": "h1-sealed12-driver-ratify-packet-2026-07-16 (items 7/10/11)",
+        "mode": mode,
+        "out_dir": out_dir,
+        "spent_videos": list(REHEARSAL_SPENT_VIDEOS),
+        "harness": "SealedReadDriver.run_verdict (REAL A->E; supersedes fence-only run_dress_rehearsal.py)",
+        "stage_receipts": receipts,
+        "verdict": {
+            "verdict": verdict["verdict"],
+            "meets_bar": verdict["meets_bar"],
+            "video_unit": verdict["video_unit"],
+            "economics": verdict["economics"],
+            "validity_valid": (verdict.get("validity") or {}).get("valid"),
+            "scope_lines": verdict["scope_lines"],
+        },
+        "witnesses": {"iyf_enum_axis": iyf, "fused_conflation_axis": fused},
+        "mixed_video_rollup": mixed_report,
+        "independent_reverify": reverify,
+        "drift_guard": drift,
+        "live_call_guard": live_call_guard,
+        "failures": failures,
+        "rehearsal_pass": not failures,
+        "owns_tmp_out_dir": owns_tmp,
+    }
+    return report
+
+
+def _iyf_rejected_rows(
+    driver: SealedReadDriver,
+    out_dir: str,
+    mode: str,
+    validity_inputs: dict,
+    spies: tuple[Callable, Callable, Callable],
+) -> list[dict]:
+    """The REAL IyF REJECTED Module-D rows (enum FAIL) sourced from a full A->E run
+    on the IyF witness video — the REJECTED half of the constructed mixed video."""
+    extract_spy, panel_spy, rater_spy = spies
+    manifest = _write_spent_rehearsal_manifest(
+        os.path.join(out_dir, "iyf-mixed-source-manifest.json"), [IYF_WITNESS_VIDEO]
+    )
+    res = driver.run_verdict(
+        manifest,
+        mode=mode,
+        out_dir=os.path.join(out_dir, "iyf-mixed-source"),
+        live_extract_fn=extract_spy,
+        live_panel_fn=panel_spy,
+        rater_fn=rater_spy,
+        **validity_inputs,
+    )
+    rows = (res["rater_layer"]["per_video_rater_verdicts"]).get(IYF_WITNESS_VIDEO, [])
+    return [r for r in rows if not _row_is_clean(r)]
