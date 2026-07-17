@@ -65,7 +65,12 @@ vi.mock("../../routes/sse.js", () => ({
 const { onConflictMock, insertMock, insertAuditRowMock, broadcastSSEMock } = mocks;
 
 // ── Import subject after mocks ────────────────────────────────────────────────
-import { runN8nExecutionScrape, _internal } from "../n8n-execution-scraper-service.js";
+import {
+  runN8nExecutionScrape,
+  _internal,
+  getLastN8nScrapeState,
+  _resetLastN8nScrapeStateForTest,
+} from "../n8n-execution-scraper-service.js";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -109,6 +114,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   // Default insert behavior: 1 row written (no conflict).
   withInsertReturning([{ id: "row-uuid-1" }]);
+  _resetLastN8nScrapeStateForTest();
 });
 
 afterEach(() => {
@@ -281,5 +287,97 @@ describe("runN8nExecutionScrape — new failure SSE broadcast", () => {
       workflowName: "Workflow One",
       executionId: "e1",
     });
+  });
+});
+
+// fixwave2-scheduler-health-monitoring (2026-07-17): getLastN8nScrapeState()
+// is the state the n8n-health-check cron reads to distinguish "genuinely
+// healthy" (empty execution log, but the scraper is fine) from
+// "indeterminate" (empty execution log because THIS scraper is down). These
+// tests drive runN8nExecutionScrape() through each state transition and
+// assert the snapshot getLastN8nScrapeState() returns.
+describe("getLastN8nScrapeState — scrape-attempt state tracking", () => {
+  it("starts unattempted before any scrape has run", () => {
+    const state = getLastN8nScrapeState();
+    expect(state).toEqual({
+      lastAttemptAt: null,
+      lastSuccessAt: null,
+      lastError: null,
+      disabled: false,
+    });
+  });
+
+  it("marks disabled=true (not an error) when env is missing, and records the attempt", async () => {
+    setEnv(false);
+    const before = Date.now();
+    await runN8nExecutionScrape();
+    const state = getLastN8nScrapeState();
+    expect(state.disabled).toBe(true);
+    expect(state.lastAttemptAt).not.toBeNull();
+    expect(state.lastAttemptAt!).toBeGreaterThanOrEqual(before);
+    expect(state.lastError).toBeNull();
+    expect(state.lastSuccessAt).toBeNull();
+  });
+
+  it("records lastError (and does NOT set lastSuccessAt) on a fetch failure", async () => {
+    setEnv(true);
+    globalThis.fetch = vi.fn(async () => {
+      throw new Error("simulated network failure");
+    }) as typeof fetch;
+    await runN8nExecutionScrape();
+    const state = getLastN8nScrapeState();
+    expect(state.disabled).toBe(false);
+    expect(state.lastAttemptAt).not.toBeNull();
+    expect(state.lastError).toMatch(/simulated network failure/);
+    expect(state.lastSuccessAt).toBeNull();
+  });
+
+  it("records lastError on a non-OK HTTP response (stale API key / outage)", async () => {
+    setEnv(true);
+    globalThis.fetch = vi.fn(async (input: RequestInfo | URL) => {
+      const url = typeof input === "string" ? input : input.toString();
+      if (url.includes("/executions")) {
+        return { ok: false, status: 401, json: async () => ({}) } as Response;
+      }
+      return { ok: true, json: async () => ({ data: [] }) } as Response;
+    }) as typeof fetch;
+    await runN8nExecutionScrape();
+    const state = getLastN8nScrapeState();
+    expect(state.lastError).toMatch(/HTTP 401/);
+    expect(state.lastSuccessAt).toBeNull();
+  });
+
+  it("sets lastSuccessAt and clears lastError on a successful scrape (even with zero executions)", async () => {
+    setEnv(true);
+    mockFetchResponses([], []);
+    await runN8nExecutionScrape();
+    const state = getLastN8nScrapeState();
+    expect(state.lastError).toBeNull();
+    expect(state.lastSuccessAt).not.toBeNull();
+    expect(state.disabled).toBe(false);
+  });
+
+  it("recovery: a prior error is cleared by a subsequent successful scrape", async () => {
+    setEnv(true);
+    globalThis.fetch = vi.fn(async () => {
+      throw new Error("outage");
+    }) as typeof fetch;
+    await runN8nExecutionScrape();
+    expect(getLastN8nScrapeState().lastError).toMatch(/outage/);
+
+    mockFetchResponses([], []);
+    await runN8nExecutionScrape();
+    const state = getLastN8nScrapeState();
+    expect(state.lastError).toBeNull();
+    expect(state.lastSuccessAt).not.toBeNull();
+  });
+
+  it("getLastN8nScrapeState returns a copy — mutating the result does not affect module state", async () => {
+    setEnv(true);
+    mockFetchResponses([], []);
+    await runN8nExecutionScrape();
+    const state = getLastN8nScrapeState();
+    state.lastError = "tampered";
+    expect(getLastN8nScrapeState().lastError).toBeNull();
   });
 });

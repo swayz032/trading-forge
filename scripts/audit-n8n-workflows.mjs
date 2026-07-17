@@ -26,9 +26,20 @@
  * skips the symbol-hardcoding check (use sparingly — symbol-specific
  * fixtures like news_fade_mcl).
  *
- * Output: `tmp-n8n/n8n-drift-report.md`. Exit 1 on any violation,
- * 0 otherwise. Reads N8N_BASE_URL (or N8N_API_URL) and N8N_API_KEY
- * from env.
+ * Output: `tmp-n8n/n8n-drift-report.md`. Exit 0 = clean, exit 1 = genuine
+ * drift found (totalViolations > 0). Reads N8N_BASE_URL (or N8N_API_URL)
+ * and N8N_API_KEY from env.
+ *
+ * EXIT 2 — API UNREACHABLE (fixwave2-scheduler-health-monitoring, 2026-07-17):
+ *   Missing env vars, a network failure, or a non-2xx HTTP response while
+ *   listing/fetching workflows throws `N8nApiUnreachableError` and exits 2
+ *   — NOT 1. This is deliberate: the caller (scheduler.ts `_runN8nDriftAudit`
+ *   via `src/server/lib/n8n-drift-audit-classifier.ts`) previously could not
+ *   tell "the n8n API was unreachable (stale key / outage)" apart from
+ *   "genuine drift was found" because both exited 1 — producing a misleading
+ *   CRITICAL "workflows are missing safety configurations" alert during a
+ *   pure connectivity failure. Keep `N8N_AUDIT_EXIT_API_UNREACHABLE` in
+ *   n8n-drift-audit-classifier.ts in sync with the literal `2` used here.
  *
  * Usage:
  *   N8N_BASE_URL=http://localhost:5678 N8N_API_KEY=... \
@@ -47,6 +58,22 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 config({ path: path.resolve(__dirname, "..", ".env"), override: true });
 
 const REPORT_PATH = path.resolve(__dirname, "..", "tmp-n8n", "n8n-drift-report.md");
+
+// ─── API-unreachable error class (fixwave2-scheduler-health-monitoring) ──
+// Thrown for missing config / network failure / non-2xx HTTP response —
+// anything that means "we never got to evaluate a workflow", as opposed to
+// "we evaluated workflows and found drift". main()'s top-level catch checks
+// `instanceof` this class to pick exit code 2 vs the generic exit code 1.
+export class N8nApiUnreachableError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "N8nApiUnreachableError";
+  }
+}
+
+/** Keep in sync with N8N_AUDIT_EXIT_API_UNREACHABLE in
+ *  src/server/lib/n8n-drift-audit-classifier.ts. */
+export const EXIT_API_UNREACHABLE = 2;
 
 // ─── API-key drift patterns ─────────────────────────────────────────
 // Each pattern matches a literal credential value. Env-var references
@@ -157,18 +184,31 @@ const INTERNAL_HOST_PATTERNS = [
   /^=?\{\{\s*\$env\.(TF_BACKEND|RAILWAY_RELAY|RELAY_BACKEND)/i,
 ];
 
-async function fetchWorkflows(baseUrl, apiKey) {
+// Exported for regression coverage (fixwave2-scheduler-health-monitoring,
+// 2026-07-17) — proves fetchWorkflows/fetchWorkflowDetail raise
+// N8nApiUnreachableError (not a generic Error) on network failure / non-2xx
+// response, which is what lets main().catch() pick exit code 2.
+export async function fetchWorkflows(baseUrl, apiKey) {
   const all = [];
   let cursor;
   do {
     const url = new URL(`${baseUrl.replace(/\/$/, "")}/api/v1/workflows`);
     url.searchParams.set("limit", "100");
     if (cursor) url.searchParams.set("cursor", cursor);
-    const res = await fetch(url.toString(), {
-      headers: { "X-N8N-API-KEY": apiKey },
-    });
+    let res;
+    try {
+      res = await fetch(url.toString(), {
+        headers: { "X-N8N-API-KEY": apiKey },
+      });
+    } catch (networkErr) {
+      // fetch() itself threw — DNS failure, connection refused, timeout, etc.
+      // This is unreachability, never a drift finding.
+      throw new N8nApiUnreachableError(`n8n API unreachable listing workflows: ${networkErr.message}`);
+    }
     if (!res.ok) {
-      throw new Error(`n8n API error: ${res.status} ${res.statusText}`);
+      // Non-2xx here (401 stale key, 5xx outage) means we never got workflow
+      // data to evaluate — NOT that we evaluated it and found a violation.
+      throw new N8nApiUnreachableError(`n8n API error: ${res.status} ${res.statusText}`);
     }
     const body = await res.json();
     all.push(...(body.data ?? []));
@@ -177,11 +217,16 @@ async function fetchWorkflows(baseUrl, apiKey) {
   return all;
 }
 
-async function fetchWorkflowDetail(baseUrl, apiKey, id) {
+export async function fetchWorkflowDetail(baseUrl, apiKey, id) {
   const url = `${baseUrl.replace(/\/$/, "")}/api/v1/workflows/${id}`;
-  const res = await fetch(url, { headers: { "X-N8N-API-KEY": apiKey } });
+  let res;
+  try {
+    res = await fetch(url, { headers: { "X-N8N-API-KEY": apiKey } });
+  } catch (networkErr) {
+    throw new N8nApiUnreachableError(`n8n API unreachable fetching ${id}: ${networkErr.message}`);
+  }
   if (!res.ok) {
-    throw new Error(`n8n API error fetching ${id}: ${res.status}`);
+    throw new N8nApiUnreachableError(`n8n API error fetching ${id}: ${res.status}`);
   }
   return await res.json();
 }
@@ -524,13 +569,15 @@ async function main() {
   const apiKey = process.env.TF_N8N_API_KEY ?? process.env.RAILWAY_N8N_API_KEY ?? process.env.N8N_API_KEY;
 
   if (!baseUrl || !apiKey) {
-    console.error(
-      "ERROR: N8N_API_URL (or N8N_BASE_URL) and N8N_API_KEY must be set.\n" +
-        "Example:\n" +
+    // Missing config means we never got to evaluate a single workflow —
+    // this is unreachability, not a drift finding. Throw so the shared
+    // main().catch() below classifies it consistently with network/HTTP
+    // failures raised from fetchWorkflows/fetchWorkflowDetail.
+    throw new N8nApiUnreachableError(
+      "N8N_API_URL (or N8N_BASE_URL) and N8N_API_KEY must be set. Example:\n" +
         "  N8N_API_URL=http://localhost:5678 N8N_API_KEY=... \\\n" +
         "    node scripts/audit-n8n-workflows.mjs",
     );
-    process.exit(1);
   }
 
   console.log(`Listing workflows from ${baseUrl}…`);
@@ -592,6 +639,15 @@ async function main() {
 const _isMain = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 if (_isMain) {
   main().catch((err) => {
+    // fixwave2-scheduler-health-monitoring (2026-07-17): distinguish "could
+    // not reach the n8n API" (exit 2) from any other unexpected script
+    // failure (exit 1, same as a genuine drift finding — conservative
+    // default for a failure mode this script doesn't recognize). See the
+    // EXIT 2 header comment above and src/server/lib/n8n-drift-audit-classifier.ts.
+    if (err instanceof N8nApiUnreachableError) {
+      console.error("audit-n8n-workflows: n8n API unreachable:", err.message);
+      process.exit(EXIT_API_UNREACHABLE);
+    }
     console.error("audit-n8n-workflows failed:", err);
     process.exit(1);
   });

@@ -31,6 +31,13 @@
  *   `insertAuditRow()` with `correlationId = cycleId` so an operator can
  *   reconstruct what the scraper saw + wrote in any given tick. Empty
  *   cycles (no new executions) are NOT logged — only cycles that wrote.
+ *
+ * SCRAPE STATE (fixwave2-scheduler-health-monitoring, 2026-07-17):
+ *   `getLastN8nScrapeState()` exposes the last attempt/success/error so the
+ *   scheduler's `n8n-health-check` cron (15-min, queries n8n_execution_log
+ *   directly) can distinguish "checked, genuinely healthy" from "the
+ *   execution log is empty because THIS scraper is down" — see
+ *   src/server/lib/n8n-health-classifier.ts for the consumer-side logic.
  */
 
 import { randomUUID } from "node:crypto";
@@ -73,6 +80,40 @@ const RAILWAY_FETCH_LIMIT = 100; // covers 5-min cadence at the busiest workflow
 const RAILWAY_HTTP_TIMEOUT_MS = 15_000;
 
 /**
+ * Last-scrape-attempt state, module-scoped (mirrors `_n8nHealthAlertDedup`'s
+ * module-scoped dedup pattern in scheduler.ts). Read by
+ * `getLastN8nScrapeState()` — see the SCRAPE STATE header comment above.
+ */
+interface LastScrapeState {
+  lastAttemptAt: number | null;
+  lastSuccessAt: number | null;
+  lastError: string | null;
+  disabled: boolean;
+}
+const _lastScrapeState: LastScrapeState = {
+  lastAttemptAt: null,
+  lastSuccessAt: null,
+  lastError: null,
+  disabled: false,
+};
+
+/** Snapshot of the most recent scrape attempt — consumed by the
+ *  n8n-health-check cron to distinguish "genuinely healthy" from
+ *  "the scraper that feeds this table is down". Returns a copy so callers
+ *  can't mutate module state. */
+export function getLastN8nScrapeState(): LastScrapeState {
+  return { ..._lastScrapeState };
+}
+
+/** Test-only reset so vitest suites don't leak scrape state across cases. */
+export function _resetLastN8nScrapeStateForTest(): void {
+  _lastScrapeState.lastAttemptAt = null;
+  _lastScrapeState.lastSuccessAt = null;
+  _lastScrapeState.lastError = null;
+  _lastScrapeState.disabled = false;
+}
+
+/**
  * One scrape cycle: fetch latest executions from Railway, dedupe-insert new
  * rows, broadcast SSE for any new failures, write one audit_log summary row.
  */
@@ -89,11 +130,15 @@ export async function runN8nExecutionScrape(): Promise<ScrapeResult> {
     errors: [],
   };
 
+  _lastScrapeState.lastAttemptAt = Date.now();
+
   if (!baseUrl || !apiKey) {
     // Disabled mode — no env, no work. NOT an error; matches the
     // `/api/health` "disabled" pattern for missing-config.
+    _lastScrapeState.disabled = true;
     return result;
   }
+  _lastScrapeState.disabled = false;
 
   // 1) Pull executions + workflow-id→name map in parallel.
   let executions: RailwayExecution[];
@@ -120,9 +165,16 @@ export async function runN8nExecutionScrape(): Promise<ScrapeResult> {
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     result.errors.push(`fetch_failed: ${msg}`);
+    _lastScrapeState.lastError = msg;
     logger.warn({ cycleId, err }, "n8n-execution-scrape: fetch failed");
     return result;
   }
+
+  // Reached only when both fetches succeeded — clear any previously-recorded
+  // error so a transient outage doesn't keep the health check "indeterminate"
+  // forever after the scraper recovers.
+  _lastScrapeState.lastError = null;
+  _lastScrapeState.lastSuccessAt = Date.now();
 
   result.fetched = executions.length;
   if (executions.length === 0) return result;

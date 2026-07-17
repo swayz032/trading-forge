@@ -40,6 +40,12 @@ import { logger } from "./lib/logger.js";
 import { isSundayAtEtHour } from "./lib/weekly-cron-et-guard.js";
 import { isFirstOfMonthAtEtHour } from "./lib/monthly-cron-et-guard.js";
 import { findUnscheduledJobs } from "./lib/scheduler-drift.js";
+// fixwave2-scheduler-health-monitoring (2026-07-17): pure classifiers for the
+// n8n-health-check / n8n-drift-detector / paper-vs-backtest crons — see each
+// module's header for the false-green class of bug it closes.
+import { classifyN8nHealthCheck } from "./lib/n8n-health-classifier.js";
+import { classifyN8nDriftAuditExit } from "./lib/n8n-drift-audit-classifier.js";
+import { computeMetricDeviation, maxAvailableDeviation, type MetricDeviation } from "./lib/paper-backtest-deviation.js";
 import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { runPythonModule } from "./lib/python-runner.js";
@@ -3387,6 +3393,7 @@ except Exception as e:
   registerJob("n8n-health-check", 15 * 60 * 1000, async () => {
     const { n8nExecutionLog } = await import("./db/schema.js");
     const { gte: gteOp, sql: sqlOp } = await import("drizzle-orm");
+    const { getLastN8nScrapeState } = await import("./services/n8n-execution-scraper-service.js");
     const since = new Date(Date.now() - 60 * 60 * 1000); // last hour
 
     const stats = await db.select({
@@ -3397,24 +3404,31 @@ except Exception as e:
       .where(gteOp(n8nExecutionLog.createdAt, since))
       .groupBy(n8nExecutionLog.workflowName);
 
-    const failing = stats.filter((s) => s.failures > 0);
-    if (failing.length > 0) {
-      broadcastSSE("n8n:health-alert", { failing });
-      logger.warn({ failing }, "n8n health check: workflows with recent failures");
+    // fixwave2-scheduler-health-monitoring (2026-07-17): an EMPTY stats array
+    // is ambiguous — it could mean "genuinely zero n8n activity" OR "the
+    // execution-log scraper that feeds this table is down" (n8n outage,
+    // stale API key). classifyN8nHealthCheck() (src/server/lib/n8n-health-
+    // classifier.ts) resolves the ambiguity against the scraper's own last-
+    // attempt state so a scraper outage is never reported as "healthy".
+    const check = classifyN8nHealthCheck(stats, getLastN8nScrapeState());
+
+    if (check.status === "failing") {
+      broadcastSSE("n8n:health-alert", { failing: check.failing });
+      logger.warn({ failing: check.failing }, "n8n health check: workflows with recent failures");
       // deepscan6 A2: previously SSE + warn-log ONLY — invisible to an operator on
       // vacation. Fire a family-grade Discord WARN, deduped to once/hour per failing
       // signature so a persistently-broken workflow doesn't spam every 15 min.
       try {
-        const sig = failing.map((f) => f.workflowName).sort().join(",");
+        const sig = check.failing.map((f) => f.workflowName).sort().join(",");
         const now = Date.now();
         const last = _n8nHealthAlertDedup.get(sig) ?? 0;
         if (now - last >= 60 * 60 * 1000) {
           _n8nHealthAlertDedup.set(sig, now);
-          const lines = failing.map((f) => `• ${f.workflowName}: ${f.failures}/${f.total} runs failed (last hour)`).join("\n");
+          const lines = check.failing.map((f) => `• ${f.workflowName}: ${f.failures}/${f.total} runs failed (last hour)`).join("\n");
           notifyWarning(
             "n8n workflows failing",
             appendFamilyGradePostscript(
-              `${failing.length} n8n workflow(s) had failures in the last hour:\n${lines}`,
+              `${check.failing.length} n8n workflow(s) had failures in the last hour:\n${lines}`,
               "One of the background automations is erroring.",
               "It won't stop your trades. Check the n8n dashboard when you can, or ping Tony.",
             ),
@@ -3423,8 +3437,36 @@ except Exception as e:
       } catch (alertErr) {
         logger.warn({ err: String(alertErr) }, "n8n health check: Discord alert failed (non-blocking)");
       }
+    } else if (check.status === "indeterminate") {
+      // NOT "all healthy" — the check itself produced no data and the scraper
+      // is stale/erroring. Surface distinctly so an operator never reads this
+      // as a verified all-clear during an n8n outage or stale-key incident.
+      logger.warn({ reason: check.reason }, "n8n health check: INDETERMINATE — cannot verify n8n health");
+      try {
+        const sig = "n8n-health-check:indeterminate";
+        const now = Date.now();
+        const last = _n8nHealthAlertDedup.get(sig) ?? 0;
+        if (now - last >= 60 * 60 * 1000) {
+          _n8nHealthAlertDedup.set(sig, now);
+          notifyWarning(
+            "n8n health check inconclusive",
+            appendFamilyGradePostscript(
+              `n8n health check found zero execution-log rows in the last hour, and ${check.reason}. ` +
+                `This means we CANNOT verify n8n workflow health right now — it does NOT mean workflows ` +
+                `are healthy. Possible causes: n8n API outage, a stale/expired API key, or a network issue ` +
+                `reaching Railway. Check the execution-log scraper (n8n-execution-scrape cron) and N8N_BASE_URL/TF_N8N_API_KEY.`,
+              "The system that checks whether the background automations are working could not run its check.",
+              "It won't stop your trades. If this keeps happening for more than an hour, ping Tony.",
+            ),
+          );
+        }
+      } catch (alertErr) {
+        logger.warn({ err: String(alertErr) }, "n8n health check: indeterminate-state Discord alert failed (non-blocking)");
+      }
     } else {
-      logger.debug({ workflowCount: stats.length }, "n8n health check: all workflows healthy");
+      // "healthy" | "quiet" | "disabled" — all legitimate non-alerting states,
+      // logged at debug for observability without paging anyone.
+      logger.debug({ workflowCount: stats.length, status: check.status, reason: check.reason }, "n8n health check: " + check.status);
     }
   });
 
@@ -6934,6 +6976,38 @@ async function _runN8nDriftAudit(jobName: string): Promise<void> {
         ),
         { jobName, correlationId, timeoutMs: TIMEOUT_MS },
       );
+    } else if (classifyN8nDriftAuditExit(resolvedExitCode, false) === "unreachable") {
+      // fixwave2-scheduler-health-monitoring (2026-07-17): exit code
+      // N8N_AUDIT_EXIT_API_UNREACHABLE (2) means audit-n8n-workflows.mjs
+      // could not even REACH the n8n API (missing env, network failure,
+      // stale/expired API key) — it never got to evaluate a single workflow
+      // for drift. Previously this fell through to the same "drift detected"
+      // CRITICAL alert as a genuine finding, which is a misleading false
+      // signal: an unreachable API proves nothing about workflow health.
+      logger.warn({ correlationId, jobName, exitCode: resolvedExitCode, stderrSummary }, "n8n-drift-audit: audit:n8n could not reach the n8n API — drift status UNKNOWN, not asserting drift");
+      await insertAuditRow({
+        action: "n8n.drift_check_unreachable",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { jobName, correlationId, exitCode: resolvedExitCode } as Record<string, unknown>,
+        result: { exitCode: resolvedExitCode, stderrSummary, stdoutSummary } as Record<string, unknown>,
+        status: "failed",
+        correlationId,
+      }).catch((err) => logger.error({ err }, "n8n-drift-audit: audit row write failed (unreachable)"));
+      notifyWarning(
+        "n8n drift check could not reach n8n",
+        appendFamilyGradePostscript(
+          `n8n drift check (${jobName}) could not reach the n8n API (exit code ${resolvedExitCode}) — ` +
+            `this is NOT a drift finding, the check never got to evaluate any workflow. Likely causes: ` +
+            `n8n API outage, a stale/expired API key (N8N_API_URL/N8N_BASE_URL + N8N_API_KEY/TF_N8N_API_KEY), ` +
+            `or a network issue reaching Railway. Run \`npm run audit:n8n\` from the Skytech tower to see the ` +
+            `exact error. Stderr: ${stderrSummary || "(empty)"}`,
+          "A background health check for the strategy automation system could not connect to check for problems.",
+          "This does NOT mean anything is broken — it means the checker itself couldn't run. If it keeps happening, tell Tony.",
+        ),
+        { jobName, correlationId, exitCode: resolvedExitCode, stderrSummary },
+      );
     } else {
       logger.error({ correlationId, jobName, exitCode: resolvedExitCode, stderrSummary }, "n8n-drift-audit: audit:n8n exited non-zero — drift detected");
       await insertAuditRow({
@@ -7594,35 +7668,36 @@ async function comparePaperToBacktest() {
         continue;
       }
 
-      // 3. Compare key metrics
+      // 3. Compare key metrics.
+      // fixwave2-scheduler-health-monitoring (2026-07-17): pass the RAW
+      // (un-coerced) backtest fields to computeMetricDeviation() — coercing
+      // via `?? 0` here (the old btSharpe/btWinRate/btAvgDailyPnl pattern)
+      // makes a genuinely-missing baseline indistinguishable from a
+      // genuinely-computed zero, which is exactly the ambiguity that let the
+      // old `if (btX !== 0)` gate silently skip comparisons. See
+      // src/server/lib/paper-backtest-deviation.ts for the full rationale.
+      const deviations: MetricDeviation[] = [
+        computeMetricDeviation("Sharpe", paperSharpe, backtest.sharpeRatio, 0.5, 0.1),
+        computeMetricDeviation("WinRate", paperWinRate, backtest.winRate, 0.15, 0.05),
+        computeMetricDeviation("AvgDailyPnL", paperAvgDailyPnl, backtest.avgDailyPnl, 0.5, 1),
+      ];
+      // Coerced display copies for the journal/SSE payload below — comparison
+      // logic above never sees these, only the raw fields.
       const btSharpe = Number(backtest.sharpeRatio ?? 0);
       const btWinRate = Number(backtest.winRate ?? 0);
       const btAvgDailyPnl = Number(backtest.avgDailyPnl ?? 0);
 
-      // Use backtest as baseline; compute deviation as ratio of difference to backtest value
-      // A simple heuristic: if paper metric deviates more than the backtest value * threshold, alert
-      const deviations: { metric: string; paper: number; backtest: number; sigmas: number }[] = [];
-
-      // Sharpe deviation (use absolute difference scaled by expected magnitude)
-      if (btSharpe !== 0) {
-        const sharpeDev = Math.abs(paperSharpe - btSharpe) / Math.max(Math.abs(btSharpe) * 0.5, 0.1);
-        deviations.push({ metric: "Sharpe", paper: paperSharpe, backtest: btSharpe, sigmas: sharpeDev });
-      }
-
-      // Win rate deviation (percentage points scaled)
-      if (btWinRate !== 0) {
-        const wrDev = Math.abs(paperWinRate - btWinRate) / Math.max(btWinRate * 0.15, 0.05);
-        deviations.push({ metric: "WinRate", paper: paperWinRate, backtest: btWinRate, sigmas: wrDev });
-      }
-
-      // Avg daily PnL deviation
-      if (btAvgDailyPnl !== 0) {
-        const pnlDev = Math.abs(paperAvgDailyPnl - btAvgDailyPnl) / Math.max(Math.abs(btAvgDailyPnl) * 0.5, 1);
-        deviations.push({ metric: "AvgDailyPnL", paper: paperAvgDailyPnl, backtest: btAvgDailyPnl, sigmas: pnlDev });
-      }
-
-      const maxDeviation = deviations.reduce((max, d) => Math.max(max, d.sigmas), 0);
+      const maxDeviation = maxAvailableDeviation(deviations);
       const alertTriggered = maxDeviation > 2.0;
+      const unavailableMetrics = deviations.filter((d) => d.baselineUnavailable).map((d) => d.metric);
+      if (unavailableMetrics.length > 0) {
+        // Observability: a metric with no backtest baseline was NOT compared —
+        // surface that explicitly rather than let it silently read as "clean".
+        logger.warn(
+          { strategyId: session.strategyId, sessionId: session.id, unavailableMetrics },
+          "Paper-vs-backtest comparison: backtest baseline unavailable for one or more metrics — those metrics were not compared",
+        );
+      }
 
       // 4. If deviation > 2 std dev, broadcast SSE alert + persist
       if (alertTriggered) {
@@ -7667,11 +7742,13 @@ async function comparePaperToBacktest() {
           deviations,
           maxDeviation,
           alertTriggered,
+          unavailableMetrics,
         },
         analystNotes: `Paper-vs-backtest comparison for session ${session.id}: ` +
           `${trades.length} trades over ${dailyPnls.length} days. ` +
           `Max deviation: ${maxDeviation.toFixed(1)}σ. ` +
-          (alertTriggered ? "ALERT: significant divergence detected." : "Within expected range."),
+          (alertTriggered ? "ALERT: significant divergence detected." : "Within expected range.") +
+          (unavailableMetrics.length > 0 ? ` Baseline unavailable for: ${unavailableMetrics.join(", ")}.` : ""),
       }).catch((err) => {
         // Journal insert is best-effort; don't fail the whole job
         logger.error({ err, sessionId: session.id }, "Failed to log paper-vs-backtest to journal");
