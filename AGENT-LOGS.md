@@ -4,6 +4,40 @@
 
 ---
 
+### Session Log — 2026-07-16 /goal DEEP-SCAN (goalscan-authpine) — 9-finder scan @ `61bb20a3`, CONTROL-PLANE fix wave (auth/pine/obs/n8n/CI) LANDED, VERIFIED BAND 7, ZERO carry-forwards
+
+**Mission:** Full-codebase /goal deep-scan (find all HIGH/MED/LOW, institutional-grade, band 8) run CONCURRENTLY with the "$250–$1K/day Readiness" campaign — hard constraint: **do not interfere** with that agent's instrument/execution surface. Operator mid-session: target = band **8** (production-ready); **"no carry forwards at all."**
+
+**Deconfliction (the whole reason this wave is what it is):** read the campaign's plan first and drew a boundary. The campaign OWNS the instrument/execution surface (`paper-execution-service.ts`, `paper-signal-service.ts`, `risk-sizing.ts`, `sizing.py`, `backtester.py`, `firm_config.py`, `broker-router.ts`, `lifecycle-service.ts`, `routes/paper.ts`/`prop-firm.ts`, massive/feed). Every CRIT/HIGH my 9 read-only finders surfaced in THOSE files became a **verified hand-off**, never my edit. My fix wave touched ONLY the non-overlapping control-plane/delivery/telemetry surface — verified zero file overlap with the campaign's W1 at land (clean rebase onto their `43159324`).
+
+**Phase 1 (9 parallel read-only finders):** capital-safety, backtest, TS↔Python parity, lifecycle-gates, n8n, observability/autonomy, compliance, arch/security, pine-export. The recurring cron-vs-pure-evaluator gate-parity class is now largely CLOSED (WFE/param-drift/BIF/Frankenstein/shadow-div/frozen-policy all verified already-fixed); the `decisionAuthority='human'`-on-autonomous-path and `metadata`-vs-`result` dead-audit classes are CLOSED (0 new siblings).
+
+**Work completed — MY surface (14 findings, all closed this wave, all committed on `hardening/goalscan-authpine-20260716`):**
+- **A1 (HIGH)** `compliance.ts` — Office-guard `POST /drift/:firm/cascade` (mass firm-pause was Bearer-only; sibling `/resolve` was guarded).
+- **A2 (HIGH)** `strategies.ts` — `PATCH /:id` 409-blocks config/symbols/symbol mutation on a frozen (`frozenPolicyHash!=null`) or live (DEPLOYED/PILOT/DEPLOY_READY) strategy → closes the frozen-policy-gate bypass.
+- **A3 (MED)** `admin.ts` `/liquidity-map/naked-pocs-batch` — admits **shared-secret OR Office authority** (relay-Bearer injection of live-confluence liquidity data blocked; automation path preserved) + fixed `sync_naked_pocs_to_liquidity_map.py` to send Bearer + secret (it was sending NO auth → silent 401 → stale `liquidity_target_clear` data — grader F-1 catch).
+- **A4 (MED)** `admin.ts` `/operator-mark-present` — pipeline/vacation-control guard (vacation-autopilot disengage was Bearer-only; `human` authority now honest).
+- **A5 (MED)** `strategies.ts` — SHADOW added to DELETE-protected states.
+- **A6 (MED)** `admin.ts` — removed the false "tower-relay HMAC gateway" security docstring (no such gateway exists; claimed-safeguard-owes-wiring-verify).
+- **O1 (HIGH)** `alert-service.ts` `systemError()` — optional `correlationId` → Discord + `alerts.metadata`; wired at CME-outage + firm-suspension/unreachable (was lost on ~17 fail-closed capital-safety alert paths).
+- **O2 (MED)** outage/suspension SSE broadcasts carry `correlationId`.
+- **O3 (LOW)** `human_admin` → `human` (canonical authority; the non-canonical string never matched the vacation-absence clock).
+- **P1 (HIGH)** `pine-export-service.ts` — zero-artifact faithful-block now sets export status `failed` (not `completed`), both single+dual paths + the RETURNED status → recipient path no longer reports phantom "success" + setup README for a nonexistent `.pine`.
+- **P2 (LOW)** `strategy-assignment-service.ts` — corrected stale "warn-only" docstring → code HARD-BLOCKS MFFU collaborative-trading (409).
+- **C1 (LOW)** `verify-2026-rules-compliance.mjs` — extended `check:2026-compliance` to guard `FIRM_CONTRACT_CAPS` (topstep 50/50/50, MFFU 40/40/40) — a silent cap edit previously passed CI green.
+- **N1–N4 (MED/LOW)** n8n committed exports: 5P cron double-fire reconciled (`0 9,10 * * 0`→`0 5 * * 0`) + cred bind restored (`toPhkc55VihQCGN4`); watchdog self-restart HMAC no longer signs with literal `'unset'` (fail-loud, downgrades to alert) — was a `neverError:true`-swallowed fail-GREEN self-heal; `_live-snapshot-2026-06-29.json` marked `_DO_NOT_RESTORE`.
+
+**Verification:** `tsc --noEmit` exit 0 (real binary via junction, not the npx troll-stub); RED-proof suite `goalscan-20260716-auth-pine-obs.test.ts` **15/15** green (source-contract, revert→red); 3 CI gates GREEN (production-isolation CLEAN, 2026-compliance OK, system-map:check exit 0 after sync). The 1 pre-existing vitest failure (`deepscan18-compliance-drift-sse` in `compliance-refresh-service.ts`) confirmed byte-identical to base (not a regression). **Independent grade (accuracy-validator, doer≠grader, 2+ non-overlapping paths per fix): VERIFIED BAND 7** — all 9 core fixes CONFIRMED-CORRECT, no inflation, scope confirmed 8/8 files. Grader's two reservations (F-1 A3 caller-admission + F-2 A1 in-process-caller — both false/misleading COMMENTS) were FIXED in-loop (A3 reworked to secret-OR-office + sync-script auth; A1 comment corrected). Band 7 not 8: fixed-rubric pre-live ceiling + textual (not live-HTTP) test class; a defensible 8 needs a re-grade of the corrected wave + operator residual acceptance.
+
+**Known-facts updates:** pinned `feedback_zero_carry_forwards_absolute_2026_07_16` (operator mandate) + CLAUDE.md **§11c Zero Carry-Forwards (HARD RULE)**.
+
+**Carry-forward for next session: ZERO on my surface** (operator mandate honored — every my-surface finding closed this wave). The following are **verified HAND-OFFS to the concurrent campaign** (their owned files; editing them would violate worktree-isolation + "don't interfere" — NOT my carry-forwards):
+- **CRIT** 95% DLL force-close skipped during the news blackout window (`paper-signal-service.ts:3508/3513`).
+- **CRIT** manual `PATCH /:id/lifecycle` (HMAC shared w/ n8n) promotes TESTING/SHADOW→PAPER skipping B14/WFE/param-drift/DSR/MC-survival; `check-gate-parity.mjs` scope gap (`lifecycle-service.ts _promoteStrategyInner`).
+- **CRIT** invariant/truthiness (B-2) gate dead on SHADOW→PAPER (`lifecycle-service.ts:1704/1738`); **CRIT/HIGH** CPCV-Style-C gate dead on SHADOW→PAPER (`:1795`).
+- **HIGH** bare `except` swallows ALL trade management on one bad bar → whole run reverts to raw exits (`backtester.py:5106`); **HIGH** full-size ES/NQ/CL resolve to micro specs → 10× risk mislabel (`config.py`/`backtester.py:3664`).
+- (F-1/F-3/sizing dd-room + MES stop-floor Python-parity are already the campaign's D9/W2b/W2.)
+
 ### Session Log — 2026-07-16 CAMPAIGN "$250–$1K/day Readiness" — plan approved + W1 (F-3 CRITICAL) LANDED `78f3475a`
 
 **Mission:** Operator asked me to turn 4 batches of external GPT review into an institutional, wired-tight execution campaign, then start executing "with every wave double-checked and wired good."
