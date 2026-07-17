@@ -203,6 +203,58 @@ soft, non-hard-block factor (unlike the eligibility gate) the measurement bar is
 than the other three entries — but the discipline is the same: a previously-dead signal
 input doesn't get switched on by convenience, it gets switched on by decision.
 
+## Fifth coordination-packet entry: network-failover monitor — dormant kill-switch layer, higher severity than entries 1-4
+
+**Added 2026-07-17 from a repo-wide dormant-activation sweep** (grep for every
+`start*`/`init*`/`subscribe*`/`connect*`-prefixed exported function across
+`src/server`, cross-checked callers — the higher-leverage version of hunting domains
+one at a time, after the 4th instance of this exact species (market-internals) made the
+pattern obvious). The sweep found exactly one more genuine zero-caller hit beyond
+market-internals: `startNetworkFailoverMonitor()` (`src/server/lib/network-failover.ts`).
+A sibling, `startComputeFailoverMonitor()` (`compute-failover.ts`), was ALSO found
+dormant by the same sweep but was independently verified safe to wire and fixed
+directly (`index.ts` boot sequence + `gracefulShutdown()` teardown) — nothing in the
+codebase branches on its output for real routing, only a status-display consumer.
+
+**network-failover.ts is a different, more severe case — caught by grading, not by my
+own first-pass judgment.** I initially wired both monitors together, reasoning that
+network-failover.ts's own header comment ("This module is a connectivity OBSERVATION
+layer, not an execution modifier... Orders are NOT blocked") meant it was equally safe.
+An independent grader caught that this claim is **false for the actual current code**:
+`isConnectivityDegraded()` (network-failover.ts) is consumed by
+`kill-switch.ts::checkLayer4Connectivity()` — **unscoped** (takes no account parameter,
+unlike Layers 2/3 which do) — which gates `isHaltedForProduction()`, the documented
+FIRST check ahead of every `openPosition()`. Verified independently, not just trusted
+from the grader: `kill-switch.ts:987` reads `isConnectivityDegraded()`; the two call
+sites (`kill-switch.ts:1387`, `:1714`) are both inside the per-signal evaluation path
+with no account scoping on Layer 4 specifically.
+
+**Consequence: Layer 4 has been permanently `halted:false` since it shipped, because the
+monitor that would ever flip it never ran.** Wiring `startNetworkFailoverMonitor()`
+activates a real, system-wide (not per-account), never-before-exercised trade-halt path
+the moment 3 consecutive broker-connectivity probes fail. Worse: the documented operator
+recovery mechanism — `POST /api/admin/network-failover/confirm-tethering`, referenced in
+the module's own header — **does not exist anywhere in `src/server/routes/`** (confirmed
+by grep). If Layer 4 ever tripped today, the only way back to trading is the connectivity
+genuinely self-healing or an operator setting `FORCE_USB_TETHERING=true` and restarting
+the server. This is a materially higher-severity finding than entries 1-4: those degrade
+a score or block promotion; this one can halt live trading system-wide with no
+documented way to un-halt it live.
+
+**Reverted before commit, not shipped.** The initial wiring (`index.ts` import + boot
+call + shutdown teardown call) was removed; a regression test
+(`dormant-activation-sweep-2026-07-17.test.ts`) now asserts
+`startNetworkFailoverMonitor` is NOT called, specifically to prevent this exact mistake
+from being silently reintroduced by a future edit.
+
+**Named owner + concrete unblock condition:** owner = whoever owns
+`kill-switch.ts`/production safety-layer surface under the live campaign — NOT
+signal-generation (different territory than entry 4). Unblocks when TWO things exist,
+not one: (1) the missing `confirm-tethering` route is actually built, and (2) a decision
+is made on whether Layer 4 should truly be an unscoped global halt or per-account like
+its siblings — that scoping question needs an explicit answer, not an assumption, before
+this monitor is ever safe to start. Until both exist, this stays reserved.
+
 ## Sequencing
 
 1. This draft gets sign-off (advisor + whichever agent owns `backtester.py` under the

@@ -148,11 +148,21 @@ describe("F-4: buildDrawdownDistance — real DLL wiring", () => {
     expect(src).not.toContain('severity: "green", // Not halted');
   });
 
-  it("applies firm-specific DLL percentages (mffu=2%, topstep=5%)", () => {
+  it("applies firm-specific DLL percentages (mffu=2% fixed; topstep uses trailing-DD, not a fixed %)", () => {
+    // Stale-test fix (2026-07-17, grader-hardened): topstep was moved off the fixed-5%
+    // estimate to its real trailing-DD-HWM model by e027e416 (F-6) — this assertion
+    // still checked for the OLD buggy behavior post-fix. Production code is correct;
+    // the test had rotted. Grading caught that matching "topstep intentionally absent"
+    // only proves a COMMENT exists — the real regression guard is that the executable
+    // FIRM_DLL_PCT map body itself has no topstep key.
     const src = readSrc("routes/production-status.ts");
-    expect(src).toContain("FIRM_DLL_PCT");
-    expect(src).toContain("mffu: 0.02");
-    expect(src).toContain("topstep: 0.05");
+    const mapStart = src.indexOf("const FIRM_DLL_PCT");
+    expect(mapStart).toBeGreaterThan(-1);
+    const mapEnd = src.indexOf("};", mapStart);
+    const mapBody = src.slice(mapStart, mapEnd);
+    expect(mapBody).toContain("mffu: 0.02");
+    expect(mapBody).not.toMatch(/topstep\s*:\s*0\.\d+/);
+    expect(src).toContain('dllModel:"trailing_dd_hwm"');
   });
 
   it("severity thresholds: yellow >=50%, red >=67%", () => {

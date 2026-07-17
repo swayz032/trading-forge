@@ -117,6 +117,7 @@ import { runPendingMigrations } from "./lib/boot-migration-runner.js";
 import { checkStartupSecrets, startBootConfigReminderMonitor } from "./lib/startup-config-check.js";
 import { runBootSchemaDriftCanary } from "./lib/schema-drift-check.js";
 import { insertAuditRowSafe } from "./lib/audit-log-helper.js";
+import { startComputeFailoverMonitor, stopComputeFailoverMonitor } from "./lib/compute-failover.js";
 
 // ─── Boot correlation (deepscan7 D2 / obs-M5, 2026-07-02) ─────────
 // ONE bootCorrelationId minted BEFORE migrations/scheduler/regime-bank so every
@@ -165,6 +166,30 @@ await checkStartupSecrets();
 // This starts a 24h repeat that re-fires Discord only while each gap persists.
 // Idempotent + fail-soft — safe to call once here regardless of NODE_ENV/platform.
 startBootConfigReminderMonitor();
+
+// Dormant-activation sweep (2026-07-17): this module was fully built —
+// idempotent, fail-soft, correctly documented as observation-only (neither
+// mutates business logic nor gates trading decisions) — but had ZERO callers
+// anywhere in the repo, confirmed by full-tree grep. getComputeFailoverStatus()
+// froze at its initial LOCAL_HEALTHY forever, and nothing in the codebase
+// branches on getComputeTarget()'s value for actual routing (only
+// pipeline-control-service.ts surfaces it in a status payload) — an
+// independent grader confirmed this before it shipped. Safe activation, not
+// a re-baseline.
+//
+// NOTE: startNetworkFailoverMonitor() (network-failover.ts) was found dormant
+// by the same sweep and INITIALLY wired here too, but an independent grader
+// caught that its own module doc's "observation layer, not an execution
+// modifier" claim is false: isConnectivityDegraded() is consumed by
+// kill-switch.ts's Layer 4 (checkLayer4Connectivity, unscoped — no account
+// parameter, unlike Layers 2/3), which gates isHaltedForProduction() ahead of
+// every openPosition(). Layer 4 has been permanently halted:false since it
+// shipped because the monitor never ran; wiring it activates a real,
+// system-wide, never-before-exercised trade-halt path with no operator
+// recovery route (POST /api/admin/network-failover/confirm-tethering is
+// documented but does not exist). Reverted before commit — staged as a
+// coordination-packet entry (docs/engine-v2-shadow-contract-draft.md) instead.
+startComputeFailoverMonitor();
 
 // goalscan-r2 (2026-07-17, Fable advisor ruling): boot-time live-schema drift
 // canary. Compares every schema.ts (table, column) against information_schema
@@ -1777,6 +1802,11 @@ function gracefulShutdown(signal: string): void {
 
   // Step 3: Tear down Massive WebSocket streams
   stopAllStreams();
+
+  // Step 3b: Clear the compute-failover health-check timer — setInterval() is
+  // not .unref()'d, so an un-cleared timer would keep the event loop alive and
+  // force shutdown to wait out the 10s hard-kill instead of exiting cleanly.
+  stopComputeFailoverMonitor();
 
   // Step 4: Drain Python subprocesses before closing HTTP (they may be serving
   // in-flight requests). We fire-and-forget this with a 5s window, then proceed
