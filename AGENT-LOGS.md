@@ -4,6 +4,20 @@
 
 ---
 
+### Session Log — 2026-07-17 Advisor review of H1 Claude-rung v3.2 stop-point (cloud session, `claude/agent-reports-review-ehn3ou`)
+
+**Mission:** operator's local session froze mid-loop; resume the agent-reports→advisor workflow from the cloud — read the extraction agents' current reports, get current on the H1 campaign, and write the advisor report back to the agent.
+
+**Work completed:**
+- Searched every pushed branch for `docs/agent reports/` — it does not exist on origin (the frozen session's staging, if any, never reached the remote). Treated the cert-branch verdict docs as the reports of record: `corpus-v3-gate3-cert-2026-07-06` @ `efa377d6` (V32-RETEST-VERDICT, V32-DIAGNOSIS, v1 JOINT-BAR-VERDICT, PARALLEL-LANES-STATUS-2026-07-13, claude-rung pre-reg + Amendment 1, campaign plan, H2 pre-reg, mission scope, extraction-campaign-SKILL).
+- Independent evidence read of the single load-bearing residual (2DX-s2 spread-making): pulled the actual grading record from `content_batch_v32_input.jsonl` (transcript span, extraction, coverage_notes, grader-v2 contract) rather than relying on the verdict summary. Key finding: the extraction promoted the Facebook-IPO anecdote's ACTION into `entry_sequence[1]` while stripping the same passage's activating condition (wide spread + heavy two-sided volume), and the doer-cited coverage ("relative equilibrium but thin") describes nearly the opposite regime — so the residual is a genuine boundary case, NOT clean grader over-reach; equally, the coverage contract was honored as written (no separate precondition element in `element_inventory[4]`), locating the defect in Phase-A granularity if it counts (same class v3.2 fixed).
+- Wrote the advisor report: `docs/agent-reports/ADVISOR-2026-07-17-h1-claude-rung-v32-stop-point.md` — verdict-quality assessment (license discipline, legitimate-fix signature, cross-vendor separation, overrun disclosure all hold), the 2DX-s2 evidence sharpened both ways + two legitimate resolution paths (direct operator ruling on the packet, or blind adjudication per the DLwVqc precedent), boundary-fixture minting either way, non-negotiables per Law 6 (miss ⇒ rung closes at 21/22, no second retest; clear ⇒ freeze SHA + terminal read, nothing retroactive), process items (flex-runner mid-run hard-cap as PRECONDITION with a governor trip-test RED-proof; Lane-2 mini tryout is a dangling state owed closure), and if-clear pre-thinking (H2 pre-reg governs; certification is of the READER, not the LIBRARY).
+- Inaugurated `docs/agent-reports/` with a README pinning the convention (agent↔advisor channel only; campaign artifacts stay on the cert branch FF-only; claim scoping + doer≠grader + read-once apply to every report).
+
+**Verification:** docs-only change — no code touched, no instrument packet owed, no system-map sync owed. All quotes in the advisor report verified against `git show` of the cert branch at `efa377d6`.
+
+**Carry-forward for next session:** (1) the two operator calls remain OPEN — 2DX-s2 ruling (decides clear vs narrow-miss) + overrun acknowledgement/cap fix; (2) if the frozen local session had unpushed agent reports staged in `docs/agent reports/`, recover them from the tower checkout and land them here; (3) Lane-2 mini Phase-B tryout result (≥92% anchored bar) + `TF-Frontier-DesignPool-Resume` cron state owed in the agent's next report.
+
 ### Session Log — 2026-07-11 Tower/origin 3-way divergence reconciliation (`hardening/phase-0`)
 
 **Mission:** discovered mid-push-prep that the merge staged the previous session (`wt-merge-prep-20260710`) was built on a stale base and that tower-local `hardening/phase-0` and `origin/hardening/phase-0` had diverged far beyond "a few unpushed commits" — reconcile the two histories in an isolated worktree, verify, and report before pushing anything.
