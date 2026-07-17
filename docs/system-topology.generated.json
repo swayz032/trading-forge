@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-17T16:29:39.127Z",
+  "generatedAt": "2026-07-17T16:36:28.653Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -16,12 +16,12 @@
   },
   "counts": {
     "routes": 79,
-    "schedulerJobs": 112,
+    "schedulerJobs": 111,
     "workflowFiles": 20,
     "canonicalWorkflows": 20,
     "engineSubsystems": 29,
     "databaseTables": 111,
-    "registrySubsystems": 74
+    "registrySubsystems": 73
   },
   "routes": [
     "/api/ab-comparison",
@@ -214,7 +214,6 @@
     "w19-statistics-pull",
     "wave26-cohort-daily-audit-report",
     "webhook-latency-check",
-    "weekend-auto-resume-check",
     "weekly-drift-2sigma-check",
     "weekly-drift-detection"
   ],
@@ -520,7 +519,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 330h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 331h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -761,34 +760,34 @@
     "workflow_backups"
   ],
   "registryCoverage": {
-    "registryEntries": 74,
-    "autonomousSubsystems": 57,
+    "registryEntries": 73,
+    "autonomousSubsystems": 64,
     "selfEvolvingSubsystems": 9,
     "proofStatusCounts": {
-      "runtime-proven": 68,
+      "runtime-proven": 67,
       "partially-proven": 1,
       "offline-by-design": 0,
       "experimental": 5,
       "drifted": 0
     },
     "runtimeStateCounts": {
-      "active": 68,
+      "active": 67,
       "experimental": 5,
       "scaffold": 1
     },
     "currentStateCounts": {
       "inactive_preprod": 0,
       "partially_active_preprod": 0,
-      "active_preprod": 69,
+      "active_preprod": 68,
       "experimental_preprod": 5
     },
     "launchTargetCounts": {
-      "runtime_proven_autonomous": 67,
+      "runtime_proven_autonomous": 66,
       "runtime_proven_manual_gate": 2,
       "experimental_challenger": 5
     },
     "closedLoopCounts": {
-      "not_collecting": 61,
+      "not_collecting": 60,
       "collecting_only": 0,
       "learning_active": 8,
       "learning_blocked": 0,
@@ -796,13 +795,13 @@
     },
     "learningModeCounts": {
       "active_learning": 7,
-      "deterministic_instrumented": 60,
+      "deterministic_instrumented": 59,
       "manual_gate_only": 2,
       "shadow_experimental": 5
     },
     "operatingClassCounts": {
       "adaptive": 7,
-      "deterministic_instrumented": 65,
+      "deterministic_instrumented": 64,
       "manual_gated": 2
     },
     "manualGates": [
@@ -819,7 +818,7 @@
     ],
     "coveredCounts": {
       "routes": 79,
-      "schedulerJobs": 112,
+      "schedulerJobs": 111,
       "engineSubsystems": 29,
       "databaseTables": 111
     },
@@ -846,11 +845,11 @@
     "manualGateViolations": [],
     "preprodIntegrity": {
       "status": "incomplete",
-      "automationComplete": 52,
-      "dataCollectionComplete": 74,
-      "auditabilityComplete": 74,
-      "failureVisibilityComplete": 74,
-      "authorityCorrect": 74,
+      "automationComplete": 59,
+      "dataCollectionComplete": 73,
+      "auditabilityComplete": 73,
+      "failureVisibilityComplete": 73,
+      "authorityCorrect": 73,
       "learningActive": 8,
       "incompleteSubsystems": [
         "adaptive_exit_engine",
@@ -858,14 +857,6 @@
         "exit_engine_ab_harness",
         "fade_the_losers",
         "phase5_contract_spec_scaffold",
-        "replay_grade_confluence",
-        "replay_grade_consistency",
-        "replay_grade_critique",
-        "replay_grade_pattern_aggregator",
-        "replay_grade_robustness",
-        "replay_grade_survival_twin",
-        "replay_grade_unified_dispatcher",
-        "replay_harness_engine",
         "slumhouse_frontend",
         "slumhouse_routes",
         "slumhouse_users_table",
@@ -875,7 +866,7 @@
     "productionConvergence": {
       "status": "blocked",
       "targetStateCounts": {
-        "production_autonomous": 67,
+        "production_autonomous": 66,
         "production_manual_gate": 2,
         "production_experimental": 5,
         "production_not_intended": 0
@@ -945,7 +936,6 @@
         "replay_grade_consistency",
         "replay_grade_critique",
         "replay_grade_pattern_aggregator",
-        "replay_grade_quantum",
         "replay_grade_robustness",
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
@@ -999,7 +989,6 @@
         "replay_grade_consistency:manual_gate:operator-approve",
         "replay_grade_critique:manual_gate:operator-approve",
         "replay_grade_pattern_aggregator:manual_gate:operator-approve",
-        "replay_grade_quantum:manual_gate:operator-approve",
         "replay_grade_robustness:manual_gate:operator-approve",
         "replay_grade_survival_twin:manual_gate:operator-approve",
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
@@ -1046,7 +1035,6 @@
         "replay_grade_consistency:manual_gate:operator-approve",
         "replay_grade_critique:manual_gate:operator-approve",
         "replay_grade_pattern_aggregator:manual_gate:operator-approve",
-        "replay_grade_quantum:manual_gate:operator-approve",
         "replay_grade_robustness:manual_gate:operator-approve",
         "replay_grade_survival_twin:manual_gate:operator-approve",
         "replay_grade_unified_dispatcher:manual_gate:operator-approve",
@@ -1091,7 +1079,6 @@
         "replay_grade_consistency",
         "replay_grade_critique",
         "replay_grade_pattern_aggregator",
-        "replay_grade_quantum",
         "replay_grade_robustness",
         "replay_grade_survival_twin",
         "replay_grade_unified_dispatcher",
@@ -4059,7 +4046,6 @@
           "python-pool-saturation-check",
           "regime-coverage-check",
           "resource-snapshot",
-          "weekend-auto-resume-check",
           "stale-pending-sweeper",
           "system-map-drift",
           "validation-cadence-monthly",
@@ -5533,298 +5519,6 @@
         "domain": "validation",
         "ownerSurface": "node",
         "runtimeState": "active",
-        "automationMode": "manual_invoke",
-        "decisionAuthority": "system",
-        "manualGate": "operator-approve",
-        "selfEvolving": false,
-        "proofMode": "active-runtime",
-        "proofStatus": "runtime-proven",
-        "ownershipBoundary": "internal-only",
-        "learningBoundary": "engine_only",
-        "deploymentAuthority": "autonomous_pre_deploy",
-        "criticality": "important",
-        "currentState": "active_preprod",
-        "launchTargetState": "runtime_proven_autonomous",
-        "productionTargetState": "production_autonomous",
-        "authoritativeRuntime": "node-python",
-        "activationBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "activationCriteria": [
-          "failure visibility wired",
-          "freshness signals available",
-          "runtime evidence persisted"
-        ],
-        "runtimeEvidence": [
-          "docs/replay-results/*-confluence-disagreement.md (written only on --apply)",
-          "stdout-json-summary"
-        ],
-        "dataCollectionCoverage": [
-          "backtest_trades",
-          "backtests",
-          "quantum_mc_runs",
-          "walk_forward_windows"
-        ],
-        "closedLoopStatus": "not_collecting",
-        "learningMode": "deterministic_instrumented",
-        "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
-        "automationStatus": "incomplete",
-        "dataCollectionStatus": "complete",
-        "auditabilityStatus": "complete",
-        "failureVisibilityStatus": "complete",
-        "learningStatus": "not_applicable",
-        "authorityStatus": "correct",
-        "preprodProofStatus": "runtime-proven",
-        "productionBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "productionCriteria": [
-          "authority boundary remains enforced",
-          "data collection stays complete across critical handoffs",
-          "failure visibility remains wired",
-          "pre-production runtime proof remains stable"
-        ],
-        "requiredEvidence": [
-          "docs/replay-results/*-confluence-disagreement.md (written only on --apply)",
-          "src/server/__tests__/replay/replay-grade-confluence.test.ts",
-          "stdout-json-summary"
-        ],
-        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-        "routes": [],
-        "schedulerJobs": [],
-        "healthCheck": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
-        "freshnessSignals": [
-          "docs/replay-results/*-confluence-disagreement.md (written only on --apply)"
-        ],
-        "evidenceQueries": [
-          "src/server/__tests__/replay/replay-grade-confluence.test.ts"
-        ],
-        "coverageGaps": []
-      },
-      {
-        "id": "replay_grade_consistency",
-        "domain": "validation",
-        "ownerSurface": "node",
-        "runtimeState": "active",
-        "automationMode": "manual_invoke",
-        "decisionAuthority": "system",
-        "manualGate": "operator-approve",
-        "selfEvolving": false,
-        "proofMode": "active-runtime",
-        "proofStatus": "runtime-proven",
-        "ownershipBoundary": "internal-only",
-        "learningBoundary": "engine_only",
-        "deploymentAuthority": "autonomous_pre_deploy",
-        "criticality": "important",
-        "currentState": "active_preprod",
-        "launchTargetState": "runtime_proven_autonomous",
-        "productionTargetState": "production_autonomous",
-        "authoritativeRuntime": "node-python",
-        "activationBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "activationCriteria": [
-          "failure visibility wired",
-          "freshness signals available",
-          "runtime evidence persisted"
-        ],
-        "runtimeEvidence": [
-          "docs/replay-results/*-consistency-disagreement.md (written only on --apply)",
-          "stdout-json-summary"
-        ],
-        "dataCollectionCoverage": [
-          "backtest_trades",
-          "backtests"
-        ],
-        "closedLoopStatus": "not_collecting",
-        "learningMode": "deterministic_instrumented",
-        "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
-        "automationStatus": "incomplete",
-        "dataCollectionStatus": "complete",
-        "auditabilityStatus": "complete",
-        "failureVisibilityStatus": "complete",
-        "learningStatus": "not_applicable",
-        "authorityStatus": "correct",
-        "preprodProofStatus": "runtime-proven",
-        "productionBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "productionCriteria": [
-          "authority boundary remains enforced",
-          "data collection stays complete across critical handoffs",
-          "failure visibility remains wired",
-          "pre-production runtime proof remains stable"
-        ],
-        "requiredEvidence": [
-          "docs/replay-results/*-consistency-disagreement.md (written only on --apply)",
-          "src/server/__tests__/replay/replay-grade-consistency.test.ts",
-          "stdout-json-summary"
-        ],
-        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-        "routes": [],
-        "schedulerJobs": [],
-        "healthCheck": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
-        "freshnessSignals": [
-          "docs/replay-results/*-consistency-disagreement.md (written only on --apply)"
-        ],
-        "evidenceQueries": [
-          "src/server/__tests__/replay/replay-grade-consistency.test.ts"
-        ],
-        "coverageGaps": []
-      },
-      {
-        "id": "replay_grade_critique",
-        "domain": "validation",
-        "ownerSurface": "node",
-        "runtimeState": "active",
-        "automationMode": "manual_invoke",
-        "decisionAuthority": "system",
-        "manualGate": "operator-approve",
-        "selfEvolving": false,
-        "proofMode": "active-runtime",
-        "proofStatus": "runtime-proven",
-        "ownershipBoundary": "internal-only",
-        "learningBoundary": "engine_only",
-        "deploymentAuthority": "autonomous_pre_deploy",
-        "criticality": "important",
-        "currentState": "active_preprod",
-        "launchTargetState": "runtime_proven_autonomous",
-        "productionTargetState": "production_autonomous",
-        "authoritativeRuntime": "node-python",
-        "activationBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "activationCriteria": [
-          "failure visibility wired",
-          "freshness signals available",
-          "runtime evidence persisted"
-        ],
-        "runtimeEvidence": [
-          "docs/replay-results/*-critique-disagreement.md (written only on --apply)",
-          "stdout-json-summary"
-        ],
-        "dataCollectionCoverage": [
-          "backtest_trades",
-          "backtests",
-          "trade_critique"
-        ],
-        "closedLoopStatus": "not_collecting",
-        "learningMode": "deterministic_instrumented",
-        "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
-        "automationStatus": "incomplete",
-        "dataCollectionStatus": "complete",
-        "auditabilityStatus": "complete",
-        "failureVisibilityStatus": "complete",
-        "learningStatus": "not_applicable",
-        "authorityStatus": "correct",
-        "preprodProofStatus": "runtime-proven",
-        "productionBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "productionCriteria": [
-          "authority boundary remains enforced",
-          "data collection stays complete across critical handoffs",
-          "failure visibility remains wired",
-          "pre-production runtime proof remains stable"
-        ],
-        "requiredEvidence": [
-          "docs/replay-results/*-critique-disagreement.md (written only on --apply)",
-          "src/server/__tests__/replay/replay-grade-critique.test.ts",
-          "stdout-json-summary"
-        ],
-        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-        "routes": [],
-        "schedulerJobs": [],
-        "healthCheck": "src/server/__tests__/replay/replay-grade-critique.test.ts",
-        "freshnessSignals": [
-          "docs/replay-results/*-critique-disagreement.md (written only on --apply)"
-        ],
-        "evidenceQueries": [
-          "src/server/__tests__/replay/replay-grade-critique.test.ts"
-        ],
-        "coverageGaps": []
-      },
-      {
-        "id": "replay_grade_pattern_aggregator",
-        "domain": "validation",
-        "ownerSurface": "node",
-        "runtimeState": "active",
-        "automationMode": "manual_invoke",
-        "decisionAuthority": "system",
-        "manualGate": "operator-approve",
-        "selfEvolving": false,
-        "proofMode": "active-runtime",
-        "proofStatus": "runtime-proven",
-        "ownershipBoundary": "internal-only",
-        "learningBoundary": "engine_only",
-        "deploymentAuthority": "autonomous_pre_deploy",
-        "criticality": "important",
-        "currentState": "active_preprod",
-        "launchTargetState": "runtime_proven_autonomous",
-        "productionTargetState": "production_autonomous",
-        "authoritativeRuntime": "node-python",
-        "activationBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "activationCriteria": [
-          "failure visibility wired",
-          "freshness signals available",
-          "runtime evidence persisted"
-        ],
-        "runtimeEvidence": [
-          "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)",
-          "stdout-json-summary"
-        ],
-        "dataCollectionCoverage": [
-          "backtest_trades",
-          "backtests",
-          "prompt_versions"
-        ],
-        "closedLoopStatus": "not_collecting",
-        "learningMode": "deterministic_instrumented",
-        "operatingClass": "deterministic_instrumented",
-        "launchReady": false,
-        "automationStatus": "incomplete",
-        "dataCollectionStatus": "complete",
-        "auditabilityStatus": "complete",
-        "failureVisibilityStatus": "complete",
-        "learningStatus": "not_applicable",
-        "authorityStatus": "correct",
-        "preprodProofStatus": "runtime-proven",
-        "productionBlockers": [
-          "manual_gate:operator-approve"
-        ],
-        "productionCriteria": [
-          "authority boundary remains enforced",
-          "data collection stays complete across critical handoffs",
-          "failure visibility remains wired",
-          "pre-production runtime proof remains stable"
-        ],
-        "requiredEvidence": [
-          "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)",
-          "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
-          "stdout-json-summary"
-        ],
-        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-        "routes": [],
-        "schedulerJobs": [],
-        "healthCheck": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
-        "freshnessSignals": [
-          "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)"
-        ],
-        "evidenceQueries": [
-          "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
-        ],
-        "coverageGaps": []
-      },
-      {
-        "id": "replay_grade_quantum",
-        "domain": "validation",
-        "ownerSurface": "node",
-        "runtimeState": "active",
         "automationMode": "autonomous",
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
@@ -5845,23 +5539,20 @@
         "activationCriteria": [
           "failure visibility wired",
           "freshness signals available",
-          "runtime evidence persisted",
-          "scheduler jobs healthy"
+          "runtime evidence persisted"
         ],
         "runtimeEvidence": [
-          "audit_log:quantum_replay.weekly_analysis_failed",
-          "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
-          "audit_log:quantum_replay.weekly_verdict_emitted",
-          "quantum_replay.kill_switch_read_failed",
-          "quantum_replay.weekly_analysis_failed",
-          "quantum_replay.weekly_analysis_loop_halted_skip",
-          "quantum_replay.weekly_analysis_skipped_no_data",
-          "quantum_replay.weekly_analysis_timeout",
-          "quantum_replay.weekly_verdict_emitted",
+          "audit_log:replay_grade_confluence.inconclusive",
+          "audit_log:replay_grade_confluence.no_signal",
+          "audit_log:replay_grade_confluence.preliminary",
+          "audit_log:replay_grade_confluence.signal_detected",
+          "replay_grade_confluence.inconclusive",
+          "replay_grade_confluence.no_signal",
+          "replay_grade_confluence.preliminary",
+          "replay_grade_confluence.signal_detected",
           "stdout-json-summary"
         ],
         "dataCollectionCoverage": [
-          "audit_log",
           "backtest_trades",
           "backtests",
           "quantum_mc_runs",
@@ -5888,44 +5579,38 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
-          "audit_log:quantum_replay.weekly_analysis_failed",
-          "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
-          "audit_log:quantum_replay.weekly_verdict_emitted",
-          "quantum_replay.kill_switch_read_failed",
-          "quantum_replay.weekly_analysis_failed",
-          "quantum_replay.weekly_analysis_loop_halted_skip",
-          "quantum_replay.weekly_analysis_skipped_no_data",
-          "quantum_replay.weekly_analysis_timeout",
-          "quantum_replay.weekly_verdict_emitted",
-          "src/server/__tests__/replay/replay-grade-quantum.test.ts",
-          "src/server/__tests__/wave27-pass1-5-quantum-replay-auto-fire.test.ts",
-          "src/server/__tests__/wave27-pass1-5-weekly-replay-cron.test.ts",
+          "audit_log:replay_grade_confluence.inconclusive",
+          "audit_log:replay_grade_confluence.no_signal",
+          "audit_log:replay_grade_confluence.preliminary",
+          "audit_log:replay_grade_confluence.signal_detected",
+          "replay_grade_confluence.inconclusive",
+          "replay_grade_confluence.no_signal",
+          "replay_grade_confluence.preliminary",
+          "replay_grade_confluence.signal_detected",
+          "src/server/__tests__/replay/replay-grade-confluence.test.ts",
           "stdout-json-summary"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
-        "schedulerJobs": [
-          "quantum-replay-weekly-analysis"
-        ],
-        "healthCheck": "src/server/__tests__/replay/replay-grade-quantum.test.ts",
+        "schedulerJobs": [],
+        "healthCheck": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
         "freshnessSignals": [
-          "audit_log:quantum_replay.weekly_verdict_emitted",
-          "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
-          "audit_log:quantum_replay.weekly_analysis_failed"
+          "audit_log:replay_grade_confluence.signal_detected",
+          "audit_log:replay_grade_confluence.no_signal",
+          "audit_log:replay_grade_confluence.inconclusive",
+          "audit_log:replay_grade_confluence.preliminary"
         ],
         "evidenceQueries": [
-          "src/server/__tests__/replay/replay-grade-quantum.test.ts",
-          "src/server/__tests__/wave27-pass1-5-quantum-replay-auto-fire.test.ts",
-          "src/server/__tests__/wave27-pass1-5-weekly-replay-cron.test.ts"
+          "src/server/__tests__/replay/replay-grade-confluence.test.ts"
         ],
         "coverageGaps": []
       },
       {
-        "id": "replay_grade_robustness",
+        "id": "replay_grade_consistency",
         "domain": "validation",
         "ownerSurface": "node",
         "runtimeState": "active",
-        "automationMode": "manual_invoke",
+        "automationMode": "autonomous",
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
@@ -5948,11 +5633,17 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
-          "docs/replay-results/*-robustness-disagreement.md (written only on --apply)",
+          "audit_log:replay_grade_consistency.inconclusive",
+          "audit_log:replay_grade_consistency.no_signal",
+          "audit_log:replay_grade_consistency.preliminary",
+          "audit_log:replay_grade_consistency.signal_detected",
+          "replay_grade_consistency.inconclusive",
+          "replay_grade_consistency.no_signal",
+          "replay_grade_consistency.preliminary",
+          "replay_grade_consistency.signal_detected",
           "stdout-json-summary"
         ],
         "dataCollectionCoverage": [
-          "b15_robustness_runs",
           "backtest_trades",
           "backtests"
         ],
@@ -5960,7 +5651,7 @@
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
         "launchReady": false,
-        "automationStatus": "incomplete",
+        "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
@@ -5977,7 +5668,284 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
-          "docs/replay-results/*-robustness-disagreement.md (written only on --apply)",
+          "audit_log:replay_grade_consistency.inconclusive",
+          "audit_log:replay_grade_consistency.no_signal",
+          "audit_log:replay_grade_consistency.preliminary",
+          "audit_log:replay_grade_consistency.signal_detected",
+          "replay_grade_consistency.inconclusive",
+          "replay_grade_consistency.no_signal",
+          "replay_grade_consistency.preliminary",
+          "replay_grade_consistency.signal_detected",
+          "src/server/__tests__/replay/replay-grade-consistency.test.ts",
+          "stdout-json-summary"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
+        "freshnessSignals": [
+          "audit_log:replay_grade_consistency.signal_detected",
+          "audit_log:replay_grade_consistency.no_signal",
+          "audit_log:replay_grade_consistency.inconclusive",
+          "audit_log:replay_grade_consistency.preliminary"
+        ],
+        "evidenceQueries": [
+          "src/server/__tests__/replay/replay-grade-consistency.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "replay_grade_critique",
+        "domain": "validation",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "operator-approve",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator-approve"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log:replay_grade_critique.inconclusive",
+          "audit_log:replay_grade_critique.no_signal",
+          "audit_log:replay_grade_critique.preliminary",
+          "audit_log:replay_grade_critique.signal_detected",
+          "replay_grade_critique.inconclusive",
+          "replay_grade_critique.no_signal",
+          "replay_grade_critique.preliminary",
+          "replay_grade_critique.signal_detected",
+          "stdout-json-summary"
+        ],
+        "dataCollectionCoverage": [
+          "backtest_trades",
+          "backtests",
+          "trade_critique"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [
+          "manual_gate:operator-approve"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:replay_grade_critique.inconclusive",
+          "audit_log:replay_grade_critique.no_signal",
+          "audit_log:replay_grade_critique.preliminary",
+          "audit_log:replay_grade_critique.signal_detected",
+          "replay_grade_critique.inconclusive",
+          "replay_grade_critique.no_signal",
+          "replay_grade_critique.preliminary",
+          "replay_grade_critique.signal_detected",
+          "src/server/__tests__/replay/replay-grade-critique.test.ts",
+          "stdout-json-summary"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/__tests__/replay/replay-grade-critique.test.ts",
+        "freshnessSignals": [
+          "audit_log:replay_grade_critique.signal_detected",
+          "audit_log:replay_grade_critique.no_signal",
+          "audit_log:replay_grade_critique.inconclusive",
+          "audit_log:replay_grade_critique.preliminary"
+        ],
+        "evidenceQueries": [
+          "src/server/__tests__/replay/replay-grade-critique.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "replay_grade_pattern_aggregator",
+        "domain": "validation",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "operator-approve",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator-approve"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log:replay_grade_pattern_aggregator.inconclusive",
+          "audit_log:replay_grade_pattern_aggregator.no_signal",
+          "audit_log:replay_grade_pattern_aggregator.preliminary",
+          "audit_log:replay_grade_pattern_aggregator.signal_detected",
+          "replay_grade_pattern_aggregator.inconclusive",
+          "replay_grade_pattern_aggregator.no_signal",
+          "replay_grade_pattern_aggregator.preliminary",
+          "replay_grade_pattern_aggregator.signal_detected",
+          "stdout-json-summary"
+        ],
+        "dataCollectionCoverage": [
+          "backtest_trades",
+          "backtests",
+          "prompt_versions"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [
+          "manual_gate:operator-approve"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:replay_grade_pattern_aggregator.inconclusive",
+          "audit_log:replay_grade_pattern_aggregator.no_signal",
+          "audit_log:replay_grade_pattern_aggregator.preliminary",
+          "audit_log:replay_grade_pattern_aggregator.signal_detected",
+          "replay_grade_pattern_aggregator.inconclusive",
+          "replay_grade_pattern_aggregator.no_signal",
+          "replay_grade_pattern_aggregator.preliminary",
+          "replay_grade_pattern_aggregator.signal_detected",
+          "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
+          "stdout-json-summary"
+        ],
+        "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+        "routes": [],
+        "schedulerJobs": [],
+        "healthCheck": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
+        "freshnessSignals": [
+          "audit_log:replay_grade_pattern_aggregator.signal_detected",
+          "audit_log:replay_grade_pattern_aggregator.no_signal",
+          "audit_log:replay_grade_pattern_aggregator.inconclusive",
+          "audit_log:replay_grade_pattern_aggregator.preliminary"
+        ],
+        "evidenceQueries": [
+          "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
+        ],
+        "coverageGaps": []
+      },
+      {
+        "id": "replay_grade_robustness",
+        "domain": "validation",
+        "ownerSurface": "node",
+        "runtimeState": "active",
+        "automationMode": "autonomous",
+        "decisionAuthority": "system",
+        "manualGate": "operator-approve",
+        "selfEvolving": false,
+        "proofMode": "active-runtime",
+        "proofStatus": "runtime-proven",
+        "ownershipBoundary": "internal-only",
+        "learningBoundary": "engine_only",
+        "deploymentAuthority": "autonomous_pre_deploy",
+        "criticality": "important",
+        "currentState": "active_preprod",
+        "launchTargetState": "runtime_proven_autonomous",
+        "productionTargetState": "production_autonomous",
+        "authoritativeRuntime": "node-python",
+        "activationBlockers": [
+          "manual_gate:operator-approve"
+        ],
+        "activationCriteria": [
+          "failure visibility wired",
+          "freshness signals available",
+          "runtime evidence persisted"
+        ],
+        "runtimeEvidence": [
+          "audit_log:replay_grade_robustness.inconclusive",
+          "audit_log:replay_grade_robustness.no_signal",
+          "audit_log:replay_grade_robustness.preliminary",
+          "audit_log:replay_grade_robustness.signal_detected",
+          "replay_grade_robustness.inconclusive",
+          "replay_grade_robustness.no_signal",
+          "replay_grade_robustness.preliminary",
+          "replay_grade_robustness.signal_detected",
+          "stdout-json-summary"
+        ],
+        "dataCollectionCoverage": [
+          "b15_robustness_runs",
+          "backtest_trades",
+          "backtests"
+        ],
+        "closedLoopStatus": "not_collecting",
+        "learningMode": "deterministic_instrumented",
+        "operatingClass": "deterministic_instrumented",
+        "launchReady": false,
+        "automationStatus": "complete",
+        "dataCollectionStatus": "complete",
+        "auditabilityStatus": "complete",
+        "failureVisibilityStatus": "complete",
+        "learningStatus": "not_applicable",
+        "authorityStatus": "correct",
+        "preprodProofStatus": "runtime-proven",
+        "productionBlockers": [
+          "manual_gate:operator-approve"
+        ],
+        "productionCriteria": [
+          "authority boundary remains enforced",
+          "data collection stays complete across critical handoffs",
+          "failure visibility remains wired",
+          "pre-production runtime proof remains stable"
+        ],
+        "requiredEvidence": [
+          "audit_log:replay_grade_robustness.inconclusive",
+          "audit_log:replay_grade_robustness.no_signal",
+          "audit_log:replay_grade_robustness.preliminary",
+          "audit_log:replay_grade_robustness.signal_detected",
+          "replay_grade_robustness.inconclusive",
+          "replay_grade_robustness.no_signal",
+          "replay_grade_robustness.preliminary",
+          "replay_grade_robustness.signal_detected",
           "src/server/__tests__/replay/replay-grade-robustness.test.ts",
           "stdout-json-summary"
         ],
@@ -5986,7 +5954,10 @@
         "schedulerJobs": [],
         "healthCheck": "src/server/__tests__/replay/replay-grade-robustness.test.ts",
         "freshnessSignals": [
-          "docs/replay-results/*-robustness-disagreement.md (written only on --apply)"
+          "audit_log:replay_grade_robustness.signal_detected",
+          "audit_log:replay_grade_robustness.no_signal",
+          "audit_log:replay_grade_robustness.inconclusive",
+          "audit_log:replay_grade_robustness.preliminary"
         ],
         "evidenceQueries": [
           "src/server/__tests__/replay/replay-grade-robustness.test.ts"
@@ -5998,7 +5969,7 @@
         "domain": "validation",
         "ownerSurface": "python",
         "runtimeState": "active",
-        "automationMode": "manual_invoke",
+        "automationMode": "autonomous",
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
@@ -6021,8 +5992,19 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
-          "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)",
-          "stdout-json-summary"
+          "audit_log:replay_grade_survival_twin.inconclusive",
+          "audit_log:replay_grade_survival_twin.no_signal",
+          "audit_log:replay_grade_survival_twin.preliminary",
+          "audit_log:replay_grade_survival_twin.signal_detected",
+          "audit_log:survival_twin_replay.completed",
+          "audit_log:survival_twin_replay.failed",
+          "replay_grade_survival_twin.inconclusive",
+          "replay_grade_survival_twin.no_signal",
+          "replay_grade_survival_twin.preliminary",
+          "replay_grade_survival_twin.signal_detected",
+          "stdout-json-summary",
+          "survival_twin_replay.completed",
+          "survival_twin_replay.failed"
         ],
         "dataCollectionCoverage": [
           "backtest_trades",
@@ -6034,7 +6016,7 @@
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
         "launchReady": false,
-        "automationStatus": "incomplete",
+        "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
@@ -6051,9 +6033,20 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
-          "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)",
+          "audit_log:replay_grade_survival_twin.inconclusive",
+          "audit_log:replay_grade_survival_twin.no_signal",
+          "audit_log:replay_grade_survival_twin.preliminary",
+          "audit_log:replay_grade_survival_twin.signal_detected",
+          "audit_log:survival_twin_replay.completed",
+          "audit_log:survival_twin_replay.failed",
+          "replay_grade_survival_twin.inconclusive",
+          "replay_grade_survival_twin.no_signal",
+          "replay_grade_survival_twin.preliminary",
+          "replay_grade_survival_twin.signal_detected",
           "src/server/__tests__/replay/replay-grade-survival-twin.test.ts",
           "stdout-json-summary",
+          "survival_twin_replay.completed",
+          "survival_twin_replay.failed",
           "tests/python/replay/test_survival_twin_replay.py"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -6061,7 +6054,12 @@
         "schedulerJobs": [],
         "healthCheck": "tests/python/replay/test_survival_twin_replay.py",
         "freshnessSignals": [
-          "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)"
+          "audit_log:survival_twin_replay.completed",
+          "audit_log:survival_twin_replay.failed",
+          "audit_log:replay_grade_survival_twin.signal_detected",
+          "audit_log:replay_grade_survival_twin.no_signal",
+          "audit_log:replay_grade_survival_twin.inconclusive",
+          "audit_log:replay_grade_survival_twin.preliminary"
         ],
         "evidenceQueries": [
           "tests/python/replay/test_survival_twin_replay.py",
@@ -6074,7 +6072,7 @@
         "domain": "validation",
         "ownerSurface": "node",
         "runtimeState": "active",
-        "automationMode": "manual_invoke",
+        "automationMode": "autonomous",
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
@@ -6097,7 +6095,10 @@
           "runtime evidence persisted"
         ],
         "runtimeEvidence": [
-          "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)",
+          "audit_log:replay_grade.aggregate_verdict_emitted",
+          "audit_log:replay_grade.dispatcher_invoked",
+          "replay_grade.aggregate_verdict_emitted",
+          "replay_grade.dispatcher_invoked",
           "stdout-json-summary"
         ],
         "dataCollectionCoverage": [
@@ -6112,7 +6113,7 @@
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
         "launchReady": false,
-        "automationStatus": "incomplete",
+        "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
@@ -6129,22 +6130,24 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
-          "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)",
-          "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
-          "src/server/__tests__/replay/replay-grade-unified.test.ts",
+          "audit_log:replay_grade.aggregate_verdict_emitted",
+          "audit_log:replay_grade.dispatcher_invoked",
+          "replay_grade.aggregate_verdict_emitted",
+          "replay_grade.dispatcher_invoked",
+          "scripts/replay-grade.ts",
           "src/server/lib/replay/harness-base.ts",
           "stdout-json-summary"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
         "schedulerJobs": [],
-        "healthCheck": "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
+        "healthCheck": "scripts/replay-grade.ts",
         "freshnessSignals": [
-          "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)"
+          "audit_log:replay_grade.dispatcher_invoked",
+          "audit_log:replay_grade.aggregate_verdict_emitted"
         ],
         "evidenceQueries": [
-          "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
-          "src/server/__tests__/replay/replay-grade-unified.test.ts",
+          "scripts/replay-grade.ts",
           "src/server/lib/replay/harness-base.ts"
         ],
         "coverageGaps": []
@@ -6154,7 +6157,7 @@
         "domain": "validation",
         "ownerSurface": "python",
         "runtimeState": "active",
-        "automationMode": "manual_invoke",
+        "automationMode": "autonomous",
         "decisionAuthority": "system",
         "manualGate": "operator-approve",
         "selfEvolving": false,
@@ -6174,10 +6177,12 @@
         "activationCriteria": [
           "failure visibility wired",
           "freshness signals available",
-          "runtime evidence persisted"
+          "runtime evidence persisted",
+          "scheduler jobs healthy"
         ],
         "runtimeEvidence": [
-          "pytest-invocation:tests/python/replay/test_quantum_replay.py",
+          "audit_log:replay.harness_executed",
+          "replay.harness_executed",
           "stdout-json-summary"
         ],
         "dataCollectionCoverage": [
@@ -6189,7 +6194,7 @@
         "learningMode": "deterministic_instrumented",
         "operatingClass": "deterministic_instrumented",
         "launchReady": false,
-        "automationStatus": "incomplete",
+        "automationStatus": "complete",
         "dataCollectionStatus": "complete",
         "auditabilityStatus": "complete",
         "failureVisibilityStatus": "complete",
@@ -6206,16 +6211,19 @@
           "pre-production runtime proof remains stable"
         ],
         "requiredEvidence": [
-          "pytest-invocation:tests/python/replay/test_quantum_replay.py",
+          "audit_log:replay.harness_executed",
+          "replay.harness_executed",
           "stdout-json-summary",
           "tests/python/replay/test_quantum_replay.py"
         ],
         "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
         "routes": [],
-        "schedulerJobs": [],
+        "schedulerJobs": [
+          "quantum-replay-weekly-analysis"
+        ],
         "healthCheck": "tests/python/replay/test_quantum_replay.py",
         "freshnessSignals": [
-          "pytest-invocation:tests/python/replay/test_quantum_replay.py"
+          "audit_log:replay.harness_executed"
         ],
         "evidenceQueries": [
           "tests/python/replay/test_quantum_replay.py"
@@ -11155,7 +11163,6 @@
         "python-pool-saturation-check",
         "regime-coverage-check",
         "resource-snapshot",
-        "weekend-auto-resume-check",
         "stale-pending-sweeper",
         "system-map-drift",
         "validation-cadence-monthly",
@@ -12629,298 +12636,6 @@
       "domain": "validation",
       "ownerSurface": "node",
       "runtimeState": "active",
-      "automationMode": "manual_invoke",
-      "decisionAuthority": "system",
-      "manualGate": "operator-approve",
-      "selfEvolving": false,
-      "proofMode": "active-runtime",
-      "proofStatus": "runtime-proven",
-      "ownershipBoundary": "internal-only",
-      "learningBoundary": "engine_only",
-      "deploymentAuthority": "autonomous_pre_deploy",
-      "criticality": "important",
-      "currentState": "active_preprod",
-      "launchTargetState": "runtime_proven_autonomous",
-      "productionTargetState": "production_autonomous",
-      "authoritativeRuntime": "node-python",
-      "activationBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "activationCriteria": [
-        "failure visibility wired",
-        "freshness signals available",
-        "runtime evidence persisted"
-      ],
-      "runtimeEvidence": [
-        "docs/replay-results/*-confluence-disagreement.md (written only on --apply)",
-        "stdout-json-summary"
-      ],
-      "dataCollectionCoverage": [
-        "backtest_trades",
-        "backtests",
-        "quantum_mc_runs",
-        "walk_forward_windows"
-      ],
-      "closedLoopStatus": "not_collecting",
-      "learningMode": "deterministic_instrumented",
-      "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
-      "automationStatus": "incomplete",
-      "dataCollectionStatus": "complete",
-      "auditabilityStatus": "complete",
-      "failureVisibilityStatus": "complete",
-      "learningStatus": "not_applicable",
-      "authorityStatus": "correct",
-      "preprodProofStatus": "runtime-proven",
-      "productionBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "productionCriteria": [
-        "authority boundary remains enforced",
-        "data collection stays complete across critical handoffs",
-        "failure visibility remains wired",
-        "pre-production runtime proof remains stable"
-      ],
-      "requiredEvidence": [
-        "docs/replay-results/*-confluence-disagreement.md (written only on --apply)",
-        "src/server/__tests__/replay/replay-grade-confluence.test.ts",
-        "stdout-json-summary"
-      ],
-      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-      "routes": [],
-      "schedulerJobs": [],
-      "healthCheck": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
-      "freshnessSignals": [
-        "docs/replay-results/*-confluence-disagreement.md (written only on --apply)"
-      ],
-      "evidenceQueries": [
-        "src/server/__tests__/replay/replay-grade-confluence.test.ts"
-      ],
-      "coverageGaps": []
-    },
-    {
-      "id": "replay_grade_consistency",
-      "domain": "validation",
-      "ownerSurface": "node",
-      "runtimeState": "active",
-      "automationMode": "manual_invoke",
-      "decisionAuthority": "system",
-      "manualGate": "operator-approve",
-      "selfEvolving": false,
-      "proofMode": "active-runtime",
-      "proofStatus": "runtime-proven",
-      "ownershipBoundary": "internal-only",
-      "learningBoundary": "engine_only",
-      "deploymentAuthority": "autonomous_pre_deploy",
-      "criticality": "important",
-      "currentState": "active_preprod",
-      "launchTargetState": "runtime_proven_autonomous",
-      "productionTargetState": "production_autonomous",
-      "authoritativeRuntime": "node-python",
-      "activationBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "activationCriteria": [
-        "failure visibility wired",
-        "freshness signals available",
-        "runtime evidence persisted"
-      ],
-      "runtimeEvidence": [
-        "docs/replay-results/*-consistency-disagreement.md (written only on --apply)",
-        "stdout-json-summary"
-      ],
-      "dataCollectionCoverage": [
-        "backtest_trades",
-        "backtests"
-      ],
-      "closedLoopStatus": "not_collecting",
-      "learningMode": "deterministic_instrumented",
-      "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
-      "automationStatus": "incomplete",
-      "dataCollectionStatus": "complete",
-      "auditabilityStatus": "complete",
-      "failureVisibilityStatus": "complete",
-      "learningStatus": "not_applicable",
-      "authorityStatus": "correct",
-      "preprodProofStatus": "runtime-proven",
-      "productionBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "productionCriteria": [
-        "authority boundary remains enforced",
-        "data collection stays complete across critical handoffs",
-        "failure visibility remains wired",
-        "pre-production runtime proof remains stable"
-      ],
-      "requiredEvidence": [
-        "docs/replay-results/*-consistency-disagreement.md (written only on --apply)",
-        "src/server/__tests__/replay/replay-grade-consistency.test.ts",
-        "stdout-json-summary"
-      ],
-      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-      "routes": [],
-      "schedulerJobs": [],
-      "healthCheck": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
-      "freshnessSignals": [
-        "docs/replay-results/*-consistency-disagreement.md (written only on --apply)"
-      ],
-      "evidenceQueries": [
-        "src/server/__tests__/replay/replay-grade-consistency.test.ts"
-      ],
-      "coverageGaps": []
-    },
-    {
-      "id": "replay_grade_critique",
-      "domain": "validation",
-      "ownerSurface": "node",
-      "runtimeState": "active",
-      "automationMode": "manual_invoke",
-      "decisionAuthority": "system",
-      "manualGate": "operator-approve",
-      "selfEvolving": false,
-      "proofMode": "active-runtime",
-      "proofStatus": "runtime-proven",
-      "ownershipBoundary": "internal-only",
-      "learningBoundary": "engine_only",
-      "deploymentAuthority": "autonomous_pre_deploy",
-      "criticality": "important",
-      "currentState": "active_preprod",
-      "launchTargetState": "runtime_proven_autonomous",
-      "productionTargetState": "production_autonomous",
-      "authoritativeRuntime": "node-python",
-      "activationBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "activationCriteria": [
-        "failure visibility wired",
-        "freshness signals available",
-        "runtime evidence persisted"
-      ],
-      "runtimeEvidence": [
-        "docs/replay-results/*-critique-disagreement.md (written only on --apply)",
-        "stdout-json-summary"
-      ],
-      "dataCollectionCoverage": [
-        "backtest_trades",
-        "backtests",
-        "trade_critique"
-      ],
-      "closedLoopStatus": "not_collecting",
-      "learningMode": "deterministic_instrumented",
-      "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
-      "automationStatus": "incomplete",
-      "dataCollectionStatus": "complete",
-      "auditabilityStatus": "complete",
-      "failureVisibilityStatus": "complete",
-      "learningStatus": "not_applicable",
-      "authorityStatus": "correct",
-      "preprodProofStatus": "runtime-proven",
-      "productionBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "productionCriteria": [
-        "authority boundary remains enforced",
-        "data collection stays complete across critical handoffs",
-        "failure visibility remains wired",
-        "pre-production runtime proof remains stable"
-      ],
-      "requiredEvidence": [
-        "docs/replay-results/*-critique-disagreement.md (written only on --apply)",
-        "src/server/__tests__/replay/replay-grade-critique.test.ts",
-        "stdout-json-summary"
-      ],
-      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-      "routes": [],
-      "schedulerJobs": [],
-      "healthCheck": "src/server/__tests__/replay/replay-grade-critique.test.ts",
-      "freshnessSignals": [
-        "docs/replay-results/*-critique-disagreement.md (written only on --apply)"
-      ],
-      "evidenceQueries": [
-        "src/server/__tests__/replay/replay-grade-critique.test.ts"
-      ],
-      "coverageGaps": []
-    },
-    {
-      "id": "replay_grade_pattern_aggregator",
-      "domain": "validation",
-      "ownerSurface": "node",
-      "runtimeState": "active",
-      "automationMode": "manual_invoke",
-      "decisionAuthority": "system",
-      "manualGate": "operator-approve",
-      "selfEvolving": false,
-      "proofMode": "active-runtime",
-      "proofStatus": "runtime-proven",
-      "ownershipBoundary": "internal-only",
-      "learningBoundary": "engine_only",
-      "deploymentAuthority": "autonomous_pre_deploy",
-      "criticality": "important",
-      "currentState": "active_preprod",
-      "launchTargetState": "runtime_proven_autonomous",
-      "productionTargetState": "production_autonomous",
-      "authoritativeRuntime": "node-python",
-      "activationBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "activationCriteria": [
-        "failure visibility wired",
-        "freshness signals available",
-        "runtime evidence persisted"
-      ],
-      "runtimeEvidence": [
-        "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)",
-        "stdout-json-summary"
-      ],
-      "dataCollectionCoverage": [
-        "backtest_trades",
-        "backtests",
-        "prompt_versions"
-      ],
-      "closedLoopStatus": "not_collecting",
-      "learningMode": "deterministic_instrumented",
-      "operatingClass": "deterministic_instrumented",
-      "launchReady": false,
-      "automationStatus": "incomplete",
-      "dataCollectionStatus": "complete",
-      "auditabilityStatus": "complete",
-      "failureVisibilityStatus": "complete",
-      "learningStatus": "not_applicable",
-      "authorityStatus": "correct",
-      "preprodProofStatus": "runtime-proven",
-      "productionBlockers": [
-        "manual_gate:operator-approve"
-      ],
-      "productionCriteria": [
-        "authority boundary remains enforced",
-        "data collection stays complete across critical handoffs",
-        "failure visibility remains wired",
-        "pre-production runtime proof remains stable"
-      ],
-      "requiredEvidence": [
-        "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)",
-        "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
-        "stdout-json-summary"
-      ],
-      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
-      "routes": [],
-      "schedulerJobs": [],
-      "healthCheck": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
-      "freshnessSignals": [
-        "docs/replay-results/*-pattern-aggregator-disagreement.md (written only on --apply)"
-      ],
-      "evidenceQueries": [
-        "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
-      ],
-      "coverageGaps": []
-    },
-    {
-      "id": "replay_grade_quantum",
-      "domain": "validation",
-      "ownerSurface": "node",
-      "runtimeState": "active",
       "automationMode": "autonomous",
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
@@ -12941,23 +12656,20 @@
       "activationCriteria": [
         "failure visibility wired",
         "freshness signals available",
-        "runtime evidence persisted",
-        "scheduler jobs healthy"
+        "runtime evidence persisted"
       ],
       "runtimeEvidence": [
-        "audit_log:quantum_replay.weekly_analysis_failed",
-        "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
-        "audit_log:quantum_replay.weekly_verdict_emitted",
-        "quantum_replay.kill_switch_read_failed",
-        "quantum_replay.weekly_analysis_failed",
-        "quantum_replay.weekly_analysis_loop_halted_skip",
-        "quantum_replay.weekly_analysis_skipped_no_data",
-        "quantum_replay.weekly_analysis_timeout",
-        "quantum_replay.weekly_verdict_emitted",
+        "audit_log:replay_grade_confluence.inconclusive",
+        "audit_log:replay_grade_confluence.no_signal",
+        "audit_log:replay_grade_confluence.preliminary",
+        "audit_log:replay_grade_confluence.signal_detected",
+        "replay_grade_confluence.inconclusive",
+        "replay_grade_confluence.no_signal",
+        "replay_grade_confluence.preliminary",
+        "replay_grade_confluence.signal_detected",
         "stdout-json-summary"
       ],
       "dataCollectionCoverage": [
-        "audit_log",
         "backtest_trades",
         "backtests",
         "quantum_mc_runs",
@@ -12984,44 +12696,38 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
-        "audit_log:quantum_replay.weekly_analysis_failed",
-        "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
-        "audit_log:quantum_replay.weekly_verdict_emitted",
-        "quantum_replay.kill_switch_read_failed",
-        "quantum_replay.weekly_analysis_failed",
-        "quantum_replay.weekly_analysis_loop_halted_skip",
-        "quantum_replay.weekly_analysis_skipped_no_data",
-        "quantum_replay.weekly_analysis_timeout",
-        "quantum_replay.weekly_verdict_emitted",
-        "src/server/__tests__/replay/replay-grade-quantum.test.ts",
-        "src/server/__tests__/wave27-pass1-5-quantum-replay-auto-fire.test.ts",
-        "src/server/__tests__/wave27-pass1-5-weekly-replay-cron.test.ts",
+        "audit_log:replay_grade_confluence.inconclusive",
+        "audit_log:replay_grade_confluence.no_signal",
+        "audit_log:replay_grade_confluence.preliminary",
+        "audit_log:replay_grade_confluence.signal_detected",
+        "replay_grade_confluence.inconclusive",
+        "replay_grade_confluence.no_signal",
+        "replay_grade_confluence.preliminary",
+        "replay_grade_confluence.signal_detected",
+        "src/server/__tests__/replay/replay-grade-confluence.test.ts",
         "stdout-json-summary"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
-      "schedulerJobs": [
-        "quantum-replay-weekly-analysis"
-      ],
-      "healthCheck": "src/server/__tests__/replay/replay-grade-quantum.test.ts",
+      "schedulerJobs": [],
+      "healthCheck": "src/server/__tests__/replay/replay-grade-confluence.test.ts",
       "freshnessSignals": [
-        "audit_log:quantum_replay.weekly_verdict_emitted",
-        "audit_log:quantum_replay.weekly_analysis_skipped_no_data",
-        "audit_log:quantum_replay.weekly_analysis_failed"
+        "audit_log:replay_grade_confluence.signal_detected",
+        "audit_log:replay_grade_confluence.no_signal",
+        "audit_log:replay_grade_confluence.inconclusive",
+        "audit_log:replay_grade_confluence.preliminary"
       ],
       "evidenceQueries": [
-        "src/server/__tests__/replay/replay-grade-quantum.test.ts",
-        "src/server/__tests__/wave27-pass1-5-quantum-replay-auto-fire.test.ts",
-        "src/server/__tests__/wave27-pass1-5-weekly-replay-cron.test.ts"
+        "src/server/__tests__/replay/replay-grade-confluence.test.ts"
       ],
       "coverageGaps": []
     },
     {
-      "id": "replay_grade_robustness",
+      "id": "replay_grade_consistency",
       "domain": "validation",
       "ownerSurface": "node",
       "runtimeState": "active",
-      "automationMode": "manual_invoke",
+      "automationMode": "autonomous",
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
@@ -13044,11 +12750,17 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
-        "docs/replay-results/*-robustness-disagreement.md (written only on --apply)",
+        "audit_log:replay_grade_consistency.inconclusive",
+        "audit_log:replay_grade_consistency.no_signal",
+        "audit_log:replay_grade_consistency.preliminary",
+        "audit_log:replay_grade_consistency.signal_detected",
+        "replay_grade_consistency.inconclusive",
+        "replay_grade_consistency.no_signal",
+        "replay_grade_consistency.preliminary",
+        "replay_grade_consistency.signal_detected",
         "stdout-json-summary"
       ],
       "dataCollectionCoverage": [
-        "b15_robustness_runs",
         "backtest_trades",
         "backtests"
       ],
@@ -13056,7 +12768,7 @@
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "launchReady": false,
-      "automationStatus": "incomplete",
+      "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
@@ -13073,7 +12785,284 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
-        "docs/replay-results/*-robustness-disagreement.md (written only on --apply)",
+        "audit_log:replay_grade_consistency.inconclusive",
+        "audit_log:replay_grade_consistency.no_signal",
+        "audit_log:replay_grade_consistency.preliminary",
+        "audit_log:replay_grade_consistency.signal_detected",
+        "replay_grade_consistency.inconclusive",
+        "replay_grade_consistency.no_signal",
+        "replay_grade_consistency.preliminary",
+        "replay_grade_consistency.signal_detected",
+        "src/server/__tests__/replay/replay-grade-consistency.test.ts",
+        "stdout-json-summary"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/__tests__/replay/replay-grade-consistency.test.ts",
+      "freshnessSignals": [
+        "audit_log:replay_grade_consistency.signal_detected",
+        "audit_log:replay_grade_consistency.no_signal",
+        "audit_log:replay_grade_consistency.inconclusive",
+        "audit_log:replay_grade_consistency.preliminary"
+      ],
+      "evidenceQueries": [
+        "src/server/__tests__/replay/replay-grade-consistency.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "replay_grade_critique",
+      "domain": "validation",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator-approve"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log:replay_grade_critique.inconclusive",
+        "audit_log:replay_grade_critique.no_signal",
+        "audit_log:replay_grade_critique.preliminary",
+        "audit_log:replay_grade_critique.signal_detected",
+        "replay_grade_critique.inconclusive",
+        "replay_grade_critique.no_signal",
+        "replay_grade_critique.preliminary",
+        "replay_grade_critique.signal_detected",
+        "stdout-json-summary"
+      ],
+      "dataCollectionCoverage": [
+        "backtest_trades",
+        "backtests",
+        "trade_critique"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [
+        "manual_gate:operator-approve"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:replay_grade_critique.inconclusive",
+        "audit_log:replay_grade_critique.no_signal",
+        "audit_log:replay_grade_critique.preliminary",
+        "audit_log:replay_grade_critique.signal_detected",
+        "replay_grade_critique.inconclusive",
+        "replay_grade_critique.no_signal",
+        "replay_grade_critique.preliminary",
+        "replay_grade_critique.signal_detected",
+        "src/server/__tests__/replay/replay-grade-critique.test.ts",
+        "stdout-json-summary"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/__tests__/replay/replay-grade-critique.test.ts",
+      "freshnessSignals": [
+        "audit_log:replay_grade_critique.signal_detected",
+        "audit_log:replay_grade_critique.no_signal",
+        "audit_log:replay_grade_critique.inconclusive",
+        "audit_log:replay_grade_critique.preliminary"
+      ],
+      "evidenceQueries": [
+        "src/server/__tests__/replay/replay-grade-critique.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "replay_grade_pattern_aggregator",
+      "domain": "validation",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator-approve"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log:replay_grade_pattern_aggregator.inconclusive",
+        "audit_log:replay_grade_pattern_aggregator.no_signal",
+        "audit_log:replay_grade_pattern_aggregator.preliminary",
+        "audit_log:replay_grade_pattern_aggregator.signal_detected",
+        "replay_grade_pattern_aggregator.inconclusive",
+        "replay_grade_pattern_aggregator.no_signal",
+        "replay_grade_pattern_aggregator.preliminary",
+        "replay_grade_pattern_aggregator.signal_detected",
+        "stdout-json-summary"
+      ],
+      "dataCollectionCoverage": [
+        "backtest_trades",
+        "backtests",
+        "prompt_versions"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [
+        "manual_gate:operator-approve"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:replay_grade_pattern_aggregator.inconclusive",
+        "audit_log:replay_grade_pattern_aggregator.no_signal",
+        "audit_log:replay_grade_pattern_aggregator.preliminary",
+        "audit_log:replay_grade_pattern_aggregator.signal_detected",
+        "replay_grade_pattern_aggregator.inconclusive",
+        "replay_grade_pattern_aggregator.no_signal",
+        "replay_grade_pattern_aggregator.preliminary",
+        "replay_grade_pattern_aggregator.signal_detected",
+        "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
+        "stdout-json-summary"
+      ],
+      "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
+      "routes": [],
+      "schedulerJobs": [],
+      "healthCheck": "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts",
+      "freshnessSignals": [
+        "audit_log:replay_grade_pattern_aggregator.signal_detected",
+        "audit_log:replay_grade_pattern_aggregator.no_signal",
+        "audit_log:replay_grade_pattern_aggregator.inconclusive",
+        "audit_log:replay_grade_pattern_aggregator.preliminary"
+      ],
+      "evidenceQueries": [
+        "src/server/__tests__/replay/replay-grade-pattern-aggregator.test.ts"
+      ],
+      "coverageGaps": []
+    },
+    {
+      "id": "replay_grade_robustness",
+      "domain": "validation",
+      "ownerSurface": "node",
+      "runtimeState": "active",
+      "automationMode": "autonomous",
+      "decisionAuthority": "system",
+      "manualGate": "operator-approve",
+      "selfEvolving": false,
+      "proofMode": "active-runtime",
+      "proofStatus": "runtime-proven",
+      "ownershipBoundary": "internal-only",
+      "learningBoundary": "engine_only",
+      "deploymentAuthority": "autonomous_pre_deploy",
+      "criticality": "important",
+      "currentState": "active_preprod",
+      "launchTargetState": "runtime_proven_autonomous",
+      "productionTargetState": "production_autonomous",
+      "authoritativeRuntime": "node-python",
+      "activationBlockers": [
+        "manual_gate:operator-approve"
+      ],
+      "activationCriteria": [
+        "failure visibility wired",
+        "freshness signals available",
+        "runtime evidence persisted"
+      ],
+      "runtimeEvidence": [
+        "audit_log:replay_grade_robustness.inconclusive",
+        "audit_log:replay_grade_robustness.no_signal",
+        "audit_log:replay_grade_robustness.preliminary",
+        "audit_log:replay_grade_robustness.signal_detected",
+        "replay_grade_robustness.inconclusive",
+        "replay_grade_robustness.no_signal",
+        "replay_grade_robustness.preliminary",
+        "replay_grade_robustness.signal_detected",
+        "stdout-json-summary"
+      ],
+      "dataCollectionCoverage": [
+        "b15_robustness_runs",
+        "backtest_trades",
+        "backtests"
+      ],
+      "closedLoopStatus": "not_collecting",
+      "learningMode": "deterministic_instrumented",
+      "operatingClass": "deterministic_instrumented",
+      "launchReady": false,
+      "automationStatus": "complete",
+      "dataCollectionStatus": "complete",
+      "auditabilityStatus": "complete",
+      "failureVisibilityStatus": "complete",
+      "learningStatus": "not_applicable",
+      "authorityStatus": "correct",
+      "preprodProofStatus": "runtime-proven",
+      "productionBlockers": [
+        "manual_gate:operator-approve"
+      ],
+      "productionCriteria": [
+        "authority boundary remains enforced",
+        "data collection stays complete across critical handoffs",
+        "failure visibility remains wired",
+        "pre-production runtime proof remains stable"
+      ],
+      "requiredEvidence": [
+        "audit_log:replay_grade_robustness.inconclusive",
+        "audit_log:replay_grade_robustness.no_signal",
+        "audit_log:replay_grade_robustness.preliminary",
+        "audit_log:replay_grade_robustness.signal_detected",
+        "replay_grade_robustness.inconclusive",
+        "replay_grade_robustness.no_signal",
+        "replay_grade_robustness.preliminary",
+        "replay_grade_robustness.signal_detected",
         "src/server/__tests__/replay/replay-grade-robustness.test.ts",
         "stdout-json-summary"
       ],
@@ -13082,7 +13071,10 @@
       "schedulerJobs": [],
       "healthCheck": "src/server/__tests__/replay/replay-grade-robustness.test.ts",
       "freshnessSignals": [
-        "docs/replay-results/*-robustness-disagreement.md (written only on --apply)"
+        "audit_log:replay_grade_robustness.signal_detected",
+        "audit_log:replay_grade_robustness.no_signal",
+        "audit_log:replay_grade_robustness.inconclusive",
+        "audit_log:replay_grade_robustness.preliminary"
       ],
       "evidenceQueries": [
         "src/server/__tests__/replay/replay-grade-robustness.test.ts"
@@ -13094,7 +13086,7 @@
       "domain": "validation",
       "ownerSurface": "python",
       "runtimeState": "active",
-      "automationMode": "manual_invoke",
+      "automationMode": "autonomous",
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
@@ -13117,8 +13109,19 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
-        "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)",
-        "stdout-json-summary"
+        "audit_log:replay_grade_survival_twin.inconclusive",
+        "audit_log:replay_grade_survival_twin.no_signal",
+        "audit_log:replay_grade_survival_twin.preliminary",
+        "audit_log:replay_grade_survival_twin.signal_detected",
+        "audit_log:survival_twin_replay.completed",
+        "audit_log:survival_twin_replay.failed",
+        "replay_grade_survival_twin.inconclusive",
+        "replay_grade_survival_twin.no_signal",
+        "replay_grade_survival_twin.preliminary",
+        "replay_grade_survival_twin.signal_detected",
+        "stdout-json-summary",
+        "survival_twin_replay.completed",
+        "survival_twin_replay.failed"
       ],
       "dataCollectionCoverage": [
         "backtest_trades",
@@ -13130,7 +13133,7 @@
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "launchReady": false,
-      "automationStatus": "incomplete",
+      "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
@@ -13147,9 +13150,20 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
-        "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)",
+        "audit_log:replay_grade_survival_twin.inconclusive",
+        "audit_log:replay_grade_survival_twin.no_signal",
+        "audit_log:replay_grade_survival_twin.preliminary",
+        "audit_log:replay_grade_survival_twin.signal_detected",
+        "audit_log:survival_twin_replay.completed",
+        "audit_log:survival_twin_replay.failed",
+        "replay_grade_survival_twin.inconclusive",
+        "replay_grade_survival_twin.no_signal",
+        "replay_grade_survival_twin.preliminary",
+        "replay_grade_survival_twin.signal_detected",
         "src/server/__tests__/replay/replay-grade-survival-twin.test.ts",
         "stdout-json-summary",
+        "survival_twin_replay.completed",
+        "survival_twin_replay.failed",
         "tests/python/replay/test_survival_twin_replay.py"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
@@ -13157,7 +13171,12 @@
       "schedulerJobs": [],
       "healthCheck": "tests/python/replay/test_survival_twin_replay.py",
       "freshnessSignals": [
-        "quantum_mc_runs:governance_labels.survival_twin=true (recent row, written only on --apply)"
+        "audit_log:survival_twin_replay.completed",
+        "audit_log:survival_twin_replay.failed",
+        "audit_log:replay_grade_survival_twin.signal_detected",
+        "audit_log:replay_grade_survival_twin.no_signal",
+        "audit_log:replay_grade_survival_twin.inconclusive",
+        "audit_log:replay_grade_survival_twin.preliminary"
       ],
       "evidenceQueries": [
         "tests/python/replay/test_survival_twin_replay.py",
@@ -13170,7 +13189,7 @@
       "domain": "validation",
       "ownerSurface": "node",
       "runtimeState": "active",
-      "automationMode": "manual_invoke",
+      "automationMode": "autonomous",
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
@@ -13193,7 +13212,10 @@
         "runtime evidence persisted"
       ],
       "runtimeEvidence": [
-        "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)",
+        "audit_log:replay_grade.aggregate_verdict_emitted",
+        "audit_log:replay_grade.dispatcher_invoked",
+        "replay_grade.aggregate_verdict_emitted",
+        "replay_grade.dispatcher_invoked",
         "stdout-json-summary"
       ],
       "dataCollectionCoverage": [
@@ -13208,7 +13230,7 @@
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "launchReady": false,
-      "automationStatus": "incomplete",
+      "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
@@ -13225,22 +13247,24 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
-        "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)",
-        "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
-        "src/server/__tests__/replay/replay-grade-unified.test.ts",
+        "audit_log:replay_grade.aggregate_verdict_emitted",
+        "audit_log:replay_grade.dispatcher_invoked",
+        "replay_grade.aggregate_verdict_emitted",
+        "replay_grade.dispatcher_invoked",
+        "scripts/replay-grade.ts",
         "src/server/lib/replay/harness-base.ts",
         "stdout-json-summary"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
       "schedulerJobs": [],
-      "healthCheck": "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
+      "healthCheck": "scripts/replay-grade.ts",
       "freshnessSignals": [
-        "docs/replay-results/*-weekly-roundup.md (written only on --tool=all --apply)"
+        "audit_log:replay_grade.dispatcher_invoked",
+        "audit_log:replay_grade.aggregate_verdict_emitted"
       ],
       "evidenceQueries": [
-        "src/server/__tests__/replay/replay-grade-dispatcher-wiring.test.ts",
-        "src/server/__tests__/replay/replay-grade-unified.test.ts",
+        "scripts/replay-grade.ts",
         "src/server/lib/replay/harness-base.ts"
       ],
       "coverageGaps": []
@@ -13250,7 +13274,7 @@
       "domain": "validation",
       "ownerSurface": "python",
       "runtimeState": "active",
-      "automationMode": "manual_invoke",
+      "automationMode": "autonomous",
       "decisionAuthority": "system",
       "manualGate": "operator-approve",
       "selfEvolving": false,
@@ -13270,10 +13294,12 @@
       "activationCriteria": [
         "failure visibility wired",
         "freshness signals available",
-        "runtime evidence persisted"
+        "runtime evidence persisted",
+        "scheduler jobs healthy"
       ],
       "runtimeEvidence": [
-        "pytest-invocation:tests/python/replay/test_quantum_replay.py",
+        "audit_log:replay.harness_executed",
+        "replay.harness_executed",
         "stdout-json-summary"
       ],
       "dataCollectionCoverage": [
@@ -13285,7 +13311,7 @@
       "learningMode": "deterministic_instrumented",
       "operatingClass": "deterministic_instrumented",
       "launchReady": false,
-      "automationStatus": "incomplete",
+      "automationStatus": "complete",
       "dataCollectionStatus": "complete",
       "auditabilityStatus": "complete",
       "failureVisibilityStatus": "complete",
@@ -13302,16 +13328,19 @@
         "pre-production runtime proof remains stable"
       ],
       "requiredEvidence": [
-        "pytest-invocation:tests/python/replay/test_quantum_replay.py",
+        "audit_log:replay.harness_executed",
+        "replay.harness_executed",
         "stdout-json-summary",
         "tests/python/replay/test_quantum_replay.py"
       ],
       "productionAuthorityBoundary": "Autonomous in pre-production up to the pre-deploy boundary with no independent release authority.",
       "routes": [],
-      "schedulerJobs": [],
+      "schedulerJobs": [
+        "quantum-replay-weekly-analysis"
+      ],
       "healthCheck": "tests/python/replay/test_quantum_replay.py",
       "freshnessSignals": [
-        "pytest-invocation:tests/python/replay/test_quantum_replay.py"
+        "audit_log:replay.harness_executed"
       ],
       "evidenceQueries": [
         "tests/python/replay/test_quantum_replay.py"

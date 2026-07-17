@@ -57,6 +57,10 @@ import { evaluateLunchBlackoutGate, getLunchBlackoutStartEnvDefault, getLunchBla
 // Fail-OPEN: payout-eligibility gate (not a loss gate) — consistent with daily-trade-cap precedent.
 import { shouldBlockNewEntry as consistencyGateShouldBlock, CONSISTENCY_RULE_FIRMS } from "./consistency-tracker-service.js";
 import { resolveConsistencyEnforced } from "../lib/consistency-lane.js";
+// Wave 6 ($250-1K campaign): shadow (observability-only, never-enforcing) profit-milestone
+// governor. Bucketing only — see profit-milestone-shadow.ts for the fail-open + uncapped-
+// upside contract. NEVER read/written into lockoutBlocked or any exit path.
+import { evaluateProfitMilestone, resolveProfitMilestoneShadowEnabled, decideProfitMilestoneTransition, type ProfitMilestoneZone } from "../lib/profit-milestone-shadow.js";
 // FIX B (2026-06-22): In-process Tier-1 event window checker for calendar fallback.
 // When the Python calendar_filter subprocess fails, CALENDAR_SAFE_DEFAULT had
 // is_economic_event:false — silently opening FOMC/CPI/NFP windows. The in-process
@@ -629,6 +633,13 @@ interface GovernorSessionState {
   sessionTrades: number;
   profitableSessions: number;
   dailyLossBudget: number;
+  // Wave 6 ($250-1K campaign): last STRONG/EXCEPTIONAL zone the shadow profit-milestone
+  // governor has already logged an audit row + SSE event for THIS session. Dedup marker
+  // only — observability-only field, never read by any blocking gate. null = not yet
+  // logged (or fell back below STRONG and the marker was cleared). Reset to null wherever
+  // sessionPnl resets (new session, restored session, end-of-day) so a new trading day
+  // re-triggers the transition-only audit/SSE fire.
+  lastProfitMilestoneZone: ProfitMilestoneZone | null;
 }
 
 const SIZE_MULTIPLIERS_TS: Record<GovernorStateName, number> = {
@@ -758,6 +769,7 @@ function getGovernorState(
       sessionTrades: 0,
       profitableSessions: 0,
       dailyLossBudget,
+      lastProfitMilestoneZone: null,
     };
     governorStateCache.set(sessionId, state);
   }
@@ -921,6 +933,7 @@ export function restoreGovernorState(
     sessionTrades: 0,
     profitableSessions: 0,
     dailyLossBudget: typeof snapshot.dailyLossBudget === "number" ? snapshot.dailyLossBudget : 500,
+    lastProfitMilestoneZone: null, // reset alongside sessionPnl — new trading day, fresh zone tracking
   };
 
   governorStateCache.set(sessionId, restoredState);
@@ -950,6 +963,7 @@ export function governorOnSessionEnd(sessionId: string): void {
   // Reset session-level counters
   gov.sessionPnl = 0;
   gov.sessionTrades = 0;
+  gov.lastProfitMilestoneZone = null; // new trading day — fresh zone tracking
   // NOTE: consecutiveLosses/consecutiveWins persist across sessions (cross-session streaks)
 }
 
@@ -4158,6 +4172,84 @@ export async function evaluateSignals(
     // W23H.H/F: symbol whitelist, pre-market blackout, and DLL halt are treated as
     // early lockouts (same short-circuit pattern — downstream gates all check lockoutBlocked).
     let lockoutBlocked = symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked || dailyTradeCapBlocked || lunchBlackoutBlocked || consistencyBlocked;
+
+    // ─── Wave 6 ($250-1K campaign) — Shadow Profit-Milestone Governor (OBSERVABILITY ONLY) ──
+    // Pure bucketing of session realized P&L into NORMAL/BASE/STRONG/EXCEPTIONAL zones, purely
+    // for operator visibility. This block MUST NEVER read from or write into `lockoutBlocked`
+    // (or any gate derived from it — correlatedBlocked, crossAccountHedgeBlocked,
+    // priceLockBlocked, antiSetupBlocked, etc.), and MUST NEVER be called from exit/close logic.
+    // Daily upside stays UNCAPPED by explicit operator directive (CLAUDE.md §5) — this
+    // governor is not, and must never become, a take-profit ceiling. See
+    // src/server/lib/profit-milestone-shadow.ts for the fail-open + uncapped-upside contract.
+    //
+    // De-dup: audit row + SSE fire only on the transition INTO STRONG/EXCEPTIONAL (tracked via
+    // gov.lastProfitMilestoneZone on the existing per-session governorStateCache entry), not on
+    // every bar/signal evaluation while the session continues to sit in that zone.
+    try {
+      const profitMilestoneShadowEnabled = resolveProfitMilestoneShadowEnabled(
+        sessionConfig.config as unknown as { profit_milestone_shadow_enabled?: boolean },
+      );
+      if (profitMilestoneShadowEnabled) {
+        try {
+          const gov = getGovernorState(sessionId);
+          const milestoneResult = evaluateProfitMilestone({ sessionPnl: gov.sessionPnl });
+          const transition = decideProfitMilestoneTransition(gov.lastProfitMilestoneZone, milestoneResult.zone);
+          gov.lastProfitMilestoneZone = transition.nextMarker;
+
+          if (transition.emit) {
+            logger.info(
+              { sessionId, symbol, zone: milestoneResult.zone, sessionPnl: milestoneResult.sessionPnl },
+              "Wave 6: shadow profit-milestone governor — session entered a new zone (observability only, never blocks)",
+            );
+            insertAuditRow({
+              action: "profit_governor.shadow_would_block",
+              entityType: "paper_session",
+              entityId: sessionId,
+              decisionAuthority: "system",
+              status: "info",
+              input: { sessionPnl: gov.sessionPnl } as Record<string, unknown>,
+              // wouldBlock is PERMANENTLY false — this governor never actually blocks.
+              // Do not repurpose this field to mean anything else in a future edit.
+              result: { zone: milestoneResult.zone, wouldBlock: false } as Record<string, unknown>,
+              correlationId: correlationId ?? null,
+            }).catch((e: unknown) => {
+              logger.warn({ e, action: "profit_governor.shadow_would_block" }, "audit write failed — non-blocking");
+              auditWriteFailuresTotal.labels({ action: "profit_governor.shadow_would_block" }).inc();
+            });
+            broadcastSSE("profit_governor:shadow_milestone", {
+              sessionId,
+              zone: milestoneResult.zone,
+              sessionPnl: milestoneResult.sessionPnl,
+            });
+          }
+        } catch (milestoneErr) {
+          // Fail-OPEN: this governor NEVER blocks signal evaluation. Any internal error is
+          // caught here, logged, and audited — the signal proceeds exactly as if the shadow
+          // governor did not exist. lockoutBlocked is never touched in this catch block.
+          logger.warn(
+            { err: milestoneErr, sessionId, symbol },
+            "Wave 6: shadow profit-milestone governor threw — fail-open, signal evaluation unaffected",
+          );
+          insertAuditRow({
+            action: "profit_governor.shadow_would_block",
+            entityType: "paper_session",
+            entityId: sessionId,
+            decisionAuthority: "system",
+            status: "warning",
+            input: { sessionId, symbol, error: String(milestoneErr) } as Record<string, unknown>,
+            result: { zone: null, wouldBlock: false, failOpen: true } as Record<string, unknown>,
+            correlationId: correlationId ?? null,
+          }).catch((e: unknown) => {
+            logger.warn({ e, action: "profit_governor.shadow_would_block" }, "audit write failed — non-blocking");
+            auditWriteFailuresTotal.labels({ action: "profit_governor.shadow_would_block" }).inc();
+          });
+        }
+      }
+    } catch (resolveErr) {
+      // Even resolving whether the shadow governor is enabled must never block signal flow.
+      logger.warn({ err: resolveErr, sessionId, symbol }, "Wave 6: shadow profit-milestone enablement check failed — fail-open");
+    }
+
     try {
       const activeLockout = await getActiveLockout(sessionConfig.strategyId);
       if (activeLockout) {
