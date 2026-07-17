@@ -160,6 +160,49 @@ pattern-matching the name. Doing so would fail-open B14 + WFE + CPCV + WRC + SPA
 zero benefit to the actual bug. Named explicitly so nobody touches it while working this
 entry.
 
+## Fourth coordination-packet entry: market-internals WS subscription never started
+
+**Added 2026-07-17 from a fresh band-ledger domain scan (`market_internals_service`,
+registry criticality "important").** `market-internals-service.ts` implements a
+correctly fail-soft Massive WebSocket subscription for NYSE breadth internals
+($TICK/$ADD/$VOLD/$TRIN): `startInternalsSubscription()` is idempotent, degrades to an
+all-null snapshot when disabled/disconnected, and never throws. Verified by direct grep
+across the whole repo (`.claude/worktrees/*` residue excluded): `startInternalsSubscription`
+has **zero callers anywhere** — not in `index.ts`'s boot sequence (which only calls
+`initScheduler()`/`initAgentCoordination()`), not in `scheduler.ts`, not in any route.
+The WS connection has never been opened in production.
+
+**Consequence — silent, not crashing, but real:** both consumers handle the resulting
+always-`stale:true`/all-null snapshot honestly (no fabrication bug found — this is a
+clean subsystem otherwise): `confluence-score.ts::evalInternalsAligned()` correctly
+returns `satisfied:false, reason:"internals_stale"` (soft factor, `isHardBlock:false`,
+so it doesn't block, just always contributes its weight as unsatisfied); `pre-market-routine.ts`
+correctly leaves `tickOpen`/`addOpen`/`voldOpen`/`trinOpen` as `null` when
+`snapshot.stale`. The bug is entirely upstream: the `internals_aligned` confluence
+factor has silently, permanently contributed a fixed "unsatisfied" weight to every
+MES/MNQ signal since this shipped (Wave 25 Pass 2.5) — a real, ongoing signal-quality
+gap nobody could see because the failure mode is quiet by design.
+
+**Why this is coordination-gated, not a solo fix:** `MASSIVE_API_KEY` **is** set in this
+environment's `.env` — confirmed directly, not assumed. Wiring the missing caller is not
+a no-op: it would be the first time ever that `internals_aligned` evaluates to anything
+other than the fixed "internals_stale" value, changing weighted confluence scores for
+MES/MNQ signals going forward. Same re-baseline species as the other three entries —
+the missing-caller fix and the live first-activation are the same action here, with no
+separable telemetry-only slice (unlike the Tier-A liquidity-map fix earlier this session,
+where the honesty fix and the producer-gap fix were cleanly separable).
+
+**Named owner + concrete unblock condition:** owner = whoever owns
+`confluence-score.ts`/signal-generation surface under the live campaign (same territory
+class as the other entries, though a different specific file). Unblocks when a short
+before/after comparison exists — replay a representative window of existing MES/MNQ
+signals with `internals_aligned` forced to its current always-unsatisfied baseline vs.
+with the WS subscription live, showing the actual confluence-score delta — before wiring
+`startInternalsSubscription()` into `index.ts`'s boot sequence for real. Given this is a
+soft, non-hard-block factor (unlike the eligibility gate) the measurement bar is lighter
+than the other three entries — but the discipline is the same: a previously-dead signal
+input doesn't get switched on by convenience, it gets switched on by decision.
+
 ## Sequencing
 
 1. This draft gets sign-off (advisor + whichever agent owns `backtester.py` under the

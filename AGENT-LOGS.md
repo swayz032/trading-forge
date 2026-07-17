@@ -4,6 +4,20 @@
 
 ---
 
+### Session Log — 2026-07-17 BAND-LEDGER DOMAIN SCAN — market_internals_service: dormancy found, properly RESERVED (doc entry 4)
+
+**Mission:** after the Tier-C wave + its self-caught follow-up both landed, advisor's guidance was to keep driving the band-ledger (73-domain `docs/system-subsystem-registry.json`) rather than hold — pick one bounded, never-graded domain per round, scan it under the same discipline as everything else this session, fix what's separable, reserve what's re-baseline-risk. Picked `market_internals_service` (execution/important) — no dedicated grading wave found anywhere in this file's history, unlike most other critical-tier domains, and not campaign-owned.
+
+**Finding (real, confirmed, not fixed — properly reserved):** `market-internals-service.ts::startInternalsSubscription()` — a well-built, idempotent, fail-soft Massive WS subscription for NYSE breadth internals ($TICK/$ADD/$VOLD/$TRIN) — has **zero callers anywhere in the repo** (verified by direct grep across the full tree, worktree residue excluded; not in `index.ts`'s boot sequence, not in `scheduler.ts`, not in any route). The WS connection has never been opened in production. Both consumers handle the resulting always-null/stale snapshot honestly — `confluence-score.ts`'s `internals_aligned` factor correctly returns `satisfied:false` (soft, non-hard-block), `pre-market-routine.ts` correctly leaves `tickOpen`/`addOpen`/`voldOpen`/`trinOpen` null — **no fabrication bug**, this is a clean subsystem otherwise. The defect is purely the missing activation call, meaning `internals_aligned` has silently, permanently contributed a fixed "unsatisfied" weight to every MES/MNQ confluence score since Wave 25 Pass 2.5 shipped.
+
+**Why reserved, not fixed:** confirmed directly (not assumed) that `MASSIVE_API_KEY` **is** set in this environment's `.env` — wiring the missing caller is therefore not a no-op, it's the first live activation of this signal ever, which would re-baseline MES/MNQ confluence scores going forward. Same re-baseline species as the regime-engine/eligibility-gate/parameter-drift entries already in `docs/engine-v2-shadow-contract-draft.md` — added as a fourth entry there with a named owner (signal-generation surface owner under the live campaign) and a concrete (lighter-weight, since this is a soft factor not a hard gate) unblock condition: a before/after replay comparison before wiring the caller for real.
+
+**Verification:** two-path confirmed (repo-wide grep for the function name found only its own definition; separately confirmed both consumer call sites independently handle the stale/null case correctly by reading each one directly) before writing the reservation. `.env` checked directly for `MASSIVE_API_KEY` presence rather than assumed either way.
+
+**Carry-forward:** NONE — this is a proper reservation (named owner + concrete unblock condition in the coordination doc + a dedicated memory reference), not an unowned carry-forward. Next band-ledger domain pick: `carter_voice_agent` or `dd_velocity_gate`, whichever the next round favors.
+
+---
+
 ### Session Log — 2026-07-17 TIER-C CLOSURE WAVE — composite-health staleness + weekend-cron wiring + aggregator fabrication LANDED `f226580d`, parameter-drift properly RESERVED, zero carry-forwards
 
 **Mission:** the liveness-audit batch (previous entry below) left 4 items bucketed "Tier C" — advisor's initial triage was too loose: 3 of the 4 were unowned control-plane carry-forwards dressed up as deferrals ("recorded in memory" doesn't satisfy the zero-carry-forward bar), while only the parameter-drift dead-code item is genuinely instrument-surface/coordination-gated. Advisor caught this on review and re-triaged before any code was touched.
