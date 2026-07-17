@@ -16,15 +16,29 @@
  *      audit row) instead of a silent no-op.
  *   2. A missing pre_market_sessions row produces its own distinct
  *      liquidity_map.refresh_no_premarket_data signal.
- *   3. EQH/EQL heuristic non-detection (a normal, expected null) does NOT
- *      trigger the loud signal — it must stay silent, or every healthy tick
- *      would falsely alarm.
+ *   3. The nullIsExpected=true carve-out on EQH/EQL suppresses the loud
+ *      signal when a supplied structureState doesn't produce a match — this
+ *      test exercises that exclusion MECHANISM directly (it passes
+ *      structureState as the optional 5th arg, which the test harness can do
+ *      even though production never does — see the F-1 correction below).
  *   4. A normal tick with real prices still reports cleanly — no regression
  *      on the healthy path (nullPriceSkips=0, no warning audit rows).
  *
  * Explicitly OUT OF SCOPE (not tested/fixed here): implementing
  * /api/bars/:symbol, or the 6 missing liquidity_levels level_type producers
  * (hod/lod/asian_high/asian_low/untouched_fvg/untouched_ob).
+ *
+ * F-1 correction (independent grading, same date): EQH/EQL is NOT merely
+ * "sometimes no equal high/low this session" in production — it is
+ * STRUCTURALLY DEAD. The only real caller, scheduler.ts:4906, invokes
+ * `refreshSessionLevels(symbol, sessionDate, correlationId)` with just 3 args
+ * and never supplies `structureState`, so swingH/swingL are ALWAYS null in
+ * production, unconditionally, forever. Test 3 below passes structureState
+ * explicitly to prove the nullIsExpected carve-out itself works correctly
+ * (it must not fire on ANY EQH/EQL null, matched-heuristic-miss or otherwise)
+ * — it is NOT evidence that this scenario occurs in production. Wiring
+ * bias_state.structure_state into the scheduler call site is a separate,
+ * out-of-scope fix.
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
@@ -192,11 +206,17 @@ describe("liquidity-map null-price telemetry honesty", () => {
     expect(skipCalls).toHaveLength(0);
   });
 
-  it("does NOT fire the loud null-price signal for EQH/EQL non-detection (expected, not a data gap)", async () => {
-    // Healthy pre_market row, but swing_high/swing_low far from pdh/pdl so EQH/EQL
-    // legitimately don't fire. This must stay silent per the anti-false-alarm
-    // scoping — otherwise every healthy tick without an equal high/low would
-    // falsely alarm as a data-availability incident.
+  it("nullIsExpected carve-out: EQH/EQL non-match on a supplied structureState does NOT fire the loud null-price signal", async () => {
+    // Healthy pre_market row; structureState is passed explicitly here so
+    // swing_high/swing_low are far from pdh/pdl and EQH/EQL don't match.
+    // This proves the carve-out mechanism itself (nullIsExpected=true must
+    // suppress the signal for ANY EQH/EQL null, not just some) — it is NOT
+    // evidence this scenario occurs in production. In production,
+    // structureState is never supplied at all (scheduler.ts:4906 calls
+    // refreshSessionLevels with only 3 args), so EQH/EQL is unconditionally
+    // null for a structural reason, not a per-session heuristic miss — see
+    // the F-1 correction in the file header. That gap is a separate,
+    // out-of-scope wiring fix, not something this carve-out should surface.
     const dal = makeMockDAL(
       makeHealthyPreMarketRow({ pdh: 4280.0, pdl: 4220.0 }),
     );
@@ -211,7 +231,9 @@ describe("liquidity-map null-price telemetry honesty", () => {
     expect(levelTypes).not.toContain("eqh");
     expect(levelTypes).not.toContain("eql");
 
-    // nullPriceSkips must be 0 — eqh/eql nulls are expected, not skipped-as-error.
+    // nullPriceSkips must be 0 — the nullIsExpected carve-out excludes EQH/EQL
+    // from this count (whether the null comes from a non-match or, as in
+    // production, from structureState being unwired entirely).
     expect(result.nullPriceSkips).toBe(0);
     const skipCalls = insertAuditRowMock.mock.calls.filter(
       ([arg]) => arg.action === "liquidity_map.insert_skipped_null_price",

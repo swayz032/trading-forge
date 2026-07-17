@@ -396,10 +396,23 @@ export async function refreshSessionLevels(
 
   // Loud-signal tracking for the null-price-no-op class of bug. Populated only
   // for levels whose price SHOULD be present when the source data is healthy
-  // (bars-derived pre_market_sessions fields). EQH/EQL are heuristic-derived
-  // and legitimately null whenever no equal high/low is found this session —
-  // that is NOT a data-availability problem, so those calls pass
-  // opts.nullIsExpected=true below and never enter this list.
+  // (bars-derived pre_market_sessions fields). EQH/EQL are excluded via
+  // opts.nullIsExpected=true below — NOT because a null there is a normal
+  // per-session heuristic miss, but because `structureState` is UNWIRED from
+  // production: the only caller, scheduler.ts:4906, invokes
+  // `refreshSessionLevels(symbol, sessionDate, correlationId)` with just 3
+  // args and never supplies the optional 5th `structureState` parameter, so
+  // `swingH`/`swingL` below are ALWAYS null in production — detectEqhEql()
+  // ALWAYS returns {eqh: null, eql: null}, unconditionally, forever. EQH/EQL
+  // detection is structurally dead pending that wiring (the swing data does
+  // exist — bias-state-service.ts persists it to bias_state.structure_state
+  // JSONB — nothing fetches and passes it at the scheduler call site). The
+  // carve-out exists so this pre-existing dead path doesn't get double-counted
+  // as a NEW null-price-skip finding by this fix; it does NOT mean the gap is
+  // benign or already covered. Wiring bias_state.structure_state into the
+  // scheduler call site is a separate, out-of-scope fix (2026-07-17 liveness
+  // audit F-1 correction — this comment previously mischaracterized the gap
+  // as "a normal, expected outcome of the heuristic").
   const skippedLevels: Array<{
     levelType: LevelType;
     reason: "null_price" | "non_finite_price" | "non_positive_price";
@@ -498,10 +511,17 @@ export async function refreshSessionLevels(
       }
     }
 
-    // EQH/EQL detection (daily — htf_significance=3). null here means "no
-    // equal high/low found this session" (a normal, expected outcome of the
-    // heuristic) — NOT a data-availability problem, so nullIsExpected=true
-    // keeps it out of the loud null-price-skip signal below.
+    // EQH/EQL detection (daily — htf_significance=3). `structureState` is
+    // UNWIRED from production: scheduler.ts:4906 is the only real caller and
+    // it never passes this optional 5th param, so swingH/swingL below are
+    // ALWAYS null in production and detectEqhEql() ALWAYS returns
+    // {eqh: null, eql: null} — this is a structurally-dead path, not a
+    // benign "no equal high/low this session" miss. nullIsExpected=true
+    // keeps this PRE-EXISTING dead path out of the NEW null-price-skip
+    // signal below (it is a distinct, already-known gap, tracked separately —
+    // see the fuller note above the `skippedLevels` declaration; wiring
+    // bias_state.structure_state into the scheduler call site is a separate,
+    // out-of-scope fix).
     const swingH = structureState?.swing_high ?? null;
     const swingL = structureState?.swing_low ?? null;
     const { eqh, eql } = detectEqhEql(swingH, swingL, pmRow.pdh, pmRow.pdl, symbol);
