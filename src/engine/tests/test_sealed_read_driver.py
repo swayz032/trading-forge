@@ -64,6 +64,67 @@ def _certified_dispatch_record():
         "dispatch_mode": "headless",
     }
 
+def _phase_a_draw_fn(
+    counts,
+    *,
+    identity=None,
+    dispatch=None,
+    per_draw_dispatch=None,
+    per_draw_identity=None,
+    refs_for=None,
+    omit_dispatch=False,
+    omit_identity=False,
+    spy=None,
+):
+    """A PER-DRAW Phase-A enumeration seam (R-024.1). draw_index ``i`` returns
+    ``counts[i]`` + ``strategy_refs``, self-reporting the certified reader_identity
+    and a per-draw dispatch_record (certified unless overridden for that index).
+    Every call is one SEPARATE dispatch — the driver combines the draws itself."""
+    base_ident = identity or certified_reader_identity()
+    base_dispatch = dispatch if dispatch is not None else _certified_dispatch_record()
+
+    def fn(video_id, draw_index, _manifest_verified):
+        if spy is not None:
+            spy.append((video_id, draw_index))
+        c = counts[draw_index]
+        disp = (per_draw_dispatch or {}).get(draw_index, base_dispatch)
+        ident = (per_draw_identity or {}).get(draw_index, base_ident)
+        refs = refs_for(video_id, draw_index, c) if refs_for else [f"s{j}" for j in range(c)]
+        payload = {"video_id": video_id, "draw_index": draw_index, "count": c, "strategy_refs": refs}
+        if not omit_identity:
+            payload["reader_identity"] = ident
+        if not omit_dispatch:
+            payload["dispatch_record"] = disp
+        return payload
+
+    return fn
+
+
+def _phase_b_fn(*, identity=None, dispatch=None, strat_for=None, spy=None):
+    """A PER-STRATEGY Phase-B single-draw extraction seam (R-024.1). Returns ONE
+    staging_v32-shaped strategy per consensus ref, self-reporting the certified
+    identity + a dispatch_record. Each call is one SEPARATE dispatch."""
+    ident = identity or certified_reader_identity()
+    disp = dispatch if dispatch is not None else _certified_dispatch_record()
+
+    def fn(video_id, strategy_ref, strategy_index, _manifest_verified):
+        if spy is not None:
+            spy.append((video_id, strategy_ref, strategy_index))
+        strat = (
+            strat_for(video_id, strategy_ref, strategy_index)
+            if strat_for
+            else {"name": f"{video_id}__strat{strategy_index}", "entry_sequence": []}
+        )
+        return {
+            "reader_identity": ident,
+            "dispatch_record": disp,
+            "strategies": [strat],
+            "instrument_classification": None,
+        }
+
+    return fn
+
+
 # The 3 spent design-pool rehearsal videos (ratify-packet §4 / Module F).
 REHEARSAL_VIDEOS = ["2DXQqwKSwJE", "DLwVqcLRcfw", "R5L890juvRw"]
 # Expected per-video Phase-B strategy counts in the certified staging_v32 set.
@@ -231,67 +292,118 @@ def test_driver_runs_extraction_after_gate_pass_staging(tmp_path):
 
 
 # --------------------------------------------------------------------------- #
-# (d) sealed mode with an injected fake live_extract_fn — seam works, no key
+# (d) sealed mode PER-DRAW / PER-STRATEGY (R-024.1) — the driver dispatches FIVE
+# independent Phase-A draws + one Phase-B dispatch per consensus strategy, no key.
 # --------------------------------------------------------------------------- #
 
 
-def test_sealed_mode_calls_injected_fn_and_persists_byte_exact(tmp_path):
-    calls = []
-
-    def fake_live_extract_fn(video_id, manifest_verified):
-        calls.append(video_id)
-        return {
-            "video_id": video_id,
-            "reader": "certified-reader-v3.2",
-            # the seam now REQUIRES the live reader to self-report its identity;
-            # here it self-reports the CERTIFIED identity so the guard accepts it.
-            "reader_identity": certified_reader_identity(),
-            "phase_a": {"counts": [2, 2, 2, 2, 2], "mode": 2, "mode_n": 5, "unstable": False},
-            "strategies": [{"name": f"canned_{video_id}", "entry_sequence": []}],
-            "instrument_classification": None,
-        }
-
+# (a) ★ R-024.1 REGRESSION: sealed asks EXACTLY 5 Phase-A draws per video (draw
+#     indices 0..4), NOT one per-video call. Spy the per-draw seam.
+def test_sealed_dispatches_exactly_five_phase_a_draws_per_video(tmp_path):
+    pa_spy = []
+    pb_spy = []
     ids = ["VIDvid000AA", "VIDvid000BB"]
-    verified = {"video_ids": ids}
     out_dir = str(tmp_path / "sealed-artifacts")
     result = run_extraction_stage(
-        verified,
+        {"video_ids": ids},
         mode="sealed",
         out_dir=out_dir,
-        live_extract_fn=fake_live_extract_fn,
-        dispatch_record=_certified_dispatch_record(),
+        live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 2], spy=pa_spy),
+        live_phase_b_fn=_phase_b_fn(spy=pb_spy),
     )
-
     assert result["ready"] is True
-    # called once per video.
-    assert calls == ids
-    # persisted byte-exact: the on-disk artifact equals what the fn returned.
+    # EXACTLY 5 Phase-A draws per video, draw_index 0..4 each (independent draws).
     for vid in ids:
-        path = os.path.join(out_dir, f"{vid}.extraction.json")
-        assert os.path.exists(path)
-        with open(path, encoding="utf-8") as fh:
-            on_disk = json.load(fh)
-        # byte-exact: the on-disk artifact round-trips to exactly the reader
-        # payload (same video_id, strategies, phase_a) with no mutation.
-        assert on_disk["video_id"] == vid
-        assert on_disk["strategies"][0]["name"] == f"canned_{vid}"
-        assert on_disk["phase_a"] == {
-            "counts": [2, 2, 2, 2, 2],
-            "mode": 2,
-            "mode_n": 5,
-            "unstable": False,
-        }
-        # the fn was NOT re-invoked by the persistence path.
-        assert calls == ids
-    for rec in result["per_video"]:
-        assert rec["enum_stability"]["stable"] is True
-        assert rec["adjudication_needed"] is False
+        drawn = sorted(d for (v, d) in pa_spy if v == vid)
+        assert drawn == [0, 1, 2, 3, 4], f"{vid}: expected 5 per-draw dispatches 0..4, got {drawn}"
+    assert len(pa_spy) == 5 * len(ids)  # never one per-video call
+    # persisted artifact records the driver-computed phase_a (counts from the 5 draws).
+    for vid in ids:
+        with open(os.path.join(out_dir, f"{vid}.extraction.json"), encoding="utf-8") as fh:
+            art = json.load(fh)
+        assert art["phase_a"]["counts"] == [2, 2, 2, 2, 2]
+        assert art["phase_a"]["mode"] == 2 and art["phase_a"]["mode_n"] == 5
+        assert art["phase_a"]["stable"] is True
+        assert art["enum_stability"]["stable"] is True
+        assert art["adjudication_needed"] is False
 
 
-def test_sealed_mode_requires_live_fn(tmp_path):
+# (b) the DRIVER (not the conductor) computes consensus + stability from the 5
+#     collected draws: [2,2,2,2,3] -> mode 2, mode_n 4 -> stable; [2,2,3,3,4] ->
+#     mode_n 2 -> unstable -> exactly one adjudication dispatch requested.
+def test_sealed_driver_computes_consensus_and_stability_from_five_draws(tmp_path):
+    result = run_extraction_stage(
+        {"video_ids": ["VIDstable01"]},
+        mode="sealed",
+        out_dir=str(tmp_path / "stable"),
+        live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 3]),
+        live_phase_b_fn=_phase_b_fn(),
+    )
+    rec = result["per_video"][0]
+    assert rec["enum_stability"]["mode"] == 2
+    assert rec["enum_stability"]["mode_n"] == 4  # 4/5 agree -> the floor
+    assert rec["enum_stability"]["stable"] is True
+    assert rec["adjudication_needed"] is False
+
+    adjudicated = []
+
+    def adjudicate_fn(video_id, enum_stability):
+        adjudicated.append((video_id, enum_stability["mode_n"]))
+        return {"video_id": video_id, "adjudication_needed": True, "resolved_count": None}
+
+    result2 = run_extraction_stage(
+        {"video_ids": ["VIDunstab01"]},
+        mode="sealed",
+        out_dir=str(tmp_path / "unstable"),
+        live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 3, 3, 4]),
+        live_phase_b_fn=_phase_b_fn(),
+        adjudicate_fn=adjudicate_fn,
+    )
+    rec2 = result2["per_video"][0]
+    assert rec2["enum_stability"]["mode_n"] == 2  # deterministic tie-break -> smallest
+    assert rec2["enum_stability"]["stable"] is False
+    assert rec2["adjudication_needed"] is True
+    # exactly ONE adjudication dispatch was requested for the unstable video.
+    assert adjudicated == [("VIDunstab01", 2)]
+    assert result2["adjudications_needed"] == ["VIDunstab01"]
+
+
+# (c) Phase-B: ONE dispatch PER CONSENSUS STRATEGY (spy the count). The modal draw
+#     enumerates `mode` strategies -> `mode` Phase-B dispatches.
+def test_sealed_phase_b_one_dispatch_per_consensus_strategy(tmp_path):
+    pb_spy = []
+    out_dir = str(tmp_path / "sealed")
+    # all 5 draws enumerate 3 strategies -> stable mode 3 -> 3 Phase-B dispatches.
+    result = run_extraction_stage(
+        {"video_ids": ["VIDthree001"]},
+        mode="sealed",
+        out_dir=out_dir,
+        live_phase_a_draw_fn=_phase_a_draw_fn([3, 3, 3, 3, 3]),
+        live_phase_b_fn=_phase_b_fn(spy=pb_spy),
+    )
+    assert result["ready"] is True
+    assert len(pb_spy) == 3  # one dispatch per consensus strategy
+    assert [i for (_v, _r, i) in pb_spy] == [0, 1, 2]
+    with open(os.path.join(out_dir, "VIDthree001.extraction.json"), encoding="utf-8") as fh:
+        art = json.load(fh)
+    assert art["n_strategies"] == 3
+    assert len(art["strategies"]) == 3
+    assert len(art["per_strategy_artifacts"]) == 3
+    # cids are <video_id>__s<idx> (staging_v32 shape for downstream Module C).
+    assert [e["cid"] for e in art["per_strategy_artifacts"]] == [f"VIDthree001__s{i}" for i in range(3)]
+
+
+def test_sealed_mode_requires_per_draw_and_per_strategy_seams(tmp_path):
+    # both seams missing -> ValueError.
+    with pytest.raises(ValueError):
+        run_extraction_stage({"video_ids": ["x"]}, mode="sealed", out_dir=str(tmp_path / "a"))
+    # only Phase-A supplied -> still ValueError (Phase-B required).
     with pytest.raises(ValueError):
         run_extraction_stage(
-            {"video_ids": ["x"]}, mode="sealed", out_dir=str(tmp_path), live_extract_fn=None
+            {"video_ids": ["x"]},
+            mode="sealed",
+            out_dir=str(tmp_path / "b"),
+            live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 2]),
         )
 
 
@@ -425,84 +537,96 @@ def test_rehearsal_stamps_certified_reader_identity(tmp_path):
         assert art["reader_identity"] == pinned
 
 
-# (c) sealed mode with an injected fn self-reporting the CERTIFIED identity ->
-#     accepted + stamped.
+# (c) sealed mode: each per-draw + per-strategy dispatch self-reports the CERTIFIED
+#     identity -> accepted; the assembled artifact is stamped with the pinned id.
 def test_sealed_mode_accepts_certified_identity_and_stamps(tmp_path):
     pinned = certified_reader_identity()
-
-    def certified_fn(video_id, manifest_verified):
-        return {
-            "video_id": video_id,
-            "reader_identity": pinned,
-            "phase_a": {"unstable": False},
-            "strategies": [{"name": f"ok_{video_id}", "entry_sequence": []}],
-        }
-
-    ids = ["VIDcertOK01"]
     out_dir = str(tmp_path / "sealed")
     result = run_extraction_stage(
-        {"video_ids": ids},
+        {"video_ids": ["VIDcertOK01"]},
         mode="sealed",
         out_dir=out_dir,
-        live_extract_fn=certified_fn,
-        dispatch_record=_certified_dispatch_record(),
+        live_phase_a_draw_fn=_phase_a_draw_fn([1, 1, 1, 1, 1]),
+        live_phase_b_fn=_phase_b_fn(),
     )
     assert result["ready"] is True
     assert result["reader_identity"] == pinned
-    # persisted (byte-exact) artifact carries the self-reported certified identity.
     with open(os.path.join(out_dir, "VIDcertOK01.extraction.json"), encoding="utf-8") as fh:
         on_disk = json.load(fh)
     assert on_disk["reader_identity"] == pinned
-    # stage summary record also stamped.
     assert result["per_video"][0]["video_id"] == "VIDcertOK01"
 
 
-# (d) ★ CORE SAFETY PROPERTY: sealed mode, injected fn self-reports a WRONG
-#     model (gpt-5.4) -> ReaderIdentityMismatch, HALT, NO artifact persisted.
-def test_sealed_mode_wrong_model_halts_and_persists_nothing(tmp_path):
+# (d) ★ CORE SAFETY PROPERTY (R-024.1 item 2): a wrong-model dispatch_record on
+#     ONE of the 5 Phase-A draws -> ReaderIdentityMismatch, HALT (not silently
+#     averaged into the consensus), NO artifact persisted for that video.
+def test_sealed_wrong_model_on_one_of_five_draws_halts(tmp_path):
     pinned = certified_reader_identity()
-    wrong_model = pinned["model_id"] + "__WRONG-BRAIN"  # e.g. the gpt-5.4 vault
-
-    def wrong_fn(video_id, manifest_verified):
-        ident = dict(pinned)
-        ident["model_id"] = wrong_model  # everything else matches; only the brain differs
-        return {
-            "video_id": video_id,
-            "reader_identity": ident,
-            "phase_a": {"unstable": False},
-            "strategies": [{"name": "should_never_persist", "entry_sequence": []}],
-        }
-
-    ids = ["VIDwrongMdl"]
-    out_dir = str(tmp_path / "sealed-wrong")
-    # a certified dispatch_record is supplied; the WRONG identity is in the
-    # SELF-REPORT, so the self-report guard (assert_reader_identity) catches it.
+    wrong_model = pinned["model_id"] + "__gpt-5.4-WRONG-BRAIN"
+    # draw index 2 (of 0..4) carries a wrong-model dispatch_record; the other four
+    # are certified. The per-DISPATCH guard must HALT on that single draw.
+    bad_dispatch = dict(_certified_dispatch_record(), resolved_model=wrong_model)
+    out_dir = str(tmp_path / "sealed-wrong-draw")
     with pytest.raises(ReaderIdentityMismatch) as ei:
         run_extraction_stage(
-            {"video_ids": ids},
+            {"video_ids": ["VIDwrongDrw"]},
             mode="sealed",
             out_dir=out_dir,
-            live_extract_fn=wrong_fn,
-            dispatch_record=_certified_dispatch_record(),
+            live_phase_a_draw_fn=_phase_a_draw_fn(
+                [2, 2, 2, 2, 2], per_draw_dispatch={2: bad_dispatch}
+            ),
+            live_phase_b_fn=_phase_b_fn(),
+        )
+    assert "resolved_model" in str(ei.value)
+    assert not os.path.exists(os.path.join(out_dir, "VIDwrongDrw.extraction.json"))
+
+
+# (d-ii) a wrong-model SELF-REPORT on one Phase-A draw -> HALT (self-report guard).
+def test_sealed_wrong_self_report_on_one_draw_halts(tmp_path):
+    pinned = certified_reader_identity()
+    wrong_ident = dict(pinned, model_id=pinned["model_id"] + "__WRONG-BRAIN")
+    out_dir = str(tmp_path / "sealed-wrong-selfreport")
+    with pytest.raises(ReaderIdentityMismatch) as ei:
+        run_extraction_stage(
+            {"video_ids": ["VIDwrongSR0"]},
+            mode="sealed",
+            out_dir=out_dir,
+            live_phase_a_draw_fn=_phase_a_draw_fn(
+                [2, 2, 2, 2, 2], per_draw_identity={3: wrong_ident}
+            ),
+            live_phase_b_fn=_phase_b_fn(),
         )
     assert "model_id" in str(ei.value)
-    # HALT means NO artifact was written for that video.
-    assert not os.path.exists(os.path.join(out_dir, "VIDwrongMdl.extraction.json"))
+    assert not os.path.exists(os.path.join(out_dir, "VIDwrongSR0.extraction.json"))
+
+
+# (d-iii) a wrong-model dispatch on a Phase-B strategy -> HALT (per-dispatch too).
+def test_sealed_wrong_model_on_phase_b_dispatch_halts(tmp_path):
+    pinned = certified_reader_identity()
+    wrong = dict(_certified_dispatch_record(), requested_model=pinned["model_id"] + "__WRONG")
+    out_dir = str(tmp_path / "sealed-wrong-b")
+    with pytest.raises(ReaderIdentityMismatch) as ei:
+        run_extraction_stage(
+            {"video_ids": ["VIDwrongB01"]},
+            mode="sealed",
+            out_dir=out_dir,
+            live_phase_a_draw_fn=_phase_a_draw_fn([1, 1, 1, 1, 1]),
+            live_phase_b_fn=_phase_b_fn(dispatch=wrong),
+        )
+    assert "requested_model" in str(ei.value)
+    assert not os.path.exists(os.path.join(out_dir, "VIDwrongB01.extraction.json"))
 
 
 def test_sealed_mode_missing_self_report_halts(tmp_path):
-    """A live payload that does NOT self-report a reader_identity is fail-closed."""
-
-    def no_identity_fn(video_id, manifest_verified):
-        return {"video_id": video_id, "strategies": []}  # no reader_identity block
-
+    """A Phase-A draw payload that does NOT self-report a reader_identity is
+    fail-closed (a live reader that will not name itself cannot read the twelve)."""
     with pytest.raises(ReaderIdentityMismatch):
         run_extraction_stage(
             {"video_ids": ["VIDnoident0"]},
             mode="sealed",
             out_dir=str(tmp_path / "o"),
-            live_extract_fn=no_identity_fn,
-            dispatch_record=_certified_dispatch_record(),
+            live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 2], omit_identity=True),
+            live_phase_b_fn=_phase_b_fn(),
         )
 
 
@@ -587,20 +711,9 @@ def test_assert_dispatch_identity_accepts_certified_and_polarities():
     assert assert_dispatch_identity(dict(good, dispatch_mode="interactive"), pinned) is None
 
 
-# (b) ★ sealed dispatch channel_class == api (everything else matching) -> HALT,
-#     NO artifact persisted.
+# (b) ★ a sealed dispatch on the forbidden api channel (everything else matching)
+#     -> HALT, NO artifact persisted (asserted per dispatch, on the first draw).
 def test_sealed_dispatch_api_channel_halts_and_persists_nothing(tmp_path):
-    pinned = certified_reader_identity()
-
-    def certified_fn(video_id, manifest_verified):
-        return {
-            "video_id": video_id,
-            "reader_identity": pinned,  # self-report is certified/clean...
-            "phase_a": {"unstable": False},
-            "strategies": [{"name": "should_never_persist", "entry_sequence": []}],
-        }
-
-    # ...but the DISPATCH was made on the forbidden api channel.
     api_dispatch = dict(_certified_dispatch_record(), channel_class=srd.FORBIDDEN_API_CHANNEL)
     out_dir = str(tmp_path / "sealed-api")
     with pytest.raises(ReaderIdentityMismatch) as ei:
@@ -608,27 +721,18 @@ def test_sealed_dispatch_api_channel_halts_and_persists_nothing(tmp_path):
             {"video_ids": ["VIDapiChan0"]},
             mode="sealed",
             out_dir=out_dir,
-            live_extract_fn=certified_fn,
-            dispatch_record=api_dispatch,
+            live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 2], dispatch=api_dispatch),
+            live_phase_b_fn=_phase_b_fn(),
         )
     assert "api" in str(ei.value).lower()
     assert not os.path.exists(os.path.join(out_dir, "VIDapiChan0.extraction.json"))
 
 
 # (c) ★ dispatch requested_model OR resolved_model wrong -> HALT (self-report
-#     clean, so the DISPATCH RECORD leg is what fails).
+#     clean, so the DISPATCH RECORD leg is what fails), asserted per dispatch.
 def test_sealed_dispatch_wrong_model_halts(tmp_path):
     pinned = certified_reader_identity()
     wrong = pinned["model_id"] + "__gpt-5.4-WRONG"
-
-    def certified_fn(video_id, manifest_verified):
-        return {
-            "video_id": video_id,
-            "reader_identity": pinned,  # self-report matches the certified identity
-            "phase_a": {"unstable": False},
-            "strategies": [{"name": "should_never_persist", "entry_sequence": []}],
-        }
-
     for leg in ("requested_model", "resolved_model"):
         bad_dispatch = dict(_certified_dispatch_record(), **{leg: wrong})
         out_dir = str(tmp_path / f"sealed-{leg}")
@@ -637,8 +741,8 @@ def test_sealed_dispatch_wrong_model_halts(tmp_path):
                 {"video_ids": ["VIDwrongDsp"]},
                 mode="sealed",
                 out_dir=out_dir,
-                live_extract_fn=certified_fn,
-                dispatch_record=bad_dispatch,
+                live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 2], dispatch=bad_dispatch),
+                live_phase_b_fn=_phase_b_fn(),
             )
         assert leg in str(ei.value)
         assert not os.path.exists(os.path.join(out_dir, "VIDwrongDsp.extraction.json"))
@@ -656,51 +760,53 @@ def test_dispatch_conflicting_self_report_halts():
     assert "conflicting evidence" in str(ei.value).lower()
 
 
-# (e) dispatch_record correct + self-report agrees -> accepted + stamped
-#     (the certified channel-class rides on the stamped reader_identity).
+# (e) per-dispatch dispatch_records correct + self-reports agree -> accepted +
+#     stamped (the certified channel-class rides on the stamped reader_identity).
 def test_sealed_dispatch_correct_accepts_and_stamps(tmp_path):
-    pinned = certified_reader_identity()
-
-    def certified_fn(video_id, manifest_verified):
-        return {
-            "video_id": video_id,
-            "reader_identity": pinned,
-            "phase_a": {"unstable": False},
-            "strategies": [{"name": f"ok_{video_id}", "entry_sequence": []}],
-        }
-
     out_dir = str(tmp_path / "sealed-ok")
     result = run_extraction_stage(
         {"video_ids": ["VIDdspOK001"]},
         mode="sealed",
         out_dir=out_dir,
-        live_extract_fn=certified_fn,
-        dispatch_record=_certified_dispatch_record(),
+        live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 2]),
+        live_phase_b_fn=_phase_b_fn(),
     )
     assert result["ready"] is True
     assert result["reader_identity"]["channel_class"] == _parse_channel_class_from_record()
     assert os.path.exists(os.path.join(out_dir, "VIDdspOK001.extraction.json"))
 
 
-# (f) missing dispatch_record in sealed mode -> fail-closed HALT.
+# (f) a dispatch with NEITHER its own dispatch_record NOR a whole-run fallback ->
+#     fail-closed HALT (assert_dispatch_identity requires a dict).
 def test_sealed_missing_dispatch_record_halts(tmp_path):
-    def certified_fn(video_id, manifest_verified):
-        return {
-            "video_id": video_id,
-            "reader_identity": certified_reader_identity(),
-            "strategies": [{"name": "x", "entry_sequence": []}],
-        }
-
     out_dir = str(tmp_path / "sealed-nodsp")
     with pytest.raises(ReaderIdentityMismatch):
         run_extraction_stage(
             {"video_ids": ["VIDnoDsp001"]},
             mode="sealed",
             out_dir=out_dir,
-            live_extract_fn=certified_fn,
+            # per-draw payloads omit dispatch_record AND no top-level fallback given.
+            live_phase_a_draw_fn=_phase_a_draw_fn([2, 2, 2, 2, 2], omit_dispatch=True),
+            live_phase_b_fn=_phase_b_fn(),
             dispatch_record=None,
         )
     assert not os.path.exists(os.path.join(out_dir, "VIDnoDsp001.extraction.json"))
+
+
+# (f-ii) a per-dispatch payload MAY omit its own dispatch_record and rely on the
+#     whole-run fallback -> accepted (the fallback governs).
+def test_sealed_dispatch_record_fallback_accepted(tmp_path):
+    out_dir = str(tmp_path / "sealed-fallback")
+    result = run_extraction_stage(
+        {"video_ids": ["VIDfallbk01"]},
+        mode="sealed",
+        out_dir=out_dir,
+        live_phase_a_draw_fn=_phase_a_draw_fn([1, 1, 1, 1, 1], omit_dispatch=True),
+        live_phase_b_fn=_phase_b_fn(),
+        dispatch_record=_certified_dispatch_record(),  # whole-run fallback
+    )
+    assert result["ready"] is True
+    assert os.path.exists(os.path.join(out_dir, "VIDfallbk01.extraction.json"))
 
 
 # (g) rehearsal mode still works with NO dispatch_record; the certified channel-

@@ -87,27 +87,52 @@ def _small_sealed_manifest(tmp_path, video_ids: list[str]) -> str:
 
 
 def _build_fake_workdir(tmp_path, video_ids: list[str], *, dispatch_model: str) -> str:
-    """Write a complete fake conductor work-dir: per-video extraction artifacts
-    (self-reporting the CERTIFIED identity), PASS/PASS panels, control-correct
-    rater answers, a dispatch_record (CERTIFIED unless overridden), and the
-    seal-day validity inputs."""
+    """Write a complete fake conductor work-dir in the PER-DRAW / PER-STRATEGY
+    layout (R-024.1): per video FIVE blind Phase-A enumeration draws
+    (phase_a/<vid>/draw_<0..4>.json, each self-reporting the CERTIFIED identity +
+    its own dispatch_record) + ONE Phase-B strategy extraction (phase_b/<cid>.json),
+    PASS/PASS panels, control-correct rater answers, a whole-run dispatch_record
+    (CERTIFIED unless overridden), and the seal-day validity inputs."""
     ri = certified_reader_identity()
     strat = _real_strategy()
+    dispatch = {
+        "requested_model": dispatch_model,
+        "resolved_model": dispatch_model,
+        "channel_class": ri["channel_class"],
+        "dispatch_mode": "interactive",
+    }
     wd = str(tmp_path / "workdir")
-    for sub in ("extractions", "panels", "raters"):
+    for sub in ("phase_a", "phase_b", "panels", "raters"):
         os.makedirs(os.path.join(wd, sub), exist_ok=True)
     for vid in video_ids:
-        with open(os.path.join(wd, "extractions", f"{vid}.json"), "w", encoding="utf-8") as fh:
+        # FIVE independent Phase-A enumeration draws, each its OWN blind dispatch.
+        pa_vid_dir = os.path.join(wd, "phase_a", vid)
+        os.makedirs(pa_vid_dir, exist_ok=True)
+        for draw_index in range(5):
+            with open(os.path.join(pa_vid_dir, f"draw_{draw_index}.json"), "w", encoding="utf-8") as fh:
+                json.dump(
+                    {
+                        "reader_identity": ri,
+                        "dispatch_record": dispatch,
+                        "video_id": vid,
+                        "draw_index": draw_index,
+                        "count": 1,  # all 5 draws enumerate 1 strategy -> stable mode 1
+                        "strategy_refs": [f"{vid}__ref0"],
+                    },
+                    fh,
+                )
+        cid = f"{vid}__s0"
+        # ONE Phase-B single-draw extraction per consensus strategy.
+        with open(os.path.join(wd, "phase_b", f"{cid}.json"), "w", encoding="utf-8") as fh:
             json.dump(
                 {
                     "reader_identity": ri,
-                    "video_id": vid,
+                    "dispatch_record": dispatch,
                     "strategies": [strat],
-                    "phase_a": {"unstable": False},
+                    "instrument_classification": None,
                 },
                 fh,
             )
-        cid = f"{vid}__s0"
         with open(os.path.join(wd, "panels", f"{cid}.json"), "w", encoding="utf-8") as fh:
             json.dump(
                 {
@@ -296,6 +321,31 @@ def test_d_sealed_fake_workdir_drives_verdict(tmp_path, no_live_locator):
         assert "verdict:" in text and "video_unit_clean_fraction:" in text
         assert "validity: VALID" in text
         assert code == 0  # a VALID FIDELITY verdict was produced
+    finally:
+        os.remove(token)
+    _assert_no_token_created()
+
+
+def test_d_sealed_missing_phase_a_draw_halts(tmp_path, no_live_locator):
+    """A missing Phase-A draw artifact under the per-draw work-dir -> HALT (the CLI
+    never fabricates a missing draw; R-024.1 per-draw dispatch is mandatory)."""
+    token = str(tmp_path / "SEAL-GO.token")
+    with open(token, "w", encoding="utf-8") as fh:
+        fh.write("GO (temp, test-owned)")
+    try:
+        ri = certified_reader_identity()
+        manifest = _small_sealed_manifest(tmp_path, ["FAKEVID0001"])
+        wd = _build_fake_workdir(tmp_path, ["FAKEVID0001"], dispatch_model=ri["model_id"])
+        # delete draw 3 of 5 -> the driver's per-draw request for it must HALT.
+        os.remove(os.path.join(wd, "phase_a", "FAKEVID0001", "draw_3.json"))
+        code, text = cli.run_sealed(
+            wd, manifest_path=manifest, token_path=token, propose_fn=_synthetic_dry_run_propose_fn
+        )
+        assert code != 0
+        assert "HALT" in text
+        assert "ConductorArtifactMissing" in text
+        assert "Phase-A draw 3" in text
+        assert "TERMINAL-READ VERDICT" not in text
     finally:
         os.remove(token)
     _assert_no_token_created()

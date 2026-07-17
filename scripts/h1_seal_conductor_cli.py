@@ -23,11 +23,12 @@ TWO MODES (runbook STEP 1):
   it).  Then it pins the sealed-12 manifest by READING it from disk (no hardcoded
   sha/ids), and drives the built :meth:`SealedReadDriver.run_verdict` in
   ``mode="sealed"`` — Module A ``gate_sealed_read`` rejects the spent-16 manifest,
-  and the live extraction / panel / rater seams are wired to THIN READERS of the
-  conductor-written files under ``--work-dir`` (each carrying the conductor's
-  dispatch_record so the driver's identity/channel guards assert).  A missing
-  required conductor artifact => HALT (never fabricated).  The verdict is printed
-  verbatim, or the HALT is.
+  and the PER-DRAW / PER-STRATEGY extraction (R-024.1: five blind Phase-A draws +
+  one Phase-B dispatch per consensus strategy) / panel / rater seams are wired to
+  THIN READERS of the conductor-written files under ``--work-dir`` (each carrying
+  the conductor's dispatch_record so the driver's identity/channel guards assert
+  PER DISPATCH).  A missing required conductor artifact => HALT (never fabricated).
+  The verdict is printed verbatim, or the HALT is.
 
 NOTHING in this file hardcodes a sealed sha / model id / prompt sha / video id —
 the sealed-12 manifest basename comes from the gate module's own filename
@@ -222,22 +223,44 @@ def _load_validity_inputs(work_dir: str) -> dict:
         return json.load(fh)
 
 
-def _make_conductor_extract_fn(work_dir: str):
-    """Thin reader for the live EXTRACTION seam (STEP 2): per video, return the
-    conductor's byte-exact extraction artifact (carrying its self-reported
-    ``reader_identity`` + ``strategies`` + optional ``phase_a``). The bytes are
-    returned VERBATIM (as text) so the driver persists them byte-exact and asserts
-    the self-report against the pinned identity. Missing => HALT (never fabricated)."""
-    ext_dir = os.path.join(work_dir, "extractions")
+def _make_conductor_phase_a_draw_fn(work_dir: str):
+    """Thin reader for the PER-DRAW Phase-A seam (STEP 2 / R-024.1): for draw N of 5
+    of a video, return the conductor's blind enumeration-draw artifact (carrying its
+    self-reported ``reader_identity`` + ``dispatch_record`` + ``count`` /
+    ``strategy_refs``). Each draw is a SEPARATE fresh blind subagent, written to
+    ``phase_a/<video_id>/draw_<N>.json``. The DRIVER (not the conductor) combines the
+    five draws into the consensus + stability. Missing => HALT (never fabricated)."""
+    pa_dir = os.path.join(work_dir, "phase_a")
 
-    def fn(video_id: str, _manifest_verified: dict):
-        path = os.path.join(ext_dir, f"{video_id}.json")
+    def fn(video_id: str, draw_index: int, _manifest_verified: dict):
+        path = os.path.join(pa_dir, video_id, f"draw_{draw_index}.json")
         if not os.path.exists(path):
             raise ConductorArtifactMissing(
-                f"missing conductor extraction artifact for video_id={video_id!r}: {path}"
+                f"missing conductor Phase-A draw {draw_index} for video_id={video_id!r}: {path}"
             )
         with open(path, encoding="utf-8") as fh:
-            return fh.read()  # byte-exact reader payload (str) — driver parses it
+            return json.load(fh)
+
+    return fn
+
+
+def _make_conductor_phase_b_fn(work_dir: str):
+    """Thin reader for the PER-STRATEGY Phase-B seam (STEP 2 / R-024.1): for each
+    consensus strategy, return the conductor's single-draw extraction artifact
+    (carrying its self-reported ``reader_identity`` + ``dispatch_record`` +
+    ``strategies``), written to ``phase_b/<video_id>__s<idx>.json``. Each strategy is
+    a SEPARATE fresh subagent. Missing => HALT (never fabricated)."""
+    pb_dir = os.path.join(work_dir, "phase_b")
+
+    def fn(video_id: str, _strategy_ref, strategy_index: int, _manifest_verified: dict):
+        cid = f"{video_id}__s{strategy_index}"
+        path = os.path.join(pb_dir, f"{cid}.json")
+        if not os.path.exists(path):
+            raise ConductorArtifactMissing(
+                f"missing conductor Phase-B strategy artifact for cid={cid!r}: {path}"
+            )
+        with open(path, encoding="utf-8") as fh:
+            return json.load(fh)
 
     return fn
 
@@ -341,7 +364,8 @@ def run_sealed(
             mode="sealed",
             out_dir=os.path.join(out_dir, "sealed"),
             token_path=token_path,
-            live_extract_fn=_make_conductor_extract_fn(work_dir),
+            live_phase_a_draw_fn=_make_conductor_phase_a_draw_fn(work_dir),
+            live_phase_b_fn=_make_conductor_phase_b_fn(work_dir),
             live_panel_fn=_make_conductor_panel_fn(work_dir),
             rater_fn=_make_conductor_rater_fn(work_dir),
             dispatch_record=dispatch_record,
@@ -389,8 +413,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--work-dir",
         default=None,
-        help="sealed mode: dir of conductor-written artifacts (extractions/, "
-        "panels/, raters/, dispatch_record.json, validity_inputs.json).",
+        help="sealed mode: dir of conductor-written artifacts (phase_a/<vid>/"
+        "draw_<0..4>.json, phase_b/<cid>.json, panels/, raters/, "
+        "dispatch_record.json, validity_inputs.json).",
     )
     parser.add_argument(
         "--manifest",

@@ -33,14 +33,16 @@ Run the driver CLI:
 The CLI pins the sealed-12 manifest (`docs/designs/h1-wave6-sealed-fresh-set-2026-07-12.json`, read from disk — never typed), verifies the seal, and drives the pipeline. It will tell you, per video, when it needs a live EXTRACTION or a live RATER judgment (sealed mode only — staging is fully cached).
 
 ## STEP 2 — WHEN THE DRIVER ASKS FOR A LIVE EXTRACTION (sealed mode)
-For each video the driver requests, dispatch a **fresh Claude subagent on the subscription channel** (Claude Code dispatch, interactive or headless `claude -p` — same subscription runtime; NEVER the API) to run the certified reader:
+The CLI names **each required dispatch INDIVIDUALLY** — you never decide the granularity, and you **NEVER combine dispatches**. Each is a **fresh Claude subagent on the subscription channel** (Claude Code dispatch, interactive or headless `claude -p` — same subscription runtime; NEVER the API):
+- **Phase-A is FIVE separate dispatches per video — draw N of 5 is its OWN fresh subagent, BLIND to the other four draws.** (The k=5 modal-consensus stability measure is only valid if the five draws are independent; one subagent doing five draws is correlated and silently corrupts the read. The driver — not you — combines the five draws into the consensus + stability.)
+- **Phase-B is ONE fresh subagent PER STRATEGY** (single-draw), for each strategy the consensus produced.
 - Set the model EXPLICITLY per dispatch: `claude-opus-4-8[1m]`.
-- Give the subagent ONLY the frozen prompts (enumerator-v1.2 Phase-A k=5 modal; frontier-v3.2 Phase-B single-draw) and the one video's transcript. NOTHING else.
-- The subagent writes its extraction artifact byte-exact to the path the CLI names.
-- Record the **dispatch record** the CLI asks for: `{requested_model: "claude-opus-4-8[1m]", resolved_model: <what actually ran>, channel_class: "subscription", dispatch_mode: "interactive"|"headless"}`. The driver's guard asserts this against the frozen identity — if it HALTs on a mismatch, STOP and report.
+- Give each subagent ONLY the frozen prompt the CLI names (enumerator-v1.2 for a Phase-A draw; frontier-v3.2 for a Phase-B strategy) **and the transcript PATH the CLI names — the subagent reads that file itself. You NEVER open, cat, or paste transcript contents** (that would break your blindness). Nothing else.
+- The subagent writes its artifact byte-exact to the path the CLI names.
+- Record the **dispatch record** the CLI asks for PER DISPATCH: `{requested_model: "claude-opus-4-8[1m]", resolved_model: <what actually ran>, channel_class: "subscription", dispatch_mode: "interactive"|"headless"}`. The driver's guard asserts each against the frozen identity — if it HALTs on a mismatch, STOP and report.
 
 ## STEP 3 — WHEN THE DRIVER ASKS FOR LIVE RATERS (sealed mode)
-For each two-stage tier-3 packet the driver emits, dispatch **two independent blind raters** (fresh subagents, subscription channel), each following the driver's packet EXACTLY:
+For each two-stage tier-3 packet the driver emits, dispatch **two independent blind raters = fresh Claude subagents, subscription channel, model set EXPLICITLY per dispatch** (`claude-opus-4-8[1m]`; never the API, never a different rater brain — the independent axis is the model-free locator + F-2 floor, not a different model). Each follows the driver's packet EXACTLY:
 - Controls first; Stage-1 (role from the quote ALONE) committed BEFORE Stage-2 (revealed condition support) is shown — the driver's packet enforces the read-order lock; do not reorder.
 - The two raters never see each other's answers and never see the reader's identity.
 - Return each rater's answers to the CLI as instructed. The driver applies the control gate and composes the verdicts.

@@ -45,10 +45,17 @@ TWO EXECUTION MODES:
   * ``mode in {"rehearsal","staging"}`` — the full-dress path the build +
     tests exercise. Loads the ALREADY-SPENT cached staging/vault artifacts
     from disk for each video. NO live LLM/network call is ever made.
-  * ``mode == "sealed"`` — seal-day only, operator-gated, REAL spend. Calls
-    the injected ``live_extract_fn`` per video (dependency injection, so no
-    test needs a real key) and persists its returned artifact byte-exact.
-    This path is STRUCTURED here but NEVER invoked by the tests.
+  * ``mode == "sealed"`` — seal-day only, operator-gated, REAL spend. PER-DRAW /
+    PER-STRATEGY dispatch (ADVISOR-RULINGS R-024.1; effective-params §1:
+    fresh-context, blind, PER DRAW). The driver requests FIVE independent Phase-A
+    enumeration draws per video via the injected ``live_phase_a_draw_fn`` (each a
+    SEPARATE blind dispatch — a single per-video subagent running all five draws
+    in one context correlates them and silently corrupts the k=5 modal-consensus
+    stability measure), computes the modal consensus + stability ITSELF, routes an
+    unstable video to ONE blind adjudication dispatch, then requests ONE Phase-B
+    single-draw extraction per consensus strategy via the injected
+    ``live_phase_b_fn`` (each a SEPARATE dispatch). Every dispatch's identity +
+    dispatch_record is asserted PER DISPATCH. NEVER invoked by tests without fakes.
 
 BYTE-EXACT PERSISTENCE + ARTIFACTS-ON-DISK GATE: every artifact is written
 to disk programmatically (atomic tmp-file + ``os.replace``, no hand-copy),
@@ -735,40 +742,200 @@ def _build_rehearsal_artifact(
     }
 
 
-def _wrap_live_artifact(
-    video_id: str,
-    raw,
-    mode: str,
-    adjudicate_fn: Callable[[str, dict], dict],
-    k: int,
-    stability_min: int,
-) -> tuple[dict, object]:
-    """Sealed live path (STRUCTURED, not invoked in tests): take whatever the
-    injected reader returned for ``video_id`` and derive the stage's
-    in-memory routing record from it, while persisting the reader's payload
-    BYTE-EXACT. Returns ``(record, persist_payload)`` where ``persist_payload``
-    is what is written to disk verbatim (the raw reader payload) and
-    ``record`` is the stage's per-video summary.
+# --------------------------------------------------------------------------- #
+# SEALED LIVE PATH — PER-DRAW / PER-STRATEGY dispatch (ADVISOR-RULINGS R-024.1;
+# runbook STEP 2; effective-params record §1: fresh-context, blind, PER DRAW).
+#
+# THE DEFECT R-024.1 FIXES: the prior sealed seam dispatched ONCE PER VIDEO, so a
+# conductor's single per-video subagent could run all five Phase-A enumeration
+# draws in ONE context -> CORRELATED draws -> the k=5 modal-consensus stability
+# measure is silently corrupted. The certified protocol is FIVE independent
+# one-draw subagents for Phase-A, then ONE subagent per consensus strategy for
+# Phase-B single-draw. The DRIVER (never the conductor) collects the draws and
+# computes the modal consensus + stability itself, and asserts identity PER
+# DISPATCH (a wrong model on ANY single draw HALTs, never silently averaged).
+# --------------------------------------------------------------------------- #
 
-    The reader payload may be a ``dict`` (carrying ``strategies`` and,
-    optionally, a ``phase_a`` block for stability) or a pre-serialized
-    ``str``. Byte-exactness is preserved either way (see :func:`_atomic_write`)."""
+
+def _parse_payload(raw) -> dict:
+    """Parse a sealed dispatch payload (a ``str`` JSON body or a ``dict``) to a
+    dict; anything else -> ``{}`` (fail-soft to an empty payload — the identity
+    guard :func:`_claimed_reader_identity` fails such a payload closed)."""
     if isinstance(raw, str):
         try:
             parsed = json.loads(raw)
         except ValueError:
-            parsed = {}
-    elif isinstance(raw, dict):
-        parsed = raw
-    else:
-        parsed = {}
+            return {}
+        return parsed if isinstance(parsed, dict) else {}
+    return raw if isinstance(raw, dict) else {}
 
-    phase_a = parsed.get("phase_a") if isinstance(parsed, dict) else None
-    enum = _enum_stability(phase_a, k=k, stability_min=stability_min)
+
+def _assert_one_dispatch(raw, pinned: dict, dispatch_record_fallback=None) -> None:
+    """PER-DISPATCH fail-closed identity assertion for ONE sealed dispatch (a
+    single Phase-A draw OR a single Phase-B strategy extraction — R-024.1 item 2).
+
+    Runs BOTH guards on THIS dispatch: :func:`assert_reader_identity` (the
+    dispatch's self-reported ``reader_identity`` vs the pinned identity) AND
+    :func:`assert_dispatch_identity` (the AUTHORITATIVE channel-class + both model
+    legs, from the dispatch's OWN ``dispatch_record``, with the self-report as
+    corroboration). A dispatch omitting its own ``dispatch_record`` falls back to
+    ``dispatch_record_fallback`` (a conductor may supply one whole-run record); if
+    neither exists, ``assert_dispatch_identity`` fails closed. A wrong model on ANY
+    single dispatch HALTs here — it is never averaged into the consensus."""
+    claimed = _claimed_reader_identity(raw)  # fail-closed if self-report absent
+    assert_reader_identity(claimed, pinned)
+    parsed = _parse_payload(raw)
+    dispatch = parsed.get("dispatch_record")
+    if dispatch is None:
+        dispatch = dispatch_record_fallback
+    assert_dispatch_identity(dispatch, pinned, self_report=claimed)
+
+
+def _draw_count(draw: dict) -> int:
+    """The enumeration COUNT of one Phase-A draw: the explicit ``count`` when the
+    draw reports one, else the length of its enumerated ``strategy_refs`` (aka
+    ``strategies``). Only ints feed the modal consensus (``_mode_of``)."""
+    c = draw.get("count")
+    if isinstance(c, int):
+        return c
+    refs = _draw_refs(draw)
+    return len(refs)
+
+
+def _draw_refs(draw: dict) -> list:
+    """The enumerated strategy references of one Phase-A draw (what Phase-B
+    extracts, one dispatch each). Accepts ``strategy_refs`` or ``strategies``."""
+    refs = draw.get("strategy_refs")
+    if isinstance(refs, list):
+        return refs
+    refs = draw.get("strategies")
+    return refs if isinstance(refs, list) else []
+
+
+def _collect_phase_a_draws(
+    video_id: str,
+    manifest_verified: dict,
+    live_phase_a_draw_fn: Callable[[str, int, dict], object],
+    pinned: dict,
+    k: int,
+    dispatch_record_fallback,
+) -> tuple[list[dict], list[int]]:
+    """Request ``k`` INDEPENDENT Phase-A enumeration draws for one video — draw
+    index 0..k-1, EACH its OWN separate dispatch (R-024.1: the conductor fulfils
+    each with a fresh blind subagent; the driver NEVER combines draws). Asserts
+    identity + dispatch PER DRAW. Returns ``(draws, counts)`` — the parsed draw
+    payloads and their per-draw enumeration counts (the input to the modal
+    consensus the driver computes itself)."""
+    draws: list[dict] = []
+    counts: list[int] = []
+    for draw_index in range(k):
+        raw = live_phase_a_draw_fn(video_id, draw_index, manifest_verified)
+        _assert_one_dispatch(raw, pinned, dispatch_record_fallback)
+        parsed = _parse_payload(raw)
+        draws.append(parsed)
+        counts.append(_draw_count(parsed))
+    return draws, counts
+
+
+def _consensus_strategy_refs(
+    draws: list[dict], counts: list[int], enum: dict, adjudication
+) -> list:
+    """The consensus enumeration the driver sends to Phase-B (one dispatch each).
+
+    STABLE (``mode_n >= stability_min``): the strategy refs of the REPRESENTATIVE
+    modal draw — the FIRST draw, in dispatch order, whose count equals the modal
+    count (deterministic; never wall-clock/iteration order).
+    UNSTABLE: the settling blind-adjudication draw's refs, if it resolved a count +
+    refs; else ``[]`` (fail-closed — never fabricate an enumeration for a video
+    whose count the protocol could not settle)."""
+    if enum.get("stable"):
+        mode = enum.get("mode")
+        for draw, c in zip(draws, counts, strict=False):
+            if c == mode:
+                return _draw_refs(draw)
+        return []
+    if isinstance(adjudication, dict):
+        refs = adjudication.get("strategy_refs")
+        if isinstance(refs, list):
+            return refs
+    return []
+
+
+def _dispatch_phase_b(
+    video_id: str,
+    strategy_refs: list,
+    live_phase_b_fn: Callable[[str, object, int, dict], object],
+    manifest_verified: dict,
+    pinned: dict,
+    dispatch_record_fallback,
+) -> tuple[list[dict], list[dict], object]:
+    """Request ONE Phase-B single-draw extraction PER CONSENSUS STRATEGY — each a
+    SEPARATE dispatch (R-024.1). Asserts identity + dispatch PER STRATEGY. Returns
+    ``(strategies, per_strategy_artifacts, instrument_classification)`` in the
+    staging_v32 shape :func:`_strategy_pairs` (Module C+) already consumes."""
+    strategies: list[dict] = []
+    per_strategy: list[dict] = []
+    instrument = None
+    for idx, strategy_ref in enumerate(strategy_refs):
+        raw = live_phase_b_fn(video_id, strategy_ref, idx, manifest_verified)
+        _assert_one_dispatch(raw, pinned, dispatch_record_fallback)
+        parsed = _parse_payload(raw)
+        cid = f"{video_id}__s{idx}"
+        strat_list = parsed.get("strategies")
+        strat = strat_list[0] if isinstance(strat_list, list) and strat_list else None
+        if strat is not None:
+            strategies.append(strat)
+        if instrument is None:
+            instrument = parsed.get("instrument_classification")
+        per_strategy.append(
+            {
+                "cid": cid,
+                "source_path": None,
+                "phase": "B-single-draw",
+                "strategy_ref": strategy_ref,
+                "extraction": parsed,
+            }
+        )
+    return strategies, per_strategy, instrument
+
+
+def _build_sealed_artifact(
+    video_id: str,
+    manifest_verified: dict,
+    mode: str,
+    live_phase_a_draw_fn: Callable[[str, int, dict], object],
+    live_phase_b_fn: Callable[[str, object, int, dict], object],
+    adjudicate_fn: Callable[[str, dict], dict],
+    pinned: dict,
+    k: int,
+    stability_min: int,
+    dispatch_record_fallback,
+) -> dict:
+    """Sealed live path — PER-DRAW / PER-STRATEGY (R-024.1). For one verified
+    video: request FIVE independent Phase-A enumeration draws (each a separate
+    blind dispatch), compute the modal consensus + stability ITSELF (the conductor
+    never pre-computes stability), route an UNSTABLE video to ONE additional blind
+    adjudication dispatch (the existing hook), then request ONE Phase-B single-draw
+    extraction PER CONSENSUS STRATEGY (each a separate dispatch). Every dispatch's
+    identity + dispatch_record is asserted PER DISPATCH inside the collectors.
+
+    Returns the assembled per-video extraction artifact (staging_v32 shape) with
+    the computed ``phase_a`` recorded (counts + mode + mode_n + stable). Persisted
+    deterministically by :func:`_atomic_write` (sorted keys, no wall-clock)."""
+    draws, counts = _collect_phase_a_draws(
+        video_id, manifest_verified, live_phase_a_draw_fn, pinned, k, dispatch_record_fallback
+    )
+    # The DRIVER computes the modal consensus + stability from the collected draws
+    # (reusing _enum_stability/_mode_of unchanged) — the conductor never does.
+    enum = _enum_stability({"counts": counts}, k=k, stability_min=stability_min)
     adjudication_needed = not enum["stable"]
     adjudication = adjudicate_fn(video_id, enum) if adjudication_needed else None
-    strategies = parsed.get("strategies") if isinstance(parsed, dict) else None
-    record = {
+
+    strategy_refs = _consensus_strategy_refs(draws, counts, enum, adjudication)
+    strategies, per_strategy, instrument = _dispatch_phase_b(
+        video_id, strategy_refs, live_phase_b_fn, manifest_verified, pinned, dispatch_record_fallback
+    )
+    return {
         "artifact": "h1-sealed-read-extraction",
         "module": "B-extraction-orchestration",
         "video_id": video_id,
@@ -776,12 +943,23 @@ def _wrap_live_artifact(
         "policy": POLICY,
         "reader": "certified-reader-v3.2-LIVE",
         "enum_stability": enum,
+        "phase_a": {
+            "counts": list(counts),
+            "mode": enum.get("mode"),
+            "mode_n": enum.get("mode_n"),
+            "stable": enum.get("stable"),
+        },
         "adjudication_needed": adjudication_needed,
         "adjudication": adjudication,
-        "n_strategies": len(strategies) if isinstance(strategies, list) else None,
-        "persisted": "byte-exact-live-reader-payload",
+        "n_strategies": len(strategies),
+        "strategies": strategies,
+        "instrument_classification": instrument,
+        "per_strategy_artifacts": per_strategy,
+        "source": {
+            "phase_a_draws_requested": len(draws),
+            "phase_b_strategies_requested": len(strategy_refs),
+        },
     }
-    return record, raw
 
 
 # --------------------------------------------------------------------------- #
@@ -820,6 +998,8 @@ def run_extraction_stage(
     k: int = K_DEFAULT,
     stability_min: int = STABILITY_MIN,
     dispatch_record: dict | None = None,
+    live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
+    live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
 ) -> dict:
     """Item-1 extraction stage. Produce, persist, and disk-gate one extraction
     artifact per verified video, via the certified reader v3.2 pipeline.
@@ -829,18 +1009,27 @@ def run_extraction_stage(
 
     ``mode``:
       * ``"rehearsal"``/``"staging"`` — load the ALREADY-SPENT cached staging /
-        vault artifacts from disk. NO live call.
-      * ``"sealed"`` — call ``live_extract_fn(video_id, manifest_verified)`` per
-        video (real spend; seal-day only) and persist its payload byte-exact.
+        vault artifacts from disk. NO live call. (``live_extract_fn`` is accepted
+        for the rehearsal capstone's no-live-call sentinel and is never invoked.)
+      * ``"sealed"`` — PER-DRAW / PER-STRATEGY (ADVISOR-RULINGS R-024.1). The
+        driver requests FIVE independent Phase-A enumeration draws per video via
+        ``live_phase_a_draw_fn(video_id, draw_index, manifest_verified)`` (draw
+        0..k-1, EACH a separate blind dispatch), computes the modal consensus +
+        stability ITSELF, routes an UNSTABLE video to ONE blind adjudication
+        dispatch, then requests ONE Phase-B single-draw extraction per consensus
+        strategy via ``live_phase_b_fn(video_id, strategy_ref, strategy_index,
+        manifest_verified)`` (each a separate dispatch). The driver assembles the
+        per-video artifact (staging_v32 shape). The legacy single per-video
+        ``live_extract_fn`` seam is REMOVED for sealed (it correlated the five
+        draws — the exact defect R-024.1 fixes).
 
-    ``dispatch_record`` (R-020.3 + R-021.2): the seal-day conductor's
-    dependency-injected dispatch record ``{requested_model, resolved_model,
-    channel_class, dispatch_mode}`` describing HOW it dispatched the read. SEALED
-    mode REQUIRES it — :func:`assert_dispatch_identity` asserts it (channel-class
-    from the frozen record + both model legs, with each video's self-report as
-    corroboration) BEFORE any artifact is persisted; a missing dispatch_record in
-    sealed mode fails closed (HALT). It is NOT read from the artifact and is NOT
-    required for rehearsal/staging (see below).
+    ``dispatch_record`` (R-020.3 + R-021.2): a WHOLE-RUN fallback dispatch record
+    ``{requested_model, resolved_model, channel_class, dispatch_mode}`` describing
+    HOW the conductor dispatched. Each per-draw / per-strategy payload carries its
+    OWN ``dispatch_record`` (asserted PER DISPATCH); this param is used only when a
+    payload omits one. If a dispatch has NEITHER, its
+    :func:`assert_dispatch_identity` fails closed (HALT). NOT required for
+    rehearsal/staging.
 
     Every artifact is written to ``out_dir`` (default
     ``<cache_dir>/sealed-read-artifacts``) and :func:`require_artifacts_on_disk`
@@ -858,19 +1047,17 @@ def run_extraction_stage(
     adjudicate_fn = adjudicate_fn or _default_adjudicate
     out_dir = out_dir or os.path.join(cache_dir, "sealed-read-artifacts")
 
-    if mode == "sealed" and live_extract_fn is None:
-        raise ValueError("sealed mode requires an injected live_extract_fn")
     if mode not in _REHEARSAL_MODES and mode != "sealed":
         raise ValueError(f"unknown extraction mode: {mode!r}")
-    # DISPATCH-RECORD requirement (R-020.3 + R-021.2): sealed mode cannot assert
-    # channel-class + model resolution without the conductor's dispatch record.
-    # Missing it => fail-closed HALT (never persist an un-provenanced live read).
-    if mode == "sealed" and dispatch_record is None:
-        raise ReaderIdentityMismatch(
-            "sealed mode requires a dispatch_record "
-            "{requested_model, resolved_model, channel_class, dispatch_mode} "
-            "(fail-closed HALT — channel-class + model resolution cannot be "
-            "asserted from the artifact; the conductor must inject it)"
+    # SEALED requires the PER-DRAW / PER-STRATEGY seams (R-024.1). The single
+    # per-video ``live_extract_fn`` seam is gone for sealed — one subagent running
+    # all five Phase-A draws in one context is the correlated-draw defect this
+    # ruling fixes.
+    if mode == "sealed" and (live_phase_a_draw_fn is None or live_phase_b_fn is None):
+        raise ValueError(
+            "sealed mode requires injected live_phase_a_draw_fn + live_phase_b_fn "
+            "(the per-draw / per-strategy seams; R-024.1 — the legacy single "
+            "per-video live_extract_fn correlated the five Phase-A draws)"
         )
 
     # READER-IDENTITY GUARD (R-018.1a/b): resolve the pinned certified-reader
@@ -904,31 +1091,29 @@ def run_extraction_stage(
             artifact["reader_identity"] = pinned_identity
             _atomic_write(path, artifact)
             record = artifact
-        else:  # sealed
-            raw = live_extract_fn(video_id, manifest_verified)  # REAL spend seam
-            # ASSERT the live reader self-reported the CERTIFIED identity BEFORE
-            # persisting anything. A wrong-model (uncertified-brain) self-report =>
-            # ReaderIdentityMismatch => HALT, no artifact written for this video.
-            claimed_identity = _claimed_reader_identity(raw)
-            assert_reader_identity(claimed_identity, pinned_identity)
-            # DISPATCH-RECORD assertion (R-020.3 + R-021.2): the AUTHORITATIVE
-            # channel-class + model-resolution check, from HOW the conductor
-            # dispatched — with this video's self-report as CORROBORATION only.
-            # Also BEFORE persist: a forbidden/api channel, a wrong model leg, or a
-            # self-report that contradicts the dispatch record => HALT, nothing
-            # written for this video.
-            assert_dispatch_identity(
-                dispatch_record, pinned_identity, self_report=claimed_identity
+        else:  # sealed — PER-DRAW / PER-STRATEGY (R-024.1)
+            # The driver requests 5 independent Phase-A draws + 1 Phase-B dispatch
+            # per consensus strategy, asserting each dispatch's identity + dispatch
+            # record PER DISPATCH (a wrong model on ANY single draw HALTs here,
+            # before assembly — never averaged into the consensus). If any dispatch
+            # HALTs, nothing is written for this video.
+            artifact = _build_sealed_artifact(
+                video_id,
+                manifest_verified,
+                mode,
+                live_phase_a_draw_fn,
+                live_phase_b_fn,
+                adjudicate_fn,
+                pinned_identity,
+                k,
+                stability_min,
+                dispatch_record,
             )
-            record, persist_payload = _wrap_live_artifact(
-                video_id, raw, mode, adjudicate_fn, k, stability_min
-            )
-            # The persisted payload is byte-exact (it already carries the live
-            # reader's self-reported, now-asserted reader_identity); stamp the
-            # stage summary record with the pinned identity too.
-            record["reader_identity"] = pinned_identity
-            _atomic_write(path, persist_payload)  # byte-exact reader payload
-            artifact = record
+            # Stamp the assembled artifact with the pinned identity (the per-
+            # dispatch self-reports were already asserted equal to it).
+            artifact["reader_identity"] = pinned_identity
+            _atomic_write(path, artifact)
+            record = artifact
 
         artifacts.append(artifact)
         artifact_paths.append(path)
@@ -1417,6 +1602,8 @@ class SealedReadDriver:
         fetched: dict | None = None,
         live_extract_fn: Callable[[str, dict], object] | None = None,
         dispatch_record: dict | None = None,
+        live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
+        live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
     ) -> dict:
         """Gate (Module A) THEN extract. On gate refusal returns
         ``{ok:False, allowed:False, stage:"seal_gate", halt_reason, gate,
@@ -1424,8 +1611,10 @@ class SealedReadDriver:
         pass returns ``{ok:True, allowed:True, stage:"extraction", gate,
         extraction:<run_extraction_stage result>}``.
 
-        ``dispatch_record`` is threaded to :func:`run_extraction_stage` (required
-        by its sealed path; ignored in rehearsal/staging)."""
+        ``live_phase_a_draw_fn`` / ``live_phase_b_fn`` are the per-draw /
+        per-strategy sealed seams (R-024.1), threaded to
+        :func:`run_extraction_stage` (required by its sealed path; ignored in
+        rehearsal/staging). ``dispatch_record`` is the whole-run fallback record."""
         gate = gate_sealed_read(manifest_path, mode, token_path=token_path, fetched=fetched)
         if not gate["allowed"]:
             return {
@@ -1448,6 +1637,8 @@ class SealedReadDriver:
             phase_a_vault_dir=self.phase_a_vault_dir,
             adjudicate_fn=self.adjudicate_fn,
             dispatch_record=dispatch_record,
+            live_phase_a_draw_fn=live_phase_a_draw_fn,
+            live_phase_b_fn=live_phase_b_fn,
         )
         return {
             "ok": True,
@@ -1471,6 +1662,8 @@ class SealedReadDriver:
         rater_fn: Callable[[str, str, dict], dict] | None = None,
         rater_answers_dir: str | None = None,
         propose_fn: Callable[[str, str], str | None] | None = None,
+        live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
+        live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
     ) -> dict:
         """FULL composition THROUGH MODULE D: gate (A) -> extraction (B) ->
         panels+certificate (C) -> HUMAN-BLIND TWO-STAGE RATER LAYER (D).
@@ -1493,6 +1686,8 @@ class SealedReadDriver:
             live_panel_fn=live_panel_fn,
             panel_cache_dir=panel_cache_dir,
             dispatch_record=dispatch_record,
+            live_phase_a_draw_fn=live_phase_a_draw_fn,
+            live_phase_b_fn=live_phase_b_fn,
         )
         if not full.get("ok"):
             # Gate refused -> Module D UNREACHABLE (compose-order short-circuit).
@@ -1527,6 +1722,8 @@ class SealedReadDriver:
         live_panel_fn: Callable[[str, dict, str], object] | None = None,
         panel_cache_dir: str | None = None,
         dispatch_record: dict | None = None,
+        live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
+        live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
     ) -> dict:
         """FULL composition: gate (A) -> extraction (B) -> panels+certificate (C).
 
@@ -1549,6 +1746,8 @@ class SealedReadDriver:
             fetched=fetched,
             live_extract_fn=live_extract_fn,
             dispatch_record=dispatch_record,
+            live_phase_a_draw_fn=live_phase_a_draw_fn,
+            live_phase_b_fn=live_phase_b_fn,
         )
         if not base.get("ok"):
             # Gate refused -> Module C UNREACHABLE (compose-order short-circuit).
@@ -1588,6 +1787,8 @@ class SealedReadDriver:
         frozen_scan_commit: str | None = None,
         driver_commit: str | None = None,
         epoch: object | None = None,
+        live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
+        live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
     ) -> dict:
         """FULL composition THROUGH MODULE E: gate (A) -> extraction (B) ->
         panels+certificate (C) -> rater layer (D) -> VERDICT MATH (E).
@@ -1621,6 +1822,8 @@ class SealedReadDriver:
             rater_fn=rater_fn,
             rater_answers_dir=rater_answers_dir,
             propose_fn=propose_fn,
+            live_phase_a_draw_fn=live_phase_a_draw_fn,
+            live_phase_b_fn=live_phase_b_fn,
         )
         if not composed.get("ok"):
             # Gate refused -> Module E UNREACHABLE (compose-order short-circuit).
