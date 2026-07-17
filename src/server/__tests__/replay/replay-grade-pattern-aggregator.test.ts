@@ -33,6 +33,7 @@ import {
   buildVersionStats,
   computeConsecutivePairs,
   applyPatternDecisionRule,
+  aggregateSharpeValues,
   MIN_VERSIONS_FOR_FULL_ANALYSIS,
   MIN_STRATEGIES_PER_VERSION,
   SPEARMAN_SIGNAL_RHO,
@@ -528,5 +529,122 @@ describe("test_dryRun_passed_to_pattern_aggregator_service", () => {
     );
     const pairs = computeConsecutivePairs(stats);
     expect(pairs.length).toBe(0);
+  });
+});
+
+// ─── MED fix (critic-replay-lifecycle-misc, 2026-07-17): Infinity/NaN guard ───
+//
+// computeSharpe legitimately returns signed Infinity for a zero-variance PnL
+// series (Wave hardening 2026-06-22). A version whose attributed strategies mix
+// a zero-variance-always-positive strategy (Sharpe=+Infinity) with a
+// zero-variance-always-negative strategy (Sharpe=-Infinity) previously NaN-
+// poisoned avgSharpe via naive reduce-sum (+Infinity + -Infinity = NaN), which
+// then corrupted computeSpearman's rank-sort comparator for the WHOLE trend
+// test — not just the one degenerate version.
+describe("Infinity/NaN guard — aggregateSharpeValues + degenerate version exclusion", () => {
+  it("aggregateSharpeValues: all-finite input behaves exactly as the old naive average", () => {
+    const r = aggregateSharpeValues([1.0, 2.0, 3.0]);
+    expect(r.avgSharpe).toBeCloseTo(2.0, 5);
+    expect(r.degenerateMixedInfinite).toBe(false);
+  });
+
+  it("aggregateSharpeValues: pure +Infinity (no mixing) stays +Infinity — legitimate per computeSharpe contract", () => {
+    const r = aggregateSharpeValues([Infinity, Infinity, 5.0]);
+    expect(r.avgSharpe).toBe(Infinity);
+    expect(r.degenerateMixedInfinite).toBe(false);
+  });
+
+  it("aggregateSharpeValues: pure -Infinity (no mixing) stays -Infinity", () => {
+    const r = aggregateSharpeValues([-Infinity, -Infinity, -5.0]);
+    expect(r.avgSharpe).toBe(-Infinity);
+    expect(r.degenerateMixedInfinite).toBe(false);
+  });
+
+  it("HIGH regression: mixed +Infinity AND -Infinity does NOT produce NaN — falls back to the finite subset and flags degenerate", () => {
+    const r = aggregateSharpeValues([Infinity, -Infinity, 3.0, 1.0]);
+    expect(Number.isNaN(r.avgSharpe)).toBe(false);
+    expect(r.avgSharpe).toBeCloseTo(2.0, 5); // (3+1)/2, infinities excluded
+    expect(r.degenerateMixedInfinite).toBe(true);
+  });
+
+  it("HIGH regression: mixed +Infinity/-Infinity with NO finite values at all → 0, not NaN", () => {
+    const r = aggregateSharpeValues([Infinity, -Infinity]);
+    expect(Number.isNaN(r.avgSharpe)).toBe(false);
+    expect(r.avgSharpe).toBe(0);
+    expect(r.degenerateMixedInfinite).toBe(true);
+  });
+
+  it("HIGH regression: buildVersionStats never produces a NaN avgSharpe even when a version's strategies mix +Infinity/-Infinity Sharpes", () => {
+    const v1 = makeVersion(1, 100);
+    const attribution = new Map<string, string[]>([[v1.versionId, ["s1", "s2"]]]);
+    // s1: zero-variance always-positive PnL → computeSharpe returns +Infinity.
+    // s2: zero-variance always-negative PnL → computeSharpe returns -Infinity.
+    const sharpeByStrategy = new Map([
+      ["s1", computeSharpe([5, 5, 5])],
+      ["s2", computeSharpe([-5, -5, -5])],
+    ]);
+    expect(sharpeByStrategy.get("s1")).toBe(Infinity);
+    expect(sharpeByStrategy.get("s2")).toBe(-Infinity);
+
+    const stats = buildVersionStats([v1], attribution, sharpeByStrategy);
+    const statV1 = stats.find((s) => s.versionId === v1.versionId)!;
+    expect(Number.isNaN(statV1.avgSharpe)).toBe(false);
+    expect(statV1.degenerateMixedInfinite).toBe(true);
+  });
+
+  it("HIGH regression: evaluatePatternAggregatorSignal end-to-end — one degenerate version among 10+ qualifying versions produces a real (non-NaN) verdict, not a silently-corrupted one", () => {
+    // 10 clean monotone-improving versions + 1 degenerate mixed-infinite version
+    // inserted in the middle. Pre-fix, the degenerate version's NaN avgSharpe
+    // would poison computeSpearman's rank-sort comparator for ALL 11 versions,
+    // making spearmanRho/spearmanPValue unreliable (potentially NaN, or a
+    // silently wrong ordering) — this test would have caught that because a
+    // NaN-poisoned comparator does not reliably reproduce the strong monotone
+    // signal the 10 clean versions carry.
+    const sharpesPerVersion: number[][] = [];
+    for (let i = 0; i < 10; i++) {
+      const base = 0.5 + i * 0.3;
+      sharpesPerVersion.push([base - 0.05, base, base + 0.05, base - 0.03, base + 0.03, base]);
+    }
+
+    const { versions, strategies, sharpeByStrategy } = makeSyntheticVersionDataset({ sharpesPerVersion });
+
+    // Insert an 11th, degenerate version with mixed +Inf/-Inf sharpes, activated
+    // most recently (so it doesn't disturb the existing 10 versions' chronology).
+    const degenerateVersion = makeVersion(11, 0);
+    versions.push(degenerateVersion);
+    const degStrategies: GeneratedStrategy[] = [];
+    for (let si = 0; si < 6; si++) {
+      const strategyId = `degenerate-s${si}`;
+      degStrategies.push({
+        strategyId,
+        appendixVersionId: degenerateVersion.versionId,
+        appendixVersionIndex: degenerateVersion.versionIndex,
+        generatedAt: new Date(),
+      });
+      // Alternate +Infinity / -Infinity so the version's avgSharpe would NaN
+      // under the pre-fix naive average.
+      sharpeByStrategy.set(strategyId, si % 2 === 0 ? computeSharpe([5, 5, 5]) : computeSharpe([-5, -5, -5]));
+    }
+    strategies.push(...degStrategies);
+
+    const result = evaluatePatternAggregatorSignal(versions, strategies, sharpeByStrategy);
+
+    // The core regression: nothing downstream is NaN.
+    expect(Number.isNaN(result.spearmanRho)).toBe(false);
+    expect(Number.isNaN(result.spearmanPValue)).toBe(false);
+    expect(result.verdict).not.toBe(undefined);
+
+    // The 10 clean monotone versions still carry a real SIGNAL — proving the
+    // degenerate version was excluded rather than corrupting the trend test.
+    expect(result.verdict).toBe("SIGNAL");
+    expect(result.spearmanRho).toBeGreaterThanOrEqual(SPEARMAN_SIGNAL_RHO);
+
+    // The degenerate version itself is flagged and reported as excluded.
+    const degStat = result.versionStats.find((s) => s.versionId === degenerateVersion.versionId)!;
+    expect(degStat.degenerateMixedInfinite).toBe(true);
+    expect(Number.isNaN(degStat.avgSharpe)).toBe(false);
+    expect(
+      result.auditEntries.some((e) => e.message.includes("excluded from trend test")),
+    ).toBe(true);
   });
 });

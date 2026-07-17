@@ -309,25 +309,19 @@ async function _evaluateStrategy(
   }
 
   // ── Live demotion path (master flag ON) ──────────────────────────────────────
-  const operatorBody =
-    `[WARN] Portfolio Drift Demotion — Strategy: ${strategyName} (${strategyId})\n` +
-    `Rolling 30d Sharpe: ${sharpe.toFixed(3)} (floor: ${PORTFOLIO_DRIFT_SHARPE_FLOOR})\n` +
-    `Action: Strategy demoted DEPLOYED → DECLINING → TESTING for re-validation.\n` +
-    `Strategy must complete fresh CPCV + PBO + WFE before re-promotion.\n` +
-    `Correlation ID: ${correlationId}`;
-
-  const fullBody = appendFamilyGradePostscript(
-    operatorBody,
-    "One of the strategies has been underperforming (its rolling risk-adjusted return fell below the safe floor).",
-    "The bot automatically paused it for re-testing. No action needed — it re-qualifies before trading again.",
-  );
-
-  notifyWarning(
-    `[DS16W3] Portfolio Drift — Strategy ${strategyName} demoted to TESTING`,
-    fullBody,
-    { strategyId, strategyName, rollingSharpe30d: sharpe, floor: PORTFOLIO_DRIFT_SHARPE_FLOOR, correlationId },
-  );
-
+  // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): the operator notifyWarning
+  // announcing "demoted to TESTING" previously fired HERE — unconditionally, BEFORE
+  // lifecycleService.promoteStrategy() was even called. If step1 threw, returned
+  // success:false, or step2 failed (zombie DECLINING), the operator still received
+  // a Discord message claiming the strategy had been demoted DEPLOYED → DECLINING →
+  // TESTING when it had NOT been — a false-positive safety notification (worse: on
+  // a step1 failure the strategy is silently still DEPLOYED and live-trading, with
+  // no signal at all that the intended demotion never took effect, since the only
+  // record was a log line). Moved to fire ONLY on genuine completion (the `demoted
+  // = true` branch below) and paired with a distinct notifyWarning on outright
+  // step1 failure so that failure case — previously silent apart from a log line —
+  // is now visible to the operator too, matching the step2/zombie case which
+  // already notified via notifyCritical.
   let demoted = false;
   try {
     const step1 = await lifecycleService.promoteStrategy(strategyId, "DEPLOYED", "DECLINING", {
@@ -338,6 +332,19 @@ async function _evaluateStrategy(
 
     if (!step1.success) {
       logger.error({ correlationId, strategyId, error: step1.error }, "portfolio-drift-demotion: DEPLOYED → DECLINING failed");
+      notifyWarning(
+        `[DS16W3] Portfolio Drift — Strategy ${strategyName} demotion FAILED — still DEPLOYED`,
+        appendFamilyGradePostscript(
+          `[WARN] Portfolio Drift Demotion FAILED — Strategy: ${strategyName} (${strategyId})\n` +
+          `Rolling 30d Sharpe: ${sharpe.toFixed(3)} (floor: ${PORTFOLIO_DRIFT_SHARPE_FLOOR})\n` +
+          `Action: Demotion DEPLOYED → DECLINING was ATTEMPTED but FAILED: ${step1.error ?? "unknown error"}\n` +
+          `The strategy remains DEPLOYED and will be re-evaluated on the next sweep.\n` +
+          `Correlation ID: ${correlationId}`,
+          "One of the strategies has been underperforming, and the bot's automatic pause attempt failed.",
+          "The strategy is still trading live. Tell Tony to check on it — this needs a human look.",
+        ),
+        { strategyId, strategyName, rollingSharpe30d: sharpe, floor: PORTFOLIO_DRIFT_SHARPE_FLOOR, correlationId, step1_error: step1.error },
+      );
     } else {
       const step2 = await lifecycleService.promoteStrategy(strategyId, "DECLINING", "TESTING", {
         correlationId,
@@ -380,6 +387,20 @@ async function _evaluateStrategy(
         demoted = true;
         logger.warn({ correlationId, strategyId, strategyName }, "portfolio-drift-demotion: strategy demoted DEPLOYED → DECLINING → TESTING");
 
+        notifyWarning(
+          `[DS16W3] Portfolio Drift — Strategy ${strategyName} demoted to TESTING`,
+          appendFamilyGradePostscript(
+            `[WARN] Portfolio Drift Demotion — Strategy: ${strategyName} (${strategyId})\n` +
+            `Rolling 30d Sharpe: ${sharpe.toFixed(3)} (floor: ${PORTFOLIO_DRIFT_SHARPE_FLOOR})\n` +
+            `Action: Strategy demoted DEPLOYED → DECLINING → TESTING for re-validation.\n` +
+            `Strategy must complete fresh CPCV + PBO + WFE before re-promotion.\n` +
+            `Correlation ID: ${correlationId}`,
+            "One of the strategies has been underperforming (its rolling risk-adjusted return fell below the safe floor).",
+            "The bot automatically paused it for re-testing. No action needed — it re-qualifies before trading again.",
+          ),
+          { strategyId, strategyName, rollingSharpe30d: sharpe, floor: PORTFOLIO_DRIFT_SHARPE_FLOOR, correlationId },
+        );
+
         try {
           broadcastSSE(LIFECYCLE_GATE_EVENTS.PORTFOLIO_DRIFT_DEMOTED, {
             strategyId,
@@ -414,6 +435,19 @@ async function _evaluateStrategy(
     }
   } catch (err) {
     logger.error({ err, correlationId, strategyId }, "portfolio-drift-demotion: demotion threw — strategy may still be DEPLOYED");
+    notifyWarning(
+      `[DS16W3] Portfolio Drift — Strategy ${strategyName} demotion attempt threw — still DEPLOYED`,
+      appendFamilyGradePostscript(
+        `[WARN] Portfolio Drift Demotion threw an exception — Strategy: ${strategyName} (${strategyId})\n` +
+        `Rolling 30d Sharpe: ${sharpe.toFixed(3)} (floor: ${PORTFOLIO_DRIFT_SHARPE_FLOOR})\n` +
+        `Error: ${err instanceof Error ? err.message : String(err)}\n` +
+        `The strategy's lifecycle state is unconfirmed and will be re-evaluated on the next sweep.\n` +
+        `Correlation ID: ${correlationId}`,
+        "One of the strategies has been underperforming, and the bot hit an unexpected error trying to pause it.",
+        "The strategy may still be trading live. Tell Tony to check on it — this needs a human look.",
+      ),
+      { strategyId, strategyName, rollingSharpe30d: sharpe, floor: PORTFOLIO_DRIFT_SHARPE_FLOOR, correlationId, error: err instanceof Error ? err.message : String(err) },
+    );
   }
 
   return { strategyId, strategyName, rollingSharpe30d: sharpe, driftDetected: true, demoted };

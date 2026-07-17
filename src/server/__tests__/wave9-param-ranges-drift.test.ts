@@ -132,6 +132,12 @@ const pyPatternKeys = extractPythonEntryPatternKeys(pySource);
 // liquidity_sweep_breakout: routes to archetype:liquidity_sweep at compile time (see graduator §2b).
 // fifo_session_open:        session/event indicator; no Python ENTRY_PATTERNS counterpart (engine-side DSL only).
 // news_fade_mco:            event-driven indicator; no Python ENTRY_PATTERNS counterpart (engine-side DSL only).
+// ict_bias_aligned_continuation: full archetype strategy CLASS (src/engine/strategies/
+//                           ict_bias_aligned_continuation.py), routed via archetype
+//                           dispatch — never a pattern_library.py ENTRY_PATTERNS entry.
+//                           Added to CANONICAL_PARAM_RANGES (critic-replay-lifecycle-misc,
+//                           2026-07-17) so the critic's H-5/H-8 bounds machinery has real
+//                           bounds for this archetype's 6 numeric knobs.
 // Wave hardening 2026-06-22, CI-trust: documented 12 TS-only indicators that are genuine DSL-only
 // aliases or route through strategy classes / archetype routing rather than pattern_library.
 const TS_ONLY_INDICATORS = new Set([
@@ -148,6 +154,7 @@ const TS_ONLY_INDICATORS = new Set([
   "liquidity_sweep_breakout",
   "fifo_session_open",
   "news_fade_mco",
+  "ict_bias_aligned_continuation",
 ]);
 
 describe("Wave 9 — PARAM_RANGES TS↔Python drift", () => {

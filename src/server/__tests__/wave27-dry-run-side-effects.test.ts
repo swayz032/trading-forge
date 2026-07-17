@@ -120,6 +120,7 @@ vi.mock("../lib/logger.js", () => ({
 // ─── Imports (after mocks) ────────────────────────────────────────────────────
 
 import { db } from "../db/index.js";
+import { tradeCritique, paperPositions, paperSessions, strategies } from "../db/schema.js";
 import { callOpenAI, setAppendixCache } from "../services/model-router.js";
 import { notifyWarning, notifyCritical } from "../services/notification-service.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
@@ -161,6 +162,31 @@ function buildSelectSequenceMock(responses: unknown[][]): void {
     (chain.where as AnyFn).mockReturnValue(chain);
     (chain.orderBy as AnyFn).mockReturnValue(chain);
 
+    return chain;
+  });
+}
+
+/**
+ * Table-KEYED select mock (order-independent) — dispatches by the object
+ * passed to `.from(table)` rather than by call order, so it correctly proves
+ * the fix REGARDLESS of whether the idempotency lookup runs (pre-fix, buggy)
+ * or is skipped (post-fix): each table gets its own designated fixture no
+ * matter which query fires first.
+ */
+function buildTableKeyedSelectMock(responses: Map<unknown, unknown[]>): void {
+  getDb().select = vi.fn().mockImplementation(() => {
+    let matchedTable: unknown = null;
+    const chain: Record<string, unknown> = {
+      from: vi.fn().mockImplementation((table: unknown) => {
+        matchedTable = table;
+        return chain;
+      }),
+      where: vi.fn().mockReturnThis(),
+      orderBy: vi.fn().mockReturnThis(),
+      limit: vi.fn().mockImplementation(() => Promise.resolve(responses.get(matchedTable) ?? [])),
+      then: (resolve: (r: unknown) => unknown, reject?: (e: unknown) => unknown) =>
+        Promise.resolve(responses.get(matchedTable) ?? []).then(resolve, reject),
+    };
     return chain;
   });
 }
@@ -295,13 +321,13 @@ describe("wave27 dryRun — trade-critique-service", () => {
   it("TC-1: dryRun=true → audit_log.insert NOT called", async () => {
     buildInsertMock("critique-123");
 
-    // Select sequence:
-    //   0 = idempotency check → no existing critique
-    //   1 = position row
-    //   2 = session row
-    //   3 = strategy row
+    // Select sequence (dryRun=true — critic-replay-lifecycle-misc, 2026-07-17
+    // fix: the idempotency lookup is SKIPPED entirely when dryRun=true, so the
+    // FIRST select is the position row, not the idempotency check):
+    //   0 = position row
+    //   1 = session row
+    //   2 = strategy row
     buildSelectSequenceMock([
-      [],                // idempotency: no existing critique in last 5 min
       [MOCK_POSITION],   // position
       [MOCK_SESSION],    // session
       [MOCK_STRATEGY],   // strategy
@@ -342,8 +368,8 @@ describe("wave27 dryRun — trade-critique-service", () => {
   it("TC-3 (bonus): dryRun=true + LLM returns valid JSON → critique result returned with grade", async () => {
     buildInsertMock();
 
+    // dryRun=true skips the idempotency select — position is index 0.
     buildSelectSequenceMock([
-      [],
       [MOCK_POSITION],
       [MOCK_SESSION],
       [MOCK_STRATEGY],
@@ -362,6 +388,46 @@ describe("wave27 dryRun — trade-critique-service", () => {
     // No critiqueId since we didn't persist
     expect(result.critiqueId).toBeUndefined();
     // db.insert must NOT have been called
+    expect(getDb().insert).not.toHaveBeenCalled();
+  });
+
+  it("TC-4 (MED fix, critic-replay-lifecycle-misc, 2026-07-17): dryRun=true ALWAYS fires the LLM " +
+    "even when a recent live critique exists for the same position — idempotency short-circuit " +
+    "must NOT apply to dry-run/replay-grading calls", async () => {
+    buildInsertMock();
+
+    // Table-KEYED (order-independent) mock — this is the RED-proof: if the
+    // idempotency lookup (queries the `tradeCritique` table) still ran under
+    // dryRun=true (the pre-fix bug), it would find this stale "D-" match and
+    // short-circuit BEFORE ever calling callOpenAI, regardless of call order.
+    // Post-fix, the tradeCritique table is never queried by this call at all.
+    buildTableKeyedSelectMock(new Map<unknown, unknown[]>([
+      [tradeCritique, [{
+        id: "stale-critique-existing",
+        grade: "D-", // deliberately different from the fresh LLM response below
+        dataCompleteness: "full",
+        provider: "openai",
+        model: "gpt-5.4",
+        critiquedAt: new Date(),
+      }]],
+      [paperPositions, [MOCK_POSITION]],
+      [paperSessions, [MOCK_SESSION]],
+      [strategies, [MOCK_STRATEGY]],
+    ]));
+
+    vi.mocked(callOpenAI).mockResolvedValue(VALID_LLM_JSON); // fresh grade = "B+"
+
+    const { runTradeCritique, _resetActiveCount } = await import("../services/trade-critique-service.js");
+    _resetActiveCount();
+
+    const result = await runTradeCritique("pos-dry-run-001", "corr-001", true);
+
+    // The LLM MUST have fired (callOpenAI called) and its FRESH grade must be
+    // returned — not the stale "D-" idempotency would have returned had the
+    // tradeCritique table lookup still run under dryRun=true.
+    expect(vi.mocked(callOpenAI)).toHaveBeenCalled();
+    expect(result.grade).toBe("B+");
+    expect(result.critiqueId).toBeUndefined();
     expect(getDb().insert).not.toHaveBeenCalled();
   });
 });

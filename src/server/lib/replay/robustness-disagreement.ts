@@ -328,9 +328,26 @@ export function selectOptimalThresholds(
  *
  * SIGNAL:        precision >= 0.70 AND recall >= 0.50 AND n >= 50
  *             OR F1 >= 0.60 AND n >= 50
- * INCONCLUSIVE:  0.40 <= precision < 0.70 OR 0.30 <= recall < 0.50
+ * INCONCLUSIVE:  NOT SIGNAL AND (precision >= 0.40 OR recall >= 0.30) AND n >= 50
  * NO_SIGNAL:     precision < 0.40 AND recall < 0.30 AND n >= 50
  * PRELIMINARY:   n < 50
+ *
+ * MED fix (critic-replay-lifecycle-misc, 2026-07-17): the INCONCLUSIVE row
+ * previously read "0.40 <= precision < 0.70 OR 0.30 <= recall < 0.50", implying
+ * upper bounds on each side of the OR. The implementation never enforced those
+ * upper bounds (`precision >= 0.40 || recall >= 0.30`, no `< 0.70` / `< 0.50`
+ * checks) — intentionally: INCONCLUSIVE is the OR-catch-all for everything the
+ * SIGNAL branch didn't already claim, by design (e.g. precision=0.90 but
+ * recall=0.10, f1=0.18 — high precision but weak recall, clearly NOT
+ * "no signal" — correctly lands INCONCLUSIVE via the unbounded precision
+ * check). NO_SIGNAL's AND condition (`precision < 0.40 AND recall < 0.30`) is
+ * the exact De Morgan complement of the INCONCLUSIVE OR condition, so the two
+ * branches are gapless and jointly exhaustive over the full domain — the code
+ * was always correct and complete; only the docstring's implied upper bounds
+ * were wrong. Adding literal `< 0.70` / `< 0.50` upper-bound checks to the CODE
+ * to match the old docstring would introduce a genuine undefined-verdict gap
+ * (e.g. precision=0.90/recall=0.10 would then match neither INCONCLUSIVE's
+ * narrowed range nor NO_SIGNAL's) — do NOT make that change.
  */
 export function applyB15DecisionRule(
   precision: number,

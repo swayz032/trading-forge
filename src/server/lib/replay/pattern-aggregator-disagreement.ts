@@ -106,6 +106,71 @@ export interface VersionStats {
   strategyIds: string[];
   /** Individual Sharpes for Mann-Whitney input */
   sharpeValues: number[];
+  /**
+   * MED fix (critic-replay-lifecycle-misc, 2026-07-17): true when this version's
+   * sharpeValues contains BOTH +Infinity and -Infinity (some attributed
+   * strategies have zero-variance-always-positive P&L, others zero-variance-
+   * always-negative — both legitimate per computeSharpe's signed-Infinity
+   * contract). Averaging +Infinity and -Infinity together via naive
+   * reduce-sum produces NaN, which then silently corrupts
+   * computeSpearman's rank-sort comparator (Array.sort's comparator
+   * contract is undefined when it returns NaN) — so a single degenerate
+   * version could poison the ENTIRE trend-test verdict without any error.
+   * avgSharpe/stdSharpe below fall back to the finite-only subset (or 0 if
+   * none) when this is true; the caller excludes such versions from the
+   * Spearman/Mann-Whitney statistical inputs — see evaluatePatternAggregatorSignal.
+   */
+  degenerateMixedInfinite: boolean;
+}
+
+/**
+ * Aggregate a Sharpe array that may legitimately contain signed Infinity
+ * (computeSharpe's zero-variance-series output — see its doc comment) into a
+ * NaN-safe (avg, std) pair.
+ *
+ * MED fix (critic-replay-lifecycle-misc, 2026-07-17): the naive
+ * `reduce((a,b)=>a+b,0)/n` average silently produces NaN when the array
+ * contains BOTH +Infinity and -Infinity (Infinity + -Infinity = NaN in IEEE
+ * 754). That NaN then flows into computeSpearman's rank-sort comparator
+ * (`(a,b) => a.v - b.v`), where Array.prototype.sort's behavior on a
+ * NaN-returning comparator is unspecified — corrupting the ENTIRE trend
+ * test's rank ordering, not just the one degenerate data point, with no
+ * thrown error and no audit signal. A single strategy pair with opposite-
+ * signed zero-variance P&L inside one appendix version could therefore
+ * silently invalidate the whole SIGNAL/INCONCLUSIVE/NO_SIGNAL verdict.
+ *
+ * When both signs of Infinity are present, falls back to averaging the
+ * finite subset only (0 if none exist) and flags `degenerateMixedInfinite`
+ * so the caller can exclude the version from statistical analysis entirely
+ * rather than silently blend a partial, misleading average into the verdict.
+ * A single-signed Infinity (only +Infinity, or only -Infinity, no mixing) is
+ * NOT degenerate — it is the legitimate, unambiguous "this version's
+ * strategies had uniformly infinite risk-adjusted return" signal the 2026-06-22
+ * hardening pass introduced, and is preserved unchanged.
+ */
+export function aggregateSharpeValues(
+  sharpeValues: number[],
+): { avgSharpe: number; stdSharpe: number; degenerateMixedInfinite: boolean } {
+  const hasPosInf = sharpeValues.some((v) => v === Infinity);
+  const hasNegInf = sharpeValues.some((v) => v === -Infinity);
+
+  if (hasPosInf && hasNegInf) {
+    const finite = sharpeValues.filter((v) => Number.isFinite(v));
+    if (finite.length === 0) {
+      return { avgSharpe: 0, stdSharpe: 0, degenerateMixedInfinite: true };
+    }
+    return {
+      avgSharpe: finite.reduce((a, b) => a + b, 0) / finite.length,
+      stdSharpe: computeStd(finite),
+      degenerateMixedInfinite: true,
+    };
+  }
+
+  const avgSharpe =
+    sharpeValues.length > 0
+      ? sharpeValues.reduce((a, b) => a + b, 0) / sharpeValues.length
+      : 0;
+  return { avgSharpe, stdSharpe: computeStd(sharpeValues), degenerateMixedInfinite: false };
 }
 
 /**
@@ -301,11 +366,9 @@ export function buildVersionStats(
       .filter((s): s is number => s !== undefined);
 
     const nStrategies = strategyIds.length;
-    const avgSharpe =
-      sharpeValues.length > 0
-        ? sharpeValues.reduce((a, b) => a + b, 0) / sharpeValues.length
-        : 0;
-    const stdSharpe = computeStd(sharpeValues);
+    // MED fix (critic-replay-lifecycle-misc, 2026-07-17): use the NaN-safe
+    // aggregator — see aggregateSharpeValues doc comment.
+    const { avgSharpe, stdSharpe, degenerateMixedInfinite } = aggregateSharpeValues(sharpeValues);
 
     stats.push({
       versionId: v.versionId,
@@ -316,6 +379,7 @@ export function buildVersionStats(
       stdSharpe,
       strategyIds,
       sharpeValues,
+      degenerateMixedInfinite,
     });
   }
 
@@ -366,7 +430,12 @@ export function computeConsecutivePairs(
  *
  * SIGNAL:        |ρ| ≥ 0.25 AND p ≤ 0.05 AND n_qualifying_versions ≥ 10
  *             OR improvementRate ≥ 0.60 AND n_consecutive_pairs ≥ 5
- * INCONCLUSIVE:  0.10 ≤ |ρ| < 0.25 AND n ≥ 10
+ * INCONCLUSIVE:  NOT SIGNAL AND |ρ| ≥ 0.10 AND n ≥ 10 (OR-catch-all — e.g. a
+ *                strong |ρ| ≥ 0.25 that misses SIGNAL only on p > 0.05
+ *                correctly lands here, not NO_SIGNAL; see the identical
+ *                bound-note on applyB15DecisionRule in robustness-disagreement.ts,
+ *                critic-replay-lifecycle-misc, 2026-07-17 — do not add an
+ *                upper-bound `< 0.25` check here, it would create a gap)
  * NO_SIGNAL:     |ρ| < 0.10 AND n ≥ 10
  * PRELIMINARY:   n_qualifying_versions < 10 (always)
  */
@@ -451,37 +520,72 @@ export function evaluatePatternAggregatorSignal(
     return emptyAnalysis(versions.length, auditEntries);
   }
 
+  // MED fix (critic-replay-lifecycle-misc, 2026-07-17): exclude degenerate
+  // (mixed +Infinity/-Infinity) versions from the statistical inputs — see
+  // aggregateSharpeValues doc comment. Their avgSharpe is already NaN-safe
+  // (falls back to the finite subset), but a partial-average built from
+  // throwing away the infinite extremes is a MEANINGLESS trend-test input, so
+  // it is excluded entirely rather than silently blended into the verdict.
+  const analyzableStats = qualifyingStats.filter((s) => !s.degenerateMixedInfinite);
+  const degenerateCount = qualifyingStats.length - analyzableStats.length;
+  if (degenerateCount > 0) {
+    auditEntries.push({
+      level: "warn",
+      message: `${degenerateCount} qualifying version(s) excluded from trend test — mixed +Infinity/-Infinity Sharpe values (zero-variance-always-positive AND zero-variance-always-negative strategies attributed to the same version) make a version-level average statistically meaningless`,
+      data: {
+        excludedVersionIndices: qualifyingStats
+          .filter((s) => s.degenerateMixedInfinite)
+          .map((s) => s.versionIndex),
+      },
+    });
+  }
+
+  if (analyzableStats.length === 0) {
+    auditEntries.push({
+      level: "warn",
+      message: "All qualifying versions were degenerate (mixed-Infinite) — analysis not possible",
+    });
+    return emptyAnalysis(versions.length, auditEntries);
+  }
+
   // Spearman ρ: version_index vs avg_sharpe (trend test)
-  const versionIndices = qualifyingStats.map((s) => s.versionIndex);
-  const avgSharpes = qualifyingStats.map((s) => s.avgSharpe);
+  const versionIndices = analyzableStats.map((s) => s.versionIndex);
+  const avgSharpes = analyzableStats.map((s) => s.avgSharpe);
   const { rho: spearmanRho, pValue: spearmanPValue } = computeSpearman(
     versionIndices,
     avgSharpes,
   );
 
   // Consecutive pair comparison (Mann-Whitney U)
-  const consecutivePairs = computeConsecutivePairs(qualifyingStats);
+  const consecutivePairs = computeConsecutivePairs(analyzableStats);
   const improvementRate =
     consecutivePairs.length > 0
       ? consecutivePairs.filter((p) => p.improvedRaw).length /
         consecutivePairs.length
       : 0;
 
+  // MED fix (critic-replay-lifecycle-misc, 2026-07-17): the decision rule's
+  // sample-size gate must count what was ACTUALLY fed into the Spearman/
+  // Mann-Whitney tests (analyzableStats), not qualifyingStats — otherwise a
+  // run with degenerate versions excluded would silently report a higher n
+  // than the trend test really used, potentially crossing the
+  // MIN_VERSIONS_FOR_FULL_ANALYSIS threshold on paper while the real
+  // analyzable sample stayed below it.
   const verdict = applyPatternDecisionRule(
     spearmanRho,
     spearmanPValue,
-    qualifyingStats.length,
+    analyzableStats.length,
     improvementRate,
     consecutivePairs.length,
   );
 
   const isPreliminary =
-    qualifyingStats.length < MIN_VERSIONS_FOR_FULL_ANALYSIS;
+    analyzableStats.length < MIN_VERSIONS_FOR_FULL_ANALYSIS;
 
   if (isPreliminary) {
     auditEntries.push({
       level: "warn",
-      message: `PRELIMINARY: only ${qualifyingStats.length} qualifying versions (need ${MIN_VERSIONS_FOR_FULL_ANALYSIS})`,
+      message: `PRELIMINARY: only ${analyzableStats.length} analyzable qualifying versions (need ${MIN_VERSIONS_FOR_FULL_ANALYSIS})`,
     });
   }
 

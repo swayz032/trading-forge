@@ -22,8 +22,39 @@
  *
  * Authority:
  *   - This service is advisory for most uses.
- *   - At PAPER→DEPLOY_READY it is a HARD GATE (fail-closed).
+ *   - At PAPER→DEPLOY_READY it is a HARD GATE (fail-closed), WITH ONE documented,
+ *     bounded exception — see "Ramp-up grandfather exception" below and the
+ *     checkSignalCorrelationGate() doc comment. Prior to the 2026-07-17
+ *     critic-replay-lifecycle-misc fix wave this exception existed in code but
+ *     was undocumented here, making the "fail-closed" claim inaccurate.
  *   - Quantum and tensor signals NEVER have promotion authority.
+ *
+ * Ramp-up grandfather exception (MED fix, critic-replay-lifecycle-misc, 2026-07-17):
+ *   If ZERO of the currently-DEPLOYED strategies have EVER had a signal vector
+ *   persisted (all pre-date migration 0072 / A7 rollout, or their backtest-time
+ *   fire-and-forget vector write silently failed), the gate ALLOWS promotion
+ *   with a "ramp-up" reason string instead of blocking on an empty comparison
+ *   set. This is the SAME class of exception as `lifecycle.wfe_unavailable_legacy`
+ *   / `lifecycle.pbo_unavailable_legacy` / B14's `legacy_ruin_scalar_fallback`
+ *   elsewhere in the codebase — a one-time historical bootstrap gap, not a
+ *   permanent bypass. It is intentionally NARROW: as soon as even ONE deployed
+ *   strategy has a persisted vector, computePairwiseCorrelation() compares
+ *   against it and the gate returns to full fail-closed enforcement (a partial
+ *   coverage gap — some but not all deployed strategies missing vectors — is
+ *   NOT ramp-up; it degrades gracefully by comparing against whichever peers
+ *   DO have vectors, per computePairwiseCorrelation()'s per-reference-id skip).
+ *   This documentation closes the "undocumented fail-open branch" finding
+ *   (critic-replay-lifecycle-misc fix wave) — the exception's existence and
+ *   bounds are now discoverable without reading 60 lines into the function
+ *   body. Closing the exception entirely (hard-blocking any promotion while
+ *   any pre-A7 DEPLOYED strategy lacks a vector) was considered and rejected:
+ *   it would make legitimate first-post-A7-migration promotions permanently
+ *   unblockable until every historical deployed strategy is backfilled or
+ *   retired, which is a stricter regression relative to the grandfather-window
+ *   precedent this codebase already uses for equivalent legacy-data gaps
+ *   elsewhere — this repo's convention is to document + bound the exception,
+ *   not silently widen or silently close it. Operator review of this rationale
+ *   is the outstanding sign-off step this comment exists to make easy.
  *
  * Persistence:
  *   strategySignalVectors table (migration 0072). Written fire-and-forget
@@ -277,6 +308,12 @@ export async function computePairwiseCorrelation(
  *   - No signal vector for the candidate  → BLOCK (signal_vector_missing)
  *   - Any deployed strategy has sim > 0.85 → BLOCK (high_correlation)
  *   - No deployed strategies yet           → ALLOW (nothing to compare against)
+ *   - Deployed strategies exist but NONE of them have a persisted signal vector
+ *     → ALLOW, "ramp-up" reason (documented, BOUNDED grandfather exception —
+ *     see the module-level doc comment's "Ramp-up grandfather exception"
+ *     section for the full rationale and the bound that keeps this from being
+ *     a silent permanent bypass). This is the only fail-open branch in this
+ *     gate; every other missing-data case above fails closed.
  *
  * This is a HARD GATE. Classical performance gates must also pass independently.
  *
@@ -333,17 +370,27 @@ export async function checkSignalCorrelationGate(strategyId: string): Promise<{
   const pairs = await computePairwiseCorrelation(strategyId, deployedIds);
 
   if (pairs.length === 0) {
-    // Deployed strategies exist but none have signal vectors yet — fail-open with warning.
-    // This covers ramp-up: deployed strategies pre-A7 don't have vectors yet.
+    // DOCUMENTED, BOUNDED grandfather exception (MED fix, critic-replay-lifecycle-misc,
+    // 2026-07-17) — see the module-level "Ramp-up grandfather exception" doc comment and
+    // this function's "Fail-closed contract" bullet list for the full rationale. Fires
+    // ONLY when deployed strategies exist but ZERO of them have EVER had a signal vector
+    // persisted (pre-A7 legacy, or a fire-and-forget vector write silently failed at
+    // backtest time). This is the one intentional fail-OPEN branch in an otherwise
+    // fail-closed gate — every other missing-data case above fails closed. It is
+    // self-narrowing: computePairwiseCorrelation() compares against ANY reference
+    // strategy that DOES have a vector, so this branch stops firing the moment even one
+    // deployed strategy accumulates a vector.
     logger.warn(
       { strategyId, deployedCount: deployedIds.length },
-      "A7 gate: DEPLOYED strategies exist but none have signal vectors — allowing promotion (ramp-up mode)",
+      "A7 gate: DEPLOYED strategies exist but none have signal vectors — allowing promotion " +
+        "(documented ramp-up grandfather exception, not silent — see signal-correlation-service.ts doc comment)",
     );
     return {
       allowed: true,
       reason:
-        "A7 signal correlation gate: PASSED (ramp-up) — deployed strategies have no signal vectors yet. " +
-        "Gate will be fully enforced once deployed strategies accumulate signal vectors.",
+        "A7 signal correlation gate: PASSED (documented ramp-up grandfather exception) — deployed strategies " +
+        "have no signal vectors yet. Gate returns to full fail-closed enforcement once any deployed strategy " +
+        "accumulates a signal vector.",
       maxSimilarity: null,
       blockingStrategyId: null,
     };

@@ -50,4 +50,52 @@ export const CANONICAL_PARAM_RANGES: Record<string, RangeMap> = {
   // Distinct from ema_crossover (MA vs MA cross). Fixed routing 2026-05-26.
   // ma_type is a string enum ("sma"|"ema") — not validated numerically here.
   bounce_off_level:      { ma_period: [10, 250], proximity_atr_mult: [0.5, 3.0], swing_lookback: [3, 20], atr_period: [7, 21] },
+  // MED fix (critic-replay-lifecycle-misc, 2026-07-17): ict_bias_aligned_continuation
+  // was documented (CLAUDE.md §2b Wave 26 Pass G B1 v10 update: "awareness of new
+  // archetypes (bounce_off_level, ict_bias_aligned_continuation)") and shipped
+  // (src/engine/strategies/ict_bias_aligned_continuation.py, indicator-catalog.md
+  // §"ict_bias_aligned_continuation") alongside bounce_off_level, but only
+  // bounce_off_level ever made it into this table — ict_bias_aligned_continuation
+  // was missing entirely, so critic-optimizer-service.ts's H-5 warn fired
+  // unconditionally ("no canonical param ranges — bounds will be unclamped") for
+  // every strategy running this archetype, and the H-8 pre-replay bounds gate could
+  // never clamp any of its 6 real numeric knobs. Bounds mirror the Python defaults
+  // (htf_swing_lookback=20, bos_lookback=5, bos_window=15, fvg_lookback=8,
+  // atr_period=14, max_bars_held=30) with the same ±proportional-window convention
+  // used for the other archetype entries above.
+  ict_bias_aligned_continuation: {
+    htf_swing_lookback: [10, 60],
+    bos_lookback:       [2, 20],
+    bos_window:         [5, 40],
+    fvg_lookback:       [2, 30],
+    atr_period:         [7, 21],
+    max_bars_held:      [10, 78],
+  },
 } as const;
+
+/**
+ * Resolves CANONICAL_PARAM_RANGES for a strategy's `entry_indicator`, stripping
+ * an optional "archetype:" prefix first.
+ *
+ * MED fix (critic-replay-lifecycle-misc, 2026-07-17): archetype strategies persist
+ * `entry_indicator` WITH the "archetype:" prefix (direct-bucket-graduator.ts:2253 —
+ * `entry_indicator: isArchetype && archetypeName ? \`archetype:${archetypeName}\` :
+ * entryIndicator`), matching the convention used throughout the codebase
+ * (archetype-registry-keys.ts, playbook-registration-backfill.ts, dsl-compiler.ts,
+ * fade-the-losers-service.ts all strip this same prefix before lookup). But this
+ * table's own keys — including the pre-existing `bounce_off_level` entry — are
+ * registered BARE (no prefix). Every prior direct `CANONICAL_PARAM_RANGES[key]`
+ * lookup against a live archetype-prefixed entry_indicator therefore silently
+ * missed, for EVERY archetype, regardless of whether that archetype had a bare
+ * entry registered here. Callers should use this helper instead of indexing the
+ * map directly whenever entry_indicator may be archetype-prefixed.
+ */
+export function resolveCanonicalRangesForEntryIndicator(
+  entryIndicator: string | null | undefined,
+): RangeMap | null {
+  if (typeof entryIndicator !== "string") return null;
+  const trimmed = entryIndicator.trim();
+  if (trimmed.length === 0) return null;
+  const key = trimmed.startsWith("archetype:") ? trimmed.slice("archetype:".length).trim() : trimmed;
+  return CANONICAL_PARAM_RANGES[key] ?? null;
+}

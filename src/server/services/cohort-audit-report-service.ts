@@ -7,7 +7,16 @@
  *
  * Design rules:
  *   - Read-only: never writes to audit_log (script/cron caller writes the receipt)
- *   - Fail-soft: empty result sets → zero counts, no throws
+ *   - Fail-LOUD on query errors, fail-soft on empty results: a genuinely empty
+ *     result set (zero matching rows) reports zero counts with no throw, but a
+ *     DB QUERY FAILURE throws rather than collapsing to []/0 — corrected
+ *     (critic-replay-lifecycle-misc, 2026-07-17) after this line drifted stale
+ *     against the 2026-07-06 deep-scan services HIGH fix (see _fetchRows /
+ *     _fetchCount below): silently reporting 0 on a query failure would let a
+ *     broken audit_log read masquerade as a healthy "0 events" go/no-go
+ *     verdict, exactly what that fix exists to prevent. Callers (scheduler.ts's
+ *     wave26-cohort-daily-audit-report job) MUST wrap buildCohortAuditReport()
+ *     in try/catch — it is not a bare fire-and-forget.
  *   - No business logic: pure aggregation of existing audit events
  *   - Logger from leaf module only (never ../index.js — bootstrap isolation)
  *   - §10b mandate: this IS the audit_log reconstruction harness for adaptive exits
@@ -347,8 +356,18 @@ function _buildMarkdown(
 /**
  * Build a cohort audit report by querying audit_log.
  *
- * Fail-soft: individual query failures return zero counts (logged as warn).
- * Never throws — caller can fire-and-forget.
+ * CORRECTED (critic-replay-lifecycle-misc, 2026-07-17): this previously claimed
+ * "individual query failures return zero counts (logged as warn). Never throws —
+ * caller can fire-and-forget" — stale against the 2026-07-06 deep-scan services
+ * HIGH fix, which deliberately made _fetchRows/_fetchCount THROW on a DB error
+ * instead of collapsing to []/0 (a caught error there would otherwise read as a
+ * genuinely healthy "0 events" go/no-go verdict). This function DOES throw —
+ * any _fetchRows/_fetchCount failure inside the Promise.all rejects this
+ * promise. The real caller (scheduler.ts's wave26-cohort-daily-audit-report
+ * job) already wraps this in try/catch, so there is no live production bug —
+ * but this docstring previously told a future caller the opposite of the
+ * actual contract, which would have licensed a genuinely unsafe fire-and-forget
+ * call site. Callers MUST catch.
  */
 export async function buildCohortAuditReport(
   opts: CohortReportOpts,

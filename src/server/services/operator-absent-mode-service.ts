@@ -11,7 +11,7 @@
  * Fail-CLOSED: any error in gate evaluation blocks promotion.
  */
 
-import { eq, isNotNull, and, desc } from "drizzle-orm";
+import { eq, isNull, and, desc } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { strategies, backtests, auditLog, frankensteinTestRuns, strategySignalVectors } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -291,11 +291,20 @@ export async function runOperatorAbsentAutoPromote(correlationId?: string): Prom
 export async function recordAbsenceStart(reason?: string): Promise<void> {
   try {
     const { operatorAbsentPeriods } = await import("../db/schema.js");
-    // Only insert if there's no currently-open period
+    // Only insert if there's no currently-open period.
+    // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): this previously checked
+    // isNotNull(startedAt) — but startedAt is `.notNull().defaultNow()`, so that
+    // condition is trivially true for EVERY row ever inserted (open or already
+    // closed). The schema comment on endedAt is explicit: "NULL = currently
+    // absent". So after the very first absence period in the table's history,
+    // `existing` was always truthy and every subsequent recordAbsenceStart()
+    // call became a permanent silent no-op — no new operator_absent_periods row
+    // was ever written again, for any future vacation, regardless of whether the
+    // prior period had already been closed by recordAbsenceEnd().
     const [existing] = await db
       .select({ id: operatorAbsentPeriods.id })
       .from(operatorAbsentPeriods)
-      .where(isNotNull(operatorAbsentPeriods.startedAt))
+      .where(isNull(operatorAbsentPeriods.endedAt))
       .limit(1);
 
     if (!existing) {
@@ -314,10 +323,17 @@ export async function recordAbsenceStart(reason?: string): Promise<void> {
 export async function recordAbsenceEnd(endedBy: string): Promise<void> {
   try {
     const { operatorAbsentPeriods } = await import("../db/schema.js");
+    // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): this previously matched
+    // isNotNull(startedAt) — again trivially true for every row ever inserted —
+    // so every call to recordAbsenceEnd() overwrote endedAt/endedBy on EVERY
+    // historical absence period (open or already closed), wiping the real
+    // close timestamp on prior periods and recording a nonsensical endedBy on
+    // rows that had nothing to do with this close event. Scoped to the
+    // genuinely-open row (endedAt IS NULL) per the schema's own contract.
     await db
       .update(operatorAbsentPeriods)
       .set({ endedAt: new Date(), endedBy })
-      .where(isNotNull(operatorAbsentPeriods.startedAt));
+      .where(isNull(operatorAbsentPeriods.endedAt));
     logger.info({ endedBy }, "operator-absent-mode: absence period closed");
   } catch (err) {
     logger.warn({ err }, "operator-absent-mode: failed to record absence end (non-blocking)");

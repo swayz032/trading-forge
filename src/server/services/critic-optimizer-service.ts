@@ -57,7 +57,7 @@ import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { MAX_GENERATIONS as _MAX_GENERATIONS_SHARED } from "../lib/lifecycle-constants.js";
 import { assertCrossValidatedSource } from "./agent-service.js";
 import { sqaRegistry } from "../lib/sqa-promise-registry.js";
-import { CANONICAL_PARAM_RANGES } from "../lib/param-ranges.js";
+import { resolveCanonicalRangesForEntryIndicator } from "../lib/param-ranges.js";
 import { notifyWarning } from "./notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { criticOptimizerRecoveryForceFailTotal } from "../lib/metrics-registry.js";
@@ -1468,8 +1468,13 @@ async function collectEvidence(
   const paramRanges: Array<{ name: string; min_val: number; max_val: number; n_bits: number }> = [];
   const stratConfig = (strat?.config ?? config.strategy ?? {}) as any;
   // F-1: resolve entry_indicator so we can clamp against CANONICAL_PARAM_RANGES.
+  // MED fix (critic-replay-lifecycle-misc, 2026-07-17): use the shared
+  // resolveCanonicalRangesForEntryIndicator() helper instead of a raw map index —
+  // archetype strategies persist entry_indicator WITH an "archetype:" prefix
+  // (e.g. "archetype:bounce_off_level"), which never matched this table's bare
+  // keys via direct indexing. See param-ranges.ts doc comment for full rationale.
   const entryIndicatorKey: string | undefined = stratConfig.entry_indicator ?? undefined;
-  const canonicalForEntry = entryIndicatorKey ? (CANONICAL_PARAM_RANGES[entryIndicatorKey] ?? null) : null;
+  const canonicalForEntry = resolveCanonicalRangesForEntryIndicator(entryIndicatorKey);
 
   // H-5: when entry_indicator is set but has no canonical match, log WARN once
   // so the bypass is observable. Behavior is unchanged (bounds proceed unclamped).
@@ -2085,6 +2090,156 @@ async function createChildStrategy(
 }
 
 /**
+ * R8 + R3: shared per-candidate governance gates — pre-commit completeness and
+ * lookahead-violation. Both the automated (replayCandidatesAsync) and manual
+ * (manualReplayCandidates) replay paths MUST route through this single function
+ * so the two paths cannot drift apart (fixwave-critic-replay-lifecycle-misc,
+ * 2026-07-17: the manual path previously omitted these gates — and the H-8 bounds
+ * gate below — entirely, letting an operator manually replay a governance-
+ * incomplete, lookahead-violating, or out-of-canonical-bounds candidate straight
+ * through to a walk-forward backtest and potential promotion).
+ *
+ * On a gate trip, persists replayStatus + governanceLabels on the candidate,
+ * writes the audit row, broadcasts SSE, and fires a Discord WARN — the full
+ * side-effect contract the automated path already enforced. Returns true when
+ * the candidate must be skipped (caller should `continue`).
+ */
+async function checkPrecommitAndLookaheadGates(
+  candidate: typeof criticCandidates.$inferSelect,
+  ctx: { runId: string; strategyId: string; correlationId?: string },
+): Promise<boolean> {
+  const { runId, strategyId, correlationId } = ctx;
+  const candidateGovMeta = (candidate.governanceMeta as GovernanceMeta | null) ?? null;
+
+  // R8: Pre-commit governance gate.
+  if (candidateGovMeta?.precommit_status === "incomplete") {
+    logger.warn(
+      { runId, candidateId: candidate.id, missingFields: candidateGovMeta.missing_fields },
+      "R8: candidate lacks pre-commit governance declaration — skipping (precommit_incomplete)",
+    );
+    await db
+      .update(criticCandidates)
+      .set({
+        replayStatus: "skipped_precommit_incomplete",
+        governanceLabels: {
+          ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
+          precommit_status: "incomplete",
+          missing_fields: candidateGovMeta.missing_fields,
+          skip_reason: "precommit_incomplete",
+        } as any,
+      })
+      .where(eq(criticCandidates.id, candidate.id));
+    await logAudit(
+      "research_governance.precommit_incomplete",
+      "critic_optimization",
+      runId,
+      { candidateId: candidate.id, strategyId },
+      { missing_fields: candidateGovMeta.missing_fields },
+      correlationId,
+    );
+    broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_precommit_incomplete" });
+    void notifyWarning(
+      "R8: Critic governance block — candidate skipped (precommit_incomplete)",
+      appendFamilyGradePostscript(
+        `Critic candidate ${candidate.id} for strategy ${strategyId} was skipped because it is missing mandatory governance fields: ${(candidateGovMeta.missing_fields ?? []).join(", ")}. Run ID: ${runId}.`,
+        "The trading research system blocked a proposed parameter change because required safety information was missing from it.",
+        "No action needed. The system is protecting itself automatically. Let Tony know if this alert keeps firing repeatedly.",
+      ),
+      { runId, candidateId: candidate.id, strategyId, missingFields: candidateGovMeta.missing_fields },
+    );
+    return true;
+  }
+
+  // R3: Lookahead violation gate.
+  if (candidateGovMeta?.lookahead_violation === true) {
+    logger.warn(
+      {
+        runId,
+        candidateId: candidate.id,
+        reasons: (candidateGovMeta as any).lookahead_violation_reasons,
+      },
+      "R3: candidate has lookahead_violation=true — skipping (lookahead_blocked)",
+    );
+    await db
+      .update(criticCandidates)
+      .set({
+        replayStatus: "skipped_lookahead_violation",
+        governanceLabels: {
+          ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
+          lookahead_violation: true,
+          skip_reason: "lookahead_violation",
+        } as any,
+      })
+      .where(eq(criticCandidates.id, candidate.id));
+    await logAudit(
+      "research_governance.lookahead_violation_blocked",
+      "critic_optimization",
+      runId,
+      { candidateId: candidate.id, strategyId },
+      { reasons: (candidateGovMeta as any).lookahead_violation_reasons },
+      correlationId,
+    );
+    broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_lookahead_violation" });
+    void notifyWarning(
+      "R3: Critic governance block — candidate skipped (lookahead_violation)",
+      appendFamilyGradePostscript(
+        `Critic candidate ${candidate.id} for strategy ${strategyId} was blocked because it contains a lookahead violation — the proposed parameter change references future market data that would not be available at trade time. Violation reasons: ${JSON.stringify((candidateGovMeta as any).lookahead_violation_reasons ?? [])}. Run ID: ${runId}.`,
+        "The trading research system blocked a proposed change because it was based on information that would not exist at the time of a real trade. This is an important integrity check.",
+        "No action needed. The system caught and blocked this automatically. If Tony sees this alert often, it may indicate a problem with the research pipeline that he should investigate.",
+      ),
+      { runId, candidateId: candidate.id, strategyId, reasons: (candidateGovMeta as any).lookahead_violation_reasons },
+    );
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * H-8: shared canonical param-bounds gate — skips a candidate whose changedParams
+ * fall outside CANONICAL_PARAM_RANGES for the strategy's entry_indicator. Shared
+ * by both replay paths for the same drift-prevention reason documented above.
+ * No-op (returns false) when no canonical ranges are registered for the strategy's
+ * entry_indicator.
+ */
+async function checkParamBoundsGate(
+  candidate: typeof criticCandidates.$inferSelect,
+  canonicalRanges: Record<string, [number, number]> | null,
+  ctx: { runId: string; strategyId: string },
+): Promise<boolean> {
+  const { runId, strategyId } = ctx;
+  if (!canonicalRanges) return false;
+
+  const changedParamsRaw = candidate.changedParams as Record<string, number>;
+  const outOfBoundsParams: Array<{ param: string; value: number; min: number; max: number }> = [];
+  for (const [paramName, paramValue] of Object.entries(changedParamsRaw)) {
+    const range = canonicalRanges[paramName] ?? null;
+    if (range && (paramValue < range[0] || paramValue > range[1])) {
+      outOfBoundsParams.push({ param: paramName, value: paramValue, min: range[0], max: range[1] });
+    }
+  }
+  if (outOfBoundsParams.length === 0) return false;
+
+  logger.warn(
+    { runId, candidateId: candidate.id, strategyId, outOfBoundsParams },
+    "H-8: candidate changedParams outside canonical bounds — skipping (skipped_out_of_bounds)",
+  );
+  await db
+    .update(criticCandidates)
+    .set({
+      replayStatus: "skipped_out_of_bounds",
+      governanceLabels: {
+        ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
+        out_of_bounds_params: outOfBoundsParams,
+        skip_reason: "skipped_out_of_bounds",
+      } as any,
+    })
+    .where(eq(criticCandidates.id, candidate.id));
+  broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_out_of_bounds" });
+  return true;
+}
+
+/**
  * Replay top candidates through the backtester and select survivor.
  *
  * Wrapped in try/finally so any unhandled error marks the run as "failed"
@@ -2209,112 +2364,20 @@ async function replayCandidatesAsync(
   }
 
   // ─── Resolve canonical param ranges for H-8 bounds gate ───────────────────
+  // MED fix (critic-replay-lifecycle-misc, 2026-07-17): resolve via the shared
+  // helper (strips "archetype:" prefix) — see param-ranges.ts doc comment.
   const replayStratConfig = (strat.config ?? originalConfig) as any;
   const replayEntryIndicator: string | undefined = replayStratConfig.entry_indicator ?? undefined;
-  const replayCanonicalRanges = replayEntryIndicator
-    ? (CANONICAL_PARAM_RANGES[replayEntryIndicator] ?? null)
-    : null;
+  const replayCanonicalRanges = resolveCanonicalRangesForEntryIndicator(replayEntryIndicator);
 
   try {
     // ─── Replay each candidate sequentially ───────────────────────────
     for (const candidate of candidates) {
       try {
-        // R8 Wave 4 Track 4C: Pre-commit governance gate.
-        // A candidate whose governance_meta marks precommit_status="incomplete"
-        // lacks the 5 mandatory governance fields (economic_rationale,
-        // declared_param_space_size, min_sample_size, target_regime,
-        // declared_failure_mode). It must NOT be queued for replay — kept as
-        // "skipped_precommit_incomplete" so the audit trail is accurate.
-        // F-6: the "advisory" bypass for the critic_optimizer.py path is REMOVED.
-        // Both code paths now validate the 5 fields — see buildCandidateGovernanceMeta.
-        const candidateGovMeta = (candidate.governanceMeta as GovernanceMeta | null) ?? null;
-        if (candidateGovMeta?.precommit_status === "incomplete") {
-          logger.warn(
-            { runId, candidateId: candidate.id, missingFields: candidateGovMeta.missing_fields },
-            "R8: candidate lacks pre-commit governance declaration — skipping (precommit_incomplete)",
-          );
-          await db
-            .update(criticCandidates)
-            .set({
-              replayStatus: "skipped_precommit_incomplete",
-              governanceLabels: {
-                ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
-                precommit_status: "incomplete",
-                missing_fields: candidateGovMeta.missing_fields,
-                skip_reason: "precommit_incomplete",
-              } as any,
-            })
-            .where(eq(criticCandidates.id, candidate.id));
-          await logAudit(
-            "research_governance.precommit_incomplete",
-            "critic_optimization",
-            runId,
-            { candidateId: candidate.id, strategyId },
-            { missing_fields: candidateGovMeta.missing_fields },
-            correlationId,
-          );
-          broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_precommit_incomplete" });
-          // GAP 2 fix — R8: emit Discord WARN so governance blocks are visible to the operator.
-          // Previously this block was silent on Discord; operator had no signal that the
-          // critic produced governance-incomplete candidates without querying audit_log.
-          void notifyWarning(
-            "R8: Critic governance block — candidate skipped (precommit_incomplete)",
-            appendFamilyGradePostscript(
-              `Critic candidate ${candidate.id} for strategy ${strategyId} was skipped because it is missing mandatory governance fields: ${(candidateGovMeta.missing_fields ?? []).join(", ")}. Run ID: ${runId}.`,
-              "The trading research system blocked a proposed parameter change because required safety information was missing from it.",
-              "No action needed. The system is protecting itself automatically. Let Tony know if this alert keeps firing repeatedly.",
-            ),
-            { runId, candidateId: candidate.id, strategyId, missingFields: candidateGovMeta.missing_fields },
-          );
-          continue;
-        }
-
-        // R3 F-5 mirror: Block candidates with lookahead_violation=true.
-        // parameter_evolver.py HARD mode already excludes these before they reach the
-        // DB when LOOKAHEAD_GUARD_HARD=true. This gate is the TS-layer defence for
-        // candidates that arrive via soft mode or legacy data with the flag already set.
-        if (candidateGovMeta?.lookahead_violation === true) {
-          logger.warn(
-            {
-              runId,
-              candidateId: candidate.id,
-              reasons: (candidateGovMeta as any).lookahead_violation_reasons,
-            },
-            "R3: candidate has lookahead_violation=true — skipping (lookahead_blocked)",
-          );
-          await db
-            .update(criticCandidates)
-            .set({
-              replayStatus: "skipped_lookahead_violation",
-              governanceLabels: {
-                ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
-                lookahead_violation: true,
-                skip_reason: "lookahead_violation",
-              } as any,
-            })
-            .where(eq(criticCandidates.id, candidate.id));
-          await logAudit(
-            "research_governance.lookahead_violation_blocked",
-            "critic_optimization",
-            runId,
-            { candidateId: candidate.id, strategyId },
-            { reasons: (candidateGovMeta as any).lookahead_violation_reasons },
-            correlationId,
-          );
-          broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_lookahead_violation" });
-          // GAP 2 fix — R3: emit Discord WARN so lookahead violations are visible to the operator.
-          // Lookahead violations = LLM fabricating market knowledge (institutional red flag).
-          // Previously silent on Discord; operator could not detect systematic violations
-          // without querying audit_log. Now surfaces as an actionable warning signal.
-          void notifyWarning(
-            "R3: Critic governance block — candidate skipped (lookahead_violation)",
-            appendFamilyGradePostscript(
-              `Critic candidate ${candidate.id} for strategy ${strategyId} was blocked because it contains a lookahead violation — the proposed parameter change references future market data that would not be available at trade time. Violation reasons: ${JSON.stringify((candidateGovMeta as any).lookahead_violation_reasons ?? [])}. Run ID: ${runId}.`,
-              "The trading research system blocked a proposed change because it was based on information that would not exist at the time of a real trade. This is an important integrity check.",
-              "No action needed. The system caught and blocked this automatically. If Tony sees this alert often, it may indicate a problem with the research pipeline that he should investigate.",
-            ),
-            { runId, candidateId: candidate.id, strategyId, reasons: (candidateGovMeta as any).lookahead_violation_reasons },
-          );
+        // R8 + R3: shared pre-commit governance + lookahead-violation gates.
+        // See checkPrecommitAndLookaheadGates doc comment — both replay paths
+        // route through this single function so they cannot drift.
+        if (await checkPrecommitAndLookaheadGates(candidate, { runId, strategyId, correlationId })) {
           continue;
         }
 
@@ -2324,43 +2387,14 @@ async function replayCandidatesAsync(
           .where(eq(criticCandidates.id, candidate.id));
         broadcastSSE("critic:replay_started", { runId, candidateId: candidate.id, rank: candidate.rank });
 
-        // H-8: Pre-replay bounds check — skip any candidate whose changedParams fall
-        // outside canonical ranges. Without this check, an out-of-range candidate would
-        // run a full walk-forward backtest and potentially produce misleading results.
-        // Only applied when canonical ranges are available for this entry_indicator.
-        const changedParamsRaw = candidate.changedParams as Record<string, number>;
-        if (replayCanonicalRanges) {
-          const outOfBoundsParams: Array<{ param: string; value: number; min: number; max: number }> = [];
-          for (const [paramName, paramValue] of Object.entries(changedParamsRaw)) {
-            const range = replayCanonicalRanges[paramName] ?? null;
-            if (range && (paramValue < range[0] || paramValue > range[1])) {
-              outOfBoundsParams.push({ param: paramName, value: paramValue, min: range[0], max: range[1] });
-            }
-          }
-          if (outOfBoundsParams.length > 0) {
-            logger.warn(
-              { runId, candidateId: candidate.id, strategyId, outOfBoundsParams },
-              "H-8: candidate changedParams outside canonical bounds — skipping (skipped_out_of_bounds)",
-            );
-            await db
-              .update(criticCandidates)
-              .set({
-                replayStatus: "skipped_out_of_bounds",
-                governanceLabels: {
-                  ...(candidate.governanceLabels as Record<string, unknown> ?? {}),
-                  out_of_bounds_params: outOfBoundsParams,
-                  skip_reason: "skipped_out_of_bounds",
-                } as any,
-              })
-              .where(eq(criticCandidates.id, candidate.id));
-            broadcastSSE("critic:replay_complete", { runId, candidateId: candidate.id, status: "skipped_out_of_bounds" });
-            continue;
-          }
+        // H-8: shared canonical param-bounds gate — see checkParamBoundsGate.
+        if (await checkParamBoundsGate(candidate, replayCanonicalRanges, { runId, strategyId })) {
+          continue;
         }
 
         // Clone strategy config and apply changed params using generic deep-merge (Fix 1).
         const replayConfig = JSON.parse(JSON.stringify(baseConfig));
-        const changedParams = changedParamsRaw;
+        const changedParams = candidate.changedParams as Record<string, number>;
 
         const unappliedParamKeys = applyAllParamChanges(replayConfig, changedParams);
 
@@ -2812,16 +2846,38 @@ export async function manualReplayCandidates(
     .limit(1);
   const _manualTrialNTotal: number = (_manualRunRow?.evidencePacket as any)?.trial_n_total ?? 1;
 
+  // ─── Resolve canonical param ranges for the shared H-8 bounds gate ────────
+  // (mirrors replayCandidatesAsync — see checkParamBoundsGate doc comment)
+  // MED fix (critic-replay-lifecycle-misc, 2026-07-17): resolve via the shared
+  // helper (strips "archetype:" prefix) — see param-ranges.ts doc comment.
+  const manualStratConfig = (strat.config ?? {}) as any;
+  const manualEntryIndicator: string | undefined = manualStratConfig.entry_indicator ?? undefined;
+  const manualCanonicalRanges = resolveCanonicalRangesForEntryIndicator(manualEntryIndicator);
+
   let bestCandidate: { id: string; compositeScore: number; backtestId: string } | null = null;
 
   try {
     for (const candidate of candidates) {
       try {
+        // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): the manual replay
+        // path previously omitted all three governance/safety gates that the
+        // automated path (replayCandidatesAsync) enforces per-candidate — R8
+        // pre-commit governance completeness, R3 lookahead-violation, and H-8
+        // canonical param-bounds. Route through the SAME shared functions the
+        // automated path uses so the two paths cannot drift.
+        if (await checkPrecommitAndLookaheadGates(candidate, { runId, strategyId, correlationId })) {
+          continue;
+        }
+
         await db
           .update(criticCandidates)
           .set({ replayStatus: "running" })
           .where(eq(criticCandidates.id, candidate.id));
         broadcastSSE("critic:replay_started", { runId, candidateId: candidate.id, rank: candidate.rank });
+
+        if (await checkParamBoundsGate(candidate, manualCanonicalRanges, { runId, strategyId })) {
+          continue;
+        }
 
         // Clone config and apply changed params using generic deep-merge (Fix 1).
         const replayConfig = JSON.parse(JSON.stringify(baseConfig));
@@ -3052,10 +3108,13 @@ export async function manualReplayCandidates(
             // C1: auto-trigger walk-forward backtest for child to restart the loop.
             // suppressAutoPromote: true — child earns promotion through its own critic cycle.
             // Fire-and-forget — does not block manual replay completion.
-            const childMergedConfig = {
-              ...(strat.config ?? {}),
-              ...(survivorRow.changedParams as Record<string, unknown>),
-            };
+            // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): this previously flat-spread
+            // changedParams over strat.config, writing orphan top-level keys instead of merging
+            // into the correct nested locations (indicators[].period, stop_loss.multiplier,
+            // etc.) — the same bug already fixed at the two sibling call sites (createChildStrategy
+            // and replayCandidatesAsync's own child auto-backtest) via applyAllParamChanges.
+            const childMergedConfig = structuredClone(strat.config ?? {}) as Record<string, any>;
+            applyAllParamChanges(childMergedConfig, survivorRow.changedParams as Record<string, number>);
             runBacktest(childId, {
               strategy: childMergedConfig,
               mode: "walkforward",

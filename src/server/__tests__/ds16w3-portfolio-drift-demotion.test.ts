@@ -13,7 +13,10 @@ const promoteCalls: Array<[string, string, string]> = [];
 const auditActions: string[] = [];
 const sseEvents: string[] = [];
 const criticalTitles: string[] = [];
+const warnTitles: string[] = [];
 let step2ShouldFail = false;
+let step1ShouldFail = false;
+let step1ShouldThrow = false;
 
 vi.mock("../db/index.js", () => ({
   db: {
@@ -34,13 +37,15 @@ vi.mock("../lib/metrics-registry.js", () => ({
 }));
 vi.mock("../lib/notification-helpers.js", () => ({ appendFamilyGradePostscript: (b: string) => b }));
 vi.mock("../services/notification-service.js", () => ({
-  notifyWarning: () => {},
+  notifyWarning: (title: string) => { warnTitles.push(title); },
   notifyCritical: (title: string) => { criticalTitles.push(title); },
 }));
 vi.mock("../services/lifecycle-service.js", () => ({
   LifecycleService: class {
     promoteStrategy(id: string, from: string, to: string) {
+      if (to === "DECLINING" && step1ShouldThrow) throw new Error("step1_threw");
       promoteCalls.push([id, from, to]);
+      if (to === "DECLINING" && step1ShouldFail) return Promise.resolve({ success: false, error: "step1_boom" });
       if (to === "TESTING" && step2ShouldFail) return Promise.resolve({ success: false, error: "step2_boom" });
       return Promise.resolve({ success: true });
     }
@@ -63,7 +68,10 @@ beforeEach(async () => {
   auditActions.length = 0;
   sseEvents.length = 0;
   criticalTitles.length = 0;
+  warnTitles.length = 0;
   step2ShouldFail = false;
+  step1ShouldFail = false;
+  step1ShouldThrow = false;
   delete process.env.PORTFOLIO_DRIFT_DEMOTION_ENABLED; // default-OFF unless a test opts in
   ({ runPortfolioDriftDemotion } = await import("../services/portfolio-drift-demotion-service.js"));
 });
@@ -136,6 +144,54 @@ describe("DS16W3 — portfolio-drift auto-demotion", () => {
     ]);
     expect(auditActions).toContain("lifecycle.portfolio_drift_zombie_declining");
     expect(criticalTitles.length).toBe(1);
+    // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): a step2 (zombie) failure
+    // must NEVER also claim via notifyWarning that the strategy was demoted — the
+    // pre-fix code fired the "demoted to TESTING" warning unconditionally BEFORE
+    // attempting either promoteStrategy call, so this scenario (real demotion
+    // failure) previously still sent a false "demoted to TESTING" Discord message.
+    expect(warnTitles.some((t) => t.includes("demoted to TESTING"))).toBe(false);
+  });
+
+  it("HIGH fix: step1 (DEPLOYED→DECLINING) failure does NOT send a false 'demoted' notification, and DOES send a failure notification", async () => {
+    process.env.PORTFOLIO_DRIFT_DEMOTION_ENABLED = "true";
+    step1ShouldFail = true;
+    mockRows.push({ id: "s7", name: "step1-fails", rollingSharpe30d: "0.3" });
+    const r = await runPortfolioDriftDemotion();
+    expect(r.demoted).toBe(0);
+    // Only step1 was attempted — step2 must never run when step1 fails.
+    expect(promoteCalls).toEqual([["s7", "DEPLOYED", "DECLINING"]]);
+    // Pre-fix: notifyWarning("...demoted to TESTING") fired unconditionally BEFORE
+    // promoteStrategy was even called, regardless of outcome. Post-fix: no false
+    // "demoted" claim, and a distinct failure notification fires instead so the
+    // operator isn't left with zero signal that the strategy is still DEPLOYED.
+    expect(warnTitles.some((t) => t.includes("demoted to TESTING"))).toBe(false);
+    expect(warnTitles.some((t) => t.includes("demotion FAILED"))).toBe(true);
+  });
+
+  it("HIGH fix: promoteStrategy throwing synchronously does NOT send a false 'demoted' notification", async () => {
+    process.env.PORTFOLIO_DRIFT_DEMOTION_ENABLED = "true";
+    step1ShouldThrow = true;
+    mockRows.push({ id: "s8", name: "step1-throws", rollingSharpe30d: "0.3" });
+    const r = await runPortfolioDriftDemotion();
+    expect(r.demoted).toBe(0);
+    expect(warnTitles.some((t) => t.includes("demoted to TESTING"))).toBe(false);
+    expect(warnTitles.some((t) => t.includes("threw"))).toBe(true);
+  });
+
+  it("HIGH fix: successful demotion sends the 'demoted to TESTING' notification exactly once, AFTER both promote calls complete", async () => {
+    process.env.PORTFOLIO_DRIFT_DEMOTION_ENABLED = "true";
+    mockRows.push({ id: "s9", name: "clean-demote", rollingSharpe30d: "0.3" });
+    const r = await runPortfolioDriftDemotion();
+    expect(r.demoted).toBe(1);
+    const demotedTitles = warnTitles.filter((t) => t.includes("demoted to TESTING"));
+    expect(demotedTitles).toHaveLength(1);
+    // Both lifecycle transitions must have already been recorded by the time the
+    // notification fires — proven by promoteCalls holding both entries when this
+    // assertion runs (the whole sweep is awaited to completion above).
+    expect(promoteCalls).toEqual([
+      ["s9", "DEPLOYED", "DECLINING"],
+      ["s9", "DECLINING", "TESTING"],
+    ]);
   });
 
   it("always writes a completion summary row", async () => {

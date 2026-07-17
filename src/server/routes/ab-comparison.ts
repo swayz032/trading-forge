@@ -236,6 +236,19 @@ async function loadSubAccountMetrics(
  * Read the latest quantum_rl.kill_switch_evaluated audit row.
  * If no row exists (legacy / not yet evaluated), returns safe defaults:
  *   is_armed=true, currently_dormant=false (RL running, not triggered).
+ *
+ * CORRECTED (HIGH fix, critic-replay-lifecycle-misc, 2026-07-17): this
+ * previously read `is_armed` / `dormant` fields — the real Python producer
+ * (src/engine/quantum_rl_agent.py::compute_rl_kill_switch_state, verified via
+ * grep) never writes either. It writes a boolean `should_dormant` plus a
+ * `reason` string ("insufficient_samples" when there aren't enough sessions
+ * to evaluate yet, otherwise "within_tolerance" or a "sharpe_gap_...pct"
+ * label once should_dormant flips true). `result?.["is_armed"] !== false`
+ * was silently always-true (the field is undefined, and `undefined !== false`
+ * is true) and `result?.["dormant"] === true` was silently always-false (the
+ * field is undefined) — so is_armed/currently_dormant were hardcoded true/false
+ * regardless of the real evaluation, in both the "no row" fallback AND the
+ * "row exists" branch.
  */
 async function loadKillSwitchStatus(): Promise<KillSwitchStatus> {
   try {
@@ -257,13 +270,16 @@ async function loadKillSwitchStatus(): Promise<KillSwitchStatus> {
     const row = rows[0]!;
     const result = row.result as Record<string, unknown> | null;
 
-    // Parse from audit result payload written by C.2 rl-signal-fetcher pattern
-    const isArmed = result?.["is_armed"] !== false; // default true
-    const dormant = result?.["dormant"] === true;
+    // Parse from the real Python audit result payload.
+    const shouldDormant = result?.["should_dormant"] === true;
+    const reason = typeof result?.["reason"] === "string" ? (result["reason"] as string) : null;
+    // "Armed" = the evaluator had enough sessions to make a real gap decision.
+    // insufficient_samples means the kill switch hasn't started gating yet.
+    const isArmed = reason !== "insufficient_samples";
 
     return {
       is_armed: isArmed,
-      currently_dormant: dormant,
+      currently_dormant: shouldDormant,
       last_evaluated: row.createdAt instanceof Date ? row.createdAt : new Date(String(row.createdAt)),
     };
   } catch (err) {

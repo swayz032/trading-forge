@@ -23,6 +23,9 @@ import { randomUUID } from "crypto";
 import { sql, and, gte, eq } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { auditLog } from "../db/schema.js";
+// HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): P&L delta / Sharpe now
+// sourced from the real realized-P&L journal (paper_trades) instead of a
+// never-written audit action — see _queryAccountMetrics doc comment.
 import { logger } from "../lib/logger.js";
 import { insertAuditRowSafe } from "../lib/audit-log-helper.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
@@ -138,61 +141,68 @@ function _weekWindow(asOf: Date): { windowStart: Date; windowEnd: Date } {
 }
 
 /**
- * Compute cumulative P&L delta for a given paper_account_routing label over
- * the last 7 days.  Reads from audit_log rows with action='signal.position_closed'
- * and entity_type matching the account routing tag.
+ * Compute cumulative P&L delta + rolling Sharpe for a given paper_account_routing
+ * label over the last 7 days.
  *
- * Returns {cumulativePnlDelta, rollingSharp20} by querying paper_positions
- * materialized through audit rows.  If no rows exist returns null quantities.
+ * CORRECTED (HIGH fix, critic-replay-lifecycle-misc, 2026-07-17): this previously
+ * queried audit_log for action='signal.rl_ab_routed' — that string is never
+ * written by any producer (it's the *SSE event name* from sse.ts's
+ * WAVE29_EVENTS.RL_AB_ROUTED = "signal:rl_ab_routed", confused here for a DB
+ * audit action) — with fields 'account_routing' / 'realized_pnl'. The real
+ * per-signal routing audit action is `quantum_rl.signal_routed`
+ * (paper-signal-service.ts), but it fires at entry/routing time BEFORE a
+ * trade's P&L is known, and its result payload never carries a realized_pnl
+ * field at all — so no amount of field-renaming against that action can ever
+ * populate P&L. Renaming to it would still leave this permanently zero.
  *
- * NOTE: This is a best-effort read.  The service uses audit_log rows for
- * `quantum_rl.training_completed` (epoch count) and `quantum_rl.kill_switch_engaged`
- * (engage count) — these are the most reliable queryable sources available
- * without a full ORM join chain to paper_positions which requires cross-table
- * awareness of account routing.  Regime breakdown uses bias_state via
- * the signal rows' result->>'institutional_regime' field.
+ * The real realized-P&L journal is `paper_trades.pnl` (NET, post-commission).
+ * closePosition() zeroes `paper_positions.unrealized_pnl` on close — the
+ * realized P&L lands in `paper_trades` instead (documented + already relied on
+ * by consistency-tracker-service.ts for the identical "where does realized P&L
+ * actually live" question). The routing label lives on
+ * `strategies.paper_account_routing` (migration 0159, NOT NULL default
+ * 'baseline'), joined paper_trades -> paper_sessions -> strategies.
  *
- * In the current state we have access to:
- *   - audit_log rows with action='signal.rl_ab_routed' carrying routing label
- *   - paper_positions rows (routed sub-account via broker_account_id join)
- *   - quantum_rl_runs rows for training epoch counts
- *
- * For production correctness we query audit_log rows as a proxy and return
- * structured output the Discord builder can render.
+ * "Session" here means an NY-calendar trading day
+ * (DATE(exit_time AT TIME ZONE 'America/New_York')) — the same daily-bucket
+ * convention used by consistency-tracker-service.ts / daily-trade-cap.ts —
+ * not one entry per individual trade.
  */
 async function _queryAccountMetrics(
   routingLabel: string,
   windowStart: Date,
   _windowEnd: Date,
 ): Promise<{ cumulativePnlDelta: number; rollingSharp20: number | null; sessionPnls: number[] }> {
-  // Query audit_log rows for signal.rl_ab_routed with matching routing label
-  // result->>'account_routing' = routingLabel, within the 7-day window.
-  // Sum result->>'realized_pnl' for the P&L delta.
   try {
-    const rows = await db
-      .select({
-        resultJson: auditLog.result,
-      })
-      .from(auditLog)
-      .where(
-        and(
-          eq(auditLog.action, "signal.rl_ab_routed"),
-          gte(auditLog.createdAt, windowStart),
-          sql`${auditLog.result}->>'account_routing' = ${routingLabel}`,
-        ),
-      );
+    // strategies.paper_account_routing is NOT NULL (default 'baseline'), but
+    // the OR-NULL clause is kept defensively to mirror the same fail-soft
+    // default paper-signal-service.ts applies when the strategy row itself
+    // can't be resolved (routingDecision ?? "baseline").
+    const routingClause = routingLabel === BASELINE_ACCOUNT
+      ? sql`(s.paper_account_routing = ${BASELINE_ACCOUNT} OR s.paper_account_routing IS NULL)`
+      : sql`s.paper_account_routing = ${routingLabel}`;
 
-    const sessionPnls: number[] = [];
-    let cumulativePnlDelta = 0;
-    for (const row of rows) {
-      const result = row.resultJson as Record<string, unknown> | null;
-      if (!result) continue;
-      const pnl = typeof result["realized_pnl"] === "number" ? result["realized_pnl"] : 0;
-      cumulativePnlDelta += pnl;
-      sessionPnls.push(pnl);
-    }
+    type DailyRow = { day: string; pnl: number };
+    const dailyRows = await db.execute<DailyRow>(
+      sql`
+        SELECT
+          DATE(pt.exit_time AT TIME ZONE 'America/New_York') AS day,
+          SUM(pt.pnl::numeric) AS pnl
+        FROM paper_trades pt
+        JOIN paper_sessions ps ON ps.id = pt.session_id
+        JOIN strategies s ON s.id = ps.strategy_id
+        WHERE
+          ${routingClause}
+          AND pt.exit_time >= ${windowStart.toISOString()}::timestamptz
+        GROUP BY 1
+        ORDER BY 1
+      `,
+    );
 
-    // Rolling 20-session Sharpe: mean / std of the last ≤20 session P&Ls
+    const sessionPnls: number[] = (dailyRows as unknown as DailyRow[]).map((row) => Number(row.pnl));
+    const cumulativePnlDelta = sessionPnls.reduce((a, b) => a + b, 0);
+
+    // Rolling 20-session Sharpe: mean / std of the last ≤20 daily-bucket P&Ls
     const last20 = sessionPnls.slice(-20);
     let rollingSharp20: number | null = null;
     if (last20.length >= 2) {
@@ -203,7 +213,8 @@ async function _queryAccountMetrics(
     }
 
     return { cumulativePnlDelta, rollingSharp20, sessionPnls };
-  } catch {
+  } catch (err) {
+    logger.warn({ err, routingLabel }, "ab-comparison-weekly-digest: _queryAccountMetrics failed — returning zeroed metrics");
     return { cumulativePnlDelta: 0, rollingSharp20: null, sessionPnls: [] };
   }
 }
@@ -229,9 +240,20 @@ async function _countAuditAction(action: string, windowStart: Date, _windowEnd: 
 }
 
 /**
- * Count kill_switch armed sessions: audit_log rows where
- * quantum_rl.kill_switch_evaluated with result->>'decision' != 'engaged'
- * (armed but did not fire) within the 7-day window.
+ * Count kill_switch armed-and-idle evaluations: audit_log rows where
+ * quantum_rl.kill_switch_evaluated has should_dormant=false (evaluated,
+ * within tolerance, did not engage) within the 7-day window.
+ *
+ * CORRECTED (HIGH fix, critic-replay-lifecycle-misc, 2026-07-17): the real
+ * producer (src/engine/quantum_rl_agent.py::compute_rl_kill_switch_state)
+ * never writes a `decision` field on this action — it writes a boolean
+ * `should_dormant` (verified via grep against the Python emitter). The old
+ * `result->>'decision' != 'engaged'` comparison silently matched every row
+ * (NULL != 'engaged' is NULL, which is falsy in SQL WHERE — so this returned
+ * zero armed-idle sessions, not "all of them," regardless of actual state).
+ * Rows with reason='insufficient_samples' never reached a real evaluation
+ * (baseline_n/rl_n below the lookback floor) so they're excluded from the
+ * armed-and-idle count — they weren't "armed," just under-sampled.
  */
 async function _countKillSwitchArmedIdle(windowStart: Date, _windowEnd: Date): Promise<number> {
   try {
@@ -242,7 +264,8 @@ async function _countKillSwitchArmedIdle(windowStart: Date, _windowEnd: Date): P
         and(
           eq(auditLog.action, "quantum_rl.kill_switch_evaluated"),
           gte(auditLog.createdAt, windowStart),
-          sql`${auditLog.result}->>'decision' != 'engaged'`,
+          sql`(${auditLog.result}->>'should_dormant')::boolean = false`,
+          sql`${auditLog.result}->>'reason' IS DISTINCT FROM 'insufficient_samples'`,
         ),
       );
     return rows.length;
@@ -252,33 +275,43 @@ async function _countKillSwitchArmedIdle(windowStart: Date, _windowEnd: Date): P
 }
 
 /**
- * Compute per-regime Sharpe gap (challenger - baseline) using signal audit rows
- * that carry institutional_regime in their result payload.
+ * Compute per-regime Sharpe gap (challenger - baseline) grouped by macro regime
+ * at trade exit.
+ *
+ * CORRECTED (HIGH fix, critic-replay-lifecycle-misc, 2026-07-17): this previously
+ * read the same never-written `signal.rl_ab_routed` action and an
+ * `institutional_regime` field that doesn't exist anywhere on it either — real
+ * per-strategy institutional regime lives on `bias_state` (excluded from this
+ * fix wave — owned by another concurrent session). `paper_trades.macro_regime`
+ * is the real per-trade regime field that DOES exist (captured from
+ * macroSnapshots at close time) and needs no join outside this wave's scope.
  */
 async function _computeRegimeBreakdown(
   windowStart: Date,
   _windowEnd: Date,
 ): Promise<RegimeEdge[]> {
   try {
-    const rows = await db
-      .select({ resultJson: auditLog.result })
-      .from(auditLog)
-      .where(
-        and(
-          eq(auditLog.action, "signal.rl_ab_routed"),
-          gte(auditLog.createdAt, windowStart),
-        ),
-      );
+    type TradeRegimeRow = { regime: string | null; routing: string; pnl: number };
+    const rows = await db.execute<TradeRegimeRow>(
+      sql`
+        SELECT
+          pt.macro_regime AS regime,
+          COALESCE(s.paper_account_routing, ${BASELINE_ACCOUNT}) AS routing,
+          pt.pnl::numeric AS pnl
+        FROM paper_trades pt
+        JOIN paper_sessions ps ON ps.id = pt.session_id
+        JOIN strategies s ON s.id = ps.strategy_id
+        WHERE pt.exit_time >= ${windowStart.toISOString()}::timestamptz
+      `,
+    );
 
     // Group by (regime, routing_label) → collect P&Ls
     const regimeMap: Record<string, { baseline: number[]; challenger: number[] }> = {};
 
-    for (const row of rows) {
-      const result = row.resultJson as Record<string, unknown> | null;
-      if (!result) continue;
-      const regime = typeof result["institutional_regime"] === "string" ? result["institutional_regime"] : "UNKNOWN";
-      const routing = typeof result["account_routing"] === "string" ? result["account_routing"] : "baseline";
-      const pnl = typeof result["realized_pnl"] === "number" ? result["realized_pnl"] : 0;
+    for (const row of (rows as unknown as TradeRegimeRow[])) {
+      const regime = row.regime ?? "UNKNOWN";
+      const routing = row.routing;
+      const pnl = Number(row.pnl);
 
       if (!regimeMap[regime]) {
         regimeMap[regime] = { baseline: [], challenger: [] };
@@ -346,7 +379,7 @@ function _buildDigestBody(
   ];
 
   if (metrics.noDataFound) {
-    lines.push("Past 7 days: No A/B data yet — no signal.rl_ab_routed audit rows found.");
+    lines.push("Past 7 days: No A/B data yet — no closed paper_trades rows found for either routing.");
     lines.push("The RL challenger may not have routed any signals this week.");
     lines.push("");
     lines.push(`Correlation ID: ${correlationId}`);

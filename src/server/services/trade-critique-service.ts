@@ -12,6 +12,7 @@
  *   - Dual-output: technical_diagnosis + plain_english_summary
  *   - Defensive Wave 25 field handling: null fields → missing_fields[] + data_completeness
  *   - Idempotency: re-run within 5 min on same position_id → returns existing row
+ *     (dryRun=true bypasses this lookup entirely — see runTradeCritique doc comment)
  *
  * Audit actions emitted:
  *   trade_critique.completed
@@ -493,11 +494,18 @@ async function writeAudit(
  *   void runTradeCritique(positionId, correlationId).catch(err => logger.error({err},...))
  *
  * Returns early with status="queued_deferred" when MAX_CONCURRENT_CRITIQUES is saturated.
- * Idempotent: if a critique already exists for this positionId within 5 minutes, returns it.
+ * Idempotent (non-dryRun only): if a critique already exists for this positionId
+ * within 5 minutes, returns it without calling the LLM. dryRun=true SKIPS this
+ * idempotency lookup entirely (critic-replay-lifecycle-misc, 2026-07-17) — see
+ * the dryRun param note below; the guarantee that "LLM call still fires" would
+ * otherwise be silently broken whenever a live critique for the same position
+ * existed within the lookback window.
  *
  * @param dryRun - When true, suppresses all DB writes (audit_log, system_parameters,
- *   trade_critique INSERT) and Discord notifications. LLM call still fires so callers
- *   can inspect/grade the result. Pass 2 replay-grading uses this path.
+ *   trade_critique INSERT), Discord notifications, AND the idempotency read —
+ *   LLM call ALWAYS fires so callers can inspect/grade a fresh result,
+ *   independent of any recent production critique for the same position.
+ *   Pass 2 replay-grading uses this path.
  */
 export async function runTradeCritique(
   positionId: string,
@@ -505,36 +513,53 @@ export async function runTradeCritique(
   dryRun: boolean = false,
 ): Promise<TradeCritiqueResult> {
   // ─── Idempotency: skip if critique already written in last 5 min ───
-  const idempotentCutoff = new Date(Date.now() - IDEMPOTENCY_WINDOW_MS);
-  const [existing] = await db
-    .select({
-      id: tradeCritique.id,
-      grade: tradeCritique.grade,
-      dataCompleteness: tradeCritique.dataCompleteness,
-      provider: tradeCritique.provider,
-      model: tradeCritique.model,
-    })
-    .from(tradeCritique)
-    .where(
-      and(
-        eq(tradeCritique.positionId, positionId),
-        gte(tradeCritique.critiquedAt, idempotentCutoff),
-      ),
-    )
-    .orderBy(desc(tradeCritique.critiquedAt))
-    .limit(1);
+  // MED fix (critic-replay-lifecycle-misc, 2026-07-17): this lookup previously
+  // ran UNCONDITIONALLY, regardless of dryRun — so a dryRun=true call (Pass 2
+  // replay-grading — see this function's own doc comment: "LLM call still
+  // fires so callers can inspect/grade the result") for a positionId that had
+  // ALSO been critiqued live within the last 5 minutes would short-circuit
+  // here and return the STALE production row instead of ever calling the LLM
+  // — directly contradicting the documented "LLM call still fires" guarantee
+  // for that case, and silently defeating the grading harness's purpose of
+  // independently exercising the LLM path. Mirrors the identical, already-
+  // established pattern-aggregator-service.ts precedent (Finding MED — Wave A
+  // Critic): "dryRun callers (replay harness) must [not depend on] ... the
+  // non-dryRun production path" — dryRun now skips this DB read entirely, the
+  // same way pattern-aggregator-service.ts skips its kill-switch read, so the
+  // dry-run/replay-grading path is fully independent of live production DB
+  // state and always reaches the LLM call.
+  if (!dryRun) {
+    const idempotentCutoff = new Date(Date.now() - IDEMPOTENCY_WINDOW_MS);
+    const [existing] = await db
+      .select({
+        id: tradeCritique.id,
+        grade: tradeCritique.grade,
+        dataCompleteness: tradeCritique.dataCompleteness,
+        provider: tradeCritique.provider,
+        model: tradeCritique.model,
+      })
+      .from(tradeCritique)
+      .where(
+        and(
+          eq(tradeCritique.positionId, positionId),
+          gte(tradeCritique.critiquedAt, idempotentCutoff),
+        ),
+      )
+      .orderBy(desc(tradeCritique.critiquedAt))
+      .limit(1);
 
-  if (existing) {
-    logger.debug({ positionId, critiqueId: existing.id }, "trade_critique: idempotent skip — critique exists within 5 min");
-    return {
-      status: "completed",
-      positionId,
-      critiqueId: existing.id,
-      grade: existing.grade as PlainEnglishSummary["grade"],
-      dataCompleteness: existing.dataCompleteness as "full" | "partial" | "minimal",
-      provider: existing.provider as "openai" | "ollama",
-      model: existing.model,
-    };
+    if (existing) {
+      logger.debug({ positionId, critiqueId: existing.id }, "trade_critique: idempotent skip — critique exists within 5 min");
+      return {
+        status: "completed",
+        positionId,
+        critiqueId: existing.id,
+        grade: existing.grade as PlainEnglishSummary["grade"],
+        dataCompleteness: existing.dataCompleteness as "full" | "partial" | "minimal",
+        provider: existing.provider as "openai" | "ollama",
+        model: existing.model,
+      };
+    }
   }
 
   // ─── Backpressure: check concurrency cap ────────────────────────

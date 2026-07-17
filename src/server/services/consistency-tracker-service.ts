@@ -116,17 +116,51 @@ function _setCache(accountId: string, state: ConsistencyState): void {
 
 // ─── Cycle boundary helpers ───────────────────────────────────────────────────
 
+// MED fix (critic-replay-lifecycle-misc, 2026-07-17): the daily P&L buckets keyed by
+// _toNyDateString / DATE(exit_time AT TIME ZONE 'America/New_York') are NY-calendar buckets,
+// so "midnight NY time on the 1st of the current NY month" is the same day-boundary basis
+// they use — a UTC-basis cycle start is a 4-5 hour mismatch (same class of bug as LOW#15
+// below, one function up the chain). Concretely: during the 20:00-23:59 ET window on the
+// LAST day of a month, the UTC calendar date has already rolled to the 1st of the NEXT
+// month (20:00 ET = 00:00-01:00 UTC next day at EDT; 5-hour gap at EST). The old
+// `d.setUTCDate(1)` cycle boundary flipped forward during that evening window while
+// `_toNyDateString`-keyed dailyProfits still (correctly) attributed those trades to the
+// OLD month's last day — so cycleCumulativeProfit / highestDayProfit / currentConcentrationPct
+// silently excluded the evening's real trades from the correct cycle, and could silently
+// start counting the NEW cycle a day early. Fixed by resolving the NY-calendar first-of-month
+// and converting THAT to the correct UTC instant (NY midnight, DST-safe via the actual
+// America/New_York UTC offset at that instant), instead of truncating the UTC calendar date.
+function _nyMidnightToUtc(year: number, month1Indexed: number, day: number): Date {
+  // Candidate: UTC midnight on the same Y-M-D. NY midnight is always LATER than UTC
+  // midnight on the same calendar date (NY is behind UTC), so this candidate always
+  // falls on the correct side of any DST transition for offset resolution purposes.
+  const candidate = new Date(Date.UTC(year, month1Indexed - 1, day, 0, 0, 0));
+  const offsetPart = new Intl.DateTimeFormat("en-US", {
+    timeZone: "America/New_York",
+    timeZoneName: "shortOffset",
+  })
+    .formatToParts(candidate)
+    .find((p) => p.type === "timeZoneName")?.value;
+  // "GMT-4" (EDT) or "GMT-5" (EST) — fall back to standard time if parsing ever fails.
+  const offsetHours = offsetPart ? Number(offsetPart.replace("GMT", "")) : -5;
+  const safeOffsetHours = Number.isFinite(offsetHours) ? offsetHours : -5;
+  // NY local time = UTC time + offsetHours (offsetHours is negative), so the UTC instant
+  // for NY midnight = candidate_UTC_midnight − offsetHours.
+  return new Date(candidate.getTime() - safeOffsetHours * 60 * 60 * 1000);
+}
+
 /**
  * Returns the cycle start date as a Date.
  *
- * Default: first day of current calendar month (UTC).
+ * Default: first day of the current NY-calendar month, expressed as the UTC
+ * instant of NY midnight on that day (DST-safe) — matches the NY-calendar
+ * basis of the daily P&L buckets (_toNyDateString below).
  * TODO: replace with lookup to cycle_start table once TopstepX account is opened.
  */
 function _getCycleStart(asOf: Date): Date {
-  const d = new Date(asOf);
-  d.setUTCDate(1);
-  d.setUTCHours(0, 0, 0, 0);
-  return d;
+  const nyDateStr = _toNyDateString(asOf); // "YYYY-MM-DD" in NY calendar
+  const [yearStr, monthStr] = nyDateStr.split("-");
+  return _nyMidnightToUtc(Number(yearStr), Number(monthStr), 1);
 }
 
 function _toDateString(d: Date): string {

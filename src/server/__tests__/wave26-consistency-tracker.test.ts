@@ -285,6 +285,31 @@ describe("getConsistencyState", () => {
     expect(state.gateState).toBe("ok");
   });
 
+  it("8a. MED fix (critic-replay-lifecycle-misc, 2026-07-17): cycle boundary computed in NY time, not UTC — evening-of-last-day-of-month stays in the OLD cycle", async () => {
+    // asOf = 2026-02-01T02:00:00Z. In NY time (EST, UTC-5 in February — no DST until
+    // March), that instant is 2026-01-31T21:00:00 ET — still the evening of the LAST
+    // day of January, not February 1st.
+    //
+    // Before the fix, _getCycleStart truncated asOf's *UTC* calendar date
+    // (d.setUTCDate(1)) → cycleStartDate would read "2026-02-01" and cycleDay=1,
+    // silently starting a fresh February cycle a few hours early — any trade closed
+    // that January 31st evening (correctly bucketed into "2026-01-31" by the
+    // NY-keyed daily P&L buckets) would fall OUTSIDE the [cycleStart, now) window
+    // used by the SQL query (`pt.exit_time >= cycleStart`), so it would never be
+    // counted in cycleCumulativeProfit/highestDayProfit for the cycle it actually
+    // belongs to.
+    //
+    // After the fix, cycleStartDate must still read "2026-01-01" (still January's
+    // cycle) and cycleDay must be 31 (the 31st day of January).
+    setupDb([], 0);
+
+    const asOf = new Date("2026-02-01T02:00:00Z");
+    const state = await getConsistencyState("acct-ny-boundary-8a", asOf);
+
+    expect(state.cycleStartDate).toBe("2026-01-01");
+    expect(state.cycleDay).toBe(31);
+  });
+
   it("9a. audit row contract: consistency.40pct_warned — entityType, entityId, result fields", async () => {
     // $400 + $300 + $300 = $1000; best=$400 → 40% → warn_40
     setupDb(

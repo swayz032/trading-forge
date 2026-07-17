@@ -21,6 +21,18 @@ vi.mock("../db/schema.js", () => ({
   frankensteinTestRuns: { _tableName: "frankenstein_test_runs" },
   strategySignalVectors: { _tableName: "strategy_signal_vectors" },
   systemState: { _tableName: "system_state" },
+  // Real Column-shaped stubs (drizzle's isNull/isNotNull only need `.name` to
+  // build their SQL — see the drizzle-orm queryChunks[1] contract this test
+  // relies on) so recordAbsenceStart/recordAbsenceEnd's real isNull() calls
+  // produce inspectable SQL objects instead of throwing on a bare string.
+  operatorAbsentPeriods: {
+    _tableName: "operator_absent_periods",
+    id: { name: "id" },
+    startedAt: { name: "started_at" },
+    endedAt: { name: "ended_at" },
+    reason: { name: "reason" },
+    endedBy: { name: "ended_by" },
+  },
 }));
 
 vi.mock("../services/alert-service.js", () => ({
@@ -57,6 +69,8 @@ import {
   operatorAbsentModeActive,
   checkAutopilotGates,
   runOperatorAbsentAutoPromote,
+  recordAbsenceStart,
+  recordAbsenceEnd,
 } from "../services/operator-absent-mode-service.js";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -290,5 +304,113 @@ describe("runOperatorAbsentAutoPromote", () => {
     });
     const result = await runOperatorAbsentAutoPromote();
     expect(result.promoted).toHaveLength(0);
+  });
+});
+
+// ─── recordAbsenceStart / recordAbsenceEnd — endedAt vs startedAt filter ──────
+//
+// HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): both functions previously
+// filtered on `isNotNull(operatorAbsentPeriods.startedAt)` — but startedAt is
+// `.notNull().defaultNow()`, so that condition matches EVERY row ever inserted
+// (open or already closed), not just the currently-open one. The schema's own
+// comment says "endedAt: NULL = currently absent" — the correct filter is
+// isNull(endedAt). This block evaluates the REAL drizzle SQL condition object
+// each function builds (via drizzle-orm's queryChunks contract) against a tiny
+// in-memory "table", so the test fails against the pre-fix code (which built
+// isNotNull(startedAt) and matched rows it should not have) and passes against
+// the fix (isNull(endedAt), matching only the genuinely-open row).
+function evalPeriodCondition(cond: unknown, rows: Array<Record<string, unknown>>): Array<Record<string, unknown>> {
+  const chunks = (cond as { queryChunks: Array<{ name?: string; value?: string[] }> }).queryChunks;
+  const colName = chunks[1]?.name; // "started_at" | "ended_at"
+  const opText = chunks[2]?.value?.[0] ?? "";
+  const negated = opText.includes("not");
+  const field = colName === "ended_at" ? "endedAt" : colName === "started_at" ? "startedAt" : undefined;
+  return rows.filter((r) => {
+    const isNullVal = field === undefined ? false : r[field] === null || r[field] === undefined;
+    return negated ? !isNullVal : isNullVal;
+  });
+}
+
+describe("recordAbsenceStart / recordAbsenceEnd — endedAt-based open-period detection", () => {
+  let periodsTable: Array<{ id: number; startedAt: Date; endedAt: Date | null; reason: string | null; endedBy: string | null }>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    periodsTable = [];
+
+    (db as typeof db & { select: ReturnType<typeof vi.fn> }).select.mockImplementation(() => ({
+      from: vi.fn().mockReturnValue({
+        where: vi.fn().mockImplementation((cond: unknown) => ({
+          limit: vi.fn().mockImplementation((n: number) =>
+            Promise.resolve(evalPeriodCondition(cond, periodsTable as unknown as Array<Record<string, unknown>>).slice(0, n)),
+          ),
+        })),
+      }),
+    }));
+
+    (db as typeof db & { insert: ReturnType<typeof vi.fn> }).insert = vi.fn().mockReturnValue({
+      values: vi.fn().mockImplementation((vals: { reason: string | null; endedAt: Date | null }) => {
+        periodsTable.push({
+          id: periodsTable.length + 1,
+          startedAt: new Date(),
+          endedAt: vals.endedAt ?? null,
+          reason: vals.reason ?? null,
+          endedBy: null,
+        });
+        return Promise.resolve([]);
+      }),
+    });
+
+    (db as typeof db & { update: ReturnType<typeof vi.fn> }).update = vi.fn().mockReturnValue({
+      set: vi.fn().mockImplementation((vals: { endedAt: Date; endedBy: string }) => ({
+        where: vi.fn().mockImplementation((cond: unknown) => {
+          const matched = evalPeriodCondition(cond, periodsTable as unknown as Array<Record<string, unknown>>);
+          for (const row of matched) {
+            const target = periodsTable.find((p) => p.id === row["id"]);
+            if (target) {
+              target.endedAt = vals.endedAt;
+              target.endedBy = vals.endedBy;
+            }
+          }
+          return Promise.resolve([]);
+        }),
+      })),
+    });
+  });
+
+  it("recordAbsenceStart inserts a new period when the only existing period is already CLOSED", async () => {
+    // A past, already-ended vacation. Under the pre-fix isNotNull(startedAt)
+    // filter, this row's startedAt is non-null, so `existing` would be truthy
+    // and the new absence would be silently dropped.
+    periodsTable.push({ id: 1, startedAt: new Date("2026-01-01"), endedAt: new Date("2026-01-05"), reason: "past trip", endedBy: "manual_api" });
+
+    await recordAbsenceStart("second vacation");
+
+    expect(periodsTable).toHaveLength(2);
+    expect(periodsTable[1].reason).toBe("second vacation");
+    expect(periodsTable[1].endedAt).toBeNull();
+  });
+
+  it("recordAbsenceStart does NOT insert when a period is genuinely still open (endedAt null)", async () => {
+    periodsTable.push({ id: 1, startedAt: new Date("2026-07-01"), endedAt: null, reason: "current trip", endedBy: null });
+
+    await recordAbsenceStart("duplicate call");
+
+    expect(periodsTable).toHaveLength(1);
+  });
+
+  it("recordAbsenceEnd closes ONLY the open row and leaves prior closed periods untouched", async () => {
+    // Under the pre-fix isNotNull(startedAt) filter, BOTH rows match (both have
+    // a startedAt) and the update would stomp row 1's real historical endedAt/
+    // endedBy with the current close event's values — corrupting history.
+    periodsTable.push({ id: 1, startedAt: new Date("2026-01-01"), endedAt: new Date("2026-01-05"), reason: "past trip", endedBy: "manual_api" });
+    periodsTable.push({ id: 2, startedAt: new Date("2026-07-01"), endedAt: null, reason: "current trip", endedBy: null });
+
+    await recordAbsenceEnd("system_restart");
+
+    expect(periodsTable[0].endedAt).toEqual(new Date("2026-01-05"));
+    expect(periodsTable[0].endedBy).toBe("manual_api");
+    expect(periodsTable[1].endedAt).not.toBeNull();
+    expect(periodsTable[1].endedBy).toBe("system_restart");
   });
 });

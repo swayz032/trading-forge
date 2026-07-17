@@ -32,8 +32,8 @@
 import { logger } from "../lib/logger.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { db } from "../db/index.js";
-import { liquidityLevels, preMarketSessions } from "../db/schema.js";
-import { eq, and, isNull, gt, lt, lte, gte, sql } from "drizzle-orm";
+import { liquidityLevels, preMarketSessions, biasState } from "../db/schema.js";
+import { eq, and, isNull, gt, lt, lte, gte, sql, desc } from "drizzle-orm";
 
 // ─── Level type enum ─────────────────────────────────────────────────────────
 // 17 canonical values — THIS IS A CONTRACT FOR PASS 7 ADAPTIVE EXITS.
@@ -83,6 +83,11 @@ export interface RankedLevel {
   distance_points: number;     // signed: positive = level above query price
 }
 
+export interface StructureStateSwing {
+  swing_high: number | null;
+  swing_low: number | null;
+}
+
 /** Minimal DAL for test injection */
 export interface LiquidityMapDAL {
   upsertLevel(row: UpsertLevelInput): Promise<{ id: string }>;
@@ -91,6 +96,11 @@ export interface LiquidityMapDAL {
   incrementTouchedCount(id: string): Promise<void>;
   expireLevels(symbol: string, beforeDate: string): Promise<number>;
   getPreMarketSession(symbol: string, sessionDate: string): Promise<PreMarketRow | null>;
+  // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): optional so pre-existing
+  // minimal test DALs keep compiling unchanged. When present, refreshSessionLevels
+  // self-resolves EQH/EQL swing data from bias_state.structure_state instead of
+  // requiring the caller to supply it — see refreshSessionLevels doc comment.
+  getStructureState?(symbol: string, sessionDate: string): Promise<StructureStateSwing | null>;
 }
 
 export interface UpsertLevelInput {
@@ -354,6 +364,29 @@ export function makeProductionDAL(): LiquidityMapDAL {
         nearbyNakedPocs: r.nearbyNakedPocs,
       };
     },
+
+    // HIGH fix (critic-replay-lifecycle-misc, 2026-07-17): reads bias_state.structure_state
+    // directly — a plain table read, not a call into bias-state-service.ts (held back this
+    // wave). Closes the EQH/EQL wiring gap without touching scheduler.ts (also held back —
+    // it is the only production caller and never supplies the optional structureState arg).
+    // Picks the freshest row for (symbol, sessionDate) since bias_state can be re-computed
+    // intraday (e.g. the 10am refresh).
+    async getStructureState(symbol: string, sessionDate: string): Promise<StructureStateSwing | null> {
+      const rows = await db
+        .select({ structureState: biasState.structureState })
+        .from(biasState)
+        .where(and(eq(biasState.symbol, symbol), eq(biasState.sessionDate, sessionDate)))
+        .orderBy(desc(biasState.computedAt))
+        .limit(1);
+
+      if (rows.length === 0) return null;
+      const raw = rows[0].structureState as Record<string, unknown> | null;
+      if (!raw) return null;
+
+      const swingHigh = typeof raw["swing_high"] === "number" ? raw["swing_high"] : null;
+      const swingLow = typeof raw["swing_low"] === "number" ? raw["swing_low"] : null;
+      return { swing_high: swingHigh, swing_low: swingLow };
+    },
   };
 }
 
@@ -376,6 +409,17 @@ export function makeProductionDAL(): LiquidityMapDAL {
  * See liquidity_map.insert_skipped_null_price / liquidity_map.refresh_no_premarket_data
  * below. This does NOT fix the upstream data gap — it makes the failure loud.
  *
+ * EQH/EQL wiring (HIGH fix, critic-replay-lifecycle-misc, 2026-07-17): the
+ * only production caller (scheduler.ts:5085, held back this fix wave) invokes
+ * this with just 3 args and never supplies the optional `structureState` 5th
+ * param below. Rather than requiring that caller to change (which would touch
+ * an excluded file), this function now SELF-RESOLVES structure state from
+ * bias_state.structure_state via dal.getStructureState() whenever the caller
+ * doesn't explicitly pass one (`structureState === undefined`) — a plain table
+ * read, not a call through bias-state-service.ts (also held back). Passing
+ * `structureState` explicitly (including `null`) still overrides self-resolution,
+ * preserving the existing test-injection contract.
+ *
  * @param dal  Injected DAL (defaults to production Drizzle DAL)
  */
 export async function refreshSessionLevels(
@@ -383,36 +427,38 @@ export async function refreshSessionLevels(
   sessionDate: string,
   correlationId: string,
   dal: LiquidityMapDAL = makeProductionDAL(),
-  /** Optional structure state (bias-state-service publishes this at session start) */
-  structureState?: {
-    swing_high: number | null;
-    swing_low: number | null;
-  } | null,
+  /** Optional structure state (bias-state-service publishes this at session start).
+   *  Leave undefined to self-resolve via dal.getStructureState(); pass explicitly
+   *  (including null) to override — used by tests exercising the carve-out. */
+  structureState?: StructureStateSwing | null,
 ): Promise<{ added: number; expired: number; nullPriceSkips: number }> {
   let added = 0;
+
+  // ── Resolve structure state (self-resolve when caller omits it) ──────────
+  // `structureStateMechanismAvailable` distinguishes "we genuinely tried to
+  // resolve structure state and it came back empty" (a real data gap — loud)
+  // from "no resolution mechanism exists at all" (a minimal test DAL that
+  // predates this fix — stays suppressed, matching pre-existing test contracts).
+  let resolvedStructureState: StructureStateSwing | null = structureState ?? null;
+  let structureStateMechanismAvailable = structureState !== undefined;
+  if (structureState === undefined && dal.getStructureState) {
+    resolvedStructureState = await dal.getStructureState(symbol, sessionDate);
+    structureStateMechanismAvailable = true;
+  }
 
   // ── Pull pre_market_sessions row ─────────────────────────────────────────
   const pmRow = await dal.getPreMarketSession(symbol, sessionDate);
 
   // Loud-signal tracking for the null-price-no-op class of bug. Populated only
   // for levels whose price SHOULD be present when the source data is healthy
-  // (bars-derived pre_market_sessions fields). EQH/EQL are excluded via
-  // opts.nullIsExpected=true below — NOT because a null there is a normal
-  // per-session heuristic miss, but because `structureState` is UNWIRED from
-  // production: the only caller, scheduler.ts:4906, invokes
-  // `refreshSessionLevels(symbol, sessionDate, correlationId)` with just 3
-  // args and never supplies the optional 5th `structureState` parameter, so
-  // `swingH`/`swingL` below are ALWAYS null in production — detectEqhEql()
-  // ALWAYS returns {eqh: null, eql: null}, unconditionally, forever. EQH/EQL
-  // detection is structurally dead pending that wiring (the swing data does
-  // exist — bias-state-service.ts persists it to bias_state.structure_state
-  // JSONB — nothing fetches and passes it at the scheduler call site). The
-  // carve-out exists so this pre-existing dead path doesn't get double-counted
-  // as a NEW null-price-skip finding by this fix; it does NOT mean the gap is
-  // benign or already covered. Wiring bias_state.structure_state into the
-  // scheduler call site is a separate, out-of-scope fix (2026-07-17 liveness
-  // audit F-1 correction — this comment previously mischaracterized the gap
-  // as "a normal, expected outcome of the heuristic").
+  // (bars-derived pre_market_sessions fields). EQH/EQL use a narrower carve-out
+  // below — nullIsExpected only when the underlying swing value is itself
+  // present (a genuine "no equal high/low this session" miss) or when no
+  // resolution mechanism exists at all (legacy test DAL). Once
+  // dal.getStructureState() is wired (as it now is in production) and returns
+  // a null swing value, that IS treated as a genuine data gap and surfaces
+  // loudly — see the nullIsExpected computation just above the eqh/eql
+  // insertLevel calls below, and the doc comment above this function.
   const skippedLevels: Array<{
     levelType: LevelType;
     reason: "null_price" | "non_finite_price" | "non_positive_price";
@@ -511,31 +557,36 @@ export async function refreshSessionLevels(
       }
     }
 
-    // EQH/EQL detection (daily — htf_significance=3). `structureState` is
-    // UNWIRED from production: scheduler.ts:4906 is the only real caller and
-    // it never passes this optional 5th param, so swingH/swingL below are
-    // ALWAYS null in production and detectEqhEql() ALWAYS returns
-    // {eqh: null, eql: null} — this is a structurally-dead path, not a
-    // benign "no equal high/low this session" miss. nullIsExpected=true
-    // keeps this PRE-EXISTING dead path out of the NEW null-price-skip
-    // signal below (it is a distinct, already-known gap, tracked separately —
-    // see the fuller note above the `skippedLevels` declaration; wiring
-    // bias_state.structure_state into the scheduler call site is a separate,
-    // out-of-scope fix).
-    const swingH = structureState?.swing_high ?? null;
-    const swingL = structureState?.swing_low ?? null;
+    // EQH/EQL detection (daily — htf_significance=3). structureState is now
+    // self-resolved above (dal.getStructureState) when the caller (scheduler.ts,
+    // held back this wave) doesn't supply it directly — see the doc comment on
+    // this function and the resolution block near the top.
+    //
+    // nullIsExpected is narrower than the old unconditional `true`:
+    //   - swing value itself present, no EQH/EQL match this session → benign,
+    //     suppressed (a real "nothing to report" outcome of the heuristic).
+    //   - swing value null AND we have a real resolution mechanism (production,
+    //     or a test DAL implementing getStructureState) → genuine data gap →
+    //     NOT suppressed, surfaces via liquidity_map.insert_skipped_null_price
+    //     like any other missing source price.
+    //   - no resolution mechanism at all (legacy minimal test DAL) → suppressed,
+    //     matching this function's pre-existing test contracts.
+    const swingH = resolvedStructureState?.swing_high ?? null;
+    const swingL = resolvedStructureState?.swing_low ?? null;
+    const eqhNullIsExpected = swingH !== null || !structureStateMechanismAvailable;
+    const eqlNullIsExpected = swingL !== null || !structureStateMechanismAvailable;
     const { eqh, eql } = detectEqhEql(swingH, swingL, pmRow.pdh, pmRow.pdl, symbol);
     await insertLevel(
       "eqh",
       eqh,
       { source: "structure_state_heuristic", swing_high: swingH, pdh: pmRow.pdh },
-      { nullIsExpected: true },
+      { nullIsExpected: eqhNullIsExpected },
     );
     await insertLevel(
       "eql",
       eql,
       { source: "structure_state_heuristic", swing_low: swingL, pdl: pmRow.pdl },
-      { nullIsExpected: true },
+      { nullIsExpected: eqlNullIsExpected },
     );
   } else {
     // No pre_market_sessions row at all for this symbol/session — a stronger

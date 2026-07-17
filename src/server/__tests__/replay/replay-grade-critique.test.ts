@@ -250,24 +250,27 @@ describe("Wave 27 Pass 2.F2 — critique-disagreement pure library", () => {
         limit: vi.fn(() => chain),
       };
       const currentCall = selectCallCount++;
+      // MED fix (critic-replay-lifecycle-misc, 2026-07-17): dryRun=true now
+      // SKIPS the idempotency select entirely (trade-critique-service.ts) —
+      // so the first select this dryRun=true call makes is the position row,
+      // not the idempotency check. Indices shifted down by 1 accordingly.
       chain.then = (resolve: any) => {
-        if (currentCall === 0) return Promise.resolve([]).then(resolve); // idempotency check
-        if (currentCall === 1) return Promise.resolve([{
+        if (currentCall === 0) return Promise.resolve([{
           id: "pos-spy-001", sessionId: "sess-001",
           symbol: "MES", side: "long", contracts: 6,
           entryPrice: "4500.00", stopPrice: "4492.00",
           entryTime: new Date("2026-04-01T14:30:00Z"),
           exitPrice: "4507.00",
         }]).then(resolve); // position
-        if (currentCall === 2) return Promise.resolve([{
+        if (currentCall === 1) return Promise.resolve([{
           id: "sess-001", strategyId: "strat-001", firmId: "topstep",
           metricsSnapshot: null,
         }]).then(resolve); // session
-        if (currentCall === 3) return Promise.resolve([{
+        if (currentCall === 2) return Promise.resolve([{
           id: "strat-001", name: "orb_mes_5m", symbol: "MES", positionSize: null,
         }]).then(resolve); // strategy
         // Consecutive failures read
-        if (currentCall === 4) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
+        if (currentCall === 3) return Promise.resolve([{ currentValue: "0" }]).then(resolve);
         return Promise.resolve([]).then(resolve);
       };
       return chain;
