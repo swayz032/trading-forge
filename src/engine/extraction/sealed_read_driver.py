@@ -65,6 +65,7 @@ rehearsal/staging path; the sole live seam is the injected
 
 from __future__ import annotations
 
+import copy
 import glob
 import hashlib
 import json
@@ -1455,6 +1456,65 @@ class SealedReadDriver:
             "extraction": extraction,
         }
 
+    def run_with_raters(
+        self,
+        manifest_path: str,
+        mode: str,
+        out_dir: str,
+        token_path: str = DEFAULT_TOKEN_PATH,
+        fetched: dict | None = None,
+        live_extract_fn: Callable[[str, dict], object] | None = None,
+        live_panel_fn: Callable[[str, dict, str], object] | None = None,
+        panel_cache_dir: str | None = None,
+        dispatch_record: dict | None = None,
+        rater_fn: Callable[[str, str, dict], dict] | None = None,
+        rater_answers_dir: str | None = None,
+        propose_fn: Callable[[str, str], str | None] | None = None,
+    ) -> dict:
+        """FULL composition THROUGH MODULE D: gate (A) -> extraction (B) ->
+        panels+certificate (C) -> HUMAN-BLIND TWO-STAGE RATER LAYER (D).
+
+        Compose-order is structural, inherited from :meth:`run_full`: on ANY gate
+        refusal this short-circuits with ``stage="seal_gate"``, ``panels=None``,
+        ``rater_layer=None`` — Module D is NEVER reached (no dual-read, no packet
+        build, no ``rater_fn`` call). Module D itself re-asserts (compose-order,
+        fail-closed) that Module C produced ready certificates before it runs.
+
+        Seams for E/F remain OUT of this composition (no cert->video rollup / >=60%
+        bar / verdict math, no re-verify/drift guard)."""
+        full = self.run_full(
+            manifest_path,
+            mode,
+            out_dir,
+            token_path=token_path,
+            fetched=fetched,
+            live_extract_fn=live_extract_fn,
+            live_panel_fn=live_panel_fn,
+            panel_cache_dir=panel_cache_dir,
+            dispatch_record=dispatch_record,
+        )
+        if not full.get("ok"):
+            # Gate refused -> Module D UNREACHABLE (compose-order short-circuit).
+            return {**full, "rater_layer": None}
+
+        rater_layer = run_rater_layer_stage(
+            full,
+            mode,
+            cache_dir=panel_cache_dir or self.panel_cache_dir,
+            rater_fn=rater_fn,
+            rater_answers_dir=rater_answers_dir,
+            propose_fn=propose_fn,
+        )
+        return {
+            "ok": True,
+            "allowed": True,
+            "stage": "rater_layer",
+            "gate": full["gate"],
+            "extraction": full["extraction"],
+            "panels": full["panels"],
+            "rater_layer": rater_layer,
+        }
+
     def run_full(
         self,
         manifest_path: str,
@@ -1507,3 +1567,523 @@ class SealedReadDriver:
             "extraction": base["extraction"],
             "panels": panels,
         }
+
+
+# --------------------------------------------------------------------------- #
+# MODULE D — HUMAN-BLIND TWO-STAGE RATER LAYER (ratify-packet item 5).
+#
+# Spec: docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md (Module D) +
+# pilot ADDENDUM 4 (docs/designs/h1-pilot-preregistration-2026-07-12.md:105-130,
+# the dual-read gate + two-stage tier-3 packet, FROZEN law) + R-017 pin 1.
+#
+# WHAT THIS MODULE DOES (and nothing else — E/F stay clean seams):
+#   Per certified strategy from Module C, RUN the FROZEN dual-read agreement gate
+#   (``pilot_conveyor.prepare_strategy``: tier-1 detectors on BOTH the extractor's
+#   condition text AND the located quote; agreement->classify, disagreement->
+#   fall-through — pilot_conveyor.py:1056-1125) to identify the FALLTHROUGH
+#   conditions needing tier-3.  For each, the frozen ``_build_tier3_packet`` (that
+#   ``prepare_strategy`` already assembled into ``prep["tier3_packet"]``) is the
+#   TWO-STAGE packet: Stage-1 blind role-from-quote {gate-strength/context/
+#   cannot-determine} committed BEFORE Stage-2 revealed-condition support
+#   {confirmed/partial/denied}, read-order locked (Stage-2 lives OUTSIDE
+#   ``packet["sections"]`` — structurally absent from the Stage-1 rater view).
+#
+#   ★ ``blinding_leak_scan`` is run on EVERY packet BEFORE dispatch (house
+#   standard). A leak (Stage-2 inferable from Stage-1; identity in the quote;
+#   pre-filled answer) => FAIL-CLOSED HALT for that packet — the raters are NEVER
+#   invoked on a leaky packet.
+#
+#   TWO blind control-gated raters per packet, INDEPENDENT (each gets its own
+#   deep-copied view; no shared mutable state) and blind to each other + to reader
+#   identity. CONTROLS FIRST: the Set-A control items are answered in Stage-1; a
+#   rater's TARGET judgments count ONLY if its controls pass (>=4/5 gate-strength
+#   AND >=4/5 context — pre-reg §3). Composition mirrors the FROZEN pilot conductor
+#   (scripts/h1_pilot_phase3_finalize.py): agreed determinate role ->
+#   ``verdict_from_rater_response`` (``control_gate_passed=both_pass``, so
+#   ``assemble_certificate`` DROPS any verdict whose gate failed); agreed/contested
+#   support -> ``support_verdict_from_stage2_response``. The verdicts feed the SAME
+#   frozen fence ``finalize_certificate`` (Module C already calls it) with
+#   ``tier3_verdicts`` + ``tier3_support``, so a ``denied``/``partial`` support
+#   DOWNGRADES the condition (classifying_tier -> None; pilot/full/certificate
+#   grade -> False) per ADDENDUM 4.
+#
+# FROZEN INSTRUMENTS REUSED READ-ONLY (never modified — all amber): the dual-read
+# gate + ``_build_tier3_packet`` + ``blinding_leak_scan`` + ``_load_wave1_control_
+# section`` + ``verdict_from_rater_response`` + ``support_verdict_from_stage2_
+# response`` + ``finalize_certificate`` in pilot_conveyor.py, ``cert_assembler``,
+# ``anchor_locator``.  No live LLM/network call in the rehearsal/staging path or
+# any test; the sole live seam is the injected ``rater_fn`` (sealed only).
+# --------------------------------------------------------------------------- #
+
+#: Set-A control item_ids + their pre-reg §3 correct direction — the SAME split
+#: the FROZEN pilot conductor (h1_pilot_phase3_finalize.py:28-29) applies. NOT a
+#: re-derivation: the control quotes + answer key are the Wave-1 shakedown
+#: packet's, loaded read-only via ``_load_wave1_control_section``.
+_GATE_CONTROLS = frozenset({"W1-0001", "W1-0003", "W1-0005", "W1-0007", "W1-0009"})
+_CONTEXT_CONTROLS = frozenset({"W1-0002", "W1-0004", "W1-0006", "W1-0008", "W1-0010"})
+#: >=4/5 in EACH direction (pre-reg §3 control gate; conductor uses `>= 4`).
+_CONTROL_MIN = 4
+
+#: Rehearsal/staging rater-answer cache root (cached blind answers for ALREADY-
+#: SPENT videos, if any exist). Absent -> the deterministic fake is used. NEVER a
+#: live call in the rehearsal/staging path.
+DEFAULT_RATER_ANSWERS_DIR = os.path.join(_H1_SCRIPTS, "claude-rung-v32", "rater_answers")
+
+_RATER_IDS = ("A", "B")
+
+
+class RaterLayerNotReady(RuntimeError):
+    """Raised (fail-closed, compose-order) when the rater layer (D) is asked to
+    run without Module C having produced ready certificates (and Module B its
+    on-disk extraction). Structurally proves Module D is UNREACHABLE unless C
+    (hence B, hence the A gate) succeeded."""
+
+
+def _control_gate(stage1_answers: dict) -> dict:
+    """Pre-reg §3 control gate from a rater's Stage-1 answers. Mirrors the FROZEN
+    conductor's ``control_gate`` (h1_pilot_phase3_finalize.py:38-41): count the
+    Set-A gate-strength controls answered ``gate-strength`` and the context
+    controls answered ``context``; PASS iff BOTH directions clear ``_CONTROL_MIN``
+    (>=4/5). A rater whose controls fail contributes NOTHING downstream."""
+    gate_ok = sum(1 for i in _GATE_CONTROLS if stage1_answers.get(i) == "gate-strength")
+    context_ok = sum(1 for i in _CONTEXT_CONTROLS if stage1_answers.get(i) == "context")
+    return {
+        "gate_ok": gate_ok,
+        "context_ok": context_ok,
+        "passed": gate_ok >= _CONTROL_MIN and context_ok >= _CONTROL_MIN,
+    }
+
+
+def _agreed_role(a: str | None, b: str | None) -> str | None:
+    """Determinate cross-rater role agreement (conductor R2): a role classifies
+    tier-3 ONLY when both raters returned the SAME determinate call
+    (``gate-strength`` or ``context``). ``cannot-determine`` agreement OR any
+    disagreement -> None (unresolved fall-through, stays not-clean)."""
+    if a == b and a in ("gate-strength", "context"):
+        return a
+    return None
+
+
+def _agreed_support(a: dict | None, b: dict | None) -> tuple[str, str]:
+    """Cross-rater Stage-2 support composition (conductor R3): ``confirmed`` iff
+    BOTH confirmed; a shared ``denied``/``partial`` carries through; any other
+    disagreement is a contested downgrade to ``partial``. Returns (support,
+    justification) — justification is REQUIRED by
+    ``support_verdict_from_stage2_response``."""
+    sa = (a or {}).get("support")
+    sb = (b or {}).get("support")
+    if sa == "confirmed" and sb == "confirmed":
+        return "confirmed", "both raters confirmed"
+    if sa == sb and sa in ("denied", "partial"):
+        return sa, f"both raters {sa}"
+    return "partial", f"contested support (raterA={sa}, raterB={sb})"
+
+
+def _stage1_view(packet: dict) -> dict:
+    """The BLIND Stage-1 rater view: a DEEP COPY of the packet with the Stage-2
+    block STRUCTURALLY REMOVED. This is the read-order lock made physical — a
+    rater doing Stage-1 cannot see any Stage-2 revealed-condition content because
+    it is not in the object it is handed. ``_build_tier3_packet`` already keeps
+    Stage-2 outside ``sections``; this drops the whole ``stage2`` key too so even
+    a packet-wide read of the Stage-1 view is Stage-2-free."""
+    return {k: copy.deepcopy(v) for k, v in packet.items() if k != "stage2"}
+
+
+def _stage2_view(packet: dict, committed_stage1: dict) -> dict:
+    """The Stage-2 rater view, revealed ONLY after Stage-1 is committed: the
+    revealed ``stage2`` block + this rater's OWN committed Stage-1 roles (so the
+    rater answers "does this quote express THIS condition?" against the role it
+    already locked). Deep-copied — never shares mutable state with the packet or
+    the other rater."""
+    return {
+        "stage2": copy.deepcopy(packet["stage2"]),
+        "committed_stage1": copy.deepcopy(committed_stage1),
+    }
+
+
+def _deterministic_rehearsal_rater(rater_id: str, stage: str, view: dict) -> dict:
+    """Network-free deterministic blind rater for the rehearsal/staging path when
+    NO cached answers exist (NO live call, ever). Exercises the FULL structure:
+    it answers the Set-A controls CORRECTLY (so the control gate passes — a
+    stand-in for a competent blind rater, per the house standard that the FAKE
+    proves the plumbing, not the judgment), and gives every TARGET item a
+    deterministic ``gate-strength`` role + ``confirmed`` support. Reads ONLY the
+    view it is handed (Stage-1 view is Stage-2-free) — it never consults the other
+    rater's answers, so the two raters stay independent."""
+    if stage == "stage1":
+        answers: dict = {}
+        for section in view.get("sections", []):
+            for item in section.get("items", []):
+                iid = item.get("item_id")
+                if iid in _GATE_CONTROLS:
+                    answers[iid] = "gate-strength"
+                elif iid in _CONTEXT_CONTROLS:
+                    answers[iid] = "context"
+                else:
+                    answers[iid] = "gate-strength"
+        return answers
+    # stage2
+    out: dict = {}
+    for item in view.get("stage2", {}).get("items", []):
+        iid = item.get("item_id")
+        out[iid] = {"support": "confirmed", "support_justification": "rehearsal-deterministic"}
+    return out
+
+
+def _load_cached_rater(rater_answers_dir: str | None, cid: str):
+    """Return a rater_fn backed by CACHED blind answers for ``cid`` if a cache
+    file exists (``<rater_answers_dir>/<cid>.json`` with per-rater
+    ``{stage1:{item_id:role}, stage2:{item_id:{support,justification}}}``), else
+    None (caller falls back to the deterministic fake). NEVER a live call."""
+    if not rater_answers_dir:
+        return None
+    path = os.path.join(rater_answers_dir, f"{cid}.json")
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        cached = json.load(fh)
+
+    def cached_rater(rater_id: str, stage: str, view: dict) -> dict:
+        return dict(((cached.get(rater_id) or {}).get(stage)) or {})
+
+    return cached_rater
+
+
+def _dispatch_two_stage_packet(
+    packet: dict,
+    item_span_map: dict,
+    full_transcript: str,
+    rater_fn: Callable[[str, str, dict], dict],
+    audit_item_id: str | None,
+) -> dict:
+    """LEAK-SCAN-then-dispatch ONE two-stage packet to the two blind raters.
+
+    ★ FAIL-CLOSED: ``blinding_leak_scan`` runs FIRST. On ANY violation the packet
+    is HALTED (``dispatched=False``) and the raters are NEVER invoked — a leaky
+    packet is never shipped (house standard, non-negotiable).
+
+    On a clean packet: each rater answers Stage-1 on a Stage-2-FREE view (read-
+    order lock), its control gate is scored, THEN Stage-2 is revealed. Verdicts
+    are composed ONLY for fall-through targets (the ADDENDUM 5 axis-3 audit item,
+    if present, is recorded for the certificate's ``axis3_audit`` monitor but its
+    role never classifies — mirrors the conductor's R4). Returns the assembled
+    ``tier3_verdicts`` + ``tier3_support`` (both empty when the joint control gate
+    fails: every verdict then carries ``control_gate_passed=False`` and is dropped
+    by ``assemble_certificate``)."""
+    from .pilot_conveyor import (
+        blinding_leak_scan,
+        support_verdict_from_stage2_response,
+        verdict_from_rater_response,
+    )
+
+    scan = blinding_leak_scan(packet)
+    if not scan.clean:
+        return {
+            "dispatched": False,
+            "halted": True,
+            "leak_scan_clean": False,
+            "leak_violations": scan.violations,
+            "tier3_verdicts": [],
+            "tier3_support": [],
+            "control_gates": None,
+            "both_control_gates_passed": False,
+        }
+
+    # Two INDEPENDENT blind raters. Each is handed its OWN deep-copied views;
+    # rater B's inputs are byte-identical to rater A's (the packet) and carry
+    # NONE of rater A's answers -> no rater-to-rater leakage.
+    stage1_by_rater: dict = {}
+    stage2_by_rater: dict = {}
+    control_gates: dict = {}
+    for rid in _RATER_IDS:
+        s1 = dict(rater_fn(rid, "stage1", _stage1_view(packet)) or {})
+        control_gates[rid] = _control_gate(s1)
+        # Stage-2 revealed ONLY after Stage-1 is committed for THIS rater.
+        s2 = dict(rater_fn(rid, "stage2", _stage2_view(packet, s1)) or {})
+        stage1_by_rater[rid] = s1
+        stage2_by_rater[rid] = s2
+
+    both_pass = all(control_gates[rid]["passed"] for rid in _RATER_IDS)
+    a1, b1 = stage1_by_rater["A"], stage1_by_rater["B"]
+    a2, b2 = stage2_by_rater["A"], stage2_by_rater["B"]
+
+    tier3_verdicts: list = []
+    tier3_support: list = []
+    role_contested: list = []
+    support_contested: list = []
+    for item_id, span in item_span_map.items():
+        s, e = span
+        quote = full_transcript[s:e]
+        if item_id == audit_item_id:
+            # ADDENDUM 5 axis-3 audit: support recorded for the monitor, role
+            # unused (never classifies) — conductor R4.
+            sup, just = _agreed_support(a2.get(item_id), b2.get(item_id))
+            tier3_support.append(
+                support_verdict_from_stage2_response(char_span=(s, e), support=sup, support_justification=just)
+            )
+            continue
+        role = _agreed_role(a1.get(item_id), b1.get(item_id))
+        if role is None:
+            if a1.get(item_id) != b1.get(item_id):
+                role_contested.append({"item_id": item_id, "A": a1.get(item_id), "B": b1.get(item_id)})
+            continue
+        # A determinate agreed role classifies tier-3 — but ``control_gate_passed``
+        # is the JOINT gate, so a single failing rater zeroes the credit
+        # (assemble_certificate drops control_gate_passed=False verdicts).
+        tier3_verdicts.append(
+            verdict_from_rater_response(
+                char_span=(s, e), quote_anchor=quote, role=role, control_gate_passed=both_pass
+            )
+        )
+        sup, just = _agreed_support(a2.get(item_id), b2.get(item_id))
+        if (a2.get(item_id) or {}).get("support") != (b2.get(item_id) or {}).get("support"):
+            support_contested.append({"item_id": item_id})
+        tier3_support.append(
+            support_verdict_from_stage2_response(char_span=(s, e), support=sup, support_justification=just)
+        )
+
+    return {
+        "dispatched": True,
+        "halted": False,
+        "leak_scan_clean": True,
+        "leak_violations": [],
+        "tier3_verdicts": tier3_verdicts,
+        "tier3_support": tier3_support,
+        "control_gates": control_gates,
+        "both_control_gates_passed": both_pass,
+        "role_contested": role_contested,
+        "support_contested": support_contested,
+    }
+
+
+def _normalize_rater_input(
+    certificates_or_extractions, extraction_result: dict | None
+) -> tuple[dict, dict | None]:
+    """Accept EITHER a full ``run_with_raters``/``run_full``-style composed result
+    (carries both ``panels`` [Module C] and ``extraction`` [Module B]) OR a bare
+    Module-C stage result (``stage == "panels_and_certificate"``) plus an explicit
+    ``extraction_result``. Returns (cert_stage, extraction). Never guesses — an
+    unrecognized shape falls to the compose-order gate in the caller."""
+    obj = certificates_or_extractions
+    if isinstance(obj, dict) and "panels" in obj and "extraction" in obj:
+        return obj.get("panels"), obj.get("extraction")
+    if isinstance(obj, dict) and obj.get("stage") == "panels_and_certificate":
+        return obj, extraction_result
+    return obj if isinstance(obj, dict) else {}, extraction_result
+
+
+def run_rater_layer_stage(
+    certificates_or_extractions,
+    mode: str,
+    cache_dir: str = DEFAULT_PANEL_CACHE_DIR,
+    rater_fn: Callable[[str, str, dict], dict] | None = None,
+    rater_answers_dir: str | None = None,
+    propose_fn: Callable[[str, str], str | None] | None = None,
+    extraction_result: dict | None = None,
+) -> dict:
+    """MODULE D stage: human-blind two-stage rater layer over Module C's certified
+    strategies.
+
+    ``certificates_or_extractions``: the composed ``run_with_raters``/``run_full``
+    result (carries Module C's ``panels`` + Module B's ``extraction``), or a bare
+    Module-C stage result together with an explicit ``extraction_result``.
+
+    ``mode``:
+      * ``"rehearsal"``/``"staging"`` — raters come from CACHED blind answers for
+        the spent videos if present (``rater_answers_dir``), else a deterministic
+        network-free fake. NO live call. ``propose_fn`` for the dual-read defaults
+        to the frozen verbatim locator stub (no network).
+      * ``"sealed"`` — REQUIRES an injected ``rater_fn`` (blind control-gated
+        rater; real spend, seal-day only, never invoked by tests without a fake).
+        ``propose_fn`` defaults to the REAL anchor locator (live) unless injected.
+
+    Per certified strategy: RUN the frozen dual-read gate (``prepare_strategy``) to
+    identify fall-throughs -> its ``_build_tier3_packet`` two-stage packet ->
+    ★ ``blinding_leak_scan`` (fail-closed HALT on a leak, never dispatched) ->
+    two blind control-gated raters -> compose ``tier3_verdicts`` + ``tier3_support``
+    -> ``finalize_certificate`` (SAME frozen fence, SAME conflation/enum panels
+    Module C used) so a ``denied``/``partial`` support DOWNGRADES the condition.
+
+    Returns the per-strategy rater-adjudicated certificates + dispatch records
+    ONLY — NO cert->video rollup / >=60% bar / verdict math (E), NO re-verify (F)."""
+    from src.engine.tests._a_packet_harness import build_inputs
+
+    from . import pilot_conveyor as pc
+
+    if mode not in _REHEARSAL_MODES and mode != "sealed":
+        raise ValueError(f"unknown rater-layer mode: {mode!r}")
+    if mode == "sealed" and rater_fn is None:
+        raise ValueError("sealed mode requires an injected rater_fn")
+
+    cert_stage, extraction = _normalize_rater_input(certificates_or_extractions, extraction_result)
+
+    # COMPOSE-ORDER GATE (ratify-packet §4 / test (e)): Module D is UNREACHABLE
+    # unless Module C produced READY certificates AND Module B its on-disk
+    # extraction artifacts. Fail-closed on every missing link.
+    if not isinstance(cert_stage, dict) or not cert_stage.get("ready") or cert_stage.get("stage") != "panels_and_certificate":
+        raise RaterLayerNotReady(
+            "rater layer requires a READY Module-C panels+certificate stage "
+            "(compose-order: D cannot run before C produced certificates)"
+        )
+    certificate_rows = cert_stage.get("certificates") or []
+    if not certificate_rows:
+        raise RaterLayerNotReady("Module-C stage produced no certificates to adjudicate")
+    if not isinstance(extraction, dict) or not extraction.get("ready"):
+        raise RaterLayerNotReady(
+            "rater layer requires the Module-B extraction result (pass the full "
+            "run_with_raters/run_full result, or an explicit extraction_result)"
+        )
+    artifact_paths = extraction.get("artifact_paths") or []
+    if not artifact_paths:
+        raise RaterLayerNotReady("extraction result carries no artifact_paths")
+    require_artifacts_on_disk(artifact_paths)
+
+    # Re-derive the RAW strategy dicts from Module B's on-disk artifacts (the SAME
+    # `_strategy_pairs` Module C used), keyed by cid — the dual-read gate needs the
+    # strategy, which the Module-C row does not carry.
+    cid_to_strategy: dict = {}
+    for path in artifact_paths:
+        with open(path, encoding="utf-8") as fh:
+            art = json.load(fh)
+        for cid, strategy in _strategy_pairs(art):
+            cid_to_strategy[cid] = strategy
+
+    # rehearsal/staging dual-read: frozen verbatim locator stub (NO network).
+    # sealed: real locator unless the caller injected one.
+    effective_propose_fn = propose_fn
+    if effective_propose_fn is None and mode in _REHEARSAL_MODES:
+        effective_propose_fn = pc._synthetic_dry_run_propose_fn
+
+    rows: list = []
+    per_video: dict = {}
+    for row in certificate_rows:
+        cid = row.get("cid")
+        video_id = row.get("video_id")
+        strategy_index = row.get("strategy_index", 0)
+        strategy = cid_to_strategy.get(cid)
+        panels = row.get("panels") or {}
+        conflation_verdict = panels.get("conflation_verdict")
+        enum_verdict = panels.get("enumeration_consistency_verdict")
+
+        if strategy is None:
+            # Fail-closed: a certificate whose source strategy is not on disk
+            # cannot be adjudicated (never fabricate a prep).
+            raise RaterLayerNotReady(f"no source strategy on disk for certified cid={cid!r}")
+
+        # Same synthetic transcript Module C certified against (build_inputs), so
+        # every fall-through span is a real substring and f2_coverage passes.
+        transcript, _tier1, _entries = build_inputs(strategy)
+
+        # RUN THE FROZEN DUAL-READ GATE. prepare_strategy itself leak-scans and
+        # raises LeakScanFailure on a leak — caught here as a fail-closed HALT for
+        # this strategy (never crash the whole stage).
+        try:
+            prep = pc.prepare_strategy(
+                strategy,
+                transcript,
+                video_id,
+                extractor_version="certified-reader-v3.2",
+                taxonomy_version="taxonomy-v2",
+                strategy_index=strategy_index,
+                propose_fn=effective_propose_fn,
+            )
+        except pc.LeakScanFailure as exc:
+            rows.append(
+                {
+                    "cid": cid,
+                    "video_id": video_id,
+                    "strategy_index": strategy_index,
+                    "rater_layer_halted": True,
+                    "leak_scan_clean": False,
+                    "leak_violations": exc.violations,
+                    "dispatched": False,
+                    "adjudicated_certificate": None,
+                }
+            )
+            per_video.setdefault(video_id, []).append(rows[-1])
+            continue
+
+        packet = prep["tier3_packet"]
+        item_span_map = prep["item_span_map"]
+        audit_item_id = (prep.get("axis3_audit") or {}).get("item_id")
+
+        # Pick the rater for this cid: cached blind answers if present, else the
+        # sealed rater_fn, else the deterministic rehearsal fake.
+        if mode == "sealed":
+            active_rater = rater_fn
+        else:
+            active_rater = _load_cached_rater(
+                rater_answers_dir or DEFAULT_RATER_ANSWERS_DIR, cid
+            ) or _deterministic_rehearsal_rater
+
+        dispatch = _dispatch_two_stage_packet(
+            packet, item_span_map, prep["full_transcript"], active_rater, audit_item_id
+        )
+
+        if dispatch["halted"]:
+            # ★ Leak-scan fired at dispatch time -> HALT, packet NOT dispatched,
+            # NO adjudicated certificate (fail-closed).
+            rows.append(
+                {
+                    "cid": cid,
+                    "video_id": video_id,
+                    "strategy_index": strategy_index,
+                    "rater_layer_halted": True,
+                    "leak_scan_clean": False,
+                    "leak_violations": dispatch["leak_violations"],
+                    "dispatched": False,
+                    "adjudicated_certificate": None,
+                }
+            )
+            per_video.setdefault(video_id, []).append(rows[-1])
+            continue
+
+        # Wire the rater verdicts into the SAME frozen fence, threading the SAME
+        # conflation/enum panels Module C used, so a denied/partial support
+        # DOWNGRADES the condition through to the certificate (ADDENDUM 4).
+        adjudicated = pc.finalize_certificate(
+            prep,
+            dispatch["tier3_verdicts"],
+            tier3_support=dispatch["tier3_support"],
+            conflation_verdict=conflation_verdict,
+            enumeration_consistency_verdict=enum_verdict,
+        )
+        adjudicated_row = {
+            "cid": cid,
+            "video_id": video_id,
+            "strategy_index": strategy_index,
+            "rater_layer_halted": False,
+            "leak_scan_clean": True,
+            "dispatched": True,
+            "n_fallthrough_targets": sum(1 for iid in item_span_map if iid != audit_item_id),
+            "n_tier3_verdicts": len(dispatch["tier3_verdicts"]),
+            "both_control_gates_passed": dispatch["both_control_gates_passed"],
+            "control_gates": dispatch["control_gates"],
+            "role_contested": dispatch.get("role_contested", []),
+            "support_contested": dispatch.get("support_contested", []),
+            "base_certificate": row.get("certificate"),
+            "adjudicated_certificate": adjudicated,
+            "pilot_grade": adjudicated.get("pilot_grade"),
+            "certificate_grade": adjudicated.get("certificate_grade"),
+            "terminal_read_grade": adjudicated.get("terminal_read_grade"),
+            "terminal_read_clean": adjudicated.get("terminal_read_clean"),
+        }
+        rows.append(adjudicated_row)
+        per_video.setdefault(video_id, []).append(adjudicated_row)
+
+    return {
+        "stage": "rater_layer",
+        "module": "D",
+        "mode": mode,
+        "ready": True,
+        "n_strategies": len(rows),
+        "n_halted": sum(1 for r in rows if r.get("rater_layer_halted")),
+        "rater_verdicts": rows,
+        "per_video_rater_verdicts": per_video,
+        "rater_answers_dir": (rater_answers_dir or DEFAULT_RATER_ANSWERS_DIR) if mode in _REHEARSAL_MODES else None,
+        "downstream_seams": (
+            "E=verdict math (cert->video rollup, >=60% bar, economics/validity "
+            "block); F=independent re-verify + drift guard — NONE computed here "
+            "(Module D returns per-strategy rater-adjudicated certificates only)"
+        ),
+    }

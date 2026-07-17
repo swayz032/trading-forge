@@ -22,15 +22,19 @@ from src.engine.extraction.sealed_read_driver import (
     ArtifactsMissingError,
     ExtractionNotReady,
     ExtractionSourceMissing,
+    RaterLayerNotReady,
     ReaderIdentityMismatch,
     SealedReadDriver,
+    _dispatch_two_stage_packet,
     _enum_stability,
+    _stage1_view,
     assert_dispatch_identity,
     assert_reader_identity,
     certified_reader_identity,
     require_artifacts_on_disk,
     run_extraction_stage,
     run_panels_and_certify_stage,
+    run_rater_layer_stage,
 )
 
 
@@ -1053,3 +1057,421 @@ def test_module_c_deterministic(tmp_path):
     assert json.dumps([c["certificate"] for c in r1["certificates"]], sort_keys=True) == json.dumps(
         [c["certificate"] for c in r2["certificates"]], sort_keys=True
     )
+
+
+# =========================================================================== #
+# MODULE D — HUMAN-BLIND TWO-STAGE RATER LAYER (ratify-packet item 5).
+#
+# No live LLM/network anywhere: the dual-read uses the frozen verbatim locator
+# stub; raters are deterministic fakes / injected spies. Spec: pilot ADDENDUM 4
+# (dual-read gate + two-stage tier-3 packet, read-order-locked, leak-scanned,
+# controls-first).
+# =========================================================================== #
+
+import copy as _copy  # noqa: E402
+
+from src.engine.extraction import pilot_conveyor as _pc  # noqa: E402
+from src.engine.tests._a_packet_harness import build_inputs as _build_inputs  # noqa: E402
+
+_GATE_CONTROLS = {"W1-0001", "W1-0003", "W1-0005", "W1-0007", "W1-0009"}
+_CONTEXT_CONTROLS = {"W1-0002", "W1-0004", "W1-0006", "W1-0008", "W1-0010"}
+
+
+def _prep_for(cid: str = "2DXQqwKSwJE__s0"):
+    """Run the FROZEN dual-read gate on a real staging strategy (verbatim locator
+    stub — no network) -> a prep dict carrying the two-stage tier-3 packet, the
+    item_span_map, and the fall-through targets. 2DXQqwKSwJE__s0 yields 7 clean
+    fall-throughs whose packet passes the frozen leak-scan."""
+    strat = _real_strategy(cid)
+    transcript, _t1, _e = _build_inputs(strat)
+    return _pc.prepare_strategy(
+        strat,
+        transcript,
+        cid.split("__")[0],
+        extractor_version="certified-reader-v3.2",
+        taxonomy_version="taxonomy-v2",
+        strategy_index=0,
+        propose_fn=_pc._synthetic_dry_run_propose_fn,
+    )
+
+
+def _controls_answers(*, pass_gate=True, pass_context=True):
+    """Set-A control answers: correct in each direction unless told to fail it."""
+    a = {}
+    for i in _GATE_CONTROLS:
+        a[i] = "gate-strength" if pass_gate else "context"
+    for i in _CONTEXT_CONTROLS:
+        a[i] = "context" if pass_context else "gate-strength"
+    return a
+
+
+def _make_rater(*, target_role="gate-strength", support="confirmed", pass_gate=True, pass_context=True, log=None):
+    """A blind two-stage rater_fn: answers Set-A controls (correct unless told to
+    fail), every target a fixed role, every Stage-2 a fixed support. Optionally
+    logs each (rater_id, stage, view) it is handed — used to prove the read-order
+    lock + rater independence."""
+
+    def rater(rater_id, stage, view):
+        if log is not None:
+            log.append((rater_id, stage, _copy.deepcopy(view)))
+        if stage == "stage1":
+            out = {}
+            for section in view.get("sections", []):
+                for item in section.get("items", []):
+                    iid = item["item_id"]
+                    if iid in _GATE_CONTROLS:
+                        out[iid] = "gate-strength" if pass_gate else "context"
+                    elif iid in _CONTEXT_CONTROLS:
+                        out[iid] = "context" if pass_context else "gate-strength"
+                    else:
+                        out[iid] = target_role
+            return out
+        return {
+            item["item_id"]: {"support": support, "support_justification": "j"}
+            for item in view.get("stage2", {}).get("items", [])
+        }
+
+    return rater
+
+
+# --------------------------------------------------------------------------- #
+# (a) two-stage read-order LOCK: the Stage-1 rater view provably lacks Stage-2
+#     condition/support content.
+# --------------------------------------------------------------------------- #
+
+
+def test_d_read_order_lock_stage1_view_has_no_stage2_content():
+    prep = _prep_for()
+    packet = prep["tier3_packet"]
+    stage2_items = packet["stage2"]["items"]
+    assert stage2_items  # there ARE stage-2 items (7 fall-throughs)
+
+    s1_view = _stage1_view(packet)
+    # STRUCTURAL: the whole stage2 block is absent from the Stage-1 view.
+    assert "stage2" not in s1_view
+    # CONTENT: every Stage-2 field (revealed condition text + support slot) is
+    # absent from the serialized Stage-1 view.
+    serialized = json.dumps(s1_view, default=str)
+    assert "adjudication_response" not in serialized
+    assert "extracted_condition_text" not in serialized
+    assert "support_justification" not in serialized
+    # ...yet Stage-2 DOES carry the revealed condition text (it lives ONLY in the
+    # separate stage2 block, read after Stage-1 commits).
+    assert any(it.get("extracted_condition_text") for it in stage2_items)
+    # read-order lock is stated on the packet for a human/dispatcher too.
+    assert "read_order_lock" in packet["stage2"]
+
+
+# --------------------------------------------------------------------------- #
+# (b) ★ leak-scan fires on a leaky packet -> FAIL-CLOSED HALT, packet NOT
+#     dispatched (raters never invoked).
+# --------------------------------------------------------------------------- #
+
+
+def test_d_leak_scan_halts_and_does_not_dispatch():
+    prep = _prep_for()
+    packet = _copy.deepcopy(prep["tier3_packet"])
+    # Craft a Stage-2 leak: duplicate a Set-B item's OWN revealed condition text
+    # into that SAME item OUTSIDE its quote_anchor (english_gloss) -> the frozen
+    # scan's stage2 check fires (Stage-2 inferable from the Stage-1 item).
+    leak_phrase = "ZZLEAKPHRASE_unique_condition_text"
+    target = packet["sections"][-1]["items"][0]
+    tid = target["item_id"]
+    target["english_gloss"] = leak_phrase
+    for s2 in packet["stage2"]["items"]:
+        if s2["item_id"] == tid:
+            s2["extracted_condition_text"] = leak_phrase
+
+    # sanity: the frozen scan actually flags it.
+    assert _pc.blinding_leak_scan(packet).clean is False
+
+    rater_calls = []
+
+    def spy_rater(rater_id, stage, view):
+        rater_calls.append((rater_id, stage))
+        return {}
+
+    result = _dispatch_two_stage_packet(
+        packet, prep["item_span_map"], prep["full_transcript"], spy_rater, None
+    )
+    assert result["halted"] is True
+    assert result["dispatched"] is False
+    assert result["leak_scan_clean"] is False
+    assert any("stage2_leak" in v for v in result["leak_violations"])
+    assert result["tier3_verdicts"] == []
+    # ★ the raters were NEVER invoked on the leaky packet.
+    assert rater_calls == []
+
+
+def test_d_leak_scan_halt_propagates_through_stage_no_certificate(tmp_path, monkeypatch):
+    """A GENUINELY leaky packet HALTs fail-closed through run_rater_layer_stage:
+    the row is marked halted with NO adjudicated certificate, and the stage does
+    not crash.
+
+    R-022 NOTE: this test previously relied on the AR-011 FALSE-POSITIVE (the
+    real 2DXQqwKSwJE quote contains the trader word "drift", which the 3-char
+    "dri" fragment wrongly HALTed). That defect is now FIXED -- the spent set
+    flows clean -- so the fail-closed PROPAGATION path is exercised here with a
+    planted GENUINE machinery-key leak (Layer 1) instead, via a wrapped
+    `_build_tier3_packet`. The production HALT path is unchanged; only its
+    (bogus) former trigger is gone."""
+    original_builder = _pc._build_tier3_packet
+
+    def _leaky_builder(full_transcript, video_id, fallthroughs, strategy_index=0,
+                       condition_text_by_span=None, audit_target=None):
+        packet, span_map = original_builder(
+            full_transcript, video_id, fallthroughs, strategy_index,
+            condition_text_by_span=condition_text_by_span, audit_target=audit_target,
+        )
+        # Plant a real grade-machinery KEY spec-side -> Layer-1 leak (genuine).
+        if packet["sections"][-1]["items"]:
+            packet["sections"][-1]["items"][0]["extracted_object"] = "leaked ground_truth answer"
+        return packet, span_map
+
+    monkeypatch.setattr(_pc, "_build_tier3_packet", _leaky_builder)
+
+    manifest = _write_rehearsal_manifest(str(tmp_path / "m.json"), ["2DXQqwKSwJE"])
+    full = SealedReadDriver().run_with_raters(manifest, "staging", str(tmp_path / "out"))
+    rl = full["rater_layer"]
+    halted = [r for r in rl["rater_verdicts"] if r["rater_layer_halted"]]
+    assert halted, "expected the planted genuine leak to HALT fail-closed"
+    for r in halted:
+        assert r["dispatched"] is False
+        assert r["adjudicated_certificate"] is None
+        assert r["leak_scan_clean"] is False
+        assert any(v == "machinery_key:ground_truth" for v in r["leak_violations"])
+
+
+# --------------------------------------------------------------------------- #
+# (c) control-gate: a rater whose controls score <4/5 -> its target judgments are
+#     DISCARDED (contribute nothing); passing controls -> counted.
+# --------------------------------------------------------------------------- #
+
+
+def test_d_control_gate_failing_rater_discards_all_target_judgments():
+    prep = _prep_for()
+    packet = prep["tier3_packet"]
+    # Rater A passes controls; rater B FAILS the gate-strength controls.
+    rater_a = _make_rater(target_role="gate-strength", support="confirmed")
+    rater_b_fail = _make_rater(target_role="gate-strength", support="confirmed", pass_gate=False)
+
+    # Compose via the module's dispatch by alternating the two raters through one
+    # rater_fn keyed on rater_id.
+    def rater_fn(rid, stage, view):
+        return (rater_a if rid == "A" else rater_b_fail)(rid, stage, view)
+
+    res = _dispatch_two_stage_packet(
+        packet, prep["item_span_map"], prep["full_transcript"], rater_fn, None
+    )
+    assert res["control_gates"]["A"]["passed"] is True
+    assert res["control_gates"]["B"]["passed"] is False
+    assert res["both_control_gates_passed"] is False
+    # verdicts still ASSEMBLED but all carry control_gate_passed=False...
+    assert res["tier3_verdicts"] and all(v.control_gate_passed is False for v in res["tier3_verdicts"])
+    # ...so the frozen assembler DROPS them: every fall-through stays unresolved.
+    cert = _pc.finalize_certificate(
+        prep, res["tier3_verdicts"], tier3_support=res["tier3_support"],
+        conflation_verdict="PASS", enumeration_consistency_verdict="PASS",
+    )
+    assert all(c.get("classifying_tier") != 3 for c in cert["conditions"])
+
+
+def test_d_control_gate_passing_raters_classify_tier3():
+    prep = _prep_for()
+    rater_fn = _make_rater(target_role="gate-strength", support="confirmed")
+    res = _dispatch_two_stage_packet(
+        prep["tier3_packet"], prep["item_span_map"], prep["full_transcript"], rater_fn, None
+    )
+    assert res["both_control_gates_passed"] is True
+    assert all(v.control_gate_passed is True for v in res["tier3_verdicts"])
+    cert = _pc.finalize_certificate(
+        prep, res["tier3_verdicts"], tier3_support=res["tier3_support"],
+        conflation_verdict="PASS", enumeration_consistency_verdict="PASS",
+    )
+    tier3 = [c for c in cert["conditions"] if c.get("classifying_tier") == 3]
+    assert len(tier3) == len(prep["item_span_map"])  # all fall-throughs classified
+
+
+# --------------------------------------------------------------------------- #
+# (d) a `denied` Stage-2 support verdict DOWNGRADES the condition through to the
+#     certificate.
+# --------------------------------------------------------------------------- #
+
+
+def test_d_denied_support_downgrades_condition_through_certificate(tmp_path):
+    """Full stage: raters pass controls + agree the role (classify tier-3) but
+    DENY the Stage-2 support -> every classified condition is downgraded
+    (classifying_tier None, adjudication_verdict.support 'denied') and the
+    certificate's pilot/certificate grade -> False."""
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidDG", [("vidDG__s0", _real_strategy())])
+    cert_stage = run_panels_and_certify_stage(
+        _extraction_result([path]), mode="sealed",
+        live_panel_fn=lambda cid, s, v: {"conflation": "PASS", "enumeration_consistency": "PASS", "completeness": True},
+    )
+    deny_rater = _make_rater(target_role="gate-strength", support="denied")
+    rl = run_rater_layer_stage(
+        cert_stage, mode="sealed", rater_fn=deny_rater,
+        propose_fn=_pc._synthetic_dry_run_propose_fn, extraction_result=_extraction_result([path]),
+    )
+    row = rl["rater_verdicts"][0]
+    assert row["dispatched"] is True
+    cert = row["adjudicated_certificate"]
+    assert cert["pilot_grade"] is False
+    assert cert["certificate_grade"] is False
+    tier3 = [c for c in cert["conditions"] if c.get("classifying_tier") == 3]
+    assert tier3 == []  # all downgraded off tier-3
+    denied = [c for c in cert["conditions"] if (c.get("adjudication_verdict") or {}).get("support") == "denied"]
+    assert denied, "denied support stamped on the certificate condition entries"
+
+
+def test_d_confirmed_support_leaves_condition_classified(tmp_path):
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidOK", [("vidOK__s0", _real_strategy())])
+    cert_stage = run_panels_and_certify_stage(
+        _extraction_result([path]), mode="sealed",
+        live_panel_fn=lambda cid, s, v: {"conflation": "PASS", "enumeration_consistency": "PASS", "completeness": True},
+    )
+    ok_rater = _make_rater(target_role="gate-strength", support="confirmed")
+    rl = run_rater_layer_stage(
+        cert_stage, mode="sealed", rater_fn=ok_rater,
+        propose_fn=_pc._synthetic_dry_run_propose_fn, extraction_result=_extraction_result([path]),
+    )
+    row = rl["rater_verdicts"][0]
+    cert = row["adjudicated_certificate"]
+    tier3 = [c for c in cert["conditions"] if c.get("classifying_tier") == 3]
+    assert len(tier3) == row["n_fallthrough_targets"]
+    assert tier3  # at least one fall-through classified + confirmed
+    assert all((c.get("adjudication_verdict") or {}).get("support") == "confirmed" for c in tier3)
+
+
+# --------------------------------------------------------------------------- #
+# (e) compose-order: rater layer UNREACHABLE unless C produced certificates (and
+#     A/B upstream).
+# --------------------------------------------------------------------------- #
+
+
+def test_d_unreachable_without_ready_certificates():
+    # not-ready cert stage
+    with pytest.raises(RaterLayerNotReady):
+        run_rater_layer_stage(
+            {"stage": "panels_and_certificate", "ready": False, "certificates": []},
+            mode="staging", extraction_result={"ready": True, "artifact_paths": ["x"]},
+        )
+    # ready but ZERO certificates
+    with pytest.raises(RaterLayerNotReady):
+        run_rater_layer_stage(
+            {"stage": "panels_and_certificate", "ready": True, "certificates": []},
+            mode="staging", extraction_result={"ready": True, "artifact_paths": ["x"]},
+        )
+    # certificates present but the extraction (Module B) is missing.
+    with pytest.raises(RaterLayerNotReady):
+        run_rater_layer_stage(
+            {"stage": "panels_and_certificate", "ready": True, "certificates": [{"cid": "z"}]},
+            mode="staging", extraction_result=None,
+        )
+
+
+def test_d_gate_deny_short_circuits_rater_layer(tmp_path):
+    """run_with_raters in sealed mode with NO SEAL-GO.token: gate refuses ->
+    rater_layer None, rater_fn NEVER called (Module D structurally unreachable)."""
+    rater_calls = []
+
+    def spy_rater(rid, stage, view):
+        rater_calls.append((rid, stage))
+        return {}
+
+    manifest = _write_rehearsal_manifest(str(tmp_path / "m.json"), REHEARSAL_VIDEOS)
+    res = SealedReadDriver().run_with_raters(
+        manifest, "sealed", str(tmp_path / "out"),
+        token_path=str(tmp_path / "NO-SEAL-GO.token"),
+        live_extract_fn=lambda v, m: {"video_id": v, "reader_identity": certified_reader_identity(), "strategies": []},
+        live_panel_fn=lambda cid, s, v: {"conflation": "PASS", "enumeration_consistency": "PASS", "completeness": True},
+        rater_fn=spy_rater,
+    )
+    assert res["ok"] is False
+    assert res["rater_layer"] is None
+    assert res["stage"] == "seal_gate"
+    assert rater_calls == []
+
+
+# --------------------------------------------------------------------------- #
+# (f) sealed mode injected fake rater_fn -> called (no real key); rehearsal
+#     deterministic (no rater_fn needed).
+# --------------------------------------------------------------------------- #
+
+
+def test_d_sealed_calls_injected_rater_fn_no_key(tmp_path):
+    path = _write_extraction_artifact(str(tmp_path / "out"), "vidSR", [("vidSR__s0", _real_strategy())])
+    cert_stage = run_panels_and_certify_stage(
+        _extraction_result([path]), mode="sealed",
+        live_panel_fn=lambda cid, s, v: {"conflation": "PASS", "enumeration_consistency": "PASS", "completeness": True},
+    )
+    calls = []
+    rater = _make_rater(target_role="gate-strength", support="confirmed", log=calls)
+    rl = run_rater_layer_stage(
+        cert_stage, mode="sealed", rater_fn=rater,
+        propose_fn=_pc._synthetic_dry_run_propose_fn, extraction_result=_extraction_result([path]),
+    )
+    # both raters, both stages, invoked.
+    assert {(rid, stage) for rid, stage, _ in calls} == {("A", "stage1"), ("A", "stage2"), ("B", "stage1"), ("B", "stage2")}
+    assert rl["rater_verdicts"][0]["dispatched"] is True
+
+
+def test_d_sealed_requires_rater_fn():
+    with pytest.raises(ValueError):
+        run_rater_layer_stage(
+            {"stage": "panels_and_certificate", "ready": True, "certificates": [{"cid": "z"}]},
+            mode="sealed", rater_fn=None, extraction_result={"ready": True, "artifact_paths": ["x"]},
+        )
+
+
+def test_d_rehearsal_deterministic_no_rater_fn(tmp_path):
+    manifest = _write_rehearsal_manifest(str(tmp_path / "m.json"), ["2DXQqwKSwJE"])
+    r1 = SealedReadDriver().run_with_raters(manifest, "staging", str(tmp_path / "o1"))
+    r2 = SealedReadDriver().run_with_raters(manifest, "staging", str(tmp_path / "o2"))
+
+    def _summary(res):
+        return [
+            (r["cid"], r["rater_layer_halted"], (r.get("adjudicated_certificate") or {}).get("pilot_grade"))
+            for r in res["rater_layer"]["rater_verdicts"]
+        ]
+
+    assert _summary(r1) == _summary(r2)
+    # dispatched rows carry an adjudicated certificate; halted rows do not.
+    for r in r1["rater_layer"]["rater_verdicts"]:
+        if r["rater_layer_halted"]:
+            assert r["adjudicated_certificate"] is None
+        else:
+            assert r["adjudicated_certificate"] is not None
+            assert r["both_control_gates_passed"] is True
+
+
+# --------------------------------------------------------------------------- #
+# (g) raters INDEPENDENT: rater A's answers do not influence rater B (no shared
+#     mutable state; B's Stage-1 view carries none of A's answers).
+# --------------------------------------------------------------------------- #
+
+
+def test_d_raters_are_independent_no_shared_state():
+    prep = _prep_for()
+    calls = []
+    rater = _make_rater(target_role="gate-strength", support="confirmed", log=calls)
+    _dispatch_two_stage_packet(
+        prep["tier3_packet"], prep["item_span_map"], prep["full_transcript"], rater, None
+    )
+    views = {(rid, stage): view for rid, stage, view in calls}
+    a1 = views[("A", "stage1")]
+    b1 = views[("B", "stage1")]
+    # B's Stage-1 view is byte-identical to A's (the same blind packet) and
+    # contains NEITHER 'rater_response' answers filled in NOR a stage2 block.
+    assert json.dumps(a1, sort_keys=True, default=str) == json.dumps(b1, sort_keys=True, default=str)
+    assert "stage2" not in b1
+    # every rater_response in B's view is still the blank {role:None, notes:None}
+    # -> A's committed roles never leaked into B's inputs.
+    for section in b1.get("sections", []):
+        for item in section.get("items", []):
+            rr = item.get("rater_response")
+            if isinstance(rr, dict):
+                assert rr.get("role") is None and rr.get("notes") is None
+    # A's Stage-2 view carries A's OWN committed stage1, never B's.
+    a2 = views[("A", "stage2")]
+    assert "committed_stage1" in a2 and "stage2" in a2
