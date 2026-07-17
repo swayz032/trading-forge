@@ -82,6 +82,35 @@ describe("Wave 6 wiring — the shadow governor block never touches lockoutBlock
     }
   });
 
+  // F-1 (independent accuracy-validator grade, 2026-07-17): the two assertions above are a
+  // NAMED-IDENTIFIER DENYLIST, not an exhaustive check of every field on the shared governor
+  // object. A mutation that instead assigned e.g. `gov.state = "lockout"` inside this block
+  // (the SAME `gov` object the block already legitimately reads `sessionPnl` from and writes
+  // `lastProfitMilestoneZone` to) sailed through both tests above undetected — yet
+  // `checkGovernor()` (paper-signal-service.ts) genuinely blocks/reduces entries when
+  // `gov.state === "lockout"`. This test closes that gap: the ONLY governor-object field this
+  // block may ever assign is `lastProfitMilestoneZone` — every other GovernorSessionState field
+  // is enforcement-adjacent and must never be written here.
+  it("assigns no GovernorSessionState field except lastProfitMilestoneZone (closes F-1: denylist was not exhaustive)", () => {
+    const code = stripLineComments(extractShadowGovernorBlock());
+    const forbiddenGovFields = [
+      "state",
+      "consecutiveLosses",
+      "consecutiveWins",
+      "sessionTrades",
+      "profitableSessions",
+      "dailyLossBudget",
+      "sessionPnl",
+    ];
+    for (const field of forbiddenGovFields) {
+      const assignPattern = new RegExp(`\\bgov\\.${field}\\s*=(?!=)`);
+      expect(code).not.toMatch(assignPattern);
+    }
+    // Sanity: the one legitimate write still exists (proves this test isn't vacuously
+    // passing because the block assigns nothing at all).
+    expect(code).toMatch(/\bgov\.lastProfitMilestoneZone\s*=(?!=)/);
+  });
+
   it("the block is placed AFTER the lockoutBlocked aggregation line and BEFORE the lockout DB gate", () => {
     const aggIdx = SRC.indexOf(
       "let lockoutBlocked = symbolWhitelistBlocked || blackoutBlocked || dllHaltBlocked || dailyTradeCapBlocked || lunchBlackoutBlocked || consistencyBlocked;",
