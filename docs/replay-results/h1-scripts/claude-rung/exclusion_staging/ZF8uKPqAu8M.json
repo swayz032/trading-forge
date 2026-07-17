@@ -1,0 +1,17 @@
+{
+  "video": "ZF8uKPqAu8M",
+  "excluded_mentions": [
+    {
+      "key": "immediate_breakout_wick_entry",
+      "desc": "Enter as soon as price breaks the opening range (buy on the breakout wick) rather than waiting for a candle to close outside the range. Speaker describes this as a version 'some people' use and explicitly rejects it in favor of waiting for a confirmed close above the range.",
+      "direction": "long",
+      "why_mention": "rejected_alternative — presented only to contrast with the speaker's preferred close-outside-the-range entry ('some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above'); never adopted or backtested as its own setup."
+    },
+    {
+      "key": "opposite_momentum_breakout",
+      "desc": "Do the opposite of waiting for a pullback: focus on the momentum and strength of the initial breakout to filter out fake-outs and catch only the strongest breakouts (which tend not to pull back to the opening range). No entry/stop/target rules are specified.",
+      "direction": null,
+      "why_mention": "future_backtest — floated in the closing as an unbuilt idea to be tested in a possible future video ('this back test gave me another idea, which is actually to do the opposite... I can do a back test on that idea. If you want me to make a video on it... type breakout back test'); under-specified and not yet tested, so not a taught/certified strategy."
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "video": "PVMgOxHUqFA",
+  "excluded_mentions": [
+    {
+      "key": "bearish_lh_ll_downtrend_tracking",
+      "desc": "The speaker tracks a sequence of lower highs and lower lows ('price is still bearish because it's still making lows. It's breaking levels of support') as price shoots down and corrects to make a lower high, repeatedly. This bearish downtrend structure is described in detail but only to identify when the correction is exhausted so the long reclaim can be taken.",
+      "direction": "short",
+      "why_mention": "Diagnostic-only. The bearish LH/LL tracking is used solely to time the end of the correction and confirm the long entry ('what helps you identify that this is no longer bearish is the fact that it makes another lower high'). No short is ever taught: no bearish entry trigger, no stop, and no target are given for trading the downtrend itself. It is a structural read, not a promotable setup."
+    }
+  ]
+}

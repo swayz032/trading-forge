@@ -22,3 +22,5 @@ A defect class INVISIBLE to every existing net: Phase-B re-promotes an enumerati
 - Regression: existing tests green.
 
 ## ROLLBACK: revert the lint + its terminal_read_grade axis. No live default, pre-live.
+
+## LANDED (2026-07-15): lint + fail-closed axis + COMPLETE 16-video exclusion log (12 re-derived blind + 4 founding). Empty-vs-absent semantic corrected (None=NOT_EVALUATED, []=PASS). Re-run: 21/22 PASS, IyF FAIL (breakdown_continuation vs excluded 'breakdown'/short), 0 NOT_EVALUATED. CERTIFICATE SCOPE LINE (operator): "variant promotion beyond enumeration: measured lower-bound 1/22, lint armed at terminal read." NEXT: independent grade (isolated packet). Note (dress-rehearsal grader catch): this axis was co-mingled uncommitted with the conflation-wiring packet -> now committed SEPARATELY, isolating the two terminal_read_grade edits.

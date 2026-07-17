@@ -1,0 +1,11 @@
+{
+  "video": "_LS6qcSlDCs",
+  "excluded_mentions": [
+    {
+      "key": "buy_high_of_day_break",
+      "desc": "Buying the stock as it breaks the high of the day / breaks new highs on the momentum move over VWAP.",
+      "direction": "long",
+      "why_mention": "Taught only as a mistake/anti-pattern, never as a promoted setup: 'they don't want to buy it as it's breaking highs because that can get really easily faked out' and 'experienced traders are actually taking profit at those high of the day levels.' It is the foil that motivates the certified pullback-entry, not a strategy the speaker endorses."
+    }
+  ]
+}

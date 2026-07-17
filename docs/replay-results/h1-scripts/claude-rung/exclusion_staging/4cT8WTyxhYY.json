@@ -1,0 +1,17 @@
+{
+  "video": "4cT8WTyxhYY",
+  "excluded_mentions": [
+    {
+      "key": "bulkowski_backtest_stat",
+      "desc": "Thomas Bulkowski 14,000-trade backtest cited to show that a valley-above (liquidity-grab) pattern outperforms a valley-below pattern, used to justify why the reversal setup is worth trading.",
+      "direction": null,
+      "why_mention": "Framed as statistical motivation/justification for the certified strategy ('the statistics even back this up'), not a distinct runnable entry with its own trigger/stop/target rules."
+    },
+    {
+      "key": "private_indicator_automation_pitch",
+      "desc": "Promo for the presenter's private indicator (tradinglab.doai) that auto-detects liquidity grabs, marks the entry point, color-codes long/short, and gives an entry signal; enabled via settings 'show reversals = True'.",
+      "direction": null,
+      "why_mention": "Tooling/product pitch that merely automates detection of the already-certified liquidity_grab_reversal strategy; it defines no new setup or runnable entry of its own."
+    }
+  ]
+}

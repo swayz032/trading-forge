@@ -1,0 +1,41 @@
+{
+  "video": "R5L890juvRw",
+  "excluded_mentions": [
+    {
+      "key": "institutional_execution_alpha_vwap_fill",
+      "desc": "The institutional 'execution alpha' model: banks/hedge funds fragment huge orders and fill them gradually around the daily/weekly VWAP and its standard-deviation bands (loading longs in the discount below VWAP, shorts in the premium above), aiming for the band extremes as optimal fill prices. Volume-driven algos like VWAP are described as best for long-duration orders (30 min to 1 day).",
+      "direction": null,
+      "why_mention": "Explicitly framed as NOT for the retail viewer to act on ('okay for you as a day trader with five es contracts to not care about this side of institutional trading called execution Alpha'). Presented as the background rationale for why VWAP works, not a runnable retail entry."
+    },
+    {
+      "key": "price_driven_execution_algorithms",
+      "desc": "The 'price-driven algorithms' category of institutional order-execution shown in the order-execution table, set against volume-driven algorithms such as VWAP.",
+      "direction": null,
+      "why_mention": "Named once as a category in the execution table but never explained or turned into a setup; no rules, levels, or runnable entry taught."
+    },
+    {
+      "key": "ict_swing_premium_discount",
+      "desc": "ICT-style premium/discount measured off a swing high/low with the 50% midpoint of an impulse as the dividing line (below 50% = discount, above 50% = premium).",
+      "direction": null,
+      "why_mention": "Dispreferred / risk-contrast: presented as the arbitrary and 'very simplistic' alternative the speaker rejects in favor of VWAP's objective session-based premium/discount ('it remains an arbitrary decision where to track this'). No runnable entry is taught for it."
+    },
+    {
+      "key": "bollinger_bands_and_moving_averages",
+      "desc": "Standard Bollinger Bands and moving averages as generic mean/volatility references.",
+      "direction": null,
+      "why_mention": "Dispreferred alternative cited only to argue that VWAP standard-deviation bands give 'a much deeper reason to have an edge rather than normal Ballinger bands or moving averages.' No setup is built on them."
+    },
+    {
+      "key": "volume_profile_value_area",
+      "desc": "Normal volume profile as a Gaussian/bell curve with the value area (fair-value area) defined as ~70% of traded volume, i.e. one standard deviation around the average.",
+      "direction": null,
+      "why_mention": "Explanatory concept used to build intuition for standard deviation and 'fair value' before introducing VWAP; no runnable entry, target, or stop is taught for the volume-profile value area itself."
+    },
+    {
+      "key": "strong_trend_vwap_override",
+      "desc": "Caveat scenario: during high momentum or an established strong trend the market keeps buying (or selling) even at premium/discount prices far from VWAP, so the reversion-to-VWAP expectation breaks down and context is required.",
+      "direction": null,
+      "why_mention": "Risk-contrast / caveat ('vwap is not always working it's always needed to have a context behind your trading idea'), warning when the mean-reversion fade should be avoided rather than a standalone runnable setup."
+    }
+  ]
+}

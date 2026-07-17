@@ -186,13 +186,17 @@ _TERMINAL_STRUCTURAL_LINTS = (
 def terminal_read_grade(
     lint_results: Dict[str, "cl.LintResult"],
     conflation_verdict: Optional[str] = None,
+    enumeration_consistency_verdict: Optional[str] = None,
+    enumeration_override: Optional[object] = None,
 ) -> dict:
     """Fail-closed terminal-read grade. Returns {grade, clean, disposition}.
 
     Live axes: the calibrated semantic conflation verdict (structural axis),
-    `f2_coverage_gate`, and `causality_lint`'s regex leg. causality's same_bar
-    leg is DELIBERATELY exempt -- provably-not-load-bearing (execution timing,
-    orthogonal to extraction fidelity; ratify-packet disposition table).
+    the enumeration-consistency verdict (structural axis, ratify-packet
+    2026-07-15), `f2_coverage_gate`, and `causality_lint`'s regex leg.
+    causality's same_bar leg is DELIBERATELY exempt -- provably-not-load-bearing
+    (execution timing, orthogonal to extraction fidelity; ratify-packet
+    disposition table).
 
     Structural axis (`conflation_verdict`, "PASS"|"REJECT"|None):
       "REJECT" -> FAIL contribution (co-required contradiction).
@@ -201,12 +205,26 @@ def terminal_read_grade(
                   contribution (fail-closed: a read cannot pass without a real
                   conflation verdict).
 
+    Enumeration-consistency axis (`enumeration_consistency_verdict`,
+    "PASS"|"FAIL"|"NOT_EVALUATED"|None):
+      "FAIL"          -> FAIL contribution (a promoted enumeration-excluded
+                         mention -> not-clean / REJECTED-contributing).
+      "NOT_EVALUATED" -> NOT_EVALUATED contribution (absent exclusion log,
+                         fail-closed -> INDETERMINATE).
+      "PASS"          -> clean contribution.
+      None (param not supplied) -> axis ABSENT: not contributed at all, so
+                         callers that do not run this post-processing lint are
+                         unaffected (backward-compatible additive axis).
+    BLIND-ADJUDICATION OVERRIDE (`enumeration_override`, default absent): when a
+    recorded blind-adjudication artifact is supplied AND the enumeration verdict
+    is "FAIL", the FAIL is flipped to an allowed (clean) contribution
+    (disposition "FAIL_OVERRIDDEN"). The override ONLY flips an explicit FAIL,
+    and ONLY when explicitly supplied -- absent override, FAIL stands.
+
     Grade combination (FAIL dominates NOT_EVALUATED):
-      REJECTED      if any live axis is FAIL (conflation REJECT, f2 FAIL, or
-                    causality-regex FAIL).
-      INDETERMINATE if none FAIL but any live axis is NOT_EVALUATED
-                    (conflation None, or f2/causality-regex NOT_EVALUATED).
-      CLEAN         iff conflation==PASS AND f2==PASS AND causality-regex==PASS.
+      REJECTED      if any live axis is FAIL.
+      INDETERMINATE if none FAIL but any live axis is NOT_EVALUATED.
+      CLEAN         iff every contributed live axis is PASS.
     `clean` (grade == CLEAN) is the ONLY value counting toward the >=60% bar."""
     disposition: Dict[str, str] = {}
     any_fail = False
@@ -222,6 +240,28 @@ def terminal_read_grade(
     else:
         disposition["conflation_check"] = "NOT_EVALUATED"
         any_not_eval = True
+
+    # Structural axis: enumeration-consistency (post-processing lint). ADDITIVE
+    # and fail-closed. `None` param = axis not run by this caller -> absent
+    # (never contributed), preserving backward compatibility. An explicit FAIL
+    # may be flipped ONLY by a supplied blind-adjudication override.
+    if enumeration_consistency_verdict == "FAIL":
+        if enumeration_override is not None:
+            disposition["enumeration_consistency"] = "FAIL_OVERRIDDEN"
+        else:
+            disposition["enumeration_consistency"] = "FAIL"
+            any_fail = True
+    elif enumeration_consistency_verdict == "PASS":
+        disposition["enumeration_consistency"] = "PASS"
+    elif enumeration_consistency_verdict == "NOT_EVALUATED":
+        disposition["enumeration_consistency"] = "NOT_EVALUATED"
+        any_not_eval = True
+    elif enumeration_consistency_verdict is not None:
+        # Any other non-None string is an unknown/errored verdict -> fail-closed.
+        disposition["enumeration_consistency"] = "NOT_EVALUATED"
+        any_not_eval = True
+    else:
+        disposition["enumeration_consistency"] = "AXIS_ABSENT"
 
     # The 3 structural lints: RE-STATIONED to H2 (full_grade). Recorded as
     # informational only -- they no longer contribute to the terminal gate.

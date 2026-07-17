@@ -1,0 +1,11 @@
+{
+  "video": "kFyD3H6I1I8",
+  "excluded_mentions": [
+    {
+      "key": "supply_zone_reaction_fade",
+      "desc": "Price rallying up into an aggressive supply zone and reacting/coming down off of that level ('if price comes up to supply, it very likely can react and come down off of that level').",
+      "direction": "short",
+      "why_mention": "TP-placement rationale, not a taught standalone entry. The speaker invokes the supply-reaction only to justify where he sets the take-profit for the LONG three-step trade (target parked in the middle of the opposing supply). It is never taught as an independent fade-short setup: no bias step, no break/close confirmation, no retest trigger, and no stop rule of its own are given for entering short at supply. Per the example/rationale-not-a-rule guard it is a candidate mention, not a promotable strategy."
+    }
+  ]
+}

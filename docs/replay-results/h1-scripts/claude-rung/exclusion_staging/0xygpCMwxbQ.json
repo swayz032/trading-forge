@@ -1,0 +1,29 @@
+{
+  "video": "0xygpCMwxbQ",
+  "excluded_mentions": [
+    {
+      "key": "fvg_standalone_entry_model",
+      "desc": "Fair value gap (FVG) used by itself as a complete entry model. The speaker enumerates the PD arrays and explicitly states 'each one of these Concepts could be used as an entry model by themselves' — the FVG is one of those standalone models. The certified strategy only uses the FVG as one blended component of the checklist, never as its own promoted strategy.",
+      "direction": null,
+      "why_mention": "Taught as a standalone entry model ('could be used as an entry model by themselves') but the certified strategy is the blended A+ checklist; the FVG-alone model was mentioned, not promoted."
+    },
+    {
+      "key": "order_block_standalone_entry_model",
+      "desc": "Order block (defined as the down-close candle before the raid for a long) used by itself as a complete entry model. Part of the 'each one of these Concepts could be used as an entry model by themselves' enumeration. Certified strategy only uses the order block as one blended PD-array option, not as a standalone certified strategy.",
+      "direction": null,
+      "why_mention": "Named as a self-sufficient entry model in the standalone-concept statement; only appears in the certified strategy as a blended component, so the standalone use is an unpromoted mention."
+    },
+    {
+      "key": "breaker_block_standalone_entry_model",
+      "desc": "Breaker block (defined as the up-close candles before the raid on liquidity) used by itself as a complete entry model. Included in 'each one of these Concepts could be used as an entry model by themselves.' The certified strategy uses the breaker only as one blended PD-array option (e.g. the example where 'I was just going to take the breaker block entry'), never as its own promoted strategy.",
+      "direction": null,
+      "why_mention": "Taught as a standalone entry model per the enumeration; demonstrated alone in an example but not certified as a separate strategy — mention only."
+    },
+    {
+      "key": "ote_standalone_entry_model",
+      "desc": "Optimal trade entry (OTE / fib discount-refinement) used by itself as a complete entry model. Covered by 'each one of these Concepts could be used as an entry model by themselves.' In the certified strategy the OTE is only a discount-range refinement blended with a PD array, not a standalone promoted strategy.",
+      "direction": null,
+      "why_mention": "Enumerated as a concept usable as an entry model on its own; the certified checklist folds it in as a blended refinement step, leaving the standalone-model use an unpromoted mention."
+    }
+  ]
+}

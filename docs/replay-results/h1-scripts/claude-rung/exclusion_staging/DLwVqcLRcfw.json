@@ -1,0 +1,11 @@
+{
+  "video": "DLwVqcLRcfw",
+  "excluded_mentions": [
+    {
+      "key": "sma20_only_strategy",
+      "desc": "Trading purely and solely off the 20 SMA with no VWAP confluence. Cited only as a counterfactual mistake: a 20-SMA-only trader would have taken the short as price closed below the 20 SMA and been 'rudely stopped out,' because VWAP was still showing firm support. Used to motivate adding VWAP as extra confluence rather than taught as an executable standalone setup.",
+      "direction": null,
+      "why_mention": "Named strategy approach ('if you were simply following the 20 SMA strategy') referenced as a counterfactual / what-NOT-to-do to contrast against the certified VWAP+20SMA confluence setups. The speaker frames it as a losing play (would have been stopped out), not a setup he is teaching to execute, so it is not certified as its own strategy. The illustrated failure instance was a short entry, but the approach itself is stated as a general standalone method, hence direction null."
+    }
+  ]
+}

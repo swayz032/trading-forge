@@ -1,13 +1,180 @@
 {
-  "artifact": "h1-certified-enumeration-exclusion-log",
-  "source": "FROZEN-ENUMERATION-16.md 'Mention-not-object' + per-strategy coverage flags; certified enumeration (tag h1-certified-reader-v3.2) authority",
-  "note": "Mentions the certified enumeration ruled UNPROMOTED (no runnable entry) and EXCLUDED. A Phase-B variant matching one of these = enumeration-consistency violation (mention re-promoted to runnable variant) -> fail-closed not-clean unless blind adjudication promotes from source.",
-  "excluded_mentions": {
-    "IyFioFkRgWo": [{"key": "breakdown", "desc": "breakdown 'big move' once support lost", "direction": "short", "why_mention": "retrospective 'you would have entered there', no runnable entry"}],
-    "-igpOZs8LsM": [{"key": "order block", "desc": "order block (prior video)", "direction": null, "why_mention": "deferred/named model, no runnable entry taught here"},
-                    {"key": "breaker", "desc": "breaker blocks (next video)", "direction": null, "why_mention": "deferred to next video"},
-                    {"key": "flip zone", "desc": "flip zone", "direction": null, "why_mention": "named-only, never explained"}],
-    "W7nlnHTUZQU": [{"key": "breakout", "desc": "breakout-without-retest entry", "direction": null, "why_mention": "dispreferred alternative, speaker prefers retest"}],
-    "2DXQqwKSwJE": [{"key": "swing", "desc": "swing trading", "direction": null, "why_mention": "risk-contrast mention, never taught"}]
-  }
+ "artifact": "h1-certified-enumeration-exclusion-log",
+ "source": "FROZEN-ENUMERATION-16.md 'Mention-not-object' + per-strategy coverage flags; certified enumeration (tag h1-certified-reader-v3.2) authority",
+ "note": "Mentions the certified enumeration ruled UNPROMOTED (no runnable entry) and EXCLUDED. A Phase-B variant matching one of these = enumeration-consistency violation (mention re-promoted to runnable variant) -> fail-closed not-clean unless blind adjudication promotes from source.",
+ "excluded_mentions": {
+  "IyFioFkRgWo": [
+   {
+    "key": "breakdown",
+    "desc": "breakdown 'big move' once support lost",
+    "direction": "short",
+    "why_mention": "retrospective 'you would have entered there', no runnable entry"
+   }
+  ],
+  "-igpOZs8LsM": [
+   {
+    "key": "order block",
+    "desc": "order block (prior video)",
+    "direction": null,
+    "why_mention": "deferred/named model, no runnable entry taught here"
+   },
+   {
+    "key": "breaker",
+    "desc": "breaker blocks (next video)",
+    "direction": null,
+    "why_mention": "deferred to next video"
+   },
+   {
+    "key": "flip zone",
+    "desc": "flip zone",
+    "direction": null,
+    "why_mention": "named-only, never explained"
+   }
+  ],
+  "W7nlnHTUZQU": [
+   {
+    "key": "breakout",
+    "desc": "breakout-without-retest entry",
+    "direction": null,
+    "why_mention": "dispreferred alternative, speaker prefers retest"
+   }
+  ],
+  "2DXQqwKSwJE": [
+   {
+    "key": "swing",
+    "desc": "swing trading",
+    "direction": null,
+    "why_mention": "risk-contrast mention, never taught"
+   }
+  ],
+  "0xygpCMwxbQ": [
+   {
+    "key": "fvg_standalone_entry_model",
+    "desc": "Fair value gap (FVG) used by itself as a complete entry model. The speaker enumerates the PD arrays and explicitly states 'each one of these Concepts could be used as an entry model by themselves' — the FVG is one of those standalone models. The certified strategy only uses the FVG as one blended component of the checklist, never as its own promoted strategy.",
+    "direction": null,
+    "why_mention": "Taught as a standalone entry model ('could be used as an entry model by themselves') but the certified strategy is the blended A+ checklist; the FVG-alone model was mentioned, not promoted."
+   },
+   {
+    "key": "order_block_standalone_entry_model",
+    "desc": "Order block (defined as the down-close candle before the raid for a long) used by itself as a complete entry model. Part of the 'each one of these Concepts could be used as an entry model by themselves' enumeration. Certified strategy only uses the order block as one blended PD-array option, not as a standalone certified strategy.",
+    "direction": null,
+    "why_mention": "Named as a self-sufficient entry model in the standalone-concept statement; only appears in the certified strategy as a blended component, so the standalone use is an unpromoted mention."
+   },
+   {
+    "key": "breaker_block_standalone_entry_model",
+    "desc": "Breaker block (defined as the up-close candles before the raid on liquidity) used by itself as a complete entry model. Included in 'each one of these Concepts could be used as an entry model by themselves.' The certified strategy uses the breaker only as one blended PD-array option (e.g. the example where 'I was just going to take the breaker block entry'), never as its own promoted strategy.",
+    "direction": null,
+    "why_mention": "Taught as a standalone entry model per the enumeration; demonstrated alone in an example but not certified as a separate strategy — mention only."
+   },
+   {
+    "key": "ote_standalone_entry_model",
+    "desc": "Optimal trade entry (OTE / fib discount-refinement) used by itself as a complete entry model. Covered by 'each one of these Concepts could be used as an entry model by themselves.' In the certified strategy the OTE is only a discount-range refinement blended with a PD array, not a standalone promoted strategy.",
+    "direction": null,
+    "why_mention": "Enumerated as a concept usable as an entry model on its own; the certified checklist folds it in as a blended refinement step, leaving the standalone-model use an unpromoted mention."
+   }
+  ],
+  "4cT8WTyxhYY": [
+   {
+    "key": "bulkowski_backtest_stat",
+    "desc": "Thomas Bulkowski 14,000-trade backtest cited to show that a valley-above (liquidity-grab) pattern outperforms a valley-below pattern, used to justify why the reversal setup is worth trading.",
+    "direction": null,
+    "why_mention": "Framed as statistical motivation/justification for the certified strategy ('the statistics even back this up'), not a distinct runnable entry with its own trigger/stop/target rules."
+   },
+   {
+    "key": "private_indicator_automation_pitch",
+    "desc": "Promo for the presenter's private indicator (tradinglab.doai) that auto-detects liquidity grabs, marks the entry point, color-codes long/short, and gives an entry signal; enabled via settings 'show reversals = True'.",
+    "direction": null,
+    "why_mention": "Tooling/product pitch that merely automates detection of the already-certified liquidity_grab_reversal strategy; it defines no new setup or runnable entry of its own."
+   }
+  ],
+  "CLDEIsNpVRc": [],
+  "DLwVqcLRcfw": [
+   {
+    "key": "sma20_only_strategy",
+    "desc": "Trading purely and solely off the 20 SMA with no VWAP confluence. Cited only as a counterfactual mistake: a 20-SMA-only trader would have taken the short as price closed below the 20 SMA and been 'rudely stopped out,' because VWAP was still showing firm support. Used to motivate adding VWAP as extra confluence rather than taught as an executable standalone setup.",
+    "direction": null,
+    "why_mention": "Named strategy approach ('if you were simply following the 20 SMA strategy') referenced as a counterfactual / what-NOT-to-do to contrast against the certified VWAP+20SMA confluence setups. The speaker frames it as a losing play (would have been stopped out), not a setup he is teaching to execute, so it is not certified as its own strategy. The illustrated failure instance was a short entry, but the approach itself is stated as a general standalone method, hence direction null."
+   }
+  ],
+  "E9MzEC_yNoM": [],
+  "PVMgOxHUqFA": [
+   {
+    "key": "bearish_lh_ll_downtrend_tracking",
+    "desc": "The speaker tracks a sequence of lower highs and lower lows ('price is still bearish because it's still making lows. It's breaking levels of support') as price shoots down and corrects to make a lower high, repeatedly. This bearish downtrend structure is described in detail but only to identify when the correction is exhausted so the long reclaim can be taken.",
+    "direction": "short",
+    "why_mention": "Diagnostic-only. The bearish LH/LL tracking is used solely to time the end of the correction and confirm the long entry ('what helps you identify that this is no longer bearish is the fact that it makes another lower high'). No short is ever taught: no bearish entry trigger, no stop, and no target are given for trading the downtrend itself. It is a structural read, not a promotable setup."
+   }
+  ],
+  "R5L890juvRw": [
+   {
+    "key": "institutional_execution_alpha_vwap_fill",
+    "desc": "The institutional 'execution alpha' model: banks/hedge funds fragment huge orders and fill them gradually around the daily/weekly VWAP and its standard-deviation bands (loading longs in the discount below VWAP, shorts in the premium above), aiming for the band extremes as optimal fill prices. Volume-driven algos like VWAP are described as best for long-duration orders (30 min to 1 day).",
+    "direction": null,
+    "why_mention": "Explicitly framed as NOT for the retail viewer to act on ('okay for you as a day trader with five es contracts to not care about this side of institutional trading called execution Alpha'). Presented as the background rationale for why VWAP works, not a runnable retail entry."
+   },
+   {
+    "key": "price_driven_execution_algorithms",
+    "desc": "The 'price-driven algorithms' category of institutional order-execution shown in the order-execution table, set against volume-driven algorithms such as VWAP.",
+    "direction": null,
+    "why_mention": "Named once as a category in the execution table but never explained or turned into a setup; no rules, levels, or runnable entry taught."
+   },
+   {
+    "key": "ict_swing_premium_discount",
+    "desc": "ICT-style premium/discount measured off a swing high/low with the 50% midpoint of an impulse as the dividing line (below 50% = discount, above 50% = premium).",
+    "direction": null,
+    "why_mention": "Dispreferred / risk-contrast: presented as the arbitrary and 'very simplistic' alternative the speaker rejects in favor of VWAP's objective session-based premium/discount ('it remains an arbitrary decision where to track this'). No runnable entry is taught for it."
+   },
+   {
+    "key": "bollinger_bands_and_moving_averages",
+    "desc": "Standard Bollinger Bands and moving averages as generic mean/volatility references.",
+    "direction": null,
+    "why_mention": "Dispreferred alternative cited only to argue that VWAP standard-deviation bands give 'a much deeper reason to have an edge rather than normal Ballinger bands or moving averages.' No setup is built on them."
+   },
+   {
+    "key": "volume_profile_value_area",
+    "desc": "Normal volume profile as a Gaussian/bell curve with the value area (fair-value area) defined as ~70% of traded volume, i.e. one standard deviation around the average.",
+    "direction": null,
+    "why_mention": "Explanatory concept used to build intuition for standard deviation and 'fair value' before introducing VWAP; no runnable entry, target, or stop is taught for the volume-profile value area itself."
+   },
+   {
+    "key": "strong_trend_vwap_override",
+    "desc": "Caveat scenario: during high momentum or an established strong trend the market keeps buying (or selling) even at premium/discount prices far from VWAP, so the reversion-to-VWAP expectation breaks down and context is required.",
+    "direction": null,
+    "why_mention": "Risk-contrast / caveat ('vwap is not always working it's always needed to have a context behind your trading idea'), warning when the mean-reversion fade should be avoided rather than a standalone runnable setup."
+   }
+  ],
+  "WEhmadJArQo": [],
+  "ZF8uKPqAu8M": [
+   {
+    "key": "immediate_breakout_wick_entry",
+    "desc": "Enter as soon as price breaks the opening range (buy on the breakout wick) rather than waiting for a candle to close outside the range. Speaker describes this as a version 'some people' use and explicitly rejects it in favor of waiting for a confirmed close above the range.",
+    "direction": "long",
+    "why_mention": "rejected_alternative — presented only to contrast with the speaker's preferred close-outside-the-range entry ('some people will enter as soon as the price is broken, like on this green wick up here. But I prefer to wait for the candle to actually break through and then close above'); never adopted or backtested as its own setup."
+   },
+   {
+    "key": "opposite_momentum_breakout",
+    "desc": "Do the opposite of waiting for a pullback: focus on the momentum and strength of the initial breakout to filter out fake-outs and catch only the strongest breakouts (which tend not to pull back to the opening range). No entry/stop/target rules are specified.",
+    "direction": null,
+    "why_mention": "future_backtest — floated in the closing as an unbuilt idea to be tested in a possible future video ('this back test gave me another idea, which is actually to do the opposite... I can do a back test on that idea. If you want me to make a video on it... type breakout back test'); under-specified and not yet tested, so not a taught/certified strategy."
+   }
+  ],
+  "_LS6qcSlDCs": [
+   {
+    "key": "buy_high_of_day_break",
+    "desc": "Buying the stock as it breaks the high of the day / breaks new highs on the momentum move over VWAP.",
+    "direction": "long",
+    "why_mention": "Taught only as a mistake/anti-pattern, never as a promoted setup: 'they don't want to buy it as it's breaking highs because that can get really easily faked out' and 'experienced traders are actually taking profit at those high of the day levels.' It is the foil that motivates the certified pullback-entry, not a strategy the speaker endorses."
+   }
+  ],
+  "dV7chra4u4Q": [],
+  "kFyD3H6I1I8": [
+   {
+    "key": "supply_zone_reaction_fade",
+    "desc": "Price rallying up into an aggressive supply zone and reacting/coming down off of that level ('if price comes up to supply, it very likely can react and come down off of that level').",
+    "direction": "short",
+    "why_mention": "TP-placement rationale, not a taught standalone entry. The speaker invokes the supply-reaction only to justify where he sets the take-profit for the LONG three-step trade (target parked in the middle of the opposing supply). It is never taught as an independent fade-short setup: no bias step, no break/close confirmation, no retest trigger, and no stop rule of its own are given for entering short at supply. Per the example/rationale-not-a-rule guard it is a candidate mention, not a promotable strategy."
+   }
+  ]
+ },
+ "completeness": "all 16 design-pool videos (12 re-derived blind + 4 hand-built founding: IyF/-igp/W7/2DX). [] = enumeration confirmed no unpromoted mention (PASS). Sealed-12 exclusion log produced at read-time enumeration."
 }
