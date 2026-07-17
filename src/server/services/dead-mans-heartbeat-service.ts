@@ -319,12 +319,31 @@ export async function writeHeartbeat(): Promise<void> {
 // ─── CHECK: stale detection + alert ──────────────────────────────────────────
 
 /**
- * Returns the most recent heartbeat timestamp, or null if no rows exist.
+ * Why getLastHeartbeatAt() returned null. MED finding fix (2026-07-17
+ * telemetry-honesty scan): previously the query-succeeded/zero-rows case and
+ * the query-threw/DB-unreachable case were BOTH just a null return with no
+ * way for the caller to tell them apart — so a genuine total DB outage
+ * during RTH only ever reached the caller's soft "no rows yet" WARNING
+ * branch, never the CRITICAL a total DB outage deserves. `query_error` is
+ * the new, distinguishable cause a caller can escalate on.
+ */
+type HeartbeatReadCause = "ok" | "no_rows" | "table_missing" | "query_error";
+
+interface HeartbeatReadResult {
+  lastAt: Date | null;
+  cause: HeartbeatReadCause;
+}
+
+/**
+ * Reads the most recent heartbeat timestamp AND why it's null when it is.
+ * Internal — getLastHeartbeatAt() below is the stable Date|null public
+ * contract; callers that need to escalate differently by cause (RTH/OOH
+ * stale checks) call this directly.
  */
 // Track A F-7: getLastHeartbeatAt distinguishes "table missing" (schema drift,
 // operator-actionable) from "no rows" (ok — first RTH start) from transient query
 // failures. Returns null in all non-fatal cases; logs severity reflects the cause.
-export async function getLastHeartbeatAt(): Promise<Date | null> {
+async function _readLastHeartbeat(): Promise<HeartbeatReadResult> {
   try {
     const rows = await db.execute<{ ts: string }>(
       sql`SELECT ts FROM ${sql.identifier(HEARTBEAT_TABLE)} ORDER BY ts DESC LIMIT 1`
@@ -332,8 +351,8 @@ export async function getLastHeartbeatAt(): Promise<Date | null> {
     // postgres.js returns an array directly (RowList)
     const arr = Array.isArray(rows) ? rows : (rows as unknown as { rows: Array<{ ts: string }> }).rows;
     // "no rows" = first RTH start this session — severity: ok, return null
-    if (!arr || arr.length === 0) return null;
-    return new Date((arr[0] as { ts: string }).ts);
+    if (!arr || arr.length === 0) return { lastAt: null, cause: "no_rows" };
+    return { lastAt: new Date((arr[0] as { ts: string }).ts), cause: "ok" };
   } catch (err) {
     if (isTableMissingError(err)) {
       // F-3: Schema drift on the READ path — fire notifyCritical, but dedup via
@@ -369,11 +388,27 @@ export async function getLastHeartbeatAt(): Promise<Date | null> {
           );
         }
       }
+      return { lastAt: null, cause: "table_missing" };
     } else {
-      logger.warn({ err }, "dead-mans-heartbeat: last heartbeat query failed");
+      // MED finding fix: this used to be a bare logger.warn with no way for the
+      // caller to distinguish it from "table genuinely has zero rows" — a real
+      // DB-connectivity outage (connection refused, timeout, pool exhausted,
+      // etc.) collapsed into the same benign-looking null. Tagged distinctly
+      // as query_error and logged at error severity so it can be escalated.
+      logger.error({ err }, "dead-mans-heartbeat: last heartbeat query failed — DB may be unreachable");
+      return { lastAt: null, cause: "query_error" };
     }
-    return null;
   }
+}
+
+/**
+ * Returns the most recent heartbeat timestamp, or null if no rows exist.
+ * Stable Date|null contract — see _readLastHeartbeat() for the cause detail
+ * consumed by the stale-check callers below.
+ */
+export async function getLastHeartbeatAt(): Promise<Date | null> {
+  const { lastAt } = await _readLastHeartbeat();
+  return lastAt;
 }
 
 async function sendSmsStalert(minutesSince: number, lastAt: Date): Promise<boolean> {
@@ -411,10 +446,38 @@ export async function runHeartbeatStaleCheck(): Promise<void> {
     return;
   }
 
-  const lastAt = await getLastHeartbeatAt();
+  const { lastAt, cause } = await _readLastHeartbeat();
   const now = Date.now();
 
   if (!lastAt) {
+    // MED finding fix (2026-07-17 telemetry-honesty scan): a genuine DB-
+    // connectivity outage (cause="query_error" — the query THREW, we never
+    // learned whether rows exist) used to collapse into the exact same
+    // WARNING path as "table genuinely has zero rows" (cause="no_rows"). A
+    // total DB outage during RTH means the backend cannot verify ANYTHING
+    // about its own liveness or the strategies it's supposed to be
+    // protecting — that deserves the CRITICAL escalation ladder, not a soft
+    // WARNING indistinguishable from "just started this morning".
+    if (cause === "query_error") {
+      logger.error(
+        "dead-mans-heartbeat: heartbeat query FAILED during RTH — cannot verify backend liveness (DB outage suspected)",
+      );
+      notifyCritical(
+        "[dead-mans-heartbeat] Heartbeat query failed during RTH — DB may be unreachable",
+        appendFamilyGradePostscript(
+          "The heartbeat stale-check query threw an error during trading hours — this means the backend " +
+            "could not even query the database to check its own liveness. This is distinct from 'no heartbeat " +
+            "rows yet' (which is expected right after startup): a query failure suggests the database itself " +
+            "is unreachable (connection refused, pool exhausted, network partition, etc.). Investigate DB " +
+            "connectivity immediately.",
+          "The trading computer cannot reach its own database during market hours — this is more serious than " +
+            "a routine startup delay.",
+          "Call Tony immediately — the database connection itself appears to be down.",
+        ),
+        { cause },
+      );
+      return;
+    }
     // FINDING #6 FIX: null lastAt during RTH = no heartbeat ever written → WARNING.
     // An empty table during trading hours means the backend may never have started its
     // heartbeat loop, or the table was truncated. Cannot verify liveness — fire WARNING.
@@ -550,9 +613,33 @@ export async function runOffRthHeartbeatCheck(): Promise<void> {
     return;
   }
 
-  const lastAt = await getLastHeartbeatAt();
+  const { lastAt, cause } = await _readLastHeartbeat();
 
   if (!lastAt) {
+    // MED finding fix (2026-07-17 telemetry-honesty scan): same collapsing-
+    // null bug as the RTH check — a genuine DB-connectivity outage
+    // (cause="query_error") used to be silently indistinguishable from "no
+    // heartbeat rows yet" (cause="no_rows", debug-only, expected pre-RTH).
+    // A DB outage matters regardless of RTH; escalate to this function's own
+    // WARNING ceiling (it never fires CRITICAL — that's the RTH check's job)
+    // instead of staying completely silent.
+    if (cause === "query_error") {
+      logger.warn(
+        "dead-mans-heartbeat: off-rth check — heartbeat query FAILED (DB may be unreachable)",
+      );
+      notifyWarning(
+        "[dead-mans-heartbeat] Off-RTH heartbeat query failed — DB may be unreachable",
+        appendFamilyGradePostscript(
+          "The off-RTH heartbeat check's query threw an error — this is distinct from 'no heartbeat rows yet' " +
+            "(expected right after startup, outside trading hours). A query failure suggests the database " +
+            "itself is unreachable. Not urgent outside trading hours, but worth checking before next RTH open.",
+          "The system could not check in with its database outside of trading hours.",
+          "No immediate action needed. If this repeats close to market open, check the tower and database connection.",
+        ),
+        { cause },
+      );
+      return;
+    }
     // No heartbeat rows yet — normal if backend just started outside RTH.
     // The RTH check will handle it at next market open.
     logger.debug("dead-mans-heartbeat: off-rth check — no heartbeat rows (expected pre-RTH)");

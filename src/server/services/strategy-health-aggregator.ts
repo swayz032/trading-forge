@@ -900,6 +900,15 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
       };
     }
 
+    // HIGH finding (2026-07-17 telemetry-honesty scan): this insert failure was
+    // caught, logged as a warning, then IGNORED — Step 8 below unconditionally
+    // wrote an audit row with status:"success" and the function unconditionally
+    // returned written:true, even when the strategy_health_scores row never
+    // landed. Consumers (composite-health-digest-service.ts already branches on
+    // `!result.written` to skip a strategy) had no honest signal to act on. The
+    // audit row and return value now reflect the INSERT's real outcome.
+    let insertSucceeded = true;
+    let insertErrorMessage: string | null = null;
     try {
       // Typed Drizzle insert — column-name + type-checked at compile time.
       // Wave hardening 2026-06-22 (Defect G4): strategyId column is now UUID in schema.ts
@@ -916,21 +925,26 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
         // disagreements: Pass D deliverable — null in Pass A
       });
     } catch (_insertErr) {
-      // Defensive: log but do not fail the aggregator — Pass A is observability
-      // only. Audit row (Step 8) still emitted so the failure is traceable.
+      insertSucceeded = false;
+      insertErrorMessage = String(_insertErr);
       logger.warn(
-        { strategyId, rowId, err: String(_insertErr), correlationId },
-        "strategy-health-aggregator: strategy_health_scores insert failed — audit row still written",
+        { strategyId, rowId, err: insertErrorMessage, correlationId },
+        "strategy-health-aggregator: strategy_health_scores insert failed — audit row reflects failure, not written",
       );
     }
 
     // ── Step 8: Emit composite_health.evaluated audit row ───────────────────
+    // status + persisted reflect the ACTUAL insert outcome (not an assumption
+    // of success). subsystem fetch + composite computation still ran, so the
+    // evaluation detail is preserved even when persistence failed.
     await insertAuditRowSafe({
       action: "composite_health.evaluated",
       entityType: "strategy",
       entityId: String(strategyId),
       result: {
-        row_id: rowId,
+        row_id: insertSucceeded ? rowId : null,
+        persisted: insertSucceeded,
+        insert_error: insertErrorMessage,
         composite_health_score: composite,
         verdict,
         computed_from_n_subsystems: n,
@@ -945,15 +959,27 @@ export async function aggregateStrategyHealth(strategyId: string): Promise<Aggre
           error: s.error ?? null,
         })),
       },
-      status: "success",
+      status: insertSucceeded ? "success" : "failure",
       decisionAuthority: "system",
       correlationId,
     });
 
     logger.info(
-      { strategyId, verdict, composite, n, weightsVersionId, stalenessAgeHours, correlationId },
+      { strategyId, verdict, composite, n, weightsVersionId, stalenessAgeHours, correlationId, persisted: insertSucceeded },
       "strategy-health-aggregator: composite health evaluated",
     );
+
+    if (!insertSucceeded) {
+      return {
+        written: false,
+        rowId: null,
+        reason: "insert_failed",
+        verdict: verdict ?? null,
+        composite,
+        n,
+        subsystems,
+      };
+    }
 
     return {
       written: true,

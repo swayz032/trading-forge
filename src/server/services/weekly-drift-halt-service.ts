@@ -170,12 +170,43 @@ async function checkStrategyDrift(
   }
 
   if (baselineDaily.length < MIN_OBSERVATIONS) {
-    logger.info(
-      { strategyId, baselineLength: baselineDaily.length },
-      "weekly-drift-halt: no baseline return series — using zero mean (conservative)",
+    // CRITICAL safety finding (2026-07-17 telemetry-honesty scan): this used to
+    // fabricate an all-zero baseline (`Array.from({length:10}, () => 0)`,
+    // "using zero mean (conservative)") and feed it straight into
+    // computeZScore() below. A missing/malformed baseline is a DATA problem,
+    // not evidence the strategy has zero expected daily P&L — but the
+    // synthesized zero baseline was indistinguishable from a real one to the
+    // z-score math, so a data-missing condition could produce an arbitrary
+    // z-score that crosses Z_SCORE_HALT_THRESHOLD and fires a GLOBAL
+    // killSwitch.setMode("HALT", ...) off a made-up number. Skip the drift
+    // check for this cycle instead — a real baseline is required before this
+    // strategy's z-score can be trusted for a HALT-capable decision.
+    logger.warn(
+      { strategyId, strategyName, baselineLength: baselineDaily.length, minRequired: MIN_OBSERVATIONS },
+      "weekly-drift-halt: no real baseline return series — skipping drift check for this cycle (NOT substituting a fabricated zero baseline)",
     );
-    // If no baseline, compare against 0 (expects any positive expectancy)
-    baselineDaily = Array.from({ length: 10 }, () => 0);
+    await insertAuditRow({
+      action: "drift.weekly_2sigma_baseline_unavailable",
+      entityType: "strategy",
+      entityId: strategyId,
+      decisionAuthority: "system",
+      input: {
+        lookback_days: LOOKBACK_DAYS,
+        live_trade_count: liveTrades.length,
+        live_daily_count: liveDaily.length,
+        baseline_daily_count: baselineDaily.length,
+        min_required: MIN_OBSERVATIONS,
+      } as Record<string, unknown>,
+      result: {
+        reason: "no_real_baseline_return_series",
+      } as Record<string, unknown>,
+      status: "warning",
+      correlationId,
+    }).catch((err) =>
+      logger.error({ err, strategyId }, "weekly-drift-halt: baseline-unavailable audit_log write failed"),
+    );
+
+    return { strategyId, strategyName, outcome: "insufficient_data", reason: "no_baseline_data" };
   }
 
   // ── 3. Compute z-score ─────────────────────────────────────────────────────

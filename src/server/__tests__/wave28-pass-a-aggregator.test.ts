@@ -422,6 +422,78 @@ describe("aggregateStrategyHealth — G4 strategy_id UUID regression (Wave harde
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// HIGH finding fix (2026-07-17 telemetry-honesty scan): a swallowed INSERT
+// failure previously still wrote a composite_health.evaluated audit row with
+// status:"success" and returned written:true — an operator (or the
+// composite-health-digest-service.ts consumer, which branches on
+// `!result.written`) would never learn the row was never persisted.
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("aggregateStrategyHealth — strategy_health_scores INSERT failure (HIGH finding fix)", () => {
+  it("returns written=false with reason=insert_failed when the INSERT throws", async () => {
+    process.env.MIN_COMPOSITE_SUBSYSTEMS = "0";
+    mockDbSelect.mockReturnValue(buildSelectChain([]));
+    mockDbInsert.mockReturnValue({
+      values: vi.fn().mockRejectedValue(new Error("relation strategy_health_scores does not exist")),
+    });
+
+    const result = await aggregateStrategyHealth(STRATEGY_ID);
+
+    expect(result.written).toBe(false);
+    expect(result.reason).toBe("insert_failed");
+    expect(result.rowId).toBeNull();
+    // Composite/verdict/subsystems are still returned — the evaluation itself
+    // ran fine, only persistence failed.
+    expect(result.subsystems).toHaveLength(13);
+  });
+
+  it("emits composite_health.evaluated with status=failure and persisted=false — NOT status=success (pre-fix regression)", async () => {
+    process.env.MIN_COMPOSITE_SUBSYSTEMS = "0";
+    mockDbSelect.mockReturnValue(buildSelectChain([]));
+    mockDbInsert.mockReturnValue({
+      values: vi.fn().mockRejectedValue(new Error("connection terminated unexpectedly")),
+    });
+
+    await aggregateStrategyHealth(STRATEGY_ID);
+
+    const auditMock = insertAuditRowSafe as unknown as MockFn;
+    const auditCalls = auditMock.mock.calls as Array<
+      [{ action: string; status: string; result: Record<string, unknown> }]
+    >;
+    const evaluatedCall = auditCalls.find(([args]) => args.action === "composite_health.evaluated");
+    expect(evaluatedCall).toBeDefined();
+    // Pre-fix behavior: this asserted "success" unconditionally, even though
+    // the INSERT above threw. The audit row must now tell the truth.
+    expect(evaluatedCall![0].status).toBe("failure");
+    expect(evaluatedCall![0].result.persisted).toBe(false);
+    expect(evaluatedCall![0].result.row_id).toBeNull();
+    expect(evaluatedCall![0].result.insert_error).toContain("connection terminated");
+  });
+
+  it("regression guard: successful INSERT still reports written=true, status=success, persisted=true", async () => {
+    process.env.MIN_COMPOSITE_SUBSYSTEMS = "0";
+    mockDbSelect.mockReturnValue(buildSelectChain([]));
+    mockDbInsert.mockReturnValue({
+      values: vi.fn().mockResolvedValue([{ id: 1n }]),
+    });
+
+    const result = await aggregateStrategyHealth(STRATEGY_ID);
+    expect(result.written).toBe(true);
+    expect(result.rowId).toBeDefined();
+
+    const auditMock = insertAuditRowSafe as unknown as MockFn;
+    const auditCalls = auditMock.mock.calls as Array<
+      [{ action: string; status: string; result: Record<string, unknown> }]
+    >;
+    const evaluatedCall = auditCalls.find(([args]) => args.action === "composite_health.evaluated");
+    expect(evaluatedCall).toBeDefined();
+    expect(evaluatedCall![0].status).toBe("success");
+    expect(evaluatedCall![0].result.persisted).toBe(true);
+    expect(evaluatedCall![0].result.row_id).toBe(result.rowId);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // 6. fail-CLOSED: aggregator-level throw bubbles up + audit row written
 // ─────────────────────────────────────────────────────────────────────────────
 

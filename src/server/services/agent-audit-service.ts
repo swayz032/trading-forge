@@ -25,7 +25,7 @@ import { broadcastSSE } from "../routes/sse.js";
 // Importing from ../index.js drags the full route/service graph into test
 // isolation runs that mock db/schema.js partially, causing spurious failures.
 import { logger } from "../lib/logger.js";
-import { getSchedulerHealth } from "../scheduler.js";
+import { getSchedulerHealth, getAllJobHealth } from "../scheduler.js";
 
 // ─── Domain Definitions ─────────────────────────────────────────────
 
@@ -331,10 +331,22 @@ async function probeRisk(): Promise<DomainHealth> {
   }
 }
 
-async function probeScheduler(): Promise<DomainHealth> {
+// HIGH finding (2026-07-17 telemetry-honesty scan): getSchedulerHealth() only
+// records a timestamp on cron SUCCESS (scheduler.ts::schedulerHealth[name] =
+// new Date() runs after the try succeeds). A job that fails on EVERY run
+// never gets an entry there — it is invisible to a staleness check keyed off
+// that map alone and the probe reports "healthy". scheduler.ts already
+// tracks failures independently via jobHealthTracker (consecutiveFailures /
+// lastFailure / disabled), exposed read-only via getAllJobHealth() — this
+// probe now also consults that map so a consistently-failing job (with or
+// without ANY prior success) is surfaced as degraded/down instead of absent.
+const SCHEDULER_PROBE_FAILURE_THRESHOLD = 3;
+
+export async function probeScheduler(): Promise<DomainHealth> {
   const start = Date.now();
   try {
     const health = getSchedulerHealth();
+    const jobHealth = getAllJobHealth();
     const now = Date.now();
 
     const staleJobs: string[] = [];
@@ -343,20 +355,60 @@ async function probeScheduler(): Promise<DomainHealth> {
       if (ageH > 25) staleJobs.push(name); // More than a day without running
     }
 
+    // Jobs with sustained consecutive failures (or auto-disabled after
+    // repeated failure). This catches the case a stale-timestamp check can
+    // never catch: a job that has NEVER once succeeded has no entry in
+    // `health` at all, so it would otherwise never appear anywhere in this
+    // probe's output.
+    const failingJobs: string[] = [];
+    const neverSucceededFailingJobs: string[] = [];
+    const disabledJobs: string[] = [];
+    for (const [name, jh] of jobHealth.entries()) {
+      if (jh.disabled) disabledJobs.push(name);
+      if (jh.consecutiveFailures >= SCHEDULER_PROBE_FAILURE_THRESHOLD) {
+        failingJobs.push(name);
+        if (!(name in health)) neverSucceededFailingJobs.push(name);
+      }
+    }
+
     const recommendations: string[] = [];
     if (staleJobs.length > 0) {
       recommendations.push(`Stale scheduler jobs: ${staleJobs.join(", ")}`);
     }
-    if (Object.keys(health).length === 0) {
+    if (neverSucceededFailingJobs.length > 0) {
+      recommendations.push(
+        `Jobs failing on EVERY run (no recorded success ever): ${neverSucceededFailingJobs.join(", ")}`,
+      );
+    }
+    if (failingJobs.length > 0) {
+      recommendations.push(`Jobs with ${SCHEDULER_PROBE_FAILURE_THRESHOLD}+ consecutive failures: ${failingJobs.join(", ")}`);
+    }
+    if (disabledJobs.length > 0) {
+      recommendations.push(`Jobs auto-disabled after repeated failure: ${disabledJobs.join(", ")}`);
+    }
+    if (Object.keys(health).length === 0 && jobHealth.size === 0) {
       recommendations.push("No scheduler jobs have ever run — scheduler may not be initialized");
     }
 
+    const status: DomainHealth["status"] =
+      disabledJobs.length > 0 || neverSucceededFailingJobs.length > 0
+        ? "down"
+        : staleJobs.length > 0 || failingJobs.length > 0
+          ? "degraded"
+          : "healthy";
+
     return {
       domain: "scheduler",
-      status: staleJobs.length > 0 ? "degraded" : "healthy",
+      status,
       latencyMs: Date.now() - start,
-      errorCount: staleJobs.length,
-      details: { registeredJobs: Object.keys(health).length, staleJobs },
+      errorCount: staleJobs.length + failingJobs.length,
+      details: {
+        registeredJobs: Object.keys(health).length,
+        staleJobs,
+        failingJobs,
+        neverSucceededFailingJobs,
+        disabledJobs,
+      },
       recommendations,
     };
   } catch {

@@ -1,0 +1,12 @@
+# telemetry-honesty-safety-adjacent (2026-07-17): scripts/backup-n8n-data.mjs
+# opens with a `#!/usr/bin/env node` shebang. With core.autocrlf=true and no
+# .gitattributes, Windows checkouts normalize the committed LF blob to CRLF
+# on disk — harmless for `node` itself (it strips \r\n shebangs fine), but
+# esbuild's shebang-stripping regex (used by Vite/Vitest's transform
+# pipeline) does not handle a \r\n-terminated shebang and throws
+# "SyntaxError: Invalid or unexpected token" at import time, breaking
+# scripts/backup-n8n-data.mjs's own test suite
+# (src/server/__tests__/backup-n8n-data-fail-loud.test.ts) on every fresh
+# Windows checkout. Force LF for this file so the on-disk shebang always
+# parses regardless of the checking-out environment's autocrlf setting.
+scripts/backup-n8n-data.mjs text eol=lf

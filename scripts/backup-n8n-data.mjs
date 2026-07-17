@@ -74,17 +74,28 @@ export async function runBackup({ outDir = "backups/n8n", logger = console } = {
     rowCounts: {},
   };
 
+  // HIGH finding (2026-07-17 telemetry-honesty scan): a per-table read failure
+  // used to be swallowed (dump.tables[t] = null, warn-only) while the backup
+  // still wrote a .json.gz file and returned a success result. restore-n8n-data.mjs
+  // TRUNCATEs every table unconditionally then only re-INSERTs tables where
+  // Array.isArray(rows) is true — so a backup with even ONE failed table
+  // (e.g. workflow_entity) restores as a silent full wipe of that table,
+  // with the backup file itself giving no indication anything was wrong.
+  // Any per-table read failure now aborts the whole backup loudly instead of
+  // being recorded as a partial success.
   try {
     for (const t of TABLES) {
+      let rows;
       try {
-        const rows = await sql.unsafe(`SELECT * FROM n8n."${t}"`);
-        dump.tables[t] = rows;
-        dump.rowCounts[t] = rows.length;
+        rows = await sql.unsafe(`SELECT * FROM n8n."${t}"`);
       } catch (err) {
-        logger.warn(`[backup-n8n-data] skip table ${t}:`, err.message);
-        dump.tables[t] = null;
-        dump.rowCounts[t] = -1;
+        logger.error(`[backup-n8n-data] FAILED reading table ${t}:`, err.message);
+        throw new Error(
+          `backup-n8n-data: failed reading table "${t}" — aborting backup (no partial/incomplete backup file will be written): ${err.message}`,
+        );
       }
+      dump.tables[t] = rows;
+      dump.rowCounts[t] = rows.length;
     }
   } finally {
     await sql.end();

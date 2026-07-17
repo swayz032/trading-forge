@@ -37,7 +37,7 @@ import { paperSessions, deadLetterQueue, backtests } from "../db/schema.js";
 import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import { checkSystemMapDrift, type RegistrySubsystemSummary } from "../lib/system-topology.js";
 import { getDeepARRuntimeStatus, type DeepARRuntimeStatus } from "../services/deepar-service.js";
-import { getQuantumRuntimeStatus } from "../services/quantum-mc-service.js";
+import { getQuantumRuntimeStatus, type QuantumRuntimeStatus } from "../services/quantum-mc-service.js";
 import { getPythonSubprocessStats } from "../lib/python-runner.js";
 
 const router = Router();
@@ -97,6 +97,28 @@ export function deriveDeepARDashboardStatus(
     status: "degraded",
     staleReason: trainingFresh ? "forecast_stale" : "training_stale",
   };
+}
+
+// MED finding fix (2026-07-17 telemetry-honesty scan): the quantum tile used
+// to hardcode status:"ok" on promise settlement alone
+// (`quantumResult.status === "fulfilled" ? { status: "ok", ...quantumResult.value }`)
+// — even when quantumResult.value.latestRunStatus itself said "failed".
+// getQuantumRuntimeStatus() never throws on a failed quantum run (a failed
+// run is a normal DB row, not an exception), so "the promise resolved" says
+// nothing about whether the run it describes actually succeeded. Mirrors the
+// deriveDeepARDashboardStatus() pattern above: read the payload's own
+// success/failure field, not just settlement.
+export function deriveQuantumDashboardStatus(
+  runtimeStatus: Pick<QuantumRuntimeStatus, "latestRunStatus">,
+): { status: "ok" | "failed" | "pending" | "unknown" } {
+  const { latestRunStatus } = runtimeStatus;
+  if (latestRunStatus === "completed") return { status: "ok" };
+  if (latestRunStatus === "failed") return { status: "failed" };
+  if (latestRunStatus === "running" || latestRunStatus === "pending") return { status: "pending" };
+  // null — no quantum run has ever completed or failed (dormant/never-used,
+  // consistent with quantum being challenger-only/advisory). Not itself
+  // evidence of a problem, but distinct from an actually-observed "ok" run.
+  return { status: "unknown" };
 }
 
 // ─── Individual subsystem checks ──────────────────────────────
@@ -618,7 +640,7 @@ router.get("/dashboard", async (req: Request, res: Response) => {
           : { status: "error", error: deeparResult.reason instanceof Error ? deeparResult.reason.message : String(deeparResult.reason) },
       quantum:
         quantumResult.status === "fulfilled"
-          ? { status: "ok", ...quantumResult.value }
+          ? { ...quantumResult.value, ...deriveQuantumDashboardStatus(quantumResult.value) }
           : { status: "error", error: quantumResult.reason instanceof Error ? quantumResult.reason.message : String(quantumResult.reason) },
     },
     paperSessions: paperCounts,

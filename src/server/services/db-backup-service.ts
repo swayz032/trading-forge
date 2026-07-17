@@ -177,6 +177,74 @@ export async function runPgDump(
   return { filePath, sizeBytes: stat.size };
 }
 
+// ─── Dump content sanity check ─────────────────────────────────────────────────
+// HIGH finding (2026-07-17 telemetry-honesty scan): the caller previously only
+// checked that pg_dump exited without throwing, then reported success. pg_dump
+// exits 0 even against an empty/blank database or a wrong DATABASE_URL — a
+// clean exit code is not proof the dump is restorable. This check reads the
+// dump back and confirms it is (a) plausibly large and (b) actually contains
+// CREATE TABLE statements for a couple of core, always-present tables, before
+// the caller is allowed to report db_backup.completed.
+
+/**
+ * Minimum plausible size (bytes) for a real Trading Forge schema dump. A dump
+ * against an empty/wrong database still exits 0 but produces a tiny file
+ * (pg_dump header/comments only, no CREATE TABLE statements) — this catches
+ * that silently-successful-but-empty case. Overridable for environments with
+ * a genuinely small schema footprint.
+ */
+const MIN_PLAUSIBLE_DUMP_BYTES = Number(process.env["DB_BACKUP_MIN_SIZE_BYTES"] ?? 10_000);
+
+/**
+ * Core tables that must always exist in a real Trading Forge schema dump.
+ * `audit_log` is the append-only audit trail this whole system depends on
+ * for reconstructability; `strategies` is the pipeline's root entity. If
+ * either is missing, the dump is against the wrong database or an
+ * incomplete/corrupt schema — restoring it would silently wipe production.
+ */
+const EXPECTED_DUMP_TABLE_MARKERS = ["CREATE TABLE public.audit_log", "CREATE TABLE public.strategies"];
+
+export interface DumpValidationResult {
+  valid: boolean;
+  reason?: string;
+}
+
+/**
+ * Sanity-check that a completed pg_dump actually contains real schema data,
+ * not just an empty/near-empty file. Called by runDbBackup() after a
+ * successful pg_dump invocation and before the backup is reported as
+ * completed — a non-throwing pg_dump exit alone is NOT sufficient evidence
+ * of a real, restorable backup.
+ */
+export function validateDumpContents(filePath: string, sizeBytes: number): DumpValidationResult {
+  if (sizeBytes < MIN_PLAUSIBLE_DUMP_BYTES) {
+    return {
+      valid: false,
+      reason: `dump file is only ${sizeBytes} bytes (minimum plausible size ${MIN_PLAUSIBLE_DUMP_BYTES}) — likely an empty or wrong-database dump`,
+    };
+  }
+
+  let contents: string;
+  try {
+    contents = fs.readFileSync(filePath, "utf8");
+  } catch (err) {
+    return {
+      valid: false,
+      reason: `could not read dump file back for validation: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+
+  const missingMarkers = EXPECTED_DUMP_TABLE_MARKERS.filter((marker) => !contents.includes(marker));
+  if (missingMarkers.length > 0) {
+    return {
+      valid: false,
+      reason: `dump is missing expected table(s): ${missingMarkers.join(", ")} — dump may be against the wrong database or an incomplete schema`,
+    };
+  }
+
+  return { valid: true };
+}
+
 // ─── S3 push ──────────────────────────────────────────────────────────────────
 
 /**
@@ -415,6 +483,32 @@ export async function runDbBackup(): Promise<DbBackupResult> {
       { correlationId, dumpPath, error },
     );
     return { status: "failed", error, durationMs: Date.now() - t0 };
+  }
+
+  // ─── Sanity-check dump contents before reporting success ────────────────────
+  // A clean pg_dump exit code alone does not prove the dump is real or
+  // restorable (e.g. DATABASE_URL pointed at an empty/wrong database).
+  const dumpValidation = validateDumpContents(dumpResult.filePath, dumpResult.sizeBytes);
+  if (!dumpValidation.valid) {
+    const error = `pg_dump exited cleanly but produced an invalid backup: ${dumpValidation.reason}`;
+    logger.error({ correlationId, filePath: dumpResult.filePath, sizeBytes: dumpResult.sizeBytes, reason: dumpValidation.reason }, "db-backup: dump content validation FAILED");
+    await _emitFailedAudit(correlationId, error, t0);
+    notifyCritical(
+      "DB Backup FAILED: dump content validation failed",
+      appendFamilyGradePostscript(
+        `pg_dump exited without error but the resulting file failed sanity checks: ${dumpValidation.reason}\n\nFile: ${dumpResult.filePath} (${dumpResult.sizeBytes} bytes). Database is NOT reliably backed up.`,
+        "The automated backup of trading data ran but produced a suspicious/empty file — the backup is NOT trustworthy.",
+        "No action needed for now — the bot will retry. Call Tony if this persists for more than 24 hours.",
+      ),
+      { correlationId, filePath: dumpResult.filePath, sizeBytes: dumpResult.sizeBytes, reason: dumpValidation.reason },
+    );
+    return {
+      status: "failed",
+      filePath: dumpResult.filePath,
+      sizeBytes: dumpResult.sizeBytes,
+      error,
+      durationMs: Date.now() - t0,
+    };
   }
 
   // ─── Off-tower push ──────────────────────────────────────────────────────────

@@ -58,6 +58,14 @@ let _readdirSyncImpl: ((dir: string) => string[]) | null = null;
 // Per-test existsSync override
 let _existsSyncImpl: ((p: string) => boolean) | null = null;
 
+// Per-test readFileSync override — default returns a plausible dump
+// containing the table markers validateDumpContents() looks for (HIGH
+// finding fix: runDbBackup() now reads the dump back before reporting
+// success, so the mock must return realistic dump text by default).
+const DEFAULT_DUMP_TEXT =
+  "-- PostgreSQL database dump\nCREATE TABLE public.audit_log (id uuid PRIMARY KEY);\nCREATE TABLE public.strategies (id uuid PRIMARY KEY);\n";
+let _readFileSyncImpl: ((p: string) => string) | null = null;
+
 // ─── Mock: node:fs ────────────────────────────────────────────────────────────
 
 vi.mock("node:fs", () => ({
@@ -70,6 +78,7 @@ vi.mock("node:fs", () => ({
     readdirSync: vi.fn((dir: string) => (_readdirSyncImpl ? _readdirSyncImpl(dir) : [])),
     unlinkSync: vi.fn((p: string) => { _unlinkSyncCalls.push(p); }),
     createReadStream: vi.fn((_p: string) => ({ pipe: vi.fn(), on: vi.fn() })),
+    readFileSync: vi.fn((p: string) => (_readFileSyncImpl ? _readFileSyncImpl(p) : DEFAULT_DUMP_TEXT)),
   },
   existsSync: vi.fn((p: string) => (_existsSyncImpl ? _existsSyncImpl(p) : true)),
   mkdirSync: vi.fn((p: string) => { _mkdirSyncCalls.push(p); }),
@@ -79,6 +88,7 @@ vi.mock("node:fs", () => ({
   readdirSync: vi.fn((dir: string) => (_readdirSyncImpl ? _readdirSyncImpl(dir) : [])),
   unlinkSync: vi.fn((p: string) => { _unlinkSyncCalls.push(p); }),
   createReadStream: vi.fn((_p: string) => ({ pipe: vi.fn(), on: vi.fn() })),
+  readFileSync: vi.fn((p: string) => (_readFileSyncImpl ? _readFileSyncImpl(p) : DEFAULT_DUMP_TEXT)),
 }));
 
 // ─── Mock: node:child_process ─────────────────────────────────────────────────
@@ -193,6 +203,7 @@ function resetMocks() {
   _statSyncImpl = null;
   _readdirSyncImpl = null;
   _existsSyncImpl = null;
+  _readFileSyncImpl = null;
   vi.clearAllMocks();
 }
 
@@ -253,13 +264,24 @@ describe("db-backup-service: runDbBackup()", () => {
   });
 
   // ─── Case 2: Disabled ───────────────────────────────────────────────────────
-  it("2. disabled via DB_BACKUP_ENABLED=false → status=disabled, no audit rows", async () => {
+  // NOTE (2026-07-17 telemetry-honesty scan, pre-existing test bug found on
+  // inspection — not part of this wave's 7 findings, fixed on sight per
+  // zero-carry-forward): this assertion predates "FIX 1 (deepscan10)"
+  // (db-backup-service.ts's disabled path deliberately fires ONE
+  // db_backup.disabled_by_env WARNING audit row + Discord WARN, so a
+  // continuously-disabled backup is never silent) and was never updated to
+  // match. Corrected to assert the actual, intended, already-shipped
+  // behavior — no production code changed here.
+  it("2. disabled via DB_BACKUP_ENABLED=false → status=disabled, emits ONE disabled_by_env WARNING audit (not silent)", async () => {
     process.env["DB_BACKUP_ENABLED"] = "false";
     const { runDbBackup } = await import("../services/db-backup-service.js");
     const result = await runDbBackup();
 
     expect(result.status).toBe("disabled");
-    expect(_auditRowsWritten).toHaveLength(0);
+    expect(_auditRowsWritten).toHaveLength(1);
+    expect(_auditRowsWritten[0]).toMatchObject({ action: "db_backup.disabled_by_env", status: "warning" });
+    // Discord WARN (notifyWarning), not CRITICAL — a deliberate env-driven
+    // disable is not an emergency.
     expect(_notifyCriticalCalls).toHaveLength(0);
   });
 
@@ -342,6 +364,48 @@ describe("db-backup-service: runDbBackup()", () => {
     expect(
       _notifyCriticalCalls.find((c) => c.title.toLowerCase().includes("off-tower")),
     ).toBeDefined();
+  });
+
+  // ─── Case 18: dump content sanity check — HIGH finding fix ─────────────────
+  // (2026-07-17 telemetry-honesty scan) runDbBackup() previously only checked
+  // that pg_dump exited without throwing, then unconditionally reported
+  // success — an empty/wrong-database dump (clean exit code, near-empty file)
+  // would report db_backup.completed with no evidence the backup is real.
+  it("18. pg_dump exits cleanly but dump is too small (empty/wrong-DB dump) → status=failed, no db_backup.completed", async () => {
+    _statSyncImpl = () => ({ size: 200, mtimeMs: Date.now() }); // far below MIN_PLAUSIBLE_DUMP_BYTES
+    const { runDbBackup } = await import("../services/db-backup-service.js");
+    const result = await runDbBackup();
+
+    expect(result.status).toBe("failed");
+    expect(result.error).toContain("invalid backup");
+
+    expect(_auditRowsWritten.find((r) => r.action === "db_backup.completed")).toBeUndefined();
+    const failedAudit = _auditRowsWritten.find((r) => r.action === "db_backup.failed");
+    expect(failedAudit).toBeDefined();
+    expect(
+      _notifyCriticalCalls.find((c) => c.title.toLowerCase().includes("validation failed")),
+    ).toBeDefined();
+  });
+
+  it("19. pg_dump exits cleanly with plausible size but missing expected tables (wrong DB) → status=failed, no db_backup.completed", async () => {
+    _readFileSyncImpl = () => "-- PostgreSQL database dump\nCREATE TABLE public.some_other_schema_entirely (id int);\n".repeat(500);
+    const { runDbBackup } = await import("../services/db-backup-service.js");
+    const result = await runDbBackup();
+
+    expect(result.status).toBe("failed");
+    expect(result.error).toContain("invalid backup");
+    expect(result.error).toContain("audit_log");
+
+    expect(_auditRowsWritten.find((r) => r.action === "db_backup.completed")).toBeUndefined();
+    expect(_auditRowsWritten.find((r) => r.action === "db_backup.failed")).toBeDefined();
+  });
+
+  it("20. real-looking dump (plausible size + expected table markers) → status=success (regression guard for case 18/19 fix)", async () => {
+    const { runDbBackup } = await import("../services/db-backup-service.js");
+    const result = await runDbBackup();
+
+    expect(result.status).toBe("success");
+    expect(_auditRowsWritten.find((r) => r.action === "db_backup.completed")).toBeDefined();
   });
 });
 
