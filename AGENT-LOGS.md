@@ -4,6 +4,16 @@
 
 ---
 
+### Session Log — 2026-07-17 CAMPAIGN W4+W5 — evidence artifacts LANDED `cef0402d` + doc-rot sweep LANDED `713d8f88`
+
+**Mission:** W4 (evidence, read-only) + W5's independent doc-rot items, continuing autonomously per operator directive.
+
+**W4 landed `cef0402d`:** (1) h5 structural-stop A/B reports ×3 (`docs/replay-results/2026-07-17T0408*-h5-*.md`, synthetic a-priori magnitude for the operator's D2 parity-flag decision): **MES 186/186 trades change** (avg risk 9.06→6.96pt, stop-exits 2→77), **MCL 197/200** (0.527→0.414pt, 2→83), **MNQ nearly unchanged** (36/171 — the 62pt ceiling means ATR×1.5 binds anyway) → flipping `BACKTEST_STRUCTURAL_STOP_PARITY_ENABLED` re-baselines MES/MCL heavily; flag stays OFF, operator decision. (2) `scripts/exit-style-inventory.ts` (READ-ONLY, deliberately NO --apply per §13). **Live-DB run: 120 strategies, adaptive cohort EMPTY** — all static_styleC(default-absent), 117 CANDIDATE + 3 NEEDS_ARCHETYPE → W2's static-path geometry fix covers 100% of the current library.
+
+**W5 (independent items) landed `713d8f88`:** §12 consistency row un-staled (gate WIRED since 2026-06-22 FIX A, opt-in lane, default OFF — the stale claim misled the external GPT review); §2b pinned sizing 6/6/18→9/9/18+ramp+C-05 note; **§5 Phase-1 → $250–$1,000+/day + OPERATOR DIRECTIVE (2026-07-16): daily dollar figures are OBSERVED outcome ranges, never quotas/ceilings; no fixed TP; nothing caps a winning day**; AGENTS.md ceilings 40pt MNQ/25-tick MCL→62pt/1.00pt + base 9/9/18 (×2). All stale-string greps → 0. §8 doctrine rewrite deliberately deferred to land WITH M3's code flip.
+
+**Campaign scoreboard:** W0 ✅ W1 `78f3475a` ✅ W2 `d694c61a` ✅ W2b `bd47b8a8` ✅ W4 `cef0402d` ✅ W5-indep `713d8f88` ✅. Remaining: W3B (next — mostly disjoint), M1b, M2/M3/W3A/W6 (goalscan-co-edited files — coordinate), M1a (operator's Massive docs), W7 close-out.
+
 ### Session Log — 2026-07-16 CAMPAIGN W2b — C-05 sizing "lowest wins" (D9) LANDED `bd47b8a8`, band 7 after 3 grade rounds, zero carry-forwards
 
 **Mission:** Wave 2b — fix C-05 (external audit): healthy-account (≥85%) sizing did `max(base_contracts, min(pyramidTier, riskCap, firmCap, liquidityCap, ddRoomCap))` — the `max(base, …)` floor OVERRODE the risk-derived 2% ceiling back up to base, contradicting CLAUDE.md §4 "risk math is the CEILING, lowest wins." Live in paper (dd-room-bounded ~5); UNBOUNDED in backtests (base 9 where risk said 1). **D9 (operator, 2026-07-16): risk math always wins.**

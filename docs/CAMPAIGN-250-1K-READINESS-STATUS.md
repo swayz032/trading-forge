@@ -27,8 +27,8 @@ Plus: daily upside is UNCAPPED (no fixed TP) → §5 doc $250-500 → $250-1000+
 | **M3** PAPER authority + 5-10d gate | ⏳ **RE-SCOPE** | goalscan (op-auth `0896aaca`) ALREADY did the manual `_promoteStrategyInner` gate parity + SHADOW→PAPER enforcement. M3 shrinks to the UN-done parts: PAPER-authority `stopStream` inversion (lifecycle :2912-2968) + `paper.start_refused_paper_state` removal (routes/paper.ts) + the 5-10-qualifying-day gate + §8 doctrine docs. Re-read goalscan's lifecycle-service.ts diff before dispatching to avoid duplication/conflict. |
 | **W3A** execution hardening | ⏳ | pin to W2 SHA |
 | **W3B** prop-firm hygiene | ⏳ disjoint/parallel | firm_profiles packet (feeds C4 gate), payout-cap wiring, comment sweep |
-| **W4** evidence artifacts | ⏳ read-only | h5 A/B report ×3, exit-style inventory |
-| **W5** doc-rot + daily-uncapped | ⏳ | parent-session docs sweep |
+| **W4** evidence artifacts | ✅ **LANDED `cef0402d`** | h5 A/B ×3 (MES/MCL re-baseline heavily, MNQ ~unchanged — D2 evidence, flag stays OFF); exit-style inventory: **adaptive cohort EMPTY**, 120 strategies all static_styleC |
+| **W5** doc-rot + daily-uncapped | ✅ **LANDED `713d8f88`** (indep. items) | §12 consistency un-staled; §2b 9/9/18; **§5 → $250–$1,000+/day, figures = observed outcomes never quotas/ceilings**; AGENTS ceilings/base fixed. §8 rewrite = M3-gated |
 | **W6** shadow profit governor | ⏳ | pin to M2 SHA; observability-only |
 | **W7** close-out + wiring audit | ⏳ | campaign-wide end-to-end integration + Go-Live Register doc |
 
