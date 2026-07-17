@@ -1604,6 +1604,7 @@ class SealedReadDriver:
         dispatch_record: dict | None = None,
         live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
         live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
+        readable_video_ids: list | None = None,
     ) -> dict:
         """Gate (Module A) THEN extract. On gate refusal returns
         ``{ok:False, allowed:False, stage:"seal_gate", halt_reason, gate,
@@ -1627,6 +1628,17 @@ class SealedReadDriver:
             }
 
         verified = gate["record"]["verify"]
+        # SOURCE-ATTRITION (R-028.3, ADDITIVE): restrict the EXTRACTION video set
+        # to the readable subset so an UNREADABLE-AT-SOURCE video (no dispatched
+        # artifacts) does not force a fail-closed missing-artifact HALT. The gate
+        # record (seal_verification) stays the FULL sealed manifest — only what
+        # gets read is filtered. None => full manifest (byte-unchanged).
+        if readable_video_ids is not None:
+            allowed = set(readable_video_ids)
+            verified = {
+                **verified,
+                "video_ids": [v for v in (verified.get("video_ids") or []) if v in allowed],
+            }
         extraction = run_extraction_stage(
             verified,
             mode,
@@ -1664,6 +1676,7 @@ class SealedReadDriver:
         propose_fn: Callable[[str, str], str | None] | None = None,
         live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
         live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
+        readable_video_ids: list | None = None,
     ) -> dict:
         """FULL composition THROUGH MODULE D: gate (A) -> extraction (B) ->
         panels+certificate (C) -> HUMAN-BLIND TWO-STAGE RATER LAYER (D).
@@ -1688,6 +1701,7 @@ class SealedReadDriver:
             dispatch_record=dispatch_record,
             live_phase_a_draw_fn=live_phase_a_draw_fn,
             live_phase_b_fn=live_phase_b_fn,
+            readable_video_ids=readable_video_ids,
         )
         if not full.get("ok"):
             # Gate refused -> Module D UNREACHABLE (compose-order short-circuit).
@@ -1724,6 +1738,7 @@ class SealedReadDriver:
         dispatch_record: dict | None = None,
         live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
         live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
+        readable_video_ids: list | None = None,
     ) -> dict:
         """FULL composition: gate (A) -> extraction (B) -> panels+certificate (C).
 
@@ -1748,6 +1763,7 @@ class SealedReadDriver:
             dispatch_record=dispatch_record,
             live_phase_a_draw_fn=live_phase_a_draw_fn,
             live_phase_b_fn=live_phase_b_fn,
+            readable_video_ids=readable_video_ids,
         )
         if not base.get("ok"):
             # Gate refused -> Module C UNREACHABLE (compose-order short-circuit).
@@ -1789,6 +1805,8 @@ class SealedReadDriver:
         epoch: object | None = None,
         live_phase_a_draw_fn: Callable[[str, int, dict], object] | None = None,
         live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
+        source_attrition: dict | None = None,
+        readable_video_ids: list | None = None,
     ) -> dict:
         """FULL composition THROUGH MODULE E: gate (A) -> extraction (B) ->
         panels+certificate (C) -> rater layer (D) -> VERDICT MATH (E).
@@ -1808,7 +1826,14 @@ class SealedReadDriver:
         bug: the seal-day conductor supplies these.
 
         Leaves the F seam (full-dress rehearsal orchestration + drift guard)
-        clean — no re-verify, no drift guard computed here."""
+        clean — no re-verify, no drift guard computed here.
+
+        ``readable_video_ids`` (R-028.3, ADDITIVE): restricts extraction to the
+        readable subset so unreadable-at-source videos don't HALT. If None and a
+        ``source_attrition`` record is supplied, the readable list is taken from
+        it. None + no attrition => full manifest (byte-unchanged)."""
+        if readable_video_ids is None and isinstance(source_attrition, dict):
+            readable_video_ids = source_attrition.get("readable")
         composed = self.run_with_raters(
             manifest_path,
             mode,
@@ -1824,6 +1849,7 @@ class SealedReadDriver:
             propose_fn=propose_fn,
             live_phase_a_draw_fn=live_phase_a_draw_fn,
             live_phase_b_fn=live_phase_b_fn,
+            readable_video_ids=readable_video_ids,
         )
         if not composed.get("ok"):
             # Gate refused -> Module E UNREACHABLE (compose-order short-circuit).
@@ -1837,7 +1863,9 @@ class SealedReadDriver:
             driver_commit=driver_commit,
             epoch=epoch,
         )
-        verdict = run_verdict_stage(composed["rater_layer"], instrument_stamps, mode)
+        verdict = run_verdict_stage(
+            composed["rater_layer"], instrument_stamps, mode, source_attrition=source_attrition
+        )
         return {
             "ok": True,
             "allowed": True,
@@ -2656,6 +2684,171 @@ _REQUIRED_VALIDITY_ELEMENTS = (
     "epoch_read_once",
 )
 
+# --------------------------------------------------------------------------- #
+# SOURCE-ATTRITION (ADVISOR-RULINGS R-028.3) — a sealed video whose transcript
+# cannot be fetched (or hash-mismatches the sealed record WITH source-side
+# evidence) is UNREADABLE-AT-SOURCE: excluded from BOTH numerator and denominator
+# of the >=60% bar (it can neither convict nor acquit the reader — the read
+# measures THE READER, not YouTube's link-rot, on the Option-R plumbing-exclusion
+# precedent). A hash-mismatch whose evidence is LOCAL-side (not source) stays a
+# HALT, never attrition. Readable-N floor >=9 of 12: below it the read is
+# INDETERMINATE_SOURCE_ATTRITION and ESCALATES (a terminal verdict on <9 is noise
+# wearing a bar). The worst-case sensitivity line recomputes the fraction with all
+# unreadables counted NOT-CLEAN (Option-R pattern) — survives => attrition-robust.
+#
+# This is PURE + ADDITIVE: the rehearsal/staging verdict path never supplies a
+# source_attrition record, so its verdict dict is byte-unchanged. Only the sealed
+# path (plan stage produces the record) threads it in.
+# --------------------------------------------------------------------------- #
+
+#: Readable-N floor: >=9 of 12 sealed videos must be readable to compute a verdict.
+READABLE_N_FLOOR = 9
+#: The escalation verdict when the readable-N floor is not met (no fidelity read).
+INDETERMINATE_SOURCE_ATTRITION = "INDETERMINATE_SOURCE_ATTRITION"
+
+
+def classify_source_attrition(
+    sealed_video_ids,
+    fetch_evidence: dict,
+    *,
+    floor: int = READABLE_N_FLOOR,
+) -> dict:
+    """Partition the sealed video set into READABLE / UNREADABLE-AT-SOURCE /
+    LOCAL-HALT from the plan stage's per-video fetch evidence (R-028.3).
+
+    ``fetch_evidence`` maps ``video_id -> {fetched:bool, char_count:int|None,
+    content_hash:str|None, sealed_content_hash:str|None, anomaly_side:
+    "source"|"local"|None, final_outcome:str|None, error:str|None}``.
+
+    Rules (fail-closed):
+      * ``fetched`` False (transcript could not be fetched) -> UNREADABLE-AT-SOURCE.
+      * ``fetched`` True AND a sealed content hash is present AND the fetch-time
+        content hash differs from it:
+          - ``anomaly_side == "source"`` (source-side change, e.g. the video was
+            re-captioned since sealing) -> UNREADABLE-AT-SOURCE (attrition).
+          - otherwise (local-side anomaly, or unproven) -> LOCAL-HALT (never
+            attrition; a truncated/corrupt local fetch must HALT, not silently
+            excuse itself as link-rot).
+      * else -> READABLE.
+
+    Returns ``{sealed_total, floor, readable_n, meets_floor, readable:[ids],
+    unreadable_at_source:[{video_id,reason,evidence}], local_halt:[{...}],
+    fetch_evidence:{...}}``. Deterministic (sorted id order). A non-empty
+    ``local_halt`` means the read must HALT — the caller enforces it."""
+    sealed = sorted(sealed_video_ids)
+    readable: list[str] = []
+    unreadable: list[dict] = []
+    local_halt: list[dict] = []
+    for vid in sealed:
+        ev = fetch_evidence.get(vid)
+        if not isinstance(ev, dict):
+            ev = {"fetched": False, "error": "no fetch evidence recorded"}
+        if not bool(ev.get("fetched")):
+            unreadable.append({"video_id": vid, "reason": "fetch_failed", "evidence": ev})
+            continue
+        content_hash = ev.get("content_hash")
+        sealed_hash = ev.get("sealed_content_hash")
+        anomaly = ev.get("anomaly_side")
+        if (
+            isinstance(sealed_hash, str)
+            and sealed_hash
+            and isinstance(content_hash, str)
+            and content_hash
+            and content_hash != sealed_hash
+        ):
+            if anomaly == "source":
+                unreadable.append(
+                    {"video_id": vid, "reason": "hash_mismatch_source_side", "evidence": ev}
+                )
+            else:
+                local_halt.append(
+                    {"video_id": vid, "reason": "hash_mismatch_local_anomaly", "evidence": ev}
+                )
+            continue
+        readable.append(vid)
+    readable_n = len(readable)
+    return {
+        "sealed_total": len(sealed),
+        "floor": floor,
+        "readable_n": readable_n,
+        "meets_floor": readable_n >= floor,
+        "readable": readable,
+        "unreadable_at_source": unreadable,
+        "local_halt": local_halt,
+        "fetch_evidence": {v: fetch_evidence.get(v) for v in sealed},
+    }
+
+
+def _source_attrition_block(source_attrition: dict, rollup: dict) -> dict:
+    """Compute the attrition-aware rollup view (R-028.3): the attrition-adjusted
+    fraction (clean videos / READABLE videos — the rollup denominator IS the
+    readable set once unreadables never entered the pipeline) and the WORST-CASE
+    sensitivity line (clean videos / sealed_total, all unreadables counted
+    not-clean). ``attrition_robust`` is True iff the worst-case fraction still
+    clears the bar."""
+    sealed_total = source_attrition.get("sealed_total") or 0
+    readable_n = source_attrition.get("readable_n") or 0
+    clean_videos = rollup.get("clean_videos") or 0
+    unreadable = source_attrition.get("unreadable_at_source") or []
+    adjusted_fraction = round(clean_videos / readable_n, 4) if readable_n else None
+    worst_case_fraction = round(clean_videos / sealed_total, 4) if sealed_total else None
+    # R-029 pin: the bar is an EXACT real-number comparison, inclusive at equality,
+    # NO rounding in either direction (a rounded 0.5999->0.60 must never flip a
+    # boundary). The rounded fractions above are for DISPLAY/reporting only; the
+    # verdict compares the exact ratio. (Achievable denominators are <=12, so this
+    # matches the pinned table: 6/10 passes, 5/9 fails, etc.)
+    adjusted_meets_bar = bool(readable_n and (clean_videos / readable_n) >= VIDEO_CLEAN_BAR)
+    worst_case_meets_bar = bool(
+        sealed_total and (clean_videos / sealed_total) >= VIDEO_CLEAN_BAR
+    )
+    return {
+        "rule": (
+            "video-unit rollup denominator = READABLE videos; UNREADABLE-AT-SOURCE "
+            "excluded from BOTH numerator and denominator (R-028.3, Option-R)"
+        ),
+        "sealed_total": sealed_total,
+        "readable_n": readable_n,
+        "floor": source_attrition.get("floor"),
+        "meets_floor": bool(source_attrition.get("meets_floor")),
+        "unreadable_at_source_ids": [u.get("video_id") for u in unreadable],
+        "attrition_log": unreadable,
+        "adjusted_fraction": adjusted_fraction,
+        "adjusted_meets_bar": adjusted_meets_bar,
+        "worst_case_fraction": worst_case_fraction,
+        "worst_case_meets_bar": worst_case_meets_bar,
+        "attrition_robust": worst_case_meets_bar,
+        "bar": VIDEO_CLEAN_BAR,
+    }
+
+
+def _source_attrition_scope_lines(block: dict) -> list[str]:
+    """The verbatim scope lines the attrition block adds to the verdict (carried
+    into the printed verdict block by the CLI's scope-line renderer)."""
+    ids = block.get("unreadable_at_source_ids") or []
+    robust = block.get("attrition_robust")
+    worst = block.get("worst_case_fraction")
+    lines = [
+        "source-attrition: {rn}/{st} videos readable (floor {fl}); "
+        "{n} UNREADABLE-AT-SOURCE excluded from num+denom{ids}".format(
+            rn=block.get("readable_n"),
+            st=block.get("sealed_total"),
+            fl=block.get("floor"),
+            n=len(ids),
+            ids=(": " + ", ".join(ids)) if ids else "",
+        ),
+        "worst-case sensitivity (unreadables counted NOT-CLEAN): "
+        "fraction={worst} vs bar {bar} -> {verdict}".format(
+            worst=worst,
+            bar=block.get("bar"),
+            verdict=(
+                "attrition-robust (still passes)"
+                if robust
+                else "FLIPS (fails under worst-case)"
+            ),
+        ),
+    ]
+    return lines
+
 
 class VerdictNotReady(RuntimeError):
     """Raised (fail-closed, compose-order) when the verdict stage (E) is asked to
@@ -2932,9 +3125,20 @@ def _assemble_instrument_stamps(
 # --------------------------------------------------------------------------- #
 
 
-def run_verdict_stage(video_certificates, instrument_stamps: dict, mode: str) -> dict:
+def run_verdict_stage(
+    video_certificates, instrument_stamps: dict, mode: str, source_attrition: dict | None = None
+) -> dict:
     """MODULE E stage: the ONE terminal verdict over Module D's per-strategy
     rater-adjudicated certificates.
+
+    ``source_attrition`` (R-028.3, sealed path only — ADDITIVE): the plan stage's
+    per-video attrition record (from :func:`classify_source_attrition`). When
+    None (rehearsal/staging + every existing staged verdict), the verdict dict is
+    BYTE-UNCHANGED. When supplied it wires the attrition rule in: the video-unit
+    rollup denominator is the READABLE set (unreadables were excluded upstream);
+    a readable-N below the floor => INDETERMINATE_SOURCE_ATTRITION (escalate, no
+    fidelity read); a non-empty local_halt => INVALID (fail-closed); the verdict
+    carries the attrition block + worst-case sensitivity scope lines.
 
     ``video_certificates``: Module D's stage result (``module == "D"`` /
     ``stage == "rater_layer"``, ``ready`` True, carrying ``per_video_rater_verdicts``)
@@ -2997,11 +3201,49 @@ def run_verdict_stage(video_certificates, instrument_stamps: dict, mode: str) ->
         verdict = "FIDELITY_PASS" if meets_bar else "FIDELITY_MISS"
         verdict_meets_bar = meets_bar
 
-    return {
+    ready = bool(validity["valid"])
+    scope_lines = list(SCOPE_LINES)
+
+    # SOURCE-ATTRITION (R-028.3) — ADDITIVE; only when the sealed plan stage
+    # supplied the record. Rehearsal/staging (source_attrition None) keeps the
+    # verdict dict byte-unchanged.
+    attrition_block = None
+    if source_attrition is not None:
+        attrition_block = _source_attrition_block(source_attrition, rollup)
+        local_halt = source_attrition.get("local_halt") or []
+        if local_halt:
+            # A hash-mismatch with LOCAL-side anomaly is a HALT, never attrition —
+            # fail closed to INVALID (never silently excused as link-rot).
+            verdict = "INVALID"
+            verdict_meets_bar = None
+            ready = False
+            scope_lines = scope_lines + [
+                "source-attrition HALT: local-side anomaly on "
+                + ", ".join(str(h.get("video_id")) for h in local_halt)
+                + " — not attrition (fail-closed INVALID)"
+            ]
+        elif not attrition_block["meets_floor"]:
+            # Below the readable-N floor: escalate, no fidelity read on <9.
+            verdict = INDETERMINATE_SOURCE_ATTRITION
+            verdict_meets_bar = None
+            ready = False
+            scope_lines = scope_lines + _source_attrition_scope_lines(attrition_block) + [
+                "readable-N {rn} < floor {fl} -> INDETERMINATE_SOURCE_ATTRITION "
+                "(ESCALATE; no fidelity verdict computed on fewer than {fl} videos)".format(
+                    rn=attrition_block["readable_n"], fl=attrition_block["floor"]
+                )
+            ]
+        else:
+            # Floor met: the fraction the verdict already read IS the attrition-
+            # adjusted (readable-denominator) fraction. Add the attrition log +
+            # worst-case sensitivity scope lines.
+            scope_lines = scope_lines + _source_attrition_scope_lines(attrition_block)
+
+    result = {
         "stage": "verdict",
         "module": "E",
         "mode": mode,
-        "ready": bool(validity["valid"]),
+        "ready": ready,
         "read_once": True,
         "verdict": verdict,
         "meets_bar": verdict_meets_bar,
@@ -3013,13 +3255,16 @@ def run_verdict_stage(video_certificates, instrument_stamps: dict, mode: str) ->
         "economics": economics,
         "content_axis_recorded": content_axis,
         "validity": validity,
-        "scope_lines": list(SCOPE_LINES),
+        "scope_lines": scope_lines,
         "downstream_seams": (
             "F=full-dress rehearsal orchestration + independent re-verify + drift "
             "guard — NONE computed here (Module E returns the terminal verdict math "
             "only, read once from Module D's persisted certificates)"
         ),
     }
+    if attrition_block is not None:
+        result["source_attrition"] = attrition_block
+    return result
 
 
 # =========================================================================== #

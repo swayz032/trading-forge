@@ -55,12 +55,17 @@ from src.engine.extraction.pilot_conveyor import (  # noqa: E402
     LeakScanFailure,
 )
 from src.engine.extraction.sealed_read_driver import (  # noqa: E402
+    ENUMERATOR_PROMPT_PATH,
+    FRONTIER_PROMPT_PATH,
+    READABLE_N_FLOOR,
     REHEARSAL_SPENT_VIDEOS,
     ReaderIdentityMismatch,
     SealedReadDriver,
     _write_spent_rehearsal_manifest,
     build_panel_requests,
     build_rater_packets,
+    certified_reader_identity,
+    classify_source_attrition,
     compute_phase_a_consensus,
     run_extraction_stage,
     run_full_dress_rehearsal,
@@ -85,6 +90,16 @@ class ConductorArtifactMissing(RuntimeError):
     """Raised (fail-closed HALT) when a REQUIRED conductor-written artifact is not
     present under ``--work-dir`` on the sealed path. The CLI NEVER fabricates a
     missing extraction / panel / rater artifact — a missing input HALTs."""
+
+
+class RawJsonNonCompliant(ValueError):
+    """Raised (fail-closed) when a ``claude -p`` RAW extraction is NOT a single clean
+    JSON value — substantial prose before/after the JSON, an ambiguous / EXAMPLE-
+    bearing output, or truly-malformed. A ``ValueError`` subclass so any existing
+    ``except ValueError`` caller still fails closed. DISTINCT from a guard HALT: it
+    signals 'the model did not emit strict-parseable JSON for THIS dispatch', so the
+    conductor STOPS and reports (NO auto-retry — the read-once / retry policy is the
+    advisor's call, never the CLI's)."""
 
 
 # --------------------------------------------------------------------------- #
@@ -218,6 +233,136 @@ def _load_dispatch_record(work_dir: str) -> dict:
         )
     with open(path, encoding="utf-8") as fh:
         return json.load(fh)
+
+
+def _load_dispatch_record_optional(work_dir: str):
+    """The conductor's whole-run dispatch record if present, else None. Used by the
+    WRAP step to EMBED the dispatch_record into each wrapped artifact (so a wrapped
+    draw is self-describing); the per-dispatch identity guard still falls back to the
+    whole-run record at ingestion if a given artifact omits it."""
+    path = os.path.join(work_dir, "dispatch_record.json")
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _load_raw_json(raw_path: str) -> dict:
+    """Parse a `claude -p`-captured RAW extraction file to a dict, FAIL-CLOSED.
+
+    The model is instructed to print ONLY the JSON object. This parser tolerates an
+    OPTIONAL surrounding ```` ```json ```` code fence + whitespace and NOTHING more:
+    after fence-stripping, the remaining raw MUST be a SINGLE JSON value whose
+    surrounding content is whitespace-only. It uses ``json.JSONDecoder().raw_decode``
+    and REQUIRES that (a) the value begins at the very start (only whitespace / an
+    optional fence before it) and (b) only whitespace follows it.
+
+    This is the fix for the CRITICAL silent-mis-parse: the old first-``{``…last-``}``
+    slice would SILENTLY return a schema EXAMPLE the model printed while explaining
+    ("For example the format looks like {…}. Now I will re-read the transcript…")
+    when the real answer was truncated/missing. Such a prose-wrapped / ambiguous /
+    example-bearing output is now REFUSED — it NEVER silently returns a non-answer
+    JSON. Raises :class:`RawJsonNonCompliant` (a ``ValueError`` subclass) on any
+    prose-wrapped / ambiguous / malformed raw, or a non-object JSON value."""
+    with open(raw_path, encoding="utf-8") as fh:
+        text = fh.read()
+    stripped = text.strip()
+    if stripped.startswith("```"):
+        # Strip a SINGLE opening fence line (``` or ```json) + a closing fence line
+        # (a tiny, whitespace-equivalent budget) — fence-tolerance, NOT prose-tolerance.
+        lines = stripped.splitlines()
+        if lines and lines[0].startswith("```"):
+            lines = lines[1:]
+        if lines and lines[-1].strip().startswith("```"):
+            lines = lines[:-1]
+        stripped = "\n".join(lines).strip()
+    if not stripped:
+        raise RawJsonNonCompliant("raw extraction is empty (no JSON object)")
+    if stripped[0] not in "{[":
+        # Substantial non-whitespace PROSE before the JSON (e.g. a "For example…"
+        # preamble) — REFUSE; never scan forward to the first `{`.
+        raise RawJsonNonCompliant(
+            "raw extraction does not begin with a JSON value — substantial "
+            f"preamble/prose before the JSON ({stripped[:60]!r}…); the model must "
+            "print ONLY the JSON object"
+        )
+    try:
+        parsed, end = json.JSONDecoder().raw_decode(stripped)
+    except ValueError as exc:
+        raise RawJsonNonCompliant(f"raw extraction is not parseable JSON: {exc}") from None
+    trailing = stripped[end:]
+    if trailing.strip():
+        # A well-formed JSON value FOLLOWED by prose (e.g. an example object then
+        # "Now I will re-read the transcript…") — REFUSE; never accept the leading
+        # span as the answer.
+        raise RawJsonNonCompliant(
+            "raw extraction has substantial non-whitespace content AFTER the JSON "
+            f"value ({trailing.strip()[:60]!r}…) — a prose-wrapped / example-bearing "
+            "output is REFUSED, never silently sliced to the first {…} span"
+        )
+    if not isinstance(parsed, dict):
+        raise RawJsonNonCompliant("raw extraction is not a JSON object")
+    return parsed
+
+
+def _wrap_dispatch_raw(
+    work_dir: str, seam: str, raw_path: str, video_id: str, index: int
+) -> tuple[int, str]:
+    """R-028.4 finding #3 — the RAW->DRAW wrap. The conductor's per-dispatch job is
+    ``claude -p`` -> RAW model stdout + a dispatch_record; the CLI (here) wraps that
+    raw into the artifact the EXISTING ingestion (`_make_conductor_phase_a_draw_fn` /
+    `_make_conductor_phase_b_fn` + `_assert_one_dispatch`) already reads UNCHANGED:
+
+      * ``reader_identity`` is ADDED from ``certified_reader_identity()`` (the frozen
+        record — identity is NEVER a model self-report / conductor literal);
+      * ``dispatch_record`` is EMBEDDED from the conductor's ``dispatch_record.json``;
+      * Phase-A ``count`` is SYNTHESIZED as ``len(strategies)`` and ``strategy_refs``
+        as one deterministic ref per enumerated strategy.
+
+    The raw fields (``strategies`` / ``enumeration_note`` / ``instrument_classifi-
+    cation`` / …) are carried through verbatim. Writes the canonical
+    ``phase_a/<vid>/draw_<i>.json`` or ``phase_b/<vid>__s<idx>.json``. HALTs (never
+    fabricates) on a missing/unparseable raw or a raw missing its ``strategies``
+    list."""
+    if not os.path.exists(raw_path):
+        return 1, f"HALT: --raw extraction file not found: {raw_path}"
+    try:
+        raw = _load_raw_json(raw_path)
+    except RawJsonNonCompliant as exc:
+        # DISTINCT HALT class: the model didn't emit clean JSON for THIS dispatch —
+        # NOT an artifact-guard HALT. Read-once: NOT auto-retried; the conductor
+        # STOPS and reports per the runbook (a retry/prompt policy is the advisor's).
+        return 1, (
+            f"HALT: --raw is NON-COMPLIANT (model did not emit clean JSON for this "
+            f"dispatch: {seam} {video_id} #{index}) ({raw_path}): {exc}"
+        )
+    except ValueError as exc:
+        return 1, f"HALT: --raw is not parseable JSON ({raw_path}): {exc}"
+    strategies = raw.get("strategies")
+    if not isinstance(strategies, list):
+        return 1, (
+            f"HALT: raw extraction {raw_path} has no `strategies` list — cannot wrap "
+            "(the model must emit the raw extraction schema)"
+        )
+    identity = certified_reader_identity()
+    dispatch_record = _load_dispatch_record_optional(work_dir)
+    if seam == "phase_a":
+        wrapped = {
+            **raw,
+            "count": len(strategies),
+            "strategy_refs": [f"{video_id}__s{j}" for j in range(len(strategies))],
+            "reader_identity": identity,
+        }
+        out_path = os.path.join(work_dir, "phase_a", video_id, f"draw_{index}.json")
+    else:  # phase_b
+        wrapped = {**raw, "reader_identity": identity}
+        out_path = os.path.join(work_dir, "phase_b", f"{video_id}__s{index}.json")
+    if dispatch_record is not None:
+        wrapped["dispatch_record"] = dispatch_record
+    _atomic_write_text(
+        out_path, json.dumps(wrapped, ensure_ascii=False, sort_keys=True, indent=2)
+    )
+    return 0, f"WRAP {seam} ok: {raw_path} -> {out_path} (count={len(strategies)})"
 
 
 def _load_validity_inputs(work_dir: str) -> dict:
@@ -378,6 +523,32 @@ def run_sealed(
     return code, text
 
 
+def _load_source_attrition(work_dir: str) -> dict | None:
+    """Read the plan stage's ``emit/source_attrition.json`` if present (R-028.3).
+    Absent => None => the verdict is attrition-UNAWARE (byte-identical to the
+    pre-R-028 path — every existing staged test and the rehearsal path)."""
+    path = _emit_path(work_dir, _SOURCE_ATTRITION_EMIT)
+    if not os.path.exists(path):
+        return None
+    with open(path, encoding="utf-8") as fh:
+        return json.load(fh)
+
+
+def _readable_verified(verified: dict, work_dir: str) -> dict:
+    """Restrict a verified-manifest record's ``video_ids`` to the plan's READABLE
+    set (R-028.3) so the phase_a/certify stages never dispatch/read an UNREADABLE-
+    AT-SOURCE video (whose artifacts were never written). No plan/attrition record
+    => the record is returned UNCHANGED (byte-identical to the pre-R-028 path)."""
+    sa = _load_source_attrition(work_dir)
+    if not sa:
+        return verified
+    readable = set(sa.get("readable") or [])
+    return {
+        **verified,
+        "video_ids": [v for v in (verified.get("video_ids") or []) if v in readable],
+    }
+
+
 def _drive_full_sealed_read(
     work_dir: str,
     *,
@@ -386,6 +557,7 @@ def _drive_full_sealed_read(
     out_dir: str,
     driver: SealedReadDriver,
     propose_fn=None,
+    source_attrition: dict | None = None,
 ) -> tuple[int, str]:
     """The shared A->E drive shared by the single-shot :func:`run_sealed` and the
     STAGED :func:`run_stage_verdict`. Assumes the token was already verified and
@@ -409,6 +581,7 @@ def _drive_full_sealed_read(
             rater_fn=_make_conductor_rater_fn(work_dir),
             dispatch_record=dispatch_record,
             propose_fn=propose_fn,
+            source_attrition=source_attrition,
             **validity_inputs,
         )
     except (ReaderIdentityMismatch, SpentManifestRejected, ConductorArtifactMissing) as exc:
@@ -449,11 +622,19 @@ def _drive_full_sealed_read(
 # --------------------------------------------------------------------------- #
 
 _EMIT_SUBDIR = "emit"
+_PLAN_EMIT = "dispatch_plan.json"
+_SOURCE_ATTRITION_EMIT = "source_attrition.json"
 _PHASE_A_EMIT = "phase_a_consensus.json"
 _PANEL_REQ_EMIT = "panel_requests.json"
 _RATER_PKT_EMIT = "rater_packets.json"
 _CERTIFY_STAMP_EMIT = "certify_stamp.json"
-_STAGES = ("phase_a", "certify", "verdict")
+_STAGES = ("plan", "phase_a", "certify", "verdict")
+#: the RAW->DRAW wrap seams (R-028.4 finding #3) — the plan emits `--wrap <seam>` as
+#: the second named command per dispatch.
+_WRAP_SEAMS = ("phase_a", "phase_b")
+#: subdir the plan stage writes fetched transcripts to (conductor NEVER opens them;
+#: the CLI writes the file, the dispatched subagent reads the PATH — blindness kept).
+_TRANSCRIPTS_SUBDIR = "transcripts"
 
 
 def _emit_path(work_dir: str, name: str) -> str:
@@ -506,6 +687,390 @@ def _consensus_cids(per_video: dict) -> list[str]:
     return cids
 
 
+# --------------------------------------------------------------------------- #
+# STAGE `plan` (stage-0) — ADVISOR-RULINGS R-028.1/.3. Runs Module A first, FETCHES
+# each transcript by video_id (recording per-video FETCH EVIDENCE + the SOURCE-
+# ATTRITION partition), and EMITS the COMPLETE per-dispatch instruction set the
+# conductor runs as NAMED commands (prompt path + transcript path + output path +
+# the `claude -p` template with the explicit model flag + expected draw schema).
+# NOTHING here hardcodes a model id / prompt sha — the identity is read at runtime
+# from the frozen records via certified_reader_identity(). Emit-and-stop.
+# --------------------------------------------------------------------------- #
+
+
+def _rel(path: str) -> str:
+    """Repo-relative POSIX path (the plan names paths the conductor dispatches on)."""
+    return os.path.relpath(path, _ROOT).replace("\\", "/")
+
+
+def _atomic_write_text(path: str, text: str) -> None:
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = f"{path}.{os.getpid()}.tmp"
+    with open(tmp, "w", encoding="utf-8") as fh:
+        fh.write(text)
+    os.replace(tmp, path)
+
+
+def _default_transcript_fetch_fn(video_id: str) -> dict:
+    """Real seal-day transcript fetch — the DISCOVERED production path. Runs
+    ``scripts/h1-fetch-one.ts`` (the byte-faithful replica of the campaign's
+    ``fetchTranscriptWithRetry`` youtube-transcript bridge) via ``npx tsx``, stdin
+    ``{"video_id": <id>}``, stdout ``{video_id, transcript, char_count,
+    final_outcome, attempts}`` (or ``{error}`` + exit 1). Returns fetch evidence
+    ``{fetched, char_count, content_hash, transcript, final_outcome, error}``.
+    NETWORK-TOUCHING — NEVER invoked in tests (a stub fetch_fn is injected)."""
+    import subprocess
+
+    script = os.path.join(_ROOT, "scripts", "h1-fetch-one.ts")
+    try:
+        proc = subprocess.run(
+            ["npx", "tsx", script],
+            input=json.dumps({"video_id": video_id}),
+            capture_output=True,
+            text=True,
+            cwd=_ROOT,
+            timeout=180,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:  # pragma: no cover - env
+        return {
+            "fetched": False, "char_count": None, "content_hash": None,
+            "transcript": None, "final_outcome": "fetch_process_error", "error": str(exc),
+        }
+    out = (proc.stdout or "").strip()
+    try:
+        parsed = json.loads(out.splitlines()[-1]) if out else {}
+    except (ValueError, IndexError):
+        parsed = {}
+    if proc.returncode != 0 or "error" in parsed or not isinstance(parsed.get("transcript"), str):
+        return {
+            "fetched": False, "char_count": None, "content_hash": None,
+            "transcript": None, "final_outcome": "all_failed",
+            "error": parsed.get("error") or (proc.stderr or "").strip() or "fetch failed",
+        }
+    transcript = parsed.get("transcript") or ""
+    return {
+        "fetched": True,
+        "char_count": parsed.get("char_count", len(transcript)),
+        "content_hash": hashlib.sha256(transcript.encode("utf-8")).hexdigest(),
+        "transcript": transcript,
+        "final_outcome": parsed.get("final_outcome"),
+        "error": None,
+    }
+
+
+def _sealed_content_hashes(manifest_path: str) -> dict:
+    """Optional per-video sealed transcript-content hash from the manifest (the
+    real sealed-12 stored NONE — existence probe only — so this is ``{}`` there;
+    present only if a future manifest carries a ``transcript_content_sha256``).
+    The attrition hash-mismatch branch compares the fetch-time hash against this."""
+    try:
+        with open(manifest_path, encoding="utf-8") as fh:
+            manifest = json.load(fh)
+    except (OSError, ValueError):
+        return {}
+    out: dict = {}
+    for v in manifest.get("videos") or []:
+        vid = v.get("video_id")
+        h = v.get("transcript_content_sha256") or v.get("content_hash")
+        if vid and isinstance(h, str) and h:
+            out[vid] = h
+    return out
+
+
+def _fetch_or_reuse(tx_dir: str, video_id: str, fetch_fn) -> dict:
+    """Read-once/idempotent fetch: if ``transcripts/<vid>.txt`` already exists +
+    is non-empty, REUSE it (recompute char_count + content_hash from disk, never
+    re-hit YouTube — so a re-run of `plan` can never silently change the readable
+    set). Otherwise call ``fetch_fn`` and, on success, persist the transcript
+    atomically. Returns fetch evidence WITHOUT the transcript body."""
+    path = os.path.join(tx_dir, f"{video_id}.txt")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as fh:
+            text = fh.read()
+        if text.strip():
+            return {
+                "fetched": True,
+                "char_count": len(text),
+                "content_hash": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+                "final_outcome": "reused_on_disk",
+                "error": None,
+                "anomaly_side": None,
+            }
+    ev = dict(fetch_fn(video_id) or {})
+    transcript = ev.pop("transcript", None)
+    if ev.get("fetched") and isinstance(transcript, str) and transcript:
+        _atomic_write_text(path, transcript)
+    return ev
+
+
+def _abs_slash(path: str) -> str:
+    """OS-correct ABSOLUTE path with forward slashes (R-028.4 finding #2). Windows
+    ``os.path.abspath`` yields backslashes, which a bash ``$(cat …)`` / redirect
+    command treats as escape chars; forward-slash absolute paths (``C:/…``) are
+    valid on Windows for python/node/claude AND round-trip through bash. Never a
+    relative or ``/tmp/…`` literal."""
+    return os.path.abspath(path).replace(os.sep, "/")
+
+
+#: This CLI's own absolute path — the plan emits `python <this> --wrap …` as the
+#: second named command per dispatch (the wrap step; see `_wrap_dispatch_raw`).
+_THIS_CLI = _abs_slash(__file__)
+
+
+def _claude_p_template(model_id: str, prompt_path: str, transcript_path: str, raw_output_path: str) -> str:
+    """The headless `claude -p` invocation template (runbook STEP 2: fresh Claude
+    subagent on the subscription channel, model set EXPLICITLY).
+
+    R-028.4 finding #1 (headless permission): a default-headless `claude -p` may
+    NOT use the Write tool, so the subagent PRINTS the JSON to stdout and the shell
+    CAPTURES it (`> raw_output_path`) — no Write-tool permission needed. `Read` is
+    the ONE tool the subagent needs (to read the transcript PATH itself — blindness
+    kept) and is the minimal allow-list. The model flag is the ONLY load-bearing
+    literal and is interpolated from the frozen identity — never hardcoded. All
+    paths are OS-correct ABSOLUTE (finding #2)."""
+    return (
+        f"claude -p --model {model_id} --allowedTools Read "
+        f'--append-system-prompt "$(cat {prompt_path})" '
+        f'"Read the transcript file at {transcript_path} and produce the extraction '
+        "artifact exactly as the frozen prompt specifies. Print ONLY the JSON "
+        "artifact and nothing else to stdout. Output ONLY the JSON object — no "
+        "preamble, no explanation, no markdown fences, no text before or after the "
+        f'JSON." > {raw_output_path}'
+    )
+
+
+def _wrap_command(work_dir_abs: str, seam: str, raw_output_path: str, video_id: str, index) -> str:
+    """The SECOND named command the plan emits per dispatch (R-028.4 finding #3):
+    after the `claude -p` writes the RAW extraction to ``raw_output_path``, this CLI
+    step reads that raw + the conductor's dispatch_record, WRAPS them into the draw
+    schema the ingestion asserts on (adding ``reader_identity`` from the FROZEN
+    record + deriving ``count``/``strategy_refs`` from the raw), and writes the
+    canonical ``<seam>/…`` artifact the existing stage reads UNCHANGED. The
+    conductor never hand-assembles identity — the CLI owns the wrap."""
+    idx_flag = "--draw-index" if seam == "phase_a" else "--strategy-index"
+    return (
+        f"python {_THIS_CLI} --mode sealed --work-dir {work_dir_abs} "
+        f"--wrap {seam} --raw {raw_output_path} --video-id {video_id} {idx_flag} {index}"
+    )
+
+
+#: What the `claude -p` PRINTS (raw model extraction) — Phase-A enumerator output.
+_PHASE_A_RAW_SCHEMA = {
+    "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)",
+    "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+}
+#: What the CLI WRAP step produces from the raw — the draw artifact the existing
+#: ingestion (`_make_conductor_phase_a_draw_fn` + `_assert_one_dispatch`) asserts on.
+_PHASE_A_DRAW_SCHEMA = {
+    "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+    "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)",
+    "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+    "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+}
+#: What the Phase-B `claude -p` PRINTS (raw frontier-v3.2 extraction).
+_PHASE_B_RAW_SCHEMA = {
+    "strategies": "list[one strategy object]",
+    "instrument_classification": "object|null",
+    "rejected_strategies": "list (optional)",
+    "coaching_notes": "list (optional)",
+}
+
+
+def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attrition: dict) -> dict:
+    """The COMPLETE per-dispatch instruction set (R-028.1) — the single source of
+    'how to dispatch'. Per readable video, k Phase-A draws named individually; the
+    later seams (Phase-B / panel / rater) carry their instruction SHAPE (their cids
+    are emitted by later stages, not knowable at plan time)."""
+    model_id = identity["model_id"]
+    k = identity["k"]
+    # OS-correct ABSOLUTE paths (R-028.4 finding #2) — the conductor dispatches these
+    # verbatim; a relative / `/tmp/…` path does not round-trip.
+    wd_abs = _abs_slash(work_dir)
+    enum_prompt = _abs_slash(ENUMERATOR_PROMPT_PATH)
+    frontier_prompt = _abs_slash(FRONTIER_PROMPT_PATH)
+    dispatch_record_template = {
+        "requested_model": model_id,
+        "resolved_model": "<what actually ran — conductor fills; must equal requested>",
+        "channel_class": identity["channel_class"],
+        "dispatch_mode": "interactive|headless",
+    }
+    # Pre-create the raw-capture dirs so the emitted `> raw_output_path` redirect
+    # has a landing dir (bash `>` does not mkdir the parent).
+    os.makedirs(os.path.join(work_dir, "raw", "phase_b"), exist_ok=True)
+    phase_a_dispatches: list[dict] = []
+    for vid in readable_ids:
+        transcript_path = f"{wd_abs}/{_TRANSCRIPTS_SUBDIR}/{vid}.txt"
+        os.makedirs(os.path.join(work_dir, "raw", "phase_a", vid), exist_ok=True)
+        for i in range(k):
+            raw_output_path = f"{wd_abs}/raw/phase_a/{vid}/draw_{i}.json"
+            output_path = f"{wd_abs}/phase_a/{vid}/draw_{i}.json"
+            phase_a_dispatches.append(
+                {
+                    "seam": "phase_a_draw",
+                    "video_id": vid,
+                    "draw_index": i,
+                    "prompt_path": enum_prompt,
+                    "transcript_path": transcript_path,
+                    "raw_output_path": raw_output_path,
+                    "output_path": output_path,
+                    # 1) run the model -> RAW extraction (stdout-captured, no Write tool);
+                    "claude_p_template": _claude_p_template(
+                        model_id, enum_prompt, transcript_path, raw_output_path
+                    ),
+                    # 2) CLI wraps raw + dispatch_record -> the ingested draw artifact.
+                    "wrap_command": _wrap_command(
+                        wd_abs, "phase_a", raw_output_path, vid, i
+                    ),
+                    "expected_raw_schema": dict(_PHASE_A_RAW_SCHEMA),
+                    "expected_schema": dict(_PHASE_A_DRAW_SCHEMA),
+                }
+            )
+    later_seam_instruction_shapes = {
+        "phase_b": {
+            "seam": "phase_b_strategy",
+            "emitted_by_stage": "certify (one dispatch per consensus strategy)",
+            "prompt_path": frontier_prompt,
+            "transcript_path_template": f"{wd_abs}/{_TRANSCRIPTS_SUBDIR}/<video_id>.txt",
+            "raw_output_path_template": f"{wd_abs}/raw/phase_b/<video_id>__s<idx>.json",
+            "output_path_template": f"{wd_abs}/phase_b/<video_id>__s<idx>.json",
+            "claude_p_template": _claude_p_template(
+                model_id, frontier_prompt,
+                f"{wd_abs}/{_TRANSCRIPTS_SUBDIR}/<video_id>.txt",
+                f"{wd_abs}/raw/phase_b/<video_id>__s<idx>.json",
+            ),
+            "wrap_command_template": _wrap_command(
+                wd_abs, "phase_b",
+                f"{wd_abs}/raw/phase_b/<video_id>__s<idx>.json",
+                "<video_id>", "<idx>",
+            ),
+            "expected_raw_schema": dict(_PHASE_B_RAW_SCHEMA),
+            "expected_schema": {
+                "strategies": "list[one strategy object] (raw, carried through the wrap)",
+                "instrument_classification": "object|null (raw, carried through)",
+                "reader_identity": "object — ADDED by the wrap (frozen record)",
+                "dispatch_record": "object — embedded by the wrap (per dispatch)",
+            },
+        },
+        "panel": {
+            "seam": "panel",
+            "emitted_by_stage": "certify (emit/panel_requests.json, one per cid)",
+            "output_path_template": "panels/<cid>.json",
+            "expected_schema": {
+                "conflation": "PASS|FAIL",
+                "enumeration_consistency": "PASS|FAIL",
+                "completeness": {"content_clean": "bool"},
+            },
+        },
+        "rater": {
+            "seam": "rater",
+            "emitted_by_stage": "certify (emit/rater_packets.json; two blind raters)",
+            "output_path_template": "raters/<rater_id>.json",
+            "raters": ["A", "B"],
+            "expected_schema": {
+                "stage1": {"<item_id>": "gate-strength|context|cannot-determine"},
+                "stage2": {"<item_id>": {"support": "confirmed|partial|denied",
+                                         "support_justification": "str"}},
+            },
+        },
+    }
+    return {
+        "artifact": "h1-staged-plan-dispatch-emit",
+        "stage": "plan",
+        "sealed_total": attrition["sealed_total"],
+        "readable_n": attrition["readable_n"],
+        "reader_identity": identity,
+        "dispatch_record_template": dispatch_record_template,
+        "phase_a_dispatches": phase_a_dispatches,
+        "later_seam_instruction_shapes": later_seam_instruction_shapes,
+        "source_attrition_emit": _rel(_emit_path(work_dir, _SOURCE_ATTRITION_EMIT)),
+    }
+
+
+def run_stage_plan(
+    work_dir: str,
+    manifest_path: str = PINNED_SEALED12_MANIFEST,
+    token_path: str = PINNED_TOKEN_PATH,
+    fetch_fn=None,
+) -> tuple[int, str]:
+    """STAGE `plan` (stage-0, R-028.1/.3): Module A gate FIRST (token + seal-verify
+    + reject spent-16 — HALT on any failure); FETCH each transcript by video_id to
+    ``<dir>/transcripts/<vid>.txt`` recording per-video FETCH EVIDENCE; partition
+    into READABLE / UNREADABLE-AT-SOURCE / LOCAL-HALT (attrition); EMIT
+    ``emit/source_attrition.json`` + ``emit/dispatch_plan.json`` (the complete
+    per-dispatch instruction set). A LOCAL-side hash anomaly HALTs (never
+    attrition). Read-once: re-running REUSES fetched transcripts on disk (a
+    re-fetch never silently changes the readable set). Emit-and-stop."""
+    if not _token_present(token_path):
+        return 1, _NO_TOKEN_HALT
+    # Module A gate FIRST (reject spent-16 + operator gate + seal-verify).
+    try:
+        verified = _gate_verified(manifest_path, token_path)
+    except SpentManifestRejected as exc:
+        return 1, f"HALT: {type(exc).__name__}: {exc}"
+    video_ids = verified.get("video_ids") or []
+    if not video_ids:
+        return 1, "HALT: seal gate produced no video_ids to plan"
+
+    fetch_fn = fetch_fn or _default_transcript_fetch_fn
+    sealed_hashes = _sealed_content_hashes(manifest_path)
+    tx_dir = os.path.join(work_dir, _TRANSCRIPTS_SUBDIR)
+    os.makedirs(tx_dir, exist_ok=True)
+
+    fetch_evidence: dict = {}
+    for vid in video_ids:
+        ev = _fetch_or_reuse(tx_dir, vid, fetch_fn)
+        ev.setdefault("anomaly_side", None)
+        ev["sealed_content_hash"] = sealed_hashes.get(vid)
+        fetch_evidence[vid] = ev
+
+    attrition = classify_source_attrition(video_ids, fetch_evidence, floor=READABLE_N_FLOOR)
+
+    # A LOCAL-side hash anomaly is a HALT, never attrition — fail closed, no emit.
+    if attrition["local_halt"]:
+        offenders = ", ".join(str(h.get("video_id")) for h in attrition["local_halt"])
+        return 1, (
+            "HALT: source-attrition LOCAL anomaly (not source-side) on "
+            f"{offenders} — a local-side hash-mismatch HALTs, never attrition; "
+            "resolve the local fetch before re-running plan"
+        )
+
+    _write_emit(
+        work_dir,
+        _SOURCE_ATTRITION_EMIT,
+        {"artifact": "h1-staged-source-attrition-emit", **attrition},
+    )
+    identity = certified_reader_identity()
+    plan = _build_dispatch_plan(work_dir, attrition["readable"], identity, attrition)
+    _write_emit(work_dir, _PLAN_EMIT, plan)
+
+    unreadable_ids = [u["video_id"] for u in attrition["unreadable_at_source"]]
+    lines = [
+        "=== STAGE plan EMITTED (STOP — dispatch Phase-A next) ===",
+        "readable: {rn}/{st} (floor {fl}, meets_floor={mf})".format(
+            rn=attrition["readable_n"], st=attrition["sealed_total"],
+            fl=attrition["floor"], mf=attrition["meets_floor"],
+        ),
+    ]
+    if unreadable_ids:
+        lines.append("UNREADABLE-AT-SOURCE (excluded from num+denom): " + ", ".join(unreadable_ids))
+    if not attrition["meets_floor"]:
+        lines.append(
+            "WARNING: readable-N below floor -> the verdict stage will return "
+            "INDETERMINATE_SOURCE_ATTRITION (escalate; no fidelity verdict on <"
+            f"{attrition['floor']})"
+        )
+    lines.append(f"source_attrition: {_emit_path(work_dir, _SOURCE_ATTRITION_EMIT)}")
+    lines.append(
+        "dispatch_plan: {p} ({n} Phase-A draws across {v} readable videos)".format(
+            p=_emit_path(work_dir, _PLAN_EMIT),
+            n=len(plan["phase_a_dispatches"]),
+            v=attrition["readable_n"],
+        )
+    )
+    lines.append("=== END STAGE plan ===")
+    return 0, "\n".join(lines)
+
+
 def run_stage_phase_a(
     work_dir: str,
     manifest_path: str = PINNED_SEALED12_MANIFEST,
@@ -520,7 +1085,7 @@ def run_stage_phase_a(
     if not _token_present(token_path):
         return 1, _NO_TOKEN_HALT
     try:
-        verified = _gate_verified(manifest_path, token_path)
+        verified = _readable_verified(_gate_verified(manifest_path, token_path), work_dir)
         dispatch_record = _load_dispatch_record(work_dir)
         consensus = compute_phase_a_consensus(
             verified,
@@ -582,7 +1147,7 @@ def run_stage_certify(
         prior = _read_json_required(
             _emit_path(work_dir, _PHASE_A_EMIT), "stage phase_a emit (phase_a_consensus.json)"
         )
-        verified = _gate_verified(manifest_path, token_path)
+        verified = _readable_verified(_gate_verified(manifest_path, token_path), work_dir)
         dispatch_record = _load_dispatch_record(work_dir)
 
         # RE-INGEST Phase-A (deterministic re-emit) + VERIFY vs the emitted stamp.
@@ -672,6 +1237,9 @@ def run_stage_verdict(
     owns_tmp = out_dir is None
     out_dir = out_dir or tempfile.mkdtemp(prefix="h1-seal-conductor-verdict-")
     driver = driver or SealedReadDriver()
+    # R-028.3: the plan stage's attrition record (absent on the pre-R-028 /
+    # rehearsal path -> None -> verdict byte-unchanged).
+    source_attrition = _load_source_attrition(work_dir)
 
     try:
         phase_a_emit = _read_json_required(
@@ -683,7 +1251,7 @@ def run_stage_verdict(
         rater_pkt_emit = _read_json_required(
             _emit_path(work_dir, _RATER_PKT_EMIT), "stage certify rater packets"
         )
-        verified = _gate_verified(manifest_path, token_path)
+        verified = _readable_verified(_gate_verified(manifest_path, token_path), work_dir)
         dispatch_record = _load_dispatch_record(work_dir)
 
         # (a) Phase-A hash unchanged since stage phase_a.
@@ -717,6 +1285,7 @@ def run_stage_verdict(
         out_dir=os.path.join(out_dir, "read1"),
         driver=driver,
         propose_fn=propose_fn,
+        source_attrition=source_attrition,
     )
     if text.startswith("HALT:"):
         return code, text
@@ -730,6 +1299,7 @@ def run_stage_verdict(
         out_dir=os.path.join(out_dir, "read2"),
         driver=SealedReadDriver(),
         propose_fn=propose_fn,
+        source_attrition=source_attrition,
     )
     reverify = "MATCH" if (code2 == code and text2 == text) else "MISMATCH"
     text += f"\nreverify: {reverify}"
@@ -817,6 +1387,8 @@ def run_sealed_staged(
     if not _token_present(token_path):
         return 1, _NO_TOKEN_HALT
     stage = stage or _detect_stage(work_dir)
+    if stage == "plan":
+        return run_stage_plan(work_dir, manifest_path=manifest_path, token_path=token_path)
     if stage == "phase_a":
         return run_stage_phase_a(work_dir, manifest_path=manifest_path, token_path=token_path)
     if stage == "certify":
@@ -874,10 +1446,36 @@ def main(argv: list[str] | None = None) -> int:
         help="sealed mode: the STAGED emit-and-stop step (R-026). Omit to "
         "auto-detect the next stage from the work-dir emit state.",
     )
+    parser.add_argument(
+        "--wrap",
+        default=None,
+        choices=_WRAP_SEAMS,
+        help="sealed mode: the RAW->DRAW wrap step (R-028.4). Reads --raw (the "
+        "`claude -p`-captured raw extraction) + the conductor's dispatch_record and "
+        "writes the ingested draw artifact (adds reader_identity from the frozen "
+        "record; derives count/strategy_refs for Phase-A).",
+    )
+    parser.add_argument("--raw", default=None, help="--wrap: path to the raw extraction stdout.")
+    parser.add_argument("--video-id", default=None, help="--wrap: the dispatch's video_id.")
+    parser.add_argument("--draw-index", type=int, default=None, help="--wrap phase_a: draw index.")
+    parser.add_argument("--strategy-index", type=int, default=None, help="--wrap phase_b: strategy index.")
     args = parser.parse_args(argv)
 
     if args.mode == "staging":
         code, text = run_staging(out_dir=args.out_dir)
+    elif args.wrap:
+        if not args.work_dir:
+            print("HALT: --work-dir is required for --wrap", file=sys.stderr)
+            return 2
+        index = args.draw_index if args.wrap == "phase_a" else args.strategy_index
+        if args.raw is None or args.video_id is None or index is None:
+            print(
+                "HALT: --wrap requires --raw, --video-id, and "
+                + ("--draw-index" if args.wrap == "phase_a" else "--strategy-index"),
+                file=sys.stderr,
+            )
+            return 2
+        code, text = _wrap_dispatch_raw(args.work_dir, args.wrap, args.raw, args.video_id, index)
     else:
         if not args.work_dir:
             print("HALT: --work-dir is required for --mode sealed", file=sys.stderr)
