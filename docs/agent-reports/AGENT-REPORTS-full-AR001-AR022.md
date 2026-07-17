@@ -4,6 +4,23 @@
 
 ---
 
+## AR-022 · 2026-07-17 · R-031 LANDED + independently graded BAND 8 + runbook re-frozen + probed. The RATER receipt is RE-EARNED LIVE — ALL THREE seam classes now proven live on spent 2DX. The read is BUILD-COMPLETE and FULLY GREEN. Holding ONLY on the operator's open-the-twelve go. Seal INTACT.
+
+**R-031 both gaps closed (committed on `h1-wave4-sealed12-driver`):**
+- **§1 — the packet carries its own `output_contract`** (`ae324c93`; `build_rater_packets` / `_rater_output_contract`): stage-scoped answer-store shape + allowed values + commitment. Values DERIVED, never retyped (§a1) — roles from the packet's own `closed_taxonomy` keys; support from `pilot_conveyor.SUPPORT_VALUES` (the exact set `support_verdict_from_stage2_response` accepts, :1382/1408). Shape+values+commitment ONLY (§a2). §3's premise ("the packet carries its instructions") is now TRUE.
+- **§2 — VERIFIED then SPLIT.** Confirmed from code the single dispatch embedded BOTH `stage1_view` and `stage2_items` (read-order lock broken). Split into TWO sequential stage-scoped no-tools dispatches per rater: the Stage-1 prompt PHYSICALLY EXCLUDES `stage2_items` (`_seam_source_text` projection), so the blind role read cannot see the revealed conditions; Stage-2 embeds them; the wrap MERGES both into `raters/<id>.json`. Fresh-context Stage-2 is strictly tighter than the pilot's same-session reveal.
+- **§a4 — out-of-vocabulary HALTs, never coerces** (`_wrap_rater_parsed` + `_rater_allowed_values`): an out-of-vocab role/support, or a blank Stage-2 justification, HALTs fail-closed; the allowed set is read from the EMITTED packet's own contract (single-sourced). §a5 — the pre-R-031 contaminated rater answer was QUARANTINED (never consulted).
+
+**Independent grade (doer≠grader): BAND 8 SAFE** — all four mutations flip RED (derived-vocab, the read-order-lock split, vocab-HALT, merge-not-clobber); no CRITICAL/HIGH; two LOW findings closed same-wave (derivation test hardened with synthetic taxo keys; added a derived-contract→CLI-enforcement integration test). 323 passed / 3 skipped.
+
+**★ RATER RECEIPT RE-EARNED LIVE** (spent 2DXQqwKSwJE, never the twelve): certify re-emitted `output_contract`-bearing packets → rater A **Stage-1 ingested 38 roles**, **Stage-2 ingested 28 support judgments**, both stage-scoped, 0 format-retries, guards passing. **★★ ALL THREE SEAM CLASSES ARE NOW PROVEN LIVE ON SPENT MATERIAL: Phase-A (5 blind draws) + Phase-B (3 strategies) + rater (both stages).** The generalized green law is satisfied end-to-end.
+
+**Runbook RE-FROZEN (`149608a6`, Addendum B) + final comprehension probe PASSED** — a fresh clean-room reader answered the two-ordered-commands-per-rater, the Stage-1 physical exclusion of Stage-2 conditions, no-tools blindness, out-of-vocab HALT, and stop-and-report, verbatim (and caught a blank-justification doc omission, now closed). Params addendum §5/§6 records the two-dispatch structure + the R-030 §4 live-found fixes.
+
+**★ THE SEALED-12 TERMINAL READ IS BUILD-COMPLETE, FULLY GREEN, AND EXECUTABLE END-TO-END.** Every seam graded (doer≠grader) at the 7-8 pre-live ceiling, every seam class proven LIVE on spent material, runbook re-frozen + comprehension-proven, five trigger-time catches across R-030/R-031 with zero corruption and zero sealed spend. **I am holding ONLY on the operator's explicit go to open the twelve** — the irreversible multi-hour live read is his ignition, not mine; the standing `SEAL-GO.token` authorizes it but I will not initiate the once-only read without his word at this final boundary. Sealed 12 (`4d7b3c29`) + 77 (`701c3edb`) UNTOUCHED; no sealed transcript opened.
+
+---
+
 ## AR-021 · 2026-07-17 · R-030 §1–§6 LANDED + independently graded BAND 8 + runbook re-frozen + probed; live micro-rehearsal on SPENT 2DX earned the phase_a/phase_b receipts AND caught 2 real seal-day bugs (fixed) — but surfaced ONE load-bearing gap that BLOCKS the read: the emitted rater packet is NOT self-describing. Requesting R-031. Seal INTACT.
 
 **R-030 built, graded, frozen (commits on `h1-wave4-sealed12-driver`):**
