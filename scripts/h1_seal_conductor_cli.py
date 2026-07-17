@@ -97,9 +97,19 @@ class RawJsonNonCompliant(ValueError):
     JSON value — substantial prose before/after the JSON, an ambiguous / EXAMPLE-
     bearing output, or truly-malformed. A ``ValueError`` subclass so any existing
     ``except ValueError`` caller still fails closed. DISTINCT from a guard HALT: it
-    signals 'the model did not emit strict-parseable JSON for THIS dispatch', so the
-    conductor STOPS and reports (NO auto-retry — the read-once / retry policy is the
-    advisor's call, never the CLI's)."""
+    signals 'the model did not emit strict-parseable JSON for THIS dispatch'. R-030
+    §2: this is the SOLE MECHANICAL TRIGGER for a bounded format-retry (initial + at
+    most 2 = 3 attempts). Retry fires ONLY on this exception, NEVER on any property of
+    a successfully-parsed object — zero content discretion in the loop. Retries
+    exhausted => the dispatch HALTs NON-COMPLIANT (option (c), the exhaust path)."""
+
+
+class ClaudeDispatchError(RuntimeError):
+    """Raised (fail-closed HALT) when the ``claude -p`` subprocess itself fails — a
+    non-zero exit / spawn error / timeout (an INFRASTRUCTURE failure, not a format
+    issue). This is NOT a format-retry trigger (R-030 §2(a): only RawJsonNonCompliant
+    retries); an infra failure HALTs immediately so a broken dispatch runtime can
+    never be silently papered over as a format retry."""
 
 
 # --------------------------------------------------------------------------- #
@@ -248,7 +258,16 @@ def _load_dispatch_record_optional(work_dir: str):
 
 
 def _load_raw_json(raw_path: str) -> dict:
-    """Parse a `claude -p`-captured RAW extraction file to a dict, FAIL-CLOSED.
+    """Parse a `claude -p`-captured RAW extraction FILE to a dict, FAIL-CLOSED — a
+    thin file wrapper over :func:`_parse_raw_json_text` (which carries the strict
+    contract). Kept for the file-based ``--wrap`` path; the CLI-owned dispatch loop
+    (R-030 §2) parses the captured stdout via :func:`_parse_raw_json_text` directly."""
+    with open(raw_path, encoding="utf-8") as fh:
+        return _parse_raw_json_text(fh.read())
+
+
+def _parse_raw_json_text(text: str) -> dict:
+    """Parse a `claude -p`-captured RAW extraction (a STRING) to a dict, FAIL-CLOSED.
 
     The model is instructed to print ONLY the JSON object. This parser tolerates an
     OPTIONAL surrounding ```` ```json ```` code fence + whitespace and NOTHING more:
@@ -263,9 +282,9 @@ def _load_raw_json(raw_path: str) -> dict:
     when the real answer was truncated/missing. Such a prose-wrapped / ambiguous /
     example-bearing output is now REFUSED — it NEVER silently returns a non-answer
     JSON. Raises :class:`RawJsonNonCompliant` (a ``ValueError`` subclass) on any
-    prose-wrapped / ambiguous / malformed raw, or a non-object JSON value."""
-    with open(raw_path, encoding="utf-8") as fh:
-        text = fh.read()
+    prose-wrapped / ambiguous / malformed raw, or a non-object JSON value. R-030 §2:
+    a ``RawJsonNonCompliant`` is the ONE mechanical trigger for a bounded format-retry
+    — no property of a SUCCESSFULLY-parsed object ever triggers a retry."""
     stripped = text.strip()
     if stripped.startswith("```"):
         # Strip a SINGLE opening fence line (``` or ```json) + a closing fence line
@@ -338,11 +357,35 @@ def _wrap_dispatch_raw(
         )
     except ValueError as exc:
         return 1, f"HALT: --raw is not parseable JSON ({raw_path}): {exc}"
+    try:
+        out_path, count = _wrap_phase_parsed(work_dir, seam, raw, video_id, index)
+    except DispatchWrapShapeError as exc:
+        return 1, f"HALT: raw extraction {raw_path} — {exc}"
+    return 0, f"WRAP {seam} ok: {raw_path} -> {out_path} (count={count})"
+
+
+class DispatchWrapShapeError(RuntimeError):
+    """Raised when a SUCCESSFULLY-parsed raw JSON object is the wrong SHAPE for its
+    seam (e.g. Phase-A/B with no ``strategies`` list). R-030 §2(a): this is a property
+    of parsed CONTENT, so it is NOT a format-retry trigger — it HALTs the dispatch
+    (never retried, never fabricated). Distinct from :class:`RawJsonNonCompliant`
+    (the parse-format trigger) precisely so the retry loop never fires on it."""
+
+
+def _wrap_phase_parsed(
+    work_dir: str, seam: str, raw: dict, video_id: str, index: int
+) -> tuple[str, int]:
+    """Wrap a parsed Phase-A/Phase-B raw dict into the canonical ingested artifact
+    (identity from the frozen record, dispatch_record embedded, Phase-A count/refs
+    synthesized). Shared by the file-based :func:`_wrap_dispatch_raw` and the
+    CLI-owned dispatch loop (:func:`run_dispatch`). Returns ``(out_path, count)``.
+    Raises :class:`DispatchWrapShapeError` (a HALT, NOT a retry) on a missing
+    ``strategies`` list."""
     strategies = raw.get("strategies")
     if not isinstance(strategies, list):
-        return 1, (
-            f"HALT: raw extraction {raw_path} has no `strategies` list — cannot wrap "
-            "(the model must emit the raw extraction schema)"
+        raise DispatchWrapShapeError(
+            "has no `strategies` list — cannot wrap (the model must emit the raw "
+            "extraction schema); a well-formed-but-wrong-schema raw HALTs, never retried"
         )
     identity = certified_reader_identity()
     dispatch_record = _load_dispatch_record_optional(work_dir)
@@ -362,7 +405,288 @@ def _wrap_dispatch_raw(
     _atomic_write_text(
         out_path, json.dumps(wrapped, ensure_ascii=False, sort_keys=True, indent=2)
     )
-    return 0, f"WRAP {seam} ok: {raw_path} -> {out_path} (count={len(strategies)})"
+    return out_path, len(strategies)
+
+
+# =========================================================================== #
+# R-030 §2/§3 — the CLI-OWNED dispatch loop. The CLI (NOT the conductor) shells
+# `claude -p` with NO tools (`--tools ""` = PHYSICAL blindness) and the transcript /
+# rater-packet CONTENT embedded in the prompt; it strict-parses the captured stdout,
+# and on a RawJsonNonCompliant (the SOLE mechanical trigger, R-030 §2(a)) it
+# re-dispatches up to a hard cap (R-030 §2(b)). Non-compliant raws are moved to a
+# QUARANTINE dir — persisted, never ingested, never content-inspected (R-030 §2(c)).
+# Every attempt is indexed; the run-total format-retry count is threaded into Module
+# E's verdict as a REPORTED (never gating) dispatch-health signal.
+#
+# Blindness (R-030 §3, option (i)): the subagent has NO Read tool, so it cannot open
+# the transcript path, a cached prior answer, the manifest, or any other file — the
+# ONLY material it sees is what the CLI embeds here. The conductor stays blind too:
+# the CLI machinery (already trusted to fetch+hash transcripts at stage-0) embeds the
+# content; the conductor never opens it. Swept across ALL Claude subscription seams
+# (Phase-A draws, Phase-B, raters); gpt-5.4 panels are a separate cross-vendor API
+# path, out of this blindness class.
+# =========================================================================== #
+
+#: R-030 §2(b): initial dispatch + at most this many format-retries (3 attempts total).
+_FORMAT_RETRY_CAP = 2
+
+#: R-030 §2(d) — the DISPATCH WRAPPER (declared instrument-surface). FORMAT
+#: instructions ONLY, IDENTICAL across every dispatch of every seam; the sole
+#: per-dispatch variable is the embedded source. NEVER content guidance. Recorded
+#: verbatim in the params-record addendum; enters the re-grade mutation scope.
+_WRAPPER_VERSION = "r030-dispatch-wrapper-v1"
+_DISPATCH_WRAPPER_HEADER = (
+    "Follow the specification EXACTLY — it is provided in the system prompt above "
+    "and/or embedded in the source material below. Between the markers below is the "
+    "COMPLETE and ONLY source material for this task. You have no tools and no file "
+    "access: use nothing but the text between the markers — do not consult any cached "
+    "result, prior answer, or external file.\n\n"
+    "OUTPUT CONTRACT (format only — it does not change the specification): print ONLY "
+    "the single JSON object the specification requires. No preamble, no explanation, "
+    "no markdown code fences, no text before or after the JSON.\n"
+)
+_DISPATCH_SOURCE_OPEN = "\n===== BEGIN SOURCE MATERIAL =====\n"
+_DISPATCH_SOURCE_CLOSE = "\n===== END SOURCE MATERIAL =====\n"
+
+
+def _compose_user_prompt(source_text: str) -> str:
+    """The FORMAT-only instrument-surface wrapper (R-030 §2(d)) around the CLI-embedded
+    source. Identical for every dispatch of every seam; the ONLY per-dispatch variable
+    is ``source_text`` (the transcript body, or the rater-packet JSON)."""
+    return f"{_DISPATCH_WRAPPER_HEADER}{_DISPATCH_SOURCE_OPEN}{source_text}{_DISPATCH_SOURCE_CLOSE}"
+
+
+def _frozen_prompt_text(path: str) -> str:
+    """Read a FROZEN certified prompt file's content (the system prompt for a seam)."""
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def _seam_system_prompt_text(seam: str) -> str:
+    """The FROZEN system prompt for a seam: the certified enumerator (Phase-A) or
+    frontier (Phase-B) prompt. Raters have NO separate frozen prompt — the emitted
+    tier-3 packet carries its own ``instructions`` — so the rater system prompt is
+    empty and the whole task definition rides in the embedded packet."""
+    if seam == "phase_a":
+        return _frozen_prompt_text(ENUMERATOR_PROMPT_PATH)
+    if seam == "phase_b":
+        return _frozen_prompt_text(FRONTIER_PROMPT_PATH)
+    if seam == "rater":
+        return ""
+    raise ValueError(f"unknown dispatch seam: {seam!r}")
+
+
+def _seam_source_text(work_dir: str, seam: str, video_id: str | None) -> str:
+    """The CONTENT the CLI embeds for a dispatch (R-030 §3) — read by the CLI
+    machinery, NEVER by the subagent. Phase-A/Phase-B embed the fetched transcript
+    body; a rater embeds the driver-emitted rater-packet JSON (which carries its own
+    instructions + items + allowed values). Missing => HALT (never fabricated)."""
+    if seam in ("phase_a", "phase_b"):
+        path = os.path.join(work_dir, _TRANSCRIPTS_SUBDIR, f"{video_id}.txt")
+        if not os.path.exists(path):
+            raise ConductorArtifactMissing(f"transcript to embed not found: {path}")
+        with open(path, encoding="utf-8") as fh:
+            return fh.read()
+    # rater
+    path = _emit_path(work_dir, _RATER_PKT_EMIT)
+    if not os.path.exists(path):
+        raise ConductorArtifactMissing(f"rater packets emit to embed not found: {path}")
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def _run_claude_p(model_id: str, system_prompt_text: str, user_prompt_text: str, timeout: int = 300) -> str:
+    """Seal-day LIVE model call — a fresh blind Claude subagent on the SUBSCRIPTION
+    channel via headless `claude -p`, run with ``--tools ""`` (NO tools = PHYSICAL
+    blindness, R-030 §3). The frozen prompt (if any) is the appended system prompt;
+    the ONLY material the subagent can see is ``user_prompt_text`` (the format wrapper
+    + the CLI-embedded source) — with no Read tool it cannot open the transcript path,
+    a cached answer, the manifest, or any file.
+
+    The user prompt is passed via STDIN, NOT as a positional argv element: ``--tools``
+    is a VARIADIC flag (``<tools...>``), so a trailing positional prompt would be
+    swallowed as a tool name (verified live 2026-07-17: positional prompt -> "Input
+    must be provided…"; stdin prompt -> clean output). The frozen system-prompt TEXT is
+    still an argv element (no shell, no ``$(cat …)``) so quoting can't corrupt it.
+    NETWORK/subscription-touching — NEVER called in unit tests (a stub is injected)."""
+    import subprocess
+
+    cmd = ["claude", "-p", "--model", model_id, "--tools", ""]
+    if system_prompt_text:
+        cmd += ["--append-system-prompt", system_prompt_text]
+    try:
+        proc = subprocess.run(
+            cmd, input=user_prompt_text, capture_output=True, text=True, cwd=_ROOT, timeout=timeout
+        )
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ClaudeDispatchError(f"claude -p failed to run: {exc}") from None
+    if proc.returncode != 0:
+        raise ClaudeDispatchError(
+            f"claude -p exited {proc.returncode}: {(proc.stderr or '').strip()[:200]}"
+        )
+    return proc.stdout or ""
+
+
+def _dispatch_key(seam: str, video_id: str | None, index) -> str:
+    """A filesystem-safe per-dispatch identity used for raw/quarantine/attempts paths."""
+    if seam == "phase_a":
+        return f"phase_a__{video_id}__d{index}"
+    if seam == "phase_b":
+        return f"phase_b__{video_id}__s{index}"
+    if seam == "rater":
+        return f"rater__{index}"
+    raise ValueError(f"unknown dispatch seam: {seam!r}")
+
+
+def _wrap_rater_parsed(work_dir: str, parsed: dict, rater_id) -> str:
+    """Write a parsed rater answer store to ``raters/<rater_id>.json``. Validates the
+    two-stage shape (``stage1`` + ``stage2`` objects) — a well-formed JSON object of
+    the WRONG shape HALTs via :class:`DispatchWrapShapeError` (R-030 §2(a): a property
+    of parsed content is never retried). The item-id / wrong-packet guard remains at
+    the verdict stage (R-026.2); this only asserts the coarse container shape."""
+    stage1 = parsed.get("stage1")
+    stage2 = parsed.get("stage2")
+    if not isinstance(stage1, dict) or not isinstance(stage2, dict):
+        raise DispatchWrapShapeError(
+            "rater answer store must be a JSON object with `stage1` and `stage2` "
+            "objects (the packet's output contract); wrong-shape HALTs, never retried"
+        )
+    out_path = os.path.join(work_dir, "raters", f"{rater_id}.json")
+    _atomic_write_text(
+        out_path, json.dumps(parsed, ensure_ascii=False, sort_keys=True, indent=2)
+    )
+    return out_path
+
+
+def _write_attempts(work_dir: str, seam: str, key: str, attempts: list, resolved: bool, retry_count: int = 0) -> None:
+    """Persist the per-dispatch attempts index (R-030 §2(c) full logging): every
+    attempt indexed with its outcome (ok / non_compliant→quarantined / dispatch_error)
+    + the resolved flag + the retry_count. Never content — only outcomes + paths."""
+    rec = {
+        "seam": seam,
+        "dispatch_key": key,
+        "resolved": bool(resolved),
+        "retry_count": int(retry_count),
+        "attempts": attempts,
+        "format_retry_cap": _FORMAT_RETRY_CAP,
+        "wrapper_version": _WRAPPER_VERSION,
+    }
+    _atomic_write_text(
+        os.path.join(work_dir, "attempts", f"{key}.json"),
+        json.dumps(rec, ensure_ascii=False, sort_keys=True, indent=2),
+    )
+
+
+def _scan_dispatch_retry_total(work_dir: str) -> int | None:
+    """Sum the format-retry count across ALL per-dispatch attempts records (R-030
+    §2(c)) — the run-total the verdict reports. Returns None when NO attempts dir
+    exists (the rehearsal / pre-R-030 path never ran the CLI-owned dispatch loop) so
+    the verdict stays byte-unchanged; an int (possibly 0) once the loop has run."""
+    adir = os.path.join(work_dir, "attempts")
+    if not os.path.isdir(adir):
+        return None
+    total = 0
+    for name in sorted(os.listdir(adir)):
+        if not name.endswith(".json"):
+            continue
+        try:
+            with open(os.path.join(adir, name), encoding="utf-8") as fh:
+                total += int(json.load(fh).get("retry_count") or 0)
+        except (OSError, ValueError):
+            continue
+    return total
+
+
+def run_dispatch(
+    work_dir: str,
+    seam: str,
+    video_id: str | None,
+    index,
+    claude_fn=None,
+    timeout: int = 300,
+) -> tuple[int, str]:
+    """R-030 §2/§3 — the CLI-OWNED single-dispatch operation the conductor invokes as
+    ONE named command per seam. Composes the no-tools embedded-content invocation,
+    shells `claude -p` (blind), strict-parses the stdout, retries ONLY on
+    RawJsonNonCompliant up to the cap (quarantining each non-compliant raw), and on
+    the first compliant raw WRAPS it into the canonical ingested artifact. Exhausted
+    retries => HALT NON-COMPLIANT (option (c)). An infra failure => HALT immediately
+    (never a format retry). ``claude_fn`` is injected in tests (no live model)."""
+    claude_fn = claude_fn or _run_claude_p
+    identity = certified_reader_identity()
+    model_id = identity["model_id"]
+    try:
+        system_text = _seam_system_prompt_text(seam)
+        source_text = _seam_source_text(work_dir, seam, video_id)
+    except (ConductorArtifactMissing, ValueError) as exc:
+        return 1, f"HALT: {type(exc).__name__}: {exc}"
+    user_text = _compose_user_prompt(source_text)
+    key = _dispatch_key(seam, video_id, index)
+    raw_dir = os.path.join(work_dir, "raw_dispatch", key)
+    q_dir = os.path.join(work_dir, "quarantine", key)
+
+    attempts: list[dict] = []
+    parsed: dict | None = None
+    for attempt_i in range(_FORMAT_RETRY_CAP + 1):
+        try:
+            raw_text = claude_fn(model_id, system_text, user_text, timeout)
+        except ClaudeDispatchError as exc:
+            attempts.append({"attempt": attempt_i, "outcome": "dispatch_error", "error": str(exc)[:200]})
+            _write_attempts(work_dir, seam, key, attempts, resolved=False)
+            return 1, (
+                f"HALT: ClaudeDispatchError ({key}) on attempt {attempt_i} — infra "
+                f"failure, NOT a format-retry (R-030 §2(a)); {exc}"
+            )
+        raw_path = os.path.join(raw_dir, f"attempt_{attempt_i}.txt")
+        _atomic_write_text(raw_path, raw_text)
+        try:
+            parsed = _parse_raw_json_text(raw_text)
+        except RawJsonNonCompliant as exc:
+            # SOLE retry trigger — QUARANTINE the raw (persist, never ingest / re-read).
+            q_path = os.path.join(q_dir, f"attempt_{attempt_i}.txt")
+            os.makedirs(q_dir, exist_ok=True)
+            os.replace(raw_path, q_path)
+            attempts.append({
+                "attempt": attempt_i, "outcome": "non_compliant",
+                "quarantined_raw": _rel(q_path), "error": str(exc)[:200],
+            })
+            parsed = None
+            continue
+        attempts.append({"attempt": attempt_i, "outcome": "ok", "raw": _rel(raw_path)})
+        break
+    # retry_count = number of RE-dispatches = attempts beyond the first (R-030 §2(c)).
+    # Consistent across paths: in the success path the last attempt is the compliant
+    # one so this equals the non-compliant count; in the exhaust path (all N attempts
+    # non-compliant) it is N-1, the true number of retries (never N).
+    retry_count = max(0, len(attempts) - 1)
+    if parsed is None:
+        # Every attempt non-compliant — HALT NON-COMPLIANT (option (c), exhaust path).
+        # Log the TRUE retry count (grader LOW finding): an exhausted dispatch HALTs the
+        # run so this never reaches a reported verdict, but the attempts record must not
+        # undercount its own retries (R-030 §2(c) logging integrity).
+        _write_attempts(work_dir, seam, key, attempts, resolved=False, retry_count=retry_count)
+        return 1, (
+            f"HALT: dispatch NON-COMPLIANT after {len(attempts)} attempts ({key}) — "
+            f"the model never emitted strict-parseable JSON; {_FORMAT_RETRY_CAP} "
+            "format-retries exhausted. Raws QUARANTINED (never ingested); advisor "
+            "adjudicates (R-030 §2(c))."
+        )
+
+    try:
+        if seam == "rater":
+            out_path = _wrap_rater_parsed(work_dir, parsed, index)
+            tail = "rater-answers"
+        else:
+            out_path, count = _wrap_phase_parsed(work_dir, seam, parsed, video_id, index)
+            tail = f"count={count}"
+    except DispatchWrapShapeError as exc:
+        _write_attempts(work_dir, seam, key, attempts, resolved=False, retry_count=retry_count)
+        return 1, f"HALT: dispatch wrap shape ({key}) — {exc}"
+    _write_attempts(work_dir, seam, key, attempts, resolved=True, retry_count=retry_count)
+    return 0, (
+        f"DISPATCH {seam} ok: {key} -> {_rel(out_path)} "
+        f"({tail}, attempts={len(attempts)}, retries={retry_count})"
+    )
 
 
 def _load_validity_inputs(work_dir: str) -> dict:
@@ -582,6 +906,7 @@ def _drive_full_sealed_read(
             dispatch_record=dispatch_record,
             propose_fn=propose_fn,
             source_attrition=source_attrition,
+            dispatch_retry_total=_scan_dispatch_retry_total(work_dir),
             **validity_inputs,
         )
     except (ReaderIdentityMismatch, SpentManifestRejected, ConductorArtifactMissing) as exc:
@@ -812,45 +1137,32 @@ def _abs_slash(path: str) -> str:
     return os.path.abspath(path).replace(os.sep, "/")
 
 
-#: This CLI's own absolute path — the plan emits `python <this> --wrap …` as the
-#: second named command per dispatch (the wrap step; see `_wrap_dispatch_raw`).
+#: This CLI's own absolute path — the plan emits `python <this> --dispatch …` as the
+#: SINGLE named command per dispatch (R-030 §2/§3: the CLI owns compose→shell→retry→
+#: quarantine→wrap; the conductor just runs the one command, stays blind).
 _THIS_CLI = _abs_slash(__file__)
 
 
-def _claude_p_template(model_id: str, prompt_path: str, transcript_path: str, raw_output_path: str) -> str:
-    """The headless `claude -p` invocation template (runbook STEP 2: fresh Claude
-    subagent on the subscription channel, model set EXPLICITLY).
-
-    R-028.4 finding #1 (headless permission): a default-headless `claude -p` may
-    NOT use the Write tool, so the subagent PRINTS the JSON to stdout and the shell
-    CAPTURES it (`> raw_output_path`) — no Write-tool permission needed. `Read` is
-    the ONE tool the subagent needs (to read the transcript PATH itself — blindness
-    kept) and is the minimal allow-list. The model flag is the ONLY load-bearing
-    literal and is interpolated from the frozen identity — never hardcoded. All
-    paths are OS-correct ABSOLUTE (finding #2)."""
-    return (
-        f"claude -p --model {model_id} --allowedTools Read "
-        f'--append-system-prompt "$(cat {prompt_path})" '
-        f'"Read the transcript file at {transcript_path} and produce the extraction '
-        "artifact exactly as the frozen prompt specifies. Print ONLY the JSON "
-        "artifact and nothing else to stdout. Output ONLY the JSON object — no "
-        "preamble, no explanation, no markdown fences, no text before or after the "
-        f'JSON." > {raw_output_path}'
-    )
-
-
-def _wrap_command(work_dir_abs: str, seam: str, raw_output_path: str, video_id: str, index) -> str:
-    """The SECOND named command the plan emits per dispatch (R-028.4 finding #3):
-    after the `claude -p` writes the RAW extraction to ``raw_output_path``, this CLI
-    step reads that raw + the conductor's dispatch_record, WRAPS them into the draw
-    schema the ingestion asserts on (adding ``reader_identity`` from the FROZEN
-    record + deriving ``count``/``strategy_refs`` from the raw), and writes the
-    canonical ``<seam>/…`` artifact the existing stage reads UNCHANGED. The
-    conductor never hand-assembles identity — the CLI owns the wrap."""
-    idx_flag = "--draw-index" if seam == "phase_a" else "--strategy-index"
+def _dispatch_command(work_dir_abs: str, seam: str, video_id: str | None, index) -> str:
+    """The SINGLE named command the plan emits per dispatch (R-030 §2/§3). Running it
+    makes the CLI: embed the transcript / rater-packet CONTENT into a no-tools
+    `claude -p` invocation (physical blindness — the subagent gets NO Read tool and
+    cannot open the transcript path, a cached answer, or any file), strict-parse the
+    stdout, re-dispatch ONLY on RawJsonNonCompliant up to the cap (quarantining each
+    non-compliant raw), and WRAP the first compliant raw into the ingested artifact.
+    The conductor never shells `claude -p` itself and never opens the transcript —
+    the CLI machinery does both. No `--allowedTools`, no `> raw` redirect, no wrap
+    step: all folded into the CLI-owned dispatch."""
+    if seam == "phase_a":
+        idx_flag = "--draw-index"
+    elif seam == "phase_b":
+        idx_flag = "--strategy-index"
+    else:  # rater
+        idx_flag = "--rater-id"
+    vid_part = f"--video-id {video_id} " if video_id is not None else ""
     return (
         f"python {_THIS_CLI} --mode sealed --work-dir {work_dir_abs} "
-        f"--wrap {seam} --raw {raw_output_path} --video-id {video_id} {idx_flag} {index}"
+        f"--dispatch {seam} {vid_part}{idx_flag} {index}"
     )
 
 
@@ -883,44 +1195,30 @@ def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attr
     are emitted by later stages, not knowable at plan time)."""
     model_id = identity["model_id"]
     k = identity["k"]
-    # OS-correct ABSOLUTE paths (R-028.4 finding #2) — the conductor dispatches these
-    # verbatim; a relative / `/tmp/…` path does not round-trip.
+    # OS-correct ABSOLUTE paths — the conductor runs these dispatch commands verbatim.
     wd_abs = _abs_slash(work_dir)
-    enum_prompt = _abs_slash(ENUMERATOR_PROMPT_PATH)
-    frontier_prompt = _abs_slash(FRONTIER_PROMPT_PATH)
     dispatch_record_template = {
         "requested_model": model_id,
-        "resolved_model": "<what actually ran — conductor fills; must equal requested>",
+        "resolved_model": "<what actually ran — the CLI dispatch loop fills; must equal requested>",
         "channel_class": identity["channel_class"],
-        "dispatch_mode": "interactive|headless",
+        "dispatch_mode": "headless",
     }
-    # Pre-create the raw-capture dirs so the emitted `> raw_output_path` redirect
-    # has a landing dir (bash `>` does not mkdir the parent).
-    os.makedirs(os.path.join(work_dir, "raw", "phase_b"), exist_ok=True)
+    # R-030 §2/§3: ONE command per Phase-A draw — the CLI owns compose (no tools,
+    # embedded transcript) -> shell claude -p -> strict-parse + bounded retry ->
+    # quarantine -> wrap. No conductor-run `claude -p`, no `--allowedTools`, no raw
+    # redirect, no separate wrap step (all folded in). The conductor stays blind.
     phase_a_dispatches: list[dict] = []
     for vid in readable_ids:
-        transcript_path = f"{wd_abs}/{_TRANSCRIPTS_SUBDIR}/{vid}.txt"
-        os.makedirs(os.path.join(work_dir, "raw", "phase_a", vid), exist_ok=True)
         for i in range(k):
-            raw_output_path = f"{wd_abs}/raw/phase_a/{vid}/draw_{i}.json"
             output_path = f"{wd_abs}/phase_a/{vid}/draw_{i}.json"
             phase_a_dispatches.append(
                 {
                     "seam": "phase_a_draw",
                     "video_id": vid,
                     "draw_index": i,
-                    "prompt_path": enum_prompt,
-                    "transcript_path": transcript_path,
-                    "raw_output_path": raw_output_path,
                     "output_path": output_path,
-                    # 1) run the model -> RAW extraction (stdout-captured, no Write tool);
-                    "claude_p_template": _claude_p_template(
-                        model_id, enum_prompt, transcript_path, raw_output_path
-                    ),
-                    # 2) CLI wraps raw + dispatch_record -> the ingested draw artifact.
-                    "wrap_command": _wrap_command(
-                        wd_abs, "phase_a", raw_output_path, vid, i
-                    ),
+                    # SINGLE named command — the CLI-owned blind dispatch (R-030 §2/§3).
+                    "dispatch_command": _dispatch_command(wd_abs, "phase_a", vid, i),
                     "expected_raw_schema": dict(_PHASE_A_RAW_SCHEMA),
                     "expected_schema": dict(_PHASE_A_DRAW_SCHEMA),
                 }
@@ -929,19 +1227,9 @@ def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attr
         "phase_b": {
             "seam": "phase_b_strategy",
             "emitted_by_stage": "certify (one dispatch per consensus strategy)",
-            "prompt_path": frontier_prompt,
-            "transcript_path_template": f"{wd_abs}/{_TRANSCRIPTS_SUBDIR}/<video_id>.txt",
-            "raw_output_path_template": f"{wd_abs}/raw/phase_b/<video_id>__s<idx>.json",
             "output_path_template": f"{wd_abs}/phase_b/<video_id>__s<idx>.json",
-            "claude_p_template": _claude_p_template(
-                model_id, frontier_prompt,
-                f"{wd_abs}/{_TRANSCRIPTS_SUBDIR}/<video_id>.txt",
-                f"{wd_abs}/raw/phase_b/<video_id>__s<idx>.json",
-            ),
-            "wrap_command_template": _wrap_command(
-                wd_abs, "phase_b",
-                f"{wd_abs}/raw/phase_b/<video_id>__s<idx>.json",
-                "<video_id>", "<idx>",
+            "dispatch_command_template": _dispatch_command(
+                wd_abs, "phase_b", "<video_id>", "<idx>"
             ),
             "expected_raw_schema": dict(_PHASE_B_RAW_SCHEMA),
             "expected_schema": {
@@ -954,6 +1242,7 @@ def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attr
         "panel": {
             "seam": "panel",
             "emitted_by_stage": "certify (emit/panel_requests.json, one per cid)",
+            "note": "gpt-5.4 cross-vendor API panel — NOT a claude -p / no-tools seam.",
             "output_path_template": "panels/<cid>.json",
             "expected_schema": {
                 "conflation": "PASS|FAIL",
@@ -966,6 +1255,9 @@ def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attr
             "emitted_by_stage": "certify (emit/rater_packets.json; two blind raters)",
             "output_path_template": "raters/<rater_id>.json",
             "raters": ["A", "B"],
+            # R-030 §3: raters swept the SAME way — no tools, the emitted rater packet
+            # embedded (it carries its own instructions). ONE command per rater.
+            "dispatch_command_template": _dispatch_command(wd_abs, "rater", None, "<rater_id>"),
             "expected_schema": {
                 "stage1": {"<item_id>": "gate-strength|context|cannot-determine"},
                 "stage2": {"<item_id>": {"support": "confirmed|partial|denied",
@@ -980,6 +1272,8 @@ def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attr
         "readable_n": attrition["readable_n"],
         "reader_identity": identity,
         "dispatch_record_template": dispatch_record_template,
+        "dispatch_model": "no-tools embedded-content claude -p (R-030 §2/§3)",
+        "wrapper_version": _WRAPPER_VERSION,
         "phase_a_dispatches": phase_a_dispatches,
         "later_seam_instruction_shapes": later_seam_instruction_shapes,
         "source_attrition_emit": _rel(_emit_path(work_dir, _SOURCE_ATTRITION_EMIT)),
@@ -1456,13 +1750,39 @@ def main(argv: list[str] | None = None) -> int:
         "record; derives count/strategy_refs for Phase-A).",
     )
     parser.add_argument("--raw", default=None, help="--wrap: path to the raw extraction stdout.")
-    parser.add_argument("--video-id", default=None, help="--wrap: the dispatch's video_id.")
-    parser.add_argument("--draw-index", type=int, default=None, help="--wrap phase_a: draw index.")
-    parser.add_argument("--strategy-index", type=int, default=None, help="--wrap phase_b: strategy index.")
+    parser.add_argument("--video-id", default=None, help="--wrap/--dispatch: the dispatch's video_id.")
+    parser.add_argument("--draw-index", type=int, default=None, help="--wrap/--dispatch phase_a: draw index.")
+    parser.add_argument("--strategy-index", type=int, default=None, help="--wrap/--dispatch phase_b: strategy index.")
+    parser.add_argument(
+        "--dispatch",
+        default=None,
+        choices=("phase_a", "phase_b", "rater"),
+        help="sealed mode: the CLI-OWNED blind dispatch (R-030 §2/§3). Composes a "
+        "no-tools `claude -p` with the transcript/rater-packet embedded, strict-parses "
+        "the stdout, retries ONLY on non-compliant JSON up to the cap (quarantining "
+        "each), and wraps the first compliant raw into the ingested artifact.",
+    )
+    parser.add_argument("--rater-id", default=None, help="--dispatch rater: the rater id (e.g. A / B).")
     args = parser.parse_args(argv)
 
     if args.mode == "staging":
         code, text = run_staging(out_dir=args.out_dir)
+    elif args.dispatch:
+        if not args.work_dir:
+            print("HALT: --work-dir is required for --dispatch", file=sys.stderr)
+            return 2
+        if args.dispatch == "phase_a":
+            index = args.draw_index
+        elif args.dispatch == "phase_b":
+            index = args.strategy_index
+        else:
+            index = args.rater_id
+        if index is None or (args.dispatch in ("phase_a", "phase_b") and args.video_id is None):
+            need = {"phase_a": "--video-id + --draw-index", "phase_b": "--video-id + --strategy-index",
+                    "rater": "--rater-id"}[args.dispatch]
+            print(f"HALT: --dispatch {args.dispatch} requires {need}", file=sys.stderr)
+            return 2
+        code, text = run_dispatch(args.work_dir, args.dispatch, args.video_id, index)
     elif args.wrap:
         if not args.work_dir:
             print("HALT: --work-dir is required for --wrap", file=sys.stderr)

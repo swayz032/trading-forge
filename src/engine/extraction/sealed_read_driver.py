@@ -1807,6 +1807,7 @@ class SealedReadDriver:
         live_phase_b_fn: Callable[[str, object, int, dict], object] | None = None,
         source_attrition: dict | None = None,
         readable_video_ids: list | None = None,
+        dispatch_retry_total: int | None = None,
     ) -> dict:
         """FULL composition THROUGH MODULE E: gate (A) -> extraction (B) ->
         panels+certificate (C) -> rater layer (D) -> VERDICT MATH (E).
@@ -1864,7 +1865,9 @@ class SealedReadDriver:
             epoch=epoch,
         )
         verdict = run_verdict_stage(
-            composed["rater_layer"], instrument_stamps, mode, source_attrition=source_attrition
+            composed["rater_layer"], instrument_stamps, mode,
+            source_attrition=source_attrition,
+            dispatch_retry_total=dispatch_retry_total,
         )
         return {
             "ok": True,
@@ -3126,7 +3129,11 @@ def _assemble_instrument_stamps(
 
 
 def run_verdict_stage(
-    video_certificates, instrument_stamps: dict, mode: str, source_attrition: dict | None = None
+    video_certificates,
+    instrument_stamps: dict,
+    mode: str,
+    source_attrition: dict | None = None,
+    dispatch_retry_total: int | None = None,
 ) -> dict:
     """MODULE E stage: the ONE terminal verdict over Module D's per-strategy
     rater-adjudicated certificates.
@@ -3264,6 +3271,20 @@ def run_verdict_stage(
     }
     if attrition_block is not None:
         result["source_attrition"] = attrition_block
+    # DISPATCH HEALTH (R-030 §2(c)) — the run's TOTAL format-retry count, REPORTED
+    # (never gating: a format-retry moves throughput toward completion, not the bar
+    # toward pass — the fidelity grade is output-vs-transcript regardless of which
+    # attempt parsed). ADDITIVE: None keeps the verdict dict byte-unchanged (rehearsal
+    # / every existing staged verdict). A non-zero total surfaces pervasive retrying
+    # as a VISIBLE anomaly the operator/advisor can see, never a silent smoothing.
+    if dispatch_retry_total is not None:
+        result["dispatch_health"] = {
+            "total_format_retries": int(dispatch_retry_total),
+            "note": (
+                "count of RawJsonNonCompliant re-dispatches across all seams "
+                "(R-030 §2); reported, not gating — throughput signal only"
+            ),
+        }
     return result
 
 

@@ -1756,6 +1756,26 @@ def test_e_bar_8_of_12_meets_7_of_12_misses():
     assert VIDEO_CLEAN_BAR == 0.60
 
 
+def test_e_dispatch_health_additive_reported_never_gating():
+    """R-030 §2(c): the run-total format-retry count is ADDITIVE to the verdict —
+    None -> absent (byte-unchanged); an int -> a REPORTED dispatch_health block. It
+    NEVER moves the bar (a format-retry is throughput, not the fidelity read)."""
+    per_video = _n_clean_videos(8, 12)
+    base = run_verdict_stage(_d_result(per_video), _valid_stamps(), "sealed")
+    assert "dispatch_health" not in base  # None default keeps the dict byte-unchanged
+    withn = run_verdict_stage(
+        _d_result(per_video), _valid_stamps(), "sealed", dispatch_retry_total=7
+    )
+    assert withn["dispatch_health"]["total_format_retries"] == 7
+    # a pervasive-retry run and a zero-retry run reach the SAME structural verdict.
+    zero = run_verdict_stage(
+        _d_result(per_video), _valid_stamps(), "sealed", dispatch_retry_total=0
+    )
+    assert withn["meets_bar"] == base["meets_bar"] == zero["meets_bar"]
+    assert withn["verdict"] == base["verdict"]
+    assert zero["dispatch_health"]["total_format_retries"] == 0
+
+
 # --------------------------------------------------------------------------- #
 # (c) content NOT gated (R-021.3): content_clean=False still counts CLEAN.
 # --------------------------------------------------------------------------- #

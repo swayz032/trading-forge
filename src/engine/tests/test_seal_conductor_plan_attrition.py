@@ -153,48 +153,42 @@ def test_a_plan_emits_wellformed_dispatch_plan(tmp_path):
     draws = plan["phase_a_dispatches"]
     assert len(draws) == 12 * ri["k"]  # k blind Phase-A draws per readable video
     d0 = next(d for d in draws if d["video_id"] == ids[0] and d["draw_index"] == 0)
-    assert d0["prompt_path"].endswith("strategy-enumerator.md")
     # R-028.4 finding #2: paths are OS-correct ABSOLUTE (never relative / `/tmp/…`).
     wd_abs = os.path.abspath(wd).replace(os.sep, "/")
-    assert d0["transcript_path"] == f"{wd_abs}/transcripts/{ids[0]}.txt"
     assert d0["output_path"] == f"{wd_abs}/phase_a/{ids[0]}/draw_0.json"
-    assert d0["raw_output_path"] == f"{wd_abs}/raw/phase_a/{ids[0]}/draw_0.json"
     assert os.path.isabs(d0["output_path"].replace("/", os.sep)) and "/tmp/" not in d0["output_path"]
-    assert d0["prompt_path"] == os.path.abspath(d0["prompt_path"]).replace(os.sep, "/")
-    # R-028.4 finding #1: the `claude -p` template CAPTURES STDOUT (no Write-tool
-    # permission) into raw_output_path + allows ONLY the Read tool (minimal).
-    tmpl = d0["claude_p_template"]
-    assert tmpl.startswith("claude -p ")
-    assert f"--model {ri['model_id']}" in tmpl
-    assert "--allowedTools Read" in tmpl
-    assert "Print ONLY the JSON artifact" in tmpl
-    assert "--permission-mode bypassPermissions" not in tmpl  # stdout-capture, not bypass
-    assert tmpl.rstrip().endswith(d0["raw_output_path"])  # `> raw_output_path`
-    assert f"> {d0['raw_output_path']}" in tmpl
-    assert d0["prompt_path"] in tmpl and d0["transcript_path"] in tmpl
-    # the model emits the RAW extraction; the wrap step produces the ingested draw.
+    # R-030 §2/§3: the plan emits ONE dispatch command per draw — the CLI-OWNED blind
+    # dispatch. NO conductor-run `claude -p`, NO `--allowedTools`, NO `> raw` redirect,
+    # NO separate wrap step (all folded into the CLI). The subagent gets NO tools.
+    cmd = d0["dispatch_command"]
+    assert cmd.startswith("python ") and "--dispatch phase_a" in cmd
+    assert f"--video-id {ids[0]}" in cmd and "--draw-index 0" in cmd
+    assert f"--work-dir {wd_abs}" in cmd
+    # the OLD leaky surfaces are GONE from the emitted plan (blindness fix, R-030 §3).
+    assert "claude_p_template" not in d0 and "wrap_command" not in d0
+    assert "--allowedTools" not in cmd and "allowedTools Read" not in json.dumps(plan)
+    assert "raw_output_path" not in d0
+    assert plan["wrapper_version"] == cli._WRAPPER_VERSION
+    # the model emits the RAW extraction; the CLI-owned wrap produces the ingested draw.
     assert set(d0["expected_raw_schema"]) == {"strategies", "enumeration_note"}
     assert set(d0["expected_schema"]) == {"count", "strategy_refs", "reader_identity", "dispatch_record"}
-    # R-028.4 finding #3: the SECOND named command = the CLI `--wrap` step.
-    wrap = d0["wrap_command"]
-    assert wrap.startswith("python ") and "--wrap phase_a" in wrap
-    assert f"--raw {d0['raw_output_path']}" in wrap
-    assert f"--video-id {ids[0]}" in wrap and "--draw-index 0" in wrap
-    assert f"--work-dir {wd_abs}" in wrap
+    # Phase-B + rater later-seam shapes ALSO emit no-tools dispatch commands (swept).
+    pb = plan["later_seam_instruction_shapes"]["phase_b"]
+    assert "--dispatch phase_b" in pb["dispatch_command_template"]
+    assert "claude_p_template" not in pb and "--allowedTools" not in pb["dispatch_command_template"]
+    rt = plan["later_seam_instruction_shapes"]["rater"]
+    assert "--dispatch rater" in rt["dispatch_command_template"] and "--rater-id" in rt["dispatch_command_template"]
 
     # later-seam instruction shapes present (single source of "how to dispatch").
     shapes = plan["later_seam_instruction_shapes"]
-    assert shapes["phase_b"]["prompt_path"].endswith("transcript-extractor-frontier-v32.md")
-    pb_tmpl = shapes["phase_b"]["claude_p_template"]
-    assert f"--model {ri['model_id']}" in pb_tmpl and "--allowedTools Read" in pb_tmpl
-    assert pb_tmpl.rstrip().endswith(shapes["phase_b"]["raw_output_path_template"])
-    assert "--wrap phase_b" in shapes["phase_b"]["wrap_command_template"]
     assert set(shapes["phase_b"]["expected_raw_schema"]) == {
         "strategies", "instrument_classification", "rejected_strategies", "coaching_notes"
     }
     assert set(shapes) == {"phase_b", "panel", "rater"}
+    # the panel seam is the cross-vendor gpt-5.4 path — explicitly NOT a no-tools claude seam.
+    assert "dispatch_command_template" not in shapes["panel"]
 
-    # transcripts fetched to disk (conductor never opens them; the subagent reads the path).
+    # transcripts fetched to disk (the CLI embeds them; conductor never opens them).
     assert os.path.exists(os.path.join(wd, "transcripts", f"{ids[0]}.txt"))
 
     # ★ NO hardcoded model id / prompt sha in the CLI or driver source.
