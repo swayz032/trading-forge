@@ -387,6 +387,15 @@ adminRoutes.post("/ollama-health-recheck", async (req, res) => {
 // is also a presence marker (audit row decisionAuthority='human' becomes the
 // activity signal future detector ticks will see).
 adminRoutes.post("/operator-mark-present", async (req, res) => {
+  // goalscan 2026-07-16 (vacation-autopilot disengage, MED): this route clears the STICKY
+  // operator_absent_since marker — the only way to disengage Tier-1 vacation autopilot — and
+  // stamps decisionAuthority:"human". Bearer-only, a relay-tunneled family/n8n key holder could
+  // silently disengage vacation mode during the operator's absence, and the "human" tag would be
+  // false. Require the same pipeline/vacation-control authority its siblings (/pipeline/pause,
+  // /vacation, /start) carry — this makes the "human" authority honest (guard confirmed operator)
+  // and closes the disengage gap. (The lighter "hit any admin endpoint clears PENDING" convenience
+  // path in CLAUDE.md §3 still works for the non-sticky pending marker via other endpoints.)
+  if (!requirePipelineControlAuthority(req, res)) return;
   const correlationId = randomUUID();
   try {
     const { clearOperatorAbsenceMarkers } = await import("../services/dead-mans-heartbeat-service.js");
@@ -1465,16 +1474,24 @@ adminRoutes.get("/data-integrity-findings", async (req, res) => {
 // HOD/LOD records: expire_at = end_of_session (not implemented; same as naked_poc — no expiry set
 // here, operator cron re-runs daily and existing active rows are skipped via idempotency check).
 //
-// Auth: optional shared-secret via X-Liquidity-Map-Secret header.  Enforced
-// only when env var LIQUIDITY_MAP_BATCH_SECRET is set.  Operator-grade admin
-// endpoint — admin routes are mounted behind the tower-relay HMAC gateway so
-// this layer is defense-in-depth, not the primary auth boundary.
+// Auth (goalscan 2026-07-16, MED + false-safeguard-doc, A3/A6): this route injects
+// liquidity_levels rows that the LIVE 11-factor confluence gate (liquidity_target_clear, w=0.13)
+// and adaptive TP1/TP2 selection consume — fabricated rows can push a signal over the 0.72
+// threshold or seed bogus exit targets. The prior comment claimed "admin routes are mounted
+// behind the tower-relay HMAC gateway so this is defense-in-depth" — that gateway DOES NOT EXIST
+// (verified: the only /api boundary is the shared Bearer API_KEY in middleware/auth.ts; the relay
+// forwards it verbatim and adds no HMAC). So the shared secret was the ONLY real control and it is
+// OPTIONAL (unset by default). Fix: require the same Office/operator control authority the other
+// trade-influencing admin mutations carry — this admits the operator's LOCAL daily cron (loopback,
+// non-relay) and the Office admin cookie, and blocks a relay-tunneled Bearer-only caller. The
+// optional X-Liquidity-Map-Secret remains an ADDITIONAL layer, not the primary boundary.
 //
 // Audit: liquidity_map.naked_pocs_batched row carries the correlation_id.
 adminRoutes.post("/liquidity-map/naked-pocs-batch", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   const correlationId = randomUUID();
 
-  // ── Optional shared-secret check ────────────────────────────────────────
+  // ── Optional shared-secret check (secondary layer; primary is the guard above) ──
   const requiredSecret = process.env.LIQUIDITY_MAP_BATCH_SECRET;
   if (requiredSecret && requiredSecret.length > 0) {
     const providedSecret = req.header("x-liquidity-map-secret") ?? "";

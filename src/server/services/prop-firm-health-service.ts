@@ -257,14 +257,16 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
           `New orders BLOCKED. Review account dashboard immediately. ` +
           `Run dashboard-snapshot-service to capture evidence.`,
         ),
+        cronCorrelationId, // goalscan 2026-07-16: forensic correlationId to Discord + alerts.metadata
       );
 
-      // SSE broadcast
+      // SSE broadcast — goalscan 2026-07-16: correlationId for audit-trail join
       broadcastSSE("prop-firm:suspension-detected", {
         firmId: result.firmId,
         status: result.status,
         responseCode: result.responseCode,
         snippet: result.responseBodySnippet?.slice(0, 200),
+        correlationId: cronCorrelationId,
       });
 
       // Notify paper engine
@@ -294,7 +296,7 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
 
       logger.info({ firmId: result.firmId }, "C2 prop firm health restored — lifting order block");
 
-      broadcastSSE("prop-firm:suspension-cleared", { firmId: result.firmId });
+      broadcastSSE("prop-firm:suspension-cleared", { firmId: result.firmId, correlationId: cronCorrelationId });
 
       if (_onSuspensionChange) {
         try {
@@ -330,6 +332,7 @@ export async function pollPropFirmHealth(): Promise<FirmHealthResult[]> {
             `(~${streak * 15} min). The C1/C2 outage/suspension detector is BLIND for this firm — new-order ` +
             `blocking on suspension will NOT fire. Investigate DNS/TLS/endpoint. Last error: ${result.responseBodySnippet ?? "unknown"}.`,
           ),
+          cronCorrelationId, // goalscan 2026-07-16: forensic correlationId to Discord + alerts.metadata
         );
         await insertAuditRow({
           action: "prop_firm.repeated_unreachable_alert",
@@ -418,7 +421,11 @@ export async function simulateSuspension(firmId: string): Promise<void> {
     action: "prop_firm.suspension_simulated",
     entityType: "system",
     entityId: null,
-    decisionAuthority: "human_admin",
+    // goalscan 2026-07-16 (O3): "human_admin" is not in the canonical decisionAuthority vocabulary
+    // (gate|human|agent|scheduler|n8n); getLastOperatorActivityAt() exact-matches "human", so this
+    // string would never count as operator activity. Canonicalize to "human" so if this admin/test
+    // hook is ever wired to a route, a real operator action resets the vacation-absence clock.
+    decisionAuthority: "human",
     input: { firmId } as Record<string, unknown>,
     result: { ordersBlocked: true } as Record<string, unknown>,
     status: "success",

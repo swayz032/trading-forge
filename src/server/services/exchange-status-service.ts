@@ -477,7 +477,7 @@ export async function simulateOutage(exchange: string, reason: string, affectedS
     action: "exchange.outage_simulated",
     entityType: "system",
     entityId: null,
-    decisionAuthority: "human_admin",
+    decisionAuthority: "human", // goalscan 2026-07-16 (O3): canonical vocabulary (was non-matching "human_admin")
     input: { exchange, reason, affectedSymbols } as Record<string, unknown>,
     result: { outageId } as Record<string, unknown>,
     status: "success",
@@ -522,7 +522,7 @@ export async function resolveOutage(exchange: string): Promise<{ resolved: boole
     action: "exchange.outage_resolved",
     entityType: "system",
     entityId: null,
-    decisionAuthority: "human_admin",
+    decisionAuthority: "human", // goalscan 2026-07-16 (O3): canonical vocabulary (was non-matching "human_admin")
     input: { exchange, outageId } as Record<string, unknown>,
     result: { endedAt: new Date().toISOString(), auto_reissue: false } as Record<string, unknown>,
     status: "success",

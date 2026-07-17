@@ -85,6 +85,49 @@ describe("goalscan 2026-07-16 — O1/O2 exchange-status correlationId propagatio
   });
 });
 
+describe("goalscan 2026-07-16 — A4/A3/A6 admin.ts guards", () => {
+  const src = srv("routes/admin.ts");
+  it("A4: operator-mark-present requires pipeline/vacation control authority", () => {
+    const idx = src.indexOf('adminRoutes.post("/operator-mark-present"');
+    expect(idx).toBeGreaterThan(-1);
+    const body = src.slice(idx, idx + 1600);
+    expect(body).toContain("requirePipelineControlAuthority(req, res)");
+    // guard precedes the marker-clearing call
+    expect(body.indexOf("requirePipelineControlAuthority")).toBeLessThan(body.indexOf("clearOperatorAbsenceMarkers("));
+  });
+  it("A3: liquidity-map batch route is guarded", () => {
+    const idx = src.indexOf('adminRoutes.post("/liquidity-map/naked-pocs-batch"');
+    expect(idx).toBeGreaterThan(-1);
+    expect(src.slice(idx, idx + 200)).toContain("requirePipelineControlAuthority(req, res)");
+  });
+  it("A6: the false 'tower-relay HMAC gateway' security claim is removed", () => {
+    // the doc-rot that rationalized the weak liquidity-batch auth must be gone
+    expect(src).not.toContain("mounted behind the tower-relay HMAC gateway so");
+  });
+});
+
+describe("goalscan 2026-07-16 — O1/O3 prop-firm-health telemetry + authority", () => {
+  const src = srv("services/prop-firm-health-service.ts");
+  it("O3: no non-canonical human_admin authority value remains", () => {
+    expect(src).not.toContain('decisionAuthority: "human_admin"');
+  });
+  it("O1: suspension + unreachable systemError alerts carry cronCorrelationId", () => {
+    // both AlertFactory.systemError calls must pass cronCorrelationId as the 3rd arg
+    const calls = src.split("AlertFactory.systemError(").slice(1);
+    expect(calls.length).toBeGreaterThanOrEqual(2);
+    for (const c of calls) {
+      const callBody = c.slice(0, c.indexOf(");") + 2);
+      expect(callBody).toContain("cronCorrelationId");
+    }
+  });
+});
+
+describe("goalscan 2026-07-16 — O3 exchange-status authority", () => {
+  it("no non-canonical human_admin authority value remains", () => {
+    expect(srv("services/exchange-status-service.ts")).not.toContain('decisionAuthority: "human_admin"');
+  });
+});
+
 describe("goalscan 2026-07-16 — P1 pine phantom-success closed", () => {
   const src = srv("services/pine-export-service.ts");
   it("single path derives status from artifact count (failed when zero)", () => {
