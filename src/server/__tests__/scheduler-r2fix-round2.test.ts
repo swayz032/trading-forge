@@ -227,8 +227,14 @@ describe("goalscan-r2 — bias-state-freshness-check canary (0134-class writer-d
   it("source-contract: canary is registered, hourly-scheduled, day-deduped, and alerts via audit + Discord WARN", () => {
     // Registered job exists
     expect(schedulerSource).toContain('registerJob("bias-state-freshness-check"');
-    // Hourly cron wrapper exists and routes through the real registered handler
-    const wrapperIdx = schedulerSource.indexOf('SCHEDULER_JOBS["bias-state-freshness-check"]?.run()');
+    // Hourly cron wrapper exists and routes through the real registered handler.
+    // Tier-C follow-up (2026-07-17): the wrapper now calls withRetry() around the
+    // real handler reference (not a direct .run() invocation) so this job gets the
+    // same auto-disable/schedulerLastError/gauge self-healing infra every sibling
+    // job gets — still the real registered function, just retried/tracked now.
+    const wrapperIdx = schedulerSource.indexOf(
+      'withRetry("bias-state-freshness-check", SCHEDULER_JOBS["bias-state-freshness-check"].run',
+    );
     expect(wrapperIdx).toBeGreaterThan(-1);
     // Slice the registered handler body for the contract assertions
     const regIdx = schedulerSource.indexOf('registerJob("bias-state-freshness-check"');

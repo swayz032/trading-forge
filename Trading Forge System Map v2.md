@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-17T07:50:30.160Z`.
+Updated automatically from the repo on `2026-07-17T09:03:46.025Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -12,7 +12,7 @@ Updated automatically from the repo on `2026-07-17T07:50:30.160Z`.
 - TradingView deployment gate: `manual-only`
 - Manual gates declared: `ci_gate, kill_switch, operator, operator_hmac_override, operator_invoke_for_cohort_validation, operator_opt_in_per_strategy, operator-approve, operator-halt-only, operator-only-recovery, tradingview_deploy`
 - API routes tracked: `79`
-- Scheduler jobs tracked: `111`
+- Scheduler jobs tracked: `112`
 - Current live Trading Forge n8n workflows tracked: `20`
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
@@ -55,7 +55,7 @@ Updated automatically from the repo on `2026-07-17T07:50:30.160Z`.
 ### Registry Coverage
 - Registry subsystems tracked: `73`
 - Route coverage: `79/79`
-- Scheduler coverage: `111/111`
+- Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
 - Database coverage: `111/111`
 - Autonomous subsystems with audit coverage: `64/64`
@@ -421,6 +421,7 @@ Updated automatically from the repo on `2026-07-17T07:50:30.160Z`.
 - `w19-statistics-pull`
 - `wave26-cohort-daily-audit-report`
 - `webhook-latency-check`
+- `weekend-auto-resume-check`
 - `weekly-drift-2sigma-check`
 - `weekly-drift-detection`
 

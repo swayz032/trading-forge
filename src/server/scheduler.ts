@@ -1787,6 +1787,14 @@ export function initScheduler(bootCorrelationId: string | null = null) {
       logger.info({ outcome: result.outcome }, "Scheduler: weekend auto-resume check — pipeline resumed after reboot pause");
     }
   });
+  // Wave-B registry-completeness follow-up (2026-07-17): registerJob() alone
+  // isn't enough to get the self-healing infra every sibling job gets —
+  // withRetry() is what wires the auto-disable-after-consecutive-failures
+  // safety net, schedulerLastError[] admin-dashboard visibility, and the
+  // cronJobsConcurrent gauge. Calling .run() directly (as first drafted)
+  // silently skipped all of that. maxRetries=1: light, since the hourly tick
+  // is itself a natural retry — matches pre-trading-day-health-check's
+  // withRetry(..., 1) a few hundred lines above.
   // Registering this job makes it newly visible to reconcileMissedRuns(), which
   // gates non-exempt jobs on pipelineGate() during boot catch-up. Without this
   // exemption, a boot catch-up while the pipeline is PAUSED would skip the very
@@ -1799,7 +1807,7 @@ export function initScheduler(bootCorrelationId: string | null = null) {
     if (!_tryAcquireJobLock("weekend-auto-resume-check")) return;
     const t0war = Date.now();
     try {
-      await SCHEDULER_JOBS["weekend-auto-resume-check"].run();
+      await withRetry("weekend-auto-resume-check", SCHEDULER_JOBS["weekend-auto-resume-check"].run, 1);
       markJobRun("weekend-auto-resume-check");
       emitJobComplete("weekend-auto-resume-check", Date.now() - t0war);
     } catch (err) {
@@ -4318,7 +4326,13 @@ except Exception as e:
       // In ALWAYS_RUN_JOBS (observability canary — must fire during pauses; the
       // R2FIX CRIT-2 lesson: an exempt-list entry alone does NOT bypass pipelineGate).
       if (!(await pipelineGate("bias-state-freshness-check"))) return;
-      await SCHEDULER_JOBS["bias-state-freshness-check"]?.run();
+      // Wave-B registry-completeness follow-up (2026-07-17): direct .run() skipped
+      // withRetry's self-healing infra (auto-disable-after-consecutive-failures,
+      // schedulerLastError[] admin visibility, cronJobsConcurrent gauge) that every
+      // sibling job gets — same class as weekend-auto-resume-check's identical gap,
+      // fixed alongside it rather than in isolation. maxRetries=1: light, the hourly
+      // tick is itself a natural retry.
+      await withRetry("bias-state-freshness-check", SCHEDULER_JOBS["bias-state-freshness-check"].run, 1);
       markJobRun("bias-state-freshness-check");
     } catch (err) {
       logger.warn({ err: String(err) }, "bias-state-freshness-check: tick threw (non-blocking)");

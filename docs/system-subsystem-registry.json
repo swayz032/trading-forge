@@ -1909,6 +1909,7 @@
       "python-pool-saturation-check",
       "regime-coverage-check",
       "resource-snapshot",
+      "weekend-auto-resume-check",
       "stale-pending-sweeper",
       "system-map-drift",
       "validation-cadence-monthly",
