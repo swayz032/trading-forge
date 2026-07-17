@@ -673,7 +673,7 @@ The deep-scan skill's zero-carry-forward *default* is now an absolute *rule* for
 | **A4 Frankenstein** | TESTING → PAPER | Curve-fit luck via N-shuffle |
 | **A7 Signal Correlation** | PAPER → DEPLOY_READY | Duplicate-signal failure |
 | **B10 MRP** | PAPER → DEPLOY_READY (soft) | Regime-conditional fragility |
-| **A14 Black Swan** | PAPER → DEPLOY_READY (Phase 0 advisory) | Unseen-regime fragility |
+| **A14 Black Swan** | Computed + persisted only — NOT read by any promotion gate evaluator (corrected 2026-07-17; `lifecycle-service.ts` has zero references) | Unseen-regime fragility. Manual-only today via `GET /api/synthetic-black-swan/:backtestId`; also feeds the observability-only `black_swan` composite-health subsystem (never a gate). Wiring a hard/advisory lifecycle gate off this evaluator is a future, separately-ratified operator decision. |
 | **B14 Survival Twin** | PAPER → DEPLOY_READY (HARD — Wave 24) | Per-firm payout-denial / ban risk (40% consistency cap) |
 | **C11 Macro Gates** | paper signal | Crisis regime + ISM/RRP stress |
 | **C1 CME Outage** | live execution | Block new entries during halts |

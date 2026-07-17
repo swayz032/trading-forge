@@ -21,7 +21,6 @@ import sys
 import types
 import uuid
 from datetime import datetime, timedelta
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import polars as pl
@@ -35,15 +34,24 @@ _vbt_mock = types.ModuleType("vectorbt")
 _vbt_mock.Portfolio = MagicMock()
 sys.modules.setdefault("vectorbt", _vbt_mock)
 
-from src.engine.black_swan_evaluator import (
+# psycopg2 is not installed in this environment (DATABASE_URL in .env is a
+# live-DB placeholder, not a test fixture). black_swan_evaluator.py imports
+# psycopg2 LAZILY inside _query_regime_bank / _load_strategy_config_from_db,
+# so the module itself imports fine without it (proven by the 31 tests
+# above) — but the CRIT-1a/CRIT-1b regression tests below DO call those two
+# functions directly, so psycopg2 must be mocked before they run. Mirrors the
+# established pattern in test_deepscan14_anti_setup_db_wiring.py.
+if "psycopg2" not in sys.modules:
+    sys.modules["psycopg2"] = MagicMock()
+    sys.modules["psycopg2.extras"] = MagicMock()
+
+from src.engine.black_swan_evaluator import (  # noqa: E402
     BLACK_SWAN_TOP_K,
     DEFAULT_PROP_FIRM_CAP_DOLLARS,
     RegimeRecord,
-    RegimeSurvivalResult,
     evaluate_strategy,
     score_survival,
 )
-
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -629,6 +637,7 @@ class TestF1RegimeBankAdvisoryDegradation:
     def test_advisory_json_structure_is_serializable(self):
         """Advisory result JSON matches the expected schema and is json.dumps-safe."""
         import json
+
         from src.engine.black_swan_evaluator import _UNKNOWN_MODEL_VERSION
 
         advisory = {
@@ -658,9 +667,8 @@ class TestF1RegimeBankAdvisoryDegradation:
 
     def test_advisory_does_not_raise_on_empty_bank(self):
         """When _query_regime_bank raises ValueError, CLI does not raise — returns advisory."""
+        import json
         from unittest.mock import patch
-        import json, sys
-        from io import StringIO
 
         # Patch both DB functions to simulate empty bank + valid strategy
         with patch(
@@ -802,7 +810,7 @@ class TestArchetypeRouting:
 
         with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
             with patch("src.engine.black_swan_evaluator.run_backtest", side_effect=mock_dsl_run):
-                result = evaluate_strategy(
+                evaluate_strategy(
                     strategy_config=strategy_config,
                     regime_records=[regime],
                     prop_firm_cap_dollars=2000.0,
@@ -861,7 +869,7 @@ class TestArchetypeRouting:
 
         with patch("src.engine.black_swan_evaluator.run_class_backtest", side_effect=mock_class_run):
             with patch("src.engine.black_swan_evaluator.run_backtest", side_effect=mock_dsl_run):
-                result = evaluate_strategy(
+                evaluate_strategy(
                     strategy_config=strategy_config,
                     regime_records=[regime],
                     prop_firm_cap_dollars=2000.0,
@@ -905,9 +913,7 @@ class TestArchetypeRouting:
 
     def test_archetype_map_has_all_python_class_archetypes(self):
         """_ARCHETYPE_TO_CLASS_PATH must contain all archetypes that have Python classes."""
-        from src.engine.black_swan_evaluator import _ARCHETYPE_TO_CLASS_PATH, _KNOWN_DSL_FALLBACK_ARCHETYPES
-        # All Python class paths must be unique (no accidentally sharing one path)
-        class_paths = list(_ARCHETYPE_TO_CLASS_PATH.values())
+        from src.engine.black_swan_evaluator import _ARCHETYPE_TO_CLASS_PATH
         # At minimum, these known archetypes must be routed
         required_archetypes = {
             "bounce_off_level",
@@ -933,3 +939,313 @@ class TestArchetypeRouting:
             assert parts[-1][0].isupper(), (
                 f"Archetype {key}: class name must be uppercase: {parts[-1]}"
             )
+
+
+# ─── CRIT-1a/CRIT-1b Regression Tests (2026-07-17) ────────────────────────────
+#
+# Live-DB verification (ratify packet grounding, 2026-07-17):
+#   SELECT count(*) FROM strategies WHERE config ? 'symbol'        → 0 (of 120)
+#   SELECT DISTINCT timeframe FROM strategies                      → 1m,5m,15m,30m,1h,4h
+#   SELECT DISTINCT timeframe FROM synthetic_regime_bank            → 5min (23 rows, MES/MNQ/MCL)
+#
+# Before these fixes: (a) symbol/timeframe were read off the config JSONB TOP
+# LEVEL, which 0/120 live strategies populate, so every real strategy resolved
+# to the hardcoded MES/daily default regardless of its actual market/timeframe;
+# (b) even with (a) fixed, the raw "5m" vs bank "5min" string mismatch meant
+# _query_regime_bank found zero regime_labels for every real strategy and
+# ValueError'd into the advisory path 100% of the time. The tests below prove
+# a real strategy (MNQ / 5m) now resolves its REAL symbol/timeframe and finds
+# genuine bank coverage — not a ValueError, not a silent MES/daily default.
+
+
+class TestCanonicalizeTimeframe:
+    """CRIT-1b: the timeframe-alias -> canonical-duration mapper."""
+
+    def test_shorthand_and_bank_alias_canonicalize_identically(self):
+        from src.engine.black_swan_evaluator import _canonicalize_timeframe
+
+        assert _canonicalize_timeframe("5m") == _canonicalize_timeframe("5min")
+        assert _canonicalize_timeframe("15m") == _canonicalize_timeframe("15min")
+        assert _canonicalize_timeframe("30m") == _canonicalize_timeframe("30min")
+        assert (
+            _canonicalize_timeframe("1h")
+            == _canonicalize_timeframe("60min")
+            == _canonicalize_timeframe("1hour")
+        )
+        assert (
+            _canonicalize_timeframe("4h")
+            == _canonicalize_timeframe("240min")
+            == _canonicalize_timeframe("4hour")
+        )
+
+    def test_daily_aliases_canonicalize_to_daily_sentinel(self):
+        from src.engine.black_swan_evaluator import _canonicalize_timeframe
+
+        assert _canonicalize_timeframe("daily") == "daily"
+        assert _canonicalize_timeframe("1d") == "daily"
+        assert _canonicalize_timeframe("1D") == "daily"
+
+    def test_distinct_durations_are_not_equal(self):
+        from src.engine.black_swan_evaluator import _canonicalize_timeframe
+
+        assert _canonicalize_timeframe("5m") != _canonicalize_timeframe("15m")
+        assert _canonicalize_timeframe("1h") != _canonicalize_timeframe("4h")
+
+    def test_unrecognized_alias_returns_none_not_crash(self):
+        from src.engine.black_swan_evaluator import _canonicalize_timeframe
+
+        assert _canonicalize_timeframe("weird_tf") is None
+        assert _canonicalize_timeframe("") is None
+        assert _canonicalize_timeframe(None) is None  # type: ignore[arg-type]
+
+
+class TestResolveBankTimeframe:
+    """CRIT-1b: _resolve_bank_timeframe matches a strategy's shorthand alias
+    against whatever literal string the bank actually stores for that symbol
+    — this is the fix that makes the live "5m" strategy vs "5min" bank row
+    mismatch resolve instead of silently missing every label."""
+
+    def _make_cursor(self, distinct_rows):
+        cur = MagicMock()
+        cur.fetchall.return_value = distinct_rows
+        return cur
+
+    def test_resolves_5m_strategy_to_bank_5min_row(self):
+        """The exact live mismatch: strategy declares '5m', bank stores '5min'."""
+        from src.engine.black_swan_evaluator import _resolve_bank_timeframe
+
+        cur = self._make_cursor([{"timeframe": "5min"}])
+        result = _resolve_bank_timeframe(cur, "MNQ", "5m")
+        assert result == "5min"
+
+    def test_no_duration_equivalent_coverage_returns_none_not_valueerror(self):
+        """Bank only has 5min rows; a 15m strategy has genuinely zero coverage —
+        this must be a clean None (insufficient-data path), never a crash."""
+        from src.engine.black_swan_evaluator import _resolve_bank_timeframe
+
+        cur = self._make_cursor([{"timeframe": "5min"}])
+        result = _resolve_bank_timeframe(cur, "MNQ", "15m")
+        assert result is None
+
+    def test_unrecognized_requested_timeframe_short_circuits_without_querying(self):
+        from src.engine.black_swan_evaluator import _resolve_bank_timeframe
+
+        cur = MagicMock()
+        result = _resolve_bank_timeframe(cur, "MNQ", "not_a_real_timeframe")
+        assert result is None
+        cur.execute.assert_not_called()
+
+    def test_matches_alternate_hour_alias_conventions(self):
+        """Bank could plausibly store '1hour' or '60min' for an hourly regime —
+        either must resolve for a strategy declaring '1h'."""
+        from src.engine.black_swan_evaluator import _resolve_bank_timeframe
+
+        cur_1hour = self._make_cursor([{"timeframe": "1hour"}])
+        assert _resolve_bank_timeframe(cur_1hour, "MES", "1h") == "1hour"
+
+        cur_60min = self._make_cursor([{"timeframe": "60min"}])
+        assert _resolve_bank_timeframe(cur_60min, "MES", "1h") == "60min"
+
+
+class TestLoadStrategyConfigFromDbPrecedence:
+    """CRIT-1a: symbol/timeframe resolution precedence.
+
+    THE test that fails without FIX 1: pre-fix code read
+    `strategy_cfg.get("symbol", "MES")` from the config JSONB TOP LEVEL —
+    verified live that 0/120 strategies populate that key, so every real
+    strategy silently resolved to MES/daily regardless of its actual market.
+    These tests simulate the verified-live row shape (DB columns populated,
+    config has no top-level symbol/timeframe key) and assert the DB columns
+    win, producing the strategy's REAL symbol/timeframe.
+    """
+
+    def _load(self, monkeypatch, *, db_symbol, db_timeframe, config):
+        monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@localhost/db")
+
+        mock_cursor = MagicMock()
+        mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
+        mock_cursor.__exit__ = MagicMock(return_value=False)
+        mock_cursor.fetchone.return_value = {
+            "symbol": db_symbol,
+            "timeframe": db_timeframe,
+            "config": config,
+        }
+
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = mock_cursor
+
+        with patch("psycopg2.connect", return_value=mock_conn):
+            from src.engine.black_swan_evaluator import _load_strategy_config_from_db
+
+            return _load_strategy_config_from_db("strategy-under-test")
+
+    def test_real_strategy_shape_resolves_db_columns_not_mes_daily_default(
+        self, monkeypatch
+    ):
+        """The exact shape verified live: config has NO top-level symbol/
+        timeframe keys; the real values live on the DB columns. Pre-FIX-1
+        this would have silently resolved to MES/daily regardless."""
+        config = {"strategy": {"timeframe": "5m"}, "indicators": []}
+
+        cfg, symbol, timeframe = self._load(
+            monkeypatch, db_symbol="MNQ", db_timeframe="5m", config=config
+        )
+
+        assert symbol == "MNQ"
+        assert timeframe == "5m"
+        assert symbol != "MES", "must not silently fall back to the MES default"
+        assert timeframe != "daily", "must not silently fall back to the daily default"
+
+    def test_non_daily_timeframe_resolves_correctly(self, monkeypatch):
+        """A non-daily (1h) strategy must resolve to '1h', not the daily default."""
+        config = {"strategy": {"timeframe": "1h"}}
+
+        cfg, symbol, timeframe = self._load(
+            monkeypatch, db_symbol="MCL", db_timeframe="1h", config=config
+        )
+
+        assert symbol == "MCL"
+        assert timeframe == "1h"
+
+    def test_db_columns_win_over_disagreeing_nested_config(self, monkeypatch):
+        """DB column is the declared precedence winner even when nested config disagrees."""
+        config = {"strategy": {"timeframe": "1h", "symbol": "MCL"}}
+
+        cfg, symbol, timeframe = self._load(
+            monkeypatch, db_symbol="MES", db_timeframe="15m", config=config
+        )
+
+        assert symbol == "MES"
+        assert timeframe == "15m"
+
+    def test_falls_back_to_nested_config_when_db_columns_blank(self, monkeypatch):
+        config = {"strategy": {"timeframe": "30m", "symbol": "MNQ"}}
+
+        cfg, symbol, timeframe = self._load(
+            monkeypatch, db_symbol=None, db_timeframe=None, config=config
+        )
+
+        assert symbol == "MNQ"
+        assert timeframe == "30m"
+
+    def test_falls_back_to_top_level_config_keys_when_db_and_nested_blank(
+        self, monkeypatch
+    ):
+        config = {"symbol": "MCL", "timeframe": "4h"}
+
+        cfg, symbol, timeframe = self._load(
+            monkeypatch, db_symbol=None, db_timeframe=None, config=config
+        )
+
+        assert symbol == "MCL"
+        assert timeframe == "4h"
+
+    def test_defaults_to_mes_daily_only_as_last_resort(self, monkeypatch):
+        """Only when EVERY source is blank does the hardcoded default fire."""
+        config: dict = {}
+
+        cfg, symbol, timeframe = self._load(
+            monkeypatch, db_symbol=None, db_timeframe=None, config=config
+        )
+
+        assert symbol == "MES"
+        assert timeframe == "daily"
+
+    def test_returns_config_dict_unchanged(self, monkeypatch):
+        config = {"strategy": {"timeframe": "5m"}, "indicators": [{"type": "atr"}]}
+
+        cfg, symbol, timeframe = self._load(
+            monkeypatch, db_symbol="MES", db_timeframe="5m", config=config
+        )
+
+        assert cfg == config
+
+
+class TestQueryRegimeBankTimeframeNormalizationEndToEnd:
+    """CRIT-1b end-to-end: _query_regime_bank resolves the bank's literal
+    timeframe alias via _resolve_bank_timeframe before running the label/
+    sample queries, so a "5m" strategy finds the bank's "5min" rows instead
+    of ValueError'ing on every call (the pre-fix behavior for 100% of live
+    strategies, verified — see module docstring above)."""
+
+    def _make_mock_cursor(self, *, distinct_timeframes, labels, sample_rows):
+        """Build a MagicMock cursor answering, in call order:
+        1. _resolve_bank_timeframe's DISTINCT timeframe lookup -> distinct_timeframes
+        2. sql_labels DISTINCT regime_label lookup -> labels
+        3. per-label: SELECT setseed() (no rows) then sql_sample -> sample_rows
+        """
+        cur = MagicMock()
+        # setseed() calls don't fetchall in the code path (only execute), so we
+        # only need fetchall results for: resolve_bank_timeframe, sql_labels,
+        # then one sql_sample fetchall per label.
+        fetchall_returns = [distinct_timeframes, labels] + [sample_rows for _ in labels]
+        cur.fetchall.side_effect = fetchall_returns
+        return cur
+
+    def test_5m_strategy_finds_5min_bank_coverage_not_valueerror(self, monkeypatch):
+        """The core regression: a real MNQ/5m strategy must find bank coverage
+        (bank stores '5min') instead of raising ValueError on every call."""
+        monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@localhost/db")
+
+        sample_row = {
+            "id": "regime-uuid-1",
+            "symbol": "MNQ",
+            "timeframe": "5min",
+            "regime_label": "COVID_crash",
+            "s3_path": "s3://bucket/MNQ/5min/COVID_crash/regime-uuid-1.parquet",
+            "num_bars": 1200,
+            "generator_model_version": "stochastic_v1.0",
+        }
+        cur = self._make_mock_cursor(
+            distinct_timeframes=[{"timeframe": "5min"}],
+            labels=[{"regime_label": "COVID_crash"}],
+            sample_rows=[sample_row],
+        )
+        cur.__enter__ = MagicMock(return_value=cur)
+        cur.__exit__ = MagicMock(return_value=False)
+
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = cur
+
+        with patch("psycopg2.connect", return_value=mock_conn):
+            from src.engine.black_swan_evaluator import _query_regime_bank
+
+            records = _query_regime_bank(
+                symbol="MNQ",
+                timeframe="5m",  # the strategy's real (shorthand) declared timeframe
+                regime_count=1,
+                strategy_id="strat-1",
+                backtest_id="bt-1",
+            )
+
+        assert len(records) == 1
+        assert records[0].symbol == "MNQ"
+        assert records[0].timeframe == "5min"
+        assert records[0].regime_label == "COVID_crash"
+
+    def test_timeframe_with_zero_bank_coverage_raises_clean_valueerror(self, monkeypatch):
+        """A strategy on a timeframe the bank genuinely has no coverage for
+        (e.g. 15m, when the bank only has 5min rows) must raise ValueError —
+        a legitimate insufficient-data signal the CLI degrades to advisory,
+        NOT an unrelated crash."""
+        monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@localhost/db")
+
+        cur = MagicMock()
+        cur.fetchall.return_value = [{"timeframe": "5min"}]  # only 5min exists
+        cur.__enter__ = MagicMock(return_value=cur)
+        cur.__exit__ = MagicMock(return_value=False)
+
+        mock_conn = MagicMock()
+        mock_conn.cursor.return_value = cur
+
+        with patch("psycopg2.connect", return_value=mock_conn):
+            from src.engine.black_swan_evaluator import _query_regime_bank
+
+            with pytest.raises(ValueError, match="No stylized-fact-passing regimes"):
+                _query_regime_bank(
+                    symbol="MNQ",
+                    timeframe="15m",
+                    regime_count=1,
+                    strategy_id="strat-1",
+                    backtest_id="bt-1",
+                )

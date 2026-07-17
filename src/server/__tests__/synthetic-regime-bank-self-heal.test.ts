@@ -21,8 +21,12 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 // ─── Hoisted mock state ────────────────────────────────────────────────────────
 
 const dbMocks = vi.hoisted(() => {
-  // The count query chain: db.select({count: sql`count(*)`}).from(t) → number
-  const selectResult: { rows: Array<{ count: number }> } = { rows: [{ count: 0 }] };
+  // The count query chain: db.select({count: sql`count(*)`, newest: sql`max(created_at)`}).from(t)
+  // → one row carrying both the bank row count and the newest row's timestamp
+  // (or null when absent/never-populated).
+  const selectResult: { rows: Array<{ count: number; newest?: string | null }> } = {
+    rows: [{ count: 0, newest: null }],
+  };
   const selectMock = vi.fn();
   const fromMock = vi.fn();
 
@@ -80,9 +84,20 @@ vi.mock("../lib/logger.js", () => ({
   },
 }));
 
-// Mock python-runner so it never actually spawns
+// Mock python-runner so it never actually spawns. Hoisted + referenceable so
+// tests can assert the fire-and-forget populate path actually reached the
+// CLI-invocation stage (the async function body runs synchronously up to its
+// first `await`, so this call is observable immediately after
+// ensureRegimeBankPopulated resolves, even though populate itself is never
+// awaited by the caller).
+const pythonRunnerMocks = vi.hoisted(() => ({
+  runPythonModule: vi
+    .fn()
+    .mockResolvedValue({ generated: 8, stored: 8, regimes: [], errors: [] }),
+}));
+
 vi.mock("../lib/python-runner.js", () => ({
-  runPythonModule: vi.fn().mockResolvedValue({ generated: 8, stored: 8, regimes: [], errors: [] }),
+  runPythonModule: pythonRunnerMocks.runPythonModule,
 }));
 
 // Mock S3 SDK
@@ -113,11 +128,17 @@ const { ensureRegimeBankPopulated } = await import(
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
+// Fixed "now" reference so age-based fixtures are deterministic regardless of
+// when the test suite runs.
+const NOW_MS = Date.now();
+const FRESH_TIMESTAMP = new Date(NOW_MS - 2 * 24 * 60 * 60 * 1000).toISOString(); // 2 days old
+const STALE_TIMESTAMP = new Date(NOW_MS - 45 * 24 * 60 * 60 * 1000).toISOString(); // 45 days old (default staleness window is 30)
+
 describe("ensureRegimeBankPopulated", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Reset to empty bank (count = 0)
-    dbMocks.selectResult.rows = [{ count: 0 }];
+    // Reset to empty bank (count = 0, no newest row)
+    dbMocks.selectResult.rows = [{ count: 0, newest: null }];
     // Restore default mock implementations
     dbMocks.fromMock.mockImplementation(async () => dbMocks.selectResult.rows);
     dbMocks.selectMock.mockImplementation(() => ({ from: dbMocks.fromMock }));
@@ -157,8 +178,8 @@ describe("ensureRegimeBankPopulated", () => {
   // B2: Populated bank → skip (no populate, emit skipped audit)
   // ────────────────────────────────────────────────────────────────────────────
 
-  it("B2: skips populate when bank has rows (count > 0)", async () => {
-    dbMocks.selectResult.rows = [{ count: 8 }];
+  it("B2: skips populate when bank has fresh rows (count > 0, not stale)", async () => {
+    dbMocks.selectResult.rows = [{ count: 8, newest: FRESH_TIMESTAMP }];
 
     await ensureRegimeBankPopulated("corr-b2");
 
@@ -170,8 +191,8 @@ describe("ensureRegimeBankPopulated", () => {
     expect(skippedAudit).toBeTruthy();
   });
 
-  it("B2b: does NOT emit self_heal_triggered when bank is populated", async () => {
-    dbMocks.selectResult.rows = [{ count: 8 }];
+  it("B2b: does NOT emit self_heal_triggered when bank is populated and fresh", async () => {
+    dbMocks.selectResult.rows = [{ count: 8, newest: FRESH_TIMESTAMP }];
 
     await ensureRegimeBankPopulated("corr-b2b");
 
@@ -180,6 +201,83 @@ describe("ensureRegimeBankPopulated", () => {
       ([args]: [any]) => args?.action === "synthetic_regime_bank.self_heal_triggered"
     );
     expect(triggeredAudit).toBeUndefined();
+  });
+
+  // ────────────────────────────────────────────────────────────────────────────
+  // B6 (HIGH-1 fix, 2026-07-17): Stale bank (count > 0 but newest row older
+  // than REGIME_BANK_STALENESS_DAYS) → re-trigger self-heal + visible warn audit.
+  // Previously REGIME_BANK_STALENESS_DAYS was computed but never read in an
+  // `if` — a bank populated once and never refreshed silently read as
+  // permanently healthy forever. This is the regression test for that gap.
+  // ────────────────────────────────────────────────────────────────────────────
+
+  it("B6: triggers self-heal when bank has rows but newest row is stale (> 30 days)", async () => {
+    dbMocks.selectResult.rows = [{ count: 23, newest: STALE_TIMESTAMP }];
+
+    await ensureRegimeBankPopulated("corr-b6");
+
+    const auditCalls = auditMocks.insertAuditRowSafe.mock.calls;
+    const triggeredAudit = auditCalls.find(
+      ([args]: [any]) => args?.action === "synthetic_regime_bank.self_heal_triggered"
+    );
+    expect(triggeredAudit).toBeTruthy();
+  });
+
+  it("B6b: does NOT emit self_heal_skipped_populated when the bank is stale", async () => {
+    dbMocks.selectResult.rows = [{ count: 23, newest: STALE_TIMESTAMP }];
+
+    await ensureRegimeBankPopulated("corr-b6b");
+
+    const auditCalls = auditMocks.insertAuditRowSafe.mock.calls;
+    const skippedAudit = auditCalls.find(
+      ([args]: [any]) => args?.action === "synthetic_regime_bank.self_heal_skipped_populated"
+    );
+    expect(skippedAudit).toBeUndefined();
+  });
+
+  it("B6c: stale-branch trigger audit carries the ageDays + newestCreatedAt diagnostics", async () => {
+    dbMocks.selectResult.rows = [{ count: 23, newest: STALE_TIMESTAMP }];
+
+    await ensureRegimeBankPopulated("corr-b6c");
+
+    const auditCalls = auditMocks.insertAuditRowSafe.mock.calls;
+    const triggeredAudit = auditCalls.find(
+      ([args]: [any]) => args?.action === "synthetic_regime_bank.self_heal_triggered"
+    );
+    expect(triggeredAudit).toBeTruthy();
+    const [auditArgs] = triggeredAudit!;
+    expect(auditArgs.input.triggeredBy).toBe("boot_self_heal_stale");
+    expect(auditArgs.input.ageDays).toBeGreaterThan(30);
+    expect(auditArgs.input.newestCreatedAt).toBe(new Date(STALE_TIMESTAMP).toISOString());
+  });
+
+  it("B6d: fires the populate pipeline (fire-and-forget) on the stale branch", async () => {
+    dbMocks.selectResult.rows = [{ count: 23, newest: STALE_TIMESTAMP }];
+
+    await ensureRegimeBankPopulated("corr-b6d");
+
+    // runSyntheticRegimeBankPopulate is a same-module function (not imported),
+    // so it can't be spied on directly — but it invokes runPythonModule() as
+    // the first thing its async body does, synchronously, before its first
+    // await. That call is observable via the hoisted python-runner mock even
+    // though the outer ensureRegimeBankPopulated() never awaits it.
+    expect(pythonRunnerMocks.runPythonModule).toHaveBeenCalled();
+  });
+
+  it("B6e: a bank with rows but a null newest timestamp is treated as stale (infinite age)", async () => {
+    // Defensive: if created_at is somehow null (shouldn't happen — column is
+    // NOT NULL — but MAX() over zero matching rows or a driver quirk could
+    // surface null), the null-safe age computation must fail toward "stale"
+    // (trigger self-heal), never silently toward "skip forever".
+    dbMocks.selectResult.rows = [{ count: 23, newest: null }];
+
+    await ensureRegimeBankPopulated("corr-b6e");
+
+    const auditCalls = auditMocks.insertAuditRowSafe.mock.calls;
+    const triggeredAudit = auditCalls.find(
+      ([args]: [any]) => args?.action === "synthetic_regime_bank.self_heal_triggered"
+    );
+    expect(triggeredAudit).toBeTruthy();
   });
 
   // ────────────────────────────────────────────────────────────────────────────
@@ -240,7 +338,7 @@ describe("ensureRegimeBankPopulated", () => {
   });
 
   it("B5b: propagates correlationId to audit row on skip", async () => {
-    dbMocks.selectResult.rows = [{ count: 8 }];
+    dbMocks.selectResult.rows = [{ count: 8, newest: FRESH_TIMESTAMP }];
     const corrId = "boot-skip-test-corr-id-456";
 
     await ensureRegimeBankPopulated(corrId);

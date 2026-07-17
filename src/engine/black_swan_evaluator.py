@@ -613,7 +613,80 @@ def evaluate_strategy(
     )
 
 
+# ─── Timeframe Normalization (CRIT-1b fix, 2026-07-17) ───────────────────────
+#
+# `strategies.timeframe` uses shorthand aliases ("1m", "5m", "15m", "30m",
+# "1h", "4h") while `synthetic_regime_bank.timeframe` uses a different
+# convention — verified live 2026-07-17 via
+#   SELECT DISTINCT timeframe FROM strategies         → {1m,5m,15m,30m,1h,4h}
+#   SELECT DISTINCT timeframe FROM synthetic_regime_bank → {5min}  (23 rows)
+# A raw string-equality WHERE clause therefore NEVER matches any live
+# strategy, so every A14 evaluation silently fell into the "regime bank
+# empty/stale" advisory path — 100% of the time, regardless of FIX 1.
+#
+# Rather than hardcode a single fixed string mapping (which breaks again the
+# moment a future ingestion job writes yet another alias, e.g. "1hour" or
+# "60min" for an hourly regime), timeframes are canonicalized to a
+# comparable "bar duration" — minutes for intraday, or the "daily" sentinel —
+# and the DISTINCT timeframe strings actually present in the bank (per
+# symbol) are matched against that canonical duration at query time. This
+# keeps working regardless of which literal alias a given bank row happens
+# to use, as long as its DURATION matches the strategy's declared timeframe.
+_TIMEFRAME_DURATION_MINUTES: dict[str, int] = {
+    "1m": 1, "1min": 1,
+    "5m": 5, "5min": 5,
+    "15m": 15, "15min": 15,
+    "30m": 30, "30min": 30,
+    "1h": 60, "60min": 60, "1hour": 60,
+    "4h": 240, "240min": 240, "4hour": 240,
+}
+_DAILY_TIMEFRAME_ALIASES = {"1d", "1D", "daily"}
+
+
+def _canonicalize_timeframe(tf: str) -> Optional[object]:
+    """Return a comparable canonical form for a timeframe alias string.
+
+    Returns an int (bar duration in minutes) for intraday timeframes, the
+    literal string "daily" for daily aliases, or None if the alias is not
+    recognized (caller must treat this as "no coverage", never crash).
+    """
+    if not tf:
+        return None
+    if tf in _DAILY_TIMEFRAME_ALIASES:
+        return "daily"
+    return _TIMEFRAME_DURATION_MINUTES.get(tf)
+
+
 # ─── DB / Regime Bank Query (for CLI mode) ───────────────────────────────────
+
+
+def _resolve_bank_timeframe(cur, symbol: str, requested_timeframe: str) -> Optional[str]:
+    """Find the literal timeframe string used in synthetic_regime_bank that is
+    duration-equivalent to `requested_timeframe` for this symbol.
+
+    Args:
+        cur: An open psycopg2 DictCursor (caller owns the connection/cursor).
+        symbol: Futures symbol to scope the DISTINCT lookup to.
+        requested_timeframe: The strategy's declared timeframe alias (e.g. "5m").
+
+    Returns:
+        The literal bank timeframe string to use in the sample query (e.g.
+        "5min"), or None when the bank has no duration-equivalent coverage
+        for this symbol — a legitimate insufficient-data case, NOT a bug.
+    """
+    target = _canonicalize_timeframe(requested_timeframe)
+    if target is None:
+        return None
+
+    cur.execute(
+        "SELECT DISTINCT timeframe FROM synthetic_regime_bank WHERE symbol = %s",
+        (symbol,),
+    )
+    for row in cur.fetchall():
+        candidate = row["timeframe"]
+        if _canonicalize_timeframe(candidate) == target:
+            return candidate
+    return None
 
 
 def _query_regime_bank(
@@ -634,7 +707,10 @@ def _query_regime_bank(
 
     Args:
         symbol: Futures symbol (MES, MNQ, MCL).
-        timeframe: Bar timeframe (1min, 5min, daily, etc.).
+        timeframe: Bar timeframe alias as declared on the strategy (e.g. "5m",
+            "1h", "daily"). Normalized internally (see _resolve_bank_timeframe)
+            against whatever literal alias the bank actually stores for this
+            symbol — the bank is verified to use "5min", not "5m".
         regime_count: Number of regimes to sample.
         strategy_id: UUID string used to seed the sample deterministically.
         backtest_id: UUID string used to seed the sample deterministically.
@@ -646,7 +722,10 @@ def _query_regime_bank(
     Raises:
         ImportError: If psycopg2 is not installed.
         RuntimeError: If DATABASE_URL is not set.
-        ValueError: If no passing regimes found for this symbol/timeframe.
+        ValueError: If no passing regimes found for this symbol/timeframe —
+            including the case where the bank has zero duration-equivalent
+            coverage after normalization (legitimate insufficient-data, the
+            caller degrades to the advisory result rather than crashing).
 
     Determinism note (2026-05-20):
         Previously used bare ORDER BY random() which produced non-deterministic
@@ -715,13 +794,29 @@ def _query_regime_bank(
         conn = psycopg2.connect(db_url)
         try:
             with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
-                cur.execute(sql_labels, (symbol, timeframe))
+                # CRIT-1b fix (2026-07-17): resolve the strategy's shorthand
+                # timeframe alias (e.g. "5m") to whatever literal string the
+                # bank actually stores for this symbol (verified live: "5min").
+                # A raw string match against the raw `timeframe` param would
+                # find zero labels for every real strategy, unconditionally
+                # falling into the advisory path below regardless of FIX 1.
+                bank_timeframe = _resolve_bank_timeframe(cur, symbol, timeframe)
+                if bank_timeframe is None:
+                    raise ValueError(
+                        f"No stylized-fact-passing regimes found in synthetic_regime_bank "
+                        f"for symbol={symbol!r}, timeframe={timeframe!r} "
+                        f"(no duration-equivalent bank coverage for this symbol). "
+                        f"Run the synthetic_market_simulator generator first."
+                    )
+
+                cur.execute(sql_labels, (symbol, bank_timeframe))
                 labels = [row["regime_label"] for row in cur.fetchall()]
 
                 if not labels:
                     raise ValueError(
                         f"No stylized-fact-passing regimes found in synthetic_regime_bank "
-                        f"for symbol={symbol!r}, timeframe={timeframe!r}. "
+                        f"for symbol={symbol!r}, timeframe={timeframe!r} "
+                        f"(resolved bank timeframe={bank_timeframe!r}). "
                         f"Run the synthetic_market_simulator generator first."
                     )
 
@@ -734,7 +829,7 @@ def _query_regime_bank(
                     # Seed Postgres RNG before the ORDER BY random() query so that
                     # identical inputs always produce identical samples.
                     cur.execute("SELECT setseed(%s)", (_pg_seed_for_label(i),))
-                    cur.execute(sql_sample, (symbol, timeframe, label, n_this))
+                    cur.execute(sql_sample, (symbol, bank_timeframe, label, n_this))
                     rows = cur.fetchall()
                     for row in rows:
                         records.append(RegimeRecord(
@@ -764,14 +859,36 @@ def _query_regime_bank(
     return records
 
 
-def _load_strategy_config_from_db(strategy_id: str) -> dict:
-    """Load a strategy's DSL config from the strategies table.
+def _load_strategy_config_from_db(strategy_id: str) -> tuple[dict, str, str]:
+    """Load a strategy's DSL config + resolved (symbol, timeframe).
+
+    CRIT-1a fix (2026-07-17): the previous implementation read
+    `strategy_cfg.get("symbol", "MES")` / `.get("timeframe", "daily")` off the
+    TOP LEVEL of the `config` JSONB column — but live-DB verification found
+    0 of 120 strategies have those top-level keys (`SELECT count(*) FROM
+    strategies WHERE config ? 'symbol'` → 0). Every real strategy silently
+    fell back to the MES/daily default regardless of its actual market or
+    timeframe. The real values live on the `strategies.symbol` /
+    `strategies.timeframe` DB COLUMNS (verified NOT NULL, always populated).
+
+    Resolution precedence (highest wins):
+        1. `strategies.symbol` / `strategies.timeframe` DB columns — the real
+           source of truth (confirmed non-null across all live rows).
+        2. `config["strategy"]["timeframe"]` / `["symbol"]` nested block —
+           matches the resolved DB column on every live row checked, kept as
+           a fallback for any row where the DB column is unexpectedly blank.
+        3. `config["symbol"]` / `config["timeframe"]` top-level keys — legacy
+           fallback; verified 0/120 live rows populate these, kept only for
+           forward compatibility with a future writer.
+        4. Hardcoded MES/daily default — last resort only, never expected to
+           fire on a live row.
 
     Args:
         strategy_id: UUID string of the strategy.
 
     Returns:
-        Strategy config dict (the 'config' JSONB column).
+        (config, symbol, timeframe) — config is the raw 'config' JSONB dict;
+        symbol/timeframe are resolved per the precedence above.
 
     Raises:
         RuntimeError: If strategy not found or DB unavailable.
@@ -789,7 +906,7 @@ def _load_strategy_config_from_db(strategy_id: str) -> dict:
         raise RuntimeError("DATABASE_URL environment variable is not set.")
 
     sql = """
-        SELECT config
+        SELECT symbol, timeframe, config
         FROM strategies
         WHERE id = %s
         LIMIT 1
@@ -808,7 +925,25 @@ def _load_strategy_config_from_db(strategy_id: str) -> dict:
                 config = row["config"]
                 if isinstance(config, str):
                     config = json.loads(config)
-                return config
+                if not isinstance(config, dict):
+                    config = {}
+
+                nested = config.get("strategy")
+                nested = nested if isinstance(nested, dict) else {}
+
+                symbol = (
+                    row["symbol"]
+                    or nested.get("symbol")
+                    or config.get("symbol")
+                    or "MES"
+                )
+                timeframe = (
+                    row["timeframe"]
+                    or nested.get("timeframe")
+                    or config.get("timeframe")
+                    or "daily"
+                )
+                return config, str(symbol), str(timeframe)
         finally:
             conn.close()
     except RuntimeError:
@@ -880,10 +1015,12 @@ if __name__ == "__main__":
             strategy_id, backtest_id, regime_count, prop_firm_cap,
         )
 
-        # 1. Load strategy config from DB
-        strategy_cfg = _load_strategy_config_from_db(strategy_id)
-        symbol = strategy_cfg.get("symbol", "MES")
-        timeframe = strategy_cfg.get("timeframe", "daily")
+        # 1. Load strategy config + resolved symbol/timeframe from DB
+        #    (CRIT-1a fix: symbol/timeframe now resolved from the strategies
+        #    DB columns, not the config JSONB top level — see
+        #    _load_strategy_config_from_db docstring for the precedence and
+        #    the live-DB verification that motivated the change).
+        strategy_cfg, symbol, timeframe = _load_strategy_config_from_db(strategy_id)
 
         # 2. Query regime bank (strategy_id + backtest_id seed deterministic sampling).
         # F-1 (2026-05-20): NEMO→A14→bank pipeline is structurally disconnected —

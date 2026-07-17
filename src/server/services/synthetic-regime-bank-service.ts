@@ -499,12 +499,29 @@ const REGIME_BANK_STALENESS_DAYS: number = (() => {
  * run at ANY time (not just after the weekly Sunday cron) get real verdicts.
  *
  * Contract:
- *   - Queries `SELECT count(*) FROM synthetic_regime_bank`.
+ *   - Queries `SELECT count(*), max(created_at) FROM synthetic_regime_bank`.
  *   - count === 0 → fire-and-forget `runSyntheticRegimeBankPopulate()` (async,
  *     NEVER awaited in a way that blocks app.listen).
  *     Emits audit `synthetic_regime_bank.self_heal_triggered`.
- *   - count > 0 → skip populate.
- *     Emits audit `synthetic_regime_bank.self_heal_skipped_populated`.
+ *   - count > 0 AND newest row age > REGIME_BANK_STALENESS_DAYS → the bank
+ *     is stale (HIGH-1 fix, 2026-07-17: this branch previously did not
+ *     exist — REGIME_BANK_STALENESS_DAYS was computed but never read in an
+ *     `if`, so a bank populated once and never refreshed read as
+ *     permanently "healthy"). Fire-and-forget re-populate (same as the
+ *     empty-bank path) AND emit `synthetic_regime_bank.self_heal_triggered`
+ *     so the staleness state is visible in the audit trail either way.
+ *     NOTE: `GENERATOR_MODEL_VERSION` is a static constant
+ *     ("stochastic_v1.0", see populate_regime_bank.py) and dedup keys on
+ *     (symbol, timeframe, regime_label, generator_model_version) — so a
+ *     re-populate run will legitimately SKIP every already-existing regime
+ *     row (this is a genuine no-op on `created_at`, not a bug) and only
+ *     insert rows for any NEW symbol/timeframe/label combination added since
+ *     the version was last bumped. This still serves as a liveness check on
+ *     the population pipeline itself and will pick up any newly-added
+ *     scenario coverage; refreshing existing rows' `created_at` requires an
+ *     operator-driven `GENERATOR_MODEL_VERSION` bump (separate decision).
+ *   - count > 0 AND newest row age <= REGIME_BANK_STALENESS_DAYS → skip
+ *     populate. Emits audit `synthetic_regime_bank.self_heal_skipped_populated`.
  *   - Any DB error → log warn + return (never throw, never block boot).
  *
  * Called once at boot from `src/server/index.ts` INSIDE app.listen() callback
@@ -520,13 +537,18 @@ export async function ensureRegimeBankPopulated(
   correlationId: string,
 ): Promise<void> {
   try {
-    // Count rows in the bank. Use sql`` template for a lightweight count query
-    // that avoids loading all rows.
+    // Single query: count + newest row timestamp. Avoids a second round-trip
+    // and keeps the "is the bank healthy" decision atomic against the same
+    // read.
     const countRows = await db
-      .select({ count: sql<number>`count(*)::int` })
+      .select({
+        count: sql<number>`count(*)::int`,
+        newest: sql<string | null>`max(created_at)`,
+      })
       .from(syntheticRegimeBank);
 
     const bankCount = Number(countRows[0]?.count ?? 0);
+    const newestRaw = countRows[0]?.newest ?? null;
 
     if (bankCount === 0) {
       // Empty bank — trigger self-heal (fire-and-forget)
@@ -544,7 +566,7 @@ export async function ensureRegimeBankPopulated(
         input: {
           bankCount,
           stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
-          triggeredBy: "boot_self_heal",
+          triggeredBy: "boot_self_heal_empty",
         },
       });
 
@@ -562,10 +584,63 @@ export async function ensureRegimeBankPopulated(
       return;
     }
 
-    // Bank is populated — skip
+    // ── Staleness check (HIGH-1 fix, 2026-07-17) ────────────────────────────
+    // Bank has rows — but a one-time-populated bank that is never refreshed
+    // must not read as healthy forever. Compare the newest row's age against
+    // REGIME_BANK_STALENESS_DAYS (previously computed but never consulted).
+    const newestCreatedAt = newestRaw ? new Date(newestRaw) : null;
+    const ageDays = newestCreatedAt
+      ? (Date.now() - newestCreatedAt.getTime()) / (1000 * 60 * 60 * 24)
+      : Number.POSITIVE_INFINITY;
+    const isStale = ageDays > REGIME_BANK_STALENESS_DAYS;
+
+    if (isStale) {
+      logger.warn(
+        {
+          correlationId,
+          bankCount,
+          newestCreatedAt: newestCreatedAt ? newestCreatedAt.toISOString() : null,
+          ageDays,
+          stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
+        },
+        "synthetic_regime_bank: bank is stale — triggering self-heal re-populate (fire-and-forget)",
+      );
+
+      await insertAuditRowSafe({
+        action: "synthetic_regime_bank.self_heal_triggered",
+        entityType: "regime_bank",
+        entityId: correlationId,
+        correlationId,
+        status: "warning",
+        input: {
+          bankCount,
+          newestCreatedAt: newestCreatedAt ? newestCreatedAt.toISOString() : null,
+          ageDays,
+          stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
+          triggeredBy: "boot_self_heal_stale",
+        },
+      });
+
+      // Fire-and-forget re-populate — see docstring note: rows for existing
+      // (symbol, timeframe, regime_label, generator_model_version) tuples
+      // will legitimately dedup-skip; this call is a pipeline liveness check
+      // + picks up any newly-added scenario coverage, not a guaranteed
+      // refresh of every row's created_at.
+      runSyntheticRegimeBankPopulate(correlationId).catch((err: unknown) => {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        logger.warn(
+          { correlationId, err: errMsg },
+          "synthetic_regime_bank: staleness re-populate run failed (fire-and-forget, non-blocking)",
+        );
+      });
+
+      return;
+    }
+
+    // Bank is populated and fresh — skip
     logger.info(
-      { correlationId, bankCount },
-      "synthetic_regime_bank: bank has rows — self-heal skipped",
+      { correlationId, bankCount, ageDays },
+      "synthetic_regime_bank: bank has fresh rows — self-heal skipped",
     );
 
     await insertAuditRowSafe({
@@ -576,6 +651,8 @@ export async function ensureRegimeBankPopulated(
       status: "success",
       input: {
         bankCount,
+        newestCreatedAt: newestCreatedAt ? newestCreatedAt.toISOString() : null,
+        ageDays,
         stalenessWindowDays: REGIME_BANK_STALENESS_DAYS,
       },
     });

@@ -294,6 +294,91 @@ describe("runBlackSwanTest — pending → failed", () => {
   });
 });
 
+// ─── Pending → insufficient_data (advisory path — CRIT-1c fix) ───────────────
+//
+// The Python evaluator emits `survival_rate: null` + `advisory: true` +
+// `gate_passed: null` + `reason: "regime_bank_stale_or_empty"` with exit 0
+// when the bank has no duration-equivalent coverage for the strategy's
+// symbol/timeframe (see FIX 1+2 in black_swan_evaluator.py). Before this fix,
+// the service unconditionally did `survivalRate: String(pythonResult.survival_rate)`
+// — for `null` this produces the STRING "null", which the Postgres numeric
+// column rejects with an opaque "invalid input syntax for type numeric",
+// flipping the row to status="failed" as if the evaluator had crashed. This
+// test proves the advisory envelope now produces an HONEST non-crash record
+// instead: a distinct status with a genuinely-null survivalRate, never a
+// coerced fake number string.
+
+const ADVISORY_PYTHON_RESULT = {
+  num_regimes_tested: 0,
+  num_regimes_survived: 0,
+  survival_rate: null,
+  worst_regime: null,
+  worst_k: [],
+  generator_model_version: "unknown",
+  advisory: true,
+  gate_passed: null,
+  reason: "regime_bank_stale_or_empty",
+};
+
+describe("runBlackSwanTest — pending → insufficient_data (advisory, CRIT-1c)", () => {
+  beforeEach(() => {
+    resetMocks();
+  });
+
+  it("does NOT crash on survival_rate=null — writes status=insufficient_data with a genuinely-null survivalRate", async () => {
+    runPythonModuleMock.mockResolvedValue(ADVISORY_PYTHON_RESULT);
+
+    const result = await runBlackSwanTest("backtest-advisory", "strategy-advisory");
+
+    // Must not surface as a crash/failure.
+    expect(result.status).toBe("insufficient_data");
+    expect(result.survivalRate).toBeNull();
+    expect(result.errorMessage).toBeNull();
+
+    // The DB write must carry a real `null`, never the string "null".
+    expect(insertCalls.length).toBe(1);
+    expect(updateCalls.length).toBe(1);
+    const setVals = updateCalls[0].set;
+    expect(setVals.status).toBe("insufficient_data");
+    expect(setVals.survivalRate).toBeNull();
+    expect(typeof setVals.survivalRate).not.toBe("string");
+  });
+
+  it("propagates the evaluator's reason string into the result (not swallowed)", async () => {
+    runPythonModuleMock.mockResolvedValue(ADVISORY_PYTHON_RESULT);
+
+    const result = await runBlackSwanTest("backtest-advisory-2", "strategy-advisory-2");
+
+    expect(result.reason).toBe("regime_bank_stale_or_empty");
+  });
+
+  it("also treats survival_rate=null WITHOUT an explicit advisory flag as the advisory path (defensive)", async () => {
+    // Defensive: even if a future evaluator change omits `advisory: true` but
+    // still emits survival_rate: null, the service must not crash — it must
+    // still degrade to the honest insufficient_data record rather than
+    // attempting String(null).
+    runPythonModuleMock.mockResolvedValue({
+      ...ADVISORY_PYTHON_RESULT,
+      advisory: undefined,
+    });
+
+    const result = await runBlackSwanTest("backtest-advisory-3", "strategy-advisory-3");
+
+    expect(result.status).toBe("insufficient_data");
+    expect(result.survivalRate).toBeNull();
+  });
+
+  it("does not populate worst_regime fields on the advisory path", async () => {
+    runPythonModuleMock.mockResolvedValue(ADVISORY_PYTHON_RESULT);
+
+    const result = await runBlackSwanTest("backtest-advisory-4", "strategy-advisory-4");
+
+    expect(result.worstRegimeId).toBeNull();
+    expect(result.worstRegimeDrawdown).toBeNull();
+    expect(result.worstRegimeLabel).toBeNull();
+  });
+});
+
 // ─── Pipeline paused ─────────────────────────────────────────────────────────
 
 describe("runBlackSwanTest — pipeline paused", () => {

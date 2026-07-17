@@ -1771,8 +1771,15 @@ export async function runBacktest(strategyId: string, config: BacktestConfig, st
     // Hard contract — DO NOT change:
     //   - Fire-and-forget. NEVER awaited. NEVER affects backtest return value.
     //   - Errors from runBlackSwanTest swallowed via .catch() with logger.error.
-    //   - Phase 0 advisory: lifecycle-service reads the latest run; promotion
-    //     never blocks on this evaluation.
+    //   - Phase 0, current state (corrected 2026-07-17 — see CLAUDE.md §12 A14
+    //     row): this evaluation is computed + persisted only. NO promotion
+    //     gate evaluator reads it — `lifecycle-service.ts` has zero references
+    //     to synthetic-black-swan-service.ts (verified via grep). The only
+    //     consumer today is the manual `GET /api/synthetic-black-swan/:backtestId`
+    //     route + the strategy-health-aggregator's observability-only
+    //     `black_swan` composite subsystem. Wiring a lifecycle gate off this
+    //     evaluator is a distinct, separately-ratified operator decision — do
+    //     NOT infer that promotion already reads it from this comment.
     //
     // Pattern source: A7 signal-vector persistence block immediately above.
     (async () => {

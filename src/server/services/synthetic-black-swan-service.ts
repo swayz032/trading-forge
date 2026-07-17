@@ -42,27 +42,48 @@ const DEFAULT_PROP_FIRM_CAP_DOLLARS = 2000.0; // Topstep 50K — tightest firm
 /**
  * JSON contract returned by `src/engine/black_swan_evaluator.py` (stdout).
  * Mirrors `RegimeSurvivalResult.to_json_dict()`.
+ *
+ * CRIT-1c fix (2026-07-17): when the regime bank has no duration-equivalent
+ * coverage for the strategy's symbol/timeframe (see FIX 1+2 in
+ * black_swan_evaluator.py), the CLI `__main__` block emits the ADVISORY
+ * envelope instead — `survival_rate: null`, `advisory: true`,
+ * `gate_passed: null`, `reason: "regime_bank_stale_or_empty"` — with exit 0
+ * (NOT the `error` field path). `survival_rate` is therefore `number | null`,
+ * and `advisory`/`gate_passed`/`reason` are additive optional fields that
+ * only appear on that envelope.
  */
 export interface BlackSwanPythonResult {
   num_regimes_tested: number;
   num_regimes_survived: number;
-  survival_rate: number;
+  survival_rate: number | null;
   worst_regime: { id: string; drawdown: number; label: string } | null;
   worst_k: Array<{ id: string; drawdown: number; label: string }>;
   generator_model_version: string;
   error?: string;
+  /** Set true on the advisory (insufficient-bank-coverage) envelope only. */
+  advisory?: boolean;
+  /** Always null on the advisory envelope — A14 is Phase 0 advisory-only regardless. */
+  gate_passed?: boolean | null;
+  /** e.g. "regime_bank_stale_or_empty" — only present on the advisory envelope. */
+  reason?: string;
 }
 
 /**
  * Public output shape returned by runBlackSwanTest().
- * `null` on metric fields when the run failed (status="failed") or was
- * skipped (status="skipped_pipeline_paused").
+ * `null` on metric fields when the run failed (status="failed"), was
+ * skipped (status="skipped_pipeline_paused"), or the bank had insufficient
+ * duration-equivalent coverage for this symbol/timeframe
+ * (status="insufficient_data" — CRIT-1c fix, 2026-07-17).
  */
 export interface BlackSwanResult {
   runId: string;
   backtestId: string;
   strategyId: string;
-  status: "completed" | "failed" | "skipped_pipeline_paused";
+  status:
+    | "completed"
+    | "failed"
+    | "skipped_pipeline_paused"
+    | "insufficient_data";
   numRegimesTested: number | null;
   numRegimesSurvived: number | null;
   survivalRate: number | null;
@@ -168,6 +189,63 @@ export async function runBlackSwanTest(
     }
 
     const wallClockMs = Date.now() - startedAt;
+
+    // ── CRIT-1c fix (2026-07-17): advisory envelope, not a crash ────────────
+    // The evaluator emits `survival_rate: null` (+ `advisory: true`,
+    // `gate_passed: null`, `reason: "regime_bank_stale_or_empty"`) with
+    // exit 0 when the bank has no duration-equivalent coverage for this
+    // symbol/timeframe (see FIX 1+2 in black_swan_evaluator.py). The
+    // previous code path did `survivalRate: String(pythonResult.survival_rate)`
+    // unconditionally, which for `null` produces the STRING "null" — the
+    // Postgres numeric column then rejects it with an opaque
+    // "invalid input syntax for type numeric" error, flipping the row to
+    // status="failed" as if the evaluator had crashed, when in fact it
+    // correctly reported "insufficient data". Record that honestly instead:
+    // a distinct status with a genuinely-null (nullable) survivalRate column,
+    // never a coerced fake number.
+    if (pythonResult.survival_rate === null || pythonResult.advisory === true) {
+      const reason = pythonResult.reason ?? "regime_bank_insufficient_coverage";
+
+      await db
+        .update(syntheticBlackSwanRuns)
+        .set({
+          status: "insufficient_data",
+          numRegimesTested: pythonResult.num_regimes_tested,
+          numRegimesSurvived: pythonResult.num_regimes_survived,
+          survivalRate: null,
+          worstRegimeId: null,
+          worstRegimeDrawdown: null,
+          worstRegimeLabel: null,
+          resultSummary: pythonResult.worst_k ?? [],
+          executionTimeMs: wallClockMs,
+          generatorModelVersion: pythonResult.generator_model_version,
+          errorMessage: `advisory: ${reason}`,
+          resolvedAt: new Date(),
+        })
+        .where(eq(syntheticBlackSwanRuns.id, runId));
+
+      logger.info(
+        { backtestId, strategyId, runId, reason, wallClockMs },
+        "synthetic_black_swan: advisory result — insufficient bank coverage (not a failure)",
+      );
+
+      return {
+        runId,
+        backtestId,
+        strategyId,
+        status: "insufficient_data",
+        numRegimesTested: pythonResult.num_regimes_tested,
+        numRegimesSurvived: pythonResult.num_regimes_survived,
+        survivalRate: null,
+        worstRegimeId: null,
+        worstRegimeDrawdown: null,
+        worstRegimeLabel: null,
+        generatorModelVersion: pythonResult.generator_model_version,
+        errorMessage: null,
+        reason,
+      };
+    }
+
     const worst = pythonResult.worst_regime;
 
     await db
