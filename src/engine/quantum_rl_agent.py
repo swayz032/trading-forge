@@ -1868,7 +1868,7 @@ def train_regime_conditioned_policies(
     #   (1) load_backtest_bar_data() builds bars from backtest_trades and never
     #       enriches them (this false-green closure surfaces that, above).
     #   (2) FIXED — Path-A A1 (2026-07-17, RATIFY-PACKET.md §3.1, commit
-    #       PATH_A_A1_COMMIT_SHA): _load_production_state_at() previously SELECTed
+    #       19db47d4c366bf48f5bbda62ae20999e2b96e9c6): _load_production_state_at() previously SELECTed
     #       bias_state columns {state, confluence_score, institutional_regime}
     #       that did NOT EXIST in the live schema — it would have thrown "column
     #       does not exist" if ever wired in, and its unit tests only passed
