@@ -19,6 +19,8 @@
 
 **Carry-forward:** NONE on this wave's own fixable surface. Parameter-drift stays a proper reservation (named owner + unblock condition), not a carry-forward. One pre-existing item explicitly NOT re-opened this wave: the `MC_REGIME_RESAMPLE_ENABLED`→`MC_REGIME_AWARE_BOOTSTRAP_ENABLED` CLAUDE.md doc-drift was already fixed in the prior wave (`c5ccb887`) — memory had briefly (incorrectly) implied it was still open; corrected.
 
+**Immediate self-caught follow-up (`0e39108e`):** running `system-map:check` right after landing found real drift — `weekend-auto-resume-check` was registered in `scheduler.ts` but never added to `observability_reliability`'s `scheduler_jobs[]` in the registry. Fixed + re-synced (`system-map:check` exit 0, `driftItems: []`). Closing that surfaced a bigger issue via `wave-b-architect-registry-no-deprecated-jobs.test.ts`: both `weekend-auto-resume-check` (mine) and the pre-existing `bias-state-freshness-check` (goalscan-r2) called `SCHEDULER_JOBS[name].run()` directly instead of routing through `withRetry()`, silently skipping the auto-disable-after-consecutive-failures safety net, `schedulerLastError[]` admin-dashboard visibility, and the `cronJobsConcurrent` gauge every sibling cron gets. Wired both through `withRetry(name, fn, 1)` — same defect class, fixed together rather than just the instance I'd introduced. One source-string test updated to match the improved call pattern. 63/63 targeted tests green, tsc clean, `system-map:check` exit 0.
+
 ---
 
 ### Session Log — 2026-07-17 LIVENESS-AUDIT FIX WAVE — A14 + DeepAR/replay-fabrication + Tier-A telemetry-honesty + scheduler HIGH-1 LANDED `d7a895aa`→`04927bd3`, per-item VERIFIED BAND 7-8, zero carry-forwards
