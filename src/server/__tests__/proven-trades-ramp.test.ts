@@ -158,22 +158,24 @@ describe("Withdrawal safety — proven_trades mode does not lower tier on profit
 describe("8% drawdown-room cap — base 9 on fresh $50K Topstep", () => {
 
   it("no current_drawdown_room → pyramid floor override → 9 contracts", () => {
-    // buffer = 52000 - 50000 = $2K; riskDollars = 2000 × 0.02 = $40; cap = floor(40/30) = 1
-    // pyramid floor override fires (healthy acct) → returns base_contracts = 9
+    // C-05/D9: floor override REMOVED. buffer=$2K → riskDollars=$40 → cap=floor(40/30)=1 now BINDS.
     const result = computeRiskDerivedContracts(makeInput({ firmContractCap: 50 }));
-    expect(result.pyramidFloorApplied).toBe(true);
-    expect(result.finalContracts).toBe(BASE_CONTRACTS);  // 9
+    expect(result.riskDerivedCap).toBe(1);
+    expect(result.pyramidFloorApplied).toBe(false);
+    expect(result.finalContracts).toBe(1);  // risk cap wins (lowest wins), not base 9
     expect(result.drawdownRoomCap).toBeNull();
   });
 
   it("drawdownRoom=$3375 → cap=floor(3375×0.08/30)=9 — exactly at base, no conflict", () => {
-    // 3375 × 0.08 / 30 = 9.0 → floor = 9
+    // C-05/D9: floor override REMOVED. DD cap=9, but the small-buffer risk cap (1) is lower and
+    // now binds (lowest wins) → final = 1.
     const result = computeRiskDerivedContracts(makeInput({
       firmContractCap: 50,
       currentDrawdownRoom: 3_375,
     }));
     expect(result.drawdownRoomCap).toBe(9);
-    expect(result.finalContracts).toBe(9);
+    expect(result.riskDerivedCap).toBe(1);
+    expect(result.finalContracts).toBe(1);
   });
 
   it("very small DD room ($300) → cap=0 → 0 contracts even on healthy account", () => {
@@ -255,9 +257,9 @@ describe("scalingMode/scalingTier present in every return path", () => {
   });
 
   it("pyramid_floor_override path emits scalingMode and scalingTier", () => {
-    // healthy account, risk-derived cap < base → pyramid floor override
+    // C-05/D9: floor override REMOVED — the risk-cap-binds path (riskCap=1 < base) emits scalingMode.
     const result = computeRiskDerivedContracts(makeInput({ firmContractCap: 50 }));
-    expect(result.pyramidFloorApplied).toBe(true);
+    expect(result.pyramidFloorApplied).toBe(false);
     expect(["proven_trades", "dollar_fallback"]).toContain(result.scalingMode);
     expect(typeof result.scalingTier).toBe("number");
   });

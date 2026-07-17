@@ -168,15 +168,12 @@ describe("Wave 10 Task 3A: computeRiskDerivedContracts", () => {
 
     it("extreme ATR (100 pts) — Wave 23: pyramid floor overrides riskCap on healthy account", () => {
       // stop = 1.5 × 100 × $5 = $750; MFFU riskDollars = 50K*0.02 = $1K → riskCap=1
-      // Wave 23: account is 100% healthy → pyramid floor (base=4) overrides riskCap.
-      // For base=4 (Wave 10 config), floor=4 applies.
-      // Pre-Wave-23 expectation (≤2) was correct when floor did not exist.
-      // Floor only sacrifices on drawdown accounts (< 85% of starting).
+      // C-05/D9 (2026-07-16): floor override REMOVED → risk cap (1) binds (lowest wins),
+      // regardless of account health. Not base 4.
       const r = computeRiskDerivedContracts(makeInput({ atrPoints: 100, accountBalance: 50_000 }));
-      // Wave 23: healthy account → pyramid floor binds → finalContracts = base_contracts (4)
-      expect(r.finalContracts).toBe(4);   // pyramid floor applies (Wave 23)
-      expect(r.pyramidFloorApplied).toBe(true);
-      expect(r.riskDerivedCap).toBe(1);   // riskCap still 1 — but floor overrides
+      expect(r.finalContracts).toBe(1);   // risk cap binds — no floor override
+      expect(r.pyramidFloorApplied).toBe(false);
+      expect(r.riskDerivedCap).toBe(1);
       expect(r.rejectionReason).toBeNull();
     });
 
@@ -276,14 +273,16 @@ describe("PM/news taper is respected by both pyramid floors", () => {
   });
 
   it("early-return floor (riskCap≤0): pmSizeFactor=0.5 → floor(4*0.5)=2, NOT re-inflated to base 4", () => {
-    // atrPoints=200 → stop_dollars=1.5*200*5=1500 > risk_dollars($1000) → riskDerivedCap=0 →
-    // healthy early-return floor path. Tapered floor must yield 2, not the un-tapered base 4.
+    // atrPoints=200 → stop_dollars=1.5*200*5=1500 > risk_dollars($1000) → riskDerivedCap=0.
+    // C-05/D9 (2026-07-16): floor override REMOVED → riskCap<=0 ALWAYS rejects (negative_cap), honest
+    // skip. There is no early-return floor left to taper — the honest result is 0, not 2.
     const r = computeRiskDerivedContracts(makeInput({
       pmSizeFactor: 0.5,
       accountStartingFloor: 50_000,
       atrPoints: 200,
     }));
     expect(r.riskDerivedCap).toBe(0);
-    expect(r.finalContracts).toBe(2);
+    expect(r.finalContracts).toBe(0);
+    expect(r.rejectionReason).toBe("negative_cap");
   });
 });

@@ -204,13 +204,14 @@ class TestNoCap:
         assert result.drawdown_room_cap_binding is False
 
     def test_topstep_large_room_not_binding(self):
-        """Large DD room → cap >> other caps → not binding → pyramid floor applies."""
+        """C-05/D9: floor override REMOVED. Large DD room → DD cap not binding; the small-buffer
+        risk cap (1) now binds (lowest wins), not base 6."""
         result = compute_risk_derived_contracts(
             **make_topstep_input(
                 account_balance=52_000.0,
                 high_water_balance=52_000.0,
                 cumulative_profit=0.0,
-                current_drawdown_room=100_000.0,  # massive room → cap = 33
+                current_drawdown_room=100_000.0,  # massive room → cap = 266
                 firm_contract_cap=50,
             )
         )
@@ -220,9 +221,10 @@ class TestNoCap:
             100_000.0 * _DRAWDOWN_ROOM_RISK_PCT / STOP_DOLLARS
         )
         assert result.drawdown_room_cap_binding is False
-        # Pyramid floor applies: account healthy, risk-cap is low (small Topstep buffer)
-        assert result.pyramid_floor_applied is True
-        assert result.final_contracts == BASE_CONTRACTS  # = 6
+        # buffer $2K → risk_dollars $40 → risk_derived_cap = floor(40/30) = 1 binds; no floor override
+        assert result.risk_derived_cap == 1
+        assert result.pyramid_floor_applied is False
+        assert result.final_contracts == 1
 
 
 # ── Test 6: Parity check — Python matches TypeScript formula exactly ──────────
@@ -258,17 +260,13 @@ class TestParityWithTypescript:
 
 class TestCap2HealthyAccountEarlyReturnDrawdownRoomFix:
     def test_drawdown_room_cap_binds_in_healthy_account_early_return(self):
-        """Healthy account + risk_derived_cap<=0 + tight drawdown room → DD room cap must
-        still bind the floor, not just base_contracts/firm_cap/liquidity_cap.
-
-        Before the CAP-2 fix this branch ignored drawdown_room_cap entirely and returned
-        base_contracts=6 even though DD room only supports 1 contract — a firm-compliance
-        gap identical to the TS F-4 bug (risk-sizing.ts:794-802).
+        """C-05/D9 (2026-07-16): floor override REMOVED — risk_derived_cap<=0 ALWAYS rejects,
+        regardless of account health. A healthy fresh combine whose 2% risk cap collapses to 0
+        is now an honest SKIP (0 contracts, negative_cap), not a base/DD-room-clamped floor.
 
         Setup forces risk_derived_cap<=0 via a wide ATR (stop_dollars_per_contract=45 >
-        risk_dollars=40), while the account stays healthy (balance/starting_floor=1.02)
-        and DD room is tight enough (drawdown_room_cap=1) to be the binding constraint
-        below base_contracts=6.
+        risk_dollars=40), account healthy (balance/starting_floor=1.02). The computed
+        drawdown_room_cap is still exposed for telemetry parity with risk-sizing.ts.
         """
         atr_wide = 6.0
         stop_dollars = STOP_MULT * atr_wide * PV  # 1.5 * 6 * 5 = 45
@@ -292,29 +290,23 @@ class TestCap2HealthyAccountEarlyReturnDrawdownRoomFix:
         )
 
         # buffer = 51000 - min(51000-2000, 50000) = 51000 - 49000 = 2000
-        # risk_dollars = 2000 * 0.02 = 40; risk_derived_cap = floor(40/45) = 0 → early-return branch
+        # risk_dollars = 2000 * 0.02 = 40; risk_derived_cap = floor(40/45) = 0 → ALWAYS rejects
         assert result.risk_derived_cap == 0
         assert result.account_health_ratio == pytest.approx(1.02)
-        # drawdown_room_cap = floor(1000 * 0.08 / 45) = floor(1.777...) = 1
+        # drawdown_room_cap = floor(1000 * 0.08 / 45) = floor(1.777...) = 1 — still exposed (parity)
         expected_dd_cap = math.floor(1_000.0 * _DRAWDOWN_ROOM_RISK_PCT / stop_dollars)
         assert expected_dd_cap == 1
         assert result.drawdown_room_cap == expected_dd_cap
 
-        # CAP-2 fix: final_contracts must be clamped to drawdown_room_cap (1), NOT
-        # base_contracts (6) — the pre-fix bug returned 6.
-        assert result.final_contracts == 1
-        assert result.rejection_reason is None  # floor override, not a rejection
-        assert result.drawdown_room_cap_binding is True
-        # drawdown_room_cap overrides the pyramid floor when it's the binding constraint
+        # D9: honest skip — no floor, no DD-room clamp; risk math wins → reject at 0.
+        assert result.final_contracts == 0
+        assert result.rejection_reason == "negative_cap"
+        assert result.drawdown_room_cap_binding is False
         assert result.pyramid_floor_applied is False
-        assert result.evidence["binding_cap"] == "drawdown_room"
-        assert result.evidence["drawdown_room_cap"] == 1
 
     def test_pyramid_floor_still_applies_when_drawdown_room_cap_not_binding(self):
-        """Same early-return branch, but DD room is generous (cap > base_contracts) —
-        pyramid floor (base_contracts) should still win, matching pre-fix behavior.
-        Guards against an over-correction that always prefers drawdown_room_cap.
-        """
+        """C-05/D9: floor override REMOVED. Same risk_derived_cap<=0 branch with generous DD room —
+        no floor to apply; the account rejects at 0 (lowest wins → honest skip)."""
         atr_wide = 6.0
         result = compute_risk_derived_contracts(
             base_contracts=BASE_CONTRACTS,  # 6
@@ -338,6 +330,6 @@ class TestCap2HealthyAccountEarlyReturnDrawdownRoomFix:
         assert result.risk_derived_cap == 0
         assert result.drawdown_room_cap > BASE_CONTRACTS
         assert result.drawdown_room_cap_binding is False
-        assert result.final_contracts == BASE_CONTRACTS
-        assert result.pyramid_floor_applied is True
-        assert result.evidence["binding_cap"] == "pyramid_floor_override"
+        assert result.final_contracts == 0
+        assert result.rejection_reason == "negative_cap"
+        assert result.pyramid_floor_applied is False

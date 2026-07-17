@@ -65,8 +65,9 @@ const TOPSTEP_50K_HEALTHY = {
 
 describe("Wave 23 B.1 — MES base 6 at $50K Topstep healthy", () => {
   it("MES base 6: pyramid floor overrides riskCap=1 on fresh $50K combine", () => {
-    // Topstep $50K: buffer=$2K, riskDollars=40, stopDollars=$30 → riskCap=1
-    // BUT pyramid floor (base=6) overrides because account is healthy (100% > 85%)
+    // C-05/D9 (2026-07-16): floor override REMOVED — risk math wins, lowest wins.
+    // Topstep $50K: buffer=$2K, riskDollars=40, stopDollars=$30 → riskCap=1 now BINDS (final=1),
+    // NOT base 6 — even though the account is healthy.
     const r = computeRiskDerivedContracts({
       positionSizeConfig: MES_CFG_BASE6,
       ...TOPSTEP_50K_HEALTHY,
@@ -76,8 +77,8 @@ describe("Wave 23 B.1 — MES base 6 at $50K Topstep healthy", () => {
       pointDollarValue: 5.0,  // MES $5/pt
       firmContractCap: 15,
     });
-    expect(r.finalContracts).toBe(6);  // pyramid floor binds
-    expect(r.pyramidFloorApplied).toBe(true);
+    expect(r.finalContracts).toBe(1);  // risk cap binds (lowest wins)
+    expect(r.pyramidFloorApplied).toBe(false);
     expect(r.riskDerivedCap).toBe(1);  // riskCap only 1 contract
     expect(r.accountHealthRatio).toBeCloseTo(1.0, 2);
     expect(r.rejectionReason).toBeNull();
@@ -211,6 +212,7 @@ describe("Wave 23 B.1 — MNQ base 6 at $50K Topstep healthy", () => {
     // MNQ: stopDollars = 1.5 * 4 * 2 = $12/contract
     // Topstep buffer=$2K, riskDollars=40, riskCap=floor(40/12)=3 < base=6
     // Floor must override → finalContracts=6
+    // C-05/D9: floor override REMOVED. riskCap=3 < base 6 → risk cap (3) now binds (lowest wins).
     const r = computeRiskDerivedContracts({
       positionSizeConfig: MNQ_CFG_BASE6,
       ...TOPSTEP_50K_HEALTHY,
@@ -220,8 +222,8 @@ describe("Wave 23 B.1 — MNQ base 6 at $50K Topstep healthy", () => {
       pointDollarValue: 2.0,  // MNQ $2/pt
       firmContractCap: 15,
     });
-    expect(r.finalContracts).toBe(6);
-    expect(r.pyramidFloorApplied).toBe(true);
+    expect(r.finalContracts).toBe(3);
+    expect(r.pyramidFloorApplied).toBe(false);
     // riskCap = floor(40/12) = 3
     expect(r.riskDerivedCap).toBe(3);
     expect(r.rejectionReason).toBeNull();
@@ -247,6 +249,8 @@ describe("Wave 23 B.1 — MCL base 18 at $50K Topstep healthy", () => {
     // stopDollars = 1.5 * 0.1 * 100 = $15/contract
     // Topstep buffer=$2K, riskDollars=40, riskCap=floor(40/15)=2 < base=18
     // Floor must override → finalContracts=18
+    // C-05/D9: floor override REMOVED. stopDollars=1.5*0.1*100=15, riskDollars=40 → riskCap=2 < base
+    // 18 → risk cap (2) now binds (lowest wins), not base 18.
     const r = computeRiskDerivedContracts({
       positionSizeConfig: MCL_CFG_BASE18,
       ...TOPSTEP_50K_HEALTHY,
@@ -256,8 +260,9 @@ describe("Wave 23 B.1 — MCL base 18 at $50K Topstep healthy", () => {
       pointDollarValue: 100.0,  // MCL $100/pt (= $1/tick × 100 ticks/pt)
       firmContractCap: null,
     });
-    expect(r.finalContracts).toBe(18);
-    expect(r.pyramidFloorApplied).toBe(true);
+    expect(r.riskDerivedCap).toBe(2);
+    expect(r.finalContracts).toBe(2);
+    expect(r.pyramidFloorApplied).toBe(false);
     expect(r.riskDerivedCap).toBeLessThan(18);  // risk-cap is below base
     expect(r.rejectionReason).toBeNull();
   });
@@ -327,7 +332,8 @@ describe("Wave 23 B.1 — MES base 6 at $50K MFFU healthy", () => {
 
 describe("Wave 23 B.1 — Account health boundary at 85%", () => {
   it("exactly 85% health: floor APPLIES (>= 0.85 threshold)", () => {
-    // $42,500 / $50,000 = 0.85 → exactly at threshold → floor binds
+    // C-05/D9: floor override REMOVED — health ratio no longer lifts size to base.
+    // $42,500 / $50,000 = 0.85 → risk cap (5) binds regardless of health (lowest wins).
     const r = computeRiskDerivedContracts({
       positionSizeConfig: MES_CFG_BASE6,
       firm: "mffu",
@@ -343,9 +349,9 @@ describe("Wave 23 B.1 — Account health boundary at 85%", () => {
     expect(r.accountHealthRatio).toBeCloseTo(0.85, 2);
     // riskDollars = 42500 * 0.02 = $850; stopDollars = 1.5*20*5 = $150; riskCap = floor(850/150) = 5
     expect(r.riskDerivedCap).toBe(5);
-    // riskCap (5) < base (6) AND health >= 0.85 → floor applies → final=6
-    expect(r.pyramidFloorApplied).toBe(true);
-    expect(r.finalContracts).toBe(6);
+    // riskCap (5) < base (6) → risk cap binds (no floor override)
+    expect(r.pyramidFloorApplied).toBe(false);
+    expect(r.finalContracts).toBe(5);
   });
 
   it("exactly 84.9% health: floor does NOT apply (below 0.85 threshold)", () => {

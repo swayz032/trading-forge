@@ -299,6 +299,8 @@ When `exit_style="adaptive"`:
 ### Sizing — Risk-Derived Pyramid (W23F.N — Wave 23 canonical)
 Sizing is **risk-management-bounded, not contract-count-bounded**. Pyramid is the SLOW-RAMP floor; risk math is the CEILING. Lowest wins.
 
+**★ C-05 / D9 (2026-07-16): the healthy-account pyramid-floor OVERRIDE was REMOVED — do NOT restore.** The code previously did `max(base_contracts, min(...))` on healthy accounts (≥85% of start), which OVERRODE the risk-derived 2% ceiling back up to base — contradicting this section's own "lowest wins." Now `finalContracts = max(0, min(pyramidTier, riskDerivedCap, firmCap, liquidityCap, drawdownRoomCap))` is a PURE lowest-wins min() in BOTH `risk-sizing.ts` and `sizing.py` (scalar + vectorized): when risk math yields <1 contract → **skip the trade** (0), never a fabricated base floor. This reverses the earlier anti-strangulation intent behind the `DRAWDOWN_ROOM_RISK_PCT` 0.01→0.08 recal — a deliberate operator tradeoff (risk-honesty over always-trading-base); on a fresh combine with a wide stop the bot may now size down or skip. Magnitude in `docs/replay-results/2026-07-16-c05-lowest-wins-ab.md`. The vectorized backtest path skips-to-0 identically (no fabricated 1-contract trades feeding WFE/PBO/B14). A future agent that re-adds a base floor over the risk cap is regressing C-05.
+
 **Pyramid ramp (2026-06-23 — base 9 + proven-trades ramp):**
 ```
 Base:      9 MES / 9 MNQ / 18 MCL   (was 6/6/18; 9÷3 keeps Style C clean; MCL unchanged)

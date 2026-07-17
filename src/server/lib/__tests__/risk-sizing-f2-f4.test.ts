@@ -243,8 +243,8 @@ describe("F-4: early-return pyramid floor path respects drawdownRoomCap", () => 
   });
 
   it("healthy account, no currentDrawdownRoom provided → early-return still returns base_contracts", () => {
-    // When currentDrawdownRoom is absent, drawdownRoomCap is null (MFFU-style or no input).
-    // The early-return path should still apply the pyramid floor as before.
+    // C-05/D9 (2026-07-16): floor override REMOVED — riskDerivedCap<=0 ALWAYS rejects (negative_cap),
+    // regardless of health. buffer=$100 → riskDollars=$2 → riskDerivedCap=0 → honest skip (0).
     const result = computeRiskDerivedContracts({
       positionSizeConfig: MES_CFG,
       accountBalance: 50_100,
@@ -262,9 +262,10 @@ describe("F-4: early-return pyramid floor path respects drawdownRoomCap", () => 
 
     // drawdownRoomCap should be null when no input provided
     expect(result.drawdownRoomCap).toBeNull();
-    // Pyramid floor applies: base_contracts=6 returned
-    expect(result.finalContracts).toBe(6);
-    expect(result.pyramidFloorApplied).toBe(true);
+    // D9: risk cap collapsed to 0 → reject (no floor override to lift it to base)
+    expect(result.finalContracts).toBe(0);
+    expect(result.rejectionReason).toBe("negative_cap");
+    expect(result.pyramidFloorApplied).toBe(false);
   });
 });
 

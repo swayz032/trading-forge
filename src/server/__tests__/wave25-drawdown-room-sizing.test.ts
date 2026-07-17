@@ -113,11 +113,13 @@ describe("Inst-10: Drawdown-room-anchored sizing (Wave 25 Pass 2)", () => {
 
       const result = computeRiskDerivedContracts(input);
 
-      // recal 0.01→0.08 (2026-06-23): drawdownRoomCap = floor(4500 × 0.08 / 30) = floor(360 / 30) = 12.
-      // At the old 1% rate this cap was 1 and BOUND finalContracts to 1; at 8% the cap (12) no longer binds —
-      // the pyramid base (fixture base_contracts=6) is now the tightest min() term, so finalContracts=6.
+      // recal 0.01→0.08 (2026-06-23): drawdownRoomCap = floor(4500 × 0.08 / 30) = 12 (not binding).
+      // buffer = 54500 - 50000 = $4500 → riskDollars = $90 → riskDerivedCap = floor(90/30) = 3.
+      // C-05/D9: floor override REMOVED — the risk cap (3) is now the tightest min() term and binds
+      // (lowest wins) → finalContracts=3 (was 6 via the floor override).
       expect(result.drawdownRoomCap).toBe(12);
-      expect(result.finalContracts).toBe(6);
+      expect(result.riskDerivedCap).toBe(3);
+      expect(result.finalContracts).toBe(3);
     });
 
     it("Topstep: drawdownRoomCap IS the binding constraint → drawdownRoomCapBinding=true", () => {
@@ -244,11 +246,11 @@ describe("Inst-10: Drawdown-room-anchored sizing (Wave 25 Pass 2)", () => {
       // recal 0.01→0.08: drawdownRoomCap = floor(100000 × 0.08 / 30) = 266 (still not binding vs pyramid tier)
       expect(result.drawdownRoomCap).toBe(266);
       expect(result.drawdownRoomCapBinding).toBe(false);
-      // Account is healthy (52K/50K = 1.04 ≥ 0.85) and Topstep trail uses buffer-pct.
       // On a fresh Topstep: buffer = 52000 - 50000 = $2000 → riskDollars = $40
-      // riskDerivedCap = floor(40/30) = 1 → pyramid floor overrides → 6 contracts
-      expect(result.pyramidFloorApplied).toBe(true);
-      expect(result.finalContracts).toBe(6);
+      // riskDerivedCap = floor(40/30) = 1. C-05/D9: floor override REMOVED → risk cap (1) binds
+      // (lowest wins), not base 6.
+      expect(result.pyramidFloorApplied).toBe(false);
+      expect(result.finalContracts).toBe(1);
     });
   });
 });

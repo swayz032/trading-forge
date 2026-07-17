@@ -47,16 +47,16 @@ Wave 22 — Firm-Aware Risk Cap:
   New RiskSizingResult fields: firm, risk_cap_method ("topstep_trailing_dd" | "mffu_balance_pct"),
     firm_cap_applied (bool).
 
-Wave 23 — Pyramid Floor Enforcement (B.1):
-  base_contracts is the MINIMUM viable contract count (MES=6, MNQ=6, MCL=18).
-  All bases are divisible by 3 — Style C 33/33/33 partials clean at every tier.
+Wave 23 — Pyramid Floor Enforcement (B.1) — FLOOR OVERRIDE REMOVED 2026-07-16 (D9, C-05):
   Micro point values LOCKED (per operator directive 2026-05-19):
     MES = $5/point  (1/10 of ES at $50/pt)
     MNQ = $2/point  (1/10 of NQ at $20/pt)
     MCL = $1/tick   ($100/point, tick=0.01, tick_value=$1.00)
-  Floor rule: on healthy accounts (balance >= 85% of starting_capital), if risk-cap
-  returns fewer than base_contracts, use base_contracts instead. On drawdown accounts
-  (< 85%), risk-cap fully binds to protect firm compliance.
+  The healthy-account pyramid-floor override was REMOVED — risk math always wins, lowest wins:
+    finalContracts = max(0, min(pyramidTier, riskDerivedCap, firmCap, liquidityCap, drawdownRoomCap))
+  on EVERY account (healthy or drawdown). When that minimum is < 1 the honest result is REJECT/SKIP
+  (0 contracts, risk_derived_cap <= 0 → rejection_reason="negative_cap"), never a fabricated base floor.
+  `pyramid_floor_applied` is retained (always False) for schema/telemetry compat; do NOT restore the floor.
   New RiskSizingResult fields: pyramid_floor_applied (bool), account_health_ratio (float).
 
 Wave 25 Pass 2 — Inst-10 Drawdown-Room Cap (Topstep only):
@@ -513,99 +513,11 @@ def compute_risk_derived_contracts(
         effective_firm_cap = None  # No firm cap = infinity
 
     # Edge case: computed cap <= 0 (extreme ATR or tiny account/buffer).
-    # Wave 23: On healthy accounts, pyramid floor still applies even here.
-    # If account_is_healthy AND risk_cap <= 0, use base_contracts as the floor.
-    # This handles the Topstep fresh-combine case: risk_cap=0 but account is healthy.
-    # On drawdown accounts, this rejection holds (risk-cap protects the account).
+    # C-05 / D9 (2026-07-16): risk_derived_cap <= 0 ALWAYS rejects — the healthy-account
+    # pyramid-floor override was REMOVED (risk math wins, lowest wins). There is no floor to
+    # clamp here; a fresh combine whose 2% risk cap collapses to 0 is an honest SKIP, not a
+    # fabricated base-size trade. Behaves identically on healthy and drawdown accounts.
     if risk_derived_cap <= 0:
-        if account_is_healthy and base_contracts > 0:
-            # F-7: Pyramid floor applies on healthy account, but clamp by firm cap + liquidity cap.
-            # base_contracts alone is unbounded — firm compliance limits must still bind.
-            # CAP-2 / F-4 fix (mirrors risk-sizing.ts:794-802): also include drawdown_room_cap
-            # in this floor min(). The main path below already applies drawdown_room_cap in its
-            # min(); this early-return path previously omitted it, allowing base_contracts to be
-            # returned even when DD room is too tight to support that many contracts.
-            # drawdown_room_cap OVERRIDES the pyramid floor when it is the binding constraint.
-            # LOW#1 (freshscan5 2026-07-12): apply the PM-taper to base_contracts here too — the
-            # main-path floor (line ~666 `floor(base_contracts * _pm_factor)`) and the TS mirror
-            # (risk-sizing.ts:785,804 `flooredBase = Math.floor(base_contracts * pmFactor)`) both taper
-            # the floor, but this risk_cap<=0 early-return path returned the UN-tapered base_contracts →
-            # a PM (13:30-15:30 ET) entry on a fresh-combine / tight-buffer account floored to full AM
-            # base instead of the ~0.5 PM size, over-sizing PM trades >2x vs both the live/paper PM taper
-            # and the vectorized backtest path.
-            _pm_floored_base = int(math.floor(base_contracts * _pm_factor))
-            floored_candidates = [_pm_floored_base, liquidity_cap]
-            if effective_firm_cap is not None:
-                floored_candidates.append(effective_firm_cap)
-            if drawdown_room_cap is not None and drawdown_room_cap >= 0:
-                floored_candidates.append(drawdown_room_cap)
-            floored_contracts = max(0, min(floored_candidates))
-            floor_firm_cap_applied = (
-                effective_firm_cap is not None
-                and effective_firm_cap == floored_contracts
-                and effective_firm_cap < base_contracts
-            )
-            # drawdown_room_cap binding when it was the actual constraining element
-            early_return_drawdown_room_cap_binding = (
-                drawdown_room_cap is not None
-                and drawdown_room_cap >= 0
-                and drawdown_room_cap == floored_contracts
-            )
-            ev_floor: dict = {
-                "account_balance": account_balance,
-                "atr_points": atr_points,
-                "stop_multiplier": stop_multiplier,
-                "point_dollar_value": point_dollar_value,
-                "stop_dollars_per_contract": stop_dollars_per_contract,
-                "risk_dollars": risk_dollars,
-                "pyramid_tier": pyramid_tier,
-                "risk_derived_cap": risk_derived_cap,
-                "firm_cap": effective_firm_cap,  # F-7: expose the cap that was applied
-                "liquidity_cap": liquidity_cap,
-                "drawdown_room_cap": drawdown_room_cap,
-                "final_contracts": floored_contracts,
-                "rejection_reason": None,
-                "firm": firm,
-                "account_health_ratio": account_health_ratio,
-                "pyramid_floor_applied": not early_return_drawdown_room_cap_binding,
-                "firm_cap_applied": floor_firm_cap_applied,  # F-7: audit whether firm cap bound
-                "binding_cap": (
-                    "drawdown_room"
-                    if early_return_drawdown_room_cap_binding
-                    else "pyramid_floor_override"
-                ),
-                "base_contracts": base_contracts,
-                "risk_cap_method": risk_cap_method,
-            }
-            if firm == "topstep":
-                ev_floor.update(
-                    {
-                        "trailing_floor": trailing_floor,
-                        "buffer": buffer,
-                        "high_water_balance": _high_water,
-                        "trailing_dd": trailing_dd,
-                        "account_starting_floor": account_starting_floor,
-                    }
-                )
-            return RiskSizingResult(
-                final_contracts=floored_contracts,
-                pyramid_tier=pyramid_tier,
-                risk_derived_cap=risk_derived_cap,
-                firm_cap=effective_firm_cap,  # F-7: expose effective firm cap
-                liquidity_cap=liquidity_cap,
-                rejection_reason=None,  # not a rejection — floor overrides (or DD room cap)
-                firm=firm,
-                risk_cap_method=risk_cap_method,
-                firm_cap_applied=floor_firm_cap_applied,  # F-7: true if firm cap constrained floor
-                pyramid_floor_applied=not early_return_drawdown_room_cap_binding,
-                account_health_ratio=account_health_ratio,
-                scaling_mode=scaling_mode,
-                scaling_tier=tiers,
-                drawdown_room_cap=drawdown_room_cap,
-                drawdown_room_cap_binding=early_return_drawdown_room_cap_binding,
-                evidence=ev_floor,
-            )
-
         ev: dict = {
             "account_balance": account_balance,
             "atr_points": atr_points,
@@ -615,8 +527,14 @@ def compute_risk_derived_contracts(
             "risk_dollars": risk_dollars,
             "pyramid_tier": pyramid_tier,
             "risk_derived_cap": risk_derived_cap,
-            "firm_cap": None,
+            # C-05/D9 NEW-HIGH (2026-07-16): expose the resolved effective_firm_cap (honors
+            # topstep_account_cap_override) — NOT None. The negative_cap return now PROCEEDS to the
+            # vectorized per-bar path (HIGH#2 fix), whose consumer reads sizing_result.firm_cap to
+            # clamp per-bar sizes; hardcoding None dropped the per-account cap and let the per-bar
+            # sizes exceed topstep_account_cap_override. Scalar/live is unaffected (final=0 regardless).
+            "firm_cap": effective_firm_cap,
             "liquidity_cap": liquidity_cap,
+            "drawdown_room_cap": drawdown_room_cap,  # parity with risk-sizing.ts negative_cap return
             "final_contracts": 0,
             "rejection_reason": "negative_cap",
             "firm": firm,
@@ -637,7 +555,7 @@ def compute_risk_derived_contracts(
             final_contracts=0,
             pyramid_tier=pyramid_tier,
             risk_derived_cap=risk_derived_cap,
-            firm_cap=None,
+            firm_cap=effective_firm_cap,  # C-05/D9 NEW-HIGH: honor topstep_account_cap_override (see ev note)
             liquidity_cap=liquidity_cap,
             rejection_reason="negative_cap",
             firm=firm,
@@ -647,6 +565,8 @@ def compute_risk_derived_contracts(
             account_health_ratio=account_health_ratio,
             scaling_mode=scaling_mode,
             scaling_tier=tiers,
+            drawdown_room_cap=drawdown_room_cap,  # parity: TS returns the computed cap here
+            drawdown_room_cap_binding=False,
             evidence=ev,
         )
 
@@ -672,57 +592,17 @@ def compute_risk_derived_contracts(
 
     final_contracts = max(0, final_contracts)
 
-    # Step 2 (Wave 23): Pyramid floor enforcement.
-    # On healthy accounts (>= 85% of starting capital), base_contracts is the minimum viable
-    # contract count. Risk-cap can return fewer than base on fresh Topstep combines (narrow
-    # buffer = low risk cap), which would break Style C 33/33/33 partials.
-    # F-7: Floor is min(base_contracts, effective_firm_cap, liquidity_cap) — never unbounded.
-    #      Firm cap and liquidity cap must still bind even when pyramid floor overrides risk-cap.
-    # On drawdown accounts (< 85%), risk-cap fully binds — floor does not override.
-    # Wave 25 Pass 2 Inst-10: drawdown_room_cap takes priority over pyramid floor —
-    # when DD room is very small, forcing base_contracts would violate the 1%-of-room contract.
-    # LOW#9 (fresh-scan 2026-07-12): this SCALAR floor lacked the `pyramid_tier >= base` trigger guard
-    # and the pm-taper floor value that BOTH risk-sizing.ts and the Python per-bar path (compute_position_
-    # sizes) apply — a latent TS/scalar parity divergence. Without them, a PM-tapered scalar call
-    # (pm_size_factor<1) whose tapered pyramid_tier fell below base wrongly floored the size back UP to
-    # full base, re-inflating a deliberate PM reduction. Mirror the per-bar path.
+    # Step 2 REMOVED — C-05 / D9 (2026-07-16): the healthy-account pyramid-floor override is GONE.
+    # final_contracts stays the pure `max(0, min(pyramid_tier, risk_derived_cap, firm_cap,
+    # liquidity_cap, drawdown_room_cap))` computed above — risk math is the true ceiling, lowest wins.
+    # `pyramid_floor_applied` is retained (always False) for schema/telemetry compat; the
+    # `binding_cap="pyramid_floor_override"` state can no longer occur. Do NOT restore the floor.
     pyramid_floor_applied = False
-    if (
-        not drawdown_room_cap_binding
-        and account_is_healthy
-        and final_contracts < base_contracts
-        and pyramid_tier >= base_contracts
-    ):
-        floor_value = int(math.floor(base_contracts * _pm_factor))
-        if effective_firm_cap is not None and effective_firm_cap < floor_value:
-            floor_value = effective_firm_cap
-        if liquidity_cap < floor_value:
-            floor_value = liquidity_cap
-        # MED (freshscan8 2026-07-12): clamp the pyramid floor by drawdown_room_cap too — the TS mirror
-        # (risk-sizing.ts:990-994 flooredCandidates incl. drawdownRoomCap) AND Python's own risk_cap<=0
-        # early-return floor (line ~518) both include it, but THIS main-path floor omitted it. On the
-        # canonical fresh-Topstep-$2K combine (drawdown_room_cap=5, base=9) the floor returned 9 vs the TS
-        # 5 — an 80% over-size (9×$30=$270=13.5% of DD room vs the intended 8% cap). Restores TS↔Python parity.
-        _floor_dd_room_bound = (
-            drawdown_room_cap is not None and drawdown_room_cap >= 0 and drawdown_room_cap < floor_value
-        )
-        if _floor_dd_room_bound:
-            floor_value = drawdown_room_cap
-        final_contracts = max(0, floor_value)
-        pyramid_floor_applied = final_contracts > 0
-        # audit accuracy: if drawdown_room_cap constrained the floor, flag it as the binding cap
-        if _floor_dd_room_bound and final_contracts == drawdown_room_cap:
-            drawdown_room_cap_binding = True
-        # F-7: firmCapApplied = true when effectiveFirmCap constrained the floor
-        if effective_firm_cap is not None and effective_firm_cap < base_contracts:
-            firm_cap_applied = True
 
     # Determine which cap is binding (for audit trail).
     # drawdown_room takes priority when it was binding.
     if drawdown_room_cap_binding:
         binding_cap = "drawdown_room"
-    elif pyramid_floor_applied:
-        binding_cap = "pyramid_floor_override"
     elif (
         risk_derived_cap <= pyramid_tier
         and (effective_firm_cap is None or risk_derived_cap <= effective_firm_cap)
@@ -1214,14 +1094,19 @@ def compute_position_sizes(
         )
 
         if sizing_result.rejection_reason is not None:
+            # C-05/D9 (2026-07-16): a prelim-scalar rejection no longer fabricates 1 contract.
+            # Structural rejects (zero_balance/zero_atr/zero_buffer) SKIP the whole run to 0; a
+            # mean-ATR negative_cap PROCEEDS to the per-bar computation (see the sizes branch below).
+            # `contracts` here is a diagnostics-only summary for the debug log, not a sizing decision.
+            _mean_atr_negcap = sizing_result.rejection_reason == "negative_cap"
             logger.warning(
-                "sizing.risk_derived_rejected reason=%s atr=%.4f balance=%.2f → 1 contract fallback",
+                "sizing.risk_derived_rejected reason=%s atr=%.4f balance=%.2f → %s",
                 sizing_result.rejection_reason,
                 atr_for_sizing,
                 account_balance,
+                "per-bar lowest-wins (mean-ATR cap collapsed)" if _mean_atr_negcap else "whole-run skip (0)",
             )
-            # Fall back to 1 contract on rejection (minimum tradeable)
-            contracts = 1
+            contracts = 0
         else:
             contracts = sizing_result.final_contracts
 
@@ -1270,10 +1155,25 @@ def compute_position_sizes(
         base_contr = int(config.base_contracts)
         account_is_healthy_bar = sizing_result.account_health_ratio >= 0.85
 
-        if sizing_result.rejection_reason is not None:
-            # Global rejection (zero buffer, zero balance) — 1 contract fallback for all bars
-            sizes = np.full(n, 1.0, dtype=np.float64)
+        _structural_reject = sizing_result.rejection_reason in (
+            "zero_balance",
+            "zero_atr",
+            "zero_buffer",
+        )
+        if _structural_reject:
+            # C-05/D9 HIGH#2 (2026-07-16): a STRUCTURAL rejection (zero_balance / zero_atr /
+            # zero_buffer — the account/params are un-sizable for the ENTIRE run) is an honest SKIP.
+            # Was `np.full(n, 1.0)` which fabricated a 1-contract trade on EVERY bar — a trade that
+            # cannot happen live (the scalar/live path rejects → 0 trades). np.zeros mirrors that skip
+            # so the vectorized backtest agrees with paper/live instead of manufacturing flat-1/bar P&L.
+            sizes = np.zeros(n, dtype=np.float64)
         else:
+            # rejection_reason is None OR "negative_cap".
+            # C-05/D9 HIGH#2: a mean-session-ATR "negative_cap" does NOT mean the whole run is
+            # un-sizable — the prelim scalar used the SESSION-MEAN ATR, but per-bar ATR varies. So
+            # PROCEED to the per-bar lowest-wins computation below (which honestly skips-to-0 the bars
+            # whose OWN ATR collapses the risk cap and sizes the rest at the risk cap), instead of the
+            # old wholesale `np.full(n, 1.0)` that degraded any mean-ATR-collapsed backtest to flat-1/bar.
             # Per-bar risk-derived cap: floor(risk_dollars / (sizing_stop_pts[i] * pv))
             # Wave 2 (2026-07-16): when symbol is provided, the per-bar stop distance mirrors
             # stop_geometry.sizing_stop_pts element-wise (clamp(mult×atr, floor, ceiling)); when
@@ -1346,34 +1246,23 @@ def compute_position_sizes(
             bar_sizes = np.minimum(bar_sizes, effective_firm_cap_bar)
             bar_sizes = np.minimum(bar_sizes, liquidity_cap_bar)
             bar_sizes = np.maximum(bar_sizes, 0.0)
-            # Step 2 (Wave 23): Pyramid floor on healthy accounts — element-wise
-            # NOTE: Wave 26 Pass K — floor binds ONLY when pyramid_tier_per_bar >= base_contr
-            # so PM-tapered bars don't get re-inflated above the EOD-DD safe size.
-            if account_is_healthy_bar and base_contr > 0:
-                # deep-scan 2026-07-11 MED fix: the floor value must be CLAMPED to the firm + liquidity
-                # caps, not the raw base_contracts. When base_contracts >= a cap (e.g. a per-strategy
-                # liquidity_comfort_cap=10 with base=18), the un-clamped floor re-inflated bar size ABOVE
-                # the cap → over-sizing / inflated backtest P&L vs live-achievable (the TS floor already
-                # clamps via flooredCandidates=[base, liquidityCap, firmCap?]). Mirror that here.
-                # CRIT (fresh-scan 2026-07-12): apply the per-bar PM taper to the floor value, mirroring
-                # the TS flooredBase = Math.floor(base_contracts × pmFactor). pm_factors is 1.0 on
-                # non-PM bars (floor = base, unchanged) and ~0.5 in the PM session (floor = base×0.5),
-                # so a deliberate PM-session reduction is never silently re-inflated to full base — and
-                # Python now equals paper on the same afternoon bar.
-                floored_val = np.minimum(np.floor(float(base_contr) * pm_factors), effective_firm_cap_bar)
-                floored_val = np.minimum(floored_val, liquidity_cap_bar)
-                bar_sizes = np.where(
-                    (bar_sizes < base_contr) & (pyramid_tier_per_bar >= base_contr),
-                    floored_val,
-                    bar_sizes,
-                )
-            # Bars where risk_derived_caps == 0 and account unhealthy → 1 fallback (minimum tradeable)
-            # Wave 26 Pass K: PM-closed bars (pyramid_tier_per_bar == 0) stay at 0 (no entry).
-            bar_sizes = np.where(
-                (bar_sizes <= 0) & (pyramid_tier_per_bar > 0),
-                1.0,
-                bar_sizes,
-            )
+            # Step 2 REMOVED — C-05 / D9 (2026-07-16): the healthy-account per-bar pyramid-floor
+            # override is GONE (mirrors the scalar path + risk-sizing.ts). bar_sizes stays the pure
+            # lowest-wins min(pyramid_tier_per_bar, risk_derived_cap, firm_cap, liquidity_cap) — risk
+            # math is the true ceiling. Do NOT restore the `pyramid_tier_per_bar >= base_contr` floor.
+            #
+            # C-05/D9 HIGH#1 (2026-07-16): the min-1 "minimum tradeable" fallback is REMOVED from this
+            # risk_derived_pyramid path. A lowest-wins-0 bar now STAYS 0 (skip) — mirroring the
+            # scalar/live negative_cap skip-to-0. The old `np.where((bar_sizes<=0)&(pyramid_tier_per_bar>0),
+            # 1.0, ...)` fabricated a 1-contract trade on exactly the bars where lowest-wins collapsed to 0
+            # — the identical scenario D9 fixes, just floored to 1 instead of base — and did so SILENTLY
+            # (over_risk stays all-False here, unlike the dynamic_atr mode which flags via over_risk). That
+            # recreated the backtest/live divergence D9 closes (live honestly skips 0 trades; the vectorized
+            # backtest — which feeds WFE/PBO/B14 promotion gates — traded a phantom 1-contract). vectorbt
+            # from_signals treats size=0 as a no-op (no order), so a 0-size entry bar produces NO trade.
+            # PM-closed bars (pyramid_tier_per_bar==0) were already 0. Do NOT restore the min-1 floor.
+            # The SEPARATE dynamic_atr-mode min-1 (~:1265, which flags over_risk) is a different sizing
+            # mode and is intentionally untouched.
             sizes = bar_sizes
 
         over_risk = np.zeros(n, dtype=bool)

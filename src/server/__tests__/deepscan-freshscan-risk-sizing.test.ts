@@ -58,8 +58,8 @@ describe("fresh-scan HIGH#3 — pyramid floor respects a deliberate PM taper", (
   });
 
   it("floor STILL fires when a CAP (not the taper) pushed the count below base", () => {
-    // No taper (pmFactor 1), pyramidTier high (>= base), but risk cap binds below base.
-    // base 9; atrPoints huge → riskDerivedCap < 9 → pre-floor < base; pyramidTier >= base → floor fires.
+    // C-05/D9 (2026-07-16): floor override REMOVED — a CAP below base no longer floors back up.
+    // base 9; atrPoints huge → riskDerivedCap=3 < 9 → risk cap (3) now binds (lowest wins).
     const r = computeRiskDerivedContracts(makeInput({
       positionSizeConfig: {
         type: "risk_derived_pyramid", base_contracts: 9, tier_increment: 3, tier_threshold_dollars: 3000,
@@ -69,8 +69,9 @@ describe("fresh-scan HIGH#3 — pyramid floor respects a deliberate PM taper", (
       accountBalance: 50_000, accountStartingFloor: 50_000, cumulativeProfit: 9000, // tier 3 → pyramidTier 18 >= 9
       atrPoints: 40, // stop $ huge → riskDerivedCap small (< 9)
     }));
-    expect(r.pyramidFloorApplied).toBe(true);
-    expect(r.finalContracts).toBe(9); // floored up to base (pmFactor 1)
+    expect(r.riskDerivedCap).toBe(3);
+    expect(r.pyramidFloorApplied).toBe(false);
+    expect(r.finalContracts).toBe(3); // risk cap binds — no floor override
   });
 });
 

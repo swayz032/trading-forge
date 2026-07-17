@@ -218,16 +218,13 @@ class TestEightPctBufferCap:
       risk_dollars = buffer × 0.02 = $40
       risk_derived_cap = floor(40 / 30) = 1
 
-    Prior behaviour (base=6): pyramid_floor_override fires → 6 contracts.
-    New behaviour (base=9): pyramid_floor_override fires → 9 contracts.
-    The 8% DD-room cap with $2K room = floor(2000 × 0.08 / 30) = 5 contracts.
-    That cap would bind UNLESS current_drawdown_room > ~337.5 (to give ≥9 contracts).
-
-    With no current_drawdown_room supplied → no DD-room cap → pyramid floor override = 9.
+    C-05/D9 (2026-07-16): the pyramid-floor override was REMOVED — risk math wins, lowest wins.
+    On this fresh combine risk_derived_cap = 1 now BINDS (final = 1), regardless of base 9 or
+    account health. A narrow-buffer combine trades the risk cap or skips, never a fabricated base floor.
     """
 
     def test_base_9_on_fresh_account_no_dd_room_cap(self):
-        """No current_drawdown_room → pyramid floor override → 9 contracts."""
+        """C-05/D9: no floor override — risk cap (1) binds on a fresh $2K-buffer combine."""
         result = compute_risk_derived_contracts(
             **_base_kwargs(
                 account_balance=52_000.0,
@@ -239,16 +236,15 @@ class TestEightPctBufferCap:
                 firm_contract_cap=50,
             )
         )
-        # risk_derived_cap = floor(2000 × 0.02 / 30) = 1 → pyramid floor fires
-        assert result.pyramid_floor_applied is True
-        assert result.final_contracts == BASE_CONTRACTS   # 9
+        # risk_derived_cap = floor(2000 × 0.02 / 30) = 1 → binds (lowest wins), no floor
+        assert result.risk_derived_cap == 1
+        assert result.pyramid_floor_applied is False
+        assert result.final_contracts == 1
         assert result.drawdown_room_cap is None
 
     def test_8pct_drawdown_room_cap_allows_base_9_at_3375_room(self):
-        """
-        current_drawdown_room = $3,375 → cap = floor(3375 × 0.08 / 30) = floor(9.0) = 9.
-        Pyramid floor (9) and DD-room cap (9) align exactly.
-        """
+        """C-05/D9: floor override REMOVED. current_drawdown_room=$3,375 → DD cap=9, but the
+        small-buffer risk cap (1) is lower and now binds (lowest wins) → final = 1."""
         room = 3_375.0
         expected_dd_cap = math.floor(room * 0.08 / STOP_DOLLARS)
         assert expected_dd_cap == 9, f"Math precondition: expected 9, got {expected_dd_cap}"
@@ -264,7 +260,8 @@ class TestEightPctBufferCap:
             )
         )
         assert result.drawdown_room_cap == expected_dd_cap
-        assert result.final_contracts == 9
+        assert result.risk_derived_cap == 1
+        assert result.final_contracts == 1  # risk cap (1) < DD cap (9); lowest wins
 
     def test_8pct_small_dd_room_caps_below_base(self):
         """

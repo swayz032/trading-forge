@@ -274,18 +274,14 @@ describe("Finding #10 — Sizing returns 0 → NO-TRADE (matches backtest skip b
 
   it("pyramid floor overrides near-zero risk cap — returns base_contracts not 0 (documents floor semantics)", () => {
     // risk cap = floor(50000 * 0.000001 / (1.5 * 4 * 5)) = floor(0.05 / 30) = 0
-    // BUT: pyramidFloorApplied = true when accountHealth >= 0.85. The floor
-    // prevents near-zero risk cap from starving a healthy account. Returns base=6.
-    // This is intentional — it is NOT a zero-size path.
-    // The zero-size paths are: ATR=0 and balance=0 (tested above).
+    // C-05/D9 (2026-07-16): floor override REMOVED — riskCap<=0 ALWAYS rejects (negative_cap), even on
+    // a healthy account. A near-zero risk cap is an honest SKIP (0), joining the ATR=0/balance=0
+    // no-trade paths — the #10 no-trade contract now covers this case too.
     const result = computeRiskDerivedContracts(makeInput({
       positionSizeConfig: { ...BASE_CFG, max_risk_pct_per_trade: 0.000001 },
     }));
-    // Floor fires → finalContracts = base_contracts (6), NOT 0
-    expect(result.finalContracts).toBeGreaterThanOrEqual(6);
-    expect(result.rejectionReason).toBeNull();
-    // This means max(1, 6) === 6 either way, so the #10 fix doesn't change this path.
-    // The #10 fix only matters for genuine ATR=0 or balance=0 rejection paths.
+    expect(result.finalContracts).toBe(0);
+    expect(result.rejectionReason).toBe("negative_cap");
   });
 
   it("sizing returns 0 → riskGatePassed MUST be false (no-trade path, NOT 1-contract floor)", () => {

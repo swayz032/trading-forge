@@ -183,9 +183,10 @@ describe("W23H.4: computeRiskDerivedContracts — confluence multiplier integrat
 
   describe("Backward compat: callers without confluence_count get 1.0× (no behavior change)", () => {
     it("Topstep healthy $50K, no confluence_count → pyramid floor applies, finalContracts=6", () => {
+      // C-05/D9: floor override REMOVED → risk cap (1) binds (lowest wins), not base 6.
       const r = computeRiskDerivedContracts(TOPSTEP_50K_HEALTHY as RiskSizingInputs);
-      expect(r.finalContracts).toBe(6);
-      expect(r.pyramidFloorApplied).toBe(true);
+      expect(r.finalContracts).toBe(1);
+      expect(r.pyramidFloorApplied).toBe(false);
     });
 
     it("MFFU $50K, no confluence_count → pyramidTier=6, finalContracts=6", () => {
@@ -196,11 +197,12 @@ describe("W23H.4: computeRiskDerivedContracts — confluence multiplier integrat
 
   describe("1 factor (primary only) → 1.0× → base 6 MES unchanged", () => {
     it("Topstep healthy, confluence_count=1 → finalContracts=6 (pyramid floor, no upsize)", () => {
+      // C-05/D9: floor override REMOVED → risk cap (1) binds (lowest wins).
       const r = computeRiskDerivedContracts({
         ...(TOPSTEP_50K_HEALTHY as RiskSizingInputs),
         confluence_count: 1,
       });
-      expect(r.finalContracts).toBe(6);
+      expect(r.finalContracts).toBe(1);
       expect(r.confluenceAudit.multiplier).toBe(1.0);
       expect(r.confluenceAudit.confluence_count).toBe(1);
     });
@@ -351,27 +353,26 @@ describe("W23H.4: computeRiskDerivedContracts — confluence multiplier integrat
 
   describe("Wave 23 pyramid floor preserved on healthy account", () => {
     it("Topstep $50K (healthy), 1 confluence factor → floor applies → finalContracts=6, not 0", () => {
-      // Fresh $50K Topstep combine: riskDerivedCap = 1, but accountIsHealthy → floor = 6
+      // C-05/D9: floor override REMOVED. Fresh $50K Topstep combine: riskDerivedCap = 1 now BINDS
+      // (lowest wins) — the risk cap is the true ceiling regardless of account health.
       const r = computeRiskDerivedContracts({
         ...(TOPSTEP_50K_HEALTHY as RiskSizingInputs),
         confluence_count: 1,
       });
-      expect(r.finalContracts).toBe(6);
-      expect(r.pyramidFloorApplied).toBe(true);
-      expect(r.confluenceAudit.binding_constraint).toBe("pyramid_floor_override");
+      expect(r.finalContracts).toBe(1);
+      expect(r.pyramidFloorApplied).toBe(false);
+      expect(r.confluenceAudit.binding_constraint).toBe("riskDerivedCap");
     });
 
     it("Topstep $50K (healthy), 3 confluence factors → pyramid floor override path → still uses base_contracts (not multiplied base)", () => {
-      // riskDerivedCap is very low on fresh Topstep → pyramid floor override fires.
-      // Floor uses base_contracts (6), not multiplied base — floor is safety minimum.
+      // C-05/D9: floor override REMOVED. The confluence upsize applies to pyramidTier (→9), but the
+      // UNMULTIPLIED risk cap (1) is the ceiling → min(9, 1, 100) = 1 (lowest wins), no floor.
       const r = computeRiskDerivedContracts({
         ...(TOPSTEP_50K_HEALTHY as RiskSizingInputs),
         confluence_count: 3,
       });
-      // pyramidTierMultiplied = floor(6*1.5)=9, riskDerivedCapMultiplied = floor(1*1.5)=1
-      // min(9, 1, 100) = 1, then pyramidFloor: 1 < 6 → floor → 6
-      expect(r.finalContracts).toBe(6);
-      expect(r.pyramidFloorApplied).toBe(true);
+      expect(r.finalContracts).toBe(1);
+      expect(r.pyramidFloorApplied).toBe(false);
     });
   });
 
@@ -476,10 +477,10 @@ describe("W23H.4: computeRiskDerivedContracts — confluence multiplier integrat
         atrPoints: 50,
         confluence_count: 4,
       });
-      // With 4-factor: pyramidTierMultiplied=12, riskDerivedCapMultiplied=4, min(12,4,100)=4
-      // accountIsHealthy: 4 < 6 → floor → 6
-      expect(r.finalContracts).toBe(6);
-      expect(r.pyramidFloorApplied).toBe(true);
+      // C-05/D9: floor override REMOVED. pyramidTierMultiplied=12, UNMULTIPLIED risk cap=2 →
+      // min(12, 2, 100) = 2 (lowest wins), no floor lifts it back to base 6.
+      expect(r.finalContracts).toBe(2);
+      expect(r.pyramidFloorApplied).toBe(false);
     });
   });
 

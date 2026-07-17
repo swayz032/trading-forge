@@ -141,9 +141,9 @@ describe("Topstep branch — trailing-DD buffer math (Wave 22)", () => {
     expect(r.evidence["buffer"]).toBe(2_000);
     // riskDollars = 2000 * 0.02 = 40; stopDollars=30; riskCap=floor(40/30)=1
     expect(r.riskDerivedCap).toBe(1);
-    // Wave 23: health=100%>=85% → pyramid floor overrides → returns base_contracts=4
-    expect(r.finalContracts).toBe(4);
-    expect(r.pyramidFloorApplied).toBe(true);
+    // C-05/D9: floor override REMOVED → risk cap (1) binds (lowest wins), not base 4
+    expect(r.finalContracts).toBe(1);
+    expect(r.pyramidFloorApplied).toBe(false);
     expect(r.rejectionReason).toBeNull();
   });
 
@@ -165,9 +165,9 @@ describe("Topstep branch — trailing-DD buffer math (Wave 22)", () => {
     expect(r.evidence["buffer"]).toBe(3_000);
     expect(r.riskDerivedCap).toBe(2);
     expect(r.pyramidTier).toBe(6);  // $3K profit → 1 tier → 4+2=6
-    // Wave 23: risk-cap=2 < pyramidTier=6, final pre-floor=2 < base=4 → floor=4
-    expect(r.finalContracts).toBe(4);
-    expect(r.pyramidFloorApplied).toBe(true);
+    // C-05/D9: floor override REMOVED → risk cap (2) binds (lowest wins), not base 4
+    expect(r.finalContracts).toBe(2);
+    expect(r.pyramidFloorApplied).toBe(false);
   });
 
   // At substantial profit: balance=70K, HWM=70K
@@ -207,9 +207,9 @@ describe("Topstep branch — trailing-DD buffer math (Wave 22)", () => {
     expect(r.evidence["trailingFloor"]).toBe(47_500);
     expect(r.evidence["buffer"]).toBe(2_000);
     expect(r.riskDerivedCap).toBe(1);
-    // Wave 23: health=99%>=85% → pyramid floor applies
-    expect(r.finalContracts).toBe(4);
-    expect(r.pyramidFloorApplied).toBe(true);
+    // C-05/D9: floor override REMOVED → risk cap (1) binds (lowest wins), not base 4
+    expect(r.finalContracts).toBe(1);
+    expect(r.pyramidFloorApplied).toBe(false);
   });
 
   // At moderate drawdown: balance=49K, HWM=50K
@@ -227,10 +227,10 @@ describe("Topstep branch — trailing-DD buffer math (Wave 22)", () => {
       accountStartingFloor: 50_000,
     });
     expect(r.evidence["buffer"]).toBe(1_000);
-    // Wave 23: health=98%>=85% → pyramid floor overrides → not a rejection
-    expect(r.rejectionReason).toBeNull();
-    expect(r.finalContracts).toBe(4);  // base_contracts
-    expect(r.pyramidFloorApplied).toBe(true);
+    // C-05/D9: floor override REMOVED → riskCap=0 now ALWAYS rejects (negative_cap), honest skip.
+    expect(r.rejectionReason).toBe("negative_cap");
+    expect(r.finalContracts).toBe(0);
+    expect(r.pyramidFloorApplied).toBe(false);
     expect(r.accountHealthRatio).toBeCloseTo(0.98);
   });
 
@@ -493,13 +493,14 @@ describe("Wave 23 — MES base 6 pyramid floor enforcement", () => {
       firmContractCap: 15,
       ...TOPSTEP_FRESH_50K,
     });
-    expect(r.finalContracts).toBe(6);
-    expect(r.pyramidFloorApplied).toBe(true);
+    // C-05/D9: floor override REMOVED → risk cap (1) binds (lowest wins), not base 6
+    expect(r.finalContracts).toBe(1);
+    expect(r.pyramidFloorApplied).toBe(false);
     expect(r.riskDerivedCap).toBe(1);
     expect(r.accountHealthRatio).toBeCloseTo(1.0);
     expect(r.rejectionReason).toBeNull();
-    // Dollar risk at base=6: 6 * 14pt * $5 = $420 — per CLAUDE.md §4
-    expect(r.finalContracts * 14 * 5).toBe(420);
+    // Worst-case loss at final=1 with 14pt ceiling: 1 * 14 * $5 = $70 (well under budget)
+    expect(r.finalContracts * 14 * 5).toBe(70);
   });
 
   it("MES base=6 at 50K Topstep with -15% drawdown ($42,500) → risk-cap binds, no floor", () => {
@@ -632,7 +633,7 @@ describe("Wave 23 — MNQ base 6 pyramid floor enforcement", () => {
   it("MNQ base=6 at 50K Topstep healthy → floor binds over risk-cap", () => {
     // MNQ at Topstep fresh 50K: buffer=2K, riskDollars=40
     // stopDollars = 1.5 * 20 * 2 = $60; riskCap = floor(40/60) = 0
-    // health = 100% >= 85% → pyramid floor → 6
+    // C-05/D9: floor override REMOVED → riskCap=0 ALWAYS rejects (negative_cap), honest skip.
     const r = computeRiskDerivedContracts({
       positionSizeConfig: W23_MNQ_CFG,
       cumulativeProfit: 0,
@@ -642,8 +643,9 @@ describe("Wave 23 — MNQ base 6 pyramid floor enforcement", () => {
       firmContractCap: 15,
       ...TOPSTEP_FRESH_50K,
     });
-    expect(r.finalContracts).toBe(6);
-    expect(r.pyramidFloorApplied).toBe(true);
+    expect(r.finalContracts).toBe(0);
+    expect(r.rejectionReason).toBe("negative_cap");
+    expect(r.pyramidFloorApplied).toBe(false);
     expect(r.riskDerivedCap).toBe(0);
   });
 });
@@ -664,8 +666,9 @@ describe("Wave 23 — MCL base 18 pyramid floor enforcement", () => {
       accountBalance: 50_000,
       firm: "mffu",
     });
-    expect(r.finalContracts).toBe(18);
-    expect(r.pyramidFloorApplied).toBe(true);
+    // C-05/D9: floor override REMOVED → risk cap (13) binds (lowest wins), not base 18
+    expect(r.finalContracts).toBe(13);
+    expect(r.pyramidFloorApplied).toBe(false);
     expect(r.riskDerivedCap).toBe(13);
     // Dollar risk at base=18 with 25-tick stop: 18 * 25 * $1 = $450 — per CLAUDE.md §4
     expect(18 * 25 * 1).toBe(450);
@@ -713,12 +716,13 @@ describe("Wave 23 — MCL base 18 pyramid floor enforcement", () => {
       accountBalance: 50_000,
       firm: "mffu",
     });
-    // Correct: stopDollars=150; riskCap=floor(1000/150)=6 < base=18 → floor=18
+    // Correct: stopDollars=150; riskCap=floor(1000/150)=6 < base=18 → risk cap (6) binds (lowest wins)
     expect(r_correct.riskDerivedCap).toBe(6);
-    // Wrong: stopDollars=15; riskCap=floor(1000/15)=66 >> base=18 → pyramid=18
+    // Wrong: stopDollars=15; riskCap=floor(1000/15)=66 >> base=18 → pyramidTier=18 binds
     expect(r_wrong.riskDerivedCap).toBe(66);
-    // Both give 18 at base (pyramid floor or tier binds), but riskCap is 10x different
-    expect(r_correct.finalContracts).toBe(18);
+    // C-05/D9: correct value now sizes to the risk cap (6); wrong value still 18 (pyramid binds).
+    // The 10x riskCap divergence is the point — a mini/micro point-value bug is now visible in size too.
+    expect(r_correct.finalContracts).toBe(6);
     expect(r_wrong.finalContracts).toBe(18);
   });
 });

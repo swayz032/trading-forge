@@ -14,21 +14,23 @@
  *   current ATR. Instead, call computeRiskDerivedContracts() at signal-time
  *   with live inputs and let the math determine the safe ceiling.
  *
- * Safety invariant (Wave 23 update):
- *   pyramidFloor = base_contracts (minimum from DSL config)
- *   On healthy accounts (balance >= 85% of startingCapital):
- *     finalContracts = max(base_contracts, min(pyramidTier, riskDerivedCap, firmCap, liquidityCap))
- *     Pyramid BASE is the slow-ramp FLOOR and overrides risk-cap when account is healthy.
- *   On drawdown accounts (balance < 85% of startingCapital):
- *     finalContracts = max(0, min(pyramidTier, riskDerivedCap, firmCap, liquidityCap))
- *     Risk-cap fully binds to protect the account during drawdown.
+ * Safety invariant (C-05 "lowest wins", D9 2026-07-16):
+ *   RISK MATH ALWAYS WINS. The final size is a PURE lowest-wins minimum on EVERY
+ *   account (healthy or drawdown), with NO base_contracts floor override:
+ *     finalContracts = max(0, min(pyramidTier, riskDerivedCap, firmCap, liquidityCap, drawdownRoomCap))
+ *   When that minimum is < 1 the honest result is REJECT / SKIP (0 contracts) —
+ *   never a fabricated base_contracts floor. riskDerivedCap <= 0 ALWAYS rejects
+ *   with rejectionReason="negative_cap", regardless of account health.
  *
- *   Rationale: MES base=6, MNQ base=6, MCL base=18 are the minimum viable
- *   contract counts for Style C 33/33/33 partial exits (must be divisible by 3).
- *   At a fresh $50K Topstep combine (buffer=$2K, riskCap=1), without the floor,
- *   the function returns 1 contract — which is not divisible by 3 and produces
- *   incorrect partials. The floor ensures minimum viable trades on healthy accounts.
- *   On drawdown accounts (< 85% of starting), risk-cap protection takes priority.
+ *   HEALTHY-ACCOUNT PYRAMID-FLOOR OVERRIDE REMOVED 2026-07-16 (D9, C-05) — the
+ *   risk cap is the TRUE ceiling; do NOT restore. Previously, on a healthy
+ *   account (balance >= 85% of startingCapital), the code did
+ *   `max(base_contracts, min(...))` so a narrow-buffer fresh combine whose 2%
+ *   risk cap said "trade 1" was overridden back up to base (e.g. 9). The operator
+ *   (D9) chose risk-honesty over always-trading-base: if the math says 1, trade 1;
+ *   if it says < 1, skip. `pyramidFloorApplied` is retained (always false) for
+ *   schema/telemetry compat; the `bindingCap="pyramid_floor_override"` state can
+ *   no longer occur.
  *
  * Wave 22 — Firm-aware risk cap:
  *
@@ -789,98 +791,27 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
       ? Math.floor((drawdownRoomInput * DRAWDOWN_ROOM_RISK_PCT) / stopDollarsPerContract)
       : null;
 
+  // Effective firm cap: DSL override takes priority over live firm cap.
+  // C-05/D9 NEW-HIGH (2026-07-16): HOISTED above the negative_cap return so that return can EXPOSE
+  // it (parity with sizing.py, whose vectorized per-bar consumer reads firm_cap off the negative_cap
+  // result to honor topstep_account_cap_override). TS has no vectorized consumer so this is telemetry-
+  // only here, but the negative_cap firmCap field MUST match Python's shape.
+  const effectiveFirmCap: number | null =
+    typeof cfg.topstep_account_cap_override === "number"
+      ? cfg.topstep_account_cap_override
+      : (input.firmContractCap ?? null);
+
   // Edge case: computed cap ≤ 0 (extreme ATR or tiny account/buffer).
-  // Wave 23: On healthy accounts, pyramid floor still applies even here.
-  // If accountIsHealthy AND riskCap <= 0, we use base_contracts as the floor.
-  // This handles the Topstep fresh-combine case: riskCap=0 but account is healthy.
-  // On drawdown accounts, this rejection holds (risk-cap protects the account).
+  // C-05 / D9 (2026-07-16): riskDerivedCap <= 0 ALWAYS rejects — the healthy-account
+  // pyramid-floor override was REMOVED (risk math wins, lowest wins). There is no floor
+  // to clamp here; a fresh combine whose 2% risk cap collapses to 0 is an honest SKIP,
+  // not a fabricated base-size trade. Behaves identically on healthy and drawdown accounts.
   if (riskDerivedCap <= 0) {
-    if (accountIsHealthy && cfg.base_contracts > 0) {
-      // Pyramid floor applies on healthy account.
-      // Pass 5 Track C F-7: floor must STILL be clamped by firmCap and liquidityCap.
-      // Returning unbounded base_contracts allows a misconfigured strategy
-      // (or overlay drift writing oversized base) to bypass firm/book limits.
-      const effectiveFirmCapForFloor: number | null =
-        typeof cfg.topstep_account_cap_override === "number"
-          ? cfg.topstep_account_cap_override
-          : (input.firmContractCap ?? null);
-      // F-4 Fix: include drawdownRoomCap in the early-return floor min().
-      // The main path (line ~705) already applies drawdownRoomCap in the min();
-      // this early-return path previously omitted it, allowing base_contracts to
-      // be returned even when DD room is too tight to support that many contracts.
-      // drawdownRoomCap OVERRIDES the pyramid floor — consistent with line ~730 note.
-      // deep-scan 2026-07-11 HIGH fix: taper the floor's base by pmFactor so a DELIBERATE PM-session /
-      // news-caution size reduction is never silently re-inflated to full base_contracts. The floor
-      // protects Style-C partials from a fresh-combine narrow RISK-CAP, not from the EOD-DD PM taper.
-      // pmFactor=1 → floor = base_contracts (protection intact); pmFactor<1 → floor(base*pmFactor).
-      const flooredBase = Math.floor(cfg.base_contracts * pmFactor);
-      const flooredCandidates: number[] = [flooredBase, liquidityCap];
-      if (effectiveFirmCapForFloor !== null) flooredCandidates.push(effectiveFirmCapForFloor);
-      if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
-      const flooredContracts = Math.min(...flooredCandidates);
-      const firmCapAppliedAtFloor =
-        effectiveFirmCapForFloor !== null && effectiveFirmCapForFloor === flooredContracts &&
-        effectiveFirmCapForFloor < cfg.base_contracts;
-      // drawdownRoomCap binding when it was the actual constraining element
-      const earlyReturnDrawdownRoomCapBinding =
-        drawdownRoomCap !== null && drawdownRoomCap >= 0 && drawdownRoomCap === flooredContracts;
-      return {
-        finalContracts: flooredContracts,
-        pyramidTier,
-        riskDerivedCap,
-        firmCap: effectiveFirmCapForFloor,
-        liquidityCap,
-        rejectionReason: null,  // not a rejection — floor overrides (or DD room cap)
-        firm,
-        riskCapMethod,
-        firmCapApplied: firmCapAppliedAtFloor,
-        pyramidFloorApplied: !earlyReturnDrawdownRoomCapBinding,
-        accountHealthRatio,
-        drawdownRoomCap,
-        drawdownRoomCapBinding: earlyReturnDrawdownRoomCapBinding,
-        scalingMode,
-        scalingTier: tiers,
-        evidence: {
-          accountBalance: input.accountBalance,
-          atrPoints: input.atrPoints,
-          stopMultiplier: input.stopMultiplier,
-          pointDollarValue: input.pointDollarValue,
-          stopDollarsPerContract,
-          riskDollars,
-          ...(firm === "topstep" ? {
-            trailingFloor, buffer, highWaterBalance, trailingDD, accountStartingFloor,
-            hwm_defaulted: !hwmProvided,  // F-2: visibility flag for conservative HWM default
-          } : {}),
-          pyramidTier,
-          riskDerivedCap,
-          firmCap: effectiveFirmCapForFloor,
-          liquidityCap,
-          drawdownRoomCap: drawdownRoomCap ?? null,
-          finalContracts: flooredContracts,
-          rejectionReason: null,
-          firm,
-          accountHealthRatio,
-          pyramidFloorApplied: !earlyReturnDrawdownRoomCapBinding,
-          bindingCap: earlyReturnDrawdownRoomCapBinding ? "drawdown_room" : "pyramid_floor_override",
-          base_contracts: cfg.base_contracts,
-          riskCapMethod,
-          confluenceCount,
-          confluenceMultiplier: multiplier,
-        },
-        confluenceAudit: {
-          confluence_count: confluenceCount,
-          multiplier,
-          contracts_before: pyramidTier,
-          contracts_after: flooredContracts,
-          binding_constraint: earlyReturnDrawdownRoomCapBinding ? "drawdown_room" : "pyramid_floor_override",
-        },
-      };
-    }
     return {
       finalContracts: 0,
       pyramidTier,
       riskDerivedCap,
-      firmCap: null,
+      firmCap: effectiveFirmCap,  // C-05/D9 NEW-HIGH: parity with Python (honor override), telemetry-only in TS
       liquidityCap,
       rejectionReason: "negative_cap",
       firm,
@@ -905,7 +836,7 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
         } : {}),
         pyramidTier,
         riskDerivedCap,
-        firmCap: null,
+        firmCap: effectiveFirmCap,  // C-05/D9 NEW-HIGH: parity with Python negative_cap firm_cap
         liquidityCap,
         drawdownRoomCap: drawdownRoomCap ?? null,
         finalContracts: 0,
@@ -924,11 +855,7 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
     };
   }
 
-  // Effective firm cap: DSL override takes priority over live firm cap
-  const effectiveFirmCap: number | null =
-    typeof cfg.topstep_account_cap_override === "number"
-      ? cfg.topstep_account_cap_override
-      : (input.firmContractCap ?? null);
+  // effectiveFirmCap hoisted above the negative_cap return (see its declaration) — used below.
 
   // W23H.4: Apply the confluence multiplier to pyramidTier BEFORE the min() against firmCap and
   // liquidityCap so the upsize is bounded by the per-symbol liquidity_comfort_cap.
@@ -961,51 +888,12 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   }
   finalContracts = Math.max(0, finalContracts);
 
-  // Step 2 (Wave 23): Pyramid floor enforcement.
-  // On healthy accounts (>= 85% of starting capital), base_contracts is the minimum viable
-  // contract count. Risk-cap can return fewer than base on fresh Topstep combines (narrow
-  // buffer = low risk cap), which would break Style C 33/33/33 partials.
-  // Rule: if account is healthy AND risk-cap produced fewer than base_contracts → use base_contracts.
-  // On drawdown accounts (< 85%), risk-cap fully binds — floor does not override.
-  // NOTE: floor uses base_contracts (not multiplied base) — floor is a safety minimum,
-  // not an upsize trigger. Multiplier applies via pyramidTier, not the floor value.
-  // NOTE: drawdownRoomCap (Inst-10) OVERRIDES the pyramid floor — when DD room is very
-  // small, forcing base_contracts would violate the 1%-of-room safety contract.
-  // HIGH#3 (deep-scan 2026-07-12): guard the floor TRIGGER with `pyramidTier >= base_contracts`,
-  // mirroring the Python per-bar path (sizing.py:1270 `pyramid_tier_per_bar >= base_contr`). The
-  // 2026-07-11 fix correctly tapered the floor VALUE (flooredBase = base×pmFactor) but left the
-  // trigger comparing the already-PM-tapered finalContracts against the UNTAPERED base_contracts —
-  // so on a healthy PM-session account with an earned tier (pyramidTier tapered to e.g. 6 < base 9)
-  // the floor WRONGLY fired and shrank finalContracts from 6 down to flooredBase 4: a "floor" that
-  // LOWERED the value it exists to raise, and a ~33% silent under-size vs the backtest that promoted
-  // the strategy (Python left it at 6). Only floor when the tapered tier itself is >= base — i.e. a
-  // CAP (not the deliberate PM/news taper) pushed the count below base.
-  let pyramidFloorApplied = false;
-  if (!drawdownRoomCapBinding && accountIsHealthy && finalContracts < cfg.base_contracts && pyramidTier >= cfg.base_contracts) {
-    // MED C-2 fix (deep-scan #16 wave-1 track-3, 2026-07-04): this floor previously
-    // force-set finalContracts = cfg.base_contracts UNCLAMPED — unlike the early-return
-    // branch above (F-7/F-4), which was patched to min([base, liquidityCap, firmCap?,
-    // drawdownRoomCap?]). A misconfigured strategy (or overlay drift writing an oversized
-    // base_contracts) could bypass firmCap/liquidityCap here even though the early-return
-    // path already guards against exactly that. Apply the SAME clamp for consistency —
-    // drawdownRoomCap is deliberately excluded from this min() because entering this branch
-    // already requires !drawdownRoomCapBinding (drawdownRoomCap did not constrain the
-    // pre-floor finalContracts), so re-including it here would only matter in the edge case
-    // where drawdownRoomCap sits between the pre-floor finalContracts and base_contracts —
-    // guard against that edge case too by including it when present, mirroring the
-    // early-return floor's [base_contracts, liquidityCap, firmCap?, drawdownRoomCap?] set.
-    // deep-scan 2026-07-11 HIGH fix: taper the floor's base by pmFactor so a DELIBERATE PM-session /
-    // news-caution size reduction is never silently re-inflated to full base_contracts. The floor
-    // protects Style-C partials from a fresh-combine narrow RISK-CAP, not from the EOD-DD PM taper.
-    // pmFactor=1 → floor = base_contracts (protection intact); pmFactor<1 → floor(base*pmFactor),
-    // matching the PM/news-tapered pyramidTier (line ~574).
-    const flooredBase = Math.floor(cfg.base_contracts * pmFactor);
-    const flooredCandidates: number[] = [flooredBase, liquidityCap];
-    if (effectiveFirmCap !== null) flooredCandidates.push(effectiveFirmCap);
-    if (drawdownRoomCap !== null && drawdownRoomCap >= 0) flooredCandidates.push(drawdownRoomCap);
-    finalContracts = Math.min(...flooredCandidates);
-    pyramidFloorApplied = true;
-  }
+  // Step 2 REMOVED — C-05 / D9 (2026-07-16): the healthy-account pyramid-floor override is GONE.
+  // finalContracts stays the pure `max(0, min(pyramidTierMultiplied, riskDerivedCap, firmCap,
+  // liquidityCap, drawdownRoomCap))` computed above — risk math is the true ceiling and lowest wins.
+  // `pyramidFloorApplied` is retained (always false) for schema/telemetry compat; the
+  // `bindingCap="pyramid_floor_override"` state can no longer occur. Do NOT restore the floor.
+  const pyramidFloorApplied = false;
 
   // Which cap is binding? (pyramidTier is multiplied by the confluence upsize; riskDerivedCap is the
   // UNMULTIPLIED 2% ceiling — HIGH#4 2026-07-12 — so attribution compares against it directly.)
@@ -1013,8 +901,6 @@ export function computeRiskDerivedContracts(input: RiskSizingInputs): RiskSizing
   let bindingCap = "pyramid";
   if (drawdownRoomCapBinding) {
     bindingCap = "drawdown_room";
-  } else if (pyramidFloorApplied) {
-    bindingCap = "pyramid_floor_override";
   } else if (riskDerivedCap <= pyramidTierMultiplied && (effectiveFirmCap === null || riskDerivedCap <= effectiveFirmCap) && riskDerivedCap <= liquidityCap) {
     bindingCap = "risk_derived";
   } else if (effectiveFirmCap !== null && effectiveFirmCap <= pyramidTierMultiplied && effectiveFirmCap <= riskDerivedCap && effectiveFirmCap <= liquidityCap) {

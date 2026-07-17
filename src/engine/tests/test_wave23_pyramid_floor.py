@@ -125,11 +125,12 @@ class TestMesBase6TopstepHealthy:
     """MES base=6 at fresh $50K Topstep combine. Pyramid floor must override riskCap."""
 
     def test_floor_overrides_risk_cap_on_fresh_combine(self):
-        """Topstep $50K: buffer=$2K, riskCap=1. Floor (6) must override."""
+        """C-05/D9 (2026-07-16): floor override REMOVED — risk math wins, lowest wins.
+        Topstep $50K: buffer=$2K, riskCap=1. Final size is now the risk cap (1), NOT base 6."""
         r = _mes(**TOPSTEP_PARAMS)
-        assert r.final_contracts == 6, f"Expected 6, got {r.final_contracts}"
-        assert r.pyramid_floor_applied is True
-        assert r.risk_derived_cap == 1  # only 1 contract from buffer math
+        assert r.final_contracts == 1, f"Expected 1 (risk cap wins), got {r.final_contracts}"
+        assert r.pyramid_floor_applied is False
+        assert r.risk_derived_cap == 1  # only 1 contract from buffer math — this now binds
         assert r.account_health_ratio == pytest.approx(1.0, abs=0.01)
         assert r.rejection_reason is None
 
@@ -254,10 +255,11 @@ class TestMnqBase6TopstepHealthy:
     """MNQ base=6 at fresh $50K Topstep combine."""
 
     def test_floor_overrides_risk_cap(self):
-        """MNQ: stopDollars=12, buffer=$2K, riskCap=3 < base=6 → floor applies."""
+        """C-05/D9: floor override REMOVED. MNQ stopDollars=12, buffer=$2K, riskCap=3 < base=6
+        → risk cap (3) now binds (lowest wins), not base 6."""
         r = _mnq(**TOPSTEP_PARAMS)
-        assert r.final_contracts == 6
-        assert r.pyramid_floor_applied is True
+        assert r.final_contracts == 3
+        assert r.pyramid_floor_applied is False
         # stopDollars = 1.5 * 4 * 2 = $12; riskDollars = 2000 * 0.02 = $40; riskCap=floor(40/12)=3
         assert r.risk_derived_cap == 3
         assert r.rejection_reason is None
@@ -276,10 +278,12 @@ class TestMclBase18TopstepHealthy:
     """MCL base=18 at fresh $50K Topstep combine."""
 
     def test_floor_overrides_risk_cap(self):
-        """MCL: very low stopDollars per contract → riskCap < 18 → floor applies."""
+        """C-05/D9: floor override REMOVED. MCL very low stopDollars → riskCap < 18 → risk cap
+        now binds (lowest wins), not base 18. stopDollars=1.5*0.1*100=15, riskDollars=40 → riskCap=2."""
         r = _mcl(**TOPSTEP_PARAMS)
-        assert r.final_contracts == 18
-        assert r.pyramid_floor_applied is True
+        assert r.risk_derived_cap == 2
+        assert r.final_contracts == 2
+        assert r.pyramid_floor_applied is False
         assert r.risk_derived_cap < 18
         assert r.rejection_reason is None
 
@@ -330,7 +334,8 @@ class TestAccountHealthBoundary:
     """Exact 85% boundary — floor binds AT 85%, not below."""
 
     def test_exactly_85pct_health_floor_applies(self):
-        """At exactly 85% ($42,500 / $50K), floor APPLIES."""
+        """C-05/D9: floor override REMOVED — health ratio no longer lifts size to base.
+        At exactly 85% ($42,500 / $50K), the risk cap (5) binds regardless of health (lowest wins)."""
         r = compute_risk_derived_contracts(
             base_contracts=BASE_MES,
             tier_increment=INCREMENT,
@@ -348,8 +353,8 @@ class TestAccountHealthBoundary:
         assert r.account_health_ratio == pytest.approx(0.85, abs=0.001)
         # riskCap = floor((42500*0.02) / (1.5*20*5)) = floor(850/150) = 5 < 6
         assert r.risk_derived_cap == 5
-        assert r.pyramid_floor_applied is True
-        assert r.final_contracts == 6  # floor overrides
+        assert r.pyramid_floor_applied is False
+        assert r.final_contracts == 5  # risk cap binds — no floor override
 
     def test_just_below_85pct_health_floor_does_not_apply(self):
         """At 84.9% ($42,450 / $50K), floor does NOT apply."""
