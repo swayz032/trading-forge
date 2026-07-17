@@ -72,6 +72,16 @@ import { getT1ReleaseWindow } from "../lib/economic-calendar-loader.js";
 // is unavailable. The Tier-1 event checker (FIX B) handles economic events; this module
 // handles holiday detection so CME-closure days are blocked even during outages.
 import { checkCmeHolidayFallback } from "../lib/cme-holidays.js";
+// M2 (2026-07-17): durability backstop for pendingEntryQueue — persists deferred
+// entries so a restart between signal (bar N) and fill (bar N+1) re-hydrates
+// instead of silently dropping the trade. See pending-entry-persistence.ts.
+import {
+  persistPendingEntry,
+  deletePendingEntryRow,
+  deleteAllPendingEntriesForSession,
+  rehydratePendingEntriesForSession,
+  type PersistablePendingEntry,
+} from "../lib/pending-entry-persistence.js";
 // Topstep Prohibited Conduct (2026-06-23): cross-account hedging (opposite positions across
 // the operator's multiple accounts) + holding within 2% of a product's price-lock limit.
 import { checkCrossAccountHedge, checkIntraAccountHedge, symbolToUnderlying } from "../lib/cross-account-hedge-gate.js";
@@ -680,6 +690,35 @@ export function __clearPendingEntryQueueForTests(): void {
   pendingEntryQueue.clear();
 }
 
+/**
+ * Test hook — read a pending entry back out of the in-memory queue by
+ * session+symbol key, without exposing the Map itself.
+ */
+export function __peekPendingEntryForTests(sessionId: string, symbol: string): PendingEntry | undefined {
+  return pendingEntryQueue.get(`${sessionId}:${symbol}`);
+}
+
+/**
+ * M2 (2026-07-17): boot re-hydration entry point. Called by
+ * scheduler.ts::resumeActivePaperSessions() after a restart, for every
+ * session whose internal simulator stream resumes (pre-PAPER sessions only —
+ * PAPER+ strategies never populate this Map, TradersPost is their canonical
+ * journal, so there is nothing to re-hydrate for them).
+ *
+ * Re-hydrates the in-memory pendingEntryQueue from persisted
+ * paper_pending_entries rows so a restart landing between a deferred entry's
+ * signal (bar N) and its fill (bar N+1) does not silently drop the trade —
+ * the next evaluateSignals() call for that session+symbol will see the
+ * re-hydrated entry exactly as if the process had never restarted.
+ */
+export async function rehydratePendingEntryQueueForSession(
+  sessionId: string,
+): Promise<{ rehydrated: number; droppedStale: number }> {
+  return rehydratePendingEntriesForSession(sessionId, (entry: PersistablePendingEntry) => {
+    pendingEntryQueue.set(`${entry.sessionId}:${entry.symbol}`, entry as PendingEntry);
+  });
+}
+
 // ─── Fix 4: Parity divergence warning — logged once per session start ──────
 // Paper enforces skip engine + anti-setup gates ALWAYS.
 // Backtest defaults: TF_BACKTEST_SKIP_MODE=off, TF_BACKTEST_ANTI_SETUP_MODE=off.
@@ -1042,6 +1081,10 @@ export function cleanupSession(sessionId: string, symbols: string[]): void {
     // FIX 1 (B2): evict any pending deferred entry for this session+symbol on stop
     pendingEntryQueue.delete(`${sessionId}:${symbol}`);
   }
+  // M2 (2026-07-17): durability backstop — delete all persisted pending-entry
+  // rows for this session on stop (session-scoped, not per-symbol). Fire-and-
+  // forget: cleanupSession is synchronous by contract; this never throws.
+  void deleteAllPendingEntriesForSession(sessionId);
   // Trail stop HWM and bars-held are keyed by position UUID — we can't filter
   // by sessionId without an extra DB lookup.  Accept the small leak; positions
   // should all be closed before session stop, so in practice the maps are empty.
@@ -2536,6 +2579,10 @@ export async function evaluateSignals(
   const pendingEntry = pendingEntryQueue.get(pendingKey);
   if (pendingEntry && !openPos && !isShadow) {
     pendingEntryQueue.delete(pendingKey); // consume the pending entry
+    // M2 (2026-07-17): mirror the consume in the durability backstop — covers
+    // BOTH the fill path and every drop path below (H3 gate re-check failures),
+    // since this delete runs before either outcome is decided. Fire-and-forget.
+    void deletePendingEntryRow(sessionId, symbol);
 
     // ─── H3 (2026-06-23): Re-evaluate all entry gates at fill time (bar N+1) ──
     //
@@ -6067,7 +6114,7 @@ export async function evaluateSignals(
         // ─── End Wave 29 Pass A.1 SHADOW intercept ───────────────────────────
 
         // Store the pending entry — execution deferred to bar N+1 in the next evaluateSignals call
-        pendingEntryQueue.set(pendingKey, {
+        const newPendingEntry: PendingEntry = {
           sessionId,
           symbol,
           side: config.side,
@@ -6099,7 +6146,12 @@ export async function evaluateSignals(
             nearestLiquidityLevel: entryCtxNearestLiquidityLevel,
             atrAtEntry: currentAtrForEntry ?? null,
           },
-        });
+        };
+        pendingEntryQueue.set(pendingKey, newPendingEntry);
+        // M2 (2026-07-17): durability backstop — persist so a restart between this
+        // signal (bar N) and its fill (bar N+1) re-hydrates instead of dropping.
+        // Fire-and-forget: never blocks the in-memory fast path; never throws.
+        void persistPendingEntry(newPendingEntry);
 
         // ─── Wave 26 Pass G A.4: Archetype signal-fire audit hook ────────────
         // Fire-and-forget — never blocks the entry path.

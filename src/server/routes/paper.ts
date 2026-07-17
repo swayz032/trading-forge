@@ -16,6 +16,9 @@ import { idempotencyMiddleware } from "../middleware/idempotency.js";
 import { notifyWarning } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { trackG2SilentFailuresTotal } from "../lib/metrics-registry.js";
+// M2 (2026-07-17), Item 3: claim-scoping evidence labels stamped at session
+// start — additive metadata only, never gates.
+import { buildPaperEvidenceLabels } from "../lib/paper-evidence-labels.js";
 
 const router = Router();
 
@@ -130,9 +133,15 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
           ),
         );
       if (existing) return null; // an active session already exists for this strategy+mode
+      // M2 (2026-07-17), Item 3: stamp claim-scoping evidence labels onto the
+      // session config — additive only, never gates. See paper-evidence-labels.ts.
+      const configWithEvidenceLabels: import("../db/jsonb-shapes.js").PaperSessionConfigShape = {
+        ...(config as import("../db/jsonb-shapes.js").PaperSessionConfigShape),
+        evidence_labels: buildPaperEvidenceLabels(),
+      };
       const [row] = await tx
         .insert(paperSessions)
-        .values({ strategyId, startingCapital, currentEquity: startingCapital, config: config as import("../db/jsonb-shapes.js").PaperSessionConfigShape, mode, firmId: firmId ?? null })
+        .values({ strategyId, startingCapital, currentEquity: startingCapital, config: configWithEvidenceLabels, mode, firmId: firmId ?? null })
         .returning();
       return row;
     });
@@ -156,6 +165,20 @@ router.post("/start", idempotencyMiddleware, async (req, res) => {
       });
       return;
     }
+
+    // M2 (2026-07-17), Item 3: audit row mirroring the stamped evidence labels —
+    // additive observability only, never gates. Fire-and-forget.
+    db.insert(auditLog).values({
+      action: "paper.evidence_labels_stamped",
+      entityType: "paper_session",
+      entityId: session.id,
+      input: { strategyId, mode },
+      result: (session.config as import("../db/jsonb-shapes.js").PaperSessionConfigShape | null)
+        ?.evidence_labels as Record<string, unknown> | undefined ?? null,
+      status: "info",
+      decisionAuthority: "system",
+      correlationId: req.id ?? null,
+    }).catch((auditErr) => req.log.warn({ auditErr, sessionId: session.id }, "paper.evidence_labels_stamped audit write failed (non-blocking)"));
 
     // Look up strategy symbol(s) and start the Massive WS stream
     try {

@@ -44,7 +44,7 @@ import { LifecycleService } from "./services/lifecycle-service.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { runPythonModule } from "./lib/python-runner.js";
 import { startStream, stopStream, isStreaming, getActiveStreams, getStreamHealth, getBarBuffer } from "./services/paper-trading-stream.js";
-import { restorePositionState, cleanupSession, restoreGovernorState } from "./services/paper-signal-service.js";
+import { restorePositionState, cleanupSession, restoreGovernorState, rehydratePendingEntryQueueForSession } from "./services/paper-signal-service.js";
 import { trainDeepAR, predictRegime, validatePastForecasts, isDeepARDeferred } from "./services/deepar-service.js";
 import { setRegimeWeights } from "./services/regime-state-service.js";
 import { runAgentHealthSweep } from "./services/agent-audit-service.js";
@@ -7170,6 +7170,26 @@ async function resumeActivePaperSessions(): Promise<void> {
         }
       } else {
         logger.debug({ sessionId: session.id }, "P0-4: No persisted governor state — starting at normal");
+      }
+
+      // M2 (2026-07-17): re-hydrate any deferred entry that was queued (bar N
+      // signal) but not yet filled (bar N+1) when the process stopped, so the
+      // trade opens exactly once instead of being silently dropped. Only
+      // relevant for sessions reaching this point (internal-stream resume) —
+      // PAPER+ sessions were already skipped above and never populate this queue.
+      try {
+        const { rehydrated, droppedStale } = await rehydratePendingEntryQueueForSession(session.id);
+        if (rehydrated > 0 || droppedStale > 0) {
+          logger.info(
+            { sessionId: session.id, rehydrated, droppedStale },
+            "M2: re-hydrated pending-entry queue after restart",
+          );
+        }
+      } catch (err) {
+        logger.error(
+          { err, sessionId: session.id },
+          "M2: rehydratePendingEntryQueueForSession failed (non-blocking — no worse than pre-M2 drop behavior)",
+        );
       }
 
       logger.info({ sessionId: session.id, symbols }, "Resumed active paper session");

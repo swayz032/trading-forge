@@ -53,6 +53,32 @@ export interface PaperSessionConfigShape {
    * Absent = use table lookup (preferred — avoids stale hardcoded values).
    */
   trailing_dd_amount?: number;
+
+  // ── M2 (2026-07-17): evidence-scoping labels ─────────────────────────────
+  // See `src/server/lib/paper-evidence-labels.ts`. Additive, observability-only
+  // — nothing gates on these fields. Stamped once at session start.
+  evidence_labels?: PaperEvidenceLabels;
+}
+
+/**
+ * Claim-scoping law applied to the PAPER stage (M2, 2026-07-17): which
+ * dimensions of a paper result are qualified evidence vs NOT qualified.
+ * Fixed vocabulary — see paper-evidence-labels.ts for the canonical values.
+ */
+export interface PaperEvidenceClaims {
+  /** Dimensions this paper session's results ARE qualified evidence for. */
+  certified: string[];
+  /** Dimensions this paper session's results are explicitly NOT qualified evidence for. */
+  not_certified: string[];
+}
+
+/** Shape of the evidence-scoping stamp attached to a paper session's config. */
+export interface PaperEvidenceLabels {
+  /** Market-data feed characteristic this session ran against. */
+  feed_mode: "delayed" | "realtime" | "unknown";
+  /** Vendor-published nominal delay in seconds, when known. Null = not configured — never fabricated. */
+  nominal_delay_seconds: number | null;
+  claims: PaperEvidenceClaims;
 }
 
 // ─── Adaptive Exit Engine Config Shape (Wave 25 Pass 7) ─────────────────────

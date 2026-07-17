@@ -1444,6 +1444,13 @@
       "when": 1783392619000,
       "tag": "0203_live_schema_drift_forward_fix",
       "breakpoints": true
+    },
+    {
+      "idx": 207,
+      "version": "7",
+      "when": 1783392620000,
+      "tag": "0204_paper_pending_entries",
+      "breakpoints": true
     }
   ]
 }

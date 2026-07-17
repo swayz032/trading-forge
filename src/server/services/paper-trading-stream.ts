@@ -341,6 +341,15 @@ export async function buildExitBarContext(bar: Bar): Promise<StyleExitBarContext
 async function processSessionBar(sessionId: string, bar: Bar) {
   // Mint a per-bar correlationId at the Massive-WS entry point.
   // Every downstream call that accepts a correlationId receives this value.
+  //
+  // M2 determinism caveat (accuracy-validator grade, 2026-07-17, F-3): this
+  // correlationId seeds the M2 deterministic fill-model RNG (paper-execution-service.ts
+  // FillModelSeedIdentity.orderIntentId) — but it is minted fresh here on EVERY bar,
+  // independent of tape/bar content. That gives reconstruction-from-recorded-identity
+  // determinism (replay the same correlationId → same fill), NOT fresh-tape determinism
+  // (re-running the identical OHLCV sequence from scratch mints new correlationIds and
+  // will NOT reproduce the same fills). A future replay/audit tool must reuse the
+  // recorded correlationIds from the original run, not just the original bar data.
   const correlationId = randomUUID();
 
   // BL-1 / H-1 fix: pass full OHLC bar so updatePositionPrices can:

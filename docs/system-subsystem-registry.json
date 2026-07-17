@@ -848,6 +848,7 @@
       "macro_snapshots",
       "market_data_meta",
       "opening_auction_imbalance",
+      "paper_pending_entries",
       "paper_positions",
       "paper_session_feedback",
       "paper_sessions",

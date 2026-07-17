@@ -60,7 +60,19 @@ import { evaluateStyleCExit } from "../lib/style-c-exit-evaluator.js";
 // SAME account-key resolver cross-symbol-pnl.ts uses for DLL aggregation, so "which
 // account does this position belong to" can never disagree between the two subsystems.
 import { resolveAccountKey } from "./cross-symbol-pnl.js";
+// M2 (2026-07-17): deterministic hash-seeded uniform draw replacing Math.random()
+// in the fill model (latency drift + fill-probability miss gate). Same inputs ->
+// same draw, uniform on [0,1) — see deterministic-rng.ts. Fill-model MATH
+// (latencyFactor formula, fillProb threshold) is untouched — only the
+// randomness source changed.
+import { seededUniformDraw } from "../lib/deterministic-rng.js";
 export { CONTRACT_SPECS };
+
+// M2 (2026-07-17): fill-model version stamp — bumped only if the fill-model
+// MATH itself changes (not for this wave, which only changes the RNG source).
+// Stamped onto spans/audit so a pre/post-M2 boundary is distinguishable in
+// telemetry even though the math stayed byte-identical across the boundary.
+export const FILL_MODEL_VERSION = "v1-deterministic-rng";
 
 // ─── C1: Register CME outage callback on module init ─────────────────────────
 // The exchange-status-service notifies us when CME halts or resumes.
@@ -562,11 +574,43 @@ export function toSlippageSession(session: ReturnType<typeof classifySessionType
 
 // ─── Gap 7: Latency Simulation ───────────────────────────────
 
-function applyLatency(signalPrice: number, symbol: string, latencyMs: number, atr?: number): number {
+/**
+ * Seed identity for a single deterministic draw — every M2 fill-model call
+ * site threads the same 5-part identity so a draw is reproducible per
+ * (session, order, bar, fill-model version, site) but independent across
+ * distinct sites for the same order (latency-drift vs fill-prob-miss never
+ * correlate). `orderIntentId` is the position id when known, else the
+ * request's correlationId (a stable per-order-attempt UUID minted before
+ * either draw happens) — see openPosition().
+ */
+export interface FillModelSeedIdentity {
+  sessionId: string;
+  orderIntentId: string;
+  barTimestamp: string;
+  fillModelVersion: string;
+}
+
+// Exported for direct unit testing (replay-determinism), same precedent as
+// toSlippageSession above.
+export function applyLatency(
+  signalPrice: number,
+  symbol: string,
+  latencyMs: number,
+  atr: number | undefined,
+  seedIdentity: FillModelSeedIdentity,
+): number {
   if (latencyMs <= 0 || !atr || atr <= 0) return signalPrice;
   // Random walk estimate: price drifts by ATR * latency_factor during latency window
   const latencyFactor = (latencyMs / 1000) * 0.1; // 10% of ATR per second of delay
-  const drift = (Math.random() * 2 - 1) * atr * latencyFactor;
+  const draw = seededUniformDraw([
+    seedIdentity.sessionId,
+    seedIdentity.orderIntentId,
+    seedIdentity.barTimestamp,
+    seedIdentity.fillModelVersion,
+    "latency_drift",
+    symbol,
+  ]);
+  const drift = (draw * 2 - 1) * atr * latencyFactor;
   return signalPrice + drift;
 }
 
@@ -1910,12 +1954,26 @@ export async function openPosition(sessionId: string, params: {
     });
   }
 
+  // M2 (2026-07-17): resolve the order timestamp BEFORE the fill-model draws so
+  // both the fill-probability-miss check and applyLatency() below can seed off
+  // the same bar identity. Moved up from its prior position further down this
+  // function (session classification below still uses the same value) — a pure
+  // derivation, no functional change from relocating it.
+  const orderTimestamp = params.barTimestamp ?? new Date();
+  const fillModelSeedIdentity: FillModelSeedIdentity = {
+    sessionId,
+    orderIntentId: correlationId,
+    barTimestamp: orderTimestamp.toISOString(),
+    fillModelVersion: FILL_MODEL_VERSION,
+  };
+
   // Gap 6: Fill probability check
   // capturedFillProbability is persisted on the position row so closePosition() can copy it to the trade journal.
   // Market orders bypass the model entirely and are recorded as 1.0.
   const orderType = params.orderType ?? "market";
   let capturedFillProbability: number | null = fillModelEnabled ? null : 1.0;
   const fillSpan = tracer.startSpan("paper.fill_check");
+  fillSpan.setAttribute("fill_model_version", FILL_MODEL_VERSION);
   if (fillModelEnabled) {
     const fillProb = computeFillProbability({
       orderType,
@@ -1926,7 +1984,18 @@ export async function openPosition(sessionId: string, params: {
       medianBarVolume: params.medianBarVolume,
     });
     capturedFillProbability = fillProb;
-    if (Math.random() > fillProb) {
+    // M2 (2026-07-17): deterministic hash-seeded draw replaces Math.random() —
+    // same (session, order, bar, fill-model version) always redraws the same
+    // value. Math/threshold UNCHANGED (still `draw > fillProb` miss condition).
+    const fillMissDraw = seededUniformDraw([
+      fillModelSeedIdentity.sessionId,
+      fillModelSeedIdentity.orderIntentId,
+      fillModelSeedIdentity.barTimestamp,
+      fillModelSeedIdentity.fillModelVersion,
+      "fill_prob_miss",
+      params.symbol,
+    ]);
+    if (fillMissDraw > fillProb) {
       logger.info({ sessionId, symbol: params.symbol, fillProb, orderType }, "Fill probability miss — order not filled");
       broadcastSSE("paper:fill-miss", { sessionId, symbol: params.symbol, fillProb, orderType, correlationId });
       fillSpan.setAttribute("filled", false);
@@ -1952,7 +2021,13 @@ export async function openPosition(sessionId: string, params: {
   fillSpan.end();
 
   // Gap 7: Apply latency to price
-  const priceAfterLatency = applyLatency(params.signalPrice, params.symbol, latencyMs, params.atr);
+  const priceAfterLatency = applyLatency(
+    params.signalPrice,
+    params.symbol,
+    latencyMs,
+    params.atr,
+    fillModelSeedIdentity,
+  );
 
   // Apply variable slippage (ATR-scaled, session-aware, order-type-aware)
   // Use median ATR estimate: assume current ATR is near median unless extreme
@@ -1966,7 +2041,7 @@ export async function openPosition(sessionId: string, params: {
   // Fix 2: derive session at order time so calculateSlippage applies the correct
   // session multiplier (OVERNIGHT=2x, LONDON=1.5x, RTH=1x, CME_HALT=100x).
   // classifySessionType returns "ASIA"; calculateSlippage expects "ASIAN" — map it.
-  const orderTimestamp = params.barTimestamp ?? new Date();
+  // (orderTimestamp itself was resolved earlier, before the Gap 6 fill-model draws.)
   const sessionAtOrder = classifySessionType(orderTimestamp);
 
   // P1-7: Reject new entries during CME settlement halt (16:00–17:00 ET)

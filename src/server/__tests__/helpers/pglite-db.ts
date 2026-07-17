@@ -214,7 +214,14 @@ CREATE TABLE IF NOT EXISTS lifecycle_shadow_signals (
 );
 
 CREATE TABLE IF NOT EXISTS audit_log (
-  id                  UUID PRIMARY KEY,
+  -- M2 (2026-07-17): DEFAULT gen_random_uuid() added — production DDL
+  -- (migrations/0000_previous_nuke.sql) has always had this default; the
+  -- test-mirror DDL here drifted without it, silently forcing every caller
+  -- of the production insertAuditRow()/insertAuditRowSafe() helpers (which
+  -- omit the id column and rely on the DB default) to fail against PGlite
+  -- unless the test hand-supplies an id. Confirmed gen_random_uuid() works as
+  -- a DEFAULT in this PGlite version (same mechanism broker_accounts below already uses).
+  id                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   action              TEXT NOT NULL,
   entity_type         TEXT,
   entity_id           UUID,
@@ -243,6 +250,13 @@ CREATE TABLE IF NOT EXISTS lifecycle_transitions (
   quantum_fallback_triggered          BOOLEAN DEFAULT FALSE,
   quantum_classical_disagreement_pct  NUMERIC,
   cloud_qmc_run_id                    UUID,
+  -- M2 (2026-07-17) sibling fix: correlation_id (Wave 6 Fix 1, migration 0106) was
+  -- present in schema.ts but never mirrored into this CORE_DDL test copy — same
+  -- drift class as the 4 M2 fixes above, found by an independent grader's
+  -- full-table sweep (accuracy-validator grade). Confirmed pre-existing at base
+  -- be313a9e (not introduced by M2); no current test exercised this column so it
+  -- was silently blind, not silently broken.
+  correlation_id                      TEXT,
   created_at                          TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
@@ -277,6 +291,15 @@ CREATE TABLE IF NOT EXISTS paper_sessions (
   daily_pnl_breakdown   JSONB DEFAULT '{}',
   metrics_snapshot      JSONB DEFAULT '{}',
   total_trades          INTEGER NOT NULL DEFAULT 0,
+  -- M2 (2026-07-17) sibling fix: proven_trades_count was added to schema.ts by
+  -- migration 0174 (proven-trades ramp) but never mirrored into this CORE_DDL
+  -- test copy — every Drizzle .insert(paperSessions) that omits the column
+  -- (i.e. all of them; it has a schema default) failed against PGlite with
+  -- "column proven_trades_count does not exist" the moment a test actually
+  -- exercised paper_sessions. Confirmed pre-existing at base be313a9e (not
+  -- introduced by M2) via git show; fixed here since it silently blinded any
+  -- DB-integration test touching paper_sessions, including this wave's own.
+  proven_trades_count   INTEGER NOT NULL DEFAULT 0,
   governor_state        JSONB,
   created_at            TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -309,8 +332,51 @@ CREATE TABLE IF NOT EXISTS paper_positions (
   current_exit_style        TEXT,
   current_trail_method      TEXT,
   last_handler_eval_at      TIMESTAMPTZ,
-  exit_plan                 JSONB
+  exit_plan                 JSONB,
+  -- M2 (2026-07-17) sibling fix: 5 columns present in schema.ts (added by
+  -- migrations 0179 initial_stop_price/high_since_entry_price/
+  -- low_since_entry_price, 0180 correlation_id, 0201 entry_contracts) but
+  -- never mirrored into this CORE_DDL test copy — same drift class as the
+  -- proven_trades_count / audit_log.id fixes above. Confirmed pre-existing at
+  -- base be313a9e (not introduced by M2); fixed here since it silently
+  -- blinded any DB-integration test that inserts a full paper_positions row
+  -- (e.g. paper-execution-style-c-pglite.test.ts).
+  entry_contracts           INTEGER,
+  initial_stop_price        NUMERIC,
+  high_since_entry_price    NUMERIC,
+  low_since_entry_price     NUMERIC,
+  correlation_id            TEXT
 );
+
+-- M2 (migration 0204, 2026-07-17): durability mirror of paper-signal-service.ts's
+-- in-memory pendingEntryQueue. See migrations/0204_paper_pending_entries.sql for
+-- full column comments — mirrored here column-for-column so gate-chain /
+-- integration tests exercising the deferred-fill durability path aren't blind.
+CREATE TABLE IF NOT EXISTS paper_pending_entries (
+  id                           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  session_id                   UUID NOT NULL REFERENCES paper_sessions(id) ON DELETE CASCADE,
+  symbol                       TEXT NOT NULL,
+  side                         TEXT NOT NULL,
+  contracts                    INTEGER NOT NULL,
+  order_type                   TEXT NOT NULL,
+  stop_limit_offset            NUMERIC,
+  rsi                          NUMERIC,
+  atr                          NUMERIC,
+  bar_volume                   NUMERIC,
+  median_bar_volume            NUMERIC,
+  signal_bar_timestamp         TEXT NOT NULL,
+  correlation_id               TEXT,
+  stop_multiplier              NUMERIC NOT NULL,
+  entry_context                JSONB,
+  news_reduced_at_signal_time  BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at                   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS paper_pending_entries_key_idx
+  ON paper_pending_entries (session_id, symbol, signal_bar_timestamp);
+
+CREATE INDEX IF NOT EXISTS paper_pending_entries_session_idx
+  ON paper_pending_entries (session_id);
 
 CREATE TABLE IF NOT EXISTS paper_trades (
   id                UUID PRIMARY KEY,
@@ -337,6 +403,9 @@ CREATE TABLE IF NOT EXISTS paper_trades (
   skip_signal       TEXT,
   fill_probability  NUMERIC,
   roll_spread_cost  NUMERIC,
+  -- M2 (2026-07-17) sibling fix: correlation_id (migration 0180) was likewise
+  -- missing from this CORE_DDL mirror — same drift class as paper_positions above.
+  correlation_id    TEXT,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

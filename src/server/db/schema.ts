@@ -47,6 +47,7 @@ import type {
   PaperSessionGovernorStateShape,
   ExitPlanConfig,
   ExitPlanWithRuntimeState,
+  EntryDecisionContext,
 } from "./jsonb-shapes.js";
 
 // bytea type for compressed signal vectors
@@ -894,6 +895,54 @@ export const paperPositions = pgTable(
     index("paper_positions_open_idx")
       .on(table.sessionId, table.symbol)
       .where(sql`closed_at IS NULL`),
+  ]
+);
+
+// ─── Paper Pending Entries (M2, migration 0204) ─────────────
+// Durability-only mirror of paper-signal-service.ts's in-memory `pendingEntryQueue`
+// Map (module-level `Map<string, PendingEntry>`, key `${sessionId}:${symbol}`).
+// Persists a deferred entry (signal fired bar N, fill scheduled bar N+1) so a
+// process restart landing in that window re-hydrates instead of silently
+// dropping the trade. Column set mirrors the `PendingEntry` TS interface
+// (paper-signal-service.ts:644-671) field-for-field.
+export const paperPendingEntries = pgTable(
+  "paper_pending_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .references(() => paperSessions.id, { onDelete: "cascade" })
+      .notNull(),
+    symbol: text("symbol").notNull(),
+    side: text("side").notNull(), // long | short
+    contracts: integer("contracts").notNull(),
+    orderType: text("order_type").notNull(), // currently always "stop_limit"
+    stopLimitOffset: numeric("stop_limit_offset"),
+    rsi: numeric("rsi"),
+    atr: numeric("atr"),
+    barVolume: numeric("bar_volume"),
+    medianBarVolume: numeric("median_bar_volume"),
+    // Matches PendingEntry.signalBarTimestamp (string) — the bar N timestamp.
+    signalBarTimestamp: text("signal_bar_timestamp").notNull(),
+    correlationId: text("correlation_id"),
+    // Wave 2 (2026-07-16) POST-W2 shape: the config stop-ATR multiple threaded
+    // to openPosition's managed-stop geometry.
+    stopMultiplier: numeric("stop_multiplier").notNull(),
+    entryContext: jsonb("entry_context").$type<EntryDecisionContext>(),
+    newsReducedAtSignalTime: boolean("news_reduced_at_signal_time").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    // The queue key (session_id+symbol, matching the in-memory Map key) plus
+    // signal_bar_timestamp for idempotency — a retried enqueue for the SAME
+    // signal is a safe no-op upsert; a NEW signal (different signal bar) for
+    // the same session+symbol is a distinct row (enqueue-side code deletes the
+    // stale row for that session+symbol first, mirroring Map.set() overwrite).
+    uniqueIndex("paper_pending_entries_key_idx").on(
+      table.sessionId,
+      table.symbol,
+      table.signalBarTimestamp,
+    ),
+    index("paper_pending_entries_session_idx").on(table.sessionId),
   ]
 );
 
