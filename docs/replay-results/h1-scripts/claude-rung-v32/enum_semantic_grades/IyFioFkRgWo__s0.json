@@ -1,0 +1,16 @@
+{
+ "custom_id": "IyFioFkRgWo__s0",
+ "exercised": true,
+ "verdict": {
+  "strategy_name": "support_bounce_scalp",
+  "enumeration_consistent": false,
+  "offending_variants": [
+   {
+    "variant": "breakdown_continuation",
+    "re_promotes_mention": "breakdown 'big move' once support lost"
+   }
+  ],
+  "reasoning": "The long variants are legitimate extensions of the taught support-bounce scalp on the 5-minute chart, but the short variant breakdown_continuation re-promotes the exact scenario the enumeration excluded: the narrator’s retrospective aside about the 'big move' after the 200 EMA/support was lost. In the transcript that breakdown was not taught as a fully runnable setup—he only says 'you would have entered there' while gesturing at the chart—whereas this variant turns that excluded mention into an explicit short entry/exit model, so it is not enumeration-consistent."
+ },
+ "tokens": 3382
+}

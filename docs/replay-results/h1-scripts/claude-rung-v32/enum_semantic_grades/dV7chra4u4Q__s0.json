@@ -1,0 +1,11 @@
+{
+ "custom_id": "dV7chra4u4Q__s0",
+ "exercised": true,
+ "verdict": {
+  "strategy_name": "break_and_retest",
+  "enumeration_consistent": true,
+  "offending_variants": [],
+  "reasoning": "The excluded-mentions list is empty, so there is no ruled-out scenario for any variant to re-promote. The listed variants—a moving-average reclaim as added confirmation at the retest and using the 5-minute chart with 2-minute refinement—remain ordinary configuration/example details of the taught break-and-retest setup rather than turning any excluded mention into a standalone runnable setup."
+ },
+ "tokens": 4893
+}

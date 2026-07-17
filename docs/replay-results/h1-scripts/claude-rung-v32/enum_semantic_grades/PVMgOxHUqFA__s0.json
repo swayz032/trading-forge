@@ -1,0 +1,11 @@
+{
+ "custom_id": "PVMgOxHUqFA__s0",
+ "exercised": true,
+ "verdict": {
+  "strategy_name": "abc_trend_continuation_reclaim",
+  "enumeration_consistent": true,
+  "offending_variants": [],
+  "reasoning": "None of the variants re-promote the excluded bearish LH/LL downtrend-tracking mention as a tradable short setup. The 15-minute/5-minute entry-timeframe variant is just a timeframe configuration of the same long reclaim model, and the lower-timeframe scalp variant still uses the bearish correction only as diagnostic structure before a reclaim entry in the higher-timeframe bullish context. In substance, both variants remain long correction-end/reclaim continuations, not standalone bearish breakdown or downtrend trades with short entry mechanics."
+ },
+ "tokens": 5326
+}

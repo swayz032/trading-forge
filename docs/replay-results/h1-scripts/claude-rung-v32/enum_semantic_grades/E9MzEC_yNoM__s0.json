@@ -1,0 +1,11 @@
+{
+ "custom_id": "E9MzEC_yNoM__s0",
+ "exercised": true,
+ "verdict": {
+  "strategy_name": "premarket_range_break_continuation",
+  "enumeration_consistent": true,
+  "offending_variants": [],
+  "reasoning": "There are no enumeration-excluded mentions for this video, so none of the strategy's variants can be judged as re-promoting an excluded scenario. The listed breakout and retest variants both reflect setups explicitly taught in the transcript rather than turning any ruled-out aside, counterexample, or mere mention into a runnable trade variant."
+ },
+ "tokens": 4592
+}

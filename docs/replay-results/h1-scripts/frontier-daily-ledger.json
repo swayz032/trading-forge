@@ -1,6 +1,6 @@
 {
  "2026-07-13": {
-  "gpt54": 1695580,
+  "gpt54": 1834886,
   "mini": 309111,
   "_burst_gpt54": {
    "pool": "gpt54",
@@ -67,9 +67,17 @@
    }
   ],
   "_conflation_check": {
-   "tokens": 103946,
-   "est_usd": 0.26,
+   "tokens": 106470,
+   "est_usd": 0.266,
    "cal_ok": true
+  },
+  "_enum_semantic_check": {
+   "tokens": 32836,
+   "est_usd": 0.082,
+   "exercised": 7,
+   "vacuous": 15,
+   "cal": "both polarities hold (IyF INCONSISTENT, 6 clean PASS)",
+   "under_envelope": true
   }
  },
  "_balance_anchor": {

@@ -1,3 +1,10 @@
+"""SUPERSEDED-FOR-PROSE (2026-07-15, minted law): this MECHANICAL/lexical lint is
+BYPASSABLE across the prose seam (paraphrase-bypass; the IyF catch was a key-format
+accident, grader-falsified). The terminal read consumes the SEMANTIC cross-vendor
+enumeration-consistency verdict instead (src/agents/enumeration-consistency-semantic.md).
+This lint is RETAINED only for the STRUCTURED (compiled-spec/H2) layer where key/field
+signal natively exists. Do NOT arm it as the prose terminal-read axis.
+"""
 """H1 enumeration-consistency lint (ratify-packet
 `docs/designs/h1-enumeration-consistency-lint-ratify-2026-07-15.md`).
 

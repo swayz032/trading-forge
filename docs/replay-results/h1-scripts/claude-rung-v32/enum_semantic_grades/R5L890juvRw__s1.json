@@ -1,0 +1,9 @@
+{
+ "custom_id": "R5L890juvRw__s1",
+ "exercised": false,
+ "verdict": {
+  "enumeration_consistent": true,
+  "offending_variants": [],
+  "reasoning": "no variants -> no variant-promotion possible (trivially consistent, not semantically exercised)"
+ }
+}

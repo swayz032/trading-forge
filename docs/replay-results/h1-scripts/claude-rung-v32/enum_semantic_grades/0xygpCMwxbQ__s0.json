@@ -1,0 +1,11 @@
+{
+ "custom_id": "0xygpCMwxbQ__s0",
+ "exercised": true,
+ "verdict": {
+  "strategy_name": "ict_aplus_entry_checklist",
+  "enumeration_consistent": true,
+  "offending_variants": [],
+  "reasoning": "None of the listed variants re-promote the excluded standalone-concept mentions. The 'Blended PD-array A+ entry' still requires the full checklist skeleton—daily bias, stop raid, market structure shift/displacement, return into discount/OTE, then a PD array such as FVG, order block, breaker, or OTE—so those concepts remain blended components rather than being converted into standalone runnable strategies. The 'Box setup' variant is a separate range-deviation/retest model taught in the transcript and does not substantively match any excluded mention, since the excluded items were specifically FVG-alone, order-block-alone, breaker-alone, and OTE-alone entry models."
+ },
+ "tokens": 5104
+}

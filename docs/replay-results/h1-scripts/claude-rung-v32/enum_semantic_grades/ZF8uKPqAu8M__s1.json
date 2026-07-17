@@ -1,0 +1,11 @@
+{
+ "custom_id": "ZF8uKPqAu8M__s1",
+ "exercised": true,
+ "verdict": {
+  "strategy_name": "orb_breakout_pullback_continuation",
+  "enumeration_consistent": true,
+  "offending_variants": [],
+  "reasoning": "None of the listed variants turns an excluded mention into a runnable setup. The excluded wick-entry mention was an immediate buy on the first breakout through the range before a confirmed close, whereas these variants all remain within the pullback-continuation framework or modify stop/target placement after a breakout-pullback sequence; even the top-of-ORB stop-order variant is a pullback re-entry idea, not the rejected initial breakout wick entry. Likewise, none of the variants matches the excluded future idea of a standalone momentum-first breakout model that does the opposite of waiting for pullbacks; that concept was only floated for a later video and is not reintroduced here as a variant."
+ },
+ "tokens": 5522
+}

@@ -1,0 +1,11 @@
+{
+ "custom_id": "2DXQqwKSwJE__s0",
+ "exercised": true,
+ "verdict": {
+  "strategy_name": "mean_reversion_scalp",
+  "enumeration_consistent": true,
+  "offending_variants": [],
+  "reasoning": "The only excluded mention is swing trading, which the video referenced solely as a contrast to scalping's shorter holding period and risk profile. The variant \"short_mirror_at_resistance\" does not re-promote swing trading in substance; it is just the opposite-direction expression of the taught mean reversion scalp mechanic already described in the transcript (a sharp move into resistance with large offers, then fading the move). So none of the strategy's variants turns an excluded mention into a runnable setup."
+ },
+ "tokens": 4017
+}
