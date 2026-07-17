@@ -309,21 +309,37 @@ class TestLoadProductionStateAt:
         mock_cursor.__enter__ = MagicMock(return_value=mock_cursor)
         mock_cursor.__exit__ = MagicMock(return_value=False)
 
-        # bias_state row mock
+        # bias_state row mock — Path-A A1 (2026-07-17): mirrors the REAL schema
+        # shape (schema.ts biasState). NO `state`, `confluence_score`, or
+        # `institutional_regime` keys — those columns do not exist. Real columns
+        # only: regime_label, evidence, structure_state, narrative_state,
+        # htf_narrative, regime_evidence, created_at.
         bias_row = {
-            "state": json.dumps({
-                "htfBiasDirection": "bullish",
-                "dailyAtr": 12.5,
-                "dailyEma20": 4210.0,
-                "smtScore": 0.65,
-                "confluenceScore": 0.78,
+            "regime_label": "TRENDING_UP",
+            "evidence": json.dumps({
+                "source": "compute_bias_primary",
+                "symbol": "MES",
+                "is_refresh": False,
+                "htf_daily_trend": "up",
+                "htf_weekly_trend": "up",
+                "htf_atr_percentile": 0.62,
+                "htf_pd_location": "premium",
+                "vp_shape": "D",
+                "net_bias": 1,
+                "bias_confidence": 0.78,
+                "daily_bars_loaded": 250,
+                "current_price": 4210.0,
+                "opening_range_high": 4215.0,
+                "opening_range_low": 4205.0,
+                "overnight_bias": "bullish",
             }),
-            "confluence_score": 0.78,
             "structure_state": json.dumps({
-                "current_state": "BOS",
-                "bos_count": 2,
-                "choch_count": 1,
-                "mss_count": 0,
+                "bos_recent": True,
+                "bos_direction": "up",
+                "choch_recent": False,
+                "choch_direction": None,
+                "mss_recent": False,
+                "mss_direction": None,
             }),
             "narrative_state": json.dumps({
                 "phase": "DISTRIBUTION",
@@ -334,10 +350,14 @@ class TestLoadProductionStateAt:
                 "dailyDealing": {"current_quadrant": "premium_upper"},
             }),
             "regime_evidence": json.dumps({
-                "atr_percentile": 0.72,
-                "volume_ratio": 1.3,
+                "atr_percentile_vs_30d": 72.0,
+                "volume_ratio_vs_session_avg": 1.3,
+                "range_size_vs_atr": 0.9,
+                "is_macro_event_day": False,
+                "session_health": "rth_open",
+                "primary_driver": "none",
             }),
-            "institutional_regime": "TRENDING",
+            "created_at": datetime(2024, 6, 15, 14, 0, 0, tzinfo=timezone.utc),
         }
         mock_cursor.fetchone.side_effect = [
             bias_row,             # bias_state query
@@ -355,6 +375,50 @@ class TestLoadProductionStateAt:
         assert result is not None, "_load_production_state_at returned None"
         for field in PRODUCTION_STATE_FIELDS:
             assert field in result, f"Field '{field}' missing from result"
+
+        # institutional_regime derives from regime_label via the verified
+        # normalization table: TRENDING_UP -> TRENDING (real schema has no
+        # institutional_regime column; regime_label is the real source).
+        assert result["institutional_regime"] == "TRENDING", (
+            f"expected regime_label 'TRENDING_UP' normalized to 'TRENDING', got {result['institutional_regime']!r}"
+        )
+        # Fields with NO verified persisted source must stay honestly None —
+        # the old `state`/`confluence_score` columns never existed, so nothing
+        # fabricates a value for these anymore.
+        assert result["htf_bias_direction"] is None
+        assert result["daily_atr"] is None
+        assert result["daily_ema_20"] is None
+        assert result["smt_score"] is None
+        assert result["confluence_score_11factor"] is None
+        assert result["htf_bias_score"] is None
+
+    def test_regime_label_high_vol_macro_passes_through_unchanged(self):
+        """A regime_label already in the RL 6-value vocabulary (e.g. HIGH_VOL_MACRO)
+        must pass through the normalization table unchanged (not remapped)."""
+        from src.engine.quantum_rl_agent import _load_production_state_at
+
+        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        mock_conn = MagicMock()
+        mock_cursor = MagicMock()
+        bias_row = {
+            "regime_label": "HIGH_VOL_MACRO",
+            "evidence": json.dumps({}),
+            "structure_state": None,
+            "narrative_state": None,
+            "htf_narrative": None,
+            "regime_evidence": None,
+            "created_at": datetime(2024, 6, 15, 14, 0, 0, tzinfo=timezone.utc),
+        }
+        mock_cursor.fetchone.side_effect = [bias_row, None]
+        mock_cursor.fetchall.return_value = []
+        mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
+        mock_conn.cursor.return_value.__exit__.return_value = False
+
+        with patch("psycopg2.connect", return_value=mock_conn):
+            with patch.dict(os.environ, {"DATABASE_URL": "postgresql://test/test"}):
+                result = _load_production_state_at(ts, "MES")
+
+        assert result["institutional_regime"] == "HIGH_VOL_MACRO"
 
     def test_load_state_returns_none_when_no_db_url(self):
         """Must return None (not raise) when DATABASE_URL is not set."""

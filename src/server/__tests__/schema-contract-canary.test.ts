@@ -49,8 +49,18 @@ function declaredColumns(tableName: string): Set<string> {
  * Owner: RL Path-A ratify packet (reader rewrite to regime_label +
  * regime_evidence). Every entry here is a KNOWN, OPERATOR-SURFACED defect —
  * never add to this ledger to make a new test failure go away; fix the reader.
+ *
+ * CLOSED — Path-A A1 (2026-07-17, RATIFY-PACKET.md §3.1): the reader's SELECT
+ * no longer queries {state, confluence_score, institutional_regime} at all —
+ * it now selects the real columns (regime_label, evidence, structure_state,
+ * narrative_state, htf_narrative, regime_evidence, created_at), with a
+ * verified field-mapping (see quantum_rl_agent.py comments at the SELECT
+ * site) and an explicit regime_label→RL-vocabulary normalization table
+ * (_REGIME_LABEL_TO_RL_VOCAB). Ledger empties to ∅ per the packet's Path-A A1
+ * acceptance criterion — this canary now tightens: any FUTURE bias_state
+ * column drift in this reader fails immediately, with no ledger to hide in.
  */
-const KNOWN_READER_DRIFT = new Set(["state", "confluence_score", "institutional_regime"]);
+const KNOWN_READER_DRIFT = new Set<string>([]);
 
 describe("schema contract canary — bias_state readers/writers vs schema.ts", () => {
   const biasStateCols = declaredColumns("bias_state");

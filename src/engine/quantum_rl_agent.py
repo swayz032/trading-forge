@@ -158,6 +158,26 @@ PRODUCTION_STATE_FIELDS = [
 _N_STATE_FIELDS = len(PRODUCTION_STATE_FIELDS)  # 25
 
 
+# ─── Regime label vocabulary normalization (Path-A A1, 2026-07-17) ───────────
+# The real `bias_state.regime_label` column (schema.ts biasState) is written by
+# bias-state-service.ts's PLAYBOOK_TO_REGIME map (~lines 521-548) using
+# bias_engine.py's 9-value REGIME_VALUES vocabulary (~line 42): TRENDING_UP,
+# TRENDING_DOWN, RANGE_BOUND, EXPANSION, COMPRESSION, HIGH_VOL_MACRO,
+# LATE_CYCLE_OVERHEATING, NO_TRADE (plus an engine-fallback "UNKNOWN" string
+# outside REGIME_VALUES). serialize_state_to_numpy()'s `_regime_map` (below,
+# ~line 527) only encodes 6 values: TRENDING, RANGE_BOUND, HIGH_VOL_MACRO,
+# COMPRESSION, EXPANSION, LOW_LIQ_CHOP. This table normalizes the verified
+# overlap (TRENDING_UP/TRENDING_DOWN → TRENDING — both are the RL's single
+# existing "trending" concept) and deliberately does NOT invent an analog for
+# LATE_CYCLE_OVERHEATING / NO_TRADE / UNKNOWN: those pass through unchanged and
+# fall to _regime_map.get(..., 0.0)'s existing default, exactly as an
+# unrecognized value already did before this rewrite.
+_REGIME_LABEL_TO_RL_VOCAB: dict[str, str] = {
+    "TRENDING_UP": "TRENDING",
+    "TRENDING_DOWN": "TRENDING",
+}
+
+
 # ─── DB-Backed Production State Loader ───────────────────────────
 
 def _load_production_state_at(
@@ -217,15 +237,23 @@ def _load_production_state_at(
     try:
         with conn.cursor(cursor_factory=psycopg2.extras.DictCursor) as cur:
             # ── 1. Load bias_state row nearest to timestamp ────────────────
+            # Path-A A1 (2026-07-17, RATIFY-PACKET.md §3.1): the previous query
+            # named {state, confluence_score, institutional_regime} — three
+            # columns that exist in NO migration (see schema.ts biasState,
+            # ~line 2340). This reader threw "column does not exist" whenever
+            # actually wired to a live DB; its unit tests only passed because
+            # they mocked the psycopg2 cursor with a fabricated schema. Rewritten
+            # to the REAL columns below. KNOWN_READER_DRIFT ledger in
+            # schema-contract-canary.test.ts owns tracking this — it must be
+            # emptied in the same commit as this rewrite.
             sql_bias = """
                 SELECT
-                    state,
-                    confluence_score,
+                    regime_label,
+                    evidence,
                     structure_state,
                     narrative_state,
                     htf_narrative,
                     regime_evidence,
-                    institutional_regime,
                     created_at
                 FROM bias_state
                 WHERE symbol = %s
@@ -237,19 +265,84 @@ def _load_production_state_at(
             bias_row = cur.fetchone()
 
             if bias_row is not None:
-                bias_state_json = bias_row["state"] or {}
-                if isinstance(bias_state_json, str):
-                    try:
-                        bias_state_json = json.loads(bias_state_json)
-                    except (json.JSONDecodeError, TypeError):
-                        bias_state_json = {}
+                # `evidence` (real JSONB column, replaces the nonexistent `state`
+                # column) is intentionally NOT parsed into a local dict here — every
+                # field the old code tried to read from it (see below) has no
+                # verified equivalent in its actual payload, so there is nothing to
+                # extract. Verified against the ONLY writer, src/server/services/bias-state-service.ts
+                # (the `evidence` dict literal passed to emit(), ~lines 709-725):
+                #   {source, symbol, is_refresh, htf_daily_trend, htf_weekly_trend,
+                #    htf_atr_percentile, htf_pd_location, vp_shape, net_bias,
+                #    bias_confidence, daily_bars_loaded, current_price,
+                #    opening_range_high, opening_range_low, overnight_bias}
+                # None of htfBiasDirection/htf_bias_direction, dailyAtr/daily_atr,
+                # or dailyEma20/daily_ema_20 are ever written into `evidence` (or
+                # anywhere else in bias_state) — there is no real persisted source.
+                # `htf_daily_trend` and `htf_atr_percentile` exist but are DIFFERENT
+                # metrics (a trend label, and an ATR percentile rank rather than raw
+                # ATR points) — not verified equivalents, so they are not substituted.
+                # Left honestly None per the fail-open PRODUCTION_STATE_FIELDS contract
+                # rather than fabricating a mapping to a differently-shaped field.
+                state["htf_bias_direction"] = None
+                state["daily_atr"] = None
+                state["daily_ema_20"] = None
 
-                # Extract HTF bias direction from state JSONB
-                state["htf_bias_direction"] = bias_state_json.get("htfBiasDirection") or bias_state_json.get("htf_bias_direction")
-                state["daily_atr"] = _safe_float(bias_state_json.get("dailyAtr") or bias_state_json.get("daily_atr"))
-                state["daily_ema_20"] = _safe_float(bias_state_json.get("dailyEma20") or bias_state_json.get("daily_ema_20"))
-                state["htf_bias_score"] = _safe_float(bias_row["confluence_score"])
-                state["institutional_regime"] = bias_row["institutional_regime"]
+                # smt_score: no smtScore/smt_score key anywhere in `evidence` — the
+                # Wave-25 SMT ES↔NQ divergence score is never persisted to bias_state.
+                # No verified source. None.
+                state["smt_score"] = None
+
+                # confluence_score_11factor: `evidence.bias_confidence` exists but is
+                # the bias-engine's OWN directional confidence (compute_bias() net_bias
+                # confidence), NOT the Wave-25 11-factor weighted confluence score
+                # (computed downstream in confluence-score.ts at signal time and never
+                # written back to bias_state). Different metric — not a verified
+                # equivalent, so left None rather than conflating the two.
+                state["confluence_score_11factor"] = None
+
+                # htf_bias_score previously read from the nonexistent `confluence_score`
+                # column. No verified real source in the current schema. None.
+                state["htf_bias_score"] = None
+
+                # institutional_regime: the nonexistent `institutional_regime` column
+                # never existed. The REAL institutional-regime signal lives in the
+                # `regime_label` TEXT column: bias-state-service.ts computes it via
+                # PLAYBOOK_TO_REGIME.get(routed_playbook, "UNKNOWN") (~lines 521-548),
+                # a mapping that INCLUDES the institutional arms (EXPANSION,
+                # COMPRESSION, HIGH_VOL_MACRO, LATE_CYCLE_OVERHEATING) alongside the
+                # classic TRENDING_UP/TRENDING_DOWN/RANGE_BOUND/NO_TRADE arms — i.e.
+                # regime_label IS the persisted institutional_regime value (see
+                # bias_engine.py REGIME_VALUES, ~line 42, for the 9-value source
+                # vocabulary this maps onto).
+                #
+                # Vocabulary mismatch, verified from both sides: the RL state encoder's
+                # _regime_map (serialize_state_to_numpy, ~line 527 below) only knows 6
+                # values — TRENDING / RANGE_BOUND / HIGH_VOL_MACRO / COMPRESSION /
+                # EXPANSION / LOW_LIQ_CHOP — with TRENDING_UP/TRENDING_DOWN collapsed
+                # into one TRENDING bucket and no entry at all for LATE_CYCLE_OVERHEATING,
+                # NO_TRADE, or the engine-fallback "UNKNOWN". Rather than silently
+                # mismatching (both would otherwise fall through _regime_map.get(...,
+                # 0.0) — the same degrade path as an unmapped/None regime), normalize
+                # explicitly via _REGIME_LABEL_TO_RL_VOCAB below: TRENDING_UP/DOWN are
+                # merged into TRENDING (verified equivalence — both are the RL's
+                # existing single "trending" concept); LATE_CYCLE_OVERHEATING/NO_TRADE/
+                # UNKNOWN are passed through UNCHANGED (no fabricated 6-value analog
+                # exists) and continue to degrade to 0.0 in the numpy encoder, exactly
+                # as an unmapped value already did before this rewrite — a documented,
+                # not a silent, gap.
+                #
+                # NOTE (structural, out of Path-A A1 scope, honestly flagged): bias-
+                # state-service.ts also demotes any LOW_LIQ_CHOP institutional
+                # classification to playbook=NO_TRADE before it reaches PLAYBOOK_TO_REGIME
+                # (bias_engine.py, "HIGH_VOL_MACRO and LOW_LIQ_CHOP should force
+                # NO_TRADE playbook"), so regime_label can never actually contain
+                # "LOW_LIQ_CHOP" in production today — the RL vocabulary carries an
+                # entry for a value the writer structurally never emits. Not fixed here
+                # (writer-side change, outside this reader-rewrite's scope).
+                raw_regime_label = bias_row["regime_label"]
+                state["institutional_regime"] = _REGIME_LABEL_TO_RL_VOCAB.get(
+                    raw_regime_label, raw_regime_label
+                )
 
                 # Structure state: BOS / CHoCH / MSS from structure_state JSONB
                 structure_json = bias_row["structure_state"] or {}
@@ -325,14 +418,12 @@ def _load_production_state_at(
                     liq_exc,
                 )
 
-            # ── 3. SMT score from bias_state state JSONB ───────────────────
-            if bias_row is not None:
-                smt_val = bias_state_json.get("smtScore") or bias_state_json.get("smt_score")
-                state["smt_score"] = _safe_float(smt_val)
-                conf_val = bias_state_json.get("confluenceScore") or bias_state_json.get("confluence_score")
-                if conf_val is None:
-                    conf_val = bias_row.get("confluence_score")
-                state["confluence_score_11factor"] = _safe_float(conf_val)
+            # ── 3. (removed — Path-A A1) smt_score / confluence_score_11factor
+            # were previously (re-)populated here from the nonexistent `state`
+            # JSONB column. Both fields are now set once, honestly, to None in
+            # step 1 above (no verified persisted source — see the comment
+            # block there). This step number is preserved as a placeholder so
+            # the numbered comments below don't need renumbering.
 
             # ── 4. MC ruin probability ci_high (OPTIONAL) ─────────────────
             if strategy_id is not None:
@@ -1776,12 +1867,24 @@ def train_regime_conditioned_policies(
     # for THREE stacked reasons (all evidenced by live-DB inspection):
     #   (1) load_backtest_bar_data() builds bars from backtest_trades and never
     #       enriches them (this false-green closure surfaces that, above).
-    #   (2) The enrichment fn that WOULD fix it, _load_production_state_at(),
-    #       SELECTs bias_state columns {state, confluence_score, structure_state,
-    #       institutional_regime} that DO NOT EXIST in the live bias_state schema
-    #       (live cols: regime_label TEXT, regime_evidence/evidence JSONB, ...);
-    #       it would throw "column does not exist" if wired in. Its unit tests
-    #       pass only because they mock the cursor (fabricated-schema false-green).
+    #   (2) FIXED — Path-A A1 (2026-07-17, RATIFY-PACKET.md §3.1, commit
+    #       PATH_A_A1_COMMIT_SHA): _load_production_state_at() previously SELECTed
+    #       bias_state columns {state, confluence_score, institutional_regime}
+    #       that did NOT EXIST in the live schema — it would have thrown "column
+    #       does not exist" if ever wired in, and its unit tests only passed
+    #       because they mocked the cursor (fabricated-schema false-green). The
+    #       reader now SELECTs the real columns (regime_label, evidence,
+    #       structure_state, narrative_state, htf_narrative, regime_evidence,
+    #       created_at) with a verified field-mapping + an explicit
+    #       regime-label→RL-vocabulary normalization table
+    #       (_REGIME_LABEL_TO_RL_VOCAB). KNOWN_READER_DRIFT in
+    #       schema-contract-canary.test.ts is now empty. This closes the SCHEMA
+    #       half of the gap — it does NOT by itself create training data: this
+    #       function is still only called from the RL train/compare path, and
+    #       load_backtest_bar_data() (reason (1)) still doesn't invoke it, so
+    #       this fix has ZERO runtime effect until a later Path-A phase wires
+    #       batched enrichment into the training bar loader (RATIFY-PACKET.md
+    #       §3, item 3).
     #   (3) Live bias_state holds ~82 rows over ~3 days (2026-05-20..23), so even
     #       a schema-fixed loader has almost no historical regime coverage to
     #       train on until the live bias engine accumulates real history.
