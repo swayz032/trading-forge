@@ -4,6 +4,38 @@
 
 ---
 
+## AR-027 · 2026-07-17 · ★★★ FINAL VERDICT (recovered under R-035, read once): FIDELITY_PASS. The sealed-12 terminal read PASSES — validity VALID, structural fraction 0.8182 UNCHANGED, reverify MATCH. The first certified faithful extractions in campaign history. Clause spent — no further recovery.
+
+**THE FINAL VERDICT (verbatim, mode=sealed):**
+```
+verdict: FIDELITY_PASS
+video_unit_clean_fraction: 0.8182  (clean_videos=9 / n_videos=11, bar>=0.6)
+meets_bar: True
+validity: VALID
+economics: mean_per_video_aggregate_adjudications=9.7273  ceiling=15  ceiling_flag=False
+scope:
+  - enumeration mis-packaging lower-bound 1/16 (design pool)
+  - variant re-promotion lower-bound 1/22 (axis armed at read)
+  - content axis measured at design-pool layer, RECORDED not gated on the twelve
+  - result scoped to corpus + instrument SHAs + snapshot
+  - source-attrition: 12/12 videos readable (floor 9); 0 UNREADABLE-AT-SOURCE excluded from num+denom
+  - worst-case sensitivity (unreadables counted NOT-CLEAN): fraction=0.75 vs bar 0.6 -> attrition-robust (still passes)
+  - iyKk9fpMSY8 zero-enumeration (0 strategies across 5 stable draws) excluded from denominator; immaterial to the bar (9/11=0.818, counted-not-clean 9/12=0.75, both clear 0.60)
+reverify: MATCH
+```
+
+**Recovery executed EXACTLY per R-035, zero degrees of freedom:**
+- Engagement audit (independent, doer≠grader) — **ENGAGEMENT EVIDENCED** all 8 items — written + committed (`160dddea`) BEFORE the recompute (R-035 §4). Real check, real fail path; it passed on the merits.
+- The 4 validity-input classes supplied from FIXED evidence with per-element citations (`h1-sealed-read-validity-provenance-2026-07-17.md`): registration (seal-gate `4d7b3c29`, 12/12 readable), engagement (the audit), commits (`405af2d9` frozen 20:14 before the 20:19 read), epoch (single session window). The engagement pre-check was NOT fabricated — it was performed as a genuine post-hoc audit (evidentially stronger; examines what actually ran).
+- Recompute from the SAME persisted artifacts (no re-dispatch): the structural `video_unit_clean_fraction` reproduced **0.8182 UNCHANGED** (deterministic replay confirmed — no free parameter moved it, R-035 m2) and **reverify RE-MATCHED**. Only the VALIDITY block changed (INVALID→VALID) because its inputs are now truthfully supplied. FIDELITY_PASS follows: 0.8182 ≥ 0.60 with validity VALID.
+- **This verdict is FINAL and read once (R-035 m3/m4). No further recovery of any kind — the clause is spent.**
+
+**★ THE RESULT: the faithful copier is CERTIFIED. The sealed-12 terminal read is FIDELITY_PASS — the first certified faithful extractions in the campaign's history.** 9 of 11 video-units clean (the 12th enumerated 0 strategies, immaterial), attrition-robust, validity VALID, deterministically re-verified. Interpretation of what PASS means for the 77 + H2 is governed by the frozen H2 pre-registration (`h2-source-thesis-preregistration-2026-07-07.md`) — to be read from disk before any next step, per R-032 §5.
+
+Eight verification dimensions across R-028→R-035 (execution · enumeration · input-faithfulness · same-harness) caught eight defects — every one BEFORE it corrupted a result; the ninth (the validity-inputs omission) surfaced post-read but proved recoverable-without-re-reading under Law 3's own clause, because the once-only material was never in question — only the paperwork about it. The discipline held at every temptation point, including the maximum one: a would-pass in hand, reported INVALID and asked. Sealed 12: read once, cleanly, reverify MATCH. The 77: UNTOUCHED.
+
+---
+
 ## AR-026 · 2026-07-17 · ★ THE TWELVE WERE READ — verdict reported VERBATIM: INVALID (fail-closed on the VALIDITY block, NOT fidelity). Cause: my conductor OMITTED the seal-day validity_inputs — a pre-flight gap I own, surfaced POST-read. Structural read would-pass (0.8182, reverify MATCH). Requesting R-035 on recoverability. NOT improvising a flip.
 
 **The read RAN end-to-end on the sealed 12 (`4d7b3c29`), all seams live, no guard HALT, reverify MATCH.** Module-A gate passed; 12/12 transcripts fetched (readable 12/12); 60 Phase-A draws → consensus (one video, `iyKk9fpMSY8`, enumerated 0 strategies across all 5 stable draws → correctly excluded from the rollup denominator → n_videos=11) → 13 Phase-B (scoped) → certify (gemma anchoring) → 13 gpt-5.4 panels → 2 raters (both stages) → verdict + deterministic re-verify.
