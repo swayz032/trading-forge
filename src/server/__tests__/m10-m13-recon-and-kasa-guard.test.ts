@@ -278,14 +278,15 @@ describe("M10 — shadow-signal recon", () => {
     // Positions 2-onwards: sub-checks (interleaved by Promise.all scheduling)
     setResponses(
       [deployedStrat],     // [0] DEPLOYED+ strategies
-      [],                  // [1] paper_trades → 0 trades, evaluateStrategy returns early
+      [{ cnt: "0" }],      // [1] checkBrokerTapeSourceActive (production_trades count) — new pre-existing unconditional call
+      [],                  // [2] paper_trades → 0 trades, evaluateStrategy returns early
       // Sub-checks (Promise.all – order follows call ordering within each sub-check):
-      [shadowStrat],       // [2] SHADOW strategies (shadow sub-check call 1)
-      [],                  // [3] completed backtests (quantum sub-check call 1)
-      [],                  // [4] AB strategies (ab_routing sub-check call 1)
-      [{ cnt: "15" }],     // [5] lifecycle_shadow_signals count (shadow call 2)
-      [shadowSession],     // [6] paperSessions for shadow strategy (shadow call 3)
-      [{ cnt: "20" }],     // [7] paper_signal_logs count (shadow call 4)
+      [shadowStrat],       // [3] SHADOW strategies (shadow sub-check call 1)
+      [],                  // [4] completed backtests (quantum sub-check call 1)
+      [],                  // [5] AB strategies (ab_routing sub-check call 1)
+      [{ cnt: "15" }],     // [6] lifecycle_shadow_signals count (shadow call 2)
+      [shadowSession],     // [7] paperSessions for shadow strategy (shadow call 3)
+      [{ cnt: "20" }],     // [8] paper_signal_logs count (shadow call 4)
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-24"));
@@ -360,11 +361,12 @@ describe("M10 — quantum-replay orphan recon", () => {
 
     setResponses(
       [deployedStrat],                    // [0] DEPLOYED+
-      [],                                 // [1] paper_trades → 0 → early exit
-      [],                                 // [2] SHADOW strategies (shadow call 1) → none → skip
-      [{ id: orphanBacktestId }],         // [3] completed backtests in 24h (quantum call 1)
-      [],                                 // [4] AB strategies (ab_routing call 1) → none
-      [],                                 // [5] quantum_mc_runs replay rows (quantum call 2) → NONE → orphan
+      [{ cnt: "0" }],                     // [1] checkBrokerTapeSourceActive (production_trades count) — new pre-existing unconditional call
+      [],                                 // [2] paper_trades → 0 → early exit
+      [],                                 // [3] SHADOW strategies (shadow call 1) → none → skip
+      [{ id: orphanBacktestId }],         // [4] completed backtests in 24h (quantum call 1)
+      [],                                 // [5] AB strategies (ab_routing call 1) → none
+      [],                                 // [6] quantum_mc_runs replay rows (quantum call 2) → NONE → orphan
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-24"));
@@ -426,13 +428,14 @@ describe("M10 — A/B routing recon", () => {
 
     setResponses(
       [deployedStrat],                                          // [0] DEPLOYED+
-      [],                                                       // [1] paper_trades → 0
-      [],                                                       // [2] SHADOW strategies → none
-      [],                                                       // [3] completed backtests → none
-      [{ id: abStratId, paperAccountRouting: "slumdawg-baseline" }],  // [4] AB strategies
-      [],                                                       // [5] quantum_mc_runs → (backtests empty, no call N+5 for quantum)
-                                                                // Note: when backtests=[], quantum returns early before [5]
-                                                                // So [5] is actually broker_accounts for AB strategy
+      [{ cnt: "0" }],                                           // [1] checkBrokerTapeSourceActive (production_trades count) — new pre-existing unconditional call
+      [],                                                       // [2] paper_trades → 0
+      [],                                                       // [3] SHADOW strategies → none
+      [],                                                       // [4] completed backtests → none
+      [{ id: abStratId, paperAccountRouting: "slumdawg-baseline" }],  // [5] AB strategies
+      [],                                                       // [6] quantum_mc_runs → (backtests empty, no call N+6 for quantum)
+                                                                // Note: when backtests=[], quantum returns early before [6]
+                                                                // So [6] is actually broker_accounts for AB strategy
       [],                                                       // broker_accounts → MISSING → orphan
     );
 

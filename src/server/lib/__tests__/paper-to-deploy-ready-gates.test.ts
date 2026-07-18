@@ -211,6 +211,10 @@ function buildPassInput(): PaperToDeployReadyGateInput {
       reason: "composite.healthy",
     },
     frozenPolicy: frozenPolicyPass,
+    // 85e1500b (2026-07-12) hardened bif-gate.ts's legacy-null path to fail-CLOSED
+    // (was fail-open grandfather-pass). A clean bifInput is required for the "happy
+    // path" fixture to still reach PASS.
+    bifInput: { bif: 1.2, kEff: 20 },
   };
 }
 
@@ -281,7 +285,7 @@ describe("evaluatePaperToDeployReadyGates", () => {
       expect(JSON.stringify(result)).toContain("bif.computation_error_fail_closed");
     });
 
-    it("freshscan7 MED control: bif=null WITHOUT computationError still grandfather-passes (legacy Wave-3 null)", () => {
+    it("NOW BLOCKS (85e1500b hardening superseded grandfather pass) — freshscan7 MED control: bif=null WITHOUT computationError still grandfather-passes (legacy Wave-3 null)", () => {
       // The fix must NOT block a genuine pre-Wave-3 legacy null (computationError absent/false).
       setAllGatesPass();
       const input = buildPassInput();
@@ -289,7 +293,9 @@ describe("evaluatePaperToDeployReadyGates", () => {
 
       const result = evaluatePaperToDeployReadyGates(input);
 
-      expect(result.passed).toBe(true);
+      expect(result.passed).toBe(false);
+      expect(result.failedGate).toBe("bif");
+      expect(JSON.stringify(result)).toContain("bif.legacy_null_pre_wave3");
     });
 
     it("does not block when b14HardGateEnabled=false even if survival_twin.passed===false", () => {
@@ -890,6 +896,11 @@ describe("evaluatePaperToDeployReadyGates", () => {
         orchGates: null,
         compositeShadow: null,
         frozenPolicy: frozenPolicyPass,
+        // 85e1500b (2026-07-12) hardened bif-gate.ts's own legacy-null path to fail-CLOSED
+        // (bif.legacy_null_pre_wave3) — that behavior is covered separately by the
+        // dedicated "NOW BLOCKS" test above. This fixture supplies a clean bifInput so
+        // this test continues to exercise the OTHER gates' legacy-null grandfather paths.
+        bifInput: { bif: 1.2, kEff: 20 },
       };
 
       const result = evaluatePaperToDeployReadyGates(legacyInput);

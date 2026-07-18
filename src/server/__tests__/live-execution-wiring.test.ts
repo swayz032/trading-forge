@@ -81,6 +81,7 @@ vi.mock("../lib/slumhouse/admin-session.js", () => ({
   checkPasscode:             vi.fn(),
   isAdminConfigured:         vi.fn(() => true),
   signAdminSession:          vi.fn(),
+  adminDiscordUserIdFromCookie: vi.fn(() => undefined),
   ADMIN_COOKIE_NAME:         "slumhouse_admin_sid",
   ADMIN_SESSION_TTL_SEC:     3600,
 }));

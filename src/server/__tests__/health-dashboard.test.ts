@@ -6,7 +6,9 @@
  * - 2-second timeout wrapper doesn't block the response indefinitely
  * - subsystems block contains postgres, ollama, python, n8n
  * - scheduler, circuitBreakers, paperSessions, metrics, memory, responseMs all present
- * - In dev mode (no API_KEY), auth is skipped
+ * - Auth is skipped via the explicit AUTH_DEV_BYPASS=true escape hatch (deep-scan
+ *   #13 CRITICAL, commit eceb6f8f, killed the old implicit NODE_ENV=development
+ *   bypass this test originally relied on — auth.ts now fails closed without it)
  */
 
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
@@ -17,6 +19,7 @@ let baseUrl: string;
 
 beforeAll(async () => {
   process.env.NODE_ENV = "development";
+  process.env.AUTH_DEV_BYPASS = "true";
   delete process.env.API_KEY;
 
   const { app } = await import("../index.js");
@@ -32,6 +35,9 @@ beforeAll(async () => {
 }, 15_000);
 
 afterAll(async () => {
+  // Don't leak the dev-only auth bypass into sibling test files sharing this
+  // vitest worker process.
+  delete process.env.AUTH_DEV_BYPASS;
   if (server) {
     await new Promise<void>((resolve, reject) => {
       server.close((err) => (err ? reject(err) : resolve()));

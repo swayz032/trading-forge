@@ -110,7 +110,10 @@ describe("Pass 6 Track B — A/B routing source-code analysis (paper-signal-serv
 
   it("routeOrder is only called when routingDecision === 'rl-challenger' AND resolvedAccountId is not null", () => {
     const s = readFileSync(PAPER_SIGNAL_PATH, "utf8");
-    expect(s).toContain('routingDecision === "rl-challenger" && resolvedAccountId !== null');
+    // A pre-existing family-invariant guard fix reads effectiveRoutingDecision, not
+    // the raw routingDecision — it overrides to "baseline" when a strategy released
+    // to family is erroneously flagged rl-challenger (operator-only routing).
+    expect(s).toContain('effectiveRoutingDecision === "rl-challenger" && resolvedAccountId !== null');
   });
 
   it("fail-soft catch block present — abRoutingErr logged but not rethrown", () => {

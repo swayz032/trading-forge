@@ -53,7 +53,7 @@ describe("Migration 0058: audit_log append-only", () => {
   it("provides a reversible DOWN migration", () => {
     const downPath = resolve(
       process.cwd(),
-      "src/server/db/migrations/0058_audit_log_append_only.down.sql"
+      "src/server/db/migrations/rollbacks/0058_audit_log_append_only.down.sql"
     );
     expect(existsSync(downPath)).toBe(true);
     const sql = readFileSync(downPath, "utf8");

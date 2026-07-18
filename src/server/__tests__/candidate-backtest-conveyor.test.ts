@@ -81,6 +81,7 @@ vi.mock("../db/schema.js", () => ({
 vi.mock("drizzle-orm", () => ({
   eq: vi.fn(() => "__eq__"),
   and: vi.fn(() => "__and__"),
+  asc: vi.fn(() => "__asc__"),
   sql: new Proxy(() => "__sql__", { get: () => () => "__sql__" }),
 }));
 
@@ -124,7 +125,9 @@ function setupSelectMock(runningCount: number, candidatesResult: unknown[]) {
     .mockReturnValueOnce({
       from: vi.fn(() => ({
         where: vi.fn(() => ({
-          limit: vi.fn(() => Promise.resolve(candidatesResult)),
+          orderBy: vi.fn(() => ({
+            limit: vi.fn(() => Promise.resolve(candidatesResult)),
+          })),
         })),
       })),
     });

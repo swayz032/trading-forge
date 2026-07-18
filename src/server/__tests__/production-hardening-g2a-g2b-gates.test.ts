@@ -71,26 +71,26 @@ describe("G2a — WFE degenerate IS (producer contract: wfe_overall=0.0, wfe_sta
 
 // ─── G2a: genuine legacy path stays GREEN (regression) ───────────────────────
 
-describe("G2a — genuine legacy path (wfe_status absent/undefined → grandfather pass)", () => {
-  it("passes when wfeOverall is null AND wfeStatus is undefined (key genuinely absent)", () => {
+describe("G2a — genuine legacy path (wfe_status absent/undefined → fail-closed per hardening)", () => {
+  it("blocks when wfeOverall is null AND wfeStatus is undefined (key genuinely absent)", () => {
     const result = evaluateWfeGate(null, 0.70, 0.50, undefined);
     expect(result.status).toBe<WfeGateStatus>("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
   });
 
-  it("passes when wfeOverall is null AND wfeStatus is null (pre-W27.5 backtest row)", () => {
+  it("blocks when wfeOverall is null AND wfeStatus is null (pre-W27.5 backtest row)", () => {
     const result = evaluateWfeGate(null, 0.70, 0.50, null);
     expect(result.status).toBe<WfeGateStatus>("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
   });
 
-  it("passes when wfeOverall is undefined AND no wfeStatus (omitted 4th arg — legacy caller)", () => {
+  it("blocks when wfeOverall is undefined AND no wfeStatus (omitted 4th arg — legacy caller)", () => {
     // Callers that do not yet pass wfeStatus (existing lifecycle-service.ts) remain unbroken
     const result = evaluateWfeGate(undefined);
     expect(result.status).toBe<WfeGateStatus>("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
   });
 });
 

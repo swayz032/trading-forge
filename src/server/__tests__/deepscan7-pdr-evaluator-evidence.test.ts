@@ -28,8 +28,11 @@ const STRAT_ID = "dddd0002-0000-0000-0000-000000000002";
  *   Gate 1 survival twin  → absent, no on-demand      → legacy_unavailable
  *   Gate 2 B14 CI         → scalar-only MC (pre-Pass-A) → legacy_null
  *   Gate 5 param drift    → no classification          → legacy_null
- *   Gate 6 DSR            → no wf_metadata             → legacy_proceed
- *   Gate 6.5 BIF          → null bif (pre-Wave-3)      → legacy_null
+ *   Gate 6 DSR            → dsr_pass:true supplied — 2026-07-12 "Harden validation
+ *                            promotion gates" (85e1500b) made the legacy/absent DSR
+ *                            path fail-CLOSED, no longer grandfathered           → complete
+ *   Gate 6.5 BIF          → bif:1.0/kEff:5 supplied — same hardening pass made the
+ *                            legacy/absent BIF path fail-CLOSED too              → complete
  *   Gate 7 orchestrator   → no data (grandfather env)  → legacy_proceed
  *   Gate 8 shadow         → observability-only         → complete
  *   Gate 9 frozen policy  → per-scenario
@@ -41,9 +44,14 @@ function legacyHeavyInput(overrides: Partial<PaperToDeployReadyGateInput> = {}):
     b14McDataAvailable: true,
     mcRuinCi: { probability_of_ruin_ci: null, probability_of_ruin: 0.02 },
     b15Battery: null,
-    walkForwardResults: null,
+    // 2026-07-12 "Harden validation promotion gates" (85e1500b) flipped DSR's and
+    // BIF's legacy/absent paths from grandfather-PASS to fail-CLOSED BLOCK (both
+    // predate this campaign's base SHA). This fixture must now supply passing
+    // evidence for those two gates to reach the PASS branch at all — every other
+    // gate below is still exercised in its legacy/incomplete state.
+    walkForwardResults: { wf_metadata: { dsr_pass: true } },
     orchGates: null,
-    bifInput: null,
+    bifInput: { bif: 1.0, kEff: 5 },
     compositeShadow: null,
     frozenPolicy: { id: STRAT_ID, config: {}, frozenPolicyHash: null },
     ...overrides,
@@ -68,9 +76,10 @@ describe("B3 (F-3) — evaluator surfaces incompleteGateCount on PASS results", 
     expect(result.needsFirstTimeFreeze).toBe(true);
     expect(result.gateEvidenceStatuses).toBeDefined();
     expect(result.incompleteGateCount).toBeDefined();
-    // 7 incomplete statuses expected: twin legacy_unavailable, CI legacy_null,
-    // drift legacy_null, DSR legacy_proceed, BIF legacy_null, orch legacy_proceed,
-    // frozen-policy legacy_proceed (null hash). Shadow is "complete".
+    // 5 incomplete statuses expected: twin legacy_unavailable, CI legacy_null,
+    // drift legacy_null, orch legacy_proceed, frozen-policy legacy_proceed (null
+    // hash). DSR and BIF are now "complete" (fixture supplies passing evidence —
+    // both gates' legacy paths fail-CLOSED post-85e1500b). Shadow is "complete".
     expect(result.incompleteGateCount!).toBeGreaterThanOrEqual(3);
     // Predicate parity with the cron: recompute and compare.
     const recount = result.gateEvidenceStatuses!.filter(

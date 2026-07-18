@@ -4366,8 +4366,12 @@ except Exception as e:
     );
     notifyWarning(
       "Bias-state recording stale",
-      `No regime (bias_state) row has been saved for today's session (last row: ${mx?.toISOString() ?? "none ever"}). ` +
-        `Regime history is not accumulating. If today is a market holiday, ignore this. Otherwise check the persist_failed audits.`,
+      appendFamilyGradePostscript(
+        `No regime (bias_state) row has been saved for today's session (last row: ${mx?.toISOString() ?? "none ever"}). ` +
+          `Regime history is not accumulating. If today is a market holiday, ignore this. Otherwise check the persist_failed audits.`,
+        "The bot's market-regime tracker hasn't recorded anything today.",
+        "No action needed while you're away — when back, ask Tony to check the bias-state persistence logs (unless today is a market holiday).",
+      ),
       { todayEt, lastBiasRow: mx?.toISOString() ?? null },
     );
   });
@@ -7347,6 +7351,9 @@ async function resumeActivePaperSessions(): Promise<void> {
  * Update rolling 30-day Sharpe ratio for all active strategies.
  */
 async function updateRollingSharpe() {
+  // wave-a-observability-corr-null regression guard: this cron's audit rows must
+  // carry a real correlationId, not the literal null every sibling cron job avoids.
+  const correlationId = randomUUID();
   // P1-4: Include DEPLOY_READY so promotion-gate inputs stay current.
   // Excludes CANDIDATE/TESTING/DECLINING/RETIRED/GRAVEYARD — those states
   // have no active paper sessions and should never be re-promoted from a
@@ -7504,7 +7511,7 @@ async function updateRollingSharpe() {
               decisionAuthority: "gate", status: "warning",
               input: { liveSharpe, btSharpe, decayRatio, reviewRatio } as Record<string, unknown>,
               result: { band: "review", note: "live Sharpe < 0.5x backtest baseline" } as Record<string, unknown>,
-              correlationId: null,
+              correlationId,
             }).catch(() => {});
             const now = Date.now();
             const last = _sharpeDecayAlertDedup.get(strat.id) ?? 0;
@@ -7525,7 +7532,7 @@ async function updateRollingSharpe() {
               decisionAuthority: "gate", status: "warning",
               input: { liveSharpe, btSharpe, decayRatio, warnRatio } as Record<string, unknown>,
               result: { band: "warn", note: "live Sharpe < 0.7x backtest baseline" } as Record<string, unknown>,
-              correlationId: null,
+              correlationId,
             }).catch(() => {});
           }
         }

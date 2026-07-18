@@ -106,7 +106,13 @@ describe("FIX 2 — logShadowSignal: try/catch + audit + correlationId", () => {
     ) as Record<string, unknown> | undefined;
 
     expect(auditRow).toBeDefined();
-    expect(auditRow!.entityId).toBe("sess-shadow-001");
+    // A pre-existing P0 hardening commit (audit-log-helper.ts::coerceEntityId) made
+    // non-UUID entityId values coerce to null, with the raw value preserved at
+    // input.entity_ref instead (prevents Postgres "invalid input syntax for type
+    // uuid" on the audit_log.entity_id column). "sess-shadow-001" is not a UUID.
+    expect(auditRow!.entityId).toBeNull();
+    const auditInput = auditRow!.input as Record<string, unknown>;
+    expect(auditInput.entity_ref).toBe("sess-shadow-001");
     expect(auditRow!.entityType).toBe("paper_session");
     expect(auditRow!.decisionAuthority).toBe("system");
     expect(auditRow!.status).toBe("info");

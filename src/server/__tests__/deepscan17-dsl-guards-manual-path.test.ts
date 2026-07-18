@@ -172,6 +172,10 @@ vi.mock("../lib/shadow-signal-divergence-loader.js", () => ({
 }));
 vi.mock("../lib/shadow-to-paper-gate.js", () => ({
   evaluateShadowToPaperGate: (...args: unknown[]) => mockShadowGate(...args),
+  // Production's manual SHADOW→PAPER path now imports getMinSampleSize() alongside
+  // evaluateShadowToPaperGate — the mock factory must provide it or the dynamic
+  // import destructure throws.
+  getMinSampleSize: vi.fn(() => 20),
 }));
 vi.mock("../lib/frozen-policy-contract.js", () => ({
   evaluateFrozenPolicyDriftAtPromotion: vi.fn(),

@@ -148,7 +148,7 @@ describe("FIX #1 — param_stability_status cpcv_exempt (JSONB round-trip)", () 
     const result = evaluateParameterDriftGate(cls, conf, status);
 
     expect(result.status).toBe("cpcv_exempt");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
     expect(result.status).not.toBe("legacy_null");
     expect(result.auditAction).not.toBe("lifecycle.parameter_drift_unavailable");

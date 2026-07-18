@@ -219,7 +219,9 @@ describe("deepscan14 H1 — Gate 2.5 (SHADOW → PAPER) reuses the SAME pure eva
 
   it("stamps the frozen-policy baseline via freezePolicyForStrategy on the SHADOW→PAPER cron path", () => {
     const region = src.slice(gate25Idx, gate25Idx + 44000);
-    expect(region).toContain("freezePolicyForStrategy(s.id, currentRegimeShCron)");
+    // freezePolicyForStrategy gained a required expectedFromState CAS-guard param
+    // (frozen-policy-contract.ts) — the call site now passes "SHADOW" as a 3rd arg.
+    expect(region).toContain('freezePolicyForStrategy(s.id, currentRegimeShCron, "SHADOW")');
   });
 
   it("does NOT re-implement BIF here — BIF is documented as already symmetric (PAPER→DEPLOY_READY only)", () => {
@@ -309,9 +311,14 @@ describe("deepscan14 H1 behavior — DSR walk-forward gate blocks at SHADOW→PA
     expect(result.status).toBe("blocked_dsr_unavailable");
   });
 
-  it("evaluateDsrWalkForwardGate proceeds (legacy grandfather) when dsr_pass is null/undefined", () => {
+  it("evaluateDsrWalkForwardGate fail-closed blocks (status is a MISNOMER) when dsr_pass is null/undefined", () => {
+    // goalscan (24664dc3) corrected b14-ci-gate.ts's docstring: "legacy_proceed" is a
+    // name kept for consumer-string compat (cron/manual-path/check-gate-parity.mjs match
+    // on it), but DSR is deliberately NOT grandfathered like WFE/B14/PBO — an
+    // overfitting-detection gate must not be skipped on a stale backtest. This test
+    // pre-dated that correction and pinned the old (wrong) "proceeds" expectation.
     const result = evaluateDsrWalkForwardGate(null);
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.status).toBe("legacy_proceed");
   });
 

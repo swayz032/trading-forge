@@ -203,9 +203,13 @@ describe("F-6: PAPER→DEPLOY_READY drift check infra error fails-closed", () =>
   });
 
   it("drift check catch block includes continue after audit row (blocks promotion)", () => {
-    const driftErrIdx = lifecycleSrc.indexOf("drift_check_infra_error");
-    // Find the next continue within ~800 chars after the audit action key
-    const windowAfter = lifecycleSrc.slice(driftErrIdx, driftErrIdx + 800);
+    // Anchor on "F-6 FIX" (unique to the cron-path catch block) instead of
+    // "drift_check_infra_error" — an earlier pre-existing commit reused that same
+    // audit action string at an earlier manual-path call site (which `return`s
+    // instead of `continue`s), so a plain indexOf() no longer lands here.
+    const driftErrIdx = lifecycleSrc.indexOf("F-6 FIX");
+    expect(driftErrIdx).toBeGreaterThan(-1);
+    const windowAfter = lifecycleSrc.slice(driftErrIdx, driftErrIdx + 1800);
     expect(windowAfter).toMatch(/continue\s*;/);
   });
 
@@ -312,8 +316,11 @@ describe("F-11: buryInGraveyard does NOT fire on DECLINING", () => {
 describe("F-12: Frankenstein gate applies to CANDIDATE→PAPER fast-track", () => {
   it("Frankenstein gate condition includes CANDIDATE as fromState", () => {
     // Find the gate condition
+    // A pre-existing commit widened this to also match SHADOW→PAPER (closing a gap
+    // where the Frankenstein gate never ran on the SHADOW ladder) — allow an
+    // optional trailing SHADOW arm instead of requiring exactly TESTING/CANDIDATE.
     expect(lifecycleSrc).toMatch(
-      /\(\s*fromState\s*===\s*["']TESTING["']\s*\|\|\s*fromState\s*===\s*["']CANDIDATE["']\s*\)\s*&&\s*toState\s*===\s*["']PAPER["']/,
+      /\(\s*fromState\s*===\s*["']TESTING["']\s*\|\|\s*fromState\s*===\s*["']CANDIDATE["'](?:\s*\|\|\s*fromState\s*===\s*["']SHADOW["'])?\s*\)\s*&&\s*toState\s*===\s*["']PAPER["']/,
     );
   });
 
@@ -328,7 +335,10 @@ describe("F-12: Frankenstein gate applies to CANDIDATE→PAPER fast-track", () =
 
   it("Frankenstein gate comment mentions CANDIDATE", () => {
     const frankGateIdx = lifecycleSrc.indexOf("A4 Frankenstein Gate");
-    const frankGateComment = lifecycleSrc.slice(frankGateIdx, frankGateIdx + 800);
+    // Window widened 800->1400: a pre-existing commit inserted its own SHADOW
+    // explanatory comment ahead of the pre-existing CANDIDATE context comment,
+    // pushing "CANDIDATE" past the original 800-char cutoff.
+    const frankGateComment = lifecycleSrc.slice(frankGateIdx, frankGateIdx + 1400);
     expect(frankGateComment).toContain("CANDIDATE");
   });
 });

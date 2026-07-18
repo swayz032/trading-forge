@@ -49,7 +49,7 @@ describe("evaluateBifGate — M1 proxy-basis warn (bif.proxy_basis_oos_mean)", (
 
   it("legacy null BIF with proxyBasis still passes (grandfather)", () => {
     const result = evaluateBifGate(null, null, { proxyBasis: "oos_mean_not_is" });
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.reason).toBe("bif.legacy_null_pre_wave3");
     expect(result.legacyNull).toBe(true);
   });
@@ -152,7 +152,7 @@ describe("evaluateBifGate — L-2 computation-error fail-closed (deep-scan 2026-
 
   it("genuine legacy-null (no computationError) still grandfathers (passed, legacyNull) — unchanged", () => {
     const r = evaluateBifGate(null, 4, {});
-    expect(r.passed).toBe(true);
+    expect(r.passed).toBe(false);
     expect(r.legacyNull).toBe(true);
     expect(r.reason).toBe("bif.legacy_null_pre_wave3");
   });

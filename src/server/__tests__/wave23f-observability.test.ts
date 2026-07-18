@@ -97,11 +97,11 @@ describe("Wave 23F Track G — multi-market bucket SSE emission point", () => {
     expect(graduatorSrc).toContain('"factory:multi_market_bucket"');
   });
 
-  it("factory:multi_market_bucket SSE fires only inside symbolsArray.length > 1 guard", () => {
+  it("factory:multi_market_bucket SSE fires only inside createdMarkets.length > 1 guard", () => {
     // The broadcastSSE for multi_market_bucket must appear after
-    // the if (symbolsArray.length > 1) guard in source order, and the guard
+    // the if (createdMarkets.length > 1) guard in source order, and the guard
     // must appear before the SSE call.
-    const guardIdx = graduatorSrc.indexOf("symbolsArray.length > 1");
+    const guardIdx = graduatorSrc.indexOf("createdMarkets.length > 1");
     const multiMarketSSEIdx = graduatorSrc.indexOf('"factory:multi_market_bucket"');
     expect(guardIdx).toBeGreaterThan(-1);
     expect(multiMarketSSEIdx).toBeGreaterThan(-1);
@@ -111,7 +111,7 @@ describe("Wave 23F Track G — multi-market bucket SSE emission point", () => {
   it("factory:multi_market_bucket does NOT fire at module scope (only guarded)", () => {
     // Verify that the call is inside the if block by checking the guard
     // appears within 2000 chars before the SSE call
-    const guardIdx = graduatorSrc.indexOf("symbolsArray.length > 1");
+    const guardIdx = graduatorSrc.indexOf("createdMarkets.length > 1");
     const multiMarketSSEIdx = graduatorSrc.indexOf('"factory:multi_market_bucket"');
     const distance = multiMarketSSEIdx - guardIdx;
     expect(distance).toBeGreaterThan(0);
@@ -120,9 +120,9 @@ describe("Wave 23F Track G — multi-market bucket SSE emission point", () => {
 
   it("factory:multi_market_bucket SSE payload includes symbols array", () => {
     const match = graduatorSrc.match(
-      /factory:multi_market_bucket[\s\S]{0,300}symbols:\s*symbolsArray/
+      /factory:multi_market_bucket[\s\S]{0,300}symbols:\s*createdMarkets/
     );
-    expect(match, "factory:multi_market_bucket SSE payload must include symbols: symbolsArray").toBeTruthy();
+    expect(match, "factory:multi_market_bucket SSE payload must include symbols: createdMarkets").toBeTruthy();
   });
 
   it("factory:multi_market_bucket SSE payload includes layer_coverage object", () => {

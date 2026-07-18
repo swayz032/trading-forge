@@ -174,15 +174,20 @@ describe("W3.4 Gann Box — concept name coverage", () => {
 
 describe("W3.4 Gann Box — UNSPECIFIED_ARCHETYPES", () => {
   it("includes gann_box_4h_continuation in regime-agnostic set", () => {
-    // Verify gann_box_4h_continuation appears AFTER the UNSPECIFIED_ARCHETYPES declaration
-    expect(GRADUATOR_SRC).toContain("UNSPECIFIED_ARCHETYPES");
-    const unspecIdx = GRADUATOR_SRC.indexOf("UNSPECIFIED_ARCHETYPES");
-    const gannInUnspec = GRADUATOR_SRC.indexOf('"gann_box_4h_continuation"', unspecIdx);
-    expect(gannInUnspec).toBeGreaterThan(unspecIdx);
-    // Verify the gann entry appears before the closing ]);
-    const closingBracket = GRADUATOR_SRC.indexOf("]);", gannInUnspec);
-    const nextSectionIdx = GRADUATOR_SRC.indexOf("// Determine regime", unspecIdx);
-    expect(gannInUnspec).toBeLessThan(nextSectionIdx);
+    // A pre-existing hardening commit hoisted the regime-agnostic archetype set to
+    // MODULE scope as REGIME_AGNOSTIC_ARCHETYPES (single source of truth); the local
+    // UNSPECIFIED_ARCHETYPES inside deriveRegime is now just an alias
+    // (`= REGIME_AGNOSTIC_ARCHETYPES;`) declared AFTER the canonical set, so anchor
+    // on the canonical declaration instead of the alias name.
+    expect(GRADUATOR_SRC).toContain("REGIME_AGNOSTIC_ARCHETYPES");
+    const regimeAgnosticIdx = GRADUATOR_SRC.indexOf("const REGIME_AGNOSTIC_ARCHETYPES");
+    const gannInUnspec = GRADUATOR_SRC.indexOf('"gann_box_4h_continuation"', regimeAgnosticIdx);
+    expect(gannInUnspec).toBeGreaterThan(regimeAgnosticIdx);
+    // Verify the gann entry appears before the closing ]); of the canonical set
+    const closingBracket = GRADUATOR_SRC.indexOf("]);", regimeAgnosticIdx);
+    expect(gannInUnspec).toBeLessThan(closingBracket);
+    // Verify the local alias still points at the canonical set
+    expect(GRADUATOR_SRC).toMatch(/const UNSPECIFIED_ARCHETYPES\s*=\s*REGIME_AGNOSTIC_ARCHETYPES;/);
   });
 });
 

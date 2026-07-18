@@ -90,7 +90,16 @@ vi.mock("../db/index.js", () => {
       update: vi.fn(() => ({
         set: vi.fn((vals: Record<string, unknown>) => {
           capturedPositionUpdates.push({ ...vals });
-          return { where: vi.fn().mockResolvedValue(undefined) };
+          // 2026-07-12 hardening: updatePositionPrices' MTM UPDATE now guards with
+          // .where(closedAt IS NULL).returning({id}) (idempotency-claim pattern,
+          // matching the tx-level update below) — the mock chain must expose
+          // .returning() returning a non-empty array or the guard treats every
+          // position as "closed concurrently" (or, absent .returning() at all, throws).
+          return { where: vi.fn().mockImplementation(() => {
+            const p: any = Promise.resolve(undefined);
+            p.returning = vi.fn().mockResolvedValue([{ id: "pos-mtm-updated" }]);
+            return p;
+          }) };
         }),
       })),
       transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn({

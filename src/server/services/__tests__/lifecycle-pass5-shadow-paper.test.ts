@@ -43,7 +43,9 @@ describe("Pass 5 Track C — SHADOW→PAPER evaluator wiring in lifecycle-servic
 
   it("broadcasts SSE on block", () => {
     const src = readFileSync(LIFECYCLE_PATH, "utf8");
-    expect(src).toContain("lifecycle:shadow_to_paper_blocked");
+    // Refactored into the shared LIFECYCLE_GATE_EVENTS constants object — assert the
+    // symbol reference, not the raw string value.
+    expect(src).toContain("LIFECYCLE_GATE_EVENTS.SHADOW_TO_PAPER_BLOCKED");
   });
 
   it("fail-CLOSED on infrastructure errors (catch (shadowGateErr) returns { success: false })", () => {

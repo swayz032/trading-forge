@@ -128,7 +128,20 @@ vi.mock("../db/index.js", () => ({
     update: vi.fn(() => ({
       set: vi.fn((payload: Record<string, unknown>) => {
         updateSetPayloads.push(payload);
-        return { where: vi.fn(() => Promise.resolve(undefined)) };
+        return {
+          where: vi.fn(() => {
+            // freshscan3 (54a6f88d, pre-campaign) added .returning({ id }) to the MTM
+            // UPDATE in updatePositionPrices (guards concurrent-close double-counting);
+            // this mock never grew a .returning() branch, so every test exercising that
+            // path threw "returning is not a function" and short-circuited before the
+            // exit-audit-row / correlationId / runner-trail assertions below it ran.
+            const p = Promise.resolve(undefined) as Promise<undefined> & {
+              returning?: () => Promise<Array<{ id: string }>>;
+            };
+            p.returning = () => Promise.resolve([{ id: "mtm-updated-1" }]);
+            return p;
+          }),
+        };
       }),
     })),
     transaction: vi.fn(async (fn: (tx: unknown) => unknown) => {

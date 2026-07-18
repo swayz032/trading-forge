@@ -38,13 +38,12 @@ const journal = JSON.parse(
 // because the runner keys `pending` on `when`). The migrations ARE idempotent (e.g. 0052
 // uses DROP CONSTRAINT IF EXISTS before each ADD), so even a re-run would be safe — no
 // action needed on these; this guard only blocks NEW collisions going forward.
-const ALLOWLISTED_DUP_WHENS: ReadonlySet<number> = new Set([
-  1776200000000, // 0044a_system_parameters_tables / 0052_fk_cascade_hardening
-  1748304000000, // 0147_quantum_mc_runs_replay_uniqueness / 0159_broker_accounts_ab_paper_routing
-  1748390400000, // 0148_backtests_compliance_mode / 0160_shadow_signals
-  1748563200000, // 0152_strategies_needs_revision_states / 0162_needs_archetype_queue
-  1748649600000, // 0153_pipeline_modes_autopause / 0164_slumhouse_users
-]);
+const ALLOWLISTED_DUP_WHENS: ReadonlySet<number> = new Set([]);
+// The 5 formerly-duplicate `when` collisions were RESOLVED in the campaign's base
+// commit ("migrations: give dup-when journal siblings unique whens (fixes boot
+// CRITICAL)") — each later sibling was bumped to when+1 (unique, order-preserving).
+// Zero duplicate-`when` groups remain in the journal. This guard now blocks ANY
+// new collision going forward.
 
 describe("deep-scan F — migration journal duplicate-`when` guard", () => {
   it("has NO new duplicate-`when` collisions beyond the allowlisted 5", () => {

@@ -173,7 +173,7 @@ describe("Wave 26 Pass G B3 — confluence-quality-audit.ts source contracts", (
   });
 
   it("exports AUTO_FLOOR_FACTORS set", () => {
-    expect(CONFLUENCE_AUDIT_SRC).toContain("export const AUTO_FLOOR_FACTORS");
+    expect(CONFLUENCE_AUDIT_SRC).toContain("export { AUTO_FLOOR_FACTORS");
     expect(CONFLUENCE_AUDIT_SRC).toContain("regime_match");
     expect(CONFLUENCE_AUDIT_SRC).toContain("structural_setup");
   });

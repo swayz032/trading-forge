@@ -59,6 +59,29 @@ vi.mock("../services/agent-service.js", () => ({
 vi.mock("../services/regime-service.js", () => ({ analyzeMarket: vi.fn() }));
 vi.mock("../services/robustness-service.js", () => ({ runRobustnessTest: vi.fn() }));
 
+// These 3 mocks isolate the windowing logic under test (single-pass / chunked-fallback
+// / chunked_oom_safe) from later, independently-shipped enrichment layers (recall pass,
+// coverage gate, coverage repair loop) that production now wires into the same request
+// path and that also call the shared LLM-extraction mock — without these, their calls
+// inflate this file's call-count assertions.
+vi.mock("../lib/extraction-coverage-gate.js", () => ({
+  runCoverageGate: vi.fn().mockResolvedValue({
+    speakerItems: [],
+    verdict: { covered: [], shallow: [], missing: [], coverage_pct: 1, verdict: "pass" },
+  }),
+}));
+vi.mock("../lib/extraction-coverage-repair.js", () => ({
+  runCoverageRepairLoop: vi.fn(),
+}));
+vi.mock("../lib/transcript-extractor-recall.js", () => ({
+  runRecallPass: vi.fn().mockResolvedValue({
+    patched: {},
+    recall: {},
+    appliedChanges: [],
+    failed: true,
+  }),
+}));
+
 // DB mock: insert chain must support .values(...).catch(...) and .returning() for audit rows.
 const auditInsertValues = vi.fn().mockReturnValue({
   catch: vi.fn().mockResolvedValue(undefined),
@@ -289,10 +312,18 @@ describe("W23G.7 — single-pass extraction (12K window)", () => {
     const transcript10K = (preamble + strategySection).slice(0, TARGET_LENGTH);
     expect(transcript10K.length).toBe(TARGET_LENGTH); // sanity-check fixture is exactly 10K
 
-    // First and only LLM call returns a valid strategy.
+    // entry_sequence (>=3 steps) is required so isThinResult() in agent.ts's
+    // THIN-RECHUNK gate does not classify this as "thin" and trigger an unwanted
+    // rechunk — the original fixture predates THIN-RECHUNK and never set this field.
     callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
       instrument_classification: "futures_primary",
-      strategies: [makeMesStrategy()],
+      strategies: [makeMesStrategy({
+        entry_sequence: [
+          { step: 1, action: "9 EMA crosses above 21 EMA on 5m bar" },
+          { step: 2, action: "wait for pullback to 21 EMA" },
+          { step: 3, action: "enter long on retest confirmation" },
+        ],
+      })],
     }));
 
     const r = await postScoutExtract({
@@ -310,7 +341,7 @@ describe("W23G.7 — single-pass extraction (12K window)", () => {
     expect(r.json.extraction_mode).toBe("single_pass");
   });
 
-  it("test 5: 15K transcript, empty first pass → chunked fallback fires with 3 chunks (4 total calls)", async () => {
+  it("test 5: 15K transcript, empty first chunk → OOM-safe 2-window chunked path recovers on chunk 2 (2 total calls)", async () => {
     // Build a 15K transcript where the first 12K is all preamble with no strategy.
     // The strategy appears in the last 3K (captured by the end chunk in fallback).
     const strategyAtEnd =
@@ -325,24 +356,27 @@ describe("W23G.7 — single-pass extraction (12K window)", () => {
     const transcript15K = (preamble + strategyAtEnd).slice(0, TARGET_LENGTH);
     expect(transcript15K.length).toBe(TARGET_LENGTH); // sanity-check
 
-    // Call 1 (first pass, 12K): empty — no strategy in first 12K chars.
+    // CHUNKING_THRESHOLD_CHARS was lowered 14000→12000 (a pre-existing, already-shipped
+    // change), so a 15K transcript now routes into the OOM-safe 2-window chunked path
+    // (chunkChars=10000, overlapChars=1000 → windows [0,10000) and [9000,15000)) instead
+    // of the old first-pass(12K)+3-way-fallback path this test originally exercised.
+    // Call 1 (window [0,10000)): empty — no strategy content in the preamble-only window.
     callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
       instrument_classification: "futures_primary",
       strategies: [],
       empty_reason: "no_strategy_content",
     }));
-    // Calls 2, 3 (start chunk, mid chunk): empty.
+    // Call 2 (window [9000,15000)): strategy found — entry_sequence (>=3 steps) required
+    // again so isThinResult()'s THIN-RECHUNK gate doesn't escalate the merged result.
     callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
-      strategies: [],
-      empty_reason: "no_strategy_content",
-    }));
-    callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
-      strategies: [],
-      empty_reason: "no_strategy_content",
-    }));
-    // Call 4 (end chunk): strategy found.
-    callScoutExtractLlmMock.mockResolvedValueOnce(JSON.stringify({
-      strategies: [makeMesStrategy({ concept_name: "ema_crossover_end_chunk" })],
+      strategies: [makeMesStrategy({
+        concept_name: "ema_crossover_end_chunk",
+        entry_sequence: [
+          { step: 1, action: "9 EMA crosses above 21 EMA on 5m bar" },
+          { step: 2, action: "wait for pullback to 21 EMA" },
+          { step: 3, action: "enter long on retest confirmation" },
+        ],
+      })],
     }));
 
     const r = await postScoutExtract({
@@ -354,10 +388,10 @@ describe("W23G.7 — single-pass extraction (12K window)", () => {
     expect(r.status).toBe(200);
     expect(r.json.extracted).toBe(true);
     expect(r.json.ideas).toHaveLength(1);
-    // 4 calls: 1 first pass + 3 chunks
-    expect(callScoutExtractLlmMock).toHaveBeenCalledTimes(4);
-    // Telemetry field must indicate chunked_fallback
-    expect(r.json.extraction_mode).toBe("chunked_fallback");
+    // 2 calls: window 1 (empty) + window 2 (recovers)
+    expect(callScoutExtractLlmMock).toHaveBeenCalledTimes(2);
+    // Telemetry field must indicate chunked_oom_safe
+    expect(r.json.extraction_mode).toBe("chunked_oom_safe");
   });
 
   it("test 6: success response contains extraction_mode and tokens_estimated fields", async () => {

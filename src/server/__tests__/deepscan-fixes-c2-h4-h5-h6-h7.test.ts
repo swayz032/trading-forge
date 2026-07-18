@@ -62,6 +62,18 @@ vi.mock("../index.js", () => ({
   },
 }));
 
+// alert-service.ts and model-router.ts import logger from ../lib/logger.js
+// (not ../index.js) — mock that target too so the C2/H6 logger.warn/info
+// assertions observe the real call sites.
+vi.mock("../lib/logger.js", () => ({
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
+
 vi.mock("../services/notification-service.js", () => ({
   notifyWarning: vi.fn(),
   notifyInfo: vi.fn(),
@@ -87,7 +99,7 @@ vi.mock("../lib/audit-log-helper.js", () => ({
 
 import { createAlert } from "../services/alert-service.js";
 import { db } from "../db/index.js";
-import { logger } from "../index.js";
+import { logger } from "../lib/logger.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 // Helper: reset and re-configure the db.insert chain mock.
@@ -410,9 +422,10 @@ describe("H5: recheckOllamaHealth resets OLLAMA_HEALTHY to true on healthy respo
       .mockResolvedValueOnce({
         // Phase 2: /api/generate probe — uses stream:false, so Ollama returns a
         // single JSON object; the probe calls .json() not a streaming reader.
+        // Phase 2 /api/chat probe — gates on eval_count > 0, not a .response field
         ok: true,
         status: 200,
-        json: vi.fn().mockResolvedValue({ response: '{"ok":true}' }),
+        json: vi.fn().mockResolvedValue({ message: { content: "ready" }, eval_count: 8 }),
       });
     vi.stubGlobal("fetch", fetchSpy);
 
@@ -482,9 +495,10 @@ describe("H6: emitLocalLlmDownSignal aborts EXTRACTION LOST when recheck returns
       })
       .mockResolvedValueOnce({
         // Phase 2: /api/generate probe (stream:false — .json(), not a reader)
+        // Phase 2 /api/chat probe — gates on eval_count > 0, not a .response field
         ok: true,
         status: 200,
-        json: vi.fn().mockResolvedValue({ response: '{"ok":true}' }),
+        json: vi.fn().mockResolvedValue({ message: { content: "ready" }, eval_count: 8 }),
       });
     vi.stubGlobal("fetch", fetchSpy);
 

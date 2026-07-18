@@ -159,11 +159,11 @@ describe("checkComplianceRuleDrift — compliance:drift_detected SSE emission (d
         oldHash: "old-hash-000",
         affectedStrategyCount: 2,
         severity: "critical",
-        correlationId: null,
       }),
     );
     expect(typeof payload.newHash).toBe("string");
     expect(typeof payload.timestamp).toBe("string");
+    expect(typeof payload.correlationId).toBe("string");
   });
 
   it("broadcasts severity=warning when no live strategies are affected", async () => {

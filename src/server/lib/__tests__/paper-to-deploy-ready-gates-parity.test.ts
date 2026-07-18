@@ -171,6 +171,11 @@ function baseInput(): PaperToDeployReadyGateInput {
       config: { stopLoss: 12, takeProfit: 18, contractSize: 1 },
       frozenPolicyHash: "aabbccdd11223344",
     },
+    // A pre-existing hardening commit fail-closed BIF's legacy-null path.
+    // evaluateBifGate() is NOT mocked in this file — it runs for real — so a clean
+    // BIF input is required for the "happy path" background gates to stay green;
+    // 1.5 <= BIF_WARN_THRESHOLD(2.0) → "bif.clean".
+    bifInput: { bif: 1.5, kEff: 8 },
   };
 }
 

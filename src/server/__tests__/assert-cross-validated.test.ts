@@ -5,6 +5,8 @@
  *   - 'graduated_bucket' (canonical cross-validated path)
  *   - 'clone' (operator-initiated — inherits parent's cross-validated tag)
  *   - 'b4_regen' (regen from declining strategy)
+ *   - 'evolved' (LLM-guided mutation child; passes auditGraduatedConfig before
+ *     INSERT — added deepscan11 Track P FIX 1, 2026-07-02)
  *   - any source with tags including 'cross-validated'
  *
  * Guards every db.insert(strategies) call site from creating rows without
@@ -123,9 +125,13 @@ describe("assertCrossValidatedSource", () => {
   });
 
   it("empty tags array is not exempt for non-allowed sources", () => {
-    expect(() => assertCrossValidatedSource("evolved", [])).toThrow(
+    expect(() => assertCrossValidatedSource("unknown_source", [])).toThrow(
       "strategy_insert_violation",
     );
+  });
+
+  it("allows source=evolved without cross-validated tag (LLM-guided mutation child, Track P FIX 1)", () => {
+    expect(() => assertCrossValidatedSource("evolved", [])).not.toThrow();
   });
 
   it("evolved source with cross-validated tag IS allowed (parent had CV)", () => {

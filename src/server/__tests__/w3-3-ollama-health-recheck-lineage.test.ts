@@ -84,8 +84,10 @@ describe("recheckOllamaHealth — Group A", () => {
 
   it("A1: stuck false→true after successful 2-phase probe", async () => {
     // Phase 1: /api/tags returns model present
-    // Phase 2: /api/generate returns success
-    const targetModel = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e2b";
+    // Phase 2: /api/chat returns success (a pre-existing false-negative fix switched
+    // the probe from /api/generate to /api/chat + eval_count>0). Default model
+    // matches the pre-existing tower-model-consolidation default (gemma4:e4b-it-qat).
+    const targetModel = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat";
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
@@ -93,7 +95,7 @@ describe("recheckOllamaHealth — Group A", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ response: '{"ok":true}' }),
+        json: async () => ({ message: { content: "ready" }, eval_count: 8 }),
       });
 
     expect(__getOllamaHealthyForTests()).toBe(false); // starts stuck false
@@ -158,8 +160,9 @@ describe("recheckOllamaHealth — Group A", () => {
     expect(__getOllamaHealthyForTests()).toBe(false);
   });
 
-  it("A6: model name with prefix match counts (e.g. gemma4:e2b registered as gemma4)", async () => {
-    // Ollama sometimes returns just the base name "gemma4" in tags; startsWith check covers it
+  it("A6: model name with prefix match counts (e.g. gemma4:e4b-it-qat registered as gemma4)", async () => {
+    // Ollama sometimes returns just the base name "gemma4" in tags; startsWith check covers it.
+    // Phase 2 uses the /api/chat + eval_count>0 shape (pre-existing false-negative fix).
     mockFetch
       .mockResolvedValueOnce({
         ok: true,
@@ -167,7 +170,7 @@ describe("recheckOllamaHealth — Group A", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ response: '{"ok":true}' }),
+        json: async () => ({ message: { content: "ready" }, eval_count: 8 }),
       });
 
     __setOllamaHealthyForTests(false);

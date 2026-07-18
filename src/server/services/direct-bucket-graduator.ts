@@ -1904,6 +1904,12 @@ export async function graduateBucketDirectly(opts: {
     breaker_block: { identifier: /breaker|failed.swing|flipped/i, context: [/retest|return/i] },
     bounce_off_level: { identifier: /bounce|reject|ma.{0,10}support|ma.{0,10}resistance|moving.average.{0,15}(level|zone|touch)|price.{0,10}(test|touch).{0,10}(ema|sma|ma)/i, context: [/support|resistance|level/i] },
     ict_bias_aligned_continuation: { identifier: /bias|htf.{0,10}(long|short|bull|bear)|continuation/i, context: [/bos|break.of.structure|choch|change.of.character/i, /fvg|fair.value.gap/i] },
+    // W3.4 (2026-06-22) added gann_box_4h_continuation to ARCHETYPE_REGISTRY and to
+    // the routing-keyword map above (line ~599) but never to this mechanic-keyword
+    // coverage map — surfaced by the W7 campaign close-out full-suite audit
+    // (wave9-archetype-mechanic-coverage.test.ts). Mirrors the routing keywords'
+    // gann-box/fib-zone identifier + 4H-continuation/retracement context.
+    gann_box_4h_continuation: { identifier: /gann.{0,6}box|gann.{0,6}(fib|fibonacci|zone|level|square)|optimum.{0,12}(zone|fib|fibonacci|retrace|entry)/i, context: [/(4h|4.hour|four.hour).{0,12}(candle|box|impulse|impulsive|continuation)/i, /retrace|pullback|impulse/i] },
   };
 
   let mechanicKeywordErrors: string[] = [];

@@ -164,11 +164,15 @@ describe("Wave 9 P2D: evolution-service — tag propagation logic", () => {
     expect(childTags).toContain("evolved");
   });
 
-  it("parent without cross-validated tag causes assertCrossValidatedSource to throw", () => {
+  it("source=evolved is unconditionally exempt regardless of parent tags (auditGraduatedConfig gates evolution INSERT instead)", () => {
     const parentTags = ["dsl-compiled"]; // no cross-validated
     const childTags = [...parentTags, "evolved"];
-    // P2D: if parent lacks cross-validated, assertCrossValidatedSource will throw
-    expect(() => assertCrossValidatedSource("evolved", childTags)).toThrow("strategy_insert_violation");
+    // A pre-existing commit added "evolved" to assertCrossValidatedSource's
+    // EXEMPT_SOURCES unconditionally — evolution-service children are no longer
+    // gated by tag inheritance here; they're gated by auditGraduatedConfig pre-tx
+    // instead. So this call must NOT throw even when the parent lacks the
+    // cross-validated tag.
+    expect(() => assertCrossValidatedSource("evolved", childTags)).not.toThrow();
   });
 });
 

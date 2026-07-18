@@ -76,11 +76,14 @@ describe("Wave 9 — ARCHETYPE_MECHANIC_KEYWORDS full coverage", () => {
     expect(orphans, `MECHANIC_KEYWORDS keys not in ARCHETYPE_REGISTRY: [${orphans.join(", ")}]`).toEqual([]);
   });
 
-  it("counts match: 38 registry entries, 38 mechanic keyword entries", () => {
+  it("counts match: 39 registry entries, 39 mechanic keyword entries", () => {
     // Wave hardening 2026-06-22, CI-trust: 6 new archetypes (fvg, judas_swing, silver_bullet,
     // breaker_block, bounce_off_level, ict_bias_aligned_continuation) added to both sides.
-    expect(registryKeys.length).toBe(38);
-    expect(mechanicKeys.length).toBe(38);
+    // W7 campaign close-out (2026-07-17): gann_box_4h_continuation (added to
+    // ARCHETYPE_REGISTRY by W3.4, 2026-06-22) was missing its MECHANIC_KEYWORDS
+    // entry — this test's own coverage-gap check above caught it; closed same-wave.
+    expect(registryKeys.length).toBe(39);
+    expect(mechanicKeys.length).toBe(39);
   });
 });
 

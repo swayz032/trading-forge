@@ -387,9 +387,13 @@ describe("Pass 4.5 Track B — lifecycle-service.ts gate block source contract",
 
   it("gate returns { success: false } on block (not silent skip)", () => {
     // The block path must call `return { success: false, error: ... }`
-    // We verify the pattern exists after the archetype_gateway_bypass_blocked audit
+    // We verify the pattern exists after the archetype_gateway_bypass_blocked audit.
+    // Scope the search to start AFTER blockIdx: a pre-existing commit added an
+    // EARLIER, unrelated archetype_gateway_env_missing gate that reuses the
+    // identical `return { success: false, error: blockReason };` text — an unscoped
+    // indexOf() finds that earlier occurrence instead.
     const blockIdx = source.indexOf("lifecycle.archetype_gateway_bypass_blocked");
-    const successFalseIdx = source.indexOf("return { success: false, error: blockReason }");
+    const successFalseIdx = source.indexOf("return { success: false, error: blockReason }", blockIdx);
     expect(blockIdx).toBeGreaterThan(0);
     expect(successFalseIdx).toBeGreaterThan(blockIdx);
   });

@@ -62,7 +62,35 @@ vi.mock("../db/index.js", () => {
   return { db: dbMock };
 });
 
-vi.mock("../routes/sse.js", () => ({ broadcastSSE: vi.fn() }));
+vi.mock("../routes/sse.js", () => ({
+  broadcastSSE: vi.fn(),
+  // A pre-existing commit added a new DSL guards hard gate to the manual
+  // promotion path (deepscan17); it reads LIFECYCLE_GATE_EVENTS.DSL_GUARDS_EVALUATED
+  // to broadcast its own SSE event. Without this export the read throws, and the
+  // gate's own try/catch fails CLOSED (lifecycle.dsl_guards_gate_error_fail_closed),
+  // masking every scenario this file actually means to test underneath it.
+  LIFECYCLE_GATE_EVENTS: {
+    AUTO_GRAVEYARD: "lifecycle:auto_graveyard",
+    PROMOTION_EVIDENCE_INCOMPLETE: "lifecycle:promotion_evidence_incomplete",
+    B14_EVALUATED: "lifecycle:b14_evaluated",
+    WFE_EVALUATED: "lifecycle:wfe_evaluated",
+    PARAMETER_DRIFT_EVALUATED: "lifecycle:parameter_drift_evaluated",
+    BIF_EVALUATED: "lifecycle:bif_evaluated",
+    PBO_EVALUATED: "lifecycle:pbo_evaluated",
+    SHADOW_DIVERGENCE_EVALUATED: "lifecycle:shadow_divergence_evaluated",
+    DSL_GUARDS_EVALUATED: "lifecycle:dsl_guards_evaluated",
+  },
+  // The PBO gate (also touched by the manual TESTING->PAPER path) reads
+  // WAVE29_EVENTS.PBO_EVALUATED to broadcast its own SSE event.
+  WAVE29_EVENTS: {
+    SHADOW_LOGGED: "signal:shadow_logged",
+    PBO_EVALUATED: "lifecycle:pbo_evaluated",
+    SHADOW_DIVERGENCE_EVALUATED: "lifecycle:shadow_divergence_evaluated",
+    RL_AB_ROUTED: "signal:rl_ab_routed",
+    RL_TRAINING_COMPLETED: "quantum_rl:training_completed",
+    RL_KILL_SWITCH_ENGAGED: "quantum_rl:kill_switch_engaged",
+  },
+}));
 vi.mock("./alert-service.js", () => ({
   AlertFactory: { deployReady: vi.fn().mockResolvedValue(undefined), decayAlert: vi.fn().mockResolvedValue(undefined) },
 }));
@@ -96,6 +124,19 @@ vi.mock("./frankenstein-service.js", () => ({
 vi.mock("../lib/audit-log-helper.js", () => ({ insertAuditRow: vi.fn().mockResolvedValue(undefined) }));
 vi.mock("../lib/metrics-registry.js", () => ({
   strategyPromotions: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  // A pre-existing commit added several counters to metrics-registry.ts that
+  // lifecycle-service.ts imports by name. Complete the mock to match the
+  // known-good pattern in the sibling test deepscan17-dsl-guards-manual-path.test.ts.
+  pboBlocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  lifecycleShadowPromotionsTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  autoGraveyardTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  bifGateEvaluationsTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  slippageSurvivalBlocksTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  auditWriteFailuresTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  b14GateTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  wfeGateTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  parameterDriftGateTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
+  dslGuardsGateTotal: { labels: vi.fn().mockReturnValue({ inc: vi.fn() }) },
 }));
 vi.mock("./multi-firm-promotion-service.js", () => ({
   evaluateMultiFirmEligibility: vi.fn().mockResolvedValue(undefined),
@@ -162,12 +203,17 @@ function makeAwaitableSelectChain(rows: unknown[]) {
 
 // Wire db.select to return different rows depending on call count.
 // Call 1: strategy row (pre-tx read)
-// Call 2: backtest evidence (id + forgeScore + resultExtras + createdAt)
-// Call 3: MC run
-// Call 4: QMC shadow (empty)
-// Call 5: staleness check (backtest.createdAt)
-// Call 6: resultExtras gate read
-// Call 7: frankenstein gate
+// Call 2: DSL guards gate read (a pre-existing commit added this call, which runs
+//         BEFORE the evidence block below on every TESTING→PAPER / SHADOW→PAPER
+//         manual promotion). Reuses the backtest row shape (only .resultExtras is
+//         read); fixtures never set resultExtras.dsl_guards so the gate
+//         legacy-proceeds and does not block.
+// Call 3: backtest evidence (id + forgeScore + resultExtras + createdAt)
+// Call 4: MC run
+// Call 5: QMC shadow (empty)
+// Call 6: staleness check (backtest.createdAt)
+// Call 7: resultExtras gate read
+// Call 8: frankenstein gate
 // Subsequent: empty
 function wireSelectCalls(mockDb: MockDb, resultExtras: unknown) {
   const strategy = makeStrategy("TESTING");
@@ -177,18 +223,53 @@ function wireSelectCalls(mockDb: MockDb, resultExtras: unknown) {
     resultExtras,
     createdAt: new Date(),  // fresh backtest
   };
-  const mcRun = { probabilityOfRuin: "0.1" };
+  // A pre-existing hardening commit ("Harden validation promotion gates") made
+  // the B14 CI gate fail-CLOSED when riskMetrics.probability_of_ruin_ci is
+  // absent (previously grandfathered) — this fixture predates that hardening and
+  // never supplied it, so the manual TESTING->PAPER path's B14 gate now blocks
+  // before ever reaching the resultExtras invariant gate this file means to test.
+  // ci_high=0.1 is under the default 0.20 threshold, so B14 passes clean.
+  const mcRun = {
+    probabilityOfRuin: "0.1",
+    riskMetrics: {
+      probability_of_ruin_ci: {
+        point_estimate: 0.1,
+        ci_low: 0.05,
+        ci_high: 0.1,
+        ci_method: "bca",
+        n_resamples: 1000,
+        standard_error: 0.01,
+      },
+    },
+  };
 
-  let callCount = 0;
-  mockDb.select.mockImplementation(() => {
-    callCount++;
-    if (callCount === 1) return makeAwaitableSelectChain([strategy]);
-    if (callCount === 2) return makeAwaitableSelectChain([backtest]);
-    if (callCount === 3) return makeAwaitableSelectChain([mcRun]);
-    if (callCount === 4) return makeAwaitableSelectChain([]);  // QMC shadow
-    if (callCount === 5) return makeAwaitableSelectChain([{ createdAt: new Date() }]);  // staleness
-    if (callCount === 6) return makeAwaitableSelectChain([{ resultExtras }]);  // invariant gate
-    if (callCount === 7) return makeAwaitableSelectChain([{ id: "bt-uuid-1" }]);  // frankenstein
+  // Dispatch by the SHAPE of the requested columns (Object.keys of the .select({...})
+  // arg) rather than by positional call count. The manual TESTING->PAPER path makes
+  // 11 real db.select() calls across strategy row / DSL guards / backtest evidence /
+  // MC-survival-floor / QMC-shadow-advisory / staleness / invariant-gate (x2) /
+  // hard-gate-parity walkForwardResults / a 2nd MC-survival-style read / and the B14
+  // CI gate's own riskMetrics read — several were added by separate pre-existing
+  // hardening commits at different times, and a positional callCount queue has
+  // repeatedly drifted out of sync as a result (the exact class of bug this file's
+  // own "resultExtras is not found" / "B14 ci_high=unavailable" failures trace to).
+  // Keying on column shape is immune to a later commit inserting a new call anywhere
+  // in the sequence.
+  mockDb.select.mockImplementation((cols?: unknown) => {
+    const keys = cols && typeof cols === "object" ? Object.keys(cols as object).sort().join(",") : "";
+    if (keys === "") return makeAwaitableSelectChain([strategy]);
+    if (keys === "resultExtras") return makeAwaitableSelectChain([{ resultExtras }]);
+    if (keys === "createdAt,forgeScore,id,resultExtras") return makeAwaitableSelectChain([backtest]);
+    if (keys === "probabilityOfRuin") return makeAwaitableSelectChain([{ probabilityOfRuin: "0.1" }]);  // MC-survival-floor checks (survivalRate=0.9, passes)
+    if (keys === "confidenceInterval,estimatedValue") return makeAwaitableSelectChain([]);  // QMC shadow — advisory only, never gates
+    if (keys === "createdAt") return makeAwaitableSelectChain([{ createdAt: new Date() }]);  // staleness — fresh backtest
+    // hard-gate parity block — also feeds the DSR walk-forward gate, which (like
+    // B14/BIF) was hardened to fail-CLOSED on absent dsr_pass by the same
+    // pre-existing "Harden validation promotion gates" commit.
+    if (keys === "walkForwardResults") return makeAwaitableSelectChain([{ walkForwardResults: { wf_metadata: { dsr_pass: true } } }]);
+    if (keys === "probabilityOfRuin,riskMetrics") return makeAwaitableSelectChain([mcRun]);  // B14 CI gate's own read
+    if (keys === "id") return makeAwaitableSelectChain([{ id: "bt-uuid-1" }]);  // frankenstein gate
+    if (keys === "dsl") return makeAwaitableSelectChain([{ dsl: { exit_params: { style: "c" } } }]);  // wf_mode_insufficient's Style-C runner check
+    if (keys === "config,id") return makeAwaitableSelectChain([{ id: "strat-inv-1", config: {} }]);  // freezePolicyForStrategy's own strategy read
     return makeAwaitableSelectChain([]);
   });
 }
@@ -211,6 +292,14 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
     mockDb._txInner.update.mockReturnValue({ set: vi.fn().mockReturnValue(setChain) });
     mockDb._txInner.select.mockReturnValue(mockDb._txInner._selectChain);
     mockDb._txInner._selectChain._setValue([]);
+
+    // freezePolicyForStrategy (frozen-policy-contract.ts) calls db.update(...) directly
+    // (NOT via tx) with its own CAS guard requiring a non-empty .returning() — the
+    // module-level mock factory's default db.update chain always resolves to [],
+    // which trips the guard's "concurrent promotion" race-block path unconditionally.
+    const topWhereChain = { returning: vi.fn().mockResolvedValue([{ id: "strat-inv-1" }]) };
+    const topSetChain = { where: vi.fn().mockReturnValue(topWhereChain) };
+    mockDb.update.mockReturnValue({ set: vi.fn().mockReturnValue(topSetChain) });
   });
 
   it("blocks TESTING→PAPER when invariants.overall_passed=false and writes invariant_blocked audit row", async () => {
@@ -237,6 +326,11 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
   it("allows TESTING→PAPER when invariants.overall_passed=true", async () => {
     const resultExtras = {
       invariants: { overall_passed: true, critical_failures: [] },
+      // wf_mode_insufficient gate (separate from the invariant gate under test)
+      // requires wf_metadata.mode==="cpcv" — a fresh CPCV walk-forward result —
+      // before TESTING/SHADOW→PAPER. A test whose invariants pass now falls
+      // through to this later gate instead of returning early at invariant_blocked.
+      wf_metadata: { mode: "cpcv" },
     };
     wireSelectCalls(mockDb, resultExtras);
 
@@ -248,6 +342,8 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
     const resultExtras = {
       invariants: { overall_passed: true, critical_failures: [] },
       parity_shadow: { passed: false, drift_pct: 3.2 },
+      // See "allows TESTING→PAPER..." test above for why wf_metadata.mode is required.
+      wf_metadata: { mode: "cpcv" },
     };
     wireSelectCalls(mockDb, resultExtras);
 

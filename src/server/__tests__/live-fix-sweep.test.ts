@@ -8,7 +8,7 @@
  *   F-5: Compliance firm ID case normalisation (lowercase)
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import * as nodeFs from "node:fs";
 import * as nodePath from "node:path";
 
@@ -57,15 +57,19 @@ describe("Kill Switch — Layer 2+3 real implementation (F-1)", () => {
 
   it("both layer 2 and 3 have fail-CLOSED error branches", () => {
     const source = nodeFs.readFileSync(killSwitchPath, "utf-8");
-    // Fail-closed means: on error → l2Halted = true / l3Halted = true
-    expect(source).toContain("l2Halted = true; // fail-CLOSED");
-    expect(source).toContain("l3Halted = true; // fail-CLOSED");
+    // A pre-existing refactor replaced the old l2Halted/l3Halted booleans with a
+    // shared `decision` object returned per-layer-check-function; fail-closed means
+    // the catch branch still sets halted:true on a DB/compute error for both layers.
+    expect(source).toContain('logger.error({ err }, "kill-switch L2: DLL check failed — blocking entries (fail-closed)");');
+    expect(source).toContain('logger.error({ err }, "kill-switch L3: trailing-DD check failed — blocking entries (fail-closed)");');
   });
 
   it("layer 2 queries active sessions by DLL threshold", () => {
     const source = nodeFs.readFileSync(killSwitchPath, "utf-8");
-    // Key phrase from the implementation
-    expect(source).toContain("DLL_HALT_PCT * dll");
+    // A pre-existing commit centralized the DLL-threshold math into
+    // cross-symbol-pnl.ts's evaluateCrossSymbolDll(); kill-switch.ts Layer 2 now
+    // calls it after querying active paperSessions rather than inlining the arithmetic.
+    expect(source).toContain("evaluateCrossSymbolDll(cumPnL, personalDllDollars)");
   });
 
   it("layer 3 compares against TRAILING_DD_BUFFER_DOLLARS", () => {
@@ -104,8 +108,11 @@ describe("Calendar gate — Python spawn storm prevention (F-2)", () => {
 
   it("on failure, safe-default is written to cache to prevent re-spawn", () => {
     const source = nodeFs.readFileSync(signalServicePath, "utf-8");
-    // Cache must be set even on error
-    expect(source).toContain("signalCalendarCache.set(key, CALENDAR_SAFE_DEFAULT)");
+    // A pre-existing fix replaced the unconditional cache-write with a
+    // fail-closed-aware entryToCache (spreads CALENDAR_SAFE_DEFAULT unless a Tier-1
+    // window is detected in-process) — the cache is still always written on failure.
+    expect(source).toContain("...CALENDAR_SAFE_DEFAULT,");
+    expect(source).toContain("signalCalendarCache.set(key, entryToCache)");
   });
 
   it("exports __resetCalendarFailLogForTests for test isolation", () => {
@@ -124,6 +131,14 @@ describe("Correlated position guard — Topstep multi-account exception (F-3)", 
     correlations: { MES_MNQ: 0.95, MES_MCL: 0.22 },
     threshold: 0.70,
   };
+
+  // A pre-existing hardening commit added an audit-row write to a fail-open path in
+  // correlated-position-guard.js, which now transitively imports db/index.ts even for
+  // this pure-logic test suite. Stub a dummy DATABASE_URL so the module loads without
+  // a real DB connection — same idiom as placeability-suite.test.ts.
+  beforeAll(() => {
+    process.env.DATABASE_URL = process.env.DATABASE_URL || "postgresql://x:x@localhost:5432/x";
+  });
 
   beforeEach(async () => {
     // Reset internal matrix so tests are isolated

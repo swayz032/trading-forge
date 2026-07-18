@@ -5,7 +5,11 @@
  * and verifies basic response shape. Uses native fetch (Node 18+).
  *
  * These tests require a running database (or will get degraded /health).
- * Auth is skipped in development mode when API_KEY is not set.
+ * Auth is skipped via the explicit AUTH_DEV_BYPASS=true escape hatch (deep-scan
+ * #13 CRITICAL, commit eceb6f8f, killed the old implicit NODE_ENV=development
+ * bypass — the Railway relay forwards public internet traffic to localhost, so
+ * "dev mode" alone is not a trust signal; auth.ts fails-closed without an
+ * explicit bypass or API_KEY).
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import type { Server } from "http";
@@ -14,8 +18,16 @@ let server: Server;
 let baseUrl: string;
 
 beforeAll(async () => {
-  // Force dev mode so auth middleware is skipped
+  // Force dev mode + the explicit auth bypass flag. NODE_ENV alone no longer
+  // skips auth (deep-scan #13 removed the implicit bypass); AUTH_DEV_BYPASS=true
+  // is the only escape hatch auth.ts honors for unauthenticated local requests.
+  // Also note: index.ts's first import (load-env.ts) runs dotenv with
+  // override:true, so a bare `delete process.env.API_KEY` here does NOT stick —
+  // .env's real API_KEY gets reloaded on import. AUTH_DEV_BYPASS is not present
+  // in .env, so setting it here survives the reload and is what actually lets
+  // these unauthenticated fetch() calls through.
   process.env.NODE_ENV = "development";
+  process.env.AUTH_DEV_BYPASS = "true";
   delete process.env.API_KEY;
 
   // Dynamic import to pick up env vars set above
@@ -33,6 +45,9 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  // Don't leak the dev-only auth bypass into sibling test files sharing this
+  // vitest worker process — several other files rely on auth failing closed.
+  delete process.env.AUTH_DEV_BYPASS;
   if (server) {
     await new Promise<void>((resolve, reject) => {
       server.close((err) => (err ? reject(err) : resolve()));

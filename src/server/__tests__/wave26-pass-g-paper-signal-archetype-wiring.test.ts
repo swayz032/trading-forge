@@ -113,8 +113,10 @@ describe("Wave 26 Pass G — paper-signal-service archetype audit wiring", () =>
     expect(HOOK_WINDOW).toMatch(/config\.side.*short.*long|long.*short.*config\.side/s);
   });
 
-  it("bar_timestamp ISO string converted from bar.timestamp", () => {
-    expect(HOOK_WINDOW).toContain("bar.timestamp");
+  it("bar_timestamp ISO string converted from closedBucketBar.timestamp", () => {
+    // M1c follow-up renamed from raw `bar` to `closedBucketBar` so the audit trail
+    // matches the decision's own bar (timeframe-parity fix).
+    expect(HOOK_WINDOW).toContain("closedBucketBar.timestamp");
     expect(HOOK_WINDOW).toContain("toISOString()");
     // Fallback chain covers number → string → new Date()
     expect(HOOK_WINDOW).toContain("new Date().toISOString()");

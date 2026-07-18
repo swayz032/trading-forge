@@ -135,6 +135,7 @@ vi.mock("../services/notification-service.js", () => ({
 const insertAuditRowMock = vi.fn().mockResolvedValue(undefined);
 vi.mock("../lib/audit-log-helper.js", () => ({
   insertAuditRow: insertAuditRowMock,
+  insertAuditRowSafe: vi.fn().mockResolvedValue(true),
 }));
 
 // ─── Python runner ────────────────────────────────────────────────────────────

@@ -367,6 +367,9 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
 
   it("T11: checkTranscriptExtractorOllamaHealth with gemma4 in tags sets OLLAMA_HEALTHY=true", async () => {
     const origFetch = globalThis.fetch;
+    // 2026-06-22 hardening added a Phase 2 test-inference probe (POST /api/chat) after
+    // Phase 1's /api/tags check — the mock response must also satisfy that probe's
+    // eval_count > 0 / no-error contract.
     globalThis.fetch = vi.fn().mockResolvedValue({
       ok: true,
       json: async () => ({
@@ -374,6 +377,8 @@ describe("wave26-transcript-extractor-gemma4-routing", () => {
           { name: "gemma4" },
           { name: "deepseek-r1:14b" },
         ],
+        message: { content: "ready" },
+        eval_count: 4,
       }),
     } as any);
     __setOllamaHealthyForTests(false); // start unhealthy

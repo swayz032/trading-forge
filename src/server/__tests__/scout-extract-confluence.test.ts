@@ -104,7 +104,7 @@ async function postScoutExtract(body: unknown): Promise<{ status: number; json: 
 }
 
 const VALID_MARKDOWN_MIN =
-  "MES strategy: enter long on EMA crossover with 14 ATR stop. ".repeat(3);
+  "MES strategy: enter long on the 9/21 EMA crossover, confirmed by the 21 EMA slope, with a 14 ATR stop. ".repeat(3);
 
 const BASE_STRATEGY = {
   name: "ema_pullback",

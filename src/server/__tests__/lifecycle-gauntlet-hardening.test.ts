@@ -361,8 +361,10 @@ describe("F-5 — Double WFE evaluation removed from PAPER→DEPLOY_READY cron p
     const allWfeCalls = (src.match(/evaluateWfeGate\(/g) ?? []).length;
     // TESTING→PAPER = 1 call; PAPER→DEPLOY_READY standalone = 0 (removed by F-5);
     // deepscan14 H1 = 1 call added at SHADOW→PAPER (Gate 2.5) to restore the full
-    // pre-paper gate stack on the canonical Wave 29 ladder. So total is now 2.
-    expect(allWfeCalls).toBeLessThanOrEqual(2);
+    // pre-paper gate stack on the canonical Wave 29 ladder; goalscan-crit WAVE 2
+    // added 1 more call to bring the manual _promoteStrategyInner path to parity
+    // with the cron gate stack. Total is now 3.
+    expect(allWfeCalls).toBeLessThanOrEqual(3);
   });
 });
 

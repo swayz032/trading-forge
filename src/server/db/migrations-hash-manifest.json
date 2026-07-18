@@ -202,5 +202,8 @@
   "0198_daily_reconciliation_expected_pnl_nullable.sql": "a473c9101c8bca9a9562f5072860769e4c4aa6dd25e85f21b4eecef7043790c7",
   "0199_c1_exchange_outage_dedup.sql": "acc21ea7321d8486f4c74e0f21e8326224c6c65c912a67f7019f3c1699cd033c",
   "0200_audit_log_no_truncate.sql": "fd63e2da5f1c0cc3fa86c54d3f4ce8c868d6a6ba09fee35c16fbd34e7757f107",
-  "0201_paper_positions_entry_contracts.sql": "9008ba413f4fd5f3d345d03996b321e9a7a4e9eb6cc7168a7a4914aa0c58e354"
+  "0201_paper_positions_entry_contracts.sql": "9008ba413f4fd5f3d345d03996b321e9a7a4e9eb6cc7168a7a4914aa0c58e354",
+  "0202_rails_nightly_reports.sql": "62d585dbeec592b2a64ff1d2ef8941f33f03152fc4caab0e5667abda229e9f51",
+  "0203_live_schema_drift_forward_fix.sql": "f34f959aa61ee1bed485e46c801dcc589af6d95c19b31ee809fb30c288999d20",
+  "0204_paper_pending_entries.sql": "5e46376e916d37a8402a60451c333a08d43a8b5eeb3dba3f14bd201513bc6d80"
 }

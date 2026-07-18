@@ -84,8 +84,12 @@ describe("FIX 1 — writeLockoutFromKillEvent: audit row + correlationId", () =>
   });
 
   it("emits strategy.lockout_written audit row with correlationId on success", async () => {
+    // entityId must be UUID-shaped: audit-log-helper.ts's coerceEntityId() (a
+    // pre-existing P0 hardening commit) nulls any non-UUID entityId before the
+    // audit_log insert (moves it to input.entity_ref instead) — "strat-fix1" isn't
+    // UUID-shaped so the old raw-string assertion never matches anymore.
     await writeLockoutFromKillEvent({
-      strategyId: "strat-fix1",
+      strategyId: "550e8400-e29b-41d4-a716-446655440002",
       killAuditId: "audit-kill-001",
       reason: "daily_loss_kill",
       correlationId: "corr-fix1-001",
@@ -100,7 +104,7 @@ describe("FIX 1 — writeLockoutFromKillEvent: audit row + correlationId", () =>
     ) as Record<string, unknown> | undefined;
     expect(lockoutAudit).toBeDefined();
 
-    expect(lockoutAudit!.entityId).toBe("strat-fix1");
+    expect(lockoutAudit!.entityId).toBe("550e8400-e29b-41d4-a716-446655440002");
     expect(lockoutAudit!.entityType).toBe("strategy");
     expect(lockoutAudit!.decisionAuthority).toBe("system");
     expect(lockoutAudit!.status).toBe("warning");

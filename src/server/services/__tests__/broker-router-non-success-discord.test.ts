@@ -292,7 +292,11 @@ describe("broker-router — non-success Discord visibility (Pass 4 Track C)", ()
 
     expect(mockNotifyWarning).toHaveBeenCalledOnce();
     const [title, body] = mockNotifyWarning.mock.calls[0] as [string, string];
-    expect(title).toContain("TradersPost reject");
+    // A pre-existing fix: a genuine timeout (statusCode==null) is AMBIGUOUS delivery
+    // — the broker may have already processed the order before the socket timed out
+    // — so broker-router.ts now uses a distinct, softer title ("timeout/network
+    // error") instead of the "reject" wording reserved for a real 4xx/5xx.
+    expect(title).toContain("TradersPost timeout/network error");
     // Degraded path: status code reported as "unknown"
     expect(body).toContain("unknown");
     // Family postscript still present in degraded path

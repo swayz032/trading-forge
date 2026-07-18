@@ -533,7 +533,7 @@ describe("Pass 2 Track C — pglite DB: exportability_blocked audit row round-tr
 
     // Use parameterized query to safely insert JSONB without manual escaping
     await ctx.pg.query(
-      `INSERT INTO audit_log (id, action, entity_type, entity_id, result, correlation_id, severity, metadata)
+      `INSERT INTO audit_log (id, action, entity_type, entity_id, result, correlation_id, status, input)
        VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8::jsonb)`,
       [
         TEST_AUDIT_ID,
@@ -547,7 +547,7 @@ describe("Pass 2 Track C — pglite DB: exportability_blocked audit row round-tr
           deductions: exportCheck.deductions,
         }),
         TEST_CORRELATION_ID,
-        "error",
+        "failure",
         JSON.stringify({ exportability_blocked: true }),
       ],
     );
@@ -564,8 +564,8 @@ describe("Pass 2 Track C — pglite DB: exportability_blocked audit row round-tr
     entity_id: string | null;
     result: Record<string, unknown> | null;
     correlation_id: string | null;
-    severity: string | null;
-    metadata: Record<string, unknown> | null;
+    status: string | null;
+    input: Record<string, unknown> | null;
     created_at: string;
   }
 
@@ -578,13 +578,13 @@ describe("Pass 2 Track C — pglite DB: exportability_blocked audit row round-tr
     expect(result.rows[0].action).toBe("strategy.lifecycle.exportability_blocked");
   });
 
-  it("audit_log row has entity_type='strategy' and severity='error'", async () => {
+  it("audit_log row has entity_type='strategy' and status='failure'", async () => {
     const result = await ctx.pg.query<AuditLogRow>(
       `SELECT * FROM audit_log WHERE entity_id = $1`,
       [STRATEGY_UUID_NONEXISTENT],
     );
     expect(result.rows[0].entity_type).toBe("strategy");
-    expect(result.rows[0].severity).toBe("error");
+    expect(result.rows[0].status).toBe("failure");
   });
 
   it("audit_log row carries deductions in result JSONB", async () => {

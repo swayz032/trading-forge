@@ -79,10 +79,10 @@ describe("MFFU 2026 Rule 9 — Bi-Weekly Payouts + 80/20 Split", () => {
     expect(acct!.payoutSplit).toBe(0.80);
   });
 
-  it("MFFU payout cycle is exactly 14 days", () => {
+  it("MFFU payout cycle is exactly 2 days (Builder plan, pays every 48h)", () => {
     const acct = getFirmAccount("mffu", "50k");
     expect(acct).not.toBeNull();
-    expect(acct!.payoutCycleDays).toBe(14);
+    expect(acct!.payoutCycleDays).toBe(2);
   });
 
   it("MFFU_PAYOUT_SPLIT named constant is 0.80 (no magic numbers)", () => {
@@ -257,8 +257,8 @@ describe("Canonical doc parity (sanity)", () => {
     expect(acct!.maxDrawdown).toBe(2000);
   });
 
-  it("MFFU 50K commissionPerSide is 0.62 (matches docs/prop-firm-rules-2026-mffu.md)", () => {
+  it("MFFU 50K commissionPerSide is 0.95 (matches docs/prop-firm-rules-2026-mffu.md)", () => {
     const acct = getFirmAccount("mffu", "50k");
-    expect(acct!.commissionPerSide).toBe(0.62);
+    expect(acct!.commissionPerSide).toBe(0.95);
   });
 });

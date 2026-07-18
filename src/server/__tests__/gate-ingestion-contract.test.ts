@@ -61,10 +61,10 @@ describe("buildBacktestArgs — B15 battery flag (G1a)", () => {
     expect(args).not.toContain("--b15-battery");
   });
 
-  it("omits --b15-battery when B15_BATTERY_ENABLED is unset (default false)", () => {
+  it("includes --b15-battery when B15_BATTERY_ENABLED is unset (default true)", () => {
     // env is deleted in beforeEach — this is the default state
     const args = buildBacktestArgs({ backtestId: "bt-1", mode: "walk_forward" });
-    expect(args).not.toContain("--b15-battery");
+    expect(args).toContain("--b15-battery");
   });
 
   it("includes --b15-battery when opts.b15BatteryEnabled=true (overrides env)", () => {

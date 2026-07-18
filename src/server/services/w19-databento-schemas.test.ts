@@ -66,8 +66,12 @@ describe("contract-specs-service", () => {
   it("hardcoded reference has correct multipliers", async () => {
     const { CONTRACT_SPECS_HARDCODED } = await import("./contract-specs-service.js");
 
-    expect(CONTRACT_SPECS_HARDCODED.ES.multiplier).toBe(50.0);
-    expect(CONTRACT_SPECS_HARDCODED.NQ.multiplier).toBe(20.0);
+    // A pre-existing safety fix made ES/NQ/CL MICRO ALIASES (matching MES/MNQ/MCL) —
+    // the full-size MINI values (50/20/1000) moved to MINI_SPECS_HARDCODED, gated
+    // behind contract_class="mini" + TF_PHASE_5_ENABLED, closing a 10x risk-inflation
+    // landmine if a literal ES/NQ/CL symbol reached a P&L path.
+    expect(CONTRACT_SPECS_HARDCODED.ES.multiplier).toBe(5.0);
+    expect(CONTRACT_SPECS_HARDCODED.NQ.multiplier).toBe(2.0);
     expect(CONTRACT_SPECS_HARDCODED.MES.multiplier).toBe(5.0);
     expect(CONTRACT_SPECS_HARDCODED.MNQ.multiplier).toBe(2.0);
     expect(CONTRACT_SPECS_HARDCODED.MCL.multiplier).toBe(100.0);
@@ -89,7 +93,7 @@ describe("contract-specs-service", () => {
     // DB mock returns empty array (no rows)
     const spec = await getContractSpec("ES");
     expect(spec.source).toBe("hardcoded_fallback");
-    expect(spec.multiplier).toBe(50.0);
+    expect(spec.multiplier).toBe(5.0);
     expect(spec.tickSize).toBe(0.25);
   });
 

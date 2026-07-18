@@ -53,6 +53,22 @@ vi.mock("../services/pipeline-control-service.js", () => ({
   isActive: vi.fn().mockResolvedValue(true),
 }));
 
+// broker-router.routeOrder() calls killSwitch.isHaltedForProduction() as its FIRST
+// gate (F-2 kill-switch supremacy, pre-existing — see kill-switch.ts). Without this
+// mock, the real isHaltedForProduction() runs against this file's generic db.select
+// mock (shaped for the broker_accounts/strategies lookups the tests under test
+// actually care about); getCurrentState()'s systemState row lookup gets a mismatched
+// row shape, evaluateAllKillSwitchLayers() throws internally, and the outer
+// try/catch fails CLOSED (halted=true) — every routeOrder() call in this file then
+// short-circuits to reason:"production_halt" before reaching the account/pipeline
+// logic the "broker-router: real-service coverage" and "cross-cutting" tests
+// actually exercise. Mirrors the working mock in the sibling broker-router.test.ts.
+vi.mock("../production/kill-switch.js", () => ({
+  killSwitch: {
+    isHaltedForProduction: vi.fn().mockResolvedValue(false),
+  },
+}));
+
 vi.mock("../routes/sse.js", () => ({
   broadcastSSE: vi.fn(),
 }));
@@ -75,6 +91,10 @@ vi.mock("../lib/credential-loader.js", () => ({
 
 vi.mock("../integrations/traderspost/client.js", () => ({
   submitWebhookOrder: vi.fn().mockResolvedValue({ success: true, statusCode: 200, responseBody: {} }),
+  // execution-hardening (8223e5c9, pre-campaign): routeOrder() derives a
+  // deterministic per-order idempotency key from this helper — mock never grew
+  // an export for it.
+  buildDeterministicIdempotencyKey: vi.fn(() => "test-idempotency-key"),
 }));
 
 vi.mock("../integrations/traderspost/webhook-builder.js", () => ({
@@ -669,7 +689,17 @@ describe("broker-router: real-service coverage (3 tests)", () => {
       routeOrder("acct-mffu-operator", signal),
     ]);
 
-    expect(auditRows.length).toBe(2);
+    // 2 rows per call (4 total for 2 concurrent calls): this file doesn't mock the
+    // compliance-gate subprocess check, so it fails and writes
+    // "broker_router.compliance_gate_failed" (documented availability tradeoff, W3A
+    // item 2 — left fail-open/continue, not fail-closed) before the order still
+    // proceeds to the final "broker_router.route_order" write. The real assertion
+    // this test cares about — no cross-call corruption — holds: each call's 2 rows
+    // are independently well-formed, not merged/overwritten.
+    expect(auditRows.length).toBe(4);
+    const actions = auditRows.map((r: any) => r.action);
+    expect(actions.filter((a: string) => a === "broker_router.compliance_gate_failed").length).toBe(2);
+    expect(actions.filter((a: string) => a === "broker_router.route_order").length).toBe(2);
   });
 
   // Test 19: DB failure path returns internal_error + audit row

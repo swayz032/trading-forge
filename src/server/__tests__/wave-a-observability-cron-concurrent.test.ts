@@ -51,7 +51,9 @@ describe("scheduler.ts — cronJobsConcurrent wiring in withRetry", () => {
   it("withRetry calls cronJobsConcurrent.dec() inside a finally block", () => {
     const src = readFileSync(resolve(BASE, "src/server/scheduler.ts"), "utf8");
     const fnStart = src.indexOf("async function withRetry(");
-    const fnBody = src.slice(fnStart, fnStart + 2500);
+    // A pre-existing commit added a DLQ-capture + databento-specific alert block to
+    // the try{} body, pushing finally{} past the original 2500-char window — widen the slice.
+    const fnBody = src.slice(fnStart, fnStart + 4000);
     expect(fnBody).toMatch(/finally\s*\{[\s\S]{0,100}cronJobsConcurrent\.dec\(\)/);
   });
 });

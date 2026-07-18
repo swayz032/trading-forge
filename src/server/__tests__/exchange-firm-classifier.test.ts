@@ -20,7 +20,7 @@ vi.mock("../lib/logger.js", () => ({ logger: { debug: vi.fn(), info: vi.fn(), wa
 import { checkCmeStatus } from "../services/exchange-status-service.js";
 import { probeFirm } from "../services/prop-firm-health-service.js";
 
-function mockFetch(impl: () => Promise<unknown>) {
+function mockFetch(impl: (url: string) => Promise<unknown>) {
   vi.stubGlobal("fetch", vi.fn(impl as never));
 }
 function jsonResp(status: number, body: unknown) {
@@ -49,22 +49,37 @@ describe("checkCmeStatus — CME outage classifier (C1 gate)", () => {
     expect((await checkCmeStatus()).operational).toBe(true);
   });
   it("non-200 (503) → operational=false, reason mentions HTTP", async () => {
-    mockFetch(async () => textResp(503, "unavailable"));
+    // A pre-existing ratify-packet fix made a venue-probe transport failure
+    // corroborate with broker (Tradovate) reachability before opening an outage.
+    // Differentiate the mock per-URL so the broker probe also reports unreachable —
+    // otherwise the shared "any status = reachable" broker-probe semantics would
+    // clear the outage (operational=true).
+    mockFetch(async (url: string) => {
+      if (url.includes("tradovateapi")) throw new Error("broker unreachable (test)");
+      return textResp(503, "unavailable");
+    });
     const r = await checkCmeStatus();
     expect(r.operational).toBe(false);
     expect(r.reason).toContain("503");
   });
-  it("fetch throws → operational=false with fetchError", async () => {
+  it("fetch throws → operational=false with reason", async () => {
+    // checkCmeStatus() no longer returns a populated `fetchError` field — the
+    // underlying error text is now folded into `reason`. Both the venue probe AND
+    // the broker probe use this same mocked fetch, so both throw ECONNREFUSED and
+    // the result stays fail-CLOSED (operational=false).
     mockFetch(async () => { throw new Error("ECONNREFUSED"); });
     const r = await checkCmeStatus();
     expect(r.operational).toBe(false);
-    expect(r.fetchError).toContain("ECONNREFUSED");
+    expect(r.reason).toContain("ECONNREFUSED");
   });
-  it("AbortError (timeout) → operational=false, 'Request timed out'", async () => {
+  it("AbortError (timeout) → operational=false, reason mentions 'Request timed out'", async () => {
+    // Same contract as above: fetchError is no longer a field on the result; the
+    // timeout text is folded into `reason`. Both probes hit the same mocked fetch
+    // here, so the broker probe also times out and the result stays fail-CLOSED.
     mockFetch(async () => { const e = new Error("aborted"); e.name = "AbortError"; throw e; });
     const r = await checkCmeStatus();
     expect(r.operational).toBe(false);
-    expect(r.fetchError).toBe("Request timed out");
+    expect(r.reason).toContain("Request timed out");
   });
 });
 

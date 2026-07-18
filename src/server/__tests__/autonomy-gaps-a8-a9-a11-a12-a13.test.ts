@@ -104,6 +104,7 @@ vi.mock("../db/index.js", () => ({
 // Without this mock, A-12 fail-open test (db.select throws → count=0 → below cap → spawn)
 // would block for 75 seconds (SCRIPT_TIMEOUT_MS) waiting for powershell.exe.
 vi.mock("child_process", () => ({
+  execFile: vi.fn(),
   spawn: vi.fn().mockImplementation(() => {
     let errorCb: ((err: Error) => void) | null = null;
     const child = {

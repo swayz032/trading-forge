@@ -65,7 +65,7 @@ describe("insertAuditRow — null correlationId warning", () => {
 
     await insertAuditRow({
       action: "test.action",
-      entityId: "abc-123",
+      entityId: "550e8400-e29b-41d4-a716-446655440001",
       entityType: "strategy",
       correlationId: null,
     } as Parameters<typeof insertAuditRow>[0]);
@@ -74,7 +74,7 @@ describe("insertAuditRow — null correlationId warning", () => {
     const warnCall = (logger.warn as ReturnType<typeof vi.fn>).mock.calls[0];
     expect(warnCall[0]).toMatchObject({
       action: "test.action",
-      entityId: "abc-123",
+      entityId: "550e8400-e29b-41d4-a716-446655440001",
       entityType: "strategy",
     });
     expect(warnCall[1]).toContain("correlation_id");

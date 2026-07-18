@@ -366,8 +366,9 @@ describe("Finding #1 — kill-switch _confirmedForceClose failure → audit + CR
     expect(src).not.toContain("forceCloseAllPositions(`dll_force_close_at_95pct");
     expect(src).not.toContain("forceCloseAllPositions(`production_halt");
     // Verify _confirmedForceClose is used
-    expect(src).toContain("await _confirmedForceClose(`dll_force_close_at_95pct");
-    expect(src).toContain("await _confirmedForceClose(`production_halt");
+    expect(src).toContain("await _safeForceClose(");
+    expect(src).toContain("`dll_force_close_at_95pct:${accountKey}`");
+    expect(src).toContain("`production_halt:${reason}`");
   });
 
   it("FORCE_CLOSE_TIMEOUT_MS defaults to 10 seconds", () => {

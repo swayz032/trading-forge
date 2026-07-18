@@ -181,7 +181,7 @@ describe("Wave 23H Fix 1 — C1 CME Outage Layer 6 fail-CLOSED", () => {
           error_message: cmeErr.message,
           layer: 6,
         }),
-        result: expect.objectContaining({ l6Halted: true }),
+        result: expect.objectContaining({ halted: true }),
       }),
     );
   });
