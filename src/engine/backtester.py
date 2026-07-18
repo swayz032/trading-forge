@@ -5621,9 +5621,9 @@ def run_backtest(
     gate_passed, gate_rejections = check_performance_gate(_gate_stats)
     gate_tier = classify_tier(_gate_stats)
     # Fix 1 / P1-F: Replace private _compute_forge_score (no crisis veto, no survival) with the
-    # authoritative performance_gate.compute_forge_score. MC/crisis/survival args are None
-    # here — they are not computed yet at this point in run_backtest(). compute_forge_score
-    # handles None gracefully (crisis_veto=False, survival_component=0).
+    # authoritative performance_gate.compute_forge_score. MC/crisis args are None here — they
+    # are not computed yet at this point in run_backtest(). compute_forge_score handles None
+    # gracefully (crisis_veto=False, mc component=0).
     #
     # P1-F NOTE: Single (non-walk-forward) backtests compute forge_score WITHOUT MC or crisis
     # results because MC runs AFTER this point. The forge_score here will be lower than the
@@ -5634,11 +5634,15 @@ def run_backtest(
     # Gate safety: compute_forge_score() without MC/crisis will NOT produce false positives —
     # a strategy passing forgeScore >= 50 without MC bonus is genuinely strong on core metrics.
     # It may produce false negatives (strategies that would pass only WITH MC bonus are deferred).
+    #
+    # W7 close-out fix (2026-07-18): survival_results IS computable here — unlike MC/crisis it
+    # only needs daily_pnl_records, already in scope. See _compute_survival_results_for_gate's
+    # docstring for why this was missing and what it gates (C4 TESTING->PAPER hard gate).
     _full_forge_result = _pgate_forge_score(
         _gate_stats,
         mc_results=None,
         crisis_results=None,
-        survival_results=None,
+        survival_results=_compute_survival_results_for_gate(daily_pnl_records, request.firm_key),
     )
     forge_score = _full_forge_result["score"]
     if not gate_passed:
@@ -6425,6 +6429,65 @@ def _compute_monthly_survival_stats(daily_pnl_records: list[dict]) -> dict:
         "avg_loss_on_red_days": round(avg_loss_red, 2),
         "avg_win_on_green_days": round(avg_win_green, 2),
     }
+
+
+# Canonical firms this repo supports (CLAUDE.md §6: Topstep primary, MFFU secondary).
+# survival_scorer's FIRM_PROFILES currently only has a "50K" account_type for each.
+_SURVIVAL_FIRM_KEY_MAP: dict[str, tuple[str, str]] = {
+    "topstep_50k": ("Topstep", "50K"),
+    "mffu_50k": ("MFFU", "50K"),
+}
+
+
+def _compute_survival_results_for_gate(
+    daily_pnl_records: list[dict], firm_key: Optional[str],
+) -> Optional[dict]:
+    """C4 gate input: score `daily_pnl_records` for prop-firm survival via
+    survival_scorer.survival_score(), for compute_forge_score()'s
+    `survival_results` param.
+
+    Previously every backtester.py call site passed `survival_results=None`
+    unconditionally (comment claimed "not computed yet at this point" —
+    true for the B14 Monte Carlo `mc_results`/crisis `crisis_results`, which
+    genuinely run later, but survival_score() only needs the daily P&L series
+    already available here). The result: `raw_survival_score` was
+    architecturally always 0.0, and once real backtests start flowing this
+    silently hard-blocks every TESTING->PAPER promotion at the C4 gate
+    (lifecycle-service.ts, `raw_survival_score < 60` -> block) regardless of
+    what firm_profiles.py says. Found + recorded during the $250-1K campaign's
+    W7 close-out (2026-07-18); fixed here.
+
+    If `firm_key` names a specific recognized firm/account (the
+    "topstep_50k"/"mffu_50k" convention this file already uses for
+    commission/contract-cap resolution elsewhere), score against exactly that
+    firm. Otherwise — the common case, most backtests aren't pinned to one
+    firm — score against BOTH canonical firms and take the WORST (minimum)
+    survival_score, so a strategy's C4 evidence never overstates survivability
+    for whichever firm it eventually deploys to. Mirrors this codebase's
+    existing "worst firm wins" convention for MC ruin estimates
+    (`ruin_firm` in mc_confidence.py).
+
+    Fails OPEN (returns None, logs a warning) on any error — a survival-score
+    computation failure must not crash or corrupt an otherwise-valid backtest;
+    compute_forge_score() already handles survival_results=None gracefully
+    (survival_component stays 0, matching the pre-fix behavior exactly).
+    """
+    if not daily_pnl_records:
+        return None
+    try:
+        from src.engine.survival.survival_scorer import survival_score
+
+        daily_pnls = [rec.get("pnl", 0.0) for rec in daily_pnl_records]
+        firms_to_score = (
+            [_SURVIVAL_FIRM_KEY_MAP[firm_key]]
+            if firm_key in _SURVIVAL_FIRM_KEY_MAP
+            else list(_SURVIVAL_FIRM_KEY_MAP.values())
+        )
+        scored = [survival_score(daily_pnls, firm, account_type) for firm, account_type in firms_to_score]
+        return min(scored, key=lambda s: s.get("survival_score", 0.0))
+    except Exception as exc:  # noqa: BLE001 - fail-open enrichment, never block the backtest
+        print(f"WARNING: survival_score computation failed (C4 gate input stays None): {exc}", file=sys.stderr)
+        return None
 
 
 def _compute_tier(avg_daily_pnl: float, winning_days: int, total_trading_days: int,
@@ -7747,11 +7810,13 @@ def run_class_backtest(
         gate_passed, gate_rejections = check_performance_gate(_gate_stats)
         gate_tier = classify_tier(_gate_stats)
         # Fix 1 (run_class_backtest path): use authoritative forge_score with crisis veto + survival
+        # W7 close-out fix (2026-07-18): survival_results wired in — see
+        # _compute_survival_results_for_gate's docstring.
         _full_forge_result_class = _pgate_forge_score_class(
             _gate_stats,
             mc_results=None,
             crisis_results=None,
-            survival_results=None,
+            survival_results=_compute_survival_results_for_gate(daily_pnl_records, firm_key),
         )
         if not gate_passed:
             print(f"Performance gate REJECTED: {'; '.join(gate_rejections[:3])}", file=sys.stderr)
