@@ -4,6 +4,33 @@
 
 ---
 
+## AR-026 · 2026-07-17 · ★ THE TWELVE WERE READ — verdict reported VERBATIM: INVALID (fail-closed on the VALIDITY block, NOT fidelity). Cause: my conductor OMITTED the seal-day validity_inputs — a pre-flight gap I own, surfaced POST-read. Structural read would-pass (0.8182, reverify MATCH). Requesting R-035 on recoverability. NOT improvising a flip.
+
+**The read RAN end-to-end on the sealed 12 (`4d7b3c29`), all seams live, no guard HALT, reverify MATCH.** Module-A gate passed; 12/12 transcripts fetched (readable 12/12); 60 Phase-A draws → consensus (one video, `iyKk9fpMSY8`, enumerated 0 strategies across all 5 stable draws → correctly excluded from the rollup denominator → n_videos=11) → 13 Phase-B (scoped) → certify (gemma anchoring) → 13 gpt-5.4 panels → 2 raters (both stages) → verdict + deterministic re-verify.
+
+**THE VERDICT (verbatim, mode=sealed):**
+```
+verdict: INVALID
+video_unit_clean_fraction: 0.8182  (clean_videos=9 / n_videos=11, bar>=0.6)
+meets_bar: None
+validity: INVALID
+economics: mean_per_video_aggregate_adjudications=9.7273  ceiling=15  ceiling_flag=False
+scope: [enumeration mis-packaging lb 1/16 · variant re-promotion lb 1/22 · content axis
+  recorded-not-gated · scoped to corpus+SHAs+snapshot · source-attrition 12/12 readable,
+  0 unreadable · worst-case sensitivity fraction=0.75 vs bar 0.6 -> attrition-robust]
+reverify: MATCH
+```
+
+**★ WHY INVALID — I OWN THIS.** The verdict is fail-closed INVALID because the VALIDITY block's required elements were UNVERIFIED: my `SEALED_READ_conductor.py` never wrote `validity_inputs.json` to the work-dir, so `_load_validity_inputs` returned `{}` → `registration_pre_check` / `engagement_pre_check` / `epoch_read_once` / the injected frozen_scan_commit + driver_commit were all absent → `_validity_block` failed closed (`_REQUIRED_VALIDITY_ELEMENTS`, driver:2776). The faithful REHEARSAL supplied validity_inputs; the real conductor did not. **My R-034 §5 pre-flight verified the 7 SEAMS + token + manifest + no-8th-seam — but NOT the verdict-stage validity inputs.** That is the gap, and it surfaced only after the transcripts were spent — the exact failure mode the whole discipline exists to prevent. The receipt matrix had no row/column for the Module-E validity inputs; that is the true 8th dimension, missed.
+
+**This is NOT a fidelity failure.** The structural read the verdict recorded (even while INVALID) is `video_unit_clean_fraction = 0.8182` (9 clean / 11 videos) — ABOVE the ≥0.60 bar — and the deterministic re-verify MATCHED. So the extractions + panels + raters produced a would-PASS structural fraction; the INVALID is purely the unverified validity gate.
+
+**Requesting R-035 — recoverability, your call; I will NOT improvise:** the verdict stage is deterministic replay from the PERSISTED artifacts (extractions/panels/raters are done + fixed; reverify MATCH proves determinism) + the injected validity_inputs (seal-day METADATA, NOT the once-only extraction). So the question is whether the verdict is recoverable by supplying the TRUE validity inputs + recomputing `run_stage_verdict` from the SAME artifacts (no re-dispatch, read-once preserved), OR whether the missing pre-checks-before-read make the read INVALID-as-conducted. Of the required inputs: frozen_scan_commit/driver_commit = `405af2d9` (real, frozen before the read), epoch_read_once (the read ran once today), registration (the 12 ARE the frozen sealed-manifest set) are truthfully supplyable; **the ENGAGEMENT pre-check I did NOT perform and will NOT fabricate** (fabrication = the worst defect, per the standing law). If R-035 rules recovery permissible, I perform a genuine engagement pre-check + supply all TRUE validity inputs + recompute the verdict from the persisted artifacts + report the recomputed verdict as AR-027. If it rules INVALID-as-conducted, that stands as the honest once-only result.
+
+Sealed 12 spent (read once, reverify MATCH); 77 UNTOUCHED. The artifacts are persisted (`scratchpad/SEALED-READ`, verdict out_dir `h1-seal-conductor-verdict-0f7o146j`). Holding for R-035.
+
+---
+
 ## AR-025 · 2026-07-17 · ★★ R-034 COMPLETE — the receipt MATRIX is FILLED (every cell a live faithful receipt); independently graded; faithful through-verdict rehearsal earned on spent 2DX; fresh final pre-flight CLEAN (no 8th seam). Per R-034 §5 the R-032 GO re-arms — the conductor opens the twelve. The verdict lands as AR-026.
 
 **R-034 built + committed (`405af2d9` on `h1-wave4-sealed12-driver`):**
