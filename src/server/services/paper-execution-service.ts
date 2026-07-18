@@ -2465,6 +2465,12 @@ export async function openPosition(sessionId: string, params: {
     sessionId,
     symbol: params.symbol,
     side: params.side,
+    // W7-3 fix (2026-07-18): thread the same bar-time-or-fallback value closePosition()
+    // already uses for closedAt (F-3's own precedent) — previously entryTime silently
+    // fell back to the column's defaultNow() wall-clock value, an asymmetric miss of
+    // the exact bug class F-3 fixed on the exit side. See closePosition's closeTimestamp
+    // (context?.barTimestamp ?? new Date()) for the mirrored pattern.
+    entryTime: orderTimestamp,
     entryPrice: String(actualEntry),
     currentPrice: String(actualEntry),
     contracts: params.contracts,

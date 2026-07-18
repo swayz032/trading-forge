@@ -558,9 +558,13 @@ describe("computePnlTolerance", () => {
   it("PAPER_RECON_CONFIG defaults are sensible", () => {
     expect(PAPER_RECON_CONFIG.PNL_FLOOR_DOLLARS).toBe(0.50);
     expect(PAPER_RECON_CONFIG.BAR_WINDOW_MINUTES).toBe(5);
-    expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).toContain("PAPER");
     expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).toContain("DEPLOYED");
     expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).toContain("PILOT");
+  });
+
+  it("DEPLOYED_PLUS_STATES excludes PAPER post-M3 (2026-07-17) — PAPER-state strategies use the internal engine exclusively and never route through the broker, so reconciling them against a broker tape is a contract mismatch, not a safety check", () => {
+    expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).not.toContain("PAPER");
+    expect(PAPER_RECON_CONFIG.DEPLOYED_PLUS_STATES).toEqual(["DEPLOY_READY", "PILOT", "DEPLOYED"]);
   });
 
 });

@@ -7314,7 +7314,8 @@ async function resumeActivePaperSessions(): Promise<void> {
       // signal) but not yet filled (bar N+1) when the process stopped, so the
       // trade opens exactly once instead of being silently dropped. Only
       // relevant for sessions reaching this point (internal-stream resume) —
-      // PAPER+ sessions were already skipped above and never populate this queue.
+      // broker-authoritative (DEPLOY_READY+) sessions were already skipped
+      // above and never populate this queue.
       try {
         const { rehydrated, droppedStale } = await rehydratePendingEntryQueueForSession(session.id);
         if (rehydrated > 0 || droppedStale > 0) {
@@ -7336,14 +7337,14 @@ async function resumeActivePaperSessions(): Promise<void> {
     }
   }
 
-  // B5: Boot-log summary — surfaces stale PAPER+ rows so operator knows they exist.
+  // B5: Boot-log summary — surfaces stale broker-authoritative rows so operator knows they exist.
   if (skipCount > 0) {
     logger.info(
       { resumeCount, skipCount, skippedSessionIds },
-      "B5: resumeActivePaperSessions complete — skipped PAPER+ sessions (stale status='active' rows; recon cron will sweep). Only pre-PAPER sessions get internal streams.",
+      "B5: resumeActivePaperSessions complete — skipped broker-authoritative (DEPLOY_READY+) sessions (stale status='active' rows; recon cron will sweep). Only non-broker-authoritative sessions (incl. PAPER, post-M3) get internal streams.",
     );
   } else {
-    logger.info({ resumeCount }, "resumeActivePaperSessions complete — all resumed sessions are pre-PAPER");
+    logger.info({ resumeCount }, "resumeActivePaperSessions complete — all resumed sessions are non-broker-authoritative");
   }
 }
 

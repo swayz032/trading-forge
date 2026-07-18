@@ -719,9 +719,11 @@ export function __peekPendingEntryForTests(sessionId: string, symbol: string): P
 /**
  * M2 (2026-07-17): boot re-hydration entry point. Called by
  * scheduler.ts::resumeActivePaperSessions() after a restart, for every
- * session whose internal simulator stream resumes (pre-PAPER sessions only —
- * PAPER+ strategies never populate this Map, TradersPost is their canonical
- * journal, so there is nothing to re-hydrate for them).
+ * session whose internal simulator stream resumes (non-broker-authoritative
+ * sessions only — DEPLOY_READY+ strategies never populate this Map,
+ * TradersPost is their canonical journal, so there is nothing to re-hydrate
+ * for them. PAPER-state sessions DO populate this Map post-M3, since PAPER
+ * uses the internal engine exclusively).
  *
  * Re-hydrates the in-memory pendingEntryQueue from persisted
  * paper_pending_entries rows so a restart landing between a deferred entry's

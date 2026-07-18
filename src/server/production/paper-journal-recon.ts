@@ -90,8 +90,17 @@ export const PAPER_RECON_CONFIG = {
   PNL_FLOOR_DOLLARS: Number(process.env["PAPER_RECON_PNL_FLOOR_DOLLARS"] ?? 0.50),
   /** ±5 minutes bar_timestamp window for JOIN matching. */
   BAR_WINDOW_MINUTES: Number(process.env["PAPER_RECON_BAR_WINDOW_MINUTES"] ?? 5),
-  /** Lifecycle states considered "DEPLOYED+" (active paper journal is canonical). */
-  DEPLOYED_PLUS_STATES: ["PAPER", "DEPLOY_READY", "PILOT", "DEPLOYED"],
+  /**
+   * Lifecycle states whose paper journal is broker-authoritative (TradersPost is the
+   * canonical trade tape to reconcile against). PAPER removed post-M3 (2026-07-17):
+   * PAPER-state strategies now use the internal engine exclusively and never call the
+   * broker — reconciling them against a broker tape that was never populated would
+   * either sit permanently dormant (no broker tape) or, once a real broker tape exists
+   * for other reasons, spuriously flag missing-broker-data on every PAPER-state
+   * strategy every recon cycle. See src/server/lib/paper-authority-states.ts
+   * (BROKER_AUTHORITATIVE_STATES) — this list should track that one.
+   */
+  DEPLOYED_PLUS_STATES: ["DEPLOY_READY", "PILOT", "DEPLOYED"],
   /**
    * Shadow-signal recon: delta > 5% across ≥20 signals = intercept is silently dropping.
    * These mirror SHADOW_DIVERGENCE_THRESHOLD_PCT / SHADOW_DIVERGENCE_MIN_SAMPLE but are
