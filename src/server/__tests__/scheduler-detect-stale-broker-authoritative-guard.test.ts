@@ -205,6 +205,13 @@ function buildDetectStaleDbMock(opts: {
       const isPaperTradesShape = !!shape && "pnl" in shape;
       const isAuditLogIdShape = !!shape && Object.keys(shape).length === 1 && "id" in shape;
       const isSessionStatusShape = !!shape && Object.keys(shape).length === 1 && "status" in shape;
+      // W7-6: detectStalePaperSessions' stale-check block selects ONLY
+      // { createdAt } from both paperSignalLogs and paperTrades (two separate
+      // calls, same shape — table identity isn't distinguishable from the
+      // shape alone). Both resolve empty here so activityBaseline always
+      // falls back to session.startedAt — tests control staleness via
+      // startedAt directly, not via fabricated signal/trade rows.
+      const isCreatedAtOnlyShape = !!shape && Object.keys(shape).length === 1 && "createdAt" in shape;
       return {
         from: vi.fn(() => ({
           where: vi.fn(() => {
@@ -215,6 +222,7 @@ function buildDetectStaleDbMock(opts: {
             if (isPaperTradesShape) return { orderBy: vi.fn(() => Promise.resolve([])) };
             if (isAuditLogIdShape) return Promise.resolve([]); // no prior restart/exhaustion audit rows
             if (isSessionStatusShape) return Promise.resolve([{ status: "active" }]);
+            if (isCreatedAtOnlyShape) return { orderBy: vi.fn(() => ({ limit: vi.fn(() => Promise.resolve([])) })) };
             // Bare select() with no shape: either paperSessions('failed_to_stream')
             // or paperSessions('active') — dispatch via the FIFO queue above.
             return Promise.resolve(bareSelectCursor());
@@ -362,6 +370,63 @@ describe("detectStalePaperSessions — M3 broker-authoritative guard (item 6)", 
         action: "paper.session_auto_stop_broker_authoritative_leak",
         entityId: sessionId,
       }),
+    );
+  });
+});
+
+describe("detectStalePaperSessions — W7-6: stream-liveness guards the stale_2h auto-stop", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockGetActiveStreams.mockReturnValue(new Map());
+  });
+
+  it("does NOT auto-stop a PAPER session with a 3h-old activityBaseline when the internal stream is actively connected — a selective strategy producing zero signals for hours is healthy, not stale", async () => {
+    const strategyId = "bbbbbbbb-1111-0000-0000-000000000006";
+    const sessionId = "aaaaaaaa-1111-0000-0000-000000000006";
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const activeSession = { id: sessionId, strategyId, startedAt: threeHoursAgo };
+    mockIsStreaming.mockReturnValue(true);
+    mockGetStreamHealth.mockReturnValue({ connected: true, symbols: ["MES"] });
+    const { db } = await import("../db/index.js");
+    Object.assign(db, buildDetectStaleDbMock({
+      failedToStreamSessions: [],
+      activeSessions: [activeSession],
+      strategyRowsById: { [strategyId]: { id: strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} } },
+    }));
+
+    const { _testOnly } = await import("../scheduler.js");
+    await _testOnly.detectStalePaperSessions();
+
+    // stopPaperSession's own audit row + the "paper:auto_stopped" SSE broadcast
+    // both only fire on the stale_2h path (see the sibling RED-proof below) —
+    // asserting the SSE never fires is the cleanest signal that auto-stop
+    // never triggered.
+    expect(mockBroadcastSSE).not.toHaveBeenCalledWith(
+      "paper:auto_stopped",
+      expect.objectContaining({ sessionId }),
+    );
+  });
+
+  it("RED-proof regression: DOES auto-stop a PAPER session with a 3h-old activityBaseline when the stream is NOT connected — the pre-fix behavior is preserved for a genuinely dead feed", async () => {
+    const strategyId = "bbbbbbbb-1111-0000-0000-000000000007";
+    const sessionId = "aaaaaaaa-1111-0000-0000-000000000007";
+    const threeHoursAgo = new Date(Date.now() - 3 * 60 * 60 * 1000);
+    const activeSession = { id: sessionId, strategyId, startedAt: threeHoursAgo };
+    mockIsStreaming.mockReturnValue(false);
+    mockGetStreamHealth.mockReturnValue({ connected: false, symbols: [] });
+    const { db } = await import("../db/index.js");
+    Object.assign(db, buildDetectStaleDbMock({
+      failedToStreamSessions: [],
+      activeSessions: [activeSession],
+      strategyRowsById: { [strategyId]: { id: strategyId, lifecycleState: "PAPER", symbol: "MES", config: {} } },
+    }));
+
+    const { _testOnly } = await import("../scheduler.js");
+    await _testOnly.detectStalePaperSessions();
+
+    expect(mockBroadcastSSE).toHaveBeenCalledWith(
+      "paper:auto_stopped",
+      expect.objectContaining({ sessionId, reason: "stale_2h" }),
     );
   });
 });

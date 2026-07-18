@@ -8546,7 +8546,22 @@ async function detectStalePaperSessions(): Promise<void> {
       // If there has never been any activity, use session start time as the baseline
       const activityBaseline = lastActivityTime ?? session.startedAt;
 
-      if (activityBaseline < twoHoursAgo) {
+      // W7-6 fix (2026-07-18, grading-integrity pass finding): a genuinely healthy,
+      // selective strategy can legitimately produce zero paperSignalLogs/paperTrades
+      // rows for hours — paperSignalLogs only writes when a DSL entry condition
+      // actually fires (paper-signal-service.ts's entrySignal branch), and CLAUDE.md
+      // §5 explicitly treats "0 trades = a valid day" for a 1-2-A+-trades/day
+      // strategy. Auto-stopping on signal/trade silence alone contradicted this
+      // function's own comment above ("a live stream keeps producing signals, so
+      // 'last activity' never goes stale") — that assumption was never true. If the
+      // internal stream is actively connected (already proven healthy by the
+      // auto-recovery block above), the feed itself is live; skip the stale-timeout
+      // auto-stop and let this cycle's feed-liveness be the signal instead. A
+      // genuinely dead/disconnected/never-started stream still falls through to the
+      // auto-stop below, unchanged.
+      const streamIsLive = isStreaming(session.id) && streamHealth.connected;
+
+      if (!streamIsLive && activityBaseline < twoHoursAgo) {
         // ─── Auto-stop: 2+ hours inactive ──────────────────────
         // Stop the session so QuantStats runs and metricsSnapshot is populated.
         const staleSinceMs = Date.now() - activityBaseline.getTime();
