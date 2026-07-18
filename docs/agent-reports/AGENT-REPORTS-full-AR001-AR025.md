@@ -4,6 +4,28 @@
 
 ---
 
+## AR-025 · 2026-07-17 · ★★ R-034 COMPLETE — the receipt MATRIX is FILLED (every cell a live faithful receipt); independently graded; faithful through-verdict rehearsal earned on spent 2DX; fresh final pre-flight CLEAN (no 8th seam). Per R-034 §5 the R-032 GO re-arms — the conductor opens the twelve. The verdict lands as AR-026.
+
+**R-034 built + committed (`405af2d9` on `h1-wave4-sealed12-driver`):**
+- **§3 seam enumeration DERIVED FROM CODE** — 7 seams, computed not remembered (`h1-sealed-read-seam-enumeration-2026-07-17.md`).
+- **Seam 4 Phase-B input faithfulness (AR-024 gap) — FIXED.** Enumerator grows `element_inventory`; driver exposes `consensus_scopes`; CLI embeds the certified frontier-v3.2 `## SCOPE` fields (`CONSENSUS_SCOPE_FIELDS`, minimal-necessary — surplus `coaching_notes` excluded). Parity RED on drop, RED on surplus.
+- **Seam 5 Panel (AR-023 gap) — OPERATIONALIZED.** `--dispatch panel --cid`: the 3 calibrated gpt-5.4 graders BYTE-UNCHANGED + **SHA-PINNED** (grader HIGH finding closed — on-disk tamper HALTs), fed the threaded inventory + certified-shape extraction + transcript, cap-guarded, 429-retry + default fallback.
+- **Seam 1 Fetch — FIXED + receipt (t5):** npx full-path resolution; live-fetch of spent 2DX hash-MATCHED on-disk at zero sealed cost.
+
+**Independent grade (doer≠grader): BAND 7 SAFE** — input-faithfulness enforced both directions, 4/5 mutations RED; the two findings (grader-prompt SHA-pin HIGH; builder-drift-alarm MEDIUM) CLOSED same wave.
+
+**★ THE RECEIPT MATRIX — EVERY CELL FILLED** (`h1-sealed-read-receipt-matrix-2026-07-17.md`). The **faithful through-verdict rehearsal** on spent 2DXQqwKSwJE ran ALL 7 seams LIVE with faithful inputs: scoped Phase-B (certified inventory embedded) → live gemma anchoring → **live gpt-5.4 panels (3 cids × 3 axes)** → live raters A+B (both stages) → verdict `INDETERMINATE_SOURCE_ATTRITION` (correct on 1 video, floor 9) + validity VALID + **reverify MATCH**. The whole faithfully-wired read path computes and re-verifies. This is the green law + input-faithfulness law satisfied end-to-end.
+
+**Runbook RE-FROZEN R-034 (Addendum C, `405af2d9`) + final comprehension probe PASSED** (a fresh reader answered the scoped Phase-B, the `--dispatch panel --cid` command, byte-unchanged graders, HALT discipline, the two-stage rater order — all verbatim).
+
+**Fresh final pre-flight — CLEAN:** all 7 code-derived seams carry a live faithful receipt; **NO 8th seam** (`live_extract_fn` is removed for sealed, driver:1063/1093; the 4 raise-if-None + gemma + fetch + verdict are the complete set); operator `SEAL-GO.token` present (78 bytes, his hand); sealed manifest = `h1-wave6-sealed-fresh-set-2026-07-12.json` sealed_sha256 **4d7b3c29** (the real 12, NOT spent-16 `8e39ffe1`); spend within the standing envelope; 341 seal tests green.
+
+**Per R-034 §5, the completed matrix + clean pre-flight RE-ARM the R-032 GO automatically. The conductor opens the twelve — no further ruling, no further operator word (his authorization stands unexpired: his token + his direct "yes" in-session).** The irreversible read initiates now; the verdict lands verbatim as **AR-026** with the validity block, every scope line, and the attrition sensitivity line (R-015 items 6–8). Any guard HALT mid-read → stop + report, zero improvisation.
+
+Seal was INTACT through the ENTIRE build — every rehearsal on spent 2DX at zero sealed cost. Eight verification dimensions surfaced across R-028→R-034 (execution, enumeration, input); the matrix now makes green a checkable state. Opening the twelve.
+
+---
+
 ## AR-024 · 2026-07-17 · ★ EXPANDED HOLD (still not the verdict; read did NOT run). R-033's code-derived seam law, applied deeply, exposed that the seal-day pipeline proves dispatch MECHANICS but DROPS the calibrated inter-stage INPUT THREADING the design pool used. This is bigger than the panel operationalization. Requesting R-034 (architectural). Seal INTACT.
 
 **R-033 §3 seam enumeration — DONE, and it paid off far beyond panels.** Derived from code (`docs/designs/h1-sealed-read-seam-enumeration-2026-07-17.md`): 7 sealed seams. Seams 2/3/4/6 (Phase-A, anchor-locator/gemma, Phase-B, rater) had "live receipts"; seam 5 (panel) + seam 7 (verdict) were the known gaps. But tracing the panel's INPUTS surfaced a deeper class of gap the mechanics-only receipts masked:
