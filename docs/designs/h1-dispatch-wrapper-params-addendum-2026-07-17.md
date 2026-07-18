@@ -117,6 +117,39 @@ Seal-day rater dispatch is therefore:
   stage1 ingested 38 roles + stage2 ingested 28 support judgments, both stages
   stage-scoped, 0 format-retries, guards passing.
 
+## 7. Input-faithfulness threading + panel operationalization (R-034)
+
+The seam-enumeration law (R-033) + input-faithfulness law (R-034) exposed that the
+seal-day pipeline proved dispatch MECHANICS but dropped the calibrated INTER-STAGE
+INPUT THREADING. This wave threads each stage its certified input, mechanically
+embedded by the CLI (the conductor stays blind — a stage's own upstream input is its
+job, not an answer key):
+
+- **Phase-B scope (seam 4, the confirmed AR-024 gap).** The enumerator (v3.2) grows
+  `element_inventory` per strategy; the driver exposes the consensus strategy objects
+  (`_consensus_strategy_objects` → `consensus_scopes`); the CLI embeds the certified
+  frontier-v3.2 `## SCOPE` fields `{name, entry_summary, exit_summary, variants,
+  element_inventory}` (`CONSENSUS_SCOPE_FIELDS`, projected minimal-necessary per t1 —
+  surplus `coaching_notes` excluded). Phase-B now extracts THE consensus strategy,
+  accountable to its inventory. Parity-tested both directions.
+- **Panel seam (seam 5, the AR-023 gap) — operationalized.** `--dispatch panel --cid`
+  runs the 3 calibrated gpt-5.4 graders (`content-preservation-grader-v2.md`,
+  `semantic-conflation-check.md`, `enumeration-consistency-semantic.md`) BYTE-UNCHANGED
+  (t2), user-messages composed to MATCH the design-pool builders exactly, fed the
+  threaded consensus inventory + coaching_notes + the sealed extraction (projected to
+  the certified shape — wrap metadata stripped) + the transcript. Cap-guarded
+  (`MeteredCapGuard`, ≤$0.60/cid ticket). Produces `panels/<cid>.json = {conflation,
+  enumeration_consistency, completeness}`. `scripts/h1_seal_panel_dispatch.py`.
+  - Enum sub-axis: a no-variants strategy is trivially consistent (no LLM); a
+    with-variants strategy is judged against the enumeration-excluded mentions
+    (threaded from `emit/enum_exclusions/<vid>.json` if present, else empty and
+    recorded as `_enum_mentions_n` — a conservative input, flagged for parity).
+- **Fetch (seam 1) — fixed.** `_default_transcript_fetch_fn` resolves `npx` to its full
+  path (`shutil.which`); a bare `npx` under Python's CreateProcess on Windows is
+  `npx.cmd` and fails WinError 2, which would collapse every sealed transcript to
+  attrition. Fetch receipt (R-034 t5): live-fetch a spent video, hash-compare vs the
+  on-disk copy — verified MATCH on 2DXQqwKSwJE at zero sealed cost.
+
 ## 6. Live-found seal-day invocation fixes (R-030 §4)
 
 The micro-rehearsal caught two Windows/subprocess integration issues stubbed tests

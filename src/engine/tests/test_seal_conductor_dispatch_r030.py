@@ -120,6 +120,65 @@ def test_r030_infra_error_halts_immediately_not_retried(tmp_path):
     assert len(stub.calls) == 1  # infra failure is NOT a format-retry
 
 
+def _wd_with_consensus(tmp_path, vid="VIDPB01", scope=None):
+    """A work-dir with a transcript + a phase_a consensus emit carrying one scope."""
+    wd = str(tmp_path / "workdir")
+    os.makedirs(os.path.join(wd, "transcripts"), exist_ok=True)
+    os.makedirs(os.path.join(wd, "emit"), exist_ok=True)
+    with open(os.path.join(wd, "transcripts", f"{vid}.txt"), "w", encoding="utf-8") as fh:
+        fh.write("TRANSCRIPT-MARKER body")
+    scope = scope if scope is not None else {
+        "name": "S", "entry_summary": "e", "exit_summary": "x",
+        "variants": [{"name": "v"}], "element_inventory": ["INV-1", "INV-2"], "coaching_notes": ["CN-1"],
+    }
+    with open(cli._emit_path(wd, cli._PHASE_A_EMIT), "w", encoding="utf-8") as fh:
+        json.dump({"per_video": {vid: {"consensus_scopes": [scope]}}}, fh)
+    return wd, vid
+
+
+def test_r034_phase_b_input_parity_carries_certified_scope(tmp_path):
+    """R-034: the Phase-B embed carries the transcript + the EXACT certified frontier
+    scope fields (name, entry_summary, exit_summary, variants, element_inventory) — and
+    NO surplus field (coaching_notes is not in the frontier contract -> excluded)."""
+    wd, vid = _wd_with_consensus(tmp_path)
+    src = cli._seam_source_text(wd, "phase_b", vid, index=0)
+    assert "TRANSCRIPT-MARKER" in src and "## SCOPE" in src
+    for f in cli.CONSENSUS_SCOPE_FIELDS:
+        assert f'"{f}"' in src, f"missing certified field {f}"
+    assert "INV-1" in src  # the element_inventory is really threaded
+    # surplus field (coaching_notes) is NOT in the frontier scope contract.
+    assert "coaching_notes" not in src.split("## SCOPE")[1]
+    assert "CN-1" not in src
+
+
+def test_r034_phase_b_parity_red_when_inventory_dropped(tmp_path):
+    """The parity mutation: a scope MISSING the contracted element_inventory produces
+    an embed without it -> the input-faithfulness parity check goes RED."""
+    scope = {"name": "S", "entry_summary": "e", "exit_summary": "x", "variants": []}  # no element_inventory
+    wd, vid = _wd_with_consensus(tmp_path, scope=scope)
+    src = cli._seam_source_text(wd, "phase_b", vid, index=0)
+    # element_inventory key still named (contract) but its value is null — the parity
+    # check (a real inventory present) fails: no inventory items embedded.
+    assert "INV-1" not in src
+    import json as _j
+    scope_json = src.split("## SCOPE")[1]
+    parsed = _j.loads(scope_json[scope_json.index("{"):])
+    assert parsed.get("element_inventory") in (None, [])  # RED: contracted field is empty
+
+
+def test_r034_phase_b_halts_without_consensus_scope(tmp_path):
+    """No consensus emit -> Phase-B cannot compose its certified input -> HALT (never
+    falls back to transcript-only, the AR-024 gap)."""
+    wd = str(tmp_path / "bare")
+    os.makedirs(os.path.join(wd, "transcripts"), exist_ok=True)
+    with open(os.path.join(wd, "transcripts", "V.txt"), "w", encoding="utf-8") as fh:
+        fh.write("t")
+    stub = _ScriptedClaude([_CLEAN_PHASE_A])
+    code, text = cli.run_dispatch(wd, "phase_b", "V", 0, claude_fn=stub)
+    assert code == 1 and "HALT" in text
+    assert len(stub.calls) == 0  # never dispatched without the certified input
+
+
 def test_r030_dispatch_embeds_transcript_and_frozen_system_prompt(tmp_path):
     vid = "VIDEMBED01"
     body = "UNIQUE-TRANSCRIPT-MARKER strategy body " * 5
@@ -132,6 +191,31 @@ def test_r030_dispatch_embeds_transcript_and_frozen_system_prompt(tmp_path):
     assert f"transcripts/{vid}.txt" not in call["user_text"]  # NOT a path to read
     assert "you have no tools and no file access" in call["user_text"].lower()
     assert call["system_text"] == cli._frozen_prompt_text(cli.ENUMERATOR_PROMPT_PATH)
+
+
+def test_r034_fetch_resolves_npx_fullpath(monkeypatch):
+    """R-034 seam 1 fix: the transcript fetch resolves `npx` to its full path (a bare
+    `npx` under Python's CreateProcess on Windows is `npx.cmd` and fails WinError 2,
+    collapsing every sealed transcript to attrition). The resolved path is used."""
+    captured = {}
+
+    class _P:
+        returncode = 0
+        stdout = '{"video_id":"V","transcript":"t","char_count":1,"final_outcome":"ok"}'
+        stderr = ""
+
+    import shutil
+    import subprocess
+
+    def _spy(cmd, **k):
+        captured["cmd"] = cmd
+        return _P()
+
+    monkeypatch.setattr(shutil, "which", lambda name: r"C:\ProgramData\npm\npx.CMD" if name == "npx" else None)
+    monkeypatch.setattr(subprocess, "run", _spy)
+    cli._default_transcript_fetch_fn("V")
+    assert captured["cmd"][0] == r"C:\ProgramData\npm\npx.CMD"  # resolved, not bare "npx"
+    assert captured["cmd"][1] == "tsx"
 
 
 def test_r030_run_claude_p_uses_no_tools_and_no_allowedtools(monkeypatch):

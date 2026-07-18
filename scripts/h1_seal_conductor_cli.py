@@ -55,6 +55,7 @@ from src.engine.extraction.pilot_conveyor import (  # noqa: E402
     LeakScanFailure,
 )
 from src.engine.extraction.sealed_read_driver import (  # noqa: E402
+    CONSENSUS_SCOPE_FIELDS,
     ENUMERATOR_PROMPT_PATH,
     FRONTIER_PROMPT_PATH,
     READABLE_N_FLOOR,
@@ -476,21 +477,56 @@ def _seam_system_prompt_text(seam: str) -> str:
     raise ValueError(f"unknown dispatch seam: {seam!r}")
 
 
-def _seam_source_text(work_dir: str, seam: str, video_id: str | None, rater_stage: str | None = None) -> str:
+def _read_transcript(work_dir: str, video_id: str | None) -> str:
+    """Read the fetched transcript body the CLI embeds (never the subagent)."""
+    path = os.path.join(work_dir, _TRANSCRIPTS_SUBDIR, f"{video_id}.txt")
+    if not os.path.exists(path):
+        raise ConductorArtifactMissing(f"transcript to embed not found: {path}")
+    with open(path, encoding="utf-8") as fh:
+        return fh.read()
+
+
+def _consensus_scope_for(work_dir: str, video_id: str | None, index) -> dict:
+    """R-034 §3 — the driver-derived SCOPE for consensus strategy ``index``, read from
+    the phase_a consensus emit and PROJECTED to the EXACT frontier-v3.2 contract fields
+    (``CONSENSUS_SCOPE_FIELDS``). This is the input-faithfulness fix: the certified
+    frontier expects the enumerator's inventory for the ONE strategy; the CLI embeds
+    it mechanically (the conductor stays blind). Missing => HALT (never fabricated)."""
+    path = _emit_path(work_dir, _PHASE_A_EMIT)
+    if not os.path.exists(path):
+        raise ConductorArtifactMissing(f"phase_a consensus emit required for Phase-B scope: {path}")
+    with open(path, encoding="utf-8") as fh:
+        pv = ((json.load(fh) or {}).get("per_video") or {}).get(video_id) or {}
+    scopes = pv.get("consensus_scopes") or []
+    if index is None or int(index) >= len(scopes):
+        raise ConductorArtifactMissing(
+            f"no consensus scope for {video_id} strategy #{index} "
+            f"(have {len(scopes)}); re-run stage phase_a"
+        )
+    scope = scopes[int(index)] or {}
+    return {f: scope.get(f) for f in CONSENSUS_SCOPE_FIELDS}
+
+
+def _seam_source_text(work_dir: str, seam: str, video_id: str | None, rater_stage: str | None = None, index=None) -> str:
     """The CONTENT the CLI embeds for a dispatch (R-030 §3) — read by the CLI
-    machinery, NEVER by the subagent. Phase-A/Phase-B embed the fetched transcript
-    body. A rater dispatch is STAGE-SCOPED (R-031 §2): the two-stage read-order lock
-    (Stage-1 blind role-from-quote committed BEFORE Stage-2's revealed conditions are
-    seen) only holds if the Stage-1 prompt PHYSICALLY excludes ``stage2_items``. So a
-    rater embed projects each packet down to ONLY the requested stage's view + that
-    stage's ``output_contract`` — the other stage never enters the prompt. Missing =>
-    HALT (never fabricated)."""
-    if seam in ("phase_a", "phase_b"):
-        path = os.path.join(work_dir, _TRANSCRIPTS_SUBDIR, f"{video_id}.txt")
-        if not os.path.exists(path):
-            raise ConductorArtifactMissing(f"transcript to embed not found: {path}")
-        with open(path, encoding="utf-8") as fh:
-            return fh.read()
+    machinery, NEVER by the subagent. Phase-A embeds the transcript body. Phase-B
+    embeds the transcript + the driver-derived SCOPE (the enumerator's inventory for
+    the ONE consensus strategy — R-034 input faithfulness). A rater dispatch is
+    STAGE-SCOPED (R-031 §2): the two-stage read-order lock only holds if the Stage-1
+    prompt PHYSICALLY excludes ``stage2_items``, so a rater embed projects each packet
+    to ONLY the requested stage's view + contract. Missing => HALT (never fabricated)."""
+    if seam == "phase_a":
+        return _read_transcript(work_dir, video_id)
+    if seam == "phase_b":
+        transcript = _read_transcript(work_dir, video_id)
+        scope = _consensus_scope_for(work_dir, video_id, index)
+        return (
+            "TRANSCRIPT:\n" + transcript
+            + "\n\n## SCOPE — the enumerator's full inventory for the ONE strategy to "
+            "extract (extract ONLY this strategy; account for EVERY element per the "
+            "Coverage Contract):\n"
+            + json.dumps(scope, ensure_ascii=False, sort_keys=True, indent=2)
+        )
     # rater — STAGE-SCOPED projection (physically excludes the other stage).
     if rater_stage not in ("stage1", "stage2"):
         raise ValueError("rater dispatch requires --rater-stage stage1|stage2")
@@ -718,7 +754,7 @@ def run_dispatch(
     _ensure_dispatch_record(work_dir, identity)
     try:
         system_text = _seam_system_prompt_text(seam)
-        source_text = _seam_source_text(work_dir, seam, video_id, rater_stage)
+        source_text = _seam_source_text(work_dir, seam, video_id, rater_stage, index)
     except (ConductorArtifactMissing, ValueError) as exc:
         return 1, f"HALT: {type(exc).__name__}: {exc}"
     user_text = _compose_user_prompt(source_text)
@@ -1145,12 +1181,18 @@ def _default_transcript_fetch_fn(video_id: str) -> dict:
     final_outcome, attempts}`` (or ``{error}`` + exit 1). Returns fetch evidence
     ``{fetched, char_count, content_hash, transcript, final_outcome, error}``.
     NETWORK-TOUCHING — NEVER invoked in tests (a stub fetch_fn is injected)."""
+    import shutil
     import subprocess
 
     script = os.path.join(_ROOT, "scripts", "h1-fetch-one.ts")
+    # R-034 seam 1 fix: resolve `npx` to its full path — a bare "npx" under Python's
+    # CreateProcess on Windows is `npx.cmd` and fails (WinError 2), which would mark
+    # every sealed transcript UNREADABLE and collapse the read to attrition. shutil
+    # .which finds npx.cmd; if unresolved, fall back to the bare name (POSIX).
+    npx = shutil.which("npx") or "npx"
     try:
         proc = subprocess.run(
-            ["npx", "tsx", script],
+            [npx, "tsx", script],
             input=json.dumps({"video_id": video_id}),
             capture_output=True,
             text=True,
@@ -1345,12 +1387,17 @@ def _build_dispatch_plan(work_dir: str, readable_ids: list, identity: dict, attr
         "panel": {
             "seam": "panel",
             "emitted_by_stage": "certify (emit/panel_requests.json, one per cid)",
-            "note": "gpt-5.4 cross-vendor API panel — NOT a claude -p / no-tools seam.",
+            "note": "gpt-5.4 cross-vendor panel (NOT claude -p). R-034: ONE named "
+            "command per cid runs the 3 calibrated graders byte-unchanged, fed the "
+            "threaded consensus inventory + sealed extraction + transcript.",
             "output_path_template": "panels/<cid>.json",
+            "dispatch_command_template": (
+                f"python {_THIS_CLI} --mode sealed --work-dir {wd_abs} --dispatch panel --cid <cid>"
+            ),
             "expected_schema": {
-                "conflation": "PASS|FAIL",
-                "enumeration_consistency": "PASS|FAIL",
-                "completeness": {"content_clean": "bool"},
+                "conflation": "PASS|REJECT",
+                "enumeration_consistency": "PASS|FAIL|NOT_EVALUATED",
+                "completeness": "bool (content_clean)",
             },
         },
         "rater": {
@@ -1610,8 +1657,8 @@ def run_stage_certify(
         f"phase_b_hash: {phase_b_hash}",
         f"panel_requests: {_emit_path(work_dir, _PANEL_REQ_EMIT)} ({len(panel_requests)} cids)",
         f"rater_packets: {_emit_path(work_dir, _RATER_PKT_EMIT)} ({len(rater_packets)} packets)",
-        "fulfil next: panels/<cid>.json (per request) + raters/<id>.json "
-        "(answer ONLY the emitted packet item_ids)",
+        "fulfil next: per cid `--dispatch panel --cid <cid>` -> panels/<cid>.json; "
+        "per rater `--dispatch rater --rater-id <A|B> --rater-stage stage1|stage2`",
         "=== END STAGE certify ===",
     ]
     text = "\n".join(lines)
@@ -1865,12 +1912,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--dispatch",
         default=None,
-        choices=("phase_a", "phase_b", "rater"),
-        help="sealed mode: the CLI-OWNED blind dispatch (R-030 §2/§3). Composes a "
-        "no-tools `claude -p` with the transcript/rater-packet embedded, strict-parses "
-        "the stdout, retries ONLY on non-compliant JSON up to the cap (quarantining "
-        "each), and wraps the first compliant raw into the ingested artifact.",
+        choices=("phase_a", "phase_b", "rater", "panel"),
+        help="sealed mode: the CLI-OWNED dispatch. phase_a/phase_b/rater = blind "
+        "no-tools `claude -p` (R-030/R-031). panel = the gpt-5.4 cross-vendor 3-axis "
+        "grade for one --cid via the calibrated instruments byte-unchanged (R-034).",
     )
+    parser.add_argument("--cid", default=None, help="--dispatch panel: the cid (<vid>__s<idx>).")
     parser.add_argument("--rater-id", default=None, help="--dispatch rater: the rater id (e.g. A / B).")
     parser.add_argument(
         "--rater-stage",
@@ -1887,6 +1934,15 @@ def main(argv: list[str] | None = None) -> int:
         if not args.work_dir:
             print("HALT: --work-dir is required for --dispatch", file=sys.stderr)
             return 2
+        if args.dispatch == "panel":
+            if not args.cid:
+                print("HALT: --dispatch panel requires --cid", file=sys.stderr)
+                return 2
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            from h1_seal_panel_dispatch import run_panel_dispatch
+            code, text = run_panel_dispatch(args.work_dir, args.cid)
+            print(text)
+            return code
         if args.dispatch == "phase_a":
             index = args.draw_index
         elif args.dispatch == "phase_b":

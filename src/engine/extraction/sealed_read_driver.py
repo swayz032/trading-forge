@@ -861,6 +861,46 @@ def _consensus_strategy_refs(
     return []
 
 
+#: R-034 t1 — the EXACT fields the certified frontier-v3.2 `## SCOPE` clause names
+#: (src/agents/transcript-extractor-frontier-v32.md:71: "{name, entry_summary,
+#: exit_summary, variants[], element_inventory[]}") that Phase-B must receive.
+#: Nothing more (a surplus field is a parity RED); nothing less (a missing field is a
+#: parity RED). The enumerator (v3.2, strategy-enumerator.md:205-235) grows these.
+CONSENSUS_SCOPE_FIELDS = ("name", "entry_summary", "exit_summary", "variants", "element_inventory")
+#: The panels additionally consume the Tier-B coaching_notes channel (content grader
+#: TIER-B). The consensus emit carries this UNION; each seam PROJECTS to its own
+#: contract's exact fields at embed time (the parity-checked boundary).
+CONSENSUS_STRATEGY_FIELDS = (*CONSENSUS_SCOPE_FIELDS, "coaching_notes")
+
+
+def _consensus_strategy_objects(draws: list[dict], counts: list[int], enum: dict, adjudication) -> list:
+    """The consensus strategy OBJECTS parallel to :func:`_consensus_strategy_refs`
+    (same representative-modal-draw / adjudication selection), so the driver can
+    thread each strategy's certified SCOPE + inventory into Phase-B and the panels
+    (R-034 input faithfulness). Aligned by index with the refs (ref ``<vid>__s<i>``
+    <-> object ``i``). Fail-closed to ``[]`` on the unsettled path, exactly as the
+    refs helper does — never fabricate a scope for an unsettled enumeration."""
+    if enum.get("stable"):
+        mode = enum.get("mode")
+        for draw, c in zip(draws, counts, strict=False):
+            if c == mode:
+                return list(draw.get("strategies") or [])
+        return []
+    if isinstance(adjudication, dict):
+        strategies = adjudication.get("strategies")
+        if isinstance(strategies, list):
+            return strategies
+    return []
+
+
+def _project_consensus_scopes(objs: list) -> list[dict]:
+    """Project each consensus strategy object to the UNION of downstream-contract
+    fields (R-034 t1) — the driver-derived scope the CLI embeds mechanically into the
+    blind Phase-B / panel dispatches. Never carries strategy_id or any field no
+    downstream contract names."""
+    return [{f: (o or {}).get(f) for f in CONSENSUS_STRATEGY_FIELDS} for o in objs]
+
+
 def _dispatch_phase_b(
     video_id: str,
     strategy_refs: list,
@@ -2482,8 +2522,12 @@ def compute_phase_a_consensus(
         adjudication_needed = not enum["stable"]
         adjudication = adjudicate_fn(video_id, enum) if adjudication_needed else None
         strategy_refs = _consensus_strategy_refs(draws, counts, enum, adjudication)
+        strategy_objs = _consensus_strategy_objects(draws, counts, enum, adjudication)
         per_video[video_id] = {
             "strategy_refs": list(strategy_refs),
+            # R-034 §3: the driver-derived per-strategy SCOPE the CLI mechanically
+            # embeds into the blind Phase-B / panel dispatches (input faithfulness).
+            "consensus_scopes": _project_consensus_scopes(strategy_objs),
             "n_strategies": len(strategy_refs),
             "stable": bool(enum.get("stable")),
             "mode": enum.get("mode"),

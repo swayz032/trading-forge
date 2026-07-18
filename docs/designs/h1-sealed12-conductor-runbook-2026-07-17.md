@@ -1,6 +1,6 @@
 # H1 SEALED-12 TERMINAL-READ — CONDUCTOR RUNBOOK (2026-07-17)
 
-> **STATUS: RE-FROZEN (R-031, 2026-07-17 — see ADDENDUM A + ADDENDUM B at the end).** R-031: raters are now TWO sequential stage-scoped dispatches per rater (Stage-1 blind roles committed BEFORE Stage-2's revealed conditions are ever in a prompt); the packet carries its own answer-store output_contract (values derived from the frozen ingesters); out-of-vocabulary answers HALT. Prior R-030: the CLI now OWNS each dispatch: it shells a no-tools (`--tools ""`, physically blind) `claude -p` with the transcript / rater-packet CONTENT embedded, strict-parses, and re-dispatches on non-compliant JSON up to a cap of 2 — the conductor runs ONE `--dispatch` command per seam and never shells `claude -p` or hands a transcript path to a subagent. Prior standing: RE-FROZEN (R-026.4, 2026-07-17). STEP 1 rewritten to the STAGED (emit-and-stop) sequence after the live Phase-A→consensus→Phase-B ordering gap was found + fixed (R-026 / staged CLI `e0e5dccc`, independently graded Band 7 SAFE): the sealed read is a stage loop (phase_a → fulfil Phase-B → certify → fulfil panels+raters → verdict), each stage emitting what to dispatch next. **Comprehension RE-PROBED on the amended staged steps (2026-07-17): a fresh reader answered the full staged sequence, "the DRIVER computes the consensus; you only READ its emit," and the HALT/no-retry/read-once rule — all verbatim from the steps.** Prior standing: ratified R-024 (amendments 1-3), staging-rehearsed zero-hints (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives; self-contained on purpose. Do not edit — amend by dated addendum only.
+> **STATUS: RE-FROZEN (R-034, 2026-07-17 — see ADDENDUM A + B + C at the end).** R-034: Phase-B now embeds the driver-derived enumerator inventory for the ONE consensus strategy (input faithfulness); PANELS are an operationalized named command `--dispatch panel --cid <cid>` (3 calibrated gpt-5.4 graders byte-unchanged, cap-guarded). Prior R-031 (see ADDENDUM B). R-031: raters are now TWO sequential stage-scoped dispatches per rater (Stage-1 blind roles committed BEFORE Stage-2's revealed conditions are ever in a prompt); the packet carries its own answer-store output_contract (values derived from the frozen ingesters); out-of-vocabulary answers HALT. Prior R-030: the CLI now OWNS each dispatch: it shells a no-tools (`--tools ""`, physically blind) `claude -p` with the transcript / rater-packet CONTENT embedded, strict-parses, and re-dispatches on non-compliant JSON up to a cap of 2 — the conductor runs ONE `--dispatch` command per seam and never shells `claude -p` or hands a transcript path to a subagent. Prior standing: RE-FROZEN (R-026.4, 2026-07-17). STEP 1 rewritten to the STAGED (emit-and-stop) sequence after the live Phase-A→consensus→Phase-B ordering gap was found + fixed (R-026 / staged CLI `e0e5dccc`, independently graded Band 7 SAFE): the sealed read is a stage loop (phase_a → fulfil Phase-B → certify → fulfil panels+raters → verdict), each stage emitting what to dispatch next. **Comprehension RE-PROBED on the amended staged steps (2026-07-17): a fresh reader answered the full staged sequence, "the DRIVER computes the consensus; you only READ its emit," and the HALT/no-retry/read-once rule — all verbatim from the steps.** Prior standing: ratified R-024 (amendments 1-3), staging-rehearsed zero-hints (R-023.1c). This is the ONLY document the seal-day clean-room conductor receives; self-contained on purpose. Do not edit — amend by dated addendum only.
 
 ---
 
@@ -109,4 +109,19 @@ Running each command makes the CLI embed ONLY that stage's blind view + the pack
 
 ---
 
-*Runbook authored 2026-07-17 by the working agent under R-023.1a; ratified R-024, staging-rehearsed by a fresh clean-room conductor (R-023.1c), re-frozen R-026.4, amended + re-frozen R-030 (Addendum A), and amended R-031 (Addendum B). Amend by dated addendum only.*
+---
+
+## ADDENDUM C — 2026-07-17 (R-034): PANELS are a named dispatch; Phase-B is scoped
+
+The seam-enumeration + input-faithfulness laws (R-033/R-034) found that the pipeline dropped the calibrated inter-stage inputs. Two conductor-visible changes:
+
+- **STEP 2 Phase-B is now SCOPED.** You still run `--dispatch phase_b --video-id <V> --strategy-index <i>`; the CLI now embeds the transcript PLUS the driver-derived enumerator inventory for that ONE consensus strategy (name, entry/exit summaries, variants, element_inventory), so the frontier extracts the intended strategy accountable to its inventory. You do nothing differently — the CLI threads it mechanically (you stay blind).
+- **STEP 4 PANELS are now an operationalized named command.** For each cid the certify emit names, run:
+```
+python <this CLI> --mode sealed --work-dir <wd> --dispatch panel --cid <cid>
+```
+This makes the CLI run the THREE calibrated gpt-5.4 graders (byte-unchanged) fed the threaded inventory + sealed extraction + transcript, cap-guarded, and write `panels/<cid>.json`. It is a cross-vendor gpt-5.4 call (real metered $, under the standing envelope with the mid-run hard-cap armed) — NOT a no-tools `claude -p`. A cap breach or missing input HALTs; STOP and report. Everything else stands.
+
+---
+
+*Runbook authored 2026-07-17 by the working agent under R-023.1a; ratified R-024, staging-rehearsed (R-023.1c), re-frozen R-026.4, amended + re-frozen R-030 (Addendum A), amended R-031 (Addendum B), and amended R-034 (Addendum C). Amend by dated addendum only.*

@@ -189,8 +189,10 @@ def test_a_plan_emits_wellformed_dispatch_plan(tmp_path):
         "strategies", "instrument_classification", "rejected_strategies", "coaching_notes"
     }
     assert set(shapes) == {"phase_b", "panel", "rater"}
-    # the panel seam is the cross-vendor gpt-5.4 path — explicitly NOT a no-tools claude seam.
-    assert "dispatch_command_template" not in shapes["panel"]
+    # R-034: the panel seam is the cross-vendor gpt-5.4 path (NOT a no-tools claude
+    # seam) but IS operationalized — one named `--dispatch panel --cid` command.
+    assert "--dispatch panel" in shapes["panel"]["dispatch_command_template"]
+    assert "--allowedTools" not in shapes["panel"]["dispatch_command_template"]
 
     # transcripts fetched to disk (the CLI embeds them; conductor never opens them).
     assert os.path.exists(os.path.join(wd, "transcripts", f"{ids[0]}.txt"))
