@@ -1,6 +1,6 @@
 # ADVISOR REPORT — H1 Claude rung v3.2 stop-point review
 
-> **⚠ ANNOTATION (2026-07-17, later same day — see R-029 in `ADVISOR-RULINGS-full-R014-R034.md`):**
+> **⚠ ANNOTATION (2026-07-17, later same day — see R-029 in `ADVISOR-RULINGS-full-R014-R035.md`):**
 > Written before the AR/R file-relay record landed on this branch (commit `77ecc1e0`). The 2DX-s2
 > residual analyzed below as an OPEN operator call was subsequently shown by that record to be
 > ALREADY RULED — grader over-reach from source; normativity test minted as grader law with
