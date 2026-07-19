@@ -55,6 +55,11 @@ def _load_h1(relpath, name):
 
 tc_mod = _load_h1("src/engine/battery/trial_counter.py", "tc")
 pl_mod = _load_h1("src/engine/battery/passage_ledger.py", "pl_ledger")
+mg_mod = _load_h1("src/engine/battery/mapping_guard.py", "mapping_guard")
+# R-048 §2: the strict-key guard is a shared, tested primitive ("any verdict/
+# disposition mapping"). Re-export MappingSchemaError for the runner's catch path.
+MappingSchemaError = mg_mod.MappingSchemaError
+_req = mg_mod.require
 
 
 def _specs():
@@ -63,29 +68,6 @@ def _specs():
     for p in sorted(glob.glob(os.path.join(SHAKEDOWN_SPECS, "*.spec.json"))):
         out.append((os.path.basename(p)[: -len(".spec.json")], json.load(open(p, encoding="utf-8"))))
     return out
-
-
-class MappingSchemaError(RuntimeError):
-    """R-048 §2: a verdict/disposition mapping read a key ABSENT from the result
-    schema. Fail-loud — a missing key must NEVER silently default to a constant
-    (the F-1/min_paths disease: a nonexistent `min_paths`, read via `.get()`,
-    made the cpcv verdict a constant PASS). One guard kills the whole
-    silent-degradation class. A raise here is caught by the runner's per-spec
-    try/except -> a VISIBLE ABORTED with signature, not a silent wrong verdict."""
-
-
-def _req(d: dict, key: str, ctx: str):
-    """Strict verdict read (R-048 §2). Absence of `key` RAISES; a PRESENT value is
-    returned verbatim (None is a legitimate signal — a MISSING KEY is a schema
-    break). Use ONLY for keys the WF class-result contract guarantees; branch
-    discriminators that legitimately test optional presence stay on `.get()`."""
-    if key not in d:
-        raise MappingSchemaError(
-            f"R-048 §2 strict-key guard: required verdict key {key!r} absent from "
-            f"{ctx} (present keys={sorted(d)}). A verdict mapping must not read a "
-            f"missing key and default to a constant — fail-loud instead."
-        )
-    return d[key]
 
 
 def _wf_gate_rows(res: dict):
@@ -129,10 +111,15 @@ def _wf_gate_rows(res: dict):
         rows["bif"] = (True, V_FAIL if bif > 4.0 else V_PASS, {"bif": bif, "detail": str(res.get("bif_detail"))[:120]})
     else:
         rows["bif"] = ("SPEC_GATED", "bif_computation_error")
-    # slippage_survival.
-    ss = res.get("slippage_survival")
-    if isinstance(ss, dict) and ss:
-        rows["slippage_survival"] = (True, V_NE, {k: ss.get(k) for k in ("breaks_at", "multiples", "pf") if k in ss})
+    # slippage_survival — the WF class result emits it in every return path, so
+    # it is a contract key WHENEVER the WF ran (R-048 §2 grader F-1: was left on
+    # .get() -> a schema drop would silently vanish + be mislabeled PATH_GATED
+    # instead of raising; now STRICT). A present-but-empty value is a legitimate
+    # no-signal state (no row added); a MISSING key is a schema break (raises).
+    if wfm:
+        ss = _req(res, "slippage_survival", "wf-result")
+        if isinstance(ss, dict) and ss:
+            rows["slippage_survival"] = (True, V_NE, {k: ss.get(k) for k in ("breaks_at", "multiples", "pf") if k in ss})
     # dsr — FIRES: computed unconditionally, nested at wf_metadata.dsr/dsr_pass
     # (F-3 fix: was wrongly checked at top-level -> always None -> falsely
     # spec-gated with a statistically-unsound "needs positive Sharpe" reason;

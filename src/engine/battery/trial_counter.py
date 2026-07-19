@@ -227,15 +227,20 @@ class TrialCounter:
     def _dedup_key(row: dict) -> tuple:
         """The EFFECTIVE-N collapse tuple (R-048 §3). Identical deterministic
         replicates share it; genuinely different runs (different data, config,
-        engine, or spec) differ on at least one component. `.get()` so legacy
-        rows (pre-dataset_hash/config_hash) map to a valid all-present tuple with
-        None slots — they never silently drop out of the denominator."""
-        return (
-            row.get("spec_hash"),
-            row.get("engine_sha"),
-            row.get("dataset_hash"),
-            row.get("config_hash"),
-        )
+        engine, or spec) differ on at least one component.
+
+        R-048 grader F-2: a row with an INCOMPLETE tuple (null dataset_hash or
+        config_hash — a legacy row that was never backfilled) must NEVER collapse
+        with another such row: two null-null rows are NOT provably the same
+        experiment, and a false collapse would UNDER-count the luck-math
+        denominator (the unsafe direction). So an incomplete row gets a UNIQUE key
+        (its trial_id) — it stays its own group, counted conservatively, and
+        `effective_n` surfaces the incomplete count so it is never silent. Collapse
+        is opt-in: only a fully-stamped tuple may dedup."""
+        ds, cfg = row.get("dataset_hash"), row.get("config_hash")
+        if ds is None or cfg is None:
+            return ("__incomplete_tuple__", row.get("trial_id"))
+        return (row.get("spec_hash"), row.get("engine_sha"), ds, cfg)
 
     def effective_n(self, *, wave: Optional[str] = None) -> Dict[str, Any]:
         """R-048 §3: the denominator the luck-math (DSR/PBO/BIF) actually consumes.
@@ -253,8 +258,11 @@ class TrialCounter:
         raw_n = len(rows)
         executed = [r for r in rows if r["outcome"] != OUTCOME_ABORTED]
         groups: Dict[tuple, int] = {}
+        incomplete_n = 0
         for r in executed:
             k = self._dedup_key(r)
+            if k[0] == "__incomplete_tuple__":
+                incomplete_n += 1  # never collapses (F-2); counted conservatively
             groups[k] = groups.get(k, 0) + 1
         return {
             "raw_n": raw_n,
@@ -262,9 +270,16 @@ class TrialCounter:
             "aborted_n": raw_n - len(executed),
             "effective_n": len(groups),
             "collapsed_replicates": sum(v - 1 for v in groups.values()),
+            # R-048 grader F-2: executed rows with a null dedup slot — each stays
+            # its own group (no false collapse). Non-zero = a wave entered the
+            # denominator without a complete tuple; backfill it before trusting
+            # the luck-math on it. Surfaced, never silent.
+            "incomplete_tuple_n": incomplete_n,
             "groups": [
                 {"spec_hash": k[0], "engine_sha": k[1], "dataset_hash": k[2],
                  "config_hash": k[3], "replicates": v}
+                if k[0] != "__incomplete_tuple__"
+                else {"incomplete_tuple": True, "trial_id": k[1], "replicates": v}
                 for k, v in groups.items()
             ],
             "dedup_tuple": "(spec_hash × engine_sha × dataset_hash × config_hash)",
