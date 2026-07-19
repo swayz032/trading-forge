@@ -163,6 +163,7 @@ class PassageLedger:
         engaged_features: Optional[List[str]] = None,
         exit_provenance: Optional[str] = None,
         audit_level: str = "spot-check",
+        scope_line: Optional[str] = None,
     ) -> dict:
         """Record one gate's passage for one strategy. Raises on an unknown gate
         (the enum is code-derived and closed — a gate not in it is a derivation
@@ -203,8 +204,9 @@ class PassageLedger:
                 "engaged_features": engaged_features or [],
             },
             "exit_provenance": exit_provenance,
-            # MEASURED per-spec rate (R-042 pin 3) — never a blanket 0.99.
-            "scope_line": f"shakedown; binding-approx {binding_approximation_rate}; framework-behavior measurement, NOT edge evidence",
+            # MEASURED per-spec rate (R-042 pin 3) — never a blanket 0.99. The
+            # caller may pass a wave-specific scope_line; default is shakedown.
+            "scope_line": scope_line or f"shakedown; binding-approx {binding_approximation_rate}; framework-behavior measurement, NOT edge evidence",
             "audit_level": audit_level,
             "recorded_at": _now_iso(),
         }

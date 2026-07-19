@@ -66,52 +66,59 @@ def _specs():
 
 
 def _wf_gate_rows(res: dict):
-    """Extract per-judge (fired, verdict, receipt) from a WF result. A judge whose
-    stat is structurally absent/degenerate -> ('SPEC_GATED', reason). Thresholds
-    from the code-derived enum's cited gates (pbo>0.15 fail, bif>4.0 fail)."""
+    """Extract per-judge (fired, verdict, receipt) from a WF result, reading the
+    REAL keys (grader F-1/F-3: dsr + n_paths live nested in `wf_metadata`, not
+    top-level; the CPCV floor is n_paths>=15 per promotion-gate-orchestrator.ts).
+    A judge whose stat the class-CPCV path genuinely never computes ->
+    ('PATH_GATED', reason) (a PATH property, not a ghost-spec property)."""
     V_PASS, V_FAIL, V_NE = pl_mod.VERDICT_PASS, pl_mod.VERDICT_FAIL, pl_mod.VERDICT_NOT_EVALUATED
     wfm = res.get("wf_metadata") or {}
     rows = {}
 
-    # walk_forward — fires whenever the WF ran (wf_metadata present).
+    # walk_forward — fires whenever the WF ran; NOT_EVALUATED when WFE degenerate.
     if wfm:
         wfe = res.get("wfe_overall")
         deg = res.get("wfe_status") == "degenerate_is"
         rows["walk_forward"] = (True, V_NE if deg else (V_PASS if (wfe or 0) >= 0.70 else V_FAIL),
                                 {"wfe_overall": wfe, "wfe_status": res.get("wfe_status"), "n_folds": wfm.get("n_folds")})
-    # cpcv — fires when mode==cpcv.
+    # cpcv — FIRES when mode==cpcv; real verdict = n_paths >= the institutional
+    # floor 15 (CPCV_MIN_PATHS, promotion-gate-orchestrator.ts). (F-1 fix: was a
+    # vacuous `n_folds>=min_paths` where min_paths never exists -> always PASS.)
     if wfm.get("mode") == "cpcv":
-        rows["cpcv"] = (True, V_PASS if (wfm.get("n_folds") or 0) >= (wfm.get("min_paths") or 0) else V_NE,
-                        {"mode": wfm.get("mode"), "n_folds": wfm.get("n_folds"), "path_sharpes": res.get("path_sharpes")})
-    # pbo — degenerate -> spec-gated.
+        n_paths = wfm.get("n_paths")
+        rows["cpcv"] = (True, V_PASS if (n_paths or 0) >= 15 else V_FAIL,
+                        {"n_paths": n_paths, "cpcv_floor": 15, "n_folds": wfm.get("n_folds"), "path_sharpes": res.get("path_sharpes")})
+    # pbo — degenerate -> spec-gated (a real degenerate-split property).
     pbo = res.get("pbo_overall")
     if pbo is not None and not res.get("pbo_degenerate"):
         rows["pbo"] = (True, V_FAIL if pbo > 0.15 else V_PASS, {"pbo_overall": pbo, "p_value": res.get("pbo_overall_p_value")})
     else:
-        rows["pbo"] = ("SPEC_GATED", "pbo_degenerate on near-ghost (no IS/OOS split variation to overfit)")
+        rows["pbo"] = ("SPEC_GATED", "pbo_degenerate: no IS/OOS split variation to overfit on this spec")
     # bif.
     bif = res.get("bif")
     if bif is not None and not res.get("bif_computation_error"):
         rows["bif"] = (True, V_FAIL if bif > 4.0 else V_PASS, {"bif": bif, "detail": str(res.get("bif_detail"))[:120]})
     else:
-        rows["bif"] = ("SPEC_GATED", "bif not computable")
+        rows["bif"] = ("SPEC_GATED", "bif_computation_error")
     # slippage_survival.
     ss = res.get("slippage_survival")
     if isinstance(ss, dict) and ss:
         rows["slippage_survival"] = (True, V_NE, {k: ss.get(k) for k in ("breaks_at", "multiples", "pf") if k in ss})
-    # dsr / wrc / spa / monte_carlo_ruin — check presence; absent on uniformly-
-    # losing ghosts -> SPEC_GATED (no positive-performance distribution to test).
-    for gate, keys, reason in (
-        ("dsr", ("dsr", "dsr_pass", "deflated_sharpe_ratio"), "no positive Sharpe distribution to deflate on a uniformly-losing ghost"),
-        ("wrc", ("wrc_result", "wrc_p", "wrc_p_value"), "White's Reality Check needs a candidate outperformance; none on a losing ghost"),
-        ("spa", ("spa_consistent_p", "spa_p", "spa_result"), "Hansen SPA needs a candidate outperformance; none on a losing ghost"),
-        ("monte_carlo_ruin", ("probability_of_ruin", "probability_of_ruin_ci"), "MC-ruin needs an equity path distribution; WF class path emits none here"),
-    ):
-        val = next((res.get(k) for k in keys if res.get(k) is not None), None)
-        if val is not None:
-            rows[gate] = (True, V_NE, {gate: str(val)[:120]})
-        else:
-            rows[gate] = ("SPEC_GATED", reason)
+    # dsr — FIRES: computed unconditionally, nested at wf_metadata.dsr/dsr_pass
+    # (F-3 fix: was wrongly checked at top-level -> always None -> falsely
+    # spec-gated with a statistically-unsound "needs positive Sharpe" reason;
+    # DSR accepts any Sharpe sign). SPEC_GATED only when genuinely unavailable.
+    if wfm.get("dsr_unavailable") or wfm.get("dsr") is None:
+        rows["dsr"] = ("SPEC_GATED", f"dsr_unavailable (dsr={wfm.get('dsr')}, dsr_unavailable={wfm.get('dsr_unavailable')})")
+    else:
+        rows["dsr"] = (True, V_PASS if wfm.get("dsr_pass") else V_FAIL,
+                       {"dsr": wfm.get("dsr"), "dsr_pass": wfm.get("dsr_pass")})
+    # wrc / spa / monte_carlo_ruin — the class-CPCV walk-forward path does NOT
+    # compute these (F-4 fix: a PATH-level absence for EVERY spec, not a ghost
+    # property). PATH_GATED: their witnessed-firing requirement transfers to a
+    # path that computes them (the full run_backtest / promotion path).
+    for gate in ("wrc", "spa", "monte_carlo_ruin"):
+        rows[gate] = ("PATH_GATED", f"{gate} is not computed in the class-CPCV walk-forward path (path-level absence, all specs)")
     return rows
 
 
@@ -132,7 +139,10 @@ def main() -> int:
     done = {r["strategy_ref"] for r in counter._doc["runs"] if r["wave"] == WAVE and r["outcome"] in ("PASS", "FAIL")}
 
     specs = _specs()[: args.limit] if args.limit else _specs()
-    witnessed, spec_gated = set(), {}
+    witnessed, gated = set(), {}  # gated[gate] = (SPEC_GATED|PATH_GATED, reason)
+    raw_dir = os.path.join(BATTERY_DIR, "wave1r_raw")
+    os.makedirs(raw_dir, exist_ok=True)
+    SCOPE = "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence"
     print(f"WAVE-1R on {ENGINE_SHA[:8]} | {len(specs)} specs | FULL scope {WF_START}..{WF_END} | already done: {len(done)}", flush=True)
 
     for i, (stub, art) in enumerate(specs, 1):
@@ -140,16 +150,23 @@ def main() -> int:
             print(f"  [{i}/{len(specs)}] {stub} SKIP (already finalized)", flush=True); continue
         approx = art["approximation_metrics"]["binding_approximation_rate"]
         tid = counter.allocate(wave=WAVE, strategy_ref=stub, spec_hash=art["spec_hash"], engine_sha=ENGINE_SHA,
-                               binding_approximation_rate=approx, survivor_eligible=False, run_epoch=epoch)
+                               binding_approximation_rate=approx, survivor_eligible=False, run_epoch=epoch, scope_line=SCOPE)
         t0 = time.time()
         try:
             strat = from_compiled_spec(art, symbol="MES", timeframe="5m", strategy_name=stub)
             res = run_walk_forward_class(strategy=strat, start_date=WF_START, end_date=WF_END, embargo_bars=20)
+            # PERSIST the raw WF judge stats (grader lesson: a re-map must never
+            # need a re-run) — the slim slice _wf_gate_rows reads.
+            if isinstance(res, dict):
+                slim = {k: res.get(k) for k in ("wf_metadata", "wfe_overall", "wfe_status", "pbo_overall",
+                        "pbo_overall_p_value", "pbo_degenerate", "bif", "bif_computation_error", "bif_detail",
+                        "slippage_survival", "path_sharpes")}
+                json.dump(slim, open(os.path.join(raw_dir, stub + ".json"), "w", encoding="utf-8"), indent=1, default=str)
             rows = _wf_gate_rows(res) if isinstance(res, dict) else {}
             exit_prov = (art["spec"].get("framework_overlay") or {}).get("exit")
             for gate, info in rows.items():
-                if info[0] == "SPEC_GATED":
-                    spec_gated[gate] = info[1]  # rides forward (R-047 §2)
+                if info[0] in ("SPEC_GATED", "PATH_GATED"):
+                    gated[gate] = (info[0], info[1])
                     continue
                 _fired, verdict, receipt = info
                 witnessed.add(gate)
@@ -157,25 +174,31 @@ def main() -> int:
                               gate=gate, received=True, fired=True, verdict=verdict, binding_approximation_rate=approx,
                               inputs_seen=list(receipt.keys()), value=receipt,
                               engaged_features=["real_bar_data(S3_ratio_adj)", "cpcv", "fill_model"],
-                              exit_provenance=exit_prov, audit_level="first-passage-full")
+                              exit_provenance=exit_prov, audit_level="first-passage-full", scope_line=SCOPE)
             counter.finalize(tid, "FAIL")  # receipts, not returns — ghosts fail by design
-            print(f"  [{i}/{len(specs)}] {stub} DONE {time.time()-t0:.0f}s | witnessed={sorted(k for k in rows if rows[k][0] is True)} | spec_gated={sorted(k for k in rows if rows[k][0]=='SPEC_GATED')}", flush=True)
+            print(f"  [{i}/{len(specs)}] {stub} DONE {time.time()-t0:.0f}s | witnessed={sorted(k for k in rows if rows[k][0] is True)} | gated={sorted(k for k in rows if rows[k][0] in ('SPEC_GATED','PATH_GATED'))}", flush=True)
         except Exception as e:
             counter.finalize(tid, "ABORTED", abort_signature=repr(e)[:140])
             print(f"  [{i}/{len(specs)}] {stub} ABORTED {time.time()-t0:.0f}s: {e!r}", flush=True)
 
-    # Tooth-2 (R-043 §4): per-spec coverage; un-fired unconditional judges are
-    # dispositioned SPEC_GATED (rides forward) / PATH_GATED (forge_score).
+    # Tooth-2 (R-043 §4): every un-witnessed unconditional judge is dispositioned
+    # with its ACTUAL reason (SPEC_GATED = ghost-spec property, rides forward;
+    # PATH_GATED = the class-CPCV path doesn't surface it — NOT "did not fire").
     disp = {}
     for g in ledger.unconditional_gate_names():
         if g in witnessed:
             continue
-        if g == "forge_score":
+        if g in gated:
+            kind, reason = gated[g]
+            disp[g] = f"{kind}: {reason}" + (" [rides forward to first post-WIRE-1 wave]" if kind == "SPEC_GATED" else "")
+        elif g == "performance_gate":
+            disp[g] = ("PATH_GATED: check_performance_gate FIRES per-OOS-window inside run_class_backtest "
+                       "(witnessed on shakedown-1's single-backtest path) but is NOT aggregated into the WF "
+                       "top-level result — a runner aggregation boundary, NOT 'did not fire' and NOT a ghost property")
+        elif g == "forge_score":
             disp[g] = "PATH_GATED: crisis-veto structurally untestable on the WF class path (crisis_results None)"
-        elif g in spec_gated:
-            disp[g] = f"SPEC_GATED (rides forward to first post-WIRE-1 wave): {spec_gated[g]}"
         else:
-            disp[g] = "SPEC_GATED (rides forward): judge did not fire on any tier-b near-ghost at full scope"
+            disp[g] = "PATH_GATED: not surfaced in the class-CPCV walk-forward aggregate result"
     undispositioned = []
     for stub, _ in specs:
         for gap in ledger.coverage_gaps(strategy_ref=stub, wave=WAVE):
@@ -188,8 +211,8 @@ def main() -> int:
         "n_trials_total": counter.total_trials, "outcomes": counter.outcomes(),
         "survivor_eligibility": "NONE (R-047 — tier-b near-ghosts; product is RECEIPTS not returns)",
         "judges_witnessed_this_wave": sorted(witnessed),
-        "judges_spec_gated_ride_forward": disp,
-        "commissioning_note": "'fully commissioned' is annotated per-judge/per-wave (R-047 §2 honest commissioning) — SPEC_GATED judges await the first post-WIRE-1 real-fidelity wave",
+        "judges_gated_this_wave": disp,  # SPEC_GATED (ghost-spec, rides forward) + PATH_GATED (class-CPCV path doesn't surface it)
+        "commissioning_note": "per-judge/per-wave honest commissioning (R-047 §2): SPEC_GATED judges ride forward to the first post-WIRE-1 wave; PATH_GATED judges (e.g. performance_gate fires per-window but isn't aggregated here; wrc/spa/mc not computed on the class-CPCV path) are witnessed on a path that surfaces them, NOT deferred as ghost-properties",
         "tooth2_fail_closed": len(undispositioned) == 0,
         "undispositioned_gaps": undispositioned[:20],
     }

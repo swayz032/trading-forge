@@ -4,6 +4,20 @@
 
 ---
 
+## AR-044 · 2026-07-19 · ★ CORRECTION of AR-043: the independent grade caught REAL defects in my WAVE-1R judge-mapping — BAND 5 NOT-SAFE. My "verdicts honest, no false-green" self-cert was INFLATED. Root-caused, mapping FIXED, buggy run SUPERSEDED, re-running clean. The doer≠grader loop working exactly as designed.
+
+**AR-043 is CORRECTED. The independent grader (doer≠grader, live re-execution) graded the WAVE-1R runner BAND 5, NOT-SAFE** and proved 3 real defects my self-verification missed — because I checked the judges the runner CHOSE to disposition, not whether the dispositions themselves were correct (the exact methodological gap the audit exists to catch):
+- **F-1 (CRITICAL, false-green risk):** `cpcv` verdict read `wf_metadata.min_paths` — a key that DOESN'T EXIST (real key is `n_paths`, floor 15 per `promotion-gate-orchestrator.ts:52`). The check degenerated to `n_folds>=0` = ALWAYS PASS; vacuous. Didn't flip this wave (config-fixed) but would rubber-stamp a future short-path wave.
+- **F-2 (CRITICAL, false disposition):** `performance_gate` was labeled "SPEC_GATED: did not fire" — but it DOES fire per-OOS-window inside `run_class_backtest` (grader reproduced "Performance gate REJECTED..." live); it's just not aggregated into the WF top-level dict I inspected. A runner aggregation boundary, NOT "did not fire", NOT a ghost property.
+- **F-3 (CRITICAL, false disposition):** `dsr` was labeled SPEC_GATED "no positive Sharpe to deflate" — but DSR IS computed unconditionally (any Sharpe sign) and nested at `wf_metadata.dsr`/`dsr_pass` (I wrongly checked top-level → always None). My stated reason was statistically unsound; dsr may not need to ride forward at all.
+- F-4/F-5/F-6/F-7 (LOW): wrc/spa/mc reason mischaracterized (path-absence, not ghost-property); global-not-per-spec disposition sets (latent); wave-1R rows' scope_line said "shakedown"; dataset_hash not per-trial.
+
+**FIXED (`run_wave1r.py` + minimal `passage_ledger.record` scope_line param, instrument tests still 17/17):** `_wf_gate_rows` now reads the REAL nested keys — `cpcv` verdict = `n_paths>=15`; `dsr` WITNESSED from `wf_metadata.dsr/dsr_pass` (SPEC_GATED only if genuinely `dsr_unavailable`); `performance_gate`/`wrc`/`spa`/`monte_carlo_ruin` correctly PATH_GATED (the class-CPCV path doesn't surface them — witnessed on a path that does, NOT deferred as ghost-properties). **Added raw-WF-result persistence (`wave1r_raw/`) so a future re-map NEVER needs a re-run — the grader's lesson.** Verifying the fix on one reduced-scope spec now.
+
+**SUPERSEDING the buggy run (honest handling):** the old wave-1R counter trials + ledger rows + verdict are a DEFECTIVE run (buggy audit mapping), being corrected before any downstream trust. Clearing them and re-running clean — NOT a leaked-trial violation (the same 16 deterministic backtests are reproduced with correct audit; keeping both would double-count the same specs and wrongly inflate the luck-math trial count). shakedown-1's 16 entries (correct) stay untouched. Then re-run the full 16 (fixed) + re-grade. WIRE-1 parallel unchanged. The 77 stay SEALED.
+
+---
+
 ## AR-043 · 2026-07-19 · WAVE-1R COMPLETE (R-047) — the real-data machinery proof is DONE. 5 anti-overfit judges WITNESSED firing on real S3 data across all 16; 4 SPEC-GATED ride-forward exactly as pre-committed; Tooth-2 fail-closed; verdicts honest (no false-green). Independent grade running.
 
 **WAVE_1R_COMPLETE on pinned engine 404a3396, FULL scope (`2016-01-01..2024-12-31`, CPCV), real S3 ratio-adjusted bars (dataset_hash-stamped, quality-gated).** All 16 tier-b specs ran the real walk-forward anti-overfit battery SOLO (~30 min/spec for the high-signal ones; a few ~150s; no crashes — my mid-run "1 ABORTED" was a snapshot of an in-progress allocate, corrected).
