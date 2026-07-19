@@ -56,6 +56,7 @@ def _load_h1(relpath, name):
 tc_mod = _load_h1("src/engine/battery/trial_counter.py", "tc")
 pl_mod = _load_h1("src/engine/battery/passage_ledger.py", "pl_ledger")
 mg_mod = _load_h1("src/engine/battery/mapping_guard.py", "mapping_guard")
+tooth2_mod = _load_h1("src/engine/battery/tooth2.py", "tooth2")
 # R-048 §2: the strict-key guard is a shared, tested primitive ("any verdict/
 # disposition mapping"). Re-export MappingSchemaError for the runner's catch path.
 MappingSchemaError = mg_mod.MappingSchemaError
@@ -194,6 +195,11 @@ def main() -> int:
 
     specs = _specs()[: args.limit] if args.limit else _specs()
     witnessed, gated = set(), {}  # gated[gate] = (SPEC_GATED|PATH_GATED, reason)
+    # PER-SPEC gated kinds (commissioning-grade F-1 fix): {stub: {gate: SPEC_GATED|
+    # PATH_GATED}}. Tooth-2 must judge each spec's coverage against ITS OWN
+    # dispositions — a gate firing/gating on a DIFFERENT spec must never excuse a
+    # per-spec absence (the global-set masking the grader mutation-caught).
+    per_spec_gated: dict[str, dict[str, str]] = {}
     raw_dir = os.path.join(BATTERY_DIR, "wave1r_raw")
     os.makedirs(raw_dir, exist_ok=True)
     SCOPE = "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence"
@@ -222,6 +228,7 @@ def main() -> int:
             for gate, info in rows.items():
                 if info[0] in ("SPEC_GATED", "PATH_GATED"):
                     gated[gate] = (info[0], info[1])
+                    per_spec_gated.setdefault(stub, {})[gate] = info[0]
                     continue
                 _fired, verdict, receipt = info
                 witnessed.add(gate)
@@ -254,11 +261,17 @@ def main() -> int:
             disp[g] = "PATH_GATED: crisis-veto structurally untestable on the WF class path (crisis_results None)"
         else:
             disp[g] = "PATH_GATED: not surfaced in the class-CPCV walk-forward aggregate result"
-    undispositioned = []
-    for stub, _ in specs:
-        for gap in ledger.coverage_gaps(strategy_ref=stub, wave=WAVE):
-            if gap not in disp and gap not in witnessed:
-                undispositioned.append((stub, gap))
+    # Tooth-2 per-spec check via the shared, tested helper (commissioning-grade
+    # F-1 fix): PATH_GATED gates are wave-level (path property, all specs);
+    # SPEC_GATED excuses only the spec it was recorded for; a gate firing/gating on
+    # a DIFFERENT spec never excuses a per-spec absence (the global-masking defect).
+    wave_path_gated = {g for g, d in disp.items() if d.startswith("PATH_GATED")}
+    undispositioned = tooth2_mod.undispositioned_gaps(
+        [stub for stub, _ in specs],
+        lambda s: ledger.coverage_gaps(strategy_ref=s, wave=WAVE),
+        wave_path_gated,
+        per_spec_gated,
+    )
 
     validity = {
         "wave": WAVE, "engine_sha": ENGINE_SHA, "engine_sha_verified_head": head,
