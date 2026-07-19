@@ -4,6 +4,18 @@
 
 ---
 
+## AR-038 · 2026-07-19 · R-043 accepted. Binding-primitives packet DESIGN PHASE complete — ratify staged, GATE-LAYER route decided WITH EVIDENCE (R-042 pin 4b); WIRE-1 build proceeds autonomously. Tooth-1 + Tooth-2 + F-3 carries recorded. Track-A shakedown sequence teed up.
+
+**R-043 read + accepted.** Binding packet needs no further ruling (R-042 pin 4 = scope, R-043 §2 GO). Tooth-1 (`compile_fidelity_forensics` built after the binding packet, before first survivor — owner: me) + Tooth-2 (the runner precondition is now a FAIL-CLOSED INVARIANT: no wave verdict unless `coverage_gaps()` empty for every strategy or every gap dispositioned in the validity block) both recorded.
+
+**Binding-primitives ratify STAGED:** `docs/designs/h1-binding-primitives-enrichment-ratify-2026-07-19.md`. **Architecture decision (R-042 pin 4b, mine to make WITH EVIDENCE): the GATE-LAYER route.** Evidence: `SpecConditionStrategy.compute(self, df)` (`spec_condition_compiler.py:563`) gets ONLY the exec-TF frame, while the real per-bar HTF/session/bias adapter (`compute_session_context`+`compute_bias`+`htf_cache`) ALREADY runs in the eligibility gate (`backtester.py:400-414`). Route the real signals to the bindings via that existing adapter rather than DUPLICATE multi-TF plumbing into every strategy instance (the repo's named anti-duplication liability). Scoped: plumbing work-item + WIRE 1 (WAIT_STRUCTURE, feed a real HTF frame to `compute_structure_state` instead of the self-referential exec window) + WIRE 2 (WAIT_BIAS, replace the EMA-slope proxy with `compute_bias`'s net_bias sign) + the `confirmation_native` partial win; RETEST/full-CONFIRMATION/FILTER-heavy DEFERRED with named-owner carry + trigger. Each wire flag-gated default-OFF until its both-polarity ablation proof (proxy≠wired on the same bars) + independent grade. **DoD = the 0.99 must MOVE, measurably (per-family before/after).** Caveat pinned: the DoD needs REAL multi-TF data (≥200 daily bars + `load_n_timeframes`), not the single synthetic exec frame the Packet-2 DoD used — the real work-item.
+
+**Proceeding autonomously to the WIRE-1 plumbing spike** (design-spike the gate-layer seam on one family, prove proxy≠wired, before generalizing — R-042 pin 4b). Not holding — the architecture call is mine and R-043 GO'd the build.
+
+**Track-A (shakedown, parallel) sequence:** tier-(a) integer receipt (load-bearing verify-from-disk — deterministic verdict re-rollup, done with care not rushed) → trial-counter zero-point stamp on `404a3396` → BUILD the battery runner (enforcing the Tooth-2 fail-closed coverage invariant, wiring counter+ledger over the 16 compilable specs) → dispatch shakedown wave-1. F-3 (npm install + TS test) before the wave-1 verdict read. The 77 stay SEALED.
+
+---
+
 ## AR-037 · 2026-07-18 · R-042 instrumentation BUILT + INDEPENDENTLY GRADED BAND 7 SAFE-TO-LAND, landed. Trial-counter + passage-ledger with a CODE-DERIVED gate enum (26 gates, spot-checked against source). Grader's 3 defects all CLOSED in-wave. One standing precondition carried to the battery runner.
 
 **Built as ratified (R-042 pins 1–3):** `src/engine/battery/trial_counter.py` + `passage_ledger.py` + tests (26 pass).
