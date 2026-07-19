@@ -4,6 +4,20 @@
 
 ---
 
+## AR-035 · 2026-07-18 · R-041 executed: binding-primitives investigation (the real fidelity lever) LAUNCHED; wave-1 instrumentation (trial-counter + passage-ledger) DESIGNED for ratification; F-3 owned; tier-(a) pin flagged as a load-bearing verify-from-disk step (not rushed).
+
+**R-041 read + accepted.** The ~0.99 read internalized: it's an ENGINE-family-binding property, NOT the classifier → (2b) stays reserved, wave 1 is the honestly-labeled PIPELINE-SHAKEDOWN (scope-line on every verdict, NO survivor eligibility, but every run feeds the trial counter). F-3 accepted-in-writing with me as named owner (toolchain repair + TS test land BEFORE the wave-1 verdict read — the passage ledger is the stamp's consumer).
+
+**1. THE REAL FIDELITY LEVER — binding-primitives investigation LAUNCHED (R-041 §4).** A focused agent is answering the PINNED first question — per approximating family (WAIT_STRUCTURE/VERIFY_STRUCTURE/WAIT_BIAS/CONFIRM_DIRECTION/WAIT_RETEST/FILTER/WAIT_CONFIRMATION), is closing the approximation **WIRING** `FAMILY_META` to an already-built Waves-25.x evaluator (StructureState/BOS/CHoCH, liquidity map, killzones, VWAP bands, HTF narrative) vs **BUILDING** new — with file:line evidence, not assumed. Deliverable: a per-family WIRING/WIRING+ADAPTER/BUILD table + the weeks-vs-months bottom-line + the highest-leverage first wire. Findings will land in a follow-up AR.
+
+**2. WAVE-1 INSTRUMENTATION — DESIGNED for ratification** (R-036 pin 2 + pin 8 / R-041 §5): `docs/designs/h1-wave1-instrumentation-trial-counter-passage-ledger-2026-07-18.md`. The trial-counter artifact (from-zero, append-only, every run incl. abort-path counts, resume-dedup, binding-approx on every trial, survivor_eligible HARD false) + the passage-ledger format (one row per strategy×gate: received+fired+engagement_receipt with inputs visible; `received=true,fired=false`=dormant-judge alarm; exit_provenance field = the F-3 stamp's consumer; engaged-features sweep per row). Three ratification asks in the doc (schema/invariants, gate-class list incl. whether compile-fidelity-forensics is a ledger gate, scope-line wording).
+
+**3. TIER-(a) INTEGER PIN — flagged as a LOAD-BEARING verify-from-disk step, NOT rushed.** The video_unit rollup is located (`SEALED-READ/emit/phase_a_consensus.json`: 13 strategies across 11 live video-units — iyKk9=0 theory-talk, YqY0 & st5e = 2 each). But the final verdict's per-video CLEAN determination was read-once/computed-deterministically and NOT persisted as a structured per-video-clean artifact, so the exact clean-STRATEGY integer needs a careful deterministic re-rollup (two-path-derivation law; advisor-never-from-memory). I will derive it with a receipt at wave-1 registration rather than guess it now (AR-028's "between 9 and 13" is a bound, not the pin).
+
+**HOLD on wave-1 DISPATCH** pending: ratification of the instrumentation design (item 2), the tier-(a) receipt (item 3), and — informing the parallel track — the binding-primitives finding (item 1). Dispatch is the compute-heavy shakedown step; it runs once the instruments are ratified + the counter zero-point is stamped on engine 404a3396. The 77 stay SEALED.
+
+---
+
 ## AR-034 · 2026-07-18 · R-040 PACKET 2 (runnable-spec compiler) BUILT + INDEPENDENTLY GRADED BAND 7 SAFE-TO-LAND, landed. First WITNESSED H1→H2 physical connection on pinned engine 404a3396. Both packets now landed+graded — wave 1's precondition is met. ONE deferred item needs operator accept-in-writing (F-3, TS test).
 
 **Built under `docs/designs/h1-packet2-runnable-spec-compiler-ratify-2026-07-18.md` (R-040).** New `src/engine/extraction/spec_producer.py`: certified `staging_v32` extraction → SpecArtifact (`.spec.json`) → the EXISTING onboarding back-half. Deliverables, all four R-040 honesty pins honored:
