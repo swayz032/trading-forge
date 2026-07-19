@@ -1,13 +1,16 @@
 # Wave 25 Pass 7 — Exit Engine A/B Report
 
-**Run date:** 2026-07-06 07:08 UTC
+**Run date:** 2026-07-19 00:02 UTC
 **Window:** 2025-01-01 → 2025-01-07
 **Strategies tested:** 1
-**Adaptive exit wired:** NO (P7.A1–A4 state; adaptive path stubs to static_styleC)
+**Non-regression gate enforcement:** ADVISORY (logged, not blocking)
 
-> NOTE: adaptive exit engine wiring (P7.A5) is not yet complete.
-> Expect zero delta between adaptive and static_styleC runs.
-> Gate is advisory only until `ADAPTIVE_WIRED=true`.
+> NOTE: the adaptive exit engine runs unconditionally on the adaptive
+> arm (fixwave 2026-07-17 adaptive_ctx fix) — real divergence from
+> static_styleC is expected below. `ADAPTIVE_WIRED=false` (default)
+> only means the non-regression gate is advisory, not that the
+> adaptive path is a stub. Set `ADAPTIVE_WIRED=true` to make a
+> detected regression fail the run.
 
 ## Overall Gate: PASS
 
@@ -30,7 +33,7 @@
 | max_dd_regression | 800.00 | 800.00 | PASS — OK |
 | trade_count_parity | 20.00 | 20.00 | PASS — OK |
 
-**Strategy gate:** PASS (advisory — adaptive not yet wired)
+**Strategy gate:** PASS (advisory — gate enforcement off)
 
 ---
 

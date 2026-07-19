@@ -8,20 +8,23 @@
  *   could not distinguish this from a genuine pre-Wave-29 legacy null, so it silently
  *   PROCEEDED via pbo_unavailable_legacy — indistinguishable, untraceable.
  *
- *   THE RESOLUTION (merge of two deep-scan sessions, 2026-06-29):
+ *   THE RESOLUTION (merge of two deep-scan sessions, 2026-06-29; operator-ratified
+ *   BLOCK direction 2026-07-17 — see gate-contract-restoration-2026-07-17 ratify packet):
  *     walk_forward.py emits wf_metadata.pbo_degenerate_reason="cpcv_is_sharpe_unavailable"
  *     when mode="cpcv". evaluatePboGate() reads pbo_degenerate_reason and returns a
- *     DISTINCT result — PROCEED (ok:true) with reason "lifecycle.pbo_cpcv_is_unavailable"
+ *     DISTINCT result — BLOCK (ok:false) with reason "lifecycle.pbo_cpcv_is_unavailable"
  *     and cpcv_exempt:true in the audit payload, NOT the generic legacy grandfather.
  *
- *   WHY PROCEED, NOT BLOCK: CPCV is the default WF_MODE, so a BLOCK-on-degenerate
- *   would strangle the ENTIRE pipeline (no strategy could ever clear PBO). The honest
- *   "explicit exempt + proceed" stopgap preserves the audit-trail honesty without
- *   killing the pipeline; the real fix is Wave 30 per-path IS Sharpe tracking.
+ *   WHY BLOCK, NOT PROCEED: a PBO overfit gate that is structurally unable to measure
+ *   overfitting in CPCV mode (the default WF_MODE) must not silently authorize
+ *   promotion — ship gates strict, then loosen with data, not fear (CLAUDE.md §13).
+ *   The operator ratified this on 2026-07-17 after a prior session flagged the
+ *   PROCEED/BLOCK disagreement as an open decision (commit 707810b7). The real fix
+ *   remains Wave 30 per-path IS Sharpe tracking, which removes the exemption entirely.
  *
  *   CRITICAL DISTINCTION the gate must preserve:
  *     - Legacy null (pre-Wave-29, no reason) → PROCEED via pbo_unavailable_legacy
- *     - CPCV degenerate (reason set)         → PROCEED via pbo_cpcv_is_unavailable (DISTINCT)
+ *     - CPCV degenerate (reason set)         → BLOCK via pbo_cpcv_is_unavailable (DISTINCT)
  *     - Both are pbo_overall===null but route to different, traceable audit actions.
  */
 
@@ -34,18 +37,18 @@ vi.mock("../lib/logger.js", () => ({
 
 const CPCV_REASON = "cpcv_is_sharpe_unavailable";
 
-describe("evaluatePboGate — FINDING-1: CPCV degenerate path is EXEMPT (proceed, distinct audit)", () => {
+describe("evaluatePboGate — FINDING-1: CPCV degenerate path is EXEMPT (blocks, distinct audit)", () => {
   afterEach(() => {
     delete process.env["PBO_OVERFIT_THRESHOLD_PCT"];
   });
 
-  it("PROCEEDS with the distinct cpcv-exempt audit when pbo_degenerate_reason is set and pbo_overall is null", () => {
+  it("BLOCKS with the distinct cpcv-exempt audit when pbo_degenerate_reason is set and pbo_overall is null", () => {
     const r = evaluatePboGate({ pbo_overall: null, pbo_p_value: null, pbo_degenerate_reason: CPCV_REASON });
-    expect(r.ok).toBe(true);
+    expect(r.ok).toBe(false);
     expect(r.reason).toBe("lifecycle.pbo_cpcv_is_unavailable");
     expect(r.legacyNull).toBe(false);
     expect(r.auditPayload.cpcv_exempt).toBe(true);
-    expect(r.auditPayload.blocked).toBe(false);
+    expect(r.auditPayload.blocked).toBe(true);
   });
 
   it("is DISTINCT from the legacy-null grandfather path (different audit action, legacyNull flag)", () => {
@@ -55,7 +58,8 @@ describe("evaluatePboGate — FINDING-1: CPCV degenerate path is EXEMPT (proceed
     expect(exempt.legacyNull).toBe(false);
     expect(legacy.reason).toBe("lifecycle.pbo_unavailable_legacy");
     expect(legacy.legacyNull).toBe(true);
-    // Both proceed, but they must be queryably different (the honesty guarantee).
+    // One blocks (CPCV-exempt), one proceeds (legacy grandfather) — they must be
+    // queryably different (the honesty guarantee).
     expect(exempt.reason).not.toBe(legacy.reason);
   });
 

@@ -27,9 +27,9 @@
  */
 
 import { randomUUID } from "crypto";
-import { eq, and, desc, gte, sql, count } from "drizzle-orm";
+import { eq, and, desc, gte, sql, count, isNull } from "drizzle-orm";
 import { db } from "../db/index.js";
-import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, complianceRulesets, pilotSessions } from "../db/schema.js";
+import { strategies, strategyNames, strategyGraveyard, backtests, auditLog, lifecycleTransitions, monteCarloRuns, quantumMcRuns, paperSessions, paperTrades, paperPositions, complianceRulesets, pilotSessions } from "../db/schema.js";
 import { computeAgreement } from "../lib/quantum-agreement.js";
 import { getLatestAdversarialStressRun } from "./adversarial-stress-service.js";
 import { getLatestFrankensteinRun } from "./frankenstein-service.js";
@@ -3447,6 +3447,63 @@ export class LifecycleService {
 
         leavingSessId = activeSess?.id ?? null;
         if (leavingSessId) {
+          // M3 CRIT fix (2026-07-17): a Style C position can still be open on the
+          // internal-engine session at the moment of promotion (the 6h autonomous
+          // lifecycle-auto-check cron carries no open-position filter). Once the
+          // stream below stops, no further bar ever reaches this position — closedAt
+          // stays NULL forever, and because DLL_AGGREGATE_SESSION_STATUSES intentionally
+          // includes 'stopped' sessions, its frozen unrealizedPnl keeps feeding the real
+          // kill-switch Layer 2/3 (checkLayer2DailyLoss/checkLayer3TrailingDD) aggregation
+          // for that account indefinitely. Force-close BEFORE tearing down the stream so
+          // the position falls out of every closedAt-IS-NULL query going forward. Atomic
+          // claim (closedAt IS NULL guard) mirrors closePosition's own idempotency claim
+          // in paper-execution-service.ts. unrealizedPnl is left untouched — its last
+          // known value becomes the frozen final realized figure for this row (this path
+          // does not write a paper_trades journal entry, unlike closePosition's fuller
+          // close). Never blocks the transition — a failure here still lets stopStream
+          // and the promotion proceed, just with a distinct error audit so the operator
+          // can catch it.
+          try {
+            const closeTs = new Date();
+            const forceClosedPositions = await db
+              .update(paperPositions)
+              .set({ closedAt: closeTs })
+              .where(and(eq(paperPositions.sessionId, leavingSessId), isNull(paperPositions.closedAt)))
+              .returning({ id: paperPositions.id, symbol: paperPositions.symbol, unrealizedPnl: paperPositions.unrealizedPnl });
+
+            if (forceClosedPositions.length > 0) {
+              logger.warn(
+                { strategyId: id, sessionId: leavingSessId, fromState, toState, positionIds: forceClosedPositions.map((p) => p.id) },
+                "PAPER→broker-authoritative: force-closed orphaned open internal-engine position(s) before stream teardown",
+              );
+              db.insert(auditLog).values({
+                action: "lifecycle.paper_position_force_closed_on_promotion",
+                entityId: id, entityType: "strategy", status: "warn",
+                decisionAuthority: "system",
+                input: { fromState, toState, sessionId: leavingSessId },
+                result: {
+                  closedAt: closeTs.toISOString(),
+                  positions: forceClosedPositions.map((p) => ({ id: p.id, symbol: p.symbol, finalUnrealizedPnl: p.unrealizedPnl })),
+                },
+                correlationId: options.correlationId ?? null,
+              }).catch((e) => { logger.warn({ err: e }, "lifecycle.paper_position_force_closed_on_promotion audit failed (non-blocking)"); });
+            }
+          } catch (forceCloseErr) {
+            const fcErrMsg = forceCloseErr instanceof Error ? forceCloseErr.message : String(forceCloseErr);
+            logger.error(
+              { strategyId: id, sessionId: leavingSessId, fromState, toState, err: forceCloseErr },
+              "PAPER→broker-authoritative: force-close of open paper_positions FAILED — position(s) may remain open and continue feeding DLL/trailing-DD aggregation",
+            );
+            db.insert(auditLog).values({
+              action: "lifecycle.paper_position_force_close_failed",
+              entityId: id, entityType: "strategy", status: "error",
+              decisionAuthority: "system",
+              input: { fromState, toState, sessionId: leavingSessId },
+              result: { error: fcErrMsg },
+              correlationId: options.correlationId ?? null,
+            }).catch((e) => { logger.warn({ err: e }, "lifecycle.paper_position_force_close_failed audit failed (non-blocking)"); });
+          }
+
           await stopStream(leavingSessId);
           logger.info({ strategyId: id, sessionId: leavingSessId, fromState, toState }, "PAPER→broker-authoritative: stopped internal stream (TradersPost authority declared)");
         }

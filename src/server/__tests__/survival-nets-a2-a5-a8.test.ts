@@ -118,6 +118,10 @@ function makeHmacSig(secret: string, timestamp: number, reason: string): string 
   return createHmac("sha256", secret).update(`${timestamp}:${reason}`, "utf8").digest("hex");
 }
 
+function makeStuckSessionHmacSig(secret: string, timestamp: number, reason: string, sessionId: string): string {
+  return createHmac("sha256", secret).update(`${timestamp}:${reason}:${sessionId}`, "utf8").digest("hex");
+}
+
 async function buildRecoveryApp(): Promise<Express> {
   const app = express();
   app.use(express.json());
@@ -344,12 +348,12 @@ describe("A-5: POST /api/admin/clear-stuck-session", () => {
     expect(status).toBe(401);
   });
 
-  it("returns 200 + clears stuck session + writes audit on valid HMAC", async () => {
+  it("returns 200 + clears stuck session + writes audit on valid HMAC (session_id bound into signature)", async () => {
     const app = await buildRecoveryApp();
     const timestamp = Math.floor(Date.now() / 1000);
     const reason = "force_flatten_stuck_vacation";
     const sessionId = "sess-abc-123";
-    const sig = makeHmacSig(TEST_SECRET, timestamp, reason);
+    const sig = makeStuckSessionHmacSig(TEST_SECRET, timestamp, reason, sessionId);
 
     const { status, body } = await callRecovery(
       app,
@@ -370,6 +374,47 @@ describe("A-5: POST /api/admin/clear-stuck-session", () => {
         status: "success",
       }),
     );
+  });
+
+  it("RED-PROOF: a signature that omits session_id from the signed payload no longer authorizes clearing an ARBITRARY session_id", async () => {
+    // This is the exact exploit shape the finding described: sign only over
+    // (timestamp, reason) — the OLD canonical string — then swap in an
+    // arbitrary session_id the signer never intended to authorize. Against
+    // the pre-fix code this returned 200 and cleared "victim-session-999".
+    // Against the fixed code it must be rejected: the signature no longer
+    // matches because session_id is now part of what's signed.
+    const app = await buildRecoveryApp();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const reason = "force_flatten_stuck_vacation";
+    const oldSchemeSig = makeHmacSig(TEST_SECRET, timestamp, reason); // signed WITHOUT session_id
+
+    const { status, body } = await callRecovery(
+      app,
+      "/clear-stuck-session",
+      { timestamp, reason, session_id: "victim-session-999" },
+      { "x-restart-signature": oldSchemeSig },
+    );
+
+    expect(status).toBe(401);
+    expect(body.error).toBe("hmac_verification_failed");
+    expect(mocks.clearStuckSessionId).not.toHaveBeenCalled();
+  });
+
+  it("a signature bound to one session_id does not authorize clearing a DIFFERENT session_id", async () => {
+    const app = await buildRecoveryApp();
+    const timestamp = Math.floor(Date.now() / 1000);
+    const reason = "force_flatten_stuck_vacation";
+    const sigForSessionA = makeStuckSessionHmacSig(TEST_SECRET, timestamp, reason, "session-a");
+
+    const { status } = await callRecovery(
+      app,
+      "/clear-stuck-session",
+      { timestamp, reason, session_id: "session-b" },
+      { "x-restart-signature": sigForSessionA },
+    );
+
+    expect(status).toBe(401);
+    expect(mocks.clearStuckSessionId).not.toHaveBeenCalled();
   });
 });
 
@@ -415,7 +460,7 @@ describe("M5: admin-recovery threads inbound x-correlation-id", () => {
     const timestamp = Math.floor(Date.now() / 1000);
     const reason = "force_flatten_stuck";
     const sessionId = "sess-cid-1";
-    const sig = makeHmacSig(TEST_SECRET, timestamp, reason);
+    const sig = makeStuckSessionHmacSig(TEST_SECRET, timestamp, reason, sessionId);
 
     const { status, body } = await callRecovery(
       app,

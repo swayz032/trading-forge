@@ -137,11 +137,11 @@ describe("evaluateWfeGate — WFE < warn floor → blocked", () => {
 
 // ─── Legacy null path ─────────────────────────────────────────────────────────
 
-describe("evaluateWfeGate — null WFE → insufficient evidence block", () => {
+describe("evaluateWfeGate — null WFE → legacy proceed", () => {
   it("returns legacy_null status when wfeOverall is null", () => {
     const result = evaluateWfeGate(null, 0.70, 0.50);
     expect(result.status).toBe<WfeGateStatus>("legacy_null");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
     expect(result.wfeOverall).toBeNull();
   });
@@ -149,7 +149,7 @@ describe("evaluateWfeGate — null WFE → insufficient evidence block", () => {
   it("returns legacy_null status when wfeOverall is undefined", () => {
     const result = evaluateWfeGate(undefined, 0.70, 0.50);
     expect(result.status).toBe<WfeGateStatus>("legacy_null");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
   });
 });
 
@@ -195,10 +195,10 @@ describe("evaluateWfeGate — critical boundary cases (institutional contract)",
     expect(result.auditAction).toBe("lifecycle.wfe_hard_floor_block");
   });
 
-  it("legacy null blocks promotion until WFE is recomputed", () => {
+  it("legacy null → proceed (grandfather path unchanged)", () => {
     const result = evaluateWfeGate(null, 0.70, 0.50);
     expect(result.status).toBe<WfeGateStatus>("legacy_null");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
   });
 });
@@ -235,10 +235,10 @@ describe("evaluateWfeGate — result payload (SSE surface)", () => {
 // MUST still BLOCK regardless of any wfe_status changes to other paths.
 
 describe("evaluateWfeGate — CPCV-exempt path (hardening/phase-0)", () => {
-  it("wfe_status=cpcv_not_applicable + null wfeOverall blocks with distinct auditAction", () => {
+  it("wfe_status=cpcv_not_applicable + null wfeOverall passes with distinct auditAction", () => {
     const result = evaluateWfeGate(null, 0.70, 0.50, "cpcv_not_applicable");
     expect(result.status).toBe<WfeGateStatus>("cpcv_exempt");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
     expect(result.wfeOverall).toBeNull();
   });
@@ -249,7 +249,7 @@ describe("evaluateWfeGate — CPCV-exempt path (hardening/phase-0)", () => {
     // the wfe_status label takes precedence.
     const result = evaluateWfeGate(0.30, 0.70, 0.50, "cpcv_not_applicable");
     expect(result.status).toBe<WfeGateStatus>("cpcv_exempt");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
   });
 

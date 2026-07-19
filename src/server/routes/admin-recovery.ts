@@ -39,7 +39,8 @@
  * Curl example (clear-stuck-session):
  *   TIMESTAMP=$(date +%s)
  *   REASON="force_flatten_stuck_pos_manually_closed"
- *   SIG=$(echo -n "${TIMESTAMP}:${REASON}" | openssl dgst -sha256 \
+ *   SESSION_ID="<session-uuid>"
+ *   SIG=$(echo -n "${TIMESTAMP}:${REASON}:${SESSION_ID}" | openssl dgst -sha256 \
  *         -hmac "$ADMIN_RESTART_HMAC_SECRET" | awk '{print $2}')
  *   curl -X POST https://<relay>/api/admin/clear-stuck-session \
  *     -H "Content-Type: application/json" \
@@ -47,9 +48,13 @@
  *     -d "{\"timestamp\": $TIMESTAMP, \"reason\": \"$REASON\", \
  *          \"session_id\": \"<session-uuid>\"}"
  *
- * HMAC: HMAC-SHA256(ADMIN_RESTART_HMAC_SECRET, "${timestamp}:${reason}")
+ * HMAC (clear-kill-switch-cache): HMAC-SHA256(ADMIN_RESTART_HMAC_SECRET, "${timestamp}:${reason}")
+ * HMAC (clear-stuck-session): HMAC-SHA256(ADMIN_RESTART_HMAC_SECRET, "${timestamp}:${reason}:${session_id}")
+ *   session_id is bound into the signed payload so a signature only authorizes clearing the
+ *   specific session the signer intended — it cannot be replayed against an arbitrary session_id.
  * Replay protection: timestamp drift > 60s → 401.
- * Dev/test bypass: when ADMIN_RESTART_HMAC_SECRET is unset and NODE_ENV != "production".
+ * Fail-closed: when ADMIN_RESTART_HMAC_SECRET is unset, verification fails closed
+ * (reason_code "secret_not_configured") in EVERY environment — there is no dev/test bypass.
  *
  * Import logger from ./logger.js (not ../index.js) per CLAUDE.md §13 feedback rule.
  */
@@ -73,15 +78,19 @@ const HMAC_TIMESTAMP_DRIFT_MS = 60_000;
 
 /**
  * Verify X-Restart-Signature header using the same algorithm as self-restart.
- * Payload: "${timestamp}:${reason}"
+ * Payload: "${timestamp}:${reason}", or "${timestamp}:${reason}:${boundValue}" when
+ * boundValue is supplied — used by clear-stuck-session to bind the signature to the
+ * specific session_id being cleared (matching admin-frozen-policy-override.ts's pattern
+ * of including the mutation target in the signed canonical string).
  * Algorithm: HMAC-SHA256 with ADMIN_RESTART_HMAC_SECRET.
  *
- * Dev/test bypass when secret unset and NODE_ENV !== "production".
+ * Fails closed when the secret is unset, in every environment — no dev/test bypass.
  */
 function verifyRestartHmac(
   headerValue: string | undefined,
   timestamp: number,
   reason: string,
+  boundValue?: string,
 ): { ok: true } | { ok: false; reason_code: string } {
   const secret = process.env.ADMIN_RESTART_HMAC_SECRET;
 
@@ -96,7 +105,7 @@ function verifyRestartHmac(
     return { ok: false, reason_code: "missing_header" };
   }
 
-  const payload = `${timestamp}:${reason}`;
+  const payload = boundValue === undefined ? `${timestamp}:${reason}` : `${timestamp}:${reason}:${boundValue}`;
   const expected = createHmac("sha256", secret).update(payload, "utf8").digest("hex");
 
   if (headerValue.length !== expected.length) {
@@ -116,12 +125,21 @@ function verifyRestartHmac(
 
 /**
  * Shared body + HMAC validation for both recovery routes.
- * Returns { ok: true, timestamp, reason, correlationId } or sends the error response.
+ *
+ * When `bindField` is provided (e.g. "session_id"), that body field is required,
+ * folded into the signed canonical string as its 3rd component
+ * ("${timestamp}:${reason}:${boundValue}"), and returned as `boundValue` — so a
+ * signature only authorizes the specific mutation target the signer intended,
+ * not an arbitrary one swapped in at request time.
+ *
+ * Returns { ok: true, timestamp, reason, correlationId, boundValue? } or sends the
+ * error response.
  */
 function validateHmacRequest(
   req: Request,
   res: Response,
-): { ok: true; timestamp: number; reason: string; correlationId: string } | { ok: false } {
+  bindField?: "session_id",
+): { ok: true; timestamp: number; reason: string; correlationId: string; boundValue?: string } | { ok: false } {
   // Honor an inbound x-correlation-id header so operator-initiated recovery preserves
   // end-to-end trace continuity; generate a fresh UUID only when absent/empty.
   const inboundCorrelationId = req.headers["x-correlation-id"];
@@ -132,7 +150,7 @@ function validateHmacRequest(
         ? inboundCorrelationId[0].trim()
         : null;
   const correlationId = headerCorrelationId ?? randomUUID();
-  const body = (req.body ?? {}) as { timestamp?: unknown; reason?: unknown };
+  const body = (req.body ?? {}) as { timestamp?: unknown; reason?: unknown; session_id?: unknown };
 
   if (typeof body.timestamp !== "number") {
     res.status(400).json({ error: "missing_body_field", field: "timestamp", correlationId });
@@ -147,6 +165,15 @@ function validateHmacRequest(
   const timestamp = body.timestamp as number;
   const reason = (body.reason as string).trim();
 
+  let boundValue: string | undefined;
+  if (bindField === "session_id") {
+    if (typeof body.session_id !== "string" || (body.session_id as string).trim().length === 0) {
+      res.status(400).json({ error: "missing_body_field", field: "session_id", correlationId });
+      return { ok: false };
+    }
+    boundValue = (body.session_id as string).trim();
+  }
+
   // Replay protection
   const drift = Math.abs(Date.now() - timestamp * 1000);
   if (drift > HMAC_TIMESTAMP_DRIFT_MS) {
@@ -157,14 +184,14 @@ function validateHmacRequest(
 
   // HMAC verification
   const sig = req.header("x-restart-signature");
-  const verified = verifyRestartHmac(sig, timestamp, reason);
+  const verified = verifyRestartHmac(sig, timestamp, reason, boundValue);
   if (!verified.ok) {
     logger.warn({ reason_code: verified.reason_code, correlationId }, "admin-recovery: HMAC verification failed");
     res.status(401).json({ error: "hmac_verification_failed", reason_code: verified.reason_code, correlationId });
     return { ok: false };
   }
 
-  return { ok: true, timestamp, reason, correlationId };
+  return { ok: true, timestamp, reason, correlationId, boundValue };
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -224,18 +251,14 @@ adminRecoveryRoutes.post("/clear-kill-switch-cache", async (req, res) => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 adminRecoveryRoutes.post("/clear-stuck-session", async (req, res) => {
-  const validated = validateHmacRequest(req, res);
+  const validated = validateHmacRequest(req, res, "session_id");
   if (!validated.ok) return;
-  const { reason, correlationId } = validated;
+  const { reason, correlationId, boundValue: sessionId } = validated;
 
-  const body = (req.body ?? {}) as { session_id?: unknown };
-
-  if (typeof body.session_id !== "string" || (body.session_id as string).trim().length === 0) {
+  if (!sessionId) {
     res.status(400).json({ error: "missing_body_field", field: "session_id", correlationId });
     return;
   }
-
-  const sessionId = (body.session_id as string).trim();
 
   logger.info({ correlationId, reason, sessionId }, "admin-recovery: clearing stuck session entry block");
 

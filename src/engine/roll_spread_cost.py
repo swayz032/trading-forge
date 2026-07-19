@@ -30,6 +30,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import sys
 from datetime import date
 from decimal import Decimal
 from functools import lru_cache
@@ -191,3 +192,53 @@ def build_roll_spread_audit(
         "total_cost_usd": float(total_cost_usd),
         "itemized": _get_roll_spread_itemized(),
     }
+
+
+# ─── Roll-Spread Compute Fail-Loud Guard ──────────────────────────
+# The per-trade roll-spread deduction (backtester.py) previously wrapped
+# compute_roll_spread_cost() in a bare except that printed to stderr and
+# silently continued with the cost OMITTED from net_pnl — understating cost
+# on any rollover-day trade whose bar timestamp is malformed/missing (a data
+# gap coinciding with a rollover day). Mirrors the
+# BACKTEST_ZERO_VOLUME_TRADE_CRITICAL_FAIL_LOUD pattern in data_loader.py.
+#
+# BACKTEST_ROLL_SPREAD_FAIL_LOUD (default "true"):
+#   true  → raise RollSpreadCostComputeError (institutional default)
+#   false → warn to stderr and return None (preserves legacy silent-omit)
+
+
+class RollSpreadCostComputeError(RuntimeError):
+    """Raised when roll-spread cost computation fails on a bar flagged is_rollover_day.
+
+    A malformed/missing bar timestamp on a rollover-day bar previously caused the
+    roll-spread cost to be silently omitted from net_pnl instead of charged.
+    Raise path is the institutional default (BACKTEST_ROLL_SPREAD_FAIL_LOUD=true).
+    Set the env var to "false" to restore legacy silent-omit behavior.
+    """
+
+    def __init__(self, symbol: str, bar_idx: int, side: str, original_error: Exception) -> None:
+        self.symbol = symbol
+        self.bar_idx = bar_idx
+        self.side = side
+        self.original_error = original_error
+        super().__init__(
+            f"RollSpreadCostComputeError: {symbol} {side}-side roll cost at bar {bar_idx} "
+            f"failed to compute ({original_error!r}). "
+            f"Set BACKTEST_ROLL_SPREAD_FAIL_LOUD=false to skip silently."
+        )
+
+
+def check_roll_spread_fail_loud(symbol: str, bar_idx: int, side: str, original_error: Exception) -> None:
+    """Central fail-loud/fail-soft decision point for a failed roll-spread compute.
+
+    Raises RollSpreadCostComputeError when BACKTEST_ROLL_SPREAD_FAIL_LOUD is "true"
+    (default). Otherwise prints the legacy stderr warning and returns.
+    """
+    fail_loud = os.environ.get("BACKTEST_ROLL_SPREAD_FAIL_LOUD", "true").lower() != "false"
+    if fail_loud:
+        raise RollSpreadCostComputeError(symbol, bar_idx, side, original_error)
+    print(
+        f"[roll-spread] Error computing {side}-side roll cost at bar {bar_idx}: {original_error} "
+        f"(BACKTEST_ROLL_SPREAD_FAIL_LOUD=false)",
+        file=sys.stderr,
+    )

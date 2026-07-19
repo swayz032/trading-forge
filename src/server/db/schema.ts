@@ -3564,3 +3564,29 @@ export const carterMemory = pgTable(
 
 export type CarterMemoryRow = typeof carterMemory.$inferSelect;
 export type NewCarterMemoryRow = typeof carterMemory.$inferInsert;
+
+// ─── economic_release_dates — authoritative macro release calendar ────────────
+// Populated by economic-calendar-sync-service.ts from FRED / Federal Reserve /
+// EIA sources (2026-06-22). The T1 news-blackout consumers read from here; the
+// hardcoded FOMC_ANNOUNCE_DATES list is only a fail-safe fallback when this
+// table is empty/stale. Backed by migration 0172.
+export const economicReleaseDates = pgTable(
+  "economic_release_dates",
+  {
+    id:               bigserial("id", { mode: "number" }).primaryKey(),
+    eventType:        text("event_type").notNull(), // FOMC | FOMC_MINUTES | NFP | CPI | EIA | PPI | GDP
+    releaseDate:      date("release_date").notNull(), // ET calendar date of the release
+    timeEt:           text("time_et").notNull(), // "HH:MM" ET (e.g. 08:30, 14:00, 10:30)
+    source:           text("source").notNull(), // fred | fed | eia | eia_generated | fallback
+    affectsProducts:  text("affects_products"), // optional CSV scope hint (e.g. "MCL,CL"); null = per news-policy default
+    fetchedAt:        timestamp("fetched_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt:        timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    typeDateUq: uniqueIndex("uq_economic_release_dates_type_date").on(t.eventType, t.releaseDate),
+    dateIdx: index("idx_economic_release_dates_date").on(t.releaseDate),
+  }),
+);
+
+export type EconomicReleaseDateRow = typeof economicReleaseDates.$inferSelect;
+export type NewEconomicReleaseDateRow = typeof economicReleaseDates.$inferInsert;

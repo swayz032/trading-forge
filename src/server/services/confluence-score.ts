@@ -158,6 +158,14 @@ export interface StructureState {
   swing_high: number | null;
   swing_low: number | null;
   computed_at_bar_idx: number;
+  /**
+   * Age in trading days for the most recent occurrence of each break type,
+   * tracked independently (W25.2 3b, confluence-decay-bar-unit-mismatch-2026-07-17
+   * packet). null if that type never occurred in the exec_bars window.
+   */
+  choch_age_bars?: number | null;
+  mss_age_bars?: number | null;
+  bos_age_bars?: number | null;
   /** Derived: htf_bias_aligned && last_break_direction matches bias. Optional — eval handles via htf_bias_aligned + choch_recent when absent. */
   market_structure_aligned?: boolean;
 }

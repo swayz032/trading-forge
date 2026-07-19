@@ -430,11 +430,18 @@ describe("deriveFactorDecay", () => {
       expect(result!.hard_killed).toBe(false);
     });
 
-    it("market_structure_aligned with choch_recent and age → decays", () => {
+    // The next two tests exercise deriveFactorDecay()'s pure dispatch logic in
+    // isolation via a hand-constructed structureState object literal. This is
+    // a legitimate unit test of the TS function's branching — it is NOT proof
+    // that the real structure_engine.py ever produces this exact shape; see
+    // the cross-language fixture tests in
+    // wave25-confluence-decay-recency-first.test.ts for that proof (built from
+    // real Python-computed StructureState output).
+    it("market_structure_aligned with choch_recent and age → decays (choch_age_bars is trading-day-denominated)", () => {
       const result = deriveFactorDecay("market_structure_aligned", {
         structureState: {
           choch_recent: true,
-          choch_age_bars: 100, // at half-life → 0.7 penalty → confidence = 0.3
+          choch_age_bars: 100, // 100 trading days saturates the 10-trading-day half-life cap → 0.7 penalty → confidence = 0.3
         },
         signalContext: {},
       });
@@ -442,12 +449,12 @@ describe("deriveFactorDecay", () => {
       expect(result!.confidence).toBeCloseTo(0.3, 3);
     });
 
-    it("market_structure_aligned with mss_recent and age → decays via mssDecay", () => {
+    it("market_structure_aligned with mss_recent and age → decays via mssDecay (mss_age_bars is trading-day-denominated)", () => {
       const result = deriveFactorDecay("market_structure_aligned", {
         structureState: {
           choch_recent: false,
           mss_recent: true,
-          mss_age_bars: 80, // MSS at half-life → penalty 0.7 → confidence = 0.3
+          mss_age_bars: 80, // 80 trading days saturates the 6-trading-day half-life cap → 0.7 penalty → confidence = 0.3
         },
         signalContext: {},
       });
@@ -461,14 +468,160 @@ describe("deriveFactorDecay", () => {
           choch_recent: false,
           mss_recent: false,
           bos_recent: false,
-          last_break_age_bars: 50, // chochDecay: min(0.7, 50/100) = 0.5 penalty → 0.5
+          last_break_age_bars: 50, // 50 trading days: chochDecay ageTradingDays path, min(0.7, 50/10) = 0.7 (capped) → confidence = 0.3
         },
         signalContext: {},
       });
       expect(result).not.toBeNull();
-      expect(result!.confidence).toBeCloseTo(0.5, 3);
+      expect(result!.confidence).toBeCloseTo(0.3, 3);
+    });
+  });
+
+  // ── confluence-decay-bar-unit-mismatch-2026-07-17 packet §4 verification plan ──
+
+  describe("RED-proof: age-unit fix (item 1) — a 15-trading-day-old break no longer scores near-fresh", () => {
+    it("the SAME raw age (15) through the SAME real chochDecay(): bar-scale path=0.85 (near-fresh), trading-day path=0.30 (stale)", () => {
+      // This is the actual bug + actual fix, both exercised through the real,
+      // live chochDecay() function — not a hand-copied re-derivation of its
+      // constants (feedback_hardcoded_test_copy_is_fabricated_safety_claim).
+      // The bar-scale branch is PRESERVED live code (packet §4 item 2
+      // backward-compat requirement) — this is exactly what the old
+      // deriveFactorDecay() called before this fix, when it passed
+      // structureState.last_break_age_bars=15 (trading days) into chochDecay
+      // as `{ ageBars: 15 }` (packet §1a worked example: a structural break
+      // 15 trading days / ~3 weeks old).
+      const oldPathResult = chochDecay({ ageBars: 15 });
+      expect(oldPathResult.confidence).toBeCloseTo(0.85, 3); // near-fresh — THE BUG
+
+      // The fix: deriveFactorDecay() now passes the same raw number as
+      // `{ ageTradingDays: 15 }` instead.
+      const newPathResult = chochDecay({ ageTradingDays: 15 });
+      expect(newPathResult.confidence).toBeCloseTo(0.3, 3); // genuinely stale — THE FIX
+
+      expect(newPathResult.confidence).toBeLessThan(oldPathResult.confidence);
     });
 
+    it("end-to-end through deriveFactorDecay(): a 15-trading-day-old CHoCH break scores confidence≈0.30, not 0.85", () => {
+      const result = deriveFactorDecay("market_structure_aligned", {
+        structureState: {
+          choch_recent: true,
+          choch_age_bars: 15, // 15 TRADING DAYS (~3 weeks) — the packet's own worked example
+        },
+        signalContext: {},
+      });
+      expect(result).not.toBeNull();
+      // min(0.7, 15/10) = 0.7 (capped) → confidence = 0.3 — genuinely stale,
+      // not "near-fresh". This is the fix: the same raw age (15) that used
+      // to read as confidence=0.85 under the bar-scale misinterpretation now
+      // reads as confidence=0.30 under the correct day-scale interpretation.
+      expect(result!.confidence).toBeCloseTo(0.3, 3);
+      expect(result!.confidence).toBeLessThan(0.85);
+    });
+
+    it("sub-saturation N=5 trading days shows the RATE, not just floor saturation: bar-scale path=0.95, trading-day path=0.5", () => {
+      const oldPathResult = chochDecay({ ageBars: 5 });
+      expect(oldPathResult.confidence).toBeCloseTo(0.95, 3); // old bar-scale misread: "basically brand new"
+
+      const result = deriveFactorDecay("market_structure_aligned", {
+        structureState: {
+          choch_recent: true,
+          choch_age_bars: 5, // 5 TRADING DAYS (one trading week)
+        },
+        signalContext: {},
+      });
+      expect(result).not.toBeNull();
+      // min(0.7, 5/10) = 0.5 penalty → confidence = 0.5 — genuinely half-decayed.
+      expect(result!.confidence).toBeCloseTo(0.5, 3);
+    });
+  });
+
+  describe("Backward-compat flip enumeration (packet §4 item 2): bar-scale path is byte-identical when ageTradingDays is absent", () => {
+    it("chochDecay({ ageBars: 100 }) is unchanged — still 0.3 confidence via the bar-scale half-life", () => {
+      const result = chochDecay({ ageBars: 100 });
+      expect(result.confidence).toBeCloseTo(0.3, 3);
+      expect(result.reason).toContain("age_bars=100");
+    });
+
+    it("mssDecay({ ageBars: 80 }) is unchanged — still 0.3 confidence via the bar-scale half-life", () => {
+      const result = mssDecay({ ageBars: 80 });
+      expect(result.confidence).toBeCloseTo(0.3, 3);
+      expect(result.reason).toContain("age_bars=80");
+    });
+
+    it("ageTradingDays takes priority over ageBars when both are present", () => {
+      // ageTradingDays=15 → day-scale path (confidence≈0.3); if ageBars=15
+      // were used instead (bar-scale), confidence would be ≈0.85 — proves
+      // the day-scale branch is selected first, not silently ignored.
+      const result = chochDecay({ ageTradingDays: 15, ageBars: 15 });
+      expect(result.confidence).toBeCloseTo(0.3, 3);
+      expect(result.reason).toContain("age_trading_days=15");
+    });
+  });
+
+  describe("Recency-first selection (packet §2d/§3a): smallest non-null age wins, tie broken MSS > CHoCH > BOS", () => {
+    it("tie (choch_age_bars === mss_age_bars) → selects MSS, not CHoCH (the current-bug regression guard)", () => {
+      // Before this fix, deriveFactorDecay() was type-first (CHoCH checked
+      // before MSS) — on a tie it would incorrectly resolve to chochDecay's
+      // 10-trading-day half-life instead of mssDecay's 6-trading-day
+      // half-life, understating the decay of a break that was ALSO an MSS.
+      const result = deriveFactorDecay("market_structure_aligned", {
+        structureState: {
+          choch_recent: true,
+          choch_age_bars: 3,
+          mss_recent: true,
+          mss_age_bars: 3, // same age — the only case the two can genuinely coincide (same bar)
+        },
+        signalContext: {},
+      });
+      expect(result).not.toBeNull();
+      // mssDecay({ageTradingDays:3}) = min(0.7, 3/6) = 0.5 penalty → confidence = 0.5.
+      // A type-first (CHoCH-wins) implementation would instead report
+      // chochDecay({ageTradingDays:3}) = min(0.7, 3/10) = 0.3 penalty → 0.7 —
+      // this assertion fails against that wrong implementation.
+      expect(result!.confidence).toBeCloseTo(0.5, 3);
+      expect(result!.reason).toContain("structure_mss");
+    });
+
+    it("CHoCH strictly more recent than an earlier MSS → selects CHoCH, not MSS (guards a naive MSS-first reorder)", () => {
+      // §2d counter-example: CHoCH 2 trading days ago, MSS 5 trading days ago.
+      // A naive "fix" that reorders the priority chain to MSS > CHoCH (rather
+      // than genuine recency-first) would incorrectly pick the older MSS.
+      const result = deriveFactorDecay("market_structure_aligned", {
+        structureState: {
+          choch_recent: true,
+          choch_age_bars: 2,
+          mss_recent: true,
+          mss_age_bars: 5,
+        },
+        signalContext: {},
+      });
+      expect(result).not.toBeNull();
+      // chochDecay({ageTradingDays:2}) = min(0.7, 2/10) = 0.2 penalty → confidence = 0.8.
+      // A naive MSS-first implementation would instead report
+      // mssDecay({ageTradingDays:5}) = min(0.7, 5/6) = 0.7 (capped) → 0.3 —
+      // this assertion fails against that wrong implementation.
+      expect(result!.confidence).toBeCloseTo(0.8, 3);
+      expect(result!.reason).toContain("structure_choch");
+    });
+
+    it("BOS-only (no choch_recent/mss_recent) falls back correctly and uses the smallest available age", () => {
+      const result = deriveFactorDecay("market_structure_aligned", {
+        structureState: {
+          choch_recent: false,
+          mss_recent: false,
+          bos_recent: true,
+          bos_age_bars: 4,
+        },
+        signalContext: {},
+      });
+      expect(result).not.toBeNull();
+      // BOS routes through chochDecay as a proxy (same as before this fix).
+      expect(result!.confidence).toBeCloseTo(0.6, 3); // min(0.7, 4/10) = 0.4 → confidence = 0.6
+      expect(result!.reason).toContain("structure_bos");
+    });
+  });
+
+  describe("DECAY_FACTORS — returns valid DecayResult (continued)", () => {
     it("smt_confirmation → returns DecayResult", () => {
       const result = deriveFactorDecay("smt_confirmation", emptyCtx);
       expect(result).not.toBeNull();

@@ -207,6 +207,7 @@
   },
   "settings": {
     "executionOrder": "v1",
+    "timezone": "America/New_York",
     "saveDataErrorExecution": "all",
     "saveDataSuccessExecution": "all",
     "saveManualExecutions": true,

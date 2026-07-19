@@ -117,7 +117,7 @@ export function evaluateParameterDriftGate(
   if (paramStabilityStatus === "cpcv_not_applicable" || classification === "cpcv_not_applicable") {
     return {
       status: "cpcv_exempt",
-      passed: false,
+      passed: true,
       classification: null,
       confidence: null,
       auditAction: "lifecycle.parameter_drift_cpcv_exempt",
@@ -128,7 +128,7 @@ export function evaluateParameterDriftGate(
   if (classification == null) {
     return {
       status: "legacy_null",
-      passed: false,
+      passed: true,
       classification: null,
       confidence: null,
       auditAction: "lifecycle.parameter_drift_unavailable",

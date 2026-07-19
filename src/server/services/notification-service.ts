@@ -157,13 +157,30 @@ async function sendWebhook(
   webhookUrl: string,
   payload: DiscordWebhookPayload,
   opts?: { isCritical?: boolean; originalOpts?: NotifyOptions },
-): Promise<void> {
+): Promise<boolean> {
+  const title = opts?.originalOpts?.title ?? "(batch flush)";
+  const severity = opts?.originalOpts?.severity ?? "WARNING";
+  const dropStatus = severity === "CRITICAL" ? "error" : "warning";
+
   if (!checkRateLimit()) {
     logger.warn(
-      { rateLimit: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW_MS },
+      { rateLimit: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW_MS, severity, title },
       "NotificationService: rate limit reached — webhook call dropped",
     );
-    return;
+
+    insertAuditRow({
+      action: "notification.rate_limit_dropped",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: { title, severity, rateLimit: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW_MS } as Record<string, unknown>,
+      result: { dropped: true, reason: "rate_limited" } as Record<string, unknown>,
+      status: dropStatus,
+    }).catch((auditErr: unknown) => {
+      logger.warn({ auditErr, title }, "NotificationService: failed to write rate_limit_dropped audit row");
+    });
+
+    return false;
   }
 
   recordCall();
@@ -187,10 +204,23 @@ async function sendWebhook(
   } catch (err) {
     if (err instanceof CircuitOpenError) {
       logger.warn(
-        { endpoint: "discord", reopensAt: err.reopensAt.toISOString() },
+        { endpoint: "discord", reopensAt: err.reopensAt.toISOString(), severity, title },
         "NotificationService: Discord circuit OPEN — skipping webhook (fast-fail)",
       );
-      return;
+
+      insertAuditRow({
+        action: "notification.circuit_open_dropped",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { title, severity, reopensAt: err.reopensAt.toISOString() } as Record<string, unknown>,
+        result: { dropped: true, reason: "circuit_open" } as Record<string, unknown>,
+        status: dropStatus,
+      }).catch((auditErr: unknown) => {
+        logger.warn({ auditErr, title }, "NotificationService: failed to write circuit_open_dropped audit row");
+      });
+
+      return false;
     }
     throw err;
   }
@@ -214,9 +244,6 @@ async function sendWebhook(
       } catch { /* body not JSON — ignore */ }
     }
 
-    const title = opts?.originalOpts?.title ?? "(batch flush)";
-    const severity = opts?.originalOpts?.severity ?? "WARNING";
-
     logger.warn(
       { retryAfterSec, severity, title },
       "NotificationService: Discord 429 rate-limited — message dropped",
@@ -235,13 +262,15 @@ async function sendWebhook(
       logger.warn({ auditErr }, "NotificationService: failed to write discord_rate_limited audit row");
     });
 
-    return; // Drop — do not throw (caller is fire-and-forget)
+    return false; // Drop — do not throw (caller is fire-and-forget)
   }
 
   if (!response.ok) {
     const body = await response.text().catch(() => "(unreadable)");
     throw new Error(`Discord webhook HTTP ${response.status}: ${body.slice(0, 200)}`);
   }
+
+  return true;
 }
 
 // ─── Warning batch flush ──────────────────────────────────────────────────────
@@ -273,15 +302,50 @@ async function flushWarningQueue(): Promise<void> {
   logger.info({ count: batch.length }, "NotificationService: flushing warning batch");
 
   const embed = buildBatchEmbed(batch);
+  let delivered = false;
   try {
-    await sendWebhook(webhookUrl, { embeds: [embed] }, { isCritical: false });
-    logger.info({ count: batch.length }, "NotificationService: warning batch sent");
+    delivered = await sendWebhook(webhookUrl, { embeds: [embed] }, { isCritical: false });
   } catch (err) {
     logger.warn(
       { err, count: batch.length },
       "NotificationService: failed to send warning batch — dropped",
     );
+
+    warningQueue.unshift(...batch);
+    scheduleWarningFlush();
+
+    insertAuditRow({
+      action: "notification.warning_batch_flush_failed",
+      entityType: "system",
+      entityId: null,
+      decisionAuthority: "system",
+      input: {
+        count: batch.length,
+        titles: batch.map((item) => item.title),
+        reason: "batch_flush_failed",
+      } as Record<string, unknown>,
+      result: { requeued: true, error: (err as Error)?.message ?? String(err) } as Record<string, unknown>,
+      status: "error",
+    }).catch((auditErr: unknown) => {
+      logger.error(
+        { auditErr, count: batch.length },
+        "NotificationService: warning_batch_flush_failed audit row ALSO failed",
+      );
+    });
+
+    return;
   }
+
+  if (delivered) {
+    logger.info({ count: batch.length }, "NotificationService: warning batch sent");
+    return;
+  }
+
+  // sendWebhook resolved without delivering (rate-limited / circuit-open / 429) —
+  // those paths already wrote their own reason-specific audit row. Re-queue the
+  // batch rather than silently discarding it.
+  warningQueue.unshift(...batch);
+  scheduleWarningFlush();
 }
 
 // ─── Public API ───────────────────────────────────────────────────────────────
@@ -315,11 +379,13 @@ export function notify(opts: NotifyOptions): void {
 
   // CRITICAL and INFO are sent immediately, fire-and-forget
   const embed = buildEmbed(opts);
-  sendWebhook(webhookUrl, { embeds: [embed] }, { isCritical: opts.severity === "CRITICAL", originalOpts: opts }).then(() => {
-    logger.debug(
-      { severity: opts.severity, title: opts.title },
-      "NotificationService: notification sent",
-    );
+  sendWebhook(webhookUrl, { embeds: [embed] }, { isCritical: opts.severity === "CRITICAL", originalOpts: opts }).then((delivered) => {
+    if (delivered) {
+      logger.debug(
+        { severity: opts.severity, title: opts.title },
+        "NotificationService: notification sent",
+      );
+    }
   }).catch((err) => {
     logger.warn(
       { err, severity: opts.severity, title: opts.title },

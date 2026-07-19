@@ -165,7 +165,9 @@ export async function runEconomicCalendarSync(opts?: {
 
   // ── Upsert (fail-safe: never delete; conflict updates time/source/fetched_at) ──
   let upserted = 0;
+  let failedRows = 0;
   const bySource: Record<string, number> = {};
+  const failureSamples: Array<{ eventType: string; releaseDate: string; error: string }> = [];
   for (const r of rows) {
     try {
       await db.execute(sql`
@@ -178,7 +180,11 @@ export async function runEconomicCalendarSync(opts?: {
       upserted++;
       bySource[r.source] = (bySource[r.source] ?? 0) + 1;
     } catch (err) {
+      failedRows++;
       logger.error({ err, row: r }, "economic_release_dates upsert failed for one row");
+      if (failureSamples.length < 5) {
+        failureSamples.push({ eventType: r.eventType, releaseDate: r.releaseDate, error: String(err) });
+      }
     }
   }
 
@@ -203,12 +209,28 @@ export async function runEconomicCalendarSync(opts?: {
     logger.warn({ err }, "failed to write economic_release_dates.json snapshot — backtest uses hardcoded fallback");
   }
 
+  // A total failure (every attempted row's INSERT threw — e.g. the table doesn't
+  // exist) must NOT read as a routine successful sync. A real empty-calendar
+  // period (rows.length === 0, nothing to upsert) is unaffected — this branch
+  // only fires when rows were attempted and none landed.
+  const auditStatus: "info" | "warning" | "error" =
+    rows.length > 0 && upserted === 0 ? "error" : failedRows > 0 ? "warning" : "info";
+
   await insertAuditRowSafe({
     action: "economic_calendar.synced",
-    status: "info",
+    status: auditStatus,
     entityType: "economic_release_dates",
     decisionAuthority: "system",
-    result: { startDate, endDate, upserted, bySource, sources: sourcesOk } as Record<string, unknown>,
+    result: {
+      startDate,
+      endDate,
+      upserted,
+      bySource,
+      sources: sourcesOk,
+      attempted: rows.length,
+      failedRows,
+      failureSamples,
+    } as Record<string, unknown>,
   });
 
   logger.info({ upserted, bySource, sources: sourcesOk }, "Economic calendar sync complete");

@@ -35,7 +35,10 @@ DOWNSTREAM CONTRACT (JSON shape for W25.1 sibling):
       "last_break_age_bars": int | null,
       "swing_high": float | null,
       "swing_low": float | null,
-      "computed_at_bar_idx": int
+      "computed_at_bar_idx": int,
+      "choch_age_bars": int | null,
+      "mss_age_bars": int | null,
+      "bos_age_bars": int | null
     }
 
     Serialise via dataclasses.asdict() — keys are snake_case matching
@@ -67,15 +70,16 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from typing import Optional
 
 import polars as pl
 
 from src.engine.indicators.market_structure import (
-    detect_swings,
     detect_bos,
     detect_choch_with_context,
     detect_mss_with_context,
+    detect_swings,
+)
+from src.engine.indicators.market_structure import (
     premium_discount_zone as pd_zone_scalar,
 )
 
@@ -99,23 +103,26 @@ class StructureState:
     """
 
     bos_recent: bool                       # BOS detected within BOS_RECENT_WINDOW_BARS
-    bos_direction: Optional[str]           # "bullish" | "bearish" | None
+    bos_direction: str | None           # "bullish" | "bearish" | None
     choch_recent: bool                     # CHoCH detected within CHOCH_RECENT_WINDOW_BARS
-    choch_direction: Optional[str]         # "bullish" | "bearish" | None
+    choch_direction: str | None         # "bullish" | "bearish" | None
     mss_recent: bool                       # MSS detected within MSS_RECENT_WINDOW_BARS
-    mss_direction: Optional[str]           # "bullish" | "bearish" | None
-    mss_displacement_atr_mult: Optional[float]  # displacement magnitude at MSS bar
+    mss_direction: str | None           # "bullish" | "bearish" | None
+    mss_displacement_atr_mult: float | None  # displacement magnitude at MSS bar
     displacement_active: bool              # last DISPLACEMENT_LOOKBACK bars has displacement
     premium_discount_zone: str             # "premium" | "discount" | "equilibrium"
     htf_bias_aligned: bool                 # last_break_direction matches htf_bias
-    last_break_direction: Optional[str]    # "bullish" | "bearish" | None
-    last_break_age_bars: Optional[int]     # bars since last BOS/CHoCH/MSS
-    swing_high: Optional[float]            # most-recent confirmed swing high price
-    swing_low: Optional[float]             # most-recent confirmed swing low price
+    last_break_direction: str | None    # "bullish" | "bearish" | None
+    last_break_age_bars: int | None     # bars since last BOS/CHoCH/MSS (recency-first winner)
+    swing_high: float | None            # most-recent confirmed swing high price
+    swing_low: float | None             # most-recent confirmed swing low price
     computed_at_bar_idx: int               # index of last bar in exec_bars
+    choch_age_bars: int | None          # bars since the most recent CHoCH, tracked independently
+    mss_age_bars: int | None            # bars since the most recent MSS, tracked independently
+    bos_age_bars: int | None            # bars since the most recent BOS, tracked independently
 
 
-def _derive_prior_bos_direction(bos_series: pl.Series, up_to_bar: int) -> Optional[str]:
+def _derive_prior_bos_direction(bos_series: pl.Series, up_to_bar: int) -> str | None:
     """Return the most-recent non-null BOS direction in bos_series up to bar i.
 
     Scans backward from bar i (inclusive). Returns None if no BOS found.
@@ -128,7 +135,7 @@ def _derive_prior_bos_direction(bos_series: pl.Series, up_to_bar: int) -> Option
     return None
 
 
-def _last_swing_prices(swings: pl.DataFrame, up_to_bar: int) -> tuple[Optional[float], Optional[float]]:
+def _last_swing_prices(swings: pl.DataFrame, up_to_bar: int) -> tuple[float | None, float | None]:
     """Return (swing_high, swing_low) of the most-recent confirmed swings up to bar i.
 
     Scans the swings DataFrame (already sorted by index) for the latest
@@ -137,8 +144,8 @@ def _last_swing_prices(swings: pl.DataFrame, up_to_bar: int) -> tuple[Optional[f
     highs = swings.filter((pl.col("type") == "high") & (pl.col("index") <= up_to_bar))
     lows = swings.filter((pl.col("type") == "low") & (pl.col("index") <= up_to_bar))
 
-    swing_high: Optional[float] = None
-    swing_low: Optional[float] = None
+    swing_high: float | None = None
+    swing_low: float | None = None
 
     if len(highs) > 0:
         # Most-recent swing high = last row (swings are sorted ascending by index)
@@ -154,7 +161,7 @@ def _find_last_break(
     choch_df: pl.DataFrame,
     mss_df: pl.DataFrame,
     up_to_bar: int,
-) -> tuple[Optional[str], Optional[int]]:
+) -> tuple[str | None, int | None]:
     """Identify the most-recent structure break (MSS > CHoCH > BOS precedence).
 
     Returns (direction, age_bars) of the MOST RECENT break found up to up_to_bar.
@@ -165,8 +172,8 @@ def _find_last_break(
     mss_detected = mss_df["mss_detected"].to_list()
     mss_dirs = mss_df["mss_direction"].to_list()
 
-    last_dir: Optional[str] = None
-    last_age: Optional[int] = None
+    last_dir: str | None = None
+    last_age: int | None = None
     last_break_idx: int = -1
 
     end = min(up_to_bar + 1, len(bos_vals))
@@ -190,6 +197,50 @@ def _find_last_break(
     return last_dir, last_age
 
 
+def _find_per_type_ages(
+    bos_series: pl.Series,
+    choch_df: pl.DataFrame,
+    mss_df: pl.DataFrame,
+    up_to_bar: int,
+) -> tuple[int | None, int | None, int | None]:
+    """Track each break type's own most-recent occurrence independently.
+
+    Unlike _find_last_break() (which returns the single cross-type winner),
+    this tracks 3 separate "last seen index" pointers — one per type — so a
+    consumer can decay a CHoCH and an MSS at their own genuine ages instead
+    of collapsing to whichever type happened to be the single overall
+    winner. An MSS bar is definitionally also a CHoCH bar (detect_mss_with_
+    context() only evaluates bars where choch_detected is True), so
+    mss_age_bars, when non-null, is always >= choch_age_bars.
+
+    Returns (choch_age_bars, mss_age_bars, bos_age_bars) — each None if that
+    type never occurred within [0, up_to_bar].
+    """
+    bos_vals = bos_series.to_list()
+    choch_detected = choch_df["choch_detected"].to_list()
+    mss_detected = mss_df["mss_detected"].to_list()
+
+    end = min(up_to_bar + 1, len(bos_vals))
+
+    last_choch_idx: int = -1
+    last_mss_idx: int = -1
+    last_bos_idx: int = -1
+
+    for i in range(end):
+        if choch_detected[i]:
+            last_choch_idx = i
+        if mss_detected[i]:
+            last_mss_idx = i
+        if bos_vals[i] is not None:
+            last_bos_idx = i
+
+    choch_age = (up_to_bar - last_choch_idx) if last_choch_idx >= 0 else None
+    mss_age = (up_to_bar - last_mss_idx) if last_mss_idx >= 0 else None
+    bos_age = (up_to_bar - last_bos_idx) if last_bos_idx >= 0 else None
+
+    return choch_age, mss_age, bos_age
+
+
 def _is_displacement_active(
     bars: pl.DataFrame,
     choch_df: pl.DataFrame,
@@ -210,9 +261,9 @@ def _is_displacement_active(
 def compute_structure_state(
     exec_bars: pl.DataFrame,
     htf_bars: pl.DataFrame,
-    htf_bias: Optional[str] = None,
+    htf_bias: str | None = None,
     lookback_swings: int = 20,
-) -> Optional["StructureState"]:
+) -> StructureState | None:
     """Run the full structure detection pipeline and return a StructureState snapshot.
 
     Reads exec_bars for current structure; htf_bars for HTF bias alignment check.
@@ -247,7 +298,7 @@ def compute_structure_state(
 def _compute_structure_state_inner(
     exec_bars: pl.DataFrame,
     htf_bars: pl.DataFrame,
-    htf_bias: Optional[str],
+    htf_bias: str | None,
     lookback_swings: int,
 ) -> StructureState:
     """Inner implementation — may raise; caller wraps in try/except."""
@@ -277,7 +328,7 @@ def _compute_structure_state_inner(
     start_bos_window = max(0, last_bar_idx - BOS_RECENT_WINDOW_BARS + 1)
     bos_in_window = [v for v in bos_vals[start_bos_window:last_bar_idx + 1] if v is not None]
     bos_recent = len(bos_in_window) > 0
-    bos_direction: Optional[str] = bos_in_window[-1] if bos_in_window else prior_bos_direction
+    bos_direction: str | None = bos_in_window[-1] if bos_in_window else prior_bos_direction
 
     # ── Step 3: CHoCH detection (requires prior BOS direction) ───────────────
     choch_df: pl.DataFrame
@@ -301,7 +352,7 @@ def _compute_structure_state_inner(
         if choch_detected_list[i]
     ]
     choch_recent = len(choch_in_window) > 0
-    choch_direction: Optional[str] = choch_in_window[-1] if choch_in_window else None
+    choch_direction: str | None = choch_in_window[-1] if choch_in_window else None
 
     # ── Step 4: MSS detection (CHoCH + displacement) ─────────────────────────
     mss_df = detect_mss_with_context(exec_bars, choch_df, atr_period=ATR_PERIOD)
@@ -316,8 +367,8 @@ def _compute_structure_state_inner(
         if mss_detected_list[i]
     ]
     mss_recent = len(mss_in_window_indices) > 0
-    mss_direction: Optional[str] = mss_direction_list[mss_in_window_indices[-1]] if mss_in_window_indices else None
-    mss_displacement_atr_mult: Optional[float] = (
+    mss_direction: str | None = mss_direction_list[mss_in_window_indices[-1]] if mss_in_window_indices else None
+    mss_displacement_atr_mult: float | None = (
         mss_mult_list[mss_in_window_indices[-1]] if mss_in_window_indices else None
     )
 
@@ -338,6 +389,9 @@ def _compute_structure_state_inner(
 
     # ── Step 7: Last break direction + age ───────────────────────────────────
     last_break_direction, last_break_age_bars = _find_last_break(
+        bos_series, choch_df, mss_df, last_bar_idx
+    )
+    choch_age_bars, mss_age_bars, bos_age_bars = _find_per_type_ages(
         bos_series, choch_df, mss_df, last_bar_idx
     )
 
@@ -368,4 +422,7 @@ def _compute_structure_state_inner(
         swing_high=swing_high,
         swing_low=swing_low,
         computed_at_bar_idx=last_bar_idx,
+        choch_age_bars=choch_age_bars,
+        mss_age_bars=mss_age_bars,
+        bos_age_bars=bos_age_bars,
     )

@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-18T18:18:50.557Z`.
+Updated automatically from the repo on `2026-07-19T00:18:36.009Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -17,7 +17,7 @@ Updated automatically from the repo on `2026-07-18T18:18:50.557Z`.
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `29`
-- Database tables tracked: `111`
+- Database tables tracked: `112`
 
 ### Subsystem Runtime States
 - `active`: `68`
@@ -57,7 +57,7 @@ Updated automatically from the repo on `2026-07-18T18:18:50.557Z`.
 - Route coverage: `80/80`
 - Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
-- Database coverage: `111/111`
+- Database coverage: `111/112`
 - Autonomous subsystems with audit coverage: `57/57`
 - Autonomous subsystems with audit actions: `57/57`
 - Autonomous subsystems with telemetry evidence: `57/57`
@@ -516,6 +516,7 @@ Updated automatically from the repo on `2026-07-18T18:18:50.557Z`.
 - `dead_letter_queue`
 - `deepar_forecasts`
 - `deepar_training_runs`
+- `economic_release_dates`
 - `exchange_outages`
 - `firm_adversarial_priors`
 - `frankenstein_test_runs`
@@ -628,14 +629,6 @@ Updated automatically from the repo on `2026-07-18T18:18:50.557Z`.
 - **Payload shape:** `{ ... }`
 - **Listeners:** `useSSE.ts` → invalidates strategies.
 - **Purpose:** Lifecycle auto-check scheduler job completed.
-
----
-
-### profit_governor:shadow_milestone
-- **Emitter:** `src/server/services/paper-signal-service.ts:4406` (W6, 2026-07-17 — shadow profit-milestone governor)
-- **Payload shape:** `{ sessionId: string, zone: "NORMAL"|"BASE"|"STRONG"|"EXCEPTIONAL", sessionPnl: number }`
-- **Listeners:** none yet — no frontend consumer subscribes to this event today (grep-confirmed 2026-07-18). Future dashboard panel.
-- **Purpose:** Observability-only. Fires when a new signal's session P&L crosses into the STRONG/EXCEPTIONAL profit-milestone zone. The shadow governor NEVER blocks the signal or touches an exit — `wouldBlock` is permanently `false` by design (see `src/server/lib/profit-milestone-shadow.ts` + CLAUDE.md §5's uncapped-upside directive). Paired with the `profit_governor.shadow_would_block` audit_log row (misleadingly-named for historical reasons — it never actually blocks).
 
 ---
 

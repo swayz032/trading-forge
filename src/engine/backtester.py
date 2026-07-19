@@ -974,6 +974,102 @@ def _apply_backtest_parity_gates(
     return out, parity_stats
 
 
+def _compliance_violation_check_enabled() -> bool:
+    """Reads BACKTEST_COMPLIANCE_VIOLATION_CHECK_ENABLED (default off).
+
+    Extracted as its own function (rather than inlined in run_backtest) so the
+    exact gating decision run_backtest makes before calling
+    detect_trade_compliance_violations() is independently testable without
+    running a full backtest.
+    """
+    return os.environ.get(
+        "BACKTEST_COMPLIANCE_VIOLATION_CHECK_ENABLED", "false",
+    ).lower() in ("true", "1", "yes")
+
+
+def detect_trade_compliance_violations(
+    trades: list[dict],
+    firm_key: Optional[str],
+    starting_balance: float,
+    host: str = "skytech-tower",
+) -> list[dict]:
+    """G3 shadow-mode compliance-violation detector.
+
+    Ratify-packet: docs/ratify-packets/backtest-compliance-sizing-gaps-2026-07-17.md,
+    Finding 1 (check_violation()'s MFFU 2%/HFT/hedging checks were never invoked
+    anywhere in the backtest engine). Gated by BACKTEST_COMPLIANCE_VIOLATION_CHECK_ENABLED
+    (default off — see run_backtest's wiring).
+
+    Walks a chronological list of already-executed trades and evaluates each one
+    against the real check_violation() — the MFFU 2%-per-trade rule and the MFFU
+    HFT (500 trades/day) limit. Detection only: this function never mutates or
+    removes a trade; it is the audit trail check_strategy_compliance() never
+    provided at the backtest signal-time parity gate.
+
+    Only fires for MFFU firm keys (e.g. "mffu_50k") — the checks this function
+    closes are all MFFU-specific inside check_violation(). Every other firm
+    (or no firm) returns [] immediately.
+
+    Args:
+        trades: chronological trade summaries, each
+            {"symbol": str, "entry_date": "YYYY-MM-DD", "intended_max_loss":
+            float (this trade's stop-distance-in-dollars), "net_pnl": float}.
+        firm_key: engine-style firm key ("mffu_50k", "topstep_50k", ...).
+        starting_balance: the firm's real starting balance/floor (dollars) —
+            the running-balance walk starts here and accumulates each trade's
+            net_pnl in order, so later trades are checked against the account's
+            actual simulated balance at that point, not the starting constant.
+        host: origin tag passed to check_violation()'s VPS-ban check — must
+            never be left to default ("unknown" is not in the allowed host set
+            and would spuriously flag every backtest were this ever extended
+            past MFFU, which has no vps_prohibited rule today).
+
+    Returns:
+        One entry per violating trade, in trade order:
+        {"trade_index": int, "symbol": str, "entry_date": str,
+         "violations": list[str]}
+        `violations` is check_violation()'s real return shape (a list of
+        human-readable strings) — not a fabricated {"type", "rule"} dict.
+    """
+    if not firm_key:
+        return []
+    firm_bare = str(firm_key).split("_")[0].lower()
+    if firm_bare != "mffu":
+        return []
+
+    from src.engine.compliance.compliance_gate import check_violation
+
+    ruleset: dict = {"rules": {}}
+    violations_out: list[dict] = []
+    running_balance = float(starting_balance)
+    trades_today_by_date: dict[str, int] = {}
+
+    for idx, trade in enumerate(trades):
+        entry_date = str(trade.get("entry_date") or "")
+        trades_today = trades_today_by_date.get(entry_date, 0)
+        strategy_state = {
+            "automated": True,
+            "host": host,
+            "intended_max_loss": trade.get("intended_max_loss"),
+            "account_balance": running_balance,
+            "trades_today": trades_today,
+            "proposed_symbol": trade.get("symbol"),
+            "open_positions": [],
+        }
+        result = check_violation(firm_bare, ruleset, strategy_state)
+        if result.get("violation"):
+            violations_out.append({
+                "trade_index": idx,
+                "symbol": trade.get("symbol"),
+                "entry_date": entry_date,
+                "violations": result.get("violations", []),
+            })
+        running_balance += float(trade.get("net_pnl") or 0.0)
+        trades_today_by_date[entry_date] = trades_today + 1
+
+    return violations_out
+
+
 def _apply_naked_management(
     trades_records,
     high_np: np.ndarray,
@@ -5146,6 +5242,7 @@ def run_backtest(
         # Import once, collect audit rows per roll day encountered.
         from src.engine.roll_spread_cost import (
             build_roll_spread_audit,
+            check_roll_spread_fail_loud,
             compute_roll_spread_cost,
         )
         _has_rollover_col = "is_rollover_day" in df.columns
@@ -5239,10 +5336,7 @@ def run_backtest(
                             build_roll_spread_audit(config.symbol, _roll_date, int_size, _roll_cost)
                         )
                     except Exception as _re:
-                        print(
-                            f"[roll-spread] Error computing entry-side roll cost at bar {entry_idx}: {_re}",
-                            file=sys.stderr,
-                        )
+                        check_roll_spread_fail_loud(config.symbol, entry_idx, "entry", _re)
             # Exit-side roll spread (E7): only when exit is on a DIFFERENT bar than entry.
             # Same-bar entry+exit (exit_idx == entry_idx) already accounted for by the
             # entry-side deduction above (same rollover day, same spread — do not double-deduct).
@@ -5262,10 +5356,7 @@ def run_backtest(
                             build_roll_spread_audit(config.symbol, _roll_date_exit, int_size, _roll_cost_exit)
                         )
                     except Exception as _re_exit:
-                        print(
-                            f"[roll-spread] Error computing exit-side roll cost at bar {exit_idx}: {_re_exit}",
-                            file=sys.stderr,
-                        )
+                        check_roll_spread_fail_loud(config.symbol, exit_idx, "exit", _re_exit)
 
             net_pnl = gross - slip_cost - comm_cost - _roll_cost_usd
 
@@ -5324,6 +5415,10 @@ def run_backtest(
                 risk_points = managed_stop_pts(_symbol_of_spec(spec), atr_at_entry, sl_mult)
             trade["stop_basis"] = _mgmt_stop_basis
             risk_dollars = risk_points * spec.point_value
+            # G3 (ratify-packet 2026-07-17, Finding 1): total dollar risk this trade's
+            # stop-distance represented at entry — additive-only field consumed by
+            # detect_trade_compliance_violations()'s MFFU 2%-rule check.
+            trade["intended_max_loss"] = round(risk_dollars * int_size, 2)
             if risk_dollars > 0 and size > 0:
                 reward_dollars = net_pnl / size
                 trade["rr"] = round(reward_dollars / risk_dollars, 2)
@@ -5371,6 +5466,42 @@ def run_backtest(
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
         avg_trade_pnl = float(np.mean(trade_pnls_arr))
         winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
+
+    # ─── G3 compliance-violation shadow audit (Finding 1, ratify-packet
+    # docs/ratify-packets/backtest-compliance-sizing-gaps-2026-07-17.md) ────
+    # Detection-only — never mutates trades_list or any P&L figure computed
+    # above. Default OFF; MFFU-only (check_violation()'s 2%/HFT rules are
+    # MFFU-specific). Mirrors the shadow-vs-enforce contract this codebase's
+    # other compliance mechanisms already follow (BACKTEST_COMPLIANCE_MODE).
+    compliance_violation_audit: list[dict] = []
+    if _compliance_violation_check_enabled():
+        try:
+            from src.engine.firm_config import FIRM_RULES as _cv_firm_rules
+            _cv_rules = _cv_firm_rules.get(request.firm_key, {}) if request.firm_key else {}
+            _cv_starting_balance = float(
+                _cv_rules.get("starting_floor") or _cv_rules.get("account_size") or 50_000.0
+            )
+            _cv_trades = [
+                {
+                    "symbol": config.symbol,
+                    "entry_date": str(t.get("entry_timestamp") or "")[:10],
+                    "intended_max_loss": t.get("intended_max_loss", 0.0),
+                    "net_pnl": t.get("PnL", 0.0),
+                }
+                for t in trades_list
+            ]
+            compliance_violation_audit = detect_trade_compliance_violations(
+                _cv_trades, request.firm_key, _cv_starting_balance,
+            )
+            if compliance_violation_audit:
+                print(
+                    f"[compliance.violation_shadow_logged] strategy={getattr(config, 'name', '?')} "
+                    f"firm={request.firm_key} violating_trades={len(compliance_violation_audit)} "
+                    f"of {len(_cv_trades)} total",
+                    file=sys.stderr,
+                )
+        except Exception as _cve:
+            print(f"[compliance.violation_check_error] {_cve}", file=sys.stderr)
 
     # ─── Build equity curve from per-trade data ─────────────────
     # Uses per-trade entry/exit data so equity matches per-trade P&L exactly.
@@ -5811,6 +5942,10 @@ def run_backtest(
         "over_risk_bars": over_risk_count,
         "over_risk_pct": round(over_risk_count / max(len(df), 1) * 100, 2),
         "prop_compliance": prop_compliance,
+        # G3 (ratify-packet 2026-07-17, Finding 1): MFFU 2%-rule/HFT-limit shadow-mode
+        # violation audit. Always present (empty list when the flag is off, the firm
+        # isn't MFFU, or no violation was detected) — never a missing key.
+        "compliance_violation_audit": compliance_violation_audit,
         "analytics": analytics,
         "long_short_split": long_short_split,
         "confidence_intervals": {
@@ -7408,6 +7543,7 @@ def run_class_backtest(
         # MED #5 (Wave 27.5 Pass D.1) — Roll spread cost setup (class backtest path).
         from src.engine.roll_spread_cost import (
             build_roll_spread_audit,
+            check_roll_spread_fail_loud,
             compute_roll_spread_cost,
         )
         _has_rollover_col_cls = "is_rollover_day" in df.columns
@@ -7480,10 +7616,7 @@ def run_class_backtest(
                             build_roll_spread_audit(symbol, _roll_date_cls, int_size, _roll_cost_cls)
                         )
                     except Exception as _re_cls:
-                        print(
-                            f"[roll-spread] Error computing entry-side roll cost at bar {entry_idx}: {_re_cls}",
-                            file=sys.stderr,
-                        )
+                        check_roll_spread_fail_loud(symbol, entry_idx, "entry", _re_cls)
             # Exit-side roll spread (E7 class path): skip when exit_idx == entry_idx (same bar).
             if _has_rollover_col_cls and exit_idx < len(df) and exit_idx != entry_idx:
                 try:
@@ -7501,10 +7634,7 @@ def run_class_backtest(
                             build_roll_spread_audit(symbol, _roll_date_cls_exit, int_size, _roll_cost_cls_exit)
                         )
                     except Exception as _re_cls_exit:
-                        print(
-                            f"[roll-spread] Error computing exit-side roll cost at bar {exit_idx}: {_re_cls_exit}",
-                            file=sys.stderr,
-                        )
+                        check_roll_spread_fail_loud(symbol, exit_idx, "exit", _re_cls_exit)
 
             net_pnl = gross - slip_cost - comm_cost - _roll_cost_usd_cls
 
@@ -7547,6 +7677,10 @@ def run_class_backtest(
 
             # ─── Per-trade R:R (using 6pt capped risk) ───────────────
             risk_dollars = risk_pts * spec.point_value
+            # G3 (ratify-packet 2026-07-17, Finding 1, §1.1c class-path sibling): total
+            # dollar risk this trade's stop-distance represented at entry — additive-only
+            # field consumed by detect_trade_compliance_violations()'s MFFU 2%-rule check.
+            trade["intended_max_loss"] = round(risk_dollars * int_size, 2)
             if risk_dollars > 0 and size > 0:
                 reward_dollars = net_pnl / size
                 trade["rr"] = round(reward_dollars / risk_dollars, 2)
@@ -7592,6 +7726,42 @@ def run_class_backtest(
         profit_factor = gross_profit / gross_loss if gross_loss > 0 else float("inf")
         avg_trade_pnl = float(np.mean(trade_pnls_arr))
         winner_loser_ratio = avg_winner / avg_loser if avg_loser > 0 else float("inf")
+
+    # ─── G3 compliance-violation shadow audit (Finding 1, ratify-packet
+    # docs/ratify-packets/backtest-compliance-sizing-gaps-2026-07-17.md, §1.1c
+    # class-path sibling extension) ──────────────────────────────
+    # Detection-only — never mutates trades_list or any P&L figure computed
+    # above. Default OFF; MFFU-only (check_violation()'s 2%/HFT rules are
+    # MFFU-specific). Mirrors run_backtest()'s identical DSL-path block.
+    compliance_violation_audit: list[dict] = []
+    if _compliance_violation_check_enabled():
+        try:
+            from src.engine.firm_config import FIRM_RULES as _cv_firm_rules
+            _cv_rules = _cv_firm_rules.get(firm_key, {}) if firm_key else {}
+            _cv_starting_balance = float(
+                _cv_rules.get("starting_floor") or _cv_rules.get("account_size") or 50_000.0
+            )
+            _cv_trades = [
+                {
+                    "symbol": symbol,
+                    "entry_date": str(t.get("entry_timestamp") or "")[:10],
+                    "intended_max_loss": t.get("intended_max_loss", 0.0),
+                    "net_pnl": t.get("PnL", 0.0),
+                }
+                for t in trades_list
+            ]
+            compliance_violation_audit = detect_trade_compliance_violations(
+                _cv_trades, firm_key, _cv_starting_balance,
+            )
+            if compliance_violation_audit:
+                print(
+                    f"[compliance.violation_shadow_logged] strategy={strategy.name} "
+                    f"firm={firm_key} violating_trades={len(compliance_violation_audit)} "
+                    f"of {len(_cv_trades)} total",
+                    file=sys.stderr,
+                )
+        except Exception as _cve:
+            print(f"[compliance.violation_check_error] {_cve}", file=sys.stderr)
 
     # ─── Build equity curve from managed trades ─────────────────
     # Uses managed entry/exit data so equity matches per-trade P&L exactly.
@@ -8001,6 +8171,11 @@ def run_class_backtest(
         "over_risk_bars": over_risk_count,
         "over_risk_pct": round(over_risk_count / max(len(df), 1) * 100, 2),
         "prop_compliance": prop_compliance,
+        # G3 (ratify-packet 2026-07-17, Finding 1 §1.1c): MFFU 2%-rule/HFT-limit
+        # shadow-mode violation audit, class-path sibling of run_backtest()'s
+        # identical key. Always present (empty list when the flag is off, the
+        # firm isn't MFFU, or no violation was detected) — never a missing key.
+        "compliance_violation_audit": compliance_violation_audit,
         "analytics": analytics,
         "long_short_split": long_short_split,
         "confidence_intervals": {

@@ -27,7 +27,10 @@
  *     - killzone_active: binary time window check — no decay concept.
  *
  * FACTORS THAT RECEIVE DECAY (6 of 11):
- *   1. market_structure_aligned — CHoCH/MSS/BOS age from structureState.last_break_age_bars
+ *   1. market_structure_aligned — CHoCH/MSS/BOS age (trading days) from
+ *      structureState.choch_age_bars / mss_age_bars / bos_age_bars
+ *      (recency-first selection), falling back to last_break_age_bars when
+ *      no per-type age is available
  *   2. smt_confirmation — SMT divergence resolves quickly (~60 bars half-life)
  *   3. vp_level_proximity — VP levels go stale across sessions
  *   4. vwap_alignment — anchored VWAP staleness (ageBars = bars since anchor bar)
@@ -51,6 +54,14 @@ export interface DecayInput {
   ageBars?: number;
   /** Hours since formed. Alternative to ageBars (used for cross_asset_aligned). */
   ageHours?: number;
+  /**
+   * Trading days since the signal/structure formed. Alternative to ageBars —
+   * used by chochDecay/mssDecay when the caller's age is day-denominated
+   * (structureState.*_age_bars is computed against daily exec_bars, not
+   * 5-minute bars — see confluence-decay-bar-unit-mismatch-2026-07-17 ratify
+   * packet). Takes priority over ageBars when both are present.
+   */
+  ageTradingDays?: number;
   /** How many times the level/signal was visited by price. */
   touchedCount?: number;
   /** Hard-kill flag: a mitigated OB/FVG is fully expired regardless of age. */
@@ -79,13 +90,47 @@ const OB_AGE_HALF_LIFE_BARS = 150;
 const OB_AGE_MAX_PENALTY = 0.6;
 const OB_TOUCH_PENALTY = 0.3;
 
-/** CHoCH: 100-bar half-life (~8.3h on 5m bars). No touch concept. */
+/**
+ * CHoCH: 100-bar half-life. No touch concept.
+ * Applies ONLY to a genuine bar-granularity caller (input.ageBars, 5-minute
+ * bars) — as of 2026-07-17 no production caller supplies that shape;
+ * deriveFactorDecay() (the only production caller of chochDecay/mssDecay)
+ * always supplies ageTradingDays, since structureState.*_age_bars is
+ * computed against daily exec_bars (bias-state-service.ts), not 5-minute
+ * bars. The bar-scale path below is preserved for any future genuine
+ * 5-minute-bar caller and is unit-tested for backward compat.
+ */
 const CHOCH_AGE_HALF_LIFE_BARS = 100;
 const CHOCH_AGE_MAX_PENALTY = 0.7;
 
-/** MSS: 80-bar half-life (~6.7h). More aggressive — institutional pros invalidate MSS quickly. */
+/**
+ * MSS: 80-bar half-life. More aggressive — institutional pros invalidate MSS
+ * quickly. Same bar-vs-trading-day caveat as CHOCH_AGE_HALF_LIFE_BARS above.
+ */
 const MSS_AGE_HALF_LIFE_BARS = 80;
 const MSS_AGE_MAX_PENALTY = 0.7;
+
+/**
+ * CHoCH day-scale half-life — 10 trading days (two trading weeks).
+ * PROPOSED / needs-post-ship-validation: structureState is None in every
+ * backtest (backtester.py never passes exec_bars into compute_bias()), so
+ * this factor has zero historical data to tune against. This is a defensible
+ * starting point, not a backtested optimum — validate via
+ * signal.confluence_factor_decayed audit-row satisfied-rate over the first
+ * 30+ days live (same discipline CLAUDE.md §2b already applies to the
+ * 11-factor weights). Confidence reaches the 0.3 floor at 7 trading days
+ * (~1.5 weeks) — see confluence-decay-bar-unit-mismatch-2026-07-17 packet §3a.
+ */
+const CHOCH_AGE_HALF_LIFE_TRADING_DAYS = 10;
+
+/**
+ * MSS day-scale half-life — 6 trading days (just over one trading week).
+ * Kept more aggressive than CHoCH, matching the existing 80/100-bar ratio's
+ * intent. PROPOSED / needs-post-ship-validation — same caveat as
+ * CHOCH_AGE_HALF_LIFE_TRADING_DAYS above. Confidence reaches the 0.3 floor
+ * at ~4-5 trading days (~1 week).
+ */
+const MSS_AGE_HALF_LIFE_TRADING_DAYS = 6;
 
 /** SMT divergence: 60-bar half-life (~5h). Resolves quickly. */
 const SMT_AGE_HALF_LIFE_BARS = 60;
@@ -209,14 +254,20 @@ export function obDecay(input: DecayInput): DecayResult {
 /**
  * CHoCH (Change of Character) decay.
  *
- * confidence = max(0, 1 - min(CHOCH_AGE_MAX_PENALTY, ageBars / CHOCH_AGE_HALF_LIFE_BARS))
+ * Trading-day-scale (preferred, matches every production caller today):
+ *   confidence = max(0, 1 - min(CHOCH_AGE_MAX_PENALTY, ageTradingDays / CHOCH_AGE_HALF_LIFE_TRADING_DAYS))
+ * Bar-scale fallback (input.ageTradingDays absent, genuine 5m-bar caller):
+ *   confidence = max(0, 1 - min(CHOCH_AGE_MAX_PENALTY, ageBars / CHOCH_AGE_HALF_LIFE_BARS))
  *
  * No touch concept for structure breaks.
  */
 export function chochDecay(input: DecayInput): DecayResult {
   let agePenalty = 0;
   let ageStr = "age=unknown";
-  if (input.ageBars !== undefined && Number.isFinite(input.ageBars)) {
+  if (input.ageTradingDays !== undefined && Number.isFinite(input.ageTradingDays)) {
+    agePenalty = Math.min(CHOCH_AGE_MAX_PENALTY, input.ageTradingDays / CHOCH_AGE_HALF_LIFE_TRADING_DAYS);
+    ageStr = `age_trading_days=${input.ageTradingDays}`;
+  } else if (input.ageBars !== undefined && Number.isFinite(input.ageBars)) {
     agePenalty = Math.min(CHOCH_AGE_MAX_PENALTY, input.ageBars / CHOCH_AGE_HALF_LIFE_BARS);
     ageStr = `age_bars=${input.ageBars}`;
   }
@@ -233,12 +284,18 @@ export function chochDecay(input: DecayInput): DecayResult {
  * MSS (Market Structure Shift) decay.
  *
  * More aggressive than CHoCH — institutional traders invalidate MSS quickly.
- * confidence = max(0, 1 - min(MSS_AGE_MAX_PENALTY, ageBars / MSS_AGE_HALF_LIFE_BARS))
+ * Trading-day-scale (preferred, matches every production caller today):
+ *   confidence = max(0, 1 - min(MSS_AGE_MAX_PENALTY, ageTradingDays / MSS_AGE_HALF_LIFE_TRADING_DAYS))
+ * Bar-scale fallback (input.ageTradingDays absent, genuine 5m-bar caller):
+ *   confidence = max(0, 1 - min(MSS_AGE_MAX_PENALTY, ageBars / MSS_AGE_HALF_LIFE_BARS))
  */
 export function mssDecay(input: DecayInput): DecayResult {
   let agePenalty = 0;
   let ageStr = "age=unknown";
-  if (input.ageBars !== undefined && Number.isFinite(input.ageBars)) {
+  if (input.ageTradingDays !== undefined && Number.isFinite(input.ageTradingDays)) {
+    agePenalty = Math.min(MSS_AGE_MAX_PENALTY, input.ageTradingDays / MSS_AGE_HALF_LIFE_TRADING_DAYS);
+    ageStr = `age_trading_days=${input.ageTradingDays}`;
+  } else if (input.ageBars !== undefined && Number.isFinite(input.ageBars)) {
     agePenalty = Math.min(MSS_AGE_MAX_PENALTY, input.ageBars / MSS_AGE_HALF_LIFE_BARS);
     ageStr = `age_bars=${input.ageBars}`;
   }
@@ -379,11 +436,18 @@ export interface DecayStructureState {
   mss_recent?: boolean;
   bos_recent?: boolean;
   last_break_age_bars?: number | null;
-  /** Pass 1: age_bars for the most recent CHoCH specifically. Preferred over last_break_age_bars. */
+  /**
+   * Age (in trading days — computed against daily exec_bars, see
+   * confluence-decay-bar-unit-mismatch-2026-07-17 packet §1a) for the most
+   * recent CHoCH. Selection among choch/mss/bos_age_bars is RECENCY-FIRST
+   * (smallest non-null age wins; same-age ties broken MSS > CHoCH > BOS,
+   * matching structure_engine.py::_find_last_break()'s own same-bar
+   * tiebreak) — NOT a fixed type-priority order.
+   */
   choch_age_bars?: number | null;
-  /** Age in bars for the most recent MSS. */
+  /** Age in trading days for the most recent MSS. See choch_age_bars doc. */
   mss_age_bars?: number | null;
-  /** Age for BOS if CHoCH/MSS absent. */
+  /** Age in trading days for the most recent BOS. See choch_age_bars doc. */
   bos_age_bars?: number | null;
   mitigated?: boolean;
 }
@@ -418,42 +482,58 @@ export function deriveFactorDecay(
 
   switch (factorName) {
     case _FACTOR_MARKET_STRUCTURE_ALIGNED: {
-      // Use structureState age if available. Priority: choch_age_bars > mss_age_bars >
-      // bos_age_bars > last_break_age_bars.
       const ss = ctx.structureState;
       if (!ss) {
         // Structure engine not yet live — no decay (full confidence).
         return { confidence: 1.0, reason: "structure_state_null_no_penalty", hard_killed: false };
       }
 
-      // Determine which structure break type is most recent and its age.
-      // CHoCH takes priority (strongest signal), then MSS, then BOS.
-      let ageBars: number | undefined;
+      // RECENCY-FIRST selection (confluence-decay-bar-unit-mismatch-2026-07-17
+      // packet §2d/§3a): among whichever of choch/mss/bos_age_bars are
+      // non-null, the SMALLEST age (the most recent break) wins — NOT a
+      // fixed type-priority chain. structure_engine.py::_find_last_break()
+      // is recency-first across bars, tiebreaking only same-bar coincidences
+      // (an MSS bar is definitionally also a CHoCH bar) MSS > CHoCH > BOS.
+      // Mirror that tiebreak exactly here so this dispatch stays equivalent
+      // to the engine's own semantics — a type-first order (in either
+      // direction) reports the wrong-age break whenever the types disagree
+      // on which is most recent.
+      type BreakCandidate = { type: "choch" | "mss" | "bos"; age: number; tiebreakRank: number };
+      const candidates: BreakCandidate[] = [];
+      if (ss.choch_recent && ss.choch_age_bars != null && Number.isFinite(ss.choch_age_bars)) {
+        candidates.push({ type: "choch", age: ss.choch_age_bars, tiebreakRank: 1 });
+      }
+      if (ss.mss_recent && ss.mss_age_bars != null && Number.isFinite(ss.mss_age_bars)) {
+        candidates.push({ type: "mss", age: ss.mss_age_bars, tiebreakRank: 2 });
+      }
+      if (ss.bos_recent && ss.bos_age_bars != null && Number.isFinite(ss.bos_age_bars)) {
+        candidates.push({ type: "bos", age: ss.bos_age_bars, tiebreakRank: 0 });
+      }
+      candidates.sort((a, b) => (a.age - b.age) || (b.tiebreakRank - a.tiebreakRank));
+
+      let ageTradingDays: number | undefined;
       let breakType = "generic_break";
 
-      if (ss.choch_recent && ss.choch_age_bars != null && Number.isFinite(ss.choch_age_bars)) {
-        ageBars = ss.choch_age_bars;
-        breakType = "choch";
-      } else if (ss.mss_recent && ss.mss_age_bars != null && Number.isFinite(ss.mss_age_bars)) {
-        ageBars = ss.mss_age_bars;
-        breakType = "mss";
-      } else if (ss.bos_recent && ss.bos_age_bars != null && Number.isFinite(ss.bos_age_bars)) {
-        ageBars = ss.bos_age_bars;
-        breakType = "bos";
+      if (candidates.length > 0) {
+        ageTradingDays = candidates[0].age;
+        breakType = candidates[0].type;
       } else if (ss.last_break_age_bars != null && Number.isFinite(ss.last_break_age_bars)) {
-        ageBars = ss.last_break_age_bars;
+        // No per-type age available (pre-3b callers, or the type never
+        // occurred in the window) — fall back to the single cross-type age.
+        ageTradingDays = ss.last_break_age_bars;
         breakType = "last_break";
       }
 
       // Delegate to the most specific decay function based on break type.
+      // All 4 age sources originate from the same daily-exec_bars-computed
+      // StructureState, so all 4 are trading-day-denominated (§1a/§2a).
       let result: DecayResult;
-      if (breakType === "choch") {
-        result = chochDecay({ ageBars });
-      } else if (breakType === "mss") {
-        result = mssDecay({ ageBars });
+      if (breakType === "mss") {
+        result = mssDecay({ ageTradingDays });
       } else {
-        // BOS or generic — use choch as a reasonable proxy (same half-life class).
-        result = chochDecay({ ageBars });
+        // CHoCH, BOS, or the last_break fallback — chochDecay is a
+        // reasonable proxy for BOS/generic (same half-life class).
+        result = chochDecay({ ageTradingDays });
       }
 
       return {

@@ -39,6 +39,17 @@ vi.mock("../db/index.js", () => ({
   },
 }));
 
+// Deep-scan B fix-wave 2026-07-17: spy directly on insertAuditRow so the
+// rate-limit-dropped / circuit-open-dropped / batch-flush-failed audit rows
+// (the fix under test) can be asserted on, independent of the raw db mock above.
+const { insertAuditRowMock } = vi.hoisted(() => ({
+  insertAuditRowMock: vi.fn().mockResolvedValue(undefined),
+}));
+vi.mock("../lib/audit-log-helper.js", () => ({
+  insertAuditRow: insertAuditRowMock,
+}));
+
+import { CircuitBreakerRegistry } from "../lib/circuit-breaker.js";
 import {
   notify,
   notifyCritical,
@@ -69,6 +80,17 @@ async function flushMicrotasks(): Promise<void> {
   await Promise.resolve();
 }
 
+/**
+ * Deeper microtask flush for chains that route through sendWebhook's internal
+ * `await cb.call(...)` PLUS notify()'s outer `.then().catch()` — more hops than
+ * the 2-tick flushMicrotasks() above reliably drains.
+ */
+async function flushMicrotasksDeep(rounds = 6): Promise<void> {
+  for (let i = 0; i < rounds; i++) {
+    await Promise.resolve();
+  }
+}
+
 // ─── Tests ───────────────────────────────────────────────────────────────────
 
 describe("NotificationService", () => {
@@ -77,6 +99,15 @@ describe("NotificationService", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     _resetForTests();
+    // Circuit breakers are a process-wide singleton registry keyed by endpoint
+    // ("discord") — without this reset, a test that trips the breaker OPEN
+    // leaves it OPEN for every later test (fake timers never advance past the
+    // cooldown), silently short-circuiting their fetch assertions.
+    CircuitBreakerRegistry._resetForTests();
+    // vi.restoreAllMocks() in afterEach strips the resolved-value implementation
+    // off this plain vi.fn() (it isn't a vi.spyOn mock, so "restore" behaves like
+    // a full reset) — re-establish it fresh every test, not just clear call history.
+    insertAuditRowMock.mockReset().mockResolvedValue(undefined);
     delete process.env.DISCORD_WEBHOOK_URL;
   });
 
@@ -306,6 +337,109 @@ describe("NotificationService", () => {
 
       const after = getNotificationServiceStatus().rateLimitBudgetRemaining;
       expect(after).toBe(before - 1);
+    });
+  });
+
+  // ─── Dropped-delivery audit trail (deep-scan B fix-wave 2026-07-17) ───────
+  // Three paths previously dropped CRITICAL/INFO/WARNING deliveries with only
+  // a logger.warn and no audit_log row: (1) rate-limit drop, (2) circuit-open
+  // drop, (3) WARNING batch-flush failure. These tests are RED-proof — they
+  // fail against the pre-fix code because insertAuditRow was never called on
+  // these paths (verified by temporarily reverting the fix and re-running).
+
+  describe("dropped-delivery audit trail", () => {
+    it("writes a notification.rate_limit_dropped audit row when the rate limiter drops a call", async () => {
+      process.env.DISCORD_WEBHOOK_URL = WEBHOOK_URL;
+      const fetchSpy = makeFetchSpy();
+      vi.stubGlobal("fetch", fetchSpy);
+
+      // Fill the 5-call rate-limit window
+      for (let i = 0; i < 5; i++) {
+        notifyCritical(`Burst ${i}`, "body");
+      }
+      await flushMicrotasks();
+      expect(fetchSpy).toHaveBeenCalledTimes(5);
+
+      insertAuditRowMock.mockClear();
+
+      // 6th call is dropped by the rate limiter before ever touching fetch
+      notifyCritical("Over budget", "should be rate-limited");
+      await flushMicrotasks();
+
+      expect(fetchSpy).toHaveBeenCalledTimes(5); // unchanged — 6th never reached fetch
+
+      const rateLimitRows = insertAuditRowMock.mock.calls
+        .map(([row]) => row)
+        .filter((row) => row.action === "notification.rate_limit_dropped");
+      expect(rateLimitRows).toHaveLength(1);
+      expect(rateLimitRows[0]).toMatchObject({
+        action: "notification.rate_limit_dropped",
+        entityType: "system",
+        status: "error", // CRITICAL severity escalates the drop's audit status
+        input: expect.objectContaining({ title: "Over budget", severity: "CRITICAL" }),
+        result: expect.objectContaining({ dropped: true, reason: "rate_limited" }),
+      });
+    });
+
+    it("writes a notification.circuit_open_dropped audit row when the Discord circuit is OPEN", async () => {
+      process.env.DISCORD_WEBHOOK_URL = WEBHOOK_URL;
+      const failingFetch = vi.fn().mockRejectedValue(new Error("Network error"));
+      vi.stubGlobal("fetch", failingFetch);
+
+      // Trip the circuit breaker (default failureThreshold = 3 consecutive failures)
+      for (let i = 0; i < 3; i++) {
+        notifyCritical(`Trip ${i}`, "body");
+        await flushMicrotasksDeep();
+      }
+      expect(failingFetch).toHaveBeenCalledTimes(3);
+
+      insertAuditRowMock.mockClear();
+
+      // 4th call: circuit is now OPEN — sendWebhook fast-fails via CircuitOpenError
+      // without ever invoking fetch again
+      notifyCritical("Circuit is open", "should be dropped without calling fetch");
+      await flushMicrotasksDeep();
+
+      expect(failingFetch).toHaveBeenCalledTimes(3); // still 3 — fast-failed, no new fetch call
+
+      const circuitOpenRows = insertAuditRowMock.mock.calls
+        .map(([row]) => row)
+        .filter((row) => row.action === "notification.circuit_open_dropped");
+      expect(circuitOpenRows).toHaveLength(1);
+      expect(circuitOpenRows[0]).toMatchObject({
+        action: "notification.circuit_open_dropped",
+        entityType: "system",
+        status: "error",
+        input: expect.objectContaining({ title: "Circuit is open", severity: "CRITICAL" }),
+        result: expect.objectContaining({ dropped: true, reason: "circuit_open" }),
+      });
+    });
+
+    it("re-queues the WARNING batch (does not drop it) and writes an audit row when the batch flush throws", async () => {
+      process.env.DISCORD_WEBHOOK_URL = WEBHOOK_URL;
+      const failingFetch = vi.fn().mockRejectedValue(new Error("Network error"));
+      vi.stubGlobal("fetch", failingFetch);
+
+      notifyWarning("W1", "body 1");
+      notifyWarning("W2", "body 2");
+
+      await flushNotifications();
+
+      // The batch was NOT discarded — it was pushed back onto the queue for
+      // the next scheduled flush attempt.
+      expect(getNotificationServiceStatus().warningQueueDepth).toBe(2);
+
+      const batchFailedRows = insertAuditRowMock.mock.calls
+        .map(([row]) => row)
+        .filter((row) => row.action === "notification.warning_batch_flush_failed");
+      expect(batchFailedRows).toHaveLength(1);
+      expect(batchFailedRows[0]).toMatchObject({
+        action: "notification.warning_batch_flush_failed",
+        entityType: "system",
+        status: "error",
+        input: expect.objectContaining({ count: 2, titles: ["W1", "W2"] }),
+        result: expect.objectContaining({ requeued: true }),
+      });
     });
   });
 

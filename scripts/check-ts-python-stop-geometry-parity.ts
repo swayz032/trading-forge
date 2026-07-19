@@ -20,7 +20,9 @@
  * Fail-CLOSED: any mismatch, any invariant violation, or any Python error → exit 1.
  *
  * Coverage:
- *   - Base grid: {MES,MNQ,MCL,ZZZ} × ATR {0.5,3,4,8,9.34,50} × mult {1.5,2.0,5.0}
+ *   - Base grid: {MES,MNQ,MCL,ES,NQ,CL,ZZZ} × ATR {0.5,3,4,8,9.34,50} × mult {1.5,2.0,5.0}
+ *     (ES/NQ/CL are the Phase 5 mini aliases — dormant behind TF_PHASE_5_ENABLED
+ *     today, but included so this gate can never go blind to them again.)
  *   - Two env-override subprocess runs proving env floor semantics stay in parity:
  *       STOP_FLOOR_PTS_MNQ=12  (opt-in floor widens MNQ sizing)
  *       STOP_FLOOR_PTS_MES=0   (disables the default MES floor)
@@ -39,7 +41,7 @@ import { managedStopPts, sizingStopPts } from "../src/server/lib/stop-geometry.j
 
 const TOLERANCE = 1e-9;
 
-const SYMBOLS = ["MES", "MNQ", "MCL", "ZZZ"] as const;
+const SYMBOLS = ["MES", "MNQ", "MCL", "ES", "NQ", "CL", "ZZZ"] as const;
 const ATRS = [0.5, 3, 4, 8, 9.34, 50] as const;
 const MULTS = [1.5, 2.0, 5.0] as const;
 

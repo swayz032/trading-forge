@@ -13,11 +13,9 @@ Coverage areas:
 """
 
 import hashlib
-import pytest
 
-from src.engine.pine_compiler import compile_dual_artifacts, compile_strategy
 from src.engine.exportability import score_exportability
-
+from src.engine.pine_compiler import compile_dual_artifacts, compile_strategy
 
 # ─── Shared fixture ──────────────────────────────────────────────────────────
 
@@ -156,7 +154,6 @@ def test_risk_lockout_updates_session_pnl_in_strategy_artifact():
     # Must NOT contain the dead-code pattern from before the fix
     # Old code: "var float session_pnl = 0.0" with no update
     # New code: session_pnl is computed from strategy.netprofit delta
-    lines = pine.splitlines()
     dead_code_pattern = "var float session_pnl = 0.0"
     assert dead_code_pattern not in pine, (
         "FIX 1: dead-code 'var float session_pnl = 0.0' still present — "
@@ -191,7 +188,6 @@ def test_content_hash_is_sha256_of_artifact():
     # Single-artifact hash is SHA-256 of the indicator pine_code only
     indicator_artifacts = [a for a in single_result.artifacts if a.artifact_type == "indicator"]
     if indicator_artifacts:
-        expected_single = hashlib.sha256(indicator_artifacts[0].content.encode()).hexdigest()
         # The single path hashes pine_code (built before artifacts list is populated)
         # so we check the hash is a valid 64-char hex string
         assert len(single_result.content_hash) == 64
@@ -404,6 +400,96 @@ def test_single_atr_declaration_no_atr_qty_period():
         f"F-7: Expected exactly 1 ta.atr() call (shared), found {atr_call_count}. "
         "Dual ATR declarations allow stop and sizing ATR to drift."
     )
+
+
+# ─── Test 12 — entry/exit conditions reference the ACTUAL declared indicator var ──
+
+def test_ema_crossover_references_declared_ind_ema_var_not_hardcoded_sma():
+    """_build_entry_condition() and _build_exit_signal_pine() must reference the
+    Pine variable name _build_pine_indicator_var() actually declared for this
+    strategy's indicator (ind_ema_0), not a hardcoded ind_sma_0/ind_sma_1 pair.
+
+    entry_indicator="ema_crossover" (CLAUDE.md's own canonical DSL example, and
+    the real fixture src/engine/strategies/dsl_fixtures/trend_mnq.json) has no
+    explicit `indicators` list, so the compiler synthesizes a single indicator
+    from entry_indicator + entry_params and declares `ind_ema_0` (base_type
+    derived from "ema_crossover".split("_")[0] == "ema"). Before the fix, the
+    crossover branches in _build_entry_condition/_build_exit_signal_pine
+    unconditionally hardcoded ind_sma_0/ind_sma_1 — an undeclared identifier in
+    the emitted Pine (invalid Pine v5 — fails to compile in TradingView) that
+    the exportability scorer never caught.
+    """
+    strategy = {
+        "name": "Test EMA Crossover Strategy",
+        "symbol": "MNQ",
+        "timeframe": "15m",
+        "direction": "both",
+        "entry_type": "trend_follow",
+        "entry_indicator": "ema_crossover",
+        "entry_params": {"fast_period": 9, "slow_period": 21},
+        "exit_type": "indicator_signal",
+        "stop_loss_atr_multiple": 2.0,
+        "take_profit_atr_multiple": 4.0,
+    }
+    result = compile_dual_artifacts(strategy, firm_key="topstep_50k")
+    assert result.strategy_artifact is not None
+    pine = result.strategy_artifact.content
+
+    # The only declared indicator variable must be ind_ema_0.
+    assert "ind_ema_0 = ta.ema(close, 9)" in pine, (
+        "Expected declaration 'ind_ema_0 = ta.ema(close, 9)' not found in compiled Pine"
+    )
+
+    # RED-proof: pre-fix code always emitted ind_sma_0/ind_sma_1 regardless of the
+    # actual indicator type — an undeclared identifier for this ema strategy.
+    assert "ind_sma_0" not in pine, (
+        "Compiled Pine references undeclared 'ind_sma_0' — crossover entry/exit "
+        "condition is hardcoded to sma instead of deriving the real declared var"
+    )
+    assert "ind_sma_1" not in pine, (
+        "Compiled Pine references undeclared 'ind_sma_1' — crossover entry/exit "
+        "condition is hardcoded to sma instead of deriving the real declared var"
+    )
+
+    # Entry signal must reference the real declared var (single-indicator form,
+    # since only one ind_ema_0 was declared from entry_indicator+entry_params).
+    assert "long_signal = in_session and (ta.crossover(close, ind_ema_0))" in pine, (
+        "Long entry signal does not reference the declared ind_ema_0 variable"
+    )
+    assert "short_signal = in_session and (ta.crossunder(close, ind_ema_0))" in pine, (
+        "Short entry signal does not reference the declared ind_ema_0 variable"
+    )
+
+    # Exit signal (exit_type=indicator_signal) must also reference ind_ema_0.
+    assert "exit_long_signal = ta.crossunder(close, ind_ema_0)" in pine, (
+        "Exit long signal does not reference the declared ind_ema_0 variable"
+    )
+    assert "exit_short_signal = ta.crossover(close, ind_ema_0)" in pine, (
+        "Exit short signal does not reference the declared ind_ema_0 variable"
+    )
+
+
+def test_sma_crossover_output_unchanged_after_ema_fix():
+    """Regression guard: the pre-existing sma_crossover fixture (2 explicit sma
+    indicators, ind_sma_0/ind_sma_1) must produce byte-identical output after
+    the ind_ema_0 fix — the sma case happened to match the old hardcoded names
+    by coincidence and must not silently change behavior."""
+    strategy = _base_strategy()
+    result = compile_dual_artifacts(strategy, firm_key="topstep_50k")
+    pine = result.strategy_artifact.content
+
+    assert "ind_sma_0 = ta.sma(close, 10)" in pine
+    assert "ind_sma_1 = ta.sma(close, 50)" in pine
+    assert "long_signal = in_session and (ta.crossover(ind_sma_0, ind_sma_1))" in pine
+    assert "short_signal = in_session and (ta.crossunder(ind_sma_0, ind_sma_1))" in pine
+
+    # content_hash must be deterministic SHA-256 of this exact byte content —
+    # asserted here as a pin so any future accidental drift in this fixture's
+    # output is caught immediately.
+    expected_hash = hashlib.sha256(
+        (result.indicator_artifact.content + result.strategy_artifact.content).encode()
+    ).hexdigest()
+    assert result.content_hash == expected_hash
 
 
 # ─── Test 11 — F-12: webhook quantity is dynamic qty_final, not hardcoded 1 ──

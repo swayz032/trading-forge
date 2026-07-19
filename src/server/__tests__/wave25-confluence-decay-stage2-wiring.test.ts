@@ -5,8 +5,8 @@
  *
  * Coverage:
  *   1. Decay confidence multiplied into factor contribution
- *   2. Old structureState (CHoCH age=200 bars) → contribution reduced
- *   3. Fresh structureState (CHoCH age=10 bars) → contribution near full weight
+ *   2. Old structureState (CHoCH age=15 trading days) → contribution reduced
+ *   3. Fresh structureState (CHoCH age=2 trading days) → contribution near full weight
  *   4. Mitigated confluence → satisfied forced to false (hard_kill)
  *   5. Liquidity factor NOT decayed twice (anti-double-decay architecture safety)
  *   6. signal.confluence_factor_decayed fires via decayedFactors when confidence < 0.7
@@ -85,14 +85,19 @@ function makeContext(overrides: Partial<SignalContext> = {}): SignalContext {
   };
 }
 
-/** Build a structureState with a CHoCH of given age in bars */
-function makeStructureState(chochAgeBars: number) {
+/**
+ * Build a structureState with a CHoCH of given age in TRADING DAYS.
+ * choch_age_bars/last_break_age_bars are trading-day-denominated (computed
+ * against daily exec_bars — see confluence-decay-bar-unit-mismatch-2026-07-17
+ * packet); the parameter name matches the field name, not the unit.
+ */
+function makeStructureState(chochAgeTradingDays: number) {
   return {
     bos_recent: false,
     bos_direction: null as null,
     choch_recent: true,
     choch_direction: "bullish" as const,
-    choch_age_bars: chochAgeBars,
+    choch_age_bars: chochAgeTradingDays,
     mss_recent: false,
     mss_direction: null as null,
     mss_displacement_atr_mult: null,
@@ -100,7 +105,7 @@ function makeStructureState(chochAgeBars: number) {
     premium_discount_zone: "discount" as const,
     htf_bias_aligned: true,
     last_break_direction: "bullish" as const,
-    last_break_age_bars: chochAgeBars,
+    last_break_age_bars: chochAgeTradingDays,
     swing_high: null,
     swing_low: null,
     computed_at_bar_idx: 0,
@@ -220,25 +225,25 @@ describe("Stage 2 decay wiring", () => {
   });
 
   describe("Decay reduces contribution for satisfied factors", () => {
-    it("CHoCH age=200 bars → market_structure_aligned contribution is reduced vs fresh", () => {
+    it("CHoCH age=15 trading days → market_structure_aligned contribution is reduced vs fresh", () => {
       // structureState=null → no decay → structureState.market_structure_aligned reads as false
       // so this tests the reduction when structureState is present but aged.
 
-      // Fresh CHoCH (10 bars) — satisfied=true with high confidence
-      // Note: with age=10 bars, choch penalty = min(0.7, 10/100) = 0.07 → confidence = 0.93
+      // Fresh CHoCH (2 trading days) — satisfied=true with high confidence
+      // choch_age_bars is trading-day-denominated: penalty = min(0.7, 2/10) = 0.2 → confidence = 0.8
       const freshResult = evaluateWeightedConfluence(
         makeStrategy(),
-        makeContext({ structureState: makeStructureState(10) }),
+        makeContext({ structureState: makeStructureState(2) }),
       );
       const freshFc = freshResult.factorContributions.find(
         (c) => c.factor === FACTOR_MARKET_STRUCTURE_ALIGNED,
       )!;
 
-      // Old CHoCH (200 bars) — satisfied=true but decayed
-      // age=200 bars: penalty = min(0.7, 200/100) = 0.7 → confidence = 0.3
+      // Old CHoCH (15 trading days, ~3 weeks) — satisfied=true but decayed
+      // penalty = min(0.7, 15/10) = 0.7 (capped) → confidence = 0.3
       const oldResult = evaluateWeightedConfluence(
         makeStrategy(),
-        makeContext({ structureState: makeStructureState(200) }),
+        makeContext({ structureState: makeStructureState(15) }),
       );
       const oldFc = oldResult.factorContributions.find(
         (c) => c.factor === FACTOR_MARKET_STRUCTURE_ALIGNED,
@@ -251,30 +256,30 @@ describe("Stage 2 decay wiring", () => {
       expect(oldFc.decay_confidence).toBeLessThan(freshFc.decay_confidence!);
     });
 
-    it("fresh CHoCH (age=10 bars) → contribution near full weight", () => {
+    it("fresh CHoCH (age=2 trading days) → contribution near full weight", () => {
       const result = evaluateWeightedConfluence(
         makeStrategy(),
-        makeContext({ structureState: makeStructureState(10) }),
+        makeContext({ structureState: makeStructureState(2) }),
       );
       const fc = result.factorContributions.find(
         (c) => c.factor === FACTOR_MARKET_STRUCTURE_ALIGNED,
       )!;
-      // age=10: choch_penalty = min(0.7, 10/100) = 0.10 → confidence = 0.90
-      // contribution = 0.20 × 0.90 = 0.18
+      // age=2 trading days: choch_penalty = min(0.7, 2/10) = 0.20 → confidence = 0.80
+      // contribution = 0.20 × 0.80 = 0.16
       expect(fc.satisfied).toBe(true);
-      expect(fc.decay_confidence).toBeCloseTo(0.90, 2);
-      expect(fc.contribution).toBeCloseTo(0.18, 2);
+      expect(fc.decay_confidence).toBeCloseTo(0.80, 2);
+      expect(fc.contribution).toBeCloseTo(0.16, 2);
     });
 
-    it("very old CHoCH (age=200 bars) → contribution = weight × 0.3", () => {
+    it("very old CHoCH (age=15 trading days) → contribution = weight × 0.3", () => {
       const result = evaluateWeightedConfluence(
         makeStrategy(),
-        makeContext({ structureState: makeStructureState(200) }),
+        makeContext({ structureState: makeStructureState(15) }),
       );
       const fc = result.factorContributions.find(
         (c) => c.factor === FACTOR_MARKET_STRUCTURE_ALIGNED,
       )!;
-      // age=200: choch_penalty = min(0.7, 200/100) = 0.7 → confidence = 0.3
+      // age=15 trading days: choch_penalty = min(0.7, 15/10) = 0.7 (capped) → confidence = 0.3
       // contribution = 0.20 × 0.3 = 0.06
       expect(fc.satisfied).toBe(true);
       expect(fc.decay_confidence).toBeCloseTo(0.3, 2);
@@ -429,7 +434,7 @@ describe("Stage 2 decay wiring", () => {
         makeStrategy(),
         makeContext({
           calendarBlocked: true,
-          structureState: makeStructureState(5), // fresh structure
+          structureState: makeStructureState(5), // decay is irrelevant here — hard-block forces score=0 regardless
         }),
       );
       expect(result.hardBlockTriggered).toBe(true);
@@ -521,7 +526,7 @@ describe("Stage 2 decay wiring", () => {
     });
 
     it("decayedFactors populated when satisfied factor's decay_confidence < 0.7 (audit fires)", () => {
-      // CHoCH at age=200 bars → choch_penalty=min(0.7, 200/100)=0.7 → confidence=0.3
+      // CHoCH at age=200 trading days → choch_penalty=min(0.7, 200/10)=0.7 (capped) → confidence=0.3
       // 0.3 < 0.7 → must appear in decayedFactors (audit row will fire)
       const result = evaluateWeightedConfluence(
         makeStrategy(),
@@ -542,25 +547,25 @@ describe("Stage 2 decay wiring", () => {
     });
 
     it("decayedFactors empty when satisfied factor's decay_confidence >= 0.7 (no audit fires)", () => {
-      // CHoCH at age=10 bars → choch_penalty=min(0.7, 10/100)=0.1 → confidence=0.9
+      // CHoCH at age=1 trading day → choch_penalty=min(0.7, 1/10)=0.1 → confidence=0.9
       // 0.9 >= 0.7 → must NOT appear in decayedFactors (no audit row)
       const result = evaluateWeightedConfluence(
         makeStrategy(),
-        makeContext({ structureState: makeStructureState(10) }),
+        makeContext({ structureState: makeStructureState(1) }),
       );
       const decayedNames = result.decayedFactors.map((fc) => fc.factor);
       expect(decayedNames).not.toContain(FACTOR_MARKET_STRUCTURE_ALIGNED);
     });
 
     it("decayedFactors respects DECAY_TELEMETRY_THRESHOLD env override (raised cutoff fires more rows)", () => {
-      // CHoCH at age=50 bars → choch_penalty=min(0.7, 50/100)=0.5 → confidence=0.5
+      // CHoCH at age=5 trading days → choch_penalty=min(0.7, 5/10)=0.5 → confidence=0.5
       // At default threshold=0.7: 0.5 < 0.7 → fires
       // If we LOWERED threshold to 0.4: 0.5 >= 0.4 → does NOT fire
       process.env.DECAY_TELEMETRY_THRESHOLD = "0.4";
       try {
         const result = evaluateWeightedConfluence(
           makeStrategy(),
-          makeContext({ structureState: makeStructureState(50) }),
+          makeContext({ structureState: makeStructureState(5) }),
         );
         const decayedNames = result.decayedFactors.map((fc) => fc.factor);
         // With threshold lowered to 0.4, a confidence of 0.5 is ABOVE threshold → no fire.

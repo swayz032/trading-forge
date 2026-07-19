@@ -227,19 +227,23 @@ export function getCommissionPerSide(
 
 /**
  * Per-symbol maximum stop distance in price POINTS.
- * This is the canonical TS mirror of Python `_STOP_CEILING_TABLE` in
- * `src/engine/risk/margin_expansion.py`.
+ * This is the canonical TS mirror of Python `_STOP_CEILING_DEFAULTS` in
+ * `src/engine/stop_geometry.py`.
  *
  * Updated values (Wave 1 Track 1B — 2026-06-27):
  *   MNQ: 40pt → 62pt   (wider ceiling matches realistic MNQ ATR)
  *   MCL: 0.25pt → 1.00pt  (1.00pt = 100 ticks; old 0.25pt = 25 ticks was too tight)
  *
- * Environment overrides (same env names as Python side — required for parity):
- *   STOP_CEILING_PTS_MES  default 14   (MES structural ceiling per CLAUDE.md §4)
- *   STOP_CEILING_PTS_MNQ  default 62   (MNQ ceiling, calibrated to 2026 ATR data)
- *   STOP_CEILING_PTS_MCL  default 1.00 (MCL ceiling in points; 1pt = $100/contract)
+ * Mini aliases (ES/NQ/CL) share their micro's env var and default exactly as
+ * Python's `_STOP_CEILING_DEFAULTS` does — Phase 5 (TF_PHASE_5_ENABLED, CLAUDE.md
+ * §5) is the only consumer of these keys today; dormant until that flag flips.
  *
- * Unit: POINTS throughout. For MCL: 1 point = 100 ticks = $100 per contract.
+ * Environment overrides (same env names as Python side — required for parity):
+ *   STOP_CEILING_PTS_MES  default 14   (MES structural ceiling per CLAUDE.md §4; ES shares this var)
+ *   STOP_CEILING_PTS_MNQ  default 62   (MNQ ceiling, calibrated to 2026 ATR data; NQ shares this var)
+ *   STOP_CEILING_PTS_MCL  default 1.00 (MCL ceiling in points; 1pt = $100/contract; CL shares this var)
+ *
+ * Unit: POINTS throughout. For MCL/CL: 1 point = 100 ticks = $100 per contract.
  * Never confuse with TICKS — the MCL pointDollarValue is $100/pt, tick_value is $1.
  *
  * Usage:
@@ -248,18 +252,23 @@ export function getCommissionPerSide(
  */
 const STOP_CEILING_TABLE: Record<string, number> = {
   MES: parseFloat(process.env.STOP_CEILING_PTS_MES ?? "14"),
+  ES: parseFloat(process.env.STOP_CEILING_PTS_MES ?? "14"),
   MNQ: parseFloat(process.env.STOP_CEILING_PTS_MNQ ?? "62"),
+  NQ: parseFloat(process.env.STOP_CEILING_PTS_MNQ ?? "62"),
   MCL: parseFloat(process.env.STOP_CEILING_PTS_MCL ?? "1.00"),
+  CL: parseFloat(process.env.STOP_CEILING_PTS_MCL ?? "1.00"),
 } as const;
 
 /**
  * Resolve the stop ceiling in price points for a given symbol.
  * Returns the symbol-specific ceiling, or the MES default (14) for unknown symbols.
  *
- * Mirrors Python: `_STOP_CEILING_TABLE.get(symbol, _STOP_CEILING_TABLE["MES"])`.
+ * Mirrors Python `get_stop_ceiling_for_symbol()` in `src/engine/stop_geometry.py`,
+ * which resolves against `_STOP_CEILING_DEFAULTS` and falls back to
+ * `_STOP_CEILING_DEFAULT` (14.0) for unrecognised symbols.
  * Case-insensitive. Never throws.
  *
- * @param symbol  Contract symbol (e.g. "MES", "MNQ", "MCL"). Case-insensitive.
+ * @param symbol  Contract symbol (e.g. "MES", "MNQ", "MCL", "ES", "NQ", "CL"). Case-insensitive.
  * @returns Ceiling stop distance in price POINTS.
  */
 export function getStopCeilingPts(symbol: string): number {

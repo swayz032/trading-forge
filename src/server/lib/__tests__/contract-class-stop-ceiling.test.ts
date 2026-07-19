@@ -58,6 +58,28 @@ describe("getStopCeilingPts — canonical stop ceiling mirror", () => {
     });
   });
 
+  describe("mini aliases (ES/NQ/CL, Phase 5) — must mirror their micro's ceiling, not silently fall back to MES", () => {
+    it("ES ceiling = 14 points, same as MES (shares STOP_CEILING_PTS_MES)", () => {
+      expect(getStopCeilingPts("ES")).toBe(14);
+    });
+
+    it("NQ ceiling = 62 points, same as MNQ (shares STOP_CEILING_PTS_MNQ) — NOT the MES fallback of 14", () => {
+      expect(getStopCeilingPts("NQ")).toBe(62);
+      expect(getStopCeilingPts("NQ")).not.toBe(14);
+    });
+
+    it("CL ceiling = 1.00 point, same as MCL (shares STOP_CEILING_PTS_MCL) — NOT the MES fallback of 14", () => {
+      expect(getStopCeilingPts("CL")).toBe(1.00);
+      expect(getStopCeilingPts("CL")).not.toBe(14);
+    });
+
+    it("lowercase mini aliases resolve identically to their uppercase micro", () => {
+      expect(getStopCeilingPts("es")).toBe(getStopCeilingPts("MES"));
+      expect(getStopCeilingPts("nq")).toBe(getStopCeilingPts("MNQ"));
+      expect(getStopCeilingPts("cl")).toBe(getStopCeilingPts("MCL"));
+    });
+  });
+
   describe("env var overrides", () => {
     // NOTE: env-var-overrides affect module-level constants which are read at module load.
     // These tests verify the logic is correct when env vars are set to non-default values.

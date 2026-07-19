@@ -29,7 +29,7 @@ import multiprocessing
 import os
 import sys
 import time
-from typing import Optional
+from datetime import UTC
 
 import numpy as np
 import polars as pl
@@ -125,7 +125,7 @@ def _compute_wf_slippage_survival(all_oos_trades: list[dict]) -> dict:
         if "GrossPnL" not in t or "SlippageCost" not in t
     )
     if _missing_keys_count > 0:
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         print(
             f"WARNING: slippage_survival (WF aggregate): {_missing_keys_count} of "
@@ -141,7 +141,7 @@ def _compute_wf_slippage_survival(all_oos_trades: list[dict]) -> dict:
                 "GrossPnL/SlippageCost keys — cannot compute an honest sweep"
             ),
             "n_trades": len(all_oos_trades),
-            "computed_at": datetime.now(timezone.utc).isoformat(),
+            "computed_at": datetime.now(UTC).isoformat(),
         }
 
     return _compute_slippage_survival_block(all_oos_trades)
@@ -319,7 +319,7 @@ def _combined_fold_sharpe(pnls: list[float]) -> float:
 
 def _run_walk_forward_cpcv(
     request: BacktestRequest,
-    data: Optional[pl.DataFrame] = None,
+    data: pl.DataFrame | None = None,
     n_splits: int = 6,
     k_test_groups: int = 2,
     embargo_bars: int = 20,
@@ -841,15 +841,17 @@ def _run_walk_forward_cpcv(
     # we don't have per-path IS Sharpes (the IS data is pooled across folds).
     # This is conservative — a more accurate implementation would track per-path
     # IS Sharpes during the combinations loop above (Wave 30 carry-forward).
-    _cpcv_pbo_overall: Optional[float] = None
-    _cpcv_pbo_p_value: Optional[float] = None
+    _cpcv_pbo_overall: float | None = None
+    _cpcv_pbo_p_value: float | None = None
     _cpcv_pbo_audit_actions: list[str] = []
     # BYPASS 2 EXPLICIT AUDIT (2026-06-28 hardening): track the degenerate reason
     # so the TS lifecycle gate receives a distinct "cpcv_is_sharpe_unavailable"
     # label rather than the generic legacy-null grandfather-PASS path.
-    # (Merge 2026-06-29: adopted over the deepscan-wiring BLOCK approach — CPCV is the
-    # default WF_MODE, so BLOCK-on-degenerate would strangle the whole pipeline.)
-    _cpcv_pbo_degenerate_reason: Optional[str] = None
+    # (Operator-ratified 2026-07-17: BLOCK is the correct contract for this branch — a
+    # PBO overfit gate that structurally cannot measure overfitting in CPCV mode must
+    # not silently authorize promotion. Ship gates strict, then loosen with data, not
+    # fear (CLAUDE.md §13). See gate-contract-restoration-2026-07-17 ratify packet.)
+    _cpcv_pbo_degenerate_reason: str | None = None
     try:
         from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _cpcv_pbo_fn
         # E1: use true per-path IS Sharpes when available to make PBO non-degenerate.
@@ -858,7 +860,7 @@ def _run_walk_forward_cpcv(
         if _has_full_is and len(per_path_is_sharpes) == len(path_sharpes):
             _cpcv_path_dicts = [
                 {"is_sharpe": is_s, "oos_sharpe": oos_s, "is_returns": [], "oos_returns": []}
-                for is_s, oos_s in zip(per_path_is_sharpes, path_sharpes)
+                for is_s, oos_s in zip(per_path_is_sharpes, path_sharpes, strict=True)
             ]
         else:
             # Fallback: IS==OOS for all paths → degenerate guard fires → pbo=None.
@@ -891,15 +893,15 @@ def _run_walk_forward_cpcv(
             # CPCV mode uses is_sharpe == oos_sharpe (no per-path IS data) → pbo_gate.py
             # fires the degenerate guard → pbo=None. The degenerate_reason
             # ("cpcv_is_sharpe_unavailable") is already set at line 583-585; the TS
-            # lifecycle gate PROCEEDS with an explicit cpcv_exempt audit (NOT a silent
-            # grandfather-pass, and NOT a BLOCK — CPCV is the default WF_MODE, so blocking
-            # would strangle the whole pipeline; Wave 30 per-path IS Sharpe is the real fix).
+            # lifecycle gate BLOCKS with an explicit cpcv_exempt audit (operator-ratified
+            # 2026-07-17 — a structurally-unmeasurable PBO cannot authorize promotion;
+            # Wave 30 per-path IS Sharpe is the real fix that removes the exemption).
             _cpcv_pbo_audit_actions.append("walk_forward.pbo_cpcv_degenerate")
             print(
                 "  PBO (cpcv gate): degenerate — IS==OOS for all paths "
                 "(per-path IS unavailable in CPCV mode); emitting "
                 "pbo_degenerate_reason='cpcv_is_sharpe_unavailable' "
-                "→ TS gate PROCEEDS with cpcv_exempt audit "
+                "→ TS gate BLOCKS with cpcv_exempt audit "
                 "(walk_forward.pbo_cpcv_degenerate)",
                 file=sys.stderr,
             )
@@ -1066,9 +1068,9 @@ def _run_walk_forward_cpcv(
     #   wfe_status = "degenerate_is" (helper returns 0.0 → conservative BLOCK).
     # When E1 data absent (_has_full_is=False): keep cpcv_not_applicable unchanged.
     import math as _math_wfe_cpcv
-    _cpcv_wfe_overall: Optional[float] = None
+    _cpcv_wfe_overall: float | None = None
     _cpcv_wfe_status: str = "cpcv_not_applicable"
-    _cpcv_wfe_basis: Optional[dict] = None
+    _cpcv_wfe_basis: dict | None = None
 
     if _has_full_is and per_path_is_sharpes:
         _cpcv_is_basis = _combined_fold_sharpe(all_is_pnls)
@@ -1214,13 +1216,13 @@ def _run_walk_forward_cpcv(
 
 def run_walk_forward(
     request: BacktestRequest,
-    data: Optional[pl.DataFrame] = None,
+    data: pl.DataFrame | None = None,
     n_splits: int = 5,
     is_ratio: float = 0.7,
     optimize: bool = False,
     n_trials: int = 800,
     embargo_bars: int = 20,
-    wf_mode: Optional[str] = None,
+    wf_mode: str | None = None,
 ) -> dict:
     """Run walk-forward validation.
 
@@ -1407,7 +1409,7 @@ def run_walk_forward(
     all_is_pnls: list[float] = []
     # Regime per window — populated from the IS backtest result's bias context
     # or from config.preferred_regime as a static fallback.
-    _per_window_regimes: list[Optional[str]] = []
+    _per_window_regimes: list[str | None] = []
 
     # ─── Phase 12: Parallel OOS window dispatch ─────────────────────────────
     # When not optimizing (Optuna uses SQLite which is single-writer), dispatch
@@ -1718,7 +1720,7 @@ def run_walk_forward(
         # Strategy's preferred_regime field is the lightweight fallback when
         # the IS backtest does not emit a dominant_regime (most strategies
         # don't unless they run the bias engine explicitly).
-        _window_regime: Optional[str] = (
+        _window_regime: str | None = (
             _is_res_i.get("dominant_regime")
             or oos_result.get("dominant_regime")
             or getattr(config, "preferred_regime", None)
@@ -1813,7 +1815,7 @@ def run_walk_forward(
             _opt_window_indices = [
                 i for i, w in enumerate(window_results) if w.get("optimization")
             ]
-            _opt_window_regimes: list[Optional[str]] = [
+            _opt_window_regimes: list[str | None] = [
                 _per_window_regimes[i] if i < len(_per_window_regimes) else None
                 for i in _opt_window_indices
             ]
@@ -1877,13 +1879,13 @@ def run_walk_forward(
     #   pbo_gate_result — from pbo_gate.compute_pbo_from_cpcv_paths (new W29 gate)
     # pbo_overall = pbo_gate_result.pbo (preferred) or pbo_result.pbo (fallback).
     # pbo_audit_actions — list of audit action names for the TS layer to write.
-    pbo_result: Optional[dict] = None
-    pbo_gate_result: Optional[dict] = None
+    pbo_result: dict | None = None
+    pbo_gate_result: dict | None = None
     pbo_audit_actions: list[str] = []
     # deepscan15 C2: declared at FUNCTION scope (not inside the len>=4 block below)
     # because wf_metadata assembly references it unconditionally — a plain/purged
     # walk-forward with < 4 windows skips the block and hit UnboundLocalError.
-    _plain_wf_pbo_degenerate_reason: Optional[str] = None
+    _plain_wf_pbo_degenerate_reason: str | None = None
     _pbo_threshold = float(os.environ.get("PBO_OVERFIT_THRESHOLD", str(_PBO_OVERFIT_THRESHOLD_DEFAULT)))
     if len(window_results) >= 4:
         try:
@@ -2063,8 +2065,8 @@ def run_walk_forward(
     # wfe_overall = combined_OOS_Sharpe / combined_IS_Sharpe (not per-window average).
     # This is the standard institutional metric: treat the full concatenated OOS
     # as the evaluation set and the full concatenated IS as the reference.
-    wfe_overall: Optional[float] = None
-    wfe_status: Optional[str] = None
+    wfe_overall: float | None = None
+    wfe_status: str | None = None
     wfe_per_window: list[dict] = []
     _wfe_hard_floor = get_wfe_hard_floor()
     _wfe_warn_floor = get_wfe_warn_floor()
@@ -2072,7 +2074,7 @@ def run_walk_forward(
     # Compute combined IS Sharpe from accumulated IS daily P&Ls.
     # When optimizer IS Sharpe was used directly (_is_sharpe_opt on window_detail),
     # we skip the accumulated path and use the opt score as combined IS Sharpe.
-    _combined_is_sharpe: Optional[float] = None
+    _combined_is_sharpe: float | None = None
 
     # FINDING-3 fix: track WFE IS Sharpe basis to surface inflation visibility.
     # optimizer_best_score_mean = IS is the cherry-picked optimizer best score (inflated vs base config)
@@ -2122,7 +2124,7 @@ def run_walk_forward(
     # wfe_overall_base_basis uses all_is_pnls (base-config IS backtest) as the denominator
     # regardless of whether optimize=True was used — a stable reference across runs.
     # Additive: no gate changes; emitted alongside existing wfe_overall.
-    _wfe_overall_base_basis: Optional[float] = None
+    _wfe_overall_base_basis: float | None = None
     if len(all_is_pnls) > 1:
         _is_pnl_arr_base = np.array(all_is_pnls)
         _is_std_base = float(np.std(_is_pnl_arr_base, ddof=1))
@@ -2383,7 +2385,7 @@ def run_walk_forward(
     # _plain_wf_dsr_pass: bool|None — read separately because compute_deflated_sharpe_ratio
     # returns the gate under key "passes" (not "dsr_pass").  We normalise to "dsr_pass"
     # in wf_metadata to match the CPCV path contract consumed by lifecycle-service.ts.
-    _plain_wf_dsr_pass: Optional[bool] = None
+    _plain_wf_dsr_pass: bool | None = None
     _plain_wf_dsr_unavailable: bool = False
     try:
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _plain_dsr_fn
@@ -2596,16 +2598,16 @@ def _run_walk_forward_cpcv_class(
     start_date: str,
     end_date: str,
     data: pl.DataFrame,
-    daily_data: Optional[pl.DataFrame],
-    htf_cache: Optional[dict],
+    daily_data: pl.DataFrame | None,
+    htf_cache: dict | None,
     slippage_ticks: float,
-    commission_per_side: Optional[float],
-    firm_key: Optional[str],
+    commission_per_side: float | None,
+    firm_key: str | None,
     skip_eligibility_gate: bool,
     n_splits: int = 6,
     k_test_groups: int = 2,
     embargo_bars: int = 20,
-    fill_model: Optional[FillProbabilityConfig] = None,
+    fill_model: FillProbabilityConfig | None = None,
 ) -> dict:
     """CPCV walk-forward for class-based (BaseStrategy) strategies.
 
@@ -2652,7 +2654,6 @@ def _run_walk_forward_cpcv_class(
     from itertools import combinations as _combos_cls
 
     start_time = time.time()
-    symbol = strategy.symbol
     n = len(data)
     _base_seed = int(os.environ.get("BACKTEST_SEED", "42"))
 
@@ -2964,15 +2965,15 @@ def _run_walk_forward_cpcv_class(
         print(f"  BIF (CPCV class): computation FAILED ({_bif_exc_cls!r}).", file=sys.stderr)
 
     # ── PBO across CPCV paths — same true-IS-vs-degenerate contract as DSL path ──
-    _pbo_overall_cls: Optional[float] = None
-    _pbo_p_value_cls: Optional[float] = None
+    _pbo_overall_cls: float | None = None
+    _pbo_p_value_cls: float | None = None
     _pbo_degenerate_cls = False
     try:
         from src.engine.pbo_gate import compute_pbo_from_cpcv_paths as _pbo_cpcv_cls
         if _has_full_is_cls:
             _path_dicts_cls = [
                 {"is_sharpe": is_s, "oos_sharpe": oos_s, "is_returns": [], "oos_returns": []}
-                for is_s, oos_s in zip(per_path_is_sharpes, path_sharpes)
+                for is_s, oos_s in zip(per_path_is_sharpes, path_sharpes, strict=False)
             ]
         else:
             _path_dicts_cls = [
@@ -2998,7 +2999,7 @@ def _run_walk_forward_cpcv_class(
     # ── WFE — combined-fold OOS Sharpe / combined-fold IS Sharpe ──────────────
     # X5 ratified 2026-07-09: symmetric combined/combined basis (parity with the
     # main _run_walk_forward_cpcv path). Was mean(per_path_is_sharpes).
-    _wfe_overall_cls: Optional[float] = None
+    _wfe_overall_cls: float | None = None
     _wfe_status_cls: str = "cpcv_not_applicable"
     if _has_full_is_cls and per_path_is_sharpes:
         _is_basis_cls = _combined_fold_sharpe(all_is_pnls)
@@ -3091,15 +3092,15 @@ def run_walk_forward_class(
     # below). None flows straight through to run_class_backtest's own
     # firm-override -> explicit-value -> spec.default_commission resolution
     # net, so behavior for every existing MES/MNQ/MCL caller is unchanged.
-    commission_per_side: Optional[float] = None,
-    firm_key: Optional[str] = None,
+    commission_per_side: float | None = None,
+    firm_key: str | None = None,
     n_splits: int = 8,
     is_ratio: float = 0.5,
     embargo_bars: int = 20,
     optimize: bool = False,
-    skip_eligibility_gate: Optional[bool] = None,
-    wf_mode: Optional[str] = None,
-    fill_model: Optional[FillProbabilityConfig] = None,
+    skip_eligibility_gate: bool | None = None,
+    wf_mode: str | None = None,
+    fill_model: FillProbabilityConfig | None = None,
 ) -> dict:
     """Walk-forward validation for class-based (BaseStrategy) strategies.
 
@@ -3559,7 +3560,7 @@ def run_walk_forward_class(
     for _w_is in window_results:
         all_is_pnls_cls.extend(_w_is.get("_is_daily_pnls", []))
 
-    _combined_is_sharpe_cls: Optional[float] = None
+    _combined_is_sharpe_cls: float | None = None
     if len(all_is_pnls_cls) > 1:
         _is_pnl_arr_cls = np.array(all_is_pnls_cls)
         _is_std_cls = float(np.std(_is_pnl_arr_cls, ddof=1))
@@ -3568,8 +3569,8 @@ def run_walk_forward_class(
         )
 
     # ── WFE ──────────────────────────────────────────────────────────────────
-    wfe_overall_cls: Optional[float] = None
-    wfe_status_cls: Optional[str] = None
+    wfe_overall_cls: float | None = None
+    wfe_status_cls: str | None = None
     _wfe_hard_floor_cls = get_wfe_hard_floor()
     _wfe_warn_floor_cls = get_wfe_warn_floor()
     if _combined_is_sharpe_cls is not None and _combined_is_sharpe_cls > 0:
@@ -3628,8 +3629,8 @@ def run_walk_forward_class(
         )
 
     # ── PBO ──────────────────────────────────────────────────────────────────
-    pbo_overall_cls: Optional[float] = None
-    pbo_overall_p_value_cls: Optional[float] = None
+    pbo_overall_cls: float | None = None
+    pbo_overall_p_value_cls: float | None = None
     pbo_degenerate_cls = False
     if len(window_results) >= 4:
         try:
@@ -3674,7 +3675,7 @@ def run_walk_forward_class(
 
     # ── DSR ──────────────────────────────────────────────────────────────────
     _class_dsr_result: dict = {}
-    _class_dsr_pass: Optional[bool] = None
+    _class_dsr_pass: bool | None = None
     _class_dsr_unavailable = False
     try:
         from src.engine.risk_metrics import compute_deflated_sharpe_ratio as _class_dsr_fn

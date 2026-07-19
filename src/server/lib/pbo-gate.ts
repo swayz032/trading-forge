@@ -130,9 +130,10 @@ export function evaluatePboGate(
   // rank comparison could not be computed). Unlike CPCV — which has a structural
   // excuse (all paths share OOS data) — plain WF has NO such excuse: it RAN and came
   // back unusable, so the strategy is UN-VALIDATED, not measurement-limited. This is
-  // therefore distinct from BOTH the CPCV-exempt PROCEED and the legacy-null
-  // grandfather PROCEED. Fail-CLOSED → BLOCK with a distinct reason so the audit row
-  // is never confused with either PROCEED path.
+  // therefore distinct from BOTH the CPCV-exempt BLOCK (operator-ratified 2026-07-17 —
+  // see the CPCV-exempt path below) and the legacy-null grandfather PROCEED. Fail-CLOSED
+  // → BLOCK with a distinct reason so the audit row is never confused with the
+  // legacy-null PROCEED path.
   // NOTE: the string "plain_wf_is_unavailable" must match Track B's walk_forward.py
   // emitter EXACTLY — do not rename without coordinating the Python side.
   if (pboRaw == null && backtestResult.pbo_degenerate_reason === "plain_wf_is_unavailable") {
@@ -164,6 +165,9 @@ export function evaluatePboGate(
   // signals the structural limitation. Return a DISTINCT result so the audit row
   // uses "lifecycle.pbo_cpcv_is_unavailable" instead of the generic legacy action.
   // legacyNull=false so callers can distinguish this from the grandfather window.
+  // Operator-ratified 2026-07-17: this branch BLOCKS (ok:false) — CPCV is the default
+  // WF_MODE, but a PBO overfit gate that cannot measure overfitting must not silently
+  // authorize promotion; ship gates strict, then loosen with data (CLAUDE.md §13).
   if (pboRaw == null && backtestResult.pbo_degenerate_reason === "cpcv_is_sharpe_unavailable") {
     logger.warn(
       { threshold: effectiveThreshold, pbo_degenerate_reason: backtestResult.pbo_degenerate_reason },

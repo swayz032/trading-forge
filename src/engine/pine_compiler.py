@@ -522,6 +522,18 @@ def _build_pine_indicator_var(
     return var_name, f"{var_name} = {pine_expr}"
 
 
+def _indicator_vars_for_base_type(base_type: str, indicator_vars: dict[str, str]) -> list[str]:
+    """Return declared Pine variable names matching the `ind_{base_type}_{idx}`
+    naming convention _build_pine_indicator_var() uses, in declaration order.
+
+    Filtering by the actual declared var_name (rather than assuming positional
+    indices) is robust to other indicators (e.g. atr) interleaved in the
+    indicators list at lower idx values.
+    """
+    prefix = f"ind_{base_type}_"
+    return [v for v in indicator_vars if v.startswith(prefix)]
+
+
 def _build_entry_condition(strategy: dict, indicator_vars: dict[str, str]) -> tuple[str, str]:
     """Generate Pine entry conditions (long_signal, short_signal) from DSL."""
     _entry_type = strategy.get("entry_type", "trend_follow")
@@ -530,8 +542,21 @@ def _build_entry_condition(strategy: dict, indicator_vars: dict[str, str]) -> tu
 
     # Default signals based on entry type
     if "crossover" in entry_indicator:
-        long_cond = "ta.crossover(ind_sma_0, ind_sma_1)" if len(indicator_vars) >= 2 else "ta.crossover(close, ind_sma_0)"
-        short_cond = "ta.crossunder(ind_sma_0, ind_sma_1)" if len(indicator_vars) >= 2 else "ta.crossunder(close, ind_sma_0)"
+        # Derive the actually-declared variable name(s) — mirrors the
+        # ind_{base_type}_{idx} convention _build_pine_indicator_var() uses,
+        # instead of assuming a hardcoded sma pair (bug: undeclared ind_sma_0/
+        # ind_sma_1 emitted for non-sma crossover indicators, e.g. ema_crossover).
+        base_type = entry_indicator.split("_")[0] if "_" in entry_indicator else entry_indicator
+        crossover_vars = _indicator_vars_for_base_type(base_type, indicator_vars)
+        if len(crossover_vars) >= 2:
+            long_cond = f"ta.crossover({crossover_vars[0]}, {crossover_vars[1]})"
+            short_cond = f"ta.crossunder({crossover_vars[0]}, {crossover_vars[1]})"
+        else:
+            fallback_var = crossover_vars[0] if crossover_vars else (
+                next(iter(indicator_vars), None) or "close"
+            )
+            long_cond = f"ta.crossover(close, {fallback_var})"
+            short_cond = f"ta.crossunder(close, {fallback_var})"
     elif "rsi" in entry_indicator:
         long_cond = "ta.crossover(ind_rsi_0, 30)"
         short_cond = "ta.crossunder(ind_rsi_0, 70)"
@@ -574,7 +599,7 @@ def _build_exit_condition(strategy: dict) -> tuple[str, str]:
     return sl_line, tp_line
 
 
-def _build_exit_signal_pine(strategy: dict) -> tuple[str, str]:
+def _build_exit_signal_pine(strategy: dict, indicator_vars: Optional[dict[str, str]] = None) -> tuple[str, str]:
     """Generate Pine exit_long_signal / exit_short_signal expressions from strategy config.
 
     P2-3: Reads exit_type from strategy config.
@@ -588,6 +613,14 @@ def _build_exit_signal_pine(strategy: dict) -> tuple[str, str]:
     translated from DSL and fall back to the generic SMA mean-revert or false.
     This is explicit degradation — not silent invention.
 
+    Args:
+        strategy:       Full strategy config dict.
+        indicator_vars: var_name -> ind_type of the indicators actually declared
+                         earlier in the same compile (see _build_pine_indicator_var).
+                         Used to resolve the real ind_{base_type}_{idx} names for the
+                         sma/ema/crossover exit branch instead of assuming a hardcoded
+                         sma pair. None/empty falls back to the single-var form.
+
     Returns (exit_long_expr, exit_short_expr) as Pine boolean expressions.
     """
     exit_type = strategy.get("exit_type", "atr_multiple")
@@ -597,6 +630,8 @@ def _build_exit_signal_pine(strategy: dict) -> tuple[str, str]:
         # ATR stop/target handles exits — no signal-based component
         return "false", "false"
 
+    indicator_vars = indicator_vars or {}
+
     # Translate exit indicator to Pine — simplified mapping
     if "rsi" in entry_indicator:
         # RSI exit: long exits when RSI crosses back above 50 (overbought recovery);
@@ -604,13 +639,22 @@ def _build_exit_signal_pine(strategy: dict) -> tuple[str, str]:
         exit_long = "ta.crossover(ind_rsi_0, 50)"
         exit_short = "ta.crossunder(ind_rsi_0, 50)"
     elif any(x in entry_indicator for x in ("sma", "ema", "crossover")):
-        # Moving-average cross exit: opposite cross of entry signal
-        if len(strategy.get("indicators", [])) >= 2:
-            exit_long = "ta.crossunder(ind_sma_0, ind_sma_1)"
-            exit_short = "ta.crossover(ind_sma_0, ind_sma_1)"
+        # Moving-average cross exit: opposite cross of entry signal.
+        # Derive the actually-declared variable name(s) — mirrors the
+        # ind_{base_type}_{idx} convention _build_pine_indicator_var() uses,
+        # instead of assuming a hardcoded sma pair (bug: undeclared ind_sma_0/
+        # ind_sma_1 emitted for non-sma crossover indicators, e.g. ema_crossover).
+        base_type = entry_indicator.split("_")[0] if "_" in entry_indicator else entry_indicator
+        crossover_vars = _indicator_vars_for_base_type(base_type, indicator_vars)
+        if len(crossover_vars) >= 2:
+            exit_long = f"ta.crossunder({crossover_vars[0]}, {crossover_vars[1]})"
+            exit_short = f"ta.crossover({crossover_vars[0]}, {crossover_vars[1]})"
         else:
-            exit_long = "ta.crossunder(close, ind_sma_0)"
-            exit_short = "ta.crossover(close, ind_sma_0)"
+            fallback_var = crossover_vars[0] if crossover_vars else (
+                next(iter(indicator_vars), None) or "close"
+            )
+            exit_long = f"ta.crossunder(close, {fallback_var})"
+            exit_short = f"ta.crossover(close, {fallback_var})"
     elif "macd" in entry_indicator:
         exit_long = "ta.crossunder(ind_macd_0_line, ind_macd_0_signal)"
         exit_short = "ta.crossover(ind_macd_0_line, ind_macd_0_signal)"
@@ -1385,7 +1429,7 @@ atr_val = ta.atr({atr_period})
         pine_code += line + "\n"
 
     # P2-3: exit signals for legacy indicator path
-    exit_long_expr_legacy, exit_short_expr_legacy = _build_exit_signal_pine(strategy)
+    exit_long_expr_legacy, exit_short_expr_legacy = _build_exit_signal_pine(strategy, indicator_vars)
 
     pine_code += f"""
 // ─── Session Filter ─────────────────────────────────────────────
@@ -2150,6 +2194,7 @@ def _build_shared_preamble(
     prop_overlay: str,
     risk_intel_overlay: str,
     firm_key: Optional[str] = None,
+    indicator_vars: Optional[dict[str, str]] = None,
 ) -> str:
     """Build the shared Pine logic block (indicators, signals, state).
 
@@ -2171,7 +2216,7 @@ def _build_shared_preamble(
     indicator_block = "\n".join(indicator_lines)
 
     # P2-3: exit signals from strategy config
-    exit_long_expr, exit_short_expr = _build_exit_signal_pine(strategy)
+    exit_long_expr, exit_short_expr = _build_exit_signal_pine(strategy, indicator_vars)
 
     code = f"""
 // ─── Inputs ─────────────────────────────────────────────────────────
@@ -2682,6 +2727,7 @@ def compile_dual_artifacts(
         prop_overlay=prop_overlay,
         risk_intel_overlay=risk_intel_overlay,
         firm_key=firm_key,
+        indicator_vars=indicator_vars,
     )
 
     # T6: Per-recipient header comment lines (prepended to both artifacts).

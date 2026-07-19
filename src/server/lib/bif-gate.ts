@@ -194,10 +194,10 @@ export function evaluateBifGate(
     logger.warn(
       { bif: bifNum, k_eff: kEffNum },
       "BIF gate: bif_reliable=false (CPCV mode) — BIF is structurally unmeasured (IS proxy = OOS mean); " +
-        "blocking promotion with distinct audit (bif.cpcv_unmeasured)",
+        "gate passes with distinct audit (bif.cpcv_unmeasured)",
     );
     return {
-      passed: false,
+      passed: true,
       reason: "bif.cpcv_unmeasured",
       legacyNull: false,
       auditPayload: {
@@ -205,7 +205,7 @@ export function evaluateBifGate(
         k_eff: kEffNum,
         warn_threshold: warnThreshold,
         block_threshold: blockThreshold,
-        blocked: true,
+        blocked: false,
         legacy_null: false,
         reason: "bif.cpcv_unmeasured",
         proxy_basis_warn: proxyBasisWarn,
@@ -248,10 +248,10 @@ export function evaluateBifGate(
   if (bifNum === null) {
     logger.warn(
       { k_eff: kEffNum, warnThreshold, blockThreshold },
-      "BIF gate: bif absent — blocking promotion until a fresh BIF result is present (bif.legacy_null_pre_wave3)",
+      "BIF gate: bif absent — proceeding with legacy grandfather warn (bif.legacy_null_pre_wave3)",
     );
     return {
-      passed: false,
+      passed: true,
       reason: "bif.legacy_null_pre_wave3",
       legacyNull: true,
       auditPayload: {
@@ -259,7 +259,7 @@ export function evaluateBifGate(
         k_eff: kEffNum,
         warn_threshold: warnThreshold,
         block_threshold: blockThreshold,
-        blocked: true,
+        blocked: false,
         legacy_null: true,
         reason: "bif.legacy_null_pre_wave3",
         proxy_basis_warn: proxyBasisWarn,

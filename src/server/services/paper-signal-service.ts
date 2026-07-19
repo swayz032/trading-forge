@@ -696,6 +696,13 @@ interface PendingEntry {
   // again (double ×0.5 → 0.25×, or a silent drop to 0 for small base sizes). Absent/false = the signal
   // was queued OUTSIDE the window, so Gate 4 legitimately applies the reduction when the fill crosses in.
   newsReducedAtSignalTime?: boolean;
+  // fill-time gate re-verify wave (2026-07-17): true when the signal-time sizing ALREADY applied the
+  // 60%-DLL soft-throttle reduce_size factor (dllReduceSizeFactor < 1 at signal time). The fill-time
+  // Gate 5 must NOT reduce again (double ×0.5 → 0.25×, or a silent drop to 0 for small base sizes) —
+  // same double-application hazard newsReducedAtSignalTime guards above. Absent/false = the signal was
+  // queued OUTSIDE the reduce_size band, so Gate 5 legitimately applies the reduction when the fill
+  // lands inside it.
+  dllReducedAtSignalTime?: boolean;
 }
 
 const pendingEntryQueue = new Map<string, PendingEntry>();
@@ -3001,6 +3008,16 @@ export async function evaluateSignals(
       }
 
       // Gate 5: DLL re-check at fill time — current combined P&L may have shifted
+      //
+      // fill-time gate re-verify wave (2026-07-17): when action === "reduce_size" (the 60%-DLL
+      // soft-throttle band — documented ladder in CLAUDE.md §4 "REDUCE new-entry size x0.50 at
+      // 60%"), multiply pendingEntry.contracts by dllResult.reduceSizeFactor — mirroring Gate 4's
+      // CF4 pattern exactly (2026-06-24). If the result rounds down to 0 contracts, DROP the entry
+      // with audit pending_entry.dropped_dll_size_reduced_to_zero (info severity — correct
+      // capital-safety behavior). Otherwise emit pending_entry.contracts_reduced_dll_band info
+      // audit with original + reduced counts. Skip the re-apply when signal-time sizing already
+      // reduced for DLL (pendingEntry.dllReducedAtSignalTime) — same double-application guard CF4
+      // uses for the news gate.
       if (!pendingDropReason) {
         try {
           // HIGH C-1 fix (deep-scan #16 wave-1 track-3): scope by the resolved
@@ -3025,6 +3042,50 @@ export async function evaluateSignals(
           // the degraded signal, matching the documented fail-CLOSED DLL policy.
           if (dllResult.action === "halt" || dllResult.action === "force_close" || dllResult.degraded) {
             pendingDropReason = "dll_halt";
+          } else if (dllResult.action === "reduce_size" && !pendingEntry.dllReducedAtSignalTime) {
+            const originalContracts = pendingEntry.contracts;
+            const reducedContracts = Math.floor(originalContracts * dllResult.reduceSizeFactor);
+            if (reducedContracts <= 0) {
+              // Sizing reduced to zero — drop the entry (correct capital-safety behavior).
+              // The generic pendingDropReason handler below emits pending_entry.dropped_dll_size_reduced_to_zero.
+              pendingDropReason = "dll_size_reduced_to_zero";
+            } else {
+              // Apply the reduction and allow through.
+              pendingEntry.contracts = reducedContracts;
+              span.setAttribute("dll_reduce_size_factor_at_fill", dllResult.reduceSizeFactor);
+              span.setAttribute("dll_reduced_contracts_original", originalContracts);
+              span.setAttribute("dll_reduced_contracts_fill", reducedContracts);
+              insertAuditRow({
+                action: "pending_entry.contracts_reduced_dll_band",
+                entityType: "paper_session",
+                entityId: sessionId,
+                decisionAuthority: "system",
+                status: "info",
+                input: {
+                  sessionId,
+                  symbol,
+                  side: pendingEntry.side,
+                  originalContracts,
+                  sizeFactor: dllResult.reduceSizeFactor,
+                } as Record<string, unknown>,
+                result: { reducedContracts } as Record<string, unknown>,
+                correlationId: fillCorrelationId,
+              }).catch((e: unknown) => {
+                logger.warn({ e, action: "pending_entry.contracts_reduced_dll_band" }, "audit write failed — non-blocking");
+                auditWriteFailuresTotal.labels({ action: "pending_entry.contracts_reduced_dll_band" }).inc();
+              });
+              logger.info(
+                {
+                  sessionId,
+                  symbol,
+                  originalContracts,
+                  reducedContracts,
+                  sizeFactor: dllResult.reduceSizeFactor,
+                  correlationId: fillCorrelationId,
+                },
+                "Pending entry contracts reduced at fill time due to DLL 60% soft-throttle band (reduce_size action)",
+              );
+            }
           }
         } catch (_dllErr) {
           // Fail-CLOSED for DLL gate (same as signal-time policy)
@@ -3064,6 +3125,31 @@ export async function evaluateSignals(
         }
       }
 
+      // Gate 7: Topstep/MFFU 50% consistency re-check at fill time — the highest-single-day
+      // vs cycle-cumulative concentration may have shifted between signal and fill (a trade
+      // closing in the interim can push today's share over 50%). The signal-time consistency
+      // gate (FIX A, ~line 4200) is evaluated only once, when the signal is queued — same
+      // re-verify rationale as the DLL and daily-trade-cap gates above ("current combined P&L
+      // may have shifted"). Scoped identically to the signal-time gate (CONSISTENCY_RULE_FIRMS
+      // + resolveConsistencyEnforced) so it stays a no-op for accounts that don't opt in.
+      if (!pendingDropReason) {
+        try {
+          const sessionFirmIdAtFill = sessionRow.firmId ?? "";
+          const consistencyEnforcedAtFill = resolveConsistencyEnforced(
+            sessionConfig.config as unknown as Record<string, unknown>,
+          );
+          if (CONSISTENCY_RULE_FIRMS.includes(sessionFirmIdAtFill) && consistencyEnforcedAtFill) {
+            const consistencyResult = await consistencyGateShouldBlock(sessionId, 1.0, 0);
+            if (consistencyResult.block) {
+              pendingDropReason = "consistency_50pct";
+            }
+          }
+        } catch (_consistencyErr) {
+          // Fail-OPEN (matches signal-time policy, "FIX A"): payout-eligibility gate, not a
+          // loss gate — a DB error must not block an otherwise-valid fill.
+        }
+      }
+
       if (pendingDropReason !== null) {
         // A gate failed at fill time — emit audit + skip openPosition.
         // Severity: "info" for expected temporal crossings (lunch/session-boundary/
@@ -3072,7 +3158,8 @@ export async function evaluateSignals(
           (pendingDropReason === "lunch_blackout" ||
            pendingDropReason === "session_boundary_crossed" ||
            pendingDropReason === "daily_trade_cap" ||
-           pendingDropReason === "news_size_reduced_to_zero")
+           pendingDropReason === "news_size_reduced_to_zero" ||
+           pendingDropReason === "dll_size_reduced_to_zero")
             ? "info" : "warning";
 
         const logPayload = {
@@ -6672,6 +6759,9 @@ export async function evaluateSignals(
           // Tier-1 news reduce factor (newsReduceSizeFactor < 1 ⟺ signal fired inside the T1 window) so
           // fill-time Gate 4 does not double-reduce.
           newsReducedAtSignalTime: newsReduceSizeFactor < 1,
+          // fill-time gate re-verify wave (2026-07-17): record whether signal-time sizing already
+          // applied the 60%-DLL soft-throttle factor so fill-time Gate 5 does not double-reduce.
+          dllReducedAtSignalTime: dllReduceSizeFactor < 1,
           // Trade-critique data bridge (2026-07-05): whatever this signal actually knew
           // at bar N, carried to bar N+1's openPosition() call. `biasState` may be null
           // (legacy bypass strategy) — every field below degrades to null gracefully,

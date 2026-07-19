@@ -433,13 +433,30 @@ def score_exportability(strategy_config: dict) -> ExportabilityResult:
     if entry_quality.get("regime_required") is True:
         _inexpressible_confluence = True
 
+    # Path B (canonical-5 factor gate, Wave 23.C) — a non-empty confluence_factors
+    # list runs paper-signal-service.ts's satisfiedCount>=minRequired boolean gate
+    # (minRequired defaults to len(confluence_factors) when min_factors_satisfied
+    # is unset), even though min_factors_satisfied itself is absent. Pine cannot
+    # reproduce this gate either — same as the checks above.
+    if entry_quality.get("confluence_factors"):
+        _inexpressible_confluence = True
+
+    # Path A (per-strategy confirming indicators, W23H.D) — a non-empty
+    # confirming_indicators list runs the same boolean satisfiedCount gate against
+    # a per-strategy indicator list instead of the canonical 5. Priority order in
+    # confluence-path-resolver.ts:65-94: Path C (opt-in) > Path A (this) > Path B.
+    if entry_quality.get("confirming_indicators"):
+        _inexpressible_confluence = True
+
     if _inexpressible_confluence:
         _faithful = False
         score = 0.0  # force to 0
         deductions.append(
             "Confluence gating not expressible in Pine: this strategy requires "
-            "11-factor weighted scoring and/or minimum factor satisfaction "
-            "(entry_quality.use_weighted_scoring / min_factors_satisfied / regime_required) "
+            "11-factor weighted scoring, a minimum satisfied-factor count, a "
+            "canonical confluence-factor list, and/or per-strategy confirming "
+            "indicators (entry_quality.use_weighted_scoring / min_factors_satisfied "
+            "/ regime_required / confluence_factors / confirming_indicators) "
             "that Pine cannot reproduce — Pine fires on the raw indicator alone. "
             "This strategy executes server-side via broker-router (server-mediated "
             "execution); Pine export is a visual-only aid for DEPLOYED strategies."

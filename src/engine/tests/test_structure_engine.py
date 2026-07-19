@@ -14,7 +14,6 @@ Covers:
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Optional
 
 import polars as pl
 import pytest
@@ -30,7 +29,6 @@ from src.engine.indicators.market_structure import (
     detect_swings,
     premium_discount_zone,
 )
-
 
 # ─── Test fixtures ────────────────────────────────────────────────────────────
 
@@ -202,7 +200,6 @@ class TestCHoCHDetection:
 
         choch_detected = choch_df["choch_detected"].to_list()
         # After 40 bars up + 30 bars down, a CHoCH should fire
-        fired = any(choch_detected)
         # If not fired, the synthetic data may not have produced confirming swings
         # Just verify the shape is correct
         assert len(choch_detected) == len(df)
@@ -216,7 +213,8 @@ class TestCHoCHDetection:
         choch_dirs = [
             d for d, fired in zip(
                 choch_df["choch_direction"].to_list(),
-                choch_df["choch_detected"].to_list()
+                choch_df["choch_detected"].to_list(),
+                strict=True,
             )
             if fired
         ]
@@ -253,7 +251,8 @@ class TestCHoCHDetection:
         choch_dirs = [
             d for d, fired in zip(
                 choch_df["choch_direction"].to_list(),
-                choch_df["choch_detected"].to_list()
+                choch_df["choch_detected"].to_list(),
+                strict=True,
             )
             if fired
         ]
@@ -293,7 +292,8 @@ class TestMSSDetection:
         mss_mults = [
             m for m, fired in zip(
                 mss_df["mss_displacement_atr_mult"].to_list(),
-                mss_fired
+                mss_fired,
+                strict=True,
             )
             if fired
         ]
@@ -311,7 +311,6 @@ class TestMSSDetection:
         choch_df = detect_choch_with_context(df, swings, "bullish")
         mss_df = detect_mss_with_context(df, choch_df)
         # With tiny bars the displacement threshold is never met
-        mss_fired = any(mss_df["mss_detected"].to_list())
         # We can't assert False unconditionally (ATR could be tiny too) —
         # just verify shape is correct
         assert len(mss_df) == len(df)
@@ -505,13 +504,19 @@ class TestStructureStateContract:
             "last_break_direction", "last_break_age_bars",
             "swing_high", "swing_low",
             "computed_at_bar_idx",
+            # W25.2 3b (confluence-decay-bar-unit-mismatch-2026-07-17): additive,
+            # now real contract fields — extended here for completeness even
+            # though the `required - fields` subset-check below doesn't strictly
+            # need it to keep passing for OPTIONAL fields.
+            "choch_age_bars", "mss_age_bars", "bos_age_bars",
         }
         missing = required - fields
         assert not missing, f"StructureState missing fields: {missing}"
 
     def test_dataclasses_asdict_serialisable(self):
         """dataclasses.asdict(state) must produce JSON-serialisable output."""
-        import dataclasses, json
+        import dataclasses
+        import json
         df = _bullish_bos_bars(n_up=50)
         state = compute_structure_state(df, pl.DataFrame())
         if state is None:
@@ -534,3 +539,153 @@ class TestStructureStateContract:
         if state is None:
             pytest.skip("No structure state computed")
         assert state.premium_discount_zone in ("premium", "discount", "equilibrium")
+
+
+# ─── Tests: per-type break ages (W25.2 3b, confluence-decay-bar-unit-mismatch-2026-07-17) ─
+
+class TestPerTypeBreakAges:
+    """choch_age_bars/mss_age_bars/bos_age_bars — independently tracked, additive fields."""
+
+    def test_full_pipeline_populates_per_type_ages_on_real_displacement(self):
+        """compute_structure_state() populates all 3 age fields when a real
+        CHoCH+MSS displacement bar is the most recent break of every type
+        (the achievable real-engine scenario — see
+        wave25-confluence-decay-recency-first.test.ts fixture (a) for why
+        choch_age_bars/mss_age_bars tie here, and why they can never diverge
+        in the OTHER direction given detect_choch_with_context()'s
+        single-fire-per-call design)."""
+        closes: list[float] = []
+        base = 100.0
+        for i in range(40):
+            cycle = i % 10
+            if cycle < 5:
+                closes.append(base + cycle * 3.0)
+            else:
+                closes.append(base + (10 - cycle) * 1.5)
+            if cycle == 9:
+                base += 6.0
+        opens = [c - 0.5 for c in closes]
+        highs = [c + 1.0 for c in closes]
+        lows = [c - 1.0 for c in closes]
+        prev_close = closes[-1]
+        c_disp = prev_close - 20.0
+        opens.append(prev_close - 0.5)
+        closes.append(c_disp)
+        highs.append(prev_close)
+        lows.append(c_disp - 0.5)
+        for i in range(3):
+            c = c_disp - i * 0.3
+            closes.append(c)
+            opens.append(c - 0.1)
+            highs.append(c + 0.2)
+            lows.append(c - 0.2)
+        df = _make_ohlcv(closes, opens=opens, highs=highs, lows=lows)
+
+        state = compute_structure_state(df, pl.DataFrame())
+        assert state is not None
+
+        # The displacement bar is 3 bars before the end (computed_at_bar_idx).
+        # Whichever break type(s) fired there report the SAME age.
+        if state.mss_recent:
+            assert state.mss_age_bars is not None
+            assert state.choch_age_bars is not None
+            # An MSS bar is definitionally also a CHoCH bar — never younger.
+            assert state.mss_age_bars >= state.choch_age_bars
+        if state.choch_recent:
+            assert state.choch_age_bars is not None
+        if state.bos_recent:
+            assert state.bos_age_bars is not None
+
+    def test_no_break_of_a_type_yields_none_age_for_that_type(self):
+        """A type that never occurs in the window reports None, not 0 or a
+        stale/incorrect value."""
+        # Flat, structureless bars — no swings, no BOS, no CHoCH, no MSS.
+        df = _make_ohlcv([100.0 + (i % 2) * 0.01 for i in range(30)])
+        state = compute_structure_state(df, pl.DataFrame())
+        if state is None:
+            pytest.skip("No structure state computed on flat bars")
+        assert state.choch_age_bars is None
+        assert state.mss_age_bars is None
+
+    def test_find_per_type_ages_independent_tracking_choch_older_than_mss(self):
+        """Direct unit test of _find_per_type_ages() proving genuinely
+        INDEPENDENT per-type tracking — not a shared pointer.
+
+        This is tested at the helper-function level (hand-built bos_series/
+        choch_df/mss_df) rather than through the full compute_structure_state()
+        pipeline: investigation while building the cross-language fixture
+        test (wave25-confluence-decay-recency-first.test.ts) found that
+        detect_choch_with_context() sets a single `choch_fired` flag and
+        fires at most ONCE per call, and detect_mss_with_context() only
+        evaluates bars where choch_detected is True — so mss_age_bars, when
+        non-null, can never be YOUNGER than choch_age_bars via the real
+        detection functions today (a discovered, pre-existing, out-of-scope
+        property of the current single-fire CHoCH detector, unrelated to
+        this packet). _find_per_type_ages() itself makes no such assumption
+        and must track each type's pointer independently regardless — this
+        test proves that directly with hand-built inputs where CHoCH is
+        OLDER than MSS (the direction the full pipeline CAN’T reach today).
+        """
+        from src.engine.context.structure_engine import _find_per_type_ages
+
+        n = 10
+        bos_vals = [None] * n
+        choch_detected = [False] * n
+        mss_detected = [False] * n
+
+        # CHoCH fires at bar 2 (older); MSS fires at bar 6 (more recent).
+        choch_detected[2] = True
+        mss_detected[6] = True
+        bos_vals[4] = "bullish"
+
+        bos_series = pl.Series("bos", bos_vals, dtype=pl.Utf8)
+        choch_df = pl.DataFrame({"choch_detected": pl.Series(choch_detected, dtype=pl.Boolean)})
+        mss_df = pl.DataFrame({"mss_detected": pl.Series(mss_detected, dtype=pl.Boolean)})
+
+        up_to_bar = 9
+        choch_age, mss_age, bos_age = _find_per_type_ages(bos_series, choch_df, mss_df, up_to_bar)
+
+        assert choch_age == 7   # 9 - 2
+        assert mss_age == 3     # 9 - 6
+        assert bos_age == 5     # 9 - 4
+        # CHoCH is OLDER than MSS here — proves the two pointers are
+        # independent, not one derived from (or capped by) the other.
+        assert choch_age > mss_age
+
+    def test_find_per_type_ages_independent_tracking_mss_older_than_choch(self):
+        """Same helper, opposite direction — MSS older than a later plain CHoCH."""
+        from src.engine.context.structure_engine import _find_per_type_ages
+
+        n = 10
+        bos_vals = [None] * n
+        choch_detected = [False] * n
+        mss_detected = [False] * n
+
+        mss_detected[1] = True
+        choch_detected[1] = True  # the MSS bar is also a CHoCH bar (real-world shape)
+        choch_detected[7] = True  # a later, separate plain CHoCH (no displacement)
+
+        bos_series = pl.Series("bos", bos_vals, dtype=pl.Utf8)
+        choch_df = pl.DataFrame({"choch_detected": pl.Series(choch_detected, dtype=pl.Boolean)})
+        mss_df = pl.DataFrame({"mss_detected": pl.Series(mss_detected, dtype=pl.Boolean)})
+
+        up_to_bar = 9
+        choch_age, mss_age, bos_age = _find_per_type_ages(bos_series, choch_df, mss_df, up_to_bar)
+
+        assert choch_age == 2   # 9 - 7 (most recent choch)
+        assert mss_age == 8     # 9 - 1
+        assert bos_age is None
+        assert choch_age < mss_age
+
+    def test_find_per_type_ages_all_none_when_nothing_detected(self):
+        from src.engine.context.structure_engine import _find_per_type_ages
+
+        n = 5
+        bos_series = pl.Series("bos", [None] * n, dtype=pl.Utf8)
+        choch_df = pl.DataFrame({"choch_detected": pl.Series([False] * n, dtype=pl.Boolean)})
+        mss_df = pl.DataFrame({"mss_detected": pl.Series([False] * n, dtype=pl.Boolean)})
+
+        choch_age, mss_age, bos_age = _find_per_type_ages(bos_series, choch_df, mss_df, n - 1)
+        assert choch_age is None
+        assert mss_age is None
+        assert bos_age is None

@@ -190,3 +190,74 @@ class TestBuildRollSpreadAudit:
         audit = build_roll_spread_audit("MES", roll_date, 1, cost)
         # MES base 3 ticks ± 0.5 noise → charged in [2.5, 3.5]
         assert 2.5 <= audit["ticks_charged"] <= 3.5
+
+
+class TestRollSpreadFailLoudGuard:
+    """check_roll_spread_fail_loud() — institutional default is fail-loud (raise),
+    not the legacy silent-omit-from-net_pnl behavior."""
+
+    def test_default_raises_roll_spread_cost_compute_error(self, monkeypatch):
+        from src.engine.roll_spread_cost import (
+            RollSpreadCostComputeError,
+            check_roll_spread_fail_loud,
+        )
+        monkeypatch.delenv("BACKTEST_ROLL_SPREAD_FAIL_LOUD", raising=False)
+        original = ValueError("could not parse timestamp")
+        try:
+            check_roll_spread_fail_loud("MES", 42, "entry", original)
+            assert False, "expected RollSpreadCostComputeError to be raised"
+        except RollSpreadCostComputeError as exc:
+            assert exc.symbol == "MES"
+            assert exc.bar_idx == 42
+            assert exc.side == "entry"
+            assert exc.original_error is original
+            assert "MES" in str(exc)
+            assert "entry" in str(exc)
+            assert "42" in str(exc)
+
+    def test_explicit_true_raises(self, monkeypatch):
+        from src.engine.roll_spread_cost import (
+            RollSpreadCostComputeError,
+            check_roll_spread_fail_loud,
+        )
+        monkeypatch.setenv("BACKTEST_ROLL_SPREAD_FAIL_LOUD", "true")
+        try:
+            check_roll_spread_fail_loud("MNQ", 7, "exit", RuntimeError("boom"))
+            assert False, "expected RollSpreadCostComputeError to be raised"
+        except RollSpreadCostComputeError:
+            pass
+
+    def test_legacy_false_does_not_raise(self, monkeypatch):
+        """Explicit opt-out restores legacy silent-omit behavior — returns None, no raise."""
+        from src.engine.roll_spread_cost import check_roll_spread_fail_loud
+        monkeypatch.setenv("BACKTEST_ROLL_SPREAD_FAIL_LOUD", "false")
+        result = check_roll_spread_fail_loud("MCL", 3, "entry", ValueError("bad date"))
+        assert result is None
+
+    def test_backtester_dsl_path_raises_on_malformed_rollover_timestamp(self, monkeypatch):
+        """RED-proof: a rollover-day bar with a malformed timestamp must now fail loud
+        (net_pnl must never silently omit a real roll-spread charge), not print-and-continue.
+
+        Regression guard for the deep-scan-b finding: before this fix, the DSL backtest
+        path's entry-side/exit-side except blocks caught the ValueError from
+        date.fromisoformat('None'[:10]) and only printed to stderr, leaving
+        _roll_cost_usd unincremented — the trade's net_pnl was silently optimistic by
+        the omitted roll-spread amount.
+        """
+        monkeypatch.delenv("BACKTEST_ROLL_SPREAD_FAIL_LOUD", raising=False)
+        from src.engine.roll_spread_cost import (
+            RollSpreadCostComputeError,
+            check_roll_spread_fail_loud,
+        )
+        # Simulate exactly what the backtester's except block now does: a malformed
+        # timestamp (None serialized to the string "None") produces a ValueError from
+        # date.fromisoformat("Non"[:10]) when parsed, which the guard must now raise.
+        try:
+            date.fromisoformat(str(None)[:10])
+            assert False, "test setup invariant broken: expected fromisoformat('None') to raise"
+        except ValueError as parse_err:
+            try:
+                check_roll_spread_fail_loud("MES", 100, "entry", parse_err)
+                assert False, "expected RollSpreadCostComputeError to propagate (fail-loud default)"
+            except RollSpreadCostComputeError:
+                pass

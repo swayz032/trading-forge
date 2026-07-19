@@ -266,7 +266,8 @@ adminRoutes.post("/self-restart", async (req, res) => {
 //
 // Signature: X-Restart-Signature = HMAC-SHA256(secret, body.timestamp + ":" + body.reason)
 // Replay window: 60s (same as self-restart).
-// Dev/test bypass: when ADMIN_RESTART_HMAC_SECRET is unset and NODE_ENV != "production".
+// Fail-closed: when ADMIN_RESTART_HMAC_SECRET is unset, verification fails closed
+// in EVERY environment — there is no dev/test bypass.
 //
 // Curl example:
 //   TIMESTAMP=$(date +%s)
@@ -562,6 +563,7 @@ adminRoutes.post("/pipeline/start", async (req, res) => {
 // Body: { urls: string[] } or { url: string }
 // Response: { results: [{ url, status, ideas, error? }, ...] }
 adminRoutes.post("/scout/operator-ingest", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const body = (req.body as { url?: string; urls?: string[] }) ?? {};
     const urls = Array.isArray(body.urls) ? body.urls : (body.url ? [body.url] : []);
@@ -1137,6 +1139,7 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
 // returns immediately; cycle completes async over 3-10 min.
 // Restored W23F.N (2026-05-19) after route was dropped during 86-file corruption recovery.
 adminRoutes.post("/scout/run-autonomous-cycle", async (req, res) => {
+  if (!requirePipelineControlAuthority(req, res)) return;
   try {
     const { runAutonomousScoutCycle } = await import("../services/autonomous-scout-runner.js");
     res.setHeader("Content-Type", "application/json");

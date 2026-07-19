@@ -26,6 +26,52 @@ class TestExportabilityFaithfulAdversarial:
         assert score_exportability({"entry_quality": {"min_factors_satisfied": 3}}).faithful is False
         assert score_exportability({"entry_quality": {"regime_required": True}}).faithful is False
 
+    def test_path_b_canonical_confluence_factors_is_not_faithful(self):
+        # RATIFY-PACKET pine-faithful-flag-confluence-detection-2026-07-17: a non-empty
+        # confluence_factors list runs paper-signal-service.ts Path B's live
+        # satisfiedCount>=minRequired gate (minRequired defaults to len(factors) when
+        # min_factors_satisfied is absent) — reproduces the confirmed CRIT exactly:
+        # this config scored 100.0/clean/faithful=True before the §6b fix (no
+        # min_factors_satisfied/use_weighted_scoring/regime_required present at all).
+        r = score_exportability(
+            {
+                "exit_type": "fixed_target",
+                "entry_quality": {"confluence_factors": ["session_alignment", "delta_or_volume_signature"]},
+            }
+        )
+        assert r.faithful is False
+        assert r.exportable is False
+        assert r.score == 0.0
+
+    def test_path_a_confirming_indicators_is_not_faithful(self):
+        # A non-empty confirming_indicators list runs paper-signal-service.ts Path A's
+        # per-strategy live boolean gate (priority order in confluence-path-resolver.ts:
+        # 65-94 — Path A wins over Path B whenever this list is non-empty).
+        r = score_exportability(
+            {
+                "exit_type": "fixed_target",
+                "entry_quality": {
+                    "confirming_indicators": [{"indicator": "rsi", "condition": "below", "value": 30}]
+                },
+            }
+        )
+        assert r.faithful is False
+        assert r.exportable is False
+        assert r.score == 0.0
+
+    def test_empty_confluence_lists_stay_faithful(self):
+        # Non-tautology guard: an EMPTY confluence_factors/confirming_indicators list
+        # must NOT trip the new detector (Path A/B only gate when the list is non-empty —
+        # an empty Path-B list vacuously passes satisfiedCount(0)>=minRequired(0) live too).
+        r = score_exportability(
+            {
+                "exit_type": "fixed_target",
+                "entry_quality": {"confluence_factors": [], "confirming_indicators": []},
+            }
+        )
+        assert r.faithful is True
+        assert r.exportable is True
+
     def test_multi_tf_gating_is_not_faithful(self):
         # HTF alignment fields require top-down timeframe AND-gating Pine cannot express.
         assert score_exportability({"daily_tf": "1D", "htf_tf": "4h"}).faithful is False

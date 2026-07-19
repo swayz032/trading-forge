@@ -199,6 +199,14 @@ describe("source contract — gated routes invoke the shared guard", () => {
     expect(starts.map((m) => m[1]).sort()).toEqual(["pause", "start", "vacation"]);
   });
 
+  it("admin.ts /scout/operator-ingest and /scout/run-autonomous-cycle call requirePipelineControlAuthority (MED fix — were the only pipeline-mutating scout routes without the guard)", () => {
+    const src = read("src/server/routes/admin.ts");
+    const scoutStarts = [
+      ...src.matchAll(/adminRoutes\.post\("\/scout\/(operator-ingest|run-autonomous-cycle)", async \(req, res\) => \{\s*\n\s*if \(!requirePipelineControlAuthority\(req, res\)\) return;/g),
+    ];
+    expect(scoutStarts.map((m) => m[1]).sort()).toEqual(["operator-ingest", "run-autonomous-cycle"]);
+  });
+
   it("strategies.ts deploy + reject-deploy call the shared guard first", () => {
     const src = read("src/server/routes/strategies.ts");
     const guarded = [...src.matchAll(/strategyRoutes\.post\("\/:id\/(deploy|reject-deploy)", async \(req, res\) => \{\s*\n\s*if \(!requireOfficeControlAuthority\(req, res, "strategy\.deploy_mutation_blocked"\)\) return;/g)];
