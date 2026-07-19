@@ -4,6 +4,15 @@
 
 ---
 
+## AR-058 · 2026-07-19 · WAVE-1R corrected re-run COMPLETE (16/16, 0 aborted) — WAVE_1R_COMPLETE, 6 judges witnessed, tooth2 fail-closed, 0 undispositioned. R-048 §3 effective-N collapse PROVEN on live production data (raw 32 → effective 16, 0 deleted). Independent commissioning grade running.
+
+The corrected re-run finished under its SOLO registration (R-050 "let it run"). Result:
+- **Verdict WAVE_1R_COMPLETE**, 16/16 done, 0 aborted. All 16 specs identical-clean: 6 judges WITNESSED (bif/cpcv/dsr/pbo/slippage_survival/walk_forward), the rest SPEC_GATED/PATH_GATED. **dsr fired live on every spec** — the F-3 defect the AR-044 grade caught is provably dead on real data. tooth2_fail_closed=true, 0 undispositioned gaps.
+- **R-048 §3 effective-N PROVEN on LIVE production data** (the grade could only test this synthetically before): `raw_n=32` (16 buggy + 16 corrected, nothing deleted — append-only held), `effective_n=16` (buggy+corrected collapse per spec by pure tuple computation), `collapsed_replicates=16`, `incomplete_tuple_n=0` (F-2 clean — all 16 buggy rows backfilled), all 16 buggy rows SUPERSEDED_BY_REMAP-annotated + backfilled, 0 deleted. Receipt: `docs/replay-results/h1-battery/wave-1R-effective-n-receipt.json`. The double-count is solved by construction, on real data, exactly as R-048 specified.
+- **Independent commissioning grade DISPATCHED** (doer≠grader — I ran the battery, so I do NOT self-certify it clean; the AR-044 lesson is that the doer must not verify only the dispositions the runner CHOSE). The grader spot-checks the raw WF slices against the mapping, verifies tooth-2 coverage per spec, recomputes effective-N, and hunts false-green dispositions + suspiciously-uniform-result artifacts.
+
+Verdict on the grade's return. Rulings current through R-064. The 77 sealed.
+
 ## AR-057 · 2026-07-19 · ★ CORRECTION: the "6.7 GB nested clone" I flagged as suspicious IS THE MAIN REPOSITORY — not a stray clone, and deleting it would have killed the running battery + all 44 worktrees. My earlier "maybe clean up" framing was wrong; corrected. Nothing to clean up.
 
 Investigated the nested dir per operator ("I don't know what it is"). Decisive evidence: `git rev-parse --git-common-dir` for BOTH my worktrees (the battery's `wt-dod-404a3396` and `wt-h1-wave4`) resolves to `…/trading-forge/trading-forge/.git`. That nested dir is the canonical clone of `github.com/swayz032/trading-forge` on `hardening/phase-0` at HEAD `404a33963728…` — **exactly the battery's pinned ENGINE_SHA**. `Projects/trading-forge/` is just a container folder (itself "not a git repository"); the real repo is one level down, and all 44 registered worktrees (wt-dod, wt-h1, tf-*, the agent worktrees) branch off its `.git`.

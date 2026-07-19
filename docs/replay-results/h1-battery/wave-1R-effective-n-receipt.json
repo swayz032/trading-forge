@@ -1,0 +1,22 @@
+{
+  "receipt": "wave-1R effective-N verification (R-048 §3 — double-count solved by construction, on LIVE production data)",
+  "wave": "wave-1R",
+  "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+  "dedup_tuple": "(spec_hash × engine_sha × dataset_hash × config_hash)",
+  "raw_n": 32,
+  "effective_n": 16,
+  "collapsed_replicates": 16,
+  "incomplete_tuple_n": 0,
+  "executed_n": 32,
+  "aborted_n": 0,
+  "append_only_proof": {
+    "wave1r_rows_total": 32,
+    "superseded_by_remap_buggy": 16,
+    "corrected_rerun": 16,
+    "all_superseded_backfilled": true,
+    "rows_deleted": 0
+  },
+  "interpretation": "The buggy WAVE-1R run (16 rows, SUPERSEDED_BY_REMAP annotated + true-tuple backfilled per AR-044/R-048 §3) and the corrected re-run (16 new dense ids) share the same deterministic experiment tuple, so they collapse to effective_n=16 in the luck-math denominator by PURE computation — effective_n never reads the annotation. Nothing was deleted (raw_n=32 retained); statistical honesty computed, not curated. F-2 clean (0 incomplete tuples — every legacy row backfilled).",
+  "verdict_ref": "wave-1R-verdict.json (WAVE_1R_COMPLETE, 6 judges witnessed, tooth2_fail_closed=true, 0 undispositioned)",
+  "grand_total_trials_all_waves": 48
+}

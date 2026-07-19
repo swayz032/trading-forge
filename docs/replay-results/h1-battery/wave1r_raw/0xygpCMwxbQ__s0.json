@@ -1,0 +1,74 @@
+{
+ "wf_metadata": {
+  "mode": "cpcv",
+  "n_folds": 6,
+  "embargo_pct": 0.01,
+  "purge_window": 20,
+  "n_paths": 15,
+  "dsr": -57.0451,
+  "dsr_pass": false,
+  "dsr_unavailable": false,
+  "bif_proxy_basis": "cpcv_per_path_is",
+  "bif_reliable": true
+ },
+ "wfe_overall": 0.0,
+ "wfe_status": "degenerate_is",
+ "pbo_overall": 0.5333333333333333,
+ "pbo_overall_p_value": 0.4999999999999999,
+ "pbo_degenerate": false,
+ "bif": 1.0,
+ "bif_computation_error": null,
+ "bif_detail": {
+  "bif": 1.0,
+  "k_eff": 15.0,
+  "is_sharpe": -5.82674,
+  "wf_sharpe": -5.659992,
+  "expected_inflation": 2.327252,
+  "verdict": "clean",
+  "fail_closed": false,
+  "warn_threshold": 2.0,
+  "block_threshold": 4.0,
+  "bif_proxy_basis": "cpcv_per_path_is",
+  "bif_reliable": true
+ },
+ "slippage_survival": {
+  "schema_version": 1,
+  "multiples": [
+   1.0,
+   2.0,
+   3.0
+  ],
+  "pf": {
+   "1x": 0.2203,
+   "2x": 0.0907,
+   "3x": 0.0422
+  },
+  "expectancy_r": {
+   "1x": -0.6378,
+   "2x": -1.1919,
+   "3x": -1.746
+  },
+  "breaks_at": 1.0,
+  "retention_2x": null,
+  "n_trades": 11116,
+  "insufficient_sample": false,
+  "computed_at": "2026-07-19T16:44:21.148921+00:00"
+ },
+ "path_sharpes": [
+  -6.3491,
+  -5.3568,
+  -6.6081,
+  -7.9107,
+  -6.0879,
+  -4.9862,
+  -5.7516,
+  -5.8672,
+  -5.2573,
+  -5.3168,
+  -4.9019,
+  -5.0577,
+  -6.1131,
+  -5.4073,
+  -6.0742
+ ]
+}

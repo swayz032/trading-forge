@@ -2,7 +2,7 @@
   "artifact": "h1-trial-counter",
   "zero_point": "2026-07-19T07:21:43.018616+00:00",
   "engine_sha_at_zero": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
-  "total_trials": 32,
+  "total_trials": 48,
   "runs": [
     {
       "trial_id": 1,
@@ -359,7 +359,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T07:55:57.090212+00:00",
-      "finalized_at": "2026-07-19T08:27:49.647984+00:00"
+      "finalized_at": "2026-07-19T08:27:49.647984+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473000+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 18,
@@ -380,7 +386,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T08:27:49.649261+00:00",
-      "finalized_at": "2026-07-19T08:56:34.300322+00:00"
+      "finalized_at": "2026-07-19T08:56:34.300322+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473009+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 19,
@@ -401,7 +413,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T08:56:34.301725+00:00",
-      "finalized_at": "2026-07-19T09:25:27.867640+00:00"
+      "finalized_at": "2026-07-19T09:25:27.867640+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473012+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 20,
@@ -422,7 +440,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T09:25:27.868715+00:00",
-      "finalized_at": "2026-07-19T09:54:27.249175+00:00"
+      "finalized_at": "2026-07-19T09:54:27.249175+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473013+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 21,
@@ -443,7 +467,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T09:54:27.250381+00:00",
-      "finalized_at": "2026-07-19T10:23:01.758132+00:00"
+      "finalized_at": "2026-07-19T10:23:01.758132+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473015+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 22,
@@ -464,7 +494,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T10:23:01.759267+00:00",
-      "finalized_at": "2026-07-19T10:51:37.290411+00:00"
+      "finalized_at": "2026-07-19T10:51:37.290411+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473016+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 23,
@@ -485,7 +521,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T10:51:37.291807+00:00",
-      "finalized_at": "2026-07-19T10:54:05.661405+00:00"
+      "finalized_at": "2026-07-19T10:54:05.661405+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473018+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 24,
@@ -506,7 +548,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T10:54:05.662565+00:00",
-      "finalized_at": "2026-07-19T11:25:49.619173+00:00"
+      "finalized_at": "2026-07-19T11:25:49.619173+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473020+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 25,
@@ -527,7 +575,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T11:25:49.620394+00:00",
-      "finalized_at": "2026-07-19T11:57:53.821112+00:00"
+      "finalized_at": "2026-07-19T11:57:53.821112+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473021+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 26,
@@ -548,7 +602,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T11:57:53.822311+00:00",
-      "finalized_at": "2026-07-19T12:29:58.814391+00:00"
+      "finalized_at": "2026-07-19T12:29:58.814391+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473022+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 27,
@@ -569,7 +629,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T12:29:58.815892+00:00",
-      "finalized_at": "2026-07-19T13:02:10.516368+00:00"
+      "finalized_at": "2026-07-19T13:02:10.516368+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473023+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 28,
@@ -590,7 +656,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T13:02:10.517888+00:00",
-      "finalized_at": "2026-07-19T13:34:36.481004+00:00"
+      "finalized_at": "2026-07-19T13:34:36.481004+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473024+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 29,
@@ -611,7 +683,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T13:34:36.482452+00:00",
-      "finalized_at": "2026-07-19T14:07:09.574403+00:00"
+      "finalized_at": "2026-07-19T14:07:09.574403+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473025+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 30,
@@ -632,7 +710,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T14:07:09.575661+00:00",
-      "finalized_at": "2026-07-19T14:09:46.689707+00:00"
+      "finalized_at": "2026-07-19T14:09:46.689707+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473027+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 31,
@@ -653,7 +737,13 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T14:09:46.691690+00:00",
-      "finalized_at": "2026-07-19T14:12:22.871413+00:00"
+      "finalized_at": "2026-07-19T14:12:22.871413+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473029+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
     },
     {
       "trial_id": 32,
@@ -674,7 +764,413 @@
         "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"
       },
       "dispatched_at": "2026-07-19T14:12:22.872943+00:00",
-      "finalized_at": "2026-07-19T14:44:48.992045+00:00"
+      "finalized_at": "2026-07-19T14:44:48.992045+00:00",
+      "superseded_by_remap": {
+        "by": "AR-044 (R-048 \u00a73 remap)",
+        "at": "2026-07-19T15:38:27.473030+00:00"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+    },
+    {
+      "trial_id": 33,
+      "wave": "wave-1R",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T15:38:27.481330+00:00",
+      "finalized_at": "2026-07-19T16:11:41.827343+00:00"
+    },
+    {
+      "trial_id": 34,
+      "wave": "wave-1R",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T16:11:41.828915+00:00",
+      "finalized_at": "2026-07-19T16:44:21.196362+00:00"
+    },
+    {
+      "trial_id": 35,
+      "wave": "wave-1R",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T16:44:21.197802+00:00",
+      "finalized_at": "2026-07-19T17:17:17.132957+00:00"
+    },
+    {
+      "trial_id": 36,
+      "wave": "wave-1R",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T17:17:17.135353+00:00",
+      "finalized_at": "2026-07-19T17:50:17.671639+00:00"
+    },
+    {
+      "trial_id": 37,
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T17:50:17.673387+00:00",
+      "finalized_at": "2026-07-19T18:25:46.621325+00:00"
+    },
+    {
+      "trial_id": 38,
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T18:25:46.623717+00:00",
+      "finalized_at": "2026-07-19T19:02:27.417837+00:00"
+    },
+    {
+      "trial_id": 39,
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T19:02:27.419874+00:00",
+      "finalized_at": "2026-07-19T19:06:45.387085+00:00"
+    },
+    {
+      "trial_id": 40,
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T19:06:45.389608+00:00",
+      "finalized_at": "2026-07-19T19:43:55.095784+00:00"
+    },
+    {
+      "trial_id": 41,
+      "wave": "wave-1R",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T19:43:55.098453+00:00",
+      "finalized_at": "2026-07-19T20:20:12.851745+00:00"
+    },
+    {
+      "trial_id": 42,
+      "wave": "wave-1R",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T20:20:12.853936+00:00",
+      "finalized_at": "2026-07-19T20:53:28.129280+00:00"
+    },
+    {
+      "trial_id": 43,
+      "wave": "wave-1R",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T20:53:28.131688+00:00",
+      "finalized_at": "2026-07-19T21:27:54.471443+00:00"
+    },
+    {
+      "trial_id": 44,
+      "wave": "wave-1R",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 0.9,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T21:27:54.473338+00:00",
+      "finalized_at": "2026-07-19T22:01:27.136112+00:00"
+    },
+    {
+      "trial_id": 45,
+      "wave": "wave-1R",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T22:01:27.137946+00:00",
+      "finalized_at": "2026-07-19T22:35:00.147780+00:00"
+    },
+    {
+      "trial_id": 46,
+      "wave": "wave-1R",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T22:35:00.149799+00:00",
+      "finalized_at": "2026-07-19T22:37:30.815496+00:00"
+    },
+    {
+      "trial_id": 47,
+      "wave": "wave-1R",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T22:37:30.817441+00:00",
+      "finalized_at": "2026-07-19T22:40:06.700516+00:00"
+    },
+    {
+      "trial_id": 48,
+      "wave": "wave-1R",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "wave-1R; real S3 ratio-adj bars; tier-b near-ghost; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 17120,
+        "concurrency": 1,
+        "wave": "wave-1R",
+        "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+        "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+        "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50"
+      },
+      "dataset_hash": "68a4c52546596fa9d8dc2389e76f699f43fe867e538a6be667c90dd3ba120e66",
+      "config_hash": "f8248f5e643d1fdcb3b6a03675e28235b107f3247c2f4f1bf29084637a4c7a50",
+      "dispatched_at": "2026-07-19T22:40:06.702591+00:00",
+      "finalized_at": "2026-07-19T23:13:42.750851+00:00"
     }
   ]
 }
