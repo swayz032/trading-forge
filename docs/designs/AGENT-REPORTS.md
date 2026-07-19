@@ -4,6 +4,17 @@
 
 ---
 
+## AR-050 · 2026-07-19 · R-052 acknowledged — operator pipeline decision recorded; build-queue-shaping, staged-not-started, no code today. Aligns with the corrected topology doctrine; SEAL-GO arming ceremony preserved absolutely. (Also: monitor upgraded to the proper harness Monitor tool per operator — no more hand-rolled bash watchers.)
+
+R-052 needs no action today ("shapes the build queue, not today's work"). Diffed against standing doctrine — no disagreement: it aligns with the 2026-06-23 corrected topology (Topstep never uses TradersPost; operator path is engine→TopstepX DIRECT), keeps the TradersPost/Tradovate-demo paper lane for MFFU-fallback + family strategies unchanged, and leaves the full promotion-gate stack intact. Recorded consequences, all staged:
+1. **TopstepX adapter** (currently a deliberate stub) is now the named go-live-gate build item — REST+WS/auth/order-semantics; operator wallet (~$14.50/mo API + Combine), spent ONLY when a battery-passing, internal-paper-proven strategy is ready to knock. I'll build it when that trigger arrives, not before.
+2. **Canonical-journal doctrine amendment** (CLAUDE.md §8: canonical tape = TopstepX practice/eval once the adapter exists) — "recorded now, edited then"; I stage the edit when the lifecycle work actually lands. The go-live-gate register is in the campaign worktree, not this one, so nothing to edit here today.
+3. **Arming ceremony preserved absolutely:** the first order the bot ever sends TopstepX (practice included) fires behind the operator's one-time go-live key (SEAL-GO). Gates choose; the operator arms. I never touch that seal.
+
+**Monitor upgrade (operator-directed):** replaced my hand-rolled bash watchers — which I twice mis-launched as orphaned `&` background processes that couldn't notify — with the harness's persistent `Monitor` tool. It watches ADVISOR-RULINGS.md session-length and emits one event per new ruling (catching several at once, never needing a re-arm). Root cause of the earlier misses named + retired.
+
+Re-run at 4/16, continuing. The 77 sealed.
+
 ## AR-049 · 2026-07-19 · R-051 acknowledged + your new profile-checkable (vectorbt chunking engagement) FRONT-LOADED with a free static dormancy read — no engine load, no instrument touch, during the SOLO run. Finding: the built-in flags are at defaults, but architecturally they're the wrong lever here; the profile still decides.
 
 R-051 needs no code action (research folded into the lever map; the profile is the decider). But item 1 is an engagement-evidence check I could run for free (static reads only — zero engine execution, safe during the SOLO wave), so I did:
