@@ -1,0 +1,816 @@
+{
+  "summary": {
+    "artifact": "h1-a-packet-22-table",
+    "packet": "h1-a-packet-full-grade-semantic-gate-amended-ratify-2026-07-18 (R-039)",
+    "n_files": 22,
+    "n_strategies": 22,
+    "structural_evaluate_after_count": 22,
+    "structural_not_evaluated_after_count": 0,
+    "before_indeterminate_count": 22,
+    "after_terminal_grade_histogram": {
+      "CLEAN": 21,
+      "REJECTED": 1
+    },
+    "strategies_with_calibrated_conflation_verdict": 22,
+    "strategies_with_calibrated_enumeration_verdict": 22,
+    "after_full_grade_histogram": {
+      "True": 21,
+      "False": 1
+    },
+    "definition_of_done_met": true
+  },
+  "strategies": [
+    {
+      "video_id": "-igpOZs8LsM__s0",
+      "strategy_name": "fvg_trend_continuation_entry",
+      "condition_count": 12,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "0xygpCMwxbQ__s0",
+      "strategy_name": "ict_aplus_entry_checklist",
+      "condition_count": 16,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "2DXQqwKSwJE__s0",
+      "strategy_name": "mean_reversion_scalp",
+      "condition_count": 9,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "2DXQqwKSwJE__s1",
+      "strategy_name": "continuation_breakout_scalp",
+      "condition_count": 14,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "2DXQqwKSwJE__s2",
+      "strategy_name": "spread_making_scalp",
+      "condition_count": 8,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "4cT8WTyxhYY__s0",
+      "strategy_name": "liquidity_grab_reversal",
+      "condition_count": 11,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "CLDEIsNpVRc__s0",
+      "strategy_name": "htf_irl_fvg_1m_inversion",
+      "condition_count": 13,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "DLwVqcLRcfw__s0",
+      "strategy_name": "vwap_20sma_confluence_long",
+      "condition_count": 10,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "DLwVqcLRcfw__s1",
+      "strategy_name": "vwap_20sma_rejection_short",
+      "condition_count": 6,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "E9MzEC_yNoM__s0",
+      "strategy_name": "premarket_range_break_continuation",
+      "condition_count": 3,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "E9MzEC_yNoM__s1",
+      "strategy_name": "premarket_range_liquidity_sweep_reversal",
+      "condition_count": 10,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "IyFioFkRgWo__s0",
+      "strategy_name": "support_bounce_scalp",
+      "condition_count": 8,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "FAIL",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "REJECTED",
+        "terminal_read_clean": false,
+        "full_grade": false,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "PVMgOxHUqFA__s0",
+      "strategy_name": "abc_trend_continuation_reclaim",
+      "condition_count": 11,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "R5L890juvRw__s0",
+      "strategy_name": "vwap_band_trend_continuation",
+      "condition_count": 9,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "R5L890juvRw__s1",
+      "strategy_name": "vwap_band_mean_reversion",
+      "condition_count": 6,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "W7nlnHTUZQU__s0",
+      "strategy_name": "overnight_range_break_retest",
+      "condition_count": 12,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "WEhmadJArQo__s0",
+      "strategy_name": "opening_range_fvg_break_entry",
+      "condition_count": 24,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "ZF8uKPqAu8M__s0",
+      "strategy_name": "orb_15m_immediate_breakout",
+      "condition_count": 10,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "ZF8uKPqAu8M__s1",
+      "strategy_name": "orb_breakout_pullback_continuation",
+      "condition_count": 12,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "_LS6qcSlDCs__s0",
+      "strategy_name": "vwap_reclaim_pullback_dip_buy",
+      "condition_count": 6,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "dV7chra4u4Q__s0",
+      "strategy_name": "break_and_retest",
+      "condition_count": 10,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    },
+    {
+      "video_id": "kFyD3H6I1I8__s0",
+      "strategy_name": "three_step_engulfing_orb_scalp",
+      "condition_count": 22,
+      "or_branch_count": 0,
+      "calibrated_conflation_verdict": "PASS",
+      "calibrated_enumeration_verdict": "PASS",
+      "before": {
+        "structural": {
+          "direction_conflation_lint": "NOT_EVALUATED",
+          "unsat_sat_check": "NOT_EVALUATED",
+          "or_alternatives_honored": "NOT_EVALUATED"
+        },
+        "terminal_read_grade": "INDETERMINATE"
+      },
+      "after": {
+        "structural": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS"
+        },
+        "all_five": {
+          "direction_conflation_lint": "PASS",
+          "unsat_sat_check": "PASS",
+          "or_alternatives_honored": "PASS",
+          "f2_coverage_gate": "PASS",
+          "causality_lint": "PASS"
+        },
+        "terminal_read_grade": "CLEAN",
+        "terminal_read_clean": true,
+        "full_grade": true,
+        "full_grade_basis": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer"
+      },
+      "structural_evaluate_after": true,
+      "non_compilability_classification": null
+    }
+  ]
+}

@@ -401,24 +401,6 @@ def assemble_certificate(
         and live_lints_pass
     )
 
-    # §C: full_grade requires ALL FIVE lints PASS on real topology -- zero
-    # NOT_EVALUATED anywhere in compile_integrity, including causality's
-    # same_bar_leg_status sub-field (a lint whose top-level status happens to
-    # be PASS can still carry a NOT_EVALUATED sub-leg; that must still block
-    # full_grade -- "on EVERY certificate field", addendum §A).
-    def _statuses(r: cl.LintResult) -> List[str]:
-        statuses = [r.status]
-        if r.same_bar_leg_status is not None:
-            statuses.append(r.same_bar_leg_status)
-        return statuses
-
-    zero_not_evaluated = all(
-        s != cl.STATUS_NOT_EVALUATED for r in lint_results.values() for s in _statuses(r)
-    )
-    all_five_pass = all(r.status == cl.STATUS_PASS for r in lint_results.values())
-
-    full_grade = pilot_grade and all_five_pass and zero_not_evaluated
-
     # THE FENCE (ratify-packet 2026-07-15, structural axis re-based): the ONLY
     # grade the sealed-12 terminal read consumes. Structural axis = the
     # calibrated semantic conflation verdict (`conflation_verdict`), fail-closed.
@@ -441,6 +423,56 @@ def assemble_certificate(
         enumeration_consistency_verdict=enumeration_consistency_verdict,
     )
 
+    # §C RE-BASED (ratify-packet h1-a-packet-full-grade-semantic-gate-amended-
+    # 2026-07-18, R-039): full_grade's load-bearing structural gate is the
+    # SEMANTIC conflation + enumeration verdicts (via terminal_read's clean
+    # determination), NOT the 3 mechanical structural lints. Those lints are
+    # calibration-BLIND on prose (a merge-silenced real `direction:"both"`
+    # object has no per-condition long/short, so direction_conflation vacuously
+    # PASSes -- the AR-030 finding). R-039 three-layer law: semantic cross-vendor
+    # checks are load-bearing at every prose-derived layer (incl. compiled
+    # topology, which inherits its source's signal-absence); mechanical lints are
+    # load-bearing ONLY at the spec-compiler layer where the producer emits
+    # structured direction/comparator/or-group fields, and are REACHABILITY
+    # DIAGNOSTICS everywhere else.
+    #
+    # full_grade = the pilot anchoring/classification/f2/causality-regex gate AND
+    # the terminal-read semantic-structural CLEAN determination (conflation PASS +
+    # enumeration clean + f2 + causality-regex), fail-closed on an absent
+    # conflation verdict. Single-source: reuse terminal_read rather than
+    # re-derive. The 3 mechanical structural lints + causality's same_bar leg NO
+    # LONGER gate full_grade (dropped `all_five_pass`/`zero_not_evaluated`); the
+    # same_bar NOT_EVALUATED leg is DISPOSITIONED by explicit classification
+    # (EXEMPT, execution-timing, orthogonal to extraction fidelity -- same call
+    # terminal_read_grade already makes), NOT a masked fire. Pre-change full_grade
+    # was structurally always False (same_bar always NOT_EVALUATED); this makes it
+    # REACHABLE and HONEST for the first time -- a strict monotone improvement, no
+    # certificate that was full_grade=True becomes False (there were none).
+    full_grade = pilot_grade and terminal_read["clean"]
+
+    # Law 7 -- state the demotion on the artifact, never beside it. The gate's
+    # load-bearing axes are named; the demoted checks are labeled honest-vacuous
+    # so no future reader mistakes a mechanical PASS for a safety claim.
+    full_grade_basis = {
+        # The GATE POLICY: which axes are load-bearing WHEN SUPPLIED. This is a
+        # stable policy statement; the per-certificate axis CONTRIBUTIONS for
+        # THIS assembly (e.g. whether the enumeration axis was supplied or is
+        # AXIS_ABSENT) live in `terminal_read_disposition` -- read both together.
+        "load_bearing_axes_policy": [
+            "conflation_verdict(semantic)",
+            "enumeration_consistency(semantic)",
+            "f2_coverage_gate",
+            "causality_lint.regex_leg",
+            "pilot_anchoring_classification",
+        ],
+        "per_certificate_axis_contributions": "see terminal_read_disposition",
+        "structural_gate": "semantic (terminal_read clean); mechanical lints re-stationed to spec-compiler layer",
+        "direction_conflation_lint": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+        "unsat_sat_check": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+        "or_alternatives_honored": "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING",
+        "causality_lint.same_bar_leg": "EXEMPT_NOT_LOAD_BEARING",
+    }
+
     return {
         "conditions": condition_entries,
         "compile_integrity": compile_integrity,
@@ -456,6 +488,7 @@ def assemble_certificate(
         "scope_line": scope_line,
         "pilot_grade": pilot_grade,
         "full_grade": full_grade,
+        "full_grade_basis": full_grade_basis,
         # bool alias of full_grade (§D: the strictest §4 reading is the only
         # grade H2 consumes) -- kept so any future caller reading a plain
         # bool never mistakes a lesser pilot-grade certificate for full §4.

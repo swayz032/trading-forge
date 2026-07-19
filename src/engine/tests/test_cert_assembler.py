@@ -4,11 +4,16 @@ addendum §A/§B/§C, 2026-07-12).
 Covers: (a) every emitted char_span resolves to quote_anchor verbatim; (b)
 pilot_grade/full_grade/certificate_grade logic -- pilot_grade gates on
 classification+anchoring+the LIVE lints only (f2_coverage_gate +
-causality_lint's regex leg); full_grade additionally requires ALL FIVE lints
-PASS with ZERO NOT_EVALUATED anywhere (unreachable in the topology-less
-pilot conveyor by design, addendum §C); certificate_grade is a bool alias of
-full_grade; (c) classifying_tier==2 is NEVER emitted; (d) adjudication_verdict
-present iff tier==3; (e) provenance complete.
+causality_lint's regex leg); full_grade additionally requires the SEMANTIC
+structural gate CLEAN (calibrated conflation + enumeration verdicts, via
+terminal_read's clean determination), fail-closed on an absent conflation
+verdict (ratify-packet h1-a-packet-full-grade-semantic-gate-amended-2026-07-18,
+R-039). The 3 mechanical structural lints + causality's same_bar leg are
+REACHABILITY DIAGNOSTICS at this cert layer, NOT full_grade gates -- they are
+calibration-blind on prose (AR-030), their load-bearing station is the spec-
+compiler layer. certificate_grade is a bool alias of full_grade; (c)
+classifying_tier==2 is NEVER emitted; (d) adjudication_verdict present iff
+tier==3; (e) provenance complete.
 
 Imports ONLY the pure-stdlib extraction package (no vectorbt / no
 backtester), matching test_tier1_detectors.py / test_compile_lints.py.
@@ -91,11 +96,12 @@ def test_pilot_grade_true_but_full_grade_false_on_topology_less_certificate():
     supplied): every condition classifies+anchors and the two LIVE lints
     (f2_coverage_gate, causality_lint's regex leg) are clean, so pilot_grade
     is True -- this is the pilot's actual question, answered. full_grade
-    (and its certificate_grade alias) must be False: the 3 structural lints
-    + causality's same-bar leg are NOT_EVALUATED (topology/params absent),
-    and §C is explicit that full_grade is NEVER reachable in this topology-
-    less path -- that gap is the pre-registered H2 precondition, not a bug
-    here."""
+    (and its certificate_grade alias) must be False: NO conflation verdict was
+    supplied, so the SEMANTIC structural gate is fail-closed (terminal_read
+    INDETERMINATE -> not clean). The 3 structural lints being NOT_EVALUATED is
+    now a DIAGNOSTIC observation (reachability), no longer the full_grade gate
+    (R-039 amendment); the load-bearing reason full_grade is False here is the
+    absent conflation verdict, asserted below."""
     transcript = "buy from the demand zone when it is retested"
     res = run_tier1(transcript)
     cert = assemble_certificate(
@@ -163,15 +169,17 @@ def test_pilot_grade_false_when_a_live_lint_fails():
     assert cert["certificate_grade"] is False
 
 
-def test_structural_lint_fail_does_not_block_pilot_grade_but_blocks_full_grade():
-    """Feed the direction-conflation type-specimen through the assembler via
-    the topology overlay + or_branches param. Per addendum §B, pilot_grade
-    gates ONLY on the live subset (f2_coverage_gate + causality's regex leg)
-    -- a structural lint FAIL on a rare topology-bearing certificate does
-    NOT block pilot_grade (the pilot's own question does not ask about
-    compile-time AND/OR topology; that is exactly what full_grade + the §C
-    H2 precondition exist to gate). full_grade (and certificate_grade) MUST
-    be False -- §4's all-five standard is preserved there, undiluted."""
+def test_mechanical_structural_lint_fail_is_a_diagnostic_not_a_full_grade_gate():
+    """R-039 amendment: a MECHANICAL structural lint (direction_conflation_lint)
+    FAIL is a REACHABILITY DIAGNOSTIC at the cert layer, NOT a full_grade gate.
+    Here a hand-crafted topology (an explicitly-labeled SYNTHETIC probe, the ONLY
+    legitimate use of hand-injected per-condition direction fields) makes
+    direction_conflation_lint FAIL -- but with the SEMANTIC conflation verdict
+    PASS and the pilot gate clean, full_grade is TRUE. The mechanical FAIL is
+    recorded as a diagnostic in full_grade_basis, never a safety veto. (This is
+    the exact inversion of the pre-R-039 behavior: the mechanical lint is
+    calibration-blind on prose, so it must NOT be able to convict OR acquit
+    full_grade -- the semantic verdict is the load-bearing gate.)"""
     transcript = "5-SMA-cross-above-50 confirms long; 5-SMA-cross-below-50 confirms short"
     span_a = (0, len("5-SMA-cross-above-50"))
     idx_b = transcript.index("5-SMA-cross-below-50")
@@ -191,28 +199,59 @@ def test_structural_lint_fail_does_not_block_pilot_grade_but_blocks_full_grade()
         tier1_detections=[det_a, det_b],
         tier1_fallthroughs=[],
         topology=topology,
+        conflation_verdict="PASS",  # the load-bearing semantic axis says coherent
     )
     assert cert["compile_integrity"]["direction_conflation_lint"]["status"] == "FAIL"
     assert cert["pilot_grade"] is True, "a non-live structural lint FAIL must not block pilot_grade (§B)"
-    assert cert["full_grade"] is False, "full_grade requires ALL FIVE lints PASS (§C)"
-    assert cert["certificate_grade"] is False
-    # every OTHER precondition for pilot_grade=True still holds -- isolates
-    # classification/anchoring as clean, per the brief's disjunction.
+    # THE INVERSION: mechanical FAIL no longer gates full_grade; semantic PASS + clean pilot -> True.
+    assert cert["full_grade"] is True, "mechanical lint FAIL must NOT block full_grade (R-039 demotion)"
+    assert cert["certificate_grade"] is True
+    assert cert["full_grade_basis"]["direction_conflation_lint"] == "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING"
+    assert "conflation_verdict(semantic)" in cert["full_grade_basis"]["load_bearing_axes_policy"]
     assert all(c["classifying_tier"] in (1, 3) for c in cert["conditions"])
 
 
-def test_not_evaluated_never_counts_as_pass_toward_full_grade():
-    """Direct proof of the addendum's headline invariant: even when every
-    LIVE lint is clean and topology happens to be supplied for the two
-    structural lints under test (both silently PASS on real topology), if
-    ANY compile_integrity field -- including a sub-leg like causality's
-    same_bar_leg_status -- is still NOT_EVALUATED, full_grade must be False.
-    This certificate supplies topology (so direction_conflation_lint and
-    unsat_sat_check evaluate to real PASS, not NOT_EVALUATED) but declares no
-    or_branches, so or_alternatives_honored ALSO PASSes on real topology --
-    yet causality_lint's same-bar leg is STILL NOT_EVALUATED (assemble_
-    certificate never wires same_bar_fill/signal_lag), which alone must keep
-    full_grade False."""
+def test_mechanical_structural_lint_fail_still_recorded_but_semantic_reject_convicts():
+    """Companion to the above: the SEMANTIC axis is what convicts. Same synthetic
+    topology (mechanical FAIL present), but conflation_verdict=REJECT -> full_grade
+    False. Proves the gate is the semantic verdict, not the mechanical lint (which
+    happens to also FAIL here but is not consulted for the gate)."""
+    transcript = "5-SMA-cross-above-50 confirms long; 5-SMA-cross-below-50 confirms short"
+    span_a = (0, len("5-SMA-cross-above-50"))
+    idx_b = transcript.index("5-SMA-cross-below-50")
+    span_b = (idx_b, idx_b + len("5-SMA-cross-below-50"))
+    det_a = Tier1Detection(surface_class="imperative", quote_anchor=transcript[span_a[0]:span_a[1]], char_span=span_a)
+    det_b = Tier1Detection(surface_class="imperative", quote_anchor=transcript[span_b[0]:span_b[1]], char_span=span_b)
+    topology = [
+        ConditionTopology(char_span=span_a, direction="long", and_group=0),
+        ConditionTopology(char_span=span_b, direction="short", and_group=0),
+    ]
+    cert = assemble_certificate(
+        full_transcript=transcript,
+        full_transcript_sha256="sha1",
+        source_video_id="v1",
+        extractor_version="e1",
+        taxonomy_version="t1",
+        tier1_detections=[det_a, det_b],
+        tier1_fallthroughs=[],
+        topology=topology,
+        conflation_verdict="REJECT",
+    )
+    assert cert["full_grade"] is False, "semantic REJECT convicts full_grade"
+    assert cert["certificate_grade"] is False
+    assert cert["terminal_read_grade"] == "REJECTED"
+
+
+def test_same_bar_not_evaluated_is_exempt_from_full_grade():
+    """R-039 pin-3 disposition: causality's same_bar leg is ALWAYS NOT_EVALUATED
+    at cert assembly (same_bar_fill/signal_lag params are never wired here), and
+    it is EXEMPT from full_grade by explicit classification (execution-timing,
+    orthogonal to extraction fidelity -- the same call terminal_read_grade
+    already makes). So with the SEMANTIC conflation verdict PASS and the pilot
+    gate clean, full_grade is TRUE despite the same_bar NOT_EVALUATED sub-leg.
+    This is the exact inversion of the pre-R-039 invariant (which let the dead
+    same_bar leg hold full_grade uniformly False); the disposition is recorded
+    on the artifact, not a masked fire."""
     transcript = "buy from the demand zone when it is retested"
     res = run_tier1(transcript)
     span = res.detections[0].char_span
@@ -226,13 +265,13 @@ def test_not_evaluated_never_counts_as_pass_toward_full_grade():
         tier1_detections=res.detections,
         tier1_fallthroughs=[],
         topology=topology,
+        conflation_verdict="PASS",
     )
-    for name in ("direction_conflation_lint", "unsat_sat_check", "or_alternatives_honored"):
-        assert cert["compile_integrity"][name]["status"] == "PASS"
     assert cert["compile_integrity"]["causality_lint"]["same_bar_leg_status"] == "NOT_EVALUATED"
     assert cert["pilot_grade"] is True
-    assert cert["full_grade"] is False, "a NOT_EVALUATED sub-leg alone must block full_grade"
-    assert cert["certificate_grade"] is False
+    assert cert["full_grade"] is True, "same_bar NOT_EVALUATED is EXEMPT -- must not block full_grade (R-039)"
+    assert cert["certificate_grade"] is True
+    assert cert["full_grade_basis"]["causality_lint.same_bar_leg"] == "EXEMPT_NOT_LOAD_BEARING"
 
 
 def test_certificate_grade_false_when_no_conditions_at_all():
@@ -249,6 +288,118 @@ def test_certificate_grade_false_when_no_conditions_at_all():
     assert cert["pilot_grade"] is False
     assert cert["full_grade"] is False
     assert cert["certificate_grade"] is False
+
+
+# --------------------------------------------------------------------------- #
+# (b') THE LOAD-BEARING full_grade semantic-gate proof (R-039): both polarities
+# on REAL fixtures + the panel's CALIBRATED verdicts (never hand-crafted fields).
+# This is the safety claim the AR-030 finding demanded -- merge-silencing is
+# caught by the SEMANTIC verdict, not the prose-blind mechanical lint.
+# --------------------------------------------------------------------------- #
+
+import json  # noqa: E402
+import os  # noqa: E402
+
+_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+_V32 = os.path.join(_ROOT, "docs", "replay-results", "h1-scripts", "claude-rung-v32")
+_STAGING = os.path.join(
+    _ROOT, "docs", "replay-results", "h1-scripts", "claude-rung-designpool", "staging_v32"
+)
+
+
+def _calibrated_conflation_verdict(grade_stub: str) -> str:
+    with open(os.path.join(_V32, "conflation_grades", f"{grade_stub}.json"), encoding="utf-8") as fh:
+        return json.load(fh)["verdict"]["verdict"]
+
+
+def _cert_with_conflation(strategy: dict, conflation_verdict: str, vid: str) -> dict:
+    """Assemble a REAL certificate through the unmodified assembler + producer,
+    threading the given (calibrated) conflation verdict -- the seal-day path."""
+    from src.engine.extraction.topology_producer import produce_topology
+    from src.engine.tests._a_packet_harness import build_inputs
+
+    transcript, tier1, entries = build_inputs(strategy)
+    topology, or_branches = produce_topology(strategy, entries)
+    return assemble_certificate(
+        full_transcript=transcript,
+        full_transcript_sha256="sha-real",
+        source_video_id=vid,
+        extractor_version="gpt-5.4:designpool-v32",
+        taxonomy_version="taxonomy-v2",
+        tier1_detections=tier1,
+        tier1_fallthroughs=[],
+        topology=list(topology.values()),
+        or_branches=or_branches,
+        conflation_verdict=conflation_verdict,
+    )
+
+
+def test_full_grade_semantic_gate_REJECT_polarity_real_r5l890_fused():
+    """REJECT witness: the campaign's own 'Must REJECT' calibration fixture
+    (R5L890-FUSED, two opposite VWAP-band setups welded co-required) + its
+    CALIBRATED panel verdict REJECT (loaded from disk) -> full_grade False.
+    The mechanical direction_conflation_lint VACUOUSLY PASSes this same object
+    (the AR-030 defect) -- so this test proves the SEMANTIC verdict, not the
+    mechanical lint, is what convicts."""
+    with open(os.path.join(_V32, "conflation_fixtures", "R5L890_FUSED_reject.json"), encoding="utf-8") as fh:
+        strategy = json.load(fh)["strategies"][0]
+    verdict = _calibrated_conflation_verdict("CAL_R5L890_FUSED")
+    assert verdict == "REJECT", "calibration fixture must carry the REJECT verdict"
+    cert = _cert_with_conflation(strategy, verdict, "R5L890juvRw")
+    # the prose-blind mechanical lint vacuously PASSes -- exactly the AR-030 defect
+    assert cert["compile_integrity"]["direction_conflation_lint"]["status"] == "PASS"
+    # but the SEMANTIC gate convicts: full_grade False, terminal read REJECTED
+    assert cert["full_grade"] is False
+    assert cert["certificate_grade"] is False
+    assert cert["terminal_read_grade"] == "REJECTED"
+    assert cert["full_grade_basis"]["direction_conflation_lint"] == "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING"
+
+
+def test_full_grade_semantic_gate_PASS_polarity_real_igp_mirror():
+    """PASS witness (mirror): the real -igp fvg_trend_continuation strategy (one
+    skeleton, side-by-context -- NOT a fusion) + its CALIBRATED panel verdict
+    PASS -> full_grade True. Direction check: the honest mirror passes where the
+    fused adversarial is rejected -- strictly the legitimate signature."""
+    with open(os.path.join(_STAGING, "-igpOZs8LsM__s0.json"), encoding="utf-8") as fh:
+        strategy = json.load(fh)["strategies"][0]
+    verdict = _calibrated_conflation_verdict("-igpOZs8LsM__s0")
+    assert verdict == "PASS", "mirror fixture must carry the PASS verdict"
+    cert = _cert_with_conflation(strategy, verdict, "-igpOZs8LsM")
+    assert cert["pilot_grade"] is True
+    assert cert["full_grade"] is True, "semantic PASS + clean pilot -> full_grade reachable"
+    assert cert["certificate_grade"] is True
+    assert cert["terminal_read_grade"] == "CLEAN"
+
+
+def test_full_grade_second_semantic_axis_enumeration_fail_convicts():
+    """R-039's gate is BOTH semantic axes (conflation + enumeration_consistency).
+    This proves the SECOND axis is load-bearing in full_grade: the -igp mirror
+    with conflation=PASS but enumeration_consistency=FAIL (a promoted
+    enumeration-excluded mention) -> full_grade False. Neither semantic axis
+    alone suffices; both must be clean."""
+    with open(os.path.join(_STAGING, "-igpOZs8LsM__s0.json"), encoding="utf-8") as fh:
+        strategy = json.load(fh)["strategies"][0]
+    from src.engine.extraction.topology_producer import produce_topology
+    from src.engine.tests._a_packet_harness import build_inputs
+
+    transcript, tier1, entries = build_inputs(strategy)
+    topology, or_branches = produce_topology(strategy, entries)
+    cert = assemble_certificate(
+        full_transcript=transcript,
+        full_transcript_sha256="sha-real",
+        source_video_id="-igpOZs8LsM",
+        extractor_version="gpt-5.4:designpool-v32",
+        taxonomy_version="taxonomy-v2",
+        tier1_detections=tier1,
+        tier1_fallthroughs=[],
+        topology=list(topology.values()),
+        or_branches=or_branches,
+        conflation_verdict="PASS",
+        enumeration_consistency_verdict="FAIL",
+    )
+    assert cert["full_grade"] is False, "enumeration FAIL must convict full_grade even with conflation PASS"
+    assert cert["certificate_grade"] is False
+    assert cert["terminal_read_grade"] == "REJECTED"
 
 
 # --------------------------------------------------------------------------- #
@@ -508,9 +659,13 @@ def test_or_alternatives_honored_flows_through_assembler(monkeypatch):
         or_branches=[["t1-0", "t1-1"]],
     )
     assert cert["compile_integrity"]["or_alternatives_honored"]["status"] == "FAIL"
-    # or_alternatives_honored is a structural lint (§B) -- a FAIL there does
-    # not block pilot_grade (classification/anchoring + the live lints are
-    # still clean), but it MUST block full_grade (§C's all-five standard).
+    # or_alternatives_honored is a mechanical structural lint -- this asserts it
+    # FLOWS THROUGH the assembler and EVALUATEs to FAIL (a reachability/logic
+    # probe), NOT that it gates full_grade. Post-R-039 it is a diagnostic, not a
+    # safety gate. full_grade is False here because NO conflation verdict was
+    # supplied (semantic gate fail-closed), and full_grade_basis labels the
+    # mechanical lint honest-vacuous.
     assert cert["pilot_grade"] is True
     assert cert["full_grade"] is False
+    assert cert["full_grade_basis"]["or_alternatives_honored"] == "REACHABILITY_DIAGNOSTIC_NOT_SAFETY_GATING"
     assert cert["certificate_grade"] is False
