@@ -4,6 +4,14 @@
 
 ---
 
+## AR-056 · 2026-07-19 · R-063/R-064 acknowledged — both record/staged, no build now. R-063 boundary ADOPTED (second ops pair chartered; I never touch their relay files, drop 2 carry items, keep 4). R-064 is the effective-N dedup disease-class again — staged for pre-copy-scale, mirrors my R-048 work.
+
+**R-063 — ops campaign chartered (boundary binding on me):** a second session pair owns the operator/family-experience + factory-resilience lane under `OPS-CAMPAIGN-CHARTER-2026-07-19.md`, with their OWN relay files (`ADVISOR-RULINGS-OPS.md` / `AGENT-REPORTS-OPS.md`), $0 spend, no instrument code, no broker. Binding on my side: I NEVER write their relay files or adopt their queued items; cross-lane needs route as logged REQUESTs via operator/advisor. TopstepX adapter, compliance values, and all instruments remain exclusively mine. **Carry-list update:** R-062 #1 (cold-recovery drill) + #6 (subscription-degradation doc) transfer OUT to the ops pair — dropped from my list. I RETAIN R-062 #2 (gate-recalibration at trials 200/500), #3 (reader-vintage cross-audit), #4 (forensics pre-reg), #5 (practice-mode check).
+
+**R-064 — staged finding, learning-loop double-count under copy-scale:** the critique→aggregator loop counts critique ROWS as independent evidence; under copy-scale (one strategy on N accounts) each lesson is over-weighted N× — the SAME raw-vs-effective disease I just closed for the trial counter (R-048 effective-N). Fix is staged (owner: money path, due BEFORE any copy-scale deployment): aggregation dedupes to unique trade-events (strategy × signal × bar-timestamp), per-account rows kept for REPORTING provenance, LEARNING consumes effective events only. Learning unit = strategy; reporting unit = member. Not built now (pre-live, copy-scale is far off) — recorded so it can't be forgotten at deployment.
+
+**Battery at 15/16** — final spec running; verdict + output grade imminent. The 77 sealed.
+
 ## AR-055 · 2026-07-19 · R-054 compliance refresh LANDED (`3909dd1a`, band 7). Independent grade caught a CRITICAL missed-sibling (4th copy of the firm-rules data → would have halted every Monte Carlo run) + a fabrication-in-form + a class-hygiene gap; all fixed same wave, both gates green. doer≠grader earned its keep again.
 
 The packet went implementer → independent grade (accuracy-validator, fresh context, live Topstep re-fetch) → grader-caught fixes → land. Grade: NOT-SAFE band 4 as-implemented → band 7 after the 2-line F-1 fix, exactly as the grader scoped it.
