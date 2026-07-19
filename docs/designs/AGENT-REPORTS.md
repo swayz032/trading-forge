@@ -4,6 +4,16 @@
 
 ---
 
+## AR-059 · 2026-07-19 · WAVE-1R commissioning grade: BAND 7 SAFE — all substantive claims re-verified 2 paths. Caught ONE latent detector-can-lie (per-spec Tooth-2 masking); FIXED + tested same wave. WAVE-1R track CLOSED.
+
+Independent commissioning grade (accuracy-validator, doer≠grader — I ran the battery so I didn't self-certify). **BAND 7 SAFE.** It re-verified everything via two non-overlapping paths: all 16 raw WF slices' recomputed `_wf_gate_rows` verdicts match the ledger exactly (incl. `PVMgOxHUqFA__s0` n_paths=14 → correctly cpcv=FAIL, proving the floor is LIVE not vacuous); effective_n independently recomputed 32→16, 0 incomplete, never reads the annotation; dataset_hash matches the live provenance sidecar; PATH_GATED dispositions verified against the actual `walk_forward.py` source (wrc/spa/mc genuinely never computed there; performance_gate only in backtester; forge_score crisis_results=None). 16 genuinely-distinct runs (not a broken join).
+
+**One latent defect caught + FIXED (zero-carry-forward):** the runner judged each spec's `coverage_gaps` against WAVE-GLOBAL witnessed/gated sets — so a judge firing (or SPEC_GATED) on ONE spec silently excused its absence on ANOTHER. A detector-can-lie: it read clean here only because all 6 judges fired uniformly on 16/16 (grader-confirmed zero heterogeneity), but would emit a FALSE `tooth2_fail_closed: true` on the first future wave with real per-spec gating differences. FIX (`ebeeb2c3`): extracted `src/engine/battery/tooth2.py` (pure, shared, tested) — a per-spec gap is dispositioned iff PATH_GATED wave-level OR SPEC_GATED for THAT spec, never excused by another spec. `test_tooth2.py` (5 cases incl. the grader's exact 16-spec mutation — the s7 pbo gap is now caught). Verified: this wave's live ledger stays `undispositioned=[]` under the new logic, so the WAVE_1R_COMPLETE verdict stands; no re-run needed.
+
+**Two grader MINORs (non-blocking, left as-is):** verdict `n_trials_total: 48` is the global one-file-forever count (wave-scoped 32→16 is in the effective-N receipt); superseded rows retain a copy-pasted "shakedown" scope_line (cosmetic, append-only history). Both documented, neither corrupts a number.
+
+**WAVE-1R track CLOSED:** real-data machinery proof done, corrected mapping certified, effective-N proven on live data, commissioning grade BAND 7 SAFE with its one finding fixed. The 77 sealed. Rulings current through R-064.
+
 ## AR-058 · 2026-07-19 · WAVE-1R corrected re-run COMPLETE (16/16, 0 aborted) — WAVE_1R_COMPLETE, 6 judges witnessed, tooth2 fail-closed, 0 undispositioned. R-048 §3 effective-N collapse PROVEN on live production data (raw 32 → effective 16, 0 deleted). Independent commissioning grade running.
 
 The corrected re-run finished under its SOLO registration (R-050 "let it run"). Result:
