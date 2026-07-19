@@ -4,6 +4,23 @@
 
 ---
 
+## AR-037 · 2026-07-18 · R-042 instrumentation BUILT + INDEPENDENTLY GRADED BAND 7 SAFE-TO-LAND, landed. Trial-counter + passage-ledger with a CODE-DERIVED gate enum (26 gates, spot-checked against source). Grader's 3 defects all CLOSED in-wave. One standing precondition carried to the battery runner.
+
+**Built as ratified (R-042 pins 1–3):** `src/engine/battery/trial_counter.py` + `passage_ledger.py` + tests (26 pass).
+- **Trial-counter (pin 1):** `trial_id` allocated+persisted AT DISPATCH (outcome defaulted ABORTED) → a crash mid-run leaves a COUNTED aborted row (no lost trial); a trial_id exists only if allocate ran (no phantom). One-file-forever (zero_point never re-stamped), dense-monotonic ids, `total_trials` structural (==len, cannot drift), atomic write-temp-rename, measured per-spec scope-line, survivor_eligible HARD-false. **Grader ran a real subprocess HARD-KILL (`os._exit(137)`) between allocate and finalize → the aborted row survived and still counts.**
+- **Passage-ledger (pin 2):** gate-class enum **DERIVED FROM CODE** (the seam-enum investigation, AR pending) — 26 gates each carrying its code invocation site, encoding the producer/judge split (engine computes UNCONDITIONAL per backtest; TS lifecycle fires the verdict CONDITIONAL per transition). `compile_fidelity_forensics` correctly RESERVED (grader confirmed NO such function exists in code). dormant-judge alarm (unconditional received/not-fired = alarm; conditional-absent ≠ alarm; reserved ≠ alarm). Measured per-spec scope-line per row (pin 3); `exit_provenance` field = the F-3 stamp consumer.
+
+**INDEPENDENT GRADE (doer≠grader, fresh accuracy-validator): BAND 7, SAFE-TO-LAND.** The two highest-value checks held under adversarial reproduction: (A) trial-counter leak-closure via the subprocess hard-kill; (B) the code-derived enum via a line-by-line spot-check of ~26 citations (all real; only ONE minor secondary-attribution error). 3 defects, **ALL CLOSED in-wave (zero-carry-forward):**
+- **#1 (MED) — the per-row alarm can't see a judge that NEVER got a row (pure silence).** CLOSED: added `coverage_gaps(strategy_ref, wave)` — diffs FIRED unconditional judges against `unconditional_gate_names()`, returns the missing ones (a COVERAGE ALARM). + 2 tests (silent-absence detected; received-not-fired is both a per-row alarm AND a coverage gap).
+- **#2 (LOW) — `compliance_drift` cited an unrelated module in its parenthetical.** CLOSED: corrected to the real `complianceRulesets.driftDetected` check.
+- **#3 (LOW) — provenance test only substring-checked.** CLOSED: added a standing guard test that every cited `.py` source EXISTS under src/ (passes — confirms the derivation's Python citations are real, not memory).
+
+**★ ONE STANDING PRECONDITION carried to the (not-yet-built) BATTERY RUNNER:** the runner MUST call `coverage_gaps()` per strategy — ledger silence is only "all judges fired clean" when coverage_gaps is empty for every strategy. Named here so wave-1's ledger silence is never trusted as clean without the coverage diff (the Pass-6 ZZ-sink false-green class). This is the verified-hand-off form, owner = the battery-runner build.
+
+**Landed on `h1-wave4-sealed12-driver`.** R-042 §6 sequence: instrumentation ✓ → NEXT: tier-(a) integer receipt (load-bearing verify-from-disk) → trial-counter zero-point stamp on 404a3396 → shakedown wave-1 dispatch (runner honoring the coverage-diff precondition). Binding-primitives packet (R-042 pin 4) in parallel — awaiting your scope/sequence (AR-036). F-3 (my named owner) before the wave-1 verdict read. The 77 stay SEALED.
+
+---
+
 ## AR-036 · 2026-07-18 · R-041 §4 ANSWERED: the binding-primitives enrichment packet is MOSTLY WIRING (WEEKS, not months) — the institutional evaluators already exist and already run per-bar in backtester.py; SpecConditionStrategy just bypasses them. 2 highest-leverage first wires named; 2 genuine BUILDs flagged; the real work-item is plumbing.
 
 **The advisor's belief is CONFIRMED with the important nuances (file:line-evidenced investigation).** Every core institutional evaluator the families describe EXISTS and is fully built — and for bias/structure a per-bar adapter (`load_n_timeframes` → `HTFContext`/`SessionContext` → `compute_bias`, htf_cache) **already runs inside `backtester.py`'s eligibility gate** (`backtester.py:410-414, 6635, 6653`). `SpecConditionStrategy.compute(df)` simply gets only the exec-TF frame and substitutes cheap proxies. So the ~0.99 is a DEPTH/wiring problem, not an existence problem.
