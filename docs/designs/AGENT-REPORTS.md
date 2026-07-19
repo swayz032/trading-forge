@@ -4,6 +4,18 @@
 
 ---
 
+## AR-046 · 2026-07-19 · R-048 independent grade: BAND 6 SAFE — all three orders CONFIRMED correct (backfill verified TRUTHFUL, not fabrication, via 2-path hash check). 3 named follow-ups (F-1/F-2/F-3) all CLOSED this wave, test-backed. Corrected re-run still in flight.
+
+**The grade (accuracy-validator, fresh context, doer≠grader; commit `8469fe58`).** BAND 6 SAFE. It ran its OWN 12-case adversarial harness (not mine), wrote standalone counter/ledger fixtures, cross-referenced every claimed-guaranteed schema key against the real engine's 3 WF return paths (`walk_forward.py:2842-2870/3026-3077/3725-3783`), and — the part that matters most — **independently proved the backfill is truthful, not fabricated**: recomputed `config_hash` from the literal formula → byte-for-byte match to the live counter; read the provenance sidecar off disk → `dataset_hash` match; diffed 3 commits (`ca2f8711`→`e9bb8667`→`8469fe58`) to confirm WF_START/END/embargo unchanged, so "same experiment, only the mapping changed" is a verified fact; confirmed `effective_n` contains zero references to `superseded_by_remap` (no curation leak). All three orders CONFIRMED CORRECT. My scoping disclosure (sidecar vs runtime hash) was ruled "a defensible, disclosed judgment call, not a defect."
+
+**Three follow-ups named — all CLOSED this wave (commit `a7aadc4d`), each test-backed:**
+
+- **F-1 (MAJOR, dormant):** `slippage_survival` was the ONE verdict-determining read still on `.get()` — the commit message over-claimed "every read." Dormant (the engine emits it in all 3 paths) but if it ever went missing it would silently vanish and be mislabeled `PATH_GATED` — the exact disease §2 exists to kill. FIX: extracted the guard to a first-class shared primitive `src/engine/battery/mapping_guard.py` (honoring §2's literal "any verdict/disposition mapping") and routed `slippage_survival` through it. Missing key now RAISES; present-but-empty stays a legit no-signal. Verified both.
+- **F-2 (MINOR, forward-looking):** two null-null dedup tuples would falsely collapse for a future un-backfilled legacy wave (under-counting the denominator — the unsafe direction). FIX: `_dedup_key` gives any incomplete tuple a unique key → never collapses; `effective_n` surfaces `incomplete_tuple_n` so it's never silent.
+- **F-3 (MAJOR, discipline):** the "Verified:" claim was bare prose with no persisted regression guard (grading-integrity violation). FIX: `src/engine/tests/test_battery_r048.py`, 12 cases covering `require` raise/return-None, `annotate_superseded` append-only/idempotent/backfill-never-overwrites, `effective_n` collapse/ABORTED-exclusion/F-2. **12 passed.**
+
+The doer≠grader loop earned its keep again: I self-certified the R-048 work clean, the grader found 3 real gaps, and they're closed with tests before the wave shut. Corrected full-16 re-run still grinding (spec 1 of 16 at last check; ~100min); its data-output verdict + a re-grade land when it finishes. WIRE-1 parallel unchanged; the 77 sealed.
+
 ## AR-045 · 2026-07-19 · R-048 executed: strict-key guard (F-1 class dead) + SUPERSEDED_BY_REMAP annotation + effective-N dedup. The clearing is REVERSED per your overrule — nothing deleted; buggy rows retained + annotated + tuple-backfilled so they collapse with the corrected re-run by PURE computation. Corrected full-16 re-run in flight; independent grade running.
 
 **Your three orders, all landed (commit `8469fe58`; packet `docs/designs/h1-r048-strictkey-superseded-effectiven-ratify-2026-07-19.md`; all autonomous under independent grade, pre-live).**
