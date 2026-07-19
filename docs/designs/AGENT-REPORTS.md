@@ -4,6 +4,21 @@
 
 ---
 
+## AR-052 · 2026-07-19 · R-054 received — 4 orders. Order 1 (compliance-refresh, HIGH) STARTED: primary-source research dispatched (2-path, the ~8 named changes), compliance architecture mapped, epoch-safe landing planned. Orders 2–4 recorded/staged. This is the first R-05x needing a real build, not an ack.
+
+**Order 1 — COMPLIANCE-REFRESH AUDIT (HIGH, my packet) — IN PROGRESS:**
+- **Research dispatched** (background, fully independent of the battery per R-053 pt1): re-derive current Topstep rules from PRIMARY sources, ≥2025 dates, **two-path per rule** (load-bearing → disagreement is the alarm, per the standing derivation law). Targets the exact named changes: per-payout caps $2K/$3K on no-activation Combines (from $5K/$6K), 90/10 from dollar-one (post-2026-01-12), post-2026-02-10 funded 20%-tradeable/80%-RESERVE 25%-milestone unlock, TFD→TopstepX, plus any others Nov-2025→Apr-2026. Frozen baseline handed to it (profit_target $3K, DD $2K EOD, split 0.90, min_payout_days 5, verified 2026-05-19).
+- **Architecture mapped for the diff/land:** `docs/prop-firm-rules-2026-topstep.md` is the SOURCE OF TRUTH (last reviewed 2026-06-22), parsed by `scripts/verify-2026-rules-compliance.mjs` (= `check:2026-compliance`); `firm_config.py` (Py) + `src/shared/firm-config.ts` (TS, cross-lang parity) must match it; `firm_rules_version.py` is the drift hash MC asserts. So the refresh = update canonical doc's Canonical-Values block → match Py+TS → version recomputes → `check:2026-compliance` green → re-verify B14 + §5 scaling/payout-extraction + DRAWDOWN_ROOM sizing against the RESERVE mechanics → record which combine type carries which cap (account-purchase = go-live strategic choice).
+- **Epoch-law guardrail:** `firm_config.py` is instrument code, but this worktree's edits do NOT move the battery's `wt-dod-404a3396` engine HEAD, and the tier-b ghosts don't gate on payout/DD extraction — so the compliance packet lands epoch-safe without disturbing the in-flight registered wave. Ratify-packet + independent grade (doer≠grader) on research return.
+
+**Order 2 — FIRM POSTURE (record-only):** the top-3 real payout-denial causes (VPN/IP, news windows, consistency ≈60% of disputes) are already hard-guarded in-stack — I'll record that validation + the current firm money-math side-by-side in the compliance packet's evidence note. No code change.
+
+**Order 3 — READER-SUCCESSION PROTOCOL (small doc, no code):** draft the deprecation-contingency (ladder re-runs on the successor model: birth gate + design-pool re-measure under frozen instruments; fresh sealed exam from the 77 ONLY if the re-measure is ambiguous, per seal laws). "Before go-live at latest" — I'll stage it for ratify alongside the compliance packet or next quiet slot.
+
+**Order 4 — SCOUT + FORENSICS SHARPENING (staged for intake-scale):** recency + niche-ness intake weighting (judgment-heavy ICT/SMC preferred) + survivor-forensics decay-slope read. Recorded; builds when intake scales, not now.
+
+Battery at 8/16, clean. Monitor healthy. The 77 sealed.
+
 ## AR-051 · 2026-07-19 · R-053 acknowledged — parallelism policy recorded; no code action. It reaffirms exactly the disciplines I'm running: serial integrity chain intact, and the in-flight battery stays LEVER-governed (R-049/R-051), never headcount-parallelized. WIDE allowances captured for their tracks.
 
 R-053 is a standing policy, nothing to execute now. Diffed against current work — full alignment, zero conflict:
