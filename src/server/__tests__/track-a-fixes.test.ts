@@ -113,9 +113,11 @@ describe("F-3: notification-service — Discord 429 detection wired", () => {
 
   it("429 handler does not throw (fire-and-forget contract preserved)", () => {
     const src = readSrc("services/notification-service.ts");
-    // After 429 block, must return (not throw)
-    // Verify the return statement exists inside the 429 block
-    expect(src).toContain("return; // Drop — do not throw");
+    // After 429 block, must return (not throw). sendWebhook() now returns
+    // Promise<boolean> (deep-scan-b fixwave 2026-07-17) so callers can react to
+    // drops instead of only inferring them from a caught rejection — the drop
+    // return became `return false;` accordingly.
+    expect(src).toContain("return false; // Drop — do not throw");
   });
 });
 

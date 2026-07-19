@@ -468,15 +468,55 @@ describe("evaluatePaperToDeployReadyGates", () => {
       expect(result.failedGate).toBe("wfe");
     });
 
-    it("does not block when WFE is legacy_null (grandfather)", () => {
+    it("blocks when WFE is legacy_null (hardened 2026-07-18 — matches evaluateWfeGate's real contract)", () => {
       setAllGatesPass();
       mockWfe.mockReturnValue({
         status: "legacy_null",
-        passed: true,
+        passed: false,
         wfeOverall: null,
         hardFloor: 0.70,
         warnFloor: 0.50,
         auditAction: "lifecycle.wfe_unavailable_legacy",
+      });
+
+      const result = evaluatePaperToDeployReadyGates(buildPassInput());
+
+      expect(result.passed).toBe(false);
+      expect(result.failedGate).toBe("wfe");
+    });
+
+    // gate-contract-restoration wave (2026-07-18): the isBlock check used to be a
+    // hardcoded status-string allowlist that ignored `passed` for any status other
+    // than "blocked"/"degenerate_is_block" — so cpcv_exempt (below) and legacy_null
+    // (above), both hardened by 85e1500b to passed=false, silently proceeded through
+    // this orchestrator. Checking !passed directly closes that class of gap for any
+    // current or future status, not just the two the old allowlist happened to name.
+    it("honors passed=false on cpcv_exempt too (not just the legacy_null the allowlist missed)", () => {
+      setAllGatesPass();
+      mockWfe.mockReturnValue({
+        status: "cpcv_exempt",
+        passed: false,
+        wfeOverall: null,
+        hardFloor: 0.70,
+        warnFloor: 0.50,
+        auditAction: "lifecycle.wfe_cpcv_exempt",
+      });
+
+      const result = evaluatePaperToDeployReadyGates(buildPassInput());
+
+      expect(result.passed).toBe(false);
+      expect(result.failedGate).toBe("wfe");
+    });
+
+    it("still does not block on a genuinely non-blocking status (passed=true)", () => {
+      setAllGatesPass();
+      mockWfe.mockReturnValue({
+        status: "warned",
+        passed: true,
+        wfeOverall: 0.55,
+        hardFloor: 0.70,
+        warnFloor: 0.50,
+        auditAction: "lifecycle.wfe_warning_below_target",
       });
 
       const result = evaluatePaperToDeployReadyGates(buildPassInput());
@@ -535,11 +575,11 @@ describe("evaluatePaperToDeployReadyGates", () => {
       expect(result.failedGate).not.toBe("parameter_drift");
     });
 
-    it("does not block on legacy_null (no drift classification)", () => {
+    it("blocks on legacy_null (hardened 2026-07-18 — matches evaluateParameterDriftGate's real contract)", () => {
       setAllGatesPass();
       mockDrift.mockReturnValue({
         status: "legacy_null",
-        passed: true,
+        passed: false,
         classification: null,
         confidence: null,
         auditAction: "lifecycle.parameter_drift_unavailable",
@@ -547,7 +587,8 @@ describe("evaluatePaperToDeployReadyGates", () => {
 
       const result = evaluatePaperToDeployReadyGates(buildPassInput());
 
-      expect(result.failedGate).not.toBe("parameter_drift");
+      expect(result.passed).toBe(false);
+      expect(result.failedGate).toBe("parameter_drift");
     });
 
     // ── C1 (2026-06-29): param_stability_status threading ────────────────────
@@ -566,11 +607,11 @@ describe("evaluatePaperToDeployReadyGates", () => {
       expect(mockDrift).toHaveBeenCalledWith(null, null, "cpcv_not_applicable");
     });
 
-    it("does not block on cpcv_exempt (CPCV path is non-blocking, distinct audit)", () => {
+    it("blocks on cpcv_exempt (hardened 2026-07-18 — CPCV path is unmeasured, not exempt-from-blocking)", () => {
       setAllGatesPass();
       mockDrift.mockReturnValue({
         status: "cpcv_exempt",
-        passed: true,
+        passed: false,
         classification: null,
         confidence: null,
         auditAction: "lifecycle.parameter_drift_cpcv_exempt",
@@ -580,7 +621,8 @@ describe("evaluatePaperToDeployReadyGates", () => {
 
       const result = evaluatePaperToDeployReadyGates(input);
 
-      expect(result.failedGate).not.toBe("parameter_drift");
+      expect(result.passed).toBe(false);
+      expect(result.failedGate).toBe("parameter_drift");
     });
 
     it("passes null 3rd arg when param_stability_status is absent (legacy backtests)", () => {

@@ -16,7 +16,14 @@
  *   wfe_overall <  WFE_HARD_FLOOR (0.70) → BLOCK (status="blocked", passed=false)
  *     — this includes the former "warn band" [0.50, 0.70).
  *     — emits lifecycle.wfe_hard_floor_block in all blocked cases.
- *   wfe_overall null (legacy pre-Pass-B.1) → PASS, emit legacy audit
+ *   wfe_overall null (legacy pre-Pass-B.1) → BLOCK (status="legacy_null", passed=false)
+ *     — hardened 2026-07-12 (85e1500b, operator commit "Harden validation promotion
+ *       gates"): required fresh CPCV/WF evidence before TESTING → PAPER and blocked
+ *       WFE (among BIF/DSR/parameter-drift/PBO/B14/slippage-survival) when
+ *       unavailable or incomplete. A pre-Pass-B.1 backtest with no WFE measurement
+ *       is unmeasured overfitting risk, not a free pass. This SUPERSEDES the
+ *       original "grandfather pass" design below this docstring's older passes —
+ *       do not revert to passed=true without a new operator ratification.
  *     EXCEPTION: wfe_status="degenerate_is" (G2a hardening 2026-06-22) — see below.
  *
  * Wave hardening 2026-06-22 (G2a) — degenerate IS contract:
@@ -26,7 +33,8 @@
  *     - wfe_status="degenerate_is" → BLOCK (lifecycle.wfe_degenerate_is_block),
  *       regardless of wfe_overall value.  NOT a legacy null.
  *     - wfe_overall undefined/null AND wfe_status absent/undefined → genuine legacy
- *       (pre-W27.5 backtests where the key was never written) → grandfather pass.
+ *       (pre-W27.5 backtests where the key was never written) → BLOCK per the
+ *       2026-07-12 hardening above (85e1500b) — no longer a grandfather pass.
  *
  * CPCV real-IS contract (deep-scan #9 FIX K 2026-07-02; X5 ratified 2026-07-09):
  *   When walk_forward.py runs CPCV mode AND a per-path IS basis is available, it
@@ -59,8 +67,8 @@ export type WfeGateStatus =
                           // retained for backward-compat with serialized audit_log rows only
   | "blocked"             // wfe_overall < WFE_HARD_FLOOR (includes former "warn band")
   | "degenerate_is_block" // wfe_status="degenerate_is" from producer (G2a hardening 2026-06-22)
-  | "legacy_null"         // wfe_overall key absent (pre-Pass-B.1 backtest) → grandfather pass
-  | "cpcv_exempt";        // wfe_status="cpcv_not_applicable" → CPCV mode; WFE formula N/A → distinct audit
+  | "legacy_null"         // wfe_overall key absent (pre-Pass-B.1 backtest) → BLOCK (85e1500b hardening 2026-07-12)
+  | "cpcv_exempt";        // wfe_status="cpcv_not_applicable" → CPCV mode; WFE unmeasured → BLOCK (85e1500b hardening 2026-07-12)
 
 export interface WfeGateResult {
   status: WfeGateStatus;
@@ -140,12 +148,13 @@ export function evaluateWfeGate(
   // when the run used Combinatorial Purged Cross-Validation (mode="cpcv").  In CPCV mode the
   // WFE ratio (OOS/IS Sharpe) is structurally undefined — CPCV has no single IS window to
   // compare against.  This is NOT a legacy null (wfe_overall was deliberately set to None/null
-  // by the producer) and NOT a degenerate IS failure.  The gate PASSES with a DISTINCT audit
-  // action so the exemption is visible and auditable rather than silently grandfather-passing.
+  // by the producer) and NOT a degenerate IS failure.  Hardened 2026-07-12 (85e1500b): the
+  // gate BLOCKS with a DISTINCT audit action — unmeasured WFE is unmeasured overfitting risk,
+  // not a free pass, even though it's visible/auditable as its own status.
   if (wfeStatus === "cpcv_not_applicable") {
     return {
       status: "cpcv_exempt",
-      passed: true,
+      passed: false,
       wfeOverall: null,
       hardFloor: effectiveHardFloor,
       warnFloor: effectiveWarnFloor,
@@ -219,11 +228,11 @@ export function evaluateWfeGate(
     };
   }
 
-  // Legacy path — wfe_overall key genuinely absent (pre-Pass-B.1 backtest); grandfather pass.
+  // Missing WFE cannot authorize a fresh promotion.
   if (wfeOverall == null) {
     return {
       status: "legacy_null",
-      passed: true,
+      passed: false,
       wfeOverall: null,
       hardFloor: effectiveHardFloor,
       warnFloor: effectiveWarnFloor,

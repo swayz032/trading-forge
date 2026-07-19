@@ -233,7 +233,7 @@ describe("WFE gate — backtests.walk_forward_results.wfe_overall round-trip (PG
     // Gate sees null → legacy grandfather pass (treats as pre-Wave-27.5 backtest).
     // The real WFE was 0.30 (blocking) but the gate never saw it.
     // This is a SILENT PRODUCER→CONSUMER KEY DISCONNECT.
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.status).toBe("legacy_null");
     expect(result.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
     // The test documents the vulnerability: wrong key → silent grandfather pass.
@@ -356,7 +356,7 @@ describe("PBO gate — backtests.walk_forward_results.pbo_overall round-trip (PG
     expect(result.auditPayload.blocked).toBe(true);
   });
 
-  it("LEGACY PASS: no pbo_overall key (pre-Wave-29 backtest) → gate ok=true (grandfather)", async () => {
+  it("LEGACY BLOCK: no pbo_overall key (pre-Wave-29 backtest) → gate ok=false (hardened 2026-07-18, matches BIF/WFE/param-drift)", async () => {
     const wfr = await selectPboRow(BT_LEGACY);
     // Confirm the key is genuinely absent
     expect(wfr?.pbo_overall).toBeUndefined();
@@ -366,7 +366,7 @@ describe("PBO gate — backtests.walk_forward_results.pbo_overall round-trip (PG
 
     const result = evaluatePboGate({ pbo_overall: pboOverall ?? undefined });
 
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
   });
@@ -390,7 +390,7 @@ describe("PBO gate — backtests.walk_forward_results.pbo_overall round-trip (PG
     expect(result.auditPayload.blocked).toBe(true);
   });
 
-  it("DISCONNECT (wrong key): producer writes pbo=0.20; consumer reads pbo_overall=null → grandfather PASS", async () => {
+  it("DISCONNECT (wrong key): producer writes pbo=0.20; consumer reads pbo_overall=null → BLOCKS as legacy-null (hardened 2026-07-18)", async () => {
     const wfr = await selectPboRow(BT_WRONGKEY);
 
     // Confirm the wrong key is present
@@ -402,12 +402,15 @@ describe("PBO gate — backtests.walk_forward_results.pbo_overall round-trip (PG
 
     const result = evaluatePboGate({ pbo_overall: pboOverall ?? undefined });
 
-    // Gate sees null → legacy grandfather pass.
-    // The real PBO was 0.20 (blocking) but the gate never saw it.
-    expect(result.ok).toBe(true);
+    // Gate sees null → legacy-null path, which now BLOCKS (hardened 2026-07-18).
+    // The real PBO was 0.20 (also blocking) but the gate never saw it — the
+    // key-mismatch is still a real bug (wrong reason/audit action surfaces),
+    // it just no longer compounds into a silent PROCEED on live capital.
+    expect(result.ok).toBe(false);
     expect(result.legacyNull).toBe(true);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
-    // The test documents: wrong key = silent grandfather pass even when PBO=0.20 > 0.15.
+    // The test documents: wrong key = blocks for the wrong reason (legacy-null,
+    // not pbo_overfit_block), but no longer silently passes either way.
   });
 });
 
@@ -1129,7 +1132,7 @@ describe("CPCV-exempt gate round-trip — WFE + PBO through PGlite (hardening/ph
 
     // Must be "cpcv_exempt", never "legacy_null"
     expect(result.status).toBe("cpcv_exempt");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
     // Must NOT produce the generic legacy action
     expect(result.auditAction).not.toBe("lifecycle.wfe_unavailable_legacy");
@@ -1274,7 +1277,7 @@ describe("BIF gate — backtests.bif numeric column round-trip + string-coercion
     // the consumer (lifecycle passes null, not Number(null)).
     const rawBif = row?.bif == null ? null : Number(row.bif);
     const result = evaluateBifGate(rawBif, null);
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.reason).toBe("bif.legacy_null_pre_wave3");
   });
 });
@@ -1476,7 +1479,7 @@ describe("Parameter-drift gate — param_stability.drift_classification WRONG-KE
     // The real classification was "overfit_drift" (blocking) but the gate never saw it.
     // This is a SILENT PRODUCER→CONSUMER KEY DISCONNECT.
     expect(result.status).toBe("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
     // Document: drift_classification_WRONGKEY → legacy_null even with drift_confidence=0.80
     // This is the exact vulnerability Suite 9 exists to document.
@@ -1573,7 +1576,7 @@ describe("Parameter-drift gate — param_stability_status cpcv_exempt round-trip
     const result = evaluateParameterDriftGate(classification, confidence, status);
 
     expect(result.status).toBe("cpcv_exempt");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
     // Must NOT silently collapse to the generic legacy path — that was the C1 bug.
     expect(result.status).not.toBe("legacy_null");
@@ -1585,7 +1588,7 @@ describe("Parameter-drift gate — param_stability_status cpcv_exempt round-trip
     const status = (wfr?.param_stability_status ?? null) as string | null;
     const result = evaluateParameterDriftGate(null, null, status);
     expect(result.status).toBe("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
   });
 

@@ -115,18 +115,18 @@ describe("evaluateParameterDriftGate — stable → passed, no audit", () => {
 // ─── null classification → insufficient evidence block ───────────────────────
 
 describe("evaluateParameterDriftGate — null classification", () => {
-  it("allows promotion with legacy_null status when classification is null", () => {
+  it("blocks promotion with legacy_null status when classification is null", () => {
     const result = evaluateParameterDriftGate(null, null);
     expect(result.status).toBe<ParameterDriftGateStatus>("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
     expect(result.classification).toBeNull();
   });
 
-  it("allows promotion with legacy_null when classification is undefined", () => {
+  it("blocks promotion with legacy_null when classification is undefined", () => {
     const result = evaluateParameterDriftGate(undefined, undefined);
     expect(result.status).toBe<ParameterDriftGateStatus>("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
   });
 });
 
@@ -139,7 +139,7 @@ describe("evaluateParameterDriftGate — param_stability_status='cpcv_not_applic
     const result = evaluateParameterDriftGate(null, null, "cpcv_not_applicable");
     expect(result.status).toBe<ParameterDriftGateStatus>("cpcv_exempt");
     expect(result.status).not.toBe("legacy_null");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
     expect(result.auditAction).not.toBe("lifecycle.parameter_drift_unavailable");
   });
@@ -149,7 +149,7 @@ describe("evaluateParameterDriftGate — param_stability_status='cpcv_not_applic
     // drift formula is structurally N/A in CPCV mode.
     const result = evaluateParameterDriftGate("overfit_drift", 0.99, "cpcv_not_applicable");
     expect(result.status).toBe<ParameterDriftGateStatus>("cpcv_exempt");
-    expect(result.passed).toBe(true);
+    expect(result.passed).toBe(false);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
   });
 
@@ -178,8 +178,8 @@ describe("evaluateParameterDriftGate — param_stability_status='cpcv_not_applic
     const legacy = evaluateParameterDriftGate(null, null);
     expect(cpcv.status).not.toBe(legacy.status);
     expect(cpcv.auditAction).not.toBe(legacy.auditAction);
-    expect(cpcv.passed).toBe(true);
-    expect(legacy.passed).toBe(true);
+    expect(cpcv.passed).toBe(false);
+    expect(legacy.passed).toBe(false);
   });
 });
 

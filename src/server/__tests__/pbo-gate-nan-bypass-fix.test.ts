@@ -87,24 +87,24 @@ describe("evaluatePboGate — NaN bypass fix (BLOCKER B4)", () => {
   });
 });
 
-// ── PRESERVED: legacy-null grandfather MUST still PROCEED ────────────────────
+// ── legacy-null now BLOCKS (hardened 2026-07-18, matches BIF/WFE/param-drift) ─
 
-describe("evaluatePboGate — legacy null grandfather (unchanged behavior)", () => {
-  it("PROCEEDs with legacyNull=true when pbo_overall is null (no pbo_overall field pre-Wave-29)", () => {
+describe("evaluatePboGate — legacy null (hardened, blocks)", () => {
+  it("BLOCKs with legacyNull=true when pbo_overall is null (no pbo_overall field pre-Wave-29)", () => {
     const result = evaluatePboGate({ pbo_overall: null });
 
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
     expect(result.pbo).toBeNull();
     expect(result.legacyNull).toBe(true);
     expect(result.auditPayload.legacy_null).toBe(true);
-    expect(result.auditPayload.blocked).toBe(false);
+    expect(result.auditPayload.blocked).toBe(true);
   });
 
-  it("PROCEEDs with legacyNull=true when pbo_overall is undefined (backtest has no walk-forward)", () => {
+  it("BLOCKs with legacyNull=true when pbo_overall is undefined (backtest has no walk-forward)", () => {
     const result = evaluatePboGate({});
 
-    expect(result.ok).toBe(true);
+    expect(result.ok).toBe(false);
     expect(result.reason).toBe("lifecycle.pbo_unavailable_legacy");
     expect(result.legacyNull).toBe(true);
   });

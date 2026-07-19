@@ -667,7 +667,13 @@ export function evaluatePaperToDeployReadyGates(
     const wfeResult = evaluateWfeGate(wfeOverall, undefined, undefined, wfeStatus);
 
     if (wfeResult.auditAction) {
-      const isBlock = wfeResult.status === "blocked" || wfeResult.status === "degenerate_is_block";
+      // gate-contract-restoration wave (2026-07-18): this used to check a hardcoded
+      // status-string allowlist ("blocked" | "degenerate_is_block"), which silently
+      // ignored wfeResult.passed===false for any OTHER status (legacy_null,
+      // cpcv_exempt) — both of which 85e1500b hardened to passed=false. Checking
+      // !wfeResult.passed directly makes this path honor whatever the gate itself
+      // decided, instead of maintaining a second, driftable copy of that decision.
+      const isBlock = !wfeResult.passed;
       if (isBlock) {
         logger.warn(
           { strategyId, wfeOverall: wfeResult.wfeOverall, status: wfeResult.status },
@@ -687,12 +693,17 @@ export function evaluatePaperToDeployReadyGates(
           failedGate: "wfe",
         };
       }
-      // legacy_null or non-blocking — log and continue
+      // non-blocking (warned) — log and continue
       logger.info(
         { strategyId, wfeStatus: wfeResult.status },
-        "evaluatePaperToDeployReadyGates: WFE gate non-blocking (legacy/warn) — promotion continues",
+        "evaluatePaperToDeployReadyGates: WFE gate non-blocking (warn) — promotion continues",
       );
     }
+    // (deepscan7 F-3 2026-07-02) cron parity (lifecycle-service Track A.2 push).
+    // gate-contract-restoration wave (2026-07-18): WFE previously never pushed to
+    // gateEvidenceStatuses at all, so a non-blocking WFE status (e.g. legacy_null)
+    // was invisible to countIncompleteEvidence() too — fixed alongside the isBlock bug.
+    gateEvidenceStatuses.push(wfeResult.auditAction ? (wfeResult.status ?? "legacy_null") : "complete");
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -713,7 +724,12 @@ export function evaluatePaperToDeployReadyGates(
     const driftResult = evaluateParameterDriftGate(driftClassification, driftConfidence, paramStabilityStatus);
 
     if (driftResult.auditAction) {
-      const isBlock = driftResult.status === "blocked" || driftResult.status === "blocked_classifier_error";
+      // gate-contract-restoration wave (2026-07-18): same class of bug as Gate 4 (WFE)
+      // above — a hardcoded status-string allowlist silently ignored
+      // driftResult.passed===false for legacy_null/cpcv_exempt, both hardened by
+      // 85e1500b. Check !driftResult.passed directly so this path can't drift out
+      // of sync with the gate's own decision again.
+      const isBlock = !driftResult.passed;
       if (isBlock) {
         logger.warn(
           { strategyId, classification: driftResult.classification, confidence: driftResult.confidence },

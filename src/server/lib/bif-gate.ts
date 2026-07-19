@@ -13,8 +13,16 @@
  * Gate semantics (priority order):
  *
  *   1. bif === null / undefined (pre-Wave-3 backtests)
- *      → legacyNull=true, passed=true, reason "bif.legacy_null_pre_wave3"
- *      → documented grandfather warn; NEVER block on missing data.
+ *      → legacyNull=true, passed=false, reason "bif.legacy_null_pre_wave3"
+ *      → HARD BLOCK. Hardened 2026-07-12 (85e1500b, operator commit "Harden
+ *        validation promotion gates"): the pipeline must fail closed on stale,
+ *        missing, malformed, or unmeasured promotion evidence. A pre-Wave-3
+ *        backtest with no BIF measurement is unmeasured overfitting risk, not a
+ *        free pass — require a fresh BIF result before promoting. This replaced
+ *        the original Wave-3 grandfather-pass design; do not revert to
+ *        passed=true without a new operator ratification (see gate-contract
+ *        siblings wfe-gate.ts / parameter-drift-gate.ts / pbo-gate.ts, all
+ *        hardened in the same commit).
  *
  *   2. bif > BIF_BLOCK_THRESHOLD (default 4.0)
  *      → passed=false, reason "bif.blocked_exceeds_threshold"
@@ -89,8 +97,9 @@ export interface BifGateResult {
   reason: string;
   /**
    * True when bif was null/undefined (pre-Wave-3 backtest that never emitted the
-   * field).  Gate is ALWAYS passed=true when legacyNull=true — NEVER block on
-   * missing data.  Caller should surface a grandfather warn in the audit log.
+   * field).  Gate is passed=false when legacyNull=true (hardened 2026-07-12,
+   * 85e1500b) — unmeasured BIF blocks promotion until a fresh result is present.
+   * Caller should surface the block reason in the audit log.
    */
   legacyNull: boolean;
   /** Full audit payload — merge into the audit_log result field. */
@@ -194,10 +203,10 @@ export function evaluateBifGate(
     logger.warn(
       { bif: bifNum, k_eff: kEffNum },
       "BIF gate: bif_reliable=false (CPCV mode) — BIF is structurally unmeasured (IS proxy = OOS mean); " +
-        "gate passes with distinct audit (bif.cpcv_unmeasured)",
+        "blocking promotion with distinct audit (bif.cpcv_unmeasured)",
     );
     return {
-      passed: true,
+      passed: false,
       reason: "bif.cpcv_unmeasured",
       legacyNull: false,
       auditPayload: {
@@ -205,7 +214,7 @@ export function evaluateBifGate(
         k_eff: kEffNum,
         warn_threshold: warnThreshold,
         block_threshold: blockThreshold,
-        blocked: false,
+        blocked: true,
         legacy_null: false,
         reason: "bif.cpcv_unmeasured",
         proxy_basis_warn: proxyBasisWarn,
@@ -248,10 +257,10 @@ export function evaluateBifGate(
   if (bifNum === null) {
     logger.warn(
       { k_eff: kEffNum, warnThreshold, blockThreshold },
-      "BIF gate: bif absent — proceeding with legacy grandfather warn (bif.legacy_null_pre_wave3)",
+      "BIF gate: bif absent — blocking promotion until a fresh BIF result is present (bif.legacy_null_pre_wave3)",
     );
     return {
-      passed: true,
+      passed: false,
       reason: "bif.legacy_null_pre_wave3",
       legacyNull: true,
       auditPayload: {
@@ -259,7 +268,7 @@ export function evaluateBifGate(
         k_eff: kEffNum,
         warn_threshold: warnThreshold,
         block_threshold: blockThreshold,
-        blocked: false,
+        blocked: true,
         legacy_null: true,
         reason: "bif.legacy_null_pre_wave3",
         proxy_basis_warn: proxyBasisWarn,

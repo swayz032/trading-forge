@@ -168,15 +168,17 @@ async function sendWebhook(
       "NotificationService: rate limit reached — webhook call dropped",
     );
 
-    insertAuditRow({
-      action: "notification.rate_limit_dropped",
-      entityType: "system",
-      entityId: null,
-      decisionAuthority: "system",
-      input: { title, severity, rateLimit: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW_MS } as Record<string, unknown>,
-      result: { dropped: true, reason: "rate_limited" } as Record<string, unknown>,
-      status: dropStatus,
-    }).catch((auditErr: unknown) => {
+    Promise.resolve(
+      insertAuditRow({
+        action: "notification.rate_limit_dropped",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: { title, severity, rateLimit: RATE_LIMIT_MAX, windowMs: RATE_LIMIT_WINDOW_MS } as Record<string, unknown>,
+        result: { dropped: true, reason: "rate_limited" } as Record<string, unknown>,
+        status: dropStatus,
+      }),
+    ).catch((auditErr: unknown) => {
       logger.warn({ auditErr, title }, "NotificationService: failed to write rate_limit_dropped audit row");
     });
 
@@ -208,15 +210,17 @@ async function sendWebhook(
         "NotificationService: Discord circuit OPEN — skipping webhook (fast-fail)",
       );
 
-      insertAuditRow({
-        action: "notification.circuit_open_dropped",
-        entityType: "system",
-        entityId: null,
-        decisionAuthority: "system",
-        input: { title, severity, reopensAt: err.reopensAt.toISOString() } as Record<string, unknown>,
-        result: { dropped: true, reason: "circuit_open" } as Record<string, unknown>,
-        status: dropStatus,
-      }).catch((auditErr: unknown) => {
+      Promise.resolve(
+        insertAuditRow({
+          action: "notification.circuit_open_dropped",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { title, severity, reopensAt: err.reopensAt.toISOString() } as Record<string, unknown>,
+          result: { dropped: true, reason: "circuit_open" } as Record<string, unknown>,
+          status: dropStatus,
+        }),
+      ).catch((auditErr: unknown) => {
         logger.warn({ auditErr, title }, "NotificationService: failed to write circuit_open_dropped audit row");
       });
 
@@ -314,19 +318,21 @@ async function flushWarningQueue(): Promise<void> {
     warningQueue.unshift(...batch);
     scheduleWarningFlush();
 
-    insertAuditRow({
-      action: "notification.warning_batch_flush_failed",
-      entityType: "system",
-      entityId: null,
-      decisionAuthority: "system",
-      input: {
-        count: batch.length,
-        titles: batch.map((item) => item.title),
-        reason: "batch_flush_failed",
-      } as Record<string, unknown>,
-      result: { requeued: true, error: (err as Error)?.message ?? String(err) } as Record<string, unknown>,
-      status: "error",
-    }).catch((auditErr: unknown) => {
+    Promise.resolve(
+      insertAuditRow({
+        action: "notification.warning_batch_flush_failed",
+        entityType: "system",
+        entityId: null,
+        decisionAuthority: "system",
+        input: {
+          count: batch.length,
+          titles: batch.map((item) => item.title),
+          reason: "batch_flush_failed",
+        } as Record<string, unknown>,
+        result: { requeued: true, error: (err as Error)?.message ?? String(err) } as Record<string, unknown>,
+        status: "error",
+      }),
+    ).catch((auditErr: unknown) => {
       logger.error(
         { auditErr, count: batch.length },
         "NotificationService: warning_batch_flush_failed audit row ALSO failed",
@@ -396,15 +402,20 @@ export function notify(opts: NotifyOptions): void {
     // so a failed critical delivery is reconstructable from audit_log (the one channel that survives a Discord
     // outage), turning "silent drop" into "surfaced gap the operator can find".
     if (opts.severity === "CRITICAL") {
-      insertAuditRow({
-        action: "notification.critical_delivery_failed",
-        entityType: "system",
-        entityId: null,
-        decisionAuthority: "system",
-        input: { title: opts.title, severity: opts.severity } as Record<string, unknown>,
-        result: { dropped: true, error: (err as Error)?.message ?? String(err) } as Record<string, unknown>,
-        status: "error",
-      }).catch((auditErr: unknown) =>
+      // Wrapped in Promise.resolve() so this fire-and-forget call can never throw
+      // synchronously into an unhandled rejection even if insertAuditRow's mock/impl
+      // returns a non-Promise value (observed under cross-test mock-reset timing).
+      Promise.resolve(
+        insertAuditRow({
+          action: "notification.critical_delivery_failed",
+          entityType: "system",
+          entityId: null,
+          decisionAuthority: "system",
+          input: { title: opts.title, severity: opts.severity } as Record<string, unknown>,
+          result: { dropped: true, error: (err as Error)?.message ?? String(err) } as Record<string, unknown>,
+          status: "error",
+        }),
+      ).catch((auditErr: unknown) =>
         logger.error({ auditErr, title: opts.title }, "NotificationService: critical_delivery_failed audit row ALSO failed"),
       );
     }

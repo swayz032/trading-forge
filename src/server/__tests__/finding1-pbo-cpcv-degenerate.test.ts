@@ -23,9 +23,13 @@
  *   remains Wave 30 per-path IS Sharpe tracking, which removes the exemption entirely.
  *
  *   CRITICAL DISTINCTION the gate must preserve:
- *     - Legacy null (pre-Wave-29, no reason) → PROCEED via pbo_unavailable_legacy
+ *     - Legacy null (pre-Wave-29, no reason) → BLOCK via pbo_unavailable_legacy
+ *       (hardened 2026-07-18 — matches BIF/WFE/parameter-drift's real 85e1500b
+ *       contract; a 2026-07-17 fix briefly flipped this to PROCEED on a false
+ *       premise about those siblings, corrected same-day it was found)
  *     - CPCV degenerate (reason set)         → BLOCK via pbo_cpcv_is_unavailable (DISTINCT)
- *     - Both are pbo_overall===null but route to different, traceable audit actions.
+ *     - Both are pbo_overall===null and now BOTH block, but route to different,
+ *       traceable audit actions/reasons.
  */
 
 import { describe, it, expect, vi, afterEach } from "vitest";
@@ -70,17 +74,17 @@ describe("evaluatePboGate — FINDING-1: CPCV degenerate path is EXEMPT (blocks,
   });
 });
 
-describe("evaluatePboGate — FINDING-1: legacy-null grandfather PRESERVED", () => {
-  it("PROCEEDs (pbo_unavailable_legacy) when pbo_overall=null and no degenerate reason", () => {
+describe("evaluatePboGate — FINDING-1: legacy-null BLOCKS (hardened 2026-07-18)", () => {
+  it("BLOCKs (pbo_unavailable_legacy) when pbo_overall=null and no degenerate reason", () => {
     const r = evaluatePboGate({ pbo_overall: null });
-    expect(r.ok).toBe(true);
+    expect(r.ok).toBe(false);
     expect(r.reason).toBe("lifecycle.pbo_unavailable_legacy");
     expect(r.legacyNull).toBe(true);
   });
 
-  it("PROCEEDs when pbo_overall is undefined (empty object)", () => {
+  it("BLOCKs when pbo_overall is undefined (empty object)", () => {
     const r = evaluatePboGate({});
-    expect(r.ok).toBe(true);
+    expect(r.ok).toBe(false);
     expect(r.legacyNull).toBe(true);
   });
 });

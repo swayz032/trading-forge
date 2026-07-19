@@ -15,19 +15,24 @@
  *   classification == "indeterminate"                         → WARN (allow)
  *   classification == "classifier_error"                     → BLOCK (G2b hardening 2026-06-22)
  *   classification == "regime_driven" OR "stable"            → pass, no action
- *   classification == null (legacy or no regime data)        → allow + audit
+ *   classification == null (legacy or no regime data)        → BLOCK + audit
+ *     (hardened 2026-07-12, 85e1500b, operator commit "Harden validation promotion
+ *     gates": unmeasured parameter drift is unmeasured overfitting risk, not a free
+ *     pass — this SUPERSEDES the original "allow + audit" grandfather design)
  *
- * CPCV-exempt path (hardening/phase-0, 2026-06-29 — C1 consumer side):
+ * CPCV-exempt path (hardening/phase-0, 2026-06-29 — C1 consumer side; hardened
+ * 2026-07-12 — 85e1500b):
  *   walk_forward.py emits a top-level `param_stability_status` key in its output:
  *     - "cpcv_not_applicable" on the CPCV path (no single optimization window to
  *       measure parameter stability across — the drift classifier is structurally N/A)
  *     - "computed" (or absent) on the plain-WF / purged-embargo path
  *   When param_stability_status == "cpcv_not_applicable" this gate returns a DISTINCT
- *   `cpcv_exempt` result (passed=true, auditAction="lifecycle.parameter_drift_cpcv_exempt")
+ *   `cpcv_exempt` result (passed=false, auditAction="lifecycle.parameter_drift_cpcv_exempt")
  *   — modeled EXACTLY on the wfe-gate.ts cpcv_exempt precedent. This makes the CPCV
  *   bypass VISIBLE + auditable rather than silently collapsing into `legacy_null`
  *   (indistinguishable from genuinely-old pre-Pass-B.1 backtests). Genuine legacy-null
  *   (status absent/undefined AND classification null) keeps emitting the legacy_null path.
+ *   Both BLOCK — an unmeasured CPCV-exempt drift is still unmeasured overfitting risk.
  *
  * Wave hardening 2026-06-22 (G2b): "classifier_error" is DISTINCT from
  * "indeterminate".  A classifier CRASH on a real (possibly overfit) strategy
@@ -69,7 +74,7 @@ export interface ParameterDriftGateResult {
     | "lifecycle.parameter_drift_indeterminate_warn"
     | "lifecycle.parameter_drift_overfit_low_confidence_warn"
     | "lifecycle.parameter_drift_unavailable"
-    | "lifecycle.parameter_drift_cpcv_exempt"             // CPCV mode: drift formula N/A; PASS with distinct audit
+    | "lifecycle.parameter_drift_cpcv_exempt"             // CPCV mode: drift formula N/A; BLOCK with distinct audit (85e1500b hardening)
     | null; // null = stable/regime_driven, no audit needed
 }
 
@@ -85,26 +90,29 @@ const OVERFIT_DRIFT_CONFIDENCE_THRESHOLD = 0.70;
  *                        May be null even when classification is non-null.
  * @param paramStabilityStatus  Top-level walk_forward output key `param_stability_status`.
  *                        When "cpcv_not_applicable" the gate returns a DISTINCT
- *                        `cpcv_exempt` result (passed=true, distinct audit) instead of
- *                        collapsing to legacy_null — mirrors the wfe-gate.ts cpcv_exempt
- *                        precedent so the CPCV bypass is visible + auditable. Any other
- *                        value (incl. "computed", undefined, null) falls through to the
- *                        normal classification logic below.
+ *                        `cpcv_exempt` result (passed=false, distinct audit — hardened
+ *                        2026-07-12, 85e1500b) instead of collapsing to legacy_null —
+ *                        mirrors the wfe-gate.ts cpcv_exempt precedent so the CPCV
+ *                        bypass is visible + auditable. Any other value (incl.
+ *                        "computed", undefined, null) falls through to the normal
+ *                        classification logic below.
  */
 export function evaluateParameterDriftGate(
   classification: string | null | undefined,
   confidence: number | null | undefined,
   paramStabilityStatus?: string | null,
 ): ParameterDriftGateResult {
-  // CPCV-exempt path (hardening/phase-0, 2026-06-29 — C1 consumer side):
+  // CPCV-exempt path (hardening/phase-0, 2026-06-29 — C1 consumer side; hardened to
+  // BLOCK 2026-07-12, 85e1500b):
   // walk_forward.py emits param_stability_status="cpcv_not_applicable" on the CPCV path.
   // In CPCV mode there is no single optimization window to measure parameter drift across,
   // so the 4-class regime-context classifier is structurally N/A. This is NOT a legacy
-  // null (the producer deliberately signals the exemption) — the gate PASSES with a
+  // null (the producer deliberately signals the exemption) — the gate BLOCKS with a
   // DISTINCT audit action so the exemption is queryable and distinguishable from a
-  // pre-Pass-B.1 backtest where the field was simply never written. Checked FIRST so
-  // it takes precedence over the null-classification legacy path (mirrors wfe-gate.ts,
-  // where cpcv_not_applicable is checked before the legacy-null fall-through).
+  // pre-Pass-B.1 backtest where the field was simply never written, while still refusing
+  // to promote on unmeasured drift risk. Checked FIRST so it takes precedence over the
+  // null-classification legacy path (mirrors wfe-gate.ts, where cpcv_not_applicable is
+  // checked before the legacy-null fall-through).
   //
   // DUAL-CONVENTION (cross-agent contract reconciliation, 2026-06-29): the CPCV-exempt
   // signal is honored whether the caller threads it as the dedicated 3rd `paramStabilityStatus`
@@ -117,7 +125,7 @@ export function evaluateParameterDriftGate(
   if (paramStabilityStatus === "cpcv_not_applicable" || classification === "cpcv_not_applicable") {
     return {
       status: "cpcv_exempt",
-      passed: true,
+      passed: false,
       classification: null,
       confidence: null,
       auditAction: "lifecycle.parameter_drift_cpcv_exempt",
@@ -128,7 +136,7 @@ export function evaluateParameterDriftGate(
   if (classification == null) {
     return {
       status: "legacy_null",
-      passed: true,
+      passed: false,
       classification: null,
       confidence: null,
       auditAction: "lifecycle.parameter_drift_unavailable",
