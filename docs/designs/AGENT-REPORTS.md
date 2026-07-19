@@ -4,6 +4,21 @@
 
 ---
 
+## AR-053 · 2026-07-19 · Caught up on R-055→R-059 (monitor missed them — root-caused again, restarted + disk-check backstop). They heavily refine the compliance audit: GOVERNING cap values come from the operator's live-page screenshot ($4K/$6K/$10K standard · $6K/$8K/$12K consistency), NOT my agent's aggregator "$2K/$3K." Full ratify packet re-scoped + staged. Good that I hadn't implemented — I'd have written the wrong caps.
+
+**Monitor failed a 3rd time (my miss, you flagged it).** The persistent Monitor caught R-053/R-054 then died silently; R-055–059 landed unseen. Restarted at baseline R-059 — but the real fix is procedural: I now read ADVISOR-RULINGS.md directly at the top of every turn, treating the Monitor as convenience, not guarantee. Backlog fully absorbed below.
+
+**The 5 rulings refine R-054 order 1 (my in-flight compliance packet) — re-scoped, packet staged at `docs/designs/h1-r054-compliance-refresh-ratify-2026-07-19.md`:**
+- **R-056/R-057 — GOVERNING VALUES corrected off primary source:** my research agent found "$2K/$3K caps cut 2026-04-28" from AGGREGATOR articles; your live-page screenshot governs and shows RAISES — Standard $4K/$6K/$10K, Consistency $6K/$8K/$12K, Combine $85/$129/$199. The $2K/$3K applies to No-Activation-Fee variants only (reconciled product-by-product). The agent DID two-path-flag the disagreement; your primary source resolves it. My config's current $2K/$3K base is stale → corrected to the governing values.
+- **R-059 — scaling doctrine:** confirms my research finding — the `SCALING_PLANS` 50K→100K@$5K tiers are FICTION (Topstep: "size locked to the Combine passed"). Removed/corrected; real model = within-account micro pyramid (9/9/18→+3/tier→50 ceiling) + horizontal ~5 accounts. Class-sweep ordered — I verified SCALING_PLANS is unconsumed in Py; sweeping TS/dashboards/projections/survival in the packet.
+- **R-058.2 — method re-ordered:** files lead, web confirms. The audit reads in-repo DLL/rules docs FIRST (`prop-firm-scaling-2026.md`, `risk-kill-switch-sizing-2026.md`), then verifies against live pages. Adjusted.
+- **R-055.0/R-057.2 — DLL-toggle = MANDATORY CAPTURE:** document the add-a-DLL→higher-payout setting + its linkage to the Consistency election from primary sources; verify our internal DLL ladder (reduce@60/halt@67/force-close@95) sits strictly inside Topstep's terms. In the packet.
+- **STAGED, explicitly NOT now:** the consistency-tracker retune (50%→40%, DILUTE-DON'T-TAPER per R-057.3/R-058.1) fires only AT the Phase-3.5 CONSISTENCY election, not before; the LFA 20/80 reserve (R-054) documented for the live stage; Phase-plan items (R-055.1-5) and reader-succession (R-054.3) are their own packets/triggers.
+
+**Also captured, no action now:** R-055's spearhead-lane/pre-positioned-last-mile/Phase-3-conveyor/Phase-3.5/hard-phase-gates are campaign-plan structure — drafted into the plan when convenient (R-055.5 "ratified in passing").
+
+Next: dispatch a scope-locked implementer on the staged packet (files-lead, governing values) → independent grade → `check:2026-compliance` green. Battery still running in parallel. The 77 sealed.
+
 ## AR-052 · 2026-07-19 · R-054 received — 4 orders. Order 1 (compliance-refresh, HIGH) STARTED: primary-source research dispatched (2-path, the ~8 named changes), compliance architecture mapped, epoch-safe landing planned. Orders 2–4 recorded/staged. This is the first R-05x needing a real build, not an ack.
 
 **Order 1 — COMPLIANCE-REFRESH AUDIT (HIGH, my packet) — IN PROGRESS:**
