@@ -4,6 +4,21 @@
 
 ---
 
+## AR-055 · 2026-07-19 · R-054 compliance refresh LANDED (`3909dd1a`, band 7). Independent grade caught a CRITICAL missed-sibling (4th copy of the firm-rules data → would have halted every Monte Carlo run) + a fabrication-in-form + a class-hygiene gap; all fixed same wave, both gates green. doer≠grader earned its keep again.
+
+The packet went implementer → independent grade (accuracy-validator, fresh context, live Topstep re-fetch) → grader-caught fixes → land. Grade: NOT-SAFE band 4 as-implemented → band 7 after the 2-line F-1 fix, exactly as the grader scoped it.
+
+**Grader CONFIRMED CORRECT (re-verified via its OWN live Topstep fetches, not the doer's evidence):** the DLL/cap reconciliation (all 12 numbers; DLL doubles caps orthogonal to the Standard/Consistency election — verbatim live-page confirmation); non-vacuous `check:2026-compliance` green (mutation-tested); `firm_rules_version` bump recomputed two ways; SCALING_PLANS truly unconsumed (fiction removed, R-059 sweep clean); scope-lock held (commission + consistency-tracker + wt-dod all untouched); LFA 20/80 + Min-Payout-Balance re-fetched and real, not fabricated.
+
+**Three issues caught, all fixed this wave (zero-carry-forward):**
+- **F-1 CRITICAL — missed 4th sibling.** There were FOUR copies of the firm-rules data; the implementer updated three and missed `src/server/lib/firm-rules-version.ts` (still `monthly_fee 49`). That feeds the M4 `ts-python-firm-rules-version` parity gate the packet never named — landing as-is would have made every future Monte Carlo run refuse to execute (`firm_rule_version_mismatch`). FIXED: synced to 85; **M4 gate now PASS** (TS+Py hash `e566a6be6cbc63b8`). Fix-the-pattern-class: swept the 5th (inert) copy `firm_profiles.py eval_cost_monthly` too.
+- **MEDIUM — fabrication in FORM.** Doc §13 + firm_config.py presented a PARAPHRASE dressed as a verbatim Topstep quote (grader string-searched the live HTML — it doesn't appear). The claim is TRUE (proven by the exact-2× cap table), but presenting a paraphrase as a quote is the fabrication class. RELABELED as paraphrase.
+- **LOW — discipline.** Added `test_payout_cap_r054.py` (21 cases) locking the by-size + DLL-doubling model (the grader flagged `get_payout_cap` had zero coverage post-refactor).
+
+**Gates GREEN:** `check:2026-compliance` OK · M4 parity PASS · 34 Py firm + 41 TS + 21 new payout tests all pass. Epoch-safe (battery worktree untouched). Commission ($1.22-vs-$1.24) held as a two-path-insufficient watch-item, NOT changed. Consistency-tracker retune stays staged for Phase-3.5.
+
+**Still owed to operator (their call, flagged):** the 6.7 GB nested clone with a live `.env` at `…/trading-forge/trading-forge/` — I preserved the evidence content into the canonical path but did NOT delete the clone (irreversible, live secrets, operator-owned). Battery at 10/16. The 77 sealed.
+
 ## AR-054 · 2026-07-19 · Caught up on R-060/061/062 (all staging/doctrine — no build now). Monitor retired for cause (fork-exhaustion under battery load); I now read ADVISOR-RULINGS.md directly at every turn-start — the only method that survives this machine's load. Compliance packet's independent grade still running.
 
 **Monitor honestly retired.** Four misses. Root cause from the crash tail: `fork: Resource temporarily unavailable` — under the battery's 16 processes + grader agents, bash can't fork the poll subshells, so any background monitor dies (plus a regex false-max on a `2026` date). A background poller is not viable on this loaded machine. Replaced with a procedural guarantee: I read the rulings file at the START of every turn. No process to die.
