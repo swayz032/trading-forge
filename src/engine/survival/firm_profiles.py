@@ -42,8 +42,8 @@ FIRM_PROFILES: dict[str, dict] = {
                 # TopstepX scaling plan ramps up to this max as balance grows.
                 "max_contracts": {"MES": 50, "MNQ": 50, "MCL": 50},
                 "payout_split": 0.90,
-                "eval_cost_monthly": 49,
-                "commission_per_side": 0.37,
+                "eval_cost_monthly": 85,  # R-054 fix-the-class: Combine fee $49→$85 (5th sibling copy; inert survival field, synced for correctness)
+                "commission_per_side": 0.37,  # WATCH-ITEM: $1.22-vs-$1.24 RT two-path-insufficient; commission scope-locked, not changed here
             },
         },
     },

@@ -66,10 +66,11 @@ export interface FirmAccountConfig {
   allowsCloudFailover?: boolean;               // Topstep: false (VPS/VPN/remote banned = no cloud failover)
   multiAccountWithinUserAllowed?: boolean;     // Topstep: true
   copyTradesWithinUserAllowed?: boolean;       // Topstep: true
-  // ── Topstep 2026-06-02 voluntary-DLL payout cap promo ────────────────────
-  // XFA payout caps indexed by path: { standard: {base, withDll}, consistency: {base, withDll} }
-  // null for each path = uncapped (LFA). MFFU carries no such field (flat $2K cap).
-  xfaPayoutCaps?: Record<string, { base: number; withDll: number }>;
+  // ── Topstep XFA payout caps (2026-07-19 compliance refresh) ──────────────
+  // Indexed by account size → election path → {base, withDll}. `base` = voluntary
+  // DLL toggle NOT added; `withDll` = added (governing operator caps). LFA is
+  // uncapped (getPayoutCap returns null). MFFU carries no such field (flat $2K).
+  xfaPayoutCaps?: Record<string, Record<string, { base: number; withDll: number }>>;
 }
 
 export interface FirmConfig {
@@ -139,7 +140,9 @@ export const FIRMS: Record<string, FirmConfig> = {
     macro_blackout_mode: "advisory",
     accountTypes: {
       "50k": {
-        accountSize: 50_000, monthlyFee: 49, activationFee: 0, ongoingMonthlyFee: 0,
+        // 2026-07-19 compliance refresh: Combine monthly fee $49 -> $85 (operator
+        // live-page primary source; 100K=$129, 150K=$199 — see canonical doc).
+        accountSize: 50_000, monthlyFee: 85, activationFee: 0, ongoingMonthlyFee: 0,
         profitTarget: 3000, maxDrawdown: 2000, maxContracts: 50, trailing: "eod",
         payoutSplit: 0.90, minPayoutDays: 5, consistencyRule: 0.50, // Python: "topstep_50pct" — 50% best-day cap at Combine pass-request
         dailyLossLimit: 1000, overnightOk: false, weekendOk: false, commissionPerSide: 0.37,
@@ -154,12 +157,17 @@ export const FIRMS: Record<string, FirmConfig> = {
         allowsCloudFailover: false,
         multiAccountWithinUserAllowed: true,
         copyTradesWithinUserAllowed: true,
-        // 2026-06-02 voluntary-DLL promo: opting into DLL at Combine checkout doubles
-        // the XFA per-request payout cap. LFA is uncapped (modeled by getPayoutCap returning null).
-        // IMPORTANT: conservative default for callers is dll_opted_in=false → base cap.
+        // XFA per-request payout caps by account size → election → {base, withDll}.
+        // withDll = voluntary Daily Loss Limit added at Combine checkout (doubles the
+        // base cap; = operator's GOVERNING live-page caps). base = DLL toggle NOT added
+        // (Topstep help-center Payout Policy, primary 2026-07-19). The DLL toggle is
+        // SEPARATE from the Consistency election (not a prerequisite). LFA is uncapped
+        // (getPayoutCap returns null). Conservative default for callers: dll_opted_in
+        // = false → base cap. Keep this field LAST in the 50k block (lint block-regex).
         xfaPayoutCaps: {
-          standard:    { base: 2000, withDll: 4000 },
-          consistency: { base: 3000, withDll: 6000 },
+          "50k":  { standard: { base: 2000, withDll: 4000 },  consistency: { base: 3000, withDll: 6000 } },
+          "100k": { standard: { base: 3000, withDll: 6000 },  consistency: { base: 4000, withDll: 8000 } },
+          "150k": { standard: { base: 5000, withDll: 10000 }, consistency: { base: 6000, withDll: 12000 } },
         },
       },
     },
@@ -508,22 +516,29 @@ export const TOPSTEPX_API_MONTHLY_FEE_USD = 14.50;
 /** Promo code for TopstepX API subscription discount. */
 export const TOPSTEPX_PROMO_CODE = "topstep";
 
-// ─── Payout Cap Model (2026-06-02 Topstep voluntary-DLL promo) ───────────────
+// ─── Payout Cap Model (2026-07-19 compliance refresh — R-056/R-057/R-058.2) ──
 //
-// Topstep XFA (Express Funded Account) payout caps:
-//   Standard Path:    base $2,000 / with voluntary-DLL $4,000
-//   Consistency Path: base $3,000 / with voluntary-DLL $6,000
+// Topstep XFA (Express Funded Account) per-request payout election — TWO options,
+// caps by account size, each with a base (no DLL toggle) and withDll (governing).
+//   Standard:    base $2,000/$3,000/$5,000  · withDll $4,000/$6,000/$10,000
+//   Consistency: base $3,000/$4,000/$6,000  · withDll $6,000/$8,000/$12,000
+// GOVERNING = the withDll caps (operator opted into the voluntary DLL → live page).
+// base caps = Topstep help-center Payout Policy (primary, fetched 2026-07-19).
+// The voluntary Daily Loss Limit is a SEPARATE checkout add-on (NOT a prerequisite
+// for the Consistency election); it doubles the base cap. Per-request withdrawal is
+// additionally capped at 50% of account balance (applied downstream, not here).
 //
 // Live Funded Account (LFA) is uncapped regardless of DLL opt-in.
 // MFFU payout cap: $2,000 flat — no promo, dll_opted_in is ignored.
-//
 // Conservative contract: default dll_opted_in=false → base cap.
-// Never assume the doubled cap unless dll_opted_in is explicitly true.
 
-/** Topstep XFA payout caps per path. withDll = cap after voluntary-DLL opt-in. */
-export const TOPSTEP_XFA_PAYOUT_CAPS: Readonly<Record<string, { base: number; withDll: number }>> = {
-  standard:    { base: 2000, withDll: 4000 },
-  consistency: { base: 3000, withDll: 6000 },
+/** Topstep XFA payout caps: size → election → {base, withDll}. withDll = voluntary DLL added. */
+export const TOPSTEP_XFA_PAYOUT_CAPS: Readonly<
+  Record<string, Record<string, { base: number; withDll: number }>>
+> = {
+  "50k":  { standard: { base: 2000, withDll: 4000 },  consistency: { base: 3000, withDll: 6000 } },
+  "100k": { standard: { base: 3000, withDll: 6000 },  consistency: { base: 4000, withDll: 8000 } },
+  "150k": { standard: { base: 5000, withDll: 10000 }, consistency: { base: 6000, withDll: 12000 } },
 } as const;
 
 /**
@@ -535,21 +550,57 @@ export const TOPSTEP_LFA_PAYOUT_CAP: null = null;
 /** MFFU flat per-request payout cap. No voluntary-DLL promo applies. */
 export const MFFU_PAYOUT_CAP = 2000;
 
+/** Minimum withdrawal per payout request (Topstep help-center, 2026-07-19). */
+export const TOPSTEP_MIN_PAYOUT_USD = 125;
+
+/**
+ * "Minimum Payout Balance" — SECOND payout condition, effective 2025-12-30.
+ * Every payout AFTER the first requires BOTH the path's winning-days count AND
+ * the account remaining net-profitable since the last payout. Documentation
+ * constant — not a signal-time gate. See docs/prop-firm-rules-2026-topstep.md §12.
+ */
+export const TOPSTEP_MIN_PAYOUT_BALANCE_RULE = {
+  effectiveDate: "2025-12-30",
+  appliesTo: "every payout after the first",
+  conditions: "winning-days requirement AND net-profitable-since-last-payout",
+} as const;
+
+/**
+ * LFA 20%/80% reserve system — effective 2026-02-10, Live-Funded stage.
+ * A fresh LFA starts 20% tradeable / 80% reserve; reserve unlocks in 4×25%
+ * increments, each gated on net-profit-since-last-unlock ($3K/$6K/$9K by size).
+ * ⚠ DRAWDOWN_ROOM implication: a "$50K LFA" is a $10K tradeable base on day one —
+ * sizing that assumes the full balance oversizes a freshly-live account. Pre-live
+ * (bot is Combine/XFA stage today) — represented, no live default changed.
+ * Source: Topstep Live Funded Account Parameters + Rules (primary, 2026-07-19).
+ */
+export const TOPSTEP_LFA_RESERVE = {
+  effectiveDate: "2026-02-10",
+  tradeablePctAtActivation: 0.20,
+  reservePctAtActivation: 0.80,
+  unlockIncrements: 4,
+  unlockPctEach: 0.25,
+  netProfitPerUnlockBySize: { "50k": 3000, "100k": 6000, "150k": 9000 } as Record<string, number>,
+  unlockReviewCadence: "at most once per calendar week",
+  minStartingBalance: 10000,
+} as const;
+
 /**
  * Return the maximum payout per withdrawal request for a given firm/stage/path combination.
  *
- * Topstep XFA: doubles when dll_opted_in=true (2026-06-02 voluntary-DLL promo).
+ * Topstep XFA: caps by size + election; withDll (governing) when dllOptedIn=true.
  * Topstep LFA: uncapped — returns null.
- * MFFU: always $2,000 regardless of dll_opted_in (promo is Topstep-only).
+ * MFFU: always $2,000 regardless of dllOptedIn (promo is Topstep-only).
  *
- * Conservative default: dll_opted_in=false → base cap.
- * Never returns the doubled cap unless dll_opted_in is explicitly true.
+ * Conservative default: dllOptedIn=false → base cap.
  *
  * @param firmId       "topstep" | "mffu"
  * @param accountStage "xfa" | "lfa"
  * @param payoutPath   "standard" | "consistency"
- * @param dllOptedIn   Whether the account elected the voluntary DLL at checkout.
- *                     Default false = base cap (safe conservative default).
+ * @param dllOptedIn   Whether the account added the voluntary DLL at checkout.
+ *                     Default false = base cap. The operator's GOVERNING live-page
+ *                     caps correspond to dllOptedIn=true.
+ * @param accountSize  "50k" | "100k" | "150k" (Topstep XFA). Default "50k".
  * @returns            Cap in USD, or null for "uncapped".
  */
 export function getPayoutCap(
@@ -557,16 +608,23 @@ export function getPayoutCap(
   accountStage: "xfa" | "lfa",
   payoutPath: "standard" | "consistency" = "standard",
   dllOptedIn: boolean = false,
+  accountSize: "50k" | "100k" | "150k" = "50k",
 ): number | null {
   const firm = firmId.toLowerCase();
 
   if (firm === "topstep") {
     if (accountStage === "lfa") return TOPSTEP_LFA_PAYOUT_CAP; // null — uncapped
     // XFA
-    const caps = TOPSTEP_XFA_PAYOUT_CAPS[payoutPath];
+    const sizeCaps = TOPSTEP_XFA_PAYOUT_CAPS[accountSize];
+    if (!sizeCaps) {
+      throw new Error(
+        `Unknown accountSize '${accountSize}' for Topstep XFA. Valid: ${Object.keys(TOPSTEP_XFA_PAYOUT_CAPS).join(", ")}`,
+      );
+    }
+    const caps = sizeCaps[payoutPath];
     if (!caps) {
       throw new Error(
-        `Unknown payoutPath '${payoutPath}' for Topstep XFA. Valid: ${Object.keys(TOPSTEP_XFA_PAYOUT_CAPS).join(", ")}`,
+        `Unknown payoutPath '${payoutPath}' for Topstep XFA. Valid: ${Object.keys(sizeCaps).join(", ")}`,
       );
     }
     return dllOptedIn ? caps.withDll : caps.base;

@@ -377,3 +377,154 @@ The rules that directly govern bot behavior (max contracts, DLL enforcement, ove
 - **Triangulation threshold:** 3 independent sources per recommendation
 - **Code files audited:** firm_config.py, prop_compliance.py, docs/prop-firm-rules-2026-topstep.md, docs/prop-firm-rules-2026-mffu.md
 - **Next recommended review:** 2026-09-01 (quarterly) or upon Topstep/MFFU rule change announcement
+
+---
+
+> **Relocated 2026-07-19** from the mis-written doubled path
+> `trading-forge/trading-forge/docs/institutional-evidence/` into this canonical
+> location. Existing June-22 content above is unchanged; the R-054 compliance-
+> refresh pass below is appended verbatim.
+
+# COMPLIANCE-REFRESH PASS — 2026-07-19 (advisor ruling R-054 order 1)
+
+## Audit Parameters
+
+- **Trigger:** Advisor ruling R-054 order 1 — re-derive CURRENT Topstep $50K Combine + Funded rules against 5 specifically-named alleged 2025-2026 changes, ≥2 independent sources per load-bearing rule, disagreement flagged not averaged.
+- **Scope:** Topstep $50K Combine + Express Funded Account (XFA) + Live Funded Account (LFA) only. MFFU out of scope this pass.
+- **Primary-source-first methodology:** Topstep's own `help.topstep.com` and `www.topstep.com` pages fetched directly via WebFetch FIRST, then corroborated with ≥1 independent blog-general secondary source, per R-054's "Topstep's own site first" instruction.
+- **Frozen values under test (operator-stated, last verified 2026-05-19):** profit_target=$3,000; max_drawdown(trailing)=$2,000 EOD; payout_split=0.90; min_payout_days=5; activation_fee=$0 (No-Activation-Fee Combine); consistency_rule=50% best-day cap at pass-request; contract cap=5 minis/50 micros; scaling=50K→100K@$5K profit, 100K→150K@$10K profit.
+- **Sources dropped for staleness:** 3 (a 2024-dated Reddit thread on payout caps, an undated PDF mirror of old Topstep rules, and one Quora answer with no visible date — all rejected per the ≥2025-01-01 hard rule).
+
+## Sources (≥2025 only, this pass)
+
+| Date | Source | Tier | Citation | Key claim |
+|---|---|---|---|---|
+| (current, fetched 2026-07-19) | Topstep Help Center — Payout Policy | **primary (official)** | https://help.topstep.com/en/articles/8284233-topstep-payout-policy | $50K payout caps: Standard $2,000 / Consistency $3,000; 90/10 split; "100% of first $10,000" grandfather note explicitly scoped to pre-Jan-12-2026 joiners |
+| (current, fetched 2026-07-19) | Topstep Help Center — Live Funded Account Parameters | **primary (official)** | https://help.topstep.com/en/articles/10657969-live-funded-account-parameters | LFA: 20% tradeable / 80% reserve at activation; reserve unlocks in 4×25% increments; $50K LFA unlock threshold = $3,000 net profit per increment |
+| 2026-07-01 | topstep.com — Live Funded Account Rules | **primary (official)** | https://www.topstep.com/live-funded-account-rules | Confirms 20%/80% + 25%-increment unlock mechanic; 90% of Starting Balance + net profit payout ceiling; 30 Benchmark Days for 100% payout access |
+| (current, fetched 2026-07-19) | Topstep Help Center — Trading Combine Parameters | **primary (official)** | https://help.topstep.com/en/articles/8284197-trading-combine-parameters | $50K/100K/150K contract caps (5/10/15 minis); 50% consistency target language verbatim; "You can pass in as few as two days" (confirms NO min trading days) |
+| (current, fetched 2026-07-19) | Topstep Help Center — Express Funded Account Parameters | **primary (official)** | https://help.topstep.com/en/articles/8284215-express-funded-account-parameters | **"Your size matches the Trading Combine you passed and is locked before and after activation"** — account size does NOT grow via profit; up to 5 active XFAs at once |
+| (current, fetched 2026-07-19) | Topstep Help Center — TopstepX Commissions and Fees | **primary (official)** | https://help.topstep.com/en/articles/8284213-topstepx-commissions-and-fees | MES RT = $1.22, MNQ RT = $1.22, MCL RT = $1.52 |
+| (current, fetched 2026-07-19) | Topstep Help Center — Dynamic Live Risk Expansion | **primary (official)** | https://help.topstep.com/en/articles/11748475-dynamic-live-risk-expansion | LFA-stage tiered DLL/position-size expansion at $20K/$50K/$100K/$200K/$550K/$1M cumulative-profit tiers, 10 Active Trading Days per tier — this is the ONLY real "scaling" mechanism Topstep publishes, and it is LFA-only, not Combine/XFA account-size growth |
+| 2026-04-01 | GlobeNewswire (Topstep official press release, syndicated to Yahoo Finance + Business Insider) | **corporate-eng (official press release)** | https://www.globenewswire.com/news-release/2026/04/01/3266805/... | Topstep acquired The Futures Desk (TFD) April 1, 2026; TFD tech integrating into TopstepX; "does not currently change Topstep's rule framework" |
+| 2026-05-12 | Tradecovex — "Topstep Rule Changes 2026 — Every Update" | blog-general | https://tradecovex.com/guides/topstep-rule-changes-2026 | Full chronological timeline: Nov 25 2025 (No-Activation-Fee Combines launched), Dec 30 2025 (two-rule payout structure / Minimum Payout Balance added), Jan 12 2026 (90/10 split), Feb 5 2026 (XFA Standard/Consistency split), Feb 10 2026 (LFA 20/80 reserve), Apr 1 2026 (TFD), Apr 28 2026 (payout cap cut) |
+| 2026-05-06 | Tradecovex — "Topstep Payout Rules 2026 [Updated April 28]" | blog-general | https://tradecovex.com/guides/topstep-payout-rules-2026 | "90/10 profit split from dollar one for accounts created after January 12, 2026"; caps cut is scoped to **No Activation Fee Combines specifically** |
+| 2026-04-28 | PropTradingVibes — "Topstep Trading Combine Rules" | blog-general | https://proptradingvibes.com/blog/topstep-trading-combine-rules | $50K Combine = 5 minis/50 micros; corroborates contract caps |
+| 2026-04-28 | PropTradingVibes — "Topstep Rules 2026 overview" | blog-general | https://proptradingvibes.com/blog/topstep-rules-overview | "90/10 from $1 for current sign-ups (100%-first-$10K grandfathered pre-Jan-12-2026)"; "20% tradable / 80% reserve, $15K unlocks per $6K profit milestone" (150K tier example) |
+| 2026-04-28 | PropTradingVibes — "Topstep Consistency Rule" | blog-general | https://proptradingvibes.com/blog/topstep-consistency-rule | "$50K Combine: $3,000 profit target means biggest day capped at $1,500" (50% rule, worked example) |
+| 2026-05-28 | PropTradingVibes — "Topstep Review 2026" | blog-general | https://proptradingvibes.com/prop-firms/topstep | Confirms TFD acquisition context + 20%/80% reserve + $15K-per-$6K-milestone example |
+| 2026-06-18 | Lune Trading — "Topstep Payouts Guide 2026" | blog-general | https://lunefi.com/blog/topstep-payouts | "Payout caps start at $2,000 to $6,000 per request based on account size before traders advance to uncapped Live Funded Accounts"; corroborates grandfather clause |
+| 2026-06-29 | Tradetanto — "Topstep Rules: Combine, Funded, and Live Explained" | blog-general | https://tradetanto.com/learn/topstep-rules | MLL $2,000/$3,000/$4,500 for 50K/100K/150K (confirms $2,000 unchanged, resolves a stray "$2,500" title-snippet as noise) |
+| 2026-06-09 | Tradecovex — "How to Pass Topstep Combine 2026" | blog-general | https://tradecovex.com/guides/pass-topstep-combine | Grandfather clause explicit: "split applies per trader, not per account" |
+| 2026-03-05 / 2025-11-10 (Exa-verified) | h2tfunding — "Topstep Scaling Plan Explained" | blog-general | https://h2tfunding.com/topstep-scaling-plan/ | "In the Trading Combine, you need to hit the profit target for the 100K account" — i.e., a SEPARATE Combine pass is required for a bigger account, corroborating the primary-source "locked size" finding |
+| 2026-04-28 (No formal restriction, 3+ corroborating) | PropTradingVibes ×2 + traderssecondbrain.com + h2tfunding | blog-general | https://proptradingvibes.com/blog/topstep-news-trading-policy, https://traderssecondbrain.com/guides/futures-prop-firms-news-trading | "Topstep does not publish a hard news-trading restriction in its Help Center as of April 2026" — no FOMC/CPI/NFP blackout window exists (matches operator's own §13 doctrine on Topstep news handling — REDUCE not BLOCK) |
+| 2026-05-08 (CONTRADICTS primary — flagged, not used) | Futureshive — "TopStep Scaling Plan Explained 2026: How to Grow Funded Account Size" | blog-general (LOW CONFIDENCE — see disagreement note below) | https://www.futureshive.com/blog/topstep-scaling-plan-explained | Claims account auto-upgrades 50K→100K→150K→**250K** via "3-5 successful payouts"; **Topstep does not offer a $250K Combine size anywhere else in the corpus** — this source is almost certainly wrong/conflating a different firm's structure or a deprecated mechanism |
+
+## Sub-Claim Verdicts (R-054's 5 named questions)
+
+### 1. Per-payout caps cut to $2K/$3K on No-Activation-Fee Combines (from $5K/$6K) — CONFIRMED, with a scope nuance
+
+**Verdict: TRUE.** $50K No-Activation-Fee Combine → XFA per-payout caps: Standard Path $2,000 / Consistency Path $3,000, effective **April 28, 2026**, down from $5,000 (first payout) / $6,000 (subsequent) pre-April-28. Confirmed by the Topstep primary Payout Policy page (current live table shows $2,000/$3,000 for $50K with no path-qualifier) + Tradecovex ×2 (independent articles, both dated) + PropTradingVibes.
+
+**Scope nuance (flagged, not resolved with full confidence):** Tradecovex's May 6 2026 article explicitly scopes the cut to "**No Activation Fee** Combines" specifically, implying the original Standard (activation-fee, $149) Path may have RETAINED the older $5K/$6K caps. The current primary Topstep help-center table I fetched (2026-07-19) shows a single unified $2,000/$3,000 figure with no Standard-vs-No-Activation-Fee split visible in the extracted text — this could mean the cut was later extended to both paths, or it could mean the table shown is specifically the No-Activation-Fee table and a separate Standard-Path table exists elsewhere on the page that WebFetch's summarizer didn't surface. **Operator note: since your frozen config already specifies "No-Activation-Fee Combine" explicitly, the $2,000/$3,000 figures apply directly to your setup — no ambiguity for your specific path.** Existing pre-April-28 accounts keep their original (higher) caps per Tradecovex's "Existing accounts retain their original payout caps even after rebill or Reset Credit" quote.
+
+**Corroboration count:** 4 independent sources (1 primary + 3 blog-general), 0 disagreement on the $2K/$3K number itself.
+
+### 2. 90/10 split "from dollar one" for accounts opened post-2026-01-12 — CONFIRMED, high confidence
+
+**Verdict: TRUE**, exactly as stated in the ruling. New sign-ups (accounts created on or after January 12, 2026) get a flat 90% trader / 10% Topstep split starting on their very first dollar of profit — no tiered ramp. Accounts that pre-date January 12, 2026 are grandfathered onto the OLDER structure: 100% of the first $10,000 in lifetime profits (per trader, not per account — opening a new account does not reset this), THEN 90/10 thereafter.
+
+**Corroboration count: 7 independent sources**, including the Topstep primary Payout Policy page itself (direct quote via Brave snippet: "⚠️ Note for traders who joined the new Topstep dashboard before January 12, 2026: You receive 100% of your first $10,000 in lifetime profits") + Tradecovex ×3 + PropTradingVibes ×2 + Lune. Zero disagreement across all 7 once the primary-source wording was pinned down (an earlier WebFetch summarization pass on the same primary page had inverted which cohort the grandfather applies to — resolved by re-querying and cross-checking the raw Brave snippet, which quotes the page verbatim).
+
+**Operator implication:** your frozen `payout_split: 0.90` is correct IF your account was opened on/after 2026-01-12. If your account predates that, you are still in the 100%-first-$10K grandfather window and 0.90 is currently UNDER-crediting early payouts in any sizing/payout math that assumes flat 90/10 from day one.
+
+### 3. Funded accounts post-2026-02-10: 20% tradeable / 80% reserve, 25%-milestone unlock — CONFIRMED, exact mechanics obtained
+
+**Verdict: TRUE**, but this applies to the **Live Funded Account (LFA)** — the THIRD stage (real money, after Combine → XFA → LFA), not the XFA (simulated funded, what "Express Funded Account" means and what Trading Forge's `firm_config.py` currently models as "funded"). This is a critical scope distinction the ruling's phrasing ("Funded accounts") could conflate.
+
+**Exact mechanics (primary-sourced, effective February 10, 2026, applies only to LFAs created on/after that date — pre-Feb-10 LFAs keep their "original framework"):**
+- 20% of the LFA's starting balance is tradeable immediately upon Live activation; 80% is held in Reserve.
+- Reserve releases in **4 equal increments of 25% each** (so 4 unlocks total = 100% access).
+- Each unlock requires hitting a **net profit target since the last unlock** (not cumulative from zero) — $3,000 per unlock on the $50K LFA tier, $6,000 on the $100K tier, $9,000 on the $150K tier (mirrors the Combine profit-target ladder).
+- Unlocks are reviewed **weekly (every Monday morning, per one primary source; "no more than once per calendar week" per the topstep.com page)**, with approved deposits landing within 1-2 business days.
+- Minimum starting LFA balance is $10,000 (Topstep supplements smaller pools if the average of the trader's XFAs rounds below that).
+- A Daily Loss Limit ladder is layered on top, tied to tradeable balance tiers (not the same axis as the reserve unlock): $10K-or-below tradeable balance → $2,000 DLL / 5-contract max; $5K-or-below → $1,000 DLL / 3-contract max.
+- Falling below $1,000 tradeable balance triggers automatic liquidation and account closure at day's end.
+
+**Corroboration count: 4 independent sources** (2 primary Topstep pages — Live Funded Account Parameters + Live Funded Account Rules — + PropTradingVibes ×2 with a worked $150K-tier example showing "$15K unlocks per $6,000 profit milestone" which is internally consistent with the $9K-per-milestone figure scaled differently, i.e. the $15K figure appears to be 25% of $60K notional or a distinct example — flagged as a minor unresolved arithmetic reconciliation, not a contradiction of the core 20/80/4×25% mechanic). One low-tier source (propfirmescape.com) claimed "30% milestones" instead of 25% — REJECTED as an outlier against 2 primary + 2 corroborating secondary sources all agreeing on 25%.
+
+**Operator implication — this is the single most consequential finding of this audit for drawdown-room sizing:** if/when the operator's Topstep account progresses from XFA to LFA (real money, third stage), a freshly-activated LFA has only 20% of its nominal balance actually tradeable. A "$50K LFA" is NOT immediately a $50K risk base — it starts as a $10K tradeable base with $40K locked, unlocking in four $3,000-net-profit-gated $12,500 tranches. Any sizing math (`DRAWDOWN_ROOM_RISK_PCT`, contract-count caps) that assumes full LFA balance is available from day one will oversize a freshly-live account. **Currently out of scope for Trading Forge's live sizing code because the bot has not yet reached the LFA stage** (per CLAUDE.md, the account today is Combine/XFA-stage) — but this is a load-bearing gap to close in `firm_config.py` BEFORE the account goes live-funded, not after.
+
+### 4. TFD acquisition into TopstepX — CONFIRMED, no rule impact
+
+**Verdict: TRUE, but non-load-bearing for compliance math.** Topstep officially acquired The Futures Desk (TFD), a smaller futures prop firm, on **April 1, 2026** (official press release via GlobeNewswire, syndicated to Yahoo Finance and Business Insider — corporate-eng tier, as authoritative as a source gets short of Topstep's own site). TFD co-founders (Josh Schwartzberg, Brian Ford) joined Topstep's team; TFD's technology is being integrated into the TopstepX platform. The press release explicitly states: "the acquisition does not currently change Topstep's rule framework." No corroborating source found any downstream rule/fee/platform change attributable to the TFD deal as of this audit date (2026-07-19). **No action needed in `firm_config.py` or `prop_compliance.py`.**
+
+### 5. Other Topstep rule changes Nov-2025 → Apr-2026 — 2 additional changes found, not previously documented
+
+Beyond the 4 named changes above, the Tradecovex chronological timeline (corroborated piecemeal by other sources) surfaces two more:
+
+- **November 25, 2025 — No Activation Fee Combines launched.** A second pricing path introduced alongside the original Standard Path: higher recurring monthly subscription, but $0 activation fee after passing (vs Standard Path's $149 one-time activation fee). This is the path the operator's frozen `activation_fee: $0` value already correctly targets — good, no drift here, just now dated precisely.
+- **December 30, 2025 — Two-rule payout structure ("Minimum Payout Balance") added.** Every payout AFTER the first now requires TWO conditions instead of one: (1) the path's winning-days requirement (5 for Standard / 3 for Consistency, unchanged), AND (2) the account must have remained net-profitable since the last payout ("Minimum Payout Balance"). The FIRST payout still only requires condition (1). **This is a genuinely new rule not present anywhere in the operator's frozen config or the June-22 audit** — a strategy that wins big, pays out, then goes into a net-loss stretch could satisfy the winning-days count for its next payout but be BLOCKED by the Minimum Payout Balance condition. Worth encoding as a second payout-eligibility gate alongside the existing winning-days check.
+
+No news-trading-window change found (still no formal FOMC/CPI/NFP blackout — 4 corroborating sources, consistent with the June-22 finding and the operator's own §13 CLAUDE.md doctrine). No consistency-threshold change (still 50% Combine / 40% XFA-Consistency-Path / none XFA-Standard-Path — unchanged from June 22). No minimum-trading-days change (still effectively none — "as few as two days" per Topstep's own primary text, confirming the June-22 CRITICAL finding is STILL live and unresolved in the codebase).
+
+## Platform + Fee Schedule Confirmation
+
+- **TopstepX required platform: CONFIRMED with a nuance.** New Trading Combine sign-ups in 2026 must use TopstepX. However, per Tradecovex's timeline, existing Combine accounts opened on NinjaTrader, Tradovate, or Quantower before the lockdown "continue to be honoured" — i.e., this reads as a new-signups-only requirement + a grandfather clause for legacy accounts, not a full historical-account migration mandate. Since Trading Forge's own CLAUDE.md §6 already states TopstepX-only starting the January 12, 2026 lockdown and the operator's account is presumably a fresh 2026 sign-up, this is a non-issue for the current setup — flagged only because "banned" (CLAUDE.md's wording) is slightly stronger than what the primary timeline actually documents ("required for new sign-ups, legacy honored").
+- **Fee schedule: DRIFT FOUND.** MES and MNQ TopstepX round-turn commission is **$1.22**, not $1.24 as asked about in the ruling. Confirmed directly from the Topstep primary Commissions and Fees help-center page (single source, but it is the primary/official source — no secondary source disputes it, none found a $1.24 figure anywhere in the 2025-2026 corpus). MCL round-turn is $1.52. **This is a small (~1.6%) but real per-round-turn commission drift** in whatever cost model currently assumes $1.24 — worth a one-line correction wherever that figure is hardcoded, though the dollar impact per trade is under 2 cents.
+
+## Scaling Claim — REFUTED (this is the second major finding of this pass)
+
+**Operator's frozen claim:** "scaling: 50K→100K at $5K profit, 100K→150K at $10K profit" — describing a mechanism where a single Combine/XFA account grows in SIZE (not just position-size ceiling) as cumulative profit crosses thresholds.
+
+**Verdict: REFUTED by 2 independent primary Topstep sources**, with an explicit, load-bearing disagreement flagged rather than resolved by convenience:
+
+- **Topstep's own "Express Funded Account Parameters" help page states verbatim:** *"No. Your size matches the Trading Combine you passed and is locked before and after activation."* Account size does not grow through trading profit at all — to get a bigger funded account, a trader must pass a SEPARATE, larger Trading Combine outright (and can hold up to 5 active XFAs simultaneously, which is how Topstep traders typically scale their total exposure — horizontally across accounts, not vertically within one).
+- **h2tfunding.com (2025-11-10) corroborates independently:** "In the Trading Combine, you need to hit the profit target for the **100K account**" while describing the Scaling Plan — i.e., getting to $100K requires passing the $100K Combine specifically, not scaling up from a $50K account.
+- **One contradicting source found:** Futureshive.com (2026-05-08) claims accounts auto-upgrade "50K → 100K → 150K → **250K**" via "3-5 consecutive successful payouts" or "a cumulative profit target." This is almost certainly WRONG — **Topstep does not offer a $250K account size anywhere else in this entire 20+-source corpus** (every other source, including 2 primary pages, enumerates exactly 3 sizes: $50K/$100K/$150K). This source is either describing a different/defunct Topstep policy, confusing Topstep with a different prop firm's scaling ladder, or simply hallucinating a plausible-sounding but fabricated structure. **Per the audit's own disagreement rule, this is not averaged against the primary source — the primary source (Topstep's own site, corroborated by an independent blog) wins, and the Futureshive claim is REJECTED.**
+
+**What Topstep actually publishes as "scaling":**
+1. **XFA Scaling Plan** (within ONE fixed-size funded account): max POSITION SIZE (contract count) grows as account BALANCE grows, but is capped at that account's own Combine-size ceiling (e.g., a $50K XFA scales up to its own 5-contract max — it never exceeds what a $50K account was ever allowed). This is a within-account risk-ladder, not an account-size upgrade. Exact dollar-threshold breakpoints are shown only in a chart image on Topstep's site that WebFetch's text extraction could not read — this remains a genuine sourcing gap (flagged, not fabricated).
+2. **Dynamic Live Risk Expansion** (LFA-stage only, i.e., AFTER going live-funded): DLL and max-position-size expand in 6 discrete cumulative-profit tiers — $20K+, $50K+, $100K+, $200K+, $550K+, $1M+ — each requiring 10 Active Trading Days at the new tier before the expansion applies. This is a real, primary-sourced mechanism, but it operates on LFA cumulative profit in the tens/hundreds of thousands, not the $5K/$10K figures in the operator's frozen claim.
+
+**Operator implication:** the frozen "50K→100K at $5K profit, 100K→150K at $10K profit" claim does not correspond to any Topstep mechanism found in this audit at those dollar thresholds. If Trading Forge's growth-lever logic (CLAUDE.md §5, scaling levers 3 "multi-account same firm") currently assumes single-account organic size growth, it should instead model: (a) multiple parallel XFAs opened by separately passing multiple Combines (up to 5 active at once) — which is in fact already how CLAUDE.md §1/§5 frames "horizontal" scaling, so the code-level architecture may already be correctly using multi-account growth even if the `firm_config.py` scaling constant is a leftover/mislabeled value; and (b) the LFA-stage Dynamic Live Risk Expansion ladder once/if the account goes live-funded. **This needs an operator decision on what `firm_config.py`'s scaling field is actually meant to represent before it can be corrected** — it may be dead/unused config, or it may need remapping to the multi-XFA-count-and-LFA-tier model above.
+
+## Compliance Table — Full R-054 Deliverable
+
+| Rule | Our frozen value | Current value (primary + 2nd source, dates) | CHANGED? | Effective date | Applies to |
+|---|---|---|---|---|---|
+| Profit target | $3,000 | $3,000 — Topstep Trading Combine Parameters (primary, current) + Lune 2026-06-15 | NO | n/a (unchanged) | $50K Combine/XFA |
+| Max drawdown (trailing MLL) | $2,000 EOD | $2,000 — Topstep MLL page (primary, current) + Tradetanto 2026-06-29 + Tradecovex 2026-06-09 | NO | n/a (unchanged) | $50K Combine/XFA (trailing, resets to $0 buffer after each payout) |
+| Payout split | 0.90 (90/10) | 0.90 from dollar one for accounts opened ≥2026-01-12; grandfathered accounts get 100% of first $10K then 90/10 | **CONFIRMED, dated precisely** | 2026-01-12 | All Topstep XFA payouts (both paths) |
+| Min payout days | 5 | Standard Path: 5 winning days ($150+ net each) — Topstep Payout Policy (primary) + Tradecovex 2026-05-06; Consistency Path: 3 days | NO (for Standard Path — matches frozen value) | n/a (unchanged since Feb 5 2026 split) | XFA payout eligibility, path-dependent |
+| Activation fee | $0 (No-Activation-Fee Combine) | $0 confirmed on No-Activation-Fee path — Topstep Pricing FAQ (primary, 2026-06-30) | NO | Path launched 2025-11-25 | $50K No-Activation-Fee Combine specifically |
+| Consistency rule | 50% best-day cap at pass-request | 50% Combine eval (confirmed, primary + PropTradingVibes worked example); XFA Consistency Path = 40%, not 50% (primary Payout Policy quote); XFA Standard Path = none | NO for the frozen scope (Combine pass-request) | n/a (unchanged) | Combine evaluation phase only |
+| Contract cap | 5 minis / 50 micros (10:1) | 5 minis / 50 micros confirmed — Topstep Combine Parameters (primary) + PropTradingVibes 2026-04-28 | NO | n/a (unchanged) | $50K Combine/XFA |
+| Scaling (50K→100K@$5K, 100K→150K@$10K) | as stated | **REFUTED** — account size is locked to the Combine passed (primary source verbatim); no profit-threshold account-size-upgrade mechanism exists at these dollar amounts. Real mechanisms: multi-XFA (up to 5 active) + LFA-stage Dynamic Live Risk Expansion (6 tiers, $20K-$1M) | **YES — claim does not match any current mechanism** | n/a | See full write-up above |
+| Per-payout cap ($50K, No-Act-Fee) | not in frozen list | Standard $2,000 / Consistency $3,000 (down from $5,000/$6,000) | **YES — CUT CONFIRMED** | 2026-04-28 | $50K + $100K No-Activation-Fee new accounts only; pre-Apr-28 accounts keep old caps |
+| LFA reserve/unlock system | not in frozen list | 20% tradeable / 80% reserve at LFA activation; 4×25% unlocks gated on net-profit-since-last-unlock ($3,000 per unlock on $50K tier) | **YES — NEW RULE, primary-confirmed** | 2026-02-10 | Live Funded Account (3rd stage — real money) only, NOT the XFA the operator is likely on today |
+| Two-rule payout structure (Minimum Payout Balance) | not in frozen list | Every payout after the first requires BOTH winning-days AND net-profitable-since-last-payout | **YES — NEW RULE** | 2025-12-30 | All XFA payouts after the first |
+| TFD → TopstepX integration | not in frozen list | Confirmed, official press release; explicitly "does not currently change Topstep's rule framework" | Informational only, no rule impact | 2026-04-01 | Platform/tech only |
+| TopstepX required platform | topstepx (required) | Required for NEW sign-ups; pre-lockdown NinjaTrader/Tradovate/Quantower accounts grandfathered/"honoured" | Nuance only (not a full ban as CLAUDE.md phrasing implies) | Ongoing since Jan 12 2026 lockdown | New Combine sign-ups |
+| MES/MNQ commission | $1.24 RT | $1.22 RT (MES + MNQ); MCL = $1.52 RT | **YES — small drift (~1.6%)** | n/a (current as of fetch) | TopstepX-executed trades |
+
+## Sub-Claim Corroboration Summary (per §3 triangulation requirement)
+
+| Sub-claim | # independent sources | Tiers represented | Disagreement found? |
+|---|---|---|---|
+| 1. Payout cap cut to $2K/$3K | 4 | primary + blog-general×3 | Minor scope ambiguity (Standard-Path-only vs unified) — flagged, not resolved |
+| 2. 90/10 from dollar one, post-Jan-12 | 7 | primary + blog-general×6 | None (after re-verifying primary wording) |
+| 3. LFA 20/80 reserve, 25% milestones | 4 | primary×2 + blog-general×2 | One low-tier outlier (30% instead of 25%) rejected as minority |
+| 4. TFD → TopstepX | 4 | corporate-eng (official press release)×1 + blog-general×3 | None |
+| 5. Other Nov25-Apr26 changes | 1 primary aggregator source (Tradecovex timeline), individual items corroborated piecemeal by 2-4 sources each | blog-general primary + primary Topstep confirmations per item | None |
+| Scaling 50K→100K@$5K claim | 2 primary + 1 corroborating secondary AGAINST; 1 secondary FOR | primary×2 vs blog-general×1 | **YES — explicit, load-bearing disagreement; primary source wins per audit rule** |
+| MES/MNQ commission $1.24 | 1 (primary only) | primary | INSUFFICIENT EVIDENCE for a second independent source explicitly stating $1.22 — no source contradicts it either. Primary-only confirmation; recommend operator screenshot-verify in their own TopstepX dashboard before trusting for cost-model precision. |
+
+## Evidence File Metadata (this pass)
+
+- **Written:** 2026-07-19
+- **Sources fetched:** 20 distinct URLs (8 primary Topstep pages + 1 official press release + 11 blog-general secondary sources), all current/2025-2026
+- **Sources dropped for staleness:** 3 (pre-2025 or undated)
+- **Triangulation:** ≥2 independent sources per load-bearing rule per R-054's instruction (most claims hit 3-7); 2 explicit disagreements flagged rather than averaged (scaling mechanism; payout-cap path-scope)
+- **Code files this pass recommends operator/specialist review (NOT edited by this agent):** `src/engine/firm_config.py`, `src/engine/prop_compliance.py`, `docs/prop-firm-rules-2026-topstep.md`
+- **Next recommended review:** upon next Topstep rule-change announcement, or 2026-10-01 quarterly, whichever first — Topstep shipped ~8 changes in the Nov2025-Apr2026 window alone, faster than quarterly cadence assumes

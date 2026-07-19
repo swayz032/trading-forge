@@ -6,9 +6,17 @@
 > the `## Canonical Values` block below. Drift triggers CI failure.
 >
 > Effective: 2026-01-12 (TopstepX-only platform lockdown).
-> Last reviewed: 2026-06-22.
+> Last reviewed: 2026-07-19 (R-054 compliance refresh — see §§9-15).
 > Promo added: 2026-06-02 (voluntary-DLL doubles XFA payout cap).
 > Evidence source: docs/institutional-evidence/firm-rules-freshness-2026-06-22.md
+> (R-054 compliance-refresh pass appended 2026-07-19).
+>
+> 2026-07-19 refresh (R-056/R-057/R-058.2/R-059): Combine monthly fee corrected
+> $49 → $85 (100K=$129, 150K=$199); payout caps re-expressed as the two-option
+> Standard/Consistency election by account size (§10); SCALING_PLANS size-upgrade
+> ladder REMOVED as fiction — account size is locked to the Combine passed (§9b);
+> LFA 20/80 reserve (§11), Minimum Payout Balance (§12), and the voluntary
+> Daily-Loss-Limit toggle mechanic (§13) added.
 
 ---
 
@@ -18,7 +26,7 @@
 |---|---|
 | Account size | `$50,000` |
 | Activation fee | `$0` (always — all firms) |
-| Monthly fee (Combine) | `$49` |
+| Monthly fee (Combine) | `$85` (50K; 100K = `$129`, 150K = `$199` — corrected 2026-07-19, was `$49`) |
 | Ongoing monthly fee (post-funded) | `$0` |
 | Profit target | `$3,000` |
 | Max drawdown (trailing) | `$2,000` |
@@ -42,7 +50,7 @@ names in `firm_config.py:FIRM_RULES["topstep_50k"]` and
 ```yaml
 firm_id: topstep
 account_size: 50000
-monthly_fee: 49
+monthly_fee: 85  # Combine 50K (corrected 2026-07-19, was 49); 100K=129, 150K=199
 activation_fee: 0
 ongoing_monthly_fee: 0
 profit_target: 3000
@@ -203,44 +211,150 @@ reflects Standard Path. If operator switches to Consistency Path, update
 
 - **Sources:** Tradecovex 2026-04-09 + 2026-04-28, Backtrex 2026-06-07.
 
-### 10. Payout Caps — Base Caps (Reduced April 28, 2026) + Voluntary-DLL Doubled Caps (June 2, 2026)
+### 9b. Scaling Doctrine — Account Size Is LOCKED to the Combine Passed (R-059, 2026-07-19)
 
-For accounts created **after April 28, 2026**, the **base** payout caps on the $50K plan are:
+**There is NO profit-threshold account-size upgrade at Topstep.** A single funded
+account does NOT grow in SIZE as cumulative profit crosses dollar thresholds. The
+former internal `SCALING_PLANS` (50K→100K@$5K profit, 100K→150K@$10K) was FICTION
+and has been REMOVED from `firm_config.py`.
 
-| Path | Base Cap | With Voluntary DLL (effective 2026-06-02) |
-|---|---|---|
-| Standard Path | **$2,000** | **$4,000** |
-| Consistency Path | **$3,000** | **$6,000** |
+- **Primary source (Topstep "Express Funded Account Parameters", fetched 2026-07-19):**
+  *"No. Your size matches the Trading Combine you passed and is locked before and
+  after activation."* To trade a bigger account you must pass a separate, larger
+  Combine. Corroborated independently by h2tfunding 2025-11-10. One contradicting
+  source (Futureshive, claiming auto-upgrade to a $250K size) is **REJECTED** —
+  Topstep publishes exactly three sizes ($50K/$100K/$150K), never $250K.
+- **The real scaling model (canonical, CLAUDE.md §1/§4/§5):**
+  - **Within-account:** the micro-contract PYRAMID — base 9 MES / 9 MNQ / 18 MCL,
+    +3 per proven-trades tier, risk-bounded, 50-micro ceiling. Position size grows;
+    account size does not.
+  - **Cross-account (HORIZONTAL):** up to ~5 active funded accounts per trader
+    (pass a Combine per account), copy-scaled — the income growth path.
+  - **LFA stage only:** Dynamic Live Risk Expansion (6 cumulative-profit tiers,
+    $20K–$1M, 10 Active Trading Days each) — a DLL/position ladder, not an
+    account-size upgrade, and only after going live-funded.
+- **Sweep receipt (2026-07-19):** `SCALING_PLANS` was verified UNCONSUMED anywhere
+  in code (repo-wide grep; only its own definition + docs referenced it). No
+  consumer produced fictional projections. `TOPSTEP_TRAILING_DD_BY_SIZE`
+  ($50K→$2K / $100K→$3K / $150K→$4.5K in `firm-config.ts`) is retained and CORRECT
+  — it maps the size a trader actually holds (via passing that Combine) to its
+  trailing-DD amount; it is not a size-upgrade ladder.
 
-The doubled cap applies when the account holder elected the voluntary Daily Loss
-Limit (DLL) at Combine checkout **before** June 2, 2026 promo effective date or
-any subsequent re-purchase. Accounts created before April 28, 2026 retain the
-higher pre-Apr-28 base caps ($5,000/$6,000) — the doubling promo applies on top
-of whichever base cap applies to the account's creation date.
+### 10. Payout Caps — Two-Option Election (Standard vs Consistency) by Account Size
 
-**Live Funded Account (LFA): uncapped** regardless of DLL opt-in or account tier.
+Post-Combine, the trader elects ONE of two payout options per funded account. Caps
+are per-request and per account size. Each has a **base** cap and a **withDll** cap
+(the voluntary Daily Loss Limit toggle — see §13 — doubles the base cap).
 
-**MFFU payout cap: $2,000 flat** — this is a Topstep-only promo; MFFU is NOT
-affected and its cap does not double.
+| Election | $50K | $100K | $150K |
+|---|---|---|---|
+| **Standard — base** (no DLL toggle) | $2,000 | $3,000 | $5,000 |
+| **Standard — withDll** (GOVERNING) | **$4,000** | **$6,000** | **$10,000** |
+| **Consistency — base** (no DLL toggle) | $3,000 | $4,000 | $6,000 |
+| **Consistency — withDll** (GOVERNING) | **$6,000** | **$8,000** | **$12,000** |
 
-**Operator status:** operator IS opting into the voluntary DLL for their Topstep
-account(s). The `dll_opted_in` flag on `broker_accounts` drives which cap the
-system models per account.
+- **GOVERNING = the withDll row** (operator's live-page primary source, 2026-07-19):
+  the operator has added the voluntary DLL, so their page shows the doubled caps.
+  These OVERRIDE the R-054 aggregator numbers.
+- **base caps** are from Topstep's own Help-Center Payout Policy page (primary,
+  fetched 2026-07-19, `help.topstep.com/en/articles/8284233`): Standard
+  $2,000/$3,000/$5,000; Consistency $3,000/$4,000/$6,000.
+- **R-054 "$2K/$3K cut" reconciliation (labeled by product):** the aggregator's
+  "$2,000 Standard / $3,000 Consistency" No-Activation-Fee figure coincides with the
+  **$50K base row** here — it is NOT the operator's plan value (operator is
+  DLL-opted → the withDll/governing caps). Pre-April-28-2026 accounts retain older
+  higher base caps ($5,000/$6,000 on 50K). Both are recorded separately and are
+  distinct from the governing values.
+- **Per-request withdrawal is ALSO capped at 50% of account balance** (Topstep help
+  page), applied on top of the dollar caps above. Modeled downstream, not here.
+- **Standard election:** ≥5 winning days ≥$150 each; maintain balance between payouts.
+  **Consistency election:** ≥3 trading days (≥1 trade/day); best day ≤40% of total —
+  higher caps + faster clock. (See §8/§9 for the consistency-threshold detail.)
+- **Live Funded Account (LFA): uncapped** regardless of election or DLL toggle.
+- **MFFU payout cap: $2,000 flat** — Topstep-only promo; MFFU cap does not double.
+- **Not a signal-time gate** — payout cap is a withdrawal policy. Modeled via
+  `getPayoutCap()` (`firm-config.ts`) and `get_payout_cap()` (`firm_config.py`) for
+  analytics/reporting; per-account DLL opt-in in `broker_accounts.dll_opted_in`
+  (migration 0167). Conservative caller default: `dll_opted_in=false` → base cap.
+- **Safety note:** the voluntary DLL dollar amount elected at checkout must be **at
+  or above the firm DLL we model** ($1,000 on $50K) so our 67% halt threshold ($670)
+  fires before Topstep's voluntary DLL. Operator confirms the exact $ at checkout.
+- **Sources:** Topstep Payout Policy (primary, 2026-07-19); operator live-page
+  (governing, withDll caps); Tradecovex 2026-04-28/2026-05-06; PropTradingVibes;
+  Lune 2026-06-18. See the R-054 evidence pass for the full corroboration table.
 
-**Safety note:** the voluntary DLL dollar amount elected at checkout must be
-**at or above the firm DLL we model** ($1,000 on a $50K account) so that our
-67% halt threshold ($670) fires before Topstep's voluntary DLL. Operator must
-confirm the exact $ amount chosen at Combine checkout.
+### 11. LFA 20%/80% Reserve System — Live-Funded Stage (Effective 2026-02-10)
 
-- **Not codified in CI-checked fields** — payout cap is a withdrawal policy, not
-  a gate enforced at signal time. Modeled via `getPayoutCap()` in `firm-config.ts`
-  and `get_payout_cap()` in `firm_config.py` for analytics/reporting. The per-account
-  opt-in is stored in `broker_accounts.dll_opted_in` (migration 0167).
-- **Sources (base cap reduction):** Tradecovex 2026-04-28 (single source; treat as
-  informational until a second source corroborates).
-- **Sources (voluntary-DLL promo):** Operator-authoritative, effective 2026-06-02.
+Applies to the **Live Funded Account (LFA)** — the THIRD stage (real money, after
+Combine → XFA → LFA), NOT the XFA the bot models as "funded" today. Represented
+here for the sizing gap it will create BEFORE the account goes live-funded; **no
+live default is changed (pre-live)**.
 
-### 11. MLL Resets to $0 After Every Payout — CRITICAL Post-Payout Sizing Note
+- A freshly-activated LFA has only **20% of its starting balance TRADEABLE**; the
+  other **80% is held in Reserve**.
+- The reserve releases in **4 equal 25% increments** (4 unlocks = 100% access).
+- Each unlock is gated on **net profit SINCE THE LAST UNLOCK** (not cumulative from
+  zero): **$3,000 per unlock on $50K**, $6,000 on $100K, $9,000 on $150K (mirrors
+  the Combine profit-target ladder).
+- Unlocks reviewed **≤ once per calendar week**; approved within 1–2 business days.
+- Minimum starting LFA balance **$10,000** (Topstep supplements smaller XFA pools).
+
+**⚠ DRAWDOWN_ROOM sizing implication:** a "$50K LFA" is **NOT** a $50K risk base on
+day one — it is a **$10K tradeable base with $40K locked**, unlocking in four
+$3,000-net-profit-gated tranches. Any `DRAWDOWN_ROOM_RISK_PCT` / contract-count
+sizing that assumes the full LFA balance will **oversize** a freshly-live account.
+**Carry-forward to close in `firm_config.py` BEFORE the account goes live-funded.**
+Represented in config as `TOPSTEP_LFA_RESERVE` (`firm_config.py` + `firm-config.ts`).
+
+- **Sources:** Topstep "Live Funded Account Parameters" + "Live Funded Account Rules"
+  (primary ×2, 2026-07-19) + PropTradingVibes ×2. A 30%-milestone outlier was rejected.
+
+### 12. Minimum Payout Balance — Second Payout Condition (Effective 2025-12-30)
+
+Every payout **AFTER the first** now requires **TWO** conditions instead of one:
+1. the elected path's winning-days requirement (5 Standard / 3 Consistency — unchanged), **AND**
+2. the account remained **net-profitable since the last payout** ("Minimum Payout Balance").
+
+The FIRST payout still requires only condition (1). A strategy that wins big, pays
+out, then goes into a net-loss stretch could satisfy the winning-days count but be
+**BLOCKED** by the Minimum Payout Balance condition. Separately, the **minimum
+withdrawal per request is $125** (Topstep help-center, 2026-07-19).
+
+Represented in config as `TOPSTEP_MIN_PAYOUT_BALANCE_RULE` + `TOPSTEP_MIN_PAYOUT_USD`
+(`firm_config.py` + `firm-config.ts`). Documentation/analytics — not a signal-time gate.
+
+- **Sources:** Topstep Payout Policy (primary, 2026-07-19); Tradecovex timeline 2026-05-12.
+
+### 13. Voluntary Daily-Loss-Limit Toggle — Payout-Cap Lever (SEPARATE from Consistency)
+
+Topstep lets a trader **add a voluntary Daily Loss Limit** at Combine checkout. Per
+Topstep's own Payout Policy page (primary, fetched 2026-07-19) — **paraphrase, not a
+verbatim quote:** the voluntary DLL is a separate, limited-time checkout add-on, NOT a
+prerequisite for the Consistency option, that increases per-request payout caps when
+added at Combine purchase. (The substance — that the DLL doubles caps independently of
+the election — is confirmed by the exact-2× cap table in §10, not just the citation.)
+
+- **Linkage finding (item 6):** the voluntary DLL toggle is **SEPARATE from** the
+  Consistency payout election — NOT part of it and NOT a prerequisite for it. Its
+  effect is on the **payout cap**: adding it **doubles the base cap** (§10 `withDll`
+  column). Election (Standard vs Consistency) and the DLL toggle are two independent
+  axes; the governing caps reflect Consistency/Standard × DLL-added.
+- **Sourcing gap flagged, not fabricated:** Topstep's own Trading-Combine-Parameters
+  page references a dedicated "Daily Loss Limit in the Trading Combine and Express
+  Funded Account" article but does not inline its per-size dollar thresholds; the
+  Payout Policy page confirms the toggle exists, is separate from Consistency, and
+  raises caps, but did not surface a per-size DLL dollar table in the extracted text.
+  Pages checked: `help.topstep.com/en/articles/8284233` (Payout Policy),
+  `help.topstep.com/en/articles/8284197` (Trading Combine Parameters).
+- **Internal DLL ladder sits STRICTLY INSIDE Topstep's terms — verified.** Our
+  ladder (`cross-symbol-pnl.ts::evaluateCrossSymbolDll`, CLAUDE.md §4) is:
+  `personal_dll = 67% of firm DLL`; **reduce-size @ 60%**, **halt @ 67%**,
+  **force-close @ 95%** — all **of the personal DLL**, i.e. of $670 on a $50K firm
+  DLL of $1,000. Force-close therefore fires at ~$637 realized+unrealized, far
+  inside Topstep's $1,000 firm DLL (and inside any voluntary DLL the operator sets
+  ≥ $1,000). The internal ladder is strictly more conservative than the firm limit.
+
+### 14. MLL Resets to $0 After Every Payout — CRITICAL Post-Payout Sizing Note
 
 **Effective: current Topstep policy (confirmed 2026-06-22).**
 
@@ -377,6 +491,14 @@ live-side; the backtest is exact per-symbol). Changing `FIRM_COMMISSIONS` re-has
 `firm_rules_version` — old backtests will trip `monte_carlo.firm_rule_version_mismatch` on MC
 re-run (correct: they were graded against wrong fees; re-run them). MFFU rates unchanged
 (separate schedule). Source: operator-provided TopstepX Commissions & Fees doc.
+
+**⚠ WATCH-ITEM (2026-07-19, NOT changed):** the Topstep Help-Center Commissions &
+Fees page (primary, fetched 2026-07-19) shows **MES/MNQ round-turn = $1.22** (per-side
+$0.61) and **MCL RT = $1.52** — a ~1.6% drift below our coded $1.24 RT ($0.62/side).
+This is **single-source / two-path-INSUFFICIENT** (no second independent source states
+$1.22; none disputes it either), so per R-054 the values are **left unchanged** pending
+a second primary source (e.g. an operator TopstepX-dashboard screenshot). Dollar impact
+< 2¢/round-turn. Recorded here and in the R-054 evidence pass as a watch-item only.
 
 ---
 

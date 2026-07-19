@@ -36,7 +36,7 @@ import { createHash } from "node:crypto";
 export const FIRM_CONFIGS_TS = {
   topstep_50k: {
     name: "Topstep 50K",
-    monthly_fee: 49,
+    monthly_fee: 85,
     activation_fee: 0,
     profit_target: 3000,
     max_drawdown: 2000,
@@ -82,7 +82,7 @@ export const FIRM_CONFIGS_TS = {
 export const FIRM_RULES_TS = {
   topstep_50k: {
     account_size: 50000,
-    monthly_fee: 49,
+    monthly_fee: 85,
     activation_fee: 0,
     ongoing_monthly_fee: 0,
     profit_target: 3000,

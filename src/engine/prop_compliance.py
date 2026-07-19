@@ -35,7 +35,9 @@ from src.engine.firm_config import FIRM_COMMISSIONS
 FIRM_CONFIGS = {
     "topstep_50k": {
         "name": "Topstep 50K",
-        "monthly_fee": 49,
+        # 2026-07-19 compliance refresh: Combine monthly fee $49 -> $85 (kept in
+        # sync with firm_config.py FIRM_RULES; both feed firm_rules_version).
+        "monthly_fee": 85,
         "activation_fee": 0,
         "profit_target": 3000,
         "max_drawdown": 2000,

@@ -154,25 +154,34 @@ describe("Per-firm independence — Topstep fields don't leak to MFFU", () => {
   });
 });
 
-// ─── Rule 10 / Payout Cap Model (2026-06-02 voluntary-DLL promo) ────────────
+// ─── Rule 10 / Payout Cap Model (2026-07-19 refresh — size × election × DLL) ──
 
-describe("Topstep 2026 Rule 10 — XFA payout caps (base + voluntary-DLL doubled)", () => {
-  // Task 5 assertions: Topstep $50K Standard + Consistency; MFFU; LFA uncapped.
+describe("Topstep 2026 Rule 10 — XFA payout caps (by size; base + voluntary-DLL)", () => {
+  // Governing (operator live-page): withDll caps Standard $4K/$6K/$10K,
+  // Consistency $6K/$8K/$12K. base caps (no DLL toggle) per Topstep help-center.
 
-  it("Topstep XFA Standard cap is $2,000 when dll_opted_in=false (base, conservative default)", () => {
+  it("Topstep 50K XFA Standard cap is $2,000 base / $4,000 withDll", () => {
     expect(getPayoutCap("topstep", "xfa", "standard", false)).toBe(2000);
-  });
-
-  it("Topstep XFA Standard cap is $4,000 when dll_opted_in=true (voluntary-DLL promo)", () => {
     expect(getPayoutCap("topstep", "xfa", "standard", true)).toBe(4000);
   });
 
-  it("Topstep XFA Consistency cap is $3,000 when dll_opted_in=false (base)", () => {
+  it("Topstep 50K XFA Consistency cap is $3,000 base / $6,000 withDll", () => {
     expect(getPayoutCap("topstep", "xfa", "consistency", false)).toBe(3000);
+    expect(getPayoutCap("topstep", "xfa", "consistency", true)).toBe(6000);
   });
 
-  it("Topstep XFA Consistency cap is $6,000 when dll_opted_in=true (doubled)", () => {
-    expect(getPayoutCap("topstep", "xfa", "consistency", true)).toBe(6000);
+  it("Topstep 100K XFA caps: Standard $3K/$6K, Consistency $4K/$8K", () => {
+    expect(getPayoutCap("topstep", "xfa", "standard", false, "100k")).toBe(3000);
+    expect(getPayoutCap("topstep", "xfa", "standard", true, "100k")).toBe(6000);
+    expect(getPayoutCap("topstep", "xfa", "consistency", false, "100k")).toBe(4000);
+    expect(getPayoutCap("topstep", "xfa", "consistency", true, "100k")).toBe(8000);
+  });
+
+  it("Topstep 150K XFA caps (governing): Standard withDll $10K, Consistency withDll $12K", () => {
+    expect(getPayoutCap("topstep", "xfa", "standard", false, "150k")).toBe(5000);
+    expect(getPayoutCap("topstep", "xfa", "standard", true, "150k")).toBe(10000);
+    expect(getPayoutCap("topstep", "xfa", "consistency", false, "150k")).toBe(6000);
+    expect(getPayoutCap("topstep", "xfa", "consistency", true, "150k")).toBe(12000);
   });
 
   it("Topstep LFA is uncapped (null) regardless of dll_opted_in", () => {
@@ -188,11 +197,13 @@ describe("Topstep 2026 Rule 10 — XFA payout caps (base + voluntary-DLL doubled
     expect(getPayoutCap("mffu", "lfa", "standard", true)).toBe(2000);
   });
 
-  it("TOPSTEP_XFA_PAYOUT_CAPS constant has correct base + withDll values", () => {
-    expect(TOPSTEP_XFA_PAYOUT_CAPS.standard.base).toBe(2000);
-    expect(TOPSTEP_XFA_PAYOUT_CAPS.standard.withDll).toBe(4000);
-    expect(TOPSTEP_XFA_PAYOUT_CAPS.consistency.base).toBe(3000);
-    expect(TOPSTEP_XFA_PAYOUT_CAPS.consistency.withDll).toBe(6000);
+  it("TOPSTEP_XFA_PAYOUT_CAPS constant has correct base + withDll values (by size)", () => {
+    expect(TOPSTEP_XFA_PAYOUT_CAPS["50k"]!.standard.base).toBe(2000);
+    expect(TOPSTEP_XFA_PAYOUT_CAPS["50k"]!.standard.withDll).toBe(4000);
+    expect(TOPSTEP_XFA_PAYOUT_CAPS["50k"]!.consistency.base).toBe(3000);
+    expect(TOPSTEP_XFA_PAYOUT_CAPS["50k"]!.consistency.withDll).toBe(6000);
+    expect(TOPSTEP_XFA_PAYOUT_CAPS["150k"]!.standard.withDll).toBe(10000);
+    expect(TOPSTEP_XFA_PAYOUT_CAPS["150k"]!.consistency.withDll).toBe(12000);
   });
 
   it("TOPSTEP_LFA_PAYOUT_CAP constant is null (uncapped)", () => {
@@ -203,7 +214,7 @@ describe("Topstep 2026 Rule 10 — XFA payout caps (base + voluntary-DLL doubled
     expect(MFFU_PAYOUT_CAP).toBe(2000);
   });
 
-  it("getPayoutCap defaults to standard path and dll_opted_in=false (conservative)", () => {
+  it("getPayoutCap defaults to standard path, 50k, dll_opted_in=false (conservative)", () => {
     // Called with only firmId + accountStage — must not assume doubled cap
     expect(getPayoutCap("topstep", "xfa")).toBe(2000);
   });
@@ -211,10 +222,9 @@ describe("Topstep 2026 Rule 10 — XFA payout caps (base + voluntary-DLL doubled
   it("Topstep firm-config xfaPayoutCaps field matches canonical constants", () => {
     const acct = getFirmAccount("topstep", "50k");
     expect(acct!.xfaPayoutCaps).toBeDefined();
-    expect(acct!.xfaPayoutCaps!["standard"]!.base).toBe(TOPSTEP_XFA_PAYOUT_CAPS["standard"]!.base);
-    expect(acct!.xfaPayoutCaps!["standard"]!.withDll).toBe(TOPSTEP_XFA_PAYOUT_CAPS["standard"]!.withDll);
-    expect(acct!.xfaPayoutCaps!["consistency"]!.base).toBe(TOPSTEP_XFA_PAYOUT_CAPS["consistency"]!.base);
-    expect(acct!.xfaPayoutCaps!["consistency"]!.withDll).toBe(TOPSTEP_XFA_PAYOUT_CAPS["consistency"]!.withDll);
+    expect(acct!.xfaPayoutCaps!["50k"]!["standard"]!.base).toBe(TOPSTEP_XFA_PAYOUT_CAPS["50k"]!.standard.base);
+    expect(acct!.xfaPayoutCaps!["50k"]!["standard"]!.withDll).toBe(TOPSTEP_XFA_PAYOUT_CAPS["50k"]!.standard.withDll);
+    expect(acct!.xfaPayoutCaps!["150k"]!["consistency"]!.withDll).toBe(TOPSTEP_XFA_PAYOUT_CAPS["150k"]!.consistency.withDll);
   });
 
   it("MFFU firm-config does NOT carry xfaPayoutCaps (promo is Topstep-only)", () => {
@@ -254,8 +264,8 @@ describe("Topstep — canonical doc parity (sanity)", () => {
     expect(acct!.payoutSplit).toBe(0.90);
   });
 
-  it("Topstep 50K monthlyFee is 49 (matches docs/prop-firm-rules-2026-topstep.md)", () => {
+  it("Topstep 50K monthlyFee is 85 (matches docs/prop-firm-rules-2026-topstep.md)", () => {
     const acct = getFirmAccount("topstep", "50k");
-    expect(acct!.monthlyFee).toBe(49);
+    expect(acct!.monthlyFee).toBe(85);
   });
 });
