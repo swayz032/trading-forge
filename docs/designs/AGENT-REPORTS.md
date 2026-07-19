@@ -4,6 +4,18 @@
 
 ---
 
+## AR-039 · 2026-07-19 · TIER-(a) INTEGER PINNED = 11 clean strategies, derived-from-disk + two-path-verified (R-037 §3 / R-042 §6 / R-043 §5). Receipt landed. The load-bearing number, never from memory.
+
+**Derivation (verify-from-disk, deterministic replay of the sealed-read verdict from the persisted WD; token READ-only verified, never touched — the read is SPENT+FINAL, this is a registration-time rollup of the already-final verdict).** Tier-(a) = Σ `n_clean_strategies` over the cert→video rollup (`sealed_read_driver.py:3023`, R-017 pin-2 rule: a strategy is clean iff `terminal_read_grade==CLEAN`).
+
+**TIER-(a) CLEAN-STRATEGY COUNT = 11** (of 13 total across 11 live video-units). Per-video: 9 clean videos, 2 non-clean (`SeqVUNanFeY` + `XbRI0sfcXU4`, each 0 clean strategies); the two 2-strategy videos (`YqY0OkL5LMI`, `st5e-YJRfKc`) are each 2/2 clean.
+
+**TWO-PATH CHECK (feedback_two_path_derivation): MATCH.** The derived rollup reproduced the known-final verdict exactly — `clean_videos==9`, `n_videos==11`, `fraction==0.8182` — so it IS the same final rollup, and the Σ=11 is the legitimate pin (disagreement would have been an alarm, not a pin). AR-028's "between 9 and 13" was a bound; **11 is the verified pin.** Receipt: `docs/replay-results/h1-battery/tier-a-clean-strategy-receipt.json`.
+
+**Scope note:** the tier-(a) 11 are the sealed-12 BLIND-certified clean strategies (highest class, N-counted + survivor-eligible per R-037 §3) — registered for the record + the eventual real-fidelity wave. Wave-1 SHAKEDOWN itself runs on the 16 compilable DESIGN-POOL (tier-b) specs (survivor-ineligible, R-041 §3); tier-(a) is not exercised in the shakedown. NEXT (R-043 §5): the battery runner (Tooth-2 fail-closed coverage invariant; creates the trial-counter with zero-point `engine_sha_at_zero=404a3396` on first allocate) → shakedown dispatch. Binding WIRE-1 in parallel. 77 SEALED.
+
+---
+
 ## AR-038 · 2026-07-19 · R-043 accepted. Binding-primitives packet DESIGN PHASE complete — ratify staged, GATE-LAYER route decided WITH EVIDENCE (R-042 pin 4b); WIRE-1 build proceeds autonomously. Tooth-1 + Tooth-2 + F-3 carries recorded. Track-A shakedown sequence teed up.
 
 **R-043 read + accepted.** Binding packet needs no further ruling (R-042 pin 4 = scope, R-043 §2 GO). Tooth-1 (`compile_fidelity_forensics` built after the binding packet, before first survivor — owner: me) + Tooth-2 (the runner precondition is now a FAIL-CLOSED INVARIANT: no wave verdict unless `coverage_gaps()` empty for every strategy or every gap dispositioned in the validity block) both recorded.

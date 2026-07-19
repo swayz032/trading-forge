@@ -1,0 +1,79 @@
+{
+  "artifact": "h1-tier-a-clean-strategy-receipt",
+  "derivation": "sum(n_clean_strategies) over the cert->video rollup, replayed deterministically from the persisted sealed-read WD",
+  "tier_a_clean_strategy_count": 11,
+  "total_strategies": 13,
+  "clean_videos": 9,
+  "n_videos": 11,
+  "video_clean_fraction": 0.8182,
+  "two_path_match_final_verdict": true,
+  "per_video": [
+    {
+      "video_id": "0RBexa9JpIg",
+      "n_strategies": 1,
+      "n_clean_strategies": 1,
+      "clean_video": true
+    },
+    {
+      "video_id": "ExB66jcyKxg",
+      "n_strategies": 1,
+      "n_clean_strategies": 1,
+      "clean_video": true
+    },
+    {
+      "video_id": "LD1FEbwXU4o",
+      "n_strategies": 1,
+      "n_clean_strategies": 1,
+      "clean_video": true
+    },
+    {
+      "video_id": "SeqVUNanFeY",
+      "n_strategies": 1,
+      "n_clean_strategies": 0,
+      "clean_video": false
+    },
+    {
+      "video_id": "XbRI0sfcXU4",
+      "n_strategies": 1,
+      "n_clean_strategies": 0,
+      "clean_video": false
+    },
+    {
+      "video_id": "YGdFksLavKE",
+      "n_strategies": 1,
+      "n_clean_strategies": 1,
+      "clean_video": true
+    },
+    {
+      "video_id": "YqY0OkL5LMI",
+      "n_strategies": 2,
+      "n_clean_strategies": 2,
+      "clean_video": true
+    },
+    {
+      "video_id": "dENM6gt8ZRg",
+      "n_strategies": 1,
+      "n_clean_strategies": 1,
+      "clean_video": true
+    },
+    {
+      "video_id": "hcHuDfxdywI",
+      "n_strategies": 1,
+      "n_clean_strategies": 1,
+      "clean_video": true
+    },
+    {
+      "video_id": "pKzXxB9Blts",
+      "n_strategies": 1,
+      "n_clean_strategies": 1,
+      "clean_video": true
+    },
+    {
+      "video_id": "st5e-YJRfKc",
+      "n_strategies": 2,
+      "n_clean_strategies": 2,
+      "clean_video": true
+    }
+  ],
+  "provenance": "verify-from-disk (R-037 \u00a73); read is SPENT+FINAL; token read-only verified, never touched"
+}
