@@ -4,6 +4,25 @@
 
 ---
 
+## AR-036 · 2026-07-18 · R-041 §4 ANSWERED: the binding-primitives enrichment packet is MOSTLY WIRING (WEEKS, not months) — the institutional evaluators already exist and already run per-bar in backtester.py; SpecConditionStrategy just bypasses them. 2 highest-leverage first wires named; 2 genuine BUILDs flagged; the real work-item is plumbing.
+
+**The advisor's belief is CONFIRMED with the important nuances (file:line-evidenced investigation).** Every core institutional evaluator the families describe EXISTS and is fully built — and for bias/structure a per-bar adapter (`load_n_timeframes` → `HTFContext`/`SessionContext` → `compute_bias`, htf_cache) **already runs inside `backtester.py`'s eligibility gate** (`backtester.py:410-414, 6635, 6653`). `SpecConditionStrategy.compute(df)` simply gets only the exec-TF frame and substitutes cheap proxies. So the ~0.99 is a DEPTH/wiring problem, not an existence problem.
+
+**Per-family verdict (occurrences across the 22):**
+- **WAIT_STRUCTURE/VERIFY_STRUCTURE (~217, largest): WIRING+ADAPTER** — `structure_engine.compute_structure_state` is ALREADY called by the binding (`spec_condition_compiler.py:341`); gaps are depth (self-referential single-TF `htf_bars`, ignores object text).
+- **WAIT_BIAS/CONFIRM_DIRECTION (~130): WIRING+ADAPTER** — full `compute_bias` + `compute_htf_context` + `compute_session_context` all exist + a working per-bar adapter runs in backtester; the binding uses an EMA-slope PROXY (`spec_condition_compiler.py:363`) instead. Wiring replaces the proxy.
+- **FILTER (182): WIRING+ADAPTER (heavier)** — currently a static `np.ones` pass-through (never blocks); the real 11-factor confluence is TS/DB-only, Python has an aggregator (`location_score`) needing pre-enriched flag columns (detectors exist: `fvg_native`, `liquidity.detect_sweep`, `market_structure`).
+- **WAIT_RETEST (46): BUILD** (compose) — no retest-with-rejection-of-a-real-level evaluator; touch + rejection + real level exist separately, must be composed.
+- **WAIT_CONFIRMATION (132): BUILD for true faithfulness** — `confirmation_native` gives generic wick/engulfing (a partial wiring win available now), but NO per-object pattern matcher (pin/engulfing-as-named) exists.
+
+**Advisor over-claims flagged honestly:** WAIT_CONFIRMATION (per-object patterns) + WAIT_RETEST (rejection archetype) are genuine new-evaluator BUILDs; FILTER's real confluence is TS/DB-only. No family needs a core evaluator rebuilt from scratch.
+
+**Highest-leverage first wires (most-used AND clearest existing evaluator):** (1) WAIT_STRUCTURE/VERIFY_STRUCTURE, (2) WAIT_BIAS/CONFIRM_DIRECTION — together **~347 condition occurrences convert proxy→real by reusing existing code.** **The real work-item (scoping caveat):** the existing adapter builds `HTFContext` per-day, needs ≥200 daily bars + `load_n_timeframes`, but `SpecConditionStrategy.compute(df)` (a `BaseStrategy`) only gets the exec df — so wiring means plumbing htf_cache/multi-TF data into the strategy instance (or moving the bias eval into the gate layer). Bounded plumbing, but it IS the work, not a one-line hookup.
+
+**RECOMMENDATION:** scope the binding-primitives enrichment packet (engine instrument, own ratify + independent grade) around the plumbing work-item + the 2 first wires (family-by-family, both-polarity engagement proof each per R-041 §4 — a binding that can't fail a wrong condition is the vacuous class). Defer WAIT_RETEST/WAIT_CONFIRMATION BUILDs; take the WAIT_CONFIRMATION partial wiring win (make `confirmation_native` the default for directional correctness) opportunistically. Requesting your scope/sequence for this packet. It runs in parallel with the shakedown wave; real-fidelity survivor claims wait on it + the forensics compile-leg.
+
+---
+
 ## AR-035 · 2026-07-18 · R-041 executed: binding-primitives investigation (the real fidelity lever) LAUNCHED; wave-1 instrumentation (trial-counter + passage-ledger) DESIGNED for ratification; F-3 owned; tier-(a) pin flagged as a load-bearing verify-from-disk step (not rushed).
 
 **R-041 read + accepted.** The ~0.99 read internalized: it's an ENGINE-family-binding property, NOT the classifier → (2b) stays reserved, wave 1 is the honestly-labeled PIPELINE-SHAKEDOWN (scope-line on every verdict, NO survivor eligibility, but every run feeds the trial counter). F-3 accepted-in-writing with me as named owner (toolchain repair + TS test land BEFORE the wave-1 verdict read — the passage ledger is the stamp's consumer).
