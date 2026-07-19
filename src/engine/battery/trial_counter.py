@@ -113,13 +113,22 @@ class TrialCounter:
         survivor_eligible: bool = False,
         run_epoch: Optional[Dict[str, Any]] = None,
         scope_line: Optional[str] = None,
+        dataset_hash: Optional[str] = None,
+        config_hash: Optional[str] = None,
     ) -> int:
         """Persist a NEW trial row AT DISPATCH, outcome defaulted to ABORTED, and
         return its dense trial_id. Call this BEFORE executing the backtest. If
         the process dies before `finalize`, the row honestly stays ABORTED — the
         crash was a trial, and it is counted (no leak). `binding_approximation_
         rate` is REQUIRED on every trial (the measured optimistic-bias scope
-        travels with the number, R-040 pin 2iii / R-042 pin 3)."""
+        travels with the number, R-040 pin 2iii / R-042 pin 3).
+
+        `dataset_hash` (the bar data the trial ran on) and `config_hash` (the
+        experiment config: window, embargo, mode, floor) complete the EFFECTIVE-N
+        dedup tuple (R-048 §3): `effective_n()` collapses identical deterministic
+        replicates on `(spec_hash × engine_sha × dataset_hash × config_hash)` so a
+        re-run of the same experiment counts ONCE in the luck-math denominator —
+        the double-count is solved by construction, never by deleting a row."""
         trial_id = self._next_id()
         # Scope line interpolates the MEASURED per-spec rate (R-042 pin 3), never
         # a blanket ≈0.99, unless the caller supplied its own.
@@ -140,6 +149,10 @@ class TrialCounter:
             "survivor_eligible": bool(survivor_eligible),
             "scope_line": scope_line,
             "run_epoch": run_epoch or {},
+            # EFFECTIVE-N dedup tuple components (R-048 §3); None on legacy rows,
+            # which read as a valid (present-but-null) tuple slot.
+            "dataset_hash": dataset_hash,
+            "config_hash": config_hash,
             "dispatched_at": _now_iso(),
             "finalized_at": None,
         })
@@ -159,6 +172,103 @@ class TrialCounter:
                 self._persist()
                 return
         raise KeyError(f"trial_id {trial_id} not found — finalize without a prior allocate is a leak")
+
+    # ------------------------------------------------------------------ #
+    def annotate_superseded(
+        self,
+        *,
+        wave: str,
+        by: str,
+        strategy_ref: Optional[str] = None,
+        predicate=None,
+        backfill_dataset_hash: Optional[str] = None,
+        backfill_config_hash: Optional[str] = None,
+    ) -> int:
+        """R-048 §3: mark the rows of a defective audit as `SUPERSEDED_BY_REMAP`
+        WITHOUT deleting them (append-only is absolute). Adds a
+        `superseded_by_remap` provenance field ({by, at}) to every matching row;
+        never removes a row, never re-ids, never changes an outcome or the trial
+        count. Returns the number of rows annotated. Idempotent.
+
+        `predicate(row) -> bool` optionally narrows further; else all rows of
+        `wave` (and `strategy_ref` if given) match.
+
+        BACKFILL (R-048 §3 — the double-count solution): rows allocated BEFORE the
+        dedup-tuple fields existed carry null `dataset_hash`/`config_hash`, so they
+        would NOT collapse with their corrected re-run in `effective_n` — leaving
+        the double-count unsolved. When the caller passes the experiment's TRUE
+        (disk-derived) `backfill_dataset_hash`/`backfill_config_hash`, they are
+        written to matched rows ONLY WHERE CURRENTLY NULL — completing the
+        provenance of what the run actually was (the buggy run ran the identical
+        spec×engine×data×config), never overwriting a recorded identity. Then the
+        buggy row and its corrected replicate share the tuple and collapse to ONE
+        by PURE computation — `effective_n` never reads this annotation, so the
+        statistic is computed, never curated (R-048: 'no one ever needs to delete
+        anything to keep the stats right')."""
+        n = 0
+        for row in self._doc["runs"]:
+            if row["wave"] != wave:
+                continue
+            if strategy_ref is not None and row["strategy_ref"] != strategy_ref:
+                continue
+            if predicate is not None and not predicate(row):
+                continue
+            row["superseded_by_remap"] = {"by": by, "at": _now_iso()}
+            if backfill_dataset_hash is not None and row.get("dataset_hash") is None:
+                row["dataset_hash"] = backfill_dataset_hash
+            if backfill_config_hash is not None and row.get("config_hash") is None:
+                row["config_hash"] = backfill_config_hash
+            n += 1
+        if n:
+            self._persist()
+        return n
+
+    @staticmethod
+    def _dedup_key(row: dict) -> tuple:
+        """The EFFECTIVE-N collapse tuple (R-048 §3). Identical deterministic
+        replicates share it; genuinely different runs (different data, config,
+        engine, or spec) differ on at least one component. `.get()` so legacy
+        rows (pre-dataset_hash/config_hash) map to a valid all-present tuple with
+        None slots — they never silently drop out of the denominator."""
+        return (
+            row.get("spec_hash"),
+            row.get("engine_sha"),
+            row.get("dataset_hash"),
+            row.get("config_hash"),
+        )
+
+    def effective_n(self, *, wave: Optional[str] = None) -> Dict[str, Any]:
+        """R-048 §3: the denominator the luck-math (DSR/PBO/BIF) actually consumes.
+        `raw_n` counts every appended trial (nothing is ever deleted); `effective_n`
+        collapses identical deterministic replicates on
+        `(spec_hash × engine_sha × dataset_hash × config_hash)` so a re-run of the
+        same experiment — the buggy WAVE-1R vs its remap re-run — counts ONCE.
+        `groups` lists each tuple with its replicate count (>1 = a collapsed
+        re-run). Statistical honesty is COMPUTED here, never curated by deletion.
+
+        A trial is a real statistical draw only if it EXECUTED — ABORTED rows
+        (dispatch-time default, crashes) are counted in `raw_n` (no leak) but
+        excluded from the effective denominator (a crash is not a draw)."""
+        rows = [r for r in self._doc["runs"] if wave is None or r["wave"] == wave]
+        raw_n = len(rows)
+        executed = [r for r in rows if r["outcome"] != OUTCOME_ABORTED]
+        groups: Dict[tuple, int] = {}
+        for r in executed:
+            k = self._dedup_key(r)
+            groups[k] = groups.get(k, 0) + 1
+        return {
+            "raw_n": raw_n,
+            "executed_n": len(executed),
+            "aborted_n": raw_n - len(executed),
+            "effective_n": len(groups),
+            "collapsed_replicates": sum(v - 1 for v in groups.values()),
+            "groups": [
+                {"spec_hash": k[0], "engine_sha": k[1], "dataset_hash": k[2],
+                 "config_hash": k[3], "replicates": v}
+                for k, v in groups.items()
+            ],
+            "dedup_tuple": "(spec_hash × engine_sha × dataset_hash × config_hash)",
+        }
 
     # ------------------------------------------------------------------ #
     @property

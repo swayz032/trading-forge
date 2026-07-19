@@ -65,38 +65,67 @@ def _specs():
     return out
 
 
+class MappingSchemaError(RuntimeError):
+    """R-048 §2: a verdict/disposition mapping read a key ABSENT from the result
+    schema. Fail-loud — a missing key must NEVER silently default to a constant
+    (the F-1/min_paths disease: a nonexistent `min_paths`, read via `.get()`,
+    made the cpcv verdict a constant PASS). One guard kills the whole
+    silent-degradation class. A raise here is caught by the runner's per-spec
+    try/except -> a VISIBLE ABORTED with signature, not a silent wrong verdict."""
+
+
+def _req(d: dict, key: str, ctx: str):
+    """Strict verdict read (R-048 §2). Absence of `key` RAISES; a PRESENT value is
+    returned verbatim (None is a legitimate signal — a MISSING KEY is a schema
+    break). Use ONLY for keys the WF class-result contract guarantees; branch
+    discriminators that legitimately test optional presence stay on `.get()`."""
+    if key not in d:
+        raise MappingSchemaError(
+            f"R-048 §2 strict-key guard: required verdict key {key!r} absent from "
+            f"{ctx} (present keys={sorted(d)}). A verdict mapping must not read a "
+            f"missing key and default to a constant — fail-loud instead."
+        )
+    return d[key]
+
+
 def _wf_gate_rows(res: dict):
     """Extract per-judge (fired, verdict, receipt) from a WF result, reading the
     REAL keys (grader F-1/F-3: dsr + n_paths live nested in `wf_metadata`, not
     top-level; the CPCV floor is n_paths>=15 per promotion-gate-orchestrator.ts).
     A judge whose stat the class-CPCV path genuinely never computes ->
-    ('PATH_GATED', reason) (a PATH property, not a ghost-spec property)."""
+    ('PATH_GATED', reason) (a PATH property, not a ghost-spec property).
+
+    R-048 §2: every VERDICT-DETERMINING read goes through `_req` — a schema drop
+    now RAISES (visible ABORTED) instead of degrading to a silent constant."""
     V_PASS, V_FAIL, V_NE = pl_mod.VERDICT_PASS, pl_mod.VERDICT_FAIL, pl_mod.VERDICT_NOT_EVALUATED
     wfm = res.get("wf_metadata") or {}
     rows = {}
 
     # walk_forward — fires whenever the WF ran; NOT_EVALUATED when WFE degenerate.
     if wfm:
-        wfe = res.get("wfe_overall")
-        deg = res.get("wfe_status") == "degenerate_is"
+        wfe = _req(res, "wfe_overall", "wf-result")
+        status = _req(res, "wfe_status", "wf-result")
+        deg = status == "degenerate_is"
         rows["walk_forward"] = (True, V_NE if deg else (V_PASS if (wfe or 0) >= 0.70 else V_FAIL),
-                                {"wfe_overall": wfe, "wfe_status": res.get("wfe_status"), "n_folds": wfm.get("n_folds")})
-    # cpcv — FIRES when mode==cpcv; real verdict = n_paths >= the institutional
-    # floor 15 (CPCV_MIN_PATHS, promotion-gate-orchestrator.ts). (F-1 fix: was a
-    # vacuous `n_folds>=min_paths` where min_paths never exists -> always PASS.)
-    if wfm.get("mode") == "cpcv":
-        n_paths = wfm.get("n_paths")
-        rows["cpcv"] = (True, V_PASS if (n_paths or 0) >= 15 else V_FAIL,
-                        {"n_paths": n_paths, "cpcv_floor": 15, "n_folds": wfm.get("n_folds"), "path_sharpes": res.get("path_sharpes")})
+                                {"wfe_overall": wfe, "wfe_status": status, "n_folds": wfm.get("n_folds")})
+        # cpcv — FIRES when mode==cpcv; real verdict = n_paths >= the institutional
+        # floor 15 (CPCV_MIN_PATHS, promotion-gate-orchestrator.ts). (F-1 fix: was a
+        # vacuous `n_folds>=min_paths` where min_paths never exists -> always PASS.
+        # R-048 §2: mode + n_paths are now STRICT reads — a schema drop RAISES,
+        # never silently skips cpcv or degrades its verdict to a constant.)
+        if _req(wfm, "mode", "wf_metadata") == "cpcv":
+            n_paths = _req(wfm, "n_paths", "wf_metadata[cpcv]")
+            rows["cpcv"] = (True, V_PASS if n_paths >= 15 else V_FAIL,
+                            {"n_paths": n_paths, "cpcv_floor": 15, "n_folds": wfm.get("n_folds"), "path_sharpes": res.get("path_sharpes")})
     # pbo — degenerate -> spec-gated (a real degenerate-split property).
-    pbo = res.get("pbo_overall")
-    if pbo is not None and not res.get("pbo_degenerate"):
+    pbo = _req(res, "pbo_overall", "wf-result")
+    if pbo is not None and not _req(res, "pbo_degenerate", "wf-result"):
         rows["pbo"] = (True, V_FAIL if pbo > 0.15 else V_PASS, {"pbo_overall": pbo, "p_value": res.get("pbo_overall_p_value")})
     else:
         rows["pbo"] = ("SPEC_GATED", "pbo_degenerate: no IS/OOS split variation to overfit on this spec")
     # bif.
-    bif = res.get("bif")
-    if bif is not None and not res.get("bif_computation_error"):
+    bif = _req(res, "bif", "wf-result")
+    if bif is not None and not _req(res, "bif_computation_error", "wf-result"):
         rows["bif"] = (True, V_FAIL if bif > 4.0 else V_PASS, {"bif": bif, "detail": str(res.get("bif_detail"))[:120]})
     else:
         rows["bif"] = ("SPEC_GATED", "bif_computation_error")
@@ -108,11 +137,16 @@ def _wf_gate_rows(res: dict):
     # (F-3 fix: was wrongly checked at top-level -> always None -> falsely
     # spec-gated with a statistically-unsound "needs positive Sharpe" reason;
     # DSR accepts any Sharpe sign). SPEC_GATED only when genuinely unavailable.
-    if wfm.get("dsr_unavailable") or wfm.get("dsr") is None:
-        rows["dsr"] = ("SPEC_GATED", f"dsr_unavailable (dsr={wfm.get('dsr')}, dsr_unavailable={wfm.get('dsr_unavailable')})")
-    else:
-        rows["dsr"] = (True, V_PASS if wfm.get("dsr_pass") else V_FAIL,
-                       {"dsr": wfm.get("dsr"), "dsr_pass": wfm.get("dsr_pass")})
+    # R-048 §2: dsr_unavailable + dsr are STRICT reads (the contract emits both);
+    # only when the WF genuinely ran (wfm present) — a no-WF result has no dsr.
+    if wfm:
+        dsr_unavail = _req(wfm, "dsr_unavailable", "wf_metadata")
+        dsr_val = _req(wfm, "dsr", "wf_metadata")
+        if dsr_unavail or dsr_val is None:
+            rows["dsr"] = ("SPEC_GATED", f"dsr_unavailable (dsr={dsr_val}, dsr_unavailable={dsr_unavail})")
+        else:
+            dsr_pass = _req(wfm, "dsr_pass", "wf_metadata")
+            rows["dsr"] = (True, V_PASS if dsr_pass else V_FAIL, {"dsr": dsr_val, "dsr_pass": dsr_pass})
     # wrc / spa / monte_carlo_ruin — the class-CPCV walk-forward path does NOT
     # compute these (F-4 fix: a PATH-level absence for EVERY spec, not a ghost
     # property). PATH_GATED: their witnessed-firing requirement transfers to a
@@ -127,16 +161,49 @@ def main() -> int:
     ap.add_argument("--limit", type=int, default=None)
     args = ap.parse_args()
 
+    import hashlib
     import subprocess
     head = subprocess.run(["git", "-C", WT, "rev-parse", "HEAD"], capture_output=True, text=True).stdout.strip()
     if head != ENGINE_SHA:
         print(f"HALT: engine HEAD {head[:12]} != {ENGINE_SHA[:12]}"); return 1
-    epoch = {"engine_sha": ENGINE_SHA, "pid": os.getpid(), "concurrency": 1, "wave": WAVE, "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)"}
+
+    # EFFECTIVE-N dedup tuple (R-048 §3). dataset_hash = the CANONICAL hash the
+    # bar-cache provenance sidecar stamps (authoritative; identical across the
+    # buggy run and this remap re-run -> they collapse to ONE in the denominator).
+    prov = os.path.join(WT, "data_cache", "ES", "ratio_adj", "5min.parquet.provenance.json")
+    DATASET_HASH = json.load(open(prov, encoding="utf-8"))["dataset_hash"] if os.path.exists(prov) else None
+    if DATASET_HASH is None:
+        print("HALT: dataset provenance sidecar missing — cannot stamp the effective-N dataset_hash"); return 1
+    # config_hash = the experiment config that, WITH the spec+engine+data, defines
+    # a deterministic replicate. The remap did NOT change any of these -> the
+    # corrected re-run shares the tuple with the buggy run and dedups by construction.
+    CONFIG_HASH = hashlib.sha256(json.dumps({
+        "runner": "run_walk_forward_class", "wf_start": WF_START, "wf_end": WF_END,
+        "embargo_bars": 20, "mode": "cpcv", "cpcv_floor": 15, "symbol": "MES", "timeframe": "5m",
+    }, sort_keys=True).encode()).hexdigest()
+    epoch = {"engine_sha": ENGINE_SHA, "pid": os.getpid(), "concurrency": 1, "wave": WAVE,
+             "bar_source": "S3 ratio-adjusted (dataset_hash-stamped, quality-gated, cached)",
+             "dataset_hash": DATASET_HASH, "config_hash": CONFIG_HASH}
 
     counter = tc_mod.TrialCounter(os.path.join(BATTERY_DIR, "trial-counter.json"), engine_sha_at_zero=ENGINE_SHA)
     ledger = pl_mod.PassageLedger(os.path.join(BATTERY_DIR, "passage-ledger.json"))
-    # resume: specs already FINALIZED (PASS/FAIL) in this wave are skipped.
-    done = {r["strategy_ref"] for r in counter._doc["runs"] if r["wave"] == WAVE and r["outcome"] in ("PASS", "FAIL")}
+    # R-048 §3: annotate the PRE-REMAP buggy rows SUPERSEDED_BY_REMAP (never delete).
+    # The distinguisher is the null dedup-tuple slot (config_hash) — only pre-fix
+    # rows lack it; every corrected row carries it -> idempotent + re-run-safe.
+    # The pre-remap buggy rows used the IDENTICAL experiment (same spec×engine×S3
+    # data×WF config) — backfill their true, disk-derived dedup tuple so they
+    # COLLAPSE with the corrected re-run in effective_n (double-count solved by
+    # pure computation, R-048 §3), only where currently null.
+    _pre = lambda r: r.get("config_hash") is None
+    n_sup_c = counter.annotate_superseded(wave=WAVE, by="AR-044 (R-048 §3 remap)", predicate=_pre,
+                                          backfill_dataset_hash=DATASET_HASH, backfill_config_hash=CONFIG_HASH)
+    n_sup_l = ledger.annotate_superseded(wave=WAVE, by="AR-044 (R-048 §3 remap)", predicate=_pre,
+                                         backfill_dataset_hash=DATASET_HASH, backfill_config_hash=CONFIG_HASH)
+    print(f"R-048 §3: annotated {n_sup_c} counter rows + {n_sup_l} ledger rows SUPERSEDED_BY_REMAP (retained, not deleted)", flush=True)
+    # resume: specs FINALIZED in this wave are skipped — EXCEPT superseded rows
+    # (the buggy run's finalizations must not block their corrected re-run).
+    done = {r["strategy_ref"] for r in counter._doc["runs"]
+            if r["wave"] == WAVE and r["outcome"] in ("PASS", "FAIL") and not r.get("superseded_by_remap")}
 
     specs = _specs()[: args.limit] if args.limit else _specs()
     witnessed, gated = set(), {}  # gated[gate] = (SPEC_GATED|PATH_GATED, reason)
@@ -150,7 +217,8 @@ def main() -> int:
             print(f"  [{i}/{len(specs)}] {stub} SKIP (already finalized)", flush=True); continue
         approx = art["approximation_metrics"]["binding_approximation_rate"]
         tid = counter.allocate(wave=WAVE, strategy_ref=stub, spec_hash=art["spec_hash"], engine_sha=ENGINE_SHA,
-                               binding_approximation_rate=approx, survivor_eligible=False, run_epoch=epoch, scope_line=SCOPE)
+                               binding_approximation_rate=approx, survivor_eligible=False, run_epoch=epoch, scope_line=SCOPE,
+                               dataset_hash=DATASET_HASH, config_hash=CONFIG_HASH)
         t0 = time.time()
         try:
             strat = from_compiled_spec(art, symbol="MES", timeframe="5m", strategy_name=stub)

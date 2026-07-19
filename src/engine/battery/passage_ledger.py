@@ -164,6 +164,8 @@ class PassageLedger:
         exit_provenance: Optional[str] = None,
         audit_level: str = "spot-check",
         scope_line: Optional[str] = None,
+        dataset_hash: Optional[str] = None,
+        config_hash: Optional[str] = None,
     ) -> dict:
         """Record one gate's passage for one strategy. Raises on an unknown gate
         (the enum is code-derived and closed — a gate not in it is a derivation
@@ -207,12 +209,55 @@ class PassageLedger:
             # MEASURED per-spec rate (R-042 pin 3) — never a blanket 0.99. The
             # caller may pass a wave-specific scope_line; default is shakedown.
             "scope_line": scope_line or f"shakedown; binding-approx {binding_approximation_rate}; framework-behavior measurement, NOT edge evidence",
+            # EFFECTIVE-N dedup tuple components (R-048 §3) — provenance parity with
+            # the trial counter; None on legacy rows.
+            "dataset_hash": dataset_hash,
+            "config_hash": config_hash,
             "audit_level": audit_level,
             "recorded_at": _now_iso(),
         }
         self._doc["rows"].append(row)
         self._persist()
         return row
+
+    def annotate_superseded(
+        self,
+        *,
+        wave: str,
+        by: str,
+        strategy_ref: Optional[str] = None,
+        predicate=None,
+        backfill_dataset_hash: Optional[str] = None,
+        backfill_config_hash: Optional[str] = None,
+    ) -> int:
+        """R-048 §3: mark a defective audit's ledger rows `SUPERSEDED_BY_REMAP`
+        WITHOUT deleting them (append-only is absolute). Adds a
+        `superseded_by_remap` ({by, at}) provenance field to matching rows; never
+        removes a row, never changes a verdict/alarm. Returns the count annotated.
+        Idempotent. The corrected re-run appends NEW rows as always.
+
+        `predicate(row) -> bool` optionally narrows the set (e.g. only the
+        pre-remap rows, distinguished by a null dedup-tuple slot), so a repeated
+        remap never re-stamps the corrected rows. `backfill_*` completes the true
+        (disk-derived) dedup-tuple slots on matched rows only where currently null
+        — provenance parity with the trial counter (R-048 §3)."""
+        n = 0
+        for row in self._doc["rows"]:
+            if row["wave"] != wave:
+                continue
+            if strategy_ref is not None and row["strategy_ref"] != strategy_ref:
+                continue
+            if predicate is not None and not predicate(row):
+                continue
+            row["superseded_by_remap"] = {"by": by, "at": _now_iso()}
+            if backfill_dataset_hash is not None and row.get("dataset_hash") is None:
+                row["dataset_hash"] = backfill_dataset_hash
+            if backfill_config_hash is not None and row.get("config_hash") is None:
+                row["config_hash"] = backfill_config_hash
+            n += 1
+        if n:
+            self._persist()
+        return n
 
     def alarms(self) -> List[dict]:
         """Every dormant-judge alarm row — the audit's first read."""
