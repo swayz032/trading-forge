@@ -1,0 +1,294 @@
+{
+ "video": "kFyD3H6I1I8__s0",
+ "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+    "type": "WAIT_SESSION",
+    "object": "a simple 1-hour candle pattern I follow before my trading session every day",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "a simple 1-hour candle pattern I follow before my trading session every day",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+    "type": "WAIT_SESSION",
+    "object": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+    "type": "WAIT_SESSION",
+    "object": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+    "type": "WAIT_SESSION",
+    "object": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5",
+    "type": "WAIT_STRUCTURE",
+    "object": "I'm on the five-minute time frame, and I need to set up my range",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I'm on the five-minute time frame, and I need to set up my range",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+    "type": "WAIT_SESSION",
+    "object": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+    "type": "WAIT_CONFIRMATION",
+    "object": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+    "type": "WAIT_STRUCTURE",
+    "object": "I'm looking for the price to break out the bottom of that range",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I'm looking for the price to break out the bottom of that range",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+    "type": "WAIT_STRUCTURE",
+    "object": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+    "type": "WAIT_STRUCTURE",
+    "object": "This created a level of supply. I was looking at this supply level right here",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "This created a level of supply. I was looking at this supply level right here",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+    "type": "WAIT_STRUCTURE",
+    "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+    "type": "WAIT_RETEST",
+    "object": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+    "type": "WAIT_STRUCTURE",
+    "object": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+    "type": "WAIT_STRUCTURE",
+    "object": "on Forex, Nasdaq, gold, everything",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "on Forex, Nasdaq, gold, everything",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:i-already-know-the-direction-i-m-looking#15",
+    "type": "WAIT_STRUCTURE",
+    "object": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:i-was-also-looking-at-the-bottom-of-the#16",
+    "type": "WAIT_RETEST",
+    "object": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+    "type": "WAIT_SESSION",
+    "object": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+    "type": "WAIT_SESSION",
+    "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4",
+    "type_confidence": "approximate"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+    "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+    "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+    "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+    "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+    "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5",
+    "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+    "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+    "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+    "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+    "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+    "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+    "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+    "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+    "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+    "WAIT_STRUCTURE:i-already-know-the-direction-i-m-looking#15",
+    "WAIT_RETEST:i-was-also-looking-at-the-bottom-of-the#16",
+    "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+    "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:long-my-stop-loss-is-pretty-perfect-here#19",
+    "type": "INVALIDATE",
+    "object": "LONG \u2014 'My stop loss is pretty perfect here. I like it below the range.' SHORT \u2014 'I put my stop loss above this recent wick to be safe.' Break-even management \u2014 'Now, I set break even, okay? Once we got to about this level right here, I set break even.'",
+    "role": "invalidation",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "LONG \u2014 'My stop loss is pretty perfect here. I like it below the range.' SHORT \u2014 'I put my stop loss above this recent wick to be safe.' Break-even management \u2014 'Now, I set break even, okay? Once we got to about this level right here, I set break even.'",
+    "type_confidence": "confident"
+   }
+  ],
+  "entry_trigger_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 19,
+  "n_confident": 10,
+  "n_approximate": 7,
+  "n_unmatched": 2,
+  "classifier_approximation_rate": 0.4737,
+  "n_executed_bindable": 12,
+  "n_binding_approximation": 12,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

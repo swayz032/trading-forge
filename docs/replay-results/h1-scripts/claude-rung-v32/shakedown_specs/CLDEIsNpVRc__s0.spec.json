@@ -1,0 +1,177 @@
+{
+ "video": "CLDEIsNpVRc__s0",
+ "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+    "type": "WAIT_SESSION",
+    "object": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+    "type": "WAIT_SESSION",
+    "object": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_BIAS:you-want-to-wait-simply-for-price-to-tap#3",
+    "type": "WAIT_BIAS",
+    "object": "you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:drop-down-to-one-minute-time-frame-now-h#4",
+    "type": "WAIT_CONFIRMATION",
+    "object": "drop down to one minute time frame. Now here is when our lower time frame confirmation or entry model comes in and this is very important. This is the most important part of the strategy",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "drop down to one minute time frame. Now here is when our lower time frame confirmation or entry model comes in and this is very important. This is the most important part of the strategy",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:make-sure-on-the-one-minute-price-has-sw#5",
+    "type": "WAIT_RETEST",
+    "object": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6",
+    "type": "WAIT_STRUCTURE",
+    "object": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:you-simply-wait-for-price-to-close-below#7",
+    "type": "WAIT_CONFIRMATION",
+    "object": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price. So price will not go above that. So once price closes below this IFVG you want to take a short position right away",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price. So price will not go above that. So once price closes below this IFVG you want to take a short position right away",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+    "type": "WAIT_STRUCTURE",
+    "object": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+    "type": "WAIT_STRUCTURE",
+    "object": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that",
+    "type_confidence": "confident"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+    "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+    "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+    "WAIT_BIAS:you-want-to-wait-simply-for-price-to-tap#3",
+    "WAIT_CONFIRMATION:drop-down-to-one-minute-time-frame-now-h#4",
+    "WAIT_RETEST:make-sure-on-the-one-minute-price-has-sw#5",
+    "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6",
+    "WAIT_CONFIRMATION:you-simply-wait-for-price-to-close-below#7",
+    "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+    "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:you-want-to-put-your-stop-above-the-high#10",
+    "type": "INVALIDATE",
+    "object": "you want to put your stop above the high (short case); below the low / below the bodies (long case)",
+    "role": "invalidation",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "you want to put your stop above the high (short case); below the low / below the bodies (long case)",
+    "type_confidence": "confident"
+   }
+  ],
+  "entry_trigger_id": "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 10,
+  "n_confident": 4,
+  "n_approximate": 6,
+  "n_unmatched": 0,
+  "classifier_approximation_rate": 0.6,
+  "n_executed_bindable": 8,
+  "n_binding_approximation": 8,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

@@ -1,0 +1,186 @@
+{
+ "video": "0xygpCMwxbQ__s0",
+ "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_BIAS:once-i-have-a-daily-bias-or-direction-i#0",
+    "type": "WAIT_BIAS",
+    "object": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+    "type": "WAIT_STRUCTURE",
+    "object": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:i-generally-like-to-see-price-move-back#3",
+    "type": "WAIT_STRUCTURE",
+    "object": "I generally like to see price move back into a discount of this price range here",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I generally like to see price move back into a discount of this price range here",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+    "type": "WAIT_SESSION",
+    "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:some-sort-of-pd-array-where-generally-i#5",
+    "type": "WAIT_STRUCTURE",
+    "object": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+    "type": "WAIT_STRUCTURE",
+    "object": "for my entry I would personally be looking to enter the trade right here",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "for my entry I would personally be looking to enter the trade right here",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:each-one-of-these-concepts-could-be-used#7",
+    "type": "WAIT_STRUCTURE",
+    "object": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+    "type": "WAIT_SESSION",
+    "object": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:does-that-meet-all-my-criteria-it-does-n#9",
+    "type": "WAIT_STRUCTURE",
+    "object": "does that meet all my criteria it does not because it is in a premium of the range",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "does that meet all my criteria it does not because it is in a premium of the range",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+    "type": "WAIT_SESSION",
+    "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-did-go-a-tick-below-this-low-but-i-do#11",
+    "type": "WAIT_STRUCTURE",
+    "object": "we did go a tick below this low but I do not count that personally",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we did go a tick below this low but I do not count that personally",
+    "type_confidence": "unmatched"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_BIAS:once-i-have-a-daily-bias-or-direction-i#0",
+    "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+    "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+    "WAIT_STRUCTURE:i-generally-like-to-see-price-move-back#3",
+    "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+    "WAIT_STRUCTURE:some-sort-of-pd-array-where-generally-i#5",
+    "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+    "WAIT_STRUCTURE:each-one-of-these-concepts-could-be-used#7",
+    "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+    "WAIT_STRUCTURE:does-that-meet-all-my-criteria-it-does-n#9",
+    "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+    "WAIT_STRUCTURE:we-did-go-a-tick-below-this-low-but-i-do#11"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6"
+ },
+ "approximation_metrics": {
+  "n_conditions": 12,
+  "n_confident": 7,
+  "n_approximate": 1,
+  "n_unmatched": 4,
+  "classifier_approximation_rate": 0.4167,
+  "n_executed_bindable": 9,
+  "n_binding_approximation": 9,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

@@ -1,0 +1,344 @@
+{
+  "artifact": "h1-trial-counter",
+  "zero_point": "2026-07-19T07:21:43.018616+00:00",
+  "engine_sha_at_zero": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+  "total_trials": 16,
+  "runs": [
+    {
+      "trial_id": 1,
+      "wave": "shakedown-1",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:43.025924+00:00",
+      "finalized_at": "2026-07-19T07:21:47.254746+00:00"
+    },
+    {
+      "trial_id": 2,
+      "wave": "shakedown-1",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:47.255784+00:00",
+      "finalized_at": "2026-07-19T07:21:48.011498+00:00"
+    },
+    {
+      "trial_id": 3,
+      "wave": "shakedown-1",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:48.012489+00:00",
+      "finalized_at": "2026-07-19T07:21:48.763872+00:00"
+    },
+    {
+      "trial_id": 4,
+      "wave": "shakedown-1",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:48.764821+00:00",
+      "finalized_at": "2026-07-19T07:21:49.513695+00:00"
+    },
+    {
+      "trial_id": 5,
+      "wave": "shakedown-1",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:49.514995+00:00",
+      "finalized_at": "2026-07-19T07:21:50.251801+00:00"
+    },
+    {
+      "trial_id": 6,
+      "wave": "shakedown-1",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:50.252847+00:00",
+      "finalized_at": "2026-07-19T07:21:50.992538+00:00"
+    },
+    {
+      "trial_id": 7,
+      "wave": "shakedown-1",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:50.993764+00:00",
+      "finalized_at": "2026-07-19T07:21:51.116678+00:00"
+    },
+    {
+      "trial_id": 8,
+      "wave": "shakedown-1",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:51.117795+00:00",
+      "finalized_at": "2026-07-19T07:21:51.887120+00:00"
+    },
+    {
+      "trial_id": 9,
+      "wave": "shakedown-1",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:51.888118+00:00",
+      "finalized_at": "2026-07-19T07:21:52.626375+00:00"
+    },
+    {
+      "trial_id": 10,
+      "wave": "shakedown-1",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:52.627654+00:00",
+      "finalized_at": "2026-07-19T07:21:53.367939+00:00"
+    },
+    {
+      "trial_id": 11,
+      "wave": "shakedown-1",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:53.369265+00:00",
+      "finalized_at": "2026-07-19T07:21:54.123264+00:00"
+    },
+    {
+      "trial_id": 12,
+      "wave": "shakedown-1",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 0.9,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 0.9; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:54.124427+00:00",
+      "finalized_at": "2026-07-19T07:21:54.877237+00:00"
+    },
+    {
+      "trial_id": 13,
+      "wave": "shakedown-1",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:54.878764+00:00",
+      "finalized_at": "2026-07-19T07:21:55.624849+00:00"
+    },
+    {
+      "trial_id": 14,
+      "wave": "shakedown-1",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:55.626271+00:00",
+      "finalized_at": "2026-07-19T07:21:55.733947+00:00"
+    },
+    {
+      "trial_id": 15,
+      "wave": "shakedown-1",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:55.735871+00:00",
+      "finalized_at": "2026-07-19T07:21:55.847765+00:00"
+    },
+    {
+      "trial_id": 16,
+      "wave": "shakedown-1",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "outcome": "FAIL",
+      "abort_signature": null,
+      "binding_approximation_rate": 1.0,
+      "survivor_eligible": false,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "run_epoch": {
+        "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+        "pid": 9180,
+        "concurrency": 1,
+        "wave": "shakedown-1",
+        "bar_source": "synthetic"
+      },
+      "dispatched_at": "2026-07-19T07:21:55.849223+00:00",
+      "finalized_at": "2026-07-19T07:21:56.597332+00:00"
+    }
+  ]
+}

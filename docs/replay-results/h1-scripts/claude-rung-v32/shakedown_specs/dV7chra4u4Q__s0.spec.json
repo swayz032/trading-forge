@@ -1,0 +1,151 @@
+{
+ "video": "dV7chra4u4Q__s0",
+ "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+    "type": "WAIT_SESSION",
+    "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:we-want-to-wait-for-price-to-break-the-k#1",
+    "type": "WAIT_CONFIRMATION",
+    "object": "We want to wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level. Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it. Literally like a couple big candles through the level, that's what we want to look for. So, if it looks weak, we ignore the setup, and we do not take it.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "We want to wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level. Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it. Literally like a couple big candles through the level, that's what we want to look for. So, if it looks weak, we ignore the setup, and we do not take it.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:we-want-to-wait-for-the-retest-we-want-t#2",
+    "type": "WAIT_RETEST",
+    "object": "We want to wait for the retest. We want to wait for price to pull back, price pulls back, tests the level. We want to see price hold the level. If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish price action, if we're looking for price to go down.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "We want to wait for the retest. We want to wait for price to pull back, price pulls back, tests the level. We want to see price hold the level. If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish price action, if we're looking for price to go down.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:i-enter-after-confirmation-so-again-if-w#3",
+    "type": "WAIT_CONFIRMATION",
+    "object": "I enter after confirmation. So, again, if we do not get confirmation, we do not take the trade. For a long: we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. For a short: we're looking for bearish price action. Long upper wicks, bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I enter after confirmation. So, again, if we do not get confirmation, we do not take the trade. For a long: we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. For a short: we're looking for bearish price action. Long upper wicks, bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+    "type": "WAIT_CONFIRMATION",
+    "object": "We do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "We do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+    "type": "WAIT_CONFIRMATION",
+    "object": "If you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area. All those things combined, the volume confirmation, the price action telling you to get in, as well as the liquidity on Bookmap, all of that sets up for a very high probability trade.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "If you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area. All those things combined, the volume confirmation, the price action telling you to get in, as well as the liquidity on Bookmap, all of that sets up for a very high probability trade.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:the-first-retest-is-always-the-highest-p#6",
+    "type": "WAIT_RETEST",
+    "object": "The first retest is always the highest probability. So don't be sitting there trying to trade every break and retest.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "The first retest is always the highest probability. So don't be sitting there trying to trade every break and retest.",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7",
+    "type": "WAIT_STRUCTURE",
+    "object": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max.",
+    "type_confidence": "unmatched"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+    "WAIT_CONFIRMATION:we-want-to-wait-for-price-to-break-the-k#1",
+    "WAIT_RETEST:we-want-to-wait-for-the-retest-we-want-t#2",
+    "WAIT_CONFIRMATION:i-enter-after-confirmation-so-again-if-w#3",
+    "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+    "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+    "WAIT_RETEST:the-first-retest-is-always-the-highest-p#6",
+    "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:your-stop-is-if-price-breaks-back-on-the#8",
+    "type": "INVALIDATE",
+    "object": "Your stop is if price breaks back on the opposite side of the breakout level. For longs, right below the break area; for shorts, if price comes back up above the break area. That's it. So, you're not risking a lot when you take these trades.",
+    "role": "invalidation",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "Your stop is if price breaks back on the opposite side of the breakout level. For longs, right below the break area; for shorts, if price comes back up above the break area. That's it. So, you're not risking a lot when you take these trades.",
+    "type_confidence": "confident"
+   }
+  ],
+  "entry_trigger_id": "WAIT_CONFIRMATION:i-enter-after-confirmation-so-again-if-w#3",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 8,
+  "n_confident": 1,
+  "n_approximate": 6,
+  "n_unmatched": 1,
+  "classifier_approximation_rate": 0.875,
+  "n_executed_bindable": 7,
+  "n_binding_approximation": 7,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

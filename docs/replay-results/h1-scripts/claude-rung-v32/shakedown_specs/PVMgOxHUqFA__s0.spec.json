@@ -1,0 +1,151 @@
+{
+ "video": "PVMgOxHUqFA__s0",
+ "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:you-just-have-to-start-tracking-your-hig#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "You just have to start tracking your highs and lows on that 15-minut time frame.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "You just have to start tracking your highs and lows on that 15-minut time frame.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+    "type": "WAIT_STRUCTURE",
+    "object": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support.",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+    "type": "WAIT_CONFIRMATION",
+    "object": "confirmation to enter: the moment price comes above this level, this lets us know that price is bullish",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "confirmation to enter: the moment price comes above this level, this lets us know that price is bullish",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+    "type": "WAIT_STRUCTURE",
+    "object": "once you find this... breaking above that level... your entry goes here",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "once you find this... breaking above that level... your entry goes here",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:literally-a-abc-setup#5",
+    "type": "WAIT_STRUCTURE",
+    "object": "Literally a ABC setup.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "Literally a ABC setup.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:a-is-a-low-b-is-a-lower-high-identified#6",
+    "type": "WAIT_CONFIRMATION",
+    "object": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher than the previous one. Same setup. Literally a ABC setup.'",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher than the previous one. Same setup. Literally a ABC setup.'",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+    "type": "WAIT_STRUCTURE",
+    "object": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+    "type_confidence": "confident"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:you-just-have-to-start-tracking-your-hig#0",
+    "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+    "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+    "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+    "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+    "WAIT_STRUCTURE:literally-a-abc-setup#5",
+    "WAIT_CONFIRMATION:a-is-a-low-b-is-a-lower-high-identified#6",
+    "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:putting-your-stop-loss-under-that-level#8",
+    "type": "INVALIDATE",
+    "object": "putting your stop loss under that level where you don't want to see price get broken; explicit operator choice of either the higher-low/reclaim level or the prior low ('either here or here whichever one you want to use')",
+    "role": "invalidation",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "putting your stop loss under that level where you don't want to see price get broken; explicit operator choice of either the higher-low/reclaim level or the prior low ('either here or here whichever one you want to use')",
+    "type_confidence": "confident"
+   }
+  ],
+  "entry_trigger_id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 8,
+  "n_confident": 4,
+  "n_approximate": 1,
+  "n_unmatched": 3,
+  "classifier_approximation_rate": 0.5,
+  "n_executed_bindable": 8,
+  "n_binding_approximation": 8,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

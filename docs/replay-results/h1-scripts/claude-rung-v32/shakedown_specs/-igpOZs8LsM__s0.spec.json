@@ -1,0 +1,190 @@
+{
+ "video": "-igpOZs8LsM__s0",
+ "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:the-gap-you-know-is-created-between-thre#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "the gap you know is created between three candlesticks",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the gap you know is created between three candlesticks",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+    "type": "WAIT_SESSION",
+    "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "this is a bullish imbalance",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "this is a bullish imbalance",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+    "type": "WAIT_SESSION",
+    "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
+    "type": "WAIT_RETEST",
+    "object": "patiently wait for you know price to get there tap in",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "patiently wait for you know price to get there tap in",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+    "type": "WAIT_RETEST",
+    "object": "wait for price to tap in and then push to your direction",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "wait for price to tap in and then push to your direction",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_BIAS:the-probability-of-your-treads-playing-o#6",
+    "type": "WAIT_BIAS",
+    "object": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+    "type": "WAIT_STRUCTURE",
+    "object": "the imbalance must create a break of structure",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the imbalance must create a break of structure",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+    "type": "WAIT_STRUCTURE",
+    "object": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+    "type": "WAIT_RETEST",
+    "object": "there should also be liquidity price will clear before you know tapping into the imbalance",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "there should also be liquidity price will clear before you know tapping into the imbalance",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+    "type": "WAIT_STRUCTURE",
+    "object": "map out the FVG that is very close to the order block",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "map out the FVG that is very close to the order block",
+    "type_confidence": "confident"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:the-gap-you-know-is-created-between-thre#0",
+    "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+    "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+    "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+    "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
+    "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+    "WAIT_BIAS:the-probability-of-your-treads-playing-o#6",
+    "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+    "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+    "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+    "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:put-your-stop-loss-a-little-bit-below-th#11",
+    "type": "INVALIDATE",
+    "object": "put your stop loss a little bit below the fair value gap",
+    "role": "invalidation",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "put your stop loss a little bit below the fair value gap",
+    "type_confidence": "confident"
+   }
+  ],
+  "entry_trigger_id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 11,
+  "n_confident": 8,
+  "n_approximate": 3,
+  "n_unmatched": 0,
+  "classifier_approximation_rate": 0.2727,
+  "n_executed_bindable": 9,
+  "n_binding_approximation": 9,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

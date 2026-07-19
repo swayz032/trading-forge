@@ -1,0 +1,112 @@
+{
+ "video": "_LS6qcSlDCs__s0",
+ "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+    "type": "WAIT_SESSION",
+    "object": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:i-m-using-that-vwop-level-as-that-big-mi#1",
+    "type": "WAIT_RETEST",
+    "object": "i'm using that vwop level as that big milestone level and then i'm buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "i'm using that vwop level as that big milestone level and then i'm buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+    "type": "WAIT_RETEST",
+    "object": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+    "type": "FILTER",
+    "object": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+    "type": "WAIT_SESSION",
+    "object": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5",
+    "type": "WAIT_RETEST",
+    "object": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level",
+    "type_confidence": "approximate"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+    "WAIT_RETEST:i-m-using-that-vwop-level-as-that-big-mi#1",
+    "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+    "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+    "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+    "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 6,
+  "n_confident": 1,
+  "n_approximate": 5,
+  "n_unmatched": 0,
+  "classifier_approximation_rate": 0.8333,
+  "n_executed_bindable": 4,
+  "n_binding_approximation": 4,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

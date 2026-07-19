@@ -1,0 +1,134 @@
+{
+ "video": "DLwVqcLRcfw__s0",
+ "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+    "type": "WAIT_SESSION",
+    "object": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+    "type": "WAIT_STRUCTURE",
+    "object": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:anytime-we-come-into-vwap-and-kind-of-te#2",
+    "type": "WAIT_CONFIRMATION",
+    "object": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:come-down-to-vwap-start-a-new-position-b#3",
+    "type": "WAIT_STRUCTURE",
+    "object": "come down to vwap start a new position bounce come down to vop start a new position",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "come down to vwap start a new position bounce come down to vop start a new position",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+    "type": "WAIT_STRUCTURE",
+    "object": "if we're trading over the vwob we're typically more bullish",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if we're trading over the vwob we're typically more bullish",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:as-long-as-we-re-trading-over-vwap-and-a#5",
+    "type": "WAIT_STRUCTURE",
+    "object": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+    "type": "WAIT_STRUCTURE",
+    "object": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-green-line-that-you-see-is-the-vwap#7",
+    "type": "WAIT_STRUCTURE",
+    "object": "the green line that you see is the vwap ... the little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the green line that you see is the vwap ... the little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW",
+    "type_confidence": "confident"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+    "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+    "WAIT_CONFIRMATION:anytime-we-come-into-vwap-and-kind-of-te#2",
+    "WAIT_STRUCTURE:come-down-to-vwap-start-a-new-position-b#3",
+    "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+    "WAIT_STRUCTURE:as-long-as-we-re-trading-over-vwap-and-a#5",
+    "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+    "WAIT_STRUCTURE:the-green-line-that-you-see-is-the-vwap#7"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_STRUCTURE:come-down-to-vwap-start-a-new-position-b#3"
+ },
+ "approximation_metrics": {
+  "n_conditions": 8,
+  "n_confident": 3,
+  "n_approximate": 0,
+  "n_unmatched": 5,
+  "classifier_approximation_rate": 0.625,
+  "n_executed_bindable": 7,
+  "n_binding_approximation": 7,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

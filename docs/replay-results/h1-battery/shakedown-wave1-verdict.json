@@ -1,0 +1,36 @@
+{
+  "verdict": "SHAKEDOWN_COMPLETE",
+  "note": "machinery proven; NO survivor eligibility; anti-overfit judges data-gated (dispositioned)",
+  "validity": {
+    "wave": "shakedown-1",
+    "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+    "engine_sha_verified_head": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+    "trial_counter_zero_point_engine": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+    "n_trials": 16,
+    "outcomes": {
+      "FAIL": 16
+    },
+    "survivor_eligibility": "NONE (R-041 \u00a73 shakedown)",
+    "scope_line": "shakedown; per-spec binding-approx on each trial; framework-behavior measurement, NOT edge evidence",
+    "engagement_sweep": {
+      "fill_model": "engaged",
+      "bar_source": "synthetic (no local bar data)",
+      "eligibility_gate": "default"
+    },
+    "coverage_dispositions": {
+      "walk_forward": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "cpcv": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "dsr": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "pbo": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "bif": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "wrc": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "spa": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "monte_carlo_ruin": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "slippage_survival": "data-gated: no local bar data; requires the walk_forward real-data dispatch (witnessed-firing deferred)",
+      "forge_score": "forge_score's crisis-veto is STRUCTURALLY untestable on the run_class_backtest path (crisis_results always None -> passed can only be True); witnessed-firing awaits the crisis-scenario path"
+    },
+    "coverage_disposition_reason": "no local bar data -> the walk-forward anti-overfit battery + prop/promotion judges cannot fire here; witnessed-firing deferred to the real-data dispatch. Counter/ledger/Tooth-2/ops-rhythm + performance_gate ARE exercised.",
+    "tooth2_fail_closed": true,
+    "undispositioned_gaps": []
+  }
+}

@@ -1,0 +1,320 @@
+{
+ "video": "WEhmadJArQo__s0",
+ "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "we're going to get to our desks right at 9:30 a.m. EST",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we're going to get to our desks right at 9:30 a.m. EST",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:we-re-going-to-wait-for-the-first-candle#1",
+    "type": "WAIT_CONFIRMATION",
+    "object": "we're going to wait for the first candle of the day at that 9:30 time to print",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we're going to wait for the first candle of the day at that 9:30 time to print",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "We're going to start on our five-minute chart.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "We're going to start on our five-minute chart.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+    "type": "WAIT_STRUCTURE",
+    "object": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+    "type": "WAIT_STRUCTURE",
+    "object": "we are going to switch to the 1 minute chart",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we are going to switch to the 1 minute chart",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+    "type": "WAIT_STRUCTURE",
+    "object": "we're going to wait for a break of the level, but we need a fair value gap",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we're going to wait for a break of the level, but we need a fair value gap",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+    "type": "WAIT_RETEST",
+    "object": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+    "type": "WAIT_RETEST",
+    "object": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+    "type": "WAIT_CONFIRMATION",
+    "object": "as soon as we get this engulfing, you're good to enter the trade",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "as soon as we get this engulfing, you're good to enter the trade",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+    "type": "WAIT_STRUCTURE",
+    "object": "you're going to start on the 15minute chart",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "you're going to start on the 15minute chart",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+    "type": "WAIT_STRUCTURE",
+    "object": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11",
+    "type": "WAIT_STRUCTURE",
+    "object": "we're going to mark the high and the low of the first 15-minute candle",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we're going to mark the high and the low of the first 15-minute candle",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+    "type": "WAIT_STRUCTURE",
+    "object": "Instead of going to the one minute chart, we're going to go to the five-minute chart.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "Instead of going to the one minute chart, we're going to go to the five-minute chart.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-have-now-created-our-fair-value-gap-t#13",
+    "type": "WAIT_STRUCTURE",
+    "object": "we have now created our fair value gap through this first candle",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we have now created our fair value gap through this first candle",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+    "type": "WAIT_RETEST",
+    "object": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+    "type": "WAIT_STRUCTURE",
+    "object": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+    "type": "WAIT_STRUCTURE",
+    "object": "since we broke through the high, the direction is bullish. We're going to be looking for long trades.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "since we broke through the high, the direction is bullish. We're going to be looking for long trades.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+    "type": "WAIT_CONFIRMATION",
+    "object": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:a-fair-value-gap-is-just-a-three-candle#18",
+    "type": "WAIT_CONFIRMATION",
+    "object": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+    "type": "WAIT_STRUCTURE",
+    "object": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:if-you-re-not-aware-of-what-an-engulfing#20",
+    "type": "WAIT_CONFIRMATION",
+    "object": "if you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21",
+    "type": "WAIT_RETEST",
+    "object": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine.",
+    "type_confidence": "approximate"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+    "WAIT_CONFIRMATION:we-re-going-to-wait-for-the-first-candle#1",
+    "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+    "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+    "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+    "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+    "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+    "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+    "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+    "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+    "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+    "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11",
+    "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+    "WAIT_STRUCTURE:we-have-now-created-our-fair-value-gap-t#13",
+    "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+    "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+    "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+    "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+    "WAIT_CONFIRMATION:a-fair-value-gap-is-just-a-three-candle#18",
+    "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+    "WAIT_CONFIRMATION:if-you-re-not-aware-of-what-an-engulfing#20",
+    "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 22,
+  "n_confident": 7,
+  "n_approximate": 6,
+  "n_unmatched": 9,
+  "classifier_approximation_rate": 0.6818,
+  "n_executed_bindable": 22,
+  "n_binding_approximation": 22,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

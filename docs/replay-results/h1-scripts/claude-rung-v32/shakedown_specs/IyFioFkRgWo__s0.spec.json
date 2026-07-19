@@ -1,0 +1,112 @@
+{
+ "video": "IyFioFkRgWo__s0",
+ "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "long",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+    "type": "WAIT_STRUCTURE",
+    "object": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:the-stock-came-down-and-it-hit-right-the#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "the stock came down and it hit right there that's our entry for a scalp",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "the stock came down and it hit right there that's our entry for a scalp",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+    "type": "WAIT_STRUCTURE",
+    "object": "I got the 5 minute chart",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I got the 5 minute chart",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:this-13-ema-operated-as-a-initial-suppor#4",
+    "type": "WAIT_CONFIRMATION",
+    "object": "this 13 EMA operated as a initial support ... this candle wick came down bounced off of that",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "this 13 EMA operated as a initial support ... this candle wick came down bounced off of that",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5",
+    "type": "WAIT_STRUCTURE",
+    "object": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there",
+    "type_confidence": "unmatched"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+    "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+    "WAIT_STRUCTURE:the-stock-came-down-and-it-hit-right-the#2",
+    "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+    "WAIT_CONFIRMATION:this-13-ema-operated-as-a-initial-suppor#4",
+    "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_STRUCTURE:the-stock-came-down-and-it-hit-right-the#2",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 6,
+  "n_confident": 2,
+  "n_approximate": 1,
+  "n_unmatched": 3,
+  "classifier_approximation_rate": 0.6667,
+  "n_executed_bindable": 6,
+  "n_binding_approximation": 6,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

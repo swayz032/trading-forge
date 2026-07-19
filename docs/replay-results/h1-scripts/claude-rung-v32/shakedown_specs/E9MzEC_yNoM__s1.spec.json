@@ -1,0 +1,160 @@
+{
+ "video": "E9MzEC_yNoM__s1",
+ "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+    "type": "WAIT_SESSION",
+    "object": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action.",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+    "type": "WAIT_SESSION",
+    "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+    "type": "WAIT_RETEST",
+    "object": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+    "type": "WAIT_SESSION",
+    "object": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+    "type": "WAIT_SESSION",
+    "object": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+    "type": "WAIT_RETEST",
+    "object": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+    "type": "WAIT_STRUCTURE",
+    "object": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+    "type": "WAIT_STRUCTURE",
+    "object": "reclaims the level with a lot of volume",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "reclaims the level with a lot of volume",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:if-you-use-orderflow-such-as-bookmap-the#9",
+    "type": "WAIT_STRUCTURE",
+    "object": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator.",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator.",
+    "type_confidence": "approximate"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+    "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+    "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+    "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+    "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+    "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+    "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+    "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+    "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+    "WAIT_STRUCTURE:if-you-use-orderflow-such-as-bookmap-the#9"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7"
+ },
+ "approximation_metrics": {
+  "n_conditions": 10,
+  "n_confident": 2,
+  "n_approximate": 7,
+  "n_unmatched": 1,
+  "classifier_approximation_rate": 0.8,
+  "n_executed_bindable": 6,
+  "n_binding_approximation": 6,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

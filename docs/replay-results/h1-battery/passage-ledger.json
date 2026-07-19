@@ -1,0 +1,742 @@
+{
+  "artifact": "h1-passage-ledger",
+  "gate_enum_provenance": "code-derived (R-042 pin 2)",
+  "rows": [
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3982.705506,
+            "sharpe_ratio": -29.2058,
+            "profit_factor": 0.0061,
+            "total_trades": 18
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:47.253125+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3500.323271,
+            "sharpe_ratio": -18.6528,
+            "profit_factor": 0.1164,
+            "total_trades": 16
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:48.009750+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -6217.076473,
+            "sharpe_ratio": -44.65,
+            "profit_factor": 0.0026,
+            "total_trades": 18
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:48.762282+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3392.13465,
+            "sharpe_ratio": -25.0392,
+            "profit_factor": 0.1159,
+            "total_trades": 17
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:49.512022+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -2710.073917,
+            "sharpe_ratio": -29.0266,
+            "profit_factor": 0.0061,
+            "total_trades": 17
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:50.250124+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -2576.519144,
+            "sharpe_ratio": -28.0525,
+            "profit_factor": 0.015,
+            "total_trades": 17
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:50.990962+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3637.231466,
+            "sharpe_ratio": -23.6232,
+            "profit_factor": 0.0076,
+            "total_trades": 18
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:51.115285+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3982.705506,
+            "sharpe_ratio": -29.2058,
+            "profit_factor": 0.0061,
+            "total_trades": 18
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:51.885411+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -1171.552396,
+            "sharpe_ratio": -5.8395,
+            "profit_factor": 0.5522,
+            "total_trades": 16
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:52.624469+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -2710.073917,
+            "sharpe_ratio": -29.0266,
+            "profit_factor": 0.0061,
+            "total_trades": 17
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:53.365648+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -6217.076473,
+            "sharpe_ratio": -44.65,
+            "profit_factor": 0.0026,
+            "total_trades": 18
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:54.120975+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3379.868022,
+            "sharpe_ratio": -25.2202,
+            "profit_factor": 0.047,
+            "total_trades": 17
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 0.9; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:54.875132+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -4336.858424,
+            "sharpe_ratio": -36.2189,
+            "profit_factor": 0.0,
+            "total_trades": 18
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:55.622798+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3652.926616,
+            "sharpe_ratio": -38.3157,
+            "profit_factor": 0.014,
+            "total_trades": 18
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:55.731503+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -2573.0367,
+            "sharpe_ratio": -29.3469,
+            "profit_factor": 0.0621,
+            "total_trades": 17
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:55.845620+00:00"
+    },
+    {
+      "wave": "shakedown-1",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "performance_gate",
+      "gate_stage": "performance",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "performance_gate.py:57 (backtester.py:5547,7686)",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "gate_rejections",
+          "tier",
+          "total_return",
+          "sharpe_ratio",
+          "profit_factor",
+          "total_trades"
+        ],
+        "value": {
+          "gate_rejections": [
+            "Only 9 OOS trading days \u2014 minimum 60 required for statistical reliability"
+          ],
+          "tier": "REJECTED",
+          "metrics": {
+            "total_return": -3539.700146,
+            "sharpe_ratio": -32.5533,
+            "profit_factor": 0.0192,
+            "total_trades": 17
+          }
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "fill_model",
+          "synthetic_bars(no-local-data)"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T07:21:56.594909+00:00"
+    }
+  ]
+}

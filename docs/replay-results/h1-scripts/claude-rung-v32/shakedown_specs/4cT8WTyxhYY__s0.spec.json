@@ -1,0 +1,164 @@
+{
+ "video": "4cT8WTyxhYY__s0",
+ "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+    "type": "WAIT_STRUCTURE",
+    "object": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:you-were-going-to-mark-your-entry-point#2",
+    "type": "WAIT_STRUCTURE",
+    "object": "you were going to mark your entry point at the candle that made the liquidity grab",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "you were going to mark your entry point at the candle that made the liquidity grab",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+    "type": "WAIT_STRUCTURE",
+    "object": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+    "type": "WAIT_STRUCTURE",
+    "object": "we wait for the entry signal once we get it we enter",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we wait for the entry signal once we get it we enter",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+    "type": "WAIT_STRUCTURE",
+    "object": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+    "type": "WAIT_SESSION",
+    "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_STRUCTURE:to-do-this-simply-go-to-metatrader-click#7",
+    "type": "WAIT_STRUCTURE",
+    "object": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_BIAS:we-then-move-to-a-1hour-time-frame-and-w#8",
+    "type": "WAIT_BIAS",
+    "object": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame and on top of that we have a liquidity grab on a lower time frame which is a great Confluence we move back to the 15-minute time frame and do our normal stop loss and take profit ... we would not enter on this trade because the move is happening in the middle of this range on a higher time frame",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame and on top of that we have a liquidity grab on a lower time frame which is a great Confluence we move back to the 15-minute time frame and do our normal stop loss and take profit ... we would not enter on this trade because the move is happening in the middle of this range on a higher time frame",
+    "type_confidence": "approximate"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+    "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+    "WAIT_STRUCTURE:you-were-going-to-mark-your-entry-point#2",
+    "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+    "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+    "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+    "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+    "WAIT_STRUCTURE:to-do-this-simply-go-to-metatrader-click#7",
+    "WAIT_BIAS:we-then-move-to-a-1hour-time-frame-and-w#8"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [
+   {
+    "id": "INVALIDATE:set-your-stop-loss-right-right-below-the#9",
+    "type": "INVALIDATE",
+    "object": "set your stop loss right right below the liquidity grab (for longs); set our stop loss right above the liquidity grab (for shorts)",
+    "role": "invalidation",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "set your stop loss right right below the liquidity grab (for longs); set our stop loss right above the liquidity grab (for shorts)",
+    "type_confidence": "confident"
+   }
+  ],
+  "entry_trigger_id": "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 9,
+  "n_confident": 0,
+  "n_approximate": 8,
+  "n_unmatched": 1,
+  "classifier_approximation_rate": 1.0,
+  "n_executed_bindable": 8,
+  "n_binding_approximation": 8,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

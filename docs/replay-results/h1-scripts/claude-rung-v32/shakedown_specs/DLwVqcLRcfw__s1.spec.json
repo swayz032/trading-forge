@@ -1,0 +1,112 @@
+{
+ "video": "DLwVqcLRcfw__s1",
+ "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "short",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+    "type": "WAIT_STRUCTURE",
+    "object": "how to use vwap as well as a 20 period moving average which 20 simple moving average",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "how to use vwap as well as a 20 period moving average which 20 simple moving average",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:if-we-were-to-lose-vop-and-lose-the-20-s#2",
+    "type": "WAIT_CONFIRMATION",
+    "object": "if we were to lose vop and lose the 20 SMA collectively and then close below vop",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if we were to lose vop and lose the 20 SMA collectively and then close below vop",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:then-we-have-a-following-candle-that-sta#3",
+    "type": "WAIT_STRUCTURE",
+    "object": "then we have a following candle that starts to build below",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "then we have a following candle that starts to build below",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+    "type": "WAIT_CONFIRMATION",
+    "object": "what I'm looking to do is short the rejection of vwap and the 20 SMA",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "what I'm looking to do is short the rejection of vwap and the 20 SMA",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:as-long-as-we-don-t-close-below-vwap-we#5",
+    "type": "WAIT_CONFIRMATION",
+    "object": "as long as we don't close below vwap we should still not be trying to short the market here",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "as long as we don't close below vwap we should still not be trying to short the market here",
+    "type_confidence": "confident"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+    "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+    "WAIT_CONFIRMATION:if-we-were-to-lose-vop-and-lose-the-20-s#2",
+    "WAIT_STRUCTURE:then-we-have-a-following-candle-that-sta#3",
+    "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+    "WAIT_CONFIRMATION:as-long-as-we-don-t-close-below-vwap-we#5"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+  "framework_overlay": {
+   "exit": "house-default (trader taught none)",
+   "exit_source": "framework_overlay_style_c"
+  }
+ },
+ "approximation_metrics": {
+  "n_conditions": 6,
+  "n_confident": 3,
+  "n_approximate": 0,
+  "n_unmatched": 3,
+  "classifier_approximation_rate": 0.5,
+  "n_executed_bindable": 6,
+  "n_binding_approximation": 6,
+  "binding_approximation_rate": 1.0,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}

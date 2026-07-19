@@ -1,0 +1,160 @@
+{
+ "video": "W7nlnHTUZQU__s0",
+ "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+ "graph_canonical_hash": "",
+ "ledger_d": "UNKNOWN",
+ "transcript_chars": 0,
+ "spec": {
+  "direction": "both",
+  "entry_conditions": [
+   {
+    "id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+    "type": "WAIT_STRUCTURE",
+    "object": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:what-we-are-going-to-wait-for-is-one-for#1",
+    "type": "WAIT_STRUCTURE",
+    "object": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:if-we-can-actually-get-that-break-we-wan#2",
+    "type": "WAIT_CONFIRMATION",
+    "object": "if we can actually get that break we want to see it close below or above with strength or weakness. So if for example if we're breaking below well then we want to see a break below with weakness. If we see a break above well then we want to look for price to break above with strength",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "if we can actually get that break we want to see it close below or above with strength or weakness. So if for example if we're breaking below well then we want to see a break below with weakness. If we see a break above well then we want to look for price to break above with strength",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:we-are-waiting-for-candle-closes-to-actu#3",
+    "type": "WAIT_CONFIRMATION",
+    "object": "we are waiting for candle closes to actually confirm... price wicked right back down and reclaimed on the opposite side. So there was no entry",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "we are waiting for candle closes to actually confirm... price wicked right back down and reclaimed on the opposite side. So there was no entry",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+    "type": "WAIT_RETEST",
+    "object": "LONG: if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume. If we can get that, we are then going to look for a long entry",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "LONG: if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume. If we can get that, we are then going to look for a long entry",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_CONFIRMATION:short-if-price-were-to-break-below-this#5",
+    "type": "WAIT_CONFIRMATION",
+    "object": "SHORT: If price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this area as resistance with bearish price action, whether it be bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume. Well, if we get that, we are going to look for a short entry to take price lower",
+    "role": "spine",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "SHORT: If price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this area as resistance with bearish price action, whether it be bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume. Well, if we get that, we are going to look for a short entry to take price lower",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+    "type": "WAIT_SESSION",
+    "object": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)",
+    "type_confidence": "approximate"
+   },
+   {
+    "id": "FILTER:an-elevation-in-the-volume#7",
+    "type": "FILTER",
+    "object": "an elevation in the volume",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "an elevation in the volume",
+    "type_confidence": "confident"
+   },
+   {
+    "id": "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+    "type": "WAIT_STRUCTURE",
+    "object": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day",
+    "type_confidence": "unmatched"
+   },
+   {
+    "id": "WAIT_RETEST:entry-mechanic-variant-i-m-not-a-big-fan#9",
+    "type": "WAIT_RETEST",
+    "object": "ENTRY-MECHANIC VARIANT: I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest",
+    "role": "confluence",
+    "span": {
+     "start": 0,
+     "end": 0
+    },
+    "evidence": "ENTRY-MECHANIC VARIANT: I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest",
+    "type_confidence": "confident"
+   }
+  ],
+  "and_groups": [
+   [
+    "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+    "WAIT_STRUCTURE:what-we-are-going-to-wait-for-is-one-for#1",
+    "WAIT_CONFIRMATION:if-we-can-actually-get-that-break-we-wan#2",
+    "WAIT_CONFIRMATION:we-are-waiting-for-candle-closes-to-actu#3",
+    "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+    "WAIT_CONFIRMATION:short-if-price-were-to-break-below-this#5",
+    "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+    "FILTER:an-elevation-in-the-volume#7",
+    "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+    "WAIT_RETEST:entry-mechanic-variant-i-m-not-a-big-fan#9"
+   ]
+  ],
+  "or_branches": [],
+  "invalidations": [],
+  "entry_trigger_id": "WAIT_CONFIRMATION:short-if-price-were-to-break-below-this#5"
+ },
+ "approximation_metrics": {
+  "n_conditions": 10,
+  "n_confident": 6,
+  "n_approximate": 3,
+  "n_unmatched": 1,
+  "classifier_approximation_rate": 0.4,
+  "n_executed_bindable": 10,
+  "n_binding_approximation": 9,
+  "binding_approximation_rate": 0.9,
+  "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
+ }
+}
