@@ -589,6 +589,21 @@ export async function onboardSpecArtifact(
     // bidirectional setup has no single regime bias by construction).
     const preferredRegime = spec.direction === "long" ? "TRENDING_UP" : spec.direction === "short" ? "TRENDING_DOWN" : null;
 
+    // PACKET 2 (R-039 pin c / R-040): propagate the producer's house-default-exit
+    // provenance stamp so it reaches the persisted cert↔spec chain. The Python
+    // spec_producer stamps `spec.framework_overlay.exit = "house-default (trader
+    // taught none)"` when the trader taught NO exit; framework-overlay.ts then
+    // supplies Style C unconditionally, but carries no record of WHY. This
+    // threads the "why" into config.metadata AND compiled_spec (both sides).
+    const houseDefaultExit =
+      (spec.framework_overlay?.["exit"] as string | undefined) === "house-default (trader taught none)"
+        ? {
+            exit: "house-default (trader taught none)",
+            exit_source:
+              (spec.framework_overlay?.["exit_source"] as string | undefined) ?? "framework_overlay_style_c",
+          }
+        : null;
+
     const compiled: Record<string, unknown> = {
       direction: spec.direction,
       entry_type: "market",
@@ -612,6 +627,7 @@ export async function onboardSpecArtifact(
         graph_canonical_hash: artifact.graph_canonical_hash,
         ledger_d: artifact.ledger_d,
         pipeline_version: artifact.pipeline_version ?? null,
+        ...(houseDefaultExit ? { exit_provenance: houseDefaultExit } : {}),
         timeframe_recovery: {
           exec_timeframe: timeframe,
           higher_timeframe: higherTimeframe,
@@ -653,6 +669,7 @@ export async function onboardSpecArtifact(
         graph_canonical_hash: artifact.graph_canonical_hash,
         ledger_d: artifact.ledger_d,
         spec,
+        ...(houseDefaultExit ? { exit_provenance: houseDefaultExit } : {}),
         // Band C: audit-visible summary of the binding-plan decision (the
         // Python engine recomputes the full plan itself at backtest time via
         // spec_family_bindings.compile_binding_plan — this summary is for

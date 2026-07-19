@@ -1,0 +1,48 @@
+{
+  "artifact": "h1-packet2-roundtrip-dod",
+  "packet": "h1-packet2-runnable-spec-compiler-ratify-2026-07-18 (R-040)",
+  "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+  "engine_sha_short": "404a3396",
+  "worktree": "C:/Users/tonio/Projects/wt-dod-404a3396",
+  "ancestry_note": "404a3396 is NOT an ancestor of the h1-wave4 HEAD (verified) -> dedicated worktree, epoch law; .spec.json transferred as spec_hash-stamped files",
+  "sizing_note": "TF_ALLOW_FIXED_1=true (engine-sanctioned unit-scope switch); synthetic MES 5m bars, not production data",
+  "bars": {
+    "rows": 2400,
+    "start": "2026-01-05",
+    "end": "2026-01-13",
+    "synthetic": true
+  },
+  "round_trip_witnessed": true,
+  "specs": [
+    {
+      "spec": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "ran": true,
+      "n_trades": 17,
+      "binding_approximation_rate": 1.0,
+      "metrics": {
+        "total_return": -2984.418827,
+        "sharpe_ratio": -34.2278,
+        "max_drawdown": 3046.329442,
+        "win_rate": 0.0588,
+        "profit_factor": 0.0176,
+        "total_trades": 17
+      }
+    },
+    {
+      "spec": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "ran": true,
+      "n_trades": 17,
+      "binding_approximation_rate": 1.0,
+      "metrics": {
+        "total_return": -1682.451368,
+        "sharpe_ratio": -6.6075,
+        "max_drawdown": 2739.395428,
+        "win_rate": 0.2941,
+        "profit_factor": 0.5071,
+        "total_trades": 17
+      }
+    }
+  ]
+}

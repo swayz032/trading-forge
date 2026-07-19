@@ -1,0 +1,281 @@
+{
+  "summary": {
+    "artifact": "h1-packet2-inventory-22",
+    "packet": "h1-packet2-runnable-spec-compiler-ratify-2026-07-18 (R-040)",
+    "n_strategies": 22,
+    "disposition_histogram": {
+      "compilable-futures": 16,
+      "non-portable-mechanic": 3,
+      "compile-degraded": 3
+    },
+    "effective_battery_denominator": 16,
+    "compilable_binding_approximation": {
+      "min": 0.9,
+      "max": 1.0,
+      "mean": 0.9938,
+      "distribution": [
+        0.9,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "note": "binding_approximation_rate is the OPTIMISTIC-looser-than-taught bias (R-040 pin 2iii): approximated conditions degrade to np.ones pass-through. High-approximation specs cannot ground a survivor claim alone; every battery verdict carries the rate in its scope line."
+  },
+  "strategies": [
+    {
+      "video": "-igpOZs8LsM__s0",
+      "strategy_name": "fvg_trend_continuation_entry",
+      "disposition": "compilable-futures",
+      "asset_class": "commodity / spot gold",
+      "n_conditions": 11,
+      "classifier_approximation_rate": 0.2727,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "house_default_exit": true
+    },
+    {
+      "video": "0xygpCMwxbQ__s0",
+      "strategy_name": "ict_aplus_entry_checklist",
+      "disposition": "compilable-futures",
+      "asset_class": null,
+      "n_conditions": 12,
+      "classifier_approximation_rate": 0.4167,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "house_default_exit": false
+    },
+    {
+      "video": "2DXQqwKSwJE__s0",
+      "strategy_name": "mean_reversion_scalp",
+      "disposition": "non-portable-mechanic",
+      "asset_class": "equities",
+      "n_conditions": 7,
+      "classifier_approximation_rate": 0.5714,
+      "binding_approximation_rate": 0.8571,
+      "spec_hash": "46c12202937b59d365fcbd55d764480dc8124fabd2e639dddcdf9846e3b43848",
+      "house_default_exit": true
+    },
+    {
+      "video": "2DXQqwKSwJE__s1",
+      "strategy_name": "continuation_breakout_scalp",
+      "disposition": "non-portable-mechanic",
+      "asset_class": "equities",
+      "n_conditions": 12,
+      "classifier_approximation_rate": 0.75,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "3345a82ee13a0edaa73b63a238a1976eea517bae17bc7e9cc95f0926e6cf9386",
+      "house_default_exit": true
+    },
+    {
+      "video": "2DXQqwKSwJE__s2",
+      "strategy_name": "spread_making_scalp",
+      "disposition": "non-portable-mechanic",
+      "asset_class": "equities",
+      "n_conditions": 7,
+      "classifier_approximation_rate": 0.4286,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "68e1251b4efea3b88b3901d8e57fe497c3446deccf5992f1cd96b49c2cb06c81",
+      "house_default_exit": true
+    },
+    {
+      "video": "4cT8WTyxhYY__s0",
+      "strategy_name": "liquidity_grab_reversal",
+      "disposition": "compilable-futures",
+      "asset_class": null,
+      "n_conditions": 9,
+      "classifier_approximation_rate": 1.0,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "house_default_exit": true
+    },
+    {
+      "video": "CLDEIsNpVRc__s0",
+      "strategy_name": "htf_irl_fvg_1m_inversion",
+      "disposition": "compilable-futures",
+      "asset_class": null,
+      "n_conditions": 10,
+      "classifier_approximation_rate": 0.6,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "house_default_exit": true
+    },
+    {
+      "video": "DLwVqcLRcfw__s0",
+      "strategy_name": "vwap_20sma_confluence_long",
+      "disposition": "compilable-futures",
+      "asset_class": "futures",
+      "n_conditions": 8,
+      "classifier_approximation_rate": 0.625,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "house_default_exit": false
+    },
+    {
+      "video": "DLwVqcLRcfw__s1",
+      "strategy_name": "vwap_20sma_rejection_short",
+      "disposition": "compilable-futures",
+      "asset_class": "index_futures",
+      "n_conditions": 6,
+      "classifier_approximation_rate": 0.5,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "house_default_exit": true
+    },
+    {
+      "video": "E9MzEC_yNoM__s0",
+      "strategy_name": "premarket_range_break_continuation",
+      "disposition": "compilable-futures",
+      "asset_class": "futures",
+      "n_conditions": 2,
+      "classifier_approximation_rate": 1.0,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "house_default_exit": false
+    },
+    {
+      "video": "E9MzEC_yNoM__s1",
+      "strategy_name": "premarket_range_liquidity_sweep_reversal",
+      "disposition": "compilable-futures",
+      "asset_class": "futures",
+      "n_conditions": 10,
+      "classifier_approximation_rate": 0.8,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "house_default_exit": false
+    },
+    {
+      "video": "IyFioFkRgWo__s0",
+      "strategy_name": "support_bounce_scalp",
+      "disposition": "compilable-futures",
+      "asset_class": "equities",
+      "n_conditions": 6,
+      "classifier_approximation_rate": 0.6667,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "house_default_exit": true
+    },
+    {
+      "video": "PVMgOxHUqFA__s0",
+      "strategy_name": "abc_trend_continuation_reclaim",
+      "disposition": "compilable-futures",
+      "asset_class": "commodity",
+      "n_conditions": 8,
+      "classifier_approximation_rate": 0.5,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "house_default_exit": true
+    },
+    {
+      "video": "R5L890juvRw__s0",
+      "strategy_name": "vwap_band_trend_continuation",
+      "disposition": "compilable-futures",
+      "asset_class": "equity index futures",
+      "n_conditions": 8,
+      "classifier_approximation_rate": 0.5,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "house_default_exit": true
+    },
+    {
+      "video": "R5L890juvRw__s1",
+      "strategy_name": "vwap_band_mean_reversion",
+      "disposition": "compile-degraded",
+      "asset_class": "futures",
+      "n_conditions": 6,
+      "classifier_approximation_rate": 0.6667,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "3b649e5dfa8413f4adb7e942e37234534b3f4f173d4c3baf85e2e400375acf0e",
+      "house_default_exit": true
+    },
+    {
+      "video": "W7nlnHTUZQU__s0",
+      "strategy_name": "overnight_range_break_retest",
+      "disposition": "compilable-futures",
+      "asset_class": "futures",
+      "n_conditions": 10,
+      "classifier_approximation_rate": 0.4,
+      "binding_approximation_rate": 0.9,
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "house_default_exit": false
+    },
+    {
+      "video": "WEhmadJArQo__s0",
+      "strategy_name": "opening_range_fvg_break_entry",
+      "disposition": "compilable-futures",
+      "asset_class": "multi-asset (market-agnostic)",
+      "n_conditions": 22,
+      "classifier_approximation_rate": 0.6818,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "house_default_exit": true
+    },
+    {
+      "video": "ZF8uKPqAu8M__s0",
+      "strategy_name": "orb_15m_immediate_breakout",
+      "disposition": "compile-degraded",
+      "asset_class": "equity_index_futures",
+      "n_conditions": 9,
+      "classifier_approximation_rate": 0.4444,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "7620915f5f2f626314811e3ae82e41e29e875fe26651d07f9ae223290acd0a2f",
+      "house_default_exit": false
+    },
+    {
+      "video": "ZF8uKPqAu8M__s1",
+      "strategy_name": "orb_breakout_pullback_continuation",
+      "disposition": "compile-degraded",
+      "asset_class": "equity_index",
+      "n_conditions": 10,
+      "classifier_approximation_rate": 0.6,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "ea5da6012126cb96b803b640132f3cacf62a9aa15e3dbfc362684296b23f0883",
+      "house_default_exit": true
+    },
+    {
+      "video": "_LS6qcSlDCs__s0",
+      "strategy_name": "vwap_reclaim_pullback_dip_buy",
+      "disposition": "compilable-futures",
+      "asset_class": "equities",
+      "n_conditions": 6,
+      "classifier_approximation_rate": 0.8333,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "house_default_exit": true
+    },
+    {
+      "video": "dV7chra4u4Q__s0",
+      "strategy_name": "break_and_retest",
+      "disposition": "compilable-futures",
+      "asset_class": "futures",
+      "n_conditions": 8,
+      "classifier_approximation_rate": 0.875,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "house_default_exit": true
+    },
+    {
+      "video": "kFyD3H6I1I8__s0",
+      "strategy_name": "three_step_engulfing_orb_scalp",
+      "disposition": "compilable-futures",
+      "asset_class": "mixed (FX, equity index, metals)",
+      "n_conditions": 19,
+      "classifier_approximation_rate": 0.4737,
+      "binding_approximation_rate": 1.0,
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "house_default_exit": true
+    }
+  ]
+}
