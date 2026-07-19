@@ -1,0 +1,33 @@
+{
+  "verdict": "WAVE_1R_COMPLETE",
+  "note": "receipts not returns; machinery witnessed on real data; SPEC_GATED judges ride forward",
+  "validity": {
+    "wave": "wave-1R",
+    "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+    "engine_sha_verified_head": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+    "scope": "FULL 2016-01-01..2024-12-31, CPCV; real S3 ratio-adjusted bars (dataset_hash-stamped, quality-gated)",
+    "n_trials_total": 32,
+    "outcomes": {
+      "FAIL": 32
+    },
+    "survivor_eligibility": "NONE (R-047 \u2014 tier-b near-ghosts; product is RECEIPTS not returns)",
+    "judges_witnessed_this_wave": [
+      "bif",
+      "cpcv",
+      "pbo",
+      "slippage_survival",
+      "walk_forward"
+    ],
+    "judges_spec_gated_ride_forward": {
+      "dsr": "SPEC_GATED (rides forward to first post-WIRE-1 wave): no positive Sharpe distribution to deflate on a uniformly-losing ghost",
+      "wrc": "SPEC_GATED (rides forward to first post-WIRE-1 wave): White's Reality Check needs a candidate outperformance; none on a losing ghost",
+      "spa": "SPEC_GATED (rides forward to first post-WIRE-1 wave): Hansen SPA needs a candidate outperformance; none on a losing ghost",
+      "monte_carlo_ruin": "SPEC_GATED (rides forward to first post-WIRE-1 wave): MC-ruin needs an equity path distribution; WF class path emits none here",
+      "performance_gate": "SPEC_GATED (rides forward): judge did not fire on any tier-b near-ghost at full scope",
+      "forge_score": "PATH_GATED: crisis-veto structurally untestable on the WF class path (crisis_results None)"
+    },
+    "commissioning_note": "'fully commissioned' is annotated per-judge/per-wave (R-047 \u00a72 honest commissioning) \u2014 SPEC_GATED judges await the first post-WIRE-1 real-fidelity wave",
+    "tooth2_fail_closed": true,
+    "undispositioned_gaps": []
+  }
+}

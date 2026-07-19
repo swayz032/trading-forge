@@ -737,6 +737,3286 @@
       "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
       "audit_level": "first-passage-full",
       "recorded_at": "2026-07-19T07:21:56.594909+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:27:49.638097+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -18.8152,
+            -17.3453,
+            -16.3154,
+            -18.3003,
+            -17.7904,
+            -18.6358,
+            -18.0318,
+            -20.227,
+            -19.3923,
+            -16.2728,
+            -18.9237,
+            -17.314,
+            -17.361,
+            -15.8663,
+            -20.415
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:27:49.640592+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.4666666666666667,
+          "p_value": 0.696380615234375
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:27:49.642509+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -18.1838, 'wf_sharpe': -17.963042, 'expected_inflation': 2.327252, 'verdict': '"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:27:49.644431+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "-igpOZs8LsM__s0",
+      "spec_hash": "b25f94bc52df57e6b6f2dd47e47b28a5222d80f8ab947b768c11c8eaab8ebdff",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0461,
+            "2x": 0.0086,
+            "3x": 0.0024
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:27:49.646231+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:56:34.291293+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -6.3491,
+            -5.3568,
+            -6.6081,
+            -7.9107,
+            -6.0879,
+            -4.9862,
+            -5.7516,
+            -5.8672,
+            -5.2573,
+            -5.3168,
+            -4.9019,
+            -5.0577,
+            -6.1131,
+            -5.4073,
+            -6.0742
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:56:34.293734+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.5333333333333333,
+          "p_value": 0.4999999999999999
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:56:34.295780+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -5.82674, 'wf_sharpe': -5.659992, 'expected_inflation': 2.327252, 'verdict': 'c"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:56:34.297438+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "0xygpCMwxbQ__s0",
+      "spec_hash": "5001df6d9f08826bf4314a9656887ce25c84b91c35c0f876dd727b2fd923816e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.2203,
+            "2x": 0.0907,
+            "3x": 0.0422
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T08:56:34.298869+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:25:27.857872+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -8.3677,
+            -6.9652,
+            -6.2462,
+            -6.2942,
+            -7.3564,
+            -6.0281,
+            -8.2991,
+            -7.7076,
+            -7.2428,
+            -5.6997,
+            -5.6828,
+            -6.0995,
+            -6.3537,
+            -6.4658,
+            -6.5995
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:25:27.860562+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.6,
+          "p_value": 0.30361938476562494
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:25:27.862438+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -7.21052, 'wf_sharpe': -6.539486, 'expected_inflation': 2.327252, 'verdict': 'c"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:25:27.864173+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "4cT8WTyxhYY__s0",
+      "spec_hash": "3906dcb865a1f2cdcaa6817746313e0f88fe567bdd1417fd198b2cbc835e480e",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.2367,
+            "2x": 0.0967,
+            "3x": 0.0451
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:25:27.866002+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:54:27.238353+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -10.685,
+            -5.513,
+            -9.7031,
+            -8.2076,
+            -10.444,
+            -5.0994,
+            -9.5282,
+            -6.2363,
+            -10.1266,
+            -4.9968,
+            -4.6899,
+            -4.9825,
+            -9.3338,
+            -9.0749,
+            -7.6022
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:54:27.241124+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.5333333333333333,
+          "p_value": 0.4999999999999999
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:54:27.243408+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -7.10122, 'wf_sharpe': -6.709496, 'expected_inflation': 2.327252, 'verdict': 'c"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:54:27.245298+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "CLDEIsNpVRc__s0",
+      "spec_hash": "1380fdf4744ec55ee4452e9bb09f0bcf2f13fd02a21ec48a2579f9a6bbb22444",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.1647,
+            "2x": 0.0589,
+            "3x": 0.0252
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T09:54:27.247256+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:23:01.747390+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -16.6961,
+            -15.9654,
+            -16.8819,
+            -19.13,
+            -18.2659,
+            -16.5519,
+            -16.9482,
+            -18.6288,
+            -18.1557,
+            -16.5918,
+            -18.4262,
+            -17.9956,
+            -19.3802,
+            -19.169,
+            -20.6396
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:23:01.750059+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.5333333333333333,
+          "p_value": 0.4999999999999999
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:23:01.752019+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -17.921933, 'wf_sharpe': -17.861588, 'expected_inflation': 2.327252, 'verdict':"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:23:01.754232+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s0",
+      "spec_hash": "8a1bfc803bb96ca62e8fcca52bf1e7256e01558bd60e67f5fd431f5f3c17a36b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0338,
+            "2x": 0.0029,
+            "3x": 0.0004
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:23:01.756134+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:51:37.277973+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -18.4086,
+            -15.4297,
+            -16.6253,
+            -19.1453,
+            -17.6045,
+            -17.1689,
+            -18.4204,
+            -20.3671,
+            -20.4448,
+            -15.5708,
+            -17.721,
+            -16.6023,
+            -19.6361,
+            -18.3343,
+            -21.8028
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:51:37.281630+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.5333333333333333,
+          "p_value": 0.4999999999999999
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:51:37.283959+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -18.06486, 'wf_sharpe': -18.060714, 'expected_inflation': 2.327252, 'verdict': "
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:51:37.286124+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "DLwVqcLRcfw__s1",
+      "spec_hash": "9a4ab2e50a5530b025bf78d7a9f3fcfc099d6f7f20d4ab5352fcf4c483b90b28",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0432,
+            "2x": 0.0076,
+            "3x": 0.0023
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:51:37.288175+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:54:05.648536+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -16.5214,
+            -16.1923,
+            -14.9469,
+            -17.4081,
+            -16.3557,
+            -17.305,
+            -16.4621,
+            -18.8734,
+            -17.3997,
+            -15.9492,
+            -18.6233,
+            -16.7974,
+            -17.0282,
+            -15.1413,
+            -19.0154
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:54:05.651932+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.4666666666666667,
+          "p_value": 0.696380615234375
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:54:05.654401+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -17.100913, 'wf_sharpe': -16.849457, 'expected_inflation': 2.327252, 'verdict':"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:54:05.656731+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s0",
+      "spec_hash": "bbda7ef74227c2e20c78c13fd35be24c90ea3b97d76d5d5a1eeb63aeed6b0d30",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0566,
+            "2x": 0.0112,
+            "3x": 0.003
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T10:54:05.659113+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:25:49.606009+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -18.8152,
+            -17.3453,
+            -16.3154,
+            -18.3003,
+            -17.7904,
+            -18.6358,
+            -18.0318,
+            -20.227,
+            -19.3923,
+            -16.2728,
+            -18.9237,
+            -17.314,
+            -17.361,
+            -15.8663,
+            -20.415
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:25:49.609652+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.4666666666666667,
+          "p_value": 0.696380615234375
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:25:49.612110+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -18.1838, 'wf_sharpe': -17.963042, 'expected_inflation': 2.327252, 'verdict': '"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:25:49.614506+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "E9MzEC_yNoM__s1",
+      "spec_hash": "a7f9baa380b90aafb674d1e896fbaa10bbc7d4793e706debdc7ad89bbcbc34db",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0461,
+            "2x": 0.0086,
+            "3x": 0.0024
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:25:49.616891+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:57:53.807319+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -7.172,
+            -5.8965,
+            -5.7351,
+            -5.3915,
+            -5.7045,
+            -6.0375,
+            -8.035,
+            -7.8307,
+            -7.587,
+            -5.3995,
+            -5.2088,
+            -5.5043,
+            -6.1006,
+            -6.5866,
+            -6.3462
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:57:53.810950+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.4666666666666667,
+          "p_value": 0.696380615234375
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:57:53.813548+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -6.41238, 'wf_sharpe': -6.117541, 'expected_inflation': 2.327252, 'verdict': 'c"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:57:53.816004+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "IyFioFkRgWo__s0",
+      "spec_hash": "00b2d271e5053cba482b3460945d205ddfcbdd66b78665e525ccfedc7254352c",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.2483,
+            "2x": 0.1028,
+            "3x": 0.0481
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T11:57:53.818568+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T12:29:58.800047+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -16.6961,
+            -15.9654,
+            -16.8819,
+            -19.13,
+            -18.2659,
+            -16.5519,
+            -16.9482,
+            -18.6288,
+            -18.1557,
+            -16.5918,
+            -18.4262,
+            -17.9956,
+            -19.3802,
+            -19.169,
+            -20.6396
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T12:29:58.803684+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.5333333333333333,
+          "p_value": 0.4999999999999999
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T12:29:58.806447+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -17.921933, 'wf_sharpe': -17.861588, 'expected_inflation': 2.327252, 'verdict':"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T12:29:58.808933+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "PVMgOxHUqFA__s0",
+      "spec_hash": "64affd9037abc44c57b85f813e04c1eef60625b320af12cf66c24a907353675b",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0338,
+            "2x": 0.0029,
+            "3x": 0.0004
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T12:29:58.811763+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:02:10.501126+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -8.3677,
+            -6.9652,
+            -6.2462,
+            -6.2942,
+            -7.3564,
+            -6.0281,
+            -8.2991,
+            -7.7076,
+            -7.2428,
+            -5.6997,
+            -5.6828,
+            -6.0995,
+            -6.3537,
+            -6.4658,
+            -6.5995
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:02:10.505096+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.6,
+          "p_value": 0.30361938476562494
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:02:10.508250+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -7.21052, 'wf_sharpe': -6.539486, 'expected_inflation': 2.327252, 'verdict': 'c"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:02:10.511022+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "R5L890juvRw__s0",
+      "spec_hash": "e02280634450f80e23ec59161f9af6f1b358c9b91ea0dd389a0821a0841c8554",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.2367,
+            "2x": 0.0967,
+            "3x": 0.0451
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:02:10.513535+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 0.9; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:34:36.465313+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -14.6702,
+            -13.5947,
+            -14.1132,
+            -16.3651,
+            -15.3144,
+            -15.1138,
+            -16.1963,
+            -17.8608,
+            -16.9584,
+            -14.4497,
+            -16.3186,
+            -15.3349,
+            -18.0029,
+            -15.7298,
+            -19.6739
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 0.9; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:34:36.469104+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.5333333333333333,
+          "p_value": 0.4999999999999999
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 0.9; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:34:36.472323+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -16.180573, 'wf_sharpe': -15.83108, 'expected_inflation': 2.327252, 'verdict': "
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 0.9; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:34:36.475400+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "W7nlnHTUZQU__s0",
+      "spec_hash": "2ba9c4ccf1ed6ef5e36e751b2ea47eb53b01e1d9ed36602c0240e0cd0c4ac33a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0606,
+            "2x": 0.0139,
+            "3x": 0.0052
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": null,
+      "scope_line": "shakedown; binding-approx 0.9; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T13:34:36.478086+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:07:09.558106+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -16.8617,
+            -15.5978,
+            -16.056,
+            -18.0368,
+            -18.1092,
+            -15.988,
+            -17.3615,
+            -19.1096,
+            -18.7576,
+            -15.7167,
+            -17.469,
+            -17.2004,
+            -19.8831,
+            -18.9769,
+            -20.9889
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:07:09.561902+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.4666666666666667,
+          "p_value": 0.696380615234375
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:07:09.564922+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -17.91816, 'wf_sharpe': -17.596349, 'expected_inflation': 2.327252, 'verdict': "
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:07:09.568167+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "WEhmadJArQo__s0",
+      "spec_hash": "245be3c41d350676502659e14ab70309035d4d8963ed16d420831b65fd3a9ed6",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.04,
+            "2x": 0.0064,
+            "3x": 0.002
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:07:09.571221+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:09:46.663356+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -16.5854,
+            -15.1095,
+            -14.8495,
+            -16.5257,
+            -15.9006,
+            -16.9036,
+            -16.9837,
+            -18.5714,
+            -18.0684,
+            -15.2756,
+            -17.3003,
+            -16.3288,
+            -16.6585,
+            -15.6359,
+            -18.1792
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:09:46.669381+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.4666666666666667,
+          "p_value": 0.696380615234375
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:09:46.674451+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -16.79304, 'wf_sharpe': -16.510429, 'expected_inflation': 2.327252, 'verdict': "
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:09:46.679665+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "_LS6qcSlDCs__s0",
+      "spec_hash": "fc4d8c040e91b02de040592f4c276e98b2a6befb01dcd2f083aa2ab413e1d34a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0582,
+            "2x": 0.0123,
+            "3x": 0.0033
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:09:46.684668+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:12:22.853367+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -17.7773,
+            -15.2721,
+            -16.2798,
+            -18.3998,
+            -18.2407,
+            -16.5742,
+            -18.3044,
+            -20.4227,
+            -19.9662,
+            -15.0212,
+            -16.9605,
+            -16.6949,
+            -19.6835,
+            -18.6341,
+            -21.3958
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:12:22.857821+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.4666666666666667,
+          "p_value": 0.696380615234375
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:12:22.861155+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -18.192673, 'wf_sharpe': -17.803092, 'expected_inflation': 2.327252, 'verdict':"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:12:22.864622+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "dV7chra4u4Q__s0",
+      "spec_hash": "9d9e26bae7017ff3d57861cba93a2b4335cb05377c56f10f7dd11a33f0cd031a",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0422,
+            "2x": 0.0075,
+            "3x": 0.0025
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:12:22.868157+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "walk_forward",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:182",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "wfe_overall",
+          "wfe_status",
+          "n_folds"
+        ],
+        "value": {
+          "wfe_overall": 0.0,
+          "wfe_status": "degenerate_is",
+          "n_folds": 6
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:44:48.972057+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "cpcv",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "walk_forward.py:297",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "mode",
+          "n_folds",
+          "path_sharpes"
+        ],
+        "value": {
+          "mode": "cpcv",
+          "n_folds": 6,
+          "path_sharpes": [
+            -16.706,
+            -16.2345,
+            -15.18,
+            -18.0555,
+            -17.3882,
+            -16.9701,
+            -15.4244,
+            -18.4945,
+            -17.9375,
+            -16.2288,
+            -18.5093,
+            -18.1835,
+            -18.5859,
+            -17.54,
+            -19.753
+          ]
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:44:48.976439+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "pbo",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "pbo_gate.py:48 / pbo-gate.ts:119",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "pbo_overall",
+          "p_value"
+        ],
+        "value": {
+          "pbo_overall": 0.5333333333333333,
+          "p_value": 0.4999999999999999
+        },
+        "verdict": "FAIL",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:44:48.980830+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "bif",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "backtest_inflation_factor.py / bif-gate.ts:132",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "bif",
+          "detail"
+        ],
+        "value": {
+          "bif": 1.0,
+          "detail": "{'bif': 1.0, 'k_eff': 15.0, 'is_sharpe': -17.304193, 'wf_sharpe': -17.299735, 'expected_inflation': 2.327252, 'verdict':"
+        },
+        "verdict": "PASS",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:44:48.985328+00:00"
+    },
+    {
+      "wave": "wave-1R",
+      "strategy_ref": "kFyD3H6I1I8__s0",
+      "spec_hash": "88db16801d3b979ba9f5ee9b145a01e5bb0cd5e6bac94a540f643cdd1ad1d70d",
+      "engine_sha": "404a33963728e58c6dd12bf7d0d0c894ae6818b0",
+      "gate": "slippage_survival",
+      "gate_stage": "battery",
+      "gate_unconditional": true,
+      "gate_verdict_bearing": true,
+      "gate_reserved": false,
+      "gate_invocation": "slippage_survival.py / slippage-survival-gate.ts:248",
+      "received": true,
+      "fired": true,
+      "dormant_judge_alarm": false,
+      "engagement_receipt": {
+        "inputs_seen": [
+          "breaks_at",
+          "multiples",
+          "pf"
+        ],
+        "value": {
+          "breaks_at": 1.0,
+          "multiples": [
+            1.0,
+            2.0,
+            3.0
+          ],
+          "pf": {
+            "1x": 0.0451,
+            "2x": 0.0078,
+            "3x": 0.0022
+          }
+        },
+        "verdict": "NOT_EVALUATED",
+        "engaged_features": [
+          "real_bar_data(S3_ratio_adj)",
+          "cpcv",
+          "fill_model"
+        ]
+      },
+      "exit_provenance": "house-default (trader taught none)",
+      "scope_line": "shakedown; binding-approx 1.0; framework-behavior measurement, NOT edge evidence",
+      "audit_level": "first-passage-full",
+      "recorded_at": "2026-07-19T14:44:48.988847+00:00"
     }
   ]
 }

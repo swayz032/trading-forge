@@ -4,6 +4,17 @@
 
 ---
 
+## AR-043 · 2026-07-19 · WAVE-1R COMPLETE (R-047) — the real-data machinery proof is DONE. 5 anti-overfit judges WITNESSED firing on real S3 data across all 16; 4 SPEC-GATED ride-forward exactly as pre-committed; Tooth-2 fail-closed; verdicts honest (no false-green). Independent grade running.
+
+**WAVE_1R_COMPLETE on pinned engine 404a3396, FULL scope (`2016-01-01..2024-12-31`, CPCV), real S3 ratio-adjusted bars (dataset_hash-stamped, quality-gated).** All 16 tier-b specs ran the real walk-forward anti-overfit battery SOLO (~30 min/spec for the high-signal ones; a few ~150s; no crashes — my mid-run "1 ABORTED" was a snapshot of an in-progress allocate, corrected).
+- **WITNESSED firing on real data (all 16):** `walk_forward`, `cpcv`, `pbo`, `bif`, `slippage_survival` — 80 ledger rows, real engagement receipts (e.g. bif detail `is_sharpe=-18.18/wf_sharpe=-17.96`).
+- **SPEC-GATED, RIDE FORWARD to first post-WIRE-1 wave (R-047 §2, exactly as pre-committed):** `dsr`, `wrc`, `spa`, `monte_carlo_ruin` — no positive-performance distribution to test on uniformly-losing ghosts. `performance_gate` witnessed on shakedown-1 (run_class_backtest path; not surfaced in the WF aggregate); `forge_score` path-gated. **Honest per-judge/per-wave commissioning** (the "fully commissioned" claim carries the annotation).
+- **VERDICTS HONEST (self-verified, no false-green):** pbo FAIL×16 (all pbo_overall>0.15 — overfit garbage), verdict-vs-stat mismatches = 0; walk_forward/slippage NOT_EVALUATED×16 (WFE degenerate — honest N/E not a false PASS); bif PASS×16 (bif≈1.0<4.0 — a real "not-inflated" computation on a losing spec); NO dormant-judge alarms. **32 total trials, all FAIL — receipts not returns (R-047 §3).** Tooth-2 fail-closed, undispositioned=[].
+
+**F-3 CLOSED in parallel (AR-042):** vitest toolchain repaired (restorative `npm install`, never `ci` on the shared junction), TS exit_provenance test passing → the verdict is TRUSTABLE. **Independent grade of the WAVE-1R runner/ledger LAUNCHED** (doer≠grader — verify the WF-gate mapping honesty, no false-green, spec-gated evidence; the runner reuses the band-7 shakedown base). NEXT: the courtroom is fully commissioned (WF judges on real data); WIRE-1 (real-fidelity lever) makes the ride-forward judges finally testable; Tooth-1 (compile_fidelity_forensics) after WIRE-1. The 77 stay SEALED.
+
+---
+
 ## AR-042 · 2026-07-19 · R-047 executed: WAVE-1R RUNNING (full 16, full scope, SOLO managed on 404a3396 — PID alive + grinding); F-3 CLOSED in parallel (toolchain repaired, TS test passing). Verdict on completion.
 
 **F-3 CLOSED (R-046 §4 / R-047 §4 — done in parallel, commit `4f6a1033`):** repaired the vitest toolchain via `npm install` (RESTORATIVE — never `npm ci`; node_modules is a shared JUNCTION and `ci`'s rm-rf would wipe the shared target, the documented catastrophe). Restored `@vitest/utils` + `@types/node`. New pglite test `spec-onboarding-exit-provenance.test.ts` PASSES both polarities: house-default stamp → `exit_provenance` in BOTH `config.metadata` + `config.compiled_spec`; no overlay → absent. **The passage-ledger's `exit_provenance` consumer is now test-backed → a wave verdict can be TRUSTED (R-047 §4).**
