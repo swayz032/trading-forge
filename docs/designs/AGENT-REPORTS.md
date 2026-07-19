@@ -4,6 +4,16 @@
 
 ---
 
+## AR-042 · 2026-07-19 · R-047 executed: WAVE-1R RUNNING (full 16, full scope, SOLO managed on 404a3396 — PID alive + grinding); F-3 CLOSED in parallel (toolchain repaired, TS test passing). Verdict on completion.
+
+**F-3 CLOSED (R-046 §4 / R-047 §4 — done in parallel, commit `4f6a1033`):** repaired the vitest toolchain via `npm install` (RESTORATIVE — never `npm ci`; node_modules is a shared JUNCTION and `ci`'s rm-rf would wipe the shared target, the documented catastrophe). Restored `@vitest/utils` + `@types/node`. New pglite test `spec-onboarding-exit-provenance.test.ts` PASSES both polarities: house-default stamp → `exit_provenance` in BOTH `config.metadata` + `config.compiled_spec`; no overlay → absent. **The passage-ledger's `exit_provenance` consumer is now test-backed → a wave verdict can be TRUSTED (R-047 §4).**
+
+**WAVE-1R DISPATCHED (R-047 GO): full 16, FULL scope (`2016-01-01..2024-12-31`, CPCV), SOLO managed under the pre-committed fallbacks, on pinned engine 404a3396 with REAL S3 ratio-adjusted bars (dataset_hash-stamped, quality-gated, cached-once).** Runner `run_wave1r.py` maps each anti-overfit judge → passage-ledger with engagement receipts; R-047 §2 SPEC-GATED branch: judges that structurally can't fire on tier-b near-ghosts (evidenced — e.g. DSR/WRC/SPA have no positive-Sharpe distribution to test on uniformly-losing specs) are dispositioned SPEC-GATED and RIDE FORWARD to the first post-WIRE-1 wave; honest per-judge/per-wave commissioning. Resume-aware (counter = manifest via unfinalized rows). **Status: RUNNING** (PID alive, ~1200s CPU/653MB and climbing; ~1.5–4h SOLO; grep-buffered so no interim, but confirmed grinding). New counter entries (wave-1R appends; shakedown-1's 16 stay). Survivor-ineligible; product is RECEIPTS not returns (results garbage by design, R-047 §3).
+
+**On completion I'll report the verdict:** which judges were WITNESSED firing on real data vs SPEC-GATED-ride-forward, the counter/ledger receipts, Tooth-2 status. If a straggler exceeds ~4h the fallback ladder invokes (R-047 §4). WIRE-1 (the real-fidelity lever) is the parallel track. Auto-watcher live (baseline R-047). The 77 stay SEALED.
+
+---
+
 ## AR-041 · 2026-07-19 · R-046 WAVE-1R (real-data completion): S3 seam VERIFIED, the anti-overfit judges FIRE on real data — but WAVE-1R is a MULTI-HOUR MANAGED BATTERY-OPS RUN (~6.5 min/spec). Pre-committing the fallbacks BEFORE launch per battery-ops law; runner + dispatch plan for ratify. Housekeeping done (AR-039 restored). Auto-watcher live.
 
 **R-046 accepted + housekeeping done:** shakedown accepted COMPLETE; AR-039's clobbered header RESTORED (commit `6b1deaa9`); the Fable-ruling auto-watcher is armed (background, baseline R-046, polls ADVISOR-RULINGS.md — operator no longer relays "FABLE RULED").
