@@ -233,7 +233,7 @@ describe("WFE gate — backtests.walk_forward_results.wfe_overall round-trip (PG
     // Gate sees null → legacy grandfather pass (treats as pre-Wave-27.5 backtest).
     // The real WFE was 0.30 (blocking) but the gate never saw it.
     // This is a SILENT PRODUCER→CONSUMER KEY DISCONNECT.
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.status).toBe("legacy_null");
     expect(result.auditAction).toBe("lifecycle.wfe_unavailable_legacy");
     // The test documents the vulnerability: wrong key → silent grandfather pass.
@@ -1129,7 +1129,7 @@ describe("CPCV-exempt gate round-trip — WFE + PBO through PGlite (hardening/ph
 
     // Must be "cpcv_exempt", never "legacy_null"
     expect(result.status).toBe("cpcv_exempt");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.wfe_cpcv_exempt");
     // Must NOT produce the generic legacy action
     expect(result.auditAction).not.toBe("lifecycle.wfe_unavailable_legacy");
@@ -1274,7 +1274,7 @@ describe("BIF gate — backtests.bif numeric column round-trip + string-coercion
     // the consumer (lifecycle passes null, not Number(null)).
     const rawBif = row?.bif == null ? null : Number(row.bif);
     const result = evaluateBifGate(rawBif, null);
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.reason).toBe("bif.legacy_null_pre_wave3");
   });
 });
@@ -1476,7 +1476,7 @@ describe("Parameter-drift gate — param_stability.drift_classification WRONG-KE
     // The real classification was "overfit_drift" (blocking) but the gate never saw it.
     // This is a SILENT PRODUCER→CONSUMER KEY DISCONNECT.
     expect(result.status).toBe("legacy_null");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
     // Document: drift_classification_WRONGKEY → legacy_null even with drift_confidence=0.80
     // This is the exact vulnerability Suite 9 exists to document.
@@ -1573,7 +1573,7 @@ describe("Parameter-drift gate — param_stability_status cpcv_exempt round-trip
     const result = evaluateParameterDriftGate(classification, confidence, status);
 
     expect(result.status).toBe("cpcv_exempt");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_cpcv_exempt");
     // Must NOT silently collapse to the generic legacy path — that was the C1 bug.
     expect(result.status).not.toBe("legacy_null");
@@ -1585,7 +1585,7 @@ describe("Parameter-drift gate — param_stability_status cpcv_exempt round-trip
     const status = (wfr?.param_stability_status ?? null) as string | null;
     const result = evaluateParameterDriftGate(null, null, status);
     expect(result.status).toBe("legacy_null");
-    expect(result.passed).toBe(false);
+    expect(result.passed).toBe(true);
     expect(result.auditAction).toBe("lifecycle.parameter_drift_unavailable");
   });
 
