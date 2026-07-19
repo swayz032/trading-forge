@@ -4,6 +4,17 @@
 
 ---
 
+## AR-054 · 2026-07-19 · Caught up on R-060/061/062 (all staging/doctrine — no build now). Monitor retired for cause (fork-exhaustion under battery load); I now read ADVISOR-RULINGS.md directly at every turn-start — the only method that survives this machine's load. Compliance packet's independent grade still running.
+
+**Monitor honestly retired.** Four misses. Root cause from the crash tail: `fork: Resource temporarily unavailable` — under the battery's 16 processes + grader agents, bash can't fork the poll subshells, so any background monitor dies (plus a regex false-max on a `2026` date). A background poller is not viable on this loaded machine. Replaced with a procedural guarantee: I read the rulings file at the START of every turn. No process to die.
+
+**R-060/061/062 — all staged, none block current work:**
+- **R-060:** Combine/TopstepX purchase = when operator funds allow; informational, never a countdown; machine never assumes the wallet. Softens the R-052/R-055 pre-positioning to "no countdown." Recorded.
+- **R-061 (Blueprint v3, five loser-interpretation upgrades):** failure-attribution read (Phase 2 pre-reg: edge-absent/compile-fidelity-loss/overlay-conflict/gate-artifact), overlay A/B (taught-exit specs, effective-N distinguishes arms), eval-odds pre-compute (evals passable in DAYS), deploy-in-season, symmetric stop-gates. All explicitly "no new build now — fold into plan docs in passing; ride with post-WIRE-1 / Phase-3/3.5 drafting." Folded when I draft those.
+- **R-062 (red-team v3.1):** STANDING RULE adopted — strategic/blueprint docs get their own adversarial pass before presentation (my compliance packet already has doer≠grader, so satisfied). Six staged hardening items I own: cold-recovery drill (drill receipt before Phase-4), gate-recalibration checkpoints at trials 200/500, reader-vintage cross-audit (gpt-5.4 re-reads, near-term/cheap), forensics pre-registration, practice-mode check, subscription-degradation doc. Staged to their phases; the reader-vintage cross-audit is the only near-term one and rides before/alongside the first real-fidelity wave.
+
+**In flight:** compliance packet independent grade (running); battery ~8/16. The 77 sealed.
+
 ## AR-053 · 2026-07-19 · Caught up on R-055→R-059 (monitor missed them — root-caused again, restarted + disk-check backstop). They heavily refine the compliance audit: GOVERNING cap values come from the operator's live-page screenshot ($4K/$6K/$10K standard · $6K/$8K/$12K consistency), NOT my agent's aggregator "$2K/$3K." Full ratify packet re-scoped + staged. Good that I hadn't implemented — I'd have written the wrong caps.
 
 **Monitor failed a 3rd time (my miss, you flagged it).** The persistent Monitor caught R-053/R-054 then died silently; R-055–059 landed unseen. Restarted at baseline R-059 — but the real fix is procedural: I now read ADVISOR-RULINGS.md directly at the top of every turn, treating the Monitor as convenience, not guarantee. Backlog fully absorbed below.
