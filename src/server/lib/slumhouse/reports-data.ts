@@ -41,6 +41,15 @@ export interface ReportsPayload {
   reports: GptReport[];
   accounts: Array<{ id: string; label: string; count: number }>;
   stats: { total: number; lastNight: number; byGrade: Record<string, number> };
+  /**
+   * OR-042 F-2 closure. The two queries below keep their pre-existing fail-soft
+   * `.catch(() => [])` — deliberately: this is a DISPLAY assembler, and on a PARTIAL outage a
+   * rendered page beats a blank room. What was missing is that the failure left NO trace in the
+   * return value, so an outage was byte-identical to a genuinely quiet night.
+   * These fields carry that distinction. Optional + additive: existing consumers are untouched.
+   */
+  degraded?: boolean;
+  error?: string;
 }
 
 /**
@@ -63,6 +72,9 @@ function prettifyFirmId(firmId: string | null | undefined): string | null {
 }
 
 export async function assembleGptReports(opts: { scope: "night" | "all" }): Promise<ReportsPayload> {
+  // Collects which source(s) failed, so a swallowed query is visible in the RETURN VALUE rather
+  // than vanishing into an empty-but-successful payload (OR-042 F-2).
+  const degradedSources: string[] = [];
   const timeFilter = opts.scope === "night"
     ? sql`AND tc.critiqued_at > NOW() - INTERVAL '24 hours'`
     : sql``;
@@ -89,7 +101,7 @@ export async function assembleGptReports(opts: { scope: "night" | "all" }): Prom
     ${timeFilter}
     ORDER BY tc.critiqued_at DESC
     LIMIT 200
-  `).catch(() => [] as unknown[])) as Array<{
+  `).catch(() => { degradedSources.push("reports_query_failed"); return [] as unknown[]; })) as Array<{
     id: string;
     position_id: string;
     account_id: string | null;
@@ -174,7 +186,7 @@ export async function assembleGptReports(opts: { scope: "night" | "all" }): Prom
       COUNT(*)::int AS total,
       COUNT(*) FILTER (WHERE critiqued_at > NOW() - INTERVAL '24 hours')::int AS last_night
     FROM trade_critique
-  `).catch(() => [] as unknown[])) as Array<{ total: number; last_night: number }>;
+  `).catch(() => { degradedSources.push("stats_query_failed"); return [] as unknown[]; })) as Array<{ total: number; last_night: number }>;
   const statRow = statRows[0] ?? { total: 0, last_night: 0 };
 
   return {
@@ -185,5 +197,9 @@ export async function assembleGptReports(opts: { scope: "night" | "all" }): Prom
       lastNight: Number(statRow.last_night ?? 0),
       byGrade,
     },
+    // Absent (not `false`) on a healthy run, so a genuinely quiet night stays clean.
+    ...(degradedSources.length > 0
+      ? { degraded: true, error: degradedSources.join(",") }
+      : {}),
   };
 }
