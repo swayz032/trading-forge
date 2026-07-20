@@ -4,6 +4,31 @@
 
 ---
 
+## AR-104 · 2026-07-20 · ★★ PROBES RETURNED — **hypothesis resolves to the ONE-OFF arm.** `detect_fvg` CLEAN · trio CLEAN · **F-1 was never copy-pasted.** ★ But `detect_sweep`'s own code is clean while **every real call site LEAKS** — and the probe explained my inadmissible 7/39 rather than just overturning it.
+
+**Every verdict carries a fired plant-catch.** 20 seeds × 56 probe bars = **1,120 checks per detector**, each preceded by a calibration battery. Read-only; no production file touched.
+
+| detector | plant fired | production | verdict |
+|---|---|---|---|
+| `detect_fvg` | **37/50** | **0/1120** | **CLEAN** |
+| `detect_equal_highs` | **7/50** | **0/1120** | **CLEAN** |
+| `detect_equal_lows` | (transfers — byte-identical structure, confirmed by read) | **0/1120** | **CLEAN** |
+| `detect_sweep` (own loop, fixed levels) | **39/50** | **0/1120** | **CLEAN** |
+| `detect_sweep` (real wiring, causal levels) | — | **156/1120** | **★ LEAKS (inherited)** |
+
+**1. ★ THE PRE-REGISTERED HYPOTHESIS RESOLVES TO THE ONE-OFF ARM.** The F-1 mechanism — whole-table `used`-set clustering letting a later swing retroactively absorb an earlier one — is **architecturally confined to `detect_buyside/sellside_liquidity`.** It was **not** copy-pasted into the four same-file, same-author siblings: `detect_equal_highs/lows` have **no `used` set** (every in-tolerance pair recorded independently), and `detect_sweep` is a **pure per-bar function** of `(level, high[i], low[i], close[i])`. **The code fix stays narrow — those two functions.** My house-style suspicion was wrong, and it was wrong in the *conservative* direction for once.
+
+**2. ★★ MY 7/39 WAS EXPLAINED, NOT MERELY OVERTURNED — and the explanation matters more than the verdict.** The probe reproduced my artifact and found its cause: **I compared visibility on the raw `index` column (the FVG's MIDDLE candle) instead of `index+1` (the third candle, without which the record is not yet knowable).** So I was measuring the detector's own fixed 1-bar confirmation delay and calling it a leak. Once compared correctly, the clean reference and production both go to **0**. **My refusal to self-upgrade that reading (AR-099) was right, and for a better reason than I gave** — I guessed my *plant* was malformed; the actual defect was in my *comparison*. The static pass and the validated probe now agree, and the instrument disagreement is closed.
+
+**3. ★ THE FINDING THAT WIDENS THE FIX'S VERIFICATION, NOT ITS CODE: `detect_sweep` is clean in isolation and leaking in every real call site**, because production hands it non-causally-computed levels. Concrete trace: **bar 1 of the dataset is classified a liquidity sweep against a level only fully formed ~296 bars later.** Live wiring confirmed at `ict_2022.py:57-75`, `ict_swing.py:65-68`, `turtle_soup.py:54-60`, `quarterly_swing.py:149-152` — **and `paper_bridge.py:425-426`, a consumer NOT in my AR-098 census.**
+- **This is inherited, not a second defect** — fixing BSL/SSL silently cures it, with **no change inside `detect_sweep`.**
+- **But the qualifier must travel with the narrow-fix decision:** the F-1 fix's **verification** must re-run the **sweep-consuming strategies**, not just the two clustering functions' unit tests. A narrow code fix with a narrow verification would leave the observable defect unmeasured in exactly the place it shows up.
+
+**4. Declared not-verified, carried forward rather than buried:** `detect_inducement`, `detect_raid`, `detect_ifvg` — same files, same authorship, **never named as targets and so never probed**; the same-file prior that motivated this unit applies to them equally. Synthetic bars only (verdicts rest on architectural proof confirmed empirically, not on live market data). `paper_bridge.py`'s equal-highs-as-levels sweep path not separately traced.
+
+**Not done:** no fix, no packet. **Holds:** six archetypes barred · `named_sr_level` blocked · F-1 real · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-103 · 2026-07-20 · R-112 §4 executed — **first validated probe unit DISPATCHED** (receipt held): `detect_fvg` (the disagreement) + the `liquidity.py` trio (the house-style test). Your hypothesis is written INTO the brief, both arms, before it runs.
 
 **1. The pre-registered hypothesis is in the probe's own brief, verbatim and two-sided** — *"if the trio leaks → HOUSE STYLE, fix widens to a file-level causal rewrite; if clean → one-off, fix stays narrow"* — with the explicit instruction **"both outcomes are useful, do not favour either."** Pre-registration written where the runner reads it, not only where we record it, is what makes it bind: a runner that never sees the prediction cannot be steered by it, and one that sees both arms weighted equally cannot drift toward the interesting one. **After three enumeration errors that all leaned interesting, I am not leaving that to chance.**
