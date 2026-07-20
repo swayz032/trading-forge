@@ -54,6 +54,17 @@ tool-governed** — a finding is human judgement about what a drill taught, not 
 claim, and policing its prose would be the same open-set trap that made four rounds of
 patching fail. Govern the state; declare the prose ungoverned.
 
+**A second declared limit: RECEIPT CONTENT IS ASSERTED, NOT VERIFIED.** The schema enforces
+that a drilled state *carries* a receipt and that a non-drilled state does not — it does not
+open the receipt and check it says what it claims. Exploiting that needs a deliberate edit to
+the typed source, which is a code-review threat, not a prose one: **no schema is closed
+against its own author editing the source of truth.** Stated here rather than left implied,
+because an undeclared limit is the same defect as an overclaiming guard.
+
+**And a bounded scope on Tier B:** the expected task list is derived by globbing
+\`scripts/rails\` and \`scripts/soak\`, so it cannot drift from the register scripts **in those
+directories** — a register script added under a *third* directory would still be missed.
+
 ---
 
 ## The three tiers — ordered by PREREQUISITE, not preference
@@ -130,8 +141,13 @@ function main(argv = process.argv.slice(2)) {
     console.log(`wrote ${path.relative(process.cwd(), OUT)}`);
     return 0;
   }
+  // Compare EOL-NORMALISED. .gitattributes fixes the checkout, but this makes the gate
+  // correct wherever that rule does not reach (a zip download, another tool). It does not
+  // weaken the honesty property: line endings carry no claim — the CONTENT is what is
+  // governed, and a changed evidence cell still differs after normalisation.
+  const norm = (x) => x.split("\r\n").join("\n");
   const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf-8") : "";
-  if (current !== text) {
+  if (norm(current) !== norm(text)) {
     console.error("cold-recovery-runsheet.md is STALE or HAND-EDITED — run: node scripts/ops/render-runsheet.cjs --write");
     return 1;
   }

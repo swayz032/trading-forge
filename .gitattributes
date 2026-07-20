@@ -10,3 +10,11 @@
 # Windows checkout. Force LF for this file so the on-disk shebang always
 # parses regardless of the checking-out environment's autocrlf setting.
 scripts/backup-n8n-data.mjs text eol=lf
+
+# generated-artifact honesty gate (2026-07-20): docs/cold-recovery-runsheet.md is RENDERED
+# from scripts/ops/recovery-evidence.cjs, and `npm run runsheet:check` compares the file to
+# a fresh render. With core.autocrlf=true and no rule here, a Windows checkout smudges the
+# committed LF blob to CRLF on disk while render() emits LF — so the gate false-REDs
+# "STALE or HAND-EDITED" on a pristine clone. Same class as the shebang entry above,
+# reproduced one file over. CI is Linux so it never saw it; a contributor would.
+docs/cold-recovery-runsheet.md text eol=lf

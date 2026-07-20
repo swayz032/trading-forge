@@ -367,3 +367,35 @@ test("★ every leg in the schema renders exactly one table row", () => {
     assert.ok(rows[0].includes(EVIDENCE_STATES[l.state].label), `leg "${l.leg}" row lost its state label`);
   }
 });
+
+// ── In-wave residuals (OR-102): both are DECLARED limits, matching the KEY-FINDING precedent ──
+test("★ the RECEIPT limit is declared — an undeclared limit is an overclaiming guard", () => {
+  // The schema enforces that a drilled state CARRIES a receipt; it does not open the receipt
+  // and check it says what it claims. That is a code-review threat, not a prose one — no
+  // schema is closed against its own author editing the source of truth. Declared, not implied.
+  const doc = render();
+  assert.match(doc, /RECEIPT CONTENT IS ASSERTED, NOT VERIFIED/);
+  assert.match(doc, /no schema is closed[\s\S]{0,60}editing the source of truth/i);
+});
+
+test("★ the Tier-B glob's BOUNDED scope is stated in the RUNSHEET, not only in a code comment", () => {
+  // The bounded truth previously lived in a code comment and a commit message. The runsheet
+  // is what an operator reads mid-incident, so the limit belongs where the reader stands.
+  const doc = render();
+  assert.match(doc, /bounded scope on Tier B/i);
+  assert.match(doc, /third\*{0,2} directory would still be missed/i);
+});
+
+test("★ runsheet:check is EOL-insensitive — a CRLF checkout must not false-RED", () => {
+  // core.autocrlf=true smudges the committed LF blob to CRLF on a Windows clone while
+  // render() emits LF, so the gate reported "STALE or HAND-EDITED" on a pristine checkout.
+  // Line endings carry no claim; the CONTENT is what is governed.
+  const lf = render();
+  const crlf = lf.split("\n").join("\r\n");
+  const norm = (x) => x.split("\r\n").join("\n");
+  assert.equal(norm(crlf), norm(lf), "a CRLF checkout must compare equal");
+  // ...and a real content change must STILL differ after normalisation (the property that
+  // must not regress while fixing the false-RED).
+  const tampered = lf.replace("DESIGNED — NOT DRILLED", "DRILLED + RECEIPTED");
+  assert.notEqual(norm(tampered), norm(lf), "an evidence edit must still be caught");
+});

@@ -88,8 +88,14 @@ jobs:
       # an obstacle gets disabled rather than fixed. Promote to --strict once it has run
       # clean across the whole ops surface for a stretch.
       # BLOCKING: the runsheet is generated from a typed source, so a drift here means
-      # someone hand-edited an evidence claim. That is the exact dishonesty the schema
-      # exists to prevent, and unlike the lint it has zero false-positive surface.
+      # someone hand-edited an evidence claim — the exact dishonesty the schema prevents.
+      #
+      # CORRECTION (OR-102): the first version of this comment claimed "zero false-positive
+      # surface". That was FALSE as written — a surface existed: core.autocrlf smudged the
+      # LF blob to CRLF on Windows clones and the gate false-REDs. Closed two ways (a
+      # .gitattributes eol=lf rule + an EOL-normalised comparison), so the claim is true
+      # NOW — but it was a claim ahead of its evidence when written, which is the thing this
+      # whole leg is about.
       - name: Cold-recovery runsheet matches its typed source
         run: npm run runsheet:check
 
