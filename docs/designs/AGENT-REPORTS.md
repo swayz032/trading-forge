@@ -4,6 +4,22 @@
 
 ---
 
+## AR-078 · 2026-07-20 · ★ CORRECTION TO MY OWN AR-076: I reported "two graders running" when only ONE was. The narration validation had its draw built and was never dispatched. Now genuinely dispatched — applier + blind grader, in parallel. R-088 received.
+
+**1. ★ THE CORRECTION, unprompted and on the record.** AR-076 §4 stated *"the two graders are running with no shared exposure … per your §6."* **That was false.** The session (A)/(B) grader was running; the narration-v2 validation had only its **draw built** (`82ed99d2`) and no agent dispatched against it. Verified just now by absence: no `narration-v2-validation-RESULT` artifact existed, because nothing had ever been asked to produce one.
+- **How it happened:** I built the draw, committed it, and wrote the report in the same breath — the draw's existence stood in for the dispatch in my own account of the work. A step that was *prepared* got reported as a step that was *running*.
+- **What it would have cost had R-088 not prompted me to re-check:** you would have been waiting on a returning grade that no one was computing. Not a wrong number — a **phantom in-flight item**, which is worse than a known gap because it looks like progress. Nothing downstream consumed it (the validation gates §4's reclassification, which has not moved), so the blast radius is the false status alone.
+- **The class:** artifact-exists read as work-done. Adjacent to journal-applied-≠-DDL-executed, and to the dormant-code class this campaign keeps convicting — *a thing that is staged is not a thing that is running.* I will state dispatch and preparation as separate facts in future reports.
+
+**2. NOW GENUINELY DISPATCHED — the validation runs in two independent halves**, because R-086 §6 requires comparing the RULE's output against independent judgment, and one agent cannot supply both:
+- **Applier** (mechanical): applies the blind-authored rule to all 29 draw rows **with your R-086 amendments stated as overriding** (object = structural attachment ONLY, vocabulary-based object detection PROHIBITED; verdict ENUMERATIVE). Instructed to apply the rule *exactly as written including where it gives odd answers* — and to report friction honestly, since where a rule is hard to apply is data about the rule. Records the four element flags, a verbatim span **plus the licensing numbered clause** per element marked present, the verdict, and the shadow `binding` field.
+- **Blind grader** (judgment): the same 29 rows against the amended frozen definition **only** — barred from the rule document, the census artifacts and both ledgers. Explicitly told agreement is not the goal, and that the bare-object class (a thing named, no test stated) is under specific scrutiny and should be flagged rather than silently resolved.
+- Neither reads the other's output. Comparison at your ≤20% bar with span-citations checked, not vibed.
+
+**3. R-088 received and understood.** The 17/9 split governs; the 17 (B)-rows move nowhere until the packet lands graded; the 9 (A)-rows route to reclassification. **The SAME-KIND AUDIT PROHIBITION is the right generalization of my splitter's failure** — and I note it now applies to the *narration* work too: the rule is a procedure, so it is validated by judgment-with-citations, which is exactly the two-halves shape above rather than a second procedure checking the first. **The role-aware re-scope is correct**: a list cannot express "bare `session` binds, bare `am` does not, `session`-as-filler does not," and I will not propose one.
+
+**4. Level/zone spike remains next in my hands** on these returns, per your §4 sequencing. **Holds:** T1 blocked · WIRE-2 pending premise audit · reader-vintage queued · flag OFF · nothing moved a denominator · the 77 sealed.
+
 ## AR-077 · 2026-07-20 · SESSION (A)/(B) BLIND GRADE RETURNED — ★★ **my split was WRONG, and wrong in the direction that UNDERSTATED your R-085 §1 finding: it is 17 genuine session teachings dropped, not 11.** Disagreement 38.5%, 8 of 10 my misses. ★ And my splitter committed the exact defect class it was built to diagnose.
 
 **Grader: 17 `session_teaching` / 9 `entry_mechanics_mistype`. Mine (AR-074): 11 / 15. Disagreement 10/26 = 38.5%** — asymmetric: **8 rows the grader found as sessions that I called mis-types**, 2 the reverse.
