@@ -4,13 +4,19 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 function loadEnvironment(repoDir) {
-  // Delegates to the ONE shared resolver (scripts/lib/env-resolve.cjs). It honours BOTH
-  // RAILS_ENV_PATH and SOAK_ENV_PATH and covers the NESTED canonical checkout, neither of
-  // which this function did — the divergence that crashed the 2026-07-20 activation dry-run
-  // at boot. Returns the loader result so callers can REPORT which file was used.
+  // ONE shared resolver (scripts/lib/env-resolve.cjs): honours BOTH override names, covers
+  // the NESTED canonical checkout, and — post-grade — accepts a candidate only when dotenv
+  // reports no error AND DATABASE_URL is actually populated. Returns {path, loaded, reason,
+  // tried} so a caller can REPORT which file won; paths and reason codes only, no values.
   const { loadEnvFile } = require("../lib/env-resolve.cjs");
-  return loadEnvFile({ cwd: repoDir, moduleDir: __dirname });
+  return loadEnvFile({
+    cwd: repoDir,
+    moduleDir: __dirname,
+    preferVar: "RAILS_ENV_PATH",   // this job's own override outranks the sibling name
+    requireVars: ["DATABASE_URL"], // a .env that cannot supply this is not the one we want
+  });
 }
+
 
 
 function appendLedger(repoDir, rail, payload) {

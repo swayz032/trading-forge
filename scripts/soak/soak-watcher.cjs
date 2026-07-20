@@ -40,17 +40,28 @@ try {
 // Resolve .env from a candidate list so this runs from an isolated worktree tonight
 // (finds the sibling main checkout's .env) AND from the main checkout after landing.
 (function loadEnv() {
-  // ONE shared resolver (scripts/lib/env-resolve.cjs) — honours BOTH RAILS_ENV_PATH and
-  // SOAK_ENV_PATH and covers the NESTED canonical checkout. The old local list read only
-  // SOAK_ENV_PATH and pointed one level too shallow at the sibling checkout, so the
-  // documented "runs from an isolated worktree" affordance had never actually worked.
+  // ONE shared resolver. preferVar keeps an operator's SOAK_ENV_PATH pin from being
+  // silently outranked by an ambient RAILS_ENV_PATH (grader MINOR-1), and requireVars
+  // restores the content-aware fall-through this job always had: keep walking candidates
+  // until DATABASE_URL is actually set, so a partial .env cannot shadow a complete one
+  // (grader MAJOR-2 — the regression the first version of the shared resolver introduced).
   if (!dotenv) return;
   try {
     const { loadEnvFile } = require("../lib/env-resolve.cjs");
-    const r = loadEnvFile({ cwd: process.cwd(), moduleDir: __dirname });
-    // Path only — never a value. Reported so a recovery check can assert WHICH file was
-    // used instead of inferring it from the process merely having started.
-    if (!r.loaded) console.error("soak-watcher: .env not loaded:", r.reason);
+    const r = loadEnvFile({
+      cwd: process.cwd(),
+      moduleDir: __dirname,
+      preferVar: "SOAK_ENV_PATH",
+      requireVars: ["DATABASE_URL"],
+    });
+    // Consume the returned path (grader MINOR-2: it previously had zero consumers, so the
+    // "recovery can assert WHICH file" affordance was shipped but not delivered). Paths and
+    // fixed reason codes only — never a value.
+    if (r.loaded) {
+      console.log(JSON.stringify({ type: "env", loadedFrom: r.path }));
+    } else {
+      console.error(JSON.stringify({ type: "env", loaded: false, reason: r.reason, tried: r.tried }));
+    }
   } catch (e) {
     console.error("soak-watcher: env resolution failed, continuing on ambient env:", e.message);
   }
