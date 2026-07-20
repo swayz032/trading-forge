@@ -1,0 +1,305 @@
+{
+ "artifact": "wire1-dod-remeasure",
+ "window": "2022-01-01..2023-06-30",
+ "symbol": "MES",
+ "n_specs": 16,
+ "n_measured": 16,
+ "corpus_binding_approximation_rate_BEFORE": 0.9938,
+ "corpus_AFTER_structural": 0.4011,
+ "corpus_AFTER_engagement_weighted": 0.4162,
+ "corpus_engaged_fraction_PER_COLUMN": {
+  "structure": 0.9999,
+  "bias": 0.4898
+ },
+ "scope_line": "MES 5m, 2022-01-01..2023-06-30, one window, wire flag ON. CARRY decision (R-071 \u00a73): no pre-window warmup seeding \u2014 infeasible for this window (51 prior daily bars vs 200 needed) \u2014 so the bias column's engaged fraction is depressed by warmup consuming the window front. Engagement is reported PER COLUMN (R-074 \u00a72). Product is RECEIPTS, not returns: these are tier-b near-ghost specs and no edge claim attaches to any profit_factor here.",
+ "rows": [
+  {
+   "spec": "-igpOZs8LsM__s0",
+   "n_executed_bindable": 9,
+   "n_binding_approximation_before": 9,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 5,
+   "wired_bias_bindings": 1,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.3333,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.3901,
+   "trades": 631,
+   "profit_factor": 0.1571,
+   "secs": 13.5,
+   "error": null
+  },
+  {
+   "spec": "0xygpCMwxbQ__s0",
+   "n_executed_bindable": 9,
+   "n_binding_approximation_before": 9,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 8,
+   "wired_bias_bindings": 1,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.0,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.0568,
+   "trades": 360,
+   "profit_factor": 0.2875,
+   "secs": 10.0,
+   "error": null
+  },
+  {
+   "spec": "4cT8WTyxhYY__s0",
+   "n_executed_bindable": 8,
+   "n_binding_approximation_before": 8,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 7,
+   "wired_bias_bindings": 1,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.0,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.0639,
+   "trades": 353,
+   "profit_factor": 0.1085,
+   "secs": 10.2,
+   "error": null
+  },
+  {
+   "spec": "CLDEIsNpVRc__s0",
+   "n_executed_bindable": 8,
+   "n_binding_approximation_before": 8,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 4,
+   "wired_bias_bindings": 1,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.375,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.4388,
+   "trades": 352,
+   "profit_factor": 0.3728,
+   "secs": 10.2,
+   "error": null
+  },
+  {
+   "spec": "DLwVqcLRcfw__s0",
+   "n_executed_bindable": 7,
+   "n_binding_approximation_before": 7,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 6,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.1429,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.1429,
+   "trades": 632,
+   "profit_factor": 0.1078,
+   "secs": 9.9,
+   "error": null
+  },
+  {
+   "spec": "DLwVqcLRcfw__s1",
+   "n_executed_bindable": 6,
+   "n_binding_approximation_before": 6,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 3,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.5,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.5,
+   "trades": 623,
+   "profit_factor": 0.1187,
+   "secs": 10.0,
+   "error": null
+  },
+  {
+   "spec": "E9MzEC_yNoM__s0",
+   "n_executed_bindable": 2,
+   "n_binding_approximation_before": 2,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 0,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 1.0,
+   "binding_approximation_rate_AFTER_engagement_weighted": 1.0,
+   "trades": 711,
+   "profit_factor": 0.0623,
+   "secs": 10.2,
+   "error": null
+  },
+  {
+   "spec": "E9MzEC_yNoM__s1",
+   "n_executed_bindable": 6,
+   "n_binding_approximation_before": 6,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 4,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.3333,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.3334,
+   "trades": 631,
+   "profit_factor": 0.1571,
+   "secs": 10.5,
+   "error": null
+  },
+  {
+   "spec": "IyFioFkRgWo__s0",
+   "n_executed_bindable": 6,
+   "n_binding_approximation_before": 6,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 5,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.1667,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.1667,
+   "trades": 350,
+   "profit_factor": 0.0987,
+   "secs": 9.9,
+   "error": null
+  },
+  {
+   "spec": "PVMgOxHUqFA__s0",
+   "n_executed_bindable": 8,
+   "n_binding_approximation_before": 8,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 6,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.25,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.2501,
+   "trades": 632,
+   "profit_factor": 0.1078,
+   "secs": 9.9,
+   "error": null
+  },
+  {
+   "spec": "R5L890juvRw__s0",
+   "n_executed_bindable": 5,
+   "n_binding_approximation_before": 5,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 4,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.2,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.2001,
+   "trades": 353,
+   "profit_factor": 0.1085,
+   "secs": 10.2,
+   "error": null
+  },
+  {
+   "spec": "W7nlnHTUZQU__s0",
+   "n_executed_bindable": 10,
+   "n_binding_approximation_before": 9,
+   "binding_approximation_rate_BEFORE": 0.9,
+   "wired_structure_bindings": 3,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.6,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.6,
+   "trades": 624,
+   "profit_factor": 0.176,
+   "secs": 10.3,
+   "error": null
+  },
+  {
+   "spec": "WEhmadJArQo__s0",
+   "n_executed_bindable": 22,
+   "n_binding_approximation_before": 22,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 13,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.4091,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.4092,
+   "trades": 633,
+   "profit_factor": 0.1541,
+   "secs": 10.3,
+   "error": null
+  },
+  {
+   "spec": "_LS6qcSlDCs__s0",
+   "n_executed_bindable": 4,
+   "n_binding_approximation_before": 4,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 0,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 1.0,
+   "binding_approximation_rate_AFTER_engagement_weighted": 1.0,
+   "trades": 713,
+   "profit_factor": 0.0649,
+   "secs": 10.4,
+   "error": null
+  },
+  {
+   "spec": "dV7chra4u4Q__s0",
+   "n_executed_bindable": 7,
+   "n_binding_approximation_before": 7,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 1,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.8571,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.8572,
+   "trades": 729,
+   "profit_factor": 0.0551,
+   "secs": 10.3,
+   "error": null
+  },
+  {
+   "spec": "kFyD3H6I1I8__s0",
+   "n_executed_bindable": 12,
+   "n_binding_approximation_before": 12,
+   "binding_approximation_rate_BEFORE": 1.0,
+   "wired_structure_bindings": 9,
+   "wired_bias_bindings": 0,
+   "engaged_fraction_PER_COLUMN": {
+    "structure": 0.9999,
+    "bias": 0.4898
+   },
+   "binding_approximation_rate_AFTER_structural": 0.25,
+   "binding_approximation_rate_AFTER_engagement_weighted": 0.2501,
+   "trades": 633,
+   "profit_factor": 0.1275,
+   "secs": 10.3,
+   "error": null
+  }
+ ]
+}

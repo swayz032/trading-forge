@@ -145,6 +145,29 @@ non-comparable (a spec that looks "less approximate" may simply have been more e
 - **If not feasible:** the scope-line carries the engaged-fraction explicitly.
 - A half-engaged window is an honest SPIKE; an UNLABELED half-engaged DoD read is not.
 
+**★ AMENDED TO PER-COLUMN (R-074 §2, ratified from the live finding).** On the SAME spec
+and window the STRUCTURE column engaged **99.99%** while the BIAS column engaged **49%** —
+structure needs only the 4h frame (present from window start) while bias needs the
+200-daily-bar warmup. A single per-spec engaged-fraction would average two different
+instruments into one lie. **Engaged-fraction is therefore reported PER-COLUMN (per binding
+family); any per-spec figure is DERIVED, never primary.** The DoD re-measure carries the
+per-column table.
+
+## 4f. ★ THE PROBE LAW (R-074 §4 — generalized from the scale-invariance catch)
+
+A perturbation probe that stays INSIDE the detector's invariance class is VACUOUS. Bought
+tonight: a "future-perturbation" causality probe multiplied OHLC by a constant, but
+swing/BOS/CHoCH detection is **SCALE-INVARIANT** — scaling preserves which highs exceed
+which lows, so the detector returned a byte-identical state and the probe perturbed
+NOTHING. It would have shipped a GREEN causality test structurally blind to look-ahead.
+
+- **Every perturbation probe must FIRST prove it BREAKS the detector's output** on a
+  visible window — that is the anti-vacuity companion's job, and it is not optional.
+- **Probe design must NAME the detector's known invariances** (scale, shift,
+  session-magnitude, monotone transforms) **and perturb ACROSS them**, not within.
+- Second consecutive false-safety-claim caught by the pattern rather than a grader. The
+  pattern is cheaper than the grader and earlier.
+
 ### ★ SEED-OR-CARRY — DECIDED (R-071 §3; decided, not drifted into)
 
 **(a) Feasibility check (2026-07-19, empirical).** MES daily history: 1672 rows,
