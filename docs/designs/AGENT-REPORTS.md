@@ -4,6 +4,20 @@
 
 ---
 
+## AR-065 · 2026-07-20 · R-071 §3 discharged — SEED-OR-CARRY **DECIDED** on an empirical feasibility check (CARRY now, seeding stationed). And R-067 §3's **INTRA-DAY STRADDLE proof is DONE** — the forming-bar leak is closed before any structure column exists.
+
+**R-071 §3 — SEED-OR-CARRY, decided not drifted (`7f49753d`, recorded in packet §4e).**
+- **(a) Feasibility, measured:** MES daily history is 1672 rows, earliest `2015-08-01`, latest `2024-12-31` (with gaps). Prior daily bars available before candidate window starts — **2016-01-01: 51 · 2018-01-14 (actual data start): 51 · 2020-01-01: 116 · 2022-01-01: 738.** Seeding needs ≥200.
+- **(b) DECISION: CARRY for this re-measure; seeding STATIONED for a later wave.** Reasons on the record: (1) seeding is **INFEASIBLE for the registered window** — only 51 prior daily bars exist, a data fact not a preference; (2) re-windowing to 2022+ purely to enable seeding would **break comparability** with the commissioning battery — a different window is a different measurement; (3) **the confound is severe only on SHORT windows** — warmup is a fixed ~200 daily bars (~10 months), which was ~51% of the spike's 18-month window (hence 49% engaged) but a small fraction of the registered multi-year window, so the 0-vs-51,731 result was a short-window artifact, not a standing property; (4) engaged-fraction is reported per-spec regardless, so the carriage is labeled, never silent.
+
+**R-067 §3 — INTRA-DAY STRADDLE PROOF DONE (`563a2e43`).** `htf_availability.completed_htf_slice` implements the ratified rule — an HTF bar is available to exec bar `t` **iff its CLOSE ≤ t**, which for the OPEN-stamped S3 frames is `stamp + period ≤ t`. **7 tests, each with its anti-vacuity companion** per your R-069 §2 house pattern:
+- **THE STRADDLE** — an exec bar at 10:30 does NOT see the 08:00 bar (which closes 12:00 and is still forming).
+- **ANTI-VACUITY** — the naive `stamp ≤ t` filter WOULD have admitted it, differing by **exactly one bar**, so the correct-slice test is not proving a tautology.
+- exact-close boundary is inclusive · start-of-window sees NOTHING (empty, not a silent partial) · 4h and 1h each respect their OWN period (a wrong period silently shifts the boundary) · an unknown timeframe **RAISES rather than guessing**.
+- The leaky filter exists ONLY to power the companion tests and is never called in production. Grounded in the two-path stamp resolution (code `label="left"` + empirical 0.0000 match across 67/67 4h and 253/253 1h bars).
+
+**Sequence position:** the causality groundwork for the structure wire is now complete — daily (future-perturbation, mutation-verified), 4h/1h stamp convention (two-path), 1h alignment (binding caveat discharged), and the straddle/forming-bar rule. **Next: the structure columns themselves** (step functions advancing per COMPLETED HTF bar, per your two-granularity distinction), then `_eval_wait_structure` flag-gated OFF, three proofs, the 0.99 per-family re-measure WITH engaged-fraction, and the independent grade — whose scope carries the freshly-live non-None builder branch, the dead-load activation, and this availability rule. Runtime profiling of per-spec 4h/1h loading still owed on the throughput scope-line. The 77 sealed.
+
 ## AR-064 · 2026-07-19 · R-069 executed end-to-end: 1h aligned (binding caveat discharged) → DSL conversion ALONE (two-commit law honored, de-dup COMPLETE) → dead-load ACTIVATED with engagement proof. R-070 acknowledged (staged, waits). The engaged-fraction confound demonstrated LIVE.
 
 **R-070 acknowledged — no action on my lane.** Forensics pre-registration FROZEN at hash `d3665c577347b70c`; your §4 bindings (Tooth-1 packet references it BY HASH, two-path anchor re-verify at build time, grader runs the §4 calibration battery from their own hands, `load_bearing` field lands with/before the build) are recorded and WAIT for the packet, exactly as you scoped. R-062 carry now: **#2 gate-recalibration (N=200/500), #3 reader-vintage cross-audit, #5 practice-mode check** remain ours; #4 STAGED-FROZEN.
