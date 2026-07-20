@@ -44,6 +44,7 @@ decision record with citations):
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field, replace
 
 # ─── FVG Identity Dispatch Experiment (docs/designs/fvg-identity-dispatch-
@@ -84,6 +85,60 @@ def resolve_fvg_object(object_text: str) -> bool:
         return False
     norm = object_text.strip().lower()
     return any(kw in norm for kw in FVG_OBJECT_KEYWORDS)
+
+
+# ─── Level/Zone Routing Sub-Wire (docs/designs/packet-levelzone-subwire-
+# 2026-07-20.md) ─────────────────────────────────────────────────────────────
+# WAIT_STRUCTURE/VERIFY_STRUCTURE conditions all bind to structure_engine.
+# compute_structure_state, which takes NO level argument — any two level/zone
+# conditions on the same bars ("support at 100" vs "resistance at 140")
+# therefore receive an IDENTICAL signal (premise audit, docs/replay-results/
+# h1-battery/levelzone_premise_audit.py, leg 2). spec_condition_compiler.
+# retest_touch_check IS level-aware (leg 1: proven to move with its `level`
+# input, both polarities exercised). WHEN ENABLED, a WAIT_STRUCTURE/
+# VERIFY_STRUCTURE condition whose object names a level/zone concept binds to
+# that level-aware evaluator instead of the shared, level-blind structure
+# signal every other WAIT_STRUCTURE/VERIFY_STRUCTURE condition still uses.
+# Default OFF so production binding plans stay byte-identical until the
+# independent grade — same "ship gates STRICT, default OFF" pattern as
+# TF_FVG_IDENTITY_ENABLED above.
+#
+# approximation is DELIBERATELY left at meta.base_approximation (True) here,
+# NOT flipped to False like the FVG dispatch above — the packet's hard
+# constraint #2 is explicit: the routing lands, the fidelity claim does not.
+# base_approximation=True stays until an independent grade licenses otherwise.
+#
+# Concept classifier: mirrored VERBATIM (not re-authored — packet hard
+# constraint #5) from the `level_zone` regex in the committed census
+# generator, docs/replay-results/h1-battery/wire1_structure_census.py lines
+# 56-58. Duplicated as a literal pattern (not imported) for the same
+# zero-import-surface / portability reason SESSION_KEYWORDS is duplicated
+# below rather than imported from session_windows.py — this module's own
+# PURITY CONTRACT (module docstring) forbids reaching into a docs/ script's
+# path at runtime, and a second, drifted copy is exactly the defect class
+# this campaign keeps convicting, so any edit to the census regex MUST be
+# mirrored here in the same commit.
+LEVEL_ZONE_RE = re.compile(
+    r"\b(support|resistance|demand|supply|zone|level|previous\s+(day|high|low)|"
+    r"high\s+of\s+(the\s+)?day|low\s+of\s+(the\s+)?day|pdh\b|pdl\b)\b", re.I)
+
+LEVELZONE_NATIVE_PRIMITIVE: str = "spec_condition_compiler.retest_touch_check"
+
+
+def levelzone_routing_enabled() -> bool:
+    """Read at call time (not cached), same live-read contract as
+    fvg_identity_enabled() above — lets a before/after comparison run in the
+    same process."""
+    return os.environ.get("TF_LEVELZONE_ROUTING_ENABLED", "false").strip().lower() == "true"
+
+
+def resolve_levelzone_object(object_text: str) -> bool:
+    """True iff `object_text` names a level/zone concept per the mirrored
+    census regex above. Pure regex match, same contract as
+    resolve_fvg_object/resolve_sweep_object/resolve_mss_object."""
+    if not object_text:
+        return False
+    return bool(LEVEL_ZONE_RE.search(object_text))
 
 
 # ─── Composition Fidelity Experiment — Phase 3 Increment 2 (docs/designs/
@@ -490,6 +545,30 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
             primitive="fvg_native.compute_fvg_signal",
             approximation=False,
             executed=True,
+            reason=None,
+        )
+
+    # Level/Zone Routing Sub-Wire (experiment, env-gated — see module docstring
+    # above LEVEL_ZONE_RE). Checked AFTER the FVG identity dispatch above (an
+    # object naming both an FVG and a level/zone concept, e.g. "fvg near
+    # support zone", keeps FVG's more specific routing when both flags happen
+    # to be on) and scope-locked to WAIT_STRUCTURE/VERIFY_STRUCTURE only per
+    # packet §3 — FILTER is explicitly NOT in scope for this sub-wire (unlike
+    # the FVG dispatch above, which does cover FILTER).
+    if (
+        cond_type in ("WAIT_STRUCTURE", "VERIFY_STRUCTURE")
+        and levelzone_routing_enabled()
+        and resolve_levelzone_object(obj)
+    ):
+        return ConditionBinding(
+            condition_id=cond_id,
+            type=cond_type,
+            role=role,
+            object=obj,
+            bindable=True,
+            primitive=LEVELZONE_NATIVE_PRIMITIVE,
+            approximation=meta.base_approximation,
+            executed=meta.executed,
             reason=None,
         )
 

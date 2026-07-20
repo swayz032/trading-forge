@@ -60,6 +60,11 @@ from src.engine.spec_family_bindings import (
 from src.engine.strategy_base import BaseStrategy
 
 FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
+LEVELZONE_PRIMITIVE_NAME: str = "spec_condition_compiler.retest_touch_check"
+# Level/Zone Routing Sub-Wire (docs/designs/packet-levelzone-subwire-2026-07-20.md, TF_LEVELZONE_
+# ROUTING_ENABLED) — MUST match the literal string spec_family_bindings.LEVELZONE_NATIVE_PRIMITIVE
+# returns, same independently-duplicated-constant convention as FVG_PRIMITIVE_NAME above (that
+# module has zero import surface by design).
 # Composition Fidelity Experiment (docs/designs/composition-fidelity-experiment-2026-07-05.md)
 # bundle primitive names — MUST match the literal strings spec_family_bindings.resolve_bundle_
 # primitive() returns (that module has zero import surface by design, so these are independently
@@ -630,6 +635,26 @@ class SpecConditionStrategy(BaseStrategy):
         atr = compute_atr(df_atr, ATR_PERIOD).to_numpy()
         return retest_touch_check(close, high, low, level, atr)
 
+    def _eval_wait_structure_levelzone(
+        self, close: np.ndarray, high: np.ndarray, low: np.ndarray, n: int
+    ) -> np.ndarray:
+        """Level/Zone Routing Sub-Wire (docs/designs/packet-levelzone-subwire-2026-07-20.md):
+        evaluate a level/zone-classified WAIT_STRUCTURE/VERIFY_STRUCTURE condition via the
+        level-aware retest_touch_check primitive instead of the shared, level-blind
+        structure_engine.compute_structure_state signal every other WAIT_STRUCTURE/
+        VERIFY_STRUCTURE condition still uses (_eval_wait_structure above).
+
+        Level-series resolution is IDENTICAL to _eval_wait_retest's EMA proxy — this sub-wire
+        reuses the SAME already-audited level-resolution convention WAIT_RETEST conditions use,
+        not a fresh per-condition numeric-level extraction (out of scope per packet §3: "the
+        exact change, scope-locked" names routing to retest_touch_check "with a resolved level
+        series," not per-condition level parsing). A dedicated method (rather than calling
+        _eval_wait_retest directly) keeps the two families' call sites and trace provenance
+        distinct even though the underlying computation is presently identical, and gives this
+        sub-wire a single seam to later swap in a per-condition level resolver without touching
+        WAIT_RETEST's own behavior."""
+        return self._eval_wait_retest(close, high, low, n)
+
     # ─── Core compute ───────────────────────────────────────────────────────
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
         n = len(df)
@@ -668,6 +693,7 @@ class SpecConditionStrategy(BaseStrategy):
         )
         wait_bias_cache: dict[bool, np.ndarray] = {}
         wait_structure = None
+        wait_structure_levelzone = None
         wait_retest = None
         fvg_signal = None
         # Composition Fidelity Experiment bundle caches (each computed at most once per compute()
@@ -706,6 +732,14 @@ class SpecConditionStrategy(BaseStrategy):
                 if fvg_signal is None:
                     fvg_signal = self._eval_fvg(open_, high, low, close)
                 per_condition_bool[b.condition_id] = fvg_signal
+            elif b.primitive == LEVELZONE_PRIMITIVE_NAME:
+                # Level/Zone Routing Sub-Wire — checked BEFORE the generic WAIT_STRUCTURE/
+                # VERIFY_STRUCTURE type dispatch below, same placement discipline as the FVG check
+                # above, so a level/zone-routed binding never falls through to the shared generic
+                # structure-activity array.
+                if wait_structure_levelzone is None:
+                    wait_structure_levelzone = self._eval_wait_structure_levelzone(close, high, low, n)
+                per_condition_bool[b.condition_id] = wait_structure_levelzone
             elif b.primitive == BIAS_PRIMITIVE_NAME:
                 # Composition-bundle restoration (experiment) — checked BEFORE the generic
                 # WAIT_BIAS/CONFIRM_DIRECTION type dispatch below, same placement discipline as
