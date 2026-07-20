@@ -1,0 +1,63 @@
+{
+  "artifact": "liquidity-detector-consumer-census",
+  "authority": "R-107 \u00a72",
+  "detectors": [
+    "src/engine/indicators/liquidity.py::detect_buyside_liquidity",
+    "src/engine/indicators/liquidity.py::detect_sellside_liquidity"
+  ],
+  "defect": "clusters over the ENTIRE swings table (liquidity.py:33-52, 76-95) \u2014 a FUTURE swing retroactively re-clusters past levels; a level's existence at bar i can be decided by data at bar >> i. Proven 4/5 seeds, up to 84/185 probe bars (AR-096 F-1).",
+  "\u2605_headline": "ALL SIX consumers are REGISTERED strategy archetypes, NOT dormant. The leak is a STANDING ENGINE DEFECT pre-dating the Population-A packet entirely \u2014 tonight's resolver was merely the first consumer honest enough to expose it.",
+  "n_consumers": 6,
+  "n_registered": 6,
+  "scope_note": "Registration proves REACHABILITY, not that any archetype has run on live capital. The system is pre-live by design (0 backtests, all-CANDIDATE). What this census establishes is that the fix scope is ENGINE-WIDE, not packet-local \u2014 it does NOT establish live harm.",
+  "rows": [
+    {
+      "module": "src/engine/strategies/eqhl_raid.py",
+      "class": "EqhlRaidStrategy",
+      "registered_in_archetype_evaluator": true,
+      "registered_in_black_swan_evaluator": true,
+      "status": "REGISTERED \u2014 reachable, NOT dormant",
+      "consumes": "detect_buyside_liquidity + detect_sellside_liquidity"
+    },
+    {
+      "module": "src/engine/strategies/ict_2022.py",
+      "class": "Ict2022Strategy",
+      "registered_in_archetype_evaluator": true,
+      "registered_in_black_swan_evaluator": true,
+      "status": "REGISTERED \u2014 reachable, NOT dormant",
+      "consumes": "detect_buyside_liquidity + detect_sellside_liquidity"
+    },
+    {
+      "module": "src/engine/strategies/ict_scalp.py",
+      "class": "IctScalpStrategy",
+      "registered_in_archetype_evaluator": true,
+      "registered_in_black_swan_evaluator": true,
+      "status": "REGISTERED \u2014 reachable, NOT dormant",
+      "consumes": "detect_buyside_liquidity + detect_sellside_liquidity"
+    },
+    {
+      "module": "src/engine/strategies/ict_swing.py",
+      "class": "IctSwingStrategy",
+      "registered_in_archetype_evaluator": true,
+      "registered_in_black_swan_evaluator": true,
+      "status": "REGISTERED \u2014 reachable, NOT dormant",
+      "consumes": "detect_buyside_liquidity + detect_sellside_liquidity"
+    },
+    {
+      "module": "src/engine/strategies/quarterly_swing.py",
+      "class": "QuarterlySwingStrategy",
+      "registered_in_archetype_evaluator": true,
+      "registered_in_black_swan_evaluator": true,
+      "status": "REGISTERED \u2014 reachable, NOT dormant",
+      "consumes": "detect_buyside_liquidity + detect_sellside_liquidity"
+    },
+    {
+      "module": "src/engine/strategies/turtle_soup.py",
+      "class": "TurtleSoupStrategy",
+      "registered_in_archetype_evaluator": true,
+      "registered_in_black_swan_evaluator": true,
+      "status": "REGISTERED \u2014 reachable, NOT dormant",
+      "consumes": "detect_buyside_liquidity + detect_sellside_liquidity"
+    }
+  ]
+}
