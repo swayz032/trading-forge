@@ -4,6 +4,25 @@
 
 ---
 
+## AR-096 · 2026-07-20 · ★★★ GRADE: **BAND 3, NOT-SAFE — a REAL LOOK-AHEAD LEAK in `named_sr_level`**, mutation-validated. The lane HALTS. ★ And my specific suspicion was pointed at the WRONG kind — the class-sweep caught it, not my hunch.
+
+**F-1 CRITICAL — look-ahead, proven two independent ways.** `named_sr_level` resolves via `detect_buyside/sellside_liquidity`, which **clusters over the ENTIRE swings table** (`liquidity.py:33-52`, `76-95`). So **a FUTURE swing can retroactively absorb an earlier, already-confirmed swing** into a differently-anchored cluster — silently deleting or moving a level a live trader already knew.
+- **Truncation test** (compute over full df vs `df.head(i+1)`, compare bar *i*): **4 of 5 seeds mismatch, up to 84/185 probe bars.**
+- **Concrete trace:** a swing high at **bar 73** is its own visible cluster when only bars 0–100 are known; on the full 220-bar frame it merges into a cluster anchored at **bar 135** and the bar-73 level **vanishes from "active levels at bar 100" entirely.** *The existence of a level at bar 100 is decided by data from bar 135.*
+- **Blast radius contained**: both flags default OFF and no `approximation=False` shipped — **the widening you ratified in R-103 is what kept this out of anything consuming it.** That decision paid for itself tonight.
+
+**★ THE PROBE LAW EARNED ITS KEEP, and I want the mechanism on record:** the grader **planted a deliberate leak first** (`level[i] = close[i+5]`) and confirmed its probe fired (6/7 bars) **before** trusting any clean verdict. It then ran invariance pairs per kind: a future-bar perturbation leaves `swing`/`order_block_edge` untouched (causally invariant, correct) but **moves `named_sr_level` 96.72 → 110.71** — the leak's own magnitude. **Without R-105's addition, "no leak found" on an unvalidated probe would have read as a clean bill of health.**
+
+**★ MY SUSPICION WAS AIMED AT THE WRONG KIND.** I flagged the **`order_block_edge` 10-bar margin** as the thing to scrutinise hardest — and it is **CLEAN**, analytically and empirically (0/185 mismatches × 5 seeds), as is `swing`. **The leak is in `named_sr_level`, which the implementer never audited and which I did not name.** What caught it was the *class-sweep* instruction — "check `named_sr_level` and `swing` for the same class" — not my hunch. **The lesson I take: a named suspicion is worth less than a class sweep, because the suspicion encodes what I already imagined and the sweep does not.** I got the posture right and the target wrong; only the posture mattered.
+
+**F-2 MEDIUM — over-strict anaphora regex** (the very class R-091 §3 named): `POPULATION_A_ANAPHORA_RE` short-circuits on *"this **area of resistance** rejected price"* — a row that DOES name a kind in-span — because it checks anaphora before kinds with no `of <kind>` lookahead. **Fail-safe direction** (under-counts, never fabricates), so no correctness risk today, but it will silently suppress legitimate rows as the corpus grows. **Fix before tier-a expansion.**
+
+**F-3 LOW — my own citation was wrong.** AR-094 relayed "184 pre-existing tests"; the reproducible counts are 85 (the three named files) or 241 (every importer). All green either way, but **I passed along a number I had not reconciled** — and after AR-089 that is precisely the habit I said I'd stop.
+
+**Independently reconciled TRUE:** R6 byte-identity (0 mismatches at default-OFF and routing-ON; exactly 7 differ with both flags on, **differing only in `primitive`, `approximation` True in every case**) · R7 · Population-B prohibition (no hollow binding found on any probe) · R8 anti-vacuity (collapse-mutation broke 14/51 tests incl. both R1/R2 headliners — **the tests are real**) · scope-lock (`+974/-0`, **zero deletions**, so every OUT item is untouched by construction) · TS gap honestly declared.
+
+**DISPOSITION — the lane halts here, and I am not proposing the split myself:** the grader recommends `order_block_edge` + `swing` could proceed on their own track if the packet were split, since both are independently clean. **That is a scoping decision and it is yours.** What is not in question: **no `approximation=False` for `named_sr_level` under any circumstance until F-1 is fixed AND covered by a causal-safety test** — truncation-style, not discrimination-style, because 51 tests passed while this leaked. **Holds:** T1 blocked · WIRE-2 pending · reader-vintage queued · flags OFF · the 77 sealed.
+
 ## AR-095 · 2026-07-20 · R-105's PROBE-LAW addition FORWARDED to the in-flight grader — scope amended mid-grade rather than left stale.
 
 **The grader was already running when R-105 landed**, so its brief was one requirement short. I sent the addition rather than letting the grade complete against a stale scope and discovering the gap afterward — the same reasoning as amending the packet ceiling before dispatch rather than after.
