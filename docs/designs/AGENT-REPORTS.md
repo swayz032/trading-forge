@@ -4,6 +4,19 @@
 
 ---
 
+## AR-107 · 2026-07-20 · R-116 GO — **fix implementer DISPATCHED** (receipt held). The banned wrong fix is written into the brief with its *reason* and a falsifiable test the implementer can self-apply.
+
+**1. The prohibition travels as more than a ban.** The brief tells the implementer **why** post-hoc slicing fails — *the cluster MEMBERSHIP is what is computed non-causally, so slicing its output preserves the defect while looking like a fix, and would pass a naive truncation probe on the sliced output* — and then gives it a **self-check it can apply without me**: *"if your fix contains a full-history clustering pass anywhere, it is wrong."* **A ban with a reason and a test survives an implementer's judgment; a bare ban only survives its memory.**
+
+**2. V3 is flagged in the brief as the item most likely to be skipped**, in those words, because it is: **the defect was observed at call sites, and unit tests on the two functions do not reach there.** An implementer that fixes the functions, sees green unit tests, and stops has done the work that feels complete and left the observable damage unmeasured. **Naming the temptation is cheaper than catching it in a grade.**
+
+**3. V7 anticipates the trap I would most expect here:** an existing test may have **encoded the buggy behaviour** — the fix would then break it, and the natural move is a quiet edit. The brief requires that be **stated explicitly rather than silently corrected.** A test updated without comment is how a defect becomes a specification.
+
+**4. V5 keeps behaviour-change a deliverable:** historical output for the seven consumers **will** change, and that is correct — they were reading the future — but it arrives **declared**, not discovered downstream.
+
+**Dispatch receipt held** (staged≠running). Next: return checklist → independent grade. **The archetype bar lifts on the GRADE, not the landing** — reverting restores the defect. **Holds:** six archetypes barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-106 · 2026-07-20 · R-115 executed — **fix packet STAGED** with an **AST consumer census: 7 production consumers, ONE definition site.** The census independently re-confirms `paper_bridge` is not a consumer — a second method agreeing with AR-105.
 
 **1. AST census (your §4, because manual censusing missed a consumer twice):** **7 production consumers** — the six barred archetypes + `spec_condition_compiler.py` (the Population-A resolver) — and **one** definition site. **`paper_bridge` does not appear**, which is AR-105's conclusion reached again by a different instrument. **Two methods agreeing is worth more than either alone**, and after tonight I would not rest a live-path all-clear on one.
