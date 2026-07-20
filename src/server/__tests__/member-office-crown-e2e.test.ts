@@ -68,7 +68,7 @@ beforeAll(async () => {
   const { memberOfficeRouter } = await import("../routes/slumhouse/api/member-office.js");
   app.use(memberOfficeRouter);
 
-  await new Promise<void>((r) => { server = app.listen(0, r); });
+  await new Promise<void>((resolve) => { server = app.listen(0, () => resolve()); });
   const addr = server.address();
   base = `http://127.0.0.1:${typeof addr === "object" && addr ? addr.port : 0}`;
 });
