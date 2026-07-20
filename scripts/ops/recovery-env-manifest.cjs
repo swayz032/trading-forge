@@ -35,6 +35,14 @@
 //   2. A NON-EMPTY BUT WRONG default still degrades silently and is NOT mechanically
 //      detectable. The empty-string shape is the detectable SUBSET, not the whole class.
 //      Those entries are classed by human judgement and marked `humanClassified: true`.
+//   3. ★ JUSTIFICATION CONTENT IS ASSERTED, NOT VERIFIED. `validate()` checks that a declared
+//      class CARRIES its `breaks`/`degrades`/`fallback` string and that it is non-empty — it
+//      cannot check the string is TRUE. Not hypothetical: the shipped `DATABASE_URL` justification
+//      claimed the verifier "reports FAIL" when `legDb()` actually returns UNKNOWN, and no test
+//      caught it because no test could. Same shape as leg-2's receipt-content limit, one field
+//      over. Justification prose is HUMAN-reviewed; the CLASS is machine-checked. Stated because
+//      an undeclared limit is the same defect as an overclaiming guard — which is exactly what
+//      that sentence was.
 "use strict";
 
 /** The CLOSED set of classes. A class cannot be introduced by phrasing. */
@@ -65,7 +73,12 @@ const VARS = [
     name: "DATABASE_URL",
     leg: "db",
     classes: ["OPTIONAL_DEGRADING", "REQUIRED"],
-    breaks: "every DB path. The recovery verifier's db leg cannot connect and reports FAIL.",
+    breaks:
+      "every DB path. ★ CORRECTED: the recovery verifier's db leg reports **UNKNOWN** " +
+      "(`database_url_absent`), NOT FAIL, when this is unset — verified by running `legDb()` " +
+      "with it removed. FAIL fires only when the URL is PRESENT but the database is unreachable. " +
+      "The earlier text claimed FAIL and was false; UNKNOWN-is-not-FAIL is deliberate (a checker " +
+      "that cannot run must not condemn the box), so the runbook must say what actually happens.",
     degrades:
       "★ 5 of its read sites default to `\"\"` instead of failing — notably " +
       "src/server/lib/boot-migration-runner.ts:1020, where the MIGRATION RUNNER proceeds with an " +
@@ -76,7 +89,16 @@ const VARS = [
   {
     name: "AWS_ACCESS_KEY_ID",
     leg: "s3",
-    classes: ["OPTIONAL_DEGRADING"],
+    // Three shapes in three consumers — exactly why classes are a SET:
+    // DEGRADING (duckdb-service.ts:83 defaults to "" and SETs it as the DuckDB S3 credential),
+    // REQUIRED-shaped (s3-client.ts:77 guards, then uses it 8 lines later), and FALLBACK
+    // (synthetic-regime-bank-service.ts:185 returns a `local:<path>` sentinel when
+    // isS3Configured() is false — a graceful degrade that is CORRECT, not a failure).
+    classes: ["OPTIONAL_DEGRADING", "OPTIONAL_FALLBACK"],
+    fallback:
+      "`local:<path>` sentinel — synthetic-regime-bank-service.ts:185 skips the S3 upload "
+      + "and returns a local path when the credential trio is unset. THAT consumer degrades "
+      + "gracefully and on purpose; the duckdb-service consumer does not.",
     degrades:
       "S3 auth. duckdb-service.ts:83 falls back to `\"\"` and SETs it as the DuckDB s3 key — " +
       "the box BOOTS HEALTHY and is silently S3-blind. The lake read fails later, far from the cause.",
@@ -85,7 +107,16 @@ const VARS = [
   {
     name: "AWS_SECRET_ACCESS_KEY",
     leg: "s3",
-    classes: ["OPTIONAL_DEGRADING"],
+    // Three shapes in three consumers — exactly why classes are a SET:
+    // DEGRADING (duckdb-service.ts:84 defaults to "" and SETs it as the DuckDB S3 credential),
+    // REQUIRED-shaped (s3-client.ts:77 guards, then uses it 8 lines later), and FALLBACK
+    // (synthetic-regime-bank-service.ts:185 returns a `local:<path>` sentinel when
+    // isS3Configured() is false — a graceful degrade that is CORRECT, not a failure).
+    classes: ["OPTIONAL_DEGRADING", "OPTIONAL_FALLBACK"],
+    fallback:
+      "`local:<path>` sentinel — synthetic-regime-bank-service.ts:185 skips the S3 upload "
+      + "and returns a local path when the credential trio is unset. THAT consumer degrades "
+      + "gracefully and on purpose; the duckdb-service consumer does not.",
     degrades:
       "S3 auth, identically to AWS_ACCESS_KEY_ID — duckdb-service.ts:84 defaults to `\"\"`. " +
       "The pair is the canonical 'boots healthy, S3-blind' shape.",

@@ -50,6 +50,15 @@ const SCAN_DIRS = ["src", "scripts"];
 // language-dependent, and getting it wrong contaminates the measurement.
 const TEST_RE = /__tests__|\.test\.|\.spec\.|[\\/]test_|[\\/]tests?[\\/]|conftest/i;
 
+// ★ F-2 — THE TOOL MUST NOT SCAN ITSELF. Its own comments quote read sites verbatim
+// (`process.env.AWS_ACCESS_KEY_ID ?? ""`), and the manifest's `evidence:` strings quote them too.
+// Measured before fixing: 2 PHANTOM sites per AWS var were ALREADY being counted — this was not
+// merely latent. It failed to flip a verdict only because the real empty-default sites already
+// dominated: inert by luck, which is not a safety property. A future comment edit could inject or
+// remove a site and move a verdict with ZERO change to production code.
+// An instrument must not be part of what it measures.
+const SELF_RE = /verify-env-manifest\.cjs|recovery-env-manifest\.cjs/i;
+
 function readSites(name, { runner = execFileSync, root = ROOT } = {}) {
   const pattern =
     `process\\.env\\.${name}\\b|process\\.env\\[["']${name}["']\\]|` +
@@ -70,7 +79,11 @@ function readSites(name, { runner = execFileSync, root = ROOT } = {}) {
     if (e && e.status === 1) return [];
     throw new Error(`grep failed for ${name}: status=${e && e.status}`);
   }
-  return out.split("\n").filter((l) => l.trim() && !TEST_RE.test(l.split(":")[0]));
+  return out
+    .split("\n")
+    .filter((l) => l.trim())
+    .filter((l) => !TEST_RE.test(l.split(":")[0]))
+    .filter((l) => !SELF_RE.test(l.split(":")[0]));
 }
 
 // ★★ THE MODEL, and why the obvious one is WRONG.

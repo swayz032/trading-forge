@@ -150,4 +150,33 @@ test("POSITIVE CONTROL — the real, unmutated manifest is GREEN", () => {
   const rows = check();
   assert.equal(rows.filter((r) => r.verdict === "FAIL").length, 0);
   assert.ok(rows.some((r) => r.verdict === "PASS"), "at least one real PASS");
+  // ★ F-3 — AND NO VAR MAY BE DARK. Asserting only FAIL===0 left the artifact's central claim
+  // ("cannot go stale without going red") UNBACKED: a var whose read sites become invisible to
+  // the scan returns UNKNOWN, not FAIL, so the old assertion passed green while coverage was
+  // silently zero. That is the leg-2 "cannot drift" overclaim reappearing in leg-3's own
+  // self-description. UNKNOWN is correctly not-FAIL as a VERDICT (a checker that cannot run must
+  // not condemn the box) — but for the SHIPPED manifest it means a declared var is unmeasured,
+  // which is precisely the staleness the claim denies.
+  assert.equal(
+    rows.filter((r) => r.verdict === "UNKNOWN").length, 0,
+    "a declared var has ZERO scanned read sites — coverage went dark, so the manifest's " +
+    "'cannot go stale without going red' claim is no longer true. Fix the scan or the entry.");
+});
+
+test("F-3 CONTROL — a var whose coverage goes DARK is CAUGHT (the claim is now enforced)", () => {
+  // The mutant must be the shape the defect is about: coverage disappearing (e.g. a refactor to
+  // `env[name]` that the regex cannot see), NOT a mislabelled class.
+  const v = clone();
+  v.push({
+    name: "TF_VAR_THAT_NO_LONGER_EXISTS_ANYWHERE",
+    leg: "s3",
+    classes: ["REQUIRED"],
+    breaks: "nothing — this entry exists only to simulate coverage going dark.",
+    evidence: "synthetic test entry",
+  });
+  const rows = check(v);
+  const dark = rows.find((r) => r.name === "TF_VAR_THAT_NO_LONGER_EXISTS_ANYWHERE");
+  assert.equal(dark.verdict, "UNKNOWN", "dark coverage must surface as UNKNOWN");
+  // …and the positive control's new assertion is what turns that into a red build.
+  assert.ok(rows.filter((r) => r.verdict === "UNKNOWN").length > 0);
 });

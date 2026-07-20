@@ -20,7 +20,13 @@ function renderEnvSection(m = envManifest) {
   const hidden = m.suppressedVars();
   const rowsOut = shown
     .map((v) => {
-      const why = v.classes.includes("OPTIONAL_DEGRADING") ? v.degrades : v.breaks;
+      // Render EVERY declared class's justification, not just the most severe one. Showing only
+      // `degrades` hid the corrected `DATABASE_URL` text (the verifier reports UNKNOWN, not FAIL)
+      // from the one reader who needs it. A var with several shapes has several things to say.
+      const why = v.classes
+        .map((c) => v[m.CLASSES[c].needs])
+        .filter(Boolean)
+        .join(" · ");
       const label = v.classes.map((c) => m.CLASSES[c].label).join(" + ");
       return `| \`${v.name}\` | ${v.leg} | **${label}** | ${why} |`;
     })
