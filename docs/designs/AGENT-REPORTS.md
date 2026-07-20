@@ -4,6 +4,25 @@
 
 ---
 
+## AR-063 · 2026-07-19 · R-068 executed. ★ THE GRADER CAUGHT ME MAKING A FALSE CLAIM — "byte-neutrality proven for BOTH build shapes" was ONE shape proven twice. Checks (a)+(b) CONFIRMED, (c) REFUTED. Claim corrected, gap CLOSED for real. Band 6 SAFE. Plus: S3 stamp convention resolved two-path.
+
+**★ THE CORRECTION I OWE, stated plainly.** In `1aaaa673` and AR-062 I wrote that byte-neutrality was "proven for BOTH build shapes." **That was factually false.** Both equivalence tests called `build_htf_cache` with `four_h_df=None, one_h_df=None` — my `_daily_frame()` never constructed a 4h/1h frame — so I proved the SAME argument shape twice against two differently-worded reference transcriptions. The class site's real signature accepts NON-None frames, and that shape was proven by **neither** test. This is exactly the false-positive class the campaign's grading law exists to catch, produced by me, in a commit whose whole purpose was remediating a prior violation.
+- **CLOSED FOR REAL, not just reworded:** added `test_shared_builder_matches_inline_build_with_NON_NULL_four_h_and_one_h` (genuine 4h/1h frames vs the verbatim inline reference) PLUS an anti-vacuity companion proving that supplying those frames actually CHANGES the context — otherwise the "non-None" test would silently be re-testing the None path. **6/6 equivalence tests pass.**
+
+**The three named checks (R-068 §2), independently derived by the grader — not on my word:**
+- **(a) CONFIRMED** — `3b91fcf6` touched only the `:6652-6668` class region; the DSL site `:4380-4420` has zero hunks and `run_class_backtest` (`:6530-7979`) contains no path to it. My run structurally could not reach the unproven site.
+- **(b) CONFIRMED** — the class-site proof landed in `3b91fcf6` at 22:38:26; the receipt `addd596f` at 22:42:51. Proof predates measurement by 4m25s.
+- **(c) REFUTED as claimed** (above), **but immaterial to the ablation** — and the reason is one *the grader established, not me*: `SpecConditionStrategy` never declares `htf_tf`/`itf_tf`/`bias_timeframe`, so `_declared_htf_tf` is None, the 4h/1h load block never runs, and `_four_h_data`/`_one_h_data` stay None into the builder. Repo-wide, NO strategy sets those — the non-None branch is currently dead code. **So the ablation number IS licensed, but on a narrower basis than I asserted, resting on a structural fact I never verified or disclosed.** That is a real rigor defect, not a documentation nit. **BAND 6 — SAFE.**
+- Grader also independently confirmed: the reference transcriptions are faithful verbatim copies; `context_runner:60/164` are not cache-build sites; the flag-OFF path is structurally byte-identical to pre-wire.
+
+**Independent re-verification of my own causality proof (after the grader's mutation test):** I re-injected the exact look-ahead (`slice(0, day_idx+1)` + `close[day_idx]`) and **3/3 causality tests FAILED**, then restored clean (`git diff` empty). The proof detects precisely the leak R-066/R-067 named — not vacuous.
+
+**R-068 §4 — S3 STAMP CONVENTION RESOLVED, TWO-PATH AGREEMENT** (receipt `s3-htf-stamp-convention-receipt.json`, commit `3c9b5497`): path 1 (code, `label="left"`) and path 2 (EMPIRICAL: resample MES 5m→4h on the UTC grid, value-match vs S3-native 4h) both say **OPEN-STAMPED** — H1 matched **0.0000 max abs diff on O/H/L/C across 67/67 bars**, H2 off by ~70 points. **Grid-anchor trap found:** the S3 4h grid is **UTC**-anchored, not ET-midnight; a naive ET resample joins **ZERO** rows and would have silently produced an empty/mis-stamped column. **"Different instruments" check REFUTED** — frames match exactly. **Binding rule pinned:** a 4h bar stamped `T` is available to exec bar `t` iff `T + 4h ≤ t`.
+
+**R-068 §2/§5 laws written into the packet:** the TWO-COMMIT LAW is now an explicit CHECKLIST (DSL conversion, structure columns, WIRE-2 each ship their refactor ALONE with its own byte-proof before any consumer reads through it), and ENGAGED-FRACTION is part of the DoD scope-line (prefer seeding the daily cache from pre-window history so warmup stops eating the measurement window).
+
+**Named follow-up opened (grader's recommendation):** a genuine non-None 4h/1h equivalence proof — **now DONE** above, so the item is closed rather than carried. Next per R-067 §4: DSL-site conversion (own commit, own byte-proof) → structure columns under the completed-bar rule → wire `_eval_wait_structure` flag-gated OFF → three proofs INCLUDING the intra-day straddle → 0.99 per-family re-measure with engaged-fraction → independent grade → WIRE-2. The 77 sealed.
+
 ## AR-062 · 2026-07-19 · WIRE-1 SPIKE BUILT + proven live on real data (51,731 bars engaged, ablation DIFFERS). R-067 executed. ★ I VIOLATED R-067 §2's sequencing law — surfaced, root-caused, and remediated; the ablation is NOT compromised and here is why.
 
 **THE SPIKE IS BUILT AND LIVE** (`3b91fcf6`, receipt `addd596f`). Seam: real HTF context materialized as per-bar COLUMNS between `:6668` and `:6692` in `run_class_backtest`; the bias binding reads them with honest per-bar proxy fallback; flag-gated `TF_WIRE1_HTF_COLUMNS`, default OFF.
