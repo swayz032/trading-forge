@@ -1,0 +1,44 @@
+{
+  "receipt": "WIRE-1 DEAD-LOAD ACTIVATION — engagement proof (R-069 §3, mandatory before structure columns read anything)",
+  "date": "2026-07-19",
+  "spec": "-igpOZs8LsM__s0",
+  "flag": "TF_WIRE1_HTF_COLUMNS",
+
+  "why_this_was_required": "The grader established that NO strategy repo-wide declares htf_tf/itf_tf/bias_timeframe, so backtester's W25.4 block never runs and _four_h_data/_one_h_data are ALWAYS None in the battery path. Consequence (R-069 §3): the structure wire cannot read a frame that is never loaded. Making the frames load ACTIVATES A DEAD PATH — the additive-fix-activates-dead-path class — which owes its own engagement proof.",
+
+  "what_changed": "SpecConditionStrategy now declares htf_tf='4h' / itf_tf='1h' UNDER THE WIRE-1 FLAG. Default OFF => no declaration => the W25.4 loader sees nothing => byte-identical to pre-wire (verified: hasattr(strategy,'htf_tf') is False with the flag off).",
+
+  "engagement_proof_18mo_window": {
+    "window": "2022-01-01..2023-06-30",
+    "evidence_lines": [
+      "W25.4: loaded extra TFs ['4h', '1h'] for deadload18mo",
+      "Built HTF cache: 265 days",
+      "WIRE-1: HTF columns attached — 51731/105606 bars engaged"
+    ],
+    "frames_load": true,
+    "cache_builds_with_non_none_frames": true,
+    "bars_engaged": 51731,
+    "bars_total": 105606,
+    "dormant": false,
+    "result_unchanged_vs_pre_activation": {"trades": 722, "profit_factor": 0.0645, "matches_prior_flag_on_run": true},
+    "interpretation": "The dead path is genuinely ACTIVATED (frames load), the builder's NON-NONE branch — the branch that existed untested until the grader forced a proof for it — is now the branch running in production, and the cache still builds (265 days) with engagement preserved. Results are IDENTICAL to the pre-activation flag-ON run because the bias binding reads `daily_trend` (daily-derived); supplying 4h/1h frames populates `four_h_trend`, which no binding reads YET. Unchanged numbers here are the CORRECT outcome, not a null result."
+  },
+
+  "warmup_boundary_finding_6mo_window": {
+    "window": "2022-01-01..2022-06-30",
+    "evidence_lines": [
+      "W25.4: loaded extra TFs ['4h', '1h'] for deadload",
+      "WIRE-1: HTF columns attached — 0/35028 bars engaged  [DORMANT: no bar matched the cache]"
+    ],
+    "built_htf_cache_line_present": false,
+    "root_cause": "a 6-month window yields ~125 daily bars, BELOW the 200-bar warmup, so build_htf_cache correctly returns None and no cache exists. NOT an activation defect — a property of the window.",
+    "why_this_is_a_useful_receipt": "The DORMANT alarm fired instead of the column silently filling with nulls that a later reader might mistake for signal. This is R-068 §5's engaged-fraction confound demonstrated live: the SAME code and SAME spec read 51,731 engaged bars on one window and 0 on a shorter one. An unlabelled DoD read across mixed windows would be non-comparable — exactly why engaged-fraction is now part of the DoD scope-line."
+  },
+
+  "SCOPE — not claimed": [
+    "NOT the DoD. The 0.99 per-family binding-approximation distribution is still unmeasured.",
+    "No structure column exists yet — this proves the FRAMES LOAD, not that anything reads them correctly. The completed-bar availability rule (4h: T+4h<=t; 1h: T+1h<=t) and the intra-day STRADDLE causality proof are still owed before the structure wire lands.",
+    "Runtime cost of per-spec 4h/1h loading not yet profiled (R-069 §3 asks the throughput scope-line to record it).",
+    "One spec, one symbol, two windows. No independent grade of this activation yet."
+  ]
+}

@@ -33,6 +33,7 @@ tests/test_spec_condition_compiler_trace_byte_identity.py.
 
 from __future__ import annotations
 
+import os
 from datetime import UTC, datetime
 from typing import Any
 
@@ -293,6 +294,17 @@ class SpecConditionStrategy(BaseStrategy):
         # strategy MUST carry approximation=True through to governance_labels
         # so downstream verdicts stay honest.
         self.approximation: bool = self.binding_plan.approximation_used
+        # ── WIRE-1 DEAD-LOAD ACTIVATION (R-069 §3, flag-gated) ───────────────
+        # backtester's W25.4 block only loads 4h/1h when the strategy DECLARES
+        # htf_tf/itf_tf. No strategy repo-wide declares them, so that path is DEAD
+        # and `_four_h_data`/`_one_h_data` are always None — meaning the structure
+        # wire would read a frame that is never loaded. Declaring them here
+        # ACTIVATES a dead path (additive-fix-activates-dead-path class), so it is
+        # gated on the same WIRE-1 flag as the columns: default OFF => the loader
+        # sees no declaration and behavior is byte-identical to pre-wire.
+        if os.getenv("TF_WIRE1_HTF_COLUMNS", "").strip().lower() in ("1", "true", "yes"):
+            self.htf_tf: str = "4h"
+            self.itf_tf: str = "1h"
         # Populated by compute() when trace_enabled=True.
         self.last_trace: list[dict] = []
         # DIAGNOSTIC-ONLY (composition-fidelity-experiment-2026-07-05.md Step 0): always
