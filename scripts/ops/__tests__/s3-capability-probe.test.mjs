@@ -45,6 +45,28 @@ function stripPy(src) {
     .join("\n");
 }
 
+/**
+ * Collapse adjacent string-literal concatenation so a split key name is seen whole.
+ *
+ * `"s3_access_" + "key_id"` and Python's implicit adjacency `"s3_access_" "key_id"` both
+ * keep the CONTIGUOUS name absent while assembling it — which is how the previous version
+ * of this guard missed the grader's original mutant. Repeated until stable so a
+ * three-way split collapses too.
+ *
+ * This is deliberately finite: it closes the realistic accidental-reintroduction shape and
+ * makes no claim about runtime assembly (see the scope note at the assertion).
+ */
+function collapseConcat(src) {
+  let out = src, prev;
+  do {
+    prev = out;
+    out = out
+      .replace(/(["'])([^"'\n]*)\1\s*\+\s*(["'])([^"'\n]*)\3/g, '"$2$4"')  // "a" + "b"
+      .replace(/(["'])([^"'\n]*)\1\s+(["'])([^"'\n]*)\3/g, '"$2$4"');      // "a" "b"
+  } while (out !== prev);
+  return out;
+}
+
 const parse = (out) => JSON.parse(String(out).trim().split("\n").filter(Boolean).pop());
 
 test("verdict codes are distinct and UNKNOWN is not FAIL", () => {
@@ -108,17 +130,33 @@ test("★ the probe never SETs credentials into SQL — the engine's own anti-in
   assert.ok(!/SET\s+s3_access_key_id/i.test(code), "probe SETs the access key into SQL");
   assert.ok(!/SET\s+s3_secret_access_key/i.test(code), "probe SETs the secret into SQL");
 
-  // ★ MAJOR-5, ACTUALLY SHIPPED THIS TIME. `5778ab4c`'s message claimed this guard and the
-  // edit silently no-op'd, so the literal-grep above was still the only check — and it
-  // stayed green because the probe genuinely does not literally SET credentials. A guard
-  // against a SEMANTIC class (a credential reaching SQL) cannot be a SYNTACTIC token match.
+  // ★ MAJOR-5, third attempt — and the SCOPE stated honestly this time.
   //
-  // The credential KEY NAMES must appear nowhere in executable code at all: if the name is
-  // absent, no construction — dict lookup, concat, f-string — can assemble the SET.
+  // History, because it is the point: `5778ab4c` CLAIMED this guard and the edit silently
+  // no-op'd. `302dbddc` shipped a contiguous-name grep and a comment claiming "no
+  // construction can assemble the SET" — FALSE: `"s3_access_" + "key_id"` keeps the
+  // contiguous name absent while assembling it, and that was the grader's ORIGINAL mutant
+  // shape. My own RED-proof used a full literal — the one shape the guard already caught —
+  // so it proved the easy case, not the case the finding was about.
+  //
+  // ★ WHAT THIS GUARD ACTUALLY DOES, and does not:
+  //   CATCHES  a literal `SET s3_…`; a full key name anywhere in executable code; and
+  //            simple adjacent string-concatenation ("s3_access_" + "key_id"), which is
+  //            what an accidental reintroduction realistically looks like.
+  //   DOES NOT a source-text grep CANNOT close a semantic class. Runtime assembly —
+  //            base64, chr() codes, getattr — always evades it. Chasing that is a regress.
+  //
+  // ★ THE REAL DEFENSE IS ARCHITECTURAL, NOT TEXTUAL: the probe mirrors data_loader.py's
+  // env-var auto-read, so credentials never enter SQL at all. This guard is a best-effort
+  // tripwire against obvious reintroduction — nothing more. Saying it catches "any
+  // construction" would make the guard itself a false green, which is the exact thing this
+  // leg exists to stop.
+  const normalized = collapseConcat(code);
   for (const cred of ["s3_access_key_id", "s3_secret_access_key", "s3_session_token"]) {
     assert.ok(
-      !new RegExp(cred, "i").test(code),
-      `credential key "${cred}" appears in executable code — any construction can reach SQL from there`,
+      !new RegExp(cred, "i").test(normalized),
+      `credential key "${cred}" is assembled in executable code — the env-var path is the ` +
+        `protection, and this tripwire says that path was abandoned`,
     );
   }
   // ...and the secret's VALUE must never be bound into a variable; only truthiness is read.
@@ -128,6 +166,30 @@ test("★ the probe never SETs credentials into SQL — the engine's own anti-in
   assert.match(code, /read_parquet/, "probe must exercise the production read mechanism");
   // the region IS SET, and must be quote-stripped exactly as the engine does
   assert.match(code, /replace\("'", ""\)/, "AWS_REGION must be sanitized before SET");
+});
+
+test("★ the guard's DOCUMENTED SCOPE matches its executed behaviour", () => {
+  // The previous version's comment claimed "no construction — dict lookup, concat, f-string
+  // — can assemble the SET". That was FALSE: concat kept the contiguous name absent while
+  // assembling it. Caption-is-a-claim, recursed from a commit message into a code comment.
+  //
+  // So the scope is now ASSERTED, not narrated. If someone widens or narrows the guard, this
+  // fails and the comment must be rewritten with it — the comment cannot drift from the code.
+  const hit = (code) =>
+    ["s3_access_key_id", "s3_secret_access_key"].some((c) => new RegExp(c, "i").test(collapseConcat(code)));
+
+  // IN SCOPE — realistic accidental reintroduction
+  assert.ok(hit(`k="s3_access_key_id"`), "full literal must be caught");
+  assert.ok(hit(`k="s3_access_" + "key_id"`), "split concat must be caught (the grader's original shape)");
+  assert.ok(hit(`k="s3_" + "access_" + "key_id"`), "three-way split must be caught");
+  assert.ok(hit(`k="s3_access_" "key_id"`), "Python implicit adjacency must be caught");
+
+  // OUT OF SCOPE — stated honestly. A source-text grep cannot close a semantic class, and
+  // pretending otherwise would make the guard itself a false green.
+  assert.ok(!hit(`k="".join(["s3","_access_key_id"])`), "runtime assembly is documented as OUT of scope");
+
+  // ...and the clean architectural path must never trip it, or the tripwire is noise.
+  assert.ok(!hit(`os.environ.get("AWS_SECRET_ACCESS_KEY")`), "the env-var path must not be flagged");
 });
 
 test("★ ONE read, not a survey — a gate asks 'reachable at all', not 'complete'", () => {
