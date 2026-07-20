@@ -1,0 +1,152 @@
+{
+  "artifact": "narration-qa-sample",
+  "purpose": "R-090 \u00a73 QA \u2014 second blind judge; inter-judge disagreement <=15% or the definition escalates",
+  "draw": "systematic every ceil(52/20)-th by condition_id ascending, no RNG",
+  "withheld": [
+    "first judge's verdicts, spans and reasoning",
+    "nominator flags"
+  ],
+  "n": 20,
+  "rows": [
+    {
+      "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "FILTER",
+      "role": "spine",
+      "object": "add volume by Price values go to vwap developing vwap"
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "as soon as we get this engulfing, you're good to enter the trade"
+    },
+    {
+      "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed"
+    },
+    {
+      "condition_id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market."
+    },
+    {
+      "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "there should also be liquidity price will clear before you know tapping into the imbalance"
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice"
+    },
+    {
+      "condition_id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "after we broke it and tested it we can try our long trade"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "for my entry I would personally be looking to enter the trade right here"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I'm looking for the price to break out the bottom of that range"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "on Forex, Nasdaq, gold, everything"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "since we broke through the high, the direction is bullish. We're going to be looking for long trades."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "this is a bullish imbalance"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we're going to get to our desks right at 9:30 a.m. EST"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "your short entry would be at the bottom of this candle that initiated this liquidity grab"
+    },
+    {
+      "condition_id": "FILTER:an-elevation-in-the-volume#7",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "FILTER",
+      "role": "confluence",
+      "object": "an elevation in the volume"
+    },
+    {
+      "condition_id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "FILTER",
+      "role": "confluence",
+      "object": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength"
+    }
+  ]
+}

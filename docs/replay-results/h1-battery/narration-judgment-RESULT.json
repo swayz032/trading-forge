@@ -1,0 +1,324 @@
+{
+  "judge": "independent-blind",
+  "n": 52,
+  "rows": [
+    {
+      "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+      "verdict": "narration",
+      "quoted_span": "add volume by Price values go to vwap developing vwap",
+      "reasoning": "This is a chart-setup instruction naming which indicators to load, stating nothing about what price or volume must do."
+    },
+    {
+      "condition_id": "FILTER:an-elevation-in-the-volume#7",
+      "verdict": "not_narration",
+      "quoted_span": "an elevation in the volume",
+      "reasoning": "Volume is the object and 'elevation' is a directional above-normal comparison a machine can evaluate."
+    },
+    {
+      "condition_id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+      "verdict": "not_narration",
+      "quoted_span": "a ton of green candles in a row which obviously shows a lot of strength",
+      "reasoning": "Consecutive up-close candles plus rising volume is a countable, directional market state."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+      "verdict": "not_narration",
+      "quoted_span": "as soon as we get this engulfing",
+      "reasoning": "An engulfing candle is a defined bar-relationship whose occurrence is directly checkable and here gates the entry."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+      "verdict": "not_narration",
+      "quoted_span": "If we break out or if we react off a low volume, it's typically not going to work out.",
+      "reasoning": "It conditions the setup on volume being low at the breakout or reaction, a testable volume comparison."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-re-going-to-wait-for-the-first-candle#1",
+      "verdict": "not_narration",
+      "quoted_span": "wait for the first candle of the day at that 9:30 time to print",
+      "reasoning": "A specific clock time and a specific bar-close event give a machine an exact trigger instant."
+    },
+    {
+      "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+      "verdict": "not_narration",
+      "quoted_span": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed",
+      "reasoning": "Price entering a defined FVG followed by an engulfing of the retest candle is a two-stage checkable sequence."
+    },
+    {
+      "condition_id": "WAIT_RETEST:as-always-we-enter-on-the-confirmation-a#0",
+      "verdict": "not_narration",
+      "quoted_span": "after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level",
+      "reasoning": "Three named price-versus-level events attach to a concrete object (the level) and each is independently detectable."
+    },
+    {
+      "condition_id": "WAIT_RETEST:i-m-using-that-vwop-level-as-that-big-mi#1",
+      "verdict": "not_narration",
+      "quoted_span": "buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop",
+      "reasoning": "Price pulling back to the VWAP level is a concrete price-to-reference comparison with a long direction attached."
+    },
+    {
+      "condition_id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+      "verdict": "not_narration",
+      "quoted_span": "once the market trades back into the fair value gap, we're automatically entered into the market",
+      "reasoning": "Price re-entering the FVG boundary is an exact, machine-checkable fill trigger."
+    },
+    {
+      "condition_id": "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+      "verdict": "not_narration",
+      "quoted_span": "It taps into the level of demand, and it clearly respects the level",
+      "reasoning": "Price touching a demand level and printing a bullish engulfing are both detectable states with direction."
+    },
+    {
+      "condition_id": "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
+      "verdict": "not_narration",
+      "quoted_span": "wait for you know price to get there tap in",
+      "reasoning": "Price arriving at and tapping the referenced zone is a real arrival test, even though the zone is named only deictically.",
+      "note": "Ambiguous: the object is purely anaphoric ('there'), so bindability depends on an antecedent level not present in this span."
+    },
+    {
+      "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+      "verdict": "not_narration",
+      "quoted_span": "there should also be liquidity price will clear before you know tapping into the imbalance",
+      "reasoning": "It requires a liquidity sweep to occur prior to price entering the imbalance, an ordered pair of checkable events."
+    },
+    {
+      "condition_id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+      "verdict": "not_narration",
+      "quoted_span": "wait for price to tap in and then push to your direction",
+      "reasoning": "Price tapping the zone and then moving in the trade's direction states both an object and a direction."
+    },
+    {
+      "condition_id": "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5",
+      "verdict": "not_narration",
+      "quoted_span": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level",
+      "reasoning": "A retracement to VWAP or to a round-number price is an explicit price-versus-reference condition."
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+      "verdict": "not_narration",
+      "quoted_span": "we can buy the pullback into that first few bounces",
+      "reasoning": "Buying a pullback into a prior bounce zone binds a long direction to a retracement into a defined area."
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+      "verdict": "not_narration",
+      "quoted_span": "after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level",
+      "reasoning": "Same as its sibling row: three named price-versus-level events, each detectable against a concrete level."
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+      "verdict": "not_narration",
+      "quoted_span": "we need the market to trade back into the fair value gap",
+      "reasoning": "Price trading back inside the FVG's price bounds is exactly a checkable containment test."
+    },
+    {
+      "condition_id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+      "verdict": "not_narration",
+      "quoted_span": "looking for price to trade into these areas",
+      "reasoning": "Price entering the marked areas is a concrete price-in-zone condition, with the trade types listed as downstream branches."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+      "verdict": "not_narration",
+      "quoted_span": "You get the break of recent structure",
+      "reasoning": "It defines demand by an impulsive move that breaks recent structure, which is a measurable structural event."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+      "verdict": "not_narration",
+      "quoted_span": "when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+      "reasoning": "Price breaking a level then reversing is a full condition with object, comparison and direction in plain trader words."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+      "verdict": "not_narration",
+      "quoted_span": "after we broke it and tested it we can try our long trade",
+      "reasoning": "Break-then-retest of the referenced level, gating a long, is an ordered checkable sequence with direction."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+      "verdict": "not_narration",
+      "quoted_span": "waiting for that price to come back to my level",
+      "reasoning": "Price returning to a marked level is a direct price-versus-level comparison."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+      "verdict": "not_narration",
+      "quoted_span": "map out the FVG that cost the break of structure",
+      "reasoning": "It restricts the eligible FVG to the one that caused the break of structure, a selection predicate on the object."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+      "verdict": "narration",
+      "quoted_span": "I would personally be looking to enter the trade right here",
+      "reasoning": "Pure deictic pointing at a chart spot with no stated property price must have for entry to be valid."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-already-know-the-direction-i-m-looking#15",
+      "verdict": "not_narration",
+      "quoted_span": "I'm looking for the price to break out the bottom of that range",
+      "reasoning": "Price breaking below a range boundary is an explicit directional comparison against a defined level."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-generally-like-to-see-price-move-back#3",
+      "verdict": "not_narration",
+      "quoted_span": "price move back into a discount of this price range",
+      "reasoning": "'Discount' is the sub-midpoint half of a defined range, so this is a computable price-location test."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+      "verdict": "not_narration",
+      "quoted_span": "price to break out the bottom of that range",
+      "reasoning": "A downside break of the range low is a direct threshold crossing with direction."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+      "verdict": "not_narration",
+      "quoted_span": "every time we get to this price the stock take off",
+      "reasoning": "It asserts a repeatable reaction when price reaches a specific support/demand price, which is backtestable."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-use-orderflow-such-as-bookmap-the#9",
+      "verdict": "narration",
+      "quoted_span": "you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator",
+      "reasoning": "This recommends a tool to look at and never states what the tool must show for the condition to be true."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+      "verdict": "narration",
+      "quoted_span": "whichever you prefer to trade",
+      "reasoning": "It offers a free choice between two sides rather than asserting any condition that must hold."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:literally-a-abc-setup#5",
+      "verdict": "narration",
+      "quoted_span": "Literally a ABC setup.",
+      "reasoning": "A bare label tossed at the chart with no attached price, level, or movement requirement.",
+      "note": "Ambiguous: 'ABC setup' names a pattern, but nothing here says what makes something an ABC."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+      "verdict": "not_narration",
+      "quoted_span": "the FVG that is very close to the order block",
+      "reasoning": "Proximity between the FVG and the order block is a distance comparison, loose but measurable."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+      "verdict": "narration",
+      "quoted_span": "on Forex, Nasdaq, gold, everything",
+      "reasoning": "A list of tradable markets scoping applicability, asserting nothing that price or volume must do."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+      "verdict": "not_narration",
+      "quoted_span": "reclaims the level with a lot of volume",
+      "reasoning": "Price crossing back through a level accompanied by above-average volume is two checkable conditions."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+      "verdict": "narration",
+      "quoted_span": "set show reversals to Tru",
+      "reasoning": "A software toggle instruction; the market condition is delegated to an indicator and never stated."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+      "verdict": "not_narration",
+      "quoted_span": "since we broke through the high, the direction is bullish",
+      "reasoning": "Price exceeding a prior high, yielding a bullish bias, is a threshold crossing with an explicit direction."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+      "verdict": "not_narration",
+      "quoted_span": "as soon as price touched that level, I'd be into my trading position",
+      "reasoning": "Price touching a specified level is an exact fill trigger a machine can evaluate bar by bar."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:some-sort-of-pd-array-where-generally-i#5",
+      "verdict": "not_narration",
+      "quoted_span": "some sort of PD array where generally I prefer to have a fair value gut or an order block",
+      "reasoning": "It requires one of an enumerated set of structures to be present in the entry area, a presence test over named objects.",
+      "note": "Ambiguous: phrased as personal preference among alternatives rather than a hard requirement."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+      "verdict": "not_narration",
+      "quoted_span": "a low was put in before it was rated or broken",
+      "reasoning": "A prior swing low subsequently being taken out is a concrete, ordered price event."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+      "verdict": "not_narration",
+      "quoted_span": "the imbalance must create a break of structure",
+      "reasoning": "A hard requirement binding one structural object to producing another detectable structural event."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+      "verdict": "not_narration",
+      "quoted_span": "This created a level of supply",
+      "reasoning": "It asserts the formation of a supply zone, a directional structural object a detector can locate.",
+      "note": "Ambiguous: the second sentence is pure deictic narration; only the first sentence carries any structural claim."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+      "verdict": "not_narration",
+      "quoted_span": "this is a bullish imbalance",
+      "reasoning": "It states the presence of an imbalance with an explicit bullish polarity, both of which are detectable.",
+      "note": "Ambiguous: reads as a labelling aside about one chart spot rather than a stated rule."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+      "verdict": "narration",
+      "quoted_span": "This strategy works for any market, whether it's futures, stocks, crypto, or forex",
+      "reasoning": "A scope/applicability claim about instruments, imposing no condition anything must satisfy."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-have-now-created-our-fair-value-gap-t#13",
+      "verdict": "not_narration",
+      "quoted_span": "we have now created our fair value gap through this first candle",
+      "reasoning": "FVG formation off a specified candle is a defined three-bar gap relationship a machine can compute."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+      "verdict": "narration",
+      "quoted_span": "we're going to get to our desks right at 9:30 a.m. EST",
+      "reasoning": "This describes the trader's own routine; no market variable is placed under any test.",
+      "note": "Ambiguous: the 9:30 EST clock value could be read as a session anchor, but nothing market-side is attached to it here."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+      "verdict": "not_narration",
+      "quoted_span": "wait for a break of the level, but we need a fair value gap",
+      "reasoning": "A level break plus a required FVG are two concrete structural conditions joined as a gate."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+      "verdict": "narration",
+      "quoted_span": "we wait for the entry signal once we get it we enter",
+      "reasoning": "Pure procedure: 'entry signal' is left entirely undefined, so nothing here can be evaluated."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+      "verdict": "not_narration",
+      "quoted_span": "we should see displacement. It shouldn't be a choppy price action like this",
+      "reasoning": "It requires displacement rather than chop at the inversion, a measurable candle-range/momentum discriminator that rejects the setup."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+      "verdict": "narration",
+      "quoted_span": "you're not just going to trade based off of vwap only",
+      "reasoning": "General advice against relying on one indicator; it names no confluence and states nothing checkable."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-were-going-to-mark-your-entry-point#2",
+      "verdict": "not_narration",
+      "quoted_span": "mark your entry point at the candle that made the liquidity grab",
+      "reasoning": "The entry is anchored to an identifiable bar defined by a detectable liquidity-grab event."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+      "verdict": "not_narration",
+      "quoted_span": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+      "reasoning": "It gives an exact price (the low of a specifically identified candle) and a short direction."
+    }
+  ]
+}
