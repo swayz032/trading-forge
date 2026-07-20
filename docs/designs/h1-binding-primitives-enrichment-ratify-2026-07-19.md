@@ -68,9 +68,23 @@ at 10:30, because its OHLC is computed from the bar-`t` FUTURE.
   resample convention is **OPEN-stamped** — `data_loader.py:1237`
   `group_by_dynamic("ts_event", every="1w", closed="left", label="left")`. Under
   open-stamping, "close ≤ t" means **`stamp + period ≤ t`**, i.e. `stamp ≤ t - period`
-  — a naive `stamp ≤ t` filter is exactly the leak. NOTE: this is proven for the
-  in-engine WEEKLY resample; the S3-native 4h/1h stamp convention is **NOT yet
-  established from code** and MUST be before the structure wire slices those frames.
+  — a naive `stamp ≤ t` filter is exactly the leak. (Path 1 proves the in-engine WEEKLY
+  resample only.)
+- **★ S3-NATIVE CONVENTION — RESOLVED, TWO-PATH AGREEMENT (R-068 §4).** Receipt:
+  `docs/replay-results/h1-battery/s3-htf-stamp-convention-receipt.json`. Path 2
+  (EMPIRICAL): resample MES 5m→4h on the UTC grid and value-match against the S3-native
+  4h frame. **H1 open-stamped matches EXACTLY — 0.0000 max abs diff on O/H/L/C across
+  67/67 bars; H2 close-stamped is off by ~70 points.** Code says open-stamped, data
+  confirms open-stamped → **no alarm**.
+  - **Grid-anchor trap found:** the S3 4h grid is anchored to **UTC** boundaries, not ET
+    midnight (first 4h bar 03:00 ET = 08:00 UTC). A naive ET-anchored resample joins
+    **ZERO** rows — an alignment bug that would have silently produced an empty or
+    mis-stamped column.
+  - **"Different instruments" check REFUTED:** once anchored, S3-native 4h == exec-resampled
+    4h exactly. No fidelity decision is forced about which frame feeds structure.
+  - **THEREFORE, concretely for the structure wire:** a 4h bar stamped `T` is available to
+    exec bar `t` **iff `T + 4h ≤ t`** (i.e. `T ≤ t - 4h`). Scope: MES, one window; 1h not
+    separately aligned — align it before it is used.
 - **Why the existing daily path is safe:** `compute_htf_context` applies the completed-bar
   discipline INTERNALLY ("All HTF data uses PREVIOUS completed bar (shift(1)) — no
   look-ahead", `htf_context.py:3/66`) and has a bar_date lookahead filter
@@ -94,6 +108,39 @@ materialization and the existing downstream eligibility gate. For overlapping
 sample windows, the upstream column value and the gate-phase value must **AGREE
 BYTE-FOR-BYTE** — that is the proof the reuse is real and un-drifted (no second
 implementation crept in). **A disagreement is an ALARM, not a tolerance.**
+
+## 4d. ★ THE TWO-COMMIT LAW — MANDATORY CHECKLIST (R-068 §2, pattern-class fix)
+
+Failure mode minted 2026-07-19: **momentum collapses a mandated two-commit sequence
+into one.** The extraction+wire pair shipped as a single commit, so extraction drift
+could have masqueraded as the wire's effect and the ablation would have read a lie.
+This is a CHECKLIST, not a memory — every refactor+wire pair below ticks it EXPLICITLY:
+
+- [ ] **DSL-site conversion** (`backtester.py:4391-4401` → shared builder) — licensed by
+      the byte-proof in `1aaaa673`, **NOT DONE**. Ships as its OWN result-neutral commit
+      with its OWN byte-proof, BEFORE anything reads through it.
+- [ ] **WIRE-1 structure columns** — any refactor they require is a separate prior commit.
+- [ ] **WIRE-2 (bias family generalization)** — same.
+- [x] ~~shared-builder extraction~~ — VIOLATED (extraction+wire in `3b91fcf6`);
+      remediated by `1aaaa673`; defense assigned to the independent grader per R-068 §2,
+      NOT self-accepted.
+
+**Rule:** a refactor that touches live commissioned machinery lands ALONE, proven
+byte-neutral against every original it replaces, before any consumer reads through it.
+No exceptions for momentum.
+
+## 4e. ★ ENGAGED-FRACTION IS PART OF THE DoD SCOPE-LINE (R-068 §5)
+
+The spike's window ran ~49% engaged: the 200-daily-bar cache spin-up consumed the front
+of the exec window, so those bars fell back to the proxy. **Law: the 0.99 per-family
+re-measure REPORTS per-spec engaged-fraction ALONGSIDE the approximation distribution.**
+Otherwise engagement is a hidden confound across specs/windows and the DoD numbers are
+non-comparable (a spec that looks "less approximate" may simply have been more engaged).
+
+- **Preferred fix:** seed the daily cache from PRE-WINDOW daily history (S3 daily data
+  predating the exec window) so warmup stops eating the measurement window.
+- **If not feasible:** the scope-line carries the engaged-fraction explicitly.
+- A half-engaged window is an honest SPIKE; an UNLABELED half-engaged DoD read is not.
 
 ## 5. VERIFICATION (R-042 pin 4c + 4d)
 - **Both-polarity engagement proof PER WIRED FAMILY (pin 4c):** each wired binding SEEN failing a wrong condition AND passing a right one on real multi-TF data — a binding that cannot fail is the vacuous class (we do not ship it twice in one week). Not a code-path-exists check: a fixture where the real bias is bullish must PASS a "with-trend long" condition and FAIL a "counter-trend" one, distinct from what the EMA proxy would have done (ablation: proxy vs wired differ on the same bars).

@@ -1,0 +1,40 @@
+{
+  "receipt": "S3-native HTF stamp convention — TWO-PATH resolution (R-068 §4)",
+  "date": "2026-07-19",
+  "why": "Before the WIRE-1 structure wire may slice 4h/1h frames per-bar, the stamp convention must be KNOWN, not assumed. Under OPEN-stamping a naive `stamp <= t` filter admits the FORMING bar, whose OHLC contains bar-t future — the silent look-ahead R-067 §3 named, whose error direction is OPTIMISTIC.",
+
+  "path_1_from_code": {
+    "evidence": "src/engine/data_loader.py:1237 — group_by_dynamic('ts_event', every='1w', closed='left', label='left')",
+    "conclusion": "the repo's explicit in-engine resample is OPEN-stamped (label='left')",
+    "limitation": "proves the in-engine WEEKLY resample only; says nothing about S3-native 4h/1h"
+  },
+
+  "path_2_empirical_alignment": {
+    "method": "Load MES 5min + S3-native 4h for 2022-03-01..2022-03-15. Convert both to UTC. Resample the 5m frame to 4h (closed='left', label='left') on the UTC grid. Join the S3-native 4h frame against the resampled bins under both stamping hypotheses and compare OHLC values.",
+    "H1_open_stamped": {"joined_rows": 67, "max_abs_diff": {"open": 0.0, "high": 0.0, "low": 0.0, "close": 0.0}},
+    "H2_close_stamped": {"joined_rows": 65, "max_abs_diff": {"open": 70.4214, "high": 67.2336, "low": 68.103, "close": 70.4214}},
+    "conclusion": "S3-native 4h bars are OPEN-STAMPED. The value match is EXACT (0.0000 on all four OHLC fields across all 67 overlapping bars) under H1 and grossly wrong under H2."
+  },
+
+  "grid_anchor_finding": {
+    "observation": "first 5m bar 2022-03-01 00:00 ET; first S3 4h bar 2022-03-01 03:00 ET == 08:00 UTC",
+    "conclusion": "the S3 4h grid is anchored to UTC 4h boundaries, NOT to ET midnight. A naive ET-anchored resample joins ZERO rows (verified) — an alignment bug that would have silently produced an empty or mis-stamped column."
+  },
+
+  "different_instruments_check": {
+    "question": "R-068 §4 — if S3-native 4h cannot be made to match exec-resampled 4h at all (session filtering, roll handling), the two frames are different instruments and WHICH feeds structure is a fidelity decision.",
+    "finding": "REFUTED — they match EXACTLY (0.0000 diff, 67/67 overlapping bars) once anchored to the UTC grid. Same instrument. No fidelity decision is forced.",
+    "residual": "67 S3 rows vs 68 resampled bins over the window: the resample produces one extra partial edge bin at the window boundary. Boundary effect, not a content disagreement."
+  },
+
+  "TWO_PATH_VERDICT": "AGREEMENT — code says OPEN-stamped, empirical alignment confirms OPEN-stamped. No alarm.",
+
+  "BINDING_RULE_for_the_structure_wire": {
+    "rule": "An HTF bar is available to exec bar t IFF its CLOSE time <= t (completed bars only).",
+    "concretely_for_S3_4h": "bars are OPEN-stamped, so close = stamp + 4h; therefore a 4h bar with stamp T is available to exec bar t IFF T + 4h <= t, i.e. T <= t - 4h.",
+    "the_leak_this_prevents": "a naive `T <= t` filter admits the bar stamped at or before t that has NOT closed — e.g. the bar stamped 08:00 covering 08:00-12:00 is NOT available at 10:30. Its high/low/close are computed from the bar-t FUTURE.",
+    "still_owed": "the intra-day STRADDLE case in the truncated-replay proof (an exec bar mid-way through a forming 4h bar) before the structure wire lands — R-067 §3."
+  },
+
+  "scope": "MES, 2022-03-01..2022-03-15, 5min vs 4h. The convention is a property of the S3 dataset layout, but this receipt establishes it on ONE symbol and ONE window; 1h was not separately aligned."
+}
