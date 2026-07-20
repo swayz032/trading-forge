@@ -67,6 +67,13 @@ interface AlertingStatus {
   lastAlertFiredAt: string | null;
   minutesSinceLastAlert: number | null;
   webhookConfigured: boolean;
+  // Added 2026-07-20 (ops-experience green-board truth-test, OR-027 §3). This was the ONLY
+  // status interface without a severity: on query failure it returned severity-less nulls,
+  // indistinguishable from "no alerts fired recently", and contributed nothing to the roll-up
+  // while its three siblings degraded honestly. The tile whose job is "would I be told if
+  // something broke?" was the one tile that could not say "I don't know" — and unknown read
+  // as calm. red when alerting provably cannot deliver; yellow when we cannot tell.
+  severity: OverallSeverity;
 }
 
 interface SixQuestions {
@@ -352,11 +359,14 @@ async function buildAlertingStatus(): Promise<AlertingStatus> {
       sql`SELECT created_at FROM alerts ORDER BY created_at DESC LIMIT 1`
     );
 
+    // No alerts on record is NOT a fault — a quiet system genuinely fires none. The severity
+    // here is about whether alerting COULD deliver, not whether it recently did.
     if (rows.length === 0) {
       return {
         lastAlertFiredAt: null,
         minutesSinceLastAlert: null,
         webhookConfigured,
+        severity: webhookConfigured ? "green" : "red",
       };
     }
 
@@ -367,10 +377,13 @@ async function buildAlertingStatus(): Promise<AlertingStatus> {
       lastAlertFiredAt: lastAt.toISOString(),
       minutesSinceLastAlert,
       webhookConfigured,
+      severity: webhookConfigured ? "green" : "red",
     };
   } catch (err) {
     logger.warn({ err }, "production-status: alerting status query failed");
-    return { lastAlertFiredAt: null, minutesSinceLastAlert: null, webhookConfigured };
+    // YELLOW, not green: we could not read alert state, so we do not know. Unknown must never
+    // render as calm — that is the decorative-on-failure class this fix exists to kill.
+    return { lastAlertFiredAt: null, minutesSinceLastAlert: null, webhookConfigured, severity: "yellow" };
   }
 }
 
@@ -446,7 +459,10 @@ export async function buildProductionStatus(): Promise<ProductionStatusResponse>
     areWeTrading.severity,
     pnlToday.severity,
     drawdownDistance.severity,
-    lastCleanRecon.severity
+    lastCleanRecon.severity,
+    // OR-027 3: alertingStatus was absent from the roll-up entirely. worstOf is worst-wins,
+    // so adding a source can only make the board MORE honest, never less.
+    alertingStatus.severity
   );
 
   return {
@@ -512,7 +528,9 @@ productionStatusRoutes.get(
             layers: [],
             checked_at: new Date(),
           },
-          alertingStatus: { lastAlertFiredAt: null, minutesSinceLastAlert: null, webhookConfigured: false },
+          // The whole-status failure path: alerting is red here because in this branch we
+          // provably cannot tell the operator anything at all.
+          alertingStatus: { lastAlertFiredAt: null, minutesSinceLastAlert: null, webhookConfigured: false, severity: "red" },
         },
         autopilot_status: {
           operator_absent_mode_active: false,
