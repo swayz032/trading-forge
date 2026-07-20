@@ -4,6 +4,19 @@
 
 ---
 
+## AR-093 · 2026-07-20 · ★ I MISSED AN ORDER — R-093 §3's "9 session (A) rows join the reclassification wave" was never executed. Closed now — **and executing it surfaced a distinction that must NOT be forced: they join the WAVE, not the DENOMINATOR MOVE.**
+
+**1. The miss, plainly.** R-093 §3 ordered the 9 session (A) mis-type rows into the same reclassification wave. **I applied the narration reclassification and never touched them.** Verified just now by absence: 0 of the 9 appear in `narration-reclassification-FINAL.json`. Nothing downstream consumed the gap (the reclassification's own numbers are unaffected — see §2), but it was **a silent carry-forward I created**, and it sat unnoticed across ten rulings. I found it by re-reading my own outstanding orders rather than by being told, which is the only good part of this.
+
+**2. ★ EXECUTING IT SURFACED A DISTINCTION I AM DELIBERATELY NOT FORCING.** The narration reclassification is a **denominator move** — narration EXITS the denominator as non-condition. **A session mis-type is the opposite kind of thing: a REAL taught condition wrongly labelled `WAIT_SESSION`.** It stays in the denominator and needs its *type* corrected.
+- **Had I merged them mechanically as ordered, I would have dropped 9 real taught conditions out of the denominator and moved the rate OPTIMISTIC** — the exact direction every law in this campaign guards, arriving through an order I was following correctly.
+- So: the 9 join the **WAVE** (same discipline, same per-row paperwork, same graded provenance) and **NOT the denominator move.** Artifact `session-a-mistype-dispositions.json`, each row carrying its graded verdict, the grader's `quoted_span`, and disposition **RE-TYPE candidate**. **Dual denominators unchanged: 124 / 111.**
+- If you intended the stronger reading — that they should move the denominator — say so and I will, but I want the optimistic direction stated out loud before it happens rather than discovered in a re-measure.
+
+**3. Why this is worth a report rather than a quiet fix:** the failure mode here is *following an order precisely enough to cause the harm the order exists to prevent.* "Join the same wave" is unambiguous as English and ambiguous as arithmetic. The zero-carry-forward law caught the omission; the null/optimism discipline caught what closing it would have done. **Both laws were needed, and neither would have sufficed alone.**
+
+**Holds:** T1 blocked · WIRE-2 pending its audit · reader-vintage queued · flag OFF · no `approximation=False` · the 77 sealed. Population-A implementer still running.
+
 ## AR-092 · 2026-07-20 · R-102 §2 applied — **packet ceiling AMENDED 7 → 6** before the build could start against a stale number; implementer DISPATCHED (receipt held).
 
 **1. The ceiling was amended BEFORE dispatch, not after.** Your `swing` ruling changes the scope-line from *"at most 7 of 16 de-approximate"* to **"at most 6 of 16 de-approximate; a 7th is ROUTED-BUT-APPROXIMATE."** I edited the packet first, then dispatched — because an implementer building against a stale ceiling produces a delivery whose own scope-line overstates it, and that is how a ceiling quietly becomes a promise. The `swing` disposition (`UNVERIFIED-BY-SAMPLE`, `approximation=True`, until tier-a grows n to the floor) is written into the packet verbatim, including your reason: **§4's sharpened check is literally unrunnable inside a kind of one.**

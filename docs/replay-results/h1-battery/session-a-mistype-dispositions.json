@@ -1,0 +1,102 @@
+{
+  "artifact": "session-a-mistype-dispositions",
+  "authority": "R-093 \u00a73",
+  "n": 9,
+  "\u2605_distinction_surfaced": "These 9 join the reclassification WAVE (same discipline, same per-row paperwork) but NOT the narration DENOMINATOR MOVE. Narration exits the denominator as non-condition; a mis-type stays in it and gets re-typed. Merging them would silently drop 9 real taught conditions out of the denominator and move the rate OPTIMISTIC \u2014 the exact direction every law here guards.",
+  "dual_denominators_unchanged": {
+    "with_narration": 124,
+    "without_narration_PRIMARY": 111
+  },
+  "rows": [
+    {
+      "condition_id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "role": "spine",
+      "object": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep.",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "A liquidity sweep is going to be a brief fake out below or above the level",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "role": "confluence",
+      "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "as I move my entry closer to my stop loss my risk to reward increases",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "role": "confluence",
+      "object": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "I prefer to have a stop rate prior to the displacement",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "role": "confluence",
+      "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "if the liquidity grab and the entry candle were closer than 10 candles apart",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "role": "spine",
+      "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "So the gap in between is what is called an imbalance",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "role": "spine",
+      "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "role": "spine",
+      "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "you map it out from the closing points when it's a sell",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "role": "spine",
+      "object": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "when price breaks below this previous low point right here, not only are stops going to hit",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    },
+    {
+      "condition_id": "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2",
+      "file": "R5L890juvRw__s0.spec.json",
+      "role": "spine",
+      "object": "you might have a long idea for your session",
+      "graded_verdict": "entry_mechanics_mistype",
+      "quoted_span": "you might have a long idea for your session",
+      "disposition": "RE-TYPE candidate \u2014 NOT a denominator move",
+      "rationale": "a mis-typed condition is a REAL taught condition wrongly labelled WAIT_SESSION; it stays in the denominator and needs its type corrected, unlike narration which LEAVES the denominator"
+    }
+  ]
+}
