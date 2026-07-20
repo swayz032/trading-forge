@@ -112,9 +112,72 @@ def test_levelzone_object_binds_to_native_primitive_when_enabled(cond_type, obj)
         b = bind_condition(cond)
     assert b.bindable is True
     assert b.primitive == LEVELZONE_NATIVE_PRIMITIVE
-    assert b.primitive == "spec_condition_compiler.retest_touch_check"
+    assert b.primitive == "levelzone_routing.retest_touch_check"
+    # Deliberately NOT the WAIT_RETEST family's own primitive string ("spec_condition_compiler.
+    # retest_touch_check") — see test_levelzone_primitive_name_does_not_collide_with_wait_retest
+    # below for why that distinction is load-bearing, not cosmetic.
     # Hard constraint #2: approximation must NOT flip to False for this sub-wire.
     assert b.approximation is True, "packet hard constraint: routing lands, fidelity claim does not"
+
+
+def test_levelzone_primitive_name_does_not_collide_with_wait_retest():
+    """Regression guard for a real bug caught during implementation: an earlier draft used the
+    literal string "spec_condition_compiler.retest_touch_check" for LEVELZONE_NATIVE_PRIMITIVE —
+    the EXACT string FAMILY_META["WAIT_RETEST"].primitive already uses. That collision made
+    spec_condition_compiler.py's `elif b.primitive == LEVELZONE_PRIMITIVE_NAME` dispatch branch
+    intercept every genuine WAIT_RETEST condition too, UNCONDITIONALLY (WAIT_RETEST's primitive
+    string never depends on TF_LEVELZONE_ROUTING_ENABLED) — an engagement-count run over the real
+    corpus with the flag OFF showed nonzero "levelzone" engagement, which is how it was caught.
+    The two marker strings must stay distinct even though both currently dispatch to the same
+    underlying retest_touch_check computation."""
+    assert LEVELZONE_NATIVE_PRIMITIVE != "spec_condition_compiler.retest_touch_check"
+
+    retest_cond = {"id": "r1", "type": "WAIT_RETEST", "object": "ema retest", "role": "spine"}
+    with levelzone_routing(True):
+        b_on = bind_condition(retest_cond)
+    b_off = bind_condition(retest_cond)
+    assert b_on.to_dict() == b_off.to_dict(), (
+        "a genuine WAIT_RETEST condition's binding must be untouched by the level/zone flag"
+    )
+    assert b_on.primitive == "spec_condition_compiler.retest_touch_check"
+    assert b_on.primitive != LEVELZONE_NATIVE_PRIMITIVE
+
+
+def test_wait_retest_execution_unaffected_by_levelzone_flag_in_mixed_spec():
+    """Execution-level companion to the collision regression above: a spec with BOTH a genuine
+    WAIT_RETEST condition and a level/zone WAIT_STRUCTURE condition must route each to its own
+    evaluator — flipping the flag must not change the WAIT_RETEST condition's per-bar array or
+    trace primitive, only the WAIT_STRUCTURE condition's."""
+    df = _synthetic_df(n=100, seed=17)
+    spec = {
+        "direction": "long",
+        "entry_conditions": [
+            {"id": "t1", "type": "ENABLE_ENTRY", "object": "entry", "role": "trigger"},
+            {"id": "s1", "type": "WAIT_STRUCTURE", "object": "support zone retest", "role": "spine"},
+            {"id": "s2", "type": "WAIT_RETEST", "object": "ema 20 retest", "role": "spine"},
+        ],
+        "invalidations": [],
+        "entry_trigger_id": "t1",
+    }
+    compiled_spec = {"spec": spec, "spec_hash": "testhash"}
+
+    os.environ.pop("TF_LEVELZONE_ROUTING_ENABLED", None)
+    strat_off = SpecConditionStrategy(compiled_spec, symbol="MES", timeframe="15m", trace=True)
+    strat_off.compute(df)
+    bool_off = dict(strat_off.last_per_condition_bool)
+
+    with levelzone_routing(True):
+        strat_on = SpecConditionStrategy(compiled_spec, symbol="MES", timeframe="15m", trace=True)
+        strat_on.compute(df)
+    bool_on = dict(strat_on.last_per_condition_bool)
+
+    assert np.array_equal(bool_off["s2"], bool_on["s2"]), (
+        "WAIT_RETEST condition's per-bar array must be unaffected by the level/zone flag"
+    )
+    by_id_off = {b.condition_id: b for b in strat_off.binding_plan.bindings}
+    by_id_on = {b.condition_id: b for b in strat_on.binding_plan.bindings}
+    assert by_id_off["s2"].primitive == by_id_on["s2"].primitive == "spec_condition_compiler.retest_touch_check"
+    assert by_id_off["s1"].primitive != by_id_on["s1"].primitive, "the level/zone condition IS expected to flip"
 
 
 def test_filter_condition_is_out_of_scope_even_when_enabled():
@@ -280,7 +343,7 @@ def test_trace_shows_distinct_levelzone_primitive_contributor_when_enabled():
     if not strat.last_trace:
         pytest.skip("no entry signal fired on this synthetic fixture/seed — nothing to inspect")
     fired_primitives = {c["primitive"] for rec in strat.last_trace for c in rec["conditions"]}
-    assert "spec_condition_compiler.retest_touch_check" in fired_primitives
+    assert "levelzone_routing.retest_touch_check" in fired_primitives
     assert "structure_engine.compute_structure_state" not in fired_primitives
 
 

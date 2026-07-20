@@ -122,7 +122,14 @@ LEVEL_ZONE_RE = re.compile(
     r"\b(support|resistance|demand|supply|zone|level|previous\s+(day|high|low)|"
     r"high\s+of\s+(the\s+)?day|low\s+of\s+(the\s+)?day|pdh\b|pdl\b)\b", re.I)
 
-LEVELZONE_NATIVE_PRIMITIVE: str = "spec_condition_compiler.retest_touch_check"
+# NOTE: deliberately NOT the literal string "spec_condition_compiler.retest_touch_check" — that
+# exact string is already FAMILY_META["WAIT_RETEST"].primitive (see the table above). Reusing it
+# here would make spec_condition_compiler.py's `b.primitive == ...` dispatch check collide with
+# every genuine WAIT_RETEST condition's binding, regardless of this flag — a real bug caught by
+# an engagement-count run over the corpus during implementation (a WAIT_RETEST-only spec showed
+# nonzero "levelzone" engagement with the flag OFF). This marker is distinct on purpose, even
+# though both ultimately call the same retest_touch_check function underneath.
+LEVELZONE_NATIVE_PRIMITIVE: str = "levelzone_routing.retest_touch_check"
 
 
 def levelzone_routing_enabled() -> bool:

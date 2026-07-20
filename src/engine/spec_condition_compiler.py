@@ -60,11 +60,16 @@ from src.engine.spec_family_bindings import (
 from src.engine.strategy_base import BaseStrategy
 
 FVG_PRIMITIVE_NAME: str = "fvg_native.compute_fvg_signal"
-LEVELZONE_PRIMITIVE_NAME: str = "spec_condition_compiler.retest_touch_check"
+LEVELZONE_PRIMITIVE_NAME: str = "levelzone_routing.retest_touch_check"
 # Level/Zone Routing Sub-Wire (docs/designs/packet-levelzone-subwire-2026-07-20.md, TF_LEVELZONE_
 # ROUTING_ENABLED) — MUST match the literal string spec_family_bindings.LEVELZONE_NATIVE_PRIMITIVE
 # returns, same independently-duplicated-constant convention as FVG_PRIMITIVE_NAME above (that
-# module has zero import surface by design).
+# module has zero import surface by design). Deliberately DISTINCT from the literal string
+# FAMILY_META["WAIT_RETEST"].primitive uses ("spec_condition_compiler.retest_touch_check") even
+# though both dispatch to the same underlying retest_touch_check computation — reusing that exact
+# string here would make the `elif b.primitive == ...` check below collide with every genuine
+# WAIT_RETEST condition's binding, unconditionally (see spec_family_bindings.py's comment on this
+# constant for how that collision was caught).
 # Composition Fidelity Experiment (docs/designs/composition-fidelity-experiment-2026-07-05.md)
 # bundle primitive names — MUST match the literal strings spec_family_bindings.resolve_bundle_
 # primitive() returns (that module has zero import surface by design, so these are independently
