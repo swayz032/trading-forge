@@ -1,0 +1,377 @@
+{
+  "artifact": "narration-judgment-input",
+  "population": "the 52 NOMINEES \u2014 rows the mechanical rule could not settle",
+  "withheld_from_judge": [
+    "element flags",
+    "spans",
+    "licensing clauses",
+    "the nominator's reasoning"
+  ],
+  "n": 52,
+  "rows": [
+    {
+      "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "FILTER",
+      "role": "spine",
+      "object": "add volume by Price values go to vwap developing vwap"
+    },
+    {
+      "condition_id": "FILTER:an-elevation-in-the-volume#7",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "FILTER",
+      "role": "confluence",
+      "object": "an elevation in the volume"
+    },
+    {
+      "condition_id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "FILTER",
+      "role": "confluence",
+      "object": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength"
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "as soon as we get this engulfing, you're good to enter the trade"
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "We do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-re-going-to-wait-for-the-first-candle#1",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "we're going to wait for the first candle of the day at that 9:30 time to print"
+    },
+    {
+      "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed"
+    },
+    {
+      "condition_id": "WAIT_RETEST:as-always-we-enter-on-the-confirmation-a#0",
+      "file": "E9MzEC_yNoM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."
+    },
+    {
+      "condition_id": "WAIT_RETEST:i-m-using-that-vwop-level-as-that-big-mi#1",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "i'm using that vwop level as that big milestone level and then i'm buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level"
+    },
+    {
+      "condition_id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market."
+    },
+    {
+      "condition_id": "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again"
+    },
+    {
+      "condition_id": "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "patiently wait for you know price to get there tap in"
+    },
+    {
+      "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "there should also be liquidity price will clear before you know tapping into the imbalance"
+    },
+    {
+      "condition_id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "wait for price to tap in and then push to your direction"
+    },
+    {
+      "condition_id": "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level"
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice"
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap."
+    },
+    {
+      "condition_id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "after we broke it and tested it we can try our long trade"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "for my entry I would personally be looking to enter the trade right here"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-already-know-the-direction-i-m-looking#15",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-generally-like-to-see-price-move-back#3",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I generally like to see price move back into a discount of this price range here"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I'm looking for the price to break out the bottom of that range"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-use-orderflow-such-as-bookmap-the#9",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:literally-a-abc-setup#5",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "Literally a ABC setup."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "map out the FVG that is very close to the order block"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "on Forex, Nasdaq, gold, everything"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "reclaims the level with a lot of volume"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "since we broke through the high, the direction is bullish. We're going to be looking for long trades."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:some-sort-of-pd-array-where-generally-i#5",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "the imbalance must create a break of structure"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "This created a level of supply. I was looking at this supply level right here"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "this is a bullish imbalance"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-have-now-created-our-fair-value-gap-t#13",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we have now created our fair value gap through this first candle"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we're going to get to our desks right at 9:30 a.m. EST"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we're going to wait for a break of the level, but we need a fair value gap"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we wait for the entry signal once we get it we enter"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "you're not just going to trade based off of vwap only"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-were-going-to-mark-your-entry-point#2",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "you were going to mark your entry point at the candle that made the liquidity grab"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "your short entry would be at the bottom of this candle that initiated this liquidity grab"
+    }
+  ]
+}

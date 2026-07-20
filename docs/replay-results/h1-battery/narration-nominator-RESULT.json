@@ -1,0 +1,1781 @@
+{
+ "applier": "mechanical-nominator",
+ "rule": "narration-rule-v2-BLIND-AUTHORED.md +R-086/R-090 amendments",
+ "n": 124,
+ "declared_policies": [
+  "P1 OBJECT = structural attachment ONLY (R-086): O-1/O-2/O-3 remain; O-4 (independent measure-noun frame) is DISABLED, because the amendment defines object as 'an argument attached to a detected comparator/threshold/direction'. Consequence: OBJECT can never be the sole firing element and therefore never changes the class.",
+  "P2 ENUMERATIVE (R-090): >=1 element present => class=not_narration (FINAL); all four absent => class=nominee (escalates to human-style judgment; NOT a verdict of narration).",
+  "P3 Plural folding PERMITTED and applied uniformly to the inventory NOUNS only (measure nouns O-4 [moot under P1], generic-process nouns D-O1, document nouns D-C1/D-D2): 'levels'~'level', 'values'~'value', 'examples'~'example'.",
+  "P4 NO verb-inflection folding. Sec 1.4 forbids stemming/lemmatizing and the amendment extends folding only to inventory nouns. Only the exact listed surface forms fire. Consequences recorded as data: 'lose' (row 13) fires D-1 but 'losing' (row 5) does not; 'are in' does not match C-3 'is in' (row 90); 'expansive' does not match D-1 'expand' (row 90).",
+  "P5 OQ-5 followed: unbound/unfilled operand slots keep COMPARATOR true but THRESHOLD false (rows 76, 91, 94).",
+  "P6 Sec 3.2.1-3.2.3 followed: negation, modality, hypotheticals, definitions and quoted/illustrative material all count as surface presence.",
+  "P7 T-4 anti-circularity policy (rule gap): T-4 quantity words (all/any/every/each/'no'+count-noun) fire only when filling the operand slot of an INDEPENDENTLY-detected comparator span. The O-2 attachment route cannot be satisfied by the candidate T-4 word itself, otherwise T-4 is self-licensing and vacuous. Affects rows 19, 53, 54, 66, 79, 98, 116.",
+  "P8 Timeframe expressions ('5 minute', 'one minute', 'five-minute', '15minute', 'two-minute') are DURATION literals under T-3 and are NOT struck by D-T3, which strikes only calendar/clock POINTS ('9:30 a.m.', '9:45'). This is the single highest-firing threshold route in this corpus.",
+  "P9 Nominal-hood for O-1/O-2/O-3: noun phrases and pronouns ('it') count (D-O2 lists only I/we/you/they/the team/the author/the reader/this document/the following/the above). Bare numerals, clock times and single-letter placeholders do NOT count as nominals (OQ-5 rationale). Adjectival modifiers ('lower lows', 'highest point') are NOT subjects or direct objects and so do NOT trigger O-3.",
+  "P10 D-3 '-er/-est' is restricted to genuine comparative/superlative morphology; agentive/lexical -er words (order, buyers, filter, whether, either, after, retest, hammer, breaker, metatrader) are NOT comparatives. 'upper' IS counted as a comparative form.",
+  "P11 No analogical extension (Sec 2 / 3.4.4): spans that 'feel' directional or relational but match no listed form are ABSENT. Recorded as data: 'to the upside' (row 33, 'upside' is not 'up'/'upward'), 'at max' (row 121, not 'at most'/'maximum of'), 'whichever you prefer' (rows 69/83, D-4 requires 'prefer X over Y'), 'low volume' (row 20, D-2 lists 'lower' not 'low'), 'a whole dollar level' (row 40, T-3 requires a currency SYMBOL or CODE plus a magnitude).",
+  "P12 D-C1/D-D2 locative strikes apply only when the governed nominal is a document/discourse noun or deictic. Market-position uses of above/below/over/under/up/down are therefore NOT struck ('below vwap', 'come down to vwap', 'scroll down to oscillate')."
+ ],
+ "rows": [
+  {
+   "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "FILTER:an-elevation-in-the-volume#7",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:a-fair-value-gap-is-just-a-three-candle#18",
+   "comparator": true,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "between one candle's wick and the third candle's wick",
+     "clause": "C-2 (between ... and ...)"
+    },
+    "object": {
+     "quoted_span": "one candle's wick",
+     "clause": "O-1 (comparator operand of 'between ... and ...')"
+    },
+    "threshold": {
+     "quoted_span": "three candle formation",
+     "clause": "T-2 (spelled cardinal 'three')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:a-is-a-low-b-is-a-lower-high-identified#6",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "comparator": {
+     "quoted_span": "higher than the previous one",
+     "clause": "C-2 (higher than)"
+    },
+    "object": {
+     "quoted_span": "a low that is higher than",
+     "clause": "O-1 (comparator operand of 'higher than')"
+    },
+    "direction": {
+     "quoted_span": "a lower high",
+     "clause": "D-2 (lower)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:anytime-we-come-into-vwap-and-kind-of-te#2",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "closing below it",
+     "clause": "C-2 (below)"
+    },
+    "object": {
+     "quoted_span": "below it",
+     "clause": "O-1 (comparator operand 'it')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:as-long-as-we-don-t-close-below-vwap-we#5",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "close below vwap",
+     "clause": "C-2 (below)"
+    },
+    "object": {
+     "quoted_span": "below vwap",
+     "clause": "O-1 (comparator operand 'vwap')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "comes above this level",
+     "clause": "C-2 (above)"
+    },
+    "object": {
+     "quoted_span": "above this level",
+     "clause": "O-1 (comparator operand 'this level')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:drop-down-to-one-minute-time-frame-now-h#4",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "one minute time frame",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "one minute",
+     "clause": "T-3 (time-and-duration literal)"
+    },
+    "direction": {
+     "quoted_span": "drop down to one minute time frame",
+     "clause": "D-1 (drop) + D-2 (down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:i-enter-after-confirmation-so-again-if-w#3",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "Long lower wicks",
+     "clause": "D-2 (lower)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "close outside of that range",
+     "clause": "C-2 (outside of)"
+    },
+    "object": {
+     "quoted_span": "outside of that range",
+     "clause": "O-1 (comparator operand 'that range')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:if-we-can-actually-get-that-break-we-wan#2",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "close below or above with strength",
+     "clause": "C-2 (below / above)"
+    },
+    "object": {
+     "quoted_span": "price to break above",
+     "clause": "O-1 (comparator operand 'price')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:if-we-were-to-lose-vop-and-lose-the-20-s#2",
+   "comparator": true,
+   "object": true,
+   "threshold": true,
+   "direction": true,
+   "spans": {
+    "comparator": {
+     "quoted_span": "close below vop",
+     "clause": "C-2 (below)"
+    },
+    "object": {
+     "quoted_span": "below vop",
+     "clause": "O-1 (comparator operand 'vop')"
+    },
+    "threshold": {
+     "quoted_span": "the 20 SMA",
+     "clause": "T-1 (numeral '20')"
+    },
+    "direction": {
+     "quoted_span": "lose vop",
+     "clause": "D-1 (lose)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "all of that sets up",
+     "clause": "D-2 (up)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:if-you-re-not-aware-of-what-an-engulfing#20",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "one candle",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "one candle",
+     "clause": "T-2 (spelled cardinal 'one')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:short-if-price-were-to-break-below-this#5",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "comparator": {
+     "quoted_span": "break below this level",
+     "clause": "C-2 (below)"
+    },
+    "object": {
+     "quoted_span": "below this level",
+     "clause": "O-1 (comparator operand 'this level')"
+    },
+    "direction": {
+     "quoted_span": "take price lower",
+     "clause": "D-2 (lower); also 'up', 'upper'"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+   "comparator": false,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "cut it",
+     "clause": "O-3 (direct object of DIRECTION span)"
+    },
+    "direction": {
+     "quoted_span": "just won't cut it",
+     "clause": "D-1 (cut)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:this-13-ema-operated-as-a-initial-suppor#4",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "13 EMA",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "this 13 EMA",
+     "clause": "T-1 (numeral '13')"
+    },
+    "direction": {
+     "quoted_span": "came down",
+     "clause": "D-2 (down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:we-are-waiting-for-candle-closes-to-actu#3",
+   "comparator": false,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "price wicked right back down",
+     "clause": "O-3 (subject of DIRECTION span)"
+    },
+    "direction": {
+     "quoted_span": "price wicked right back down",
+     "clause": "D-2 (down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:we-re-going-to-wait-for-the-first-candle#1",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:we-want-to-wait-for-price-to-break-the-k#1",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "breakout above resistance",
+     "clause": "C-2 (above / below)"
+    },
+    "object": {
+     "quoted_span": "above resistance",
+     "clause": "O-1 (comparator operand 'resistance')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "20 SMA",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the 20 SMA",
+     "clause": "T-1 (numeral '20')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:what-s-really-important-is-you-need-to-w#1",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "close above or below the range",
+     "clause": "C-2 (above / below)"
+    },
+    "object": {
+     "quoted_span": "below the range",
+     "clause": "O-1 (comparator operand 'the range')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_CONFIRMATION:you-simply-wait-for-price-to-close-below#7",
+   "comparator": true,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "close below this one minute fair value gap",
+     "clause": "C-2 (below / above)"
+    },
+    "object": {
+     "quoted_span": "below this one minute fair value gap",
+     "clause": "O-1 (comparator operand)"
+    },
+    "threshold": {
+     "quoted_span": "one minute",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:as-always-we-enter-on-the-confirmation-a#0",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:entry-mechanic-variant-i-m-not-a-big-fan#9",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "a nice little move up",
+     "clause": "D-2 (up)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21",
+   "comparator": false,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "the market come down",
+     "clause": "O-3 (subject of DIRECTION span)"
+    },
+    "direction": {
+     "quoted_span": "the market come down",
+     "clause": "D-2 (down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:i-m-using-that-vwop-level-as-that-big-mi#1",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:i-was-also-looking-at-the-bottom-of-the#16",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "This is one of the main orb entry models",
+     "clause": "C-3 (is one of)"
+    },
+    "object": {
+     "quoted_span": "one of the main orb entry models",
+     "clause": "O-1 (comparator operand 'the main orb entry models')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "comparator": {
+     "quoted_span": "break above the overnight highs",
+     "clause": "C-2 (above)"
+    },
+    "object": {
+     "quoted_span": "above the overnight highs",
+     "clause": "O-1 (comparator operand 'the overnight highs')"
+    },
+    "direction": {
+     "quoted_span": "long lower wicks",
+     "clause": "D-2 (lower)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:make-sure-on-the-one-minute-price-has-sw#5",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "15-minute fair value gap",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "15-minute fair value gap",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:the-first-retest-is-always-the-highest-p#6",
+   "comparator": false,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "The first retest is always the highest probability",
+     "clause": "O-3 (subject of DIRECTION span)"
+    },
+    "direction": {
+     "quoted_span": "the highest probability",
+     "clause": "D-3 (-est superlative)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_RETEST:we-want-to-wait-for-the-retest-we-want-t#2",
+   "comparator": false,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "price to go up",
+     "clause": "O-3 (subject of DIRECTION span)"
+    },
+    "direction": {
+     "quoted_span": "price to go up",
+     "clause": "D-2 (up / down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "5m minute fair value gap",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "5m minute fair value gap",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:as-long-as-we-re-trading-over-vwap-and-a#5",
+   "comparator": true,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "trading over vwap",
+     "clause": "C-2 (over)"
+    },
+    "object": {
+     "quoted_span": "over vwap",
+     "clause": "O-1 (comparator operand 'vwap')"
+    },
+    "threshold": {
+     "quoted_span": "this 20 SMA",
+     "clause": "T-1 (numeral '20')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:come-down-to-vwap-start-a-new-position-b#3",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "come down to vwap",
+     "clause": "D-2 (down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:does-that-meet-all-my-criteria-it-does-n#9",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "it is in a premium of the range",
+     "clause": "C-3 (is in)"
+    },
+    "object": {
+     "quoted_span": "in a premium of the range",
+     "clause": "O-1 (comparator operand 'a premium of the range')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:each-one-of-these-concepts-could-be-used#7",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "three of these Concepts",
+     "clause": "O-2 (<THRESHOLD> of <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "one two or three of these Concepts",
+     "clause": "T-2 (spelled cardinals)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "20 period moving average",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "a 20 period moving average",
+     "clause": "T-1 (numeral '20')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:i-already-know-the-direction-i-m-looking#15",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:i-generally-like-to-see-price-move-back#3",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "5 minute chart",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the 5 minute chart",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "five-minute time frame",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the five-minute time frame",
+     "clause": "T-3 (time-and-duration literal)"
+    },
+    "direction": {
+     "quoted_span": "set up my range",
+     "clause": "D-2 (up)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+   "comparator": true,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "from 9:30 to 11:00 a.m. Eastern",
+     "clause": "C-2 (from ... to ...)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "five-minute time frame",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the five-minute time frame",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "comparator": {
+     "quoted_span": "trading over the vwob",
+     "clause": "C-2 (over)"
+    },
+    "object": {
+     "quoted_span": "over the vwob",
+     "clause": "O-1 (comparator operand 'the vwob')"
+    },
+    "direction": {
+     "quoted_span": "more bullish",
+     "clause": "D-2 (more) / D-3 (more <adj>)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:if-you-use-orderflow-such-as-bookmap-the#9",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "one minute chart",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the one minute chart",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:literally-a-abc-setup#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "two fair value gaps",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "two fair value gaps",
+     "clause": "T-2 (spelled cardinal 'two')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+   "comparator": true,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "close over this 20 period moving average",
+     "clause": "C-2 (over)"
+    },
+    "object": {
+     "quoted_span": "over this 20 period moving average",
+     "clause": "O-1 (comparator operand) + O-2"
+    },
+    "threshold": {
+     "quoted_span": "this 20 period moving average",
+     "clause": "T-1 (numeral '20')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "breaking above that level",
+     "clause": "C-2 (above)"
+    },
+    "object": {
+     "quoted_span": "above that level",
+     "clause": "O-1 (comparator operand 'that level')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "Price breaks below",
+     "clause": "C-2 (below)"
+    },
+    "object": {
+     "quoted_span": "Price breaks below",
+     "clause": "O-1 (comparator operand 'Price')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "two examples",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the last two examples",
+     "clause": "T-2 (spelled cardinal 'two')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6",
+   "comparator": false,
+   "object": false,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "threshold": {
+     "quoted_span": "the one minute",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:some-sort-of-pd-array-where-generally-i#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-first-standard-deviation-is-one-the#6",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "1.5 standard deviation",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "1.5 standard deviation",
+     "clause": "T-1 (numeral '1.5')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-gap-you-know-is-created-between-thre#0",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "three candlesticks",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "three candlesticks",
+     "clause": "T-2 (spelled cardinal 'three')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-green-line-that-you-see-is-the-vwap#7",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "the upper and lower ranges",
+     "clause": "D-2 (lower) / D-3 (upper)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "comparator": {
+     "quoted_span": "price comes above this level",
+     "clause": "C-2 (above)"
+    },
+    "object": {
+     "quoted_span": "above this level",
+     "clause": "O-1 (comparator operand 'this level')"
+    },
+    "direction": {
+     "quoted_span": "the lower high",
+     "clause": "D-2 (lower / down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "5-minute candle level",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "this first 5-minute candle level",
+     "clause": "T-3 (time-and-duration literal '5-minute')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+   "comparator": true,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "aggressively moved over",
+     "clause": "C-2 (over)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-stock-came-down-and-it-hit-right-the#2",
+   "comparator": false,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "the stock came down",
+     "clause": "O-3 (subject of DIRECTION span)"
+    },
+    "direction": {
+     "quoted_span": "the stock came down",
+     "clause": "D-2 (down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "20 simple moving average",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the 20 SMA",
+     "clause": "T-1 (numeral '20')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:then-we-have-a-following-candle-that-sta#3",
+   "comparator": true,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "starts to build below",
+     "clause": "C-2 (below)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "5-minute candle",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "that first 5-minute candle",
+     "clause": "T-3 (time-and-duration literal '5-minute')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+   "comparator": false,
+   "object": false,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "threshold": {
+     "quoted_span": "the first 5 to 15 minutes",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:to-do-this-simply-go-to-metatrader-click#7",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "making higher highs",
+     "clause": "D-2 (higher / lower / down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "two-minute time frame",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the two-minute time frame",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+   "comparator": false,
+   "object": true,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "object": {
+     "quoted_span": "It tries to come down",
+     "clause": "O-3 (subject of DIRECTION span)"
+    },
+    "direction": {
+     "quoted_span": "making lower lows",
+     "clause": "D-2 (lower / down)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "1 minute chart",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the 1 minute chart",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-did-go-a-tick-below-this-low-but-i-do#11",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "a tick below this low",
+     "clause": "C-2 (below)"
+    },
+    "object": {
+     "quoted_span": "below this low",
+     "clause": "O-1 (comparator operand 'this low')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-have-now-created-our-fair-value-gap-t#13",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "15-minute candle",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the first 15-minute candle",
+     "clause": "T-3 (time-and-duration literal '15-minute')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "five-minute chart",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "our five-minute chart",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+   "comparator": false,
+   "object": false,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "threshold": {
+     "quoted_span": "the 15minute",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "that highest point",
+     "clause": "D-3 (-est superlative: highest / lowest)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:what-we-are-going-to-wait-for-is-one-for#1",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "break above that range",
+     "clause": "C-2 (above / below)"
+    },
+    "object": {
+     "quoted_span": "above that range",
+     "clause": "O-1 (comparator operand 'that range')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": true,
+   "spans": {
+    "direction": {
+     "quoted_span": "making lower highs and lower lows",
+     "clause": "D-2 (lower)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5",
+   "comparator": false,
+   "object": false,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "threshold": {
+     "quoted_span": "one or two",
+     "clause": "T-2 (spelled cardinals)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:you-just-have-to-start-tracking-your-hig#0",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "15-minut time frame",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "that 15-minut time frame",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:you-might-want-to-wait-until-the-price-h#4",
+   "comparator": true,
+   "object": true,
+   "threshold": false,
+   "direction": false,
+   "spans": {
+    "comparator": {
+     "quoted_span": "at least to the first if not the second standard deviation",
+     "clause": "C-2 (at least)"
+    },
+    "object": {
+     "quoted_span": "at least to the first if not the second standard deviation",
+     "clause": "O-1 (comparator operand 'standard deviation')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "15minute chart",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "the 15minute chart",
+     "clause": "T-3 (time-and-duration literal)"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7",
+   "comparator": false,
+   "object": true,
+   "threshold": true,
+   "direction": false,
+   "spans": {
+    "object": {
+     "quoted_span": "two trades",
+     "clause": "O-2 (<THRESHOLD> <NOMINAL>)"
+    },
+    "threshold": {
+     "quoted_span": "One to two trades a day",
+     "clause": "T-2 (spelled cardinals 'One'/'two')"
+    }
+   },
+   "class": "not_narration"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:you-were-going-to-mark-your-entry-point#2",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  },
+  {
+   "condition_id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+   "comparator": false,
+   "object": false,
+   "threshold": false,
+   "direction": false,
+   "spans": {},
+   "class": "nominee"
+  }
+ ]
+}
