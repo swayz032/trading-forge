@@ -4,6 +4,29 @@
 
 ---
 
+## AR-100 · 2026-07-20 · ★★ CLASS DISCOVERED (R-109 §3) — **26 detectors across 4 modules, not 2 across 1. The class is ~13× wider than the census I delivered.** No probes run; the enumeration alone re-scopes the lane.
+
+**The discovered family, consumed by the six registered archetypes:**
+
+| module | detectors | status |
+|---|---|---|
+| `indicators/core.py` | **10** | unprobed |
+| `indicators/liquidity.py` | 4 | **1 pair LEAK-CONFIRMED (F-1)**, 2 unprobed |
+| `indicators/market_structure.py` | 5 | 1 unadmitted-clean, 4 unprobed |
+| `indicators/price_delivery.py` | 7 | 1 at **7/39 UNCONFIRMED**, 6 unprobed |
+| **total** | **26 across 4 modules** | |
+
+**★ THE SCOPING ERROR, measured rather than described.** My AR-098 census swept **2 detectors in 1 module** — the pair you named. The class actually consumed by those same six archetypes is **26 detectors across 4 modules.** I did not sweep a class; I swept a citation. **R-109's "the class is DISCOVERED, not assumed" is the correction, and the number is how badly assumption underperformed: ~13×.**
+
+**★ AND THE ENUMERATION ITSELF SURFACED SOMETHING I'D HAVE MISSED AGAIN:** `core.py` re-exports **`detect_buyside_liquidity` / `detect_sellside_liquidity`** — **the confirmed-leaking pair** — alongside 8 others. So the F-1 leak is reachable through a **second import path** I never enumerated, and any archetype importing from `core.py` rather than `liquidity.py` consumes the identical defect while looking untouched in my original census. **`price_delivery.py` re-exports the pair too.** The blast radius is not just wider in detector count; **the same defect has three doors.**
+
+**What this does NOT establish, stated before anyone reads it as worse than it is:** these are **imports**, not proven leaks. **25 of the 26 are unprobed**; exactly one pair is leak-confirmed and one detector sits at an unconfirmed 7/39. **Import ≠ defect.** The enumeration bounds the *work*, not the *damage* — and per the standing containment, nothing has consumed any of it for a decision.
+
+**Not done, deliberately:** no probes re-run. Your §2 requires each detector's probe carry **its own** plant built to the **F-1 shape** (existence at bar *i* decided by post-*i* data), with **both polarities** — plant CAUGHT and known-clean PASSES — before any verdict admits. **26 detectors × per-detector validated plants is a materially larger unit than an hour of probing**, and I would rather hand you the true size than a partial sweep that looks like progress. The `detect_fvg` 7/39 stays queued and uncited.
+
+**Holds:** six archetypes barred (scope extends automatically with whatever the validated sweep finds) · `named_sr_level` blocked · T1 blocked · WIRE-2 pending · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-099 · 2026-07-20 · ★★ SIBLING SWEEP RUN — **BUT MY PROBE FAILED ITS OWN VALIDATION, SO I AM REPORTING NO RESULTS.** A possible second leak in `detect_fvg` is held as UNCONFIRMED. The probe law applied to myself says these numbers do not count.
 
 **1. ★ THE VALIDATION FAILED, AND THAT GOVERNS EVERYTHING BELOW.** Per R-105/R-108 I planted a deliberate leak and required the probe to catch it. **It did not fire (0/39 on the plant).** By the law's own terms — *a probe that cannot fail proves nothing* — **every verdict this run produced is inadmissible**, the clean ones especially.
