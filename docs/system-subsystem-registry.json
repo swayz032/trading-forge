@@ -5146,7 +5146,9 @@
       "src/server/db/schema.ts::slumhouseUsers"
     ],
     "database_tables": [
-      "slumhouse_users"
+      "slumhouse_users",
+      "slumhouse_member_pins",
+      "slumhouse_connect_test"
     ],
     "learning_from": [],
     "learning_assets": [],
