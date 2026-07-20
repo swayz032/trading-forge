@@ -1,0 +1,88 @@
+{
+  "artifact": "bsl-ssl-consumer-census-AST",
+  "authority": "R-114 \u00a74",
+  "method": "AST ImportFrom + Call nodes \u2014 manual censuses missed a consumer twice",
+  "n_production_consumers": 7,
+  "rows": [
+    {
+      "file": "src/engine/spec_condition_compiler.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 2,
+      "is_definition": false,
+      "is_test": false
+    },
+    {
+      "file": "src/engine/strategies/eqhl_raid.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 2,
+      "is_definition": false,
+      "is_test": false
+    },
+    {
+      "file": "src/engine/strategies/ict_2022.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 2,
+      "is_definition": false,
+      "is_test": false
+    },
+    {
+      "file": "src/engine/strategies/ict_scalp.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 2,
+      "is_definition": false,
+      "is_test": false
+    },
+    {
+      "file": "src/engine/strategies/ict_swing.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 2,
+      "is_definition": false,
+      "is_test": false
+    },
+    {
+      "file": "src/engine/strategies/quarterly_swing.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 2,
+      "is_definition": false,
+      "is_test": false
+    },
+    {
+      "file": "src/engine/strategies/turtle_soup.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 2,
+      "is_definition": false,
+      "is_test": false
+    },
+    {
+      "file": "src/engine/tests/test_liquidity_ict.py",
+      "imports": [
+        "detect_buyside_liquidity",
+        "detect_sellside_liquidity"
+      ],
+      "n_calls": 3,
+      "is_definition": false,
+      "is_test": true
+    }
+  ]
+}

@@ -4,6 +4,21 @@
 
 ---
 
+## AR-106 · 2026-07-20 · R-115 executed — **fix packet STAGED** with an **AST consumer census: 7 production consumers, ONE definition site.** The census independently re-confirms `paper_bridge` is not a consumer — a second method agreeing with AR-105.
+
+**1. AST census (your §4, because manual censusing missed a consumer twice):** **7 production consumers** — the six barred archetypes + `spec_condition_compiler.py` (the Population-A resolver) — and **one** definition site. **`paper_bridge` does not appear**, which is AR-105's conclusion reached again by a different instrument. **Two methods agreeing is worth more than either alone**, and after tonight I would not rest a live-path all-clear on one.
+
+**2. The packet's §3 carries a PROHIBITION, not just a scope-lock:** *post-hoc slicing of a full-history clustering result is banned.* **The cluster MEMBERSHIP is what is computed non-causally**, so slicing its output preserves the defect while looking like a fix — **and would pass a naive truncation probe run on the sliced output.** That is the most plausible wrong fix. **Naming it in advance costs nothing; discovering it in a grade costs a wave.**
+
+**3. §4 leads with the two items this lane learned the hard way:** the **plant-catch per function** (a probe that cannot fail proves nothing — AR-099), and **consumption-wide verification** (R-114 §2 — the defect was *observed* at call sites, so **unit tests on the two functions do not cover where it showed**). I also wrote in the **record-knowability alignment** rule (R-114 §3), because a middle-candle-vs-third-candle misalignment already manufactured one false 7/39 reading — **mine** — and the next runner should not have to rediscover it.
+
+**4. Behaviour-change disclosure is a numbered deliverable, not a footnote:** the fix **will** change historical backtest output for all seven consumers. **That is the point — they were reading the future** — but it must be **stated, not discovered**, and no certified number may be silently re-baselined.
+
+**5. Rollback is honest about what revert means:** pure-function change, single-commit revert, no flag — the fix is **strictly more-correct, not opt-in.** So **the archetype bar stays until the fix is GRADED, not merely landed**: reverting restores the defect, and a bar lifted on a landing rather than a grade would be exactly the gap this lane exists to close.
+
+**Not done:** no code. Next is implementation via agent-loop under the §4 checklist, then an independent grade. **Holds:** six archetypes barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-105 · 2026-07-20 · R-114 §4 LIVENESS CHECK — **`paper_bridge` is LIVE but does NOT consume the leak.** It never imports the leaking pair; it feeds `detect_sweep` the **probed-clean** `detect_equal_highs`. **No paper contamination, no annotation needed.** The feared live-adjacent exposure does not exist.
 
 **1. LIVE — confirmed, not assumed.** `paper_bridge` is invoked from the running paper engine: `paper-signal-service.ts:1448` calls `runPythonModule({module: "src.engine.indicators.paper_bridge", …})` on a live signal path. **So the liveness half of your question is YES.**
