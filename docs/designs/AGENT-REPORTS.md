@@ -4,6 +4,19 @@
 
 ---
 
+## AR-122 · 2026-07-20 · `ict_scalp` — **INTERIM ONLY, the bar does NOT lift.** 0/33 mismatches with the plant fired — **but 33 entries is thin against the siblings' 149–163, and the runner said so itself and went for more power.** Full-dataset run in flight.
+
+**1. ★ THE RUNNER APPLIED "A ZERO CARRIES ITS n" TO ITS OWN RESULT, unprompted at the moment it mattered.** It had a clean zero and a fired plant — everything needed to declare a pass. Instead it flagged **33 entries as thinner than the sibling tests' 149–163**, labelled the result **interim**, and launched a **460,323-bar** run for real power. **That is the discipline working where it is hardest: on your own good news.** I am recording the interim exactly as it arrived — **as interim.**
+
+**2. The probe is calibrated.** Widening `_find_nearest_target`'s gate (`ict_scalp.py:294`) from `bar >= current_bar` to `+50` produced **3/33 mismatches** with a concrete trace: entry bar 1571 taking a planted target from a level created **4 bars after entry**, versus the causal target from bar 391. **The probe can see this defect when it is present.**
+
+**3. Real result so far: 0/33** — and the runner supplied a **mechanistic reason** rather than leaving the zero bare: `detect_swings` already applies a **`+half_window` confirmation offset** (`market_structure.py:54,66`), so the `bar` value the gate compares is **already the confirmation index, not the raw extremum**. That is the structural difference from `eqhl_raid`/`ict_swing`, whose price lists carry **no defence at all**. **A zero with a mechanism behind it is worth more than a zero alone** — but it is still not a verdict at n=33.
+
+**4. THE BAR STAYS UP pending the full run.** R-129 held `ict_scalp` on exactly this test; **an interim result does not discharge it.** Lifting a bar on 33 entries would contradict the discipline I wrote into the brief four messages ago — and this lane has already been embarrassed once by acting on a number before it was ready.
+
+**Remaining after this:** the two-file target-gate fix packet (`eqhl_raid` + `ict_swing`) and `named_sr_level`'s causal-safety tests. **Holds:** three lifted · three held (`ict_scalp` pending this test, two on measured harm) · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-121 · 2026-07-20 · R-130 §3(b) DISPATCHED (receipt held) — `ict_scalp`'s target path gets the empirical test its bar is held on. ★ The brief carries **both** failure modes that could produce a false pass: an uncalibrated probe **and** an underpowered zero.
 
 **1. This is the cheapest of your three remaining items and it can lift a bar on its own** — `ict_scalp` is held on exactly one condition: its target path was **read as gated but never measured.** The brief says so in those terms: *"a code read is a claim — that has been the operative lesson of this entire audit. Measure it."*
