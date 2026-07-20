@@ -1,0 +1,214 @@
+{
+  "grader": "independent-blind",
+  "n": 32,
+  "rows": [
+    {
+      "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["structure_event", "level_zone", "fvg_imbalance"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": ["fvg_imbalance", "liquidity"],
+      "narration": false,
+      "note": "Names 5m and 15m only; 9:30 is time-of-day, not a timeframe. 'draw on liquidity' read as liquidity concept."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration": false,
+      "note": "Ambiguous. 'it' has no antecedent in the text, so no named object; but break-then-retest with a long direction is a bindable shape given a referent. Called non-narration on the direction+event, concepts empty because nothing is actually named."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["level_zone"],
+      "narration": false,
+      "note": "'come back to my level' is a checkable retrace-to-level predicate, though the level is undefined here."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["fvg_imbalance", "structure_event"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": ["level_zone"],
+      "narration": true,
+      "note": "'set up my range' is an intention with no predicate, so narration; counted 'range' as a zone, which is a weak call."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration": false,
+      "note": "Clock window, not a timeframe. Non-narration because a session window 09:30-11:00 ET is a directly bindable time filter."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": true,
+      "note": "Instrument/timeframe declaration; no market-state predicate."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": ["fvg_imbalance"],
+      "narration": false,
+      "note": "'wait for all N FVGs to get inversed, then enter' is countable and testable. 'manipulation leg' not counted as liquidity since no raid/sweep/equal-highs wording."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["level_zone"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["level_zone"],
+      "narration": false,
+      "note": "Volume is not in the ma_indicator vocabulary, so not tagged."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration": true,
+      "note": "'A+' is undefined here, so no threshold a machine could bind."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": ["fvg_imbalance"],
+      "narration": false,
+      "note": "Borderline: it is a mark-out instruction, but it has a concrete object (FVGs within a named leg) so it is bindable."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["fvg_imbalance", "structure_event"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["level_zone", "structure_event"],
+      "narration": false,
+      "note": "structure_event tagged because price trading above a lower high is a swing high being broken."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": ["level_zone"],
+      "narration": false,
+      "note": "Describes expansion/force, which is displacement in substance, but the trader never names displacement or a break, so structure_event withheld."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["structure_event"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": ["level_zone"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["level_zone"],
+      "narration": false,
+      "note": "Hardest tf call. 'the first 5 to 15 minutes to pass' is an elapsed-duration wait, not a named chart timeframe, so TF_UNSPECIFIED rather than EXEC_TAUGHT."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": ["level_zone"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": false,
+      "note": "15minute is named. Waiting for a specific candle to close is a bindable event."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["level_zone"],
+      "narration": false,
+      "note": "Construction instruction, but the objects (highest/lowest point of price action) are concrete enough to compute."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": ["fvg_imbalance", "structure_event"],
+      "narration": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration": false,
+      "note": "Ambiguous. 'one to two trades a day at max' is a real bindable threshold, so not pure narration, even though 'A+ setups' and 'fixed amount' are undefined."
+    }
+  ]
+}
