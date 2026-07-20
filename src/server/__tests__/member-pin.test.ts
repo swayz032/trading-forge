@@ -76,6 +76,46 @@ describe("verifyPin", () => {
   });
 });
 
+// ── ASYMMETRIC PROBES (OR-018: the SYMMETRIC-BLINDNESS class) ───────────────────────────────
+// `util.promisify(scrypt)` silently dropped the ENTIRE options object, so N/r/p/maxmem never
+// reached the KDF — and 13 round-trip tests could not see it, because hash-then-verify is
+// self-consistent at whatever parameters actually ran: the same broken plumbing on both sides.
+// A dropped parameter cannot hide from a KNOWN-ANSWER vector. These probes are asymmetric by
+// construction: the expected value is fixed OUTSIDE the code under test.
+describe("asymmetric probes — a dropped cost parameter cannot hide", () => {
+  // Generated from the raw node:crypto callback API with EXPLICIT options:
+  //   scrypt("483920", <salt>, 64, { N: 2**15, r: 8, p: 1 })
+  const SALT_B64 = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=";
+  const KEY_N15_B64 =
+    "kxrakn0n3/z5XQCrDrDn5L/2/Zs2f5EVj2i9yMAbjkHSNjKhaUB7jahACQnHtVIYb3bDh/NT7ijS0WsF5LMwFg==";
+
+  it("KNOWN-ANSWER: a record built outside this module verifies — proving N/r/p actually reach the KDF", async () => {
+    const record = `scrypt$${2 ** 15}$8$1$${SALT_B64}$${KEY_N15_B64}`;
+    // If the wrapper dropped its options, verifyPin would derive at Node's default N (16384)
+    // and this would be false. It passing is proof the declared cost parameters are honoured.
+    expect(await verifyPin("483920", record)).toBe(true);
+  });
+
+  it("the SAME key labelled with a DIFFERENT N must NOT verify — proving N is read, not ignored", async () => {
+    const mislabelled = `scrypt$${2 ** 14}$8$1$${SALT_B64}$${KEY_N15_B64}`;
+    expect(await verifyPin("483920", mislabelled)).toBe(false);
+  });
+
+  it("the SAME key labelled with a different r must NOT verify", async () => {
+    expect(await verifyPin("483920", `scrypt$${2 ** 15}$4$1$${SALT_B64}$${KEY_N15_B64}`)).toBe(false);
+  });
+
+  it("hashPin emits records at the DECLARED cost parameters, not silent defaults", async () => {
+    const stored = await hashPin("483920");
+    const [, N, r, p] = stored.split("$");
+    expect(Number(N)).toBe(PIN_KDF_V1.N);
+    expect(Number(r)).toBe(PIN_KDF_V1.r);
+    expect(Number(p)).toBe(PIN_KDF_V1.p);
+    // ...and the record it emits round-trips, so the label matches what was actually derived.
+    expect(await verifyPin("483920", stored)).toBe(true);
+  });
+});
+
 describe("evaluateAttempt — fail-closed lockout", () => {
   it("DENIES when the attempt state is unreadable (fail-closed, not fail-open)", () => {
     expect(evaluateAttempt(null, 1_000).allowed).toBe(false);
