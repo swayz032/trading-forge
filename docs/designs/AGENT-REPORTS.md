@@ -4,6 +4,21 @@
 
 ---
 
+## AR-076 · 2026-07-20 · R-085 §3 + R-086 §6 both executed: session (A)/(B) blind grade DISPATCHED (prompt committed pre-run `72f945e5` @10:43:09) · narration-v2 validation draw BUILT on virgin territory with the bare-object stratum (`82ed99d2`). Both graders running; nothing applied, nothing moved.
+
+**1. Session (A)/(B) blind grade — DISPATCHED under the same auditable-blindness machinery.** Prompt + sample committed at `72f945e5`, **10:43:09**, dispatch after. Grader receives the 26 condition texts only; **withheld: my own (A)/(B) assignment, the resolver's output, the per-side counts, and the keyword vocabulary.** Two design choices I want on the record because they follow your §3 rather than my convenience:
+- **Both error directions are named IN the prompt** — under-widening drops real teaching, over-widening binds entry-mechanics text to a time window it was never about — with an explicit instruction not to balance the piles and not to assume the earlier classifier was mostly right or mostly wrong. A grader primed to "find more sessions" would have manufactured exactly the widening I want, which is why it isn't primed.
+- **A verbatim `quoted_span` is REQUIRED per verdict** — your §5 span-citation ratification applied immediately to the next grade rather than filed for later. A call that cannot be anchored to the speaker's own words is a call to reconsider.
+
+**2. Narration-v2 validation draw — BUILT (`82ed99d2`), 29 rows, on genuinely virgin territory.** Pool = 92 (78 structure + 46 deferred − 32 already graded). Draw = **8 bare-object + 22 general**, systematic by `condition_id`, no RNG. **Zero overlap with the graded 32 is ASSERTED programmatically** — an `assert` that aborts the build, not a claim in a report, because contamination would silently void the entire validation.
+- **The §2 bare-object stratum is present and its selection rule is declared for what it is:** a stratum-selection heuristic (no relational/quantity/polarity surface marker), **explicitly NOT a narration verdict.** The rule under validation supplies verdicts; the sampler must not pre-judge the class it exists to measure. Your residual gets MEASURED, which was the point.
+
+**3. Your two rulings closed exactly what AR-075 said validation needed**, and I note the shape: the blind author escalated against the commissioning definition, you sustained the escalation against your own sentence, and the amendment (object → structural attachment, vocabulary-free, with vocabulary-based detection **permanently prohibited** in this rule) closes the door on re-importing the convicted class through the conservative-looking leg. I have applied the rule to nothing — not the 29, not the 92 — pending the fresh grader.
+
+**4. Sequencing note, offered not assumed:** the two graders are running with **no shared exposure** (different populations, different tasks, neither reads the other's artifact), per your §6. The level/zone premise-audit spike remains unstarted and is next in my hands unless the returning grades re-order the board — I would rather report two clean grades than three half-finished lanes.
+
+**Holds:** T1 blocked · WIRE-2 pending premise audit · reader-vintage queued · flag OFF · the 77 sealed. **Nothing moved a denominator.**
+
 ## AR-075 · 2026-07-20 · BLIND NARRATION RULE RETURNED (`narration-rule-v2-BLIND-AUTHORED.md`, 274 lines) — and its ★ headline is an escalation about YOUR frozen definition, not about the rule: **the "object" element is NOT detectable without domain vocabulary.** Not applied to anything, per §3.
 
 **Blindness held:** authored from R-080 §4's frozen sentence alone, fresh context, no corpus, no repo reads, prompt committed pre-dispatch (`0e2a53c7`). The artifact opens by stating no examples or vocabulary were consulted.
