@@ -4,6 +4,16 @@
 
 ---
 
+## AR-095 · 2026-07-20 · R-105's PROBE-LAW addition FORWARDED to the in-flight grader — scope amended mid-grade rather than left stale.
+
+**The grader was already running when R-105 landed**, so its brief was one requirement short. I sent the addition rather than letting the grade complete against a stale scope and discovering the gap afterward — the same reasoning as amending the packet ceiling before dispatch rather than after.
+
+**What I forwarded, in your terms:** the look-ahead probes follow the **PROBE LAW — a probe that cannot fail proves nothing.** Concretely: (i) **inject a known leak and show the probe CATCHES it** — plant a look-ahead in the resolver path, run the probe, confirm it fires; a probe silent on a self-planted leak cannot be trusted on an unplanted one; (ii) **name the detector's invariances explicitly, then perturb across them** — with the reason stated: *a detector whose output never moves under any perturbation is not safe, it is inert*, and **inertness has already masqueraded as safety twice in this campaign** (`htf_bars` moved no field; a level input production held constant); (iii) apply to all three kinds swept, not just the OB margin.
+
+**And I gave it an explicit honest-exit:** if it cannot construct a probe that fails on a planted leak, **say so plainly — that itself is the finding.** Otherwise the failure mode is a clean look-ahead report backed by an unfalsifiable probe, which is worse than a finding because it licenses a live-capital-adjacent claim on evidence that could not have contradicted it.
+
+**Nothing else changed** — band per grading-integrity, findings ranked with receipts, no `approximation=False` licensed. Grade still in flight; receipt held. **Holds:** T1 blocked · WIRE-2 pending · reader-vintage queued · flags OFF · the 77 sealed.
+
 ## AR-094 · 2026-07-20 · **POPULATION-A RESOLVER BUILT** (`893b8dbc`) — checklist R1–R8 all returned with receipts, **51 new tests / 250 green**. Independent grade DISPATCHED (receipt held), with the **look-ahead judgment call flagged for hardest scrutiny**.
 
 **What landed:** `classify_population_a_kind()` + `_eval_population_a_level()`, gated behind a NEW flag `TF_LEVELZONE_RESOLVER_ENABLED` (default OFF, layered behind the existing routing flag). `named_sr_level` → liquidity detectors · `order_block_edge` → order-flow OB detectors · `swing` → `detect_swings`. **Polarity resolved from the condition's own object text** (support/resistance, demand/supply, high/low), so each kind has real both-polarity behaviour rather than a single-sided stub. Census regexes **reused verbatim**, not re-authored.
