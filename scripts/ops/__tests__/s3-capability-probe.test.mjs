@@ -101,10 +101,29 @@ test("★ the probe never SETs credentials into SQL — the engine's own anti-in
   // needed, which avoids SQL injection risk from credentials with special chars."
   // A probe that interpolated them would diverge from production AND put a secret in a
   // string that error paths can echo.
-  const src = fs.readFileSync(PROBE, "utf8");
-  const code = src.split("\n").filter((l) => !l.trim().startsWith("#") && !l.trim().startsWith("*")).join("\n");
+  const code = stripPy(fs.readFileSync(PROBE, "utf8"));
+
+  // Cheap first line — a LITERAL `SET s3_secret_access_key`. Kept, but it is NOT the guard:
+  // `con.execute(f"SET {k}='{v}'")` with k bound to the key name walks straight past it.
   assert.ok(!/SET\s+s3_access_key_id/i.test(code), "probe SETs the access key into SQL");
   assert.ok(!/SET\s+s3_secret_access_key/i.test(code), "probe SETs the secret into SQL");
+
+  // ★ MAJOR-5, ACTUALLY SHIPPED THIS TIME. `5778ab4c`'s message claimed this guard and the
+  // edit silently no-op'd, so the literal-grep above was still the only check — and it
+  // stayed green because the probe genuinely does not literally SET credentials. A guard
+  // against a SEMANTIC class (a credential reaching SQL) cannot be a SYNTACTIC token match.
+  //
+  // The credential KEY NAMES must appear nowhere in executable code at all: if the name is
+  // absent, no construction — dict lookup, concat, f-string — can assemble the SET.
+  for (const cred of ["s3_access_key_id", "s3_secret_access_key", "s3_session_token"]) {
+    assert.ok(
+      !new RegExp(cred, "i").test(code),
+      `credential key "${cred}" appears in executable code — any construction can reach SQL from there`,
+    );
+  }
+  // ...and the secret's VALUE must never be bound into a variable; only truthiness is read.
+  assert.ok(!/os\.environ\[["']AWS_SECRET_ACCESS_KEY/.test(code), "probe reads the secret's VALUE");
+  assert.ok(!/os\.environ\.get\(["']AWS_SECRET_ACCESS_KEY["']\)\s*(?![\s)])/.test(code), "probe binds the secret's VALUE");
   assert.match(code, /LOAD httpfs/, "probe must use the engine's httpfs path");
   assert.match(code, /read_parquet/, "probe must exercise the production read mechanism");
   // the region IS SET, and must be quote-stripped exactly as the engine does
