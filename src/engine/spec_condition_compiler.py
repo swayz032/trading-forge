@@ -47,7 +47,7 @@ from src.engine.indicators.fvg_native import compute_fvg_signal
 from src.engine.indicators.market_structure import detect_swings
 from src.engine.indicators.mss_native import compute_mss_signal
 from src.engine.indicators.sweep_native import compute_sweep_signal
-from src.engine.role_demotion_audit import get_classifications_for_video, is_demotable
+from src.engine.role_demotion_audit import get_classifications_for_video
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_family_bindings import (
     BindingPlan,
@@ -360,20 +360,56 @@ class SpecConditionStrategy(BaseStrategy):
             out[i] = last_result
         return out
 
-    def _eval_wait_bias(self, close: np.ndarray, n: int, want_bearish: bool = False) -> np.ndarray:
-        """Directional-bias proxy via fast/slow EMA slope sign.
-        APPROXIMATION: full bias_engine.classify_institutional_regime needs
-        HTFContext/SessionContext construction not available in a bar-only
-        compute() path — documented follow-up in
-        docs/spec-execution-semantics.md. This proxy answers "is there a
-        directional lean," not the full institutional regime classification."""
+    def _eval_wait_bias(
+        self,
+        close: np.ndarray,
+        n: int,
+        want_bearish: bool = False,
+        htf_trend: list | None = None,
+    ) -> np.ndarray:
+        """Directional bias.
+
+        WIRE-1 (R-066): when the REAL HTF trend column is materialized on the frame
+        (`htf_daily_trend`, SMA 20/50/200 alignment on strictly-prior daily bars),
+        this binding reads the INSTITUTIONAL signal per bar and is NOT an
+        approximation on those bars. Where the column is absent/null (pre-warmup,
+        data gap, or wire flag off) it falls back to the historical EMA-slope PROXY
+        and remains approximation=True for those bars — honest per-bar provenance,
+        never a blanket relabel.
+
+        Why this moves the 0.99: the EMA proxy always picks a side, so it gates
+        almost nothing (a binding that cannot FAIL is the detector-can-lie disease
+        in evaluator form — R-065's doctrine applied to bindings). The real signal
+        can report "neutral", which genuinely REFUSES the condition on those bars.
+
+        PROXY (fallback) semantics unchanged: fast/slow EMA slope sign. The full
+        bias_engine.classify_institutional_regime remains out of scope here.
+        """
         out = np.zeros(n, dtype=bool)
+
+        # ── WIRED PATH: real HTF trend per bar (approximation=False on these bars)
+        wired_bars = 0
+        if htf_trend is not None:
+            want = "bearish" if want_bearish else "bullish"
+            for i in range(min(n, len(htf_trend))):
+                t = htf_trend[i]
+                if t is None:
+                    continue
+                wired_bars += 1
+                out[i] = (t == want)          # "neutral" => False: a real refusal
+            self._wire1_bias_bars = wired_bars
+            if wired_bars == min(n, len(htf_trend)) and wired_bars > 0:
+                return out                     # fully wired — no proxy needed
+
+        # ── PROXY FALLBACK (unwired bars only; approximation=True)
         if n < BIAS_EMA_SLOW + 2:
             return out
         s = pl.Series(close)
         fast = compute_ema(s, BIAS_EMA_FAST).to_numpy()
         slow = compute_ema(s, BIAS_EMA_SLOW).to_numpy()
         for i in range(n):
+            if htf_trend is not None and i < len(htf_trend) and htf_trend[i] is not None:
+                continue                       # already decided by the real signal
             if np.isnan(fast[i]) or np.isnan(slow[i]):
                 continue
             bullish_lean = fast[i] > slow[i]
@@ -588,6 +624,13 @@ class SpecConditionStrategy(BaseStrategy):
         # different directions, so this caches the EMA-slope proxy array per want_bearish value
         # (at most 2 entries: True and False) instead of the single `wait_bias_bull` variable the
         # pre-fix code relied on.
+        # WIRE-1 seam: the REAL HTF trend column, materialized upstream of compute()
+        # by backtester.run_class_backtest from the prior-completed-period cache
+        # (R-066 §2 causality). Absent => every bias bar falls back to the proxy and
+        # behavior is byte-identical to pre-wire.
+        _htf_trend = (
+            df["htf_daily_trend"].to_list() if "htf_daily_trend" in df.columns else None
+        )
         wait_bias_cache: dict[bool, np.ndarray] = {}
         wait_structure = None
         wait_retest = None
@@ -659,7 +702,7 @@ class SpecConditionStrategy(BaseStrategy):
             elif b.type in ("WAIT_BIAS", "CONFIRM_DIRECTION"):
                 want_bearish = self._resolve_wait_bias_bearish(b.object)
                 if want_bearish not in wait_bias_cache:
-                    wait_bias_cache[want_bearish] = self._eval_wait_bias(close, n, want_bearish=want_bearish)
+                    wait_bias_cache[want_bearish] = self._eval_wait_bias(close, n, want_bearish=want_bearish, htf_trend=_htf_trend)
                 per_condition_bool[b.condition_id] = wait_bias_cache[want_bearish]
             elif b.type == "WAIT_RETEST":
                 if wait_retest is None:
@@ -714,7 +757,7 @@ class SpecConditionStrategy(BaseStrategy):
             entry_short = entry_signal
         else:  # "both" — direct via EMA-slope proxy (bullish lean) at the firing bar
             if False not in wait_bias_cache:
-                wait_bias_cache[False] = self._eval_wait_bias(close, n, want_bearish=False)
+                wait_bias_cache[False] = self._eval_wait_bias(close, n, want_bearish=False, htf_trend=_htf_trend)
             wait_bias_bull = wait_bias_cache[False]
             entry_long = entry_signal & wait_bias_bull
             entry_short = entry_signal & ~wait_bias_bull

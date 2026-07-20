@@ -6651,21 +6651,14 @@ def run_class_backtest(
             )
 
     if htf_cache is None and daily_data is not None and len(daily_data) >= 200:
-        from src.engine.context.htf_context import compute_htf_context
-        htf_cache = {}
-        # Use ts_et for day keys to avoid UTC/ET date mismatch at midnight boundary
-        _htf_ts_col = "ts_et" if "ts_et" in daily_data.columns else "ts_event"
-        for day_idx in range(200, len(daily_data)):
-            bar_date = daily_data[_htf_ts_col][day_idx]
-            day_key = str(bar_date)[:10]
-            htf_cache[day_key] = compute_htf_context(
-                daily_df=daily_data.slice(0, day_idx),
-                four_h_df=_four_h_data,
-                one_h_df=_one_h_data,
-                current_price=float(daily_data["close"][day_idx - 1]),
-                bar_date=bar_date,
-            )
-        print(f"Built HTF cache: {len(htf_cache)} days", file=sys.stderr)
+        # WIRE-1 seam: ONE shared builder (R-066 §3 — makes upstream/gate equivalence
+        # STRUCTURAL, not merely tested) carrying the prior-completed-period causality
+        # law verbatim (extraction proven byte-faithful in test_htf_cache_equivalence).
+        from src.engine.context.htf_cache_builder import build_htf_cache
+        htf_cache = build_htf_cache(
+            daily_data, four_h_df=_four_h_data, one_h_df=_one_h_data
+        )
+        print(f"Built HTF cache: {len(htf_cache or {})} days", file=sys.stderr)
 
     # ─── Validate bar count ──────────────────────────────────
     _validate_bar_count(data, timeframe, start_date, end_date)
@@ -6686,6 +6679,25 @@ def run_class_backtest(
             validation_warnings.extend(static_result.warnings)
         except Exception as e:
             print(f"WARNING: Could not validate {strategy.name}: {e}", file=sys.stderr)
+
+    # ─── WIRE-1 (flag-gated, default OFF): materialize REAL HTF context as per-bar
+    # columns so the spec-condition bindings can read institutional signals instead
+    # of exec-TF proxies. THE SEAM: the cache above is already built from strictly
+    # prior days, so a bar on day D reads a function of the PAST only (R-066 §2
+    # causality law; proven by future-perturbation replay in
+    # test_htf_cache_causality). Default OFF => byte-identical to pre-wire behavior
+    # until the family wire's both-polarity proof + independent grade land.
+    _wire1_engaged = 0
+    if os.getenv("TF_WIRE1_HTF_COLUMNS", "").strip().lower() in ("1", "true", "yes"):
+        from src.engine.context.htf_columns import attach_htf_columns
+        data, _wire1_engaged = attach_htf_columns(data, htf_cache)
+        # ENGAGEMENT EVIDENCE (campaign law 1): an all-null column is a DORMANT
+        # feed, never a wired one — the count is printed so a zero cannot hide.
+        print(
+            f"WIRE-1: HTF columns attached — {_wire1_engaged}/{len(data)} bars engaged"
+            + ("  [DORMANT: no bar matched the cache]" if _wire1_engaged == 0 else ""),
+            file=sys.stderr,
+        )
 
     # ─── Run strategy compute (produces entry/exit signal columns) ──
     print(f"Running {strategy.name} compute()...", file=sys.stderr)
