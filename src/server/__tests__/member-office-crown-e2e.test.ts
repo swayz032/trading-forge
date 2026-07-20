@@ -17,7 +17,6 @@ import express from "express";
 import type { Server } from "node:http";
 import { createTestDb, type TestDb } from "./helpers/pglite-db.js";
 import { slumhouseUsers, slumhouseMemberPins } from "../db/schema.js";
-import { hashPin } from "../lib/member-pin.js";
 import { signPinTicket, PIN_COOKIE_NAME } from "../lib/slumhouse/pin-ticket.js";
 
 const M1 = "crown-member-one";
@@ -85,11 +84,27 @@ beforeEach(async () => {
     { discordUserId: M1, displayName: "Crown One" },
     { discordUserId: M2, displayName: "Crown Two" },
   ]);
-  await h.db.insert(slumhouseMemberPins).values([
-    { discordUserId: M1, pinHash: await hashPin(PIN) },
-    { discordUserId: M2, pinHash: await hashPin(PIN) },
-  ]);
+  // DELIBERATELY does NOT seed pin rows. The earlier version pre-inserted hashes — the exact
+  // "fixture supplies the missing feature to itself" trap that let F-2 (no establishment path)
+  // survive 60 green tests. Every PIN below is now established through the REAL route.
 });
+
+const establish = (sessionUser: string, pin: string) =>
+  fetch(`${base}/slumhouse/api/member/pin/establish`, {
+    method: "POST",
+    headers: { "content-type": "application/json", "x-test-session-user": sessionUser },
+    body: JSON.stringify({ pin }),
+  });
+
+/** Establishes a PIN via the route and returns the ticket the ROUTE minted. */
+async function establishAndTicket(sessionUser: string, pin = PIN): Promise<string> {
+  const res = await establish(sessionUser, pin);
+  if (res.status !== 201) throw new Error(`establish failed: ${res.status}`);
+  const setCookie = res.headers.get("set-cookie") ?? "";
+  const m = setCookie.match(new RegExp(`${PIN_COOKIE_NAME}=([^;]+)`));
+  if (!m) throw new Error("establish returned no pin cookie");
+  return decodeURIComponent(m[1]);
+}
 
 const scope = (sessionUser: string, cookie?: string) =>
   fetch(`${base}/slumhouse/api/member/scope`, {
@@ -99,9 +114,64 @@ const scope = (sessionUser: string, cookie?: string) =>
     },
   });
 
+describe("FULL FLOW: establish -> verify -> scope, entirely through the real routes", () => {
+  it("a member sets their own PIN, then reaches their room", async () => {
+    const res = await establish(M1, PIN);
+    expect(res.status).toBe(201);
+
+    // Verify with the PIN they just set — proves establishment wrote a hash verifyPin accepts.
+    const verify = await fetch(`${base}/slumhouse/api/member/pin`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-session-user": M1 },
+      body: JSON.stringify({ pin: PIN }),
+    });
+    expect(verify.status).toBe(200);
+
+    const cookie = (verify.headers.get("set-cookie") ?? "").match(new RegExp(`${PIN_COOKIE_NAME}=([^;]+)`));
+    const body = await (await scope(M1, decodeURIComponent(cookie![1]))).json();
+    expect(body.surfaces).toContain("my_room");
+  });
+
+  it("BEFORE establishment, verify reports no_pin_set and the room stays locked", async () => {
+    const verify = await fetch(`${base}/slumhouse/api/member/pin`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-session-user": M1 },
+      body: JSON.stringify({ pin: PIN }),
+    });
+    expect(verify.status).toBe(409);
+    expect((await verify.json()).error).toBe("no_pin_set");
+  });
+
+  // Establishment is NOT reset: a second call must not silently overwrite an existing PIN,
+  // or anyone with a live Discord session could take over an established room.
+  it("establishing TWICE is refused", async () => {
+    expect((await establish(M1, PIN)).status).toBe(201);
+    const second = await establish(M1, "775511");
+    expect(second.status).toBe(409);
+    expect((await second.json()).error).toBe("pin_already_set");
+  });
+
+  it("a weak PIN is refused at establishment, and no row is written", async () => {
+    const res = await establish(M1, "111111");
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe("pin_policy");
+    const rows = await h.db.select().from(slumhouseMemberPins);
+    expect(rows).toEqual([]);
+  });
+
+  it("a non-string pin is refused", async () => {
+    const res = await fetch(`${base}/slumhouse/api/member/pin/establish`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-session-user": M1 },
+      body: JSON.stringify({ pin: 618394 }),
+    });
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("CROWN PROPERTY, through the real router: one member's ticket cannot open another's room", () => {
   it("M1 with M1's own ticket SEES their room", async () => {
-    const ticket = signPinTicket(M1, Date.now())!;
+    const ticket = await establishAndTicket(M1);
     const body = await (await scope(M1, ticket)).json();
     expect(body.surfaces).toContain("my_room");
   });
@@ -109,7 +179,7 @@ describe("CROWN PROPERTY, through the real router: one member's ticket cannot op
   // THE test. The ticket is cryptographically valid — that is the danger. Only the router's
   // subject comparison stands between it and another member's room.
   it("M1 presenting M2's VALID ticket sees NOTHING", async () => {
-    const m2Ticket = signPinTicket(M2, Date.now())!;
+    const m2Ticket = await establishAndTicket(M2);
     const body = await (await scope(M1, m2Ticket)).json();
     expect(body.surfaces).toEqual([]);
     expect(body.surfaces).not.toContain("my_room");
@@ -122,7 +192,7 @@ describe("CROWN PROPERTY, through the real router: one member's ticket cannot op
   });
 
   it("a member never receives an operator-only surface, ticket or not", async () => {
-    const ticket = signPinTicket(M1, Date.now())!;
+    const ticket = await establishAndTicket(M1);
     const body = await (await scope(M1, ticket)).json();
     for (const s of ["carter", "approvals", "reporting_room", "conveyor", "risk", "all_members"]) {
       expect(body.surfaces).not.toContain(s);
@@ -131,7 +201,7 @@ describe("CROWN PROPERTY, through the real router: one member's ticket cannot op
 
   // The connect-card path enforces scope independently — a stolen ticket must not write either.
   it("M1 with M2's ticket is refused by the connect-card route and writes nothing", async () => {
-    const m2Ticket = signPinTicket(M2, Date.now())!;
+    const m2Ticket = await establishAndTicket(M2);
     const res = await fetch(`${base}/slumhouse/api/member/connect-test`, {
       method: "POST",
       headers: {
