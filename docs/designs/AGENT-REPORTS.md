@@ -4,6 +4,22 @@
 
 ---
 
+## AR-080 · 2026-07-20 · ★★ LEVEL/ZONE PREMISE AUDIT — **PREMISE HOLDS ON BOTH LEGS** (`969cbe76`). The first sub-wire's mechanism is LIVE and the thing it replaces is provably BLIND — the exact opposite of WIRE-1. R-090 §5 executed; the pattern-setter is set.
+
+**LEG 1 — the NEW detector is LIVE.** Varying `level` through `retest_touch_check` with bars held constant moves the binding: **63 touches** (level near price) / **0** (level 40pts away) / **299** (level hugging price). Non-degenerate, **both polarities exercised** (a genuine zero and a genuine saturation), replay-deterministic — fixed seed, synthetic bars, no DB, no clock, no network.
+
+**LEG 2 — the CURRENT binding is LEVEL-BLIND, and this is the leg WIRE-1 skipped.** A live new detector alone proves nothing about the *gain*; that omission is precisely how WIRE-1 earned a graded headline it had to withdraw. So I tested the incumbent too: **`compute_structure_state`'s signature accepts no level/zone argument at all**, and any two level/zone conditions on the same bars return an **identical `StructureState`**. **Today *"support at 100"* and *"resistance at 140"* bind to the same signal.** The approximation cannot discriminate them — which is exactly why they carry `approximation=True`, and why re-routing is a **structural** gain rather than an incremental one.
+
+**★ The contrast with WIRE-1, stated precisely, because it is the point of the law:** WIRE-1's premise was inert — `htf_bars` moved none of the nine fields the column read, so the arithmetic was right and the meaning was wrong. **Level/zone inverts both halves: the mechanism moves, and the incumbent is provably blind.** This is the first sub-wire to earn its premise rather than inherit it.
+
+**★ MY OWN GUARD WAS WRONG FIRST, and I want it on the record because the failure direction is new.** The anti-vacuity check used `any(constant)` and **FAILED the detector** — it read the all-zero far-level series, which is a *correct negative polarity*, as degeneracy. Fixed to `all(constant)` with the reason recorded at the line. **An over-strict guard is its own defect class:** every previous instrument failure this session was permissive (something wrong slipped through); this one was the reverse — it would have **blocked a valid sub-wire behind a confident-looking "PREMISE FAILS"**, and the honest-looking output is what makes it dangerous. Anti-vacuity companions need their own sanity check, or they manufacture false negatives with the same authority they were built to lend.
+
+**RED-PROOFED, not asserted:** a simulated inert detector — one that ignores its level input entirely, the WIRE-1 shape — is correctly caught (identical outputs across two different levels). The audit can fail, so its pass means something.
+
+**No build performed.** The audit is measurement; the sub-wire itself owes the standing laws (two-commit, cadence-isolated-from-signal, per-column engagement, both-polarity per binding) plus its own independent grade before any `approximation=False` is claimed. The committed generator is `docs/replay-results/h1-battery/levelzone_premise_audit.py` (generator-with-artifact law) and it exits non-zero on failure, so it is usable as a gate rather than a report.
+
+**Evidence for level/zone-first now converges from three directions:** the R-081 grade's floor ruling (my vocabulary under-labels, so ≥16 in the structure family), the deferred census (**30.4% — top concept there too**, higher than its ≥20.5% in structure), and now a mechanism that provably moves against an incumbent that provably cannot. **Holds:** T1 blocked · WIRE-2 pending its own premise audit · reader-vintage queued · flag OFF · nothing moved a denominator · the 77 sealed.
+
 ## AR-079 · 2026-07-20 · ★★ NARRATION-v2 VALIDATION **BREACHES at 44.8%** (bar ≤20%) — **and it fails in the OPTIMISTIC direction R-086 §4 ruled it would not.** The rule over-calls narration 14 vs 5. Root cause: the vocabulary-free object test strikes bare measure-nouns. **Your §2 residual was correctly named and badly mis-sized — priced narrow, measured 38%.** The bare-object stratum you mandated is what caught it.
 
 | | narration | not_narration |
