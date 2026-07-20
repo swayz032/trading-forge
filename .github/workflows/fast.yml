@@ -73,8 +73,14 @@ jobs:
       - name: Remaining contract and parity checks
         run: node ci/run-checks.mjs
 
-      - name: Rails unit tests
+      # The scripts/ estate spans two runners. Both lanes run; the lane-coverage guard inside
+      # the node:test lane fails loudly if any scripts/ test file is claimed by zero lanes or
+      # by both. See ci/vitest.config.mjs for the split (ops-experience 2026-07-19, OR-009).
+      - name: Rails unit tests (vitest lane)
         run: node node_modules/vitest/vitest.mjs run --config ci/vitest.config.mjs
+
+      - name: Rails/soak unit tests (node:test lane)
+        run: npm run test:scripts
 
       - name: Prepare evidence directory
         run: mkdir -p ci/out
