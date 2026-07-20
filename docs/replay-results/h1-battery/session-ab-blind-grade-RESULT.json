@@ -1,0 +1,147 @@
+{
+  "grader": "independent-blind",
+  "n": 26,
+  "rows": [
+    {
+      "condition_id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "A liquidity sweep is going to be a brief fake out below or above the level",
+      "note": "Genuinely ambiguous. The worked example names \"the London high\" / \"your London low\", but the definition being taught is level-generic (\"the level\"), and London enters only as \"for example\". The pattern is what the speaker is telling you to recognize; the session name is the carrier of the illustration, not a condition on the teaching."
+    },
+    {
+      "condition_id": "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+      "verdict": "session_teaching",
+      "quoted_span": "before my trading session every day",
+      "note": "The subject is a candle pattern, but the pattern is defined by its placement in the pre-session window — a 1-hour candle that must form before the session. The time reference is a real constraint, not decoration, so it carries genuine time-window meaning."
+    },
+    {
+      "condition_id": "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+      "verdict": "session_teaching",
+      "quoted_span": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST"
+    },
+    {
+      "condition_id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "as I move my entry closer to my stop loss my risk to reward increases"
+    },
+    {
+      "condition_id": "WAIT_SESSION:as-the-new-york-session-opens-we-are-sti#3",
+      "verdict": "session_teaching",
+      "quoted_span": "as the New York session opens"
+    },
+    {
+      "condition_id": "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+      "verdict": "session_teaching",
+      "quoted_span": "For the session indicator, I'm using New York session by James Davey"
+    },
+    {
+      "condition_id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+      "verdict": "session_teaching",
+      "quoted_span": "find 3:00 a.m. EST all the way until market open"
+    },
+    {
+      "condition_id": "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+      "verdict": "session_teaching",
+      "quoted_span": "this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+      "note": "Borderline: the clock times identify two specific candles rather than delimiting a window. Read as a session teaching because the 7–8 a.m. pair is explicitly the pre-session read that sets \"my session direction\" — the hours are load-bearing, not incidental."
+    },
+    {
+      "condition_id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "I prefer to have a stop rate prior to the displacement",
+      "note": "\"prior to\" is sequence-in-price-structure, not clock time."
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+      "verdict": "session_teaching",
+      "quoted_span": "opens weak on the day and actually drops at the opening bell below the v-wop"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+      "verdict": "session_teaching",
+      "quoted_span": "I want to see a bullish engulfing pattern form before my trading session",
+      "note": "Pattern plus a genuine pre-session timing condition — the pattern only counts if it forms before the session opens."
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+      "verdict": "session_teaching",
+      "quoted_span": "I want to see a bearish engulfing pattern form before my trading session",
+      "note": "Mirror of the bullish row; same reasoning."
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "if the liquidity grab and the entry candle were closer than 10 candles apart"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+      "verdict": "session_teaching",
+      "quoted_span": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low"
+    },
+    {
+      "condition_id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+      "verdict": "session_teaching",
+      "quoted_span": "Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+    },
+    {
+      "condition_id": "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+      "verdict": "session_teaching",
+      "quoted_span": "from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open"
+    },
+    {
+      "condition_id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "So the gap in between is what is called an imbalance"
+    },
+    {
+      "condition_id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE"
+    },
+    {
+      "condition_id": "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+      "verdict": "session_teaching",
+      "quoted_span": "the first two-minute candle off the Bell",
+      "note": "The trigger itself is indicator-based (20 SMA and vwap), but the candle is identified solely by its position at the market open, so the open is doing real selection work."
+    },
+    {
+      "condition_id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+      "verdict": "session_teaching",
+      "quoted_span": "this could be um Asia high or low, right? It could be London high or low",
+      "note": "The enumeration also includes non-session levels (equal highs/lows, HTF swings), but named session ranges lead the list and are load-bearing for which levels to mark."
+    },
+    {
+      "condition_id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "you map it out from the closing points when it's a sell"
+    },
+    {
+      "condition_id": "WAIT_SESSION:this-line-is-being-reset-as-soon-as-ever#1",
+      "verdict": "session_teaching",
+      "quoted_span": "this line is being reset as soon as every single session starts again"
+    },
+    {
+      "condition_id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "when price breaks below this previous low point right here, not only are stops going to hit",
+      "note": "Ambiguous. \"that London low right there\" appears mid-sentence, but the teaching is a two-sided stop-run mechanic anchored on \"this previous low point right here\"; the London naming is an aside identifying the chart object, not a time condition on the setup."
+    },
+    {
+      "condition_id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+      "verdict": "session_teaching",
+      "quoted_span": "after being below it at the opening bell",
+      "note": "VWAP mechanics dominate, but the qualifying state (below VWAP) is pinned to the opening bell, which is a genuine market-open condition."
+    },
+    {
+      "condition_id": "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2",
+      "verdict": "entry_mechanics_mistype",
+      "quoted_span": "you might have a long idea for your session",
+      "note": "Hardest call and the weakest fit for either bin. It is not entry mechanics at all — it is a directional-bias fragment — but \"your session\" is generic filler for \"the day you are trading\"; no instruction depends on any time window, so it fails the doing-real-work test for session_teaching."
+    },
+    {
+      "condition_id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+      "verdict": "session_teaching",
+      "quoted_span": "pre-market highs, pre-market lows, the 30-minute opening range high and low"
+    }
+  ]
+}
