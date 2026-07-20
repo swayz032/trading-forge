@@ -56,9 +56,17 @@ export interface TestDb {
 // PGlite supports standard PostgreSQL DDL including UUID, JSONB, BIGSERIAL,
 // REAL, NUMERIC, TEXT[], TIMESTAMPTZ, FOREIGN KEY, and CHECK constraints.
 //
-// gen_random_uuid() is NOT available as a DEFAULT in PGlite 0.5.x without
-// the pgcrypto extension being loaded.  Test code supplies explicit UUIDs via
-// crypto.randomUUID() instead.
+// CORRECTED 2026-07-20 (ops-experience): this previously said gen_random_uuid() is
+// "NOT available as a DEFAULT in PGlite 0.5.x without pgcrypto" and that test code
+// must supply explicit UUIDs. It IS available here. Receipts: migration 0205's
+// 2-pass idempotency replay applies `id uuid PRIMARY KEY DEFAULT gen_random_uuid()`
+// against a bare `new PGlite()` and succeeds; and member-office-integration.test.ts
+// inserts slumhouse_connect_test rows omitting `id` entirely, which only works if
+// the DEFAULT fires.
+//
+// Supplying explicit UUIDs is still fine (costs verbosity, never correctness) — but
+// a false "you can't do X" in a shared helper is how the next author writes a worse
+// workaround, so the claim is corrected rather than left standing.
 
 const CORE_DDL = `
 -- Wave hardening 2026-06-22, pglite real-DB test layer
