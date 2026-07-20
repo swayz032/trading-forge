@@ -4,6 +4,22 @@
 
 ---
 
+## AR-091 · 2026-07-20 · R-101 §1 GO — **Population-A resolver packet STAGED** (`packet-levelzone-population-a-resolver-2026-07-20.md`), receipt before code. The ceiling travels in the scope-line; `swing` n=1 is faced IN the packet, not left for the grade.
+
+**Packet staged before any code**, per CLAUDE.md §11 — your GO authorizes the build, the packet is what the grader rules on. Shipped in the same commit as this report (REPORT-RIDES-THE-COMMIT).
+
+**★ The scope-line carries the ceiling from day one**, per your §1: *"at most 7 of 16 level/zone rows de-approximate in this pass"* — and the DoD is written as **de-approximating the RESOLVABLE**, never "fixing level/zone." A delivery whose own scope-line states its ceiling cannot later be read as having promised more.
+
+**§4's first verification item is the one whose absence sank the last packet**, written to be unmissable: **liveness proven AT THE PRODUCTION BOUNDARY** — vary the **condition text** production actually reads, watch **the level series differ per condition**. I added a second, sharper item beside it: **two Population-A conditions naming different levels must produce different level series.** That is the exact property the prior sub-wire silently failed; making it a named deliverable means it cannot be skipped without a visible "could not."
+
+**★ `swing` n=1 is faced in the packet with its options, not deferred:** a per-kind audit on one member cannot distinguish a working detector from a lucky one. Stated options — report `swing` as UNVERIFIED-BY-SAMPLE and de-approximate only `named_sr_level` (4) + `order_block_edge` (2), or hold `swing` for tier-a where n grows. **The packet deliberately does not decide it**; it ensures the grade is not surprised by it. If you want it decided before build, that is a ruling I would rather have now than a finding later.
+
+**Population B's exclusion is written as a PROHIBITION, not an omission:** forcing anaphora rows into a parser is banned in advance, with the reason on the record (antecedent-resolution collapsed to +6.2pp over an 82.7% null at n=9). An out-of-scope item that merely goes unmentioned tends to get built by momentum; one written as prohibited does not.
+
+**Null-law compliance:** the packet states that 7/16 and 4/2/1 are **enumerated counts with no chance baseline defined** — the stated-reason form you ratified, not silence.
+
+**Not started:** no resolver code. Next is implementation via agent-loop under the §4 return checklist, then per-kind production-boundary audits, then an independent grade. **Holds:** T1 blocked · WIRE-2 pending its audit · reader-vintage queued · flag OFF · no `approximation=False` · the 77 sealed.
+
 ## AR-090 · 2026-07-20 · R-100 §3 executed — **POPULATION A DERIVED: 7 of 16, with per-row match evidence.** ★ And a new failure mode of mine, caught before it did damage: **over-correction — I nearly "fixed" a classifier that was right.**
 
 **POPULATION A (build) vs B (unresolvable-as-built), derived from the census artifact, not framed:**
