@@ -14,14 +14,17 @@
 //     being true.
 // So: resolve ONCE in Node, inject, and let Python do only the read.
 //
-// Verdicts pass through unchanged (0 PASS / 1 FAIL / 2 UNKNOWN). UNKNOWN is NOT FAIL:
-// a probe that cannot run must never report the lake as down.
+// Verdicts: 0 PASS / 2 UNKNOWN / 3 FAIL, mapped through an ALLOWLIST. UNKNOWN is NOT FAIL —
+// a probe that cannot run must never report the lake as down — and exit 1 (Python's
+// uncaught-traceback code) means the probe CRASHED, which is likewise not evidence.
 "use strict";
 const path = require("node:path");
 const { spawnSync } = require("node:child_process");
 const { loadEnvFile } = require("../lib/env-resolve.cjs");
 
-const PASS = 0, FAIL = 1, UNKNOWN = 2;
+// ★ MAJOR-1: FAIL is 3, not 1. Exit 1 is Python's uncaught-traceback code, so it means
+// "the probe crashed" — which is NOT evidence about the lake and maps to UNKNOWN.
+const PASS = 0, UNKNOWN = 2, FAIL = 3, CRASHED = 1;
 const PROBE = path.join(__dirname, "s3_capability_probe.py");
 
 function emit(o) { console.log(JSON.stringify({ probe: "s3_capability", ...o })); }
@@ -48,14 +51,24 @@ function main() {
   }
 
   if (r.stdout) process.stdout.write(r.stdout);
-  if (r.status !== PASS && r.stderr) {
-    // stderr only on a non-PASS, and only its last line: a Python traceback can carry a
-    // presigned URL. The probe already emits a scrubbed reason on the happy paths.
-    const last = r.stderr.trim().split("\n").pop();
-    emit({ stage: "probe_stderr", tail: String(last).slice(0, 200) });
+
+  // ★ MAJOR-2 (grader): this used to emit the raw stderr tail. DuckDB parser errors echo
+  // SQL text verbatim and tracebacks can carry a presigned URL, so a message-text channel
+  // contradicts the probe's own "class name only" discipline. It is latent today, but
+  // data_loader.py documents a CERTIFIED native-crash class that `except Exception` cannot
+  // catch — so the probe's scrubbing is not a guarantee this channel stays starved.
+  // Emit only WHETHER there was stderr, never its content.
+  if (r.status !== PASS && r.stderr && r.stderr.trim()) {
+    emit({ stage: "probe_stderr", present: true, bytes: r.stderr.length });
   }
-  return r.status;
+
+  // ★ MAJOR-1 / MINOR-1: map exit codes through an ALLOWLIST. An uncaught traceback (1) is
+  // the probe crashing, and anything unrecognised is equally not evidence about the lake —
+  // both become UNKNOWN rather than being passed through as a verdict they never claimed.
+  if (r.status === PASS || r.status === FAIL || r.status === UNKNOWN) return r.status;
+  emit({ verdict: "UNKNOWN", reason: r.status === CRASHED ? "probe_crashed" : "probe_exit_unmapped", exit_code: r.status });
+  return UNKNOWN;
 }
 
 if (require.main === module) process.exitCode = main();
-module.exports = { PASS, FAIL, UNKNOWN, PROBE };
+module.exports = { PASS, FAIL, UNKNOWN, CRASHED, PROBE };

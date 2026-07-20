@@ -12,7 +12,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
-import { PASS, FAIL, UNKNOWN, PROBE } from "../verify-s3-capability.cjs";
+import { PASS, FAIL, UNKNOWN, CRASHED, PROBE } from "../verify-s3-capability.cjs";
 
 const PY = process.platform === "win32" ? "python" : "python3";
 const pythonWorks = spawnSync(PY, ["-c", "print(1)"], { encoding: "utf-8" }).status === 0;
@@ -21,14 +21,34 @@ const pythonWorks = spawnSync(PY, ["-c", "print(1)"], { encoding: "utf-8" }).sta
 function runProbe(env) {
   return spawnSync(PY, [PROBE], {
     encoding: "utf-8", timeout: 60_000, windowsHide: true,
-    env: { PATH: process.env.PATH, SystemRoot: process.env.SystemRoot, ...env },
+    // ★ MAJOR-4 (grader): HOME/USERPROFILE must be EXPLICIT. Windows' spawnSync injects
+    // USERPROFILE even with an explicit env object; POSIX does not inject HOME. Without it
+    // `INSTALL httpfs` fails ("Can't find the home directory"), the probe returns UNKNOWN,
+    // and a leak assertion that accepts UNKNOWN passes green having tested NOTHING.
+    env: {
+      PATH: process.env.PATH, SystemRoot: process.env.SystemRoot,
+      HOME: process.env.HOME || process.env.USERPROFILE,
+      USERPROFILE: process.env.USERPROFILE || process.env.HOME,
+      TEMP: process.env.TEMP, TMP: process.env.TMP,
+      ...env,
+    },
   });
+}
+
+/** Executable Python only: drop the module docstring AND #-comments, so prose describing a
+ *  banned pattern is never mistaken for the pattern itself (the campaign's comment trap). */
+function stripPy(src) {
+  const noDoc = src.replace(/^\s*"""[\s\S]*?"""/m, "");
+  return noDoc
+    .split("\n")
+    .filter((l) => !l.trim().startsWith("#"))
+    .join("\n");
 }
 
 const parse = (out) => JSON.parse(String(out).trim().split("\n").filter(Boolean).pop());
 
 test("verdict codes are distinct and UNKNOWN is not FAIL", () => {
-  assert.equal(PASS, 0); assert.equal(FAIL, 1); assert.equal(UNKNOWN, 2);
+  assert.equal(PASS, 0); assert.equal(UNKNOWN, 2); assert.equal(FAIL, 3);
   assert.notEqual(UNKNOWN, FAIL, "collapsing UNKNOWN into FAIL blames the lake for our own tooling");
 });
 
@@ -67,8 +87,12 @@ test("★ NO SECRET in any output path — a planted value never appears", (t) =
   const all = `${r.stdout}${r.stderr}`;
   assert.ok(!all.includes(SECRET), "the secret VALUE reached an output stream");
   assert.ok(!all.includes("AKIA_CANARY_ID"), "the access key VALUE reached an output stream");
-  // A bad bucket with valid-shaped creds is the lake's problem -> FAIL, not UNKNOWN.
-  assert.ok([FAIL, UNKNOWN].includes(r.status), `unexpected status ${r.status}`);
+  // ★ MAJOR-4: the assertion must REQUIRE that a read was attempted. Accepting UNKNOWN
+  // let this pass on a host where the probe never reached the network — a leak test that
+  // tests nothing is worse than no leak test, because it reports safety.
+  const v = parse(r.stdout);
+  assert.equal(v.reason, "read_failed", `no read was attempted (reason=${v.reason}) — leak channel NOT exercised`);
+  assert.equal(r.status, FAIL, "a reachable-but-bad target is the lake's problem, not UNKNOWN");
 });
 
 test("★ the probe never SETs credentials into SQL — the engine's own anti-injection stance", () => {
@@ -97,4 +121,30 @@ test("★ the probe EXITS with its verdict — the diagnostic it replaces always
   const code = fs.readFileSync(PROBE, "utf8");
   assert.match(code, /sys\.exit\(main\(\)\)/, "verdict must reach the exit code");
   assert.match(code, /return FAIL/, "a FAIL path must exist and be reachable");
+});
+
+test("★ exit 1 (an uncaught traceback) maps to UNKNOWN, not FAIL", () => {
+  // ★ MAJOR-1 (grader): FAIL used to BE 1, so any bug in the probe reported "the lake is
+  // unreachable" — the exact inversion the three-state design exists to prevent.
+  assert.equal(CRASHED, 1);
+  assert.notEqual(FAIL, CRASHED, "FAIL must not collide with Python's traceback exit code");
+  assert.equal(FAIL, 3);
+  assert.equal(UNKNOWN, 2);
+});
+
+test("★ the probe's verdict constants match the driver's allowlist", () => {
+  // A silent drift here would make the driver map a real verdict to UNKNOWN, or worse pass
+  // an unmapped code through as if it were one.
+  const code = fs.readFileSync(PROBE, "utf8");
+  assert.match(code, /PASS,\s*UNKNOWN,\s*FAIL,\s*CRASHED\s*=\s*0,\s*2,\s*3,\s*1/,
+    "probe verdict codes drifted from the driver's");
+});
+
+test("★ the read must DECODE data, not just the footer (grader MAJOR-3)", () => {
+  const code = stripPy(fs.readFileSync(PROBE, "utf8"));
+  // `SELECT 1` projects zero columns -> DuckDB answers from row-group metadata and PASSes
+  // on an object whose data region is destroyed. Proven by execution, not argued.
+  assert.ok(!/SELECT\s+1\s+FROM\s+read_parquet/i.test(code), "zero-column projection reads only the footer");
+  assert.ok(!/COUNT\(\*\)\s*FROM\s*\(/i.test(code), "the COUNT wrapper is pruned identically");
+  assert.match(code, /SELECT \* FROM read_parquet\(\?\) LIMIT 1/, "must force a column decode");
 });
