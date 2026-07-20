@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Your Office · Slumhouse</title>
+<!--
+  Per-member Slumhouse office (Tier-2 item 6; operator directive OR-003 §1 / OR-013 §2).
+
+  ONE shared page, DIFFERENT offices: every member loads THIS file and sees only their own
+  world. Scoping is decided SERVER-SIDE by src/server/lib/member-office-scope.ts — this page
+  renders what it is handed and nothing more. There is deliberately no client-side role check
+  anywhere in here, because a UI check is not a security boundary.
+
+  CARTER IS ABSENT BY ROUTE, NOT BY CSS. There is no Carter markup, container or script on this
+  page at all — a member cannot reach Carter by opening devtools because there is nothing here
+  to unhide (OR-003 §1-addendum). Verified by a check that strips HTML comments and asserts zero
+  Carter references remain in live markup.
+
+  (For precision: the connect card IS hidden with display:none when the server does not
+  authorise it. That is a cosmetic tidy on top of a server decision, never the enforcement —
+  the route refuses regardless of what the DOM says. Carter is a different, stronger case: not
+  hidden, simply not present.)
+
+  TEST MODE: the broker-connect card accepts DESIGNATED TEST KEYS ONLY and never contacts a
+  live broker. src/server/lib/connect-wizard-mock.ts enforces that with an allowlist; this page
+  states it in the UI so the member is never misled about what they just connected.
+
+  PALETTE NOTE (flagged to the advisor, not silently resolved): the operator's own office.html
+  uses lime #a3ff12; the operator's directive for the MEMBER office specifies emerald #10B981.
+  Built to the directive. If the two surfaces are meant to match, this is the file to change.
+-->
+<style>
+  :root {
+    --emerald: #10B981;
+    --emerald-dim: rgba(16, 185, 129, 0.18);
+    --emerald-glow: rgba(16, 185, 129, 0.35);
+    --ink: #050706;
+    --glass: rgba(8, 10, 9, 0.55);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--ink); color: #fff;
+    font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    background-image: radial-gradient(1200px 600px at 50% -10%, rgba(16,185,129,0.10), transparent 60%);
+  }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 64px 22px 90px; }
+  .eyebrow { text-align: center; color: var(--emerald); font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.2em; text-shadow: 0 0 14px var(--emerald-glow); }
+  h1 { text-align: center; font-size: 30px; font-weight: 800; margin: 8px 0 4px; letter-spacing: -0.01em; }
+  .sub { text-align: center; font-size: 13px; color: rgba(255,255,255,0.66); margin-bottom: 34px; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+  .card {
+    background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border: 1px solid var(--emerald-dim); border-radius: 18px; padding: 20px 20px 18px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.55);
+  }
+  .card h2 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em;
+    color: var(--emerald); font-weight: 700; }
+  .card .val { font-size: 22px; font-weight: 700; }
+  .card .note { font-size: 12px; color: rgba(255,255,255,0.58); margin-top: 6px; }
+
+  /* Floating broker-connect card — the operator's "floating card" directive. */
+  .float {
+    position: fixed; right: 22px; bottom: 22px; width: min(360px, calc(100vw - 44px)); z-index: 40;
+    background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    border: 1px solid rgba(16,185,129,0.30); border-radius: 18px; padding: 18px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 28px 70px rgba(0,0,0,0.65), 0 0 34px rgba(16,185,129,0.10);
+  }
+  .float h2 { margin: 0 0 2px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--emerald); }
+  .testpill { display: inline-block; margin: 6px 0 10px; padding: 3px 9px; border-radius: 999px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+    color: #ffce5c; background: rgba(255,206,92,0.10); border: 1px solid rgba(255,206,92,0.35); }
+  label { display: block; font-size: 11px; color: rgba(255,255,255,0.62); margin: 10px 0 4px; }
+  select, input {
+    width: 100%; padding: 9px 11px; border-radius: 10px; color: #fff; font-size: 13px;
+    background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(16,185,129,0.16); }
+  button {
+    width: 100%; margin-top: 12px; padding: 10px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: var(--ink); background: var(--emerald); border: 0;
+  }
+  button:hover { filter: brightness(1.08); }
+  .status { margin-top: 10px; font-size: 12px; min-height: 17px; }
+  .ok { color: var(--emerald); } .bad { color: #ff8a8a; }
+  .fineprint { margin-top: 10px; font-size: 10.5px; color: rgba(255,255,255,0.42); line-height: 1.5; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="eyebrow">Slumhouse</div>
+    <h1 id="greeting">Your office</h1>
+    <p class="sub" id="subtitle">Everything here is yours alone.</p>
+
+    <!-- Rendered from the server's scope decision. No surface appears here that the server
+         did not authorise; there is no client-side filtering to bypass. -->
+    <div class="grid" id="surfaces"></div>
+  </div>
+
+  <!-- Floating broker-connect card. TEST MODE ONLY until the money path's Phase 5. -->
+  <section class="float" id="connect-card" aria-label="Connect your broker">
+    <h2>Connect your broker</h2>
+    <div class="testpill">Test mode · no live orders</div>
+    <label for="broker">Broker</label>
+    <select id="broker">
+      <option value="topstepx">TopstepX</option>
+      <option value="traderspost">MFFU / TradersPost</option>
+    </select>
+    <label for="key">Test key</label>
+    <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="TESTKEY-…" />
+    <button id="connect" type="button">Validate</button>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+    <p class="fineprint">
+      This is a practice connection. It accepts designated test keys only, never reaches a real
+      broker, and cannot place an order. Your real account is connected later, once the system is
+      cleared to trade — and that step needs both you and the operator.
+    </p>
+  </section>
+
+<script>
+  // The page renders what the SERVER authorised. It performs no access decisions of its own —
+  // member-office-scope.ts is the single authority, so this file cannot drift from it.
+  const SURFACE_LABELS = {
+    my_room:         ["Your room",        "Signed in and scoped to you"],
+    ready_checklist: ["Ready checklist",  "What's left before you can go live"],
+    agent_heartbeat: ["Agent heartbeat",  "Is your bot awake?"],
+    payout_tracker:  ["Payout tracker",   "Progress toward your next payout"],
+  };
+
+  async function boot() {
+    let scope = { surfaces: [], displayName: null };
+    try {
+      const r = await fetch("/slumhouse/api/member/scope", { credentials: "same-origin" });
+      if (r.ok) scope = await r.json();
+    } catch { /* offline shell: render nothing rather than inventing state */ }
+
+    if (scope.displayName) {
+      document.getElementById("greeting").textContent = `${scope.displayName}'s office`;
+    }
+
+    const grid = document.getElementById("surfaces");
+    const shown = (scope.surfaces || []).filter((s) => SURFACE_LABELS[s]);
+    if (shown.length === 0) {
+      grid.innerHTML = '<div class="card"><h2>Locked</h2><div class="val">Enter your code</div>'
+        + '<div class="note">Your office opens once you enter the code you set up.</div></div>';
+      document.getElementById("connect-card").style.display = "none";
+      return;
+    }
+    grid.innerHTML = shown.map((s) => {
+      const [title, note] = SURFACE_LABELS[s];
+      return `<div class="card"><h2>${title}</h2><div class="val">—</div><div class="note">${note}</div></div>`;
+    }).join("");
+
+    // The connect card only exists if the server said this member may see it.
+    if (!(scope.surfaces || []).includes("connect_card")) {
+      document.getElementById("connect-card").style.display = "none";
+    }
+  }
+
+  document.getElementById("connect").addEventListener("click", async () => {
+    const status = document.getElementById("status");
+    const keyEl = document.getElementById("key");
+    status.className = "status";
+    status.textContent = "Checking…";
+    try {
+      const r = await fetch("/slumhouse/api/member/connect-test", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brokerKind: document.getElementById("broker").value, key: keyEl.value }),
+      });
+      const j = await r.json().catch(() => ({}));
+      // Never echo the key back into the DOM, not even on failure.
+      keyEl.value = "";
+      if (j.status === "validated") {
+        status.className = "status ok";
+        status.textContent = j.display || "Connected (test mode)";
+      } else {
+        status.className = "status bad";
+        status.textContent = j.status === "rejected" && j.reason === "not_a_designated_test_key"
+          ? "That isn't a test key. Test mode only accepts keys that start with TESTKEY-."
+          : "That didn't work. Nothing was saved.";
+      }
+    } catch {
+      status.className = "status bad";
+      status.textContent = "Couldn't reach the office. Nothing was saved.";
+    }
+  });
+
+  boot();
+</script>
+</body>
+</html>
