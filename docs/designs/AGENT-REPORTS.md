@@ -4,6 +4,25 @@
 
 ---
 
+## AR-098 · 2026-07-20 · ★ AR-097's ENTRY NEVER LANDED — the commit `d50ef9be` claims a report that is not in this file. Report-rides-the-commit **held the file, not the content**. Both now filed: the census result, and the law's first failure mode.
+
+**1. ★ THE LAW HAS A HOLE AND I FOUND IT BY TRIPPING IT.** My script writes the AR entry, then commits the artifact + `AGENT-REPORTS.md` together. **The write step failed** (a stale anchor string — the AR-096 heading I was matching had changed) — but the **commit ran anyway**, because it was a separate command in the same shell line. So `d50ef9be` shipped the census artifact with a commit message describing AR-097, and **no AR-097 in this file.**
+- **REPORT-RIDES-THE-COMMIT guarantees the FILE is in the commit; it does not guarantee the CONTENT was written.** Same shape as every defect this session: the mechanism was structural, the *verification of the mechanism* was not. A ban implemented as architecture still needs its own probe.
+- **Fix, adopted now: the write must FAIL LOUD and abort the commit.** My scripts use `assert` then chain `&& git commit` — but the assert's failure did not stop the chain because the commit was a separate shell statement, not chained to the Python exit code. Correct form: single chained statement, or verify the entry is present *after* writing and before committing. **A structural guarantee I never tested is exactly the class I have been reporting all night.**
+
+**2. THE CENSUS RESULT (R-107 §2), now actually on the record.** Artifact `liquidity-detector-consumer-census.json` (in `d50ef9be`). **All six consumers of `detect_buyside/sellside_liquidity` are REGISTERED strategy archetypes, none dormant:** `EqhlRaidStrategy` (`ict_eqhl_raid`) · `Ict2022Strategy` · `IctScalpStrategy` · `IctSwingStrategy` · `QuarterlySwingStrategy` · `TurtleSoupStrategy` (`ict_turtle_soup`) — all in `archetype_evaluator.py`'s class map, two also in `black_swan_evaluator.py`.
+
+**★ Your reframe is confirmed and it is bigger than the packet.** The leak was never the resolver's; the resolver was the first consumer honest enough to expose it. **Six registered ICT archetypes have been reading future-contaminated liquidity levels for as long as those detectors have existed** — and each is precisely the kind of strategy whose backtest looks *better* for it: a level that exists only because a later swing confirmed it is a level that "worked."
+
+**★ SCOPING MY OWN CLAIM, because this is where I would overstate.** Registration proves **REACHABILITY**, not live-capital execution. The system is **pre-live by design** (0 backtests, all-CANDIDATE). **This census establishes the FIX SCOPE is engine-wide; it does NOT establish live harm and I claim none.** Honest sentence: *a standing defect in a shared detector, reachable by six registered archetypes, found before anything consumed it for a decision.*
+
+**3. Not done:** no fix, no fix packet, `liquidity.py` untouched — per your §2 the fix is an ENGINE instrument change owing its own packet, blast radius now **six archetypes wide**, materially larger than the packet I'd have written an hour ago.
+
+**4. For that packet's scope-line:** the two CLEAN kinds route through `order_flow.py` and `market_structure.py`, **which the same six archetypes also consume.** The grader validated those for *our* call pattern, not every archetype's. **Class-sweep says probe the siblings before calling them clean** — the truncation harness already exists, so it is cheap.
+
+**Holds:** T1 blocked · `named_sr_level` BLOCKED pending detector fix + per-kind causal-safety test · OB+swing on their ratified track · WIRE-2 pending · reader-vintage queued · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-096 · 2026-07-20 · ★★★ GRADE: **BAND 3, NOT-SAFE — a REAL LOOK-AHEAD LEAK in `named_sr_level`**, mutation-validated. The lane HALTS. ★ And my specific suspicion was pointed at the WRONG kind — the class-sweep caught it, not my hunch.
 
 **F-1 CRITICAL — look-ahead, proven two independent ways.** `named_sr_level` resolves via `detect_buyside/sellside_liquidity`, which **clusters over the ENTIRE swings table** (`liquidity.py:33-52`, `76-95`). So **a FUTURE swing can retroactively absorb an earlier, already-confirmed swing** into a differently-anchored cluster — silently deleting or moving a level a live trader already knew.
