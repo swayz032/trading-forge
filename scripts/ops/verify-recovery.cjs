@@ -27,37 +27,11 @@ const { loadEnvFile } = require("../lib/env-resolve.cjs");
 const PASS = 0, UNKNOWN = 2, FAIL = 3;
 const V = { PASS: "PASS", FAIL: "FAIL", UNKNOWN: "UNKNOWN" };
 
-/**
- * ★ F-3 (grader): evidence levels are a CLOSED SET, not free text.
- *
- * The previous guard classified cells by a two-keyword list and called that "meaning-based".
- * `"designed — not drilled, but VERIFIED live and CONFIRMED working"` sailed straight
- * through — on the one document an operator reads mid-incident. Chasing synonyms is
- * whack-a-mole (the leg-5 lesson): a blacklist of dishonest phrasings is INFINITE, a
- * whitelist of valid states is FINITE. So the level is an enum key, the prose lives in the
- * table, and anything not exactly one of these is rejected.
- */
-const EVIDENCE_STATES = Object.freeze({
-  DRILLED: "DRILLED + RECEIPTED 2026-07-02",
-  WITNESSED_LIVE: "BUILT + WITNESSED LIVE PASS",
-  DESIGNED: "DESIGNED — NOT DRILLED",
-  // The secrets/env leg is neither drilled nor merely designed — the resolver is built and
-  // covered, the per-var manifest is not. A closed set must have a state for every row it
-  // governs, or the ungoverned row becomes the hole.
-  PARTIALLY_BUILT: "PARTIALLY BUILT",
-});
-/** Which state each leg is in. Keys only — free text cannot be smuggled in here. */
-const EVIDENCE_LEVEL = {
-  db: "DRILLED",
-  services: "DESIGNED",
-  tasks: "DESIGNED",
-  wsl: "DESIGNED",
-  s3: "WITNESSED_LIVE",
-};
-/** Rendered form, derived from the closed set — never hand-written per leg. */
-const EVIDENCE = Object.fromEntries(
-  Object.entries(EVIDENCE_LEVEL).map(([leg, k]) => [leg, EVIDENCE_STATES[k]]),
-);
+// Evidence comes from the TYPED SOURCE — one definition, rendered to markdown by
+// render-runsheet.cjs and consumed here. There is no second copy to drift, and no free-form
+// cell anywhere for a drill claim to be typed into.
+const { EVIDENCE_STATES, LEGS, evidenceLabel } = require("./recovery-evidence.cjs");
+const EVIDENCE = Object.fromEntries(LEGS.map((l) => [l.leg, evidenceLabel(l)]));
 
 const emit = (o) => console.log(JSON.stringify({ check: "cold-recovery", ...o }));
 
@@ -67,6 +41,10 @@ const emit = (o) => console.log(JSON.stringify({ check: "cold-recovery", ...o })
  * seventh register script would be invisible and the claim "the check cannot drift from the
  * thing it checks" was false one level up. Enumerate the scripts themselves.
  */
+// ★ F-6 SCOPE, stated HERE because a commit message is git-archaeology no operator reads:
+// globbing removes drift for a new SCRIPT, not for a new DIRECTORY. These two dirs are still
+// enumerated, so a register script added under a third directory would be missed. Bounded
+// claim: the check cannot drift from the scripts IN THESE DIRECTORIES.
 const REGISTER_DIRS = ["scripts/rails", "scripts/soak"];
 const REGISTER_RE = /^register-.*-task\.ps1$/;
 
@@ -86,8 +64,8 @@ function registerScripts(root = process.cwd(), readdirFn = fs.readdirSync, exist
  * DERIVE the expected task names from the register scripts' own `$TaskName` defaults.
  *
  * Hand-listing them is what produced the false green: the list said 3, the scripts create 6,
- * and the gap was invisible. Deriving means the check cannot drift from the thing it checks —
- * the same reason the roll-up guard parses `worstOf(...)` instead of naming its sources.
+ * and the gap was invisible. Deriving means the check cannot drift from the register scripts
+ * IN REGISTER_DIRS — the bounded form of the claim; see the scope note there.
  */
 function expectedTaskNames(root = process.cwd(), readFileFn = fs.readFileSync, existsFn = fs.existsSync, readdirFn = fs.readdirSync) {
   const names = [];
@@ -260,6 +238,6 @@ async function main() {
 
 if (require.main === module) main().then((c) => { process.exitCode = c; });
 module.exports = {
-  PASS, UNKNOWN, FAIL, V, EVIDENCE, EVIDENCE_STATES, EVIDENCE_LEVEL, CHECKS,
+  PASS, UNKNOWN, FAIL, V, EVIDENCE, EVIDENCE_STATES, LEGS, CHECKS,
   REGISTER_DIRS, registerScripts, expectedTaskNames, tierServices, tierTasks, tierWsl, legS3, legDb, aggregate, runChecks,
 };

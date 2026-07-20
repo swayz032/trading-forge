@@ -87,6 +87,12 @@ jobs:
       # first act is never to block the lane it exists to protect — a guard that arrives as
       # an obstacle gets disabled rather than fixed. Promote to --strict once it has run
       # clean across the whole ops surface for a stretch.
+      # BLOCKING: the runsheet is generated from a typed source, so a drift here means
+      # someone hand-edited an evidence claim. That is the exact dishonesty the schema
+      # exists to prevent, and unlike the lint it has zero false-positive surface.
+      - name: Cold-recovery runsheet matches its typed source
+        run: npm run runsheet:check
+
       - name: False-success lint (ops surface, non-blocking)
         continue-on-error: true
         run: npm run lint:false-success

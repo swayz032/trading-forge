@@ -15,7 +15,7 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  PASS, UNKNOWN, FAIL, V, EVIDENCE, EVIDENCE_STATES, EVIDENCE_LEVEL, CHECKS,
+  PASS, UNKNOWN, FAIL, V, EVIDENCE, EVIDENCE_STATES, LEGS, CHECKS,
   REGISTER_DIRS, registerScripts, expectedTaskNames,
   tierServices, tierTasks, tierWsl, legS3, legDb, aggregate, runChecks,
 } from "../verify-recovery.cjs";
@@ -175,69 +175,12 @@ test("runChecks attaches the per-leg evidence level to every result", async () =
 });
 
 // ── ★ Runsheet honesty — SEMANTIC, not a literal grep ────────────────────────
-/**
- * Parse the evidence table into {leg -> evidence cell}. The previous guard grepped for the
- * literal "NOT DRILLED": it went RED on an honest reword and stayed GREEN on a dishonest
- * upgrade that kept the phrase. Parsing the table and classifying the cell is the semantic
- * form — the same literal-vs-semantic lesson as the leg-5 credential guard.
- */
-function runsheetEvidence(doc) {
-  const out = {};
-  for (const line of doc.split("\n")) {
-    if (!line.trim().startsWith("|")) continue;
-    const cells = line.split("|").map((c) => c.trim()).filter(Boolean);
-    if (cells.length < 3) continue;
-    out[cells[0].replace(/\*+/g, "")] = cells[2];
-  }
-  return out;
-}
-const DRILL_CLAIM = /drill|receipt/i;
-const NOT_DRILLED = /not\s+drilled|pending\s+drill|designed/i;
-
-// ★ SIBLING FOUND BY THE MANDATED SEARCH (F-3): the keyword-based EVIDENCE guard that the
-// whitelist REPLACES was still running alongside it. A weaker guard left beside its
-// replacement still passes the text the replacement rejects — the fix left its predecessor
-// alive, which is the same one-word-over shape the grader named. Removed; the closed-set
-// assertions below are the guard.
-
-test("★ every runsheet row that CLAIMS a drill must actually have one", () => {
-  const ev = runsheetEvidence(fs.readFileSync(RUNSHEET, "utf8"));
-  const claiming = Object.entries(ev).filter(([, c]) => DRILL_CLAIM.test(c) && !NOT_DRILLED.test(c));
-  // Only the DB leg has a receipt. Any other row claiming a drill is the exact overreach
-  // this document exists to prevent — and a reworded dishonest upgrade is caught here,
-  // where a literal grep for "NOT DRILLED" let it through.
-  const legs = claiming.map(([k]) => k);
-  assert.deepEqual(legs.filter((l) => !/database/i.test(l)), [],
-    `these rows claim a drill they do not have: ${legs.join(", ")}`);
-});
-
-test("★ every runsheet evidence cell is EXACTLY one of the closed states", () => {
-  // Phrase-classification is gone here too: the markdown cell must be verbatim one of the
-  // canonical strings, so a hedged expansion ("...but VERIFIED live") is not a cell at all.
-  const ev = runsheetEvidence(fs.readFileSync(RUNSHEET, "utf8"));
-  const canonical = Object.values(EVIDENCE_STATES);
-  // ★ SIBLING: the first version filtered to five named rows, leaving the secrets/env row
-  // ungoverned — a row excluded from the guard can say anything. EVERY row in the evidence
-  // table is now checked, and the closed set carries a state for each.
-  const rows = Object.entries(ev).filter(([k]) => /^\s*\d+\s*·|^[A-C]\s*·/.test(k));
-  assert.ok(rows.length >= 6, `expected every evidence row, found ${rows.length}: ${Object.keys(ev)}`);
-  for (const [k, cell] of rows) {
-    const bare = cell.replace(/\*+/g, "").trim();
-    assert.ok(canonical.includes(bare), `row "${k}" is not a canonical evidence state: "${bare}"`);
-  }
-});
-
-test("★ no blanket drill claim anywhere in the PROSE — the table is not the only surface", () => {
-  // Grader mutant M9 added a "cold-box rebuild PASSED" sentence while leaving the header
-  // disclaimer intact; a table-only parser never sees it. Any sentence asserting the WHOLE
-  // runsheet is drilled is the blanket claim OR-091 forbids.
-  const doc = fs.readFileSync(RUNSHEET, "utf8");
-  const prose = doc.split("\n").filter((l) => !l.trim().startsWith("|"));
-  for (const line of prose) {
-    const blanket = /(cold[- ]box|full|end[- ]to[- ]end|whole|entire).{0,40}(rebuild|recovery).{0,30}(drill|passed|verified)/i;
-    assert.ok(!blanket.test(line), `blanket drill claim in prose: "${line.trim()}"`);
-  }
-});
+// ★★ THE KEYWORD-GUARD MACHINERY IS DELETED, NOT PATCHED.
+// runsheetEvidence()/DRILL_CLAIM/NOT_DRILLED parsed free-form markdown, so the governed
+// surface was open-ended by construction and siblings regenerated faster than they closed
+// (2 -> 3 -> 2 -> 4). My previous commit claimed this was "Removed" while one use was still
+// live — the same remove-one-use-leave-the-sibling shape, in the fix for that shape.
+// The markdown is now RENDERED from a closed typed source, so these tests replace it.
 
 test("★ the runsheet carries the KEY FINDINGs — the payload a drill produces", () => {
   const doc = fs.readFileSync(RUNSHEET, "utf8");
@@ -348,34 +291,79 @@ test("F-2: no DATABASE_URL -> UNKNOWN, and the var NAME is fine to emit (it is n
 });
 
 // ── F-3: the whitelist inversion — a closed set, not a keyword blacklist ──────
-test("★ F-3: every leg's evidence is EXACTLY one of a closed set of states", () => {
-  // `"designed — not drilled, but VERIFIED live and CONFIRMED working"` passed the old
-  // two-keyword guard. A blacklist of dishonest phrasings is infinite; a whitelist of valid
-  // states is finite. Same closed-enum shape as PASS/FAIL/UNKNOWN.
-  const valid = Object.keys(EVIDENCE_STATES);
-  for (const [leg, key] of Object.entries(EVIDENCE_LEVEL)) {
-    assert.ok(valid.includes(key), `leg "${leg}" has evidence "${key}", not one of ${valid.join("|")}`);
-  }
-  for (const [leg, rendered] of Object.entries(EVIDENCE)) {
-    assert.ok(Object.values(EVIDENCE_STATES).includes(rendered),
-      `leg "${leg}" renders free text: "${rendered}"`);
-  }
-});
 
-test("★ F-3: free text cannot be smuggled into a rendered evidence level", () => {
-  const smuggled = "DESIGNED — NOT DRILLED, but VERIFIED live and CONFIRMED working";
-  assert.ok(!Object.values(EVIDENCE_STATES).includes(smuggled),
-    "the closed set must not contain a hedged/expanded state");
-  // and the rendering is derived, so a hand-edit to one leg cannot introduce it
-  assert.equal(EVIDENCE.services, EVIDENCE_STATES.DESIGNED);
-});
 
-test("★ F-3: only the DB leg may hold the DRILLED state", () => {
-  const drilled = Object.entries(EVIDENCE_LEVEL).filter(([, k]) => k === "DRILLED").map(([l]) => l);
-  assert.deepEqual(drilled, ["db"], `legs claiming DRILLED: ${drilled.join(", ")}`);
-});
 
 test("★ aggregate([]) is not a silent PASS — an empty check set proves nothing", () => {
   // Lower severity but the same root: absence read as success.
   assert.notEqual(aggregate([]), PASS, "an empty result set must not report PASS");
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ★★ THE REDESIGN: govern the SCHEMA, not the prose.
+// Four patch rounds failed because the guard parsed free-form markdown, so every new row,
+// column, tier or directory was a fresh ungoverned surface. The evidence state is now a
+// closed typed value and the markdown is RENDERED from it — there is no free-form cell in
+// which to assert a drill, so the class is closed BY CONSTRUCTION rather than cell by cell.
+// ═══════════════════════════════════════════════════════════════════════════════
+import { render, OUT } from "../render-runsheet.cjs";
+import { validate, drilledLegs } from "../recovery-evidence.cjs";
+
+test("★ the schema validates: every leg's state is one of the closed set", () => {
+  assert.equal(validate(), true);
+  const valid = Object.keys(EVIDENCE_STATES);
+  for (const l of LEGS) assert.ok(valid.includes(l.state), `leg "${l.leg}" state "${l.state}" is not in the closed set`);
+});
+
+test("★ a DRILLED claim without a receipt is REJECTED by the schema", () => {
+  // The one rule that cannot be phrased around: there is no free-text cell to assert a drill,
+  // and asserting the state requires naming where the receipt lives.
+  assert.throws(
+    () => validate([{ leg: "x", state: "DRILLED", receipt: null }]),
+    /claims DRILLED with no receipt/,
+  );
+});
+
+test("★ a state OUTSIDE the closed set is REJECTED — no phrasing can introduce one", () => {
+  assert.throws(
+    () => validate([{ leg: "x", state: "DESIGNED — NOT DRILLED, but VERIFIED live", receipt: null }]),
+    /not one of/,
+  );
+});
+
+test("★ a NOT-drilled leg carrying a receipt is rejected (the inverse smuggle)", () => {
+  assert.throws(() => validate([{ leg: "x", state: "DESIGNED_NOT_DRILLED", receipt: "somewhere" }]), /not drilled but carries a receipt/);
+});
+
+test("★ only the DB leg asserts a drill", () => {
+  assert.deepEqual(drilledLegs(), ["db"]);
+});
+
+test("★ the checked-in runsheet MATCHES its typed source — a hand-edit goes red", () => {
+  // This is what removes the free-form surface: the markdown is generated, so editing a cell
+  // to claim a drill does not survive. `--check` enforces the same in CI.
+  const onDisk = fs.readFileSync(OUT, "utf-8");
+  assert.equal(onDisk, render(), "runsheet is stale or hand-edited — run: node scripts/ops/render-runsheet.cjs --write");
+});
+
+test("★ the rendered header's drill count is DERIVED, not typed", () => {
+  const doc = render();
+  assert.match(doc, new RegExp(`${drilledLegs().length} of ${LEGS.length} legs carry a drill receipt`));
+  assert.match(doc, /NOT\*{0,2} drilled as a whole/i);
+});
+
+test("★ KEY FINDINGs are declared UNGOVERNED — the guard states its own limit", () => {
+  // A guard may have finite reach; it may not CLAIM more than it has. Policing free-text
+  // findings for honesty is the open-set trap that made four rounds of patching fail.
+  const doc = render();
+  assert.match(doc, /KEY FINDING column is free text and is NOT[\s\S]{0,4}tool-governed/i);
+});
+
+test("★ every leg in the schema renders exactly one table row", () => {
+  const doc = render();
+  for (const l of LEGS) {
+    const rows = doc.split("\n").filter((x) => x.startsWith("|") && x.includes(`· ${l.name}`));
+    assert.equal(rows.length, 1, `leg "${l.leg}" rendered ${rows.length} rows`);
+    assert.ok(rows[0].includes(EVIDENCE_STATES[l.state].label), `leg "${l.leg}" row lost its state label`);
+  }
 });
