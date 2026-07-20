@@ -4,29 +4,14 @@ const fs = require("node:fs");
 const path = require("node:path");
 
 function loadEnvironment(repoDir) {
-  const candidates = [
-    process.env.RAILS_ENV_PATH,
-    path.join(repoDir, ".env"),
-    path.join(path.dirname(repoDir), "trading-forge", ".env"),
-  ].filter(Boolean);
-
-  let dotenv;
-  try {
-    dotenv = require("dotenv");
-  } catch {
-    return;
-  }
-  for (const candidate of candidates) {
-    try {
-      if (fs.existsSync(candidate)) {
-        dotenv.config({ path: candidate, override: false });
-        return;
-      }
-    } catch {
-      // Keep trying candidates. The caller treats missing credentials explicitly.
-    }
-  }
+  // Delegates to the ONE shared resolver (scripts/lib/env-resolve.cjs). It honours BOTH
+  // RAILS_ENV_PATH and SOAK_ENV_PATH and covers the NESTED canonical checkout, neither of
+  // which this function did — the divergence that crashed the 2026-07-20 activation dry-run
+  // at boot. Returns the loader result so callers can REPORT which file was used.
+  const { loadEnvFile } = require("../lib/env-resolve.cjs");
+  return loadEnvFile({ cwd: repoDir, moduleDir: __dirname });
 }
+
 
 function appendLedger(repoDir, rail, payload) {
   const dataDir = path.join(repoDir, "data", "rails");

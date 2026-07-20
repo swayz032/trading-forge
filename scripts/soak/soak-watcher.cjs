@@ -40,15 +40,19 @@ try {
 // Resolve .env from a candidate list so this runs from an isolated worktree tonight
 // (finds the sibling main checkout's .env) AND from the main checkout after landing.
 (function loadEnv() {
+  // ONE shared resolver (scripts/lib/env-resolve.cjs) — honours BOTH RAILS_ENV_PATH and
+  // SOAK_ENV_PATH and covers the NESTED canonical checkout. The old local list read only
+  // SOAK_ENV_PATH and pointed one level too shallow at the sibling checkout, so the
+  // documented "runs from an isolated worktree" affordance had never actually worked.
   if (!dotenv) return;
-  const candidates = [
-    process.env.SOAK_ENV_PATH,
-    path.join(process.cwd(), ".env"),
-    path.join(__dirname, "..", "..", ".env"),                              // worktree root
-    path.join(__dirname, "..", "..", "..", "trading-forge", ".env"),       // sibling main checkout
-  ].filter(Boolean);
-  for (const p of candidates) {
-    try { if (fs.existsSync(p)) { dotenv.config({ path: p }); if (process.env.DATABASE_URL) return; } } catch { /* keep trying */ }
+  try {
+    const { loadEnvFile } = require("../lib/env-resolve.cjs");
+    const r = loadEnvFile({ cwd: process.cwd(), moduleDir: __dirname });
+    // Path only — never a value. Reported so a recovery check can assert WHICH file was
+    // used instead of inferring it from the process merely having started.
+    if (!r.loaded) console.error("soak-watcher: .env not loaded:", r.reason);
+  } catch (e) {
+    console.error("soak-watcher: env resolution failed, continuing on ambient env:", e.message);
   }
 })();
 
