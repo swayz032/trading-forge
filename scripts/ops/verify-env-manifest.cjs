@@ -156,9 +156,59 @@ function deriveClasses(sites) {
   return { degrading: dist.empty_default > 0, dist };
 }
 
+// ★★ CLASS COVERAGE — the difference between governing 4 INSTANCES and governing the CLASS.
+//
+// Listing DISCORD_CH_* entries in the manifest checks those four variables. It does NOT stop a
+// FIFTH alert channel being added tomorrow with `|| ""` and no manifest entry — which is the
+// exact defect (empty-default + undeclared) that produced the finding in the first place. A
+// manifest that only knows what it was told is an inventory, not a guard.
+//
+// So: scan the alert-routing surface for EVERY empty-string default and require each to be
+// declared. Bounded on purpose — one named file, not the whole repo, because the repo-wide set
+// includes legitimate empty defaults (`PYTHONPATH ?? ""`) and flagging those is the cry-wolf
+// this design exists to prevent. Widening the surface is a deliberate edit here, not a drift.
+const GOVERNED_SURFACES = [
+  // NOTE the scope is the FILE, not just CHANNEL_MAP. An earlier version of this line said
+  // "CHANNEL_MAP" while the scan read the whole file — a description that overstated its own
+  // precision, which is the caption-is-a-claim defect in the tool's own metadata. It also
+  // MATTERED: the whole-file scan is what surfaced SLUMDAWG_WEBHOOK_SECRET, an empty-default
+  // outside CHANNEL_MAP that a CHANNEL_MAP-only scan would have missed.
+  { file: "src/discord/bot.ts", why: "Discord bot — alert channel routing and webhook signing" },
+];
+
+function surfaceCoverage(vars = VARS, { runner = execFileSync, root = ROOT } = {}) {
+  const declared = new Set(vars.map((v) => v.name));
+  const gaps = [];
+  for (const s of GOVERNED_SURFACES) {
+    let out = "";
+    try {
+      out = runner("grep", ["-oE", 'process\\.env\\.[A-Z][A-Z0-9_]+ *(\\|\\||\\?\\?) *""', s.file],
+        { cwd: root, encoding: "utf-8", maxBuffer: 8 * 1024 * 1024 });
+    } catch (e) {
+      if (e && e.status === 1) continue; // no empty-defaults in this file — fine
+      throw new Error(`surface scan failed for ${s.file}: status=${e && e.status}`);
+    }
+    for (const line of out.split("\n")) {
+      const m = line.match(/process\.env\.([A-Z][A-Z0-9_]+)/);
+      if (m && !declared.has(m[1])) gaps.push({ name: m[1], file: s.file, why: s.why });
+    }
+  }
+  return gaps;
+}
+
 function check(vars = VARS, opts = {}) {
   validate(vars);
   const rows = [];
+
+  // Class-coverage gaps are reported as FAIL rows so they cannot be read past.
+  for (const g of surfaceCoverage(vars, opts)) {
+    rows.push({
+      name: g.name, declared: [], verdict: "FAIL",
+      reason: `UNDECLARED empty-string default on a governed surface (${g.file} — ${g.why}). ` +
+              `Add it to recovery-env-manifest.cjs or give it a real fallback.`,
+      sites: 1,
+    });
+  }
   for (const v of vars) {
     if (v.dynamicRead) {
       rows.push({ name: v.name, declared: v.class, derived: null,
@@ -218,4 +268,4 @@ function main() {
 }
 
 if (require.main === module) process.exitCode = main();
-module.exports = { readSites, siteShape, deriveClasses, check, main, TEST_RE, SITE_SHAPES };
+module.exports = { readSites, siteShape, deriveClasses, check, main, TEST_RE, SITE_SHAPES, surfaceCoverage, GOVERNED_SURFACES };

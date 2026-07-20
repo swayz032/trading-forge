@@ -571,9 +571,31 @@ alertApp.post("/alert/:channel", async (req, res) => {
   const { channel } = req.params;
   const channelId = CHANNEL_MAP[channel];
 
-  if (!channelId) {
+  // Two DIFFERENT failures used to share one message, and it contradicted itself: a known
+  // channel whose env var is unset reported `Unknown channel: critical-alerts. Available:
+  // …, critical-alerts` — naming it unknown while listing it as available. That sends an
+  // operator hunting a typo when the real cause is an unset variable.
+  if (!(channel in CHANNEL_MAP)) {
     res.status(404).json({
       error: `Unknown channel: ${channel}. Available: ${Object.keys(CHANNEL_MAP).join(", ")}`,
+    });
+    return;
+  }
+
+  if (!channelId) {
+    // Known channel, no destination. CRITICAL_ALERTS/WORKFLOW_ERRORS/N8N_DAILY_REPORT/
+    // STRATEGY_FINDS default to "" (unlike the others, which carry a hardcoded fallback ID),
+    // so an unset env var silently yields no destination. Say exactly that, and name the
+    // variable to set — the message an operator can act on without reading this file.
+    const envVar = `DISCORD_CH_${channel.toUpperCase().replace(/-/g, "_")}`;
+    res.status(503).json({
+      error:
+        `Channel "${channel}" is known but has no destination configured: ` +
+        `${envVar} is unset or empty, and this channel has no fallback ID. ` +
+        `Set ${envVar} to a Discord channel ID.`,
+      channel,
+      envVar,
+      reason: "channel_unconfigured",
     });
     return;
   }

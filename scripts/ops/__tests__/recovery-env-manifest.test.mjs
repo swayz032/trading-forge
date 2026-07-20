@@ -8,7 +8,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { CLASSES, VARS, validate, runbookVars, suppressedVars } from "../recovery-env-manifest.cjs";
-import { siteShape, deriveClasses, check, TEST_RE } from "../verify-env-manifest.cjs";
+import { siteShape, deriveClasses, check, TEST_RE, surfaceCoverage, GOVERNED_SURFACES } from "../verify-env-manifest.cjs";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -143,6 +143,41 @@ test("MUTANT CAUGHT — an empty classes[] set is rejected", () => {
   const v = clone();
   v[0].classes = [];
   assert.throws(() => validate(v), /non-empty/);
+});
+
+// ─── CLASS COVERAGE — governing the class, not four instances ─────────────────
+test("class coverage: the governed surface has NO undeclared empty-string defaults", () => {
+  // This is the difference between an inventory and a guard. Listing the DISCORD_CH_* vars
+  // checks those vars; this checks that no NEW one can appear undeclared.
+  assert.deepEqual(surfaceCoverage(), []);
+});
+
+test("class coverage: the surface list is non-empty (a check over nothing proves nothing)", () => {
+  assert.ok(GOVERNED_SURFACES.length > 0);
+  for (const s of GOVERNED_SURFACES) {
+    assert.ok(s.file && s.why, "each surface must name its file and why it is governed");
+  }
+});
+
+test("MUTANT CAUGHT — an undeclared var is flagged even though it is not in the manifest", () => {
+  // The real defect shape: someone adds a channel with `|| ""` and forgets the manifest.
+  // Simulated by removing a DECLARED var from the manifest, which makes the surface's real
+  // empty-default site undeclared — equivalent to the var being newly added.
+  const v = clone().filter((x) => x.name !== "DISCORD_CH_CRITICAL_ALERTS");
+  const gaps = surfaceCoverage(v);
+  assert.ok(gaps.some((g) => g.name === "DISCORD_CH_CRITICAL_ALERTS"),
+    "an undeclared empty-default on a governed surface SURVIVED — the class is not governed");
+  // …and it must surface as a FAIL row, not merely as data.
+  const rows = check(v);
+  const row = rows.find((r) => r.name === "DISCORD_CH_CRITICAL_ALERTS");
+  assert.equal(row.verdict, "FAIL");
+});
+
+test("the highest-severity alert channel is declared and in the runbook", () => {
+  const crit = VARS.find((v) => v.name === "DISCORD_CH_CRITICAL_ALERTS");
+  assert.ok(crit, "DISCORD_CH_CRITICAL_ALERTS must be governed");
+  assert.ok(crit.classes.includes("OPTIONAL_DEGRADING"));
+  assert.ok(runbookVars().some((v) => v.name === "DISCORD_CH_CRITICAL_ALERTS"));
 });
 
 test("POSITIVE CONTROL — the real, unmutated manifest is GREEN", () => {

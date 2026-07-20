@@ -20,7 +20,12 @@
 // which re-derives each declared class from the code and FAILS on disagreement, so this file
 // cannot quietly drift out of step with reality.
 //
-// ★ DECLARED SCOPE — this manifest covers the COLD-RECOVERY surface, not the whole app.
+// ★ DECLARED SCOPE — COLD-RECOVERY plus the ALERT-ROUTING surface. Not the whole app.
+// Alerting was added 2026-07-20 after the same defect shape the recovery legs taught us
+// (empty-default + undeclared in .env.example) turned up on DISCORD_CH_CRITICAL_ALERTS, the
+// highest-severity channel. Governing it here is what stops the NEXT instance being found by
+// hand: any alert var that acquires an empty-string default now fails this manifest's
+// cross-check unless it is declared.
 // The repo reads ~617 env vars; ~323 are absent from `.env.example`. Enumerating all of them
 // would rebuild the cry-wolf list this design exists to avoid. Scope = the variables the
 // recovery legs (db · services · tasks · wsl · s3 · secrets) actually depend on. A var outside
@@ -157,6 +162,61 @@ const VARS = [
     classes: ["OPTIONAL_FALLBACK"],
     fallback: "http://127.0.0.1:4000/api/health",
     evidence: "4 non-test read sites, all defaulted (verify-recovery.cjs:82, tower-idle-guard.cjs:29, …).",
+  },
+  {
+    name: "DISCORD_CH_CRITICAL_ALERTS",
+    leg: "alerting",
+    classes: ["OPTIONAL_DEGRADING"],
+    degrades:
+      "★ the HIGHEST-SEVERITY alert channel. `src/discord/bot.ts` CHANNEL_MAP defaults it to " +
+      "`\"\"` — unlike compliance/skip/macro/tournament/alerts/governor, which carry a hardcoded " +
+      "fallback ID — so an unset var leaves critical alerts with NO destination. Since " +
+      "2026-07-20 the route answers 503 `channel_unconfigured` naming the exact variable, so the " +
+      "failure is DIAGNOSABLE; the degradation (no delivery) is unchanged. Verified live: the " +
+      "running tower HAS it set, so this is a REBUILD gap, not a live blindness.",
+    evidence: "src/discord/bot.ts CHANNEL_MAP — `process.env.DISCORD_CH_CRITICAL_ALERTS || \"\"`",
+  },
+  {
+    name: "DISCORD_CH_WORKFLOW_ERRORS",
+    leg: "alerting",
+    classes: ["OPTIONAL_DEGRADING"],
+    degrades:
+      "n8n workflow failures lose their destination when unset (empty default, no fallback ID). " +
+      "Same shape as CRITICAL_ALERTS, lower severity.",
+    evidence: "src/discord/bot.ts CHANNEL_MAP — `process.env.DISCORD_CH_WORKFLOW_ERRORS || \"\"`",
+  },
+  {
+    name: "DISCORD_CH_N8N_DAILY_REPORT",
+    leg: "alerting",
+    classes: ["OPTIONAL_DEGRADING"],
+    degrades:
+      "the daily report silently has nowhere to go when unset (empty default, no fallback ID). " +
+      "Lowest severity of the four — a missing daily report is noticed; a missing critical " +
+      "alert is not.",
+    evidence: "src/discord/bot.ts CHANNEL_MAP — `process.env.DISCORD_CH_N8N_DAILY_REPORT || \"\"`",
+  },
+  {
+    name: "DISCORD_CH_STRATEGY_FINDS",
+    leg: "alerting",
+    classes: ["OPTIONAL_DEGRADING"],
+    degrades:
+      "strategy-find posts lose their destination when unset. Already declared in `.env.example` " +
+      "(unlike the other three were), so the rebuild path is covered — listed for completeness " +
+      "of the empty-default class, not because it is a gap.",
+    evidence: "src/discord/bot.ts CHANNEL_MAP — `process.env.DISCORD_CH_STRATEGY_FINDS || \"\"`",
+  },
+  {
+    name: "SLUMDAWG_WEBHOOK_SECRET",
+    leg: "alerting",
+    classes: ["OPTIONAL_DEGRADING"],
+    degrades:
+      "★ FOUND BY THE CLASS-COVERAGE CHECK, not by hand — it sits outside CHANNEL_MAP and I " +
+      "would have missed it. `src/discord/bot.ts:743` defaults it to `\"\"`; the signer then yields " +
+      "no signature, the headers are omitted, and the backend 401s the ingest. A `log.warn` fires " +
+      "(added by the deep-scan n8n F-1 fix), so it is not silent SERVER-side — but the user-facing " +
+      "✅ reaction and \"cooking now\" ack are sent BEFORE the request, so the person in Discord still " +
+      "sees success. Residual of the same documented CRITICAL; the user-visible half is not closed.",
+    evidence: "src/discord/bot.ts:743 — `process.env.SLUMDAWG_WEBHOOK_SECRET || \"\"`",
   },
   {
     name: "RAILS_ENV_PATH",

@@ -100,7 +100,7 @@ would page an operator about a box that is fine.
 
 ## Secrets/env — what to set on a rebuilt box
 
-**Set these 4.** Generated from `scripts/ops/recovery-env-manifest.cjs`; every row's
+**Set these 9.** Generated from `scripts/ops/recovery-env-manifest.cjs`; every row's
 class is cross-checked against the code by `node scripts/ops/verify-env-manifest.cjs`.
 
 | variable | leg | class | if it is missing |
@@ -109,6 +109,11 @@ class is cross-checked against the code by `node scripts/ops/verify-env-manifest
 | `AWS_ACCESS_KEY_ID` | s3 | **★ OPTIONAL — SILENTLY DEGRADES + OPTIONAL — working default** | S3 auth. duckdb-service.ts:83 falls back to `""` and SETs it as the DuckDB s3 key — the box BOOTS HEALTHY and is silently S3-blind. The lake read fails later, far from the cause. · `local:<path>` sentinel — synthetic-regime-bank-service.ts:185 skips the S3 upload and returns a local path when the credential trio is unset. THAT consumer degrades gracefully and on purpose; the duckdb-service consumer does not. |
 | `AWS_SECRET_ACCESS_KEY` | s3 | **★ OPTIONAL — SILENTLY DEGRADES + OPTIONAL — working default** | S3 auth, identically to AWS_ACCESS_KEY_ID — duckdb-service.ts:84 defaults to `""`. The pair is the canonical 'boots healthy, S3-blind' shape. · `local:<path>` sentinel — synthetic-regime-bank-service.ts:185 skips the S3 upload and returns a local path when the credential trio is unset. THAT consumer degrades gracefully and on purpose; the duckdb-service consumer does not. |
 | `AWS_REGION` | s3 | **★ OPTIONAL — SILENTLY DEGRADES** | ★ CORRECTED BY THE VERIFIER, against my own hand-declaration. I classed this OPTIONAL_FALLBACK on the strength of `?? "us-east-1"` at duckdb-service.ts:82 — but 3 sites default to `""` (data_loader.py:52, deepar_forecaster.py:181, and s3_capability_probe.py:67, which is OUR OWN leg-5 probe). An empty region silently mis-targets S3 rather than failing. |
+| `DISCORD_CH_CRITICAL_ALERTS` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | ★ the HIGHEST-SEVERITY alert channel. `src/discord/bot.ts` CHANNEL_MAP defaults it to `""` — unlike compliance/skip/macro/tournament/alerts/governor, which carry a hardcoded fallback ID — so an unset var leaves critical alerts with NO destination. Since 2026-07-20 the route answers 503 `channel_unconfigured` naming the exact variable, so the failure is DIAGNOSABLE; the degradation (no delivery) is unchanged. Verified live: the running tower HAS it set, so this is a REBUILD gap, not a live blindness. |
+| `DISCORD_CH_WORKFLOW_ERRORS` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | n8n workflow failures lose their destination when unset (empty default, no fallback ID). Same shape as CRITICAL_ALERTS, lower severity. |
+| `DISCORD_CH_N8N_DAILY_REPORT` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | the daily report silently has nowhere to go when unset (empty default, no fallback ID). Lowest severity of the four — a missing daily report is noticed; a missing critical alert is not. |
+| `DISCORD_CH_STRATEGY_FINDS` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | strategy-find posts lose their destination when unset. Already declared in `.env.example` (unlike the other three were), so the rebuild path is covered — listed for completeness of the empty-default class, not because it is a gap. |
+| `SLUMDAWG_WEBHOOK_SECRET` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | ★ FOUND BY THE CLASS-COVERAGE CHECK, not by hand — it sits outside CHANNEL_MAP and I would have missed it. `src/discord/bot.ts:743` defaults it to `""`; the signer then yields no signature, the headers are omitted, and the backend 401s the ingest. A `log.warn` fires (added by the deep-scan n8n F-1 fix), so it is not silent SERVER-side — but the user-facing ✅ reaction and "cooking now" ack are sent BEFORE the request, so the person in Discord still sees success. Residual of the same documented CRITICAL; the user-visible half is not closed. |
 
 **★ Read the SILENTLY DEGRADES rows twice.** Those do not fail loudly — the box boots healthy and
 is quietly less able. `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` default to `""` and get SET as
@@ -119,7 +124,7 @@ That is the "boots healthy, S3-blind" shape this manifest exists to surface.
 each has a working default, so absence is *correct*. Listing them would train you to skim the list,
 which is the failure mode this triage prevents. **A count of undeclared vars is not an inventory of
 recovery risk:** the repo reads ~617 env vars and ~323 are absent from `.env.example`; almost all
-of that gap is noise, and enumerating it would bury the 4 rows above.
+of that gap is noise, and enumerating it would bury the 9 rows above.
 
 **Declared limits of the cross-check** — it adjudicates ONE property soundly (the silent-degradation
 signature, an empty-string default) in both directions. It does **not** derive REQUIRED vs
