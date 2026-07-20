@@ -496,6 +496,44 @@ CREATE TABLE IF NOT EXISTS broker_accounts (
     (regexp_replace(lower(firm_id), '_[0-9]+k$', '') <> 'topstep' AND broker_type = 'traderspost')
   )
 );
+
+-- Slumhouse per-member office (migration 0205, ops-experience 2026-07-20).
+-- Mirrored here in the SAME change as the migration + schema.ts edit: a CORE_DDL that lags
+-- schema.ts silently breaks EVERY DB-backed suite at once via the shared beforeAll, and it
+-- looks like "my new test is broken" rather than harness drift (pinned 2026-06-28).
+-- slumhouse_users is the FK parent for both, so it is declared first.
+CREATE TABLE IF NOT EXISTS slumhouse_users (
+  discord_user_id   TEXT PRIMARY KEY,
+  display_name      TEXT NOT NULL,
+  jersey_number     INTEGER,
+  broker_account_id UUID,
+  created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at      TIMESTAMPTZ,
+  session_epoch     INTEGER NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS slumhouse_member_pins (
+  discord_user_id TEXT PRIMARY KEY REFERENCES slumhouse_users(discord_user_id) ON DELETE CASCADE,
+  pin_hash        TEXT NOT NULL,
+  failures        INTEGER NOT NULL DEFAULT 0,
+  locked_until    TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- TEST-ONLY by name and by schema. broker_accounts is never written from the ops lane.
+CREATE TABLE IF NOT EXISTS slumhouse_connect_test (
+  id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  discord_user_id TEXT NOT NULL REFERENCES slumhouse_users(discord_user_id) ON DELETE CASCADE,
+  broker_kind     TEXT NOT NULL,
+  test_key_ref    TEXT,
+  status          TEXT NOT NULL DEFAULT 'pending',
+  validated_at    TIMESTAMPTZ,
+  created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT slumhouse_connect_test_broker_kind_ck CHECK (broker_kind IN ('topstepx', 'traderspost')),
+  CONSTRAINT slumhouse_connect_test_status_ck      CHECK (status IN ('pending', 'validated', 'rejected'))
+);
 `;
 
 // ─── Factory ──────────────────────────────────────────────────────────────────
