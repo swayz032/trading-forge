@@ -215,3 +215,27 @@ def test_equivalence_probe_is_not_vacuous():
         "VACUOUS PROBE: a known look-ahead build compared EQUAL to the correct one, "
         "so this equivalence test could not detect a real drift."
     )
+
+
+def test_four_h_trend_column_stays_WITHDRAWN():
+    """★ F-1 GUARD (independent grade, 2026-07-20). `compute_htf_context` computes
+    `four_h_trend` from the UNSLICED 4h frame — its bar_date filter touches only
+    `daily_df` — so that value is a LOOK-AHEAD for any bar before the frame's end. It was
+    dormant, but a dormant unsafe column in the frame is a trap for the next wire. This
+    test fails if it is ever materialized again before htf_context is fixed under its own
+    packet."""
+    import polars as pl_
+
+    from src.engine.context.htf_columns import COL_FOUR_H_TREND, HTF_COLUMNS, attach_htf_columns
+
+    assert COL_FOUR_H_TREND not in HTF_COLUMNS, "four_h_trend re-entered HTF_COLUMNS"
+
+    df = build_htf_cache(_daily_frame())
+    exec_df = pl_.DataFrame({
+        "ts_event": ["2021-01-01 10:00:00", "2021-01-01 10:05:00"],
+        "close": [1.0, 2.0],
+    })
+    out, _ = attach_htf_columns(exec_df, df)
+    assert COL_FOUR_H_TREND not in out.columns, (
+        "the withdrawn look-ahead column was materialized onto the frame"
+    )

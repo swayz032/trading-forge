@@ -22,6 +22,7 @@ import sys
 from datetime import datetime, timedelta
 
 import polars as pl
+import pytest
 
 _ROOT = os.path.normpath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 if _ROOT not in sys.path:
@@ -147,3 +148,51 @@ def test_no_htf_frame_yields_no_column_and_zero_engagement():
     ex = _exec_frame()
     out, engaged = attach_structure_column(ex, None, tf="4h")
     assert engaged == 0 and COL_STRUCTURE_ACTIVE not in out.columns
+
+
+@pytest.mark.xfail(
+    reason="★ WIRE-1 STRUCTURE PREMISE IS INERT (self-caught 2026-07-20). "
+           "compute_structure_state's `htf_bars` argument moves NO output field — verified "
+           "by feeding two wholly different HTF frames and diffing every field of "
+           "StructureState (bos/choch/mss/htf_bias_aligned/premium_discount_zone/swings/... "
+           "all identical). The real HTF lever is the SEPARATE `htf_bias` STRING param "
+           "(bullish -> htf_bias_aligned=True), which neither the proxy nor this wire "
+           "passes. So the column cannot depend on the completed-bar rule, and the "
+           "structure-family credit in the DoD is UNEARNED by the claimed mechanism. "
+           "This xfail flips to PASS once the wire feeds a real, causally-derived htf_bias.",
+    strict=True,
+)
+def test_column_output_DEPENDS_on_the_completed_bar_rule():
+    """★ F-3 CLOSURE (independent grade, 2026-07-20). The grade mutation-tested
+    `completed_htf_slice` with the naive leaky filter (`stamp <= t`): the sibling
+    straddle test caught it, but THIS file's future-perturbation test did NOT — its
+    corruption indices happen not to straddle a recompute boundary, so a systematic
+    near-boundary leak slipped past at the column level, while this file's docstring
+    claimed independent coverage. That claim was false in practice.
+
+    Closed decisively rather than by tuning indices (which would be fragile): swap the
+    availability rule for the KNOWN-LEAKY one and assert the built column CHANGES. If it
+    did not, the column would not actually depend on the completed-bar rule and every
+    causality claim about it would be vacuous."""
+    import src.engine.context.htf_columns as hc
+    from src.engine.context.htf_availability import naive_leaky_slice
+
+    ex, htf = _exec_frame(), _htf_frame()
+    correct = _column(ex, htf)
+
+    real = hc.completed_htf_slice if hasattr(hc, "completed_htf_slice") else None
+    import src.engine.context.htf_availability as ha
+    saved = ha.completed_htf_slice
+    try:
+        ha.completed_htf_slice = lambda df, t, tf: naive_leaky_slice(df, t)
+        leaky = _column(ex, htf)
+    finally:
+        ha.completed_htf_slice = saved
+        assert ha.completed_htf_slice is saved, "failed to restore the real availability rule"
+
+    assert leaky != correct, (
+        "The structure column is IDENTICAL under the correct completed-bar rule and the "
+        "known-leaky `stamp <= t` filter — so the column does not depend on the rule and "
+        "its causality proof is vacuous."
+    )
+    _ = real  # documented: the column reaches the rule via the availability module

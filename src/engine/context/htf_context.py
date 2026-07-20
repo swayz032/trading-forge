@@ -44,7 +44,6 @@ def _classify_trend(sma_20: float, sma_50: float, sma_200: float, close: float) 
 
 def _premium_discount(price: float, high: float, low: float) -> str:
     """Premium/discount relative to a range. Above midpoint = premium, below = discount."""
-    mid = (high + low) / 2.0
     range_size = high - low
     if range_size < 1e-9:
         return "equilibrium"
@@ -140,6 +139,15 @@ def compute_htf_context(
     pd_location = _premium_discount(current_price, prev_day_high, prev_day_low)
 
     # 4H trend
+    # ★★ KNOWN LOOK-AHEAD — DO NOT WIRE (independent grade F-1, 2026-07-20).
+    # The `bar_date` filter above (see `d = daily_df ... filter(ts_event < bar_date)`)
+    # applies ONLY to `daily_df`. `four_h_df`/`one_h_df` are used UNSLICED below, so
+    # c4[-1]/c4[-20:]/c4[-200:] read the END OF THE WHOLE LOADED FRAME regardless of
+    # bar_date. For a cache entry keyed to day D that is FUTURE data. The module header's
+    # "All HTF data uses PREVIOUS completed bar (shift(1)) — no look-ahead" is TRUE FOR
+    # DAILY and FALSE HERE. No consumer reads four_h_trend today (verified repo-wide), and
+    # htf_columns.py has WITHDRAWN its column. Fixing this changes the eligibility gate's
+    # behavior, so it needs its OWN ratify packet + independent grade — do not fix inline.
     four_h_trend = "neutral"
     if four_h_df is not None and len(four_h_df) >= 200:
         c4 = four_h_df["close"].to_numpy()

@@ -32,9 +32,18 @@ from src.engine.context.htf_cache_builder import day_key_of
 # The materialized column names. `approximation=False` is only claimed for a
 # binding when its column is present AND non-null on the bar being evaluated.
 COL_DAILY_TREND: str = "htf_daily_trend"
-COL_FOUR_H_TREND: str = "htf_four_h_trend"
+# ★ WITHDRAWN — DO NOT MATERIALIZE (independent grade F-1, 2026-07-20).
+# `compute_htf_context` computes `four_h_trend` from the ENTIRE UNSLICED 4h frame
+# (htf_context.py:143-149 -> c4[-1], c4[-20:], c4[-50:], c4[-200:]) and its `bar_date`
+# filter (htf_context.py:78-79) applies ONLY to `daily_df` — never to four_h_df/one_h_df.
+# So for a cache entry keyed to day D this value reflects the END OF THE WHOLE LOADED
+# HISTORY, not day D. That is a genuine LOOK-AHEAD with the usual OPTIMISTIC direction.
+# It was dormant (zero consumers) so no measured number is affected, but it is NOT
+# materialized any more: an unsafe column sitting in the frame is a trap waiting for the
+# next wire to read it. Re-enable ONLY after htf_context is fixed under its own packet.
+COL_FOUR_H_TREND: str = "htf_four_h_trend"  # withdrawn; name kept for the test that guards it
 COL_PD_LOCATION: str = "htf_pd_location"
-HTF_COLUMNS: Tuple[str, ...] = (COL_DAILY_TREND, COL_FOUR_H_TREND, COL_PD_LOCATION)
+HTF_COLUMNS: Tuple[str, ...] = (COL_DAILY_TREND, COL_PD_LOCATION)  # four_h WITHDRAWN (F-1)
 
 
 def exec_ts_col(df: pl.DataFrame) -> Optional[str]:
@@ -140,7 +149,6 @@ def attach_htf_columns(
         return df, 0
 
     daily: list[Optional[str]] = []
-    four_h: list[Optional[str]] = []
     pd_loc: list[Optional[str]] = []
     engaged = 0
     for ts in df[ts_col].to_list():
@@ -148,17 +156,14 @@ def attach_htf_columns(
         ctx = htf_cache.get(day_key_of(ts)) if ts is not None else None
         if ctx is None:
             daily.append(None)
-            four_h.append(None)
             pd_loc.append(None)
             continue
         engaged += 1
         daily.append(getattr(ctx, "daily_trend", None))
-        four_h.append(getattr(ctx, "four_h_trend", None))
         pd_loc.append(getattr(ctx, "pd_location", None))
 
     out = df.with_columns([
         pl.Series(COL_DAILY_TREND, daily, dtype=pl.Utf8),
-        pl.Series(COL_FOUR_H_TREND, four_h, dtype=pl.Utf8),
         pl.Series(COL_PD_LOCATION, pd_loc, dtype=pl.Utf8),
     ])
     return out, engaged
