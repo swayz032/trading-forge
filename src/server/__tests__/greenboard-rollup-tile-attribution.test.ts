@@ -70,10 +70,38 @@ function sliceBalanced(src: string, needle: string, open: string, close: string)
 // nothing, so the parser must not be line-ending sensitive.
 const routeSrc = fs.readFileSync(ROUTE, "utf8").replace(/\r\n/g, "\n");
 
+/** Split a literal body on commas that sit at nesting depth 0. */
+function splitTopLevel(body: string): string[] {
+  const out: string[] = [];
+  let depth = 0;
+  let cur = "";
+  for (const ch of body) {
+    if ("({[".includes(ch)) depth++;
+    else if (")}]".includes(ch)) depth--;
+    if (ch === "," && depth === 0) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.map((s) => s.trim()).filter(Boolean);
+}
+
+/** The raw argument expressions passed to worstOf(), one per element. */
+function rollupArgs(src: string = routeSrc): string[] {
+  const call = stripComments(sliceBalanced(src, "const overall = worstOf(", "(", ")"));
+  // Drop the leading `const overall = worstOf(` and the trailing `)`.
+  const body = call.slice(call.indexOf("(") + 1, call.lastIndexOf(")"));
+  return splitTopLevel(body);
+}
+
 /** Local variable names whose `.severity` is passed to worstOf(). */
-function deriveRollupSources(): string[] {
-  const call = stripComments(sliceBalanced(routeSrc, "const overall = worstOf(", "(", ")"));
-  const names = [...call.matchAll(/(\w+)\s*\.\s*severity/g)].map((m) => m[1]);
+function deriveRollupSources(src: string = routeSrc): string[] {
+  const names = rollupArgs(src)
+    .map((a) => a.match(/^(\w+)\s*\.\s*severity$/)?.[1])
+    .filter((n): n is string => Boolean(n));
   return [...new Set(names)];
 }
 
@@ -83,22 +111,34 @@ function deriveRollupSources(): string[] {
  * renamed keys — `lastCleanReconciliation: lastCleanRecon`) plus the return object's
  * `autopilot_status: autopilotStatus`. Nothing here is hand-listed.
  */
-function derivePayloadPaths(): Record<string, string[]> {
+function derivePayloadPaths(src: string = routeSrc): Record<string, string[]> {
   const out: Record<string, string[]> = {};
-  const six = stripComments(sliceBalanced(routeSrc, "const sixQuestions: SixQuestions = {", "{", "}"));
-  for (const line of six.split("\n")) {
-    const renamed = line.match(/^\s*(\w+)\s*:\s*(\w+)\s*,?\s*$/);
-    if (renamed) {
-      out[renamed[2]] = ["sixQuestions", renamed[1]];
-      continue;
-    }
-    const shorthand = line.match(/^\s*(\w+)\s*,\s*$/);
-    if (shorthand) out[shorthand[1]] = ["sixQuestions", shorthand[1]];
+
+  // Entries are split on TOP-LEVEL COMMAS, not on newlines. A renamed key wrapped
+  // across two lines (`lastCleanReconciliation:\n  lastCleanRecon,`) is one entry to
+  // the language and must be one entry here too. Splitting by line matched the
+  // continuation as a shorthand key and derived `sixQuestions.lastCleanRecon` — a path
+  // nothing reads, so the suite failed RED with a message accusing a tile that was
+  // actually fine. Failing safe is not the same as failing usefully.
+  const entryOf = (raw: string): [string, string] | null => {
+    const flat = raw.replace(/\s+/g, " ").trim();
+    const renamed = flat.match(/^(\w+)\s*:\s*(\w+)$/);
+    if (renamed) return [renamed[2], renamed[1]]; // [localVar, payloadKey]
+    const shorthand = flat.match(/^(\w+)$/);
+    if (shorthand) return [shorthand[1], shorthand[1]];
+    return null;
+  };
+
+  const sixBody = stripComments(sliceBalanced(src, "const sixQuestions: SixQuestions = {", "{", "}"));
+  for (const raw of splitTopLevel(sixBody.slice(sixBody.indexOf("{") + 1, sixBody.lastIndexOf("}")))) {
+    const e = entryOf(raw);
+    if (e) out[e[0]] = ["sixQuestions", e[1]];
   }
-  const ret = stripComments(sliceBalanced(routeSrc, "  return {\n    overall,", "{", "}"));
-  for (const line of ret.split("\n")) {
-    const renamed = line.match(/^\s*(\w+)\s*:\s*(\w+)\s*,?\s*$/);
-    if (renamed && !(renamed[2] in out)) out[renamed[2]] = [renamed[1]];
+
+  const retBody = stripComments(sliceBalanced(src, "  return {\n    overall,", "{", "}"));
+  for (const raw of splitTopLevel(retBody.slice(retBody.indexOf("{") + 1, retBody.lastIndexOf("}")))) {
+    const e = entryOf(raw);
+    if (e && !(e[0] in out)) out[e[0]] = [e[1]];
   }
   return out;
 }
@@ -158,10 +198,22 @@ describe("Risk Truth board — every roll-up source is individually attributable
   const paths = derivePayloadPaths();
   const r = loadRenderData();
 
-  it("derives the roll-up membership from the real worstOf() call", () => {
-    // Sanity on the PARSER itself — if this ever reads 0 sources the suite would
-    // vacuously pass, which is the failure mode that makes a guard worthless.
-    expect(sources.length).toBeGreaterThanOrEqual(4);
+  it("derives EVERY argument of the real worstOf() call — no silent coverage loss", () => {
+    // Sanity on the PARSER itself. A magic floor (">= 4") only catches a TOTAL parse
+    // failure; it cannot see a PARTIAL drop. If someone rewrites one argument as
+    // `sevOf(autopilotStatus)`, the `x.severity` idiom no longer matches, that source
+    // silently stops being tested, and a floor of 4 still passes with 5 of 6 covered.
+    //
+    // So the floor is the ARGUMENT COUNT of the actual call: every argument must
+    // resolve to a derived source. Wrap one and this fails immediately, naming it.
+    const args = rollupArgs();
+    expect(args.length, "parsed zero arguments out of worstOf() — parser is broken").toBeGreaterThan(0);
+    expect(
+      sources.length,
+      `worstOf() takes ${args.length} arguments but only ${sources.length} sources were derived. ` +
+        `Unparsed: ${args.filter((a) => !/^\w+\s*\.\s*severity$/.test(a)).join(", ")}. ` +
+        `Every roll-up argument must be attributable to a tile.`,
+    ).toBe(args.length);
     for (const s of sources) {
       expect(paths[s], `no payload path derived for roll-up source '${s}'`).toBeDefined();
     }
@@ -197,4 +249,99 @@ describe("Risk Truth board — every roll-up source is individually attributable
       ).toContain("ofr-v bad");
     });
   }
+});
+
+// ── Regression locks for the four findings raised by the independent grader ──
+describe("Risk Truth board — render honesty at the value edges", () => {
+  const r = loadRenderData();
+
+  it("★ a wrapped worstOf argument is DETECTED, not silently dropped", () => {
+    // Grader finding 1, exercised for real. The old floor was a magic `>= 4`, which
+    // only catches a TOTAL parse failure. Wrap ONE argument in a helper and that source
+    // silently stops being tested while the floor still passes — coverage shrinks with
+    // no signal. The floor is now the ARGUMENT COUNT, so a partial drop is visible.
+    const wrapped = `
+const overall = worstOf(
+    areWeTrading.severity,
+    pnlToday.severity,
+    sevOf(autopilotStatus)
+  );
+`;
+    const args = rollupArgs(wrapped);
+    const sources = deriveRollupSources(wrapped);
+    expect(args.length, "should see all three arguments").toBe(3);
+    expect(sources.length, "the wrapped arg must NOT resolve to a source").toBe(2);
+    // The real assertion in the suite above compares these two — here we prove they
+    // genuinely diverge on this input, which is what makes that comparison load-bearing.
+    expect(sources.length).not.toBe(args.length);
+  });
+
+  it("splitTopLevel respects nesting (the parser's own foundation)", () => {
+    expect(splitTopLevel("a, b, c")).toEqual(["a", "b", "c"]);
+    expect(splitTopLevel("a, f(x, y), b")).toEqual(["a", "f(x, y)", "b"]);
+    expect(splitTopLevel("{ p: 1, q: 2 }, z")).toEqual(["{ p: 1, q: 2 }", "z"]);
+  });
+
+  it("the real route file's renamed key derives its real payload key", () => {
+    expect(derivePayloadPaths()["lastCleanRecon"]).toEqual([
+      "sixQuestions",
+      "lastCleanReconciliation",
+    ]);
+  });
+
+  it("★ a renamed key WRAPPED ACROSS LINES still derives the real payload key", () => {
+    // Grader finding 2, exercised for real. The shipped route happens to keep this
+    // entry on one line, so asserting against the live file could not distinguish the
+    // fixed parser from the broken one — a test that cannot tell them apart is not
+    // coverage. This feeds a synthetic source where the key genuinely wraps.
+    //
+    // The old line-based parser matched the continuation line as a SHORTHAND key and
+    // derived `sixQuestions.lastCleanRecon` — a path nothing reads.
+    const synthetic = `
+const sixQuestions: SixQuestions = {
+  areWeTrading,
+  lastCleanReconciliation:
+    lastCleanRecon,
+  killSwitchLayers: ksReport,
+};
+  return {
+    overall,
+    autopilot_status: autopilotStatus,
+  };
+`;
+    const paths = derivePayloadPaths(synthetic);
+    expect(paths["lastCleanRecon"]).toEqual(["sixQuestions", "lastCleanReconciliation"]);
+    expect(paths["ksReport"]).toEqual(["sixQuestions", "killSwitchLayers"]);
+    expect(paths["areWeTrading"]).toEqual(["sixQuestions", "areWeTrading"]);
+    expect(paths["autopilotStatus"]).toEqual(["autopilot_status"]);
+  });
+
+  it("★ a NaN P&L renders Unknown, never a blank GREEN tile", () => {
+    // Grader finding 4. NaN passes `!= null`, money() returns null, esc(null) is ''
+    // → an EMPTY tile classed 'good'. A blank green tile is exactly the false calm
+    // this board exists to prevent.
+    const p = greenPayload();
+    p.sixQuestions.pnlToday = { todayPnl: NaN, expectedPnl: null, delta: null, severity: "yellow" };
+    const html = r.render(p);
+    expect(html).toContain("Unknown");
+    expect(html, "NaN P&L rendered an empty value cell").not.toMatch(/ofr-v good"><\/div>/);
+  });
+
+  it("a real $0 day still renders $0 — honesty must not swallow a true zero", () => {
+    // The inverse guard: hardening against NaN/null must not turn a genuine flat day
+    // into "Unknown". Zero is a real, knowable number.
+    const p = greenPayload();
+    p.sixQuestions.pnlToday = { todayPnl: 0, expectedPnl: 0, delta: 0, severity: "green" };
+    expect(r.render(p)).toContain("$0");
+  });
+
+  it("the heartbeat sub-line is escaped exactly once", () => {
+    // Grader finding 3: item() escapes `sub` itself, so pre-escaping double-escaped it.
+    const p = greenPayload();
+    p.autopilot_status.operator_absent_mode_active = true;
+    p.autopilot_status.last_heartbeat_at = "A&B";
+    const html = r.render(p);
+    expect(html).toContain("A&amp;B");
+    expect(html, "double-escaped").not.toContain("A&amp;amp;B");
+  });
 });

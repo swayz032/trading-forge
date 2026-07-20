@@ -179,7 +179,11 @@
     // null todayPnl means the tower could not tell us — it must NOT render as "$0",
     // which is a real number and would read as "flat day" instead of "no idea".
     var pnl = six.pnlToday || {};
-    if (pnl.todayPnl != null) {
+    // isFinite as well as != null: NaN passes a null-check, money() returns null for it,
+    // and esc(null) is '' — so a NaN P&L rendered an EMPTY tile classed 'good'. A blank
+    // green tile is the false-calm this very board exists to prevent, so NaN routes to
+    // the honest Unknown branch below rather than sneaking through as a green nothing.
+    if (pnl.todayPnl != null && isFinite(pnl.todayPnl)) {
       html += item(
         'Money today',
         money(pnl.todayPnl),
@@ -222,7 +226,9 @@
       html += item('Autopilot',
         ap.operator_absent_mode_active ? 'ON — running unattended' : 'Off — operator present',
         sevClass(ap.severity),
-        ap.last_heartbeat_at ? 'Last check-in: ' + esc(ap.last_heartbeat_at) : 'No check-in recorded.');
+        // item() escapes `sub` itself — pre-escaping here double-escaped it, unlike every
+        // sibling tile which passes raw values. Over-escaping, so never unsafe, but wrong.
+        ap.last_heartbeat_at ? 'Last check-in: ' + ap.last_heartbeat_at : 'No check-in recorded.');
     }
 
     // 9. Overall + production mode
