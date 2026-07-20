@@ -4,6 +4,27 @@
 
 ---
 
+## AR-117 · 2026-07-20 · T2 — **4 of 4 CLEAN, every plant fired, 0 uncalibrated.** ★ `detect_swings` clean **strengthens** the three prior clearances rather than merely preserving them — and the runner **caught its own false-boundary assumption mid-probe.**
+
+| detector | plant fired | real code | verdict |
+|---|---|---|---|
+| `detect_swings` | 45/3956 | **0/3956 + 0/2374** boundary-exact | **CLEAN** |
+| `detect_bullish_ob` | 32/42 | **0/42** (two alignments) | **CLEAN** |
+| `detect_bearish_ob` | 49/47 | **0/47** (two alignments) | **CLEAN** |
+| `compute_atr` | **272/272** | **0/272 + 0/720** | **CLEAN** |
+
+**1. ★★ THE RUNNER CAUGHT ITS OWN FALSE BOUNDARY — the exact trap, self-caught.** Its first OB probe assumed *the order block's own `index` is its reveal boundary.* **Wrong** — an OB **precedes** its confirming swing chronologically, so it is not knowable until that swing confirms. It **discarded the assumption and empirically discovered the true reveal cutoff per OB**, then checked value stability at reveal, reveal−1 (must be absent), reveal+1 (must be unchanged). **That is the false-7/39 class caught by the runner, at the right moment, without being told which boundary was wrong** — only that the class exists.
+
+**2. ★ `detect_swings` CLEAN STRENGTHENS the three prior clearances, and the runner explains why it is not a formality.** `detect_bos`/`detect_choch`/`compute_premium_discount` were cleared on the **assumption** that `swings["index"]` is stable once `<= i`. **But a detector can pass a strict `< i` gate on `index` while `price` retroactively mutates — which is precisely what `detect_buyside_liquidity` did.** This probe checked `detect_swings`'s **`price` field directly**, boundary-exact: **0/2374.** So the downstream gate's protection is now **empirically grounded rather than assumed.** It does **not** re-verify those three detectors' own internal logic — stated as out of scope rather than implied.
+
+**3. Probed at the REAL production parameter values, traced to call sites** — lookbacks 3/5/10/20 sourced from `judas_swing`, `breaker`/`unicorn`/`london_raid`, `turtle_soup`/`ote_strategy`, `ict_2022`/`quarterly_swing`/`iofed` — and `compute_atr` at period 14, verified repo-wide as the uniform production default. **Not a guessed parameter sweep.**
+- **★ Incidental observation I am flagging rather than absorbing:** that call-site trace names **several consumers outside any census I have run** (`judas_swing`, `breaker`, `unicorn`, `london_raid`, `ote_strategy`, `iofed`, `mitigation`). They consume `detect_swings`, **not** BSL/SSL — a **different population**, and my censuses were scoped to BSL/SSL. **But it is evidence the detector-consumer graph is wider than any enumeration I have done**, and I would not assume the six archetypes bound it.
+
+**4. Declared not-verified, carried:** synthetic fixtures only (no real CME data, no NaN/gap edge cases) · OB reveal-probing at `L ∈ {5,0}` only, with residual risk at other lookbacks **assessed low but not measured** · `compute_atr` at three periods · six same-file detectors not re-probed · numba cold-start cache path not stress-tested.
+
+**Score: 9 of 19 detectors carry validated verdicts** (8 clean, 1 confirmed-and-fixed), plus `detect_sweep` confirmed defective at its boundary and `eqhl_raid`'s target path confirmed as a third instance. **Holds:** six barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed. Reconciliation + per-call-site census still in flight.
+
+
 ## AR-116 · 2026-07-20 · T2 tier DISPATCHED (receipt held) — `detect_swings` · both OB detectors · `compute_atr`. ★ The brief tells the runner its own tier tag is **worthless as evidence**, and flags `detect_swings` as **load-bearing on three verdicts already issued**.
 
 **1. ★ `detect_swings` is graded as load-bearing, not as one more target.** The three T1 clearances (`detect_bos`, `detect_choch`, `compute_premium_discount`) rest on a stated argument: **they consume `detect_swings` output under a strict `< i` gate, so the gate re-derives its confirmation delay.** That argument is sound **only if `detect_swings` itself is causal.** So the brief asks the runner directly: **does `detect_swings` being clean — or not — change confidence in the three already cleared?** **A dependency that would retroactively weaken three issued verdicts should be probed knowing that, not discovered afterward.**
