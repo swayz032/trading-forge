@@ -4,6 +4,29 @@
 
 ---
 
+## AR-067 · 2026-07-20 · ★★ THE DoD IS MET — corpus binding-approximation **0.9938 → 0.4011 structural / 0.4162 engagement-weighted** across all 16 specs, zero errors. The 0.99 moved. Per-column engagement carried per your amended law. R-075 execution queued behind this, as ordered.
+
+**R-074/R-075 acknowledged.** Your two laws are written into the packet: **per-column engaged-fraction** (§4e amended) and **THE PROBE LAW** (§4f — a probe inside the detector's invariance class is vacuous; name the invariances and perturb ACROSS them). R-075's reader-vintage protocol is frozen at `81b646023a28d5b5` with execution stationed AFTER this re-measure — I have NOT preempted it; it is next, and I will **re-derive the whole sample draw at dispatch** (population artifact, criterion-(i) tie-break, seed from the manifest FILE BYTES not the internal field, k = seed mod 28) and treat any disagreement with your computed `YqY0OkL5LMI` / `ExB66jcyKxg` / `LD1FEbwXU4o` as an ALARM. R-062 carry: #5 alone remains.
+
+**★★ THE DoD (packet §5 pin 4d), artifact `wire1-dod-remeasure.json`, commit `4d52fb31`:**
+
+| | value |
+|---|---|
+| corpus rate BEFORE | **0.9938** |
+| corpus AFTER — structural (ceiling) | **0.4011** |
+| corpus AFTER — engagement-weighted (honest) | **0.4162** |
+| engaged fraction — **structure** column | **0.9999** |
+| engaged fraction — **bias** column | **0.4898** |
+| specs measured | **16/16, zero errors** |
+
+**Two after-numbers, deliberately.** STRUCTURAL credits a wired binding outright — the ceiling the wire achieves where its column exists. ENGAGEMENT-WEIGHTED credits each wired binding only by its column's engaged fraction — the honest number, because a column dormant on half the window did not de-approximate those bars. Reporting only the structural would overstate the win; only the weighted would hide the ceiling. The two differ by just 0.015 here because the big family (structure) engages at 99.99%.
+
+**★ THE DoD CARRIES ITS OWN ANTI-VACUITY SIGNAL — and I want it on the record, because a uniform improvement would have been the suspicious result.** Two specs moved **NOT AT ALL** (`E9MzEC_yNoM__s0` 1.0→1.0, `_LS6qcSlDCs__s0` 1.0→1.0): both have **ZERO wired-family bindings** (0 structure, 0 bias), so the wire correctly does not touch them. At the other end, two specs went **1.0 → 0.0** (fully de-approximated). The measurement DISCRIMINATES by what each spec actually binds — it is not relabeling everything green. Had all 16 improved uniformly I would be looking for the join error first, per the campaign's implausible-uniformity law.
+
+**Scope, carried honestly:** MES 5m, ONE window (2022-01-01..2023-06-30), wire flag ON, **CARRY** decision in force (no pre-window seeding — infeasible, 51 prior daily bars vs 200 needed), which is precisely why the bias column reads 48.98% rather than ~100%. Tier-b near-ghost specs: **RECEIPTS, not returns — no edge claim attaches to any profit_factor in this artifact.** No survivor arithmetic exists.
+
+**Owed next, in your order:** the **independent grade** — scope per R-074 §3/§5: the non-None builder branch, the dead-load activation, the availability rule, the structure column's causality certificate, and specifically the **speedup MECHANISM** (fewer admitted signals → less downstream work, NOT silently skipped evaluation — "a defect wearing a gift's clothing"). Then WIRE-2 bias-family generalization → `confirmation_native` → **R-075 reader-vintage cross-audit** (receipt before any tier-A result is INTERPRETED) → forensics T1 with bars set from this DoD artifact. The 77 sealed.
+
 ## AR-066 · 2026-07-20 · ★ WIRE-1 STRUCTURE COLUMN BUILT AND CAUSALLY PROVEN (`13c91e74`). Live: trades 721→631, PF 0.059→0.157, 99.99% engaged, runtime halved. And the anti-vacuity companion caught my causality probe being VACUOUS — twice — including a scale-invariance trap I would otherwise have shipped green.
 
 **R-072/R-073 acknowledged.** R-073 accepted AR-065 whole; road open. R-072 freezes gate-recalibration at hash `654780c88a4fba64` — noting your own 2× correction (lifetime effective-N is **32**, not the wave-scoped 16): that is exactly my F-2 incomplete-tuple fix working — the 16 shakedown singletons correctly REFUSE to collapse, which is why lifetime reads 16 collapsed wave-1R groups + 16 singletons. Your §3 DSR selection-side deflation gap is recorded as stationed in my lane (own packet + grade, with/before Tooth-1, NOT now). R-062 carry: #3, #5 remain ours.
