@@ -9,14 +9,42 @@
 There is no Anthropic API key in any runtime path. The subscription is a **build-side** dependency
 — it pays for the *agents that develop and grade this repo*, not for anything the factory executes.
 
-Two near-misses worth stating so nobody "corrects" this later:
+### Before you "correct" this page with a grep — read this
 
-- `src/server/services/llm-input-sanitizer.ts` matches the word `claude` — inside a **prompt-injection
-  defence regex** (`/\battention\s+(ai|llm|assistant|model|gpt|claude|ollama)\s*:/i`). It is a guard
-  *against* injected instructions, not a call to anything.
-- `scripts/carter/configure-agent.ts` sets `claude-sonnet-4-5` — that is an **ElevenLabs ConvAI enum
-  value**. Carter's voice model is billed through **ElevenLabs**, not Anthropic. See the separate row
-  below; an Anthropic lapse does not touch it.
+`grep -ri claude src/ scripts/` returns **471 hits**. **423 of them are references to `CLAUDE.md`**,
+the repo's own instruction file. None of them is a dependency. An earlier draft of this page tried to
+*enumerate* the misleading hits; that list was one short within a day, because **the set of things
+that merely mention "claude" is open and grows with every comment written.** Enumerating it is the
+same trap as policing prose instead of governing a schema.
+
+**So here is the rule instead of a list. A real dependency is exactly one of:**
+
+| signal | meaning |
+|---|---|
+| `api.anthropic.com` | a live HTTP call |
+| `ANTHROPIC_API_KEY` / `process.env.ANTHROPIC*` | a credential read |
+| `@anthropic-ai/*` import or `package.json` entry | an SDK dependency |
+
+**Everything else is a mention.** The discriminating query, and its result:
+
+```
+grep -rnE 'api\.anthropic\.com|ANTHROPIC_API_KEY|@anthropic-ai|process\.env\.ANTHROPIC' \
+  --include=*.ts --include=*.cjs --include=*.mjs --include=*.js --include=*.py src scripts
+  → 0 hits
+```
+
+**That zero is meaningful, not vacuous:** the same query run against a file containing
+`process.env.ANTHROPIC_API_KEY` returns 1. It discriminates.
+
+Three representative mentions, given as **illustrations of the rule — not as a complete list**
+(a complete list is not possible, which is the point):
+
+- `src/server/services/llm-input-sanitizer.ts` — `claude` appears inside a **prompt-injection defence
+  regex**. A guard *against* injected instructions, not a call.
+- `scripts/carter/configure-agent.ts` — `claude-sonnet-4-5` is an **ElevenLabs ConvAI enum value**.
+  Carter's voice is billed through **ElevenLabs**; an Anthropic lapse does not touch it.
+- `scripts/w7c-full-graduation.mjs:156` — a `console.log` printing the dev-skill name
+  `/claude-md-management:claude-md-improver`. A suggestion to a human, not a call.
 
 ---
 
