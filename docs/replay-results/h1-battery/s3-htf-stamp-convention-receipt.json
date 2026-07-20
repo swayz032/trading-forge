@@ -36,5 +36,15 @@
     "still_owed": "the intra-day STRADDLE case in the truncated-replay proof (an exec bar mid-way through a forming 4h bar) before the structure wire lands — R-067 §3."
   },
 
-  "scope": "MES, 2022-03-01..2022-03-15, 5min vs 4h. The convention is a property of the S3 dataset layout, but this receipt establishes it on ONE symbol and ONE window; 1h was not separately aligned."
+  "one_hour_alignment_R069_s4": {
+    "why": "R-069 §4 made this BINDING: 'the 1h frame is NOT yet aligned — align it empirically before anything reads it.'",
+    "method": "identical to the 4h path — resample MES 5m→1h on the UTC grid, value-match against the S3-native 1h frame under both stamping hypotheses",
+    "H1_open_stamped": {"joined_rows": 253, "max_abs_diff": {"open": 0.0, "high": 0.0, "low": 0.0, "close": 0.0}},
+    "H2_close_stamped": {"joined_rows": 241, "max_abs_diff": {"open": 88.0992, "high": 83.7522, "low": 92.1564, "close": 88.0992}},
+    "row_counts": {"s3_native_1h": 253, "exec_resampled_1h": 253, "note": "EXACT count match — no boundary or session-filter divergence at this window"},
+    "conclusion": "S3-native 1h bars are OPEN-STAMPED, same as 4h. Binding rule: a 1h bar stamped T is available to exec bar t IFF T + 1h <= t.",
+    "status": "R-069 §4 binding caveat DISCHARGED"
+  },
+
+  "scope": "MES, 2022-03-01..2022-03-15. Both 4h and 1h now empirically aligned on ONE symbol and ONE window; the convention is a property of the S3 dataset layout, but a second symbol/window was not tested."
 }

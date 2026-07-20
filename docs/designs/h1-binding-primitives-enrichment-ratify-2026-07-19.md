@@ -83,8 +83,11 @@ at 10:30, because its OHLC is computed from the bar-`t` FUTURE.
   - **"Different instruments" check REFUTED:** once anchored, S3-native 4h == exec-resampled
     4h exactly. No fidelity decision is forced about which frame feeds structure.
   - **THEREFORE, concretely for the structure wire:** a 4h bar stamped `T` is available to
-    exec bar `t` **iff `T + 4h ≤ t`** (i.e. `T ≤ t - 4h`). Scope: MES, one window; 1h not
-    separately aligned — align it before it is used.
+    exec bar `t` **iff `T + 4h ≤ t`** (i.e. `T ≤ t - 4h`).
+  - **1h ALIGNED TOO (R-069 §4 binding caveat DISCHARGED):** same method, same verdict —
+    H1 open-stamped matches **0.0000 across 253/253 bars** (exact row-count match); H2
+    close-stamped off by ~88 points. **Rule: a 1h bar stamped `T` is available to exec bar
+    `t` iff `T + 1h ≤ t`.** Scope: MES, one window, for both frames.
 - **Why the existing daily path is safe:** `compute_htf_context` applies the completed-bar
   discipline INTERNALLY ("All HTF data uses PREVIOUS completed bar (shift(1)) — no
   look-ahead", `htf_context.py:3/66`) and has a bar_date lookahead filter
