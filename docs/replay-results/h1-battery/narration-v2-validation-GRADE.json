@@ -1,0 +1,161 @@
+{
+  "grader": "independent-blind",
+  "n": 29,
+  "rows": [
+    {
+      "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+      "verdict": "narration",
+      "quoted_span": "add volume by Price values go to vwap developing vwap",
+      "note": "BARE-OBJECT CLASS. Names indicator objects (volume-by-price, vwap, developing vwap) but is a pure chart-setup instruction: nothing is compared, no threshold, no direction, nothing acts ON the named objects."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+      "verdict": "not_narration",
+      "quoted_span": "as soon as we get this engulfing"
+    },
+    {
+      "condition_id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+      "verdict": "not_narration",
+      "quoted_span": "wait for price to tap in and then push to your direction"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+      "verdict": "narration",
+      "quoted_span": "I would personally be looking to enter the trade right here",
+      "note": "Pure statement of speaker intent; 'right here' is deictic pointing, not a comparator or level with any attached test."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+      "verdict": "not_narration",
+      "quoted_span": "very close to the order block",
+      "note": "HARD CALL. Verb ('map out') is procedural, but 'very close to' is a proximity comparator structurally attached to an object (the order block). Loose and thresholdless, yet the plain-language intent ('checkable, however loosely') tips it to not_narration."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+      "verdict": "not_narration",
+      "quoted_span": "as soon as price touched that level"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+      "verdict": "not_narration",
+      "quoted_span": "a bullish imbalance",
+      "note": "HARD CALL, near the boundary. This is a labelling assertion about a chart feature, not a condition to wait for. Counted not_narration only because a direction ('bullish') is structurally attached to an object ('imbalance'). If polarity carried inside a compound noun does not count as direction, this flips to narration."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:a-is-a-low-b-is-a-lower-high-identified#6",
+      "verdict": "not_narration",
+      "quoted_span": "C is a low that is higher than the previous one"
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+      "verdict": "not_narration",
+      "quoted_span": "the moment price comes above this level"
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+      "verdict": "not_narration",
+      "quoted_span": "the price to break and close outside of that range"
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+      "verdict": "not_narration",
+      "quoted_span": "seen on the heat map that buyers or sellers are present at that area",
+      "note": "Much of this text is tool-endorsement commentary; the quoted clause is the one checkable state (presence of resting participants at a located area) and carries the verdict."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+      "verdict": "not_narration",
+      "quoted_span": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+      "verdict": "not_narration",
+      "quoted_span": "if we break out or if we react off a low volume, it's typically not going to work out"
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+      "verdict": "not_narration",
+      "quoted_span": "short the rejection of vwap and the 20 SMA"
+    },
+    {
+      "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+      "verdict": "not_narration",
+      "quoted_span": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed"
+    },
+    {
+      "condition_id": "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21",
+      "verdict": "not_narration",
+      "quoted_span": "the market come down and revisit the fair value gap",
+      "note": "HARD CALL. Rhetorically this is reassurance commentary ('That's totally fine'), not an instruction. But a direction ('come down') and a revisit event are attached to a real object (the fair value gap), so the enumerative test forces not_narration. The definition gives no way to discount an element that appears inside a purely descriptive aside."
+    },
+    {
+      "condition_id": "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+      "verdict": "not_narration",
+      "quoted_span": "if we break above the overnight highs"
+    },
+    {
+      "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+      "verdict": "not_narration",
+      "quoted_span": "there should also be liquidity price will clear before you know tapping into the imbalance"
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+      "verdict": "not_narration",
+      "quoted_span": "after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+      "verdict": "not_narration",
+      "quoted_span": "when price breaks a support or resistance and does a fake out and heads in the opposite direction"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+      "verdict": "narration",
+      "quoted_span": "how to use vwap as well as a 20 period moving average",
+      "note": "BARE-OBJECT CLASS. Topic announcement. '20 period' is a parameter inside the indicator's name, not a threshold applied to anything; nothing is compared or directed."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+      "verdict": "not_narration",
+      "quoted_span": "if we're trading over the vwob we're typically more bullish"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+      "verdict": "not_narration",
+      "quoted_span": "once we close over this 20 period moving average"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-standard-deviation-is-one-the#6",
+      "verdict": "not_narration",
+      "quoted_span": "usually I just keep it at two",
+      "note": "HARD CALL. Reads as settings talk with no market test, but explicit numeric values (1.5, two) are attached to a real object (the standard-deviation band), so a threshold element is literally present. The definition does not say whether a threshold that only configures an indicator, rather than gating an event, counts."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+      "verdict": "narration",
+      "quoted_span": "the white line that you see on my screen that's the 20 SMA",
+      "note": "BARE-OBJECT CLASS, and the hardest narration call. Pure chart identification/disambiguation of which indicator is drawn; the 'not smooth / not exponential' contrast is about the indicator's identity, not about any market quantity, and no comparator acts on price."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+      "verdict": "not_narration",
+      "quoted_span": "Price stops making lower lows"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+      "verdict": "not_narration",
+      "quoted_span": "wait for a break of the level, but we need a fair value gap"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+      "verdict": "not_narration",
+      "quoted_span": "while price is still making lower highs and lower lows, do not buy"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+      "verdict": "narration",
+      "quoted_span": "you're not just going to trade based off of vwap only",
+      "note": "BARE-OBJECT CLASS. Names vwap and negates a practice, but nothing is compared to vwap, no level, no threshold, no direction — meta-advice about method, not a market condition."
+    }
+  ]
+}
