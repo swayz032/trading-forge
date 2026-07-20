@@ -91,11 +91,18 @@ interface SixQuestions {
 }
 
 interface AutopilotStatus {
-  operator_absent_mode_active: boolean;
+  // OR-031 §2: null means "we could not determine this", NOT false. A definite `false` on a
+  // build failure renders as "autopilot off / operator present" — a false-calm identical in
+  // shape to the alerting tile. This is a DISPLAY block: the value here suppresses nothing,
+  // it only tells the operator what to believe.
+  operator_absent_mode_active: boolean | null;
   last_heartbeat_at: string | null;
   bw_session_expires_at: string | null;  // null until first BW refresh check
   cookie_refresh_status: { mffu: "fresh" | "stale" | "unknown"; topstep: "fresh" | "stale" | "unknown" };
   discord_webhook_health: DiscordWebhookHealth;
+  /** yellow ONLY when the block genuinely failed to build. A healthy "autopilot off" is green. */
+  severity: OverallSeverity;
+  degraded?: boolean;
 }
 
 export interface ProductionStatusResponse {
@@ -407,15 +414,22 @@ async function buildAutopilotStatus(): Promise<AutopilotStatus> {
         topstep: (cookieStatus["topstep"] as "fresh" | "stale" | "unknown") ?? "unknown",
       },
       discord_webhook_health: webhookHealth,
+      // A healthy "operator present, autopilot off" is GREEN. Only a genuine build failure
+      // is yellow — otherwise the tile cries wolf on the normal case (OR-031 §2 RED-proof).
+      severity: "green",
     };
   } catch (err) {
     logger.warn({ err }, "production-status: autopilot status build failed — returning defaults");
     return {
-      operator_absent_mode_active: false,
+      // null, NOT false: a definite `false` here would render "autopilot off / operator
+      // present" when we simply could not tell — the alerting tile's false-calm shape.
+      operator_absent_mode_active: null,
       last_heartbeat_at: null,
       bw_session_expires_at: null,
       cookie_refresh_status: { mffu: "unknown", topstep: "unknown" },
       discord_webhook_health: "not_configured",
+      severity: "yellow",
+      degraded: true,
     };
   }
 }
@@ -462,7 +476,10 @@ export async function buildProductionStatus(): Promise<ProductionStatusResponse>
     lastCleanRecon.severity,
     // OR-027 3: alertingStatus was absent from the roll-up entirely. worstOf is worst-wins,
     // so adding a source can only make the board MORE honest, never less.
-    alertingStatus.severity
+    alertingStatus.severity,
+    // OR-031 §2: a block that cannot report the autopilot state is a real yellow on a
+    // go/no-go board. Green on the healthy "autopilot off" case — no cry-wolf.
+    autopilotStatus.severity
   );
 
   return {
@@ -533,11 +550,14 @@ productionStatusRoutes.get(
           alertingStatus: { lastAlertFiredAt: null, minutesSinceLastAlert: null, webhookConfigured: false, severity: "red" },
         },
         autopilot_status: {
-          operator_absent_mode_active: false,
+          // Whole-status failure: we can determine nothing, so claim nothing.
+          operator_absent_mode_active: null,
           last_heartbeat_at: null,
           bw_session_expires_at: null,
           cookie_refresh_status: { mffu: "unknown", topstep: "unknown" },
           discord_webhook_health: "not_configured",
+          severity: "red",
+          degraded: true,
         },
         generatedAt: new Date().toISOString(),
         cacheHit: false,
