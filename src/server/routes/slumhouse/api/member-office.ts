@@ -1,21 +1,15 @@
 /**
- * ⚠ INFRASTRUCTURE ONLY — THIS FEATURE IS NOT YET USABLE (OR-052 §2, F-2, 2026-07-20).
+ * PIN provisioning EXISTS as of 2026-07-20 (OR-053/OR-054). An earlier revision of this header
+ * disclosed that no establishment path existed and the whole gate was inert (F-2) — that
+ * disclosure was accurate when written and is now FALSE, so it is removed rather than left to
+ * rot. A stale disclosure is its own small decoration.
  *
- * There is NO PIN-ESTABLISHMENT PATH. `hashPin()` is called from nowhere in the product and
- * nothing INSERTs into `slumhouse_member_pins`, so no member can ever have a PIN on file.
- * In practice that means: `POST /member/pin` can only ever return 409 `no_pin_set`, no member
- * can obtain a ticket, and therefore EVERY member surface is locked — `/member/scope` returns
- * an empty surface list for everyone.
+ * Flow: POST /member/pin/establish (member sets their own PIN, once) -> POST /member/pin
+ * (verify, mint ticket) -> GET /member/scope. Establishment refuses if a PIN already exists;
+ * reset is Discord re-auth with operator notification, deliberately a harder path.
  *
- * This is FAIL-CLOSED and harmless (test-mode, pre-Phase-5, zero exposure), and the crypto,
- * cross-member isolation and schema beneath it are independently graded band-7 SAFE. But the
- * verify path must not be mistaken for a working feature: **safe and complete are different
- * axes, and this is the first without the second.**
- *
- * PIN provisioning is the immediate next unit. Until it ships, do not wire this into any
- * member-facing flow and do not read a green test suite as evidence the gate works end to end —
- * every existing test supplies its own hash, which is precisely how this gap survived 60
- * passing tests.
+ * Still TEST-MODE / pre-Phase-5: the broker-connect card validates designated test keys only
+ * and never contacts a live broker.
  *
  * Per-member Slumhouse office routes (Tier-2 item 6).
  *
@@ -41,7 +35,7 @@ import { db } from "../../../db/index.js";
 import { slumhouseMemberPins, slumhouseConnectTest } from "../../../db/schema.js";
 import { requireSlumhouseUser, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
 import { evaluateOfficeScope, visibleSurfaces, type OfficeSurface } from "../../../lib/member-office-scope.js";
-import { verifyPin, evaluateAttempt, nextAttemptState, PIN_POLICY } from "../../../lib/member-pin.js";
+import { hashPin, verifyPin, evaluateAttempt, nextAttemptState, PIN_POLICY, PinPolicyError } from "../../../lib/member-pin.js";
 import { validateTestKey, assertStorable, redactKey } from "../../../lib/connect-wizard-mock.js";
 import {
   PIN_COOKIE_NAME,
@@ -84,6 +78,57 @@ function pinSatisfied(req: SlumhouseRequest, viewerId: string, nowMs: number): b
   }
   return true;
 }
+
+// ── POST /slumhouse/api/member/pin/establish ─────────────────────────────────────────────────
+// The member SETS their own PIN at first login (operator directive, OR-003 §1: member-created,
+// not operator-issued). This is the path whose absence made the whole gate inert (F-2).
+//
+// ESTABLISHMENT IS NOT RESET. If a row already exists this refuses — a silent overwrite would
+// let anyone holding a live Discord session replace an existing member's PIN, turning "set your
+// code" into "take over the room". Reset stays Discord re-auth with operator notification
+// (OR-013 §2), deliberately a different, harder path.
+memberOfficeRouter.post(
+  "/slumhouse/api/member/pin/establish",
+  requireSlumhouseUser,
+  async (req: SlumhouseRequest, res: Response) => {
+    const viewerId = req.slumhouseUser!.discordUserId;
+    const nowMs = Date.now();
+    const submitted = (req.body ?? {}).pin;
+
+    try {
+      const existing = await db.select().from(slumhouseMemberPins)
+        .where(eq(slumhouseMemberPins.discordUserId, viewerId)).limit(1);
+      if (existing[0]) { res.status(409).json({ error: "pin_already_set" }); return; }
+
+      if (typeof submitted !== "string") { res.status(400).json({ error: "pin_required" }); return; }
+
+      // hashPin enforces the weak-PIN policy itself and throws PinPolicyError — the policy
+      // lives in one place rather than being restated here where it could drift.
+      let pinHash: string;
+      try {
+        pinHash = await hashPin(submitted);
+      } catch (err) {
+        res.status(400).json({
+          error: "pin_policy",
+          reason: err instanceof PinPolicyError ? err.message : "invalid pin",
+        });
+        return;
+      }
+
+      await db.insert(slumhouseMemberPins).values({ discordUserId: viewerId, pinHash });
+
+      // Setting the PIN signs you in — no reason to demand it again in the same breath.
+      const ticket = signPinTicket(viewerId, nowMs);
+      if (!ticket) { res.status(503).json({ error: "pin_unavailable" }); return; }
+      res.cookie?.(PIN_COOKIE_NAME, ticket, {
+        httpOnly: true, sameSite: "lax", secure: true, maxAge: PIN_TTL_SEC * 1000, path: "/slumhouse",
+      });
+      res.status(201).json({ ok: true });
+    } catch {
+      res.status(500).json({ error: "pin_establish_failed" });   // never leak the reason
+    }
+  },
+);
 
 // ── POST /slumhouse/api/member/pin ───────────────────────────────────────────────────────────
 memberOfficeRouter.post(
