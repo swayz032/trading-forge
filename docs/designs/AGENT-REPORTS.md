@@ -4,6 +4,29 @@
 
 ---
 
+## AR-113 · 2026-07-20 · ★★★ RESIDUAL AUDIT — mechanism IDENTIFIED: **`detect_sweep` discards the index column outright.** Two candidates ruled out with fired plants. ★ And `eqhl_raid` is inside the leak through a **THIRD, SEPARATE instance** the sweep fix would NOT close. ★ Plus a **50× measurement discrepancy** the runner refused to reconcile away.
+
+| candidate | verdict | evidence |
+|---|---|---|
+| cluster **PRICE** evolution | **RULED OUT** | plant fired **57 drift events**; real code **0** — `anchor_price` set once at `liquidity.py:71`, never reassigned |
+| call-site **level SET** | **RULED OUT** | on **REAL ES data**: plant (old `max()`) **9/9 cutoffs mismatch**; fixed code **0/9** |
+| **`detect_sweep` index gating** | **★ CONFIRMED** | `liquidity.py:241` — `levels = liquidity_levels["price"].to_list()` **discards `index` entirely** |
+| **`eqhl_raid` target selection** | **★ CONFIRMED — separate instance** | `eqhl_raid.py:157-160,173-176` |
+
+**1. THE MECHANISM, in one line of code:** `detect_sweep` takes only the price column and then applies **every level to every bar**, never comparing the bar index against the level's creation index. **Real trace:** at bar **1302**, `sweep_bsl` is **False** truncated and **True** on full data, because a level created at bar **2040 — 738 bars later —** was included un-gated. Full accounting: **54/54 mismatches 100% explained** by future-created levels, with swing-detection edge effects ruled out in parallel.
+
+**2. ★★ THE `eqhl_raid` ANSWER IS NOT THE ONE EITHER OF US EXPECTED — and it survives your §4 reasoning by a different route.** Your bar rested on *"if the mechanism is price drift, price-only consumers are inside it."* **Price drift is ruled out** — so that chain fails. **But `eqhl_raid` is inside the leak anyway**, through a path neither of us named: its **entries are clean** (its own EQH/EQL sweep detection is explicitly index-gated at `eqhl_raid.py:108/116` — 0 mismatches at three cutoffs), while its **take-profit TARGET** is chosen from the raw, un-gated whole-df price list.
+- **Real trace:** at bar **26391**, the short target was **2879.41** using only data through that bar, and **3063.01** using the whole frame — because an SSL level was created **29 bars after the entry.**
+- **★ Fixing `detect_sweep` would NOT close this.** Different file, different side of the trade (exit target, not entry signal), and `eqhl_raid` never calls `detect_sweep` on BSL/SSL at all. **It is a third fix point.** So your instinct to keep it barred was right and your stated reason was wrong — which is exactly why you ordered it measured.
+
+**3. ★ THE DISCREPANCY THE RUNNER REFUSED TO RECONCILE AWAY — and I am flagging it as live, not settled.** Its measured raw sweep-bit mismatch is **~0.1–0.5%**. The figure carried through this lane is **6.6–18.3%** (which I had already mis-cited as ~11–22%). **That is a ~50× gap.** It tested the obvious explanation — a leaked sweep bit gating entries for up to 15 bars via the strategy state machine — **directly on `ICT2022Strategy.compute()` output at three cutoffs and found 0 entry-signal mismatches.** It reported this as **NOT VERIFIED — neither agreement nor disagreement.**
+- **Two independent measurements of "the residual gap" now differ by ~50×, and nobody knows which measures the thing that matters.** Given that this lane has already been wrong about a downstream cure, **I am not scoping a fix packet on either number until they are reconciled.** That reconciliation is the next unit, and it is cheap relative to fixing the wrong thing.
+
+**4. Declared not-verified, carried not buried:** the four other sweep strategies were not individually traced (the mechanism applies by construction — identical call shape — but no per-strategy real-data trace exists); the `eqhl_raid` target census stopped at 5 hits each side, non-exhaustive and non-cherry-picked; **no check was made for other price-only consumers elsewhere with the same call-site pattern** — and after tonight I would treat that last one as an open population, not an empty one.
+
+**Not done:** no fix, no packet. **Holds:** six barred — five on the now-**confirmed** `detect_sweep` gap, `eqhl_raid` on its **own confirmed** third instance · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-112 · 2026-07-20 · R-112 §4's unrun leg DISPATCHED (receipt held) — the remaining **T1 global-scanners**: `detect_bos` · `detect_choch` · `compute_premium_discount`. Runs parallel to the residual audit; no shared files.
 
 **1. Taking the ordered sequence rather than waiting on the audit.** Your R-112 §4 probe order was *fvg → liquidity trio → remaining T1 → T2 → T3*; legs one and two returned, **leg three had not run.** It is independent of the in-flight residual audit (different detectors, different files), so it proceeds in parallel rather than queueing behind it.
