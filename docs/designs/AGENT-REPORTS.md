@@ -4,6 +4,27 @@
 
 ---
 
+## AR-099 · 2026-07-20 · ★★ SIBLING SWEEP RUN — **BUT MY PROBE FAILED ITS OWN VALIDATION, SO I AM REPORTING NO RESULTS.** A possible second leak in `detect_fvg` is held as UNCONFIRMED. The probe law applied to myself says these numbers do not count.
+
+**1. ★ THE VALIDATION FAILED, AND THAT GOVERNS EVERYTHING BELOW.** Per R-105/R-108 I planted a deliberate leak and required the probe to catch it. **It did not fire (0/39 on the plant).** By the law's own terms — *a probe that cannot fail proves nothing* — **every verdict this run produced is inadmissible**, the clean ones especially.
+
+**2. My diagnosis of my own failure, stated as diagnosis not excuse:** I believe **the PLANT was malformed, not the probe dead** — my synthetic leak appended a row whose index still fell at/before the probe bar, so it produced no count difference for the comparison to see. Evidence the probe is not simply inert: **it fired 7/39 on `detect_fvg`.** But *"I think my plant was bad"* is exactly the reasoning the law exists to refuse. **I am not upgrading a failed validation on my own say-so.**
+
+**3. What the run produced, recorded as UNADMITTED — not as findings:**
+- `detect_swings` at lookbacks **2, 3, 5, 10** (the archetypes' htf/ltf spread): 0/39 each.
+- `detect_bullish_ob` / `detect_bearish_ob`: 0/39 each.
+- **`detect_fvg` — 7/39 mismatches.** A **sibling nobody has probed**, consumed by `Ict2022Strategy` (`price_delivery.py`), which my census did not enumerate because I swept only the two *liquidity* detectors you named.
+**None of these may be cited.** The clean readings could be a probe that cannot see; the `detect_fvg` reading could be a real second leak or an artifact of the same weakness. **Both directions are unresolved and I am claiming neither.**
+
+**4. ★ WHAT I WOULD HAVE DONE AN HOUR AGO:** reported *"siblings clean, plus a bonus leak found in `detect_fvg`"* — a satisfying result, six clean verdicts and a discovery, all resting on an instrument that had just failed its only calibration. **The validation step is the entire reason that report does not exist.** This is the fourth instrument of mine to fail tonight and the first to fail *before* producing a number I believed.
+
+**5. ★ AND IT WIDENS YOUR §3(a) SCOPE:** `detect_fvg` is a **third** shared detector in this family, consumed by a registered archetype, **outside the census I ran**. Whatever its truncation status turns out to be, **the sibling sweep is not two detectors wide — it is at least three**, and the census I delivered in AR-098 was scoped to the pair you named rather than to the class. **That is my scoping error, not a change in the orders.**
+
+**6. What I need before this lane can advance:** a probe validated by a **correctly constructed** plant — one that genuinely makes a level's *existence at bar i* depend on data after bar i, which is the actual defect shape from F-1 — and re-run across all three detectors under the archetypes' call patterns. **Not started; I would rather hand you a failed validation than a clean sweep I cannot stand behind.**
+
+**Holds unchanged:** the six archetypes barred from any wave · `named_sr_level` blocked · T1 blocked · WIRE-2 pending · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-098 · 2026-07-20 · ★ AR-097's ENTRY NEVER LANDED — the commit `d50ef9be` claims a report that is not in this file. Report-rides-the-commit **held the file, not the content**. Both now filed: the census result, and the law's first failure mode.
 
 **1. ★ THE LAW HAS A HOLE AND I FOUND IT BY TRIPPING IT.** My script writes the AR entry, then commits the artifact + `AGENT-REPORTS.md` together. **The write step failed** (a stale anchor string — the AR-096 heading I was matching had changed) — but the **commit ran anyway**, because it was a separate command in the same shell line. So `d50ef9be` shipped the census artifact with a commit message describing AR-097, and **no AR-097 in this file.**
