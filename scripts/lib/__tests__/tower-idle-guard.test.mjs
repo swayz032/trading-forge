@@ -9,7 +9,7 @@ test("exit code mapping", () => {
   assert.equal(exitCodeFor("ABORT"), 20);
 });
 
-const quietSample = { health: { reachable: true, ok: true, backtestsActive: 0 }, gpuUtil: 5, pythonCount: 0 };
+const quietSample = { health: { reachable: true, ok: true, backtestsActive: 0 }, gpuUtil: 5, pythonCount: 0, backtestWorkerCount: 0 };
 
 test("quiet + armed → RUN", async () => {
   const r = await guardOnce({
@@ -31,7 +31,7 @@ test("switch off → SKIP", async () => {
 });
 
 test("forceRun bypasses busy tower → RUN forced", async () => {
-  const busy = { health: { reachable: true, ok: true, backtestsActive: 3 }, gpuUtil: 5, pythonCount: 0 };
+  const busy = { health: { reachable: true, ok: true, backtestsActive: 3 }, gpuUtil: 5, pythonCount: 0, backtestWorkerCount: 0 };
   const r = await guardOnce({
     takeSampleFn: async () => busy,
     readSwitchFn: async () => ({ mode: "armed", skipUntilMs: null }),

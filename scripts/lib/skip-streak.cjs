@@ -30,7 +30,13 @@ const THRESHOLDS_V1 = Object.freeze({
 
 // Reason codes are internal; the operator reads English.
 const REASON_ENGLISH = {
-  python_workers_active: "tower busy (research work running)",
+  // RETAINED, not renamed: ledger rows written before 2026-07-20 carry this code, and
+  // rewriting history's label would make old skip streaks unreadable. New rows use
+  // backtest_workers_active. The wording keeps the old rows honest about what that
+  // check ACTUALLY meant at the time — any python at all, not necessarily research.
+  python_workers_active: "tower looked busy (any Python process — pre-2026-07-20 check)",
+  backtest_workers_active: "tower busy (backtest workers running)",
+  backtest_probe_unavailable: "could not tell if the tower was busy (failed safe)",
   backend_unreachable: "backend not running",
   gpu_busy: "tower busy (GPU in use)",
   backtests_active: "tower busy (backtests running)",

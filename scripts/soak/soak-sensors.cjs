@@ -25,7 +25,19 @@ $o=@{}
 $c = Get-NetTCPConnection -LocalPort ${port} -State Listen | Select-Object -First 1
 if($c){ $o.backend = Info (Get-Process -Id $c.OwningProcess) }
 $o.ollama = Info (Get-Process -Name ollama | Select-Object -First 1)
-$o.pythonCount = @(Get-Process -Name python,python3,pythonw).Count
+try {
+  $py = @(Get-CimInstance Win32_Process -Filter "Name='python.exe' or Name='python3.exe' or Name='pythonw.exe'" -ErrorAction Stop | Select-Object ProcessId,CommandLine)
+  $o.pythonProbeOk = $true
+  $o.pythonCount = $py.Count
+  # A process whose CommandLine we cannot read cannot be judged -> counted as a possible
+  # worker, so unreadable pushes toward YIELDING, never toward running.
+  $unreadable = @($py | Where-Object { -not $_.CommandLine }).Count
+  $matched = @($py | Where-Object { $_.CommandLine -match '(-m\s+src\.|src\.engine|src[\\/]engine|src[\\/]data[\\/]scripts)' }).Count
+  $o.pythonCmdlineUnreadable = $unreadable
+  $o.backtestWorkerCount = $matched + $unreadable
+} catch {
+  $o.pythonProbeOk = $false
+}
 $o.diskFreeBytes = [int64]((Get-PSDrive C).Free)
 $o | ConvertTo-Json -Compress -Depth 4
 `.trim();
@@ -36,12 +48,20 @@ $o | ConvertTo-Json -Compress -Depth 4
   // gradeRestarts leans on PID (which DOES change on a real NSSM respawn).
   const saneMs = v => (Number.isFinite(v) && v > 946684800000) ? v : null;
   const proc = p => p ? { pid: p.pid ?? null, rssMb: p.rssMb ?? null, handles: p.handles ?? null, startMs: saneMs(p.startMs) } : { ...nullProc };
-  if (!out) return { backend: { ...nullProc }, ollama: { ...nullProc }, pythonCount: null, diskFreeBytes: null };
-  let j; try { j = JSON.parse(out); } catch { return { backend: { ...nullProc }, ollama: { ...nullProc }, pythonCount: null, diskFreeBytes: null }; }
+  // backtestWorkerCount === null means "we could not determine this", which the guard
+  // treats as BUSY. Distinct from 0, which means "we looked and there are none".
+  const nullSample = { backend: { ...nullProc }, ollama: { ...nullProc }, pythonCount: null, backtestWorkerCount: null, pythonCmdlineUnreadable: null, diskFreeBytes: null };
+  if (!out) return { ...nullSample };
+  let j; try { j = JSON.parse(out); } catch { return { ...nullSample }; }
   return {
     backend: proc(j.backend),
     ollama: proc(j.ollama),
     pythonCount: Number.isFinite(j.pythonCount) ? j.pythonCount : null,
+    // A silently-empty enumeration must NOT read as "zero workers" — only an
+    // explicitly successful probe may produce a number here.
+    backtestWorkerCount:
+      j.pythonProbeOk === true && Number.isFinite(j.backtestWorkerCount) ? j.backtestWorkerCount : null,
+    pythonCmdlineUnreadable: Number.isFinite(j.pythonCmdlineUnreadable) ? j.pythonCmdlineUnreadable : null,
     diskFreeBytes: Number.isFinite(j.diskFreeBytes) ? j.diskFreeBytes : null,
   };
 }
@@ -91,6 +111,8 @@ async function takeSample({ healthUrl, port = 4000, nowMs }) {
     backend: win.backend,
     ollama: win.ollama,
     pythonCount: win.pythonCount,
+    backtestWorkerCount: win.backtestWorkerCount,
+    pythonCmdlineUnreadable: win.pythonCmdlineUnreadable,
     diskFreeBytes: win.diskFreeBytes,
     vramUsedMb: gpu.vramUsedMb,
     gpuUtil: gpu.gpuUtil,
