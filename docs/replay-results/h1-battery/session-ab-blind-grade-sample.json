@@ -1,0 +1,195 @@
+{
+  "artifact": "session-ab-blind-grade-sample",
+  "population": "all WAIT_SESSION conditions that resolve to NO session zone (26 of 27)",
+  "task": "sort each into genuine-session-teaching vs entry-mechanics-mistype",
+  "withheld_from_grader": [
+    "the agent's own (A)/(B) assignment",
+    "resolver output",
+    "counts per side"
+  ],
+  "n": 26,
+  "rows": [
+    {
+      "condition_id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep."
+    },
+    {
+      "condition_id": "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "a simple 1-hour candle pattern I follow before my trading session every day"
+    },
+    {
+      "condition_id": "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action."
+    },
+    {
+      "condition_id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade"
+    },
+    {
+      "condition_id": "WAIT_SESSION:as-the-new-york-session-opens-we-are-sti#3",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "as the New York session opens we are still right on Fair Value we start running up"
+    },
+    {
+      "condition_id": "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right"
+    },
+    {
+      "condition_id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps."
+    },
+    {
+      "condition_id": "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction"
+    },
+    {
+      "condition_id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together"
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows"
+    },
+    {
+      "condition_id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+    },
+    {
+      "condition_id": "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session"
+    },
+    {
+      "condition_id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance"
+    },
+    {
+      "condition_id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here"
+    },
+    {
+      "condition_id": "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "the first two-minute candle off the Bell closes over the 20 SMA and vwap"
+    },
+    {
+      "condition_id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high"
+    },
+    {
+      "condition_id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle"
+    },
+    {
+      "condition_id": "WAIT_SESSION:this-line-is-being-reset-as-soon-as-ever#1",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session"
+    },
+    {
+      "condition_id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way"
+    },
+    {
+      "condition_id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support"
+    },
+    {
+      "condition_id": "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "you might have a long idea for your session"
+    },
+    {
+      "condition_id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones."
+    }
+  ]
+}
