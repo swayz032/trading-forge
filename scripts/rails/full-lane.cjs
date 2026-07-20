@@ -5,6 +5,9 @@
 const { spawnSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+// Local modules only at top level (builtins + self-guarded optional requires) — see cert-rig.cjs.
+const { loadEnvironment, postDiscord } = require("./rail-runtime.cjs");
+const { guardRailMain } = require("../lib/rail-crash-handler.cjs");
 
 // ── Pure core: guard → (run both) → verdict. Skip path never invokes the runners. ──
 async function runFullLane({ guardFn, runPytestFn, runReplayFn, nowMs }) {
@@ -55,8 +58,8 @@ async function writeAudit(sql, action, payload) {
 }
 
 async function main() {
-  const dotenv = require("dotenv");
-  dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+  // See cert-rig.cjs — bare require("dotenv") here was a silent-death path (2026-07-18).
+  loadEnvironment(process.cwd());
   const postgres = require("postgres");
   const { takeSample } = require("../soak/soak-sensors.cjs");
   const { guardOnce } = require("../lib/tower-idle-guard.cjs");
@@ -82,5 +85,7 @@ async function main() {
   } finally { await sql.end({ timeout: 5 }); }
 }
 
-if (require.main === module) main();
+if (require.main === module) {
+  main().catch(guardRailMain({ rail: "full-lane", writeLedgerFn: writeJsonl, notifyFn: postDiscord }));
+}
 module.exports = { runFullLane, pytestCmd, replayCmd, exitToResult, PYTEST_TIMEOUT_MS, REPLAY_TIMEOUT_MS, SCHTASK_LIMIT_MS };

@@ -3,11 +3,44 @@
 "use strict";
 const fs = require("fs");
 const path = require("path");
-const dotenv = require("dotenv");
+// Local modules only — builtins + self-guarded optional requires, so these cannot themselves
+// be the silent killer. See scripts/lib/rail-crash-handler.cjs for the 2026-07-18 incident.
+const { buildCrashRow, crashMessage } = require("../lib/rail-crash-handler.cjs");
+const { postDiscord } = require("../rails/rail-runtime.cjs");
+
+// ── Boot-crash visibility ────────────────────────────────────────────────────────────────────
+// This file's requires run at MODULE TOP LEVEL, i.e. BEFORE main().catch() at the bottom exists.
+// On 2026-07-18 a degraded node_modules made `require("dotenv")` here throw, so the watcher died
+// before its own crash handler was attached: exit 1, no ledger row, no Discord line, 36h silent.
+// Everything below writes a row FIRST and dies second.
+function writeBootCrashRow(row) {
+  const dir = process.env.SOAK_DATA_DIR || path.join(process.cwd(), "data", "soak");
+  fs.mkdirSync(dir, { recursive: true });
+  const stamp = new Date().toISOString().slice(0, 10).replaceAll("-", "");
+  fs.appendFileSync(path.join(dir, `soak-${stamp}.jsonl`), `${JSON.stringify({ type: "crash", ...row })}\n`);
+}
+
+function bootFail(error, reason) {
+  const row = { ...buildCrashRow({ rail: "soak", error, nowMs: Date.now() }), phase: "boot", reason };
+  try { writeBootCrashRow(row); } catch (e) { console.error("soak boot-crash ledger write failed:", e.message); }
+  try { void postDiscord(crashMessage(row)); } catch { /* best effort */ }
+  console.error(JSON.stringify(row));
+  process.exitCode = 1;
+}
+
+let dotenv = null;
+try {
+  dotenv = require("dotenv");
+} catch (e) {
+  // Not fatal by itself — a real .env may already be in the process env. Record and continue;
+  // the DATABASE_URL check below is the actual gate.
+  console.error("soak-watcher: dotenv unavailable, continuing on ambient env:", e.message);
+}
 
 // Resolve .env from a candidate list so this runs from an isolated worktree tonight
 // (finds the sibling main checkout's .env) AND from the main checkout after landing.
 (function loadEnv() {
+  if (!dotenv) return;
   const candidates = [
     process.env.SOAK_ENV_PATH,
     path.join(process.cwd(), ".env"),
@@ -19,7 +52,13 @@ const dotenv = require("dotenv");
   }
 })();
 
-const postgres = require("postgres");
+let postgres;
+try {
+  postgres = require("postgres");
+} catch (e) {
+  bootFail(e, "postgres_module_unavailable");
+  process.exit(1);
+}
 const { takeSample, readHealthResilient } = require("./soak-sensors.cjs");
 const { decide } = require("./soak-guard.cjs");
 const V = require("./soak-verdict.cjs");
@@ -46,7 +85,11 @@ const CFG = {
 // Test runs (dry/force) write a SEPARATE action so they never pollute the real ledger or calibration count.
 const AUDIT_ACTION = (CFG.dryRun || CFG.forceRun) ? "soak.night_completed_test" : "soak.night_completed";
 
-if (!process.env.DATABASE_URL) { console.error("soak-watcher: DATABASE_URL not resolved from any .env candidate"); process.exit(2); }
+if (!process.env.DATABASE_URL) {
+  // Exit 2 (config) stays distinct from exit 1 (crash) — but it must no longer be invisible.
+  bootFail(new Error("DATABASE_URL not resolved from any .env candidate"), "database_url_missing");
+  process.exit(2);
+}
 const sql = postgres(process.env.DATABASE_URL, { max: 1 });
 
 // switch: system_parameters.current_value is NUMERIC. 0=off, else armed. Row absent → armed
@@ -170,7 +213,12 @@ async function main() {
 }
 
 main().catch(async (e) => {
+  // Ledger row FIRST — Discord and the DB can both be down; the JSONL row is the one artifact
+  // that survives a degraded environment (fs only). Each sink is independent (OR-007 §4).
+  const row = { ...buildCrashRow({ rail: "soak", error: e, nowMs: Date.now() }), phase: "run" };
+  try { writeBootCrashRow(row); } catch (err) { console.error("soak crash ledger write failed:", err.message); }
   try { await discord(`🔴 Tower Soak watcher crashed: ${String(e && e.message || e).slice(0, 180)}`); } catch { /* ignore */ }
   try { await sql.end(); } catch { /* ignore */ }
+  console.error(JSON.stringify(row));
   process.exitCode = 1;
 });
