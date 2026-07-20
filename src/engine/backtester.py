@@ -4387,19 +4387,15 @@ def run_backtest(
             request.start_date, request.end_date,
         )
         if len(_daily_data_for_htf) >= 200:
-            from src.engine.context.htf_context import compute_htf_context
-            _dsl_htf_cache = {}
-            _htf_ts_col = "ts_et" if "ts_et" in _daily_data_for_htf.columns else "ts_event"
-            for _day_idx in range(200, len(_daily_data_for_htf)):
-                _bar_date = _daily_data_for_htf[_htf_ts_col][_day_idx]
-                _day_key = str(_bar_date)[:10]
-                _dsl_htf_cache[_day_key] = compute_htf_context(
-                    daily_df=_daily_data_for_htf.slice(0, _day_idx),
-                    four_h_df=None,
-                    one_h_df=None,
-                    current_price=float(_daily_data_for_htf["close"][_day_idx - 1]),
-                    bar_date=_bar_date,
-                )
+            # Second (and last) cache-build site converted to the ONE shared builder
+            # (R-068 §2 two-commit law: this refactor ships ALONE, licensed by the
+            # DSL-shape byte-proof in test_htf_cache_equivalence). Behavior is
+            # byte-identical — same strictly-prior slice, same prior-day close,
+            # same four_h/one_h=None shape the original hardcoded.
+            from src.engine.context.htf_cache_builder import build_htf_cache
+            _dsl_htf_cache = build_htf_cache(
+                _daily_data_for_htf, four_h_df=None, one_h_df=None
+            )
             print(
                 f"  DSL backtest: built HTF cache {len(_dsl_htf_cache)} days "
                 f"for eligibility gate + structural TP",
