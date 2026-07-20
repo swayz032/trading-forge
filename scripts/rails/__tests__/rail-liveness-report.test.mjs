@@ -217,7 +217,9 @@ test("★ NEVER-SEEN is not CRASHED — a not-yet-activated rail must not alert 
   // operator that red means "ignore me".
   const dates = windowDates("2026-07-19", 10);
   const { readFileFn, existsFn } = fakeFs({});
-  const r = buildLivenessReport({ rails: [soakSpec], root: "/r", dates, readFileFn, existsFn });
+  // Explicit EMPTY listing = "the folder is readable and holds nothing", which is the
+  // never-activated case. Distinct from an unreadable folder, which now alerts (MINOR-1).
+  const r = buildLivenessReport({ rails: [soakSpec], root: "/r", dates, readFileFn, existsFn, listDirFn: () => [] });
   assert.equal(r.results[0].kind, "never_seen");
   assert.equal(r.results[0].alert, false);
   assert.deepEqual(r.lines, []);
@@ -266,8 +268,9 @@ test("everWrote is window-independent and matches only its OWN rail's prefix", (
   const listing = ["cert-2026-07-01.jsonl", "full-lane-2026-07-01.jsonl"];
   assert.equal(everWrote(soakSpec, "/r", () => listing), false, "soak must not claim cert's files");
   assert.equal(everWrote(RAILS.find((r) => r.rail === "cert-rig"), "/r", () => listing), true);
-  // an unreadable directory must not be read as "it has lived"
-  assert.equal(everWrote(soakSpec, "/r", () => { throw new Error("EACCES"); }), false);
+  // ★ An unreadable directory is NULL, not false — "we could not look" must never collapse
+  // into "it never wrote", which is how a dead rail could go quiet (MINOR-1).
+  assert.equal(everWrote(soakSpec, "/r", () => { throw new Error("EACCES"); }), null);
 });
 
 test("★ a rail whose ONLY ledger is dated AFTER the window is ALIVE, not dead", () => {
@@ -303,4 +306,21 @@ test("★ but a ledger dated BEFORE the window still makes in-window silence mea
 test("ledgerDates parses BOTH filename conventions (soak YYYYMMDD, others YYYY-MM-DD)", () => {
   assert.deepEqual(ledgerDates(soakSpec, "/r", () => ["soak-20260711.jsonl", "other.txt"]), ["20260711"]);
   assert.deepEqual(ledgerDates(RAILS.find((r) => r.rail === "cert-rig"), "/r", () => ["cert-2026-07-11.jsonl"]), ["20260711"]);
+});
+
+test("★ an UNREADABLE ledger folder ALERTS — 'could not look' is not 'nothing there'", () => {
+  // MINOR-1 (third pass). This previously returned [] and, with an empty window, produced
+  // never_seen/alert:false — a genuinely dead rail going QUIET because its directory could
+  // not be read. The old comment called that "yielding to ignorance, not to silence"; at
+  // the output the two were identical.
+  const dates = windowDates("2026-07-19", 10);
+  const { readFileFn, existsFn } = fakeFs({});
+  const r = buildLivenessReport({
+    rails: [soakSpec], root: "/r", dates, readFileFn, existsFn,
+    listDirFn: () => { throw new Error("EPERM"); },
+  });
+  assert.equal(r.results[0].kind, "ledger_unreadable");
+  assert.equal(r.results[0].alert, true);
+  assert.match(r.lines[0], /could not be read/);
+  assert.match(r.lines[0], /unverified, not as fine/);
 });

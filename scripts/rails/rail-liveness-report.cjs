@@ -10,6 +10,14 @@
 //
 // Read-only over the ledgers. Zero instrument code. Writes one JSONL row of its own so
 // that IT is not the next thing that runs silently forever.
+//
+// ★ CONSTRAINT (MINOR-3, third pass): "has this rail EVER written" is backed entirely by
+// files under data/rails + data/soak, which are GITIGNORED and unbacked. A clean re-clone,
+// a disk restore, or any future retention/rotation job resets every dead rail to
+// `never_seen` -> permanently silent, reinstating the exact hole NEW-1 closed. No such job
+// exists today (verified: nothing under scripts/ or src/ prunes those directories).
+// Treat data/rails and data/soak as APPEND-ONLY, and if retention is ever added it must
+// persist a first-seen watermark instead of deleting the evidence of a rail's existence.
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -164,9 +172,12 @@ function ledgerDates(spec, root, listDirFn = fs.readdirSync) {
       .map((f) => f.slice(spec.prefix.length, -".jsonl".length).replace(/-/g, ""))
       .filter((d) => /^\d{8}$/.test(d));
   } catch {
-    // Directory unreadable/absent -> we cannot claim it has ever written, so treat as
-    // never-seen rather than inventing a death. Yielding to ignorance, not to silence.
-    return [];
+    // ★ MINOR-1 (third pass): this used to return [] — indistinguishable from "no files".
+    // With an empty window that produced never_seen/alert:false, i.e. a genuinely dead rail
+    // could go QUIET because we could not read its directory. The old comment claimed this
+    // was "yielding to ignorance, not to silence"; at the output they were the same thing.
+    // null now means UNREADABLE and gets its own alerting state.
+    return null;
   }
 }
 
@@ -189,6 +200,7 @@ function ledgerDates(spec, root, listDirFn = fs.readdirSync) {
 function everWrote(spec, root, listDirFn = fs.readdirSync, windowEnd) {
   const end = String(windowEnd || "").replace(/-/g, "");
   const dates = ledgerDates(spec, root, listDirFn);
+  if (dates === null) return null;            // unreadable — caller must not read this as "no"
   if (!end) return dates.length > 0;
   return dates.some((d) => d <= end);
 }
@@ -209,7 +221,15 @@ function buildLivenessReport({ rails, root, dates, readFileFn, existsFn, listDir
     //
     // It is still REPORTED in the payload, just not alerted on, so a rail that is never
     // activated cannot hide behind silence either.
-    if (Object.keys(entriesByDate).length === 0 && !everWrote(spec, root, listDirFn, dates[dates.length - 1])) {
+    const ever = everWrote(spec, root, listDirFn, dates[dates.length - 1]);
+    if (Object.keys(entriesByDate).length === 0 && ever === null) {
+      // We cannot tell whether this rail ever lived. That is not evidence of youth.
+      return {
+        rail: spec.rail, alert: true, kind: "ledger_unreadable", streak: 0,
+        silentFires: dates.length, reasons: {}, thresholds: thresholds.version,
+      };
+    }
+    if (Object.keys(entriesByDate).length === 0 && ever === false) {
       return {
         rail: spec.rail, alert: false, kind: "never_seen", streak: 0,
         silentFires: dates.length, reasons: {}, thresholds: thresholds.version,
@@ -218,7 +238,13 @@ function buildLivenessReport({ rails, root, dates, readFileFn, existsFn, listDir
 
     return evaluateRailLiveness({ rail: spec.rail, expectedDates: dates, entriesByDate, thresholds });
   });
-  const lines = results.map(formatLivenessLine).filter(Boolean);
+  const lines = results
+    .map((r) =>
+      r.kind === "ledger_unreadable"
+        ? `🔴 ${r.rail}: its ledger folder could not be read, so we cannot tell whether it is running. Treat as unverified, not as fine.`
+        : formatLivenessLine(r),
+    )
+    .filter(Boolean);
   return {
     results,
     lines,
@@ -240,7 +266,15 @@ async function main() {
   loadEnvironment(process.cwd());
   const root = process.cwd();
   const dryRun = process.argv.includes("--dry-run");
-  const days = Number(process.env.RAILS_LIVENESS_WINDOW_DAYS || DEFAULT_WINDOW_DAYS);
+  // ★ MINOR-2 (third pass): days ∈ {0, 1, NaN} makes crash_suspect STRUCTURALLY unreachable
+  // (silentFiresN is 2), so a typo'd env value would leave the reporter running, exiting 0,
+  // printing "all rails measuring", and detecting nothing. A config typo must not be able
+  // to silently disable the alarm — clamp to a floor that keeps every threshold reachable.
+  const rawDays = Number(process.env.RAILS_LIVENESS_WINDOW_DAYS || DEFAULT_WINDOW_DAYS);
+  const days = Number.isFinite(rawDays) && rawDays >= 3 ? Math.floor(rawDays) : DEFAULT_WINDOW_DAYS;
+  if (days !== rawDays) {
+    console.error(`RAILS_LIVENESS_WINDOW_DAYS=${process.env.RAILS_LIVENESS_WINDOW_DAYS} unusable (min 3) — using ${days}`);
+  }
   const dates = completedWindow(new Date().toISOString().slice(0, 10), days);
 
   const report = buildLivenessReport({ rails: RAILS, root, dates });

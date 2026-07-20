@@ -81,17 +81,35 @@ test("the regex is a valid, non-empty pattern (an empty one would match everythi
 });
 
 // ── ★ NEW-2 (re-grader): the env hop is the seam that fails SILENTLY ──
-test("★ the regex actually ARRIVES in PowerShell — an empty one would match everything", () => {
-  // execFileSync env -> $env:TF_WORKER_CMDLINE_RE is one hop and it is load-bearing. If it
-  // arrived empty, PowerShell's -match would match EVERY command line, every python would
-  // count as a worker, and the rails would never run again. That failure is fail-CLOSED
-  // (availability, not safety) which is exactly why it would go unnoticed.
-  //
-  // The discriminator: this machine always has assistant tooling running, so a working
-  // injection MUST produce backtestWorkerCount < pythonCount. A broken one makes them equal.
+//
+// ★ MAJOR-1 (third pass): the FIRST version of this test ended with
+//   `if (w.pythonCount === null) return;`
+// which node:test reports as a ✔ PASS, not a skip. `readWindows()` shells out to
+// powershell, so on the Linux CI runner (fast.yml runs test:scripts on wsl-tower) the
+// probe never resolves, the assertion never executes, and the line reads green — 1.1ms
+// versus 1566ms when it genuinely runs, with byte-identical output.
+//
+// The test written BECAUSE "unit tests passed while real-data runs failed" was itself a
+// test that passes without running. It only had teeth when a human ran it on Windows.
+//
+// t.skip() makes a non-executing run visibly distinct from a passing one, and the
+// host-state precondition is a SKIP rather than an assertion so a Windows box with no
+// python idling fails for a real regression only, never for its environment.
+test("★ the regex actually ARRIVES in PowerShell — an empty one would match everything", (t) => {
+  // If it arrived empty, PowerShell's -match would match EVERY command line, every python
+  // would count as a worker, and the rails would never run again. Fail-CLOSED, which is
+  // exactly why it would go unnoticed.
   const w = readWindows(4000);
-  if (w.pythonCount === null) return; // probe unavailable on this host; nothing to assert
-  assert.ok(w.pythonCount > 0, "expected assistant tooling python on this box");
+  if (w.pythonCount === null) {
+    t.skip("powershell probe unavailable on this host — assertion NOT executed");
+    return;
+  }
+  if (!(w.pythonCount > 0)) {
+    t.skip("no python processes on this host — nothing to discriminate against");
+    return;
+  }
+  // The discriminator: with tooling present, a working injection MUST produce
+  // backtestWorkerCount < pythonCount. A broken (empty) regex makes them equal.
   assert.ok(
     w.backtestWorkerCount < w.pythonCount,
     `backtestWorkerCount (${w.backtestWorkerCount}) == pythonCount (${w.pythonCount}) — ` +
