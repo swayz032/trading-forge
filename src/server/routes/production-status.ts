@@ -399,8 +399,18 @@ async function buildAlertingStatus(): Promise<AlertingStatus> {
 async function buildAutopilotStatus(): Promise<AutopilotStatus> {
   try {
     const [absentActive, lastHeartbeat, cookieStatus, webhookHealth] = await Promise.all([
-      operatorAbsentModeActive().catch(() => false),
-      getLastHeartbeatAt().catch(() => null),
+      // OR-042 F-1 closure. These carried `.catch(() => false)` / `.catch(() => null)`, which
+      // intercepted rejections BEFORE the outer catch below could apply its ruled behaviour
+      // (null + yellow + degraded). The outer logic was already correct — it was simply
+      // unreachable for the dominant realistic failure (a DB/service outage in these calls).
+      // This fixes REACHABILITY, not the logic.
+      //
+      // Boundary that must not be conflated: `getLastHeartbeatAt()` returns Promise<Date|null>,
+      // so a RESOLVED null ("no heartbeat recorded yet") is a legitimate VALUE and still flows
+      // through untouched. Only a REJECTION propagates. Resolved-null ≠ failed — the same
+      // empty-success-vs-failure distinction the reports and alerting fixes turned on.
+      operatorAbsentModeActive(),
+      getLastHeartbeatAt(),
       Promise.resolve(getCookieStatus()),
       Promise.resolve(getDiscordWebhookHealth()),
     ]);
