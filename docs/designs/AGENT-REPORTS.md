@@ -4,6 +4,31 @@
 
 ---
 
+## AR-087 · 2026-07-20 · R-097 §3(i) OBJECT-REFERENCE CENSUS DONE (`c054ee74`) — ★ **5 of 16 name NO resolvable level: they point at the chart, not at a price.** That bounds the resolver's ceiling before it is designed. ★ And a PROCESS FAILURE of mine, third occurrence, reported with its structural fix.
+
+**★ FIRST, THE PROCESS FAILURE, because it affected you directly.** The census committed at `c054ee74` and **I filed no report** — you were left with an artifact in the tree and no AR entry, and the operator had to tell me you'd flagged me idle. **This is the third time I have completed a unit and narrated it to the operator instead of filing it here.** The cause is not workload: I have been treating my operator-facing message as the report, when the operator's standing instruction is that everything goes to you and only kill-switch/veto matters go to him. **Structural fix, adopted now, not an intention: the AR entry ships IN THE SAME COMMIT as the work it reports.** Work-without-report then becomes impossible rather than merely discouraged — the same shape as generator-with-artifact, applied to the relay. Recorded in durable memory so it survives a context roll.
+
+**THE CENSUS** (`levelzone-object-reference-census.json` + committed generator; design input only, no resolver proposed, no engine code):
+
+| reference kind | n | % |
+|---|---|---|
+| `named_sr_level` | 5 | 31.2% |
+| `order_block_edge` | 3 | 18.8% |
+| `swing` | 2 | 12.5% |
+| `fvg_edge` | 1 | 6.2% |
+| bare anaphora (any) | **8** | 50.0% |
+| **ANAPHORA-AMBIGUOUS** | **5** | **31.2%** |
+| no kind matched | 6 | 37.5% |
+
+**★ THE FINDING THAT SHOULD SHAPE §3(ii): 5 of 16 point DEICTICALLY AT A CHART, not at a price** — *"reclaims the level"* · *"as soon as price touched that level"* · *"once you find this… breaking above that level"*. **The referent was visible in the video and is absent from the text.** No per-condition resolver can recover those from condition text at any level of effort — **the information is not there to parse.** That is a ceiling on the resolver's reachable population, established *before* design rather than discovered during it, which is the whole point of your census-first order.
+- **Implication I'd flag for the design:** the resolvable population is bounded by what names a market-derived object (11 of 16 at best on these labels), and the anaphora rows need a **disposition**, not a parser — either an antecedent-resolution mechanism reading beyond the condition span, or an explicit unresolvable class. Forcing them into a parser would manufacture exactly the confident-but-hollow binding this campaign keeps convicting.
+
+**★ MY OWN TAXONOMY GAP, caught mid-run and recorded at the line rather than patched quietly:** the first run had **no bucket for `support`/`resistance`** — the single most common retail level name — so genuine S/R references fell into "no kind matched", **undercounting the resolvable population**. Caught by asking whether the **taxonomy** rather than the corpus was the gap — the same question that caught AR-077's session-sizing regex. Your same-kind audit prohibition again, and I want the honest form on record: **I did not avoid the failure, I only recognised its shape faster.** The remaining 6 no-kind rows should be read as a **floor**, not a finding.
+
+**Artifact labelled RECONSTRUCTION-GRADE** and it **buckets** the anaphora call rather than forcing it, because a keyword rule is weakest exactly where the resolver's hard case lives. Generator committed and exits non-zero on a degenerate census.
+
+**Not started, awaiting your §3(ii) direction:** resolver design routed by this census (binding to detectors the repo already owns), then its own packet + two-leg audit **under the amended Leg 1 — production-boundary liveness** + grade. **Holds:** T1 blocked · WIRE-2 pending its audit under the amended Leg 1 · reader-vintage queued · flag OFF · no `approximation=False` · the 77 sealed.
+
 ## AR-086 · 2026-07-20 · ★★★ ESCALATION — **THE LEVEL/ZONE SUB-WIRE DOES NOT FIX WHAT ITS OWN PREMISE AUDIT SAID IT WOULD. The routed evaluator is ALSO level-blind in production.** This is the WIRE-1 shape one layer down, and the defect is in MY packet and MY Leg 1, not the implementer's work.
 
 **The finding, confirmed from source before reporting** (`spec_condition_compiler.py:638`):
