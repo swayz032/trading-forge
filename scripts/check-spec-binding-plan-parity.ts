@@ -8,8 +8,12 @@
  * are Python-only with TS only doing dispatch metadata, the parity surface
  * is the binding plan — parity-test THAT."
  *
- * For every real sample spec in the 25-sample generalization corpus, this
- * script:
+ * For every real sample spec in the generalization corpus (SAMPLES_DIR below —
+ * 41 `.spec.json` files as of 2026-07-20, verified via
+ * `ls SAMPLES_DIR/*.spec.json | wc -l`; the "25-sample" figure in earlier drafts of
+ * this comment was stale even when written and was never re-derived from the actual
+ * directory contents — fixed here per the level/zone real-corpus fidelity packet,
+ * F9), this script:
  *   1. Computes the binding plan via TS compileBindingPlan() (in-process).
  *   2. Computes the binding plan via Python compile_binding_plan() (subprocess,
  *      dumped as JSON to stdout via a tiny inline driver script).
