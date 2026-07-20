@@ -1,0 +1,130 @@
+{
+  "judge": "independent-blind-QA",
+  "n": 20,
+  "rows": [
+    {
+      "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+      "verdict": "narration",
+      "quoted_span": "add volume by Price values go to vwap developing vwap",
+      "reasoning": "This is a chart-setup instruction naming indicators to load, with no comparator, threshold, direction, or anything a test could act on.",
+      "note": "Ambiguous class: indicator-configuration instruction — names real indicator objects (volume-by-price, developing VWAP) but binds no predicate to them."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+      "verdict": "not_narration",
+      "quoted_span": "as soon as we get this engulfing, you're good to enter the trade",
+      "reasoning": "An engulfing candle is a machine-checkable event and it gates the entry, so a bindable predicate is present."
+    },
+    {
+      "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+      "verdict": "not_narration",
+      "quoted_span": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed",
+      "reasoning": "Two checkable events in sequence — price trading into the FVG and the retest candle being engulfed — form a testable condition."
+    },
+    {
+      "condition_id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+      "verdict": "not_narration",
+      "quoted_span": "once the market trades back into the fair value gap, we're automatically entered into the market",
+      "reasoning": "Price re-entering the FVG is an explicit checkable trigger, notwithstanding the surrounding procedural framing about order type."
+    },
+    {
+      "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+      "verdict": "not_narration",
+      "quoted_span": "there should also be liquidity price will clear before you know tapping into the imbalance",
+      "reasoning": "Garbled speech but it states an ordered market condition — liquidity is swept before price taps the imbalance — which a machine could check."
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+      "verdict": "not_narration",
+      "quoted_span": "we can buy the pullback into that first few bounces",
+      "reasoning": "A pullback into a prior level with a stated buy direction is a bindable entry condition, not commentary."
+    },
+    {
+      "condition_id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+      "verdict": "not_narration",
+      "quoted_span": "we are looking for price to trade into these areas",
+      "reasoning": "Price trading into a defined zone is a checkable condition even though the follow-on setup is left as a menu of three options."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+      "verdict": "not_narration",
+      "quoted_span": "after we broke it and tested it we can try our long trade",
+      "reasoning": "Break-then-retest with a long direction is a fully checkable sequence in plain speech."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+      "verdict": "narration",
+      "quoted_span": "for my entry I would personally be looking to enter the trade right here",
+      "reasoning": "Pure deixis — 'right here' points at the chart and states no comparator, object, threshold, or direction a machine could evaluate."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+      "verdict": "not_narration",
+      "quoted_span": "I'm looking for the price to break out the bottom of that range",
+      "reasoning": "Price breaking the bottom of a range gives object, level and direction — a testable breakout condition."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+      "verdict": "narration",
+      "quoted_span": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+      "reasoning": "This states an operator preference over which variant to trade and binds no comparator, threshold or direction to either named structure.",
+      "note": "Ambiguous: it names two real structures with opposite polarity, but the sentence asserts nothing about price relative to them — it is a choose-your-own-flavour aside."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+      "verdict": "narration",
+      "quoted_span": "on Forex, Nasdaq, gold, everything",
+      "reasoning": "A bare list of markets the method applies to — no comparator, threshold or direction, and nothing acting on any market state."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+      "verdict": "not_narration",
+      "quoted_span": "since we broke through the high, the direction is bullish. We're going to be looking for long trades.",
+      "reasoning": "A break of the prior high is checkable and it sets a bias direction that gates trade side."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+      "verdict": "not_narration",
+      "quoted_span": "a stop raid this just means that a low was put in before it was rated or broken",
+      "reasoning": "The clause defines the structure operationally — a low forms and is subsequently broken — which is directly checkable."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+      "verdict": "not_narration",
+      "quoted_span": "this is a bullish imbalance",
+      "reasoning": "It names a detectable structure carrying a polarity, so an object and a direction are both present under the enumerative test.",
+      "note": "This is the flagged assertion-of-existence class: the four-element test says not_narration (object + direction), while the plain-intent test pulls the other way because it reports a past observation at a chart point rather than a forward trigger. I resolved it on the enumerative rule, which the definition states is controlling when any one element is present."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+      "verdict": "not_narration",
+      "quoted_span": "right at 9:30 a.m. EST",
+      "reasoning": "An explicit clock threshold is present and a machine can check it, even though the surrounding verb describes the trader's routine.",
+      "note": "Genuinely ambiguous: the threshold attaches to the speaker's arrival ('get to our desks'), not to market state, so plain-intent reads it as routine commentary; I let the explicit time threshold decide it under the enumerative rule."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+      "verdict": "not_narration",
+      "quoted_span": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action",
+      "reasoning": "Displacement-versus-chop at the inversion is a required qualifying condition with an explicit reject branch."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+      "verdict": "not_narration",
+      "quoted_span": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+      "reasoning": "It specifies a concrete price level anchored to an identifiable candle plus a trade direction."
+    },
+    {
+      "condition_id": "FILTER:an-elevation-in-the-volume#7",
+      "verdict": "not_narration",
+      "quoted_span": "an elevation in the volume",
+      "reasoning": "'Elevation' is a directional comparison on volume against its normal level — loosely phrased but bindable."
+    },
+    {
+      "condition_id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+      "verdict": "not_narration",
+      "quoted_span": "a ton of green candles in a row which obviously shows a lot of strength",
+      "reasoning": "Consecutive up candles plus rising volume is a checkable pattern, with the strength claim as its interpretation."
+    }
+  ]
+}

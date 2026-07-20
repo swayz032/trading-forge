@@ -4,6 +4,29 @@
 
 ---
 
+## AR-082 · 2026-07-20 · ★★ NARRATION PASS COMPLETE — nominator + judgment + QA all run over the full 124. **QA PASSES at 5.0%** (bar ≤15%). **Your demotion is vindicated at scale: the judge rescued 41 of 52 nominees (79%).** One definitional escalation, seconded independently.
+
+| stage | result |
+|---|---|
+| **Nominator** (mechanical, ≥1 element ⇒ final) | 72 `not_narration` · **52 nominees** |
+| **Judgment** (blind, with-citations, on the 52) | **41 `not_narration`** · 11 `narration` |
+| **FULL 124** | **113 `not_narration` · 11 `narration`** |
+| **QA — inter-judge, 20-row systematic** | **1/20 = 5.0%** vs ≤15% bar → **PASS** |
+
+**1. ★★ THE DEMOTION IS VINDICATED ON THE REAL POPULATION.** As a verdict-giver the rule would have quarantined **all 52**. Judgment rescued **41 of them (79%)** — real bindable conditions that would have been removed from the denominator, moving the rate optimistic. The 44.8% breach measured on 29 rows was not a sampling artifact; it reproduces at full scale. **Every one of those 41 was saved by the escalation path you built, not by anything I or the rule did.**
+
+**2. The 11 genuine narration rows are recognisable as a class**, which is itself corroboration: chart/indicator setup (*"add volume by Price… go to vwap"*), scope claims (*"works for any market"*), undefined placeholders (*"we wait for the entry signal once we get it we enter"*), free choice (*"whichever you prefer to trade"*), bare advice, a bare pattern label (*"Literally a ABC setup"*), tool-pointing, pure deixis (*"enter the trade right here"*), and the trader's own routine.
+
+**3. QA passed at 5.0% and the single disagreement is the predicted one** — *"get to our desks right at 9:30 a.m. EST"*: an explicit clock threshold attached to the **trader's action rather than market state**. Judge 1 called it narration on intent; judge 2 let the threshold decide. **Both judges, independently and without seeing each other, named this exact class as the tension before it was measured.** Agreement on 19 of 20 with the one break landing precisely where both predicted is stronger evidence of a shared, well-specified standard than 20/20 would have been.
+
+**4. ★ DEFINITIONAL ESCALATION — seconded independently, and it is yours not mine.** Both judges report the definition is **internally in tension**, in the same place: **the enumerative clause and the plain-intent clause diverge whenever an element is PRESENT BUT INERT** — a polarity that merely labels a past observation (*"this is a bullish imbalance"*), a threshold bound to the speaker rather than the market, a named structure with nothing asserted about it. Judge 2's framing: *"the two rules are not co-extensive, and a judge who weighted plain-intent instead would flip all three. That is a property of the definition, not of either judge's care."* Both resolved consistently toward enumerative **because the definition marks it controlling** — so the pass is honest, not papered over.
+- **The remedy both point at is the same and it is NOT a re-run:** amend the definition to say **which clause wins when an element is present but inert** — judge 1 frames it as a possible **fifth criterion on forward-evaluability** (a past observation is not a forward condition), judge 2 as an explicit precedence rule. Re-running the QA would not touch it.
+- I have made **no such amendment and applied none** — it is a definitional change and it is yours.
+
+**5. Every artifact is on disk with receipts** and each stage withheld the prior stage's labels: `narration-nominator-input.json` (124) → `-RESULT.json` (72/52, 12 declared policies) → `narration-judgment-input.json` (52, flags withheld) → `-RESULT.json` (span + reasoning per row) → `narration-qa-sample.json` (20, systematic, no RNG, verdicts withheld) → `narration-qa-RESULT.json`. Commits `43ea743e`, `94b2d4cf`, `6ab167bd`.
+
+**6. NOTHING MOVED.** The reclassification has not been applied; dual denominators are not yet computed; no rate changed. **The 113/11 split is a graded RESULT awaiting your ruling on whether it may move the denominator** — and I would flag that the present-but-inert question touches which rows are in the 11, so ruling it first may be the cheaper order. **Holds:** T1 blocked · WIRE-2 pending its own two-leg audit · reader-vintage queued · flag OFF · the 77 sealed. Level/zone independent grade still running.
+
 ## AR-081 · 2026-07-20 · R-091 §1 GO executed — **packet STAGED first (`bb49003f`), then implementer DISPATCHED** (receipt held, per your R-089 law). Classified AUTONOMOUS, not reserved — reasoning stated for audit rather than assumed.
 
 **1. Packet staged BEFORE any code** (`docs/designs/packet-levelzone-subwire-2026-07-20.md`). CLAUDE.md §11 makes the ratify-packet skill a MUST-fire on instrument surfaces, and I did not treat your §1 GO as a substitute for it — the GO authorizes the build; the packet is the receipt the grader rules on. All five parts staged: receipts (audit `969cbe76` + the incumbent's level-free signature), blast radius, scope-lock, verification plan, rollback.
