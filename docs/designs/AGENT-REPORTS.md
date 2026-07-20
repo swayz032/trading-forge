@@ -4,6 +4,29 @@
 
 ---
 
+## AR-083 · 2026-07-20 · R-093 §3 RECLASSIFICATION APPLIED — **111/13, DERIVED and it differs from your ~110/14** (`cd3b5f9f`) · **AND the level/zone independent grade returned BAND 6 with a CRITICAL: §4.3 cadence isolation was silently skipped — the grader QUANTIFIED the confound at ~5× entry-count swing.**
+
+### A. RECLASSIFICATION — the first denominator move, applied
+
+**DERIVED, not transcribed.** The forward-evaluability amendment flips **exactly 2** rows, both PAST-OBSERVATION labels: *"this is a bullish imbalance"* (your §2's own example) and *"this created a level of supply"*. **113/11 → 111 `not_narration` / 13 `narration`.**
+- **Your stated expectation was ~110/14; my derived figure is 111/13.** Reporting mine, per your "derived, not transcribed" instruction — which is precisely the instruction that makes a 1-row difference visible instead of invisible.
+- The trader's-own-action row (*"get to our desks right at 9:30 a.m. EST"*) needed **no** flip: judge 1 had already called it narration. **The amendment resolves the sole QA disagreement in judge 1's favour** — a pleasing independent check on the amendment itself.
+- **DUAL DENOMINATORS ride every artifact from here:** with-narration **124** (never deleted, append-only) / without-narration **111** (PRIMARY). Conservative remainder recorded per §2: possible inert-element rows inside the never-judged 72 stay in the denominator, direction safe.
+
+### B. LEVEL/ZONE INDEPENDENT GRADE — **BAND 6, VERIFIED. May land; may NOT claim its own §4.**
+
+**★ CRITICAL — §4.3 cadence isolation was never attempted and never disclosed as a gap.** The grader found `cadence` appears zero times in either commit, then went further and **measured the confound it creates**: the baseline evaluator recomputes every 10 bars and holds the value constant between recomputes; the routed evaluator evaluates **every single bar**. So routing changes **two variables at once** — level-awareness AND update cadence. Holding the level-aware primitive fixed and varying only cadence over 2000 bars: **entries 49 vs 10, a ~5× swing, 6.5% bar-level disagreement.**
+- **This is the WIRE-1 pattern exactly** — 721→631 read as fidelity when it was cadence — which is why §4.3 was marked non-negotiable, and it was dropped silently rather than surfaced. **I take that on my side of the loop:** my dispatch brief named cadence isolation in the verification plan but did not make it a blocking deliverable the implementer had to return, and I did not check for it before dispatching the grade — I flagged it *to* the grader instead of catching it myself.
+- **Binding consequence, and I am recording it as an open item not a closed one:** no future `approximation=False` claim for this sub-wire may cite this delivery as having isolated cadence. The harness must be built first.
+
+**What the grader independently re-verified CLEAN, each ≥2 paths, by mutation-testing rather than reading:** flag-OFF byte-identity (extracted the pre-change module at `43ea743e` and ran all 78 real conditions through both — **0 mismatches**; then forced the flag ON to confirm the tests actually fail) · `approximation` stays True · **the flag-leak fix is real and the sibling sweep found no second instance** (reverted the marker, watched 8 tests fail exactly as the collision predicts) · scope-lock · **engagement 16/78 = 20.5% ON, 0 OFF reproduced by three non-overlapping paths** · both-polarity and anti-vacuity companions mutation-tested non-decorative, and it noted they correctly avoid the over-strict `any(constant)` trap.
+
+**Finding 2 (MEDIUM), dormant but worth your eye:** the TS mirror has no level/zone logic — defensible by precedent — **but the parity gate that would catch a divergence spawns Python without the flag**, so it only ever compares flag-OFF plans and could not detect a breach if the flag were ever set for a Python-only research run. Currently inert; the mitigation is incomplete rather than absent.
+
+**Band 6 reasoning I accept as correct:** the code is sound and its safety property is the best-proven claim in the packet, but a self-declared non-negotiable verification item was silently dropped — which is the class the grader exists to catch, and the 7–8 pre-live ceiling is not reachable with an undisclosed gap in the packet's own plan.
+
+**Neither result licenses anything further.** No `approximation=False`, no fidelity claim, flag still OFF. **Holds:** T1 blocked · WIRE-2 pending its own two-leg audit · reader-vintage queued · the 77 sealed.
+
 ## AR-082 · 2026-07-20 · ★★ NARRATION PASS COMPLETE — nominator + judgment + QA all run over the full 124. **QA PASSES at 5.0%** (bar ≤15%). **Your demotion is vindicated at scale: the judge rescued 41 of 52 nominees (79%).** One definitional escalation, seconded independently.
 
 | stage | result |
