@@ -4,6 +4,31 @@
 
 ---
 
+## AR-090 · 2026-07-20 · R-100 §3 executed — **POPULATION A DERIVED: 7 of 16, with per-row match evidence.** ★ And a new failure mode of mine, caught before it did damage: **over-correction — I nearly "fixed" a classifier that was right.**
+
+**POPULATION A (build) vs B (unresolvable-as-built), derived from the census artifact, not framed:**
+
+| population | n | disposition |
+|---|---|---|
+| **A — named kind, referent IN-span, no anaphora** | **7** | BUILD, per-kind |
+| **B — any bare anaphora** | **8** | UNRESOLVABLE-AS-BUILT |
+| neither (no kind, no anaphora) | 1 | also unresolvable |
+
+**Population A by kind — each owes its OWN amended-Leg-1 audit:** `named_sr_level` 4 · `order_block_edge` 2 · `swing` 1.
+
+**★ THE THING I ALMOST DID WRONG.** Reading Population A's texts, two looked obviously misclassified to me — *"the next thing I look for is a market structure shift…"* tagged `swing`, and *"time your entries once you have allowed the first 5 to 15 minutes to pass…"* tagged `named_sr_level`. Both read as timing/structure talk, not level references. **I was about to strike them from the build population. I checked the match evidence first, and I was wrong on both:**
+- the first matches on ***"a previous high was broken"*** — a genuine swing reference;
+- the second matches on ***"establish where support is at"*** — it genuinely names support, in a sentence whose *opening clause* is about timing.
+**In both cases I had read the beginning of the text and judged the whole.**
+
+**Why I am reporting this rather than just fixing my draft:** this session has convicted four of my own instruments, and the reflex that produces is to assume the fifth is wrong too. **That reflex was itself about to cause an error — removing valid rows from a build population on a sight-read.** Over-correction is a real failure mode with the same shape as the ones it overreacts to: *a confident judgment made from a partial look.* The discipline that saved it was the same one that caught the others — **look at the evidence, not at the label** — which cuts in both directions and I had only been applying it in one.
+
+**Null-law compliance (R-100 §2), applied to my own numbers here:** I cite **no rate** in this report. 7/16 and 4/2/1 are **counts of a fully enumerated population**, not sampled rates, so a chance-baseline is not defined for them — stating that explicitly rather than silently omitting a null the new law would otherwise require.
+
+**What I have NOT done:** no resolver design, no packet, no code. Population A's membership is derived and evidenced; the per-kind detector mapping (S/R levels, order-block edges, swings → the detectors the repo already owns) is the next unit, and it is design work that should start from your ruling rather than my momentum. **One flag for that design:** at n=7 split 4/2/1 across three kinds, the `swing` kind has a **single** member — a per-kind premise audit on n=1 will not be able to distinguish a working detector from a lucky one, and that should be faced in the packet rather than discovered in the grade.
+
+**Holds:** T1 blocked · WIRE-2 pending its audit under the amended Leg 1 · reader-vintage queued · flag OFF · no `approximation=False` · the 77 sealed.
+
 ## AR-089 · 2026-07-20 · ★★★ URGENT SELF-CORRECTION — **MY 88.9% IS NEAR-CHANCE. The null calibration says 82.7% would happen by accident.** R-099 has already elevated that number into design requirements; it should not be. The probe is close to VACUOUS.
 
 **STOP-THE-PRESS ON AR-088.** Running R-099 §2's window-derivation, I ran the null I should have run before reporting at all.
