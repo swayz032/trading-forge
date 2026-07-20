@@ -4,10 +4,20 @@
 frozen refs, promotion gates and sizing paths untouched; `approximation=False` remains
 gated behind an independent grade. Authorization: **R-101 §1 BUILD IS GO.**
 
-**★ CEILING, travelling in the scope-line from day one per R-101 §1:**
-**at most 7 of 16 level/zone rows de-approximate in this pass.** This sentence appears
-wherever the result is cited. The delivery's DoD is de-approximating the RESOLVABLE — never
-"fixing level/zone."
+**★ CEILING, travelling in the scope-line from day one per R-101 §1 — AMENDED BY R-102 §2:**
+**at most 6 of 16 level/zone rows de-approximate in this pass; a 7th is ROUTED-BUT-APPROXIMATE.**
+This sentence appears wherever the result is cited. The delivery's DoD is de-approximating
+the RESOLVABLE — never "fixing level/zone."
+
+**R-102 §2 ruling on `swing` (n=1): BUILD THE ROUTING, WITHHOLD THE CLAIM.** The resolver
+machinery is shared, so `swing` routes with the rest — but **de-approximation is granted
+per-kind only where the audit population supports it, floor n≥2**, because §4's sharpened
+check (two different-level conditions → two different series) is literally unrunnable inside
+a kind of one. So: `named_sr_level` (4) and `order_block_edge` (2) may earn
+`approximation=False` pending their per-kind audits; **`swing` stays `approximation=True`,
+disposition UNVERIFIED-BY-SAMPLE**, until tier-a/tier-c grows its population to the floor.
+**A detector that cannot be distinguished from luck does not get the flag, however plausible
+its single member looks.**
 
 ---
 

@@ -4,6 +4,18 @@
 
 ---
 
+## AR-092 · 2026-07-20 · R-102 §2 applied — **packet ceiling AMENDED 7 → 6** before the build could start against a stale number; implementer DISPATCHED (receipt held).
+
+**1. The ceiling was amended BEFORE dispatch, not after.** Your `swing` ruling changes the scope-line from *"at most 7 of 16 de-approximate"* to **"at most 6 of 16 de-approximate; a 7th is ROUTED-BUT-APPROXIMATE."** I edited the packet first, then dispatched — because an implementer building against a stale ceiling produces a delivery whose own scope-line overstates it, and that is how a ceiling quietly becomes a promise. The `swing` disposition (`UNVERIFIED-BY-SAMPLE`, `approximation=True`, until tier-a grows n to the floor) is written into the packet verbatim, including your reason: **§4's sharpened check is literally unrunnable inside a kind of one.**
+
+**2. Build-the-routing / withhold-the-claim is carried into the brief as two separate constraints**, because they are separately skippable: `swing` routes with the shared machinery, AND `swing` keeps `approximation=True` with the implementer explicitly told **not to argue for it**. I also widened the second constraint beyond your ruling: **this delivery introduces NO `approximation=False` at all**, for any kind — the eligible kinds' flips are a later, independently-graded step. Building resolution and claiming fidelity in one commit is how the last two packets blurred; separating them costs nothing now.
+
+**3. The prohibition is carried as a prohibition.** The brief bans Population B handling by name — no antecedent resolution, no deixis heuristics, **no fallback that guesses a referent** — with the reason attached. I added the fallback clause specifically: an implementer under scope pressure reaches for a default, and a defaulted referent is exactly the confident-but-hollow binding this packet exists to avoid.
+
+**4. R1 and R2 lead the checklist deliberately.** R1 is production-boundary liveness (vary the condition text production reads); R2 is per-condition discrimination (two conditions naming different levels → different series). **R2 is the property the prior sub-wire silently lacked**, and it is now unskippable without a visible "could not". R8 additionally forbids over-strict guards, per R-091 §3 and my own near-miss.
+
+**5. Dispatch receipt held** (per R-089's staged≠running law) — the implementer is running, not merely briefed. Next: return checklist → per-kind production-boundary audits → independent grade. **Holds:** T1 blocked · WIRE-2 pending its audit · reader-vintage queued · flag OFF · no `approximation=False` · the 77 sealed.
+
 ## AR-091 · 2026-07-20 · R-101 §1 GO — **Population-A resolver packet STAGED** (`packet-levelzone-population-a-resolver-2026-07-20.md`), receipt before code. The ceiling travels in the scope-line; `swing` n=1 is faced IN the packet, not left for the grade.
 
 **Packet staged before any code**, per CLAUDE.md §11 — your GO authorizes the build, the packet is what the grader rules on. Shipped in the same commit as this report (REPORT-RIDES-THE-COMMIT).
