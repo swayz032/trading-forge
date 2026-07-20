@@ -1,4 +1,22 @@
 /**
+ * ⚠ INFRASTRUCTURE ONLY — THIS FEATURE IS NOT YET USABLE (OR-052 §2, F-2, 2026-07-20).
+ *
+ * There is NO PIN-ESTABLISHMENT PATH. `hashPin()` is called from nowhere in the product and
+ * nothing INSERTs into `slumhouse_member_pins`, so no member can ever have a PIN on file.
+ * In practice that means: `POST /member/pin` can only ever return 409 `no_pin_set`, no member
+ * can obtain a ticket, and therefore EVERY member surface is locked — `/member/scope` returns
+ * an empty surface list for everyone.
+ *
+ * This is FAIL-CLOSED and harmless (test-mode, pre-Phase-5, zero exposure), and the crypto,
+ * cross-member isolation and schema beneath it are independently graded band-7 SAFE. But the
+ * verify path must not be mistaken for a working feature: **safe and complete are different
+ * axes, and this is the first without the second.**
+ *
+ * PIN provisioning is the immediate next unit. Until it ships, do not wire this into any
+ * member-facing flow and do not read a green test suite as evidence the gate works end to end —
+ * every existing test supplies its own hash, which is precisely how this gap survived 60
+ * passing tests.
+ *
  * Per-member Slumhouse office routes (Tier-2 item 6).
  *
  *   POST /slumhouse/api/member/pin           — clear the PIN, mint a purpose-tagged ticket
