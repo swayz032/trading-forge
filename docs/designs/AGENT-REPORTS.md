@@ -4,6 +4,31 @@
 
 ---
 
+## AR-066 · 2026-07-20 · ★ WIRE-1 STRUCTURE COLUMN BUILT AND CAUSALLY PROVEN (`13c91e74`). Live: trades 721→631, PF 0.059→0.157, 99.99% engaged, runtime halved. And the anti-vacuity companion caught my causality probe being VACUOUS — twice — including a scale-invariance trap I would otherwise have shipped green.
+
+**R-072/R-073 acknowledged.** R-073 accepted AR-065 whole; road open. R-072 freezes gate-recalibration at hash `654780c88a4fba64` — noting your own 2× correction (lifetime effective-N is **32**, not the wave-scoped 16): that is exactly my F-2 incomplete-tuple fix working — the 16 shakedown singletons correctly REFUSE to collapse, which is why lifetime reads 16 collapsed wave-1R groups + 16 singletons. Your §3 DSR selection-side deflation gap is recorded as stationed in my lane (own packet + grade, with/before Tooth-1, NOT now). R-062 carry: #3, #5 remain ours.
+
+**THE STRUCTURE WIRE IS BUILT (`13c91e74`).** `attach_structure_column` materializes the real-HTF structure signal as a **STEP FUNCTION advancing per COMPLETED HTF bar** (your two-granularity distinction, implemented as specified — not daily-frozen, not per-bar noise). `_eval_wait_structure` reads it when present and falls back **per bar** to the self-referential proxy otherwise. Availability obeys `completed_htf_slice` (close ≤ t), so the forming bar straddling `t` is never visible. Flag-gated default OFF.
+
+**LIVE RESULT (MES 2022-01-01..2023-06-30, ONE spec):**
+| | OFF | ON |
+|---|---|---|
+| trades | 721 | **631 (−12.5%)** |
+| profit factor | 0.059 | **0.157** |
+| structure column engaged | — | **105,594/105,606 (99.99%)** |
+| runtime | 34.3s | **10.2s** |
+
+**Trades DROPPING is the fidelity gain** — real HTF gating refuses signals the self-referential proxy admitted. The runtime halving is the **ghost-collapse speedup R-049 L2 predicted** ("the pathology's cost dies with the pathology") — first empirical confirmation, and it feeds the throughput scope-line you're owed. Note the engagement asymmetry worth carrying into the DoD: the **structure** column engages 99.99% (it needs only the 4h frame, present from window start) while the **bias** column engages 49% (it needs the 200-daily-bar warmup). Two columns, two engaged-fractions, same window — the per-spec engaged-fraction law needs to be **per-column**, not per-spec, or the DoD will average two different things.
+
+**★ THE ANTI-VACUITY COMPANION EARNED ITS KEEP TWICE — and the second catch is the interesting one.** My structure-column causality probe failed its companion, twice:
+1. First: the synthetic fixture was too smooth for the detector to find any BOS/CHoCH, so the column was near-constant.
+2. Then — after I made it a zigzag — it failed AGAIN, and the reason is the lesson: **my corruption multiplied all OHLC by a constant, and swing/BOS/CHoCH detection is SCALE-INVARIANT.** Scaling preserves which highs exceed which lows, so the detector returned a byte-identical state and my "future-perturbation" perturbed nothing. Fixed by changing the SHAPE (flattening future bars).
+**Without the companion I would have committed a GREEN causality test that was structurally incapable of detecting look-ahead** — a false safety claim of exactly the class you named in R-069 §1, caught this time by the pattern rather than by a grader. The companion is now proving its own value on the same packet that adopted it.
+
+**Causality PROVEN (4 tests):** future-perturbation on exec+HTF moves nothing before the corruption point · step-function property held (flips bounded, not per-bar churn) · no-frame yields no column · plus the non-vacuous companion. All 28 WIRE-1 proofs green; regression is the same 8 pre-existing failures verified on clean HEAD.
+
+**Next:** both-polarity proof for the structure binding, then the **0.99 per-family re-measure WITH per-column engaged-fraction**, then the independent grade (scope: non-None branch, dead-load activation, availability rule, structure column). The 77 sealed.
+
 ## AR-065 · 2026-07-20 · R-071 §3 discharged — SEED-OR-CARRY **DECIDED** on an empirical feasibility check (CARRY now, seeding stationed). And R-067 §3's **INTRA-DAY STRADDLE proof is DONE** — the forming-bar leak is closed before any structure column exists.
 
 **R-071 §3 — SEED-OR-CARRY, decided not drifted (`7f49753d`, recorded in packet §4e).**
