@@ -4,6 +4,34 @@
 
 ---
 
+### Session Log — 2026-07-20 WIRE-1 lane resumed — R-080 §5 executed, found a ★ DEFECT IN THE CENSUS (n=90 → 78); corrected census v2 + generator landed; AR-071 filed
+
+**Mission:** operator directive — read the agent reports + Fable rulings in `docs/designs/` and the lane memory, and continue where the previous session stopped (last report AR-070, rulings current through R-080).
+
+**Work completed:**
+- Mission-loaded the lane: CLAUDE.md + AGENTS.md + AGENT-LOGS pinned facts, then `ADVISOR-RULINGS.md` R-080 and `AGENT-REPORTS.md` AR-070 in full, plus memory `project_wire1_withdrawn_decomposition_ratified_2026_07_20`. R-080 had already ratified the decomposition architecture, so the open work was its §6 sequence: census blind grade ∥ level/zone premise-audit spike.
+- **Found the census defect while drawing §5's blind-grade sample.** `wire1-structure-census.json` (v1, `3db7fa88`) reports n=90; the true distinct count is **n=78**. Root cause: `-igpOZs8LsM__s0.spec.json` and `4cT8WTyxhYY__s0.spec.json` exist in BOTH `packet2_dod_specs/` and `shakedown_specs/` (byte-identical, same SHA-256); v1 globbed both dirs and emitted those 2 specs' conditions twice — exactly 2× on those files, the other 12 exact. `packet2_dod_specs/` (2 specs) is a strict SUBSET of `shakedown_specs/` (16), so "16 shakedown + 3 packet2" is really 16 distinct specs, 14 carrying structure conditions.
+- **Headline survives:** `HTF_TAUGHT = 0` on the corrected denominator AND under an independently-authored rule set — R-080 §3's decompose-don't-build-HTF direction is unaffected. Corrections: EXEC_TAUGHT 11 (12.2%) → 16 (20.5%); TF_UNSPECIFIED 79 (87.8%) → 62 (79.5%) (so R-080 §2's "79 / 87.8%" reads 62 / 79.5%); structure-event → 4.
+- **Two further v1 defects, both material:** v1 shipped **no generator** (artifact + proposal only), so §1b's concept table is unreproducible; and it persisted **no per-row concept label**, so §5's narration/level-zone strata cannot be drawn. Consequently R-080 §5's sample spec ("all 6 structure-event calls") matches no classifier on disk — v1 boolean 7 (5 distinct), v1 §1b concept 6, v2 4.
+- **Shipped corrected census v2** (`38e5ba71`): `wire1-structure-census-v2.json` + committed generator `wire1_structure_census.py` — dedup keyed on condition `id`, every label persisted, **fail-closed** assert if two same-named specs ever differ by hash. Concept labels explicitly marked a RECONSTRUCTION (v1 regexes unrecoverable); v1 artifact retained, not deleted.
+- **Filed AR-071** (`1f00611e`) to the advisor with the finding, corrections, containment and four asks for ruling. Did **not** start the level/zone premise-audit spike — it selects its target population from a denominator not yet ratified.
+
+**Verification:**
+- n=78 confirmed by **three independent paths**: distinct `(file,role,object,class)` tuples in v1 = 78; direct count of `WAIT_STRUCTURE`/`VERIFY_STRUCTURE` in the source specs = 78; v2 generator = 78.
+- Duplicate copies proven byte-identical via `sha256sum` (no vintage ambiguity).
+- **Blast-radius sweep (fix-the-class):** `wire1-dod-HONEST-FLOOR.json` and `wire1-dod-remeasure.json` both carry 16 rows with each spec exactly once — **the 0.9938 → 0.9793 honest floor is uncontaminated.**
+- **Self-caught error:** v2's first draft returned EXEC=5 vs v1's 11; the two-path diff against v1 showed v1 was right — my regex required digits+whitespace and missed word-numerals/hyphens ("five-minute", "one minute", "15minute"). Fixed, reason recorded at the regex. Post-fix the two rule sets disagree on 5/78 (6.4%, inside R-080's 15% threshold); all 5 inspected, v2 correct on all 5.
+- Explicit-path commits only (`git commit -o`) — the OPS seat's files and Fable's uncommitted R-080 verified untouched; `git stash list` empty after a pre-commit hook auto-stash.
+
+**Known-facts updates:**
+- New memory `reference_census_v1_double_glob_defect_2026_07_20` — the double-glob defect, plus two generalizable rules: an artifact shipped without its generator is unreproducible and ungradeable; dedup on a stable id and fail CLOSED on hash mismatch (vintage ambiguity is worse than duplication). Also pinned: a reconstruction is never the original.
+- ⚠ The repo's pre-commit hook **auto-stashes** unstaged files — a §11b hazard, since `refs/stash` is shared across worktrees. It restored cleanly here, but a concurrent-session stash during that window would collide.
+
+**Carry-forward for next session:**
+1. **Blocked on Fable's ruling on AR-071's four asks:** ratify n=78 + v2 as the blind-grade substrate · re-issue §5's sample definition against v2's strata · rule whether reconstruction-status changes the grade design · confirm the level/zone spike may start in parallel.
+2. Once ruled: census blind grade (independent grader, blind, classifying from condition texts) ∥ level/zone premise-audit spike, then narration-rule freeze → sub-wires one by one.
+3. Unchanged holds: T1 blocked · WIRE-2 blocked pending its own premise audit · reader-vintage cross-audit queued · `TF_WIRE1_HTF_COLUMNS` default OFF · the 77 sealed.
+
 ### Session Log — 2026-07-12 H1 Wave-4 — certificate assembler + 5 compile-integrity lints LANDED (band-6 independent grade); pilot gated on F-1
 
 **Mission:** resume H1 extraction work per the frozen handoff — re-dispatch the aborted Wave-4 builder (assembler + lints), grade, land, tee up the pilot on the sealed 16.
