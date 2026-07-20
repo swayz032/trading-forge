@@ -4,6 +4,39 @@
 
 ---
 
+## AR-070 · 2026-07-20 · R-079 executed: honest FLOOR issued (**the 0.99 essentially did NOT move — 0.9938 → 0.9793**), and the ★★ CENSUS REDIRECTS THE BUILD: **ZERO of 90 structure occurrences taught HTF structure.** Architecture proposal staged for your ratification. Also: my monitor's real failure diagnosed and fixed.
+
+**§3 (b)-as-FLOOR — ISSUED IMMEDIATELY (`4964150f`), the ledger is true today:**
+| | rate |
+|---|---|
+| BEFORE | 0.9938 |
+| AFTER floor — structural, bias-credit only | 0.9642 |
+| **AFTER floor — weighted, bias-credit only** | **0.9793** |
+| ~~withdrawn claim~~ | ~~0.4011 / 0.4162~~ |
+
+**The 0.99 essentially did not move — ~1.5% relative, not 58%.** Structure-family credit reverted to `approximation=True`; the bias family is small (typically 1 binding/spec) at 49% engagement, so its credit is minimal. The original artifact is RETAINED and annotated `WITHDRAWN_AS_FIDELITY_CLAIM` (append-only — never deleted, never silently replaced), pointing to `wire1-dod-HONEST-FLOOR.json`. Your F-2 correction rides the scope-line: 738 daily bars DO exist before the measured window; CARRY was **comparability**, not infeasibility.
+
+**★★ §3 EVIDENCE PASS — THE CENSUS REDIRECTS THE BUILD** (`3db7fa88`, proposal `wire1-structure-census-and-architecture-proposal-2026-07-20.md`). 90 occurrences on disk (vs the packet's ~217 broader corpus — scope stated). Anti-fit rules, from timeframe semantics not from reading the texts first:
+
+| taught timeframe | n | % | | concept | n | % |
+|---|---|---|---|---|---|---|
+| **HTF_TAUGHT** | **0** | **0.0%** | | (narration, no concept) | 32 | 35.6% |
+| EXEC_TAUGHT (5m/1m) | 11 | 12.2% | | level/zone | 25 | 27.8% |
+| BOTH | 0 | 0.0% | | liquidity | 15 | 16.7% |
+| TF_UNSPECIFIED | 79 | 87.8% | | FVG/imbalance | 14 | 15.6% |
+| | | | | **structure event** | **6** | **6.7%** |
+
+**Three findings that decide the architecture:**
+1. **NOBODY TAUGHT HTF STRUCTURE — 0 of 90.** Building 4h BOS/CHoCH detection would implement something **no trader in this corpus taught** — a fidelity REGRESSION wearing an improvement's clothes. **The inert `htf_bars` defect was lucky:** had it worked, the 0.99 would have "improved" while fidelity actually fell. That is the sharpest argument I can make for your premise-audit law.
+2. **The family is a CATCH-ALL — only 6.7% are structure events.** It is dominated by level/zone, liquidity and FVG. "Wire the structure family" was never one problem; it is at least four, and the repo already owns detectors for several (`fvg_native`, `sweep_native`, `mss_native`, `structural_stops`).
+3. **~1/3 are NARRATION, not conditions** (*"we wait for the entry signal once we get it we enter"*). They are executed-bindable today, so they sit in the **denominator** of the approximation rate — meaning a third of the metric may be measuring un-actionable text, and the 0.99 itself is partly an artifact of what got admitted as a condition.
+
+**PROPOSED, NOT BUILT — awaiting your ratification:** drop the HTF-structure build; **decompose** the family by taught concept and route each sub-population to the detector the repo already owns, each earning `approximation=False` only under its OWN both-polarity + premise-audit proof; **quarantine the narration tier** — but that is a METRIC-DEFINITION change and **I am not moving a denominator on my own authority**; `htf_bias` as a narrow alignment component only, fed from the proven-causal daily path, never the F-1-contaminated `four_h_trend`; **cadence isolated from signal permanently** (tonight's 721→631 was cadence masquerading as fidelity precisely because they moved together).
+
+**Monitor — root-caused, since it cost the operator a wait.** Two failures, neither the regex (which matches all 14 rulings): (a) when two rulings landed close together my monitor emitted both but the notification BATCHED them, surfacing only the newest — that is why I repeatedly reported "skipped R-072/74/76" as one-offs when they were emitted-and-collapsed; (b) the monitor DIED with a previous session context — its log ends at R-078 while R-079 sat unfired 21 minutes. Rebuilt: state-file backed (survives restart, no lost position) + 1.5s spacing between emissions so batching cannot collapse rulings. Standing caveat stated plainly: a background poller is not reliable here; the turn-start disk check is the guarantee, and it only fires when the operator interacts.
+
+**Holds respected:** T1 blocked · WIRE-2 blocked pending premise-audit + your ratification of this architecture · reader-vintage queued · flag OFF · the 77 sealed. No fidelity number is claimed by this census — it is evidence for a build decision, not a result.
+
 ## AR-069 · 2026-07-20 · ★★ ESCALATION — I MUST WITHDRAW THE DoD'S FIDELITY CLAIM. The grade returned BAND 7 SAFE and LICENSED the number; then, closing its own F-3, I found the WIRE-1 structure premise is **INERT**. The arithmetic is right; the MEANING is wrong. T1 and WIRE-2 stay blocked. Do not let anything consume 0.9938→0.4011 as a fidelity result.
 
 **The grade first (`ae06949…`): SAFE — BAND 7, headline LICENSED.** It re-derived the corpus numbers by its own path (4 specs incl. both mandated extremes + full-JSON aggregate) — exact match; confirmed the discrimination pattern by dumping the full binding plans of both no-move specs (genuinely zero wired-family conditions anywhere); verified the speedup is real work-substitution (`compute()` 27.81s→0.39s: one upstream 4h computation replacing per-bar 5m recompute — no dropped signal opportunity); confirmed flag-OFF byte-identity and non-None branch coverage. It filed three defects (F-1 CRITICAL-dormant, F-2 scope-line, F-3 test coverage).
