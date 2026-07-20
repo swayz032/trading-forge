@@ -9,6 +9,10 @@ const fs = require("fs");
 const path = require("path");
 const { buildCertificate, INVARIANT_CHECKS } = require("./cert-schema.cjs");
 const { diffCertificates } = require("./cert-diff.cjs");
+// Local modules only at top level — both use builtins and guard their own optional requires,
+// so a degraded node_modules cannot kill this file before the crash handler is attached.
+const { loadEnvironment, postDiscord } = require("./rail-runtime.cjs");
+const { guardRailMain } = require("../lib/rail-crash-handler.cjs");
 
 // ── Pure assembly: prev cert + tonight's check results → cert + diff + the DB row shape.
 // Unit-tested; the runner wraps this with spawn/DB/JSONL I/O. ──
@@ -61,8 +65,10 @@ async function writeAudit(sql, action, payload) {
 }
 
 async function main() {
-  const dotenv = require("dotenv");
-  dotenv.config({ path: path.resolve(process.cwd(), ".env") });
+  // 2026-07-18 incident: a bare require("dotenv") here died on a degraded node_modules and took
+  // the whole run down silently. loadEnvironment() guards its own require and covers the same
+  // <cwd>/.env path plus RAILS_ENV_PATH and the sibling checkout.
+  loadEnvironment(process.cwd());
   const postgres = require("postgres");
   const { takeSample } = require("../soak/soak-sensors.cjs");
   const { guardOnce } = require("../lib/tower-idle-guard.cjs");
@@ -100,5 +106,7 @@ async function main() {
   } finally { await sql.end({ timeout: 5 }); }
 }
 
-if (require.main === module) main();
+if (require.main === module) {
+  main().catch(guardRailMain({ rail: "cert", writeLedgerFn: writeJsonl, notifyFn: postDiscord }));
+}
 module.exports = { assembleNightly, runCheck, collectCheckResults };
