@@ -276,3 +276,74 @@ def test_resolve_session_keyword_never_false_positives_on_padded_substring():
     # Regression against the exact false-positive class Band B's matcher
     # documented fixing (word-boundary padding, not bare substring match).
     assert resolve_session_keyword("keynotes about the market") is None
+
+
+# --- R-083 §3 regression fence: bare-token session matching -------------------
+# A monitor probe flagged the token "am" inside "...so I am not counting this as
+# a displacement..." — the English verb, not the meridiem. Production is SAFE
+# (SESSION_KEYWORDS is phrase-based: "am session", "ny am", never bare "am"), so
+# the alarm was the probe's defect, not the code's. Fenced here because the
+# bare-token version of this matcher is a live trap for any future rewrite: it
+# would silently BIND entry-mechanics prose as a session condition, which changes
+# n_executed_bindable and therefore the binding-approximation rate.
+
+# Verbatim from shakedown_specs/0xygpCMwxbQ__s0.spec.json, condition
+# "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8" — a WAIT_SESSION
+# condition whose text carries no session semantics at all (it is stop placement).
+_AM_VERB_OBJECT = (
+    "I prefer to have a stop rate prior to the displacement so I am not "
+    "counting this as a displacement move up"
+)
+
+
+def test_bare_am_verb_never_resolves_to_a_session_zone():
+    assert resolve_session_keyword(_AM_VERB_OBJECT) is None
+
+
+@pytest.mark.parametrize(
+    "prose",
+    [
+        _AM_VERB_OBJECT,
+        "I am watching for the setup to form",
+        "this is where I am entering the trade",
+        "pm me if you want the indicator",
+        "the trend am I right about it continuing",
+    ],
+)
+def test_bare_am_pm_tokens_in_prose_never_bind_as_session(prose):
+    assert resolve_session_keyword(prose) is None
+    binding = bind_condition(
+        {
+            "id": "regression:bare-am-pm",
+            "type": "WAIT_SESSION",
+            "object": prose,
+            "role": "confluence",
+        }
+    )
+    assert binding.bindable is False
+    assert binding.reason == "no_recognized_session_keyword"
+
+
+@pytest.mark.parametrize(
+    ("phrase", "expected_zone"),
+    [
+        ("we trade the ny am session only", "ny_am"),
+        ("wait for the london open before entering", "london"),
+        ("skip the lunch hour entirely", "lunch_blackout"),
+    ],
+)
+def test_real_session_phrases_still_bind(phrase, expected_zone):
+    # ANTI-VACUITY COMPANION. Without this, the fence above would pass just as
+    # happily if resolve_session_keyword were broken to always return None —
+    # a dead matcher and a correct one are indistinguishable on negative cases.
+    assert resolve_session_keyword(phrase) == expected_zone
+    binding = bind_condition(
+        {
+            "id": "regression:real-session",
+            "type": "WAIT_SESSION",
+            "object": phrase,
+            "role": "confluence",
+        }
+    )
+    assert binding.bindable is True
+    assert binding.session_zone == expected_zone

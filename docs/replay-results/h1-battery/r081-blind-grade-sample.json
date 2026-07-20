@@ -1,0 +1,346 @@
+{
+  "artifact": "r081-blind-grade-sample",
+  "draw_rule": "strata per R-081 \u00a73; systematic every ceil(n/k)-th by condition_id ascending, no RNG",
+  "strata_membership": {
+    "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8": [
+      "a_structure_event"
+    ],
+    "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7": [
+      "a_structure_event"
+    ],
+    "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2": [
+      "a_structure_event",
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9": [
+      "a_structure_event"
+    ],
+    "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2": [
+      "b_exec_taught"
+    ],
+    "WAIT_STRUCTURE:i-got-the-5-minute-chart#3": [
+      "b_exec_taught",
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5": [
+      "b_exec_taught"
+    ],
+    "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0": [
+      "b_exec_taught",
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12": [
+      "b_exec_taught"
+    ],
+    "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8": [
+      "b_exec_taught",
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6": [
+      "b_exec_taught",
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19": [
+      "b_exec_taught"
+    ],
+    "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3": [
+      "b_exec_taught",
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0": [
+      "b_exec_taught",
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0": [
+      "b_exec_taught"
+    ],
+    "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4": [
+      "b_exec_taught",
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11": [
+      "b_exec_taught"
+    ],
+    "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2": [
+      "b_exec_taught",
+      "d_narration",
+      "e_empty_concepts"
+    ],
+    "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10": [
+      "b_exec_taught"
+    ],
+    "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9": [
+      "b_exec_taught",
+      "e_empty_concepts"
+    ],
+    "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9": [
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11": [
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4": [
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8": [
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7": [
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0": [
+      "c_level_zone"
+    ],
+    "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5": [
+      "d_narration",
+      "e_empty_concepts"
+    ],
+    "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5": [
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7": [
+      "d_narration"
+    ],
+    "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0": [
+      "e_empty_concepts"
+    ],
+    "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8": [
+      "e_empty_concepts"
+    ],
+    "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15": [
+      "e_empty_concepts"
+    ]
+  },
+  "n_to_grade": 32,
+  "withheld_from_grader": [
+    "tf_class",
+    "concepts",
+    "narration_candidate"
+  ],
+  "rows": [
+    {
+      "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+      "object": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "kFyD3H6I1I8__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+      "object": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "CLDEIsNpVRc__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+      "object": "after we broke it and tested it we can try our long trade",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "R5L890juvRw__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+      "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "kFyD3H6I1I8__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+      "object": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "-igpOZs8LsM__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+      "object": "I got the 5 minute chart",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "IyFioFkRgWo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5",
+      "object": "I'm on the five-minute time frame, and I need to set up my range",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "kFyD3H6I1I8__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+      "object": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "kFyD3H6I1I8__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+      "object": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "E9MzEC_yNoM__s1.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+      "object": "Instead of going to the one minute chart, we're going to go to the five-minute chart.",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+      "object": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "CLDEIsNpVRc__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+      "object": "once you find this... breaking above that level... your entry goes here",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "PVMgOxHUqFA__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+      "object": "reclaims the level with a lot of volume",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "E9MzEC_yNoM__s1.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+      "object": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "W7nlnHTUZQU__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6",
+      "object": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "CLDEIsNpVRc__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+      "object": "the imbalance must create a break of structure",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "-igpOZs8LsM__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+      "object": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "PVMgOxHUqFA__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+      "object": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+      "object": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "0xygpCMwxbQ__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+      "object": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+      "object": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market.",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+      "object": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "IyFioFkRgWo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+      "object": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "DLwVqcLRcfw__s1.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+      "object": "we are going to switch to the 1 minute chart",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11",
+      "object": "we're going to mark the high and the low of the first 15-minute candle",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+      "object": "We're going to start on our five-minute chart.",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+      "object": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead.",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+      "object": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "W7nlnHTUZQU__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+      "object": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "CLDEIsNpVRc__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5",
+      "object": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "IyFioFkRgWo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+      "object": "you're going to start on the 15minute chart",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "file": "WEhmadJArQo__s0.spec.json"
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7",
+      "object": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max.",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "file": "dV7chra4u4Q__s0.spec.json"
+    }
+  ]
+}
