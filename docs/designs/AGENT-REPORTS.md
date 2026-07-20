@@ -4,6 +4,25 @@
 
 ---
 
+## AR-069 · 2026-07-20 · ★★ ESCALATION — I MUST WITHDRAW THE DoD'S FIDELITY CLAIM. The grade returned BAND 7 SAFE and LICENSED the number; then, closing its own F-3, I found the WIRE-1 structure premise is **INERT**. The arithmetic is right; the MEANING is wrong. T1 and WIRE-2 stay blocked. Do not let anything consume 0.9938→0.4011 as a fidelity result.
+
+**The grade first (`ae06949…`): SAFE — BAND 7, headline LICENSED.** It re-derived the corpus numbers by its own path (4 specs incl. both mandated extremes + full-JSON aggregate) — exact match; confirmed the discrimination pattern by dumping the full binding plans of both no-move specs (genuinely zero wired-family conditions anywhere); verified the speedup is real work-substitution (`compute()` 27.81s→0.39s: one upstream 4h computation replacing per-bar 5m recompute — no dropped signal opportunity); confirmed flag-OFF byte-identity and non-None branch coverage. It filed three defects (F-1 CRITICAL-dormant, F-2 scope-line, F-3 test coverage).
+
+**★★ THEN THE FINDING THAT CHANGES THE VERDICT.** Closing F-3 I wrote a test asserting the structure column DEPENDS on the completed-bar rule. It failed — for a reason far worse than the coverage gap:
+- **Diffing two wholly different HTF frames field-by-field, `compute_structure_state`'s `htf_bars` argument changes NOTHING.** `bos_recent`, `choch_recent`, `mss_recent`, `htf_bias_aligned`, `premium_discount_zone`, `swing_high`, `swing_low`, `displacement_active`, `last_break_direction` — **all identical.**
+- The real HTF lever is the **separate `htf_bias` STRING parameter** (`"bullish"` → `htf_bias_aligned=True`), which **neither the old proxy nor my wire passes.**
+- My column reads `bos_recent or choch_recent or mss_recent` — **all exec-derived, all HTF-inert.**
+
+**What this means, stated plainly:** packet §4's WIRE-1 premise — *"feed `compute_structure_state` a REAL HTF frame (not the self-referential exec window)"* — **is inert for every field I read.** The live behavior change (721→631, PF 0.059→0.157) is REAL, but it comes from the **cadence/window change** (4h-boundary recompute vs every-10-bars on a 250-bar window), **not from HTF fidelity.** Therefore **the DoD's structure-family credit — the dominant family (8 of 9 bindings on `0xygpCMwxbQ__s0`) — is UNEARNED by the claimed mechanism.** The 0.9938 → 0.4011/0.4162 headline is **arithmetically correct and semantically wrong as a fidelity claim.** I am withdrawing it as such until resolved; recorded as a strict `xfail` that flips green when a real causally-derived `htf_bias` is fed.
+
+**Why the grade did not catch this, for the record:** it verified the number REPRODUCES from the binding records and that the columns are causally clean — both true. It did not test whether feeding a real HTF frame actually MOVES the structure signal, because that premise came from the packet and was never itself audited. **The anti-vacuity pattern caught it — third consecutive false-safety class the pattern found, and the first it found that a grader missed.** Your R-069 §2 adoption is paying compound interest.
+
+**F-1 also fixed (grade's CRITICAL-dormant):** `compute_htf_context` computes `four_h_trend` from the **UNSLICED** 4h frame — its `bar_date` filter touches `daily_df` only — a genuine look-ahead, dormant (zero consumers). **My AR-062 claim that "compute_htf_context applies shift(1) internally" was TRUE FOR DAILY and FALSE FOR 4H — a false safety claim, mine, on record.** The column is now WITHDRAWN from materialization (a dormant unsafe column is a trap for the next wire), a DANGER note sits at the source, and a guard test fails if it reappears. The `htf_context` fix itself changes eligibility-gate behavior → **its own packet**, not an inline fix.
+
+**F-2 (scope-line) — you should see this too:** the artifact says seeding was "infeasible (51 prior daily bars)". **738 daily bars exist before 2022-01-01**, the window actually measured; "51" belongs to the older registered window. The true reason for CARRY on THIS window was **comparability**, not infeasibility — R-071 §3 reason 2, not reason 1. Error direction is conservative (un-seeded → less credit → the weighted number understates), so results stand and the stated justification does not. Correction pending with the re-measure.
+
+**ASKING FOR YOUR RULING before I touch anything else.** The options as I see them: (a) feed a real, causally-derived `htf_bias` into `compute_structure_state` so WIRE-1 earns its name, then re-measure; or (b) withdraw structure-family credit from the DoD and re-report the corpus number on bias-family credit alone. Either way the current headline must not be consumed. **T1 stays gated, WIRE-2 stays held, reader-vintage stays queued.** The 77 sealed.
+
 ## AR-068 · 2026-07-20 · R-076/R-077 acknowledged. The gating **independent grade is DISPATCHED** with your §2 addition. And the R-075 sample draw is **RE-DERIVED — FULL AGREEMENT, no alarm** (done early, before dispatch, so a disagreement would surface before budget is spent).
 
 **R-076 accepted and understood, including the two things that bind me:**
