@@ -4,6 +4,27 @@
 
 ---
 
+## AR-120 · 2026-07-20 · ★★★ **THE DETECTOR SWEEP IS COMPLETE — 19 of 19 validated, every plant fired, ZERO uncalibrated.** T3 6/6 CLEAN. ★ And the runner **refused to upgrade the heuristic on a confirming case.** R-129's bar reshape acknowledged.
+
+**T3 remainder: `detect_mss` · `detect_displacement` · `ote_zone` · 3 killzones — all CLEAN**, plants fired in every case (5-7/100 · 9-10/79 · **30/52** · **52/52**), real code **0 leaks** across 3 seeds each.
+
+**★★ THE SWEEP IS CLOSED. Final tally, 19 of 19:**
+- **16 CLEAN** with fired plant-catches: `detect_fvg` · `detect_equal_highs` · `detect_equal_lows` · `detect_sweep` (own loop) · `detect_bos` · `detect_choch` · `compute_premium_discount` · `detect_swings` · `detect_bullish_ob` · `detect_bearish_ob` · `compute_atr` · `detect_mss` · `detect_displacement` · `ote_zone` · 3 killzones
+- **2 CONFIRMED DEFECTIVE → FIXED, graded BAND 8:** `detect_buyside_liquidity` / `detect_sellside_liquidity`
+- **1 CONFIRMED DEFECTIVE, decision-level INERT:** `detect_sweep` at its call sites
+- **0 PROBE-UNCALIBRATED.** Every verdict in this sweep is backed by a probe demonstrated able to fail.
+
+**★ THE RUNNER REFUSED TO UPGRADE THE HEURISTIC ON A WIN — and that is the report's best line.** The tag predicted 6/6 correctly here. It said so, then said: *"this agreement is not evidence the tag is trustworthy — it's one more data point in a small, mixed sample. The tag remains uninformative as a shortcut; it happened to line up here only after independent plant-catch verification, not instead of it."* **A confirming case is exactly when a heuristic gets promoted without earning it**, and it declined. **Final verdict on the tier system: a router, never a predictor — 0-for-3 then 6-for-6, which is a coin, not an instrument.**
+
+**★ It also declared a coverage gap that another batch had already closed** — it did not standalone plant-catch `detect_swings`/`compute_atr`, verifying them by source read plus as a side effect of `detect_mss`. **Both were independently plant-caught in T2 (AR-117): `detect_swings` 45/3956 plant, 0/2374 boundary-exact; `compute_atr` 272/272 plant, 0/720.** So the gap is closed by cross-batch evidence — **worth stating explicitly, because a declared gap that is silently already covered still reads as open in the record.**
+
+**R-129 acknowledged — the bars now rest item-by-item on evidence:** LIFT `ict_2022` · `turtle_soup` · `quarterly_swing` (exposure was only the inert sweep bit; decision-level clean at power) · HOLD `ict_scalp` on one cheap named condition (target path **code-read-gated but not empirically truncation-tested** — and a code read is a claim, which is this session's central lesson) · HOLD `eqhl_raid` + `ict_swing` on **measured** decision-level harm. **No bar now stands on a stale reason.**
+
+**Carried not-verified:** tz-aware timestamp dtype not probed (same code path, assessed very unlikely) · `is_ny_lunch`/`is_nypm_killzone`/`is_silver_bullet_*`/`is_macro_time`/`quarterly_theory`/`true_day_open` not in scope · `detect_mss_with_context`/`detect_choch_with_context` (Wave-25 variants) not probed · `auto_swing_fib` dormant, zero production callers.
+
+**Next, per R-129 §2:** the two-file target-selection fix (`eqhl_raid` + `ict_swing`), scoped to the same index gate `eqhl_raid` already applies on its entry path, with **DECISION-LEVEL truncation tests on `entry_*`/`exit_*`** as a new mandatory class — the existing suite watched sweep booleans while shipped targets time-travelled. **Holds:** three barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-119 · 2026-07-20 · ★★★ THE 50x GAP IS RESOLVED — **a test-scale artifact, not a disagreement.** The sweep-bit leak is **DECISION-LEVEL INERT** (0 mismatches across 20 well-powered tests). ★★ And a **FOURTH instance** was found: `ict_swing` has its own un-gated target path — **6 of 149 real entries differ, one using a level created 373 bars later.**
 
 **1. ★ THE 50x RESOLVES, and neither number was wrong.** Both instruments count the same thing — a per-bar sweep-bit mismatch between truncated and full runs. They differ only in **denominator protocol**: Instrument B re-checks all bars `[0,C)` at **every** cutoff, so early bars are counted repeatedly. **The decisive test: B's own protocol run on real ES data instead of its 150-bar synthetic fixture → 0.42%**, collapsing into A's range.
