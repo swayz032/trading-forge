@@ -4,6 +4,32 @@
 
 ---
 
+## AR-068 · 2026-07-20 · R-076/R-077 acknowledged. The gating **independent grade is DISPATCHED** with your §2 addition. And the R-075 sample draw is **RE-DERIVED — FULL AGREEMENT, no alarm** (done early, before dispatch, so a disagreement would surface before budget is spent).
+
+**R-076 accepted and understood, including the two things that bind me:**
+- **T1 IS GATED ON THE GRADE** — bars never derive from an ungraded number. I will not touch forensics T1 until the grade certifies `wire1-dod-remeasure.json`.
+- **The flag's production default stays OFF.** Recorded plainly: the DoD ran flag-ON as a MEASUREMENT run. *"The DoD is met" and "the wire ships" are different sentences* — I will not conflate them, and packet §ROLLBACK is unchanged.
+- The DUAL-NUMBER form being adopted as house standard for future fidelity reads is noted and will carry forward.
+
+**THE GRADE IS DISPATCHED** (doer≠grader, fresh adversarial context) with the full R-074 §3/§5 scope — non-None builder branch · dead-load activation · availability rule · causality certificate · **speedup MECHANISM** (fewer admitted signals vs silently skipped evaluation — "a defect wearing a gift's clothing") — **plus your R-076 §2 addition, specified explicitly**: re-derive ≥3 specs' approximation rates from the RAW binding records by a second path, mandatorily including one 1.0→1.0 spec and one 1.0→0.0 spec, because the extremes are where a join error hides. I also asked it to attack the anti-vacuity companions directly — to try to construct a look-ahead my tests would MISS — given that my own probes were twice vacuous.
+
+**★ R-075 SAMPLE DRAW — RE-DERIVED INDEPENDENTLY, FULL AGREEMENT** (receipt `r075-sample-draw-rederivation-receipt.json`, `0c670566`). Every step reproduces from disk:
+| step | mine | yours | |
+|---|---|---|---|
+| clean videos | 9 | 9 | ✓ |
+| criterion (i) max n_clean | 2, tied `YqY0OkL5LMI`/`st5e-YJRfKc` | same | ✓ |
+| byte-order tie-break | **YqY0OkL5LMI** | YqY0OkL5LMI | ✓ |
+| seed (manifest FILE BYTES) | `e7f16b4ccf0ad650…525e07` | identical | ✓ |
+| k = seed mod 28 | **7** | 7 | ✓ |
+| pairs enumerated | 28 | 28 | ✓ |
+| pair[7] | `ExB66jcyKxg`, `LD1FEbwXU4o` | same | ✓ |
+
+**SAMPLE = [`ExB66jcyKxg`, `LD1FEbwXU4o`, `YqY0OkL5LMI`] — no alarm.** I deliberately used the FILE-BYTES hash rather than the manifest's internal `sealed_sha256` field, i.e. the exact ambiguity your red-team caught; had I taken the other reading the seed would have diverged and I would be filing an alarm instead. This re-derives the DRAW only — the audit itself is NOT executed, since R-076 §5 sequences it after the grade, WIRE-2 and `confirmation_native`.
+
+**R-077 noted, no action tonight:** practice is free-WITH-Combine (not standalone), so one Combine purchase opens both the adapter-certification sandbox and the eval on the same rail; ProjectX going Topstep-exclusive retires the third-party-platform risk from the R-052 operator-lane decision; the Gateway-can-order-on-Practice question is queued as the adapter build's FIRST check. R-062 #5 stays OPEN, firing at adapter-build. The Combine purchase remains the operator's unhurried R-060 decision.
+
+**Holding at the gate:** WIRE-2 and T1 both wait on the grade, as ordered. Verdict on its return. The 77 sealed.
+
 ## AR-067 · 2026-07-20 · ★★ THE DoD IS MET — corpus binding-approximation **0.9938 → 0.4011 structural / 0.4162 engagement-weighted** across all 16 specs, zero errors. The 0.99 moved. Per-column engagement carried per your amended law. R-075 execution queued behind this, as ordered.
 
 **R-074/R-075 acknowledged.** Your two laws are written into the packet: **per-column engaged-fraction** (§4e amended) and **THE PROBE LAW** (§4f — a probe inside the detector's invariance class is vacuous; name the invariances and perturb ACROSS them). R-075's reader-vintage protocol is frozen at `81b646023a28d5b5` with execution stationed AFTER this re-measure — I have NOT preempted it; it is next, and I will **re-derive the whole sample draw at dispatch** (population artifact, criterion-(i) tie-break, seed from the manifest FILE BYTES not the internal field, k = seed mod 28) and treat any disagreement with your computed `YqY0OkL5LMI` / `ExB66jcyKxg` / `LD1FEbwXU4o` as an ALARM. R-062 carry: #5 alone remains.
