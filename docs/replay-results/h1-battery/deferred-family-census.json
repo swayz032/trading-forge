@@ -1,0 +1,843 @@
+{
+  "artifact": "deferred-family-census",
+  "status": "INVENTORY ONLY \u2014 no denominator may move from this artifact",
+  "generator": "docs/replay-results/h1-battery/deferred_family_census.py",
+  "narration_column_caveat": "narration_candidate_OLD_RULE is the PROXY-LABELED-AS-SEMANTIC flag (== concepts==[]), proven at ~50% false-positive by the R-081 blind grade. NON-LOAD-BEARING per R-084 \u00a75; retained only so the replacement rule can be diffed against it. Do not quarantine anything on this column.",
+  "families": [
+    "FILTER",
+    "WAIT_CONFIRMATION",
+    "WAIT_RETEST"
+  ],
+  "n_deferred": 46,
+  "type_counts": {
+    "WAIT_RETEST": 20,
+    "WAIT_CONFIRMATION": 23,
+    "FILTER": 3
+  },
+  "tf_class_counts": {
+    "TF_UNSPECIFIED": 43,
+    "EXEC_TAUGHT": 3
+  },
+  "concept_counts": {
+    "liquidity": 6,
+    "fvg_imbalance": 8,
+    "level_zone": 14,
+    "ma_indicator": 6
+  },
+  "n_empty_concepts": 18,
+  "specs_touched": 14,
+  "mistyped_session_carried": 26,
+  "rows": [
+    {
+      "condition_id": "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "patiently wait for you know price to get there tap in",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "wait for price to tap in and then push to your direction",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "there should also be liquidity price will clear before you know tapping into the imbalance",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity",
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:drop-down-to-one-minute-time-frame-now-h#4",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "drop down to one minute time frame. Now here is when our lower time frame confirmation or entry model comes in and this is very important. This is the most important part of the strategy",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:make-sure-on-the-one-minute-price-has-sw#5",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [
+        "liquidity",
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:you-simply-wait-for-price-to-close-below#7",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price. So price will not go above that. So once price closes below this IFVG you want to take a short position right away",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [
+        "fvg_imbalance",
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:anytime-we-come-into-vwap-and-kind-of-te#2",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:if-we-were-to-lose-vop-and-lose-the-20-s#2",
+      "file": "DLwVqcLRcfw__s1.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "if we were to lose vop and lose the 20 SMA collectively and then close below vop",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+      "file": "DLwVqcLRcfw__s1.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "what I'm looking to do is short the rejection of vwap and the 20 SMA",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-long-as-we-don-t-close-below-vwap-we#5",
+      "file": "DLwVqcLRcfw__s1.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "as long as we don't close below vwap we should still not be trying to short the market here",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:as-always-we-enter-on-the-confirmation-a#0",
+      "file": "E9MzEC_yNoM__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity",
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:what-s-really-important-is-you-need-to-w#1",
+      "file": "E9MzEC_yNoM__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "what's really important is you need to wait for the break. You do not want to take early entries. You want to look for a solid candle close above or below the range.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity",
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:this-13-ema-operated-as-a-initial-suppor#4",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "this 13 EMA operated as a initial support ... this candle wick came down bounced off of that",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone",
+        "ma_indicator"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "confirmation to enter: the moment price comes above this level, this lets us know that price is bullish",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:a-is-a-low-b-is-a-lower-high-identified#6",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher than the previous one. Same setup. Literally a ABC setup.'",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "FILTER",
+      "role": "spine",
+      "object": "add volume by Price values go to vwap developing vwap",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:if-we-can-actually-get-that-break-we-wan#2",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "if we can actually get that break we want to see it close below or above with strength or weakness. So if for example if we're breaking below well then we want to see a break below with weakness. If we see a break above well then we want to look for price to break above with strength",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-are-waiting-for-candle-closes-to-actu#3",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "we are waiting for candle closes to actually confirm... price wicked right back down and reclaimed on the opposite side. So there was no entry",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "LONG: if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume. If we can get that, we are then going to look for a long entry",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:short-if-price-were-to-break-below-this#5",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "SHORT: If price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this area as resistance with bearish price action, whether it be bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume. Well, if we get that, we are going to look for a short entry to take price lower",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "FILTER:an-elevation-in-the-volume#7",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "FILTER",
+      "role": "confluence",
+      "object": "an elevation in the volume",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:entry-mechanic-variant-i-m-not-a-big-fan#9",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "ENTRY-MECHANIC VARIANT: I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-re-going-to-wait-for-the-first-candle#1",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "we're going to wait for the first candle of the day at that 9:30 time to print",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "as soon as we get this engulfing, you're good to enter the trade",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:a-fair-value-gap-is-just-a-three-candle#18",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:if-you-re-not-aware-of-what-an-engulfing#20",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "if you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:i-m-using-that-vwop-level-as-that-big-mi#1",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "i'm using that vwop level as that big milestone level and then i'm buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "FILTER",
+      "role": "confluence",
+      "object": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-want-to-wait-for-price-to-break-the-k#1",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "We want to wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level. Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it. Literally like a couple big candles through the level, that's what we want to look for. So, if it looks weak, we ignore the setup, and we do not take it.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-want-to-wait-for-the-retest-we-want-t#2",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "We want to wait for the retest. We want to wait for price to pull back, price pulls back, tests the level. We want to see price hold the level. If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish price action, if we're looking for price to go down.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:i-enter-after-confirmation-so-again-if-w#3",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "I enter after confirmation. So, again, if we do not get confirmation, we do not take the trade. For a long: we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. For a short: we're looking for bearish price action. Long upper wicks, bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "We do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "confluence",
+      "object": "If you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area. All those things combined, the volume confirmation, the price action telling you to get in, as well as the liquidity on Bookmap, all of that sets up for a very high probability trade.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:the-first-retest-is-always-the-highest-p#6",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "The first retest is always the highest probability. So don't be sitting there trying to trade every break and retest.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_CONFIRMATION",
+      "role": "spine",
+      "object": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "spine",
+      "object": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_RETEST:i-was-also-looking-at-the-bottom-of-the#16",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_RETEST",
+      "role": "confluence",
+      "object": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    }
+  ],
+  "mistyped_session_rows": [
+    {
+      "condition_id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "pd_array"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "structure_event"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high",
+      "tf_class": "HTF_TAUGHT",
+      "concepts": [
+        "liquidity",
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity",
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity",
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:this-line-is-being-reset-as-soon-as-ever#1",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "you might have a long idea for your session",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:as-the-new-york-session-opens-we-are-sti#3",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "as the New York session opens we are still right on Fair Value we start running up",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+      "file": "_LS6qcSlDCs__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones.",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate_OLD_RULE": false
+    },
+    {
+      "condition_id": "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "a simple 1-hour candle pattern I follow before my trading session every day",
+      "tf_class": "HTF_TAUGHT",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "spine",
+      "object": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    }
+  ]
+}
