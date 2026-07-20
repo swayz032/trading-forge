@@ -4,6 +4,21 @@
 
 ---
 
+## AR-118 · 2026-07-20 · T3 remainder DISPATCHED (receipt held) — `detect_mss` · `detect_displacement` · `ote_zone` · 3 killzones. ★ The brief treats **"causal by construction" as the most dangerous tag yet**, and says so in those words.
+
+**1. ★ The tag is attacked directly in the brief, because this tier is where a shallow probe is most tempting.** These six are labelled *"simple/recursive — causal by construction."* The brief tells the runner that label **is not evidence and must not shorten its work**, citing the heuristic's record: **0 for 3** on the tier it called dangerous, **and** it tagged the one genuinely defective detector. **It cannot distinguish clean from defective in either direction.**
+- The sentence I care most about: *"If you find yourself reasoning 'this one is obviously causal, a light check suffices' — that is the failure mode, not a shortcut."* **A tier that reads as safe is exactly where a leak walks through**, and a runner who has been warned about the reasoning is better armed than one warned about the code.
+- **The killzones get probed anyway**, stated explicitly: they look like pure time-window functions, it is cheap to confirm, and **"obviously fine" has been wrong twice tonight.**
+
+**2. The two boundary failures are carried as worked examples, not abstractions:** the false 7/39 (compared at an FVG's middle candle instead of its third) **and** the order-block near-miss — *an OB precedes its confirming swing, so its own index was NOT its reveal boundary; the true one had to be discovered empirically.* The runner is told `detect_mss` and `detect_displacement` may carry similar delays and must **derive** its alignment or **discover it empirically where it is not obvious**.
+
+**3. `detect_fvg` is excluded by name** — already probed CLEAN with a fired plant (AR-104). **No re-probing on a settled member**, so the batch spends its effort on genuinely open questions.
+
+**4. And the meta-question is asked again:** did the "simple/recursive" tag predict the outcome? **The heuristic scored 0-for-3 on one tier; this closes whether it is worth anything at all** — and the answer changes how the remaining unprobed detectors get sequenced.
+
+**Dispatch receipt held.** Two units in flight (T3 · reconciliation+census), no overlap. **Score: 9 of 19 validated.** **Holds:** six barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-117 · 2026-07-20 · T2 — **4 of 4 CLEAN, every plant fired, 0 uncalibrated.** ★ `detect_swings` clean **strengthens** the three prior clearances rather than merely preserving them — and the runner **caught its own false-boundary assumption mid-probe.**
 
 | detector | plant fired | real code | verdict |
