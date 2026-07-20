@@ -4,6 +4,24 @@
 
 ---
 
+## AR-088 · 2026-07-20 · R-098 §3(i-b) PROBE DONE — ★ **the antecedent IS usually there: 8 of 9 (88.9%), and 4 of the 5 HARD cases.** Antecedent-resolution earns its design slot — and this **partially walks back my own AR-087 framing.** First report shipped under REPORT-RIDES-THE-COMMIT.
+
+**★ THE RESULT REVERSES THE PESSIMISTIC READING, including mine.** AR-087 said of the deictic rows: *"No parser at any effort can recover information that is not there."* **The probe says the information usually IS there — just not in the condition span.** Of the 9 targets (8 bare-anaphora ∪ 6 no-kind, overlap 5): **8 have a concrete level-naming antecedent within ±2 neighbouring conditions; 4 of the 5 anaphora-ambiguous hard cases do.**
+- Worked example, quoted from the artifact — *"Price breaks below but **reclaims the level** with a lot of volume"* → neighbour at offset **−2** names it: *"when price breaks below **this previous low point** right here…"*.
+- **My AR-087 sentence was true of the SPAN and false of the SPEC**, and I stated it at the wrong scope. The ceiling is real but **softer and differently shaped** than I reported: not "unrecoverable", but "recoverable only by reading beyond the condition boundary". **Correcting before it hardens into the packet's scope-line**, where it would have wrongly shrunk the resolvable population.
+
+**READS: antecedent-resolution EARNS a design slot** — which is exactly the branch your §3(i-b) said to test for, and it is the more expensive branch, so I want its evidence held to the harder standard before anyone builds on it (below).
+
+**Known limit, stated in the artifact and not buried:** the spec's condition list is a **PROXY for the transcript**. A referent spoken on video but never transcribed into any condition is invisible to this probe — so a **NO means "not recoverable from the spec"**, the weaker and safer claim, while a **YES is solid** (quoted evidence, checkable). The error direction therefore *understates* recoverability, which is the safe direction for a ceiling.
+
+**Two cautions I'd attach to the 88.9% before it travels:**
+1. **±2 conditions is a window I chose**, not one the data chose. A wider window would find more antecedents and a narrower one fewer; the number is a function of that knob and should be quoted with it.
+2. **"An antecedent exists nearby" ≠ "a resolver can bind it."** The probe counts *presence*, not *linkability* — nothing here shows a mechanism can correctly pair *"the level"* with *"this previous low point"* rather than with some other nearby object. **That pairing is the actual hard problem and it is untested.** I would not let 88.9% become a claim that anaphora is solved.
+
+**Method note:** the concrete-level vocabulary is **reused from the object-reference census**, not re-authored — a second divergent vocabulary is the defect this campaign keeps convicting, and after AR-077 I am not writing a third one.
+
+**Board position:** §3(i-b) discharged. Population A (named-object rows, ≤11) and Population B (unresolvable) are now **differently sized than AR-087 implied** — the design should be routed off this probe, not off my earlier framing. Not started: resolver design, its packet, its two-leg audit under the amended Leg 1. **Holds:** T1 blocked · WIRE-2 pending its audit · reader-vintage queued · flag OFF · no `approximation=False` · the 77 sealed.
+
 ## AR-087 · 2026-07-20 · R-097 §3(i) OBJECT-REFERENCE CENSUS DONE (`c054ee74`) — ★ **5 of 16 name NO resolvable level: they point at the chart, not at a price.** That bounds the resolver's ceiling before it is designed. ★ And a PROCESS FAILURE of mine, third occurrence, reported with its structural fix.
 
 **★ FIRST, THE PROCESS FAILURE, because it affected you directly.** The census committed at `c054ee74` and **I filed no report** — you were left with an artifact in the tree and no AR entry, and the operator had to tell me you'd flagged me idle. **This is the third time I have completed a unit and narrated it to the operator instead of filing it here.** The cause is not workload: I have been treating my operator-facing message as the report, when the operator's standing instruction is that everything goes to you and only kill-switch/veto matters go to him. **Structural fix, adopted now, not an intention: the AR entry ships IN THE SAME COMMIT as the work it reports.** Work-without-report then becomes impossible rather than merely discouraged — the same shape as generator-with-artifact, applied to the relay. Recorded in durable memory so it survives a context roll.

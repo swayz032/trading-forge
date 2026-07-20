@@ -1,0 +1,180 @@
+{
+  "artifact": "levelzone-antecedent-probe",
+  "authority": "R-098 \u00a73(i-b)",
+  "status": "COUNT ONLY \u2014 no resolver proposed, no engine code written",
+  "question": "does surrounding spec text name the referent the condition points at?",
+  "method": "scan +/-2 neighbouring entry_conditions for a concrete level-naming object; vocabulary reused from the object-reference census",
+  "known_limit": "the spec's condition list is a PROXY for the transcript; a referent spoken on video but never transcribed into a condition is invisible here, so a NO means 'not recoverable from the spec' \u2014 the weaker, safer claim",
+  "n_targets": 9,
+  "antecedent_found": 8,
+  "antecedent_absent": 1,
+  "hard_case_n": 5,
+  "hard_case_antecedent_found": 4,
+  "rows": [
+    {
+      "condition_id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "object": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+      "own_span_kinds": [],
+      "anaphora_ambiguous": true,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": -2,
+          "matched": "previous low",
+          "evidence": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where"
+        }
+      ],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "object": "reclaims the level with a lot of volume",
+      "own_span_kinds": [],
+      "anaphora_ambiguous": true,
+      "antecedent_found": false,
+      "antecedent_evidence": [],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "object": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off",
+      "own_span_kinds": [
+        "order_block_edge",
+        "named_sr_level"
+      ],
+      "anaphora_ambiguous": false,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": -1,
+          "matched": "support",
+          "evidence": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at"
+        }
+      ],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "object": "once you find this... breaking above that level... your entry goes here",
+      "own_span_kinds": [],
+      "anaphora_ambiguous": true,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": 2,
+          "matched": "lower high",
+          "evidence": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher t"
+        }
+      ],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "object": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+      "own_span_kinds": [
+        "swing"
+      ],
+      "anaphora_ambiguous": false,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": -1,
+          "matched": "lower high",
+          "evidence": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher t"
+        }
+      ],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "object": "we're going to wait for a break of the level, but we need a fair value gap",
+      "own_span_kinds": [
+        "fvg_edge"
+      ],
+      "anaphora_ambiguous": false,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": 1,
+          "matched": "fair value gap",
+          "evidence": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap."
+        },
+        {
+          "offset": 2,
+          "matched": "fair value gap",
+          "evidence": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed"
+        }
+      ],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "object": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+      "own_span_kinds": [],
+      "anaphora_ambiguous": false,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": -1,
+          "matched": "fair value gap",
+          "evidence": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick"
+        },
+        {
+          "offset": 2,
+          "matched": "fair value gap",
+          "evidence": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine."
+        }
+      ],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+      "own_span_kinds": [],
+      "anaphora_ambiguous": true,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": -2,
+          "matched": "demand",
+          "evidence": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing"
+        },
+        {
+          "offset": -1,
+          "matched": "supply",
+          "evidence": "This created a level of supply. I was looking at this supply level right here"
+        },
+        {
+          "offset": 1,
+          "matched": "demand",
+          "evidence": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You c"
+        }
+      ],
+      "located_in_spec": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "object": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position",
+      "own_span_kinds": [],
+      "anaphora_ambiguous": true,
+      "antecedent_found": true,
+      "antecedent_evidence": [
+        {
+          "offset": -1,
+          "matched": "demand",
+          "evidence": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You c"
+        }
+      ],
+      "located_in_spec": true
+    }
+  ]
+}
