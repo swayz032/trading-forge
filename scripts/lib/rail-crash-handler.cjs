@@ -37,10 +37,22 @@ function crashMessage(row) {
   return `🔴 Tower Rails — ${row.rail} CRASHED${code}: ${row.error.slice(0, 300)}`;
 }
 
+// F-1 (Grade A, CRITICAL). This previously did `await fn(arg); return {ok:true}` — it DISCARDED
+// the sink's return and reported success for anything that didn't THROW. But the real sink,
+// `rail-runtime.postDiscord`, NEVER throws: it returns `{ok:false, reason}` on a missing
+// webhook, a non-2xx, or a network error. So `notifyOk` read TRUE in every real Discord
+// failure — the crash row lied about whether the alert was delivered, and lied precisely when
+// alerting was broken, which is the only time it matters.
+//
+// The honest-signal disease inside the crash-visibility tool built to cure it. A sink that
+// REPORTS failure by return value is now treated exactly like one that throws.
 async function callSink(fn, arg) {
   if (typeof fn !== "function") return { ok: false, reason: "sink_unavailable" };
   try {
-    await fn(arg);
+    const r = await fn(arg);
+    if (r && r.ok === false) {
+      return { ok: false, reason: String(r.reason || "sink_reported_failure").slice(0, 300) };
+    }
     return { ok: true };
   } catch (e) {
     const d = describeError(e);
