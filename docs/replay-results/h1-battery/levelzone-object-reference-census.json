@@ -1,0 +1,184 @@
+{
+  "artifact": "levelzone-object-reference-census",
+  "authority": "R-097 \u00a73(i)",
+  "status": "DESIGN INPUT ONLY \u2014 proposes no resolver, writes no engine code",
+  "grade": "RECONSTRUCTION-GRADE: reference-kind rules authored from R-097 \u00a73's taxonomy, not tuned to these texts; the anaphora call is where a keyword rule is weakest, so ambiguous rows are bucketed, never forced",
+  "generator": "docs/replay-results/h1-battery/levelzone_object_reference_census.py",
+  "n": 16,
+  "reference_kind_counts": {
+    "swing": 2,
+    "named_sr_level": 5,
+    "order_block_edge": 3,
+    "fvg_edge": 1
+  },
+  "bare_anaphora": 8,
+  "anaphora_ambiguous_HARD_CASE": 5,
+  "no_kind_matched": 6,
+  "rows": [
+    {
+      "condition_id": "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "role": "spine",
+      "object": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+      "reference_kinds": [
+        "swing"
+      ],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "role": "spine",
+      "object": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+      "reference_kinds": [
+        "named_sr_level"
+      ],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "role": "spine",
+      "object": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+      "reference_kinds": [],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "role": "confluence",
+      "object": "reclaims the level with a lot of volume",
+      "reference_kinds": [],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "role": "spine",
+      "object": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at",
+      "reference_kinds": [
+        "named_sr_level"
+      ],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "role": "spine",
+      "object": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off",
+      "reference_kinds": [
+        "order_block_edge",
+        "named_sr_level"
+      ],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "role": "spine",
+      "object": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support.",
+      "reference_kinds": [
+        "named_sr_level"
+      ],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "role": "spine",
+      "object": "once you find this... breaking above that level... your entry goes here",
+      "reference_kinds": [],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "role": "confluence",
+      "object": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+      "reference_kinds": [
+        "swing"
+      ],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "role": "spine",
+      "object": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action",
+      "reference_kinds": [
+        "named_sr_level"
+      ],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "role": "spine",
+      "object": "we're going to wait for a break of the level, but we need a fair value gap",
+      "reference_kinds": [
+        "fvg_edge"
+      ],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "role": "confluence",
+      "object": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+      "reference_kinds": [],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "role": "spine",
+      "object": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing",
+      "reference_kinds": [
+        "order_block_edge"
+      ],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "role": "spine",
+      "object": "This created a level of supply. I was looking at this supply level right here",
+      "reference_kinds": [
+        "order_block_edge"
+      ],
+      "bare_anaphora": false,
+      "anaphora_ambiguous": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "role": "spine",
+      "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+      "reference_kinds": [],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "role": "spine",
+      "object": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position",
+      "reference_kinds": [],
+      "bare_anaphora": true,
+      "anaphora_ambiguous": true
+    }
+  ]
+}
