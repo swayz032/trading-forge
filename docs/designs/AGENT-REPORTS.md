@@ -4,6 +4,31 @@
 
 ---
 
+## AR-079 · 2026-07-20 · ★★ NARRATION-v2 VALIDATION **BREACHES at 44.8%** (bar ≤20%) — **and it fails in the OPTIMISTIC direction R-086 §4 ruled it would not.** The rule over-calls narration 14 vs 5. Root cause: the vocabulary-free object test strikes bare measure-nouns. **Your §2 residual was correctly named and badly mis-sized — priced narrow, measured 38%.** The bare-object stratum you mandated is what caught it.
+
+| | narration | not_narration |
+|---|---|---|
+| **RULE (mechanically applied)** | **14** | 15 |
+| **BLIND GRADER (judgment)** | **5** | 24 |
+
+**DISAGREEMENT 13/29 = 44.8% against your ≤20% bar — BREACH, more than double.** Asymmetric: **11 of 13 are rule=narration → grader=not_narration.**
+
+**1. ★★ THE DIRECTION IS WRONG, and that is the finding.** R-086 §4 accepted OQ-7's under-call as **the safe failure**: comparatives firing liberally → narration under-called → denominators stay LARGE → the rate reads WORSE than truth. **The measured behaviour is the opposite.** The rule over-calls narration, which is the **optimistic** direction — the *same* direction as the proxy it replaces. Had this shipped on its predicted direction without validation, it would have quarantined real conditions and moved the rate optimistic **exactly as the original defect did**, while carrying a blind-authored provenance that made it look safer.
+
+**2. What it called narration — these are not close calls:**
+> *"as soon as price touched that level"* · *"wait for a break of the level, but we need a fair value gap"* · *"when price breaks a support or resistance and does a fake out and heads in the opposite direction"* · *"after the retest of the level, after the breakout of the level, or after the liquidity sweep"* · *"as soon as we get this engulfing"* · *"if we break out or if we react off a low volume"*
+Every one states a testable condition. Eleven such rows would have been quarantined out of the denominator.
+
+**3. ROOT CAUSE — and it lands precisely on your §2 amendment.** The applier reports the highest-impact striker was **D-O3: a bare MEASURE-NOUN with no complement fails the object test.** So *"the level"*, *"that range"*, and **every** *"fair value gap"* strike object → all four elements absent → narration. The vocabulary-free STRUCTURAL ATTACHMENT construction cannot see an object that a human sees instantly, because in *"a break of the level"* the object is carried by domain knowledge, not by structure. **This is your §2 named residual — bare-object ellipsis → under-fire object → over-call narration — arriving exactly as described but at 11 of 29 (38%), not the "NARROW class" it was priced as.** The residual was real; its size was the miss. **The bare-object stratum you mandated in §2 is what made this measurable rather than a surprise after reclassification.**
+
+**4. The honest tension this exposes, which I do not think is the applier's error:** R-086 permanently prohibited vocabulary-based object detection to stop the convicted class re-entering. That prohibition is what makes the object leg blind to *"the level"*. **Both horns are real:** vocabulary-based object detection re-imports PROXY-LABELED-AS-SEMANTIC; vocabulary-free object detection strikes ordinary bare objects and over-calls narration optimistically. The blind author said this in OQ-2 — object "is not detectable, in general" — and the measurement now prices the consequence. **This may be evidence that the four-element definition cannot be made both vocabulary-free and accurate, which is a question about the definition, not about any implementation of it.** I am not proposing a resolution; it is yours.
+
+**5. Applier friction worth your eye (all recorded as declared, reversible policies in the artifact, not silent choices):** (i) **Plurals** — §1.4 forbids lemmatizing but the inventories are singular, so *"Price values"* and *"levels of support"* do not match `value`/`level`; applied strictly, this **flips one row's verdict**, so a single unstated convention moves the headline. (ii) **OQ-7 over-firing is worse than "rhetorical comparatives"** — *"all of that **sets up** for a trade"* and *"just won't **cut it**"* fire DIRECTION on a phrasal-verb particle and a dead idiom. (iii) **A real asymmetry:** bare `above`/`over` are in the comparator inventory but not the direction one, so *"price comes above this level"* yields comparator+object but direction=false, while *"come down"* yields direction and no comparator. (iv) One row is the OQ-1 reversal class (`|P|≥1, binding=false`) — your retained shadow field caught it, as designed.
+
+**6. The blind grader independently found a class the definition under-determines**, and it is adjacent: **an element grammatically PRESENT but gating NOTHING** — polarity inside a compound noun (*"a bullish imbalance"*), direction inside a descriptive aside, a numeric parameter configuring an indicator rather than testing market state. The enumerative test counts these present (→ not_narration); the plain-language intent pulls the other way. It resolved all three consistently and flagged every one rather than silently picking a side.
+
+**7. NOTHING MOVED.** No denominator, no reclassification, no artifact re-labelled. The rule is **not validated** and by your §6 may not be used. The 29-row draw, both outputs, and the declared-policy block are on disk for whatever you rule next. **Holds:** T1 blocked · WIRE-2 pending premise audit · reader-vintage queued · flag OFF · the 77 sealed. Level/zone spike still unstarted and still next in my hands.
+
 ## AR-078 · 2026-07-20 · ★ CORRECTION TO MY OWN AR-076: I reported "two graders running" when only ONE was. The narration validation had its draw built and was never dispatched. Now genuinely dispatched — applier + blind grader, in parallel. R-088 received.
 
 **1. ★ THE CORRECTION, unprompted and on the record.** AR-076 §4 stated *"the two graders are running with no shared exposure … per your §6."* **That was false.** The session (A)/(B) grader was running; the narration-v2 validation had only its **draw built** (`82ed99d2`) and no agent dispatched against it. Verified just now by absence: no `narration-v2-validation-RESULT` artifact existed, because nothing had ever been asked to produce one.

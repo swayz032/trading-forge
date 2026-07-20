@@ -1,0 +1,370 @@
+{
+  "applier": "mechanical",
+  "rule": "narration-rule-v2-BLIND-AUTHORED.md +R-086 amendments",
+  "n": 29,
+  "declared_policies": [
+    "P1 PLURALS: §1.4 forbids stemming/lemmatization, so a plural surface token is NOT matched against a singular inventory entry (e.g. 'values' does not match MEASURE-NOUN 'value'; 'levels' does not match 'level'). Applied uniformly.",
+    "P2 OPERAND SLOT: for O-1, the grammatical subject of the predicate containing the comparator counts as filling the left operand slot; the nominal governed by the comparator fills the right slot. Applied uniformly.",
+    "P3 PRONOUNS: personal/demonstrative pronouns are noun phrases and therefore nominals for O-1/O-2/O-3 unless struck by the literal D-O2 list (I, we, you, they, the team, the author, the reader, this document, the following, the above). 'it'/'that' are not on that list and are not struck.",
+    "P4 VALUE POSITION: §2.3's iff-clause requires a resolvable magnitude in a value position; pronominal 'one' ('this one', 'the previous one') is not a resolvable magnitude and does not fire T-2."
+  ],
+  "rows": [
+    {
+      "condition_id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'Price values' would fire O-4 <NOMINAL> <MEASURE-NOUN> if plurals matched the singular inventory; blocked by P1. Verdict-flipping."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'as soon as' is not in C-2 (which has 'as much as'/'as few as'); no analogical extension."
+    },
+    {
+      "condition_id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'then' never in C-2 and explicitly barred by D-C4; 'direction' is not itself a D-2/D-4 marker."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'close to' is not a C-2 fixed form."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'one' in 'on this one' pronominal, not a value position (P4). 'limit order' is MEASURE-NOUN+NOMINAL, the reverse of O-4's <NOMINAL> <MEASURE-NOUN>; 'that level' bare measure noun struck by D-O3."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "Bare copula 'is' is not in C-3 (which lists 'is equal to', 'is the same as', 'is one of', 'is in')."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:a-is-a-low-b-is-a-lower-high-identified#6",
+      "comparator": true,
+      "object": true,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "comparator": { "span": "higher than the previous one", "clause": "C-2 (higher than); also C-4" },
+        "direction": { "span": "higher", "clause": "D-2 (higher); also D-3" },
+        "object": { "span": "price comes up", "clause": "O-3 (subject of DIRECTION span 'up')" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+      "comparator": true,
+      "object": true,
+      "threshold": false,
+      "direction": false,
+      "spans": {
+        "comparator": { "span": "above this level", "clause": "C-2 (above); D-C1 not triggered, 'level' is not a document/discourse noun" },
+        "object": { "span": "price comes above this level", "clause": "O-1 (left operand nominal 'price', per P2)" }
+      },
+      "verdict": "not_narration",
+      "binding": true,
+      "note": "DIRECTION false: bare 'above' is in C-2 but NOT in the D-2 inventory (which lists 'above-zero/below-zero framing', not bare 'above')."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+      "comparator": true,
+      "object": true,
+      "threshold": false,
+      "direction": false,
+      "spans": {
+        "comparator": { "span": "outside of that range", "clause": "C-2 (outside of)" },
+        "object": { "span": "the price", "clause": "O-1 (left operand nominal, per P2); right operand 'that range' struck by D-O3" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+      "comparator": false,
+      "object": true,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "direction": { "span": "sets up", "clause": "D-2 (up); no D-D1/D-D2 entry covers a phrasal-verb particle" },
+        "object": { "span": "all of that sets up", "clause": "O-3 (subject of DIRECTION span)" }
+      },
+      "verdict": "not_narration",
+      "binding": true,
+      "note": "OQ-7-class over-firing: 'sets up' is a phrasal-verb particle carrying no ordered axis, but D-D1 does not list it and analogical striking is forbidden."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+      "comparator": false,
+      "object": true,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "direction": { "span": "cut it", "clause": "D-1 (cut)" },
+        "object": { "span": "cut it", "clause": "O-3 (direct object 'it' of DIRECTION span, per P3)" }
+      },
+      "verdict": "not_narration",
+      "binding": true,
+      "note": "OQ-7-class over-firing: 'won't cut it' is an idiom with no magnitude axis; D-D3's frozen-idiom list does not cover it."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'low' is not in D-2 (only 'lower'); 'out' in 'break out'/'work out' is not in D-2 (only 'up'/'down')."
+    },
+    {
+      "condition_id": "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+      "comparator": false,
+      "object": true,
+      "threshold": true,
+      "direction": false,
+      "spans": {
+        "threshold": { "span": "20", "clause": "T-1 (numeral)" },
+        "object": { "span": "20 SMA", "clause": "O-2 (<THRESHOLD> <NOMINAL>)" }
+      },
+      "verdict": "not_narration",
+      "binding": true,
+      "note": "'short' is not in D-1/D-2 ('shorter' is); marking it would be domain-vocabulary reasoning, which the amendment prohibits."
+    },
+    {
+      "condition_id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'fair value gap' contains two MEASURE-NOUNs but the O-4 <NOMINAL> <MEASURE-NOUN> candidate nominal is itself the measure noun 'value' with no complement, struck by D-O3."
+    },
+    {
+      "condition_id": "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21",
+      "comparator": false,
+      "object": true,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "direction": { "span": "come down", "clause": "D-2 (down); D-D2 not triggered, no document/physical-position nominal" },
+        "object": { "span": "the market come down", "clause": "O-3 (subject of DIRECTION span)" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+      "comparator": true,
+      "object": true,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "comparator": { "span": "above the overnight highs", "clause": "C-2 (above)" },
+        "direction": { "span": "lower", "clause": "D-2 (lower)" },
+        "object": { "span": "the overnight highs", "clause": "O-1 (right operand of comparator)" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'before' never in C-2 and barred by D-C4; 'price' is not in the O-4 MEASURE-NOUN inventory."
+    },
+    {
+      "condition_id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'the level' occurs three times but always as a bare MEASURE-NOUN with no complement, struck by D-O3; no 'the <MEASURE-NOUN> of <NOMINAL>' frame exists."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'opposite direction' is not a D-2 polarity token; 'fake out' particle 'out' is not in D-2."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+      "comparator": false,
+      "object": true,
+      "threshold": true,
+      "direction": false,
+      "spans": {
+        "threshold": { "span": "20", "clause": "T-1 (numeral)" },
+        "object": { "span": "20 period", "clause": "O-2 (<THRESHOLD> <NOMINAL>)" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+      "comparator": true,
+      "object": true,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "comparator": { "span": "over the vwob", "clause": "C-2 (over)" },
+        "direction": { "span": "more bullish", "clause": "D-3 (more <adj>); also D-2 (more)" },
+        "object": { "span": "the vwob", "clause": "O-1 (right operand of comparator)" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+      "comparator": true,
+      "object": true,
+      "threshold": true,
+      "direction": false,
+      "spans": {
+        "comparator": { "span": "over this 20 period moving average", "clause": "C-2 (over)" },
+        "threshold": { "span": "20", "clause": "T-1 (numeral)" },
+        "object": { "span": "20 period", "clause": "O-2 (<THRESHOLD> <NOMINAL>); also O-1 as comparator operand" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-standard-deviation-is-one-the#6",
+      "comparator": false,
+      "object": true,
+      "threshold": true,
+      "direction": false,
+      "spans": {
+        "threshold": { "span": "1.5", "clause": "T-1 (decimal numeral); 'first'/'second'/'third' struck by D-T1" },
+        "object": { "span": "1.5 standard deviation", "clause": "O-2 (<THRESHOLD> <NOMINAL>)" }
+      },
+      "verdict": "not_narration",
+      "binding": true,
+      "note": "'keep it at two' — bare 'at' is not a C-2 form ('at least'/'at most'/'capped at' are), so COMPARATOR false."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+      "comparator": false,
+      "object": true,
+      "threshold": true,
+      "direction": false,
+      "spans": {
+        "threshold": { "span": "20", "clause": "T-1 (numeral)" },
+        "object": { "span": "20 SMA", "clause": "O-2 (<THRESHOLD> <NOMINAL>)" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+      "comparator": false,
+      "object": true,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "direction": { "span": "come down", "clause": "D-2 (down); also 'lower' per D-2" },
+        "object": { "span": "It tries to come down", "clause": "O-3 (subject 'It' of DIRECTION span, per P3)" }
+      },
+      "verdict": "not_narration",
+      "binding": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'the level' bare measure noun struck by D-O3; 'fair value gap' struck as in row 15; 'break' is not in D-1."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": true,
+      "spans": {
+        "direction": { "span": "lower highs", "clause": "D-2 (lower); also D-3" }
+      },
+      "verdict": "not_narration",
+      "binding": false,
+      "note": "OBJECT false: attributive 'lower' has no grammatical subject or direct object, so O-3 cannot fire; 'levels of support' blocked by P1 (plural). This is a |P|>=1 with binding=false row — the OQ-1 reversal class."
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+      "comparator": false,
+      "object": false,
+      "threshold": false,
+      "direction": false,
+      "spans": {},
+      "verdict": "narration",
+      "binding": false,
+      "note": "'only' is not in the T-4 inventory; 'off of' is not a C-2 form."
+    }
+  ]
+}
