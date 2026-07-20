@@ -42,7 +42,7 @@
     "test:metrics:fast": "python -m pytest src/engine/tests/test_metric_snapshot.py::TestSnapshotPerfect src/engine/tests/test_metric_snapshot.py::TestSnapshotMarginal src/engine/tests/test_metric_snapshot.py::TestSnapshotFeesKiller src/engine/tests/test_metric_snapshot.py::TestSnapshotConsistency -q --tb=short",
     "test:metrics:update-snapshots": "SNAPSHOT_UPDATE=1 python -m pytest src/engine/tests/test_metric_snapshot.py -v --tb=short",
     "test:full-fleet": "vitest run --config vitest.config.full-fleet.ts",
-    "test:scripts": "node --test \"scripts/lib/__tests__/*.test.mjs\" \"scripts/soak/__tests__/*.test.mjs\" scripts/rails/__tests__/cert-core.test.mjs scripts/rails/__tests__/full-lane.test.mjs scripts/rails/__tests__/full-lane.redproof.test.mjs"
+    "test:scripts": "node --test \"scripts/lib/__tests__/*.test.mjs\" \"scripts/soak/__tests__/*.test.mjs\" \"scripts/watchdog/__tests__/*.test.mjs\" scripts/rails/__tests__/cert-core.test.mjs scripts/rails/__tests__/full-lane.test.mjs scripts/rails/__tests__/full-lane.redproof.test.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1005.0",
