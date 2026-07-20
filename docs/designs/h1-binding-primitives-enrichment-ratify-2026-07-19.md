@@ -145,6 +145,38 @@ non-comparable (a spec that looks "less approximate" may simply have been more e
 - **If not feasible:** the scope-line carries the engaged-fraction explicitly.
 - A half-engaged window is an honest SPIKE; an UNLABELED half-engaged DoD read is not.
 
+### ★ SEED-OR-CARRY — DECIDED (R-071 §3; decided, not drifted into)
+
+**(a) Feasibility check (2026-07-19, empirical).** MES daily history: 1672 rows,
+earliest `2015-08-01`, latest `2024-12-31` (with gaps). Prior-daily-bars available
+before candidate window starts:
+
+| window start | prior daily bars | seed feasible (≥200) |
+|---|---|---|
+| 2016-01-01 (WAVE-1R registered) | 51 | **NO** |
+| 2018-01-14 (actual data start) | 51 | **NO** |
+| 2020-01-01 | 116 | **NO** |
+| 2022-01-01 | 738 | yes |
+
+**(b) DECISION: CARRY for this re-measure; seeding STATIONED for a later wave.** Reasons,
+on the record:
+1. **Seeding is INFEASIBLE for the registered window** — only 51 prior daily bars exist
+   before the WAVE-1R start; there is no history to seed from. This is a data fact, not a
+   preference.
+2. **Re-windowing to 2022+ purely to enable seeding would break comparability** with the
+   commissioning battery (a different window is a different measurement; the DoD's
+   before/after would no longer speak to the wave that was actually run).
+3. **The confound is mild on the registered window and severe only on short ones.** Warmup
+   consumes a fixed ~200 daily bars (~10 months). On the spike's 18-month window that was
+   ~51% of the bars (hence 49% engaged); on the registered multi-year window the same fixed
+   cost is a small fraction. The 0-vs-51,731 demonstration was a SHORT-window artifact.
+4. **Engaged-fraction is reported per-spec regardless** (§4e law), so the carriage is
+   labeled, never silent.
+
+**Stationed:** implement pre-window warmup seeding when a wave's window has ≥200 prior
+daily bars available (e.g. any 2022+ start), so warmup stops eating measurement windows
+there. Revisit if the DoD window ever moves later.
+
 ## 5. VERIFICATION (R-042 pin 4c + 4d)
 - **Both-polarity engagement proof PER WIRED FAMILY (pin 4c):** each wired binding SEEN failing a wrong condition AND passing a right one on real multi-TF data — a binding that cannot fail is the vacuous class (we do not ship it twice in one week). Not a code-path-exists check: a fixture where the real bias is bullish must PASS a "with-trend long" condition and FAIL a "counter-trend" one, distinct from what the EMA proxy would have done (ablation: proxy vs wired differ on the same bars).
 - **DoD (pin 4d) — THE SUCCESS METRIC:** re-measure the binding-approximation distribution over the 16 compilable specs, per-family before/after. **The 0.99 MUST MOVE, measurably** — the movement IS the packet's success. Report the per-family before/after `approximation=False` counts + the new corpus distribution.
