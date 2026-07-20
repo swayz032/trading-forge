@@ -4,6 +4,28 @@
 
 ---
 
+## AR-086 · 2026-07-20 · ★★★ ESCALATION — **THE LEVEL/ZONE SUB-WIRE DOES NOT FIX WHAT ITS OWN PREMISE AUDIT SAID IT WOULD. The routed evaluator is ALSO level-blind in production.** This is the WIRE-1 shape one layer down, and the defect is in MY packet and MY Leg 1, not the implementer's work.
+
+**The finding, confirmed from source before reporting** (`spec_condition_compiler.py:638`):
+```
+level = compute_ema(pl.Series(close), RETEST_LEVEL_EMA_PERIOD).to_numpy()
+```
+**The `level` fed to `retest_touch_check` in production is a bars-only EMA(20) proxy. It contains no condition text, no trader-named price.** So every level/zone condition receives the **identical** level series — machine-confirmed on real data by the measurement: all 8 real specs produce numerically identical arrays.
+
+**★ WHY THIS IS SEVERE: it invalidates the gain my own AR-080 claimed.** My Leg 2 argued the sub-wire's justification was that `compute_structure_state` takes no level argument, so *"support at 100"* and *"resistance at 140"* bind identically — and re-routing would make them discriminable. **They still bind identically.** The incumbent was level-blind; **the replacement is level-blind too, by a different mechanism.** The structural gain I reported to you does not exist as built.
+
+**★ AND MY PREMISE AUDIT'S LEG 1 IS WHERE IT SHOULD HAVE BEEN CAUGHT.** I varied `level` with **hand-constructed synthetic arrays** (100 / 140 / price-hugging) and proved `retest_touch_check` responds. That was true and it was not the question. **I never checked what production actually passes as `level`.** The mechanism is live *in the function* and inert *in the wiring* — **precisely the WIRE-1 defect, one layer further down**: there, `htf_bars` moved no output; here, the output moves for levels production never varies. **The two-leg form you ratified in R-091 §2 is right; my Leg 1 executed it against a synthetic input instead of the production one, which is a hole in how I ran it, not in the form.** Proposed as an amendment for every remaining wire: **Leg 1 must vary the input the PRODUCTION path supplies, or it proves only that a function is a function.**
+
+**The implementer is NOT at fault and I want that explicit.** Its docstring states the limitation plainly — *"Level-series resolution is IDENTICAL to `_eval_wait_retest`'s EMA proxy … not a fresh per-condition numeric-level extraction (out of scope per packet §3)"* — and it is correct: **my packet §3 scope-locked to "with a resolved level series," never per-condition level parsing.** It built exactly what was specified. **I specified a change that cannot deliver the gain my premise claimed**, and it left a deliberate single seam to swap in a per-condition resolver later.
+
+**What survives, unaffected:** the Band-7 cadence-isolation work (a measurement design, correct independently of this) · the sign-inversion finding · the parity-gate fix · flag-OFF byte-identity · 16/16 engagement (the routing wires correctly — it just carries a signal that means less than claimed).
+
+**What must NOT now happen:** no `approximation=False` for level/zone — it was already ungranted and this is decisive additional reason. **And the three-direction convergence I reported for level/zone-first (grade floor ≥16 · deferred-census 30.4% · mechanism-moves-vs-incumbent-blind) loses its third leg** — the first two stand as population evidence; the third does not.
+
+**Also surfaced by the measurement, recorded not buried:** 3 of 16 level/zone rows are `role=confluence`, and `compute()`'s per-bar gating loop never enters for confluence rows (`spec_condition_compiler.py:714`, pre-existing production fact) — so **3/16 are unobservable at the per-bar level by construction**, and both-polarity could only be demonstrated on the 13 spine rows (13/13 shown). Engagement of 16/16 counts *binding*, not *observable evaluation*.
+
+**My recommendation, which is yours to accept or reject:** the honest next unit is a **per-condition level resolver** — extract the trader's named level from the condition text and feed *that* — which is a materially larger change than the packet I staged, and it owes its own packet, its own premise audit with **Leg 1 run against the production input**, and its own grade. I have written no such code. **Holds:** T1 blocked · WIRE-2 pending its own two-leg audit (with this Leg-1 amendment applying to it) · reader-vintage queued · flag OFF · the 77 sealed.
+
 ## AR-085 · 2026-07-20 · ★★ RE-GRADE RETURNS **BAND 7 VERIFIED** — §4.3 SATISFIED, the CRITICAL closed. The highest-risk question (is the harness measuring production or its own model?) was independently verified SOUND. `approximation=False` remains correctly ungranted.
 
 **BAND 6 → BAND 7, and the grader argues explicitly why it is a lift and not an inflation:** Band 6 was solely the one silently-skipped §4.3 CRITICAL; that CRITICAL is now closed with reproducible evidence on every axis it could independently re-derive. It withheld 8+ for two stated reasons, both of which I think are right.
