@@ -4,6 +4,36 @@
 
 ---
 
+## AR-110 · 2026-07-20 · ★★ GRADE: **BAND 8 VERIFIED — the session's highest, and it may land.** My falsification was **independently confirmed** (0/36000). ★ But the grader found a gap NOBODY measured: **`eqhl_raid`'s target selection has the same structural leak class and was never probed.** Bar ruling below.
+
+**Every claim re-derived from scratch — including pulling the REAL pre-fix code from `7e3247ca~1` rather than trusting the test file's inline copy.** That distinction matters: a test's own reimplementation of "the old behaviour" is a claim, and the grader refused it.
+
+| claim | verdict | evidence |
+|---|---|---|
+| membership equivalence | **VERIFIED** | independent 5,416-case fuzz (threshold-exact, dense, shuffled arrival, tied-index) — **0 fails** |
+| F-1 fixed | **VERIFIED** | **1,444 NATURAL vanish events** found on the real pre-fix blob; resolved on fixed |
+| plant-catch calibrated | **VERIFIED** | fires on real old code, passes on fixed |
+| **V3 falsification of my packet §1** | **VERIFIED** | **0/36,000 bar diffs**; source-grep: none of the 5 ever read `index` |
+| banned wrong fix avoided | **VERIFIED** | genuine streaming pass, no full-history-then-slice |
+| V6 null | **VERIFIED** | exact 451/640 → 0/640 |
+| scope-lock / no regression | **VERIFIED** | 4 unrelated failures **reproduce identically on the parent commit** |
+
+**1. ★ MY FALSIFICATION HELD UNDER INDEPENDENT TEST.** The packet's "cured by inheritance" claim is **false as measured** — confirmed by a second party through a different method (source-grep + 36,000 bar comparisons). **I would rather have my error confirmed this thoroughly than left as one runner's word.**
+
+**2. ★★ THE GRADER FOUND WHAT NEITHER OF US LOOKED FOR: `eqhl_raid.py:157,173`** reads BSL/SSL prices to pick a take-profit **target** from the **full, unfiltered price list, unconditional on when that level was created** — **structurally the same gap class as `detect_sweep`'s missing index gate.** **It was never measured:** V3's consumption-wide verification covered the five *sweep-consuming* strategies, and `eqhl_raid` is not one of them — **so it fell through a scope boundary drawn by the word "sweep."** That is the class-sweep lesson landing a third time: **the population I named excluded a member of the population that mattered.**
+
+**3. ★ AND A CORRECTION TO MY OWN CITATION:** I have repeatedly written the residual gap as **"~11–22%."** The grader's measured per-strategy rates are **`ict_2022` 6.6%** · `ict_scalp` 18.3% · `ict_swing` 18.1% · `turtle_soup` 18.1% · `quarterly_swing` 18.3%. **The low end was wrong by nearly half** — I inherited a range from the implementer's docstring and repeated it without re-deriving. Small, but it is the transcription law again, and I have now broken it twice tonight after invoking it against others.
+
+**4. ARCHETYPE BAR — the grader's explicit ruling, which REBASES the reason for five and leaves the sixth unverified:**
+- **The five sweep-consumers: bar STAYS, reason CHANGES.** They were **never exposed to the BSL/SSL index leak at all** (they only ever read `price`) — so the original justification was wrong, not merely stale. They remain barred on **`detect_sweep`'s own index-gating gap**, which is separate and unfixed.
+- **`eqhl_raid`: bar STAYS, status UNVERIFIED** — its entry signal is certified clean, but its target-selection gap has never been probed. **It needs its own truncation probe, separate from the other five.**
+- `spec_condition_compiler`'s Population-A resolver is a **genuine beneficiary** and is not an archetype.
+
+**5. Band 8 not 9, for reasons I accept:** a first independent pass with no second cross-checking grader, and **one coverage gap surfaced during the grade rather than pre-closed by the delivery** — mine to have closed, since I wrote the verification scope.
+
+**Verdict: the fix MAY LAND.** The residual-gap premise audit is still in flight and now carries an extra question: **`eqhl_raid`'s target-selection path.** **Holds:** six barred (five re-based, one unverified) · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-109 · 2026-07-20 · R-118 §3 executed — **residual-gap PREMISE AUDIT dispatched** (receipt held): identify the leaking VARIABLE, no fix design. The `eqhl_raid` question your §4 flagged is written in as a named deliverable.
 
 **1. Mechanism before cure, per your §3** — and the brief opens by saying why: *"a cure designed before the disease is measured is exactly the error this task exists to prevent (a fix packet just asserted a downstream cure that measured 0%)."* **My own falsified claim is the brief's stated motivation.** The runner is told the deliverable is **a named variable with a trace**, and is explicitly barred from proposing a fix design.
