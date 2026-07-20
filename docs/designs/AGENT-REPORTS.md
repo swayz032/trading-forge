@@ -4,6 +4,32 @@
 
 ---
 
+## AR-089 · 2026-07-20 · ★★★ URGENT SELF-CORRECTION — **MY 88.9% IS NEAR-CHANCE. The null calibration says 82.7% would happen by accident.** R-099 has already elevated that number into design requirements; it should not be. The probe is close to VACUOUS.
+
+**STOP-THE-PRESS ON AR-088.** Running R-099 §2's window-derivation, I ran the null I should have run before reporting at all.
+
+**Base rate: 55 of 155 conditions in this corpus (35.5%) name a concrete level.** So "is there a concrete level nearby?" is answered YES by accident most of the time:
+
+| window | chance-alone | **observed** | margin |
+|---|---|---|---|
+| ±1 | 58.4% | 66.7% | **+8.3pp** |
+| ±2 | **82.7%** | **88.9%** | **+6.2pp** |
+| ±3 | 92.8% | 100.0% | **+7.2pp** |
+
+**My headline "8 of 9, 88.9%" is ~6 points above coin-flipping at n=9. That is noise, not a finding.** The correct reading of AR-088 is: **concrete level mentions are simply COMMON in these specs**, so pointing at any neighbour usually lands on one. I measured the corpus's density and reported it as the probe's discovery.
+
+**★ WHAT I DID WRONG, precisely:** I ran a detector, got a high number, and shipped it — **without the anti-vacuity companion this campaign has convicted three times already this session** (my narration proxy, my session-sizing regex, my over-strict guard). The companion here is one line of arithmetic: *what would this probe report on data with no antecedent structure at all?* **82.7%.** I attached two cautions to AR-088 about the window knob and about presence-vs-linkability — **both real, and both aimed past the actual defect.** I guarded the sophisticated risks and missed the base rate.
+
+**★ CONSEQUENCE FOR R-099, which is why this is urgent:** §2 elevated my cautions to requirements and §3 re-sized the design populations off this probe. **The evidence under that does not bear the weight.** Antecedent-resolution has NOT earned its slot on this artifact — it may still deserve one, but not on 6 points of margin at n=9.
+
+**THE ONE SIGNAL THAT SURVIVES THE NULL, offered as weak and labelled weak:** the nearest antecedent is **BEHIND the reference in 7 of 9 cases** (distances `-1,-1,1,-1,-1,-1,-2,2,-3`). Under a chance model direction should be ~50/50; anaphora is *definitionally* backward-looking, so a 7/9 backward skew is the shape a real referent-introduction pattern would make. **At n=9 that is suggestive and nothing more** — I am not building a second claim on a sample that just embarrassed the first.
+
+**The derived-window answer, for completeness:** coverage saturates at **±3 (9/9)**, so the data-derived knob is ±3, not my chosen ±2 — **but saturation is expected under the null too** (92.8% by chance), so this is not independent evidence of locality either.
+
+**WHAT I RECOMMEND, and it is yours to rule:** the probe needs re-running against a **null-calibrated** design before any resolver work cites it — either a permutation test (shuffle antecedent positions within each spec, re-measure) or a comparison population (do NON-anaphora conditions show the same nearby-antecedent rate? if yes, the effect is entirely base rate). **Both are cheap. Neither is built.** Until then the honest scope-line is: *antecedent-resolution is UNEVIDENCED on this corpus*, not disproven and not supported.
+
+**Nothing was built on it** — no resolver, no packet, no code. The correction lands before the design, which is the only reason this is a near-miss rather than another withdrawn claim. **Holds:** T1 blocked · WIRE-2 pending · reader-vintage queued · flag OFF · no `approximation=False` · the 77 sealed.
+
 ## AR-088 · 2026-07-20 · R-098 §3(i-b) PROBE DONE — ★ **the antecedent IS usually there: 8 of 9 (88.9%), and 4 of the 5 HARD cases.** Antecedent-resolution earns its design slot — and this **partially walks back my own AR-087 framing.** First report shipped under REPORT-RIDES-THE-COMMIT.
 
 **★ THE RESULT REVERSES THE PESSIMISTIC READING, including mine.** AR-087 said of the deictic rows: *"No parser at any effort can recover information that is not there."* **The probe says the information usually IS there — just not in the condition span.** Of the 9 targets (8 bare-anaphora ∪ 6 no-kind, overlap 5): **8 have a concrete level-naming antecedent within ±2 neighbouring conditions; 4 of the 5 anaphora-ambiguous hard cases do.**
