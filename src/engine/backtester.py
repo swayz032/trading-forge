@@ -6687,6 +6687,18 @@ def run_class_backtest(
     if os.getenv("TF_WIRE1_HTF_COLUMNS", "").strip().lower() in ("1", "true", "yes"):
         from src.engine.context.htf_columns import attach_htf_columns
         data, _wire1_engaged = attach_htf_columns(data, htf_cache)
+        # WIRE-1 structure column (step function per COMPLETED HTF bar). Feeds
+        # compute_structure_state a REAL higher-TF frame instead of the
+        # self-referential exec window; availability obeys close<=t.
+        _wire1_struct = 0
+        if _four_h_data is not None and len(_four_h_data):
+            from src.engine.context.htf_columns import attach_structure_column
+            data, _wire1_struct = attach_structure_column(data, _four_h_data, tf="4h")
+            print(
+                f"WIRE-1: structure column — {_wire1_struct}/{len(data)} bars engaged"
+                + ("  [DORMANT]" if _wire1_struct == 0 else ""),
+                file=sys.stderr,
+            )
         # ENGAGEMENT EVIDENCE (campaign law 1): an all-null column is a DORMANT
         # feed, never a wired one — the count is printed so a zero cannot hide.
         print(

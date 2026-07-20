@@ -46,6 +46,82 @@ def exec_ts_col(df: pl.DataFrame) -> Optional[str]:
     return None
 
 
+COL_STRUCTURE_ACTIVE: str = "htf_structure_active"
+
+
+def attach_structure_column(
+    df: pl.DataFrame,
+    htf_df: Optional[pl.DataFrame],
+    tf: str = "4h",
+    exec_window_bars: int = 250,
+) -> Tuple[pl.DataFrame, int]:
+    """Materialize the REAL-HTF structure-activity column as a STEP FUNCTION.
+
+    TWO GRANULARITIES (R-067 §3): bias columns are per-DAY constants; structure columns
+    are STEP FUNCTIONS advancing per COMPLETED HTF bar. A daily-frozen structure column
+    would UNDER-shoot fidelity; a forming-bar leak would FAKE it. Both failures are
+    silent, so this computes at each HTF-bar boundary and forward-fills between them.
+
+    ★ CAUSALITY: at boundary `b` the structure state is computed from HTF bars whose
+    CLOSE ≤ b (`completed_htf_slice`) and exec bars at/before `b` — never the forming
+    bar straddling `b`. The value is then visible only to exec bars AT OR AFTER `b`,
+    so no exec bar sees a state derived from its own future.
+
+    This is the WIRE-1 fidelity change: `compute_structure_state`'s `htf_bars` argument
+    stops being the self-referential exec window and becomes a REAL higher-timeframe
+    frame.
+
+    Returns (df_with_column, engaged_bar_count). Zero engaged = DORMANT feed.
+    """
+    if htf_df is None or not len(htf_df):
+        return df, 0
+    ts_col = exec_ts_col(df)
+    if ts_col is None:
+        return df, 0
+
+    from src.engine.context.htf_availability import completed_htf_slice, htf_period, ts_col_of
+    from src.engine.context.structure_engine import compute_structure_state
+
+    htf_ts = ts_col_of(htf_df)
+    if htf_ts is None:
+        return df, 0
+    period = htf_period(tf)
+
+    exec_ts = df[ts_col].to_list()
+    # Boundary = the CLOSE time of each HTF bar: the first instant its state is usable.
+    boundaries = [t + period for t in htf_df[htf_ts].to_list()]
+
+    out: list[Optional[bool]] = [None] * len(exec_ts)
+    engaged = 0
+    bi = 0
+    state_now: Optional[bool] = None
+    for i, t in enumerate(exec_ts):
+        if t is None:
+            continue
+        # Advance the step: adopt every HTF bar that has CLOSED at or before this bar.
+        advanced = False
+        while bi < len(boundaries) and boundaries[bi] <= t:
+            bi += 1
+            advanced = True
+        if advanced:
+            htf_slice = completed_htf_slice(htf_df, t, tf)
+            if len(htf_slice):
+                lo = max(0, i - exec_window_bars + 1)
+                exec_slice = df.slice(lo, i - lo + 1)
+                try:
+                    st = compute_structure_state(exec_slice, htf_slice)
+                except Exception:  # noqa: BLE001 — fail-soft to the prior step value
+                    st = None
+                state_now = bool(
+                    st is not None and (st.bos_recent or st.choch_recent or st.mss_recent)
+                ) if st is not None else state_now
+        if state_now is not None:
+            out[i] = state_now
+            engaged += 1
+
+    return df.with_columns(pl.Series(COL_STRUCTURE_ACTIVE, out, dtype=pl.Boolean)), engaged
+
+
 def attach_htf_columns(
     df: pl.DataFrame,
     htf_cache: Optional[Dict[str, Any]],

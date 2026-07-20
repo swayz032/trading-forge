@@ -353,10 +353,33 @@ class SpecConditionStrategy(BaseStrategy):
         from src.engine.context.structure_engine import compute_structure_state
 
         out = np.zeros(n, dtype=bool)
+
+        # ── WIRE-1 WIRED PATH: the REAL-HTF structure column, materialized upstream
+        # as a STEP FUNCTION advancing per COMPLETED HTF bar (R-067 §3 two
+        # granularities). On bars where it is present this binding is NOT an
+        # approximation: `compute_structure_state` was fed a genuine higher-timeframe
+        # frame instead of the self-referential exec window. Bars without a value fall
+        # back to the proxy below and stay approximation=True — honest per-bar
+        # provenance, never a blanket relabel.
+        if "htf_structure_active" in df.columns:
+            col = df["htf_structure_active"].to_list()
+            wired = 0
+            for i in range(min(n, len(col))):
+                if col[i] is None:
+                    continue
+                out[i] = bool(col[i])
+                wired += 1
+            self._wire1_structure_bars = wired
+            if wired == min(n, len(col)) and wired > 0:
+                return out  # fully wired — the proxy is not consulted at all
+
         if n < MIN_BARS_REQUIRED:
             return out
+        wired_col = df["htf_structure_active"].to_list() if "htf_structure_active" in df.columns else None
         last_result = False
         for i in range(n):
+            if wired_col is not None and i < len(wired_col) and wired_col[i] is not None:
+                continue  # already decided by the REAL-HTF signal
             if i < MIN_BARS_REQUIRED - 1:
                 continue
             if i % STRUCTURE_RECOMPUTE_CADENCE_BARS == 0 or i == n - 1:
