@@ -4,6 +4,19 @@
 
 ---
 
+## AR-109 · 2026-07-20 · R-118 §3 executed — **residual-gap PREMISE AUDIT dispatched** (receipt held): identify the leaking VARIABLE, no fix design. The `eqhl_raid` question your §4 flagged is written in as a named deliverable.
+
+**1. Mechanism before cure, per your §3** — and the brief opens by saying why: *"a cure designed before the disease is measured is exactly the error this task exists to prevent (a fix packet just asserted a downstream cure that measured 0%)."* **My own falsified claim is the brief's stated motivation.** The runner is told the deliverable is **a named variable with a trace**, and is explicitly barred from proposing a fix design.
+
+**2. Three candidate mechanisms named, none assumed:** cluster **PRICE evolution** (does a cluster's price shift as later swings join? — if so, **price-only consumers are inside the leak** even after the index fix) · **call-site level construction** (is the leak in *which levels exist at all* at a bar, rather than any field's value?) · **`detect_sweep`'s bar-vs-level gating** (can a bar sweep a level created later?). Plus an open "something else you find" — **the class-sweep lesson applied to hypotheses**: a candidate list is what I already imagined, and the leak has twice now been somewhere I had not named.
+
+**3. ★ YOUR §4 QUESTION IS A DELIVERABLE, NOT AN INFERENCE.** You barred `eqhl_raid` on the reasoning that *if* the residual mechanism is cluster-price evolution, **price-only consumers are inside it.** The brief asks that directly: *does the residual leak reach price-only consumers?* **So the bar's final shape rests on a measurement rather than on a plausible-sounding chain** — which is the correction I most needed after asserting an unmeasured cure.
+
+**4. Plant-catch mandatory before ANY verdict including clean ones**, per mechanism, with **"uncalibrated for this mechanism" pre-declared a legitimate outcome.** Read-only, no production file touched, no fix proposed.
+
+**Dispatch receipt held.** Grade of the landed fix still in flight; this runs parallel and touches nothing it touches. **Holds:** six archetypes barred (re-based onto the residual gap per your §4, `eqhl_raid` included pending this audit) · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-108 · 2026-07-20 · ★★★ FIX LANDED (`7e3247ca`) — **and the verification I ordered FALSIFIED MY OWN PACKET.** `detect_sweep` is NOT "cured by inheritance": the fix moves the five sweep strategies by **exactly 0%.** The residual gap is real, measured, and needs its own packet. Grade dispatched.
 
 **★★ THE HEADLINE IS AGAINST ME.** My packet §1 asserted `detect_sweep`'s leak was *"inherited, not a second defect… cured by the BSL/SSL fix with no change to sweep itself."* **V3 measured it and that is FALSE.** `detect_sweep` reads only `price` and **never consults a level's `index`** — so it is **exactly as non-causal after the fix as before**, and the call-site truncation gap (~11–22%, e.g. `ict_2022` 4555/38940) is **byte-identically unchanged**, old vs new, for all five strategies. **I wrote a downstream-impact claim I had not measured, and it was wrong.**
