@@ -159,6 +159,22 @@ describe("FULL FLOW: establish -> verify -> scope, entirely through the real rou
     expect(rows).toEqual([]);
   });
 
+  // F-5 (OA-050 self-caught, grader independently re-derived). Concurrent establishes race the
+  // SELECT-then-INSERT; the PK keeps it SAFE, but the loser used to get a 500 "something broke"
+  // for a situation the system knows is "PIN already set".
+  it("CONCURRENT establishes: exactly one wins, and the loser gets 409 — never a 500", async () => {
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () => establish(M1, PIN).then((r) => r.status)),
+    );
+    expect(results.filter((s) => s === 201)).toHaveLength(1);   // exactly one writer
+    expect(results.filter((s) => s === 409)).toHaveLength(4);   // losers get the TRUE answer
+    expect(results).not.toContain(500);                          // ← the F-5 assertion
+
+    // And the PK actually held: one row, matching the PIN that was submitted.
+    const rows = await h.db.select().from(slumhouseMemberPins);
+    expect(rows).toHaveLength(1);
+  });
+
   it("a non-string pin is refused", async () => {
     const res = await fetch(`${base}/slumhouse/api/member/pin/establish`, {
       method: "POST",

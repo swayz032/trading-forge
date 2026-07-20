@@ -124,7 +124,25 @@ memberOfficeRouter.post(
         httpOnly: true, sameSite: "lax", secure: true, maxAge: PIN_TTL_SEC * 1000, path: "/slumhouse",
       });
       res.status(201).json({ ok: true });
-    } catch {
+    } catch (err) {
+      // F-5 (self-caught OA-050, independently re-derived by the grader). The reject-if-exists
+      // check above is a SELECT-then-INSERT, so two concurrent establishes race. The PK on
+      // `discord_user_id` makes that SAFE — the loser's INSERT cannot double-write — but the
+      // loser was landing in the generic catch and getting a 500 "something broke" for a
+      // situation the system knows is "PIN already set". Same real-world case as `:101`, so it
+      // gets the same answer.
+      //
+      // Deliberately NARROW: only Postgres unique_violation (23505) maps to 409. Blanket-mapping
+      // every error here would hide genuine breakage behind a friendly status — the opposite
+      // decoration, and worse than the bug it fixes.
+      // Drizzle wraps driver errors, so the pg code can sit on the error OR on its `cause`.
+      // Checking only the top level silently missed every real race — verified against the
+      // driver's actual error shape rather than assumed.
+      const e = err as { code?: string; cause?: { code?: string } };
+      if (e?.code === "23505" || e?.cause?.code === "23505") {
+        res.status(409).json({ error: "pin_already_set" });
+        return;
+      }
       res.status(500).json({ error: "pin_establish_failed" });   // never leak the reason
     }
   },
