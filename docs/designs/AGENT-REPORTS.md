@@ -4,6 +4,27 @@
 
 ---
 
+## AR-108 · 2026-07-20 · ★★★ FIX LANDED (`7e3247ca`) — **and the verification I ordered FALSIFIED MY OWN PACKET.** `detect_sweep` is NOT "cured by inheritance": the fix moves the five sweep strategies by **exactly 0%.** The residual gap is real, measured, and needs its own packet. Grade dispatched.
+
+**★★ THE HEADLINE IS AGAINST ME.** My packet §1 asserted `detect_sweep`'s leak was *"inherited, not a second defect… cured by the BSL/SSL fix with no change to sweep itself."* **V3 measured it and that is FALSE.** `detect_sweep` reads only `price` and **never consults a level's `index`** — so it is **exactly as non-causal after the fix as before**, and the call-site truncation gap (~11–22%, e.g. `ict_2022` 4555/38940) is **byte-identically unchanged**, old vs new, for all five strategies. **I wrote a downstream-impact claim I had not measured, and it was wrong.**
+- **V3 is the item I flagged in the brief as "most likely to be skipped."** It was not skipped, and it is the only reason my error is on the record instead of inside a closed packet. **The instruction that caught this was aimed at the implementer's diligence and landed on my own analysis.**
+- **The implementer refused to let the claim stand** — recording the falsification in the test docstrings, the commit message, and its memory rather than quietly declaring my §1 correct. **That is the doer-refuses-to-rubber-stamp posture pointed upward, and it is worth more than the fix.**
+
+**★ AND THE DIAGNOSIS NARROWED — the packet over-described the defect too.** The implementer tried to prove the fix necessary before writing it and found **cluster MEMBERSHIP was never non-causal**: the old used-set greedy and a streaming "join first matching cluster" pass are the **same partition function** (both are earliest-anchor-wins over a creation-fixed threshold; 20/20 exact-match trials). **The sole defect was `index = max(cluster_indices)`** — a cluster's reported timestamp advancing retroactively as it gained members, which is precisely the bar-73→bar-135 disappearance. Fix: **`index = min(...)`**, the creation index, provably immutable once assigned. **A smaller, more precise fix than "rewrite the clustering"** — and it is **not** the banned wrong fix (no full-history pass is sliced; the streaming pass runs in knowability order).
+
+**Receipts:** V1 **0/640** mismatches (5 seeds × 64 cutoffs × 2 sides) · **V6 null: old code 451/640 (0.705) vs fixed 0/640** — the probe demonstrably discriminates · V2 plant-catch **FIRES** on a reinstated pre-fix implementation and **PASSES** on the fixed code, **per function** · V7 **106/106** green, **no existing test edited**, none had encoded the bug · scope-lock: `liquidity.py` (two functions + helper) + one new test file.
+
+**★ V4 — it caught its own miscalibration before trusting a number**, unprompted: its first probe filtered by `row.index < C` and got 33–61/64 "mismatches" that were **artifacts of still-growing clusters** (a 1-member cluster legitimately gains members and a larger index later). Diagnosed and documented **before** any figure was reported. **That is the same middle-candle-vs-third-candle class that produced my false 7/39** — caught this time by the runner, at the right moment.
+
+**The genuine beneficiary is narrower than claimed:** `spec_condition_compiler.py:799-802` — the Population-A `named_sr_level` resolver — **does** read `levels["index"]` for forward-fill activation, so its timing moves from *"retroactively drifting last-touch"* to *"true first-known bar."* A real causal improvement. `eqhl_raid` reads only `price`: zero change.
+
+**What this does NOT close, stated as a named follow-up rather than absorbed:** the residual `detect_sweep` call-site gap is **real, measured, and pre-existing** — and **out of this packet's scope by its own ban** (touching `detect_sweep` or archetype logic was prohibited). **It needs its own packet.** I am not letting "the fix landed" imply that gap closed.
+
+**Open question I am NOT answering myself and have put to the grader:** the six archetypes were barred *because they consume the leaking detectors*. If the fix leaves their observable behaviour **unchanged**, the bar's justification has shifted — it should now rest on the residual `detect_sweep` gap, not on this fix. **Whether it lifts, stays, or changes shape is the grader's call, then yours.**
+
+**Grade dispatched** (receipt held), with the falsification named as the most consequential claim to verify. **Holds:** six archetypes barred **pending that ruling** · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-107 · 2026-07-20 · R-116 GO — **fix implementer DISPATCHED** (receipt held). The banned wrong fix is written into the brief with its *reason* and a falsifiable test the implementer can self-apply.
 
 **1. The prohibition travels as more than a ban.** The brief tells the implementer **why** post-hoc slicing fails — *the cluster MEMBERSHIP is what is computed non-causally, so slicing its output preserves the defect while looking like a fix, and would pass a naive truncation probe on the sliced output* — and then gives it a **self-check it can apply without me**: *"if your fix contains a full-history clustering pass anywhere, it is wrong."* **A ban with a reason and a test survives an implementer's judgment; a bare ban only survives its memory.**
