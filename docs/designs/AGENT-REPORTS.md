@@ -4,6 +4,24 @@
 
 ---
 
+## AR-105 · 2026-07-20 · R-114 §4 LIVENESS CHECK — **`paper_bridge` is LIVE but does NOT consume the leak.** It never imports the leaking pair; it feeds `detect_sweep` the **probed-clean** `detect_equal_highs`. **No paper contamination, no annotation needed.** The feared live-adjacent exposure does not exist.
+
+**1. LIVE — confirmed, not assumed.** `paper_bridge` is invoked from the running paper engine: `paper-signal-service.ts:1448` calls `runPythonModule({module: "src.engine.indicators.paper_bridge", …})` on a live signal path. **So the liveness half of your question is YES.**
+
+**2. ★ BUT IT DOES NOT CONSUME THE LEAK — three independent reasons, each checked:**
+- **It never imports the leaking pair.** `grep detect_buyside_liquidity|detect_sellside_liquidity src/engine/indicators/paper_bridge.py` → **no matches.** The sweep path reads `lev = detect_equal_highs(df)` (`paper_bridge.py:425`) — **the detector this same sweep just probed CLEAN at 0/1120, with no `used` set.**
+- **It runs on a trailing window, not the whole history.** `paper-signal-service.ts:1446` sends `barBuffer.slice(-200)` — the last 200 bars. The backtest leak's mechanism requires a *whole-table* pass where a far-future swing re-anchors an early cluster; a rolling 200-bar window cannot contain that shape as the backtest does.
+- **It consumes one value, not a series.** `paper_bridge.py:427` returns `_last_scalar(sw)` — only the most recent bar's verdict, computed from bars at-or-before now. `detect_sweep` is pure per-bar (probed clean in isolation), and its levels here are causal.
+
+**3. ★ SO THE ORDERED ANNOTATION IS NOT NEEDED — and I want the negative stated as plainly as a positive would have been.** Your §4 reasoned that *if* the path were live-and-consuming, paper metrics for sweep-consuming strategies would carry contamination **today**, and paper metrics are promotion evidence. **The path is live; the consumption is not there.** Paper records need no contamination annotation on this account. **This is the first thing tonight that looked worse in prospect than it turned out to be**, and it is worth as much care in reporting as the findings that went the other way — a false alarm left standing costs the same credibility as a missed one.
+
+**4. What I am NOT claiming:** I checked the **sweep** path specifically, per your order. `paper_bridge` exposes other indicators through the same bridge; **I have not swept its full surface** for other consumers of anything in the 19-detector class, and I am not asserting the whole bridge is clean — only that the named path does not touch the confirmed defect. **The consumer census for the fix packet must still be AST-derived** per your §4, since manual censuses have now missed a consumer twice — this check vindicates the *file* but not the *method*.
+
+**5. The genuine census lesson stands regardless of the outcome:** `paper_bridge` was outside AR-098 because I swept the pair I was handed rather than the class, twice. **The good outcome here is luck, not method** — had that path called `detect_buyside_liquidity`, my census would have missed live paper contamination.
+
+**Not done:** no fix, no packet. **Holds:** six archetypes barred · `named_sr_level` blocked · F-1 real · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-104 · 2026-07-20 · ★★ PROBES RETURNED — **hypothesis resolves to the ONE-OFF arm.** `detect_fvg` CLEAN · trio CLEAN · **F-1 was never copy-pasted.** ★ But `detect_sweep`'s own code is clean while **every real call site LEAKS** — and the probe explained my inadmissible 7/39 rather than just overturning it.
 
 **Every verdict carries a fired plant-catch.** 20 seeds × 56 probe bars = **1,120 checks per detector**, each preceded by a calibration battery. Read-only; no production file touched.
