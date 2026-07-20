@@ -52,7 +52,20 @@ function decide({ sample, sw, gpuBusyPct, nowMs, phase }) {
   if (sample.backtestWorkerCount === null || sample.backtestWorkerCount === undefined) {
     return { action: busyAction, reason: "backtest_probe_unavailable" };
   }
-  if (sample.backtestWorkerCount > 0) return { action: busyAction, reason: "backtest_workers_active" };
+  if (sample.backtestWorkerCount > 0) {
+    // NEW-3 (re-grader): backtestWorkerCount = matched + UNREADABLE. On Windows, a python
+    // owned by SYSTEM or another user has an unreadable CommandLine, so a single such
+    // process pins this above zero forever -> permanent yield. The polarity is right
+    // (unjudgeable counts as busy), but the operator must be able to tell "a battery is
+    // running" from "we cannot see what is running" — otherwise a permanent skip looks
+    // like a permanently busy tower, and that is the never-measures bug in its safe coat.
+    const unreadable = sample.pythonCmdlineUnreadable ?? 0;
+    const matched = sample.backtestWorkerCount - unreadable;
+    if (matched <= 0 && unreadable > 0) {
+      return { action: busyAction, reason: "python_cmdline_unreadable" };
+    }
+    return { action: busyAction, reason: "backtest_workers_active" };
+  }
   if ((sample.gpuUtil ?? 0) > gpuBusyPct) return { action: busyAction, reason: "gpu_busy" };
   return { action: "RUN", reason: "quiet" };
 }

@@ -5,7 +5,7 @@
 // synthetic ledgers with no filesystem and no clock.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildLivenessReport, readRail, windowDates, completedWindow, RAILS } from "../rail-liveness-report.cjs";
+import { buildLivenessReport, readRail, everWrote, ledgerDates, windowDates, completedWindow, RAILS } from "../rail-liveness-report.cjs";
 
 const soakSpec = RAILS.find((r) => r.rail === "soak");
 const fullSpec = RAILS.find((r) => r.rail === "full-lane");
@@ -234,4 +234,73 @@ test("but a rail that HAS written and then went silent still alerts red", () => 
   assert.equal(r.results[0].kind, "crash_suspect");
   assert.equal(r.results[0].alert, true);
   assert.deepEqual(r.neverSeen, []);
+});
+
+// ── ★ NEW-1 (re-grader): a rail dead LONGER than the window must stay loud ──
+test("★ CLOCK WALK: a dead rail keeps alerting after its last ledger ages out", () => {
+  // The re-grader disproved my comment by walking the clock forward: the rail alerted red
+  // for exactly windowDays, then flipped to never_seen/alert:false — permanently silent at
+  // the point it had been dead longest. The charter is 30+ days unattended, so a rail dying
+  // on day 1 of a vacation was silent by day 11 and stayed silent.
+  const files = { "soak-20260705.jsonl": ranRow() };   // wrote once, on 2026-07-05, then died
+  const { readFileFn, existsFn } = fakeFs(files);
+  const listDirFn = () => Object.keys(files);          // the file still EXISTS on disk
+
+  for (const today of ["2026-07-08", "2026-07-16", "2026-07-20", "2026-08-01", "2026-09-01"]) {
+    const dates = completedWindow(today, 10);
+    const r = buildLivenessReport({ rails: [soakSpec], root: "/r", dates, readFileFn, existsFn, listDirFn });
+    assert.notEqual(r.results[0].kind, "never_seen", `went silent on ${today} — a lived rail cannot return to never-seen`);
+    assert.equal(r.results[0].alert, true, `stopped alerting on ${today}`);
+  }
+});
+
+test("★ but a rail with NO ledger anywhere on disk is still never_seen (not a fake death)", () => {
+  const dates = completedWindow("2026-07-20", 10);
+  const { readFileFn, existsFn } = fakeFs({});
+  const r = buildLivenessReport({ rails: [soakSpec], root: "/r", dates, readFileFn, existsFn, listDirFn: () => [] });
+  assert.equal(r.results[0].kind, "never_seen");
+  assert.equal(r.results[0].alert, false);
+});
+
+test("everWrote is window-independent and matches only its OWN rail's prefix", () => {
+  const listing = ["cert-2026-07-01.jsonl", "full-lane-2026-07-01.jsonl"];
+  assert.equal(everWrote(soakSpec, "/r", () => listing), false, "soak must not claim cert's files");
+  assert.equal(everWrote(RAILS.find((r) => r.rail === "cert-rig"), "/r", () => listing), true);
+  // an unreadable directory must not be read as "it has lived"
+  assert.equal(everWrote(soakSpec, "/r", () => { throw new Error("EACCES"); }), false);
+});
+
+test("★ a rail whose ONLY ledger is dated AFTER the window is ALIVE, not dead", () => {
+  // Caught on the witnessed run of the NEW-1 fix itself. The liveness rail had written
+  // exactly one ledger — TODAY — and the completed window ends YESTERDAY. It therefore had
+  // "ever written" but nothing in-window, and reported RED while actively running.
+  // A file dated after the window is evidence of LIFE; the window has not caught up.
+  const today = "2026-07-20";
+  const dates = completedWindow(today, 10);              // ends 2026-07-19
+  const files = { "liveness-2026-07-20.jsonl": JSON.stringify({ alerting: [] }) };
+  const liveness = RAILS.find((r) => r.rail === "liveness");
+  const { readFileFn, existsFn } = fakeFs(files);
+  const r = buildLivenessReport({
+    rails: [liveness], root: "/r", dates, readFileFn, existsFn, listDirFn: () => Object.keys(files),
+  });
+  assert.equal(r.results[0].alert, false, "a rail that ran TODAY must not be reported dead");
+  assert.equal(r.results[0].kind, "never_seen");
+});
+
+test("★ but a ledger dated BEFORE the window still makes in-window silence mean death", () => {
+  // The discriminator for the case above — it must not have bought quiet at the cost of
+  // the NEW-1 fix it sits next to.
+  const dates = completedWindow("2026-07-20", 10);       // 07-10 .. 07-19
+  const files = { "soak-20260101.jsonl": ranRow() };     // wrote long ago, then died
+  const { readFileFn, existsFn } = fakeFs(files);
+  const r = buildLivenessReport({
+    rails: [soakSpec], root: "/r", dates, readFileFn, existsFn, listDirFn: () => Object.keys(files),
+  });
+  assert.equal(r.results[0].alert, true, "a long-dead rail must still alert");
+  assert.equal(r.results[0].kind, "crash_suspect");
+});
+
+test("ledgerDates parses BOTH filename conventions (soak YYYYMMDD, others YYYY-MM-DD)", () => {
+  assert.deepEqual(ledgerDates(soakSpec, "/r", () => ["soak-20260711.jsonl", "other.txt"]), ["20260711"]);
+  assert.deepEqual(ledgerDates(RAILS.find((r) => r.rail === "cert-rig"), "/r", () => ["cert-2026-07-11.jsonl"]), ["20260711"]);
 });

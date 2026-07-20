@@ -37,6 +37,8 @@ const REASON_ENGLISH = {
   python_workers_active: "tower looked busy (any Python process — pre-2026-07-20 check)",
   backtest_workers_active: "tower busy (backtest workers running)",
   backtest_probe_unavailable: "could not tell if the tower was busy (failed safe)",
+  no_idle_evidence: "no way to confirm the tower was idle (failed safe)",
+  python_cmdline_unreadable: "a Python process we cannot inspect (failed safe — not necessarily a backtest)",
   backend_unreachable: "backend not running",
   gpu_busy: "tower busy (GPU in use)",
   backtests_active: "tower busy (backtests running)",

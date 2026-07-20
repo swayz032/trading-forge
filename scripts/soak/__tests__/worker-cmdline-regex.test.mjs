@@ -17,7 +17,7 @@
 //   full-lane.cjs         pytestCmd()                       -> `-m pytest src/engine`
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { WORKER_CMDLINE_RE } from "../soak-sensors.cjs";
+import { WORKER_CMDLINE_RE, readWindows } from "../soak-sensors.cjs";
 
 // PowerShell's -match is case-insensitive by default; mirror that here so this test and the
 // shipped behaviour cannot drift apart on casing.
@@ -78,4 +78,23 @@ test("the regex is a valid, non-empty pattern (an empty one would match everythi
   assert.ok(WORKER_CMDLINE_RE.length > 10);
   assert.doesNotThrow(() => new RegExp(WORKER_CMDLINE_RE));
   assert.ok(!re().test(""), "the pattern must not match an empty command line");
+});
+
+// ── ★ NEW-2 (re-grader): the env hop is the seam that fails SILENTLY ──
+test("★ the regex actually ARRIVES in PowerShell — an empty one would match everything", () => {
+  // execFileSync env -> $env:TF_WORKER_CMDLINE_RE is one hop and it is load-bearing. If it
+  // arrived empty, PowerShell's -match would match EVERY command line, every python would
+  // count as a worker, and the rails would never run again. That failure is fail-CLOSED
+  // (availability, not safety) which is exactly why it would go unnoticed.
+  //
+  // The discriminator: this machine always has assistant tooling running, so a working
+  // injection MUST produce backtestWorkerCount < pythonCount. A broken one makes them equal.
+  const w = readWindows(4000);
+  if (w.pythonCount === null) return; // probe unavailable on this host; nothing to assert
+  assert.ok(w.pythonCount > 0, "expected assistant tooling python on this box");
+  assert.ok(
+    w.backtestWorkerCount < w.pythonCount,
+    `backtestWorkerCount (${w.backtestWorkerCount}) == pythonCount (${w.pythonCount}) — ` +
+      `the regex likely arrived EMPTY in PowerShell and matched everything`,
+  );
 });

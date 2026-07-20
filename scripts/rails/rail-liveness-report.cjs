@@ -25,6 +25,7 @@ const DEFAULT_WINDOW_DAYS = 10;
 const RAILS = [
   {
     rail: "soak",
+    prefix: "soak-",
     dir: (root) => path.join(root, "data", "soak"),
     file: (d) => `soak-${d.replace(/-/g, "")}.jsonl`,
     // soak-watcher writes {type:"crash"}; cert/full write {crashed:true} via guardRailMain.
@@ -39,6 +40,7 @@ const RAILS = [
   },
   {
     rail: "cert-rig",
+    prefix: "cert-",
     dir: (root) => path.join(root, "data", "rails"),
     file: (d) => `cert-${d}.jsonl`,
     classify: (row) =>
@@ -50,6 +52,7 @@ const RAILS = [
   },
   {
     rail: "full-lane",
+    prefix: "full-lane-",
     dir: (root) => path.join(root, "data", "rails"),
     file: (d) => `full-lane-${d}.jsonl`,
     classify: (row) =>
@@ -65,6 +68,7 @@ const RAILS = [
     // Writing a row no one reads detects nothing; the claim was the same shape as the
     // decorative-green this campaign keeps finding. It now watches itself.
     rail: "liveness",
+    prefix: "liveness-",
     dir: (root) => path.join(root, "data", "rails"),
     file: (d) => `liveness-${d}.jsonl`,
     classify: (row) => (row.crashed ? { outcome: "crash", reason: row.reason } : { outcome: "ran" }),
@@ -134,8 +138,63 @@ function readRail(spec, root, dates, readFileFn = fs.readFileSync, existsFn = fs
   return entries;
 }
 
+/**
+ * Has this rail EVER written a ledger, at any time — not just inside the rolling window?
+ *
+ * ★ NEW-1 (re-grader, 2026-07-20). `never_seen` was decided by "no entries in the window",
+ * which meant a genuinely DEAD rail alerted red for exactly `windowDays` and then went
+ * PERMANENTLY SILENT the moment its last ledger file aged out — silent at precisely the
+ * point it had been dead longest. I had asserted the opposite in a comment ("one
+ * observation anywhere in the window is enough ... cannot swallow a real death"); the
+ * re-grader disproved it by walking the clock forward, and my own test had placed its
+ * single observation on the OLDEST day in the window — one day from proving the reverse.
+ *
+ * The charter is 30+ days unattended. A rail dying on day 1 of a vacation was silent by
+ * day 11 and stayed silent: the reporter built to stop things running silently forever,
+ * acquiring that exact property.
+ *
+ * "Ever written" is window-INDEPENDENT, so a rail that has lived cannot return to
+ * never-seen. Cheap: one directory listing per rail.
+ */
+function ledgerDates(spec, root, listDirFn = fs.readdirSync) {
+  try {
+    return listDirFn(spec.dir(root))
+      .filter((f) => f.startsWith(spec.prefix) && f.endsWith(".jsonl"))
+      // soak files are YYYYMMDD, the rest YYYY-MM-DD — normalise to a comparable key.
+      .map((f) => f.slice(spec.prefix.length, -".jsonl".length).replace(/-/g, ""))
+      .filter((d) => /^\d{8}$/.test(d));
+  } catch {
+    // Directory unreadable/absent -> we cannot claim it has ever written, so treat as
+    // never-seen rather than inventing a death. Yielding to ignorance, not to silence.
+    return [];
+  }
+}
+
+/**
+ * Has this rail written a ledger ON OR BEFORE the window's end?
+ *
+ * ★ Caught on the witnessed run of the NEW-1 fix itself — my THIRD false positive from
+ * this alarm. Making `everWrote` window-independent fixed the "dead rail goes quiet after
+ * 10 days" hole and immediately opened its mirror image: the liveness rail had written
+ * exactly one ledger, TODAY, and the completed window ends YESTERDAY. So it had "ever
+ * written" but nothing in-window, and reported 🔴 dead — while actively running.
+ *
+ * A file dated AFTER the window is evidence of LIFE, not death; the window simply has not
+ * caught up. Only a ledger at or before the window end can make in-window silence mean
+ * something. Three distinct states, and each needs its own answer:
+ *   wrote before/inside the window, silent inside  -> genuinely dead   -> ALERT
+ *   wrote only after the window (i.e. today)       -> newly active     -> quiet
+ *   never wrote at all                             -> never activated  -> quiet
+ */
+function everWrote(spec, root, listDirFn = fs.readdirSync, windowEnd) {
+  const end = String(windowEnd || "").replace(/-/g, "");
+  const dates = ledgerDates(spec, root, listDirFn);
+  if (!end) return dates.length > 0;
+  return dates.some((d) => d <= end);
+}
+
 /** Pure core: ledgers -> per-rail verdicts + the operator-facing lines. */
-function buildLivenessReport({ rails, root, dates, readFileFn, existsFn, thresholds = THRESHOLDS_V1 }) {
+function buildLivenessReport({ rails, root, dates, readFileFn, existsFn, listDirFn, thresholds = THRESHOLDS_V1 }) {
   const results = rails.map((spec) => {
     const entriesByDate = readRail(spec, root, dates, readFileFn, existsFn);
 
@@ -150,7 +209,7 @@ function buildLivenessReport({ rails, root, dates, readFileFn, existsFn, thresho
     //
     // It is still REPORTED in the payload, just not alerted on, so a rail that is never
     // activated cannot hide behind silence either.
-    if (Object.keys(entriesByDate).length === 0) {
+    if (Object.keys(entriesByDate).length === 0 && !everWrote(spec, root, listDirFn, dates[dates.length - 1])) {
       return {
         rail: spec.rail, alert: false, kind: "never_seen", streak: 0,
         silentFires: dates.length, reasons: {}, thresholds: thresholds.version,
@@ -222,4 +281,4 @@ async function main() {
 if (require.main === module) {
   main().catch(guardRailMain({ rail: "liveness", writeLedgerFn: (p) => writeJsonl(p, process.cwd()), notifyFn: postDiscord }));
 }
-module.exports = { buildLivenessReport, readRail, windowDates, completedWindow, RAILS, DEFAULT_WINDOW_DAYS };
+module.exports = { buildLivenessReport, readRail, everWrote, ledgerDates, windowDates, completedWindow, RAILS, DEFAULT_WINDOW_DAYS };
