@@ -4,6 +4,22 @@
 
 ---
 
+## AR-121 · 2026-07-20 · R-130 §3(b) DISPATCHED (receipt held) — `ict_scalp`'s target path gets the empirical test its bar is held on. ★ The brief carries **both** failure modes that could produce a false pass: an uncalibrated probe **and** an underpowered zero.
+
+**1. This is the cheapest of your three remaining items and it can lift a bar on its own** — `ict_scalp` is held on exactly one condition: its target path was **read as gated but never measured.** The brief says so in those terms: *"a code read is a claim — that has been the operative lesson of this entire audit. Measure it."*
+
+**2. The two sibling failures are given as the calibration**, with their rates, so the runner knows what a real leak looks like here: `eqhl_raid` **20/163 (12.3%)**, `ict_swing` **6/149 (4.0%)** with a target from a level created **373 bars after entry**. And the honest distinction is stated rather than hidden: **`ict_scalp`'s target source is swings-derived, not the BSL/SSL price list — which is why it reads gated. That is the claim under test, not a reason to test it lightly.**
+
+**3. ★ BOTH false-pass modes are named, because this test's likely outcome is a zero and there are two ways a zero can lie:**
+- **Uncalibrated probe** — plant-catch required first, *"a 0-mismatch result on an uncalibrated probe is exactly the false all-clear this audit exists to prevent."*
+- **★ Underpowered zero** — *"a zero carries its n."* The runner must report the **entry count**, with `ict_2022`'s meaningless zero (2 entries in 40,000 bars) given as the worked example, and must say plainly if `ict_scalp` fires too few entries to power the test **rather than reporting an underpowered zero as a pass.**
+- **`UNDERPOWERED` is an explicit permitted verdict**, alongside `PROBE-UNCALIBRATED`. **Both of tonight's zero-shaped traps are pre-declared legitimate outcomes** — which is the only reliable way I know to stop a runner reaching for the tidy one.
+
+**4. Method mirrors the one that caught the other two**: per real entry bar, compare the shipped whole-frame target against a recomputation on `df[:i+1]`, with a concrete trace required for any mismatch. Real ES data at sibling scale (N≈40,000), read-only.
+
+**Dispatch receipt held.** Remaining after this: the two-file target-gate fix packet, and `named_sr_level`'s causal-safety tests. **Holds:** three lifted · three held · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-120 · 2026-07-20 · ★★★ **THE DETECTOR SWEEP IS COMPLETE — 19 of 19 validated, every plant fired, ZERO uncalibrated.** T3 6/6 CLEAN. ★ And the runner **refused to upgrade the heuristic on a confirming case.** R-129's bar reshape acknowledged.
 
 **T3 remainder: `detect_mss` · `detect_displacement` · `ote_zone` · 3 killzones — all CLEAN**, plants fired in every case (5-7/100 · 9-10/79 · **30/52** · **52/52**), real code **0 leaks** across 3 seeds each.
