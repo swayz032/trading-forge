@@ -4,6 +4,24 @@
 
 ---
 
+## AR-085 · 2026-07-20 · ★★ RE-GRADE RETURNS **BAND 7 VERIFIED** — §4.3 SATISFIED, the CRITICAL closed. The highest-risk question (is the harness measuring production or its own model?) was independently verified SOUND. `approximation=False` remains correctly ungranted.
+
+**BAND 6 → BAND 7, and the grader argues explicitly why it is a lift and not an inflation:** Band 6 was solely the one silently-skipped §4.3 CRITICAL; that CRITICAL is now closed with reproducible evidence on every axis it could independently re-derive. It withheld 8+ for two stated reasons, both of which I think are right.
+
+**1. ★ THE HIGHEST-RISK QUESTION CAME BACK SOUND — and it was checked, not accepted.** I flagged the one 2×2 cell with no production path (level-aware at held cadence, built by resampling) as the place a harness could be measuring its own model rather than production. The grader verified the justification **from the code rather than the claim**: `retest_touch_check` (`spec_condition_compiler.py:110-135`) is a **pure per-index function** — no loop-carried state, no window slice — and its `level`/`atr` inputs come from `compute_ema` and Wilder-RMA `compute_atr`, both **causal recursive formulas computed once over the full array**, unlike `_eval_wait_structure`'s window-sliced `compute_structure_state(window, window)`. So "recompute fresh at bar i" and "read the precomputed array at bar i" are **mathematically identical for this evaluator**. **Not the fabricated-cell failure mode** — a legitimate substitution specific to this primitive's lack of windowing, and the harness says so itself rather than hiding it.
+
+**2. It re-ran all four mutation tests itself** (I asked for ≥2), each confirmed PASS→FAIL with real exit codes then reverted clean. **And it proved the parity flag is genuinely passed rather than ambient by a test I had not thought of:** it **poisoned the calling shell** with `TF_LEVELZONE_ROUTING_ENABLED=true` and confirmed Pass 1 (flag=false) *still* reported 0 mismatches — then diffed the pre-fix version and confirmed the old `spawnSync` had **no `env` field at all**, so the bug was real and the fix genuinely closes it. That is a better proof than the one I dispatched for.
+
+**3. ★ It sharpened my own framing, and I am carrying the correction:** it notes the isolated result **"overturns AR-083's own '~5×' framing, which only looked at one axis."** The ~5× figure — which I relayed and Fable recorded — was a *single-axis* number. The honest statement is the 2×2: cadence alone −39 entries, level-awareness alone −28, and the confounded read pointing the wrong way. **The ~5× was never wrong, but it was never the whole picture either**, and I should have said so when I reported it rather than after a grader said it for me.
+
+**4. Verified clean, each live today:** harness exit 0 and Axis B reproducing 49-vs-10 / 6.5% on a second implementation · parity gate 41 specs, flag=false 0 mismatches, flag=true 87 known primitive divergences 0 unexpected · `approximation=meta.base_approximation` (True) unflipped · flag default OFF · `git show --stat` confirming **zero production files changed** by this delivery · pytest 38/38 · tsc 0 errors.
+
+**5. Open risks it documented (recording, not disputing):** a stale "25-sample" doc comment vs the actual 41 specs (cosmetic) · the synthetic cell is mathematically sound but has **zero production runtime history** · this worktree carries substantial unrelated dirty/untracked state from concurrent lanes.
+
+**6. WHAT THIS DOES NOT LICENSE, stated by the grader and endorsed by me:** **no `approximation=False` for level/zone.** That is packet §4 item 5 — a separate and much larger claim, that the level-aware evaluator is a faithful *enough* replacement to drop the approximation flag. This delivery does not attempt it and the grade does not license it. Per your R-095 §5, the fidelity measurement may now proceed **with the isolated-axes design as its permanent measurement plan — cadence and awareness reported separately, forever.**
+
+**Holds:** T1 blocked · WIRE-2 pending its own two-leg audit · reader-vintage queued · flag OFF · the 77 sealed.
+
 ## AR-084 · 2026-07-20 · ★★ CADENCE ISOLATION DONE (`9aaf6afc`) — return checklist C1–C8 all returned with receipts. **The isolated axes overturn the naive reading: the confounded comparison showed +11 entries while BOTH real effects are large DECREASES.** Parity gate fixed. Re-grade dispatched.
 
 **Your R-094 §3 return-checklist law was applied to its own first dispatch** — eight blocking items, each returned with a receipt. **Nothing was silently skipped**, which is the whole point of the fence. I re-ran the harness myself before reporting: exit 0, numbers reproduce.
