@@ -18,12 +18,21 @@ Exit `0` all PASS · `2` something inconclusive · `3` a capability is genuinely
 | **1 · Database** | restore + reach | **DRILLED + RECEIPTED 2026-07-02** | prod is **PostgreSQL 17.10** — a v16 `pg_dump` **REFUSES** with `server version mismatch`. Install pg**17**, not "latest". |
 | **5 · Data lake** | DuckDB can read S3 | **BUILT + WITNESSED LIVE PASS** | a footer-only read **PASSes on a corrupt object**. The gate must force a column decode (`SELECT *`), not `SELECT 1`. |
 | **A · Services** | API actually serving | **DESIGNED — NOT DRILLED** | *(none yet — a drill would produce one)* |
-| **B · Scheduled tasks** | tasks registered **and** able to run | **DESIGNED — NOT DRILLED** | registration ≠ execution: a task registers cleanly and then does nothing (see Tier C). |
+| **B · Scheduled tasks** | expected tasks **registered and enabled** (derived from the register scripts) | **DESIGNED — NOT DRILLED** | ★ **3 of 6 are ABSENT on the tower right now** — `TF-Rails-Divergence`, `TF-Rails-WorktreeTTL`, `TF-CI-Runner`. Found only once the check stopped hand-listing 3 names. |
 | **C · WSL runner** | a configured WSL distro | **DESIGNED — NOT DRILLED** | ★ **the prerequisite no prior recovery note lists.** |
 | **3 · Secrets/env** | the right `.env` resolves | **PARTIALLY BUILT** | boot **fail-OPENs** on missing secrets *by design*; `.env.example` is **not** a recovery manifest. |
 
 **Nothing in this table may be upgraded without a receipt.** "Designed" becomes "drilled" only
 after a real execution is logged in `AGENT-LOGS.md` with a date.
+
+> ★ **KEY FINDING — Tier B, found 2026-07-20 by the verifier's own correction.**
+> The first version of `verify-recovery.cjs` hand-listed **three** expected task names while
+> the register scripts create **six**. It printed `all_registered` on a tower where
+> `TF-Rails-Divergence`, `TF-Rails-WorktreeTTL` and **`TF-CI-Runner`** were absent — and
+> `TF-CI-Runner` is the Tier-C runner task whose inertness is this document's headline gap.
+> **Tier C reported green while the task it protects did not exist.**
+> Expected names are now DERIVED from the register scripts, so the check cannot drift from
+> the thing it checks. The tower currently reports **FAIL** on Tier B, correctly.
 
 ---
 
@@ -41,8 +50,11 @@ or slow is *serving*; only an unanswered request is a real failure (the 07-11 fa
 ### Tier B — node scheduled tasks (needs **node on PATH** + valid paths)
 `register-{soak,cert-rig,full-lane,divergence,worktree-ttl}-task.ps1`
 Five of six validate their `ScriptPath`/`WorkingDir` before registering.
-**Capability check:** the expected tasks exist in `schtasks`.
-⚠ **Registration is necessary and NOT sufficient** — see Tier C for how that bites.
+**Capability check:** every task the register scripts create is present in `schtasks` **and not
+Disabled** — matched by FIELD, not substring, and the expected list is DERIVED from those
+scripts rather than hand-written.
+⚠ **Registration is necessary and NOT sufficient** — a Disabled task is registered and cannot
+run, which is why Disabled is a FAIL here, and see Tier C for the sharper version.
 
 ### Tier C — the WSL runner (needs **a configured WSL distro**)
 `scripts/rails/register-runner-task.ps1` registers a **WSL** action
