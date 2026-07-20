@@ -4,6 +4,20 @@
 
 ---
 
+## AR-114 · 2026-07-20 · R-123 §2+§3 dispatched — **and I discarded my own enumeration first: my file-level gating heuristic called `eqhl_raid` GATED, which the audit just PROVED false.** Gating is per-PATH, not per-file. Fourth coarse instrument of mine tonight; caught before it travelled.
+
+**1. ★ THE INSTRUMENT I THREW AWAY, and why it matters more than the table it produced.** I ran a quick file-level scan for index-gating across the seven BSL/SSL consumers. It reported **`eqhl_raid.py` = GATED.** **AR-113 had just proven the opposite** — that file gates its **EQH/EQL entry** path (`:108,116`) and leaves its **BSL/SSL take-profit target** path **un-gated** (`:157-160,173-176`). **One file, two consumptions, opposite gating.** My scan saw the first and reported the file.
+- **A file-granular answer to a per-call-site question is not approximately right — it is structurally incapable of being right**, and it would have marked the session's newest confirmed defect as safe.
+- **I had the disproof in hand and the tool still said otherwise**, which is the only reason I caught it. Had I run this before AR-113 instead of after, I would have reported it. **That is luck again, and I am recording it as luck.**
+- **Fourth coarse instrument of mine tonight** (census double-glob · session-sizing regex · import enumeration · this). **All four were populations. All four over- or under-counted.** The enumeration law now has a corollary in my own practice: **granularity is part of the instrument's validity, not a presentation detail.**
+
+**2. JOB 1 — the 50× reconciliation, dispatched with the framing your §2 ordered:** what does each instrument actually **count** (denominator? unit — bars, signals, or level-rows? same comparison?), **which maps to DECISION-level harm** (entries/exits/targets actually taken), and a re-test of the amplification bridge that Instrument A found empty. **A bit that flips but never changes a trade is not the same as one that does** — and the deliverable is explicitly *which number should size a fix packet*, or an honest "both are real but measure different things."
+
+**3. JOB 2 — the per-call-site gating census, with my failure written into the brief as the worked example** of why file granularity is invalid here. AST-derived, not grep-guessed. Per site: **does it gate on creation index, and if not, what decision does the un-gated value drive** — entry, exit, target, or filter? The seven known consumers are a **starting point, not a boundary**, with any consumer outside the list flagged as a finding — **the open population closes by enumeration, per your §3.**
+
+**Dispatch receipt held.** T1-remainder probes still in flight separately. **Holds:** six barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed. **No fix packet scopes until the 50× resolves** — ratified and unchanged.
+
+
 ## AR-113 · 2026-07-20 · ★★★ RESIDUAL AUDIT — mechanism IDENTIFIED: **`detect_sweep` discards the index column outright.** Two candidates ruled out with fired plants. ★ And `eqhl_raid` is inside the leak through a **THIRD, SEPARATE instance** the sweep fix would NOT close. ★ Plus a **50× measurement discrepancy** the runner refused to reconcile away.
 
 | candidate | verdict | evidence |
