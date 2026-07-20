@@ -15,8 +15,9 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import {
-  PASS, UNKNOWN, FAIL, V, EVIDENCE, CHECKS, REGISTER_SCRIPTS,
-  expectedTaskNames, tierServices, tierTasks, tierWsl, legS3, aggregate, runChecks,
+  PASS, UNKNOWN, FAIL, V, EVIDENCE, EVIDENCE_STATES, EVIDENCE_LEVEL, CHECKS,
+  REGISTER_DIRS, registerScripts, expectedTaskNames,
+  tierServices, tierTasks, tierWsl, legS3, legDb, aggregate, runChecks,
 } from "../verify-recovery.cjs";
 
 const RUNSHEET = path.resolve(process.cwd(), "docs/cold-recovery-runsheet.md");
@@ -121,7 +122,7 @@ test("★ expected tasks are DERIVED from the register scripts, not hand-listed"
   assert.ok(names.length >= 6, `expected >=6 derived task names, got ${names.length}: ${names}`);
   assert.ok(names.includes("TF-CI-Runner"), "the Tier-C runner task must be expected — it is the headline gap");
   assert.ok(names.includes("TF-Rails-Divergence") && names.includes("TF-Rails-WorktreeTTL"));
-  for (const rel of REGISTER_SCRIPTS) assert.ok(fs.existsSync(path.resolve(process.cwd(), rel)), `missing ${rel}`);
+  for (const rel of registerScripts()) assert.ok(fs.existsSync(path.resolve(process.cwd(), rel)), `missing ${rel}`);
 });
 test("expectedTaskNames returns [] when scripts are unreadable (caller must treat as UNKNOWN)", () => {
   assert.deepEqual(expectedTaskNames("/nonexistent-root", () => "", () => false), []);
@@ -193,22 +194,11 @@ function runsheetEvidence(doc) {
 const DRILL_CLAIM = /drill|receipt/i;
 const NOT_DRILLED = /not\s+drilled|pending\s+drill|designed/i;
 
-test("★ the EVIDENCE enum is classified by MEANING — the markdown is not the only claim", () => {
-  // Grader mutant M10 SURVIVED the first fix: `"DRILLED 2026-07-20 (previously: not
-  // drilled)"` in the enum asserts a drill that never happened while still containing the
-  // words "not drilled". My rewrite made the RUNSHEET guard semantic and left the enum with
-  // NO honesty assertion at all — the instance fixed, the class left open, one file over
-  // from where I fixed it. The enum is printed in every verifier run, so it is a claim.
-  for (const leg of ["services", "tasks", "wsl"]) {
-    const cell = EVIDENCE[leg];
-    assert.ok(NOT_DRILLED.test(cell), `${leg} must state it is not drilled; got "${cell}"`);
-    const residual = cell.replace(/not\s+drilled|pending\s+drill|designed/gi, "");
-    assert.ok(!DRILL_CLAIM.test(residual), `${leg} smuggles a drill claim: "${cell}"`);
-  }
-  assert.ok(DRILL_CLAIM.test(EVIDENCE.db), "the DB leg is the one that WAS drilled");
-  // and the levels must not collapse into one uniform claim
-  assert.ok(new Set(Object.values(EVIDENCE)).size >= 3, "evidence levels went uniform");
-});
+// ★ SIBLING FOUND BY THE MANDATED SEARCH (F-3): the keyword-based EVIDENCE guard that the
+// whitelist REPLACES was still running alongside it. A weaker guard left beside its
+// replacement still passes the text the replacement rejects — the fix left its predecessor
+// alive, which is the same one-word-over shape the grader named. Removed; the closed-set
+// assertions below are the guard.
 
 test("★ every runsheet row that CLAIMS a drill must actually have one", () => {
   const ev = runsheetEvidence(fs.readFileSync(RUNSHEET, "utf8"));
@@ -221,17 +211,19 @@ test("★ every runsheet row that CLAIMS a drill must actually have one", () => 
     `these rows claim a drill they do not have: ${legs.join(", ")}`);
 });
 
-test("★ the tiers are classified as un-drilled by MEANING, not by an exact phrase", () => {
+test("★ every runsheet evidence cell is EXACTLY one of the closed states", () => {
+  // Phrase-classification is gone here too: the markdown cell must be verbatim one of the
+  // canonical strings, so a hedged expansion ("...but VERIFIED live") is not a cell at all.
   const ev = runsheetEvidence(fs.readFileSync(RUNSHEET, "utf8"));
-  for (const [k, cell] of Object.entries(ev)) {
-    if (/services|scheduled tasks|wsl runner/i.test(k)) {
-      assert.ok(NOT_DRILLED.test(cell), `${k} must state it is not drilled; got "${cell}"`);
-      // Strip EVERY negation phrase (global) before looking for a residual positive claim —
-      // a non-global replace left "NOT DRILLED" behind, whose own "drilled" then read as a
-      // drill claim. The check must not trip on the very words that make the row honest.
-      const residual = cell.replace(/not\s+drilled|pending\s+drill|designed/gi, "");
-      assert.ok(!DRILL_CLAIM.test(residual), `${k} smuggles a drill claim: "${cell}"`);
-    }
+  const canonical = Object.values(EVIDENCE_STATES);
+  // ★ SIBLING: the first version filtered to five named rows, leaving the secrets/env row
+  // ungoverned — a row excluded from the guard can say anything. EVERY row in the evidence
+  // table is now checked, and the closed set carries a state for each.
+  const rows = Object.entries(ev).filter(([k]) => /^\s*\d+\s*·|^[A-C]\s*·/.test(k));
+  assert.ok(rows.length >= 6, `expected every evidence row, found ${rows.length}: ${Object.keys(ev)}`);
+  for (const [k, cell] of rows) {
+    const bare = cell.replace(/\*+/g, "").trim();
+    assert.ok(canonical.includes(bare), `row "${k}" is not a canonical evidence state: "${bare}"`);
   }
 });
 
@@ -273,4 +265,117 @@ test("every CHECKS entry has a declared evidence level", () => {
     assert.ok(c.leg && c.label && typeof c.run === "function");
     assert.ok(EVIDENCE[c.leg], `check "${c.leg}" would print an undefined evidence claim`);
   }
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ★ Closure of the THREE NEW CRITICALs the grader found by hunting beyond the named
+// ten. All three are one blind-spot genus wearing different costumes — one abstraction
+// level up (F-1), one file/code-path over (F-2), one word choice over (F-3).
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── F-1: the hardcoding moved UP a level; it did not go away ──────────────────
+test("★ F-1: register scripts are GLOBBED — a 7th script is picked up automatically", () => {
+  // The previous fix derived NAMES honestly from a hardcoded array of six PATHS, so a new
+  // register script was invisible and "cannot drift" was false one abstraction up.
+  const fake = { "scripts/rails": ["register-cert-rig-task.ps1", "register-brand-new-task.ps1", "notes.md"],
+                 "scripts/soak": ["register-soak-task.ps1"] };
+  const found = registerScripts("/r", (dir) => fake[Object.keys(fake).find((k) => dir.endsWith(path.normalize(k)))] || [], () => true);
+  assert.equal(found.length, 3, `expected 3 globbed scripts, got ${found}`);
+  assert.ok(found.some((f) => f.includes("register-brand-new-task.ps1")), "a NEW register script was not picked up");
+});
+
+test("★ F-1: a new register script flows through to the expected TASK NAMES", () => {
+  const files = { "scripts/rails": ["register-brand-new-task.ps1"], "scripts/soak": [] };
+  const names = expectedTaskNames(
+    "/r",
+    () => '  [string]$TaskName   = "TF-Brand-New",',
+    () => true,
+    (dir) => files[Object.keys(files).find((k) => dir.endsWith(path.normalize(k)))] || [],
+  );
+  assert.deepEqual(names, ["TF-Brand-New"], "a new script's task name did not reach the expected list");
+});
+
+test("F-1: unreadable register dirs yield [] (caller must treat as UNKNOWN)", () => {
+  assert.deepEqual(registerScripts("/r", () => { throw new Error("EACCES"); }, () => true), []);
+});
+
+// ── F-2: legDb had ZERO coverage and its FAIL branch leaked a live DSN ────────
+const DSN_ERR = () => Object.assign(
+  new Error("connect ECONNREFUSED postgres://tf_user:SUPER_SECRET_PW@db.host:5432/tf"),
+  { code: "ECONNREFUSED" },
+);
+
+test("★ F-2: legDb FAIL emits e.code ONLY — a DSN password must never reach stdout", async () => {
+  // Mutating detail -> e.message passed 34/34 before this existed. emit() prints detail into
+  // task logs and alert relays, so this is a live-secret channel, not a cosmetic one.
+  const prev = process.env.DATABASE_URL;
+  process.env.DATABASE_URL = "postgres://tf_user:SUPER_SECRET_PW@db.host:5432/tf";
+  try {
+    // postgres(url, opts) returns a tagged-template fn that also has .end()
+    const connectFn = () => Object.assign(() => { throw DSN_ERR(); }, { end: async () => {} });
+    const r = await legDb({ connectFn });
+    assert.equal(r.verdict, V.FAIL);
+    assert.equal(r.detail, "ECONNREFUSED", "detail must be the CODE, not the message");
+    const blob = JSON.stringify(r);
+    assert.ok(!blob.includes("SUPER_SECRET_PW"), "the DSN password reached the emitted result");
+    assert.ok(!blob.includes("postgres://"), "a DSN reached the emitted result");
+  } finally {
+    if (prev === undefined) delete process.env.DATABASE_URL; else process.env.DATABASE_URL = prev;
+  }
+});
+
+test("★ F-2: no emitted field may ever carry a message/stack — code-shaped only", async () => {
+  const prev = process.env.DATABASE_URL;
+  process.env.DATABASE_URL = "postgres://u:PW_LEAK@h/d";
+  try {
+    const connectFn = () => Object.assign(() => { throw DSN_ERR(); }, { end: async () => {} });
+    const blob = JSON.stringify(await legDb({ connectFn }));
+    assert.ok(!blob.includes("PW_LEAK"), "a password reached the result");
+    assert.ok(!/connect ECONNREFUSED postgres/.test(blob), "an error MESSAGE reached the result");
+  } finally {
+    if (prev === undefined) delete process.env.DATABASE_URL; else process.env.DATABASE_URL = prev;
+  }
+});
+
+test("F-2: no DATABASE_URL -> UNKNOWN, and the var NAME is fine to emit (it is not a value)", async () => {
+  const prev = process.env.DATABASE_URL;
+  delete process.env.DATABASE_URL;
+  try {
+    const r = await legDb({});
+    assert.equal(r.verdict, V.UNKNOWN);
+    assert.equal(r.detail, "DATABASE_URL");
+  } finally { if (prev !== undefined) process.env.DATABASE_URL = prev; }
+});
+
+// ── F-3: the whitelist inversion — a closed set, not a keyword blacklist ──────
+test("★ F-3: every leg's evidence is EXACTLY one of a closed set of states", () => {
+  // `"designed — not drilled, but VERIFIED live and CONFIRMED working"` passed the old
+  // two-keyword guard. A blacklist of dishonest phrasings is infinite; a whitelist of valid
+  // states is finite. Same closed-enum shape as PASS/FAIL/UNKNOWN.
+  const valid = Object.keys(EVIDENCE_STATES);
+  for (const [leg, key] of Object.entries(EVIDENCE_LEVEL)) {
+    assert.ok(valid.includes(key), `leg "${leg}" has evidence "${key}", not one of ${valid.join("|")}`);
+  }
+  for (const [leg, rendered] of Object.entries(EVIDENCE)) {
+    assert.ok(Object.values(EVIDENCE_STATES).includes(rendered),
+      `leg "${leg}" renders free text: "${rendered}"`);
+  }
+});
+
+test("★ F-3: free text cannot be smuggled into a rendered evidence level", () => {
+  const smuggled = "DESIGNED — NOT DRILLED, but VERIFIED live and CONFIRMED working";
+  assert.ok(!Object.values(EVIDENCE_STATES).includes(smuggled),
+    "the closed set must not contain a hedged/expanded state");
+  // and the rendering is derived, so a hand-edit to one leg cannot introduce it
+  assert.equal(EVIDENCE.services, EVIDENCE_STATES.DESIGNED);
+});
+
+test("★ F-3: only the DB leg may hold the DRILLED state", () => {
+  const drilled = Object.entries(EVIDENCE_LEVEL).filter(([, k]) => k === "DRILLED").map(([l]) => l);
+  assert.deepEqual(drilled, ["db"], `legs claiming DRILLED: ${drilled.join(", ")}`);
+});
+
+test("★ aggregate([]) is not a silent PASS — an empty check set proves nothing", () => {
+  // Lower severity but the same root: absence read as success.
+  assert.notEqual(aggregate([]), PASS, "an empty result set must not report PASS");
 });

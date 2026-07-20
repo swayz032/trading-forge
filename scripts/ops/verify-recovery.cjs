@@ -27,25 +27,60 @@ const { loadEnvFile } = require("../lib/env-resolve.cjs");
 const PASS = 0, UNKNOWN = 2, FAIL = 3;
 const V = { PASS: "PASS", FAIL: "FAIL", UNKNOWN: "UNKNOWN" };
 
-/** Evidence level per leg — an honest map, never a blanket "drilled" (OR-091). */
-const EVIDENCE = {
-  db: "drilled+receipted 2026-07-02",
-  services: "designed — not drilled",
-  tasks: "designed — not drilled",
-  wsl: "designed — not drilled",
-  s3: "built + witnessed live PASS",
+/**
+ * ★ F-3 (grader): evidence levels are a CLOSED SET, not free text.
+ *
+ * The previous guard classified cells by a two-keyword list and called that "meaning-based".
+ * `"designed — not drilled, but VERIFIED live and CONFIRMED working"` sailed straight
+ * through — on the one document an operator reads mid-incident. Chasing synonyms is
+ * whack-a-mole (the leg-5 lesson): a blacklist of dishonest phrasings is INFINITE, a
+ * whitelist of valid states is FINITE. So the level is an enum key, the prose lives in the
+ * table, and anything not exactly one of these is rejected.
+ */
+const EVIDENCE_STATES = Object.freeze({
+  DRILLED: "DRILLED + RECEIPTED 2026-07-02",
+  WITNESSED_LIVE: "BUILT + WITNESSED LIVE PASS",
+  DESIGNED: "DESIGNED — NOT DRILLED",
+  // The secrets/env leg is neither drilled nor merely designed — the resolver is built and
+  // covered, the per-var manifest is not. A closed set must have a state for every row it
+  // governs, or the ungoverned row becomes the hole.
+  PARTIALLY_BUILT: "PARTIALLY BUILT",
+});
+/** Which state each leg is in. Keys only — free text cannot be smuggled in here. */
+const EVIDENCE_LEVEL = {
+  db: "DRILLED",
+  services: "DESIGNED",
+  tasks: "DESIGNED",
+  wsl: "DESIGNED",
+  s3: "WITNESSED_LIVE",
 };
+/** Rendered form, derived from the closed set — never hand-written per leg. */
+const EVIDENCE = Object.fromEntries(
+  Object.entries(EVIDENCE_LEVEL).map(([leg, k]) => [leg, EVIDENCE_STATES[k]]),
+);
 
 const emit = (o) => console.log(JSON.stringify({ check: "cold-recovery", ...o }));
 
-const REGISTER_SCRIPTS = [
-  "scripts/rails/register-cert-rig-task.ps1",
-  "scripts/rails/register-divergence-task.ps1",
-  "scripts/rails/register-full-lane-task.ps1",
-  "scripts/rails/register-runner-task.ps1",
-  "scripts/rails/register-worktree-ttl-task.ps1",
-  "scripts/soak/register-soak-task.ps1",
-];
+/**
+ * ★ F-1 (grader): the previous fix DERIVED task names honestly — from a HARDCODED array of
+ * six file paths. The hardcoding moved up one abstraction level rather than going away, so a
+ * seventh register script would be invisible and the claim "the check cannot drift from the
+ * thing it checks" was false one level up. Enumerate the scripts themselves.
+ */
+const REGISTER_DIRS = ["scripts/rails", "scripts/soak"];
+const REGISTER_RE = /^register-.*-task\.ps1$/;
+
+function registerScripts(root = process.cwd(), readdirFn = fs.readdirSync, existsFn = fs.existsSync) {
+  const out = [];
+  for (const dir of REGISTER_DIRS) {
+    const abs = path.resolve(root, dir);
+    if (!existsFn(abs)) continue;
+    let entries = [];
+    try { entries = readdirFn(abs); } catch { continue; }
+    for (const f of entries) if (REGISTER_RE.test(f)) out.push(path.join(dir, f));
+  }
+  return out.sort();
+}
 
 /**
  * DERIVE the expected task names from the register scripts' own `$TaskName` defaults.
@@ -54,9 +89,9 @@ const REGISTER_SCRIPTS = [
  * and the gap was invisible. Deriving means the check cannot drift from the thing it checks —
  * the same reason the roll-up guard parses `worstOf(...)` instead of naming its sources.
  */
-function expectedTaskNames(root = process.cwd(), readFileFn = fs.readFileSync, existsFn = fs.existsSync) {
+function expectedTaskNames(root = process.cwd(), readFileFn = fs.readFileSync, existsFn = fs.existsSync, readdirFn = fs.readdirSync) {
   const names = [];
-  for (const rel of REGISTER_SCRIPTS) {
+  for (const rel of registerScripts(root, readdirFn, existsFn)) {
     const p = path.resolve(root, rel);
     if (!existsFn(p)) continue;
     const m = String(readFileFn(p, "utf-8")).match(/\$TaskName\s*=\s*"([^"]+)"/);
@@ -160,7 +195,12 @@ async function legDb({ connectFn } = {}) {
     await sql`SELECT 1`;
     return { verdict: V.PASS, reason: "reachable", detail: "SELECT 1 succeeded" };
   } catch (e) {
-    // Scrub: a connection error can echo the full DSN, credentials included. Code only.
+    // ★ F-2 (grader): CODE ONLY, never message. A postgres connection error's `.message`
+    // carries the full DSN — `postgres://user:PASSWORD@host/db` — and `emit()` prints
+    // `detail` to stdout, i.e. into any task log, monitoring pipe or alert relay. This
+    // branch had a scrub COMMENT and zero tests: mutating `e.code`->`e.message` passed
+    // 34/34. Identical class to leg-5's driver echoing a presigned URL — the leak class
+    // RECURRED in the one leg the earlier fix left untouched, so it is now covered.
     return { verdict: V.FAIL, reason: "unreachable", detail: (e && e.code) || "query_failed" };
   } finally {
     try { await sql.end({ timeout: 5 }); } catch { /* closing must not change the verdict */ }
@@ -177,6 +217,10 @@ const CHECKS = [
 
 /** Pure aggregation: FAIL dominates UNKNOWN dominates PASS. Exported so it is testable. */
 function aggregate(results) {
+  // ★ An EMPTY set is not a pass. `[].some(...)` is false twice, so the old code fell
+  // through to PASS and reported "everything is fine" having checked nothing — absence read
+  // as success, which is this campaign's whole subject. Checking nothing is UNKNOWN.
+  if (!Array.isArray(results) || results.length === 0) return UNKNOWN;
   if (results.some((r) => r.verdict === V.FAIL)) return FAIL;
   if (results.some((r) => r.verdict === V.UNKNOWN)) return UNKNOWN;
   return PASS;
@@ -216,6 +260,6 @@ async function main() {
 
 if (require.main === module) main().then((c) => { process.exitCode = c; });
 module.exports = {
-  PASS, UNKNOWN, FAIL, V, EVIDENCE, CHECKS, REGISTER_SCRIPTS,
-  expectedTaskNames, tierServices, tierTasks, tierWsl, legS3, legDb, aggregate, runChecks,
+  PASS, UNKNOWN, FAIL, V, EVIDENCE, EVIDENCE_STATES, EVIDENCE_LEVEL, CHECKS,
+  REGISTER_DIRS, registerScripts, expectedTaskNames, tierServices, tierTasks, tierWsl, legS3, legDb, aggregate, runChecks,
 };
