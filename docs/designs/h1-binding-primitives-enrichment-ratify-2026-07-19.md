@@ -29,6 +29,37 @@ Measured consequence: 16/16 compilable specs at ~0.99 binding-approximation (`pa
 - **DEFERRED with named-owner carry + trigger** (R-042 pin 4a): WAIT_RETEST (rejection-of-a-real-level BUILD) + full WAIT_CONFIRMATION (per-object pattern BUILD) + FILTER's heavier feature-column enrichment — all trigger POST-packet once the wiring pattern is proven. Owner: this working agent.
 - **OUT OF SCOPE:** the evaluators' internals; the extractor/reader; the classifier (heuristic stays, R-041); `FAMILY_META` for the deferred families.
 
+## 4b. ★ CAUSALITY LAW FOR MATERIALIZED COLUMNS (R-066 §2 — mandatory, ratified)
+
+Materialized columns are the classic silent LOOK-AHEAD vector: a bar-`t` column
+computed using information from bars `> t` (e.g. stamping a SAME-day daily context
+onto that day's intraday bars) fake-improves every backtest, and **the error
+direction is OPTIMISTIC** — it would make the 0.99's fall look like recovered edge
+when it is time-travel. Non-negotiable requirements:
+
+- **DAY-KEY DISCIPLINE (the law the columns ride):** the HTF/daily context visible
+  to bar `t` is the **PRIOR COMPLETED period** — never the in-progress one. This is
+  the existing mtf_join no-look-ahead law, already implemented in the gate's cache
+  build (`backtester.py:4391-4401`): `htf_cache[day_key]` for day `D` is computed
+  from `daily_df.slice(0, _day_idx)` (STRICTLY the days before `D`) with
+  `current_price = close[_day_idx - 1]` (the prior day's close), and
+  `compute_htf_context`'s own contract is "COMPLETED bars only (shift-1 safe)"
+  (`htf_context.py:66`). The materialized columns REUSE this exact cache and law —
+  they never re-derive a looser one.
+- **TRUNCATED-REPLAY CAUSALITY CHECK (required in the spike AND in WIRE-1's grade):**
+  for a sample of bars, recompute each column value from data `≤ t` ONLY and
+  **BYTE-MATCH** it against the materialized value (the pattern that validated
+  breaker/unicorn). A column value must be a provable function of the past. Any
+  mismatch is a look-ahead defect, not a tolerance.
+
+## 4c. ★ EQUIVALENCE TWO-PATH (R-066 §3 — free and decisive)
+
+The same evaluator functions now run at TWO call sites: the new upstream column
+materialization and the existing downstream eligibility gate. For overlapping
+sample windows, the upstream column value and the gate-phase value must **AGREE
+BYTE-FOR-BYTE** — that is the proof the reuse is real and un-drifted (no second
+implementation crept in). **A disagreement is an ALARM, not a tolerance.**
+
 ## 5. VERIFICATION (R-042 pin 4c + 4d)
 - **Both-polarity engagement proof PER WIRED FAMILY (pin 4c):** each wired binding SEEN failing a wrong condition AND passing a right one on real multi-TF data — a binding that cannot fail is the vacuous class (we do not ship it twice in one week). Not a code-path-exists check: a fixture where the real bias is bullish must PASS a "with-trend long" condition and FAIL a "counter-trend" one, distinct from what the EMA proxy would have done (ablation: proxy vs wired differ on the same bars).
 - **DoD (pin 4d) — THE SUCCESS METRIC:** re-measure the binding-approximation distribution over the 16 compilable specs, per-family before/after. **The 0.99 MUST MOVE, measurably** — the movement IS the packet's success. Report the per-family before/after `approximation=False` counts + the new corpus distribution.
