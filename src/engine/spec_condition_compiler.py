@@ -45,14 +45,17 @@ from src.engine.indicators.bias_native import compute_bias_signal
 from src.engine.indicators.confirmation_native import compute_confirmation_signal
 from src.engine.indicators.core import compute_atr, compute_ema
 from src.engine.indicators.fvg_native import compute_fvg_signal
+from src.engine.indicators.liquidity import detect_buyside_liquidity, detect_sellside_liquidity
 from src.engine.indicators.market_structure import detect_swings
 from src.engine.indicators.mss_native import compute_mss_signal
+from src.engine.indicators.order_flow import detect_bearish_ob, detect_bullish_ob
 from src.engine.indicators.sweep_native import compute_sweep_signal
 from src.engine.role_demotion_audit import get_classifications_for_video
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_family_bindings import (
     BindingPlan,
     ConditionBinding,
+    classify_population_a_kind,
     compile_binding_plan,
     or_branches_enabled,
     role_demotion_mode,
@@ -70,6 +73,13 @@ LEVELZONE_PRIMITIVE_NAME: str = "levelzone_routing.retest_touch_check"
 # string here would make the `elif b.primitive == ...` check below collide with every genuine
 # WAIT_RETEST condition's binding, unconditionally (see spec_family_bindings.py's comment on this
 # constant for how that collision was caught).
+LEVELZONE_RESOLVER_PRIMITIVE_NAME: str = "levelzone_routing.population_a_resolver"
+# Population-A Level Resolver (docs/designs/packet-levelzone-population-a-resolver-
+# 2026-07-20.md) — MUST match the literal string spec_family_bindings.
+# LEVELZONE_RESOLVER_PRIMITIVE returns. Duplicated as a literal for the same collision-
+# safety reason LEVELZONE_PRIMITIVE_NAME is duplicated above (that module's zero-import-
+# surface purity contract + the real WAIT_RETEST collision this file's comment on
+# LEVELZONE_PRIMITIVE_NAME documents catching).
 # Composition Fidelity Experiment (docs/designs/composition-fidelity-experiment-2026-07-05.md)
 # bundle primitive names — MUST match the literal strings spec_family_bindings.resolve_bundle_
 # primitive() returns (that module has zero import surface by design, so these are independently
@@ -101,6 +111,25 @@ CANDLE_WICK_RATIO_THRESHOLD: float = 0.4
 MIN_BARS_REQUIRED: int = 30
 ATR_PERIOD: int = 14
 TICK_SIZE_BY_SYMBOL: dict[str, float] = {"MES": 0.25, "MNQ": 0.25, "MCL": 0.01}
+POPULATION_A_SWING_LOOKBACK: int = 5
+"""Population-A Level Resolver: swing-detection lookback fed to market_structure.
+detect_swings, matching the confirmation-delay convention every production ICT strategy
+that consumes swings uses (breaker.py / mitigation.py / unicorn.py / ict_swing.py all
+default swing_lookback=5 — see market_structure.SWING_LOOKBACK_DEFAULT)."""
+POPULATION_A_OB_VISIBILITY_MARGIN_BARS: int = 10
+"""Population-A Level Resolver, order_block_edge kind — no-lookahead safety margin.
+order_flow.py's `_find_bullish_obs`/`_find_bearish_obs` scan up to 10 bars BACKWARD from
+a confirmed swing bar (`start = max(sl - 10, 0)`) to find the OB candle; the OB is not
+actually knowable until that confirming swing bar resolves, and the SPECIFIC confirming
+swing index isn't recoverable from the returned OB row (the numba kernel doesn't echo it
+back per-row). The returned `index` is the OB CANDLE's own bar — using it directly as
+"visible from" would look ahead by up to this many bars. Shifting visibility forward by
+the FULL scan window is the conservative (never-lookahead) bound: the true confirming
+swing bar is provably <= ob_index + 10 (it anchors the backward scan that found ob_index
+in the first place), so ob_index + 10 is always >= the true knowable-at bar. MUST be kept
+equal to order_flow.py's hardcoded scan-window constant (currently inlined as a literal
+`10` there, not itself a named constant) — a mismatch here would silently reopen a
+lookahead gap or over-tighten visibility."""
 _DEMOTION_GROUP_OFFSET: int = 1_000_000
 """Hard-Constraint Demotion Experiment: offset added to struct_alt/struct_all's synthetic
 per-strategy ALTERNATIVE OR-group index so it can never collide with the spec's own 0-based
@@ -133,6 +162,66 @@ def retest_touch_check(
         touched = (low[i] <= lvl + prox) and (high[i] >= lvl - prox)
         out[i] = bool(touched)
     return out
+
+
+def _ffill_level_series(indices: list[int], prices: list[float], n: int) -> np.ndarray:
+    """Population-A Level Resolver helper: forward-fill a sparse set of (bar_index, price)
+    detector points into a dense per-bar level array of length n. Bars before the first
+    known point are NaN — same "no signal yet" convention retest_touch_check already
+    honors for the EMA(20) proxy's own warm-up window (`np.isnan(lvl): continue`), so no
+    new NaN-handling contract is introduced downstream. Pure, deterministic, no I/O."""
+    out = np.full(n, np.nan, dtype=np.float64)
+    if not indices:
+        return out
+    pairs = sorted(zip(indices, prices, strict=True), key=lambda p: p[0])
+    last = np.nan
+    pi = 0
+    for i in range(n):
+        while pi < len(pairs) and pairs[pi][0] <= i:
+            last = pairs[pi][1]
+            pi += 1
+        out[i] = last
+    return out
+
+
+def population_a_bullish_leaning(kind: str, object_text: str) -> bool:
+    """Population-A Level Resolver polarity selection: which side of the detector's output
+    (support/demand/swing-low vs resistance/supply/swing-high) THIS condition's own object
+    text names — same object-text-keyword-first convention as _select_directional /
+    _resolve_wait_bias_bearish elsewhere in this file, applied to the Population-A kinds'
+    own literal vocabulary (support/resistance, demand/supply, high/low) rather than the
+    generic BUNDLE_BEARISH/BULLISH_KEYWORDS list (those don't appear in any of the 7
+    corpus rows' object text). When a text names BOTH sides (e.g. row #0's "we want to
+    take our support and resistance line..."), support/demand/low wins the tie —
+    deterministic, documented, not accidental. When NEITHER side is literally named (should
+    not happen for a condition that already matched a Population-A kind regex, since every
+    kind's regex requires one of these words, but kept as an explicit documented default
+    rather than an unreachable-assumed branch), the bullish/support-leaning side is used,
+    matching _resolve_wait_bias_bearish's own long/both-default convention."""
+    norm = f" {(object_text or '').strip().lower()} "
+    if kind == "named_sr_level":
+        if "support" in norm:
+            return True
+        if "resistance" in norm:
+            return False
+        return True
+    if kind == "order_block_edge":
+        if "demand" in norm:
+            return True
+        if "supply" in norm:
+            return False
+        if any(kw in norm for kw in BUNDLE_BEARISH_KEYWORDS):
+            return False
+        if any(kw in norm for kw in BUNDLE_BULLISH_KEYWORDS):
+            return True
+        return True
+    if kind == "swing":
+        if "low" in norm:
+            return True
+        if "high" in norm:
+            return False
+        return False
+    return True
 
 
 def candle_confirmation_check(
@@ -304,6 +393,10 @@ class SpecConditionStrategy(BaseStrategy):
         # strategy MUST carry approximation=True through to governance_labels
         # so downstream verdicts stay honest.
         self.approximation: bool = self.binding_plan.approximation_used
+        # Population-A Level Resolver introspection surface (populated per-compute() call;
+        # empty until compute() runs, and reset every call — never carries stale state
+        # across instances/calls, same discipline as last_per_condition_bool/last_trace).
+        self.last_population_a_level: dict[str, np.ndarray] = {}
         # ── WIRE-1 DEAD-LOAD ACTIVATION (R-069 §3, flag-gated) ───────────────
         # backtester's W25.4 block only loads 4h/1h when the strategy DECLARES
         # htf_tf/itf_tf. No strategy repo-wide declares them, so that path is DEAD
@@ -660,6 +753,82 @@ class SpecConditionStrategy(BaseStrategy):
         WAIT_RETEST's own behavior."""
         return self._eval_wait_retest(close, high, low, n)
 
+    def _eval_population_a_level(
+        self,
+        kind: str,
+        object_text: str,
+        df: pl.DataFrame,
+        n: int,
+        swings_cache: dict[str, pl.DataFrame],
+    ) -> np.ndarray:
+        """Population-A Level Resolver (docs/designs/packet-levelzone-population-a-resolver-
+        2026-07-20.md) — resolves `kind` (spec_family_bindings.classify_population_a_kind's
+        output for this condition's OWN object text) to a per-bar level series built from a
+        detector the repo already owns, instead of the shared EMA(20) proxy every other
+        level/zone condition still uses. This is what makes two Population-A conditions
+        naming DIFFERENT levels produce DIFFERENT series (packet R2) — the exact property
+        the prior sub-wire lacked.
+
+        Cadence: every-bar, identical to _eval_wait_retest / _eval_wait_structure_levelzone
+        — this resolver changes ONLY the `level` argument fed to retest_touch_check, never
+        its evaluation cadence, so it introduces no new cadence axis to confound with the
+        signal-source axis (cadence_isolation_harness.py's discipline: the two axes are
+        never combined here because only one of them ever varies in this delivery).
+
+        APPROXIMATION: the caller (spec_family_bindings.bind_condition) leaves
+        `approximation` at meta.base_approximation (True) for EVERY Population-A binding
+        this method serves, including named_sr_level/order_block_edge — packet hard
+        constraint: this delivery lands routing, never the fidelity claim.
+        """
+        if "swings" not in swings_cache:
+            swings_cache["swings"] = detect_swings(df, POPULATION_A_SWING_LOOKBACK)
+        swings = swings_cache["swings"]
+        bullish = population_a_bullish_leaning(kind, object_text)
+
+        if kind == "swing":
+            stype = "low" if bullish else "high"
+            sub = swings.filter(pl.col("type") == stype).sort("index")
+            return _ffill_level_series(sub["index"].to_list(), sub["price"].to_list(), n)
+
+        if kind == "named_sr_level":
+            # support (bullish) -> sell-side liquidity: clusters of swing LOWS, i.e. the
+            # level price is expected to find support AT. resistance (bearish) -> buy-side
+            # liquidity: clusters of swing HIGHS, i.e. the level price is expected to meet
+            # resistance AT. See indicators/liquidity.py module docstring for the BSL/SSL
+            # convention this reuses unmodified.
+            levels = detect_sellside_liquidity(df, swings) if bullish else detect_buyside_liquidity(df, swings)
+            idxs = levels["index"].to_list() if len(levels) > 0 else []
+            prices = levels["price"].to_list() if len(levels) > 0 else []
+            return _ffill_level_series(idxs, prices, n)
+
+        if kind == "order_block_edge":
+            # demand (bullish) -> bullish OB (order_flow.detect_bullish_ob): price is
+            # expected to retrace DOWN into the zone and find demand, so the first-contact
+            # edge on the way down is the zone's TOP. supply (bearish) -> bearish OB
+            # (detect_bearish_ob): price retraces UP into the zone, first-contact edge is
+            # the zone's BOTTOM. lookback=0: swings passed in are ALREADY the confirmed
+            # (causally-safe, half-window-offset) indices detect_swings returns, so the
+            # kernel's backward scan is anchored at a real, already-knowable bar — see
+            # POPULATION_A_OB_VISIBILITY_MARGIN_BARS docstring for why the returned OB
+            # candle index still needs a visibility margin on top of that.
+            if bullish:
+                obs = detect_bullish_ob(df, swings, lookback=0)
+                edge_col = "top"
+            else:
+                obs = detect_bearish_ob(df, swings, lookback=0)
+                edge_col = "bottom"
+            if len(obs) == 0:
+                return np.full(n, np.nan, dtype=np.float64)
+            visible_idx = [int(i) + POPULATION_A_OB_VISIBILITY_MARGIN_BARS for i in obs["index"].to_list()]
+            prices = obs[edge_col].to_list()
+            return _ffill_level_series(visible_idx, prices, n)
+
+        # Unreachable given the dispatch loop only calls this for a kind
+        # classify_population_a_kind actually returned — kept as an honest fallback
+        # rather than a silent guess if a future kind is added to the classifier without
+        # a matching branch here.
+        return np.full(n, np.nan, dtype=np.float64)
+
     # ─── Core compute ───────────────────────────────────────────────────────
     def compute(self, df: pl.DataFrame) -> pl.DataFrame:
         n = len(df)
@@ -667,6 +836,7 @@ class SpecConditionStrategy(BaseStrategy):
         if n < MIN_BARS_REQUIRED:
             self.last_trace = []
             self.last_per_condition_bool = {}
+            self.last_population_a_level = {}
             return df.with_columns(
                 [
                     false_col.alias("entry_long"),
@@ -701,6 +871,21 @@ class SpecConditionStrategy(BaseStrategy):
         wait_structure_levelzone = None
         wait_retest = None
         fvg_signal = None
+        # Population-A Level Resolver caches — level_cache keyed by (kind, bullish) so
+        # conditions that resolve to the SAME kind+polarity share one computed series
+        # (mirrors wait_structure_levelzone's single-shared-array caching), while
+        # different (kind, bullish) pairs — and therefore different Population-A
+        # conditions naming different levels — get DISTINCT arrays (packet R2).
+        # swings_cache and atr are computed at most once per compute() call regardless
+        # of how many Population-A conditions this spec has.
+        population_a_level_cache: dict[tuple[str, bool], np.ndarray] = {}
+        population_a_swings_cache: dict[str, pl.DataFrame] = {}
+        population_a_atr: np.ndarray | None = None
+        # Per-condition-id level series, exposed for introspection (proves R1/R2: the
+        # production path's own object text drives a DIFFERENT array per condition_id,
+        # not just a shared per-kind array). Reset every compute() call — replay-
+        # deterministic, never carries state across instances or calls.
+        self.last_population_a_level: dict[str, np.ndarray] = {}
         # Composition Fidelity Experiment bundle caches (each computed at most once per compute()
         # call, mirroring fvg_signal's caching above) — separate cache per family so a spec with
         # e.g. both a restored WAIT_BIAS and a restored WAIT_CONFIRMATION condition evaluates each
@@ -745,6 +930,27 @@ class SpecConditionStrategy(BaseStrategy):
                 if wait_structure_levelzone is None:
                     wait_structure_levelzone = self._eval_wait_structure_levelzone(close, high, low, n)
                 per_condition_bool[b.condition_id] = wait_structure_levelzone
+            elif b.primitive == LEVELZONE_RESOLVER_PRIMITIVE_NAME:
+                # Population-A Level Resolver — checked alongside the sub-wire's own
+                # LEVELZONE_PRIMITIVE_NAME branch above (a condition binds to exactly ONE
+                # of the two, decided in spec_family_bindings.py; never both). Resolves
+                # THIS condition's own object text to a kind, computes (or reuses a
+                # cached) per-(kind, polarity) level series, and evaluates the SAME
+                # retest_touch_check primitive the EMA-proxy path uses — only the `level`
+                # argument differs, so cadence is unchanged (R4: no combined axis).
+                kind = classify_population_a_kind(b.object)
+                bullish = population_a_bullish_leaning(kind, b.object) if kind else True
+                cache_key = (kind, bullish)
+                if cache_key not in population_a_level_cache:
+                    population_a_level_cache[cache_key] = self._eval_population_a_level(
+                        kind, b.object, df, n, population_a_swings_cache
+                    )
+                level = population_a_level_cache[cache_key]
+                self.last_population_a_level[b.condition_id] = level
+                if population_a_atr is None:
+                    df_atr = pl.DataFrame({"high": high, "low": low, "close": close})
+                    population_a_atr = compute_atr(df_atr, ATR_PERIOD).to_numpy()
+                per_condition_bool[b.condition_id] = retest_touch_check(close, high, low, level, population_a_atr)
             elif b.primitive == BIAS_PRIMITIVE_NAME:
                 # Composition-bundle restoration (experiment) — checked BEFORE the generic
                 # WAIT_BIAS/CONFIRM_DIRECTION type dispatch below, same placement discipline as

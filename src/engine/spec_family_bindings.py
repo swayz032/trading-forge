@@ -148,6 +148,96 @@ def resolve_levelzone_object(object_text: str) -> bool:
     return bool(LEVEL_ZONE_RE.search(object_text))
 
 
+# ─── Population-A Level Resolver (docs/designs/packet-levelzone-population-a-
+# resolver-2026-07-20.md) ───────────────────────────────────────────────────
+# The sub-wire above fixed WHICH primitive a level/zone condition binds to
+# (retest_touch_check instead of the level-blind structure signal) but NOT
+# what `level` that primitive is fed — production still feeds it a bars-only
+# EMA(20) proxy (spec_condition_compiler.py's _eval_wait_retest), so every
+# level/zone condition still receives an IDENTICAL level series regardless of
+# what the trader named ("support at 100" and "resistance at 140" bind
+# identically). This layer classifies a condition's OBJECT TEXT into one of
+# the object-reference-census's reference kinds — Population-A only (the 7
+# rows whose referent is named IN-SPAN, `bare_anaphora=false`) — so
+# spec_condition_compiler.py can route each Population-A kind to a detector
+# the repo already owns (market_structure.detect_swings /
+# indicators.liquidity.detect_{buyside,sellside}_liquidity /
+# indicators.order_flow.detect_{bullish,bearish}_ob) instead of the shared
+# EMA proxy. Population B (bare anaphora — "the level", "that zone") is
+# PROHIBITED from this classifier by construction: ANAPHORA_RE is checked
+# FIRST and short-circuits to None before any kind regex runs, mirroring the
+# census generator's own `anaphora_ambiguous = anaph and not kinds` bucketing
+# discipline — this delivery must never manufacture a confident-but-hollow
+# binding for a row that points at a level without naming one.
+#
+# Vocabulary REUSED VERBATIM (packet §3: "reuse the census's own vocabulary —
+# do NOT author a third divergent classifier") from docs/replay-results/
+# h1-battery/levelzone_object_reference_census.py's KIND_RES / ANAPHORA_RE
+# (lines 35-55 as of this delivery). Any edit to that generator's regexes
+# MUST be mirrored here in the same commit — same duplication convention as
+# LEVEL_ZONE_RE above (that module has zero import surface by design).
+# Population-A-eligible subset ONLY: fvg_edge / session_range / prior_day /
+# absolute_price are real census kinds but OUT of this delivery's scope
+# (packet names exactly 3: named_sr_level, order_block_edge, swing).
+POPULATION_A_SWING_RE = re.compile(
+    r"\b(swing\s+(high|low)|higher\s+high|lower\s+low|lower\s+high|"
+    r"higher\s+low|previous\s+(high|low)|prior\s+(high|low)|"
+    r"recent\s+(high|low)|peak|trough)\b", re.I)
+POPULATION_A_ORDER_BLOCK_EDGE_RE = re.compile(
+    r"\b(order\s+block|breaker|mitigation\s+block|demand|supply)\b", re.I)
+POPULATION_A_NAMED_SR_LEVEL_RE = re.compile(r"\b(support|resistance)\b", re.I)
+POPULATION_A_ANAPHORA_RE = re.compile(
+    r"\b(the|this|that|these|those|it|there)\s+"
+    r"(level|zone|area|line|point|price)\b", re.I)
+
+# Priority order when an object text matches more than one Population-A kind
+# (none of the 7 real corpus rows are multi-label as of this delivery, but the
+# classifier must still be deterministic for any future/synthetic text) —
+# mirrors the census generator's own KIND_RES list order for the subset of
+# kinds this delivery is scoped to.
+POPULATION_A_KIND_ORDER: tuple[tuple[str, re.Pattern], ...] = (
+    ("swing", POPULATION_A_SWING_RE),
+    ("order_block_edge", POPULATION_A_ORDER_BLOCK_EDGE_RE),
+    ("named_sr_level", POPULATION_A_NAMED_SR_LEVEL_RE),
+)
+
+LEVELZONE_RESOLVER_PRIMITIVE: str = "levelzone_routing.population_a_resolver"
+"""Distinct from LEVELZONE_NATIVE_PRIMITIVE (EMA-proxy path) for the same collision-safety
+reason documented on LEVELZONE_NATIVE_PRIMITIVE above — spec_condition_compiler.py's
+`elif b.primitive == ...` dispatch must be able to tell "resolved per-condition level" apart
+from "shared EMA(20) proxy" even though a reader might expect them to share a marker."""
+
+
+def classify_population_a_kind(object_text: str) -> str | None:
+    """Returns the Population-A reference kind ("swing" | "order_block_edge" |
+    "named_sr_level") this object text names IN-SPAN, or None when the text is bare
+    anaphora (Population B — PROHIBITED, packet §3) or names no Population-A kind at all
+    (still Population B/no-kind-matched rows, or a non-Population-A kind like fvg_edge —
+    out of scope here). Pure string/regex logic, same contract as resolve_levelzone_object
+    above — no I/O, no DataFrame access, callable from both the binding-plan layer (to pick
+    a primitive) and the executable layer (to pick a detector) without a second, drifted
+    copy of the classification rule."""
+    if not object_text:
+        return None
+    if POPULATION_A_ANAPHORA_RE.search(object_text):
+        return None
+    for kind, rx in POPULATION_A_KIND_ORDER:
+        if rx.search(object_text):
+            return kind
+    return None
+
+
+def levelzone_resolver_enabled() -> bool:
+    """Read at call time (not cached), same live-read contract as
+    levelzone_routing_enabled() above. Independent flag — separate from
+    TF_LEVELZONE_ROUTING_ENABLED per packet §3 ('a new env flag, default OFF'). Gated
+    STRICTLY behind levelzone_routing_enabled() also being True in the dispatch call site
+    below (the resolver only ever replaces the EMA proxy for a condition that would
+    otherwise already be routed to the level-aware primitive) — this function itself does
+    not enforce that ordering, the caller does."""
+    return os.environ.get("TF_LEVELZONE_RESOLVER_ENABLED", "false").strip().lower() == "true"
+
+
 # ─── Composition Fidelity Experiment — Phase 3 Increment 2 (docs/designs/
 # composition-fidelity-experiment-2026-07-05.md) ────────────────────────────
 # The FVG null (increment 1) proved single-object identity restoration is real but
@@ -567,6 +657,28 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         and levelzone_routing_enabled()
         and resolve_levelzone_object(obj)
     ):
+        # Population-A Level Resolver (docs/designs/packet-levelzone-population-a-
+        # resolver-2026-07-20.md) — checked BEFORE falling back to the EMA-proxy sub-wire
+        # primitive, so a Population-A-classified condition gets the per-condition resolved
+        # level instead of the shared proxy. Requires BOTH flags: the pre-existing routing
+        # flag (this condition would otherwise get retest_touch_check at all) AND the new,
+        # independent resolver flag. approximation is DELIBERATELY still meta.base_
+        # approximation (True) — packet hard constraint: this delivery lands the routing,
+        # never the fidelity claim (approximation=False is a separate, later,
+        # independently-graded step, for every kind including named_sr_level/
+        # order_block_edge that would otherwise qualify).
+        if levelzone_resolver_enabled() and classify_population_a_kind(obj) is not None:
+            return ConditionBinding(
+                condition_id=cond_id,
+                type=cond_type,
+                role=role,
+                object=obj,
+                bindable=True,
+                primitive=LEVELZONE_RESOLVER_PRIMITIVE,
+                approximation=meta.base_approximation,
+                executed=meta.executed,
+                reason=None,
+            )
         return ConditionBinding(
             condition_id=cond_id,
             type=cond_type,
