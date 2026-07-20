@@ -1023,7 +1023,7 @@
         entryQuality: 0.82, model: 'GPT-5.4', critiquedAt: '3:04 AM'
       };
       function rrGradeClass(g) { var c = String(g || '').charAt(0).toUpperCase(); return c === 'A' ? 'g-a' : c === 'B' ? 'g-b' : c === 'C' ? 'g-c' : 'g-d'; }
-      var RR_STATE = { idx: 0, n: 0, timer: null, reports: [], accounts: [], account: 'all', reportIdx: 0, stats: null };
+      var RR_STATE = { idx: 0, n: 0, timer: null, reports: [], accounts: [], account: 'all', reportIdx: 0, stats: null, degraded: false, unreachable: false };
       var RR_PREMIUM = [[/silver\s*bullet/i,'Silver Bullet'],[/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i,'Opening Heist'],[/mean\s*revers|rubber|revert/i,'The Rubber Band'],[/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i,'The Bounce'],[/resist|supply\s*zone|rejection|reject/i,'The Rejection'],[/break\s*out|breakout|range\s*break/i,'The Breakout'],[/squeeze|bollinger|keltner|coil|nr7/i,'Squeeze Play'],[/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i,'The Trap'],[/reversal|reverse|\bflip\b/i,'The Flip'],[/vwap|\bfade\b/i,'The Fade'],[/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i,'Gap & Go'],[/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i,'The Sweep'],[/trend|continuation|momentum|pullback|rider/i,'Trend Rider'],[/scalp/i,'Quick Bite'],[/\brsi\b|oversold|overbought|connors/i,'The Dip Snatch'],[/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i,'The Crossover']];
       var RR_FILLER = {i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1};
       function rrCleanName(name){var n=String(name||'').replace(/_/g,' ').replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi,'').replace(/\s+\d+\s*m(in)?\b/gi,'').replace(/\s+\d+\s*h\b/gi,'').replace(/\s+/g,' ').trim();var w=n.split(' ').filter(Boolean);var k=w.filter(function(x){return !RR_FILLER[x.toLowerCase()];});return ((k.length?k:w).slice(0,3).join(' ').trim())||'House Special';}
@@ -1064,13 +1064,40 @@
       }
       function rrAutoPlay() { if (RR_STATE.timer) clearInterval(RR_STATE.timer); RR_STATE.timer = setInterval(function () { rrGo(RR_STATE.idx + 1); }, 5200); }
       function rrStopPlay() { if (RR_STATE.timer) { clearInterval(RR_STATE.timer); RR_STATE.timer = null; } }
-      function rrIdleHTML() {
+      // ops-experience 2026-07-20 — THREE different states used to render as this one
+      // "quiet night" screen: (a) genuinely no trades, (b) the server answered 200 with
+      // `degraded:true` because the reports query FAILED, (c) the request never landed.
+      //
+      // The old copy did not merely lose that distinction — it asserted a CAUSE:
+      // "No trades yet, so there's nothing to read." On a failed query that sentence is
+      // false, and it is the most reassuring possible false sentence: the operator is
+      // told the machine is fine and idle when the reporting path is broken. The server
+      // now sends `degraded` precisely so this screen can tell the difference; a payload
+      // field nothing renders is not a fix, it is a fix that stopped one layer short.
+      //
+      // Quiet is only good news when we know it is quiet.
+      function rrIdleHTML(state) {
+        var s = state || {};
+        var title, sub, dot;
+        if (s.unreachable) {
+          title = 'Can\'t reach the report desk';
+          sub = 'The Office could not load your reports just now. This is a connection problem on our side — it does NOT mean the bot was idle, and it does not mean anything is wrong with your account. Reports are safe; they will appear once the connection is back.';
+          dot = 'Retrying';
+        } else if (s.degraded) {
+          title = 'Reports are not readable right now';
+          sub = 'The report desk answered, but it could not read your reports back. We are deliberately NOT showing "no trades" here, because we genuinely do not know whether the bot traded last night. Nothing has been lost — this is a read problem, not a trading problem.';
+          dot = 'The desk is looking into it';
+        } else {
+          title = 'The ball is quiet';
+          sub = 'GPT-5 reads every trade your bot takes and tells the story here — the grade, what worked, the fix, and why it happened. No trades yet, so there\'s nothing to read. Your first report appears the morning after the bot trades.';
+          dot = 'Listening for the first trade';
+        }
         return '<div class="rr-stage"><div class="rr-mist"></div><div class="rr-mist b"></div><div class="rr-mist c"></div><div class="rr-glass"></div>' +
           '<div class="rr-idle">' +
             '<div class="rr-idle-mark">GPT-5 Analyst</div>' +
-            '<div class="rr-idle-title">The ball is quiet</div>' +
-            '<div class="rr-idle-sub">GPT-5 reads every trade your bot takes and tells the story here — the grade, what worked, the fix, and why it happened. No trades yet, so there\'s nothing to read. Your first report appears the morning after the bot trades.</div>' +
-            '<div class="rr-idle-dot"><i></i> Listening for the first trade</div>' +
+            '<div class="rr-idle-title">' + rrEsc(title) + '</div>' +
+            '<div class="rr-idle-sub">' + rrEsc(sub) + '</div>' +
+            '<div class="rr-idle-dot"><i></i> ' + rrEsc(dot) + '</div>' +
           '</div>' +
         '</div>';
       }
@@ -1079,7 +1106,7 @@
         if (!body) return;
         rrStopPlay();
         var isEx = RR_STATE.reports.length === 0;
-        if (isEx) { body.innerHTML = rrIdleHTML(); return; }
+        if (isEx) { body.innerHTML = rrIdleHTML(RR_STATE); return; }
         var filtered = rrFiltered();
         if (RR_STATE.reportIdx >= filtered.length) RR_STATE.reportIdx = 0;
         var cur = isEx ? RR_EXAMPLE : (filtered[RR_STATE.reportIdx] || RR_EXAMPLE);
@@ -1120,10 +1147,19 @@
             RR_STATE.reports = (data && Array.isArray(data.reports)) ? data.reports : [];
             RR_STATE.accounts = (data && Array.isArray(data.accounts)) ? data.accounts : [];
             RR_STATE.stats = (data && data.stats) || null;
+            // `data === null` means a non-2xx response — the request landed but the desk
+            // refused it. That is NOT a quiet night either, so it is carried as its own
+            // state rather than collapsing into the empty case.
+            RR_STATE.unreachable = !data;
+            RR_STATE.degraded = !!(data && data.degraded);
             RR_STATE.account = 'all'; RR_STATE.reportIdx = 0;
             paintRoom();
           })
-          .catch(function () { RR_STATE.reports = []; RR_STATE.accounts = []; RR_STATE.stats = null; paintRoom(); });
+          .catch(function () {
+            RR_STATE.reports = []; RR_STATE.accounts = []; RR_STATE.stats = null;
+            RR_STATE.unreachable = true; RR_STATE.degraded = false;
+            paintRoom();
+          });
       }
       function exitReportingRoom() {
         var room = document.getElementById('reporting-room');

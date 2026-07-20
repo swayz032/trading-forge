@@ -20,7 +20,6 @@ import { dailyReconciliation, paperSessions, weeklyDriftReports } from "../db/sc
 import { and, desc, eq, gte, isNull, or, sql } from "drizzle-orm";
 import { logger } from "../lib/logger.js";
 import { killSwitch } from "../production/kill-switch.js";
-import { getDailyReconciliationStatus } from "../production/reconciliation-service.js";
 import type { KillSwitchStatusReport } from "../production/kill-switch.js";
 import { operatorAbsentModeActive } from "../services/operator-absent-mode-service.js";
 import { getLastHeartbeatAt } from "../services/dead-mans-heartbeat-service.js";

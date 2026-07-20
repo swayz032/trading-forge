@@ -174,7 +174,58 @@
         'No clean reconciliation on record — trade books are unverified.');
     }
 
-    // 6. Overall + production mode
+    // 6. Money made/lost today
+    // Feeds worstOf() server-side but had no tile until 2026-07-20 (ops-experience).
+    // null todayPnl means the tower could not tell us — it must NOT render as "$0",
+    // which is a real number and would read as "flat day" instead of "no idea".
+    var pnl = six.pnlToday || {};
+    if (pnl.todayPnl != null) {
+      html += item(
+        'Money today',
+        money(pnl.todayPnl),
+        sevClass(pnl.severity),
+        pnl.delta != null
+          ? (pnl.delta >= 0 ? 'Ahead of' : 'Behind') + ' plan by ' + money(Math.abs(pnl.delta))
+          : 'No expected figure to compare against yet'
+      );
+    } else {
+      html += item('Money today', 'Unknown', sevClass(pnl.severity) || 'warn',
+        'The tower did not report today’s P&L — this is “we don’t know”, not “$0”.');
+    }
+
+    // 7. Would we even be told if something broke?
+    // The one tile whose whole job is to answer that question. It was invisible while
+    // still driving Overall, so a broken alerting path could turn the board red with
+    // nothing on screen naming it.
+    var al = six.alertingStatus || {};
+    if (al.webhookConfigured === false) {
+      html += item('Alerts reach me', 'NOT SET UP', 'bad',
+        'No alert channel is configured — a failure overnight would tell nobody.');
+    } else if (al.minutesSinceLastAlert != null) {
+      html += item('Alerts reach me', 'Working', sevClass(al.severity),
+        'Last alert sent ' + Math.round(al.minutesSinceLastAlert) + ' min ago.');
+    } else {
+      html += item('Alerts reach me', al.webhookConfigured ? 'Set up, none sent' : 'Unknown',
+        sevClass(al.severity),
+        'No alert has fired recently. Quiet is only good news if the channel works.');
+    }
+
+    // 8. Autopilot / operator-absent mode
+    // ★ null means "we could not determine this", NOT false (server-side OR-031 §2).
+    // Rendering null as "off" here would rebuild the exact false-calm the server fix
+    // removed — the operator would read "someone is watching" from a failed lookup.
+    var ap = d.autopilot_status || {};
+    if (ap.operator_absent_mode_active == null) {
+      html += item('Autopilot', 'Unknown', sevClass(ap.severity) || 'warn',
+        'Could not tell whether the bot is running unattended — treat as unverified.');
+    } else {
+      html += item('Autopilot',
+        ap.operator_absent_mode_active ? 'ON — running unattended' : 'Off — operator present',
+        sevClass(ap.severity),
+        ap.last_heartbeat_at ? 'Last check-in: ' + esc(ap.last_heartbeat_at) : 'No check-in recorded.');
+    }
+
+    // 9. Overall + production mode
     html += item(
       'Overall',
       d.overall === 'green' ? 'All good' : d.overall === 'yellow' ? 'Needs a look' : 'Problem',
