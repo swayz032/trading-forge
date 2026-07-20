@@ -4,6 +4,32 @@
 
 ---
 
+## AR-084 · 2026-07-20 · ★★ CADENCE ISOLATION DONE (`9aaf6afc`) — return checklist C1–C8 all returned with receipts. **The isolated axes overturn the naive reading: the confounded comparison showed +11 entries while BOTH real effects are large DECREASES.** Parity gate fixed. Re-grade dispatched.
+
+**Your R-094 §3 return-checklist law was applied to its own first dispatch** — eight blocking items, each returned with a receipt. **Nothing was silently skipped**, which is the whole point of the fence. I re-ran the harness myself before reporting: exit 0, numbers reproduce.
+
+### The 2×2, both axes separate (never combined — C4 enforced in the script itself)
+
+| | cadence = every-bar | cadence = every-10-held (production) |
+|---|---|---|
+| **level-aware** | 49 entries | **10 entries** |
+| **level-blind** | 48 entries | **38 entries** ← today's production baseline |
+
+- **C3 / Axis B (cadence alone, awareness fixed ON):** 49 → 10, **6.5% bar disagreement — reproduces AR-083's exact 49-vs-10 / 6.5% figures**, independently, same seed. The grader's finding is confirmed by a second implementation.
+- **C2 / Axis A (level-awareness alone, cadence fixed):** **38.95%** bar disagreement at every-bar, **39.0%** at production cadence. **The claimed mechanism has a large, real effect on its own** — this is a genuine signal, not an artifact.
+
+**★ THE FINDING THAT MATTERS, and it is not what the naive comparison said.** The confounded "before vs after routing" read is `blind@cadence-10 (38)` → `aware@cadence-1 (49)` = **+11 entries, a modest-looking increase**. But once separated: **cadence alone drops 49→10, and level-awareness alone at production cadence drops 38→10.** **Both isolated effects are large DECREASES, and the confounded comparison showed an INCREASE.** It did not merely overstate the mechanism — **it pointed the wrong way**. Anyone reading the bundled delta as fidelity would have concluded routing *adds* entries when the mechanism it claims to test *removes ~3.8× of them*. That is a sharper version of the WIRE-1 lesson than WIRE-1 itself gave us, and it exists only because §4.3 was enforced rather than waived.
+
+**C5 — parity gate fixed** (Finding 2): the driver now passes `TF_LEVELZONE_ROUTING_ENABLED` explicitly to `spawnSync` instead of relying on ambient inheritance, and runs **two** passes. Flag=false: full parity, 0 mismatches (the pre-existing hard gate, intact). Flag=true: 87 known primitive divergences, **0 unexpected** — so the gate now actively asserts the TS/Python divergence stays bounded to exactly the `primitive` field on level/zone-routed rows, instead of being blind to it.
+
+**C6 — four mutation tests, each shown PASS→FAIL→revert→PASS with real process exit codes:** identity-patching the cadence hold, aliasing level-blind to level-aware, forcing `approximation=False` (parity gate caught it: 87 unexpected mismatches), and stubbing the classifier to always-false (caught: zero routed conditions). **Every guard demonstrated able to fail.**
+
+**C7/C8 — clean:** no production code touched by this delivery (`git diff -- src/` shows only harness + TS gate); `approximation=meta.base_approximation` unchanged; flag default still OFF; flag-OFF parity pass still 0 mismatches.
+
+**Honest scope note the implementer surfaced rather than buried:** one 2×2 cell (level-aware at a *held* cadence) has no production path, so it is constructed by resampling the every-bar array with the identical hold rule `_eval_wait_structure` uses — valid because `retest_touch_check` has no windowing dependency, but it is a harness construction and is labelled as one, not passed off as a production measurement.
+
+**Nothing here licenses `approximation=False`.** The axes are now separated and measured; whether the mechanism's effect is *good* is a different question from whether it is *real*, and that is the re-grade's call. **Independent re-grade dispatched** (fresh context, doer ≠ grader) toward Band 7 per your §4(i). **Holds:** T1 blocked · WIRE-2 pending its own two-leg audit · reader-vintage queued · flag OFF · the 77 sealed.
+
 ## AR-083 · 2026-07-20 · R-093 §3 RECLASSIFICATION APPLIED — **111/13, DERIVED and it differs from your ~110/14** (`cd3b5f9f`) · **AND the level/zone independent grade returned BAND 6 with a CRITICAL: §4.3 cadence isolation was silently skipped — the grader QUANTIFIED the confound at ~5× entry-count swing.**
 
 ### A. RECLASSIFICATION — the first denominator move, applied
