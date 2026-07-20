@@ -98,6 +98,37 @@ would page an operator about a box that is fine.
 
 ---
 
+## Secrets/env — what to set on a rebuilt box
+
+**Set these 4.** Generated from `scripts/ops/recovery-env-manifest.cjs`; every row's
+class is cross-checked against the code by `node scripts/ops/verify-env-manifest.cjs`.
+
+| variable | leg | class | if it is missing |
+|---|---|---|---|
+| `DATABASE_URL` | db | **★ OPTIONAL — SILENTLY DEGRADES + REQUIRED** | ★ 5 of its read sites default to `""` instead of failing — notably src/server/lib/boot-migration-runner.ts:1020, where the MIGRATION RUNNER proceeds with an empty URL. So DATABASE_URL is loud in 107 places and SILENT in 5, and the 5 are the ones that matter on a rebuilt box. |
+| `AWS_ACCESS_KEY_ID` | s3 | **★ OPTIONAL — SILENTLY DEGRADES** | S3 auth. duckdb-service.ts:83 falls back to `""` and SETs it as the DuckDB s3 key — the box BOOTS HEALTHY and is silently S3-blind. The lake read fails later, far from the cause. |
+| `AWS_SECRET_ACCESS_KEY` | s3 | **★ OPTIONAL — SILENTLY DEGRADES** | S3 auth, identically to AWS_ACCESS_KEY_ID — duckdb-service.ts:84 defaults to `""`. The pair is the canonical 'boots healthy, S3-blind' shape. |
+| `AWS_REGION` | s3 | **★ OPTIONAL — SILENTLY DEGRADES** | ★ CORRECTED BY THE VERIFIER, against my own hand-declaration. I classed this OPTIONAL_FALLBACK on the strength of `?? "us-east-1"` at duckdb-service.ts:82 — but 3 sites default to `""` (data_loader.py:52, deepar_forecaster.py:181, and s3_capability_probe.py:67, which is OUR OWN leg-5 probe). An empty region silently mis-targets S3 rather than failing. |
+
+**★ Read the SILENTLY DEGRADES rows twice.** Those do not fail loudly — the box boots healthy and
+is quietly less able. `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` default to `""` and get SET as
+the DuckDB S3 credentials, so an unconfigured box reports itself fine and cannot read the lake.
+That is the "boots healthy, S3-blind" shape this manifest exists to surface.
+
+**5 recovery-relevant vars are deliberately NOT listed** (`S3_BUCKET`, `S3_PROBE_KEY`, `TF_HEALTH_URL`, `RAILS_ENV_PATH`, `SOAK_ENV_PATH`) —
+each has a working default, so absence is *correct*. Listing them would train you to skim the list,
+which is the failure mode this triage prevents. **A count of undeclared vars is not an inventory of
+recovery risk:** the repo reads ~617 env vars and ~323 are absent from `.env.example`; almost all
+of that gap is noise, and enumerating it would bury the 4 rows above.
+
+**Declared limits of the cross-check** — it adjudicates ONE property soundly (the silent-degradation
+signature, an empty-string default) in both directions. It does **not** derive REQUIRED vs
+OPTIONAL — cross-line guards make that undecidable line-locally, so those are human-declared.
+And it is **static-only**: `RAILS_ENV_PATH` is read via `env[v]` and scores zero static sites,
+so dynamic entries are SKIPPED and the skip is reported, never silently passed.
+
+---
+
 ## Real incident — SEPARATE AND GUARDED
 
 **Do not run anything in this section as part of a rehearsal.**

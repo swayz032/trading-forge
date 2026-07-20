@@ -10,8 +10,52 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const { EVIDENCE_STATES, LEGS, validate, evidenceLabel, drilledLegs } = require("./recovery-evidence.cjs");
+const envManifest = require("./recovery-env-manifest.cjs");
 
 const OUT = path.resolve(__dirname, "..", "..", "docs", "cold-recovery-runsheet.md");
+
+function renderEnvSection(m = envManifest) {
+  m.validate();
+  const shown = m.runbookVars();
+  const hidden = m.suppressedVars();
+  const rowsOut = shown
+    .map((v) => {
+      const why = v.classes.includes("OPTIONAL_DEGRADING") ? v.degrades : v.breaks;
+      const label = v.classes.map((c) => m.CLASSES[c].label).join(" + ");
+      return `| \`${v.name}\` | ${v.leg} | **${label}** | ${why} |`;
+    })
+    .join("\n");
+
+  return `## Secrets/env — what to set on a rebuilt box
+
+**Set these ${shown.length}.** Generated from \`scripts/ops/recovery-env-manifest.cjs\`; every row's
+class is cross-checked against the code by \`node scripts/ops/verify-env-manifest.cjs\`.
+
+| variable | leg | class | if it is missing |
+|---|---|---|---|
+${rowsOut}
+
+**★ Read the SILENTLY DEGRADES rows twice.** Those do not fail loudly — the box boots healthy and
+is quietly less able. \`AWS_ACCESS_KEY_ID\`/\`AWS_SECRET_ACCESS_KEY\` default to \`""\` and get SET as
+the DuckDB S3 credentials, so an unconfigured box reports itself fine and cannot read the lake.
+That is the "boots healthy, S3-blind" shape this manifest exists to surface.
+
+**${hidden.length} recovery-relevant vars are deliberately NOT listed** (${hidden.map((v) => `\`${v.name}\``).join(", ")}) —
+each has a working default, so absence is *correct*. Listing them would train you to skim the list,
+which is the failure mode this triage prevents. **A count of undeclared vars is not an inventory of
+recovery risk:** the repo reads ~617 env vars and ~323 are absent from \`.env.example\`; almost all
+of that gap is noise, and enumerating it would bury the ${shown.length} rows above.
+
+**Declared limits of the cross-check** — it adjudicates ONE property soundly (the silent-degradation
+signature, an empty-string default) in both directions. It does **not** derive REQUIRED vs
+OPTIONAL — cross-line guards make that undecidable line-locally, so those are human-declared.
+And it is **static-only**: \`RAILS_ENV_PATH\` is read via \`env[v]\` and scores zero static sites,
+so dynamic entries are SKIPPED and the skip is reported, never silently passed.
+
+---
+
+`;
+}
 
 function render(legs = LEGS, states = EVIDENCE_STATES) {
   validate(legs, states);
@@ -117,7 +161,7 @@ would page an operator about a box that is fine.
 
 ---
 
-## Real incident — SEPARATE AND GUARDED
+${renderEnvSection()}## Real incident — SEPARATE AND GUARDED
 
 **Do not run anything in this section as part of a rehearsal.**
 Restore-over-production lives in \`docs/disaster-recovery-db.md\` under its own heading and is

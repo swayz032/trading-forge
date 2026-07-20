@@ -45,7 +45,8 @@
     "test:scripts": "node --test \"scripts/lib/__tests__/*.test.mjs\" \"scripts/soak/__tests__/*.test.mjs\" \"scripts/watchdog/__tests__/*.test.mjs\" \"scripts/ops/__tests__/*.test.mjs\" scripts/rails/__tests__/cert-core.test.mjs scripts/rails/__tests__/full-lane.test.mjs scripts/rails/__tests__/full-lane.redproof.test.mjs scripts/rails/__tests__/rail-liveness-report.test.mjs",
     "lint:false-success": "node scripts/lib/run-false-success-lint.cjs",
     "runsheet:check": "node scripts/ops/render-runsheet.cjs",
-    "runsheet:write": "node scripts/ops/render-runsheet.cjs --write"
+    "runsheet:write": "node scripts/ops/render-runsheet.cjs --write",
+    "env-manifest:check": "node scripts/ops/verify-env-manifest.cjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1005.0",
