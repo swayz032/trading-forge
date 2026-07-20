@@ -1,0 +1,641 @@
+{
+ "artifact": "wire1-structure-family-census",
+ "n_occurrences": 90,
+ "classification_counts": {
+  "TF_UNSPECIFIED": 79,
+  "EXEC_TAUGHT": 11
+ },
+ "rules": "anti-fit: HTF/EXEC regexes derived from timeframe semantics, not tuned to this corpus",
+ "rows": [
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "spine",
+   "object": "the gap you know is created between three candlesticks",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "spine",
+   "object": "this is a bullish imbalance",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "confluence",
+   "object": "the imbalance must create a break of structure",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": true
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "confluence",
+   "object": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": true
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "confluence",
+   "object": "map out the FVG that is very close to the order block",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "spine",
+   "object": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "spine",
+   "object": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": true
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "spine",
+   "object": "I generally like to see price move back into a discount of this price range here",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "spine",
+   "object": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "spine",
+   "object": "for my entry I would personally be looking to enter the trade right here",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "confluence",
+   "object": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "confluence",
+   "object": "does that meet all my criteria it does not because it is in a premium of the range",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "0xygpCMwxbQ__s0.spec.json",
+   "role": "confluence",
+   "object": "we did go a tick below this low but I do not count that personally",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "you were going to mark your entry point at the candle that made the liquidity grab",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "we wait for the entry signal once we get it we enter",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "confluence",
+   "object": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "CLDEIsNpVRc__s0.spec.json",
+   "role": "spine",
+   "object": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "CLDEIsNpVRc__s0.spec.json",
+   "role": "spine",
+   "object": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "CLDEIsNpVRc__s0.spec.json",
+   "role": "spine",
+   "object": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "CLDEIsNpVRc__s0.spec.json",
+   "role": "confluence",
+   "object": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": true
+  },
+  {
+   "file": "DLwVqcLRcfw__s0.spec.json",
+   "role": "spine",
+   "object": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s0.spec.json",
+   "role": "spine",
+   "object": "come down to vwap start a new position bounce come down to vop start a new position",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s0.spec.json",
+   "role": "confluence",
+   "object": "if we're trading over the vwob we're typically more bullish",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s0.spec.json",
+   "role": "confluence",
+   "object": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s0.spec.json",
+   "role": "confluence",
+   "object": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s0.spec.json",
+   "role": "confluence",
+   "object": "the green line that you see is the vwap ... the little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s1.spec.json",
+   "role": "spine",
+   "object": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s1.spec.json",
+   "role": "spine",
+   "object": "how to use vwap as well as a 20 period moving average which 20 simple moving average",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "DLwVqcLRcfw__s1.spec.json",
+   "role": "spine",
+   "object": "then we have a following candle that starts to build below",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "E9MzEC_yNoM__s1.spec.json",
+   "role": "spine",
+   "object": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "E9MzEC_yNoM__s1.spec.json",
+   "role": "spine",
+   "object": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "E9MzEC_yNoM__s1.spec.json",
+   "role": "confluence",
+   "object": "reclaims the level with a lot of volume",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "E9MzEC_yNoM__s1.spec.json",
+   "role": "confluence",
+   "object": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "IyFioFkRgWo__s0.spec.json",
+   "role": "spine",
+   "object": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "IyFioFkRgWo__s0.spec.json",
+   "role": "spine",
+   "object": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "IyFioFkRgWo__s0.spec.json",
+   "role": "spine",
+   "object": "the stock came down and it hit right there that's our entry for a scalp",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "IyFioFkRgWo__s0.spec.json",
+   "role": "confluence",
+   "object": "I got the 5 minute chart",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "IyFioFkRgWo__s0.spec.json",
+   "role": "confluence",
+   "object": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "PVMgOxHUqFA__s0.spec.json",
+   "role": "spine",
+   "object": "You just have to start tracking your highs and lows on that 15-minut time frame.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "PVMgOxHUqFA__s0.spec.json",
+   "role": "spine",
+   "object": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "PVMgOxHUqFA__s0.spec.json",
+   "role": "spine",
+   "object": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "PVMgOxHUqFA__s0.spec.json",
+   "role": "spine",
+   "object": "once you find this... breaking above that level... your entry goes here",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "PVMgOxHUqFA__s0.spec.json",
+   "role": "confluence",
+   "object": "Literally a ABC setup.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "PVMgOxHUqFA__s0.spec.json",
+   "role": "confluence",
+   "object": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "R5L890juvRw__s0.spec.json",
+   "role": "spine",
+   "object": "you might want to wait until the price has gone at least to the first if not the second standard deviation",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "R5L890juvRw__s0.spec.json",
+   "role": "spine",
+   "object": "after we broke it and tested it we can try our long trade",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "R5L890juvRw__s0.spec.json",
+   "role": "confluence",
+   "object": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "R5L890juvRw__s0.spec.json",
+   "role": "confluence",
+   "object": "you're not just going to trade based off of vwap only",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "W7nlnHTUZQU__s0.spec.json",
+   "role": "spine",
+   "object": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "W7nlnHTUZQU__s0.spec.json",
+   "role": "spine",
+   "object": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "W7nlnHTUZQU__s0.spec.json",
+   "role": "confluence",
+   "object": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "we're going to get to our desks right at 9:30 a.m. EST",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "We're going to start on our five-minute chart.",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "we are going to switch to the 1 minute chart",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "we're going to wait for a break of the level, but we need a fair value gap",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "you're going to start on the 15minute chart",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "we're going to mark the high and the low of the first 15-minute candle",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "Instead of going to the one minute chart, we're going to go to the five-minute chart.",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "spine",
+   "object": "we have now created our fair value gap through this first candle",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "confluence",
+   "object": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "confluence",
+   "object": "since we broke through the high, the direction is bullish. We're going to be looking for long trades.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "WEhmadJArQo__s0.spec.json",
+   "role": "confluence",
+   "object": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "dV7chra4u4Q__s0.spec.json",
+   "role": "confluence",
+   "object": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max.",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "spine",
+   "object": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "spine",
+   "object": "I'm on the five-minute time frame, and I need to set up my range",
+   "class": "EXEC_TAUGHT",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "spine",
+   "object": "I'm looking for the price to break out the bottom of that range",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "spine",
+   "object": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": true
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "spine",
+   "object": "This created a level of supply. I was looking at this supply level right here",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "spine",
+   "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "spine",
+   "object": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "confluence",
+   "object": "on Forex, Nasdaq, gold, everything",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "kFyD3H6I1I8__s0.spec.json",
+   "role": "confluence",
+   "object": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "spine",
+   "object": "the gap you know is created between three candlesticks",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "spine",
+   "object": "this is a bullish imbalance",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "confluence",
+   "object": "the imbalance must create a break of structure",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": true
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "confluence",
+   "object": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": true
+  },
+  {
+   "file": "-igpOZs8LsM__s0.spec.json",
+   "role": "confluence",
+   "object": "map out the FVG that is very close to the order block",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "you were going to mark your entry point at the candle that made the liquidity grab",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "we wait for the entry signal once we get it we enter",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "spine",
+   "object": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  },
+  {
+   "file": "4cT8WTyxhYY__s0.spec.json",
+   "role": "confluence",
+   "object": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor",
+   "class": "TF_UNSPECIFIED",
+   "names_structural_event": false
+  }
+ ]
+}
