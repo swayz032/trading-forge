@@ -124,3 +124,54 @@ test("★ the OLD rule and the NEW rule disagree on exactly ONE of these cases",
   // ...and it diverges only in the direction of RUNNING when there is no battery.
   assert.equal(run(diverged[0]).action, "RUN");
 });
+
+// ── ★ Grader F-1 (CRITICAL): RUN requires POSITIVE EVIDENCE OF IDLENESS ──
+// The naive fix ("unknown counter means busy") collides with the DATED 07-11 decision that
+// an auth-gated 401/503 backend must still RUN — and that state nulls the counter. Blanket
+// null-means-busy would make an auth-gated tower skip forever: this unit's own bug rebuilt.
+// Resolved by requiring evidence of IDLE from either independent source.
+
+test("A9: counter UNKNOWN but the OS probe confirms idle -> RUNS (07-11 intent preserved)", () => {
+  // The probe does not depend on the backend at all, so it is real positive evidence.
+  const r = run({ health: { reachable: true, ok: false, status: 503, backtestsActive: null }, backtestWorkerCount: 0 });
+  assert.equal(r.action, "RUN");
+});
+
+test("A10: counter UNKNOWN and probe UNAVAILABLE -> SKIPS. No evidence is not evidence of idle", () => {
+  const r = run({ health: { ...HEALTHY, backtestsActive: null }, backtestWorkerCount: null, pythonCount: 11 });
+  assert.equal(r.action, "SKIP");
+  assert.equal(r.reason, "no_idle_evidence");
+});
+
+test("A11: BOTH signals absent (older sample shape) -> SKIPS", () => {
+  const r = run({ health: { reachable: true, ok: true }, backtestWorkerCount: undefined });
+  assert.equal(r.action, "SKIP");
+  assert.equal(r.reason, "no_idle_evidence");
+});
+
+test("A12: counter idle but probe UNAVAILABLE -> still SKIPS (the probe cannot vouch)", () => {
+  // One source saying idle is enough to pass the evidence gate, but an unavailable probe
+  // is still its own yield below it — a broken sensor never buys a RUN.
+  const r = run({ health: { ...HEALTHY, backtestsActive: 0 }, backtestWorkerCount: null });
+  assert.equal(r.action, "SKIP");
+  assert.equal(r.reason, "backtest_probe_unavailable");
+});
+
+test("B3: both signals KNOWN-idle -> RUNS. Closing the hole must not seize the guard", () => {
+  // The inverse lock: if the evidence gate accidentally swallowed the ordinary idle case,
+  // the rails would never run again and we would have traded one never-measures bug for
+  // another — which is exactly what the naive fix would have done under auth-gating.
+  const r = run({ health: { ...HEALTHY, backtestsActive: 0 }, backtestWorkerCount: 0 });
+  assert.equal(r.action, "RUN");
+  assert.equal(r.reason, "quiet");
+});
+
+test("★ RESIDUAL, stated not hidden: counter-null + probe-idle trusts the regex", () => {
+  // With the counter unavailable, the OS probe is the ONLY evidence, so a worker shape the
+  // regex fails to recognise would meet a RUN. That residual is bounded by
+  // worker-cmdline-regex.test.mjs (every real spawn shape asserted to MATCH), not by this
+  // file. Written down so the dependency is visible rather than implied: the guard is only
+  // as good as the regex in exactly this one state.
+  const r = run({ health: { reachable: true, ok: false, backtestsActive: null }, backtestWorkerCount: 0 });
+  assert.equal(r.action, "RUN");
+});

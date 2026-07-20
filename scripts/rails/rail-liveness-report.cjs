@@ -27,13 +27,26 @@ const RAILS = [
     rail: "soak",
     dir: (root) => path.join(root, "data", "soak"),
     file: (d) => `soak-${d.replace(/-/g, "")}.jsonl`,
-    classify: (row) => (row.type === "skip" ? { outcome: "skip", reason: row.reason } : { outcome: "ran" }),
+    // soak-watcher writes {type:"crash"}; cert/full write {crashed:true} via guardRailMain.
+    // Classifying a crash as "ran" RESETS the streak — a rail crash-looping nightly would
+    // never alert, which is worse than absence (absence at least escalates). Grader F-3.
+    classify: (row) =>
+      row.type === "crash" || row.crashed
+        ? { outcome: "crash", reason: row.reason }
+        : row.type === "skip"
+          ? { outcome: "skip", reason: row.reason }
+          : { outcome: "ran" },
   },
   {
     rail: "cert-rig",
     dir: (root) => path.join(root, "data", "rails"),
     file: (d) => `cert-${d}.jsonl`,
-    classify: (row) => (row.skipped ? { outcome: "skip", reason: row.reason } : { outcome: "ran" }),
+    classify: (row) =>
+      row.crashed
+        ? { outcome: "crash", reason: row.reason }
+        : row.skipped
+          ? { outcome: "skip", reason: row.reason }
+          : { outcome: "ran" },
   },
   {
     rail: "full-lane",
@@ -45,6 +58,16 @@ const RAILS = [
         : row.crashed
           ? { outcome: "crash", reason: row.reason }
           : { outcome: "ran" },
+  },
+  {
+    // ★ Grader F-4. The reporter wrote its own ledger row and claimed that meant it
+    // "cannot become the next thing that runs silently forever" — but NOTHING READ IT.
+    // Writing a row no one reads detects nothing; the claim was the same shape as the
+    // decorative-green this campaign keeps finding. It now watches itself.
+    rail: "liveness",
+    dir: (root) => path.join(root, "data", "rails"),
+    file: (d) => `liveness-${d}.jsonl`,
+    classify: (row) => (row.crashed ? { outcome: "crash", reason: row.reason } : { outcome: "ran" }),
   },
 ];
 
@@ -96,8 +119,16 @@ function readRail(spec, root, dates, readFileFn = fs.readFileSync, existsFn = fs
     const lines = String(text).split("\n").map((l) => l.trim()).filter(Boolean);
     if (lines.length === 0) continue;
     // Last row wins: a rail may write a skip and later a real run on the same date.
+    // Only a parsed OBJECT may replace the running value. A trailing `null`/`false`/`0`
+    // line would otherwise blank a real row, turning a present ledger into ABSENCE —
+    // which skip-streak escalates to crash_suspect. Grader F-7.
     let last = null;
-    for (const line of lines) { try { last = JSON.parse(line); } catch { /* keep prior */ } }
+    for (const line of lines) {
+      try {
+        const parsed = JSON.parse(line);
+        if (parsed !== null && typeof parsed === "object" && !Array.isArray(parsed)) last = parsed;
+      } catch { /* keep prior */ }
+    }
     if (last) entries[date] = spec.classify(last);
   }
   return entries;
@@ -105,16 +136,36 @@ function readRail(spec, root, dates, readFileFn = fs.readFileSync, existsFn = fs
 
 /** Pure core: ledgers -> per-rail verdicts + the operator-facing lines. */
 function buildLivenessReport({ rails, root, dates, readFileFn, existsFn, thresholds = THRESHOLDS_V1 }) {
-  const results = rails.map((spec) =>
-    evaluateRailLiveness({
-      rail: spec.rail,
-      expectedDates: dates,
-      entriesByDate: readRail(spec, root, dates, readFileFn, existsFn),
-      thresholds,
-    }),
-  );
+  const results = rails.map((spec) => {
+    const entriesByDate = readRail(spec, root, dates, readFileFn, existsFn);
+
+    // ★ NEVER-SEEN is not CRASHED. Caught on the second witnessed live run: the moment the
+    // reporter began watching ITSELF (F-4), it reported itself 🔴 "the last 10 scheduled runs
+    // left NO record at all" — because it has never been scheduled at all. True, and useless.
+    //
+    // crash_suspect means "it used to write and then stopped", which requires having seen it
+    // write at least once. A rail with zero entries across the whole window has never been
+    // observed, and every newly-added rail would otherwise alert red from the day it is added
+    // — teaching the operator that this report's red means "ignore me".
+    //
+    // It is still REPORTED in the payload, just not alerted on, so a rail that is never
+    // activated cannot hide behind silence either.
+    if (Object.keys(entriesByDate).length === 0) {
+      return {
+        rail: spec.rail, alert: false, kind: "never_seen", streak: 0,
+        silentFires: dates.length, reasons: {}, thresholds: thresholds.version,
+      };
+    }
+
+    return evaluateRailLiveness({ rail: spec.rail, expectedDates: dates, entriesByDate, thresholds });
+  });
   const lines = results.map(formatLivenessLine).filter(Boolean);
-  return { results, lines, alerting: results.filter((r) => r.alert).map((r) => r.rail) };
+  return {
+    results,
+    lines,
+    alerting: results.filter((r) => r.alert).map((r) => r.rail),
+    neverSeen: results.filter((r) => r.kind === "never_seen").map((r) => r.rail),
+  };
 }
 
 function writeJsonl(payload, root) {
@@ -139,12 +190,17 @@ async function main() {
     windowDays: days,
     thresholds: THRESHOLDS_V1.version,
     alerting: report.alerting,
+    neverSeen: report.neverSeen,
     results: report.results,
   };
   writeJsonl(payload, root);
 
   for (const line of report.lines) console.log(line);
   if (report.lines.length === 0) console.log("all rails measuring (or within threshold) — nothing to say");
+  // Surfaced on stdout + in the row, but never as an alert (see never_seen above).
+  if (report.neverSeen.length > 0) {
+    console.log(`not yet activated (no ledger history, not alerting): ${report.neverSeen.join(", ")}`);
+  }
 
   if (!dryRun && report.lines.length > 0) {
     const header = "**Rail liveness** — a rail that keeps standing aside is not a rail that works.";

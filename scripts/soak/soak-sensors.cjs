@@ -4,9 +4,13 @@
 "use strict";
 const { execFileSync } = require("child_process");
 
-function safeExec(cmd, args) {
-  try { return execFileSync(cmd, args, { encoding: "utf-8", timeout: 8000, windowsHide: true }).trim(); }
-  catch { return null; }
+function safeExec(cmd, args, env) {
+  try {
+    return execFileSync(cmd, args, {
+      encoding: "utf-8", timeout: 8000, windowsHide: true,
+      ...(env ? { env } : {}),
+    }).trim();
+  } catch { return null; }
 }
 
 function readGpu() {
@@ -15,6 +19,31 @@ function readGpu() {
   const [util, mem] = out.split(",").map(s => parseFloat(s.trim()));
   return { vramUsedMb: Number.isFinite(mem) ? mem : null, gpuUtil: Number.isFinite(util) ? util : null };
 }
+
+/**
+ * Command-line shapes that identify a python process as OUR contended work.
+ *
+ * ★ Exported and TESTED (grader F-2, 2026-07-20). This regex is the load-bearing half of
+ * the guard's secondary check and originally lived only inside a PowerShell string with no
+ * coverage in either direction. FALSE NEGATIVES are the dangerous direction: a real worker
+ * we fail to recognise means the lane runs during contended work.
+ *
+ * Shapes, all taken from real spawn sites rather than guessed:
+ *   -m src.…            python-runner.ts:323 (`finalArgs.push("-m", module)`) — the main path
+ *   -m scripts.…        scheduler.ts:5244, a BARE spawn with no semaphore slot, so it is
+ *                       invisible to backtestsActive too — the one double-miss the grader found
+ *   -m pytest src/…     full-lane.cjs pytestCmd()
+ *   src/engine/…        direct script paths
+ *   src/data/scripts/…  data pipeline
+ *   tf-script-<uuid>.py python-runner.ts:318 writes scriptCode to a temp file, so the module
+ *                       name never appears on the command line at all
+ *
+ * Deliberately NOT matched: the repo path. The agent's own monitor runs from
+ * `…\Temp\claude\C--Users-tonio-Projects-trading-forge\…\scratchpad\…`, which contains
+ * "trading-forge" — matching it would carry the very bug this fix removes.
+ */
+const WORKER_CMDLINE_RE =
+  "(-m\\s+(src|scripts)\\.|src\\.engine|src[\\\\/]engine|src[\\\\/]data[\\\\/]scripts|tf-script-)";
 
 // One PowerShell call returns: backend proc (by :port owner), ollama proc (by name), disk free.
 function readWindows(port) {
@@ -32,7 +61,7 @@ try {
   # A process whose CommandLine we cannot read cannot be judged -> counted as a possible
   # worker, so unreadable pushes toward YIELDING, never toward running.
   $unreadable = @($py | Where-Object { -not $_.CommandLine }).Count
-  $matched = @($py | Where-Object { $_.CommandLine -match '(-m\s+src\.|src\.engine|src[\\/]engine|src[\\/]data[\\/]scripts)' }).Count
+  $matched = @($py | Where-Object { $_.CommandLine -match $env:TF_WORKER_CMDLINE_RE }).Count
   $o.pythonCmdlineUnreadable = $unreadable
   $o.backtestWorkerCount = $matched + $unreadable
 } catch {
@@ -41,7 +70,10 @@ try {
 $o.diskFreeBytes = [int64]((Get-PSDrive C).Free)
 $o | ConvertTo-Json -Compress -Depth 4
 `.trim();
-  const out = safeExec("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps]);
+  const out = safeExec("powershell", ["-NoProfile", "-NonInteractive", "-Command", ps], {
+    ...process.env,
+    TF_WORKER_CMDLINE_RE: WORKER_CMDLINE_RE,
+  });
   const nullProc = { pid: null, rssMb: null, handles: null, startMs: null };
   // Backend runs as an NSSM service → StartTime is often inaccessible and PS returns
   // DateTime.MinValue (≈ -6.2e13 ms). Treat any pre-2000 / non-finite epoch as null so
@@ -120,4 +152,4 @@ async function takeSample({ healthUrl, port = 4000, nowMs }) {
   };
 }
 
-module.exports = { takeSample, readGpu, readWindows, readHealth, readHealthResilient };
+module.exports = { takeSample, readGpu, readWindows, readHealth, readHealthResilient, WORKER_CMDLINE_RE };

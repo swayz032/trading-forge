@@ -12,6 +12,29 @@ function decide({ sample, sw, gpuBusyPct, nowMs, phase }) {
   // backend (auth-gated/slow) is UP — don't skip for that; fall through to the load checks.
   if (!sample.health || sample.health.reachable === false) return { action: busyAction, reason: "backend_unreachable" };
   if ((sample.health.backtestsActive ?? 0) > 0) return { action: busyAction, reason: "backtests_active" };
+  // ★ CRITICAL (grader F-1, 2026-07-20): RUN REQUIRES POSITIVE EVIDENCE OF IDLENESS.
+  //
+  // `backtestsActive ?? 0` read an UNKNOWN counter as IDLE. That was survivable only while
+  // `pythonCount > 0` was a blanket backstop; narrowing the secondary check removed the
+  // backstop and made this fail-open load-bearing for the first time.
+  //
+  // The naive fix — "null means busy" — collides with a DATED safety decision: the 07-11
+  // false-positive fix deliberately keeps a reachable-but-non-200 backend (auth-gated
+  // 401/503) RUNNING, and that state nulls this counter. Blanket null-means-busy would make
+  // an auth-gated tower skip forever: the exact never-measures bug this whole unit exists to
+  // kill, rebuilt in a new coat. Two dated safety decisions, pulling opposite ways.
+  //
+  // Resolved by asking what the guard actually needs, which is not "no evidence of busy" but
+  // EVIDENCE OF IDLE. Two independent sources can supply it — the backend's own counter, and
+  // the OS-level worker probe, which does not depend on the backend at all. Either suffices.
+  // With neither, we know nothing and we yield.
+  //   auth-gated backend + probe sees 0 workers -> RUN  (07-11 intent preserved)
+  //   counter null + probe unavailable          -> SKIP (grader F-1 closed)
+  const counterIdle = sample.health.backtestsActive === 0;
+  const probeIdle = sample.backtestWorkerCount === 0;
+  if (!counterIdle && !probeIdle) {
+    return { action: busyAction, reason: "no_idle_evidence" };
+  }
   // Secondary battery check — catches backtest workers even when backtestsActive reads 0.
   //
   // ops-experience 2026-07-20 (OR-066). This was `pythonCount > 0` — EVERY python-named
