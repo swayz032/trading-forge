@@ -11,7 +11,7 @@ const { buildCertificate, INVARIANT_CHECKS } = require("./cert-schema.cjs");
 const { diffCertificates } = require("./cert-diff.cjs");
 // Local modules only at top level — both use builtins and guard their own optional requires,
 // so a degraded node_modules cannot kill this file before the crash handler is attached.
-const { loadEnvironment, postDiscord } = require("./rail-runtime.cjs");
+const { loadEnvironment, postDiscord, reportEnvLoad } = require("./rail-runtime.cjs");
 const { guardRailMain } = require("../lib/rail-crash-handler.cjs");
 
 // ── Pure assembly: prev cert + tonight's check results → cert + diff + the DB row shape.
@@ -68,7 +68,8 @@ async function main() {
   // 2026-07-18 incident: a bare require("dotenv") here died on a degraded node_modules and took
   // the whole run down silently. loadEnvironment() guards its own require and covers the same
   // <cwd>/.env path plus RAILS_ENV_PATH and the sibling checkout.
-  loadEnvironment(process.cwd());
+  // Report WHICH .env this rail loaded — the affordance the resolver returns it for.
+  reportEnvLoad(loadEnvironment(process.cwd()), "cert");
   const postgres = require("postgres");
   const { takeSample } = require("../soak/soak-sensors.cjs");
   const { guardOnce } = require("../lib/tower-idle-guard.cjs");

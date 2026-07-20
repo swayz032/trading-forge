@@ -82,6 +82,15 @@ jobs:
       - name: Rails/soak unit tests (node:test lane)
         run: npm run test:scripts
 
+      # NON-BLOCKING on purpose (OR-086). The false-success class has surfaced 3x in this
+      # project; this fence reports it. It runs green today, and lands non-blocking so its
+      # first act is never to block the lane it exists to protect — a guard that arrives as
+      # an obstacle gets disabled rather than fixed. Promote to --strict once it has run
+      # clean across the whole ops surface for a stretch.
+      - name: False-success lint (ops surface, non-blocking)
+        continue-on-error: true
+        run: npm run lint:false-success
+
       - name: Prepare evidence directory
         run: mkdir -p ci/out
 

@@ -21,7 +21,7 @@
 "use strict";
 const fs = require("fs");
 const path = require("path");
-const { loadEnvironment, postDiscord } = require("./rail-runtime.cjs");
+const { loadEnvironment, postDiscord, reportEnvLoad } = require("./rail-runtime.cjs");
 const { guardRailMain } = require("../lib/rail-crash-handler.cjs");
 const { evaluateRailLiveness, formatLivenessLine, THRESHOLDS_V1 } = require("../lib/skip-streak.cjs");
 
@@ -263,7 +263,8 @@ function writeJsonl(payload, root) {
 }
 
 async function main() {
-  loadEnvironment(process.cwd());
+  // Report WHICH .env this rail loaded — the affordance the resolver returns it for.
+  reportEnvLoad(loadEnvironment(process.cwd()), "liveness");
   const root = process.cwd();
   const dryRun = process.argv.includes("--dry-run");
   // ★ MINOR-2 (third pass): days ∈ {0, 1, NaN} makes crash_suspect STRUCTURALLY unreachable

@@ -6,7 +6,7 @@ const { spawnSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 // Local modules only at top level (builtins + self-guarded optional requires) — see cert-rig.cjs.
-const { loadEnvironment, postDiscord } = require("./rail-runtime.cjs");
+const { loadEnvironment, postDiscord, reportEnvLoad } = require("./rail-runtime.cjs");
 const { guardRailMain } = require("../lib/rail-crash-handler.cjs");
 
 // ── Pure core: guard → (run both) → verdict. Skip path never invokes the runners. ──
@@ -59,7 +59,8 @@ async function writeAudit(sql, action, payload) {
 
 async function main() {
   // See cert-rig.cjs — bare require("dotenv") here was a silent-death path (2026-07-18).
-  loadEnvironment(process.cwd());
+  // Report WHICH .env this rail loaded — the affordance the resolver returns it for.
+  reportEnvLoad(loadEnvironment(process.cwd()), "full-lane");
   const postgres = require("postgres");
   const { takeSample } = require("../soak/soak-sensors.cjs");
   const { guardOnce } = require("../lib/tower-idle-guard.cjs");

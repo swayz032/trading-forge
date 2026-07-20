@@ -145,4 +145,22 @@ function loadEnvFile({
   };
 }
 
-module.exports = { OVERRIDE_VARS, envCandidates, siblingCandidates, resolveEnvPath, loadEnvFile };
+/**
+ * Emit WHICH .env an unattended job loaded — paths and fixed reason codes only, never a value.
+ *
+ * The resolver returns its chosen path specifically so a cold-recovery check can ASSERT which
+ * config a rail used instead of inferring it from the process having started (OA-071). The
+ * grader found that affordance was consumed in exactly one of five call sites — shipped, not
+ * delivered, and "fixed the instance not the class" a second time. This is the one shape all
+ * entrypoints share.
+ */
+function reportEnvLoad(result, rail, out = console) {
+  if (!result) return;
+  if (result.loaded) {
+    out.log(JSON.stringify({ type: "env", rail, loadedFrom: result.path }));
+  } else {
+    out.error(JSON.stringify({ type: "env", rail, loaded: false, reason: result.reason, tried: result.tried || [] }));
+  }
+}
+
+module.exports = { OVERRIDE_VARS, envCandidates, siblingCandidates, resolveEnvPath, loadEnvFile, reportEnvLoad };

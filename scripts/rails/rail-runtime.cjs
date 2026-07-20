@@ -3,6 +3,10 @@
 const fs = require("node:fs");
 const path = require("node:path");
 
+function reportEnvLoad(result, rail) {
+  return require("../lib/env-resolve.cjs").reportEnvLoad(result, rail);
+}
+
 function loadEnvironment(repoDir) {
   // ONE shared resolver (scripts/lib/env-resolve.cjs): honours BOTH override names, covers
   // the NESTED canonical checkout, and — post-grade — accepts a candidate only when dotenv
@@ -82,6 +86,9 @@ async function persistRailRun({ repoDir, rail, action, payload, message, notify,
     return { ok: true, ledgerFile, audit: { ok: true, dryRun: true }, discord: { ok: true, dryRun: true } };
   }
 
+  // ENTRYPOINT-EXEMPT(env-report): persistRailRun is a MID-RUN helper, not an entrypoint.
+  // The owning rail already reported its loadedFrom at boot; emitting again per persist call
+  // would be duplicate noise, and noise is how a real line stops being read.
   loadEnvironment(repoDir);
   const audit = await writeAudit(action, ledgerPayload);
   let discord = { ok: true, skipped: true };
@@ -99,5 +106,4 @@ module.exports = {
   loadEnvironment,
   persistRailRun,
   postDiscord,
-  writeAudit,
-};
+  writeAudit, reportEnvLoad };

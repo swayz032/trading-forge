@@ -23,7 +23,16 @@ function writeBootCrashRow(row) {
 function bootFail(error, reason) {
   const row = { ...buildCrashRow({ rail: "soak", error, nowMs: Date.now() }), phase: "boot", reason };
   try { writeBootCrashRow(row); } catch (e) { console.error("soak boot-crash ledger write failed:", e.message); }
-  try { void postDiscord(crashMessage(row)); } catch { /* best effort */ }
+  // (B, OR-086) The durable JSONL row above is the source of truth and this alert is
+  // strictly secondary — nothing infers delivery from it, which is why it is SAFE-AS-WRITTEN
+  // and not an instance of the false-success class. But a boot-crash alert that silently
+  // fails to send leaves NO footprint at all, so a revoked webhook makes the loudest message
+  // in the system quietly undeliverable. Read the returned status and trace it.
+  try {
+    Promise.resolve(postDiscord(crashMessage(row)))
+      .then((r) => { if (r && r.ok === false) console.error(JSON.stringify({ type: "alert", rail: "soak", delivered: false, reason: r.reason })); })
+      .catch(() => { /* the ledger row already carries the crash */ });
+  } catch { /* best effort */ }
   console.error(JSON.stringify(row));
   process.exitCode = 1;
 }
@@ -137,7 +146,18 @@ async function writeAudit(payload) {
 async function discord(msg) {
   const url = process.env.DISCORD_WEBHOOK_URL;
   if (!url) return;
-  try { await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: msg }), signal: AbortSignal.timeout(8000) }); } catch { /* best-effort */ }
+  // Secondary alert: the JSONL row + audit_log INSERT are the source of truth, and nothing
+  // downstream infers delivery from this. That is why it is SAFE-AS-WRITTEN rather than an
+  // instance of the false-success class (OR-086). But `fetch` does NOT throw on 4xx/5xx, so
+  // as written a revoked webhook (401/404) vanished without a trace — the tower's only
+  // operator-facing channel failing silently. Match the reference impl (rail-runtime
+  // postDiscord): read the status, and leave a footprint when delivery fails.
+  try {
+    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ content: msg }), signal: AbortSignal.timeout(8000) });
+    if (!res.ok) console.error(JSON.stringify({ type: "alert", rail: "soak", delivered: false, reason: `discord_http_${res.status}` }));
+  } catch (e) {
+    console.error(JSON.stringify({ type: "alert", rail: "soak", delivered: false, reason: `discord_failed:${(e && e.name) || "unknown"}` }));
+  }
 }
 
 const appendJsonl = (file, obj) => fs.appendFileSync(file, JSON.stringify(obj) + "\n");
