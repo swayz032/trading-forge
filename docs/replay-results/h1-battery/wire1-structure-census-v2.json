@@ -1,0 +1,910 @@
+{
+  "artifact": "wire1-structure-family-census-v2",
+  "supersedes": "wire1-structure-census.json (n=90, double-counted 2 specs, no generator)",
+  "generator": "docs/replay-results/h1-battery/wire1_structure_census.py",
+  "n_specs_scanned": 16,
+  "n_specs_with_structure_conditions": 14,
+  "n_occurrences": 78,
+  "duplicate_spec_collisions": [
+    {
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "kept": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs\\-igpOZs8LsM__s0.spec.json",
+      "dropped": "docs/replay-results/h1-scripts/claude-rung-v32/packet2_dod_specs\\-igpOZs8LsM__s0.spec.json",
+      "identical": true
+    },
+    {
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "kept": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs\\4cT8WTyxhYY__s0.spec.json",
+      "dropped": "docs/replay-results/h1-scripts/claude-rung-v32/packet2_dod_specs\\4cT8WTyxhYY__s0.spec.json",
+      "identical": true
+    }
+  ],
+  "concept_labels_are": "RECONSTRUCTION \u2014 v1 regexes unrecoverable; not the original rules",
+  "tf_class_counts": {
+    "TF_UNSPECIFIED": 62,
+    "EXEC_TAUGHT": 16
+  },
+  "concept_counts": {
+    "fvg_imbalance": 9,
+    "structure_event": 4,
+    "order_block": 2,
+    "liquidity": 9,
+    "level_zone": 16,
+    "pd_array": 3,
+    "ma_indicator": 7
+  },
+  "narration_candidates": 37,
+  "rows": [
+    {
+      "condition_id": "WAIT_STRUCTURE:the-gap-you-know-is-created-between-thre#0",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "the gap you know is created between three candlesticks",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "this is a bullish imbalance",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "the imbalance must create a break of structure",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "structure_event",
+        "fvg_imbalance"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "structure_event",
+        "fvg_imbalance"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+      "file": "-igpOZs8LsM__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "map out the FVG that is very close to the order block",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance",
+        "order_block"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "structure_event",
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-generally-like-to-see-price-move-back#3",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I generally like to see price move back into a discount of this price range here",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "pd_array"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:some-sort-of-pd-array-where-generally-i#5",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "order_block",
+        "pd_array"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "for my entry I would personally be looking to enter the trade right here",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:each-one-of-these-concepts-could-be-used#7",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:does-that-meet-all-my-criteria-it-does-n#9",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "does that meet all my criteria it does not because it is in a premium of the range",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "pd_array"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-did-go-a-tick-below-this-low-but-i-do#11",
+      "file": "0xygpCMwxbQ__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "we did go a tick below this low but I do not count that personally",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity",
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-were-going-to-mark-your-entry-point#2",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "you were going to mark your entry point at the candle that made the liquidity grab",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we wait for the entry signal once we get it we enter",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:to-do-this-simply-go-to-metatrader-click#7",
+      "file": "4cT8WTyxhYY__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [
+        "liquidity",
+        "fvg_imbalance"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+      "file": "CLDEIsNpVRc__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "structure_event",
+        "fvg_imbalance"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:come-down-to-vwap-start-a-new-position-b#3",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "come down to vwap start a new position bounce come down to vop start a new position",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "if we're trading over the vwob we're typically more bullish",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:as-long-as-we-re-trading-over-vwap-and-a#5",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-green-line-that-you-see-is-the-vwap#7",
+      "file": "DLwVqcLRcfw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "the green line that you see is the vwap ... the little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+      "file": "DLwVqcLRcfw__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+      "file": "DLwVqcLRcfw__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "how to use vwap as well as a 20 period moving average which 20 simple moving average",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:then-we-have-a-following-candle-that-sta#3",
+      "file": "DLwVqcLRcfw__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "then we have a following candle that starts to build below",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "reclaims the level with a lot of volume",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-use-orderflow-such-as-bookmap-the#9",
+      "file": "E9MzEC_yNoM__s1.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "liquidity"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-stock-came-down-and-it-hit-right-the#2",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "the stock came down and it hit right there that's our entry for a scalp",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "I got the 5 minute chart",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5",
+      "file": "IyFioFkRgWo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-just-have-to-start-tracking-your-hig#0",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "You just have to start tracking your highs and lows on that 15-minut time frame.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "once you find this... breaking above that level... your entry goes here",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:literally-a-abc-setup#5",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "Literally a ABC setup.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+      "file": "PVMgOxHUqFA__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-might-want-to-wait-until-the-price-h#4",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "you might want to wait until the price has gone at least to the first if not the second standard deviation",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "after we broke it and tested it we can try our long trade",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-first-standard-deviation-is-one-the#6",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+      "file": "R5L890juvRw__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "you're not just going to trade based off of vwap only",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "ma_indicator"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:what-we-are-going-to-wait-for-is-one-for#1",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we're going to get to our desks right at 9:30 a.m. EST",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "We're going to start on our five-minute chart.",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we are going to switch to the 1 minute chart",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we're going to wait for a break of the level, but we need a fair value gap",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance",
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "you're going to start on the 15minute chart",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead.",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we're going to mark the high and the low of the first 15-minute candle",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "Instead of going to the one minute chart, we're going to go to the five-minute chart.",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:we-have-now-created-our-fair-value-gap-t#13",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "we have now created our fair value gap through this first candle",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "fvg_imbalance"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "since we broke through the high, the direction is bullish. We're going to be looking for long trades.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+      "file": "WEhmadJArQo__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7",
+      "file": "dV7chra4u4Q__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max.",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I'm on the five-minute time frame, and I need to set up my range",
+      "tf_class": "EXEC_TAUGHT",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "I'm looking for the price to break out the bottom of that range",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "This created a level of supply. I was looking at this supply level right here",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "spine",
+      "object": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [
+        "level_zone"
+      ],
+      "narration_candidate": false
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "on Forex, Nasdaq, gold, everything",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    },
+    {
+      "condition_id": "WAIT_STRUCTURE:i-already-know-the-direction-i-m-looking#15",
+      "file": "kFyD3H6I1I8__s0.spec.json",
+      "type": "WAIT_STRUCTURE",
+      "role": "confluence",
+      "object": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate": true
+    }
+  ]
+}
