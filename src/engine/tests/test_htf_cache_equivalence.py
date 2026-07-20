@@ -93,6 +93,51 @@ def test_shared_builder_matches_the_original_inline_build_byte_for_byte():
         )
 
 
+def _reference_dsl_inline_build(daily_data: pl.DataFrame):
+    """VERBATIM transcription of the OTHER original build — the DSL path
+    (`backtester.py:4391-4401`). It differs from the class path by passing
+    four_h_df=None / one_h_df=None, so byte-neutrality must be proven for THIS
+    shape too (R-067 §2: byte-identical vs the originals, not just one of them)."""
+    from src.engine.context.htf_context import compute_htf_context
+
+    _dsl_htf_cache = {}
+    _htf_ts_col = "ts_et" if "ts_et" in daily_data.columns else "ts_event"
+    for _day_idx in range(200, len(daily_data)):
+        _bar_date = daily_data[_htf_ts_col][_day_idx]
+        _day_key = str(_bar_date)[:10]
+        _dsl_htf_cache[_day_key] = compute_htf_context(
+            daily_df=daily_data.slice(0, _day_idx),
+            four_h_df=None,
+            one_h_df=None,
+            current_price=float(daily_data["close"][_day_idx - 1]),
+            bar_date=_bar_date,
+        )
+    return _dsl_htf_cache
+
+
+def test_shared_builder_matches_the_DSL_inline_build_byte_for_byte():
+    """R-067 §2 — the extraction is a RESULT-NEUTRAL refactor for BOTH real cache
+    build sites. Without this, drift introduced during extraction would masquerade
+    as the wire's effect in the 0.99 re-measure and the ablation would read a lie."""
+    df = _daily_frame()
+    shared = build_htf_cache(df, four_h_df=None, one_h_df=None)
+    reference = _reference_dsl_inline_build(df)
+
+    assert shared is not None and reference
+    assert set(shared.keys()) == set(reference.keys()), "day-key sets diverged (DSL shape)"
+    for key in reference:
+        assert _fields(shared[key]) == _fields(reference[key]), (
+            f"EQUIVALENCE ALARM (DSL shape): shared builder != inline build at {key}"
+        )
+
+
+def test_below_warmup_matches_the_originals_passthrough_condition():
+    """Both originals guard on `len(daily) >= 200` and fall back to passthrough.
+    The shared builder must reproduce that boundary exactly, not fabricate a cache."""
+    assert build_htf_cache(_daily_frame(199)) is None
+    assert build_htf_cache(_daily_frame(200)) == {}  # loop range empty at exactly 200
+
+
 def test_equivalence_probe_is_not_vacuous():
     """Anti-vacuity: the comparison must be able to FAIL. A deliberately wrong
     build (using day_idx's own bar — the look-ahead variant) must be detected."""

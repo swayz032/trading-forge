@@ -52,6 +52,41 @@ when it is time-travel. Non-negotiable requirements:
   breaker/unicorn). A column value must be a provable function of the past. Any
   mismatch is a look-ahead defect, not a tolerance.
 
+## 4b-i. ★ THE INTRA-DAY COMPLETED-BAR PIN (R-067 §3 — the leak class §4b does NOT cover)
+
+§4b's verified causality is **DAILY ONLY** (`slice(0, day_idx)` strictly-prior days,
+`close[day_idx-1]` prior close). That discipline does **not** automatically extend to
+the 4h/1h frames the STRUCTURE wire reads. `_four_h_data` in scope is the WHOLE frame;
+materializing per-bar columns by slicing it `timestamp ≤ t` **LEAKS** wherever bars are
+stamped by OPEN time — a 4h bar stamped 08:00 covering 08:00–12:00 must NOT be visible
+at 10:30, because its OHLC is computed from the bar-`t` FUTURE.
+
+- **BINDING RULE (stamping-convention-agnostic):** an HTF bar is available to exec bar
+  `t` **iff that HTF bar's CLOSE time ≤ t** (completed bars only). The implementation
+  resolves the stamp convention FROM CODE, never assumption.
+- **STAMP CONVENTION — resolved from code (2026-07-19):** the repo's one explicit
+  resample convention is **OPEN-stamped** — `data_loader.py:1237`
+  `group_by_dynamic("ts_event", every="1w", closed="left", label="left")`. Under
+  open-stamping, "close ≤ t" means **`stamp + period ≤ t`**, i.e. `stamp ≤ t - period`
+  — a naive `stamp ≤ t` filter is exactly the leak. NOTE: this is proven for the
+  in-engine WEEKLY resample; the S3-native 4h/1h stamp convention is **NOT yet
+  established from code** and MUST be before the structure wire slices those frames.
+- **Why the existing daily path is safe:** `compute_htf_context` applies the completed-bar
+  discipline INTERNALLY ("All HTF data uses PREVIOUS completed bar (shift(1)) — no
+  look-ahead", `htf_context.py:3/66`) and has a bar_date lookahead filter
+  (`context_runner.py:162`). Slicing the 4h frame ourselves BYPASSES that protection —
+  which is precisely why the structure wire needs its own proof.
+- **TWO GRANULARITIES (name them, do not conflate):**
+  - **bias columns = per-DAY constants** — causal via the day-key (what the spike built).
+  - **structure columns = STEP FUNCTIONS advancing per COMPLETED HTF bar.** A
+    daily-frozen structure column would UNDER-shoot fidelity; a forming-bar leak would
+    FAKE it. Both failures are silent.
+- **PROOF OBLIGATION:** the §4b truncated-replay MUST include an **intra-day straddle**
+  case — an exec bar mid-way through a forming 4h bar — before the structure wire lands.
+- **Standing caveat (R-067 §3):** code-inspection of a builder's causality is a CLAIM
+  until truncated-replay proves it; inspection catches the obvious slice, not the
+  stamp-convention leak.
+
 ## 4c. ★ EQUIVALENCE TWO-PATH (R-066 §3 — free and decisive)
 
 The same evaluator functions now run at TWO call sites: the new upstream column
