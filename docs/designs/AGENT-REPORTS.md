@@ -4,6 +4,26 @@
 
 ---
 
+## AR-115 · 2026-07-20 · T1 REMAINDER — **`detect_bos` · `detect_choch` · `compute_premium_discount` all CLEAN**, plants firing in the thousands. ★ **And the static heuristic scored 0 for 3 — it is a router, not a predictor.** That answers the question I asked it for, and it re-sequences the remaining twelve.
+
+| detector | plant mismatches | real code | verdict |
+|---|---|---|---|
+| `detect_bos` | **12,330** | **0** | **CLEAN** |
+| `detect_choch` | **13,047** | **0** | **CLEAN** |
+| `compute_premium_discount` | **8,185** | **0** | **CLEAN** |
+
+**1. The harness was proven sensitive before any clean verdict was accepted.** Each plant reproduced the confirmed defect's *shape* — a threshold quietly derived from the **global-last** swing rather than the index-gated pointer walk — and fired in the thousands. Trace: the plant reports `bearish` at bars 0–21 using a swing born at **bar 201**, while the truncated frame correctly knows **no swings at all** yet. **Real code: 0 mismatches across every seed, every probe bar, every `0..i` comparison.**
+
+**2. ★ The knowability trap was handled explicitly, and I want the method recorded** because it is the one that produced my false 7/39: the runner probed at **every `swing_index ± 1`** — the exact boundary — and **stated its alignment and why no offset was needed**: `detect_swings` bakes in a `+half_window` confirmation delay, and all three consumers walk swings under a strict `< i` gate, so the gate **re-derives the delay algebraically.** Verified bar-by-bar rather than at a guessed offset. **That is the alignment being audited rather than assumed.**
+
+**3. ★★ THE META-RESULT, which is worth more than the three verdicts: the static "global-scan" classification predicted 0 of 3.** All three it flagged as suspect are clean — and the *actual* defect lived in `liquidity.py`'s clustering, which the same heuristic also tagged, alongside these false positives. **So the tier is a low-precision router: useful for deciding what to probe first, worthless as a stand-in for a probe result.**
+- **Consequence for the remaining twelve, and I am stating it before anyone is tempted:** **T3 cannot be batch-cleared on its tag.** The heuristic has now demonstrated it cannot distinguish clean from defective code shapes — a "simple/recursive" tag is no more evidence of safety than "global-scan" was of danger. **Every remaining detector still owes its own plant-catch**, exactly as your T3-is-a-scheduling-tier ruling already said. **This is the empirical backing for that ruling rather than a revision of it.**
+
+**4. Declared not-verified, carried:** `detect_mss`, `detect_choch_with_context`, `detect_mss_with_context`, `compute_equilibrium`, `premium_discount_zone` — same file, **not on the target list, not probed** (the runner notes `compute_equilibrium` shares the identical pointer-walk shape and would *likely* clear — **likely is not a verdict**); no duplicate-price / all-null / single-bar edge cases; **synthetic data only, no real-market replication.**
+
+**Board:** 5 of 19 detectors now have validated verdicts (4 clean + 1 confirmed-and-fixed), plus `detect_sweep` confirmed defective at its own boundary. **Holds:** six barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed. Reconciliation + per-call-site census still in flight.
+
+
 ## AR-114 · 2026-07-20 · R-123 §2+§3 dispatched — **and I discarded my own enumeration first: my file-level gating heuristic called `eqhl_raid` GATED, which the audit just PROVED false.** Gating is per-PATH, not per-file. Fourth coarse instrument of mine tonight; caught before it travelled.
 
 **1. ★ THE INSTRUMENT I THREW AWAY, and why it matters more than the table it produced.** I ran a quick file-level scan for index-gating across the seven BSL/SSL consumers. It reported **`eqhl_raid.py` = GATED.** **AR-113 had just proven the opposite** — that file gates its **EQH/EQL entry** path (`:108,116`) and leaves its **BSL/SSL take-profit target** path **un-gated** (`:157-160,173-176`). **One file, two consumptions, opposite gating.** My scan saw the first and reported the file.
