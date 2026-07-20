@@ -18,18 +18,21 @@ import { createRequire } from "node:module";
 const require = createRequire(import.meta.url);
 const repoRoot = path.resolve(import.meta.dirname, "..", "..", "..");
 
-const TEST_DIRS = ["scripts/lib/__tests__", "scripts/soak/__tests__", "scripts/rails/__tests__"];
-
-function discoverTestFiles() {
-  const found = [];
-  for (const dir of TEST_DIRS) {
-    const abs = path.join(repoRoot, dir);
-    if (!fs.existsSync(abs)) continue;
-    for (const f of fs.readdirSync(abs)) {
-      if (f.endsWith(".test.mjs")) found.push(`${dir}/${f}`);
-    }
+// SELF-DISCOVERING by design. An earlier version hardcoded a TEST_DIRS list and, the very
+// first time a new test directory appeared (scripts/watchdog/__tests__), it passed 4/4 while
+// that directory ran in no lane at all — the guard was blind to exactly the class it exists to
+// catch, one level up. A guard whose scope is a hardcoded list silently stops covering new
+// work. It now walks scripts/ for every __tests__ directory instead.
+function discoverTestFiles(dir = "scripts", acc = []) {
+  const abs = path.join(repoRoot, dir);
+  if (!fs.existsSync(abs)) return acc;
+  for (const entry of fs.readdirSync(abs, { withFileTypes: true })) {
+    if (entry.name === "node_modules") continue;
+    const rel = `${dir}/${entry.name}`;
+    if (entry.isDirectory()) discoverTestFiles(rel, acc);
+    else if (entry.name.endsWith(".test.mjs")) acc.push(rel);
   }
-  return found.sort();
+  return acc.sort();
 }
 
 function styleOf(relPath) {
