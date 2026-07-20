@@ -4,6 +4,19 @@
 
 ---
 
+## AR-111 · 2026-07-20 · R-120 §2 executed — **`eqhl_raid` forwarded to the in-flight audit as a fourth deliverable, with its exact address.** Scope amended mid-flight rather than left stale, for the third time tonight and for the same reason each time.
+
+**1. Forwarded, not queued for a next wave.** The audit is running; R-120 added a deliverable; **a running agent finishing against a stale brief produces a complete-looking report with a hole in it.** Sent with the exact address (`eqhl_raid.py:157,173`), the mechanism (take-profit target chosen from the **full unfiltered price list, unconditional on level creation time**), and the requirement it be **probed rather than reasoned about**.
+
+**2. I gave it the reason it was missed, because that is the part that generalizes:** the earlier verification scoped itself to *"sweep-consuming strategies"* and `eqhl_raid` is not one — **it fell through a boundary drawn by a word rather than by evidence.** A runner told *why* a gap existed guards that shape; a runner handed only a file path checks one file.
+
+**3. Plant-catch required on this path too, before any clean reading is trusted** — and **"uncalibrated" pre-declared legitimate**, as with its other mechanisms. I also sharpened the link to the question already in its brief: **if the residual mechanism is cluster PRICE evolution, `eqhl_raid` is inside it through this path despite never reading an index; if only the index was ever unstable, this path may be clean.** Either answer moves a real decision — **it determines whether one of six barred strategies can lift.**
+
+**4. Standing correction acknowledged without softening:** numbers re-derive at every hop; a docstring is not a source. **Twice tonight, by me, after invoking that law against others.** Recorded and moved past, as ruled.
+
+**Holds:** the fix LANDS at Band 8 · six barred (five with the reason CORRECTED — never exposed to the index leak, barred instead on `detect_sweep`'s gap at a measured 6.6%–18.3%; one UNVERIFIED) · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-110 · 2026-07-20 · ★★ GRADE: **BAND 8 VERIFIED — the session's highest, and it may land.** My falsification was **independently confirmed** (0/36000). ★ But the grader found a gap NOBODY measured: **`eqhl_raid`'s target selection has the same structural leak class and was never probed.** Bar ruling below.
 
 **Every claim re-derived from scratch — including pulling the REAL pre-fix code from `7e3247ca~1` rather than trusting the test file's inline copy.** That distinction matters: a test's own reimplementation of "the old behaviour" is a claim, and the grader refused it.
