@@ -1,0 +1,19 @@
+{
+  "receipt": "R-075 reader-vintage SAMPLE DRAW — independent re-derivation (two-path obligation)",
+  "date": "2026-07-20",
+  "obligation": "R-075 §2: 'The agent RE-DERIVES the whole draw at dispatch; disagreement = ALARM.' Re-derived early, before dispatch, so any disagreement surfaces before budget is spent.",
+  "population_anchor": "docs/replay-results/h1-battery/tier-a-clean-strategy-receipt.json (9 clean videos of 11)",
+  "steps": {
+    "clean_videos": {"mine": 9, "fable": 9, "match": true},
+    "criterion_i_max_n_clean": {"value": 2, "tied": ["YqY0OkL5LMI", "st5e-YJRfKc"], "byte_order_pick": "YqY0OkL5LMI", "fable": "YqY0OkL5LMI", "match": true},
+    "seed_source": "SHA-256 of the manifest FILE BYTES docs/designs/h1-wave6-sealed-fresh-set-2026-07-12.json (NOT the internal sealed_sha256 field — the two-readings ambiguity the red-team caught)",
+    "seed": {"mine": "e7f16b4ccf0ad650986ae4bb448e782905514ef1dbf3270e3f45fd0248525e07", "fable": "e7f16b4ccf0ad650986ae4bb448e782905514ef1dbf3270e3f45fd0248525e07", "match": true},
+    "k": {"formula": "seed mod 28", "mine": 7, "fable": 7, "match": true},
+    "remaining_8_byte_ordered": ["0RBexa9JpIg", "ExB66jcyKxg", "LD1FEbwXU4o", "YGdFksLavKE", "dENM6gt8ZRg", "hcHuDfxdywI", "pKzXxB9Blts", "st5e-YJRfKc"],
+    "n_pairs": {"value": 28, "expected": 28, "match": true},
+    "pair_at_k": {"mine": ["ExB66jcyKxg", "LD1FEbwXU4o"], "fable": ["ExB66jcyKxg", "LD1FEbwXU4o"], "match": true}
+  },
+  "SAMPLE": ["ExB66jcyKxg", "LD1FEbwXU4o", "YqY0OkL5LMI"],
+  "VERDICT": "FULL AGREEMENT — no alarm. Every step of the draw reproduces independently from disk.",
+  "scope": "This re-derives the DRAW only. The audit itself is NOT executed here — R-076 §5 sequences reader-vintage execution after the independent grade, WIRE-2 and confirmation_native."
+}
