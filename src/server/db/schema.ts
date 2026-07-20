@@ -3590,3 +3590,53 @@ export const economicReleaseDates = pgTable(
 
 export type EconomicReleaseDateRow = typeof economicReleaseDates.$inferSelect;
 export type NewEconomicReleaseDateRow = typeof economicReleaseDates.$inferInsert;
+// ─────────────────────────────────────────────────────────────────────────────
+// Slumhouse per-member office (migration 0205 — ops-experience, 2026-07-20)
+// ─────────────────────────────────────────────────────────────────────────────
+// Two tables at DELIBERATELY opposite trust levels (OR-017 §1):
+//   slumhouseMemberPins  — REAL. The member's own office PIN: a second factor
+//     behind Discord OAuth. pin_hash is scrypt, encoded `scrypt$N$r$p$salt$hash`
+//     so cost params travel with the record (src/server/lib/member-pin.ts).
+//   slumhouseConnectTest — TEST ONLY. The floating broker-connect card's state.
+//     The TEST-ness lives in the NAME, not a filter column. `broker_accounts` is
+//     never written from this lane; at Phase 5 the FLOW migrates, never the DATA.
+export const slumhouseMemberPins = pgTable(
+  "slumhouse_member_pins",
+  {
+    discordUserId: text("discord_user_id").primaryKey(),
+    pinHash:       text("pin_hash").notNull(),
+    failures:      integer("failures").notNull().default(0),
+    lockedUntil:   timestamp("locked_until", { withTimezone: true }),
+    createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:     timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_slumhouse_member_pins_locked").on(table.lockedUntil),
+  ],
+);
+
+export type SlumhouseMemberPin = typeof slumhouseMemberPins.$inferSelect;
+export type NewSlumhouseMemberPin = typeof slumhouseMemberPins.$inferInsert;
+
+// TEST-ONLY. Never holds a real broker credential; `testKeyRef` references an
+// encrypted DESIGNATED TEST key, encrypted as practice for the real Phase-5 vault
+// flow rather than to protect anything valuable.
+export const slumhouseConnectTest = pgTable(
+  "slumhouse_connect_test",
+  {
+    id:            uuid("id").primaryKey().defaultRandom(),
+    discordUserId: text("discord_user_id").notNull(),
+    brokerKind:    text("broker_kind").notNull(),   // 'topstepx' | 'traderspost' (CHECK in 0205)
+    testKeyRef:    text("test_key_ref"),
+    status:        text("status").notNull().default("pending"), // pending|validated|rejected (CHECK)
+    validatedAt:   timestamp("validated_at", { withTimezone: true }),
+    createdAt:     timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:     timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_slumhouse_connect_test_user").on(table.discordUserId),
+  ],
+);
+
+export type SlumhouseConnectTest = typeof slumhouseConnectTest.$inferSelect;
+export type NewSlumhouseConnectTest = typeof slumhouseConnectTest.$inferInsert;

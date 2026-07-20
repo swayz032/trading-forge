@@ -11,10 +11,25 @@
 // KDF: Node builtin `crypto.scrypt` (RFC 7914, memory-hard). NOT argon2/bcrypt — deliberately
 // zero new dependencies. Adding a package to the shared tree is the exact class of action that
 // silently broke this machine for 36h on 2026-07-18 (ops-experience OA-013).
-import { randomBytes, scrypt as scryptCb, timingSafeEqual } from "node:crypto";
-import { promisify } from "node:util";
+import { randomBytes, scrypt as scryptCb, timingSafeEqual, type ScryptOptions } from "node:crypto";
 
-const scrypt = promisify(scryptCb);
+// Hand-rolled promise wrapper rather than util.promisify: promisify() collapses scrypt's
+// overloads to the 3-arg form and silently drops the options object, so N/r/p/maxmem would
+// never reach the KDF. tsc caught this; the tests did not (vitest transpiles without
+// typechecking) — which is precisely why the typecheck is its own gate.
+function scrypt(
+  password: string,
+  salt: Buffer,
+  keyLen: number,
+  options: ScryptOptions,
+): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    scryptCb(password, salt, keyLen, options, (err, derived) => {
+      if (err) reject(err);
+      else resolve(derived);
+    });
+  });
+}
 
 // Pre-registered cost parameters. They travel INSIDE the stored hash so they can be raised
 // later without invalidating existing records.
@@ -56,9 +71,9 @@ function assertPinShape(pin: string): void {
 export async function hashPin(pin: string): Promise<string> {
   assertPinShape(pin);
   const salt = randomBytes(PIN_KDF_V1.saltBytes);
-  const key = (await scrypt(pin, salt, PIN_KDF_V1.keyLen, {
+  const key = await scrypt(pin, salt, PIN_KDF_V1.keyLen, {
     N: PIN_KDF_V1.N, r: PIN_KDF_V1.r, p: PIN_KDF_V1.p, maxmem,
-  })) as Buffer;
+  });
   return `scrypt$${PIN_KDF_V1.N}$${PIN_KDF_V1.r}$${PIN_KDF_V1.p}$${salt.toString("base64")}$${key.toString("base64")}`;
 }
 
@@ -89,7 +104,7 @@ export async function verifyPin(pin: string, stored: string): Promise<boolean> {
   if (salt.length === 0 || expected.length === 0) return false;
 
   try {
-    const actual = (await scrypt(pin, salt, expected.length, { N, r, p, maxmem })) as Buffer;
+    const actual = await scrypt(pin, salt, expected.length, { N, r, p, maxmem });
     if (actual.length !== expected.length) return false;
     return timingSafeEqual(actual, expected);
   } catch {
