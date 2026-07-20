@@ -4,6 +4,45 @@
 
 ---
 
+## AR-071 · 2026-07-20 · R-080 §5 executed — and its prerequisite found a ★ DEFECT IN THE CENSUS ITSELF: **v1 double-counted 2 specs, n=90 is really n=78.** The HTF headline SURVIVES (0 either way, and under an independent rule set). But R-080 §5's sample spec is **unexecutable as written** and needs re-issue. Corrected census v2 committed `38e5ba71`.
+
+**I did not reach the blind grade.** Drawing its sample required reading the census artifact, and the artifact does not support the draw. What I found instead:
+
+**★ THE DEFECT.** `-igpOZs8LsM__s0.spec.json` and `4cT8WTyxhYY__s0.spec.json` exist in **both** `packet2_dod_specs/` and `shakedown_specs/` — byte-identical, same SHA-256. v1 globbed both directories and emitted every condition from those 2 specs **twice**. Exactly 2× on those two files (10 vs 5, 14 vs 7); the other 12 files match exactly. `packet2_dod_specs/` holds only 2 specs and both are already in `shakedown_specs/` — it is a strict subset, so the proposal's "16 shakedown + 3 packet2" is really **16 distinct specs**, 14 of which carry structure conditions.
+
+**Confirmed three independent paths, all 78:** distinct `(file, role, object, class)` tuples in v1 = 78 · direct count of `WAIT_STRUCTURE`/`VERIFY_STRUCTURE` in the source specs = 78 · v2 generator = 78.
+
+**WHAT SURVIVES — the load-bearing finding is robust.** `HTF_TAUGHT = 0` on the corrected denominator, **and** under a second, independently-authored rule set. R-080 §3's build direction (drop the HTF-structure build; decompose) is **UNAFFECTED**. I want that stated plainly before the corrections below, because the corrections do not touch it.
+
+**WHAT MOVES:**
+
+| | v1 (n=90) | v2 corrected (n=78) |
+|---|---|---|
+| HTF_TAUGHT | 0 — 0.0% | **0 — 0.0%** |
+| EXEC_TAUGHT | 11 — 12.2% | **16 — 20.5%** |
+| TF_UNSPECIFIED | 79 — 87.8% | **62 — 79.5%** |
+| structure event | 6 (§1b) / 7 (boolean) | 4 |
+
+**R-080 §2's "79 TF_UNSPECIFIED (87.8%)" corrects to 62 (79.5%).** The house-default-with-provenance-stamp form is unchanged in kind — it now applies to 62 occurrences.
+
+**Two further v1 defects, both material to §5:**
+1. **v1 shipped no generator** (commit `3db7fa88` = artifact + proposal only). So §1b's concept table (level/zone 27.8%, narration 35.6%, …) is **unreproducible**, and it was computed on the inflated 90.
+2. **v1 persisted no per-row concept label** — only `class` and `names_structural_event`. So §5's "~15 drawn from TF_UNSPECIFIED/**narration**/**level-zone**" **cannot be drawn** from the artifact.
+
+**Therefore §5's sample spec is unexecutable as written, and I am not guessing at it.** "All **6** structure-event calls" matches no classifier on disk: v1's persisted boolean says **7** (of which only 5 are distinct — 2 are duplicates), v1's §1b concept regex said **6**, v2 says **4**. The "6" came from the unreproducible concept classifier, a *different* classifier from the persisted boolean. **Please re-issue the sample definition against v2**, where every stratum is materialized and every label reproducible.
+
+**v2 (`38e5ba71`) fixes both defects:** generator committed, every label persisted, dedup keyed on condition `id`, and a **fail-closed** assert if two same-named specs ever differ by hash (vintage ambiguity would be a worse bug than the duplication). **Concept labels in v2 are a RECONSTRUCTION** — v1's regexes are unrecoverable; I have labelled them as such in the artifact and I am not presenting them as the originals.
+
+**★ My own error, on record.** v2's first draft returned EXEC=5 against v1's 11. The two-path diff against v1 showed **v1 was right and I was wrong** — my regex required digits and whitespace, missing word-numerals and hyphens ("five-minute", "one minute", "15minute"). Fixed; the reason is recorded at the regex. On re-run the two rule sets disagree on **5 of 78 (6.4%)** — comfortably inside your 15% threshold — and I inspected all 5: **v2 is correct on all five** (v1 undercounted EXEC). I flag that I am adjudicating a disagreement between v1-me and v2-me, which is exactly what §5's independent grader exists to settle; I am not treating my own adjudication as the grade.
+
+**Containment — the floor is CLEAN.** I swept the class per fix-the-whole-class: both `wire1-dod-HONEST-FLOOR.json` and `wire1-dod-remeasure.json` carry **16 rows, each spec exactly once**. **The 0.9938 → 0.9793 honest floor is uncontaminated by this defect.** v1's census artifact is RETAINED, not deleted.
+
+**What this says about the premise-audit law.** The census was evidence for a build decision, and its own denominator was wrong by 15%. It was caught because §5 sent someone to check the classifier rather than consume it. The pattern that keeps paying here is the same one: **the artifact everyone is standing on is the one nobody audited.**
+
+**Asking for your ruling on four things, before I proceed:** (1) ratify n=78 + v2 as the blind-grade substrate; (2) re-issue §5's sample definition against v2's strata; (3) rule whether the concept labels being a reconstruction changes the grade's design — my read is it *strengthens* it, since the grader now classifies from condition texts rather than re-checking my saved labels; (4) confirm the level/zone premise-audit spike (§6 step 2) may start in parallel now, or should wait on (1). **Not started, deliberately** — it is measurement not build, but it selects its target population *from the census*, and I would rather not aim it at a denominator you have not ratified.
+
+**Holds respected:** T1 blocked · WIRE-2 blocked pending its own premise audit · reader-vintage queued · flag OFF · the 77 sealed. No fidelity number is claimed here. Worktree `wt-h1-wave4-20260712`; explicit-path commit only — the OPS seat's files and your uncommitted R-080 are untouched (verified: stash list empty after a pre-commit hook auto-stash, which is a §11b hazard worth knowing the hooks introduce).
+
 ## AR-070 · 2026-07-20 · R-079 executed: honest FLOOR issued (**the 0.99 essentially did NOT move — 0.9938 → 0.9793**), and the ★★ CENSUS REDIRECTS THE BUILD: **ZERO of 90 structure occurrences taught HTF structure.** Architecture proposal staged for your ratification. Also: my monitor's real failure diagnosed and fixed.
 
 **§3 (b)-as-FLOOR — ISSUED IMMEDIATELY (`4964150f`), the ledger is true today:**
