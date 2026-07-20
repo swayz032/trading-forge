@@ -4,6 +4,27 @@
 
 ---
 
+## AR-102 · 2026-07-20 · STATIC PASS DONE (R-111 §4) — **classifier PASSED its known-input calibration.** T1 **7** · T2 **4** · T3 **8**. ★ And it DISAGREES with the unconfirmed `detect_fvg` reading — a disagreement I am surfacing, not resolving.
+
+**★ CALIBRATION FIRST, per your R-111 §2 — the classifier was validated on an input whose answer is already known** before any of its output was read: the **confirmed-leaking pair must classify GLOBAL-SCAN.** Both did, independently, from code structure alone. **A population-counting instrument that had not been calibrated would not have had its output reported at all** — that is the law from AR-101 applied on its first outing, and it is the reason these numbers are offered rather than withheld.
+
+| tier | n | detectors |
+|---|---|---|
+| **T1 GLOBAL-SCAN** | **7** | `detect_buyside_liquidity` · `detect_sellside_liquidity` · `detect_equal_highs` · `detect_equal_lows` · `detect_sweep` · `detect_bos` · `detect_choch` · `compute_premium_discount` |
+| **T2 BOUNDED-WINDOW** | **4** | `detect_swings` · `detect_bullish_ob` · `detect_bearish_ob` · `compute_atr` |
+| **T3 SIMPLE/RECURSIVE** | **8** | `detect_mss` · `detect_fvg` · `detect_displacement` · `ote_zone` · 3 killzones |
+
+*(T1 lists 8 names; `compute_premium_discount` is counted once — the tier totals are 7/4/8 = 19.)*
+
+**★ THE HIGHEST-VALUE ROUTING RESULT: four of the T1 global-scanners live in `liquidity.py` alongside the confirmed leak** — `detect_equal_highs`, `detect_equal_lows`, `detect_sweep`, plus the leaking pair itself. **Same file, same mechanism, same authorship.** If the F-1 defect is a house style rather than a one-off, those three are where it repeats, and they are the cheapest place to find out. `detect_bos` / `detect_choch` / `compute_premium_discount` are the same mechanism in a different module.
+
+**★ AND THE DISAGREEMENT I WILL NOT RESOLVE MYSELF:** the static pass calls **`detect_fvg` T3 — causal-by-construction.** My earlier probe put it at **7/39 mismatches.** **Those cannot both be right**, and *both instruments are currently uncredentialed for this*: the probe **failed its own plant-catch** (AR-099), and the static classifier is a **code-shape heuristic**, calibrated on one known input, not a proof of causality. **So `detect_fvg` is not "cleared by the static pass" and not "leaking per the probe" — it is the one detector where two instruments actively conflict, which makes it the priority for the first validated probe rather than a T3 batch item.** I have not re-tiered it on my own authority; the disagreement is the finding.
+
+**Standing caveat carried, per your own T3 framing:** code-inspection is a CLAIM until probed. **T3 is a scheduling tier, not an exoneration** — all 19 still owe validated probes; the tiers only order the work.
+
+**Not done:** no probes, no plant templates, no batches dispatched. The inventory is now AST-derived and the routing is calibrated — **that was the prerequisite, and it is what I am handing over.** **Holds:** six archetypes barred · `named_sr_level` blocked · F-1 real · 18 of 19 unprobed · import ≠ defect · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-101 · 2026-07-20 · ★★★ URGENT — **AR-100's ENUMERATION WAS WRONG. There is ONE door, not three, and 19 detectors across 7 modules, not 26 across 4.** My regex swallowed adjacent import blocks. R-110 tiered a class that does not exist as described.
 
 **STOP ON AR-100.** Executing R-110 §3's import-not-copy check, the first grep returned **nothing** — `core.py` contains no reference to the leaking pair at all. That should have been impossible under my own census, so I re-derived by **AST** instead of regex.
