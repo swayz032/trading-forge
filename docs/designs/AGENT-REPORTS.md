@@ -4,6 +4,20 @@
 
 ---
 
+## AR-081 · 2026-07-20 · R-091 §1 GO executed — **packet STAGED first (`bb49003f`), then implementer DISPATCHED** (receipt held, per your R-089 law). Classified AUTONOMOUS, not reserved — reasoning stated for audit rather than assumed.
+
+**1. Packet staged BEFORE any code** (`docs/designs/packet-levelzone-subwire-2026-07-20.md`). CLAUDE.md §11 makes the ratify-packet skill a MUST-fire on instrument surfaces, and I did not treat your §1 GO as a substitute for it — the GO authorizes the build; the packet is the receipt the grader rules on. All five parts staged: receipts (audit `969cbe76` + the incumbent's level-free signature), blast radius, scope-lock, verification plan, rollback.
+
+**2. Classification reasoning, stated so it can be challenged rather than assumed.** I ruled this **autonomous, not the irreversible/live-capital class**, because: the system is pre-live by design (no capital moving); no live default is altered; the sealed 77, `TF_WIRE1_HTF_COLUMNS`, the frozen forensics pre-reg and every promotion/sizing path are untouched; and **your §1 already gates `approximation=False` behind an independent grade**, so the build cannot itself mint a fidelity claim. Under the 2026-07-11 amendment the grade is the gate, not permission. **If you read the class differently, say so and I will hold** — the packet is staged and nothing has landed.
+
+**3. Blast radius, explicitly bounded:** level/zone binding plans and any rate computed over those rows — **under dual denominators, with no artifact silently replaced.** The honest floor is bias-credit only and is NOT re-baselined by this. Out of scope and named: the other six concepts, any `approximation=False` flip, any denominator move, the narration rule, the session resolver, `SESSION_KEYWORDS`, tier-a.
+
+**4. Implementer DISPATCHED — and I am claiming "running" with a receipt, not on the packet's existence** (your R-089 law, which I earned the hard way). Scope-locked brief carries the packet §3 lock verbatim plus: flag-gated **default OFF with byte-identity to be PROVEN not asserted**; `approximation=True` stays; **concept classifier REUSED from the committed census generator, not re-authored** (a second divergent classifier is the defect class this campaign keeps convicting); two-commit law; explicit-path commits only. **Cadence isolated from signal is in the verification plan as non-negotiable** — WIRE-1's 721→631 was cadence masquerading as fidelity precisely because they moved together.
+
+**5. ★ Your over-strict-guard law is already propagating into the brief:** the implementer is required to ship an anti-vacuity companion **for every guard it writes** — each guard shown to PASS a known-good and FAIL a known-bad case — with my own `any(constant)` failure cited as the shape not to repeat. A guard that has only ever been seen to pass is not yet a guard.
+
+**6. Next in this lane:** implementer returns → **fresh-context independent grader** (doer ≠ grader, mandatory) → post-hoc plain-English summary to the operator for his standing veto. The narration nominator+judgment pass and the role-aware session packet remain in their own lanes. **Holds:** T1 blocked · WIRE-2 pending its own two-leg audit · reader-vintage queued · flag OFF · nothing moved a denominator · the 77 sealed.
+
 ## AR-080 · 2026-07-20 · ★★ LEVEL/ZONE PREMISE AUDIT — **PREMISE HOLDS ON BOTH LEGS** (`969cbe76`). The first sub-wire's mechanism is LIVE and the thing it replaces is provably BLIND — the exact opposite of WIRE-1. R-090 §5 executed; the pattern-setter is set.
 
 **LEG 1 — the NEW detector is LIVE.** Varying `level` through `retest_touch_check` with bars held constant moves the binding: **63 touches** (level near price) / **0** (level 40pts away) / **299** (level hugging price). Non-degenerate, **both polarities exercised** (a genuine zero and a genuine saturation), replay-deterministic — fixed seed, synthetic bars, no DB, no clock, no network.
