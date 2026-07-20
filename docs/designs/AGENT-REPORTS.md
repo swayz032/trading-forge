@@ -4,6 +4,30 @@
 
 ---
 
+## AR-119 · 2026-07-20 · ★★★ THE 50x GAP IS RESOLVED — **a test-scale artifact, not a disagreement.** The sweep-bit leak is **DECISION-LEVEL INERT** (0 mismatches across 20 well-powered tests). ★★ And a **FOURTH instance** was found: `ict_swing` has its own un-gated target path — **6 of 149 real entries differ, one using a level created 373 bars later.**
+
+**1. ★ THE 50x RESOLVES, and neither number was wrong.** Both instruments count the same thing — a per-bar sweep-bit mismatch between truncated and full runs. They differ only in **denominator protocol**: Instrument B re-checks all bars `[0,C)` at **every** cutoff, so early bars are counted repeatedly. **The decisive test: B's own protocol run on real ES data instead of its 150-bar synthetic fixture → 0.42%**, collapsing into A's range.
+- **Root cause:** the contamination zone is a **fixed width** (~100–140 bars). On a 150-bar fixture that is most of the window, re-counted across ~24–48 cutoffs; on 20–40k production bars it is a rounding error. **Holding protocol fixed and changing only data scale moved 18% → 0.4%.**
+- **This is why I refused to scope a packet on either figure.** Both were honestly measured and both were real; the gap was in what the fixture represented.
+
+**2. ★★ THE BRIDGE IS EMPTY — and the prior test was underpowered for a reason nobody had checked.** AR-113 found 0 entry mismatches on `ICT2022Strategy` and honestly called it NOT VERIFIED. **The reason: `ict_2022` fires 0 long / 2 short entries in 40,000 real bars — there was almost no signal to mismatch.** Re-run across all five strategies where the others fire **39–149 real signals**: **0 mismatches / 0 / 0 / 0, across 20 well-powered tests.**
+- **So `detect_sweep`'s index-blindness is REAL but DECISION-LEVEL INERT** on this corpus: the bit flips, and it never changes an entry.
+- **Answer to your sizing question: NEITHER number should size a fix packet.** Both measure an inert proxy. **That re-orders the lane** — the confirmed `detect_sweep` defect drops in priority against what actually moves trades.
+
+**3. ★★ F-1 CRITICAL — A FOURTH INSTANCE, in a file nobody had traced.** `ict_swing.py:115-116` builds flat, unfiltered price lists from the whole-df BSL/SSL output; `:199-203` and `:211-215` pick the nearest price **with zero index comparison** — **structurally identical to `eqhl_raid`**. Every prior pass in this lane, including my own packet, asserted the other four were exposed **only** through `detect_sweep`'s entry path. **That was wrong.**
+- **6 of 149 real entries (4.0%) differ.** Trace: entry bar **13148** — causally **no** target exists yet, but the shipped strategy uses **2858.88**, from a level not created until bar **13521 — 373 bars after the entry**, a well-formed 12-member cluster, not noise.
+- **The existing test is blind to it:** `TestCallSiteTruncation` only checks sweep booleans, never `entry_*`/`exit_*`. **A regression suite can pass while the decision-level defect it was written near goes unmeasured.**
+- It also **independently re-derived `eqhl_raid` with a fresh script**: **20/163 real entries (12.3%)** — 3x the rate of my earlier non-exhaustive sample.
+
+**4. Census closed, AST-derived: exactly 7 production consumers, no consumer outside the named list** — matching AR-106. `paper_bridge` confirmed **not** a consumer (third independent confirmation). `detect_raid` has **zero production callers** — dormant. `turtle_soup`'s `equal_bsl_prices`/`equal_ssl_prices` are **dead code**, computed and never read. `spec_condition_compiler` verified gated **two ways** — code read **and** 0/46,500 empirical.
+
+**5. What this does to the board, stated plainly:** the residual fix is **not** `detect_sweep`. It is **target selection in `eqhl_raid` and `ict_swing`** — decision-level, measured, two files, both needing the index gate `eqhl_raid` already applies on its *entry* path. **The bar on those two rests on measured harm; the bar on the other three now rests on an inert proxy** and should be re-examined on that basis — **your call, not mine.**
+
+**Not verified, carried:** `ict_scalp`'s own target path read as gated but **not empirically truncation-tested** · no adversarial dataset built to upper-bound the empty bridge beyond real ES history · `spec_condition_compiler`'s `swing`/`order_block_edge` kinds not separately re-tested.
+
+**Holds:** six barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-118 · 2026-07-20 · T3 remainder DISPATCHED (receipt held) — `detect_mss` · `detect_displacement` · `ote_zone` · 3 killzones. ★ The brief treats **"causal by construction" as the most dangerous tag yet**, and says so in those words.
 
 **1. ★ The tag is attacked directly in the brief, because this tier is where a shallow probe is most tempting.** These six are labelled *"simple/recursive — causal by construction."* The brief tells the runner that label **is not evidence and must not shorten its work**, citing the heuristic's record: **0 for 3** on the tier it called dangerous, **and** it tagged the one genuinely defective detector. **It cannot distinguish clean from defective in either direction.**
