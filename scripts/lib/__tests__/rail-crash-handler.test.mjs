@@ -87,6 +87,51 @@ test("notify failure STILL writes the ledger row (no suppression)", async () => 
   assert.equal(r.notify.ok, false);
 });
 
+// ── F-1 (Grade A CRITICAL): a sink that REPORTS failure by RETURN VALUE, not by throwing ──
+// Every prior test used a sink that returned undefined or threw. The REAL sink
+// (rail-runtime.postDiscord) never throws — it returns {ok:false, reason} on a missing webhook,
+// a non-2xx, or a network error. So notifyOk read TRUE in every real Discord failure: the crash
+// row lied about delivery, exactly when alerting was broken.
+test("F-1: a sink RETURNING {ok:false} is a FAILURE, not a success", async () => {
+  const r = await crash({
+    rail: "cert", error: moduleNotFound(), nowMs: 5,
+    writeLedgerFn: () => {},
+    notifyFn: async () => ({ ok: false, reason: "discord_webhook_missing" }),
+  });
+  assert.equal(r.notify.ok, false);
+  assert.match(r.notify.reason, /discord_webhook_missing/);
+});
+
+test("F-1: the real postDiscord failure shapes are all caught", async () => {
+  for (const reason of ["discord_webhook_missing", "discord_http_500", "discord_failed:ECONNREFUSED"]) {
+    const r = await crash({
+      rail: "cert", error: moduleNotFound(), nowMs: 5,
+      writeLedgerFn: () => {},
+      notifyFn: async () => ({ ok: false, reason }),
+    });
+    assert.equal(r.notify.ok, false, reason);
+  }
+});
+
+test("F-1: a sink returning {ok:true} or undefined is still a success (no false alarm)", async () => {
+  const a = await crash({ rail: "cert", error: moduleNotFound(), nowMs: 5,
+    writeLedgerFn: () => {}, notifyFn: async () => ({ ok: true }) });
+  assert.equal(a.notify.ok, true);
+  const b = await crash({ rail: "cert", error: moduleNotFound(), nowMs: 5,
+    writeLedgerFn: () => {}, notifyFn: () => undefined });
+  assert.equal(b.notify.ok, true);
+});
+
+test("F-1: a ledger sink reporting {ok:false} is caught too", async () => {
+  const r = await crash({
+    rail: "cert", error: moduleNotFound(), nowMs: 5,
+    writeLedgerFn: () => ({ ok: false, reason: "disk_full" }),
+    notifyFn: () => {},
+  });
+  assert.equal(r.ledger.ok, false);
+  assert.match(r.ledger.reason, /disk_full/);
+});
+
 test("handleRailCrash NEVER throws, even when both sinks fail", async () => {
   const r = await crash({
     rail: "cert", error: moduleNotFound(), nowMs: 5,

@@ -7,6 +7,17 @@
 // at all for 36h. Skip-by-design is healthy; skip-forever-in-silence is dormancy wearing a
 // green coat, and writing nothing at all is worse than either.
 //
+// ⚠ BUILT BUT NOT YET WIRED (Grade A, F-2, 2026-07-20). This module has zero production
+// callers — no entrypoint hook, no cron, no poster. Its logic is correct and tested (and was
+// independently re-derived against the real ledgers: soak streak = 8), but nothing invokes it,
+// so no skip-streak alert reaches the operator today. Wiring is the named ACTIVATION-BATCH unit
+// (alongside rail-5 task registration and the API watchdog), post-landing.
+//
+// Recorded here rather than left silent because dormant-by-plan and dormant-by-accident look
+// identical from the outside — and this module is specifically the thing that makes future
+// healthy-but-blocked dormancy visible. An unwired dormancy detector is the joke it exists to
+// prevent, so its own dormancy gets stated out loud.
+//
 // Pure decision function, DI-tested, no clock and no I/O — the soak-mold §13 pattern.
 "use strict";
 
