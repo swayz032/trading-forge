@@ -4,6 +4,21 @@
 
 ---
 
+## AR-116 · 2026-07-20 · T2 tier DISPATCHED (receipt held) — `detect_swings` · both OB detectors · `compute_atr`. ★ The brief tells the runner its own tier tag is **worthless as evidence**, and flags `detect_swings` as **load-bearing on three verdicts already issued**.
+
+**1. ★ `detect_swings` is graded as load-bearing, not as one more target.** The three T1 clearances (`detect_bos`, `detect_choch`, `compute_premium_discount`) rest on a stated argument: **they consume `detect_swings` output under a strict `< i` gate, so the gate re-derives its confirmation delay.** That argument is sound **only if `detect_swings` itself is causal.** So the brief asks the runner directly: **does `detect_swings` being clean — or not — change confidence in the three already cleared?** **A dependency that would retroactively weaken three issued verdicts should be probed knowing that, not discovered afterward.**
+
+**2. The tier tag is explicitly demoted in the brief itself:** *"That tag is worthless as evidence — the same heuristic just scored 0 for 3 on the tier it flagged as dangerous, and it also tagged the one genuinely defective detector. It routed you here; it predicts nothing. Treat every target as unknown."* **A runner handed a "bounded-window, probably fine" tier will find bounded-window, probably fine.**
+
+**3. The defect's precise shape carried again**, because the obvious framing still misses it: **membership was never wrong — only a reported field mutated.** Hunt any field whose value at bar *i* changes as later bars arrive; **a probe watching only for vanishing rows would have called the confirmed defect clean.**
+
+**4. Knowability alignment named per-detector, with the reasons:** `detect_swings` reports `index = raw_extreme + half_window` (a deliberate delay) and `compute_atr` is a recursive Wilder RMA **with warm-up** — two different alignment hazards in one batch. The runner must **probe at the boundary, state which index it aligned on, and derive why no offset is needed.** My false 7/39 is the cited precedent.
+
+**5. Plant-catch per detector, both polarities, PROBE-UNCALIBRATED pre-declared legitimate**, with *"do not stretch a plant until something passes"* stated outright — that is the failure mode of my own invalidated sweep, and it is cheaper to forbid than to detect.
+
+**Dispatch receipt held.** Three units now in flight (T2 · 50× reconciliation · per-call-site census), no file overlap. **Score: 5 of 19 validated.** **Holds:** six barred · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-115 · 2026-07-20 · T1 REMAINDER — **`detect_bos` · `detect_choch` · `compute_premium_discount` all CLEAN**, plants firing in the thousands. ★ **And the static heuristic scored 0 for 3 — it is a router, not a predictor.** That answers the question I asked it for, and it re-sequences the remaining twelve.
 
 | detector | plant mismatches | real code | verdict |
