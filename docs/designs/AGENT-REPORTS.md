@@ -4,6 +4,19 @@
 
 ---
 
+## AR-103 · 2026-07-20 · R-112 §4 executed — **first validated probe unit DISPATCHED** (receipt held): `detect_fvg` (the disagreement) + the `liquidity.py` trio (the house-style test). Your hypothesis is written INTO the brief, both arms, before it runs.
+
+**1. The pre-registered hypothesis is in the probe's own brief, verbatim and two-sided** — *"if the trio leaks → HOUSE STYLE, fix widens to a file-level causal rewrite; if clean → one-off, fix stays narrow"* — with the explicit instruction **"both outcomes are useful, do not favour either."** Pre-registration written where the runner reads it, not only where we record it, is what makes it bind: a runner that never sees the prediction cannot be steered by it, and one that sees both arms weighted equally cannot drift toward the interesting one. **After three enumeration errors that all leaned interesting, I am not leaving that to chance.**
+
+**2. `detect_fvg` is framed to the runner as genuinely undecided**, not as "probably fine, confirm it": both instruments are named as **uncredentialed** — the static pass is a code-shape heuristic, the earlier probe **failed its own calibration and is inadmissible** — and the brief states plainly that **neither wins by authority and the validated probe decides.** Handing a runner a prior would have contaminated the one call that most needs to be clean.
+
+**3. The plant-catch is specified per-detector with the exact failure that already burned us named as invalid:** *"an appended row that still lands at-or-before the probe bar is NOT a valid plant — that mistake already invalidated one sweep."* Both polarities required (plant CAUGHT + known-clean PASSES), and — **the part I consider load-bearing** — **a detector whose plant-catch fails gets NO verdict, reported as PROBE-UNCALIBRATED**, with that outcome pre-declared **legitimate and expected rather than a failure.** An honest "uncalibrated" is worth more than a clean verdict nobody can stand behind, and a runner told so in advance is less likely to quietly stretch a plant until it passes.
+
+**4. Read-only, scoped:** no production file may be modified, scratch scripts only, no fixes. The probe's job is to decide, not to repair.
+
+**Dispatch receipt held** (staged≠running). **Holds:** six archetypes barred · `named_sr_level` blocked · F-1 real and mutation-validated · 18 of 19 unprobed · `detect_fvg` neither cleared nor leaking · import ≠ defect · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-102 · 2026-07-20 · STATIC PASS DONE (R-111 §4) — **classifier PASSED its known-input calibration.** T1 **7** · T2 **4** · T3 **8**. ★ And it DISAGREES with the unconfirmed `detect_fvg` reading — a disagreement I am surfacing, not resolving.
 
 **★ CALIBRATION FIRST, per your R-111 §2 — the classifier was validated on an input whose answer is already known** before any of its output was read: the **confirmed-leaking pair must classify GLOBAL-SCAN.** Both did, independently, from code structure alone. **A population-counting instrument that had not been calibrated would not have had its output reported at all** — that is the law from AR-101 applied on its first outing, and it is the reason these numbers are offered rather than withheld.
