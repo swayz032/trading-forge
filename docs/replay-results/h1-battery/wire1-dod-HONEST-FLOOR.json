@@ -1,0 +1,193 @@
+{
+ "artifact": "wire1-dod-HONEST-FLOOR",
+ "supersedes_as_fidelity_claim": "wire1-dod-remeasure.json (WITHDRAWN as a fidelity claim, retained append-only)",
+ "ruling": "R-079 \u00a73 (b)-as-FLOOR \u2014 issued immediately so the ledger is true TODAY",
+ "why": "The WIRE-1 structure premise is INERT: compute_structure_state's htf_bars argument moves none of the fields the column reads. Structure-family bindings therefore did NOT become real and REVERT to approximation=True. Only bias-family credit survives. The live behavior change (721->631) was a CADENCE/WINDOW effect, not HTF fidelity.",
+ "corpus_rate_BEFORE": 0.9938,
+ "corpus_rate_AFTER_FLOOR_structural_bias_only": 0.9642,
+ "corpus_rate_AFTER_FLOOR_weighted_bias_only": 0.9793,
+ "WITHDRAWN_CLAIM": {
+  "structural": 0.4011,
+  "weighted": 0.4162,
+  "status": "WITHDRAWN AS A FIDELITY CLAIM"
+ },
+ "scope_line": "MES 5m 2022-01-01..2023-06-30. CARRY in force \u2014 and note the corrected rationale (F-2): 738 daily bars DO exist before this window; seeding was FEASIBLE here and was declined for COMPARABILITY with the registered commissioning window, not for infeasibility. The \"51 prior bars\" figure belongs to that older window. Error direction conservative. Tier-b near-ghosts: RECEIPTS not returns, no edge claim.",
+ "rows": [
+  {
+   "spec": "-igpOZs8LsM__s0",
+   "n_executed_bindable": 9,
+   "n_binding_approximation_before": 9,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 5,
+   "wired_bias_bindings_credited": 1,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 0.8889,
+   "rate_AFTER_FLOOR_weighted_bias_only": 0.9456
+  },
+  {
+   "spec": "0xygpCMwxbQ__s0",
+   "n_executed_bindable": 9,
+   "n_binding_approximation_before": 9,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 8,
+   "wired_bias_bindings_credited": 1,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 0.8889,
+   "rate_AFTER_FLOOR_weighted_bias_only": 0.9456
+  },
+  {
+   "spec": "4cT8WTyxhYY__s0",
+   "n_executed_bindable": 8,
+   "n_binding_approximation_before": 8,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 7,
+   "wired_bias_bindings_credited": 1,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 0.875,
+   "rate_AFTER_FLOOR_weighted_bias_only": 0.9388
+  },
+  {
+   "spec": "CLDEIsNpVRc__s0",
+   "n_executed_bindable": 8,
+   "n_binding_approximation_before": 8,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 4,
+   "wired_bias_bindings_credited": 1,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 0.875,
+   "rate_AFTER_FLOOR_weighted_bias_only": 0.9388
+  },
+  {
+   "spec": "DLwVqcLRcfw__s0",
+   "n_executed_bindable": 7,
+   "n_binding_approximation_before": 7,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 6,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "DLwVqcLRcfw__s1",
+   "n_executed_bindable": 6,
+   "n_binding_approximation_before": 6,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 3,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "E9MzEC_yNoM__s0",
+   "n_executed_bindable": 2,
+   "n_binding_approximation_before": 2,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 0,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "E9MzEC_yNoM__s1",
+   "n_executed_bindable": 6,
+   "n_binding_approximation_before": 6,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 4,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "IyFioFkRgWo__s0",
+   "n_executed_bindable": 6,
+   "n_binding_approximation_before": 6,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 5,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "PVMgOxHUqFA__s0",
+   "n_executed_bindable": 8,
+   "n_binding_approximation_before": 8,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 6,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "R5L890juvRw__s0",
+   "n_executed_bindable": 5,
+   "n_binding_approximation_before": 5,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 4,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "W7nlnHTUZQU__s0",
+   "n_executed_bindable": 10,
+   "n_binding_approximation_before": 9,
+   "rate_BEFORE": 0.9,
+   "wired_structure_bindings_REVERTED": 3,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 0.9,
+   "rate_AFTER_FLOOR_weighted_bias_only": 0.9
+  },
+  {
+   "spec": "WEhmadJArQo__s0",
+   "n_executed_bindable": 22,
+   "n_binding_approximation_before": 22,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 13,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "_LS6qcSlDCs__s0",
+   "n_executed_bindable": 4,
+   "n_binding_approximation_before": 4,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 0,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "dV7chra4u4Q__s0",
+   "n_executed_bindable": 7,
+   "n_binding_approximation_before": 7,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 1,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  },
+  {
+   "spec": "kFyD3H6I1I8__s0",
+   "n_executed_bindable": 12,
+   "n_binding_approximation_before": 12,
+   "rate_BEFORE": 1.0,
+   "wired_structure_bindings_REVERTED": 9,
+   "wired_bias_bindings_credited": 0,
+   "bias_engaged_fraction": 0.4898,
+   "rate_AFTER_FLOOR_structural_bias_only": 1.0,
+   "rate_AFTER_FLOOR_weighted_bias_only": 1.0
+  }
+ ]
+}

@@ -301,5 +301,12 @@
    "secs": 10.3,
    "error": null
   }
- ]
+ ],
+ "WITHDRAWN_AS_FIDELITY_CLAIM": {
+  "ruling": "R-079 \u00a71/\u00a73 (2026-07-20)",
+  "status": "The corpus numbers in this artifact are ARITHMETICALLY CORRECT but SEMANTICALLY WRONG as a fidelity claim.",
+  "reason": "The structure-family credit assumed compute_structure_state consumes the real HTF frame. It does not: htf_bars moves none of the nine fields the column reads (verified by diffing two wholly different HTF frames). The live 721->631 change is a cadence/window effect.",
+  "superseded_by": "wire1-dod-HONEST-FLOOR.json",
+  "retention": "Retained append-only per campaign law \u2014 never deleted, never silently replaced."
+ }
 }
