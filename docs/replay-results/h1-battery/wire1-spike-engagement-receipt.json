@@ -1,0 +1,45 @@
+{
+  "receipt": "WIRE-1 spike — END-TO-END ENGAGEMENT + REAL-DATA ABLATION (campaign law 1; packet §5)",
+  "date": "2026-07-19",
+  "commit": "3b91fcf6",
+  "spec": "-igpOZs8LsM__s0",
+  "symbol": "MES",
+  "timeframe": "5m",
+  "window": "2022-01-01..2023-06-30",
+  "data": "real S3 ratio-adjusted bars; HTF cache built 265 days",
+  "flag": "TF_WIRE1_HTF_COLUMNS",
+
+  "engagement_evidence": {
+    "bars_engaged": 51731,
+    "bars_total": 105606,
+    "engaged_pct": 48.99,
+    "dormant": false,
+    "note": "A non-zero engaged count is the campaign-law-1 requirement: the column is INVOKED in a real run, not merely present. The ~51% un-engaged bars are PRE-WARMUP (the HTF cache starts 200 daily bars in) and correctly fall back to the EMA proxy with approximation=True — honest per-bar provenance, not a silent gap."
+  },
+
+  "real_data_ablation": {
+    "differ": true,
+    "flag_off": {"total_trades": 721, "win_rate": 0.0777, "profit_factor": 0.059, "total_return": -118703.62},
+    "flag_on":  {"total_trades": 722, "win_rate": 0.0817, "profit_factor": 0.0645, "total_return": -115643.27},
+    "note": "The wire CHANGES measured backtest behavior on real data — it is not a relabel. Direction is a slight improvement, which is exactly the direction R-066 §2 warned look-ahead would fake; the causality proof (future-perturbation replay, test_htf_cache_causality) is what licenses reading this as real rather than time-travel."
+  },
+
+  "flag_off_is_clean": {
+    "engagement_line_emitted": false,
+    "note": "With the flag OFF no columns are attached and no wire code runs — the pre-wire path is preserved for rollback."
+  },
+
+  "SCOPE — what this receipt does NOT claim": [
+    "NOT the packet DoD. The DoD is the per-family BINDING-APPROXIMATION distribution moving off ~0.99 over the 16 compilable specs; that has NOT been measured yet. This receipt proves the seam is live, not that the 0.99 fell.",
+    "NO edge claim. Profit factor 0.0645 is still catastrophic — this is a tier-b near-ghost spec and the product remains RECEIPTS, not returns.",
+    "Single spec, single reduced window (2022-01..2023-06), single symbol. Not a corpus result.",
+    "The bias binding only. WIRE-1 proper (WAIT_STRUCTURE, ~217 occ) and WIRE-2 (~130 occ) are not yet wired.",
+    "No independent grade yet (doer≠grader) — this is the doer's own measurement."
+  ],
+
+  "proofs_backing_this": {
+    "causality": "test_htf_cache_causality.py — 5 tests, future-perturbation replay + anti-vacuity probe (R-066 §2)",
+    "equivalence": "test_htf_cache_equivalence.py — 2 tests, shared builder byte-faithful to the original inline build + anti-vacuity (R-066 §3)",
+    "ablation_both_polarity": "test_wire1_bias_ablation.py — 6 tests, wired≠proxy, PASSES right / FAILS wrong, neutral=real refusal, null bars byte-identical fallback"
+  }
+}
