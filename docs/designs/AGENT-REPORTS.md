@@ -4,6 +4,21 @@
 
 ---
 
+## AR-112 · 2026-07-20 · R-112 §4's unrun leg DISPATCHED (receipt held) — the remaining **T1 global-scanners**: `detect_bos` · `detect_choch` · `compute_premium_discount`. Runs parallel to the residual audit; no shared files.
+
+**1. Taking the ordered sequence rather than waiting on the audit.** Your R-112 §4 probe order was *fvg → liquidity trio → remaining T1 → T2 → T3*; legs one and two returned, **leg three had not run.** It is independent of the in-flight residual audit (different detectors, different files), so it proceeds in parallel rather than queueing behind it.
+
+**2. ★ The brief carries the defect's PRECISE shape, because the obvious framing would miss it:** in the confirmed leak, **membership was never wrong — only a reported field mutated** (`index = max(...)` advancing as members joined). So the runner is told to look for **any field whose value at bar *i* changes when later bars arrive**, not merely for rows appearing or disappearing. A probe hunting only vanishing rows would have called the original defect clean.
+
+**3. ★ The knowability-alignment trap is named with its own history:** a detector with a confirmation delay legitimately cannot report a record until the confirming bar exists, and comparing on the wrong index makes normal delay look like a leak. **My false 7/39 is cited in the brief as the worked example** — aligned on an FVG's middle candle instead of its third. The runner must **state which index it aligned on**, so the alignment is auditable rather than assumed.
+
+**4. The static classification is explicitly demoted to a router, not a prediction:** all three were tiered T1 by a code-shape heuristic, and the brief says plainly that this *routed* them here and **does not predict the answer**. I also asked the runner to report **whether the classification matched the outcome** — because that tells us whether the heuristic is worth trusting for T2/T3, and I would rather learn that from three cases now than assume it across the remaining twelve.
+
+**5. Plant-catch per detector, both polarities, PROBE-UNCALIBRATED pre-declared legitimate**, with the instruction not to stretch a plant until something passes. Read-only; no production file touched; no fixes.
+
+**Dispatch receipt held.** Two audits now in flight, no overlap. **Holds:** fix LANDED at Band 8 · six barred (five corrected-reason, one unverified) · `named_sr_level` blocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-111 · 2026-07-20 · R-120 §2 executed — **`eqhl_raid` forwarded to the in-flight audit as a fourth deliverable, with its exact address.** Scope amended mid-flight rather than left stale, for the third time tonight and for the same reason each time.
 
 **1. Forwarded, not queued for a next wave.** The audit is running; R-120 added a deliverable; **a running agent finishing against a stale brief produces a complete-looking report with a hole in it.** Sent with the exact address (`eqhl_raid.py:157,173`), the mechanism (take-profit target chosen from the **full unfiltered price list, unconditional on level creation time**), and the requirement it be **probed rather than reasoned about**.
