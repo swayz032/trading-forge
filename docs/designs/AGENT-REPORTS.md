@@ -4,6 +4,34 @@
 
 ---
 
+## AR-101 · 2026-07-20 · ★★★ URGENT — **AR-100's ENUMERATION WAS WRONG. There is ONE door, not three, and 19 detectors across 7 modules, not 26 across 4.** My regex swallowed adjacent import blocks. R-110 tiered a class that does not exist as described.
+
+**STOP ON AR-100.** Executing R-110 §3's import-not-copy check, the first grep returned **nothing** — `core.py` contains no reference to the leaking pair at all. That should have been impossible under my own census, so I re-derived by **AST** instead of regex.
+
+| | AR-100 claimed | **corrected (AST)** |
+|---|---|---|
+| detectors | 26 | **19** |
+| modules | 4 | **7** |
+| `core.py` exports | **10, incl. the leaking pair** | **1 — `compute_atr`** |
+| doors to the leak | **3** | **1 — `liquidity.py`** |
+
+**★ THE CAUSE, precisely.** My regex `from …indicators\.(\w+) import \(?([^)
+]+(?:
+[^)]*)?)\)?` matched a **single-line** import (`from …core import compute_atr`), then its optional `(?:
+[^)]*)?` tail **greedily consumed the following lines** — which were the *next* import blocks. So every detector in the blocks after a single-line import got **misattributed to the wrong module.** `core.py` was credited with 10 detectors it does not export, including `detect_buyside_liquidity`, which is how I manufactured "three doors."
+
+**★ WHAT DIES WITH IT — including my most-quoted line tonight:**
+- **"The same defect has three doors" is FALSE.** `grep -rln "def detect_buyside_liquidity"` returns exactly **one** definition site: `liquidity.py`. **There is one door.** The fix's door law still matters as a principle, but its blast radius here is one module, not three.
+- **"~13× wider than my census" is inflated.** 19 against my 2 is ~9.5×, and the honest framing is different again: the class spans **7 modules**, of which several (`sessions.py`, `fibonacci.py`, `core.py`) are almost certainly causal-by-construction. **The scoping lesson survives; the multiplier I dramatised it with does not.**
+- **R-110 §2's tiering was built on my module counts.** The tiering *logic* (by window discipline) is unaffected and correct — but the **inventory it routes** must be re-derived from this corrected list before any batch is dispatched.
+
+**★ THE PATTERN, and it is mine, not the tooling's.** This is the **third** enumeration error of the session — the census double-glob (n=90→78), the session-sizing regex (11→17), now this. **Every one was a regex I trusted to describe a population, and every one over- or under-counted in the direction that made my report more interesting.** The AST re-derivation took one minute and cannot spill across nodes. **I should have used it the first time; "the class is DISCOVERED, not assumed" applies to my *method* as much as my scope.** R-085's law was *lists are derived, never transcribed* — I derived, but with an instrument I never validated on a known input.
+
+**What is unchanged and still true:** the F-1 leak in `detect_buyside/sellside_liquidity` is real and mutation-validated · all six archetypes are registered and barred · `detect_fvg`'s 7/39 remains unconfirmed and uncited · **19 detectors is still a real sweep**, and 18 of them remain unprobed · import ≠ defect · nothing has consumed any of it.
+
+**Not done:** no static pass, no tiering, no probes — **the inventory has to be right before it is routed.** Corrected list above is AST-derived and reproducible. **Holds:** all bars stand · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-100 · 2026-07-20 · ★★ CLASS DISCOVERED (R-109 §3) — **26 detectors across 4 modules, not 2 across 1. The class is ~13× wider than the census I delivered.** No probes run; the enumeration alone re-scopes the lane.
 
 **The discovered family, consumed by the six registered archetypes:**
