@@ -131,6 +131,16 @@ function siteShape(line) {
 // bare read crashes on absence needs dataflow, not pattern-matching.
 //
 // So this tool NARROWS ITS CLAIM to the thing it can actually decide:
+//   ★ SCOPE OF THE DEGRADING CLAIM, narrowed 2026-07-20 after an independent grade:
+//   this tool detects the INLINE-EMPTY-DEFAULT form of silent degradation (`?? ""`, `|| ""`).
+//   It does NOT detect the BARE-READ + SEPARATE-LINE-SILENT-GUARD form
+//   (`const u = process.env.X;` / `if (!u) return;`) — that is dataflow, not line-local shape.
+//   DISCORD_WEBHOOK_URL, the system-wide notify() chokepoint, is exactly that form and the
+//   independent grader found it where this tool structurally could not. Such entries are
+//   `humanClassified: true`, adjudicated by a person and REPORTED as HUMAN, never silently passed.
+//   The claim is therefore "governs the inline-empty-default class", not "governs silent
+//   degradation" — the earlier, broader wording overreached.
+//
 //   ✔ VERIFIED — the OPTIONAL_DEGRADING signal. An empty-string default is a LINE-LOCAL,
 //     unambiguous fact: that line proceeds with a broken value, no context required. Checked in
 //     BOTH directions, and the second is the one that protects the operator:
@@ -215,6 +225,25 @@ function check(vars = VARS, opts = {}) {
                   verdict: "SKIP", reason: "dynamic_read_declared" });
       continue;
     }
+    // ★ HUMAN-CLASSIFIED entries: the scan CANNOT decide these, so it must not pretend to.
+    // The bare-read + separate-line-silent-guard shape (`const u = process.env.X;` then
+    // `if (!u) return;`) is dataflow-gated — the same cross-line blind spot as s3-client.ts:77→85,
+    // except that one THROWS (loud, safe) and this one RETURNS (quiet, dangerous). Extending the
+    // regex to chase it would be over-engineering a line-local tool into a job it cannot do
+    // soundly; the honest move is to declare the class human-owned and REPORT the skip, never
+    // silently pass it. (This flag was named in the manifest header long before it existed here —
+    // implementing it is what made that sentence true.)
+    if (v.humanClassified) {
+      const sites = readSites(v.name, opts);
+      rows.push({
+        name: v.name, declared: [...v.classes].sort(), verdict: "HUMAN",
+        reason: "human_classified_shape_not_scan_detectable",
+        sites: sites.length,
+        note: "the scan does not adjudicate this entry; a human owns it. Reported, not skipped silently.",
+      });
+      continue;
+    }
+
     const sites = readSites(v.name, opts);
     const d = deriveClasses(sites);
     const declared = [...v.classes].sort();
@@ -257,10 +286,13 @@ function main() {
   const fail = rows.filter((r) => r.verdict === "FAIL").length;
   const unknown = rows.filter((r) => r.verdict === "UNKNOWN").length;
   const skip = rows.filter((r) => r.verdict === "SKIP").length;
+  const human = rows.filter((r) => r.verdict === "HUMAN").length;
   console.log(JSON.stringify({
     check: "env-manifest", stage: "summary",
-    pass: rows.filter((r) => r.verdict === "PASS").length, fail, unknown, skip,
-    note: "SKIP = dynamic read, declared and exempt by design; UNKNOWN is not FAIL",
+    pass: rows.filter((r) => r.verdict === "PASS").length, fail, unknown, skip, human,
+    note: "SKIP = dynamic read, exempt by design; HUMAN = shape the scan cannot adjudicate, " +
+      "a person owns it; UNKNOWN is not FAIL. Neither SKIP nor HUMAN is counted as a PASS — " +
+      "folding them in would let the tool claim coverage it does not have.",
   }));
   if (fail) return 3;
   if (unknown) return 2;

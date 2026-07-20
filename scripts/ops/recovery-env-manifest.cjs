@@ -39,7 +39,11 @@
 //      dynamic carry `dynamicRead: true` and are exempt from the derivation cross-check.
 //   2. A NON-EMPTY BUT WRONG default still degrades silently and is NOT mechanically
 //      detectable. The empty-string shape is the detectable SUBSET, not the whole class.
-//      Those entries are classed by human judgement and marked `humanClassified: true`.
+//      Those entries are classed by human judgement and marked `humanClassified: true` — a flag
+//      the verifier HONOURS by skipping its derivation cross-check and REPORTING the skip.
+//      ★ This sentence was false when first written: the flag was documented here and
+//      implemented nowhere, so the verifier ignored it. Caption-is-a-claim, in this file's own
+//      header, undetected until DISCORD_WEBHOOK_URL needed the mechanism. Implemented 2026-07-20.
 //   3. ★ JUSTIFICATION CONTENT IS ASSERTED, NOT VERIFIED. `validate()` checks that a declared
 //      class CARRIES its `breaks`/`degrades`/`fallback` string and that it is non-empty — it
 //      cannot check the string is TRUE. Not hypothetical: the shipped `DATABASE_URL` justification
@@ -217,6 +221,25 @@ const VARS = [
       "✅ reaction and \"cooking now\" ack are sent BEFORE the request, so the person in Discord still " +
       "sees success. Residual of the same documented CRITICAL; the user-visible half is not closed.",
     evidence: "src/discord/bot.ts:743 — `process.env.SLUMDAWG_WEBHOOK_SECRET || \"\"`",
+  },
+  {
+    name: "DISCORD_WEBHOOK_URL",
+    leg: "alerting",
+    classes: ["OPTIONAL_DEGRADING"],
+    humanClassified: true,
+    degrades:
+      "★ THE SYSTEM-WIDE ALERT CHOKEPOINT — unset means EVERY Discord notification is " +
+      "silently off: notify()/notifyCritical() behind 200+ call sites (startup-config validation, " +
+      "DLQ failures, paper-recon, crash paths) plus the dead-man's-heartbeat fallback. " +
+      "`notification-service.ts:301` reads it BARE and the guard `if (!webhookUrl) return;` sits " +
+      "on the NEXT line, so nothing is logged and no caller can tell — `notify()` returns void. " +
+      "The service's own docstring declares the silent no-op, which makes it intended behaviour, " +
+      "not a bug — but intended-and-silent is exactly what a recovery runbook must surface. " +
+      "Verified live: PRESENT + non-empty on the tower, so this is a REBUILD gap, not live silence.",
+    evidence:
+      "src/server/services/notification-service.ts:301-302 — bare read + next-line silent " +
+      "`return`. FOUND BY THE INDEPENDENT GRADER, not by my sweep: my sweep keyed on FILENAME " +
+      "shape and this file is not named like alerting. Naming a blind spot did not open it.",
   },
   {
     name: "RAILS_ENV_PATH",

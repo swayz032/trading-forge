@@ -100,7 +100,7 @@ would page an operator about a box that is fine.
 
 ## Secrets/env — what to set on a rebuilt box
 
-**Set these 9.** Generated from `scripts/ops/recovery-env-manifest.cjs`; every row's
+**Set these 10.** Generated from `scripts/ops/recovery-env-manifest.cjs`; every row's
 class is cross-checked against the code by `node scripts/ops/verify-env-manifest.cjs`.
 
 | variable | leg | class | if it is missing |
@@ -114,6 +114,7 @@ class is cross-checked against the code by `node scripts/ops/verify-env-manifest
 | `DISCORD_CH_N8N_DAILY_REPORT` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | the daily report silently has nowhere to go when unset (empty default, no fallback ID). Lowest severity of the four — a missing daily report is noticed; a missing critical alert is not. |
 | `DISCORD_CH_STRATEGY_FINDS` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | strategy-find posts lose their destination when unset. Already declared in `.env.example` (unlike the other three were), so the rebuild path is covered — listed for completeness of the empty-default class, not because it is a gap. |
 | `SLUMDAWG_WEBHOOK_SECRET` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | ★ FOUND BY THE CLASS-COVERAGE CHECK, not by hand — it sits outside CHANNEL_MAP and I would have missed it. `src/discord/bot.ts:743` defaults it to `""`; the signer then yields no signature, the headers are omitted, and the backend 401s the ingest. A `log.warn` fires (added by the deep-scan n8n F-1 fix), so it is not silent SERVER-side — but the user-facing ✅ reaction and "cooking now" ack are sent BEFORE the request, so the person in Discord still sees success. Residual of the same documented CRITICAL; the user-visible half is not closed. |
+| `DISCORD_WEBHOOK_URL` | alerting | **★ OPTIONAL — SILENTLY DEGRADES** | ★ THE SYSTEM-WIDE ALERT CHOKEPOINT — unset means EVERY Discord notification is silently off: notify()/notifyCritical() behind 200+ call sites (startup-config validation, DLQ failures, paper-recon, crash paths) plus the dead-man's-heartbeat fallback. `notification-service.ts:301` reads it BARE and the guard `if (!webhookUrl) return;` sits on the NEXT line, so nothing is logged and no caller can tell — `notify()` returns void. The service's own docstring declares the silent no-op, which makes it intended behaviour, not a bug — but intended-and-silent is exactly what a recovery runbook must surface. Verified live: PRESENT + non-empty on the tower, so this is a REBUILD gap, not live silence. |
 
 **★ Read the SILENTLY DEGRADES rows twice.** Those do not fail loudly — the box boots healthy and
 is quietly less able. `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` default to `""` and get SET as
@@ -124,7 +125,7 @@ That is the "boots healthy, S3-blind" shape this manifest exists to surface.
 each has a working default, so absence is *correct*. Listing them would train you to skim the list,
 which is the failure mode this triage prevents. **A count of undeclared vars is not an inventory of
 recovery risk:** the repo reads ~617 env vars and ~323 are absent from `.env.example`; almost all
-of that gap is noise, and enumerating it would bury the 9 rows above.
+of that gap is noise, and enumerating it would bury the 10 rows above.
 
 **Declared limits of the cross-check** — it adjudicates ONE property soundly (the silent-degradation
 signature, an empty-string default) in both directions. It does **not** derive REQUIRED vs
