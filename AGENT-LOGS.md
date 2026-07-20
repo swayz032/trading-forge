@@ -4,6 +4,34 @@
 
 ---
 
+### Session Log — 2026-07-19/20 [ops-experience] — THREE UNITS GRADED AND LANDED (green-board B7 · member-Office B8 · liveness-wave B7)
+
+**Mission:** boot the ops-experience pair and execute Tier-1 item 1 (the Office) + Tier-2 item 6 (per-member Office) under the Fable advisor seat, doer≠grader on every unit.
+
+**★ The incident that started it.** The canonical `node_modules` lost 18 of 34 declared deps at 2026-07-18 21:38. `cert-rig`/`full-lane` `require("dotenv")` inside a catch-less `main()`; `soak-watcher` required it at module top level, dying before its own `main().catch()` attached. **Three heavy jobs failed nightly for 36h with exit 1 and zero evidence.** Restored via plain `npm install` (lockfile byte-identical, 34/34 verified per-item). The TF services then self-healed ~2min later — **no actor**: NSSM's throttled retry finally got a bootable child. `Paused` had been NSSM's crash-loop throttle state, which I initially mis-read as a deliberate pre-live pause. Both cert (01:30) and soak (03:20) subsequently exited 0 under the real scheduler.
+
+**Units landed (all independently graded, doer≠grader, from-zero):**
+- **Green board (B7)** — 3 decorative-on-failure tiles found and fixed (alerting had no severity AND was absent from the roll-up; the Reporting Room returned 200+empty identical to a quiet night; autopilot claimed a definite `false` it could not know). 6 tiles vindicated as already honest; `killSwitchLayers` is the strongest — a read failure HALTs the board.
+- **Member Office (B8)** — migration 0205, scrypt PIN (zero new deps), HMAC **domain-separated** PIN ticket (a session-signed ticket would have been a token-confusion upgrade path), server-side wall scoping with Carter operator-only BY ROUTE, TEST-ONLY broker connect (allowlist, never a blocklist), and PIN establishment.
+- **Liveness wave (B7)** — crash-visibility class fix, the `scripts/` runner split (the CI lane was RED-by-construction and 6 test files ran in NO lane), skip-streak alert, external watchdog design + build.
+
+**★ What the doer≠grader loop actually caught — all would have shipped:**
+- Green-board fixes #2/#3 **dead on arrival**: pre-existing inner `.catch(() => default)` swallows pre-empted the new logic. My starve-proofs had starved ABOVE the swallow point — **proving a path the system cannot produce.**
+- Member-Office: **no PIN-establishment path existed** — 60 green tests missed it because **every test supplied its own hash**, manufacturing the precondition the product could not.
+- Liveness: **the crash handler lied about delivery.** `callSink` discarded the sink's return; `postDiscord` never throws, it returns `{ok:false}`. `notifyOk` read `true` in every real Discord failure — the honest-signal disease inside the tool built to cure it.
+
+**Laws minted (both seats):** the **D-law** — a starve-proof must go RED with all pre-existing inner handlers still in place · **a check whose result cannot halt the action is a decoration** (I shipped a tsc error via an `&&`-chained gate) · ledger headers carry **no wall-clock claim** (I twice fabricated `(clock read)` labels) · **a correction owns its blast radius** (chase retracted values downstream).
+
+**★ The measurement-blindness family — six faces, my most-repeated failure:** a count is not an inventory · strip comments before believing a grep · the measurement did not measure the thing asked · it did not cover the SHAPES the thing appears in (`process.env["X"]`; `err.cause.code`) · the FIXTURE did not match the real contract · **distrust empty proofs on sight** (a grep failing on a multi-byte prefix printed nothing and nearly read as "no failures").
+
+**Verification:** 192/192 vitest + 111/111 node:test post-rebase · tsc 0 · `check:production-isolation` + `check:2026-compliance` PASS · `system-map:sync`/`check` with ours-vs-upstream classification (see below) · both rebase conflicts resolved keeping BOTH lanes' work.
+
+**System Map classification (OR-035/036):** `system-map:check` was **already failing at the upstream tip**. Measured both sides rather than accepting that: upstream baseline **1** missing table, mine **3** — I had added 2. Registered them in `docs/system-subsystem-registry.json`; count back to **1**, which is upstream's `economic_release_dates`. **NOT ABSORBED.** Also recorded, not fixed: **CL-006** — upstream commit `9268fd53` removed the System Map entry for `profit_governor:shadow_milestone` while the emitter still fires.
+
+**Known-facts (pinned to memory):** boot NEVER fails on a missing secret (deliberate: fail-OPEN on secrets for availability, fail-CLOSED on the migration runner for integrity — do NOT "harden" it) · `.env.example` is NOT a recovery manifest (the code references vars it never declares, incl. `AWS_SECRET_ACCESS_KEY`) — combined, a rebuilt box **boots healthy and is silently S3-blind** · rail exit-1 ≠ skip (skips exit 0 and write a row first) · `:4000` unreachable ≠ outage — check the service state.
+
+**Carry-forward (all named, owned, operator-visible — none vague):** production-status residual-cleanup (`getDailyReconciliationStatus` dead import + the `pnlToday` tile that is computed honestly and rendered nowhere) · Office-board UI-completion (tile-level attribution; `office.html` consuming reports' `degraded`) · cold-recovery drill (scoped: 6 legs, DB leg already drilled 07-02, priority on secrets + S3 because **recovery coverage is inverted relative to risk** — the loud failures have runbooks, the silent ones do not) · **ACTIVATION BATCH** (rail-5 task registration + watchdog registration + skip-streak wiring — all built, none wired) · pytest `collectionFloor: 1` is vacuous (battery-gated) → then rail-1 runner activation. **`TF-Rails-Full-Lane`'s 22:00 exit-0 is the last outstanding proof of the dependency repair — a watch, not a gate.**
+
 ### Session Log — 2026-07-19 [ops-experience] campaign BOOT + liveness wave units 1a/1b/1c — the entire hardening-rails machine found NOT DELIVERING; canonical `node_modules` erosion root-caused and RESTORED; crash-visibility class fix built (`dec84fd4`)
 
 **Mission:** boot the SECOND session pair (ops-experience: Office / family / factory-resilience lane, chartered `docs/designs/OPS-CAMPAIGN-CHARTER-2026-07-19.md`) and execute its first target under the Fable advisor seat via the `-OPS` file relay. All work under charter fences: $0 spend, no instrument code, no live broker calls, doer≠grader, zero carry-forwards.
