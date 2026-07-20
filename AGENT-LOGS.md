@@ -15417,6 +15417,29 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-20 [ops-experience] Cold-recovery drill BUILT-COMPLETE (legs 2+3+5 landed) + the evidence-honesty redesign
+
+**Mission:** ops-experience campaign, working-agent seat under the Fable advisor (file-relay via `ADVISOR-RULINGS-OPS.md` / `AGENT-REPORTS-OPS.md`, OR-063→OR-108 / OA-091→OA-096). Finish the cold-recovery drill: leg 2 (runsheet), leg 3 (env manifest), leg 5 (S3 probe wiring).
+
+**Work completed — 3 landings on `hardening/phase-0`, all FF-only:**
+- **Leg 2 — runsheet REDESIGN** (`45a05b5e`, arc `52db4b5d`→`45a05b5e`). Four rounds of patching an evidence-honesty guard made the defect class GROW (fresh same-genus CRITICALs 2→3→2→4), because the guard PARSED free-form markdown — an open-ended governed surface by construction. Inverted to a closed typed source (`scripts/ops/recovery-evidence.cjs`) RENDERED to markdown (`render-runsheet.cjs`); a drilled state REQUIRES a receipt, a non-drilled state REFUSES one. Independent grader hunted 9 injection vectors and came back EMPTY of the genus. **With this landing leg-5's S3 probe is WIRED** — `verify-recovery.cjs` → `verify-s3-capability.cjs` → `s3_capability_probe.py`, live PASS "data decoded, not just footer".
+- **Leg 3 — three-class env manifest** (`a98a52d1` + residuals `a12b92fa`). REQUIRED / OPTIONAL-with-fallback / OPTIONAL-DEGRADING, per-var, cross-checked against code by `verify-env-manifest.cjs` so the manifest cannot go stale without going red. Rendered into the runsheet; 4 actionable vars surfaced, 5 with working defaults SUPPRESSED (anti-cry-wolf, enforced by test).
+- **CI/gates:** `runsheet:check` (blocking), `env-manifest:check`, false-success lint. `test:scripts` 245→263 GREEN.
+
+**Verification:** 263/263 node:test; `runsheet:check` exit 0 incl. on a genuinely fresh clone; `env-manifest:check` exit 0; hand-edit of the generated runsheet still caught (exit 1) after every change; each landing FF-verified from a separate checkout (prior tip still an ancestor, no clobber); live drill at the landed SHA = **4 PASS / 1 FAIL, exit 3**.
+
+**★ REAL RECOVERY DEFECT FOUND AND FIXED:** `AWS_SECRET_ACCESS_KEY` was ABSENT from `.env.example` while its partner `AWS_ACCESS_KEY_ID` was PRESENT — a box rebuilt from that file gets HALF the S3 credential pair. Both default to `""` in `src/data/loaders/duckdb-service.ts:83-84` and are SET as the DuckDB S3 credentials, so the box **boots healthy and is silently unable to read the lake**. Name added (never a value). A class sweep for other half-pairs (silent-degradation signature ∩ undeclared) came back EMPTY for recovery scope.
+
+**Known-facts updates:**
+- **`TF-Rails-Divergence`, `TF-Rails-WorktreeTTL`, `TF-CI-Runner` are ABSENT on the tower** — quadruply confirmed (verifier + raw `schtasks` + two later live runs). A genuine registration gap; rides into the deploy conversation.
+- **Landing target is `hardening/phase-0`, NOT `main`.** A pre-landing check aimed at `origin/main` flagged 5 deepscan-b instrument commits as "in my delta" — a false alarm from the wrong target, but landing on `main` would have pushed another lane's unlanded work. Pin the comparison target, never the name `main` (local `main` is genuinely diverged).
+- **An empty-string default (`?? ""`) is the detectable SUBSET of silent degradation** — syntactically a fallback, semantically a failure. It is a CANDIDATE, not proof (`PYTHONPATH ?? ""` is legitimate), so the manifest is human-declared and the tool only cross-checks.
+- **Two true facts do not make a true link** — see memory `ops_two_true_facts_do_not_make_a_true_link_2026_07_20`.
+
+**Carry-forward:** NONE from this lane (zero-carry-forwards held). **Operator-held only:** (1) the full rebuild-the-box drill — touches irreversibles, operator-scheduled; (2) the deploy switch (CL-009) — the tower runs a MANUALLY-updated checkout, so everything landed is INERT on the box until a manual pull + API restart, and that pull takes BOTH lanes.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
