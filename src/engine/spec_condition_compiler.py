@@ -967,8 +967,16 @@ class SpecConditionStrategy(BaseStrategy):
         meta.base_approximation=True), named_sr_level and order_block_edge bindings carry
         approximation=False (each independently earned a de-approximation grade — see
         POPULATION_A_DEAPPROXIMATED_KINDS in spec_family_bindings.py for citations); swing
-        still carries approximation=True (n=1, below the campaign's n>=2 de-approximation
-        floor). This method's own level-resolution LOGIC below is unchanged by that flip —
+        still carries approximation=True — by the ANCHOR-VS-TAUGHT-OBJECT REFUSAL
+        (AR-199 §1): a swing is the ANCHOR of a fibonacci retracement, while the taught
+        object is the 50%/61.8% LINE, which the level/zone primitive does not emit at
+        all. There is nothing for the row to bind TO. NOT because it falls below the
+        n>=2 de-approximation floor (that ground was withdrawn — it rested on a count
+        that was numerically false, and the population MEETS the floor), and NOT because
+        of the flip's grade scope (withdrawn in turn — a ground that depends on our own
+        permission is not a ground). The refusal is about what the primitive EMITS, so
+        no row count and no widening of the grade can move it.
+        This method's own level-resolution LOGIC below is unchanged by that flip —
         the flip moved only the fidelity LABEL attached to two of the three kinds, not one
         line of the resolution below.
 

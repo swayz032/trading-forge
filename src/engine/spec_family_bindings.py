@@ -2166,8 +2166,18 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         # named_sr_level and order_block_edge are FALSE here — each independently earned a
         # de-approximation grade (see POPULATION_A_DEAPPROXIMATED_KINDS docstring above for
         # the citations). Every other Population-A kind (swing) stays at meta.base_
-        # approximation (True) — swing's population is n=1, below the n>=2 de-approximation
-        # floor, so it routes through this same primitive without a fidelity claim attached.
+        # approximation (True), so it routes through this same primitive without a fidelity
+        # claim attached. ★ THE GROUND IS THE ANCHOR-VS-TAUGHT-OBJECT REFUSAL (AR-199 §1),
+        # NOT A COUNT: a swing is the ANCHOR of a fibonacci retracement, while the taught
+        # object is the 50/61.8% LINE — an object this primitive does not emit. There is
+        # nothing for the row to bind TO. This sentence previously gave the reason as
+        # "n=1, below the n>=2 de-approximation floor"; that ground is WITHDRAWN, and it
+        # was false in its own terms — the census holds 2 by two independent paths, so the
+        # population MEETS the floor and the sentence argued for the opposite of the
+        # disposition it was attached to. The grade-scope ground that briefly replaced it
+        # is withdrawn too: a ground that depends on our own permission is not a ground.
+        # No row count and no widening of the grade can move a refusal about what is
+        # EMITTED. The count is deliberately absent here rather than typed.
         if levelzone_resolver_enabled():
             pop_a_kind = classify_population_a_kind(obj)
             if pop_a_kind is not None:

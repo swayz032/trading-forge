@@ -18,8 +18,15 @@ UPDATED by docs/designs/packet-population-a-flip-step-2026-07-20.md: approximati
 longer uniformly True for every Population-A kind. named_sr_level and order_block_edge now
 resolve approximation=False (each independently earned a de-approximation grade — see
 POPULATION_A_DEAPPROXIMATED_KINDS in src/engine/spec_family_bindings.py for citations).
-swing still resolves approximation=True (n=1, below the n>=2 de-approximation floor,
-R-102 §2). The tests below that previously asserted "True for every kind" (this file's
+swing still resolves approximation=True — by the ANCHOR-VS-TAUGHT-OBJECT REFUSAL
+(AR-199 §1): a swing is the ANCHOR of a fibonacci retracement, while the taught object
+is the 50/61.8% line, which the level/zone primitive does not emit. There is nothing for
+the row to bind TO. NOT because it falls below the n>=2 de-approximation floor (that
+ground is WITHDRAWN — it rested on a count that was numerically false; the population
+MEETS the floor), and NOT because of the flip's grade scope (withdrawn in turn — a
+ground that depends on our own permission is not a ground). The refusal is about what
+the primitive EMITS, so no row count and no widening of the grade can move it.
+The tests below that previously asserted "True for every kind" (this file's
 original R7 block) have been SPLIT per-kind rather than edited in place — see the R9 block
 near the bottom for the flip's own evidence-citing tests, and test_swing_kind_routes_but_
 approximation_never_flips (unchanged) for the swing floor proof.
@@ -212,7 +219,11 @@ def test_population_a_object_binds_to_resolver_primitive_when_both_flags_enabled
     asserted approximation is True for ALL three parametrized objects (packet hard
     constraint at the time: no approximation=False anywhere in that delivery). It now
     asserts the PER-KIND flip explicitly — named_sr_level and order_block_edge earned
-    approximation=False, swing did not (n=1, below the n>=2 de-approximation floor)."""
+    approximation=False, swing did not — by the ANCHOR-VS-TAUGHT-OBJECT REFUSAL
+    (AR-199 §1): the taught object is the 50/61.8% line and a swing is only its ANCHOR,
+    so the primitive emits nothing for the row to bind to. NOT the n>=2 de-approximation
+    floor (withdrawn: the population MEETS it) and NOT the flip's grade scope (withdrawn:
+    a permission is not a ground). No count can move this refusal."""
     cond = {"id": "c1", "type": "WAIT_STRUCTURE", "object": obj, "role": "spine"}
     with both_flags(True):
         b = bind_condition(cond)
