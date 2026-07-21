@@ -1,6 +1,35 @@
 /**
- * GET /slumhouse/api/anam-greeting — personalised greeting + Q&A material for the Anam
- * persona, assembled from RECEIPTS THAT ALREADY EXIST (charter Tier-2 item 7).
+ * GET /slumhouse/api/anam-greeting — personalised greeting for the Anam persona, assembled from
+ * TRADE-CRITIQUE receipts that already exist.
+ *
+ * ★★ SCOPE — THIS IS ONE HALF OF CHARTER ITEM 7. Read this before assuming the item is done.
+ *
+ * Item 7 asks for a "personalized greeting + Q&A wired to EXISTING receipts (the trade-critique
+ * service's plain-English blocks; certificate plain-language chains)". What ships here:
+ *
+ *   ✔ BUILT      — greeting + talking points from trade-critique plain-English blocks.
+ *   ✘ RESERVED   — the CERTIFICATE plain-language chain reader. NOT deferred for time:
+ *                  **the receipt does not exist.** A repo-wide semantic search (independently
+ *                  confirmed by a fresh-context grade) found NO Slumhouse-side certificate
+ *                  producer — no table, no route, no service. The only `certificate` producers
+ *                  are unrelated: the rails-rig nightly health cert (migration 0202 — factory-
+ *                  wide, operator-facing, not a per-member receipt) and the H1 extraction
+ *                  campaign's grading certificates (a different lane entirely).
+ *                  ★ So the CHARTER OVERCLAIMED: it called this an "EXISTING" receipt when no
+ *                  such receipt was ever built. The blocker is a false premise in the plan, not
+ *                  effort. Owner: whoever builds a member-facing certificate receipt; this
+ *                  reader is ~an afternoon once one exists, and must carry the SAME fail-closed
+ *                  per-member scoping proven below — a sibling reader scoped weaker than this
+ *                  one would reopen the leak this route was hardened against.
+ *   ✘ RESERVED   — the Q&A path. The DATA exists (the member's own receipts); the interaction
+ *                  path does not. `anam-session.ts` sends only `personaId`, so the persona's
+ *                  conversation runs on Anam's side; feeding it member receipts needs either an
+ *                  Anam-side context capability (a paid service, not audited here) or our own
+ *                  model call — and NO slumhouse route calls a model today. Either option has a
+ *                  price, so it is **cost-gated and an operator decision**, not a size problem.
+ *                  Owner: operator, on the spend question.
+ *
+ * Anything that reports "item 7" as complete on the strength of this file is wrong.
  *
  * ★ READ-ONLY CONSUMER. This route performs SELECTs only. It creates no critique, grades
  * nothing, and writes nothing — it renders receipts the trade-critique service already
@@ -44,7 +73,10 @@ interface PlainEnglishBlock {
 export interface AnamGreetingResponse {
   /** One sentence the persona can open with. Always present. */
   greeting: string;
-  /** Plain-English lines drawn from existing receipts. Empty when unmapped — never a fallback. */
+  /**
+   * Plain-English lines drawn from existing critique receipts. Empty when unmapped — never a
+   * fallback. NOT a Q&A: this is material a persona may open with, not an answer path.
+   */
   talkingPoints: string[];
   /** Why there is no trade content, when there is none. Null when receipts were found. */
   emptyReason: "not_mapped" | "no_critiques_yet" | null;
