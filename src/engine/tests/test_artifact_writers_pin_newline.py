@@ -29,6 +29,7 @@ import hashlib
 import importlib.util
 import json
 import os
+import subprocess
 from pathlib import Path
 
 import pytest
@@ -36,7 +37,15 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[3]
 CENSUS_PY = REPO_ROOT / "docs" / "replay-results" / "h1-battery" / "newline_writer_census.py"
 
-EXCLUDED_PREFIXES = ("src/engine/tests/", "tmp-n8n/")
+EXCLUDED_PREFIXES = ("src/engine/tests/", "tests/", "tmp-n8n/")
+
+
+def _tracked_files() -> set[str]:
+    """Repo-relative paths git tracks. Empty set => we could not ask, and the caller fails."""
+    out = subprocess.run(["git", "ls-files"], cwd=REPO_ROOT, capture_output=True, text=True)
+    if out.returncode != 0:
+        return set()
+    return {ln.strip() for ln in out.stdout.splitlines() if ln.strip()}
 
 
 def _census_module():
@@ -101,9 +110,19 @@ def test_no_artifact_writer_emits_platform_dependent_bytes():
         "below would be a false green. Boundary: walker skips {mod.SKIP_DIRS}."
     )
     assert sites, "zero write sites discovered; a census of an empty set is a false green"
+    assert _tracked_files(), (
+        "git ls-files returned nothing, so the tracked-file filter below would discard EVERY "
+        "mover and this rule would report green while checking nothing.")
 
+    # ★ TRACKED FILES ONLY. The walker reads the filesystem, so it also sees UNTRACKED files --
+    # another session's work-in-progress, scratch scripts, anything lying in the tree. This rule
+    # governs writers that SHIP; holding a red over a file no commit contains would make the
+    # suite's colour depend on what happens to be lying around, and would pressure this session
+    # into editing another's uncommitted work. Tracked-ness is asked of git, not guessed.
+    tracked = _tracked_files()
     movers = [s for s in sites if s["verdict"] == "PLATFORM_DEPENDENT_BYTES"
-              and not s["file"].startswith(EXCLUDED_PREFIXES)]
+              and not s["file"].startswith(EXCLUDED_PREFIXES)
+              and s["file"] in tracked]
     assert movers == [], (
         f"{len(movers)} artifact write site(s) emit platform-dependent bytes "
         f"(of {len(sites)} write sites examined across {n_files} python files; "
