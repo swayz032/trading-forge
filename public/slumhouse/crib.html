@@ -459,6 +459,40 @@
             sessionOptions: { videoQuality: "high" },
           });
           await anamClient.streamToVideoElement("sh-anam-video");
+
+          // ── Speak the member's own Discord name ────────────────────────────
+          // Anam's personaConfig is a `oneOf`: `{personaId}` OR an inline persona
+          // definition — and `name`/`systemPrompt` live only in the inline branch. Going
+          // inline to get a spoken name would have duplicated the persona (avatar, voice,
+          // LLM, 5 tools) into this file, creating a second source of truth alongside
+          // scripts/restore-slumdawg-anam.ts and a drift path. `talk()` avoids that trade
+          // entirely: it speaks supplied text over the EXISTING stateful session, so the
+          // server-locked persona stays the single definition.
+          //
+          // The name comes from /slumhouse/api/anam-greeting — session-scoped, the
+          // authenticated member's own displayName (Discord global_name/username, refreshed
+          // each sign-in), never a request param.
+          //
+          // NOTE: the persona has its own configured first greeting (02-greeting.md Option A),
+          // so the member hears that and then this. `skipGreeting` is inline-only, so it
+          // cannot be suppressed while keeping personaId. Reversible voice-UX polish — if it
+          // sounds clumsy, the fix is the persona's own initialMessage, which is the
+          // operator's to change.
+          try {
+            const greetRes = await fetch("/slumhouse/api/anam-greeting", { credentials: "include" });
+            // fetch does NOT throw on 4xx/5xx — read the status explicitly rather than
+            // parsing an error body as a greeting.
+            if (greetRes.ok) {
+              const greetBody = await greetRes.json();
+              if (greetBody && greetBody.greeting) {
+                await anamClient.talk(greetBody.greeting);
+              }
+            }
+          } catch (greetErr) {
+            // FAIL-SOFT on purpose: a greeting is polish. The avatar must still work when
+            // this fails — never let a nice-to-have become a dependency of the stream.
+            console.warn("[slumhouse] name greeting skipped", greetErr);
+          }
         } catch (e) {
           console.error("[slumhouse] anam launch failed", e);
           launch.disabled = false;
