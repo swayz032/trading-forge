@@ -30,6 +30,13 @@
     "docs/designs/ADVISOR-RULINGS.md"
   ],
   "population_derivation": "16 spec files at docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json; recursive walk for type==WAIT_SESSION; 27 rows, 27 unique (file,id), no duplicates. resolve_session_keyword bound 0/27. classify_session_role yielded a concrete zone for exactly 9/27 with TF_SESSION_ROLE_RESOLVER_ENABLED=true.",
+  "population_derivation_AS_OF": {
+    "law": "A TYPED SNAPSHOT CARRIES ITS AS-OF. The field above states a resolver reading as a bare fact. It was true when written and it is not true now, and a reader standing at that field had no way to know -- the measured delta lived only in the header, which is not where the numeral is.",
+    "as_of": "LOCK TIME, 2026-07-21, PRE-PACKET. Every numeral in population_derivation is the reading at that instant and none of them track anything.",
+    "the_field_is_UNEDITED_and_that_is_deliberate": "This file's quarantine header commits that no verdict, reason, tally or field below it was altered. Rewriting the numeral would have made that commitment false and destroyed a locked historical record to fix a staleness problem an ADJACENT field solves. Additions preserve both; edits preserve neither.",
+    "re_measured": "The zone-bound count re-measures LOWER than the locked reading. The current figures, computed rather than typed, are in the SESSION_DISAGREEMENT block of docs/replay-results/h1-battery/dual-denominator-remeasure-2026-07-21.json; the mechanism of the change is !!_QUARANTINE_READ_THIS_FIRST.REMEDIATION_MEASURED_2026-07-21 above.",
+    "scope": "Production flags OFF; TF_SESSION_ROLE_RESOLVER_ENABLED pinned true only for the measurement, as the shipped path requires. A labeled hypothetical about the labeled corpus, not a live-trading number."
+  },
   "discriminator": "remove the clock - does a taught object remain standing? If yes the session term was an ANCHOR, not the taught object.",
   "verdicts": [
     {

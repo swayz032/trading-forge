@@ -367,6 +367,14 @@ ASSERT_DISPOSITIONS: dict[str, str] = {
     # the declaration: a predicate whose terms both live in this file could only ever be
     # SOURCE_INVARIANT, and a SOURCE_INVARIANT closure proof is a closure proof about a typing.
     "sourcing['PASS']": "DATA_SENSITIVE",
+    # ★ H1-W4 D1: THE ACKNOWLEDGMENT-PROVENANCE GATE. DATA_SENSITIVE by the taxonomy's own
+    # question -- can it fire on a run where only the DATA changed? It can: both its terms are
+    # read out of two documents this generator does not own (the quarantined D3 adjudication and
+    # the ruling that queued the redesign). Delete either file, un-quarantine the first, or drop
+    # the ruling id from the second, and this fires with this source untouched. Same shape as
+    # sourcing['PASS'], and for the same reason: a gate whose terms all live in this file could
+    # only ever be SOURCE_INVARIANT, and a provenance proof about a typing is not provenance.
+    "_ack_entry is None or ack_prov['ALL_VERIFIED']": "DATA_SENSITIVE",
     "n_levelzone_rows == 16": "DATA_SENSITIVE",
     "total_flipped <= 6": "DATA_SENSITIVE",
     # H1-W4: the CEILING's two literals became COMPUTED. Both new gates read the level/zone
@@ -472,6 +480,15 @@ ASSERTS_ADDED_SINCE_BASELINE: list[dict] = [
     {"assert": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
      "disposition": "DATA_SENSITIVE", "added_by": "R-220 s1 -- per-component split guard C",
      "commit": "THIS_WAVE"},
+    # ★ H1-W4 D1: ONE ADDITION FROM THE GATED ACKNOWLEDGMENT, AND EXACTLY ONE. The acknowledgment
+    # itself adds NO enforcement site -- it narrows the SCOPE of an existing one, whose predicate
+    # is unchanged and still counted here under its own key. What is genuinely new is the
+    # provenance gate: a present acknowledgment must have pointers that resolve. Recording it as
+    # the single addition is the ledger doing its job -- if a future edit had also relaxed the
+    # reconciliation's predicate, that key's entry would have had to move too, in this diff,
+    # where a reviewer sees it.
+    {"assert": "_ack_entry is None or ack_prov['ALL_VERIFIED']", "disposition": "DATA_SENSITIVE",
+     "added_by": "H1-W4 D1 -- the gated acknowledgment's provenance check", "commit": "THIS_WAVE"},
     # ★ H1-W4. TWO GENUINELY NEW CHECKS, created by converting two TYPED LITERALS to computed
     # values. `max_de_approximable: 6` and `n_unresolvable_as_built: 9` sat as typed numbers
     # among computed neighbours; nothing checked either. The first gate requires the ceiling to
@@ -821,6 +838,35 @@ def _axis_session_split_declared(declared: dict) -> dict:
     return out
 
 
+def _axis_session_acknowledged_pair(ack: dict | None) -> dict | None:
+    """AXIS 3's SECOND mirror repair -- the acknowledged pair is a dependent copy of A.
+
+    ★★ FOUND BY THE AXIS FAMILY REFUSING TO BUILD, WHICH IS THE FAMILY WORKING. The gated
+    acknowledgment pins component A, and AXIS 3 exists to MOVE component A. So the acknowledgment
+    is a third copy of that quantity, exactly like SESSION_SPLIT_DECLARED, and it owes the same
+    mirror repair: move it with the axis, or the axis leaves a self-consistent artifact that the
+    acknowledgment nonetheless refuses to license -- which would be the acknowledgment reporting
+    a drift the perturbation deliberately introduced and repaired.
+
+    ★ AND THE WITHHELD FORM IS A GENUINE NEW DISCRIMINATION PROBE, NOT A COURTESY. With the
+    repair withheld the graded constant has moved and the acknowledgment has NOT, which is
+    precisely the "a moved constant must re-arm the guard" requirement, driven by the standing
+    axis family rather than by a bespoke demonstration. The reconciliation must FIRE in that
+    state, and SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD is where it is scored.
+
+    ★ THE PIN IS NOT WEAKENED. This moves only when _axis_is(AXIS_SESSION_GRADE) -- i.e. only
+    inside a perturbed build that exists to test guards. On the real corpus the acknowledged pair
+    is the literal in the entry, unmoved and unmovable by any data.
+    """
+    if ack is None or not _axis_is(AXIS_SESSION_GRADE):
+        return ack
+    if _WITHHOLD_REPAIRS:
+        return ack
+    out = json.loads(json.dumps(ack))
+    out["graded_genuine_session_teachings_A"] -= 1
+    return out
+
+
 def _axis_drop_taught_condition(specs: list) -> list:
     """AXIS 4. Drop one taught entry condition, chosen so the axis owes no repair elsewhere.
 
@@ -989,8 +1035,9 @@ REVIVAL_PROBES: dict[str, dict] = {
         # ★ H1-W4 D2: THIS PROBE'S OWN RATIONALE WAS A THIRD FALSE CAPTION. It closed
         # "no corpus in this family produces it -- today the resolver resolves none", which
         # was true only of the LEGACY matcher this guard has now been re-aimed away from.
-        # Today's corpus produces the condition outright: the shipped resolver binds 9 rows
-        # against a component A of 2. The probe is KEPT -- a +99 injection still proves the
+        # Today's corpus produces the condition outright: the shipped resolver binds more rows
+        # than component A (AS-OF 2026-07-21 / b54db943: 8 against 2 -- a dated snapshot; the
+        # live pair is SESSION_DISAGREEMENT). The probe is KEPT -- a +99 injection still proves the
         # assert is reachable and correctly targeted -- but its stated reason no longer
         # advertises an unreachability that was an artifact of the dead instrument.
         "why": "The shipped resolver is made to bind more rows to a session zone than the "
@@ -998,6 +1045,45 @@ REVIVAL_PROBES: dict[str, dict] = {
                "The condition is NOT hypothetical: on today's corpus the re-aimed measurement "
                "already exceeds component A unaided, and the injection proves the assert is "
                "reachable through the hook regardless of what the corpus happens to read.",
+    },
+    # ★★★ H1-W4 D1: THE GATED ACKNOWLEDGMENT'S THREE RED-PROOFS, AS REGISTERED PROBES.
+    # A gate that lets a build publish is the most dangerous kind in this file, so it is
+    # red-proofed AT BIRTH in all three directions a reader would ask about, and each is a probe
+    # the standing census runs on every invocation rather than a one-off demonstration that
+    # stops existing the moment nobody re-runs it. --acknowledgment-red-proof drives the same
+    # three in the open, beside the AST proof that the reconciliation's predicate is untouched.
+    # ★ THE FOURTH DIRECTION -- the real measurement drifting away from the acknowledged pair --
+    # is ALREADY covered by SESSION_RESOLVER_EXCEEDS_GRADE above, which injects at the
+    # measurement hook with the acknowledgment fully intact. That probe was written before this
+    # gate existed and it still fires, which is the load-bearing fact: the acknowledgment did
+    # not disarm the check it scopes.
+    "SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN": {
+        "hook": "session_disagreement_ack",
+        "targets": "ws_session_resolvable <= graded_teachings",
+        "mutate": lambda d: None,
+        "why": "The acknowledgment entry is REMOVED. This reproduces the pre-acknowledgment "
+               "state exactly -- the state in which this build aborted before every publish "
+               "call -- and the reconciliation must abort in it, unchanged. If this probe ever "
+               "came back green the acknowledgment would have leaked into the default path.",
+    },
+    "SESSION_ACKNOWLEDGMENT_PAIR_DRIFTED": {
+        "hook": "session_disagreement_ack",
+        "targets": "ws_session_resolvable <= graded_teachings",
+        "mutate": lambda d: {**d, "resolver_binds_zone_bound": d["resolver_binds_zone_bound"] + 1},
+        "why": "The acknowledged pair names a resolver reading the resolver does not have. The "
+               "entry is present, its pointers resolve, and it still must not license anything: "
+               "an acknowledgment describes ONE world and stops applying when the world moves. "
+               "This is the probe that proves the gate is a pinned pair and not a tolerance.",
+    },
+    "SESSION_ACKNOWLEDGMENT_POINTER_UNRESOLVABLE": {
+        "hook": "session_disagreement_ack",
+        "targets": "_ack_entry is None or ack_prov['ALL_VERIFIED']",
+        "mutate": lambda d: {**d, "d3_adjudication": {
+            **d["d3_adjudication"], "path": "docs/replay-results/THIS_FILE_DOES_NOT_EXIST.json"}},
+        "why": "The acknowledgment cites a document that is not there. A present licence whose "
+               "citation does not resolve is a caption wearing provenance, and it is a LOUDER "
+               "red than no licence at all -- so it refuses at the provenance gate rather than "
+               "falling through to the reconciliation, which would report the wrong finding.",
     },
     # ★★★ H1-W4 D1: THE BIRTH-TEST PROBE, AND IT IS NOT A SYNTHETIC INJECTION.
     # Every other probe in this family perturbs a value to a state no corpus is known to have
@@ -1112,6 +1198,14 @@ IDENTIFIER_KEYS = frozenset({
     # this list is safe to extend at all. It was NOT safe before that audit existed -- that is
     # how "recovers up to 17 of 27" hid inside a key called "source".
     "commit", "added_by",
+    # ★ H1-W4 D1: AS_OF_DATE. The typed-snapshot law requires every typed numeral in a place no
+    # gate reaches to carry an as-of anchor, and an anchor is by construction a date or a SHA --
+    # i.e. an identifier whose digits quote no measurement. A SHA already reads as one (the
+    # numeral regex will not split "b54db943"); a date does not, so it would otherwise be scored
+    # as a frozen numeral-carrying claim and the law would be unsatisfiable inside this artifact.
+    # Added by EXACT KEY NAME, with identifier_exclusion_audit standing behind it: if this key
+    # ever comes to hold a free-standing MOVED numeral the audit convicts it.
+    "AS_OF_DATE",
 })
 
 
@@ -1172,6 +1266,23 @@ def _container_of(p: str) -> str:
 # as data, and that string is printed next to the gate's PASS/FAIL on every single run, green
 # or red. A reader who sees the verdict cannot avoid seeing what it does not cover.
 GATE_BOUNDARIES: dict[str, str] = {
+    "SESSION_DISAGREEMENT_ACKNOWLEDGMENT": (
+        "Licenses publication for EXACTLY ONE state: the acknowledged pair, both terms equal, "
+        "with both pointers resolving to their named documents on disk this run. It says NOTHING "
+        "about whether the resolver is right, whether the grade is right, or which of them the "
+        "adjudication will find against -- it only permits the disagreement to be REPORTED. "
+        "Every other state above the ceiling reaches the reconciliation guard with its predicate "
+        "AST-identical to the pre-acknowledgment one and the build aborts. It cannot notice a "
+        "pair that is WRONG but stable: if the acknowledged numbers and the measured numbers are "
+        "both wrong in the same way, this gate is satisfied and the adjudication is the only "
+        "thing that reaches that."
+    ),
+    "ACKNOWLEDGMENT_PROVENANCE": (
+        "Opens each pointed-at document and requires a marker only that document carries, plus a "
+        "match against the pinned path. It proves the citation RESOLVES; it does not read the "
+        "document's argument and cannot tell whether the cited ruling still says what the "
+        "acknowledgment claims it says."
+    ),
     "CAPTION_GATE": (
         "Convicts a frozen prose leaf only on numerals that MOVED inside its OWN CONTAINER's "
         "subtree. A leaf that is the SOLE moving leaf in its container therefore cannot be "
@@ -2680,7 +2791,13 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     },
     "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.DATA_SENSITIVE_derivation": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
-        "numerals": ["14", "22", "8"],
+        # ★ H1-W4 D1: THIS REGISTRATION WAS ITSELF STALE AT HEAD, AND THE ABORT IS WHY.
+        # It read ["14", "22", "8"] -- eight additions summing to twenty-two -- while the ledger
+        # at HEAD already held NINE. The gate that scores this leaf runs AFTER the session
+        # reconciliation, so for three waves it never executed and the drift could not be seen
+        # by anything. ★ A GATE DOWNSTREAM OF AN ABORT IS NOT A GATE; it is a gate's corpse, and
+        # everything it protects rots quietly. Found only because unblocking publication ran it.
+        "numerals": ["14", "24", "10"],
         "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the "
                "addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No "
                "axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately "
@@ -2692,6 +2809,18 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
         "numerals": ["10", "5"],
         "why": "Same construction, same reason, other half of the split.",
+    },
+    # ★ H1-W4 D1: THE REDESIGN RULING'S ID, inside the gated acknowledgment. "R-242" names the
+    # ruling that granted the range-structure redesign as the real unit and queued it. It is a
+    # document identifier spelled with digits, exactly like the R-199 rows above; no measurement
+    # stands behind it and no corpus can move it. It is ALSO the string the provenance check
+    # requires to be present in that ruling file, so it is a checked identifier rather than a
+    # decorative one -- SESSION_ACKNOWLEDGMENT_POINTER_UNRESOLVABLE is where that is scored.
+    "$.SESSION_ATTRIBUTION.SESSION_DISAGREEMENT.acknowledgment_entry.range_structure_redesign.ruling": {
+        "kind": "RULING_IDENTIFIER",
+        "numerals": ["242"],
+        "why": "R-242 names the ruling that queued the redesign this disagreement is a symptom "
+               "of. A document id, not a quantity.",
     },
     # ★ H1-W4. A condition_id ends in "#N", an ordinal WITHIN the id. It is part of a name,
     # not a measurement -- no corpus size, rate or count moves it, and it changes only if the
@@ -3474,8 +3603,11 @@ def session_reconciliation_holds(n_zone_bound: int, component_a: int) -> bool:
     """The re-aimed session reconciliation's ENTIRE arithmetic, in one place.
 
     ★ WHY THIS IS A NAMED FUNCTION AND NOT AN INLINE COMPARISON. The guard it
-    mirrors is expected to FIRE on today's corpus (9 zone-bound vs component
-    A = 2). A guard observed only in its firing state has shown one polarity,
+    mirrors DISAGREES on today's corpus -- the zone-bound count exceeds
+    component A (AS-OF 2026-07-21 / b54db943: 8 vs 2; the live pair is
+    published in SESSION_DISAGREEMENT, and a typed pair here is a dated
+    snapshot, never the record). A guard observed only in its firing state
+    has shown one polarity,
     and one polarity is not a demonstration: a comparison that is hard-wired
     to refuse looks identical, from outside, to one that refuses for cause.
     The predecessor guard's whole defect was the mirror image of this -- it
@@ -3486,6 +3618,258 @@ def session_reconciliation_holds(n_zone_bound: int, component_a: int) -> bool:
     a paraphrase of it; the assert at the measurement site spells the same
     comparison so its census text and revival-probe target stay stable."""
     return n_zone_bound <= component_a
+
+
+# ===================================================== H1-W4 D1: THE GATED ACKNOWLEDGMENT
+# ★★★ THE DEFECT THIS REPAIRS IS NOT THE GUARD'S PREDICATE -- IT IS THE GUARD'S SCOPE.
+# The assert below answers a TRUE question ("is the resolver binding rows the grade does not
+# call genuine teachings?") and its answer is YES. It then aborts the build, which answers a
+# SECOND question it was never asked: "may this artifact publish its own honest measurement of
+# that disagreement?" Those are different questions and the abort conflated them.
+#
+# ★ AN ARTIFACT WHOSE JOB INCLUDES REPORTING A DISAGREEMENT MUST NOT BE HELD HOSTAGE BY THE
+# DISAGREEMENT IT REPORTS. Three waves of corrections -- the re-aimed captions, the 26-vs-27
+# accounting, the sourced-row closure -- were stranded in source behind this abort while the
+# published artifact carried the WITHDRAWN readings. The abort was not protecting a reader; it
+# was freezing a strictly worse artifact in place.
+#
+# ★★ AND THIS IS A DISCRIMINATION GAIN, NOT A WEAKENING -- that is the whole test it must pass.
+# Yesterday the guard said ONE thing about EVERY state above the ceiling: abort. It could not
+# distinguish the known, adjudication-pending, pointer-backed disagreement from a novel one.
+# Today exactly one state passes -- the acknowledged pair, provenance-verified -- and every
+# other state aborts with the predicate BYTE-IDENTICAL to the one that aborted yesterday.
+# A wrong pair, a moved constant, a removed entry, a broken pointer or a drifted measurement
+# each land in the same place they landed before this block existed.
+#
+# ★ WHAT THIS DOES NOT DO, STATED SO IT CANNOT BE READ IN. It does not fix the resolver, does
+# not settle the adjudication, and does not move a graded constant. The resolver is UNSOUND,
+# that is known and named, the redesign is queued, and the production flag is OFF. This block
+# only lets the artifact SAY so in computed numbers.
+D3_ADJUDICATION_PATH = (
+    REPO_ROOT / "docs" / "replay-results" / "session-9v2-adjudication" / "verdicts-LOCKED.json")
+# ★★ THE REDESIGN POINTER IS THE PACKET, NOT THE ADVISOR LEDGER, AND THE REASON IS A MEASURED
+# ONE. The first form of this pointed at docs/designs/ADVISOR-RULINGS.md, and the draft run
+# reported it DIVERGED from its committed bytes -- correctly: it is a live, continuously-appended
+# ledger owned by another seat. A verified pointer is also a TRACKED INPUT of this generator, so
+# citing that ledger would mean every ruling anyone appends BLOCKS this artifact from publishing.
+# ★ A PROVENANCE CHECK MUST NOT BE WIRED TO A FILE THAT MOVES FOR REASONS UNRELATED TO THE CLAIM
+# -- that manufactures exactly the kind of abort this whole unit exists to remove. The packet is
+# the frozen document where the finding was made and where the redesign is declared NOT DONE.
+RANGE_STRUCTURE_REDESIGN_PATH = (
+    REPO_ROOT / "docs" / "designs" / "packet-session-refusal-precedence-2026-07-21.md")
+# The markers below are read OUT OF the pointed-at files. They are not descriptions of those
+# files -- they are the strings whose PRESENCE is the provenance check. A pointer that merely
+# names a path proves the path was typed; a pointer whose target must contain a specific marker
+# proves the target is the document the acknowledgment thinks it is. TWO markers, not one: the
+# structural CLASS, and the word that says the remedy is a redesign rather than a patch.
+RANGE_STRUCTURE_REDESIGN_MARKER = "no model of range structure"
+RANGE_STRUCTURE_REDESIGN_MARKER_2 = "redesign"
+D3_QUARANTINE_KEY = "!!_QUARANTINE_READ_THIS_FIRST"
+D3_QUARANTINE_MARKER = "DO NOT CITE"
+
+# ★ THE ENTRY IS PINNED TO AN EXACT PAIR, AND THE PAIR IS THE GATE.
+# Not "the resolver may exceed the grade" -- that would be the weakening this must not be. It
+# is "THIS resolver reading against THIS grade reading is the known, pointed-at, adjudication-
+# pending disagreement." Move either number and the acknowledgment stops matching the world it
+# was written about, which is exactly when a reader most needs the guard back.
+# ★ AS-OF CARRIED IN THE ENTRY ITSELF (typed-snapshot law): these two numerals are TYPED, so
+# they carry the date and commit they were true at. Unlike the docstring numerals below them,
+# these are also GATED -- if they go stale the run aborts rather than the reader discovering it.
+SESSION_DISAGREEMENT_ACKNOWLEDGMENT: dict | None = {
+    "AS_OF_DATE": "2026-07-21",
+    "AS_OF_COMMIT": "b54db943",
+    "resolver_binds_zone_bound": 8,
+    "graded_genuine_session_teachings_A": 2,
+    "d3_adjudication": {
+        "path": "docs/replay-results/session-9v2-adjudication/verdicts-LOCKED.json",
+        "status_required_in_that_file": "quarantined -- criterion-scoped, not corpus verdicts",
+        "why_it_is_the_pointer": (
+            "It is the only instrument that adjudicated the resolver-bound rows one by one, and "
+            "it is QUARANTINED: it graded under a discriminator the governing ruling rejected. "
+            "So the adjudication of record is PENDING, and the pointer proves the pendency "
+            "rather than asserting it."
+        ),
+    },
+    "range_structure_redesign": {
+        "source": "docs/designs/packet-session-refusal-precedence-2026-07-21.md",
+        "ruling": "R-242",
+        "ruling_NOT_MACHINE_VERIFIED_HERE": (
+            "The ruling that granted the redesign as the real unit lives in the advisor ledger, "
+            "which is a live append-only file owned by another seat. Verifying against it would "
+            "make every future ruling a blocker on this artifact, so the CHECKED pointer is the "
+            "frozen packet where the finding was made and the redesign declared not done. The "
+            "ruling id is published as an identifier for a reader to follow, and it is named "
+            "here as UNVERIFIED rather than left to look like the checked one."
+        ),
+        "why_it_is_the_pointer": (
+            "The packet that found the defect class and stated its remedy is a redesign rather "
+            "than a patch. The disagreement below is a symptom of the representation defect "
+            "that redesign exists to fix, and the redesign is queued rather than done."
+        ),
+    },
+}
+
+
+def acknowledgment_provenance(ack: dict | None) -> dict:
+    """READ the two pointers off disk. Never trust that a path string is a document.
+
+    ★ WHY THIS IS A READ AND NOT A DECLARATION. An acknowledgment carrying a
+    path is worth exactly as much as the path being checked. A pointer to a
+    file that has been deleted, renamed or emptied is a caption -- it looks
+    like provenance and cites nothing. So both targets are opened, and each
+    must contain a MARKER that only the intended document carries: the D3 file
+    must still be QUARANTINED (which is what makes the adjudication pending),
+    and the ruling file must still carry the redesign ruling's id AND the
+    structural-class phrase the ruling turns on.
+
+    ★ THE PATHS ARE READ OUT OF THE ENTRY, NOT OFF MODULE CONSTANTS. That is
+    the difference between checking THE POINTER and checking a neighbouring
+    constant that happens to point somewhere valid. If the entry's own path is
+    edited to something that does not resolve, this must go False -- and
+    SESSION_ACKNOWLEDGMENT_POINTER_UNRESOLVABLE is the probe that proves it.
+
+    Returns every term. A caller decides what to do with a False.
+    """
+    out: dict = {
+        "d3_path_exists": False,
+        "d3_is_quarantined": False,
+        "redesign_path_exists": False,
+        "redesign_names_the_structural_class": False,
+        "redesign_says_it_is_a_redesign": False,
+    }
+    if ack is None:
+        out["ALL_VERIFIED"] = False
+        out["why_not"] = "no acknowledgment entry is present -- there is nothing to verify"
+        return out
+    d3_path = REPO_ROOT / (ack.get("d3_adjudication") or {}).get("path", "")
+    rd_path = REPO_ROOT / (ack.get("range_structure_redesign") or {}).get("source", "")
+    # The two paths themselves are NOT echoed into this dict. They are already published under
+    # the entry's own `path` and `source` keys -- which the caption gate treats as identifiers by
+    # exact key name -- and re-emitting the same strings under keys that are NOT identifiers
+    # would smuggle a filename's digits into the scored prose population. One home per fact.
+    out["d3_path_exists"] = d3_path.is_file()
+    if out["d3_path_exists"]:
+        d3 = json.loads(d3_path.read_text(encoding="utf-8"))
+        header = d3.get(D3_QUARANTINE_KEY) or {}
+        out["d3_is_quarantined"] = D3_QUARANTINE_MARKER in str(header.get("status") or "")
+    out["redesign_path_exists"] = rd_path.is_file()
+    if out["redesign_path_exists"]:
+        text = rd_path.read_text(encoding="utf-8")
+        out["redesign_names_the_structural_class"] = RANGE_STRUCTURE_REDESIGN_MARKER in text
+        out["redesign_says_it_is_a_redesign"] = RANGE_STRUCTURE_REDESIGN_MARKER_2 in text
+    # ★ TWO PATHS TO THE SAME FACT, and the second is not redundant. Existence alone would let an
+    # edited pointer pass by landing on some OTHER file that happens to be there; the pin says
+    # WHICH document, and existence says it is still a document. Either alone is weaker.
+    out["d3_path_matches_the_pinned_constant"] = d3_path == D3_ADJUDICATION_PATH
+    out["redesign_path_matches_the_pinned_constant"] = rd_path == RANGE_STRUCTURE_REDESIGN_PATH
+    out["ALL_VERIFIED"] = all(
+        out[k] for k in ("d3_path_exists", "d3_is_quarantined", "redesign_path_exists",
+                         "redesign_names_the_structural_class",
+                         "redesign_says_it_is_a_redesign",
+                         "d3_path_matches_the_pinned_constant",
+                         "redesign_path_matches_the_pinned_constant"))
+    out["why_not"] = None if out["ALL_VERIFIED"] else (
+        "a pointer did not resolve to the document the acknowledgment names")
+    return out
+
+
+def measure_live_reconciliation_pair() -> tuple[int, int]:
+    """The reconciliation's two REAL terms, measured the way the build measures them.
+
+    Exists so the polarity demonstration's one non-synthetic row is read from
+    the corpus and the declared split instead of typed into a case list. The
+    build derives component A through _axis_session_grade_split so the
+    perturbation axes can move it; this reads the same function with the same
+    literals, so the two cannot disagree without the split guard firing.
+    """
+    n_zone_bound = measure_shipped_session_resolvable(load_corpus_a())
+    component_a, _ = _axis_session_grade_split(2, 21)
+    return n_zone_bound, component_a
+
+
+def _expected_from_the_acknowledged_pair() -> bool:
+    """What the reconciliation SHOULD return, derived from the acknowledgment.
+
+    Deliberately not derived from the live measurement and deliberately not
+    from session_reconciliation_holds's own body: an expectation computed from
+    the thing it grades is not an expectation.
+    """
+    ack = SESSION_DISAGREEMENT_ACKNOWLEDGMENT
+    if ack is None:
+        return True  # with nothing acknowledged, the guard is expected to hold
+    return ack["resolver_binds_zone_bound"] <= ack["graded_genuine_session_teachings_A"]
+
+
+def measure_d3_adjudication_state() -> dict:
+    """READ the adjudication's state out of the adjudication, never type it.
+
+    ★ WHY THIS IS A READ. "adjudication pending" and "the resolver is unsound"
+    are the two load-bearing qualifiers on the disagreement block, and typing
+    either would make the block a caption about the very thing it exists to
+    report. Both are derived here from the D3 file's own fields: PENDING
+    because that file is QUARANTINED (it graded under a discriminator the
+    governing ruling rejected, so it is not the adjudication of record), and
+    UNSOUND because its own zone-correctness tally records more wrong zones
+    than right ones on the rows the resolver did bind.
+
+    The tallies are the D3 instrument's CALIBRATION DIAGNOSTICS, which its own
+    quarantine header names as the part that survives the quarantine -- they
+    describe what the resolver DID, not how a row should be typed. Reading the
+    surviving half of a quarantined file is the only honest use of it.
+    """
+    out: dict = {"d3_readable": False}
+    if not D3_ADJUDICATION_PATH.is_file():
+        return out
+    d3 = json.loads(D3_ADJUDICATION_PATH.read_text(encoding="utf-8"))
+    header = d3.get(D3_QUARANTINE_KEY) or {}
+    tally = d3.get("zone_correctness_tally") or {}
+    n_correct = int(tally.get("correct") or 0)
+    n_total = sum(int(v or 0) for v in tally.values())
+    out.update({
+        "d3_readable": True,
+        "d3_is_quarantined_COMPUTED": D3_QUARANTINE_MARKER in str(header.get("status") or ""),
+        "zone_correctness_tally_COMPUTED": dict(tally),
+        "n_zones_correct_COMPUTED": n_correct,
+        "n_zones_adjudicated_COMPUTED": n_total,
+        "n_zones_NOT_correct_COMPUTED": n_total - n_correct,
+    })
+    # PENDING is the ABSENCE of an adjudication of record, and the quarantine is what makes it
+    # absent. Both directions are spelled so neither is the default.
+    out["adjudication_status_COMPUTED"] = (
+        "PENDING -- the only per-row adjudication on disk is quarantined as criterion-scoped"
+        if out["d3_is_quarantined_COMPUTED"] else
+        "ON RECORD -- the per-row adjudication is no longer quarantined and now governs")
+    out["resolver_sound_COMPUTED"] = n_total > 0 and n_total == n_correct
+    out["resolver_soundness_basis"] = (
+        "Computed from the quarantined instrument's surviving calibration diagnostics: the "
+        "share of resolver-bound rows whose ZONE it got right. Soundness here means every "
+        "adjudicated zone was correct. It is a property of the resolver, measured, and it is "
+        "NOT repaired by this unit -- the redesign that repairs it is queued and cited above."
+    )
+    return out
+
+
+def session_disagreement_acknowledged(n_zone_bound: int, component_a: int,
+                                      ack: dict | None, prov: dict) -> bool:
+    """The acknowledgment gate's ENTIRE predicate, in one place, both polarities drivable.
+
+    Same discipline as session_reconciliation_holds and
+    sourced_row_closure_holds: a gate seen in only one state is
+    indistinguishable from a gate wired to that state.
+
+    ★ THE PREDICATE IS EQUALITY ON BOTH TERMS, DELIBERATELY -- never `<=`, and
+    never a check on the excess alone. An acknowledgment of "the resolver may
+    exceed the grade" would be the weakening this must not be; it would pass
+    every future state the abort was right to catch. Pinning BOTH numerals
+    means the acknowledgment describes one world, and stops applying the
+    moment the world moves.
+    """
+    return (
+        ack is not None
+        and bool(prov.get("ALL_VERIFIED"))
+        and n_zone_bound == ack["resolver_binds_zone_bound"]
+        and component_a == ack["graded_genuine_session_teachings_A"]
+    )
 
 
 def measure_shipped_session_resolvable(specs) -> int:
@@ -3504,8 +3888,13 @@ def measure_shipped_session_resolvable(specs) -> int:
     ones. The guard's sentence is about binding to a zone; recognized-but-
     uncomputable rows return bindable=False with
     SESSION_TEACHING_UNBOUND_REASON and are deliberately NOT counted here.
-    On today's corpus that distinction is 9 (zone-bound) vs 18 (recognized),
-    so it is worth 9 either way and must not be left implicit."""
+    The distinction is worth a large fraction of the labeled population either
+    way and must not be left implicit, so BOTH counts are now measured and
+    published (measure_shipped_session_recognized is the other one) rather
+    than one being measured and the other typed into this sentence.
+    AS-OF 2026-07-21 / b54db943 the readings were 8 zone-bound and 18
+    recognized; those are a dated snapshot, and the artifact's
+    SESSION_DISAGREEMENT fields are the record."""
     prev = os.environ.get(SESSION_ROLE_RESOLVER_FLAG)
     os.environ[SESSION_ROLE_RESOLVER_FLAG] = "true"
     try:
@@ -3515,6 +3904,31 @@ def measure_shipped_session_resolvable(specs) -> int:
             for c in ec
             if c.get("type") == "WAIT_SESSION"
             and getattr(sfb.bind_condition(c), "session_zone", None) is not None
+        )
+    finally:
+        if prev is None:
+            os.environ.pop(SESSION_ROLE_RESOLVER_FLAG, None)
+        else:
+            os.environ[SESSION_ROLE_RESOLVER_FLAG] = prev
+
+
+def measure_shipped_session_recognized(specs) -> int:
+    """Count WAIT_SESSION rows the shipped role resolver RECOGNIZES as session teaching.
+
+    The superset of the zone-bound count: recognized-but-uncomputable rows are
+    in here and are not in that one. Measured rather than carried because the
+    docstring above used to TYPE this figure beside the zone-bound one, and a
+    typed figure standing next to a computed one is the caption shape.
+    """
+    prev = os.environ.get(SESSION_ROLE_RESOLVER_FLAG)
+    os.environ[SESSION_ROLE_RESOLVER_FLAG] = "true"
+    try:
+        return sum(
+            1
+            for _n, ec, _am in specs
+            for c in ec
+            if c.get("type") == "WAIT_SESSION"
+            and sfb.classify_session_role(c.get("object") or "").recognized
         )
     finally:
         if prev is None:
@@ -4028,29 +4442,96 @@ def _build_artifact_body() -> dict:
     # loop below pins TF_FAMILY_META_ENFORCED -- the arm is chosen, never inherited, because a
     # resolver measured in the wrong arm answers a different question than the one asked.
     #
-    # ★ MEASURED CONSEQUENCE OF THE RE-AIM: 9, not 0. The shipped resolver binds 9 of the 27
-    # labeled rows to a real killzone zone (18 of 27 it RECOGNIZES as session teaching; the
-    # zone-bound 9 is the subset with a computable window, and zone-bound is what this guard's
-    # sentence is about). Against component A = 2, the reconciliation REFUSES. That refusal is
-    # this deliverable: a re-aim that came back green would itself be evidence the new
-    # instrument was as dead as the old one. The 9-vs-2 per-row adjudication is a SEPARATE
-    # exercise against the regenerated numbers and is deliberately NOT performed here -- this
-    # guard's job is to make the disagreement impossible to publish through, not to settle it.
+    # ★ MEASURED CONSEQUENCE OF THE RE-AIM: NOT ZERO. The shipped resolver binds a subset of the
+    # labeled rows to a real killzone zone; a wider subset it RECOGNIZES as session teaching, and
+    # the zone-bound count is the part of that with a computable window. Zone-bound is what this
+    # guard's sentence is about. Against component A the reconciliation DISAGREES, and a re-aim
+    # that had come back green would itself be evidence the new instrument was as dead as the
+    # old one. ★ AS-OF 2026-07-21 / b54db943 the reading is 8 zone-bound and 18 recognized
+    # against A = 2; both figures are COMPUTED below and PUBLISHED as numeric fields, so this
+    # comment's numerals are a dated snapshot and the artifact is the live record.
+    # The per-row adjudication of the disagreement is a SEPARATE exercise (quarantined, see
+    # D3_ADJUDICATION_PATH) and is deliberately NOT performed here.
     ws_session_resolvable = _rv(
         "ws_session_resolvable", measure_shipped_session_resolvable(specs_a))
+    ws_session_recognized = _rv(
+        "ws_session_recognized", measure_shipped_session_recognized(specs_a))
+    # ★★★ THE GATED ACKNOWLEDGMENT. Provenance is read off disk EVERY run -- a pointer is only
+    # worth its target existing. Note the ORDER and that it is load-bearing: a PRESENT
+    # acknowledgment whose pointers do not resolve is a LOUDER red than no acknowledgment at
+    # all (someone typed a citation that cites nothing), so it refuses at exit 2 here rather
+    # than falling through to the reconciliation, which would report the wrong finding.
+    # An ABSENT entry refuses NOTHING here and falls straight through to the assert below --
+    # deliberately, because that path must reproduce the pre-acknowledgment abort EXACTLY.
+    _ack_entry = _rv("session_disagreement_ack",
+                     _axis_session_acknowledged_pair(SESSION_DISAGREEMENT_ACKNOWLEDGMENT))
+    ack_prov = acknowledgment_provenance(_ack_entry)
+    refuse_unless(_ack_entry is None or ack_prov["ALL_VERIFIED"], "ACKNOWLEDGMENT_PROVENANCE", (
+        f"GUARD BOUNDARY: a session-disagreement acknowledgment is PRESENT, so each of its "
+        f"pointers must resolve to the document it names. Read off disk this run: {ack_prov}.\n"
+        "  An acknowledgment is a licence to publish through a known disagreement. A licence "
+        "whose citations do not resolve is a caption, and it is worse than no licence, because "
+        "it reads as provenance to everyone downstream."
+    ))
+    ws_disagreement_acknowledged = session_disagreement_acknowledged(
+        ws_session_resolvable, graded_teachings, _ack_entry, ack_prov)
+    _d3 = measure_d3_adjudication_state()
+    session_disagreement_block = {
+        "resolver_binds_zone_bound_COMPUTED": ws_session_resolvable,
+        "graded_genuine_session_teachings_A_COMPUTED": graded_teachings,
+        "excess_over_component_A_COMPUTED": ws_session_resolvable - graded_teachings,
+        "resolver_recognizes_session_teaching_COMPUTED": ws_session_recognized,
+        "labeled_population_COMPUTED": ws_taught,
+        "adjudication_status_COMPUTED": _d3.get("adjudication_status_COMPUTED"),
+        "resolver_sound_COMPUTED": _d3.get("resolver_sound_COMPUTED"),
+        "production_flag": SESSION_ROLE_RESOLVER_FLAG,
+        "production_flag_state_COMPUTED": (
+            "OFF" if os.environ.get(SESSION_ROLE_RESOLVER_FLAG, "").lower() not in
+            ("1", "true", "yes") else "ON"),
+        "D3_ADJUDICATION_STATE_COMPUTED": _d3,
+        "ACKNOWLEDGED_COMPUTED": ws_disagreement_acknowledged,
+        "acknowledgment_entry": _ack_entry,
+        "acknowledgment_provenance_READ_OFF_DISK": ack_prov,
+        "what_the_disagreement_IS": (
+            "The shipped session resolver binds more of the labeled rows to a session zone than "
+            "the ratified grade calls genuine session teachings. Both counts are fields above. "
+            "Either the grade understates the genuine teachings or the resolver binds rows that "
+            "teach no session, and the second is the reading the calibration diagnostics favour."
+        ),
+        "what_this_block_does_NOT_claim": (
+            "It does not settle which side is wrong -- that is the adjudication, and its status "
+            "is a field above rather than an opinion here. It does not claim the resolver is "
+            "fixed; the soundness field is computed and the redesign is queued. The production "
+            "flag state is a field, and it is the reason none of this is live."
+        ),
+        "why_this_block_can_be_published_at_all": (
+            "A gated acknowledgment pinned to the exact pair above, with both its pointers "
+            "verified on disk this run. Any other state -- a different pair, a withdrawn entry, "
+            "a pointer that does not resolve -- reaches the reconciliation guard unchanged and "
+            "the build aborts, exactly as it did before this block existed."
+        ),
+    }
     # ★ THE ASSERT FORM IS DELIBERATE AND MUST NOT BE CONVERTED. This site is a registered
     # revival-probe target (SESSION_RESOLVER_EXCEEDS_GRADE); the probes measure it by catching
     # AssertionError, and refuse_unless raises SystemExit, which would abort the probe loop
     # instead of being scored. The file refuses -O outright for exactly this reason (see
     # OPTIMIZED_MODE), so the asserts cannot be stripped underneath the probes. The defect
     # repaired here was the INSTRUMENT CALLED, never the enforcement mechanism.
-    assert ws_session_resolvable <= graded_teachings, (
-        f"GUARD BOUNDARY: the SHIPPED session resolver (classify_session_role -> "
-        f"bind_condition) binds {ws_session_resolvable} of {ws_taught} labeled rows to a zone, "
-        f"which EXCEEDS component A ({graded_teachings}). Either the grade understates the "
-        "genuine teachings or the resolver is binding rows that teach no session. Both are "
-        "findings; neither may pass silently."
-    )
+    # ★★ THE PREDICATE BELOW IS UNTOUCHED -- AST-IDENTICAL TO THE ONE THAT ABORTED YESTERDAY,
+    # message included, and --acknowledgment-red-proof proves that by comparison rather than by
+    # this sentence. What changed is its SCOPE: it is skipped for exactly one state, the
+    # provenance-verified acknowledged pair. Every other state above the ceiling reaches it
+    # unchanged. ★ Note what this does NOT do: it does not widen to `<=` and it does not
+    # tolerate an excess. A gate that had been RELAXED would pass states nobody has looked at;
+    # this one passes exactly the state that has been looked at, and the looking is on disk.
+    if not ws_disagreement_acknowledged:
+        assert ws_session_resolvable <= graded_teachings, (
+            f"GUARD BOUNDARY: the SHIPPED session resolver (classify_session_role -> "
+            f"bind_condition) binds {ws_session_resolvable} of {ws_taught} labeled rows to a zone, "
+            f"which EXCEEDS component A ({graded_teachings}). Either the grade understates the "
+            "genuine teachings or the resolver is binding rows that teach no session. Both are "
+            "findings; neither may pass silently."
+        )
 
     # THE 161 DENOMINATOR (AR-188 fix 4). The 155 counts entry_conditions ONLY; the 16 specs also
     # carry 6 `invalidations` entries that are just as taught. Measured under BOTH enforcement arms
@@ -4881,7 +5362,9 @@ def _build_artifact_body() -> dict:
             # 0/27. So the caption attributed a reading to the shipped resolver that the
             # shipped resolver never produced, and the 0 it published was an artifact of the
             # dead instrument rather than a fact about the corpus. Re-aimed, the same corpus
-            # reads 9. The instrument is now NAMED in the sentence, not merely alluded to as
+            # reads non-zero (the live figure is the published field, not this comment; AS-OF
+            # 2026-07-21 / b54db943 it is 8). The instrument is now NAMED in the sentence,
+            # not merely alluded to as
             # "live": "live" was doing the work of a provenance claim without carrying one.
             "recovery_ceiling_vs_measured": (
                 f"CEILING (graded, not measured): at most {graded_teachings} of {ws_taught}. "
@@ -5006,6 +5489,13 @@ def _build_artifact_body() -> dict:
                 # claim of external falsifiability was made by the single term that had been
                 # rendered unfalsifiable -- the caption was not merely wrong, it was wrong in
                 # precisely the direction that made the guard look strongest.
+                # ★★ H1-W4 D1 -- AND THE CORRECTION ABOVE HAD ITS OWN FALSE NUMERAL. The
+                # sentence that replaced the withdrawn falsifiability claim ended "it moved from
+                # 0 to 9" -- a TYPED reading of a quantity the field beside it COMPUTES, and by
+                # the time anyone read it the resolver bound a different number of rows. A
+                # correction that types the figure it is correcting is the same disease at one
+                # remove. Both numerals are gone from the prose; the movement is stated as a
+                # movement and the readings are the numeric fields.
                 "ASSERTED": (
                     "★ PER COMPONENT, not merely as a sum. The predecessor asserted the SUM "
                     "alone, which stays green under every reallocation between the graded "
@@ -5015,11 +5505,20 @@ def _build_artifact_body() -> dict:
                     "the taught count; and the SHIPPED session resolver's zone-bound count "
                     "(classify_session_role -> bind_condition) is asserted not to exceed A. "
                     "That term is external to the judge and it is now genuinely falsifiable: "
-                    "re-aimed from the legacy matcher to the shipped path it moved from 0 to "
-                    "9, and the assert REFUSES against A. It is stated here as a live "
-                    "disagreement, not a passing check."
+                    "re-aimed from the legacy bare-keyword matcher, which was measured dead on "
+                    "this corpus, to the shipped path, it came off the floor and the "
+                    "reconciliation DISAGREES with A. Both readings are computed fields in "
+                    "SESSION_DISAGREEMENT beside this sentence rather than numerals inside it. "
+                    "It is stated as a live disagreement, not a passing check."
                 ),
             },
+            # ★★★ H1-W4 D1: THE DISAGREEMENT, PUBLISHED. This block is the reason the gated
+            # acknowledgment exists. The artifact's job includes reporting that the shipped
+            # resolver and the ratified grade do not agree about this corpus, and for three
+            # waves the guard's abort prevented it from reporting anything at all -- freezing a
+            # published artifact that said the resolver bound NOTHING, which was the withdrawn
+            # reading of a dead instrument. Every value below is COMPUTED on this run.
+            "SESSION_DISAGREEMENT": session_disagreement_block,
             "unflattering_reading": (
                 ("All " if ws_unbound_after == ws_taught else f"{ws_unbound_after} of ")
                 + f"{ws_taught} WAIT_SESSION conditions in Corpus A are UNBOUND"
@@ -5154,8 +5653,31 @@ def _summarise(art: dict) -> None:
           f" = {_acc['sum']} == {_acc['measured_n_WAIT_SESSION_taught']} measured"
           f" | live resolver resolves "
           f"{_acc['measured_n_resolvable_by_the_live_session_resolver']} of "
-          f"{_acc['measured_n_WAIT_SESSION_taught']}"
-          f" (ceiling A={_acc['A_graded_genuine_session_teachings']}, so the bound holds)")
+          f"{_acc['measured_n_WAIT_SESSION_taught']}")
+    # ★★ H1-W4 D1: THIS LINE ENDED "so the bound holds" -- a VERDICT, TYPED, and false on every
+    # run where the resolver exceeds A. The build aborted before reaching this print, so a
+    # summary line asserting that a violated bound held sat here unread. A caption downstream of
+    # an abort is invisible twice over: nothing checks it, and nothing even displays it.
+    # It is now COMPUTED from the same two fields it names, and it prints the disagreement.
+    _dis = ses["SESSION_DISAGREEMENT"]
+    _holds = session_reconciliation_holds(
+        _dis["resolver_binds_zone_bound_COMPUTED"],
+        _dis["graded_genuine_session_teachings_A_COMPUTED"])
+    print(f"{'OK  ' if _holds else '!!  '}SESSION DISAGREEMENT: resolver binds "
+          f"{_dis['resolver_binds_zone_bound_COMPUTED']} zone-bound "
+          f"(recognizes {_dis['resolver_recognizes_session_teaching_COMPUTED']}) vs graded "
+          f"genuine A={_dis['graded_genuine_session_teachings_A_COMPUTED']} -- excess "
+          f"{_dis['excess_over_component_A_COMPUTED']}, reconciliation_holds={_holds}")
+    print(f"      adjudication: {_dis['adjudication_status_COMPUTED']}")
+    print(f"      resolver_sound={_dis['resolver_sound_COMPUTED']} "
+          f"({_dis['D3_ADJUDICATION_STATE_COMPUTED'].get('n_zones_correct_COMPUTED')} of "
+          f"{_dis['D3_ADJUDICATION_STATE_COMPUTED'].get('n_zones_adjudicated_COMPUTED')} "
+          f"adjudicated zones correct) | {_dis['production_flag']}="
+          f"{_dis['production_flag_state_COMPUTED']}")
+    print(f"      published under a gated acknowledgment: ACKNOWLEDGED="
+          f"{_dis['ACKNOWLEDGED_COMPUTED']}, pointers verified="
+          f"{_dis['acknowledgment_provenance_READ_OFF_DISK']['ALL_VERIFIED']}")
+    _print_boundary("SESSION_DISAGREEMENT_ACKNOWLEDGMENT")
     print(f"OK  self-accounting: {sa['ASSERT_CENSUS']['n_asserts_total']} asserts "
           f"({sa['ASSERT_CENSUS']['n_DATA_SENSITIVE']} data-sensitive, "
           f"{sa['ASSERT_CENSUS']['n_SOURCE_INVARIANT']} source-invariant) | "
@@ -5277,8 +5799,9 @@ def main(argv: list[str] | None = None) -> None:
 
     if "--session-reaim-polarity" in argv:
         # ★★ DISCRIMINANCE IN THE SMALL, FOR A GUARD EXPECTED TO FIRE.
-        # The re-aimed session reconciliation refuses on today's corpus (9 zone-bound vs
-        # component A = 2), and a guard that has only ever been seen REFUSING is not yet
+        # The re-aimed session reconciliation DISAGREES on today's corpus -- the zone-bound
+        # count exceeds component A, and both terms are MEASURED below rather than typed into
+        # this comment. A guard that has only ever been seen REFUSING is not yet
         # distinguishable from one wired to refuse. That is not a hypothetical failure mode
         # here -- it is the EXACT INVERSE of the defect this deliverable repaired, where the
         # term was wired to 0 and the comparison was wired to pass. Having been fooled once by
@@ -5288,20 +5811,40 @@ def main(argv: list[str] | None = None) -> None:
         # firing assert, so a demonstration placed after it could never run -- and "the proof
         # is downstream of the thing it proves" is how a demonstration quietly stops existing.
         #
-        # Synthetic values only. This proves the ARITHMETIC is two-sided; it makes no claim
-        # about the corpus, which is measured in the run proper.
+        # Synthetic values, EXCEPT ONE. The case that claims to be today's reading is now
+        # MEASURED here rather than typed -- see below.
+        # ★★ H1-W4 D1: THE CASE LIST HELD A STALE MEASUREMENT AND SAID SO IN ITS OWN LABEL.
+        # One row read `(9, 2, False, "today's MEASURED shipped-resolver reading")`. It WAS
+        # today's reading when it was written; a later packet remediated the row that made it
+        # nine and nothing brought the case list with it. ★ A case list that LABELS a synthetic
+        # value "MEASURED" is the caption shape inside the very demonstration that exists to
+        # prove a guard is honest -- and no gate in this file reaches a CLI case list, which is
+        # the boundary that let it stand. The fix is not a fresher numeral: the row is measured
+        # from the same corpus and the same declared split the run proper uses, so it cannot go
+        # stale again. The remaining rows stay synthetic and are labelled as such.
+        _live_n, _live_a = measure_live_reconciliation_pair()
         print("SESSION RE-AIM POLARITY -- both directions of the re-aimed reconciliation")
         print("  BOUNDARY: synthetic values through session_reconciliation_holds(), the")
         print("            assert's own arithmetic. It demonstrates that the comparison can")
-        print("            resolve BOTH ways. It says NOTHING about which way the real corpus")
-        print("            lands -- that is measured in the run, and today it FIRES at 9 <= 2.")
+        print("            resolve BOTH ways. The one MEASURED row is marked, and it is read")
+        print("            from the corpus and the declared split, never typed.")
+        print(f"  COMPUTED live pair: n_zone_bound={_live_n}, component_A={_live_a}, "
+              f"reconciliation_holds={session_reconciliation_holds(_live_n, _live_a)}")
         cases = [
-            (0, 2, True,  "the legacy instrument's frozen reading -- passes, as it always did"),
-            (1, 2, True,  "under the ceiling"),
-            (2, 2, True,  "exactly AT component A -- the boundary itself, inclusive, must PASS"),
-            (3, 2, False, "one over the ceiling -- the smallest genuine refusal"),
-            (9, 2, False, "today's MEASURED shipped-resolver reading against today's grade"),
-            (0, 0, True,  "both terms zero -- degenerate, still a pass, never a crash"),
+            (0, 2, True,  "SYNTHETIC: the legacy instrument's frozen reading -- passes, as it always did"),
+            (1, 2, True,  "SYNTHETIC: under the ceiling"),
+            (2, 2, True,  "SYNTHETIC: exactly AT component A -- the boundary itself, inclusive, must PASS"),
+            (3, 2, False, "SYNTHETIC: one over the ceiling -- the smallest genuine refusal"),
+            # ★ ITS EXPECTATION COMES FROM A DIFFERENT SOURCE THAN ITS VALUE, or the row would
+            # be the predicate grading itself. The value is MEASURED from the corpus; the
+            # expectation is derived from the ACKNOWLEDGED PAIR on disk. So this row is also a
+            # staleness tripwire: if the corpus reading drifts away from the pair the
+            # acknowledgment was written about, the demonstration reports MISMATCH and exits
+            # non-zero -- which is the correct alarm, not a spurious one.
+            (_live_n, _live_a, _expected_from_the_acknowledged_pair(),
+             "MEASURED: today's shipped-resolver reading against today's declared split "
+             "(expectation derived from the acknowledged pair, not from the value)"),
+            (0, 0, True,  "SYNTHETIC: both terms zero -- degenerate, still a pass, never a crash"),
         ]
         passes = fires = 0
         ok = True
@@ -5327,6 +5870,100 @@ def main(argv: list[str] | None = None) -> None:
         print("POLARITY DEMO", "PASSED -- the guard is proven able to pass AND to fire; its "
               "pass condition is a real reconciliation" if good else
               "FAILED -- the comparison is not two-sided, or a verdict disagreed")
+        sys.exit(0 if good else 2)
+
+    if "--acknowledgment-red-proof" in argv:
+        # ★★★ RED-PROOF AT BIRTH FOR A GATE THAT LETS A BUILD PUBLISH.
+        # Four states are driven through the REAL build -- not through the predicate, not
+        # through a paraphrase of it. Three must abort and one must not, and the three are the
+        # three a reader would ask about: a wrong pair, a withdrawn entry, and the real
+        # measurement drifting away from the acknowledged one. A gate proved only in the state
+        # that suits it is the defect this whole file exists to refuse.
+        #
+        # ★ AND THE PREDICATE-PRESERVATION PROOF RUNS FIRST, because everything below is worth
+        # nothing if the reconciliation's comparison was quietly widened while attention was on
+        # the acknowledgment. It is proved by AST comparison against the expression the census
+        # and the revival probe both name, not by a sentence claiming it.
+        import ast as _ast
+
+        print("ACKNOWLEDGMENT RED-PROOF -- one state may publish, every other must abort")
+        print()
+        _tree = _ast.parse(Path(__file__).read_text(encoding="utf-8"))
+        _sites = [s for _ln, s in _guard_nodes(_tree)
+                  if s == "ws_session_resolvable <= graded_teachings"]
+        _declared = REVIVAL_PROBES["SESSION_RESOLVER_EXCEEDS_GRADE"]["targets"]
+        _pred_ok = len(_sites) == 1 and _sites[0] == _declared and _declared in ASSERT_DISPOSITIONS
+        print("  (0) PREDICATE PRESERVATION")
+        print(f"      enforcement sites unparsing to the reconciliation predicate = {len(_sites)}"
+              f" (must be 1)")
+        print(f"      AST-unparsed site text                    = {_sites[0] if _sites else None}")
+        print(f"      revival probe's declared target           = {_declared}")
+        print(f"      identical, and still classified in ASSERT_DISPOSITIONS = {_pred_ok}")
+        # ★★ AGAINST HEAD'S ACTUAL BYTES, NOT AGAINST THIS FILE'S OPINION OF ITSELF. The three
+        # rows above compare the working tree to a string typed in this same file, so a single
+        # careless edit could move both together and every row would stay green. The commit is
+        # the only witness outside the edit. The WHOLE Assert node is compared -- test AND
+        # message -- because "reproduces the abort exactly" is a claim about what a reader SEES,
+        # and a preserved comparison under a rewritten message is not the same abort.
+        def _assert_node(source: str):
+            for n in _ast.walk(_ast.parse(source)):
+                if (isinstance(n, _ast.Assert)
+                        and _ast.unparse(n.test) == "ws_session_resolvable <= graded_teachings"):
+                    return n
+            return None
+
+        _head_src, _head_status = head_blob_bytes(
+            "docs/replay-results/h1-battery/dual_denominator_remeasure.py")
+        _now_node = _assert_node(Path(__file__).read_text(encoding="utf-8"))
+        _head_node = _assert_node(_head_src.decode("utf-8")) if _head_src else None
+        _ast_same = (_now_node is not None and _head_node is not None
+                     and _ast.dump(_now_node) == _ast.dump(_head_node))
+        print(f"      HEAD blob read status                     = {_head_status}")
+        print(f"      WHOLE assert node (test AND message) AST-identical to HEAD = {_ast_same}")
+        print("      BOUNDARY: the comparison, its operands and its message, byte-for-byte as")
+        print("                the census names them and as HEAD committed them. A widened")
+        print("                predicate or a rewritten refusal message breaks these rows. It")
+        print("                cannot see a predicate moved in the SAME commit as this proof.")
+        _pred_ok = _pred_ok and _ast_same
+        print()
+
+        def _drive(label: str, probe: str | None, must_abort: bool) -> bool:
+            try:
+                with revival_probe(probe):
+                    build_artifact(None)
+                got, how = False, "BUILT -- no guard fired"
+            except AssertionError as e:
+                got, how = True, f"ABORTED (AssertionError) :: {str(e)[:96]}"
+            except SystemExit as e:
+                got, how = True, f"ABORTED (SystemExit {e.code})"
+            agree = got == must_abort
+            print(f"  {'OK  ' if agree else 'RED '} {label}")
+            print(f"        expected abort={must_abort}  observed abort={got}  -> {how}")
+            return agree
+
+        rows = [
+            _drive("(1) CONTROL: acknowledgment intact, pair as acknowledged",
+                   None, False),
+            _drive("(2) WRONG PAIR: entry present, pointers resolve, pair off by one",
+                   "SESSION_ACKNOWLEDGMENT_PAIR_DRIFTED", True),
+            _drive("(3) ENTRY REMOVED: reproduces the pre-acknowledgment abort exactly",
+                   "SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN", True),
+            _drive("(4) PAIR DRIFT: the real measurement moves away from the acknowledged pair",
+                   "SESSION_RESOLVER_EXCEEDS_GRADE", True),
+            _drive("(5) POINTER UNRESOLVABLE: a present licence citing a missing document",
+                   "SESSION_ACKNOWLEDGMENT_POINTER_UNRESOLVABLE", True),
+        ]
+        n_ok = sum(1 for r in rows if r)
+        print()
+        print(f"  COMPUTED: {n_ok} of {len(rows)} states behaved as independently stated")
+        print("  COMPUTED: the control BUILT and every planted state ABORTED = "
+              f"{all(rows)}")
+        good = all(rows) and _pred_ok
+        print()
+        print("ACKNOWLEDGMENT RED-PROOF",
+              "PASSED -- discrimination GAINED: exactly one state publishes, the predicate is "
+              "AST-identical, and every novel state aborts as it did before" if good else
+              "FAILED -- a planted state passed, the control aborted, or the predicate moved")
         sys.exit(0 if good else 2)
 
     if "--draft-publish-proof" in argv:
