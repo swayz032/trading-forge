@@ -91,12 +91,66 @@ CENSUS_PATH = H1 / "levelzone-object-reference-census.json"
 # STRUCTURAL rather than being made to track data they do not depend on.
 DE_APPROXIMATION_FLOOR = 2
 
-# The count an EARLIER note recorded, retained so the 26-vs-27 reconciliation can name both sides.
-# A superseded historical record: it describes what a prior document said, so it must NOT track the
-# live corpus. Named here rather than typed into the sentence so its kind is explicit.
+# The count an EARLIER note recorded. ★ H1-W4 D2: THIS IS NO LONGER THE ANCESTOR OF THE 26-VS-27
+# RECONCILIATION, and naming it as one was the defect. The OPERATIVE 26 is the ratified blind
+# grade's DEFINED population (measured below from the grade file itself), not this note's corpus
+# tally. The two carry the SAME NUMERAL for unrelated reasons, which is exactly why the wrong one
+# could sit in the reconciliation unchallenged -- right numerals, wrong ancestor. The constant is
+# KEPT, as a superseded historical record published in a NUMERIC field beside the corrected
+# sentence, so the supersession is checkable rather than merely performed.
 PRIOR_NOTE_WAIT_SESSION_COUNT = 26
 ENFORCEMENT_PATH = H1 / "family-meta-enforcement-delta.json"
 OUT_PATH = H1 / "dual-denominator-remeasure-2026-07-21.json"
+
+# ======================================== H1-W4 D1: THE SOURCED-ROW LEDGER
+# ★★★ THE LAW: A CLOSURE PROVED AGAINST A DECLARED CONSTANT IS PROVED AGAINST AN ASSUMPTION.
+#
+# THE FOUNDING INSTANCE, AND IT IS THIS FILE'S OWN. The closure guard below reads
+# `graded_teachings + graded_mis_types + graded_undecidable == ws_taught` -- a DECLARED 27
+# against a MEASURED 27. It was billed as detecting whether the corpus moved under the grade,
+# and for that job it is correct and it is KEPT. What it cannot do, BY CONSTRUCTION, is notice
+# that one of the 27 declared units had NO GRADED ROW BEHIND IT.
+#
+# The arithmetic, and it is the whole finding: the blind grade that sourced this split declared
+# 17 teaching + 9 mis-type = 26, over a population its own sample file DEFINES as "all
+# WAIT_SESSION conditions that resolve to NO session zone (26 of 27)". Self-consistent, and the
+# 27th row was excluded BY CONSTRUCTION rather than dropped. The governing split then declared
+# A=2 + B=21 + C=4 = 27 -- twenty-seven units over twenty-six graded sources. One unit was
+# ASSUMED into bucket B so the split would close.
+#
+# ★ AND THE GUARD'S LEFT SIDE WAS THE VERY ASSUMPTION ITS RIGHT SIDE SHOULD HAVE EXPOSED. The
+# missing row lived INSIDE the declaration the guard compared against the corpus, so the guard
+# was satisfied by the padding it would have needed to detect. It cannot distinguish "27 graded"
+# from "26 graded plus one assumed", and no value of ws_taught makes it able to.
+#
+# THE REPLACEMENT IS NOT A TIGHTER TOLERANCE, IT IS A DIFFERENT RIGHT-HAND SIDE: closure asserts
+# the SOURCED-ROW COUNT. Every declared unit must be backed by a GRADED ROW ID read out of a
+# grade artifact -- never by the declaration restating itself. That predicate CAN tell the two
+# states apart, and --sourcing-birth-test drives it through both of them.
+SESSION_GRADE_RESULT_PATH = H1 / "session-ab-blind-grade-RESULT.json"
+SESSION_GRADE_ROW27_PATH = H1 / "session-ab-blind-grade-ROW27.json"
+# ORDERED, and the order is load-bearing: element zero ALONE is the exact historical state the
+# birth test reconstructs -- the sourced population as it stood when the split declared 27.
+# ★ THE DECLARED SPLIT, LIFTED TO MODULE SCOPE SO THE BIRTH TEST READS THE SAME OBJECT THE GUARD
+# READS. It is NOT unified with the COMPUTED literals in _axis_session_grade_split(2, 21): those
+# two literals are deliberately separate, because a version of these guards that read both sides
+# out of one object made B and C tautologies -- green by construction and indistinguishable from
+# real guards in the census. Only the DECLARED side moves here.
+SESSION_SPLIT_DECLARED_LITERAL: dict[str, int] = {
+    "A_genuine_session_teachings": 2,
+    "B_mis_types": 21,
+    "C_undecidable": 4,
+}
+SESSION_GRADE_ROW_SOURCES: tuple[tuple[Path, str], ...] = (
+    (SESSION_GRADE_RESULT_PATH,
+     "the ratified blind grade. Its own sample file DEFINES its population as the WAIT_SESSION "
+     "conditions that resolve to NO session zone -- one row short of the corpus BY CONSTRUCTION, "
+     "never by omission, which is why the shortfall was invisible to a count."),
+    (SESSION_GRADE_ROW27_PATH,
+     "the population-completion grade of the single zone-resolving row that population definition "
+     "excludes. It confirms the bucket the split had ASSUMED, so the constant does not move -- "
+     "only its epistemic status does, from assumed to sourced."),
+)
 
 # Prior artifacts that MUST NOT move. Verified by hash, before and after.
 APPEND_ONLY_GUARDED = [
@@ -305,6 +359,14 @@ ASSERT_DISPOSITIONS: dict[str, str] = {
     # The reconciliation against the LIVE resolver -- the one term in the split that something
     # outside the judge can falsify. DATA_SENSITIVE in the strongest sense available here.
     "ws_session_resolvable <= graded_teachings": "DATA_SENSITIVE",
+    # ★ H1-W4 D1: THE SOURCING GUARD. DATA_SENSITIVE, and in the strictest reading of the
+    # taxonomy's own question: can it fire on a run where only the DATA changed? It can -- its
+    # left side is a count of graded row ids read out of two artifacts this generator does not
+    # own, so withdrawing, duplicating or un-grading a row in either file fires it with this
+    # source untouched. That is the whole point of moving the closure's right-hand side out of
+    # the declaration: a predicate whose terms both live in this file could only ever be
+    # SOURCE_INVARIANT, and a SOURCE_INVARIANT closure proof is a closure proof about a typing.
+    "sourcing['PASS']": "DATA_SENSITIVE",
     "n_levelzone_rows == 16": "DATA_SENSITIVE",
     "total_flipped <= 6": "DATA_SENSITIVE",
     # H1-W4: the CEILING's two literals became COMPUTED. Both new gates read the level/zone
@@ -424,6 +486,13 @@ ASSERTS_ADDED_SINCE_BASELINE: list[dict] = [
      "commit": "THIS_WAVE"},
     {"assert": "ws_session_resolvable <= graded_teachings", "disposition": "DATA_SENSITIVE",
      "added_by": "R-220 s1 -- reconciliation against the live session resolver",
+     "commit": "THIS_WAVE"},
+    # ★★ H1-W4 D1. ONE ADDITION, AND NOTHING RESTATED. The sum guard's test expression is
+    # BYTE-IDENTICAL before and after this wave -- deliberately, because the wave's whole claim
+    # is that the sum guard was never WRONG, only structurally unable to see an assumed unit.
+    # Restating it would have destroyed the evidence for that claim inside its own repair.
+    {"assert": "sourcing['PASS']", "disposition": "DATA_SENSITIVE",
+     "added_by": "H1-W4 D1 -- closure asserts the SOURCED-ROW COUNT, not declared==measured",
      "commit": "THIS_WAVE"},
 ]
 
@@ -930,6 +999,23 @@ REVIVAL_PROBES: dict[str, dict] = {
                "already exceeds component A unaided, and the injection proves the assert is "
                "reachable through the hook regardless of what the corpus happens to read.",
     },
+    # ★★★ H1-W4 D1: THE BIRTH-TEST PROBE, AND IT IS NOT A SYNTHETIC INJECTION.
+    # Every other probe in this family perturbs a value to a state no corpus is known to have
+    # held. This one reconstructs a state the campaign ACTUALLY OCCUPIED: the sourced population
+    # as it stood when the split declared 27 -- the blind grade alone, twenty-six graded rows,
+    # the twenty-seventh assumed. THE FOUNDING INSTANCE IS THE FIRST TEST CASE.
+    # A guard that has never refused anything is not a guard, so this probe exists before the
+    # guard is believed, and --sourcing-birth-test drives the same reconstruction in the open.
+    "SESSION_SOURCING_HISTORICAL_26_PLUS_ONE_ASSUMED": {
+        "hook": "session_sourced_rows",
+        "targets": "sourcing['PASS']",
+        "mutate": lambda d: measure_sourced_session_rows(SESSION_GRADE_ROW_SOURCES[:1]),
+        "why": "The population-completion grade is withdrawn, leaving exactly the historical "
+               "state: the blind grade's defined population sourcing every unit but one, and "
+               "one unit backed by nothing but the declaration. The predecessor closure guard "
+               "is GREEN in this state -- 27 declared against 27 measured -- which is why the "
+               "state survived. This guard must refuse in it.",
+    },
     "INVAL_DIRECTION_INVERTED": {
         "hook": "inval_on_concrete",
         "targets": "inval_on_concrete <= inval_off_concrete",
@@ -1137,6 +1223,14 @@ GATE_BOUNDARIES: dict[str, str] = {
     "OPTIMIZED_MODE": (
         "Checks the interpreter flag, nothing else. It cannot tell whether any PARTICULAR "
         "assert would have fired -- it refuses the whole run because it cannot know."
+    ),
+    "SESSION_SPLIT_SOURCING": (
+        "Counts DISTINCT GRADED ROW IDS in the declared grade artifacts and compares that count "
+        "against the declared unit total. It proves every declared unit HAS a graded row; it "
+        "says NOTHING about whether that row was graded CORRECTLY, nor about which bucket it "
+        "belongs in -- bucket membership is the per-component guards' subject, and grade quality "
+        "is outside every instrument in this file. It also cannot see a row graded under a "
+        "REJECTED criterion: a verdict reached the wrong way is still a verdict to a count."
     ),
 }
 
@@ -2105,6 +2199,21 @@ def repairs_withheld():
         _WITHHOLD_REPAIRS = prev
 
 
+def _raising_guard_key(exc: BaseException, line_to_key: dict[int, str]) -> str | None:
+    """Trace an exception back to the ENFORCEMENT SITE that raised it, by line.
+
+    Shared by the refusal-form branches added in H1-W4 D1. It is the same walk the
+    AssertionError branches do; factored so a refusal and an assertion are attributed by ONE
+    rule rather than by two copies that can drift apart.
+    """
+    import traceback
+
+    for fr in reversed(traceback.extract_tb(exc.__traceback__)):
+        if Path(fr.filename).resolve() == Path(__file__).resolve() and fr.lineno in line_to_key:
+            return line_to_key[fr.lineno]
+    return None
+
+
 def assert_discrimination_census() -> dict:
     """COMPUTE, per assert, which probes actually fail it. Never typed. R-207 addendum.
 
@@ -2183,6 +2292,20 @@ def assert_discrimination_census() -> dict:
             else:
                 failed_by[hit].add(probe_name)
                 probe_outcome[probe_name] = f"FIRED: {hit}"
+        except SystemExit as e:
+            # ★ H1-W4 D1: THE PROBE REGIME NOW SCORES REFUSAL-FORM GATES TOO. This family read
+            # AssertionError only, so a `refuse_unless` site was invisible to it -- and
+            # SystemExit derives from BaseException, so such a gate firing under a probe would
+            # have ABORTED the census rather than been recorded by it. A census that cannot see
+            # the enforcement primitive the file has been migrating TO would have reported a
+            # shrinking probe surface while the guarding got stronger, which is precisely the
+            # defect _guard_nodes was rewritten to avoid one level down.
+            hit = _raising_guard_key(e, line_to_key)
+            if hit is None:
+                probe_outcome[probe_name] = f"REFUSED_UNMAPPED: exit {e.code}"
+            else:
+                failed_by[hit].add(probe_name)
+                probe_outcome[probe_name] = f"REFUSED: {hit}"
         except Exception as e:  # a probe that crashes is not evidence about any assert
             probe_outcome[probe_name] = f"BUILD_ERROR: {type(e).__name__}: {str(e)[:120]}"
 
@@ -2208,6 +2331,16 @@ def assert_discrimination_census() -> dict:
                     hit = line_to_key[fr.lineno]
                     break
             revival_outcome[pname] = f"FIRED: {hit}" if hit else f"ASSERT_FIRED_UNMAPPED: {str(e)[:120]}"
+            if hit == spec["targets"]:
+                revived_by[hit].add(pname)
+            else:
+                misdirected.append({"probe": pname, "declared_target": spec["targets"],
+                                    "observed": hit or "UNMAPPED"})
+        except SystemExit as e:
+            # Same reason as the axis loop above: a refusal is a verdict, and a probe aimed at a
+            # refusal-form gate must be SCORED rather than allowed to tear down the census.
+            hit = _raising_guard_key(e, line_to_key)
+            revival_outcome[pname] = f"REFUSED: {hit}" if hit else f"REFUSED_UNMAPPED: exit {e.code}"
             if hit == spec["targets"]:
                 revived_by[hit].add(pname)
             else:
@@ -2617,11 +2750,17 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.why": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
         "numerals": ["26", "27"],
-        "why": "27 is interpolated from ws_taught and 26 from PRIOR_NOTE_WAIT_SESSION_COUNT (a "
-               "superseded record). ws_taught is unreachable BY CONSTRUCTION: the taught-drop "
-               "axis must avoid WAIT_SESSION rows to keep the graded-split closure armed, and "
-               "the split's terms are EXTERNAL grades this generator may not recompute. An axis "
-               "that moved ws_taught would have to invent a grade for the row it removed.",
+        "why": "27 is interpolated from ws_taught and 26 from n_blind_graded -- the row count of "
+               "the ratified blind grade, read from the grade artifact. ★ H1-W4 D2: the 26 was "
+               "previously interpolated from PRIOR_NOTE_WAIT_SESSION_COUNT, a superseded corpus "
+               "tally carrying the same numeral for an unrelated reason; the entry was correct "
+               "about the numeral's KIND and wrong about its source, which is the shape this "
+               "table exists to make checkable. Neither is axis-reachable: ws_taught is "
+               "unreachable BY CONSTRUCTION (the taught-drop axis must avoid WAIT_SESSION rows "
+               "to keep the graded-split closure armed, and the split's terms are EXTERNAL "
+               "grades this generator may not recompute -- an axis that moved ws_taught would "
+               "have to invent a grade for the row it removed), and the grade artifact is a "
+               "sealed input no axis perturbs.",
     },
     "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.the_27th_row": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
@@ -3384,6 +3523,64 @@ def measure_shipped_session_resolvable(specs) -> int:
             os.environ[SESSION_ROLE_RESOLVER_FLAG] = prev
 
 
+def sourced_row_closure_holds(n_sourced: int, n_declared: int,
+                              duplicates: list, ungraded: list) -> bool:
+    """The sourcing gate's ENTIRE predicate, in one place, so both polarities are drivable.
+
+    Same discipline as session_reconciliation_holds: a guard seen in only one
+    state is indistinguishable from a guard wired to that state. The BIRTH
+    TEST drives this function with the reconstructed historical population and
+    with today's, and requires it to answer differently.
+
+    THE PREDICATE IS DELIBERATELY NOT `declared == measured`. Both sides of
+    that comparison can be satisfied by a declaration restating itself, which
+    is the defect. Here the left side is a COUNT OF DISTINCT ROW IDS READ OUT
+    OF GRADE ARTIFACTS -- nothing this file declares can raise it.
+    """
+    return n_sourced == n_declared and not duplicates and not ungraded
+
+
+def measure_sourced_session_rows(sources: tuple | None = None) -> dict:
+    """COUNT the WAIT_SESSION units that have a GRADED ROW ID behind them.
+
+    Never a declared constant. Each source is a grade artifact, and a row
+    counts only if it carries BOTH an identity (condition_id) and a recorded
+    verdict -- a row present but ungraded is reported as a RED rather than
+    counted, because "present in the file" is precisely the weaker claim that
+    let an assumed unit pass for a sourced one.
+
+    DISTINCT ids, not row count: two grade artifacts covering the same row
+    would otherwise manufacture sourcing out of duplication. Duplicates are
+    reported separately so the failure names its own mechanism.
+    """
+    srcs = SESSION_GRADE_ROW_SOURCES if sources is None else sources
+    ids: list[str] = []
+    ungraded: list[dict] = []
+    per_source: dict[str, int] = {}
+    source_rows: list[dict] = []
+    for path, why in srcs:
+        d = json.loads(path.read_text(encoding="utf-8"))
+        n = 0
+        for r in d.get("rows") or []:
+            cid, verdict = r.get("condition_id"), r.get("verdict")
+            if not cid or not verdict:
+                ungraded.append({"artifact": path.name, "condition_id": cid})
+                continue
+            ids.append(cid)
+            n += 1
+        per_source[path.name] = n
+        source_rows.append({"artifact": path.name, "n_graded_rows": n, "why_it_is_a_source": why})
+    counts = collections.Counter(ids)
+    return {
+        "sources": source_rows,
+        "n_graded_rows_per_source": per_source,
+        "n_distinct_sourced_rows": len(counts),
+        "duplicate_row_ids_THIS_IS_A_RED": sorted(k for k, v in counts.items() if v > 1),
+        "rows_present_but_ungraded_THIS_IS_A_RED": ungraded,
+        "condition_ids": sorted(counts),
+    }
+
+
 def load_corpus_a() -> list[tuple[str, list[dict], dict]]:
     out = []
     for p in sorted(glob.glob(CORPUS_A_GLOB)):
@@ -3733,11 +3930,8 @@ def _build_artifact_body() -> dict:
     # DECLARED side, from two separate literals, so withholding the repair genuinely diverges.
     graded_teachings, graded_mis_types = _axis_session_grade_split(2, 21)
     graded_undecidable = 4
-    SESSION_SPLIT_DECLARED = _rv("session_split_declared", _axis_session_split_declared({
-        "A_genuine_session_teachings": 2,
-        "B_mis_types": 21,
-        "C_undecidable": 4,
-    }))
+    SESSION_SPLIT_DECLARED = _rv("session_split_declared",
+                                 _axis_session_split_declared(dict(SESSION_SPLIT_DECLARED_LITERAL)))
     # ★ A SEPARATE ACCOUNTING, DELIBERATELY NOT A TERM OF THE SPLIT. The orphan-zone refusal
     # answers "why 27 here and 26 in the pre-closure note?", which is a question about the
     # CORPUS. A/B/C answer "what are these 27 rows?", which is a question about the GRADE.
@@ -3774,6 +3968,47 @@ def _build_artifact_body() -> dict:
         f"{ws_taught} WAIT_SESSION conditions. A/B/C are external-graded and ws_taught is "
         "measured, so if this fires the corpus moved under the grade and it must be re-graded."
     )
+    # ★★★ H1-W4 D1: THE SOURCING GUARD. The assert above is KEPT and its predicate is
+    # UNTOUCHED -- it answers "did the corpus move under the grade?" and it answers it
+    # correctly. This one answers the question it CANNOT ask: is every declared unit backed by
+    # a graded row, or is one of them an assumption the declaration is vouching for itself?
+    #
+    # ADDITIVE, AND THAT IS THE DESIGN. Tightening the old predicate would have destroyed the
+    # ws_taught check (its only home) to buy a check it was never shaped to make. Two
+    # predicates, two questions, and the pair closes what neither closes alone:
+    #     sourced rows == declared units   (here)      -- no unit is assumed
+    #     declared units == ws_taught      (above)     -- no corpus row is unaccounted
+    #
+    # THE LEFT SIDE COMES FROM OUTSIDE THIS FILE. n_distinct_sourced_rows is read out of the
+    # grade artifacts; nothing this generator declares can raise it. That is the entire
+    # difference from the predicate it supersedes, whose left side was the declaration itself.
+    sourcing = _rv("session_sourced_rows", measure_sourced_session_rows())
+    sourcing["n_declared_units"] = (
+        SESSION_SPLIT_DECLARED["A_genuine_session_teachings"]
+        + SESSION_SPLIT_DECLARED["B_mis_types"]
+        + SESSION_SPLIT_DECLARED["C_undecidable"]
+    )
+    sourcing["PASS"] = sourced_row_closure_holds(
+        sourcing["n_distinct_sourced_rows"], sourcing["n_declared_units"],
+        sourcing["duplicate_row_ids_THIS_IS_A_RED"],
+        sourcing["rows_present_but_ungraded_THIS_IS_A_RED"],
+    )
+    refuse_unless(sourcing["PASS"], "SESSION_SPLIT_SOURCING", (
+        f"GUARD BOUNDARY: every declared unit of the session split must be backed by a GRADED "
+        f"ROW ID. Declared units: {sourcing['n_declared_units']}. Distinct sourced row ids: "
+        f"{sourcing['n_distinct_sourced_rows']}, read from "
+        f"{sorted(sourcing['n_graded_rows_per_source'])}. Duplicates: "
+        f"{sourcing['duplicate_row_ids_THIS_IS_A_RED'] or 'none'}. Rows present but carrying no "
+        f"verdict: {sourcing['rows_present_but_ungraded_THIS_IS_A_RED'] or 'none'}.\n"
+        "  A declared unit with no graded row behind it is an ASSUMPTION the declaration is "
+        "vouching for itself. The sum guard above CANNOT see this state -- its left side is the "
+        "declaration, so the padding and the check are the same object."
+    ))
+    # ★ H1-W4 D2: THE OPERATIVE 26, MEASURED FROM THE GRADE ITSELF. Not
+    # PRIOR_NOTE_WAIT_SESSION_COUNT, which is a superseded corpus tally that merely carries the
+    # same numeral. The reconciliation below names THIS one, and it is read from the grade file
+    # so the sentence cannot outlive the fact.
+    n_blind_graded = sourcing["n_graded_rows_per_source"][SESSION_GRADE_RESULT_PATH.name]
     # ★★ RECONCILED AGAINST SOMETHING OUTSIDE THE GRADE -- the SHIPPED session resolver.
     # A row that the shipped resolver binds to a session zone must be a genuine session
     # teaching, so its count can never legitimately exceed component A.
@@ -4694,12 +4929,28 @@ def _build_artifact_body() -> dict:
             # R-203 s3. The 26-vs-27 divergence, stated as a derivation with every term named
             # rather than as two numbers a reader is left to reconcile.
             "THE_26_VS_27_ACCOUNTING": {
+                # ★★★ H1-W4 D2: THE ANCESTOR WAS WRONG, AND RIGHT NUMERALS HID IT.
+                # What stood here blamed "an earlier note" that recorded 26 corpus-wide
+                # WAIT_SESSION rows. The OPERATIVE 26 is not that note -- it is the ratified
+                # blind grade's DEFINED population, the rows resolving to NO session zone. Two
+                # unrelated quantities carrying the same numeral, and the reconciliation named
+                # the one that was not doing the work, then declared closure on that basis.
+                # A RECONCILIATION THAT NAMES THE WRONG ANCESTOR IS A CLOSURE PROOF ABOUT
+                # NOTHING: every numeral in it can be correct while the link it asserts is not.
+                # The superseded note's numeral is retained BESIDE this sentence as a numeric
+                # field, so the supersession is a record a reader can check rather than a
+                # deletion nobody can see.
                 "why": (
-                    f"An earlier note recorded {PRIOR_NOTE_WAIT_SESSION_COUNT} corpus-wide "
-                    f"WAIT_SESSION rows; this generator counts {ws_taught}. That is not a "
-                    "discrepancy to be split or averaged -- it closes exactly, and the terms are "
-                    "named so the closure can be checked instead of believed."
+                    f"The operative {n_blind_graded} is the DEFINED population of the ratified "
+                    "blind grade -- the WAIT_SESSION conditions that resolve to NO session zone "
+                    "-- and NOT the earlier note's corpus tally this field used to name, which "
+                    "carries the same numeral for an unrelated reason. This generator counts "
+                    f"{ws_taught} WAIT_SESSION conditions; the difference is the single "
+                    "zone-resolving row that population definition excludes BY CONSTRUCTION, and "
+                    "that row carries its own graded verdict, so every declared unit of the "
+                    "split is backed by a graded row id rather than by the declaration itself."
                 ),
+                "the_numeral_the_superseded_ancestor_carried": PRIOR_NOTE_WAIT_SESSION_COUNT,
                 "A_graded_genuine_session_teachings": graded_teachings,
                 "B_graded_mis_types": graded_mis_types,
                 "C_graded_undecidable": graded_undecidable,
@@ -4707,8 +4958,24 @@ def _build_artifact_body() -> dict:
                 "measured_n_WAIT_SESSION_taught": ws_taught,
                 "measured_n_resolvable_by_the_live_session_resolver": ws_session_resolvable,
                 "former_orphan_zone_binder_now_honestly_refused": orphan_zone_refusal,
+                # ★★ H1-W4 D1/D2: RE-DERIVED FROM SOURCED COUNTS. This field previously read
+                # `sum == ws_taught` -- declared against measured, the exact comparison that was
+                # satisfied by the assumed unit. It now requires BOTH links, and the first one is
+                # the new one: no declared unit is an assumption, AND no corpus row is
+                # unaccounted. A closure claim that rests only on the second is the claim this
+                # wave withdrew.
+                "SOURCED_ROW_CLOSURE": sourcing,
                 "closes_exactly": (
-                    graded_teachings + graded_mis_types + graded_undecidable == ws_taught
+                    sourcing["n_distinct_sourced_rows"] == sourcing["n_declared_units"]
+                    and sourcing["n_declared_units"] == ws_taught
+                ),
+                "what_closes_exactly_now_means": (
+                    "Both links, not one. Every declared unit of the split is backed by a "
+                    "distinct graded row id read out of a grade artifact, AND the declared unit "
+                    "total equals the WAIT_SESSION population this generator counts. The former "
+                    "form of this field asserted only the second link, and its left side was the "
+                    "declaration -- so a unit that had been assumed into a bucket to make the "
+                    "split close was vouched for by the very thing that assumed it."
                 ),
                 "WHY_C_EXISTS": (
                     "The prior accounting had only decided buckets, so every row was forced to a "
@@ -5138,6 +5405,81 @@ def main(argv: list[str] | None = None) -> None:
                 + "".join(f"  {r['path']}  status={r['status']}\n" for r in bad)
             )
             raise SystemExit(2)
+
+    if "--sourcing-birth-test" in argv:
+        # ★★★ H1-W4 D1: THE BIRTH TEST. A GUARD THAT HAS NEVER REFUSED ANYTHING IS NOT A GUARD.
+        #
+        # It is driven through the EXACT HISTORICAL STATE -- the founding instance, not a shape
+        # authored from the hypothesis: the ratified blind grade ALONE, which is the sourced
+        # population as it stood when the split declared its unit total. In that state one
+        # declared unit had no graded row behind it, and the campaign shipped it.
+        #
+        # ★ AND THE SUPERSEDED PREDICATE IS DRIVEN THROUGH BOTH STATES BESIDE IT. That is the
+        # load-bearing half: showing the new guard red proves it can refuse, but it does not
+        # show WHY the old one had to be replaced. The old predicate is GREEN in both states --
+        # its left side is the declaration, so the assumed unit is on both sides of the
+        # comparison. A demonstration that omitted it would be asking the reader to take the
+        # blindness on trust, which is the shape this whole file refuses.
+        #
+        # RUNS AFTER THE INPUT GUARD, DELIBERATELY: it reads the real grade artifacts, so their
+        # bytes are verified against the object store before a single number here is quoted.
+        # RUNS BEFORE THE BUILD, DELIBERATELY: a proof placed downstream of a build that can
+        # abort is a proof that quietly stops existing.
+        print("SOURCING BIRTH TEST -- the new closure predicate against the historical state")
+        _print_boundary("SESSION_SPLIT_SOURCING", indent="  ")
+        print()
+        declared_units = sum(SESSION_SPLIT_DECLARED_LITERAL.values())
+        ws_taught_now = sum(
+            1 for _n, ec, _am in load_corpus_a() for c in ec if c.get("type") == "WAIT_SESSION"
+        )
+        states = [
+            ("HISTORICAL  (blind grade alone -- the state the split was declared in)",
+             measure_sourced_session_rows(SESSION_GRADE_ROW_SOURCES[:1]), False),
+            ("TODAY       (blind grade + the population-completion grade)",
+             measure_sourced_session_rows(), True),
+        ]
+        rows = []
+        for label, s, expected_new in states:
+            new_verdict = sourced_row_closure_holds(
+                s["n_distinct_sourced_rows"], declared_units,
+                s["duplicate_row_ids_THIS_IS_A_RED"], s["rows_present_but_ungraded_THIS_IS_A_RED"])
+            # The predicate this replaces, spelled exactly as it stands in the body: the DECLARED
+            # unit total against the MEASURED corpus. Neither term consults a graded row.
+            old_verdict = declared_units == ws_taught_now
+            rows.append((label, s, new_verdict, old_verdict, expected_new))
+            print(f"  {label}")
+            print(f"    distinct sourced row ids (COMPUTED) = {s['n_distinct_sourced_rows']}"
+                  f"   per source {s['n_graded_rows_per_source']}")
+            print(f"    declared units                      = {declared_units}"
+                  f"   corpus WAIT_SESSION rows = {ws_taught_now}")
+            print(f"    NEW  sourced-row closure            -> "
+                  f"{'PASS' if new_verdict else 'REFUSE'}   (expected "
+                  f"{'PASS' if expected_new else 'REFUSE'}, "
+                  f"{'OK' if new_verdict == expected_new else 'MISMATCH'})")
+            print(f"    OLD  declared-equals-measured       -> "
+                  f"{'PASS' if old_verdict else 'REFUSE'}")
+            print()
+        verdicts_correct = all(nv == exp for _l, _s, nv, _ov, exp in rows)
+        new_is_two_sided = len({nv for _l, _s, nv, _ov, _e in rows}) == 2
+        old_is_blind = len({ov for _l, _s, _nv, ov, _e in rows}) == 1 and all(
+            ov for _l, _s, _nv, ov, _e in rows)
+        n_states = len(rows)
+        print(f"  COMPUTED: {n_states} states driven; new predicate returns "
+              f"{len({nv for _l, _s, nv, _ov, _e in rows})} distinct verdicts, old predicate "
+              f"returns {len({ov for _l, _s, _nv, ov, _e in rows})}")
+        print(f"  COMPUTED: new predicate two-sided across the two states = {new_is_two_sided}")
+        print(f"  COMPUTED: old predicate GREEN in both, i.e. cannot distinguish them = "
+              f"{old_is_blind}")
+        print(f"  COMPUTED: every verdict matches its independently-stated expectation = "
+              f"{verdicts_correct}")
+        good = verdicts_correct and new_is_two_sided and old_is_blind
+        print()
+        print("BIRTH TEST", "PASSED -- the guard REFUSES on the historical 26-sourced state and "
+              "PASSES on today's, and the predicate it replaces is green on both"
+              if good else
+              "FAILED -- the guard is not two-sided, or the superseded predicate is not blind, "
+              "or a verdict disagreed with its stated expectation")
+        sys.exit(0 if good else 2)
 
     # Baselining the directory is a PUBLISH-PATH obligation: it exists to prove the write that
     # follows touched nothing else. A draft run performs no write, so it takes no baseline and

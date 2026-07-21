@@ -1,0 +1,119 @@
+{
+  "!!_QUARANTINE_READ_THIS_FIRST": {
+    "status": "CRITERION-SCOPED. DO NOT CITE AS CORPUS VERDICTS.",
+    "added": "2026-07-21, H1-W4 D3. Added AFTER lock. No verdict, reason, tally or field below was altered.",
+    "why_a_header_and_not_a_ledger_entry": "A quarantine recorded only in a ledger is invisible where the reader stands. This file outlives the conversation that qualified it, and a reader who opens it sees these verdicts, not the ruling that scoped them.",
+    "the_discriminator_this_file_used": "Sentence-level 'remove the clock - is the clock load-bearing?' (see the 'discriminator' field below). Every 'reason' field is an application of it.",
+    "the_governing_criterion": "COMPILE SEMANTICS: THE TYPE MUST PRESERVE THE TEACHING. A typing that discards the taught object is a mis-type regardless of whether the timing phrase is load-bearing. LOAD-BEARINGNESS NEVER OWNS THE TYPE - a load-bearing window SPAWNS a sibling session condition, it does not make the row a session teaching.",
+    "the_governing_ruling_EXPLICITLY_REJECTED_the_discriminator_above": "R-214 s1. This file's own dispatch record (AR-027) already owns that fact.",
+    "the_contradiction_this_header_exists_for": {
+      "row": "W7nlnHTUZQU__s0.spec.json#WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+      "verdict_in_this_file": "A",
+      "verdict_under_the_governing_criterion": "B",
+      "why": "WAIT_SESSION compiles to a session-window gate. The taught object is a LEVEL PAIR (overnight high, overnight low) extracted from a window; the compiled gate carries no high, no low and no extremum extraction, so the entire taught object is discarded. The clock IS load-bearing - the levels are defined by that window - and under the governing criterion that fact spawns a sibling condition rather than owning the type.",
+      "the_governing_grade_of_record": "docs/replay-results/h1-battery/session-ab-blind-grade-ROW27.json"
+    },
+    "what_is_NOT_quarantined": "The CALIBRATION DIAGNOSTICS are criterion-independent and remain valid: bind_path, zone, zone_correctness, zone_correctness_tally and the escalation note describe what the resolver DID, not how a row should be typed. They are unaffected by which discriminator grades the row.",
+    "not_a_competing_grade": "This instrument adjudicated a DIFFERENT question over a DIFFERENT population - the 9 resolver-bound rows (tally_over_the_9) - not the corpus WAIT_SESSION population. It is scoped, not overturned.",
+    "REMEDIATION_MEASURED_2026-07-21": {
+      "claim_in_this_file": "population_derivation records classify_session_role yielding a concrete zone for 9 of 27 rows, and the W7nlnHTUZQU#6 'escalation' field records the role resolver PREEMPTING an honest refusal with an inverted bind.",
+      "measured_today": "8 of 27 zone-bound, identical under both level/zone flag arms. The single row that left the set is W7nlnHTUZQU__s0.spec.json#6, which now returns bindable=False, session_zone=None, reason='session_zone_refused_uncomputable_window:overnight'.",
+      "reading": "The escalation recorded above has been REMEDIATED: the inverted bind is gone and the honest refusal is no longer preempted. The 9 is retained unedited as the reading AT LOCK TIME; this block is the measured delta, not a correction of the record.",
+      "scope": "Production flags OFF for the level/zone arms; TF_SESSION_ROLE_RESOLVER_ENABLED pinned true for the measurement, as the shipped path requires. A labeled hypothetical about the labeled corpus, not a live-trading number."
+    }
+  },
+  "artifact": "session-9v2-adjudication-verdicts-LOCKED",
+  "locked_before_reading": [
+    "docs/replay-results/h1-battery/session-ab-blind-grade-RESULT.json",
+    "docs/replay-results/h1-battery/session-a-mistype-dispositions.json",
+    "docs/designs/AGENT-REPORTS.md",
+    "docs/designs/ADVISOR-RULINGS.md"
+  ],
+  "population_derivation": "16 spec files at docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json; recursive walk for type==WAIT_SESSION; 27 rows, 27 unique (file,id), no duplicates. resolve_session_keyword bound 0/27. classify_session_role yielded a concrete zone for exactly 9/27 with TF_SESSION_ROLE_RESOLVER_ENABLED=true.",
+  "discriminator": "remove the clock - does a taught object remain standing? If yes the session term was an ANCHOR, not the taught object.",
+  "verdicts": [
+    {
+      "id": "DLwVqcLRcfw__s0.spec.json#WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+      "zone": "ny_am",
+      "bind_path": "SESSION_ANCHOR_PHRASE_RE only (single anchor minute 570)",
+      "verdict": "B",
+      "anchor_or_taught": "ANCHOR",
+      "reason": "Clock removed leaves 'the first two-minute candle closes over the 20 SMA and vwap' - a close-above-indicators confirmation that stands on its own. The bell SELECTS which bar; it is not the taught object. Closest call of my three (B)s.",
+      "zone_correctness": "regionally plausible but fabricated: derived from a zero-width point anchor widened to [570,571)"
+    },
+    {
+      "id": "_LS6qcSlDCs__s0.spec.json#WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+      "zone": "ny_am",
+      "bind_path": "SESSION_ANCHOR_PHRASE_RE only (single anchor minute 570)",
+      "verdict": "B",
+      "anchor_or_taught": "ANCHOR",
+      "reason": "Clock removed leaves a complete VWAP-reclaim dip-buy entry: drops below vwap, breaks back above with volume. Taught object is the vwap reclaim; 'at the opening bell' is scenery."
+    },
+    {
+      "id": "_LS6qcSlDCs__s0.spec.json#WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+      "zone": "ny_am",
+      "bind_path": "SESSION_ANCHOR_PHRASE_RE only (single anchor minute 570)",
+      "verdict": "B",
+      "anchor_or_taught": "ANCHOR",
+      "reason": "Clock removed leaves 'breaks above the vwap after being below it, buy the pullbacks, vwap holds as support' - a complete vwap-support entry model."
+    },
+    {
+      "id": "E9MzEC_yNoM__s1.spec.json#WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+      "zone": "ny_am",
+      "bind_path": "anchor phrase 570 + clock tokens 180, 570 -> span [180,570)",
+      "verdict": "A",
+      "anchor_or_taught": "TAUGHT OBJECT",
+      "reason": "Clock removed leaves 'find the highest point of price action and the lowest point' with no window to find them in - undefined. The 3:00am-to-open window IS the taught object.",
+      "zone_correctness": "COARSE. Taught window is 390 minutes (180-570); ny_am is (420,600) and captures 150 of them. Greatest-overlap proxy, declared approximation=True."
+    },
+    {
+      "id": "E9MzEC_yNoM__s1.spec.json#WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+      "zone": "ny_am",
+      "bind_path": "anchor phrase 570 + clock token 180 -> span [180,570)",
+      "verdict": "A",
+      "anchor_or_taught": "TAUGHT OBJECT",
+      "reason": "Same teaching as #1 restated: 'find 3:00 a.m. EST all the way until market open, mark the highest high and lowest low of that price action'. Remove the clock and nothing is markable.",
+      "zone_correctness": "COARSE, same as #1."
+    },
+    {
+      "id": "W7nlnHTUZQU__s0.spec.json#WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+      "zone": "ny_am",
+      "bind_path": "single clock token 9:30 a.m. -> 570; the '400 p.m. EST' token did NOT match _SESSION_CLOCK_TOKEN_RE (transcript renders it '400 p.m.', no colon+minutes form)",
+      "verdict": "A",
+      "anchor_or_taught": "TAUGHT OBJECT",
+      "reason": "'overnight/pre-market range: ... from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the overnight high and the overnight low'. Remove the clock and there is no range at all. The window IS the teaching.",
+      "zone_correctness": "WRONG AND INVERTED. The taught window WRAPS MIDNIGHT (16:00 -> 09:30 next day). ny_am (420,600) sits inside the RTH day session - the complement of the taught window. Zone was derived from the window's terminal instant alone.",
+      "escalation": "With the flag OFF this row is correctly REFUSED as session_zone_refused_uncomputable_window:overnight. The role resolver PREEMPTS that refusal (it is consulted before the orphan-zone refusal) and replaces an honest refusal with an inverted bind."
+    },
+    {
+      "id": "kFyD3H6I1I8__s0.spec.json#WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+      "zone": "ny_am",
+      "bind_path": "clock tokens 420, 480 -> span [420,480)",
+      "verdict": "A",
+      "anchor_or_taught": "TAUGHT OBJECT",
+      "reason": "'I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction'. Remove the clock and WHICH two candles is undefined. Their clock identity is the whole teaching.",
+      "zone_correctness": "CORRECT. [420,480) is wholly inside ny_am (420,600)."
+    },
+    {
+      "id": "kFyD3H6I1I8__s0.spec.json#WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+      "zone": "ny_am",
+      "bind_path": "clock tokens 570, 585 -> span [570,585)",
+      "verdict": "A",
+      "anchor_or_taught": "TAUGHT OBJECT",
+      "reason": "'Time period 15 minute, 9:30 to 9:45 UTC minus 4'. Remove the clock and what remains is 'opening range' - itself a clock construct, not a surviving non-clock taught object. Weakest of my six (A)s: the sentence is indicator-settings narration, and a judge who treats the taught object as 'use this LuxAlgo indicator' would land (C).",
+      "zone_correctness": "CORRECT. [570,585) inside ny_am."
+    },
+    {
+      "id": "kFyD3H6I1I8__s0.spec.json#WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+      "zone": "ny_am",
+      "bind_path": "anchor phrase 570 + clock tokens 570, 585 -> span [570,585)",
+      "verdict": "A",
+      "anchor_or_taught": "TAUGHT OBJECT",
+      "reason": "'marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session'. Remove the clock and there is no range. Textbook opening-range session teaching.",
+      "zone_correctness": "CORRECT."
+    }
+  ],
+  "tally_over_the_9": {"A": 6, "B": 3, "C": 0},
+  "zone_correctness_tally": {"correct": 3, "coarse": 2, "inverted": 1, "fabricated_from_point_anchor": 3},
+  "population_finding": "W7nlnHTUZQU__s0#6 is one of the 9 but is ABSENT from the 26-row blind-grade sample (session-ab-blind-grade-sample.json, population='all WAIT_SESSION conditions that resolve to NO session zone (26 of 27)'). The ratified split was never asked about it."
+}
