@@ -4,6 +4,30 @@
 
 ---
 
+### Session Log — 2026-07-21 [ops-experience] 9a PAIRING ROUTE LANDED (auth-graded BAND 8) — buildable campaign scope CLOSED. ★ INCIDENT: I landed a non-booting `main` for ~2 min (zero impact, population-verified); the rule is verify the tree you SHIP
+
+**Mission:** build 9a's pairing route over the parked core, then close the residuals.
+
+**Work completed:**
+- **Pairing route** (`api/agent-pair.ts`, mounted) — start → claim → poll. Discord has no device authorization grant, so our server is the authorization server: the device shows a code, the member claims it in a browser where they are already Discord-authed, the device polls once for a signed token. Identity comes **only** from the session; lockout keyed to the **member** not the code; unknown/expired/claimed collapse to one answer (no oracle); device secret hashed + timing-safe; single-use burns the record **before** emitting the token; fail-closed on capacity/collision/entropy/db/missing-member/unsignable. In-memory store with its limits **declared in the header**, including that multi-instance would break it.
+- **Lockout-store prune** (OR-175 follow-up) — `claimAttempts` grew one entry per member who ever mis-typed. Pruned in `sweep()`, but **only entries that no longer decide anything**: dropping a live lock or a partial streak would make sweeping itself the bypass.
+- Final tip **`2fd248c5`**; `main` == `hardening/phase-0`.
+
+**Verification:** independent auth grade **BAND 8** — a fresh scope-judgment built **33 adversarial tests** through the REAL router barrel with REAL signed cookies (not my stubbed path) and broke nothing: zero identity substitution across body/query/header/cookie *and my own test backdoor header*, zero double-mint under 20-way concurrent claims, zero oracle (timing ratio 1.01–1.04×), no lockout bypass, reachable through the mount, fail-closed everywhere. Shipping-tree verified: 3 files / 68 passed, `tsc` 0. Every guard mutation-proved.
+
+**★ INCIDENT — I landed a non-booting `main`.** The extraction plan said take only the route commit, "not superseded WIP commits" — but the core commit was the route's **dependency**, not superseded. `main`/`phase-0` sat at `622af624` with the barrel mounting a router importing two files that did not exist. **Impact population-verified ZERO**: the tower runs the canonical checkout at `404a3396` and never pulled (`merge-base --is-ancestor` → not present). LANDED ≠ RUNNING. Fixed **forward** (cherry-picked the core), never a history rewrite.
+
+**Known-facts updates:**
+- ★ **Verify on the tree you SHIP, not the tree you built.** Every count and tsc-clean in that commit was true — against a different tree than the one that reached `main`. A number with its command is worthless if the command ran somewhere else.
+- ★ **What caught it: "2 files ran when I named 3."** A file that fails to COLLECT reports as a failed *file* with zero failed *tests*, so it is invisible inside a passing count. Always check the file count, not just the test count.
+- ★ **A cherry-pick instruction naming which commits to take is a CLAIM about dependencies** — "superseded" owes a check; `tsc` answers it in one command.
+- ★ **A mutation is evidence only if it changes behaviour.** Two of mine were behaviour-neutral and their green proved nothing — the caption-is-a-claim disease inside the mutation-testing meant to cure it. Re-run against the real enforcement, both RED. Second clause for races: widen the window before trusting a green, or a fast test double hides the hole.
+- ★ **A guard that never presents the hostile input cannot prove the input is refused.** Reading identity from the request body stayed GREEN because no test ever SENT such a field — a real privilege-escalation gap, closed by supplying five identity fields at once.
+
+**Carry-forward for next session:**
+- **Duplicate-cookie ordering** in `require-session.ts` — the cookie regex is non-global, so a forged cookie placed first beats a legitimate one placed second. Pre-existing, cross-cutting every Slumhouse route, not exploitable standalone (needs a separate injection primitive). Its own session-hardening unit, not a rider.
+- **9c — the desktop tray app + auto-update — RESERVED on the operator's spend decision** (code signing is a real recurring cost). Nothing installed, nothing incurred, no price quoted. **This is the only item genuinely waiting on a human**, and with 9a landed it is all that remains of the campaign's scope.
+
 ### Session Log — 2026-07-21 [ops-experience] ITEM 6 COMPLETE — PIN-entry UI LANDED `8ec3a8f3` (auth-graded BAND 7) + CSRF hardening LANDED `2932bcd2`; the Locked room is genuinely cured
 
 **Mission:** close item 6 — build the PIN-entry UI that actually unlocks the member Office (F-1), then the CSRF follow-up.
