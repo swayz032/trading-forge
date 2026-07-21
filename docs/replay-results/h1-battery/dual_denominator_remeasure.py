@@ -235,10 +235,15 @@ def _guard_nodes(tree) -> list[tuple[int, str]]:
     """Every ENFORCEMENT SITE in this file: (lineno, the source of its test expression).
 
     ★ WHY THIS IS NOT `isinstance(n, ast.Assert)` ANY MORE, AND WHY THAT MATTERED.
-    This census counted `assert` nodes. When the five gate asserts became `refuse_unless(...)`
+    This census counted `assert` nodes. When the gate asserts became `refuse_unless(...)`
     calls -- because `python -O` strips asserts and was measured doing exactly that, publishing
     a caption-9-frozen artifact at exit 0 -- an AST scan keyed on ast.Assert would have reported
-    the enforcement surface SHRINKING by seven while the file's actual guarding got stronger.
+    the enforcement surface SHRINKING while the file's actual guarding got stronger.
+    ★ AND THE COUNT IS DELIBERATELY NOT TYPED HERE. The first draft of this comment said
+    "shrinking by seven"; the graded figure was eight. A hand-typed number that is WRONG, in the
+    file whose whole thesis is that hand-typed numbers are inadmissible -- and no gate in this
+    file reaches a COMMENT, which is the boundary that let it through. The figure is not
+    restated; own_assert_census computes it and prints it every run.
     A census that counts the OLD spelling of a thing reports on the spelling, not the thing.
     So the census counts enforcement sites by what they DO: refuse the run on a false test.
     Both primitives are listed, and adding either without a disposition still fails the run.
@@ -315,6 +320,12 @@ ASSERT_DISPOSITIONS: dict[str, str] = {
     # inside main(), so no corpus reaches it and only an edit can move it -- which is precisely
     # its job: it exists to notice the edit that writes `assert` on the publish path again.
     "publish_path['PASS']": "SOURCE_INVARIANT",
+    # THE -O REFUSAL. It reads an INTERPRETER FLAG, which is neither this source nor a corpus --
+    # the taxonomy has no third value, and inventing one to fit would be the free-text kind this
+    # file refuses elsewhere. It is classified by the question the taxonomy actually asks: can
+    # this fire on a run where only the DATA changed? It cannot. Hence SOURCE_INVARIANT, with
+    # the mismatch stated here rather than smoothed over.
+    "not sys.flags.optimize": "SOURCE_INVARIANT",
 }
 
 
@@ -348,13 +359,19 @@ ASSERTS_ADDED_SINCE_BASELINE: list[dict] = [
     {"assert": "derivation['closes_exactly']", "disposition": "SOURCE_INVARIANT",
      "added_by": "R-219 (4a) -- the ledger's own tripwire", "commit": "THIS_WAVE"},
     # ★ THE PUBLISH-PATH PRIMITIVE RULE. Note what this ledger row records and what it does NOT:
-    # this wave converted SEVEN enforcement sites from `assert` to `refuse_unless`, and the
-    # split did not move by seven, because _guard_nodes counts an enforcement site by what it
+    # this wave converted the publish path's asserts to `refuse_unless`, and the declared
+    # split did not move by that count, because _guard_nodes counts an enforcement site by what it
     # DOES rather than by which keyword spells it. Only this row is an ADDITION -- a genuinely
     # new check. A ledger that had counted keywords would have reported the enforcement surface
     # collapsing on the wave that hardened it.
     {"assert": "publish_path['PASS']", "disposition": "SOURCE_INVARIANT",
      "added_by": "the -O finding -- no assert may gate publication", "commit": "THIS_WAVE"},
+    # ADDED BY THE INDEPENDENT GRADE. Converting the publish path made THOSE gates -O-proof and
+    # left the impression the file was. It was not: under -O the run refused as REVIVAL PROBE
+    # MISDIRECTED -- fail-closed with the wrong diagnosis, which is a caption about a verdict.
+    {"assert": "not sys.flags.optimize", "disposition": "SOURCE_INVARIANT",
+     "added_by": "independent grade of d41f3bff -- name the flag, not the probes",
+     "commit": "THIS_WAVE"},
 ]
 
 
@@ -988,7 +1005,15 @@ GATE_BOUNDARIES: dict[str, str] = {
     ),
     "NO_ASSERT_ON_THE_PUBLISH_PATH": (
         "Scans main()'s AST only. It cannot see an assert placed on the publish path by a "
-        "helper main() calls -- it enforces the primitive at the decision site, not everywhere."
+        "helper main() calls -- it enforces the primitive at the decision site, not everywhere. "
+        "Asserts in helpers are DELIBERATE and cannot be converted: the discrimination probes "
+        "measure them by catching AssertionError, and refuse_unless raises SystemExit, which "
+        "derives from BaseException and would abort the probe loop instead of being scored. "
+        "That is why -O is refused outright rather than tolerated -- see OPTIMIZED_MODE."
+    ),
+    "OPTIMIZED_MODE": (
+        "Checks the interpreter flag, nothing else. It cannot tell whether any PARTICULAR "
+        "assert would have fired -- it refuses the whole run because it cannot know."
     ),
 }
 
@@ -2402,7 +2427,7 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     },
     "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.SOURCE_INVARIANT_derivation": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
-        "numerals": ["4", "5", "9"],
+        "numerals": ["10", "5"],
         "why": "Same construction, same reason, other half of the split.",
     },
     "$.SELF_ACCOUNTING.n_asserts_note": {
@@ -4436,6 +4461,22 @@ def _summarise(art: dict) -> None:
           f"{len(sp['findings'])} spawn sites, {len(sp['unexpected_spawns'])} unexpected "
           f"({sp['PASS']})")
     _print_boundary("SUBPROCESS_BOUNDARY")
+    # ★ THESE FOUR PRINT THEIR VERDICT ON GREEN, AND THE GRADER IS WHY. The first version of
+    # this change declared eight boundaries and called _print_boundary for five: the publish-path
+    # rule -- the wave's own new guard -- announced neither its verdict nor its reach unless it
+    # refused. A guard visible only when it fires is indistinguishable from a guard that is not
+    # there, which is precisely what _print_boundary's own docstring calls the caption shape.
+    pp = art.get("ASSERT_FREE_PUBLISH_PATH")
+    if pp:
+        print(f"OK  PUBLISH-PATH PRIMITIVE: {pp['n_asserts_on_publish_path_THIS_IS_THE_RED']} "
+              f"asserts in main() (must be 0) -- every publish gate is a refusal ({pp['PASS']})")
+        _print_boundary("NO_ASSERT_ON_THE_PUBLISH_PATH")
+    print(f"OK  OPTIMIZED MODE: sys.flags.optimize={sys.flags.optimize} "
+          f"(must be 0 -- -O strips the asserts the probes measure) ({not sys.flags.optimize})")
+    _print_boundary("OPTIMIZED_MODE")
+    print(f"OK  PUBLISH PRECONDITION: output path not in the guarded set "
+          f"({OUT_PATH.name not in {p.name for p in APPEND_ONLY_GUARDED}})")
+    _print_boundary("PUBLISH_PRECONDITION")
     eg = art.get("EVIDENTIAL_CLAIM_GATE")
     if eg:
         print(f"OK  EVIDENTIAL-CLAIM GATE: {eg['n_frozen_prose_leaves_SCORED']} frozen prose "
@@ -4457,6 +4498,7 @@ def _summarise(art: dict) -> None:
               f"({head['all_match']})")
     else:
         print(f"DRAFT  append-only: {head['DRAFT']}")
+    _print_boundary("APPEND_ONLY")
     ig = art["INPUT_GUARD"]
     tag = "DRAFT" if art.get("DRAFT") else "OK "
     print(f"{tag} input guard: {ig['n_tracked_checked']} tracked inputs checked against the git "
@@ -4614,6 +4656,25 @@ def main(argv: list[str] | None = None) -> None:
     # it from _build_artifact_body would recurse. It is attached to the artifact below.
     discrimination = assert_discrimination_census()
     publish_path = assert_free_publish_path()
+    # ★★★ -O IS REFUSED, AND THE REASON IS STATED CORRECTLY. THE GRADER'S FINDING.
+    # Moving the publish-path gates to refuse_unless makes THOSE survive -O. It does NOT make
+    # the file safe under -O, and the first version of this change quietly implied that it did.
+    # Sixteen asserts remain OUTSIDE main() by design -- the discrimination probes measure them
+    # by catching AssertionError, so they cannot become refusals without breaking the probes.
+    # Under -O those sixteen vanish, every revival probe reports its target as never firing, and
+    # the run refused with "REVIVAL PROBE MISDIRECTED" -- fail-CLOSED, which is right, blaming
+    # the probes, which is wrong. A guard that refuses for a reason that is not the reason is a
+    # caption about its own verdict, and this file's whole thesis is that those are inadmissible.
+    # So the condition is named where it is true: the INTERPRETER was invoked with -O.
+    refuse_unless(not sys.flags.optimize, "OPTIMIZED_MODE", (
+        f"RUNNING UNDER -O (sys.flags.optimize={sys.flags.optimize}). `python -O` strips assert "
+        "statements. The publish-path gates no longer depend on them, but this file still holds "
+        "asserts outside main() that the discrimination probes measure by catching "
+        "AssertionError -- and those ARE stripped. Their verdicts would be computed, printed, "
+        "and not acted on, which is the exact defect this wave was sent to fix.\n"
+        "  Re-run WITHOUT -O. This refusal is the correct diagnosis of the flag, not a finding "
+        "about the probes: before it existed, this run failed as REVIVAL PROBE MISDIRECTED."
+    ))
 
     if "--axis-replay" in argv:
         # ★ FOUNDING-INSTANCE DISCIPLINE AT BIRTH (R-207 (A)(iv)). Every axis ships with its own
