@@ -49,6 +49,22 @@ Keep this file short enough that pasting it is never a burden. If a trap stops b
 >    same tree, its uncommitted work passes through your stash/restore. **Re-read before every edit,
 >    and treat `git diff` returning empty where you expect content as evidence your edit was LOST**,
 >    not as a no-op.
+> 6b. **★ VERIFYING BY CHECKOUT IS A WRITE — and in a shared tree a write is a COLLISION.**
+>    `git checkout <sha> -- <files>` is the *safe* way to pin files for a differential **in a private
+>    worktree**. In a tree another session commits from, it **silently overwrites their work**, and
+>    their next commit **adopts it with no conflict shown**. This happened here: a differential's pin
+>    reverted a freshly-landed fix's tripwires; the **code survived and only the TESTS were reverted**,
+>    so HEAD carried a live fix with four tests red asserting a defect that no longer existed —
+>    **and `git status` was CLEAN throughout, because the revert was already committed.**
+>    **A clean status over a committed revert is invisible by construction.** Pin files only inside a
+>    worktree you own.
+> 6c. **★★ ONE COMMIT FORM IN A SHARED TREE: `git commit -o <paths> -F <msgfile>` — FOR EVERYTHING,
+>    including docs and journals.** Never `git add` + bare `git commit`: that commits **the whole
+>    staged index**, which in a shared tree contains other agents' work. Here one `-o`-less commit —
+>    labelled *"session log"* — carried **−150 lines of another agent's test file**, making its own
+>    message a false caption about its own diff. ★ **A habit that does real work must not have
+>    exceptions; the exception is exactly where it fails.** **After committing, run
+>    `git show --stat HEAD` and confirm the file list is what you named.**
 > 7. **ANY COUNT THAT ENTERS A RECEIPT** (tests, deltas, timings) **must be measured in an isolated
 >    worktree pinned to your commit.** A number measured in a shared tree does not reproduce from
 >    the SHA. `git worktree add --detach <tmp> <sha>` → measure → `git worktree remove`.
