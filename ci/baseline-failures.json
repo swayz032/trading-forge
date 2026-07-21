@@ -764,7 +764,8 @@
     ]
   },
   "pytest": {
-    "collectionFloor": 1,
+    "_note": "collectionFloor raised 1 -> 135 (2026-07-21, ops hardening unit 3). fast.yml enforces this over its 4 gate files (test_metric_snapshot 23 + test_golden_fixtures 57 + test_frankenstein 35 + test_cross_engine_parity 35 = 150 collected, all passing at the tip). Floor 135 = catches any single-file import collapse (smallest file 23 -> 127 < 135) while tolerating ~15 tests of normal churn. A floor of 1 could not catch a collection collapse at all. Re-measure and re-set if fast.yml's file list changes.",
+    "collectionFloor": 135,
     "knownFailures": []
   }
 }

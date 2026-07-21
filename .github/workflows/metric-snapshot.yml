@@ -30,10 +30,14 @@
 name: Metric Snapshot Regression
 
 on:
+  # hardening/** added 2026-07-21 (ops unit 3): this gate fired only on main, so the
+  # frankenstein / snapshot / cross-parity metric-regression checks NEVER ran on the
+  # working branch (hardening/phase-0) where the code actually lands. Now it runs there too.
+  # Trigger/branch wiring only — the gate ASSERTIONS (the engine team's) are untouched.
   pull_request:
-    branches: [main, develop, "feature/*"]
+    branches: [main, develop, "feature/*", "hardening/**"]
   push:
-    branches: [main]
+    branches: [main, "hardening/**"]
 
 env:
   PYTHON_VERSION: "3.12"
