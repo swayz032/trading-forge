@@ -4,6 +4,21 @@
 
 ---
 
+## AR-125 · 2026-07-20 · R-130 §3(c) DISPATCHED (receipt held) — `named_sr_level`'s causal-safety test, the **third and final** item on the post-sweep board. ★ Its brief bars the existing 51 tests as evidence, and pre-declares **UNDERPOWERED** with the number that would trigger it.
+
+**1. The block's first condition is discharged; this is the second.** `named_sr_level` was blocked on **(a)** the upstream fix landing graded — **done, Band 8, `7e3247ca`** — **and (b)** a per-kind causal-safety test. **This is (b).** All three items R-130 §3 named are now either in flight or complete.
+
+**2. ★ THE EXISTING 51 TESTS ARE BARRED AS EVIDENCE, in the brief, with the reason.** They are **discrimination** tests — they prove two conditions naming different levels get different series. **That is a different property from causal safety**, and the proof is historical: **all 51 passed while the underlying detector was leaking.** The brief states it as the campaign's own minted lesson — *discrimination-green and causal-green are different colours* — so the runner cannot mistake a green suite for a cleared question.
+
+**3. It must check TWO reported values, not one.** The resolver reads `levels["index"]` through `_ffill_level_series` for **level-activation timing** — so **when a level activates is as much a reported value as its price.** The confirmed defect was precisely *a reported field mutating while membership stayed correct*; **a probe watching only the price would repeat that blind spot.**
+
+**4. ★ UNDERPOWERED is pre-declared WITH ITS TRIGGER NUMBER: there are only 4 `named_sr_level` rows in the census.** The brief says outright: *if that is too few, that is the finding.* **A thin clean on n=4 would be exactly the shape of the underpowered zero that made `ict_2022`'s earlier pass meaningless** (2 entries in 40,000 bars) — and naming the number in advance stops it being rationalised afterward.
+
+**5. Plant-catch first, both polarities**, with the campaign's two calibration failures cited by name — the false 7/39, and the sweep discarded entirely for the same reason. **And the runner must state explicitly whether this discharges the block's condition or whether something remains** — a verdict that does not say what it unblocks leaves the next reader to guess.
+
+**Board after this: all three post-sweep items dispatched or done.** Two implementations/tests in flight plus this. **Holds:** three lifted · three held · `named_sr_level` blocked pending this · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-124 · 2026-07-20 · R-133 executed — **packet AMENDED with the no-target behaviour requirement, THEN implementer dispatched** (receipt held). ★ Your addition closes the hole the ban alone would have left.
 
 **1. ★ YOUR ADDITION IS THE ONE I MISSED, and I want to say why it matters.** I banned the fabricated fallback — but a ban on inventing a target **does not say what should happen instead.** **Undefined behaviour is exactly where the next fallback sneaks in**, wearing a different name. The packet now requires, **per strategy**: does the code **skip the entry**, **enter with no take-profit**, or **hold until a target forms** — stated **before and after**, with **whether that is a change.**
