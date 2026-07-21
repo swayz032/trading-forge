@@ -917,9 +917,18 @@ REVIVAL_PROBES: dict[str, dict] = {
         "hook": "ws_session_resolvable",
         "targets": "ws_session_resolvable <= graded_teachings",
         "mutate": lambda v: v + 99,
-        "why": "The live resolver is made to bind more rows to a session zone than the grade "
-               "calls genuine teachings. That is the reconciliation's whole subject, and no "
-               "corpus in this family produces it -- today the resolver resolves none.",
+        # ★ H1-W4 D2: THIS PROBE'S OWN RATIONALE WAS A THIRD FALSE CAPTION. It closed
+        # "no corpus in this family produces it -- today the resolver resolves none", which
+        # was true only of the LEGACY matcher this guard has now been re-aimed away from.
+        # Today's corpus produces the condition outright: the shipped resolver binds 9 rows
+        # against a component A of 2. The probe is KEPT -- a +99 injection still proves the
+        # assert is reachable and correctly targeted -- but its stated reason no longer
+        # advertises an unreachability that was an artifact of the dead instrument.
+        "why": "The shipped resolver is made to bind more rows to a session zone than the "
+               "grade calls genuine teachings. That is the reconciliation's whole subject. "
+               "The condition is NOT hypothetical: on today's corpus the re-aimed measurement "
+               "already exceeds component A unaided, and the injection proves the assert is "
+               "reachable through the hook regardless of what the corpus happens to read.",
     },
     "INVAL_DIRECTION_INVERTED": {
         "hook": "inval_on_concrete",
@@ -3319,6 +3328,62 @@ def set_levelzone_flags(on: bool) -> None:
     os.environ["TF_LEVELZONE_RESOLVER_ENABLED"] = v
 
 
+SESSION_ROLE_RESOLVER_FLAG = "TF_SESSION_ROLE_RESOLVER_ENABLED"
+
+
+def session_reconciliation_holds(n_zone_bound: int, component_a: int) -> bool:
+    """The re-aimed session reconciliation's ENTIRE arithmetic, in one place.
+
+    ★ WHY THIS IS A NAMED FUNCTION AND NOT AN INLINE COMPARISON. The guard it
+    mirrors is expected to FIRE on today's corpus (9 zone-bound vs component
+    A = 2). A guard observed only in its firing state has shown one polarity,
+    and one polarity is not a demonstration: a comparison that is hard-wired
+    to refuse looks identical, from outside, to one that refuses for cause.
+    The predecessor guard's whole defect was the mirror image of this -- it
+    was hard-wired to PASS and nobody could tell. So the pass condition is
+    made demonstrable rather than hoped: --session-reaim-polarity drives this
+    function through synthetic values in both directions and prints each
+    verdict beside its boundary. This function is the assert's arithmetic, not
+    a paraphrase of it; the assert at the measurement site spells the same
+    comparison so its census text and revival-probe target stay stable."""
+    return n_zone_bound <= component_a
+
+
+def measure_shipped_session_resolvable(specs) -> int:
+    """Count WAIT_SESSION rows the SHIPPED resolver binds to a real zone.
+
+    The shipped path is classify_session_role -> bind_condition, reached only
+    when TF_SESSION_ROLE_RESOLVER_ENABLED is set, and only AFTER the legacy
+    exact-phrase matcher has already missed. That flag is PINNED here for the
+    duration of the measurement and restored to whatever the process had,
+    because this generator otherwise runs production flags OFF: the arm a
+    resolver is measured in is part of the question, and inheriting it would
+    make the number describe an ambient environment rather than the shipped
+    code path.
+
+    Counts ZONE-BOUND rows (session_zone is not None), not merely recognized
+    ones. The guard's sentence is about binding to a zone; recognized-but-
+    uncomputable rows return bindable=False with
+    SESSION_TEACHING_UNBOUND_REASON and are deliberately NOT counted here.
+    On today's corpus that distinction is 9 (zone-bound) vs 18 (recognized),
+    so it is worth 9 either way and must not be left implicit."""
+    prev = os.environ.get(SESSION_ROLE_RESOLVER_FLAG)
+    os.environ[SESSION_ROLE_RESOLVER_FLAG] = "true"
+    try:
+        return sum(
+            1
+            for _n, ec, _am in specs
+            for c in ec
+            if c.get("type") == "WAIT_SESSION"
+            and getattr(sfb.bind_condition(c), "session_zone", None) is not None
+        )
+    finally:
+        if prev is None:
+            os.environ.pop(SESSION_ROLE_RESOLVER_FLAG, None)
+        else:
+            os.environ[SESSION_ROLE_RESOLVER_FLAG] = prev
+
+
 def load_corpus_a() -> list[tuple[str, list[dict], dict]]:
     out = []
     for p in sorted(glob.glob(CORPUS_A_GLOB)):
@@ -3709,19 +3774,47 @@ def _build_artifact_body() -> dict:
         f"{ws_taught} WAIT_SESSION conditions. A/B/C are external-graded and ws_taught is "
         "measured, so if this fires the corpus moved under the grade and it must be re-graded."
     )
-    # ★★ RECONCILED AGAINST SOMETHING OUTSIDE THE GRADE -- the production session resolver.
-    # A row that the LIVE resolver binds to a session zone must be a genuine session teaching,
-    # so the resolver's count can never legitimately exceed component A. This is the only term
-    # in the split that anything outside the judge can falsify, and it is MEASURED every run.
-    ws_session_resolvable = _rv("ws_session_resolvable", sum(
-        1 for _n, ec, _am in specs_a for c in ec
-        if c.get("type") == "WAIT_SESSION" and sfb.resolve_session_keyword(c.get("object", "")) is not None
-    ))
+    # ★★ RECONCILED AGAINST SOMETHING OUTSIDE THE GRADE -- the SHIPPED session resolver.
+    # A row that the shipped resolver binds to a session zone must be a genuine session
+    # teaching, so its count can never legitimately exceed component A.
+    #
+    # ★★★ H1-W4 D2 -- THE INSTRUMENT WAS THE DEFECT, AND IT WAS AIMED AT A CORPSE.
+    # What stood here called `sfb.resolve_session_keyword` -- the LEGACY bare-keyword matcher,
+    # already MEASURED DEAD at 0/27 on both corpora before this guard was written. So the term
+    # was 0 BY CONSTRUCTION, the comparison was `0 <= 2` under every flag arm and every grade
+    # >= 0, and the guard could not fail for any corpus this family can produce. It was billed
+    # in the artifact as "the only term in the split that anything outside the judge can
+    # falsify" -- a falsifiability claim made by the one term that had been rendered
+    # unfalsifiable. A reconciliation aimed at a dead instrument is not a weak check; it is a
+    # green light wired to nothing.
+    #
+    # Re-aimed at the path that actually SHIPS: classify_session_role -> bind_condition. The
+    # flag context is PINNED for the measurement and restored, exactly as the enforcement-arm
+    # loop below pins TF_FAMILY_META_ENFORCED -- the arm is chosen, never inherited, because a
+    # resolver measured in the wrong arm answers a different question than the one asked.
+    #
+    # ★ MEASURED CONSEQUENCE OF THE RE-AIM: 9, not 0. The shipped resolver binds 9 of the 27
+    # labeled rows to a real killzone zone (18 of 27 it RECOGNIZES as session teaching; the
+    # zone-bound 9 is the subset with a computable window, and zone-bound is what this guard's
+    # sentence is about). Against component A = 2, the reconciliation REFUSES. That refusal is
+    # this deliverable: a re-aim that came back green would itself be evidence the new
+    # instrument was as dead as the old one. The 9-vs-2 per-row adjudication is a SEPARATE
+    # exercise against the regenerated numbers and is deliberately NOT performed here -- this
+    # guard's job is to make the disagreement impossible to publish through, not to settle it.
+    ws_session_resolvable = _rv(
+        "ws_session_resolvable", measure_shipped_session_resolvable(specs_a))
+    # ★ THE ASSERT FORM IS DELIBERATE AND MUST NOT BE CONVERTED. This site is a registered
+    # revival-probe target (SESSION_RESOLVER_EXCEEDS_GRADE); the probes measure it by catching
+    # AssertionError, and refuse_unless raises SystemExit, which would abort the probe loop
+    # instead of being scored. The file refuses -O outright for exactly this reason (see
+    # OPTIMIZED_MODE), so the asserts cannot be stripped underneath the probes. The defect
+    # repaired here was the INSTRUMENT CALLED, never the enforcement mechanism.
     assert ws_session_resolvable <= graded_teachings, (
-        f"GUARD BOUNDARY: the live session resolver binds {ws_session_resolvable} of {ws_taught} "
-        f"labeled rows to a zone, which EXCEEDS component A ({graded_teachings}). Either the "
-        "grade understates the genuine teachings or the resolver is binding rows that teach no "
-        "session. Both are findings; neither may pass silently."
+        f"GUARD BOUNDARY: the SHIPPED session resolver (classify_session_role -> "
+        f"bind_condition) binds {ws_session_resolvable} of {ws_taught} labeled rows to a zone, "
+        f"which EXCEEDS component A ({graded_teachings}). Either the grade understates the "
+        "genuine teachings or the resolver is binding rows that teach no session. Both are "
+        "findings; neither may pass silently."
     )
 
     # THE 161 DENOMINATOR (AR-188 fix 4). The 155 counts entry_conditions ONLY; the 16 specs also
@@ -4547,12 +4640,21 @@ def _build_artifact_body() -> dict:
             # "up-to-17" this replaces was never a measurement -- see SESSION_SPLIT_DECLARED.
             # The honest pair is stated together because either alone misleads: the ceiling is
             # what the GRADE licenses, the measured figure is what the RESOLVER achieves.
+            # ★★ H1-W4 D2 -- CAPTION CORRECTED: IT NAMED THE WRONG INSTRUMENT. This sentence
+            # said "MEASURED by the live session resolver", and the number beside it came from
+            # sfb.resolve_session_keyword -- the LEGACY bare-keyword matcher, measured dead at
+            # 0/27. So the caption attributed a reading to the shipped resolver that the
+            # shipped resolver never produced, and the 0 it published was an artifact of the
+            # dead instrument rather than a fact about the corpus. Re-aimed, the same corpus
+            # reads 9. The instrument is now NAMED in the sentence, not merely alluded to as
+            # "live": "live" was doing the work of a provenance claim without carrying one.
             "recovery_ceiling_vs_measured": (
                 f"CEILING (graded, not measured): at most {graded_teachings} of {ws_taught}. "
-                f"MEASURED by the live session resolver: {ws_session_resolvable} of {ws_taught} "
-                f"rows resolve to a session zone at all, and {ws_recovered} recovered in this "
-                "configuration. The ceiling is an upper bound on what could be recovered, never "
-                "a claim that anything was."
+                f"MEASURED by the SHIPPED session resolver (classify_session_role -> "
+                f"bind_condition): {ws_session_resolvable} of {ws_taught} rows bind to a "
+                f"session zone, and {ws_recovered} recovered in this configuration. The "
+                "ceiling is an upper bound on what could be recovered, never a claim that "
+                "anything was."
             ),
             "recoverable_target_population": {
                 "value": graded_teachings,
@@ -4629,15 +4731,26 @@ def _build_artifact_body() -> dict:
                     "shipped classifier 26 of 26, so it was never independent of the thing it "
                     "graded."
                 ),
+                # ★★ H1-W4 D2 -- CAPTION CORRECTED: THE FALSIFIABILITY CLAIM WAS FALSE.
+                # This sentence called the resolver term "the one term anything outside the
+                # judge can falsify". It was the one term that COULD NOT BE FALSIFIED: it was
+                # computed by the legacy bare-keyword matcher, already measured dead at 0/27,
+                # so the comparison was 0 <= 2 under every flag arm and every grade >= 0. The
+                # claim of external falsifiability was made by the single term that had been
+                # rendered unfalsifiable -- the caption was not merely wrong, it was wrong in
+                # precisely the direction that made the guard look strongest.
                 "ASSERTED": (
                     "★ PER COMPONENT, not merely as a sum. The predecessor asserted the SUM "
                     "alone, which stays green under every reallocation between the graded "
                     "buckets -- that is, green under every value of the only quantity anyone "
                     "disputed. Each of A, B and C now answers for itself against "
                     "SESSION_SPLIT_DECLARED; the sum is kept because it is the only check on "
-                    "the taught count; and the live session resolver's zone-resolvable count is "
-                    "asserted not to exceed A, which is the one term anything outside the judge "
-                    "can falsify."
+                    "the taught count; and the SHIPPED session resolver's zone-bound count "
+                    "(classify_session_role -> bind_condition) is asserted not to exceed A. "
+                    "That term is external to the judge and it is now genuinely falsifiable: "
+                    "re-aimed from the legacy matcher to the shipped path it moved from 0 to "
+                    "9, and the assert REFUSES against A. It is stated here as a live "
+                    "disagreement, not a passing check."
                 ),
             },
             "unflattering_reading": (
@@ -4894,6 +5007,60 @@ def main(argv: list[str] | None = None) -> None:
         print("written. No append-only claim and no HEAD comparison will be made or reported.")
         print("Every line below is prefixed DRAFT for exactly this reason.")
         print(DRAFT_BANNER)
+
+    if "--session-reaim-polarity" in argv:
+        # ★★ DISCRIMINANCE IN THE SMALL, FOR A GUARD EXPECTED TO FIRE.
+        # The re-aimed session reconciliation refuses on today's corpus (9 zone-bound vs
+        # component A = 2), and a guard that has only ever been seen REFUSING is not yet
+        # distinguishable from one wired to refuse. That is not a hypothetical failure mode
+        # here -- it is the EXACT INVERSE of the defect this deliverable repaired, where the
+        # term was wired to 0 and the comparison was wired to pass. Having been fooled once by
+        # a hard-wired polarity, the honest thing is to show BOTH.
+        #
+        # ★ THIS MODE RUNS BEFORE THE ARTIFACT BUILD, DELIBERATELY. The build now aborts on the
+        # firing assert, so a demonstration placed after it could never run -- and "the proof
+        # is downstream of the thing it proves" is how a demonstration quietly stops existing.
+        #
+        # Synthetic values only. This proves the ARITHMETIC is two-sided; it makes no claim
+        # about the corpus, which is measured in the run proper.
+        print("SESSION RE-AIM POLARITY -- both directions of the re-aimed reconciliation")
+        print("  BOUNDARY: synthetic values through session_reconciliation_holds(), the")
+        print("            assert's own arithmetic. It demonstrates that the comparison can")
+        print("            resolve BOTH ways. It says NOTHING about which way the real corpus")
+        print("            lands -- that is measured in the run, and today it FIRES at 9 <= 2.")
+        cases = [
+            (0, 2, True,  "the legacy instrument's frozen reading -- passes, as it always did"),
+            (1, 2, True,  "under the ceiling"),
+            (2, 2, True,  "exactly AT component A -- the boundary itself, inclusive, must PASS"),
+            (3, 2, False, "one over the ceiling -- the smallest genuine refusal"),
+            (9, 2, False, "today's MEASURED shipped-resolver reading against today's grade"),
+            (0, 0, True,  "both terms zero -- degenerate, still a pass, never a crash"),
+        ]
+        passes = fires = 0
+        ok = True
+        for n, a, expected, why in cases:
+            got = session_reconciliation_holds(n, a)
+            verdict = "PASS " if got else "FIRE "
+            agree = got == expected
+            ok = ok and agree
+            if got:
+                passes += 1
+            else:
+                fires += 1
+            print(f"  {verdict} n_zone_bound={n:>2} <= component_A={a:>2}  ->  {got!s:<5} "
+                  f"(expected {expected!s:<5} {'OK' if agree else 'MISMATCH'})   {why}")
+        # ★ THE TWO-SIDEDNESS IS ASSERTED, NOT EYEBALLED. A demonstration that printed six
+        # PASSes would look exactly like a demonstration -- so the counts are checked.
+        two_sided = passes > 0 and fires > 0
+        print(f"  COMPUTED: {passes} pass verdicts, {fires} fire verdicts, "
+              f"two-sided = {two_sided}")
+        print(f"  COMPUTED: all {len(cases)} verdicts match their independently-stated "
+              f"expectation = {ok}")
+        good = ok and two_sided
+        print("POLARITY DEMO", "PASSED -- the guard is proven able to pass AND to fire; its "
+              "pass condition is a real reconciliation" if good else
+              "FAILED -- the comparison is not two-sided, or a verdict disagreed")
+        sys.exit(0 if good else 2)
 
     if "--draft-publish-proof" in argv:
         # ★ THE PROOF THE BRIEF ASKED FOR: SHOW THE ATTEMPT FAILING, do not claim it cannot
