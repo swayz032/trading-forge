@@ -65,6 +65,84 @@ def sha(p: Path) -> str:
     return hashlib.sha256(p.read_bytes()).hexdigest()
 
 
+def rate0(num, den):
+    """Rounded ratio, or None when the denominator is empty. Module-level so the drift
+    classification can use it before main()'s local alias is bound."""
+    return round(num / den, 4) if den else None
+
+
+def count_own_asserts() -> int:
+    """Count assert statements in THIS file by parsing it. AR-188 fix 6.
+
+    The prior claim -- "eight asserts, each red-proved" -- was hand-typed, and the file held
+    twelve. A hand-typed count of a thing the file itself can count is the hardcoded-test-copy
+    defect. This number is now derived from the source's own AST, so it cannot drift from it.
+    """
+    import ast
+
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    return sum(1 for n in ast.walk(tree) if isinstance(n, ast.Assert))
+
+
+def classify_drift(rate_pre, rate_post, cov_pre, cov_post) -> dict:
+    """Decide, FROM THE NUMBERS, which way the two metrics moved. AR-188 fix 1.
+
+    THE STANDING RULE THIS ENFORCES: an interpretation is COMPUTED from the fields that decide
+    it, or it is ABSENT. The string this replaces printed for ANY non-zero delta in EITHER
+    direction -- it asserted "the rate improves while coverage worsens" even when the rate had
+    worsened, which is exactly what happened. A sentence that prints regardless of the data is
+    a caption, not a finding.
+
+    DIRECTION CONVENTION, stated because the prior prose got it backwards:
+      binding_approximation_rate is the APPROXIMATION SHARE. It going UP is WORSE.
+      section-6a coverage is the BOUND-AND-CONCRETE SHARE. It going UP is BETTER.
+    The section-6a defect is the specific pair (rate BETTER, coverage WORSE) -- a spec buying a
+    better-looking rate by shedding conditions out of its denominator. Both metrics moving the
+    SAME way is the OPPOSITE of that defect: it means the change was paid for in both books.
+    """
+    d_rate = None if rate_pre is None or rate_post is None else round(rate_post - rate_pre, 6)
+    d_cov = None if cov_pre is None or cov_post is None else round(cov_post - cov_pre, 6)
+    if d_rate is None or d_cov is None:
+        return {"verdict": "NOT_COMPUTABLE", "reason": "an arm is missing a figure", "delta_rate": d_rate,
+                "delta_coverage": d_cov}
+    rate_q = -d_rate  # positive == fidelity improved on the rate
+    cov_q = d_cov     # positive == fidelity improved on coverage
+    if rate_q == 0 and cov_q == 0:
+        verdict, reading = "NO_DRIFT", "Neither metric moved. There is nothing to interpret."
+    elif rate_q > 0 and cov_q < 0:
+        verdict, reading = (
+            "OPPOSITE_DIRECTIONS__SECTION_6A_DEFECT",
+            "The rate IMPROVED while coverage WORSENED. Conditions left the rate's denominator "
+            "instead of being bound: the vanishing-denominator defect section 6a exists to expose.",
+        )
+    elif rate_q < 0 and cov_q > 0:
+        verdict, reading = (
+            "OPPOSITE_DIRECTIONS__RATE_PAID_COVERAGE_GAINED",
+            "The rate WORSENED while coverage IMPROVED. Conditions entered the denominator and "
+            "bound approximately. Not the 6a defect -- the opposite trade.",
+        )
+    else:
+        better = rate_q > 0
+        verdict = "SAME_DIRECTION__BOTH_IMPROVED" if better else "SAME_DIRECTION__BOTH_DEGRADED"
+        reading = (
+            "Both metrics moved the SAME way (" + ("both improved" if better else "both degraded") + "). "
+            "This is NOT the section-6a defect: a vanishing denominator flatters the rate while costing "
+            "coverage, and that did not happen here. A change that pays in BOTH books is not gaming either."
+        )
+    return {
+        "verdict": verdict,
+        "reading": reading,
+        "delta_rate_raw": d_rate,
+        "delta_coverage_raw": d_cov,
+        "rate_quality_delta_positive_is_better": rate_q,
+        "coverage_quality_delta_positive_is_better": cov_q,
+        "how_to_falsify": (
+            "Change either arm's rate or coverage so the two quality deltas differ in sign and this "
+            "verdict changes. It is a function of four numbers and nothing else."
+        ),
+    }
+
+
 def set_levelzone_flags(on: bool) -> None:
     v = "true" if on else "false"
     os.environ["TF_LEVELZONE_ROUTING_ENABLED"] = v
@@ -142,6 +220,18 @@ def measure_corpus_a(specs) -> dict:
                 else None,
                 "coverage_n": s_taught,
                 "census_n_executed_bindable": am.get("n_executed_bindable"),
+                # AR-188 fix 2: n_binding_approximation sat in the SAME census block as
+                # n_executed_bindable and was never read. It is the field that decides whether a
+                # vanished condition was APPROXIMATE (its loss flatters the rate) or CONCRETE
+                # (its loss costs both metrics). Reading only the bindable count is what let the
+                # prior reconciliation assert a direction it had not measured.
+                "census_n_binding_approximation": am.get("n_binding_approximation"),
+                "census_n_bound_and_concrete": (
+                    am["n_executed_bindable"] - am["n_binding_approximation"]
+                    if am.get("n_executed_bindable") is not None
+                    and am.get("n_binding_approximation") is not None
+                    else None
+                ),
             }
         )
     return {
@@ -160,6 +250,14 @@ def measure_corpus_a(specs) -> dict:
 
 
 def main() -> None:
+    # MOVED HERE FROM AFTER THE WRITE (AR-188 fix 6). This guard previously sat BELOW
+    # OUT_PATH.write_text(), so in the one scenario it names -- the output path colliding with a
+    # guarded prior artifact -- the overwrite had ALREADY HAPPENED before the assert ran. A guard
+    # positioned after the harm it names cannot prevent it. As a precondition it can now actually
+    # stop the run.
+    assert OUT_PATH not in APPEND_ONLY_GUARDED, (
+        f"output path {OUT_PATH} collides with a guarded prior artifact -- refusing to overwrite"
+    )
     before_hashes = {str(p.relative_to(REPO_ROOT)): sha(p) for p in APPEND_ONLY_GUARDED if p.exists()}
 
     # ---------------------------------------------------------------- CORPUS B
@@ -191,9 +289,14 @@ def main() -> None:
     assert path1 == path2 == path3, (
         f"987 derivation DISAGREES across paths: role-tally={path1} complement={path2} family-sum={path3}"
     )
-    assert roles["spine"] + roles["confluence"] + roles["trigger"] == b_total, (
-        f"role partition NOT exhaustive: {roles['spine']}+{roles['confluence']}+{roles['trigger']} != {b_total}"
-    )
+    # DELETED (AR-188 fix 6): an assert that the role partition is exhaustive
+    # (spine + confluence + trigger == b_total) stood here and COULD NOT FIRE. It is algebraically
+    # implied by the assert above: path1 == path2 already says
+    # roles["trigger"] == b_total - roles["spine"] - roles["confluence"], which rearranges to
+    # exactly the deleted condition. An assert that cannot fail is not a check, it is a decoration
+    # that inflates the count of checks. The property is still REPORTED (see
+    # RECONCILIATION.corpus_B_role_partition.exact) -- reporting it is honest; asserting it twice
+    # was not.
     never_by_gap = path1
     never_by_design = roles["confluence"]
 
@@ -245,23 +348,138 @@ def main() -> None:
         "The flip's grade licenses named_sr_level and order_block_edge ONLY."
     )
 
+    # ------------------------------------- DERIVED FACTS THAT WERE HAND-TYPED (AR-188 fix 6)
+    # Corpus-A role composition. Previously the string literal
+    # "spine 102 / confluence 53 / trigger 0 -- derived, see reconciliation" -- hand-typed, with
+    # NO such reconciliation entry to see. The never-pool rule (Corpus A holds zero trigger-role
+    # conditions) rested on an unasserted hand-typed value. It is now counted and asserted.
+    a_roles: collections.Counter = collections.Counter()
+    for _n, ec, _am in specs_a:
+        for c in ec:
+            a_roles[c.get("role")] += 1
+    # NOT ASSERTED, deliberately: sum(a_roles.values()) == n_taught iterates the SAME conditions on
+    # both sides and so can never fail. Writing it as an assert would have re-committed, in the very
+    # commit that removes two dead asserts, the defect being removed. It is REPORTED instead
+    # (corpus_A_role_partition_sum) where a reader can compare it against n_taught_conditions.
+    assert a_roles.get("trigger", 0) == 0, (
+        f"Corpus A now holds {a_roles.get('trigger', 0)} trigger-role conditions. The never-pool "
+        "rule and the 'Corpus A contains ZERO trigger-role conditions' claim both depend on this "
+        "being 0; if it moved, every corpus-separation statement here must be re-derived."
+    )
+
+    # Population-A kind histogram over all Corpus-A conditions. The declared non-discriminating
+    # control previously gave its reason as "only three kinds occur". FOUR occur -- and the modal
+    # value is None (conditions no kind classifies), by a wide margin. The control's CONCLUSION was
+    # right; its stated REASON was false, which makes the reason unfalsifiable decoration. Counted.
+    kind_hist: collections.Counter = collections.Counter()
+    for _bb, _ba, kind, _fam in a_before["binding_map"].values():
+        kind_hist[kind] += 1
+    kind_counts = {("None" if k is None else k): v for k, v in sorted(
+        kind_hist.items(), key=lambda x: (-x[1], str(x[0])))}
+    modal_kind, modal_n = max(kind_hist.items(), key=lambda x: x[1])
+
+    # SESSION ATTRIBUTION (AR-188 fix 5). Mandated by the spec ("how much session") and absent from
+    # the artifact, because per_family_attribution is built from by_family_approximated and UNBOUND
+    # rows never enter it -- a family that binds NOTHING is structurally invisible there. The number
+    # goes in precisely because it is the least flattering one available.
+    ws_taught = sum(1 for _n, ec, _am in specs_a for c in ec if c.get("type") == "WAIT_SESSION")
+    ws_unbound = sum(1 for u in a_before["unbound_conditions"] if u["type"] == "WAIT_SESSION")
+    ws_bound_after = sum(
+        1 for (_bb, _ba, _k, fam) in a_after["binding_map"].values() if fam == "WAIT_SESSION"
+    ) - sum(1 for u in a_after["unbound_conditions"] if u["type"] == "WAIT_SESSION")
+
+    # THE 161 DENOMINATOR (AR-188 fix 4). The 155 counts entry_conditions ONLY; the 16 specs also
+    # carry 6 `invalidations` entries that are just as taught. Measured under BOTH enforcement arms
+    # because the arm decides the numerator -- see the artifact note.
+    inval_specs = []
+    for p in sorted(glob.glob(CORPUS_A_GLOB)):
+        d = json.loads(Path(p).read_text(encoding="utf-8"))
+        inval_specs.append(d["spec"].get("invalidations") or [])
+    n_invalidations = sum(len(v) for v in inval_specs)
+    prev_enf = os.environ.get("TF_FAMILY_META_ENFORCED")
+    inval_arms = {}
+    for enf_on in (False, True):
+        os.environ["TF_FAMILY_META_ENFORCED"] = "true" if enf_on else "false"
+        nb = nc = 0
+        for ivs in inval_specs:
+            for iv in ivs:
+                bb = sfb.bind_condition(iv)
+                if bb.bindable:
+                    nb += 1
+                    if not bb.approximation:
+                        nc += 1
+        inval_arms["enforcement_ON" if enf_on else "enforcement_OFF"] = {
+            "n_bindable": nb, "n_bound_and_concrete": nc}
+    if prev_enf is None:
+        os.environ.pop("TF_FAMILY_META_ENFORCED", None)
+    else:
+        os.environ["TF_FAMILY_META_ENFORCED"] = prev_enf
+
     # ------------------------------------------- CENSUS-vs-LIVE RECONCILIATION
     # The frozen R-082 census recorded n_executed_bindable per spec. Summing it and
     # comparing against a LIVE bind is a check against something outside this pipeline.
-    census_bindable = sum(
-        r["census_n_executed_bindable"] for r in a_after["rows"] if r["census_n_executed_bindable"] is not None
-    )
-    live_bindable = a_after["n_bindable"]
-    drift_rows = [
-        {
-            "spec": r["spec"],
-            "census_n_executed_bindable": r["census_n_executed_bindable"],
-            "live_n_bindable": r["n_bindable"],
-            "delta": r["n_bindable"] - r["census_n_executed_bindable"],
-        }
-        for r in a_after["rows"]
-        if r["census_n_executed_bindable"] is not None and r["n_bindable"] != r["census_n_executed_bindable"]
-    ]
+    # ARM COMPARABILITY (AR-188). The frozen census was taken PRE-CLOSURE with the level/zone
+    # flags OFF. The comparable live arm is therefore a_before (post-closure, flags OFF) -- NOT
+    # a_after. The prior version compared census(pre-closure, flags-OFF) against a_after
+    # (post-closure, flags-ON), so the 6 level/zone flips were folded into a delta attributed to
+    # the closure. Varying two things and naming one is how the headline inverted.
+    cen_rows = [r for r in a_before["rows"] if r["census_n_executed_bindable"] is not None]
+    census_bindable = sum(r["census_n_executed_bindable"] for r in cen_rows)
+    census_approx = sum(r["census_n_binding_approximation"] for r in cen_rows)
+    census_concrete = census_bindable - census_approx
+    live_bindable = a_before["n_bindable"]
+    live_approx = a_before["n_binding_approximation"]
+    live_concrete = a_before["n_bound_and_concrete"]
+
+    drift_rows = []
+    for r in cen_rows:
+        if r["n_bindable"] == r["census_n_executed_bindable"]:
+            continue
+        d_concrete = r["n_bound_and_concrete"] - r["census_n_bound_and_concrete"]
+        d_approx = r["n_binding_approximation"] - r["census_n_binding_approximation"]
+        # WHICH KIND of condition vanished decides the direction. This is the field the prior
+        # reconciliation did not read.
+        if d_concrete < 0 and d_approx == 0:
+            vanished = "BOUND_AND_CONCRETE"
+            why = ("The lost condition was CONCRETE, not approximate. Its loss REMOVES a member from "
+                   "the section-6a numerator, so coverage falls -- and because it was concrete it was "
+                   "holding the rate DOWN, so the approximation share rises too. Both metrics pay.")
+        elif d_approx < 0 and d_concrete == 0:
+            vanished = "BINDING_APPROXIMATION"
+            why = ("The lost condition was APPROXIMATE. Its loss removes an approximate member from the "
+                   "rate's denominator, which FLATTERS the rate while leaving the 6a numerator intact.")
+        elif d_concrete < 0 and d_approx < 0:
+            vanished = "MIXED"
+            why = "Both concrete and approximate members were lost; see the per-count deltas."
+        else:
+            vanished = "NET_GAIN_OR_UNCLASSIFIED"
+            why = "Bindability moved without a net loss of either kind; see the per-count deltas."
+        drift_rows.append(
+            {
+                "spec": r["spec"],
+                "census_n_executed_bindable": r["census_n_executed_bindable"],
+                "live_n_bindable": r["n_bindable"],
+                "delta": r["n_bindable"] - r["census_n_executed_bindable"],
+                "census_n_binding_approximation": r["census_n_binding_approximation"],
+                "live_n_binding_approximation": r["n_binding_approximation"],
+                "census_n_bound_and_concrete": r["census_n_bound_and_concrete"],
+                "live_n_bound_and_concrete": r["n_bound_and_concrete"],
+                "delta_bound_and_concrete": d_concrete,
+                "delta_binding_approximation": d_approx,
+                "vanished_condition_was": vanished,
+                "why_this_decides_the_direction": why,
+                "unbound_conditions_in_this_spec_live": [
+                    u for u in a_before["unbound_conditions"] if u["spec"] == r["spec"]
+                ],
+            }
+        )
+
+    # The two comparable arms, both flags-OFF, differing ONLY in the closure.
+    census_rate = rate0(census_approx, census_bindable)
+    census_cov = rate0(census_concrete, a_before["n_taught"])
+    live_rate = rate0(live_approx, live_bindable)
+    live_cov = rate0(live_concrete, a_before["n_taught"])
+    closure_drift = classify_drift(census_rate, live_rate, census_cov, live_cov)
 
     # ---------------------------------------------------------------- CEILING
     census = json.loads(CENSUS_PATH.read_text(encoding="utf-8"))
@@ -282,8 +500,7 @@ def main() -> None:
     )
     assert enf["all_entry_conditions"] == b_total, "enforcement artifact universe size disagrees with mine"
 
-    def rate(num, den):
-        return round(num / den, 4) if den else None
+    rate = rate0
 
     art = {
         "artifact": "dual-denominator-remeasure-2026-07-21",
@@ -316,7 +533,16 @@ def main() -> None:
             "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json",
             "n_specs": len(specs_a),
             "n_taught_conditions": a_after["n_taught"],
-            "role_composition": "spine 102 / confluence 53 / trigger 0 -- derived, see reconciliation",
+            # DERIVED, not typed (AR-188). See RECONCILIATION.corpus_A_role_partition, which now
+            # exists -- the prior string said "see reconciliation" and there was nothing to see.
+            "role_composition": {
+                ("None" if k is None else k): v
+                for k, v in sorted(a_roles.items(), key=lambda x: (-x[1], str(x[0])))
+            },
+            "role_composition_note": (
+                "Counted from the corpus and asserted, not transcribed. trigger == 0 is ASSERTED "
+                "because the never-pool rule depends on it."
+            ),
             "BEFORE_flags_off": {
                 "n_bindable": a_before["n_bindable"],
                 "n_unbound": a_before["n_unbound"],
@@ -324,7 +550,7 @@ def main() -> None:
                 "n_bound_and_concrete": a_before["n_bound_and_concrete"],
                 "binding_approximation_rate": rate(a_before["n_binding_approximation"], a_before["n_bindable"]),
                 "binding_approximation_rate_n": a_before["n_bindable"],
-                "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT": rate(
+                "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT_ENTRY_CONDITIONS": rate(
                     a_before["n_bound_and_concrete"], a_before["n_taught"]
                 ),
                 "section_6a_coverage_n": a_before["n_taught"],
@@ -336,7 +562,7 @@ def main() -> None:
                 "n_bound_and_concrete": a_after["n_bound_and_concrete"],
                 "binding_approximation_rate": rate(a_after["n_binding_approximation"], a_after["n_bindable"]),
                 "binding_approximation_rate_n": a_after["n_bindable"],
-                "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT": rate(
+                "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT_ENTRY_CONDITIONS": rate(
                     a_after["n_bound_and_concrete"], a_after["n_taught"]
                 ),
                 "section_6a_coverage_n": a_after["n_taught"],
@@ -467,18 +693,185 @@ def main() -> None:
                 "exact": a_after["n_bindable"] + a_after["n_unbound"] == a_after["n_taught"],
             },
             "census_vs_live_OUTSIDE_THIS_PIPELINE": {
+                "ARMS_ARE_COMPARABLE": (
+                    "Both sides are flags-OFF and differ ONLY in the closure: census == PRE-closure "
+                    "flags-OFF, live == POST-closure flags-OFF. The prior version compared the "
+                    "pre-closure flags-OFF census against the POST-closure flags-ON arm, so the 6 "
+                    "level/zone flips were folded into a delta attributed to the closure."
+                ),
                 "frozen_census_sum_n_executed_bindable": census_bindable,
                 "live_n_bindable": live_bindable,
                 "delta": live_bindable - census_bindable,
+                "frozen_census_sum_n_binding_approximation": census_approx,
+                "live_n_binding_approximation": live_approx,
+                "frozen_census_sum_n_bound_and_concrete": census_concrete,
+                "live_n_bound_and_concrete": live_concrete,
+                "PRE_closure_flags_off_rate": census_rate,
+                "POST_closure_flags_off_rate": live_rate,
+                "PRE_closure_flags_off_section_6a_coverage": census_cov,
+                "POST_closure_flags_off_section_6a_coverage": live_cov,
                 "drift_rows": drift_rows,
-                "interpretation": (
-                    "A NON-ZERO delta here is a real finding, not noise. The session lane's honest-partial "
-                    "closure makes a WAIT_SESSION condition whose zone the runtime primitive cannot evaluate "
-                    "UNBINDABLE rather than falsely bound. That condition LEAVES the rate's denominator and "
-                    "ENTERS the unbound count -- the rate improves while coverage worsens. This is precisely "
-                    "the vanishing-denominator defect section 6a exists to expose, observed live."
+                # COMPUTED (AR-188 fix 1). What stood here was a fixed string asserting "the rate
+                # improves while coverage worsens ... precisely the vanishing-denominator defect" --
+                # emitted for ANY non-zero delta, in EITHER direction. It was wrong: the rate
+                # DEGRADED here. This verdict is a function of the four figures above and says
+                # different things when they differ.
+                "computed_drift_verdict": closure_drift,
+                "what_this_says_about_the_closure": (
+                    "The honest-partial session closure did NOT flatter itself. It gave up a "
+                    "bound-and-concrete condition, and that cost it on BOTH metrics -- the "
+                    "approximation share rose AND section-6a coverage fell. The section-6a defect is "
+                    "the pattern where a rate improves BECAUSE conditions vanish from its "
+                    "denominator; that is not what this delta is. A closure that pays in both books "
+                    "is evidence the guard is working, not evidence of the defect it guards against."
                 ),
             },
+            # NEW (AR-188 fix 6): the entry the role_composition string told readers to "see".
+            "corpus_A_role_partition": {
+                ("None" if k is None else k): v for k, v in sorted(a_roles.items())
+            },
+            "corpus_A_role_partition_sum": sum(a_roles.values()),
+            "corpus_A_trigger_role_count_ASSERTED_ZERO": a_roles.get("trigger", 0),
+        },
+        # ------------------------------------------------------ AR-188 fix 3
+        "NUMERATOR_CONTINUITY": {
+            "why_this_block_exists": (
+                "The headline 0/155 -> 6/155 rests on a numerator that LOST A MEMBER between the "
+                "census and this run. Comparing a post-closure numerator against a pre-closure one "
+                "and calling the difference an effect of the flags is an arm error. The "
+                "pre-closure-COMPARABLE figures are stated here so the headline cannot be read "
+                "without them."
+            ),
+            "pre_closure_flags_off_coverage": f"{census_concrete}/{a_before['n_taught']}",
+            "post_closure_flags_off_coverage": f"{live_concrete}/{a_before['n_taught']}",
+            "pre_closure_COMPARABLE_flags_on_coverage": (
+                f"{census_concrete + total_flipped}/{a_before['n_taught']}"
+            ),
+            "post_closure_flags_on_coverage": f"{a_after['n_bound_and_concrete']}/{a_after['n_taught']}",
+            "THE_COMPARABLE_HEADLINE": (
+                f"{census_concrete + total_flipped}/{a_before['n_taught']} -> "
+                f"{a_after['n_bound_and_concrete']}/{a_after['n_taught']} "
+                "(pre-closure-comparable flags-ON -> post-closure flags-ON). The 6 level/zone flips "
+                "are present on BOTH sides; the difference is the one condition the closure gave up."
+            ),
+            "vanishing_count_correction": {
+                "spec_said": f"{a_before['n_taught'] - census_bindable} of {a_before['n_taught']} were vanishing",
+                "corrects_to": f"{a_before['n_unbound']} of {a_before['n_taught']}",
+                "why": (
+                    "The spec's figure was the PRE-closure unbound count. Post-closure the honest-partial "
+                    "closure moved one more condition out of the bindable set, so the vanishing count is "
+                    "one higher. Stating the old number beside the new one is the correction."
+                ),
+            },
+        },
+        # ------------------------------------------------------ AR-188 fix 4
+        "COVERAGE_OVER_GENUINELY_ALL_TAUGHT": {
+            "the_defect_this_fixes": (
+                "The per-arm key was named '..._over_ALL_TAUGHT' but its denominator was 155 = "
+                "entry_conditions ONLY. The same 16 specs also carry "
+                f"{n_invalidations} `invalidations` entries, which are taught too. A key whose name "
+                "claims ALL and whose denominator excludes a taught population is the same "
+                "caption-is-a-claim defect this artifact was sent back to fix."
+            ),
+            "disposition": (
+                "BOTH. (a) The per-arm key was RENAMED to "
+                "'section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT_ENTRY_CONDITIONS' so its "
+                "name states its actual denominator. (b) The completed 161 denominator is reported "
+                "here. Renaming alone would leave the complete figure unstated; completing alone "
+                "would force a single enforcement arm to be picked silently -- see below."
+            ),
+            "n_taught_entry_conditions": a_after["n_taught"],
+            "n_taught_invalidations": n_invalidations,
+            "n_taught_ALL": a_after["n_taught"] + n_invalidations,
+            "invalidations_binding_by_enforcement_arm": inval_arms,
+            "WHY_TWO_ARMS_AND_NOT_ONE_NUMBER": (
+                "TF_FAMILY_META_ENFORCED is a SEPARATE flag from the level/zone pair, and it decides "
+                "whether these entries bind concrete or approximate. It defaults OFF, which is the "
+                "configuration this generator runs in. So the completed coverage has two honest "
+                "values, not one, and which is 'the' number is a configuration choice -- stating one "
+                "without its arm would repeat the error this artifact is being repaired for."
+            ),
+            "coverage_over_161_enforcement_OFF_this_runs_config": rate(
+                a_after["n_bound_and_concrete"] + inval_arms["enforcement_OFF"]["n_bound_and_concrete"],
+                a_after["n_taught"] + n_invalidations,
+            ),
+            "coverage_over_161_enforcement_ON": rate(
+                a_after["n_bound_and_concrete"] + inval_arms["enforcement_ON"]["n_bound_and_concrete"],
+                a_after["n_taught"] + n_invalidations,
+            ),
+            "numerators": {
+                "enforcement_OFF": (
+                    f"{a_after['n_bound_and_concrete']} entry + "
+                    f"{inval_arms['enforcement_OFF']['n_bound_and_concrete']} invalidations"
+                ),
+                "enforcement_ON": (
+                    f"{a_after['n_bound_and_concrete']} entry + "
+                    f"{inval_arms['enforcement_ON']['n_bound_and_concrete']} invalidations"
+                ),
+            },
+        },
+        # ------------------------------------------------------ AR-188 fix 5
+        "SESSION_ATTRIBUTION": {
+            "why_it_was_missing": (
+                "The spec mandates session attribution ('how much session'). per_family_attribution "
+                "is built from by_family_approximated, which only ever sees BOUND rows -- so a family "
+                "that binds NOTHING has no key there and is structurally invisible. Its absence read "
+                "as 'nothing to report' when it meant 'recovered nothing'."
+            ),
+            "n_WAIT_SESSION_taught": ws_taught,
+            "n_WAIT_SESSION_bound_flags_off": ws_taught - ws_unbound,
+            "n_WAIT_SESSION_bound_flags_on": ws_bound_after,
+            "n_WAIT_SESSION_unbound": ws_unbound,
+            "n_WAIT_SESSION_de_approximated_in_this_run": 0,
+            "THE_HEADLINE": (
+                f"0 of {ws_taught} bound - 0 of up-to-17 recovered in this measurement's configuration."
+            ),
+            "recoverable_target_population_17": {
+                "value": 17,
+                "PROVENANCE": "EXTERNAL GRADED CONSTANT -- not derived by this generator.",
+                "source": (
+                    "docs/designs/spec-dual-denominator-remeasure-2026-07-20.md line 63 "
+                    "('recovers up to 17 of 27'), resting on the graded 17-genuine / 9-mis-typed "
+                    "split of the 27 WAIT_SESSION rows recorded in ADVISOR-RULINGS.md."
+                ),
+                "why_flagged": (
+                    "This generator can count the 27 and can show 0 bound. It CANNOT re-derive the 17 "
+                    "-- that came from a human-graded read of the teaching. It is cited rather than "
+                    "recomputed, and labelled so no reader mistakes it for a measured value here."
+                ),
+            },
+            "unflattering_reading": (
+                f"All {ws_taught} WAIT_SESSION conditions in Corpus A are UNBOUND, in both arms. The "
+                "session lane -- the only family whose runtime primitive is real -- recovered nothing "
+                "in this configuration, and the honest-partial closure moved the count the wrong way "
+                "(26 unbound pre-closure, 27 post). This is the least flattering number available and "
+                "it is stated for that reason."
+            ),
+        },
+        # ------------------------------------------------------ AR-188 fix 6
+        "SELF_ACCOUNTING": {
+            "n_asserts_in_this_generator": count_own_asserts(),
+            "n_asserts_note": (
+                "Counted from this file's own AST at runtime, not typed. A prior report claimed "
+                "'eight asserts, each red-proved' while the file held twelve. Two of those twelve "
+                "could not fire and have been dealt with: the Corpus-B role-partition assert was "
+                "algebraically implied by the derivation assert above it and is DELETED (the property "
+                "is still reported); the output-path collision guard sat AFTER the write it purported "
+                "to guard and is MOVED to the top of main() where it can actually stop the run."
+            ),
+            "population_A_kind_histogram_over_corpus_A": kind_counts,
+            "n_distinct_kinds_observed": len(kind_hist),
+            "modal_kind": ("None" if modal_kind is None else modal_kind),
+            "modal_kind_n": modal_n,
+            "non_discriminating_control_reason_CORRECTED": (
+                f"The declared non-discriminating control gave its reason as 'only three kinds occur'. "
+                f"That is FALSE: {len(kind_hist)} occur, and the modal value is "
+                f"'{'None' if modal_kind is None else modal_kind}' at n={modal_n} -- conditions no kind "
+                "classifies, the large majority of the corpus. The control's CONCLUSION (that the kind "
+                "axis does not discriminate here) survives; its stated REASON did not, and a reason "
+                "that is false is not a weaker justification, it is an unfalsifiable one. The "
+                "histogram is emitted so the reason can be checked instead of believed."
+            ),
         },
         "WHAT_THIS_MAY_NOT_DO": [
             "May not claim a fidelity result the grades did not license. The flip's claim covers two kinds "
@@ -498,8 +891,6 @@ def main() -> None:
         + "\n".join(f"  {k}: {before_hashes.get(k)} -> {after_hashes.get(k)}" for k in before_hashes
                     if before_hashes.get(k) != after_hashes.get(k))
     )
-    assert OUT_PATH not in APPEND_ONLY_GUARDED, "output path collides with a guarded prior artifact"
-
     print(f"OK  wrote {OUT_PATH.relative_to(REPO_ROOT)}")
     print(f"OK  corpus A: {len(specs_a)} specs / {a_after['n_taught']} taught conditions")
     print(f"      rate BEFORE {rate(a_before['n_binding_approximation'], a_before['n_bindable'])} "
@@ -508,6 +899,13 @@ def main() -> None:
     print(f"      6a coverage BEFORE {rate(a_before['n_bound_and_concrete'], a_before['n_taught'])} "
           f"AFTER {rate(a_after['n_bound_and_concrete'], a_after['n_taught'])} (n={a_after['n_taught']})")
     print(f"      unbound {a_after['n_unbound']} of {a_after['n_taught']}")
+    print(f"      pre-closure-COMPARABLE 6a coverage {census_concrete + total_flipped}/{a_before['n_taught']}"
+          f" -> {a_after['n_bound_and_concrete']}/{a_after['n_taught']} (flags-ON both sides)")
+    print(f"OK  closure drift (flags-OFF both arms): {closure_drift['verdict']}")
+    print(f"      rate {census_rate} -> {live_rate} | 6a coverage {census_cov} -> {live_cov}")
+    print(f"OK  session attribution: 0 of {ws_taught} bound - 0 of up-to-17 recovered")
+    print(f"OK  self-accounting: {count_own_asserts()} asserts | {len(kind_hist)} kinds, "
+          f"modal '{'None' if modal_kind is None else modal_kind}' n={modal_n}")
     print(f"OK  corpus B: {len(b_specs)} specs / {b_total} taught conditions")
     print(f"      never-evaluated-by-GAP {never_by_gap} (3 paths agree) | by-DESIGN {never_by_design} (never merged)")
     print(f"OK  reconciliation: {roles['spine']}+{roles['confluence']}+{roles['trigger']} == {b_total}")

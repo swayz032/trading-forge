@@ -22,7 +22,11 @@
   "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json",
   "n_specs": 16,
   "n_taught_conditions": 155,
-  "role_composition": "spine 102 / confluence 53 / trigger 0 -- derived, see reconciliation",
+  "role_composition": {
+   "spine": 102,
+   "confluence": 53
+  },
+  "role_composition_note": "Counted from the corpus and asserted, not transcribed. trigger == 0 is ASSERTED because the never-pool rule depends on it.",
   "BEFORE_flags_off": {
    "n_bindable": 128,
    "n_unbound": 27,
@@ -30,7 +34,7 @@
    "n_bound_and_concrete": 0,
    "binding_approximation_rate": 1.0,
    "binding_approximation_rate_n": 128,
-   "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT": 0.0,
+   "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT_ENTRY_CONDITIONS": 0.0,
    "section_6a_coverage_n": 155
   },
   "AFTER_flags_on_HYPOTHETICAL": {
@@ -40,7 +44,7 @@
    "n_bound_and_concrete": 6,
    "binding_approximation_rate": 0.9531,
    "binding_approximation_rate_n": 128,
-   "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT": 0.0387,
+   "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT_ENTRY_CONDITIONS": 0.0387,
    "section_6a_coverage_n": 155
   },
   "THE_UNBOUND_COUNT_TRAVELS_BESIDE_THE_RATE": {
@@ -290,7 +294,9 @@
     "binding_approximation_rate_n": 9,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 11,
-    "census_n_executed_bindable": 9
+    "census_n_executed_bindable": 9,
+    "census_n_binding_approximation": 9,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "0xygpCMwxbQ__s0",
@@ -303,7 +309,9 @@
     "binding_approximation_rate_n": 9,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 12,
-    "census_n_executed_bindable": 9
+    "census_n_executed_bindable": 9,
+    "census_n_binding_approximation": 9,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "4cT8WTyxhYY__s0",
@@ -316,7 +324,9 @@
     "binding_approximation_rate_n": 8,
     "coverage_bound_and_concrete_over_all_taught": 0.1111,
     "coverage_n": 9,
-    "census_n_executed_bindable": 8
+    "census_n_executed_bindable": 8,
+    "census_n_binding_approximation": 8,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "CLDEIsNpVRc__s0",
@@ -329,7 +339,9 @@
     "binding_approximation_rate_n": 8,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 10,
-    "census_n_executed_bindable": 8
+    "census_n_executed_bindable": 8,
+    "census_n_binding_approximation": 8,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "DLwVqcLRcfw__s0",
@@ -342,7 +354,9 @@
     "binding_approximation_rate_n": 7,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 8,
-    "census_n_executed_bindable": 7
+    "census_n_executed_bindable": 7,
+    "census_n_binding_approximation": 7,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "DLwVqcLRcfw__s1",
@@ -355,7 +369,9 @@
     "binding_approximation_rate_n": 6,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 6,
-    "census_n_executed_bindable": 6
+    "census_n_executed_bindable": 6,
+    "census_n_binding_approximation": 6,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "E9MzEC_yNoM__s0",
@@ -368,7 +384,9 @@
     "binding_approximation_rate_n": 2,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 2,
-    "census_n_executed_bindable": 2
+    "census_n_executed_bindable": 2,
+    "census_n_binding_approximation": 2,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "E9MzEC_yNoM__s1",
@@ -381,7 +399,9 @@
     "binding_approximation_rate_n": 6,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 10,
-    "census_n_executed_bindable": 6
+    "census_n_executed_bindable": 6,
+    "census_n_binding_approximation": 6,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "IyFioFkRgWo__s0",
@@ -394,7 +414,9 @@
     "binding_approximation_rate_n": 6,
     "coverage_bound_and_concrete_over_all_taught": 0.1667,
     "coverage_n": 6,
-    "census_n_executed_bindable": 6
+    "census_n_executed_bindable": 6,
+    "census_n_binding_approximation": 6,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "PVMgOxHUqFA__s0",
@@ -407,7 +429,9 @@
     "binding_approximation_rate_n": 8,
     "coverage_bound_and_concrete_over_all_taught": 0.125,
     "coverage_n": 8,
-    "census_n_executed_bindable": 8
+    "census_n_executed_bindable": 8,
+    "census_n_binding_approximation": 8,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "R5L890juvRw__s0",
@@ -420,7 +444,9 @@
     "binding_approximation_rate_n": 5,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 8,
-    "census_n_executed_bindable": 5
+    "census_n_executed_bindable": 5,
+    "census_n_binding_approximation": 5,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "W7nlnHTUZQU__s0",
@@ -433,7 +459,9 @@
     "binding_approximation_rate_n": 9,
     "coverage_bound_and_concrete_over_all_taught": 0.1,
     "coverage_n": 10,
-    "census_n_executed_bindable": 10
+    "census_n_executed_bindable": 10,
+    "census_n_binding_approximation": 9,
+    "census_n_bound_and_concrete": 1
    },
    {
     "spec": "WEhmadJArQo__s0",
@@ -446,7 +474,9 @@
     "binding_approximation_rate_n": 22,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 22,
-    "census_n_executed_bindable": 22
+    "census_n_executed_bindable": 22,
+    "census_n_binding_approximation": 22,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "_LS6qcSlDCs__s0",
@@ -459,7 +489,9 @@
     "binding_approximation_rate_n": 4,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 6,
-    "census_n_executed_bindable": 4
+    "census_n_executed_bindable": 4,
+    "census_n_binding_approximation": 4,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "dV7chra4u4Q__s0",
@@ -472,7 +504,9 @@
     "binding_approximation_rate_n": 7,
     "coverage_bound_and_concrete_over_all_taught": 0.0,
     "coverage_n": 8,
-    "census_n_executed_bindable": 7
+    "census_n_executed_bindable": 7,
+    "census_n_binding_approximation": 7,
+    "census_n_bound_and_concrete": 0
    },
    {
     "spec": "kFyD3H6I1I8__s0",
@@ -485,7 +519,9 @@
     "binding_approximation_rate_n": 12,
     "coverage_bound_and_concrete_over_all_taught": 0.1053,
     "coverage_n": 19,
-    "census_n_executed_bindable": 12
+    "census_n_executed_bindable": 12,
+    "census_n_binding_approximation": 12,
+    "census_n_bound_and_concrete": 0
    }
   ]
  },
@@ -594,19 +630,125 @@
    "exact": true
   },
   "census_vs_live_OUTSIDE_THIS_PIPELINE": {
+   "ARMS_ARE_COMPARABLE": "Both sides are flags-OFF and differ ONLY in the closure: census == PRE-closure flags-OFF, live == POST-closure flags-OFF. The prior version compared the pre-closure flags-OFF census against the POST-closure flags-ON arm, so the 6 level/zone flips were folded into a delta attributed to the closure.",
    "frozen_census_sum_n_executed_bindable": 129,
    "live_n_bindable": 128,
    "delta": -1,
+   "frozen_census_sum_n_binding_approximation": 128,
+   "live_n_binding_approximation": 128,
+   "frozen_census_sum_n_bound_and_concrete": 1,
+   "live_n_bound_and_concrete": 0,
+   "PRE_closure_flags_off_rate": 0.9922,
+   "POST_closure_flags_off_rate": 1.0,
+   "PRE_closure_flags_off_section_6a_coverage": 0.0065,
+   "POST_closure_flags_off_section_6a_coverage": 0.0,
    "drift_rows": [
     {
      "spec": "W7nlnHTUZQU__s0",
      "census_n_executed_bindable": 10,
      "live_n_bindable": 9,
-     "delta": -1
+     "delta": -1,
+     "census_n_binding_approximation": 9,
+     "live_n_binding_approximation": 9,
+     "census_n_bound_and_concrete": 1,
+     "live_n_bound_and_concrete": 0,
+     "delta_bound_and_concrete": -1,
+     "delta_binding_approximation": 0,
+     "vanished_condition_was": "BOUND_AND_CONCRETE",
+     "why_this_decides_the_direction": "The lost condition was CONCRETE, not approximate. Its loss REMOVES a member from the section-6a numerator, so coverage falls -- and because it was concrete it was holding the rate DOWN, so the approximation share rises too. Both metrics pay.",
+     "unbound_conditions_in_this_spec_live": [
+      {
+       "spec": "W7nlnHTUZQU__s0",
+       "type": "WAIT_SESSION",
+       "condition_id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6"
+      }
+     ]
     }
    ],
-   "interpretation": "A NON-ZERO delta here is a real finding, not noise. The session lane's honest-partial closure makes a WAIT_SESSION condition whose zone the runtime primitive cannot evaluate UNBINDABLE rather than falsely bound. That condition LEAVES the rate's denominator and ENTERS the unbound count -- the rate improves while coverage worsens. This is precisely the vanishing-denominator defect section 6a exists to expose, observed live."
+   "computed_drift_verdict": {
+    "verdict": "SAME_DIRECTION__BOTH_DEGRADED",
+    "reading": "Both metrics moved the SAME way (both degraded). This is NOT the section-6a defect: a vanishing denominator flatters the rate while costing coverage, and that did not happen here. A change that pays in BOTH books is not gaming either.",
+    "delta_rate_raw": 0.0078,
+    "delta_coverage_raw": -0.0065,
+    "rate_quality_delta_positive_is_better": -0.0078,
+    "coverage_quality_delta_positive_is_better": -0.0065,
+    "how_to_falsify": "Change either arm's rate or coverage so the two quality deltas differ in sign and this verdict changes. It is a function of four numbers and nothing else."
+   },
+   "what_this_says_about_the_closure": "The honest-partial session closure did NOT flatter itself. It gave up a bound-and-concrete condition, and that cost it on BOTH metrics -- the approximation share rose AND section-6a coverage fell. The section-6a defect is the pattern where a rate improves BECAUSE conditions vanish from its denominator; that is not what this delta is. A closure that pays in both books is evidence the guard is working, not evidence of the defect it guards against."
+  },
+  "corpus_A_role_partition": {
+   "confluence": 53,
+   "spine": 102
+  },
+  "corpus_A_role_partition_sum": 155,
+  "corpus_A_trigger_role_count_ASSERTED_ZERO": 0
+ },
+ "NUMERATOR_CONTINUITY": {
+  "why_this_block_exists": "The headline 0/155 -> 6/155 rests on a numerator that LOST A MEMBER between the census and this run. Comparing a post-closure numerator against a pre-closure one and calling the difference an effect of the flags is an arm error. The pre-closure-COMPARABLE figures are stated here so the headline cannot be read without them.",
+  "pre_closure_flags_off_coverage": "1/155",
+  "post_closure_flags_off_coverage": "0/155",
+  "pre_closure_COMPARABLE_flags_on_coverage": "7/155",
+  "post_closure_flags_on_coverage": "6/155",
+  "THE_COMPARABLE_HEADLINE": "7/155 -> 6/155 (pre-closure-comparable flags-ON -> post-closure flags-ON). The 6 level/zone flips are present on BOTH sides; the difference is the one condition the closure gave up.",
+  "vanishing_count_correction": {
+   "spec_said": "26 of 155 were vanishing",
+   "corrects_to": "27 of 155",
+   "why": "The spec's figure was the PRE-closure unbound count. Post-closure the honest-partial closure moved one more condition out of the bindable set, so the vanishing count is one higher. Stating the old number beside the new one is the correction."
   }
+ },
+ "COVERAGE_OVER_GENUINELY_ALL_TAUGHT": {
+  "the_defect_this_fixes": "The per-arm key was named '..._over_ALL_TAUGHT' but its denominator was 155 = entry_conditions ONLY. The same 16 specs also carry 6 `invalidations` entries, which are taught too. A key whose name claims ALL and whose denominator excludes a taught population is the same caption-is-a-claim defect this artifact was sent back to fix.",
+  "disposition": "BOTH. (a) The per-arm key was RENAMED to 'section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT_ENTRY_CONDITIONS' so its name states its actual denominator. (b) The completed 161 denominator is reported here. Renaming alone would leave the complete figure unstated; completing alone would force a single enforcement arm to be picked silently -- see below.",
+  "n_taught_entry_conditions": 155,
+  "n_taught_invalidations": 6,
+  "n_taught_ALL": 161,
+  "invalidations_binding_by_enforcement_arm": {
+   "enforcement_OFF": {
+    "n_bindable": 6,
+    "n_bound_and_concrete": 6
+   },
+   "enforcement_ON": {
+    "n_bindable": 6,
+    "n_bound_and_concrete": 0
+   }
+  },
+  "WHY_TWO_ARMS_AND_NOT_ONE_NUMBER": "TF_FAMILY_META_ENFORCED is a SEPARATE flag from the level/zone pair, and it decides whether these entries bind concrete or approximate. It defaults OFF, which is the configuration this generator runs in. So the completed coverage has two honest values, not one, and which is 'the' number is a configuration choice -- stating one without its arm would repeat the error this artifact is being repaired for.",
+  "coverage_over_161_enforcement_OFF_this_runs_config": 0.0745,
+  "coverage_over_161_enforcement_ON": 0.0373,
+  "numerators": {
+   "enforcement_OFF": "6 entry + 6 invalidations",
+   "enforcement_ON": "6 entry + 0 invalidations"
+  }
+ },
+ "SESSION_ATTRIBUTION": {
+  "why_it_was_missing": "The spec mandates session attribution ('how much session'). per_family_attribution is built from by_family_approximated, which only ever sees BOUND rows -- so a family that binds NOTHING has no key there and is structurally invisible. Its absence read as 'nothing to report' when it meant 'recovered nothing'.",
+  "n_WAIT_SESSION_taught": 27,
+  "n_WAIT_SESSION_bound_flags_off": 0,
+  "n_WAIT_SESSION_bound_flags_on": 0,
+  "n_WAIT_SESSION_unbound": 27,
+  "n_WAIT_SESSION_de_approximated_in_this_run": 0,
+  "THE_HEADLINE": "0 of 27 bound - 0 of up-to-17 recovered in this measurement's configuration.",
+  "recoverable_target_population_17": {
+   "value": 17,
+   "PROVENANCE": "EXTERNAL GRADED CONSTANT -- not derived by this generator.",
+   "source": "docs/designs/spec-dual-denominator-remeasure-2026-07-20.md line 63 ('recovers up to 17 of 27'), resting on the graded 17-genuine / 9-mis-typed split of the 27 WAIT_SESSION rows recorded in ADVISOR-RULINGS.md.",
+   "why_flagged": "This generator can count the 27 and can show 0 bound. It CANNOT re-derive the 17 -- that came from a human-graded read of the teaching. It is cited rather than recomputed, and labelled so no reader mistakes it for a measured value here."
+  },
+  "unflattering_reading": "All 27 WAIT_SESSION conditions in Corpus A are UNBOUND, in both arms. The session lane -- the only family whose runtime primitive is real -- recovered nothing in this configuration, and the honest-partial closure moved the count the wrong way (26 unbound pre-closure, 27 post). This is the least flattering number available and it is stated for that reason."
+ },
+ "SELF_ACCOUNTING": {
+  "n_asserts_in_this_generator": 12,
+  "n_asserts_note": "Counted from this file's own AST at runtime, not typed. A prior report claimed 'eight asserts, each red-proved' while the file held twelve. Two of those twelve could not fire and have been dealt with: the Corpus-B role-partition assert was algebraically implied by the derivation assert above it and is DELETED (the property is still reported); the output-path collision guard sat AFTER the write it purported to guard and is MOVED to the top of main() where it can actually stop the run.",
+  "population_A_kind_histogram_over_corpus_A": {
+   "None": 138,
+   "named_sr_level": 10,
+   "order_block_edge": 4,
+   "swing": 3
+  },
+  "n_distinct_kinds_observed": 4,
+  "modal_kind": "None",
+  "modal_kind_n": 138,
+  "non_discriminating_control_reason_CORRECTED": "The declared non-discriminating control gave its reason as 'only three kinds occur'. That is FALSE: 4 occur, and the modal value is 'None' at n=138 -- conditions no kind classifies, the large majority of the corpus. The control's CONCLUSION (that the kind axis does not discriminate here) survives; its stated REASON did not, and a reason that is false is not a weaker justification, it is an unfalsifiable one. The histogram is emitted so the reason can be checked instead of believed."
  },
  "WHAT_THIS_MAY_NOT_DO": [
   "May not claim a fidelity result the grades did not license. The flip's claim covers two kinds (named_sr_level, order_block_edge); swing stays approximate. The session lane closed HONEST-PARTIAL with a per-row-labeled residue including 5 rows nobody can explain.",
