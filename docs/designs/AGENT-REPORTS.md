@@ -4,6 +4,24 @@
 
 ---
 
+## AR-190 · 2026-07-21 · **THE DUAL-CONFIGURATION DISPOSITION IS DISPATCHED** (R-199 §2) — and its single blocking requirement is that **the caveat be a COMPUTATION, NOT A SENTENCE.** ★ **This artifact's headline defect was a hardcoded caption; I am not letting its correction ship a second one.** The re-grade follows it.
+
+**1. ★★ THE ORDER OF OPERATIONS IS DELIBERATE: FIX FIRST, THEN RE-GRADE.** R-199 §4 dispatches the artifact re-grade — **but the ruled disposition is not yet in the artifact**, and a grader that arrives before it would grade a state we already know is superseded. **So the disposition lands first and the grader sees the final artifact.** Small, scoped, two files.
+
+**2. ★★★ THE ONE THING THAT MATTERS IN THE BRIEF: *"DO NOT REPLACE ONE CAPTION WITH ANOTHER."*** The artifact's convicted defect was **prose that printed regardless of the data.** ★ **A provenance caveat is exactly the shape that becomes a hardcoded sentence** — *"6 of this margin rests on a withdrawn claim"* is a fact today and could be typed once and left to rot. **So the requirement is: DERIVE the margin and its composition from the per-condition data, such that if the `INVALIDATE` contribution changed, the caveat's NUMBERS WOULD CHANGE WITH IT — and DEMONSTRATE it by perturbation.** **A caveat that cannot move is a caption wearing a footnote's clothes.**
+
+**3. ★ THE DECISIVE FACT YOUR RULING ADDED, and it is what makes 6/161 primary rather than merely conservative:** **6 of the 12/161 margin rests on `INVALIDATE`'s `approximation=False` — a claim WITHDRAWN as a convicted pointer lie** (its primitive is never called in production; the enforcement build corrected it to `True`). ★ **The larger figure is partly built on a retraction. That is not a matter of taste between two configurations — it is one number resting on something we already took back**, and the artifact must say so **in derived terms.**
+
+**4. NEITHER CONFIGURATION MAY BE SILENTLY DROPPED**, and **`6/161` must be STRUCTURALLY primary — not merely first in reading order.** *"A consumer taking one number must get this one."* **Reading order is not a contract; structure is.**
+
+**5. ★ AND I CARRIED THE PREDECESSOR'S SELF-CATCH FORWARD AS AN INSTRUCTION.** The last agent **caught itself nearly committing a dead assert INSIDE the commit removing dead asserts.** So this brief requires: ***"Every assert you add or touch: state whether it CAN fire, and how you proved that."*** **The defect class most likely to recur is the one you are currently removing** — that is now written into the brief rather than hoped for.
+
+**6. YOUR §2 POSTURE IS RECORDED AS THE STANDING FORM, and I want it stated in my own words so I am bound by it too:** **when a ruled number meets a measurement that disagrees — report both, adopt neither, bring it to the ruling. Never override, never quietly comply.** ★ **The agent did that with your number. I have quietly complied before** (I relayed a 16-spec census as corpus-wide rather than surfacing its bound), **and quiet compliance is the failure that looks most like cooperation.**
+
+**7. SEQUENCE FROM HERE:** disposition lands → **artifact re-grade** (independent, doer≠grader) → **T1 on the GRADED artifact** → the flag-promotion question under the measurement-vs-ship form. **Nothing about production changes at any of those steps until promotion is separately ruled.**
+
+**Holds:** flags OFF · every AFTER figure a labeled hypothetical · the 77 sealed.
+
 ## AR-189 · 2026-07-21 · ★★ **THE CAPTION IS DEAD — replaced by a COMPUTED verdict that returns `SAME_DIRECTION__BOTH_DEGRADED` on the real data and a DIFFERENT verdict on each of 5 patterns.** ★★★ **AND IT DIVERGED FROM YOUR RULED NUMBER — with cause. `6/161 = 0.0373` holds only under a flag that defaults OFF; in this generator's actual config it is 12/161 = 0.0745. BOTH are reported; NEITHER was adopted silently. Your ruling wanted.**
 
 **1. ★★ THE FIX I MOST WANTED, AND IT IS PROVEN BY DISCRIMINATION.** `classify_drift()` takes four numbers and was **fed five input patterns, returning five distinct verdicts** — *including `OPPOSITE_DIRECTIONS__SECTION_6A_DEFECT` for the inverted case the old string falsely claimed.* **On the real data it returns `SAME_DIRECTION__BOTH_DEGRADED`.** ★ **That is the test I set — feed it both directions and confirm it says different things — and it passes.** **An interpretation that can only say one thing is a caption; this one can say five and picks by the data.** Verified in the committed artifact by me.
