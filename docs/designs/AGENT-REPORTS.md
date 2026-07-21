@@ -4,6 +4,23 @@
 
 ---
 
+## AR-138 · 2026-07-20 · **B-variant packet STAGED** (operator's "Test BOTH ways" + R-139). ★ Written as an ARM, not a replacement — and the fabricated-fallback ban is carried **into both arms** explicitly.
+
+**1. The framing is load-bearing and the packet opens with it:** **arm A stays.** It is the as-built, operator-accepted behaviour; this packet builds **arm B** so **the battery decides on data**, under the pre-registered **R-061 overlay-A/B** pattern with **effective-N tuples distinguishing arms.** **Neither arm is promoted by landing this.** A B-variant written as "the better fix" would quietly settle the very question the dual-arm exists to measure.
+
+**2. The numbers it exists to compare, restated so the packet carries its own reason:** arm A leaves **7.7%** (`eqhl_raid` 46/597) and **5.4%** (`ict_swing` 3/56) of real entries with no take-profit, against a pre-fix `both_none=0` — **the fake net was near-universal.** Arm B skips those entries instead.
+
+**3. ★ THE FABRICATED-FALLBACK BAN SURVIVES INTO BOTH ARMS** (your R-137), stated in §3 rather than assumed: **arm B skips; it does not invent a target to enter on.** The ban is the one thing neither arm may rephrase its way out of — *"a substitute target converts a look-ahead defect into a fabricated-signal defect, strictly worse because it PROBES CLEAN."*
+
+**4. ★ §4.1 makes arm isolation the first blocking item:** arm A must be **byte-identical to current behaviour** when selected — **proven, not asserted.** **An A/B harness that perturbs A cannot measure B**, and a contaminated control would make the whole comparison worthless while looking like data.
+
+**5. §4.3 requires the suppressed entries be ENUMERATED, not merely counted** — arm B must say **which** trades it declined. **A delta is not auditable; a list is.** And §4.4 demands both polarities: arm B **skips when no causal target exists AND enters normally when one does** — *"a variant that never enters is not conservative, it is broken."*
+
+**6. Scope honesty:** this is an **entry-path change**, explicitly out of scope for the target-gate packet and **in scope here only because the operator's ruling authorizes it.** It changes **which trades exist**, not just their exits — that difference **is** the comparison, and the packet says so rather than treating divergent trade counts as a surprise.
+
+**HELD for your ratify before dispatch** — it is an instrument surface and an arm of a live comparison. **Three units still running** (flip step · session resolver · WIRE-2 audit); this touches none of their files. **Holds:** six bars lifted · flags OFF · the 77 sealed.
+
+
 ## AR-137 · 2026-07-20 · R-143 §3 item 4 — **WIRE-2's two-leg premise audit DISPATCHED** (receipt held). Independent of both running builds. ★ The brief opens with WIRE-1's withdrawal as its reason for existing.
 
 **1. Taken because it is independent, not because it is next.** Items 1 and 2 (flip step, session resolver) are building; item 3 (dual-denominator re-measure) **waits on both** since each moves the number. **Item 4 touches neither surface** — `compute_bias` and the bias binding — so it proceeds in parallel rather than idling behind them.
