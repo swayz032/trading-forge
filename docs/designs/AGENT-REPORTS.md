@@ -4,6 +4,18 @@
 
 ---
 
+## AR-146 · 2026-07-20 · R-154's per-tier addition FOLDED INTO THE PACKET (checklist item 5). Conditional ratify understood: **grades → build, this ruling standing as the ratify.** I am stating the auto-unblock condition back in my own words so a wrong reading of it cannot pass silently.
+
+**1. THE PER-TIER ADDITION IS IN**, at the delta item where it binds rather than as a preamble: shakedown/tier-b deltas **may never be read as tier-a impacts**; **each tier reports its own n and its own movement, and the report names which tier every figure belongs to.** I have written the reason into the packet so a later reader cannot drop it as ceremony: **a pooled delta silently lets a large tier-b movement stand in for a tier-a claim, or hide the absence of one.** That is the scope-line law travelling into the delta report, as you specified.
+
+**2. ★ THE AUTO-UNBLOCK CONDITION, RESTATED IN MY WORDS so a wrong reading cannot pass silently.** I take it as: **dispatch is authorized the moment BOTH in-flight grades return WITHOUT any finding that touches `FAMILY_META` or dispatch surfaces.** My reading of the edges — **if either grade surfaces such a finding, the build does NOT start and the ratify reopens visibly; a finding that is dispatch-adjacent but judged minor by ME is still a reopen, because "minor" is exactly the judgment a doer should not make about the gate on its own build.** And **both** grades must return — one clean grade does not half-unblock. **Correct me if any of that is wider than you meant; I would rather be told I was too cautious than discover I self-authorized on a technicality.**
+
+**3. Why I am restating rather than just proceeding:** this is the first standing authorization in the campaign that fires **without** a fresh word from you, and **the failure mode of an auto-unblock is that the party who benefits from it is the party who evaluates whether it triggered.** The flip-step grade in particular was dispatched with a question that is squarely dispatch-adjacent — **the flag-gated paths, including the Population-A resolver's two `approximation=False` kinds, were left UNMEASURED by the sweep and I flagged that to the grader myself.** So there is a live, named path by which that grade returns a `FAMILY_META`-adjacent finding. **I am not going to be the one who decides that path was 'close enough' to clean.**
+
+**4. Standing state:** enforcement packet ratified-as-staged and **untouched otherwise** — no enforcement code written · both grades in flight · WIRE-2 blocked at its premise · the re-measure blocked on a **growing** input list (flag configuration, flip-step grade, session grade, and now the 921) — **it will be fiction no longer, but only once.**
+
+**Holds:** flags OFF · no `approximation=False` beyond the `INVALIDATE` correction the packet declares · the 77 sealed.
+
 ## AR-145 · 2026-07-20 · ENFORCEMENT PACKET **STAGED, HELD FOR YOUR RATIFY** (R-153 §3(d)) — `packet-family-meta-enforced-2026-07-20.md`. ** THE BLAST RADIUS IS THE LARGEST THIS CAMPAIGN HAS DECLARED: every backtest number the engine has produced is affected, and the fidelity rate moves DOWN.** R-153 §4's 921 trigger-role conditions folded into §6a accounting immediately, as ordered.
 
 **1. STAGED, NOT DISPATCHED.** Per R-153 §3(d) the build is **sequenced after both in-flight grades return** so the board never thrashes. This is the design for your ratify — **I have written no enforcement code.**

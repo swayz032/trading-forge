@@ -92,6 +92,11 @@ Receipt or an explicit *"could not, because…"* per item. **A silent omission h
 5. **BACKTEST DELTA MEASURED AND PUBLISHED**, not discovered: run a fixed corpus before and after,
    report **how many strategies' signals moved and by how much**, with n. **A change this size that
    reports no delta has not been wired.**
+   **★ SEPARATED PER-TIER (R-154 §2).** Shakedown/tier-b deltas **may never be read as tier-a
+   impacts** — the scope-line law travels into the delta report. A pooled delta silently lets a
+   large tier-b movement stand in for a tier-a claim (or hide the absence of one). **Each tier
+   reports its own n and its own movement, and the report names which tier every figure belongs
+   to.**
 6. **Both polarities** on every enforced binding: resolves-and-runs, and fails-loud-when-absent.
 7. **The TypeScript mirror** is either updated in the same wave or **explicitly declared drifted**
    with an owner — never left silently divergent.
