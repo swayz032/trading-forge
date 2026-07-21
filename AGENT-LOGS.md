@@ -4,6 +4,30 @@
 
 ---
 
+### Session Log — 2026-07-21 [ops-experience] item 9 premise-audit (named mechanism ABSENT) + member-Office mount defect FOUND/FIXED/LANDED `048a6f7e` + 9a security core — ★ the pattern: the code held, every failure was a CLAIM about the work
+
+**Mission:** continue OR-156/157 — item 9 (Slumhouse Agent, member edge client) after item 12.
+
+**Work completed:**
+- **Item 9 premise-audit — the named mechanism does not exist.** Charter item 9 specifies *"Discord device-flow sign-in."* Fetched Discord's live developer docs: they document five flows (authorization code, implicit, client credentials, bot, webhook) and **no Device Authorization Grant / RFC 8628 / `device_code`**. Not hard — absent. Whole-repo negatives taken on the full population (opened all 3 `electron` hits; substring noise, "electronic"/"Electronics"). Advisor ruled the substitution (OR-158): our server becomes the authorization server, Discord stays the identity provider, member pairs via a short code in an already-Discord-authed browser. Decomposed 9a/9b/9c; **9c RESERVED** — a distributable auto-updating desktop agent needs code signing, a real recurring cost, so it goes to the operator under the charter's $0 law before anything is incurred.
+- **★ Found a live-latent defect in already-graded work: the ENTIRE member-Office API was never mounted.** `memberOfficeRouter` declared 4 routes and was imported by zero production files — mounted only inside its own e2e test. `member-office.html`'s `/scope` fetch 404'd, `if (r.ok)` turned that into an empty scope, and every member saw a permanent "Locked" room with nothing logged. **Item 6 had been built, e2e'd, graded BAND 8 and landed with this underneath.** Fixed the CLASS not the instance: `slumhouse-routers-mounted.test.ts` asserts every `*Router` under `routes/slumhouse/api` is imported AND mounted in the production barrel, read as TEXT (building an app re-introduces the blind spot), with a non-vacuity check and an empty `DELIBERATELY_UNMOUNTED` allowlist requiring a written reason. **LANDED `048a6f7e`**, independently graded BAND 7 safe-to-land.
+- **9a security core built (NOT landed):** `lib/slumhouse/agent-ticket.ts` (HMAC identity token, purpose tag inside the MAC for domain separation; **revocation BORROWED** — `session_epoch` in the payload so the existing `revoke-sessions` lever kills agent tokens) + `lib/agent-pairing.ts` (pure, injected clock/randomness; Crockford Base32, power-of-two alphabet so `byte & 31` is unbiased; fail-closed on short entropy; expiry derived from the clock not a stored flag). 30 tests. Deliberately unlanded on `ops/item9a-wip-20260721` — no caller yet, and landing a caller-less module is the dormant/built-zero-callers class.
+
+**Verification:** mount fix graded BAND 7 through the REAL router barrel (404→401), guard mutation-proved on three axes; 72 across the 7 office/member suites (command published — see the commit); `tsc` 0 with a positive-control error injection proving the instrument runs; `check:production-isolation` + `check:2026-compliance` PASS; `system-map:check` RED base-verified pre-existing. 9a core mutation-tested at birth — **which caught a real hole**: the domain-separation test fed a 4-part token rejected on part count *before* the purpose check ran, so deleting the single most important line stayed GREEN. Closed with an asymmetric known-vector forgery (validly signed, 5 parts, only the purpose wrong) plus a positive control.
+
+**Known-facts updates:**
+- **Discord has NO OAuth2 device authorization grant** (verified against live docs 2026-07-21). Any design naming "Discord device flow" is unbuildable as written.
+- **A test that builds its own app and mounts the router itself proves the routes work WHEN MOUNTED, never that production mounts them.** It cannot fail the way production failed. Feature grades must verify reachability through the PRODUCTION mount path.
+- Editing an LF file on Windows silently rewrote whole files (1809 lines for a 9-line change; recurred on AGENT-LOGS). Check `git diff --numstat` before every commit.
+
+**★ The pattern (the turn's real finding):** the code held all session — mount fix graded 7, guards mutation-proved, 9a crypto sound — and **every failure was in a CLAIM about the work**: severity (told the operator "broken this whole time" without verifying the affected population — it is zero, Phase-5-gated), coverage (nearly accepted an advisor exculpation that was refutable from my own record), cure (a commit claiming to fix the Locked room, which it does not — no PIN UI calls the routes), and a count (102 was real but mislabelled; 72 is the honest office/member figure). **A claim's scope is a value and gets verified by a COMMAND, not asserted by conviction** — the instrument already pointed at code, finally pointed at prose.
+
+**Carry-forward for next session:**
+- **PIN-entry UI — the ACTUAL cure for the Locked room.** Cold-ready design handed off: `docs/designs/HANDOFF-PIN-UI-2026-07-21.md` (ops campaign worktree). Fresh-context start approved by OR-164 — the error rate this session concentrated in scope-judgment, which is exactly what a fail-closed auth form depends on.
+- Then 9a's pairing route (wires the unlanded core), then 9b heartbeat ingest (the honest `—` tile has a real waiting consumer).
+- **9c RESERVED on the operator's spend decision** (code signing). Nothing installed, nothing incurred.
+- CL-012 still cross-lane-pending (cleaner no-input payout panel) — polish, not a gap.
+
 ### Session Log — 2026-07-21 [ops-experience] charter item 12 — Office "Payout Reality" panel LANDED, independently graded BAND 8 (6 → 8), zero carry-forwards
 
 **Mission:** resume the OPS lane per advisor ruling OR-156 ("keep going"; fresh-session reservation lifted) and build charter item 12 — an Office display of what a funded prop-firm run actually pays — then item 9.
