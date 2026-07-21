@@ -70,4 +70,16 @@
 # bytes) and premise-audit-arrival-paths.json (5480 CRLF -> LF, 168210 -> 162730 bytes).
 # EOL-ONLY PROOF for each: `git diff --ignore-cr-at-eol` empty over the change, and the parsed
 # JSON object identical pre/post.
-src/server/lib/spec-timeframe-recovery.ts                          !text !eol
+# NORMALIZED, exemption retired: spec-timeframe-recovery.ts (360 CRLF -> LF, 17943 -> 17583
+# bytes). PRODUCTION SURFACE -- normalized on a COMPUTED proof, never on assertion:
+#   * bytes identical once CRLF->LF is applied to BOTH sides;
+#   * TypeScript's own scanner: 458 tokens before and after, 19 differing by EOL ONLY (all
+#     multi-line template literals, whose raw text carries the terminator), 0 differing by
+#     CONTENT; AST node count 1574 both sides; 0 parse diagnostics both sides;
+#   * the token diff was REFUSED by the first proof and only accepted after ECMAScript's
+#     <CR><LF> -> <LF> template normalization was demonstrated empirically in node (cooked AND
+#     String.raw values identical from CRLF and LF sources), so no runtime string value moves;
+#   * runtime: the module's own 40 tests pass before and after.
+#
+# ALL FOUR BLOBS OF THE DEFERRED NORMALIZATION UNIT ARE NOW NORMALIZED. No `!text !eol`
+# exemption remains. Each was retired only as that file was normalized -- never widened.
