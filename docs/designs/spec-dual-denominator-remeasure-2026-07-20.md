@@ -36,11 +36,20 @@ The corpus binding-approximation rate, re-derived after:
    could improve its score by becoming *less* bindable. **26 of 155 (16.8%) were vanishing.**
    **The unbound count travels beside the rate, always.**
 2a. **★ THE TRIGGER-ROLE CONDITIONS ENTER THE COVERAGE ACCOUNTING (R-153 §4, ordered IMMEDIATE).**
-   The dispatch loop iterates **`role == "spine"` only**, so **921 trigger-role conditions are never
+   The dispatch loop iterates **`role == "spine"` only**, so **987 trigger-role conditions are never
    evaluated at all** — `WAIT_BIAS` 42 · `FILTER` 39 · `INVALIDATE` 105 · `ENABLE_ENTRY` 480 ·
    `ENTER` 255. **This is taught content the engine never tests.** It belongs in the §6a denominator
    the moment it is known, not after the enforcement build. **The unbound count grows; the honest
-   number gets honester.** Reporting a coverage rate that silently excludes 921 untested conditions
+   number gets honester.**
+
+   **★ CORRECTED 921 -> 987 (AR-173, MY error).** The original figure covered only **5 families**;
+   the loop selects `role=="spine"` ONLY, so **EVERY** trigger-role condition is skipped. The missing
+   **66**: WAIT_SESSION 18 · WAIT_CONFIRMATION 21 · WAIT_RETEST 15 · WAIT_STRUCTURE 6 ·
+   VERIFY_STRUCTURE 3 · EXIT_HINT 3. **I re-derived the SUM of the parts I was handed and never asked
+   whether the parts were ALL the parts.** A correct sum over an incomplete enumeration is still
+   incomplete — and it understated the denominator, so coverage read BETTER than truth, against this
+   spec's own rule. **Law (R-181 §3ii): AN ENUMERATION OWES A COMPLETENESS DERIVATION — query the
+   UNIVERSE, never the parts listed.** Reporting a coverage rate that silently excludes 987 untested conditions
    is the vanishing-denominator defect §6a exists to close.
 
 3. **PER-KIND / PER-FAMILY ATTRIBUTION** — how much movement is `named_sr_level`, how much

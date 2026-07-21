@@ -43,8 +43,13 @@ trusted.** **14 families; 9 declare a real primitive; only 3 execute it cleanly.
   `True` (pin (c), honest entry). **The campaign's approximation rate gets WORSE and more true.**
   It must be re-derived, never patched.
 - **★ THE §6a COVERAGE DENOMINATOR GROWS** (R-153 §4): trigger-role conditions were never evaluated
-  at all — **42 WAIT_BIAS + 39 FILTER + 105 INVALIDATE + 480 ENABLE_ENTRY + 255 ENTER = 921** taught
-  conditions the engine never tests. **The unbound count grows; the honest number gets honester.**
+  at all — **987** taught conditions the engine never tests — **the loop selects `role=="spine"` ONLY, so EVERY trigger role
+  is skipped.** ★ **CORRECTED from 921 (AR-173, my error).** The old figure enumerated only 5
+  families: WAIT_BIAS 42 + FILTER 39 + INVALIDATE 105 + ENABLE_ENTRY 480 + ENTER 255 = **921**. The
+  missing 6: WAIT_SESSION 18 + WAIT_CONFIRMATION 21 + WAIT_RETEST 15 + WAIT_STRUCTURE 6 +
+  VERIFY_STRUCTURE 3 + EXIT_HINT 3 = **66**. **921 + 66 = 987.** I summed the parts I was handed
+  without asking whether they were ALL the parts.
+  **The unbound count grows; the honest number gets honester.**
 - **The TypeScript mirror carries the same declarations** and drifts the moment Python is enforced.
 
 **NOT touched:** the sealed 77 · promotion gates · fill/P&L/sizing · tier-a · detectors · the
@@ -70,7 +75,7 @@ correction named above.
   emittable set, enumerate its consumer's covered set, **fail at load on any difference.**
 - **(c) HONEST ENTRIES** for primitive-less families (`ENABLE_ENTRY`, `ENTER`, and any other): their
   **actual mechanism** declared, **`approximation=True`**, **no aspirational pointers ever again.**
-- **(d) The trigger-role dispatch gap enters the design** (R-153 §4) — and its 921 conditions enter
+- **(d) The trigger-role dispatch gap enters the design** (R-153 §4) — and its 987 conditions enter
   the §6a accounting **immediately**, ahead of this build.
 
 **PROHIBITED, by name:**
@@ -110,7 +115,7 @@ Receipt or an explicit *"could not, because…"* per item. **A silent omission h
 7. **The TypeScript mirror** is either updated in the same wave or **explicitly declared drifted**
    with an owner — never left silently divergent.
 8. **Any rate carries its null and its n.** The new approximation rate ships with **dual denominators**
-   and **§6a coverage including the 921 trigger-role conditions.**
+   and **§6a coverage including the 987 trigger-role conditions.**
 9. Existing tests pass. **If a test encoded the constant-True behaviour, name it** rather than
    quietly editing it.
 

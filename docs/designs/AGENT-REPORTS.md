@@ -4,6 +4,24 @@
 
 ---
 
+## AR-174 · 2026-07-21 · ★★★ **STATUS CHECK ANSWERED HONESTLY: AT THE MOMENT YOUR WATCHDOG FIRED, NOTHING WAS IN FLIGHT.** The fix wave was **approved in R-181 and NOT DISPATCHED** — the 47 quiet minutes were me, hand-correcting one number, three times. **Dispatched now; receipt below.** ★ **Your watchdog was right and I was the gap.**
+
+**1. ★★★ THE TRUTHFUL ANSWER FIRST: ZERO UNITS WERE IN FLIGHT, ZERO RECEIPTS HELD.** Your check asks for the state of *"the D1/D2/D3/D5/D6 fix wave and the orphan-[zone lane]"* **as if both were running. Neither was.** The fix wave was **approved but never dispatched**; the orphan-zone packet is **staged awaiting your ratify** (AR-169) and was never dispatched either. **I am not going to characterise 47 idle minutes as work in progress.**
+
+**2. WHAT THE 47 MINUTES ACTUALLY WERE, and it is not flattering.** Correcting **921 → 987** across two documents. ★ **It took three passes:** (i) I swapped the total and left the parts, producing the line *"42 + 39 + 105 + 480 + 255 = 987"* — **arithmetically FALSE, inside the correction for an enumeration error** · (ii) my repair left a duplicated clause · (iii) the third pass finally validated **both sums in code before writing them** (`921 + 66 = 987`, asserted) and shows both halves so the arithmetic reconciles on the page. **I verified the operation I performed, not the artifact it produced — the same shape as the defect I was correcting, one scale down.** Caught by rendering the line rather than trusting the replacement.
+
+**3. ★ THE FIX WAVE IS NOW DISPATCHED — RECEIPT HELD BY THIS SEAT.** D1/D2/D3/D5/D6 per R-181 §2, and it is the **first brief to carry the KNOWN-TRAPS block** (R-180's standing order, used rather than merely written). Specifics I sharpened beyond the grade:
+- **D1: "the grader found THREE lying modes — fence ALL of them, not just the comma."** A fix for the reported instance would leave the class open, which is exactly the D6 failure.
+- **D5: "re-derive it yourself by querying the UNIVERSE rather than summing a given list — DO NOT TRUST MY 987 EITHER."** ★ **The whole defect was trusting a handed-down enumeration; handing down a replacement enumeration would repeat it.** It is also warned that `921` appears in unrelated JSON as a coincidental number — **verify by context, never blind grep-replace.**
+- **D6: it must LIST EVERY SUPERLATIVE IT CHECKED AND ITS DISPOSITION**, not only the five named. **A class sweep that reports just the seeded instances is a lookup.**
+- **Standing prohibition restated: "Reword the claim or strengthen the proof — NEVER lower the bar."** The temptation in a wave about claims outrunning proofs is to weaken the guard until the claim is true.
+
+**4. QUIESCE DISCIPLINE (R-181 §3iii) IS IN FORCE FROM THIS DISPATCH.** No agent was live while I made the corrections above — **that window was legitimately mine.** **Now that the fix wave is running, my commits batch.** This AR is the last write until it returns or something genuinely cannot wait.
+
+**5. WHY YOUR WATCHDOG EARNED ITS KEEP, stated plainly:** an approved-but-undispatched unit **looks identical to a running one** from your side — **and from mine, if I do not check.** ★ **This is `STAGED ≠ RUNNING` and `a receipt must belong to a live owner`, turned on me: I held no receipt and had not noticed.** **The activity signal was measuring my typing, not the board.**
+
+**Board, accurate as of this line:** fix wave **RUNNING** (receipt held here) · orphan-zone packet **STAGED, awaiting your ratify** · enforcement build landed and **still correctly refuses to load under all pins** · `C:/tfg` still busy, named carry. **Holds:** flags OFF · the 77 sealed.
+
 ## AR-173 · 2026-07-21 · *** **ENFORCEMENT GRADED BAND 6.** ★★ **Verdict 1: the refusal-to-load is HONEST — pins a+b load CLEAN alone, so it conceals nothing.** ★★★ **Verdict 2: THE PIN SELECTOR CAN BE MADE TO LIE — THREE WAYS. It broke it.** ★ **And one defect is partly MINE: the 921 is really 987.**
 
 **1. ★★ VERDICT 1 — THE REFUSAL IS HONEST, and the grader proved it the only way that counts: by running the pins separately.** With all pins active the engine raises **exactly one** violation — pin (b2), naming exactly `lunch_blackout` + `overnight`. **Critically: pins (a) and (b), the pins this build OWED, load CLEAN on their own.** So *"the guard fired, so we stop"* is **not** covering unfinished work. The gap was scoped OUT **in the packet, before the build, not after it fired** — and **the build declined the easy escape: it could have dropped b2 or narrowed it to pass, and instead shipped a check that convicts its own engine.**
