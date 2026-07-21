@@ -4,6 +4,32 @@
 
 ---
 
+## AR-164 · 2026-07-21 · ★★★ **THE BAR IS MISSED — FN 38.1% against 23.8%. THE LANE CLOSES AT HONEST-PARTIAL, exactly as pre-registered at `676830a3`.** FP held at 6.0%. **I am not relitigating the bar I set, and the residue ships PER-ROW LABELED — including 5 rows I CANNOT EXPLAIN.** ★ **The enforcement re-ratify returns to your desk.**
+
+**1. THE VERDICT AGAINST THE COMMITTED BAR, measured by me in an isolated worktree pinned to `16dbf95f`:**
+
+| | bar | result | |
+|---|---|---|---|
+| **FP** (hard / soft) | ≤ 6.0% | **6.0% / 6.0%** | **MET** |
+| **FN** | ≤ 5/21 = 23.8% | **8/21 = 38.1%** | **MISSED** |
+
+**Trajectory across the lane: 61.9% → 47.6% → 38.1%.** Real, monotone, and short of the line. ★ **I wrote in AR-163 §6 that I would not relitigate this when the number landed. I am not. The bar was mine, it was committed before dispatch, and it was missed.**
+
+**2. ★ THE LANE'S ACTUAL ASSET, and it is not small: THE FP MECHANISM IS CURED AND HAS NOW SURVIVED THREE SUBSEQUENT PASSES UNCHANGED.** Hard **38.0% → 6.0%**, soft/recognition-leak **74.0% → 6.0%**, role-resolver-only **35.4% → 2.1%** — **identical to the row across passes 2, 3 and 4**, each of which was aimed at the opposite axis. **The residual 2 of 3 FPs are the legacy `resolve_session_keyword` path, prohibited to this lane and owned elsewhere.** *"garbage pickup is at 8 a.m. on Thursdays"* no longer binds `ny_am`. **That was the defect that mattered — a false positive silently binds the WRONG window; a miss is honest.**
+
+**3. ★★ THE RESIDUE, PER-ROW LABELED — and I am splitting it three ways because the third category is the honest one.**
+- **NAMED-UNFIXABLE (2), reasons accepted, ordinary-life siblings identified:** `E11` *"nothing matters until 14:30 EST"* (no action, no market noun, nothing to key on) · `E21` *"do not touch **it** until 8am"* (pronoun; admitting it equally admits *"do not touch the thermostat until 7 a.m."*).
+- **DIAGNOSED-AND-DECLINED (1), where the refusal is LOAD-BEARING:** `E14` *"I close every position at 3pm on Fridays"*. Pass 4 proved *"close the positions at 5 p.m."* is **polysemous** — its refusal is what keeps *"we close the contracts at 5 p.m. with the notary"* off a killzone window. **It declined to key on `every` (surface tuning) or a trailing-noun blacklist (a failure mode already recorded in the suite). Refusing this row is currently the price of not reopening the FP class.**
+- **★★★ UNDIAGNOSED (5) — I DO NOT KNOW WHY THESE FAIL, and every one carries BOTH a market noun and a clock:** `E03` *"my window is 2:00 a.m. to 4:00 a.m. on the euro pairs"* · `E09` *"look for the sweep at 2:15 p.m."* · `E10` *"the 3:00 a.m. to 4:00 a.m. window gives me the London manipulation leg"* · `E13` *"the reversal candle at 2:30 p.m. on the NQ chart"* · `E17` *"price runs from 14:00 to 15:30 EST into the highs"*. **These should pass the market-context co-factor. They do not bind. I flagged this exact cluster when I SET the bar** (*"three remaining rows carry market nouns and actions and still fail, which means I do not actually understand why"*) — **which is why I refused to set the bar at 8-of-8 then, and why I will not now pretend the residue is understood.** **This is the single most valuable thing in the handoff: a named, reproducible, currently-unexplained cluster.**
+
+**4. PASS 4'S REAL FINDING, which outlives its number.** Its first draft licensed all three action constructions; **its own batch-8 adversarial measured 13 regressions** — *"the soda **goes flat** at 3 p.m."*, *"**close the contracts** at 5 p.m. with the notary"*. **Diagnosis: `_session_clock_does_work` had been silently doing FALSE-POSITIVE work FOR the action conjunct.** The copula+`flat` frame and the transaction-verb+position-noun construction are **polysemous**, and the clock-role test refusing `at` was **the only thing keeping that polysemy off a killzone window.** ★ **That is why loosening the clock role costs recall elsewhere — the two conjuncts were never independent, and nobody knew that until an instrument measured it.** Its structural rule (**government**, not preposition — directional, adjacent, with anaphora resolved by **uniqueness-and-exhaustion, never by matching the word `that`**) is the most precise statement this lane produced.
+
+**5. ★ AND IT LABELLED ITS OWN NUMBER A CEILING, unprompted and correctly.** *"0.0% FP / 0.0% FN is measured on populations I authored… I do not claim this lane is fixed, and I have not measured the sealed fence. The one number I'd weight is the NEGATIVE result: batch 8 found 13 regressions in my own first draft, which is the only evidence here that my instrument can fail."* **Its self-measured 0.0% FN vs the sealed 38.1% is the fourth reproduction of R-171's law — and the first time the fixer predicted the gap instead of being caught by it.**
+
+**6. THE LANE IS CLOSED. The enforcement re-ratify returns to your desk** — the campaign's critical path, parked since R-154, waiting on a flag-OFF resolver that ships nothing. **The over-bind class (R-169) and the 5 undiagnosed rows travel as named future work, not as open blockers.**
+
+**Holds:** flags OFF · FP cure preserved and independently sealed-measured · byte-identity intact · the 77 sealed.
+
 ## AR-163 · 2026-07-21 · ★★★ **THE STOP RULE, PRE-REGISTERED — WRITTEN AND COMMITTED BEFORE PASS 4 IS DISPATCHED.** Bar: **FN ≤ 5/21 (23.8%) AND FP ≤ 6.0%.** Miss either and **the lane CLOSES AT HONEST-PARTIAL.** This AR lands first; the dispatch follows it.
 
 **1. ★ THE BAR, and the order matters more than the number.** R-171 §3 requires the bar set **before** dispatch. **So this report is committed FIRST and the agent is dispatched AFTER** — a bar written after seeing a result is not a bar, it is a rationalization with a timestamp. Anyone reading the log can check the sequence.
