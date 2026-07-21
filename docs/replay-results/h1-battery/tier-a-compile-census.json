@@ -15,7 +15,8 @@
   ],
   "n_conditions": 99,
   "family_universe_size": 14,
-  "family_mix": {
+  "WHAT_THE_MIX_BELOW_MEASURES": "The distribution of taught conditions over the FAMILY_META families PLUS an explicit out-of-family UNTYPED remainder (R-231 SS2). It is NOT a 'family mix': 43 of 99 conditions carry NO family at all, and a caption claiming to measure family mix over this population would be a claim that has gone false. UNTYPED is displayed, never hidden and never admitted to FAMILY_META.",
+  "family_mix_typed_plus_untyped_remainder": {
     "CONFIRM_DIRECTION": 0,
     "ENABLE_ENTRY": 0,
     "ENTER": 0,
@@ -25,23 +26,35 @@
     "INVALIDATE": 5,
     "RESET": 0,
     "VERIFY_STRUCTURE": 0,
-    "WAIT_BIAS": 1,
-    "WAIT_CONFIRMATION": 10,
-    "WAIT_RETEST": 8,
-    "WAIT_SESSION": 21,
-    "WAIT_STRUCTURE": 50
+    "WAIT_BIAS": 0,
+    "WAIT_CONFIRMATION": 6,
+    "WAIT_RETEST": 2,
+    "WAIT_SESSION": 4,
+    "WAIT_STRUCTURE": 35,
+    "UNTYPED": 43
+  },
+  "n_typed_conditions": 56,
+  "n_untyped_conditions": 43,
+  "closure_identity": "sum(typed)=56 + UNTYPED=43 == n=99",
+  "family_mix_RENAMED": "the key `family_mix` was RENAMED to `family_mix_typed_plus_untyped_remainder`. It is not an alias and not a correction of a number -- the population it summarizes changed, so the name changed with it.",
+  "untyped_row_disposition": {
+    "in_FAMILY_META": false,
+    "why_not": "no primitive exists behind UNTYPED, so a FAMILY_META entry would declare a pointer to nothing (R-218 SS3)",
+    "in_census_display": true,
+    "why_displayed": "hiding 43 of 99 conditions would flatter this artifact exactly the way demoting them to confluence would",
+    "next_move": "docs/designs/ADVISOR-RULINGS.md R-218 SS1 -- the UNTYPED DISPOSITION CENSUS. The next move on this row is a CENSUS (what are these conditions actually teaching, and which of them deserve a type), NOT a wire. There is no primitive to build."
   },
   "family_mix_observed_only": {
-    "WAIT_STRUCTURE": 50,
-    "WAIT_SESSION": 21,
-    "WAIT_CONFIRMATION": 10,
-    "WAIT_RETEST": 8,
+    "UNTYPED": 43,
+    "WAIT_STRUCTURE": 35,
+    "WAIT_CONFIRMATION": 6,
     "INVALIDATE": 5,
+    "WAIT_SESSION": 4,
     "FILTER": 4,
-    "WAIT_BIAS": 1
+    "WAIT_RETEST": 2
   },
-  "deferred_family_conditions": 22,
-  "specs_with_any_deferred": 7,
+  "deferred_family_conditions": 12,
+  "specs_with_any_deferred": 5,
   "tf_class_counts": {
     "HTF_TAUGHT": 5,
     "TF_UNSPECIFIED": 87,
@@ -57,74 +70,139 @@
   },
   "n_conditions_zero_concepts": 64,
   "bind_status_counts": {
-    "APPROXIMATED": 73,
-    "BINDS": 5,
-    "UNBOUND": 21
+    "UNBOUND": 47,
+    "APPROXIMATED": 47,
+    "BINDS": 5
   },
   "n_spine_or_trigger": 53,
   "spine_bind_status_counts": {
-    "APPROXIMATED": 43,
-    "UNBOUND": 10
+    "UNBOUND": 28,
+    "APPROXIMATED": 25
   },
+  "SUPERSESSION_MARKER": {
+    "status": "SUPERSEDED AND REPLACED -- the reordered ranking below is live",
+    "what_is_dead": "The PREFIX-classifier vintage of this artifact ranked WAIT_STRUCTURE first with 31 load-bearing conditions across 11 specs, and 31 > 10 > 5 WAS the sort order -- so the dead number was not a detail inside the output, it was the key that produced the output. Those figures are quoted here as HISTORY; they are not recomputable from this run and nothing below is derived from them.",
+    "what_replaced_it_COMPUTED_THIS_RUN": {
+      "ranking": [
+        {
+          "family": "UNTYPED",
+          "n_load_bearing_conditions_blocked": 26,
+          "n_specs_touched": 9,
+          "wireable": false
+        },
+        {
+          "family": "WAIT_STRUCTURE",
+          "n_load_bearing_conditions_blocked": 18,
+          "n_specs_touched": 7,
+          "wireable": true
+        },
+        {
+          "family": "WAIT_CONFIRMATION",
+          "n_load_bearing_conditions_blocked": 4,
+          "n_specs_touched": 3,
+          "wireable": true
+        },
+        {
+          "family": "WAIT_SESSION",
+          "n_load_bearing_conditions_blocked": 2,
+          "n_specs_touched": 2,
+          "wireable": true
+        },
+        {
+          "family": "WAIT_RETEST",
+          "n_load_bearing_conditions_blocked": 2,
+          "n_specs_touched": 1,
+          "wireable": true
+        },
+        {
+          "family": "FILTER",
+          "n_load_bearing_conditions_blocked": 1,
+          "n_specs_touched": 1,
+          "wireable": true
+        }
+      ],
+      "spine_bind_status": {
+        "UNBOUND": 28,
+        "APPROXIMATED": 25
+      },
+      "source": "recomputed live under the fixed classifier, same corpus, same instrument, flags OFF"
+    },
+    "the_ranking_does_not_merely_shrink_IT_REORDERS": "WAIT_STRUCTURE is no longer #1. UNTYPED is -- and UNTYPED is not a family that can be wired, it is the absence of a type. A re-aim reading position [0] of this list would be aimed at something unwireable. That is why a stale-number MARKER was insufficient: correcting 31 to 18 would have left WAIT_STRUCTURE at the head of a queue it no longer heads. The rows now carry `wireable`, and UNTYPED's row carries NOT_WIREABLE plus the true next move.",
+    "the_re_aim_it_justified": {
+      "status": "SUSPENDED -- and this marker is what ties the two together",
+      "what_was_suspended": "the re-aim onto WAIT_STRUCTURE that the dead 31-sorted ranking justified",
+      "why_it_stays_suspended_even_though_the_ranking_now_recomputes": "the reorder tells you the OLD target was chosen by a dead key; it does not supply a new target. The head of the corrected ranking cannot be worked at all, so the next move is a CENSUS, not a re-aim onto position [1]. Re-aiming onto WAIT_STRUCTURE-at-18 would repeat the original error with a fresher number: picking a wire because it sorts high.",
+      "the_true_next_move": "docs/designs/ADVISOR-RULINGS.md R-218 SS1 -- the UNTYPED DISPOSITION CENSUS. The next move on this row is a CENSUS (what are these conditions actually teaching, and which of them deserve a type), NOT a wire. There is no primitive to build."
+    },
+    "why_it_IS_regenerated_now_when_it_was_not_before": "The earlier marker declined to regenerate because doing so would have restated every figure under a classifier the published run never used -- a different measurement wearing this filename. That objection is answered, not waived: the artifact now DECLARES which classifier produced it, publishes the UNTYPED remainder instead of dropping it, and reconciles its ranking against a separately-generated sibling artifact. The regeneration is no longer silent, which was the whole objection.",
+    "reproduce": "python docs/replay-results/h1-battery/tier_a_compile_census.py -- runs to completion. It PREVIOUSLY refused at exit 2 (family histogram 56 against 99 conditions) and that refusal was CORRECT: the 43 missing conditions were the UNTYPED ones the classifier fix introduced, and UNTYPED is not a FAMILY_META member. The refusal is resolved by RESTATING what the census measures (typed families + explicit UNTYPED remainder, R-231 SS2), never by widening FAMILY_META and never by dropping the check.",
+    "WHY_THE_REFUSAL_MATTERED_MORE_THAN_THE_STALE_RANKING": "That closure check was a bare `assert` until R-229. Under `python -O` it would have been stripped, and this generator would have PUBLISHED a family mix silently omitting 43 of 99 conditions -- a census that had lost nearly half its population while reporting a complete-looking histogram. The gate did not become useful when it was converted; it became UNSKIPPABLE, and the first thing it did was refuse."
+  },
+  "HOW_TO_READ_THE_RANKING_BELOW": "Sorted by load-bearing conditions blocked, RECOMPUTED live under the fixed classifier. Its head is UNTYPED, and UNTYPED CANNOT BE WIRED -- so position [0] of this list is NOT the next thing to build. Read `wireable` on every row before treating the order as a work queue.",
   "unlock_ranking_load_bearing": [
     {
-      "family": "WAIT_STRUCTURE",
-      "n_load_bearing_conditions_unlocked": 31,
-      "n_specs_touched": 11,
+      "family": "UNTYPED",
+      "n_load_bearing_conditions_unlocked": 26,
+      "n_specs_touched": 9,
       "specs": [
         "0RBexa9JpIg__s0",
         "ExB66jcyKxg__s0",
         "LD1FEbwXU4o__s0",
         "YGdFksLavKE__s0",
         "YqY0OkL5LMI__s0",
+        "dENM6gt8ZRg__s0",
+        "hcHuDfxdywI__s0",
+        "pKzXxB9Blts__s0",
+        "st5e-YJRfKc__s1"
+      ],
+      "wireable": false,
+      "NOT_WIREABLE": "\u2605 THIS ROW IS NOT A WIRE. UNTYPED is the ABSENCE of a type, not a family with a primitive behind it -- there is nothing to build. It heads this ranking only because it blocks the most conditions.",
+      "next_move": "docs/designs/ADVISOR-RULINGS.md R-218 SS1 -- the UNTYPED DISPOSITION CENSUS. The next move on this row is a CENSUS (what are these conditions actually teaching, and which of them deserve a type), NOT a wire. There is no primitive to build."
+    },
+    {
+      "family": "WAIT_STRUCTURE",
+      "n_load_bearing_conditions_unlocked": 18,
+      "n_specs_touched": 7,
+      "specs": [
+        "0RBexa9JpIg__s0",
+        "LD1FEbwXU4o__s0",
         "YqY0OkL5LMI__s1",
         "dENM6gt8ZRg__s0",
         "hcHuDfxdywI__s0",
         "pKzXxB9Blts__s0",
-        "st5e-YJRfKc__s0",
-        "st5e-YJRfKc__s1"
-      ]
-    },
-    {
-      "family": "WAIT_SESSION",
-      "n_load_bearing_conditions_unlocked": 10,
-      "n_specs_touched": 6,
-      "specs": [
-        "YGdFksLavKE__s0",
-        "YqY0OkL5LMI__s0",
-        "YqY0OkL5LMI__s1",
-        "dENM6gt8ZRg__s0",
-        "hcHuDfxdywI__s0",
         "st5e-YJRfKc__s0"
-      ]
+      ],
+      "wireable": true
     },
     {
       "family": "WAIT_CONFIRMATION",
-      "n_load_bearing_conditions_unlocked": 5,
-      "n_specs_touched": 4,
+      "n_load_bearing_conditions_unlocked": 4,
+      "n_specs_touched": 3,
       "specs": [
         "ExB66jcyKxg__s0",
         "LD1FEbwXU4o__s0",
-        "dENM6gt8ZRg__s0",
-        "hcHuDfxdywI__s0"
-      ]
+        "YGdFksLavKE__s0"
+      ],
+      "wireable": true
+    },
+    {
+      "family": "WAIT_SESSION",
+      "n_load_bearing_conditions_unlocked": 2,
+      "n_specs_touched": 2,
+      "specs": [
+        "YqY0OkL5LMI__s0",
+        "st5e-YJRfKc__s0"
+      ],
+      "wireable": true
     },
     {
       "family": "WAIT_RETEST",
-      "n_load_bearing_conditions_unlocked": 5,
-      "n_specs_touched": 2,
-      "specs": [
-        "LD1FEbwXU4o__s0",
-        "pKzXxB9Blts__s0"
-      ]
-    },
-    {
-      "family": "WAIT_BIAS",
-      "n_load_bearing_conditions_unlocked": 1,
+      "n_load_bearing_conditions_unlocked": 2,
       "n_specs_touched": 1,
       "specs": [
-        "LD1FEbwXU4o__s0"
-      ]
+        "pKzXxB9Blts__s0"
+      ],
+      "wireable": true
     },
     {
       "family": "FILTER",
@@ -132,99 +210,50 @@
       "n_specs_touched": 1,
       "specs": [
         "pKzXxB9Blts__s0"
-      ]
+      ],
+      "wireable": true
     }
   ],
+  "unlock_ranking_reconciliation": {
+    "status": "RECONCILED",
+    "against": "docs/replay-results/classifier-fix/ladder-recomputed.json",
+    "against_generator": "docs/replay-results/classifier-fix/ladder_recompute.py",
+    "which_arm": "AFTER_fixed_classifier.blocking_counts",
+    "agreed_counts": {
+      "FILTER": 1,
+      "UNTYPED": 26,
+      "WAIT_CONFIRMATION": 4,
+      "WAIT_RETEST": 2,
+      "WAIT_SESSION": 2,
+      "WAIT_STRUCTURE": 18
+    },
+    "why_this_is_outside_the_pipeline": "a different committed generator, run separately, over the same corpus -- so agreement is not this generator agreeing with itself"
+  },
   "reaim_analysis": {
     "spine": {
       "single_wire": [
         {
           "family": "WAIT_STRUCTURE",
-          "n_conditions_unlocked": 31,
-          "n_specs_completed_alone": 2
-        },
-        {
-          "family": "WAIT_SESSION",
-          "n_conditions_unlocked": 10,
-          "n_specs_completed_alone": 0
-        },
-        {
-          "family": "WAIT_CONFIRMATION",
-          "n_conditions_unlocked": 5,
-          "n_specs_completed_alone": 0
-        },
-        {
-          "family": "WAIT_RETEST",
-          "n_conditions_unlocked": 5,
-          "n_specs_completed_alone": 0
-        },
-        {
-          "family": "FILTER",
-          "n_conditions_unlocked": 1,
-          "n_specs_completed_alone": 0
-        },
-        {
-          "family": "WAIT_BIAS",
-          "n_conditions_unlocked": 1,
-          "n_specs_completed_alone": 0
-        }
-      ],
-      "greedy_cumulative": [
-        {
-          "add_family": "WAIT_STRUCTURE",
-          "cumulative_specs_fully_binding": 2
-        },
-        {
-          "add_family": "WAIT_SESSION",
-          "cumulative_specs_fully_binding": 6
-        },
-        {
-          "add_family": "WAIT_CONFIRMATION",
-          "cumulative_specs_fully_binding": 9
-        },
-        {
-          "add_family": "FILTER",
-          "cumulative_specs_fully_binding": 9
-        },
-        {
-          "add_family": "WAIT_RETEST",
-          "cumulative_specs_fully_binding": 10
-        },
-        {
-          "add_family": "WAIT_BIAS",
-          "cumulative_specs_fully_binding": 11
-        }
-      ]
-    },
-    "all": {
-      "single_wire": [
-        {
-          "family": "WAIT_STRUCTURE",
-          "n_conditions_unlocked": 50,
+          "n_conditions_unlocked": 18,
           "n_specs_completed_alone": 1
         },
         {
-          "family": "WAIT_SESSION",
-          "n_conditions_unlocked": 21,
-          "n_specs_completed_alone": 0
-        },
-        {
           "family": "WAIT_CONFIRMATION",
-          "n_conditions_unlocked": 10,
-          "n_specs_completed_alone": 0
-        },
-        {
-          "family": "WAIT_RETEST",
-          "n_conditions_unlocked": 8,
-          "n_specs_completed_alone": 0
-        },
-        {
-          "family": "FILTER",
           "n_conditions_unlocked": 4,
           "n_specs_completed_alone": 0
         },
         {
-          "family": "WAIT_BIAS",
+          "family": "WAIT_RETEST",
+          "n_conditions_unlocked": 2,
+          "n_specs_completed_alone": 0
+        },
+        {
+          "family": "WAIT_SESSION",
+          "n_conditions_unlocked": 2,
+          "n_specs_completed_alone": 0
+        },
+        {
+          "family": "FILTER",
           "n_conditions_unlocked": 1,
           "n_specs_completed_alone": 0
         }
@@ -236,32 +265,89 @@
         },
         {
           "add_family": "WAIT_SESSION",
-          "cumulative_specs_fully_binding": 4
+          "cumulative_specs_fully_binding": 2
         },
         {
           "add_family": "FILTER",
-          "cumulative_specs_fully_binding": 6
+          "cumulative_specs_fully_binding": 2
         },
         {
           "add_family": "WAIT_CONFIRMATION",
-          "cumulative_specs_fully_binding": 8
+          "cumulative_specs_fully_binding": 2
         },
         {
           "add_family": "WAIT_RETEST",
-          "cumulative_specs_fully_binding": 10
+          "cumulative_specs_fully_binding": 2
+        }
+      ],
+      "excluded_unwireable": [
+        "UNTYPED"
+      ],
+      "why_excluded": "docs/designs/ADVISOR-RULINGS.md R-218 SS1 -- the UNTYPED DISPOSITION CENSUS. The next move on this row is a CENSUS (what are these conditions actually teaching, and which of them deserve a type), NOT a wire. There is no primitive to build.",
+      "ceiling_is_capped_by_the_exclusion": "specs carrying an UNWIREABLE condition can never complete here, so the cumulative order stops short of the corpus BY CONSTRUCTION. That shortfall is the exclusion, not a wiring gap -- do not read it as 'these families are insufficient'."
+    },
+    "all": {
+      "single_wire": [
+        {
+          "family": "WAIT_STRUCTURE",
+          "n_conditions_unlocked": 35,
+          "n_specs_completed_alone": 0
         },
         {
-          "add_family": "WAIT_BIAS",
-          "cumulative_specs_fully_binding": 11
+          "family": "WAIT_CONFIRMATION",
+          "n_conditions_unlocked": 6,
+          "n_specs_completed_alone": 0
+        },
+        {
+          "family": "FILTER",
+          "n_conditions_unlocked": 4,
+          "n_specs_completed_alone": 0
+        },
+        {
+          "family": "WAIT_SESSION",
+          "n_conditions_unlocked": 4,
+          "n_specs_completed_alone": 0
+        },
+        {
+          "family": "WAIT_RETEST",
+          "n_conditions_unlocked": 2,
+          "n_specs_completed_alone": 0
         }
-      ]
+      ],
+      "greedy_cumulative": [
+        {
+          "add_family": "FILTER",
+          "cumulative_specs_fully_binding": 0
+        },
+        {
+          "add_family": "WAIT_CONFIRMATION",
+          "cumulative_specs_fully_binding": 0
+        },
+        {
+          "add_family": "WAIT_RETEST",
+          "cumulative_specs_fully_binding": 0
+        },
+        {
+          "add_family": "WAIT_SESSION",
+          "cumulative_specs_fully_binding": 0
+        },
+        {
+          "add_family": "WAIT_STRUCTURE",
+          "cumulative_specs_fully_binding": 2
+        }
+      ],
+      "excluded_unwireable": [
+        "UNTYPED"
+      ],
+      "why_excluded": "docs/designs/ADVISOR-RULINGS.md R-218 SS1 -- the UNTYPED DISPOSITION CENSUS. The next move on this row is a CENSUS (what are these conditions actually teaching, and which of them deserve a type), NOT a wire. There is no primitive to build.",
+      "ceiling_is_capped_by_the_exclusion": "specs carrying an UNWIREABLE condition can never complete here, so the cumulative order stops short of the corpus BY CONSTRUCTION. That shortfall is the exclusion, not a wiring gap -- do not read it as 'these families are insufficient'."
     }
   },
   "session_mistype_class": {
     "note": "R-083 \u00a72(ii) registered this class for explicit hunting on tier-a. A WAIT_SESSION condition whose text resolves to NO session zone is mis-typed: it is not a wiring gap, it is a classifier defect, so it is fixed by RECLASSIFICATION, never by building session support.",
-    "n_wait_session": 21,
+    "n_wait_session": 4,
     "n_resolving_to_a_zone": 0,
-    "n_mistyped": 21
+    "n_mistyped": 4
   },
   "eligibility": {
     "criterion_strict": "R-042 \u00a75 with the frozen forensics \u00a70 default: EVERY taught condition load-bearing unless dispositioned -> eligible iff all taught conditions BIND.",
@@ -295,7 +381,7 @@
       "stub": "0RBexa9JpIg__s0",
       "strategy_name": "fibonacci_pullback_continuation",
       "extraction_sha256": "27833d61f88fa06008ecedd6460ceb20cad7b47eafa0b77bdbf3c48e5bd13e6c",
-      "spec_hash": "6575b2d00dfb9554907985d3ea9c06df6901231e1db4a94c04bd9a79d3c6a79e",
+      "spec_hash": "a9c5e70c88581a067389f06d8041e4ec9f6020176c386ed01f64c5d381a090fb",
       "disposition": "compilable-futures",
       "asset_class": null,
       "instrument_class_extracted": "forex",
@@ -312,32 +398,33 @@
         "n_confident": 3,
         "n_approximate": 0,
         "n_unmatched": 4,
+        "n_ambiguous": 0,
         "classifier_approximation_rate": 0.5714,
-        "n_executed_bindable": 7,
-        "n_binding_approximation": 7,
+        "n_executed_bindable": 3,
+        "n_binding_approximation": 3,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": true,
       "conditions": [
         {
-          "condition_id": "WAIT_STRUCTURE:you-need-to-identify-the-direction-of-th#0",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:you-need-to-identify-the-direction-of-th#0",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "you need to identify the direction of the trend and can do this by simply using a 4 hour time frame and a trend line",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "HTF_TAUGHT",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_STRUCTURE:you-can-only-place-buy-trade-when-the-ma#1",
@@ -378,23 +465,23 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:we-will-use-a-1-hour-time-frame-for-this#3",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:we-will-use-a-1-hour-time-frame-for-this#3",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "We will use a 1 hour time frame for this strategy.",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "HTF_TAUGHT",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_STRUCTURE:we-will-use-a-fibonacci-retracement-indi#4",
@@ -416,42 +503,42 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:you-can-t-trade-in-a-non-trending-market#5",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:you-can-t-trade-in-a-non-trending-market#5",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "You can't trade in a non trending market.",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:you-can-apply-this-strategy-on-every-cur#6",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:you-can-apply-this-strategy-on-every-cur#6",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "You can apply this strategy on every currency pair.",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "INVALIDATE:for-buy-place-your-stop-loss-below-the-s#7",
@@ -478,7 +565,7 @@
       "stub": "ExB66jcyKxg__s0",
       "strategy_name": "sma14_strong_close_crossover",
       "extraction_sha256": "78fea28380895792b1946e5c23bc27460a5f74eeeb32b46a9fb5036068246aca",
-      "spec_hash": "b3d425cd7d74b7e59154193073aceec5e8fedcd7b7335b73d789a76183aea4a2",
+      "spec_hash": "95361dda7e672eff9eb8918c26788477d4d547344fe9ce3e58eb9f7ed697013c",
       "disposition": "compilable-futures",
       "asset_class": "index",
       "instrument_class_extracted": null,
@@ -495,26 +582,27 @@
         "n_confident": 2,
         "n_approximate": 0,
         "n_unmatched": 6,
+        "n_ambiguous": 0,
         "classifier_approximation_rate": 0.75,
-        "n_executed_bindable": 8,
-        "n_binding_approximation": 8,
+        "n_executed_bindable": 2,
+        "n_binding_approximation": 2,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": true,
       "conditions": [
         {
-          "condition_id": "WAIT_STRUCTURE:whenever-the-candle-crosses-the-moving-a#0",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:whenever-the-candle-crosses-the-moving-a#0",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "whenever the candle crosses the moving average line and closes with a strong candle, you take the trade",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
@@ -522,7 +610,7 @@
           "concepts": [
             "ma_indicator"
           ],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_CONFIRMATION:if-it-closes-above-the-line-you-buy-and#1",
@@ -563,17 +651,17 @@
           "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:you-will-need-to-select-simple-moving-av#3",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:you-will-need-to-select-simple-moving-av#3",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "you will need to select Simple moving average indicator ... and the time length of the indicator needs to be set at 14",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
@@ -581,83 +669,83 @@
           "concepts": [
             "ma_indicator"
           ],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:we-will-be-trading-in-15-mins-time-frame#4",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:we-will-be-trading-in-15-mins-time-frame#4",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "We will be trading in 15 mins time frame",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "EXEC_TAUGHT",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:we-need-the-candle-to-close-strong-below#5",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:we-need-the-candle-to-close-strong-below#5",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "we need the candle to close strong below the line, not on the line",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:i-always-have-a-rule-to-never-take-any-i#6",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:i-always-have-a-rule-to-never-take-any-i#6",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "I always have a rule to never take any intraday trades within 1 hour of closing",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "HTF_TAUGHT",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:with-a-risk-to-reward-of-3-1#7",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:with-a-risk-to-reward-of-3-1#7",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "with a risk to reward of 3:1",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "INVALIDATE:stop-loss-should-always-be-set-at-1-3rd#8",
@@ -684,8 +772,8 @@
       "stub": "LD1FEbwXU4o__s0",
       "strategy_name": "ltf_liquidity_zone_rejection_scalp",
       "extraction_sha256": "55a36849b19917c7290a8b3548e547733a9761a95ec883bb7ada58d4c0733800",
-      "spec_hash": "fb6ffed3f73b1155e08ce63c8d2f608c4aa46b62f9d55943da00a1c42056d912",
-      "disposition": "compilable-futures",
+      "spec_hash": "29b8d98ba59b8e70822e24afea7cf3fea14072f1d7e58036121c12831a01a30e",
+      "disposition": "compile-degraded",
       "asset_class": "forex",
       "instrument_class_extracted": null,
       "direction": "both",
@@ -693,30 +781,31 @@
       "n_spine_or_trigger": 5,
       "n_spine_binds": 0,
       "n_taught_binds": 1,
-      "n_deferred_family": 8,
+      "n_deferred_family": 3,
       "spine_fully_binds": false,
       "all_taught_binds": false,
       "approximation_metrics": {
         "n_conditions": 12,
         "n_confident": 2,
-        "n_approximate": 8,
+        "n_approximate": 3,
         "n_unmatched": 2,
+        "n_ambiguous": 5,
         "classifier_approximation_rate": 0.8333,
-        "n_executed_bindable": 11,
-        "n_binding_approximation": 11,
+        "n_executed_bindable": 4,
+        "n_binding_approximation": 4,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": true,
       "conditions": [
         {
-          "condition_id": "WAIT_BIAS:mark-the-higher-time-frame-liquidity-zon#0",
-          "type": "WAIT_BIAS",
+          "condition_id": "WAIT_STRUCTURE:mark-the-higher-time-frame-liquidity-zon#0",
+          "type": "WAIT_STRUCTURE",
           "role": "spine",
           "object": "mark the higher time frame liquidity zones first. Start with the daily or the 4hour chart. Mark the most recent swing highs and lows and clean levels that haven't been tapped yet",
           "load_bearing_spine": true,
           "bind_status": "APPROXIMATED",
-          "binds_to": "bias_engine.classify_institutional_regime",
+          "binds_to": "structure_engine.compute_structure_state",
           "approximation": true,
           "bindable": true,
           "executed": true,
@@ -728,68 +817,68 @@
           "concepts": [
             "liquidity"
           ],
-          "family_declared_primitive": "bias_engine.classify_institutional_regime"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_RETEST:you-can-identify-areas-that-have-not-bee#1",
-          "type": "WAIT_RETEST",
+          "condition_id": "UNTYPED:you-can-identify-areas-that-have-not-bee#1",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "you can identify areas that have not been tapped yet where the liquidity should be living",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.retest_touch_check",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "liquidity"
           ],
-          "family_declared_primitive": "spec_condition_compiler.retest_touch_check"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:drop-to-the-5minut-or-the-1-minute-chart#2",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:drop-to-the-5minut-or-the-1-minute-chart#2",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "Drop to the 5minut or the 1 minute chart if you're feeling a little bit risky",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "EXEC_TAUGHT",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_RETEST:look-for-price-rapidly-approaching-a-zon#3",
-          "type": "WAIT_RETEST",
+          "condition_id": "UNTYPED:look-for-price-rapidly-approaching-a-zon#3",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "Look for price rapidly approaching a zone. You want to see volume spike, a quick tap, and a rejection",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.retest_touch_check",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "spec_condition_compiler.retest_touch_check"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_CONFIRMATION:you-are-simply-waiting-for-one-of-these#4",
@@ -811,26 +900,26 @@
           "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
         },
         {
-          "condition_id": "WAIT_RETEST:avoid-entering-before-the-price-taps-the#5",
-          "type": "WAIT_RETEST",
+          "condition_id": "UNTYPED:avoid-entering-before-the-price-taps-the#5",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "avoid entering before the price taps the liquidity zone. Wait for confirmation",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.retest_touch_check",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "liquidity",
             "level_zone"
           ],
-          "family_declared_primitive": "spec_condition_compiler.retest_touch_check"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_CONFIRMATION:you-re-looking-for-that-rejection-wick#6",
@@ -871,44 +960,44 @@
           "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
         },
         {
-          "condition_id": "WAIT_RETEST:you-want-to-see-volume-spike-a-quick-tap#8",
-          "type": "WAIT_RETEST",
+          "condition_id": "UNTYPED:you-want-to-see-volume-spike-a-quick-tap#8",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "You want to see volume spike, a quick tap, and a rejection",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.retest_touch_check",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "spec_condition_compiler.retest_touch_check"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_CONFIRMATION:price-will-often-wick-above-resistance-p#9",
-          "type": "WAIT_CONFIRMATION",
+          "condition_id": "UNTYPED:price-will-often-wick-above-resistance-p#9",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "Price will often wick above resistance, pause, then dump or wick below support and reverse. That is your confirmation",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.candle_confirmation_check",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_SESSION:use-session-times-like-the-london-or-new#10",
@@ -930,23 +1019,23 @@
           "family_declared_primitive": "session_windows"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:do-not-chase-the-breakouts-wait-for-pric#11",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:do-not-chase-the-breakouts-wait-for-pric#11",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "do not chase the breakouts. Wait for price to trap traders and fade the move",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "INVALIDATE:i-kept-my-stop-loss-below-the-current-lo#12",
@@ -973,8 +1062,8 @@
       "stub": "YGdFksLavKE__s0",
       "strategy_name": "vwap_band_breakout",
       "extraction_sha256": "d676cfa3b78abd87737acdde9e6ff4c2ada357f9bac7da7f3fdebbe15b262a86",
-      "spec_hash": "8d37ee8d653de2b5c16055570024b5f8c231ae3b907aedfed9e38fbfc56a933c",
-      "disposition": "compilable-futures",
+      "spec_hash": "a6e54be3e5eeac50cb9ef233f30c84578f4c8df6002d8fa9ce1dc7faeb32ce77",
+      "disposition": "compile-degraded",
       "asset_class": null,
       "instrument_class_extracted": null,
       "direction": "both",
@@ -982,186 +1071,187 @@
       "n_spine_or_trigger": 8,
       "n_spine_binds": 0,
       "n_taught_binds": 0,
-      "n_deferred_family": 1,
+      "n_deferred_family": 2,
       "spine_fully_binds": false,
       "all_taught_binds": false,
       "approximation_metrics": {
         "n_conditions": 11,
-        "n_confident": 1,
-        "n_approximate": 2,
+        "n_confident": 2,
+        "n_approximate": 1,
         "n_unmatched": 8,
-        "classifier_approximation_rate": 0.9091,
-        "n_executed_bindable": 10,
-        "n_binding_approximation": 10,
+        "n_ambiguous": 0,
+        "classifier_approximation_rate": 0.8182,
+        "n_executed_bindable": 3,
+        "n_binding_approximation": 3,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": false,
       "conditions": [
         {
-          "condition_id": "WAIT_STRUCTURE:we-will-enter-into-a-buy-position-whenev#0",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:we-will-enter-into-a-buy-position-whenev#0",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "We will enter into a buy position whenever the price breaks out above the upper V-wap band.",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_STRUCTURE:for-a-sell-position-we-will-need-for-the#1",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "For a sell position we will need for the price to break below the lower V-wap band.",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_STRUCTURE:firstly-the-candlestick-will-need-to-be#2",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend.",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_STRUCTURE:secondly-the-price-must-break-above-the#3",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "Secondly, the price must break above the upper V-wap band. This shows us that the price might break out which would cause an even bigger increase in price.",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_STRUCTURE:thirdly-the-point-of-control-must-be-wit#4",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position.",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_STRUCTURE:firstly-the-candlesticks-will-need-to-be#5",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "firstly the candlesticks will need to be red, which indicates that the trend of the market is currently bearish.",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_SESSION:secondly-the-candlestick-must-close-belo#6",
-          "type": "WAIT_SESSION",
-          "role": "spine",
-          "object": "Secondly, the candlestick must close below the V-wap band. This shows us that the price might be making a bearish breakout which would cause for the price to fall further.",
           "load_bearing_spine": true,
           "bind_status": "UNBOUND",
           "binds_to": null,
           "approximation": false,
           "bindable": false,
           "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:lastly-we-will-need-to-make-sure-that-th#7",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:for-a-sell-position-we-will-need-for-the#1",
+          "type": "UNTYPED",
           "role": "spine",
-          "object": "Lastly, we will need to make sure that the point of control line is within the V-wap bands. As you can see all of the conditions have been met so let's enter into the position.",
+          "object": "For a sell position we will need for the price to break below the lower V-wap band.",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "UNTYPED:firstly-the-candlestick-will-need-to-be#2",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend.",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "UNTYPED:secondly-the-price-must-break-above-the#3",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "Secondly, the price must break above the upper V-wap band. This shows us that the price might break out which would cause an even bigger increase in price.",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "UNTYPED:thirdly-the-point-of-control-must-be-wit#4",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position.",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "UNTYPED:firstly-the-candlesticks-will-need-to-be#5",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "firstly the candlesticks will need to be red, which indicates that the trend of the market is currently bearish.",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "WAIT_CONFIRMATION:secondly-the-candlestick-must-close-belo#6",
+          "type": "WAIT_CONFIRMATION",
+          "role": "spine",
+          "object": "Secondly, the candlestick must close below the V-wap band. This shows us that the price might be making a bearish breakout which would cause for the price to fall further.",
           "load_bearing_spine": true,
           "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
+          "binds_to": "spec_condition_compiler.candle_confirmation_check",
           "approximation": true,
           "bindable": true,
           "executed": true,
           "unbound_reason": null,
           "session_zone": null,
           "session_keyword_resolves": null,
+          "deferred_family": true,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
+        },
+        {
+          "condition_id": "UNTYPED:lastly-we-will-need-to-make-sure-that-th#7",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "Lastly, we will need to make sure that the point of control line is within the V-wap bands. As you can see all of the conditions have been met so let's enter into the position.",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:we-will-be-using-this-indicator-to-deter#8",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:we-will-be-using-this-indicator-to-deter#8",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "We will be using this indicator to determine what the larger trend of the market is... To know the trend direction we will just need to look at the candle stick colors. Whenever we are in an uptrend the bars will be green and whenever we are in a downtrend the bars will be red. (CM EMA Trend Bars, EMA changed from 34 to 200)",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
@@ -1169,7 +1259,7 @@
           "concepts": [
             "ma_indicator"
           ],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "FILTER:the-point-of-control-must-be-within-the#9",
@@ -1217,7 +1307,7 @@
       "stub": "YqY0OkL5LMI__s0",
       "strategy_name": "double_inside_bar_daily_breakout",
       "extraction_sha256": "7f339794b7b131c351888f81e4ed65ee7a6c06c980b7ec035b6b091e00753444",
-      "spec_hash": "93be29fed5ee05f4e2b95629184cee27685ac98d2f82fea1ea6f55cbb6d9f08d",
+      "spec_hash": "f9e2282c35e40bd0a7e09b843d3f9e273099ccb91f6655e81db1323fea637743",
       "disposition": "compile-degraded",
       "asset_class": "stocks",
       "instrument_class_extracted": null,
@@ -1232,38 +1322,39 @@
       "approximation_metrics": {
         "n_conditions": 6,
         "n_confident": 1,
-        "n_approximate": 2,
+        "n_approximate": 1,
         "n_unmatched": 3,
+        "n_ambiguous": 1,
         "classifier_approximation_rate": 0.8333,
-        "n_executed_bindable": 4,
-        "n_binding_approximation": 4,
+        "n_executed_bindable": 1,
+        "n_binding_approximation": 1,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": true,
       "conditions": [
         {
-          "condition_id": "WAIT_STRUCTURE:this-had-a-double-inside-bar-set-up-on-t#0",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:this-had-a-double-inside-bar-set-up-on-t#0",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "this had a double inside bar set up on the daily chart",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "HTF_TAUGHT",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_SESSION:it-gapped-up-a-bit-from-the-previous-day#1",
-          "type": "WAIT_SESSION",
+          "condition_id": "UNTYPED:it-gapped-up-a-bit-from-the-previous-day#1",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday",
           "load_bearing_spine": true,
@@ -1272,26 +1363,26 @@
           "approximation": false,
           "bindable": false,
           "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:it-was-a-really-solid-setup-for-a-pushba#2",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:it-was-a-really-solid-setup-for-a-pushba#2",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "it was a really solid setup for a pushback into the 20s if it was able to start breaking out above that Friday high of day which was 18.74",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
@@ -1299,7 +1390,7 @@
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_SESSION:i-decided-to-take-a-starter-position-int#3",
@@ -1340,17 +1431,17 @@
           "family_declared_primitive": "entry_quality.confluence_factor_presence"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:it-briefly-broke-above-19-and-briefly-br#5",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:it-briefly-broke-above-19-and-briefly-br#5",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "it briefly broke above 19 and briefly broke out above that previous day's closing price",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
@@ -1358,7 +1449,7 @@
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "INVALIDATE:i-ended-up-jumping-out-and-taking-a-very#6",
@@ -1385,8 +1476,8 @@
       "stub": "YqY0OkL5LMI__s1",
       "strategy_name": "gap_and_go_opening_range_breakout",
       "extraction_sha256": "2c20c1f65a927ed95769f0b461bc9ec92c01f6072efa2b95b98b01919dd2b03d",
-      "spec_hash": "e07971f854163ffdff35c140b9c628e385917ccd1deec06708c7dee3941ad1e6",
-      "disposition": "compile-degraded",
+      "spec_hash": "0e49d326ceca808baa219ba1b1d3bcdfbc2d6c5de6a5869b726114e4e7154584",
+      "disposition": "compilable-futures",
       "asset_class": "equities",
       "instrument_class_extracted": null,
       "direction": "both",
@@ -1399,58 +1490,59 @@
       "all_taught_binds": false,
       "approximation_metrics": {
         "n_conditions": 8,
-        "n_confident": 3,
-        "n_approximate": 5,
+        "n_confident": 5,
+        "n_approximate": 3,
         "n_unmatched": 0,
-        "classifier_approximation_rate": 0.625,
-        "n_executed_bindable": 2,
-        "n_binding_approximation": 2,
+        "n_ambiguous": 0,
+        "classifier_approximation_rate": 0.375,
+        "n_executed_bindable": 7,
+        "n_binding_approximation": 7,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": true,
       "conditions": [
         {
-          "condition_id": "WAIT_SESSION:if-we-focus-on-the-pre-market-session-he#0",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:if-we-focus-on-the-pre-market-session-he#0",
+          "type": "WAIT_STRUCTURE",
           "role": "spine",
           "object": "if we focus on the pre-market session here in the open we can see it spikes up trade sideways consolidates into the open and we get ourselves an opening range breakout level",
           "load_bearing_spine": true,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:an-opening-range-breakout-level-which-is#1",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:an-opening-range-breakout-level-which-is#1",
+          "type": "WAIT_STRUCTURE",
           "role": "spine",
           "object": "an opening range breakout level which is the high of this first five minute candle of 3.94 cents",
           "load_bearing_spine": true,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "EXEC_TAUGHT",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
           "condition_id": "WAIT_STRUCTURE:a-few-minutes-later-it-starts-to-break-o#2",
@@ -1474,25 +1566,25 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:as-always-opening-range-breakout-levels#3",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:as-always-opening-range-breakout-levels#3",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "as always opening range breakout levels for the stocks with the biggest potential for a gap and go are posted every single morning in the market Master group",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "fvg_imbalance"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
           "condition_id": "WAIT_STRUCTURE:one-of-those-things-that-is-often-a-tell#4",
@@ -1535,46 +1627,46 @@
           "family_declared_primitive": "session_windows"
         },
         {
-          "condition_id": "WAIT_SESSION:this-one-actually-never-got-above-its-op#6",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:this-one-actually-never-got-above-its-op#6",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "this one actually never got above its opening range breakout level there was just no follow-through whatsoever at the open",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:we-can-see-very-quickly-it-breaks-only-s#7",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:we-can-see-very-quickly-it-breaks-only-s#7",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "we can see very quickly it breaks only seven cents above that opening range breakout level and then come straight back down",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         }
       ]
     },
@@ -1582,7 +1674,7 @@
       "stub": "dENM6gt8ZRg__s0",
       "strategy_name": "orb_5m_retest",
       "extraction_sha256": "b16473600863d0de020dff5e2810bfbdba2aacc10521335b634447dc14e7ac24",
-      "spec_hash": "dd55e043761ce2375ac1e87095e7b9383fbe3235d168f09daa343d7d7db179af",
+      "spec_hash": "5a46a8835a8319bee0ca92f8faaf6587a1e1f5f9c10a6c0e267b0e8c25fcc2a6",
       "disposition": "compile-degraded",
       "asset_class": null,
       "instrument_class_extracted": null,
@@ -1591,63 +1683,64 @@
       "n_spine_or_trigger": 5,
       "n_spine_binds": 0,
       "n_taught_binds": 0,
-      "n_deferred_family": 1,
+      "n_deferred_family": 0,
       "spine_fully_binds": false,
       "all_taught_binds": false,
       "approximation_metrics": {
         "n_conditions": 7,
-        "n_confident": 1,
-        "n_approximate": 4,
+        "n_confident": 2,
+        "n_approximate": 0,
         "n_unmatched": 2,
-        "classifier_approximation_rate": 0.8571,
-        "n_executed_bindable": 4,
-        "n_binding_approximation": 4,
+        "n_ambiguous": 3,
+        "classifier_approximation_rate": 0.7143,
+        "n_executed_bindable": 2,
+        "n_binding_approximation": 2,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": false,
       "conditions": [
         {
-          "condition_id": "WAIT_SESSION:the-first-five-minute-candle-from-09-30#0",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:the-first-five-minute-candle-from-09-30#0",
+          "type": "WAIT_STRUCTURE",
           "role": "spine",
           "object": "The first five-minute candle \u00e2\u20ac\u201d from 09:30 to 09:35 \u00e2\u20ac\u201d forms the Opening Range. Two levels: the high and the low of that candle. And the midpoint \u00e2\u20ac\u201d exactly halfway between them.",
           "load_bearing_spine": true,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
-          "session_zone": null,
-          "session_keyword_resolves": false,
-          "deferred_family": false,
-          "tf_class": "EXEC_TAUGHT",
-          "concepts": [],
-          "family_declared_primitive": "session_windows"
-        },
-        {
-          "condition_id": "WAIT_CONFIRMATION:then-we-wait-for-a-breakout-a-breakout-i#1",
-          "type": "WAIT_CONFIRMATION",
-          "role": "spine",
-          "object": "Then we wait for a breakout. A breakout is only valid if the candle body closes completely outside the range. Not a wick. Not a touch. A full close.",
-          "load_bearing_spine": true,
           "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.candle_confirmation_check",
+          "binds_to": "structure_engine.compute_structure_state",
           "approximation": true,
           "bindable": true,
           "executed": true,
           "unbound_reason": null,
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
-          "tf_class": "TF_UNSPECIFIED",
+          "deferred_family": false,
+          "tf_class": "EXEC_TAUGHT",
           "concepts": [],
-          "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:after-the-breakout-we-wait-for-a-retest#2",
-          "type": "WAIT_SESSION",
+          "condition_id": "UNTYPED:then-we-wait-for-a-breakout-a-breakout-i#1",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "Then we wait for a breakout. A breakout is only valid if the candle body closes completely outside the range. Not a wick. Not a touch. A full close.",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "UNTYPED:after-the-breakout-we-wait-for-a-retest#2",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "After the breakout, we wait for a retest. A retest is valid if the candle opened outside the range, the wick dipped inside, and the close is back outside.",
           "load_bearing_spine": true,
@@ -1656,13 +1749,13 @@
           "approximation": false,
           "bindable": false,
           "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_STRUCTURE:if-the-candle-closes-inside-the-range-th#3",
@@ -1684,8 +1777,8 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:entry-is-on-the-open-of-the-next-candle#4",
-          "type": "WAIT_SESSION",
+          "condition_id": "UNTYPED:entry-is-on-the-open-of-the-next-candle#4",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "Entry is on the open of the next candle after the retest.",
           "load_bearing_spine": true,
@@ -1694,51 +1787,51 @@
           "approximation": false,
           "bindable": false,
           "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:every-decision-is-made-on-closed-candles#5",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:every-decision-is-made-on-closed-candles#5",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "every decision is made on closed candles only",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:risk-per-trade-one-percent-of-the-deposi#6",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:risk-per-trade-one-percent-of-the-deposi#6",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "Risk per trade: one percent of the deposit. That's the classic conservative position size.",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         }
       ]
     },
@@ -1746,7 +1839,7 @@
       "stub": "hcHuDfxdywI__s0",
       "strategy_name": "institutional_order_block_reversal_entry",
       "extraction_sha256": "7ca7952d263c07d804c9a89e55382626b0799359f2473e0a2c81d152948aa57b",
-      "spec_hash": "a209e9a80d456679ac4cef043b29788561b3dab69bccdcdaa1ca25b25a3a3fae",
+      "spec_hash": "6062f5dd263f7ca58d90cb609996ef7e10455d4bb1cb1297e4ca99bb786f4557",
       "disposition": "compilable-futures",
       "asset_class": "forex",
       "instrument_class_extracted": null,
@@ -1755,15 +1848,16 @@
       "n_spine_or_trigger": 6,
       "n_spine_binds": 0,
       "n_taught_binds": 0,
-      "n_deferred_family": 4,
+      "n_deferred_family": 0,
       "spine_fully_binds": false,
       "all_taught_binds": false,
       "approximation_metrics": {
         "n_conditions": 10,
-        "n_confident": 3,
-        "n_approximate": 6,
+        "n_confident": 4,
+        "n_approximate": 5,
         "n_unmatched": 1,
-        "classifier_approximation_rate": 0.7,
+        "n_ambiguous": 0,
+        "classifier_approximation_rate": 0.6,
         "n_executed_bindable": 9,
         "n_binding_approximation": 9,
         "binding_approximation_rate": 1.0,
@@ -1814,25 +1908,25 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:after-the-first-break-of-structure-price#2",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:after-the-first-break-of-structure-price#2",
+          "type": "WAIT_STRUCTURE",
           "role": "spine",
           "object": "After the first break of structure, price performs a healthy pullback and then forms another break of structure, further confirming bullish continuation and strengthening the external structure",
           "load_bearing_spine": true,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "structure_event"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
           "condition_id": "WAIT_STRUCTURE:price-retraces-downward-and-forms-a-chan#3",
@@ -1858,10 +1952,31 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:the-change-of-character-acted-as-an-entr#4",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:the-change-of-character-acted-as-an-entr#4",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "the change of character acted as an entry trigger rather than a reversal signal",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [
+            "structure_event"
+          ],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "WAIT_STRUCTURE:in-a-bullish-order-block-a-buy-limit-ord#5",
+          "type": "WAIT_STRUCTURE",
+          "role": "spine",
+          "object": "In a bullish order block, a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries",
           "load_bearing_spine": true,
           "bind_status": "APPROXIMATED",
           "binds_to": "structure_engine.compute_structure_state",
@@ -1874,76 +1989,55 @@
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
-            "structure_event"
+            "order_block",
+            "level_zone"
           ],
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_CONFIRMATION:in-a-bullish-order-block-a-buy-limit-ord#5",
-          "type": "WAIT_CONFIRMATION",
-          "role": "spine",
-          "object": "In a bullish order block, a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.candle_confirmation_check",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": true,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [
-            "order_block",
-            "level_zone"
-          ],
-          "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
-        },
-        {
-          "condition_id": "WAIT_CONFIRMATION:the-first-and-most-powerful-confirmation#6",
-          "type": "WAIT_CONFIRMATION",
+          "condition_id": "WAIT_STRUCTURE:the-first-and-most-powerful-confirmation#6",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "The first and most powerful confirmation of a valid order block is the liquidity sweep, also known as the takeout... The final bearish candle breaks the low of the previous candle and immediately reverses upward. This move, taking out the prior low, is the liquidity sweep",
           "load_bearing_spine": false,
           "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.candle_confirmation_check",
+          "binds_to": "structure_engine.compute_structure_state",
           "approximation": true,
           "bindable": true,
           "executed": true,
           "unbound_reason": null,
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "liquidity",
             "order_block"
           ],
-          "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_CONFIRMATION:the-second-key-confirmation-of-a-valid-o#7",
-          "type": "WAIT_CONFIRMATION",
+          "condition_id": "WAIT_STRUCTURE:the-second-key-confirmation-of-a-valid-o#7",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "The second key confirmation of a valid order block is the presence of imbalance, also known as inefficiency. Immediately after the liquidity sweep, price should reverse aggressively and move upward with clear impulsive strength... On the chart, this imbalance appears as a fair value gap, an area where one or more candles do not overlap each other",
           "load_bearing_spine": false,
           "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.candle_confirmation_check",
+          "binds_to": "structure_engine.compute_structure_state",
           "approximation": true,
           "bindable": true,
           "executed": true,
           "unbound_reason": null,
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "liquidity",
             "fvg_imbalance",
             "order_block"
           ],
-          "family_declared_primitive": "spec_condition_compiler.candle_confirmation_check"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
           "condition_id": "WAIT_STRUCTURE:if-no-imbalance-forms-above-this-candle#8",
@@ -1969,26 +2063,26 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_RETEST:the-third-and-final-confirmation-of-a-va#9",
-          "type": "WAIT_RETEST",
+          "condition_id": "WAIT_STRUCTURE:the-third-and-final-confirmation-of-a-va#9",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "The third and final confirmation of a valid order block is that it must remain unmitigated. This means that after the order block is formed, price has not yet returned to this zone to retest it or trade through it",
           "load_bearing_spine": false,
           "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.retest_touch_check",
+          "binds_to": "structure_engine.compute_structure_state",
           "approximation": true,
           "bindable": true,
           "executed": true,
           "unbound_reason": null,
           "session_zone": null,
           "session_keyword_resolves": null,
-          "deferred_family": true,
+          "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "order_block",
             "level_zone"
           ],
-          "family_declared_primitive": "spec_condition_compiler.retest_touch_check"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         }
       ]
     },
@@ -1996,8 +2090,8 @@
       "stub": "pKzXxB9Blts__s0",
       "strategy_name": "anchored_vwap_pullback_from_volume_rotation",
       "extraction_sha256": "80124cc3a690dcda12adced3cfe71a04cc9b41a3f71ab127e32b85a7dae6d520",
-      "spec_hash": "98b0c05c56efeec0c6414e721afc257e68548eb163fbc6a30ee9cb79da5271fa",
-      "disposition": "compilable-futures",
+      "spec_hash": "3059da42c645abaaba9c731d7b689efb9304b09e03008b413071b8d52096cac8",
+      "disposition": "compile-degraded",
       "asset_class": null,
       "instrument_class_extracted": null,
       "direction": "both",
@@ -2005,7 +2099,7 @@
       "n_spine_or_trigger": 8,
       "n_spine_binds": 0,
       "n_taught_binds": 0,
-      "n_deferred_family": 5,
+      "n_deferred_family": 4,
       "spine_fully_binds": false,
       "all_taught_binds": false,
       "approximation_metrics": {
@@ -2013,9 +2107,10 @@
         "n_confident": 4,
         "n_approximate": 1,
         "n_unmatched": 5,
+        "n_ambiguous": 0,
         "classifier_approximation_rate": 0.6,
-        "n_executed_bindable": 10,
-        "n_binding_approximation": 10,
+        "n_executed_bindable": 5,
+        "n_binding_approximation": 5,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
@@ -2041,42 +2136,42 @@
           "family_declared_primitive": "entry_quality.confluence_factor_presence"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:this-needs-to-be-followed-by-a-trend-act#1",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:this-needs-to-be-followed-by-a-trend-act#1",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "this needs to be followed by a trend activity, a strong trend activity like this one",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
-          "condition_id": "WAIT_STRUCTURE:you-want-to-anchor-the-view-up-to-that-c#2",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:you-want-to-anchor-the-view-up-to-that-c#2",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "you want to anchor the view up to that candle, to the last candle of the rotation, which is the first candle of the sell-off, usually",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "WAIT_RETEST:you-simply-need-to-see-the-price-go-away#3",
@@ -2119,10 +2214,29 @@
           "family_declared_primitive": "spec_condition_compiler.retest_touch_check"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:that-means-short-from-here-short-from-he#5",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:that-means-short-from-here-short-from-he#5",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "that means short from here short from here",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "WAIT_STRUCTURE:the-resistance-which-is-represented-by-t#6",
+          "type": "WAIT_STRUCTURE",
+          "role": "spine",
+          "object": "the resistance which is represented by the VWAP, turns into a support, right? Because the price is moving above it. So, that's why you want to wait for the pullbacks to that support and enter longs from there",
           "load_bearing_spine": true,
           "bind_status": "APPROXIMATED",
           "binds_to": "structure_engine.compute_structure_state",
@@ -2133,50 +2247,31 @@
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_RETEST:the-resistance-which-is-represented-by-t#6",
-          "type": "WAIT_RETEST",
-          "role": "spine",
-          "object": "the resistance which is represented by the VWAP, turns into a support, right? Because the price is moving above it. So, that's why you want to wait for the pullbacks to that support and enter longs from there",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "spec_condition_compiler.retest_touch_check",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": true,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone",
             "ma_indicator"
           ],
-          "family_declared_primitive": "spec_condition_compiler.retest_touch_check"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:there-s-a-second-test-right-here-and-tha#7",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:there-s-a-second-test-right-here-and-tha#7",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "there's a second test right here, and that means another short from this place",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         },
         {
           "condition_id": "FILTER:volume-profile-shows-where-the-big-volum#8",
@@ -2198,17 +2293,17 @@
           "family_declared_primitive": "entry_quality.confluence_factor_presence"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:as-there-s-this-rotation-you-don-t-reall#9",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:as-there-s-this-rotation-you-don-t-reall#9",
+          "type": "UNTYPED",
           "role": "confluence",
           "object": "as there's this rotation, you don't really want to do anything because when the market is rotating, VWAP setups don't really work",
           "load_bearing_spine": false,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
           "session_keyword_resolves": null,
           "deferred_family": false,
@@ -2216,7 +2311,7 @@
           "concepts": [
             "ma_indicator"
           ],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
+          "family_declared_primitive": null
         }
       ]
     },
@@ -2224,7 +2319,7 @@
       "stub": "st5e-YJRfKc__s0",
       "strategy_name": "opening_range_breakout",
       "extraction_sha256": "7868524ba4401755edb26a4db4aa1699e0c4b5ad0cc422e58a5bbf759d62ab99",
-      "spec_hash": "87f847eaeced33aac8ffe6fd6e6ee83993a9d86ef707790fae48442922c1237a",
+      "spec_hash": "953105dab1ff9a4a5e82364c4c64f8f92ea3d7eccb00b3db0a3a7602c53ea405",
       "disposition": "compilable-futures",
       "asset_class": "equities",
       "instrument_class_extracted": null,
@@ -2238,12 +2333,13 @@
       "all_taught_binds": false,
       "approximation_metrics": {
         "n_conditions": 10,
-        "n_confident": 4,
-        "n_approximate": 5,
-        "n_unmatched": 1,
-        "classifier_approximation_rate": 0.6,
-        "n_executed_bindable": 5,
-        "n_binding_approximation": 5,
+        "n_confident": 10,
+        "n_approximate": 0,
+        "n_unmatched": 0,
+        "n_ambiguous": 0,
+        "classifier_approximation_rate": 0.0,
+        "n_executed_bindable": 9,
+        "n_binding_approximation": 9,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
@@ -2269,29 +2365,10 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_STRUCTURE:the-5m-minute-ob-takes-place-from-9-30-a#1",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern. The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45. And the 30 minute is from 9:30 to 10 a.m. Eastern.",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "EXEC_TAUGHT",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_SESSION:we-take-the-opening-range-high-and-the-o#2",
+          "condition_id": "WAIT_SESSION:the-5m-minute-ob-takes-place-from-9-30-a#1",
           "type": "WAIT_SESSION",
           "role": "spine",
-          "object": "We take the opening range high and the opening range low in between these time periods. And that's what forms the opening range.",
+          "object": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern. The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45. And the 30 minute is from 9:30 to 10 a.m. Eastern.",
           "load_bearing_spine": true,
           "bind_status": "UNBOUND",
           "binds_to": null,
@@ -2302,9 +2379,28 @@
           "session_zone": null,
           "session_keyword_resolves": false,
           "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
+          "tf_class": "EXEC_TAUGHT",
           "concepts": [],
           "family_declared_primitive": "session_windows"
+        },
+        {
+          "condition_id": "WAIT_STRUCTURE:we-take-the-opening-range-high-and-the-o#2",
+          "type": "WAIT_STRUCTURE",
+          "role": "spine",
+          "object": "We take the opening range high and the opening range low in between these time periods. And that's what forms the opening range.",
+          "load_bearing_spine": true,
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
           "condition_id": "WAIT_STRUCTURE:so-now-we-take-a-look-at-these-levels-pr#3",
@@ -2368,82 +2464,82 @@
           "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:this-is-the-opening-range-low-616-61-in#6",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:this-is-the-opening-range-low-616-61-in#6",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "this is the opening range low 616.61 in which the buyers won. Sellers were not able to break a penny below this level.",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:the-difference-between-the-high-and-the#7",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:the-difference-between-the-high-and-the#7",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "the difference between the high and the low is what gives us our opening range breakout range. We call this the range value. In this case, the difference was a dollar3.",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#8",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:the-half-range-represents-exactly-how-it#8",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "The half range represents exactly how it sounds, half of that opening range.",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:this-opening-range-acts-as-a-decision-po#9",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:this-opening-range-acts-as-a-decision-po#9",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "This opening range acts as a decision point for the rest of the day. It's based on the day. So it becomes relative for every single trading day.",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
           "condition_id": "INVALIDATE:so-you-ll-see-there-would-be-something-c#10",
@@ -2470,8 +2566,8 @@
       "stub": "st5e-YJRfKc__s1",
       "strategy_name": "opening_range_pullback",
       "extraction_sha256": "a74ca7bb72beb11cd054d43c7e7511cd62805750d1d5e0efa8d1cd6446cd13db",
-      "spec_hash": "6fdd8d318043cad45491bf9af739fccaba2a11ebb5c6d912d1ec3574341cb94a",
-      "disposition": "compilable-futures",
+      "spec_hash": "ec3f329fbf1fec5641bec8c500ddadb8237246853b73f17be6c5c934f7326bea",
+      "disposition": "compile-degraded",
       "asset_class": "equities",
       "instrument_class_extracted": null,
       "direction": "long",
@@ -2484,113 +2580,114 @@
       "all_taught_binds": false,
       "approximation_metrics": {
         "n_conditions": 5,
-        "n_confident": 0,
-        "n_approximate": 2,
+        "n_confident": 1,
+        "n_approximate": 1,
         "n_unmatched": 3,
-        "classifier_approximation_rate": 1.0,
-        "n_executed_bindable": 3,
-        "n_binding_approximation": 3,
+        "n_ambiguous": 0,
+        "classifier_approximation_rate": 0.8,
+        "n_executed_bindable": 2,
+        "n_binding_approximation": 2,
         "binding_approximation_rate": 1.0,
         "bias_direction": "OPTIMISTIC_LOOSER_THAN_TAUGHT"
       },
       "house_default_exit": false,
       "conditions": [
         {
-          "condition_id": "WAIT_STRUCTURE:the-initial-breakout-took-place#0",
-          "type": "WAIT_STRUCTURE",
+          "condition_id": "UNTYPED:the-initial-breakout-took-place#0",
+          "type": "UNTYPED",
           "role": "spine",
           "object": "the initial breakout took place",
           "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_STRUCTURE:in-this-case-price-pulled-back#1",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "in this case price pulled back",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_STRUCTURE:then-we-re-looking-for-an-entry-back-tow#2",
-          "type": "WAIT_STRUCTURE",
-          "role": "spine",
-          "object": "then we're looking for an entry back towards the long mark",
-          "load_bearing_spine": true,
-          "bind_status": "APPROXIMATED",
-          "binds_to": "structure_engine.compute_structure_state",
-          "approximation": true,
-          "bindable": true,
-          "executed": true,
-          "unbound_reason": null,
-          "session_zone": null,
-          "session_keyword_resolves": null,
-          "deferred_family": false,
-          "tf_class": "TF_UNSPECIFIED",
-          "concepts": [],
-          "family_declared_primitive": "structure_engine.compute_structure_state"
-        },
-        {
-          "condition_id": "WAIT_SESSION:whatever-this-opening-range-high-is-subt#3",
-          "type": "WAIT_SESSION",
-          "role": "confluence",
-          "object": "whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level",
-          "load_bearing_spine": false,
           "bind_status": "UNBOUND",
           "binds_to": null,
           "approximation": false,
           "bindable": false,
           "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "unbound_reason": "unknown_condition_type",
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "UNTYPED:in-this-case-price-pulled-back#1",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "in this case price pulled back",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "UNTYPED:then-we-re-looking-for-an-entry-back-tow#2",
+          "type": "UNTYPED",
+          "role": "spine",
+          "object": "then we're looking for an entry back towards the long mark",
+          "load_bearing_spine": true,
+          "bind_status": "UNBOUND",
+          "binds_to": null,
+          "approximation": false,
+          "bindable": false,
+          "executed": false,
+          "unbound_reason": "unknown_condition_type",
+          "session_zone": null,
+          "session_keyword_resolves": null,
+          "deferred_family": false,
+          "tf_class": "TF_UNSPECIFIED",
+          "concepts": [],
+          "family_declared_primitive": null
+        },
+        {
+          "condition_id": "WAIT_STRUCTURE:whatever-this-opening-range-high-is-subt#3",
+          "type": "WAIT_STRUCTURE",
+          "role": "confluence",
+          "object": "whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level",
+          "load_bearing_spine": false,
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
+          "session_zone": null,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [
             "level_zone"
           ],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         },
         {
-          "condition_id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#4",
-          "type": "WAIT_SESSION",
+          "condition_id": "WAIT_STRUCTURE:the-half-range-represents-exactly-how-it#4",
+          "type": "WAIT_STRUCTURE",
           "role": "confluence",
           "object": "The half range represents exactly how it sounds, half of that opening range",
           "load_bearing_spine": false,
-          "bind_status": "UNBOUND",
-          "binds_to": null,
-          "approximation": false,
-          "bindable": false,
-          "executed": false,
-          "unbound_reason": "no_recognized_session_keyword",
+          "bind_status": "APPROXIMATED",
+          "binds_to": "structure_engine.compute_structure_state",
+          "approximation": true,
+          "bindable": true,
+          "executed": true,
+          "unbound_reason": null,
           "session_zone": null,
-          "session_keyword_resolves": false,
+          "session_keyword_resolves": null,
           "deferred_family": false,
           "tf_class": "TF_UNSPECIFIED",
           "concepts": [],
-          "family_declared_primitive": "session_windows"
+          "family_declared_primitive": "structure_engine.compute_structure_state"
         }
       ]
     }
