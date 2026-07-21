@@ -1,6 +1,6 @@
 {
  "target": "dual_denominator_remeasure.py",
- "n_abort_sites_reached_by_walk": 1180,
+ "n_abort_sites_reached_by_walk": 1189,
  "n_abort_sites_live_on_normal_path": 378,
  "n_gates_examined_THE_DENOMINATOR": 290,
  "n_scorer_gates": 136,
@@ -26510,12 +26510,12 @@
    "EXECUTED_IN_TRACED_RUN": "NO"
   },
   {
-   "gate": "REFUSE_UNLESS@6845",
+   "gate": "REFUSE_UNLESS@6853",
    "gate_class": "ENFORCEMENT",
    "kind": "REFUSE_UNLESS",
-   "line": 6845,
+   "line": 6853,
    "enclosing_function": "main",
-   "order_in_normal_path": 1304,
+   "order_in_normal_path": 1313,
    "expr": "before_hashes == after_hashes",
    "reachable_on_normal_path": "YES",
    "guard_stack": [],
@@ -26602,7 +26602,7 @@
    "kind": "SCORER_CALL",
    "line": 5696,
    "enclosing_function": "_summarise",
-   "order_in_normal_path": 1305,
+   "order_in_normal_path": 1314,
    "expr": "",
    "reachable_on_normal_path": "YES",
    "guard_stack": [],
@@ -26676,7 +26676,7 @@
     },
     {
      "kind": "REFUSE_UNLESS",
-     "line": 6845,
+     "line": 6853,
      "func": "main",
      "expr": "before_hashes == after_hashes"
     }
@@ -50421,10 +50421,205 @@
   },
   {
    "kind": "RAISE",
+   "line": 6933,
+   "func": "_capstone_self_reproduction_gate",
+   "expr": "raise SystemExit(2)",
+   "order": 1299,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    },
+    {
+     "line": 6931,
+     "class": "DATA_DEPENDENT",
+     "test": "not real.exists()",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RAISE",
    "line": 255,
    "func": "publish_artifact",
    "expr": "raise SystemExit(3)",
-   "order": 1299,
+   "order": 1300,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    },
+    {
+     "line": 245,
+     "class": "DRAFT_MODE",
+     "test": "_DRAFT_MODE",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RETURN",
+   "line": 262,
+   "func": "publish_artifact",
+   "expr": "OUT_PATH",
+   "order": 1301,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RETURN",
+   "line": 6866,
+   "func": "_first_byte_diff",
+   "expr": "i",
+   "order": 1302,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    },
+    {
+     "line": 6864,
+     "class": "LOOP_BODY",
+     "test": "loop entered once by this walk",
+     "arm": "body"
+    },
+    {
+     "line": 6865,
+     "class": "DATA_DEPENDENT",
+     "test": "a[i] != b[i]",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RETURN",
+   "line": 6867,
+   "func": "_first_byte_diff",
+   "expr": "n if len(a) != len(b) else -1",
+   "order": 1303,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RAISE",
+   "line": 6976,
+   "func": "_capstone_self_reproduction_gate",
+   "expr": "raise SystemExit(2)",
+   "order": 1304,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    },
+    {
+     "line": 6970,
+     "class": "DATA_DEPENDENT",
+     "test": "not detected",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RETURN",
+   "line": 6890,
+   "func": "_line_level_drift",
+   "expr": "{'n_diff_lines': n_diff, 'first': first}",
+   "order": 1305,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    },
+    {
+     "line": 6978,
+     "class": "DATA_DEPENDENT",
+     "test": "regenerated != committed",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RAISE",
+   "line": 6995,
+   "func": "_capstone_self_reproduction_gate",
+   "expr": "raise SystemExit(2)",
+   "order": 1306,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    },
+    {
+     "line": 6978,
+     "class": "DATA_DEPENDENT",
+     "test": "regenerated != committed",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RETURN",
+   "line": 6848,
+   "func": "main",
+   "expr": "None",
+   "order": 1307,
+   "can_fire_on_normal_path": false,
+   "guard_stack": [
+    {
+     "line": 6842,
+     "class": "CLI_SUBCOMMAND",
+     "test": "'--self-reproduction-gate' in argv",
+     "arm": "then"
+    }
+   ],
+   "EXECUTED_IN_TRACED_RUN": "NO"
+  },
+  {
+   "kind": "RAISE",
+   "line": 255,
+   "func": "publish_artifact",
+   "expr": "raise SystemExit(3)",
+   "order": 1308,
    "can_fire_on_normal_path": false,
    "guard_stack": [
     {
@@ -50441,7 +50636,7 @@
    "line": 262,
    "func": "publish_artifact",
    "expr": "OUT_PATH",
-   "order": 1300,
+   "order": 1309,
    "can_fire_on_normal_path": true,
    "guard_stack": [],
    "EXECUTED_IN_TRACED_RUN": "NO"
@@ -50451,7 +50646,7 @@
    "line": 266,
    "func": "sha",
    "expr": "hashlib.sha256(p.read_bytes()).hexdigest()",
-   "order": 1301,
+   "order": 1310,
    "can_fire_on_normal_path": true,
    "guard_stack": [],
    "EXECUTED_IN_TRACED_RUN": "NO"
@@ -50461,7 +50656,7 @@
    "line": 1452,
    "func": "refuse_unless",
    "expr": "None",
-   "order": 1302,
+   "order": 1311,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50478,17 +50673,17 @@
    "line": 1460,
    "func": "refuse_unless",
    "expr": "raise SystemExit(2)",
-   "order": 1303,
+   "order": 1312,
    "can_fire_on_normal_path": true,
    "guard_stack": [],
    "EXECUTED_IN_TRACED_RUN": "YES"
   },
   {
    "kind": "REFUSE_UNLESS",
-   "line": 6845,
+   "line": 6853,
    "func": "main",
    "expr": "before_hashes == after_hashes",
-   "order": 1304,
+   "order": 1313,
    "can_fire_on_normal_path": true,
    "guard_stack": [],
    "EXECUTED_IN_TRACED_RUN": "NO"
@@ -50498,7 +50693,7 @@
    "line": 3653,
    "func": "session_reconciliation_holds",
    "expr": "n_zone_bound <= component_a",
-   "order": 1306,
+   "order": 1315,
    "can_fire_on_normal_path": true,
    "guard_stack": [],
    "EXECUTED_IN_TRACED_RUN": "YES"
@@ -50508,7 +50703,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1307,
+   "order": 1316,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50525,7 +50720,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1308,
+   "order": 1317,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50542,7 +50737,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1309,
+   "order": 1318,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50559,7 +50754,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1310,
+   "order": 1319,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50576,7 +50771,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1311,
+   "order": 1320,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50599,7 +50794,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1312,
+   "order": 1321,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50616,7 +50811,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1313,
+   "order": 1322,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50633,7 +50828,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1314,
+   "order": 1323,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50656,7 +50851,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1315,
+   "order": 1324,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50679,7 +50874,7 @@
    "line": 1426,
    "func": "_print_boundary",
    "expr": "None",
-   "order": 1316,
+   "order": 1325,
    "can_fire_on_normal_path": true,
    "guard_stack": [
     {
@@ -50695,7 +50890,7 @@
  "dynamic_arm": {
   "how": "sys.settrace line tracer over a real `--draft` invocation of the generator",
   "generator_exit_code": 0,
-  "n_distinct_lines_executed": 2482,
+  "n_distinct_lines_executed": 2476,
   "stderr_tail": "THING about whether that row was graded CORRECTLY, nor about which bucket it belongs in -- bucket membership is the per-component guards' subject, and grade quality is outside every instrument in this file. It also cannot see a row graded under a REJECTED criterion: a verdict reached the wrong way is still a verdict to a count.\n\nREFUSING TO PUBLISH. Exit 2 -- this is a guard verdict, not a crash.\n",
   "\u2605_DECLARED_LIMIT": "A --draft run RETURNS before the two publish-only guards (append-only and head-match). Those are marked NO here and that NO means 'not on this path', not 'dead'. Every other gate runs identically in draft and publish -- draft changes only whether the artifact is written."
  },
@@ -50715,8 +50910,8 @@
    "n_aborts_upstream": 361
   },
   {
-   "gate": "REFUSE_UNLESS@6845",
-   "line": 6845,
+   "gate": "REFUSE_UNLESS@6853",
+   "line": 6853,
    "func": "main",
    "n_aborts_upstream": 366
   }
