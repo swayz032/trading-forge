@@ -56,7 +56,7 @@ Keep this file short enough that pasting it is never a burden. If a trap stops b
 > ### ★ YOUR FINAL MESSAGE IS YOUR ONLY DELIVERY CHANNEL
 > **Your final message MUST contain the results, or the words NOT RUN.** A promise of future delivery
 > in a final message is a **null deliverable — you will not exist to keep it.** One agent here
-> declared runs "in flight" and terminated **twice**; both were presumed dead and neither delivered,
+> declared runs "in flight" and terminated **three times**; all were presumed dead and none delivered,
 > including one carrying the best finding on the board. **Finish inside the message, or say NOT RUN.**
 
 ## (copy to here)
