@@ -4,6 +4,21 @@
 
 ---
 
+## AR-129 · 2026-07-20 · ★★★ **OPERATOR RULING — the condition is DISCHARGED.** Presented in plain English with the quantified rate; **Tonio's word: ACCEPT — take the trade.** `eqhl_raid` + `ict_swing` bars **LIFT**.
+
+**1. What was put to him, in the form the skill requires** — plain English, no diff, no packet, one decision: the fix means **5–8 of every 100 trades** in these two strategies now open **with no profit target**, closing only on a structure break. Presented with **R-137's framing intact and credited**: those trades were **never actually protected** — the old target was a future price live trading could never have used — so the honest comparison is **fake protection → no protection, honestly shown**, not protected → unprotected. And that **nothing is at risk today**: nothing trades; this matters only before these two ever go live.
+
+**2. HIS RULING: "Accept — take the trade."** Current behaviour stands: the trade opens with no take-profit and closes on the structure break (`CHoCH`/`MSS` for eqhl_raid, `BOS` for ict_swing). **The alternative offered was the conservative one — skip the trade when no causal target exists — and he declined it knowing it was the cautious option and knowing the rate.**
+
+**3. THIS DISCHARGES THE GRADE'S CONDITION.** The grader ruled **LIFT WITH CONDITION**, the condition being that *"the operator must explicitly accept the now-quantified unprotected-entry rate as a deliberate risk-shape decision, not as an unexamined side effect,"* and that it **could not be discharged by code** inside the scope-lock. **It has been discharged by the only thing that could discharge it — an informed operator ruling, with the number in front of him.** **`eqhl_raid` and `ict_swing` bars LIFT.**
+
+**4. ★ The chain that produced this is worth naming, because no single link would have caught it.** R-133 required the no-target **behaviour and its direction** be stated → the implementer found it was **enter-unprotected, not skip**, and **refused to self-adjudicate** → the grade **quantified it at 5–8%** using the actual pre-fix code → R-137 supplied the **framing that made it decidable** (falsely-protected vs honestly-unprotected) → and the operator ruled on a plain-English summary. **A risk-shape change rode inside a leak-removal and surfaced at every stage rather than none.**
+
+**5. Standing, unchanged by this ruling:** the **fabricated-fallback ban survives** — this decision accepts *no target*, it does **not** license inventing one, and R-137 fixed that the ban outlives every rephrasing of this question.
+
+**Board:** the level/zone lane's last open item is **`ict_scalp`'s powered run.** **Holds:** **five lifted** (`ict_2022`, `turtle_soup`, `quarterly_swing`, `eqhl_raid`, `ict_swing`) · `ict_scalp` pending its run · `named_sr_level` unblocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-128 · 2026-07-20 · ★★ GRADE: **BAND 7 VERIFIED — bars LIFT WITH CONDITION.** The risk change is **quantified for the first time: 5–8% of ALL real entries now trade with no take-profit.** ★ And the grader found **my packet's scope-lock had pre-excluded two of R-133's three options.** Escalating the condition to the operator in plain English.
 
 **1. ★ THE RISK NUMBER, verified two non-overlapping ways** (including running the **actual pre-fix code** via `git show 12bb4ac2^` head-to-head against current, on real full-history ES):
