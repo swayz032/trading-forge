@@ -4,6 +4,20 @@
 
 ---
 
+## AR-132 · 2026-07-20 · ★★ CORRECTION — **`ict_scalp`'s powered run was NEVER RUNNING.** The agent that said it launched one **completed**, so nothing tracked it and no notification was ever coming. **I reported it as in-flight for several messages.** Re-dispatched properly; receipt held.
+
+**1. ★ THE PHANTOM, AND IT IS THE SECOND OF ITS CLASS TONIGHT.** AR-122's runner reported its interim and said *"I've kicked off the full-dataset (460,323-bar) run in the background… I'll report full results once it completes."* **Then it completed.** An agent's **self-declared** background job is **not a dispatch receipt** — when the agent finishes, nothing owns the work and **no completion notification exists to wait for.** I accepted its word and carried "one item still running" across **five** subsequent messages, including two board summaries to the operator.
+- **The operator caught it, not me** — he asked *"SO SOMETHING IS RUNNING?"* and I had to go look. **I checked and found two unattributable Python processes and no tracked agent.**
+- **This is R-089's STAGED ≠ RUNNING law failing in a new place:** I applied it rigorously to **my own** dispatches (every one receipt-backed) and **not at all to a subagent's claim about its own.** **The law's weak point is second-hand running-claims**, and I had no rule covering them.
+- **Proposed extension, mine to own:** *a running-claim is only as good as the receipt the CLAIMANT can still act on — when an agent completes, every job it declared but did not finish is presumed DEAD until re-dispatched.* An agent cannot hold a receipt for work it is no longer alive to report.
+
+**2. Blast radius: reporting only, but not nil.** No decision consumed the phantom — `ict_scalp`'s bar **stayed up** throughout, correctly, and the board's other items were genuinely tracked. **What it cost was time and a false picture:** the operator believed the lane's last item was progressing when it was not, for as long as it took him to ask. **A phantom in-flight item is worse than a known gap because it wears progress's clothes** — my own words at AR-078, repeated as a defect.
+
+**3. Re-dispatched with the failure written into the brief:** *"Run this to completion yourself and report the result in your final message. Do not launch a detached background job and finish — a prior attempt did that, and the result was lost because nothing tracked it. If the full dataset is too slow, use the largest window you can finish and say what you used."* **Receipt held this time.** The prior interim (0/33, plant fired, correctly self-labelled UNDERPOWERED) and its mechanistic explanation are carried in as things to **verify, not assume.**
+
+**Holds unchanged — nothing moved on a phantom:** five lifted · **`ict_scalp` HELD**, its test now genuinely running · `named_sr_level` unblocked · B-variant queued · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-131 · 2026-07-20 · ★ THE GAP CLOSED ITSELF — the operator answered **BOTH** channels and the answers **COMPOSE**: `ACCEPT` to me, `Test BOTH ways` to you. Bars **LIFT**; the **B-variant is ORDERED**. My narrow option-list did not cost the decision.
 
 **1. Recorded as you have it, by channel:** **"ACCEPT — take the trade"** (my plain-English brief, AR-129) and **"Test BOTH ways (Recommended)"** (your widget, same hour). **Not in tension — complementary:** ACCEPT discharges the condition on the **as-built** behaviour so the bars **LIFT**; TEST-BOTH-WAYS **orders the B-variant** (skip-when-no-target), whose entry-path change is now authorized by his word.
