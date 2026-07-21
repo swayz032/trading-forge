@@ -4,6 +4,27 @@
 
 ---
 
+## AR-185 · 2026-07-21 · ★★★ **THE RE-MEASURE IS DISPATCHED — receipt held here.** Your one owed line is discharged: **both extra superlatives were dispositioned IN-WAVE, and both corrections RECORD WHAT THEY REPLACED.** The lane is closed behind it.
+
+**1. ★ THE OWED LINE, VERIFIED BY READING (not grepping — I have earned that caution three times today).**
+- **The 11-as-9 partition, CORRECTED at `:9-12`:** now *"3 REACHABLE / 2 PARTIAL / 4 NOT-REACHABLE — **plus 2 families the sweep COULD NOT VERIFY, which are ADDITIONAL to those 9, not a fourth slice of them**"*, and it **names its own former defect**: *"This line previously ran the four numbers together as one list, which reads as a 3+2+4+2=11 partition of a 9-member set."*
+- **The never-true flag claim, CORRECTED at `:54-58`:** *"'Everything is behind the flag' **is what this line used to say and it was never true of this module**"* — with the actual truth stated (the load gate is flag-gated; `active_pins`, `collect_violations`, `enforcement_status` are **flag-independent readers by design**).
+★ **Neither was quietly overwritten. Both corrections carry the retired claim inside them** — which is the only form that stops a later reader from re-making it, and is exactly why the *"impossible"* fix reads the way it does.
+
+**2. THE RE-MEASURE'S BRIEF CARRIES EVERY LAW THIS REBUILD PAID FOR** — dual denominators (**124 / 111 primary**, neither deleted) · **§6a coverage as the third number**, with the unbound count travelling beside the rate · **by-gap 987 primary BESIDE by-design 2694, never merged** · per-kind attribution · append-only · the ceiling travelling · null + n on every rate · **the declared flags-ON configuration named in the scope-line.**
+
+**3. ★★ TWO CLAUSES EXIST BECAUSE OF MY OWN FAILURES, and I wrote them in that register.**
+- ***"NAME YOUR CORPUS AND ITS SIZE IN THE SCOPE-LINE — this measurement was already burned once."*** **I relayed a 16-spec census as if it were corpus-wide; the 120-spec corpus then showed 3 specs changing behaviour.** The brief adds: **if you measure more than one corpus, report them separately — never pooled.**
+- ***"Re-derive 987 yourself. Do not trust it — that number was wrong once at 921"*** **because someone summed the parts they were handed without asking whether those were all the parts. That someone was me.** ★ **Handing down a corrected enumeration without telling the receiver to distrust it repeats the original defect one generation later.**
+
+**4. AND IT MUST RECONCILE OUTSIDE ITS OWN PIPELINE** — *spine + trigger + confluence = total conditions* — because **the only instrument that caught a false green tonight was arithmetic refusing to add up.** **Greens are necessary; reconciliation is sufficient.**
+
+**5. WHAT THE BRIEF FORBIDS IT TO DO, which matters more than what it asks:** **it may not claim a fidelity result the grades did not license.** The session lane closed **honest-partial** with **5 rows nobody can explain**, and the flip's claim covers exactly two kinds. ★ **A capstone measurement is precisely where the temptation is to round the campaign's story up.** It reports what the grades earned.
+
+**6. Dispatch-time checklist, run on myself before sending:** mini-wave landed and **verified item-by-item by me** · **no other agent live — checked, not assumed** · **all four named resources confirmed to exist on disk** (spec · honest-floor artifact · sealed fence · or-branches corpus) and **canonical data intact at 460,323 rows** · checklist re-read whole for self-contradiction · relay ledgers fenced. **That checklist has now caught three of my errors and cost about a minute each time.**
+
+**★ THE NUMBER THIS REBUILD EXISTS TO MAKE TRUE IS BEING MEASURED.** **Holds:** flags OFF in production · engine loads under all pins · the 77 sealed.
+
 ## AR-184 · 2026-07-21 · ★★ **THE MINI-WAVE IS CLOSED — all four items verified by me.** Cache **DELETED** after a measured cost. ★★★ **Two findings outrank the checklist: TWO TESTS WERE RUNNING ON THE CACHE'S LIE, and a CRLF worktree artefact nearly shipped as a result.** ★ **And my own verification was wrong THREE TIMES on this one item.**
 
 **1. VERIFIED BY ME, not accepted:** `_ENFORCED_OK_PINS` **0 occurrences** · `force=` gone · artifact regenerated (`3075` present, the stale *"b2 NOT evaluated"* caption **gone**) · **all pins: violations 0, ok True, skipped []** · scope exactly 4 files, sealed fence untouched.
