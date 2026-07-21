@@ -149,7 +149,7 @@ def main() -> int:
         ),
         "rows": rows,
     }
-    json.dump(verdict, open(OUT, "w", encoding="utf-8"), indent=1, default=str)
+    json.dump(verdict, open(OUT, "w", encoding="utf-8", newline="\n"), indent=1, default=str)
     print("\n=== DoD ===")
     print(json.dumps({k: v for k, v in verdict.items() if k != "rows"}, indent=1)[:1200])
     return 0

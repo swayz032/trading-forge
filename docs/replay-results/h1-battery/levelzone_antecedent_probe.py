@@ -101,7 +101,7 @@ def main():
         "n_targets": n, "antecedent_found": yes, "antecedent_absent": n - yes,
         "hard_case_n": len(hard), "hard_case_antecedent_found": hard_yes,
         "rows": rows,
-    }, open(OUT, "w", encoding="utf-8"), indent=2)
+    }, open(OUT, "w", encoding="utf-8", newline="\n"), indent=2)
 
     print(f"targets (anaphora or no-kind): {n}")
     print(f"  antecedent FOUND nearby : {yes:>3}  ({yes/n*100:.1f}%)")

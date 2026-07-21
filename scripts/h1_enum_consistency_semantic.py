@@ -34,7 +34,7 @@ def run(it):
     outp=os.path.join(OUTD,cid+".json")
     if os.path.exists(outp): return
     if not variants:  # trivially consistent, no LLM
-        json.dump({"custom_id":cid,"exercised":False,"verdict":{"enumeration_consistent":True,"offending_variants":[],"reasoning":"no variants -> no variant-promotion possible (trivially consistent, not semantically exercised)"}},open(outp,"w",encoding="utf-8"),ensure_ascii=False,indent=1)
+        json.dump({"custom_id":cid,"exercised":False,"verdict":{"enumeration_consistent":True,"offending_variants":[],"reasoning":"no variants -> no variant-promotion possible (trivially consistent, not semantically exercised)"}},open(outp,"w",encoding="utf-8", newline="\n"),ensure_ascii=False,indent=1)
         with lock: done[0]+=1; print(f"  [{done[0]}] {cid}: PASS (no variants, vacuous)",flush=True)
         return
     mentions=LOG.get(vid,[])
@@ -46,7 +46,7 @@ def run(it):
         try:
             with lock: capg.guard_or_raise((len(json.dumps(body))//4)+3500)
             r=c.chat.completions.create(**body); v=json.loads(r.choices[0].message.content)
-            json.dump({"custom_id":cid,"exercised":True,"verdict":v,"tokens":r.usage.total_tokens},open(outp,"w",encoding="utf-8"),ensure_ascii=False,indent=1)
+            json.dump({"custom_id":cid,"exercised":True,"verdict":v,"tokens":r.usage.total_tokens},open(outp,"w",encoding="utf-8", newline="\n"),ensure_ascii=False,indent=1)
             with lock:
                 capg.record(r.usage.total_tokens); done[0]+=1
                 print(f"  [{done[0]}] {cid}: consistent={v['enumeration_consistent']} offending={[o['variant'] for o in v.get('offending_variants',[])]} ({r.usage.total_tokens}tok)",flush=True)

@@ -595,7 +595,7 @@ def main():
         "specs": specs,
     }
 
-    json.dump(out, open(OUT, "w", encoding="utf-8"), indent=2)
+    json.dump(out, open(OUT, "w", encoding="utf-8", newline="\n"), indent=2)
 
     def pct(x, d):
         return f"{x/d*100:5.1f}%" if d else "  n/a"

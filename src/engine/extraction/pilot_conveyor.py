@@ -1874,7 +1874,7 @@ def write_dry_run_artifact(result: dict, out_dir: str) -> str:
     path."""
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"h1-pilot-DRY-RUN-cert-{result['video_id']}.json")
-    with open(path, "w", encoding="utf-8") as fh:
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(result, fh, indent=2, default=str)
     return path
 

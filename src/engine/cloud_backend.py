@@ -166,7 +166,7 @@ class CloudBudgetTracker:
         try:
             with FileLock(str(lock_path), timeout=5):
                 try:
-                    with open(tmp_path, "w") as fh:
+                    with open(tmp_path, "w", newline="\n") as fh:
                         json.dump(self._data, fh, indent=2)
                     os.replace(tmp_path, self._path)
                 except OSError as exc:
@@ -427,7 +427,7 @@ class QuantumResultCache:
         try:
             with FileLock(str(lock_path), timeout=3):
                 try:
-                    with open(tmp_path, "w", encoding="utf-8") as fh:
+                    with open(tmp_path, "w", encoding="utf-8", newline="\n") as fh:
                         json.dump(entry, fh, indent=2, default=str)
                     os.replace(tmp_path, cache_path)
                     logger.debug(
@@ -741,7 +741,7 @@ class CloudJobRegistry:
         try:
             with FileLock(str(lock_path), timeout=5):
                 try:
-                    with open(tmp_path, "w", encoding="utf-8") as fh:
+                    with open(tmp_path, "w", encoding="utf-8", newline="\n") as fh:
                         json.dump(self._jobs, fh, indent=2, default=str)
                     os.replace(tmp_path, self._path)
                 except OSError as exc:
@@ -897,7 +897,7 @@ class CloudJobRegistry:
                     "cancel_error": cancel_error,
                     "governance_labels": GOVERNANCE_LABELS,
                 }
-                with open(audit_file, "w", encoding="utf-8") as fh:
+                with open(audit_file, "w", encoding="utf-8", newline="\n") as fh:
                     json.dump(audit_data, fh, indent=2, default=str)
             except OSError as exc:
                 logger.warning("cloud_watchdog: could not write audit marker: %s", exc)

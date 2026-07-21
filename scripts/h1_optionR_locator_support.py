@@ -174,7 +174,7 @@ def main():
         "terminal_equivalent_support": terminal,
         "per_condition": results,
     }
-    with open(os.path.join(OUT_DIR, "optionR_locator_support_report.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(OUT_DIR, "optionR_locator_support_report.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(out, fh, indent=1)
 
     print("=" * 70, flush=True)

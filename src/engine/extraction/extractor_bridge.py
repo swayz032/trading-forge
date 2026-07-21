@@ -359,7 +359,7 @@ def save_extraction(vault_dir: str, video_id: str, extraction: dict, seed_params
     }
     path = _vault_path(vault_dir, video_id)
     tmp_path = f"{path}.{os.getpid()}.tmp"
-    with open(tmp_path, "w", encoding="utf-8") as fh:
+    with open(tmp_path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(record, fh, indent=2, default=str)
     os.replace(tmp_path, path)
     return path
@@ -498,7 +498,7 @@ def main() -> None:  # pragma: no cover - manual invocation, requires live Ollam
     out_dir = os.path.join(_ROOT, "docs", "replay-results", "h1-scripts", "dry-run-output")
     os.makedirs(out_dir, exist_ok=True)
     path = os.path.join(out_dir, f"h1-pilot-DRY-RUN-cert-{result['video_id']}.json")
-    with open(path, "w", encoding="utf-8") as fh:
+    with open(path, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(result, fh, indent=2, default=str)
     print(f"DRY-RUN (real extractor + real anchor-locator) certificate written: {path}")
     print(f"  strategies_extracted={result['strategies_extracted']}")

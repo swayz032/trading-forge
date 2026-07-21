@@ -98,7 +98,7 @@ def run() -> None:
             for vid, r in results.items()
         },
     }
-    with open(os.path.join(OUT_DIR, "birth_fixtures_summary.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(OUT_DIR, "birth_fixtures_summary.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(summary, fh, indent=2, default=str)
 
     print("\n" + "=" * 70)

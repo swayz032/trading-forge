@@ -183,7 +183,7 @@ def run() -> None:
         "video_table": sorted(video_rows, key=lambda r: r["video_id"]),
         "per_strategy_table": per_strategy_rows,
     }
-    with open(os.path.join(OUT_DIR, "FINAL-READ.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(OUT_DIR, "FINAL-READ.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(final, fh, indent=2, default=str)
     print(json.dumps({k: final[k] for k in ("control_gates", "fidelity", "economics", "recorded_signals")}, indent=2))
 

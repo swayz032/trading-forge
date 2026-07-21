@@ -171,5 +171,5 @@ out=dict(join=dict(strategy_list=len(smap),g0=len(g0map),g4=len(g4map),pending=[
          c4=dict(mcl_err=len(mcl_err),sig46=sig46,mcl_specs=len(mcl_specs)),
          c7=dict(clean=len(clean),od_ok=od_ok,divergent=div,same=same),
          c8=dict(launched=launched,present=g4_present,pending=len(pending),mcl=g4_mcl,oom=g4_oom,other_err=g4_other_err,clean=len(clean),traded=len(traded)))
-json.dump(out, open(BASE+'vblock_master_out.json','w'), indent=1, default=str)
+json.dump(out, open(BASE+'vblock_master_out.json','w', newline="\n"), indent=1, default=str)
 print("\n[written vblock_master_out.json]")

@@ -220,6 +220,6 @@ for f in glob.glob("src/**/*.py", recursive=True):
                 P(f"  {f}:{nd.lineno} {nm}(pos={len(nd.args)}, kw={kws})")
 
 json.dump({"families":RES,"controls":CONTROLS,"corpus":CORP,"n":N,"corpus_n":len(dfc),"n_specs":len(SPECS)},
-          open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),"family-meta-reachability-sweep-latest.json"),"w"), indent=1, default=str)
+          open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),"family-meta-reachability-sweep-latest.json"),"w", newline="\n"), indent=1, default=str)
 P("\nDONE")
 OUT.close()

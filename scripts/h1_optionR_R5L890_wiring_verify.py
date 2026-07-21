@@ -163,7 +163,7 @@ def main():
     outp = os.path.join(ROOT, "docs", "replay-results", "h1-scripts",
                         "optionR-locator-support", "R5L890_wiring_verify.json")
     os.makedirs(os.path.dirname(outp), exist_ok=True)
-    json.dump(out, open(outp, "w", encoding="utf-8"), indent=1)
+    json.dump(out, open(outp, "w", encoding="utf-8", newline="\n"), indent=1)
     print(f"\nreport: {outp}")
 
 

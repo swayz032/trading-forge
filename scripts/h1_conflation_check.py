@@ -53,7 +53,7 @@ def run(it):
             with lock: capg.guard_or_raise(est)
             r=c.chat.completions.create(**body)
             v=json.loads(r.choices[0].message.content)
-            json.dump({"custom_id":cid,"expect":expect,"verdict":v,"tokens":r.usage.total_tokens},open(outp,"w",encoding="utf-8"),ensure_ascii=False,indent=1)
+            json.dump({"custom_id":cid,"expect":expect,"verdict":v,"tokens":r.usage.total_tokens},open(outp,"w",encoding="utf-8", newline="\n"),ensure_ascii=False,indent=1)
             with lock:
                 capg.record(r.usage.total_tokens); done[0]+=1
                 print(f"  [{done[0]}/{len(items)}] {cid}: {v['verdict']} (expect {expect}) {r.usage.total_tokens}tok",flush=True)
@@ -92,4 +92,4 @@ led=json.load(open(led_p,encoding="utf-8"))
 day=sorted([k for k in led if k.startswith("2026-07") and isinstance(led[k],dict) and "gpt54" in led[k]])[-1]
 led[day]["gpt54"]+=capg.spent_tok
 led[day]["_conflation_check"]={"tokens":capg.spent_tok,"est_usd":round(capg.spent_usd,3),"cal_ok":cal_ok}
-json.dump(led,open(led_p,"w",encoding="utf-8"),indent=1)
+json.dump(led,open(led_p,"w",encoding="utf-8", newline="\n"),indent=1)

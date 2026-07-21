@@ -103,7 +103,7 @@ def main():
         out["verdict"] = ("MINI QUALIFIES for Phase-B copy seat (role-split licensable, own design-pool measurement next)"
                           if rate <= 0.08 else
                           "MINI does NOT qualify for Phase-B (copy-miss > 8%); default stays gpt-5.4 whole-job")
-    json.dump(out, open(os.path.join(OUT, "mini_judge_report.json"), "w", encoding="utf-8"), indent=1)
+    json.dump(out, open(os.path.join(OUT, "mini_judge_report.json"), "w", encoding="utf-8", newline="\n"), indent=1)
     print("=" * 66)
     print(f"MINI COPY judge: {located}/{total} anchored, miss {rate*100:.1f}% (floor <=8%) -> {'PASS' if rate and rate<=0.08 else 'MISS'}")
     print(out["verdict"])

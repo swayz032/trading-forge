@@ -530,7 +530,7 @@ json.dump(
         ),
         "enforcement_status_all_pins": status,
     },
-    open(os.path.join(OUTDIR, "family-meta-enforcement-delta.json"), "w"),
+    open(os.path.join(OUTDIR, "family-meta-enforcement-delta.json"), "w", newline="\n"),
     indent=1,
     default=str,
 )

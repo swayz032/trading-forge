@@ -222,7 +222,7 @@ def save_to_cache(symbol: str, spec: dict[str, Any]) -> str:
         "pulled_at": datetime.now(timezone.utc).isoformat(),
         "source": "databento_definition",
     }
-    with open(tmp, "w") as f:
+    with open(tmp, "w", newline="\n") as f:
         json.dump(payload, f, indent=2, default=str)
     os.replace(str(tmp), str(dest))
     return str(dest)

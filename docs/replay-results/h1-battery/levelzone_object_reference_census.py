@@ -96,7 +96,7 @@ def main():
         "anaphora_ambiguous_HARD_CASE": unresolvable,
         "no_kind_matched": no_kind,
         "rows": out_rows,
-    }, open(OUT, "w", encoding="utf-8"), indent=2)
+    }, open(OUT, "w", encoding="utf-8", newline="\n"), indent=2)
 
     print(f"level/zone conditions: {n}")
     for k, v in kind_counts.most_common():

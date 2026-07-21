@@ -447,7 +447,7 @@ def run_corpus(start: str, end: str, out_path: str) -> int:
     }
     report = {"summary": summary, "strategies": rows}
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
+    with open(out_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(report, f, indent=1)
     print("\n=== CORPUS SUMMARY ===")
     print(json.dumps(summary, indent=1))
@@ -510,7 +510,7 @@ def main() -> int:
     strat_short = args.strategy_class.split(".")[-1].lower().replace("strategy", "")
     out_path = args.out.replace("{strategy}", strat_short)
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as f:
+    with open(out_path, "w", encoding="utf-8", newline="\n") as f:
         json.dump(packet, f, indent=1, default=str)
     print(f"\nfull report: {out_path}")
     return 0

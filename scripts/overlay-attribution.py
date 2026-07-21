@@ -161,7 +161,7 @@ def main() -> int:
                         daily_band_metrics(b.get("daily_pnls"), "Mode B (+overlay)")],
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    json.dump(report, open(args.out, "w", encoding="utf-8"), indent=1)
+    json.dump(report, open(args.out, "w", encoding="utf-8", newline="\n"), indent=1)
     print(json.dumps(report, indent=1))
     print(f"\nfull report: {args.out}")
     return 0

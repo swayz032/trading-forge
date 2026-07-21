@@ -129,7 +129,7 @@ def main() -> int:
     }
     report = {"summary": summary, "strategies": rows}
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
-    json.dump(report, open(args.out, "w", encoding="utf-8"), indent=1)
+    json.dump(report, open(args.out, "w", encoding="utf-8", newline="\n"), indent=1)
     print("\n=== CORPUS SUMMARY ===")
     print(json.dumps(summary, indent=1))
     print(f"\nfull report: {args.out}")

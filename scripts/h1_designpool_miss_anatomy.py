@@ -107,7 +107,7 @@ def main():
         "per_video":{k:{kk:vv for kk,vv in val.items() if kk!="misses"} for k,val in per_video.items()},
         "all_misses":[{"video":vid,**m} for vid,m in misses],
     }
-    json.dump(report,open(os.path.join(OUT,"miss_anatomy.json"),"w",encoding="utf-8"),indent=1)
+    json.dump(report,open(os.path.join(OUT,"miss_anatomy.json"),"w",encoding="utf-8", newline="\n"),indent=1)
     print(f"AGGREGATE: {loc}/{tot} anchored, miss {miss/tot*100:.1f}% (floor <=8%)")
     print(f"MISS CLASS: paraphrase-drift={drift} data-pathology={patho}")
     print(f"CONCENTRATION: worst-3 videos hold {top3_miss}/{miss} = {top3_miss/miss*100:.0f}% of all misses")

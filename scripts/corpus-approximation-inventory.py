@@ -88,7 +88,7 @@ def main() -> int:
                 for t in sorted(token_strats, key=lambda k: (-len(token_strats[k]), -token_count[k]))
             ],
         }
-        json.dump(out, open(args.out, "w", encoding="utf-8"), indent=1)
+        json.dump(out, open(args.out, "w", encoding="utf-8", newline="\n"), indent=1)
         print(f"\nwrote {args.out}")
     return 0
 

@@ -98,7 +98,7 @@ def main():
                           "DESIGN POOL MISSES (>8%) -> the ladder (Claude rung-2 same birth gate) / human-in-loop floor")
     elif rate is not None:
         out["verdict"] = f"PARTIAL ({len(files)}/16 extracted) — not a final verdict"
-    json.dump(out, open(os.path.join(OUT, "designpool_support_report.json"), "w", encoding="utf-8"), indent=1)
+    json.dump(out, open(os.path.join(OUT, "designpool_support_report.json"), "w", encoding="utf-8", newline="\n"), indent=1)
     print("=" * 66)
     print(f"DESIGN-POOL support ({len(files)}/16 videos): {located}/{total} anchored, "
           f"miss {rate*100:.1f}% (floor <=8%){' UNSTABLE:'+','.join(unstable_videos) if unstable_videos else ''}")

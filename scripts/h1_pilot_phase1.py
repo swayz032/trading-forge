@@ -203,7 +203,7 @@ def run() -> None:
         }
         # atomic per-video checkpoints: json (audit) + pkl (exact preps for Phase 3 / resume)
         tmpj = os.path.join(VID_DIR, f"{vid}.json.tmp")
-        with open(tmpj, "w", encoding="utf-8") as fh:
+        with open(tmpj, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(vid_artifact, fh, indent=2, default=str)
         os.replace(tmpj, os.path.join(VID_DIR, f"{vid}.json"))
         tmpp = prep_pkl + f".{os.getpid()}.tmp"
@@ -234,7 +234,7 @@ def run() -> None:
                          "all_preps": all_preps, "summary_rows": summary_rows}, fh)
     if failures or missing:
         print(f"[phase1] INCOMPLETE — fetch_failures={[f[0] for f in failures]} missing={missing}", flush=True)
-        with open(os.path.join(OUT_DIR, "phase1_INCOMPLETE.json"), "w", encoding="utf-8") as fh:
+        with open(os.path.join(OUT_DIR, "phase1_INCOMPLETE.json"), "w", encoding="utf-8", newline="\n") as fh:
             json.dump({"completed": [r["video_id"] for r in summary_rows], "missing": missing,
                        "fetch_failures": failures}, fh, indent=2)
 
@@ -261,7 +261,7 @@ def run() -> None:
             "adjudications_total": sum(r["adjudications_aggregate"] for r in summary_rows),
         },
     }
-    with open(os.path.join(OUT_DIR, "phase1_summary.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(OUT_DIR, "phase1_summary.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(summary, fh, indent=2, default=str)
     print("\n[phase1] DONE. summary:", json.dumps(summary["totals"]), flush=True)
 

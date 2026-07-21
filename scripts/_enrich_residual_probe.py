@@ -152,5 +152,5 @@ d["summary"] = (
     "the instantaneous-AND spine architecturally cannot express."
 )
 
-json.dump(d, open(path, "w", encoding="utf-8"), indent=2, default=str)
+json.dump(d, open(path, "w", encoding="utf-8", newline="\n"), indent=2, default=str)
 print("enriched and rewrote", path)

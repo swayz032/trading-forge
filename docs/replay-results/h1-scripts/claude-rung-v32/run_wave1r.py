@@ -222,7 +222,7 @@ def main() -> int:
                 slim = {k: res.get(k) for k in ("wf_metadata", "wfe_overall", "wfe_status", "pbo_overall",
                         "pbo_overall_p_value", "pbo_degenerate", "bif", "bif_computation_error", "bif_detail",
                         "slippage_survival", "path_sharpes")}
-                json.dump(slim, open(os.path.join(raw_dir, stub + ".json"), "w", encoding="utf-8"), indent=1, default=str)
+                json.dump(slim, open(os.path.join(raw_dir, stub + ".json"), "w", encoding="utf-8", newline="\n"), indent=1, default=str)
             rows = _wf_gate_rows(res) if isinstance(res, dict) else {}
             exit_prov = (art["spec"].get("framework_overlay") or {}).get("exit")
             for gate, info in rows.items():
@@ -286,7 +286,7 @@ def main() -> int:
     }
     verdict = {"verdict": "WAVE_1R_COMPLETE" if not undispositioned else "REFUSED",
                "note": "receipts not returns; machinery witnessed on real data; SPEC_GATED judges ride forward", "validity": validity}
-    json.dump(verdict, open(os.path.join(BATTERY_DIR, "wave-1R-verdict.json"), "w", encoding="utf-8"), indent=2)
+    json.dump(verdict, open(os.path.join(BATTERY_DIR, "wave-1R-verdict.json"), "w", encoding="utf-8", newline="\n"), indent=2)
     print("\n=== WAVE-1R VERDICT ===")
     print(json.dumps({"verdict": verdict["verdict"], "witnessed": sorted(witnessed), "spec_gated": sorted(disp.keys()),
                       "n_trials_total": validity["n_trials_total"], "outcomes": validity["outcomes"],

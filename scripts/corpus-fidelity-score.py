@@ -84,7 +84,7 @@ def main() -> int:
     print(json.dumps(summary, indent=2))
 
     if args.out:
-        json.dump({"summary": summary, "per_strategy": report}, open(args.out, "w", encoding="utf-8"), indent=1)
+        json.dump({"summary": summary, "per_strategy": report}, open(args.out, "w", encoding="utf-8", newline="\n"), indent=1)
         print(f"\nwrote {args.out}")
     return 0
 

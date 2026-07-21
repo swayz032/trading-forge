@@ -246,7 +246,7 @@ def run_panel_dispatch(work_dir: str, cid: str, openai_call=None, ticket_usd: fl
     out_path = os.path.join(work_dir, "panels", f"{cid}.json")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     tmp = f"{out_path}.tmp"
-    with open(tmp, "w", encoding="utf-8") as fh:
+    with open(tmp, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(axes, fh, ensure_ascii=False, sort_keys=True, indent=2)
     os.replace(tmp, out_path)
     return 0, (f"PANEL {cid} -> conflation={axes['conflation']} "

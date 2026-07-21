@@ -70,7 +70,7 @@ tot_conditions=0
 for vid,strats in sorted(by_vid.items()):
     vault={"phase_a":{"unstable":False},
            "phase_b":[{"extraction":{"strategies":[st]}} for st in strats]}
-    json.dump(vault, open(os.path.join(VLT,f"{vid}.json"),"w",encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(vault, open(os.path.join(VLT,f"{vid}.json"),"w",encoding="utf-8", newline="\n"), ensure_ascii=False, indent=1)
     n=sum(len(st["entry_sequence"])+len(st["confluences"])+len(st["targets"])+(1 if st["stop"] else 0) for st in strats)
     tot_conditions+=n
     print(f"  {vid}: {len(strats)} strat(s), {n} conditions")

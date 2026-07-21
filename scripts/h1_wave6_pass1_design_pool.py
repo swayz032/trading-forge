@@ -240,7 +240,7 @@ def run() -> None:
         },
         "quote_bearing_rows_for_one_rater_pass": quote_bearing_rows,
     }
-    with open(os.path.join(OUT_DIR, "gate2_gate3_report.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(OUT_DIR, "gate2_gate3_report.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(report, fh, indent=2, default=str)
 
     print("\n" + "=" * 70)

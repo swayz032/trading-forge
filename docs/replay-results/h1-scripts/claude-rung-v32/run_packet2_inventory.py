@@ -73,7 +73,7 @@ def main() -> int:
         ),
     }
     out = {"summary": summary, "strategies": rows}
-    json.dump(out, open(_OUT, "w", encoding="utf-8"), indent=2)
+    json.dump(out, open(_OUT, "w", encoding="utf-8", newline="\n"), indent=2)
     print(json.dumps(summary, indent=2))
     print(f"\nper-strategy table -> {_OUT}")
     return 0

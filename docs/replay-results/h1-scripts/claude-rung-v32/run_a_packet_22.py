@@ -187,7 +187,7 @@ def main() -> int:
         "definition_of_done_met": n_eval == n,
     }
     out = {"summary": summary, "strategies": rows}
-    with open(_OUT, "w", encoding="utf-8") as fh:
+    with open(_OUT, "w", encoding="utf-8", newline="\n") as fh:
         json.dump(out, fh, indent=2)
 
     print(json.dumps(summary, indent=2))

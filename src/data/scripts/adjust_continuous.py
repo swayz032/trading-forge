@@ -156,7 +156,7 @@ def main():
 
     # Save roll calendar
     calendar_path = output_dir / f"{args.symbol}_roll_calendar.json"
-    with open(calendar_path, "w") as f:
+    with open(calendar_path, "w", newline="\n") as f:
         json.dump(rolls, f, indent=2)
     result["roll_calendar"] = str(calendar_path)
 

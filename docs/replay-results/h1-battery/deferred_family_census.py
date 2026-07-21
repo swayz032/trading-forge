@@ -106,7 +106,7 @@ def main():
         "rows": rows,
         "mistyped_session_rows": mistyped,
     }
-    json.dump(out, open(OUT, "w", encoding="utf-8"), indent=2)
+    json.dump(out, open(OUT, "w", encoding="utf-8", newline="\n"), indent=2)
 
     print(f"deferred conditions: {n} across {out['specs_touched']} specs "
           f"(+{len(mistyped)} mis-typed WAIT_SESSION carried)")

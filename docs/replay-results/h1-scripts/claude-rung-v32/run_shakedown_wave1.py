@@ -204,7 +204,7 @@ def main() -> int:
                    "validity": validity}
         print("\n=== WAVE VERDICT: SHAKEDOWN_COMPLETE (survivor-ineligible; coverage dispositioned) ===")
 
-    json.dump(verdict, open(os.path.join(BATTERY_DIR, "shakedown-wave1-verdict.json"), "w", encoding="utf-8"), indent=2)
+    json.dump(verdict, open(os.path.join(BATTERY_DIR, "shakedown-wave1-verdict.json"), "w", encoding="utf-8", newline="\n"), indent=2)
     print(json.dumps({"verdict": verdict["verdict"], "n_trials": validity["n_trials"], "outcomes": validity["outcomes"],
                       "tooth2_fail_closed": validity["tooth2_fail_closed"], "engine": ENGINE_SHA[:8]}, indent=2))
     return 0 if not undispositioned else 1

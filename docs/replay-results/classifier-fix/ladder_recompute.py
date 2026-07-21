@@ -474,7 +474,7 @@ def main(argv=None) -> int:
         "arms": arms_out,
     }
 
-    json.dump(out, open(out_path, "w", encoding="utf-8"), indent=2)
+    json.dump(out, open(out_path, "w", encoding="utf-8", newline="\n"), indent=2)
 
     print("=== LADDER RECOMPUTE (both arms COMPUTED here) ===")
     print(out["corpus"])

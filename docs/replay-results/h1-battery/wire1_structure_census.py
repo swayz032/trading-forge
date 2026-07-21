@@ -129,7 +129,7 @@ def main():
         "narration_candidates": sum(1 for r in rows if r["narration_candidate"]),
         "rows": rows,
     }
-    with open(OUT, "w", encoding="utf-8") as f:
+    with open(OUT, "w", encoding="utf-8", newline="\n") as f:
         json.dump(out, f, indent=2)
 
     n = len(rows)

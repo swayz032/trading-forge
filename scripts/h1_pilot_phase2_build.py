@@ -117,11 +117,11 @@ def run() -> None:
         "counts": {"items": len(stage2_items)},
     }
 
-    with open(os.path.join(PKT_DIR, "stage1_packet.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(PKT_DIR, "stage1_packet.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(stage1_packet, fh, indent=2, default=str)
-    with open(os.path.join(PKT_DIR, "stage2_packet.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(PKT_DIR, "stage2_packet.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump(stage2_packet, fh, indent=2, default=str)
-    with open(os.path.join(PKT_DIR, "manifest.json"), "w", encoding="utf-8") as fh:
+    with open(os.path.join(PKT_DIR, "manifest.json"), "w", encoding="utf-8", newline="\n") as fh:
         json.dump({"targets": manifest, "leak_violations": leak_violations,
                    "n_targets": len(targets),
                    "n_fallthrough": sum(1 for m in manifest if m["kind"] == "fallthrough"),

@@ -33,7 +33,7 @@ def run(req):
             json.dump({"custom_id":cid,"grade":grade,
                        "tokens":r.usage.total_tokens,
                        "cached":(getattr(r.usage,'prompt_tokens_details',None) or {}) and getattr(r.usage.prompt_tokens_details,'cached_tokens',0)},
-                      open(outp,"w",encoding="utf-8"),ensure_ascii=False,indent=1)
+                      open(outp,"w",encoding="utf-8", newline="\n"),ensure_ascii=False,indent=1)
             with lock:
                 tot_tok[0]+=r.usage.total_tokens; done[0]+=1; capg.record(r.usage.total_tokens)
                 cached=getattr(getattr(r.usage,'prompt_tokens_details',None),'cached_tokens',0) or 0
@@ -67,5 +67,5 @@ led_p=os.path.join(ROOT,"docs","replay-results","h1-scripts","frontier-daily-led
 led=json.load(open(led_p,encoding="utf-8")); led["2026-07-13"]["gpt54"]+=tot_tok[0]
 led["2026-07-13"].setdefault("_flex_content_panel",{})
 led["2026-07-13"]["_flex_content_panel"]={"tokens":tot_tok[0],"cached":tot_cached[0],"est_usd":round(est_usd,3),"service_tier":"flex","effort":"high"}
-json.dump(led,open(led_p,"w",encoding="utf-8"),indent=1)
+json.dump(led,open(led_p,"w",encoding="utf-8", newline="\n"),indent=1)
 print("ledger updated (gpt54 += panel tokens; _flex_content_panel recorded)")

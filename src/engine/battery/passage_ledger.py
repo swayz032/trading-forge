@@ -119,7 +119,7 @@ def _atomic_write(path: str, obj: dict) -> None:
     os.makedirs(os.path.dirname(path), exist_ok=True)
     fd, tmp = tempfile.mkstemp(dir=os.path.dirname(path), suffix=".tmp")
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+        with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as fh:
             json.dump(obj, fh, indent=2)
             fh.flush()
             os.fsync(fh.fileno())
