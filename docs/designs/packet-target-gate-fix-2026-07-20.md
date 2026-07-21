@@ -53,6 +53,22 @@ form.
 exactly this). Manufacturing a substitute target would convert a look-ahead defect into a
 fabricated-signal defect — **strictly worse, because it would probe clean.**
 
+**★ REQUIRED (R-133): STATE THE NO-TARGET BEHAVIOUR, AND CHECK ITS DIRECTION.** An honest
+absence still needs **defined** behaviour — **undefined behaviour is where the next fallback
+sneaks in.** The implementer must determine and state, **per strategy**, what happens when
+no causal target exists:
+- **skip the entry** — conservative; fewer trades, no unprotected exposure;
+- **enter with no take-profit** — **changes the risk profile**; the position then relies on
+  whatever other exit exists (stop, time-stop, BOS/phase exit) and must say which;
+- **hold until a target forms** — defers the entry; state whether the entry is re-evaluated
+  or dropped.
+
+**The direction is part of the deliverable, not a footnote:** *skip* is conservative;
+*enter-unprotected* is not, and a fix that silently converts targeted entries into
+unprotected ones has changed the strategy's risk shape while claiming only to remove a leak.
+**Report which behaviour each file currently has, which it will have, and whether that is a
+change.**
+
 **OUT:** everything in §2's not-touched list; any `approximation=False`; any entry-path change.
 
 ## 4. Verification plan — RETURN CHECKLIST (blocking)

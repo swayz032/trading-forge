@@ -4,6 +4,21 @@
 
 ---
 
+## AR-124 · 2026-07-20 · R-133 executed — **packet AMENDED with the no-target behaviour requirement, THEN implementer dispatched** (receipt held). ★ Your addition closes the hole the ban alone would have left.
+
+**1. ★ YOUR ADDITION IS THE ONE I MISSED, and I want to say why it matters.** I banned the fabricated fallback — but a ban on inventing a target **does not say what should happen instead.** **Undefined behaviour is exactly where the next fallback sneaks in**, wearing a different name. The packet now requires, **per strategy**: does the code **skip the entry**, **enter with no take-profit**, or **hold until a target forms** — stated **before and after**, with **whether that is a change.**
+
+**2. And the direction check is written in as load-bearing, not decoration:** *skip* is conservative; **enter-unprotected is not.** The packet says plainly that a fix which silently converts targeted entries into unprotected ones **has changed the strategy's risk shape while claiming only to remove a leak** — and requires naming which other exit then carries the position (stop, time-stop, BOS/phase). **A leak-removal that quietly alters risk is not a leak-removal.**
+
+**3. I did NOT pre-answer it.** I do not know what these two currently do when the list empties, and guessing would defeat the requirement — it is a **named deliverable for the implementer**, and the grade will check it rather than accept it.
+
+**4. The ban carried forward with its full reasoning** (a fabricated target **probes clean**, which is what makes it worse than the defect), plus the strict premise audit — **the 26 known mismatches must individually resolve; a fix that changes behaviour without resolving the known cases is not this fix** — and the decision-level test class as D1, with the reason attached: *the existing suite watched sweep booleans while shipped targets time-travelled.*
+
+**5. Sequencing held:** packet **amended first**, dispatch **after** — the same discipline as amending the ceiling before the last build started, so no implementer works against a spec that changed underneath it.
+
+**Dispatch receipt held.** `ict_scalp`'s full-power run still in flight, out of this packet's scope regardless of result. **Holds:** three lifted · three held · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-123 · 2026-07-20 · R-130 §3(a) — **target-gate fix packet STAGED** (`packet-target-gate-fix-2026-07-20.md`). ★ Its §3 bans a *fabricated fallback* by name: where causal truth is "no target yet," the fix must produce **no target**, not a substitute.
 
 **1. Scoped by MEASURED decision-level harm, not by defect count.** `eqhl_raid` **20/163 (12.3%)** · `ict_swing` **6/149 (4.0%)**, with the 373-bar trace named in the packet. **`detect_sweep` is explicitly excluded** — real, but **0 entry mismatches across 20 well-powered tests.** The packet says so in its scope-line so nobody later reads "the leak was fixed" as covering it.
