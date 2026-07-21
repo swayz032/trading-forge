@@ -778,13 +778,23 @@ class SpecConditionStrategy(BaseStrategy):
         APPROXIMATION: this method itself never sets `approximation` — that flag lives on
         the ConditionBinding the caller (spec_family_bindings.bind_condition) already
         produced before this method runs. As of docs/designs/packet-population-a-flip-
-        step-2026-07-20.md, named_sr_level and order_block_edge bindings carry
+        step-2026-07-20.md, and ONLY when BOTH TF_LEVELZONE_ROUTING_ENABLED and
+        TF_LEVELZONE_RESOLVER_ENABLED are "true" (both default OFF; with either flag off
+        the resolver dispatch branch is unreachable and every level/zone binding keeps
+        meta.base_approximation=True), named_sr_level and order_block_edge bindings carry
         approximation=False (each independently earned a de-approximation grade — see
         POPULATION_A_DEAPPROXIMATED_KINDS in spec_family_bindings.py for citations); swing
         still carries approximation=True (n=1, below the campaign's n>=2 de-approximation
         floor). This method's own level-resolution LOGIC below is unchanged by that flip —
-        it always resolved a real per-kind level series; only the fidelity LABEL attached
-        to two of the three kinds moved.
+        the flip moved only the fidelity LABEL attached to two of the three kinds, not one
+        line of the resolution below.
+
+        What this method returns is NOT always a populated level series, and the flip did
+        not change that either: the order_block_edge branch returns an ALL-NaN array when
+        the OB detectors find nothing (see `if len(obs) == 0` below), as does the
+        unreachable-kind fallback at the end. NaN entries mean "no level knowable at this
+        bar" and are handled downstream by retest_touch_check, not silently treated as a
+        resolved level.
         """
         if "swings" not in swings_cache:
             swings_cache["swings"] = detect_swings(df, POPULATION_A_SWING_LOOKBACK)

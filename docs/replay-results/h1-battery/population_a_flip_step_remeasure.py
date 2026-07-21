@@ -29,16 +29,48 @@ from __future__ import annotations
 import json
 import os
 import sys
+from contextlib import contextmanager
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+import src.engine.spec_family_bindings as sfb  # noqa: E402
 from src.engine.spec_family_bindings import (  # noqa: E402
     POPULATION_A_DEAPPROXIMATED_KINDS,
     bind_condition,
     classify_population_a_kind,
 )
+
+
+@contextmanager
+def preflip_dispatch():
+    """CAPTURED "BEFORE" MEASUREMENT (R-158 §3: no hand-written constant wearing a
+    measurement's name).
+
+    The pre-flip commit (71b911ef~1) returned, at this exact dispatch site, the literal
+    line:
+
+        approximation=meta.base_approximation,
+
+    The as-built (post-flip) code returns:
+
+        False if pop_a_kind in POPULATION_A_DEAPPROXIMATED_KINDS else meta.base_approximation
+
+    With POPULATION_A_DEAPPROXIMATED_KINDS emptied, the as-built expression reduces to
+    `meta.base_approximation` — byte-identical to the pre-flip line (verify with
+    `git show 71b911ef -- src/engine/spec_family_bindings.py`). So emptying the set and
+    calling the LIVE bind_condition() is a genuine measurement of pre-flip behaviour, run
+    by real production code in-process — not a re-derivation and not a literal.
+
+    The set is a module global read at call time (spec_family_bindings.bind_condition),
+    restored in a finally, same discipline as the env-flag forcing in main()."""
+    prior = sfb.POPULATION_A_DEAPPROXIMATED_KINDS
+    sfb.POPULATION_A_DEAPPROXIMATED_KINDS = frozenset()
+    try:
+        yield
+    finally:
+        sfb.POPULATION_A_DEAPPROXIMATED_KINDS = prior
 
 CENSUS_PATH = REPO_ROOT / "docs" / "replay-results" / "h1-battery" / "levelzone-object-reference-census.json"
 NARRATION_DENOMINATOR_PATH = (
@@ -65,31 +97,59 @@ def main() -> None:
     os.environ["TF_LEVELZONE_RESOLVER_ENABLED"] = "true"
 
     per_kind: dict[str, dict] = {
-        "named_sr_level": {"n": 0, "flipped_to_false": 0, "condition_ids": []},
-        "order_block_edge": {"n": 0, "flipped_to_false": 0, "condition_ids": []},
-        "swing": {"n": 0, "flipped_to_false": 0, "condition_ids": []},
+        "named_sr_level": {"n": 0, "n_null": 0, "flipped_to_false": 0, "condition_ids": []},
+        "order_block_edge": {"n": 0, "n_null": 0, "flipped_to_false": 0, "condition_ids": []},
+        "swing": {"n": 0, "n_null": 0, "flipped_to_false": 0, "condition_ids": []},
     }
     non_population_a_rows = 0
     pop_a_rows = 0
+    # MEASURED (not assumed) tallies backing the rate_BEFORE figures below.
+    approx_true_before_all_levelzone = 0
+    approx_true_before_pop_a = 0
+    null_before_non_pop_a = 0
 
     try:
         for r in rows:
             kind = classify_population_a_kind(r["object"])
             is_pop_a = (not r["bare_anaphora"]) and kind is not None
+
+            cond_all = {"id": r["condition_id"], "type": "WAIT_STRUCTURE", "object": r["object"], "role": r["role"]}
+            with preflip_dispatch():
+                approx_before_row = bind_condition(cond_all).approximation
+            if approx_before_row is True:
+                approx_true_before_all_levelzone += 1
+
             if not is_pop_a:
                 non_population_a_rows += 1
+                if approx_before_row is None:
+                    null_before_non_pop_a += 1
                 continue
             pop_a_rows += 1
+            if approx_before_row is True:
+                approx_true_before_pop_a += 1
             assert kind in per_kind, f"unexpected kind {kind!r} for {r['condition_id']}"
 
             cond = {"id": r["condition_id"], "type": "WAIT_STRUCTURE", "object": r["object"], "role": r["role"]}
-            b_before = bind_condition(cond)  # code AS OF pre-flip-step commit would return True here
-            approximation_before = True  # structural: base_approximation was True for every kind pre-flip
-            approximation_after = b_before.approximation  # code AS-BUILT (post-flip) returns this now
+
+            # BEFORE: measured, by running the live dispatch with the de-approximation set
+            # emptied — see preflip_dispatch() for why that is byte-equivalent to the
+            # pre-flip commit's `approximation=meta.base_approximation`.
+            with preflip_dispatch():
+                b_preflip = bind_condition(cond)
+            approximation_before = b_preflip.approximation
+
+            # AFTER: the AS-BUILT (post-flip) dispatch, unpatched.
+            b_asbuilt = bind_condition(cond)
+            approximation_after = b_asbuilt.approximation
 
             per_kind[kind]["n"] += 1
             per_kind[kind]["condition_ids"].append(r["condition_id"])
-            if approximation_before is True and approximation_after is False:
+            # n_null: rows where the binding produced no approximation verdict at all
+            # (measured, not assumed zero) — a null here would mean the row cannot testify
+            # about the flip in either direction.
+            if approximation_before is None or approximation_after is None:
+                per_kind[kind]["n_null"] += 1
+            elif approximation_before is True and approximation_after is False:
                 per_kind[kind]["flipped_to_false"] += 1
     finally:
         if prior_routing is None:
@@ -114,17 +174,49 @@ def main() -> None:
     # test_r3_binding_engagement_and_evaluation_observability_are_reported_separately_real_corpus's
     # "NULL (resolver flag off): 0/7"): with TF_LEVELZONE_RESOLVER_ENABLED off, the Population-A
     # resolver dispatch branch is UNREACHABLE — every level/zone binding falls back to
-    # LEVELZONE_NATIVE_PRIMITIVE or the base structure primitive, both of which always assign
-    # approximation=meta.base_approximation (True). This is a structural certainty (proven by
-    # test_flag_off_binding_plan_byte_identical_to_pre_delivery_baseline), not a sampled
-    # statistic, so the null flip-count is deterministically 0 for both denominators below.
+    # LEVELZONE_NATIVE_PRIMITIVE or the base structure primitive, both of which assign
+    # approximation=meta.base_approximation. Previously asserted here as a structural
+    # certainty with hardcoded 0/1.0/1.0; now MEASURED by re-running the same rows with the
+    # resolver flag off, so the null is an observation rather than a restatement of the
+    # claim it is meant to control (R-158 §3).
     null_flipped_resolver_off = 0
-    null_rate_among_pop_a = 1.0
-    null_rate_among_all_levelzone = 1.0
+    null_true_pop_a = 0
+    null_true_all_levelzone = 0
+    prior_resolver_null = os.environ.get("TF_LEVELZONE_RESOLVER_ENABLED")
+    os.environ["TF_LEVELZONE_ROUTING_ENABLED"] = "true"
+    os.environ["TF_LEVELZONE_RESOLVER_ENABLED"] = "false"
+    try:
+        for r in rows:
+            kind = classify_population_a_kind(r["object"])
+            is_pop_a = (not r["bare_anaphora"]) and kind is not None
+            cond_null = {"id": r["condition_id"], "type": "WAIT_STRUCTURE", "object": r["object"], "role": r["role"]}
+            with preflip_dispatch():
+                null_before = bind_condition(cond_null).approximation
+            null_after = bind_condition(cond_null).approximation
+            if null_after is True:
+                null_true_all_levelzone += 1
+                if is_pop_a:
+                    null_true_pop_a += 1
+            if null_before is True and null_after is False:
+                null_flipped_resolver_off += 1
+    finally:
+        os.environ.pop("TF_LEVELZONE_ROUTING_ENABLED", None)
+        if prior_resolver_null is None:
+            os.environ.pop("TF_LEVELZONE_RESOLVER_ENABLED", None)
+        else:
+            os.environ["TF_LEVELZONE_RESOLVER_ENABLED"] = prior_resolver_null
+        if prior_routing is not None:
+            os.environ["TF_LEVELZONE_ROUTING_ENABLED"] = prior_routing
 
-    rate_before_among_pop_a = 1.0  # every Population-A row was approximation=True pre-flip, structurally
+    assert null_flipped_resolver_off == 0, (
+        f"null baseline must show zero flips with the resolver flag off, got {null_flipped_resolver_off}"
+    )
+    null_rate_among_pop_a = null_true_pop_a / pop_a_rows
+    null_rate_among_all_levelzone = null_true_all_levelzone / n_total_levelzone_rows
+
+    rate_before_among_pop_a = approx_true_before_pop_a / pop_a_rows
     rate_after_among_pop_a = (pop_a_rows - total_flipped) / pop_a_rows
-    rate_before_among_all_levelzone = 1.0  # every level/zone row (Population A+B) was approximation=True
+    rate_before_among_all_levelzone = approx_true_before_all_levelzone / n_total_levelzone_rows
     rate_after_among_all_levelzone = (n_total_levelzone_rows - total_flipped) / n_total_levelzone_rows
 
     out = {
@@ -147,16 +239,21 @@ def main() -> None:
             ),
             "verified_by_test": (
                 "src/engine/tests/test_levelzone_population_a_resolver.py::"
-                "test_flag_off_binding_plan_byte_identical_to_pre_delivery_baseline"
+                "test_flag_off_binding_plan_invariant_across_flag_absent_and_false_permutations "
+                "(same-process flag-off invariance; NOT a captured cross-commit baseline — see "
+                "that test's own scope note)"
             ),
         },
         "scope_line": (
             "Census source: docs/replay-results/h1-battery/levelzone-object-reference-census.json "
             "(n=16 level/zone rows, frozen R-097 §3(i) artifact). Both env flags forced ON for "
-            "this measurement only. 'before' is structural (every level/zone binding's "
-            "approximation was True prior to this delivery — the resolver code path itself is "
-            "new as of commit 893b8dbc and never emitted approximation=False before this packet); "
-            "'after' is the AS-BUILT bind_condition() output post-flip."
+            "this measurement only. 'before' is MEASURED, not asserted: the live bind_condition() "
+            "is run with POPULATION_A_DEAPPROXIMATED_KINDS emptied, which reduces the as-built "
+            "dispatch expression to the pre-flip commit's literal "
+            "`approximation=meta.base_approximation` (see preflip_dispatch() in this script and "
+            "`git show 71b911ef -- src/engine/spec_family_bindings.py`). 'after' is the AS-BUILT "
+            "bind_condition() output post-flip. Every n_null below is a counted observation, not "
+            "a literal."
         ),
         "dual_denominators": {
             "with_narration_ALL_conditions": dual_denominators["with_narration_ALL_conditions"],
@@ -173,9 +270,9 @@ def main() -> None:
         "ceiling": {
             "n_level_zone_rows_total": n_total_levelzone_rows,
             "n_population_a_rows": pop_a_rows,
-            "n_population_a_rows_null": 0,
+            "n_population_a_rows_null": sum(v["n_null"] for v in per_kind.values()),
             "n_non_population_a_rows": non_population_a_rows,
-            "n_non_population_a_rows_null": 0,
+            "n_non_population_a_rows_null": null_before_non_pop_a,
             "note": (
                 "9 of 16 level/zone rows are UNRESOLVABLE-AS-BUILT (bare anaphora or no kind "
                 "matched) and out of this delivery's reach entirely; of the remaining 7 "
@@ -187,7 +284,7 @@ def main() -> None:
         "per_kind_attribution": {
             kind: {
                 "n": v["n"],
-                "n_null": 0,
+                "n_null": v["n_null"],
                 "flipped_to_false": v["flipped_to_false"],
                 "still_true": v["n"] - v["flipped_to_false"],
                 "condition_ids": v["condition_ids"],
@@ -196,7 +293,7 @@ def main() -> None:
         },
         "corpus_rate_among_population_a_rows_hypothetical_both_flags_on": {
             "n": pop_a_rows,
-            "n_null": 0,
+            "n_null": sum(v["n_null"] for v in per_kind.values()),
             "rate_BEFORE": rate_before_among_pop_a,
             "rate_AFTER": round(rate_after_among_pop_a, 4),
             "delta": round(rate_after_among_pop_a - rate_before_among_pop_a, 4),
@@ -209,12 +306,12 @@ def main() -> None:
                 "n": pop_a_rows,
                 "flipped": null_flipped_resolver_off,
                 "rate": null_rate_among_pop_a,
-                "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off",
+                "basis": "MEASURED -- same 16 rows re-bound with TF_LEVELZONE_RESOLVER_ENABLED=false; the resolver dispatch branch is unreachable there, so zero rows flip. Counted, not asserted.",
             },
         },
         "corpus_rate_among_all_level_zone_rows_hypothetical_both_flags_on": {
             "n": n_total_levelzone_rows,
-            "n_null": 0,
+            "n_null": sum(v["n_null"] for v in per_kind.values()) + null_before_non_pop_a,
             "rate_BEFORE": rate_before_among_all_levelzone,
             "rate_AFTER": round(rate_after_among_all_levelzone, 4),
             "delta": round(rate_after_among_all_levelzone - rate_before_among_all_levelzone, 4),
@@ -229,12 +326,12 @@ def main() -> None:
                 "n": n_total_levelzone_rows,
                 "flipped": null_flipped_resolver_off,
                 "rate": null_rate_among_all_levelzone,
-                "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off",
+                "basis": "MEASURED -- same 16 rows re-bound with TF_LEVELZONE_RESOLVER_ENABLED=false; the resolver dispatch branch is unreachable there, so zero rows flip. Counted, not asserted.",
             },
         },
         "swing_floor_unchanged": {
             "n": per_kind["swing"]["n"],
-            "n_null": 0,
+            "n_null": per_kind["swing"]["n_null"],
             "still_approximation_true": per_kind["swing"]["n"] - per_kind["swing"]["flipped_to_false"],
             "reason": "n=1, below the n>=2 de-approximation floor (R-102 §2). Not flipped. Never argued for here.",
         },

@@ -269,16 +269,26 @@ def test_swing_kind_routes_but_approximation_never_flips():
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
-# R6: flag-OFF byte identity — PROVEN by re-extracting the pre-existing sub-wire's own
-# test assertions and re-running them, unmodified, after this delivery's changes.
+# R6: flag-OFF binding-plan INVARIANCE across every flag-absent/false permutation, plus a
+# same-process assertion that the resolver primitive is never reached with the flags off.
+#
+# SCOPE HONESTY (receipt-cleanup, R-158 §3): this test does NOT compare against a captured
+# pre-delivery artifact. It compares flag-off plans built in THIS process to each other.
+# A genuine cross-commit baseline would require executing the parent commit's code, which
+# a single-process pytest cannot do without vendoring a serialized plan (itself a
+# hand-copied constant — the very shape R-158 §3 flags). The cross-commit proof exists,
+# but it lives in the grade's own independent diff, NOT here. This test was previously
+# named ..._byte_identical_to_pre_delivery_baseline, which promised that proof; it has been
+# renamed to describe what it actually performs.
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
-def test_flag_off_binding_plan_byte_identical_to_pre_delivery_baseline():
-    """Extract-and-compare (not assert-only): builds the SAME mixed spec
-    test_levelzone_routing.py's own byte-identity test uses, and confirms the FULL
-    binding plan to_dict() is identical whether TF_LEVELZONE_RESOLVER_ENABLED is absent,
-    explicitly 'false', OR the routing flag is also independently toggled — this
-    delivery's new code path is provably never entered unless BOTH flags are 'true'."""
+def test_flag_off_binding_plan_invariant_across_flag_absent_and_false_permutations():
+    """Builds the SAME mixed spec test_levelzone_routing.py's own byte-identity test uses,
+    and confirms the FULL binding plan to_dict() is identical whether
+    TF_LEVELZONE_RESOLVER_ENABLED is absent, explicitly 'false', OR the routing flag is
+    also independently toggled — this delivery's new code path is provably never entered
+    unless BOTH flags are 'true'. All comparisons are same-process; see the block comment
+    above for why this is NOT a captured pre-delivery baseline."""
     spec = {
         "direction": "long",
         "entry_conditions": [
@@ -636,6 +646,11 @@ def test_r4_resolver_level_series_is_full_length_every_bar_no_holding_beyond_det
 # landed yet). That assertion is now FALSE for two of the three kinds by design — see R9
 # below, which replaces this test with a per-kind expectation and keeps the swing half of
 # the original claim alive (still True, still asserted, just split out).
+#
+# ACCURACY NOTE (receipt-cleanup, R-158 §3): this header is PROSE describing what the old
+# block asserted. No commented-out test code was kept anywhere in this file — the flip-step
+# commit message's phrase "old assertions kept as commented receipts" overstates that. The
+# supersession receipt is this prose block plus R9's explicit expectations, nothing more.
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
 @pytest.mark.parametrize(
@@ -645,23 +660,44 @@ def test_r4_resolver_level_series_is_full_length_every_bar_no_holding_beyond_det
         ("price found resistance here", "named_sr_level", False),
         ("a demand zone formed", "order_block_edge", False),
         ("a supply zone formed", "order_block_edge", False),
-        ("the swing low held", "swing", True),
-        ("the swing high held", "swing", True),
+        # SWING POLARITIES — object text chosen so it BOTH classifies as swing AND matches
+        # LEVEL_ZONE_RE, which is what actually carries a condition into the Population-A
+        # resolver dispatch. "the swing low/high held" does NOT match LEVEL_ZONE_RE (the
+        # regex has `previous\s+(day|high|low)`, not bare "swing"/"high"/"low"), so those
+        # strings never reach the resolver at all — they bind to the base primitive with
+        # approximation=True from an unrelated code path, which made this parametrization's
+        # swing half VACUOUS: it could not fail if swing were added to
+        # POPULATION_A_DEAPPROXIMATED_KINDS. The strings below DO reach the resolver, so
+        # they discriminate. Verified by mutation (add "swing" to the set -> both fail).
+        ("the previous low held", "swing", True),
+        ("the previous high held", "swing", True),
     ],
 )
 def test_r9_approximation_flips_per_kind_named_sr_level_and_order_block_edge_only(obj, kind, expected_approximation):
     """R9 (Population-A flip-step, docs/designs/packet-population-a-flip-step-2026-07-20.md):
     approximation is now FALSE for every named_sr_level/order_block_edge polarity (both
-    bullish- and bearish-leaning object text), and remains True for every swing polarity.
+    bullish- and bearish-leaning object text), and remains True for both swing polarities.
     Replaces R7 above, which this packet's own delivery falsifies for 4 of its 6 cases —
     see the module docstring's UPDATED note; R7's assertion is not silently edited, it is
-    explicitly superseded here with the old text left in place as a receipt of what changed
-    and why."""
+    explicitly superseded here, with a PROSE header above recording what it used to assert
+    and why that changed (no commented-out assertion code — see that header's accuracy
+    note).
+
+    ANTI-VACUITY (asserted, not asserted-about): every case below is checked to actually
+    reach the Population-A resolver primitive. Without that check the swing rows could sit
+    on object text the resolver never sees and still "pass" — the exact defect a mutation
+    run (adding "swing" to POPULATION_A_DEAPPROXIMATED_KINDS) exposed in this test's
+    original swing strings."""
     assert classify_population_a_kind(obj) == kind
     df = _synthetic_df(n=150, seed=3)
     cond = {"id": "s1", "type": "WAIT_STRUCTURE", "object": obj, "role": "spine"}
     with both_flags(True):
+        b = bind_condition(cond)
         strat = _run_single_condition_spec(cond, df)
+    assert b.primitive == LEVELZONE_RESOLVER_PRIMITIVE, (
+        f"{obj!r} ({kind}) never reached the Population-A resolver (bound to {b.primitive!r}) — "
+        "this case cannot testify about the per-kind approximation flip at all"
+    )
     assert strat.approximation is expected_approximation, (
         f"{obj!r} ({kind}): expected approximation={expected_approximation}, got {strat.approximation}"
     )

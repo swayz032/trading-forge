@@ -10,9 +10,9 @@
  "production_impact_today": {
   "value": "ZERO",
   "reason": "TF_LEVELZONE_ROUTING_ENABLED and TF_LEVELZONE_RESOLVER_ENABLED both default 'false' (unset). The dispatch branch this delivery's approximation flip lives in (src/engine/spec_family_bindings.py, Population-A resolver block) is unreachable unless BOTH are explicitly set 'true'. Every number below describes the both-flags-ON hypothetical, not today's live behavior.",
-  "verified_by_test": "src/engine/tests/test_levelzone_population_a_resolver.py::test_flag_off_binding_plan_byte_identical_to_pre_delivery_baseline"
+  "verified_by_test": "src/engine/tests/test_levelzone_population_a_resolver.py::test_flag_off_binding_plan_invariant_across_flag_absent_and_false_permutations (same-process flag-off invariance; NOT a captured cross-commit baseline \u2014 see that test's own scope note)"
  },
- "scope_line": "Census source: docs/replay-results/h1-battery/levelzone-object-reference-census.json (n=16 level/zone rows, frozen R-097 \u00a73(i) artifact). Both env flags forced ON for this measurement only. 'before' is structural (every level/zone binding's approximation was True prior to this delivery \u2014 the resolver code path itself is new as of commit 893b8dbc and never emitted approximation=False before this packet); 'after' is the AS-BUILT bind_condition() output post-flip.",
+ "scope_line": "Census source: docs/replay-results/h1-battery/levelzone-object-reference-census.json (n=16 level/zone rows, frozen R-097 \u00a73(i) artifact). Both env flags forced ON for this measurement only. 'before' is MEASURED, not asserted: the live bind_condition() is run with POPULATION_A_DEAPPROXIMATED_KINDS emptied, which reduces the as-built dispatch expression to the pre-flip commit's literal `approximation=meta.base_approximation` (see preflip_dispatch() in this script and `git show 71b911ef -- src/engine/spec_family_bindings.py`). 'after' is the AS-BUILT bind_condition() output post-flip. Every n_null below is a counted observation, not a literal.",
  "dual_denominators": {
   "with_narration_ALL_conditions": 124,
   "without_narration_PRIMARY": 111,
@@ -73,7 +73,7 @@
    "n": 7,
    "flipped": 0,
    "rate": 1.0,
-   "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off"
+   "basis": "MEASURED -- same 16 rows re-bound with TF_LEVELZONE_RESOLVER_ENABLED=false; the resolver dispatch branch is unreachable there, so zero rows flip. Counted, not asserted."
   }
  },
  "corpus_rate_among_all_level_zone_rows_hypothetical_both_flags_on": {
@@ -89,7 +89,7 @@
    "n": 16,
    "flipped": 0,
    "rate": 1.0,
-   "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off"
+   "basis": "MEASURED -- same 16 rows re-bound with TF_LEVELZONE_RESOLVER_ENABLED=false; the resolver dispatch branch is unreachable there, so zero rows flip. Counted, not asserted."
   }
  },
  "swing_floor_unchanged": {
