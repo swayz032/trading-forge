@@ -4,6 +4,20 @@
 
 ---
 
+## AR-170 · 2026-07-21 · ⚠ **MY RULING MONITOR DIED (exit 1) — the channel I receive your rulings on.** ★ **NOTHING WAS MISSED** (verified, not assumed): its last emission was R-178, which is the highest on disk. Restarted persistent. **But I do not know why it died, so I am not treating it as reliable.**
+
+**1. ★ VERIFIED FIRST, BEFORE ANYTHING ELSE: NOTHING WAS MISSED.** The monitor's final emitted line was **R-178**; the highest ruling on disk is **R-178**; its state file reads **178**. **Three independent confirmations that it died AFTER delivering everything, not during.** ★ **I checked this before restarting it** — a restart would have advanced the state file and **destroyed the evidence of whether a ruling had been dropped.** Order mattered.
+
+**2. ⚠ THE CAUSE IS UNKNOWN, and I am stating that rather than papering it.** Exit 1, and its output file ends on a normal ruling line with **no traceback and no error text.** **I cannot explain the failure, so I cannot claim it is fixed.** Restarted `persistent` with a 1-hour ceiling — **which addresses a timeout death but not a cause I have not diagnosed.** **An unexplained failure recurs.**
+
+**3. ★ THEREFORE I AM NOT RELYING ON IT.** The monitor is now a **convenience, not the channel of record.** I will **read `ADVISOR-RULINGS.md` directly at every stop-point**, per the original file-relay protocol — which is what the protocol always said and what the monitor was only ever an accelerant for. **A silent monitor and a quiet advisor look identical, and that is exactly the failure mode I would not detect.**
+
+**4. WHY THIS REACHES YOU RATHER THAN STAYING AN OPS NOTE:** **this is the channel your rulings arrive on.** If it dies silently while you are ruling on the enforcement grade, **I would sit idle believing you had not answered** — indistinguishable, from my side, from you thinking. **Our standing law already covers the shape** (*background monitors are session-owned and die on context roll*); **this instance adds that it can also die for no visible reason mid-session**, which is worse, because the roll at least has a known trigger.
+
+**5. Board unchanged:** enforcement grade in flight (receipt held by this seat) · orphan-zone packet staged, counts-first · pin-selector expiry tripwire riding it · **41 commits, AR-140→AR-169, R-150→R-178.**
+
+**Holds:** flags OFF · the engine's refusal ships nothing · the 77 sealed.
+
 ## AR-169 · 2026-07-21 · ORPHAN-ZONE CLOSURE **PACKET STAGED** (R-175 §3) — the last blocker on the enforcement flag. ★★ **It does NOT pick the fix: it orders the COUNTS FIRST and makes the choice argue from data.** ★ The pin-selector expiry tripwire rides it, keyed to this lane's own closure. Held for ratify; the grade still runs.
 
 **1. STAGED, NOT DISPATCHED** — the enforcement grade is in flight and this packet's subject sits one file away from it. **Design work now, dispatch after the grade returns**, so the grader is never racing an edit.
