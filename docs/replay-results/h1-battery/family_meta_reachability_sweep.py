@@ -23,10 +23,21 @@ declaration columns for the length of the build (legacy + enforced, two-commit l
 instrument that reads only the legacy one would report "no movement" for a packet whose entire
 subject is the declaration moving — a caption that cannot respond to its subject. `declared` now
 means "what this engine declares UNDER THE ACTIVE REGIME", which is what the instrument was
-always for. PROVEN INERT with the flag OFF: the flag-off arm still reproduces
-family-meta-reachability-sweep-baseline.json byte-identically (effective_primitive() returns
-meta.primitive when TF_FAMILY_META_ENFORCED is not true), so the before/after comparison remains
-same-instrument. Nothing else changed; no counter, control, exemplar or verdict rule was touched.
+always for. PROVEN INERT with the flag OFF, stated exactly: the flag-off arm reproduces
+family-meta-reachability-sweep-baseline.json with ZERO VALUE DIFFERENCES ON EVERY PREVIOUSLY-
+MEASURED COLUMN, across all 14/14 families; the ENTIRE delta is the two ADDED columns above
+(effective_primitive() returns meta.primitive when TF_FAMILY_META_ENFORCED is not true). So the
+before/after comparison remains same-instrument. Nothing else changed; no counter, control,
+exemplar or verdict rule was touched.
+
+★ CORRECTION, 2026-07-21, and it is the point of this note. This paragraph originally said the
+flag-off arm reproduces the baseline "BYTE-IDENTICALLY". That word is FALSE and falsifiably so:
+a plain `json.dumps(a) == json.dumps(b)` returns False, because two columns were added. The
+SUBSTANCE was and is true, but a checkable superlative that fails its own check is exactly the
+caption-is-a-claim shape this packet exists to delete — and it appeared in the header of the
+packet's own acceptance instrument. Anyone re-running the naive comparison gets False and may
+reasonably conclude the instrument was compromised. Caught by the advisor seat on independent
+re-derivation, not by the author. The phrasing above is now the one that survives its own test.
 """
 from __future__ import annotations
 import json, sys, os, contextlib, datetime as _dt
