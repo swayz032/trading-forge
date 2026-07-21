@@ -4,6 +4,21 @@
 
 ---
 
+## AR-137 · 2026-07-20 · R-143 §3 item 4 — **WIRE-2's two-leg premise audit DISPATCHED** (receipt held). Independent of both running builds. ★ The brief opens with WIRE-1's withdrawal as its reason for existing.
+
+**1. Taken because it is independent, not because it is next.** Items 1 and 2 (flip step, session resolver) are building; item 3 (dual-denominator re-measure) **waits on both** since each moves the number. **Item 4 touches neither surface** — `compute_bias` and the bias binding — so it proceeds in parallel rather than idling behind them.
+
+**2. ★ The brief's first section is WIRE-1's obituary, because that is the argument for running this at all:** the packet claimed *"feed `compute_structure_state` a REAL HTF frame"*, **nobody tested the claim**, the argument moved **none of the nine fields the column read**, and **a graded, licensed headline had to be withdrawn.** *"WIRE-2's premise is BLOCKED until this audit runs. You are that audit."*
+
+**3. ★ LEG 1 carries the amended form with the failure that motivated it, stated as the whole lesson:** *"varying an INTERIOR argument proves only that a function is a function."* The level/zone packet passed a **synthetic** value into a detector, proved it responded, shipped — while **production fed that argument a constant**, so the mechanism was **live in the function and inert in the wiring.** So: **trace what production actually feeds `compute_bias`, and vary THAT** — and if production supplies a constant or a default, **say so, because that finding alone blocks WIRE-2.**
+
+**4. ★ LEG 2 is named as the leg WIRE-1 skipped:** measure whether the **incumbent** (`classify_institutional_regime`, `base_approximation=True`) actually discriminates between bias states, or returns the same signal regardless. **A live mechanism replacing a BLIND incumbent is a structural gain; replacing a LIVE one is a smaller, different claim — and the audit must know which it would be proving** before anyone builds on it.
+
+**5. Standing disciplines attached:** plant-catch **per leg** before any verdict including clean ones (*"a probe that cannot fail proves nothing"* — with the discarded sweep cited) · **a zero carries its n**, UNDERPOWERED pre-declared legitimate · real data preferred, stated · **no WIRE-2 design proposed** — mechanism identification only · and the orphan rule in the dispatch itself: **run to completion in your own turn.**
+
+**Three units now in flight** — flip step · session resolver · WIRE-2 audit — **no file overlap.** **Holds:** six bars lifted · flags OFF · no `approximation=False` until the flip grades · **WIRE-2 remains BLOCKED pending this audit** · the 77 sealed.
+
+
 ## AR-136 · 2026-07-20 · R-145 GO — **session resolver DISPATCHED** (receipt held), with **both your additions folded in**. ★ The grade that specified the spec is now the test of it.
 
 **1. ★ Your addition (ii) is the sharpest thing in the brief, and I made it the pass/fail line:** the session grader's **own discriminations are the calibration fixtures** — its rejected literal-*"session"*-as-filler row is the **known-BAD** the resolver must refuse; the *"opening bell"* / *"off the Bell"* rows are the **known-GOOD** it must bind. Written in verbatim: ***"a resolver that cannot reproduce the grade that specified it has not implemented the spec."*** **The specification and its test are now the same artifact**, which removes the gap where an implementation satisfies a description while missing what the description was for.
