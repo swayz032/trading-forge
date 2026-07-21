@@ -99,6 +99,39 @@
     <div class="grid" id="surfaces"></div>
   </div>
 
+  <!-- PIN entry — the second factor behind the Discord session, and the ACTUAL cure for the
+       permanently-"Locked" room (F-1, OR-163). member-office-scope.ts denies every surface unless
+       pinSatisfied === true, which only /member/pin/establish and /member/pin can set; before this
+       form existed nothing called either, so the office could never open.
+
+       FIRST-RUN vs RETURN IS DECIDED BY THE SERVER, NOT GUESSED HERE. We submit, and the route
+       answers: 409 `no_pin_set` -> this member has no PIN, switch to establish; 409
+       `pin_already_set` -> one exists, switch to verify. The page never probes for whether a PIN
+       exists and never infers it — that would be a client-side access decision, which this page
+       does not make (see the boot() comment).
+
+       The code itself never leaves the input: both fields are cleared in a `finally`, so a
+       network throw cannot strand it in the DOM, and the status line is written with
+       textContent — never innerHTML, and never the code. -->
+  <section class="float" id="pin-card" aria-label="Enter your code" style="display:none">
+    <h2 id="pin-title">Enter your code</h2>
+    <p class="fineprint" id="pin-lede">Your office stays locked until you enter your code.</p>
+    <label for="pin">Code</label>
+    <input id="pin" type="password" autocomplete="off" inputmode="numeric" spellcheck="false"
+           maxlength="12" placeholder="••••••" />
+    <div id="pin-confirm-wrap" style="display:none">
+      <label for="pin-confirm">Confirm code</label>
+      <input id="pin-confirm" type="password" autocomplete="off" inputmode="numeric"
+             spellcheck="false" maxlength="12" placeholder="••••••" />
+    </div>
+    <button id="pin-submit" type="button">Unlock</button>
+    <div class="status" id="pin-status" role="status" aria-live="polite"></div>
+    <p class="fineprint">
+      This code is yours and only yours — the operator cannot see it and cannot read it back.
+      If you forget it, you sign in with Discord again to reset it.
+    </p>
+  </section>
+
   <!-- Floating broker-connect card. TEST MODE ONLY until the money path's Phase 5. -->
   <section class="float" id="connect-card" aria-label="Connect your broker">
     <h2>Connect your broker</h2>
@@ -143,11 +176,17 @@
     const grid = document.getElementById("surfaces");
     const shown = (scope.surfaces || []).filter((s) => SURFACE_LABELS[s]);
     if (shown.length === 0) {
+      // FAIL-CLOSED: no authorised surface, so nothing but the lock renders. This branch is also
+      // reached when /scope errors or the network drops — an unreachable server must never open
+      // the office, only leave it shut.
       grid.innerHTML = '<div class="card"><h2>Locked</h2><div class="val">Enter your code</div>'
         + '<div class="note">Your office opens once you enter the code you set up.</div></div>';
       document.getElementById("connect-card").style.display = "none";
+      document.getElementById("pin-card").style.display = "";
       return;
     }
+    // Authorised: the lock is satisfied, so the PIN form goes away.
+    document.getElementById("pin-card").style.display = "none";
     grid.innerHTML = shown.map((s) => {
       const [title, note] = SURFACE_LABELS[s];
       return `<div class="card"><h2>${title}</h2><div class="val">—</div><div class="note">${note}</div></div>`;
@@ -158,6 +197,90 @@
       document.getElementById("connect-card").style.display = "none";
     }
   }
+
+  // ── PIN entry ────────────────────────────────────────────────────────────────────────────
+  // "verify" = a PIN exists, prove it. "establish" = first run, choose one. The MODE IS ONLY
+  // EVER SET BY A SERVER RESPONSE (409 no_pin_set / 409 pin_already_set) — never inferred here.
+  let pinMode = "verify";
+
+  function setPinMode(mode) {
+    pinMode = mode;
+    const establishing = mode === "establish";
+    document.getElementById("pin-title").textContent = establishing ? "Choose your code" : "Enter your code";
+    document.getElementById("pin-lede").textContent = establishing
+      ? "First time here. Pick a code between 6 and 12 characters — you will use it every time."
+      : "Your office stays locked until you enter your code.";
+    document.getElementById("pin-confirm-wrap").style.display = establishing ? "" : "none";
+    document.getElementById("pin-submit").textContent = establishing ? "Set my code" : "Unlock";
+  }
+
+  function pinSay(msg) {
+    // textContent, never innerHTML — and never the code itself. Server strings are inert here.
+    document.getElementById("pin-status").textContent = msg;
+  }
+
+  async function submitPin() {
+    const pinEl = document.getElementById("pin");
+    const confirmEl = document.getElementById("pin-confirm");
+    const btn = document.getElementById("pin-submit");
+    const establishing = pinMode === "establish";
+    const code = pinEl.value;
+
+    try {
+      if (!code) { pinSay("Enter your code."); return; }
+      // UX only — the server enforces the real policy and its answer always wins.
+      if (establishing && code !== confirmEl.value) { pinSay("Those two codes do not match."); return; }
+
+      btn.disabled = true;
+      pinSay("Checking…");
+
+      const url = establishing
+        ? "/slumhouse/api/member/pin/establish"
+        : "/slumhouse/api/member/pin";
+      const r = await fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin: code }),
+      });
+      const j = await r.json().catch(() => ({}));
+
+      if (r.ok) {
+        pinSay("");
+        await boot();               // re-ask the server what this member may see; never assume
+        return;
+      }
+
+      // The server decides which flow this member is actually in.
+      if (j.error === "no_pin_set")      { setPinMode("establish"); pinSay("First time here — choose a code."); return; }
+      if (j.error === "pin_already_set") { setPinMode("verify");    pinSay("You already have a code — enter it."); return; }
+
+      if (r.status === 429) {
+        const mins = Math.max(1, Math.ceil((Number(j.retryAfterMs) || 0) / 60000));
+        // Says WHEN they may retry, never how many tries remain or how close they were.
+        pinSay("Too many tries. Try again in about " + mins + " minute" + (mins === 1 ? "" : "s") + ".");
+        return;
+      }
+      if (j.error === "pin_incorrect") { pinSay("That code did not work."); return; }
+      if (j.error === "pin_policy")    { pinSay(typeof j.reason === "string" ? j.reason : "That code is not allowed."); return; }
+      if (j.error === "pin_required")  { pinSay("Enter your code."); return; }
+
+      // Anything else (503 pin_unavailable, 500, unknown): stay locked, say nothing revealing.
+      pinSay("Cannot check your code right now. Try again in a moment.");
+    } catch {
+      pinSay("Cannot reach the server. Try again in a moment.");
+    } finally {
+      // ★ In `finally`, not after a successful fetch: a network throw or an early return must
+      // still leave nothing behind in the DOM. Same rule the connect-card key follows.
+      pinEl.value = "";
+      confirmEl.value = "";
+      btn.disabled = false;
+    }
+  }
+
+  document.getElementById("pin-submit").addEventListener("click", submitPin);
+  document.getElementById("pin").addEventListener("keydown", (e) => { if (e.key === "Enter") submitPin(); });
+  document.getElementById("pin-confirm").addEventListener("keydown", (e) => { if (e.key === "Enter") submitPin(); });
 
   document.getElementById("connect").addEventListener("click", async () => {
     const status = document.getElementById("status");
