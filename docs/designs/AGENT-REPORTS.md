@@ -4,6 +4,26 @@
 
 ---
 
+## AR-192 · 2026-07-21 · **THE FINAL GATE IS DISPATCHED** (R-201) — receipt held. ★★★ **Its central instruction is one sentence: THIS ARTIFACT HAS HAD TWO CAPTION DEFECTS; ASSUME A THIRD.** The grader is given both, told what caught each, and pointed at the class rather than the instances.
+
+**1. ★★★ TWO CAPTIONS IN ONE ARTIFACT IS A PATTERN, NOT A COINCIDENCE — so I briefed the CLASS.** The first was the **hardcoded interpretation** that printed *"the rate improves while coverage worsens"* for any delta in either direction. The second was its **replacement caveat**, whose first draft made `margin == margin_from_INVALIDATE` an **algebraic identity** — *"a decomposition whose answer is fixed before the data arrives."* ★ **Both fixes were correct; the second defect appeared INSIDE the fix for the first.** So the brief does not ask for a third instance — **it asks for the SHAPE**: *"Any sentence, key name, or classification that CANNOT BE FALSIFIED BY THE DATA IT SITS BESIDE is the finding. Ask of every prose field: what input would make this say something else? **If none exists, it is a caption.**"*
+
+**2. ★★ AND IT MUST HUNT THE IDENTITY DEFECT'S SIBLING SPECIFICALLY:** *"is any OTHER decomposition in this artifact algebraically fixed before the data arrives?"* ★ **One algebraic identity was found by perturbation and fixed. A second would not be a surprise — decompositions are exactly where a fixed answer hides behind arithmetic that looks like work.**
+
+**3. ★ IT IS ALSO ASKED THE HARDER QUESTION ABOUT THE COMPUTED VERDICT.** Not merely *"does `classify_drift()` discriminate?"* (five patterns → five verdicts) but ***"is the verdict it emits on the REAL data CORRECT?"*** — **re-derive all four arms yourself (pre/post-closure × flags on/off) and confirm both metrics moved the same way.** ★ **A classifier that discriminates can still be wrong on the one input that matters, and that is precisely how the original inversion happened: the machinery was fine, the ARMS were incomparable.**
+
+**4. THE NUMBERS ARE RE-DERIVED FROM ZERO, with the failure history attached:** 987 / 2769 / 2694 (***"this was wrong once at 921 — assume it can be wrong again"***) · rate 0.9531 at n=128 · **6/155 and 6/161** · the corrected **7/155 → 6/155** numerator continuity · *"27 of 155 vanishing"* · and the reconciliations `2769+2694+987 = 6450`, `128+27 = 155`.
+
+**5. THE SESSION NUMBER GETS ITS PROVENANCE CHECKED, not just its value:** `0 of 27 bound · 0 of up-to-17 recovered`, with the **17 flagged EXTERNAL GRADED CONSTANT.** *"Verify the 27 and the 0 yourself. **Confirm the 17 is not presented as measured.**"* ★ **The distinction between what an artifact MEASURED and what it CITED is exactly the line I crossed with the 16-spec census, and it is now something a grader checks rather than something an author remembers.**
+
+**6. TWO MORE CLASSES IT HUNTS, both with prior instances named:** **asserts that CANNOT FIRE** (two were found earlier — one algebraically implied by its neighbour, one sitting *after* the write it purported to guard; **the self-count is now AST-derived so the "eight when there were twelve" defect cannot recur by construction — verify that claim**) · and **whether any claim exceeds what the grades licensed**, particularly that the **5 unexplained residue rows appear ONLY as a scope limit, never as a result.**
+
+**7. WHAT I AM NOT DOING:** not re-running the generator myself and calling it verification (**that is the seat re-running the seat's dispatch** — R-196 §4 settled this) · not treating the two prior fixes as evidence the third pass is clean (**each fix so far has revealed the next defect**) · and **not asking for a courtesy 7**: the brief says plainly *"a defended 5 or 6 beats a courtesy 7."*
+
+**8. SEQUENCE, unchanged:** this grade → **T1 on the GRADED artifact** → the flag-promotion question under the measurement-vs-ship form. **Production has not moved at any point in this campaign and does not move here.**
+
+**Holds:** flags OFF · every AFTER figure a labeled hypothetical · the 77 sealed.
+
 ## AR-191 · 2026-07-21 · ★★★ **THE PERTURBATION REQUIREMENT CAUGHT A DEFECT IN THE FIX FOR THE DEFECT — and "the perturbation run is what exposed it, NOT REVIEW."** Dual configuration landed `3a555296`: **`6/161` under `READ_THIS_ONE`, `12/161` under `BESIDE_IT_NOT_INSTEAD_OF_IT`.** Re-grade dispatching.
 
 **1. ★★★ THE SELF-CATCH IS THE REPORT.** Its **first draft made `margin == margin_from_INVALIDATE` an ALGEBRAIC IDENTITY** — it took **one** entry-side numerator for both arms, so **two classifier branches were unreachable and `margin_from_other_sources` was always 0 BY CONSTRUCTION.** ★ **Its own words: *"That is the same caption defect one level down: a decomposition whose answer is fixed before the data arrives."*** **A caveat built to explain a caption had become a caption.**
