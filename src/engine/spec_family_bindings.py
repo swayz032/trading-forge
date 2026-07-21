@@ -1848,7 +1848,72 @@ def _session_best_real_zone_for_range(start_min: int, end_min: int) -> str | Non
     return best_zone
 
 
-def _session_anchor_sequence_wraps_midnight(clock_anchor_minutes: list[int]) -> bool:
+_SESSION_ANCHOR_PHRASE_GOVERNOR_RE = re.compile(
+    r"\b(until|till|through|to|from|before|after|by|between|into|towards?)\b",
+    re.IGNORECASE,
+)
+"""Span/selection prepositions that, when they GOVERN an anchor phrase, make it
+a range ENDPOINT rather than a descriptive gloss. Deliberately excludes "of"
+and "at": "the first 15 minutes OF the New York Stock Exchange open" describes
+a range, it does not bound one."""
+
+
+def _session_anchor_phrase_is_governed_endpoint(norm: str, phrase_start: int) -> bool:
+    """True iff the anchor phrase at `phrase_start` is governed by a span
+    preposition — i.e. it functions as an ENDPOINT of the taught range
+    ("from 4:00 p.m. until MARKET OPEN") rather than as a descriptive gloss
+    ("the first 15 minutes of the NYSE OPEN").
+
+    ★ THIS CLOSES A HOLE THE FIRST VERSION OF THIS PACKET OPENED. Excluding
+    the anchor phrase from the wrap test outright (to kill two phantom wraps)
+    let a REAL wrapping window through whenever the phrase was the terminal
+    endpoint and the only other endpoint was a single clock token:
+
+        "trade the range from 4:00 p.m. eastern until market open on the NYSE"
+            clock tokens [960] -> no backwards step -> no wrap detected
+            min/max over {570(phrase), 960} = (570, 960) -> ny_pm
+
+    ny_pm is 13:30-16:00 ET: the RTH afternoon, the COMPLEMENT of the 16:00->
+    09:30 overnight range the sentence teaches. That is the packet's own
+    defect, escaping through the packet's own remedy — and it is semantically
+    the SAME sentence as the originating corpus row ("when the market actually
+    closes until when the market opens").
+
+    The discriminator is government, not position: a governed phrase is an
+    endpoint and joins the ordered wrap test; an ungoverned one is a gloss and
+    stays out. Verified against both phantom-wrap rows, which remain correctly
+    non-wrapping:
+      - "...all the way up INTO New York market open, which is going to be
+        9:30 a.m." -> governed, joins as 570 -> [180, 570, 570], monotone.
+      - "...the first 15 minutes OF the New York Stock Exchange open" ->
+        ungoverned gloss, excluded -> [570, 585], monotone.
+
+    The governor must reach the phrase across scaffold words only ("all the
+    way up into", "until the"), never across a content word — otherwise any
+    preposition anywhere in a long sentence would license any phrase."""
+    prefix = norm[:phrase_start]
+    words = _SESSION_RESIDUE_WORD_RE.findall(prefix)
+    # Walk backwards from the phrase over scaffold/filler only. A content word
+    # ends the search: the governor must actually reach this phrase.
+    # Filler the governor may reach across: discourse scaffolding, plus the
+    # market-naming words that belong to the anchor phrase's own noun group
+    # ("until NEW YORK market open" — SESSION_ANCHOR_PHRASE_RE matches only
+    # the "market open" tail, leaving "new york" stranded in the prefix).
+    _FILLER = {
+        "all", "the", "way", "up", "right", "straight", "then", "and",
+        "new", "york", "ny", "nyse", "cash", "equity", "stock", "exchange", "us",
+    }
+    for word in reversed(words):
+        low = word.lower()
+        if _SESSION_ANCHOR_PHRASE_GOVERNOR_RE.fullmatch(low):
+            return True
+        if low in _FILLER or low in _SESSION_TIME_SCAFFOLD_WORDS:
+            continue
+        return False
+    return False
+
+
+def _session_anchor_sequence_wraps_midnight(wrap_minutes: list[int]) -> bool:
     """True iff the CLOCK anchors, IN TEXT ORDER, ever step backwards in the
     day — the signature of a window that wraps midnight ("from 4 p.m. until
     9:30 a.m.").
@@ -1869,7 +1934,7 @@ def _session_anchor_sequence_wraps_midnight(clock_anchor_minutes: list[int]) -> 
     same instant ("from 9:30 ... so, from 9:30 to 9:35"), and one real corpus
     row does exactly that. Only a STRICT decrease is a wrap. A single anchor
     can never wrap."""
-    return any(b < a for a, b in pairwise(clock_anchor_minutes))
+    return any(b < a for a, b in pairwise(wrap_minutes))
 
 
 def _session_clock_token_minutes(hour: int, minute: int, meridiem: str | None) -> int:
@@ -1990,11 +2055,21 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
     # the graded bound-and-concrete count (8 -> 6, then 8 -> 7). The graded
     # constants are owned elsewhere and must not move by side-effect; that
     # they moved is exactly how both bugs announced themselves.
-    clock_anchor_minutes: list[int] = []
+    # (character offset, minute) — sorted by offset to give TEXT order.
+    wrap_points: list[tuple[int, int]] = []
 
-    if SESSION_ANCHOR_PHRASE_RE.search(norm):
+    anchor_phrase = SESSION_ANCHOR_PHRASE_RE.search(norm)
+    if anchor_phrase:
         recognized = True
         anchor_minutes.append(_SESSION_MARKET_OPEN_MINUTE)
+        # ★ The phrase joins the wrap sequence ONLY when a span preposition
+        # governs it, i.e. it is a range ENDPOINT and not a descriptive gloss.
+        # See _session_anchor_phrase_is_governed_endpoint — this distinction is
+        # what lets the wrap test catch "from 4:00 p.m. until MARKET OPEN"
+        # without re-manufacturing the phantom wraps a positional-only rule
+        # produced.
+        if _session_anchor_phrase_is_governed_endpoint(norm, anchor_phrase.start()):
+            wrap_points.append((anchor_phrase.start(), _SESSION_MARKET_OPEN_MINUTE))
 
     # ★ SECOND-PASS: the weak markers' required co-factor is now the STRONG
     # market lexicon, not the broad one. The broad lexicon admitted ordinary
@@ -2069,11 +2144,10 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         )
         if meridiem_with_role or tier1 or tier2:
             recognized = True
-            for hour, minute, mer in parts:
-                # `parts` follows finditer order, which IS text order.
+            for tok, (hour, minute, mer) in zip(clock_tokens, parts, strict=True):
                 tok_minute = _session_clock_token_minutes(hour, minute, mer)
                 anchor_minutes.append(tok_minute)
-                clock_anchor_minutes.append(tok_minute)
+                wrap_points.append((tok.start(), tok_minute))
 
     # The two weakest markers keep the BROAD lexicon as their market co-factor
     # (the strong set measurably cost a genuine blind-graded corpus row that
@@ -2132,7 +2206,7 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
     zone: str | None = None
     refusal: str | None = None
     if anchor_minutes:
-        if _session_anchor_sequence_wraps_midnight(clock_anchor_minutes):
+        if _session_anchor_sequence_wraps_midnight([m for _pos, m in sorted(wrap_points)]):
             # ★ The taught window runs backwards through midnight. `min`/`max`
             # cannot represent it — they yield its COMPLEMENT (see
             # SESSION_WRAPPING_WINDOW_UNBOUND_REASON). Refuse by name; never

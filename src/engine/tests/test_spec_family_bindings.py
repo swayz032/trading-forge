@@ -21,9 +21,11 @@ import pytest
 from src.engine.spec_family_bindings import (
     _REAL_ZONE_INTERVALS,
     MIN_SPINE_BOUND_RATIO,
+    SESSION_ANCHOR_PHRASE_RE,
     SESSION_KEYWORDS,
     SESSION_TEACHING_UNBOUND_REASON,
     SESSION_WRAPPING_WINDOW_UNBOUND_REASON,
+    _session_anchor_phrase_is_governed_endpoint,
     _session_anchor_sequence_wraps_midnight,
     bind_condition,
     classify_session_role,
@@ -2832,3 +2834,69 @@ def test_anchor_phrase_gloss_is_not_read_as_a_range_endpoint(monkeypatch):
         result = classify_session_role(text)
         assert result.refusal is None, f"phantom wrap on a non-wrapping teaching: {text[:70]!r}"
         assert result.zone is not None, f"lost a genuine teaching: {text[:70]!r}"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        # ★ THE HOLE. One clock token + the anchor phrase as the TERMINAL
+        # endpoint. Pre-hole-fix these bound ny_pm (13:30-16:00 ET) — the RTH
+        # afternoon, the COMPLEMENT of the overnight range taught, which is
+        # this packet's own defect escaping through this packet's own remedy.
+        "trade the range from 4:00 p.m. eastern until market open on the NYSE",
+        "we hold from 6:00 p.m. eastern until the market open",
+        "from 11:00 p.m. eastern until market open, mark the high and low on ES",
+        "hold from 4:00 p.m. eastern until New York market open on ES",
+    ],
+)
+def test_wrapping_window_whose_terminal_endpoint_is_the_anchor_phrase(monkeypatch, text):
+    """★ A REAL HOLE THIS PACKET'S FIRST LANDED VERSION OPENED, found by
+    adversarially probing its own design decision rather than by a failing test.
+
+    Excluding the anchor phrase from the wrap test (to kill two phantom wraps)
+    meant a wrapping window expressed as "<clock> until MARKET OPEN" carried
+    only ONE clock token, so the ordered test saw no backwards step and the
+    min/max span silently produced the complement.
+
+    These sentences are semantically the SAME teaching as the originating
+    corpus row: "when the market actually closes until when the market opens."
+    """
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    result = classify_session_role(text)
+    assert result.zone is None, f"complement-bound to {result.zone!r}: {text!r}"
+    assert result.refusal == SESSION_WRAPPING_WINDOW_UNBOUND_REASON
+    binding = bind_condition({"id": "p:5", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.reason == SESSION_WRAPPING_WINDOW_UNBOUND_REASON
+
+
+def test_forward_span_from_the_anchor_phrase_is_not_refused(monkeypatch):
+    """The governed-endpoint rule must not turn every anchor-phrase sentence
+    into a refusal. A FORWARD span starting at the open is ordinary teaching
+    and must still bind. Negative control for the test above — without this,
+    'refuse everything' would pass it."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    result = classify_session_role("trade from market open until 11:00 a.m. eastern on the NYSE")
+    assert result.refusal is None
+    assert result.zone is not None
+
+
+@pytest.mark.parametrize(
+    "label,text,governed",
+    [
+        ("until + phrase", "hold from 4:00 p.m. until market open", True),
+        ("until + determiner + phrase", "hold from 6:00 p.m. until the market open", True),
+        ("into across discourse filler", "up into New York market open", True),
+        ("of = gloss, not an endpoint", "the first 15 minutes of the New York Stock Exchange open", False),
+        ("content word blocks the governor", "from noon we watch volume at the opening bell", False),
+        ("no governor at all", "the opening bell was loud", False),
+    ],
+)
+def test_anchor_phrase_government_discriminates_endpoint_from_gloss(label, text, governed):
+    """The rule is GOVERNMENT, not position. A span preposition may reach the
+    phrase across scaffold/market-name filler only — never across a content
+    word, or any preposition anywhere in a long sentence would license any
+    phrase."""
+    match = SESSION_ANCHOR_PHRASE_RE.search(text)
+    assert match is not None, f"fixture must contain an anchor phrase: {text!r}"
+    assert _session_anchor_phrase_is_governed_endpoint(text, match.start()) is governed, label
