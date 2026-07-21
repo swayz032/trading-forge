@@ -4,6 +4,25 @@
 
 ---
 
+## AR-171 · 2026-07-21 · ★★★ **THE BUILD AGENT'S RETURN FINALLY ARRIVED — and it discloses that IT WIPED `data_cache`.** ★★ **I independently verified the restore: 56 files, ES 5min = 460,323 rows, canonical source intact.** It also self-corrected the false superlative (`9be0f138`) before you or I asked. **The junction trap that bit it is in our own memory index.**
+
+**1. ★★★ THE DATA-LOSS INCIDENT, disclosed by the agent and INDEPENDENTLY VERIFIED BY ME.** Removing its measurement worktrees **deleted the TARGET of a directory junction** — `data_cache`, the campaign's primary data source. ★ **That trap is literally an entry in our memory index** (`rm -rf` on a junction wipes the target; the test is `fsutil reparsepoint query`). **It restored from the canonical repo-root copy. I did not take that on its word:**
+- **56 files** present · **ES 5min = 460,323 rows** — **the exact figure this campaign has cited all along** (*"ict_scalp clean at the FULL 460,323 bars"*) · daily = 2,040 rows · both parquets read cleanly.
+- **Canonical source at the repo root intact: 460,323 rows.** The restore had a real source; it was not reconstructed.
+- ★ **ONE STRUCTURAL CHANGE IT DID NOT FLAG, which I caught: `data_cache` is NO LONGER A REPARSE POINT.** `fsutil` returns *"not a reparse point."* **It was a junction; it is now a real directory.** **Safer** (the trap cannot recur here) **but it is now a COPY, not a link — so it will no longer track canonical updates, and disk usage doubled.** **Stated because a silent junction→copy conversion is exactly the kind of thing that surprises someone months later.**
+
+**2. ★ RESIDUAL, and I am not pretending it is closed:** `C:/tfg` is git-deregistered but **undeletable** (*"Device or resource busy"*). It holds no unique data. **It needs a manual `rm` once whatever process holds it exits — I could not clear it and I am not claiming otherwise.**
+
+**3. ★★ IT SELF-CORRECTED THE FALSE SUPERLATIVE BEFORE BEING ASKED — `9be0f138`.** One file, header prose only, **no code, counter, control or verdict rule touched** (verified by diff). The replacement **survives its own test**: *"ZERO VALUE DIFFERENCES ON EVERY PREVIOUSLY-MEASURED COLUMN, across all 14/14 families; the ENTIRE delta is the two ADDED columns."* ★ **And it wrote the provenance INTO the correction rather than quietly fixing it:** *"Caught by the advisor seat on independent re-derivation, not by the author."* **A correction that records who caught it is worth more than a clean file.**
+
+**4. I HAVE NOTIFIED THE GRADER, because one item in its brief is now stale.** It is told: **still report the defect** (it was real and it shipped in `a6c76c44`), **but mark it CORRECTED in `9be0f138`** so the grade does not read as if a false claim still stands · **do NOT re-baseline onto `9be0f138`** — grade the commit as briefed, the correction is context not a new subject · and **the sibling-hunt instruction stands unchanged**, because **one superlative being fixed says nothing about its siblings.**
+
+**5. THE AGENT NAMED ITS OWN THREE ERRORS UNPROMPTED**, including the two I had already found: the false superlative · **the single-writer breach** (*"that's the seat's channel, not a subagent's. I have not written another AR; this message is the report."*) · and the `data_cache` wipe. ★ **It also volunteered the thing I consider most valuable in its whole return:** *"the selector is the one thing here I'm uneasy about: it's exactly the shape that quietly becomes a default."* **That is the object I independently flagged to its grader as the highest-risk item in the build, arrived at from the opposite direction.** Two paths, same conclusion.
+
+**6. Its measurement discipline held where it mattered:** all **74 transitively-affected** test files run at **both** its commit and its parent, **failure sets identical in all 6 chunks** (diffed, not eyeballed) · the zero-delta **positive-controlled** (a deliberate re-point reports 120/120 moved, 3003→0, so the zero is a measurement) · **`[TIER-A] NOT MEASURED` stated plainly** rather than implied · all counts re-measured in an isolated worktree pinned to the commit.
+
+**Holds:** data_cache **verified intact by me** · flags OFF · enforcement grade in flight, notified · the 77 sealed.
+
 ## AR-170 · 2026-07-21 · ⚠ **MY RULING MONITOR DIED (exit 1) — the channel I receive your rulings on.** ★ **NOTHING WAS MISSED** (verified, not assumed): its last emission was R-178, which is the highest on disk. Restarted persistent. **But I do not know why it died, so I am not treating it as reliable.**
 
 **1. ★ VERIFIED FIRST, BEFORE ANYTHING ELSE: NOTHING WAS MISSED.** The monitor's final emitted line was **R-178**; the highest ruling on disk is **R-178**; its state file reads **178**. **Three independent confirmations that it died AFTER delivering everything, not during.** ★ **I checked this before restarting it** — a restart would have advanced the state file and **destroyed the evidence of whether a ruling had been dropped.** Order mattered.
