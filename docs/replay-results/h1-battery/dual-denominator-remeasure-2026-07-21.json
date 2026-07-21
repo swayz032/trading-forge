@@ -1,0 +1,617 @@
+{
+ "artifact": "dual-denominator-remeasure-2026-07-21",
+ "spec": "docs/designs/spec-dual-denominator-remeasure-2026-07-20.md",
+ "APPEND_ONLY": true,
+ "generator": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
+ "reproduce": "python docs/replay-results/h1-battery/dual_denominator_remeasure.py",
+ "DECLARED_MEASUREMENT_CONFIGURATION": {
+  "level_zone_flags_AFTER_arm": {
+   "TF_LEVELZONE_ROUTING_ENABLED": "true",
+   "TF_LEVELZONE_RESOLVER_ENABLED": "true"
+  },
+  "level_zone_flags_BEFORE_arm_and_NULL": {
+   "TF_LEVELZONE_ROUTING_ENABLED": "false",
+   "TF_LEVELZONE_RESOLVER_ENABLED": "false"
+  },
+  "PRODUCTION_DEFAULT": "OFF -- both flags default 'false' when unset.",
+  "honest_reading": "Every AFTER figure here is the both-flags-ON HYPOTHETICAL, labeled as such. Production output today, with default env, is the BEFORE arm."
+ },
+ "CORPORA_ARE_SEPARATE": "Corpus A and Corpus B are different windows and are NEVER pooled. The 987/2694 are Corpus B figures only; Corpus A contains zero trigger-role conditions. A rate inherits its window: every rate below states its corpus, spec count, and condition count.",
+ "corpus_A": {
+  "name": "shakedown / tier-b DoD corpus",
+  "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json",
+  "n_specs": 16,
+  "n_taught_conditions": 155,
+  "role_composition": "spine 102 / confluence 53 / trigger 0 -- derived, see reconciliation",
+  "BEFORE_flags_off": {
+   "n_bindable": 128,
+   "n_unbound": 27,
+   "n_binding_approximation": 128,
+   "n_bound_and_concrete": 0,
+   "binding_approximation_rate": 1.0,
+   "binding_approximation_rate_n": 128,
+   "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT": 0.0,
+   "section_6a_coverage_n": 155
+  },
+  "AFTER_flags_on_HYPOTHETICAL": {
+   "n_bindable": 128,
+   "n_unbound": 27,
+   "n_binding_approximation": 122,
+   "n_bound_and_concrete": 6,
+   "binding_approximation_rate": 0.9531,
+   "binding_approximation_rate_n": 128,
+   "section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT": 0.0387,
+   "section_6a_coverage_n": 155
+  },
+  "THE_UNBOUND_COUNT_TRAVELS_BESIDE_THE_RATE": {
+   "n_unbound": 27,
+   "n_taught": 155,
+   "unbound_fraction": 0.1742,
+   "why": "The binding_approximation_rate is computed over EXECUTED-BINDABLE conditions only. A condition the compiler cannot bind at all VANISHES from that denominator, so a spec can improve its score by becoming LESS bindable. This count is the guard against that.",
+   "conditions": [
+    {
+     "spec": "-igpOZs8LsM__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1"
+    },
+    {
+     "spec": "-igpOZs8LsM__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3"
+    },
+    {
+     "spec": "0xygpCMwxbQ__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4"
+    },
+    {
+     "spec": "0xygpCMwxbQ__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8"
+    },
+    {
+     "spec": "0xygpCMwxbQ__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10"
+    },
+    {
+     "spec": "4cT8WTyxhYY__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6"
+    },
+    {
+     "spec": "CLDEIsNpVRc__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0"
+    },
+    {
+     "spec": "CLDEIsNpVRc__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1"
+    },
+    {
+     "spec": "DLwVqcLRcfw__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0"
+    },
+    {
+     "spec": "E9MzEC_yNoM__s1",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1"
+    },
+    {
+     "spec": "E9MzEC_yNoM__s1",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2"
+    },
+    {
+     "spec": "E9MzEC_yNoM__s1",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4"
+    },
+    {
+     "spec": "E9MzEC_yNoM__s1",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5"
+    },
+    {
+     "spec": "R5L890juvRw__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:this-line-is-being-reset-as-soon-as-ever#1"
+    },
+    {
+     "spec": "R5L890juvRw__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2"
+    },
+    {
+     "spec": "R5L890juvRw__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:as-the-new-york-session-opens-we-are-sti#3"
+    },
+    {
+     "spec": "W7nlnHTUZQU__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6"
+    },
+    {
+     "spec": "_LS6qcSlDCs__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0"
+    },
+    {
+     "spec": "_LS6qcSlDCs__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4"
+    },
+    {
+     "spec": "dV7chra4u4Q__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0"
+    },
+    {
+     "spec": "kFyD3H6I1I8__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1"
+    },
+    {
+     "spec": "kFyD3H6I1I8__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2"
+    },
+    {
+     "spec": "kFyD3H6I1I8__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3"
+    },
+    {
+     "spec": "kFyD3H6I1I8__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4"
+    },
+    {
+     "spec": "kFyD3H6I1I8__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6"
+    },
+    {
+     "spec": "kFyD3H6I1I8__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17"
+    },
+    {
+     "spec": "kFyD3H6I1I8__s0",
+     "type": "WAIT_SESSION",
+     "condition_id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18"
+    }
+   ]
+  },
+  "per_kind_attribution": {
+   "named_sr_level": {
+    "n_flipped": 4,
+    "condition_ids": [
+     "4cT8WTyxhYY__s0|WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+     "IyFioFkRgWo__s0|WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+     "PVMgOxHUqFA__s0|WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+     "W7nlnHTUZQU__s0|WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0"
+    ]
+   },
+   "order_block_edge": {
+    "n_flipped": 2,
+    "condition_ids": [
+     "kFyD3H6I1I8__s0|WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+     "kFyD3H6I1I8__s0|WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10"
+    ]
+   },
+   "swing": {
+    "n_flipped": 0,
+    "n_still_approximation_true": 2,
+    "reason": "routed-but-approximate; n=1 is below the n>=2 de-approximation floor. Never argued for.",
+    "accounting": "3 Corpus-A conditions classify as swing: 2 are bindable and remain approximation=True (counted above); 1 is UNBOUND (a WAIT_SESSION row) and so sits outside the rate's denominator entirely, inside the unbound count. 2 + 1 = 3, no swing row unaccounted.",
+    "classifier_scope_caveat": "classify_population_a_kind is applied here to EVERY Corpus-A condition for attribution. The flip itself only reaches WAIT_STRUCTURE/VERIFY_STRUCTURE, so a swing classification on a WAIT_SESSION or WAIT_CONFIRMATION row is an attribution label, NOT a claim that the flip could have moved it. This population is BROADER than the frozen 16-row level/zone census (which holds 1 swing row) -- different windows, not pooled."
+   },
+   "why_per_kind": "An aggregate delta hides which change earned what."
+  },
+  "per_family_attribution": {
+   "FILTER": {
+    "approximated_BEFORE": 3,
+    "approximated_AFTER": 3,
+    "delta": 0
+   },
+   "WAIT_BIAS": {
+    "approximated_BEFORE": 4,
+    "approximated_AFTER": 4,
+    "delta": 0
+   },
+   "WAIT_CONFIRMATION": {
+    "approximated_BEFORE": 23,
+    "approximated_AFTER": 23,
+    "delta": 0
+   },
+   "WAIT_RETEST": {
+    "approximated_BEFORE": 20,
+    "approximated_AFTER": 20,
+    "delta": 0
+   },
+   "WAIT_STRUCTURE": {
+    "approximated_BEFORE": 78,
+    "approximated_AFTER": 72,
+    "delta": -6
+   }
+  },
+  "total_conditions_de_approximated": 6,
+  "bound_and_concrete_conditions": [
+   {
+    "spec": "4cT8WTyxhYY__s0",
+    "type": "WAIT_STRUCTURE",
+    "condition_id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0"
+   },
+   {
+    "spec": "IyFioFkRgWo__s0",
+    "type": "WAIT_STRUCTURE",
+    "condition_id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0"
+   },
+   {
+    "spec": "PVMgOxHUqFA__s0",
+    "type": "WAIT_STRUCTURE",
+    "condition_id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1"
+   },
+   {
+    "spec": "W7nlnHTUZQU__s0",
+    "type": "WAIT_STRUCTURE",
+    "condition_id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0"
+   },
+   {
+    "spec": "kFyD3H6I1I8__s0",
+    "type": "WAIT_STRUCTURE",
+    "condition_id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9"
+   },
+   {
+    "spec": "kFyD3H6I1I8__s0",
+    "type": "WAIT_STRUCTURE",
+    "condition_id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10"
+   }
+  ],
+  "null_baseline": {
+   "basis": "MEASURED -- the BEFORE arm is the same 155 conditions re-bound with both flags off.",
+   "n": 128,
+   "n_de_approximated": 0,
+   "binding_approximation_rate": 1.0
+  },
+  "rows": [
+   {
+    "spec": "-igpOZs8LsM__s0",
+    "n_taught": 11,
+    "n_bindable": 9,
+    "n_unbound": 2,
+    "n_binding_approximation": 9,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 9,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 11,
+    "census_n_executed_bindable": 9
+   },
+   {
+    "spec": "0xygpCMwxbQ__s0",
+    "n_taught": 12,
+    "n_bindable": 9,
+    "n_unbound": 3,
+    "n_binding_approximation": 9,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 9,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 12,
+    "census_n_executed_bindable": 9
+   },
+   {
+    "spec": "4cT8WTyxhYY__s0",
+    "n_taught": 9,
+    "n_bindable": 8,
+    "n_unbound": 1,
+    "n_binding_approximation": 7,
+    "n_bound_and_concrete": 1,
+    "binding_approximation_rate": 0.875,
+    "binding_approximation_rate_n": 8,
+    "coverage_bound_and_concrete_over_all_taught": 0.1111,
+    "coverage_n": 9,
+    "census_n_executed_bindable": 8
+   },
+   {
+    "spec": "CLDEIsNpVRc__s0",
+    "n_taught": 10,
+    "n_bindable": 8,
+    "n_unbound": 2,
+    "n_binding_approximation": 8,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 8,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 10,
+    "census_n_executed_bindable": 8
+   },
+   {
+    "spec": "DLwVqcLRcfw__s0",
+    "n_taught": 8,
+    "n_bindable": 7,
+    "n_unbound": 1,
+    "n_binding_approximation": 7,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 7,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 8,
+    "census_n_executed_bindable": 7
+   },
+   {
+    "spec": "DLwVqcLRcfw__s1",
+    "n_taught": 6,
+    "n_bindable": 6,
+    "n_unbound": 0,
+    "n_binding_approximation": 6,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 6,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 6,
+    "census_n_executed_bindable": 6
+   },
+   {
+    "spec": "E9MzEC_yNoM__s0",
+    "n_taught": 2,
+    "n_bindable": 2,
+    "n_unbound": 0,
+    "n_binding_approximation": 2,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 2,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 2,
+    "census_n_executed_bindable": 2
+   },
+   {
+    "spec": "E9MzEC_yNoM__s1",
+    "n_taught": 10,
+    "n_bindable": 6,
+    "n_unbound": 4,
+    "n_binding_approximation": 6,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 6,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 10,
+    "census_n_executed_bindable": 6
+   },
+   {
+    "spec": "IyFioFkRgWo__s0",
+    "n_taught": 6,
+    "n_bindable": 6,
+    "n_unbound": 0,
+    "n_binding_approximation": 5,
+    "n_bound_and_concrete": 1,
+    "binding_approximation_rate": 0.8333,
+    "binding_approximation_rate_n": 6,
+    "coverage_bound_and_concrete_over_all_taught": 0.1667,
+    "coverage_n": 6,
+    "census_n_executed_bindable": 6
+   },
+   {
+    "spec": "PVMgOxHUqFA__s0",
+    "n_taught": 8,
+    "n_bindable": 8,
+    "n_unbound": 0,
+    "n_binding_approximation": 7,
+    "n_bound_and_concrete": 1,
+    "binding_approximation_rate": 0.875,
+    "binding_approximation_rate_n": 8,
+    "coverage_bound_and_concrete_over_all_taught": 0.125,
+    "coverage_n": 8,
+    "census_n_executed_bindable": 8
+   },
+   {
+    "spec": "R5L890juvRw__s0",
+    "n_taught": 8,
+    "n_bindable": 5,
+    "n_unbound": 3,
+    "n_binding_approximation": 5,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 5,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 8,
+    "census_n_executed_bindable": 5
+   },
+   {
+    "spec": "W7nlnHTUZQU__s0",
+    "n_taught": 10,
+    "n_bindable": 9,
+    "n_unbound": 1,
+    "n_binding_approximation": 8,
+    "n_bound_and_concrete": 1,
+    "binding_approximation_rate": 0.8889,
+    "binding_approximation_rate_n": 9,
+    "coverage_bound_and_concrete_over_all_taught": 0.1,
+    "coverage_n": 10,
+    "census_n_executed_bindable": 10
+   },
+   {
+    "spec": "WEhmadJArQo__s0",
+    "n_taught": 22,
+    "n_bindable": 22,
+    "n_unbound": 0,
+    "n_binding_approximation": 22,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 22,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 22,
+    "census_n_executed_bindable": 22
+   },
+   {
+    "spec": "_LS6qcSlDCs__s0",
+    "n_taught": 6,
+    "n_bindable": 4,
+    "n_unbound": 2,
+    "n_binding_approximation": 4,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 4,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 6,
+    "census_n_executed_bindable": 4
+   },
+   {
+    "spec": "dV7chra4u4Q__s0",
+    "n_taught": 8,
+    "n_bindable": 7,
+    "n_unbound": 1,
+    "n_binding_approximation": 7,
+    "n_bound_and_concrete": 0,
+    "binding_approximation_rate": 1.0,
+    "binding_approximation_rate_n": 7,
+    "coverage_bound_and_concrete_over_all_taught": 0.0,
+    "coverage_n": 8,
+    "census_n_executed_bindable": 7
+   },
+   {
+    "spec": "kFyD3H6I1I8__s0",
+    "n_taught": 19,
+    "n_bindable": 12,
+    "n_unbound": 7,
+    "n_binding_approximation": 10,
+    "n_bound_and_concrete": 2,
+    "binding_approximation_rate": 0.8333,
+    "binding_approximation_rate_n": 12,
+    "coverage_bound_and_concrete_over_all_taught": 0.1053,
+    "coverage_n": 19,
+    "census_n_executed_bindable": 12
+   }
+  ]
+ },
+ "corpus_B": {
+  "name": "or-branches full corpus",
+  "path": "docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json",
+  "n_specs": 120,
+  "n_taught_conditions": 6450,
+  "role_histogram": {
+   "confluence": 2694,
+   "trigger": 987,
+   "spine": 2769
+  },
+  "NEVER_EVALUATED_BY_GAP": {
+   "n": 987,
+   "label": "never-evaluated-by-GAP (trigger-role) -- PRIMARY in coverage",
+   "meaning": "conditions that SHOULD gate and do not. This is a DEFECT.",
+   "cause": "compute()'s dispatch loop iterates role=='spine' only.",
+   "by_family": {
+    "ENABLE_ENTRY": 480,
+    "ENTER": 255,
+    "INVALIDATE": 105,
+    "WAIT_BIAS": 42,
+    "FILTER": 39,
+    "WAIT_CONFIRMATION": 21,
+    "WAIT_SESSION": 18,
+    "WAIT_RETEST": 15,
+    "WAIT_STRUCTURE": 6,
+    "VERIFY_STRUCTURE": 3,
+    "EXIT_HINT": 3
+   },
+   "derivation_paths": {
+    "path1_role_tally": 987,
+    "path2_complement_total_minus_spine_minus_confluence": 987,
+    "path3_sum_of_family_breakdown": 987,
+    "agree": true
+   },
+   "supersedes": "921, which summed a curated 5-family list (WAIT_BIAS 42, FILTER 39, INVALIDATE 105, ENABLE_ENTRY 480, ENTER 255) and omitted 66 conditions across 6 families (WAIT_SESSION 18, WAIT_CONFIRMATION 21, WAIT_RETEST 15, WAIT_STRUCTURE 6, VERIFY_STRUCTURE 3, EXIT_HINT 3). A correct sum over an incomplete enumeration is still incomplete -- and it understated the denominator, so coverage read BETTER than truth."
+  },
+  "NEVER_EVALUATED_BY_DESIGN": {
+   "n": 2694,
+   "label": "never-evaluated-by-DESIGN (confluence) -- CONTEXT, beside the primary line",
+   "meaning": "conditions never meant to gate. This is a DESIGN, not a defect.",
+   "NEVER_MERGED": "Folding this into the by-GAP denominator would trade a defect for a design. Whether confluence should ever gate is a dispatch-DESIGN question, decided as design -- never smuggled in as arithmetic."
+  },
+  "INVALIDATE_enforcement": {
+   "population": "spec['invalidations'] bindable entries -- NOT the 105 INVALIDATE entry_conditions",
+   "flag_OFF_approximated_of_total": [
+    0,
+    567
+   ],
+   "flag_ON_approximated_of_total": [
+    567,
+    567
+   ],
+   "direction": "fidelity moves DOWN, and it should -- enforcement marks these approximation=True",
+   "source": "docs/replay-results/h1-battery/family-meta-enforcement-delta.json"
+  },
+  "spine_gating_under_enforcement": {
+   "flag_OFF": {
+    "spine_bound": 2343,
+    "spine_approximated": 2265,
+    "spine_gating": 2265,
+    "spine_bound_but_never_executed": 78
+   },
+   "flag_ON": {
+    "spine_bound": 2343,
+    "spine_approximated": 2265,
+    "spine_gating": 1875,
+    "spine_bound_but_never_executed": 78
+   }
+  },
+  "filter_spine_dispositions": {
+   "honestly_declared_non_gating_constant_true": 390
+  }
+ },
+ "DUAL_DENOMINATORS": {
+  "with_narration_ALL_conditions": 124,
+  "without_narration_PRIMARY": 111,
+  "both_travel": true,
+  "with_narration_is_never_deleted": true,
+  "scope": "These are the corpus-wide WAIT_STRUCTURE NARRATION denominators, reproduced unmodified from narration-reclassification-FINAL.json. They are NOT the Corpus A (155) or Corpus B (6450) denominators and must not be substituted for either.",
+  "source": "docs/replay-results/h1-battery/narration-reclassification-FINAL.json"
+ },
+ "CEILING": {
+  "n_level_zone_rows_total": 16,
+  "max_de_approximable": 6,
+  "observed_de_approximated": 6,
+  "n_unresolvable_as_built": 9,
+  "swing": "1 row, routed-but-approximate, n=1 below the n>=2 floor -- stays approximation=True"
+ },
+ "RECONCILIATION": {
+  "corpus_B_role_partition": {
+   "spine": 2769,
+   "confluence": 2694,
+   "trigger": 987,
+   "sum": 6450,
+   "total_entry_conditions": 6450,
+   "exact": true
+  },
+  "corpus_A_condition_accounting": {
+   "taught": 155,
+   "bindable": 128,
+   "unbound": 27,
+   "bindable_plus_unbound": 155,
+   "exact": true
+  },
+  "census_vs_live_OUTSIDE_THIS_PIPELINE": {
+   "frozen_census_sum_n_executed_bindable": 129,
+   "live_n_bindable": 128,
+   "delta": -1,
+   "drift_rows": [
+    {
+     "spec": "W7nlnHTUZQU__s0",
+     "census_n_executed_bindable": 10,
+     "live_n_bindable": 9,
+     "delta": -1
+    }
+   ],
+   "interpretation": "A NON-ZERO delta here is a real finding, not noise. The session lane's honest-partial closure makes a WAIT_SESSION condition whose zone the runtime primitive cannot evaluate UNBINDABLE rather than falsely bound. That condition LEAVES the rate's denominator and ENTERS the unbound count -- the rate improves while coverage worsens. This is precisely the vanishing-denominator defect section 6a exists to expose, observed live."
+  }
+ },
+ "WHAT_THIS_MAY_NOT_DO": [
+  "May not claim a fidelity result the grades did not license. The flip's claim covers two kinds (named_sr_level, order_block_edge); swing stays approximate. The session lane closed HONEST-PARTIAL with a per-row-labeled residue including 5 rows nobody can explain.",
+  "May not report a single headline number without dual denominators + section 6a coverage.",
+  "May not merge the by-gap and by-design lines.",
+  "May not be used to justify T1 -- bars may never be set from the rate alone."
+ ]
+}
