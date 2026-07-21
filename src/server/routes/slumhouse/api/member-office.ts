@@ -33,7 +33,7 @@ import { Router, type Response } from "express";
 import { and, eq } from "drizzle-orm";
 import { db } from "../../../db/index.js";
 import { slumhouseMemberPins, slumhouseConnectTest } from "../../../db/schema.js";
-import { requireSlumhouseUser, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
+import { requireSlumhouseUser, checkSlumhouseOrigin, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
 import { evaluateOfficeScope, visibleSurfaces, type OfficeSurface } from "../../../lib/member-office-scope.js";
 import { hashPin, verifyPin, evaluateAttempt, nextAttemptState, PIN_POLICY, PinPolicyError } from "../../../lib/member-pin.js";
 import { validateTestKey, assertStorable, redactKey } from "../../../lib/connect-wizard-mock.js";
@@ -91,6 +91,11 @@ memberOfficeRouter.post(
   "/slumhouse/api/member/pin/establish",
   requireSlumhouseUser,
   async (req: SlumhouseRequest, res: Response) => {
+    // CSRF defense-in-depth (grader follow-up, OR-169 §19). SameSite=Lax already blocks the
+    // cross-site POST, so this is a second independent layer, not the only one — and it is added
+    // now precisely BECAUSE the PIN UI made these routes reachable for the first time.
+    if (!checkSlumhouseOrigin(req, res)) return;
+
     const viewerId = req.slumhouseUser!.discordUserId;
     const nowMs = Date.now();
     const submitted = (req.body ?? {}).pin;
@@ -153,6 +158,8 @@ memberOfficeRouter.post(
   "/slumhouse/api/member/pin",
   requireSlumhouseUser,
   async (req: SlumhouseRequest, res: Response) => {
+    if (!checkSlumhouseOrigin(req, res)) return;   // CSRF defense-in-depth — see /pin/establish
+
     const viewerId = req.slumhouseUser!.discordUserId;
     const nowMs = Date.now();
     const submitted = (req.body ?? {}).pin;
@@ -224,6 +231,8 @@ memberOfficeRouter.post(
   "/slumhouse/api/member/connect-test",
   requireSlumhouseUser,
   async (req: SlumhouseRequest, res: Response) => {
+    if (!checkSlumhouseOrigin(req, res)) return;   // CSRF defense-in-depth — see /pin/establish
+
     const viewerId = req.slumhouseUser!.discordUserId;
 
     // Scope authority decides — this route does not re-implement the rules.
