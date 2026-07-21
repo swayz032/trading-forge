@@ -47,6 +47,11 @@ import os
 import re
 from dataclasses import dataclass, field, replace
 
+# The ONLY import beyond stdlib in this module, and it is stdlib-only itself (importlib, os,
+# dataclasses) — the PURITY CONTRACT above (zero I/O, no DataFrame access, no DB reads,
+# trivially portable for the TS mirror comparison) is preserved.
+from src.engine.family_meta_enforcement import family_meta_enforced
+
 # ─── FVG Identity Dispatch Experiment (docs/designs/fvg-identity-dispatch-
 # experiment-2026-07-05.md, Part B item 1) ──────────────────────────────────
 # Single-variable, env-gated toggle: WHEN ENABLED, a WAIT_STRUCTURE/FILTER
@@ -478,23 +483,102 @@ tunable, but changing it is a behavior change requiring re-measurement of the
 25-sample mapped/queued split (see docs/spec-execution-semantics.md)."""
 
 
+_INHERIT: str = "\x00inherit"
+"""Sentinel for an `enforced_*` field that is UNCHANGED by enforcement. Distinct from None,
+which is a meaningful value here ("declares no primitive")."""
+
+
 @dataclass(frozen=True)
 class FamilyMeta:
+    """One family's declaration. Carries TWO columns on purpose, for the length of the
+    enforcement build only (docs/designs/packet-family-meta-enforced-2026-07-20.md, section 5,
+    two-commit law):
+
+      LEGACY  (`primitive`, `base_approximation`, ...) -- what the engine has always emitted.
+              Kept verbatim so that with TF_FAMILY_META_ENFORCED OFF (the default) every
+              binding plan, every persisted `primitive` string, and every governance label is
+              BYTE-IDENTICAL to before this packet. Some of these values are known to be
+              FALSE; they are preserved, not blessed.
+
+      ENFORCED (`enforced_primitive`, `enforced_mechanism`, `enforced_approximation`, `gates`,
+              `production_executed`) -- what is TRUE of the engine, measured by
+              docs/replay-results/h1-battery/family_meta_reachability_sweep.py. Active only
+              under the flag. `_INHERIT` means "the legacy value was already true".
+
+    A later commit deletes the legacy column and makes the enforced one the only one. That
+    separation is the two-commit law: enforcement lands here; the default change lands on the
+    grade, not on the landing."""
+
     primitive: str | None
     requires_session_keyword: bool = False
     base_approximation: bool = False
     unsupported: bool = False
     unbound_reason: str | None = None
     executed: bool = True  # False only for EXIT_HINT (provenance-only, never drives signals)
+    enforced_primitive: str | None = _INHERIT
+    enforced_mechanism: str | None = None
+    enforced_approximation: bool | None = None
+    gates: bool = True
+    """False when this family's declaration computes NO per-bar signal and therefore CANNOT
+    gate -- FILTER (constant True), ENABLE_ENTRY/ENTER (the spine conjunction is the trigger),
+    EXIT_HINT (never executed). A gating=False family may not declare a primitive; it declares
+    a MECHANISM (see family_meta_enforcement.MECHANISMS)."""
+    production_executed: bool = True
+    """False when the declared primitive is real and resolvable but is NOT called on a
+    production run. INVALIDATE only: the sweep measured 0 calls to
+    structural_stops.compute_structural_stop across 495 firing bars with trace off, and 492
+    calls with trace=True (all four signal columns byte-identical either way). The primitive
+    exists and is reachable -- but only in the trace path, so declaring it plainly `executed`
+    overstates what production does."""
+
+    def enforced_declaration(self) -> tuple[str | None, str | None]:
+        """(primitive, mechanism) as declared UNDER ENFORCEMENT, with `_INHERIT` resolved to
+        the legacy value. Flag-independent on purpose — the enforcement checker must be able
+        to inspect the enforced column without the flag being on (that is how the fail-loud
+        tests interrogate it), and reading the sentinel raw is exactly the transcription bug
+        this method exists to prevent."""
+        if self.unsupported:
+            return None, None
+        if self.enforced_mechanism is not None:
+            return None, self.enforced_mechanism
+        primitive = self.primitive if self.enforced_primitive == _INHERIT else self.enforced_primitive
+        return primitive, None
+
+    def effective_primitive(self) -> str | None:
+        """The primitive under the ACTIVE regime. Enforcement is the only thing that changes
+        it, and only where the legacy value was measured false."""
+        if not family_meta_enforced():
+            return self.primitive
+        if self.enforced_mechanism is not None:
+            # An honest entry's MECHANISM name is what a binding carries and what the
+            # executable layer routes on, exactly like a primitive -- so pin (a)'s
+            # both-directions dispatch check covers mechanisms too, and a mechanism cannot
+            # quietly fall through to an untracked `else` branch.
+            return self.enforced_mechanism
+        return self.primitive if self.enforced_primitive == _INHERIT else self.enforced_primitive
+
+    def effective_approximation(self) -> bool:
+        if not family_meta_enforced() or self.enforced_approximation is None:
+            return self.base_approximation
+        return self.enforced_approximation
 
 
 FAMILY_META: dict[str, FamilyMeta] = {
+    # ── REACHABLE in the baseline sweep: the declared primitive is the one that runs. The
+    # enforced column only sharpens WAIT_SESSION's pointer from a MODULE name to the actual
+    # FUNCTION the evaluator calls (_eval_wait_session -> is_in_killzone).
     "WAIT_SESSION": FamilyMeta(
         primitive="session_windows",
         requires_session_keyword=True,
         base_approximation=False,
         unbound_reason="no_recognized_session_keyword",
+        enforced_primitive="session_windows.is_in_killzone",
     ),
+    # ── PARTIAL (branch-conditional) in the baseline sweep: measured 198 calls on n=2000, and
+    # the WIRE-1 branch probe shows the wired-column path bypasses the primitive entirely on
+    # bars where htf_structure_active is present. The pointer is TRUE (the primitive really is
+    # what computes this signal on the proxy path); approximation=True already carries the
+    # branch-conditional honesty. Unchanged by enforcement.
     "WAIT_STRUCTURE": FamilyMeta(
         primitive="structure_engine.compute_structure_state",
         base_approximation=True,
@@ -503,42 +587,105 @@ FAMILY_META: dict[str, FamilyMeta] = {
         primitive="structure_engine.compute_structure_state",
         base_approximation=True,
     ),
+    # ── NOT-REACHABLE in the baseline sweep -> HONEST ENTRY (pin (c)). Declared
+    # `bias_engine.classify_institutional_regime`; MEASURED 0 calls to it on 2000 real ES 5min
+    # bars with a bound WAIT_BIAS/CONFIRM_DIRECTION spine condition. What actually executes is
+    # SpecConditionStrategy._eval_wait_bias -- an EMA-slope directional proxy, plus the WIRE-1
+    # htf_daily_trend column when the backtester materialized one. The pointer now names that.
+    #
+    # This is pin (c), NOT the prohibited repair: nothing was implemented to make the old
+    # pointer pass, and approximation stays True. The regime classifier is a real function that
+    # this path simply never called -- re-pointing at the executing code is the honest move; the
+    # dishonest one would have been wiring the classifier in to make the old string true.
     "WAIT_BIAS": FamilyMeta(
         primitive="bias_engine.classify_institutional_regime",
         base_approximation=True,
+        enforced_primitive="spec_condition_compiler.wait_bias_directional_proxy",
     ),
     "CONFIRM_DIRECTION": FamilyMeta(
         primitive="bias_engine.classify_institutional_regime",
         base_approximation=True,
+        enforced_primitive="spec_condition_compiler.wait_bias_directional_proxy",
     ),
+    # ── REACHABLE. Pointer true, primitive measured firing.
     "WAIT_RETEST": FamilyMeta(
         primitive="spec_condition_compiler.retest_touch_check",
         base_approximation=True,
     ),
+    # ── *** THE CONVICTING ENTRY *** NOT-REACHABLE -> HONEST ENTRY (pin (c)).
+    # `entry_quality.confluence_factor_presence` NAMES A MODULE THAT DOES NOT EXIST. compute()
+    # silently substituted np.ones(n, dtype=bool) -- constant True, 2000/2000 -- for 390 corpus
+    # conditions carrying role=spine. A condition that cannot be false cannot gate.
+    #
+    # The honest entry declares the substitution instead of hiding it: mechanism
+    # `static_true_pass_through`, gates=False, approximation=True. Under enforcement, pin (b)
+    # makes the OLD declaration a startup error (proven: see the fail-loud test), so the
+    # constant-True gate is structurally unshippable.
+    #
+    # *** WHAT WAS DELIBERATELY NOT DONE, and why it matters more than what was ***
+    # No `entry_quality.confluence_factor_presence` was written. Inventing one to satisfy the
+    # loader would convert a pointer lie into a FABRICATED IMPLEMENTATION -- strictly worse,
+    # because it would PROBE CLEAN. FILTER has no per-bar confluence primitive in this repo.
+    # The honest entry says exactly that, and the 390 conditions stay non-gating, now declared.
     "FILTER": FamilyMeta(
         primitive="entry_quality.confluence_factor_presence",
         base_approximation=True,
+        enforced_primitive=None,
+        enforced_mechanism="static_true_pass_through",
+        enforced_approximation=True,
+        gates=False,
     ),
+    # ── REACHABLE. Pointer true, primitive measured firing.
     "WAIT_CONFIRMATION": FamilyMeta(
         primitive="spec_condition_compiler.candle_confirmation_check",
         base_approximation=True,
     ),
+    # ── NOT-REACHABLE -> HONEST ENTRY (pin (c)), the correction the packet declares by name.
+    # The SOLE approximation=False among executed families, and its primitive is NEVER CALLED
+    # IN PRODUCTION: 0 calls across 495 firing bars with trace off; under trace=True it fires
+    # 492 times and all four signal columns are BYTE-IDENTICAL -- it could not change an output
+    # if it did run. The primitive is real and resolvable, so this is not a pin (b) failure;
+    # it is a fidelity lie. approximation -> True, production_executed -> False.
+    #
+    # ★ THE FIDELITY NUMBER MOVES DOWN HERE, AND SHOULD. A worse headline number is this
+    # packet succeeding.
     "INVALIDATE": FamilyMeta(
         primitive="structural_stops.compute_structural_stop",
         base_approximation=False,
+        enforced_approximation=True,
+        production_executed=False,
+        gates=False,
     ),
+    # ── COULD-NOT-VERIFY -> HONEST ENTRY (pin (c)). `spine_completion_trigger` IS NOT A CODE
+    # SYMBOL; it was an aspirational label. The real mechanism is the spine conjunction in
+    # compute() -- these trigger-role conditions are never evaluated as conditions at all
+    # (they are 480 + 255 = 735 of the 921 never-evaluated trigger-role conditions in the
+    # section 6a accounting). Declared as a mechanism, gates=False, approximation=True.
     "ENABLE_ENTRY": FamilyMeta(
         primitive="spine_completion_trigger",
         base_approximation=False,
+        enforced_primitive=None,
+        enforced_mechanism="spine_conjunction_trigger",
+        enforced_approximation=True,
+        gates=False,
     ),
     "ENTER": FamilyMeta(
         primitive="spine_completion_trigger",
         base_approximation=False,
+        enforced_primitive=None,
+        enforced_mechanism="spine_conjunction_trigger",
+        enforced_approximation=True,
+        gates=False,
     ),
+    # ── Already honest (provenance-only, never executed). Restated as a MECHANISM so the
+    # mechanism set is complete rather than partially implicit.
     "EXIT_HINT": FamilyMeta(
         primitive="provenance_only",
         base_approximation=False,
         executed=False,
+        enforced_primitive=None,
+        enforced_mechanism="provenance_only",
+        gates=False,
     ),
     "RESET": FamilyMeta(
         primitive=None,
@@ -1992,8 +2139,8 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
                 role=role,
                 object=obj,
                 bindable=True,
-                primitive=meta.primitive,
-                approximation=meta.base_approximation,
+                primitive=meta.effective_primitive(),
+                approximation=meta.effective_approximation(),
                 executed=meta.executed,
                 reason=None,
                 session_zone=zone,
@@ -2019,7 +2166,7 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
                     role=role,
                     object=obj,
                     bindable=True,
-                    primitive=meta.primitive,
+                    primitive=meta.effective_primitive(),
                     approximation=True,
                     executed=meta.executed,
                     reason=None,
@@ -2063,8 +2210,8 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         role=role,
         object=obj,
         bindable=True,
-        primitive=meta.primitive,
-        approximation=meta.base_approximation,
+        primitive=meta.effective_primitive(),
+        approximation=meta.effective_approximation(),
         executed=meta.executed,
         reason=None,
     )

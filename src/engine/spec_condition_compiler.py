@@ -41,6 +41,11 @@ import numpy as np
 import polars as pl
 
 from src.engine.context.structural_stops import compute_structural_stop
+from src.engine.family_meta_enforcement import (
+    FamilyMetaEnforcementError,
+    ensure_enforced,
+    family_meta_enforced,
+)
 from src.engine.indicators.bias_native import compute_bias_signal
 from src.engine.indicators.confirmation_native import compute_confirmation_signal
 from src.engine.indicators.core import compute_atr, compute_ema
@@ -88,6 +93,35 @@ BIAS_PRIMITIVE_NAME: str = "bias_native.compute_bias_signal"
 CONFIRMATION_PRIMITIVE_NAME: str = "confirmation_native.compute_confirmation_signal"
 SWEEP_PRIMITIVE_NAME: str = "sweep_native.compute_sweep_signal"
 MSS_PRIMITIVE_NAME: str = "mss_native.compute_mss_signal"
+
+# ─── pin (a): THE ONLY ROUTER, under TF_FAMILY_META_ENFORCED ─────────────────────────────
+# Keyed by the DECLARED primitive/mechanism string (spec_family_bindings.FAMILY_META's
+# enforced column, plus the env-gated experiment primitives bind_condition can return).
+# `family_meta_enforcement.verify_dispatch_coverage()` proves at load that this key set and
+# the declared set are EQUAL in both directions — a declared name with no key here is an
+# unroutable pointer; a key here that nothing declares is a second router. Adding an entry
+# without a FAMILY_META declaration fails the load, by design.
+ENFORCED_DISPATCH: dict[str, str] = {
+    # FAMILY_META declarations (enforced column)
+    "session_windows.is_in_killzone": "_h_session",
+    "structure_engine.compute_structure_state": "_h_structure",
+    "spec_condition_compiler.wait_bias_directional_proxy": "_h_wait_bias",
+    "spec_condition_compiler.retest_touch_check": "_h_retest",
+    "spec_condition_compiler.candle_confirmation_check": "_h_confirmation",
+    # gates=False families — real disposition, recorded not hidden (see _h_non_gating)
+    "static_true_pass_through": "_h_non_gating",      # FILTER
+    "spine_conjunction_trigger": "_h_non_gating",     # ENABLE_ENTRY / ENTER
+    "structural_stops.compute_structural_stop": "_h_non_gating",  # INVALIDATE
+    "provenance_only": "_h_never_executed",           # EXIT_HINT — asserted unreachable
+    # Env-gated experiment primitives (never FAMILY_META declarations)
+    FVG_PRIMITIVE_NAME: "_h_fvg",
+    LEVELZONE_PRIMITIVE_NAME: "_h_levelzone",
+    LEVELZONE_RESOLVER_PRIMITIVE_NAME: "_h_levelzone_resolver",
+    BIAS_PRIMITIVE_NAME: "_h_bias_native",
+    CONFIRMATION_PRIMITIVE_NAME: "_h_confirmation_native",
+    SWEEP_PRIMITIVE_NAME: "_h_sweep_native",
+    MSS_PRIMITIVE_NAME: "_h_mss_native",
+}
 BUNDLE_BEARISH_KEYWORDS: tuple[str, ...] = ("bearish", "short", "down", "sell")
 BUNDLE_BULLISH_KEYWORDS: tuple[str, ...] = ("bullish", "long", "up ", "buy")
 """Binding-plan primitive marker used by spec_family_bindings.bind_condition() when
@@ -295,6 +329,14 @@ class SpecConditionStrategy(BaseStrategy):
         strategy_name: str | None = None,
         restore_condition_ids: frozenset[str] | None = None,
     ) -> None:
+        # ─── THE LOAD GATE (pin (b)/(b2)/(a), docs/designs/packet-family-meta-enforced-
+        # 2026-07-20.md). No-op with TF_FAMILY_META_ENFORCED OFF (default). With it ON, a
+        # FAMILY_META declaration that is not true of this engine raises here — BEFORE any
+        # spec becomes executable — naming every violation. This is the earliest point that
+        # is both after the module graph is importable (the resolver reaches back into this
+        # module, so an import-time call would be circular) and before any spec can run.
+        ensure_enforced(dispatch=ENFORCED_DISPATCH)
+
         self.compiled_spec = compiled_spec
         self.spec = compiled_spec.get("spec", {}) if "spec" in compiled_spec else compiled_spec
         self.spec_hash = compiled_spec.get("spec_hash", "")
@@ -446,6 +488,147 @@ class SpecConditionStrategy(BaseStrategy):
             if ts is not None:
                 out[i] = is_in_killzone(ts, zone)
         return out
+
+    # ─── DERIVED DISPATCH — pin (a), SINGLE SOURCE ──────────────────────────────────────
+    # (docs/designs/packet-family-meta-enforced-2026-07-20.md)
+    #
+    # Below the flag, dispatch routes on the DECLARED primitive/mechanism string — the exact
+    # value FAMILY_META carries — and on NOTHING ELSE. The `elif b.type == "WAIT_SESSION"` /
+    # `elif b.type in ("WAIT_STRUCTURE", ...)` ladder in compute() is a SECOND ROUTER: it
+    # decides what runs from the condition's `type`, entirely independently of what
+    # FAMILY_META declares, which is precisely why the declaration was free to be false for
+    # four families at once. Under enforcement that ladder is not consulted at all.
+    #
+    # The consequence, and the point: RENAMING a FAMILY_META entry's primitive CHANGES WHAT
+    # RUNS. There is no path by which a condition reaches an evaluator its family did not
+    # name. `family_meta_enforcement.verify_dispatch_coverage()` proves set equality in both
+    # directions at load, so neither a declared-but-unrouted pointer nor a routed-but-
+    # undeclared handler can survive.
+    #
+    # The ladder is retained, verbatim and unreachable-under-the-flag, ONLY so that flag-OFF
+    # output is byte-identical (packet section 5). It is deleted with the legacy FAMILY_META
+    # column in the follow-on commit.
+    def _h_session(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        return self._eval_wait_session(b, ctx["ts_list"], ctx["n"])
+
+    def _h_structure(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["wait_structure"] is None:
+            ctx["wait_structure"] = self._eval_wait_structure(ctx["n"], ctx["df"])
+        return ctx["wait_structure"]
+
+    def _h_wait_bias(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        want_bearish = self._resolve_wait_bias_bearish(b.object)
+        cache = ctx["wait_bias_cache"]
+        if want_bearish not in cache:
+            cache[want_bearish] = self._eval_wait_bias(
+                ctx["close"], ctx["n"], want_bearish=want_bearish, htf_trend=ctx["htf_trend"]
+            )
+        return cache[want_bearish]
+
+    def _h_retest(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["wait_retest"] is None:
+            ctx["wait_retest"] = self._eval_wait_retest(ctx["close"], ctx["high"], ctx["low"], ctx["n"])
+        return ctx["wait_retest"]
+
+    def _h_confirmation(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        return self._select_directional_arrays(ctx["bullish_confirm"], ctx["bearish_confirm"], b.object)
+
+    def _h_non_gating(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        """A family whose declaration computes NO per-bar signal (FAMILY_META `gates=False`).
+
+        Returns constant True — the SAME array the pre-enforcement `elif b.type == "FILTER"`
+        branch and the catch-all `else` returned, so per-bar output does not move. What DOES
+        move is that the fact is now recorded rather than buried in an `else`: every such
+        condition lands in `last_non_gating_conditions` with its family and declared
+        mechanism, so "which conditions cannot gate" is a question the engine answers instead
+        of one an auditor has to reverse-engineer from a sweep.
+
+        This is deliberately NOT a fix for FILTER's 390 spine conditions. There is no per-bar
+        confluence primitive in this repo; inventing one to make them gate would be the
+        fabricated implementation the packet prohibits by name. They stay non-gating, and now
+        they say so."""
+        self.last_non_gating_conditions[b.condition_id] = {
+            "type": b.type,
+            "declared": b.primitive,
+            "object": b.object,
+            "role": b.role,
+            "disposition": "declared_non_gating_constant_true",
+        }
+        return np.ones(ctx["n"], dtype=bool)
+
+    def _h_never_executed(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        """EXIT_HINT's `provenance_only`. Registered so pin (a)'s both-directions check has a
+        route for every declared name, and asserting — not assuming — that the route is never
+        taken: `executed=False` bindings are skipped before dispatch. If this ever raises, an
+        EXIT_HINT reached the gating loop, which the module's HARD BOUNDARIES forbid."""
+        raise FamilyMetaEnforcementError(
+            f"provenance-only condition {b.condition_id!r} ({b.type}) reached the gating loop; "
+            "EXIT_HINT is never executed (W23F.N)"
+        )
+
+    def _h_fvg(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["fvg_signal"] is None:
+            ctx["fvg_signal"] = self._eval_fvg(ctx["open_"], ctx["high"], ctx["low"], ctx["close"])
+        return ctx["fvg_signal"]
+
+    def _h_levelzone(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["wait_structure_levelzone"] is None:
+            ctx["wait_structure_levelzone"] = self._eval_wait_structure_levelzone(
+                ctx["close"], ctx["high"], ctx["low"], ctx["n"]
+            )
+        return ctx["wait_structure_levelzone"]
+
+    def _h_levelzone_resolver(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        kind = classify_population_a_kind(b.object)
+        bullish = population_a_bullish_leaning(kind, b.object) if kind else True
+        cache_key = (kind, bullish)
+        if cache_key not in ctx["population_a_level_cache"]:
+            ctx["population_a_level_cache"][cache_key] = self._eval_population_a_level(
+                kind, b.object, ctx["df"], ctx["n"], ctx["population_a_swings_cache"]
+            )
+        level = ctx["population_a_level_cache"][cache_key]
+        self.last_population_a_level[b.condition_id] = level
+        if ctx["population_a_atr"] is None:
+            df_atr = pl.DataFrame({"high": ctx["high"], "low": ctx["low"], "close": ctx["close"]})
+            ctx["population_a_atr"] = compute_atr(df_atr, ATR_PERIOD).to_numpy()
+        return retest_touch_check(ctx["close"], ctx["high"], ctx["low"], level, ctx["population_a_atr"])
+
+    def _h_bias_native(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["bias_result"] is None:
+            ctx["bias_result"] = compute_bias_signal(ctx["open_"], ctx["high"], ctx["low"], ctx["close"])
+        return self._select_directional(ctx["bias_result"], b.object)
+
+    def _h_confirmation_native(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["confirmation_result"] is None:
+            ctx["confirmation_result"] = compute_confirmation_signal(
+                ctx["open_"], ctx["high"], ctx["low"], ctx["close"]
+            )
+        return self._select_directional(ctx["confirmation_result"], b.object)
+
+    def _h_sweep_native(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["sweep_result"] is None:
+            ctx["sweep_result"] = compute_sweep_signal(ctx["open_"], ctx["high"], ctx["low"], ctx["close"])
+        return self._select_directional(ctx["sweep_result"], b.object)
+
+    def _h_mss_native(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        if ctx["mss_result"] is None:
+            ctx["mss_result"] = compute_mss_signal(ctx["open_"], ctx["high"], ctx["low"], ctx["close"])
+        return self._select_directional(ctx["mss_result"], b.object)
+
+    def _dispatch_enforced(self, b: ConditionBinding, ctx: dict) -> np.ndarray:
+        """Route THIS binding by the name its family declared. No `type` fallback, no `else`.
+
+        An unroutable name is a hard error, not a constant-True pass-through — the silent
+        `else: np.ones` is the exact shape this packet deletes. Load-time coverage (pin (a))
+        should make this unreachable; it is kept as a runtime assertion because a guard that
+        cannot fire is the defect being removed, not a virtue."""
+        handler_name = ENFORCED_DISPATCH.get(b.primitive or "")
+        if handler_name is None:
+            raise FamilyMetaEnforcementError(
+                f"condition {b.condition_id!r} ({b.type}) carries primitive {b.primitive!r}, which "
+                f"the executable layer does not route. No silent pass-through is available."
+            )
+        return getattr(self, handler_name)(b, ctx)
 
     def _eval_wait_structure(self, n: int, df: pl.DataFrame) -> np.ndarray:
         """Generic structural-activity check via structure_engine, cadence-
@@ -915,6 +1098,31 @@ class SpecConditionStrategy(BaseStrategy):
         spine_bindings = [b for b in self.binding_plan.bindings if b.role == "spine"]
         per_condition_bool: dict[str, np.ndarray] = {}
 
+        # pin (a) ledger: which conditions are DECLARED non-gating this run (FAMILY_META
+        # gates=False). Reset every compute() call — replay-deterministic, never carries state
+        # across instances or calls, same contract as last_population_a_level above. Populated
+        # only under enforcement; empty dict otherwise, so flag-OFF introspection is unchanged.
+        self.last_non_gating_conditions: dict[str, dict] = {}
+        enforced = family_meta_enforced()
+        ctx: dict = {
+            "n": n, "df": df, "ts_list": ts_list,
+            "open_": open_, "high": high, "low": low, "close": close,
+            "bullish_confirm": bullish_confirm, "bearish_confirm": bearish_confirm,
+            "htf_trend": _htf_trend,
+            "wait_structure": wait_structure,
+            "wait_structure_levelzone": wait_structure_levelzone,
+            "wait_retest": wait_retest,
+            "wait_bias_cache": wait_bias_cache,
+            "fvg_signal": fvg_signal,
+            "population_a_level_cache": population_a_level_cache,
+            "population_a_swings_cache": population_a_swings_cache,
+            "population_a_atr": population_a_atr,
+            "bias_result": bias_result,
+            "confirmation_result": confirmation_result,
+            "sweep_result": sweep_result,
+            "mss_result": mss_result,
+        }
+
         for b in spine_bindings:
             if not b.executed:
                 # EXIT_HINT (and any other non-executed family): provenance
@@ -929,7 +1137,11 @@ class SpecConditionStrategy(BaseStrategy):
                 per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
                 continue
 
-            if b.primitive == FVG_PRIMITIVE_NAME:
+            if enforced:
+                # pin (a): DERIVED dispatch. The `elif b.type == ...` ladder below — the
+                # SECOND ROUTER — is not consulted at all on this path.
+                per_condition_bool[b.condition_id] = self._dispatch_enforced(b, ctx)
+            elif b.primitive == FVG_PRIMITIVE_NAME:
                 # FVG identity dispatch (experiment) — checked BEFORE the generic
                 # WAIT_STRUCTURE/FILTER type dispatch below so an FVG-family binding
                 # never falls through to the shared generic structure/confluence

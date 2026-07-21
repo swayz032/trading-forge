@@ -1,0 +1,4391 @@
+{
+ "tier": "shakedown/tier-b",
+ "tier_a": "NOT MEASURED \u2014 out of scope",
+ "n_specs": 120,
+ "bars": 600,
+ "signals_off": {
+  "0": [
+   36,
+   47
+  ],
+  "1": [
+   1,
+   0
+  ],
+  "2": [
+   1,
+   0
+  ],
+  "3": [
+   28,
+   0
+  ],
+  "4": [
+   1,
+   0
+  ],
+  "5": [
+   44,
+   0
+  ],
+  "6": [
+   28,
+   0
+  ],
+  "7": [
+   28,
+   0
+  ],
+  "8": [
+   36,
+   0
+  ],
+  "9": [
+   36,
+   47
+  ],
+  "10": [
+   36,
+   47
+  ],
+  "11": [
+   0,
+   0
+  ],
+  "12": [
+   36,
+   0
+  ],
+  "13": [
+   36,
+   0
+  ],
+  "14": [
+   0,
+   0
+  ],
+  "15": [
+   0,
+   0
+  ],
+  "16": [
+   44,
+   0
+  ],
+  "17": [
+   0,
+   48
+  ],
+  "18": [
+   0,
+   48
+  ],
+  "19": [
+   0,
+   0
+  ],
+  "20": [
+   0,
+   0
+  ],
+  "21": [
+   0,
+   0
+  ],
+  "22": [
+   44,
+   0
+  ],
+  "23": [
+   0,
+   0
+  ],
+  "24": [
+   0,
+   48
+  ],
+  "25": [
+   0,
+   0
+  ],
+  "26": [
+   0,
+   0
+  ],
+  "27": [
+   35,
+   0
+  ],
+  "28": [
+   0,
+   51
+  ],
+  "29": [
+   0,
+   51
+  ],
+  "30": [
+   0,
+   51
+  ],
+  "31": [
+   36,
+   0
+  ],
+  "32": [
+   36,
+   0
+  ],
+  "33": [
+   36,
+   0
+  ],
+  "34": [
+   35,
+   0
+  ],
+  "35": [
+   35,
+   0
+  ],
+  "36": [
+   0,
+   0
+  ],
+  "37": [
+   0,
+   0
+  ],
+  "38": [
+   0,
+   0
+  ],
+  "39": [
+   0,
+   0
+  ],
+  "40": [
+   0,
+   0
+  ],
+  "41": [
+   12,
+   0
+  ],
+  "42": [
+   12,
+   0
+  ],
+  "43": [
+   12,
+   0
+  ],
+  "44": [
+   0,
+   0
+  ],
+  "45": [
+   0,
+   0
+  ],
+  "46": [
+   0,
+   0
+  ],
+  "47": [
+   20,
+   0
+  ],
+  "48": [
+   20,
+   0
+  ],
+  "49": [
+   20,
+   0
+  ],
+  "50": [
+   0,
+   0
+  ],
+  "51": [
+   0,
+   0
+  ],
+  "52": [
+   0,
+   0
+  ],
+  "53": [
+   28,
+   34
+  ],
+  "54": [
+   28,
+   34
+  ],
+  "55": [
+   36,
+   47
+  ],
+  "56": [
+   0,
+   0
+  ],
+  "57": [
+   0,
+   0
+  ],
+  "58": [
+   116,
+   0
+  ],
+  "59": [
+   116,
+   0
+  ],
+  "60": [
+   116,
+   0
+  ],
+  "61": [
+   0,
+   0
+  ],
+  "62": [
+   36,
+   0
+  ],
+  "63": [
+   36,
+   0
+  ],
+  "64": [
+   36,
+   0
+  ],
+  "65": [
+   36,
+   0
+  ],
+  "66": [
+   28,
+   34
+  ],
+  "67": [
+   36,
+   47
+  ],
+  "68": [
+   36,
+   47
+  ],
+  "69": [
+   0,
+   0
+  ],
+  "70": [
+   0,
+   0
+  ],
+  "71": [
+   36,
+   0
+  ],
+  "72": [
+   0,
+   0
+  ],
+  "73": [
+   36,
+   0
+  ],
+  "74": [
+   36,
+   0
+  ],
+  "75": [
+   36,
+   0
+  ],
+  "76": [
+   36,
+   0
+  ],
+  "77": [
+   0,
+   0
+  ],
+  "78": [
+   0,
+   0
+  ],
+  "79": [
+   0,
+   0
+  ],
+  "80": [
+   0,
+   0
+  ],
+  "81": [
+   0,
+   0
+  ],
+  "82": [
+   0,
+   0
+  ],
+  "83": [
+   0,
+   54
+  ],
+  "84": [
+   0,
+   54
+  ],
+  "85": [
+   0,
+   54
+  ],
+  "86": [
+   0,
+   0
+  ],
+  "87": [
+   0,
+   0
+  ],
+  "88": [
+   0,
+   0
+  ],
+  "89": [
+   36,
+   0
+  ],
+  "90": [
+   0,
+   0
+  ],
+  "91": [
+   36,
+   0
+  ],
+  "92": [
+   36,
+   0
+  ],
+  "93": [
+   36,
+   0
+  ],
+  "94": [
+   36,
+   0
+  ],
+  "95": [
+   36,
+   0
+  ],
+  "96": [
+   0,
+   0
+  ],
+  "97": [
+   0,
+   0
+  ],
+  "98": [
+   0,
+   0
+  ],
+  "99": [
+   44,
+   0
+  ],
+  "100": [
+   44,
+   0
+  ],
+  "101": [
+   44,
+   0
+  ],
+  "102": [
+   28,
+   0
+  ],
+  "103": [
+   28,
+   0
+  ],
+  "104": [
+   28,
+   0
+  ],
+  "105": [
+   0,
+   0
+  ],
+  "106": [
+   0,
+   0
+  ],
+  "107": [
+   0,
+   0
+  ],
+  "108": [
+   0,
+   0
+  ],
+  "109": [
+   0,
+   0
+  ],
+  "110": [
+   0,
+   0
+  ],
+  "111": [
+   20,
+   0
+  ],
+  "112": [
+   20,
+   0
+  ],
+  "113": [
+   20,
+   0
+  ],
+  "114": [
+   20,
+   0
+  ],
+  "115": [
+   20,
+   0
+  ],
+  "116": [
+   20,
+   0
+  ],
+  "117": [
+   0,
+   0
+  ],
+  "118": [
+   0,
+   0
+  ],
+  "119": [
+   0,
+   0
+  ]
+ },
+ "signals_on": {
+  "0": [
+   36,
+   47
+  ],
+  "1": [
+   1,
+   0
+  ],
+  "2": [
+   1,
+   0
+  ],
+  "3": [
+   28,
+   0
+  ],
+  "4": [
+   1,
+   0
+  ],
+  "5": [
+   44,
+   0
+  ],
+  "6": [
+   28,
+   0
+  ],
+  "7": [
+   28,
+   0
+  ],
+  "8": [
+   36,
+   0
+  ],
+  "9": [
+   36,
+   47
+  ],
+  "10": [
+   36,
+   47
+  ],
+  "11": [
+   0,
+   0
+  ],
+  "12": [
+   36,
+   0
+  ],
+  "13": [
+   36,
+   0
+  ],
+  "14": [
+   0,
+   0
+  ],
+  "15": [
+   0,
+   0
+  ],
+  "16": [
+   44,
+   0
+  ],
+  "17": [
+   0,
+   48
+  ],
+  "18": [
+   0,
+   48
+  ],
+  "19": [
+   0,
+   0
+  ],
+  "20": [
+   0,
+   0
+  ],
+  "21": [
+   0,
+   0
+  ],
+  "22": [
+   44,
+   0
+  ],
+  "23": [
+   0,
+   0
+  ],
+  "24": [
+   0,
+   48
+  ],
+  "25": [
+   0,
+   0
+  ],
+  "26": [
+   0,
+   0
+  ],
+  "27": [
+   35,
+   0
+  ],
+  "28": [
+   0,
+   51
+  ],
+  "29": [
+   0,
+   51
+  ],
+  "30": [
+   0,
+   51
+  ],
+  "31": [
+   36,
+   0
+  ],
+  "32": [
+   36,
+   0
+  ],
+  "33": [
+   36,
+   0
+  ],
+  "34": [
+   35,
+   0
+  ],
+  "35": [
+   35,
+   0
+  ],
+  "36": [
+   0,
+   0
+  ],
+  "37": [
+   0,
+   0
+  ],
+  "38": [
+   0,
+   0
+  ],
+  "39": [
+   0,
+   0
+  ],
+  "40": [
+   0,
+   0
+  ],
+  "41": [
+   12,
+   0
+  ],
+  "42": [
+   12,
+   0
+  ],
+  "43": [
+   12,
+   0
+  ],
+  "44": [
+   0,
+   0
+  ],
+  "45": [
+   0,
+   0
+  ],
+  "46": [
+   0,
+   0
+  ],
+  "47": [
+   20,
+   0
+  ],
+  "48": [
+   20,
+   0
+  ],
+  "49": [
+   20,
+   0
+  ],
+  "50": [
+   0,
+   0
+  ],
+  "51": [
+   0,
+   0
+  ],
+  "52": [
+   0,
+   0
+  ],
+  "53": [
+   28,
+   34
+  ],
+  "54": [
+   28,
+   34
+  ],
+  "55": [
+   36,
+   47
+  ],
+  "56": [
+   0,
+   0
+  ],
+  "57": [
+   0,
+   0
+  ],
+  "58": [
+   116,
+   0
+  ],
+  "59": [
+   116,
+   0
+  ],
+  "60": [
+   116,
+   0
+  ],
+  "61": [
+   0,
+   0
+  ],
+  "62": [
+   36,
+   0
+  ],
+  "63": [
+   36,
+   0
+  ],
+  "64": [
+   36,
+   0
+  ],
+  "65": [
+   36,
+   0
+  ],
+  "66": [
+   28,
+   34
+  ],
+  "67": [
+   36,
+   47
+  ],
+  "68": [
+   36,
+   47
+  ],
+  "69": [
+   0,
+   0
+  ],
+  "70": [
+   0,
+   0
+  ],
+  "71": [
+   36,
+   0
+  ],
+  "72": [
+   0,
+   0
+  ],
+  "73": [
+   36,
+   0
+  ],
+  "74": [
+   36,
+   0
+  ],
+  "75": [
+   36,
+   0
+  ],
+  "76": [
+   36,
+   0
+  ],
+  "77": [
+   0,
+   0
+  ],
+  "78": [
+   0,
+   0
+  ],
+  "79": [
+   0,
+   0
+  ],
+  "80": [
+   0,
+   0
+  ],
+  "81": [
+   0,
+   0
+  ],
+  "82": [
+   0,
+   0
+  ],
+  "83": [
+   0,
+   54
+  ],
+  "84": [
+   0,
+   54
+  ],
+  "85": [
+   0,
+   54
+  ],
+  "86": [
+   0,
+   0
+  ],
+  "87": [
+   0,
+   0
+  ],
+  "88": [
+   0,
+   0
+  ],
+  "89": [
+   36,
+   0
+  ],
+  "90": [
+   0,
+   0
+  ],
+  "91": [
+   36,
+   0
+  ],
+  "92": [
+   36,
+   0
+  ],
+  "93": [
+   36,
+   0
+  ],
+  "94": [
+   36,
+   0
+  ],
+  "95": [
+   36,
+   0
+  ],
+  "96": [
+   0,
+   0
+  ],
+  "97": [
+   0,
+   0
+  ],
+  "98": [
+   0,
+   0
+  ],
+  "99": [
+   44,
+   0
+  ],
+  "100": [
+   44,
+   0
+  ],
+  "101": [
+   44,
+   0
+  ],
+  "102": [
+   28,
+   0
+  ],
+  "103": [
+   28,
+   0
+  ],
+  "104": [
+   28,
+   0
+  ],
+  "105": [
+   0,
+   0
+  ],
+  "106": [
+   0,
+   0
+  ],
+  "107": [
+   0,
+   0
+  ],
+  "108": [
+   0,
+   0
+  ],
+  "109": [
+   0,
+   0
+  ],
+  "110": [
+   0,
+   0
+  ],
+  "111": [
+   20,
+   0
+  ],
+  "112": [
+   20,
+   0
+  ],
+  "113": [
+   20,
+   0
+  ],
+  "114": [
+   20,
+   0
+  ],
+  "115": [
+   20,
+   0
+  ],
+  "116": [
+   20,
+   0
+  ],
+  "117": [
+   0,
+   0
+  ],
+  "118": [
+   0,
+   0
+  ],
+  "119": [
+   0,
+   0
+  ]
+ },
+ "specs_signal_moved": [],
+ "specs_plan_moved": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49,
+  50,
+  51,
+  52,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  64,
+  65,
+  66,
+  67,
+  68,
+  69,
+  70,
+  71,
+  72,
+  73,
+  74,
+  75,
+  76,
+  77,
+  78,
+  79,
+  80,
+  81,
+  82,
+  83,
+  84,
+  85,
+  86,
+  87,
+  88,
+  89,
+  90,
+  91,
+  92,
+  93,
+  94,
+  95,
+  96,
+  97,
+  98,
+  99,
+  100,
+  101,
+  102,
+  103,
+  104,
+  105,
+  106,
+  107,
+  108,
+  109,
+  110,
+  111,
+  112,
+  113,
+  114,
+  115,
+  116,
+  117,
+  118,
+  119
+ ],
+ "total_signals_off": 3003,
+ "total_signals_on": 3003,
+ "compiled_off": 114,
+ "compiled_on": 114,
+ "approximation_used_off": 120,
+ "approximation_used_on": 120,
+ "control_specs_moved": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  28,
+  29,
+  30,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  39,
+  40,
+  41,
+  42,
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49,
+  50,
+  51,
+  52,
+  53,
+  54,
+  55,
+  56,
+  57,
+  58,
+  59,
+  60,
+  61,
+  62,
+  63,
+  64,
+  65,
+  66,
+  67,
+  68,
+  69,
+  70,
+  71,
+  72,
+  73,
+  74,
+  75,
+  76,
+  77,
+  78,
+  79,
+  80,
+  81,
+  82,
+  83,
+  84,
+  85,
+  86,
+  87,
+  88,
+  89,
+  90,
+  91,
+  92,
+  93,
+  94,
+  95,
+  96,
+  97,
+  98,
+  99,
+  100,
+  101,
+  102,
+  103,
+  104,
+  105,
+  106,
+  107,
+  108,
+  109,
+  110,
+  111,
+  112,
+  113,
+  114,
+  115,
+  116,
+  117,
+  118,
+  119
+ ],
+ "invalidation_approximation_counts": {
+  "flag_OFF": [
+   0,
+   567
+  ],
+  "flag_ON": [
+   567,
+   567
+  ]
+ },
+ "filter_spine_390": [
+  {
+   "condition_id": "FILTER:previous 4h candle close#0",
+   "object": "previous 4h candle close",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:current hourly candle#0",
+   "object": "current hourly candle",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle wick#0",
+   "object": "candle wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:checklist usage#0",
+   "object": "checklist usage",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout to downside#0",
+   "object": "breakout to downside",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:regular trading hours gap fill#0",
+   "object": "regular trading hours gap fill",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous 4h candle close#0",
+   "object": "previous 4h candle close",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:current hourly candle#0",
+   "object": "current hourly candle",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle wick#0",
+   "object": "candle wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous 4h candle close#0",
+   "object": "previous 4h candle close",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:current hourly candle#0",
+   "object": "current hourly candle",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle wick#0",
+   "object": "candle wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:range supply level#0",
+   "object": "range supply level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:prior support#0",
+   "object": "prior support",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:but got severely rejected#0",
+   "object": "but got severely rejected",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:lower highs formation#0",
+   "object": "lower highs formation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:range supply level#0",
+   "object": "range supply level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:range supply level#0",
+   "object": "range supply level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:prior support#0",
+   "object": "prior support",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:but got severely rejected#0",
+   "object": "but got severely rejected",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:lower highs formation#0",
+   "object": "lower highs formation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:prior support#0",
+   "object": "prior support",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:but got severely rejected#0",
+   "object": "but got severely rejected",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:lower highs formation#0",
+   "object": "lower highs formation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:checklist usage#0",
+   "object": "checklist usage",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout to downside#0",
+   "object": "breakout to downside",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:regular trading hours gap fill#0",
+   "object": "regular trading hours gap fill",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap#0",
+   "object": "vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap retest vs pre market low retest#0",
+   "object": "vwap retest vs pre market low retest",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:pre market high#0",
+   "object": "pre market high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap#0",
+   "object": "vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap retest vs pre market low retest#0",
+   "object": "vwap retest vs pre market low retest",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:pre market high#0",
+   "object": "pre market high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bearish fvg#0",
+   "object": "bearish fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:liquidity pool level#0",
+   "object": "liquidity pool level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:old low#0",
+   "object": "old low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle body size#0",
+   "object": "candle body size",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg fvg#0",
+   "object": "fvg fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:swing point#0",
+   "object": "swing point",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bearish fvg#0",
+   "object": "bearish fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:liquidity pool level#0",
+   "object": "liquidity pool level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:old low#0",
+   "object": "old low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle body size#0",
+   "object": "candle body size",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg fvg#0",
+   "object": "fvg fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:swing point#0",
+   "object": "swing point",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bearish fvg#0",
+   "object": "bearish fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:liquidity pool level#0",
+   "object": "liquidity pool level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:old low#0",
+   "object": "old low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle body size#0",
+   "object": "candle body size",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg fvg#0",
+   "object": "fvg fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:swing point#0",
+   "object": "swing point",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:checklist usage#0",
+   "object": "checklist usage",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout to downside#0",
+   "object": "breakout to downside",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:regular trading hours gap fill#0",
+   "object": "regular trading hours gap fill",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:liquidity sweep vs bos#0",
+   "object": "liquidity sweep vs bos",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap#0",
+   "object": "vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap retest vs pre market low retest#0",
+   "object": "vwap retest vs pre market low retest",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:pre market high#0",
+   "object": "pre market high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:downtrend#0",
+   "object": "downtrend",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:flat 20s#0",
+   "object": "flat 20s",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema20#0",
+   "object": "ema20",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend direction#0",
+   "object": "trend direction",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:liquidity sweep vs bos#0",
+   "object": "liquidity sweep vs bos",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:binger band standard deviation#0",
+   "object": "binger band standard deviation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ballinger bands bases#0",
+   "object": "ballinger bands bases",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:binger band inside line#0",
+   "object": "binger band inside line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close above third standard deviation here here and here#0",
+   "object": "close above third standard deviation here here and here",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle 2 wick size#0",
+   "object": "candle 2 wick size",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:opposing run#0",
+   "object": "opposing run",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg#0",
+   "object": "fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle 2 wick size#0",
+   "object": "candle 2 wick size",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:opposing run#0",
+   "object": "opposing run",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg#0",
+   "object": "fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle 2 wick size#0",
+   "object": "candle 2 wick size",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:opposing run#0",
+   "object": "opposing run",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg#0",
+   "object": "fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema crossover trade#0",
+   "object": "ema crossover trade",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:cci line visibility#0",
+   "object": "cci line visibility",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema10 length#0",
+   "object": "ema10 length",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema crossover trade#0",
+   "object": "ema crossover trade",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:cci line visibility#0",
+   "object": "cci line visibility",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema10 length#0",
+   "object": "ema10 length",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema crossover trade#0",
+   "object": "ema crossover trade",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:cci line visibility#0",
+   "object": "cci line visibility",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema10 length#0",
+   "object": "ema10 length",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:binger band standard deviation#0",
+   "object": "binger band standard deviation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ballinger bands bases#0",
+   "object": "ballinger bands bases",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:binger band inside line#0",
+   "object": "binger band inside line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close above third standard deviation here here and here#0",
+   "object": "close above third standard deviation here here and here",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:binger band standard deviation#0",
+   "object": "binger band standard deviation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ballinger bands bases#0",
+   "object": "ballinger bands bases",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:binger band inside line#0",
+   "object": "binger band inside line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close above third standard deviation here here and here#0",
+   "object": "close above third standard deviation here here and here",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:downtrend#0",
+   "object": "downtrend",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:flat 20s#0",
+   "object": "flat 20s",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema20#0",
+   "object": "ema20",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend direction#0",
+   "object": "trend direction",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:downtrend#0",
+   "object": "downtrend",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:flat 20s#0",
+   "object": "flat 20s",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ema20#0",
+   "object": "ema20",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend direction#0",
+   "object": "trend direction",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:high point creation#0",
+   "object": "high point creation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:lowest possible zone#0",
+   "object": "lowest possible zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:1hour zone context#0",
+   "object": "1hour zone context",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg into#0",
+   "object": "fvg into",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:high point creation#0",
+   "object": "high point creation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price relative to vwap#0",
+   "object": "price relative to vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap slope#0",
+   "object": "vwap slope",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap behavior context#0",
+   "object": "vwap behavior context",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price relative to vwap#0",
+   "object": "price relative to vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap slope#0",
+   "object": "vwap slope",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap behavior context#0",
+   "object": "vwap behavior context",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price relative to vwap#0",
+   "object": "price relative to vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap slope#0",
+   "object": "vwap slope",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap behavior context#0",
+   "object": "vwap behavior context",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:sweep#0",
+   "object": "sweep",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous day high or previous week high#0",
+   "object": "previous day high or previous week high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price level low#0",
+   "object": "price level low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:prominent wick#0",
+   "object": "prominent wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:wick to left#0",
+   "object": "wick to left",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price close below ema#0",
+   "object": "price close below ema",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:first move inside poi#0",
+   "object": "first move inside poi",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:stop placement#0",
+   "object": "stop placement",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bullish candle structure#0",
+   "object": "bullish candle structure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:sweep#0",
+   "object": "sweep",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous day high or previous week high#0",
+   "object": "previous day high or previous week high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price level low#0",
+   "object": "price level low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:prominent wick#0",
+   "object": "prominent wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:wick to left#0",
+   "object": "wick to left",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price close below ema#0",
+   "object": "price close below ema",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:first move inside poi#0",
+   "object": "first move inside poi",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:stop placement#0",
+   "object": "stop placement",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bullish candle structure#0",
+   "object": "bullish candle structure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:sweep#0",
+   "object": "sweep",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous day high or previous week high#0",
+   "object": "previous day high or previous week high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price level low#0",
+   "object": "price level low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:prominent wick#0",
+   "object": "prominent wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:wick to left#0",
+   "object": "wick to left",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price close below ema#0",
+   "object": "price close below ema",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:first move inside poi#0",
+   "object": "first move inside poi",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:stop placement#0",
+   "object": "stop placement",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bullish candle structure#0",
+   "object": "bullish candle structure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:timeframe constraint#0",
+   "object": "timeframe constraint",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:most recent swing in price action#0",
+   "object": "most recent swing in price action",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg#0",
+   "object": "fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:timeframe constraint#0",
+   "object": "timeframe constraint",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:most recent swing in price action#0",
+   "object": "most recent swing in price action",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg#0",
+   "object": "fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:timeframe constraint#0",
+   "object": "timeframe constraint",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:most recent swing in price action#0",
+   "object": "most recent swing in price action",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg#0",
+   "object": "fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price relative to 1 hour highs and underneath 1 hour low#0",
+   "object": "price relative to 1 hour highs and underneath 1 hour low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level#0",
+   "object": "level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bos#0",
+   "object": "bos",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:s p 500 lows#0",
+   "object": "s p 500 lows",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price relative to 1 hour highs and underneath 1 hour low#0",
+   "object": "price relative to 1 hour highs and underneath 1 hour low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level#0",
+   "object": "level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bos#0",
+   "object": "bos",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:s p 500 lows#0",
+   "object": "s p 500 lows",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:liquidity sweep vs bos#0",
+   "object": "liquidity sweep vs bos",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:crt selection criteria#0",
+   "object": "crt selection criteria",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:overextended zone#0",
+   "object": "overextended zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:danger zone#0",
+   "object": "danger zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price close below zone#0",
+   "object": "price close below zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout event#0",
+   "object": "breakout event",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous candle close#0",
+   "object": "previous candle close",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:overextended zone#0",
+   "object": "overextended zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:danger zone#0",
+   "object": "danger zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price close below zone#0",
+   "object": "price close below zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout event#0",
+   "object": "breakout event",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous candle close#0",
+   "object": "previous candle close",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:downward tendency line#0",
+   "object": "downward tendency line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:downward tendency line#0",
+   "object": "downward tendency line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:downward tendency line#0",
+   "object": "downward tendency line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:overextended zone#0",
+   "object": "overextended zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:danger zone#0",
+   "object": "danger zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price close below zone#0",
+   "object": "price close below zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout event#0",
+   "object": "breakout event",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:previous candle close#0",
+   "object": "previous candle close",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap#0",
+   "object": "vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap resistance#0",
+   "object": "vwap resistance",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price near vwap#0",
+   "object": "price near vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap trading level#0",
+   "object": "vwap trading level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:pierce band#0",
+   "object": "pierce band",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:stop placement rule#0",
+   "object": "stop placement rule",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend#0",
+   "object": "trend",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:market condition#0",
+   "object": "market condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap#0",
+   "object": "vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap resistance#0",
+   "object": "vwap resistance",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price near vwap#0",
+   "object": "price near vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap trading level#0",
+   "object": "vwap trading level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:pierce band#0",
+   "object": "pierce band",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:stop placement rule#0",
+   "object": "stop placement rule",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend#0",
+   "object": "trend",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:market condition#0",
+   "object": "market condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap#0",
+   "object": "vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap resistance#0",
+   "object": "vwap resistance",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price near vwap#0",
+   "object": "price near vwap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:vwap trading level#0",
+   "object": "vwap trading level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:pierce band#0",
+   "object": "pierce band",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:stop placement rule#0",
+   "object": "stop placement rule",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend#0",
+   "object": "trend",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:market condition#0",
+   "object": "market condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bullish fvg#0",
+   "object": "bullish fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:crt selection criteria#0",
+   "object": "crt selection criteria",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:crt selection criteria#0",
+   "object": "crt selection criteria",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fibonacci level#0",
+   "object": "fibonacci level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price action only#0",
+   "object": "price action only",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price alignment with daily supply zone#0",
+   "object": "price alignment with daily supply zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:supply zone over here#0",
+   "object": "supply zone over here",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price zone#0",
+   "object": "price zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fibonacci level#0",
+   "object": "fibonacci level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price action only#0",
+   "object": "price action only",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price alignment with daily supply zone#0",
+   "object": "price alignment with daily supply zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:supply zone over here#0",
+   "object": "supply zone over here",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price zone#0",
+   "object": "price zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bullish fvg#0",
+   "object": "bullish fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fibonacci level#0",
+   "object": "fibonacci level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price action only#0",
+   "object": "price action only",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price alignment with daily supply zone#0",
+   "object": "price alignment with daily supply zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:supply zone over here#0",
+   "object": "supply zone over here",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price zone#0",
+   "object": "price zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:break level#0",
+   "object": "break level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level tested multiple times#0",
+   "object": "level tested multiple times",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:support level#0",
+   "object": "support level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candles can go below it with wick#0",
+   "object": "candles can go below it with wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:termination zone close condition#0",
+   "object": "termination zone close condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:support test frequency#0",
+   "object": "support test frequency",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:break level#0",
+   "object": "break level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level tested multiple times#0",
+   "object": "level tested multiple times",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:support level#0",
+   "object": "support level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candles can go below it with wick#0",
+   "object": "candles can go below it with wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:termination zone close condition#0",
+   "object": "termination zone close condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:support test frequency#0",
+   "object": "support test frequency",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bullish fvg#0",
+   "object": "bullish fvg",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:break level#0",
+   "object": "break level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level tested multiple times#0",
+   "object": "level tested multiple times",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:support level#0",
+   "object": "support level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candles can go below it with wick#0",
+   "object": "candles can go below it with wick",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:termination zone close condition#0",
+   "object": "termination zone close condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:support test frequency#0",
+   "object": "support test frequency",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:lowest possible zone#0",
+   "object": "lowest possible zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:1hour zone context#0",
+   "object": "1hour zone context",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg into#0",
+   "object": "fvg into",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:lowest possible zone#0",
+   "object": "lowest possible zone",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:1hour zone context#0",
+   "object": "1hour zone context",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg into#0",
+   "object": "fvg into",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price relative to 1 hour highs and underneath 1 hour low#0",
+   "object": "price relative to 1 hour highs and underneath 1 hour low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level#0",
+   "object": "level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:bos#0",
+   "object": "bos",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:s p 500 lows#0",
+   "object": "s p 500 lows",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:high point creation#0",
+   "object": "high point creation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:15 minutes candle closure#0",
+   "object": "15 minutes candle closure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:time window location#0",
+   "object": "time window location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:reversal formation#0",
+   "object": "reversal formation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:volume comparison#0",
+   "object": "volume comparison",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:scenario three large candle volume below average#0",
+   "object": "scenario three large candle volume below average",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:15 minutes candle closure#0",
+   "object": "15 minutes candle closure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:time window location#0",
+   "object": "time window location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:reversal formation#0",
+   "object": "reversal formation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:volume comparison#0",
+   "object": "volume comparison",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:scenario three large candle volume below average#0",
+   "object": "scenario three large candle volume below average",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:unswept low#0",
+   "object": "unswept low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:color and liquidity swap#0",
+   "object": "color and liquidity swap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price level relative to mss#0",
+   "object": "price level relative to mss",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:low sweep#0",
+   "object": "low sweep",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:smt divergence#0",
+   "object": "smt divergence",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:unswept low#0",
+   "object": "unswept low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:color and liquidity swap#0",
+   "object": "color and liquidity swap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price level relative to mss#0",
+   "object": "price level relative to mss",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:low sweep#0",
+   "object": "low sweep",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:smt divergence#0",
+   "object": "smt divergence",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:unswept low#0",
+   "object": "unswept low",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:color and liquidity swap#0",
+   "object": "color and liquidity swap",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price level relative to mss#0",
+   "object": "price level relative to mss",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:low sweep#0",
+   "object": "low sweep",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:smt divergence#0",
+   "object": "smt divergence",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:traps#0",
+   "object": "traps",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle interaction#0",
+   "object": "candle interaction",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:traps#0",
+   "object": "traps",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle interaction#0",
+   "object": "candle interaction",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:traps#0",
+   "object": "traps",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle interaction#0",
+   "object": "candle interaction",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price has not poked through trend lines#0",
+   "object": "price has not poked through trend lines",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:safety line#0",
+   "object": "safety line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line break#0",
+   "object": "trend line break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:action line and safety line equivalence#0",
+   "object": "action line and safety line equivalence",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:15 minutes candle closure#0",
+   "object": "15 minutes candle closure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:time window location#0",
+   "object": "time window location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:reversal formation#0",
+   "object": "reversal formation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:volume comparison#0",
+   "object": "volume comparison",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:scenario three large candle volume below average#0",
+   "object": "scenario three large candle volume below average",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg to be valid one three candles has to close outside 15 minute range#0",
+   "object": "fvg to be valid one three candles has to close outside 15 minute range",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg to be valid one three candles has to close outside 15 minute range#0",
+   "object": "fvg to be valid one three candles has to close outside 15 minute range",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:fvg to be valid one three candles has to close outside 15 minute range#0",
+   "object": "fvg to be valid one three candles has to close outside 15 minute range",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price has not poked through trend lines#0",
+   "object": "price has not poked through trend lines",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:safety line#0",
+   "object": "safety line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line break#0",
+   "object": "trend line break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:action line and safety line equivalence#0",
+   "object": "action line and safety line equivalence",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price has not poked through trend lines#0",
+   "object": "price has not poked through trend lines",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:safety line#0",
+   "object": "safety line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line break#0",
+   "object": "trend line break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:action line and safety line equivalence#0",
+   "object": "action line and safety line equivalence",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle close below both moving averages#0",
+   "object": "candle close below both moving averages",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle close below both moving averages#0",
+   "object": "candle close below both moving averages",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle close below both moving averages#0",
+   "object": "candle close below both moving averages",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line bounce#0",
+   "object": "trend line bounce",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line break#0",
+   "object": "trend line break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trade scope#0",
+   "object": "trade scope",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:contact points count#0",
+   "object": "contact points count",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line modification#0",
+   "object": "trend line modification",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:touch points#0",
+   "object": "touch points",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:safety line#0",
+   "object": "safety line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:distance calculation#0",
+   "object": "distance calculation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:confirmation rule#0",
+   "object": "confirmation rule",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line tool usage#0",
+   "object": "trend line tool usage",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trendline break#0",
+   "object": "trendline break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line bounce#0",
+   "object": "trend line bounce",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line break#0",
+   "object": "trend line break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trade scope#0",
+   "object": "trade scope",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:contact points count#0",
+   "object": "contact points count",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line modification#0",
+   "object": "trend line modification",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:touch points#0",
+   "object": "touch points",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:safety line#0",
+   "object": "safety line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:distance calculation#0",
+   "object": "distance calculation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:confirmation rule#0",
+   "object": "confirmation rule",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line tool usage#0",
+   "object": "trend line tool usage",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trendline break#0",
+   "object": "trendline break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line bounce#0",
+   "object": "trend line bounce",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line break#0",
+   "object": "trend line break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trade scope#0",
+   "object": "trade scope",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:contact points count#0",
+   "object": "contact points count",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line modification#0",
+   "object": "trend line modification",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:touch points#0",
+   "object": "touch points",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:safety line#0",
+   "object": "safety line",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:distance calculation#0",
+   "object": "distance calculation",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:confirmation rule#0",
+   "object": "confirmation rule",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trend line tool usage#0",
+   "object": "trend line tool usage",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:trendline break#0",
+   "object": "trendline break",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:session high#0",
+   "object": "session high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:chart scope candle selection#0",
+   "object": "chart scope candle selection",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close below level#0",
+   "object": "close below level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closures above midline#0",
+   "object": "candle closures above midline",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closure#0",
+   "object": "candle closure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:session high#0",
+   "object": "session high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:chart scope candle selection#0",
+   "object": "chart scope candle selection",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close below level#0",
+   "object": "close below level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closures above midline#0",
+   "object": "candle closures above midline",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closure#0",
+   "object": "candle closure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:session high#0",
+   "object": "session high",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:chart scope candle selection#0",
+   "object": "chart scope candle selection",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:price location#0",
+   "object": "price location",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close below level#0",
+   "object": "close below level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closures above midline#0",
+   "object": "candle closures above midline",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closure#0",
+   "object": "candle closure",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:opposing fvg to downside#0",
+   "object": "opposing fvg to downside",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ebp closure condition#0",
+   "object": "ebp closure condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closures in region#0",
+   "object": "candle closures in region",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:opposing fvg to downside#0",
+   "object": "opposing fvg to downside",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ebp closure condition#0",
+   "object": "ebp closure condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closures in region#0",
+   "object": "candle closures in region",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:opposing fvg to downside#0",
+   "object": "opposing fvg to downside",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:ebp closure condition#0",
+   "object": "ebp closure condition",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:candle closures in region#0",
+   "object": "candle closures in region",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close within range#0",
+   "object": "close within range",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level#0",
+   "object": "level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout level#0",
+   "object": "breakout level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close within range#0",
+   "object": "close within range",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level#0",
+   "object": "level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout level#0",
+   "object": "breakout level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:close within range#0",
+   "object": "close within range",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:level#0",
+   "object": "level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:breakout level#0",
+   "object": "breakout level",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:low volume node#0",
+   "object": "low volume node",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:p or b shape profile matching trap scenarios#0",
+   "object": "p or b shape profile matching trap scenarios",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:market is under point control where most volume is traded#0",
+   "object": "market is under point control where most volume is traded",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:low volume node#0",
+   "object": "low volume node",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:p or b shape profile matching trap scenarios#0",
+   "object": "p or b shape profile matching trap scenarios",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:market is under point control where most volume is traded#0",
+   "object": "market is under point control where most volume is traded",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:low volume node#0",
+   "object": "low volume node",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:p or b shape profile matching trap scenarios#0",
+   "object": "p or b shape profile matching trap scenarios",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  },
+  {
+   "condition_id": "FILTER:market is under point control where most volume is traded#0",
+   "object": "market is under point control where most volume is traded",
+   "bindable": true,
+   "declared": "static_true_pass_through",
+   "approximation": true,
+   "disposition": "honestly_declared_non_gating_constant_true"
+  }
+ ],
+ "filter_spine_dispositions": {
+  "honestly_declared_non_gating_constant_true": 390
+ },
+ "never_evaluated_trigger_role": {
+  "WAIT_BIAS": 42,
+  "FILTER": 39,
+  "INVALIDATE": 105,
+  "ENABLE_ENTRY": 480,
+  "ENTER": 255
+ },
+ "never_evaluated_total": 921,
+ "spine_conditions": 2769,
+ "all_entry_conditions": 6450,
+ "rates": {
+  "flag_OFF": {
+   "spine_bound": 2346,
+   "spine_approximated": 2265,
+   "spine_gating": 2346
+  },
+  "flag_ON": {
+   "spine_bound": 2346,
+   "spine_approximated": 2265,
+   "spine_gating": 1878
+  }
+ },
+ "enforcement_status_all_pins": {
+  "enforced": true,
+  "pins_active": [
+   "a",
+   "b",
+   "b2"
+  ],
+  "pins_skipped": [],
+  "violations": [
+   "pin(b2) [WAIT_SESSION]: spec_family_bindings.resolve_session_keyword can emit zone(s) ['lunch_blackout', 'overnight'] that its consumer session_windows.is_in_killzone cannot check (_ZONE_CHECKS covers ['london', 'macro_window', 'ny_am', 'ny_pm', 'silver_bullet']). A value nothing can evaluate is an ALWAYS-FALSE gate wearing bindable=True."
+  ],
+  "ok": false
+ }
+}

@@ -81,27 +81,109 @@ interface FamilyMeta {
   unsupported?: boolean;
   unboundReason?: string | null;
   executed?: boolean;
+  // ─── FAMILY_META ENFORCEMENT (docs/designs/packet-family-meta-enforced-2026-07-20.md) ───
+  // Mirrors the Python side's `enforced_*` column. See the ★ DRIFT DECLARATION below.
+  enforcedPrimitive?: string | null;
+  enforcedMechanism?: string | null;
+  enforcedApproximation?: boolean;
+  gates?: boolean;
+  productionExecuted?: boolean;
 }
 
 // ─── Mirror src/engine/spec_family_bindings.py::FAMILY_META EXACTLY ────────
+//
+// ★ DRIFT DECLARATION — READ BEFORE TRUSTING THIS TABLE (packet return-checklist item 7).
+// The DECLARATIONS below are fully mirrored, including the new enforced column, so the two
+// tables do not silently diverge. What is NOT mirrored is the ENFORCEMENT MACHINERY:
+// src/engine/family_meta_enforcement.py resolves every declared primitive to a real symbol at
+// load, proves dispatch derives from this table in both directions, and checks EMIT ⊆ COVERED.
+// This TypeScript module implements NONE of that — it is a pure declaration/binding mirror with
+// no executable primitives to resolve, so there is nothing here for pins (a)/(b) to check.
+//
+//   DECLARED DRIFT:  runtime enforcement, TS side — NOT IMPLEMENTED.
+//   NAMED OWNER:     the Band-B/TS parity lane (same owner as
+//                    src/server/lib/__tests__/spec-family-bindings.test.ts).
+//   CONSEQUENCE IF LEFT:  a future edit that makes a Python declaration fail load would be
+//                    accepted silently on the TS side. The mitigation available today is that
+//                    the declarations are identical, so the divergence cannot start here.
+//
+// The `enforced*` fields are DATA ONLY on this side: bindCondition() below still reads
+// `primitive` / `baseApproximation`, exactly matching the Python flag-OFF path, which is the
+// default. If TF_FAMILY_META_ENFORCED is ever defaulted ON in Python (a separate commit, per
+// the two-commit law), bindCondition() here MUST be switched to the enforced column in that
+// same commit or this mirror becomes wrong rather than merely incomplete.
 export const FAMILY_META: Record<string, FamilyMeta> = {
   WAIT_SESSION: {
     primitive: "session_windows",
     requiresSessionKeyword: true,
     baseApproximation: false,
     unboundReason: "no_recognized_session_keyword",
+    enforcedPrimitive: "session_windows.is_in_killzone",
   },
   WAIT_STRUCTURE: { primitive: "structure_engine.compute_structure_state", baseApproximation: true },
   VERIFY_STRUCTURE: { primitive: "structure_engine.compute_structure_state", baseApproximation: true },
-  WAIT_BIAS: { primitive: "bias_engine.classify_institutional_regime", baseApproximation: true },
-  CONFIRM_DIRECTION: { primitive: "bias_engine.classify_institutional_regime", baseApproximation: true },
+  // Declared bias_engine.classify_institutional_regime; MEASURED 0 calls to it on 2000 real ES
+  // 5min bars. The EMA-slope directional proxy is what runs, and now what is declared.
+  WAIT_BIAS: {
+    primitive: "bias_engine.classify_institutional_regime",
+    baseApproximation: true,
+    enforcedPrimitive: "spec_condition_compiler.wait_bias_directional_proxy",
+  },
+  CONFIRM_DIRECTION: {
+    primitive: "bias_engine.classify_institutional_regime",
+    baseApproximation: true,
+    enforcedPrimitive: "spec_condition_compiler.wait_bias_directional_proxy",
+  },
   WAIT_RETEST: { primitive: "spec_condition_compiler.retest_touch_check", baseApproximation: true },
-  FILTER: { primitive: "entry_quality.confluence_factor_presence", baseApproximation: true },
+  // *** entry_quality.confluence_factor_presence NAMES A MODULE THAT DOES NOT EXIST. *** The
+  // Python engine silently substituted constant True for 390 corpus conditions with role=spine.
+  // No such module was written to make the pointer pass — that would be a fabricated
+  // implementation, strictly worse, because it would probe clean. The honest entry declares the
+  // substitution: a non-gating constant-True mechanism.
+  FILTER: {
+    primitive: "entry_quality.confluence_factor_presence",
+    baseApproximation: true,
+    enforcedPrimitive: null,
+    enforcedMechanism: "static_true_pass_through",
+    enforcedApproximation: true,
+    gates: false,
+  },
   WAIT_CONFIRMATION: { primitive: "spec_condition_compiler.candle_confirmation_check", baseApproximation: true },
-  INVALIDATE: { primitive: "structural_stops.compute_structural_stop", baseApproximation: false },
-  ENABLE_ENTRY: { primitive: "spine_completion_trigger", baseApproximation: false },
-  ENTER: { primitive: "spine_completion_trigger", baseApproximation: false },
-  EXIT_HINT: { primitive: "provenance_only", baseApproximation: false, executed: false },
+  // The sole approximation=false among executed families, and its primitive is never called in
+  // production (0 calls / 495 firing bars; 492 under trace, all four signal columns identical).
+  INVALIDATE: {
+    primitive: "structural_stops.compute_structural_stop",
+    baseApproximation: false,
+    enforcedApproximation: true,
+    gates: false,
+    productionExecuted: false,
+  },
+  // `spine_completion_trigger` was never a code symbol. The real mechanism is the spine
+  // conjunction; these trigger-role conditions are never evaluated as conditions at all.
+  ENABLE_ENTRY: {
+    primitive: "spine_completion_trigger",
+    baseApproximation: false,
+    enforcedPrimitive: null,
+    enforcedMechanism: "spine_conjunction_trigger",
+    enforcedApproximation: true,
+    gates: false,
+  },
+  ENTER: {
+    primitive: "spine_completion_trigger",
+    baseApproximation: false,
+    enforcedPrimitive: null,
+    enforcedMechanism: "spine_conjunction_trigger",
+    enforcedApproximation: true,
+    gates: false,
+  },
+  EXIT_HINT: {
+    primitive: "provenance_only",
+    baseApproximation: false,
+    executed: false,
+    enforcedPrimitive: null,
+    enforcedMechanism: "provenance_only",
+    gates: false,
+  },
   RESET: { primitive: null, unsupported: true, unboundReason: "control_flow_reset_unsupported" },
   EXCEPTION: { primitive: null, unsupported: true, unboundReason: "control_flow_exception_unsupported" },
 };

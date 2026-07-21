@@ -15,6 +15,18 @@ so its counter reads 0 for a reason that has nothing to do with reachability. Co
 reaches dispatch before believing any zero.
 
 On commit, ONLY path handling was changed (ROOT, OUT). No behavioural change.
+
+2026-07-21, the ENFORCEMENT build (docs/designs/packet-family-meta-enforced-2026-07-20.md):
+the `declared` column now reads meta.effective_primitive() instead of meta.primitive, and two
+new columns (`gates`, `production_executed`) are recorded. REASON: FamilyMeta now carries TWO
+declaration columns for the length of the build (legacy + enforced, two-commit law), and an
+instrument that reads only the legacy one would report "no movement" for a packet whose entire
+subject is the declaration moving — a caption that cannot respond to its subject. `declared` now
+means "what this engine declares UNDER THE ACTIVE REGIME", which is what the instrument was
+always for. PROVEN INERT with the flag OFF: the flag-off arm still reproduces
+family-meta-reachability-sweep-baseline.json byte-identically (effective_primitive() returns
+meta.primitive when TF_FAMILY_META_ENFORCED is not true), so the before/after comparison remains
+same-instrument. Nothing else changed; no counter, control, exemplar or verdict rule was touched.
 """
 from __future__ import annotations
 import json, sys, os, contextlib, datetime as _dt
@@ -120,8 +132,9 @@ P(f"\n=== PER-FAMILY (real corpus condition, n={N} real ES 5min bars) ===")
 RES={}
 for ft, meta in FAMILIES.items():
     cond, src = exemplar(ft)
-    r={"declared":meta.primitive,"approximation":meta.base_approximation,"executed":meta.executed,
-       "unsupported":meta.unsupported,"exemplar":src,"object":(cond or {}).get("object","")[:80]}
+    r={"declared":meta.effective_primitive(),"approximation":meta.effective_approximation(),"executed":meta.executed,
+       "unsupported":meta.unsupported,"exemplar":src,"object":(cond or {}).get("object","")[:80],
+       "gates":meta.gates,"production_executed":meta.production_executed}
     if cond is None:
         RES[ft]=r; P(f"\n{ft}: declared={meta.primitive} -- NO CORPUS EXEMPLAR"); continue
     with all_counted() as ct:
