@@ -235,11 +235,33 @@ function check(vars = VARS, opts = {}) {
     // implementing it is what made that sentence true.)
     if (v.humanClassified) {
       const sites = readSites(v.name, opts);
+      const d = deriveClasses(sites);
+      // ★★ THE EXEMPTION IS EARNED PER-ENTRY, NOT GRANTED BY DECLARING IT.
+      // You cannot human-classify what the machine CAN check. If this var has even one
+      // machine-detectable empty-default site, the scan is competent here and the exemption
+      // would be downgrading a verified entry to an unverified one — which is exactly how the
+      // escape hatch gets abused. An earlier guard checked a population RATIO and an evidence
+      // STRING LENGTH; an independent grader defeated it in one move by human-classifying
+      // DISCORD_CH_CRITICAL_ALERTS (which HAS a detectable site) with padded evidence. Both
+      // proxies passed while the only question that matters went unasked.
+      if (d && d.dist.empty_default > 0) {
+        rows.push({
+          name: v.name, declared: [...v.classes].sort(), verdict: "FAIL",
+          reason:
+            `humanClassified is NOT PERMITTED here — the scan detects ${d.dist.empty_default} ` +
+            `empty-default site(s) for this var, so it is machine-checkable. Remove the flag ` +
+            `(the exemption is for shapes the scan cannot see, not for silencing it).`,
+          sites: sites.length, dist: d.dist,
+        });
+        continue;
+      }
       rows.push({
         name: v.name, declared: [...v.classes].sort(), verdict: "HUMAN",
         reason: "human_classified_shape_not_scan_detectable",
         sites: sites.length,
-        note: "the scan does not adjudicate this entry; a human owns it. Reported, not skipped silently.",
+        dist: d ? d.dist : null,
+        note: "EARNED exemption: the scan finds zero detectable sites for this var, so a human " +
+          "owns it. Reported, never silently skipped, and never counted as PASS.",
       });
       continue;
     }

@@ -208,18 +208,41 @@ test("the humanClassified flag does REAL work — without it the entry FAILS", (
     "if this passes without the flag, the flag is suppressing nothing and proves nothing");
 });
 
-test("humanClassified cannot be used to hollow the tool out", () => {
-  // The flag exempts an entry from the cross-check, so it is exactly the lever someone would
-  // pull to make a red manifest green. Guard it: most entries must still be MACHINE-checked,
-  // and each exemption must carry evidence explaining why the scan cannot see it.
-  const exempt = VARS.filter((v) => v.humanClassified);
-  const machineChecked = VARS.length - exempt.length - VARS.filter((v) => v.dynamicRead).length;
-  assert.ok(machineChecked > exempt.length,
-    `only ${machineChecked} machine-checked vs ${exempt.length} exempt — the tool is being hollowed out`);
-  for (const v of exempt) {
-    assert.ok(v.evidence && v.evidence.trim().length > 40,
-      `${v.name} is exempt from the scan but does not explain why`);
-  }
+// ★★ ABUSE-RESISTANCE OF THE ESCAPE HATCH — RED-proofed against the ABUSE, not against removal.
+//
+// The first version of this guard checked a population RATIO (most entries still machine-checked)
+// and an evidence STRING LENGTH. An independent grader defeated it in ONE move: human-classify
+// `DISCORD_CH_CRITICAL_ALERTS` — which HAS a machine-detectable empty-default site — and pad the
+// evidence past the length floor. Both proxies passed while the only question that matters went
+// unasked: *can the machine already check this entry?*
+//
+// Proving "remove the flag → FAIL" showed the flag was LOAD-BEARING. It never showed the flag was
+// ABUSE-RESISTANT. A guard against abuse must be RED-proofed against the abuse, in the direction
+// the defect actually travels.
+test("MUTANT CAUGHT — the grader's exact defeat: human-classifying a MACHINE-CHECKABLE var", () => {
+  const v = clone();
+  const e = v.find((x) => x.name === "DISCORD_CH_CRITICAL_ALERTS"); // has a real empty-default site
+  e.humanClassified = true;
+  e.evidence = "padded evidence string that comfortably exceeds the forty character floor";
+  const row = check(v).find((r) => r.name === "DISCORD_CH_CRITICAL_ALERTS");
+  assert.equal(row.verdict, "FAIL",
+    "a var the scan CAN check was exempted from the scan — the escape hatch is abusable");
+  assert.match(row.reason, /NOT PERMITTED|machine-checkable/i);
+});
+
+test("MUTANT CAUGHT — mass exemption cannot silence the manifest", () => {
+  const v = clone().map((x) => ({ ...x, humanClassified: true }));
+  const rows = check(v);
+  assert.ok(rows.filter((r) => r.verdict === "FAIL").length > 0,
+    "flagging every entry humanClassified produced no failures — the tool can be hollowed out");
+});
+
+test("POSITIVE CONTROL — a LEGITIMATE exemption is still granted", () => {
+  // Without this, the abuse guard could be satisfied by refusing every exemption, which would
+  // make the mechanism useless rather than safe.
+  const row = check().find((r) => r.name === "DISCORD_WEBHOOK_URL");
+  assert.equal(row.verdict, "HUMAN", "an earned exemption (zero detectable sites) must be granted");
+  assert.equal(row.dist.empty_default, 0, "…and it is earned precisely because the scan sees nothing");
 });
 
 test("the narrowed scope claim is stated in the artifact", () => {
