@@ -1213,7 +1213,11 @@ def test_role_resolver_never_emits_an_orphan_zone(_role_resolver_on):
     # Second pass: the adversarial population too, so the two rules added this
     # wave (meridiem-with-role, reopen-as-whole-object) are inside the sweep.
     texts += _ADVERSARIAL_PROSE_NEGATIVES + _ADVERSARIAL_MARKET_POSITIVES + ["reopen", "re-open", "reopens"]
-    assert len(texts) >= 26 + 13 + 4 + 14 + 6 + 3
+    # THIRD PASS: the action-anchored population too, so the trading-action
+    # co-factor added this wave is inside the sweep. These are the rows that
+    # newly BIND, so they are exactly where a new orphan emission could appear.
+    texts += _BATCH6_ACTION_POSITIVES + _BATCH6_ACTION_NEGATIVES + _BATCH6_KNOWN_FALSE_NEGATIVES
+    assert len(texts) >= 26 + 13 + 4 + 14 + 6 + 3 + 15 + 30 + 4
     emitted = set()
     for text in texts:
         binding = bind_condition({"id": "orphan:sweep", "type": "WAIT_SESSION", "object": text, "role": "spine"})
@@ -1766,4 +1770,318 @@ def test_m3_parent_diff_would_catch_a_flag_off_regression(monkeypatch):
     assert drifted > 0, (
         "flag ON produced ZERO differences from the parent commit — the resolver is inert, "
         "or the parent-diff instrument is comparing the module to itself"
+    )
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# THIRD PASS — the market-ness can live in the VERB, not only in a NOUN
+# ════════════════════════════════════════════════════════════════════════════
+#
+# The second pass fixed a real mechanism (the clock must DO WORK) and cut false
+# positives 38.0% -> 6.0%, recognition-leak axis 74.0% -> 6.0%. It over-
+# corrected on the other axis: false negatives 0% -> 61.9%. Thirteen genuine
+# session teachings, independently adjudicated by two blind judges (unanimous,
+# calibrated 15/15 and 12/12 on control rows), were being rejected.
+#
+# Every one shares a shape: the clock genuinely does work AND the sentence
+# commands an explicit trading action — but it names no instrument and no chart
+# object, so the market-context co-factor (a NOUN lexicon) refused it.
+#
+# THE TRAP, and why a verb list would have failed exactly as the four noun
+# lexicons did: ordinary life also has verbs and clock times. "The kids need to
+# be at daycare BY 8 a.m." and "we EXIT the highway before 8 a.m." are verb +
+# a clock that does work. The discriminator is not that a verb is present but
+# WHAT THE VERB ACTS UPON. Being somewhere by a time is not a trading action;
+# being FLAT by a time is.
+#
+# Batch 6 below was authored and frozen to disk BEFORE the rule was written,
+# aimed squarely at that trap: every negative carries a verb AND a span
+# preposition, so every one already passes _session_clock_does_work at
+# 6dd3a00f and is held out ONLY by the co-factor this pass loosens. It broke
+# the first draft of construction (C) — see
+# test_batch6_objectless_gerund_is_a_frame_test_not_a_blacklist.
+
+_BATCH6_ACTION_NEGATIVES = [
+    # ordinary life: a verb, and a clock that genuinely delimits
+    "the kids need to be at daycare by 8 a.m. or they miss breakfast",
+    "we need to board the ferry by 7:20 a.m. and it does not wait",
+    "close the store by 9 p.m. and set the alarm",
+    "hold the elevator until 8:15 a.m. so the movers can load",
+    "enter the building before 9 a.m. or the badge reader locks you out",
+    "cut the cake before 3 p.m. right after the toast",
+    "open the shop by 6 a.m. and start the coffee",
+    "drop the dog at daycare by 7:30 a.m. and pick her up after 5 p.m.",
+    "let the dough rest until 4 p.m. before you shape it",
+    "we exit the highway before 8 a.m. to avoid the toll",
+    "watch the kids until 3 p.m. and do not let them near the pool",
+    "do not touch the thermostat until 7 a.m.",
+    "stop by the pharmacy before 8 p.m.",
+    "take the medication before 9 a.m. with food",
+    "he sells produce at the stand from 6 a.m. until noon",
+    "settle the account before 3 p.m. to avoid a fee",
+    # ── the traps aimed at each construction ──
+    # (A) "flat" in its ordinary English adverbial idioms
+    "the movers will be flat out until 6 p.m.",
+    "we will be flat broke by 5 p.m. at this rate",
+    "I will be flat on my back until 10 a.m. with this flu",
+    "the flat we rent goes to the agent before 10 a.m.",
+    # (B) a foreign qualifier between the verb and the position noun
+    "add to the grocery order before 6 p.m. or it ships without it",
+    "we scale the recipe up before 5 p.m. so it is ready",
+    "hold my spot in line until 11 a.m.",
+    "we hold the deposit until 4 p.m. the next business day",
+    # (B) noun BEFORE verb — no government relation
+    "the position we advertised closes at 5 p.m. on Friday",
+    # (B) the position word is only an attributive modifier of a foreign head
+    "the entry fee doubles after 8 p.m.",
+    "the contract cleaners finish before 6 a.m.",
+    "close the ticket by 4 p.m. or it escalates",
+    # (C) a transitive trade-verb with a real object
+    "trade in your old phone before 5 p.m. for the discount",
+    "we stopped trading baseball cards after 3 p.m.",
+]
+
+_BATCH6_ACTION_POSITIVES = [
+    # genuine teachings whose market-ness lives ENTIRELY in the verb —
+    # no instrument, no exchange, no chart noun, no "session" word.
+    "be flat by 3:50 p.m., no exceptions",
+    "flatten everything before 3:50 p.m.",
+    "close every position by 11 a.m.",
+    "no trading until 9:30 a.m.",
+    "I only take one trade and I am done by 11 a.m.",
+    "exit all positions before 4 p.m.",
+    "stop trading after 11:30 a.m.",
+    "get flat before 2 p.m. ahead of the announcement",
+    "cut the trade before 10 a.m. if it has not moved",
+    "do not add to the position after 3 p.m.",
+    "scale out before 11 a.m. and let the runner go",
+    "hold your entries until after 10 a.m.",
+    "I am only watching, not trading, until 10 a.m.",
+    "close the runners by 3:45 p.m.",
+    "avoid trading between 12 p.m. and 1 p.m.",
+]
+
+
+@pytest.mark.parametrize("text", _BATCH6_ACTION_NEGATIVES)
+def test_batch6_ordinary_life_verb_plus_working_clock_is_still_refused(_role_resolver_on, text):
+    """★ THE PROHIBITED REGRESSION, fenced. "If your change raises false
+    positives, it has failed regardless of what it does to false negatives."
+
+    Every row here would be admitted by a naive "verb + clock => bind" rule.
+    Asserted at BOTH layers, same discipline as the second pass: a resolver
+    that recognizes prose and merely happens not to compute a zone is still
+    wrong, and starts binding the moment a zone becomes computable."""
+    assert classify_session_role(text).recognized is False, f"false positive: {text!r}"
+    binding = bind_condition({"id": "b6:neg", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None, f"SILENTLY BOUND {binding.session_zone!r}: {text!r}"
+
+
+@pytest.mark.parametrize("text", _BATCH6_ACTION_POSITIVES)
+def test_batch6_action_anchored_teachings_now_bind(_role_resolver_on, text):
+    """★ THE CLASS THIS PASS ADMITS. The other polarity of the same rule."""
+    assert classify_session_role(text).recognized is True, f"still missing a genuine teaching: {text!r}"
+
+
+def test_batch6_what_the_new_rule_admits_that_6dd3a00f_did_not(_role_resolver_on):
+    """★ CHECKLIST ITEM 2 — the standing obligation: for each rule change,
+    state what it now ADMITS that it did not before, and TEST that class.
+
+    This is the differential, run against 6dd3a00f's actual module loaded from
+    git rather than against a hand-copied number. It asserts three things at
+    once, and the third is the one that makes it a control rather than a
+    caption:
+
+      1. Exactly 14 of the 15 action-anchored positives were REJECTED by
+         6dd3a00f and are ADMITTED now — that measured set IS the class this
+         pass adds, and it is computed here rather than asserted from memory.
+      2. Exactly ONE row was already admitted at 6dd3a00f and is named, so the
+         "what it now admits" claim is not inflated by a row it did not win.
+         "stop trading after 11:30 a.m." carries TWO distinct ambiguous market
+         nouns ("stop", "trading"), so _session_is_about_markets already
+         satisfied the co-factor for it by the noun path.
+      3. BOTH versions reject all 30 ordinary-life negatives — so the recall
+         was NOT bought with false positives. If a future change buys recall by
+         re-admitting prose, this assertion fails before the recall one does.
+
+    If the instrument were non-discriminating, (1) would measure zero."""
+    old = _load_module_at_ref("6dd3a00f")
+    assert hasattr(old, "classify_session_role"), "6dd3a00f must already contain the resolver"
+    import src.engine.spec_family_bindings as today
+
+    old_admits = [t for t in _BATCH6_ACTION_POSITIVES if old.classify_session_role(t).recognized]
+    new_admits = [t for t in _BATCH6_ACTION_POSITIVES if today.classify_session_role(t).recognized]
+    newly = [t for t in new_admits if t not in old_admits]
+
+    assert old_admits == ["stop trading after 11:30 a.m."], (
+        "the set of rows already admitted at 6dd3a00f drifted — the 'what this pass admits' "
+        f"count must be re-derived. Measured: {old_admits}"
+    )
+    assert len(new_admits) == len(_BATCH6_ACTION_POSITIVES), (
+        f"admitted only {len(new_admits)}/{len(_BATCH6_ACTION_POSITIVES)}: "
+        f"{[t for t in _BATCH6_ACTION_POSITIVES if t not in new_admits]}"
+    )
+    assert len(newly) == 14, f"the newly-admitted class measured {len(newly)}, not 14: {newly}"
+    assert old_admits != new_admits, "THE CONTROL DID NOT MOVE"
+
+    # ...and the FP axis did not move in the wrong direction on the same batch.
+    old_fp = [t for t in _BATCH6_ACTION_NEGATIVES if old.classify_session_role(t).recognized]
+    new_fp = [t for t in _BATCH6_ACTION_NEGATIVES if today.classify_session_role(t).recognized]
+    assert old_fp == [], f"6dd3a00f leaked on batch 6 negatives (pre-existing): {old_fp}"
+    assert new_fp == [], f"★ THE PROHIBITED REGRESSION — this pass added false positives: {new_fp}"
+
+
+def test_batch6_the_second_pass_fp_fences_are_all_still_green(_role_resolver_on):
+    """★ THE PRESERVATION CLAIM, measured rather than asserted.
+
+    The second pass's win must not be undone. Every adversarial negative it
+    authored — batches 3, 4, 5 and the HIGH-1 prose rows, 54 in total — is
+    re-run here as ONE aggregate assertion, so that "the FP win held" is a
+    single measured number in this pass's own suite rather than an inference
+    from other tests happening to pass."""
+    inherited = _ADVERSARIAL_PROSE_NEGATIVES + _ADVERSARIAL_BATCH34_NEGATIVES + _ADVERSARIAL_BATCH5_NEGATIVES
+    assert len(inherited) == 54, "the inherited negative population changed size — re-derive this claim"
+    leaks = [t for t in inherited if classify_session_role(t).recognized]
+    assert leaks == [], f"THIRD PASS BROKE THE SECOND PASS'S FP WIN on {len(leaks)}/54 rows: {leaks}"
+
+    # And the second pass's genuine positives are all still bound.
+    lost = [t for t in _ADVERSARIAL_MARKET_POSITIVES if not classify_session_role(t).recognized]
+    assert lost == [], f"lost inherited positives: {lost}"
+
+
+def test_batch6_neither_half_of_a_construction_fires_alone(_role_resolver_on):
+    """★ THE ANTI-LEXICON PROOF. "Do not solve this by adding a verb lexicon
+    and stopping." This asserts the rule is a CONSTRUCTION test — a predicate
+    together with its argument, in a specific order and adjacency — by showing
+    that each half in isolation is refused.
+
+    Four lexicon drafts failed on the noun side. A verb list would fail the
+    same way; what makes this different is that no member of any set below can
+    fire on its own."""
+    from src.engine.spec_family_bindings import (
+        _SESSION_ACTION_ON_POSITION_RE,
+        _SESSION_POSITION_STATE_RE,
+        _session_has_trading_action,
+    )
+
+    # (B) transaction VERB alone, with a working clock — refused.
+    for verb_only in ("close the store by 9 p.m.", "hold the elevator until 8:15 a.m.", "cut the cake before 3 p.m."):
+        assert _SESSION_ACTION_ON_POSITION_RE.search(verb_only) is None, verb_only
+        assert classify_session_role(verb_only).recognized is False, verb_only
+
+    # (B) position NOUN alone, and the same noun with the verb in the WRONG
+    # ORDER — both refused. Government is directional.
+    for noun_only in (
+        "her position and salary were settled before 11 a.m.",
+        "the position we advertised closes at 5 p.m.",
+    ):
+        assert _SESSION_ACTION_ON_POSITION_RE.search(noun_only) is None, noun_only
+        assert classify_session_role(noun_only).recognized is False, noun_only
+
+    # ...but together, in order, they fire.
+    assert _SESSION_ACTION_ON_POSITION_RE.search("close every position by 11 a.m.") is not None
+
+    # (A) "flat" as a NOUN (determiner, not a copula complement) — refused;
+    # "flat" as a predicative complement — fires. Same word, different frame.
+    assert _SESSION_POSITION_STATE_RE.search("the flat we rent goes to the agent") is None
+    assert _SESSION_POSITION_STATE_RE.search("be flat by 3:50 p.m.") is not None
+
+    # And the whole co-factor is inert on text with neither construction.
+    assert _session_has_trading_action("the kids need to be at daycare by 8 a.m.") is False
+
+
+def test_batch6_objectless_gerund_is_a_frame_test_not_a_blacklist(_role_resolver_on):
+    """★ A DRAFT DEFECT, recorded rather than quietly fixed.
+
+    Construction (C) was FIRST implemented as a blacklist of object heads
+    (`cards`, `places`, `shows`...). The pre-registered adversarial "we stopped
+    trading BASEBALL CARDS after 3 p.m." walked straight through it and bound
+    ny_pm — the head noun sat two words past the gerund, and no blacklist of
+    heads ever closes that gap. That is the same failure mode as the four noun
+    lexicons, reproduced on the verb side, which is exactly what the packet
+    warned would happen.
+
+    Replaced by a FRAME test: what follows the gerund must be a clause boundary
+    or a function word, never the start of a noun phrase. This test pins both
+    polarities of that distinction."""
+    from src.engine.spec_family_bindings import _SESSION_NEGATED_TRADING_RE
+
+    # Transitive uses — an object follows, at distance 1 and at distance 2.
+    for transitive in (
+        "we stopped trading baseball cards after 3 p.m.",
+        "don't trade places before 4 p.m.",
+        "we stopped trading vintage comic books after 3 p.m.",
+    ):
+        assert _SESSION_NEGATED_TRADING_RE.search(transitive) is None, f"blacklist regression: {transitive!r}"
+        assert classify_session_role(transitive).recognized is False, transitive
+
+    # Intransitive uses — a preposition or a clause boundary follows.
+    for intransitive in (
+        "no trading until 9:30 a.m.",
+        "stop trading after 11:30 a.m.",
+        "avoid trading between 12 p.m. and 1 p.m.",
+    ):
+        assert _SESSION_NEGATED_TRADING_RE.search(intransitive) is not None, intransitive
+
+
+def test_batch6_does_work_conjunct_is_untouched_so_bare_mentions_still_miss(_role_resolver_on):
+    """★ THE SCOPE OF THE CHANGE, fenced.
+
+    This pass loosens exactly ONE conjunct — the market co-factor — and leaves
+    _session_clock_does_work alone. The proof is that a sentence carrying a
+    full-strength trading ACTION but a bare-MENTION clock is still refused: the
+    action satisfies the co-factor, and the clock-role test rejects it anyway.
+
+    If a future change moves the trading-action test outside the does-work
+    conjunct, this test fails — which is the alarm, because that is the shape
+    that would reopen the second pass's FP class wholesale."""
+    from src.engine.spec_family_bindings import _session_has_trading_action
+
+    for text in ("I take the trade at 10:30 a.m.", "close the position at 3 p.m."):
+        assert _session_has_trading_action(text) is True, f"co-factor should be satisfied: {text!r}"
+        assert classify_session_role(text).recognized is False, (
+            f"{text!r} recognized on a BARE-MENTION clock — the trading-action co-factor has "
+            "escaped the _session_clock_does_work conjunct; the second pass's FP class is reopening"
+        )
+
+    # The second pass's four pinned bare-mention misses are unchanged.
+    for text in _KNOWN_FALSE_NEGATIVES_OF_THE_DOES_WORK_RULE:
+        assert classify_session_role(text).recognized is False, text
+
+
+_BATCH6_KNOWN_FALSE_NEGATIVES = [
+    # `long`/`short` as predicative position states. "GO LONG before 10 a.m."
+    # is genuine teaching and is MISSED, because "this meeting could GO LONG
+    # before lunch" and "we are SHORT on time until 3 p.m." are the identical
+    # frame in ordinary English and no lookahead separates them. Refusing the
+    # ordinary reading matters more; the direction is the module's standing one.
+    #
+    # Both rows are deliberately stripped of every market noun. A longer form
+    # like "go long before 10 a.m. if the LEVEL holds" DOES recognize — but via
+    # the pre-existing two-distinct-ambiguous-noun path ("long" + "level"), not
+    # via this pass's rule, so it would be a false receipt for this claim.
+    "go long before 10 a.m.",
+    "get short before 2 p.m.",
+    # A pronoun complement carries no position noun, so (B) cannot fire. The
+    # packet named "do not touch it until" as a genuine teaching form; admitting
+    # it would equally admit "do not touch the thermostat until 7 a.m.", which
+    # is in the negative batch above. Named the miss rather than took the leak.
+    "do not touch it until 10 a.m.",
+    # No trading ACTION and no market noun at all — nothing to key on.
+    "nothing matters until 9:30",
+]
+
+
+@pytest.mark.parametrize("text", _BATCH6_KNOWN_FALSE_NEGATIVES)
+def test_batch6_known_false_negatives_this_pass_did_not_close(_role_resolver_on, text):
+    """★ WHAT THIS PASS DID NOT FIX, pinned as a failing-visible receipt rather
+    than as a paragraph in a commit message.
+
+    Each row is genuine teaching that is still refused, and each is refused for
+    a stated structural reason — not an oversight. If a later change recovers
+    one, this test fails and the recovery must be re-justified against the
+    ordinary-life sibling that shares its grammar."""
+    assert classify_session_role(text).recognized is False, (
+        f"{text!r} now recognizes — verify the batch-6 negative fence still passes "
+        "(especially its ordinary-life sibling) and move this row out with a stated reason"
     )

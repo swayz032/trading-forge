@@ -1092,6 +1092,195 @@ def _session_noun_qualifier_is_market_compatible(norm: str) -> bool:
     return not found_any
 
 
+# ─── THIRD PASS: the market-ness can live in the VERB, not only in a NOUN ────
+#
+# ★ THE DEFECT THIS FIXES. The second pass established the right mechanism —
+# the clock must DO WORK, not merely be mentioned — and cut false positives
+# 38.0% -> 6.0% (recognition-leak axis 74.0% -> 6.0%). But it paired that
+# grammatical test with a market-context co-factor that is still a NOUN
+# lexicon (_session_is_about_markets). So a sentence whose clock genuinely
+# delimits a window AND which commands an explicit trading action, but which
+# names no instrument and no chart object, fails the co-factor and is
+# rejected. Independently adjudicated by two blind judges (unanimous,
+# calibrated 15/15 and 12/12), 13 such genuine teachings were being missed:
+# "be flat by 3:50 p.m.", "close every position by 11 a.m.", "no trading
+# until 9:30 a.m." — every one a real instruction, none with a market noun.
+#
+# The second pass's own finding, under-applied: market NOUNS are not the
+# discriminator. Neither, though, are market VERBS — "the kids need to be at
+# daycare BY 8 a.m." and "we EXIT the highway before 8 a.m." are verb + a
+# clock that does work, and admitting them would reopen exactly the class the
+# second pass closed at real cost.
+#
+# ★ THE RULE, stated structurally. The discriminator is not that a verb is
+# present but WHAT THE VERB ACTS UPON. Being somewhere by a time is not a
+# trading action; being FLAT by a time is. So a trading action is recognized
+# only as a CONSTRUCTION — a predicate together with its argument — never as
+# a word appearing anywhere in the sentence. Three constructions, below:
+#
+#   (A) PREDICATIVE POSITION STATE — a copula/inchoative verb whose complement
+#       is a position state ("BE flat", "GET flat"), or a verb whose only
+#       reading is a position operation ("flatten", "scale out", "stopped
+#       out"). The predicative frame is what does the work: it refuses "the
+#       FLAT we rent" (determiner + noun, not a copula complement) and, with
+#       an explicit exclusion list, the adverbial idioms "flat out", "flat
+#       broke", "flat on my back".
+#
+#   (B) TRANSACTION VERB + POSITION COMPLEMENT — a transaction verb followed,
+#       within a closed set of domain-free determiners, by a position noun:
+#       "close every position", "take one trade", "add to the position".
+#       ORDER AND ADJACENCY ARE THE MECHANISM. Neither half counts alone, so
+#       "close the store" (verb, no position noun) and "the POSITION we
+#       advertised CLOSES at 5 p.m." (noun before verb, no government) are
+#       both refused. The determiner set is reused from the same whitelist
+#       principle as _SESSION_NOUN_QUALIFIER_ALLOWED: "add to the GROCERY
+#       order" is refused because "grocery" is a foreign noun qualifier.
+#
+#   (C) NEGATED BARE TRANSACTION — "NO trading", "STOP trading", "not
+#       trading". A negator or cessation verb directly governing a bare,
+#       objectless trade-gerund. Ordinary English rarely negates a bare verb
+#       with no object; where it does, it supplies one ("stopped trading
+#       baseball CARDS"), which the exclusion list catches.
+#
+# WHY THIS IS NOT THE BANNED REPAIR. This is not a widening of
+# SESSION_KEYWORDS and not bare-token matching: no member of any set below
+# can fire on its own. Each is one half of a two-part construction that must
+# appear in a specific order and adjacency. And the whole thing remains
+# ANDed under _session_clock_does_work — it is a new way to satisfy an
+# EXISTING conjunct, never a new path around the clock-role test. Sentences
+# whose clock is a bare mention ("wait for a bullish engulfing AT 8:15 a.m.")
+# are still missed, deliberately and unchanged.
+
+_SESSION_POSITION_STATE_RE = re.compile(
+    # (A1) copula / inchoative + the position state "flat", minus the ordinary
+    # English adverbial idioms that share the frame.
+    r"\b(?:be|being|am|is|are|was|were|get|gets|got|getting|go|goes|going|"
+    r"stay|stays|stayed|staying|remain|remains|end\s+up|ending\s+up)\s+"
+    r"(?:completely\s+|totally\s+|fully\s+|all\s+|already\s+)?"
+    r"flat\b(?!\s*(?:out|broke|on|tyre|tire|white|screen|share|mate|rate|"
+    r"fee|line|lined|footed|handed|chested|earth|iron|pack|land))"
+    # (A2) verbs with no non-market reading in this frame.
+    r"|\bflatten(?:s|ed|ing)?\b"
+    r"|\bscal(?:e|es|ed|ing)\s+(?:in|out)\b"
+    r"|\bstopped\s+out\b",
+    re.IGNORECASE,
+)
+"""(A) A PREDICATIVE position state. See the block comment above.
+
+★ EARNED EXCLUSIONS, each from a pre-registered adversarial that broke an
+earlier draft of this regex rather than from imagination. "the movers will BE
+FLAT OUT until 6 p.m.", "we will BE FLAT BROKE by 5 p.m.", "I will BE FLAT ON
+my back until 10 a.m." all match `be + flat` and are ordinary English; the
+lookahead refuses them. `long` and `short` were in the first draft as
+predicative states ("go long") and were REMOVED: "this meeting could GO LONG
+before lunch" and "we are SHORT on time until 3 p.m." are the same frame in
+ordinary use, and no lookahead separates them without also refusing the
+genuine form. That is a deliberate false negative, pinned in the tests."""
+
+_SESSION_ACTION_DETERMINERS: frozenset[str] = frozenset(
+    {
+        "the", "a", "an", "my", "your", "our", "his", "her", "their", "its",
+        "this", "that", "these", "those", "each", "every", "all", "any",
+        "both", "half", "one", "two", "three", "some", "several", "few",
+        "first", "last", "final", "remaining", "rest", "open", "live",
+        "runner", "runners", "winning", "losing", "current", "existing",
+        "new", "whole", "entire", "single", "other", "same", "of", "to",
+    }
+)
+"""The CLOSED set of words that may stand between a transaction verb and its
+position-noun complement without breaking the government relation. Every
+member is a determiner, quantifier, ordinal or position-internal word — none
+carries a domain of its own. Same whitelist principle as
+_SESSION_NOUN_QUALIFIER_ALLOWED: an UNKNOWN intervening word is refused by
+default, which is what turns away "add to the GROCERY order", "hold my SPOT
+in line" and "we scale the RECIPE up"."""
+
+_SESSION_ACTION_ON_POSITION_RE = re.compile(
+    r"\b(?:close|closes|closed|closing|exit|exits|exited|exiting|"
+    r"cut|cuts|cutting|trim|trims|trimmed|trimming|"
+    r"hold|holds|held|holding|take|takes|taking|took|"
+    r"add(?:s|ed|ing)?\s+to|liquidat(?:e|es|ed|ing)|offload(?:s|ed|ing)?|"
+    r"dump|dumps|dumped|dumping|flatten(?:s|ed|ing)?)\s+"
+    r"(?:(?:" + "|".join(sorted(_SESSION_ACTION_DETERMINERS, key=len, reverse=True)) + r")\s+){0,3}"
+    r"(?:positions?|trades?|entries|entry|runners?|contracts)\b"
+    # A foreign HEAD noun following the position word means the position word
+    # was only an attributive modifier: "the ENTRY fee", "the ENTRY ramp",
+    # "the CONTRACT cleaners", "the TRADE show".
+    r"(?!\s+(?:fee|fees|ramp|road|form|forms|hall|way|door|level|levels|"
+    r"exam|test|code|deadline|window|requirement|show|shows|desk|cleaners?|"
+    r"lawyers?|price|prices|number|numbers|list|lists))",
+    re.IGNORECASE,
+)
+"""(B) A TRANSACTION VERB GOVERNING A POSITION NOUN. See the block comment.
+
+★ EARNED EXCLUSIONS. `order(s)` was in the first draft's noun set and was
+REMOVED — "ADD TO THE ORDER before 6 p.m." is a restaurant tab, and the
+determiner whitelist cannot help because "the" is legitimately in it. Singular
+`contract` was removed for the same reason ("close the contract by 5 p.m." is
+a business deal); plural `contracts` is kept, which is the futures reading.
+`open`, `enter` and `buy`/`sell` were removed from the VERB set: "OPEN the
+shop by 6 a.m.", "ENTER the building before 9 a.m." are ordinary, and their
+genuine trading uses are already carried by the noun co-factor. The trailing
+lookahead is what keeps "the ENTRY fee doubles after 8 p.m." and "the CONTRACT
+cleaners finish before 6 a.m." out."""
+
+_SESSION_NEGATED_TRADING_RE = re.compile(
+    r"\b(?:no|not|never|stop|stops|stopped|stopping|avoid|avoids|avoiding|"
+    r"quit|quits|cease|ceases|ceased|halt|halts|skip|skips|"
+    r"don'?t|do\s+not|doesn'?t|didn'?t)\s+"
+    r"(?:any\s+|all\s+|more\s+|new\s+|further\s+)?"
+    r"trad(?:e|es|ing)\b"
+    # ★ OBJECTLESS, checked as a frame rather than as a blacklist. What follows
+    # the gerund must be a clause boundary or a function word — never the start
+    # of a noun phrase. See _SESSION_INTRANSITIVE_CONTINUERS.
+    r"(?=\s*(?:$|[,.;:!?)—-]|\b(?:" + "|".join(
+        sorted(
+            {
+                "until", "till", "after", "before", "from", "between", "through",
+                "past", "during", "while", "unless", "once", "when", "than",
+                "at", "on", "in", "into", "by", "to", "for", "and", "or", "but",
+                "today", "again", "anymore", "yet", "now", "here", "live",
+                "that", "if", "so", "because", "all", "period",
+            },
+            key=len,
+            reverse=True,
+        )
+    ) + r")\b))",
+    re.IGNORECASE,
+)
+"""(C) A NEGATOR OR CESSATION VERB DIRECTLY GOVERNING A BARE, OBJECTLESS
+TRADE-GERUND — "NO TRADING until 9:30", "STOP TRADING after 11:30", "only
+watching, NOT TRADING, until 10 a.m."
+
+★ THE OBJECTLESS TEST IS THE MECHANISM, and the first draft got it wrong in a
+way worth recording. That draft blacklisted the object heads it could think of
+(`cards`, `places`, `shows`...). The pre-registered adversarial "we STOPPED
+TRADING BASEBALL CARDS after 3 p.m." walked straight through it — the head
+noun was two words away, and no blacklist of heads ever closes that. Replaced
+by the frame test above: a transitive use is followed by its object's
+determiner or modifier, an intransitive use by a preposition, a conjunction or
+a clause boundary. "stopped trading BASEBALL cards" is refused because
+"baseball" opens a noun phrase; "no trading UNTIL 9:30" passes because "until"
+cannot. That is a grammatical property, not a vocabulary one."""
+
+
+def _session_has_trading_action(norm: str) -> bool:
+    """Does this text command a TRADING ACTION — a verb acting on a position,
+    an entry/exit, or the act of trading itself?
+
+    This is the third-pass co-factor. It is consulted ONLY as an alternative
+    to _session_is_about_markets, and only inside the existing
+    _session_clock_does_work conjunct, so it can never admit a sentence whose
+    clock is a bare mention. See the block comment above for the three
+    constructions and why a verb LEXICON alone would have failed the same way
+    the four noun-lexicon drafts did."""
+    return (
+        _SESSION_POSITION_STATE_RE.search(norm) is not None
+        or _SESSION_ACTION_ON_POSITION_RE.search(norm) is not None
+        or _SESSION_NEGATED_TRADING_RE.search(norm) is not None
+    )
+
+
 def _session_is_about_markets(norm: str) -> bool:
     """The co-factor the clock and named-session markers require: is this text
     about a market thing?
@@ -1296,8 +1485,17 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         # markets AND the clock is doing work (selecting/delimiting), or when
         # the clock IS the whole condition object. Mere mention never counts —
         # see _session_clock_does_work for why the lexicon alone could not.
+        # ★ THIRD PASS. The co-factor is satisfied by market CONTEXT (a noun)
+        # OR by a trading ACTION (a verb acting on a position). A sentence
+        # whose market-ness lives entirely in its verb — "be flat by 3:50
+        # p.m.", "close every position by 11 a.m." — is a trading instruction
+        # whether or not it names an instrument; 13 such genuine teachings
+        # were being rejected. _session_clock_does_work is UNCHANGED and still
+        # required, so this widens the co-factor only, never the clock-role
+        # test. See _session_has_trading_action.
+        market_cofactor = about_markets or _session_has_trading_action(norm)
         meridiem_with_role = has_meridiem and (
-            clock_is_whole_object or (about_markets and _session_clock_does_work(norm, clock_tokens))
+            clock_is_whole_object or (market_cofactor and _session_clock_does_work(norm, clock_tokens))
         )
         tier1 = _SESSION_CLOCK_MARKET_CONTEXT_RE.search(norm)
         # ★ SECOND-PASS: tier 2 now ALSO requires market context. Timezone +
