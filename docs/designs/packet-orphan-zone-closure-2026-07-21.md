@@ -1,6 +1,7 @@
 # RATIFY PACKET — orphan-zone closure (the gap that blocks the engine from loading)
 
-**STATUS: STAGED.** Authorization: **R-175 §3** (ordered as the session lane's scoped follow-up).
+**STATUS: RATIFIED — OPTION A CHOSEN (R-185 §2). SEQUENCED AFTER THE FIX WAVE LANDS** (same file,
+one writer, per R-184). Authorization: **R-175 §3 / R-183 §2 / R-185 §2** (ordered as the session lane's scoped follow-up).
 Engine-instrument class. Pre-live; the sealed 77 untouched. Independent grade is the gate.
 
 **★ THIS IS THE LAST BLOCKER ON THE ENFORCEMENT FLAG.** With all pins active the engine **correctly
@@ -40,6 +41,40 @@ evaluate**.
 
 **NOT touched:** the sealed 77 · promotion gates · fill/P&L/sizing · tier-a · the session role
 resolver (closed honest-partial — leave it) · `swing`'s flag · the enforcement build itself.
+
+## 2a. ★ THE CHOICE IS MADE — OPTION A, ON THE DATA (R-185 §2)
+
+**The census answered blocking item 1, and the choice followed the numbers rather than convenience:**
+`lunch_blackout` binds **0** conditions; `overnight` binds **1**, and that one is `role=confluence`,
+**proven never evaluated on 149,196 real bars.** **Effective demand for BOTH options: ZERO.**
+
+**Four grounds, as ruled:** (i) **effective demand is zero for both** · (ii) **the demand-driven
+law** — covering zones no trader in this corpus teaches is **building unrequested behaviour** ·
+(iii) **removal is the smaller change on a live file** · (iv) ★ **THE BRIDGE IS NOT BURNED** — the
+window checkers still exist, so if a tier-a/c corpus ever teaches lunch-avoidance or overnight logic,
+**Option B becomes a small demand-justified packet THEN**, and the census artifact records exactly
+what to revisit and why.
+
+**★ WHY OPTION B WAS UNPAYABLE FOR `overnight` — kept on the record so nobody re-opens it casually:**
+its keyword list bundles **incompatible clocks** that do not intersect into one interval · **three
+conflicting definitions already live in this repo**, with the engine disagreeing with its own only
+real corpus teaching by **2h at the open and 2.5h at the close** · and `OVERNIGHT_END_MIN = 1860`
+**is not a minute-of-day**, so the standard predicate shape would **silently drop more than half the
+intended window while wearing `approximation=False`.**
+**Sounds precise, isn't — and it would PROBE CLEAN.**
+
+## 2b. ★ ADDED SCOPE (R-185 §2-3) — both ride this packet
+
+1. **THE `:334` TRIPWIRE RETIRES WITH ITS SUBJECT.** Its premise is *"this phrase binds
+   `lunch_blackout`"* — **Option A kills the emission, so the premise dies.** Rewrite it to assert
+   the new truth (the phrase no longer binds; nothing emits an uncovered zone). ★ **It retires BY
+   DESIGN, not by accident — that is the whole difference between a self-destructing instrument and
+   one somebody quietly deleted.**
+2. **★ THE `:747` COMMENT IS FACTUALLY WRONG AND CORRECTS HERE.** It reads *"26 of 27 corpus-wide
+   WAIT_SESSION conditions never bind."* **The truth is 27 of 27 effectively never bind** — the
+   single binder binds an **orphan zone**, so it was never real. **Correct it, and record that this
+   STRENGTHENS the role-aware resolver's case: the 8 real bound rows all came from the NEW lane; the
+   LEGACY path binds nothing real in this corpus.**
 
 ## 3. The exact change, scope-locked — pick ONE, and justify it
 

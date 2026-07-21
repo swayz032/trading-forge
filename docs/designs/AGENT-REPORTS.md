@@ -4,6 +4,29 @@
 
 ---
 
+## AR-177 · 2026-07-21 · FIX WAVE LANDED `b230f6e9` — **it found a THIRD lying mode I never named, and it WITHDREW a claim rather than weaken a guard.** ★★ **But its verification is INCOMPLETE (runs in flight at write-time, owner now dead) and D5 IS UNFINISHED.** ★ **My predicted collision NEVER MATERIALIZED — stated plainly.** Orphan closure dispatched.
+
+**1. ★★ THE THIRD LYING MODE — worse than the two we knew, and it found it itself.** `_ENFORCED_OK` was a **bare bool**, so **a pass under `PINS=a` made a later ALL-PINS load return CLEAN without running b or b2 — while b2 genuinely fails today.** ★ **That is the cache turning "pins a+b held" into "enforcement passed" AT RUNTIME — the exact conflation the labeling discipline exists to prevent, achieved by a variable instead of a sentence.** Cache is now keyed on the pin set it covered. Mode 2 was also its own find: `collect_violations` skipped pin (a) when dispatch was absent **while `enforcement_status` reported it ACTIVE with `ok=True` over a planted second-router violation.** All three reproduced against the baseline **before** fixing; 11 new tests fail there and pass now.
+
+**2. ★★ D2's DECISIVE RECEIPT, and the second sabotage is the better one.** With flag-OFF per-bar output forced all-False (1 signal → 0): **the OLD test PASSED and the NEW test FAILED.** ★ **Then it planted a second sabotage DOWNSTREAM of the arrays — invisible to cross-arm equality — and caught it with an independent-recomputation leg.** **It attacked its own new test with a shape its own new test could have missed.**
+
+**3. ★★★ AND IT WITHDREW A CLAIM RATHER THAN WEAKEN A GUARD.** On flag-OFF **byte-identity**: *"does not hold as a provable claim and I did not make it hold. Nothing in-process can diff against a pre-packet engine. I WITHDREW the claim rather than weaken a guard, and replaced it with two narrower statements that are each actually proven with a control."* ★ **The brief's central prohibition was "reword the claim or strengthen the proof — NEVER lower the bar." It did the first, on the item where lowering would have been easiest and invisible.**
+
+**4. D5 RE-DERIVED FROM THE UNIVERSE — 987 CONFIRMED** by two independent paths that must agree, over all **6450** entry_conditions. **It did not trust my number and it matched.** ★ **AND IT WENT PAST THE BRIEF:** *"the 987 still isn't the whole never-evaluated population — the **2694 `role=='confluence'` conditions are also never evaluated**."* **It recorded them in the artifact (`also_never_evaluated_outside_the_987 = 2694`, verified present by me) rather than folding them into §6a's trigger-role denominator, and flagged for your ruling.** **That is the completeness law applied to the correction FOR the completeness law.** **Your ruling wanted.**
+
+**5. D6 — IT FOUND A SIBLING I DID NOT NAME, and cured it structurally.** The header *"BOTH POLARITIES ON EVERY ENFORCED BINDING"* was **false — `INVALIDATE` declares an enforced primitive and appeared in NEITHER polarity test.** ★ **And rather than lengthen the hand-list, it DERIVES the population from `FAMILY_META` and fails if any family escapes both lists — applying the D5 lesson to the D6 fix.**
+
+**6. ⚠ WHAT IS NOT DONE, and I am not calling this wave complete.**
+- **★ ITS VERIFICATION IS INCOMPLETE.** It wrote *"Both runs are in flight… I'll report the deselection alongside the diffed failure sets"* — **then completed. Per our own law those runs are PRESUMED DEAD and the diffed failure sets were never delivered.** **I hold no receipt for them.**
+- **★ D5 IS UNFINISHED: `spec_family_bindings.py:662` still reads "921"** — the prior wave corrected 987 in the delta script (8 sites) but **never opened that file.** Verified by me just now.
+- Its suite claim is **more precise than the old one and I credit it**: **collection is fine (~6800 tests, seconds)**; the stall is **one named test** (`test_cloud_backend.py::…test_raises_timeout_if_iae_hangs`, >420s, bisected, pre-existing, quantum/IBM cloud). **That corrects trap #3 rather than repeating it.**
+
+**7. ★ MY COLLISION PREDICTION DID NOT MATERIALIZE — said plainly.** I held the orphan implementation because the fix wave *"MUST edit `spec_family_bindings.py:662` under D5."* **It never touched that file at all** (4 files, none contested). **So the hold prevented a collision that would not have happened.** ★ **I still judge the hold correct — the requirement was real, unverifiable in advance, and the census ran in parallel and delivered the decision at zero cost — but I am not going to claim I averted a disaster. I averted a risk that did not fire.**
+
+**8. ORPHAN CLOSURE DISPATCHED (Option A), receipt held here** — and **I folded the missed `:662` correction into it**, since that wave opens the same file anyway: **three visits to one file become two.** It is told to **re-derive 987 itself and report any disagreement rather than adopt either figure.** Also carrying: the `:334` tripwire **rewrite** (it retires with its subject), the `:747` correction (**27 of 27**), and *"if a run is still going when you write, it will be presumed dead"* — **written in after this wave's incomplete return.**
+
+**Holds:** flags OFF · engine still refuses under all pins **until this lands** · the 77 sealed.
+
 ## AR-176 · 2026-07-21 · ★★★ **CENSUS RETURNED AND THE DATA IS DECISIVE: `lunch_blackout` = 0 conditions · `overnight` = 1, and that 1 is NEVER EVALUATED. Effective count for BOTH options: ZERO.** ★★ **And the headline nobody was looking for: exact-phrase session binding is 1 of 27 — AND THAT 1 IS THE FAKE ONE.** ★ Recommending **OPTION A**. **The choice is yours (R-183 §2).**
 
 **1. ★★ THE NUMBERS, derived through the PRODUCTION resolvers rather than re-implemented** (*"so census and engine cannot disagree"*), on **16 unique specs / 155 unique conditions**, **content-hash deduped** — it caught the known double-glob defect itself (2 mirrored files removed):
