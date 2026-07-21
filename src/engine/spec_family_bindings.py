@@ -46,6 +46,7 @@ from __future__ import annotations
 import os
 import re
 from dataclasses import dataclass, field, replace
+from itertools import pairwise
 
 # The ONLY import beyond stdlib in this module, and it is stdlib-only itself (importlib, os,
 # dataclasses) — the PURITY CONTRACT above (zero I/O, no DataFrame access, no DB reads,
@@ -1847,6 +1848,30 @@ def _session_best_real_zone_for_range(start_min: int, end_min: int) -> str | Non
     return best_zone
 
 
+def _session_anchor_sequence_wraps_midnight(clock_anchor_minutes: list[int]) -> bool:
+    """True iff the CLOCK anchors, IN TEXT ORDER, ever step backwards in the
+    day — the signature of a window that wraps midnight ("from 4 p.m. until
+    9:30 a.m.").
+
+    Text order is load-bearing and is why this cannot be done with min/max:
+    min/max discard the order that carries the wrap, and for a wrapping window
+    they return its interior endpoints, i.e. its COMPLEMENT. See
+    SESSION_WRAPPING_WINDOW_UNBOUND_REASON for the measured proof.
+
+    ★ CLOCK anchors only. The anchor-PHRASE minute (`market open` ->
+    _SESSION_MARKET_OPEN_MINUTE) is deliberately excluded: it is a descriptive
+    gloss, not a sequenced endpoint, and it can appear anywhere in the
+    sentence relative to the endpoints it describes. Feeding it in produced
+    phantom wraps on two genuine corpus teachings — see the comment at the
+    `clock_anchor_minutes` declaration for both measurements.
+
+    Equal adjacent anchors are NOT a wrap: a text may legitimately restate the
+    same instant ("from 9:30 ... so, from 9:30 to 9:35"), and one real corpus
+    row does exactly that. Only a STRICT decrease is a wrap. A single anchor
+    can never wrap."""
+    return any(b < a for a, b in pairwise(clock_anchor_minutes))
+
+
 def _session_clock_token_minutes(hour: int, minute: int, meridiem: str | None) -> int:
     """Minute-of-day for a parsed clock token.
 
@@ -1883,7 +1908,44 @@ class SessionRoleResult:
     recognized but no confident/computable window exists (ambiguous session
     name, or a session-anchored LEVEL reference rather than a time window —
     see module comment above)."""
+    refusal: str | None = None
+    """A NAMED reason this text was deliberately not zone-mapped, when the
+    refusal is more specific than the generic recognized-no-window bucket.
+    Currently only SESSION_WRAPPING_WINDOW_UNBOUND_REASON. None means "no
+    special refusal applies" — the pre-existing (recognized, zone) contract
+    is unchanged for every caller that does not read this field."""
 
+
+SESSION_WRAPPING_WINDOW_UNBOUND_REASON: str = "wrapping_window_unrepresentable"
+"""A taught window that WRAPS MIDNIGHT (16:00 -> 09:30). Refused by name, and
+NEVER complement-bound.
+
+★ WHY THIS EXISTS — the measured defect, not a hypothetical. The zone was
+derived from `min(anchor_minutes), max(anchor_minutes)`. For a wrapping
+window those two values are the window's INTERIOR endpoints, so the derived
+span is exactly the COMPLEMENT of what the text taught:
+
+    "from 4:00 p.m. eastern until 9:30 a.m. eastern on the NYSE"
+        tokens 960, 570  ->  min/max span (570, 960) = 09:30-16:00 = the RTH
+        DAY session  ->  bound ny_pm.  The text taught the OVERNIGHT range.
+
+★ AND NOTE WHAT THIS IS *NOT*. The originating corpus row was diagnosed as a
+colon-less-token defect ("400 p.m." never matched `_SESSION_CLOCK_TOKEN_RE`).
+That diagnosis was wrong at the root. The colon-less miss only degraded that
+row to a SINGLE anchor (570), which took the `lo == hi` branch into ny_am.
+The inversion above reproduces with perfectly well-formed COLON-FUL tokens
+and no colon-less token anywhere. Fixing the tokenizer alone would have moved
+that row from ny_am to ny_pm — still the complement, still wrong. `min/max`
+is the defect; the tokenizer merely chose which wrong answer appeared.
+
+★ REFUSED rather than REPRESENTED, deliberately. A window that wraps midnight
+IS an overnight window, and `overnight` is precisely one of the two orphan
+zones `is_in_killzone()` can never evaluate True for. Representing the wrap
+(as two intervals) could therefore only ever bind a FRAGMENT of the taught
+range to a day-session zone — the same class of error, merely smaller. This
+module's standing rule selects the refusal: "a miss is honest, a false
+positive silently binds the WRONG window."
+"""
 
 SESSION_TEACHING_UNBOUND_REASON: str = "session_teaching_recognized_no_computable_window"
 """Distinct from FAMILY_META["WAIT_SESSION"].unbound_reason
@@ -1906,6 +1968,29 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
 
     recognized = False
     anchor_minutes: list[int] = []
+    # ★ CLOCK tokens ONLY, in text order — the input to the midnight-wrap test.
+    # Deliberately EXCLUDES the anchor-phrase minute below, and that exclusion
+    # is the whole point: a clock token is a SEQUENCED ENDPOINT of the taught
+    # range ("from 4:00 p.m. until 9:30 a.m."), whereas an anchor phrase is a
+    # descriptive GLOSS that can sit anywhere in the sentence relative to the
+    # endpoints it describes.
+    #
+    # ★ CAUGHT BY TEST, NOT BY REVIEW — twice, and both times the same wrong
+    # premise: that "the order anchors were discovered" is "the order they
+    # appear in the text."
+    #   1. Discovery order put the anchor phrase FIRST regardless of position.
+    #      "after 3:00 a.m. ... up into New York market open ... 9:30 a.m. EST"
+    #      gave [570, 180, 570] — a phantom backwards step.
+    #   2. Sorting by text position fixed that but not the real problem.
+    #      "... that range from 9:30 to 9:45. That's the first 15 minutes of
+    #      the New York Stock Exchange open ..." puts a 570-minute GLOSS at
+    #      offset 104, AFTER the 585 endpoint: [570, 585, 570]. Still a
+    #      phantom wrap, because a gloss was being read as an endpoint.
+    # Together these refused genuine non-wrapping corpus teachings and moved
+    # the graded bound-and-concrete count (8 -> 6, then 8 -> 7). The graded
+    # constants are owned elsewhere and must not move by side-effect; that
+    # they moved is exactly how both bugs announced themselves.
+    clock_anchor_minutes: list[int] = []
 
     if SESSION_ANCHOR_PHRASE_RE.search(norm):
         recognized = True
@@ -1985,7 +2070,10 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         if meridiem_with_role or tier1 or tier2:
             recognized = True
             for hour, minute, mer in parts:
-                anchor_minutes.append(_session_clock_token_minutes(hour, minute, mer))
+                # `parts` follows finditer order, which IS text order.
+                tok_minute = _session_clock_token_minutes(hour, minute, mer)
+                anchor_minutes.append(tok_minute)
+                clock_anchor_minutes.append(tok_minute)
 
     # The two weakest markers keep the BROAD lexicon as their market co-factor
     # (the strong set measurably cost a genuine blind-graded corpus row that
@@ -2042,13 +2130,25 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         recognized = True
 
     zone: str | None = None
+    refusal: str | None = None
     if anchor_minutes:
-        lo, hi = min(anchor_minutes), max(anchor_minutes)
-        if lo == hi:
-            hi = lo + 1
-        zone = _session_best_real_zone_for_range(lo, hi)
+        if _session_anchor_sequence_wraps_midnight(clock_anchor_minutes):
+            # ★ The taught window runs backwards through midnight. `min`/`max`
+            # cannot represent it — they yield its COMPLEMENT (see
+            # SESSION_WRAPPING_WINDOW_UNBOUND_REASON). Refuse by name; never
+            # fall through to the span derivation below.
+            refusal = SESSION_WRAPPING_WINDOW_UNBOUND_REASON
+        else:
+            # Non-wrapping: the sequence is monotone non-decreasing, so
+            # (first, last) == (min, max) identically. Kept as min/max so this
+            # branch is provably byte-identical to the pre-existing behaviour
+            # for every input that is not a wrap.
+            lo, hi = min(anchor_minutes), max(anchor_minutes)
+            if lo == hi:
+                hi = lo + 1
+            zone = _session_best_real_zone_for_range(lo, hi)
 
-    return SessionRoleResult(recognized=recognized, zone=zone)
+    return SessionRoleResult(recognized=recognized, zone=zone, refusal=refusal)
 
 
 def session_role_resolver_enabled() -> bool:
@@ -2222,12 +2322,65 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
                 reason=None,
                 session_zone=zone,
             )
+        # ── ORPHAN-ZONE REFUSAL — CONSULTED BEFORE THE ROLE RESOLVER.
+        # (packet-session-refusal-precedence-2026-07-21.md, scope item (i).)
+        #
+        # ★ THIS ORDER IS THE FIX. The refusal used to sit BELOW the role
+        # resolver, so enabling TF_SESSION_ROLE_RESOLVER_ENABLED converted a
+        # correct refusal into a confident bind. MEASURED on 2 of the 9
+        # refusal-path objects in the 395-object WAIT_SESSION corpus:
+        #
+        #   flag OFF -> bindable=False, session_zone_refused_uncomputable_window:overnight
+        #   flag ON  -> bindable=True,  zone=ny_am        <-- the RTH day session,
+        #                                                     the COMPLEMENT of the
+        #                                                     overnight range taught
+        #
+        #   "new york market open or pre market"
+        #   "overnight/pre-market range: ... from 400 p.m. EST ... until 9:30 a.m. EST ..."
+        #
+        # THE REFUSAL IS LOAD-BEARING AND MUST SURVIVE THE FLAG. A phrase
+        # naming a zone this engine has no evaluable window for is refused in
+        # EVERY flag state; no flag may promote it to a bind. The role
+        # resolver is a coarse containment proxy — it is strictly weaker
+        # evidence than an explicit named refusal, so it does not get to
+        # overturn one.
+        #
+        # ★ FLAG-OFF BEHAVIOUR IS UNCHANGED BY THIS REORDERING, provably: with
+        # the flag OFF the resolver block below never executes, so the two
+        # blocks cannot race. Asserted by test, not by this argument.
+        #
+        # It is REFUSED, not silently dropped: the reason names the zone, so
+        # this is distinguishable from "we never recognized it" in every
+        # downstream ledger. Before the orphan-zone closure these phrases
+        # returned bindable=True with approximation=False and a zone
+        # is_in_killzone() returned False for on all 1,440 minutes of the day.
+        #
+        # ★ approximation is True, never False. The packet forbids an
+        # approximation=False on these zones by name — an exactness claim is
+        # exactly what the defect wore. It is inert for every aggregate:
+        # `approximation_used` and spec_producer's binding-approximation rate
+        # both filter on `bindable and executed`, and this row is neither.
+        refused = refused_session_zone(obj)
+        if refused is not None:
+            return ConditionBinding(
+                condition_id=cond_id,
+                type=cond_type,
+                role=role,
+                object=obj,
+                bindable=False,
+                primitive=None,
+                approximation=True,
+                executed=False,
+                reason=session_refusal_reason(refused),
+                session_zone=None,
+            )
+
         # Role-Aware Session Resolver (see module comment above
         # classify_session_role) — only consulted AFTER the exact-phrase
-        # matcher above has already missed, and only when explicitly
-        # enabled. Flag OFF (default): falls straight through to the
-        # pre-existing unbound return below, byte-identical to before this
-        # packet touched the file.
+        # matcher above has already missed AND the orphan-zone refusal above
+        # has declined to fire, and only when explicitly enabled. Flag OFF
+        # (default): falls straight through to the pre-existing unbound
+        # return below, byte-identical to before this packet touched the file.
         if session_role_resolver_enabled():
             role_result = classify_session_role(obj)
             if role_result.zone is not None:
@@ -2249,6 +2402,27 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
                     reason=None,
                     session_zone=role_result.zone,
                 )
+            if role_result.refusal is not None:
+                # ★ A taught window that WRAPS MIDNIGHT. Refused BY NAME and
+                # never complement-bound — see
+                # SESSION_WRAPPING_WINDOW_UNBOUND_REASON for the measurement
+                # showing min/max derives the complement of such a window.
+                # Distinct reason from the generic recognized-no-window
+                # bucket, so a downstream ledger can tell "we cannot
+                # represent this shape" from "we have no window for this
+                # name."
+                return ConditionBinding(
+                    condition_id=cond_id,
+                    type=cond_type,
+                    role=role,
+                    object=obj,
+                    bindable=False,
+                    primitive=None,
+                    approximation=False,
+                    executed=False,
+                    reason=role_result.refusal,
+                    session_zone=None,
+                )
             if role_result.recognized:
                 # Genuine session teaching, but no window session_windows.py
                 # can compute (ambiguous named session, or a session-range
@@ -2268,25 +2442,13 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
                     reason=SESSION_TEACHING_UNBOUND_REASON,
                     session_zone=None,
                 )
-        # ── ORPHAN-ZONE REFUSAL (packet-orphan-zone-closure-2026-07-21.md,
-        # Option A). Consulted LAST, so it changes no path that already
-        # produced an answer: the exact-phrase matcher has missed (these
-        # phrases were removed from SESSION_KEYWORDS) and the role resolver
-        # has neither bound nor recognized. What remains is a phrase we DO
-        # recognize as naming a session concept for which this engine has no
-        # evaluable window — `lunch_blackout` / `overnight`.
-        #
-        # It is REFUSED, not silently dropped: the reason names the zone, so
-        # this is distinguishable from "we never recognized it" in every
-        # downstream ledger. Before the closure these phrases returned
-        # bindable=True with approximation=False and a zone is_in_killzone()
-        # returned False for on all 1,440 minutes of the day.
-        #
-        # ★ approximation is True, never False. The packet forbids an
-        # approximation=False on these zones by name — an exactness claim is
-        # exactly what the defect wore. It is inert for every aggregate:
-        # `approximation_used` and spec_producer's binding-approximation rate
-        # both filter on `bindable and executed`, and this row is neither.
+        # ★★ HISTORICAL PROVENANCE OF THE ORPHAN-ZONE REFUSAL — retained here
+        # when the refusal block itself moved ABOVE the role resolver
+        # (packet-session-refusal-precedence-2026-07-21.md scope item (i)).
+        # The refusal now fires EARLIER, so it strictly supersedes what is
+        # described below; the measurement is kept because it is the receipt
+        # for the orphan-zone closure's own behaviour delta, and deleting a
+        # receipt because its code moved would lose the only record of it.
         #
         # ★★ MEASURED BEHAVIOUR DELTA — DECLARED HERE, NOT DISCOVERED DOWNSTREAM.
         # The packet declared Option A as "no behaviour change", on a census run
@@ -2316,20 +2478,6 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         # conditions, that is a SEPARATE decision about unbound spine handling
         # and belongs in its own packet; it is not something to fix by keeping an
         # always-False gate alive.
-        refused = refused_session_zone(obj)
-        if refused is not None:
-            return ConditionBinding(
-                condition_id=cond_id,
-                type=cond_type,
-                role=role,
-                object=obj,
-                bindable=False,
-                primitive=None,
-                approximation=True,
-                executed=False,
-                reason=session_refusal_reason(refused),
-                session_zone=None,
-            )
         return ConditionBinding(
             condition_id=cond_id,
             type=cond_type,

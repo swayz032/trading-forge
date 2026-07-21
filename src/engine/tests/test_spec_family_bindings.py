@@ -11,6 +11,8 @@ from __future__ import annotations
 
 import json
 import os
+import pathlib
+import random
 import re
 from datetime import UTC
 
@@ -21,9 +23,12 @@ from src.engine.spec_family_bindings import (
     MIN_SPINE_BOUND_RATIO,
     SESSION_KEYWORDS,
     SESSION_TEACHING_UNBOUND_REASON,
+    SESSION_WRAPPING_WINDOW_UNBOUND_REASON,
+    _session_anchor_sequence_wraps_midnight,
     bind_condition,
     classify_session_role,
     compile_binding_plan,
+    refused_session_zone,
     resolve_session_keyword,
 )
 
@@ -2610,3 +2615,220 @@ def test_refused_zone_constants_survive_so_the_bridge_is_not_burned():
     )
     # Positive control proving the probe above is live, not dead.
     assert any(sw.is_in_killzone(base + timedelta(minutes=i), "ny_am") for i in range(24 * 60))
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# packet-session-refusal-precedence-2026-07-21.md
+#
+# THE DEFECT, VERBATIM, AS MEASURED ON BOTH ARMS BEFORE THE FIX:
+#   TF_SESSION_ROLE_RESOLVER_ENABLED=false -> bindable=False,
+#       reason=session_zone_refused_uncomputable_window:overnight   <- honest
+#   TF_SESSION_ROLE_RESOLVER_ENABLED=true  -> bindable=True, zone=ny_am  <- WRONG
+#
+# An honest refusal replaced by a confidently wrong bind, behind the flag the
+# mission intends to turn ON. The flag is OFF in production; this is a
+# FLAG-ON BLOCKER and these tests are what gate its promotion.
+# ═══════════════════════════════════════════════════════════════════════════
+
+# The 2 corpus objects measured as PREEMPTED — the role resolver overturned
+# their orphan-zone refusal. Both bound `ny_am` (07:00-10:00 ET, inside the
+# RTH day session) while naming an OVERNIGHT concept: the complement.
+_PREEMPTED_CORPUS_OBJECTS = [
+    "new york market open or pre market",
+    (
+        "overnight/pre-market range: we are going to focus primarily when the market "
+        "actually closes until when the market opens, which is going to be from 400 p.m. "
+        "EST all the way until 9:30 a.m. EST -- identify the highest point of price action "
+        "(overnight high) and the lowest point of price action (overnight low)"
+    ),
+]
+
+
+@pytest.mark.parametrize("obj", _PREEMPTED_CORPUS_OBJECTS)
+@pytest.mark.parametrize("flag_state", ["false", "true"])
+def test_orphan_zone_refusal_survives_the_role_resolver_flag(monkeypatch, obj, flag_state):
+    """★ SCOPE ITEM (i). THE REFUSAL IS LOAD-BEARING.
+
+    No flag state may convert a correct refusal into a bind. Parametrized over
+    BOTH arms deliberately: a test that only ran the OFF arm would have passed
+    against the defect, because the defect lived exclusively in the ON arm."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", flag_state)
+    binding = bind_condition({"id": "p:1", "type": "WAIT_SESSION", "object": obj, "role": "spine"})
+    assert binding.bindable is False, (
+        f"flag={flag_state}: a refused session zone became BINDABLE (zone={binding.session_zone}). "
+        "This is the defect this packet closed."
+    )
+    assert binding.session_zone is None
+    assert binding.reason == "session_zone_refused_uncomputable_window:overnight"
+
+
+def _all_wait_session_objects() -> set[str]:
+    """Every distinct WAIT_SESSION `object` string reachable in the tracked
+    docs/ corpora. Computed, never hardcoded — a hand-copied list would be a
+    fabricated-safety claim about a corpus it no longer tracks."""
+    root = pathlib.Path(__file__).resolve().parents[3] / "docs"
+    found: set[str] = set()
+    for path in root.rglob("*.json"):
+        try:
+            doc = json.loads(path.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        stack = [doc]
+        while stack:
+            node = stack.pop()
+            if isinstance(node, dict):
+                if node.get("type") == "WAIT_SESSION" and node.get("object"):
+                    found.add(str(node["object"]))
+                stack.extend(node.values())
+            elif isinstance(node, list):
+                stack.extend(node)
+    return found
+
+
+def test_both_flag_arms_agree_on_every_refusal_path_object(monkeypatch):
+    """The refusal set is closed under the flag — census-sized, not instance-sized.
+
+    Boundary printed with the verdict: all 9 corpus objects that reach the
+    refusal path (exact-phrase matcher misses AND a refused zone is named)."""
+    all_objects = _all_wait_session_objects()
+    if not all_objects:
+        pytest.skip("docs/ corpora unavailable in this checkout")
+    assert len(all_objects) == 395, f"WAIT_SESSION object census moved: {len(all_objects)} (expected 395)"
+    refusal_path = [
+        o for o in all_objects
+        if resolve_session_keyword(o) is None and refused_session_zone(o) is not None
+    ]
+    assert len(refusal_path) == 9, f"refusal-path census moved: {len(refusal_path)} (expected 9)"
+    disagreements = []
+    for obj in refusal_path:
+        arms = {}
+        for state in ("false", "true"):
+            monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", state)
+            b = bind_condition({"id": "p:2", "type": "WAIT_SESSION", "object": obj, "role": "spine"})
+            arms[state] = (b.bindable, b.reason, b.session_zone)
+        if arms["false"] != arms["true"]:
+            disagreements.append((obj[:60], arms))
+    assert not disagreements, f"flag changed the verdict on {len(disagreements)}/9: {disagreements}"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        # ★ COLON-FUL tokens. These prove the wrapping defect is NOT the
+        # colon-less-token defect it was originally diagnosed as: every token
+        # here parses perfectly, and min/max still derived the COMPLEMENT.
+        "trade the range from 4:00 p.m. eastern until 9:30 a.m. eastern on the NYSE",
+        "we trade the ES range from 6:00 p.m. until 3:00 a.m. eastern",
+        "from 11:00 p.m. to 2:00 a.m. eastern the market is quiet, avoid entries on ES",
+    ],
+)
+def test_wrapping_window_is_refused_by_name_never_complement_bound(monkeypatch, text):
+    """★ SCOPE ITEM (ii). A window that wraps midnight is REFUSED with a named
+    reason, never bound to the complement of what it taught.
+
+    Measured before the fix (flag ON):
+        "from 4:00 p.m. ... until 9:30 a.m." -> min/max span (570, 960) -> ny_pm
+        "from 11:00 p.m. to 2:00 a.m."       -> min/max span (120, 1380) -> ny_am
+    Both are day-session zones; both texts teach an overnight range."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    result = classify_session_role(text)
+    assert result.zone is None, f"complement-bound to {result.zone!r}: {text!r}"
+    assert result.refusal == SESSION_WRAPPING_WINDOW_UNBOUND_REASON
+    binding = bind_condition({"id": "p:3", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None
+    assert binding.reason == SESSION_WRAPPING_WINDOW_UNBOUND_REASON
+
+
+@pytest.mark.parametrize(
+    "label,sequence,wraps",
+    [
+        ("ends exactly at midnight (22:00 -> 00:00)", [1320, 0], True),
+        ("starts exactly at midnight (00:00 -> 02:00)", [0, 120], False),
+        ("same minute restated is not a wrap", [570, 570], False),
+        ("single anchor can never wrap", [570], False),
+        ("no anchors at all", [], False),
+        ("monotone three-token span", [180, 570, 570], False),
+        ("backwards step anywhere in the sequence", [570, 585, 120], True),
+        ("both boundary minutes of the day", [0, 1439], False),
+        ("full reverse across the day", [1439, 0], True),
+    ],
+)
+def test_midnight_boundary_of_the_wrap_representation(label, sequence, wraps):
+    """★ The representation owes its own tests, including the midnight
+    boundary (packet scope item (ii)). Minute-of-day domain is [0, 1439];
+    both endpoints are exercised."""
+    assert _session_anchor_sequence_wraps_midnight(sequence) is wraps, label
+
+
+def test_wrap_test_never_fires_on_a_monotone_sequence():
+    """Reconciliation against something OUTSIDE the wrap test's own pipeline:
+    sortedness. A monotone non-decreasing sequence is BY DEFINITION not a
+    wrap, so any monotone input firing the test is a defect regardless of what
+    the corpus says. 2000 pseudo-random sequences, fixed seed."""
+    rng = random.Random(7)
+    for _ in range(2000):
+        seq = sorted(rng.randint(0, 1439) for _ in range(rng.randint(1, 5)))
+        assert not _session_anchor_sequence_wraps_midnight(seq), seq
+
+
+def test_orphan_zone_refusal_outranks_the_wrapping_refusal(monkeypatch):
+    """Both gates can fire on one text. The ORPHAN-ZONE refusal wins, because
+    it is the more specific claim: it names the zone, where the wrapping
+    refusal only names the shape. Pins the precedence so a later reorder is
+    loud."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    text = "the overnight range on ES is quiet from 11:00 p.m. to 2:00 a.m. eastern, avoid entries"
+    assert classify_session_role(text).refusal == SESSION_WRAPPING_WINDOW_UNBOUND_REASON, (
+        "positive control: this text must genuinely trip the wrapping gate too, "
+        "or the precedence assertion below is vacuous"
+    )
+    binding = bind_condition({"id": "p:4", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.reason == "session_zone_refused_uncomputable_window:overnight"
+
+
+@pytest.mark.parametrize(
+    "text,zone",
+    [
+        ("trade only from 9:30 a.m. to 10:00 a.m. eastern on the NYSE", "ny_am"),
+        ("the london killzone runs from 2:00 a.m. until 5:00 a.m. eastern", "london"),
+        ("we only take entries between 1:30 p.m. and 4:00 p.m. eastern on ES", "ny_pm"),
+        ("focus on price action from 10:00 a.m. through 11:00 a.m. eastern in the market", "silver_bullet"),
+    ],
+)
+def test_non_wrapping_window_teachings_still_bind_their_zone(monkeypatch, text, zone):
+    """The refusal must not eat genuine teaching. Independent synthetic
+    control, one per real killzone; 4/4 bound before AND after."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    result = classify_session_role(text)
+    assert result.refusal is None
+    assert result.zone == zone, f"lost a genuine teaching: {text!r} -> {result.zone!r}"
+
+
+def test_anchor_phrase_gloss_is_not_read_as_a_range_endpoint(monkeypatch):
+    """★ REGRESSION PIN for the two bugs this packet's own first cuts shipped
+    into test, both from one wrong premise: that discovery order is text order.
+
+    An anchor PHRASE ("market open" -> 9:30) is a descriptive gloss and may sit
+    anywhere relative to the clock tokens it describes. Feeding it into the
+    ordered wrap test produced PHANTOM wraps on genuine, non-wrapping corpus
+    teachings and moved the graded bound-and-concrete count (8 -> 6, then
+    8 -> 7). The graded constants are owned by the population-completion unit
+    and must never move by side-effect — that they moved is how both bugs
+    announced themselves."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    # Gloss BETWEEN the endpoints: text order 180, 570(gloss), 570 — monotone.
+    between = (
+        "after 3:00 a.m. Eastern time all the way up into New York market open, "
+        "which is going to be 9:30 a.m. EST, you want to find the highest point of price action"
+    )
+    # Gloss AFTER both endpoints: naive text order 570, 585, 570(gloss) — a
+    # phantom backwards step, which is why the gloss is excluded entirely.
+    after = (
+        "marking out the top and the bottom of that range from 9:30 to 9:45. That is the first "
+        "15 minutes of the New York Stock Exchange open, and that is my trading range"
+    )
+    for text in (between, after):
+        result = classify_session_role(text)
+        assert result.refusal is None, f"phantom wrap on a non-wrapping teaching: {text[:70]!r}"
+        assert result.zone is not None, f"lost a genuine teaching: {text[:70]!r}"
