@@ -3,16 +3,15 @@
  "tier_a": "NOT MEASURED \u2014 out of scope",
  "enforcement_pins": {
   "env_var": "TF_FAMILY_META_ENFORCED_PINS",
-  "value_used_for_every_flag_on_figure": "a,b",
+  "value_used_for_every_flag_on_figure": "a,b,b2",
   "pins_active": [
    "a",
-   "b"
-  ],
-  "pins_NOT_evaluated": [
+   "b",
    "b2"
   ],
-  "why_skipped": "pin (b2) fails today on the real orphan-zone gap (resolve_session_keyword can emit lunch_blackout/overnight; is_in_killzone cannot check them). Fixing that gap belongs to the session-resolver lane and is scoped OUT of this packet, so with all pins active the engine correctly REFUSES TO LOAD.",
-  "honest_reading": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+  "pins_NOT_evaluated": [],
+  "why_skipped": "NOTHING IS SKIPPED. This field previously read: 'pin (b2) fails today on the real orphan-zone gap (resolve_session_keyword can emit lunch_blackout/overnight; is_in_killzone cannot check them) ... with all pins active the engine correctly REFUSES TO LOAD.' That gap was closed by docs/designs/packet-orphan-zone-closure-2026-07-21.md; b2 now PASSES and the engine LOADS under all three pins. The prior artifact kept stamping the obsolete caveat onto every figure it contained, which is why this one is regenerated against the current tree rather than patched.",
+  "honest_reading": "ALL pins (a+b+b2) were active and held. No pin was skipped.",
   "applies_to": [
    "signals_on",
    "total_signals_on",
@@ -228,11 +227,11 @@
    0
   ],
   "50": [
-   0,
+   24,
    0
   ],
   "51": [
-   0,
+   24,
    0
   ],
   "52": [
@@ -344,7 +343,7 @@
    0
   ],
   "79": [
-   0,
+   24,
    0
   ],
   "80": [
@@ -508,7 +507,7 @@
    0
   ]
  },
- "signals_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+ "signals_on__pin_scope": "ALL pins (a+b+b2) were active and held. No pin was skipped.",
  "signals_on": {
   "0": [
    36,
@@ -711,11 +710,11 @@
    0
   ],
   "50": [
-   0,
+   24,
    0
   ],
   "51": [
-   0,
+   24,
    0
   ],
   "52": [
@@ -827,7 +826,7 @@
    0
   ],
   "79": [
-   0,
+   24,
    0
   ],
   "80": [
@@ -1114,14 +1113,14 @@
   118,
   119
  ],
- "total_signals_off": 3003,
- "total_signals_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
- "total_signals_on": 3003,
+ "total_signals_off": 3075,
+ "total_signals_on__pin_scope": "ALL pins (a+b+b2) were active and held. No pin was skipped.",
+ "total_signals_on": 3075,
  "compiled_off": 114,
- "compiled_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+ "compiled_on__pin_scope": "ALL pins (a+b+b2) were active and held. No pin was skipped.",
  "compiled_on": 114,
  "approximation_used_off": 120,
- "approximation_used_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+ "approximation_used_on__pin_scope": "ALL pins (a+b+b2) were active and held. No pin was skipped.",
  "approximation_used_on": 120,
  "control_specs_moved": [
   0,
@@ -1245,7 +1244,7 @@
   118,
   119
  ],
- "invalidation_approximation_counts__pin_scope": "flag_ON arm only: pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+ "invalidation_approximation_counts__pin_scope": "flag_ON arm only: ALL pins (a+b+b2) were active and held. No pin was skipped.",
  "invalidation_approximation_counts": {
   "flag_OFF": [
    0,
@@ -1256,7 +1255,7 @@
    567
   ]
  },
- "filter_spine_390__pin_scope": "Enumerated under enforcement. pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'. Under ALL pins active these conditions do not run at all \u2014 the load fails on pin (b2).",
+ "filter_spine_390__pin_scope": "Enumerated under enforcement. ALL pins (a+b+b2) were active and held. No pin was skipped. The previous artifact added 'under ALL pins active these conditions do not run at all \u2014 the load fails on pin (b2)'; that is no longer true, and this enumeration IS the all-pins one.",
  "filter_spine_390": [
   {
    "condition_id": "FILTER:previous 4h candle close#0",
@@ -4404,23 +4403,23 @@
  "also_never_evaluated_note": "role=='confluence' conditions are ALSO never evaluated by compute()'s spine loop. They are NOT part of the 987 because section 6a's denominator is defined over trigger-role conditions; recorded here so the omission is stated, not implied.",
  "spine_conditions": 2769,
  "all_entry_conditions": 6450,
- "rates__pin_scope": "the flag_ON arm of `rates` is scoped: pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+ "rates__pin_scope": "the flag_ON arm of `rates` is scoped: ALL pins (a+b+b2) were active and held. No pin was skipped.",
  "rates__gating_derivation": "D4: `spine_gating` is a RE-DERIVATION, not a compute() observation. It now applies the same `executed` skip the spine loop applies, so EXIT_HINT's bound-but-executed=False conditions are excluded from BOTH arms. The previous OFF arm assumed every bound spine condition gated, inflating it by 78 and making the change read 2346->1878; the attributable figure is 390.",
  "rates": {
   "flag_OFF": {
-   "spine_bound": 2346,
+   "spine_bound": 2343,
    "spine_approximated": 2265,
-   "spine_gating": 2268,
+   "spine_gating": 2265,
    "spine_bound_but_never_executed": 78
   },
   "flag_ON": {
-   "spine_bound": 2346,
+   "spine_bound": 2343,
    "spine_approximated": 2265,
-   "spine_gating": 1878,
+   "spine_gating": 1875,
    "spine_bound_but_never_executed": 78
   }
  },
- "enforcement_status_all_pins__note": "This block alone is measured with the selector UNSET (all three pins active) and is expected to show the pin (b2) violation. It is the ONLY all-pins figure here.",
+ "enforcement_status_all_pins__note": "Measured with the selector UNSET (all three pins active). It used to be the ONLY all-pins figure in this artifact and was EXPECTED TO SHOW A pin (b2) VIOLATION; since the orphan-zone closure it is expected to be CLEAN, and every other flag-ON figure here is now an all-pins figure too, so this block is a corroboration of the run's pin scope rather than an exception to it.",
  "enforcement_status_all_pins": {
   "enforced": true,
   "pins_active": [
@@ -4429,9 +4428,7 @@
    "b2"
   ],
   "pins_skipped": [],
-  "violations": [
-   "pin(b2) [WAIT_SESSION]: spec_family_bindings.resolve_session_keyword can emit zone(s) ['lunch_blackout', 'overnight'] that its consumer session_windows.is_in_killzone cannot check (_ZONE_CHECKS covers ['london', 'macro_window', 'ny_am', 'ny_pm', 'silver_bullet']). A value nothing can evaluate is an ALWAYS-FALSE gate wearing bindable=True."
-  ],
-  "ok": false
+  "violations": [],
+  "ok": true
  }
 }

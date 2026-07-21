@@ -87,13 +87,63 @@ def planted_uncovered_emission(zone: str = "zzz_planted_orphan"):
 
 @contextlib.contextmanager
 def family_meta_patched(family: str, **changes):
-    """Temporarily replace one FAMILY_META entry. Restores the exact original object."""
+    """Temporarily replace one FAMILY_META entry. Restores the exact original object.
+
+    NOTE: this is the RAW patch and it may leave the tables INCOHERENT (e.g. re-pointing a
+    family orphans the primitive it abandoned, which is a genuine pin (a)+(b) violation). That
+    is deliberate — several tests want exactly that incoherence so the gate can convict it.
+    Tests that want a VALID re-point want `family_meta_repointed` below."""
     original = sfb.FAMILY_META[family]
     sfb.FAMILY_META[family] = dataclasses.replace(original, **changes)
     try:
         yield
     finally:
         sfb.FAMILY_META[family] = original
+
+
+@contextlib.contextmanager
+def family_meta_repointed(family: str, new_primitive: str):
+    """A COHERENT re-point: change the declaration AND retire the primitive it abandons.
+
+    ★ WHY THIS EXISTS — IT REPLACES A FIXTURE THAT RAN ON THE SUCCESS CACHE'S LIE. Re-pointing
+    WAIT_SESSION leaves `session_windows.is_in_killzone` in PRIMITIVE_RESOLVERS and in the
+    dispatch map with NO FAMILY_META entry declaring it: an orphan resolver (pin b) AND a
+    second router (pin a). Two real violations.
+
+    The tests that re-point used to survive that by loading the UNPATCHED table first and
+    letting the success cache wave the patched one through — their own comments said so:
+    "Loading the un-patched table first satisfies the gate for THIS pin set, and the
+    re-pointed strategy is then built against the already-passed gate." That is lying mode 4
+    being USED AS A TEST FIXTURE: the cache's blindness to what changed after the first load
+    was the only reason the patched world looked legal.
+
+    The cache is deleted, so the fixture has to become honest instead. This one makes the
+    patched world ACTUALLY VALID — the abandoned primitive is retired from the resolver
+    registry and the dispatch map for the duration — so every pin runs, fully, against the
+    re-pointed table and passes for a REAL reason. All three objects are restored exactly."""
+    original = sfb.FAMILY_META[family]
+    abandoned, _ = original.enforced_declaration()
+    sfb.FAMILY_META[family] = dataclasses.replace(original, enforced_primitive=new_primitive)
+
+    # retire the abandoned primitive iff no OTHER family still declares it
+    still_declared = any(
+        m.enforced_declaration()[0] == abandoned
+        for f, m in sfb.FAMILY_META.items() if f != family
+    )
+    retired_resolver = retired_dispatch = None
+    if abandoned and not still_declared:
+        if abandoned in fme.PRIMITIVE_RESOLVERS:
+            retired_resolver = fme.PRIMITIVE_RESOLVERS.pop(abandoned)
+        if abandoned in ENFORCED_DISPATCH:
+            retired_dispatch = ENFORCED_DISPATCH.pop(abandoned)
+    try:
+        yield
+    finally:
+        sfb.FAMILY_META[family] = original
+        if retired_resolver is not None:
+            fme.PRIMITIVE_RESOLVERS[abandoned] = retired_resolver
+        if retired_dispatch is not None:
+            ENFORCED_DISPATCH[abandoned] = retired_dispatch
 
 
 def _bars(n: int = 300) -> pl.DataFrame:
@@ -202,8 +252,12 @@ def test_repointing_family_meta_changes_what_runs():
     bars = _bars()
     with enforced():
         baseline = SpecConditionStrategy(compiled_spec=_spec("WAIT_SESSION")).compute(bars)
-        with family_meta_patched(
-            "WAIT_SESSION", enforced_primitive="spec_condition_compiler.candle_confirmation_check"
+        # ★ COHERENT re-point (see family_meta_repointed). This used to be the raw
+        # family_meta_patched, which orphaned `session_windows.is_in_killzone` and survived
+        # only because the success cache never re-checked after the baseline load. The cache
+        # is gone; the re-pointed table is now genuinely valid and every pin really runs.
+        with family_meta_repointed(
+            "WAIT_SESSION", "spec_condition_compiler.candle_confirmation_check"
         ):
             repointed_strategy = SpecConditionStrategy(compiled_spec=_spec("WAIT_SESSION"))
             repointed = repointed_strategy.compute(bars)
@@ -781,17 +835,18 @@ def test_flag_off_per_bar_control_each_leg_can_fail():
     # leg 1 CONTROL: re-point WAIT_SESSION under enforcement. The arms must now DISAGREE
     # per-bar, so the cross-arm equality leg is capable of failing.
     #
-    # The baseline load INSIDE the enforced block is required, not incidental: re-pointing
-    # WAIT_SESSION leaves `session_windows.is_in_killzone` declared by nobody, which is a
-    # genuine pin-(a) violation, so a load attempted fresh under the re-pointed table refuses
-    # (correctly). Loading the un-patched table first satisfies the gate for THIS pin set, and
-    # the re-pointed strategy is then built against the already-passed gate. Same construction
-    # as test_repointing_family_meta_changes_what_runs above, for the same reason.
+    # ★ THIS COMMENT USED TO DOCUMENT A DEPENDENCE ON THE SUCCESS CACHE, in these words:
+    # "Loading the un-patched table first satisfies the gate for THIS pin set, and the
+    # re-pointed strategy is then built against the already-passed gate." The re-point really
+    # did orphan `session_windows.is_in_killzone` (a genuine pin (a)+(b) violation) and the
+    # only thing making the patched load legal was the cache declining to look again — lying
+    # mode 4, load-bearing, inside a CONTROL. The cache is deleted and the fixture is now a
+    # COHERENT re-point that retires the abandoned primitive, so the gate runs in full and
+    # passes because the table is valid, not because nobody re-read it.
     off_arr = _per_bar_run("WAIT_SESSION", "london session", bars)[0]
     with enforced():
-        _per_bar_run("WAIT_SESSION", "london session", bars)
-        with family_meta_patched(
-            "WAIT_SESSION", enforced_primitive="spec_condition_compiler.candle_confirmation_check"
+        with family_meta_repointed(
+            "WAIT_SESSION", "spec_condition_compiler.candle_confirmation_check"
         ):
             on_arr = _per_bar_run("WAIT_SESSION", "london session", bars)[0]
     assert not np.array_equal(off_arr, on_arr), "leg 1 cannot fail — it is not comparing arrays"
@@ -993,29 +1048,100 @@ def test_d1_mode3_a_narrow_pass_does_not_vouch_for_a_broader_run():
         fme.reset_enforcement_cache()
 
 
-def test_d1_mode3_control_the_cache_still_works_within_its_covered_pin_set():
-    """THE CONTROL for mode 3: keying the cache must not amount to deleting it. A repeat call
-    over the SAME (or a narrower) pin set must still be served from the cache — proven by
-    sabotaging FAMILY_META after the warming pass and observing the repeat call NOT notice,
-    then observing that a genuinely BROADER pin set does not get the same free ride."""
+def test_d1_mode3_a_repeat_call_re_evaluates_instead_of_being_served_from_a_cache():
+    """★ THE MODE-3 CONTROL, INVERTED BY THE CACHE'S DELETION — and the inversion is the point.
+
+    This test used to assert the OPPOSITE: that a repeat call over the same pin set was served
+    from the cache, "proven" by sabotaging FAMILY_META after a warming pass and observing the
+    repeat call NOT notice. That behaviour — a guard declining to look at a sabotaged table
+    because it had looked once already — is exactly what modes 3 and 4 were made of, and the
+    control was certifying it as correct.
+
+    The success cache is now DELETED (see the block above `ensure_enforced`), so the same
+    sabotage must now be CAUGHT on the very next call. Same setup, same sabotage, opposite
+    and correct expectation."""
     prev_flag = os.environ.get(fme.FLAG_ENV)
     prev_pins = os.environ.get(fme.PINS_ENV)
     os.environ[fme.FLAG_ENV] = "true"
     os.environ[fme.PINS_ENV] = "a,b"
     try:
-        fme.reset_enforcement_cache()
-        fme.ensure_enforced(ENFORCED_DISPATCH)
+        fme.ensure_enforced(ENFORCED_DISPATCH)  # clean pass; nothing is memoised
         with family_meta_patched("WAIT_RETEST", enforced_primitive="gone.nowhere"):
-            fme.ensure_enforced(ENFORCED_DISPATCH)          # same pin set -> cached, no re-check
+            # same pin set — previously served from cache, must now RE-RUN and convict
+            with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+                fme.ensure_enforced(ENFORCED_DISPATCH)
+            assert "gone.nowhere" in str(exc.value)
+            # narrower pin set — previously "also covered", must also convict
             os.environ[fme.PINS_ENV] = "b"
-            fme.ensure_enforced(ENFORCED_DISPATCH)          # narrower -> also covered
-            os.environ.pop(fme.PINS_ENV, None)              # broader -> must re-run and convict
             with pytest.raises(fme.FamilyMetaEnforcementError):
                 fme.ensure_enforced(ENFORCED_DISPATCH)
+            # broader — convicted before and still does
+            os.environ.pop(fme.PINS_ENV, None)
+            with pytest.raises(fme.FamilyMetaEnforcementError):
+                fme.ensure_enforced(ENFORCED_DISPATCH)
+        # CONTROL ON THE CONTROL: with the sabotage lifted the gate goes quiet again, so the
+        # raises above are the sabotage being seen, not a gate that raises unconditionally.
+        os.environ[fme.PINS_ENV] = "a,b"
+        fme.ensure_enforced(ENFORCED_DISPATCH)
     finally:
         for key, val in ((fme.FLAG_ENV, prev_flag), (fme.PINS_ENV, prev_pins)):
             if val is None:
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = val
-        fme.reset_enforcement_cache()
+
+
+def test_d1_mode4_the_guard_re_evaluates_the_dispatch_argument_on_every_call():
+    """★ LYING MODE 4 — THE FIX FOR MODE 3 GREW IT.
+
+    Keying the success cache on the PIN SET closed mode 3 and left the cache blind to the
+    `dispatch` ARGUMENT. After one good all-pins load, `ensure_enforced(<violating dispatch>)`
+    RETURNED CLEAN while `verify_dispatch_coverage` on that same map reported 1 violation.
+
+    RED PROOF (pre-fix, both forms, run against the unfixed module):
+      - passing a BAD map as the argument      -> ensure_enforced RETURNED CLEAN (direct
+        measure of the same map: 1 violation)
+      - mutating the PRODUCTION ENFORCED_DISPATCH in place, then reloading -> RETURNED CLEAN
+    The guard whose stated job is "a second router is a second truth" was FIRST-LOAD-ONLY.
+    The cache is deleted; both forms must now raise."""
+    with enforced(pins=None):
+        fme.ensure_enforced(ENFORCED_DISPATCH)  # a good all-pins load happens FIRST
+
+        # form 1: the violating map arrives as the ARGUMENT
+        bad = dict(ENFORCED_DISPATCH)
+        bad["orphan.d1.mode4.arg"] = "_h_non_gating"
+        direct = fme.verify_dispatch_coverage(bad)
+        assert len(direct) == 1 and "orphan.d1.mode4.arg" in str(direct[0]), (
+            "the planted second router is not measurable directly — this test's signal is dead"
+        )
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            fme.ensure_enforced(bad)
+        assert "orphan.d1.mode4.arg" in str(exc.value)
+
+        # form 2: the PRODUCTION object is mutated in place between loads
+        fme.ensure_enforced(ENFORCED_DISPATCH)
+        ENFORCED_DISPATCH["orphan.d1.mode4.in_place"] = "_h_non_gating"
+        try:
+            with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+                fme.ensure_enforced(ENFORCED_DISPATCH)
+            assert "orphan.d1.mode4.in_place" in str(exc.value)
+        finally:
+            del ENFORCED_DISPATCH["orphan.d1.mode4.in_place"]
+
+        # CONTROL: the clean production map still passes, so the raises above are the planted
+        # routers being seen and not a gate that has been made to raise on everything.
+        fme.ensure_enforced(ENFORCED_DISPATCH)
+
+
+def test_d1_mode4_control_no_success_cache_survives_in_the_module():
+    """The structural half of the mode-4 fix, asserted rather than trusted to review: no
+    module-level success-cache state may reappear. A re-keyed cache is how mode 4 was born;
+    if one comes back on a MEASURED cost it must key on the dispatch too and rename this."""
+    cache_names = [
+        n for n in vars(fme)
+        if n.startswith("_ENFORCED_OK") or n in {"_ENFORCED_PINS", "_ENFORCED_CACHE"}
+    ]
+    assert cache_names == [], f"a success cache has reappeared: {cache_names}"
+    # and `force=` is gone with it — there is no cache left to force past
+    import inspect
+    assert "force" not in inspect.signature(fme.ensure_enforced).parameters

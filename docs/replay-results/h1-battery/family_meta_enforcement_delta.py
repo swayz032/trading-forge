@@ -29,10 +29,23 @@ So, precisely: the SIGNAL and PLAN arms are the production engine; the section-6
 counter is a re-derivation that now mirrors the loop's own skip conditions, and is labelled as
 such wherever it prints.
 
-★ PIN SCOPE (D3). Every flag-ON figure below is produced under TF_FAMILY_META_ENFORCED_PINS=
-"a,b". Pin (b2) is NOT evaluated — it fails today on the orphan-zone gap this packet is scoped
-out of fixing. The qualifier travels INSIDE the JSON artifact, adjacent to each ON number,
-because a caveat one hop from its claim is a caption.
+★ PIN SCOPE (D3), AS OF THE 2026-07-21 REGENERATION: ALL THREE PINS.
+
+Every flag-ON figure below is now produced under TF_FAMILY_META_ENFORCED_PINS="a,b,b2" —
+the complete pin set. Pin (b2) IS evaluated and PASSES.
+
+★ WHAT THIS HEADER USED TO SAY, AND WHY THAT MATTERED. It read: `PINS="a,b"`. Pin (b2) is NOT
+evaluated — it fails today on the orphan-zone gap this packet is scoped out of fixing.` That
+was true when written and became FALSE at the orphan-zone closure
+(docs/designs/packet-orphan-zone-closure-2026-07-21.md), while the committed JSON went on
+stamping "pin b2 NOT evaluated" onto EVERY figure in it. An artifact left stale in a tree that
+falsifies it is a caption defect at artifact scale: the numbers keep asserting a scope the
+code has already left. Both the qualifier and the numbers are regenerated here against the
+current tree.
+
+The qualifier still travels INSIDE the JSON artifact, adjacent to each ON number, because a
+caveat one hop from its claim is a caption — and it is still DERIVED from the same constant
+the run uses, so it cannot drift from the run that produced the figures.
 """
 from __future__ import annotations
 
@@ -90,21 +103,28 @@ def P(*a):
 # and the caveat lived only in a commit message. A caveat one hop from its claim is a caption.
 # The label is now derived from the SAME constant the run uses — it cannot drift from it — and
 # is emitted ADJACENT to each ON figure inside the JSON, not once in a header.
-ACTIVE_PINS = "a,b"
+#
+# ★ 2026-07-21: WAS "a,b". Pin (b2) failed on the orphan-zone gap; that gap is closed and b2
+# now passes, so the ON arm runs the COMPLETE pin set and the artifact stops carrying a scope
+# caveat that is no longer true of the code.
+ACTIVE_PINS = ",".join(fme.ALL_PINS)
 SKIPPED_PINS = [p for p in fme.ALL_PINS if p not in {s.strip() for s in ACTIVE_PINS.split(",")}]
+assert not SKIPPED_PINS, f"expected the full pin set, skipped={SKIPPED_PINS}"
 PIN_QUALIFIER = (
-    f"pins {'+'.join(ACTIVE_PINS.split(','))} held; "
-    f"pin{'s' if len(SKIPPED_PINS) != 1 else ''} {'+'.join(SKIPPED_PINS)} NOT evaluated. "
-    f"This figure is NOT 'enforcement passed'."
+    f"ALL pins ({'+'.join(ACTIVE_PINS.split(','))}) were active and held. No pin was skipped."
+    if not SKIPPED_PINS
+    else (
+        f"pins {'+'.join(ACTIVE_PINS.split(','))} held; "
+        f"pin{'s' if len(SKIPPED_PINS) != 1 else ''} {'+'.join(SKIPPED_PINS)} NOT evaluated. "
+        f"This figure is NOT 'enforcement passed'."
+    )
 )
 
 
 def set_flag(on: bool) -> None:
     if on:
         os.environ[fme.FLAG_ENV] = "true"
-        # pin (b2) legitimately fails today on the orphan-zone gap this packet is scoped out
-        # of fixing (see the module docstring of family_meta_enforcement). Pins a+b are the
-        # ones this build delivers; the skip is RECORDED next to every ON number it qualifies.
+        # ALL pins. The b2 skip that used to live here expired with the orphan-zone closure.
         os.environ[fme.PINS_ENV] = ACTIVE_PINS
     else:
         os.environ.pop(fme.FLAG_ENV, None)
@@ -272,7 +292,8 @@ P("   repo, and writing one to make them gate is the fabricated-implementation t
 P("   prohibits by name. What changed: each is now DECLARED non-gating (mechanism")
 P("   static_true_pass_through, gates=False) instead of silently np.ones behind a pointer at")
 P("   a module that does not exist, and each is recorded in last_non_gating_conditions at")
-P("   run time. Under ALL pins active, these conditions do not run at all -- load fails.")
+P("   run time. This block IS the all-pins regime now: b2 passes, the load succeeds, and")
+P("   these 390 are enumerated under the complete gate rather than under a partial one.")
 
 # ── 8/9. SECTION 6a COVERAGE + APPROXIMATION RATE, dual denominators ─────────────────────
 P("")
@@ -427,10 +448,14 @@ json.dump(
             "pins_active": sorted(ACTIVE_PINS.split(",")),
             "pins_NOT_evaluated": SKIPPED_PINS,
             "why_skipped": (
-                "pin (b2) fails today on the real orphan-zone gap (resolve_session_keyword can "
-                "emit lunch_blackout/overnight; is_in_killzone cannot check them). Fixing that "
-                "gap belongs to the session-resolver lane and is scoped OUT of this packet, so "
-                "with all pins active the engine correctly REFUSES TO LOAD."
+                "NOTHING IS SKIPPED. This field previously read: 'pin (b2) fails today on the "
+                "real orphan-zone gap (resolve_session_keyword can emit lunch_blackout/"
+                "overnight; is_in_killzone cannot check them) ... with all pins active the "
+                "engine correctly REFUSES TO LOAD.' That gap was closed by "
+                "docs/designs/packet-orphan-zone-closure-2026-07-21.md; b2 now PASSES and the "
+                "engine LOADS under all three pins. The prior artifact kept stamping the "
+                "obsolete caveat onto every figure it contained, which is why this one is "
+                "regenerated against the current tree rather than patched."
             ),
             "honest_reading": PIN_QUALIFIER,
             "applies_to": [
@@ -459,8 +484,9 @@ json.dump(
         "invalidation_approximation_counts__pin_scope": f"flag_ON arm only: {PIN_QUALIFIER}",
         "invalidation_approximation_counts": inv_counts,
         "filter_spine_390__pin_scope": (
-            f"Enumerated under enforcement. {PIN_QUALIFIER} Under ALL pins active these "
-            f"conditions do not run at all — the load fails on pin (b2)."
+            f"Enumerated under enforcement. {PIN_QUALIFIER} The previous artifact added "
+            f"'under ALL pins active these conditions do not run at all — the load fails on "
+            f"pin (b2)'; that is no longer true, and this enumeration IS the all-pins one."
         ),
         "filter_spine_390": filter_rows,
         "filter_spine_dispositions": dict(disp),
@@ -496,8 +522,11 @@ json.dump(
         ),
         "rates": rates,
         "enforcement_status_all_pins__note": (
-            "This block alone is measured with the selector UNSET (all three pins active) and "
-            "is expected to show the pin (b2) violation. It is the ONLY all-pins figure here."
+            "Measured with the selector UNSET (all three pins active). It used to be the ONLY "
+            "all-pins figure in this artifact and was EXPECTED TO SHOW A pin (b2) VIOLATION; "
+            "since the orphan-zone closure it is expected to be CLEAN, and every other flag-ON "
+            "figure here is now an all-pins figure too, so this block is a corroboration of "
+            "the run's pin scope rather than an exception to it."
         ),
         "enforcement_status_all_pins": status,
     },

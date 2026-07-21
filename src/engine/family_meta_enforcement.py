@@ -6,7 +6,10 @@ binding plan, every `approximation` flag, and every fidelity number is derived f
 committed, measured sweep (docs/replay-results/h1-battery/family_meta_reachability_sweep.py,
 n=2000 real ES 5min bars, corroborated over 120 corpus specs x 600 bars, all 7 positive
 controls fired) found that of the 9 families declaring a real primitive, only 3 execute
-it: 3 REACHABLE / 2 PARTIAL / 4 NOT-REACHABLE / 2 COULD-NOT-VERIFY. The declaration was
+it: 3 REACHABLE / 2 PARTIAL / 4 NOT-REACHABLE -- plus 2 families the sweep COULD NOT
+VERIFY, which are ADDITIONAL to those 9, not a fourth slice of them. (This line previously
+ran the four numbers together as one list, which reads as a 3+2+4+2=11 partition of a
+9-member set; the sweep's own header says "plus 2".) The declaration was
 free to say anything, because nothing checked it and dispatch routed on `b.type` through
 an independent `if/elif` ladder — a SECOND ROUTER, and therefore a second truth.
 
@@ -48,7 +51,12 @@ THE FOUR PINS (packet section 3), each implemented here as a mechanical, load-ti
   (c) HONEST ENTRIES  -- lives in FAMILY_META itself (see `FamilyMeta.enforced_*` and the
       table's per-entry notes), not here; this module only verifies the result.
 
-GATING AND ROLLBACK. Everything is behind `TF_FAMILY_META_ENFORCED` (default OFF). Two-commit
+GATING AND ROLLBACK. The LOAD GATE -- `ensure_enforced`, the only function that can stop a
+process -- is behind `TF_FAMILY_META_ENFORCED` (default OFF). "Everything is behind the flag"
+is what this line used to say and it was never true of this module: `active_pins()`,
+`collect_violations()` and `enforcement_status()` are flag-independent readers/measurers by
+design (the delta harness and the tests call them with the flag OFF; see the PIN SELECTOR
+note below). Nothing they do can halt production; only `ensure_enforced` raises. Two-commit
 law: enforcement lands here; any change to the default lands separately, and only on the grade.
 
 WHAT THE FLAG-OFF GUARANTEE IS, STATED AT ITS ACTUAL STRENGTH. There is no artifact of the
@@ -82,21 +90,47 @@ which fails with a rewrite message if anyone narrows the default regime again wh
 clean. REMOVING the selector is a separate packet (it is public surface: the committed delta
 harness and the tests both read it).
 
-It is a MEASUREMENT SELECTOR, not an escape hatch. Three mechanical fences make "silently ran
-nothing" impossible; each was a LIVE DEFECT found by grading, not a hypothetical:
-  - an EMPTY selection RAISES. `PINS=","` (or `""`, or `" , "`) once parsed to the empty set,
-    ran zero checks, and returned silently with `ok=True`. The variable must either be UNSET
-    (all pins run) or name at least one pin.
-  - a NAMED-BUT-UNEVALUABLE pin RAISES. Pin (a) needs a dispatch map; `collect_violations`
-    used to skip it whenever `dispatch is None` while `enforcement_status()` went on
-    reporting it as active and `ok=True`. A pin that is named is evaluated or the call fails.
-  - the success cache is KEYED ON THE PIN SET. A pass under `PINS=a` used to warm a global
-    `_ENFORCED_OK` that made a LATER all-pins load return clean without running b or b2 --
-    i.e. the narrow run silently vouched for the broad one. A cached pass now satisfies only
-    pin sets it actually covered.
-  - an unrecognized pin name RAISES (a typo must not disable a check while looking like it
-    enabled one), and the skipped pins are recorded in `enforcement_status()` and printed in
-    any raised error.
+It is a MEASUREMENT SELECTOR, not an escape hatch.
+
+*** WHAT IS CLAIMED HERE, AND AT WHAT STRENGTH. *** This paragraph used to open "Three
+mechanical fences make 'silently ran nothing' IMPOSSIBLE" while enumerating FOUR bullets --
+and a FIFTH path was then demonstrated anyway (lying mode 4: the success cache was blind to
+the `dispatch` argument, so after one good load `ensure_enforced(<violating dispatch>)`
+returned CLEAN). The miscount and the superlative failed together, which is the point: the
+same sentence that could not count its own bullets was asserting a universal.
+
+The word "impossible" is therefore GONE, and it is not coming back. `:152` records that this
+selector's OWN previous docstring "promised was impossible" -- a rewrite that re-makes the
+identical claim has learned nothing from the sentence it is replacing. What replaces it is a
+claim with a checkable referent:
+
+  EACH NAMED PATH BELOW IS FENCED BY A TEST THAT FAILS IF THE GUARD SILENTLY RUNS NOTHING.
+  That is a statement about four enumerated paths and the tests that hold them. It is NOT a
+  statement that no fifth path exists -- mode 4 was a fifth, and modes are found by grading,
+  never by a docstring's confidence.
+
+FOUR fenced paths (the count is four; each was a LIVE DEFECT found by grading, not a
+hypothetical):
+  1. an EMPTY selection RAISES. `PINS=","` (or `""`, or `" , "`) once parsed to the empty set,
+     ran zero checks, and returned silently with `ok=True`. The variable must either be UNSET
+     (all pins run) or name at least one pin.
+     Fenced by test_d1_mode1_an_empty_pin_selection_raises_instead_of_running_nothing.
+  2. a NAMED-BUT-UNEVALUABLE pin RAISES. Pin (a) needs a dispatch map; `collect_violations`
+     used to skip it whenever `dispatch is None` while `enforcement_status()` went on
+     reporting it as active and `ok=True`. A pin that is named is evaluated or the call fails.
+     Fenced by test_d1_mode2_a_named_pin_that_cannot_be_evaluated_raises.
+  3. NO SUCCESS CACHE EXISTS. There is nothing to key, so there is nothing to key WRONGLY.
+     The history is the argument: the cache was a bare `_ENFORCED_OK` bool (mode 3 -- a pass
+     under `PINS=a` vouched for a later all-pins load); the repair keyed it on the pin set;
+     and THAT REPAIR GREW MODE 4, because the new key still ignored `dispatch`. Two lying
+     modes in one variable, the second created by the fix for the first. The guard now RUNS
+     EVERY CALL. A cache on a truth-check is a place for lies to sleep.
+     Fenced by test_d1_mode3_a_narrow_pass_does_not_vouch_for_a_broader_run and
+     test_d1_mode4_the_guard_re_evaluates_the_dispatch_argument_on_every_call.
+  4. an unrecognized pin name RAISES (a typo must not disable a check while looking like it
+     enabled one), and the skipped pins are recorded in `enforcement_status()` and printed in
+     any raised error.
+     Fenced by test_pin_selector_rejects_an_unknown_pin.
 `active_pins()` is a pure reader of the environment and IS callable with the flag OFF (the
 delta harness and the tests both do so); what is gated on the flag is `ensure_enforced`.
 The honest reading of a run made with this variable set is "pins a,b held; pin b2 was not
@@ -513,29 +547,46 @@ def enforcement_status(dispatch: dict[str, str] | None = None) -> dict:
     }
 
 
-_ENFORCED_OK_PINS: frozenset[str] | None = None
-"""The pin set a previous call actually PASSED, or None. LYING MODE 3, FENCED. This used to be
-a bare `_ENFORCED_OK: bool`: a first load under `PINS=a` set it True, and every LATER load --
-including one with the selector unset and therefore ALL pins nominally active -- hit the cache
-and returned clean without running (b) or (b2) at all. Verified: an all-pins `ensure_enforced`
-returned CLEAN behind a warm narrow-selector cache, even though pin (b2) genuinely fails today
-on the orphan-zone gap. A narrow run must never vouch for a broad one, so the cache now records
-WHICH pins it covered and is only honoured for a subset of them."""
+# ─── THERE IS NO SUCCESS CACHE. THIS IS THE DESIGN, NOT AN OMISSION. ────────────────────
+#
+# FOUR lying modes lived in the success cache that used to sit here, and the LAST TWO ARE THE
+# STORY:
+#   mode 3 -- `_ENFORCED_OK` was a bare bool. A pass under `PINS=a` warmed it and a later
+#             ALL-PINS load returned clean without running (b) or (b2) at all: the narrow run
+#             vouched for the broad one.
+#   mode 4 -- THE FIX FOR MODE 3 GREW IT. Keying the cache on the PIN SET closed mode 3 and
+#             left the cache blind to the `dispatch` ARGUMENT, so after one good all-pins load
+#             `ensure_enforced(<violating dispatch>)` RETURNED CLEAN while a direct
+#             `verify_dispatch_coverage` on the same map reported 1 violation. It fired on the
+#             production object too: mutate `ENFORCED_DISPATCH` in place, reload, clean. The
+#             guard whose whole stated job is "a second router is a second truth" was
+#             FIRST-LOAD-ONLY.
+#
+# The repair for mode 4 is NOT a third key. A key must cover everything that varies, and the
+# next thing that varies is the thing nobody has thought of yet -- that is precisely how mode 4
+# arrived out of the mode-3 repair. So the cache is DELETED and the guard RUNS EVERY CALL.
+#
+# THE COST, MEASURED RATHER THAN ASSUMED (the only thing that could justify bringing a cache
+# back). All-pins `collect_violations()` = 14.9 us/call, mean over 2000 calls, system CPython
+# 3.13 on the tower. `ensure_enforced` uncached = 15.8 us/call vs 0.9 us/call on a cache hit,
+# so the cache was buying ~14.9 us. There is ONE production call site
+# (spec_condition_compiler.py, once per SpecConditionStrategy construction), which puts the
+# whole 120-spec shakedown corpus at under 2 ms. Nothing here forces a cache back.
+#
+# IF A FUTURE MEASUREMENT EVER DOES force one back, it must key on EVERYTHING THAT VARIES --
+# the pin set AND a fingerprint of `dispatch` -- and it must ship with a mode-5 red-proof that
+# genuinely attempts a fifth lie against the new key. Cheap truth beats fast falsehood.
 
 
-def ensure_enforced(dispatch: dict[str, str] | None = None, *, force: bool = False) -> None:
+def ensure_enforced(dispatch: dict[str, str] | None = None) -> None:
     """THE LOAD GATE. Called before any spec can be turned into an executable strategy.
 
     No-op when the flag is OFF (default) -- that is the rollback guarantee. When ON, raises
-    FamilyMetaEnforcementError naming every violation. There is no fallback, no default, and
-    no partial success: every ACTIVE pin is evaluated on every call that is not covered by a
-    cached pass over a superset of those same pins. `force=True` bypasses the cache entirely
-    (tests, and any process that mutates FAMILY_META between checks)."""
-    global _ENFORCED_OK_PINS
+    FamilyMetaEnforcementError naming every violation. There is no fallback, no default, no
+    partial success, and NO CACHE: every ACTIVE pin is evaluated against the dispatch map
+    ACTUALLY PASSED, on EVERY call. See the block above for the four lying modes that bought
+    this property and the measurement that says it is affordable."""
     if not family_meta_enforced():
-        return
-    pins_wanted = active_pins()
-    if not force and _ENFORCED_OK_PINS is not None and pins_wanted <= _ENFORCED_OK_PINS:
         return
     violations = collect_violations(dispatch)
     if violations:
@@ -548,14 +599,23 @@ def ensure_enforced(dispatch: dict[str, str] | None = None, *, force: bool = Fal
             f"fallback -- see docs/designs/packet-family-meta-enforced-2026-07-20.md."
         )
         raise FamilyMetaEnforcementError(header + "\n  " + "\n  ".join(str(v) for v in violations))
-    # Record the pins this pass actually COVERED -- never a bare "ok" (see _ENFORCED_OK_PINS).
-    # Union with any previous pass so repeated narrow runs accumulate honestly instead of
-    # overwriting a broader pass with a narrower one.
-    _ENFORCED_OK_PINS = pins_wanted if _ENFORCED_OK_PINS is None else (_ENFORCED_OK_PINS | pins_wanted)
+    # Nothing is recorded. A pass means "these pins ran, on this dispatch, just now" and it is
+    # not carried forward to vouch for any later call -- that carrying-forward WAS modes 3 & 4.
 
 
 def reset_enforcement_cache() -> None:
-    """Test-only. Clears the success cache so a test can flip FAMILY_META or the env and
-    re-run the gate in the same process."""
-    global _ENFORCED_OK_PINS
-    _ENFORCED_OK_PINS = None
+    """RETAINED AS A NO-OP, DELIBERATELY. There is no success cache to reset any more (see the
+    block above `ensure_enforced`), so this function has nothing to do -- and that is exactly
+    what it should say rather than being deleted and breaking its callers.
+
+    It is kept for two reasons. (1) COMPATIBILITY: the committed delta harness
+    (docs/replay-results/h1-battery/family_meta_enforcement_delta.py) and the test module both
+    call it between arms; removing the name would be an unrelated public-surface break inside
+    a scope-locked wave. (2) TRIPWIRE: if anyone ever reintroduces a cache on a measured cost,
+    this is the function they must make real again, and its callers are the list of places
+    that already assume a reset point exists.
+
+    Calling it is harmless and is NOT required for correctness: the gate re-evaluates every
+    pin against the dispatch actually passed on every call, so a test that mutates FAMILY_META
+    or the environment is already seen without any reset."""
+    return
