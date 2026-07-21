@@ -228,7 +228,31 @@ def count_own_asserts() -> int:
     import ast
 
     tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
-    return sum(1 for n in ast.walk(tree) if isinstance(n, ast.Assert))
+    return len(_guard_nodes(tree))
+
+
+def _guard_nodes(tree) -> list[tuple[int, str]]:
+    """Every ENFORCEMENT SITE in this file: (lineno, the source of its test expression).
+
+    ★ WHY THIS IS NOT `isinstance(n, ast.Assert)` ANY MORE, AND WHY THAT MATTERED.
+    This census counted `assert` nodes. When the five gate asserts became `refuse_unless(...)`
+    calls -- because `python -O` strips asserts and was measured doing exactly that, publishing
+    a caption-9-frozen artifact at exit 0 -- an AST scan keyed on ast.Assert would have reported
+    the enforcement surface SHRINKING by seven while the file's actual guarding got stronger.
+    A census that counts the OLD spelling of a thing reports on the spelling, not the thing.
+    So the census counts enforcement sites by what they DO: refuse the run on a false test.
+    Both primitives are listed, and adding either without a disposition still fails the run.
+    """
+    import ast
+
+    out: list[tuple[int, str]] = []
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Assert):
+            out.append((n.lineno, ast.unparse(n.test)))
+        elif (isinstance(n, ast.Call) and isinstance(n.func, ast.Name)
+                and n.func.id == "refuse_unless" and n.args):
+            out.append((n.lineno, ast.unparse(n.args[0])))
+    return out
 
 
 # EVERY assert in this file must appear here, classified. AR-188 D2.
@@ -287,6 +311,10 @@ ASSERT_DISPOSITIONS: dict[str, str] = {
     "before_hashes == after_hashes": "DATA_SENSITIVE",
     "gate['PASS']": "DATA_SENSITIVE",
     "head_check['all_match']": "DATA_SENSITIVE",
+    # THE PUBLISH-PATH PRIMITIVE RULE. It parses this file's own AST for assert statements
+    # inside main(), so no corpus reaches it and only an edit can move it -- which is precisely
+    # its job: it exists to notice the edit that writes `assert` on the publish path again.
+    "publish_path['PASS']": "SOURCE_INVARIANT",
 }
 
 
@@ -319,6 +347,14 @@ ASSERTS_ADDED_SINCE_BASELINE: list[dict] = [
      "added_by": "R-219 (5)", "commit": "THIS_WAVE"},
     {"assert": "derivation['closes_exactly']", "disposition": "SOURCE_INVARIANT",
      "added_by": "R-219 (4a) -- the ledger's own tripwire", "commit": "THIS_WAVE"},
+    # ★ THE PUBLISH-PATH PRIMITIVE RULE. Note what this ledger row records and what it does NOT:
+    # this wave converted SEVEN enforcement sites from `assert` to `refuse_unless`, and the
+    # split did not move by seven, because _guard_nodes counts an enforcement site by what it
+    # DOES rather than by which keyword spells it. Only this row is an ADDITION -- a genuinely
+    # new check. A ledger that had counted keywords would have reported the enforcement surface
+    # collapsing on the wave that hardened it.
+    {"assert": "publish_path['PASS']", "disposition": "SOURCE_INVARIANT",
+     "added_by": "the -O finding -- no assert may gate publication", "commit": "THIS_WAVE"},
 ]
 
 
@@ -341,18 +377,17 @@ def own_assert_census() -> dict:
     import ast
 
     tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
-    nodes = [n for n in ast.walk(tree) if isinstance(n, ast.Assert)]
+    nodes = _guard_nodes(tree)
     dispositions = _axis_assert_dispositions(ASSERT_DISPOSITIONS)
     rows, undispositioned = [], []
     used: collections.Counter = collections.Counter()
-    for n in nodes:
-        src = ast.unparse(n.test)
+    for lineno, src in nodes:
         keys = [k for k in dispositions if k in src]
         if len(keys) != 1:
-            undispositioned.append({"line": n.lineno, "test": src, "matching_keys": keys})
+            undispositioned.append({"line": lineno, "test": src, "matching_keys": keys})
             continue
         used[keys[0]] += 1
-        rows.append({"line": n.lineno, "disposition": dispositions[keys[0]], "test": src})
+        rows.append({"line": lineno, "disposition": dispositions[keys[0]], "test": src})
 
     unexpected_disposition_keys = set(dispositions) - set(used) | {
         k for k, c in used.items() if c != 1
@@ -900,6 +935,150 @@ def _container_of(p: str) -> str:
     return p[:cut] if cut > 0 else "$"
 
 
+# ============================================================ THE GUARD REFUSAL PRIMITIVE
+# ★ WHY THIS EXISTS, MEASURED. Every one of this file's five gates was enforced by `assert`.
+# `python -O` strips asserts, so under -O all five verdicts were computed, printed, and then
+# NOT ACTED ON. Demonstrated on the founding instance: with caption 9's literal bytes typed
+# into the source at corpus_A.per_kind_attribution.swing.accounting -- the exact 6850b6ab
+# defect -- `python -O ... --draft` ran to completion and exited 0, while the same run without
+# -O refused with the census naming the path. A flag in the interpreter's invocation disabled
+# the entire enforcement layer of an instrument whose whole purpose is enforcement.
+#
+# ★ AND EXIT 1 IS NOT ENOUGH EITHER. `SystemExit("msg")` exits 1, which is the code an ordinary
+# unhandled error already uses, so a caller cannot distinguish "this guard refused" from "this
+# script crashed". A refusal is a VERDICT and gets its own code: 2.
+#
+# ★ THE BOUNDARY PRINTS BESIDE THE VERDICT, NOT IN A DOCSTRING. A limitation recorded in a
+# docstring is read once, by the author, and thereafter rots into an assumed guarantee -- which
+# is this file's own caption disease pointed at itself. Every gate therefore carries its reach
+# as data, and that string is printed next to the gate's PASS/FAIL on every single run, green
+# or red. A reader who sees the verdict cannot avoid seeing what it does not cover.
+GATE_BOUNDARIES: dict[str, str] = {
+    "CAPTION_GATE": (
+        "Convicts a frozen prose leaf only on numerals that MOVED inside its OWN CONTAINER's "
+        "subtree. A leaf that is the SOLE moving leaf in its container therefore cannot be "
+        "convicted here: freezing it deletes its only donor. That class is COMPUTED every run "
+        "by the coverage census (SOLE_MOVER_POSITIONS) and is reached by the census, not here."
+    ),
+    "COVERAGE_CENSUS": (
+        "Scores only prose leaves that CARRY A NUMERAL and exist in every build. Numeral-free "
+        "prose is excluded by proof, not by exemption. This is the gate that reaches a frozen "
+        "sole-mover position -- it falls out of RESPONSIVE into UNREACHED and fails the run."
+    ),
+    "EVIDENTIAL_CLAIM_GATE": (
+        "Pattern-matched over FROZEN prose only. A frozen claim carrying no evidential "
+        "vocabulary and no opposed direction pair is out of reach here; the general direction "
+        "rule was refused on a measured precision of 0/9 and is NOT SHIPPED."
+    ),
+    "SUBPROCESS_BOUNDARY": (
+        "An AST scan of the named modules' Python source. A spawn reached through a computed "
+        "attribute, or from a module outside the scanned set, is not visible to it."
+    ),
+    "REVIVAL_FAMILY": (
+        "Checks that each revival probe made the assert it DECLARED fire. It cannot see an "
+        "assert no probe in this family targets."
+    ),
+    "APPEND_ONLY": (
+        "Compares guarded artifacts against their committed bytes. It makes NO claim in --draft "
+        "mode, where it is reported NOT EVALUATED rather than passing."
+    ),
+    "PUBLISH_PRECONDITION": (
+        "Compares two module constants, so it can fire only on an edit to this file and never "
+        "on data. It states a structural intent at the point the intent matters."
+    ),
+    "NO_ASSERT_ON_THE_PUBLISH_PATH": (
+        "Scans main()'s AST only. It cannot see an assert placed on the publish path by a "
+        "helper main() calls -- it enforces the primitive at the decision site, not everywhere."
+    ),
+}
+
+
+def assert_free_publish_path() -> dict:
+    """★ THE REGRESSION THAT WOULD UNDO THIS: an `assert` reappearing on the publish path.
+
+    Converting the gates to refusals is worth nothing if the next edit writes `assert` again --
+    and `assert` is the reflex, so it will be written again. The rule is therefore mechanical
+    and needs no annotation to work, which is this file's standing requirement for any rule:
+
+      main() IS THE PUBLISH PATH. Every check that decides whether an artifact is written lives
+      there. So main() may contain ZERO assert statements. Anything it needs to enforce goes
+      through refuse_unless, which cannot be stripped by -O and exits 2.
+
+    Asserts elsewhere -- in probes, derivations, discrimination harnesses -- are untouched and
+    stay classified in ASSERT_DISPOSITIONS. This rule is about the decision site, and the
+    boundary saying so prints beside its verdict.
+    """
+    import ast
+
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    found = []
+    for fn in ast.walk(tree):
+        if isinstance(fn, ast.FunctionDef) and fn.name == "main":
+            for n in ast.walk(fn):
+                if isinstance(n, ast.Assert):
+                    found.append({"line": n.lineno, "test": ast.unparse(n.test)})
+    return {
+        "WHAT_THIS_IS": (
+            "main() is the publish path; an assert there is stripped by `python -O` and the "
+            "guard silently stops guarding. MEASURED: before this rule, `python -O` published a "
+            "caption-9-frozen artifact at exit 0 while the same run without -O refused."
+        ),
+        "n_asserts_on_publish_path_THIS_IS_THE_RED": len(found),
+        "asserts_found": found,
+        "PASS": not found,
+        "how_to_falsify": (
+            "Write `assert x` anywhere inside main() and re-run: this refuses with exit 2."
+        ),
+    }
+
+
+def _print_boundary(gate: str, indent: str = "      ") -> None:
+    """Print a gate's reach BESIDE its verdict, on every run, green or red.
+
+    A boundary stated in a docstring is read once and thereafter rots into an assumed
+    guarantee; a boundary printed beside every verdict cannot. This is deliberately not
+    conditional on the verdict -- a green that hides its own reach is the caption shape.
+    """
+    text = GATE_BOUNDARIES.get(gate)
+    if not text:
+        print(f"{indent}BOUNDARY {gate}: NONE DECLARED -- this is itself a defect")
+        return
+    words, line = text.split(), ""
+    lines: list[str] = []
+    for w in words:
+        if len(line) + len(w) + 1 > 92:
+            lines.append(line)
+            line = w
+        else:
+            line = f"{line} {w}".strip()
+    lines.append(line)
+    print(f"{indent}BOUNDARY: {lines[0]}")
+    for ln in lines[1:]:
+        print(f"{indent}          {ln}")
+
+
+def refuse_unless(ok: bool, gate: str, message: str) -> None:
+    """A guard REFUSES. It does not assert, and it does not exit 1.
+
+    Never `assert`: `python -O` strips it and the guard silently stops guarding.
+    Never `SystemExit("msg")`: that exits 1 and reads as an ordinary error.
+    A refusal is a verdict, and it gets its own exit code -- 2.
+
+    The boundary prints WITH the refusal, so the reader of a red also learns what the gate
+    would not have caught.
+    """
+    if ok:
+        return
+    boundary = GATE_BOUNDARIES.get(gate, "(no boundary declared -- this is itself a defect)")
+    sys.stderr.write(
+        f"\n{'=' * 78}\nGUARD REFUSED: {gate}\n{'=' * 78}\n{message}\n\n"
+        f"  WHAT THIS GATE DOES NOT COVER (printed beside every verdict, red or green):\n"
+        f"    {boundary}\n\n"
+        "REFUSING TO PUBLISH. Exit 2 -- this is a guard verdict, not a crash.\n"
+    )
+    raise SystemExit(2)
+
+
 def coverage_census(art_base: dict, per_axis: dict[str, dict], allowlist: dict,
                     structural: dict) -> dict:
     """★ THE COMPUTED GATE FIGURE. How much of the prose can the gate actually convict?
@@ -946,6 +1125,11 @@ def coverage_census(art_base: dict, per_axis: dict[str, dict], allowlist: dict,
     # union blast radius, tagged by the axis that produced it
     scope_by_axis: dict[str, list[tuple[str, set[str]]]] = {
         ax: _moved_leaves_for(base, L) for ax, L in per_axis_leaves.items()
+    }
+    # Every leaf path ANY axis moved -- the donor population, used below to compute which
+    # RESPONSIVE positions are the only mover in their own container.
+    scope_by_axis_any_moved: set[str] = {
+        lp for moved in scope_by_axis.values() for lp, _ in moved
     }
 
     def reaching_axes(path: str) -> list[str]:
@@ -1031,6 +1215,28 @@ def coverage_census(art_base: dict, per_axis: dict[str, dict], allowlist: dict,
                 "rejected_structural_claim": why,
             })
 
+    # ★ RESPONSIVE IS A PROPERTY OF THE CURRENT BYTES; THIS IS THE PROPERTY OF THE POSITION.
+    # R-207 s4 item 3 established that a leaf which is the SOLE moving leaf in its container is
+    # unconvictable BY THE CAPTION GATE: freezing it deletes the only donor in scope, so the
+    # evidence is destroyed by the act of freezing. The census bucketed such a leaf RESPONSIVE,
+    # whose stated warrant is "the text demonstrably recomputes -- nothing further is owed", and
+    # that warrant is about TODAY'S BYTES. A position guarded only while it happens to be
+    # innocent is not guarded, so the class is named here instead of being left implicit inside
+    # a bucket that vouches for it.
+    #
+    # ★ AND THE MEASURED DISPOSITION IS NOT "UNCONVICTABLE". That was the hypothesis; the
+    # replay refutes it. Freezing such a position makes it FROZEN in every build, so it leaves
+    # RESPONSIVE, reaches no axis, and lands in UNREACHED -- where this census fails the run and
+    # names the path. It is unconvictable by the CAPTION GATE and convictable by THIS ONE, which
+    # is why the boundary belongs beside the verdict rather than in a bucket name.
+    # Both polarities are demonstrated on the founding instance by --battery item 3.
+    # COMPUTED EVERY RUN -- never a frozen list.
+    sole_movers = sorted(
+        b["path"] for b in buckets["RESPONSIVE"]
+        if not [lp for lp in scope_by_axis_any_moved
+                if lp.startswith(_container_of(b["path"]) + ".") and lp != b["path"]]
+    )
+
     adjudicated = ({e["path"] for e in buckets["EXEMPTED"]}
                    | {e["path"] for e in buckets["CARRIED_UNVERIFIABLE"]}
                    | {e["path"] for e in buckets["UNREACHED"]})
@@ -1062,6 +1268,39 @@ def coverage_census(art_base: dict, per_axis: dict[str, dict], allowlist: dict,
             "where that is impossible to miss."
         ),
         "n_UNREACHED_THIS_IS_THE_RED": len(buckets["UNREACHED"]),
+        "SOLE_MOVER_POSITIONS": {
+            "WHAT_THIS_IS": (
+                "RESPONSIVE positions that are the ONLY moving leaf inside their own container. "
+                "RESPONSIVE certifies today's bytes recompute; this names the positions whose "
+                "watch by the CAPTION GATE would evaporate the instant they stopped. A position "
+                "that is only guarded while it happens to be innocent is not guarded."
+            ),
+            "paths": sole_movers,
+            "n": len(sole_movers),
+            "n_RESPONSIVE_total": len(buckets["RESPONSIVE"]),
+            "CAPTION_GATE_REACHES_THEM": False,
+            "WHY_NOT": (
+                "The caption gate scores a frozen leaf against numerals moved inside its own "
+                "container's subtree. For these positions the only such donor IS the leaf, so "
+                "freezing it destroys its own convicting evidence -- SELF-CLOAKING. This is not "
+                "an axis gap and cannot be closed by adding axes: every added axis moves the "
+                "defendant, never a sibling."
+            ),
+            "THIS_CENSUS_REACHES_THEM": True,
+            "WHY": (
+                "A frozen sole-mover leaves RESPONSIVE (it no longer moves under any axis), is "
+                "reached by no axis, and is not adjudicated STRUCTURAL -- so it lands in "
+                "UNREACHED and this census refuses the run, naming the path. MEASURED on the "
+                "founding instance, both polarities, by --battery item 3."
+            ),
+            "BOUNDARY_THAT_REMAINS": (
+                "A frozen sole-mover escapes only if someone ALSO adds a STRUCTURAL_NUMERALS "
+                "entry for it -- which must name a kind from the closed vocabulary, must "
+                "account for EVERY numeral in the sentence, and fails if any declared numeral "
+                "is observed to move. That is a visible, checked, deliberate act, not an "
+                "omission; the caption class this file exists to defeat is the omission."
+            ),
+        },
         "buckets": buckets,
         "bad_structural_claims": bad_structural,
         "structural_entries_that_matched_nothing": dead_structural,
@@ -1745,12 +1984,10 @@ def assert_discrimination_census() -> dict:
 
     tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
     line_to_key: dict[int, str] = {}
-    for n in ast.walk(tree):
-        if isinstance(n, ast.Assert):
-            src = ast.unparse(n.test)
-            keys = [k for k in ASSERT_DISPOSITIONS if k in src]
-            if len(keys) == 1:
-                line_to_key[n.lineno] = keys[0]
+    for lineno, src in _guard_nodes(tree):
+        keys = [k for k in ASSERT_DISPOSITIONS if k in src]
+        if len(keys) == 1:
+            line_to_key[lineno] = keys[0]
 
     # ★ REACHABILITY FIRST, OR THE COLUMN LIBELS HALF THE FILE. "No probe failed it" means two
     # very different things: the assert RAN under the probes and held, or the assert never ran at
@@ -2165,7 +2402,7 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     },
     "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.SOURCE_INVARIANT_derivation": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
-        "numerals": ["3", "5", "8"],
+        "numerals": ["4", "5", "9"],
         "why": "Same construction, same reason, other half of the split.",
     },
     "$.SELF_ACCOUNTING.n_asserts_note": {
@@ -4171,6 +4408,7 @@ def _summarise(art: dict) -> None:
     print(f"OK  CAPTION GATE [{gate['n_axes']} axes]: {gate['n_prose_fields_examined']} prose fields "
           f"vs {gate['n_numeric_leaves_that_moved']} moved numeric leaves -> "
           f"{gate['n_violations']} violations")
+    _print_boundary("CAPTION_GATE")
     cc = art["CAPTION_GATE_COVERAGE_CENSUS"]
     print(f"OK  GATE COVERAGE: {cc['COVERAGE']} numeral-carrying prose leaves watched "
           f"({cc['n_RESPONSIVE']} responsive + {cc['n_COVERED']} covered) | "
@@ -4179,6 +4417,15 @@ def _summarise(art: dict) -> None:
           f"{cc['n_UNREACHED_THIS_IS_THE_RED']} unreached")
     print(f"      {cc['n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF']} numeral-free prose "
           "leaves excluded by proof (no numeral -> no possible conviction)")
+    # ★ THE SOLE-MOVER CLASS, PRINTED BESIDE THE COVERAGE FIGURE IT QUALIFIES. Leaving this
+    # inside the RESPONSIVE count would let the coverage number vouch for exactly the positions
+    # the caption gate cannot hold. COMPUTED every run.
+    smp = cc["SOLE_MOVER_POSITIONS"]
+    print(f"      SOLE-MOVER POSITIONS: {smp['n']} of {smp['n_RESPONSIVE_total']} RESPONSIVE "
+          "leaves are the only mover in their container -- caption-gate-immune, census-reachable")
+    for pth in smp["paths"]:
+        print(f"        {pth}")
+    _print_boundary("COVERAGE_CENSUS")
     ad = art["SELF_ACCOUNTING"]["ASSERT_DISCRIMINATION_COMPUTED"]
     print(f"OK  ASSERT DISCRIMINATION [{ad['n_probes']} probes]: {ad['n_DISCRIMINATING']} "
           f"discriminating | {ad['n_REACHED_BUT_NO_PROBE_FAILS_IT']} reached-but-never-failed "
@@ -4188,16 +4435,19 @@ def _summarise(art: dict) -> None:
     print(f"OK  subprocess boundary: {sp['n_modules_scanned']} modules AST-scanned, "
           f"{len(sp['findings'])} spawn sites, {len(sp['unexpected_spawns'])} unexpected "
           f"({sp['PASS']})")
+    _print_boundary("SUBPROCESS_BOUNDARY")
     eg = art.get("EVIDENTIAL_CLAIM_GATE")
     if eg:
         print(f"OK  EVIDENTIAL-CLAIM GATE: {eg['n_frozen_prose_leaves_SCORED']} frozen prose "
               f"leaves scored -> {eg['n_convictions']} convictions, {eg['n_adjudicated']} "
               f"adjudicated (flagged/scored {eg['precision_COMPUTED']['flagged_over_scored']})")
+        _print_boundary("EVIDENTIAL_CLAIM_GATE")
     rf = ad.get("REVIVAL_FAMILY")
     if rf:
         print(f"OK  REVIVAL PROBES: {rf['n_probes']} value injections, "
               f"{ad['n_REVIVED_BY_VALUE_INJECTION']} asserts revived, "
               f"{len(rf['MISDIRECTED_PROBES_THIS_IS_THE_RED'])} misdirected ({rf['PASS']})")
+        _print_boundary("REVIVAL_FAMILY")
     ws = art.get("WRITE_SITE_CENSUS")
     if ws:
         print(f"OK  write sites: {ws['n_write_sites_COMPUTED']} (sole writer "
@@ -4276,9 +4526,9 @@ def main(argv: list[str] | None = None) -> None:
     # structural intent at the point where the intent matters, and it is classified rather than
     # counted as a check. It is a PRECONDITION because it previously sat BELOW the write, where
     # the overwrite it names had already happened by the time it ran.
-    assert OUT_PATH not in APPEND_ONLY_GUARDED, (
+    refuse_unless(OUT_PATH not in APPEND_ONLY_GUARDED, "PUBLISH_PRECONDITION", (
         f"output path {OUT_PATH} collides with a guarded prior artifact -- refusing to overwrite"
-    )
+    ))
 
     # WIDER THAN THE GUARDED LIST. The five named files were a curated enumeration, and a curated
     # enumeration is exactly what understated the 921. Every pre-existing file in the directory is
@@ -4363,6 +4613,7 @@ def main(argv: list[str] | None = None) -> None:
     # Computed HERE and not inside the body: it rebuilds the artifact once per probe, so calling
     # it from _build_artifact_body would recurse. It is attached to the artifact below.
     discrimination = assert_discrimination_census()
+    publish_path = assert_free_publish_path()
 
     if "--axis-replay" in argv:
         # ★ FOUNDING-INSTANCE DISCIPLINE AT BIRTH (R-207 (A)(iv)). Every axis ships with its own
@@ -4682,6 +4933,19 @@ def main(argv: list[str] | None = None) -> None:
         cap9_container = cap9_path.rsplit(".", 1)[0]
         c9 = caption_gate(p3, p3ax, NON_RESPONSIVE_PROSE_ALLOWLIST)
         e9 = evidential_claim_gate(p3, p3ax, STRUCTURAL_NUMERALS)
+        # ★★★ THE THIRD GATE, WHICH IS THE ONE THAT REACHES IT -- AND NOT ASKING IT WAS THE BUG.
+        # Every prior run of this item scored the plant against the CAPTION gate and the
+        # EVIDENTIAL gate only, then reported "structurally unconvictable" when both stayed
+        # silent. That conclusion was a property of WHICH GATES WERE ASKED, which is this file's
+        # own R-207 finding ("the single-axis gate reported 0 violations, and that was read as
+        # the prose being clean; it was a property of the gate") committed a second time, by the
+        # harness, against itself.
+        # The COVERAGE CENSUS convicts it: a frozen sole-mover leaves RESPONSIVE, is reached by
+        # no axis, is not adjudicated STRUCTURAL, and lands in UNREACHED -- which refuses the
+        # run and names the path. Scored here so the item's verdict is about the INSTRUMENT
+        # rather than about two of its three gates.
+        n9 = coverage_census(p3, p3ax, NON_RESPONSIVE_PROSE_ALLOWLIST, STRUCTURAL_NUMERALS)
+        planted_cen = [u for u in n9["buckets"]["UNREACHED"] if u["path"] == cap9_path]
         planted_cap = [v for v in c9["violations"] if v["path"] == cap9_path]
         planted_ev = [v for v in e9["convictions"] if v["path"] == cap9_path]
         # WHICH LEAVES DONATED THE CONVICTING NUMERALS. Recomputed here from the same union of
@@ -4697,11 +4961,12 @@ def main(argv: list[str] | None = None) -> None:
             if lp.startswith(cap9_container + ".") and (forms & convicting)
         )
         # GREEN POLARITY: the LIVE file, unplanted, at the very same path.
-        live_green = not [v for v in gate["violations"] if v["path"] == cap9_path] and gate["PASS"]
+        live_green = (not [v for v in gate["violations"] if v["path"] == cap9_path]
+                      and gate["PASS"] and census["PASS"])
         # The plant is the D1 shape only if it freezes the field to what it currently evaluates
         # to. If the live text has drifted from the pinned bytes, say so -- do not fit.
         freeze_is_exact = live_computed_text == CAPTION_9_LITERAL
-        convicted = bool(planted_cap) or bool(planted_ev)
+        convicted = bool(planted_cap) or bool(planted_ev) or bool(planted_cen)
 
         # ★★★ WHY THE ANSWER IS "NO", AND THE MECHANISM IS NOT THE ONE ON RECORD.
         # AR-196 s3 attributed the escape to "its container holds only unmoving leaves". That is
@@ -4728,12 +4993,13 @@ def main(argv: list[str] | None = None) -> None:
         for a3 in per_axis.values():
             for lp, forms in _moved_leaves_for(live_base, dict(_leaves(a3))):
                 live_donors.setdefault(lp, set()).update(forms)
+        # ONE SOURCE, NOT TWO. This class census used to be recomputed here from the same donor
+        # map the census uses, and reporting both would be reporting one path twice wearing a
+        # corroboration's name. It now READS the census's computed bucket, and the local donor
+        # map above is used only to name THIS field's own moved spellings in the message.
+        smp = census["SOLE_MOVER_POSITIONS"]
+        sole_movers = smp["paths"]
         responsive_paths = [b["path"] for b in census["buckets"]["RESPONSIVE"]]
-        sole_movers = sorted(
-            pth for pth in responsive_paths
-            if not [lp for lp in live_donors
-                    if lp.startswith(_container_of(pth) + ".") and lp != pth]
-        )
         results["3 caption 9 LITERAL replay"] = (
             "PASS" if convicted and live_green else "FAIL",
             f"planted the literal bytes of 6850b6ab:1463-1467 at {cap9_path} "
@@ -4749,7 +5015,21 @@ def main(argv: list[str] | None = None) -> None:
             "Freezing the field removes the only donor that could convict it -- SELF-CLOAKING, "
             "not an axis gap, and unreachable by adding axes. "
             f"CLASS CENSUS: {len(sole_movers)} of {len(responsive_paths)} RESPONSIVE prose leaves "
-            f"are sole movers in their container and share this immunity: {sole_movers}.",
+            f"are sole movers in their container and share that caption-gate immunity: {sole_movers}. "
+            ">> WHAT CONVICTS IT, AND WHY THAT REASON IS NOT FRAGILE: the COVERAGE CENSUS, which "
+            f"buckets the frozen position UNREACHED = {bool(planted_cen)} on numerals "
+            f"{planted_cen[0]['numerals'] if planted_cen else 'none'} (planted census PASS = "
+            f"{n9['PASS']}, live census PASS = {census['PASS']}). The census's warrant is "
+            "'no axis can reach this sentence, so nothing here can tell whether it is computed "
+            "or typed' -- which is caption 9's escape stated correctly, NOT a collateral hit. "
+            "Contrast battery item 1, where the caption gate convicts caption 1 by NUMERAL "
+            "COLLISION on the 6 in 'section 6a' and would stop convicting on a section renumber; "
+            "this conviction depends on no numeral's spelling and no neighbour's content -- only "
+            "on the position having gone frozen, which is the defect itself. "
+            ">> THE PREMISE THIS REFUTES: 'structurally unconvictable' was a property of WHICH "
+            "GATES THIS ITEM ASKED (caption + evidential), not of the instrument. The census was "
+            "never scored here until now. That is R-207's own finding -- a gate's silence read as "
+            "the prose being clean -- committed a second time by the harness, against itself.",
         )
 
         # ---- ITEM 4: one per bypass class.
@@ -4857,13 +5137,20 @@ def main(argv: list[str] | None = None) -> None:
     art["SUBPROCESS_BOUNDARY"] = spawn
     art["SELF_ACCOUNTING"]["ASSERT_DISCRIMINATION_COMPUTED"] = discrimination
     art["BLIND_SPOT_CENSUS"] = blind_spot_census(census, spawn, discrimination, evidential)
-    assert spawn["PASS"], (
+    art["ASSERT_FREE_PUBLISH_PATH"] = publish_path
+    refuse_unless(publish_path["PASS"], "NO_ASSERT_ON_THE_PUBLISH_PATH", (
+        "AN ASSERT IS BACK ON THE PUBLISH PATH -- `python -O` strips it, and the guard then "
+        "computes its verdict, prints it, and does not act on it. Use refuse_unless:\n"
+        + "\n".join(f"  main():{a['line']}  assert {a['test']}"
+                    for a in publish_path["asserts_found"])
+    ))
+    refuse_unless(spawn["PASS"], "SUBPROCESS_BOUNDARY", (
         "SUBPROCESS BOUNDARY BREACHED -- the read trace records Python-level opens only, and a "
         "spawn outside the named git call sites can read an input the input guard cannot see:\n"
         + "\n".join(f"  {f['path']}:{f['line']} {f['primitive']} in {f['enclosing_function']}"
                     for f in spawn["unexpected_spawns"])
-    )
-    assert census["PASS"], (
+    ))
+    refuse_unless(census["PASS"], "COVERAGE_CENSUS", (
         "COVERAGE CENSUS FAILED -- a prose leaf quotes a numeral that NO axis can reach, so "
         "nothing in this file can tell whether it is computed or typed. Add an axis that moves "
         "it, or adjudicate it as STRUCTURAL with its kind named:\n"
@@ -4879,8 +5166,8 @@ def main(argv: list[str] | None = None) -> None:
            + "; ".join(f"{L['path']} quotes {L['free_standing_moved_numerals']}"
                        for L in census["identifier_exclusion_audit"]["leaks"])
            if census["identifier_exclusion_audit"]["leaks"] else "")
-    )
-    assert evidential["PASS"], (
+    ))
+    refuse_unless(evidential["PASS"], "EVIDENTIAL_CLAIM_GATE", (
         "R-219 EVIDENTIAL-CLAIM GATE FAILED -- a FROZEN prose string claims to have observed "
         "something. A string literal never consulted the data, so the claim is unearned by "
         "construction; no perturbation is needed to know that. Make it computed, or delete it:\n"
@@ -4892,14 +5179,14 @@ def main(argv: list[str] | None = None) -> None:
         + ("\n  ADJUDICATIONS MATCHING NOTHING (delete them): "
            + ", ".join(evidential["adjudications_that_matched_nothing"])
            if evidential["adjudications_that_matched_nothing"] else "")
-    )
-    assert discrimination["REVIVAL_FAMILY"]["PASS"], (
+    ))
+    refuse_unless(discrimination["REVIVAL_FAMILY"]["PASS"], "REVIVAL_FAMILY", (
         "REVIVAL PROBE MISDIRECTED -- a probe declared it would make one assert fire and made a "
         "different one fire, or none. 'Revived' would then be a claim nobody checked:\n"
         + "\n".join(f"  {m['probe']}: declared {m['declared_target']!r}, observed {m['observed']!r}"
                     for m in discrimination["REVIVAL_FAMILY"]["MISDIRECTED_PROBES_THIS_IS_THE_RED"])
-    )
-    assert gate["PASS"], (
+    ))
+    refuse_unless(gate["PASS"], "CAPTION_GATE", (
         "R-203 s1 CAPTION GATE FAILED -- a prose field quoted a number the data moved and did not "
         "move with it:\n"
         + "\n".join(f"  {v['path']}  froze {v['frozen_numerals_that_moved']}\n    {v['text'][:240]}"
@@ -4907,7 +5194,7 @@ def main(argv: list[str] | None = None) -> None:
         + ("\n  DEAD ALLOWLIST ENTRIES (suppress nothing, delete them): "
            + ", ".join(gate["allowlist_entries_that_fired_on_nothing"])
            if gate["allowlist_entries_that_fired_on_nothing"] else "")
-    )
+    ))
 
     input_check["traced_reads"] = sorted(p.relative_to(REPO_ROOT).as_posix() for p in traced)
     input_check["n_traced_reads"] = len(traced)
@@ -4939,21 +5226,21 @@ def main(argv: list[str] | None = None) -> None:
 
     head_check = verify_guarded_match_head(APPEND_ONLY_GUARDED, REPO_ROOT)
     art["APPEND_ONLY_VERIFICATION"] = head_check
-    assert head_check["all_match"], (
+    refuse_unless(head_check["all_match"], "APPEND_ONLY", (
         "APPEND-ONLY VIOLATED AGAINST HEAD: a guarded artifact differs from its committed bytes.\n"
         + "\n".join(f"  {r}" for r in head_check["rows"] if not r.get("match"))
         + "\n  'Clean because nothing has looked' is not clean -- git's stat cache had not been "
           "invalidated, so `git status` was answering from a stale mtime rather than the content."
-    )
+    ))
 
     publish_artifact(art)
 
     after_hashes = {p.name: sha(p) for p in scope if p.exists()}
-    assert before_hashes == after_hashes, (
+    refuse_unless(before_hashes == after_hashes, "APPEND_ONLY", (
         "APPEND-ONLY VIOLATED: a pre-existing artifact in this directory changed during this run:\n"
         + "\n".join(f"  {k}: {before_hashes.get(k)} -> {after_hashes.get(k)}" for k in before_hashes
                     if before_hashes.get(k) != after_hashes.get(k))
-    )
+    ))
     _summarise(art)
 
 
