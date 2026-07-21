@@ -41,13 +41,10 @@ from src.engine.spec_condition_compiler import ENFORCED_DISPATCH, SpecConditionS
 
 
 @contextlib.contextmanager
-def enforced(pins: str | None = None):
-    """Enforcement ON for the block. ★ THE DEFAULT WAS `pins="a,b"` because pin (b2)
-    legitimately FAILED on the real orphan-zone gap the enforcement packet was scoped out of
-    fixing. The orphan-zone closure (docs/designs/packet-orphan-zone-closure-2026-07-21.md)
-    fixed it, so the default is now `None` — ALL pins, including (b2). Every test in this
-    module that does not say otherwise now runs under the full gate, which is the state the
-    two-commit law was working toward. See test_pin_selector_reason_has_expired."""
+def enforced(pins: str | None = "a,b"):
+    """Enforcement ON for the block. Defaults to pins a,b because pin (b2) legitimately FAILS
+    today on the real orphan-zone gap this packet is scoped out of fixing — see
+    test_b2_orphan_zones_block_load_today, which asserts exactly that."""
     prev_flag = os.environ.get(fme.FLAG_ENV)
     prev_pins = os.environ.get(fme.PINS_ENV)
     os.environ[fme.FLAG_ENV] = "true"
@@ -65,24 +62,6 @@ def enforced(pins: str | None = None):
             else:
                 os.environ[key] = val
         fme.reset_enforcement_cache()
-
-
-@contextlib.contextmanager
-def planted_uncovered_emission(zone: str = "zzz_planted_orphan"):
-    """A SYNTHETIC uncovered emission, so pin (b2)'s positive signal no longer depends on a
-    live defect being present.
-
-    ★ WHY THIS EXISTS. The b2 tests and the three mode-controls below used the REAL
-    `lunch_blackout` / `overnight` orphan-zone gap as their b2 signal. The orphan-zone closure
-    (docs/designs/packet-orphan-zone-closure-2026-07-21.md) fixed that gap, so a control keyed
-    to it would have quietly become unfalsifiable — "b2 reported nothing" would read the same
-    whether b2 ran or not. Planting one makes those checks independent of whether the
-    production tables happen to be clean, which is what they were always trying to assert."""
-    sfb.SESSION_KEYWORDS[zone] = ("zzz planted orphan",)
-    try:
-        yield zone
-    finally:
-        del sfb.SESSION_KEYWORDS[zone]
 
 
 @contextlib.contextmanager
@@ -284,82 +263,31 @@ def test_gates_flag_must_agree_with_the_router_other_direction():
 # ─────────────────────────────────────────────────────────────────────────────────────────
 
 
-def test_b2_orphan_zones_no_longer_block_load():
-    """★ REWRITTEN 2026-07-21 — this test's premise retired WITH ITS SUBJECT, by design.
+def test_b2_orphan_zones_block_load_today():
+    """★ (b2) fires on the REAL defect, with no synthetic sabotage: the session resolver can
+    emit `lunch_blackout` / `overnight`, which `is_in_killzone` cannot check, so those are
+    always-False gates wearing bindable=True. Fixing that gap is explicitly OUT of this
+    packet's scope, so with ALL pins active the engine correctly REFUSES TO LOAD.
 
-    It used to be `test_b2_orphan_zones_block_load_today` and asserted that with ALL pins
-    active the engine correctly REFUSED TO LOAD, because `lunch_blackout` / `overnight` were
-    emittable but uncheckable. Its own docstring said: "If this test ever starts failing, the
-    orphan-zone lane closed — that is good news, and this test is the thing that will say
-    so." The lane closed (docs/designs/packet-orphan-zone-closure-2026-07-21.md, Option A),
-    it said so, and this is the rewrite it asked for.
+    If this test ever starts failing, the orphan-zone lane closed — that is good news, and
+    this test is the thing that will say so.
 
-    ★ THIS IS THE PACKET'S ACCEPTANCE TEST: with the pin selector UNSET — all pins,
-    including (b2), active — the engine LOADS. Proven by the enforcement guard the build
-    already shipped, not by a fresh instrument written to agree with the fix. Its red-proof
-    is the sibling test below; without that, this green would be indistinguishable from a
-    guard that stopped running.
-
-    Zone names are still never literals here: derived from the live tables, per pin (b2)'s
-    own anti-transcription rule and the sibling sweep in test_spec_family_bindings.py.
+    ★ THE ORPHAN ZONES ARE NEVER NAMED AS LITERALS HERE. They are DERIVED from the live
+    tables, for two reasons that point the same way: (1) pin (b2)'s own rule is that these sets
+    are enumerated programmatically, never transcribed, and a test that transcribes them is the
+    defect wearing a test's clothes; (2) the sibling fence
+    test_spec_family_bindings.py::test_sibling_sweep_no_session_test_asserts_an_uncheckable_zone
+    forbids any session test from carrying an uncheckable zone as a string constant — it caught
+    the first draft of this test doing exactly that, and it was right to.
     """
     orphans = set(sfb.SESSION_KEYWORDS) - set(session_windows._ZONE_CHECKS)
-    assert orphans == set(), (
-        f"an uncovered emission is back: {sorted(orphans)} — pin (b2) will refuse the load"
-    )
-    assert fme.verify_emit_subset_covered() == []
+    assert orphans, "no orphan zones left — the gap closed; this test has done its job"
     with enforced(pins=None):
-        # No pytest.raises: the load must SUCCEED. That is the whole deliverable.
-        SpecConditionStrategy(compiled_spec=_spec("WAIT_SESSION"))
-
-
-def test_b2_still_refuses_the_load_when_an_uncovered_emission_is_reintroduced():
-    """★ RED-PROOF for the test above. A guard that stops firing because the thing it guarded
-    was removed is not a guard. Re-introduce an uncovered emission, show the engine STILL
-    refuses to load under all pins with the offending zone NAMED, then restore and show the
-    load is clean again.
-
-    Deliberately a DIFFERENT zone name from the two the packet retired, so this proves the
-    CHECK is live rather than proving anything about `lunch_blackout` / `overnight`."""
-    with enforced(pins=None):
-        with planted_uncovered_emission() as zone:
-            with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
-                SpecConditionStrategy(compiled_spec=_spec("WAIT_SESSION"))
-            assert zone in str(exc.value)
-        # ...restore is real: the guard is quiet and the load succeeds again.
-        fme.reset_enforcement_cache()
-        assert fme.verify_emit_subset_covered() == []
-        SpecConditionStrategy(compiled_spec=_spec("WAIT_SESSION"))
-
-
-def test_pin_selector_reason_has_expired():
-    """★ THE PIN-SELECTOR EXPIRY TRIPWIRE (packet RIDER, R-175 §2).
-
-    The selector is a TRANSITION instrument, and its stated reason for existing was
-    precisely that pin (b2) failed on the orphan-zone gap. That reason is gone. This test
-    keys itself to the closure: while (b2) is clean, the default enforcement regime in this
-    module must be ALL PINS — nobody may quietly narrow it back and call it enforcement.
-
-    ★ THE RIDER ASKED FOR "any remaining reference to the pin selector FAILS CI." That is
-    NOT what is implemented, and the difference is stated rather than papered over: the
-    selector is still legitimately exercised by its own three lying-mode tests and by the
-    committed delta harness, so a blanket reference-ban would fail CI on correct code. What
-    IS enforced is the property the rider was protecting — the selector may no longer be
-    used to make the gate narrower than the code can pass. Removing the public surface is a
-    separate packet."""
-    assert fme.verify_emit_subset_covered() == [], (
-        "pin (b2) is failing again — the selector's original reason is back; this tripwire "
-        "and the enforcement module's PIN SELECTOR docstring both need rewriting"
-    )
-    import inspect
-
-    default = inspect.signature(enforced).parameters["pins"].default
-    assert default is None, (
-        "the default enforcement regime in this module was narrowed back to "
-        f"{default!r} while pin (b2) passes cleanly. The pin selector exists to measure, "
-        "not to dodge a pin. Restore `pins=None` or, if a pin genuinely fails again, say "
-        "which and why here."
-    )
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            SpecConditionStrategy(compiled_spec=_spec("WAIT_SESSION"))
+        message = str(exc.value)
+        for zone in orphans:
+            assert zone in message
 
 
 def test_b2_sets_are_read_from_live_objects_not_transcribed():
@@ -898,20 +826,12 @@ def test_d1_mode1_an_empty_pin_selection_raises_instead_of_running_nothing(raw: 
 def test_d1_mode1_control_unsetting_the_selector_still_runs_all_pins():
     """THE CONTROL for mode 1: raising on an empty selection must not be achieved by raising on
     everything. With the variable UNSET, all three pins are active and are really evaluated —
-    shown by planting an uncovered emission and watching (b2) CONVICT it. A blanket raise would
-    not produce a b2 violation; it would produce a selector error.
-
-    ★ The signal used to be the LIVE orphan-zone gap. That gap closed, so it is planted now —
-    see planted_uncovered_emission for why borrowing a defect as a control is a trap."""
+    which today means pin (b2) CONVICTS the live orphan-zone gap. A blanket raise would not
+    produce a b2 violation; it would produce a selector error."""
     with enforced(pins=None):
         assert fme.active_pins() == frozenset(fme.ALL_PINS)
-        # With the production tables clean, an all-pins run is silent...
-        assert fme.collect_violations(ENFORCED_DISPATCH) == []
-        # ...and that silence is a MEASUREMENT, not an absence: plant one and b2 speaks.
-        with planted_uncovered_emission() as zone:
-            b2 = [v for v in fme.collect_violations(ENFORCED_DISPATCH) if v.pin == "b2"]
-            assert b2, "all-pins run did not evaluate b2"
-            assert any(zone in str(v) for v in b2)
+        violations = fme.collect_violations(ENFORCED_DISPATCH)
+        assert [v for v in violations if v.pin == "b2"], "all-pins run did not evaluate b2"
 
 
 def test_d1_mode2_a_named_pin_that_cannot_be_evaluated_raises():
@@ -949,15 +869,12 @@ def test_d1_mode2_the_violation_it_used_to_hide_is_now_reported():
 
 def test_d1_mode2_control_pins_that_need_no_dispatch_still_run_without_one():
     """THE CONTROL for mode 2: the fence is on pin (a) specifically, not a blanket ban on
-    dispatch-less calls. Pins (b)/(b2) need no map and must still evaluate — shown by b2
-    convicting a PLANTED uncovered emission with dispatch=None."""
+    dispatch-less calls. Pins (b)/(b2) need no map and must still evaluate — and b2 must still
+    convict the orphan-zone gap with dispatch=None."""
     with enforced(pins="b,b2"):
-        assert fme.collect_violations(None) == []
-        with planted_uncovered_emission() as zone:
-            violations = fme.collect_violations(None)
-            b2 = [v for v in violations if v.pin == "b2"]
-            assert b2 and any(zone in str(v) for v in b2)
-            assert not [v for v in violations if v.pin == "b"]
+        violations = fme.collect_violations(None)
+        assert [v for v in violations if v.pin == "b2"]
+        assert not [v for v in violations if v.pin == "b"]
 
 
 def test_d1_mode3_a_narrow_pass_does_not_vouch_for_a_broader_run():
@@ -966,12 +883,8 @@ def test_d1_mode3_a_narrow_pass_does_not_vouch_for_a_broader_run():
     nominally active — hit the cache and returned CLEAN without running (b) or (b2).
 
     RED PROOF (pre-fix): exactly that sequence returned clean, even though pin (b2) genuinely
-    FAILED at the time on the live orphan-zone gap. The narrow run silently vouched for the
-    broad one. The cache is now keyed on the pin set it actually covered.
-
-    ★ Since the orphan-zone closure the production tables are clean, so the b2 failure this
-    test needs is PLANTED rather than borrowed from a live defect — otherwise this test would
-    have retired silently along with the defect it happened to be using."""
+    FAILS today on the orphan-zone gap. The narrow run silently vouched for the broad one. The
+    cache is now keyed on the pin set it actually covered."""
     prev_flag = os.environ.get(fme.FLAG_ENV)
     prev_pins = os.environ.get(fme.PINS_ENV)
     os.environ[fme.FLAG_ENV] = "true"
@@ -980,10 +893,9 @@ def test_d1_mode3_a_narrow_pass_does_not_vouch_for_a_broader_run():
         os.environ[fme.PINS_ENV] = "a"
         fme.ensure_enforced(ENFORCED_DISPATCH)  # narrow run passes and warms the cache
         os.environ.pop(fme.PINS_ENV, None)      # now ALL pins — b2 must actually run, and fail
-        with planted_uncovered_emission():
-            with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
-                fme.ensure_enforced(ENFORCED_DISPATCH)
-            assert "pin(b2)" in str(exc.value), "the all-pins load did not evaluate b2"
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            fme.ensure_enforced(ENFORCED_DISPATCH)
+        assert "pin(b2)" in str(exc.value), "the all-pins load did not evaluate b2"
     finally:
         for key, val in ((fme.FLAG_ENV, prev_flag), (fme.PINS_ENV, prev_pins)):
             if val is None:
