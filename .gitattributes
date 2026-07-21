@@ -61,7 +61,11 @@
 #     6fd36843  "restore: re-land AR-200..207 ... after a concurrent reset dropped them"
 #                -> introduced all three classifier-fix artifacts AND the .ts file as CRLF
 # ---------------------------------------------------------------------------------------- #
-docs/replay-results/classifier-fix/ladder-recomputed.json          !text !eol
+# NORMALIZED, exemption retired: ladder-recomputed.json (287 CRLF -> 287 LF, 11835 -> 11548
+# bytes). EOL-ONLY PROOF: `git diff --ignore-cr-at-eol` empty over the change, and the parsed
+# JSON object is identical pre/post. Its generator (ladder_recompute.py) now pins
+# newline="\n", so a regeneration reproduces LF instead of re-dirtying the blob -- the
+# exemption is retired and the source of the CRLF is closed in the same unit.
 docs/replay-results/classifier-fix/classifier-fix-delta.json       !text !eol
 docs/replay-results/classifier-fix/premise-audit-arrival-paths.json !text !eol
 src/server/lib/spec-timeframe-recovery.ts                          !text !eol
