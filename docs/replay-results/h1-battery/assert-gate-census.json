@@ -1,0 +1,1155 @@
+{
+  "artifact": "assert-gate-census",
+  "generator": "docs/replay-results/h1-battery/assert_gate_census.py",
+  "scope_line": "corpus = every .py in the repo outside ['.git', '.mypy_cache', '.next', '.pytest_cache', '.ruff_cache', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'site-packages', 'venv'] (734 files; 364 test files EXCLUDED BY CATEGORY -- pytest is assert's habitat; 370 non-test files examined) \u00b7 a file qualifies when it has an entry function AND writes a file \u00b7 run-entry path = entry function PLUS every module function transitively reachable from it by direct call",
+  "denominator_python_files": 734,
+  "denominator_test_files_excluded": 364,
+  "denominator_non_test_files_examined": 370,
+  "denominator_instrument_guard_generator_files": 62,
+  "n_files_with_asserts_on_run_entry_path": 3,
+  "n_asserts_on_run_entry_path": 25,
+  "asserts_by_depth": {
+    "reachable_from_entry": 25
+  },
+  "WHY_DEPTH_MATTERS": "`entry` asserts are what a main()-only rule can see. `reachable_from_entry` asserts are the ones it CANNOT -- and the founding instance of this census, the CEILING gate at dual_denominator_remeasure.py:3813, is one of them. It sits in _build_artifact_body, a helper main() calls, inside a directory an existing rule already scanned. Depth is published so the widening is auditable, not asserted.",
+  "offenders": [
+    {
+      "file": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 68,
+      "n_functions_on_run_entry_path": 60,
+      "defines_refuse_unless": true,
+      "n_refuse_unless_calls": 10,
+      "asserts_on_run_entry_path": [
+        {
+          "function": "own_assert_census",
+          "line": 440,
+          "depth": "reachable_from_entry",
+          "predicate": "unexpected_disposition_keys == set()",
+          "message": "f'ASSERT_DISPOSITIONS keys matching zero or multiple asserts: {sorted(unexpected_disposition_keys)}. Every key must name exactly one assert, or the classification is not a classification.'"
+        },
+        {
+          "function": "own_assert_census",
+          "line": 444,
+          "depth": "reachable_from_entry",
+          "predicate": "undispositioned == []",
+          "message": "f'asserts with no (or an ambiguous) disposition: {undispositioned}. Every assert in this file must be declared DATA_SENSITIVE or SOURCE_INVARIANT in ASSERT_DISPOSITIONS. An undeclared assert is one no"
+        },
+        {
+          "function": "own_assert_census",
+          "line": 510,
+          "depth": "reachable_from_entry",
+          "predicate": "derivation['closes_exactly']",
+          "message": "f'ASSERT SPLIT DOES NOT RECONCILE against the ledger: {derivation['DATA_SENSITIVE_derivation']} and {derivation['SOURCE_INVARIANT_derivation']}, but the table declares {declared['DATA_SENSITIVE']}/{de"
+        },
+        {
+          "function": "classify_drift_discrimination_proof",
+          "line": 3077,
+          "depth": "reachable_from_entry",
+          "predicate": "len(set(got.values())) == len(cases)",
+          "message": "f'classify_drift does NOT discriminate: {len(cases)} distinct input patterns produced {len(set(got.values()))} distinct verdicts -- {got}'"
+        },
+        {
+          "function": "classify_drift_discrimination_proof",
+          "line": 3084,
+          "depth": "reachable_from_entry",
+          "predicate": "not got[flat].startswith('SAME_DIRECTION')",
+          "message": "f'{flat} returned {got[flat]}: one metric moved and the verdict claims BOTH did. A SAME_DIRECTION verdict derived while one delta is zero asserts a direction it never measured -- the AR-188 D3 defect."
+        },
+        {
+          "function": "compose_completed_coverage",
+          "line": 3136,
+          "depth": "reachable_from_entry",
+          "predicate": "inval_on_concrete <= inval_off_concrete",
+          "message": "f'ENFORCEMENT DIRECTION VIOLATED: enforcement-ON bound {inval_on_concrete} invalidations concrete but enforcement-OFF bound only {inval_off_concrete}. Enforcement marks entries approximation=True; it "
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3421,
+          "depth": "reachable_from_entry",
+          "predicate": "path1 == path2 == path3",
+          "message": "f'987 derivation DISAGREES across paths: role-tally={path1} complement={path2} family-sum={path3}'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3469,
+          "depth": "reachable_from_entry",
+          "predicate": "a_before['n_bindable'] == a_after['n_bindable']",
+          "message": "'bindable denominator moved between arms; the level/zone flip changes approximation, never bindability'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3532,
+          "depth": "reachable_from_entry",
+          "predicate": "per_kind.get('swing', {}).get('n_flipped', 0) == 0",
+          "message": "'swing MUST NOT de-approximate. Ground (AR-199 s1): swing is the fibonacci ANCHOR, while the taught object is the 50/61.8% line -- an object the level/zone primitive does not emit. NOT the n>=2 floor "
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3540,
+          "depth": "reachable_from_entry",
+          "predicate": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}",
+          "message": "f\"a kind OUTSIDE the two graded kinds de-approximated: {sorted(set(per_kind))}. The flip's grade licenses named_sr_level and order_block_edge ONLY.\""
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3559,
+          "depth": "reachable_from_entry",
+          "predicate": "a_roles.get('trigger', 0) == 0",
+          "message": "f\"Corpus A now holds {a_roles.get('trigger', 0)} trigger-role conditions. The never-pool rule and the 'Corpus A contains ZERO trigger-role conditions' claim both depend on this being 0; if it moved, e"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3645,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']",
+          "message": "f'GUARD BOUNDARY: component A must equal the declared genuine-session-teaching count. computed {graded_teachings} != declared {SESSION_SPLIT_DECLARED['A_genuine_session_teachings']}. The split moved w"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3651,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+          "message": "f'GUARD BOUNDARY: component B must equal the declared mis-type count. computed {graded_mis_types} != declared {SESSION_SPLIT_DECLARED['B_mis_types']}.'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3655,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
+          "message": "f'GUARD BOUNDARY: component C must equal the declared undecidable count. computed {graded_undecidable} != declared {SESSION_SPLIT_DECLARED['C_undecidable']}.'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3662,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_teachings + graded_mis_types + graded_undecidable == ws_taught",
+          "message": "f'GUARD BOUNDARY: the labeled-27 split must close on the corpus. {graded_teachings} A + {graded_mis_types} B + {graded_undecidable} C = {graded_teachings + graded_mis_types + graded_undecidable}, but "
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3677,
+          "depth": "reachable_from_entry",
+          "predicate": "ws_session_resolvable <= graded_teachings",
+          "message": "f'GUARD BOUNDARY: the live session resolver binds {ws_session_resolvable} of {ws_taught} labeled rows to a zone, which EXCEEDS component A ({graded_teachings}). Either the grade understates the genuin"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3811,
+          "depth": "reachable_from_entry",
+          "predicate": "n_levelzone_rows == 16",
+          "message": "f'level/zone census drifted: expected 16 rows, got {n_levelzone_rows}'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3813,
+          "depth": "reachable_from_entry",
+          "predicate": "total_flipped <= 6",
+          "message": "f'CEILING BREACHED: {total_flipped} conditions de-approximated, ceiling is 6 of 16'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3822,
+          "depth": "reachable_from_entry",
+          "predicate": "enf['never_evaluated_total'] == never_by_gap",
+          "message": "f'enforcement artifact says {enf['never_evaluated_total']} never-evaluated; I derive {never_by_gap}'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3826,
+          "depth": "reachable_from_entry",
+          "predicate": "enf['all_entry_conditions'] == b_total",
+          "message": "'enforcement artifact universe size disagrees with mine'"
+        }
+      ],
+      "n_asserts_on_run_entry_path": 20
+    },
+    {
+      "file": "src/engine/extraction/pilot_conveyor.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 29,
+      "n_functions_on_run_entry_path": 22,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [
+        {
+          "function": "prepare_strategy",
+          "line": 1240,
+          "depth": "reachable_from_entry",
+          "predicate": "read_quote.fallthrough is not None",
+          "message": null
+        },
+        {
+          "function": "prepare_strategy",
+          "line": 1257,
+          "depth": "reachable_from_entry",
+          "predicate": "len(spine_conditions) == len(unanchored) + len(condition_outcomes)",
+          "message": "'non-drop invariant violated: a spine condition vanished between extraction and tier-1 classification'"
+        },
+        {
+          "function": "run_dry_run_synthetic",
+          "line": 1838,
+          "depth": "reachable_from_entry",
+          "predicate": "not positive_scan.clean",
+          "message": "'leak-scan birth-gate: FAILED to fire on an injected leak'"
+        },
+        {
+          "function": "run_dry_run_synthetic",
+          "line": 1839,
+          "depth": "reachable_from_entry",
+          "predicate": "prep['leak_scan'].clean",
+          "message": "'leak-scan birth-gate: the real dry-run packet was not clean'"
+        }
+      ],
+      "n_asserts_on_run_entry_path": 4
+    },
+    {
+      "file": "src/engine/extraction/tier2_design_report.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 17,
+      "n_functions_on_run_entry_path": 14,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [
+        {
+          "function": "materialize_design",
+          "line": 89,
+          "depth": "reachable_from_entry",
+          "predicate": "len(rows) == 112",
+          "message": "len(rows)"
+        }
+      ],
+      "n_asserts_on_run_entry_path": 1
+    }
+  ],
+  "all_instrument_files": [
+    {
+      "file": "docs/replay-results/classifier-fix/ladder_recompute.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 11,
+      "n_functions_on_run_entry_path": 11,
+      "defines_refuse_unless": true,
+      "n_refuse_unless_calls": 9,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/assert_gate_census.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 8,
+      "n_functions_on_run_entry_path": 8,
+      "defines_refuse_unless": true,
+      "n_refuse_unless_calls": 2,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/deferred_family_census.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 2,
+      "n_functions_on_run_entry_path": 2,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 68,
+      "n_functions_on_run_entry_path": 60,
+      "defines_refuse_unless": true,
+      "n_refuse_unless_calls": 10,
+      "asserts_on_run_entry_path": [
+        {
+          "function": "own_assert_census",
+          "line": 440,
+          "depth": "reachable_from_entry",
+          "predicate": "unexpected_disposition_keys == set()",
+          "message": "f'ASSERT_DISPOSITIONS keys matching zero or multiple asserts: {sorted(unexpected_disposition_keys)}. Every key must name exactly one assert, or the classification is not a classification.'"
+        },
+        {
+          "function": "own_assert_census",
+          "line": 444,
+          "depth": "reachable_from_entry",
+          "predicate": "undispositioned == []",
+          "message": "f'asserts with no (or an ambiguous) disposition: {undispositioned}. Every assert in this file must be declared DATA_SENSITIVE or SOURCE_INVARIANT in ASSERT_DISPOSITIONS. An undeclared assert is one no"
+        },
+        {
+          "function": "own_assert_census",
+          "line": 510,
+          "depth": "reachable_from_entry",
+          "predicate": "derivation['closes_exactly']",
+          "message": "f'ASSERT SPLIT DOES NOT RECONCILE against the ledger: {derivation['DATA_SENSITIVE_derivation']} and {derivation['SOURCE_INVARIANT_derivation']}, but the table declares {declared['DATA_SENSITIVE']}/{de"
+        },
+        {
+          "function": "classify_drift_discrimination_proof",
+          "line": 3077,
+          "depth": "reachable_from_entry",
+          "predicate": "len(set(got.values())) == len(cases)",
+          "message": "f'classify_drift does NOT discriminate: {len(cases)} distinct input patterns produced {len(set(got.values()))} distinct verdicts -- {got}'"
+        },
+        {
+          "function": "classify_drift_discrimination_proof",
+          "line": 3084,
+          "depth": "reachable_from_entry",
+          "predicate": "not got[flat].startswith('SAME_DIRECTION')",
+          "message": "f'{flat} returned {got[flat]}: one metric moved and the verdict claims BOTH did. A SAME_DIRECTION verdict derived while one delta is zero asserts a direction it never measured -- the AR-188 D3 defect."
+        },
+        {
+          "function": "compose_completed_coverage",
+          "line": 3136,
+          "depth": "reachable_from_entry",
+          "predicate": "inval_on_concrete <= inval_off_concrete",
+          "message": "f'ENFORCEMENT DIRECTION VIOLATED: enforcement-ON bound {inval_on_concrete} invalidations concrete but enforcement-OFF bound only {inval_off_concrete}. Enforcement marks entries approximation=True; it "
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3421,
+          "depth": "reachable_from_entry",
+          "predicate": "path1 == path2 == path3",
+          "message": "f'987 derivation DISAGREES across paths: role-tally={path1} complement={path2} family-sum={path3}'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3469,
+          "depth": "reachable_from_entry",
+          "predicate": "a_before['n_bindable'] == a_after['n_bindable']",
+          "message": "'bindable denominator moved between arms; the level/zone flip changes approximation, never bindability'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3532,
+          "depth": "reachable_from_entry",
+          "predicate": "per_kind.get('swing', {}).get('n_flipped', 0) == 0",
+          "message": "'swing MUST NOT de-approximate. Ground (AR-199 s1): swing is the fibonacci ANCHOR, while the taught object is the 50/61.8% line -- an object the level/zone primitive does not emit. NOT the n>=2 floor "
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3540,
+          "depth": "reachable_from_entry",
+          "predicate": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}",
+          "message": "f\"a kind OUTSIDE the two graded kinds de-approximated: {sorted(set(per_kind))}. The flip's grade licenses named_sr_level and order_block_edge ONLY.\""
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3559,
+          "depth": "reachable_from_entry",
+          "predicate": "a_roles.get('trigger', 0) == 0",
+          "message": "f\"Corpus A now holds {a_roles.get('trigger', 0)} trigger-role conditions. The never-pool rule and the 'Corpus A contains ZERO trigger-role conditions' claim both depend on this being 0; if it moved, e"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3645,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']",
+          "message": "f'GUARD BOUNDARY: component A must equal the declared genuine-session-teaching count. computed {graded_teachings} != declared {SESSION_SPLIT_DECLARED['A_genuine_session_teachings']}. The split moved w"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3651,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+          "message": "f'GUARD BOUNDARY: component B must equal the declared mis-type count. computed {graded_mis_types} != declared {SESSION_SPLIT_DECLARED['B_mis_types']}.'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3655,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
+          "message": "f'GUARD BOUNDARY: component C must equal the declared undecidable count. computed {graded_undecidable} != declared {SESSION_SPLIT_DECLARED['C_undecidable']}.'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3662,
+          "depth": "reachable_from_entry",
+          "predicate": "graded_teachings + graded_mis_types + graded_undecidable == ws_taught",
+          "message": "f'GUARD BOUNDARY: the labeled-27 split must close on the corpus. {graded_teachings} A + {graded_mis_types} B + {graded_undecidable} C = {graded_teachings + graded_mis_types + graded_undecidable}, but "
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3677,
+          "depth": "reachable_from_entry",
+          "predicate": "ws_session_resolvable <= graded_teachings",
+          "message": "f'GUARD BOUNDARY: the live session resolver binds {ws_session_resolvable} of {ws_taught} labeled rows to a zone, which EXCEEDS component A ({graded_teachings}). Either the grade understates the genuin"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3811,
+          "depth": "reachable_from_entry",
+          "predicate": "n_levelzone_rows == 16",
+          "message": "f'level/zone census drifted: expected 16 rows, got {n_levelzone_rows}'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3813,
+          "depth": "reachable_from_entry",
+          "predicate": "total_flipped <= 6",
+          "message": "f'CEILING BREACHED: {total_flipped} conditions de-approximated, ceiling is 6 of 16'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3822,
+          "depth": "reachable_from_entry",
+          "predicate": "enf['never_evaluated_total'] == never_by_gap",
+          "message": "f'enforcement artifact says {enf['never_evaluated_total']} never-evaluated; I derive {never_by_gap}'"
+        },
+        {
+          "function": "_build_artifact_body",
+          "line": 3826,
+          "depth": "reachable_from_entry",
+          "predicate": "enf['all_entry_conditions'] == b_total",
+          "message": "'enforcement artifact universe size disagrees with mine'"
+        }
+      ],
+      "n_asserts_on_run_entry_path": 20
+    },
+    {
+      "file": "docs/replay-results/h1-battery/levelzone_antecedent_probe.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 1,
+      "n_functions_on_run_entry_path": 1,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/levelzone_object_reference_census.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 2,
+      "n_functions_on_run_entry_path": 2,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/newline_writer_census.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 14,
+      "n_functions_on_run_entry_path": 14,
+      "defines_refuse_unless": true,
+      "n_refuse_unless_calls": 3,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/population_a_flip_step_remeasure.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 4,
+      "defines_refuse_unless": true,
+      "n_refuse_unless_calls": 10,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/tier_a_compile_census.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 10,
+      "n_functions_on_run_entry_path": 10,
+      "defines_refuse_unless": true,
+      "n_refuse_unless_calls": 6,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-battery/wire1_structure_census.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 3,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-scripts/claude-rung-v32/run_a_packet_22.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 5,
+      "n_functions_on_run_entry_path": 5,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-scripts/claude-rung-v32/run_dod_remeasure.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 3,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-scripts/claude-rung-v32/run_dress_rehearsal.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 6,
+      "n_functions_on_run_entry_path": 6,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-scripts/claude-rung-v32/run_packet2_inventory.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 1,
+      "n_functions_on_run_entry_path": 1,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-scripts/claude-rung-v32/run_shakedown_wave1.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-scripts/claude-rung-v32/run_wave1r.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "docs/replay-results/h1-scripts/run_enum_consistency_22.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 2,
+      "n_functions_on_run_entry_path": 2,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/batch_backtest.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 3,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/check_line_ending_rewrite.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 8,
+      "n_functions_on_run_entry_path": 8,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/composition-experiment-controlled-run.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 3,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/composition-gating-diagnostic.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 6,
+      "n_functions_on_run_entry_path": 6,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/composition-gating-fidelity.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 1,
+      "n_functions_on_run_entry_path": 1,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/composition-paired-delta.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 2,
+      "n_functions_on_run_entry_path": 2,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/corpus-approximation-inventory.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 2,
+      "n_functions_on_run_entry_path": 2,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/corpus-fdr-report.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 4,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/corpus-fidelity-score.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 3,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/corpus-v3-reference-rederivation.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 11,
+      "n_functions_on_run_entry_path": 11,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/corpus-v3-shadow-gate3.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 9,
+      "n_functions_on_run_entry_path": 9,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/exit-policy-replay.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 13,
+      "n_functions_on_run_entry_path": 13,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/filter-ablation-cpcv.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 8,
+      "n_functions_on_run_entry_path": 8,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/full-battery-mode-ab.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 18,
+      "n_functions_on_run_entry_path": 18,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/fvg-experiment-controlled-run.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 7,
+      "n_functions_on_run_entry_path": 7,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/generate_null_strategies.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 5,
+      "n_functions_on_run_entry_path": 5,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/h1_designpool_miss_anatomy.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 6,
+      "n_functions_on_run_entry_path": 5,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/h1_designpool_support.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/h1_mini_judge_locator.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/h1_optionR_R5L890_wiring_verify.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 4,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/h1_optionR_locator_support.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 3,
+      "n_functions_on_run_entry_path": 2,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/h1_seal_conductor_cli.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 58,
+      "n_functions_on_run_entry_path": 54,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/h5_structural_stop_parity_ab_report.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 7,
+      "n_functions_on_run_entry_path": 7,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/null_gate_calibration.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 7,
+      "n_functions_on_run_entry_path": 7,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/or-branches-ccr.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 3,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/or-branches-experiment-controlled-run.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 4,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/overlay-attribution.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 5,
+      "n_functions_on_run_entry_path": 5,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/overlay-delta-corpus.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 5,
+      "n_functions_on_run_entry_path": 5,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/residual-probe-2concepts.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 4,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/signature-divergence.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 14,
+      "n_functions_on_run_entry_path": 13,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/validate-scaling-schedule.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 9,
+      "n_functions_on_run_entry_path": 9,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "scripts/wave25_exit_engine_ab_report.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 10,
+      "n_functions_on_run_entry_path": 10,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "skills/academic-research-hub/scripts/research.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 12,
+      "n_functions_on_run_entry_path": 12,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/data/scripts/adjust_continuous.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 4,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/data/scripts/databento_definition_pull.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 9,
+      "n_functions_on_run_entry_path": 9,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/data/scripts/refresh_local_cache.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 13,
+      "n_functions_on_run_entry_path": 13,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/engine/deepar_forecaster.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 6,
+      "n_functions_on_run_entry_path": 5,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/engine/extraction/extractor_bridge.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 11,
+      "n_functions_on_run_entry_path": 3,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/engine/extraction/pilot_conveyor.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 29,
+      "n_functions_on_run_entry_path": 22,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [
+        {
+          "function": "prepare_strategy",
+          "line": 1240,
+          "depth": "reachable_from_entry",
+          "predicate": "read_quote.fallthrough is not None",
+          "message": null
+        },
+        {
+          "function": "prepare_strategy",
+          "line": 1257,
+          "depth": "reachable_from_entry",
+          "predicate": "len(spine_conditions) == len(unanchored) + len(condition_outcomes)",
+          "message": "'non-drop invariant violated: a spine condition vanished between extraction and tier-1 classification'"
+        },
+        {
+          "function": "run_dry_run_synthetic",
+          "line": 1838,
+          "depth": "reachable_from_entry",
+          "predicate": "not positive_scan.clean",
+          "message": "'leak-scan birth-gate: FAILED to fire on an injected leak'"
+        },
+        {
+          "function": "run_dry_run_synthetic",
+          "line": 1839,
+          "depth": "reachable_from_entry",
+          "predicate": "prep['leak_scan'].clean",
+          "message": "'leak-scan birth-gate: the real dry-run packet was not clean'"
+        }
+      ],
+      "n_asserts_on_run_entry_path": 4
+    },
+    {
+      "file": "src/engine/extraction/tier2_design_report.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 17,
+      "n_functions_on_run_entry_path": 14,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [
+        {
+          "function": "materialize_design",
+          "line": 89,
+          "depth": "reachable_from_entry",
+          "predicate": "len(rows) == 112",
+          "message": "len(rows)"
+        }
+      ],
+      "n_asserts_on_run_entry_path": 1
+    },
+    {
+      "file": "src/engine/monte_carlo.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 30,
+      "n_functions_on_run_entry_path": 28,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/engine/survival/survival_comparator.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 2,
+      "n_functions_on_run_entry_path": 2,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/engine/survival/survival_scorer.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 7,
+      "n_functions_on_run_entry_path": 7,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/engine/synthetic/populate_regime_bank.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 4,
+      "n_functions_on_run_entry_path": 4,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    },
+    {
+      "file": "src/engine/synthetic_market_simulator.py",
+      "entry_functions": [
+        "main"
+      ],
+      "n_functions_in_module": 26,
+      "n_functions_on_run_entry_path": 17,
+      "defines_refuse_unless": false,
+      "n_refuse_unless_calls": 0,
+      "asserts_on_run_entry_path": [],
+      "n_asserts_on_run_entry_path": 0
+    }
+  ]
+}

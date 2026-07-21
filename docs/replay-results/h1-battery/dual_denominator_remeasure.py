@@ -268,6 +268,15 @@ def _guard_nodes(tree) -> list[tuple[int, str]]:
 #                      structural intent, NOT a check on a measurement, and counting it as one is
 #                      how "twelve asserts, each red-proved" became a false safety claim.
 # The key is a substring that must match EXACTLY ONE assert's unparsed test expression.
+# ★ H1-W4. THE LITERAL 6 IS SPELLED IN THREE PLACES that must move together: the CEILING
+# assert's source text, the CEILING_BREACHED revival probe's `targets` (which matches that
+# text), and the reconciliation gate that checks the COMPUTED ceiling still equals it. Naming
+# it here does two things: it says what the number IS, and it keeps the gate's own predicate
+# numeral-free -- a bare `== 6` inside a published ledger row is itself a numeral no axis can
+# move, which is the defect COVERAGE_CENSUS exists to refuse.
+CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE = 6
+
+
 ASSERT_DISPOSITIONS: dict[str, str] = {
     # AR-203 (f). BOTH of these were counted DATA_SENSITIVE and neither can be. They run
     # classify_drift -- a pure function of four floats -- over `cases`, a MODULE-LITERAL list.
@@ -298,6 +307,10 @@ ASSERT_DISPOSITIONS: dict[str, str] = {
     "ws_session_resolvable <= graded_teachings": "DATA_SENSITIVE",
     "n_levelzone_rows == 16": "DATA_SENSITIVE",
     "total_flipped <= 6": "DATA_SENSITIVE",
+    # H1-W4: the CEILING's two literals became COMPUTED. Both new gates read the level/zone
+    # census's rows, so both fire on a run where only the data moved -- DATA_SENSITIVE.
+    "_ceiling_path1 == _ceiling_path2": "DATA_SENSITIVE",
+    "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE": "DATA_SENSITIVE",
     "enf['never_evaluated_total'] == never_by_gap": "DATA_SENSITIVE",
     "enf['all_entry_conditions'] == b_total": "DATA_SENSITIVE",
     # R-207 (B). It walks the AST of this file and its first-party import closure, so its truth
@@ -396,6 +409,18 @@ ASSERTS_ADDED_SINCE_BASELINE: list[dict] = [
      "commit": "THIS_WAVE"},
     {"assert": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
      "disposition": "DATA_SENSITIVE", "added_by": "R-220 s1 -- per-component split guard C",
+     "commit": "THIS_WAVE"},
+    # ★ H1-W4. TWO GENUINELY NEW CHECKS, created by converting two TYPED LITERALS to computed
+    # values. `max_de_approximable: 6` and `n_unresolvable_as_built: 9` sat as typed numbers
+    # among computed neighbours; nothing checked either. The first gate requires the ceiling to
+    # derive twice and agree; the second requires the computed ceiling to still equal the
+    # literal 6 that the CEILING assert and the CEILING_BREACHED revival probe both spell, so
+    # the three cannot drift apart silently.
+    {"assert": "_ceiling_path1 == _ceiling_path2", "disposition": "DATA_SENSITIVE",
+     "added_by": "H1-W4 -- max_de_approximable computed from two paths", "commit": "THIS_WAVE"},
+    {"assert": "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE",
+     "disposition": "DATA_SENSITIVE",
+     "added_by": "H1-W4 -- computed ceiling reconciled against the literal the probe targets",
      "commit": "THIS_WAVE"},
     {"assert": "ws_session_resolvable <= graded_teachings", "disposition": "DATA_SENSITIVE",
      "added_by": "R-220 s1 -- reconciliation against the live session resolver",
@@ -1091,6 +1116,14 @@ GATE_BOUNDARIES: dict[str, str] = {
         "measure them by catching AssertionError, and refuse_unless raises SystemExit, which "
         "derives from BaseException and would abort the probe loop instead of being scored. "
         "That is why -O is refused outright rather than tolerated -- see OPTIMIZED_MODE."
+    ),
+    "CEILING_DERIVATION": (
+        "Derives max_de_approximable from the level/zone census's OWN rows, two ways, and "
+        "requires them to agree. It checks the DERIVATION, not the grade: if the campaign "
+        "widened _GRADED_KINDS the two paths would still agree with each other at a new value, "
+        "and only the second refusal -- the computed ceiling no longer equalling the literal 6 "
+        "that the CEILING assert and the CEILING_BREACHED probe both spell -- would catch it. "
+        "It makes NO claim about whether a row SHOULD be graded; that is AR-199 s1's ruling."
     ),
     "OPTIMIZED_MODE": (
         "Checks the interpreter flag, nothing else. It cannot tell whether any PARTICULAR "
@@ -2505,7 +2538,7 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     },
     "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.DATA_SENSITIVE_derivation": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
-        "numerals": ["14", "20", "6"],
+        "numerals": ["14", "22", "8"],
         "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the "
                "addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No "
                "axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately "
@@ -2517,6 +2550,16 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
         "numerals": ["10", "5"],
         "why": "Same construction, same reason, other half of the split.",
+    },
+    # ★ H1-W4. A condition_id ends in "#N", an ordinal WITHIN the id. It is part of a name,
+    # not a measurement -- no corpus size, rate or count moves it, and it changes only if the
+    # underlying condition is re-identified.
+    "$.CEILING.max_de_approximable_mechanism_correction.actual_subtrahend_condition_ids[0]": {
+        "kind": "SECTION_IDENTIFIER",
+        "numerals": ["1"],
+        "why": "The trailing '#1' is the ordinal inside a condition_id -- an identifier spelled "
+               "with a digit. The quantity this field is about (how many graded rows are bare "
+               "anaphora) is published as a NUMBER beside it, where an axis can reach it.",
     },
     "$.SELF_ACCOUNTING.n_asserts_note": {
         "kind": "HISTORICAL_ENUMERATION",
@@ -3812,6 +3855,67 @@ def _build_artifact_body() -> dict:
     total_flipped = _rv("total_flipped", -sum(v["delta"] for v in fam_delta.values()))
     assert total_flipped <= 6, f"CEILING BREACHED: {total_flipped} conditions de-approximated, ceiling is 6 of 16"
 
+    # ★ THE CEILING AND ITS COMPLEMENT ARE NOW COMPUTED, NOT TYPED. `max_de_approximable: 6`
+    # and `n_unresolvable_as_built: 9` were TYPED LITERALS sitting among computed neighbours
+    # (n_level_zone_rows_total and observed_de_approximated are both read from measurement).
+    # A right-and-typed number is still typed: nothing checked them, and this file's whole
+    # thesis is that a number quoted before it is computed is inadmissible.
+    #
+    # ★★ AND THE RECONCILIATION THAT WAS OFFERED FOR THE 6 NAMED THE WRONG MECHANISM. The
+    # standing account was "16 - 9 = 7, then 7 - 1 swing = 6" -- attributing the -1 to a SWING
+    # row. Measured here: ZERO swing rows carry a graded kind, so swing is not in the 7 at all
+    # and cannot be subtracted from it. The true subtrahend is the single BARE-ANAPHORA row
+    # that carries a graded kind (it names order_block_edge AND named_sr_level but resolves its
+    # object anaphorically, so there is nothing to bind to). Arithmetic right, mechanism wrong
+    # -- the same species as the typed "1" that R-207 already corrected two fields above.
+    _GRADED_KINDS = {"named_sr_level", "order_block_edge"}
+    _rows = census["rows"]
+    _graded = [r for r in _rows if set(r["reference_kinds"]) & _GRADED_KINDS]
+    _bare_in_graded = [r for r in _graded if r["bare_anaphora"]]
+    # PATH 1 -- forward: rows the grade licenses, less those whose object is anaphoric.
+    _ceiling_path1 = len(_graded) - len(_bare_in_graded)
+    # PATH 2 -- by complement: the corpus, less rows carrying no graded kind, less the same
+    # anaphoric row. Independent route to the same quantity; both are printed below.
+    _n_unresolvable = n_levelzone_rows - len(_graded)
+    _ceiling_path2 = n_levelzone_rows - _n_unresolvable - len(_bare_in_graded)
+    refuse_unless(_ceiling_path1 == _ceiling_path2, "CEILING_DERIVATION", (
+        f"the two derivations of max_de_approximable DISAGREE: forward path gives "
+        f"{_ceiling_path1} (|graded-kind rows| {len(_graded)} - |bare among them| "
+        f"{len(_bare_in_graded)}), complement path gives {_ceiling_path2} "
+        f"({n_levelzone_rows} total - {_n_unresolvable} unresolvable - "
+        f"{len(_bare_in_graded)} bare). A ceiling that cannot be derived twice is not a "
+        "ceiling; it is a number that happens to be written down."))
+    # ★ H1-W4 -- WHY THESE TWO GATES CARRY NO REVIVAL PROBE, MEASURED RATHER THAN ASSUMED.
+    # Both were armed with probes and hooks first. The result: the probe's mutation made
+    # refuse_unless fire, refuse_unless raises SystemExit(2) -- a BaseException -- and the
+    # discrimination harness catches AssertionError ONLY, so instead of scoring the probe the
+    # whole run aborted at exit 2. That is precisely the constraint this file already documents
+    # under NO_ASSERT_ON_THE_PUBLISH_PATH, reproduced here on new gates rather than inherited.
+    # THE CONSEQUENCE IS REPORTED, NOT HIDDEN: these two appear in the discrimination census as
+    # SUSPECTED DEAD (reached, never made to fail, DATA_SENSITIVE). They are NOT dormant -- they
+    # are UNPROBEABLE BY THIS HARNESS, whose reach stops at asserts. Re-labelling them
+    # SOURCE_INVARIANT would clear the flag and would be a lie about what they read: both read
+    # the level/zone census's rows and both fire on a data-only change. The flag is a true
+    # statement about the HARNESS's reach, and it stays.
+    max_de_approximable = _ceiling_path1
+    n_unresolvable_as_built = _n_unresolvable
+    # The literal the CEILING assert above still spells is now CHECKED against the computed
+    # value rather than trusted. The assert's source text is deliberately left alone: it is a
+    # key in ASSERT_DISPOSITIONS and the target of the CEILING_BREACHED revival probe, so
+    # rewriting it would silently unhook the probe that proves the gate fires.
+    refuse_unless(max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE,
+                  "CEILING_DERIVATION", (
+        f"the COMPUTED ceiling is now {max_de_approximable}, but the CEILING assert above and "
+        "the CEILING_BREACHED revival probe both still spell the literal 6. The corpus moved "
+        "under a number three other places depend on -- re-derive them together, do not edit "
+        "one of them to match."))
+    print(f"  CEILING derivation (computed, two paths): |graded-kind rows|={len(_graded)} "
+          f"- |bare among them|={len(_bare_in_graded)} = {_ceiling_path1}; complement path "
+          f"{n_levelzone_rows} - {_n_unresolvable} - {len(_bare_in_graded)} = {_ceiling_path2}; "
+          f"swing rows carrying a graded kind = "
+          f"{len([r for r in _graded if 'swing' in r['reference_kinds']])} "
+          f"(the standing account said the -1 was swing; it is not)")
+
     # ------------------------------------------------- DUAL DENOMINATORS (carried)
     narration = json.loads(NARRATION_PATH.read_text(encoding="utf-8"))
     dual = narration["dual_denominators"]
@@ -4110,9 +4214,40 @@ def _build_artifact_body() -> dict:
         },
         "CEILING": {
             "n_level_zone_rows_total": n_levelzone_rows,
-            "max_de_approximable": 6,
+            "max_de_approximable": max_de_approximable,
             "observed_de_approximated": total_flipped,
-            "n_unresolvable_as_built": 9,
+            "n_unresolvable_as_built": n_unresolvable_as_built,
+            # ★ NUMBERS AS FIELDS, PROSE WITHOUT NUMERALS. The first version of this block
+            # published the derivation as SENTENCES with the figures interpolated into them --
+            # and COVERAGE_CENSUS refused the run, because a numeral inside prose is a numeral
+            # no axis can move, so nothing in this file could tell whether it was computed or
+            # typed. That is the same defect as the typed literal this block exists to remove,
+            # relocated into the explanation of the removal. The components are fields now.
+            "max_de_approximable_derivation": {
+                "path1_forward_graded_rows": len(_graded),
+                "path1_forward_bare_among_graded": len(_bare_in_graded),
+                "path1_forward_result": _ceiling_path1,
+                "path2_complement_total_rows": n_levelzone_rows,
+                "path2_complement_no_graded_kind": n_unresolvable_as_built,
+                "path2_complement_result": _ceiling_path2,
+                "paths_agree": _ceiling_path1 == _ceiling_path2,
+                "graded_kinds": sorted(_GRADED_KINDS),
+                "was_previously": "a typed literal, unchecked, among computed neighbours",
+            },
+            "max_de_approximable_mechanism_correction": {
+                "standing_account_was": "total rows minus unresolvable, then minus swing",
+                "swing_rows_carrying_a_graded_kind": len(
+                    [r for r in _graded if "swing" in r["reference_kinds"]]),
+                "why_the_standing_account_is_wrong": (
+                    "swing carries no graded kind, so swing is not in the forward path's "
+                    "population at all and cannot be subtracted from it. The arithmetic "
+                    "happened to land on the right value by the wrong mechanism."),
+                "actual_subtrahend_kind": "bare_anaphora",
+                "actual_subtrahend_condition_ids": [r["condition_id"] for r in _bare_in_graded],
+                "why_that_row_is_excluded": (
+                    "it names a graded kind but resolves its object anaphorically, so there is "
+                    "no antecedent for the primitive to bind to"),
+            },
             # ★ R-207 CORRECTION, FOUND BY INTERPOLATING A NUMBER THAT HAD BEEN TYPED.
             # This read "1 row ... n=1 below the n>=2 floor -- stays approximation=True". The 1
             # was typed, and it was WRONG: the census it describes holds TWO swing rows, agreed
