@@ -212,7 +212,7 @@ def main() -> int:
         print(f"  done: {results[t].get('error') or 'OK'}", file=sys.stderr)
 
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(json.dumps({"results": results}, indent=2, default=str), encoding="utf-8")
+    OUT_PATH.write_text(json.dumps({"results": results}, indent=2, default=str), encoding="utf-8", newline="\n")
     print(f"wrote {OUT_PATH}", file=sys.stderr)
     return 0
 

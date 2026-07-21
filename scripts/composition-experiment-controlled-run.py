@@ -237,7 +237,7 @@ def main() -> int:
         "non_target_violations": non_target_violations,
         "per_strategy": per_strategy_report,
     }
-    Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8", newline="\n")
     print(
         f"\nnon-target byte-identical violations: {len(non_target_violations)} (must be 0)\n"
         f"wrote {args.out_before}, {args.out_after}, {args.out_before_primary}, {args.out_after_primary}, {args.report_out}",

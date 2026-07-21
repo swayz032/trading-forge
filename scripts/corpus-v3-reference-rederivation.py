@@ -454,7 +454,7 @@ def main() -> None:
         "original_9_n_dropout": n_dropout,
         "per_pair_results": per_pair,
     }
-    OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
+    OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8", newline="\n")
 
     print("\n=== REFERENCE RE-DERIVATION SUMMARY ===", file=sys.stderr)
     print(json.dumps({k: v for k, v in summary.items() if k not in ("per_pair_results", "validity", "N_reference_revival_list", "original_9_cross_check")}, indent=2, default=str), file=sys.stderr)

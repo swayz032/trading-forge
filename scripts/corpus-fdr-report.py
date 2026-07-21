@@ -376,7 +376,7 @@ def main() -> None:
     md_path = out_dir / f"{date_stamp}-corpus-fdr-report.md"
 
     payload = {"generated_at": generated_at, **report}
-    json_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8")
+    json_path.write_text(json.dumps(payload, indent=2, default=str), encoding="utf-8", newline="\n")
     md_path.write_text(render_markdown(report, generated_at), encoding="utf-8")
 
     print(f"\nCorpus FDR report written to {json_path} and {md_path}")

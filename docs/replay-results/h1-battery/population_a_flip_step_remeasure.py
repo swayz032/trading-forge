@@ -450,7 +450,7 @@ def main() -> None:
         "deapproximated_kinds_set": sorted(POPULATION_A_DEAPPROXIMATED_KINDS),
     }
 
-    OUT_PATH.write_text(json.dumps(out, indent=1, sort_keys=False) + "\n", encoding="utf-8")
+    OUT_PATH.write_text(json.dumps(out, indent=1, sort_keys=False) + "\n", encoding="utf-8", newline="\n")
     print(f"wrote {OUT_PATH}")
     print(json.dumps(out["per_kind_attribution"], indent=1))
     print(json.dumps(out["corpus_rate_among_all_level_zone_rows_hypothetical_both_flags_on"], indent=1))

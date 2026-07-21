@@ -137,7 +137,7 @@ def main() -> int:
         "per_strategy": per_strategy,
     }
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
-    Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8", newline="\n")
 
     print(
         f"primary set: {n_eligible}/{len(per_strategy)} strategies reach gating_fidelity >= "

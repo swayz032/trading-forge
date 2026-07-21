@@ -1,20 +1,20 @@
 {
   "artifact": "newline-writer-census",
   "generator": "docs/replay-results/h1-battery/newline_writer_census.py",
-  "scope_line": "corpus = every .py file in the repo outside ['.git', '.mypy_cache', '.next', '.pytest_cache', '.ruff_cache', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'site-packages', 'venv'] (n=732 files parsed) \u00b7 detector = AST \u00b7 TypeScript/JS EXCLUDED BY MECHANISM (Node fs.write* performs no newline translation) \u00b7 git-tracked-ness of the written path is NOT statically decidable and is not claimed",
-  "denominator_python_files_examined": 732,
-  "denominator_write_sites_examined": 340,
+  "scope_line": "corpus = every .py file in the repo outside ['.git', '.mypy_cache', '.next', '.pytest_cache', '.ruff_cache', '.venv', '__pycache__', 'build', 'dist', 'node_modules', 'site-packages', 'venv'] (n=734 files parsed) \u00b7 detector = AST \u00b7 TypeScript/JS EXCLUDED BY MECHANISM (Node fs.write* performs no newline translation) \u00b7 git-tracked-ness of the written path is NOT statically decidable and is not claimed",
+  "denominator_python_files_examined": 734,
+  "denominator_write_sites_examined": 348,
   "verdict_counts": {
-    "PINNED": 123,
-    "UNPINNED_TEXT": 145,
+    "PINNED": 151,
+    "UNPINNED_TEXT": 95,
+    "PLATFORM_DEPENDENT_BYTES": 5,
     "DEPENDS_ON_HANDLE": 2,
     "EXEMPT_BINARY": 7,
-    "INVARIANT_NO_NEWLINE_EMITTED": 61,
-    "PLATFORM_DEPENDENT_BYTES": 2
+    "INVARIANT_NO_NEWLINE_EMITTED": 88
   },
   "writer_kind_counts": {
-    "json.dump": 126,
-    "open": 159,
+    "json.dump": 130,
+    "open": 163,
     "Path.write_text": 53,
     "fdopen": 2
   },
@@ -28,6 +28,37 @@
     "UNRESOLVED": "mode or target not a literal; NOT silently counted as safe."
   },
   "platform_dependent_sites": [
+    {
+      "file": "docs/replay-results/h1-scripts/run_enum_consistency_22.py",
+      "line": 90,
+      "writer_kind": "Path.write_text",
+      "newline_pin": null,
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PLATFORM_DEPENDENT_BYTES",
+      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep, AND the written value emits newlines (json.dumps -> indent=2 -> newlines between elements)",
+      "call": "_OUT.write_text(json.dumps(report, indent=2), encoding='utf-8')"
+    },
+    {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 73,
+      "writer_kind": "json.dump",
+      "handle": "inline open()",
+      "newline_pin": null,
+      "resolved_open_lineno": [
+        73
+      ],
+      "resolved_open_end": [
+        [
+          73,
+          56
+        ]
+      ],
+      "emits_newlines": true,
+      "emits_newlines_evidence": "indent=2 -> newlines between elements",
+      "verdict": "PLATFORM_DEPENDENT_BYTES",
+      "call": "json.dump(obj, open(unpinned, 'w', encoding='utf-8'), indent=2)"
+    },
     {
       "file": "src/engine/tests/test_metric_snapshot.py",
       "line": 132,
@@ -47,6 +78,17 @@
       "emits_newlines_evidence": "indent=2 -> newlines between elements",
       "verdict": "PLATFORM_DEPENDENT_BYTES",
       "call": "json.dump(data, f, indent=2, sort_keys=True)"
+    },
+    {
+      "file": "tests/test_full_battery_mode_ab.py",
+      "line": 308,
+      "writer_kind": "Path.write_text",
+      "newline_pin": null,
+      "emits_newlines": true,
+      "emits_newlines_evidence": "a string literal in the written value contains a newline",
+      "verdict": "PLATFORM_DEPENDENT_BYTES",
+      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep, AND the written value emits newlines (a string literal in the written value contains a newline)",
+      "call": "manifest_path.write_text('not json\\n{\"spec_id\": \"s1\", \"ok\": true}\\n\\n', encoding='utf-8')"
     },
     {
       "file": "tmp-n8n/track-executions.py",
@@ -69,7 +111,7 @@
       "call": "json.dump(out, f, indent=2)"
     }
   ],
-  "n_platform_dependent": 2,
+  "n_platform_dependent": 5,
   "unpinned_text_handles": [
     {
       "file": "docs/replay-results/h1-battery/family_meta_enforcement_delta.py",
@@ -90,15 +132,6 @@
       "verdict": "UNPINNED_TEXT",
       "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
       "call": "open(os.path.join(os.environ.get('TMPOUT', os.path.dirname(os.path.abspath(__file__))), 'family-meta-reachability-sweep.log'), 'w', encoding='utf-8', buffering="
-    },
-    {
-      "file": "docs/replay-results/h1-battery/population_a_flip_step_remeasure.py",
-      "line": 453,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_PATH.write_text(json.dumps(out, indent=1, sort_keys=False) + '\\n', encoding='utf-8')"
     },
     {
       "file": "docs/replay-results/h1-scripts/gen_h1_pilot_prereg.py",
@@ -151,15 +184,6 @@
       "call": "io.open(BASE + 'docs/designs/h1-wave3-tier2-preregistration-2026-07-12.md', 'w', encoding='utf-8')"
     },
     {
-      "file": "docs/replay-results/h1-scripts/run_enum_consistency_22.py",
-      "line": 90,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "_OUT.write_text(json.dumps(report, indent=2), encoding='utf-8')"
-    },
-    {
       "file": "docs/replay-results/mode-ab-G4-scripts/gen_vblock_doc.py",
       "line": 412,
       "writer_kind": "open",
@@ -168,105 +192,6 @@
       "verdict": "UNPINNED_TEXT",
       "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
       "call": "open(BASE + 'docs/designs/mode-ab-G4-validity-block-2026-07-11.md', 'w', encoding='utf-8')"
-    },
-    {
-      "file": "scripts/batch_backtest.py",
-      "line": 477,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "output_path.write_text(json.dumps({'timestamp': datetime.now().isoformat(), 'mode': args.mode, 'total_strategies': len(selected), 'elapsed_minutes': round(elaps"
-    },
-    {
-      "file": "scripts/composition-experiment-controlled-run.py",
-      "line": 227,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_before).write_text(json.dumps({'strategies': manifest_before}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/composition-experiment-controlled-run.py",
-      "line": 228,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_after).write_text(json.dumps({'strategies': manifest_after}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/composition-experiment-controlled-run.py",
-      "line": 229,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_before_primary).write_text(json.dumps({'strategies': manifest_before_primary}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/composition-experiment-controlled-run.py",
-      "line": 230,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_after_primary).write_text(json.dumps({'strategies': manifest_after_primary}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/composition-experiment-controlled-run.py",
-      "line": 240,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/composition-gating-diagnostic.py",
-      "line": 299,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/composition-gating-fidelity.py",
-      "line": 140,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/composition-paired-delta.py",
-      "line": 174,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/corpus-fdr-report.py",
-      "line": 379,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "json_path.write_text(json.dumps(payload, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/corpus-fdr-report.py",
-      "line": 380,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "md_path.write_text(render_markdown(report, generated_at), encoding='utf-8')"
     },
     {
       "file": "scripts/corpus-v3-reference-rederivation.py",
@@ -279,51 +204,6 @@
       "call": "open(CHECKPOINT, 'a', encoding='utf-8')"
     },
     {
-      "file": "scripts/corpus-v3-reference-rederivation.py",
-      "line": 457,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/corpus-v3-shadow-gate3.py",
-      "line": 444,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/corpus-v3-shadow-gate3.py",
-      "line": 459,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_DELTAS.write_text(json.dumps(deltas_out, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/filter-ablation-cpcv.py",
-      "line": 373,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(manifest_path).write_text(json.dumps(data, indent=1, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/filter-ablation-cpcv.py",
-      "line": 646,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(out_path).write_text(json.dumps(report, indent=1, default=str), encoding='utf-8')"
-    },
-    {
       "file": "scripts/full-battery-mode-ab.py",
       "line": 798,
       "writer_kind": "open",
@@ -332,51 +212,6 @@
       "verdict": "UNPINNED_TEXT",
       "why": "mode=\"a\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
       "call": "open(manifest_path, 'a', encoding='utf-8')"
-    },
-    {
-      "file": "scripts/full-battery-mode-ab.py",
-      "line": 923,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/fvg-experiment-controlled-run.py",
-      "line": 348,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_before).write_text(json.dumps({'strategies': manifest_before}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/fvg-experiment-controlled-run.py",
-      "line": 349,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_after).write_text(json.dumps({'strategies': manifest_after}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/fvg-experiment-controlled-run.py",
-      "line": 357,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/generate_null_strategies.py",
-      "line": 291,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(output, encoding='utf-8')"
     },
     {
       "file": "scripts/h1_build_content_batch.py",
@@ -469,15 +304,6 @@
       "call": "open(tmp, 'w', encoding='utf-8')"
     },
     {
-      "file": "scripts/h5_structural_stop_parity_ab_report.py",
-      "line": 336,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "out_path.write_text('\\n'.join(lines), encoding='utf-8')"
-    },
-    {
       "file": "scripts/null_gate_calibration.py",
       "line": 545,
       "writer_kind": "open",
@@ -488,105 +314,6 @@
       "call": "open(manifest_path, 'a', encoding='utf-8')"
     },
     {
-      "file": "scripts/null_gate_calibration.py",
-      "line": 691,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(report_text, encoding='utf-8')"
-    },
-    {
-      "file": "scripts/or-branches-ccr.py",
-      "line": 162,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/or-branches-experiment-controlled-run.py",
-      "line": 234,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_before).write_text(json.dumps({'strategies': manifest_before}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/or-branches-experiment-controlled-run.py",
-      "line": 235,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_after).write_text(json.dumps({'strategies': manifest_after}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/or-branches-experiment-controlled-run.py",
-      "line": 236,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_before_primary).write_text(json.dumps({'strategies': manifest_before_primary}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/or-branches-experiment-controlled-run.py",
-      "line": 237,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out_after_primary).write_text(json.dumps({'strategies': manifest_after_primary}, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/or-branches-experiment-controlled-run.py",
-      "line": 249,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/residual-probe-2concepts.py",
-      "line": 215,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_PATH.write_text(json.dumps({'results': results}, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/signature-divergence.py",
-      "line": 502,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/validate-scaling-schedule.py",
-      "line": 477,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "out_path.write_text('\\n'.join(lines), encoding='utf-8')"
-    },
-    {
-      "file": "scripts/wave25_exit_engine_ab_report.py",
-      "line": 548,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(report_file).write_text(report_md, encoding='utf-8')"
-    },
-    {
       "file": "skills/academic-research-hub/scripts/research.py",
       "line": 755,
       "writer_kind": "open",
@@ -595,42 +322,6 @@
       "verdict": "UNPINNED_TEXT",
       "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
       "call": "open(args.output, 'w', encoding='utf-8')"
-    },
-    {
-      "file": "src/data/scripts/refresh_local_cache.py",
-      "line": 314,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "sidecar.write_text(payload, encoding='utf-8')"
-    },
-    {
-      "file": "src/engine/cloud_backend.py",
-      "line": 126,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "audit_path.write_text(json.dumps({'ts': ts, 'reason': str(exc), 'raw_content': raw[:4096]}, indent=2))"
-    },
-    {
-      "file": "src/engine/data_loader.py",
-      "line": 211,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "sidecar.write_text(_json.dumps(payload), encoding='utf-8')"
-    },
-    {
-      "file": "src/engine/deepar_forecaster.py",
-      "line": 400,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "config_path.write_text(self.config.model_dump_json(indent=2))"
     },
     {
       "file": "src/engine/extraction/sealed_read_driver.py",
@@ -663,24 +354,6 @@
       "call": "open(self.cache_path, 'w', encoding='utf-8')"
     },
     {
-      "file": "src/engine/gate_block_analyzer.py",
-      "line": 901,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "output_path.write_text('\\n'.join(lines), encoding='utf-8')"
-    },
-    {
-      "file": "src/engine/gate_block_analyzer.py",
-      "line": 990,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "output_path.write_text('\\n'.join(lines), encoding='utf-8')"
-    },
-    {
       "file": "src/engine/optimizer.py",
       "line": 304,
       "writer_kind": "open",
@@ -701,15 +374,6 @@
       "call": "open(output_file, 'w', encoding='utf-8')"
     },
     {
-      "file": "src/engine/synthetic_market_simulator.py",
-      "line": 918,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "config_path.write_text(json.dumps(config_data, indent=2))"
-    },
-    {
       "file": "src/engine/tensor_signal_model.py",
       "line": 553,
       "writer_kind": "open",
@@ -720,13 +384,24 @@
       "call": "open(path, 'w')"
     },
     {
-      "file": "src/engine/tests/test_audit_a12.py",
-      "line": 1382,
-      "writer_kind": "Path.write_text",
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 73,
+      "writer_kind": "open",
+      "mode": "w",
       "newline_pin": null,
       "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "REPORT_PATH.write_text(_render_report(), encoding='utf-8')"
+      "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
+      "call": "open(unpinned, 'w', encoding='utf-8')"
+    },
+    {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 75,
+      "writer_kind": "open",
+      "mode": "w",
+      "newline_pin": null,
+      "verdict": "UNPINNED_TEXT",
+      "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
+      "call": "open(flat, 'w', encoding='utf-8')"
     },
     {
       "file": "src/engine/tests/test_cloud_backend.py",
@@ -739,51 +414,6 @@
       "call": "open(tmp_budget_path, 'w')"
     },
     {
-      "file": "src/engine/tests/test_extractor_bridge.py",
-      "line": 126,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "fake_script.write_text('// stub')"
-    },
-    {
-      "file": "src/engine/tests/test_extractor_bridge.py",
-      "line": 139,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "fake_script.write_text('// stub')"
-    },
-    {
-      "file": "src/engine/tests/test_extractor_bridge.py",
-      "line": 152,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "fake_script.write_text('// stub')"
-    },
-    {
-      "file": "src/engine/tests/test_extractor_bridge.py",
-      "line": 165,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "fake_script.write_text('// stub')"
-    },
-    {
-      "file": "src/engine/tests/test_extractor_bridge.py",
-      "line": 181,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "fake_script.write_text('// stub')"
-    },
-    {
       "file": "src/engine/tests/test_metric_snapshot.py",
       "line": 131,
       "writer_kind": "open",
@@ -792,33 +422,6 @@
       "verdict": "UNPINNED_TEXT",
       "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
       "call": "open(path, 'w', encoding='utf-8')"
-    },
-    {
-      "file": "src/engine/tests/test_optimizer_dry_run.py",
-      "line": 80,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "bad_file.write_text('block')"
-    },
-    {
-      "file": "src/engine/tests/test_populate_regime_bank.py",
-      "line": 183,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "config_file.write_text(json.dumps(config), encoding='utf-8')"
-    },
-    {
-      "file": "src/engine/tests/test_role_demotion.py",
-      "line": 69,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "path.write_text(json.dumps({'full_classification_table_first_pass': rows}), encoding='utf-8')"
     },
     {
       "file": "src/engine/tests/test_seal_conductor_cli.py",
@@ -1451,15 +1054,6 @@
       "call": "open(tmp_registry_path, 'w')"
     },
     {
-      "file": "tests/test_full_battery_mode_ab.py",
-      "line": 308,
-      "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "manifest_path.write_text('not json\\n{\"spec_id\": \"s1\", \"ok\": true}\\n\\n', encoding='utf-8')"
-    },
-    {
       "file": "tmp-n8n/track-executions.py",
       "line": 60,
       "writer_kind": "open",
@@ -1470,7 +1064,7 @@
       "call": "open('./tmp-n8n/baseline.json', 'w')"
     }
   ],
-  "n_unpinned_text_handles": 145,
+  "n_unpinned_text_handles": 95,
   "unresolved_sites": [
     {
       "file": "scripts/batch_backtest.py",
@@ -1500,7 +1094,7 @@
     }
   ],
   "n_unresolved": 2,
-  "closure_identity": "sum(verdict_counts)=340 == write_sites_examined=340",
+  "closure_identity": "sum(verdict_counts)=348 == write_sites_examined=348",
   "runtime_platform": {
     "os_name": "nt",
     "linesep_repr": "'\\r\\n'"
@@ -1537,6 +1131,36 @@
       "call": "open(out_path, 'w', encoding='utf-8', newline='\\n')"
     },
     {
+      "file": "docs/replay-results/h1-battery/assert_gate_census.py",
+      "line": 220,
+      "writer_kind": "open",
+      "mode": "w",
+      "newline_pin": "'\\n'",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "open(OUT, 'w', encoding='utf-8', newline='\\n')"
+    },
+    {
+      "file": "docs/replay-results/h1-battery/assert_gate_census.py",
+      "line": 221,
+      "writer_kind": "json.dump",
+      "handle": "named handle `fh`, 1 text-write binding(s) at line(s) [220] (of 1 total binding(s))",
+      "newline_pin": "'\\n'",
+      "resolved_open_lineno": [
+        220
+      ],
+      "resolved_open_end": [
+        [
+          220,
+          55
+        ]
+      ],
+      "emits_newlines": true,
+      "emits_newlines_evidence": "indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "call": "json.dump(out, fh, indent=2)"
+    },
+    {
       "file": "docs/replay-results/h1-battery/deferred_family_census.py",
       "line": 109,
       "writer_kind": "json.dump",
@@ -1571,6 +1195,8 @@
       "line": 207,
       "writer_kind": "Path.write_text",
       "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=1 -> newlines between elements",
       "verdict": "PINNED",
       "why": "newline='\\n'",
       "call": "OUT_PATH.write_text(json.dumps(art, indent=1), encoding='utf-8', newline='\\n')"
@@ -1717,7 +1343,7 @@
     },
     {
       "file": "docs/replay-results/h1-battery/newline_writer_census.py",
-      "line": 393,
+      "line": 443,
       "writer_kind": "open",
       "mode": "w",
       "newline_pin": "'\\n'",
@@ -1727,16 +1353,16 @@
     },
     {
       "file": "docs/replay-results/h1-battery/newline_writer_census.py",
-      "line": 394,
+      "line": 444,
       "writer_kind": "json.dump",
-      "handle": "named handle `fh`, 1 text-write binding(s) at line(s) [393] (of 1 total binding(s))",
+      "handle": "named handle `fh`, 1 text-write binding(s) at line(s) [443] (of 1 total binding(s))",
       "newline_pin": "'\\n'",
       "resolved_open_lineno": [
-        393
+        443
       ],
       "resolved_open_end": [
         [
-          393,
+          443,
           55
         ]
       ],
@@ -1749,10 +1375,12 @@
       "file": "docs/replay-results/h1-battery/population_a_flip_step_remeasure.py",
       "line": 453,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_PATH.write_text(json.dumps(out, indent=1, sort_keys=False) + '\\n', encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=1 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "OUT_PATH.write_text(json.dumps(out, indent=1, sort_keys=False) + '\\n', encoding='utf-8', newline='\\n')"
     },
     {
       "file": "docs/replay-results/h1-battery/tier_a_compile_census.py",
@@ -2079,8 +1707,10 @@
       "line": 90,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PLATFORM_DEPENDENT_BYTES",
+      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep, AND the written value emits newlines (json.dumps -> indent=2 -> newlines between elements)",
       "call": "_OUT.write_text(json.dumps(report, indent=2), encoding='utf-8')"
     },
     {
@@ -2157,9 +1787,11 @@
       "file": "scripts/batch_backtest.py",
       "line": 477,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
       "call": "output_path.write_text(json.dumps({'timestamp': datetime.now().isoformat(), 'mode': args.mode, 'total_strategies': len(selected), 'elapsed_minutes': round(elaps"
     },
     {
@@ -2220,8 +1852,10 @@
       "line": 227,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_before).write_text(json.dumps({'strategies': manifest_before}, default=str), encoding='utf-8')"
     },
     {
@@ -2229,8 +1863,10 @@
       "line": 228,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_after).write_text(json.dumps({'strategies': manifest_after}, default=str), encoding='utf-8')"
     },
     {
@@ -2238,8 +1874,10 @@
       "line": 229,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_before_primary).write_text(json.dumps({'strategies': manifest_before_primary}, default=str), encoding='utf-8')"
     },
     {
@@ -2247,45 +1885,55 @@
       "line": 230,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_after_primary).write_text(json.dumps({'strategies': manifest_after_primary}, default=str), encoding='utf-8')"
     },
     {
       "file": "scripts/composition-experiment-controlled-run.py",
       "line": 240,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/composition-gating-diagnostic.py",
       "line": 299,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/composition-gating-fidelity.py",
       "line": 140,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/composition-paired-delta.py",
       "line": 174,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/corpus-approximation-inventory.py",
@@ -2321,18 +1969,22 @@
       "file": "scripts/corpus-fdr-report.py",
       "line": 379,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "json_path.write_text(json.dumps(payload, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "json_path.write_text(json.dumps(payload, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/corpus-fdr-report.py",
       "line": 380,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "md_path.write_text(render_markdown(report, generated_at), encoding='utf-8')"
     },
     {
@@ -2392,10 +2044,12 @@
       "file": "scripts/corpus-v3-reference-rederivation.py",
       "line": 457,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/corpus-v3-shadow-gate3.py",
@@ -2414,19 +2068,23 @@
       "file": "scripts/corpus-v3-shadow-gate3.py",
       "line": 444,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/corpus-v3-shadow-gate3.py",
       "line": 459,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_DELTAS.write_text(json.dumps(deltas_out, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "OUT_DELTAS.write_text(json.dumps(deltas_out, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/exit-policy-replay.py",
@@ -2492,19 +2150,23 @@
       "file": "scripts/filter-ablation-cpcv.py",
       "line": 373,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(manifest_path).write_text(json.dumps(data, indent=1, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=1 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(manifest_path).write_text(json.dumps(data, indent=1, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/filter-ablation-cpcv.py",
       "line": 646,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(out_path).write_text(json.dumps(report, indent=1, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=1 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(out_path).write_text(json.dumps(report, indent=1, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/full-battery-mode-ab.py",
@@ -2520,18 +2182,22 @@
       "file": "scripts/full-battery-mode-ab.py",
       "line": 923,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/fvg-experiment-controlled-run.py",
       "line": 348,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_before).write_text(json.dumps({'strategies': manifest_before}, default=str), encoding='utf-8')"
     },
     {
@@ -2539,26 +2205,32 @@
       "line": 349,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_after).write_text(json.dumps({'strategies': manifest_after}, default=str), encoding='utf-8')"
     },
     {
       "file": "scripts/fvg-experiment-controlled-run.py",
       "line": 357,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/generate_null_strategies.py",
       "line": 291,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out).write_text(output, encoding='utf-8')"
     },
     {
@@ -3615,10 +3287,12 @@
       "file": "scripts/h5_structural_stop_parity_ab_report.py",
       "line": 336,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "out_path.write_text('\\n'.join(lines), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "`join(...)` produces multi-line text",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "out_path.write_text('\\n'.join(lines), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/null_gate_calibration.py",
@@ -3635,26 +3309,32 @@
       "line": 691,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.report_out).write_text(report_text, encoding='utf-8')"
     },
     {
       "file": "scripts/or-branches-ccr.py",
       "line": 162,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/or-branches-experiment-controlled-run.py",
       "line": 234,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_before).write_text(json.dumps({'strategies': manifest_before}, default=str), encoding='utf-8')"
     },
     {
@@ -3662,8 +3342,10 @@
       "line": 235,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_after).write_text(json.dumps({'strategies': manifest_after}, default=str), encoding='utf-8')"
     },
     {
@@ -3671,8 +3353,10 @@
       "line": 236,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_before_primary).write_text(json.dumps({'strategies': manifest_before_primary}, default=str), encoding='utf-8')"
     },
     {
@@ -3680,18 +3364,22 @@
       "line": 237,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(args.out_after_primary).write_text(json.dumps({'strategies': manifest_after_primary}, default=str), encoding='utf-8')"
     },
     {
       "file": "scripts/or-branches-experiment-controlled-run.py",
       "line": 249,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/overlay-attribution.py",
@@ -3757,36 +3445,44 @@
       "file": "scripts/residual-probe-2concepts.py",
       "line": 215,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "OUT_PATH.write_text(json.dumps({'results': results}, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "OUT_PATH.write_text(json.dumps({'results': results}, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/signature-divergence.py",
       "line": 502,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/validate-scaling-schedule.py",
       "line": 477,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "out_path.write_text('\\n'.join(lines), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "`join(...)` produces multi-line text",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "out_path.write_text('\\n'.join(lines), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "scripts/wave25_exit_engine_ab_report.py",
       "line": 548,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "Path(report_file).write_text(report_md, encoding='utf-8')"
     },
     {
@@ -3887,8 +3583,10 @@
       "line": 314,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "sidecar.write_text(payload, encoding='utf-8')"
     },
     {
@@ -3955,10 +3653,12 @@
       "file": "src/engine/cloud_backend.py",
       "line": 126,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "audit_path.write_text(json.dumps({'ts': ts, 'reason': str(exc), 'raw_content': raw[:4096]}, indent=2))"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "audit_path.write_text(json.dumps({'ts': ts, 'reason': str(exc), 'raw_content': raw[:4096]}, indent=2), newline='\\n')"
     },
     {
       "file": "src/engine/cloud_backend.py",
@@ -4085,8 +3785,10 @@
       "line": 211,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "sidecar.write_text(_json.dumps(payload), encoding='utf-8')"
     },
     {
@@ -4094,8 +3796,10 @@
       "line": 400,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "config_path.write_text(self.config.model_dump_json(indent=2))"
     },
     {
@@ -4262,19 +3966,23 @@
       "file": "src/engine/gate_block_analyzer.py",
       "line": 901,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "output_path.write_text('\\n'.join(lines), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "`join(...)` produces multi-line text",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "output_path.write_text('\\n'.join(lines), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "src/engine/gate_block_analyzer.py",
       "line": 990,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "output_path.write_text('\\n'.join(lines), encoding='utf-8')"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "`join(...)` produces multi-line text",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "output_path.write_text('\\n'.join(lines), encoding='utf-8', newline='\\n')"
     },
     {
       "file": "src/engine/monte_carlo.py",
@@ -4372,10 +4080,12 @@
       "file": "src/engine/synthetic_market_simulator.py",
       "line": 918,
       "writer_kind": "Path.write_text",
-      "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
-      "call": "config_path.write_text(json.dumps(config_data, indent=2))"
+      "newline_pin": "'\\n'",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "json.dumps -> indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "config_path.write_text(json.dumps(config_data, indent=2), newline='\\n')"
     },
     {
       "file": "src/engine/tensor_signal_model.py",
@@ -4408,12 +4118,104 @@
       "call": "json.dump(data, f)"
     },
     {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 73,
+      "writer_kind": "json.dump",
+      "handle": "inline open()",
+      "newline_pin": null,
+      "resolved_open_lineno": [
+        73
+      ],
+      "resolved_open_end": [
+        [
+          73,
+          56
+        ]
+      ],
+      "emits_newlines": true,
+      "emits_newlines_evidence": "indent=2 -> newlines between elements",
+      "verdict": "PLATFORM_DEPENDENT_BYTES",
+      "call": "json.dump(obj, open(unpinned, 'w', encoding='utf-8'), indent=2)"
+    },
+    {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 73,
+      "writer_kind": "open",
+      "mode": "w",
+      "newline_pin": null,
+      "verdict": "UNPINNED_TEXT",
+      "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
+      "call": "open(unpinned, 'w', encoding='utf-8')"
+    },
+    {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 74,
+      "writer_kind": "json.dump",
+      "handle": "inline open()",
+      "newline_pin": "'\\n'",
+      "resolved_open_lineno": [
+        74
+      ],
+      "resolved_open_end": [
+        [
+          74,
+          68
+        ]
+      ],
+      "emits_newlines": true,
+      "emits_newlines_evidence": "indent=2 -> newlines between elements",
+      "verdict": "PINNED",
+      "call": "json.dump(obj, open(pinned, 'w', encoding='utf-8', newline='\\n'), indent=2)"
+    },
+    {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 74,
+      "writer_kind": "open",
+      "mode": "w",
+      "newline_pin": "'\\n'",
+      "verdict": "PINNED",
+      "why": "newline='\\n'",
+      "call": "open(pinned, 'w', encoding='utf-8', newline='\\n')"
+    },
+    {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 75,
+      "writer_kind": "json.dump",
+      "handle": "inline open()",
+      "newline_pin": null,
+      "resolved_open_lineno": [
+        75
+      ],
+      "resolved_open_end": [
+        [
+          75,
+          52
+        ]
+      ],
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no indent= -> single line -> no newline in output",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "call": "json.dump(obj, open(flat, 'w', encoding='utf-8'))"
+    },
+    {
+      "file": "src/engine/tests/test_artifact_writers_pin_newline.py",
+      "line": 75,
+      "writer_kind": "open",
+      "mode": "w",
+      "newline_pin": null,
+      "verdict": "UNPINNED_TEXT",
+      "why": "mode=\"w\" with no newline= -> every \\n emitted through this handle becomes os.linesep",
+      "call": "open(flat, 'w', encoding='utf-8')"
+    },
+    {
       "file": "src/engine/tests/test_audit_a12.py",
       "line": 1382,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "REPORT_PATH.write_text(_render_report(), encoding='utf-8')"
     },
     {
@@ -4464,8 +4266,10 @@
       "line": 126,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "fake_script.write_text('// stub')"
     },
     {
@@ -4473,8 +4277,10 @@
       "line": 139,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "fake_script.write_text('// stub')"
     },
     {
@@ -4482,8 +4288,10 @@
       "line": 152,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "fake_script.write_text('// stub')"
     },
     {
@@ -4491,8 +4299,10 @@
       "line": 165,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "fake_script.write_text('// stub')"
     },
     {
@@ -4500,8 +4310,10 @@
       "line": 181,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "fake_script.write_text('// stub')"
     },
     {
@@ -4539,8 +4351,10 @@
       "line": 80,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "bad_file.write_text('block')"
     },
     {
@@ -4548,8 +4362,10 @@
       "line": 183,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "config_file.write_text(json.dumps(config), encoding='utf-8')"
     },
     {
@@ -4557,8 +4373,10 @@
       "line": 69,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": false,
+      "emits_newlines_evidence": "no newline found in the written value (single-line write)",
+      "verdict": "INVARIANT_NO_NEWLINE_EMITTED",
+      "why": "unpinned, but no newline found in the written value (single-line write)",
       "call": "path.write_text(json.dumps({'full_classification_table_first_pass': rows}), encoding='utf-8')"
     },
     {
@@ -6316,8 +6134,10 @@
       "line": 308,
       "writer_kind": "Path.write_text",
       "newline_pin": null,
-      "verdict": "UNPINNED_TEXT",
-      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep",
+      "emits_newlines": true,
+      "emits_newlines_evidence": "a string literal in the written value contains a newline",
+      "verdict": "PLATFORM_DEPENDENT_BYTES",
+      "why": "Path.write_text defaults newline=None -> universal-newline translation to os.linesep, AND the written value emits newlines (a string literal in the written value contains a newline)",
       "call": "manifest_path.write_text('not json\\n{\"spec_id\": \"s1\", \"ok\": true}\\n\\n', encoding='utf-8')"
     },
     {

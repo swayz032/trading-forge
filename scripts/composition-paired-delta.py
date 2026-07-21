@@ -171,7 +171,7 @@ def main() -> int:
 
     print(json.dumps(report, indent=2), file=sys.stderr)
     if args.out:
-        Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+        Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8", newline="\n")
         print(f"\nwrote {args.out}", file=sys.stderr)
     return 0
 

@@ -370,7 +370,7 @@ def _load_manifest(manifest_path: str | None) -> dict:
 def _save_manifest(manifest_path: str | None, data: dict) -> None:
     if not manifest_path:
         return
-    Path(manifest_path).write_text(json.dumps(data, indent=1, default=str), encoding="utf-8")
+    Path(manifest_path).write_text(json.dumps(data, indent=1, default=str), encoding="utf-8", newline="\n")
 
 
 # ─── NO_TRADE hypothesis check ───────────────────────────────────────────────
@@ -643,7 +643,7 @@ def main() -> int:
     }
 
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
-    Path(out_path).write_text(json.dumps(report, indent=1, default=str), encoding="utf-8")
+    Path(out_path).write_text(json.dumps(report, indent=1, default=str), encoding="utf-8", newline="\n")
 
     # ── Console summary ───────────────────────────────────────────────────────
     print(f"\n{'=' * 68}")

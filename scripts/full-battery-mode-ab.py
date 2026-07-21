@@ -920,7 +920,7 @@ def main() -> int:
                     print(f"  {res['spec_id']}: {res['verdict']['verdict']}", file=sys.stderr)
 
     report = build_report(all_results)
-    Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8", newline="\n")
 
     if args.json:
         print(json.dumps(report, indent=2, default=str))

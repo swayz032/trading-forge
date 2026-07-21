@@ -898,7 +898,7 @@ def generate_report(
             "for at least 1-2 weeks so each gate blocks enough signals "
             f"(minimum {MIN_SIGNALS_FOR_VERDICT} evaluable per gate for a verdict)."
         )
-        output_path.write_text("\n".join(lines), encoding="utf-8")
+        output_path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
         return str(output_path)
 
     # Verdict summary table
@@ -987,7 +987,7 @@ def generate_report(
     )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    output_path.write_text("\n".join(lines), encoding="utf-8")
+    output_path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return str(output_path)
 
 

@@ -481,7 +481,7 @@ def main() -> None:
             "elapsed_minutes": round(elapsed / 60, 1),
             "tier_counts": tier_counts,
             "results": results,
-        }, indent=2))
+        }, indent=2), newline="\n")
         print(f"\n  Results saved to: {output_path}")
 
     # Also output as JSON to stdout for piping

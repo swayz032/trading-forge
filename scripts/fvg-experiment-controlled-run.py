@@ -354,7 +354,7 @@ def main() -> int:
         "n_total": len(all_entries),
         "per_strategy": per_strategy_report,
     }
-    Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+    Path(args.report_out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8", newline="\n")
     print(f"\nwrote {args.out_before}, {args.out_after}, {args.report_out}", file=sys.stderr)
     return 0
 

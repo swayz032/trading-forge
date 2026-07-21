@@ -474,7 +474,7 @@ def _write_report(
         f"*Seed: {seed} | Sims: {n_sims:,} | Block size: {block_size}*",
     ]
 
-    out_path.write_text("\n".join(lines), encoding="utf-8")
+    out_path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return out_path
 
 

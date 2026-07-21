@@ -132,7 +132,7 @@ class CloudBudgetTracker:
                             },
                             indent=2,
                         )
-                    )
+                    , newline="\n")
                 except OSError:
                     pass  # audit write failing must not block startup
                 logger.warning(

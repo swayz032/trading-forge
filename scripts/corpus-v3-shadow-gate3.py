@@ -441,7 +441,7 @@ def main() -> None:
         "n_regressions": len(regressions),
         "per_pair_results": per_pair,
     }
-    OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8")
+    OUT_RESULTS.write_text(json.dumps(summary, indent=2, default=str), encoding="utf-8", newline="\n")
 
     deltas_out = {
         "corpus_version": "v3-shadow-2026-07-05",
@@ -456,7 +456,7 @@ def main() -> None:
         "n_death_driving": sum(1 for d in role_deltas if d["is_death_driving"]),
         "role_changes": role_deltas,
     }
-    OUT_DELTAS.write_text(json.dumps(deltas_out, indent=2, default=str), encoding="utf-8")
+    OUT_DELTAS.write_text(json.dumps(deltas_out, indent=2, default=str), encoding="utf-8", newline="\n")
 
     print("\n=== GATE 3 SHADOW RESULTS SUMMARY ===", file=sys.stderr)
     # "validity" already printed distinctly above (VALIDITY-BEFORE-VERDICT ordering) — excluded

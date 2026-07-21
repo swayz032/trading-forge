@@ -47,7 +47,6 @@ from __future__ import annotations
 
 import json
 import logging
-import math
 import os
 import sys
 import time
@@ -742,7 +741,7 @@ def _tensor_to_bars(
     closes = seed_price * np.exp(np.cumsum(lr_close))
 
     # Feature 1: open log-returns → open prices (from close[t-1])
-    lr_open = arr_denorm[:, 1] if arr.shape[1] > 1 else lr_close
+    _lr_open = arr_denorm[:, 1] if arr.shape[1] > 1 else lr_close  # noqa: F841 (kept: documents feature 1's layout)
     opens = np.roll(closes, 1)
     opens[0] = seed_price
 
@@ -915,7 +914,7 @@ class SyntheticMarketSimulator:
             "trained_on": cfg.symbols,
             "governance": GOVERNANCE_LABELS,
         }
-        config_path.write_text(json.dumps(config_data, indent=2))
+        config_path.write_text(json.dumps(config_data, indent=2), newline="\n")
 
         self._model = model
         duration_ms = int(time.time() * 1000) - start_ms
@@ -982,7 +981,7 @@ class SyntheticMarketSimulator:
         model_version = config_data.get("model_version", self._model_version())
 
         n_regimes = cfg.n_regimes
-        seq_len = config_data.get("seq_len", cfg.seq_len)
+        _seq_len = config_data.get("seq_len", cfg.seq_len)  # noqa: F841 (kept: documents the config key)
         latent_dim = config_data.get("latent_dim", cfg.latent_dim)
 
         # Set up output directory

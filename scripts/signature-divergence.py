@@ -499,7 +499,7 @@ def main() -> int:
 
     if args.out:
         # pair_details can be large — keep it in the file output but not stdout.
-        Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8")
+        Path(args.out).write_text(json.dumps(report, indent=2, default=str), encoding="utf-8", newline="\n")
         print(f"\nwrote {args.out}", file=sys.stderr)
 
     return 0

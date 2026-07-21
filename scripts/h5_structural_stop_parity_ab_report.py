@@ -333,7 +333,7 @@ def _write_report(result: dict) -> Path:
         )
     lines.append("")
 
-    out_path.write_text("\n".join(lines), encoding="utf-8")
+    out_path.write_text("\n".join(lines), encoding="utf-8", newline="\n")
     return out_path
 
 

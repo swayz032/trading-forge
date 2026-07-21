@@ -111,6 +111,45 @@ def _json_dump_indent(call: ast.Call) -> tuple[bool, str]:
     return True, f"indent={ast.unparse(ind)} -> newlines between elements"
 
 
+def _expr_emits_newlines(node: ast.expr | None) -> tuple[bool, str]:
+    """Does the VALUE of this expression contain a newline character?
+
+    ★ THE BUCKET THAT HID A LIVE MOVER. The first version of this census computed
+    `emits_newlines` for `json.dump` only, and classified every `Path.write_text` as
+    UNPINNED_TEXT -- "bytes move only if a newline is written through it", declared but not
+    decided. `population_a_flip_step_remeasure.py:453` is
+        OUT_PATH.write_text(json.dumps(out, indent=1, sort_keys=False) + "\\n", ...)
+    which plainly emits newlines. It was NOT flagged, and the file is CRLF on disk RIGHT NOW
+    (105 CR) against an LF blob at HEAD -- so the defect was live, in the remedy set's blind
+    spot, while the census reported the remedy set clean. It surfaced only because a DIFFERENT
+    instrument (that artifact's own APPEND_ONLY guard) refused to publish and named
+    `crlf_only: True`, and because `git status` reported the file CLEAN throughout.
+
+    AN UNDECIDED BUCKET IS WHERE THE MOVER LIVES. So the question is now answered for every
+    text writer instead of deferred for one shape of it.
+    """
+    if node is None:
+        return False, "no argument"
+    for n in ast.walk(node):
+        if isinstance(n, ast.Constant) and isinstance(n.value, str) and "\n" in n.value:
+            return True, "a string literal in the written value contains a newline"
+        if isinstance(n, ast.JoinedStr):
+            for v in n.values:
+                if isinstance(v, ast.Constant) and isinstance(v.value, str) and "\n" in v.value:
+                    return True, "an f-string segment contains a newline"
+        if isinstance(n, ast.Call):
+            f = n.func
+            nm = f.attr if isinstance(f, ast.Attribute) else (f.id if isinstance(f, ast.Name) else None)
+            if nm == "dumps" and isinstance(f, ast.Attribute) and \
+                    isinstance(f.value, ast.Name) and f.value.id in ("json", "yaml"):
+                emits, why = _json_dump_indent(n)
+                if emits:
+                    return True, f"{f.value.id}.dumps -> {why}"
+            if nm in ("join", "dump_all", "safe_dump", "to_csv", "to_json", "to_markdown"):
+                return True, f"`{nm}(...)` produces multi-line text"
+    return False, "no newline found in the written value (single-line write)"
+
+
 #: Callables that return a TEXT-MODE file object whose newline behaviour is governed by the
 #: same `newline=` keyword. `os.fdopen` wraps a raw descriptor and translates exactly like
 #: `open` -- omitting it hid two real write sites behind an unrelated read handle (below).
@@ -233,12 +272,20 @@ def _scan(path: Path, rel: str) -> list[dict]:
         # ---- Path.write_text -------------------------------------------------------------
         elif name == "write_text":
             pinned, pin = _newline_pin(n)
-            verdict = "PINNED" if pinned else "UNPINNED_TEXT"
-            why = (f"newline={pin}" if pinned else
-                   "Path.write_text defaults newline=None -> universal-newline translation "
-                   "to os.linesep")
+            emits, evidence = _expr_emits_newlines(n.args[0] if n.args else None)
+            if pinned:
+                verdict, why = "PINNED", f"newline={pin}"
+            elif emits:
+                verdict = "PLATFORM_DEPENDENT_BYTES"
+                why = ("Path.write_text defaults newline=None -> universal-newline translation "
+                       f"to os.linesep, AND the written value emits newlines ({evidence})")
+            else:
+                verdict = "INVARIANT_NO_NEWLINE_EMITTED"
+                why = f"unpinned, but {evidence}"
             sites.append({"file": rel, "line": n.lineno, "writer_kind": "Path.write_text",
-                          "newline_pin": pin, "verdict": verdict, "why": why,
+                          "newline_pin": pin, "emits_newlines": emits,
+                          "emits_newlines_evidence": evidence,
+                          "verdict": verdict, "why": why,
                           "call": ast.unparse(n)[:160]})
 
         # ---- json.dump into a handle -----------------------------------------------------
@@ -268,7 +315,10 @@ def _scan(path: Path, rel: str) -> list[dict]:
             else:
                 cands, handle = [], f"handle is not a name: {ast.unparse(arg1) if arg1 else 'n/a'}"
 
-            def _classify(c: ast.Call) -> str:
+            # `emits` is bound as a DEFAULT rather than captured: this closure is defined
+            # inside the walk loop, and a late-binding capture would classify every site with
+            # whatever the LAST iteration happened to leave behind (ruff B023).
+            def _classify(c: ast.Call, emits: bool = emits) -> str:
                 _, pn = _newline_pin(c)
                 md = _mode_of_open(c) or ""
                 if "b" in md:
