@@ -4,6 +4,27 @@
 
 ---
 
+## AR-128 · 2026-07-20 · ★★ GRADE: **BAND 7 VERIFIED — bars LIFT WITH CONDITION.** The risk change is **quantified for the first time: 5–8% of ALL real entries now trade with no take-profit.** ★ And the grader found **my packet's scope-lock had pre-excluded two of R-133's three options.** Escalating the condition to the operator in plain English.
+
+**1. ★ THE RISK NUMBER, verified two non-overlapping ways** (including running the **actual pre-fix code** via `git show 12bb4ac2^` head-to-head against current, on real full-history ES):
+- **`eqhl_raid`: 46/597 = 7.7%** of all entries full-history (4.9% at n=20,000) — `both_none=0` pre-fix, i.e. **virtually never `None` before.**
+- **`ict_swing`: 3/56 = 5.4%** full history.
+- **"A real, material risk-shape change, not a rounding artifact."** The implementer refused to self-adjudicate it; the grade now supplies the number **so acceptance can be informed rather than assumed.**
+
+**2. ★★ A FINDING AGAINST MY OWN PACKET: R-133 posed a THREE-way choice — skip / enter-unprotected / hold — but my §3 OUT clause forbade entry-path changes, which pre-excluded skip AND hold.** So "enter with no take-profit" was **the only reachable option**, and the implementer's answer was **architecturally forced, not chosen.** The grader flags it as *"worth noting for the operator, not a defect"* — I record it as **a scope-lock that silently answered a question the ruling had left open.** A packet can pre-decide a decision it never names.
+
+**3. ★ CAVEAT 2 — the characterization was right, the citation was not.** The residual is **2/9900, not the cited 4/18,700.** The percentage rounds the same (~0.02%), *"which is presumably why nobody caught it"* — **including me: I relayed 4/18700 in AR-127 without re-deriving it.** Second unreproduced self-report in this packet's trail.
+- **But the trace clears the gate:** the 2 are an `entry_long` flip at bar 1398 plus its `exit_long` state propagation at 1399 — and **structurally cannot be caused by this fix**, since entries are computed in a separate loop that never touches the levels. **Upstream, pre-existing, out of scope.**
+
+**4. CAVEAT 3 — substitution ADEQUATE.** Two of three independent measurements agree closely on totals (597 vs 598; **56 exact**), and all three show the same defect class at the same order of magnitude resolving to **0** at every window. **The non-reproduction of AR-119's original is logged as a real institutional-memory gap — an analysis script that backed a packet's headline numbers was never committed — not as a blocker.**
+
+**5. Verified clean:** plant-catch **bidirectional and genuine** (each test asserts the OLD line fires *first*); the 2 skips trigger **only when the plant had no chance to fire either way**; **no fabrication on any path** (no `else` branch exists); scope-lock exact; dead-stores **grepped in the pre-fix file too** and genuinely write-only; ruff clean; import reorder alphabetization only. D7's exact "183/2" did not reproduce, but a **broader** 334-passed sweep did, with its single failure proven pre-existing (`git diff` empty for both implicated files).
+
+**6. ★ THE CONDITION IS AN OPERATOR DECISION AND I AM ROUTING IT AS ONE.** The grader is explicit: this **cannot be discharged by code inside the packet's scope-lock** — an entry-path change is out of scope — **it requires an operator ruling.** Per the ratify-packet skill the operator rules on a **plain-English summary, never a technical packet**, and per R-137 the honest frame is **falsely-protected before vs honestly-unprotected now.** I am putting it to him in that form, with your framing intact and the grader's number attached.
+
+**Holds:** `eqhl_raid` + `ict_swing` **lift-with-condition, condition NOT yet discharged** · `ict_scalp` pending its run · three lifted · `named_sr_level` unblocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-127 · 2026-07-20 · TARGET-GATE FIX LANDED (`12bb4ac2`) — leaks driven to **0 at three window sizes**. ★★ But **THREE caveats I am NOT letting the landing bury**, chief among them: **your R-133 direction check came back NOT CONSERVATIVE.** Grade dispatched with all three as its lead items.
 
 **The fix:** an index gate (`idx_b < i`) on exit-target selection in both files, mirroring `eqhl_raid`'s existing entry-side gate. **No fallback anywhere** — when gating empties the set, target stays `None`.
