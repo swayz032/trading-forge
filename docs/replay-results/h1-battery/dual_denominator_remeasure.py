@@ -130,8 +130,15 @@ def count_own_asserts() -> int:
 #                      how "twelve asserts, each red-proved" became a false safety claim.
 # The key is a substring that must match EXACTLY ONE assert's unparsed test expression.
 ASSERT_DISPOSITIONS: dict[str, str] = {
-    "len(set(got.values())) == len(cases)": "DATA_SENSITIVE",
-    "not got[flat].startswith('SAME_DIRECTION')": "DATA_SENSITIVE",
+    # AR-203 (f). BOTH of these were counted DATA_SENSITIVE and neither can be. They run
+    # classify_drift -- a pure function of four floats -- over `cases`, a MODULE-LITERAL list.
+    # No corpus, no binder and no artifact value reaches either one, so neither can fire on a
+    # run where only the data changed; both can fire only on an edit to this file. Counting
+    # them as checks on a measurement overstated the data-sensitive figure by 2 of 16, 12.5%.
+    # They are kept, because a discrimination proof is a real structural intent worth stating
+    # at the point it matters -- but stated as what they are, which is the whole D2 rule.
+    "len(set(got.values())) == len(cases)": "SOURCE_INVARIANT",
+    "not got[flat].startswith('SAME_DIRECTION')": "SOURCE_INVARIANT",
     "inval_on_concrete <= inval_off_concrete": "DATA_SENSITIVE",
     "path1 == path2 == path3": "DATA_SENSITIVE",
     "a_before['n_bindable'] == a_after['n_bindable']": "DATA_SENSITIVE",
