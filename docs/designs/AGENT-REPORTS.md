@@ -4,6 +4,27 @@
 
 ---
 
+## AR-163 · 2026-07-21 · ★★★ **THE STOP RULE, PRE-REGISTERED — WRITTEN AND COMMITTED BEFORE PASS 4 IS DISPATCHED.** Bar: **FN ≤ 5/21 (23.8%) AND FP ≤ 6.0%.** Miss either and **the lane CLOSES AT HONEST-PARTIAL.** This AR lands first; the dispatch follows it.
+
+**1. ★ THE BAR, and the order matters more than the number.** R-171 §3 requires the bar set **before** dispatch. **So this report is committed FIRST and the agent is dispatched AFTER** — a bar written after seeing a result is not a bar, it is a rationalization with a timestamp. Anyone reading the log can check the sequence.
+
+**2. THE BAR:**
+- **PRIMARY — FN ≤ 5/21 = 23.8%** on the adjudicated key, measured by me, sealed fence, isolated worktree pinned to the commit. Currently **10/21 = 47.6%**. **This requires recovering at least 5 of the 10 remaining misses.**
+- **HARD CONSTRAINT — FP ≤ 6.0%** (hard) **and soft-FP ≤ 6.0%.** **A recall gain bought with false positives is a FAIL, not a trade.** The FP mechanism cure is the campaign's real asset here and it is not currency.
+- **BOTH must hold. Clearing one while missing the other is a MISS.**
+
+**3. ★ WHY 5 OF 10 — derived, not chosen to be comfortable.** Of the 10 remaining, **the fixer named 2 as unfixable with reasons I accept**: *"do not touch **it** until 8am"* (a pronoun carries no position noun; admitting it equally admits *"do not touch the thermostat until 7 a.m."*) and *"nothing matters until 14:30 EST"* (no action, no market noun, nothing to key on). **That leaves 8 plausibly recoverable. The bar demands more than half of them (5 of 8), not a token.** ★ **I am deliberately NOT setting the bar at 8 of 8** — three of the remaining rows carry market nouns AND actions and still fail, which means I do not actually understand why they fail. **Setting a bar on a mechanism I have not diagnosed would be pricing my own ignorance as the fixer's obligation.**
+
+**4. ★ AND THE HONEST-PARTIAL OUTCOME IS DEFINED NOW, so it cannot be argued into a failure or a success later.** If the bar is missed, the lane closes with the resolver shipping **as what it provably is**: **FP mechanism CURED** (38.0%→6.0% hard, 74.0%→6.0% soft, independently sealed-measured, preserved across two subsequent passes) · **recall PARTIAL, per-row labeled** · **the remaining misses named as future work with their texts and their diagnosed cause.** **That is not a failure state. A resolver that refuses ordinary prose and catches some genuine teachings is strictly better than one that binds `ny_am` to garbage-pickup schedules** — and labeling exactly which teachings it misses is worth more than a number that hides them.
+
+**5. PASS 4 IS TARGETED AT THE CLOCK-ROLE CONJUNCT**, per your adoption of the diagnosis — **not the action conjunct, which is fixed and is no longer the limiter.** The prepositional/anaphoric forms are the target: ***"before that"*, *"into 3:45 p.m."*, *"at 3pm on Fridays"***. Same sealed-pair machinery: fence untouched, criterion shared, literals withheld, both axes reported, measurement isolated.
+
+**6. THE LANE CLOSES AFTER PASS 4 EITHER WAY**, per R-171 §3, **and I am not going to relitigate that when the number lands.** The enforcement re-ratify is the campaign's critical path and it has waited through four passes of a resolver that is **flag-OFF and shipping nothing**. **If pass 4 clears, the lane closes clean; if it misses, the lane closes honest. Both are closures.**
+
+**7. Recording the law that made this necessary (R-171 §2): SELF-MEASURED RECALL IS AN UPPER-BOUND CLAIM, NEVER A RESULT** — three agents, three briefs, one direction (0.0 vs 60 · "4" vs 12 · 14/15 vs 3/13). **Sealed fences are PERMANENT for recall claims, not remedial.** I will not accept pass 4's self-reported recall as anything but a ceiling, and its brief says so.
+
+**Holds:** flags OFF · FP win fenced as a pass/fail condition · the 77 sealed.
+
 ## AR-162 · 2026-07-21 · ★★ THIRD PASS `6a56618b`: **FP WIN PRESERVED EXACTLY (6.0%, soft 6.0%) — the hard constraint held.** FN **61.9% → 47.6%.** ★★★ **But the fixer measured 14-of-15 recovered on its own rows; THE SEALED FENCE SAYS 3 OF 13. Third consecutive pass where self-measurement outran sealed measurement.** ★ And I have a specific diagnosis: **the bottleneck MOVED.**
 
 **1. THE HARD CONSTRAINT HELD, which was the pass/fail condition.** FP **3/50 = 6.0%**, soft **6.0%**, role-resolver-only **2.1%** — **identical to `6dd3a00f` to the row.** The FP mechanism win survived a change aimed at the opposite axis. **That is the thing I most expected to break, and it did not.** Flag-OFF regime unchanged (4.0% / 85.7%), byte-identity intact.
