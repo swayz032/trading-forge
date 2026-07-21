@@ -885,7 +885,7 @@
   "n_WAIT_SESSION_bound_and_concrete_flags_on": 0,
   "n_WAIT_SESSION_de_approximated_in_this_run": 0,
   "THE_HEADLINE": "0 of 27 bound - 0 of AT-MOST-2 recovered in this measurement's configuration (level/zone flags ON, the AFTER arm).",
-  "recovery_ceiling_vs_measured": "CEILING (graded, not measured): at most 2 of 27. MEASURED by the live session resolver: 0 of 27 rows resolve to a session zone at all, and 0 recovered in this configuration. The ceiling is an upper bound on what could be recovered, never a claim that anything was.",
+  "recovery_ceiling_vs_measured": "CEILING (graded, not measured): at most 2 of 27. MEASURED by the SHIPPED session resolver (classify_session_role -> bind_condition): 8 of 27 rows bind to a session zone, and 0 recovered in this configuration. The ceiling is an upper bound on what could be recovered, never a claim that anything was.",
   "recoverable_target_population": {
    "value": 2,
    "PROVENANCE": "EXTERNAL GRADED CONSTANT -- not derived by this generator.",
@@ -899,27 +899,140 @@
    "why_flagged": "This generator can count the taught rows and can show how many bound. It CANNOT re-derive the graded target -- that came from a human-graded read of the teaching. It is cited rather than recomputed, and labelled so no reader mistakes it for a measured value here. \u2605 The one part it CAN reconcile is asserted: the live resolver's zone-resolvable count may never exceed it."
   },
   "THE_26_VS_27_ACCOUNTING": {
-   "why": "An earlier note recorded 26 corpus-wide WAIT_SESSION rows; this generator counts 27. That is not a discrepancy to be split or averaged -- it closes exactly, and the terms are named so the closure can be checked instead of believed.",
+   "why": "The operative 26 is the DEFINED population of the ratified blind grade -- the WAIT_SESSION conditions that resolve to NO session zone -- and NOT the earlier note's corpus tally this field used to name, which carries the same numeral for an unrelated reason. This generator counts 27 WAIT_SESSION conditions; the difference is the single zone-resolving row that population definition excludes BY CONSTRUCTION, and that row carries its own graded verdict, so every declared unit of the split is backed by a graded row id rather than by the declaration itself.",
+   "the_numeral_the_superseded_ancestor_carried": 26,
    "A_graded_genuine_session_teachings": 2,
    "B_graded_mis_types": 21,
    "C_graded_undecidable": 4,
    "sum": 27,
    "measured_n_WAIT_SESSION_taught": 27,
-   "measured_n_resolvable_by_the_live_session_resolver": 0,
+   "measured_n_resolvable_by_the_live_session_resolver": 8,
    "former_orphan_zone_binder_now_honestly_refused": 1,
+   "SOURCED_ROW_CLOSURE": {
+    "sources": [
+     {
+      "artifact": "session-ab-blind-grade-RESULT.json",
+      "n_graded_rows": 26,
+      "why_it_is_a_source": "the ratified blind grade. Its own sample file DEFINES its population as the WAIT_SESSION conditions that resolve to NO session zone -- one row short of the corpus BY CONSTRUCTION, never by omission, which is why the shortfall was invisible to a count."
+     },
+     {
+      "artifact": "session-ab-blind-grade-ROW27.json",
+      "n_graded_rows": 1,
+      "why_it_is_a_source": "the population-completion grade of the single zone-resolving row that population definition excludes. It confirms the bucket the split had ASSUMED, so the constant does not move -- only its epistemic status does, from assumed to sourced."
+     }
+    ],
+    "n_graded_rows_per_source": {
+     "session-ab-blind-grade-RESULT.json": 26,
+     "session-ab-blind-grade-ROW27.json": 1
+    },
+    "n_distinct_sourced_rows": 27,
+    "duplicate_row_ids_THIS_IS_A_RED": [],
+    "rows_present_but_ungraded_THIS_IS_A_RED": [],
+    "condition_ids": [
+     "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+     "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+     "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+     "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+     "WAIT_SESSION:as-the-new-york-session-opens-we-are-sti#3",
+     "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+     "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+     "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+     "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+     "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+     "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+     "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+     "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+     "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+     "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+     "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+     "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+     "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+     "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+     "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+     "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+     "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+     "WAIT_SESSION:this-line-is-being-reset-as-soon-as-ever#1",
+     "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+     "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+     "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2",
+     "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0"
+    ],
+    "n_declared_units": 27,
+    "PASS": true
+   },
    "closes_exactly": true,
+   "what_closes_exactly_now_means": "Both links, not one. Every declared unit of the split is backed by a distinct graded row id read out of a grade artifact, AND the declared unit total equals the WAIT_SESSION population this generator counts. The former form of this field asserted only the second link, and its left side was the declaration -- so a unit that had been assumed into a bucket to make the split close was vouched for by the very thing that assumed it.",
    "WHY_C_EXISTS": "The prior accounting had only decided buckets, so every row was forced to a decision. C holds the rows a blind judge honestly could not decide -- a TradingView install instruction, for instance, is not a session teaching, and calling it one either way would be the fabrication. Forcing rows like those is one mechanism by which a small graded count becomes a large one.",
    "the_27th_row": "The 27th is the former orphan-zone binder. The old resolver bound it to a zone that does not exist -- a fake binding wearing bindable=True. It is now REFUSED, and the refusal is why the post-closure count is one higher than the pre-closure note: the closure did not lose a binding, it stopped claiming one.",
    "supersedes": "This A/B/C read supersedes BOTH the earlier approximate ~15 mis-types / ~11 vocabulary-gap estimates AND the 17/9 graded split that replaced them. The 17/9 was withdrawn for cause, not preference: its judge reproduced the shipped classifier 26 of 26, so it was never independent of the thing it graded.",
-   "ASSERTED": "\u2605 PER COMPONENT, not merely as a sum. The predecessor asserted the SUM alone, which stays green under every reallocation between the graded buckets -- that is, green under every value of the only quantity anyone disputed. Each of A, B and C now answers for itself against SESSION_SPLIT_DECLARED; the sum is kept because it is the only check on the taught count; and the live session resolver's zone-resolvable count is asserted not to exceed A, which is the one term anything outside the judge can falsify."
+   "ASSERTED": "\u2605 PER COMPONENT, not merely as a sum. The predecessor asserted the SUM alone, which stays green under every reallocation between the graded buckets -- that is, green under every value of the only quantity anyone disputed. Each of A, B and C now answers for itself against SESSION_SPLIT_DECLARED; the sum is kept because it is the only check on the taught count; and the SHIPPED session resolver's zone-bound count (classify_session_role -> bind_condition) is asserted not to exceed A. That term is external to the judge and it is now genuinely falsifiable: re-aimed from the legacy bare-keyword matcher, which was measured dead on this corpus, to the shipped path, it came off the floor and the reconciliation DISAGREES with A. Both readings are computed fields in SESSION_DISAGREEMENT beside this sentence rather than numerals inside it. It is stated as a live disagreement, not a passing check."
+  },
+  "SESSION_DISAGREEMENT": {
+   "resolver_binds_zone_bound_COMPUTED": 8,
+   "graded_genuine_session_teachings_A_COMPUTED": 2,
+   "excess_over_component_A_COMPUTED": 6,
+   "resolver_recognizes_session_teaching_COMPUTED": 18,
+   "labeled_population_COMPUTED": 27,
+   "adjudication_status_COMPUTED": "PENDING -- the only per-row adjudication on disk is quarantined as criterion-scoped",
+   "resolver_sound_COMPUTED": false,
+   "production_flag": "TF_SESSION_ROLE_RESOLVER_ENABLED",
+   "production_flag_state_COMPUTED": "OFF",
+   "D3_ADJUDICATION_STATE_COMPUTED": {
+    "d3_readable": true,
+    "d3_is_quarantined_COMPUTED": true,
+    "zone_correctness_tally_COMPUTED": {
+     "correct": 3,
+     "coarse": 2,
+     "inverted": 1,
+     "fabricated_from_point_anchor": 3
+    },
+    "n_zones_correct_COMPUTED": 3,
+    "n_zones_adjudicated_COMPUTED": 9,
+    "n_zones_NOT_correct_COMPUTED": 6,
+    "adjudication_status_COMPUTED": "PENDING -- the only per-row adjudication on disk is quarantined as criterion-scoped",
+    "resolver_sound_COMPUTED": false,
+    "resolver_soundness_basis": "Computed from the quarantined instrument's surviving calibration diagnostics: the share of resolver-bound rows whose ZONE it got right. Soundness here means every adjudicated zone was correct. It is a property of the resolver, measured, and it is NOT repaired by this unit -- the redesign that repairs it is queued and cited above."
+   },
+   "ACKNOWLEDGED_COMPUTED": true,
+   "acknowledgment_entry": {
+    "AS_OF_DATE": "2026-07-21",
+    "AS_OF_COMMIT": "b54db943",
+    "resolver_binds_zone_bound": 8,
+    "graded_genuine_session_teachings_A": 2,
+    "d3_adjudication": {
+     "path": "docs/replay-results/session-9v2-adjudication/verdicts-LOCKED.json",
+     "status_required_in_that_file": "quarantined -- criterion-scoped, not corpus verdicts",
+     "why_it_is_the_pointer": "It is the only instrument that adjudicated the resolver-bound rows one by one, and it is QUARANTINED: it graded under a discriminator the governing ruling rejected. So the adjudication of record is PENDING, and the pointer proves the pendency rather than asserting it."
+    },
+    "range_structure_redesign": {
+     "source": "docs/designs/packet-session-refusal-precedence-2026-07-21.md",
+     "ruling": "R-242",
+     "ruling_NOT_MACHINE_VERIFIED_HERE": "The ruling that granted the redesign as the real unit lives in the advisor ledger, which is a live append-only file owned by another seat. Verifying against it would make every future ruling a blocker on this artifact, so the CHECKED pointer is the frozen packet where the finding was made and the redesign declared not done. The ruling id is published as an identifier for a reader to follow, and it is named here as UNVERIFIED rather than left to look like the checked one.",
+     "why_it_is_the_pointer": "The packet that found the defect class and stated its remedy is a redesign rather than a patch. The disagreement below is a symptom of the representation defect that redesign exists to fix, and the redesign is queued rather than done."
+    }
+   },
+   "acknowledgment_provenance_READ_OFF_DISK": {
+    "d3_path_exists": true,
+    "d3_is_quarantined": true,
+    "redesign_path_exists": true,
+    "redesign_names_the_structural_class": true,
+    "redesign_says_it_is_a_redesign": true,
+    "d3_path_matches_the_pinned_constant": true,
+    "redesign_path_matches_the_pinned_constant": true,
+    "ALL_VERIFIED": true,
+    "why_not": null
+   },
+   "what_the_disagreement_IS": "The shipped session resolver binds more of the labeled rows to a session zone than the ratified grade calls genuine session teachings. Both counts are fields above. Either the grade understates the genuine teachings or the resolver binds rows that teach no session, and the second is the reading the calibration diagnostics favour.",
+   "what_this_block_does_NOT_claim": "It does not settle which side is wrong -- that is the adjudication, and its status is a field above rather than an opinion here. It does not claim the resolver is fixed; the soundness field is computed and the redesign is queued. The production flag state is a field, and it is the reason none of this is live.",
+   "why_this_block_can_be_published_at_all": "A gated acknowledgment pinned to the exact pair above, with both its pointers verified on disk this run. Any other state -- a different pair, a withdrawn entry, a pointer that does not resolve -- reaches the reconciliation guard unchanged and the build aborts, exactly as it did before this block existed."
   },
   "unflattering_reading": "All 27 WAIT_SESSION conditions in Corpus A are UNBOUND in both arms. The session lane -- the only family whose runtime primitive is real -- recovered nothing in this configuration, and the honest-partial closure moved the unbound count the WRONG way: 27 unbound post-closure against the 26 of the pre-closure note, because the 27th row's binding was withdrawn as fake rather than lost (see THE_26_VS_27_ACCOUNTING). This is the least flattering number available and it is stated for that reason."
  },
  "SELF_ACCOUNTING": {
-  "n_asserts_in_this_generator": 32,
+  "n_asserts_in_this_generator": 34,
   "ASSERT_CENSUS": {
-   "n_asserts_total": 32,
-   "n_DATA_SENSITIVE": 22,
+   "n_asserts_total": 34,
+   "n_DATA_SENSITIVE": 24,
    "n_SOURCE_INVARIANT": 10,
    "SPLIT_DERIVATION_R219": {
     "WHY_THIS_EXISTS": "This split has now held three different values, each replacing the last with no record of WHICH asserts moved it. A third value without a derivation is not a number yet. The prior values are carried as numeric fields below rather than typed into this sentence -- a record, not a live claim. This closes the arithmetic against the file's git history, which is outside the AST that produces the total.",
@@ -1007,6 +1120,12 @@
       "commit": "THIS_WAVE"
      },
      {
+      "assert": "_ack_entry is None or ack_prov['ALL_VERIFIED']",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "H1-W4 D1 -- the gated acknowledgment's provenance check",
+      "commit": "THIS_WAVE"
+     },
+     {
       "assert": "_ceiling_path1 == _ceiling_path2",
       "disposition": "DATA_SENSITIVE",
       "added_by": "H1-W4 -- max_de_approximable computed from two paths",
@@ -1023,12 +1142,18 @@
       "disposition": "DATA_SENSITIVE",
       "added_by": "R-220 s1 -- reconciliation against the live session resolver",
       "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "sourcing['PASS']",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "H1-W4 D1 -- closure asserts the SOURCED-ROW COUNT, not declared==measured",
+      "commit": "THIS_WAVE"
      }
     ],
-    "DATA_SENSITIVE_derivation": "14 at baseline + 8 added = 22",
+    "DATA_SENSITIVE_derivation": "14 at baseline + 10 added = 24",
     "SOURCE_INVARIANT_derivation": "5 at baseline + 5 added = 10",
     "declared_now_in_ASSERT_DISPOSITIONS": {
-     "DATA_SENSITIVE": 22,
+     "DATA_SENSITIVE": 24,
      "SOURCE_INVARIANT": 10
     },
     "second_link_already_asserted_above": "every ASSERT_DISPOSITIONS key names exactly ONE assert in the AST, and every assert in the AST has exactly one key -- so a split that closes against the table closes against the file.",
@@ -1037,162 +1162,172 @@
    },
    "asserts": [
     {
-     "line": 465,
+     "line": 551,
      "disposition": "SOURCE_INVARIANT",
      "test": "unexpected_disposition_keys == set()"
     },
     {
-     "line": 469,
+     "line": 555,
      "disposition": "SOURCE_INVARIANT",
      "test": "undispositioned == []"
     },
     {
-     "line": 535,
+     "line": 621,
      "disposition": "SOURCE_INVARIANT",
      "test": "derivation['closes_exactly']"
     },
     {
-     "line": 3120,
+     "line": 3397,
      "disposition": "SOURCE_INVARIANT",
      "test": "len(set(got.values())) == len(cases)"
     },
     {
-     "line": 3127,
+     "line": 3404,
      "disposition": "SOURCE_INVARIANT",
      "test": "not got[flat].startswith('SAME_DIRECTION')"
     },
     {
-     "line": 3179,
+     "line": 3456,
      "disposition": "DATA_SENSITIVE",
      "test": "inval_on_concrete <= inval_off_concrete"
     },
     {
-     "line": 3464,
+     "line": 4140,
      "disposition": "DATA_SENSITIVE",
      "test": "path1 == path2 == path3"
     },
     {
-     "line": 3512,
+     "line": 4188,
      "disposition": "DATA_SENSITIVE",
      "test": "a_before['n_bindable'] == a_after['n_bindable']"
     },
     {
-     "line": 3575,
+     "line": 4251,
      "disposition": "DATA_SENSITIVE",
      "test": "per_kind.get('swing', {}).get('n_flipped', 0) == 0"
     },
     {
-     "line": 3583,
+     "line": 4259,
      "disposition": "DATA_SENSITIVE",
      "test": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}"
     },
     {
-     "line": 3602,
+     "line": 4278,
      "disposition": "DATA_SENSITIVE",
      "test": "a_roles.get('trigger', 0) == 0"
     },
     {
-     "line": 3688,
+     "line": 4361,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']"
     },
     {
-     "line": 3694,
+     "line": 4367,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']"
     },
     {
-     "line": 3698,
+     "line": 4371,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']"
     },
     {
-     "line": 3705,
+     "line": 4378,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_teachings + graded_mis_types + graded_undecidable == ws_taught"
     },
     {
-     "line": 3720,
+     "line": 4410,
+     "disposition": "DATA_SENSITIVE",
+     "test": "sourcing['PASS']"
+    },
+    {
+     "line": 4469,
+     "disposition": "DATA_SENSITIVE",
+     "test": "_ack_entry is None or ack_prov['ALL_VERIFIED']"
+    },
+    {
+     "line": 4528,
      "disposition": "DATA_SENSITIVE",
      "test": "ws_session_resolvable <= graded_teachings"
     },
     {
-     "line": 3854,
+     "line": 4663,
      "disposition": "DATA_SENSITIVE",
      "test": "n_levelzone_rows == 16"
     },
     {
-     "line": 3856,
+     "line": 4665,
      "disposition": "DATA_SENSITIVE",
      "test": "total_flipped <= 6"
     },
     {
-     "line": 3881,
+     "line": 4690,
      "disposition": "DATA_SENSITIVE",
      "test": "_ceiling_path1 == _ceiling_path2"
     },
     {
-     "line": 3906,
+     "line": 4715,
      "disposition": "DATA_SENSITIVE",
      "test": "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE"
     },
     {
-     "line": 3926,
+     "line": 4735,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['never_evaluated_total'] == never_by_gap"
     },
     {
-     "line": 3930,
+     "line": 4739,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['all_entry_conditions'] == b_total"
     },
     {
-     "line": 4928,
+     "line": 5999,
      "disposition": "SOURCE_INVARIANT",
      "test": "OUT_PATH not in APPEND_ONLY_GUARDED"
     },
     {
-     "line": 5026,
+     "line": 6172,
      "disposition": "SOURCE_INVARIANT",
      "test": "not sys.flags.optimize"
     },
     {
-     "line": 5568,
+     "line": 6714,
      "disposition": "SOURCE_INVARIANT",
      "test": "publish_path['PASS']"
     },
     {
-     "line": 5574,
+     "line": 6720,
      "disposition": "SOURCE_INVARIANT",
      "test": "spawn['PASS']"
     },
     {
-     "line": 5580,
+     "line": 6726,
      "disposition": "DATA_SENSITIVE",
      "test": "census['PASS']"
     },
     {
-     "line": 5597,
+     "line": 6743,
      "disposition": "DATA_SENSITIVE",
      "test": "evidential['PASS']"
     },
     {
-     "line": 5610,
+     "line": 6756,
      "disposition": "SOURCE_INVARIANT",
      "test": "discrimination['REVIVAL_FAMILY']['PASS']"
     },
     {
-     "line": 5616,
+     "line": 6762,
      "disposition": "DATA_SENSITIVE",
      "test": "gate['PASS']"
     },
     {
-     "line": 5656,
+     "line": 6802,
      "disposition": "DATA_SENSITIVE",
      "test": "head_check['all_match']"
     },
     {
-     "line": 5666,
+     "line": 6812,
      "disposition": "DATA_SENSITIVE",
      "test": "before_hashes == after_hashes"
     }
@@ -1244,12 +1379,12 @@
     "SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD": "FIRED: graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']"
    },
    "n_DISCRIMINATING": 4,
-   "n_REVIVED_BY_VALUE_INJECTION": 12,
+   "n_REVIVED_BY_VALUE_INJECTION": 14,
    "n_REACHED_BUT_NO_PROBE_FAILS_IT": 6,
    "n_NOT_REACHED_BY_THIS_PROBE_FAMILY": 10,
    "REVIVAL_FAMILY": {
     "WHY_IT_IS_REPORTED_APART": "An AXIS perturbs a SOURCE and requires the whole artifact to stay consistent; it earns the word DISCRIMINATING. A REVIVAL PROBE injects a value at the point of use. It proves the assert is LIVE and capable of failing, and nothing about whether a real corpus can reach that state. Pooling the two would inflate the very safety figure this census exists to deflate.",
-    "n_probes": 12,
+    "n_probes": 16,
     "probes": {
      "BINDABILITY_MOVED_BETWEEN_ARMS": {
       "targets": "a_before['n_bindable'] == a_after['n_bindable']",
@@ -1279,9 +1414,25 @@
       "targets": "n_levelzone_rows == 16",
       "why": "The frozen level/zone census loses a row. The assert exists to catch exactly that drift in a sealed artifact this generator does not own."
      },
+     "SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN": {
+      "targets": "ws_session_resolvable <= graded_teachings",
+      "why": "The acknowledgment entry is REMOVED. This reproduces the pre-acknowledgment state exactly -- the state in which this build aborted before every publish call -- and the reconciliation must abort in it, unchanged. If this probe ever came back green the acknowledgment would have leaked into the default path."
+     },
+     "SESSION_ACKNOWLEDGMENT_PAIR_DRIFTED": {
+      "targets": "ws_session_resolvable <= graded_teachings",
+      "why": "The acknowledged pair names a resolver reading the resolver does not have. The entry is present, its pointers resolve, and it still must not license anything: an acknowledgment describes ONE world and stops applying when the world moves. This is the probe that proves the gate is a pinned pair and not a tolerance."
+     },
+     "SESSION_ACKNOWLEDGMENT_POINTER_UNRESOLVABLE": {
+      "targets": "_ack_entry is None or ack_prov['ALL_VERIFIED']",
+      "why": "The acknowledgment cites a document that is not there. A present licence whose citation does not resolve is a caption wearing provenance, and it is a LOUDER red than no licence at all -- so it refuses at the provenance gate rather than falling through to the reconciliation, which would report the wrong finding."
+     },
      "SESSION_RESOLVER_EXCEEDS_GRADE": {
       "targets": "ws_session_resolvable <= graded_teachings",
-      "why": "The live resolver is made to bind more rows to a session zone than the grade calls genuine teachings. That is the reconciliation's whole subject, and no corpus in this family produces it -- today the resolver resolves none."
+      "why": "The shipped resolver is made to bind more rows to a session zone than the grade calls genuine teachings. That is the reconciliation's whole subject. The condition is NOT hypothetical: on today's corpus the re-aimed measurement already exceeds component A unaided, and the injection proves the assert is reachable through the hook regardless of what the corpus happens to read."
+     },
+     "SESSION_SOURCING_HISTORICAL_26_PLUS_ONE_ASSUMED": {
+      "targets": "sourcing['PASS']",
+      "why": "The population-completion grade is withdrawn, leaving exactly the historical state: the blind grade's defined population sourcing every unit but one, and one unit backed by nothing but the declaration. The predecessor closure guard is GREEN in this state -- 27 declared against 27 measured -- which is why the state survived. This guard must refuse in it."
      },
      "SESSION_SPLIT_B_DIVERGED": {
       "targets": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
@@ -1308,7 +1459,11 @@
      "ENFORCEMENT_UNIVERSE_DISAGREES": "FIRED: enf['all_entry_conditions'] == b_total",
      "INVAL_DIRECTION_INVERTED": "FIRED: inval_on_concrete <= inval_off_concrete",
      "LEVELZONE_CENSUS_DRIFTED": "FIRED: n_levelzone_rows == 16",
+     "SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN": "FIRED: ws_session_resolvable <= graded_teachings",
+     "SESSION_ACKNOWLEDGMENT_PAIR_DRIFTED": "FIRED: ws_session_resolvable <= graded_teachings",
+     "SESSION_ACKNOWLEDGMENT_POINTER_UNRESOLVABLE": "REFUSED: _ack_entry is None or ack_prov['ALL_VERIFIED']",
      "SESSION_RESOLVER_EXCEEDS_GRADE": "FIRED: ws_session_resolvable <= graded_teachings",
+     "SESSION_SOURCING_HISTORICAL_26_PLUS_ONE_ASSUMED": "REFUSED: sourcing['PASS']",
      "SESSION_SPLIT_B_DIVERGED": "FIRED: graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
      "SESSION_SPLIT_C_DIVERGED": "FIRED: graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
      "SWING_DE_APPROXIMATED": "FIRED: per_kind.get('swing', {}).get('n_flipped', 0) == 0",
@@ -1344,6 +1499,18 @@
      "revived_by_COMPUTED": [],
      "verdict": "NOT_REACHED_BY_THIS_PROBE_FAMILY",
      "WHY_NO_EVIDENCE": "It does not execute during a probe build -- it lives outside build_artifact (in main(), around the write and the git checks). This probe family says NOTHING about it either way, and saying nothing is the honest report."
+    },
+    {
+     "assert": "_ack_entry is None or ack_prov['ALL_VERIFIED']",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [
+      "SESSION_ACKNOWLEDGMENT_POINTER_UNRESOLVABLE"
+     ],
+     "verdict": "REVIVED_BY_VALUE_INJECTION",
+     "WHAT_REVIVED_MEANS": "A value injection at this assert's point of use made it fire, so it is a live guard and not a decoration. It is WEAKER evidence than an axis conviction: it says nothing about whether any real corpus can reach the state it refuses."
     },
     {
      "assert": "_ceiling_path1 == _ceiling_path2",
@@ -1628,6 +1795,18 @@
      "WHAT_REVIVED_MEANS": "A value injection at this assert's point of use made it fire, so it is a live guard and not a decoration. It is WEAKER evidence than an axis conviction: it says nothing about whether any real corpus can reach the state it refuses."
     },
     {
+     "assert": "sourcing['PASS']",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [
+      "SESSION_SOURCING_HISTORICAL_26_PLUS_ONE_ASSUMED"
+     ],
+     "verdict": "REVIVED_BY_VALUE_INJECTION",
+     "WHAT_REVIVED_MEANS": "A value injection at this assert's point of use made it fire, so it is a live guard and not a decoration. It is WEAKER evidence than an axis conviction: it says nothing about whether any real corpus can reach the state it refuses."
+    },
+    {
      "assert": "spawn['PASS']",
      "declared_disposition": "SOURCE_INVARIANT",
      "executed_during_a_probe_build": false,
@@ -1670,10 +1849,12 @@
     {
      "assert": "ws_session_resolvable <= graded_teachings",
      "declared_disposition": "DATA_SENSITIVE",
-     "executed_during_a_probe_build": true,
+     "executed_during_a_probe_build": false,
      "discriminated_by_COMPUTED": [],
      "n_probes_that_fail_it": 0,
      "revived_by_COMPUTED": [
+      "SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN",
+      "SESSION_ACKNOWLEDGMENT_PAIR_DRIFTED",
       "SESSION_RESOLVER_EXCEEDS_GRADE"
      ],
      "verdict": "REVIVED_BY_VALUE_INJECTION",
@@ -1700,13 +1881,14 @@
    "SESSION_GRADE_REALLOCATION": "One WAIT_SESSION row is reallocated from the externally-graded genuine-teaching bucket to the mis-typed bucket (17/9 -> 16/10). The SUM is deliberately preserved, so `graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught` stays armed and passing -- the axis moves the split without breaking the closure it must respect. MOVES: the 26-vs-27 accounting terms."
   },
   "n_axes": 6,
-  "n_leaves_compared": 750,
-  "n_numeric_leaves_that_moved": 159,
-  "n_moved_numeral_spellings": 88,
+  "n_leaves_compared": 849,
+  "n_numeric_leaves_that_moved": 162,
+  "n_moved_numeral_spellings": 90,
   "scoping_rule": "A prose field is answerable for the moved numbers within its own container's subtree -- its siblings and their descendants. Wider scoping convicts on numeral collision; narrower scoping would let a block quote its own parent's number and freeze.",
-  "n_prose_fields_examined": 307,
-  "n_identifier_fields_skipped": 91,
+  "n_prose_fields_examined": 368,
+  "n_identifier_fields_skipped": 129,
   "identifier_keys_excluded_as_not_prose": [
+   "AS_OF_DATE",
    "added_by",
    "artifact",
    "claim",
@@ -1745,14 +1927,14 @@
    "DRIFT_LATTICE_CASE_WITHDRAWAL",
    "SESSION_GRADE_REALLOCATION"
   ],
-  "n_prose_leaves": 203,
-  "n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF": 143,
-  "n_numeral_carrying_prose_leaves": 60,
-  "COVERAGE": "36/60",
-  "coverage_rate": 0.6,
+  "n_prose_leaves": 226,
+  "n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF": 165,
+  "n_numeral_carrying_prose_leaves": 61,
+  "COVERAGE": "36/61",
+  "coverage_rate": 0.5902,
   "n_RESPONSIVE": 34,
   "n_COVERED": 2,
-  "n_EXEMPTED_STRUCTURAL": 16,
+  "n_EXEMPTED_STRUCTURAL": 17,
   "n_CARRIED_UNVERIFIABLE_NOT_COVERAGE": 8,
   "WHAT_CARRIED_UNVERIFIABLE_MEANS": "A genuine measurement, interpolated from the field it describes, that NO axis in this family moves. The wiring is visible in the source but UNTESTED by this gate, so it is deliberately excluded from the coverage figure rather than counted as a pass. Growth in this bucket means the axis family is too narrow, and it is reported where that is impossible to miss.",
   "n_UNREACHED_THIS_IS_THE_RED": 0,
@@ -1996,6 +2178,14 @@
      "why": "The withdrawn ~15 mis-types / ~11 vocabulary-gap estimates AND the 17/9 graded split that replaced them, plus the 26-of-26 reproduction rate that convicted the 17/9 judge of non-independence. All quoted so the supersession is checkable. Frozen by intent -- an axis moving these would be the defect."
     },
     {
+     "path": "$.SESSION_ATTRIBUTION.SESSION_DISAGREEMENT.acknowledgment_entry.range_structure_redesign.ruling",
+     "kind": "RULING_IDENTIFIER",
+     "numerals": [
+      "242"
+     ],
+     "why": "R-242 names the ruling that queued the redesign this disagreement is a symptom of. A document id, not a quantity."
+    },
+    {
      "path": "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.prior_values_A_RECORD_NOT_A_TALLY[0].status",
      "kind": "SUPERSEDED_ESTIMATE",
      "numerals": [
@@ -2064,7 +2254,7 @@
       "26",
       "27"
      ],
-     "why": "27 is interpolated from ws_taught and 26 from PRIOR_NOTE_WAIT_SESSION_COUNT (a superseded record). ws_taught is unreachable BY CONSTRUCTION: the taught-drop axis must avoid WAIT_SESSION rows to keep the graded-split closure armed, and the split's terms are EXTERNAL grades this generator may not recompute. An axis that moved ws_taught would have to invent a grade for the row it removed."
+     "why": "27 is interpolated from ws_taught and 26 from n_blind_graded -- the row count of the ratified blind grade, read from the grade artifact. \u2605 H1-W4 D2: the 26 was previously interpolated from PRIOR_NOTE_WAIT_SESSION_COUNT, a superseded corpus tally carrying the same numeral for an unrelated reason; the entry was correct about the numeral's KIND and wrong about its source, which is the shape this table exists to make checkable. Neither is axis-reachable: ws_taught is unreachable BY CONSTRUCTION (the taught-drop axis must avoid WAIT_SESSION rows to keep the graded-split closure armed, and the split's terms are EXTERNAL grades this generator may not recompute -- an axis that moved ws_taught would have to invent a grade for the row it removed), and the grade artifact is a sealed input no axis perturbs."
     },
     {
      "path": "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.the_27th_row",
@@ -2079,8 +2269,8 @@
      "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
      "numerals": [
       "14",
-      "22",
-      "8"
+      "24",
+      "10"
      ],
      "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately cannot: the ledger is scored against the DECLARED table, not the perturbed one, so that the axis leaves this assert armed). Wired but untested by this family, and named as such rather than counted as coverage."
     },
@@ -2108,7 +2298,7 @@
   "structural_entries_that_matched_nothing": [],
   "identifier_exclusion_audit": {
    "WHY": "IDENTIFIER_KEYS excludes fields by exact NAME. This checks that each excluded field really holds an identifier, by requiring that it quote no moved measurement as a free-standing word. Membership earned by content, not by a name that sounds path-like.",
-   "n_identifier_leaves_audited": 160,
+   "n_identifier_leaves_audited": 198,
    "leaks": [],
    "PASS": true
   },
@@ -2125,13 +2315,13 @@
    "FIRST_PERSON_EVIDENTIAL": "'we saw', 'we then measured' -- a narrator claiming to have looked.",
    "OPPOSED_DIRECTION_PAIR": "A frozen sentence claiming one quantity rose while another fell. Caption 1's 'the rate improves while coverage worsens', in general form."
   },
-  "n_frozen_prose_leaves_SCORED": 161,
+  "n_frozen_prose_leaves_SCORED": 184,
   "n_flagged": 2,
   "n_convictions": 0,
   "n_adjudicated": 2,
   "precision_COMPUTED": {
    "WHAT_IT_MEANS": "Of the frozen prose leaves these rules flagged on THIS run, the share that needed an adjudication rather than a repair. A rising adjudication share is the signature of a rule that has started crying wolf, and it is visible here on the run that causes it rather than after the guard has been switched off.",
-   "flagged_over_scored": 0.0124,
+   "flagged_over_scored": 0.0109,
    "adjudicated_over_flagged": 1.0
   },
   "REJECTED_RULE_FAMILIES_AND_THEIR_MEASUREMENTS": {
@@ -2168,7 +2358,7 @@
   "sites": [
    {
     "enclosing_function": "publish_artifact",
-    "line": 207,
+    "line": 261,
     "primitive": "OUT_PATH.write_text"
    }
   ],
@@ -2194,7 +2384,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 2764,
+    "line": 3041,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "head_blob_bytes",
@@ -2203,7 +2393,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 2779,
+    "line": 3056,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "tracked_files",
@@ -2238,7 +2428,7 @@
     "boundary": "NUMERAL-FREE CLAIMS. The gate convicts by intersecting a sentence's own numerals with the moved spellings, so a claim carrying NO numeral -- a bare direction word like 'improved', 'degraded', 'exclusive' -- cannot be convicted by it under any axis. This is caption 1's own shape.",
     "status": "CHECKED",
     "closed_by": "the EVIDENTIAL-CLAIM GATE (R-219 (2))",
-    "evidence_COMPUTED": "143 of 203 prose leaves carry no numeral and are outside the CAPTION gate's reach BY PROOF -- but they are inside the evidential gate's: it scores 161 frozen prose leaves without needing a numeral at all, and convicts 0 of them on this run",
+    "evidence_COMPUTED": "165 of 226 prose leaves carry no numeral and are outside the CAPTION gate's reach BY PROOF -- but they are inside the evidential gate's: it scores 184 frozen prose leaves without needing a numeral at all, and convicts 0 of them on this run",
     "what_fails_if_crossed": "assert evidential['PASS'] -- a frozen string claiming an observation turns this RED with no perturbation required, because a literal cannot have observed anything whatever the data does.",
     "\u2605_THE_PREMISE_THIS_ENTRY_CARRIED_IS_REFUTED": "This entry said caption 1 was numeral-free and therefore unreachable. Run against caption 1's LITERAL bytes rather than a sentence built to its shape, that is false: the text contains 'section 6a', and 6 moves in its own container -- so the caption gate convicts it by NUMERAL COLLISION on a section identifier. A true conviction for a false reason, and one that would vanish the moment the section were renumbered. The blind spot was real; the example chosen to illustrate it was not an example of it. Demonstrated by --caption1-literal-replay.",
     "the_residual_that_is_still_open": "A direction claim that is genuinely numeral-free AND carries no evidential vocabulary remains unreachable by every gate here. The general direction detector was measured and refused on its numbers -- see the evidential gate's REJECTED_RULE_FAMILIES block. --direction-replay still demonstrates that residual against a purpose-built numeral-free sentence."
@@ -2247,7 +2437,7 @@
     "n": 3,
     "boundary": "MEASUREMENTS NO AXIS MOVES. A value that is interpolated but that no axis shifts is indistinguishable here from a typed one.",
     "status": "OPEN",
-    "evidence_COMPUTED": "8 numeral-carrying leaves sit in CARRIED_UNVERIFIABLE, excluded from the 36/60 coverage figure rather than counted in it",
+    "evidence_COMPUTED": "8 numeral-carrying leaves sit in CARRIED_UNVERIFIABLE, excluded from the 36/61 coverage figure rather than counted in it",
     "what_would_close_it": "An axis that moves each one's source; enumerated per entry."
    },
    {
@@ -2274,10 +2464,22 @@
   "comparison": "newline-normalised content against the HEAD blob. Byte-exactness is recorded per row; a pure line-ending divergence is this checkout's policy, not a tampered input.",
   "rows": [
    {
+    "path": "docs/designs/packet-session-refusal-precedence-2026-07-21.md",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 326,
+    "head_crlf_count": 0
+   },
+   {
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
     "status": "OK",
     "match": true,
-    "byte_exact": true
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 6821,
+    "head_crlf_count": 0
    },
    {
     "path": "docs/replay-results/h1-battery/family-meta-enforcement-delta.json",
@@ -2299,6 +2501,18 @@
    },
    {
     "path": "docs/replay-results/h1-battery/population-a-flip-step-remeasure.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/session-ab-blind-grade-RESULT.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/session-ab-blind-grade-ROW27.json",
     "status": "OK",
     "match": true,
     "byte_exact": true
@@ -2418,6 +2632,12 @@
     "byte_exact": true
    },
    {
+    "path": "docs/replay-results/session-9v2-adjudication/verdicts-LOCKED.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
     "path": "src/engine/__init__.py",
     "status": "OK",
     "match": true,
@@ -2436,16 +2656,19 @@
     "byte_exact": true
    }
   ],
-  "n_tracked_checked": 27,
+  "n_tracked_checked": 31,
   "n_untracked": 0,
-  "n_byte_exact": 27,
-  "n_line_ending_divergence_only": 0,
+  "n_byte_exact": 29,
+  "n_line_ending_divergence_only": 2,
   "all_match": true,
   "traced_reads": [
+   "docs/designs/packet-session-refusal-precedence-2026-07-21.md",
    "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
    "docs/replay-results/h1-battery/family-meta-enforcement-delta.json",
    "docs/replay-results/h1-battery/levelzone-object-reference-census.json",
    "docs/replay-results/h1-battery/narration-reclassification-FINAL.json",
+   "docs/replay-results/h1-battery/session-ab-blind-grade-RESULT.json",
+   "docs/replay-results/h1-battery/session-ab-blind-grade-ROW27.json",
    "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/-igpOZs8LsM__s0.spec.json",
    "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/0xygpCMwxbQ__s0.spec.json",
    "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/4cT8WTyxhYY__s0.spec.json",
@@ -2462,9 +2685,10 @@
    "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/_LS6qcSlDCs__s0.spec.json",
    "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/dV7chra4u4Q__s0.spec.json",
    "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/kFyD3H6I1I8__s0.spec.json",
-   "docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json"
+   "docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json",
+   "docs/replay-results/session-9v2-adjudication/verdicts-LOCKED.json"
   ],
-  "n_traced_reads": 21
+  "n_traced_reads": 25
  },
  "APPEND_ONLY_VERIFICATION": {
   "why": "Append-only means unchanged SINCE COMMIT, not merely unchanged during this run. Compared against the git object store so a stale stat cache cannot answer for it.",
