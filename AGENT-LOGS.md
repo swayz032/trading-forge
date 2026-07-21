@@ -4,6 +4,29 @@
 
 ---
 
+### Session Log — 2026-07-21 [ops-experience] ITEM 6 COMPLETE — PIN-entry UI LANDED `8ec3a8f3` (auth-graded BAND 7) + CSRF hardening LANDED `2932bcd2`; the Locked room is genuinely cured
+
+**Mission:** close item 6 — build the PIN-entry UI that actually unlocks the member Office (F-1), then the CSRF follow-up.
+
+**Work completed:**
+- **PIN-entry UI** (`public/slumhouse/member-office.html` + `member-office-pin-ui-guards.test.ts`), LANDED `8ec3a8f3`. First-run establish / return verify against the two live routes. **The server decides the flow, never the page** — mode is set only from `409 no_pin_set` / `409 pin_already_set`, and a guard counts `setPinMode` calls so a future client-side inference fails the build. Fail-closed on empty scope, unknown error, 5xx and network throw. The PIN never reaches the DOM: password inputs, both fields cleared in a `finally`, status via `textContent`; lockout says *when* to retry, never how many tries remain.
+- **CSRF defense-in-depth** on all three member POSTs, LANDED `2932bcd2`. Class guard asserts EVERY `memberOfficeRouter.post` calls `checkSlumhouseOrigin`, so the next one fails the day it is written. Proven **dynamically**: 4 e2e cases drive the real routes with a foreign `Origin` + a valid session header (what a cross-site attacker riding the member's cookie sends) asserting 403, plus a control proving legitimate requests still pass.
+- **9a security core** remains deliberately UNLANDED on `ops/item9a-wip-20260721` — no caller until the pairing route exists.
+
+**Verification:** independent auth grade **BAND 7 SAFE-TO-LAND** — a fresh scope-judgment built all its own attacks and proved across three methods: zero cross-member (4 attacks, all touched only the attacker's row), zero PIN leaks (8 scenarios incl. 3 adversarial-server-echo cases I never tested), fail-closed under every error shape, lockout real (6th attempt 429 even with the correct PIN). ★ And the full sign-in → establish → verify → surfaces flow proven **through the real `slumhouseRouter` barrel** — the first dynamic proof of the property that hid both item-6 escapes. 7 suites → 96 passed (was 87 pre-CSRF; +9 = 4 e2e + 5 guard cases); `tsc` 0; both CI gates PASS. Every guard mutation-proved at birth.
+
+**Known-facts updates:**
+- **Mutation-testing caught a 4th real hole, on the highest-stakes surface yet:** `pinSay("…" + code)` leaked the PIN into the status line while the guard stayed green — it watched the SINK (`textContent =`) while the leak entered through the helper's ARGUMENT. Closed against four leak paths by asserting on a **string-literal-stripped** copy of the script, so the identifier `code` is distinguishable from the UI copy "Enter your code" (a naive `\bcode\b` guard false-positives on its own prose).
+- **A test that stubs a module with a bare object silently drops every other export.** The e2e's `vi.doMock` of `require-session.js` made the newly-used `checkSlumhouseOrigin` `undefined`, which threw into the handler catch and failed 5 tests with **500** — reading exactly like a broken route. The status code was the clue: 403 would have meant the guard; 500 meant something threw. Fix is `importOriginal` + spread.
+- **A guard that matches "the first X in the file" silently assumes there is only one.** `member-office-html-guards`' F-4 check matched the first `finally`; adding a second displaced it and turned it red for a reason unrelated to its property. Verified the real property from disk BEFORE touching the test, re-pointed the guard, re-proved it catches the original bug.
+
+**★ Pattern (continuing):** every failure this session was in a CLAIM about the work, never the work — and it ran in **both** directions. I overstated severity, coverage and a cure; the advisor asserted three downstream characterizations without running the refuting command (including a "test-count overstatement" that measurement disproved — 87 was correct for the 7 suites named; counts scale with the file set). The durable mechanism, now applied: **every count ships with the command that produced it and the scope it covers.** A number with its command cannot be disputed, only reproduced.
+
+**Carry-forward for next session:**
+- **9a's pairing route** — three endpoints over the unlanded `agent-ticket`/`agent-pairing` core. Design + traps in `docs/designs/HANDOFF-PIN-UI-2026-07-21.md` §7 (ops campaign worktree).
+- **9c RESERVED** on the operator's spend decision (code signing for a distributable auto-updating desktop agent). Nothing installed, nothing incurred, no price quoted.
+- Campaign relay archived off-machine at `origin/ops/campaign-relay-archive-20260721` — it had **never** been committed to any ref; re-archive periodically or give it a tracked home.
+
 ### Session Log — 2026-07-21 [ops-experience] item 9 premise-audit (named mechanism ABSENT) + member-Office mount defect FOUND/FIXED/LANDED `048a6f7e` + 9a security core — ★ the pattern: the code held, every failure was a CLAIM about the work
 
 **Mission:** continue OR-156/157 — item 9 (Slumhouse Agent, member edge client) after item 12.
