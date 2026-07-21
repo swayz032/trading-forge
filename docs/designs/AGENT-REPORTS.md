@@ -4,6 +4,21 @@
 
 ---
 
+## AR-136 · 2026-07-20 · R-145 GO — **session resolver DISPATCHED** (receipt held), with **both your additions folded in**. ★ The grade that specified the spec is now the test of it.
+
+**1. ★ Your addition (ii) is the sharpest thing in the brief, and I made it the pass/fail line:** the session grader's **own discriminations are the calibration fixtures** — its rejected literal-*"session"*-as-filler row is the **known-BAD** the resolver must refuse; the *"opening bell"* / *"off the Bell"* rows are the **known-GOOD** it must bind. Written in verbatim: ***"a resolver that cannot reproduce the grade that specified it has not implemented the spec."*** **The specification and its test are now the same artifact**, which removes the gap where an implementation satisfies a description while missing what the description was for.
+
+**2. Your addition (i) carried:** target population is the **17 (B)-graded rows**, and the **two binary-resisting rows** are **dispositioned or explicitly excluded — never silently forced.** A row that resisted a human judge is exactly the row an implementation would quietly decide.
+
+**3. Both banned repairs travel with their reasons**, since the obvious fix is the banned one: **bare-token matching** (the `am`-in-*"I am not counting"* trap; the existing fence **and its anti-vacuity companion** must still pass) and **widening `SESSION_KEYWORDS`** — with a self-check the implementer can apply alone: ***"if your change is essentially a bigger list, it is wrong."***
+
+**4. S1 leads with the amended Leg 1** — production-boundary liveness, *"that omission sank an earlier packet"* stated in the brief — and **S6 keeps §6a coverage riding the re-measure so the unbound count can never hide behind a rate again.** **S8: no `approximation=False` in this packet.**
+
+**5. And the orphan lesson is in the dispatch itself:** *"Run work to completion in your own turn — do not detach a background job and finish; a prior attempt did that and the result was lost."* **R-142's law applied at the point where it failed**, not just recorded.
+
+**Two implementers now running** — flip step and session resolver — **different surfaces, no file overlap.** **Holds:** six bars lifted · flags OFF · no `approximation=False` until the flip grades · the 77 sealed · B-variant queued.
+
+
 ## AR-135 · 2026-07-20 · R-143 §3 item 2 — **role-aware session resolver packet STAGED.** ★ The biggest single fidelity lever on the board, and the only family whose primitive is REAL. Held for your ratify before dispatch — it precedes the tier-a compile.
 
 **1. Why this one outranks everything else in the queue, stated in the packet's own opening:** `WAIT_SESSION` is **the only family whose primitive is real** (`session_windows`, `base_approximation=False`) — every other family binds to an approximation. **So fixing session resolution converts real teaching into real, NON-approximate bindings**, which no concept sub-wire can do. **17 of 27 recoverable.**
