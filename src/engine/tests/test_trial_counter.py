@@ -106,3 +106,55 @@ def test_shakedown_survivor_eligible_hard_false_and_measured_scope_line(tmp_path
     row = next(r for r in doc["runs"] if r["trial_id"] == tid)
     assert row["survivor_eligible"] is False, "shakedown trials never survivor-eligible (R-041 §3)"
     assert "binding-approx 0.9333" in row["scope_line"], "MEASURED per-spec rate, not blanket 0.99 (R-042 pin 3)"
+
+
+# ── F9 FORWARD-RECORDING (gate-recalibration pre-reg §2/§4-DSR) — ADDITIVE ───
+# The per-trial summary Sharpe rides the counter row so the E[max-SR] null
+# inputs exist AT candidacy. Additive: existing finalize callers pass no
+# summary_sharpe and are unchanged (predicate-preservation — every test above
+# still holds).
+
+def test_forward_recording_absent_by_default_is_the_pre_f9_shape(tmp_path):
+    """A finalize with no summary_sharpe records NO field — a valid absent slot,
+    exactly the pre-F9 rows; summary_sharpes() skips it (never a fabricated 0.0)."""
+    tc = _counter(tmp_path)
+    tid = _alloc(tc)
+    tc.finalize(tid, "PASS")
+    row = next(r for r in json.load(open(tc.path, encoding="utf-8"))["runs"] if r["trial_id"] == tid)
+    assert "summary_sharpe" not in row, "absent by default — no fabricated value"
+    assert tc.summary_sharpes() == [], "absent rows contribute nothing to the null-input set"
+
+
+def test_forward_recording_records_and_reads_back(tmp_path):
+    tc = _counter(tmp_path)
+    tid = tc.allocate(wave="w", strategy_ref="A", spec_hash="h", engine_sha="404a3396",
+                      binding_approximation_rate=0.99, dataset_hash="ds", config_hash="cfg")
+    tc.finalize(tid, "PASS", summary_sharpe=1.23)
+    row = next(r for r in json.load(open(tc.path, encoding="utf-8"))["runs"] if r["trial_id"] == tid)
+    assert row["summary_sharpe"] == 1.23
+    got = tc.summary_sharpes()
+    assert got == [{"trial_id": tid, "spec_hash": "h", "engine_sha": "404a3396",
+                    "dataset_hash": "ds", "config_hash": "cfg", "summary_sharpe": 1.23}]
+
+
+def test_forward_recording_excludes_aborted_rows(tmp_path):
+    """An ABORTED crash is not a draw — even if a Sharpe were passed, an aborted
+    row never enters the null-input set."""
+    tc = _counter(tmp_path)
+    a = _alloc(tc, ref="A")
+    b = _alloc(tc, ref="B")
+    tc.finalize(a, "PASS", summary_sharpe=0.7)
+    tc.finalize(b, OUTCOME_ABORTED)
+    refs = {r["trial_id"] for r in tc.summary_sharpes()}
+    assert refs == {a}, "aborted rows excluded from the null-input set"
+
+
+def test_forward_recording_rejects_nonfinite_and_bool(tmp_path):
+    tc = _counter(tmp_path)
+    tid = _alloc(tc)
+    with pytest.raises(ValueError):
+        tc.finalize(tid, "PASS", summary_sharpe=float("nan"))
+    with pytest.raises(ValueError):
+        tc.finalize(tid, "PASS", summary_sharpe=float("inf"))
+    with pytest.raises(TypeError):
+        tc.finalize(tid, "PASS", summary_sharpe=True)

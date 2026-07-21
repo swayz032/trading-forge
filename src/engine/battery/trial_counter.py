@@ -34,6 +34,7 @@ because the ratified ops model is single-writer-per-wave.
 from __future__ import annotations
 
 import json
+import math
 import os
 import tempfile
 from datetime import datetime, timezone
@@ -159,19 +160,73 @@ class TrialCounter:
         self._persist()
         return trial_id
 
-    def finalize(self, trial_id: int, outcome: str, *, abort_signature: Optional[str] = None) -> None:
+    def finalize(
+        self,
+        trial_id: int,
+        outcome: str,
+        *,
+        abort_signature: Optional[str] = None,
+        summary_sharpe: Optional[float] = None,
+    ) -> None:
         """Record the real outcome after execution. Overwrites ONLY this row's
-        outcome/abort_signature; never touches another row, never re-allocates."""
+        outcome/abort_signature; never touches another row, never re-allocates.
+
+        F9 FORWARD-RECORDING (gate-recalibration pre-reg §2/§4-DSR, 2026-07-19):
+        `summary_sharpe` is the trial's summary Sharpe, recorded AT finalize (the
+        first moment it is known). It rides the counter row so the E[max-SR]
+        null-distribution inputs the selection-side deflation check consumes at
+        candidacy accumulate as first-class artifacts from this build onward,
+        instead of being scraped from heterogeneous replay outputs later. ADDITIVE:
+        the default is None and existing callers are unchanged — a row with no
+        recorded summary_sharpe reads as a valid (present-but-absent) slot, exactly
+        the pre-F9 rows, and `summary_sharpes()` skips it (never a fabricated 0.0).
+        A non-None value must be a real, finite number (NaN/inf is a scraped
+        artifact, refused loud, never silently recorded)."""
         if outcome not in _VALID_OUTCOMES:
             raise ValueError(f"invalid outcome {outcome!r}; must be one of {sorted(_VALID_OUTCOMES)}")
+        if summary_sharpe is not None:
+            # A recorded null-distribution input must be a real finite draw; a
+            # bool sneaking in as an int (True == 1) is a caller bug, refused.
+            if isinstance(summary_sharpe, bool) or not isinstance(summary_sharpe, (int, float)):
+                raise TypeError(f"summary_sharpe must be a real number or None, got {summary_sharpe!r}")
+            if not math.isfinite(summary_sharpe):
+                raise ValueError(f"summary_sharpe must be finite, got {summary_sharpe!r}")
         for row in self._doc["runs"]:
             if row["trial_id"] == trial_id:
                 row["outcome"] = outcome
                 row["abort_signature"] = abort_signature
+                if summary_sharpe is not None:
+                    row["summary_sharpe"] = float(summary_sharpe)
                 row["finalized_at"] = _now_iso()
                 self._persist()
                 return
         raise KeyError(f"trial_id {trial_id} not found — finalize without a prior allocate is a leak")
+
+    def summary_sharpes(self) -> List[Dict[str, Any]]:
+        """F9 null-distribution input set: every EXECUTED (non-ABORTED) row that
+        carries a recorded `summary_sharpe`, as {trial_id, spec_hash, engine_sha,
+        dataset_hash, config_hash, summary_sharpe}. This is the E[max-SR] input
+        list the §4-DSR checkpoint names — it enumerates exactly the trials that
+        forward-recorded a Sharpe and silently omits rows that did not (an ABORTED
+        crash is not a draw; a pre-F9 row honestly has no Sharpe to offer). The
+        checkpoint receipt reconciles this set against raw_n and names any trial it
+        could not read, per the pre-reg — this reader never fabricates a value for
+        an absent one."""
+        out: List[Dict[str, Any]] = []
+        for r in self._doc["runs"]:
+            if r["outcome"] == OUTCOME_ABORTED:
+                continue
+            if "summary_sharpe" not in r or r["summary_sharpe"] is None:
+                continue
+            out.append({
+                "trial_id": r["trial_id"],
+                "spec_hash": r.get("spec_hash"),
+                "engine_sha": r.get("engine_sha"),
+                "dataset_hash": r.get("dataset_hash"),
+                "config_hash": r.get("config_hash"),
+                "summary_sharpe": r["summary_sharpe"],
+            })
+        return out
 
     # ------------------------------------------------------------------ #
     def annotate_superseded(
