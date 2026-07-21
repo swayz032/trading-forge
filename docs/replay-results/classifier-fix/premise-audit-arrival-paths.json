@@ -1,0 +1,5481 @@
+{
+ "artifact": "premise-audit-arrival-paths",
+ "generator": "scratchpad/premise_audit.py (R-210 §1 premise audit)",
+ "scope": "CORPUS A = tier-a 11 clean strategies recompiled from the SEALED-READ phase_b extractions via produce_spec_artifact. CORPUS B = 16 shakedown + 2 packet2-dod committed .spec.json, reclassified from cond['object'] which IS the verbatim classifier input. Flags OFF. Classifier UNMODIFIED at this point.",
+ "module_identity": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\src\\engine\\extraction\\spec_producer.py",
+ "n_rows_total": 260,
+ "reconstruction_disagreements": [],
+ "per_corpus": {
+  "A_tier_a": {
+   "n_classified": 94,
+   "n_structural": 5,
+   "arrival_paths": {
+    "UNMATCHED_DEFAULT": 35,
+    "SOLE_HIT": 24,
+    "PRECEDENCE_WIN": 35
+   },
+   "structural_types": {
+    "INVALIDATE": 5
+   },
+   "by_family": {
+    "FILTER": {
+     "SOLE_HIT": 4
+    },
+    "WAIT_BIAS": {
+     "PRECEDENCE_WIN": 1
+    },
+    "WAIT_CONFIRMATION": {
+     "SOLE_HIT": 3,
+     "PRECEDENCE_WIN": 7
+    },
+    "WAIT_RETEST": {
+     "PRECEDENCE_WIN": 6,
+     "SOLE_HIT": 2
+    },
+    "WAIT_SESSION": {
+     "SOLE_HIT": 2,
+     "PRECEDENCE_WIN": 19
+    },
+    "WAIT_STRUCTURE": {
+     "UNMATCHED_DEFAULT": 35,
+     "SOLE_HIT": 13,
+     "PRECEDENCE_WIN": 2
+    }
+   }
+  },
+  "B_tier_b": {
+   "n_classified": 155,
+   "n_structural": 6,
+   "arrival_paths": {
+    "SOLE_HIT": 62,
+    "PRECEDENCE_WIN": 56,
+    "UNMATCHED_DEFAULT": 37
+   },
+   "structural_types": {
+    "INVALIDATE": 6
+   },
+   "by_family": {
+    "FILTER": {
+     "SOLE_HIT": 3
+    },
+    "WAIT_BIAS": {
+     "SOLE_HIT": 2,
+     "PRECEDENCE_WIN": 2
+    },
+    "WAIT_CONFIRMATION": {
+     "SOLE_HIT": 11,
+     "PRECEDENCE_WIN": 12
+    },
+    "WAIT_RETEST": {
+     "SOLE_HIT": 4,
+     "PRECEDENCE_WIN": 16
+    },
+    "WAIT_SESSION": {
+     "PRECEDENCE_WIN": 16,
+     "SOLE_HIT": 11
+    },
+    "WAIT_STRUCTURE": {
+     "SOLE_HIT": 31,
+     "UNMATCHED_DEFAULT": 37,
+     "PRECEDENCE_WIN": 10
+    }
+   }
+  }
+ },
+ "founding_instance_probes": {
+  "rth_inside_further": {
+   "n": 5,
+   "rows": [
+    {
+     "corpus": "A_tier_a",
+     "spec": "YGdFksLavKE__s0",
+     "id": "WAIT_SESSION:secondly-the-candlestick-must-close-belo#6",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "object": "Secondly, the candlestick must close below the V-wap band. This shows us that the price might be making a bearish breakout which would cause for the price to fall further."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "hcHuDfxdywI__s0",
+     "id": "WAIT_SESSION:after-the-first-break-of-structure-price#2",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "object": "After the first break of structure, price performs a healthy pullback and then forms another break of structure, further confirming bullish continuation and strengthening the external structure"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "0xygpCMwxbQ__s0",
+     "id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "0xygpCMwxbQ__s0",
+     "id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+     "type": "WAIT_SESSION",
+     "arrival_path": "SOLE_HIT",
+     "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "4cT8WTyxhYY__s0",
+     "id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together"
+    }
+   ]
+  },
+  "opening_range_as_session": {
+   "n": 15,
+   "rows": [
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:if-we-focus-on-the-pre-market-session-he#0",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "if we focus on the pre-market session here in the open we can see it spikes up trade sideways consolidates into the open and we get ourselves an opening range breakout level"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:an-opening-range-breakout-level-which-is#1",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "an opening range breakout level which is the high of this first five minute candle of 3.94 cents"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:as-always-opening-range-breakout-levels#3",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "as always opening range breakout levels for the stocks with the biggest potential for a gap and go are posted every single morning in the market Master group"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:this-one-actually-never-got-above-its-op#6",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "this one actually never got above its opening range breakout level there was just no follow-through whatsoever at the open"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:we-can-see-very-quickly-it-breaks-only-s#7",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "we can see very quickly it breaks only seven cents above that opening range breakout level and then come straight back down"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "dENM6gt8ZRg__s0",
+     "id": "WAIT_SESSION:the-first-five-minute-candle-from-09-30#0",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "The first five-minute candle â€” from 09:30 to 09:35 â€” forms the Opening Range. Two levels: the high and the low of that candle. And the midpoint â€” exactly halfway between them."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:we-take-the-opening-range-high-and-the-o#2",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "We take the opening range high and the opening range low in between these time periods. And that's what forms the opening range."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:this-is-the-opening-range-low-616-61-in#6",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "this is the opening range low 616.61 in which the buyers won. Sellers were not able to break a penny below this level."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:the-difference-between-the-high-and-the#7",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "the difference between the high and the low is what gives us our opening range breakout range. We call this the range value. In this case, the difference was a dollar3."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#8",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "The half range represents exactly how it sounds, half of that opening range."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:this-opening-range-acts-as-a-decision-po#9",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "This opening range acts as a decision point for the rest of the day. It's based on the day. So it becomes relative for every single trading day."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s1",
+     "id": "WAIT_SESSION:whatever-this-opening-range-high-is-subt#3",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_RETEST",
+      "WAIT_STRUCTURE"
+     ],
+     "object": "whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s1",
+     "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#4",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "The half range represents exactly how it sounds, half of that opening range"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "dV7chra4u4Q__s0",
+     "id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones."
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "kFyD3H6I1I8__s0",
+     "id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+     "type": "WAIT_SESSION",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+    }
+   ]
+  },
+  "session_only_via_open_stem": {
+   "n": 22,
+   "rows": [
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s0",
+     "id": "WAIT_SESSION:it-gapped-up-a-bit-from-the-previous-day#1",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open"
+     ],
+     "object": "it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s0",
+     "id": "WAIT_SESSION:i-decided-to-take-a-starter-position-int#3",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_RETEST"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "I decided to take a starter position into the opening pullback"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:an-opening-range-breakout-level-which-is#1",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "an opening range breakout level which is the high of this first five minute candle of 3.94 cents"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:with-nuwe-over-here-it-rejects-v-web-imm#5",
+     "arrival_path": "SOLE_HIT",
+     "losers": [],
+     "session_kws": [
+      "open"
+     ],
+     "object": "with nuwe over here it rejects V web immediately at the market open it rejects for you up again into this second bounce same thing happens with Lucy opens under the V web and at no point in time during the market hours was it able to actually break back above"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:this-one-actually-never-got-above-its-op#6",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "this one actually never got above its opening range breakout level there was just no follow-through whatsoever at the open"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "YqY0OkL5LMI__s1",
+     "id": "WAIT_SESSION:we-can-see-very-quickly-it-breaks-only-s#7",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "we can see very quickly it breaks only seven cents above that opening range breakout level and then come straight back down"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "dENM6gt8ZRg__s0",
+     "id": "WAIT_SESSION:the-first-five-minute-candle-from-09-30#0",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "The first five-minute candle â€” from 09:30 to 09:35 â€” forms the Opening Range. Two levels: the high and the low of that candle. And the midpoint â€” exactly halfway between them."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "dENM6gt8ZRg__s0",
+     "id": "WAIT_SESSION:after-the-breakout-we-wait-for-a-retest#2",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_RETEST",
+      "WAIT_CONFIRMATION",
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open"
+     ],
+     "object": "After the breakout, we wait for a retest. A retest is valid if the candle opened outside the range, the wick dipped inside, and the close is back outside."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "dENM6gt8ZRg__s0",
+     "id": "WAIT_SESSION:entry-is-on-the-open-of-the-next-candle#4",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_RETEST"
+     ],
+     "session_kws": [
+      "open"
+     ],
+     "object": "Entry is on the open of the next candle after the retest."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:we-take-the-opening-range-high-and-the-o#2",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "We take the opening range high and the opening range low in between these time periods. And that's what forms the opening range."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:this-is-the-opening-range-low-616-61-in#6",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "this is the opening range low 616.61 in which the buyers won. Sellers were not able to break a penny below this level."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:the-difference-between-the-high-and-the#7",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "the difference between the high and the low is what gives us our opening range breakout range. We call this the range value. In this case, the difference was a dollar3."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#8",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "The half range represents exactly how it sounds, half of that opening range."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_SESSION:this-opening-range-acts-as-a-decision-po#9",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "This opening range acts as a decision point for the rest of the day. It's based on the day. So it becomes relative for every single trading day."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s1",
+     "id": "WAIT_SESSION:whatever-this-opening-range-high-is-subt#3",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_RETEST",
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level"
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s1",
+     "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#4",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "The half range represents exactly how it sounds, half of that opening range"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "-igpOZs8LsM__s0",
+     "id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "-igpOZs8LsM__s0",
+     "id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "E9MzEC_yNoM__s1",
+     "id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open"
+     ],
+     "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps."
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "W7nlnHTUZQU__s0",
+     "id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open"
+     ],
+     "object": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "dV7chra4u4Q__s0",
+     "id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones."
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "kFyD3H6I1I8__s0",
+     "id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+     "arrival_path": "PRECEDENCE_WIN",
+     "losers": [
+      "WAIT_STRUCTURE"
+     ],
+     "session_kws": [
+      "open",
+      "opening"
+     ],
+     "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+    }
+   ]
+  },
+  "clock_time_typed_structure": {
+   "n": 6,
+   "rows": [
+    {
+     "corpus": "A_tier_a",
+     "spec": "st5e-YJRfKc__s0",
+     "id": "WAIT_STRUCTURE:the-5m-minute-ob-takes-place-from-9-30-a#1",
+     "arrival_path": "UNMATCHED_DEFAULT",
+     "hits": {},
+     "object": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern. The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45. And the 30 minute is from 9:30 to 10 a.m. Eastern."
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "CLDEIsNpVRc__s0",
+     "id": "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+     "arrival_path": "PRECEDENCE_WIN",
+     "hits": {
+      "WAIT_STRUCTURE": [
+       "fair value gap",
+       "gap",
+       "liquidity"
+      ],
+      "FILTER": [
+       "liquid"
+      ]
+     },
+     "object": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "WEhmadJArQo__s0",
+     "id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+     "arrival_path": "UNMATCHED_DEFAULT",
+     "hits": {},
+     "object": "we're going to get to our desks right at 9:30 a.m. EST"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "WEhmadJArQo__s0",
+     "id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+     "arrival_path": "UNMATCHED_DEFAULT",
+     "hits": {},
+     "object": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "WEhmadJArQo__s0",
+     "id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+     "arrival_path": "UNMATCHED_DEFAULT",
+     "hits": {},
+     "object": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead."
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "kFyD3H6I1I8__s0",
+     "id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+     "arrival_path": "UNMATCHED_DEFAULT",
+     "hits": {},
+     "object": "I trade every day from 9:30 to 11:00 a.m. Eastern"
+    }
+   ]
+  },
+  "fibonacci_rows": {
+   "n": 5,
+   "rows": [
+    {
+     "corpus": "A_tier_a",
+     "spec": "0RBexa9JpIg__s0",
+     "id": "WAIT_STRUCTURE:you-can-only-place-buy-trade-when-the-ma#1",
+     "type": "WAIT_STRUCTURE",
+     "arrival_path": "SOLE_HIT",
+     "hits": {
+      "WAIT_STRUCTURE": [
+       "swing high",
+       "swing low",
+       "swing",
+       "level"
+      ]
+     },
+     "object": "you can only place buy trade when the market is in uptrend. Now draw the fibonacci from swing low to the recent swing high and wait for the price to touch the 50 or 61.8% line. And place your buy trade anywhere between these two levels."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "0RBexa9JpIg__s0",
+     "id": "WAIT_STRUCTURE:you-can-only-place-sell-trade-when-the-m#2",
+     "type": "WAIT_STRUCTURE",
+     "arrival_path": "SOLE_HIT",
+     "hits": {
+      "WAIT_STRUCTURE": [
+       "swing high",
+       "swing low",
+       "swing",
+       "level"
+      ]
+     },
+     "object": "you can only place sell trade when the market is in downtrend. Now draw the fibonacci from swing high to the recent swing low and wait for the price to touch the 50 or 61.8% line. And place your sell trade anywhere between these two levels."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "0RBexa9JpIg__s0",
+     "id": "WAIT_STRUCTURE:we-will-use-a-fibonacci-retracement-indi#4",
+     "type": "WAIT_STRUCTURE",
+     "arrival_path": "SOLE_HIT",
+     "hits": {
+      "WAIT_STRUCTURE": [
+       "level"
+      ]
+     },
+     "object": "We will use a fibonacci retracement indicator because it helps us to identify the perfect price action levels."
+    },
+    {
+     "corpus": "A_tier_a",
+     "spec": "hcHuDfxdywI__s0",
+     "id": "WAIT_STRUCTURE:price-retraces-downward-and-forms-a-chan#3",
+     "type": "WAIT_STRUCTURE",
+     "arrival_path": "SOLE_HIT",
+     "hits": {
+      "WAIT_STRUCTURE": [
+       "order block",
+       "zone"
+      ]
+     },
+     "object": "price retraces downward and forms a change of character by breaking an internal low. This change of character does not signal a trend reversal, but rather a temporary internal shift. During this retracement, price returns into the bullish order block and fills the buy orders resting inside the zone"
+    },
+    {
+     "corpus": "B_tier_b",
+     "spec": "kFyD3H6I1I8__s0",
+     "id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+     "type": "WAIT_STRUCTURE",
+     "arrival_path": "SOLE_HIT",
+     "hits": {
+      "WAIT_STRUCTURE": [
+       "level"
+      ]
+     },
+     "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level"
+    }
+   ]
+  }
+ },
+ "detail": [
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-need-to-identify-the-direction-of-th#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "you need to identify the direction of the trend and can do this by simply using a 4 hour time frame and a trend line",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-can-only-place-buy-trade-when-the-ma#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "you can only place buy trade when the market is in uptrend. Now draw the fibonacci from swing low to the recent swing high and wait for the price to touch the 50 or 61.8% line. And place your buy trade anywhere between these two levels.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "swing high",
+     "swing low",
+     "swing",
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-can-only-place-sell-trade-when-the-m#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "you can only place sell trade when the market is in downtrend. Now draw the fibonacci from swing high to the recent swing low and wait for the price to touch the 50 or 61.8% line. And place your sell trade anywhere between these two levels.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "swing high",
+     "swing low",
+     "swing",
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:we-will-use-a-1-hour-time-frame-for-this#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "We will use a 1 hour time frame for this strategy.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:we-will-use-a-fibonacci-retracement-indi#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "We will use a fibonacci retracement indicator because it helps us to identify the perfect price action levels.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-can-t-trade-in-a-non-trending-market#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "You can't trade in a non trending market.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-can-apply-this-strategy-on-every-cur#6",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "You can apply this strategy on every currency pair.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:whenever-the-candle-crosses-the-moving-a#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "whenever the candle crosses the moving average line and closes with a strong candle, you take the trade",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_CONFIRMATION:if-it-closes-above-the-line-you-buy-and#1",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "If it closes above the line, you buy and take a trade",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "closes above"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_CONFIRMATION:when-it-closes-below-the-line-you-take-a#2",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "when it closes below the line, you take a short trade",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "closes below"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:you-will-need-to-select-simple-moving-av#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "you will need to select Simple moving average indicator ... and the time length of the indicator needs to be set at 14",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:we-will-be-trading-in-15-mins-time-frame#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "We will be trading in 15 mins time frame",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:we-need-the-candle-to-close-strong-below#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "we need the candle to close strong below the line, not on the line",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:i-always-have-a-rule-to-never-take-any-i#6",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "I always have a rule to never take any intraday trades within 1 hour of closing",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:with-a-risk-to-reward-of-3-1#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "with a risk to reward of 3:1",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_BIAS:mark-the-higher-time-frame-liquidity-zon#0",
+   "type": "WAIT_BIAS",
+   "role": "spine",
+   "object": "mark the higher time frame liquidity zones first. Start with the daily or the 4hour chart. Mark the most recent swing highs and lows and clean levels that haven't been tapped yet",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_BIAS": [
+     "higher time frame"
+    ],
+    "WAIT_RETEST": [
+     "tap"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity",
+     "swing high",
+     "swing",
+     "level",
+     "zone"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:you-can-identify-areas-that-have-not-bee#1",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "you can identify areas that have not been tapped yet where the liquidity should be living",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_STRUCTURE:drop-to-the-5minut-or-the-1-minute-chart#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Drop to the 5minut or the 1 minute chart if you're feeling a little bit risky",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:look-for-price-rapidly-approaching-a-zon#3",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "Look for price rapidly approaching a zone. You want to see volume spike, a quick tap, and a rejection",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap"
+    ],
+    "WAIT_CONFIRMATION": [
+     "rejection"
+    ],
+    "WAIT_STRUCTURE": [
+     "zone"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_CONFIRMATION:you-are-simply-waiting-for-one-of-these#4",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "you are simply waiting for one of these levels to be hit and then you're looking for that rejection wick... you can get into your scalping trade and get a 1 to2 risk-to-reward setup",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "rejection",
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:avoid-entering-before-the-price-taps-the#5",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "avoid entering before the price taps the liquidity zone. Wait for confirmation",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap",
+     "taps"
+    ],
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity",
+     "zone"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_CONFIRMATION:you-re-looking-for-that-rejection-wick#6",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "you're looking for that rejection wick",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "rejection",
+     "wick"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_CONFIRMATION:look-for-exhaustion-candles-long-wicks-b#7",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "Look for exhaustion candles, long wicks, bearish or bullish engulfing or a volume divergence",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing",
+     "wick"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:you-want-to-see-volume-spike-a-quick-tap#8",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "You want to see volume spike, a quick tap, and a rejection",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap"
+    ],
+    "WAIT_CONFIRMATION": [
+     "rejection"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_CONFIRMATION:price-will-often-wick-above-resistance-p#9",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "Price will often wick above resistance, pause, then dump or wick below support and reverse. That is your confirmation",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation",
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "support",
+     "resistance"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_SESSION:use-session-times-like-the-london-or-new#10",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "use session times like the London or New York open. That's when the most stop hunts happen",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "session",
+     "open",
+     "york",
+     "london"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_STRUCTURE:do-not-chase-the-breakouts-wait-for-pric#11",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "do not chase the breakouts. Wait for price to trap traders and fade the move",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:we-will-enter-into-a-buy-position-whenev#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "We will enter into a buy position whenever the price breaks out above the upper V-wap band.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:for-a-sell-position-we-will-need-for-the#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "For a sell position we will need for the price to break below the lower V-wap band.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:firstly-the-candlestick-will-need-to-be#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:secondly-the-price-must-break-above-the#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Secondly, the price must break above the upper V-wap band. This shows us that the price might break out which would cause an even bigger increase in price.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:thirdly-the-point-of-control-must-be-wit#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:firstly-the-candlesticks-will-need-to-be#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "firstly the candlesticks will need to be red, which indicates that the trend of the market is currently bearish.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_SESSION:secondly-the-candlestick-must-close-belo#6",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "Secondly, the candlestick must close below the V-wap band. This shows us that the price might be making a bearish breakout which would cause for the price to fall further.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "rth"
+    ],
+    "WAIT_CONFIRMATION": [
+     "close below"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:lastly-we-will-need-to-make-sure-that-th#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Lastly, we will need to make sure that the point of control line is within the V-wap bands. As you can see all of the conditions have been met so let's enter into the position.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:we-will-be-using-this-indicator-to-deter#8",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "We will be using this indicator to determine what the larger trend of the market is... To know the trend direction we will just need to look at the candle stick colors. Whenever we are in an uptrend the bars will be green and whenever we are in a downtrend the bars will be red. (CM EMA Trend Bars, EMA changed from 34 to 200)",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "FILTER:the-point-of-control-must-be-within-the#9",
+   "type": "FILTER",
+   "role": "confluence",
+   "object": "the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. This indicates that the price isn't trading at the price point where there is the most amount of volume.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:search-for-the-volume-profile-fixed-rang#10",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "search for the volume profile fixed range indicator... We will be changing the row size from 24 to 36. Make sure you also change the number of bars from 150 to 300... This is the Point of control, the point of control is the price level for the time period with the highest traded volume.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_STRUCTURE:this-had-a-double-inside-bar-set-up-on-t#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "this had a double inside bar set up on the daily chart",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_SESSION:it-gapped-up-a-bit-from-the-previous-day#1",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open"
+    ],
+    "WAIT_STRUCTURE": [
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_STRUCTURE:it-was-a-really-solid-setup-for-a-pushba#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "it was a really solid setup for a pushback into the 20s if it was able to start breaking out above that Friday high of day which was 18.74",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_SESSION:i-decided-to-take-a-starter-position-int#3",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "I decided to take a starter position into the opening pullback",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_RETEST": [
+     "pullback"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "FILTER:from-there-i-was-hoping-to-see-volume-re#4",
+   "type": "FILTER",
+   "role": "confluence",
+   "object": "from there I was hoping to see volume really start to pick up and push this back up into the 20s",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_STRUCTURE:it-briefly-broke-above-19-and-briefly-br#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "it briefly broke above 19 and briefly broke out above that previous day's closing price",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:if-we-focus-on-the-pre-market-session-he#0",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "if we focus on the pre-market session here in the open we can see it spikes up trade sideways consolidates into the open and we get ourselves an opening range breakout level",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "session",
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:an-opening-range-breakout-level-which-is#1",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "an opening range breakout level which is the high of this first five minute candle of 3.94 cents",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_STRUCTURE:a-few-minutes-later-it-starts-to-break-o#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "a few minutes later it starts to break out above that 394 level that's when I took a starter position in this trade",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:as-always-opening-range-breakout-levels#3",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "as always opening range breakout levels for the stocks with the biggest potential for a gap and go are posted every single morning in the market Master group",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening",
+     "morning"
+    ],
+    "WAIT_STRUCTURE": [
+     "gap",
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_STRUCTURE:one-of-those-things-that-is-often-a-tell#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "one of those things that is often a Telltale sign that this has potential to be a bigger Gap and go is that it's able to actually break above the V web",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "gap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:with-nuwe-over-here-it-rejects-v-web-imm#5",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "with nuwe over here it rejects V web immediately at the market open it rejects for you up again into this second bounce same thing happens with Lucy opens under the V web and at no point in time during the market hours was it able to actually break back above",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "open"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:this-one-actually-never-got-above-its-op#6",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "this one actually never got above its opening range breakout level there was just no follow-through whatsoever at the open",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:we-can-see-very-quickly-it-breaks-only-s#7",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "we can see very quickly it breaks only seven cents above that opening range breakout level and then come straight back down",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_SESSION:the-first-five-minute-candle-from-09-30#0",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "The first five-minute candle â€” from 09:30 to 09:35 â€” forms the Opening Range. Two levels: the high and the low of that candle. And the midpoint â€” exactly halfway between them.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_CONFIRMATION:then-we-wait-for-a-breakout-a-breakout-i#1",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "Then we wait for a breakout. A breakout is only valid if the candle body closes completely outside the range. Not a wick. Not a touch. A full close.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_SESSION:after-the-breakout-we-wait-for-a-retest#2",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "After the breakout, we wait for a retest. A retest is valid if the candle opened outside the range, the wick dipped inside, and the close is back outside.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_SESSION": [
+     "open"
+    ],
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_STRUCTURE:if-the-candle-closes-inside-the-range-th#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "If the candle closes inside the range â€” the signal is invalid. We wait for the next one.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_SESSION:entry-is-on-the-open-of-the-next-candle#4",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "Entry is on the open of the next candle after the retest.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open"
+    ],
+    "WAIT_RETEST": [
+     "retest"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_STRUCTURE:every-decision-is-made-on-closed-candles#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "every decision is made on closed candles only",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_STRUCTURE:risk-per-trade-one-percent-of-the-deposi#6",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "Risk per trade: one percent of the deposit. That's the classic conservative position size.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_STRUCTURE:a-bullish-trend-confirmed-by-price-break#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "a bullish trend confirmed by price breaking above the previous major high and forming a valid break of structure",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "break of structure",
+     "structure"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_STRUCTURE:a-bullish-order-block-is-typically-the-l#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "a bullish order block is typically the last bearish candle before a powerful upward move that breaks structure",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "structure",
+     "order block"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_SESSION:after-the-first-break-of-structure-price#2",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "After the first break of structure, price performs a healthy pullback and then forms another break of structure, further confirming bullish continuation and strengthening the external structure",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_SESSION": [
+     "rth"
+    ],
+    "WAIT_RETEST": [
+     "pullback"
+    ],
+    "WAIT_STRUCTURE": [
+     "break of structure",
+     "structure"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_STRUCTURE:price-retraces-downward-and-forms-a-chan#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "price retraces downward and forms a change of character by breaking an internal low. This change of character does not signal a trend reversal, but rather a temporary internal shift. During this retracement, price returns into the bullish order block and fills the buy orders resting inside the zone",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "order block",
+     "zone"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_STRUCTURE:the-change-of-character-acted-as-an-entr#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "the change of character acted as an entry trigger rather than a reversal signal",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_CONFIRMATION:in-a-bullish-order-block-a-buy-limit-ord#5",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "In a bullish order block, a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "order block",
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_CONFIRMATION:the-first-and-most-powerful-confirmation#6",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "The first and most powerful confirmation of a valid order block is the liquidity sweep, also known as the takeout... The final bearish candle breaks the low of the previous candle and immediately reverses upward. This move, taking out the prior low, is the liquidity sweep",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "order block",
+     "liquidity",
+     "low of the"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_CONFIRMATION:the-second-key-confirmation-of-a-valid-o#7",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "The second key confirmation of a valid order block is the presence of imbalance, also known as inefficiency. Immediately after the liquidity sweep, price should reverse aggressively and move upward with clear impulsive strength... On the chart, this imbalance appears as a fair value gap, an area where one or more candles do not overlap each other",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "order block",
+     "fair value gap",
+     "imbalance",
+     "gap",
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_STRUCTURE:if-no-imbalance-forms-above-this-candle#8",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "if no imbalance forms above this candle... we do not define the order block based on the liquidity sweep candle. Instead, we extend the order block boundaries to include the next candle. When we analyze that next candle, we can clearly see imbalance forming above it",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "order block",
+     "imbalance",
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_RETEST:the-third-and-final-confirmation-of-a-va#9",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "The third and final confirmation of a valid order block is that it must remain unmitigated. This means that after the order block is formed, price has not yet returned to this zone to retest it or trade through it",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest",
+     "mitigate"
+    ],
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "order block",
+     "zone"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "FILTER:you-want-to-see-heavy-volumes-traded-wit#0",
+   "type": "FILTER",
+   "role": "spine",
+   "object": "you want to see heavy volumes traded within a rotation like this",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:this-needs-to-be-followed-by-a-trend-act#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "this needs to be followed by a trend activity, a strong trend activity like this one",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:you-want-to-anchor-the-view-up-to-that-c#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "you want to anchor the view up to that candle, to the last candle of the rotation, which is the first candle of the sell-off, usually",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_RETEST:you-simply-need-to-see-the-price-go-away#3",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "You simply need to see the price go away from the VWAP and then enter a pullback",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_RETEST": [
+     "pullback"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_RETEST:you-trade-pullbacks-to-that-because-view#4",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "you trade pullbacks to that. Because view up represents a fair price since this important place",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_RETEST": [
+     "pullback"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:that-means-short-from-here-short-from-he#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "that means short from here short from here",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_RETEST:the-resistance-which-is-represented-by-t#6",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "the resistance which is represented by the VWAP, turns into a support, right? Because the price is moving above it. So, that's why you want to wait for the pullbacks to that support and enter longs from there",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "pullback"
+    ],
+    "WAIT_STRUCTURE": [
+     "support",
+     "resistance"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:there-s-a-second-test-right-here-and-tha#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "there's a second test right here, and that means another short from this place",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "FILTER:volume-profile-shows-where-the-big-volum#8",
+   "type": "FILTER",
+   "role": "confluence",
+   "object": "Volume profile shows where the big volumes were traded on the chart. That means that it sort of reveals where the big trading institutions were active because big trading institutions trade with heavy volumes",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:as-there-s-this-rotation-you-don-t-reall#9",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "as there's this rotation, you don't really want to do anything because when the market is rotating, VWAP setups don't really work",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_STRUCTURE:once-you-take-the-price-that-s-establish#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "once you take the price that's established in the first 5, 15, and the 30 minute ranges, you have what we call the 5,5 and the 30 minute OB",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_STRUCTURE:the-5m-minute-ob-takes-place-from-9-30-a#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern. The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45. And the 30 minute is from 9:30 to 10 a.m. Eastern.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:we-take-the-opening-range-high-and-the-o#2",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "We take the opening range high and the opening range low in between these time periods. And that's what forms the opening range.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_STRUCTURE:so-now-we-take-a-look-at-these-levels-pr#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "So now we take a look at these levels projected going out after this 30 minute range is over. So from 7 a.m. onwards in this case off of the Pacific Standard chart and we look for a breakout. Do we see a breakout above or below? Whichever direction we see that breakout that represents the initial directional conviction.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_STRUCTURE:when-price-breaks-above-the-range-high-f#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "When price breaks above the range high, for example, so a bullish breakout, which is what we saw an example of, that's where buyers have overcome that initial resistance.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "resistance",
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_STRUCTURE:this-was-the-highest-level-that-buyers-w#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "this was the highest level that buyers were able to take price up to before sellers defended price",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:this-is-the-opening-range-low-616-61-in#6",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "this is the opening range low 616.61 in which the buyers won. Sellers were not able to break a penny below this level.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:the-difference-between-the-high-and-the#7",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "the difference between the high and the low is what gives us our opening range breakout range. We call this the range value. In this case, the difference was a dollar3.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#8",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "The half range represents exactly how it sounds, half of that opening range.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:this-opening-range-acts-as-a-decision-po#9",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "This opening range acts as a decision point for the rest of the day. It's based on the day. So it becomes relative for every single trading day.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_STRUCTURE:the-initial-breakout-took-place#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "the initial breakout took place",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_STRUCTURE:in-this-case-price-pulled-back#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "in this case price pulled back",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_STRUCTURE:then-we-re-looking-for-an-entry-back-tow#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "then we're looking for an entry back towards the long mark",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_SESSION:whatever-this-opening-range-high-is-subt#3",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_RETEST": [
+     "pullback"
+    ],
+    "WAIT_STRUCTURE": [
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#4",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "The half range represents exactly how it sounds, half of that opening range",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_STRUCTURE:the-gap-you-know-is-created-between-thre#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "the gap you know is created between three candlesticks",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "gap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "imbalance",
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_STRUCTURE:this-is-a-bullish-imbalance#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "this is a bullish imbalance",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "imbalance"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you map it out from the closing points when it's a sell. You can see it's from the closing point of the first candle and also the opening point of the third candle",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "structure",
+     "imbalance"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "patiently wait for you know price to get there tap in",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_RETEST:wait-for-price-to-tap-in-and-then-push-t#5",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "wait for price to tap in and then push to your direction",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_BIAS:the-probability-of-your-treads-playing-o#6",
+   "type": "WAIT_BIAS",
+   "role": "confluence",
+   "object": "the probability of your treads playing out when you are sticking to the trend is higher than when you are going against the trend",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_BIAS": [
+     "trend is"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_STRUCTURE:the-imbalance-must-create-a-break-of-str#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "the imbalance must create a break of structure",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "break of structure",
+     "structure",
+     "imbalance"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_STRUCTURE:don-t-just-you-know-map-out-any-fvg-on-t#8",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "don't just you know map out any FVG on the chart map out the FVG that cost the break of structure",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "break of structure",
+     "structure",
+     "fvg"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "there should also be liquidity price will clear before you know tapping into the imbalance",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap"
+    ],
+    "WAIT_STRUCTURE": [
+     "imbalance",
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_STRUCTURE:map-out-the-fvg-that-is-very-close-to-th#10",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "map out the FVG that is very close to the order block",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "order block",
+     "fvg"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_BIAS:once-i-have-a-daily-bias-or-direction-i#0",
+   "type": "WAIT_BIAS",
+   "role": "spine",
+   "object": "once I have a daily bias or Direction I will use this checklist to make sure all requirements are met before I take an entry",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_BIAS": [
+     "daily bias"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "the next thing I look for is a market structure shift or displacement this means that a previous high was broken and aggressively moved over",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "market structure",
+     "structure"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:i-generally-like-to-see-price-move-back#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "I generally like to see price move back into a discount of this price range here",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "rth"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:some-sort-of-pd-array-where-generally-i#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "some sort of PD array where generally I prefer to have a fair value gut or an order block but I will also use an OTE in this area as well as a breaker block",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "order block"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "for my entry I would personally be looking to enter the trade right here",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:each-one-of-these-concepts-could-be-used#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "am "
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:does-that-meet-all-my-criteria-it-does-n#9",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "does that meet all my criteria it does not because it is in a premium of the range",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "rth"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:we-did-go-a-tick-below-this-low-but-i-do#11",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "we did go a tick below this low but I do not count that personally",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "a liquidity grab is simply when price breaks a support or resistance and does a fake out and heads in the opposite direction",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "support",
+     "resistance",
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:it-can-be-either-sell-side-liquidity-or#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "it can be either sell-side liquidity or buy side liquidity whichever you prefer to trade",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:you-were-going-to-mark-your-entry-point#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "you were going to mark your entry point at the candle that made the liquidity grab",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:your-short-entry-would-be-at-the-bottom#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "your short entry would be at the bottom of this candle that initiated this liquidity grab",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "we wait for the entry signal once we get it we enter",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:set-show-reversals-to-tru-and-just-like#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "set show reversals to Tru and just like that it'll find all the liquidity grabs and entries for you",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop than Peaks like this so that's very interesting to note so if you want optimal entries you should look for liquidity grabs with Peaks closer together",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_SESSION": [
+     "rth"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:to-do-this-simply-go-to-metatrader-click#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart did a liquidity grab so it's making lower lows but if we look at the momentum oscillator it's making higher highs so this is a Divergence and is also a very bullish signal so we combine both the powers of the Divergence and the bullish liquidity grab and it gives us a higher probability of working in our favor",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "atr",
+     "momentum",
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_BIAS:we-then-move-to-a-1hour-time-frame-and-w#8",
+   "type": "WAIT_BIAS",
+   "role": "confluence",
+   "object": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame and on top of that we have a liquidity grab on a lower time frame which is a great Confluence we move back to the 15-minute time frame and do our normal stop loss and take profit ... we would not enter on this trade because the move is happening in the middle of this range on a higher time frame",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_BIAS": [
+     "higher time frame"
+    ],
+    "WAIT_RETEST": [
+     "back to the"
+    ],
+    "WAIT_STRUCTURE": [
+     "support",
+     "demand",
+     "liquidity",
+     "range"
+    ],
+    "FILTER": [
+     "confluence",
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going to identify equal highs right and equal lows. So this is the most important liquidity that you want to identify as a draw on liquidity. ... or a higher time frame like 1 hour 1 hour or 4 hours time frame uh significant swing low or swing high",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_SESSION": [
+     "london",
+     "asia"
+    ],
+    "WAIT_BIAS": [
+     "higher time frame"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity",
+     "swing high",
+     "swing low",
+     "swing",
+     "equal highs",
+     "equal lows"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_BIAS",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the previous day low. And similarly, if you have taken out the London high, the draw is going to be the London low. And let's say these were like equal highs, the next draw is going to be equal lows",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_SESSION": [
+     "london",
+     "asia"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity",
+     "equal highs",
+     "equal lows"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_STRUCTURE:after-9-30-you-re-waiting-for-price-to-c#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "after 9:30, you're waiting for price to create a 5m minute fair value gap towards your draw on liquidity after 9:30 a.m. ... So, first you want to look at the 5m minute. If there's no 5m minute, you can look at 15 minute to see if there's a fair value gap forming towards your draw",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap",
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_BIAS:you-want-to-wait-simply-for-price-to-tap#3",
+   "type": "WAIT_BIAS",
+   "role": "spine",
+   "object": "you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_BIAS": [
+     "higher time frame"
+    ],
+    "WAIT_RETEST": [
+     "tap"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_CONFIRMATION:drop-down-to-one-minute-time-frame-now-h#4",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "drop down to one minute time frame. Now here is when our lower time frame confirmation or entry model comes in and this is very important. This is the most important part of the strategy",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_RETEST:make-sure-on-the-one-minute-price-has-sw#5",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap",
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_STRUCTURE:so-this-manipulation-leg-on-the-one-minu#6",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "So this manipulation leg on the one minute you want to identify all the fair value gaps and if there's only one you want to mark that out",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_CONFIRMATION:you-simply-wait-for-price-to-close-below#7",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and closes below it. So now it is inversed right and that becomes a resistance for price. So price will not go above that. So once price closes below this IFVG you want to take a short position right away",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "close below",
+     "closes below"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "fvg",
+     "gap",
+     "resistance"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_STRUCTURE:now-let-s-say-that-there-are-two-fair-va#8",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Now let's say that there are two fair value gaps in this manipulation leg on the one minute. So what you want to do is wait for both of them to get inversed. Okay? So if there are three, you're going to wait for all of those three fair value gaps to get inversed. And once that happens, you're going to take your entry",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_STRUCTURE:when-we-are-about-to-inverse-the-gap-we#9",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "when we are about to inverse the gap we should see displacement. It shouldn't be a choppy price action like this and then we get inversion. That is a low probability inversion and we don't want to take that",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "gap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "the first two-minute candle off the Bell closes over the 20 SMA and vwap",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "bell"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_CONFIRMATION:anytime-we-come-into-vwap-and-kind-of-te#2",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "anytime we come into vwap and kind of test and we're wicking around as long as we're not losing it closing below it and building below it this is a good buying opportunity",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:come-down-to-vwap-start-a-new-position-b#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "come down to vwap start a new position bounce come down to vop start a new position",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "if we're trading over the vwob we're typically more bullish",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:as-long-as-we-re-trading-over-vwap-and-a#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:the-green-line-that-you-see-is-the-vwap#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "the green line that you see is the vwap ... the little black line on the upper and the black line on the lower is just the upper and lower ranges of the VW",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "how to use vwap as well as a 20 period moving average which 20 simple moving average",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_CONFIRMATION:if-we-were-to-lose-vop-and-lose-the-20-s#2",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "if we were to lose vop and lose the 20 SMA collectively and then close below vop",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "close below"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_STRUCTURE:then-we-have-a-following-candle-that-sta#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "then we have a following candle that starts to build below",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_CONFIRMATION:what-i-m-looking-to-do-is-short-the-reje#4",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "what I'm looking to do is short the rejection of vwap and the 20 SMA",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "rejection"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_CONFIRMATION:as-long-as-we-don-t-close-below-vwap-we#5",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "as long as we don't close below vwap we should still not be trying to short the market here",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "close below"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s0",
+   "id": "WAIT_RETEST:as-always-we-enter-on-the-confirmation-a#0",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity",
+     "level"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s0",
+   "id": "WAIT_CONFIRMATION:what-s-really-important-is-you-need-to-w#1",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "what's really important is you need to wait for the break. You do not want to take early entries. You want to look for a solid candle close above or below the range.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "close above"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "after 3:00 a.m. Eastern time all the way up into New York market open, which is going to be 9:30 a.m. EST, you want to find the highest point of price action, and you want to find the lowest point of price action.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "york"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as traps.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open"
+    ],
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range a little bit, maybe it wicks above it, but overall it fails that level and it comes back down and closes below. Or vice versa, you have your London low, price tries to break below it, reclaims it right away, or it does break below it a little bit, but comes back up and reclaims the overall level. That's going to be a liquidity sweep.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 5,
+   "hits": {
+    "WAIT_SESSION": [
+     "london"
+    ],
+    "WAIT_RETEST": [
+     "comes back"
+    ],
+    "WAIT_CONFIRMATION": [
+     "wick",
+     "closes above",
+     "closes below"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity",
+     "level",
+     "range"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_SESSION:when-price-breaks-below-this-previous-lo#5",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "when price breaks below this previous low point right here, not only are stops going to hit, but anybody who's looking to short below that low is going to short as it breaks down. But then guess where their stop loss is going to be if price were to reclaim that London low right there. So, essentially, you have both sides of the market getting stopped out. Anyone who is long over here getting stopped out as price breaks below. Anyone who's shorting over here is getting stopped out as we reclaim the area which usually sets up for a pretty powerful and aggressive move the opposite way",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "london"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity",
+     "level"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "reclaims the level with a lot of volume",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_STRUCTURE:if-you-use-orderflow-such-as-bookmap-the#9",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "if you use orderflow such as bookmap, there is something called a stops indicator that I really love to use. And you usually can identify these liquidity suites with high probability by simply just looking at the stops indicator.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "liquid"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "time your entries once you have allowed the first 5 to 15 minutes to pass because it allows you to establish where support is at",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "support"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "if you first establish where your support level is at ... look and learn to find and spot the demand zones ... every time we get to this price the stock take off",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "support",
+     "demand",
+     "level",
+     "zone"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:the-stock-came-down-and-it-hit-right-the#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "the stock came down and it hit right there that's our entry for a scalp",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "I got the 5 minute chart",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_CONFIRMATION:this-13-ema-operated-as-a-initial-suppor#4",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "this 13 EMA operated as a initial support ... this candle wick came down bounced off of that",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "support"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:you-just-have-to-start-tracking-your-hig#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "You just have to start tracking your highs and lows on that 15-minut time frame.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "while price is still making lower highs and lower lows, do not buy: this means price is still bearish because it's still making lows. It's breaking levels of support.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "support",
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "confirmation to enter: the moment price comes above this level, this lets us know that price is bullish",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:once-you-find-this-breaking-above-that-l#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "once you find this... breaking above that level... your entry goes here",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:literally-a-abc-setup#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "Literally a ABC setup.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_CONFIRMATION:a-is-a-low-b-is-a-lower-high-identified#6",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "A is a low, B is a lower high identified by rejections (price comes up, shoots down in a different direction), and C is a low that is higher than the previous one: 'Price made a low, but it's higher than the previous one. Same setup. Literally a ABC setup.'",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "rejection"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:the-lower-high-is-the-level-where-seller#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "the lower high is the level where sellers sit: 'if we know sellers are sitting at this level trying to push price down, the moment price comes above this level, this lets us know that price is bullish'",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "FILTER:add-volume-by-price-values-go-to-vwap-de#0",
+   "type": "FILTER",
+   "role": "spine",
+   "object": "add volume by Price values go to vwap developing vwap",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_SESSION:this-line-is-being-reset-as-soon-as-ever#1",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "this line is being reset as soon as every single session starts again so with every new session this is being reset because it's a reference for the session",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "session"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_SESSION:you-might-have-a-long-idea-for-your-sess#2",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "you might have a long idea for your session",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "session"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_SESSION:as-the-new-york-session-opens-we-are-sti#3",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "as the New York session opens we are still right on Fair Value we start running up",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "session",
+     "open",
+     "york"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:you-might-want-to-wait-until-the-price-h#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "you might want to wait until the price has gone at least to the first if not the second standard deviation",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "after we broke it and tested it we can try our long trade",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:the-first-standard-deviation-is-one-the#6",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "you're not just going to trade based off of vwap only",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "we want to take our support and resistance line and we want to mark that highest point of price action and we want to mark that lowest point of price action",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "support",
+     "resistance"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_STRUCTURE:what-we-are-going-to-wait-for-is-one-for#1",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "what we are going to wait for is one for either price to break above that range or we are going to look for price to break below that range",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_CONFIRMATION:if-we-can-actually-get-that-break-we-wan#2",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "if we can actually get that break we want to see it close below or above with strength or weakness. So if for example if we're breaking below well then we want to see a break below with weakness. If we see a break above well then we want to look for price to break above with strength",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "close below"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_CONFIRMATION:we-are-waiting-for-candle-closes-to-actu#3",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "we are waiting for candle closes to actually confirm... price wicked right back down and reclaimed on the opposite side. So there was no entry",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "LONG: if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish price action, whether it be a bullish hammer, bullish engulfing, dragonfly dogee, long lower wicks, and an elevation in the volume. If we can get that, we are then going to look for a long entry",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_RETEST": [
+     "pull back"
+    ],
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing",
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "support"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_CONFIRMATION:short-if-price-were-to-break-below-this#5",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "SHORT: If price were to break below this level again, we're going to look for it to break with weakness. We then want to see price come back up, test this area as resistance with bearish price action, whether it be bearish hammer, gravestone dogee, long upper wick, bearish engulfing, as well as an elevation in the volume. Well, if we get that, we are going to look for a short entry to take price lower",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing",
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "resistance",
+     "level"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "FILTER:an-elevation-in-the-volume#7",
+   "type": "FILTER",
+   "role": "confluence",
+   "object": "an elevation in the volume",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky because you don't need to trade every day",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_RETEST:entry-mechanic-variant-i-m-not-a-big-fan#9",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "ENTRY-MECHANIC VARIANT: I'm not a big fan of trading the breakouts. If you wanted to, you could have and you could have caught a nice little move up, but I'm a big fan of that retest",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "we're going to get to our desks right at 9:30 a.m. EST",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_CONFIRMATION:we-re-going-to-wait-for-the-first-candle#1",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "we're going to wait for the first candle of the day at that 9:30 time to print",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "print"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "We're going to start on our five-minute chart.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "we are going to switch to the 1 minute chart",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-wait-for-a-break-of-the-l#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "we're going to wait for a break of the level, but we need a fair value gap",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap",
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_CONFIRMATION": [
+     "engulf"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_CONFIRMATION:as-soon-as-we-get-this-engulfing-you-re#8",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "as soon as we get this engulfing, you're good to enter the trade",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "you're going to start on the 15minute chart",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-mark-the-high-and-the-low#11",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "we're going to mark the high and the low of the first 15-minute candle",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "low of the"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "Instead of going to the one minute chart, we're going to go to the five-minute chart.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-have-now-created-our-fair-value-gap-t#13",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "we have now created our fair value gap through this first candle",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "fvg",
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "since we broke through the high, the direction is bullish. We're going to be looking for long trades.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_CONFIRMATION:a-fair-value-gap-is-just-a-three-candle#18",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:the-middle-candle-was-very-expansive-sho#19",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "the middle candle was very expansive, showing a lot of force, which tells us that buyers are in control, especially when it happens through this first 5-minute candle level",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_CONFIRMATION:if-you-re-not-aware-of-what-an-engulfing#20",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "if you're not aware of what an engulfing is, it's when the body of one candle gets completely closed through by opposing direction candles",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "revisit"
+    ],
+    "WAIT_STRUCTURE": [
+     "fair value gap",
+     "gap"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening",
+     "bell"
+    ],
+    "WAIT_RETEST": [
+     "pull back"
+    ],
+    "WAIT_STRUCTURE": [
+     "support"
+    ]
+   },
+   "losers": [
+    "WAIT_RETEST",
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_RETEST:i-m-using-that-vwop-level-as-that-big-mi#1",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "i'm using that vwop level as that big milestone level and then i'm buying on the pullbacks to test as a support area ... looking to dip by into pull backs to the v-wop in anticipating a bounce at the v-wop level",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "pullback",
+     "pull back"
+    ],
+    "WAIT_STRUCTURE": [
+     "support",
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "pullback"
+    ],
+    "FILTER": [
+     "momentum"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "FILTER:they-see-the-volume-come-in-a-ton-of-gre#3",
+   "type": "FILTER",
+   "role": "confluence",
+   "object": "they see the volume come in ... a ton of green candles in a row which obviously shows a lot of strength",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "if i can find a stock that opens weak on the day and actually drops at the opening bell below the v-wop and then breaks above it with some volume coming in that's my favorite area to dip buy into",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening",
+     "bell"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "pullback"
+    ],
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in mind that not all levels matter in the market, but we mainly want to focus on the most obvious ones.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "support",
+     "resistance",
+     "level",
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:we-want-to-wait-for-price-to-break-the-k#1",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "We want to wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level. Now, on top of that, we do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out. It has to be very quick and aggressive through it, not just like, you know, kind of chopping through it. Literally like a couple big candles through the level, that's what we want to look for. So, if it looks weak, we ignore the setup, and we do not take it.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "support",
+     "resistance",
+     "level"
+    ],
+    "FILTER": [
+     "volume",
+     "momentum"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_RETEST:we-want-to-wait-for-the-retest-we-want-t#2",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "We want to wait for the retest. We want to wait for price to pull back, price pulls back, tests the level. We want to see price hold the level. If it's able to hold the level, we are then going to look for either bullish price action, if we're looking for price to go up, or bearish price action, if we're looking for price to go down.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest",
+     "pull back"
+    ],
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:i-enter-after-confirmation-so-again-if-w#3",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "I enter after confirmation. So, again, if we do not get confirmation, we do not take the trade. For a long: we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help confirm to us that this resistance is now becoming support. For a short: we're looking for bearish price action. Long upper wicks, bearish hammers, gravestone dojis, etc. That would help confirm that this trade is truly valid.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation",
+     "wick"
+    ],
+    "WAIT_STRUCTURE": [
+     "support",
+     "resistance"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "We do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "FILTER": [
+     "volume"
+    ]
+   },
+   "losers": [
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+   "type": "WAIT_CONFIRMATION",
+   "role": "confluence",
+   "object": "If you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area. All those things combined, the volume confirmation, the price action telling you to get in, as well as the liquidity on Bookmap, all of that sets up for a very high probability trade.",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 3,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "liquidity"
+    ],
+    "FILTER": [
+     "volume",
+     "liquid"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_RETEST:the-first-retest-is-always-the-highest-p#6",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "The first retest is always the highest probability. So don't be sitting there trying to trade every break and retest.",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max.",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "I trade every day from 9:30 to 11:00 a.m. Eastern",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:a-simple-1-hour-candle-pattern-i-follow#1",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "a simple 1-hour candle pattern I follow before my trading session every day",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "session"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "I'm looking at two candles, this one at 7:00 a.m. and this one at 8:00 a.m. And they're going to give me my session direction",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "session"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "session"
+    ],
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "session"
+    ],
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:i-m-on-the-five-minute-time-frame-and-i#5",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "I'm on the five-minute time frame, and I need to set up my range",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
+   "type": "WAIT_SESSION",
+   "role": "spine",
+   "object": "marking out the top and the bottom of that range from 9:30 to 9:45. That's the first 15 minutes of the New York Stock Exchange open, and that is my trading range for this trading session",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "session",
+     "open",
+     "york"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+   "type": "WAIT_CONFIRMATION",
+   "role": "spine",
+   "object": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_CONFIRMATION": [
+     "confirmation"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:i-m-looking-for-the-price-to-break-out-t#8",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "I'm looking for the price to break out the bottom of that range",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "a level of demand is just when you have an aggressive push like you have right here. You get the break of recent structure, and generally we're looking for fair value gaps, that sort of thing",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "structure",
+     "fair value gap",
+     "gap",
+     "demand",
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "This created a level of supply. I was looking at this supply level right here",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "supply",
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:and-then-we-re-waiting-for-a-price-retra#11",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "And then we're waiting for a price retracement. So, you can see here I'm waiting for that price to come back to my level",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+   "type": "WAIT_RETEST",
+   "role": "spine",
+   "object": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bullish engulfing pattern telling me we have that momentum to the upside yet again",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 4,
+   "hits": {
+    "WAIT_RETEST": [
+     "tap",
+     "taps"
+    ],
+    "WAIT_CONFIRMATION": [
+     "engulf",
+     "engulfing"
+    ],
+    "WAIT_STRUCTURE": [
+     "demand",
+     "level"
+    ],
+    "FILTER": [
+     "momentum"
+    ]
+   },
+   "losers": [
+    "WAIT_CONFIRMATION",
+    "WAIT_STRUCTURE",
+    "FILTER"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:so-on-this-one-i-set-my-limit-order-righ#13",
+   "type": "WAIT_STRUCTURE",
+   "role": "spine",
+   "object": "So, on this one, I set my limit order right there. So, as soon as price touched that level, I'd be into my trading position",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "level"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "on Forex, Nasdaq, gold, everything",
+   "type_confidence": "unmatched",
+   "arrival_path": "UNMATCHED_DEFAULT",
+   "n_family_hits": 0,
+   "hits": {},
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:i-already-know-the-direction-i-m-looking#15",
+   "type": "WAIT_STRUCTURE",
+   "role": "confluence",
+   "object": "I already know the direction I'm looking for. Step one told me that I'm looking for sell trades. So, I'm looking for the price to break out the bottom of that range",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_RETEST:i-was-also-looking-at-the-bottom-of-the#16",
+   "type": "WAIT_RETEST",
+   "role": "confluence",
+   "object": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_RETEST": [
+     "retest"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:for-the-session-indicator-i-m-using-new#17",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "For the session indicator, I'm using New York session by James Davey, you can get that in your indicators in TradingView ... just make sure you have UTC minus four here in the bottom right",
+   "type_confidence": "confident",
+   "arrival_path": "SOLE_HIT",
+   "n_family_hits": 1,
+   "hits": {
+    "WAIT_SESSION": [
+     "session",
+     "york"
+    ]
+   },
+   "losers": []
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+   "type": "WAIT_SESSION",
+   "role": "confluence",
+   "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4",
+   "type_confidence": "approximate",
+   "arrival_path": "PRECEDENCE_WIN",
+   "n_family_hits": 2,
+   "hits": {
+    "WAIT_SESSION": [
+     "open",
+     "opening"
+    ],
+    "WAIT_STRUCTURE": [
+     "range"
+    ]
+   },
+   "losers": [
+    "WAIT_STRUCTURE"
+   ]
+  }
+ ]
+}

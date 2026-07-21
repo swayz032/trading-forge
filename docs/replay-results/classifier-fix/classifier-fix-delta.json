@@ -1,0 +1,1776 @@
+{
+ "artifact": "classifier-fix-delta",
+ "generator": "scratchpad/delta_report.py",
+ "status": "HYPOTHETICAL — production flags OFF; no spec artifact on disk is rewritten by this run",
+ "arms": {
+  "before": "C:\\Users\\tonio\\AppData\\Local\\Temp\\claude\\C--Users-tonio-Projects-trading-forge\\00ad28f5-61d3-439a-913c-b1572f9bebce\\scratchpad\\VAULT\\spec_producer.py.PRE",
+  "after": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712\\src\\engine\\extraction\\spec_producer.py"
+ },
+ "scope": "Both corpora, classifier-routed rows only (structurally-assigned INVALIDATE/ENABLE_ENTRY excluded — they never call _classify_family). A = tier-a 11 clean strategies (sealed-read phase_b). B = 16 shakedown + 2 packet2-dod committed .spec.json.",
+ "per_corpus": {
+  "A_tier_a": {
+   "n_classified": 94,
+   "family_before": {
+    "FILTER": 4,
+    "UNTYPED": 0,
+    "WAIT_BIAS": 1,
+    "WAIT_CONFIRMATION": 10,
+    "WAIT_RETEST": 8,
+    "WAIT_SESSION": 21,
+    "WAIT_STRUCTURE": 50
+   },
+   "family_after": {
+    "FILTER": 4,
+    "UNTYPED": 43,
+    "WAIT_BIAS": 0,
+    "WAIT_CONFIRMATION": 6,
+    "WAIT_RETEST": 2,
+    "WAIT_SESSION": 4,
+    "WAIT_STRUCTURE": 35
+   },
+   "family_delta": {
+    "FILTER": 0,
+    "UNTYPED": 43,
+    "WAIT_BIAS": -1,
+    "WAIT_CONFIRMATION": -4,
+    "WAIT_RETEST": -6,
+    "WAIT_SESSION": -17,
+    "WAIT_STRUCTURE": -15
+   },
+   "confidence_before": {
+    "unmatched": 35,
+    "confident": 24,
+    "approximate": 35
+   },
+   "confidence_after": {
+    "unmatched": 34,
+    "confident": 36,
+    "approximate": 15,
+    "ambiguous": 9
+   },
+   "transition_matrix": {
+    "FILTER": {
+     "FILTER": 4
+    },
+    "WAIT_BIAS": {
+     "WAIT_STRUCTURE": 1
+    },
+    "WAIT_CONFIRMATION": {
+     "WAIT_CONFIRMATION": 5,
+     "UNTYPED": 2,
+     "WAIT_STRUCTURE": 3
+    },
+    "WAIT_RETEST": {
+     "UNTYPED": 4,
+     "WAIT_STRUCTURE": 2,
+     "WAIT_RETEST": 2
+    },
+    "WAIT_SESSION": {
+     "WAIT_SESSION": 3,
+     "WAIT_CONFIRMATION": 1,
+     "UNTYPED": 3,
+     "WAIT_STRUCTURE": 14
+    },
+    "WAIT_STRUCTURE": {
+     "UNTYPED": 34,
+     "WAIT_STRUCTURE": 15,
+     "WAIT_SESSION": 1
+    }
+   },
+   "n_moved": 65
+  },
+  "B_tier_b": {
+   "n_classified": 155,
+   "family_before": {
+    "FILTER": 3,
+    "UNTYPED": 0,
+    "WAIT_BIAS": 4,
+    "WAIT_CONFIRMATION": 23,
+    "WAIT_RETEST": 20,
+    "WAIT_SESSION": 27,
+    "WAIT_STRUCTURE": 78
+   },
+   "family_after": {
+    "FILTER": 3,
+    "UNTYPED": 57,
+    "WAIT_BIAS": 2,
+    "WAIT_CONFIRMATION": 17,
+    "WAIT_RETEST": 6,
+    "WAIT_SESSION": 15,
+    "WAIT_STRUCTURE": 55
+   },
+   "family_delta": {
+    "FILTER": 0,
+    "UNTYPED": 57,
+    "WAIT_BIAS": -2,
+    "WAIT_CONFIRMATION": -6,
+    "WAIT_RETEST": -14,
+    "WAIT_SESSION": -12,
+    "WAIT_STRUCTURE": -23
+   },
+   "confidence_before": {
+    "confident": 62,
+    "approximate": 56,
+    "unmatched": 37
+   },
+   "confidence_after": {
+    "confident": 75,
+    "ambiguous": 22,
+    "approximate": 23,
+    "unmatched": 35
+   },
+   "transition_matrix": {
+    "FILTER": {
+     "FILTER": 3
+    },
+    "WAIT_BIAS": {
+     "WAIT_BIAS": 2,
+     "WAIT_STRUCTURE": 1,
+     "UNTYPED": 1
+    },
+    "WAIT_CONFIRMATION": {
+     "WAIT_CONFIRMATION": 13,
+     "UNTYPED": 8,
+     "WAIT_STRUCTURE": 2
+    },
+    "WAIT_RETEST": {
+     "WAIT_RETEST": 6,
+     "WAIT_STRUCTURE": 8,
+     "UNTYPED": 5,
+     "WAIT_CONFIRMATION": 1
+    },
+    "WAIT_SESSION": {
+     "UNTYPED": 7,
+     "WAIT_STRUCTURE": 6,
+     "WAIT_SESSION": 11,
+     "WAIT_CONFIRMATION": 3
+    },
+    "WAIT_STRUCTURE": {
+     "WAIT_STRUCTURE": 38,
+     "UNTYPED": 36,
+     "WAIT_SESSION": 4
+    }
+   },
+   "n_moved": 82
+  }
+ },
+ "moved_rows": [
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-need-to-identify-the-direction-of-th#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "you need to identify the direction of the trend and can do this by simply using a 4 hour time frame and a trend line"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:we-will-use-a-1-hour-time-frame-for-this#3",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "We will use a 1 hour time frame for this strategy."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-can-t-trade-in-a-non-trending-market#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "You can't trade in a non trending market."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "0RBexa9JpIg__s0",
+   "id": "WAIT_STRUCTURE:you-can-apply-this-strategy-on-every-cur#6",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "You can apply this strategy on every currency pair."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:whenever-the-candle-crosses-the-moving-a#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "whenever the candle crosses the moving average line and closes with a strong candle, you take the trade"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:you-will-need-to-select-simple-moving-av#3",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "you will need to select Simple moving average indicator ... and the time length of the indicator needs to be set at 14"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:we-will-be-trading-in-15-mins-time-frame#4",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "We will be trading in 15 mins time frame"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:we-need-the-candle-to-close-strong-below#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "we need the candle to close strong below the line, not on the line"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:i-always-have-a-rule-to-never-take-any-i#6",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "I always have a rule to never take any intraday trades within 1 hour of closing"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "ExB66jcyKxg__s0",
+   "id": "WAIT_STRUCTURE:with-a-risk-to-reward-of-3-1#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "with a risk to reward of 3:1"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_BIAS:mark-the-higher-time-frame-liquidity-zon#0",
+   "before": "WAIT_BIAS",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "mark the higher time frame liquidity zones first. Start with the daily or the 4hour chart. Mark the most recent swing highs and lows and clean levels that haven't been tapped yet"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:you-can-identify-areas-that-have-not-bee#1",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "you can identify areas that have not been tapped yet where the liquidity should be living"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_STRUCTURE:drop-to-the-5minut-or-the-1-minute-chart#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Drop to the 5minut or the 1 minute chart if you're feeling a little bit risky"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:look-for-price-rapidly-approaching-a-zon#3",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "Look for price rapidly approaching a zone. You want to see volume spike, a quick tap, and a rejection"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:avoid-entering-before-the-price-taps-the#5",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "avoid entering before the price taps the liquidity zone. Wait for confirmation"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_RETEST:you-want-to-see-volume-spike-a-quick-tap#8",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "You want to see volume spike, a quick tap, and a rejection"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_CONFIRMATION:price-will-often-wick-above-resistance-p#9",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "Price will often wick above resistance, pause, then dump or wick below support and reverse. That is your confirmation"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "LD1FEbwXU4o__s0",
+   "id": "WAIT_STRUCTURE:do-not-chase-the-breakouts-wait-for-pric#11",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "do not chase the breakouts. Wait for price to trap traders and fade the move"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:we-will-enter-into-a-buy-position-whenev#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "We will enter into a buy position whenever the price breaks out above the upper V-wap band."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:for-a-sell-position-we-will-need-for-the#1",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "For a sell position we will need for the price to break below the lower V-wap band."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:firstly-the-candlestick-will-need-to-be#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:secondly-the-price-must-break-above-the#3",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Secondly, the price must break above the upper V-wap band. This shows us that the price might break out which would cause an even bigger increase in price."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:thirdly-the-point-of-control-must-be-wit#4",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:firstly-the-candlesticks-will-need-to-be#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "firstly the candlesticks will need to be red, which indicates that the trend of the market is currently bearish."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_SESSION:secondly-the-candlestick-must-close-belo#6",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_CONFIRMATION",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "Secondly, the candlestick must close below the V-wap band. This shows us that the price might be making a bearish breakout which would cause for the price to fall further."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:lastly-we-will-need-to-make-sure-that-th#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Lastly, we will need to make sure that the point of control line is within the V-wap bands. As you can see all of the conditions have been met so let's enter into the position."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YGdFksLavKE__s0",
+   "id": "WAIT_STRUCTURE:we-will-be-using-this-indicator-to-deter#8",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "We will be using this indicator to determine what the larger trend of the market is... To know the trend direction we will just need to look at the candle stick colors. Whenever we are in an uptrend the bars will be gree"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_STRUCTURE:this-had-a-double-inside-bar-set-up-on-t#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "this had a double inside bar set up on the daily chart"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_SESSION:it-gapped-up-a-bit-from-the-previous-day#1",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_STRUCTURE:it-was-a-really-solid-setup-for-a-pushba#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "it was a really solid setup for a pushback into the 20s if it was able to start breaking out above that Friday high of day which was 18.74"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s0",
+   "id": "WAIT_STRUCTURE:it-briefly-broke-above-19-and-briefly-br#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "it briefly broke above 19 and briefly broke out above that previous day's closing price"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:if-we-focus-on-the-pre-market-session-he#0",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "if we focus on the pre-market session here in the open we can see it spikes up trade sideways consolidates into the open and we get ourselves an opening range breakout level"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:an-opening-range-breakout-level-which-is#1",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "an opening range breakout level which is the high of this first five minute candle of 3.94 cents"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:as-always-opening-range-breakout-levels#3",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "as always opening range breakout levels for the stocks with the biggest potential for a gap and go are posted every single morning in the market Master group"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:this-one-actually-never-got-above-its-op#6",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "this one actually never got above its opening range breakout level there was just no follow-through whatsoever at the open"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "YqY0OkL5LMI__s1",
+   "id": "WAIT_SESSION:we-can-see-very-quickly-it-breaks-only-s#7",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "we can see very quickly it breaks only seven cents above that opening range breakout level and then come straight back down"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_SESSION:the-first-five-minute-candle-from-09-30#0",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "The first five-minute candle â€” from 09:30 to 09:35 â€” forms the Opening Range. Two levels: the high and the low of that candle. And the midpoint â€” exactly halfway between them."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_CONFIRMATION:then-we-wait-for-a-breakout-a-breakout-i#1",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "Then we wait for a breakout. A breakout is only valid if the candle body closes completely outside the range. Not a wick. Not a touch. A full close."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_SESSION:after-the-breakout-we-wait-for-a-retest#2",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "After the breakout, we wait for a retest. A retest is valid if the candle opened outside the range, the wick dipped inside, and the close is back outside."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_SESSION:entry-is-on-the-open-of-the-next-candle#4",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "Entry is on the open of the next candle after the retest."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_STRUCTURE:every-decision-is-made-on-closed-candles#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "every decision is made on closed candles only"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "dENM6gt8ZRg__s0",
+   "id": "WAIT_STRUCTURE:risk-per-trade-one-percent-of-the-deposi#6",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Risk per trade: one percent of the deposit. That's the classic conservative position size."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_SESSION:after-the-first-break-of-structure-price#2",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "After the first break of structure, price performs a healthy pullback and then forms another break of structure, further confirming bullish continuation and strengthening the external structure"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_STRUCTURE:the-change-of-character-acted-as-an-entr#4",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "the change of character acted as an entry trigger rather than a reversal signal"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_CONFIRMATION:in-a-bullish-order-block-a-buy-limit-ord#5",
+   "before": "WAIT_CONFIRMATION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "In a bullish order block, a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_CONFIRMATION:the-first-and-most-powerful-confirmation#6",
+   "before": "WAIT_CONFIRMATION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "The first and most powerful confirmation of a valid order block is the liquidity sweep, also known as the takeout... The final bearish candle breaks the low of the previous candle and immediately reverses upward. This mo"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_CONFIRMATION:the-second-key-confirmation-of-a-valid-o#7",
+   "before": "WAIT_CONFIRMATION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "The second key confirmation of a valid order block is the presence of imbalance, also known as inefficiency. Immediately after the liquidity sweep, price should reverse aggressively and move upward with clear impulsive s"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "hcHuDfxdywI__s0",
+   "id": "WAIT_RETEST:the-third-and-final-confirmation-of-a-va#9",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "The third and final confirmation of a valid order block is that it must remain unmitigated. This means that after the order block is formed, price has not yet returned to this zone to retest it or trade through it"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:this-needs-to-be-followed-by-a-trend-act#1",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "this needs to be followed by a trend activity, a strong trend activity like this one"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:you-want-to-anchor-the-view-up-to-that-c#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "you want to anchor the view up to that candle, to the last candle of the rotation, which is the first candle of the sell-off, usually"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:that-means-short-from-here-short-from-he#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "that means short from here short from here"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_RETEST:the-resistance-which-is-represented-by-t#6",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "the resistance which is represented by the VWAP, turns into a support, right? Because the price is moving above it. So, that's why you want to wait for the pullbacks to that support and enter longs from there"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:there-s-a-second-test-right-here-and-tha#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "there's a second test right here, and that means another short from this place"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "pKzXxB9Blts__s0",
+   "id": "WAIT_STRUCTURE:as-there-s-this-rotation-you-don-t-reall#9",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "as there's this rotation, you don't really want to do anything because when the market is rotating, VWAP setups don't really work"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_STRUCTURE:the-5m-minute-ob-takes-place-from-9-30-a#1",
+   "before": "WAIT_STRUCTURE",
+   "after": "WAIT_SESSION",
+   "before_conf": "unmatched",
+   "after_conf": "confident",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern. The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45. And the 30 minute is from 9:30 to 10 a.m. Eastern."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:we-take-the-opening-range-high-and-the-o#2",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "We take the opening range high and the opening range low in between these time periods. And that's what forms the opening range."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:this-is-the-opening-range-low-616-61-in#6",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "this is the opening range low 616.61 in which the buyers won. Sellers were not able to break a penny below this level."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:the-difference-between-the-high-and-the#7",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "the difference between the high and the low is what gives us our opening range breakout range. We call this the range value. In this case, the difference was a dollar3."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#8",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "The half range represents exactly how it sounds, half of that opening range."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s0",
+   "id": "WAIT_SESSION:this-opening-range-acts-as-a-decision-po#9",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "This opening range acts as a decision point for the rest of the day. It's based on the day. So it becomes relative for every single trading day."
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_STRUCTURE:the-initial-breakout-took-place#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "the initial breakout took place"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_STRUCTURE:in-this-case-price-pulled-back#1",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "in this case price pulled back"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_STRUCTURE:then-we-re-looking-for-an-entry-back-tow#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "then we're looking for an entry back towards the long mark"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_SESSION:whatever-this-opening-range-high-is-subt#3",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level"
+  },
+  {
+   "corpus": "A_tier_a",
+   "spec": "st5e-YJRfKc__s1",
+   "id": "WAIT_SESSION:the-half-range-represents-exactly-how-it#4",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "The half range represents exactly how it sounds, half of that opening range"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_SESSION:so-the-gap-from-the-closing-point-of-the#1",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "So the gap from the closing point of the first candle to the opening point of the third candle. So the gap in between is what is called an imbalance"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_SESSION:this-is-an-example-of-a-bearish-imbalanc#3",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "this is an example of a bearish imbalance just same thing with you know the explanation for the bullish imbalance. So make sure structure is present and then you look out for the you know first three candles and um you m"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "-igpOZs8LsM__s0",
+   "id": "WAIT_RETEST:there-should-also-be-liquidity-price-wil#9",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "there should also be liquidity price will clear before you know tapping into the imbalance"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:the-first-thing-i-focus-on-is-a-stop-rai#1",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "the first thing I focus on is a stop raid this just means that a low was put in before it was rated or broken"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_SESSION:taking-that-one-step-further-by-using-an#4",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "taking that one step further by using an OTE I can see that this is our premium up here where I do not want to be longing and this Narrows down my discount range to my OTE right in here"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:for-my-entry-i-would-personally-be-looki#6",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "for my entry I would personally be looking to enter the trade right here"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:each-one-of-these-concepts-could-be-used#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "each one of these Concepts could be used as an entry model by themselves however I like to blend one two or three of these Concepts together"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_SESSION:i-prefer-to-have-a-stop-rate-prior-to-th#8",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "confident",
+   "after_conf": "unmatched",
+   "arrival_path_before": "SOLE_HIT",
+   "object": "I prefer to have a stop rate prior to the displacement so I am not counting this as a displacement move up"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_SESSION:as-i-move-my-entry-closer-to-my-stop-los#10",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "confident",
+   "after_conf": "unmatched",
+   "arrival_path_before": "SOLE_HIT",
+   "object": "as I move my entry closer to my stop loss my risk to reward increases however the further I go there is also the possibility that I do not get filled on this trade"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "0xygpCMwxbQ__s0",
+   "id": "WAIT_STRUCTURE:we-did-go-a-tick-below-this-low-but-i-do#11",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "we did go a tick below this low but I do not count that personally"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:we-wait-for-the-entry-signal-once-we-get#4",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "we wait for the entry signal once we get it we enter"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_SESSION:if-the-liquidity-grab-and-the-entry-cand#6",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "if the liquidity grab and the entry candle were closer than 10 candles apart the drop was a lot larger compared to the Peaks further apart so the back test results are saying Peaks like this had a more impulsive drop tha"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_STRUCTURE:to-do-this-simply-go-to-metatrader-click#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "to do this simply go to metatrader click insert then indicators scroll down to oscillate and click momentum so here you can see the indicator gave us a long Buy Signal but something else to notice is that here the chart "
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "4cT8WTyxhYY__s0",
+   "id": "WAIT_BIAS:we-then-move-to-a-1hour-time-frame-and-w#8",
+   "before": "WAIT_BIAS",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "we then move to a 1hour time frame and we see this Buy Signal signal happened exactly at a support on a higher time frame so we know there's a strong demand here on the higher time frame and on top of that we have a liqu"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_SESSION:the-very-first-step-is-identify-your-dra#0",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "the very first step is identify your draw on liquidity. Now, this could be um Asia high or low, right? It could be London high or low. It could be also previous day high and uh previous day low. Right? ... you're going t"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_SESSION:if-we-have-taken-out-the-asia-high-now-y#1",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "if we have taken out the Asia high ... Now you know that the draw on liquidity is going to be the Asia low. Okay. So, and similarly, if you have taken out the previous day high, you know that the draw is going to be the "
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_BIAS:you-want-to-wait-simply-for-price-to-tap#3",
+   "before": "WAIT_BIAS",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "you want to wait simply for price to tap into the higher time frame IRL which is your 5m minute fair value gap"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_RETEST:make-sure-on-the-one-minute-price-has-sw#5",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "make sure on the one minute price has swept some of liquidity before tapping into the 5minut fair value gap or 15-minute fair value gap"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "CLDEIsNpVRc__s0",
+   "id": "WAIT_CONFIRMATION:you-simply-wait-for-price-to-close-below#7",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "you simply wait for price to close below this one minute fair value gap. Okay. So that is your inversion and inversion is when we have a bullish fair value gap but then price disrespects the bullish fair value gap and cl"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:once-we-close-over-this-20-period-moving#1",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "once we close over this 20 period moving average I'm looking for a following candle to confirm the high of that candle that closed over the 20 SMA"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:come-down-to-vwap-start-a-new-position-b#3",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "come down to vwap start a new position bounce come down to vop start a new position"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:if-we-re-trading-over-the-vwob-we-re-typ#4",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "if we're trading over the vwob we're typically more bullish"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:as-long-as-we-re-trading-over-vwap-and-a#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "as long as we're trading over vwap and as long as we're trading over this 20 SMA we can hold this position"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s0",
+   "id": "WAIT_STRUCTURE:the-white-line-that-you-see-on-my-screen#6",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "the white line that you see on my screen that's the 20 SMA ... it's not the smooth moving average it's not the exponential moving average it's the 20 simple moving average"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_STRUCTURE:use-the-two-minute-time-frame-scalp-the#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "use the two-minute time frame scalp the NASDAQ futures or you know scalp es scalp uh ym rty whatever instrument that you want to trade"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_STRUCTURE:how-to-use-vwap-as-well-as-a-20-period-m#1",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "how to use vwap as well as a 20 period moving average which 20 simple moving average"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "DLwVqcLRcfw__s1",
+   "id": "WAIT_STRUCTURE:then-we-have-a-following-candle-that-sta#3",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "then we have a following candle that starts to build below"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s0",
+   "id": "WAIT_RETEST:as-always-we-enter-on-the-confirmation-a#0",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_STRUCTURE:i-trade-the-five-minute-time-frame-on-po#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "I trade the five-minute time frame on popular future instruments like the S&P 500 futures, the NASDAQ futures, or even the Dow futures."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open. mark the highest high of that price action and the lowest low of that price action. And again, these levels act as magnets and they act as t"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_RETEST:what-we-are-looking-for-is-we-are-lookin#3",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "what we are looking for is we are looking for price to trade into these areas to either look for a breakout trade, a break and retest trade, or even a liquidity sweep."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_SESSION:a-liquidity-sweep-is-going-to-be-a-brief#4",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_CONFIRMATION",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "A liquidity sweep is going to be a brief fake out below or above the level. So, for example, we have our highest point of price action from the London high. Price tries to break above it. Maybe it closes above the range "
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_RETEST:we-enter-on-the-confirmation-after-the-r#6",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_STRUCTURE:price-breaks-below-but-reclaims-the-leve#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "Price breaks below but reclaims the level with a lot of volume. You are going to look to get long."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "E9MzEC_yNoM__s1",
+   "id": "WAIT_STRUCTURE:reclaims-the-level-with-a-lot-of-volume#8",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "reclaims the level with a lot of volume"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:the-stock-came-down-and-it-hit-right-the#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "the stock came down and it hit right there that's our entry for a scalp"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:i-got-the-5-minute-chart#3",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "I got the 5 minute chart"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_CONFIRMATION:this-13-ema-operated-as-a-initial-suppor#4",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "this 13 EMA operated as a initial support ... this candle wick came down bounced off of that"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "IyFioFkRgWo__s0",
+   "id": "WAIT_STRUCTURE:you-don-t-have-to-take-every-one-of-thes#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "you don't have to take every one of these ... you can find one or two ... or you can wait for one and then take the trade there"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:you-just-have-to-start-tracking-your-hig#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "You just have to start tracking your highs and lows on that 15-minut time frame."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:wait-for-the-end-of-the-correction-price#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "wait for the end of the correction: Price stops making lower lows. It tries to come down, fails to do so. This is a bullish sign."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_CONFIRMATION:confirmation-to-enter-the-moment-price-c#3",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "confirmation to enter: the moment price comes above this level, this lets us know that price is bullish"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "PVMgOxHUqFA__s0",
+   "id": "WAIT_STRUCTURE:literally-a-abc-setup#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Literally a ABC setup."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:you-might-want-to-wait-until-the-price-h#4",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "you might want to wait until the price has gone at least to the first if not the second standard deviation"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:after-we-broke-it-and-tested-it-we-can-t#5",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "after we broke it and tested it we can try our long trade"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:the-first-standard-deviation-is-one-the#6",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "the first standard deviation is one the second here is 1.5 standard deviation usually I just keep it at two which is the third and even the third standard deviation"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "R5L890juvRw__s0",
+   "id": "WAIT_STRUCTURE:you-re-not-just-going-to-trade-based-off#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "you're not just going to trade based off of vwap only"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_CONFIRMATION",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "LONG: if we break above the overnight highs, we want to see it break with strength above, but then we want to see it pull back and test this area as support. So when it pulls back, we want to see some kind of bullish pri"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest poin"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "W7nlnHTUZQU__s0",
+   "id": "WAIT_STRUCTURE:selectivity-a-filter-it-s-not-a-strategy#8",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "SELECTIVITY / A+ FILTER: It's not a strategy that presents itself every day. But if you get a setup like I just showed you in the last two examples where it's A+, take that setup. So again, you want to be very picky beca"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-get-to-our-desks-right-at#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "WAIT_SESSION",
+   "before_conf": "unmatched",
+   "after_conf": "confident",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "we're going to get to our desks right at 9:30 a.m. EST"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-start-on-our-five-minute#2",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "We're going to start on our five-minute chart."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:then-we-re-going-to-mark-out-the-high-an#3",
+   "before": "WAIT_STRUCTURE",
+   "after": "WAIT_SESSION",
+   "before_conf": "unmatched",
+   "after_conf": "confident",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "then we're going to mark out the high and the low of that first 5-minute candle that happens at 9:30 to 9:35 a.m. Eastern Standard Time"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-are-going-to-switch-to-the-1-minute-c#4",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "we are going to switch to the 1 minute chart"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:we-want-to-wait-for-a-retest-of-the-fair#6",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "we want to wait for a retest of the fair value gap. Meaning we need the market to trade back into the fair value gap."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:after-we-ve-traded-into-the-fair-value-g#7",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "after we've traded into the fair value gap, then we wait for this retest candle right here to get engulfed"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:you-re-going-to-start-on-the-15minute-ch#9",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "you're going to start on the 15minute chart"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:we-re-going-to-wait-until-the-9-30-to-9#10",
+   "before": "WAIT_STRUCTURE",
+   "after": "WAIT_SESSION",
+   "before_conf": "unmatched",
+   "after_conf": "confident",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "We're going to wait until the 9:30 to 9:45 Eastern Standard Time candle closes. So, it's still the first candle of the day. It's just using the 15minute instead."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:instead-of-going-to-the-one-minute-chart#12",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "Instead of going to the one minute chart, we're going to go to the five-minute chart."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:instead-of-waiting-for-a-retest-we-re-ac#14",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "instead of waiting for a retest, we're actually going to set a limit order on the FVG. This means once the market trades back into the fair value gap, we're automatically entered into the market."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:this-strategy-works-for-any-market-wheth#15",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "This strategy works for any market, whether it's futures, stocks, crypto, or forex, and you use the same time for each market."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_STRUCTURE:since-we-broke-through-the-high-the-dire#16",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "since we broke through the high, the direction is bullish. We're going to be looking for long trades."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_CONFIRMATION:simply-crossing-through-the-level-whethe#17",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "Simply crossing through the level, whether it's a wick or a candle closure, just won't cut it."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_CONFIRMATION:a-fair-value-gap-is-just-a-three-candle#18",
+   "before": "WAIT_CONFIRMATION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "a fair value gap is just a three candle formation where we leave a gap between one candle's wick and the third candle's wick"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "WEhmadJArQo__s0",
+   "id": "WAIT_RETEST:every-once-in-a-while-you-re-going-to-ha#21",
+   "before": "WAIT_RETEST",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "every once in a while, you're going to have the market come down and revisit the fair value gap. That's totally fine."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
+   "before": "WAIT_SESSION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "when the stock actually breaks above the v-wop after being below it at the opening bell i'm looking to buy on those pull backs looking for the v-wap to hold it up as support"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_RETEST:we-can-buy-the-pullback-into-that-first#2",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "we can buy the pullback into that first few bounces you can see the momentum coming in after that pullback was really really nice"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "_LS6qcSlDCs__s0",
+   "id": "WAIT_RETEST:waiting-for-pullbacks-after-big-runs-lik#5",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "waiting for pullbacks after big runs like that especially to the v-wop or a whole dollar level"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_SESSION:you-want-to-identify-your-key-level-agai#0",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "You want to identify your key level. Again, pre-market highs, pre-market lows, the 30-minute opening range high and low, previous day's highs, previous day's lows, a strong area of support or resistance. Now, keep in min"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:we-want-to-wait-for-price-to-break-the-k#1",
+   "before": "WAIT_CONFIRMATION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "We want to wait for price to break the key level. So, we want strong momentum either at the breakout above resistance or the break below the support level. Now, on top of that, we do want to see volume confirmation. If w"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:i-enter-after-confirmation-so-again-if-w#3",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "I enter after confirmation. So, again, if we do not get confirmation, we do not take the trade. For a long: we want to see bullish price action. Long lower wicks, bullish hammers, dragonfly dojis, etc. That would help co"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:we-do-want-to-see-volume-confirmation-if#4",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "We do want to see volume confirmation. If we break out or if we react off a low volume, it's typically not going to work out."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_CONFIRMATION:if-you-like-to-use-order-flow-you-could#5",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "If you like to use order flow, you could use Bookmap liquidity. So, visually seen on the heat map that buyers or sellers are present at that area. All those things combined, the volume confirmation, the price action tell"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "dV7chra4u4Q__s0",
+   "id": "WAIT_STRUCTURE:you-risk-a-fixed-amount-per-trade-and-yo#7",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "You risk a fixed amount per trade, and you only take A+ setups. One to two trades a day at max."
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:i-trade-every-day-from-9-30-to-11-00-a-m#0",
+   "before": "WAIT_STRUCTURE",
+   "after": "WAIT_SESSION",
+   "before_conf": "unmatched",
+   "after_conf": "confident",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "I trade every day from 9:30 to 11:00 a.m. Eastern"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:if-i-want-to-buy-i-want-to-see-a-bullish#3",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_CONFIRMATION",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "if I want to buy, I want to see a bullish engulfing pattern form before my trading session"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:if-i-want-to-sell-i-want-to-see-a-bearis#4",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_CONFIRMATION",
+   "before_conf": "approximate",
+   "after_conf": "approximate",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "if I want to sell, I want to see a bearish engulfing pattern form before my trading session"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_CONFIRMATION:i-m-simply-looking-for-the-price-to-brea#7",
+   "before": "WAIT_CONFIRMATION",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "I'm simply looking for the price to break and close outside of that range as my next confirmation that I want to buy"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_RETEST:it-taps-into-the-level-of-demand-and-it#12",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "It taps into the level of demand, and it clearly respects the level. So, at this point I'm ready to get into a trading position because we also have another bullish engulfing pattern right here. You can see this is a bul"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_STRUCTURE:on-forex-nasdaq-gold-everything#14",
+   "before": "WAIT_STRUCTURE",
+   "after": "UNTYPED",
+   "before_conf": "unmatched",
+   "after_conf": "unmatched",
+   "arrival_path_before": "UNMATCHED_DEFAULT",
+   "object": "on Forex, Nasdaq, gold, everything"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_RETEST:i-was-also-looking-at-the-bottom-of-the#16",
+   "before": "WAIT_RETEST",
+   "after": "UNTYPED",
+   "before_conf": "approximate",
+   "after_conf": "ambiguous",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "I was also looking at the bottom of the range entry, the classic break and retest entry. This is one of the main orb entry models that I use in my trading, especially when step one was so clear"
+  },
+  {
+   "corpus": "B_tier_b",
+   "spec": "kFyD3H6I1I8__s0",
+   "id": "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
+   "before": "WAIT_SESSION",
+   "after": "WAIT_STRUCTURE",
+   "before_conf": "approximate",
+   "after_conf": "confident",
+   "arrival_path_before": "PRECEDENCE_WIN",
+   "object": "It's called opening range with breakouts and targets by Lux Algo, and these are the settings that I'm using. Time period 15 minute, 9:30 to 9:45 UTC minus 4"
+  }
+ ]
+}

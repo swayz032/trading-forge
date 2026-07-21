@@ -184,6 +184,14 @@ function isExecutionGradeToken(c: SpecCondition, tfMinutes: number): boolean {
   if (tfMinutes >= 1440) return false;
   const t = normType(c);
   if (t === "WAIT_BIAS") return false;
+  // UNTYPED is, by construction, a condition the classifier found NO evidence
+  // for (or could not adjudicate). It must never acquire execution-chart
+  // authority by falling through the default branch below — that would be the
+  // F-1 defect (a context frame promoted to exec) reintroduced through a
+  // default. It is neither exec-grade here nor higher-context in
+  // isHigherContextToken, so an UNTYPED condition contributes NO timeframe
+  // signal in either direction. Absence of evidence buys no authority.
+  if (t === "UNTYPED") return false;
   if (t === "WAIT_SESSION") return true; // intraday (tfMinutes < 1440 guaranteed here)
   return true; // WAIT_STRUCTURE/WAIT_CONFIRMATION/ENABLE_ENTRY/ENTER/FILTER/WAIT_RETEST/INVALIDATE
 }
@@ -199,6 +207,7 @@ function isHigherContextToken(c: SpecCondition, tfMinutes: number): boolean {
   if (tfMinutes >= 1440) return true;
   const t = normType(c);
   if (t === "WAIT_BIAS") return true;
+  if (t === "UNTYPED") return false; // see isExecutionGradeToken — neither, by design
   if (t === "WAIT_SESSION") {
     const obj = typeof c.object === "string" ? c.object.toLowerCase() : "";
     return TF_KEYWORD_RE.test(obj);

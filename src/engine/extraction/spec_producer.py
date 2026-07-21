@@ -53,15 +53,48 @@ from src.engine.spec_family_bindings import compile_binding_plan
 # FAMILY'S MEANING per the spec_family_bindings FAMILY->PRIMITIVE table. The
 # comment cites the family's semantic anchor. These are NOT harvested from the
 # 22's transcripts (anti-fit); they are the vocabulary a family's DEFINITION
-# implies. Precedence is the list ORDER in _KEYWORD_FAMILIES (most-specific
-# first) so an ambiguous condition resolves deterministically.
+# implies.
+#
+# ★ THERE IS NO PRECEDENCE ORDER ANY MORE (R-210 §1 pin i). The list order of
+# _KEYWORD_FAMILIES is presentation only and is asserted to be non-load-bearing
+# by test_classifier_is_order_invariant. The previous header comment here
+# claimed "Precedence is the list ORDER ... (most-specific first)" -- that
+# comment was FALSE about its own list (index 0, WAIT_SESSION, held the LEAST
+# specific stems in the file), and the claim is exactly what stopped anyone
+# re-deriving it (R-211 §2(c), caption-is-a-claim in a code comment). It is
+# deleted rather than reworded: the property it asserted is now MEASURED by a
+# test instead of stated by prose.
+#
+# Assignment is by EVIDENCE STRENGTH -- see _classify_family.
 
 _FAMILY_KEYWORDS: Dict[str, Tuple[str, ...]] = {
     # WAIT_SESSION -> session_windows (time-of-day / killzone). Semantic: a
     # calendar/clock window. (FAMILY_META requires_session_keyword=True.)
+    #
+    # ★ DERIVED HYGIENE DELTAS (each from the family SEMANTIC, never the corpus):
+    #  - "am "/"pm " REMOVED. The trailing space was a hand-rolled word boundary;
+    #    under real boundary matching those stems become the English word "am"
+    #    ("i am not counting this as a displacement"). A clock reference is
+    #    matched by _CLOCK_RE below, which is what the family semantic actually
+    #    means. Measured: the ONLY boundary-valid "am" hit on either corpus was
+    #    the verb.
+    #  - "close of" REMOVED, replaced by session-qualified forms. "close of" is
+    #    ambiguous between the close of a SESSION (this family) and the close of
+    #    a CANDLE (WAIT_CONFIRMATION); the family semantic is the former only.
+    #    Disambiguated by construction per pin (iii). Measured: 0 occurrences on
+    #    either corpus, so this delta moves NO row and is UNVERIFIABLE here --
+    #    it is a construction fix, recorded as such.
+    #  - "rth" KEPT: boundary matching is what makes it safe (it previously
+    #    matched inside "fu-rth-er"); the stem itself was never the defect.
+    #  - "open"/"opening" KEPT: bare-token opens are genuine session references
+    #    ("new york open", "market open"). The LEVEL-construct reading
+    #    ("opening range") is removed by longest-span arbitration against
+    #    WAIT_STRUCTURE's "opening range", not by deleting the stem.
     "WAIT_SESSION": (
-        "session", "killzone", "kill zone", "open", "opening", "close of",
-        "am ", "pm ", "morning", "afternoon", "york", "london", "asia",
+        "session", "killzone", "kill zone", "open", "opening",
+        "session close", "market close", "close of the session",
+        "close of the day", "closing bell", "opening bell",
+        "morning", "afternoon", "york", "london", "asia",
         "tokyo", "rth", "globex", "o'clock", "oclock", "time of day",
         "first hour", "power hour", "cash open", "bell",
     ),
@@ -93,12 +126,18 @@ _FAMILY_KEYWORDS: Dict[str, Tuple[str, ...]] = {
     # WAIT_STRUCTURE / VERIFY_STRUCTURE -> structure_engine (market structure:
     # levels, BOS, FVG, order block, S/R, liquidity). Semantic: a structural
     # feature on the chart. (Broadest -- lower precedence than the above.)
+    # ★ DERIVED ADDITION (pin iii, disambiguated by construction): "opening
+    # range" is a named PRICE RANGE -- two levels, a high and a low -- and the
+    # family definition ALREADY carries "range", "level", "high of the", "low of
+    # the". It is a level construct, not a clock window, so it belongs here. As
+    # a 2-token span it also outranks and SUPPRESSES WAIT_SESSION's 1-token
+    # "opening" at the same position (see _classify_family's span arbitration).
     "WAIT_STRUCTURE": (
         "break of structure", "bos", "market structure", "structure",
         "order block", "fair value gap", "fvg", "imbalance", "gap",
         "support", "resistance", "supply", "demand", "liquidity", "swing high",
         "swing low", "swing", "level", "zone", "trendline", "channel", "range",
-        "high of the", "low of the", "equal highs", "equal lows",
+        "opening range", "high of the", "low of the", "equal highs", "equal lows",
     ),
     # FILTER -> confluence_factor_presence (a quality/confluence gate: volume,
     # catalyst, volatility, multi-TF alignment). Semantic: a go/no-go quality
@@ -110,9 +149,10 @@ _FAMILY_KEYWORDS: Dict[str, Tuple[str, ...]] = {
     ),
 }
 
-# Precedence order (most-specific families first; STRUCTURE/FILTER are the
-# broad catch-alls). Derived from specificity of the family definitions, not
-# from the corpus.
+# The family axis. ★ THIS IS AN ENUMERATION, NOT A PRECEDENCE ORDER (pin i).
+# Nothing in _classify_family reads its index; iteration order only fixes the
+# order scores are accumulated in, and test_classifier_is_order_invariant proves
+# a shuffled copy classifies both corpora identically.
 _KEYWORD_FAMILIES: Tuple[str, ...] = (
     "WAIT_SESSION",
     "CONFIRM_DIRECTION",
@@ -127,11 +167,74 @@ _KEYWORD_FAMILIES: Tuple[str, ...] = (
 CONF_CONFIDENT = "confident"
 CONF_APPROXIMATE = "approximate"
 CONF_UNMATCHED = "unmatched"
+CONF_AMBIGUOUS = "ambiguous"
 
-# When no family keyword matches, we assign this family (the broadest audited
-# structural primitive) but flag type_confidence=UNMATCHED so the honesty is
-# on the record -- never a silent confident guess.
-_UNMATCHED_DEFAULT_FAMILY = "WAIT_STRUCTURE"
+# ★ UNTYPED (R-210 §1 pin ii) -- the honest output when the classifier has NO
+# evidence, or evidence it cannot adjudicate. It replaces the former
+# `_UNMATCHED_DEFAULT_FAMILY = "WAIT_STRUCTURE"` sink.
+#
+# WHY A SINK WAS WORSE THAN A GAP: the default silently promoted a no-evidence
+# condition into a family with a real primitive, where it bound with
+# approximation=True -- an np.ones pass-through, i.e. UNGATED and LOOSER than
+# taught (the R-040 pin 2iii optimistic bias). The row LOOKED typed and LOOKED
+# bound. "A silent default family is absence-means-maximum-scope in classifier
+# form" (R-210 §1).
+#
+# ★ UNTYPED IS DELIBERATELY *NOT* A MEMBER OF `spec_family_bindings.FAMILY_META`.
+# It is the ABSENCE of a family, not a family, and giving it a FAMILY_META entry
+# would mean giving it a declared primitive -- the pointer-lie species this
+# campaign already found 9 times (R-153). Staying out of FAMILY_META routes it
+# through the binder's existing, documented unknown-type path
+# (`_bind_condition_dispatch` -> bindable=False, reason="unknown_condition_type"),
+# which fails closed by construction. See the consumer trace in this packet's
+# report for the full enumeration of readers that can now receive it.
+UNTYPED_FAMILY = "UNTYPED"
+
+# Clock-window matching for WAIT_SESSION. The family semantic is "a calendar/
+# clock window", and a literal clock time is its canonical expression -- so this
+# is DERIVED from the family definition, not from any corpus. It also repairs
+# the reverse mis-type direction: before this, prose that named ONLY a clock
+# window ("i trade every day from 9:30 to 11:00 a.m. eastern") hit no session
+# stem at all and was swallowed by the default sink.
+_CLOCK_RE = re.compile(
+    r"(?<![a-z0-9])(?:"
+    r"\d{1,2}\s*:\s*\d{2}(?:\s*(?:a\.?m\.?|p\.?m\.?))?"   # 9:30, 9:30 a.m.
+    r"|\d{1,2}\s*(?:a\.?m\.?|p\.?m\.?)"                    # 4pm, 9 a.m.
+    r"|\d{1,2}\s*o'?clock"                                 # 4 o'clock
+    r")(?![a-z0-9])"
+)
+
+# Inflectional tail permitted after a stem. DERIVED from the morphology actually
+# observed when the old bare-substring matcher was audited: plural/possessive
+# (level/levels, zone/zones, swing high/swing highs), past and progressive
+# (wick/wicked/wicking, engulf/engulfing, open/opened/opening), with optional
+# consonant doubling (tap/tapped/tapping, gap/gapped).
+#
+# ★ WHY NOT A PLAIN `\b...\b`: pin (iii) says "word boundaries everywhere", and
+# a naive reading of that is a REGRESSION, not a fix -- it silently DROPS ~90
+# legitimate inflected hits across the two corpora. The leading boundary is what
+# kills the hazards ("fu|rth|er", "liquid|ity", "meta|tr|ader", "i|fvg"); the
+# trailing side needs a bounded tail, not a hard stop. Boundary hygiene is
+# therefore ASYMMETRIC by derivation.
+_INFLECTION = r"(?:[bdgklmnprt]?(?:s|es|ed|ing|'s))?"
+
+
+def _stem_pattern(stem: str) -> re.Pattern:
+    """Word-boundary-anchored matcher for one literal stem.
+
+    `\\b` is wrong here: several stems abut non-word characters (o'clock), so the
+    boundary is expressed as explicit lookarounds over the word-character class.
+    Interior whitespace is relaxed to `\\s+` so a stem matches across any
+    normalised spacing.
+    """
+    body = r"\s+".join(re.escape(tok) for tok in stem.strip().split())
+    return re.compile(r"(?<![a-z0-9])" + body + _INFLECTION + r"(?![a-z0-9])")
+
+
+_STEM_PATTERNS: Dict[str, Tuple[Tuple[str, re.Pattern], ...]] = {
+    fam: tuple((stem, _stem_pattern(stem)) for stem in stems)
+    for fam, stems in _FAMILY_KEYWORDS.items()
+}
 
 _HOUSE_DEFAULT_EXIT = "house-default (trader taught none)"
 
@@ -145,25 +248,124 @@ def _slug(text: str, maxlen: int = 40) -> str:
     return (s[:maxlen] or "cond").rstrip("-")
 
 
-def _classify_family(text: str, *, role_hint: Optional[str] = None) -> Tuple[str, str]:
-    """Map ONE prose condition to a (family, type_confidence). Anti-fit: scores
-    families by the FAMILY-SEMANTIC keyword hits above, never by corpus fitting.
+def _family_evidence(text: str) -> Tuple[Dict[str, int], List[Tuple[int, int, str, str]]]:
+    """Score every family on ONE prose condition and return (scores, spans).
 
-      confident  -- exactly one family's keywords hit (unambiguous).
-      approximate-- two or more families' keywords hit (ambiguous prose; the
-                    top-precedence family is chosen, honestly flagged).
-      unmatched  -- no family keyword hit -> default family, flagged.
+    THREE RULES, each derived rather than tuned:
+
+    1. BOUNDARY-ANCHORED MATCHING. Every stem is matched via `_stem_pattern`, so
+       a stem can no longer fire from inside a longer word. This is what deletes
+       the founding "rth" ⊂ "further" instance -- and, as the hygiene audit
+       found, the strictly larger "liquid" [FILTER] ⊂ "liquidity" [STRUCTURE]
+       collision, which was invisible only because FILTER sat LAST under the old
+       precedence and so never won a row it corrupted.
+
+    2. LONGEST-SPAN ARBITRATION -- "disambiguated by construction" (pin iii).
+       An occurrence of text is evidence for AT MOST ONE family: the longest
+       stem covering it. So "opening range" [WAIT_STRUCTURE] consumes the span
+       that "opening" [WAIT_SESSION] would otherwise have claimed, and the
+       opening-RANGE rows stop reading as clock windows. This is a general
+       tokenizer rule applied to every stem pair, NOT a special case written for
+       one phrase.
+
+    3. WEIGHT = TOKEN COUNT OF THE MATCHED SPAN, SUMMED OVER DISTINCT STEMS.
+       A k-token phrase is k-fold more specific evidence than a bare token. This
+       is the ONE scoring constant in the module and it is derived from the span
+       itself, so there is no per-stem number that could be tuned against a
+       corpus (anti-fit, R-040 pin 2i). "break of structure" scores 3; "swing"
+       scores 1.
+
+       ★ DISTINCT, NOT PER-OCCURRENCE -- a stem scores ONCE however often it is
+       repeated. REPETITION IS NOT EVIDENCE STRENGTH, it is verbosity. Scoring
+       per-occurrence let a row like "the retest of the level, the breakout of
+       the level, or the liquidity sweep of the level" score WAIT_STRUCTURE 3
+       purely because the speaker said "level" three times, which would have
+       replaced the old arbitrary tiebreaker (list order) with a new arbitrary
+       one (word count). A family is supported by the distinct concepts present
+       in the prose, not by how many times one of them was uttered.
     """
     hay = _norm(text)
-    hits: List[str] = []
+    spans: List[Tuple[int, int, str, str]] = []
     for fam in _KEYWORD_FAMILIES:
-        if any(kw in hay for kw in _FAMILY_KEYWORDS[fam]):
-            hits.append(fam)
-    if not hits:
-        return _UNMATCHED_DEFAULT_FAMILY, CONF_UNMATCHED
-    chosen = hits[0]  # precedence order = most-specific first
-    conf = CONF_CONFIDENT if len(hits) == 1 else CONF_APPROXIMATE
-    return chosen, conf
+        for stem, pat in _STEM_PATTERNS[fam]:
+            for m in pat.finditer(hay):
+                spans.append((m.start(), m.end(), fam, stem))
+
+    # ★ RULE 4 -- A TIME QUALIFIER NEVER OWNS THE TYPE. A clock reference is
+    # admitted as WAIT_SESSION evidence ONLY when no OTHER family has literal-
+    # stem evidence: it is evidence of LAST RESORT, not an ordinary stem.
+    #
+    # WHY. Every other stem in these tables names a taught OBJECT or ACTION
+    # (an order block, an engulfing candle, a retest). A clock names WHEN, never
+    # WHAT. Under the ratified criterion THE TYPE MUST PRESERVE THE TEACHING,
+    # typing "wait for the first candle of the day at 9:30 to print" as
+    # WAIT_SESSION compiles it to a session-window gate -- true every day before
+    # the open -- and discards the entire taught content (a candle printing).
+    # A timing phrase therefore cannot outrank a taught object, however
+    # load-bearing the timing is.
+    #
+    # ★ THIS IS THE WEAK HALF OF THAT CRITERION, DELIBERATELY. The full remedy is
+    # that a load-bearing time qualifier SPAWNS A SIBLING condition alongside the
+    # object-typed one. That is compound representation -- future compiler
+    # capability, RECORDED AND NOT BUILT HERE. What this rule can do is stop the
+    # qualifier from OWNING the type; what it cannot do is keep the qualifier.
+    # A row whose timing is genuinely load-bearing still loses that timing, and
+    # that residual is a KNOWN GAP, not a solved one.
+    if any(fam != "WAIT_SESSION" for _s, _e, fam, _k in spans):
+        pass  # a taught object is present; the clock stays out of the scoring
+    else:
+        for m in _CLOCK_RE.finditer(hay):
+            spans.append((m.start(), m.end(), "WAIT_SESSION", "<clock>"))
+
+    # Rule 2: drop any span strictly covered by a longer one (any family).
+    kept: List[Tuple[int, int, str, str]] = []
+    for sp in spans:
+        s, e = sp[0], sp[1]
+        covered = any(
+            (o[0] <= s and e <= o[1]) and (o[1] - o[0]) > (e - s) for o in spans
+        )
+        if not covered:
+            kept.append(sp)
+
+    # Rule 3: weight per DISTINCT (family, stem); repetition adds nothing.
+    best_per_stem: Dict[Tuple[str, str], int] = {}
+    for s, e, fam, stem in kept:
+        w = len(hay[s:e].split())
+        key = (fam, stem)
+        if w > best_per_stem.get(key, 0):
+            best_per_stem[key] = w
+    scores: Dict[str, int] = {}
+    for (fam, _stem), w in best_per_stem.items():
+        scores[fam] = scores.get(fam, 0) + w
+    return scores, kept
+
+
+def _classify_family(text: str, *, role_hint: Optional[str] = None) -> Tuple[str, str]:
+    """Map ONE prose condition to a (family, type_confidence).
+
+    ★ EVIDENCE DECIDES, NOT LIST ORDER (R-210 §1 pin i). The winner is the
+    highest-scoring family under `_family_evidence`. `_KEYWORD_FAMILIES` order is
+    read nowhere in this decision -- `test_classifier_is_order_invariant` proves
+    that by re-classifying both corpora under a shuffled axis.
+
+      confident  -- exactly one family produced any evidence.
+      approximate-- several families scored; one won OUTRIGHT on evidence.
+      ambiguous  -- the top score is TIED -> UNTYPED. The classifier can see the
+                    collision but cannot adjudicate it, and says so.
+      unmatched  -- no family produced any evidence -> UNTYPED.
+
+    ★ BOTH failure modes return UNTYPED_FAMILY. There is no default family and
+    no sink (pin ii): the old code returned WAIT_STRUCTURE for the no-evidence
+    case, which is how 35 of tier-A's 50 WAIT_STRUCTURE rows -- 70% of that
+    family -- were assigned with zero supporting evidence.
+    """
+    scores, _spans = _family_evidence(text)
+    if not scores:
+        return UNTYPED_FAMILY, CONF_UNMATCHED
+    ranked = sorted(scores.items(), key=lambda kv: (-kv[1], kv[0]))
+    if len(ranked) > 1 and ranked[0][1] == ranked[1][1]:
+        return UNTYPED_FAMILY, CONF_AMBIGUOUS
+    return ranked[0][0], (CONF_CONFIDENT if len(ranked) == 1 else CONF_APPROXIMATE)
 
 
 # --------------------------------------------------------------------------- #
@@ -259,7 +461,17 @@ def _entry_condition(
 
 def _spec_role(staging_role: str, family: str) -> str:
     """SpecEntryCondition.role vocabulary is {spine, confluence, trigger,
-    invalidation}. Derived structurally from the staging role + family."""
+    invalidation}. Derived structurally from the staging role + family.
+
+    ★ UNTYPED FALLS THROUGH TO "spine" DELIBERATELY (consumer-trace decision).
+    The alternative -- demoting a no-evidence condition to "confluence" -- would
+    remove it from the spine denominator, RAISE `spine_ratio`, and let specs
+    that are full of unclassifiable prose report `compiled=True`. That is the
+    optimistic direction. Keeping it on the spine keeps it load-bearing, so an
+    UNTYPED-heavy spec drops below MIN_SPINE_BOUND_RATIO and is honestly
+    disposed `compile-degraded`. Fail closed. Pinned by
+    test_untyped_stays_on_the_spine_and_is_never_demoted.
+    """
     if family == "INVALIDATE":
         return "invalidation"
     if family in ("ENABLE_ENTRY", "ENTER") or _norm(staging_role) in _TRIGGER_ROLES:
@@ -399,6 +611,13 @@ def _approximation_metrics(spec_body: dict, confidences: List[str]) -> dict:
     n_confident = sum(1 for c in confidences if c == CONF_CONFIDENT)
     n_approx = sum(1 for c in confidences if c == CONF_APPROXIMATE)
     n_unmatched = sum(1 for c in confidences if c == CONF_UNMATCHED)
+    n_ambiguous = sum(1 for c in confidences if c == CONF_AMBIGUOUS)
+    # The confidence vocabulary is a CLOSED set and these counts must exhaust it
+    # -- otherwise a new value would silently vanish from the honesty metrics
+    # while still dragging the rate (schema = decision boundary).
+    assert n_confident + n_approx + n_unmatched + n_ambiguous == n, (
+        "confidence counts do not close on n -- an unenumerated confidence value "
+        f"reached _approximation_metrics: {sorted(set(confidences))}")
 
     plan = compile_binding_plan(spec_body)
     exec_bindable = [b for b in plan.bindings if b.bindable and b.executed]
@@ -410,6 +629,7 @@ def _approximation_metrics(spec_body: dict, confidences: List[str]) -> dict:
         "n_confident": n_confident,
         "n_approximate": n_approx,
         "n_unmatched": n_unmatched,
+        "n_ambiguous": n_ambiguous,
         "classifier_approximation_rate": round((n - n_confident) / n, 4) if n else 0.0,
         "n_executed_bindable": n_exec,
         "n_binding_approximation": n_binding_approx,
