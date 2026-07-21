@@ -1,0 +1,31 @@
+{
+  "grader": "independent-blind-population-completion",
+  "protocol": "compile-semantics: THE TYPE MUST PRESERVE THE TEACHING. A typing that discards the taught object is a mis-type regardless of whether the timing phrase is load-bearing. Load-bearingness never owns the type; a load-bearing time qualifier spawns a SIBLING session condition (recorded, not built).",
+  "blind_status": "Verdict locked BEFORE reading session-ab-blind-grade-RESULT.json verdict/note fields, AGENT-REPORTS.md, or ADVISOR-RULINGS.md. Only condition_id and quoted_span were read from the graded file, for keying.",
+  "n": 1,
+  "population_note": "This row completes the WAIT_SESSION population: corpus 27, previously graded 26, 27-26=1.",
+  "join_key": {
+    "key": "family-stripped condition id (slug#index), cross-checked by author-independent text-containment of quoted_span into spec object/evidence",
+    "why_sound": "The raw condition_id embeds the family name, which is the variable under test, so it is used only after stripping the family prefix. The stripped slug#index is derived from the sentence text and its ordinal position within the spec's entry_conditions, both invariant under re-typing. Confirmed by a second, id-free path.",
+    "path_a_result": "26 of 26 graded rows matched a corpus row; 0 orphans on either side; exactly 1 corpus row unmatched.",
+    "path_b_result": "All 26 quoted_spans matched exactly one corpus row by normalized containment; 0 ambiguous, 0 zero-match; same single corpus row unmatched."
+  },
+  "rows": [
+    {
+      "condition_id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+      "spec_file": "W7nlnHTUZQU__s0.spec.json",
+      "entry_conditions_index": 6,
+      "role_in_spec": "confluence",
+      "quoted_text": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)",
+      "anchor": "The 4:00 p.m. EST to 9:30 a.m. EST overnight/pre-market window. It is the interval over which the taught object is measured.",
+      "taught_object": "Two price LEVELS: the overnight high (highest point of price action in that window) and the overnight low (lowest point). They are horizontal levels, subsequently traded as breakout/retest references.",
+      "verdict": "B",
+      "verdict_label": "mis-type",
+      "confidence": "high",
+      "reason": "WAIT_SESSION compiles to a session-window gate: a boolean over 'is now inside this window'. The taught content here is not a window, it is a level PAIR extracted from a window. Compiling this row as WAIT_SESSION yields a gate that is true from 16:00 to 09:30 and carries no high, no low, and no extremum extraction at all - the entire taught object is discarded. The clock phrase is load-bearing (the levels are DEFINED by that window), but under the governing criterion load-bearingness never owns the type: the load-bearing window spawns a SIBLING session condition, it does not make this row a session teaching.",
+      "corroborating_evidence_same_spec": "Sibling condition index 4 (WAIT_RETEST:long-if-we-break-above-the-overnight-hig#4) consumes these levels: 'if we break above the overnight highs ... pull back and test this area as support'. The levels are the strategy's traded object, which confirms the taught object of row #6 is the levels, not the clock.",
+      "inversion_note": "The mis-type is not merely lossy, it is directionally inverted. The compiled session gate is TRUE precisely during 16:00-09:30, which is the interval in which this strategy does NOT trade; it trades the regular-hours breakout of levels BUILT during that interval. A session gate here would admit trades in the window the teaching reserves for measurement only.",
+      "undecidable_considered": "Rejected. The row states the taught object explicitly and imperatively ('identify the highest point ... and the lowest point'), and names those outputs ('overnight high', 'overnight low'). There is no reading on which the taught object is the window itself."
+    }
+  ]
+}
