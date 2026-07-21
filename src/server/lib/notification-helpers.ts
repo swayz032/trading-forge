@@ -36,3 +36,40 @@ export function appendFamilyGradePostscript(
     `What to do: ${plainEnglishAction}`;
   return operatorBody + postscript;
 }
+
+/**
+ * The marker that identifies an already-postscripted body. Exported so every path that
+ * applies the fallback tests for the SAME sentinel — an inline copy in a second file is
+ * how two paths drift apart silently.
+ */
+export const FAMILY_SENTINEL = "--- For family members ---";
+
+/**
+ * ★ THE CENTRAL FALLBACK — one source of truth, used by BOTH alert paths.
+ *
+ * Background (5b Q1): `alert-service.createAlert` carried an H7 guarantee whose docstring read
+ * "guarantee every critical alert carries a family-grade postscript" — but it fired only inside
+ * `createAlert`, and `notification-service.notify()` does not route through `createAlert`. So all
+ * 189 direct `notify*` call sites bypassed it entirely. The claim was wider than the mechanism.
+ *
+ * The direct path was in fact covered — by CONVENTION (65 of 68 calling files import
+ * `appendFamilyGradePostscript`, 0 critical/warning sites uncovered when measured). But a
+ * convention is not a mechanism: nothing stops the next `notifyCritical` in an already-importing
+ * file from inheriting the import and not the habit. This function makes the guarantee
+ * structural, so the docstring's claim becomes TRUE rather than being narrowed to fit.
+ *
+ * Additive and idempotent by construction:
+ *   • CRITICAL only — matching H7's stated scope. Warnings are lower-stakes BY DESIGN, and that
+ *     scope is now stated rather than silent (it was previously true but undocumented).
+ *   • Applies ONLY when the sentinel is absent, so a caller's TAILORED postscript is never
+ *     doubled and never replaced by the generic one. A tailored message beats a generic one.
+ */
+export function applyFamilyFallback(body: string, severityIsCritical: boolean): string {
+  if (!severityIsCritical) return body;
+  if (body.includes(FAMILY_SENTINEL)) return body;
+  return appendFamilyGradePostscript(
+    body,
+    "The trading system detected a critical issue. Auto-remediation was attempted.",
+    "No immediate action needed — wait 5 minutes. If you see multiple alerts in a row, call Tony.",
+  );
+}

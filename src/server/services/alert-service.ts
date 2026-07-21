@@ -3,7 +3,7 @@ import { alerts } from "../db/schema.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
 import { notifyWarning, notifyInfo } from "./notification-service.js";
-import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
+import { appendFamilyGradePostscript, applyFamilyFallback } from "../lib/notification-helpers.js";
 import { warningSeverityDiscordRoutedTotal } from "../lib/metrics-registry.js";
 
 export type AlertSeverity = "info" | "warning" | "critical";
@@ -21,14 +21,13 @@ export async function createAlert(params: {
   // appendFamilyGradePostscript() pass through unchanged (sentinel present).
   // The 9 AlertFactory paths that don't include a postscript get this
   // generic fallback applied centrally — zero caller changes required.
-  const FAMILY_SENTINEL = "--- For family members ---";
-  const effectiveMessage =
-    params.severity === "critical" && !params.message.includes(FAMILY_SENTINEL)
-      ? params.message +
-        "\n\n--- For family members ---\n" +
-        "What this means: The trading system detected a critical issue. Auto-remediation was attempted.\n" +
-        "What to do: No immediate action needed — wait 5 minutes. If you see multiple alerts in a row, call Tony."
-      : params.message;
+  // 5b Q1: the fallback text and sentinel now live in ONE place (notification-helpers) and are
+  // shared with the direct notify* path, which previously bypassed this guarantee entirely —
+  // notification-service.notify() does not route through createAlert, so all 189 direct call
+  // sites relied on each caller REMEMBERING to append a postscript. Two inline copies of the
+  // same literal in two files is how two paths drift apart silently.
+  // SCOPE, now stated rather than silent: CRITICAL only — warnings are lower-stakes by design.
+  const effectiveMessage = applyFamilyFallback(params.message, params.severity === "critical");
 
   const [alert] = await db.insert(alerts).values({
     type: params.type,

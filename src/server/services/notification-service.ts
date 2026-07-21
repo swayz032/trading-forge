@@ -363,6 +363,20 @@ async function flushWarningQueue(): Promise<void> {
  * Safe to call even when DISCORD_WEBHOOK_URL is not set.
  */
 export function notify(opts: NotifyOptions): void {
+  // 5b Q1 — NO runtime fallback is applied here, deliberately.
+  //
+  // I began adding one, on the finding that `createAlert`'s H7 guarantee never reaches this
+  // path (notify() does not route through createAlert) and that coverage of the ~189 direct
+  // call sites therefore rested on convention. The first half is true. The second was WRONG:
+  // `scripts/check-family-grade-postscript.ts` is an AST checker, wired into ci.yml as a
+  // BLOCKING gate, that flags any bare notifyCritical/notifyWarning and accepts direct,
+  // import-aliased and indirect wraps. It passes today, and its scan root (src/server) covers
+  // every real call site — the only match outside it is a string inside an ops manifest.
+  //
+  // So the mechanism already exists and works. Adding a second, runtime layer would close no
+  // gap while putting a transform on every alert — machinery justified by a hole that is not
+  // there. The lesson is the one this campaign keeps relearning in a new place: before
+  // declaring "nothing enforces this," look for the enforcer.
   const webhookUrl = process.env.DISCORD_WEBHOOK_URL;
 
   if (!webhookUrl) {
