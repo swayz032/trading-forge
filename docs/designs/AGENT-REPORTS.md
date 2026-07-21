@@ -4,6 +4,27 @@
 
 ---
 
+## AR-191 · 2026-07-21 · ★★★ **THE PERTURBATION REQUIREMENT CAUGHT A DEFECT IN THE FIX FOR THE DEFECT — and "the perturbation run is what exposed it, NOT REVIEW."** Dual configuration landed `3a555296`: **`6/161` under `READ_THIS_ONE`, `12/161` under `BESIDE_IT_NOT_INSTEAD_OF_IT`.** Re-grade dispatching.
+
+**1. ★★★ THE SELF-CATCH IS THE REPORT.** Its **first draft made `margin == margin_from_INVALIDATE` an ALGEBRAIC IDENTITY** — it took **one** entry-side numerator for both arms, so **two classifier branches were unreachable and `margin_from_other_sources` was always 0 BY CONSTRUCTION.** ★ **Its own words: *"That is the same caption defect one level down: a decomposition whose answer is fixed before the data arrives."*** **A caveat built to explain a caption had become a caption.**
+★★ **And the receipt that matters: *"The perturbation run is what exposed it, not review."*** **The requirement I made blocking — *demonstrate by perturbation that the numbers move* — is the thing that caught it.** **Review had already passed it.**
+
+**2. THE FIX WAS TO MEASURE WHAT IT HAD ASSUMED.** It measured the entry side **per enforcement arm** instead of assuming one served both. **Result: 6/6 — the flag genuinely does not move the entry side.** ★ **So no measured value changed, and that is exactly the point: the exclusive `INVALIDATE` attribution is now a MEASUREMENT rather than an unexamined assumption the artifact was silently resting on.** **A number that was right for a reason nobody had checked is now right for a reason someone did.**
+
+**3. PERTURBATION RECEIPT, verified in the committed artifact by me:** driving the `INVALIDATE` contribution **6 → 3 → 1 → 0** moves **every figure in the caveat** — margin, share, and the *"N of the M conditions"* phrasing — and **all 4 classifier branches were reached from real-shaped inputs, including the two that were DEAD in its first draft** (`MARGIN_PARTLY_`, `MARGIN_INDEPENDENT_`). **A caveat that can say four things and picks by the data is a computation. That was the whole requirement.**
+
+**4. STRUCTURE, not reading order — confirmed by me:** `COMPLETED_161_DUAL_CONFIGURATION.READ_THIS_ONE` holds **`6/161 = 0.0373`, `status: PRIMARY`**, with its `WHY` naming R-199 §2 verbatim: *"a consumer taking exactly one coverage number from this artifact takes THIS one."* The OFF arm sits under **`BESIDE_IT_NOT_INSTEAD_OF_IT`, `status: SECONDARY__NOT_THE_HEADLINE`.** ★ **Both legacy per-arm keys survive with identical values — leaf-diff shows 0 REMOVED, so neither configuration was silently dropped.** **Both `0.0373` and `0.0745` present.**
+
+**5. ASSERT ACCOUNTING, and it answers the question I asked:** AST diff **12 → 13, one added, none removed or altered.** The addition is `inval_on_concrete <= inval_off_concrete` (*enforcement may only remove concreteness, never add it*), and **it CAN fire — red-proved TWICE**: with arms swapped in the call, and swapped at the call site in situ (exit 1). ★ **The artifact's self-count is AST-DERIVED, so it tracked automatically** — the "eight asserts when there were twelve" defect **cannot recur by construction.**
+
+**6. AND IT DISTINGUISHED A COUNTER FROM A MEASUREMENT, unprompted:** *"the only non-prose value change in the artifact is the AST assert self-count 12→13, which is the counter correctly reflecting my added assert, **not a measured value moving**."* **In a wave whose entire subject is numbers that must not move, it separated the two kinds of number without being asked.**
+
+**7. Remaining receipts:** 2 injected faults → **exit 1** · **byte-identical sha256 across `PYTHONHASHSEED` 0/1/42/12345** · **append-only: 5 guarded artifacts hashed before/after, identical** · scope **exactly 2 files**, with the pre-existing dirty files in that worktree **correctly identified as dirty at session start and left untouched** (`-o` scoping, the discipline that cost me 150 lines of someone's tests when I dropped it).
+
+**8. ★ THE ARTIFACT RE-GRADE DISPATCHES NEXT** (R-199 §4) — **independent, doer≠grader, on the final state.** Then **T1 on the GRADED artifact**, then the flag-promotion question under the measurement-vs-ship form. **Nothing about production changes at any step until promotion is separately ruled.**
+
+**Holds:** flags OFF · every AFTER figure a labeled hypothetical · the 77 sealed.
+
 ## AR-190 · 2026-07-21 · **THE DUAL-CONFIGURATION DISPOSITION IS DISPATCHED** (R-199 §2) — and its single blocking requirement is that **the caveat be a COMPUTATION, NOT A SENTENCE.** ★ **This artifact's headline defect was a hardcoded caption; I am not letting its correction ship a second one.** The re-grade follows it.
 
 **1. ★★ THE ORDER OF OPERATIONS IS DELIBERATE: FIX FIRST, THEN RE-GRADE.** R-199 §4 dispatches the artifact re-grade — **but the ruled disposition is not yet in the artifact**, and a grader that arrives before it would grade a state we already know is superseded. **So the disposition lands first and the grader sees the final artifact.** Small, scoped, two files.
