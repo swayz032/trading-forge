@@ -4,6 +4,28 @@
 
 ---
 
+## AR-162 · 2026-07-21 · ★★ THIRD PASS `6a56618b`: **FP WIN PRESERVED EXACTLY (6.0%, soft 6.0%) — the hard constraint held.** FN **61.9% → 47.6%.** ★★★ **But the fixer measured 14-of-15 recovered on its own rows; THE SEALED FENCE SAYS 3 OF 13. Third consecutive pass where self-measurement outran sealed measurement.** ★ And I have a specific diagnosis: **the bottleneck MOVED.**
+
+**1. THE HARD CONSTRAINT HELD, which was the pass/fail condition.** FP **3/50 = 6.0%**, soft **6.0%**, role-resolver-only **2.1%** — **identical to `6dd3a00f` to the row.** The FP mechanism win survived a change aimed at the opposite axis. **That is the thing I most expected to break, and it did not.** Flag-OFF regime unchanged (4.0% / 85.7%), byte-identity intact.
+
+**2. FN 13/21 → 10/21 = 47.6%** on the adjudicated key. **3 recovered:** *"from 7:00 a.m. to 9:00 a.m. I am only watching, not trading"* · *"I take one trade between 10:00 and 11:00 on the index futures"* · *"I am flat by 4 p.m. every single day."* **Real, but 3 of 13.**
+
+**3. ★★★ THE GAP IS THE FINDING — AND IT IS THE THIRD ONE IN A ROW.** The fixer measured **14 of 15 action-anchored positives recovered** on populations it authored. **The sealed fence, on rows it could not see: 3 of 13.** Pass 1: 0.0% self vs 60% sealed. Pass 2: "4 missed" self vs 12 sealed. Pass 3: 14/15 self vs 3/13 sealed. ★ **This is no longer a fixer defect — it is a structural property of authoring your own test population, reproduced three times by three different agents under three different briefs.** The sealed fence is not catching careless work; **it is catching the thing that cannot be caught from the inside.**
+
+**4. ★★ MY DIAGNOSIS, with evidence — THE BOTTLENECK MOVED, and the fixer could not see it.** Three rows **still missing** match the fixer's **own explicitly named constructions**:
+- `E05` *"…so I **flatten** before that"* — construction **(A)**, `flatten` named verbatim in its rule.
+- `E14` *"I **close every position** at 3pm on Fridays"* — construction **(B)**, and *"close every position"* is **the canonical example it gives**.
+- `E18` *"I **scale out** into 3:45 p.m."* — construction **(A)**, `scale out` named verbatim.
+**Its action co-factor now fires on all three. They still fail.** ★ **Therefore the limiter is no longer the action test — it is `_session_clock_does_work`, which the fixer deliberately left untouched** (correctly, per its brief: *"I loosened exactly that one conjunct"*). **The rule it fixed is no longer the binding constraint. The next pass must target the clock-role conjunct, not the action conjunct** — and *"before that"*, *"into 3:45 p.m."*, *"at 3pm on Fridays"* are the prepositional/anaphoric forms it is rejecting. **A fourth pass briefed at the action layer would find nothing to fix.**
+
+**5. THE QUALITY OF THE WORK ITSELF IS HIGH, and two things deserve naming.** ★ **Its own pre-registered adversarial caught its own defective draft:** its first construction-(C) was described as a frame test but *implemented* as a blacklist of object heads, so *"we stopped trading **baseball cards** after 3 p.m."* bound `ny_pm` — **the lexicon failure mode reproduced on the verb side, exactly what its brief warned about.** It found that itself and replaced it with the frame test. ★ **And three tests failed on first run — all three were ITS CLAIMS being wrong, not the code** (it had asserted 51 inherited negatives when there were 54, claimed all 15 positives were newly admitted when 14 were, and pinned a row that recognized via the pre-existing path). **It corrected each claim to the measured value rather than adjusting code to fit the claim.** That is the honest direction, and it is rarer than it sounds.
+
+**6. It correctly refused to restate the sealed rates.** *"Running it was prohibited, so I have not restated 6.0%/61.9% as post-fix numbers."* **It did not launder my earlier figures into its own report.** The numbers in §1-2 are mine, measured in an isolated worktree pinned to `6a56618b`, fence untouched — **its last-touching commit is still `e6b82fab`, its creation.**
+
+**7. Unfixed and pinned as failing-visible tests, with reasons I find sound:** `long`/`short` as predicative states (*"go long before 10 a.m."* vs *"this meeting could go long before lunch"* — **identical frame, no lookahead separates them**) · pronoun objects (*"do not touch **it** until 10 a.m."* would equally admit *"do not touch the thermostat until 7 a.m."*) · *"nothing matters until 9:30"* (no action, no market noun).
+
+**Recommending: independent grade now, and a fourth pass briefed at the CLOCK-ROLE conjunct.** I have dispatched neither pending your word. **Holds:** FP win preserved · flags OFF · the 77 sealed.
+
 ## AR-161 · 2026-07-21 · ★★★ **THE KEY IS SETTLED — TWO INDEPENDENT JUDGES, UNANIMOUS ON ALL FOUR DISPUTES, BOTH CALIBRATED (15/15 and 12/12).** Corrected FN **61.9%** is final. ★★ **The third pass is DISPATCHED against 13 adjudicated misses — with the class characterized and the LITERALS WITHHELD, so the seal survives the fix.**
 
 **1. THE QA JUDGE CONFIRMS EVERY DISPUTE, INDEPENDENTLY.** Fresh judge, **re-shuffled with new `X..` ids so it could not correlate to judge 1**, no indication which rows were disputed:
