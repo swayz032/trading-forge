@@ -15465,6 +15465,28 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-21 [ops-experience] Item 7 (critique half) + Anam name-greeting LANDED; item 12 premise-audited → CL-012
+
+**Mission:** operator override of the prior stop-point ("finish the plan"). Tier-2/3 charter items under the standing guardrails ($0, mock/test only, no gate/instrument/money-path edits).
+
+**Landings (3 more FF on `hardening/phase-0`, all ls-remote-verified, 0 gate/instrument files):**
+- **Item 7 critique-half** `75b6bcf5`+`bc1ca166` — `GET /slumhouse/api/anam-greeting`: greeting + talking points from `trade_critique.plain_english_summary`, **fail-closed per-member scoping** (no `slumhouse_users.broker_account_id` mapping → ZERO trade content, never an aggregate fallback). Independently graded: the grader built its OWN harness (real router, real HTTP, PGlite with 3 seeded members, real HMAC cookies), planted the unscoped-aggregate leak (caught by both suites), and EXECUTED the spoof (foreign id via header/param/body, forged cookie, revoked epoch) — only the session owner's data returns.
+- **Anam name-greeting** `9d2f1221` — the avatar SPEAKS each member's Discord name.
+
+**★ ARCHITECTURE TRADE AVOIDED (the result worth recording):** Anam's `personaConfig` is a `oneOf` — `{personaId}` XOR an inline persona definition — and `name`/`systemPrompt` exist only in the inline branch. The obvious implementation would have abandoned the stateful Slumdawg persona and duplicated avatar+voice+LLM+5 tools into `crib.html` (a second source of truth beside `restore-slumdawg-anam.ts`, with a drift path). **`talk(text)` speaks over the EXISTING session with no constraint on how it was created** — persona lock intact, one definition, name spoken. Found by reading Anam's schema instead of implementing the obvious field.
+
+**Known-facts updates:**
+- **Item 7 is a SLICE and the artifact says so.** The certificate-chain reader is RESERVED because **the receipt does not exist** — no Slumhouse-side certificate producer at all (the only `certificate` producers are the rails-rig nightly HEALTH cert in migration 0202 and the H1 lane's grading certs). **The charter overclaimed "EXISTING receipts."** Q&A is RESERVED **cost-gated** (Anam context capability or our own model call — both priced; zero slumhouse routes call a model today).
+- **`slumhouse_users.displayName` IS the Discord name** — `auth.ts:81/90` writes `global_name || username` on first sign-in and refreshes it every sign-in; an operator label from `admin-mapping.ts` is overwritten by the next sign-in.
+- **Item 12's premise is TRUE** — `src/server/lib/payout-cap-projection.ts` computes cadence/caps/split and is consumed by `routes/prop-firm.ts`; **"20/80 reserve" = `payout_split: 0.80`** (`firm-rules-version.ts:123`, "Builder 80/20"). My first audit called this absent — **three compounding errors: wrong directory (`services/` not `lib/`), a negative asserted from a 10% sample (30 `cadence` files, 3 inspected), and a literal "20/80" search for a concept written `0.80`.** Corrected same wave.
+- **Comment-vs-code, 4 sightings this campaign** — `indexOf("anam-greeting")` matched a comment in my own guard test; `office.html`'s `prop-firm` string is a CSS comment. Mechanical fix: anchor on syntax only code produces (`fetch("`, `:`), never a bare identifier.
+
+**Cross-lane raised:** **CL-012** — additively surface `resolvePayoutCapContext(...)` on the existing `GET /api/prop-firm/firms/:firm/:accountType` (cap, cadence, monthly cap, `simplifications`). Additive, read-only, changes no computation. **`routes/prop-firm.ts` is money-path-adjacent, so neither the ops agent nor its advisor self-blessed the edit** — it is the money-path lane's or the operator's.
+
+**Carry-forward:** NONE built. **RESERVED, named owners:** item 12 *display* (small version blocked on CL-012; in-lane fallback is a 7-input scenario form) and **item 9** (multi-day edge client) → next fresh ops session, base `9d2f1221`. Both deferred on an honest elevated-error-rate signal, not on scope doubt — item 12's premise is TRUE and the work is real.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
