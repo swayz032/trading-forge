@@ -14188,6 +14188,29 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 
 **★★★ THE THESIS PROVED ITSELF, AGAINST ITSELF.** Reconciling against an instrument OUTSIDE its own pipeline (the frozen R-082 census), the re-measure found **129 bindable vs 128 live** — one row: a `WAIT_SESSION` resolving to `overnight`, a zone the resolver emits and `is_in_killzone` cannot check. The session lane's honest-partial closure now **refuses it rather than binding it falsely**. So that row **left the RATE'S denominator and entered the UNBOUND count: THE RATE IMPROVED WHILE COVERAGE WORSENED.** §6a was written because a spec could improve its score by becoming *less bindable* — **and it demonstrated exactly that in its own debut measurement.** *"The greens never would have shown it."* **This is why the rebuild happened.**
 
+> **★★★ WITHDRAWN 2026-07-21 — THE PARAGRAPH ABOVE IS FALSE AND STAYS ON THE RECORD AS THE ERROR IT
+> WAS (advisor ruling R-198 §1 withdrew its counterpart, R-196 §2).** An independent grade rebuilt a
+> **pre-closure worktree** and re-measured the identical corpus with the pre-closure binder, varying
+> only the closure:
+> `pre-closure flags-OFF 0.9922 / 1-of-155` · `post-closure flags-OFF 1.0000 / 0-of-155` ·
+> `pre-closure flags-ON 0.9457 / 7-of-155` · `post-closure flags-ON 0.9531 / 6-of-155`.
+> **The vanished row was bound-and-CONCRETE (`approximation=False`), not approximate — so BOTH
+> metrics moved the SAME way.** The honest-partial closure **paid in both books**; that is the §6a
+> guard WORKING, **not the defect firing.**
+> **The original comparison used INCOMPARABLE ARMS** (census pre-closure/flags-OFF against live
+> post-closure/flags-**ON**); the apparent improvement was entirely the six level/zone flips.
+> ★ **And the "interpretation" was a HARDCODED PROSE STRING that printed for ANY non-zero delta in
+> either direction** — a caption waiting for a number — while `n_binding_approximation`, the single
+> field that decides the direction, sat unread **in the same block**.
+> ★★ **MY FAILURE, in order:** I published it as the finding of the night, the advisor crowned it as
+> the arc's closing entry, **and only THEN did I brief an auditor to check whether it was an
+> artifact.** That instruction is the only reason it was caught. **The record was saved by the audit;
+> the ORDER is the law — AUDIT BEFORE CROWNING (R-198 §1).** *Nothing improves a story like the story
+> proving itself, and that is exactly when the audit must come first.*
+> **What still stands:** the design rationale (a single number can flatter; the pair cannot) — a real
+> numerator loss elsewhere in the same artifact is honest evidence for it. **What does not stand is
+> the claim of a live self-demonstration. This log no longer claims one.**
+
 **The enforcement lane closed first, at BAND 7, after a mini-wave that found the deepest defect of the night.** The success cache was **deleted, not re-keyed** — on a *measured* cost (14.9 µs/call, one call site, <2 ms corpus-wide: *"nothing justifies a cache"*). **Four lying modes had lived in that one cache, and the fix for mode 3 grew mode 4.** ★★ **Deleting it turned TWO TESTS RED — correctly — because they had been passing on the cache's lie.** The fixture's own comment admitted it: *"Loading the un-patched table first satisfies the gate for THIS pin set, and the re-pointed strategy is then built against the already-passed gate."* **The defect was not only in the code; it was holding up the tests that checked the code.** Fixed by strengthening the fixture, never the guard.
 
 **Earlier in the lane:** the engine that **correctly refused to load** under all pins now **correctly loads** (violations 0, `pins_skipped []`), because the emission stopped — **not because the check was weakened.** The orphan closure also **fixed 2 rows of the sealed fence** (ordinary prose that had been falsely binding a session zone), which the sealed instrument reported **untouched** — the entire reason it was sealed.
