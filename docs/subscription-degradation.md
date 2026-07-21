@@ -97,16 +97,23 @@ command.
   across `src/` and `scripts/`, excluding tests and vendor trees). The claim is **"no direct call in
   first-party code," which is what was measured** — not "no dependency anywhere."
 
-### One limit I tried to close and could not
+### The limit that was open here is now CLOSED — verified clean
 
-**n8n workflow nodes are NOT covered**, and this is stated because the attempt failed rather than
-because it was skipped. `package.json` carries no `anthropic` dependency (checked, with a control
-confirming the grep matches a known string in that file). But n8n runs on **Railway, not locally**,
-and the only in-repo artifact — `docs/trading-forge-live-workflows.json` — turned out to be a 6.5 KB
-*normalized summary of archived/retired* workflows with **no node arrays at all**; its single
-`CLAUDE` hit is a reference to `CLAUDE.md`. A control (`grep -c '"nodes"'` → **0**) is what caught
-that the file cannot answer the question, before it got cited as if it had.
+An earlier version of this page declared: *"first-party code is clean; the live n8n node inventory
+is unverified."* **That limit has since been closed by querying the live n8n REST API (2026-07-20):**
 
-**To actually close this:** query the live n8n REST API with `X-N8N-API-KEY` and check node types for
-an Anthropic credential. Until someone does, the honest statement is *"first-party code is clean; the
-live n8n node inventory is unverified."*
+- **0 of 20 workflows** carry an Anthropic/Claude node. All 20 are **active**, so there is no
+  latent-vs-live distinction to draw.
+- Matching covered node **parameters** as well as node `type`, so an Anthropic URL inside a generic
+  `httpRequest` node would have been caught — which mattered, since `httpRequest` is the most common
+  node type here (95 of them).
+- **The zero is not vacuous**, and that is shown two ways: the scan demonstrably reads node types
+  (13 distinct types seen), and the matcher provably fires on a real Anthropic node name
+  (`@n8n/n8n-nodes-langchain.lmChatAnthropic` → matches).
+
+**So both surfaces this dependency could have hidden on are now verified**, not merely asserted:
+first-party source, and the live orchestration layer. `package.json` carries no `anthropic`
+dependency either (checked, with a control confirming the grep matches a known string in that file).
+
+*A declared limit is only honest if someone eventually closes it — otherwise "declared limit" is a
+way to retire a question permanently while sounding rigorous.*
