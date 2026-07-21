@@ -6839,6 +6839,14 @@ def main(argv: list[str] | None = None) -> None:
           "invalidated, so `git status` was answering from a stale mtime rather than the content."
     ))
 
+    if "--self-reproduction-gate" in argv:
+        # ★ VERIFY-ONLY. Regenerate to a scratch path, byte-compare to the committed capstone, and
+        # refuse (exit 2) on drift. This path does NOT publish -- a gate must not write the artifact
+        # it audits. See _capstone_self_reproduction_gate for the finding, the boundary and the
+        # corpse-law note. `art` here is the SAME fully-assembled dict a normal publish would write.
+        _capstone_self_reproduction_gate(art)
+        return
+
     publish_artifact(art)
 
     after_hashes = {p.name: sha(p) for p in scope if p.exists()}
@@ -6848,6 +6856,149 @@ def main(argv: list[str] | None = None) -> None:
                     if before_hashes.get(k) != after_hashes.get(k))
     ))
     _summarise(art)
+
+
+def _first_byte_diff(a: bytes, b: bytes) -> int:
+    """First offset at which two byte strings differ, or -1 if identical."""
+    n = min(len(a), len(b))
+    for i in range(n):
+        if a[i] != b[i]:
+            return i
+    return n if len(a) != len(b) else -1
+
+
+def _line_level_drift(committed: bytes, regenerated: bytes) -> dict:
+    """A human-readable summary of WHERE the two artifacts diverge, for the refusal message."""
+    import difflib
+
+    cl = committed.decode("utf-8", "replace").splitlines()
+    rl = regenerated.decode("utf-8", "replace").splitlines()
+    sm = difflib.SequenceMatcher(a=cl, b=rl, autojunk=False)
+    first: list[tuple[int, str, str]] = []
+    n_diff = 0
+    for tag, i1, i2, j1, j2 in sm.get_opcodes():
+        if tag == "equal":
+            continue
+        span = max(i2 - i1, j2 - j1)
+        n_diff += span
+        for k in range(span):
+            if len(first) >= 12:
+                break
+            c = cl[i1 + k].strip()[:100] if i1 + k < i2 else ""
+            r = rl[j1 + k].strip()[:100] if j1 + k < j2 else ""
+            first.append((i1 + k + 1, c, r))
+    return {"n_diff_lines": n_diff, "first": first}
+
+
+def _capstone_self_reproduction_gate(art: dict) -> None:
+    """★ THE CAPSTONE SELF-REPRODUCTION GATE  --  the last pre-T1 unit.
+
+    THE FINDING THIS CLOSES. The capstone dual-denominator-remeasure-2026-07-21.json was committed
+    at 9b4c438f; the generator was then edited at bcc563a5, so the committed artifact no longer
+    BYTE-REPRODUCES from its own generator. The measured drift is 42 leaves -- 36 line-number
+    fields (the 34 assert census rows plus the 2 subprocess-boundary rows), one self-referential
+    worktree_crlf_count, and a five-entry numerals/prose block from the split-derivation being made
+    COMPUTED. NO measurement metric moved (n_DATA_SENSITIVE=24, n_SOURCE_INVARIANT=10, ceiling 6,
+    6/161, 12/161, the 2/21/4 split and the (8,2) disagreement pair all reproduce exactly), so every
+    existing gate, test and census read GREEN over the stale file. Edit->silent-stale is the defect;
+    this gate makes it edit->visible-red.
+
+    WHAT IT DOES. Regenerates the ENTIRE artifact to a SCRATCH path through the SOLE writer
+    (publish_artifact, with OUT_PATH rebound for the duration of that one call), reads the bytes
+    back, and byte-compares them against the committed capstone on disk. A single differing byte ->
+    SystemExit(2). A generator edit then holds this gate RED until the artifact is regenerated and
+    re-committed. A one-time regeneration only resets the clock; this closes the class.
+
+    VERIFY-ONLY, BY CONSTRUCTION. It never writes OUT_PATH -- a gate must not mutate the artifact it
+    audits. The normal publish path REGENERATES (overwrites); this path only COMPARES, then returns.
+
+    POSITION AUDITED (corpse-law). It runs LATE in main(), downstream of the input-guard, the -O
+    refusal, every scorer gate and the append-only / head-match refusals. That is deliberate, not a
+    corpse: byte-reproduction is only MEANINGFUL when the inputs match HEAD, so if an input had
+    diverged the drift would be mis-attributed and refusing there FIRST is correct. On a clean tree
+    every upstream guard passes and control reaches this comparison -- proven every run by the fact
+    that this gate REFUSES on the live drift. A guard that has never refused is not a guard.
+
+    NO NEW ASSERT / refuse_unless. It refuses with SystemExit(2), so it adds nothing to this
+    generator's own assert census: n_asserts stays 34 and no metric moves when it lands. It also
+    adds no field to `art`, so the caption / coverage / evidential gates have nothing new to score.
+    """
+    global OUT_PATH
+    import shutil
+    import tempfile
+
+    real = OUT_PATH
+    if not real.exists():
+        sys.stderr.write("SELF-REPRODUCTION GATE: no committed capstone on disk to compare.\n")
+        raise SystemExit(2)
+    committed = real.read_bytes()
+
+    scratch_dir = Path(tempfile.mkdtemp(prefix="capstone-selfrepro-"))
+    scratch = scratch_dir / real.name
+    try:
+        OUT_PATH = scratch
+        publish_artifact(art)          # regenerate through THE SOLE WRITER -> scratch
+    finally:
+        OUT_PATH = real                # restore before anything else can observe it
+
+    regenerated = scratch.read_bytes()
+
+    boundary = (
+        "SELF-REPRODUCTION GATE BOUNDARY (printed beside the verdict, red or green):\n"
+        "  CHECKS: every byte of the regenerated artifact against the committed capstone.\n"
+        "  DOES NOT COVER: whether the metric VALUES are correct -- only that the committed file\n"
+        "    reproduces from THIS generator. A generator and an artifact that are wrong together but\n"
+        "    consistently pass here; value correctness is the other gates' subject.\n"
+        "  ENVIRONMENT-SCOPED: the artifact embeds worktree_crlf_count, which reflects the\n"
+        "    checkout's line-ending state, so byte-reproduction is defined WITHIN one line-ending\n"
+        "    regime. Run this gate in the same regime the artifact was generated in.\n"
+        "  PRECONDITION: it sits AFTER the input-guard and head-match refusals -- if those are red\n"
+        "    the drift is not attributable to the generator and this gate does not run."
+    )
+    print(boundary)
+    print(f"  COMPUTED: regenerated={len(regenerated)} bytes, committed={len(committed)} bytes")
+
+    # ★ RED-PROOF, EVERY INVOCATION (a birth-test that re-runs is a control, not a claim). A planted
+    # one-byte corruption of the regenerated bytes MUST be seen as a difference and LOCATED at the
+    # planted offset. If the comparator were ever wired to report 'reproduces' unconditionally, this
+    # fails CLOSED -- so the gate can never pass without first proving it can still fail.
+    poisoned = bytearray(regenerated)
+    mid = len(poisoned) // 2
+    poisoned[mid] ^= 0x20
+    detected = bytes(poisoned) != regenerated and _first_byte_diff(bytes(poisoned), regenerated) == mid
+    print(f"  COMPUTED red-proof: a planted 1-byte drift at offset {mid} is DETECTED = {detected}")
+    if not detected:
+        sys.stderr.write(
+            "SELF-REPRODUCTION GATE RED-PROOF FAILED -- the byte comparator did not detect a planted "
+            "one-byte drift. The gate is not discriminating; refusing.\n"
+        )
+        shutil.rmtree(scratch_dir, ignore_errors=True)
+        raise SystemExit(2)
+
+    if regenerated != committed:
+        diffs = _line_level_drift(committed, regenerated)
+        sys.stderr.write(
+            "\n" + "=" * 78 + "\n"
+            "GUARD REFUSED: CAPSTONE_SELF_REPRODUCTION\n"
+            + "=" * 78 + "\n"
+            f"The committed capstone does NOT byte-reproduce from the HEAD generator: "
+            f"{diffs['n_diff_lines']} line(s) differ. This is exactly the edit->silent-stale state\n"
+            "the gate exists to make visible; no existing metric need have moved for it to be true.\n"
+            "  FIRST DIFFERING LINES (committed L# | committed text -> regenerated text):\n"
+            + "".join(f"    L{ln}: {c!r}\n         -> {r!r}\n" for ln, c, r in diffs["first"])
+            + "REGENERATE: python docs/replay-results/h1-battery/dual_denominator_remeasure.py, "
+              "then commit the artifact.\n"
+            "Exit 2 -- this is a guard verdict, not a crash.\n"
+            + "=" * 78 + "\n"
+        )
+        shutil.rmtree(scratch_dir, ignore_errors=True)
+        raise SystemExit(2)
+
+    shutil.rmtree(scratch_dir, ignore_errors=True)
+    print(
+        f"SELF-REPRODUCTION GATE PASSED: the committed capstone byte-reproduces from the HEAD "
+        f"generator (all {len(committed)} bytes identical)."
+    )
 
 
 if __name__ == "__main__":
