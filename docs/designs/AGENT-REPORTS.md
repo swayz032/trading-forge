@@ -4,6 +4,24 @@
 
 ---
 
+## AR-159 · 2026-07-21 · ★★ THE ANSWER KEY IS OUT FOR BLIND ADJUDICATION (R-167 §3) — 21 positives interleaved with **21 distractors**, **no-prior form**, blinded IDs. ★ **The distractors double as a CALIBRATION CONTROL on the judge itself.** No third pass dispatched.
+
+**1. THE BLIND SET, built deterministically (seed `20260721`, reproducible, not cherry-picked):** the fence's **21 `should_bind` positives** — the judgment rows under adjudication — interleaved with **21 distractors: 15 `should_refuse` + 6 `should_recognize_unbound`**, shuffled, and **re-identified `B01…B42` so the original row IDs leak nothing.** The judge sees **texts only** — no labels, no subset names, no counts, no report, no ruling, and an explicit instruction **not to open the fence file, the reports, or the rulings**, because reading them would contaminate the verdicts and void them.
+
+**2. ★ WHY THE DISTRACTORS ARE DRAWN FROM BOTH NEGATIVE CLASSES — the judge gets its own control.** Mixing in `should_refuse` rows means **if the judge classifies obvious non-teachings (*"garbage pickup is at 8 a.m. on Thursdays"*, *"he was saved by the bell"*) as genuine session teachings, its judgment is discredited BEFORE its verdicts on the 21 can move anything.** And mixing in `should_recognize_unbound` rows tests the **second** axis — teaching-but-no-computable-window — which is exactly the distinction the 21 depend on. **The instrument judging the answer key is itself measured by the same run.** That is the discrimination law applied one level up again; I did not want a judge whose verdicts nobody could check.
+
+**3. ★ THE NO-PRIOR FORM IS ENFORCED IN THE BRIEF, not just the data:** *"Do not assume any distribution. Do not assume the buckets are balanced, or that a certain share **should** be A. If your honest read is that 40 are C, say 40 are C."* **A judge told it is validating an answer key will find the key valid.** It is told none of that — it is simply classifying sentences.
+
+**4. Verdict form per R-167:** three buckets (**A** genuine teaching WITH a computable window · **B** genuine teaching WITHOUT one · **C** not a trading instruction), each with a **verbatim span** it relied on and a one-line reason. **Torn rows must be marked `LOW-CONFIDENCE` with what would settle them** — *"a flagged uncertainty is worth more than a confident coin-flip."* It is also asked to name any item it considers **badly posed**, which is itself a finding about the fence.
+
+**5. The discriminating principle was given WITHOUT the fence's phrasing**, so the judge is not primed to reproduce the author's rule: *"ordinary prose MENTIONS a time; a trading instruction makes the time DO WORK. Mentioning is not selecting."* **That is the grammatical distinction the FIXER arrived at independently through four failed lexicon drafts** — two paths converging on it is worth noting, and is the reason I trust it enough to state plainly rather than leave the judge to infer it.
+
+**6. What happens with the verdicts, pre-committed now so I cannot rationalize later:** **confirmed positives = REAL misses → the third pass targets exactly those.** **Overturned positives = removed from the key with per-row dispositions.** Per R-167's QA form, **if the first judge's verdicts move the key materially, a second judge samples before the key is edited.** **I am pre-registering that split now, before I have seen a single verdict** — the fence's 57.1% FN either survives contact with independent judgment or it does not, and I want no room to argue afterwards about which outcome I expected.
+
+**7. NOT DISPATCHED: the third fix pass.** R-167 §4 is explicit and I am holding it. **The FP win survives either outcome** and is already recorded.
+
+**Holds:** flags OFF · byte-identity holding · enforcement re-ratify parked behind this lane · the 77 sealed.
+
 ## AR-158 · 2026-07-21 · ★★★ **THE SEALED FENCE HAS VOTED ON `6dd3a00f` — AND IT SPLITS.** FP work is **excellent and mechanism-deep: hard 38.0% → 6.0%, SOFT 74.0% → 6.0%.** ★★ **But FN went 0.0% → 57.1% — and the fixer's own disclosure ("4 teachings missed") UNDERSTATES IT BY 3×.** I ran the fence myself, isolated and pinned. **Not clean. Escalating rather than dispatching a third pass on my own read.**
 
 **1. THE NUMBERS, measured by me in an isolated worktree pinned to `6dd3a00f`** (created, measured, removed — R-162):
