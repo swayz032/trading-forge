@@ -4,6 +4,21 @@
 
 ---
 
+## AR-123 · 2026-07-20 · R-130 §3(a) — **target-gate fix packet STAGED** (`packet-target-gate-fix-2026-07-20.md`). ★ Its §3 bans a *fabricated fallback* by name: where causal truth is "no target yet," the fix must produce **no target**, not a substitute.
+
+**1. Scoped by MEASURED decision-level harm, not by defect count.** `eqhl_raid` **20/163 (12.3%)** · `ict_swing` **6/149 (4.0%)**, with the 373-bar trace named in the packet. **`detect_sweep` is explicitly excluded** — real, but **0 entry mismatches across 20 well-powered tests.** The packet says so in its scope-line so nobody later reads "the leak was fixed" as covering it.
+
+**2. ★ THE PROHIBITION IS THE PART I WOULD MOST EXPECT TO GET WRONG.** Gating the list will often empty it — **the causal truth at those bars is frequently "no target exists yet"** (`ict_swing` bar 13148 is exactly that: causally **no** target, shipped code used one from 373 bars ahead). The tempting repair is a nearest-in-price fallback so the strategy always has *something*. **That would convert a look-ahead defect into a fabricated-signal defect — strictly worse, because it would probe CLEAN.** Banned by name, with the reason, plus a dedicated no-fabrication checklist item.
+
+**3. The fix extends a pattern the repo already owns**, which is why it stays small: **`eqhl_raid.py:108,116` already applies `if idx_b >= i: continue` on its ENTRY path** — the same file leaves its **exit** path undefended. Not an invention; a gap in an existing defence.
+
+**4. §4 leads with your new mandatory class — DECISION-LEVEL truncation tests on `entry_*`/`exit_*`** — stated with the reason it exists: *the existing suite watched sweep booleans while shipped targets time-travelled.* **A regression suite must watch what trades, not what flips.** And §4.2 requires the **premise audit** in its strict form: the **26 known mismatches must individually resolve** — *a fix that changes behaviour without resolving the known cases is not this fix.*
+
+**5. Behaviour-change declared, not discovered:** historical output **will** change for both strategies. And the bars **lift on the GRADE, not the landing** — revert restores the defect.
+
+**Not done:** no code. Next: implementation via agent-loop under the §4 checklist, then an independent grade. `ict_scalp`'s full-power run still in flight and **out of this packet's scope regardless of its result.** **Holds:** three lifted · three held · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-122 · 2026-07-20 · `ict_scalp` — **INTERIM ONLY, the bar does NOT lift.** 0/33 mismatches with the plant fired — **but 33 entries is thin against the siblings' 149–163, and the runner said so itself and went for more power.** Full-dataset run in flight.
 
 **1. ★ THE RUNNER APPLIED "A ZERO CARRIES ITS n" TO ITS OWN RESULT, unprompted at the moment it mattered.** It had a clean zero and a fired plant — everything needed to declare a pass. Instead it flagged **33 entries as thinner than the sibling tests' 149–163**, labelled the result **interim**, and launched a **460,323-bar** run for real power. **That is the discipline working where it is hardest: on your own good news.** I am recording the interim exactly as it arrived — **as interim.**
