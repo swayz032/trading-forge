@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from datetime import UTC
 
 import pytest
@@ -612,9 +613,20 @@ def test_s1_premise_audit_production_boundary_varying_condition_text_moves_the_b
 #   ny_pm         [13:30,16:00)  <- 14:30 on a 24-hour clock (the H2 case)
 _S1_DISTINCT_ZONE_CASES = [
     ("the first two-minute candle off the Bell closes over the 20 SMA and vwap", "ny_am"),
-    ("the london range forms after 3:00 a.m. EST", "london"),
-    ("I take the setup at 10:30 a.m.", "silver_bullet"),
-    ("wait until 14:30 EST for the afternoon push", "ny_pm"),
+    # "range" alone is ambiguous vocabulary (a salary range, a mountain
+    # range); the second-pass rule requires one unambiguous market term or two
+    # distinct ambiguous ones, so this synthetic selector probe now names the
+    # chart explicitly. Zone expectation is unchanged.
+    ("the london range forms on the chart after 3:00 a.m. EST", "london"),
+    # Was "I take the setup AT 10:30 a.m." — rewritten to a SELECTING form
+    # because the second-pass rule refuses bare-mention clocks (see
+    # _session_clock_does_work). This is a synthetic probe of the ZONE
+    # SELECTOR, not corpus data, so rewriting it is legitimate; the fact that
+    # the "at"-mention form no longer recognizes is a real, accepted false
+    # negative and is recorded as such in
+    # test_known_false_negatives_of_the_does_work_rule below, not hidden here.
+    ("I take the setup after 10:30 a.m.", "silver_bullet"),
+    ("wait until 14:30 EST for the afternoon candle", "ny_pm"),
 ]
 
 
@@ -884,16 +896,41 @@ def test_s9_mistype_and_binary_resisting_rows_produce_zero_new_bindings(_role_re
 # that specified it can never discover that. These rows are therefore fenced
 # here permanently, as a SECOND population the resolver must survive.
 #
-# PROVENANCE, stated exactly (the grader's full 33 inputs were not handed
-# over verbatim — only the 13 it recorded as FAILURES):
-#   - 13 rows below are DOCUMENTED: the grader's 6 false positives and 7
-#     false negatives, quoted from the grade. These are the load-bearing
-#     rows; every one of them was a defect at commit ee49fdca.
-#   - The remaining 20 (to reach the grader's 15-positive / 18-negative
-#     shape) are drawn AT RUNTIME from the 26-row battery, which carries its
-#     own INDEPENDENT blind-grade verdicts. They are not authored here —
-#     authoring the filler would be re-fitting the instrument to its own
-#     author, the exact defect this fence exists to prevent.
+# ★ PROVENANCE — CORRECTED (advisor HIGH-3, second pass). The statement that
+# stood here was FALSE and is replaced by the exact composition, which
+# test_fence_corpus_provenance_statement_is_true asserts programmatically so
+# it cannot drift back into a claim nobody checks.
+#
+# What it used to say: "the remaining 20 are drawn at runtime from the 26-row
+# battery ... so this delivery cannot grade itself on inputs of its own
+# choosing." Only 17 of the 20 are. The battery holds just 9 mistype rows, so
+# `mistype[:9]` exhausts it, and 3 negatives are hand-written literals. The
+# claim overstated the fence's independence by exactly those 3 rows.
+#
+# THE TRUE COMPOSITION (33 = 15 positives + 18 negatives):
+#   - 13 DOCUMENTED rows: the grader's 6 false positives and 7 false
+#     negatives, quoted from the grade. Load-bearing; each was a real defect
+#     at ee49fdca.
+#   - 17 BATTERY-DRAWN rows (8 session_teaching positives + 9
+#     entry_mechanics_mistype negatives), taken at runtime from the 26-row
+#     battery and its INDEPENDENT blind-grade verdicts. `sorted()[:n]`, so
+#     fixed and non-cherry-picked.
+#   -  3 AUTHORED-HERE negatives, written by this delivery. Named as such.
+#     Drawing 20 from the battery is arithmetically impossible: it holds only
+#     9 negative-verdict rows, and its other 17 rows are positives.
+#
+# ★ AND THE CALIBRATION CLAIM IS WITHDRAWN. The commit message for d8cf8043
+# claimed this reconstruction "reproduces the grader's baseline EXACTLY
+# (6/18, 7/15) at ee49fdca", offered as evidence that it is a faithful proxy
+# for the grader's unseen corpus. It is not evidence. Swapping every filler
+# row for pure junk strings reproduces the identical baseline, because all 13
+# errors come from the 13 documented literals and the filler contributes
+# zero. Exact reproduction was guaranteed by construction and could not have
+# come out any other way — a control that cannot fail. It is withdrawn rather
+# than replaced with a differently-shaped one; see
+# test_fence_filler_is_not_load_bearing_so_no_calibration_is_claimed, which
+# records the insensitivity permanently so the claim cannot be re-derived,
+# and the ADVERSARIAL corpus below, which carries a control that does move.
 #
 # EXPECTATIONS ARE THIS DELIVERY'S RULINGS, NOT THE GRADER'S RAW WISH.
 # The brief is explicit that blindly making all 15 positives bind is the
@@ -965,14 +1002,18 @@ GRADER_FALSE_NEGATIVE_INPUTS = [
     ),
     (
         "reopen",
-        False,
+        True,
         None,
-        "★ DISAGREEMENT WITH THE GRADER, recorded openly. The morphology defect is real "
-        "and IS fixed (the boundary-verb alternation now carries re-?opens?, so "
-        "'the session reopens' recognizes — see the companion test). But the bare "
-        "TOKEN 'reopen', alone, with no session noun and no market object, is exactly "
-        "the bare-token matching packet §3 prohibits. Recognizing it would be the "
-        "banned repair. Counted as a REMAINING false negative in the re-measure below.",
+        "★ RULING CORRECTED (advisor, second pass). The previous delivery refused this "
+        "row outright (recognized=False) because 'the bare TOKEN reopen, alone, with no "
+        "session noun' was said to be the banned repair. That reason does not survive "
+        "its own siblings: '8am', 'cash open', 'cash equity open', 'the New York bell' "
+        "and 'European open' are ALL bare tokens with no session noun, and this same "
+        "delivery accommodates every one of them. The reason cannot be the bareness. "
+        "The consistently-applicable distinction is the COMPUTABLE TIME ANCHOR: "
+        "'cash open' has one (9:30 ET), 'reopen' has none — exactly like 'European "
+        "open', which already sits in the recognized-but-unbound bucket. Applied "
+        "consistently: recognized=True, zone=None, SESSION_TEACHING_UNBOUND_REASON.",
     ),
 ]
 
@@ -1032,6 +1073,12 @@ def test_fence_grader_false_negatives_hold_their_stated_disposition(
         assert binding.approximation is True, "S8: never approximation=False in this packet"
     else:
         assert binding.bindable is False
+        if expect_recognized:
+            # The recorded REASON is load-bearing, not decoration: it is what
+            # distinguishes "we saw session teaching we cannot compute" from
+            # "we did not see session language at all". The corrected `reopen`
+            # ruling lands in this bucket by name.
+            assert binding.reason == SESSION_TEACHING_UNBOUND_REASON, f"{text!r}: {why}"
 
 
 def test_fence_morphology_fixes_are_real_not_incidental(_role_resolver_on):
@@ -1109,7 +1156,7 @@ def test_m1_bare_timezone_phrase_is_not_sufficient_clock_context(_role_resolver_
     assert coaching.session_zone is None
 
     genuine = bind_condition(
-        {"id": "m1:pos", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon push", "role": "spine"}
+        {"id": "m1:pos", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon candle", "role": "spine"}
     )
     assert genuine.bindable is True, "narrowing must not have deleted the timezone path outright"
 
@@ -1144,7 +1191,7 @@ def test_h2_24_hour_clock_times_do_not_silently_become_am(_role_resolver_on):
 
     # Production boundary: the zone actually moves.
     binding = bind_condition(
-        {"id": "h2", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon push", "role": "spine"}
+        {"id": "h2", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon candle", "role": "spine"}
     )
     assert binding.bindable is True
     assert binding.session_zone == "ny_pm", f"24-hour token bound {binding.session_zone!r}, expected ny_pm"
@@ -1163,7 +1210,10 @@ def test_role_resolver_never_emits_an_orphan_zone(_role_resolver_on):
     texts += [t for t, _ in GRADER_FALSE_POSITIVE_INPUTS]
     texts += [t for t, _, _, _ in GRADER_FALSE_NEGATIVE_INPUTS]
     texts += [t for t, _ in _S1_DISTINCT_ZONE_CASES]
-    assert len(texts) >= 26 + 13 + 4
+    # Second pass: the adversarial population too, so the two rules added this
+    # wave (meridiem-with-role, reopen-as-whole-object) are inside the sweep.
+    texts += _ADVERSARIAL_PROSE_NEGATIVES + _ADVERSARIAL_MARKET_POSITIVES + ["reopen", "re-open", "reopens"]
+    assert len(texts) >= 26 + 13 + 4 + 14 + 6 + 3
     emitted = set()
     for text in texts:
         binding = bind_condition({"id": "orphan:sweep", "type": "WAIT_SESSION", "object": text, "role": "spine"})
@@ -1176,25 +1226,92 @@ def test_role_resolver_never_emits_an_orphan_zone(_role_resolver_on):
 # ─── The re-measure: FP/FN rates on the 33-input shape, with n ──────────────
 
 
-def _fence_corpus_33() -> tuple[list[str], list[str]]:
-    """(positives, negatives) reconstructing the grader's 15/18 split.
+# The 3 negatives this delivery AUTHORED. Held in a named constant precisely
+# so the provenance test can count them and the docstring cannot lie about
+# them again. They double as the bare-am/pm fence rows.
+_FENCE_AUTHORED_NEGATIVES = [
+    "I am watching for the setup to form",
+    "this is where I am entering the trade",
+    "pm me if you want the indicator",
+]
 
-    The 13 documented rows are literals above. The other 20 are drawn from
-    the 26-row battery, which carries INDEPENDENT blind-grade verdicts —
-    deliberately not authored here, so this delivery cannot grade itself on
-    inputs of its own choosing. Selection is `sorted()[:n]`, i.e. fixed and
-    non-cherry-picked, not "the ones that pass"."""
+
+def _fence_corpus_33() -> tuple[list[str], list[str]]:
+    """(positives, negatives) reconstructing the grader's 15/18 SHAPE.
+
+    Composition — 13 documented literals + 17 battery-drawn + 3 authored
+    here. See the corrected provenance block above; asserted by
+    test_fence_corpus_provenance_statement_is_true. Battery selection is
+    `sorted()[:n]`, i.e. fixed and non-cherry-picked, not "the ones that
+    pass". No claim is made that this reconstructs the grader's actual
+    inputs — the filler is demonstrably not load-bearing."""
     rows = _session_ab_rows()
     teaching = sorted(obj for _c, v, obj in rows if v == "session_teaching")
     mistype = sorted(obj for _c, v, obj in rows if v == "entry_mechanics_mistype")
 
     positives = [t for t, _, _, _ in GRADER_FALSE_NEGATIVE_INPUTS] + teaching[:8]
-    negatives = (
-        [t for t, _ in GRADER_FALSE_POSITIVE_INPUTS]
-        + mistype[:9]
-        + ["I am watching for the setup to form", "this is where I am entering the trade", "pm me if you want the indicator"]
-    )
+    negatives = [t for t, _ in GRADER_FALSE_POSITIVE_INPUTS] + mistype[:9] + _FENCE_AUTHORED_NEGATIVES
     return positives, negatives
+
+
+def test_fence_corpus_provenance_statement_is_true():
+    """★ HIGH-3. The provenance statement above is a CLAIM, so it gets an
+    instrument. Every number in it is recomputed from the actual construction
+    — not restated. The previous version's claim ("the remaining 20 are drawn
+    from the battery") fails this test by 3 rows, which is how it should have
+    been caught the first time."""
+    rows = _session_ab_rows()
+    battery_objects = {obj for _c, _v, obj in rows}
+    positives, negatives = _fence_corpus_33()
+
+    documented = {t for t, _ in GRADER_FALSE_POSITIVE_INPUTS} | {t for t, _, _, _ in GRADER_FALSE_NEGATIVE_INPUTS}
+    assert len(documented) == 13, "the documented-defect count in the provenance statement drifted"
+
+    all_rows = positives + negatives
+    assert len(all_rows) == 33
+    n_documented = sum(1 for t in all_rows if t in documented)
+    n_battery = sum(1 for t in all_rows if t not in documented and t in battery_objects)
+    n_authored = sum(1 for t in all_rows if t not in documented and t not in battery_objects)
+
+    assert (n_documented, n_battery, n_authored) == (13, 17, 3), (
+        f"provenance statement is FALSE: documented/battery/authored measured as "
+        f"{(n_documented, n_battery, n_authored)}, statement says (13, 17, 3)"
+    )
+    # And the arithmetic reason 20 battery rows were never available.
+    assert sum(1 for _c, v, _o in rows if v == "entry_mechanics_mistype") == 9
+    assert set(_FENCE_AUTHORED_NEGATIVES).isdisjoint(battery_objects), (
+        "an 'authored' row is actually a battery row — the labels are backwards"
+    )
+
+
+def test_fence_filler_is_not_load_bearing_so_no_calibration_is_claimed():
+    """★ HIGH-3, the withdrawn calibration claim, kept as a permanent record.
+
+    d8cf8043 claimed the reconstruction "reproduces the grader's baseline
+    EXACTLY (6/18, 7/15)" and offered that as evidence of faithfulness. This
+    test demonstrates why that number carried no information: replace all 20
+    filler rows with pure junk strings and the classification outcome for the
+    filler is IDENTICAL, because the filler contributes zero errors either
+    way. Any baseline computed over this corpus is fully determined by the 13
+    documented literals.
+
+    This test asserts the number does NOT move — which is the honest finding,
+    and is the opposite of a validating control. It exists so nobody re-derives
+    a calibration claim from a corpus that cannot support one. The control that
+    DOES move lives in the adversarial section below."""
+    _, negatives = _fence_corpus_33()
+    documented = {t for t, _ in GRADER_FALSE_POSITIVE_INPUTS}
+
+    real_filler = [t for t in negatives if t not in documented]
+    junk_filler = [f"zzqq junk string {i} with no session content" for i in range(len(real_filler))]
+    assert len(real_filler) == 12
+
+    with_real = sum(1 for t in real_filler if classify_session_role(t).recognized)
+    with_junk = sum(1 for t in junk_filler if classify_session_role(t).recognized)
+    assert with_real == with_junk == 0, (
+        "if this ever changes, the filler has become load-bearing and the "
+        "corpus may support a calibration claim again — re-derive it explicitly"
+    )
 
 
 def test_remeasured_fp_fn_rates_on_the_33_input_fence(_role_resolver_on):
@@ -1215,12 +1332,332 @@ def test_remeasured_fp_fn_rates_on_the_33_input_fence(_role_resolver_on):
     fn_rate = len(false_neg) / len(positives)
 
     assert false_pos == [], f"FP rate {fp_rate:.1%} (n={len(negatives)}); offenders: {false_pos}"
-    # The single accepted, openly-recorded miss: the bare token "reopen",
-    # which we rule out of reach BY DESIGN (recognizing it is the banned
-    # bare-token repair). If this list changes, the rate must be re-reported.
-    assert false_neg == ["reopen"], f"FN rate {fn_rate:.1%} (n={len(positives)}); misses: {false_neg}"
+    # `reopen` was the one openly-recorded remaining miss at d8cf8043. The
+    # advisor ruled that refusal inconsistent with its own siblings, so it is
+    # now recognized-but-unbound and the fence is clean on this corpus.
+    #
+    # ★ READ THIS BEFORE TRUSTING THE 0.0%/0.0%. This corpus is 13 documented
+    # defect rows plus non-load-bearing filler; a resolver graded only on the
+    # defects it was told about will always score 0. That is exactly the trap
+    # d8cf8043 fell into — it scored 0.0% FP here and 60% on the grader's
+    # fresh inputs. The number below is a REGRESSION check (these 13 specific
+    # defects have not returned), NOT a fidelity measurement.
+    assert false_neg == [], f"FN rate {fn_rate:.1%} (n={len(positives)}); misses: {false_neg}"
     assert fp_rate == 0.0
-    assert round(fn_rate, 3) == round(1 / 15, 3)
+    assert fn_rate == 0.0
+
+
+# ─── The ADVERSARIAL corpus: authored blind, WITH a control that moves ───────
+#
+# Written while fixing HIGH-1/HIGH-2, before running any of it, against no
+# fence — ordinary prose carrying clocks, timezones, and session/bell words as
+# filler. It is not independent (this delivery wrote it) and is not claimed to
+# be. Its value is that it is the population the d8cf8043 pass had NO inputs
+# from, which is why that pass could not see the FP class it manufactured.
+
+_ADVERSARIAL_PROSE_NEGATIVES = [
+    "garbage pickup is at 8 a.m. on Thursdays",
+    "my dentist appointment is at 2:30 p.m.",
+    "we had a 3:00 p.m. coaching session with the mentor yesterday",
+    "the kids get home from school at 3:15 p.m. every day",
+    "I usually go to the gym at 6am before work",
+    "dinner reservation is at 7:30 p.m. downtown",
+    "my flight lands at 11:45 p.m. eastern time",
+    "the podcast drops every Tuesday at 9am",
+    "call me back at 5pm if you get a chance",
+    "the library closes at 8 p.m. on weekends",
+    "standup is at 9:30 a.m. and retro is at 4 p.m.",
+    "he was born at 2:15 a.m. in a snowstorm",
+    "my therapy session runs from 4 to 5pm on Mondays",
+    "the school bell rings at 8am sharp",
+]
+
+_ADVERSARIAL_MARKET_POSITIVES = [
+    "enter on the 9:30 a.m. candle after the open",
+    "wait for the 10 a.m. reversal before taking the trade",
+    "I only take entries between 8am and 11am on the chart",
+    "the 3 p.m. candle usually sweeps the prior high",
+    "look for a fair value gap after 2 p.m.",
+    "no trades after 11:30 a.m., price goes dead",
+]
+
+
+@pytest.mark.parametrize("text", _ADVERSARIAL_PROSE_NEGATIVES)
+def test_high1_ordinary_prose_with_a_meridiem_clock_is_refused(_role_resolver_on, text):
+    """★ HIGH-1. `has_meridiem` ALONE satisfied clock context at d8cf8043 — no
+    market naming, no session noun, no market object required. Ordinary prose
+    carrying a meridiem clock scored 14/14 recognized here, 8 of them SILENTLY
+    BINDING a real killzone window ("garbage pickup is at 8 a.m. on Thursdays"
+    -> ny_am, "my dentist appointment is at 2:30 p.m." -> ny_pm).
+
+    Checked at BOTH layers: a resolver that recognizes prose and merely happens
+    not to compute a zone for it is still wrong, and starts binding the moment
+    a zone becomes computable."""
+    assert classify_session_role(text).recognized is False, f"false positive: {text!r}"
+    binding = bind_condition({"id": "adv:neg", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None, f"SILENTLY BOUND {binding.session_zone!r}: {text!r}"
+
+
+@pytest.mark.parametrize("text", _ADVERSARIAL_MARKET_POSITIVES)
+def test_high1_genuine_market_teaching_with_a_meridiem_clock_still_binds(_role_resolver_on, text):
+    """The other polarity, and the one a recall-destroying "fix" would break.
+    Every row carries a meridiem clock AND a market object, so the narrowed
+    rule must leave all of them recognized. Without this test, deleting the
+    meridiem path outright would pass the negatives above."""
+    assert classify_session_role(text).recognized is True, f"lost a genuine teaching: {text!r}"
+
+
+def test_high2_colonless_token_still_works_and_the_discriminator_is_role_not_morphology(_role_resolver_on):
+    """★ HIGH-2. The colon-less alternative was charged with manufacturing 4
+    new false positives ("5pm", "8 p.m.", "4 p.m."). The charge misidentifies
+    the cause, and this test records the evidence.
+
+    THE DISCRIMINATOR IS ROLE, NOT MORPHOLOGY. Deleting the colon-less form
+    would (a) re-break "8am", and (b) fix nothing, because COLON-FUL prose
+    false-bound just as hard — 5 of the 8 silent binds at d8cf8043 came from
+    "2:30 p.m.", "3:00 p.m.", "3:15 p.m.", "9:30 a.m." and "2:15 a.m.". The
+    colon-less alternative did not CAUSE the FP class; it made more prose
+    visible to an already-unsound sufficiency rule.
+
+    So the colon-less form STAYS and the role test removes both classes."""
+    # (a) the morphology fix is intact — bare "8am" is still a real bind.
+    assert classify_session_role("8am").recognized is True
+    binding = bind_condition({"id": "h2:8am", "type": "WAIT_SESSION", "object": "8am", "role": "spine"})
+    assert binding.session_zone == "ny_am"
+
+    # (b) colon-less prose is refused...
+    for text in ("call me back at 5pm if you get a chance", "the library closes at 8 p.m. on weekends"):
+        assert classify_session_role(text).recognized is False, text
+    # ...and so is COLON-FUL prose, which deleting the colon-less form could
+    # never have reached. This is the load-bearing half of the diagnosis.
+    for text in ("my dentist appointment is at 2:30 p.m.", "he was born at 2:15 a.m. in a snowstorm"):
+        assert classify_session_role(text).recognized is False, text
+
+
+# Batches 3 and 4, authored AFTER the rule was drafted and run against it for
+# the first time only when complete. Batch 3 broke the then-current draft (5
+# leaks); batch 4 broke its successor (10 leaks). Both are kept permanently —
+# a fence that only contains inputs the rule already passes is the exact
+# instrument failure this whole second pass exists to correct.
+_ADVERSARIAL_BATCH34_NEGATIVES = [
+    # batch 3 — ambiguous market words in ordinary senses
+    "the trade show opens at 9 a.m. in the convention center",
+    "she sweeps the kitchen floor at 6 a.m. before anyone wakes",
+    "his sleep patterns changed after the baby arrived at 3 a.m.",
+    "the farmers market opens at 7 a.m. every Saturday",
+    "my recording session with the band starts at 8 p.m.",
+    "the bar closes at 2 a.m. on Fridays",
+    "the tide levels peak around 5 a.m. near the harbour",
+    "the London Underground closes at 1 a.m.",
+    "New York pizza is best at 2 a.m.",
+    "the class session before lunch runs long",
+    "traffic entries onto the highway back up at 8 a.m.",
+    "the shop reopens at 10 a.m. after renovations",
+    "volume on the radio was too high at 7 a.m.",
+    # batch 4 — TWO distinct ambiguous words, and unambiguous words in
+    # non-market senses. These are what killed the lexicon approach outright.
+    "the bar orders more stock at 10 a.m. every Monday",
+    "long lines at the DMV start forming at 8 a.m.",
+    "we buy and sell furniture at the market at 9 a.m.",
+    "the trade entries in the ledger were logged at 2 p.m.",
+    "traffic patterns and volume shift around 4 p.m. downtown",
+    "her position and salary range were settled at 11 a.m.",
+    "the birthday candles were lit at 7 p.m.",
+    "the liquidity of the estate was settled at 3 p.m.",
+    "he charts his workouts at 6 a.m. daily",
+    "the setup crew arrives at 5 a.m. to build the stage",
+    "the new session at the spa opens at 9 a.m.",
+    "this session of congress opens in January",
+]
+
+
+@pytest.mark.parametrize("text", _ADVERSARIAL_BATCH34_NEGATIVES)
+def test_no_recognition_leak_on_batches_three_and_four(_role_resolver_on, text):
+    """★ THE SOFT-FP AXIS. A recognition leak counts as a false positive even
+    when no zone binds — nothing in the RULE rejected it, the window table did,
+    by arithmetic. Widen that table, or feed it a clock that lands inside a
+    window, and the leak becomes a silent wrong-window bind. So this asserts
+    the RECOGNITION verdict, and the zone only as a second line."""
+    assert classify_session_role(text).recognized is False, f"recognition leak: {text!r}"
+    binding = bind_condition({"id": "b34", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    if resolve_session_keyword(text) is None:
+        assert binding.session_zone is None
+    else:
+        # This row is bound by the LEGACY keyword matcher, which runs BEFORE
+        # the role resolver is ever consulted — see the dedicated test below.
+        # Not this delivery's path, and asserting None here would falsely
+        # attribute a pre-existing defect to the resolver.
+        assert binding.session_zone == resolve_session_keyword(text)
+
+
+_LEGACY_RESOLVER_FALSE_POSITIVES = [
+    ("the London session of parliament was televised", "london"),
+    ("the class session before lunch runs long", "lunch_blackout"),
+]
+
+
+@pytest.mark.parametrize(("text", "zone"), _LEGACY_RESOLVER_FALSE_POSITIVES)
+def test_found_not_fixed_legacy_keyword_resolver_binds_ordinary_prose(monkeypatch, text, zone):
+    """★ A DEFECT FOUND AND NOT FIXED, recorded rather than left silent.
+
+    While building the adversarial batches, two rows turned out to bind
+    ordinary prose through `resolve_session_keyword()` — the ORIGINAL bare
+    keyword matcher, not the role resolver. It runs first; the role resolver is
+    only consulted when it returns None (see _bind_condition_dispatch). So
+    these binds happen with the feature flag OFF, are untouched by everything
+    this delivery changed, and cannot be cured from inside classify_session_role.
+
+    "the London session of parliament was televised" -> london is a genuine
+    wrong-window bind of the kind this module says it refuses.
+    "the class session before lunch runs long" -> lunch_blackout is an ORPHAN
+    zone emission, which belongs to the orphan-zone lane and which this packet
+    is explicitly prohibited from touching.
+
+    Pinned flag-OFF so it is provably the legacy path, and so that whoever owns
+    that lane inherits a failing-visible receipt instead of a paragraph."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    assert resolve_session_keyword(text) == zone
+    binding = bind_condition({"id": "legacy:fp", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.session_zone == zone, "if this changed, the legacy defect moved — re-scope the note above"
+    # ...and the role resolver, this delivery's surface, correctly refuses it.
+    assert classify_session_role(text).recognized is False
+
+
+# Batch 5 — written last, aimed squarely at the SELECTION forms the does-work
+# rule newly TRUSTS (span prepositions, attributive chart nouns,
+# demonstratives, timezone+preposition). It found 2 leaks in 16; one is fixed
+# (tier 2 now requires market context), one is pinned below as irreducible.
+_ADVERSARIAL_BATCH5_NEGATIVES = [
+    "the store is open from 9 a.m. to 5 p.m. on weekdays",
+    "please arrive before 8 a.m. for the blood test",
+    "the sale runs between 10 a.m. and 2 p.m. this Saturday",
+    "don't call after 9 p.m. because the kids are asleep",
+    "the buffet is served until 11 a.m. every morning",
+    "I work from 8 a.m. to 4 p.m. at the warehouse",
+    "the parking meter is enforced between 8 a.m. and 6 p.m.",
+    "the 6 a.m. bars on the radio play the news",
+    "the 9 a.m. session at the dentist got moved",
+    "the 5 p.m. close of the museum is strict",
+    "the 8 a.m. entry to the park costs five dollars",
+    "this one at 3 p.m. is the cheaper flight",
+    "that bar at 10 p.m. gets crowded",
+    "the webinar runs from 2:00 p.m. until 3:00 p.m. eastern time",
+    "my shift starts at 14:30 EST and ends at 23:00",
+]
+
+
+@pytest.mark.parametrize("text", _ADVERSARIAL_BATCH5_NEGATIVES)
+def test_no_recognition_leak_on_batch_five_selection_forms(_role_resolver_on, text):
+    """Batch 5. Ordinary prose CAN use selection grammar — a store's opening
+    hours are a genuine span. What keeps these out is the market-context
+    conjunct, which every clock path now carries; the webinar row proved tier 2
+    was the one path that did not."""
+    assert classify_session_role(text).recognized is False, f"recognition leak: {text!r}"
+    binding = bind_condition({"id": "b5", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.session_zone is None
+
+
+def test_known_residual_leak_attributive_chart_noun_in_non_market_prose(_role_resolver_on):
+    """★ AN UNFIXED DEFECT, pinned so it is visible in the suite.
+
+    "we lit the 7 p.m. CANDLES for the vigil" is recognized. It is
+    grammatically IDENTICAL to the core positive "the 9:30 a.m. CANDLE" — a
+    time attached attributively to a chart noun — and differs only in what the
+    surrounding sentence is about. No rule available at this layer separates
+    them; refusing it would refuse the single most important genuine pattern
+    this resolver exists to catch.
+
+    It is a SOFT leak today (7 p.m. = 1140 min falls outside all five
+    computable windows, so nothing binds) — but that is arithmetic, not the
+    rule, which is exactly the latent-hard-FP shape. Were a zone ever to cover
+    19:00, this would become a silent wrong-window bind.
+
+    Stated plainly rather than fixed, and pinned so that any change in its
+    status is a test event."""
+    assert classify_session_role("we lit the 7 p.m. candles for the vigil").recognized is True
+    binding = bind_condition(
+        {"id": "residual", "type": "WAIT_SESSION", "object": "we lit the 7 p.m. candles for the vigil", "role": "spine"}
+    )
+    assert binding.session_zone is None, "the residual leak has become a HARD false positive — escalate"
+
+
+_KNOWN_FALSE_NEGATIVES_OF_THE_DOES_WORK_RULE = [
+    "the trendline break at 8:30 a.m. is the trigger",
+    "wait for a bullish engulfing at 8:15 a.m.",
+    "watch the fair value gap fill around 2:15 p.m.",
+    "I take the setup at 10:30 a.m.",
+]
+
+
+@pytest.mark.parametrize("text", _KNOWN_FALSE_NEGATIVES_OF_THE_DOES_WORK_RULE)
+def test_known_false_negatives_of_the_does_work_rule(_role_resolver_on, text):
+    """★ THE PRICE OF THE FIX, asserted rather than described.
+
+    Every row here is GENUINE market teaching that this delivery now MISSES,
+    because its clock is a bare mention ("at 8:15 a.m.", "around 2:15 p.m.")
+    rather than a selection. _session_clock_does_work cannot tell them from
+    "he charts his workouts at 6 a.m." or "the birthday candles were lit at 7
+    p.m.", which are the same grammar with different nouns.
+
+    They are pinned as failing ON PURPOSE, so the cost is visible in the suite
+    instead of living in a commit message. If a later change recovers one, this
+    test fails and the recovery must be re-justified — and if a later change
+    recovers it by re-admitting bare mentions, the batch-3/4 fence above fails
+    at the same time. The two tests are each other's control.
+
+    Direction is deliberate: "a miss is honest, a false positive silently binds
+    the WRONG window.\""""
+    assert classify_session_role(text).recognized is False, (
+        f"{text!r} now recognizes — if that is intended, verify the batch-3/4 "
+        "leak fence still passes and move this row out with a stated reason"
+    )
+
+
+def test_adversarial_control_the_measurement_actually_moves(_role_resolver_on):
+    """★ HIGH-3's replacement control — a perturbation proof that DOES move.
+
+    The withdrawn calibration claim failed because swapping its inputs changed
+    nothing. This one perturbs the RESOLVER: it loads d8cf8043's module from
+    git and runs the identical measurement through it. If this instrument were
+    non-discriminating (measuring something the fix cannot affect), both sides
+    would report the same number. They do not — that difference IS the fix.
+
+    d8cf8043 measured 14/14 FP on these negatives; today measures 0/14, with
+    the positives unchanged at 0 FN in both. A control that can distinguish
+    two module versions can also catch a regression back to either."""
+    old = _load_module_at_ref("d8cf8043")
+    assert hasattr(old, "classify_session_role"), "d8cf8043 must already contain the resolver"
+
+    def fp_count(module):
+        return sum(1 for t in _ADVERSARIAL_PROSE_NEGATIVES if module.classify_session_role(t).recognized)
+
+    def fn_count(module):
+        return sum(1 for t in _ADVERSARIAL_MARKET_POSITIVES if not module.classify_session_role(t).recognized)
+
+    import src.engine.spec_family_bindings as today
+
+    old_fp, new_fp = fp_count(old), fp_count(today)
+    assert new_fp == 0, f"false positives on ordinary prose: {new_fp}/{len(_ADVERSARIAL_PROSE_NEGATIVES)}"
+    assert old_fp == len(_ADVERSARIAL_PROSE_NEGATIVES), (
+        f"expected d8cf8043 to false-positive on ALL {len(_ADVERSARIAL_PROSE_NEGATIVES)} prose rows, got {old_fp} "
+        "— if this drops, the control is no longer measuring the defect it claims to"
+    )
+    assert old_fp != new_fp, "THE CONTROL DID NOT MOVE — this measurement cannot detect the defect it grades"
+    # Recall was not traded away to buy that: no positive was lost either side.
+    assert fn_count(old) == fn_count(today) == 0
+
+    # And the silent-bind count, the failure that actually matters, at the
+    # production boundary rather than the recognition layer.
+    def silent_binds(module):
+        return sum(
+            1
+            for t in _ADVERSARIAL_PROSE_NEGATIVES
+            if module.bind_condition({"id": "c", "type": "WAIT_SESSION", "object": t, "role": "spine"}).session_zone
+        )
+
+    assert silent_binds(old) == 8, "the recorded d8cf8043 silent-bind count changed"
+    assert silent_binds(today) == 0
 
 
 # ─── M3: S7 as a TRUE parent-diff, not a hand-copied expectation ────────────
@@ -1231,18 +1668,25 @@ _MODULE_REL_PATH = "src/engine/spec_family_bindings.py"
 
 
 def _load_prepacket_module():
-    """Load the module AS IT WAS before the packet landed, straight from git.
+    """Load the module AS IT WAS before the packet landed, straight from git."""
+    return _load_module_at_ref(_PREPACKET_REF)
 
-    This is what makes S7 a differential instead of an assertion. The module
-    is stdlib-only by deliberate design (its "zero import surface" property,
-    documented in its own header), which is precisely what makes exec'ing a
-    historical revision of it safe and dependency-free."""
+
+def _load_module_at_ref(ref: str):
+    """Load any historical revision of the module straight from git.
+
+    This is what makes S7 a differential instead of an assertion, and what
+    lets the adversarial control above compare two module versions rather
+    than assert a hand-copied number. The module is stdlib-only by deliberate
+    design (its "zero import surface" property, documented in its own
+    header), which is precisely what makes exec'ing a historical revision of
+    it safe and dependency-free."""
     import importlib.util
     import subprocess
 
     try:
         source = subprocess.run(
-            ["git", "show", f"{_PREPACKET_REF}:{_MODULE_REL_PATH}"],
+            ["git", "show", f"{ref}:{_MODULE_REL_PATH}"],
             cwd=os.path.dirname(os.path.abspath(__file__)),
             capture_output=True,
             text=True,
@@ -1251,11 +1695,11 @@ def _load_prepacket_module():
     except (OSError, subprocess.SubprocessError) as exc:  # pragma: no cover
         pytest.skip(f"git unavailable for parent-diff: {exc}")
     if source.returncode != 0 or not source.stdout.strip():
-        pytest.skip(f"pre-packet revision {_PREPACKET_REF} unavailable: {source.stderr.strip()[:200]}")
+        pytest.skip(f"revision {ref} unavailable: {source.stderr.strip()[:200]}")
 
     import sys
 
-    name = "_prepacket_spec_family_bindings"
+    name = f"_gitref_spec_family_bindings_{re.sub(r'[^A-Za-z0-9_]', '_', ref)}"
     spec = importlib.util.spec_from_loader(name, loader=None)
     module = importlib.util.module_from_spec(spec)
     # @dataclass resolves string annotations via sys.modules[cls.__module__],

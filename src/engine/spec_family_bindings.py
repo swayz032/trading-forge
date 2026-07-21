@@ -733,12 +733,80 @@ until 14:30 EST"; narrowing it is the smaller, better-targeted change."""
 
 _SESSION_CLOCK_SPAN_PREP_RE = re.compile(
     r"\b(from|until|till|through|between|starting|after|before|by|to)\s+"
-    r"(?:the\s+)?\d{1,2}(?::[0-5]\d)?\b",
+    r"(?:the\s+)?\d{1,2}(?::[0-5]\d)?(?:\s*(?:a\.?m\.?|p\.?m\.?))?(?![\d:])",
     re.IGNORECASE,
 )
 """A temporal preposition directly governing a clock numeral ("UNTIL 14:30",
 "FROM 9:30 to 9:45") — the corroboration a tier-2 timezone-only context must
 carry. "had a 3:00 coaching session" carries no such governor."""
+
+_SESSION_TIME_SCAFFOLD_WORDS: frozenset[str] = frozenset(
+    {
+        "a", "an", "the", "at", "by", "on", "of", "in",
+        "around", "about", "approximately", "roughly", "sharp",
+        "from", "to", "until", "till", "through", "between", "and", "or",
+        "et", "est", "edt", "eastern", "standard", "time", "o", "clock", "oclock",
+    }
+)
+"""The closed set of scaffold words a pure time expression may carry and still
+BE nothing but a time expression ("at 8am", "from 9:30 to 9:45 ET"). Note what
+is deliberately ABSENT: every noun, every verb, every subject. A sentence that
+merely CONTAINS a clock ("garbage pickup is at 8 a.m.") leaves "garbage",
+"pickup", "is", "Thursdays" behind and is therefore never constituted by its
+clock. Kept as an explicit frozenset rather than a regex so the exact
+admissible vocabulary is auditable in one place."""
+
+_SESSION_RESIDUE_WORD_RE = re.compile(r"[a-z]+", re.IGNORECASE)
+
+
+def _session_text_is_constituted_by(text: str, spans: list[tuple[int, int]]) -> bool:
+    """True iff deleting `spans` from `text` leaves nothing but scaffold words —
+    i.e. the matched expression IS the condition object, rather than being
+    mentioned inside a sentence that is about something else.
+
+    ★ THIS IS NOT BARE-TOKEN MATCHING (packet §3). Bare-token matching asks
+    "does this text CONTAIN token X" and therefore fires anywhere inside
+    arbitrary prose — that is exactly how bare `the bell` bound "the bell
+    pepper analogy". This asks the opposite, strictly stronger question: "is
+    this text NOTHING BUT expression X". It cannot fire inside a sentence,
+    because a sentence by definition has a subject and a verb left over. It is
+    a required qualifier that only ever NARROWS, never a lexicon that widens.
+
+    Empty `spans` must never be passed (all callers guard on a prior match);
+    with no spans the whole text is residue and an ordinary sentence fails
+    immediately, so the degenerate case is safe rather than vacuous."""
+    remainder: list[str] = []
+    cursor = 0
+    for start, end in sorted(spans):
+        if start > cursor:
+            remainder.append(text[cursor:start])
+        cursor = max(cursor, end)
+    remainder.append(text[cursor:])
+    words = _SESSION_RESIDUE_WORD_RE.findall(" ".join(remainder))
+    return all(word.lower() in _SESSION_TIME_SCAFFOLD_WORDS for word in words)
+
+
+SESSION_REOPEN_TOKEN_RE = re.compile(r"\bre-?opens?\b", re.IGNORECASE)
+"""The RE-prefixed session boundary verb standing as the whole condition object
+("reopen"). Recognized, NEVER zone-mapped.
+
+★ RULING (advisor, second pass). The previous delivery refused bare "reopen"
+outright (recognized=False) on the grounds that it is "a bare token with no
+session noun". That reason was inconsistent with this same module's own
+accepted rows: "8am", "cash open", "cash equity open", "the New York bell" and
+"European open" are ALL bare tokens with no session noun, and every one of them
+is accommodated. The reason cannot be the bareness.
+
+The real, consistently-applicable distinction is whether the expression carries
+a COMPUTABLE TIME ANCHOR. "cash open" does (9:30 ET, this module's one
+non-guessed constant). "reopen" does not — it names a recurring boundary
+without saying which one, exactly like "European open", which this module
+already places in the recognized-but-unbound bucket
+(SESSION_TEACHING_UNBOUND_REASON). Applied consistently, "reopen" belongs in
+that same bucket: recognized=True, zone=None.
+
+Scoped by _session_text_is_constituted_by so it can only fire when the verb IS
+the object. "the store reopens at nine" keeps a subject and is untouched."""
 
 SESSION_BOUNDARY_VERB_RE = re.compile(
     r"\bsession\b.{0,20}?\b(re-?opens?|opens?|starts?|begins?|resets?)\b"
@@ -812,6 +880,229 @@ Validated against BOTH populations, not fitted to one: all 5 rows of the
 26-row grading corpus that depend on these two markers still recognize
 (they carry "candle"/"pattern"/"engulfing"/"fair value"/"line"), and both
 grader-recorded false positives above are refused."""
+
+SESSION_STRONG_MARKET_OBJECT_RE = re.compile(
+    r"\b(candles?|candlesticks?|wicks?|charts?|fair\s+value|fvg|"
+    r"engulfing|vwap|v-wop|sma|ema|kill\s?zone|bullish|bearish|breakouts?|"
+    r"trendlines?|order\s+blocks?|liquidity|setups?|"
+    r"pips?|ticks?|stop\s+loss|take\s+profit|"
+    r"price\s+action|indicators?|highs?\s+and\s+lows?)\b",
+    re.IGNORECASE,
+)
+"""★ SECOND-PASS FIX (advisor clarification: a RECOGNITION leak counts as a
+false positive even when no zone binds).
+
+SESSION_MARKET_OBJECT_RE below is a broad lexicon, and roughly half of it is
+ordinary English in non-market senses — `long`, `high`, `low`, `levels`,
+`volume`, `trend`, `market`, `entry`, `lines`, `rows`, `ranges`, `orders`,
+`stops`, `targets`, `buy`, `sell`. Used as the required co-factor it let
+ordinary prose through on a single incidental word. MEASURED over 24
+non-market prose probes: 4 HARD false positives ("I bought a LONG dress at 3
+p.m." -> ny_pm; "traffic VOLUME peaks at 8 a.m. downtown" -> ny_am; "the
+water LEVELS rise at 4 a.m." -> london) and 11 recognition leaks.
+
+A recognition leak is a latent hard bind: nothing in the RULE rejected it —
+the window table did, by arithmetic. Widen that table, or feed it a clock
+that happens to land inside a window, and it converts straight into a silent
+wrong-window bind. So the leak is the defect, not the near-miss.
+
+This is the STRONG subset: vocabulary with no common non-market reading. Every
+member names a charting or trading object outright. It is what the co-factor
+tests actually require now. Like its parent this is a required CONJUNCT, never
+a disjunct — it can only ever narrow recognition.
+
+★ WHAT THIS SET DELIBERATELY EXCLUDES, and why the exclusions are the proof.
+`backtest` was in the first draft of this set and had to be removed: it
+re-admitted the grader's OWN documented false positive "start a new session in
+the terminal before running the BACKTEST" (a SHELL session), which the broad
+lexicon had correctly refused. A strong-vocabulary word can still appear in a
+sentence that is about tooling rather than about a chart. Likewise excluded on
+purpose: `market` (market square, supermarket, trade show), `price` (price of
+milk), `volume` (traffic volume), `level`, `trend`, `high`, `low`, `long`,
+`short`, `open`, `entry`, `line`, `range`, `order`, `stop`, `target`, `buy`,
+`sell` — every one of them produced a measured false positive.
+
+A THIRD, fresh adversarial batch (authored after the two above, never run
+against an earlier draft) proved the first draft of this set was still tuned
+to its own probes: `bars`, `trades`, `patterns`, `entries` and `sweeps` each
+produced a NEW false positive — "the TRADE show opens at 9 a.m." -> ny_am,
+"the BAR closes at 2 a.m." -> london, "his sleep PATTERNS changed ... at 3
+a.m." -> london, "traffic ENTRIES onto the highway back up at 8 a.m." ->
+ny_am, "she SWEEPS the kitchen floor at 6 a.m.". They are therefore NOT in
+this set; they moved to SESSION_AMBIGUOUS_MARKET_OBJECT_RE below, which
+requires corroboration."""
+
+SESSION_AMBIGUOUS_MARKET_OBJECT_RE = re.compile(
+    r"\b(bars?|trades?|trading|entries|entry|patterns?|sweeps?|positions?|"
+    r"levels?|volumes?|prices?|markets?|longs?|shorts?|orders?|stops?|"
+    r"targets?|ranges?|gaps?|trends?|lines?|reversals?|zones?|buy|sell)\b",
+    re.IGNORECASE,
+)
+"""Market vocabulary that is ALSO ordinary English. Each of these names a real
+chart object in a trading text and something else entirely in prose — a bar
+you drink in, a trade show, sleep patterns, traffic entries, sweeping a floor,
+the price of milk, traffic volume, a job position, tide levels, a long dress.
+
+ONE of these is not evidence that a text is about markets. TWO DISTINCT ones
+are: the probability that unrelated prose happens to carry two different
+trading nouns AND a meridiem clock is low, while genuine teaching that avoids
+every unambiguous term ("no TRADES after 11:30 a.m., PRICE goes dead"; "wait
+for the 10 a.m. REVERSAL before taking the TRADE") reliably carries two.
+
+That two-distinct-hit rule is the whole mechanism — see _session_is_about_
+markets. It is a graduated conjunct, not a longer keyword list: adding a word
+here makes recognition HARDER to reach than adding it to the strong set,
+because it still needs a partner.
+
+KNOWN RESIDUAL, stated rather than hidden: two ambiguous words CAN co-occur in
+prose ("VOLUME on the radio was too high at 7 a.m." would leak if bare `high`
+were in this set — which is why it is not). The rule narrows the class; it
+does not claim to close it."""
+
+
+_SESSION_CLOCK_ATTRIBUTIVE_RE = re.compile(
+    r"^[\s-]*(?:o'?clock\s+)?(?:candles?|candlesticks?|bars?|charts?|wicks?|"
+    r"sessions?|opens?|closes?|highs?|lows?|prints?|prices?|reversals?|"
+    r"engulfings?|setups?|entries|entry|sweeps?|gaps?|pushes?|moves?|"
+    r"pullbacks?|breakouts?|rallys?|rallies|drops?|dumps?|pumps?)\b",
+    re.IGNORECASE,
+)
+"""A market object standing IMMEDIATELY after a clock token — the attributive
+use, where the time modifies the noun: "the 9:30 A.M. CANDLE", "the 3 P.M.
+BAR", "the 10 A.M. REVERSAL".
+
+Adjacency is the whole point and is checked with `^`, against the text that
+directly follows the token. "we buy and sell furniture at the MARKET AT 9
+a.m." does not match: a preposition intervenes, which in English means the
+time modifies the VERB, not the noun."""
+
+
+_SESSION_CLOCK_DEMONSTRATIVE_RE = re.compile(
+    r"\b(?:this|that)\s+(?:one|candles?|bars?|print|leg)\s+at\s+\d",
+    re.IGNORECASE,
+)
+"""Demonstrative selection — "this ONE AT 7:00 a.m.", "that CANDLE AT 9:30".
+
+A demonstrative pointing at an instance and then timestamping it is SELECTION,
+not mention: the time answers "which one". This is the construction used by the
+blind-graded corpus row "I'm looking at two candles, THIS ONE AT 7:00 a.m. and
+THIS ONE AT 8:00 a.m." — which the span-preposition and attributive tests both
+miss, because the chart noun precedes the clock and "at" governs it.
+
+Deliberately narrow: it requires the demonstrative AND the instance noun AND
+the timestamp, adjacent. "the bar orders more stock at 10 a.m." has no
+demonstrative; "we buy furniture at the market at 9 a.m." has none either."""
+
+
+def _session_clock_does_work(norm: str, clock_tokens: list[re.Match]) -> bool:
+    """★ THE MECHANISM FIX (advisor clarification: recognition leaks count).
+
+    Is the clock SELECTING or DELIMITING something, or is it merely MENTIONED?
+
+    Four successive lexicon drafts failed to separate market prose from
+    ordinary prose, because the vocabulary is genuinely polysemous — a bar you
+    drink in, a trade show, sleep patterns, birthday candles, the liquidity of
+    an estate, charting your workouts, a setup crew. Every draft passed the
+    batch it was written against and leaked on the next one. A longer or
+    better-chosen word list is not the answer; the word list was the wrong
+    instrument.
+
+    The separating feature is GRAMMATICAL, not lexical. Ordinary prose
+    MENTIONS a time — almost always with "at": "garbage pickup is AT 8 a.m.",
+    "the bar orders more stock AT 10 a.m.", "he charts his workouts AT 6 a.m."
+    Trading instructions make the time DO something:
+      - govern it with a selection preposition — "AFTER 9:30", "BETWEEN 10 and
+        11", "UNTIL 14:30", "FROM 9:30 to 9:45"   (_SESSION_CLOCK_SPAN_PREP_RE)
+      - or attach it attributively to a chart object — "the 9:30 a.m. CANDLE"
+        (_SESSION_CLOCK_ATTRIBUTIVE_RE)
+      - or let the time BE the whole condition ("8am")  (handled by the caller)
+
+    That is the same "does it do work in the instruction" test the module's own
+    header says the resolver is built on — applied to the clock path, which had
+    never actually been held to it.
+
+    HONEST COST, measured and not hidden: this refuses genuine teachings whose
+    clock is also a bare mention — "the trendline break AT 8:30 a.m. is the
+    trigger", "wait for a bullish engulfing AT 8:15 a.m." Those become false
+    NEGATIVES. That is the direction this module chooses on purpose: "a miss
+    is honest, a false positive silently binds the WRONG window."
+    """
+    if _SESSION_CLOCK_SPAN_PREP_RE.search(norm):
+        return True
+    if _SESSION_CLOCK_DEMONSTRATIVE_RE.search(norm):
+        return True
+    return any(_SESSION_CLOCK_ATTRIBUTIVE_RE.match(norm[token.end():]) for token in clock_tokens)
+
+
+_SESSION_NOUN_QUALIFIER_ALLOWED: frozenset[str] = frozenset(
+    {
+        # determiners / quantifiers / ordinals — carry no domain of their own
+        "the", "a", "an", "this", "that", "these", "those", "each", "every",
+        "any", "all", "single", "one", "same", "whole", "entire", "both",
+        "new", "next", "last", "first", "second", "prior", "previous",
+        "current", "coming", "following", "upcoming", "another",
+        # market / session names — a qualifier that is itself session vocabulary
+        "trading", "market", "cash", "regular", "main", "overnight",
+        "london", "york", "ny", "asian", "asia", "european", "europe",
+        "tokyo", "frankfurt", "sydney", "globex", "us", "u.s.", "american",
+    }
+)
+"""The CLOSED set of words that may directly qualify the noun "session" and
+still leave it a market session.
+
+★ SECOND-PASS. The boundary-verb and temporal-preposition markers leaked
+recognition on ordinary prose that merely contains "session": "my GYM session
+starts before the traffic volume picks up", "the THERAPY session opens with a
+short breathing entry", "our STUDY session starts after the long weekend",
+"before my YOGA session I check the water levels", "after the COUNSELLING
+session we buy groceries at the market", "the PHOTOGRAPHY session opens with
+wide shots of the market square". In every one, the leak is carried by the
+qualifier: a non-market common noun sitting directly in front of "session".
+
+The genuine corpus rows, by contrast, qualify it only with determiners —
+"every SINGLE session starts again", "with every NEW session", "a reference
+for THE session". So this is a WHITELIST of domain-free qualifiers, not a
+blacklist of bad ones: an unknown qualifier is refused by default, which is
+the honest direction. Deliberately NOT a widening — it is a third required
+conjunct on two markers that already carry two.
+
+Chosen over promoting these markers to SESSION_STRONG_MARKET_OBJECT_RE
+because that measurably COST a genuine blind-graded corpus row (the "this
+line is being reset as soon as every single session starts again" teaching,
+which carries only the ambiguous word "line"). This rule keeps that row and
+refuses all six leaks."""
+
+_SESSION_NOUN_RE = re.compile(r"(?:(?P<qual>[A-Za-z][\w'’.-]*)\s+)?\bsessions?\b", re.IGNORECASE)
+
+
+def _session_noun_qualifier_is_market_compatible(norm: str) -> bool:
+    """True iff at least one occurrence of the noun "session" is unqualified or
+    carries a qualifier from the domain-free whitelist. A text whose every
+    "session" is qualified by a foreign noun ("gym session") is not session
+    teaching, however good its grammar looks."""
+    found_any = False
+    for match in _SESSION_NOUN_RE.finditer(norm):
+        found_any = True
+        qualifier = match.group("qual")
+        if qualifier is None or qualifier.lower() in _SESSION_NOUN_QUALIFIER_ALLOWED:
+            return True
+    # No "session" noun at all -> this gate has nothing to say; the marker's
+    # own regex (which may have matched "trading session" phrasing elsewhere)
+    # stays in charge. Never used to REJECT a text that never mentioned one.
+    return not found_any
+
+
+def _session_is_about_markets(norm: str) -> bool:
+    """The co-factor the clock and named-session markers require: is this text
+    about a market thing?
+
+    Satisfied by ONE unambiguous term, or by TWO DISTINCT ambiguous ones. A
+    single ambiguous word is never enough — that was the measured leak."""
+    if SESSION_STRONG_MARKET_OBJECT_RE.search(norm) is not None:
+        return True
+    distinct = {m.group(0).lower() for m in SESSION_AMBIGUOUS_MARKET_OBJECT_RE.finditer(norm)}
+    return len(distinct) >= 2
+
 
 SESSION_NAMED_WORD_RE = re.compile(r"\b(london|new\s+york|ny|asian?)\s+session\b", re.IGNORECASE)
 """A proper session name directly compounded with the literal word
@@ -957,31 +1248,86 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         recognized = True
         anchor_minutes.append(_SESSION_MARKET_OPEN_MINUTE)
 
+    # ★ SECOND-PASS: the weak markers' required co-factor is now the STRONG
+    # market lexicon, not the broad one. The broad lexicon admitted ordinary
+    # prose on one incidental word ("a LONG dress at 3 p.m."). See
+    # SESSION_STRONG_MARKET_OBJECT_RE. Still a required CONJUNCT throughout,
+    # so every use below can only narrow recognition, never widen it.
+    about_markets = _session_is_about_markets(norm)
+
     clock_tokens = list(_SESSION_CLOCK_TOKEN_RE.finditer(norm))
     if clock_tokens:
         parts = [_session_clock_token_parts(m) for m in clock_tokens]
-        # A clock token is a wall-clock market anchor when EITHER it carries
-        # its own meridiem, OR a TIER-1 market-naming context corroborates it,
-        # OR a TIER-2 timezone-only context does AND the token is governed by
-        # a span/selection preposition (M1 — a bare timezone phrase is no
-        # longer sufficient context on its own).
+        # ★ HIGH-1 FIX (independent grade, BAND 4 — the previous pass made
+        # false positives WORSE). A clock token is a wall-clock MARKET anchor
+        # when any of:
+        #   TIER 1  a market-naming context corroborates it ("NYSE", "killzone")
+        #   TIER 2  a timezone context does AND a span/selection preposition
+        #           governs the token (M1 — a bare timezone phrase is not
+        #           sufficient on its own)
+        #   MERIDIEM-WITH-ROLE  the token carries its own meridiem AND the
+        #           clock is doing work: either the text is about a market
+        #           object, or the time expression IS the whole condition
+        #           object.
+        #
+        # What was WRONG before: `has_meridiem` alone was sufficient. That is
+        # not a market signal at all — "a.m."/"p.m." is ordinary English
+        # scheduling vocabulary. Measured over 23 ordinary-prose negatives,
+        # meridiem-alone produced 14 recognitions and 8 SILENT BINDS to a real
+        # killzone window ("garbage pickup is at 8 a.m. on Thursdays" -> ny_am;
+        # "my dentist appointment is at 2:30 p.m." -> ny_pm). That is precisely
+        # the failure resolve_session_keyword's docstring refuses: "a miss is
+        # honest, a false positive silently binds the WRONG window."
+        #
+        # ★ HIGH-2, and why the blame was misplaced. The colon-less alternative
+        # in _SESSION_CLOCK_TOKEN_RE was charged with manufacturing 4 new false
+        # positives ("5pm", "8 p.m.", "4 p.m."). It did not CAUSE them; it only
+        # made more prose visible to an already-unsound sufficiency rule. The
+        # proof is that COLON-FUL prose false-bound just as hard — 5 of the 8
+        # silent binds above came from "2:30 p.m.", "3:00 p.m.", "3:15 p.m.",
+        # "9:30 a.m.", "2:15 a.m.", none of which deleting the colon-less form
+        # would have touched. The discriminator is not the token's MORPHOLOGY
+        # (colon vs no colon) but the clock's ROLE in the sentence. So the
+        # colon-less form STAYS (bare "8am" still binds ny_am) and the role
+        # test below removes both FP classes at once.
         has_meridiem = any(mer for _h, _m, mer in parts)
+        clock_is_whole_object = _session_text_is_constituted_by(norm, [m.span() for m in clock_tokens])
+        # ★ A meridiem clock is a MARKET anchor only when the text is about
+        # markets AND the clock is doing work (selecting/delimiting), or when
+        # the clock IS the whole condition object. Mere mention never counts —
+        # see _session_clock_does_work for why the lexicon alone could not.
+        meridiem_with_role = has_meridiem and (
+            clock_is_whole_object or (about_markets and _session_clock_does_work(norm, clock_tokens))
+        )
         tier1 = _SESSION_CLOCK_MARKET_CONTEXT_RE.search(norm)
-        tier2 = _SESSION_CLOCK_TZ_CONTEXT_RE.search(norm) and _SESSION_CLOCK_SPAN_PREP_RE.search(norm)
-        if has_meridiem or tier1 or tier2:
+        # ★ SECOND-PASS: tier 2 now ALSO requires market context. Timezone +
+        # span-preposition with no market content at all is a meeting invite:
+        # "the webinar runs FROM 2:00 p.m. UNTIL 3:00 p.m. EASTERN TIME" bound
+        # ny_pm — a hard false positive that bypassed every other gate,
+        # because tier 2 was the one path with no market requirement.
+        tier2 = (
+            _SESSION_CLOCK_TZ_CONTEXT_RE.search(norm)
+            and _SESSION_CLOCK_SPAN_PREP_RE.search(norm)
+            and about_markets
+        )
+        if meridiem_with_role or tier1 or tier2:
             recognized = True
             for hour, minute, mer in parts:
                 anchor_minutes.append(_session_clock_token_minutes(hour, minute, mer))
 
-    # The two weakest markers additionally require a price/chart object in the
-    # same text — see SESSION_MARKET_OBJECT_RE. Required CONJUNCT, so this can
-    # only narrow recognition, never widen it.
+    # The two weakest markers keep the BROAD lexicon as their market co-factor
+    # (the strong set measurably cost a genuine blind-graded corpus row that
+    # carries only the ambiguous word "line") and gain a THIRD conjunct
+    # instead: the noun "session" must not be qualified by a foreign noun.
+    # See _SESSION_NOUN_QUALIFIER_ALLOWED — this is what refuses "my GYM
+    # session starts...", which both markers previously recognized.
+    session_noun_ok = _session_noun_qualifier_is_market_compatible(norm)
     has_market_object = SESSION_MARKET_OBJECT_RE.search(norm) is not None
 
-    if SESSION_BOUNDARY_VERB_RE.search(norm) and has_market_object:
+    if SESSION_BOUNDARY_VERB_RE.search(norm) and has_market_object and session_noun_ok:
         recognized = True
 
-    if SESSION_TEMPORAL_PREPOSITION_RE.search(norm) and has_market_object:
+    if SESSION_TEMPORAL_PREPOSITION_RE.search(norm) and has_market_object and session_noun_ok:
         recognized = True
 
     if SESSION_LIQUIDITY_LEVEL_ENUM_RE.search(norm) and SESSION_NAMED_TOKEN_RE.search(norm):
@@ -992,10 +1338,31 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         # explicitly out of scope for this packet (see module comment).
         recognized = True
 
-    if SESSION_NAMED_WORD_RE.search(norm):
+    named_word = list(SESSION_NAMED_WORD_RE.finditer(norm))
+    if named_word and (about_markets or _session_text_is_constituted_by(norm, [m.span() for m in named_word])):
+        # ★ SECOND-PASS. "New York session" is a proper session name, but it is
+        # also an ordinary English noun phrase: "the LONDON SESSION of
+        # parliament was televised" recognized (and BOUND london), "the NEW
+        # YORK SESSION musicians recorded all night" leaked recognition. Same
+        # qualifier as everywhere else: the name must either constitute the
+        # condition object ("New York session") or sit in text that is
+        # unambiguously about markets.
         recognized = True
 
-    if SESSION_NAMED_MARKET_OPEN_RE.search(norm):
+    reopen_spans = [m.span() for m in SESSION_REOPEN_TOKEN_RE.finditer(norm)]
+    if reopen_spans and _session_text_is_constituted_by(norm, reopen_spans):
+        # Recognized, and deliberately contributes NO anchor minute — see
+        # SESSION_REOPEN_TOKEN_RE: a recurring boundary with no computable
+        # time anchor, same disposition as "European open".
+        recognized = True
+
+    named_open = list(SESSION_NAMED_MARKET_OPEN_RE.finditer(norm))
+    if named_open and (about_markets or _session_text_is_constituted_by(norm, [m.span() for m in named_open])):
+        # ★ SECOND-PASS qualifier, same principle: "the EUROPEAN OPEN air
+        # market is lovely in summer" and "the ASIAN OPEN mic night runs late"
+        # both leaked recognition here. Bare "European open" still recognizes
+        # (it constitutes the object); the prose forms no longer do.
+        #
         # Recognized, but deliberately contributes NO anchor minute — see
         # SESSION_NAMED_MARKET_OPEN_RE: no non-guessed minute constant exists
         # for a non-NYSE open, and the zones they would imply are the two
