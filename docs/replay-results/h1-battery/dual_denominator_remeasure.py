@@ -57,6 +57,7 @@ Self-test:  python docs/replay-results/h1-battery/dual_denominator_remeasure.py 
 
 from __future__ import annotations
 
+import builtins
 import collections
 import dataclasses
 import glob
@@ -520,6 +521,187 @@ def head_blob_bytes(rel_posix: str) -> tuple[bytes | None, str]:
     if not r.stdout:
         return None, "EMPTY_STDOUT__NOT_A_DIFFERENCE"
     return r.stdout, "OK"
+
+
+def tracked_files() -> set[str]:
+    """Every path git tracks at HEAD, as repo-relative POSIX strings.
+
+    One `git ls-files` rather than a call per file. Trap 4: git emits forward slashes here,
+    and every comparison against it uses .as_posix(), so a Windows backslash path can never
+    silently miss and read as "untracked".
+    """
+    r = subprocess.run(["git", "ls-files", "-z"], capture_output=True, cwd=REPO_ROOT)
+    if r.returncode != 0:
+        raise SystemExit("FATAL: `git ls-files` failed -- cannot establish what is tracked.")
+    return {s for s in r.stdout.decode("utf-8", "surrogateescape").split("\0") if s}
+
+
+def discover_declared_inputs() -> list[Path]:
+    """Enumerate the generator's inputs PROGRAMMATICALLY. AR-203 (a).
+
+    THE DEFECT THIS CLOSES: the append-only check ran against a FIVE-NAME LIST. Every other
+    tracked, committed file this generator reads -- Corpus B, the enforcement artifact, the
+    sixteen Corpus A specs, the binder module whose answers become the measurement -- was
+    unguarded. Tampering one of them produced exit 0, the printed safety sentence, and the
+    fabricated value PUBLISHED into the artifact. That was demonstrated, not theorised:
+    flipping five `confluence` roles in the tracked Corpus B moved the published by-DESIGN
+    figure while every assert passed and the gate reported zero violations.
+
+    So the enumeration is derived, never typed. It is taken from this module's OWN declared
+    path constants and globs -- the same objects the read sites use -- plus this file itself
+    (its AST is read by the assert census) and every imported first-party `src/` module whose
+    source decides the answers.
+
+    ★ WHY THIS IS NOT MERELY THE NEXT HAND-TYPED CONSTANT: a discovery rule can still be
+    INCOMPLETE -- someone inlines a literal path at a read site and this function never sees
+    it. That is why it is only half the mechanism. `trace_repo_reads` records what the build
+    ACTUALLY opened, and main() asserts the traced set is a SUBSET of what was guarded. The
+    enumeration cannot drift from the reads without failing the run, which is the mechanical
+    form of "guard everything you read" rather than a promise to remember to.
+    """
+    found: set[Path] = set()
+    for name, val in list(globals().items()):
+        if name in {"REPO_ROOT", "H1", "OUT_PATH"}:
+            continue
+        if isinstance(val, Path):
+            if val.is_file():
+                found.add(val.resolve())
+        elif isinstance(val, str) and ("*" in val or "?" in val):
+            for m in glob.glob(val):
+                p = Path(m).resolve()
+                if p.is_file():
+                    found.add(p)
+    # This file's own bytes are an input: count_own_asserts/own_assert_census parse its AST.
+    found.add(Path(__file__).resolve())
+    # The binder's source IS the measurement -- sfb answers every binding question below.
+    for mod in list(sys.modules.values()):
+        f = getattr(mod, "__file__", None)
+        if not f:
+            continue
+        p = Path(f).resolve()
+        try:
+            rel = p.relative_to(REPO_ROOT)
+        except ValueError:
+            continue
+        if rel.parts and rel.parts[0] == "src" and p.is_file():
+            found.add(p)
+    found.discard(OUT_PATH.resolve())
+    return sorted(found)
+
+
+@contextmanager
+def trace_repo_reads():
+    """Record every in-repo file the wrapped code actually READS. AR-203 (a), half two.
+
+    This is the instrument that keeps `discover_declared_inputs` honest. It does not guard
+    anything itself -- it observes, so that a read the discovery rule missed becomes a loud
+    failure instead of an unguarded input. Writes are deliberately not recorded: the artifact
+    write is not an input, and recording it would make the subset check vacuously fail.
+    """
+    recorded: set[Path] = set()
+    real_open, real_rt, real_rb = builtins.open, Path.read_text, Path.read_bytes
+
+    def note(f) -> None:
+        try:
+            p = Path(f).resolve()
+            rel = p.relative_to(REPO_ROOT)
+        except (ValueError, OSError, TypeError):
+            return
+        if rel.parts and rel.parts[0] == ".git":
+            return
+        if p.is_file():
+            recorded.add(p)
+
+    def my_open(file, mode="r", *a, **k):
+        if not any(c in str(mode) for c in "wax+"):
+            note(file)
+        return real_open(file, mode, *a, **k)
+
+    def my_rt(self, *a, **k):
+        note(self)
+        return real_rt(self, *a, **k)
+
+    def my_rb(self, *a, **k):
+        note(self)
+        return real_rb(self, *a, **k)
+
+    builtins.open, Path.read_text, Path.read_bytes = my_open, my_rt, my_rb
+    try:
+        yield recorded
+    finally:
+        builtins.open, Path.read_text, Path.read_bytes = real_open, real_rt, real_rb
+
+
+def verify_inputs_match_head(paths: list[Path], root: Path, tracked: set[str]) -> dict:
+    """Every TRACKED input, against the GIT OBJECT STORE, before the run baselines anything.
+
+    Widened from the five-name list per AR-203 (a). An input that git tracks must equal its
+    committed bytes; an input git does NOT track cannot be verified against HEAD at all and
+    is reported as such rather than silently passing -- main() decides that an untracked file
+    the build actually READS is a hole, because a number derived from bytes no commit vouches
+    for is exactly the thing this check exists to refuse.
+    """
+    rows = []
+    for p in paths:
+        rel = p.relative_to(root).as_posix()
+        if rel not in tracked:
+            rows.append({"path": rel, "status": "UNTRACKED__NOT_IN_HEAD", "match": None})
+            continue
+        head, status = head_blob_bytes(rel)
+        wt = p.read_bytes()
+        if status == "EMPTY_STDOUT__NOT_A_DIFFERENCE":
+            # An empty blob is ambiguous ONLY until the worktree is consulted: a tracked file
+            # that is empty at HEAD and empty on disk agrees with its commit. Calling that a
+            # mismatch is the false-REAL-DIFF this codebase already ate once.
+            head = b""
+        elif status != "OK":
+            rows.append({"path": rel, "status": status, "match": False})
+            continue
+        # ★ WHAT IS COMPARED, AND WHY IT IS NOT A LOWERED BAR. Content is compared on
+        # newline-normalised bytes. This catches every edit that can move a number -- the
+        # demonstrated Corpus-B role flip fails here -- because no content change survives
+        # newline normalisation. What it deliberately does NOT convict is a pure CRLF/LF
+        # divergence, which this checkout PRODUCES BY POLICY: files outside the h1-battery
+        # .gitattributes scope (the sixteen Corpus A specs, the binder module) are checked out
+        # with platform newlines against LF blobs. Convicting that would fire on every clean
+        # run, and a guard that is red on a clean tree gets switched off -- which is how a
+        # fabrication channel stays open. The divergence is REPORTED, not silently dropped.
+        content_match = wt.replace(b"\r\n", b"\n") == head.replace(b"\r\n", b"\n")
+        row = {
+            "path": rel,
+            "status": "OK",
+            "match": content_match,
+            "byte_exact": wt == head,
+        }
+        if wt != head:
+            row["line_ending_divergence_only"] = content_match
+            row["worktree_crlf_count"] = wt.count(b"\r\n")
+            row["head_crlf_count"] = head.count(b"\r\n")
+        if not content_match:
+            row["worktree_sha256"] = hashlib.sha256(wt).hexdigest()
+            row["head_sha256"] = hashlib.sha256(head).hexdigest()
+        rows.append(row)
+    checked = [r for r in rows if r["match"] is not None]
+    return {
+        "why": (
+            "Every tracked input this generator reads, compared against its committed bytes "
+            "BEFORE the run baselines or builds anything. The prior check ran against a "
+            "five-name list, so a tampered Corpus B published a fabricated figure at exit 0."
+        ),
+        "enumeration": "derived from this module's declared paths/globs; completeness enforced by trace_repo_reads",
+        "comparison": (
+            "newline-normalised content against the HEAD blob. Byte-exactness is recorded per "
+            "row; a pure line-ending divergence is this checkout's policy, not a tampered input."
+        ),
+        "rows": rows,
+        "n_tracked_checked": len(checked),
+        "n_untracked": len(rows) - len(checked),
+        "n_byte_exact": sum(1 for r in checked if r.get("byte_exact")),
+        "n_line_ending_divergence_only": sum(
+            1 for r in checked if r.get("line_ending_divergence_only")
+        ),
+        "all_match": all(r["match"] for r in checked),
+    }
 
 
 def verify_guarded_match_head(paths: list[Path], root: Path) -> dict:
@@ -1977,6 +2159,10 @@ def _summarise(art: dict) -> None:
           f"{gate['n_violations']} violations")
     print(f"OK  append-only: {len(head['rows'])} guarded artifacts byte-identical to HEAD "
           f"({head['all_match']})")
+    ig = art["INPUT_GUARD"]
+    print(f"OK  input guard: {ig['n_tracked_checked']} tracked inputs verified against the git "
+          f"object store pre-run ({ig['all_match']}) | {ig['n_traced_reads']} reads traced, "
+          f"all covered")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -1994,16 +2180,57 @@ def main(argv: list[str] | None = None) -> None:
     # WIDER THAN THE GUARDED LIST. The five named files were a curated enumeration, and a curated
     # enumeration is exactly what understated the 921. Every pre-existing file in the directory is
     # hashed, so a write to an unlisted neighbour is caught too. This CAN fire on data.
+    # ================================================== AR-203 (a): THE INPUT GUARD, FIRST
+    # Runs BEFORE the directory is baselined, before either build, before any write. A tampered
+    # tracked input previously reached the artifact as a published number at exit 0 with the
+    # safety sentence printed; nothing downstream could see it, because the in-run hash pair
+    # baselines the ALREADY-TAMPERED bytes and the HEAD check only looked at five names.
+    # SystemExit rather than assert on purpose: `python -O` strips asserts, and a fabrication
+    # gate that a flag can remove is not a gate.
+    tracked = tracked_files()
+    declared_inputs = discover_declared_inputs()
+    guarded_scope = sorted(set(declared_inputs) | {p.resolve() for p in APPEND_ONLY_GUARDED if p.exists()})
+    input_check = verify_inputs_match_head(guarded_scope, REPO_ROOT, tracked)
+    if not input_check["all_match"]:
+        bad = [r for r in input_check["rows"] if r["match"] is False]
+        sys.stderr.write(
+            "\nINPUT GUARD FAILED -- a tracked input differs from its committed bytes.\n"
+            "REFUSING TO RUN. No artifact written. Nothing below this point executed.\n"
+            "A number derived from tampered bytes is a fabricated number, and the previous\n"
+            "check could not see it: it guarded five names and this generator reads more.\n"
+            + "".join(f"  {r['path']}  status={r['status']}\n" for r in bad)
+        )
+        raise SystemExit(2)
+
     scope = sorted(p for p in H1.iterdir() if p.is_file() and p != OUT_PATH)
     before_hashes = {p.name: sha(p) for p in scope}
 
-    art = build_artifact(perturb=False)
+    with trace_repo_reads() as traced:
+        art = build_artifact(perturb=False)
 
     # ============================================================== R-203 s1: THE GATE
     # Build the ENTIRE artifact a second time under THE STANDARD PERTURBATION and require every
     # prose field that quotes a moved number to have moved with it. This is the check the three
     # captions died to; it runs on every invocation, before anything is written.
-    art_perturbed = build_artifact(perturb=True)
+        art_perturbed = build_artifact(perturb=True)
+
+    # AR-203 (a), completeness. The discovery rule above is only sound if it actually covered
+    # every read. This compares it against what the two builds OPENED. A read of an in-repo
+    # file that was not guarded -- an inlined literal path, a new corpus, an untracked file
+    # whose bytes no commit vouches for -- fails the run here rather than publishing.
+    unguarded = sorted(p for p in traced if p not in set(guarded_scope))
+    untracked_reads = sorted(
+        p for p in traced if p.relative_to(REPO_ROOT).as_posix() not in tracked
+    )
+    if unguarded or untracked_reads:
+        sys.stderr.write(
+            "\nINPUT ENUMERATION INCOMPLETE -- the build read an in-repo file the guard did not cover.\n"
+            "REFUSING TO PUBLISH. Add it to the declared inputs, or stop reading it.\n"
+            + "".join(f"  UNGUARDED READ  {p.relative_to(REPO_ROOT).as_posix()}\n" for p in unguarded)
+            + "".join(f"  UNTRACKED READ  {p.relative_to(REPO_ROOT).as_posix()}\n" for p in untracked_reads)
+        )
+        raise SystemExit(2)
+
     gate = caption_gate(art, art_perturbed, NON_RESPONSIVE_PROSE_ALLOWLIST)
 
     if "--gate-selftest" in argv:
@@ -2036,6 +2263,10 @@ def main(argv: list[str] | None = None) -> None:
            + ", ".join(gate["allowlist_entries_that_fired_on_nothing"])
            if gate["allowlist_entries_that_fired_on_nothing"] else "")
     )
+
+    input_check["traced_reads"] = sorted(p.relative_to(REPO_ROOT).as_posix() for p in traced)
+    input_check["n_traced_reads"] = len(traced)
+    art["INPUT_GUARD"] = input_check
 
     head_check = verify_guarded_match_head(APPEND_ONLY_GUARDED, REPO_ROOT)
     art["APPEND_ONLY_VERIFICATION"] = head_check
