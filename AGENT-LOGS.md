@@ -14033,3 +14033,34 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 **Known-facts updates:** Phase 0 CLOSED — judge certified, baseline honest, first true overlay measurement in the vault. corpus-v2 "overlay HURTS" is certified-false everywhere it was pinned.
 
 **Carry-forward:** roadmap resumes at (b) demotion-productionization cert track + Phase-1 H1 extractor build (teach the extractor to hear what traders actually say — the surface gradient); overlay bake-off + intake-provenance packet queue BEHIND H1.
+
+---
+
+### Session Log — 2026-07-20 (cont.) — The night the pointers confessed (`FAMILY_META` ruled ENFORCED)
+
+**Mission:** Resume the R-143 §3 main sequence after the level/zone detour closed. Three units dispatched in parallel: the Population-A flip step, the role-aware session resolver, and WIRE-2's two-leg premise audit.
+
+**What happened (the arc did not end where it was pointed — again):** WIRE-2's premise audit was built to ask whether `compute_bias`'s mechanism moves at the production boundary. It found something one layer up: **`FAMILY_META` declares that `WAIT_BIAS`/`CONFIRM_DIRECTION` bind to `bias_engine.classify_institutional_regime`, and the evaluator that actually runs those conditions never calls it** — 0 calls across 2,000 real ES bars *while that same run emitted 17 `entry_long` signals*, positive-controlled both ways. `bias_engine` is not imported at module scope; the only mention is a docstring saying it is out of scope. **The docstring was honest. The pointer lied.** WIRE-2 was blocked by its own premise — the second wire this audit has killed before it was built.
+
+**The class sweep (self-initiated, ratified R-152), n=2000 real bars + all 120 corpus specs × 600 bars, all 7 positive controls fired before any zero was trusted:** 14 families in `FAMILY_META`, derived from the live dict at runtime. Of the 9 declaring a real primitive — **REACHABLE 3 · PARTIAL 2 · NOT-REACHABLE 4 · COULD-NOT-VERIFY 2.** A **PATTERN**, not a one-off.
+- **`FILTER` (`spec_family_bindings.py:518`) declares `entry_quality.confluence_factor_presence` — the module DOES NOT EXIST.** `compute()` silently substitutes `np.ones(n)`: **constant True, 2000/2000**, for **390 corpus conditions carrying `role=spine`.** A condition that cannot be false cannot gate — the probe-that-cannot-fail shape, live in the execution graph. Mirrored in the TypeScript at `spec-family-bindings.ts:99`.
+- **`INVALIDATE` (`:526`) is the sole `approximation=False` among executed families and its primitive is never called** (0 calls / 495 firing bars); under `trace=True` it fires 492 times with all four signal columns **byte-identical**. The exactness claim rested on a call production never makes.
+- **`WAIT_STRUCTURE`/`VERIFY_STRUCTURE`** reach their primitive only on the proxy branch, and there an identity spy showed **`htf_bars is exec_bars` on 198/198 calls** — inert twice over.
+- **`bias_engine` was the LEAST severe member of its own class.**
+- The dispatch loop iterates `role=="spine"` only, so **921 trigger-role conditions are never evaluated at all** (42 WAIT_BIAS · 39 FILTER · 105 INVALIDATE · 480 ENABLE_ENTRY · 255 ENTER).
+
+**Ruling (R-152 → R-153 → R-154):** the fix-shape was pre-stated *before* the sweep returned, so its findings landed in a decision rather than a debate. **ENFORCED** — dispatch DERIVES from `FAMILY_META`; a declared primitive that does not resolve is a **startup error, never a silent `np.ones`**; primitive-less families get honest entries at `approximation=True`. **Demote-to-documentation REJECTED** for the agent's own stated reason: it leaves 390 spine conditions on a nonexistent module with nothing to catch the next lie. Packet staged (`3e108f17`), **conditionally ratified** (R-154) — build auto-unblocks only when **both** in-flight grades return clean of `FAMILY_META`/dispatch-adjacent findings.
+
+**The other two units:**
+- **Flip step LANDED `71b911ef`** — the campaign's **first `approximation=False`** (`named_sr_level` 4 + `order_block_edge` 2; `swing` held at n=1 below the n≥2 floor). F1–F7 fully receipted. It disclosed unprompted, in three places, that **both env flags default OFF so production output is byte-identical** — citing WIRE-1's own precedent as the reason not to repeat that conflation inverted. R-150 then set standing form: **measurement runs flags-ON and says so; production defaults stay OFF.**
+- **Session resolver LANDED `ee49fdca`** — and the headline **came down honestly**: 17 recoverable → **8 bound + 9 unbound, all still `approximation=True`.** `session_windows.py` computes only 5 real killzone windows; the rest were left unbound rather than force-mapped to a fabricated window. **The packet's premise — that this family converts teaching into NON-approximate bindings — did not survive contact.** It also found `lunch_blackout`/`overnight` absent from the `is_in_killzone` dispatch table (always False at runtime), and independently cleared WAIT_SESSION of the pointer-lie class.
+
+**My own errors, all recorded rather than smoothed:**
+1. **I reported on a landed commit before its agent returned** — caught it myself and labelled it an inspection, not a delivery.
+2. **My packet cited denominators `124/111` belonging to a different population** (WAIT_SESSION's is 26). The implementer **refused to silently substitute and flagged it** — the derive-never-transcribe law, broken by me inside the packet that carries it. Corrected at source.
+3. **I scheduled two builders against one file**; one agent's staged edit was lost mid-task. It caught this via an unexpectedly-empty `git diff` and reapplied cleanly rather than shipping a silent merge.
+4. **My memory-compaction script hit the campaign's own defect class** — every check green (72 trimmed, 77 pointers intact, 0 broken) while it destroyed the hooks' only job, reducing them to *"VARY the signal a."* The repair then **inherited the same bug** by budgeting the line instead of the hook. Minted as a law: *an instrument that optimizes the measured quantity while destroying what it measures has failed, however green its own checks.*
+
+**Verification:** AR-140 → AR-146 filed, each shipping in the same commit as its work. Two independent grades in flight (flip step, session resolver), both dispatched fresh-context, doer≠grader, re-measured from zero, 7–8 pre-live ceiling, each with an explicit RED-proof requirement. The class sweep was read-only — **no production code touched.**
+
+**Carry-forward:** both grades → auto-unblock (R-154) → enforcement build → independent grade. The dual-denominator re-measure stays **blocked on a growing input list** (declared flag configuration · flip-step grade · session grade · the 921) — its number would have been fiction twice over. WIRE-2 remains blocked at its premise; the `route_playbook` retarget question is deferred until enforcement lands. B-variant still queued. **Holds:** production flags OFF · the 77 sealed.
