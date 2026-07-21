@@ -4,6 +4,25 @@
 
 ---
 
+## AR-133 · 2026-07-20 · ★★★ **`ict_scalp` GATED CLEAN — 0/590 at the FULL 460,323-bar dataset, plant firing 38/590. Its bar DISCHARGES. ALL SIX BARS ARE NOW LIFTED and the level/zone detour CLOSES.**
+
+**Powered as demanded, and then some:** the **full dataset**, not a subsample — the prior attempt's 40,000-bar window extended to **100%**. **590 real entries** (287 long / 303 short), **3.6–4× the siblings' calibration counts** (163, 149). **0 mismatches.**
+
+**★ The plant fired and its trace was HAND-VERIFIED, not merely counted:** widening the gate at `ict_scalp.py:294`'s exact comparator produced **38/590** disagreements — trace at **entry bar 55804**, where the leaky variant pulled a target from a swing at **bar 55808, created 4 bars AFTER the entry**. The runner then **checked that swing directly against `detect_swings` on both the full frame and the `df.slice(0, 55805)` prefix** and confirmed it genuinely does not exist yet in the prefix. **A plant whose single trace was independently re-derived rather than trusted.**
+
+**★ And the mechanism was confirmed empirically, not inherited.** The prior attempt's explanation — that `detect_swings` adds `+half_window` before exposing a swing, so the gate already compares a confirmation index — was carried in as **verify-not-assume**, and this run **traced it**: a swing becomes visible at `raw_bar + lookback`, exactly the earliest bar at which its centered window is knowable, so whole-frame and prefix-truncated calls agree on every swing with confirmed index `< i`. **The claim I relayed is now measured.**
+
+**★ It also re-used the dead run's script — and audited it before trusting it**, reading the gate logic **byte-for-byte against `ict_scalp.py:294`/`:280-302`** before running it at full width. **Inheriting a tool from an orphaned job without checking it is exactly how a phantom becomes a wrong number**; it didn't.
+
+**THE SIBLING SET IS NOW COMPLETE, and the result is discriminating rather than uniform:** `eqhl_raid` **20/163 (12.3%) LEAKED → fixed** · `ict_swing` **6/149 (4.0%) LEAKED → fixed** · **`ict_scalp` 0/590 CLEAN at 3.6× the power.** **The one that read as gated was gated — and we now know that because it was measured, not because it read that way.** Two of three code-reads were wrong; this one was right; **only the testing distinguished them.**
+
+**★★ THE LEVEL/ZONE DETOUR CLOSES.** Final state: **detector sweep 19/19 validated, 0 uncalibrated** · BSL/SSL leak **fixed + graded Band 8** · target-gate leak **fixed + graded Band 7**, its risk change quantified and **operator-ruled in both channels** · `named_sr_level` **unblocked** · **all six archetype bars LIFTED on evidence, none on a stale reason** · B-variant queued for the dual-arm comparison.
+
+**Declared not-verified:** ES 5min only · `max_hold_bars` exit path out of scope · the two fixed siblings not re-verified here.
+
+**Holds:** flags OFF · no `approximation=False` · **fabricated-fallback ban intact across both arms** · the 77 sealed. **Main sequence resumes: dual-denominator DoD → session packet → WIRE-2 → vintage audit → T1.**
+
+
 ## AR-132 · 2026-07-20 · ★★ CORRECTION — **`ict_scalp`'s powered run was NEVER RUNNING.** The agent that said it launched one **completed**, so nothing tracked it and no notification was ever coming. **I reported it as in-flight for several messages.** Re-dispatched properly; receipt held.
 
 **1. ★ THE PHANTOM, AND IT IS THE SECOND OF ITS CLASS TONIGHT.** AR-122's runner reported its interim and said *"I've kicked off the full-dataset (460,323-bar) run in the background… I'll report full results once it completes."* **Then it completed.** An agent's **self-declared** background job is **not a dispatch receipt** — when the agent finishes, nothing owns the work and **no completion notification exists to wait for.** I accepted its word and carried "one item still running" across **five** subsequent messages, including two board summaries to the operator.
