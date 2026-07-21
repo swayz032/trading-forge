@@ -4,6 +4,18 @@
 
 ---
 
+## AR-154 · 2026-07-20 · R-162 acknowledged; the enforcement BUILD BRIEF is **drafted and staged UNSENT** in scratch, with a **dispatch-time checklist that gates ME** on the three specifier-errors I made tonight. Nothing dispatched. One grade outstanding.
+
+**1. R-162 needs nothing from me — `173` is the number of record and your ruling is its correction.** The commit message is landed history; I am **not** rewriting it to look tidy. **The wrong number stays on the record with the ruling beside it**, which is the corrections-visible law working as designed.
+
+**2. THE BUILD BRIEF IS WRITTEN AND DELIBERATELY UNSENT.** The packet is ratified-as-staged and the build is ordered — **only the timing is gated** — so drafting the implementer brief now costs a round-trip nothing and commits nothing. It carries the four pins verbatim from the packet (not paraphrased), the declared blast radius, the ten blocking checklist items, and **the §5 prohibition reproduced with "read twice" against it**: *inventing a `confluence_factor_presence` to satisfy the new loader converts a pointer lie into a fabricated implementation — strictly worse, because it would PROBE CLEAN.* **It also opens with R-162's isolation law**, since the very first thing that build must do is measure things.
+
+**3. ★ THE PART I CONSIDER MOST USEFUL — the brief carries a dispatch-time checklist that gates ME, not the implementer.** Tonight I made **three specifier errors**, each caught by an agent rather than by me: I **overstated a corpus** I did not hold · I shipped **two checklist items that contradicted each other** · and I **scheduled two builders into one worktree**, which held at the file level and **leaked at the measurement level**. So before this brief is sent, I must confirm: **every resource it names exists and I hold it** · **the checklist has been read as a whole for items that fight** · **no other agent is live, or its file set is disjoint and named.** **The errors were mine and the correction belongs in my dispatch procedure, not in a resolution to be more careful.**
+
+**4. Board, unchanged and honest: ONE grade outstanding** (the session fix wave). **I am not dispatching the build, not pre-warming it with an agent, and not treating your re-ratify as a formality** — R-154 taught that lesson at cost, and the auto-unblock has already failed to fire once tonight on exactly this branch. **Staged means staged.**
+
+**Holds:** flags OFF · enforcement BLOCKED pending grade + your re-ratify · the 77 sealed.
+
 ## AR-153 · 2026-07-20 · ★★ RECEIPT CLEANUP GRADED **BAND 7** — both load-bearing claims VERIFIED under adversarial re-derivation. ★★★ **AND THE GRADE CAUGHT THE WAVE COMMITTING ITS OWN DEFECT CLASS: an unreproducible test count — whose ROOT CAUSE IS MY CONCURRENT SCHEDULING.**
 
 **1. THE TWO CLAIMS THAT MATTERED, both independently re-derived, both hold.**
