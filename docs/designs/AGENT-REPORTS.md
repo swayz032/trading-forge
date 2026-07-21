@@ -4,6 +4,33 @@
 
 ---
 
+## AR-176 · 2026-07-21 · ★★★ **CENSUS RETURNED AND THE DATA IS DECISIVE: `lunch_blackout` = 0 conditions · `overnight` = 1, and that 1 is NEVER EVALUATED. Effective count for BOTH options: ZERO.** ★★ **And the headline nobody was looking for: exact-phrase session binding is 1 of 27 — AND THAT 1 IS THE FAKE ONE.** ★ Recommending **OPTION A**. **The choice is yours (R-183 §2).**
+
+**1. ★★ THE NUMBERS, derived through the PRODUCTION resolvers rather than re-implemented** (*"so census and engine cannot disagree"*), on **16 unique specs / 155 unique conditions**, **content-hash deduped** — it caught the known double-glob defect itself (2 mirrored files removed):
+
+| zone | bound | of WAIT_SESSION | of all |
+|---|---|---|---|
+| **`lunch_blackout`** | **0** | 0/27 | 0/155 |
+| **`overnight`** | **1** | 1/27 | 1/155 |
+
+**And the single `overnight` binding is `role=confluence`, PROVEN never evaluated on real bars** (149,196-row MES parquet; `compute()` leaves it absent from `last_per_condition_bool`, which holds 6 spine keys only). **★ EFFECTIVE COUNT FOR BOTH OPTIONS: 0 CONDITIONS.**
+
+**2. ★★★ THE FINDING I DID NOT ASK FOR AND WOULD NOT HAVE FOUND: session binding coverage is 1/27 — and that 1 is FAKE.** The code comment at `spec_family_bindings.py:747` says *"26 of 27 corpus-wide WAIT_SESSION conditions never bind."* **The census independently reproduces 26/27 → `None` — and then shows the ONE that binds, binds to an ORPHAN ZONE.** **So the true exact-phrase session coverage in this corpus is not 1/27. It is 0/27, wearing a 1.** That is the pointer lie at the population level, and it was sitting inside a number we have been quoting as if it were the good news.
+
+**3. ★★ THE PREMISE IS CONFIRMED — I required it re-checked rather than trusted, and it earned that.** **1,440 one-minute samples, run on BOTH DST regimes** (Jan and Jul): `lunch_blackout` **0/1440**, `overnight` **0/1440**, while `london` 180 · `ny_am` 180 · `ny_pm` 150 · `silver_bullet` 180 · `macro_window` 74. **Positive controls all fired, including the discriminating one — `ny_am` at 12:30 returns FALSE, so the probe can also say no.** ★ **And the sharpest control: at 12:00-13:00 ET `is_in_lunch_blackout()` = TRUE while `is_in_killzone(ts,'lunch_blackout')` = FALSE. The window exists and is computable; the DISPATCH TABLE is what is missing.**
+
+**4. ★★ OPTION B IS NOT MERELY UNNECESSARY — FOR `overnight` IT IS UNPAYABLE.** Three independent reasons, each sufficient: **(i)** `SESSION_KEYWORDS["overnight"]` bundles **incompatible clocks** — globex (~23h, not a window), asia (19:00-04:00), pre-market (04:00-09:30) — *"they do not intersect into one interval"* · **(ii) three conflicting definitions are ALREADY LIVE IN THIS REPO**, and **the engine disagrees with its own only real corpus teaching by 2h at the open and 2.5h at the close** (module says 18:00→07:00; the teaching says 16:00→09:30) · **(iii) `OVERNIGHT_END_MIN = 1860` is not a minute-of-day** — the standard predicate shape would be True for 360/1440 and **silently drop 420 minutes, more than half the intended window, while wearing `approximation=False`.** ★ ***"Just wire the existing constants" would ship a half-wrong gate.*** **This is the London-killzone pattern this lane already convicted: sounds precise, isn't, and it would PROBE CLEAN.**
+
+**5. `lunch_blackout` is the opposite case — Option B there is genuinely cheap and defended** (11:30-13:30 ET, ratified in `CLAUDE.md:785` on three external datasets; `is_in_lunch_blackout()` already exists and is tested). **But it would buy 0 conditions today.**
+
+**6. ★ MY RECOMMENDATION: OPTION A — and I want to name the trade honestly rather than sell it.** Option B's **total realizable value across the corpus is 0 conditions moved**; the packet's own deliverable would publish **n=0**. Option A costs **0 behaviour change** and converts the single `bindable=True, approximation=False, executed=True` **fake-exactness claim** into an honest unbound-with-reason. **It closes `EMIT ⊆ COVERED` just as completely.** ★ **The census flagged a SPLIT variant** (cover `lunch_blackout`, stop emitting `overnight`) and was scrupulous that **on today's corpus it also buys 0** — *"a forward-looking bet on future corpora rather than a measured gain."* **I do not recommend it: it adds a live code path for zero measured value, and this campaign has spent the night deleting exactly that shape.** **But it is your call and the data does not forbid it.**
+
+**7. SEALED EXPOSURE CHECKED, not assumed:** the one spec **IS** in `h1-sealed-fresh-set-2026-07-12.json` — **but the condition is confluence, outside the spine ratio (`spine_total=6, spine_bound=6`), so NO sealed backtest output can move under either option.** The only delta is binding-plan metadata: a published rate counting confluence bindings moves by exactly 1 under A.
+
+**8. ★ AND IT REFUSED TO ASSERT A CLEAN TREE IT COULD NOT CLAIM.** Told *"if `git status` differs at your end you have failed,"* it reported the tree **NOT** byte-identical — then **attributed every delta correctly to the fix wave and to my own AR-175 commit**, and stated *"my footprint: zero repo writes, zero commits, zero deletions."* **A weaker agent would have reported clean and been technically wrong. Scoping bound also volunteered: these counts cover the only `*.spec.json` on disk; a corpus elsewhere is not spoken to.**
+
+**Holds:** flags OFF · fix wave still running (one writer on the contested file) · orphan implementation **still held, awaiting your A/B ruling** · the 77 sealed.
+
 ## AR-175 · 2026-07-21 · ⚠ **YOUR "two units in flight" IS NOT YET TRUE — and I found a REAL COLLISION before dispatching into it.** ★★ **The orphan implementation and the live fix wave both edit `spec_family_bindings.py`.** So I dispatched **the CENSUS ONLY — read-only, zero files touched** — which is precisely what R-183 §2 asked for. **Implementation HELD until the fix wave lands.**
 
 **1. ★★ THE COLLISION, verified at line level rather than assumed.** R-183 said *"dispatch it"* and closed *"two units now genuinely in flight."* **I checked before obeying, and the two units would have collided:**
