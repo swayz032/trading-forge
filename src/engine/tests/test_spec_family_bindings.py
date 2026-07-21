@@ -337,15 +337,20 @@ def test_bare_am_pm_tokens_in_prose_never_bind_as_session(prose):
 # ★ R-156 §2 FIX. This list previously carried a third case,
 # ("skip the lunch hour entirely", "lunch_blackout"), asserting bindable=True
 # with session_zone="lunch_blackout". That was A GREEN TEST BLESSING AN
-# ALWAYS-FALSE RUNTIME GATE: "lunch_blackout" is not a key of
+# ALWAYS-FALSE RUNTIME GATE: "lunch_blackout" was not a key of
 # session_windows._ZONE_CHECKS, so is_in_killzone(ts, "lunch_blackout")
-# returns False for EVERY timestamp that will ever exist. The assertion was
+# returned False for EVERY timestamp that will ever exist. The assertion was
 # literally true about the binding and entirely false about the behavior —
 # a fabricated safety-claim inside a fence.
 #
-# It is NOT deleted (that would lose the coverage). It is relocated below
-# into a test that states the truth explicitly and TRIPWIRES when the
-# orphan-zone defect is finally fixed by the lane that owns it.
+# ★ R-185 §2 CLOSURE. The relocated tripwire that replaced it has now FIRED
+# and been REWRITTEN, exactly as designed — see
+# test_lunch_phrase_is_refused_and_nothing_emits_an_uncovered_zone below.
+# The orphan-zone defect is closed (Option A: the phrases no longer emit),
+# so the tripwire's premise — "this phrase binds lunch_blackout" — is dead,
+# and the test now asserts the NEW truth with the same both-directions
+# discipline. Retiring WITH its subject, by design, is the whole difference
+# between a self-destructing instrument and one somebody quietly deleted.
 _REAL_SESSION_PHRASE_CASES = [
     ("we trade the ny am session only", "ny_am"),
     ("wait for the london open before entering", "london"),
@@ -367,13 +372,16 @@ def test_real_session_phrases_still_bind(phrase, expected_zone):
     assert binding.session_zone == expected_zone
 
 
-# ─── Orphan-zone honesty (R-156 §2) ─────────────────────────────────────────
+# ─── Orphan-zone honesty (R-156 §2) → CLOSURE (R-185 §2) ────────────────────
 #
-# The coverage gap itself — SESSION_KEYWORDS emits 7 zone names while
-# session_windows._ZONE_CHECKS can evaluate only 5 — is a PRE-EXISTING defect
-# owned by a different lane (a packet writing an "emitted values ⊆ covered
-# values, fail-loud at load" contract). NOTHING here fixes it. These tests
-# exist so that no test in this file can go on CERTIFYING it as working.
+# HISTORY, kept because the check outlives the defect: SESSION_KEYWORDS used to
+# emit 7 zone names while session_windows._ZONE_CHECKS could evaluate only 5,
+# so `lunch_blackout` / `overnight` bound to gates that were False for all
+# 1,440 minutes of every day while advertising approximation=False.
+#
+# The orphan-zone closure (Option A) removed both names from the emit side.
+# These tests now assert the CLOSED state, and — this is the part that matters
+# — they must FAIL if an uncovered emission ever returns.
 
 
 def _covered_zone_names() -> set[str]:
@@ -394,31 +402,67 @@ def _orphan_zone_names() -> set[str]:
     return _emittable_zone_names() - _covered_zone_names()
 
 
-def test_orphan_zone_set_is_exactly_the_known_pre_existing_defect():
-    """Pins the derived sets so this file's other honesty checks cannot
-    silently go vacuous (e.g. if _ZONE_CHECKS grew to cover everything, or if
-    a new uncovered zone name were introduced upstream)."""
+def _refused_zone_names() -> set[str]:
+    """The zone names deliberately NOT emitted. Derived from the refusal table,
+    not typed — so this file cannot drift from the production decision."""
+    from src.engine.session_windows import REFUSED_SESSION_KEYWORDS
+
+    return set(REFUSED_SESSION_KEYWORDS)
+
+
+def test_emit_is_a_subset_of_covered_and_the_refusal_table_is_the_reason():
+    """★ THE REWRITTEN :334 TRIPWIRE, DIRECTION 1: the closed state, derived.
+
+    Every zone any resolver can emit is a zone is_in_killzone() can evaluate.
+    This FAILS THE MOMENT anyone re-introduces an uncovered emission — which is
+    the whole reason it is written over derived sets instead of literals."""
     assert _covered_zone_names() == {"london", "ny_am", "ny_pm", "silver_bullet", "macro_window"}
-    assert _orphan_zone_names() == {"lunch_blackout", "overnight"}
+    assert _orphan_zone_names() == set(), (
+        "an uncovered zone is emittable again — pin (b2) EMIT ⊆ COVERED is violated: "
+        f"{sorted(_orphan_zone_names())}"
+    )
+    # ...and the two names did not simply vanish. They are RECORDED as refused,
+    # so "we stopped emitting it" is distinguishable from "somebody deleted it."
+    assert _refused_zone_names() == {"lunch_blackout", "overnight"}
+    assert _refused_zone_names() & _emittable_zone_names() == set(), (
+        "a refused zone is emittable — refusal and emission must be disjoint"
+    )
 
 
-def test_lunch_binding_is_recorded_as_a_dead_gate_not_blessed_as_working():
-    """THE RELOCATED :334 CASE, stated truthfully.
+def test_emit_subset_covered_fails_when_an_uncovered_emission_is_reintroduced():
+    """★ THE REWRITTEN :334 TRIPWIRE, DIRECTION 2 — the anti-vacuity half.
 
-    "skip the lunch hour entirely" really does bind, and really does carry
-    session_zone="lunch_blackout" — that half of the old assertion was true.
-    What the old test did NOT say, and what made it a fabricated safety-claim,
-    is that the zone it certified is one is_in_killzone() can never evaluate
-    True for. Both halves are asserted here, together.
+    A check that passes because the thing it checks was removed is not a
+    check. This RE-INTRODUCES an uncovered emission and proves the derived
+    orphan set notices, then restores. Without this, the assertion above
+    would keep passing if _emittable_zone_names() were broken to return {}."""
+    from src.engine import spec_family_bindings as _sfb
 
-    TRIPWIRE: when the owning lane closes the coverage gap, the final
-    assertion starts failing and this test must be rewritten to assert the
-    now-working behavior. That failure is the POINT — it is how this file
-    finds out, instead of reporting green either way."""
-    from datetime import datetime, timedelta
+    assert _orphan_zone_names() == set()
+    _sfb.SESSION_KEYWORDS["zzz_reintroduced_orphan"] = ("zzz reintroduced orphan",)
+    try:
+        assert _orphan_zone_names() == {"zzz_reintroduced_orphan"}, (
+            "the orphan set is not derived from the live table — it cannot see a "
+            "re-introduced uncovered emission, so its green is meaningless"
+        )
+    finally:
+        del _sfb.SESSION_KEYWORDS["zzz_reintroduced_orphan"]
+    assert _orphan_zone_names() == set()
 
-    from src.engine.session_windows import is_in_killzone
 
+def test_lunch_phrase_is_refused_and_nothing_emits_an_uncovered_zone():
+    """★ THE REWRITTEN :334 TRIPWIRE, on the original subject phrase.
+
+    OLD PREMISE (dead): "skip the lunch hour entirely" binds, carrying
+    session_zone="lunch_blackout", and is_in_killzone() can never evaluate it.
+    NEW TRUTH: the phrase no longer binds at all. It is REFUSED — unbound,
+    with a reason that NAMES the zone it would have bound — so the teaching is
+    visibly declined rather than silently dropped into the generic bucket.
+
+    Both directions are kept: the phrase must not bind, AND the refusal must
+    stay legible. If anyone re-introduces the emission, the first assertion
+    fails; if anyone deletes the refusal instead of recording it, the second
+    and third do."""
     binding = bind_condition(
         {
             "id": "regression:orphan-zone",
@@ -427,34 +471,39 @@ def test_lunch_binding_is_recorded_as_a_dead_gate_not_blessed_as_working():
             "role": "confluence",
         }
     )
-    assert binding.bindable is True
-    assert binding.session_zone == "lunch_blackout"
-
-    # ...and the consumer can never act on it. Every minute of a full day,
-    # not a spot check — including 11:30–13:30 ET, the window the zone NAMES.
-    base = datetime(2026, 7, 20, 0, 0, tzinfo=UTC)
-    ever_true = any(is_in_killzone(base + timedelta(minutes=i), "lunch_blackout") for i in range(24 * 60))
-    assert ever_true is False, (
-        "ORPHAN-ZONE DEFECT CLOSED by another lane — lunch_blackout is now checkable. "
-        "This test asserted the defect; rewrite it to assert the working behavior."
+    assert binding.bindable is False, (
+        "an uncovered zone is binding again — this is the always-False gate the "
+        "orphan-zone closure removed"
     )
+    assert binding.session_zone is None
+    assert binding.reason == "session_zone_refused_uncomputable_window:lunch_blackout", (
+        f"refusal is not legible: reason={binding.reason!r}"
+    )
+    # The refusal must be DISTINCT from the generic miss — otherwise "refused"
+    # and "never recognized" collapse into one bucket and the honesty is lost.
+    assert binding.reason != "no_recognized_session_keyword"
+    # Never an exactness claim on a zone with no window (packet prohibition).
+    assert binding.approximation is not False
 
 
 def test_no_anti_vacuity_case_certifies_a_zone_the_killzone_gate_cannot_check():
     """Structural version of the :334 fix: no case in the anti-vacuity fence
-    may expect an orphan zone. This is exactly what the removed case did."""
-    orphans = _orphan_zone_names()
-    offenders = [(p, z) for p, z in _REAL_SESSION_PHRASE_CASES if z in orphans]
-    assert offenders == [], f"anti-vacuity fence certifies uncheckable zone(s): {offenders}"
+    may expect an orphan zone, and none may expect a REFUSED zone either.
+    Checking both keeps this live now that the orphan set is empty."""
+    forbidden = _orphan_zone_names() | _refused_zone_names()
+    offenders = [(p, z) for p, z in _REAL_SESSION_PHRASE_CASES if z in forbidden]
+    assert offenders == [], f"anti-vacuity fence certifies unbindable zone(s): {offenders}"
 
 
 def test_sibling_sweep_no_session_test_asserts_an_uncheckable_zone():
     """THE MINI-SWEEP (R-156 §2) as a PERMANENT check, not a one-time grep.
 
-    Method: derive the orphan set programmatically (above), then AST-scan
-    every test module that imports a session surface for a string literal
-    equal to an orphan zone name. Any hit outside this module (which holds
-    the one registered known-defect test) is a new sibling and fails here.
+    Method: derive the forbidden set programmatically (orphan zones, now empty,
+    UNION the refused zones — which keeps the sweep live after the closure
+    rather than letting it go vacuous), then AST-scan every test module that
+    imports a session surface for a string literal equal to a forbidden zone
+    name. Any hit outside this module (which holds the registered tests) is a
+    new sibling and fails here.
 
     Scoping note: modules that never touch spec_family_bindings/
     session_windows are excluded on purpose. Other subsystems use these same
@@ -468,7 +517,7 @@ def test_sibling_sweep_no_session_test_asserts_an_uncheckable_zone():
     import ast
     import pathlib
 
-    orphans = _orphan_zone_names()
+    orphans = _orphan_zone_names() | _refused_zone_names()
     repo_root = pathlib.Path(__file__).resolve().parents[3]
     this_module = pathlib.Path(__file__).resolve()
 
@@ -1516,7 +1565,6 @@ def test_no_recognition_leak_on_batches_three_and_four(_role_resolver_on, text):
 
 _LEGACY_RESOLVER_FALSE_POSITIVES = [
     ("the London session of parliament was televised", "london"),
-    ("the class session before lunch runs long", "lunch_blackout"),
 ]
 
 
@@ -1529,13 +1577,15 @@ def test_found_not_fixed_legacy_keyword_resolver_binds_ordinary_prose(monkeypatc
     keyword matcher, not the role resolver. It runs first; the role resolver is
     only consulted when it returns None (see _bind_condition_dispatch). So
     these binds happen with the feature flag OFF, are untouched by everything
-    this delivery changed, and cannot be cured from inside classify_session_role.
+    that delivery changed, and cannot be cured from inside classify_session_role.
 
     "the London session of parliament was televised" -> london is a genuine
-    wrong-window bind of the kind this module says it refuses.
-    "the class session before lunch runs long" -> lunch_blackout is an ORPHAN
-    zone emission, which belongs to the orphan-zone lane and which this packet
-    is explicitly prohibited from touching.
+    wrong-window bind of the kind this module says it refuses. STILL OPEN.
+
+    ★ THE SECOND ROW IS NOW FIXED and has moved to its own test below: "the
+    class session before lunch runs long" -> lunch_blackout was an ORPHAN zone
+    emission, which the orphan-zone closure retired. It is asserted as fixed
+    rather than deleted, so the receipt survives the cure.
 
     Pinned flag-OFF so it is provably the legacy path, and so that whoever owns
     that lane inherits a failing-visible receipt instead of a paragraph."""
@@ -1544,6 +1594,26 @@ def test_found_not_fixed_legacy_keyword_resolver_binds_ordinary_prose(monkeypatc
     binding = bind_condition({"id": "legacy:fp", "type": "WAIT_SESSION", "object": text, "role": "spine"})
     assert binding.session_zone == zone, "if this changed, the legacy defect moved — re-scope the note above"
     # ...and the role resolver, this delivery's surface, correctly refuses it.
+    assert classify_session_role(text).recognized is False
+
+
+def test_found_and_now_fixed_legacy_orphan_zone_leak_on_ordinary_prose(monkeypatch):
+    """★ THE OTHER HALF OF THE RECEIPT ABOVE, CLOSED.
+
+    "the class session before lunch runs long" used to bind an orphan zone
+    through the legacy bare-keyword matcher, with the flag OFF. The orphan-zone
+    closure removed the emission, so this ordinary prose no longer binds
+    anything — and, because the refusal is recorded rather than silent, the
+    reason still names what was declined.
+
+    Kept as a test (not deleted with the defect) so a regression is loud."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    text = "the class session before lunch runs long"
+    assert resolve_session_keyword(text) is None
+    binding = bind_condition({"id": "legacy:fp", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None
+    assert binding.reason.startswith("session_zone_refused_uncomputable_window:")
     assert classify_session_role(text).recognized is False
 
 
@@ -2437,3 +2507,106 @@ def test_batch8_anaphora_is_uniqueness_not_the_word_that(_role_resolver_on):
     assert governed("the news comes out at 8:30 a.m. so I have coffee before that, then I flatten") is False
     # ...and the antecedent must PRECEDE the anaphor.
     assert governed("I flatten before that and the news comes out at 8:30 a.m.") is False
+
+
+# ─── Orphan-zone closure: the refusal is VISIBLE, and it is INERT ────────────
+
+
+@pytest.mark.parametrize(
+    ("phrase", "refused_zone"),
+    [
+        ("skip the lunch hour entirely", "lunch_blackout"),
+        ("we always take a long lunch on Fridays", "lunch_blackout"),
+        ("midday chop is not tradeable", "lunch_blackout"),
+        ("the overnight session sets the range", "overnight"),
+        ("globex opens and the algos hunt stops", "overnight"),
+        ("asia session highs matter to me", "overnight"),
+        ("pre market activity tells me the tone", "overnight"),
+    ],
+)
+def test_refused_session_phrases_are_declined_with_a_named_reason(phrase, refused_zone):
+    """RETURN-CHECKLIST 3/6: refused, NOT silently dropped.
+
+    Each phrase used to bind an always-False gate. Now each is unbound with a
+    reason that NAMES the zone — strictly more informative than the generic
+    no_recognized_session_keyword, which is what "silently dropped" would look
+    like."""
+    from src.engine.spec_family_bindings import refused_session_zone, session_refusal_reason
+
+    assert resolve_session_keyword(phrase) is None
+    assert refused_session_zone(phrase) == refused_zone
+    binding = bind_condition(
+        {
+            "id": "refusal:" + refused_zone,
+            "type": "WAIT_SESSION",
+            "object": phrase,
+            "role": "spine",
+        }
+    )
+    assert binding.bindable is False
+    assert binding.session_zone is None
+    assert binding.reason == session_refusal_reason(refused_zone)
+    assert refused_zone in binding.reason, "the reason must name the zone it declined"
+    assert binding.approximation is not False
+
+
+def test_refusal_does_not_collapse_into_the_generic_miss():
+    """CAN-FAIL CONTROL for the test above. A phrase with no session vocabulary
+    at all must STILL get the generic reason — otherwise "refused" would just be
+    the new name for every miss and the distinction would be decorative."""
+    binding = bind_condition(
+        {
+            "id": "refusal:control",
+            "type": "WAIT_SESSION",
+            "object": "institutional participation",
+            "role": "spine",
+        }
+    )
+    assert binding.bindable is False
+    assert binding.reason == "no_recognized_session_keyword"
+    assert binding.approximation is False
+
+
+def test_refusal_row_is_inert_for_every_approximation_aggregate():
+    """The refusal carries approximation=True (the packet forbids an exactness
+    claim on these zones). Prove that cannot leak into a published rate: both
+    aggregates filter on `bindable and executed`, and this row is neither."""
+    plan = compile_binding_plan(
+        {
+            "entry_conditions": [
+                {"id": "t", "type": "WAIT_STRUCTURE", "object": "break of structure", "role": "spine"},
+                {"id": "r", "type": "WAIT_SESSION", "object": "lunch reversals", "role": "spine"},
+            ],
+            "entry_trigger_id": "t",
+            "invalidations": [],
+        }
+    )
+    refusal = next(b for b in plan.bindings if b.condition_id == "r")
+    assert refusal.approximation is True
+    assert refusal.bindable is False
+    assert refusal.executed is False
+    # The published aggregate is computed over bindable+executed rows only.
+    assert [b for b in plan.bindings if b.bindable and b.executed and b.condition_id == "r"] == []
+
+
+def test_refused_zone_constants_survive_so_the_bridge_is_not_burned():
+    """Option A refused the zones; it did NOT delete the window primitives.
+    If a future corpus ever teaches lunch-avoidance, covering it is a small
+    demand-justified packet — this asserts the material for it still exists."""
+    from datetime import datetime, timedelta
+
+    from src.engine import session_windows as sw
+
+    assert sw.LUNCH_BLACKOUT_START_MIN == 11 * 60 + 30
+    assert sw.LUNCH_BLACKOUT_END_MIN == 13 * 60 + 30
+    # 12:30 ET on a summer (EDT) date — the checker still works standalone...
+    noon_thirty = datetime(2026, 7, 20, 16, 30, tzinfo=UTC)
+    assert sw.is_in_lunch_blackout(noon_thirty) is True
+    # ...and is STILL not reachable through the killzone dispatch, which is
+    # precisely why binding to it was dishonest. Full day, not a spot check.
+    base = datetime(2026, 7, 20, 0, 0, tzinfo=UTC)
+    assert not any(
+        sw.is_in_killzone(base + timedelta(minutes=i), "lunch_blackout") for i in range(24 * 60)
+    )
+    # Positive control proving the probe above is live, not dead.
+    assert any(sw.is_in_killzone(base + timedelta(minutes=i), "ny_am") for i in range(24 * 60))

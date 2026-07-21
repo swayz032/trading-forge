@@ -43,6 +43,21 @@ Keep this file short enough that pasting it is never a burden. If a trap stops b
 > 7. **ANY COUNT THAT ENTERS A RECEIPT** (tests, deltas, timings) **must be measured in an isolated
 >    worktree pinned to your commit.** A number measured in a shared tree does not reproduce from
 >    the SHA. `git worktree add --detach <tmp> <sha>` → measure → `git worktree remove`.
+> 8. **★ IF YOU RUN A DIFFERENTIAL, PROVE THE ARMS ARE DISTINCT FIRST.** A before/after suite diff
+>    here once reported **identical totals on both arms for a commit that ADDS 14 TESTS** — the same
+>    measurement run twice, wearing a comparison's name. Every explicit check was green; **only the
+>    arithmetic refusing to reconcile caught it.** Before any outcome-diff: print `git rev-parse HEAD`
+>    **from inside each worktree** (never infer it), diff the **collected test-id sets**, and **NAME
+>    the ids one arm has and the other lacks.** **If the arms cannot be made to differ, that is your
+>    finding — report it.**
+> 9. **★ RECONCILE LOAD-BEARING NUMBERS AGAINST SOMETHING OUTSIDE THEIR OWN PIPELINE.** Counts that
+>    must add up, invariants that must hold. **Greens are necessary; reconciliation is sufficient.**
+
+> ### ★ YOUR FINAL MESSAGE IS YOUR ONLY DELIVERY CHANNEL
+> **Your final message MUST contain the results, or the words NOT RUN.** A promise of future delivery
+> in a final message is a **null deliverable — you will not exist to keep it.** One agent here
+> declared runs "in flight" and terminated **twice**; both were presumed dead and neither delivered,
+> including one carrying the best finding on the board. **Finish inside the message, or say NOT RUN.**
 
 ## (copy to here)
 

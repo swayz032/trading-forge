@@ -62,15 +62,32 @@ export interface BindingPlan {
 }
 
 // ─── Session keyword table — mirror src/engine/spec_family_bindings.py::SESSION_KEYWORDS EXACTLY ──
+// Every key MUST be a zone session_windows._ZONE_CHECKS can evaluate (pin (b2),
+// EMIT ⊆ COVERED). `lunch_blackout` / `overnight` were removed by the orphan-zone
+// closure (docs/designs/packet-orphan-zone-closure-2026-07-21.md) and moved to
+// REFUSED_SESSION_KEYWORDS below.
 export const SESSION_KEYWORDS: Record<string, string[]> = {
   london: ["london session", "london open", "london killzone"],
   ny_am: ["ny am", "new york am", "new york morning", "ny morning", "ny open", "am session"],
   ny_pm: ["ny pm", "new york pm", "new york afternoon", "ny afternoon", "pm session"],
   silver_bullet: ["silver bullet"],
   macro_window: ["macro window", "macro release"],
+};
+
+// ─── REFUSED session vocabulary — mirror
+// src/engine/spec_family_bindings.py::REFUSED_SESSION_KEYWORDS EXACTLY ──
+// Recognized as session vocabulary, deliberately NOT bound: the zones they name
+// have no window `is_in_killzone` can evaluate, so binding them produced an
+// always-False gate wearing `approximation: false`. Refused with a named reason
+// rather than silently dropped.
+export const REFUSED_SESSION_KEYWORDS: Record<string, string[]> = {
   lunch_blackout: ["lunch", "midday", "noon session"],
   overnight: ["overnight", "globex", "asia session", "pre market", "premarket"],
 };
+
+export function sessionRefusalReason(refusedZone: string): string {
+  return `session_zone_refused_uncomputable_window:${refusedZone}`;
+}
 
 export const MIN_SPINE_BOUND_RATIO = 0.5;
 
@@ -188,15 +205,26 @@ export const FAMILY_META: Record<string, FamilyMeta> = {
   EXCEPTION: { primitive: null, unsupported: true, unboundReason: "control_flow_exception_unsupported" },
 };
 
+function phraseHit(objectText: string, keywords: string[]): boolean {
+  const norm = ` ${objectText.trim().toLowerCase()} `;
+  return keywords.some(
+    (kw) => norm.includes(` ${kw} `) || norm.trim().startsWith(kw) || norm.trim().endsWith(kw),
+  );
+}
+
 export function resolveSessionKeyword(objectText: string | null | undefined): string | null {
   if (!objectText) return null;
-  const norm = ` ${objectText.trim().toLowerCase()} `;
   for (const [zone, keywords] of Object.entries(SESSION_KEYWORDS)) {
-    for (const kw of keywords) {
-      if (norm.includes(` ${kw} `) || norm.trim().startsWith(kw) || norm.trim().endsWith(kw)) {
-        return zone;
-      }
-    }
+    if (phraseHit(objectText, keywords)) return zone;
+  }
+  return null;
+}
+
+/** The refused zone a phrase WOULD have bound before the orphan-zone closure, or null. */
+export function refusedSessionZone(objectText: string | null | undefined): string | null {
+  if (!objectText) return null;
+  for (const [zone, keywords] of Object.entries(REFUSED_SESSION_KEYWORDS)) {
+    if (phraseHit(objectText, keywords)) return zone;
   }
   return null;
 }
@@ -241,6 +269,11 @@ export function bindCondition(condition: SpecConditionLike): ConditionBinding {
   if (meta.requiresSessionKeyword) {
     const zone = resolveSessionKeyword(object);
     if (zone === null) {
+      // Orphan-zone refusal — recognized session vocabulary with no evaluable
+      // window. Named reason, never silently dropped. `approximation` is true,
+      // never false: the packet forbids an exactness claim on these zones, and
+      // the flag is inert here because this row is neither bindable nor executed.
+      const refused = refusedSessionZone(object);
       return {
         conditionId,
         type,
@@ -248,9 +281,9 @@ export function bindCondition(condition: SpecConditionLike): ConditionBinding {
         object,
         bindable: false,
         primitive: null,
-        approximation: false,
+        approximation: refused !== null,
         executed: false,
-        reason: meta.unboundReason ?? null,
+        reason: refused !== null ? sessionRefusalReason(refused) : (meta.unboundReason ?? null),
         sessionZone: null,
       };
     }

@@ -60,10 +60,17 @@ ET_TIMEZONE = "America/New_York"
 KILLZONE_NAMES: tuple[str, ...] = ("london", "ny_am", "ny_pm", "silver_bullet", "macro_window")
 
 # W23F.N lunch blackout + PM taper reference windows (CLAUDE.md §13) — NOT part
-# of the 5 canonical killzones, but are additional session-anchored windows the
-# spec vocabulary sometimes references (WAIT_SESSION objects like "lunch",
-# "midday", "overnight"). Included here as a documented, separate lookup so the
-# binding stays honest about which constant table backs which zone name.
+# of the 5 canonical killzones, and (since the orphan-zone closure, see
+# REFUSED_SESSION_KEYWORDS below) NOT reachable from the spec-vocabulary binding
+# surface either. They remain here, unused by `_ZONE_CHECKS`, because THE BRIDGE
+# IS NOT BURNED: if a future corpus ever teaches lunch-avoidance or a defensible
+# overnight clock, covering those zones becomes a small demand-justified packet
+# and these constants are what it would build on.
+#
+# ★ `OVERNIGHT_END_MIN` IS NOT A MINUTE-OF-DAY (it is 1860 = 24*60 + 420). Any
+# predicate that compares it to `_to_et_minutes_of_day()`'s [0,1440) output
+# silently drops more than half the intended window. That is one of the reasons
+# `overnight` was refused rather than covered — see the refusal note below.
 LUNCH_BLACKOUT_START_MIN = 11 * 60 + 30
 LUNCH_BLACKOUT_END_MIN = 13 * 60 + 30
 OVERNIGHT_START_MIN = 18 * 60          # Globex session open (18:00 ET)
@@ -162,15 +169,55 @@ def is_in_lunch_blackout(timestamp_utc: datetime) -> bool:
 # philosophy: a miss is honest (unbindable), a false-positive silently binds
 # the WRONG session window (dangerous). Only unambiguous session vocabulary
 # gets an entry.
+#
+# ★ EVERY KEY OF THIS TABLE MUST BE A KEY OF `_ZONE_CHECKS`. That invariant is
+# the whole point of the orphan-zone closure (packet-orphan-zone-closure-
+# 2026-07-21.md) and is enforced at load time by
+# family_meta_enforcement.verify_emit_subset_covered() pin (b2). A zone name
+# this table can emit but `is_in_killzone` cannot check is an ALWAYS-FALSE gate
+# wearing `bindable=True, approximation=False` — a value nothing can evaluate.
 SESSION_KEYWORDS: dict[str, tuple[str, ...]] = {
     "london": ("london session", "london open", "london killzone"),
     "ny_am": ("ny am", "new york am", "new york morning", "ny morning", "ny open", "am session"),
     "ny_pm": ("ny pm", "new york pm", "new york afternoon", "ny afternoon", "pm session"),
     "silver_bullet": ("silver bullet",),
     "macro_window": ("macro window", "macro release"),
+}
+
+# ─── REFUSED session vocabulary (orphan-zone closure, Option A) ──────────────
+#
+# These phrases USED to resolve to `lunch_blackout` / `overnight`, which
+# `_ZONE_CHECKS` never covered — so `is_in_killzone()` returned False for all
+# 1,440 minutes of every day while the binding plan advertised
+# `bindable=True, approximation=False, executed=True`.
+#
+# They are REFUSED, not silently deleted: `refused_session_zone()` still
+# recognizes them and names WHY, so a reader (and §6a's unbound accounting)
+# can tell "we saw this teaching and have no honest primitive for it" apart
+# from "we never recognized it at all."
+#
+# WHY REFUSED RATHER THAN COVERED, on the data:
+#   - Effective demand is ZERO. Over the 16-spec / 27-WAIT_SESSION corpus,
+#     `lunch_blackout` binds 0 conditions and `overnight` binds exactly 1 —
+#     `role=confluence`, proven never evaluated.
+#   - `overnight`'s own keyword list bundles clocks that do not intersect
+#     into one interval (Globex open, Asia session, and US pre-market are
+#     three different windows), three conflicting definitions of "overnight"
+#     already live in this repo, and OVERNIGHT_END_MIN is not a
+#     minute-of-day. Picking one silently would be fabricated precision, and
+#     fabricated precision PROBES CLEAN.
+REFUSED_SESSION_KEYWORDS: dict[str, tuple[str, ...]] = {
     "lunch_blackout": ("lunch", "midday", "noon session"),
     "overnight": ("overnight", "globex", "asia session", "pre market", "premarket"),
 }
+
+
+def _phrase_hit(object_text: str, keywords: tuple[str, ...]) -> bool:
+    norm = f" {object_text.strip().lower()} "
+    return any(
+        f" {kw} " in norm or norm.strip().startswith(kw) or norm.strip().endswith(kw)
+        for kw in keywords
+    )
 
 
 def resolve_session_keyword(object_text: str) -> str | None:
@@ -178,12 +225,24 @@ def resolve_session_keyword(object_text: str) -> str | None:
     natural-language `object` field. Returns None (unbindable) on no match —
     never guesses. Mirrors the conservative-match philosophy of
     spec-archetype-matcher.ts::matchArchetype.
+
+    Only ever returns a zone `_ZONE_CHECKS` can evaluate; see
+    REFUSED_SESSION_KEYWORDS for the phrases deliberately NOT resolved.
     """
     if not object_text:
         return None
-    norm = f" {object_text.strip().lower()} "
     for zone, keywords in SESSION_KEYWORDS.items():
-        for kw in keywords:
-            if f" {kw} " in norm or norm.strip().startswith(kw) or norm.strip().endswith(kw):
-                return zone
+        if _phrase_hit(object_text, keywords):
+            return zone
+    return None
+
+
+def refused_session_zone(object_text: str) -> str | None:
+    """The refused zone name a phrase WOULD have resolved to before the
+    orphan-zone closure, or None. Never a binding — only a reason."""
+    if not object_text:
+        return None
+    for zone, keywords in REFUSED_SESSION_KEYWORDS.items():
+        if _phrase_hit(object_text, keywords):
+            return zone
     return None

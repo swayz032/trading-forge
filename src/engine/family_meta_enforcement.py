@@ -33,10 +33,14 @@ THE FOUR PINS (packet section 3), each implemented here as a mechanical, load-ti
       ENTRY (pin (c)) that says so, never a pointer at a look-alike.
 
   (b2) EMIT SUBSET-OF COVERED -- `verify_emit_subset_covered()`. Pointer-truth one level
-      down: a resolver may not emit a VALUE its consumer cannot check. Convicting instance:
-      the WAIT_SESSION resolvers can emit 7 zones while `session_windows._ZONE_CHECKS`
-      covers 5, so `lunch_blackout` / `overnight` are always-False gates wearing
-      bindable=True, approximation=False, executed=True. Both sets are enumerated
+      down: a resolver may not emit a VALUE its consumer cannot check. Convicting instance
+      (CLOSED 2026-07-21 by packet-orphan-zone-closure-2026-07-21.md, Option A -- kept on the
+      record because the check outlives the defect that motivated it): the WAIT_SESSION
+      resolvers COULD emit 7 zones while `session_windows._ZONE_CHECKS` covered 5, so
+      `lunch_blackout` / `overnight` WERE always-False gates wearing
+      bindable=True, approximation=False, executed=True. Those two names no longer emit, so
+      (b2) HOLDS and the engine loads under all pins; this check is what will say so if they
+      -- or any sibling -- ever come back. Both sets are enumerated
       PROGRAMMATICALLY from the live objects the production code itself iterates -- never
       transcribed, because a transcribed set drifts silently and re-creates the very defect
       this check exists to catch.
@@ -63,12 +67,22 @@ it anyway. What IS established, by tests/test_family_meta_enforcement.py:
     (test_flag_off_per_bar_output_matches_the_ladder).
 Each of the three carries a control showing it CAN fail. "Byte-identical" is not among them.
 
-PIN SELECTOR -- READ THIS BEFORE USING IT. `TF_FAMILY_META_ENFORCED_PINS` restricts which
-pins run. It exists for ONE reason: pin (b2) currently FAILS on the real orphan-zone gap,
-which this packet is explicitly scoped OUT of fixing (that gap belongs to the session-
-resolver lane), so with all pins active the engine correctly REFUSES TO LOAD and the
-acceptance sweep for pins (a)/(b)/(c) could not otherwise be run at all. It is a
-MEASUREMENT SELECTOR, not an escape hatch. Three mechanical fences make "silently ran
+PIN SELECTOR -- READ THIS BEFORE USING IT, AND NOTE THAT ITS REASON HAS EXPIRED.
+`TF_FAMILY_META_ENFORCED_PINS` restricts which pins run. It existed for ONE reason: pin (b2)
+FAILED on the real orphan-zone gap, which the enforcement packet was explicitly scoped OUT of
+fixing (that gap belonged to the session-resolver lane), so with all pins active the engine
+correctly REFUSED TO LOAD and the acceptance sweep for pins (a)/(b)/(c) could not otherwise be
+run at all.
+
+*** THAT REASON IS GONE (2026-07-21, packet-orphan-zone-closure-2026-07-21.md). *** With all
+pins active the engine now LOADS. The selector is therefore a TRANSITION INSTRUMENT WHOSE
+TRANSITION IS OVER, and one left alone quietly becomes a default. Its expiry is ASSERTED, not
+merely noted, by tests/test_family_meta_enforcement.py::test_pin_selector_reason_has_expired,
+which fails with a rewrite message if anyone narrows the default regime again while (b2) is
+clean. REMOVING the selector is a separate packet (it is public surface: the committed delta
+harness and the tests both read it).
+
+It is a MEASUREMENT SELECTOR, not an escape hatch. Three mechanical fences make "silently ran
 nothing" impossible; each was a LIVE DEFECT found by grading, not a hypothetical:
   - an EMPTY selection RAISES. `PINS=","` (or `""`, or `" , "`) once parsed to the empty set,
     ran zero checks, and returned silently with `ok=True`. The variable must either be UNSET

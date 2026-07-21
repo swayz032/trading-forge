@@ -465,15 +465,42 @@ def resolve_bundle_primitive(cond_type: str, object_text: str) -> str | None:
 # docstring). Kept identical to session_windows.SESSION_KEYWORDS so a spec's
 # WAIT_SESSION binding decision doesn't depend on session_windows.py's own
 # import surface (keeps this module trivially portable / pure). ────────────
+#
+# ★ EVERY KEY HERE MUST BE A KEY OF session_windows._ZONE_CHECKS — pin (b2),
+# `EMIT ⊆ COVERED`, checked at load time by
+# family_meta_enforcement.verify_emit_subset_covered(). `lunch_blackout` and
+# `overnight` were removed by the orphan-zone closure
+# (docs/designs/packet-orphan-zone-closure-2026-07-21.md) and now live in
+# REFUSED_SESSION_KEYWORDS below. Adding an uncovered key here makes the
+# engine refuse to load under all pins; that refusal is the guard working.
 SESSION_KEYWORDS: dict[str, tuple[str, ...]] = {
     "london": ("london session", "london open", "london killzone"),
     "ny_am": ("ny am", "new york am", "new york morning", "ny morning", "ny open", "am session"),
     "ny_pm": ("ny pm", "new york pm", "new york afternoon", "ny afternoon", "pm session"),
     "silver_bullet": ("silver bullet",),
     "macro_window": ("macro window", "macro release"),
+}
+
+# Mirror of session_windows.REFUSED_SESSION_KEYWORDS (same zero-import-surface
+# duplication convention as SESSION_KEYWORDS above — see the module docstring).
+# Phrases that are RECOGNIZED as naming a session concept this engine has no
+# honest runtime primitive for, and are therefore REFUSED with a named reason
+# rather than silently dropped into the generic no_recognized_session_keyword
+# bucket. See session_windows.REFUSED_SESSION_KEYWORDS for the full argument
+# (zero effective demand; `overnight` has no single defensible clock).
+REFUSED_SESSION_KEYWORDS: dict[str, tuple[str, ...]] = {
     "lunch_blackout": ("lunch", "midday", "noon session"),
     "overnight": ("overnight", "globex", "asia session", "pre market", "premarket"),
 }
+
+
+def session_refusal_reason(refused_zone: str) -> str:
+    """The `unbound_reason` a refused session phrase carries. Distinct from
+    BOTH `no_recognized_session_keyword` (we did not recognize it at all) and
+    SESSION_TEACHING_UNBOUND_REASON (recognized, no computable window) — this
+    one says "recognized, and DELIBERATELY not bound, because the zone it
+    names has no window `is_in_killzone` can evaluate."""
+    return f"session_zone_refused_uncomputable_window:{refused_zone}"
 
 MIN_SPINE_BOUND_RATIO: float = 0.5
 """Minimum fraction of `role=="spine"` conditions that must bind to a primitive
@@ -659,8 +686,16 @@ FAMILY_META: dict[str, FamilyMeta] = {
     # ── COULD-NOT-VERIFY -> HONEST ENTRY (pin (c)). `spine_completion_trigger` IS NOT A CODE
     # SYMBOL; it was an aspirational label. The real mechanism is the spine conjunction in
     # compute() -- these trigger-role conditions are never evaluated as conditions at all
-    # (they are 480 + 255 = 735 of the 921 never-evaluated trigger-role conditions in the
-    # section 6a accounting). Declared as a mechanism, gates=False, approximation=True.
+    # (they are 480 + 255 = 735 of the 987 never-evaluated trigger-role conditions in the
+    # section 6a accounting). ★ 921 -> 987 (D5, AR-173): the old figure summed a CURATED
+    # 5-family list as if it were the population. compute()'s loop selects role=="spine",
+    # so EVERY trigger-role condition is skipped -- 66 more across 6 families
+    # (WAIT_SESSION 18, WAIT_CONFIRMATION 21, WAIT_RETEST 15, WAIT_STRUCTURE 6,
+    # VERIFY_STRUCTURE 3, EXIT_HINT 3). Re-derived from the UNIVERSE for this commit --
+    # role=="trigger" over all 6450 entry_conditions in the 120-spec or-branches corpus,
+    # by three independent paths that agree (filter-count, (type,role) cross-tab sum,
+    # total-minus-non-trigger) = 987. Declared as a mechanism, gates=False,
+    # approximation=True.
     "ENABLE_ENTRY": FamilyMeta(
         primitive="spine_completion_trigger",
         base_approximation=False,
@@ -728,27 +763,59 @@ class ConditionBinding:
         }
 
 
+def _session_phrase_hit(object_text: str, keywords: tuple[str, ...]) -> bool:
+    norm = f" {object_text.strip().lower()} "
+    return any(
+        f" {kw} " in norm or norm.strip().startswith(kw) or norm.strip().endswith(kw)
+        for kw in keywords
+    )
+
+
 def resolve_session_keyword(object_text: str) -> str | None:
     """Pure re-implementation of session_windows.resolve_session_keyword — kept
     local so this module has zero import surface beyond stdlib (portability
-    for the TS mirror comparison in tests)."""
+    for the TS mirror comparison in tests).
+
+    Only ever returns a zone session_windows._ZONE_CHECKS can evaluate."""
     if not object_text:
         return None
-    norm = f" {object_text.strip().lower()} "
     for zone, keywords in SESSION_KEYWORDS.items():
-        for kw in keywords:
-            if f" {kw} " in norm or norm.strip().startswith(kw) or norm.strip().endswith(kw):
-                return zone
+        if _session_phrase_hit(object_text, keywords):
+            return zone
+    return None
+
+
+def refused_session_zone(object_text: str) -> str | None:
+    """Mirror of session_windows.refused_session_zone. Names the zone a phrase
+    WOULD have bound before the orphan-zone closure; never returns a binding."""
+    if not object_text:
+        return None
+    for zone, keywords in REFUSED_SESSION_KEYWORDS.items():
+        if _session_phrase_hit(object_text, keywords):
+            return zone
     return None
 
 
 # ─── Role-Aware Session Resolver (docs/designs/packet-role-aware-session-
 # resolver-2026-07-20.md) ───────────────────────────────────────────────────
-# R-085 §2 / R-088 §3 / R-143 §3 item 2. 26 of 27 corpus-wide WAIT_SESSION
-# conditions never bind via resolve_session_keyword() above (an independent
-# blind grade split the 26 into 17 GENUINE session teachings the bare-phrase
-# matcher cannot see, and 9 entry-mechanics MIS-TYPES — a separate
-# reclassification lane, untouched here — session-a-mistype-dispositions.json).
+# R-085 §2 / R-088 §3 / R-143 §3 item 2. ★ CORRECTED (R-185 §2, orphan-zone
+# closure): this comment used to read "26 of 27 corpus-wide WAIT_SESSION
+# conditions never bind." The honest figure is **27 of 27 EFFECTIVELY never
+# bind.** The single binder bound `overnight` — an ORPHAN ZONE that
+# is_in_killzone() could never evaluate True for — so it was an always-False
+# gate wearing bindable=True, not a binding. Exact-phrase session coverage in
+# this corpus was not 1/27; it was 0/27 wearing a 1. (Since the closure that
+# row is honestly REFUSED, so the 0/27 is now visible rather than disguised.)
+#
+# ★ THIS STRENGTHENS THE ROLE-AWARE RESOLVER'S CASE RATHER THAN WEAKENING IT:
+# all 8 real bound rows came from the NEW lane below; the LEGACY exact-phrase
+# path binds NOTHING REAL in this corpus. The 26 -> 27 correction moves the
+# resolver's marginal contribution from "26 recoverable" to "the entire
+# legacy yield was zero."
+#
+# An independent blind grade split the 26 into 17 GENUINE session teachings the
+# bare-phrase matcher cannot see, and 9 entry-mechanics MIS-TYPES — a separate
+# reclassification lane, untouched here — session-a-mistype-dispositions.json.
 #
 # ★ THIS IS NOT A KEYWORD LIST. The blind grade produced a tension no flat
 # list can express: bare "session" must bind ("New York session" as a named
@@ -1743,11 +1810,11 @@ zero-import-surface convention as SESSION_KEYWORDS/LEVEL_ZONE_RE above). Any
 edit to session_windows.py's boundary constants MUST be mirrored here in the
 same commit. Deliberately excludes lunch_blackout/overnight — those two
 zone names are NOT in session_windows.py's own is_in_killzone() dispatch
-table (_ZONE_CHECKS only covers the 5 keys here), a PRE-EXISTING gap this
-packet did not introduce and is out of scope to fix (spec_condition_compiler
-.py's _eval_wait_session/is_in_killzone, not spec_family_bindings.py) — see
-this packet's completion report. This resolver never emits those two zone
-names, so it cannot widen that gap's blast radius."""
+table (_ZONE_CHECKS covers exactly the 5 keys here). ★ That gap is now
+CLOSED at the source: the orphan-zone closure removed both names from
+SESSION_KEYWORDS, so no resolver emits them and pin (b2) `EMIT ⊆ COVERED`
+holds. They survive only as REFUSED_SESSION_KEYWORDS — recognized, named,
+and never bound."""
 
 _SESSION_ZONE_PRIORITY: tuple[str, ...] = ("ny_am", "london", "ny_pm", "silver_bullet", "macro_window")
 """Deterministic tie-break order when two zones have equal overlap minutes
@@ -2191,6 +2258,68 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
                     reason=SESSION_TEACHING_UNBOUND_REASON,
                     session_zone=None,
                 )
+        # ── ORPHAN-ZONE REFUSAL (packet-orphan-zone-closure-2026-07-21.md,
+        # Option A). Consulted LAST, so it changes no path that already
+        # produced an answer: the exact-phrase matcher has missed (these
+        # phrases were removed from SESSION_KEYWORDS) and the role resolver
+        # has neither bound nor recognized. What remains is a phrase we DO
+        # recognize as naming a session concept for which this engine has no
+        # evaluable window — `lunch_blackout` / `overnight`.
+        #
+        # It is REFUSED, not silently dropped: the reason names the zone, so
+        # this is distinguishable from "we never recognized it" in every
+        # downstream ledger. Before the closure these phrases returned
+        # bindable=True with approximation=False and a zone is_in_killzone()
+        # returned False for on all 1,440 minutes of the day.
+        #
+        # ★ approximation is True, never False. The packet forbids an
+        # approximation=False on these zones by name — an exactness claim is
+        # exactly what the defect wore. It is inert for every aggregate:
+        # `approximation_used` and spec_producer's binding-approximation rate
+        # both filter on `bindable and executed`, and this row is neither.
+        #
+        # ★★ MEASURED BEHAVIOUR DELTA — DECLARED HERE, NOT DISCOVERED DOWNSTREAM.
+        # The packet declared Option A as "no behaviour change", on a census run
+        # over the 16-spec / 27-WAIT_SESSION corpus. That is TRUE THERE (0 of 27
+        # changed) and FALSE on the 120-spec or-branches corpus, which is the
+        # universe the enforcement delta harness actually measures. Full sweep,
+        # 136 specs x 2000 real ES 5min bars, this commit vs its parent:
+        #   - 114 specs byte-identical on all four signal columns.
+        #   - 19 specs: `confluence_bound` drops by 1-2 (a confluence-role
+        #     WAIT_SESSION condition stops binding). compute()'s loop selects
+        #     role=="spine", so confluence conditions are never evaluated —
+        #     ZERO signal change on all 19.
+        #   - ★ 3 specs (or-branches #50, #51, #79) DO change. Each carries
+        #     `WAIT_SESSION:new york market open or pre market#0` at role=SPINE,
+        #     which bound `overnight`. Before: an always-False gate, so the spine
+        #     conjunction could never be satisfied and the spec produced
+        #     entry_long=0. After: honestly unbound, so it takes the documented
+        #     permitted-through pass-through (spec_condition_compiler's
+        #     `if not b.bindable: np.ones`) and the spec produces entry_long=115.
+        #     spine_bound 24 -> 23 of 32; ratio 0.750 -> 0.719, still above
+        #     MIN_SPINE_BOUND_RATIO, so `compiled` is unchanged.
+        #
+        # THE DIRECTION IS RISK-INCREASING AND IS NOT HIDDEN: three specs go from
+        # never-entering to entering. Neither state is a real gate — the old one
+        # was False for a fabricated reason, the new one is True for a declared
+        # one. If that pass-through default is judged wrong for session
+        # conditions, that is a SEPARATE decision about unbound spine handling
+        # and belongs in its own packet; it is not something to fix by keeping an
+        # always-False gate alive.
+        refused = refused_session_zone(obj)
+        if refused is not None:
+            return ConditionBinding(
+                condition_id=cond_id,
+                type=cond_type,
+                role=role,
+                object=obj,
+                bindable=False,
+                primitive=None,
+                approximation=True,
+                executed=False,
+                reason=session_refusal_reason(refused),
+                session_zone=None,
+            )
         return ConditionBinding(
             condition_id=cond_id,
             type=cond_type,
