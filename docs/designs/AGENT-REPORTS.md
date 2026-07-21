@@ -4,6 +4,26 @@
 
 ---
 
+## AR-183 · 2026-07-21 · **THE FINAL MINI-WAVE IS DISPATCHED** (R-192 §2), receipt held here. ★★ **D-1 is DELETE, not re-key — and I put your reason in the brief as the rule, not the rationale: *a cache on a truth-check is a place for lies to sleep.*** After it: **the re-measure.**
+
+**1. ★★ D-1 IS THE ONE THAT MATTERS, and the brief is written so the obvious repair is the FORBIDDEN one.** *"**DELETE THE SUCCESS CACHE. Do NOT re-key it.**"* — with the history that earns it: **four lying modes have now lived in one cache**, and **the fix for mode 3 GREW mode 4.** ★ **A re-key is what a competent engineer reaches for, so the brief forecloses it explicitly and prices the exception:** *if — and only if — you MEASURE a cost that forces a cache back*, it keys on **everything that varies** (pins **and** a dispatch fingerprint) and **ships a mode-5 red-proof attempting a fifth lie.** ***"State the measured cost; do not assume one."*** **Cheap truth beats fast falsehood.**
+
+**2. AND IT MUST REPRODUCE MODE 4 BEFORE FIXING IT** — show `ensure_enforced(<violating dispatch>)` returning CLEAN on current code, then RAISING after. **A fix whose defect was never demonstrated on the tree it fixes is a claim.**
+
+**3. D-2 — the artifact regenerates on the CURRENT tree.** It hardcodes `ACTIVE_PINS="a,b"` and stamps *"pin b2 NOT evaluated — it fails today"* onto every figure **while b2 now passes**, and its numbers **predate a commit that provably moved 3 specs on the same corpus.** ★ **Your framing is the brief's: an artifact stale in the tree that falsifies it is a caption defect AT ARTIFACT SCALE.** It must **state which numbers moved and why** — regenerating silently would replace one unexamined artifact with another.
+
+**4. D-3 — reword, and then SWEEP.** Count the fences correctly (**it claims three and lists four**), **drop "impossible"**, state what IS proven — *each named path is fenced by a test that fails if it silently runs nothing*. ★ **And list EVERY claim in the file with its disposition**, because the last sweep withdrew four superlatives and **left standing the one nearest its own cautionary tale** — the docstring that records its own previous version promising this exact impossibility, then re-makes it. **A sweep that reports only the seeded instance is a lookup.**
+
+**5. THE MODULE-IDENTITY ITEM IS A QUESTION, NOT A TASK — and its two answers go different places.** *"Does any PRODUCTION path import the `engine.` identity rather than `src.engine.`?"* **YES → a real hole (enforcement checks a copy production does not use), reported as its own defect and NOT fixed in this wave.** **NO → a grader-instrument trap for the traps block.** ★ **I did not let it assume either: "state your method and the exact search space."** **A census that does not say what it searched cannot support a NO.**
+
+**6. ★ TWO INSTRUCTIONS I ADDED FROM TONIGHT'S OWN DAMAGE, both aimed at me as much as at it:** *"No other agent is live — **but verify that yourself rather than trusting me; I have been wrong about it before**"* (I told the last wave it was the only writer and it was not — its edits were silently reverted twice) · and **verify the deselect path actually matches**, because *"a prior agent deselected a non-existent path, pytest did not error, and both arms sat on the hang for 35 minutes."* **Both are failures that cost real time and neither was the agent's fault.**
+
+**7. VERIFICATION PROPORTIONALITY, per your §2:** self-red-proofs now; **the NEXT natural grade — the re-measure's own — carries a checklist line confirming all four closed.** **A full re-grade for four MEDs would be disproportionate**, and I am not going to manufacture ceremony at the last gate of a lane that has already been graded three times.
+
+**8. ★★★ AND THEN THE RE-MEASURE.** Its blocked-on-inputs list is **satisfied**: flip-step graded · session lane closed at honest-partial · **declared measurement configuration** (flags-ON labeled, R-150 form) · enforcement landed and **loading under all pins**. ★ **The dual-denominator §6a re-measure is the number this entire rebuild exists to make TRUE** — and it will carry **987 by-gap primary beside 2694 by-design as context, never merged**, and the **corrected corpus scope** that my own relay got wrong.
+
+**Holds:** flags OFF in production throughout · engine loads under all pins · the 77 sealed.
+
 ## AR-182 · 2026-07-21 · ★ **STATUS: THE RE-GRADE IS DONE — BAND 7. NOTHING IS IN FLIGHT, ZERO RECEIPTS HELD.** Your board says "re-grade in flight"; it completed and I had the result while I was repairing instead of reporting. ★★★ **It found a FOURTH pin-selector lie · CONFIRMED the behaviour change · and caught MY half-repair, which I have now completed.**
 
 **1. ★ THE STATUS ANSWER FIRST, and the 91-minute gap is mine.** **Zero units in flight. Zero receipts held.** The re-grade returned **BAND 7, defended**. I spent the quiet window **repairing damage I caused** rather than filing — the repair was right and the report was owed, and *"work done but unreported"* is the same gap your watchdog caught 47 minutes into the last one. **Twice now the watchdog has been the thing that made me file.**
