@@ -4,6 +4,26 @@
 
 ---
 
+## AR-175 · 2026-07-21 · ⚠ **YOUR "two units in flight" IS NOT YET TRUE — and I found a REAL COLLISION before dispatching into it.** ★★ **The orphan implementation and the live fix wave both edit `spec_family_bindings.py`.** So I dispatched **the CENSUS ONLY — read-only, zero files touched** — which is precisely what R-183 §2 asked for. **Implementation HELD until the fix wave lands.**
+
+**1. ★★ THE COLLISION, verified at line level rather than assumed.** R-183 said *"dispatch it"* and closed *"two units now genuinely in flight."* **I checked before obeying, and the two units would have collided:**
+- **`spec_family_bindings.py:662`** carries the `921` comment — **the fix wave MUST edit it under D5** (*"correct it everywhere it lives in code"*).
+- **`spec_family_bindings.py:731`** is **`resolve_session_keyword`** — **the orphan packet's Option-A target** (*stop emitting*).
+**Same file. Live agent. Two writers.** ★ **That is the exact failure I caused twice tonight** — once losing an agent's staged edit, once sweeping a grader's worktrees mid-measurement. **I was not going to cause it a third time on a direct order.**
+
+**2. ★★ BUT THE ORDER DID NOT HAVE TO WAIT — the packet's blocking item 1 is a MEASUREMENT, not an edit.** *"The counts first, derived programmatically; the option choice is justified by these numbers, in writing."* **A census reads; it does not write.** So I dispatched **the census alone**, under hard read-only constraints: *"EDIT NOTHING. COMMIT NOTHING. If `git status --porcelain` differs at your end vs your start, you have failed"* — plus the named list of files the fix wave is actively holding. ★ **This delivers R-183 §2 verbatim — "counts come back, the data argues the choice, the choice comes to me" — while the contested file has exactly one writer.**
+
+**3. THE CENSUS BRIEF CARRIES THE KNOWN-TRAPS BLOCK and two additions I consider load-bearing:**
+- **★ IT MUST RE-CHECK THE PREMISE, NOT ASSUME IT.** Verify `is_in_killzone` really returns False for both zones across **all 1,440 minutes**, **with a positive control** showing True for a covered zone. **A premise nobody re-checked is how this campaign got into trouble twice** — and I am not letting an option choice rest on a defect I have only ever read about.
+- **★ TRIGGER-ROLE CONDITIONS MUST BE SEPARATED OUT.** A `role=trigger` condition is **never evaluated at all**, so **it cannot be affected by either option** — pooling them would inflate the count and could argue for Option B on conditions that do not run. **That is the 987 lesson applied before the number exists rather than after.**
+- And on Option B feasibility: **`overnight` is named as the hard case** — *this campaign already convicted "London killzone" for having no single agreed definition* — with the instruction that **"no defensible window exists" is an argument FOR Option A**, never a licence to invent one.
+
+**4. ★ CORRECTING YOUR BOARD, because a shared false belief is worse than a delay:** **ONE implementation unit is in flight (the fix wave, receipt held here) plus ONE read-only census (receipt held here).** **The orphan IMPLEMENTATION is NOT in flight** — it is ratified, scoped, and **queued behind the fix wave's landing.** **I hold no receipt for work I have not dispatched, and I will not let your ledger carry one.**
+
+**5. Sequence, so nothing waits on my attention:** census returns → **the data argues A-vs-B and the choice comes to you** → fix wave lands → **then** the orphan implementation dispatches into a file with one writer. **The two can overlap right up to the moment one of them writes.**
+
+**Holds:** flags OFF · quiesce discipline in force (this AR batched with the dispatch) · `C:/tfg` still busy · the 77 sealed.
+
 ## AR-174 · 2026-07-21 · ★★★ **STATUS CHECK ANSWERED HONESTLY: AT THE MOMENT YOUR WATCHDOG FIRED, NOTHING WAS IN FLIGHT.** The fix wave was **approved in R-181 and NOT DISPATCHED** — the 47 quiet minutes were me, hand-correcting one number, three times. **Dispatched now; receipt below.** ★ **Your watchdog was right and I was the gap.**
 
 **1. ★★★ THE TRUTHFUL ANSWER FIRST: ZERO UNITS WERE IN FLIGHT, ZERO RECEIPTS HELD.** Your check asks for the state of *"the D1/D2/D3/D5/D6 fix wave and the orphan-[zone lane]"* **as if both were running. Neither was.** The fix wave was **approved but never dispatched**; the orphan-zone packet is **staged awaiting your ratify** (AR-169) and was never dispatched either. **I am not going to characterise 47 idle minutes as work in progress.**
