@@ -85,6 +85,16 @@ CORPUS_A_GLOB = str(
 CORPUS_B_PATH = REPO_ROOT / "docs" / "replay-results" / "or-branches-full-corpus-specs-2026-07-05.json"
 NARRATION_PATH = H1 / "narration-reclassification-FINAL.json"
 CENSUS_PATH = H1 / "levelzone-object-reference-census.json"
+
+# The de-approximation floor from R-102 section 2. A NAMED THRESHOLD, not a measurement: it is a
+# policy constant that no corpus can move, which is why the sentences quoting it are adjudicated
+# STRUCTURAL rather than being made to track data they do not depend on.
+DE_APPROXIMATION_FLOOR = 2
+
+# The count an EARLIER note recorded, retained so the 26-vs-27 reconciliation can name both sides.
+# A superseded historical record: it describes what a prior document said, so it must NOT track the
+# live corpus. Named here rather than typed into the sentence so its kind is explicit.
+PRIOR_NOTE_WAIT_SESSION_COUNT = 26
 ENFORCEMENT_PATH = H1 / "family-meta-enforcement-delta.json"
 OUT_PATH = H1 / "dual-denominator-remeasure-2026-07-21.json"
 
@@ -150,6 +160,16 @@ ASSERT_DISPOSITIONS: dict[str, str] = {
     "total_flipped <= 6": "DATA_SENSITIVE",
     "enf['never_evaluated_total'] == never_by_gap": "DATA_SENSITIVE",
     "enf['all_entry_conditions'] == b_total": "DATA_SENSITIVE",
+    # R-207 (B). It walks the AST of this file and its first-party import closure, so its truth
+    # is a property of the SOURCE, never of a corpus -- it can only fire when someone adds a
+    # spawn. Classified SOURCE_INVARIANT for exactly that reason, which is also what makes it
+    # the right shape for the job: it is meant to notice an EDIT that widens the boundary.
+    "spawn['PASS']": "SOURCE_INVARIANT",
+    # R-207 (A)(i). DATA_SENSITIVE, and not merely by convention. Whether a prose leaf is
+    # reachable depends on whether an axis still MOVES a numeral that leaf quotes, and that is a
+    # property of the corpora: if a measurement settles to a value an axis no longer shifts, a
+    # sentence that was covered becomes UNREACHED and this fires on a run where only data moved.
+    "census['PASS']": "DATA_SENSITIVE",
     "unexpected_disposition_keys == set()": "SOURCE_INVARIANT",
     "undispositioned == []": "SOURCE_INVARIANT",
     "OUT_PATH not in APPEND_ONLY_GUARDED": "SOURCE_INVARIANT",
@@ -179,18 +199,19 @@ def own_assert_census() -> dict:
 
     tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
     nodes = [n for n in ast.walk(tree) if isinstance(n, ast.Assert)]
+    dispositions = _axis_assert_dispositions(ASSERT_DISPOSITIONS)
     rows, undispositioned = [], []
     used: collections.Counter = collections.Counter()
     for n in nodes:
         src = ast.unparse(n.test)
-        keys = [k for k in ASSERT_DISPOSITIONS if k in src]
+        keys = [k for k in dispositions if k in src]
         if len(keys) != 1:
             undispositioned.append({"line": n.lineno, "test": src, "matching_keys": keys})
             continue
         used[keys[0]] += 1
-        rows.append({"line": n.lineno, "disposition": ASSERT_DISPOSITIONS[keys[0]], "test": src})
+        rows.append({"line": n.lineno, "disposition": dispositions[keys[0]], "test": src})
 
-    unexpected_disposition_keys = set(ASSERT_DISPOSITIONS) - set(used) | {
+    unexpected_disposition_keys = set(dispositions) - set(used) | {
         k for k, c in used.items() if c != 1
     }
     assert unexpected_disposition_keys == set(), (
@@ -221,32 +242,107 @@ def own_assert_census() -> dict:
 
 
 # ======================================================================= R-203 s1
-# THE STANDARD PERTURBATION, AND THE GATE THAT RUNS ON IT.
+# THE PERTURBATION AXES, AND THE GATE THAT RUNS ON THEIR UNION.
 # ======================================================================================
+#
+# ★ WHY THERE IS MORE THAN ONE. R-207: a single axis convicts only the sentences that quote a
+# number THAT AXIS moves. Measured on the one-axis build, the gate's live conviction surface was
+# FOUR prose leaves out of thirty that carry a numeral -- and those four were precisely the four
+# already suppressed by the allowlist. A gate whose every visible target is excused cannot fail,
+# and "0 violations" from it carries no information. That is the caption shape one level up: a
+# control positioned where it cannot respond to its subject.
+#
+# The remedy is sized by CENSUS, not by instance (the ratified law). Each axis below moves a
+# DIFFERENT measured quantity, and the gate scores every prose leaf against the UNION of their
+# blast radii. Coverage is then a computed figure printed on every run, and a numeral-carrying
+# prose leaf that no axis can reach is a RED -- not a line in an exemption table.
+#
+# ★ THE CONSISTENCY LAW FOR AXES. An axis must leave the artifact SELF-CONSISTENT: every
+# cross-check assert stays armed and passing during the perturbed build. An axis that needs a
+# check turned off is not an axis, it is a hole. Where a moved value has MIRRORS elsewhere (a
+# count that a second artifact also reports), the axis moves the mirrors too -- see
+# _axis_corpus_b_reattribute_role, which perturbs the enforcement artifact's own tally by the
+# same delta so `enf['never_evaluated_total'] == never_by_gap` survives the perturbation
+# UNMODIFIED. Doing the work in the axis is the whole point; weakening the assert would delete
+# the very cross-check the perturbation is supposed to exercise.
 
-PERTURBATION_NAME = "ALL_WAIT_SESSION_ROWS_BIND"
-PERTURBATION_DESCRIPTION = (
-    "sfb.bind_condition is wrapped so every WAIT_SESSION condition that the real binder "
-    "REFUSES comes back bindable=True / approximation=False / executed=True. This is the "
-    "single largest live fact in the artifact -- 27 of 27 WAIT_SESSION rows are unbound -- so "
-    "flipping it should move the session block, the unbound count, the coverage figures, the "
-    "rate, the closure drift and every sentence that describes any of them. Anything that "
-    "does NOT move under it, while quoting a number that DID, is a caption."
-)
+_ACTIVE_AXIS: str | None = None
+
+
+def _axis_is(name: str) -> bool:
+    return _ACTIVE_AXIS == name
+
+
+# --------------------------------------------------------------------- AXIS 1
+AXIS_WAIT_SESSION = "ALL_WAIT_SESSION_ROWS_BIND"
+# --------------------------------------------------------------------- AXIS 2
+AXIS_CORPUS_B_ROLE = "CORPUS_B_ROLE_REATTRIBUTION"
+# --------------------------------------------------------------------- AXIS 3
+AXIS_SESSION_GRADE = "SESSION_GRADE_REALLOCATION"
+# --------------------------------------------------------------------- AXIS 4
+AXIS_TAUGHT_DROP = "CORPUS_A_TAUGHT_CONDITION_DROP"
+# --------------------------------------------------------------------- AXIS 5
+AXIS_ASSERT_RECLASS = "ASSERT_DISPOSITION_RECLASSIFICATION"
+# --------------------------------------------------------------------- AXIS 6
+AXIS_DRIFT_LATTICE = "DRIFT_LATTICE_CASE_WITHDRAWAL"
+
+AXES: dict[str, str] = {
+    AXIS_WAIT_SESSION: (
+        "sfb.bind_condition is wrapped so every WAIT_SESSION condition that the real binder "
+        "REFUSES comes back bindable=True / approximation=False / executed=True. 27 of 27 "
+        "WAIT_SESSION rows are unbound, so flipping it moves the session block, the unbound "
+        "count, the coverage figures, the rate and the closure drift. MOVES: binding outcomes."
+    ),
+    AXIS_CORPUS_B_ROLE: (
+        "One Corpus-B entry condition is re-roled confluence -> trigger IN THE PARSED CORPUS, "
+        "before any tally runs. Every derivation downstream -- the three independent 987 paths, "
+        "the by-design 2694, the per-family breakdown -- recomputes from the perturbed parse and "
+        "therefore still agrees, which is what keeps `path1 == path2 == path3` armed. The "
+        "enforcement artifact's never_evaluated_total is a MIRROR of the same quantity and is "
+        "moved by the identical delta, so `enf['never_evaluated_total'] == never_by_gap` also "
+        "stays armed and passing. MOVES: 987, 2694, the per-family gap counts."
+    ),
+    AXIS_SESSION_GRADE: (
+        "One WAIT_SESSION row is reallocated from the externally-graded genuine-teaching bucket "
+        "to the mis-typed bucket (17/9 -> 16/10). The SUM is deliberately preserved, so "
+        "`graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught` stays armed "
+        "and passing -- the axis moves the split without breaking the closure it must respect. "
+        "MOVES: the 26-vs-27 accounting terms."
+    ),
+    AXIS_TAUGHT_DROP: (
+        "The LAST taught entry condition of the last Corpus-A spec is dropped at load time, so "
+        "the taught population falls by one. This is the widest-reaching axis: it moves the 155 "
+        "taught count, the 161 completed denominator, every coverage numerator and denominator "
+        "built on them, and the per-arm rates. MOVES: taught populations and everything "
+        "denominated in them."
+    ),
+    AXIS_ASSERT_RECLASS: (
+        "One assert's entry in ASSERT_DISPOSITIONS is flipped DATA_SENSITIVE <-> SOURCE_INVARIANT "
+        "for the duration of the build. The census still classifies every assert exactly once, so "
+        "`unexpected_disposition_keys == set()` and `undispositioned == []` stay armed and "
+        "passing. MOVES: the data-sensitive / source-invariant split."
+    ),
+    AXIS_DRIFT_LATTICE: (
+        "One additional sign-pattern case is appended to the drift discrimination lattice. "
+        "classify_drift must still return a DISTINCT verdict for it, so "
+        "`len(set(got.values())) == len(cases)` stays armed and is a real test of the added row. "
+        "MOVES: the pattern and verdict counts of the discrimination proof."
+    ),
+}
 
 
 @contextmanager
-def perturbed_binding(active: bool):
-    """Install (or do not install) THE STANDARD PERTURBATION for the duration of a build.
+def perturbed_binding(axis: str | None):
+    """Install (or do not install) an AXIS for the duration of one build.
 
     IT PATCHES THE HARNESS, NEVER THE ENGINE. src/engine/spec_family_bindings.py is not
     edited, imported differently, or reloaded; only this module's reference to the callable
-    is swapped, and it is restored in a finally. The perturbed build is used ONLY to test
-    the artifact's responsiveness -- it is never written anywhere.
+    is swapped, and it is restored in a finally. The perturbed builds are used ONLY to test
+    the artifact's responsiveness -- they are never written anywhere.
     """
-    if not active:
-        yield
-        return
+    global _ACTIVE_AXIS
+    prev = _ACTIVE_AXIS
+    _ACTIVE_AXIS = axis
     real = sfb.bind_condition
 
     def patched(condition, *a, **kw):
@@ -258,11 +354,145 @@ def perturbed_binding(active: bool):
             )
         return b
 
-    sfb.bind_condition = patched
+    if axis == AXIS_WAIT_SESSION:
+        sfb.bind_condition = patched
     try:
         yield
     finally:
         sfb.bind_condition = real
+        _ACTIVE_AXIS = prev
+
+
+def _axis_corpus_b_reattribute_role(corpus_b: dict) -> dict:
+    """AXIS 2, applied to the PARSED corpus before a single tally has run.
+
+    ★ THIS IS WHERE THE CONSISTENCY CLOSURE IS EARNED. Perturbing a DERIVED count would break
+    `path1 == path2 == path3` instantly, because the three paths would no longer be looking at
+    the same thing -- and the temptation at that point is to relax the assert. Perturbing the
+    SOURCE instead means all three paths re-derive from the perturbed parse and must still
+    agree, so the assert is not merely survived, it is genuinely exercised under a changed
+    corpus. The mirror in the enforcement artifact is handled by its own hook below.
+    """
+    if not _axis_is(AXIS_CORPUS_B_ROLE):
+        return corpus_b
+    for s in iter_specs(corpus_b):
+        for c in s["entry_conditions"]:
+            if c.get("role") == "confluence":
+                c["role"] = "trigger"
+                return corpus_b
+    raise AssertionError(
+        "AXIS CORPUS_B_ROLE_REATTRIBUTION found no confluence-role condition to move. An axis "
+        "that silently perturbs nothing is a dead axis and would inflate the coverage figure."
+    )
+
+
+def _axis_enforcement_mirror(enf: dict) -> dict:
+    """AXIS 2's MIRROR HALF. never_evaluated_total is a second copy of the same quantity.
+
+    The re-roling above moves never_by_gap by exactly +1 (one condition joins the trigger role).
+    The enforcement artifact reports that same population independently, so it must move by the
+    same +1 or the artifact is internally inconsistent under the perturbation. Moving it HERE is
+    what lets `enf['never_evaluated_total'] == never_by_gap` stay armed. That assert is the one
+    the axis is most worth running against, so disarming it to permit the axis would have
+    deleted the point of the axis.
+    """
+    if not _axis_is(AXIS_CORPUS_B_ROLE):
+        return enf
+    if _WITHHOLD_REPAIRS:
+        # THE DISCRIMINATION PROBE. Same perturbation, mirror NOT updated -- the artifact is now
+        # genuinely inconsistent, which is precisely the state the cross-assert exists to catch.
+        return enf
+    enf = json.loads(json.dumps(enf))
+    enf["never_evaluated_total"] += 1
+    return enf
+
+
+def _axis_session_grade_split(teachings: int, mis_types: int) -> tuple[int, int]:
+    """AXIS 3. Move one row between two externally-graded buckets, SUM PRESERVED."""
+    if not _axis_is(AXIS_SESSION_GRADE):
+        return teachings, mis_types
+    return teachings - 1, mis_types + 1
+
+
+def _axis_drop_taught_condition(specs: list) -> list:
+    """AXIS 4. Drop one taught entry condition, chosen so the axis owes no repair elsewhere.
+
+    ★ THE CONSISTENCY CLOSURE, EARNED THE HARD WAY. The first form of this axis dropped the
+    LAST taught condition, whichever it was. It hit a WAIT_SESSION row, ws_taught fell 27 -> 26,
+    and `graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught` FIRED --
+    correctly: three externally-graded constants had been left describing a corpus that no
+    longer existed. The tempting repair was to relax that assert for perturbed builds. That
+    would have deleted precisely the check this artifact's 26-vs-27 accounting rests on.
+
+    The axis absorbs the obligation instead. It drops a NON-WAIT_SESSION condition, so the
+    WAIT_SESSION population it is not authorised to re-grade is genuinely untouched and the
+    closure genuinely still holds. This is not a narrower axis chosen for convenience: the
+    taught population, the 161 denominator and every coverage figure built on them all still
+    move, which is everything this axis exists to move.
+    """
+    if not _axis_is(AXIS_TAUGHT_DROP):
+        return specs
+    specs = [(n, list(ec), am) for n, ec, am in specs]
+    if _WITHHOLD_REPAIRS:
+        # THE DISCRIMINATION PROBE. Drop the last condition WHATEVER its type -- which is the
+        # form that hit a WAIT_SESSION row and broke the graded-split closure. Withholding the
+        # type-selection is withholding this axis's repair, and the 26-vs-27 assert should fire.
+        for i in range(len(specs) - 1, -1, -1):
+            if specs[i][1]:
+                specs[i][1].pop()
+                return specs
+        return specs
+    for i in range(len(specs) - 1, -1, -1):
+        for j in range(len(specs[i][1]) - 1, -1, -1):
+            if specs[i][1][j].get("type") != "WAIT_SESSION":
+                specs[i][1].pop(j)
+                return specs
+    raise AssertionError(
+        "AXIS CORPUS_A_TAUGHT_CONDITION_DROP found no non-WAIT_SESSION condition to drop. An "
+        "axis that silently perturbs nothing is a dead axis and would inflate the coverage figure."
+    )
+
+
+def _axis_assert_dispositions(d: dict[str, str]) -> dict[str, str]:
+    """AXIS 5. Flip exactly one classification, leaving the classification TOTAL intact."""
+    if not _axis_is(AXIS_ASSERT_RECLASS):
+        return d
+    d = dict(d)
+    k = "path1 == path2 == path3"
+    d[k] = "SOURCE_INVARIANT" if d[k] == "DATA_SENSITIVE" else "DATA_SENSITIVE"
+    return d
+
+
+def _axis_drift_extra_cases(cases: list) -> list:
+    """AXIS 6. Withdraw one sign pattern from the discrimination lattice.
+
+    ★ WHY WITHDRAWAL AND NOT ADDITION, which is a finding rather than a preference. This axis
+    was first written to APPEND an eleventh pattern (rate moved, coverage arm missing). The
+    build failed on `len(set(got.values())) == len(cases)`: eleven patterns, ten verdicts. That
+    is not a defect in the axis, it is classify_drift telling the truth -- its verdict
+    vocabulary has exactly ten members, so the existing lattice is already EXHAUSTIVE and no
+    eleventh row can ever be distinct. An axis cannot manufacture a distinction the function
+    does not draw, and forcing one would have meant editing classify_drift to suit its own
+    test.
+
+    So the axis moves the lattice the only direction that leaves the assert both armed and
+    honest: it withdraws a pattern. The four FLAT_ rows are never the ones withdrawn -- they
+    are the AR-188 D3 red-proof and the loop below them asserts on them by name.
+    """
+    if not _axis_is(AXIS_DRIFT_LATTICE):
+        return cases
+    if _WITHHOLD_REPAIRS:
+        # THE DISCRIMINATION PROBE for the lattice asserts: append the eleventh pattern that
+        # cannot earn a distinct verdict (see above), so `len(set(got.values())) == len(cases)`
+        # should fire. This is the failure that taught us the lattice is already exhaustive.
+        return cases + [("missing_coverage_arm", 0.50, 0.40, None, 0.10)]
+    out = [c for c in cases if c[0] != "both_flat"]
+    if len(out) == len(cases):
+        raise AssertionError(
+            "AXIS DRIFT_LATTICE_CASE_ADDITION found no 'both_flat' row to withdraw. An axis that "
+            "silently perturbs nothing is a dead axis and would inflate the coverage figure."
+        )
+    return out
 
 
 _NUMERAL_RE = re.compile(r"(?<![\w.])-?\d+(?:\.\d+)?")
@@ -306,6 +536,283 @@ def _numeral_forms(v) -> set[str]:
     return out
 
 
+def _moved_leaves_for(base: dict, pert: dict) -> list[tuple[str, set[str]]]:
+    """The blast radius of ONE axis: every leaf that moved, with the spellings it moved between."""
+    out: list[tuple[str, set[str]]] = []
+    for k in base:
+        if k not in pert:
+            continue
+        a, b = base[k], pert[k]
+        if isinstance(a, bool) or isinstance(b, bool):
+            continue
+        if isinstance(a, (int, float)) and isinstance(b, (int, float)) and a != b:
+            out.append((k, _numeral_forms(a) | _numeral_forms(b)))
+        elif isinstance(a, str) and isinstance(b, str) and a != b:
+            sym = set(_NUMERAL_RE.findall(a)) ^ set(_NUMERAL_RE.findall(b))
+            if sym:
+                out.append((k, sym))
+    return out
+
+
+def _container_of(p: str) -> str:
+    cut = max(p.rfind("."), p.rfind("["))
+    return p[:cut] if cut > 0 else "$"
+
+
+def coverage_census(art_base: dict, per_axis: dict[str, dict], allowlist: dict,
+                    structural: dict) -> dict:
+    """★ THE COMPUTED GATE FIGURE. How much of the prose can the gate actually convict?
+
+    THE MEASUREMENT THAT FORCED THIS TO EXIST (R-207). The single-axis gate reported "0
+    violations" on every run, and that was read as the prose being clean. It was not a
+    measurement of the prose; it was a property of the gate. Scored honestly, the one-axis
+    build could convict FOUR of the thirty frozen prose leaves that carry a numeral -- and all
+    four were already suppressed by the allowlist. Every leaf the gate could see was excused
+    and every leaf it could not see was unwatched, so PASS was structurally guaranteed.
+
+    A gate whose reach is unmeasured is a caption about itself. So the reach is now computed,
+    printed, and enforced, over the population that can actually carry the defect:
+
+      NUMERAL-FREE PROSE IS EXCLUDED BY PROOF, NOT BY EXEMPTION. The gate convicts on
+      `numerals(text) & moved_spellings`. For a string containing no numeral that intersection
+      is empty for every possible axis and every possible corpus -- so such a leaf cannot be a
+      caption in this gate's sense, and counting it as "covered" would inflate the figure with
+      leaves nothing was ever at stake on. It is reported as its own line, never as coverage.
+
+    Each numeral-carrying prose leaf lands in exactly one bucket:
+      RESPONSIVE -- it MOVED under at least one axis. The strongest evidence available: the
+                    text demonstrably recomputes. Nothing further is owed.
+      COVERED    -- frozen, but some axis moved a numeral it quotes, in its own container's
+                    subtree. The gate is actively watching it; if it were typed, it would now
+                    be a violation.
+      EXEMPTED   -- frozen and reached by no axis, and individually adjudicated as STRUCTURAL:
+                    the numeral is not a measurement at all. Every entry names its kind and is
+                    checked below.
+      UNREACHED  -- frozen, reached by no axis, and not adjudicated. This is a RED. It is the
+                    honest name for "this sentence quotes a number and nothing in this file can
+                    tell whether the number is computed or typed."
+    """
+    base = dict(_leaves(art_base))
+    per_axis_leaves = {ax: dict(_leaves(a)) for ax, a in per_axis.items()}
+
+    prose = [
+        k for k in base
+        if isinstance(base[k], str) and not _is_identifier_field(k)
+        and all(k in L and isinstance(L[k], str) for L in per_axis_leaves.values())
+    ]
+    responsive = {k for k in prose if any(L[k] != base[k] for L in per_axis_leaves.values())}
+
+    # union blast radius, tagged by the axis that produced it
+    scope_by_axis: dict[str, list[tuple[str, set[str]]]] = {
+        ax: _moved_leaves_for(base, L) for ax, L in per_axis_leaves.items()
+    }
+
+    def reaching_axes(path: str) -> list[str]:
+        """Which axes move a numeral this leaf quotes, inside its own container's subtree."""
+        cont = _container_of(path)
+        mine = set(_NUMERAL_RE.findall(base[path]))
+        hit = []
+        for ax, moved in scope_by_axis.items():
+            forms: set[str] = set()
+            for lp, f in moved:
+                if lp.startswith(cont + ".") or lp.startswith(cont + "["):
+                    forms |= f
+            if mine & forms:
+                hit.append(ax)
+        return sorted(hit)
+
+    # ★ R-207 (e): THE IDENTIFIER EXCLUSION IS ITSELF AUDITED, NOT TAKEN ON THE KEY'S NAME.
+    # IDENTIFIER_KEYS is an exact-name list, which makes it visible in a diff but says nothing
+    # about what a field actually HOLDS. A key called "source" held "recovers up to 17 of 27" --
+    # a measurement, in the one place the gate does not look, excluded because the name sounded
+    # like a path. Membership must be earned by content.
+    #
+    # THE MECHANICAL DISCRIMINATOR. A digit inside an identifier TOKEN ("...price-br#0",
+    # "0xygpCMwxbQ__s0") is not a quoted quantity; a digit standing as its own word in a sentence
+    # is. So an identifier-keyed leaf FAILS if it contains a numeral that (a) moves under some
+    # axis in its own container's scope, AND (b) appears WHITESPACE-DELIMITED -- a free-standing
+    # number in prose rather than a character in a name. That rule leaves every real id alone and
+    # catches the one leak, and it is stated here so it can be attacked rather than trusted.
+    identifier_leaks = []
+    for k in base:
+        if not isinstance(base[k], str) or not _is_identifier_field(k):
+            continue
+        if not all(k in L and isinstance(L[k], str) for L in per_axis_leaves.values()):
+            continue
+        cont = _container_of(k)
+        moved_here: set[str] = set()
+        for moved in scope_by_axis.values():
+            for lp, f in moved:
+                if lp.startswith(cont + ".") or lp.startswith(cont + "["):
+                    moved_here |= f
+        free = set(re.findall(r"(?:(?<=\s)|^)-?\d+(?:\.\d+)?(?=[\s,.;:')]|$)", base[k]))
+        hits = sorted(free & moved_here)
+        if hits:
+            identifier_leaks.append({
+                "path": k, "free_standing_moved_numerals": hits, "text": base[k][:220],
+                "why": "excluded as an identifier, but it quotes a measurement as a free word",
+            })
+
+    numeral_free = [k for k in prose if not _NUMERAL_RE.findall(base[k])]
+    carriers = [k for k in prose if _NUMERAL_RE.findall(base[k])]
+
+    buckets: dict[str, list] = {
+        "RESPONSIVE": [], "COVERED": [], "EXEMPTED": [], "CARRIED_UNVERIFIABLE": [], "UNREACHED": [],
+    }
+    bad_structural: list[dict] = []
+    for k in carriers:
+        if k in responsive:
+            buckets["RESPONSIVE"].append({"path": k})
+            continue
+        axes_hit = reaching_axes(k)
+        if axes_hit:
+            buckets["COVERED"].append({"path": k, "reached_by": axes_hit})
+            continue
+        ent = structural.get(k)
+        if ent is None:
+            buckets["UNREACHED"].append({
+                "path": k,
+                "numerals": sorted(set(_NUMERAL_RE.findall(base[k]))),
+                "text": base[k][:300],
+            })
+            continue
+        ok, why = _verify_structural(k, ent, base, per_axis_leaves)
+        if ok:
+            tgt = "CARRIED_UNVERIFIABLE" if ent["kind"] == _WEAK_KIND else "EXEMPTED"
+            buckets[tgt].append({"path": k, "kind": ent["kind"], "numerals": ent["numerals"],
+                                 "why": ent["why"]})
+        else:
+            bad_structural.append({"path": k, "why_rejected": why})
+            buckets["UNREACHED"].append({
+                "path": k,
+                "numerals": sorted(set(_NUMERAL_RE.findall(base[k]))),
+                "text": base[k][:300],
+                "rejected_structural_claim": why,
+            })
+
+    adjudicated = ({e["path"] for e in buckets["EXEMPTED"]}
+                   | {e["path"] for e in buckets["CARRIED_UNVERIFIABLE"]}
+                   | {e["path"] for e in buckets["UNREACHED"]})
+    dead_structural = sorted(k for k in structural if k not in adjudicated)
+    n_watched = len(buckets["RESPONSIVE"]) + len(buckets["COVERED"])
+    return {
+        "WHAT_THIS_COUNTS": (
+            "Prose leaves that CARRY A NUMERAL -- the only population this gate can convict. "
+            "Numeral-free prose is excluded by proof, not by exemption: the gate's conviction "
+            "test intersects a leaf's own numerals with the moved spellings, and that "
+            "intersection is empty for every axis and every corpus when the leaf has none."
+        ),
+        "n_axes": len(per_axis),
+        "axes": sorted(per_axis),
+        "n_prose_leaves": len(prose),
+        "n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF": len(numeral_free),
+        "n_numeral_carrying_prose_leaves": len(carriers),
+        "COVERAGE": f"{n_watched}/{len(carriers)}",
+        "coverage_rate": rate0(n_watched, len(carriers)),
+        "n_RESPONSIVE": len(buckets["RESPONSIVE"]),
+        "n_COVERED": len(buckets["COVERED"]),
+        "n_EXEMPTED_STRUCTURAL": len(buckets["EXEMPTED"]),
+        "n_CARRIED_UNVERIFIABLE_NOT_COVERAGE": len(buckets["CARRIED_UNVERIFIABLE"]),
+        "WHAT_CARRIED_UNVERIFIABLE_MEANS": (
+            "A genuine measurement, interpolated from the field it describes, that NO axis in "
+            "this family moves. The wiring is visible in the source but UNTESTED by this gate, "
+            "so it is deliberately excluded from the coverage figure rather than counted as a "
+            "pass. Growth in this bucket means the axis family is too narrow, and it is reported "
+            "where that is impossible to miss."
+        ),
+        "n_UNREACHED_THIS_IS_THE_RED": len(buckets["UNREACHED"]),
+        "buckets": buckets,
+        "bad_structural_claims": bad_structural,
+        "structural_entries_that_matched_nothing": dead_structural,
+        "identifier_exclusion_audit": {
+            "WHY": (
+                "IDENTIFIER_KEYS excludes fields by exact NAME. This checks that each excluded "
+                "field really holds an identifier, by requiring that it quote no moved "
+                "measurement as a free-standing word. Membership earned by content, not by a "
+                "name that sounds path-like."
+            ),
+            "n_identifier_leaves_audited": sum(
+                1 for k in base if isinstance(base[k], str) and _is_identifier_field(k)
+            ),
+            "leaks": identifier_leaks,
+            "PASS": not identifier_leaks,
+        },
+        "PASS": (not buckets["UNREACHED"] and not bad_structural and not dead_structural
+                 and not identifier_leaks),
+        "how_to_falsify": (
+            "Add a sentence quoting a measurement to a block no axis moves, and re-run: it "
+            "lands in UNREACHED and this generator exits non-zero. Demonstrated by "
+            "--census-selftest."
+        ),
+    }
+
+
+def _verify_structural(path: str, ent: dict, base: dict, per_axis_leaves: dict) -> tuple[bool, str]:
+    """A STRUCTURAL exemption is a claim about the KIND of a numeral, and it is checked.
+
+    ★ WHY THIS IS NOT THE ALLOWLIST AGAIN. The rejected design gave every unreached region an
+    exemption, which is the caption problem with extra steps -- an exemption sized to the escape
+    population is just the escape population with a table around it. These entries are the
+    genuine REMAINDER after six axes, each one names WHICH numerals it is claiming and WHAT KIND
+    they are, and two mechanical checks stand behind the claim:
+
+      1. EXHAUSTIVE. The declared numerals must be exactly the numerals in the text. A structural
+         claim that covers some of a sentence's numbers while a measurement hides among the rest
+         is the shape this whole wave exists to defeat.
+      2. INVARIANT. None of the declared numerals may move under ANY axis, anywhere in the
+         artifact. A numeral claimed to be a fixed threshold or a document identifier, which some
+         axis is observed to move, is a measurement being mis-declared -- and that is reported as
+         a bad structural claim, which FAILS the run exactly like an unreached caption.
+
+    Convenience is not a kind. "Too hard to reach" is not a kind. The kinds are named in the
+    STRUCTURAL_NUMERALS table and each is a statement about the number's referent.
+    """
+    declared = set(ent.get("numerals") or [])
+    actual = set(_NUMERAL_RE.findall(base[path]))
+    if declared != actual:
+        return False, (
+            f"declared numerals {sorted(declared)} != the numerals actually in the text "
+            f"{sorted(actual)} -- a structural claim must account for every number in the "
+            "sentence, or a measurement can hide among the ones it did not mention"
+        )
+    if not ent.get("kind") or not ent.get("why"):
+        return False, "a structural exemption must name its KIND and its reason"
+    if ent["kind"] not in STRUCTURAL_KINDS:
+        return False, (
+            f"kind {ent['kind']!r} is not one of the declared kinds {sorted(STRUCTURAL_KINDS)}. "
+            "The vocabulary is closed on purpose -- a free-text kind is a place to write "
+            "'because it is hard to reach', and convenience is not a kind."
+        )
+    # ★ SCOPED LIKE THE GATE, AND HONEST ABOUT WHAT THAT MAKES IT. The first version of this
+    # check asked whether the declared numerals move ANYWHERE in the artifact, and it rejected
+    # every entry -- "2" moves somewhere, always. That is the NUMERAL COLLISION the gate's
+    # container-scoping rule exists to avoid, reintroduced globally in the verifier that polices
+    # the gate. Scoped correctly it agrees with the gate.
+    #
+    # But then it is IMPLIED, not independent: a leaf only reaches this function by being
+    # UNREACHED, which already means no declared numeral moved in its scope. Saying so is the
+    # point -- a check that cannot fail is a decoration that inflates the count of checks, which
+    # is this file's own AR-188 finding. It is kept as a consistency assertion and NOT counted as
+    # a safety check. The load-bearing checks here are EXHAUSTIVENESS and the CLOSED KIND
+    # VOCABULARY above, both of which can and do fail.
+    cont = _container_of(path)
+    for ax, L in per_axis_leaves.items():
+        for k, v in L.items():
+            if k not in base or isinstance(v, bool):
+                continue
+            if not (k.startswith(cont + ".") or k.startswith(cont + "[")):
+                continue
+            b = base[k]
+            if isinstance(b, (int, float)) and isinstance(v, (int, float)) and b != v:
+                if declared & (_numeral_forms(b) | _numeral_forms(v)):
+                    return False, (
+                        f"axis {ax} MOVES {sorted(declared & (_numeral_forms(b) | _numeral_forms(v)))} "
+                        f"at {k} ({b} -> {v}), INSIDE this leaf's own container -- a numeral this "
+                        "entry declares STRUCTURAL is observably a measurement beside it"
+                    )
+    return True, "verified"
+
+
 def caption_gate(art_base: dict, art_perturbed: dict, allowlist: dict) -> dict:
     """FAIL the generator on any prose numeral that the data moved and the sentence did not.
 
@@ -329,9 +836,17 @@ def caption_gate(art_base: dict, art_perturbed: dict, allowlist: dict) -> dict:
     perturbation is chosen to be the largest live fact in the artifact rather than a
     convenient one, and why the allowlist below must justify every suppression.
     """
+    per_axis_leaves = {ax: dict(_leaves(a)) for ax, a in art_perturbed.items()}
     base = dict(_leaves(art_base))
-    pert = dict(_leaves(art_perturbed))
-    shared = [k for k in base if k in pert]
+    shared = [k for k in base if all(k in L for L in per_axis_leaves.values())]
+    # A leaf is FROZEN only if it sat still under EVERY axis; it is answerable for the numerals
+    # that ANY axis moved beside it. Both halves are unions -- widening the perturbation set can
+    # therefore only ever ADD convictions, never remove one.
+    pert = {k: base[k] for k in shared}
+    for L in per_axis_leaves.values():
+        for k in shared:
+            if L[k] != base[k]:
+                pert[k] = L[k]
 
     # WHICH MOVED NUMBERS A GIVEN SENTENCE IS ANSWERABLE FOR -- "the fields BESIDE it", which is
     # the law's own wording and not a convenience. Scoring every prose field against every moved
@@ -341,21 +856,17 @@ def caption_gate(art_base: dict, art_perturbed: dict, allowlist: dict) -> dict:
     # switched off -- which is how the next caption would survive. So a field is answerable for
     # the moved numbers inside ITS OWN CONTAINER's subtree: its siblings and their descendants.
     # This is strictly the scope in which a field could have been computed from what is beside it.
-    moved_leaves: list[tuple[str, set[str]]] = []
-    n_numeric_moved = 0
-    for k in shared:
-        a, b = base[k], pert[k]
-        if isinstance(a, bool) or isinstance(b, bool):
-            continue
-        if isinstance(a, (int, float)) and isinstance(b, (int, float)) and a != b:
-            n_numeric_moved += 1
-            moved_leaves.append((k, _numeral_forms(a) | _numeral_forms(b)))
-        elif isinstance(a, str) and isinstance(b, str) and a != b:
-            # A value that only ever surfaces inside a string (a fraction like "6/161") still
-            # counts as moved: take the numerals present on exactly one side.
-            sym = set(_NUMERAL_RE.findall(a)) ^ set(_NUMERAL_RE.findall(b))
-            if sym:
-                moved_leaves.append((k, sym))
+    # THE UNION OF THE BLAST RADII. Every axis contributes the leaves it moved and the spellings
+    # it moved them between; a leaf moved by two axes contributes both sets.
+    merged: dict[str, set[str]] = {}
+    for L in per_axis_leaves.values():
+        for k, forms in _moved_leaves_for(base, L):
+            merged.setdefault(k, set()).update(forms)
+    moved_leaves: list[tuple[str, set[str]]] = sorted(merged.items())
+    n_numeric_moved = sum(
+        1 for k in moved_leaves
+        if isinstance(base[k[0]], (int, float)) and not isinstance(base[k[0]], bool)
+    )
     moved_all = set().union(*(f for _, f in moved_leaves)) if moved_leaves else set()
 
     def _container(p: str) -> str:
@@ -410,8 +921,8 @@ def caption_gate(art_base: dict, art_perturbed: dict, allowlist: dict) -> dict:
     dead = sorted(k for k in allowlist if not suppressed.get(k))
     return {
         "bad_provenance_claims": bad_provenance,
-        "PERTURBATION": PERTURBATION_NAME,
-        "perturbation_description": PERTURBATION_DESCRIPTION,
+        "PERTURBATION_AXES": dict(sorted(AXES.items())),
+        "n_axes": len(per_axis_leaves),
         "n_leaves_compared": len(shared),
         "n_numeric_leaves_that_moved": n_numeric_moved,
         "n_moved_numeral_spellings": len(moved_all),
@@ -484,13 +995,15 @@ NON_RESPONSIVE_PROSE_ALLOWLIST: dict[str, dict] = {
             "perturbation while other counts in the corpus_A subtree pass through 0."
         ),
     },
-    "$.corpus_A.null_baseline.basis": {
-        "provenance": {"155": "$.corpus_A.n_taught_conditions"},
-        "why": (
-            "Interpolated from the taught count, which is a property of the spec list and cannot "
-            "move when only the binder's answers change."
-        ),
-    },
+    # DELETED (R-207): "$.corpus_A.null_baseline.basis" and
+    # "$.COVERAGE_OVER_GENUINELY_ALL_TAUGHT.the_defect_this_fixes" were suppressed here because
+    # the taught count "cannot move when only the binder's answers change" -- true of the ONE
+    # axis that existed, and the reason the suppressions were needed at all. Under
+    # CORPUS_A_TAUGHT_CONDITION_DROP the taught count DOES move, both sentences move with it,
+    # and both entries stopped firing. The dead-entry check demanded their deletion.
+    # ★ Widening the perturbation set SHRANK the exemption list rather than growing it. That is
+    # the test of whether axes were the right remedy: an exemption is usually a confession that
+    # no axis reaches a place, so reaching it removes the confession.
     "$.RECONCILIATION.census_vs_live_OUTSIDE_THIS_PIPELINE.ARMS_ARE_COMPARABLE": {
         "provenance": {"6": "$.CEILING.observed_de_approximated"},
         "why": (
@@ -498,17 +1011,540 @@ NON_RESPONSIVE_PROSE_ALLOWLIST: dict[str, dict] = {
             "binds WAIT_SESSION rows concrete in BOTH arms, so it moves no level/zone flip."
         ),
     },
-    "$.COVERAGE_OVER_GENUINELY_ALL_TAUGHT.the_defect_this_fixes": {
-        "provenance": {
-            "155": "$.COVERAGE_OVER_GENUINELY_ALL_TAUGHT.n_taught_entry_conditions",
-            "6": "$.COVERAGE_OVER_GENUINELY_ALL_TAUGHT.n_taught_invalidations",
-        },
-        "why": (
-            "Both interpolated from taught counts in the same block. Taught populations are "
-            "properties of the corpus files and are invariant under a binder perturbation."
+}
+
+
+# ================================================== R-207 ADDENDUM: ASSERT DISCRIMINATION
+# ★ THE LAW THIS SERVES: never a guard whose green is invariant to the question being asked.
+#
+# THE MOTIVATING INSTANCE. `graded_teachings + graded_mis_types + orphan_zone_refusal ==
+# ws_taught` reads 17 + 9 + 1 == 27. The SUM is not in doubt; the SPLIT is -- it may be 16/10
+# or 18/8. The assert is green under every one of those splits, so it protects the thing nobody
+# questions and is silent on the only thing at issue. Sized by census rather than by instance,
+# that means the WHOLE assert family gets this measured, not that one line.
+#
+# ★ WHY THE CONSISTENCY-PRESERVING AXES CANNOT COMPUTE THIS ON THEIR OWN -- a conflict worth
+# stating rather than fitting around. Requirement (iii) of this wave says an axis must leave
+# every cross-assert ARMED AND PASSING; an axis that fails an assert is a hole. So by
+# construction NO axis fails ANY assert, and a discrimination column computed against the axes
+# alone would be uniformly empty and would mean nothing.
+#
+# What discriminates an assert is the axis with its CONSISTENCY REPAIR WITHHELD -- the same
+# perturbation, minus the mirror-update that keeps the artifact self-consistent. That is exactly
+# the defect the assert exists to catch, so the probe family is the axes plus their withheld-
+# repair variants. The two requirements are complementary, not in tension: the axis proves the
+# artifact stays coherent, and the withheld-repair probe proves the assert would have noticed if
+# it had not.
+_WITHHOLD_REPAIRS = False
+
+
+@contextmanager
+def repairs_withheld():
+    """Run an axis WITHOUT its mirror repair -- i.e. inject the defect the assert is for."""
+    global _WITHHOLD_REPAIRS
+    prev = _WITHHOLD_REPAIRS
+    _WITHHOLD_REPAIRS = True
+    try:
+        yield
+    finally:
+        _WITHHOLD_REPAIRS = prev
+
+
+def assert_discrimination_census() -> dict:
+    """COMPUTE, per assert, which probes actually fail it. Never typed. R-207 addendum.
+
+    For every probe (each axis, and each axis with its consistency repair withheld) the whole
+    artifact is rebuilt and the AssertionError -- if any -- is traced back to the LINE that
+    raised, then to that line's ASSERT_DISPOSITIONS key. An assert's discrimination is the set
+    of probes observed to fail it. Nothing here reads a hand-written claim about what an assert
+    would catch, which is the point: a typed discrimination claim inside the census that
+    measures discrimination would be the caption defect in its purest form.
+
+    ★ THE FORCED DISPOSITION. An assert that NO probe can fail is one of exactly two things:
+    SOURCE_INVARIANT by declaration, or DEAD. There is no third bucket and no silent pass. The
+    row is emitted as NON_DISCRIMINATING and cross-checked against its declared disposition:
+    a DATA_SENSITIVE assert that no probe can fail is reported as a SUSPECTED DEAD ASSERT --
+    which is how two already-known dead ones in this file were found, both of which read only a
+    module-literal list and a pure function, so no data could ever reach them while the file was
+    using the DATA_SENSITIVE count as its own safety figure.
+    """
+    import ast
+    import traceback
+
+    tree = ast.parse(Path(__file__).read_text(encoding="utf-8"))
+    line_to_key: dict[int, str] = {}
+    for n in ast.walk(tree):
+        if isinstance(n, ast.Assert):
+            src = ast.unparse(n.test)
+            keys = [k for k in ASSERT_DISPOSITIONS if k in src]
+            if len(keys) == 1:
+                line_to_key[n.lineno] = keys[0]
+
+    # ★ REACHABILITY FIRST, OR THE COLUMN LIBELS HALF THE FILE. "No probe failed it" means two
+    # very different things: the assert RAN under the probes and held, or the assert never ran at
+    # all. The probe family rebuilds the artifact, so asserts living in main() -- the append-only
+    # hash pair, the git HEAD check, the gate and census gates themselves -- are never executed
+    # by a probe. Reporting those as suspected-dead would be exactly the overclaim this campaign
+    # exists to kill, so executed lines are traced and the two cases are named separately.
+    executed_lines: set[int] = set()
+    this_file = str(Path(__file__).resolve())
+
+    def _tracer(frame, event, arg):
+        if event == "line" and frame.f_code.co_filename == this_file:
+            executed_lines.add(frame.f_lineno)
+        return _tracer
+
+    prev_trace = sys.gettrace()
+    sys.settrace(_tracer)
+    try:
+        build_artifact(None)
+    finally:
+        sys.settrace(prev_trace)
+    reached = {k for ln, k in line_to_key.items() if ln in executed_lines}
+
+    probes: list[tuple[str, str, bool]] = []
+    for ax in AXES:
+        probes.append((ax, ax, False))
+        probes.append((f"{ax}__REPAIR_WITHHELD", ax, True))
+
+    failed_by: dict[str, set[str]] = {k: set() for k in ASSERT_DISPOSITIONS}
+    probe_outcome: dict[str, str] = {}
+    for probe_name, ax, withhold in probes:
+        try:
+            if withhold:
+                with repairs_withheld():
+                    build_artifact(ax)
+            else:
+                build_artifact(ax)
+            probe_outcome[probe_name] = "NO_ASSERT_FIRED"
+        except AssertionError as e:
+            tb = traceback.extract_tb(e.__traceback__)
+            hit = None
+            for fr in reversed(tb):
+                if Path(fr.filename).resolve() == Path(__file__).resolve() and fr.lineno in line_to_key:
+                    hit = line_to_key[fr.lineno]
+                    break
+            if hit is None:
+                probe_outcome[probe_name] = f"ASSERT_FIRED_UNMAPPED: {str(e)[:120]}"
+            else:
+                failed_by[hit].add(probe_name)
+                probe_outcome[probe_name] = f"FIRED: {hit}"
+        except Exception as e:  # a probe that crashes is not evidence about any assert
+            probe_outcome[probe_name] = f"BUILD_ERROR: {type(e).__name__}: {str(e)[:120]}"
+
+    rows, suspected_dead, unclassifiable = [], [], []
+    for key, disp in sorted(ASSERT_DISPOSITIONS.items()):
+        probes_hit = sorted(failed_by[key])
+        in_reach = key in reached
+        if probes_hit:
+            verdict = "DISCRIMINATING"
+        elif not in_reach:
+            verdict = "NOT_REACHED_BY_THIS_PROBE_FAMILY"
+        else:
+            verdict = "REACHED_BUT_NO_PROBE_FAILS_IT"
+        row = {
+            "assert": key,
+            "declared_disposition": disp,
+            "executed_during_a_probe_build": in_reach,
+            "discriminated_by_COMPUTED": probes_hit,
+            "n_probes_that_fail_it": len(probes_hit),
+            "verdict": verdict,
+        }
+        if verdict == "REACHED_BUT_NO_PROBE_FAILS_IT" and disp == "DATA_SENSITIVE":
+            row["SUSPECTED_DEAD"] = (
+                "declared DATA_SENSITIVE, it RAN under every probe, and none could make it fire. "
+                "Either this family is missing a probe that reaches its subject, or no data "
+                "reaches it and the declaration is wrong. Not a silent pass."
+            )
+            suspected_dead.append(key)
+        if verdict == "NOT_REACHED_BY_THIS_PROBE_FAMILY":
+            row["WHY_NO_EVIDENCE"] = (
+                "It does not execute during a probe build -- it lives outside build_artifact "
+                "(in main(), around the write and the git checks). This probe family says "
+                "NOTHING about it either way, and saying nothing is the honest report."
+            )
+            unclassifiable.append(key)
+        rows.append(row)
+
+    by_verdict = collections.Counter(r["verdict"] for r in rows)
+    return {
+        "WHY": (
+            "Never a guard whose green is invariant to the question being asked. For each assert "
+            "this records which probes were OBSERVED to fail it -- computed by rebuilding the "
+            "artifact under each probe and tracing the raising line, never declared."
         ),
+        "PROBE_FAMILY": (
+            "Each axis, and each axis with its consistency repair WITHHELD. The axes alone "
+            "cannot compute this: requirement (iii) makes them leave every assert armed and "
+            "PASSING, so they fail nothing by construction. Withholding the repair injects "
+            "exactly the inconsistency the assert exists to catch."
+        ),
+        "n_probes": len(probes),
+        "probes": sorted(p[0] for p in probes),
+        "probe_outcomes": dict(sorted(probe_outcome.items())),
+        "n_DISCRIMINATING": by_verdict["DISCRIMINATING"],
+        "n_REACHED_BUT_NO_PROBE_FAILS_IT": by_verdict["REACHED_BUT_NO_PROBE_FAILS_IT"],
+        "n_NOT_REACHED_BY_THIS_PROBE_FAMILY": by_verdict["NOT_REACHED_BY_THIS_PROBE_FAMILY"],
+        "suspected_dead_asserts": suspected_dead,
+        "asserts_this_family_CANNOT_JUDGE": unclassifiable,
+        "REACHABILITY_IS_MEASURED_NOT_ASSUMED": (
+            "Executed lines are traced during a real build, so 'no probe failed it' is never "
+            "conflated with 'it never ran'. The asserts in main() are outside every probe's "
+            "reach and are reported as unjudged rather than as dead."
+        ),
+        "rows": rows,
+        "how_to_falsify": (
+            "Run --discrimination-replay: it shows the column reporting a KNOWN non-discriminating "
+            "assert (the 17/9/1 sum, under a probe that moves the split and preserves the sum) as "
+            "NON_DISCRIMINATING, while the same probe family does fail the asserts it should."
+        ),
+    }
+
+
+def blind_spot_census(census: dict, spawn: dict, discrimination: dict) -> dict:
+    """★ R-207 (g): THE BLIND-SPOT LIST, GENERATED FROM THE FIGURES, NEVER TYPED.
+
+    A hand-written caveat is a caption about the gate: it is written once, it stops tracking the
+    thing it describes, and it reads as candour while going stale. Every entry below is computed
+    from this run's own numbers, and each states whether the boundary is CHECKED (something fails
+    if it is crossed) or OPEN (nothing here can see across it).
+
+    ENTRY #1 IS THE SUBPROCESS BOUNDARY, which entered this campaign as a declared caveat --
+    "the trace sees Python-level reads only" -- and leaves it as a check.
+    """
+    n_free = census["n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF"]
+    carried = census["n_CARRIED_UNVERIFIABLE_NOT_COVERAGE"]
+    return {
+        "WHY": (
+            "Computed from this run's figures rather than typed, so it cannot go stale while "
+            "reading as candour. CHECKED means something fails when the boundary is crossed; "
+            "OPEN means nothing in this file can see across it."
+        ),
+        "entries": [
+            {
+                "n": 1,
+                "boundary": "subprocess reads bypass the input guard's Python-level trace",
+                "status": "CHECKED",
+                "evidence_COMPUTED": (
+                    f"{spawn['n_modules_scanned']} first-party modules AST-scanned, "
+                    f"{len(spawn['findings'])} spawn sites found, "
+                    f"{len(spawn['unexpected_spawns'])} outside the named git call sites"
+                ),
+                "what_fails_if_crossed": "assert spawn['PASS'] -- a new spawn turns this RED",
+            },
+            {
+                "n": 2,
+                "boundary": (
+                    "NUMERAL-FREE CLAIMS. The gate convicts by intersecting a sentence's own "
+                    "numerals with the moved spellings, so a claim carrying NO numeral -- a bare "
+                    "direction word like 'improved', 'degraded', 'exclusive' -- cannot be "
+                    "convicted by it under any axis. This is caption 1's own shape."
+                ),
+                "status": "OPEN",
+                "evidence_COMPUTED": (
+                    f"{n_free} of {census['n_prose_leaves']} prose leaves carry no numeral and "
+                    "are therefore outside this gate's reach BY PROOF, not by exemption"
+                ),
+                "what_would_close_it": (
+                    "A direction-valued gate: prose direction words scored against the SIGN of "
+                    "the quantity they describe. Not built in this wave; demonstrated open by "
+                    "--direction-replay, which plants a false direction claim and shows the "
+                    "gate passing it."
+                ),
+            },
+            {
+                "n": 3,
+                "boundary": (
+                    "MEASUREMENTS NO AXIS MOVES. A value that is interpolated but that no axis "
+                    "shifts is indistinguishable here from a typed one."
+                ),
+                "status": "OPEN",
+                "evidence_COMPUTED": (
+                    f"{carried} numeral-carrying leaves sit in CARRIED_UNVERIFIABLE, excluded "
+                    f"from the {census['COVERAGE']} coverage figure rather than counted in it"
+                ),
+                "what_would_close_it": "An axis that moves each one's source; enumerated per entry.",
+            },
+            {
+                "n": 4,
+                "boundary": (
+                    "ASSERTS OUTSIDE build_artifact. The discrimination probe family rebuilds "
+                    "the artifact, so asserts in main() never execute under it."
+                ),
+                "status": "OPEN",
+                "evidence_COMPUTED": (
+                    f"{discrimination['n_NOT_REACHED_BY_THIS_PROBE_FAMILY']} asserts are outside "
+                    f"the family's reach; {len(discrimination['suspected_dead_asserts'])} others "
+                    "ran under every probe and none could fail them (SUSPECTED DEAD)"
+                ),
+                "what_would_close_it": (
+                    "Probes that perturb the write path and the git object store, which this "
+                    "wave did not build."
+                ),
+            },
+        ],
+        "n_CHECKED": 1,
+        "n_OPEN": 3,
+    }
+
+
+# ★ THE KIND VOCABULARY IS CLOSED. Each name is a statement about what a number REFERS TO, never
+# about how hard it was to reach. The last one is deliberately unflattering: it marks a genuine
+# measurement that no axis moves, and it is reported OUTSIDE the coverage figure so it can never
+# pad it. If that bucket grows, the honest reading is that the axis family is too narrow.
+STRUCTURAL_KINDS = frozenset({
+    "RULING_IDENTIFIER",
+    "POLICY_THRESHOLD",
+    "SECTION_IDENTIFIER",
+    "SUPERSEDED_ESTIMATE",
+    "HISTORICAL_ENUMERATION",
+    "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
+})
+# The one kind that is NOT a clean bill of health -- counted apart from the structural exemptions.
+_WEAK_KIND = "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE"
+
+
+# THE GENUINE REMAINDER after six axes. NOT an exemption map sized to the escape population --
+# it is what is left once the axes have done the work, and every entry is a claim about a
+# number's KIND that _verify_structural checks mechanically (exhaustive over the sentence's
+# numerals, and invariant under every axis). Populated from the census, never by hand-waving.
+STRUCTURAL_NUMERALS: dict[str, dict] = {
+    # ---------------------------------------------------------------- RULING IDENTIFIERS
+    # "R-199 s2" names a ruling. It is a document identifier that happens to be spelled with
+    # digits; there is no measurement behind it and no corpus can move it.
+    "$.READ_THIS_ONE__PRIMARY_COVERAGE_FIGURE.WHY_THIS_ONE": {
+        "kind": "RULING_IDENTIFIER",
+        "numerals": ["199"],
+        "why": "R-199 names the ruling this figure implements. A document id, not a quantity.",
+    },
+    "$.COVERAGE_OVER_GENUINELY_ALL_TAUGHT.COMPLETED_161_DUAL_CONFIGURATION.READ_THIS_ONE.WHY": {
+        "kind": "RULING_IDENTIFIER",
+        "numerals": ["199"],
+        "why": "Same sentence, same ruling id.",
+    },
+    "$.COVERAGE_OVER_GENUINELY_ALL_TAUGHT.WHY_TWO_ARMS_AND_NOT_ONE_NUMBER": {
+        "kind": "RULING_IDENTIFIER",
+        "numerals": ["199"],
+        "why": "R-199 again -- the ruling that required two arms.",
+    },
+    # ---------------------------------------------------------------- POLICY THRESHOLDS
+    # The de-approximation floor is a policy constant from R-102 section 2. It is now the module
+    # constant DE_APPROXIMATION_FLOOR and is interpolated, so the sentence tracks the policy; no
+    # corpus can move it, which is exactly why no axis reaches it.
+    "$.corpus_A.per_kind_attribution.swing.reason": {
+        "kind": "POLICY_THRESHOLD",
+        "numerals": ["2"],
+        "why": "The n>=2 de-approximation floor (R-102 s2), interpolated from "
+               "DE_APPROXIMATION_FLOOR. A policy constant, not a measurement.",
+    },
+    "$.CEILING.swing": {
+        "kind": "POLICY_THRESHOLD",
+        "numerals": ["2"],
+        "why": "Same floor. The swing ROW COUNT in this sentence is interpolated from the census "
+               "and is no longer the typed 1 -- see swing_row_count_CORRECTED.",
+    },
+    # ---------------------------------------------------------------- SUPERSEDED RECORDS
+    # Quotations of withdrawn claims. They describe what was once said and must NOT track the
+    # live corpus; an axis moving them would be the defect, not the fix.
+    "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.supersedes": {
+        "kind": "SUPERSEDED_ESTIMATE",
+        "numerals": ["11", "15"],
+        "why": "The withdrawn ~15 mis-types / ~11 vocabulary-gap estimates, quoted so the "
+               "supersession is checkable. Frozen by intent.",
+    },
+    "$.CEILING.swing_row_count_CORRECTED": {
+        "kind": "SUPERSEDED_ESTIMATE",
+        "numerals": ["1", "2"],
+        "why": "Records that this count was TYPED as 1 and measures as 2. The 1 is the withdrawn "
+               "value and must stay frozen; the 2 is interpolated from the census.",
+    },
+    "$.SELF_ACCOUNTING.n_asserts_note": {
+        "kind": "HISTORICAL_ENUMERATION",
+        "numerals": ["1", "2", "3"],
+        "why": "The list markers (1) (2) (3) enumerating three dead asserts removed across this "
+               "artifact's history. Ordinals in a record, not a live tally -- the live tally is "
+               "n_DATA_SENSITIVE beside them, which is computed.",
+    },
+    # ---------------------------------------------------------------- SECTION IDENTIFIERS
+    "$.WHAT_THIS_MAY_NOT_DO[1]": {
+        "kind": "SECTION_IDENTIFIER",
+        "numerals": ["6"],
+        "why": "'section 6a' names a section of the spec. A document location, not a quantity.",
+    },
+    # ---------------------------------------------------------------- ★ THE HONEST RESIDUAL
+    # These are NOT structural. Each is a genuine measurement, and each is now INTERPOLATED from
+    # the field it describes -- but no axis in this family moves that field, so the gate cannot
+    # convict them and coverage cannot claim them. They are declared as their own kind precisely
+    # so they are not mistaken for the safe categories above. This kind is WEAKER EVIDENCE than
+    # coverage: it says the author wired the value, not that the wiring was tested.
+    "$.corpus_A.per_kind_attribution.swing.classifier_scope_caveat": {
+        "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
+        "numerals": ["16", "2"],
+        "why": "16 is interpolated from n_levelzone_rows and 2 from the census swing tally. Both "
+               "come from levelzone-object-reference-census.json, a FROZEN artifact no axis "
+               "perturbs -- and an assert pins its row count at 16. Reaching these would mean an "
+               "axis that rewrites a sealed census, which is not a perturbation of this "
+               "measurement but a corruption of a different one.",
+    },
+    "$.corpus_B.INVALIDATE_enforcement.population": {
+        "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
+        "numerals": ["105"],
+        "why": "Interpolated from trigger_by_family['INVALIDATE']. CORPUS_B_ROLE_REATTRIBUTION "
+               "moves ONE condition into the trigger role and the row it finds is not an "
+               "INVALIDATE, so this family count sits still. A targeted variant would reach it; "
+               "this family does not, and that is reported rather than papered over.",
+    },
+    "$.COVERAGE_OVER_GENUINELY_ALL_TAUGHT.COMPLETED_161_DUAL_CONFIGURATION.MARGIN_DECOMPOSITION.why_the_entry_term_is_measured": {
+        "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
+        "numerals": ["0", "161"],
+        "why": "The 0 is the MEASURED entry-side margin contribution and the 161 the completed "
+               "denominator. The 0 is a measurement that came back zero and no axis moves it off "
+               "zero, so it cannot be distinguished here from a typed 0 -- stated plainly rather "
+               "than counted as coverage.",
+    },
+    "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.why": {
+        "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
+        "numerals": ["26", "27"],
+        "why": "27 is interpolated from ws_taught and 26 from PRIOR_NOTE_WAIT_SESSION_COUNT (a "
+               "superseded record). ws_taught is unreachable BY CONSTRUCTION: the taught-drop "
+               "axis must avoid WAIT_SESSION rows to keep the graded-split closure armed, and "
+               "the split's terms are EXTERNAL grades this generator may not recompute. An axis "
+               "that moved ws_taught would have to invent a grade for the row it removed.",
+    },
+    "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.the_27th_row": {
+        "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
+        "numerals": ["27"],
+        "why": "Interpolated from ws_taught; unreachable for the same reason as the sentence above.",
+    },
+    "$.WHAT_THIS_MAY_NOT_DO[0]": {
+        "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
+        "numerals": ["5"],
+        "why": "'5 rows nobody can explain' is a live count from the session lane's residue, "
+               "which this generator carries rather than derives -- no field beside it holds the "
+               "population, so there is nothing here to interpolate from and no axis to move it. "
+               "The weakest row in this table; it is a carried figure, and it is named as one.",
     },
 }
+
+
+# =============================================================== R-207 s2 / (B): THE RESIDUAL
+def subprocess_boundary_check() -> dict:
+    """★ THE INPUT GUARD'S DECLARED BOUNDARY, MADE A CHECKED ONE.
+
+    The guard traces reads by wrapping Python-level open(). Its honest caveat has been that a
+    SUBPROCESS read would not be recorded -- a true statement, and therefore a boundary that
+    quietly WIDENS the moment anyone adds a shell-out to the generator's import closure. A
+    caveat that cannot notice its own violation is a caption about a limitation.
+
+    So the boundary is asserted instead of described. This walks the AST of THIS FILE and every
+    first-party module it imports, and reports every subprocess primitive it finds. The check
+    is AST-level rather than runtime because a runtime probe only sees the paths that ran, and
+    the point is to know about a spawn that exists at all.
+
+    THE KNOWN, ALLOWED CASE IS NAMED, NOT BLANKET-EXEMPTED. This generator does shell out to
+    git -- head_blob_bytes and tracked_files run `git show` / `git ls-files` to read committed
+    bytes, which is the whole mechanism of the append-only and input guards. Those call sites
+    are allowed BY EXACT LOCATION (function name), so a NEW spawn anywhere else -- including a
+    second spawn inside those same functions' module -- turns the gate RED rather than
+    inheriting their excuse.
+    """
+    import ast
+
+    ALLOWED = {"head_blob_bytes", "tracked_files", "subprocess_boundary_check"}
+    PRIMITIVES = {"subprocess", "os.system", "os.popen", "os.spawnv", "os.spawnl",
+                  "os.execv", "os.execl", "Popen", "pty.spawn", "commands"}
+
+    mods: list[tuple[str, Path]] = [("__main__", Path(__file__))]
+    for name, m in sorted(sys.modules.items()):
+        f = getattr(m, "__file__", None)
+        if not f:
+            continue
+        p = Path(f)
+        try:
+            p.resolve().relative_to(REPO_ROOT)  # first-party TEST; the value is not needed
+        except ValueError:
+            continue  # stdlib / site-packages: not first-party, not ours to police
+        if p.resolve() != Path(__file__).resolve():
+            mods.append((name, p))
+
+    findings = []
+    for modname, p in mods:
+        try:
+            tree = ast.parse(p.read_text(encoding="utf-8"))
+        except (OSError, SyntaxError) as e:
+            findings.append({"module": modname, "error": f"{type(e).__name__}: {e}"})
+            continue
+        # map every node to its enclosing function so an allowance can be location-scoped
+        enclosing: dict[int, str] = {}
+        for fn in ast.walk(tree):
+            if isinstance(fn, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                for sub in ast.walk(fn):
+                    enclosing.setdefault(id(sub), fn.name)
+        # ★ THE IMPORT IS NOT THE SPAWN. An `import subprocess` acquires a capability and reads
+        # nothing; a CALL is what can read a file behind the trace's back. So calls are policed
+        # by exact enclosing function, and an import is judged by whether the module it sits in
+        # actually has a legitimate call site. That keeps this file's own module-level import --
+        # which head_blob_bytes and tracked_files genuinely need -- from being a blanket excuse:
+        # an import landing in a module with NO allowed call site is still a RED, because it is
+        # a spawn capability with no legitimate user.
+        mod_calls, mod_imports = [], []
+        for n in ast.walk(tree):
+            if isinstance(n, (ast.Import, ast.ImportFrom)):
+                names = [a.name for a in n.names] + (
+                    [n.module] if isinstance(n, ast.ImportFrom) and n.module else [])
+                for nm in names:
+                    if nm and nm.split(".")[0] in {"subprocess", "pty", "commands"}:
+                        mod_imports.append((n, nm))
+            elif isinstance(n, ast.Call):
+                src = ast.unparse(n.func)
+                for prim in PRIMITIVES:
+                    if src == prim or src.startswith(prim + ".") or src.endswith("." + prim):
+                        mod_calls.append((n, src))
+                        break
+
+        def row(n, hit, kind, allowed, _mod=modname, _p=p, _enc=enclosing):
+            # loop variables bound as defaults: the closure must not follow the loop (B023)
+            return {
+                "module": _mod,
+                "path": _p.resolve().relative_to(REPO_ROOT).as_posix(),
+                "line": getattr(n, "lineno", None),
+                "primitive": hit,
+                "kind": kind,
+                "enclosing_function": _enc.get(id(n), "<module>"),
+                "allowed": allowed,
+            }
+
+        for n, hit in mod_calls:
+            where = enclosing.get(id(n), "<module>")
+            findings.append(row(n, hit, "CALL_SPAWNS", where in ALLOWED))
+        has_legit_call = any(enclosing.get(id(n), "<module>") in ALLOWED for n, _ in mod_calls)
+        for n, hit in mod_imports:
+            findings.append(row(n, hit, "IMPORT_ACQUIRES_CAPABILITY", has_legit_call))
+
+    unexpected = [f for f in findings if not f.get("allowed")]
+    return {
+        "WHY": (
+            "The read trace sees Python-level opens only. A subprocess read would not be "
+            "recorded, so that boundary is asserted here rather than merely declared: if a "
+            "spawn appears outside the named git call sites, this fails instead of the "
+            "boundary silently widening."
+        ),
+        "n_modules_scanned": len(mods),
+        "modules_scanned": sorted({m for m, _ in mods}),
+        "allowed_call_sites": sorted(ALLOWED),
+        "allowed_because": (
+            "head_blob_bytes and tracked_files shell out to git to read COMMITTED bytes -- that "
+            "spawn IS the append-only and input guards. It is allowed by exact function name, "
+            "so a new spawn elsewhere is still a RED."
+        ),
+        "findings": findings,
+        "unexpected_spawns": unexpected,
+        "PASS": not unexpected,
+        "how_to_falsify": (
+            "Add `import subprocess` at module scope, or a Popen call in any function not named "
+            "above, and re-run: this exits non-zero naming the line."
+        ),
+    }
 
 
 def head_blob_bytes(rel_posix: str) -> tuple[bytes | None, str]:
@@ -876,6 +1912,7 @@ def classify_drift_discrimination_proof() -> dict:
         ("FLAT_cov__rate_worse",      0.40, 0.50, 0.10, 0.10),
         ("missing_arm",               None, 0.50, 0.10, 0.10),
     ]
+    cases = _axis_drift_extra_cases(cases)
     got = {name: classify_drift(rp, rq, cp, cq)["verdict"] for name, rp, rq, cp, cq in cases}
     assert len(set(got.values())) == len(cases), (
         f"classify_drift does NOT discriminate: {len(cases)} distinct input patterns produced "
@@ -1178,15 +2215,15 @@ def measure_corpus_a(specs) -> dict:
     }
 
 
-def build_artifact(perturb: bool = False) -> dict:
-    """Build the whole artifact. Called TWICE per run -- once real, once perturbed.
+def build_artifact(axis: str | None = None) -> dict:
+    """Build the whole artifact. Called once real, then once per AXIS.
 
     R-203 s1: the artifact had to become a pure function of the measurements before the
     perturbation gate could exist at all. While this was `main()` with the write inlined,
     "regenerate under a changed binder and diff" was not something the file could do to
     itself, which is precisely why three captions had to be found by hand from outside.
     """
-    with perturbed_binding(perturb):
+    with perturbed_binding(axis):
         return _build_artifact_body()
 
 
@@ -1194,7 +2231,9 @@ def _build_artifact_body() -> dict:
     # ---------------------------------------------------------------- CORPUS B
     # The never-evaluated universe. Derived HERE from the corpus itself -- the 987 is
     # re-derived, never transcribed, by three paths that must agree.
-    corpus_b = json.loads(CORPUS_B_PATH.read_text(encoding="utf-8"))
+    corpus_b = _axis_corpus_b_reattribute_role(
+        json.loads(CORPUS_B_PATH.read_text(encoding="utf-8"))
+    )
     b_specs = list(iter_specs(corpus_b))
     roles: collections.Counter = collections.Counter()
     trigger_by_family: collections.Counter = collections.Counter()
@@ -1232,7 +2271,7 @@ def _build_artifact_body() -> dict:
     never_by_design = roles["confluence"]
 
     # ---------------------------------------------------------------- CORPUS A
-    specs_a = load_corpus_a()
+    specs_a = _axis_drop_taught_condition(load_corpus_a())
 
     set_levelzone_flags(False)
     a_before = measure_corpus_a(specs_a)  # NULL / BEFORE arm: production default, flags OFF
@@ -1282,8 +2321,18 @@ def _build_artifact_body() -> dict:
     # arms condition-by-condition and attribute each de-approximation to its Population-A kind.
     per_kind: dict[str, dict] = {}
     swing_still_true = 0
+    # R-207: the swing accounting sentence used to TYPE its three terms ("3 ... 2 ... 1"). Under
+    # CORPUS_A_TAUGHT_CONDITION_DROP those terms move, so they are derived here and interpolated.
+    # The total and the unbound term are counted over the SAME binding_map the flip is diffed on,
+    # so the sentence's "2 + 1 = 3" closure is now arithmetic the data performs, not a claim.
+    swing_total = 0
+    swing_unbound = 0
     for key, (_bb, ba, kind, _fam) in a_before["binding_map"].items():
         nb, na, _k, _f = a_after["binding_map"][key]
+        if kind == "swing":
+            swing_total += 1
+            if not nb:
+                swing_unbound += 1
         if kind is not None and na is True and nb:
             if kind == "swing":
                 swing_still_true += 1
@@ -1364,8 +2413,7 @@ def _build_artifact_body() -> dict:
     #  = 27 = ws_taught, ASSERTED below rather than asserted in prose.
     # The graded 17/9 split SUPERSEDES the earlier ~15 mis-types / ~11 vocabulary-gap estimates
     # wherever those are cited; they were estimates, this is the graded read.
-    graded_teachings = 17
-    graded_mis_types = 9
+    graded_teachings, graded_mis_types = _axis_session_grade_split(17, 9)
     orphan_zone_refusal = 1
     assert graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught, (
         f"the 26-vs-27 accounting no longer closes: {graded_teachings} graded teachings + "
@@ -1497,6 +2545,10 @@ def _build_artifact_body() -> dict:
 
     # ---------------------------------------------------------------- CEILING
     census = json.loads(CENSUS_PATH.read_text(encoding="utf-8"))
+    # R-207: the two sentences describing the census's swing population TYPED the number 1. The
+    # census's own reference_kind_counts is the field they describe, and it is read here so the
+    # sentences quote their source instead of a memory of it. See SWING_ROW_COUNT_DISCREPANCY.
+    census_swing_rows = census["reference_kind_counts"].get("swing", 0)
     n_levelzone_rows = census["n"]
     assert n_levelzone_rows == 16, f"level/zone census drifted: expected 16 rows, got {n_levelzone_rows}"
     total_flipped = -sum(v["delta"] for v in fam_delta.values())
@@ -1507,7 +2559,7 @@ def _build_artifact_body() -> dict:
     dual = narration["dual_denominators"]
 
     # ------------------------------------------------- ENFORCEMENT (Corpus B, read)
-    enf = json.loads(ENFORCEMENT_PATH.read_text(encoding="utf-8"))
+    enf = _axis_enforcement_mirror(json.loads(ENFORCEMENT_PATH.read_text(encoding="utf-8")))
     inv = enf["invalidation_approximation_counts"]
     assert enf["never_evaluated_total"] == never_by_gap, (
         f"enforcement artifact says {enf['never_evaluated_total']} never-evaluated; I derive {never_by_gap}"
@@ -1543,7 +2595,10 @@ def _build_artifact_body() -> dict:
         "READ_THIS_ONE__PRIMARY_COVERAGE_FIGURE": {
             "coverage": _pri_block["coverage_over_161"],
             "fraction": _pri_block["fraction"],
-            "denominator_is": "161 = all taught entry_conditions + all taught invalidations",
+            "denominator_is": (
+                f"{a_after["n_taught"] + n_invalidations} = all taught entry_conditions "
+                f"({a_after["n_taught"]}) + all taught invalidations ({n_invalidations})"
+            ),
             "configuration": _pri_block["configuration"],
             "WHY_THIS_ONE": _pri_block["WHY"],
             "FULL_BLOCK": "COVERAGE_OVER_GENUINELY_ALL_TAUGHT.COMPLETED_161_DUAL_CONFIGURATION",
@@ -1556,10 +2611,10 @@ def _build_artifact_body() -> dict:
                 },
                 "per_arm_155_denominator_figures": (
                     "corpus_A.BEFORE_flags_off / AFTER_flags_on_HYPOTHETICAL carry "
-                    "section_6a_coverage over TAUGHT ENTRY CONDITIONS ONLY (155), which is a "
-                    "NARROWER denominator than the 161 above. They are arm comparisons, not the "
-                    "artifact's coverage answer, and they appear earlier in the file only because "
-                    "the corpus blocks do."
+                    f"section_6a_coverage over TAUGHT ENTRY CONDITIONS ONLY ({a_after["n_taught"]}), "
+                    f"which is a NARROWER denominator than the {a_after["n_taught"] + n_invalidations} "
+                    "above. They are arm comparisons, not the artifact's coverage answer, and they "
+                    "appear earlier in the file only because the corpus blocks do."
                 ),
                 "corpus_B": (
                     "Corpus B reports never-evaluated counts, not coverage, and is a different "
@@ -1588,9 +2643,10 @@ def _build_artifact_body() -> dict:
             ),
         },
         "CORPORA_ARE_SEPARATE": (
-            "Corpus A and Corpus B are different windows and are NEVER pooled. The 987/2694 are "
-            "Corpus B figures only; Corpus A contains zero trigger-role conditions. A rate inherits "
-            "its window: every rate below states its corpus, spec count, and condition count."
+            "Corpus A and Corpus B are different windows and are NEVER pooled. The "
+            f"{never_by_gap}/{never_by_design} are Corpus B figures only; Corpus A contains "
+            f"{a_roles.get('trigger', 0)} trigger-role conditions. A rate inherits its window: "
+            "every rate below states its corpus, spec count, and condition count."
         ),
         "corpus_A": {
             "name": "shakedown / tier-b DoD corpus",
@@ -1648,18 +2704,30 @@ def _build_artifact_body() -> dict:
                 "swing": {
                     "n_flipped": 0,
                     "n_still_approximation_true": swing_still_true,
-                    "reason": "routed-but-approximate; n=1 is below the n>=2 de-approximation floor. Never argued for.",
+                    # Same correction as CEILING.swing. This sentence also justified itself by
+                    # the floor; with the count interpolated it is visible that the Corpus-A
+                    # swing population does not fall below it either. The operative reason is
+                    # the grade scope, which is asserted rather than narrated.
+                    "reason": (
+                        f"routed-but-approximate; n={swing_still_true}. Stays approximation=True "
+                        "because the flip's grade licenses named_sr_level and order_block_edge "
+                        f"ONLY, NOT because it falls below the n>={DE_APPROXIMATION_FLOOR} "
+                        "de-approximation floor. Never argued for."
+                    ),
                     "accounting": (
-                        "3 Corpus-A conditions classify as swing: 2 are bindable and remain approximation=True "
-                        "(counted above); 1 is UNBOUND (a WAIT_SESSION row) and so sits outside the rate's "
-                        "denominator entirely, inside the unbound count. 2 + 1 = 3, no swing row unaccounted."
+                        f"{swing_total} Corpus-A conditions classify as swing: {swing_still_true} are "
+                        "bindable and remain approximation=True (counted above); "
+                        f"{swing_unbound} is UNBOUND (a WAIT_SESSION row) and so sits outside the "
+                        "rate's denominator entirely, inside the unbound count. "
+                        f"{swing_still_true} + {swing_unbound} = {swing_total}, no swing row unaccounted."
                     ),
                     "classifier_scope_caveat": (
                         "classify_population_a_kind is applied here to EVERY Corpus-A condition for attribution. "
                         "The flip itself only reaches WAIT_STRUCTURE/VERIFY_STRUCTURE, so a swing classification "
                         "on a WAIT_SESSION or WAIT_CONFIRMATION row is an attribution label, NOT a claim that the "
-                        "flip could have moved it. This population is BROADER than the frozen 16-row level/zone "
-                        "census (which holds 1 swing row) -- different windows, not pooled."
+                        "flip could have moved it. This population is BROADER than the frozen "
+                        f"{n_levelzone_rows}-row level/zone census (which holds "
+                        f"{census_swing_rows} swing rows) -- different windows, not pooled."
                     ),
                 },
                 "why_per_kind": "An aggregate delta hides which change earned what.",
@@ -1696,13 +2764,41 @@ def _build_artifact_body() -> dict:
                     "path3_sum_of_family_breakdown": path3,
                     "agree": True,
                 },
-                "supersedes": (
-                    "921, which summed a curated 5-family list (WAIT_BIAS 42, FILTER 39, INVALIDATE 105, "
-                    "ENABLE_ENTRY 480, ENTER 255) and omitted 66 conditions across 6 families "
-                    "(WAIT_SESSION 18, WAIT_CONFIRMATION 21, WAIT_RETEST 15, WAIT_STRUCTURE 6, "
-                    "VERIFY_STRUCTURE 3, EXIT_HINT 3). A correct sum over an incomplete enumeration is "
-                    "still incomplete -- and it understated the denominator, so coverage read BETTER than truth."
-                ),
+                # ★ THE WITHDRAWN 921 IS NOW DATA, NOT PROSE (R-207). It used to be a sentence
+                # reciting eleven family counts. The multi-axis gate convicted it -- the live
+                # FILTER tally passed through 39 under the Corpus-B axis while the sentence's
+                # historical "FILTER 39" sat still. The gate was RIGHT to fire and the sentence
+                # was RIGHT not to move: these numerals are a QUOTATION of a withdrawn
+                # derivation and must never track the live corpus.
+                #
+                # Both facts can only be true at once if the quotation stops being prose. A
+                # historical record belongs in fields, where it is read as a record; leaving it
+                # in a sentence forced a choice between a false conviction and an exemption
+                # covering a block that genuinely does hold frozen numbers. Structurally primary
+                # is the same remedy R-199 s2 applied to 6/161, for the same reason.
+                "SUPERSEDES__WITHDRAWN_921_DERIVATION": {
+                    "withdrawn_total": 921,
+                    "status": "WITHDRAWN -- retained as a record of the error, never recomputed",
+                    "these_numbers_are_frozen_BY_INTENT": (
+                        "A quotation of a superseded derivation. They describe what was once "
+                        "claimed, not what is now measured, so they must NOT move when the corpus "
+                        "moves. They are fields rather than prose precisely so that this is "
+                        "readable as a record instead of scored as a live claim."
+                    ),
+                    "curated_5_family_list_THAT_WAS_SUMMED": {
+                        "WAIT_BIAS": 42, "FILTER": 39, "INVALIDATE": 105,
+                        "ENABLE_ENTRY": 480, "ENTER": 255,
+                    },
+                    "omitted_families_THE_DEFECT": {
+                        "WAIT_SESSION": 18, "WAIT_CONFIRMATION": 21, "WAIT_RETEST": 15,
+                        "WAIT_STRUCTURE": 6, "VERIFY_STRUCTURE": 3, "EXIT_HINT": 3,
+                    },
+                    "n_omitted_conditions": 66,
+                    "why_it_was_wrong": (
+                        "A correct sum over an incomplete enumeration is still incomplete -- and it "
+                        "understated the denominator, so coverage read BETTER than truth."
+                    ),
+                },
             },
             "NEVER_EVALUATED_BY_DESIGN": {
                 "n": never_by_design,
@@ -1715,7 +2811,10 @@ def _build_artifact_body() -> dict:
                 ),
             },
             "INVALIDATE_enforcement": {
-                "population": "spec['invalidations'] bindable entries -- NOT the 105 INVALIDATE entry_conditions",
+                "population": (
+                    "spec['invalidations'] bindable entries -- NOT the "
+                    f"{trigger_by_family.get('INVALIDATE', 0)} INVALIDATE entry_conditions"
+                ),
                 "flag_OFF_approximated_of_total": inv["flag_OFF"],
                 "flag_ON_approximated_of_total": inv["flag_ON"],
                 "direction": "fidelity moves DOWN, and it should -- enforcement marks these approximation=True",
@@ -1730,9 +2829,10 @@ def _build_artifact_body() -> dict:
             "both_travel": True,
             "with_narration_is_never_deleted": True,
             "scope": (
-                "These are the corpus-wide WAIT_STRUCTURE NARRATION denominators, reproduced unmodified "
-                "from narration-reclassification-FINAL.json. They are NOT the Corpus A (155) or Corpus B "
-                "(6450) denominators and must not be substituted for either."
+                "These are the corpus-wide WAIT_STRUCTURE NARRATION denominators, reproduced "
+                "unmodified from narration-reclassification-FINAL.json. They are NOT the Corpus A "
+                f"({a_after['n_taught']}) or Corpus B ({b_total}) denominators and must not be "
+                "substituted for either."
             ),
             "source": "docs/replay-results/h1-battery/narration-reclassification-FINAL.json",
         },
@@ -1741,7 +2841,29 @@ def _build_artifact_body() -> dict:
             "max_de_approximable": 6,
             "observed_de_approximated": total_flipped,
             "n_unresolvable_as_built": 9,
-            "swing": "1 row, routed-but-approximate, n=1 below the n>=2 floor -- stays approximation=True",
+            # ★ R-207 CORRECTION, FOUND BY INTERPOLATING A NUMBER THAT HAD BEEN TYPED.
+            # This read "1 row ... n=1 below the n>=2 floor -- stays approximation=True". The 1
+            # was typed, and it was WRONG: the census it describes holds TWO swing rows, agreed
+            # by two independent paths (reference_kind_counts['swing'] and a row-level tally of
+            # reference_kinds). The error was not merely a stale number -- it was load-bearing.
+            # "n=1 is below the n>=2 floor" was the stated REASON swing stays approximate, and at
+            # n=2 the population MEETS the floor, so that reason does not hold.
+            # The outcome is unchanged and still asserted: swing does not de-approximate. But the
+            # reason is the GRADE SCOPE, not the floor -- the flip's grade licenses named_sr_level
+            # and order_block_edge only, which is what `set(per_kind) <= {...}` enforces. A
+            # justification is a claim, and this one was resting on a number nothing checked.
+            "swing": (
+                f"{census_swing_rows} rows, routed-but-approximate, and they stay "
+                "approximation=True because the flip's grade licenses named_sr_level and "
+                "order_block_edge ONLY -- enforced by the per_kind scope assert, not by the "
+                f"n>={DE_APPROXIMATION_FLOOR} floor, which this population MEETS rather than "
+                "falls below."
+            ),
+            "swing_row_count_CORRECTED": (
+                f"Was typed as 1. The census reports {census_swing_rows}, agreed by "
+                "reference_kind_counts and by a row-level tally. The floor-based justification "
+                "that rested on the typed 1 is withdrawn; see the comment at this key."
+            ),
         },
         "RECONCILIATION": {
             "corpus_B_role_partition": {
@@ -1884,8 +3006,9 @@ def _build_artifact_body() -> dict:
             "disposition": (
                 "BOTH. (a) The per-arm key was RENAMED to "
                 "'section_6a_coverage_bound_and_concrete_over_ALL_TAUGHT_ENTRY_CONDITIONS' so its "
-                "name states its actual denominator. (b) The completed 161 denominator is reported "
-                "here. Renaming alone would leave the complete figure unstated; completing alone "
+                "name states its actual denominator. (b) The completed "
+                f"{a_after['n_taught'] + n_invalidations} denominator is reported here. "
+                "Renaming alone would leave the complete figure unstated; completing alone "
                 "would force a single enforcement arm to be picked silently -- see below."
             ),
             "n_taught_entry_conditions": a_after["n_taught"],
@@ -1893,7 +3016,10 @@ def _build_artifact_body() -> dict:
             "n_taught_ALL": a_after["n_taught"] + n_invalidations,
             "invalidations_binding_by_enforcement_arm": inval_arms,
             "entry_conditions_binding_by_enforcement_arm": {
-                "MEASURED_AT": "level/zone flags ON (the AFTER arm the 161 numerators are built on)",
+                "MEASURED_AT": (
+                    "level/zone flags ON (the AFTER arm the "
+                    f"{a_after['n_taught'] + n_invalidations} numerators are built on)"
+                ),
                 "why": (
                     "Reported so the claim 'TF_FAMILY_META_ENFORCED moves invalidations, not "
                     "entry_conditions' is a measurement a reader can check rather than an "
@@ -1981,10 +3107,18 @@ def _build_artifact_body() -> dict:
             "recoverable_target_population": {
                 "value": graded_teachings,
                 "PROVENANCE": "EXTERNAL GRADED CONSTANT -- not derived by this generator.",
-                "source": (
-                    "docs/designs/spec-dual-denominator-remeasure-2026-07-20.md line 63 "
-                    "('recovers up to 17 of 27'), resting on the graded genuine/mis-typed split of "
-                    "the WAIT_SESSION rows recorded in ADVISOR-RULINGS.md."
+                # ★ R-207 (e): THIS FIELD WAS A CLAIM WEARING AN IDENTIFIER'S NAME. It was one
+                # string under the key "source", and "source" is in IDENTIFIER_KEYS -- so the gate
+                # skipped it wholesale. Inside it sat "recovers up to 17 of 27", a MEASUREMENT,
+                # and the 17 moves under SESSION_GRADE_REALLOCATION. A caption had found the one
+                # place the gate does not look, and it got there because the key name sounded like
+                # a path rather than because anything verified that it held one.
+                # Split: the path stays an identifier, the quoted claim becomes prose and is
+                # scored like any other sentence.
+                "source": "docs/designs/spec-dual-denominator-remeasure-2026-07-20.md line 63",
+                "source_quotes": (
+                    f"'recovers up to {graded_teachings} of {ws_taught}', resting on the graded "
+                    "genuine/mis-typed split of the WAIT_SESSION rows recorded in ADVISOR-RULINGS.md."
                 ),
                 "why_flagged": (
                     "This generator can count the taught rows and can show how many bound. It CANNOT "
@@ -1997,9 +3131,10 @@ def _build_artifact_body() -> dict:
             # rather than as two numbers a reader is left to reconcile.
             "THE_26_VS_27_ACCOUNTING": {
                 "why": (
-                    "An earlier note recorded 26 corpus-wide WAIT_SESSION rows; this generator counts "
-                    "27. That is not a discrepancy to be split or averaged -- it closes exactly, and "
-                    "the terms are named so the closure can be checked instead of believed."
+                    f"An earlier note recorded {PRIOR_NOTE_WAIT_SESSION_COUNT} corpus-wide "
+                    f"WAIT_SESSION rows; this generator counts {ws_taught}. That is not a "
+                    "discrepancy to be split or averaged -- it closes exactly, and the terms are "
+                    "named so the closure can be checked instead of believed."
                 ),
                 "graded_genuine_session_teachings": graded_teachings,
                 "graded_mis_types": graded_mis_types,
@@ -2010,7 +3145,8 @@ def _build_artifact_body() -> dict:
                     graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught
                 ),
                 "the_27th_row": (
-                    "The 27th is the former orphan-zone binder. The old resolver bound it to a zone "
+                    f"The {ws_taught}th is the former orphan-zone binder. The old resolver bound it "
+                    "to a zone "
                     "that does not exist -- a fake binding wearing bindable=True. It is now REFUSED, "
                     "and the refusal is why the post-closure count is one higher than the "
                     "pre-closure note: the closure did not lose a binding, it stopped claiming one."
@@ -2161,9 +3297,26 @@ def _summarise(art: dict) -> None:
           f"by-DESIGN {b['NEVER_EVALUATED_BY_DESIGN']['n']} (never merged)")
     print(f"OK  ceiling: {art['CEILING']['observed_de_approximated']} de-approximated, ceiling "
           f"{art['CEILING']['max_de_approximable']} of {art['CEILING']['n_level_zone_rows_total']}")
-    print(f"OK  CAPTION GATE [{gate['PERTURBATION']}]: {gate['n_prose_fields_examined']} prose fields "
+    print(f"OK  CAPTION GATE [{gate['n_axes']} axes]: {gate['n_prose_fields_examined']} prose fields "
           f"vs {gate['n_numeric_leaves_that_moved']} moved numeric leaves -> "
           f"{gate['n_violations']} violations")
+    cc = art["CAPTION_GATE_COVERAGE_CENSUS"]
+    print(f"OK  GATE COVERAGE: {cc['COVERAGE']} numeral-carrying prose leaves watched "
+          f"({cc['n_RESPONSIVE']} responsive + {cc['n_COVERED']} covered) | "
+          f"{cc['n_EXEMPTED_STRUCTURAL']} structural, "
+          f"{cc['n_CARRIED_UNVERIFIABLE_NOT_COVERAGE']} carried-unverifiable, "
+          f"{cc['n_UNREACHED_THIS_IS_THE_RED']} unreached")
+    print(f"      {cc['n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF']} numeral-free prose "
+          "leaves excluded by proof (no numeral -> no possible conviction)")
+    ad = art["SELF_ACCOUNTING"]["ASSERT_DISCRIMINATION_COMPUTED"]
+    print(f"OK  ASSERT DISCRIMINATION [{ad['n_probes']} probes]: {ad['n_DISCRIMINATING']} "
+          f"discriminating | {ad['n_REACHED_BUT_NO_PROBE_FAILS_IT']} reached-but-never-failed "
+          f"({len(ad['suspected_dead_asserts'])} of them DATA_SENSITIVE = SUSPECTED DEAD) | "
+          f"{ad['n_NOT_REACHED_BY_THIS_PROBE_FAMILY']} outside this family's reach")
+    sp = art["SUBPROCESS_BOUNDARY"]
+    print(f"OK  subprocess boundary: {sp['n_modules_scanned']} modules AST-scanned, "
+          f"{len(sp['findings'])} spawn sites, {len(sp['unexpected_spawns'])} unexpected "
+          f"({sp['PASS']})")
     print(f"OK  append-only: {len(head['rows'])} guarded artifacts byte-identical to HEAD "
           f"({head['all_match']})")
     ig = art["INPUT_GUARD"]
@@ -2213,13 +3366,14 @@ def main(argv: list[str] | None = None) -> None:
     before_hashes = {p.name: sha(p) for p in scope}
 
     with trace_repo_reads() as traced:
-        art = build_artifact(perturb=False)
+        art = build_artifact(None)
 
-    # ============================================================== R-203 s1: THE GATE
-    # Build the ENTIRE artifact a second time under THE STANDARD PERTURBATION and require every
-    # prose field that quotes a moved number to have moved with it. This is the check the three
-    # captions died to; it runs on every invocation, before anything is written.
-        art_perturbed = build_artifact(perturb=True)
+    # ============================================================== R-203 s1 / R-207: THE GATE
+    # Build the ENTIRE artifact once more PER AXIS and require every prose field that quotes a
+    # number ANY axis moved to have moved with it. One axis was not enough: measured, its live
+    # conviction surface was four leaves, all four already excused. Six axes, scored on the
+    # union of their blast radii, is what makes the PASS carry information.
+        per_axis = {ax: build_artifact(ax) for ax in AXES}
 
     # AR-203 (a), completeness. The discovery rule above is only sound if it actually covered
     # every read. This compares it against what the two builds OPENED. A read of an in-repo
@@ -2238,7 +3392,154 @@ def main(argv: list[str] | None = None) -> None:
         )
         raise SystemExit(2)
 
-    gate = caption_gate(art, art_perturbed, NON_RESPONSIVE_PROSE_ALLOWLIST)
+    gate = caption_gate(art, per_axis, NON_RESPONSIVE_PROSE_ALLOWLIST)
+    census = coverage_census(art, per_axis, NON_RESPONSIVE_PROSE_ALLOWLIST, STRUCTURAL_NUMERALS)
+    spawn = subprocess_boundary_check()
+    # Computed HERE and not inside the body: it rebuilds the artifact once per probe, so calling
+    # it from _build_artifact_body would recurse. It is attached to the artifact below.
+    discrimination = assert_discrimination_census()
+
+    if "--axis-replay" in argv:
+        # ★ FOUNDING-INSTANCE DISCIPLINE AT BIRTH (R-207 (A)(iv)). Every axis ships with its own
+        # planted caption: a KNOWN-FALSE sentence is inserted inside that axis's blast radius,
+        # and the axis must convict it ALONE -- with the other five axes withheld, so a
+        # conviction cannot be borrowed from a neighbour's radius. An axis that cannot convict
+        # inside its own reach is contributing coverage it does not have.
+        ok = True
+        for ax in sorted(AXES):
+            radius = _moved_leaves_for(dict(_leaves(art)), dict(_leaves(per_axis[ax])))
+            numeric = [(k, v) for k, v in radius
+                       if isinstance(dict(_leaves(art)).get(k), (int, float))
+                       and not isinstance(dict(_leaves(art)).get(k), bool)]
+            if not numeric:
+                print(f"  {ax}: NO NUMERIC LEAF MOVED -- cannot plant")
+                ok = False
+                continue
+            target, _ = numeric[0]
+            cont = _container_of(target)
+            val = dict(_leaves(art))[target]
+            planted = json.loads(json.dumps(art))
+            # walk to the container and drop a sentence that TYPES the number instead of computing it
+            node, parts = planted, [p for p in cont.replace("[", ".").replace("]", "").split(".")[1:] if p]
+            for p in parts:
+                node = node[int(p)] if isinstance(node, list) else node[p]
+            if not isinstance(node, dict):
+                print(f"  {ax}: container {cont} is not a dict -- cannot plant")
+                ok = False
+                continue
+            sentence = (
+                f"This sentence states that the value is {val} and will keep stating it after "
+                "the measurement changes, because the number is typed rather than interpolated."
+            )
+            node["PLANTED_CAPTION_KNOWN_FALSE"] = sentence
+            # ★ THE PLANT MUST LAND IN BOTH BUILDS OR IT IS NOT SCORED AT ALL. The gate only
+            # examines leaves present on BOTH sides -- a key that exists only in the base build
+            # is not a frozen sentence, it is an absent one, and the first version of this replay
+            # reported DID NOT CONVICT for exactly that reason. A caption is a sentence that
+            # stays the SAME while the data moves, so the identical text goes into the perturbed
+            # build too. (The replay was red before this fix, which is the only reason it was
+            # caught -- a self-test that had passed here would have been testing nothing.)
+            planted_axis = json.loads(json.dumps(per_axis[ax]))
+            pnode, pparts = planted_axis, [p for p in cont.replace("[", ".").replace("]", "").split(".")[1:] if p]
+            for p in pparts:
+                pnode = pnode[int(p)] if isinstance(pnode, list) else pnode[p]
+            pnode["PLANTED_CAPTION_KNOWN_FALSE"] = sentence
+            red = caption_gate(planted, {ax: planted_axis}, NON_RESPONSIVE_PROSE_ALLOWLIST)
+            hit = [v for v in red["violations"] if v["path"].endswith("PLANTED_CAPTION_KNOWN_FALSE")]
+            print(f"  {ax}: planted at {cont} quoting {val} -> "
+                  f"{'CONVICTS' if hit else 'DID NOT CONVICT'}")
+            if not hit:
+                ok = False
+        print("AXIS REPLAY", "PASSED" if ok else "FAILED")
+        sys.exit(0 if ok else 1)
+
+    if "--direction-replay" in argv:
+        # ★ BATTERY ITEM 1 -- CAPTION 1'S OWN SHAPE, REPLAYED. Caption 1 was a numeral-free
+        # DIRECTION claim. This plants one that is KNOWN FALSE against the artifact's own data
+        # and shows the gate passing it. The expected result is that the gate does NOT convict:
+        # a sentence with no numeral has nothing to intersect, so no axis can reach it. Printing
+        # that as a PASS would be the caption defect; it is printed as the OPEN boundary it is,
+        # and blind_spot_census entry #2 carries the same fact as a computed figure.
+        drift = art["CLOSURE_DRIFT"]["verdict"] if "CLOSURE_DRIFT" in art else "(n/a)"
+        SENT = ("Fidelity improved under the closure and the entry side gained coverage, so the "
+                "flip is exclusively responsible for the margin.")
+        planted = json.loads(json.dumps(art))
+        planted["CORPORA_ARE_SEPARATE_DIRECTION_CLAIM_KNOWN_FALSE"] = SENT
+        pax = {}
+        for ax, a in per_axis.items():
+            pa2 = json.loads(json.dumps(a))
+            pa2["CORPORA_ARE_SEPARATE_DIRECTION_CLAIM_KNOWN_FALSE"] = SENT
+            pax[ax] = pa2
+        red = caption_gate(planted, pax, NON_RESPONSIVE_PROSE_ALLOWLIST)
+        redc = coverage_census(planted, pax, NON_RESPONSIVE_PROSE_ALLOWLIST, STRUCTURAL_NUMERALS)
+        convicted = any("DIRECTION_CLAIM_KNOWN_FALSE" in v["path"] for v in red["violations"])
+        print("DIRECTION REPLAY -- caption 1's shape: a numeral-free direction claim")
+        print(f"  planted (known false against this run's own verdict {drift!r}):")
+        print(f"    {SENT}")
+        print(f"  caption gate convicted it        = {convicted}")
+        print(f"  coverage census counted it       = "
+              f"{'numeral-free, excluded by proof' if not convicted else 'scored'}")
+        print(f"  gate PASS with the false claim in= {red['PASS']}  census PASS = {redc['PASS']}")
+        print()
+        print("RESULT: the gate does NOT convict it, and that is the CORRECT report of an OPEN")
+        print("boundary, not a failure of this replay. A numeral-free sentence has nothing for a")
+        print("numeral-intersection rule to catch. Recorded as blind_spot_census entry #2.")
+        # The replay asserts the BLINDNESS is real and still declared -- if a future change made
+        # the gate catch this, entry #2 would be stale and must be rewritten.
+        # computed here rather than read off art -- the replay blocks run BEFORE it is attached
+        ok = (not convicted) and any(
+            e["n"] == 2 and e["status"] == "OPEN"
+            for e in blind_spot_census(census, spawn, discrimination)["entries"]
+        )
+        print("REPLAY", "PASSED -- blindness demonstrated and declared OPEN" if ok
+              else "FAILED -- the census no longer matches the demonstrated behaviour")
+        sys.exit(0 if ok else 1)
+
+    if "--discrimination-replay" in argv:
+        # ★ THE PLANTED-DEFECT REPLAY FOR THE DISCRIMINATION COLUMN (R-207 addendum).
+        # The independently-known answer: `graded_teachings + graded_mis_types +
+        # orphan_zone_refusal == ws_taught` is a SUM assert. SESSION_GRADE_REALLOCATION moves the
+        # SPLIT (17/9 -> 16/10) and preserves the sum, so arithmetic alone says that probe CANNOT
+        # fail it -- no measurement needed to know the right answer. Meanwhile
+        # CORPUS_A_TAUGHT_CONDITION_DROP__REPAIR_WITHHELD moves ws_taught itself, so it MUST fail
+        # it. The column is correct only if it reports both, and the pair is the whole finding:
+        # the guard is green under every split, which is the only thing in doubt.
+        KEY = "graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught"
+        row = next(r for r in discrimination["rows"] if r["assert"] == KEY)
+        hit = row["discriminated_by_COMPUTED"]
+        blind_to_split = AXIS_SESSION_GRADE not in hit
+        sees_sum = f"{AXIS_TAUGHT_DROP}__REPAIR_WITHHELD" in hit
+        print("DISCRIMINATION REPLAY -- the 17/9/1 sum assert")
+        print(f"  discriminated_by (COMPUTED) = {hit}")
+        print(f"  blind to the SPLIT ({AXIS_SESSION_GRADE} absent) = {blind_to_split}"
+              "   <- known independently: moving 17/9 to 16/10 preserves the sum")
+        print(f"  fires on the SUM ({AXIS_TAUGHT_DROP}__REPAIR_WITHHELD present) = {sees_sum}")
+        ok = blind_to_split and sees_sum
+        print("REPLAY", "PASSED -- the column reports a real non-discrimination it did not invent"
+              if ok else "FAILED -- the column does not match the independently-known answer")
+        sys.exit(0 if ok else 1)
+
+    if "--census-selftest" in argv:
+        # RED-PROOF OF THE COVERAGE FIGURE: plant a measurement-quoting sentence in a block no
+        # axis moves, and require the census to call it UNREACHED rather than quietly passing.
+        SENT = "A planted sentence quoting 424242, a number no axis moves and nothing computes."
+        planted = json.loads(json.dumps(art))
+        planted["WHAT_THIS_MAY_NOT_DO"] = list(planted["WHAT_THIS_MAY_NOT_DO"]) + [SENT]
+        # Same requirement as the axis replay: a leaf absent from the perturbed builds is not
+        # scored at all, so the plant goes into every one of them or the test tests nothing.
+        planted_axes = {}
+        for ax, a in per_axis.items():
+            pa = json.loads(json.dumps(a))
+            pa["WHAT_THIS_MAY_NOT_DO"] = list(pa["WHAT_THIS_MAY_NOT_DO"]) + [SENT]
+            planted_axes[ax] = pa
+        red = coverage_census(planted, planted_axes, NON_RESPONSIVE_PROSE_ALLOWLIST, STRUCTURAL_NUMERALS)
+        print(f"  live census PASS   = {census['PASS']}  COVERAGE {census['COVERAGE']}")
+        print(f"  planted census PASS= {red['PASS']}  UNREACHED {red['n_UNREACHED_THIS_IS_THE_RED']}")
+        if red["PASS"] or not census["PASS"]:
+            print("CENSUS SELF-TEST FAILED: the coverage gate did not discriminate.")
+            sys.exit(1)
+        print("CENSUS SELF-TEST PASSED: red on an unreachable measurement, green on the real file.")
+        sys.exit(0)
 
     if "--gate-selftest" in argv:
         # RED-PROOF OF THE GATE ITSELF, in-process: freeze one computed prose field back to the
@@ -2246,8 +3547,11 @@ def main(argv: list[str] | None = None) -> None:
         # catches it. A gate nobody has watched fail is a gate nobody has tested.
         frozen = json.loads(json.dumps(art))
         frozen["SESSION_ATTRIBUTION"]["THE_HEADLINE"] = art["SESSION_ATTRIBUTION"]["THE_HEADLINE"]
-        frozen_p = json.loads(json.dumps(art_perturbed))
-        frozen_p["SESSION_ATTRIBUTION"]["THE_HEADLINE"] = art["SESSION_ATTRIBUTION"]["THE_HEADLINE"]
+        frozen_p = {}
+        for ax, a in per_axis.items():
+            fp = json.loads(json.dumps(a))
+            fp["SESSION_ATTRIBUTION"]["THE_HEADLINE"] = art["SESSION_ATTRIBUTION"]["THE_HEADLINE"]
+            frozen_p[ax] = fp
         red = caption_gate(frozen, frozen_p, NON_RESPONSIVE_PROSE_ALLOWLIST)
         print("GATE SELF-TEST -- THE_HEADLINE reverted to a static literal")
         print(f"  live artifact gate PASS = {gate['PASS']} ({gate['n_violations']} violations)")
@@ -2261,6 +3565,33 @@ def main(argv: list[str] | None = None) -> None:
         sys.exit(0)
 
     art["CAPTION_GATE"] = gate
+    art["CAPTION_GATE_COVERAGE_CENSUS"] = census
+    art["SUBPROCESS_BOUNDARY"] = spawn
+    art["SELF_ACCOUNTING"]["ASSERT_DISCRIMINATION_COMPUTED"] = discrimination
+    art["BLIND_SPOT_CENSUS"] = blind_spot_census(census, spawn, discrimination)
+    assert spawn["PASS"], (
+        "SUBPROCESS BOUNDARY BREACHED -- the read trace records Python-level opens only, and a "
+        "spawn outside the named git call sites can read an input the input guard cannot see:\n"
+        + "\n".join(f"  {f['path']}:{f['line']} {f['primitive']} in {f['enclosing_function']}"
+                    for f in spawn["unexpected_spawns"])
+    )
+    assert census["PASS"], (
+        "COVERAGE CENSUS FAILED -- a prose leaf quotes a numeral that NO axis can reach, so "
+        "nothing in this file can tell whether it is computed or typed. Add an axis that moves "
+        "it, or adjudicate it as STRUCTURAL with its kind named:\n"
+        + "\n".join(f"  UNREACHED {u['path']}  numerals {u['numerals']}\n    {u['text'][:200]}"
+                    for u in census["buckets"]["UNREACHED"])
+        + ("\n  BAD STRUCTURAL CLAIMS: "
+           + "; ".join(f"{b['path']}: {b['why_rejected']}" for b in census["bad_structural_claims"])
+           if census["bad_structural_claims"] else "")
+        + ("\n  STRUCTURAL ENTRIES MATCHING NOTHING (delete them): "
+           + ", ".join(census["structural_entries_that_matched_nothing"])
+           if census["structural_entries_that_matched_nothing"] else "")
+        + ("\n  IDENTIFIER-EXCLUSION LEAKS (a claim wearing an identifier's name): "
+           + "; ".join(f"{L['path']} quotes {L['free_standing_moved_numerals']}"
+                       for L in census["identifier_exclusion_audit"]["leaks"])
+           if census["identifier_exclusion_audit"]["leaks"] else "")
+    )
     assert gate["PASS"], (
         "R-203 s1 CAPTION GATE FAILED -- a prose field quoted a number the data moved and did not "
         "move with it:\n"
