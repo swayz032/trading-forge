@@ -4,6 +4,34 @@
 
 ---
 
+## AR-181 · 2026-07-21 · *** **THREE OF MY OWN FAILURES, ALL LOAD-BEARING.** ★★★ **(1) My "session log" commit DELETED 150 LINES of an agent's tests — and its message was a FALSE CAPTION about its own diff.** ★★★ **(2) The census was CORPUS-SCOPED and I dropped the scope: THREE SPECS DO CHANGE, risk-increasing.** ★ **(3) I sent the re-grade an ORPHANED SHA.** Grader corrected.
+
+**1. ★★★ THE REVERT — precisely attributed, and MY HALF IS A DISCIPLINE I DROPPED ON EXACTLY ONE COMMIT.** The fix-wave agent ran `git checkout b230f6e9 -- <2 files>` **in the shared tree** to pin its differential arms — overwriting the orphan closure's rewritten tripwires. **Then my commit `0affe57c` swept them into history.** Its actual diff:
+
+| file | change |
+|---|---|
+| `AGENT-LOGS.md` | **+28** ← all I intended |
+| `family_meta_enforcement.py` | 34 ± |
+| `test_family_meta_enforcement.py` | **164 ±, −150 net** |
+
+★ **EVERY AR commit I made this session used `git commit -o <paths>` — commit ONLY these files. For the journal I used `git add` + `git commit -m`, with NO `-o`, so the ENTIRE STAGED INDEX went in.** **One inconsistent command, and a commit labelled *"session log"* was 84% the reversion of another agent's test file.** ★★ **And the message is a FALSE CAPTION ABOUT ITS OWN DIFF — caption-is-a-claim, written by me, in a commit message, on the night we convicted that class five times.** **The `-o` habit was doing real work and I did not notice, because it never failed until it did.**
+
+**2. ★★ THE DANGEROUS SHAPE, in the agent's words: the closure's CODE survived and only its TESTS were reverted.** *"HEAD had a live fix with its tripwires deleted and four tests red asserting a defect that no longer existed. `git status` was clean throughout, because the revert was already committed."* ★ **A clean `git status` over a committed revert is invisible by construction.** Repaired in `fc89aa8c`, restoring `98c0cc81`'s version verbatim. **The agent named the trap properly: *verifying by checkout is a WRITE; in a shared tree a write is a collision.*** A path-scoped checkout is the *safe* pin — **in a private worktree.**
+
+**3. ★★★ THE CENSUS WAS CORPUS-SCOPED AND I RELAYED IT WITHOUT ITS SCOPE. THREE SPECS DO CHANGE.** The census measured **16 specs** and stated its own bound plainly: *"these counts cover the only `*.spec.json` on disk; a corpus elsewhere is not spoken to."* **I carried the number and dropped the bound**, reporting *"effective count for both options: ZERO"* — **and your Option A ruling rested partly on that.**
+**On the 120-spec or-branches corpus** — the universe the enforcement delta harness actually measures — **8 WAIT_SESSION conditions bound an orphan (7 `overnight` + 1 `lunch_blackout`), and ONE IS `role=spine`.** Result, measured over 136 specs × 2000 real bars: **114 byte-identical · 19 lose 1-2 confluence bindings with zero signal change · ★ 3 specs CHANGE — or-branches #50/#51/#79, where `entry_long` goes 0 → 115.** **The direction is RISK-INCREASING: three specs go from never-entering to entering.**
+★ **The census was RIGHT on its corpus and I made it wrong by widening it silently. "A rate inherits its window" — I quoted that law at others tonight and then broke it on the one measurement a ruling depended on.**
+
+**4. THE AGENT'S DISPOSITION OF IT IS SOUND AND I ENDORSE IT:** *"Neither state is a real gate — the old one was False for a fabricated reason, the new one True for a declared one."* **It is declared at the refusal site in code, not left for downstream discovery.** **If pass-through is wrong for unbound spine conditions, that is a separate decision about unbound-spine handling — it is not fixable by keeping an always-False gate alive.** **I agree, and I flag it for your ruling rather than absorbing it.**
+
+**5. ★ I ALSO SENT THE RE-GRADE A DEAD COMMIT.** `91c84fd4` is **orphaned** — not an ancestor of HEAD; the author amended to `98c0cc81`. **My brief named the orphan.** Corrected in-flight: the grader now has `98c0cc81`, is told the tripwires were absent between `0affe57c` and `fc89aa8c` (**my damage, not the author's**), and that `DISPATCH-KNOWN-TRAPS.md` inside its commit **is mine, absorbed from the shared index by its `--amend`** — *"do not attribute it to the author."* **It is also told to independently verify the 3-spec finding rather than accept either of us.**
+
+**6. WHAT THE FIX WAVE PROVED, and it should not be lost under my errors:** all three D1 lying modes reproduced on the baseline then fenced · **D2 red-proven, and its control CORRECTED THE AUTHOR MID-BUILD** (*"suppressing one bar RELOCATES the rising edge rather than removing it, so a count-only check would have slept through it"* — legs now compare arrays) · **D5 independently 987, my 66-breakdown reproduced exactly** · **D6 found the `INVALIDATE` sibling I never named** and cured it by deriving the population from `FAMILY_META` · **D4 confirmed 390** · and **it withdrew two unprovable superlatives rather than weaken a guard.**
+
+**7. ★ AND IT REFUSED TO PRESENT A CONTAMINATED MEASUREMENT AS CLEAN:** *"Both arms are contaminated — the seat's files changed DURING the runs (md5 mismatch). The differential is still informative… but it is not a clean measurement, and I won't present it as one."* **That contamination is also mine.**
+
+**Holds:** flags OFF · engine loads under all pins · re-grade running with corrected inputs · the 77 sealed.
+
 ## AR-180 · 2026-07-21 · ★★★ **THE FLAG LOADS UNDER ALL PINS. `pins_active ['a','b','b2']` · `pins_skipped []` · VIOLATIONS 0 · ok True.** ★★ **And the differential DELIVERED — INTRODUCED: 0, with the arms PROVEN distinct by reconciliation.** ★ R-186 §3(i) discharged. **A side finding says "run the suite" is not read-only.**
 
 **1. ★★★ THE ACCEPTANCE TEST PASSES — measured by me, just now.** With `TF_FAMILY_META_ENFORCED=true` and the real dispatch map (16 entries, from `spec_condition_compiler.ENFORCED_DISPATCH`): **`collect_violations` → 0** · **`ok: True`** · **`pins_active: ['a','b','b2']`** · ★ **`pins_skipped: []` — nothing skipped, so the D1 silent-skip lie cannot be hiding inside this green.** **The engine that correctly refused to load now correctly loads.** `EMIT ⊆ COVERED` is satisfied because the emission stopped, not because the check was weakened.
