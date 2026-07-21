@@ -226,6 +226,42 @@ describe("claiming is guarded", () => {
   });
 });
 
+describe("the lockout store is pruned WITHOUT becoming the bypass", () => {
+  it("★ a live lockout survives sweeps — pruning must not forget an active lock", () => {
+    // The dangerous prune is the one that helps the attacker: drop a live lockout and the next
+    // guess starts fresh. Each request below calls sweep(); the lock must still hold after them.
+    return (async () => {
+      for (let i = 0; i < PAIRING_MAX_CLAIM_ATTEMPTS; i++) await claim(MEMBER, "AAAA-AAAA");
+      expect((await claim(MEMBER, "AAAA-AAAA")).status).toBe(429);
+      await start();                                   // sweeps
+      await start();                                   // sweeps again
+      expect((await claim(MEMBER, "AAAA-AAAA")).status).toBe(429);   // still locked
+    })();
+  });
+
+  it("★ a partial failure streak survives — forgetting it would reset the attacker's budget", async () => {
+    // 3 of 5 failures, then sweeps, then 2 more should still reach the lock. If the streak were
+    // pruned, these 2 would leave the member unlocked and the ceiling would be unreachable.
+    for (let i = 0; i < 3; i++) await claim(MEMBER, "AAAA-AAAA");
+    await start();
+    await start();
+    for (let i = 0; i < PAIRING_MAX_CLAIM_ATTEMPTS - 3; i++) await claim(MEMBER, "AAAA-AAAA");
+    expect((await claim(MEMBER, "AAAA-AAAA")).status).toBe(429);
+  });
+
+  it("a settled member leaves nothing behind — the successful claim clears the entry", async () => {
+    // Success zeroes the counter; the sweep then drops the now-meaningless entry. Observable
+    // only through behaviour: the member is not locked and a later failure starts from zero.
+    const s = await (await start()).json();
+    await claim(MEMBER, "AAAA-AAAA");                  // one failure
+    expect((await claim(MEMBER, s.pairingCode)).status).toBe(200);   // success clears it
+    for (let i = 0; i < PAIRING_MAX_CLAIM_ATTEMPTS; i++) {
+      expect((await claim(MEMBER, "AAAA-AAAA")).status).toBe(404);   // full budget again
+    }
+    expect((await claim(MEMBER, "AAAA-AAAA")).status).toBe(429);
+  });
+});
+
 describe("secrets never leave where they belong", () => {
   it("start returns the secret once and the audit input carries neither it nor the code", async () => {
     const res = await start();

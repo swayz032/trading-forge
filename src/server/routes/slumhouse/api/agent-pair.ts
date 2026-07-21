@@ -72,7 +72,15 @@ function secretMatches(presented: string, storedHash: string): boolean {
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
-/** Drop expired/consumed records. Called on every mutating request — no timer to die silently. */
+/**
+ * Drop expired/consumed records and settled lockout entries. Called on every mutating request —
+ * no background timer to die silently (a swept-by-cron store is one dead cron from unbounded).
+ *
+ * `claimAttempts` is pruned here too: without it the Map grows one permanent entry per member who
+ * ever mis-typed a code (grader follow-up, OR-175 §21). Only ENTRIES THAT NO LONGER DECIDE
+ * ANYTHING are dropped — a live lockout, or a partial failure streak, must survive, or sweeping
+ * would itself become the bypass: forget the streak and the attacker's next guess starts fresh.
+ */
 function sweep(nowMs: number): void {
   for (const [code, rec] of byCode) {
     const st = effectiveStatus(rec, nowMs);
@@ -80,6 +88,11 @@ function sweep(nowMs: number): void {
       byCode.delete(code);
       byDevice.delete(rec.deviceId);
     }
+  }
+  for (const [member, st] of claimAttempts) {
+    const lockExpired = st.lockedUntilMs != null && nowMs >= st.lockedUntilMs;
+    const nothingPending = st.failures === 0 && (st.lockedUntilMs == null || lockExpired);
+    if (nothingPending) claimAttempts.delete(member);
   }
 }
 
