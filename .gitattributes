@@ -66,6 +66,8 @@
 # JSON object is identical pre/post. Its generator (ladder_recompute.py) now pins
 # newline="\n", so a regeneration reproduces LF instead of re-dirtying the blob -- the
 # exemption is retired and the source of the CRLF is closed in the same unit.
-docs/replay-results/classifier-fix/classifier-fix-delta.json       !text !eol
-docs/replay-results/classifier-fix/premise-audit-arrival-paths.json !text !eol
+# NORMALIZED, exemptions retired: classifier-fix-delta.json (1775 CRLF -> LF, 69265 -> 67490
+# bytes) and premise-audit-arrival-paths.json (5480 CRLF -> LF, 168210 -> 162730 bytes).
+# EOL-ONLY PROOF for each: `git diff --ignore-cr-at-eol` empty over the change, and the parsed
+# JSON object identical pre/post.
 src/server/lib/spec-timeframe-recovery.ts                          !text !eol
