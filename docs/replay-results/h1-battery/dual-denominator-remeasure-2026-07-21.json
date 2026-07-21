@@ -229,7 +229,7 @@
    "swing": {
     "n_flipped": 0,
     "n_still_approximation_true": 2,
-    "reason": "routed-but-approximate; n=2. Stays approximation=True because the flip's grade licenses named_sr_level and order_block_edge ONLY, NOT because it falls below the n>=2 de-approximation floor. Never argued for.",
+    "reason": "routed-but-approximate; n=2. Stays approximation=True by the ANCHOR-VS-TAUGHT-OBJECT REFUSAL recorded in CEILING.swing_disposition_ground: a swing is the ANCHOR of a fibonacci retracement and the taught object is the retracement line, which the level/zone primitive does not emit -- so there is nothing to bind TO. NOT because it falls below the n>=2 de-approximation floor, which this population MEETS, and NOT because of the flip's grade scope, which is a permission rather than a ground. Never argued for.",
     "accounting": "3 Corpus-A conditions classify as swing: 2 are bindable and remain approximation=True (counted above); 1 is UNBOUND (a WAIT_SESSION row) and so sits outside the rate's denominator entirely, inside the unbound count. 2 + 1 = 3, no swing row unaccounted.",
     "classifier_scope_caveat": "classify_population_a_kind is applied here to EVERY Corpus-A condition for attribution. The flip itself only reaches WAIT_STRUCTURE/VERIFY_STRUCTURE, so a swing classification on a WAIT_SESSION or WAIT_CONFIRMATION row is an attribution label, NOT a claim that the flip could have moved it. This population is BROADER than the frozen 16-row level/zone census (which holds 2 swing rows) -- different windows, not pooled."
    },
@@ -860,34 +860,43 @@
   "n_WAIT_SESSION_unbound_flags_on": 27,
   "n_WAIT_SESSION_bound_and_concrete_flags_on": 0,
   "n_WAIT_SESSION_de_approximated_in_this_run": 0,
-  "THE_HEADLINE": "0 of 27 bound - 0 of up-to-17 recovered in this measurement's configuration (level/zone flags ON, the AFTER arm).",
+  "THE_HEADLINE": "0 of 27 bound - 0 of AT-MOST-2 recovered in this measurement's configuration (level/zone flags ON, the AFTER arm).",
+  "recovery_ceiling_vs_measured": "CEILING (graded, not measured): at most 2 of 27. MEASURED by the live session resolver: 0 of 27 rows resolve to a session zone at all, and 0 recovered in this configuration. The ceiling is an upper bound on what could be recovered, never a claim that anything was.",
   "recoverable_target_population": {
-   "value": 17,
+   "value": 2,
    "PROVENANCE": "EXTERNAL GRADED CONSTANT -- not derived by this generator.",
    "source": "docs/designs/spec-dual-denominator-remeasure-2026-07-20.md line 63",
-   "source_quotes": "'recovers up to 17 of 27', resting on the graded genuine/mis-typed split of the WAIT_SESSION rows recorded in ADVISOR-RULINGS.md.",
-   "why_flagged": "This generator can count the taught rows and can show how many bound. It CANNOT re-derive the graded target -- that came from a human-graded read of the teaching. It is cited rather than recomputed, and labelled so no reader mistakes it for a measured value here."
+   "source_quotes": "'recovers at most 2 of 27', resting on the ledger-blind second judge's A/B/C read of the WAIT_SESSION rows.",
+   "SUPERSEDED_PRIOR_VALUE": {
+    "value": 17,
+    "status": "WITHDRAWN -- never an independent check",
+    "why": "The blind grade that produced 17 reproduced the shipped classify_session_role() 26 of 26 row for row. A judge that reproduces the instrument it audits is measuring self-consistency, and 26/26 is the signature of that rather than a strong result. Withdrawn on that ground, not because a different number was preferred."
+   },
+   "why_flagged": "This generator can count the taught rows and can show how many bound. It CANNOT re-derive the graded target -- that came from a human-graded read of the teaching. It is cited rather than recomputed, and labelled so no reader mistakes it for a measured value here. \u2605 The one part it CAN reconcile is asserted: the live resolver's zone-resolvable count may never exceed it."
   },
   "THE_26_VS_27_ACCOUNTING": {
    "why": "An earlier note recorded 26 corpus-wide WAIT_SESSION rows; this generator counts 27. That is not a discrepancy to be split or averaged -- it closes exactly, and the terms are named so the closure can be checked instead of believed.",
-   "graded_genuine_session_teachings": 17,
-   "graded_mis_types": 9,
-   "former_orphan_zone_binder_now_honestly_refused": 1,
+   "A_graded_genuine_session_teachings": 2,
+   "B_graded_mis_types": 21,
+   "C_graded_undecidable": 4,
    "sum": 27,
    "measured_n_WAIT_SESSION_taught": 27,
+   "measured_n_resolvable_by_the_live_session_resolver": 0,
+   "former_orphan_zone_binder_now_honestly_refused": 1,
    "closes_exactly": true,
+   "WHY_C_EXISTS": "The prior accounting had only decided buckets, so every row was forced to a decision. C holds the rows a blind judge honestly could not decide -- a TradingView install instruction, for instance, is not a session teaching, and calling it one either way would be the fabrication. Forcing rows like those is one mechanism by which a small graded count becomes a large one.",
    "the_27th_row": "The 27th is the former orphan-zone binder. The old resolver bound it to a zone that does not exist -- a fake binding wearing bindable=True. It is now REFUSED, and the refusal is why the post-closure count is one higher than the pre-closure note: the closure did not lose a binding, it stopped claiming one.",
-   "supersedes": "The graded genuine/mis-typed split supersedes the earlier approximate ~15 mis-types / ~11 vocabulary-gap estimates wherever those are still cited. Those were estimates and split the population the other way round; this is the graded read and it is the one that travels.",
-   "ASSERTED": "The sum is asserted against the measured count, not narrated. Two of the three terms are external-graded constants and the fourth quantity is measured here, so the assert fires if the corpus moves out from under the grade."
+   "supersedes": "This A/B/C read supersedes BOTH the earlier approximate ~15 mis-types / ~11 vocabulary-gap estimates AND the 17/9 graded split that replaced them. The 17/9 was withdrawn for cause, not preference: its judge reproduced the shipped classifier 26 of 26, so it was never independent of the thing it graded.",
+   "ASSERTED": "\u2605 PER COMPONENT, not merely as a sum. The predecessor asserted the SUM alone, which stays green under every reallocation between the graded buckets -- that is, green under every value of the only quantity anyone disputed. Each of A, B and C now answers for itself against SESSION_SPLIT_DECLARED; the sum is kept because it is the only check on the taught count; and the live session resolver's zone-resolvable count is asserted not to exceed A, which is the one term anything outside the judge can falsify."
   },
   "unflattering_reading": "All 27 WAIT_SESSION conditions in Corpus A are UNBOUND in both arms. The session lane -- the only family whose runtime primitive is real -- recovered nothing in this configuration, and the honest-partial closure moved the unbound count the WRONG way: 27 unbound post-closure against the 26 of the pre-closure note, because the 27th row's binding was withdrawn as fake rather than lost (see THE_26_VS_27_ACCOUNTING). This is the least flattering number available and it is stated for that reason."
  },
  "SELF_ACCOUNTING": {
-  "n_asserts_in_this_generator": 24,
+  "n_asserts_in_this_generator": 30,
   "ASSERT_CENSUS": {
-   "n_asserts_total": 24,
-   "n_DATA_SENSITIVE": 16,
-   "n_SOURCE_INVARIANT": 8,
+   "n_asserts_total": 30,
+   "n_DATA_SENSITIVE": 20,
+   "n_SOURCE_INVARIANT": 10,
    "SPLIT_DERIVATION_R219": {
     "WHY_THIS_EXISTS": "This split has now held three different values, each replacing the last with no record of WHICH asserts moved it. A third value without a derivation is not a number yet. The prior values are carried as numeric fields below rather than typed into this sentence -- a record, not a live claim. This closes the arithmetic against the file's git history, which is outside the AST that produces the total.",
     "prior_values_A_RECORD_NOT_A_TALLY": [
@@ -942,13 +951,49 @@
       "disposition": "SOURCE_INVARIANT",
       "added_by": "R-219 (4a) -- the ledger's own tripwire",
       "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "publish_path['PASS']",
+      "disposition": "SOURCE_INVARIANT",
+      "added_by": "the -O finding -- no assert may gate publication",
+      "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "not sys.flags.optimize",
+      "disposition": "SOURCE_INVARIANT",
+      "added_by": "independent grade of d41f3bff -- name the flag, not the probes",
+      "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "R-220 s1 -- per-component split guard A",
+      "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "R-220 s1 -- per-component split guard B",
+      "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "R-220 s1 -- per-component split guard C",
+      "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "ws_session_resolvable <= graded_teachings",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "R-220 s1 -- reconciliation against the live session resolver",
+      "commit": "THIS_WAVE"
      }
     ],
-    "DATA_SENSITIVE_derivation": "14 at baseline + 2 added = 16",
-    "SOURCE_INVARIANT_derivation": "5 at baseline + 3 added = 8",
+    "DATA_SENSITIVE_derivation": "14 at baseline + 6 added = 20",
+    "SOURCE_INVARIANT_derivation": "5 at baseline + 5 added = 10",
     "declared_now_in_ASSERT_DISPOSITIONS": {
-     "DATA_SENSITIVE": 16,
-     "SOURCE_INVARIANT": 8
+     "DATA_SENSITIVE": 20,
+     "SOURCE_INVARIANT": 10
     },
     "second_link_already_asserted_above": "every ASSERT_DISPOSITIONS key names exactly ONE assert in the AST, and every assert in the AST has exactly one key -- so a split that closes against the table closes against the file.",
     "closes_exactly": true,
@@ -956,122 +1001,152 @@
    },
    "asserts": [
     {
-     "line": 360,
+     "line": 440,
      "disposition": "SOURCE_INVARIANT",
      "test": "unexpected_disposition_keys == set()"
     },
     {
-     "line": 364,
+     "line": 444,
      "disposition": "SOURCE_INVARIANT",
      "test": "undispositioned == []"
     },
     {
-     "line": 430,
+     "line": 510,
      "disposition": "SOURCE_INVARIANT",
      "test": "derivation['closes_exactly']"
     },
     {
-     "line": 2705,
+     "line": 3077,
      "disposition": "SOURCE_INVARIANT",
      "test": "len(set(got.values())) == len(cases)"
     },
     {
-     "line": 2712,
+     "line": 3084,
      "disposition": "SOURCE_INVARIANT",
      "test": "not got[flat].startswith('SAME_DIRECTION')"
     },
     {
-     "line": 2764,
+     "line": 3136,
      "disposition": "DATA_SENSITIVE",
      "test": "inval_on_concrete <= inval_off_concrete"
     },
     {
-     "line": 3049,
+     "line": 3421,
      "disposition": "DATA_SENSITIVE",
      "test": "path1 == path2 == path3"
     },
     {
-     "line": 3097,
+     "line": 3469,
      "disposition": "DATA_SENSITIVE",
      "test": "a_before['n_bindable'] == a_after['n_bindable']"
     },
     {
-     "line": 3147,
+     "line": 3532,
      "disposition": "DATA_SENSITIVE",
      "test": "per_kind.get('swing', {}).get('n_flipped', 0) == 0"
     },
     {
-     "line": 3155,
+     "line": 3540,
      "disposition": "DATA_SENSITIVE",
      "test": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}"
     },
     {
-     "line": 3174,
+     "line": 3559,
      "disposition": "DATA_SENSITIVE",
      "test": "a_roles.get('trigger', 0) == 0"
     },
     {
-     "line": 3227,
+     "line": 3645,
      "disposition": "DATA_SENSITIVE",
-     "test": "graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught"
+     "test": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']"
     },
     {
-     "line": 3362,
+     "line": 3651,
+     "disposition": "DATA_SENSITIVE",
+     "test": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']"
+    },
+    {
+     "line": 3655,
+     "disposition": "DATA_SENSITIVE",
+     "test": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']"
+    },
+    {
+     "line": 3662,
+     "disposition": "DATA_SENSITIVE",
+     "test": "graded_teachings + graded_mis_types + graded_undecidable == ws_taught"
+    },
+    {
+     "line": 3677,
+     "disposition": "DATA_SENSITIVE",
+     "test": "ws_session_resolvable <= graded_teachings"
+    },
+    {
+     "line": 3811,
      "disposition": "DATA_SENSITIVE",
      "test": "n_levelzone_rows == 16"
     },
     {
-     "line": 3364,
+     "line": 3813,
      "disposition": "DATA_SENSITIVE",
      "test": "total_flipped <= 6"
     },
     {
-     "line": 3373,
+     "line": 3822,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['never_evaluated_total'] == never_by_gap"
     },
     {
-     "line": 3377,
+     "line": 3826,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['all_entry_conditions'] == b_total"
     },
     {
-     "line": 4257,
+     "line": 4793,
      "disposition": "SOURCE_INVARIANT",
      "test": "OUT_PATH not in APPEND_ONLY_GUARDED"
     },
     {
-     "line": 4752,
+     "line": 4891,
+     "disposition": "SOURCE_INVARIANT",
+     "test": "not sys.flags.optimize"
+    },
+    {
+     "line": 5433,
+     "disposition": "SOURCE_INVARIANT",
+     "test": "publish_path['PASS']"
+    },
+    {
+     "line": 5439,
      "disposition": "SOURCE_INVARIANT",
      "test": "spawn['PASS']"
     },
     {
-     "line": 4758,
+     "line": 5445,
      "disposition": "DATA_SENSITIVE",
      "test": "census['PASS']"
     },
     {
-     "line": 4775,
+     "line": 5462,
      "disposition": "DATA_SENSITIVE",
      "test": "evidential['PASS']"
     },
     {
-     "line": 4788,
+     "line": 5475,
      "disposition": "SOURCE_INVARIANT",
      "test": "discrimination['REVIVAL_FAMILY']['PASS']"
     },
     {
-     "line": 4794,
+     "line": 5481,
      "disposition": "DATA_SENSITIVE",
      "test": "gate['PASS']"
     },
     {
-     "line": 4834,
+     "line": 5521,
      "disposition": "DATA_SENSITIVE",
      "test": "head_check['all_match']"
     },
     {
-     "line": 4844,
+     "line": 5531,
      "disposition": "DATA_SENSITIVE",
      "test": "before_hashes == after_hashes"
     }
@@ -1114,21 +1189,21 @@
     "ASSERT_DISPOSITION_RECLASSIFICATION": "NO_ASSERT_FIRED",
     "ASSERT_DISPOSITION_RECLASSIFICATION__REPAIR_WITHHELD": "NO_ASSERT_FIRED",
     "CORPUS_A_TAUGHT_CONDITION_DROP": "NO_ASSERT_FIRED",
-    "CORPUS_A_TAUGHT_CONDITION_DROP__REPAIR_WITHHELD": "FIRED: graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught",
+    "CORPUS_A_TAUGHT_CONDITION_DROP__REPAIR_WITHHELD": "FIRED: graded_teachings + graded_mis_types + graded_undecidable == ws_taught",
     "CORPUS_B_ROLE_REATTRIBUTION": "NO_ASSERT_FIRED",
     "CORPUS_B_ROLE_REATTRIBUTION__REPAIR_WITHHELD": "FIRED: enf['never_evaluated_total'] == never_by_gap",
     "DRIFT_LATTICE_CASE_WITHDRAWAL": "NO_ASSERT_FIRED",
     "DRIFT_LATTICE_CASE_WITHDRAWAL__REPAIR_WITHHELD": "FIRED: len(set(got.values())) == len(cases)",
     "SESSION_GRADE_REALLOCATION": "NO_ASSERT_FIRED",
-    "SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD": "NO_ASSERT_FIRED"
+    "SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD": "FIRED: graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']"
    },
-   "n_DISCRIMINATING": 3,
-   "n_REVIVED_BY_VALUE_INJECTION": 9,
+   "n_DISCRIMINATING": 4,
+   "n_REVIVED_BY_VALUE_INJECTION": 12,
    "n_REACHED_BUT_NO_PROBE_FAILS_IT": 4,
-   "n_NOT_REACHED_BY_THIS_PROBE_FAMILY": 8,
+   "n_NOT_REACHED_BY_THIS_PROBE_FAMILY": 10,
    "REVIVAL_FAMILY": {
     "WHY_IT_IS_REPORTED_APART": "An AXIS perturbs a SOURCE and requires the whole artifact to stay consistent; it earns the word DISCRIMINATING. A REVIVAL PROBE injects a value at the point of use. It proves the assert is LIVE and capable of failing, and nothing about whether a real corpus can reach that state. Pooling the two would inflate the very safety figure this census exists to deflate.",
-    "n_probes": 9,
+    "n_probes": 12,
     "probes": {
      "BINDABILITY_MOVED_BETWEEN_ARMS": {
       "targets": "a_before['n_bindable'] == a_after['n_bindable']",
@@ -1158,6 +1233,18 @@
       "targets": "n_levelzone_rows == 16",
       "why": "The frozen level/zone census loses a row. The assert exists to catch exactly that drift in a sealed artifact this generator does not own."
      },
+     "SESSION_RESOLVER_EXCEEDS_GRADE": {
+      "targets": "ws_session_resolvable <= graded_teachings",
+      "why": "The live resolver is made to bind more rows to a session zone than the grade calls genuine teachings. That is the reconciliation's whole subject, and no corpus in this family produces it -- today the resolver resolves none."
+     },
+     "SESSION_SPLIT_B_DIVERGED": {
+      "targets": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+      "why": "The declared mis-type bucket moves without the computed split moving with it -- the B-component form of the defect the A guard catches."
+     },
+     "SESSION_SPLIT_C_DIVERGED": {
+      "targets": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
+      "why": "The undecidable bucket moves alone. C is the bucket with no computed counterpart at all, so this probe is the only thing that reaches its guard."
+     },
      "SWING_DE_APPROXIMATED": {
       "targets": "per_kind.get('swing', {}).get('n_flipped', 0) == 0",
       "why": "A swing row de-approximates. Outside the flip's graded scope, and the subject of the CEILING.swing disposition."
@@ -1175,6 +1262,9 @@
      "ENFORCEMENT_UNIVERSE_DISAGREES": "FIRED: enf['all_entry_conditions'] == b_total",
      "INVAL_DIRECTION_INVERTED": "FIRED: inval_on_concrete <= inval_off_concrete",
      "LEVELZONE_CENSUS_DRIFTED": "FIRED: n_levelzone_rows == 16",
+     "SESSION_RESOLVER_EXCEEDS_GRADE": "FIRED: ws_session_resolvable <= graded_teachings",
+     "SESSION_SPLIT_B_DIVERGED": "FIRED: graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+     "SESSION_SPLIT_C_DIVERGED": "FIRED: graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
      "SWING_DE_APPROXIMATED": "FIRED: per_kind.get('swing', {}).get('n_flipped', 0) == 0",
      "UNGRADED_KIND_DE_APPROXIMATED": "FIRED: set(per_kind) <= {'named_sr_level', 'order_block_edge'}"
     },
@@ -1190,6 +1280,8 @@
     "evidential['PASS']",
     "gate['PASS']",
     "head_check['all_match']",
+    "not sys.flags.optimize",
+    "publish_path['PASS']",
     "spawn['PASS']"
    ],
    "REACHABILITY_IS_MEASURED_NOT_ASSUMED": "Executed lines are traced during a real build, so 'no probe failed it' is never conflated with 'it never ran'. The asserts in main() are outside every probe's reach and are reported as unjudged rather than as dead.",
@@ -1311,7 +1403,19 @@
      "WHY_NO_EVIDENCE": "It does not execute during a probe build -- it lives outside build_artifact (in main(), around the write and the git checks). This probe family says NOTHING about it either way, and saying nothing is the honest report."
     },
     {
-     "assert": "graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught",
+     "assert": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [
+      "SESSION_SPLIT_B_DIVERGED"
+     ],
+     "verdict": "REVIVED_BY_VALUE_INJECTION",
+     "WHAT_REVIVED_MEANS": "A value injection at this assert's point of use made it fire, so it is a live guard and not a decoration. It is WEAKER evidence than an axis conviction: it says nothing about whether any real corpus can reach the state it refuses."
+    },
+    {
+     "assert": "graded_teachings + graded_mis_types + graded_undecidable == ws_taught",
      "declared_disposition": "DATA_SENSITIVE",
      "executed_during_a_probe_build": true,
      "discriminated_by_COMPUTED": [
@@ -1320,6 +1424,29 @@
      "n_probes_that_fail_it": 1,
      "revived_by_COMPUTED": [],
      "verdict": "DISCRIMINATING"
+    },
+    {
+     "assert": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [
+      "SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD"
+     ],
+     "n_probes_that_fail_it": 1,
+     "revived_by_COMPUTED": [],
+     "verdict": "DISCRIMINATING"
+    },
+    {
+     "assert": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [
+      "SESSION_SPLIT_C_DIVERGED"
+     ],
+     "verdict": "REVIVED_BY_VALUE_INJECTION",
+     "WHAT_REVIVED_MEANS": "A value injection at this assert's point of use made it fire, so it is a live guard and not a decoration. It is WEAKER evidence than an axis conviction: it says nothing about whether any real corpus can reach the state it refuses."
     },
     {
      "assert": "head_check['all_match']",
@@ -1376,6 +1503,16 @@
      "verdict": "REACHED_BUT_NO_PROBE_FAILS_IT"
     },
     {
+     "assert": "not sys.flags.optimize",
+     "declared_disposition": "SOURCE_INVARIANT",
+     "executed_during_a_probe_build": false,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [],
+     "verdict": "NOT_REACHED_BY_THIS_PROBE_FAMILY",
+     "WHY_NO_EVIDENCE": "It does not execute during a probe build -- it lives outside build_artifact (in main(), around the write and the git checks). This probe family says NOTHING about it either way, and saying nothing is the honest report."
+    },
+    {
      "assert": "path1 == path2 == path3",
      "declared_disposition": "DATA_SENSITIVE",
      "executed_during_a_probe_build": true,
@@ -1398,6 +1535,16 @@
      ],
      "verdict": "REVIVED_BY_VALUE_INJECTION",
      "WHAT_REVIVED_MEANS": "A value injection at this assert's point of use made it fire, so it is a live guard and not a decoration. It is WEAKER evidence than an axis conviction: it says nothing about whether any real corpus can reach the state it refuses."
+    },
+    {
+     "assert": "publish_path['PASS']",
+     "declared_disposition": "SOURCE_INVARIANT",
+     "executed_during_a_probe_build": false,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [],
+     "verdict": "NOT_REACHED_BY_THIS_PROBE_FAMILY",
+     "WHY_NO_EVIDENCE": "It does not execute during a probe build -- it lives outside build_artifact (in main(), around the write and the git checks). This probe family says NOTHING about it either way, and saying nothing is the honest report."
     },
     {
      "assert": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}",
@@ -1450,6 +1597,18 @@
      "n_probes_that_fail_it": 0,
      "revived_by_COMPUTED": [],
      "verdict": "REACHED_BUT_NO_PROBE_FAILS_IT"
+    },
+    {
+     "assert": "ws_session_resolvable <= graded_teachings",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [
+      "SESSION_RESOLVER_EXCEEDS_GRADE"
+     ],
+     "verdict": "REVIVED_BY_VALUE_INJECTION",
+     "WHAT_REVIVED_MEANS": "A value injection at this assert's point of use made it fire, so it is a live guard and not a decoration. It is WEAKER evidence than an axis conviction: it says nothing about whether any real corpus can reach the state it refuses."
     }
    ],
    "how_to_falsify": "Run --discrimination-replay: it shows the column reporting a KNOWN non-discriminating assert (the 17/9/1 sum, under a probe that moves the split and preserves the sum) as NON_DISCRIMINATING, while the same probe family does fail the asserts it should."
@@ -1472,12 +1631,12 @@
    "SESSION_GRADE_REALLOCATION": "One WAIT_SESSION row is reallocated from the externally-graded genuine-teaching bucket to the mis-typed bucket (17/9 -> 16/10). The SUM is deliberately preserved, so `graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught` stays armed and passing -- the axis moves the split without breaking the closure it must respect. MOVES: the 26-vs-27 accounting terms."
   },
   "n_axes": 6,
-  "n_leaves_compared": 671,
+  "n_leaves_compared": 720,
   "n_numeric_leaves_that_moved": 159,
-  "n_moved_numeral_spellings": 89,
+  "n_moved_numeral_spellings": 88,
   "scoping_rule": "A prose field is answerable for the moved numbers within its own container's subtree -- its siblings and their descendants. Wider scoping convicts on numeral collision; narrower scoping would let a block quote its own parent's number and freeze.",
-  "n_prose_fields_examined": 247,
-  "n_identifier_fields_skipped": 67,
+  "n_prose_fields_examined": 287,
+  "n_identifier_fields_skipped": 85,
   "identifier_keys_excluded_as_not_prose": [
    "added_by",
    "artifact",
@@ -1517,17 +1676,31 @@
    "DRIFT_LATTICE_CASE_WITHDRAWAL",
    "SESSION_GRADE_REALLOCATION"
   ],
-  "n_prose_leaves": 167,
-  "n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF": 110,
-  "n_numeral_carrying_prose_leaves": 57,
-  "COVERAGE": "35/57",
-  "coverage_rate": 0.614,
-  "n_RESPONSIVE": 33,
+  "n_prose_leaves": 189,
+  "n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF": 130,
+  "n_numeral_carrying_prose_leaves": 59,
+  "COVERAGE": "36/59",
+  "coverage_rate": 0.6102,
+  "n_RESPONSIVE": 34,
   "n_COVERED": 2,
-  "n_EXEMPTED_STRUCTURAL": 14,
+  "n_EXEMPTED_STRUCTURAL": 15,
   "n_CARRIED_UNVERIFIABLE_NOT_COVERAGE": 8,
   "WHAT_CARRIED_UNVERIFIABLE_MEANS": "A genuine measurement, interpolated from the field it describes, that NO axis in this family moves. The wiring is visible in the source but UNTESTED by this gate, so it is deliberately excluded from the coverage figure rather than counted as a pass. Growth in this bucket means the axis family is too narrow, and it is reported where that is impossible to miss.",
   "n_UNREACHED_THIS_IS_THE_RED": 0,
+  "SOLE_MOVER_POSITIONS": {
+   "WHAT_THIS_IS": "RESPONSIVE positions that are the ONLY moving leaf inside their own container. RESPONSIVE certifies today's bytes recompute; this names the positions whose watch by the CAPTION GATE would evaporate the instant they stopped. A position that is only guarded while it happens to be innocent is not guarded.",
+   "paths": [
+    "$.DUAL_DENOMINATORS.scope",
+    "$.corpus_A.per_kind_attribution.swing.accounting"
+   ],
+   "n": 2,
+   "n_RESPONSIVE_total": 34,
+   "CAPTION_GATE_REACHES_THEM": false,
+   "WHY_NOT": "The caption gate scores a frozen leaf against numerals moved inside its own container's subtree. For these positions the only such donor IS the leaf, so freezing it destroys its own convicting evidence -- SELF-CLOAKING. This is not an axis gap and cannot be closed by adding axes: every added axis moves the defendant, never a sibling.",
+   "THIS_CENSUS_REACHES_THEM": true,
+   "WHY": "A frozen sole-mover leaves RESPONSIVE (it no longer moves under any axis), is reached by no axis, and is not adjudicated STRUCTURAL -- so it lands in UNREACHED and this census refuses the run, naming the path. MEASURED on the founding instance, both polarities, by --battery item 3.",
+   "BOUNDARY_THAT_REMAINS": "A frozen sole-mover escapes only if someone ALSO adds a STRUCTURAL_NUMERALS entry for it -- which must name a kind from the closed vocabulary, must account for EVERY numeral in the sentence, and fails if any declared numeral is observed to move. That is a visible, checked, deliberate act, not an omission; the caption class this file exists to defeat is the omission."
+  },
   "buckets": {
    "RESPONSIVE": [
     {
@@ -1619,6 +1792,9 @@
     },
     {
      "path": "$.SESSION_ATTRIBUTION.THE_HEADLINE"
+    },
+    {
+     "path": "$.SESSION_ATTRIBUTION.recovery_ceiling_vs_measured"
     },
     {
      "path": "$.SESSION_ATTRIBUTION.recoverable_target_population.source_quotes"
@@ -1722,13 +1898,25 @@
      "why": "R-199 again -- the ruling that required two arms."
     },
     {
+     "path": "$.SESSION_ATTRIBUTION.recoverable_target_population.SUPERSEDED_PRIOR_VALUE.why",
+     "kind": "SUPERSEDED_ESTIMATE",
+     "numerals": [
+      "17",
+      "26"
+     ],
+     "why": "The withdrawn 17, and the 26-of-26 row-for-row reproduction of classify_session_role() that convicted its judge of not being independent. Both are facts about a retracted grade, frozen by intent."
+    },
+    {
      "path": "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.supersedes",
      "kind": "SUPERSEDED_ESTIMATE",
      "numerals": [
       "11",
-      "15"
+      "15",
+      "17",
+      "26",
+      "9"
      ],
-     "why": "The withdrawn ~15 mis-types / ~11 vocabulary-gap estimates, quoted so the supersession is checkable. Frozen by intent."
+     "why": "The withdrawn ~15 mis-types / ~11 vocabulary-gap estimates AND the 17/9 graded split that replaced them, plus the 26-of-26 reproduction rate that convicted the 17/9 judge of non-independence. All quoted so the supersession is checkable. Frozen by intent -- an axis moving these would be the defect."
     },
     {
      "path": "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.prior_values_A_RECORD_NOT_A_TALLY[0].status",
@@ -1814,8 +2002,8 @@
      "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
      "numerals": [
       "14",
-      "16",
-      "2"
+      "20",
+      "6"
      ],
      "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately cannot: the ledger is scored against the DECLARED table, not the perturbed one, so that the axis leaves this assert armed). Wired but untested by this family, and named as such rather than counted as coverage."
     },
@@ -1823,9 +2011,8 @@
      "path": "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.SOURCE_INVARIANT_derivation",
      "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
      "numerals": [
-      "3",
-      "5",
-      "8"
+      "10",
+      "5"
      ],
      "why": "Same construction, same reason, other half of the split."
     },
@@ -1844,7 +2031,7 @@
   "structural_entries_that_matched_nothing": [],
   "identifier_exclusion_audit": {
    "WHY": "IDENTIFIER_KEYS excludes fields by exact NAME. This checks that each excluded field really holds an identifier, by requiring that it quote no moved measurement as a free-standing word. Membership earned by content, not by a name that sounds path-like.",
-   "n_identifier_leaves_audited": 136,
+   "n_identifier_leaves_audited": 154,
    "leaks": [],
    "PASS": true
   },
@@ -1861,13 +2048,13 @@
    "FIRST_PERSON_EVIDENTIAL": "'we saw', 'we then measured' -- a narrator claiming to have looked.",
    "OPPOSED_DIRECTION_PAIR": "A frozen sentence claiming one quantity rose while another fell. Caption 1's 'the rate improves while coverage worsens', in general form."
   },
-  "n_frozen_prose_leaves_SCORED": 126,
-  "n_flagged": 3,
+  "n_frozen_prose_leaves_SCORED": 147,
+  "n_flagged": 2,
   "n_convictions": 0,
-  "n_adjudicated": 3,
+  "n_adjudicated": 2,
   "precision_COMPUTED": {
    "WHAT_IT_MEANS": "Of the frozen prose leaves these rules flagged on THIS run, the share that needed an adjudication rather than a repair. A rising adjudication share is the signature of a rule that has started crying wolf, and it is visible here on the run that causes it rather than after the guard has been switched off.",
-   "flagged_over_scored": 0.0238,
+   "flagged_over_scored": 0.0136,
    "adjudicated_over_flagged": 1.0
   },
   "REJECTED_RULE_FAMILIES_AND_THEIR_MEASUREMENTS": {
@@ -1891,14 +2078,6 @@
      "OPPOSED_DIRECTION_PAIR"
     ],
     "why": "'the post-closure count is one higher ... the closure did not lose a binding'. A genuine opposed-pair direction claim whose subject is ws_taught -- which this file has ALREADY declared unreachable by every axis in STRUCTURAL_NUMERALS, with its reason. Adjudicated here by cross-reference to that declaration, not by a new one."
-   },
-   {
-    "path": "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.ASSERTED",
-    "kind": "METHOD_DESCRIPTION",
-    "rules": [
-     "EVIDENTIAL_THEN_DEIXIS"
-    ],
-    "why": "'the fourth quantity is measured here' describes which of the four terms this generator computes rather than inherits. The field it names is present and is the measured term; the sentence claims a mechanism, not a result."
    }
   ],
   "bad_adjudications": [],
@@ -1938,7 +2117,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 2349,
+    "line": 2721,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "head_blob_bytes",
@@ -1947,7 +2126,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 2364,
+    "line": 2736,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "tracked_files",
@@ -1982,7 +2161,7 @@
     "boundary": "NUMERAL-FREE CLAIMS. The gate convicts by intersecting a sentence's own numerals with the moved spellings, so a claim carrying NO numeral -- a bare direction word like 'improved', 'degraded', 'exclusive' -- cannot be convicted by it under any axis. This is caption 1's own shape.",
     "status": "CHECKED",
     "closed_by": "the EVIDENTIAL-CLAIM GATE (R-219 (2))",
-    "evidence_COMPUTED": "110 of 167 prose leaves carry no numeral and are outside the CAPTION gate's reach BY PROOF -- but they are inside the evidential gate's: it scores 126 frozen prose leaves without needing a numeral at all, and convicts 0 of them on this run",
+    "evidence_COMPUTED": "130 of 189 prose leaves carry no numeral and are outside the CAPTION gate's reach BY PROOF -- but they are inside the evidential gate's: it scores 147 frozen prose leaves without needing a numeral at all, and convicts 0 of them on this run",
     "what_fails_if_crossed": "assert evidential['PASS'] -- a frozen string claiming an observation turns this RED with no perturbation required, because a literal cannot have observed anything whatever the data does.",
     "\u2605_THE_PREMISE_THIS_ENTRY_CARRIED_IS_REFUTED": "This entry said caption 1 was numeral-free and therefore unreachable. Run against caption 1's LITERAL bytes rather than a sentence built to its shape, that is false: the text contains 'section 6a', and 6 moves in its own container -- so the caption gate convicts it by NUMERAL COLLISION on a section identifier. A true conviction for a false reason, and one that would vanish the moment the section were renumbered. The blind spot was real; the example chosen to illustrate it was not an example of it. Demonstrated by --caption1-literal-replay.",
     "the_residual_that_is_still_open": "A direction claim that is genuinely numeral-free AND carries no evidential vocabulary remains unreachable by every gate here. The general direction detector was measured and refused on its numbers -- see the evidential gate's REJECTED_RULE_FAMILIES block. --direction-replay still demonstrates that residual against a purpose-built numeral-free sentence."
@@ -1991,19 +2170,26 @@
     "n": 3,
     "boundary": "MEASUREMENTS NO AXIS MOVES. A value that is interpolated but that no axis shifts is indistinguishable here from a typed one.",
     "status": "OPEN",
-    "evidence_COMPUTED": "8 numeral-carrying leaves sit in CARRIED_UNVERIFIABLE, excluded from the 35/57 coverage figure rather than counted in it",
+    "evidence_COMPUTED": "8 numeral-carrying leaves sit in CARRIED_UNVERIFIABLE, excluded from the 36/59 coverage figure rather than counted in it",
     "what_would_close_it": "An axis that moves each one's source; enumerated per entry."
    },
    {
     "n": 4,
     "boundary": "ASSERTS OUTSIDE build_artifact. The discrimination probe family rebuilds the artifact, so asserts in main() never execute under it.",
     "status": "OPEN",
-    "evidence_COMPUTED": "8 asserts are outside the family's reach; 0 others ran under every probe and none could fail them (SUSPECTED DEAD)",
+    "evidence_COMPUTED": "10 asserts are outside the family's reach; 0 others ran under every probe and none could fail them (SUSPECTED DEAD)",
     "what_would_close_it": "Probes that perturb the write path and the git object store, which this wave did not build."
    }
   ],
   "n_CHECKED": 2,
   "n_OPEN": 2
+ },
+ "ASSERT_FREE_PUBLISH_PATH": {
+  "WHAT_THIS_IS": "main() is the publish path; an assert there is stripped by `python -O` and the guard silently stops guarding. MEASURED: before this rule, `python -O` published a caption-9-frozen artifact at exit 0 while the same run without -O refused.",
+  "n_asserts_on_publish_path_THIS_IS_THE_RED": 0,
+  "asserts_found": [],
+  "PASS": true,
+  "how_to_falsify": "Write `assert x` anywhere inside main() and re-run: this refuses with exit 2."
  },
  "INPUT_GUARD": {
   "why": "Every tracked input this generator reads, compared against its committed bytes BEFORE the run baselines or builds anything. The prior check ran against a five-name list, so a tampered Corpus B published a fabricated figure at exit 0.",
@@ -2014,7 +2200,10 @@
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
     "status": "OK",
     "match": true,
-    "byte_exact": true
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 5540,
+    "head_crlf_count": 0
    },
    {
     "path": "docs/replay-results/h1-battery/family-meta-enforcement-delta.json",
@@ -2223,8 +2412,8 @@
   ],
   "n_tracked_checked": 27,
   "n_untracked": 0,
-  "n_byte_exact": 11,
-  "n_line_ending_divergence_only": 16,
+  "n_byte_exact": 10,
+  "n_line_ending_divergence_only": 17,
   "all_match": true,
   "traced_reads": [
    "docs/replay-results/h1-battery/dual_denominator_remeasure.py",

@@ -96,7 +96,7 @@
   "n": 1,
   "n_null": 0,
   "still_approximation_true": 1,
-  "reason": "n=1, below the n>=2 de-approximation floor (R-102 \u00a72). Not flipped. Never argued for here."
+  "reason": "Not flipped, by the ANCHOR-VS-TAUGHT-OBJECT REFUSAL (AR-199 \u00a71): a swing is the anchor of a fibonacci retracement and the taught object is the 50/61.8% line, which the level/zone primitive does not emit -- so there is nothing for the row to bind to. NOT because it falls below the n>=2 de-approximation floor (that ground was withdrawn: it rested on a count that was numerically false), and NOT because of the flip's grade scope (withdrawn in turn: a permission is not a ground). The refusal is about what is emitted, so no row count and no widening of the grade can move it. Never argued for here."
  },
  "deapproximated_kinds_set": [
   "named_sr_level",
