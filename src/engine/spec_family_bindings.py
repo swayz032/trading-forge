@@ -595,6 +595,276 @@ def resolve_session_keyword(object_text: str) -> str | None:
     return None
 
 
+# ─── Role-Aware Session Resolver (docs/designs/packet-role-aware-session-
+# resolver-2026-07-20.md) ───────────────────────────────────────────────────
+# R-085 §2 / R-088 §3 / R-143 §3 item 2. 26 of 27 corpus-wide WAIT_SESSION
+# conditions never bind via resolve_session_keyword() above (an independent
+# blind grade split the 26 into 17 GENUINE session teachings the bare-phrase
+# matcher cannot see, and 9 entry-mechanics MIS-TYPES — a separate
+# reclassification lane, untouched here — session-a-mistype-dispositions.json).
+#
+# ★ THIS IS NOT A KEYWORD LIST. The blind grade produced a tension no flat
+# list can express: bare "session" must bind ("New York session" as a named
+# reference) · bare "am"/"pm" must NEVER bind (the existing fence below) ·
+# "session"-as-filler-for-"the day" must NEVER bind (the known-bad fixture,
+# "you might have a long idea for your session" — rejected by the grader
+# because the word did no work). SESSION_KEYWORDS is intentionally NOT
+# widened — a longer flat list cannot express ROLE and would bind filler
+# right alongside genuine teaching. Instead: a time/session expression is
+# RECOGNIZED only when it DOES WORK in the instruction — selects a candle,
+# delimits a window, or constitutes the instruction as a named session
+# range — via five independent, narrow, testable role markers below. None of
+# them is "does the text contain a session-ish word."
+#
+# RECOGNITION vs BINDING are kept as two separate questions, on purpose.
+# session_windows.py's runtime primitive (is_in_killzone) only knows FIVE
+# real, computable windows (london/ny_am/ny_pm/silver_bullet/macro_window —
+# see _REAL_ZONE_INTERVALS, a local mirror of session_windows.py's own
+# constants, same duplication convention as SESSION_KEYWORDS above). Several
+# of the 17 genuine teachings reference things it CANNOT compute:
+#   - a bare "trading session" / ambiguous "New York session" with no am/pm
+#     qualifier (which of the 5 windows? guessing is exactly the danger
+#     resolve_session_keyword's own docstring warns against: "a miss is
+#     honest, a false positive silently binds the WRONG window").
+#   - session-anchored LEVEL references ("Asia high", "London low", "draw on
+#     liquidity", "pre-market highs") — these are the object-reference
+#     census's own `session_range` KIND (see the Population-A Level Resolver
+#     block above, "fvg_edge / session_range / prior_day / absolute_price
+#     ... OUT of this delivery's scope") — a level/zone concept, not a time
+#     window, and level/zone is explicitly PROHIBITED in this packet.
+# For these, recognition is real (the condition is honestly session
+# teaching, not filler) but binding a time-window primitive to it would be a
+# category error or a guess — so they stay UNBOUND, with a NEW reason
+# (SESSION_TEACHING_UNBOUND_REASON) that is strictly more informative than
+# the generic no_recognized_session_keyword: it tells a reader "we correctly
+# SAW this is session language; we have no primitive that can compute it,"
+# rather than conflating that with "we don't even recognize this as session
+# language at all." This is exactly the §6a discipline (coverage = bound-
+# and-concrete ÷ all taught; the unbound count travels beside the rate) —
+# recognizing more without silently inflating the bound count is the point.
+#
+# The remaining 8-of-17 (empirically, over the grade's own 26-row sample —
+# see docs/replay-results/h1-battery/session-ab-blind-grade-RESULT.json)
+# carry an explicit clock-time span or a market-open/opening-bell anchor
+# concrete enough to compute a real overlap against the 5 killzone windows;
+# those DO bind, to the zone with GREATEST minute-overlap (deterministic,
+# tie-broken by a fixed priority order), with approximation=True (a coarse
+# containment proxy, never approximation=False — S8, the exactness claim is
+# a separate, later, independently-graded step, same two-step discipline as
+# the Population-A flip-step packet landing alongside this one).
+SESSION_ANCHOR_PHRASE_RE = re.compile(
+    r"\b(opening\s+bell|the\s+bell|off\s+the\s+bell|market\s+open|nyse\s+open|"
+    r"new\s+york\s+stock\s+exchange\s+open)\b",
+    re.IGNORECASE,
+)
+"""A named, concrete market-open anchor (NYSE cash open, 9:30 ET) — the
+Known-GOOD calibration fixtures from the packet's own grade ("the first
+two-minute candle OFF THE BELL", "drops at the OPENING BELL") are both named
+instances of this exact phrase class. Deliberately NOT "bell" bare (would
+false-positive on unrelated prose) and NOT "open" bare (way too common a
+word) — always a 2-3 word phrase anchored on "bell"/"open" together with a
+market-open-specific qualifier."""
+
+_SESSION_CLOCK_TOKEN_RE = re.compile(r"\b(\d{1,2}):([0-5]\d)\s*(a\.?m\.?|p\.?m\.?)?", re.IGNORECASE)
+_SESSION_CLOCK_CONTEXT_RE = re.compile(
+    r"\b(a\.m\.|p\.m\.|am|pm|est|edt|eastern\s+time|eastern|utc\s*-?\s*4|utc\s+minus\s+4|"
+    r"new\s+york\s+stock\s+exchange|nyse)\b",
+    re.IGNORECASE,
+)
+"""A digit-colon-digit token (e.g. "9:30", "3:00 a.m.") only counts as a
+wall-clock anchor when EITHER it carries its own a.m./p.m. marker OR the
+surrounding text carries some other ET-time-context marker (EST/eastern/
+UTC-4/NYSE) — never a bare "H:MM" with zero corroborating context. This
+mirrors resolve_session_keyword's own conservative-match philosophy: a miss
+is honest, a guessed reading is not."""
+
+SESSION_BOUNDARY_VERB_RE = re.compile(
+    r"\bsession\b.{0,20}?\b(opens?|starts?|begins?|resets?)\b"
+    r"|\b(opens?|starts?|begins?|resets?)\b.{0,20}?\bsession\b",
+    re.IGNORECASE,
+)
+"""The word "session" co-occurring with a boundary verb ("session STARTS
+again", "New York session OPENS") — the VERB is what does the work (marking
+a recurring time boundary), independent of whether a proper session name is
+attached. This is what correctly recognizes "this line is being reset as
+soon as every single session starts again" (generic "session", no proper
+name) while still refusing the known-bad "for your session" (no boundary
+verb anywhere nearby)."""
+
+SESSION_TEMPORAL_PREPOSITION_RE = re.compile(
+    r"\b(before|after|prior\s+to|until|into)\b[^.]{0,30}?\b(trading\s+session|session)\b",
+    re.IGNORECASE,
+)
+"""A temporal-selecting preposition governing a session noun within the same
+clause — "BEFORE my trading session", "AFTER being below it at the opening
+bell" (also caught by the anchor-phrase rule). This is the packet's named
+"hardest sub-case": pattern-plus-timing ("a bullish engulfing pattern form
+BEFORE my trading session") — the time reference selects which candle
+qualifies, so recognizing it preserves the instruction rather than
+distorting it. Bare "for your session" (the known-bad fixture) does NOT
+match — "for" is deliberately not in the preposition set; nor does "prior to
+the displacement" (a different, non-session-noun governed phrase) —
+verified by the bare-am/pm regression fence below (test class carries a
+"prior to" preposition with no session noun anywhere in the sentence)."""
+
+SESSION_LIQUIDITY_LEVEL_ENUM_RE = re.compile(r"\b(draw[\s-]on[\s-]liquidity|key\s+level)\b", re.IGNORECASE)
+SESSION_NAMED_TOKEN_RE = re.compile(r"\b(london|new\s+york|ny|asia|pre[\s-]?market)\b", re.IGNORECASE)
+""""draw on liquidity"/"key level" enumeration co-occurring with a named
+session token ("Asia high", "London low", "pre-market highs") — this is the
+session_range level/zone kind (see block comment above): genuinely session
+vocabulary, but a LEVEL reference rather than a time window, so it is
+recognized but never zone-mapped (see classify_session_role)."""
+
+SESSION_NAMED_WORD_RE = re.compile(r"\b(london|new\s+york|ny|asia)\s+session\b", re.IGNORECASE)
+"""A proper session name directly compounded with the literal word
+"session" ("New York session", as in "For the session indicator, I'm using
+New York session by James Davey") — a concrete, unambiguous session
+reference distinct from a generic possessive ("your session", "my
+session") which carries no proper name and does not match here."""
+
+_REAL_ZONE_INTERVALS: dict[str, tuple[tuple[int, int], ...]] = {
+    "london": ((120, 300),),
+    "ny_am": ((420, 600),),
+    "ny_pm": ((810, 960),),
+    "silver_bullet": ((180, 240), (600, 660), (840, 900)),
+    "macro_window": ((590, 610), (153, 180), (243, 270)),
+}
+"""Minute-of-day [start, end) boundaries — a LOCAL mirror of
+session_windows.py's LONDON_START_MIN/.../MW_WINDOW_3_END constants (same
+zero-import-surface convention as SESSION_KEYWORDS/LEVEL_ZONE_RE above). Any
+edit to session_windows.py's boundary constants MUST be mirrored here in the
+same commit. Deliberately excludes lunch_blackout/overnight — those two
+zone names are NOT in session_windows.py's own is_in_killzone() dispatch
+table (_ZONE_CHECKS only covers the 5 keys here), a PRE-EXISTING gap this
+packet did not introduce and is out of scope to fix (spec_condition_compiler
+.py's _eval_wait_session/is_in_killzone, not spec_family_bindings.py) — see
+this packet's completion report. This resolver never emits those two zone
+names, so it cannot widen that gap's blast radius."""
+
+_SESSION_ZONE_PRIORITY: tuple[str, ...] = ("ny_am", "london", "ny_pm", "silver_bullet", "macro_window")
+"""Deterministic tie-break order when two zones have equal overlap minutes
+(none of the 17-row corpus hits a true tie, but the resolver must stay
+deterministic — replay-determinism contract — for any future input)."""
+
+_SESSION_MARKET_OPEN_MINUTE: int = 9 * 60 + 30  # NYSE cash open, 9:30 ET
+
+
+def _session_interval_overlap_minutes(a_start: int, a_end: int, b_start: int, b_end: int) -> int:
+    return max(0, min(a_end, b_end) - max(a_start, b_start))
+
+
+def _session_best_real_zone_for_range(start_min: int, end_min: int) -> str | None:
+    """Greatest-overlap real killzone for a [start_min, end_min) span, or
+    None if it overlaps none of the 5 computable zones at all. Never
+    guesses: a span entirely outside every real window (e.g. a 1am-2am
+    reference) correctly returns None rather than picking the "closest"
+    zone by proximity."""
+    if end_min <= start_min:
+        return None
+    best_zone: str | None = None
+    best_overlap = 0
+    for zone in _SESSION_ZONE_PRIORITY:
+        total = sum(
+            _session_interval_overlap_minutes(start_min, end_min, s, e) for s, e in _REAL_ZONE_INTERVALS[zone]
+        )
+        if total > best_overlap:
+            best_overlap, best_zone = total, zone
+    return best_zone
+
+
+def _session_clock_token_minutes(hour: int, minute: int, meridiem: str | None) -> int:
+    h = hour % 12
+    if meridiem and meridiem.strip().lower().startswith("p"):
+        h += 12
+    # meridiem is None or starts with "a": no adjustment. Every unmarked
+    # digit-colon-digit token this resolver ever reaches has already passed
+    # _SESSION_CLOCK_CONTEXT_RE (an ET/NYSE market-hours context marker
+    # elsewhere in the same condition text), and every such token in the
+    # calibration corpus is a pre-market/AM reference (e.g. "9:30 to 9:45" /
+    # "UTC minus 4") — defaulting unmarked hours to AM is the reading that
+    # matches every corpus row, never a guess made in a vacuum.
+    return h * 60 + minute
+
+
+@dataclass(frozen=True)
+class SessionRoleResult:
+    recognized: bool
+    """True iff the phrase-AND-role test found the text doing real session
+    work (selects a candle, delimits a window, or constitutes the
+    instruction as a named session range) — independent of whether a
+    computable zone was found."""
+    zone: str | None
+    """One of the 5 real, is_in_killzone-computable zone names, or None when
+    recognized but no confident/computable window exists (ambiguous session
+    name, or a session-anchored LEVEL reference rather than a time window —
+    see module comment above)."""
+
+
+SESSION_TEACHING_UNBOUND_REASON: str = "session_teaching_recognized_no_computable_window"
+"""Distinct from FAMILY_META["WAIT_SESSION"].unbound_reason
+(no_recognized_session_keyword) on purpose — this reason means the
+condition WAS recognized as genuine session teaching, just not one
+session_windows.py's 5 real windows can compute. See classify_session_role.
+"""
+
+
+def classify_session_role(object_text: str) -> SessionRoleResult:
+    """Role-aware session classifier (docs/designs/packet-role-aware-session-
+    resolver-2026-07-20.md). Only ever consulted (see _bind_condition_dispatch)
+    AFTER resolve_session_keyword() has already returned None for this exact
+    text, and only when TF_SESSION_ROLE_RESOLVER_ENABLED is set — this
+    function's own behavior is otherwise irrelevant to any pre-existing
+    caller. Never raises; empty/falsy input is honestly not recognized."""
+    if not object_text:
+        return SessionRoleResult(recognized=False, zone=None)
+    norm = object_text.strip()
+
+    recognized = False
+    anchor_minutes: list[int] = []
+
+    if SESSION_ANCHOR_PHRASE_RE.search(norm):
+        recognized = True
+        anchor_minutes.append(_SESSION_MARKET_OPEN_MINUTE)
+
+    clock_tokens = list(_SESSION_CLOCK_TOKEN_RE.finditer(norm))
+    if clock_tokens and (any(m.group(3) for m in clock_tokens) or _SESSION_CLOCK_CONTEXT_RE.search(norm)):
+        recognized = True
+        for m in clock_tokens:
+            anchor_minutes.append(_session_clock_token_minutes(int(m.group(1)), int(m.group(2)), m.group(3)))
+
+    if SESSION_BOUNDARY_VERB_RE.search(norm):
+        recognized = True
+
+    if SESSION_TEMPORAL_PREPOSITION_RE.search(norm):
+        recognized = True
+
+    if SESSION_LIQUIDITY_LEVEL_ENUM_RE.search(norm) and SESSION_NAMED_TOKEN_RE.search(norm):
+        # Recognized as genuine session vocabulary, but deliberately NEVER
+        # zone-mapped — this is the session_range level/zone kind (a LEVEL
+        # reference, e.g. "Asia high"), not a time-window condition. Binding
+        # it to session_windows would be a category error, and level/zone is
+        # explicitly out of scope for this packet (see module comment).
+        recognized = True
+
+    if SESSION_NAMED_WORD_RE.search(norm):
+        recognized = True
+
+    zone: str | None = None
+    if anchor_minutes:
+        lo, hi = min(anchor_minutes), max(anchor_minutes)
+        if lo == hi:
+            hi = lo + 1
+        zone = _session_best_real_zone_for_range(lo, hi)
+
+    return SessionRoleResult(recognized=recognized, zone=zone)
+
+
+def session_role_resolver_enabled() -> bool:
+    """Read at call time (not cached), same live-read contract as
+    fvg_identity_enabled()/levelzone_routing_enabled() above."""
+    return os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED", "false").strip().lower() == "true"
+
+
 def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> ConditionBinding:
     """Bind a single spec condition {id, type, object, role, span, evidence} to
     a primitive descriptor. Never raises; unknown condition types are honestly
@@ -737,30 +1007,76 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
 
     if meta.requires_session_keyword:
         zone = resolve_session_keyword(obj)
-        if zone is None:
+        if zone is not None:
             return ConditionBinding(
                 condition_id=cond_id,
                 type=cond_type,
                 role=role,
                 object=obj,
-                bindable=False,
-                primitive=None,
-                approximation=False,
-                executed=False,
-                reason=meta.unbound_reason,
-                session_zone=None,
+                bindable=True,
+                primitive=meta.primitive,
+                approximation=meta.base_approximation,
+                executed=meta.executed,
+                reason=None,
+                session_zone=zone,
             )
+        # Role-Aware Session Resolver (see module comment above
+        # classify_session_role) — only consulted AFTER the exact-phrase
+        # matcher above has already missed, and only when explicitly
+        # enabled. Flag OFF (default): falls straight through to the
+        # pre-existing unbound return below, byte-identical to before this
+        # packet touched the file.
+        if session_role_resolver_enabled():
+            role_result = classify_session_role(obj)
+            if role_result.zone is not None:
+                # Genuine session teaching AND a real, computable killzone
+                # window was found (clock-time/anchor-phrase overlap) —
+                # bindable, but approximation=True: a coarse containment
+                # proxy against one of the 5 real windows, never the exact
+                # phrase-match contract resolve_session_keyword carries
+                # (S8 — no approximation=False in this packet).
+                return ConditionBinding(
+                    condition_id=cond_id,
+                    type=cond_type,
+                    role=role,
+                    object=obj,
+                    bindable=True,
+                    primitive=meta.primitive,
+                    approximation=True,
+                    executed=meta.executed,
+                    reason=None,
+                    session_zone=role_result.zone,
+                )
+            if role_result.recognized:
+                # Genuine session teaching, but no window session_windows.py
+                # can compute (ambiguous named session, or a session-range
+                # LEVEL reference — see module comment). Stays unbound —
+                # never guesses a zone — but with an honest, distinct reason
+                # so §6a coverage can tell "recognized, no primitive" apart
+                # from "not even recognized."
+                return ConditionBinding(
+                    condition_id=cond_id,
+                    type=cond_type,
+                    role=role,
+                    object=obj,
+                    bindable=False,
+                    primitive=None,
+                    approximation=False,
+                    executed=False,
+                    reason=SESSION_TEACHING_UNBOUND_REASON,
+                    session_zone=None,
+                )
         return ConditionBinding(
             condition_id=cond_id,
             type=cond_type,
             role=role,
             object=obj,
-            bindable=True,
-            primitive=meta.primitive,
-            approximation=meta.base_approximation,
-            executed=meta.executed,
-            reason=None,
-            session_zone=zone,
+            bindable=False,
+            primitive=None,
+            approximation=False,
+            executed=False,
+            reason=meta.unbound_reason,
+            session_zone=None,
         )
 
     return ConditionBinding(
