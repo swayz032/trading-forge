@@ -864,97 +864,97 @@
    "n_SOURCE_INVARIANT": 3,
    "asserts": [
     {
-     "line": 188,
+     "line": 189,
      "disposition": "SOURCE_INVARIANT",
      "test": "unexpected_disposition_keys == set()"
     },
     {
-     "line": 192,
+     "line": 193,
      "disposition": "SOURCE_INVARIANT",
      "test": "undispositioned == []"
     },
     {
-     "line": 691,
+     "line": 873,
      "disposition": "DATA_SENSITIVE",
      "test": "len(set(got.values())) == len(cases)"
     },
     {
-     "line": 698,
+     "line": 880,
      "disposition": "DATA_SENSITIVE",
      "test": "not got[flat].startswith('SAME_DIRECTION')"
     },
     {
-     "line": 749,
+     "line": 931,
      "disposition": "DATA_SENSITIVE",
      "test": "inval_on_concrete <= inval_off_concrete"
     },
     {
-     "line": 1031,
+     "line": 1213,
      "disposition": "DATA_SENSITIVE",
      "test": "path1 == path2 == path3"
     },
     {
-     "line": 1078,
+     "line": 1260,
      "disposition": "DATA_SENSITIVE",
      "test": "a_before['n_bindable'] == a_after['n_bindable']"
     },
     {
-     "line": 1106,
+     "line": 1288,
      "disposition": "DATA_SENSITIVE",
      "test": "per_kind.get('swing', {}).get('n_flipped', 0) == 0"
     },
     {
-     "line": 1109,
+     "line": 1291,
      "disposition": "DATA_SENSITIVE",
      "test": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}"
     },
     {
-     "line": 1127,
+     "line": 1309,
      "disposition": "DATA_SENSITIVE",
      "test": "a_roles.get('trigger', 0) == 0"
     },
     {
-     "line": 1181,
+     "line": 1363,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught"
     },
     {
-     "line": 1312,
+     "line": 1494,
      "disposition": "DATA_SENSITIVE",
      "test": "n_levelzone_rows == 16"
     },
     {
-     "line": 1314,
+     "line": 1496,
      "disposition": "DATA_SENSITIVE",
      "test": "total_flipped <= 6"
     },
     {
-     "line": 1323,
+     "line": 1505,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['never_evaluated_total'] == never_by_gap"
     },
     {
-     "line": 1326,
+     "line": 1508,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['all_entry_conditions'] == b_total"
     },
     {
-     "line": 1990,
+     "line": 2176,
      "disposition": "SOURCE_INVARIANT",
      "test": "OUT_PATH not in APPEND_ONLY_GUARDED"
     },
     {
-     "line": 2030,
+     "line": 2257,
      "disposition": "DATA_SENSITIVE",
      "test": "gate['PASS']"
     },
     {
-     "line": 2042,
+     "line": 2273,
      "disposition": "DATA_SENSITIVE",
      "test": "head_check['all_match']"
     },
     {
-     "line": 2057,
+     "line": 2288,
      "disposition": "DATA_SENSITIVE",
      "test": "before_hashes == after_hashes"
     }
@@ -1022,6 +1022,252 @@
   "allowlist_entries_that_fired_on_nothing": [],
   "PASS": true,
   "how_to_falsify": "Replace any interpolated numeral in any prose field with the literal it currently evaluates to and re-run: that field stops moving under the perturbation while its number still does, and this generator exits non-zero. Demonstrated by --gate-selftest, which does exactly that to THE_HEADLINE in-process."
+ },
+ "INPUT_GUARD": {
+  "why": "Every tracked input this generator reads, compared against its committed bytes BEFORE the run baselines or builds anything. The prior check ran against a five-name list, so a tampered Corpus B published a fabricated figure at exit 0.",
+  "enumeration": "derived from this module's declared paths/globs; completeness enforced by trace_repo_reads",
+  "comparison": "newline-normalised content against the HEAD blob. Byte-exactness is recorded per row; a pure line-ending divergence is this checkout's policy, not a tampered input.",
+  "rows": [
+   {
+    "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/family-meta-enforcement-delta.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/levelzone-object-reference-census.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/narration-reclassification-FINAL.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/population-a-flip-step-remeasure.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/wire1-dod-HONEST-FLOOR.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-battery/wire1-dod-remeasure.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/-igpOZs8LsM__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/0xygpCMwxbQ__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 185,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/4cT8WTyxhYY__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 163,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/_LS6qcSlDCs__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 111,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/CLDEIsNpVRc__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 176,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/DLwVqcLRcfw__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 133,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/DLwVqcLRcfw__s1.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 111,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/dV7chra4u4Q__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 150,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/E9MzEC_yNoM__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 55,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/E9MzEC_yNoM__s1.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 159,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/IyFioFkRgWo__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 111,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/kFyD3H6I1I8__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 293,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/PVMgOxHUqFA__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 150,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/R5L890juvRw__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 137,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/W7nlnHTUZQU__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 159,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/WEhmadJArQo__s0.spec.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 319,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "src/engine/__init__.py",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   },
+   {
+    "path": "src/engine/family_meta_enforcement.py",
+    "status": "OK",
+    "match": true,
+    "byte_exact": false,
+    "line_ending_divergence_only": true,
+    "worktree_crlf_count": 621,
+    "head_crlf_count": 0
+   },
+   {
+    "path": "src/engine/spec_family_bindings.py",
+    "status": "OK",
+    "match": true,
+    "byte_exact": true
+   }
+  ],
+  "n_tracked_checked": 27,
+  "n_untracked": 0,
+  "n_byte_exact": 11,
+  "n_line_ending_divergence_only": 16,
+  "all_match": true,
+  "traced_reads": [
+   "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
+   "docs/replay-results/h1-battery/family-meta-enforcement-delta.json",
+   "docs/replay-results/h1-battery/levelzone-object-reference-census.json",
+   "docs/replay-results/h1-battery/narration-reclassification-FINAL.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/-igpOZs8LsM__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/0xygpCMwxbQ__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/4cT8WTyxhYY__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/CLDEIsNpVRc__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/DLwVqcLRcfw__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/DLwVqcLRcfw__s1.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/E9MzEC_yNoM__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/E9MzEC_yNoM__s1.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/IyFioFkRgWo__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/PVMgOxHUqFA__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/R5L890juvRw__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/W7nlnHTUZQU__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/WEhmadJArQo__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/_LS6qcSlDCs__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/dV7chra4u4Q__s0.spec.json",
+   "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/kFyD3H6I1I8__s0.spec.json",
+   "docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json"
+  ],
+  "n_traced_reads": 21
  },
  "APPEND_ONLY_VERIFICATION": {
   "why": "Append-only means unchanged SINCE COMMIT, not merely unchanged during this run. Compared against the git object store so a stale stat cache cannot answer for it.",
