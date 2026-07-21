@@ -15440,6 +15440,31 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-20 [ops-experience] Charter items 3/4/5/11 closed + item 10 WITHDRAWN-as-written; ungated Tier-1 COMPLETE
+
+**Mission:** continuation of the same ops-experience session (see the entry above for legs 2/3/5). Ungated charter items after the cold-recovery drill: 3 (subscription-degradation), 4 (n8n/relay cert), 5 (Discord alert UX), 11 (trade-critique coverage), 10 (family runbooks).
+
+**Landings (all FF-only on `hardening/phase-0`, 8 more, none touching instrument/gate code):**
+- **Item 3** `b0611b72`+`79bc016b` — subscription-degradation doc. **The factory has NO Anthropic runtime dependency**: `api.anthropic.com` called from ZERO files. A lapse costs SCHEDULE not safety — but blocks PROMOTION of built-but-ungraded work. The near-miss list was replaced by a RULE after it went one-short in a day (`grep -ri claude` = 471 hits, 423 of them `CLAUDE.md`).
+- **Item 4** `7bcc8a85` — closed the n8n limit item 3 declared: read-only live REST query, **0 of 20 active workflows carry an Anthropic node**, with positive + negative controls proving the zero is meaningful.
+- **Item 5a** `4654be0a`→`d8973f2c` — alert-routing class governed. `DISCORD_CH_CRITICAL_ALERTS` etc. declared; the self-contradicting "Unknown channel" diagnostic split into 404 (unknown) vs 503 `channel_unconfigured` naming the exact var.
+- **Item 5b** `d1afa155` — de-dup only; the coverage mechanism ALREADY EXISTED.
+- **Item 11** `61a8cef1` — `docs/trade-critique-coverage-certification.md` (structural half; empirical count RESERVED to operator).
+
+**Cross-lane REQUEST raised (CL-011), gate code untouched:** the daily `cme-outage-detected` CRITICAL. Three defects: (1) an **unguarded single-sample** broker probe (the venue page is bot-blocked by design so it fails every poll → one transient Tradovate blip opens a CRITICAL and blocks entries); (2) **it probes the WRONG BROKER** — `broker-router` knows `traderspost`/`topstepx` and **zero Tradovate**; (3) the gate's own comment asserts *"(Tradovate, the path orders actually route through)"* — **false, and it is the stated justification that protects the wrong probe from review**.
+
+**Verification:** `test:scripts` 245→274 GREEN; `runsheet:check`, `env-manifest:check`, `check:family-grade-postscript` all pass; tsc clean via the direct path; every landing FF-verified from a separate checkout.
+
+**Known-facts updates:**
+- **`.env.example` was missing `AWS_SECRET_ACCESS_KEY`** while its partner was present — a rebuilt box got HALF the S3 credential pair, and both default to `""` in `duckdb-service.ts:83-84`, so it boots healthy and is silently lake-blind. **Fixed** (name only).
+- **Item 10 WITHDRAWN-as-written:** "rewrite family runbooks from the TradingView era" embeds a false premise — **TradingView+TradersPost IS the family's current live workflow** (`CLAUDE.md:18/227/450/457`), and the replacement is `connect-wizard-mock.ts`, Phase-5 gated. Rewriting would replace currently-used docs with a description of an unavailable flow. **Code built early sits dormant; a doc built early gets READ.**
+- **Trade-critique coverage is best-effort**: one fire-and-forget dispatch (`paper-execution-service.ts:3227`), no retry/sweep/reconciler. `nightly-critique-service` is a NAME-TRAP (generation-side).
+- **Counting comment lines as call sites** inflated "322 notify call sites" → really **189**; five "uncovered CRITICALs" were five comments.
+
+**Carry-forward:** NONE built. **RESERVED with named owners:** items 7/9/12 (next ops session, behind the operator's gating items; item 9 wants a fresh multi-day runway). **Operator-held:** the deploy (CL-009), the rebuild-the-box drill, the alert-text question, CL-011 thresholds, and an optional one-line critique-coverage count.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
