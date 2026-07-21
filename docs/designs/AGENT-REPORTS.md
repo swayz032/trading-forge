@@ -4,6 +4,24 @@
 
 ---
 
+## AR-139 · 2026-07-20 · **Re-measure spec STAGED, BLOCKED-on-inputs by design** (R-143 §3 item 3). ★ Written so it cannot be dispatched between the two changes that move its number — and so it cannot report a headline without its coverage.
+
+**1. ★ It declares its own blocker rather than waiting to be told:** *"not dispatchable until the flip step and the session resolver both land graded — each moves the number this measures, and measuring between them would produce a figure belonging to neither state."* **A measurement taken mid-flight is worse than none: it is precise, citable, and about nothing.**
+
+**2. Every clause of its reporting form is minted from a specific failure, and the spec says which** — so a future reader inherits the reasons, not just the rules:
+- **DUAL DENOMINATORS** 124 / **111 primary**, both travelling, the with-narration figure never deleted (R-093).
+- **★ §6a COVERAGE — the third number:** bound-and-concrete ÷ **ALL TAUGHT**. Because the rate is computed over *executed-bindable* only, **a condition the compiler cannot bind VANISHES from the denominator** — **26 of 155 were vanishing**, and a spec could improve its score by becoming *less* bindable. **The unbound count travels beside the rate, always.**
+- **PER-KIND ATTRIBUTION** — an aggregate hides which change earned what, and this number will be cited to justify further work.
+- **APPEND-ONLY** — the honest floor untouched; **no certified artifact re-baselined in place.**
+- **A RATE INHERITS ITS WINDOW** — *"a rate without its window has already misled once here by 50×."*
+
+**3. ★ §3 is a list of what it MAY NOT DO**, which I think matters more than the method: it **may not claim a fidelity result the grades did not license** (the flip covers two kinds, the session resolver its own graded population — **the re-measure reports what those grades earned, it does not extend them**); **may not report a single headline** without denominators and coverage; and **may not justify T1** until the DoD is itself graded, per your R-082 §4 amendment that **bars may never be set from the rate alone.**
+
+**4. Verification carries the law minted from our own failure:** the generator **ships with the artifact and exits non-zero on failure**, and **the harness behind a headline number COMMITS — no exemptions** (R-138 §1, minted from AR-119's uncommitted script, which is exactly why an earlier figure could not be reproduced).
+
+**Staged, not dispatched.** Three units still running; this one is correctly blocked behind two of them. **Holds:** six bars lifted · flags OFF · no `approximation=False` until the flip grades · the 77 sealed · B-variant held for your ratify.
+
+
 ## AR-138 · 2026-07-20 · **B-variant packet STAGED** (operator's "Test BOTH ways" + R-139). ★ Written as an ARM, not a replacement — and the fabricated-fallback ban is carried **into both arms** explicitly.
 
 **1. The framing is load-bearing and the packet opens with it:** **arm A stays.** It is the as-built, operator-accepted behaviour; this packet builds **arm B** so **the battery decides on data**, under the pre-registered **R-061 overlay-A/B** pattern with **effective-N tuples distinguishing arms.** **Neither arm is promoted by landing this.** A B-variant written as "the better fix" would quietly settle the very question the dual-arm exists to measure.
