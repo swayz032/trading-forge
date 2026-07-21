@@ -712,7 +712,62 @@
     "n_bound_and_concrete": 0
    }
   },
-  "WHY_TWO_ARMS_AND_NOT_ONE_NUMBER": "TF_FAMILY_META_ENFORCED is a SEPARATE flag from the level/zone pair, and it decides whether these entries bind concrete or approximate. It defaults OFF, which is the configuration this generator runs in. So the completed coverage has two honest values, not one, and which is 'the' number is a configuration choice -- stating one without its arm would repeat the error this artifact is being repaired for.",
+  "entry_conditions_binding_by_enforcement_arm": {
+   "MEASURED_AT": "level/zone flags ON (the AFTER arm the 161 numerators are built on)",
+   "why": "Reported so the claim 'TF_FAMILY_META_ENFORCED moves invalidations, not entry_conditions' is a measurement a reader can check rather than an assumption folded into the arithmetic. It feeds the margin decomposition.",
+   "enforcement_OFF": {
+    "n_bindable": 128,
+    "n_bound_and_concrete": 6
+   },
+   "enforcement_ON": {
+    "n_bindable": 128,
+    "n_bound_and_concrete": 6
+   }
+  },
+  "COMPLETED_161_DUAL_CONFIGURATION": {
+   "READ_THIS_ONE": {
+    "WHY": "R-199 s2: a consumer taking exactly one coverage number from this artifact takes THIS one. It is the honest-enforcement figure -- the arm in which the INVALIDATE entries bind under the CORRECTED approximation=True.",
+    "coverage_over_161": 0.0373,
+    "fraction": "6/161",
+    "numerator": 6,
+    "numerator_composition": "6 entry_conditions + 0 invalidations",
+    "denominator": 161,
+    "configuration": {
+     "TF_FAMILY_META_ENFORCED": "true"
+    },
+    "status": "PRIMARY"
+   },
+   "BESIDE_IT_NOT_INSTEAD_OF_IT": {
+    "WHY": "Kept because it is the configuration this generator actually runs in, and dropping a measured arm to leave one clean number is the error this artifact was sent back to repair. It is reported WITH its provenance, never as the headline.",
+    "coverage_over_161": 0.0745,
+    "fraction": "12/161",
+    "numerator": 12,
+    "numerator_composition": "6 entry_conditions + 6 invalidations",
+    "denominator": 161,
+    "configuration": {
+     "TF_FAMILY_META_ENFORCED": "false (this generator's default)"
+    },
+    "status": "SECONDARY__NOT_THE_HEADLINE",
+    "PROVENANCE_CAVEAT_COMPUTED": "The larger figure exceeds the primary by 6 of 161, and ALL 6 of that margin is invalidations entries binding approximation=False under enforcement-OFF. That approximation=False has been WITHDRAWN as a convicted pointer lie -- its primitive is never called in production, and the enforcement build corrected it to approximation=True. So 6 of the 12 conditions in the larger numerator are counted concrete only by a claim that has been retracted.",
+    "provenance_dependency_verdict": "MARGIN_RESTS_ENTIRELY_ON_THE_WITHDRAWN_CLAIM"
+   },
+   "MARGIN_DECOMPOSITION": {
+    "why_this_block_exists": "So the caveat above is checkable arithmetic rather than a sentence. Every figure in the caveat is one of these fields; change the per-arm inputs and both move.",
+    "margin_secondary_minus_primary": 6,
+    "margin_from_INVALIDATE_withdrawn_approximation_False": 6,
+    "margin_from_entry_conditions_MEASURED_NOT_ASSUMED": 0,
+    "margin_from_other_sources": 0,
+    "share_of_margin_resting_on_the_withdrawn_claim": 1.0,
+    "why_the_entry_term_is_measured": "The two 161-figures differ only in TF_FAMILY_META_ENFORCED. Attributing the whole margin to INVALIDATE requires that the flag move invalidations and NOT entry_conditions. That is a claim about the flag, so it is measured per arm rather than assumed: this field is the entry side's contribution to the margin, and it came back 0 -- the flag does not move the entry side, so the INVALIDATE attribution is exclusive by MEASUREMENT.",
+    "withdrawn_claim": {
+     "claim": "spec['invalidations'] entries bind with approximation=False",
+     "status": "WITHDRAWN -- convicted pointer lie",
+     "why_withdrawn": "The primitive the pointer named is never called in production. The enforcement build corrected the binding to approximation=True."
+    },
+    "how_to_falsify": "Change any of the four measured per-arm counts and re-run: the margin, its composition, the share, the dependency verdict, and the caveat's own numbers all move. Nothing in the caveat is typed. Specifically -- lower inval_off_concrete and the margin and the caveat's figures shrink together; make entry_off_concrete differ from entry_on_concrete and the verdict re-classifies to MARGIN_PARTLY_RESTS_ON_THE_WITHDRAWN_CLAIM, because the entry term is measured rather than fixed at zero."
+   }
+  },
+  "WHY_TWO_ARMS_AND_NOT_ONE_NUMBER": "TF_FAMILY_META_ENFORCED is a SEPARATE flag from the level/zone pair, and it decides whether these entries bind concrete or approximate. It defaults OFF, which is the configuration this generator runs in. So the completed coverage has two honest values, not one. R-199 s2 rules which is PRIMARY -- the enforcement-ON figure, because it is the arm in which the INVALIDATE entries bind under the CORRECTED approximation=True. The OFF figure is NOT dropped: it travels beside the primary with a computed provenance caveat. Dropping either arm, or stating one without its configuration, would repeat the error this artifact is being repaired for.",
   "coverage_over_161_enforcement_OFF_this_runs_config": 0.0745,
   "coverage_over_161_enforcement_ON": 0.0373,
   "numerators": {
@@ -737,7 +792,7 @@
   "unflattering_reading": "All 27 WAIT_SESSION conditions in Corpus A are UNBOUND, in both arms. The session lane -- the only family whose runtime primitive is real -- recovered nothing in this configuration, and the honest-partial closure moved the count the wrong way (26 unbound pre-closure, 27 post). This is the least flattering number available and it is stated for that reason."
  },
  "SELF_ACCOUNTING": {
-  "n_asserts_in_this_generator": 12,
+  "n_asserts_in_this_generator": 13,
   "n_asserts_note": "Counted from this file's own AST at runtime, not typed. A prior report claimed 'eight asserts, each red-proved' while the file held twelve. Two of those twelve could not fire and have been dealt with: the Corpus-B role-partition assert was algebraically implied by the derivation assert above it and is DELETED (the property is still reported); the output-path collision guard sat AFTER the write it purported to guard and is MOVED to the top of main() where it can actually stop the run.",
   "population_A_kind_histogram_over_corpus_A": {
    "None": 138,

@@ -143,6 +143,172 @@ def classify_drift(rate_pre, rate_post, cov_pre, cov_post) -> dict:
     }
 
 
+def compose_completed_coverage(
+    entry_off_concrete, entry_on_concrete, inval_off_concrete, inval_on_concrete,
+    n_taught_entry, n_invalidations,
+) -> dict:
+    """Build the completed-161 dual-configuration block. R-199 s2.
+
+    THE RULING THIS IMPLEMENTS: 6/161 (honest-enforcement, TF_FAMILY_META_ENFORCED=true) is
+    PRIMARY. 12/161 (the generator's default-OFF config) travels BESIDE it, labeled with its
+    provenance -- neither is dropped, and the choice is not made silently.
+
+    WHY THE CAVEAT IS A COMPUTATION AND NOT A SENTENCE: this artifact's headline defect was a
+    hardcoded interpretation string that printed regardless of the data (see classify_drift).
+    Replacing one caption with another caption -- "6 of the margin rests on a withdrawn claim",
+    typed -- would be the same defect wearing the ruling's words. So the margin and its
+    COMPOSITION are derived here from the same per-arm fields that produce the two rates. If
+    the INVALIDATE contribution changed, every number in the caveat changes with it, and the
+    dependency verdict re-classifies. It is a function of five integers and nothing else.
+
+    THE WITHDRAWN CLAIM: the larger figure's margin comes from spec['invalidations'] entries
+    binding with approximation=False under enforcement-OFF. That approximation=False was a
+    convicted pointer lie -- the primitive it pointed at is never called in production -- and
+    the enforcement build corrected it to approximation=True. So the margin is not merely
+    configuration-dependent; it is partly built on a retracted claim, and this block says so
+    with numbers that can be checked instead of believed.
+    """
+    # ENFORCEMENT MAY ONLY REMOVE CONCRETENESS, NEVER ADD IT. This is the direction claim the
+    # Corpus-B INVALIDATE_enforcement block already makes ("fidelity moves DOWN"). It is a
+    # property of the DATA, not algebra, so it CAN fire: call this function with
+    # inval_on_concrete > inval_off_concrete and it raises. Red-proved that way.
+    assert inval_on_concrete <= inval_off_concrete, (
+        f"ENFORCEMENT DIRECTION VIOLATED: enforcement-ON bound {inval_on_concrete} invalidations "
+        f"concrete but enforcement-OFF bound only {inval_off_concrete}. Enforcement marks entries "
+        "approximation=True; it can never make MORE of them concrete. The arms are mislabeled or "
+        "the flag no longer does what INVALIDATE_enforcement says it does."
+    )
+
+    den = n_taught_entry + n_invalidations
+    num_primary = entry_on_concrete + inval_on_concrete
+    num_secondary = entry_off_concrete + inval_off_concrete
+
+    # TWO INDEPENDENT SOURCES, each measured. An earlier draft of this function took ONE entry
+    # count for both arms, which made margin == margin_from_invalidate as an ALGEBRAIC IDENTITY:
+    # the "partly" and "independent" branches below could never be reached, and
+    # margin_from_other_sources was always 0 by construction rather than by measurement. A
+    # decomposition whose answer is fixed before the data arrives is a caption with arithmetic
+    # painted on it -- the same defect, one level down. Both sides are now measured per arm, so
+    # the entry term CAN contribute and the branch that reports it CAN be reached.
+    margin = num_secondary - num_primary
+    margin_from_invalidate_withdrawal = inval_off_concrete - inval_on_concrete
+    margin_from_entry_conditions = entry_off_concrete - entry_on_concrete
+    margin_from_other_sources = margin_from_entry_conditions
+    margin_share_withdrawn = rate0(margin_from_invalidate_withdrawal, margin)
+
+    if margin == 0:
+        dependency = "NO_MARGIN__THE_TWO_CONFIGURATIONS_AGREE"
+        caveat = (
+            f"The two configurations produce the SAME numerator ({num_primary}/{den}). There is no "
+            "margin, so nothing rests on the withdrawn INVALIDATE approximation=False claim."
+        )
+    elif margin_from_invalidate_withdrawal == margin:
+        dependency = "MARGIN_RESTS_ENTIRELY_ON_THE_WITHDRAWN_CLAIM"
+        caveat = (
+            f"The larger figure exceeds the primary by {margin} of {den}, and ALL {margin} of that "
+            f"margin is invalidations entries binding approximation=False under enforcement-OFF. "
+            "That approximation=False has been WITHDRAWN as a convicted pointer lie -- its primitive "
+            "is never called in production, and the enforcement build corrected it to "
+            f"approximation=True. So {margin} of the {num_secondary} conditions in the larger "
+            "numerator are counted concrete only by a claim that has been retracted."
+        )
+    elif margin_from_invalidate_withdrawal > 0:
+        dependency = "MARGIN_PARTLY_RESTS_ON_THE_WITHDRAWN_CLAIM"
+        caveat = (
+            f"The larger figure exceeds the primary by {margin} of {den}. "
+            f"{margin_from_invalidate_withdrawal} of that margin is invalidations entries binding "
+            "approximation=False under enforcement-OFF -- a claim WITHDRAWN as a convicted pointer "
+            f"lie. The remaining {margin_from_other_sources} comes from elsewhere and is not "
+            "impeached by the withdrawal."
+        )
+    else:
+        dependency = "MARGIN_INDEPENDENT_OF_THE_WITHDRAWN_CLAIM"
+        caveat = (
+            f"The larger figure exceeds the primary by {margin} of {den}, and NONE of that margin is "
+            "invalidations concreteness. The withdrawn INVALIDATE approximation=False claim does not "
+            "carry this margin."
+        )
+
+    return {
+        "READ_THIS_ONE": {
+            "WHY": (
+                "R-199 s2: a consumer taking exactly one coverage number from this artifact takes "
+                "THIS one. It is the honest-enforcement figure -- the arm in which the INVALIDATE "
+                "entries bind under the CORRECTED approximation=True."
+            ),
+            "coverage_over_161": rate0(num_primary, den),
+            "fraction": f"{num_primary}/{den}",
+            "numerator": num_primary,
+            "numerator_composition": (
+                f"{entry_on_concrete} entry_conditions + {inval_on_concrete} invalidations"
+            ),
+            "denominator": den,
+            "configuration": {"TF_FAMILY_META_ENFORCED": "true"},
+            "status": "PRIMARY",
+        },
+        "BESIDE_IT_NOT_INSTEAD_OF_IT": {
+            "WHY": (
+                "Kept because it is the configuration this generator actually runs in, and dropping "
+                "a measured arm to leave one clean number is the error this artifact was sent back "
+                "to repair. It is reported WITH its provenance, never as the headline."
+            ),
+            "coverage_over_161": rate0(num_secondary, den),
+            "fraction": f"{num_secondary}/{den}",
+            "numerator": num_secondary,
+            "numerator_composition": (
+                f"{entry_off_concrete} entry_conditions + {inval_off_concrete} invalidations"
+            ),
+            "denominator": den,
+            "configuration": {"TF_FAMILY_META_ENFORCED": "false (this generator's default)"},
+            "status": "SECONDARY__NOT_THE_HEADLINE",
+            "PROVENANCE_CAVEAT_COMPUTED": caveat,
+            "provenance_dependency_verdict": dependency,
+        },
+        "MARGIN_DECOMPOSITION": {
+            "why_this_block_exists": (
+                "So the caveat above is checkable arithmetic rather than a sentence. Every figure "
+                "in the caveat is one of these fields; change the per-arm inputs and both move."
+            ),
+            "margin_secondary_minus_primary": margin,
+            "margin_from_INVALIDATE_withdrawn_approximation_False": margin_from_invalidate_withdrawal,
+            "margin_from_entry_conditions_MEASURED_NOT_ASSUMED": margin_from_entry_conditions,
+            "margin_from_other_sources": margin_from_other_sources,
+            "share_of_margin_resting_on_the_withdrawn_claim": margin_share_withdrawn,
+            "why_the_entry_term_is_measured": (
+                "The two 161-figures differ only in TF_FAMILY_META_ENFORCED. Attributing the whole "
+                "margin to INVALIDATE requires that the flag move invalidations and NOT "
+                "entry_conditions. That is a claim about the flag, so it is measured per arm rather "
+                "than assumed: this field is the entry side's contribution to the margin, and it "
+                "came back "
+                + (
+                    f"{margin_from_entry_conditions} -- the flag does not move the entry side, so "
+                    "the INVALIDATE attribution is exclusive by MEASUREMENT."
+                    if margin_from_entry_conditions == 0
+                    else f"{margin_from_entry_conditions} -- the flag DOES move the entry side, so "
+                    "the margin has a second source and the INVALIDATE attribution is NOT exclusive."
+                )
+            ),
+            "withdrawn_claim": {
+                "claim": "spec['invalidations'] entries bind with approximation=False",
+                "status": "WITHDRAWN -- convicted pointer lie",
+                "why_withdrawn": (
+                    "The primitive the pointer named is never called in production. The enforcement "
+                    "build corrected the binding to approximation=True."
+                ),
+            },
+            "how_to_falsify": (
+                "Change any of the four measured per-arm counts and re-run: the margin, its "
+                "composition, the share, the dependency verdict, and the caveat's own numbers all "
+                "move. Nothing in the caveat is typed. Specifically -- lower inval_off_concrete and "
+                "the margin and the caveat's figures shrink together; make entry_off_concrete "
+                "differ from entry_on_concrete and the verdict re-classifies to "
+                "MARGIN_PARTLY_RESTS_ON_THE_WITHDRAWN_CLAIM, because the entry term is measured "
+                "rather than fixed at zero."
+            ),
+        },
+    }
+
+
 def set_levelzone_flags(on: bool) -> None:
     v = "true" if on else "false"
     os.environ["TF_LEVELZONE_ROUTING_ENABLED"] = v
@@ -398,6 +564,14 @@ def main() -> None:
     n_invalidations = sum(len(v) for v in inval_specs)
     prev_enf = os.environ.get("TF_FAMILY_META_ENFORCED")
     inval_arms = {}
+    # ENTRY SIDE, MEASURED PER ARM (R-199 s2). The prior version carried a SINGLE entry numerator
+    # across both enforcement arms -- i.e. it ASSUMED TF_FAMILY_META_ENFORCED moves invalidations
+    # only and never touches entry_conditions. That assumption was never measured, and it is the
+    # load-bearing one: if it were false, the margin between the two 161-figures would have a
+    # second source and the provenance caveat below would be attributing the whole margin to
+    # INVALIDATE on faith. So it is MEASURED here, in the same arm loop, and reported as a number
+    # that could have come back non-zero.
+    entry_arms = {}
     for enf_on in (False, True):
         os.environ["TF_FAMILY_META_ENFORCED"] = "true" if enf_on else "false"
         nb = nc = 0
@@ -410,6 +584,25 @@ def main() -> None:
                         nc += 1
         inval_arms["enforcement_ON" if enf_on else "enforcement_OFF"] = {
             "n_bindable": nb, "n_bound_and_concrete": nc}
+    # ENTRY SIDE runs with the LEVEL/ZONE FLAGS ON, because the entry numerator the two 161
+    # figures are built from is the flags-ON AFTER arm (a_after). Measuring it in the flags-OFF
+    # context this block otherwise runs in would read 0 concrete, not 6, and would be answering a
+    # different question than the one the coverage figures ask. The arm context is pinned, not
+    # inherited.
+    set_levelzone_flags(True)
+    for enf_on in (False, True):
+        os.environ["TF_FAMILY_META_ENFORCED"] = "true" if enf_on else "false"
+        enb = enc = 0
+        for _n, ec, _am in specs_a:
+            for c in ec:
+                bb = sfb.bind_condition(c)
+                if bb.bindable:
+                    enb += 1
+                    if not bb.approximation:
+                        enc += 1
+        entry_arms["enforcement_ON" if enf_on else "enforcement_OFF"] = {
+            "n_bindable": enb, "n_bound_and_concrete": enc}
+    set_levelzone_flags(False)  # leave the process as this block found it
     if prev_enf is None:
         os.environ.pop("TF_FAMILY_META_ENFORCED", None)
     else:
@@ -501,6 +694,18 @@ def main() -> None:
     assert enf["all_entry_conditions"] == b_total, "enforcement artifact universe size disagrees with mine"
 
     rate = rate0
+
+    # R-199 s2. Computed from the per-arm invalidation binds and the entry-condition numerator --
+    # the same fields the two coverage_over_161_* keys below are computed from, so the primary
+    # designation and its provenance caveat cannot drift from the rates they describe.
+    completed_coverage = compose_completed_coverage(
+        entry_off_concrete=entry_arms["enforcement_OFF"]["n_bound_and_concrete"],
+        entry_on_concrete=entry_arms["enforcement_ON"]["n_bound_and_concrete"],
+        inval_off_concrete=inval_arms["enforcement_OFF"]["n_bound_and_concrete"],
+        inval_on_concrete=inval_arms["enforcement_ON"]["n_bound_and_concrete"],
+        n_taught_entry=a_after["n_taught"],
+        n_invalidations=n_invalidations,
+    )
 
     art = {
         "artifact": "dual-denominator-remeasure-2026-07-21",
@@ -784,12 +989,32 @@ def main() -> None:
             "n_taught_invalidations": n_invalidations,
             "n_taught_ALL": a_after["n_taught"] + n_invalidations,
             "invalidations_binding_by_enforcement_arm": inval_arms,
+            "entry_conditions_binding_by_enforcement_arm": {
+                "MEASURED_AT": "level/zone flags ON (the AFTER arm the 161 numerators are built on)",
+                "why": (
+                    "Reported so the claim 'TF_FAMILY_META_ENFORCED moves invalidations, not "
+                    "entry_conditions' is a measurement a reader can check rather than an "
+                    "assumption folded into the arithmetic. It feeds the margin decomposition."
+                ),
+                **entry_arms,
+            },
+            # ------------------------------------------------------------------ R-199 s2
+            # DUAL-CONFIGURATION REPORTING. The prior version stated the two rates side by side
+            # and left the choice to the reader -- which, for a consumer taking one number, is
+            # the choice being made silently anyway. R-199 s2 rules 6/161 PRIMARY. This block is
+            # COMPUTED (compose_completed_coverage), including the provenance caveat: the caveat's
+            # figures are derived from the same per-arm fields that produce the rates, so they
+            # move with the data instead of being typed beside it.
+            "COMPLETED_161_DUAL_CONFIGURATION": completed_coverage,
             "WHY_TWO_ARMS_AND_NOT_ONE_NUMBER": (
                 "TF_FAMILY_META_ENFORCED is a SEPARATE flag from the level/zone pair, and it decides "
                 "whether these entries bind concrete or approximate. It defaults OFF, which is the "
                 "configuration this generator runs in. So the completed coverage has two honest "
-                "values, not one, and which is 'the' number is a configuration choice -- stating one "
-                "without its arm would repeat the error this artifact is being repaired for."
+                "values, not one. R-199 s2 rules which is PRIMARY -- the enforcement-ON figure, "
+                "because it is the arm in which the INVALIDATE entries bind under the CORRECTED "
+                "approximation=True. The OFF figure is NOT dropped: it travels beside the primary "
+                "with a computed provenance caveat. Dropping either arm, or stating one without "
+                "its configuration, would repeat the error this artifact is being repaired for."
             ),
             "coverage_over_161_enforcement_OFF_this_runs_config": rate(
                 a_after["n_bound_and_concrete"] + inval_arms["enforcement_OFF"]["n_bound_and_concrete"],
@@ -903,6 +1128,16 @@ def main() -> None:
           f" -> {a_after['n_bound_and_concrete']}/{a_after['n_taught']} (flags-ON both sides)")
     print(f"OK  closure drift (flags-OFF both arms): {closure_drift['verdict']}")
     print(f"      rate {census_rate} -> {live_rate} | 6a coverage {census_cov} -> {live_cov}")
+    _pri = completed_coverage["READ_THIS_ONE"]
+    _sec = completed_coverage["BESIDE_IT_NOT_INSTEAD_OF_IT"]
+    _mar = completed_coverage["MARGIN_DECOMPOSITION"]
+    print(f"OK  completed-161 coverage PRIMARY {_pri['fraction']} = {_pri['coverage_over_161']} "
+          "(TF_FAMILY_META_ENFORCED=true)")
+    print(f"      beside it {_sec['fraction']} = {_sec['coverage_over_161']} (enforcement OFF) -- "
+          f"{_mar['margin_from_INVALIDATE_withdrawn_approximation_False']} of its "
+          f"{_mar['margin_secondary_minus_primary']}-condition margin rests on the WITHDRAWN "
+          "INVALIDATE approximation=False")
+    print(f"      dependency verdict: {_sec['provenance_dependency_verdict']}")
     print(f"OK  session attribution: 0 of {ws_taught} bound - 0 of up-to-17 recovered")
     print(f"OK  self-accounting: {count_own_asserts()} asserts | {len(kind_hist)} kinds, "
           f"modal '{'None' if modal_kind is None else modal_kind}' n={modal_n}")
