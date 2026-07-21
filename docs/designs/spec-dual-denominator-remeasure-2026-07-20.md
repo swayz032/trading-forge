@@ -35,6 +35,14 @@ The corpus binding-approximation rate, re-derived after:
    condition the compiler cannot bind at all VANISHES from the denominator** — meaning a spec
    could improve its score by becoming *less* bindable. **26 of 155 (16.8%) were vanishing.**
    **The unbound count travels beside the rate, always.**
+2a. **★ THE TRIGGER-ROLE CONDITIONS ENTER THE COVERAGE ACCOUNTING (R-153 §4, ordered IMMEDIATE).**
+   The dispatch loop iterates **`role == "spine"` only**, so **921 trigger-role conditions are never
+   evaluated at all** — `WAIT_BIAS` 42 · `FILTER` 39 · `INVALIDATE` 105 · `ENABLE_ENTRY` 480 ·
+   `ENTER` 255. **This is taught content the engine never tests.** It belongs in the §6a denominator
+   the moment it is known, not after the enforcement build. **The unbound count grows; the honest
+   number gets honester.** Reporting a coverage rate that silently excludes 921 untested conditions
+   is the vanishing-denominator defect §6a exists to close.
+
 3. **PER-KIND / PER-FAMILY ATTRIBUTION** — how much movement is `named_sr_level`, how much
    `order_block_edge`, how much session. **An aggregate delta hides which change earned what**,
    and this measure will be cited to justify further work.

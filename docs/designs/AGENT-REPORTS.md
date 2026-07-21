@@ -4,6 +4,24 @@
 
 ---
 
+## AR-145 · 2026-07-20 · ENFORCEMENT PACKET **STAGED, HELD FOR YOUR RATIFY** (R-153 §3(d)) — `packet-family-meta-enforced-2026-07-20.md`. ** THE BLAST RADIUS IS THE LARGEST THIS CAMPAIGN HAS DECLARED: every backtest number the engine has produced is affected, and the fidelity rate moves DOWN.** R-153 §4's 921 trigger-role conditions folded into §6a accounting immediately, as ordered.
+
+**1. STAGED, NOT DISPATCHED.** Per R-153 §3(d) the build is **sequenced after both in-flight grades return** so the board never thrashes. This is the design for your ratify — **I have written no enforcement code.**
+
+**2. ★ THE BLAST RADIUS, DECLARED HERE RATHER THAN DISCOVERED DOWNSTREAM.** **390 spine conditions are currently constant-True.** Under enforcement they either fail loud at load or **begin to gate** — so **historical backtest output WILL change, possibly a lot.** That is correct (they were never gating), but it means **every certified number this engine has produced is in scope.** Append-only holds: artifacts whose numbers move are **annotated, never overwritten**.
+
+**3. ★ AND THE FIDELITY NUMBER GETS WORSE, WHICH IS THE HONEST DIRECTION.** Pin (c) turns `INVALIDATE`'s `approximation=False` into `True` — **the campaign's sole `approximation=False` among executed families was resting on a call production never makes.** The rate must be **re-derived, never patched.** I want it on the record that **this packet's expected outcome is a WORSE headline number**, and that this is the packet succeeding.
+
+**4. R-153 §4 EXECUTED IMMEDIATELY, not deferred to the build.** The re-measure spec now carries the trigger-role gap in its §6a accounting: **921 conditions never evaluated at all** — `WAIT_BIAS` 42 · `FILTER` 39 · `INVALIDATE` 105 · `ENABLE_ENTRY` 480 · `ENTER` 255. **Re-derived by sum before it entered the artifact**, not transcribed — the law I broke this morning, applied deliberately this time. **A coverage rate that silently excludes 921 untested conditions is the vanishing-denominator defect §6a exists to close.**
+
+**5. ★ THE PROHIBITION I CONSIDER MOST LIKELY TO BE VIOLATED, named in the packet:** *making a failing pointer PASS by aiming it at something plausible.* If `FILTER` has no real primitive, its honest entry must say so — **inventing a `confluence_factor_presence` to satisfy the new loader converts a pointer lie into a fabricated implementation, which is STRICTLY WORSE because it would PROBE CLEAN.** The fabricated-fallback ban in its newest costume. **The loud failure is the deliverable; silencing it with a try/except or a default defeats the entire packet.**
+
+**6. The checklist's two hardest items, both blocking:** **(i) fail-loud is RED-PROVEN** — point a family at a deliberately absent primitive, show load FAILS by name, restore. **A guard that cannot fire is the exact defect this packet deletes; it may not be reintroduced by the fix for it.** **(ii) the sweep is re-run as the ACCEPTANCE TEST and its verdicts must MOVE** — the 4 NOT-REACHABLE either become REACHABLE or become honest entries; **none may remain a live lie.** Plus: prove **no second router** (removing a `FAMILY_META` entry must change dispatch — if it doesn't, something else is routing and pin (a) is unmet), the 390 accounted for **individually**, and the **backtest delta measured and published, not discovered** — a change this size reporting no delta has not been wired.
+
+**7. Sequencing, unchanged and correct:** both grades return → you ratify this → build → independent grade. The re-measure **stays blocked**, and is now blocked on more than before — **its number would have been fiction twice over.**
+
+**Holds:** no enforcement code written · flags OFF · the 77 sealed.
+
 ## AR-144 · 2026-07-20 · *** THE CLASS SWEEP RETURNS: **THE POINTER LIE IS A PATTERN, NOT A ONE-OFF.** Of 9 families declaring a real primitive, **only 3 execute it cleanly. 4 NEVER RUN IT. 2 are branch-conditional.** One declares a **module that does not exist**; one is the **sole `approximation=False` claim among executed families** and its primitive is never called. **`bias_engine` was the LEAST severe member of its own class.**
 
 **1. THE VERDICT: PATTERN.** 14 families in `FAMILY_META` (**derived from the live dict at runtime, not transcribed**). 9 declare a real code primitive. **REACHABLE 3** (WAIT_SESSION, WAIT_RETEST, WAIT_CONFIRMATION) · **PARTIAL 2** (WAIT_STRUCTURE, VERIFY_STRUCTURE) · **NOT-REACHABLE 4** (WAIT_BIAS, CONFIRM_DIRECTION, **FILTER**, **INVALIDATE**) · **COULD-NOT-VERIFY 2** (ENABLE_ENTRY, ENTER) · consistent-by-design 3. Bars: **2000 real ES 5min**, corroborated across **all 120 real corpus specs x 600 bars**.
