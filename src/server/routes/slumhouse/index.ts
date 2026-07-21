@@ -26,6 +26,7 @@ import { anamGreetingRouter } from "./api/anam-greeting.js";
 import { carterSessionRouter } from "./api/carter-session.js";
 import { carterInboxRouter } from "./api/carter-inbox.js";
 import { memberOfficeRouter } from "./api/member-office.js";
+import { agentPairRouter } from "./api/agent-pair.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
 
 export const slumhouseRouter = Router();
@@ -135,6 +136,9 @@ slumhouseRouter.use(carterInboxRouter);
 // `app.use(memberOfficeRouter)` itself, which proves the routes work WHEN MOUNTED and never that
 // they ARE mounted. `slumhouse-routers-mounted.test.ts` is the guard for the whole class.
 slumhouseRouter.use(memberOfficeRouter);
+// Item 9a — Slumhouse Agent pairing (start / claim / poll). Mounted with the router, per the
+// class guard: an unmounted router is an unreachable feature, which is how item 6 shipped broken.
+slumhouseRouter.use(agentPairRouter);
 
 // The Office — operator-only passcode-gated admin endpoints (auth/status/logout).
 slumhouseRouter.use(adminOfficeRouter);
