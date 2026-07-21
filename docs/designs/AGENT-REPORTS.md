@@ -4,6 +4,25 @@
 
 ---
 
+## AR-134 · 2026-07-20 · R-143 §3 item 1 — **flip-step packet STAGED + implementer DISPATCHED** (receipt held). ★ **The first `approximation=False` of the campaign.** `swing` excluded by hard rule; dual denominators and per-kind attribution are blocking deliverables.
+
+**1. This is the claim, not a routing change** — and the packet opens by saying so: every prior delivery in this campaign deliberately withheld `approximation=False`; **the flip IS the fidelity claim.** Two kinds only:
+- **`named_sr_level` (4)** — both preconditions met and cited: upstream fixed + **graded Band 8** (`7e3247ca`), per-kind **causal-safety passed** (0/160 value, 0/28 activation, plants fired both axes) — block discharged at your R-136.
+- **`order_block_edge` (2)** — detectors probed CLEAN under fired plants (0/42, 0/47, two production alignments).
+
+**2. ★ `swing` EXCLUDED by hard rule, with the reason in the brief:** **n=1**, so §4's two-different-levels check is **literally unrunnable inside the kind** — floor is **n≥2**. The implementer is told **not to flip it and not to argue for it.** One member that *looks* right is exactly where an unearned claim would enter, and this is the change where that costs most.
+
+**3. ★ F1 makes the evidence travel WITH the flip:** each flipped kind must carry, at the flip site, **the grade or probe that earned it.** **A flip without its citation is an unearned claim** — and a future reader finding `approximation=False` with no adjacent receipt has no way to tell an earned claim from a drifted one.
+
+**4. The metric disciplines are blocking, not advisory:** **dual denominators** (124 / **111 primary**) both travelling · **delta ATTRIBUTED PER KIND** — an aggregate movement would hide which kind earned what · **APPEND-ONLY**, the honest-floor artifact untouched and the new measure a new file · nulls and n on every rate.
+
+**5. And refusal is pre-declared a valid outcome:** *"If the packet is wrong or the evidence does not support a flip, STOP and say so — refusing to make an unearned fidelity claim is a valid outcome and a better one than a thin flip."* **This lane has withdrawn a graded, licensed headline once already; the cheapest place to stop a second one is before it is made.**
+
+**6. Rollback is honest about what this is:** single-commit revert, **no flag** — a claim is not a feature toggle. **The claim stands only once graded; a landed-but-ungraded flip must not be cited as a fidelity result.**
+
+**Ceiling travelling:** at most **6 of 16** level/zone rows de-approximate — **9 remain UNRESOLVABLE-AS-BUILT** (bare anaphora), **1 is `swing`, routed-but-approximate.** **Holds:** six bars lifted · flags OFF · the 77 sealed · B-variant queued.
+
+
 ## AR-133 · 2026-07-20 · ★★★ **`ict_scalp` GATED CLEAN — 0/590 at the FULL 460,323-bar dataset, plant firing 38/590. Its bar DISCHARGES. ALL SIX BARS ARE NOW LIFTED and the level/zone detour CLOSES.**
 
 **Powered as demanded, and then some:** the **full dataset**, not a subsample — the prior attempt's 40,000-bar window extended to **100%**. **590 real entries** (287 long / 303 short), **3.6–4× the siblings' calibration counts** (163, 149). **0 mismatches.**
