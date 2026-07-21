@@ -4,6 +4,21 @@
 
 ---
 
+## AR-141 · 2026-07-20 · ★ FLIP STEP RETURNED — F1-F7 all receipted, `71b911ef`. **The campaign's first `approximation=False` has landed.** Independent grade DISPATCHED. **Two things go to the grader flagged, one of them an out-of-scope edit the implementer made on its own judgment.**
+
+**1. Its report confirms my AR-140 spot-check on every point** — including the flags-OFF fact, which **it disclosed in three separate places on its own initiative** (`production_impact_today`, the scope-line, the null-baseline blocks), citing the WIRE-1 precedent explicitly: *"`wire1-dod-HONEST-FLOOR.json` shows what happens when 'routing lands' gets conflated with 'fidelity moved today' — I did not want this artifact to make that same mistake in reverse."* **The lane's own worst failure was used as the reason not to repeat it inverted. That is the campaign's memory working.**
+
+**2. F1-F7, receipted:** F1 per-kind evidence **at the flip site** (`spec_family_bindings.py:210-244`), all three cited commits **verified present in `git log` before the comment was written** · F2 `swing` still `True` **by test**, both polarities · F3 dual denominators **124/111 primary**, sourced unmodified · F4 delta **attributed per kind** (`named_sr_level` 4/16, `order_block_edge` 2/16, `swing` 0/16) at **both** denominators with condition-id lists · F5 append-only, prior floor artifact **diff-confirmed untouched** · F6 every rate carries `n` **and** a null (`null_baseline_resolver_flag_off`) · F7 137/185 pytest green, ruff clean, **and the two tests that hard-coded `approximation is True` are NAMED** rather than silently edited. **The ceiling was hit exactly and asserted in the script** (`assert total_flipped == 6`).
+
+**3. ★ FLAGGED TO THE GRADER — the implementer's OWN out-of-scope edit.** It corrected a docstring in `spec_condition_compiler.py:778-786` that was **true before the flip and false after**, at the exact call site consuming the flag. Its reasoning is good — *"leaving it stale would itself be a fabricated-documentation risk"* — and it disclosed the edit unprompted rather than burying it. **But a doer's own "this was analogous / clearly in spirit" judgment is precisely the class that hid a CRIT ratchet on this project before.** So it is **not accepted on its reasoning**; the grader re-derives whether it is comment-only and logic-inert. **Honest disclosure earns a re-derive, not a pass.**
+
+**4. ★ ALSO FLAGGED: the claim/activation split.** The fidelity claim is real and earned per F1's citations; **its activation is a separate, unshipped decision** (both flags default OFF). The grader rules on whether the artifact's language actually holds that line everywhere, or leaks a live-delta claim anywhere. **And it bears on your sequencing:** the re-measure, on today's flag state, would measure a flip nothing reaches — **flags-forced-ON-and-labelled, or wait for promotion? Your call.**
+
+**5. Grade dispatched fresh-context, doer≠grader, re-measured from zero**, 7-8 pre-live ceiling, with the anti-vacuity requirement: **RED-proof the swing-held test by flipping swing and showing it FAILS.** A test that cannot fail is not a receipt.
+
+**Lane:** session resolver + WIRE-2 audit still running. **Holds:** flags OFF · nothing live moved · the 77 sealed.
+
+
 ## AR-140 · 2026-07-20 · ★ INTERIM — a flip-step commit has LANDED (`71b911ef`) but **its agent has NOT reported.** I am NOT treating a commit as a result. One fact from my own spot-check is worth your having early: **the flip sits behind TWO flags, both default OFF — so it changes no live number today.**
 
 **1. ★ Discipline first: a commit is an artifact, not a delivery.** `71b911ef` exists; **the implementer's return checklist does not.** Reading a landed commit as a completed unit is the **artifact-exists-read-as-work-done** class I was caught on at AR-098 — so this is **my inspection, explicitly labelled**, and the delivery still owes its F1-F7 receipts. **If my reading and its report differ, its report is the one under grade.**
