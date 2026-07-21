@@ -14227,3 +14227,46 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 **THE HONEST MAP OF WHAT MOVES THE PAIR NEXT — all named, none hiding in an aggregate:** session recall (honest-partial, with the **5-undiagnosed cluster**) · the deferred families (**RETEST/CONFIRMATION, 46 conditions**) · the trigger-role dispatch gap (**987 — a DESIGN decision, never smuggled in as arithmetic**) · the tier-a compile.
 
 **Carry-forward:** the re-measure's **independent grade is the last gate** — a measurement this load-bearing does not close on the seat's own re-run, and the grader is aimed hardest at **the finding that flatters us** (*if the 129-vs-128 reconciliation is an artifact of comparing incomparable populations, that is a bigger finding still*). T1 stays gated on a **graded** artifact; flag promotion queues behind the same grade under the measurement-vs-ship form. **Holds:** flags OFF in production — every AFTER figure is a labeled hypothetical · engine loads under all pins · `C:/tfg` a named carry · the 77 sealed.
+
+---
+
+### Session Log — 2026-07-21 (cont. 3) — The caption lineage, and the gate that did NOT end it
+
+**Mission:** Grade the capstone measurement. What it produced instead was the campaign's most durable output — a mechanism.
+
+**★★★ THE LINEAGE.** One artifact produced **EIGHT caption defects**, and the first three came **each inside the correction for the last**:
+1. A **hardcoded interpretation string** — *"the rate improves while coverage worsens… precisely the §6a defect"* — that printed for **any** non-zero delta, in either direction. **It was inverted.** A grader rebuilt a pre-closure worktree and re-measured the identical corpus varying only the closure: the vanished row was **bound-and-CONCRETE**, so **both metrics moved the SAME way.** The honest closure **paid in both books** — the guard working, not the defect firing. The original had compared **incomparable ARMS** (census pre-closure/flags-OFF against live post-closure/flags-ON).
+2. Its **replacement caveat** shipped a decomposition that was an **algebraic identity** — two branches unreachable, one term always 0 *by construction*. **Caught by perturbation, explicitly "not review."**
+3. That fix carried a **typed headline** (`"0 of 27 bound"`) which **survived a perturbation making all 27 bind**, ending up contradicting the computed field three lines above it.
+4-8. **Five more, found by the gate on its first execution** — including a typed paragraph asserting the closure "cost it on BOTH metrics", sitting twenty lines below the computed verdict it summarised, **written inside the fix for caption 1.**
+
+★★ **All eight passed human review. Only mechanical perturbation ever caught any of them.**
+
+**★★★ THE GATE (ratified permanent, R-204) — AND ITS OWN GRADE FOUND IT DEFEATABLE FIVE WAYS.**
+★★★ **A ninth caption is LIVE in the shipped file** — a typed swing-accounting claim whose subject
+is exactly what the perturbation inverts: **false in the perturbed build and byte-identical
+anyway.** And the grader got **five structurally different static claims past the gate — including
+CAPTION 1's OWN TEXT, a numeral-free direction claim. The defect that started this lineage would
+not be caught by the gate built to stop it.** Scoping creates a hiding place and it is occupied:
+**79 of 141 containers hold prose whose own subtree has zero moved leaves; 30 frozen prose fields
+quote a numeral that moved artifact-wide and were not convicted.** ★★ **An append-only BYPASS was
+red-proved:** a tracked input was tampered before the run, the stat guard baselined the tampered
+bytes, and the generator **exited 0 while reporting byte-identical-to-HEAD and publishing the
+fabricated value.** ★ **The grader's closing judgement is the finding: _a gate this defeatable
+licensing this much trust is the more dangerous of the two findings._**
+
+**What the gate DOES do, verified:** The artifact is now built **TWICE per run** — once real, once under the standard perturbation (binder wrapped so all 27 `WAIT_SESSION` rows bind). **Any prose string byte-identical across both builds while quoting a numeral that MOVED is a caption, and the generator exits non-zero.** *"It needs no annotation: a computed field whose inputs moved cannot fail it; a typed one cannot pass it."* Verified green: **202 prose fields vs 117 moved numeric leaves → 0 violations.**
+
+**THREE DESIGN LAWS FROM ITS CONSTRUCTION, all general:**
+- ★ **A GUARD'S FALSE-POSITIVE RATE IS THE MECHANISM BY WHICH IT DIES.** Artifact-wide scoping produced ~20 false REDs from numeral collision; subtree scoping fixed it. ***"A gate that cries wolf gets switched off — which is how caption 4 would have survived."*** Quietness on innocents is load-bearing, not cosmetic.
+- ★ **AN ESCAPE HATCH MUST ITSELF BE GATED.** Allowlist entries **name** their numeral's provenance, a check confirms it, and **an entry that suppresses nothing FAILS the run.**
+- ★ **THE RULE IS ABOUT CLAIMS, NOT NUMBERS.** The builder extended my rule: **direction clauses must compute and must INVERT under perturbation** — ***"a direction claim that can't invert is a caption with no digit in it."***
+
+**STRUCTURAL KILLS shipped with it:** `ASSERT_CENSUS` unparsed from the file's own AST with mandatory `DATA_SENSITIVE`/`SOURCE_INVARIANT` declarations (19: 16/3; the dead `:480` deleted — a file that **stated the condemning rule at `:526-529` and violated it at `:480`**) · append-only widened from a curated 5-file list to **every file in the directory** (*"a hand-maintained guard list is the next hand-typed constant"*) · verification against the **git object store, not the stat cache** (*"clean because nothing has looked" is not clean* — 35 of 51 files held CRLF invisibly) · the 26-vs-27 **asserted**: 17 graded teachings + 9 mis-types + 1 former orphan-zone binder = 27.
+
+**★ MY FAILURES THIS STRETCH.** I **crowned the caption**: AR-186 called the inverted finding *"the finding of the night"* and it became the arc's closing entry in R-196 §2 — **withdrawn in R-198.** The only reason it was caught is that I briefed an auditor to check whether it was an artifact — **an instruction I wrote AFTER publishing the conclusion.** Law minted: **AUDIT BEFORE CROWNING.** And when the honest `0 of 27` went in as a typed constant: **I demanded the number and did not demand it be COMPUTED** — requirements now specify the **mechanism**, never just the value.
+**Seven crude-check failures of my own**, one pattern: a grep for a string I never wrote · a count treated as an inventory · a regex matching inside the quotation it checked · backslash paths making `git show` fail silently into six false "REAL diff"s · a file-existence check at the wrong path · shell-escaping in a grep · over-clever boolean logic. **Seven false alarms, ZERO false reports — every one caught by reading the data instead of trusting the check. Four of them contradicted a careful agent who was right.**
+
+**★ THE OPERATOR ACCELERATED (R-205).** Three lanes now run in parallel — **the tier-A 11 compile** (the REAL strategies; its per-spec load-bearing census **re-aims the wire queue**, and the shakedown corpus stops being an optimization target it was never meant to be), the artifact re-grade, and breadth intake. **Not one gate was skipped to do it:** *"speed comes from ORDER, not from omission."*
+
+**Carry-forward:** artifact re-grade → **T1 on the GRADED artifact** → flag promotion under the measurement-vs-ship form · tier-A census → wire re-aim → per-spec eligibility (**one robust survivor at any N is the pre-registered breakthrough**). **Holds:** flags OFF in production throughout · every AFTER figure a labeled hypothetical · the 77 sealed.
