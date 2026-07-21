@@ -4,6 +4,27 @@
 
 ---
 
+## AR-127 · 2026-07-20 · TARGET-GATE FIX LANDED (`12bb4ac2`) — leaks driven to **0 at three window sizes**. ★★ But **THREE caveats I am NOT letting the landing bury**, chief among them: **your R-133 direction check came back NOT CONSERVATIVE.** Grade dispatched with all three as its lead items.
+
+**The fix:** an index gate (`idx_b < i`) on exit-target selection in both files, mirroring `eqhl_raid`'s existing entry-side gate. **No fallback anywhere** — when gating empties the set, target stays `None`.
+
+**Leaks resolved, at every window tested:** n=5000 → eqhl_raid 4/38→**0**, ict_swing 9/18→**0** · n=20000 → 11/102→**0**, 11/45→**0** · **full history → eqhl_raid 60/598 (10.0%)→0/597, ict_swing 11/56 (19.6%)→0/56.** Nulls asserted `> 0` so a vacuous 0/0 pass is impossible.
+
+**★ CAVEAT 1 — YOUR DIRECTION CHECK EARNED ITS PLACE, AND THE ANSWER IS THE UNCOMFORTABLE ONE.** The no-target behaviour is **enter-with-no-take-profit, NOT skip-the-entry** — and the fix **increases how often that happens.** Positions then rely **solely** on their structure-break exit (`CHoCH`/`MSS` for eqhl_raid, `BOS` for ict_swing). **Entries are never skipped by this fix; a trade that used to carry a (future-dated, illegitimate) target now more often carries none.**
+- **This is a risk-shape change riding inside a leak-removal** — precisely what R-133 §1 said must not pass silently. **Had you not added that requirement, this would have landed as "leak fixed, tests green."**
+- I have asked the grader to **quantify it** — how many more entries now run unprotected — and to rule whether it is acceptable as-is or **owes its own decision.** I am not answering that myself; it is a risk question, not a correctness one.
+
+**★ CAVEAT 2 — ict_swing is NOT fully clean: 4/18700 (0.02%) residual**, and the test asserts `<= 1%` **rather than `== 0`**. eqhl_raid is 0/17000. **A test that asserts a bound instead of zero is hiding something until someone looks** — so the grader is asked to find out what those 4 are: second mechanism, boundary artifact, or incomplete gate.
+
+**★ CAVEAT 3 — the packet's cited counts could NOT be reproduced.** AR-119's runner measured **20/163** and **6/149**; this implementer, lacking the original harness/window/commit, **could not reproduce either** and substituted its own at three windows. **Two measurements of the same defect disagreeing has already happened once in this lane** (the 50× gap — fixture scale). The grader must judge whether the substitution is adequate **or whether the non-reproduction is itself the finding.**
+
+**Also declared, not hidden:** 2 end-to-end plant tests **SKIPPED** (synthetic path never tripped the multi-stage entry pipeline — documented as fixture fragility, with mechanism-level tests + the real-data audit carrying the burden) · 2 dead-store variables removed and imports reordered to pass the repo's ruff gate — **out of packet scope, called out in the commit rather than folded in silently.** Both go to the grader.
+
+**D7:** 183 passed / 2 skipped; **no existing test encoded the un-gated behaviour**, none edited.
+
+**Grade dispatched** (receipt held) with the three caveats as its lead items, and asked to rule explicitly whether the two bars **lift, lift with a condition, or hold** — since the harm may be resolved while the risk profile has changed. **Holds:** three lifted · `ict_scalp` pending its run · `eqhl_raid` + `ict_swing` held pending this grade · `named_sr_level` unblocked · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-126 · 2026-07-20 · ★★ `named_sr_level` — **CAUSALLY SAFE. Both unblock conditions are met; the block discharges.** Plant fired 48/56 + 24/28; real code **0/160** value and **0/28** activation. ★ The runner **closed a coverage gap it found in the real corpus** rather than reporting around it.
 
 **1. Both conditions now satisfied.** The block required **(a)** the upstream fix landing graded — **done, Band 8, `7e3247ca`** — and **(b)** a per-kind causal-safety test. **This is (b), and it passes.** The runner states explicitly that this discharges the condition.
