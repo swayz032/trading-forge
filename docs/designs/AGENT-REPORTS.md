@@ -4,6 +4,21 @@
 
 ---
 
+## AR-140 · 2026-07-20 · ★ INTERIM — a flip-step commit has LANDED (`71b911ef`) but **its agent has NOT reported.** I am NOT treating a commit as a result. One fact from my own spot-check is worth your having early: **the flip sits behind TWO flags, both default OFF — so it changes no live number today.**
+
+**1. ★ Discipline first: a commit is an artifact, not a delivery.** `71b911ef` exists; **the implementer's return checklist does not.** Reading a landed commit as a completed unit is the **artifact-exists-read-as-work-done** class I was caught on at AR-098 — so this is **my inspection, explicitly labelled**, and the delivery still owes its F1-F7 receipts. **If my reading and its report differ, its report is the one under grade.**
+
+**2. ★ THE FACT WORTH HAVING EARLY:** the artifact's own scope-line states *"TF_LEVELZONE_ROUTING_ENABLED and TF_LEVELZONE_RESOLVER_ENABLED both default 'false' (unset)… the dispatch branch this delivery's approximation flip lives in is unreachable unless BOTH are explicitly set 'true'. Every number below describes the both-flags-ON hypothetical, not today's live behavior."*
+- **So the campaign's "first `approximation=False`" does not move the live corpus number at all** — it is a **measured hypothetical** behind two closed doors. **That is honest and correctly disclosed by the implementer**, and I would rather you had it before the re-measure sequencing hardens: **the dual-denominator re-measure (item 3) would, on today's flag state, be measuring a flip nothing reaches.**
+- **This may be exactly right** (a claim staged behind flags until graded), **or it may mean the re-measure needs the flags forced ON and labelled as such.** **Your call — I am flagging, not deciding.**
+
+**3. What my spot-check also shows, pending its own report:** scope is **5 files, all in-scope** (resolver binding path + tests + new measure + its generator) · **`swing` HELD**: `still_approximation_true: 1`, `delta_attributed_swing: 0.0`, *"n=1, below the n≥2 de-approximation floor (R-102 §2). Not flipped. Never argued for here."* · **the ceiling travels in the artifact**: *"At most 6 of 16 rows can ever move under this delivery"*, with **9 UNRESOLVABLE-AS-BUILT** named · **append-only** (new measure file + generator, nothing overwritten).
+
+**4. Lane state, honestly: all lanes are saturated.** Three units running (flip step · session resolver · WIRE-2 audit) — the parallel limit I hold myself to, since I cannot properly receive more. **Two staged** (B-variant held for your ratify; re-measure blocked-on-inputs by design). **Everything downstream is genuinely dependency-blocked**, not idle: item 5 is stationed post-re-measure **and carries an unconditional HUMAN floor**; items 6-7 follow the graded DoD and the session packet. **The productive state right now is the returns.**
+
+**Holds:** six bars lifted · flags OFF · **no `approximation=False` reaches live behaviour** · the 77 sealed.
+
+
 ## AR-139 · 2026-07-20 · **Re-measure spec STAGED, BLOCKED-on-inputs by design** (R-143 §3 item 3). ★ Written so it cannot be dispatched between the two changes that move its number — and so it cannot report a headline without its coverage.
 
 **1. ★ It declares its own blocker rather than waiting to be told:** *"not dispatchable until the flip step and the session resolver both land graded — each moves the number this measures, and measuring between them would produce a figure belonging to neither state."* **A measurement taken mid-flight is worse than none: it is precise, citable, and about nothing.**
