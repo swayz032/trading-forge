@@ -284,7 +284,18 @@ ASSERT_DISPOSITIONS: dict[str, str] = {
     "per_kind.get('swing', {}).get('n_flipped', 0) == 0": "DATA_SENSITIVE",
     "set(per_kind) <= {'named_sr_level', 'order_block_edge'}": "DATA_SENSITIVE",
     "a_roles.get('trigger', 0) == 0": "DATA_SENSITIVE",
-    "graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught": "DATA_SENSITIVE",
+    # R-220 s1. The sum assert, kept -- it is the only check on ws_taught. Its blindness to the
+    # SPLIT is why the four entries below exist; it was never wrong, only insufficient.
+    "graded_teachings + graded_mis_types + graded_undecidable == ws_taught": "DATA_SENSITIVE",
+    # R-220 s1: THE PER-COMPONENT SPLIT GUARDS. Each fires under
+    # SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD, which is the probe that proves the split is
+    # now checked rather than merely summed.
+    "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']": "DATA_SENSITIVE",
+    "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']": "DATA_SENSITIVE",
+    "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']": "DATA_SENSITIVE",
+    # The reconciliation against the LIVE resolver -- the one term in the split that something
+    # outside the judge can falsify. DATA_SENSITIVE in the strongest sense available here.
+    "ws_session_resolvable <= graded_teachings": "DATA_SENSITIVE",
     "n_levelzone_rows == 16": "DATA_SENSITIVE",
     "total_flipped <= 6": "DATA_SENSITIVE",
     "enf['never_evaluated_total'] == never_by_gap": "DATA_SENSITIVE",
@@ -371,6 +382,23 @@ ASSERTS_ADDED_SINCE_BASELINE: list[dict] = [
     # MISDIRECTED -- fail-closed with the wrong diagnosis, which is a caption about a verdict.
     {"assert": "not sys.flags.optimize", "disposition": "SOURCE_INVARIANT",
      "added_by": "independent grade of d41f3bff -- name the flag, not the probes",
+     "commit": "THIS_WAVE"},
+    # ★ R-220 s1. FOUR ADDITIONS, ONE DELETION-BY-RESTATEMENT. The sum assert was not removed --
+    # its test expression was RESTATED (orphan_zone_refusal -> graded_undecidable) because the
+    # third bucket changed meaning, so it is the same enforcement site under a new key and is
+    # NOT counted as an addition. The four genuinely new checks are the per-component split
+    # guards and the resolver reconciliation.
+    {"assert": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']",
+     "disposition": "DATA_SENSITIVE", "added_by": "R-220 s1 -- per-component split guard A",
+     "commit": "THIS_WAVE"},
+    {"assert": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+     "disposition": "DATA_SENSITIVE", "added_by": "R-220 s1 -- per-component split guard B",
+     "commit": "THIS_WAVE"},
+    {"assert": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
+     "disposition": "DATA_SENSITIVE", "added_by": "R-220 s1 -- per-component split guard C",
+     "commit": "THIS_WAVE"},
+    {"assert": "ws_session_resolvable <= graded_teachings", "disposition": "DATA_SENSITIVE",
+     "added_by": "R-220 s1 -- reconciliation against the live session resolver",
      "commit": "THIS_WAVE"},
 ]
 
@@ -670,10 +698,33 @@ def _axis_enforcement_mirror(enf: dict) -> dict:
 
 
 def _axis_session_grade_split(teachings: int, mis_types: int) -> tuple[int, int]:
-    """AXIS 3. Move one row between two externally-graded buckets, SUM PRESERVED."""
+    """AXIS 3. Move one row between two externally-graded buckets, SUM PRESERVED.
+
+    ★ THIS AXIS IS THE ONE THE OLD GUARD COULD NOT SEE. It moves the SPLIT and preserves the
+    SUM, so a sum-only assert is green under every value it produces. That is why the split is
+    now checked PER COMPONENT against SESSION_SPLIT_DECLARED, and why the declared table is
+    mirror-updated here: with the repair applied the artifact stays self-consistent and the
+    per-component asserts pass; with it WITHHELD the computed split and the declared split
+    disagree and the per-component asserts FIRE. The sum assert cannot tell those two states
+    apart -- which is the whole finding.
+    """
     if not _axis_is(AXIS_SESSION_GRADE):
         return teachings, mis_types
     return teachings - 1, mis_types + 1
+
+
+def _axis_session_split_declared(declared: dict) -> dict:
+    """The mirror repair for AXIS 3 -- move the DECLARED split the same way, or withhold it."""
+    if not _axis_is(AXIS_SESSION_GRADE):
+        return declared
+    if _WITHHOLD_REPAIRS:
+        # THE DISCRIMINATION PROBE. The computed split moved; the declaration did not. The
+        # per-component asserts exist for exactly this state and must fire in it.
+        return declared
+    out = dict(declared)
+    out["A_genuine_session_teachings"] -= 1
+    out["B_mis_types"] += 1
+    return out
 
 
 def _axis_drop_taught_condition(specs: list) -> list:
@@ -815,6 +866,36 @@ def _bump(d: dict, key: str, by: int = 1) -> dict:
 # fire is itself a RED (see assert_discrimination_census) -- otherwise "revived" would be a claim
 # nobody checked, which is the shape this campaign exists to kill.
 REVIVAL_PROBES: dict[str, dict] = {
+    # ★★ R-220 s1: THREE PROBES FOR THE SHADOWED SPLIT GUARDS, AND THE SHADOW IS THE POINT.
+    # SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD discriminates the A guard -- and because A is
+    # evaluated FIRST, that probe never reaches B, C or the resolver reconciliation. The
+    # discrimination census reported all three as NON_DISCRIMINATING, which under this file's
+    # forced disposition reads SUSPECTED DEAD. They are not dead; they are SHADOWED, and the
+    # census cannot tell those apart from outside. ★ The honest response is a probe that reaches
+    # them, not a re-disposition that excuses them: "no probe failed it" and "it cannot fail"
+    # are different claims, and only the second would license silence.
+    "SESSION_SPLIT_B_DIVERGED": {
+        "hook": "session_split_declared",
+        "targets": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']",
+        "mutate": lambda d: {**d, "B_mis_types": d["B_mis_types"] + 1},
+        "why": "The declared mis-type bucket moves without the computed split moving with it -- "
+               "the B-component form of the defect the A guard catches.",
+    },
+    "SESSION_SPLIT_C_DIVERGED": {
+        "hook": "session_split_declared",
+        "targets": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']",
+        "mutate": lambda d: {**d, "C_undecidable": d["C_undecidable"] + 1},
+        "why": "The undecidable bucket moves alone. C is the bucket with no computed "
+               "counterpart at all, so this probe is the only thing that reaches its guard.",
+    },
+    "SESSION_RESOLVER_EXCEEDS_GRADE": {
+        "hook": "ws_session_resolvable",
+        "targets": "ws_session_resolvable <= graded_teachings",
+        "mutate": lambda v: v + 99,
+        "why": "The live resolver is made to bind more rows to a session zone than the grade "
+               "calls genuine teachings. That is the reconciliation's whole subject, and no "
+               "corpus in this family produces it -- today the resolver resolves none.",
+    },
     "INVAL_DIRECTION_INVERTED": {
         "hook": "inval_on_concrete",
         "targets": "inval_on_concrete <= inval_off_concrete",
@@ -1775,16 +1856,12 @@ EVIDENTIAL_ADJUDICATIONS: dict[str, dict] = {
             "run, which is the opposite of an unearned observation claim."
         ),
     },
-    "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.ASSERTED": {
-        "kind": "METHOD_DESCRIPTION",
-        "rules": ["EVIDENTIAL_THEN_DEIXIS"],
-        "names_field": "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.measured_n_WAIT_SESSION_taught",
-        "why": (
-            "'the fourth quantity is measured here' describes which of the four terms this "
-            "generator computes rather than inherits. The field it names is present and is the "
-            "measured term; the sentence claims a mechanism, not a result."
-        ),
-    },
+    # DELETED (R-220 s1). The adjudication excused "the fourth quantity is measured here" in the
+    # ASSERTED sentence. That sentence was restated per-component and the clause is gone, so the
+    # adjudication matched nothing and the dead-entry check demanded its removal. ★ Note the
+    # direction, which is the same one R-207 recorded: restating a claim honestly SHRANK the
+    # adjudication list. An adjudication is a standing excuse, and the cheapest way to lose one
+    # is to stop needing it.
     "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.the_27th_row": {
         "kind": "CARRIED_DIRECTION_ALREADY_DECLARED_UNVERIFIABLE",
         "rules": ["OPPOSED_DIRECTION_PAIR"],
@@ -2382,9 +2459,20 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     # live corpus; an axis moving them would be the defect, not the fix.
     "$.SESSION_ATTRIBUTION.THE_26_VS_27_ACCOUNTING.supersedes": {
         "kind": "SUPERSEDED_ESTIMATE",
-        "numerals": ["11", "15"],
-        "why": "The withdrawn ~15 mis-types / ~11 vocabulary-gap estimates, quoted so the "
-               "supersession is checkable. Frozen by intent.",
+        "numerals": ["11", "15", "17", "26", "9"],
+        "why": "The withdrawn ~15 mis-types / ~11 vocabulary-gap estimates AND the 17/9 graded "
+               "split that replaced them, plus the 26-of-26 reproduction rate that convicted "
+               "the 17/9 judge of non-independence. All quoted so the supersession is "
+               "checkable. Frozen by intent -- an axis moving these would be the defect.",
+    },
+    # R-220 s1. The withdrawn 17 and the 26/26 reproduction rate that killed it. A record of a
+    # retracted value and of the evidence against it; it must NOT track the live corpus.
+    "$.SESSION_ATTRIBUTION.recoverable_target_population.SUPERSEDED_PRIOR_VALUE.why": {
+        "kind": "SUPERSEDED_ESTIMATE",
+        "numerals": ["17", "26"],
+        "why": "The withdrawn 17, and the 26-of-26 row-for-row reproduction of "
+               "classify_session_role() that convicted its judge of not being independent. "
+               "Both are facts about a retracted grade, frozen by intent.",
     },
     "$.CEILING.swing_disposition_ground_ruling": {
         "kind": "RULING_IDENTIFIER",
@@ -2417,7 +2505,7 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     },
     "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.DATA_SENSITIVE_derivation": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
-        "numerals": ["14", "16", "2"],
+        "numerals": ["14", "20", "6"],
         "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the "
                "addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No "
                "axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately "
@@ -3396,10 +3484,23 @@ def _build_artifact_body() -> dict:
     # arms condition-by-condition and attribute each de-approximation to its Population-A kind.
     per_kind: dict[str, dict] = {}
     swing_still_true = 0
-    # R-207: the swing accounting sentence used to TYPE its three terms ("3 ... 2 ... 1"). Under
-    # CORPUS_A_TAUGHT_CONDITION_DROP those terms move, so they are derived here and interpolated.
-    # The total and the unbound term are counted over the SAME binding_map the flip is diffed on,
-    # so the sentence's "2 + 1 = 3" closure is now arithmetic the data performs, not a claim.
+    # R-207: the swing accounting sentence used to TYPE its three terms. They are derived here
+    # and interpolated instead. The total and the unbound term are counted over the SAME
+    # binding_map the flip is diffed on, so the sentence's closure is arithmetic the data
+    # performs, not a claim.
+    # ★★ R-220 s4 CORRECTION -- THE MOTIVATION NAMED THE WRONG AXIS, AND IT WAS MEASURED, NOT
+    # ARGUED. This comment read "Under CORPUS_A_TAUGHT_CONDITION_DROP those terms move, so they
+    # are derived here". MEASURED FALSE: under CORPUS_A_TAUGHT_CONDITION_DROP the three terms
+    # come back (total=3, still=2, unbound=1) -- IDENTICAL to the unperturbed build. That axis
+    # drops a NON-WAIT_SESSION condition by construction (see _axis_drop_taught_condition), and
+    # no swing term is a function of the dropped population, so it could never have moved them.
+    # The axis that DOES move a term is ALL_WAIT_SESSION_ROWS_BIND, and it moves exactly ONE:
+    # swing_unbound 1 -> 0. swing_total and swing_still_true move under NO axis in this family.
+    # ★ The interpolation was still the right thing to do -- a typed term is wrong regardless of
+    # which axis reaches it. But the STATED REASON was false, and a false reason is not repaired
+    # by a true conclusion standing next to it. Recorded rather than quietly deleted because the
+    # shape is the campaign's own: a justification nothing gated, sitting beside code nobody
+    # doubted. No gate reaches a comment, which is exactly why this one went unchecked.
     swing_total = 0
     swing_unbound = 0
     for key, (_bb, ba, kind, _fam) in a_before["binding_map"].items():
@@ -3495,25 +3596,89 @@ def _build_artifact_body() -> dict:
         if fam == "WAIT_SESSION" and ba is True and a_after["binding_map"][key][1] is False
     )
 
-    # ------------------------------------------------- THE 26-vs-27 DERIVATION (R-203 s3)
-    # The divergence between "26 corpus-wide WAIT_SESSION rows" and the 27 counted here is not a
-    # discrepancy to be split; it dissolves by accounting, and every term is named:
-    #   17  graded GENUINE session teachings  (the recoverable target population)
-    #  + 9  graded MIS-TYPES -- rows carrying type=WAIT_SESSION that teach no session
-    #  + 1  the former orphan-zone binder: the row the old resolver bound to a zone that does
-    #       not exist. It was a fake binding, it is now honestly REFUSED, and refusing it is why
-    #       the count reads 27 unbound where the pre-closure note read 26.
-    #  = 27 = ws_taught, ASSERTED below rather than asserted in prose.
-    # The graded 17/9 split SUPERSEDES the earlier ~15 mis-types / ~11 vocabulary-gap estimates
-    # wherever those are cited; they were estimates, this is the graded read.
-    graded_teachings, graded_mis_types = _axis_session_grade_split(17, 9)
+    # ------------------------------------------------- THE 27-ROW SESSION SPLIT (R-220 s1)
+    # ★★ THE 17 IS DEAD, AND IT DIED OF NOT HAVING BEEN AN INDEPENDENT CHECK. The blind grade
+    # that produced "17 graded GENUINE session teachings" reproduced the shipped
+    # classify_session_role() 26 of 26 ROW FOR ROW. A judge that reproduces the instrument it
+    # audits has measured the instrument's self-consistency, not its correctness, and 26/26 is
+    # the signature of that: it is far too good to be independent. So the 17 was never evidence.
+    #
+    # A LEDGER-BLIND SECOND JUDGE returned, over the same LABELED population:
+    #     A = 2  genuine session teachings
+    #     B = 21 mis-types -- rows carrying type=WAIT_SESSION that teach no session
+    #     C = 4  honestly UNDECIDABLE (e.g. a TradingView install instruction is not a session
+    #            teaching, and pretending it decides either way would be the fabrication)
+    # ★ C IS A REAL BUCKET, NOT A ROUNDING ERROR. The old accounting had nowhere to put an
+    # undecidable row, so every row was forced into a decided bucket -- which is one mechanism
+    # by which a 17 can be manufactured out of 2.
+    #
+    # SCOPE, AND IT IS NARROW: this split governs the LABELED-27 population ONLY. It is not a
+    # statement about the corpus-wide session population and must not be cited as one.
+    # ★★ TWO SIDES, AND THEY MUST NOT SHARE AN OBJECT -- learned by building it wrong first.
+    # The first form of these guards read the computed terms OUT OF SESSION_SPLIT_DECLARED, so
+    # both sides of every per-component assert were the same value and B and C were TAUTOLOGIES:
+    # green by construction, incapable of firing, and indistinguishable from real guards in the
+    # census. That is the defect this whole wave is about, rebuilt by accident inside its own
+    # repair -- and it was caught only because the revival probes aimed at B and C REFUSED TO
+    # REVIVE. A probe that cannot make its target fire is evidence about the target, not a
+    # broken probe. Now the axis moves the COMPUTED side and the mirror repair moves the
+    # DECLARED side, from two separate literals, so withholding the repair genuinely diverges.
+    graded_teachings, graded_mis_types = _axis_session_grade_split(2, 21)
+    graded_undecidable = 4
+    SESSION_SPLIT_DECLARED = _rv("session_split_declared", _axis_session_split_declared({
+        "A_genuine_session_teachings": 2,
+        "B_mis_types": 21,
+        "C_undecidable": 4,
+    }))
+    # ★ A SEPARATE ACCOUNTING, DELIBERATELY NOT A TERM OF THE SPLIT. The orphan-zone refusal
+    # answers "why 27 here and 26 in the pre-closure note?", which is a question about the
+    # CORPUS. A/B/C answer "what are these 27 rows?", which is a question about the GRADE.
+    # The old form summed them together (17 + 9 + 1), which made one number do both jobs and
+    # is part of why the split could hide inside the sum.
     orphan_zone_refusal = 1
-    assert graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught, (
-        f"the 26-vs-27 accounting no longer closes: {graded_teachings} graded teachings + "
-        f"{graded_mis_types} graded mis-types + {orphan_zone_refusal} orphan-zone refusal = "
-        f"{graded_teachings + graded_mis_types + orphan_zone_refusal}, but this corpus holds "
-        f"{ws_taught} WAIT_SESSION conditions. Every term is external-graded except ws_taught, "
-        "so if this fires the corpus moved under the grade and the split must be re-graded."
+
+    # ★★ PER-COMPONENT, BECAUSE THE SUM WAS NEVER THE THING IN DOUBT. The guard this replaces
+    # read `17 + 9 + 1 == 27` and was green under 16/10 and under 18/8 alike -- i.e. green
+    # under every value of the ONLY quantity anyone disputed. A guard whose green is invariant
+    # to the question being asked is not a guard. Each component now answers for itself, and
+    # SESSION_GRADE_REALLOCATION__REPAIR_WITHHELD is the probe that proves they can fire.
+    assert graded_teachings == SESSION_SPLIT_DECLARED["A_genuine_session_teachings"], (
+        f"GUARD BOUNDARY: component A must equal the declared genuine-session-teaching count. "
+        f"computed {graded_teachings} != declared "
+        f"{SESSION_SPLIT_DECLARED['A_genuine_session_teachings']}. The split moved without its "
+        "declaration moving with it."
+    )
+    assert graded_mis_types == SESSION_SPLIT_DECLARED["B_mis_types"], (
+        f"GUARD BOUNDARY: component B must equal the declared mis-type count. computed "
+        f"{graded_mis_types} != declared {SESSION_SPLIT_DECLARED['B_mis_types']}."
+    )
+    assert graded_undecidable == SESSION_SPLIT_DECLARED["C_undecidable"], (
+        f"GUARD BOUNDARY: component C must equal the declared undecidable count. computed "
+        f"{graded_undecidable} != declared {SESSION_SPLIT_DECLARED['C_undecidable']}."
+    )
+    # ★ AND THE SUM, KEPT -- it answers a DIFFERENT question (did the corpus move under the
+    # grade?) and CORPUS_A_TAUGHT_CONDITION_DROP__REPAIR_WITHHELD is the probe that fires it.
+    # Keeping it is not redundancy: dropping it would delete the only check on ws_taught.
+    assert graded_teachings + graded_mis_types + graded_undecidable == ws_taught, (
+        f"GUARD BOUNDARY: the labeled-27 split must close on the corpus. {graded_teachings} A + "
+        f"{graded_mis_types} B + {graded_undecidable} C = "
+        f"{graded_teachings + graded_mis_types + graded_undecidable}, but this corpus holds "
+        f"{ws_taught} WAIT_SESSION conditions. A/B/C are external-graded and ws_taught is "
+        "measured, so if this fires the corpus moved under the grade and it must be re-graded."
+    )
+    # ★★ RECONCILED AGAINST SOMETHING OUTSIDE THE GRADE -- the production session resolver.
+    # A row that the LIVE resolver binds to a session zone must be a genuine session teaching,
+    # so the resolver's count can never legitimately exceed component A. This is the only term
+    # in the split that anything outside the judge can falsify, and it is MEASURED every run.
+    ws_session_resolvable = _rv("ws_session_resolvable", sum(
+        1 for _n, ec, _am in specs_a for c in ec
+        if c.get("type") == "WAIT_SESSION" and sfb.resolve_session_keyword(c.get("object", "")) is not None
+    ))
+    assert ws_session_resolvable <= graded_teachings, (
+        f"GUARD BOUNDARY: the live session resolver binds {ws_session_resolvable} of {ws_taught} "
+        f"labeled rows to a zone, which EXCEEDS component A ({graded_teachings}). Either the "
+        "grade understates the genuine teachings or the resolver is binding rows that teach no "
+        "session. Both are findings; neither may pass silently."
     )
 
     # THE 161 DENOMINATOR (AR-188 fix 4). The 155 counts entry_conditions ONLY; the 16 specs also
@@ -3798,15 +3963,28 @@ def _build_artifact_body() -> dict:
                 "swing": {
                     "n_flipped": 0,
                     "n_still_approximation_true": swing_still_true,
-                    # Same correction as CEILING.swing. This sentence also justified itself by
-                    # the floor; with the count interpolated it is visible that the Corpus-A
-                    # swing population does not fall below it either. The operative reason is
-                    # the grade scope, which is asserted rather than narrated.
+                    # ★★ R-220 s3: THE SECOND SURVIVING COPY OF A WITHDRAWN GROUND, IN THE FILE
+                    # THAT WITHDREW IT. CEILING.swing was corrected to the anchor-vs-taught-object
+                    # refusal, and this sibling field was left citing GRADE SCOPE -- withdrawn
+                    # ground (2) -- so the artifact asserted one ground in one key and a retracted
+                    # one in another. ★ A ground that depends on our own permission is not a
+                    # ground: grade scope evaporates the day the grade widens, and the disposition
+                    # would then have none at all. Corrected to the same refusal CEILING.swing
+                    # cites, because the two keys describe the same disposition and there is only
+                    # one true reason for it.
+                    # ★ THE CENSUS LESSON: correcting the FOUNDING instance did not correct the
+                    # CLASS. This copy sat 150 lines from the corrected one, in the same dict,
+                    # through the wave that wrote the correction.
                     "reason": (
                         f"routed-but-approximate; n={swing_still_true}. Stays approximation=True "
-                        "because the flip's grade licenses named_sr_level and order_block_edge "
-                        f"ONLY, NOT because it falls below the n>={DE_APPROXIMATION_FLOOR} "
-                        "de-approximation floor. Never argued for."
+                        "by the ANCHOR-VS-TAUGHT-OBJECT REFUSAL recorded in "
+                        "CEILING.swing_disposition_ground: a swing is the ANCHOR of a fibonacci "
+                        "retracement and the taught object is the retracement line, which the "
+                        "level/zone primitive does not emit -- so there is nothing to bind TO. "
+                        f"NOT because it falls below the n>={DE_APPROXIMATION_FLOOR} "
+                        "de-approximation floor, which this population MEETS, and NOT because of "
+                        "the flip's grade scope, which is a permission rather than a ground. "
+                        "Never argued for."
                     ),
                     "accounting": (
                         f"{swing_total} Corpus-A conditions classify as swing: {swing_still_true} are "
@@ -4226,9 +4404,20 @@ def _build_artifact_body() -> dict:
             # PROVES that by rebuilding under exactly that perturbation and requiring this string to
             # change (see CAPTION_GATE).
             "THE_HEADLINE": (
-                f"{ws_bound_after} of {ws_taught} bound - {ws_recovered} of up-to-"
+                f"{ws_bound_after} of {ws_taught} bound - {ws_recovered} of AT-MOST-"
                 f"{graded_teachings} recovered in this measurement's configuration "
                 "(level/zone flags ON, the AFTER arm)."
+            ),
+            # ★ R-220 s1: THE CEILING FELL FROM 17 TO 2 AND THE FLOOR WAS ALWAYS 0. The
+            # "up-to-17" this replaces was never a measurement -- see SESSION_SPLIT_DECLARED.
+            # The honest pair is stated together because either alone misleads: the ceiling is
+            # what the GRADE licenses, the measured figure is what the RESOLVER achieves.
+            "recovery_ceiling_vs_measured": (
+                f"CEILING (graded, not measured): at most {graded_teachings} of {ws_taught}. "
+                f"MEASURED by the live session resolver: {ws_session_resolvable} of {ws_taught} "
+                f"rows resolve to a session zone at all, and {ws_recovered} recovered in this "
+                "configuration. The ceiling is an upper bound on what could be recovered, never "
+                "a claim that anything was."
             ),
             "recoverable_target_population": {
                 "value": graded_teachings,
@@ -4243,14 +4432,26 @@ def _build_artifact_body() -> dict:
                 # scored like any other sentence.
                 "source": "docs/designs/spec-dual-denominator-remeasure-2026-07-20.md line 63",
                 "source_quotes": (
-                    f"'recovers up to {graded_teachings} of {ws_taught}', resting on the graded "
-                    "genuine/mis-typed split of the WAIT_SESSION rows recorded in ADVISOR-RULINGS.md."
+                    f"'recovers at most {graded_teachings} of {ws_taught}', resting on the "
+                    "ledger-blind second judge's A/B/C read of the WAIT_SESSION rows."
                 ),
+                "SUPERSEDED_PRIOR_VALUE": {
+                    "value": 17,
+                    "status": "WITHDRAWN -- never an independent check",
+                    "why": (
+                        "The blind grade that produced 17 reproduced the shipped "
+                        "classify_session_role() 26 of 26 row for row. A judge that reproduces "
+                        "the instrument it audits is measuring self-consistency, and 26/26 is "
+                        "the signature of that rather than a strong result. Withdrawn on that "
+                        "ground, not because a different number was preferred."
+                    ),
+                },
                 "why_flagged": (
                     "This generator can count the taught rows and can show how many bound. It CANNOT "
                     "re-derive the graded target -- that came from a human-graded read of the "
                     "teaching. It is cited rather than recomputed, and labelled so no reader "
-                    "mistakes it for a measured value here."
+                    "mistakes it for a measured value here. ★ The one part it CAN reconcile is "
+                    "asserted: the live resolver's zone-resolvable count may never exceed it."
                 ),
             },
             # R-203 s3. The 26-vs-27 divergence, stated as a derivation with every term named
@@ -4262,13 +4463,22 @@ def _build_artifact_body() -> dict:
                     "discrepancy to be split or averaged -- it closes exactly, and the terms are "
                     "named so the closure can be checked instead of believed."
                 ),
-                "graded_genuine_session_teachings": graded_teachings,
-                "graded_mis_types": graded_mis_types,
-                "former_orphan_zone_binder_now_honestly_refused": orphan_zone_refusal,
-                "sum": graded_teachings + graded_mis_types + orphan_zone_refusal,
+                "A_graded_genuine_session_teachings": graded_teachings,
+                "B_graded_mis_types": graded_mis_types,
+                "C_graded_undecidable": graded_undecidable,
+                "sum": graded_teachings + graded_mis_types + graded_undecidable,
                 "measured_n_WAIT_SESSION_taught": ws_taught,
+                "measured_n_resolvable_by_the_live_session_resolver": ws_session_resolvable,
+                "former_orphan_zone_binder_now_honestly_refused": orphan_zone_refusal,
                 "closes_exactly": (
-                    graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught
+                    graded_teachings + graded_mis_types + graded_undecidable == ws_taught
+                ),
+                "WHY_C_EXISTS": (
+                    "The prior accounting had only decided buckets, so every row was forced to a "
+                    "decision. C holds the rows a blind judge honestly could not decide -- a "
+                    "TradingView install instruction, for instance, is not a session teaching, "
+                    "and calling it one either way would be the fabrication. Forcing rows like "
+                    "those is one mechanism by which a small graded count becomes a large one."
                 ),
                 "the_27th_row": (
                     f"The {ws_taught}th is the former orphan-zone binder. The old resolver bound it "
@@ -4278,15 +4488,21 @@ def _build_artifact_body() -> dict:
                     "pre-closure note: the closure did not lose a binding, it stopped claiming one."
                 ),
                 "supersedes": (
-                    "The graded genuine/mis-typed split supersedes the earlier approximate ~15 "
-                    "mis-types / ~11 vocabulary-gap estimates wherever those are still cited. Those "
-                    "were estimates and split the population the other way round; this is the "
-                    "graded read and it is the one that travels."
+                    "This A/B/C read supersedes BOTH the earlier approximate ~15 mis-types / ~11 "
+                    "vocabulary-gap estimates AND the 17/9 graded split that replaced them. The "
+                    "17/9 was withdrawn for cause, not preference: its judge reproduced the "
+                    "shipped classifier 26 of 26, so it was never independent of the thing it "
+                    "graded."
                 ),
                 "ASSERTED": (
-                    "The sum is asserted against the measured count, not narrated. Two of the three "
-                    "terms are external-graded constants and the fourth quantity is measured here, "
-                    "so the assert fires if the corpus moves out from under the grade."
+                    "★ PER COMPONENT, not merely as a sum. The predecessor asserted the SUM "
+                    "alone, which stays green under every reallocation between the graded "
+                    "buckets -- that is, green under every value of the only quantity anyone "
+                    "disputed. Each of A, B and C now answers for itself against "
+                    "SESSION_SPLIT_DECLARED; the sum is kept because it is the only check on "
+                    "the taught count; and the live session resolver's zone-resolvable count is "
+                    "asserted not to exceed A, which is the one term anything outside the judge "
+                    "can falsify."
                 ),
             },
             "unflattering_reading": (
@@ -4414,11 +4630,17 @@ def _summarise(art: dict) -> None:
           "INVALIDATE approximation=False")
     print(f"      dependency verdict: {sec['provenance_dependency_verdict']}")
     print(f"OK  session attribution: {ses['THE_HEADLINE']}")
-    print(f"      26-vs-27: {ses['THE_26_VS_27_ACCOUNTING']['graded_genuine_session_teachings']}"
-          f" + {ses['THE_26_VS_27_ACCOUNTING']['graded_mis_types']}"
-          f" + {ses['THE_26_VS_27_ACCOUNTING']['former_orphan_zone_binder_now_honestly_refused']}"
-          f" = {ses['THE_26_VS_27_ACCOUNTING']['sum']} == "
-          f"{ses['THE_26_VS_27_ACCOUNTING']['measured_n_WAIT_SESSION_taught']} measured")
+    _acc = ses["THE_26_VS_27_ACCOUNTING"]
+    # PER COMPONENT in the summary too -- a printed sum would re-hide exactly what the
+    # per-component asserts were added to expose.
+    print(f"      labeled-27 split: A={_acc['A_graded_genuine_session_teachings']} genuine"
+          f" + B={_acc['B_graded_mis_types']} mis-types"
+          f" + C={_acc['C_graded_undecidable']} undecidable"
+          f" = {_acc['sum']} == {_acc['measured_n_WAIT_SESSION_taught']} measured"
+          f" | live resolver resolves "
+          f"{_acc['measured_n_resolvable_by_the_live_session_resolver']} of "
+          f"{_acc['measured_n_WAIT_SESSION_taught']}"
+          f" (ceiling A={_acc['A_graded_genuine_session_teachings']}, so the bound holds)")
     print(f"OK  self-accounting: {sa['ASSERT_CENSUS']['n_asserts_total']} asserts "
           f"({sa['ASSERT_CENSUS']['n_DATA_SENSITIVE']} data-sensitive, "
           f"{sa['ASSERT_CENSUS']['n_SOURCE_INVARIANT']} source-invariant) | "
@@ -4854,25 +5076,34 @@ def main(argv: list[str] | None = None) -> None:
 
     if "--discrimination-replay" in argv:
         # ★ THE PLANTED-DEFECT REPLAY FOR THE DISCRIMINATION COLUMN (R-207 addendum).
-        # The independently-known answer: `graded_teachings + graded_mis_types +
-        # orphan_zone_refusal == ws_taught` is a SUM assert. SESSION_GRADE_REALLOCATION moves the
-        # SPLIT (17/9 -> 16/10) and preserves the sum, so arithmetic alone says that probe CANNOT
-        # fail it -- no measurement needed to know the right answer. Meanwhile
-        # CORPUS_A_TAUGHT_CONDITION_DROP__REPAIR_WITHHELD moves ws_taught itself, so it MUST fail
-        # it. The column is correct only if it reports both, and the pair is the whole finding:
-        # the guard is green under every split, which is the only thing in doubt.
-        KEY = "graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught"
-        row = next(r for r in discrimination["rows"] if r["assert"] == KEY)
-        hit = row["discriminated_by_COMPUTED"]
-        blind_to_split = AXIS_SESSION_GRADE not in hit
-        sees_sum = f"{AXIS_TAUGHT_DROP}__REPAIR_WITHHELD" in hit
-        print("DISCRIMINATION REPLAY -- the 17/9/1 sum assert")
-        print(f"  discriminated_by (COMPUTED) = {hit}")
-        print(f"  blind to the SPLIT ({AXIS_SESSION_GRADE} absent) = {blind_to_split}"
-              "   <- known independently: moving 17/9 to 16/10 preserves the sum")
-        print(f"  fires on the SUM ({AXIS_TAUGHT_DROP}__REPAIR_WITHHELD present) = {sees_sum}")
-        ok = blind_to_split and sees_sum
-        print("REPLAY", "PASSED -- the column reports a real non-discrimination it did not invent"
+        # ★★ R-220 s1: THIS REPLAY NOW PROVES THE REPAIR, NOT JUST THE DEFECT. Its original form
+        # pinned a NON-discrimination: the sum assert is blind to the SPLIT (SESSION_GRADE_
+        # REALLOCATION preserves the sum, so arithmetic alone says that probe cannot fail it) and
+        # sighted on the SUM (CORPUS_A_TAUGHT_CONDITION_DROP__REPAIR_WITHHELD moves ws_taught, so
+        # it must). Both halves are still asserted, because the sum assert was KEPT and its
+        # blindness is unchanged -- it was never wrong, only insufficient.
+        # What is new is the THIRD half: the per-component A guard must be discriminated by
+        # exactly the axis the sum assert is blind to. That is the pair the wave exists to close,
+        # and asserting both together is what makes this a repair proof rather than two facts.
+        SUM_KEY = "graded_teachings + graded_mis_types + graded_undecidable == ws_taught"
+        SPLIT_KEY = "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']"
+        sum_hit = next(r for r in discrimination["rows"]
+                       if r["assert"] == SUM_KEY)["discriminated_by_COMPUTED"]
+        split_hit = next(r for r in discrimination["rows"]
+                         if r["assert"] == SPLIT_KEY)["discriminated_by_COMPUTED"]
+        blind_to_split = AXIS_SESSION_GRADE not in " ".join(sum_hit)
+        sees_sum = f"{AXIS_TAUGHT_DROP}__REPAIR_WITHHELD" in sum_hit
+        split_guarded = f"{AXIS_SESSION_GRADE}__REPAIR_WITHHELD" in split_hit
+        print("DISCRIMINATION REPLAY -- the sum assert and the per-component split guard")
+        print(f"  SUM   assert discriminated_by (COMPUTED) = {sum_hit}")
+        print(f"    blind to the SPLIT ({AXIS_SESSION_GRADE} absent) = {blind_to_split}"
+              "   <- known independently: reallocating between buckets preserves the sum")
+        print(f"    fires on the SUM ({AXIS_TAUGHT_DROP}__REPAIR_WITHHELD present) = {sees_sum}")
+        print(f"  SPLIT guard  discriminated_by (COMPUTED) = {split_hit}")
+        print(f"    fires on the SPLIT ({AXIS_SESSION_GRADE}__REPAIR_WITHHELD present) = "
+              f"{split_guarded}   <- the axis the sum assert cannot see")
+        ok = blind_to_split and sees_sum and split_guarded
+        print("REPLAY", "PASSED -- the sum's blindness is real AND the split guard covers it"
               if ok else "FAILED -- the column does not match the independently-known answer")
         sys.exit(0 if ok else 1)
 
