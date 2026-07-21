@@ -33,9 +33,18 @@ describe("F-3: Carter is absent by route, and stays absent", () => {
 describe("F-4: the key input is cleared on EVERY path", () => {
   it("the clear runs in a finally block, not only after a successful fetch", () => {
     // Previously the clear sat after the fetch, so a network throw left the key in the DOM.
-    const finallyBlock = html.match(/\}\s*finally\s*\{([\s\S]*?)\}/);
-    expect(finallyBlock, "connect handler must have a finally block").not.toBeNull();
-    expect(finallyBlock![1]).toMatch(/keyEl\.value\s*=\s*""/);
+    //
+    // ★ 2026-07-21: this originally matched the FIRST `finally` in the file, which silently
+    // assumed there would only ever be one. Adding the PIN form (whose own finally clears the
+    // PIN) put a different block first and turned this RED — a guard failing for a reason that
+    // had nothing to do with the property it protects. Now it selects the block that actually
+    // concerns `keyEl`, so it tests the connect-card regardless of what else gains a finally.
+    // The property itself was verified unchanged from disk before this guard was touched.
+    const blocks = [...html.matchAll(/\}\s*finally\s*\{([\s\S]*?)\n\s{4}\}/g)].map(m => m[1]);
+    expect(blocks.length, "no finally block found at all").toBeGreaterThan(0);
+    const keyBlock = blocks.find(b => /keyEl\.value/.test(b));
+    expect(keyBlock, "the connect handler's key clear is not inside a finally").toBeDefined();
+    expect(keyBlock!).toMatch(/keyEl\.value\s*=\s*""/);
   });
 
   it("the key field is a password input and never autocompleted", () => {
