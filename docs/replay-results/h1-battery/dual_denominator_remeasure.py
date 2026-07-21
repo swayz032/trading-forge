@@ -1406,6 +1406,28 @@ CAPTION_1_LITERAL = (
     "the vanishing-denominator defect section 6a exists to expose, observed live."
 )
 
+# ★ CAPTION 9, HELD AS DATA FOR THE SAME REASON. R-207 s4 item 3 named "caption 9" without
+# defining it; the definition arrived by CONTENT (a typed swing-accounting sentence whose subject
+# is a WAIT_SESSION row's bound/unbound status), and that content pin resolves to EXACTLY ONE
+# block in the history: `6850b6ab:docs/replay-results/h1-battery/dual_denominator_remeasure.py`
+# lines 1463-1467, the hardcoded "accounting" field of corpus_A.per_kind_attribution.swing.
+# The three string fragments below are the source lines VERBATIM, not a reconstruction --
+# a replay authored from the hypothesis tests the hypothesis against itself.
+# AR-196 s3 measured it: perturb=False -> UNBOUND=1, perturb=True -> UNBOUND=0, emitted block
+# byte-identical across builds, gate convicts it = False -- all four reproduced here.
+# ★ AR-196 s3 ALSO ATTRIBUTED the escape to "its container holds only unmoving leaves". THAT
+# ATTRIBUTION IS REFUTED BY THE REPLAY BELOW: it describes the artifact AFTER the plant, not the
+# mechanism. The live container holds exactly one moving leaf -- the field itself -- so freezing
+# it destroys its own convicting evidence. The escape is SELF-CLOAKING, and it is NOT
+# numeral-freeness either: this sentence is dense with numerals. A conviction here would only be
+# a real discharge if the numerals it is scored against came from INSIDE that container.
+CAPTION_9_LITERAL = (
+    "3 Corpus-A conditions classify as swing: 2 are bindable and remain approximation=True "
+    "(counted above); 1 is UNBOUND (a WAIT_SESSION row) and so sits outside the rate's "
+    "denominator entirely, inside the unbound count. 2 + 1 = 3, no swing row unaccounted."
+)
+CAPTION_9_PATH = ("corpus_A", "per_kind_attribution", "swing", "accounting")
+
 EVIDENTIAL = (
     r"(observ\w*|measur\w*|confirm\w*|verif\w*|witness\w*|saw|seen|demonstrat\w*|record\w*"
     r"|detect\w*|found|establish\w*)"
@@ -4631,17 +4653,103 @@ def main(argv: list[str] | None = None) -> None:
             f"{clean_bad or 'none'}, all within the set this run declared = {polarity_clean}.",
         )
 
-        # ---- ITEM 3: caption 9.
-        # ★ REPORTED HONESTLY AND NOT FITTED. R-207 s4 names 'caption 9' without defining which
-        # sentence that is, and no numbered caption ledger exists in this file or in the artifact
-        # (this file enumerates captions 1, 2 and 3 only, in its module docstring). Guessing which
-        # sentence is meant and then reporting a PASS against the guess would be a typed label
-        # standing in for a measurement -- the exact defect class this battery exists to catch.
-        results["3 caption 9"] = (
-            "NOT RUN",
-            "the referent is undefined in every source available here: this file's docstring "
-            "enumerates captions 1-3, and no caption-9 ledger exists in the artifact or the "
-            "battery directory. NOT RUN rather than resolved by guess.",
+        # ---- ITEM 3: caption 9, LITERAL replay.
+        # ★ THE REFERENT IS NOW DEFINED BY CONTENT, NOT BY NUMBER, and the content pin resolves
+        # to exactly one block in the history (see CAPTION_9_LITERAL). Prior waves reported this
+        # item NOT RUN rather than guess which sentence "caption 9" meant; that refusal is what
+        # earned the definition, so the replay is held to the same standard -- the LITERAL bytes
+        # are planted, never a shape authored from the hypothesis.
+        #
+        # ★ AND THE PASS IS NOT THE DELIVERABLE: the REASON is. Caption 9's historical escape was
+        # CONTAINER SCOPE, so a conviction earned from numerals donated by leaves OUTSIDE its
+        # container would be a conviction unrelated to the escape mechanism -- a FALSE DISCHARGE.
+        # The donors are therefore enumerated, not assumed.
+        p3 = json.loads(json.dumps(art))
+        p3ax = {}
+        node = p3
+        for key in CAPTION_9_PATH[:-1]:
+            node = node[key]
+        live_computed_text = node[CAPTION_9_PATH[-1]]
+        node[CAPTION_9_PATH[-1]] = CAPTION_9_LITERAL
+        for ax, a in per_axis.items():
+            pa = json.loads(json.dumps(a))
+            n = pa
+            for key in CAPTION_9_PATH[:-1]:
+                n = n[key]
+            n[CAPTION_9_PATH[-1]] = CAPTION_9_LITERAL
+            p3ax[ax] = pa
+        cap9_path = "$." + ".".join(CAPTION_9_PATH)
+        cap9_container = cap9_path.rsplit(".", 1)[0]
+        c9 = caption_gate(p3, p3ax, NON_RESPONSIVE_PROSE_ALLOWLIST)
+        e9 = evidential_claim_gate(p3, p3ax, STRUCTURAL_NUMERALS)
+        planted_cap = [v for v in c9["violations"] if v["path"] == cap9_path]
+        planted_ev = [v for v in e9["convictions"] if v["path"] == cap9_path]
+        # WHICH LEAVES DONATED THE CONVICTING NUMERALS. Recomputed here from the same union of
+        # blast radii the gate itself uses, so the attribution is measured rather than narrated.
+        base3 = dict(_leaves(p3))
+        donors: dict[str, set[str]] = {}
+        for a3 in p3ax.values():
+            for lp, forms in _moved_leaves_for(base3, dict(_leaves(a3))):
+                donors.setdefault(lp, set()).update(forms)
+        convicting = {h for v in planted_cap for h in v["frozen_numerals_that_moved"]}
+        in_container = sorted(
+            lp for lp, forms in donors.items()
+            if lp.startswith(cap9_container + ".") and (forms & convicting)
+        )
+        # GREEN POLARITY: the LIVE file, unplanted, at the very same path.
+        live_green = not [v for v in gate["violations"] if v["path"] == cap9_path] and gate["PASS"]
+        # The plant is the D1 shape only if it freezes the field to what it currently evaluates
+        # to. If the live text has drifted from the pinned bytes, say so -- do not fit.
+        freeze_is_exact = live_computed_text == CAPTION_9_LITERAL
+        convicted = bool(planted_cap) or bool(planted_ev)
+
+        # ★★★ WHY THE ANSWER IS "NO", AND THE MECHANISM IS NOT THE ONE ON RECORD.
+        # AR-196 s3 attributed the escape to "its container holds only unmoving leaves". That is
+        # a true description of the artifact AFTER the plant, and it is not the mechanism. In the
+        # LIVE build the container holds EXACTLY ONE moving leaf -- this field ITSELF. The gate
+        # scores a frozen field against the numerals moved by leaves in its own container's
+        # SUBTREE, and that subtree INCLUDES the field. So freezing the field deletes the only
+        # donor that could convict it: THE EVIDENCE IS DESTROYED BY THE ACT OF FREEZING.
+        #
+        # ★ A SELF-CLOAKING POSITION. This is not a gap in the axis family and cannot be closed by
+        # adding axes -- the gate's own comment ("widening the perturbation set can only ever ADD
+        # convictions") is true and irrelevant here, because every added axis moves the defendant,
+        # never a sibling. Any prose leaf that is the SOLE moving leaf in its container is
+        # structurally unconvictable at this design, however many numerals it quotes.
+        #
+        # ★ AND IT INDICTS THE COVERAGE FIGURE. The census buckets this path RESPONSIVE, whose
+        # stated warrant is "the text demonstrably recomputes -- nothing further is owed."
+        # RESPONSIVE is a property of the CURRENT BYTES, not of the POSITION: it certifies that
+        # the field is computed today, while the watch on it evaporates the instant it stops
+        # being. That is the coverage figure vouching for exactly the positions it cannot hold.
+        # SIZED BY CENSUS, NOT BY INSTANCE -- recomputed every run so it cannot go stale.
+        live_base = dict(_leaves(art))
+        live_donors: dict[str, set[str]] = {}
+        for a3 in per_axis.values():
+            for lp, forms in _moved_leaves_for(live_base, dict(_leaves(a3))):
+                live_donors.setdefault(lp, set()).update(forms)
+        responsive_paths = [b["path"] for b in census["buckets"]["RESPONSIVE"]]
+        sole_movers = sorted(
+            pth for pth in responsive_paths
+            if not [lp for lp in live_donors
+                    if lp.startswith(_container_of(pth) + ".") and lp != pth]
+        )
+        results["3 caption 9 LITERAL replay"] = (
+            "PASS" if convicted and live_green else "FAIL",
+            f"planted the literal bytes of 6850b6ab:1463-1467 at {cap9_path} "
+            f"(freeze-to-current exact = {freeze_is_exact}). "
+            f"RED polarity: caption gate convicts = {bool(planted_cap)} on numerals "
+            f"{sorted(convicting) or 'none'}; evidential gate convicts = {bool(planted_ev)} via "
+            f"{sorted({r for v in planted_ev for r in v['rules_that_fired']}) or 'no rule'}. "
+            f"CONVICTING DONORS INSIDE ITS OWN CONTAINER = {in_container or 'NONE'}. "
+            f"GREEN polarity: live file unplanted at the same path = {live_green}. "
+            ">> THE MECHANISM, MEASURED AND NOT THE ONE ON RECORD: in the LIVE build the sole "
+            f"moving leaf in {cap9_container} is {cap9_path} ITSELF (spellings "
+            f"{sorted(live_donors.get(cap9_path, [])) or 'none'}); every sibling is frozen. "
+            "Freezing the field removes the only donor that could convict it -- SELF-CLOAKING, "
+            "not an axis gap, and unreachable by adding axes. "
+            f"CLASS CENSUS: {len(sole_movers)} of {len(responsive_paths)} RESPONSIVE prose leaves "
+            f"are sole movers in their container and share this immunity: {sole_movers}.",
         )
 
         # ---- ITEM 4: one per bypass class.
