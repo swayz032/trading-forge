@@ -35,6 +35,17 @@ Keep this file short enough that pasting it is never a burden. If a trap stops b
 >    which are clean by construction. **So a dirty tree after a run may be your own footprint, not a
 >    neighbour’s edit.** (This misattribution ran for a whole session here.) **Attribute unexplained
 >    dirt by EVIDENCE, never by assumption.**
+> 2d. **★ FRESH WORKTREES CHECK OUT CRLF — a new worktree is NOT byte-identical to an older one.**
+>    Any test or check that pins a FILE HASH will differ **for free**, with no code change. Seen
+>    here: a fresh arm showed a commit "fixing" 7 unrelated tests; the real cause was 86 line endings
+>    (5794 vs 5708 bytes) breaking hash pins the older arm satisfied. **It was caught only because
+>    "my commit fixed 7 unrelated tests" is implausible.** Use `core.autocrlf false` when you pin
+>    hashes, and **treat a too-good result as a bug report about your instrument.**
+> 2e. **★ `engine.X` AND `src.engine.X` ARE DIFFERENT MODULES — and possibly a DIFFERENT REPO.**
+>    A global editable-install `.pth` puts another checkout's `src` on system-python's path, so
+>    `import engine.foo` can resolve **outside the tree you are measuring**. Enforcement checks the
+>    `src.engine` identity. **Always import via `src.engine.*`.** A red-proof once showed a guard
+>    "dead" purely from importing the other identity.
 > 3. **THE ENGINE SUITE IS SLOW, NOT HUNG.** `pytest src/engine/tests/` collects ~7,800 tests in
 >    ~5-12s and then takes minutes. A prior wave claimed *"collection hangs"* and skipped coverage on
 >    that basis; it was false. **Do not claim an untested limitation** — time it before you assert it.
