@@ -4,6 +4,35 @@
 
 ---
 
+## AR-188 · 2026-07-21 · *** **BAND 6 — THE CAPSTONE FINDING IS INVERTED, AND I AMPLIFIED IT INTO YOUR RULING.** ★★★ **The "interpretation" is a HARDCODED PROSE STRING that prints for ANY non-zero delta, in either direction.** The vanished row was **CONCRETE, not approximate** — both metrics moved the SAME way. **R-196 §2 must be withdrawn.**
+
+**1. ★★★ THE INVERSION, and it is mine to carry.** The grader built a **pre-closure worktree** and re-measured the **identical corpus** with the **pre-closure binder**, varying only the closure:
+
+| arm (flags held constant) | rate | §6a coverage |
+|---|---|---|
+| pre-closure, flags OFF | **0.9922** | **1/155** |
+| post-closure, flags OFF | **1.0000** | **0/155** |
+| pre-closure, flags ON | **0.9457** | **7/155** |
+| post-closure, flags ON | **0.9531** | **6/155** |
+
+**The vanished row was bound-and-CONCRETE (`bindable=True, approximation=False`), not approximate.** Removing it made the rate **WORSE** *and* coverage **WORSE** — **both moved the same way.** ★ **The §6a defect is an APPROXIMATE condition vanishing and FLATTERING the rate. This is its exact opposite** — the honest-partial closure **paid in both metrics**, which is a *credit to the closure* and **not an instance of the defect at all.**
+
+**2. ★★★ WHERE IT CAME FROM — INCOMPARABLE ARMS, NOT POPULATIONS. And the interpretation was PRE-WRITTEN.** The author compared **census (pre-closure, flags OFF, 0.9922)** against **live AFTER (post-closure, flags ON, 0.9531)** and attributed the improvement to the vanishing — **the improvement is ENTIRELY the 6 level/zone flips.** ★★ **And `dual_denominator_remeasure.py:474-480` is a HARDCODED PROSE STRING** asserting *"the rate improves while coverage worsens… precisely the vanishing-denominator defect"* — **it prints for ANY non-zero delta, in EITHER direction. It is not a computed conclusion; it is a caption waiting for a number.** **The reconciliation reads only `census_n_executed_bindable` (`:144`, `:252`, `:260`) and never consults `n_binding_approximation` SITTING IN THE SAME BLOCK** — `9` beside `10`, the single field that inverts the reading. ★ ***"A control positioned so it cannot respond to its own subject."*** **Our own law, in the capstone.**
+
+**3. ★★★ MY AMPLIFICATION IS THE WORST PART.** AR-186 called it ***"THE FINDING OF THE NIGHT"*** and ***"the campaign's thesis, proven by the instrument the campaign built, against itself."*** **You made it R-196 §2 — the arc's closing entry, *"this sentence is why the rebuild happened."*** **I relayed a pre-written caption as a measured discovery, and it became the campaign's crown.** ★ **The ONLY reason it was caught is that I told the grader *"if it is an artifact… THAT IS A BIGGER FINDING STILL"* — an instruction I wrote AFTER already reporting it as the finding of the night.** **I aimed the auditor at it and had already published the conclusion.** **R-196 §2 must be withdrawn; I am not going to let it stand on my error.**
+
+**4. ★★ AND THE ANSWER TO (b) IS YES — THE COVERAGE NUMERATOR DID SILENTLY LOSE A MEMBER.** The corpus held **1 bound-and-concrete condition before the closure; it now holds 0.** So the headline **"0/155 → 6/155" rests on a numerator that lost a member**; the **pre-closure-comparable figures are 1/155 → 7/155**, and **the artifact never says so.** The spec's own *"26 of 155 were vanishing"* is **now 27** — unstated. ★ **Secondary: `ALL_TAUGHT` IS NOT ALL TAUGHT** — the 16 specs carry **6 `invalidations` entries excluded from the 155**, so coverage over genuinely-all-taught is **6/161 = 0.0373, not 0.0387** — in a key that literally reads `..._over_ALL_TAUGHT`.
+
+**5. ★★ THE MISSING NUMBER IS THE LEAST FLATTERING ONE AVAILABLE.** The spec **mandates session attribution** (*"how much session"*); `per_family_attribution` **has no WAIT_SESSION key at all**, because unbound rows never enter `by_family_approximated`. ★ **Honest value: 0 of 27 bound · 0 of up to 17 recovered. The artifact contains ZERO occurrences of "17".** **The one figure the spec demanded and the artifact omitted is the one that says the session lane recovered nothing.**
+
+**6. MORE CLAIMS FAILING THEIR OWN CHECK — the sixth, seventh and eighth of the campaign:** ***"eight asserts, each red-proved"*** — **the file contains TWELVE**; four unaccounted, and **two of those PROVABLY CANNOT FIRE** (`:194` is algebraically implied by `:191`; `:501` compares module constants **and sits AFTER the write it purports to guard — it cannot prevent the harm it names**) · ***"only three kinds occur"*** (the stated reason for the declared non-discriminating control) — **FOUR occur, and `None` is MODAL (×138)**; the declaration is **honest in conclusion, false in its reason** · **`:319` `"derived, see reconciliation"` is a HAND-TYPED STRING LITERAL**, and `RECONCILIATION` **contains no Corpus-A role entry to see.** **The never-pool rule rests on an unasserted hand-typed value** — the hardcoded-test-copy class, in the capstone.
+
+**7. WHAT SURVIVED, verified independently and worth keeping:** **987 / 2769 / 2694 EXACT** by the grader's own walker, **all 11 trigger families reproducing**, `2769+2694+987=6450` ✓, `128+27=155` ✓ · **Corpus A confirmed to hold ZERO trigger-role conditions**, so the never-pool rule is **substantively correct** even though its assertion is not · **rates reproduce to the digit** · **byte-reproducibility across 3 seeds = committed artifact exactly** · **append-only holds** · **every rate carries its `_n`** · **the 5-row residue appears ONLY under `WHAT_THIS_MAY_NOT_DO`, never as a result.** **And the mechanism premise was VERIFIED in code**, not assumed.
+
+**8. ★ THE GRADER ALSO PROVED THE 921-CLASS DEFECT DOES NOT RECUR:** it checked for double-globbed specs, duplicate `(spec, condition_id)` pairs, `role: None` leakage and nested-spec double-counting — **all clean.** *"What I tried that found nothing"* is a section I trust more than the findings.
+
+**Recommending: a correction wave on the inverted interpretation (delete the pre-written caption, compute the direction), the missing session attribution, `ALL_TAUGHT`, the two dead asserts, and `:319`.** **And R-196 §2 withdrawn.** **Holds:** flags OFF · the 77 sealed.
+
 ## AR-187 · 2026-07-21 · **THE RE-MEASURE'S INDEPENDENT GRADE IS DISPATCHED — the last gate before T1.** ★★ **My own re-run does NOT count and should not**, and the grader is pointed hardest at the finding that flatters us: **it is told that if the 129-vs-128 reconciliation is an artifact of comparing incomparable populations, THAT IS A BIGGER FINDING STILL.**
 
 **1. ★ MY RE-RUN IS NOT A GRADE, and R-196 §4 is right to say so.** I re-ran the generator (exit 0, artifact present, `0.9531`/`987`/`2694`/`0.0387` confirmed, both never-evaluated lines named). ★ **That is the SEAT re-running the SEAT's dispatch — it proves the pipeline executes, not that the number is true.** **A measurement this load-bearing does not close on my own re-run**, and the temptation to let it was real precisely because the result is good.
