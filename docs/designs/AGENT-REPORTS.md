@@ -4,6 +4,26 @@
 
 ---
 
+## AR-189 · 2026-07-21 · ★★ **THE CAPTION IS DEAD — replaced by a COMPUTED verdict that returns `SAME_DIRECTION__BOTH_DEGRADED` on the real data and a DIFFERENT verdict on each of 5 patterns.** ★★★ **AND IT DIVERGED FROM YOUR RULED NUMBER — with cause. `6/161 = 0.0373` holds only under a flag that defaults OFF; in this generator's actual config it is 12/161 = 0.0745. BOTH are reported; NEITHER was adopted silently. Your ruling wanted.**
+
+**1. ★★ THE FIX I MOST WANTED, AND IT IS PROVEN BY DISCRIMINATION.** `classify_drift()` takes four numbers and was **fed five input patterns, returning five distinct verdicts** — *including `OPPOSITE_DIRECTIONS__SECTION_6A_DEFECT` for the inverted case the old string falsely claimed.* **On the real data it returns `SAME_DIRECTION__BOTH_DEGRADED`.** ★ **That is the test I set — feed it both directions and confirm it says different things — and it passes.** **An interpretation that can only say one thing is a caption; this one can say five and picks by the data.** Verified in the committed artifact by me.
+
+**2. ★ IT ALSO FIXED THE BUG BENEATH THE CAPTION, which I had not scoped.** The census (pre-closure, flags-OFF) now compares against **`a_before`, not `a_after`** — **the incomparable-arms error itself is repaired**, not merely its wrong conclusion. **A wrong sentence removed while its wrong comparison survived would have re-grown the finding.**
+
+**3. ★★★ THE DIVERGENCE — AND IT IS THE RIGHT KIND.** R-198 §2 adopted **`6/161 = 0.0373`**. The agent reports that figure holds **only under `TF_FAMILY_META_ENFORCED=true`** — **a separate flag that defaults OFF, which is the configuration this generator runs in.** There, the 6 `invalidations` bind **CONCRETE**, giving **`12/161 = 0.0745`**. ★ **It reported BOTH arms, labeled, and adopted neither silently — its stated reason: *"that is the defect being repaired."*** **A ruled number met a measurement that disagreed, and it neither overrode the ruling nor quietly complied. Both are in the artifact and the choice is yours.** **I verified both figures are present.**
+
+**4. ★★ THE 17 IS CITED, NOT MEASURED — and it says so.** Session attribution now reads **`0 of 27 bound · 0 of up-to-17 recovered`**, with the **17 flagged `EXTERNAL GRADED CONSTANT` with provenance**: *"I can count the 27 and show 0 bound, but cannot re-derive the 17, so it is cited, not presented as measured."* ★ **That is the exact discipline I failed with the 16-spec census — and the honest number went in precisely because it is unflattering.**
+
+**5. ★★★ IT CAUGHT ITSELF RE-COMMITTING THE DEFECT IT WAS REMOVING.** Verbatim: *"I caught myself adding `assert sum(a_roles.values()) == n_taught` — it iterates the same conditions on both sides and can never fire. **I would have re-committed the dead-assert defect inside the commit removing it.**"* **Removed, reported, reasoning recorded.** ★ **The fix wave for vacuous asserts nearly shipped a vacuous assert. It caught it; nobody else would have.**
+
+**6. THE SUBSTANTIVE READING, corrected — and it is BETTER for the closure than the false caption was.** Rate and coverage **both degraded**, which means the honest-partial closure **paid in both books rather than buying a prettier rate by shedding a condition.** ★ ***"That is the §6a guard working, not the defect firing."*** **The true story is a credit to the closure; the invented one was a credit to the campaign. I published the invented one.**
+
+**7. Remaining receipts:** numerator continuity stated (**7/155 → 6/155**; *"26 of 155"* → **27**) · dead asserts removed or relocated (**the output-path guard moved to the TOP of `main()`, ahead of the write it purports to guard**) · **assert count now derived from the file's own AST (12)** · `:319` **derived, with `trigger == 0` asserted** · three-kinds reason corrected (**4 kinds, `None` modal ×138**) · **3 injected faults → exit 1** · **byte-reproducible across 4 hash seeds** · **append-only: 5 guarded artifacts byte-identical** · scope exactly 2 files.
+
+**8. Liveness verified independently, as instructed:** 4 `claude.exe` processes, **none writing this worktree** — one a read-only mtime poller, one its own caller's monitor; both target files git-clean at start. **It did not take my word.**
+
+**Awaiting your ruling on §3 (0.0373 vs 0.0745), then the artifact's re-grade.** **Holds:** flags OFF · the 77 sealed.
+
 ## AR-188 · 2026-07-21 · *** **BAND 6 — THE CAPSTONE FINDING IS INVERTED, AND I AMPLIFIED IT INTO YOUR RULING.** ★★★ **The "interpretation" is a HARDCODED PROSE STRING that prints for ANY non-zero delta, in either direction.** The vanished row was **CONCRETE, not approximate** — both metrics moved the SAME way. **R-196 §2 must be withdrawn.**
 
 **1. ★★★ THE INVERSION, and it is mine to carry.** The grader built a **pre-closure worktree** and re-measured the **identical corpus** with the **pre-closure binder**, varying only the closure:
