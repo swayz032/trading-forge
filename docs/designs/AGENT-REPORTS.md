@@ -4,6 +4,25 @@
 
 ---
 
+## AR-126 · 2026-07-20 · ★★ `named_sr_level` — **CAUSALLY SAFE. Both unblock conditions are met; the block discharges.** Plant fired 48/56 + 24/28; real code **0/160** value and **0/28** activation. ★ The runner **closed a coverage gap it found in the real corpus** rather than reporting around it.
+
+**1. Both conditions now satisfied.** The block required **(a)** the upstream fix landing graded — **done, Band 8, `7e3247ca`** — and **(b)** a per-kind causal-safety test. **This is (b), and it passes.** The runner states explicitly that this discharges the condition.
+
+**2. Calibrated on both axes, and the non-firing cases explained rather than glossed.** Reinstating the pre-fix `max(cluster_indices)` fired **48/56** on level value and **24/28** on activation timing. The 8 and 4 silent cases are **all at the last two probe bars of 460,323** — there is **no trailing data left for `max` to diverge from `min`.** **A boundary artifact, traced per-condition, not a calibration failure** — and saying so beats quietly reporting the higher number.
+
+**3. Real result: 0/56 value, expanded to 0/160 across 40 seeded random bars, and 0/28 activation.** **Both** reported values checked, as required — price **and** activation timing, the latter being exactly the field-mutation class the original defect exploited.
+
+**4. ★ AND AN ANTI-VACUITY CHECK I DID NOT ASK FOR:** it verified all 56 evaluations landed on **non-NaN prices in real ES range (~2000–6800)** — confirming the zero is *"a genuine match on live signal, not a NaN-vs-NaN vacuity."* **A clean result that could have been clean because nothing was computed is the exact trap this campaign has been convicting all night**, and it closed it unprompted.
+
+**5. ★ IT FOUND AND CLOSED A REAL COVERAGE GAP, honestly labelled.** All 4 corpus texts contain *"support"*, so **all four route to `detect_sellside_liquidity` — the real corpus never exercises the bearish/"resistance" leg through `named_sr_level` text.** Rather than report a clean verdict over a one-sided sample, **it probed both detectors directly at the shared primitive**, both plant-caught and clean-passed. **The mechanism is covered on both polarities; the corpus routing only ever hits one — stated as a coverage note, not buried.**
+
+**6. Independent confirmation of an earlier finding, in passing:** n=4 matched the pre-declared count because the census's 5th `named_sr_level`-tagged row is `bare_anaphora: true`, so `classify_population_a_kind` returns `None` and it **never reaches the resolver** — **the anaphora short-circuit working in production**, observed by a runner who was not looking for it.
+
+**7. Scope fenced by the runner itself:** *"do not treat this clearance as extending to `order_block_edge` and `swing`"* — same resolver method, **out of scope, no probe.** A clearance that fences its own edges needs no correction later.
+
+**Board: 2 of 3 post-sweep items resolved.** Remaining: the target-gate fix (in flight) and `ict_scalp`'s full-power run (in flight). **Holds:** three lifted · `ict_scalp` held pending its run · `eqhl_raid` + `ict_swing` held on measured harm · **`named_sr_level` UNBLOCKED** · flags OFF · no `approximation=False` · the 77 sealed.
+
+
 ## AR-125 · 2026-07-20 · R-130 §3(c) DISPATCHED (receipt held) — `named_sr_level`'s causal-safety test, the **third and final** item on the post-sweep board. ★ Its brief bars the existing 51 tests as evidence, and pre-declares **UNDERPOWERED** with the number that would trigger it.
 
 **1. The block's first condition is discharged; this is the second.** `named_sr_level` was blocked on **(a)** the upstream fix landing graded — **done, Band 8, `7e3247ca`** — **and (b)** a per-kind causal-safety test. **This is (b).** All three items R-130 §3 named are now either in flight or complete.
