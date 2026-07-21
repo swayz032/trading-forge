@@ -4,6 +4,34 @@
 
 ---
 
+## AR-158 · 2026-07-21 · ★★★ **THE SEALED FENCE HAS VOTED ON `6dd3a00f` — AND IT SPLITS.** FP work is **excellent and mechanism-deep: hard 38.0% → 6.0%, SOFT 74.0% → 6.0%.** ★★ **But FN went 0.0% → 57.1% — and the fixer's own disclosure ("4 teachings missed") UNDERSTATES IT BY 3×.** I ran the fence myself, isolated and pinned. **Not clean. Escalating rather than dispatching a third pass on my own read.**
+
+**1. THE NUMBERS, measured by me in an isolated worktree pinned to `6dd3a00f`** (created, measured, removed — R-162):
+
+| axis | baseline `cb643661` | fix `6dd3a00f` |
+|---|---|---|
+| **hard FP** | 38.0% | **6.0%** |
+| **SOFT FP (recognition leak)** | **74.0%** | **6.0%** |
+| **FN** | **0.0%** | **57.1% (12/21)** |
+| zone_mismatch | 0 | 0 |
+| flag-OFF regime | FP 4.0% / FN 85.7% | **identical — byte-identity holds** |
+
+**2. ★★ THE FP RESULT IS THE REAL THING, AND IT MEETS YOUR ACCEPTANCE BAR EXACTLY.** R-166 set it verbatim: *"a fix that drives hard FP to 0 while leaving soft FP at 74% has not fixed the mechanism."* **Soft went 74.0% → 6.0%.** That is the **RULE** changing, not the arithmetic — the latent-FP class is genuinely gone, not merely hidden behind window boundaries. **Role-resolver-only FP is 1/48 = 2.1%**; the residual 2 are the `keyword_matcher_leak` subset — **the legacy path the fixer was PROHIBITED from touching.** On the axis it controlled, it went **35.4% → 2.1%.**
+
+**3. ★★★ BUT FN 0.0% → 57.1% IS DISQUALIFYING ON ITS FACE — and the gap between self-report and fence is the finding.** The fixer disclosed *"4 genuine teachings now missed… deliberate direction."* **The sealed fence says 12 of 21.** **Its self-assessment understates by 3× against a corpus it could not see.** **This is precisely why the fence is sealed** — and it is the same shape as the first pass (0.0% FP on its own corpus, 60% on fresh inputs), **caught this time by design instead of by a grader two waves later.**
+
+**4. ★ I AM NOT RULING ON WHETHER THE 12 ARE REAL — that question decides the next move and it is not mine.** Either **(a)** the fix over-corrected and 12 genuine teachings are broken → **third pass, targeted at the over-correction**; or **(b)** some of the fence's 21 expected-positives are the AUTHOR's judgment calls that a grader would overturn → the true FN is lower and the picture changes. **I can construct a plausible story for either and that is exactly the condition under which I should not decide.** ★ Note the structural asymmetry: **the fence author hand-derived its 21 positives and its zone expectations were 21/21 CORRECT against the published window table** — which earns real credibility — **but "is this text a genuine session teaching?" is a judgment, while "does 09:30 fall in `ny_am`?" is arithmetic. Being right about the arithmetic does not transfer.**
+
+**5. THE FIXER CORRECTED MY DIAGNOSIS ON HIGH-2, with a receipt, and it was right.** I briefed the colon-less alternative as having *manufactured* the FP class. **It did not: 5 of the 8 silent binds at `d8cf8043` came from colon-FUL tokens** (`2:30 p.m.`, `3:00 p.m.`, `9:30 a.m.`…) **that deleting the colon-less form could never have reached.** The colon-less form **made more prose visible to an already-unsound rule** — it exposed the defect, it did not create it. **My brief inherited that attribution from the grade and passed it on unchecked.** That is the third time tonight a downstream agent has corrected something I relayed without re-deriving.
+
+**6. ★ AND ITS CENTRAL INSIGHT IS WORTH MORE THAN THE PATCH — four lexicon drafts FAILED FIRST.** Batches 3, 4 and 5, each authored *after* the then-current draft, broke it with 5, 10 and 2 leaks. **A lexicon co-factor cannot separate market prose from ordinary prose** — *a bar you drink in, a trade show, sleep patterns, birthday candles, the liquidity of an estate, a setup crew.* **The separating feature is GRAMMATICAL: prose MENTIONS a time; an instruction makes the time SELECT** (*"after 9:30"*, *"the 9:30 a.m. candle"*). **That is the role-awareness the original packet claimed and never had** — arrived at by four measured failures rather than by assertion.
+
+**7. TWO LIVE DEFECTS IT PINNED AS TESTS RATHER THAN PROSE — one is FLAG-INDEPENDENT and I want it seen.** **`resolve_session_keyword()` runs BEFORE the role resolver and is NOT gated by the flag**: it binds *"the London session of parliament was televised"* → `london`, and *"the class session before lunch runs long"* → **`lunch_blackout` — an ORPHAN zone.** **Pre-existing, not introduced here, and prohibited to this lane** — so my standing "blast radius today ZERO" line was true of *this change* and I am narrowing it explicitly: **the ROLE RESOLVER is flag-gated at zero; the LEGACY keyword path is live and defective.** Second: *"we lit the 7 p.m. candles for the vigil"* still recognizes — **soft only because 19:00 misses every window. Latent, not safe.**
+
+**8. Seal held mechanically:** the fixer's commit touches **exactly 2 files**; grep for the fence in it returns **0**; every pytest invocation was path-scoped to exclude it. **Failing-first proven** (60 tests fail against `d8cf8043`, md5-verified restore). **It did not reproduce the "pytest hangs" claim either — collection 0.06s.**
+
+**Requesting your ruling on §4** — third pass against the over-correction, or independent adjudication of the 12 first. **I have dispatched neither.** Holds: flags OFF · enforcement BLOCKED · the 77 sealed.
+
 ## AR-157 · 2026-07-20 · ★★★ THE SEALED FENCE IS BUILT AND IT PASSES ITS OWN DISCRIMINATION TEST — **88 rows, 96 POINTS of FP separation between always-bind and always-refuse.** ★★ **And it found the thing that would have let the next fix LOOK fixed: the SOFT rate is DOUBLE the hard rate.** Criterion (not inputs) relayed to the blind fixer.
 
 **1. ★★ THE DISCRIMINATION PROOF PASSES — the fence earns the right to judge.** Scored through `bind_condition()` against four resolvers: **REAL 38.0% FP · always-bind 100% · always-refuse 4.0% · recognize-never-bind 4.0% hard / 100% soft.** **96 points of FP separation, 86 of FN, 48 of exact-match spread.** ★ **The fourth arm is the cleverest part** — `recognize-never-bind` is indistinguishable from always-refuse on the HARD axis but hits 100% on the SOFT axis, **so the corpus can tell a RECOGNITION leak apart from a BINDING leak.** And the residual 4% floor is honestly explained: two rows bypass `classify_session_role()` entirely and **cannot be moved by any monkeypatch — a correct floor, not noise.**
