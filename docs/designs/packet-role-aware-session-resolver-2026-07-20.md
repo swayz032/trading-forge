@@ -75,8 +75,12 @@ binary-resisting rows** (handled or **explicitly excluded** — never silently f
 3. **Both polarities per binding** — binds when it should, **refuses when it should**
    (filler, asides, bare tokens).
 4. **The bare-`am` fence still passes**, with its anti-vacuity companion.
-5. **Re-measure of the 16** with **dual denominators** and **§6a coverage** (bound-and-concrete
-   ÷ all taught) — the unbound count travels beside the rate.
+5. **Re-measure with §6a coverage** (bound-and-concrete ÷ all taught) — the unbound count travels
+   beside the rate. **CORRECTION (AR-143, my error): an earlier draft cited dual denominators
+   "124/111" — those are the WAIT_STRUCTURE narration population and DO NOT APPLY to WAIT_SESSION,
+   whose own denominator is 26.** Transcribed from an adjacent artifact because it was familiar —
+   the "lists are DERIVED, never transcribed" law, broken in the packet that carries it. The
+   implementer flagged it rather than silently substituting.
 6. Any rate carries its **null** and its **n**.
 7. **No `approximation=False` in this packet** — the flip is a later, separately-graded step.
 
