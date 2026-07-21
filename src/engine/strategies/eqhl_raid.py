@@ -7,18 +7,18 @@ from __future__ import annotations
 
 import polars as pl
 
-from src.engine.strategy_base import BaseStrategy
-from src.engine.indicators.market_structure import (
-    detect_swings,
-    detect_choch,
-    detect_mss,
-)
 from src.engine.indicators.liquidity import (
+    detect_buyside_liquidity,
     detect_equal_highs,
     detect_equal_lows,
-    detect_buyside_liquidity,
     detect_sellside_liquidity,
 )
+from src.engine.indicators.market_structure import (
+    detect_choch,
+    detect_mss,
+    detect_swings,
+)
+from src.engine.strategy_base import BaseStrategy
 
 
 class EqhlRaidStrategy(BaseStrategy):
@@ -82,9 +82,15 @@ class EqhlRaidStrategy(BaseStrategy):
             price = float(eql["price"][row_i])
             eql_levels.append((idx_b, price))
 
-        # BSL/SSL prices for exit targets
-        bsl_prices = bsl["price"].to_list() if len(bsl) > 0 else []
-        ssl_prices = ssl["price"].to_list() if len(ssl) > 0 else []
+        # BSL/SSL levels for exit targets — kept as (creation_index, price) pairs
+        # so target selection below can gate on causal existence at bar i, the
+        # same convention already used for the entry-side eql_levels/eqh_levels
+        # gate above (`if idx_b >= i: continue`). A level's `index` is its
+        # cluster's CREATION bar (see liquidity.py's _cluster_swings_causal) —
+        # picking a level whose creation index is >= the entry bar means the
+        # trade would be targeting a price level that did not exist yet.
+        bsl_levels = list(zip(bsl["index"].to_list(), bsl["price"].to_list(), strict=True)) if len(bsl) > 0 else []
+        ssl_levels = list(zip(ssl["index"].to_list(), ssl["price"].to_list(), strict=True)) if len(ssl) > 0 else []
 
         entry_long = [False] * len(df)
         entry_short = [False] * len(df)
@@ -93,9 +99,7 @@ class EqhlRaidStrategy(BaseStrategy):
 
         # Track sweep events for reversal confirmation window
         last_eql_sweep_bar = -999
-        last_eql_sweep_price = None
         last_eqh_sweep_bar = -999
-        last_eqh_sweep_price = None
 
         in_long = False
         long_target = None
@@ -109,7 +113,6 @@ class EqhlRaidStrategy(BaseStrategy):
                     continue
                 if lows[i] < price and closes[i] > price:
                     last_eql_sweep_bar = i
-                    last_eql_sweep_price = price
 
             # ── Detect sweeps of equal highs (price wicks above) ──
             for idx_b, price in eqh_levels:
@@ -117,7 +120,6 @@ class EqhlRaidStrategy(BaseStrategy):
                     continue
                 if highs[i] > price and closes[i] < price:
                     last_eqh_sweep_bar = i
-                    last_eqh_sweep_price = price
 
             # Guard: prevent entry on same bar as exit (vectorbt drops the entry)
             exited_this_bar_long = False
@@ -153,11 +155,20 @@ class EqhlRaidStrategy(BaseStrategy):
             ):
                 entry_long[i] = True
                 in_long = True
+                # Target = nearest BSL above close, restricted to levels whose
+                # creation index is causally before this bar (idx_b < i, same
+                # gate form as the entry-side sweep loops above). If gating
+                # empties the eligible set, long_target stays None — NO
+                # fallback substitution (see module docstring / packet
+                # PROHIBITED clause): the position then enters with no
+                # take-profit and relies solely on the bearish CHoCH/MSS
+                # structure-break exit below.
                 long_target = None
-                for bp in sorted(bsl_prices):
-                    if bp > closes[i]:
-                        long_target = bp
-                        break
+                eligible_bsl = sorted(
+                    price for idx_b, price in bsl_levels if idx_b < i and price > closes[i]
+                )
+                if eligible_bsl:
+                    long_target = eligible_bsl[0]
 
             # ── Entry short: EQH sweep within reversal_bars + bearish CHoCH or MSS ──
             if (
@@ -169,11 +180,17 @@ class EqhlRaidStrategy(BaseStrategy):
             ):
                 entry_short[i] = True
                 in_short = True
+                # Mirror of the long-side gate above: nearest SSL below close,
+                # restricted to idx_b < i. No fallback if gating empties the
+                # set — enters with no take-profit, relies on the bullish
+                # CHoCH/MSS structure-break exit below.
                 short_target = None
-                for sp in sorted(ssl_prices, reverse=True):
-                    if sp < closes[i]:
-                        short_target = sp
-                        break
+                eligible_ssl = sorted(
+                    (price for idx_b, price in ssl_levels if idx_b < i and price < closes[i]),
+                    reverse=True,
+                )
+                if eligible_ssl:
+                    short_target = eligible_ssl[0]
 
         result = result.with_columns([
             pl.Series("entry_long", entry_long),

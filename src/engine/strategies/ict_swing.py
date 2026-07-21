@@ -9,20 +9,20 @@ from __future__ import annotations
 
 import polars as pl
 
-from src.engine.strategy_base import BaseStrategy
 from src.engine.indicators.core import compute_atr
-from src.engine.indicators.market_structure import (
-    detect_swings,
-    detect_bos,
-    compute_premium_discount,
-)
-from src.engine.indicators.price_delivery import detect_fvg
-from src.engine.indicators.order_flow import detect_bullish_ob, detect_bearish_ob
 from src.engine.indicators.liquidity import (
     detect_buyside_liquidity,
     detect_sellside_liquidity,
     detect_sweep,
 )
+from src.engine.indicators.market_structure import (
+    compute_premium_discount,
+    detect_bos,
+    detect_swings,
+)
+from src.engine.indicators.order_flow import detect_bearish_ob, detect_bullish_ob
+from src.engine.indicators.price_delivery import detect_fvg
+from src.engine.strategy_base import BaseStrategy
 
 
 class ICTSwingStrategy(BaseStrategy):
@@ -111,9 +111,15 @@ class ICTSwingStrategy(BaseStrategy):
                 bear_pd_tops.append(float(bearish_fvgs["top"][idx]))
                 bear_pd_bots.append(float(bearish_fvgs["bottom"][idx]))
 
-        # Extract BSL/SSL target prices for exit targeting
-        bsl_prices = bsl["price"].to_list() if len(bsl) > 0 else []
-        ssl_prices = ssl["price"].to_list() if len(ssl) > 0 else []
+        # Extract BSL/SSL levels for exit targeting as (creation_index, price)
+        # pairs so the exit-target loops below can gate on causal existence at
+        # bar i — mirroring eqhl_raid.py's existing entry-side gate
+        # (`if idx_b >= i: continue`). A level's `index` is its cluster's
+        # CREATION bar (see liquidity.py's _cluster_swings_causal); picking a
+        # level whose creation index is >= i means targeting a price that did
+        # not exist yet at the bar being evaluated.
+        bsl_levels = list(zip(bsl["index"].to_list(), bsl["price"].to_list(), strict=True)) if len(bsl) > 0 else []
+        ssl_levels = list(zip(ssl["index"].to_list(), ssl["price"].to_list(), strict=True)) if len(ssl) > 0 else []
 
         # ── Build signal arrays ──────────────────────────────────────
         entry_long = [False] * n
@@ -195,9 +201,17 @@ class ICTSwingStrategy(BaseStrategy):
                     exit_short[i] = True  # Close short before flipping to long
                 in_long = True
                 in_short = False
-                # Target = nearest BSL above current price
+                # Target = nearest BSL above current price, restricted to
+                # levels whose creation index is causally before this bar
+                # (idx_b < i). If gating empties the eligible set, long_target
+                # stays None — NO fallback substitution (packet PROHIBITED
+                # clause): the position enters (already decided above, in the
+                # separate entry loop) with no take-profit and relies solely
+                # on the bearish-BOS exit below.
                 long_target = None
-                for p in bsl_prices:
+                for idx_b, p in bsl_levels:
+                    if idx_b >= i:
+                        continue
                     if p > closes[i]:
                         if long_target is None or p < long_target:
                             long_target = p
@@ -207,9 +221,14 @@ class ICTSwingStrategy(BaseStrategy):
                     exit_long[i] = True  # Close long before flipping to short
                 in_short = True
                 in_long = False
-                # Target = nearest SSL below current price
+                # Mirror of the long-side gate above: nearest SSL below
+                # current price, restricted to idx_b < i. No fallback if
+                # gating empties the set — enters (already decided above)
+                # with no take-profit, relies on the bullish-BOS exit below.
                 short_target = None
-                for p in ssl_prices:
+                for idx_b, p in ssl_levels:
+                    if idx_b >= i:
+                        continue
                     if p < closes[i]:
                         if short_target is None or p > short_target:
                             short_target = p
