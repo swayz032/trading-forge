@@ -514,6 +514,34 @@ ASSERTS_ADDED_SINCE_BASELINE: list[dict] = [
 ]
 
 
+def _split_derivation_numerals(disposition: str) -> list[str]:
+    """★ THE STRUCTURAL_NUMERALS REGISTRATION FOR THE SPLIT-DERIVATION SENTENCES, COMPUTED.
+
+    THE DEFECT THIS CLOSES (H1-W4 D2). The SPLIT_DERIVATION_R219.<disposition>_derivation entry
+    in STRUCTURAL_NUMERALS carried a TYPED numeral list. own_assert_census() builds the sentence
+    it registers as `{baseline} at baseline + {added} added = {baseline + added}`, from these
+    two module constants -- so the numerals in that sentence are a function of the ledger. The
+    typed list did not track the ledger: it read ["14","22","8"] (eight additions summing to 22)
+    while the ledger already held nine, and NOTHING caught the drift for three waves because the
+    scorer that would have -- coverage_census -> _verify_structural -- sat below an abort and
+    never ran. ★ A typed copy of a computed sentence is a caption waiting to happen (AR-188);
+    the fix is to stop copying.
+
+    This returns the numerals that sentence WILL contain, from the SAME two constants that build
+    it, so the registration cannot go stale again: grow the ledger and both move together. It is
+    still coupled to the sentence's exact TEXT by _verify_structural's exhaustiveness check,
+    which fails the run if the declared numerals are not EXACTLY those the sentence carries -- so
+    a change to the sentence format that this helper did not follow fails CLOSED, loudly, rather
+    than drifting silently the way the typed list did.
+    """
+    base = ASSERT_SPLIT_BASELINE[disposition]
+    added = sum(1 for a in ASSERTS_ADDED_SINCE_BASELINE if a["disposition"] == disposition)
+    # The three quantities own_assert_census writes into the sentence: baseline, additions, sum.
+    # De-duplicated because _verify_structural compares against set(findall(text)); when two of
+    # the three coincide (5 + 5 = 10 gives {"5","10"}) the sentence carries the token once.
+    return sorted({str(base), str(added), str(base + added)})
+
+
 def own_assert_census() -> dict:
     """Classify EVERY assert in this file, and fail if one is unclassified. AR-188 D2.
 
@@ -2791,24 +2819,29 @@ STRUCTURAL_NUMERALS: dict[str, dict] = {
     },
     "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.DATA_SENSITIVE_derivation": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
-        # ★ H1-W4 D1: THIS REGISTRATION WAS ITSELF STALE AT HEAD, AND THE ABORT IS WHY.
+        # ★ H1-W4 D1/D2: THIS REGISTRATION WAS ITSELF STALE AT HEAD, AND THE ABORT IS WHY.
         # It read ["14", "22", "8"] -- eight additions summing to twenty-two -- while the ledger
         # at HEAD already held NINE. The gate that scores this leaf runs AFTER the session
         # reconciliation, so for three waves it never executed and the drift could not be seen
         # by anything. ★ A GATE DOWNSTREAM OF AN ABORT IS NOT A GATE; it is a gate's corpse, and
         # everything it protects rots quietly. Found only because unblocking publication ran it.
-        "numerals": ["14", "24", "10"],
+        # ★ H1-W4 D2: the typed list is now COMPUTED from the ledger (_split_derivation_numerals),
+        # so it cannot go stale again -- a typed copy of a computed sentence was the disease.
+        "numerals": _split_derivation_numerals("DATA_SENSITIVE"),
         "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the "
-               "addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No "
-               "axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately "
-               "cannot: the ledger is scored against the DECLARED table, not the perturbed one, "
-               "so that the axis leaves this assert armed). Wired but untested by this family, "
-               "and named as such rather than counted as coverage.",
+               "addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. The "
+               "numerals registration is now itself COMPUTED from those same two constants, so "
+               "it tracks the ledger by construction. No axis moves either constant "
+               "(ASSERT_DISPOSITION_RECLASSIFICATION deliberately cannot: the ledger is scored "
+               "against the DECLARED table, not the perturbed one, so that the axis leaves this "
+               "assert armed). Wired but untested by this family, and named as such rather than "
+               "counted as coverage.",
     },
     "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.SOURCE_INVARIANT_derivation": {
         "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
-        "numerals": ["10", "5"],
-        "why": "Same construction, same reason, other half of the split.",
+        "numerals": _split_derivation_numerals("SOURCE_INVARIANT"),
+        "why": "Same construction, same reason, other half of the split -- also COMPUTED from "
+               "the ledger, not typed.",
     },
     # ★ H1-W4 D1: THE REDESIGN RULING'S ID, inside the gated acknowledgment. "R-242" names the
     # ruling that granted the range-structure redesign as the real unit and queued it. It is a

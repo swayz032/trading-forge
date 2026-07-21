@@ -1,0 +1,149 @@
+{
+ "WHAT_THIS_IS": "Every pin/repair site in the generator, the axis each freezes a value against, and whether its mirror fires a guard when withheld ALONE -- the collision check the founding pin (the gated acknowledgment, AXIS 3) was given retroactively, applied to all pins. A mirror only proven load-bearing when withheld TOGETHER with a sibling is reported as jointly-verified, not individually -- that distinction is the point.",
+ "n_pins_examined_THE_DENOMINATOR": 5,
+ "n_MIRROR_PINS": 3,
+ "n_SELECTION_REPAIRS": 2,
+ "axes_with_multiple_mirror_pins": {
+  "SESSION_GRADE_REALLOCATION": [
+   "_axis_session_split_declared",
+   "_axis_session_acknowledged_pair"
+  ]
+ },
+ "every_axis_builds_clean_with_repairs_applied": {
+  "ALL_WAIT_SESSION_ROWS_BIND": "CLEAN",
+  "CORPUS_B_ROLE_REATTRIBUTION": "CLEAN",
+  "SESSION_GRADE_REALLOCATION": "CLEAN",
+  "CORPUS_A_TAUGHT_CONDITION_DROP": "CLEAN",
+  "ASSERT_DISPOSITION_RECLASSIFICATION": "CLEAN",
+  "DRIFT_LATTICE_CASE_WITHDRAWAL": "CLEAN"
+ },
+ "pins": [
+  {
+   "site": "_axis_enforcement_mirror",
+   "line": 818,
+   "axis_constant": [
+    "AXIS_CORPUS_B_ROLE"
+   ],
+   "axis_value": [
+    "CORPUS_B_ROLE_REATTRIBUTION"
+   ],
+   "mutated_fields": [
+    "enf['never_evaluated_total']"
+   ],
+   "class": "MIRROR_PIN",
+   "ISOLATED_WITHHOLD": [
+    {
+     "axis": "CORPUS_B_ROLE_REATTRIBUTION",
+     "withholding_ONLY_this_mirror": "ASSERT_FIRED",
+     "guard_that_fired_line": 4768,
+     "guard_message_head": "enforcement artifact says 987 never-evaluated; I derive 988",
+     "mirror_INDIVIDUALLY_load_bearing": true
+    }
+   ],
+   "has_a_mirror": true,
+   "mirror_individually_verified": true
+  },
+  {
+   "site": "_axis_session_split_declared",
+   "line": 855,
+   "axis_constant": [
+    "AXIS_SESSION_GRADE"
+   ],
+   "axis_value": [
+    "SESSION_GRADE_REALLOCATION"
+   ],
+   "mutated_fields": [
+    "out['A_genuine_session_teachings']",
+    "out['B_mis_types']"
+   ],
+   "class": "MIRROR_PIN",
+   "ISOLATED_WITHHOLD": [
+    {
+     "axis": "SESSION_GRADE_REALLOCATION",
+     "withholding_ONLY_this_mirror": "ASSERT_FIRED",
+     "guard_that_fired_line": 4394,
+     "guard_message_head": "GUARD BOUNDARY: component A must equal the declared genuine-session-teaching count. computed 1 != declared 2. The split moved without its declaration moving wit",
+     "mirror_INDIVIDUALLY_load_bearing": true
+    }
+   ],
+   "has_a_mirror": true,
+   "mirror_individually_verified": true
+  },
+  {
+   "site": "_axis_session_acknowledged_pair",
+   "line": 869,
+   "axis_constant": [
+    "AXIS_SESSION_GRADE"
+   ],
+   "axis_value": [
+    "SESSION_GRADE_REALLOCATION"
+   ],
+   "mutated_fields": [
+    "out['graded_genuine_session_teachings_A']"
+   ],
+   "class": "MIRROR_PIN",
+   "ISOLATED_WITHHOLD": [
+    {
+     "axis": "SESSION_GRADE_REALLOCATION",
+     "withholding_ONLY_this_mirror": "ASSERT_FIRED",
+     "guard_that_fired_line": 4561,
+     "guard_message_head": "GUARD BOUNDARY: the SHIPPED session resolver (classify_session_role -> bind_condition) binds 8 of 27 labeled rows to a zone, which EXCEEDS component A (1). Eith",
+     "mirror_INDIVIDUALLY_load_bearing": true
+    }
+   ],
+   "has_a_mirror": true,
+   "mirror_individually_verified": true
+  },
+  {
+   "site": "_axis_drop_taught_condition",
+   "line": 898,
+   "axis_constant": [
+    "AXIS_TAUGHT_DROP"
+   ],
+   "axis_value": [
+    "CORPUS_A_TAUGHT_CONDITION_DROP"
+   ],
+   "mutated_fields": [],
+   "class": "SELECTION_REPAIR",
+   "ISOLATED_WITHHOLD": [
+    {
+     "axis": "CORPUS_A_TAUGHT_CONDITION_DROP",
+     "withholding_ONLY_this_mirror": "ASSERT_FIRED",
+     "guard_that_fired_line": 4411,
+     "guard_message_head": "GUARD BOUNDARY: the labeled-27 split must close on the corpus. 2 A + 21 B + 4 C = 27, but this corpus holds 26 WAIT_SESSION conditions. A/B/C are external-grade",
+     "mirror_INDIVIDUALLY_load_bearing": true
+    }
+   ],
+   "has_a_mirror": true,
+   "mirror_individually_verified": true
+  },
+  {
+   "site": "_axis_drift_extra_cases",
+   "line": 947,
+   "axis_constant": [
+    "AXIS_DRIFT_LATTICE"
+   ],
+   "axis_value": [
+    "DRIFT_LATTICE_CASE_WITHDRAWAL"
+   ],
+   "mutated_fields": [],
+   "class": "SELECTION_REPAIR",
+   "ISOLATED_WITHHOLD": [
+    {
+     "axis": "DRIFT_LATTICE_CASE_WITHDRAWAL",
+     "withholding_ONLY_this_mirror": "ASSERT_FIRED",
+     "guard_that_fired_line": 3430,
+     "guard_message_head": "classify_drift does NOT discriminate: 11 distinct input patterns produced 10 distinct verdicts -- {'both_flat': 'NO_DRIFT', 'rate_better_cov_worse': 'OPPOSITE_D",
+     "mirror_INDIVIDUALLY_load_bearing": true
+    }
+   ],
+   "has_a_mirror": true,
+   "mirror_individually_verified": true
+  }
+ ],
+ "SUMMARY": {
+  "all_pins_have_a_mirror": true,
+  "all_mirrors_individually_verified": true,
+  "pins_NOT_individually_verified": []
+ }
+}
