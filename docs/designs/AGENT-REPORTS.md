@@ -4,6 +4,24 @@
 
 ---
 
+## AR-165 · 2026-07-21 · ★★ **MY DISPATCH CHECKLIST CAUGHT A REAL DEFECT BEFORE THE BIGGEST BUILD OF THE CAMPAIGN: the acceptance instrument WAS NOT IN THE REPO.** Committed, made repo-relative, and **PROVEN to reproduce the frozen baseline byte-for-byte.** Enforcement build dispatching now.
+
+**1. ★★ THE CATCH.** The enforcement packet's blocking item 2 says *"the sweep is re-run as the ACCEPTANCE TEST and its verdicts must MOVE."* **The sweep lived only in a session-scoped scratchpad.** A fresh implementer would have **re-authored it** — and *"the verdicts must move"* is meaningless if the instrument that produced the before-table is not the one producing the after-table. **The comparison would have been apples-to-oranges and would have LOOKED valid.** It also breaks our own standing law: **the harness behind a headline number COMMITS, no exemptions.** ★ **This is the checklist's second real save** (the first was two contradictory checklist items) — and it fired on the resource-verification line I added precisely because I once briefed a corpus I did not hold.
+
+**2. COMMITTED, with the reason written into the file itself** so a later reader cannot mistake it for stray tooling: `docs/replay-results/h1-battery/family_meta_reachability_sweep.py` + its **frozen baseline** `family-meta-reachability-sweep-baseline.json`. The header records what it measured (**n=2000 real ES bars, 120 corpus specs × 600 bars, 3 REACHABLE / 2 PARTIAL / 4 NOT-REACHABLE / 2 COULD-NOT-VERIFY, all 7 positive controls fired**) **and the known trap that once cost a false NOT-REACHABLE** — *an exemplar that is not BINDABLE never enters dispatch, so its counter reads 0 for a reason unrelated to reachability.*
+
+**3. ★★ AND THE COMMITTED COPY IS PROVEN EQUIVALENT, not assumed.** I changed **only path handling** — and then **ran it and diffed its output against the frozen baseline: `baseline == fresh run: True`.** **A behaviour-neutral edit that I claimed was behaviour-neutral, and then measured.** Had I only asserted it, the acceptance test would have rested on my word.
+
+**4. ★ TWO REAL BUGS CAUGHT BY RUNNING IT RATHER THAN READING IT.** My repo-relative `ROOT` was **one directory level short** (the file sits three deep, needing four `dirname`s) → `ModuleNotFoundError`. Then a **second, separate `TMPOUT` reference** on the JSON write that my first patch missed → `KeyError`. **Neither was visible by inspection; both surfaced on the first execution.** I also **renamed the run output** (`…-latest.json`) so **a re-run cannot clobber the frozen baseline** — append-only applied to the instrument's own artifacts.
+
+**5. THE REST OF THE CHECKLIST, run and passing:** re-ratify landed (R-173) · **no agent live**, `git status --porcelain src/` → 0, **0 stash entries** · packet exists at the named path · **the TS mirror's FILTER declaration verified present at `spec-family-bindings.ts:99`** rather than cited from memory · checklist re-read as a whole for internal contradictions.
+
+**6. DISPATCHING THE ENFORCEMENT BUILD NOW** under the staged brief, receipt held. Four pins: **(a)** dispatch DERIVES from `FAMILY_META` · **(b)** fail-loud at load on an unresolvable primitive · **(b2)** **EMIT ⊆ COVERED**, also fail-loud · **(c)** honest entries for primitive-less families. **The declared blast radius stands: 390 spine conditions currently constant-True either fail loud or begin to gate, historical output WILL change, and the fidelity number moves DOWN when `INVALIDATE`'s false exactness is corrected. A worse headline number is this packet succeeding.**
+
+**7. What I am NOT doing:** not weakening the acceptance bar now that I have seen how hard the last lane was · not folding the over-bind class or the undiagnosed-5 into this build · **not treating my own instrument-commit as exempt from the grade** — it ships in this wave and is gradeable like anything else.
+
+**Holds:** flags OFF · the 77 sealed · **the critical path is moving for the first time since R-154.**
+
 ## AR-164 · 2026-07-21 · ★★★ **THE BAR IS MISSED — FN 38.1% against 23.8%. THE LANE CLOSES AT HONEST-PARTIAL, exactly as pre-registered at `676830a3`.** FP held at 6.0%. **I am not relitigating the bar I set, and the residue ships PER-ROW LABELED — including 5 rows I CANNOT EXPLAIN.** ★ **The enforcement re-ratify returns to your desk.**
 
 **1. THE VERDICT AGAINST THE COMMITTED BAR, measured by me in an isolated worktree pinned to `16dbf95f`:**

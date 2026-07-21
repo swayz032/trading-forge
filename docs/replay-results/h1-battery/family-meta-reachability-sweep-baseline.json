@@ -1,0 +1,550 @@
+{
+ "families": {
+  "WAIT_SESSION": {
+   "declared": "session_windows",
+   "approximation": false,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "first 30 minutes high",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {},
+   "bindings": [
+    {
+     "bindable": false,
+     "primitive": null,
+     "approx": false,
+     "executed": false,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "WAIT_STRUCTURE": {
+   "declared": "structure_engine.compute_structure_state",
+   "approximation": true,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "price holds pre market high and 30min orb high",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 198,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "structure_engine.compute_structure_state": 198,
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 29,
+   "signals_S": 0,
+   "arrays": {
+    "WAIT_STRUCTURE:price holds pre market high and 30min orb high#0": {
+     "true": 1549,
+     "n": 2000,
+     "all_true": false
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "structure_engine.compute_structure_state",
+     "approx": true,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "VERIFY_STRUCTURE": {
+   "declared": "structure_engine.compute_structure_state",
+   "approximation": true,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "breakout",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 198,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "structure_engine.compute_structure_state": 198,
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 29,
+   "signals_S": 0,
+   "arrays": {
+    "VERIFY_STRUCTURE:breakout#0": {
+     "true": 1549,
+     "n": 2000,
+     "all_true": false
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "structure_engine.compute_structure_state",
+     "approx": true,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "WAIT_BIAS": {
+   "declared": "bias_engine.classify_institutional_regime",
+   "approximation": true,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "chart timeframe",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 17,
+   "signals_S": 0,
+   "arrays": {
+    "WAIT_BIAS:chart timeframe#0": {
+     "true": 890,
+     "n": 2000,
+     "all_true": false
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "bias_engine.classify_institutional_regime",
+     "approx": true,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "CONFIRM_DIRECTION": {
+   "declared": "bias_engine.classify_institutional_regime",
+   "approximation": true,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "bullish uptrend",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 17,
+   "signals_S": 0,
+   "arrays": {
+    "CONFIRM_DIRECTION:bullish uptrend#0": {
+     "true": 890,
+     "n": 2000,
+     "all_true": false
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "bias_engine.classify_institutional_regime",
+     "approx": true,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "WAIT_RETEST": {
+   "declared": "spec_condition_compiler.retest_touch_check",
+   "approximation": true,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "level",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 1,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.retest_touch_check": 1,
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 138,
+   "signals_S": 0,
+   "arrays": {
+    "WAIT_RETEST:level#0": {
+     "true": 1534,
+     "n": 2000,
+     "all_true": false
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "spec_condition_compiler.retest_touch_check",
+     "approx": true,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "FILTER": {
+   "declared": "entry_quality.confluence_factor_presence",
+   "approximation": true,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "previous 4h candle close",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {
+    "FILTER:previous 4h candle close#0": {
+     "true": 2000,
+     "n": 2000,
+     "all_true": true
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "entry_quality.confluence_factor_presence",
+     "approx": true,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "WAIT_CONFIRMATION": {
+   "declared": "spec_condition_compiler.candle_confirmation_check",
+   "approximation": true,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "upside movement",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 495,
+   "signals_S": 0,
+   "arrays": {
+    "WAIT_CONFIRMATION:upside movement#0": {
+     "true": 854,
+     "n": 2000,
+     "all_true": false
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "spec_condition_compiler.candle_confirmation_check",
+     "approx": true,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "INVALIDATE": {
+   "declared": "structural_stops.compute_structural_stop",
+   "approximation": false,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=trigger)",
+   "object": "buy",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {
+    "INVALIDATE:buy#0": {
+     "true": 2000,
+     "n": 2000,
+     "all_true": true
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "structural_stops.compute_structural_stop",
+     "approx": false,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "ENABLE_ENTRY": {
+   "declared": "spine_completion_trigger",
+   "approximation": false,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=trigger)",
+   "object": "long entry or short entry",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {
+    "ENABLE_ENTRY:long entry or short entry#0": {
+     "true": 2000,
+     "n": 2000,
+     "all_true": true
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "spine_completion_trigger",
+     "approx": false,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "ENTER": {
+   "declared": "spine_completion_trigger",
+   "approximation": false,
+   "executed": true,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=trigger)",
+   "object": "long position",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {
+    "ENTER:long position#0": {
+     "true": 2000,
+     "n": 2000,
+     "all_true": true
+    }
+   },
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "spine_completion_trigger",
+     "approx": false,
+     "executed": true,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "EXIT_HINT": {
+   "declared": "provenance_only",
+   "approximation": false,
+   "executed": false,
+   "unsupported": false,
+   "exemplar": "entry_condition(orig role=spine)",
+   "object": "trade duration",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {},
+   "bindings": [
+    {
+     "bindable": true,
+     "primitive": "provenance_only",
+     "approx": false,
+     "executed": false,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "RESET": {
+   "declared": null,
+   "approximation": false,
+   "executed": true,
+   "unsupported": true,
+   "exemplar": "invalidations entry",
+   "object": "bias smas",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {},
+   "bindings": [
+    {
+     "bindable": false,
+     "primitive": null,
+     "approx": false,
+     "executed": false,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  },
+  "EXCEPTION": {
+   "declared": null,
+   "approximation": false,
+   "executed": true,
+   "unsupported": true,
+   "exemplar": "invalidations entry",
+   "object": "trade outcome",
+   "counts": {
+    "session_windows.is_in_killzone": 0,
+    "structure_engine.compute_structure_state": 0,
+    "bias_engine.classify_institutional_regime": 0,
+    "bias_engine.compute_bias": 0,
+    "scc.retest_touch_check": 0,
+    "scc.candle_confirmation_check": 1,
+    "structural_stops.compute_structural_stop": 0
+   },
+   "fired": {
+    "scc.candle_confirmation_check": 1
+   },
+   "signals_L": 1,
+   "signals_S": 0,
+   "arrays": {},
+   "bindings": [
+    {
+     "bindable": false,
+     "primitive": null,
+     "approx": false,
+     "executed": false,
+     "role": "spine"
+    }
+   ],
+   "n": 2000
+  }
+ },
+ "controls": {
+  "session_windows.is_in_killzone": 1,
+  "structure_engine.compute_structure_state": 1,
+  "bias_engine.classify_institutional_regime": 1,
+  "bias_engine.compute_bias": 1,
+  "scc.retest_touch_check": 1,
+  "scc.candle_confirmation_check": 1,
+  "structural_stops.compute_structural_stop": 1
+ },
+ "corpus": {
+  "session_windows.is_in_killzone": 1800,
+  "structure_engine.compute_structure_state": 6786,
+  "bias_engine.classify_institutional_regime": 0,
+  "bias_engine.compute_bias": 0,
+  "scc.retest_touch_check": 93,
+  "scc.candle_confirmation_check": 120,
+  "structural_stops.compute_structural_stop": 0
+ },
+ "n": 2000,
+ "corpus_n": 600,
+ "n_specs": 120
+}
