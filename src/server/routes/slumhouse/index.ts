@@ -22,6 +22,7 @@ import { menuApiRouter } from "./api/menu.js";
 import { recipeApiRouter } from "./api/recipe.js";
 import { reportsApiRouter } from "./api/reports.js";
 import { anamSessionRouter } from "./api/anam-session.js";
+import { anamGreetingRouter } from "./api/anam-greeting.js";
 import { carterSessionRouter } from "./api/carter-session.js";
 import { carterInboxRouter } from "./api/carter-inbox.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
@@ -118,6 +119,7 @@ slumhouseRouter.use(menuApiRouter);
 slumhouseRouter.use(recipeApiRouter);
 slumhouseRouter.use(reportsApiRouter);
 slumhouseRouter.use(anamSessionRouter);
+slumhouseRouter.use(anamGreetingRouter);
 slumhouseRouter.use(carterSessionRouter);
 slumhouseRouter.use(carterInboxRouter);
 
