@@ -78,6 +78,37 @@ describe("every Slumhouse API router is actually mounted in the production barre
   }
 });
 
+describe("every state-mutating member-Office POST checks the request origin (CSRF)", () => {
+  // Grader follow-up (OR-169 §19). SameSite=Lax already blocks the cross-site POST, so this is a
+  // SECOND independent layer — but the routes only became reachable when the PIN UI shipped, so
+  // "not exploitable today" was a property of the wiring, not of the routes.
+  //
+  // Written as a CLASS guard over every `.post(` in the file rather than three instance
+  // assertions: a future member POST added without the check fails here on the day it is written,
+  // which is the failure mode that produced OA-140 in the first place.
+  const src = fs.readFileSync(path.join(API_DIR, "member-office.ts"), "utf-8");
+
+  // Split on the router's POST registrations; each chunk is one handler.
+  const posts = src.split(/memberOfficeRouter\.post\(/).slice(1);
+
+  it("finds the POST handlers (guard is not vacuously passing)", () => {
+    expect(posts.length).toBeGreaterThanOrEqual(3);
+  });
+
+  for (const chunk of posts) {
+    const url = chunk.match(/"(\/slumhouse\/api\/member\/[a-z/-]*)"/)?.[1] ?? "(unknown route)";
+    it(`${url} calls checkSlumhouseOrigin`, () => {
+      // Live code only — a check written in a comment protects nothing.
+      const liveChunk = chunk.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
+      expect(liveChunk).toMatch(/if \(!checkSlumhouseOrigin\(req, res\)\) return;/);
+    });
+  }
+
+  it("the helper is actually imported (not just referenced)", () => {
+    expect(src).toMatch(/import\s*\{[^}]*checkSlumhouseOrigin[^}]*\}\s*from/);
+  });
+});
+
 describe("the member-Office routes the live page depends on are reachable", () => {
   // Pinned by path, not just by router name: the page hardcodes these URLs, so a route rename
   // that leaves the router mounted would still break the page silently.

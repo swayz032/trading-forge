@@ -51,7 +51,14 @@ beforeAll(async () => {
   // Stub ONLY the Discord-session middleware — the thing under test is the router's OWN
   // subject comparison (`pinSatisfied`), not Discord auth. Everything downstream of this
   // (ticket verification, scope evaluation, the connect-card guard) stays REAL.
-  vi.doMock("../lib/slumhouse/require-session.js", () => ({
+  // ★ importOriginal, NOT a bare object: replacing the whole module silently drops every other
+  // export, and the router uses `checkSlumhouseOrigin` too (CSRF hardening, OR-169 §19). A
+  // wholesale stub made that `undefined`, so the call threw into the handler's catch and every
+  // FULL FLOW test failed with 500 — a test-harness gap that reads exactly like a broken route.
+  // Spreading the original keeps this honest to the comment above: the session middleware is the
+  // ONLY thing stubbed, and the real origin check now genuinely runs in this flow.
+  vi.doMock("../lib/slumhouse/require-session.js", async (importOriginal) => ({
+    ...(await importOriginal<Record<string, unknown>>()),
     requireSlumhouseUser: (
       req: express.Request & { slumhouseUser?: unknown },
       res: express.Response,
@@ -113,6 +120,57 @@ const scope = (sessionUser: string, cookie?: string) =>
       ...(cookie ? { cookie: `${PIN_COOKIE_NAME}=${encodeURIComponent(cookie)}` } : {}),
     },
   });
+
+describe("CSRF: a foreign origin cannot drive the member's own routes", () => {
+  // DYNAMIC proof, through the real route and the real `checkSlumhouseOrigin` (the mock now
+  // spreads the original module, so this is not a stub answering yes). A static grep can only
+  // show the call is written; this shows it BLOCKS.
+  //
+  // Note what makes this a real check: the session header is VALID on every request below. A
+  // cross-site attacker in a browser would likewise ride the member's real session cookie — so
+  // the origin is the only thing standing between them and the member's PIN routes.
+  const FOREIGN = "https://evil.example.com";
+
+  it("rejects a foreign-origin establish", async () => {
+    const res = await fetch(`${base}/slumhouse/api/member/pin/establish`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-session-user": "csrf-victim", origin: FOREIGN },
+      body: JSON.stringify({ pin: PIN }),
+    });
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe("forbidden_origin");
+  });
+
+  it("rejects a foreign-origin verify", async () => {
+    const res = await fetch(`${base}/slumhouse/api/member/pin`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-session-user": M1, origin: FOREIGN },
+      body: JSON.stringify({ pin: PIN }),
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it("rejects a foreign-origin connect-test", async () => {
+    const res = await fetch(`${base}/slumhouse/api/member/connect-test`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-session-user": M1, origin: FOREIGN },
+      body: JSON.stringify({ brokerKind: "topstepx", key: "TESTKEY-1" }),
+    });
+    expect(res.status).toBe(403);
+  });
+
+  it("★ the SAME request without the foreign origin is NOT blocked — the origin is what decided", () => {
+    // Control. Without it these three could pass because the requests are malformed in some
+    // other way, and the guard would look effective while testing nothing.
+    return fetch(`${base}/slumhouse/api/member/pin`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-test-session-user": M1 },
+      body: JSON.stringify({ pin: "definitely-wrong-pin" }),
+    }).then(async (res) => {
+      expect(res.status).not.toBe(403);
+    });
+  });
+});
 
 describe("FULL FLOW: establish -> verify -> scope, entirely through the real routes", () => {
   it("a member sets their own PIN, then reaches their room", async () => {
