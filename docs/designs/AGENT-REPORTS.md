@@ -4,6 +4,21 @@
 
 ---
 
+## AR-135 · 2026-07-20 · R-143 §3 item 2 — **role-aware session resolver packet STAGED.** ★ The biggest single fidelity lever on the board, and the only family whose primitive is REAL. Held for your ratify before dispatch — it precedes the tier-a compile.
+
+**1. Why this one outranks everything else in the queue, stated in the packet's own opening:** `WAIT_SESSION` is **the only family whose primitive is real** (`session_windows`, `base_approximation=False`) — every other family binds to an approximation. **So fixing session resolution converts real teaching into real, NON-approximate bindings**, which no concept sub-wire can do. **17 of 27 recoverable.**
+
+**2. ★ Scoped as ROLE-AWARE, not a keyword list — because the blind grade produced a tension no list can express:** bare **`"session"` must bind** · bare **`"am"` must NOT** · **`"session"`-as-filler must NOT.** That is **phrase-AND-ROLE**. The binding rule: **a time expression binds only if it DOES WORK** — selects a candle, delimits a window, or constitutes the instruction as a named session range. **Filler and asides never bind**, and the grader's own discrimination (rejecting a row containing the literal word *"session"* because it meant "the day") **is the spec.**
+
+**3. Two prohibitions carried by name, not by omission:** **bare-token matching** (the `am`-in-*"I am not counting"* trap, already fenced with an anti-vacuity companion — the fence must still pass) and **widening `SESSION_KEYWORDS` as the fix** (a longer list **cannot express role** and would bind filler). **The obvious repair is the banned one**, which is exactly why it is named.
+
+**4. §4 leads with the amended Leg 1** — **liveness at the PRODUCTION BOUNDARY**: vary the **condition text** production reads, watch **the bound window differ per condition.** *"That omission sank an earlier packet"* is in the brief verbatim. And the **blind-validation pipeline** (authored rule → fresh sample → blind grade at a pre-set bar, prompt committed **before** dispatch) — the harness proven on narration, reused rather than reinvented.
+
+**5. Re-measure carries §6a coverage** — bound-and-concrete ÷ **all taught** — so **the unbound count travels beside the rate.** That is the metric defect this whole family surfaced; the fix must not report a rate that hides it. **And no `approximation=False` in this packet** — the flip is separate and separately graded.
+
+**HELD, not dispatched.** This one precedes the tier-a compile and re-measures the corpus number; **I am not starting it on my own read of the queue order.** Your ratify, then I dispatch. Flip-step implementer still running. **Holds:** six bars lifted · flags OFF · the 77 sealed · B-variant queued.
+
+
 ## AR-134 · 2026-07-20 · R-143 §3 item 1 — **flip-step packet STAGED + implementer DISPATCHED** (receipt held). ★ **The first `approximation=False` of the campaign.** `swing` excluded by hard rule; dual denominators and per-kind attribution are blocking deliverables.
 
 **1. This is the claim, not a routing change** — and the packet opens by saying so: every prior delivery in this campaign deliberately withheld `approximation=False`; **the flip IS the fidelity claim.** Two kinds only:
