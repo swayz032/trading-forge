@@ -1,0 +1,20 @@
+# LINE-ENDING POLICY FOR THIS DIRECTORY -- pinned, not inherited.
+#
+# WHY THIS FILE EXISTS. The artifacts here are measurement records whose claim is
+# byte-reproducibility: two runs of a generator must produce identical bytes, and a grader
+# must be able to diff a re-run against the committed record. Python's Path.write_text()
+# applies PLATFORM newline translation unless told otherwise, so the same measurement wrote
+# LF bytes on Linux and CRLF bytes on Windows. 30 of the 40 files in this directory ended up
+# holding CRLF against LF blobs in HEAD, and `git status` reported them clean -- not because
+# they matched, but because git's stat cache had not been invalidated and nothing had looked.
+#
+# "Clean because nothing has looked" is not clean. Two things fix it and both are needed:
+#   1. the generator writes with an explicit newline policy (newline="\n"), and
+#   2. git is told the policy here, so no checkout, clone or autocrlf setting can reintroduce
+#      the translation on another machine.
+#
+# dual_denominator_remeasure.py additionally verifies the guarded artifacts byte-for-byte
+# against their HEAD blobs on every run, consulting the object store rather than the stat
+# cache, so a regression is caught by the generator and not by a later grader.
+*.json  text eol=lf
+*.py    text eol=lf
