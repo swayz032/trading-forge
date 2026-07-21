@@ -103,10 +103,15 @@ GATE_CLASSES: Dict[str, GateClass] = {
     "compliance_drift":   GateClass("compliance_drift", "promotion", "lifecycle-service.ts:~484 (complianceRulesets.driftDetected check)", False),
     "dsl_guards":         GateClass("dsl_guards", "promotion", "lifecycle-service.ts:141-166", False),
     "composite_shadow":   GateClass("composite_shadow", "promotion", "paper-to-deploy-ready-gates.ts:918", False, verdict=False),  # observability-only, never blocks
-    # ── Stage: compile-fidelity forensics (R-040 pin 2iv) — NOT-YET-BUILT ──
+    # ── Stage: compile-fidelity forensics (R-040 pin 2iv) — Leg A DETECTOR BUILT, INVOCATION DEFERRED ──
+    # Detector: forensics/compile_fidelity.py:run_leg_a (Tooth-1 build, tooth1-compile-fidelity-
+    # ratify-2026-07-21). reserved=True KEPT: no LIVE candidacy invocation runs yet — the eligible
+    # survivor set is empty (0 candidates), so Leg A has nothing to grade. The gate wires to a real
+    # candidacy call site when the first survivor candidate exists (pre-reg §6).
     "compile_fidelity_forensics": GateClass(
         "compile_fidelity_forensics", "forensics",
-        "RESERVED — designed in h1-packet2-...-ratify (spec_producer.py:35), no gate function exists yet",
+        "RESERVED invocation — detector BUILT (forensics/compile_fidelity.py:run_leg_a); live "
+        "candidacy call site deferred, eligible set empty (0 candidates)",
         False, reserved=True),
 }
 
