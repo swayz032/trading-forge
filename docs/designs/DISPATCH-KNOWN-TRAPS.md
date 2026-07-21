@@ -26,6 +26,15 @@ Keep this file short enough that pasting it is never a burden. If a trap stops b
 >    `git worktree add` **cannot** read bars. If a probe needs real data, either run it in the main
 >    tree (**and say so**) or mark it COULD-NOT-VERIFY. **Never substitute synthetic data for real
 >    bars** — that silently answers a different question.
+> 2b. **THE PROJECT `.venv` IS UNUSABLE FOR THE ENGINE SUITE** — it is missing `filelock`, which
+>    fails COLLECTION of `test_cloud_backend.py`, `test_cross_engine_parity.py`, `test_watchdog.py`.
+>    **Use system `python`** (3.13 / pytest 9.0.3 collects all 8107 cleanly in ~13s). Collection
+>    failures in `.venv` are this, not a real defect.
+> 2c. **★ RUNNING THE SUITE IS A WRITE OPERATION.** It MUTATES tracked files under `docs/`
+>    (`A12-AUDIT-REPORT.md`, `wave25-exit-engine-ab-report.md`) — proven on FRESH worktree checkouts,
+>    which are clean by construction. **So a dirty tree after a run may be your own footprint, not a
+>    neighbour’s edit.** (This misattribution ran for a whole session here.) **Attribute unexplained
+>    dirt by EVIDENCE, never by assumption.**
 > 3. **THE ENGINE SUITE IS SLOW, NOT HUNG.** `pytest src/engine/tests/` collects ~7,800 tests in
 >    ~5-12s and then takes minutes. A prior wave claimed *"collection hangs"* and skipped coverage on
 >    that basis; it was false. **Do not claim an untested limitation** — time it before you assert it.
