@@ -14,8 +14,25 @@ than omitted (an omitted population is one a reader supplies from imagination).
 
 METHOD. Both arms run IN THE SAME PROCESS over the SAME bars; only os.environ
 [TF_FAMILY_META_ENFORCED] differs between them (every flag in this codebase is read at call
-time precisely so this is possible). The OFF arm is therefore the production engine, not a
-reconstruction of it.
+time precisely so this is possible).
+
+★ WHERE THE OFF ARM IS THE ENGINE, AND WHERE IT IS NOT (corrected after the BAND-6 grade).
+This header used to say flatly "The OFF arm is therefore the production engine, not a
+reconstruction of it." That is true of the SIGNAL and BINDING-PLAN blocks — they call
+SpecConditionStrategy.compute() and read what it returns. It was FALSE of the section-6a
+gating count, which never called compute() at all: it re-derived "did this gate?" as
+`meta.gates if on else True`, i.e. it ASSUMED every bound spine condition gated with the flag
+off. That is a reconstruction, it was wrong, and it inflated the OFF baseline by EXIT_HINT's
+78 bound-but-executed=False conditions (2346 -> 1878 read as a 468 change; the attributable
+figure is 390). The assumption is now replaced by the same `executed` test compute() applies.
+So, precisely: the SIGNAL and PLAN arms are the production engine; the section-6a gating
+counter is a re-derivation that now mirrors the loop's own skip conditions, and is labelled as
+such wherever it prints.
+
+★ PIN SCOPE (D3). Every flag-ON figure below is produced under TF_FAMILY_META_ENFORCED_PINS=
+"a,b". Pin (b2) is NOT evaluated — it fails today on the orphan-zone gap this packet is scoped
+out of fixing. The qualifier travels INSIDE the JSON artifact, adjacent to each ON number,
+because a caveat one hop from its claim is a caption.
 """
 from __future__ import annotations
 
@@ -67,13 +84,28 @@ def P(*a):
     print(s.encode("ascii", "replace").decode("ascii"))
 
 
+# ── D3: THE PIN CONFIGURATION, DEFINED ONCE AND CARRIED INTO THE ARTIFACT ────────────────
+# Graded BAND 6: the script set PINS="a,b" and the JSON artifact had NO pins field at all, so
+# every quotable flag-ON number in it (3003, 1878, 567/567, 390, 120/120) travelled unlabelled
+# and the caveat lived only in a commit message. A caveat one hop from its claim is a caption.
+# The label is now derived from the SAME constant the run uses — it cannot drift from it — and
+# is emitted ADJACENT to each ON figure inside the JSON, not once in a header.
+ACTIVE_PINS = "a,b"
+SKIPPED_PINS = [p for p in fme.ALL_PINS if p not in {s.strip() for s in ACTIVE_PINS.split(",")}]
+PIN_QUALIFIER = (
+    f"pins {'+'.join(ACTIVE_PINS.split(','))} held; "
+    f"pin{'s' if len(SKIPPED_PINS) != 1 else ''} {'+'.join(SKIPPED_PINS)} NOT evaluated. "
+    f"This figure is NOT 'enforcement passed'."
+)
+
+
 def set_flag(on: bool) -> None:
     if on:
         os.environ[fme.FLAG_ENV] = "true"
         # pin (b2) legitimately fails today on the orphan-zone gap this packet is scoped out
         # of fixing (see the module docstring of family_meta_enforcement). Pins a+b are the
-        # ones this build delivers; the skip is RECORDED in the receipt below, never implied.
-        os.environ[fme.PINS_ENV] = "a,b"
+        # ones this build delivers; the skip is RECORDED next to every ON number it qualifies.
+        os.environ[fme.PINS_ENV] = ACTIVE_PINS
     else:
         os.environ.pop(fme.FLAG_ENV, None)
         os.environ.pop(fme.PINS_ENV, None)
@@ -106,6 +138,10 @@ P("=" * 92)
 P("FAMILY_META ENFORCEMENT DELTA")
 P(f"POPULATION: SHAKEDOWN / TIER-B corpus, n={len(SPECS)} specs x {BARS} real ES 5min bars")
 P("TIER-A: NOT MEASURED (out of this packet's scope). No figure below is a tier-a figure.")
+P(f"PIN SCOPE: every flag-ON figure below is run with {fme.PINS_ENV}={ACTIVE_PINS!r}.")
+P(f"           {PIN_QUALIFIER}")
+P("           (the label is written INTO family-meta-enforcement-delta.json next to each ON")
+P("            number — a caveat one hop from its claim is a caption.)")
 P("=" * 92)
 
 off_signals, off_plans = run_arm(False)
@@ -242,21 +278,59 @@ P("   run time. Under ALL pins active, these conditions do not run at all -- loa
 P("")
 P("── [TIER-B] ITEM 9: SECTION-6a COVERAGE + APPROXIMATION RATE (dual denominators) ───────")
 by_type_role = collections.Counter()
+by_role = collections.Counter()
 for spec in SPECS:
     for c in spec.get("entry_conditions") or []:
         by_type_role[(c.get("type"), c.get("role"))] += 1
+        by_role[c.get("role")] += 1
 
-TRIGGER_ROLE_NEVER_EVALUATED = ["WAIT_BIAS", "FILTER", "INVALIDATE", "ENABLE_ENTRY", "ENTER"]
-never_evaluated = {t: by_type_role[(t, "trigger")] for t in TRIGGER_ROLE_NEVER_EVALUATED}
+# ── D5 CORRECTION (graded BAND 6). This block used to read:
+#
+#     TRIGGER_ROLE_NEVER_EVALUATED = ["WAIT_BIAS", "FILTER", "INVALIDATE", "ENABLE_ENTRY", "ENTER"]
+#     never_evaluated = {t: by_type_role[(t, "trigger")] for t in TRIGGER_ROLE_NEVER_EVALUATED}
+#
+# — a CURATED FAMILY LIST used as if it were the population. The compute loop selects
+# `role == "spine"` and nothing else, so EVERY trigger-role condition is skipped, not just
+# those five families'. The list silently dropped six families (WAIT_SESSION 18,
+# WAIT_CONFIRMATION 21, WAIT_RETEST 15, WAIT_STRUCTURE 6, VERIFY_STRUCTURE 3, EXIT_HINT 3 = 66)
+# and published 921 where the true count is 987.
+#
+# The fix is not a corrected list — a list is what failed. The count is now DERIVED FROM THE
+# UNIVERSE: every condition whose role is not the one the loop selects. Two independent paths
+# compute it and must agree; a disagreement is the alarm, not something to reconcile by hand.
+EVALUATED_ROLE = "spine"  # the ONLY role compute()'s spine loop iterates
+
+# path 1: sum the (type, role) cross-tab over every non-spine trigger cell
+never_evaluated = {
+    t: v for (t, r), v in sorted(by_type_role.items()) if r == "trigger"
+}
 never_evaluated_total = sum(never_evaluated.values())
+# path 2: an independent single-key tally of the role column, never touching the cross-tab
+never_evaluated_total_check = by_role["trigger"]
+if never_evaluated_total != never_evaluated_total_check:
+    raise SystemExit(
+        f"D5 TWO-PATH DERIVATION DISAGREES: cross-tab={never_evaluated_total} "
+        f"role-tally={never_evaluated_total_check}. Do not publish either number."
+    )
 
 all_entry_conditions = sum(by_type_role.values())
-spine_conditions = sum(v for (t, r), v in by_type_role.items() if r == "spine")
+spine_conditions = sum(v for (t, r), v in by_type_role.items() if r == EVALUATED_ROLE)
+
+# ── The population the corrected 987 STILL does not cover, named rather than left implicit.
+# `role == "confluence"` conditions are ALSO never evaluated by the spine loop — it selects
+# `role == "spine"`, so confluence conditions never enter per_condition_bool either. They are
+# reported separately because the packet's section-6a denominator is defined over trigger-role
+# conditions; this is a NEW observation from the D5 re-derivation, not a re-scoping of it, and
+# it is recorded here so the next reader does not have to rediscover it.
+other_never_evaluated = {
+    r: v for r, v in sorted(by_role.items()) if r not in (EVALUATED_ROLE, "trigger")
+}
+other_never_evaluated_total = sum(other_never_evaluated.values())
 
 rates = {}
 for arm, on in (("flag_OFF", False), ("flag_ON", True)):
     set_flag(on)
-    bound = approx = gating = 0
+    bound = approx = gating = not_executed = 0
     for spec in SPECS:
         for c in spec.get("entry_conditions") or []:
             if c.get("role") != "spine":
@@ -268,9 +342,27 @@ for arm, on in (("flag_OFF", False), ("flag_ON", True)):
             if b.approximation:
                 approx += 1
             meta = sfb.FAMILY_META.get(str(c.get("type")))
-            if meta is not None and (meta.gates if on else True):
+            if meta is None:
+                continue
+            # ── D4 CORRECTION (graded BAND 6). This read `(meta.gates if on else True)`: the
+            # OFF arm ASSUMED every bound spine condition gated. It does not. compute()'s
+            # spine loop `continue`s on `not b.executed` BEFORE anything can gate, and
+            # EXIT_HINT's 78 bound spine conditions carry executed=False in BOTH arms — they
+            # never enter the gating map under enforcement or without it. Counting them as
+            # gating in the OFF arm only inflated the OFF baseline by 78 and made the headline
+            # read "2346 -> 1878" (a 468 swing) when the change attributable to this packet is
+            # 390 — exactly FILTER's 390 spine conditions, and nothing else.
+            if not b.executed:
+                not_executed += 1
+                continue
+            if meta.gates if on else True:
                 gating += 1
-    rates[arm] = {"spine_bound": bound, "spine_approximated": approx, "spine_gating": gating}
+    rates[arm] = {
+        "spine_bound": bound,
+        "spine_approximated": approx,
+        "spine_gating": gating,
+        "spine_bound_but_never_executed": not_executed,
+    }
 set_flag(False)
 
 P(f"[TIER-B] entry_conditions (all roles)      n = {all_entry_conditions}")
@@ -278,7 +370,16 @@ P(f"[TIER-B] role=spine conditions             n = {spine_conditions}")
 P("[TIER-B] NEVER-EVALUATED trigger-role conditions (section 6a denominator growth):")
 for t, v in never_evaluated.items():
     P(f"           {t:14s} {v:5d}")
-P(f"           {'TOTAL':14s} {never_evaluated_total:5d}   (packet declares 921)")
+P(f"           {'TOTAL':14s} {never_evaluated_total:5d}   (packet declares 987; two-path "
+  f"derivation agrees: cross-tab={never_evaluated_total} role-tally={never_evaluated_total_check})")
+P("           ^ was published as 921 before the BAND-6 grade: a curated 5-family list stood in")
+P("             for the population. compute() selects role==spine, so ALL 987 are skipped.")
+P("[TIER-B] ALSO never evaluated by the spine loop, and NOT in the 987 (reported, not folded in):")
+for r, v in other_never_evaluated.items():
+    P(f"           role={str(r):14s} {v:5d}")
+P(f"           {'TOTAL':19s} {other_never_evaluated_total:5d}   <- section 6a's denominator is")
+P("             defined over TRIGGER-role conditions, so these sit outside it; they are named")
+P("             here because 'never evaluated' is true of them too and silence would imply not.")
 P("")
 P("APPROXIMATION RATE — DUAL DENOMINATORS. A rate over BOUND conditions flatters the engine")
 P("(it silently drops everything that never bound); a rate over ALL TAUGHT conditions is the")
@@ -292,7 +393,14 @@ for arm in ("flag_OFF", "flag_ON"):
     P(f"     spine approximated     = {r['spine_approximated']}")
     P(f"     rate / BOUND spine     = {r['spine_approximated'] / d1:.4f}  (n={d1})")
     P(f"     rate / ALL spine taught= {r['spine_approximated'] / d2:.4f}  (n={d2})")
-    P(f"     spine conditions that CAN GATE = {r['spine_gating']}")
+    P(f"     spine conditions that CAN GATE = {r['spine_gating']}"
+      f"   (excludes {r['spine_bound_but_never_executed']} bound-but-executed=False, both arms)")
+P(f"  [TIER-B] attributable gating change OFF->ON = "
+  f"{rates['flag_OFF']['spine_gating'] - rates['flag_ON']['spine_gating']}"
+  "   <- read THIS, not the old 2346->1878")
+P("     The pre-correction OFF baseline counted EXIT_HINT's 78 executed=False conditions as")
+P("     gating, which they never were in either arm; the 468 swing that produced was 78 of")
+P("     bookkeeping on top of the 390 real ones (FILTER's spine conditions).")
 P("")
 P("  [TIER-B] section-6a coverage denominator INCLUDING the never-evaluated trigger-role")
 P(f"     conditions: {spine_conditions} spine + {never_evaluated_total} never-evaluated trigger-role")
@@ -312,27 +420,85 @@ json.dump(
     {
         "tier": "shakedown/tier-b",
         "tier_a": "NOT MEASURED — out of scope",
+        # ── D3: the pin configuration, IN the artifact rather than in a commit message ──
+        "enforcement_pins": {
+            "env_var": fme.PINS_ENV,
+            "value_used_for_every_flag_on_figure": ACTIVE_PINS,
+            "pins_active": sorted(ACTIVE_PINS.split(",")),
+            "pins_NOT_evaluated": SKIPPED_PINS,
+            "why_skipped": (
+                "pin (b2) fails today on the real orphan-zone gap (resolve_session_keyword can "
+                "emit lunch_blackout/overnight; is_in_killzone cannot check them). Fixing that "
+                "gap belongs to the session-resolver lane and is scoped OUT of this packet, so "
+                "with all pins active the engine correctly REFUSES TO LOAD."
+            ),
+            "honest_reading": PIN_QUALIFIER,
+            "applies_to": [
+                "signals_on", "total_signals_on", "compiled_on", "approximation_used_on",
+                "invalidation_approximation_counts.flag_ON", "filter_spine_390",
+                "filter_spine_dispositions", "rates.flag_ON",
+            ],
+        },
         "n_specs": len(SPECS),
         "bars": BARS,
         "signals_off": {str(k): v for k, v in off_signals.items()},
+        "signals_on__pin_scope": PIN_QUALIFIER,
         "signals_on": {str(k): v for k, v in on_signals.items()},
         "specs_signal_moved": moved,
         "specs_plan_moved": plan_moved,
         "total_signals_off": tot_off,
+        "total_signals_on__pin_scope": PIN_QUALIFIER,
         "total_signals_on": tot_on,
         "compiled_off": compiled_off,
+        "compiled_on__pin_scope": PIN_QUALIFIER,
         "compiled_on": compiled_on,
         "approximation_used_off": approx_off,
+        "approximation_used_on__pin_scope": PIN_QUALIFIER,
         "approximation_used_on": approx_on,
         "control_specs_moved": control_moved,
+        "invalidation_approximation_counts__pin_scope": f"flag_ON arm only: {PIN_QUALIFIER}",
         "invalidation_approximation_counts": inv_counts,
+        "filter_spine_390__pin_scope": (
+            f"Enumerated under enforcement. {PIN_QUALIFIER} Under ALL pins active these "
+            f"conditions do not run at all — the load fails on pin (b2)."
+        ),
         "filter_spine_390": filter_rows,
         "filter_spine_dispositions": dict(disp),
+        # ── D5: derived from the UNIVERSE of conditions, not a curated family list ──
         "never_evaluated_trigger_role": never_evaluated,
         "never_evaluated_total": never_evaluated_total,
+        "never_evaluated_total_derivation": (
+            f"role=='trigger' over all {all_entry_conditions} entry_conditions in the {len(SPECS)}-spec "
+            f"corpus. Two independent paths agree (cross-tab={never_evaluated_total}, "
+            f"role-tally={never_evaluated_total_check}). Supersedes the previously published 921, "
+            f"which summed a curated 5-family list and omitted 66 conditions across 6 families "
+            f"(WAIT_SESSION 18, WAIT_CONFIRMATION 21, WAIT_RETEST 15, WAIT_STRUCTURE 6, "
+            f"VERIFY_STRUCTURE 3, EXIT_HINT 3). compute() selects role=='spine', so ALL "
+            f"{never_evaluated_total} trigger-role conditions are skipped, not just five families'."
+        ),
+        "also_never_evaluated_outside_the_987": other_never_evaluated,
+        "also_never_evaluated_outside_the_987_total": other_never_evaluated_total,
+        "also_never_evaluated_note": (
+            "role=='confluence' conditions are ALSO never evaluated by compute()'s spine loop. "
+            "They are NOT part of the 987 because section 6a's denominator is defined over "
+            "trigger-role conditions; recorded here so the omission is stated, not implied."
+        ),
         "spine_conditions": spine_conditions,
         "all_entry_conditions": all_entry_conditions,
+        "rates__pin_scope": f"the flag_ON arm of `rates` is scoped: {PIN_QUALIFIER}",
+        "rates__gating_derivation": (
+            "D4: `spine_gating` is a RE-DERIVATION, not a compute() observation. It now applies "
+            "the same `executed` skip the spine loop applies, so EXIT_HINT's bound-but-"
+            "executed=False conditions are excluded from BOTH arms. The previous OFF arm "
+            "assumed every bound spine condition gated, inflating it by 78 and making the "
+            "change read 2346->1878; the attributable figure is "
+            f"{rates['flag_OFF']['spine_gating'] - rates['flag_ON']['spine_gating']}."
+        ),
         "rates": rates,
+        "enforcement_status_all_pins__note": (
+            "This block alone is measured with the selector UNSET (all three pins active) and "
+            "is expected to show the pin (b2) violation. It is the ONLY all-pins figure here."
+        ),
         "enforcement_status_all_pins": status,
     },
     open(os.path.join(OUTDIR, "family-meta-enforcement-delta.json"), "w"),

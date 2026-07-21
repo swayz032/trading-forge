@@ -1,6 +1,29 @@
 {
  "tier": "shakedown/tier-b",
  "tier_a": "NOT MEASURED \u2014 out of scope",
+ "enforcement_pins": {
+  "env_var": "TF_FAMILY_META_ENFORCED_PINS",
+  "value_used_for_every_flag_on_figure": "a,b",
+  "pins_active": [
+   "a",
+   "b"
+  ],
+  "pins_NOT_evaluated": [
+   "b2"
+  ],
+  "why_skipped": "pin (b2) fails today on the real orphan-zone gap (resolve_session_keyword can emit lunch_blackout/overnight; is_in_killzone cannot check them). Fixing that gap belongs to the session-resolver lane and is scoped OUT of this packet, so with all pins active the engine correctly REFUSES TO LOAD.",
+  "honest_reading": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+  "applies_to": [
+   "signals_on",
+   "total_signals_on",
+   "compiled_on",
+   "approximation_used_on",
+   "invalidation_approximation_counts.flag_ON",
+   "filter_spine_390",
+   "filter_spine_dispositions",
+   "rates.flag_ON"
+  ]
+ },
  "n_specs": 120,
  "bars": 600,
  "signals_off": {
@@ -485,6 +508,7 @@
    0
   ]
  },
+ "signals_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
  "signals_on": {
   "0": [
    36,
@@ -1091,10 +1115,13 @@
   119
  ],
  "total_signals_off": 3003,
+ "total_signals_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
  "total_signals_on": 3003,
  "compiled_off": 114,
+ "compiled_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
  "compiled_on": 114,
  "approximation_used_off": 120,
+ "approximation_used_on__pin_scope": "pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
  "approximation_used_on": 120,
  "control_specs_moved": [
   0,
@@ -1218,6 +1245,7 @@
   118,
   119
  ],
+ "invalidation_approximation_counts__pin_scope": "flag_ON arm only: pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
  "invalidation_approximation_counts": {
   "flag_OFF": [
    0,
@@ -1228,6 +1256,7 @@
    567
   ]
  },
+ "filter_spine_390__pin_scope": "Enumerated under enforcement. pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'. Under ALL pins active these conditions do not run at all \u2014 the load fails on pin (b2).",
  "filter_spine_390": [
   {
    "condition_id": "FILTER:previous 4h candle close#0",
@@ -4354,27 +4383,44 @@
   "honestly_declared_non_gating_constant_true": 390
  },
  "never_evaluated_trigger_role": {
-  "WAIT_BIAS": 42,
+  "ENABLE_ENTRY": 480,
+  "ENTER": 255,
+  "EXIT_HINT": 3,
   "FILTER": 39,
   "INVALIDATE": 105,
-  "ENABLE_ENTRY": 480,
-  "ENTER": 255
+  "VERIFY_STRUCTURE": 3,
+  "WAIT_BIAS": 42,
+  "WAIT_CONFIRMATION": 21,
+  "WAIT_RETEST": 15,
+  "WAIT_SESSION": 18,
+  "WAIT_STRUCTURE": 6
  },
- "never_evaluated_total": 921,
+ "never_evaluated_total": 987,
+ "never_evaluated_total_derivation": "role=='trigger' over all 6450 entry_conditions in the 120-spec corpus. Two independent paths agree (cross-tab=987, role-tally=987). Supersedes the previously published 921, which summed a curated 5-family list and omitted 66 conditions across 6 families (WAIT_SESSION 18, WAIT_CONFIRMATION 21, WAIT_RETEST 15, WAIT_STRUCTURE 6, VERIFY_STRUCTURE 3, EXIT_HINT 3). compute() selects role=='spine', so ALL 987 trigger-role conditions are skipped, not just five families'.",
+ "also_never_evaluated_outside_the_987": {
+  "confluence": 2694
+ },
+ "also_never_evaluated_outside_the_987_total": 2694,
+ "also_never_evaluated_note": "role=='confluence' conditions are ALSO never evaluated by compute()'s spine loop. They are NOT part of the 987 because section 6a's denominator is defined over trigger-role conditions; recorded here so the omission is stated, not implied.",
  "spine_conditions": 2769,
  "all_entry_conditions": 6450,
+ "rates__pin_scope": "the flag_ON arm of `rates` is scoped: pins a+b held; pin b2 NOT evaluated. This figure is NOT 'enforcement passed'.",
+ "rates__gating_derivation": "D4: `spine_gating` is a RE-DERIVATION, not a compute() observation. It now applies the same `executed` skip the spine loop applies, so EXIT_HINT's bound-but-executed=False conditions are excluded from BOTH arms. The previous OFF arm assumed every bound spine condition gated, inflating it by 78 and making the change read 2346->1878; the attributable figure is 390.",
  "rates": {
   "flag_OFF": {
    "spine_bound": 2346,
    "spine_approximated": 2265,
-   "spine_gating": 2346
+   "spine_gating": 2268,
+   "spine_bound_but_never_executed": 78
   },
   "flag_ON": {
    "spine_bound": 2346,
    "spine_approximated": 2265,
-   "spine_gating": 1878
+   "spine_gating": 1878,
+   "spine_bound_but_never_executed": 78
   }
  },
+ "enforcement_status_all_pins__note": "This block alone is measured with the selector UNSET (all three pins active) and is expected to show the pin (b2) violation. It is the ONLY all-pins figure here.",
  "enforcement_status_all_pins": {
   "enforced": true,
   "pins_active": [

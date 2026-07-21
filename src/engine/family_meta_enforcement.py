@@ -44,23 +44,48 @@ THE FOUR PINS (packet section 3), each implemented here as a mechanical, load-ti
   (c) HONEST ENTRIES  -- lives in FAMILY_META itself (see `FamilyMeta.enforced_*` and the
       table's per-entry notes), not here; this module only verifies the result.
 
-GATING AND ROLLBACK. Everything is behind `TF_FAMILY_META_ENFORCED` (default OFF). With the
-flag OFF the engine is byte-identical to before this module existed -- proven, not asserted,
-by tests/test_family_meta_enforcement.py::test_flag_off_binding_plans_are_byte_identical
-(which carries its own control showing the proof CAN fail). Two-commit law: enforcement
-lands here; any change to the default lands separately, and only on the grade.
+GATING AND ROLLBACK. Everything is behind `TF_FAMILY_META_ENFORCED` (default OFF). Two-commit
+law: enforcement lands here; any change to the default lands separately, and only on the grade.
+
+WHAT THE FLAG-OFF GUARANTEE IS, STATED AT ITS ACTUAL STRENGTH. There is no artifact of the
+pre-packet engine to diff against in-process, so "byte-identical to before this module
+existed" is NOT something the test suite can establish, and this docstring previously claimed
+it anyway. What IS established, by tests/test_family_meta_enforcement.py:
+  - the flag-OFF `b.type` ladder is the code that runs, and the enforced dispatch path is not
+    consulted at all (test_second_router_control_flag_off_ignores_the_repoint: re-pointing
+    FAMILY_META changes NOTHING with the flag OFF);
+  - the declarations flag-OFF production emits have not drifted from the legacy column
+    (test_flag_off_declarations_are_unchanged, test_flag_off_binding_matches_the_legacy_column
+    -- which compare against a HAND-TRANSCRIBED table, `LEGACY_DECLARATIONS`, and so detect
+    drift in FAMILY_META, NOT identity against pre-commit code);
+  - the flag-OFF PER-BAR ARRAYS equal the ladder branch's own output, are non-degenerate, and
+    the entry signals derived from them match an independent recomputation
+    (test_flag_off_per_bar_output_matches_the_ladder).
+Each of the three carries a control showing it CAN fail. "Byte-identical" is not among them.
 
 PIN SELECTOR -- READ THIS BEFORE USING IT. `TF_FAMILY_META_ENFORCED_PINS` restricts which
 pins run. It exists for ONE reason: pin (b2) currently FAILS on the real orphan-zone gap,
 which this packet is explicitly scoped OUT of fixing (that gap belongs to the session-
 resolver lane), so with all pins active the engine correctly REFUSES TO LOAD and the
 acceptance sweep for pins (a)/(b)/(c) could not otherwise be run at all. It is a
-MEASUREMENT SELECTOR, not an escape hatch:
-  - it can only ever be consulted when enforcement is already ON;
-  - it cannot silence a pin implicitly -- you must NAME the pins you are running, and the
-    excluded pin is recorded in `enforcement_status()` and printed in the raised error;
-  - it is NOT read when the value is unset (all pins run).
-The honest reading of a run made with this variable set is "pins a,b,c held; pin b2 was not
+MEASUREMENT SELECTOR, not an escape hatch. Three mechanical fences make "silently ran
+nothing" impossible; each was a LIVE DEFECT found by grading, not a hypothetical:
+  - an EMPTY selection RAISES. `PINS=","` (or `""`, or `" , "`) once parsed to the empty set,
+    ran zero checks, and returned silently with `ok=True`. The variable must either be UNSET
+    (all pins run) or name at least one pin.
+  - a NAMED-BUT-UNEVALUABLE pin RAISES. Pin (a) needs a dispatch map; `collect_violations`
+    used to skip it whenever `dispatch is None` while `enforcement_status()` went on
+    reporting it as active and `ok=True`. A pin that is named is evaluated or the call fails.
+  - the success cache is KEYED ON THE PIN SET. A pass under `PINS=a` used to warm a global
+    `_ENFORCED_OK` that made a LATER all-pins load return clean without running b or b2 --
+    i.e. the narrow run silently vouched for the broad one. A cached pass now satisfies only
+    pin sets it actually covered.
+  - an unrecognized pin name RAISES (a typo must not disable a check while looking like it
+    enabled one), and the skipped pins are recorded in `enforcement_status()` and printed in
+    any raised error.
+`active_pins()` is a pure reader of the environment and IS callable with the flag OFF (the
+delta harness and the tests both do so); what is gated on the flag is `ensure_enforced`.
+The honest reading of a run made with this variable set is "pins a,b held; pin b2 was not
 evaluated" -- never "enforcement passed".
 """
 
@@ -84,7 +109,17 @@ class FamilyMetaEnforcementError(RuntimeError):
 
     Deliberately a hard error with a nameable message: the whole point of this packet is
     that a declaration which does not resolve must be a STARTUP ERROR, never a silent
-    fallback. Callers MUST NOT catch this."""
+    fallback.
+
+    CATCHING RULE, RESTATED ACCURATELY (D6 sweep). This used to say flatly "Callers MUST NOT
+    catch this", and the packet's own committed harness
+    (docs/replay-results/h1-battery/family_meta_enforcement_delta.py::run_arm) catches it in a
+    broad `except Exception` — so the absolute form was already false of the code shipped
+    beside it. The real rule is the one that harness actually honours: this error may be
+    caught ONLY to RECORD it as a result (run_arm stores the repr and marks the spec's signals
+    -1). It may never be caught to CONTINUE AS IF IT HAD NOT HAPPENED — no substituting a
+    default, no falling through to a pass-through array, no logging-and-skipping. A caught-
+    and-recorded failure is a measurement; a caught-and-absorbed one is the defect."""
 
 
 def family_meta_enforced() -> bool:
@@ -95,13 +130,28 @@ def family_meta_enforced() -> bool:
 
 
 def active_pins() -> frozenset[str]:
-    """The pins that will actually be evaluated. Unset (the normal case) => ALL of them.
-    An unrecognized pin name is an error, not a silent no-op: a typo here would otherwise
+    """The pins that will actually be evaluated. UNSET (the normal case) => ALL of them.
+
+    LYING MODE 1, FENCED. Absent and present-but-empty are NOT the same thing and must not be
+    collapsed. `PINS=","` parsed to the empty set, `unknown` was then also empty so nothing
+    raised, `collect_violations` ran no check, and `ensure_enforced` returned silently with
+    enforcement nominally ON -- the precise "silently skip EVERY pin" this selector's own
+    docstring promised was impossible. So: if the variable is PRESENT it must NAME at least
+    one pin. To run everything, UNSET it; there is no empty-string spelling for "all".
+
+    An unrecognized pin name is likewise an error, not a silent no-op: a typo would otherwise
     disable a check while looking like it enabled one."""
-    raw = os.environ.get(PINS_ENV, "").strip()
-    if not raw:
+    if PINS_ENV not in os.environ:
         return frozenset(ALL_PINS)
+    raw = os.environ[PINS_ENV]
     names = frozenset(p.strip().lower() for p in raw.split(",") if p.strip())
+    if not names:
+        raise FamilyMetaEnforcementError(
+            f"{PINS_ENV} is set to {raw!r}, which names NO pin. An empty or malformed pin "
+            f"selection would run zero checks while enforcement reports ON -- that is the "
+            f"defect this fence exists to delete. UNSET {PINS_ENV} to run all pins "
+            f"{list(ALL_PINS)}, or name at least one."
+        )
     unknown = names - set(ALL_PINS)
     if unknown:
         raise FamilyMetaEnforcementError(
@@ -400,21 +450,44 @@ def verify_dispatch_coverage(dispatch: dict[str, str]) -> list[Violation]:
 
 def collect_violations(dispatch: dict[str, str] | None = None) -> list[Violation]:
     """Every violation across every ACTIVE pin, collected rather than short-circuited so one
-    load reports the whole truth instead of the first thing it tripped over."""
+    load reports the whole truth instead of the first thing it tripped over.
+
+    LYING MODE 2, FENCED. Pin (a) is the only pin that needs an argument. The guard used to
+    read `if "a" in pins and dispatch is not None`, so a caller passing no dispatch silently
+    dropped pin (a) while `active_pins()` -- and therefore `enforcement_status()` -- went on
+    reporting it ACTIVE, `pins_skipped` omitted it, and `ok` came back True over a live
+    second-router violation (verified: a planted orphan dispatch key was reported as 1
+    violation with the map and 0 without it). A pin that is NAMED is EVALUATED, or the call
+    raises. "Not evaluable here" is not a quiet pass."""
     pins = active_pins()
+    if "a" in pins and dispatch is None:
+        raise FamilyMetaEnforcementError(
+            f"pin (a) is active but no dispatch map was supplied, so it CANNOT be evaluated. "
+            f"Skipping it here would report a pin as active while running nothing. Pass the "
+            f"executable layer's dispatch, or name only the pins you can evaluate via "
+            f"{PINS_ENV} (active={sorted(pins)})."
+        )
     out: list[Violation] = []
     if "b" in pins:
         out.extend(verify_primitives())
     if "b2" in pins:
         out.extend(verify_emit_subset_covered())
-    if "a" in pins and dispatch is not None:
+    if "a" in pins:
+        assert dispatch is not None  # guarded above
         out.extend(verify_dispatch_coverage(dispatch))
     return out
 
 
 def enforcement_status(dispatch: dict[str, str] | None = None) -> dict:
-    """Machine-readable status. Always reports which pins were SKIPPED, so a passing run
-    made under a pin selector can never be read as "enforcement passed"."""
+    """Machine-readable status. Always reports which pins were SKIPPED, so a passing run made
+    under a pin selector can never be read as "enforcement passed".
+
+    That claim was FALSE until this wave in two ways, both now fenced upstream in
+    `active_pins()` / `collect_violations()` rather than here: an empty selection reported
+    `pins_active=[]` with `ok=True`, and a dispatch-less call reported pin (a) ACTIVE while
+    never running it. This function is a reporter; it is honest because the things it reports
+    on now raise instead of degrading. `ok` means "every pin in `pins_active` RAN and found
+    nothing" -- it never means "enforcement passed"."""
     pins = active_pins()
     violations = collect_violations(dispatch)
     return {
@@ -426,21 +499,29 @@ def enforcement_status(dispatch: dict[str, str] | None = None) -> dict:
     }
 
 
-_ENFORCED_OK: bool = False
+_ENFORCED_OK_PINS: frozenset[str] | None = None
+"""The pin set a previous call actually PASSED, or None. LYING MODE 3, FENCED. This used to be
+a bare `_ENFORCED_OK: bool`: a first load under `PINS=a` set it True, and every LATER load --
+including one with the selector unset and therefore ALL pins nominally active -- hit the cache
+and returned clean without running (b) or (b2) at all. Verified: an all-pins `ensure_enforced`
+returned CLEAN behind a warm narrow-selector cache, even though pin (b2) genuinely fails today
+on the orphan-zone gap. A narrow run must never vouch for a broad one, so the cache now records
+WHICH pins it covered and is only honoured for a subset of them."""
 
 
 def ensure_enforced(dispatch: dict[str, str] | None = None, *, force: bool = False) -> None:
     """THE LOAD GATE. Called before any spec can be turned into an executable strategy.
 
-    No-op when the flag is OFF (default) -- that is the byte-identity guarantee. When ON,
-    raises FamilyMetaEnforcementError naming every violation. There is no fallback, no
-    default, and no partial success: this function either returns or the engine does not
-    start. `force=True` bypasses the once-only cache (tests, and any process that mutates
-    FAMILY_META between checks)."""
-    global _ENFORCED_OK
+    No-op when the flag is OFF (default) -- that is the rollback guarantee. When ON, raises
+    FamilyMetaEnforcementError naming every violation. There is no fallback, no default, and
+    no partial success: every ACTIVE pin is evaluated on every call that is not covered by a
+    cached pass over a superset of those same pins. `force=True` bypasses the cache entirely
+    (tests, and any process that mutates FAMILY_META between checks)."""
+    global _ENFORCED_OK_PINS
     if not family_meta_enforced():
         return
-    if _ENFORCED_OK and not force:
+    pins_wanted = active_pins()
+    if not force and _ENFORCED_OK_PINS is not None and pins_wanted <= _ENFORCED_OK_PINS:
         return
     violations = collect_violations(dispatch)
     if violations:
@@ -453,11 +534,14 @@ def ensure_enforced(dispatch: dict[str, str] | None = None, *, force: bool = Fal
             f"fallback -- see docs/designs/packet-family-meta-enforced-2026-07-20.md."
         )
         raise FamilyMetaEnforcementError(header + "\n  " + "\n  ".join(str(v) for v in violations))
-    _ENFORCED_OK = True
+    # Record the pins this pass actually COVERED -- never a bare "ok" (see _ENFORCED_OK_PINS).
+    # Union with any previous pass so repeated narrow runs accumulate honestly instead of
+    # overwriting a broader pass with a narrower one.
+    _ENFORCED_OK_PINS = pins_wanted if _ENFORCED_OK_PINS is None else (_ENFORCED_OK_PINS | pins_wanted)
 
 
 def reset_enforcement_cache() -> None:
-    """Test-only. Clears the once-only success cache so a test can flip FAMILY_META or the
-    env and re-run the gate in the same process."""
-    global _ENFORCED_OK
-    _ENFORCED_OK = False
+    """Test-only. Clears the success cache so a test can flip FAMILY_META or the env and
+    re-run the gate in the same process."""
+    global _ENFORCED_OK_PINS
+    _ENFORCED_OK_PINS = None

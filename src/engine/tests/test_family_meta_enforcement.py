@@ -1,11 +1,27 @@
 """Tests for the FAMILY_META enforcement gate
 (docs/designs/packet-family-meta-enforced-2026-07-20.md).
 
-★ EVERY GUARD HERE IS RED-PROVEN. A guard that cannot fire is the exact defect this packet
-exists to delete — FILTER's constant-True spine conditions were a probe that could not fail —
-so it may not be re-introduced by the fix for it. Each test that asserts something PASSES
-carries a paired control showing the same assertion FAILING when the thing it guards is
-actually broken. An assertion with no such control is not evidence.
+★ WHICH GUARDS HERE ARE RED-PROVEN, AND WHICH ARE NOT. This header used to read "EVERY GUARD
+HERE IS RED-PROVEN." It was false, and grading found the counterexample:
+test_flag_off_per_bar_output_is_unchanged_by_this_packet claimed per-bar array equality
+"proven by exercising it" over a body that asserted only that a ledger was empty — the grader
+sabotaged flag-OFF per-bar output (1 signal -> 0) and it still PASSED. A superlative that
+cannot survive its own check is the defect this packet exists to delete, wearing a docstring.
+So, stated at actual strength:
+
+  RED-PROVEN (each carries a paired control showing the same assertion FAILING when the thing
+  it guards is actually broken, and the control is named next to it):
+    - fail-loud / pin (b)            -> test_fail_loud_control_unmodified_table_loads_clean
+    - derived dispatch / pin (a)     -> test_second_router_control_flag_off_ignores_the_repoint
+    - (b2) sets are derived not transcribed -> test_b2_sets_are_read_from_live_objects_...
+    - flag-OFF declaration identity  -> test_byte_identity_control_the_proof_can_fail
+    - flag-OFF per-bar output        -> test_flag_off_per_bar_control_each_leg_can_fail
+    - all three pin-selector lying modes -> the three test_d1_mode*_control_* tests
+
+  PLAIN ASSERTIONS, no control, and NOT to be quoted as proofs: the pin-selector reporting
+  tests, test_invalidate_approximation_moves_to_true, test_no_fabricated_confluence_primitive_
+  was_written, and test_no_aspirational_pointer_survives_enforcement. They assert a property of
+  a table. That is worth having; it is not the same evidentiary class as the list above.
 """
 
 from __future__ import annotations
@@ -226,6 +242,22 @@ def test_gates_flag_must_agree_with_the_router():
         assert "gates=True" in str(exc.value)
 
 
+def test_gates_flag_must_agree_with_the_router_other_direction():
+    """★ THE SIBLING THE ORIGINAL TEST LEFT OPEN. `NON_GATING_HANDLERS`' docstring claims pin
+    (a) checks gates against the router "in both directions". The CODE does; the TESTS only
+    covered gates=True-routed-to-non-gating. The opposite disagreement — a family declaring
+    gates=False while routed to a real evaluator — had no test at all, so half of a
+    both-directions claim was resting on a reading of the source.
+
+    Found by sweeping the claim class rather than the named instance (D6)."""
+    with enforced(), family_meta_patched("WAIT_SESSION", gates=False):
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            SpecConditionStrategy(compiled_spec=_spec("WAIT_SESSION"))
+        message = str(exc.value)
+        assert "gates=False" in message
+        assert "real evaluator" in message
+
+
 # ─────────────────────────────────────────────────────────────────────────────────────────
 # RETURN CHECKLIST 4 — (b2) EMIT ⊆ COVERED, DERIVED PROGRAMMATICALLY
 # ─────────────────────────────────────────────────────────────────────────────────────────
@@ -291,6 +323,15 @@ def test_b2_sets_are_read_from_live_objects_not_transcribed():
 
 # ─────────────────────────────────────────────────────────────────────────────────────────
 # RETURN CHECKLIST 6/7 — BOTH POLARITIES ON EVERY ENFORCED BINDING
+#
+# ★ "EVERY" IS NOW MECHANICALLY ENFORCED (D6 sweep). This header made an EVERY-claim over a
+# HAND-MAINTAINED list, and the list was incomplete: INVALIDATE declares an enforced primitive
+# (structural_stops.compute_structural_stop) and appeared in NEITHER polarity test. The claim
+# was false by one family and nothing would have said so — the same shape as D5's curated
+# 5-family list standing in for a population. Adding INVALIDATE to the list would fix the
+# instance and leave the class open, so the cure is
+# test_every_enforced_primitive_family_is_polarity_tested below: it DERIVES the population
+# from FAMILY_META and fails if any family escapes both lists.
 # ─────────────────────────────────────────────────────────────────────────────────────────
 
 ENFORCED_PRIMITIVE_FAMILIES = [
@@ -302,6 +343,65 @@ ENFORCED_PRIMITIVE_FAMILIES = [
     ("WAIT_RETEST", "retest of the level"),
     ("WAIT_CONFIRMATION", "confirmation candle"),
 ]
+"""Families declaring an enforced primitive that is routed to a REAL evaluator (gates=True)."""
+
+ENFORCED_PRIMITIVE_NON_GATING_FAMILIES = [
+    ("INVALIDATE", "structure breaks the low"),
+]
+"""Families declaring an enforced primitive routed to a NON-gating handler (gates=False).
+INVALIDATE is the whole population today: its primitive resolves, but production never calls
+it (production_executed=False), so it is routed to _h_non_gating and must land in the ledger
+rather than produce a gate. It needs its own polarity-1 assertion — asserting an empty ledger,
+as the gating families do, would be asserting the opposite of what is true of it. That is why
+it was missing, and why the completeness test below is a derivation and not a longer list."""
+
+
+def test_every_enforced_primitive_family_is_polarity_tested():
+    """★ THE CLASS CURE for the incomplete EVERY-claim above. The set of families declaring an
+    enforced primitive is READ FROM FAMILY_META, not transcribed, and every one of them must
+    appear in exactly one of the two polarity lists. A family added to the table later cannot
+    slip past both without failing here."""
+    declared = {
+        family for family, meta in sfb.FAMILY_META.items()
+        if meta.enforced_declaration()[0] is not None
+    }
+    gating = {f for f, _ in ENFORCED_PRIMITIVE_FAMILIES}
+    non_gating = {f for f, _ in ENFORCED_PRIMITIVE_NON_GATING_FAMILIES}
+    assert not (gating & non_gating), "a family cannot be in both polarity lists"
+    assert declared == gating | non_gating, (
+        f"families declaring an enforced primitive but covered by NO polarity test: "
+        f"{sorted(declared - gating - non_gating)}; listed but not declared: "
+        f"{sorted((gating | non_gating) - declared)}"
+    )
+    # and the split must match the table's own gates flag, not the author's memory of it
+    for family in gating:
+        assert sfb.FAMILY_META[family].gates is True, f"{family} is in the GATING list but gates=False"
+    for family in non_gating:
+        assert sfb.FAMILY_META[family].gates is False, f"{family} is in the NON-GATING list but gates=True"
+
+
+@pytest.mark.parametrize(("family", "obj"), ENFORCED_PRIMITIVE_NON_GATING_FAMILIES)
+def test_polarity_non_gating_resolves_and_is_recorded(family: str, obj: str):
+    """Polarity 1, non-gating arm: the declared primitive resolves, the condition produces a
+    per-bar array, and it is RECORDED in the non-gating ledger rather than silently passing as
+    a gate. The mirror of test_polarity_resolves_and_runs for the gates=False population."""
+    with enforced():
+        strategy = SpecConditionStrategy(compiled_spec=_spec(family, obj))
+        strategy.compute(_bars())
+        assert strategy.last_per_condition_bool, f"{family} produced no per-condition array"
+        ledger = strategy.last_non_gating_conditions
+        assert list(ledger) == ["c1"], f"{family} was not recorded as non-gating"
+        assert ledger["c1"]["declared"] == sfb.FAMILY_META[family].enforced_declaration()[0]
+
+
+@pytest.mark.parametrize(("family", "obj"), ENFORCED_PRIMITIVE_NON_GATING_FAMILIES)
+def test_polarity_non_gating_fails_loud_when_absent(family: str, obj: str):
+    """Polarity 2, non-gating arm: being routed to a non-gating handler must NOT exempt a
+    family from pin (b). A non-gating condition with an unresolvable pointer is still a lie."""
+    with enforced(), family_meta_patched(family, enforced_primitive=f"gone.{family.lower()}_primitive"):
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            SpecConditionStrategy(compiled_spec=_spec(family, obj))
+        assert f"gone.{family.lower()}_primitive" in str(exc.value)
 
 
 @pytest.mark.parametrize(("family", "obj"), ENFORCED_PRIMITIVE_FAMILIES)
@@ -388,14 +488,21 @@ def test_non_gating_conditions_are_recorded_not_hidden():
 
 
 # ─────────────────────────────────────────────────────────────────────────────────────────
-# RETURN CHECKLIST — FLAG-OFF BYTE IDENTITY, PROVEN NOT ASSERTED
+# RETURN CHECKLIST — THE FLAG-OFF GUARANTEE, AT ITS ACTUAL STRENGTH
+#
+# NOT "byte identity". Two separable statements live below, and conflating them is what earned
+# BAND 6: (1) the legacy DECLARATIONS have not drifted (a table check, tripwired against a
+# hand transcription); (2) the flag-OFF PER-BAR BEHAVIOUR matches the ladder (an engine check,
+# with an independent recomputation of the signals). Each has its own control.
 # ─────────────────────────────────────────────────────────────────────────────────────────
 
-BYTE_IDENTITY_FAMILIES = [
+LEGACY_DECLARATION_FAMILIES = [
     "WAIT_SESSION", "WAIT_STRUCTURE", "VERIFY_STRUCTURE", "WAIT_BIAS", "CONFIRM_DIRECTION",
     "WAIT_RETEST", "FILTER", "WAIT_CONFIRMATION", "INVALIDATE", "ENABLE_ENTRY", "ENTER",
     "EXIT_HINT", "RESET", "EXCEPTION",
 ]
+"""Renamed from BYTE_IDENTITY_FAMILIES: these are the families whose LEGACY DECLARATION is
+checked, which is not the same thing as byte identity and must not be named as if it were."""
 
 LEGACY_DECLARATIONS = {
     "WAIT_SESSION": ("session_windows", False),
@@ -411,9 +518,19 @@ LEGACY_DECLARATIONS = {
     "ENTER": ("spine_completion_trigger", False),
     "EXIT_HINT": ("provenance_only", False),
 }
-"""The pre-packet declarations, held here so a silent drift in the LEGACY column — which is
-what flag-OFF production still emits — is caught. These are the values every persisted binding
-plan and every certified artifact was produced under; they are preserved, not endorsed."""
+"""The pre-packet declarations, HAND-TRANSCRIBED, held here so a silent drift in the LEGACY
+column — which is what flag-OFF production still emits — is caught. These are the values every
+persisted binding plan and every certified artifact was produced under; they are preserved,
+not endorsed.
+
+★ WHAT THIS TABLE CAN AND CANNOT ESTABLISH (corrected after grading). It is a DRIFT TRIPWIRE
+on FAMILY_META's legacy column. It is NOT, and cannot be, a byte-identity proof against
+pre-commit code: it is a copy typed by hand into this file, so it can only ever say "the table
+still equals what someone wrote down", never "the engine still emits what it emitted before
+this packet". The test below was previously named ...binding_plans_are_byte_identical and
+compared TWO fields against this dict; the name promised an object comparison the body never
+made. Renamed and widened. The per-bar statement — the one that is actually about engine
+behaviour — lives in test_flag_off_per_bar_output_matches_the_ladder."""
 
 
 def test_flag_off_declarations_are_unchanged():
@@ -424,25 +541,53 @@ def test_flag_off_declarations_are_unchanged():
         assert meta.effective_approximation() is approximation, family
 
 
-@pytest.mark.parametrize("family", BYTE_IDENTITY_FAMILIES)
-def test_flag_off_binding_plans_are_byte_identical(family: str):
-    """Flag OFF => the binding a condition receives is exactly the legacy one."""
+@pytest.mark.parametrize("family", LEGACY_DECLARATION_FAMILIES)
+def test_flag_off_binding_matches_the_legacy_column(family: str):
+    """Flag OFF => the BINDING OBJECT a condition receives agrees, field by field, with the
+    live legacy column of FAMILY_META — and that column still equals the transcribed table.
+
+    ★ RENAMED AND WIDENED AFTER GRADING. Was `test_flag_off_binding_plans_are_byte_identical`,
+    which compared two fields against a hand-typed dict and was cited in the module docstring
+    of family_meta_enforcement.py as proof the engine is "byte-identical" flag OFF. It never
+    established that; nothing in-process can, because there is no pre-packet artifact to diff.
+    Two separate things are checked here, and neither is called byte-identity:
+
+      (1) AGAINST THE LIVE OBJECT, not a transcription: every FAMILY_META-derived field of the
+          binding equals what the meta's own effective_* accessors return under the flag. This
+          is the comparison the old name implied and the old body skipped — a divergence
+          between what FAMILY_META says and what bind_condition() emits is caught here even if
+          BOTH have drifted away from the transcribed table.
+      (2) AGAINST THE TRANSCRIPTION, as a drift tripwire only: the same values still match
+          LEGACY_DECLARATIONS. The WAIT_SESSION exemption the old body carried (`primitive`
+          only, approximation unchecked) was unnecessary — it matches — and is removed rather
+          than preserved.
+    """
     binding = sfb.bind_condition({"id": "c1", "type": family, "role": "spine", "object": "london session"})
-    expected = LEGACY_DECLARATIONS.get(family)
-    if expected is None:  # RESET / EXCEPTION — unsupported, unbound both regimes
-        assert binding.bindable is False
+    meta = sfb.FAMILY_META[family]
+
+    if meta.unsupported:  # RESET / EXCEPTION — unsupported, unbound in both regimes
+        assert binding.bindable is False, family
+        assert binding.primitive is None, family
+        assert family not in LEGACY_DECLARATIONS, family
         return
-    if family == "WAIT_SESSION":
-        assert binding.primitive == expected[0]
-    else:
-        assert binding.primitive == expected[0]
-        assert binding.approximation is expected[1]
+
+    # (1) the binding object vs the live legacy column
+    assert binding.bindable is True, family
+    assert binding.primitive == meta.effective_primitive(), family
+    assert binding.approximation is meta.effective_approximation(), family
+
+    # (2) the live column vs the hand-transcribed table (drift tripwire)
+    legacy_primitive, legacy_approximation = LEGACY_DECLARATIONS[family]
+    assert binding.primitive == legacy_primitive, family
+    assert binding.approximation is legacy_approximation, family
 
 
 def test_byte_identity_control_the_proof_can_fail():
-    """★ THE CONTROL ON THE BYTE-IDENTITY PROOF. A byte-identity assertion that cannot fail
-    proves nothing. Flipping the flag ON must make the SAME comparison fail — for FILTER,
-    WAIT_BIAS, INVALIDATE, ENABLE_ENTRY and ENTER, whose declarations genuinely move."""
+    """★ THE CONTROL ON THE LEGACY-DECLARATION CHECK. A declaration-identity assertion that
+    cannot fail proves nothing. Flipping the flag ON must make the SAME comparison fail — for
+    FILTER, WAIT_BIAS, CONFIRM_DIRECTION, INVALIDATE, ENABLE_ENTRY and ENTER, whose
+    declarations genuinely move. (Name kept for the module docstring's cross-reference; what it
+    controls is the declaration check, not a byte-identity claim — there isn't one any more.)"""
     moved = []
     with enforced():
         for family in ("FILTER", "WAIT_BIAS", "CONFIRM_DIRECTION", "INVALIDATE", "ENABLE_ENTRY", "ENTER"):
@@ -457,17 +602,163 @@ def test_byte_identity_control_the_proof_can_fail():
     ]
 
 
-def test_flag_off_per_bar_output_is_unchanged_by_this_packet():
-    """The strongest OFF-side statement available in-process: for every family, the flag-OFF
-    per-bar arrays equal the arrays the pre-packet `b.type` ladder produces — because the
-    ladder is the code that runs, verbatim, untouched. Proven by exercising it, not asserted."""
+PER_BAR_FAMILIES = ENFORCED_PRIMITIVE_FAMILIES + [("FILTER", "confluence")]
+
+# The pairs the flag-OFF `b.type` ladder routes to ONE shared evaluator — read off the ladder
+# in spec_condition_compiler.compute(): `elif b.type in ("WAIT_STRUCTURE", "VERIFY_STRUCTURE")`
+# shares `wait_structure`, and `elif b.type in ("WAIT_BIAS", "CONFIRM_DIRECTION")` shares
+# `wait_bias_cache[want_bearish]`. This is a structural fingerprint of the ladder, not a
+# transcribed value: rewire either branch and the partition below stops holding.
+LADDER_SHARED_EVALUATOR_PAIRS = [
+    ("WAIT_STRUCTURE", "VERIFY_STRUCTURE"),
+    ("WAIT_BIAS", "CONFIRM_DIRECTION"),
+]
+
+
+def _per_bar_run(family: str, obj: str, bars: pl.DataFrame):
+    """One compute(), returning the actual per-bar condition array and both signal columns."""
+    strategy = SpecConditionStrategy(compiled_spec=_spec(family, obj))
+    out = strategy.compute(bars)
+    return (
+        strategy.last_per_condition_bool["c1"],
+        out["entry_long"].to_numpy(),
+        out["entry_short"].to_numpy(),
+        strategy.last_non_gating_conditions,
+    )
+
+
+def _independent_entry_signals(arrays: dict[str, np.ndarray], n: int) -> np.ndarray:
+    """Recompute the entry signal from the per-bar arrays ALONE: strict AND across the spine,
+    then the rising edge into the satisfied state (single-fire). Deliberately a SECOND
+    implementation, written from the contract rather than called out of the engine, so a
+    change downstream of the arrays cannot move the columns and the check together."""
+    satisfied = np.ones(n, dtype=bool)
+    for arr in arrays.values():
+        satisfied &= arr
+    signal = np.zeros(n, dtype=bool)
+    signal[0] = satisfied[0]
+    signal[1:] = satisfied[1:] & ~satisfied[:-1]
+    return signal
+
+
+def test_flag_off_per_bar_output_matches_the_ladder():
+    """★ REWRITTEN AFTER GRADING (BAND 6). The previous version of this test carried this
+    docstring's claim — per-bar array equality "proven by exercising it, not asserted" — over a
+    body that asserted ONLY `last_non_gating_conditions == {}`. The grader sabotaged flag-OFF
+    per-bar output (1 signal -> 0) and it still PASSED. A proof that cannot fail is the exact
+    defect this packet exists to delete, so it may not live in the packet's own test file.
+
+    Three legs, each an ACTUAL per-bar comparison, each red-proven by the paired control below:
+
+      1. CROSS-ARM. For every family, the flag-OFF per-bar array and BOTH signal columns are
+         array-equal to the enforced arm's. This is the real statement available in-process:
+         the enforced router reproduces the ladder's per-bar behaviour exactly.
+      2. LADDER FINGERPRINT. Families the OFF ladder routes to one shared evaluator produce
+         EQUAL arrays; families routed elsewhere do not all collapse together. A ladder branch
+         that got rewired — or collapsed into the `else: np.ones` — breaks this.
+      3. INDEPENDENT RECOMPUTATION. entry_long / entry_short are re-derived from the per-bar
+         arrays by a second implementation of the strict-AND + rising-edge contract and must
+         match the columns compute() returned. This is the leg that catches a signal being
+         added or dropped downstream of the arrays — the grader's sabotage.
+    """
     bars = _bars()
-    for family, obj in ENFORCED_PRIMITIVE_FAMILIES + [("FILTER", "confluence")]:
-        strategy = SpecConditionStrategy(compiled_spec=_spec(family, obj))
-        strategy.compute(bars)
-        assert strategy.last_non_gating_conditions == {}, (
-            f"{family}: the enforcement ledger was populated with the flag OFF"
+    n = bars.height
+    assert os.environ.get(fme.FLAG_ENV, "false").lower() != "true"
+
+    off = {family: _per_bar_run(family, obj, bars) for family, obj in PER_BAR_FAMILIES}
+    with enforced():
+        on = {family: _per_bar_run(family, obj, bars) for family, obj in PER_BAR_FAMILIES}
+
+    for family, _ in PER_BAR_FAMILIES:
+        off_arr, off_long, off_short, off_ledger = off[family]
+        on_arr, on_long, on_short, _ = on[family]
+
+        # leg 0 (retained): the enforcement ledger stays empty with the flag OFF.
+        assert off_ledger == {}, f"{family}: enforcement ledger populated with the flag OFF"
+
+        # leg 1: ACTUAL per-bar arrays, not a proxy for them.
+        assert off_arr.dtype == bool and off_arr.shape == (n,), family
+        assert np.array_equal(off_arr, on_arr), f"{family}: per-bar array moved between arms"
+        assert np.array_equal(off_long, on_long), f"{family}: entry_long moved between arms"
+        assert np.array_equal(off_short, on_short), f"{family}: entry_short moved between arms"
+
+        # leg 3: signals re-derived from the arrays by an independent implementation.
+        expected = _independent_entry_signals({"c1": off_arr}, n)
+        assert np.array_equal(off_long, expected), (
+            f"{family}: entry_long does not follow from the per-bar array it is built from"
         )
+        assert not off_short.any(), f"{family}: direction=long produced short signals"
+
+    # leg 2: the ladder's routing partition.
+    for left, right in LADDER_SHARED_EVALUATOR_PAIRS:
+        assert np.array_equal(off[left][0], off[right][0]), (
+            f"{left}/{right} share one ladder evaluator but produced different arrays"
+        )
+    assert not np.array_equal(off["WAIT_STRUCTURE"][0], off["WAIT_RETEST"][0]), (
+        "every family produced the same array — the ladder has collapsed and legs 1/2 are vacuous"
+    )
+
+
+def test_flag_off_per_bar_control_each_leg_can_fail():
+    """★ THE CONTROL ON THE TEST ABOVE — the thing its predecessor did not have. Each of the
+    three legs is shown FAILING when the thing it guards is actually broken. Without this the
+    rewrite would be a longer assertion with the same standing as the one it replaces."""
+    bars = _bars()
+    n = bars.height
+
+    # leg 1 CONTROL: re-point WAIT_SESSION under enforcement. The arms must now DISAGREE
+    # per-bar, so the cross-arm equality leg is capable of failing.
+    #
+    # The baseline load INSIDE the enforced block is required, not incidental: re-pointing
+    # WAIT_SESSION leaves `session_windows.is_in_killzone` declared by nobody, which is a
+    # genuine pin-(a) violation, so a load attempted fresh under the re-pointed table refuses
+    # (correctly). Loading the un-patched table first satisfies the gate for THIS pin set, and
+    # the re-pointed strategy is then built against the already-passed gate. Same construction
+    # as test_repointing_family_meta_changes_what_runs above, for the same reason.
+    off_arr = _per_bar_run("WAIT_SESSION", "london session", bars)[0]
+    with enforced():
+        _per_bar_run("WAIT_SESSION", "london session", bars)
+        with family_meta_patched(
+            "WAIT_SESSION", enforced_primitive="spec_condition_compiler.candle_confirmation_check"
+        ):
+            on_arr = _per_bar_run("WAIT_SESSION", "london session", bars)[0]
+    assert not np.array_equal(off_arr, on_arr), "leg 1 cannot fail — it is not comparing arrays"
+
+    # leg 2 CONTROL: a shared-evaluator pair must stop matching if one side's array changes.
+    ws = _per_bar_run("WAIT_STRUCTURE", "price holds the high", bars)[0]
+    tampered = ws.copy()
+    tampered[0] = not tampered[0]
+    assert not np.array_equal(ws, tampered), "leg 2 cannot fail"
+
+    # leg 3 CONTROL: the grader's sabotage class, reproduced. Drop/add a single satisfied bar
+    # in the per-bar array and the independently recomputed signals MUST move — proving leg 3
+    # would have caught "1 signal -> 0" instead of passing through it.
+    session_arr = off_arr.copy()
+    baseline_signals = _independent_entry_signals({"c1": session_arr}, n)
+    assert baseline_signals.sum() == 1, "control assumes the single-fire session baseline"
+
+    # (3a) Flip ONE satisfied bar. The signal array MOVES — but note the count does NOT: the
+    # session window is a contiguous block, so suppressing its first bar just relocates the
+    # rising edge to the next one. Recorded because it is the reason leg 3 compares ARRAYS and
+    # not counts; a count-only check would have slept through this edit.
+    first_fire = int(np.argmax(baseline_signals))
+    nudged = session_arr.copy()
+    nudged[first_fire] = False
+    nudged_signals = _independent_entry_signals({"c1": nudged}, n)
+    assert not np.array_equal(baseline_signals, nudged_signals), "leg 3 cannot fail"
+    assert nudged_signals.sum() == baseline_signals.sum(), (
+        "expected the rising edge to relocate rather than vanish — if this changed, the "
+        "comment above is stale"
+    )
+
+    # (3b) THE GRADER'S SABOTAGE, EXACTLY: 1 signal -> 0. Suppress the whole satisfied block
+    # and the recomputed signals must go to zero. This is the edit that slipped past the old
+    # ledger-only body; leg 3 must be able to see it.
+    silenced = np.zeros(n, dtype=bool)
+    silenced_signals = _independent_entry_signals({"c1": silenced}, n)
+    assert silenced_signals.sum() == 0 < baseline_signals.sum(), (
+        "leg 3 is not sensitive to the 1-signal-to-0 sabotage class it exists to catch"
+    )
 
 
 # ─────────────────────────────────────────────────────────────────────────────────────────
@@ -501,3 +792,142 @@ def test_pin_selector_is_inert_when_enforcement_is_off():
             os.environ.pop(fme.PINS_ENV, None)
         else:
             os.environ[fme.PINS_ENV] = prev
+
+
+# ─────────────────────────────────────────────────────────────────────────────────────────
+# ★ D1 — THE THREE WAYS THE SELECTOR COULD SILENTLY SKIP EVERY PIN
+#
+# Graded BAND 6. The module docstring claimed "it cannot silence a pin implicitly"; it could,
+# three separate ways, and none of the three pre-existing selector tests looked at any of
+# them. Each test below was RUN AGAINST THE UNFIXED MODULE FIRST and FAILED there — that is
+# the only thing that makes it evidence rather than decoration.
+# ─────────────────────────────────────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize("raw", [",", "", "  ", " , ", ",,,", " ,, , "])
+def test_d1_mode1_an_empty_pin_selection_raises_instead_of_running_nothing(raw: str):
+    """LYING MODE 1. `PINS=","` filtered to the empty name set, `unknown` was then empty too so
+    nothing raised, and enforcement ran ZERO checks while reporting itself ON.
+
+    RED PROOF (pre-fix, all six spellings): active_pins() -> frozenset(),
+    collect_violations() -> [], enforcement_status() -> pins_active=[] ok=True, and
+    ensure_enforced() returned silently. Every spelling that names no pin must now RAISE."""
+    with enforced(pins=raw):
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            fme.active_pins()
+        assert "names NO pin" in str(exc.value)
+        # and the gate itself must refuse, not merely the reader
+        with pytest.raises(fme.FamilyMetaEnforcementError):
+            fme.ensure_enforced(ENFORCED_DISPATCH)
+        with pytest.raises(fme.FamilyMetaEnforcementError):
+            fme.enforcement_status(ENFORCED_DISPATCH)
+
+
+def test_d1_mode1_control_unsetting_the_selector_still_runs_all_pins():
+    """THE CONTROL for mode 1: raising on an empty selection must not be achieved by raising on
+    everything. With the variable UNSET, all three pins are active and are really evaluated —
+    which today means pin (b2) CONVICTS the live orphan-zone gap. A blanket raise would not
+    produce a b2 violation; it would produce a selector error."""
+    with enforced(pins=None):
+        assert fme.active_pins() == frozenset(fme.ALL_PINS)
+        violations = fme.collect_violations(ENFORCED_DISPATCH)
+        assert [v for v in violations if v.pin == "b2"], "all-pins run did not evaluate b2"
+
+
+def test_d1_mode2_a_named_pin_that_cannot_be_evaluated_raises():
+    """LYING MODE 2. `collect_violations` guarded pin (a) with `and dispatch is not None`, so a
+    dispatch-less call SKIPPED it while `enforcement_status()` reported it ACTIVE, left it out
+    of `pins_skipped`, and returned ok=True.
+
+    RED PROOF (pre-fix): with a second-router key planted in ENFORCED_DISPATCH,
+    collect_violations(None) returned 0 violations while collect_violations(ENFORCED_DISPATCH)
+    returned 1, and ensure_enforced(None) returned silently over that live violation."""
+    with enforced(pins="a"):
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            fme.collect_violations(None)
+        assert "cannot be evaluated" in str(exc.value).lower() or "CANNOT be evaluated" in str(exc.value)
+        with pytest.raises(fme.FamilyMetaEnforcementError):
+            fme.ensure_enforced(None)
+        with pytest.raises(fme.FamilyMetaEnforcementError):
+            fme.enforcement_status(None)
+
+
+def test_d1_mode2_the_violation_it_used_to_hide_is_now_reported():
+    """Mode 2, at the level of the thing it hid rather than the mechanism. A REAL pin-(a)
+    violation (a router entry no FAMILY_META names) must not be silently unreported just
+    because the caller passed no map — and with the map, it must still be caught."""
+    with enforced(pins="a"):
+        ENFORCED_DISPATCH["orphan.d1.mode2"] = "_h_non_gating"
+        try:
+            found = fme.collect_violations(ENFORCED_DISPATCH)
+            assert any("orphan.d1.mode2" in str(v) for v in found)
+            with pytest.raises(fme.FamilyMetaEnforcementError):
+                fme.collect_violations(None)  # must RAISE, never return [] over this
+        finally:
+            del ENFORCED_DISPATCH["orphan.d1.mode2"]
+
+
+def test_d1_mode2_control_pins_that_need_no_dispatch_still_run_without_one():
+    """THE CONTROL for mode 2: the fence is on pin (a) specifically, not a blanket ban on
+    dispatch-less calls. Pins (b)/(b2) need no map and must still evaluate — and b2 must still
+    convict the orphan-zone gap with dispatch=None."""
+    with enforced(pins="b,b2"):
+        violations = fme.collect_violations(None)
+        assert [v for v in violations if v.pin == "b2"]
+        assert not [v for v in violations if v.pin == "b"]
+
+
+def test_d1_mode3_a_narrow_pass_does_not_vouch_for_a_broader_run():
+    """★ LYING MODE 3, THE WORST OF THE THREE. `_ENFORCED_OK` was a bare bool keyed on nothing.
+    A pass under `PINS=a` warmed it, and a LATER load with the selector UNSET — all three pins
+    nominally active — hit the cache and returned CLEAN without running (b) or (b2).
+
+    RED PROOF (pre-fix): exactly that sequence returned clean, even though pin (b2) genuinely
+    FAILS today on the orphan-zone gap. The narrow run silently vouched for the broad one. The
+    cache is now keyed on the pin set it actually covered."""
+    prev_flag = os.environ.get(fme.FLAG_ENV)
+    prev_pins = os.environ.get(fme.PINS_ENV)
+    os.environ[fme.FLAG_ENV] = "true"
+    try:
+        fme.reset_enforcement_cache()
+        os.environ[fme.PINS_ENV] = "a"
+        fme.ensure_enforced(ENFORCED_DISPATCH)  # narrow run passes and warms the cache
+        os.environ.pop(fme.PINS_ENV, None)      # now ALL pins — b2 must actually run, and fail
+        with pytest.raises(fme.FamilyMetaEnforcementError) as exc:
+            fme.ensure_enforced(ENFORCED_DISPATCH)
+        assert "pin(b2)" in str(exc.value), "the all-pins load did not evaluate b2"
+    finally:
+        for key, val in ((fme.FLAG_ENV, prev_flag), (fme.PINS_ENV, prev_pins)):
+            if val is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = val
+        fme.reset_enforcement_cache()
+
+
+def test_d1_mode3_control_the_cache_still_works_within_its_covered_pin_set():
+    """THE CONTROL for mode 3: keying the cache must not amount to deleting it. A repeat call
+    over the SAME (or a narrower) pin set must still be served from the cache — proven by
+    sabotaging FAMILY_META after the warming pass and observing the repeat call NOT notice,
+    then observing that a genuinely BROADER pin set does not get the same free ride."""
+    prev_flag = os.environ.get(fme.FLAG_ENV)
+    prev_pins = os.environ.get(fme.PINS_ENV)
+    os.environ[fme.FLAG_ENV] = "true"
+    os.environ[fme.PINS_ENV] = "a,b"
+    try:
+        fme.reset_enforcement_cache()
+        fme.ensure_enforced(ENFORCED_DISPATCH)
+        with family_meta_patched("WAIT_RETEST", enforced_primitive="gone.nowhere"):
+            fme.ensure_enforced(ENFORCED_DISPATCH)          # same pin set -> cached, no re-check
+            os.environ[fme.PINS_ENV] = "b"
+            fme.ensure_enforced(ENFORCED_DISPATCH)          # narrower -> also covered
+            os.environ.pop(fme.PINS_ENV, None)              # broader -> must re-run and convict
+            with pytest.raises(fme.FamilyMetaEnforcementError):
+                fme.ensure_enforced(ENFORCED_DISPATCH)
+    finally:
+        for key, val in ((fme.FLAG_ENV, prev_flag), (fme.PINS_ENV, prev_pins)):
+            if val is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = val
+        fme.reset_enforcement_cache()
