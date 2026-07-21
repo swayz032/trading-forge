@@ -4,6 +4,24 @@
 
 ---
 
+## AR-169 · 2026-07-21 · ORPHAN-ZONE CLOSURE **PACKET STAGED** (R-175 §3) — the last blocker on the enforcement flag. ★★ **It does NOT pick the fix: it orders the COUNTS FIRST and makes the choice argue from data.** ★ The pin-selector expiry tripwire rides it, keyed to this lane's own closure. Held for ratify; the grade still runs.
+
+**1. STAGED, NOT DISPATCHED** — the enforcement grade is in flight and this packet's subject sits one file away from it. **Design work now, dispatch after the grade returns**, so the grader is never racing an edit.
+
+**2. ★★ THE PACKET REFUSES TO PICK THE FIX, and that is deliberate.** Two options are laid out — **(A) stop emitting** `lunch_blackout`/`overnight`, or **(B) cover them honestly** in `_ZONE_CHECKS` — and **the choice is ordered to be argued from the DATA, not from convenience:** blocking item 1 is *"how many corpus conditions bind each zone today, derived programmatically — the option choice is justified by these numbers, in writing."* **If ~0 conditions depend on them, A is honest and cheap; if real teachings do, B earns its blast radius. I do not know that number yet and I am not going to guess it into a packet.**
+
+**3. ★★ THE PROHIBITION I EXPECT TO MATTER MOST — and the session lane already convicted it.** `overnight` **has no single agreed clock definition.** That is **exactly** the *"London killzone"* finding the blind judge produced hours ago (*"sources give 2-5 a.m. ET, others 7-10 a.m. London — sounds precise, isn't"*). **So: inventing a window to satisfy the loader is FABRICATED PRECISION, and it would PROBE CLEAN.** Written into the packet by name, with the reasoning: **if no defensible window exists, that is an argument FOR Option A — never a licence to pick one quietly.**
+
+**4. ★ THE `:334` TRIPWIRE WILL FIRE, AND THE PACKET SAYS SO IN ADVANCE.** It asserts the gate is False for all **1,440** minutes and **self-destructs with a rewrite message when coverage closes.** **Its failure IS this packet working.** The packet orders it **REWRITTEN, never suppressed or deleted**, with the same both-directions discipline. **A tripwire whose firing gets treated as a regression teaches the next reader to disable tripwires.**
+
+**5. ★ THE ACCEPTANCE TEST IS THE ENFORCEMENT GUARD ITSELF** — with all pins active the engine must **LOAD**. **And red-proofed:** re-introduce an uncovered emission and show it **still refuses**. ***A guard that stops firing because the thing it guarded was removed is not a guard*** — that sentence is in the packet, because "it loads now" is exactly the evidence that would otherwise go unexamined.
+
+**6. THE PIN-SELECTOR EXPIRY TRIPWIRE RIDES THIS PACKET** (R-175 §2), **keyed to this lane's own closure** — when the orphan gap closes, any surviving reference to the selector **fails CI with a rewrite message.** It ships here **because this packet is the event it is keyed to.** **A transition instrument that cannot outlive its reason is the only kind worth having.**
+
+**7. The blast radius is declared per option, not in general:** under **A** nothing that currently binds changes (revert is inert); under **B** conditions bound to those zones **stop being permanently-False and begin to gate**, so historical output moves and **every newly-covered window must be DEFENDED with a source or a stated convention** — not assumed.
+
+**Holds:** flags OFF · enforcement grade in flight, untouched · the 77 sealed.
+
 ## AR-168 · 2026-07-21 · ★ **THE ENFORCEMENT GRADE IS DISPATCHED BY THIS SEAT, receipt held here** (R-176 §4) — with the relay fenced in the brief for the first time, and the grader pointed at the two things most likely to be wrong: **the refusal-to-load, and the pin selector.** Orphan-zone packet + expiry tripwire queued behind it.
 
 **1. RECEIPT HELD BY THE SEAT, and it is a fresh dispatch — not a re-labelling of the subagent's word.** R-176 §4 required the grade's receipt to sit with me. **No grade had been dispatched at all** (the only thing that existed was the build agent's own AR-166), **so this is the first and only dispatch of it.** I hold the receipt.
