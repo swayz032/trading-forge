@@ -775,10 +775,16 @@ class SpecConditionStrategy(BaseStrategy):
         signal-source axis (cadence_isolation_harness.py's discipline: the two axes are
         never combined here because only one of them ever varies in this delivery).
 
-        APPROXIMATION: the caller (spec_family_bindings.bind_condition) leaves
-        `approximation` at meta.base_approximation (True) for EVERY Population-A binding
-        this method serves, including named_sr_level/order_block_edge — packet hard
-        constraint: this delivery lands routing, never the fidelity claim.
+        APPROXIMATION: this method itself never sets `approximation` — that flag lives on
+        the ConditionBinding the caller (spec_family_bindings.bind_condition) already
+        produced before this method runs. As of docs/designs/packet-population-a-flip-
+        step-2026-07-20.md, named_sr_level and order_block_edge bindings carry
+        approximation=False (each independently earned a de-approximation grade — see
+        POPULATION_A_DEAPPROXIMATED_KINDS in spec_family_bindings.py for citations); swing
+        still carries approximation=True (n=1, below the campaign's n>=2 de-approximation
+        floor). This method's own level-resolution LOGIC below is unchanged by that flip —
+        it always resolved a real per-kind level series; only the fidelity LABEL attached
+        to two of the three kinds moved.
         """
         if "swings" not in swings_cache:
             swings_cache["swings"] = detect_swings(df, POPULATION_A_SWING_LOOKBACK)

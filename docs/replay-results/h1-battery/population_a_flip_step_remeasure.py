@@ -1,0 +1,251 @@
+"""Re-measure script for docs/designs/packet-population-a-flip-step-2026-07-20.md.
+
+Measures the effect of flipping `approximation` False for the two earned Population-A
+kinds (named_sr_level, order_block_edge) while leaving swing at True, against the frozen
+levelzone-object-reference-census.json (the same 16-row census the resolver's own tests
+(test_classify_population_a_kind_reproduces_census_membership_exactly) already verify this
+classifier reproduces exactly).
+
+HONEST SCOPE, stated up front (do not let the per-kind delta below imply more than this):
+this flip only changes what `bind_condition()` returns for a WAIT_STRUCTURE/VERIFY_STRUCTURE
+condition when BOTH TF_LEVELZONE_ROUTING_ENABLED and TF_LEVELZONE_RESOLVER_ENABLED are
+"true" (both default OFF, per the "ship gates STRICT, default OFF" pattern shared by every
+other flag in spec_family_bindings.py). Production output TODAY, with default env, is
+BYTE-IDENTICAL before and after this delivery — this is a re-measure of what the flip WOULD
+move if/when that sub-wire is later promoted to default-on, not a claim about today's live
+corpus rate. See wire1-dod-HONEST-FLOOR.json for a worked example of what happens when a
+"routing lands" claim gets conflated with a "fidelity moved today" claim (WIRE-1's inert
+htf_bars premise) — this script exists specifically to not repeat that error.
+
+APPEND-ONLY: writes docs/replay-results/h1-battery/population-a-flip-step-remeasure.json.
+Never touches wire1-dod-HONEST-FLOOR.json or wire1-dod-remeasure.json — those are a
+different (WIRE-1 HTF structure) fidelity claim, different scope, different denominator.
+
+Run: python docs/replay-results/h1-battery/population_a_flip_step_remeasure.py
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import sys
+from pathlib import Path
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT))
+
+from src.engine.spec_family_bindings import (  # noqa: E402
+    POPULATION_A_DEAPPROXIMATED_KINDS,
+    bind_condition,
+    classify_population_a_kind,
+)
+
+CENSUS_PATH = REPO_ROOT / "docs" / "replay-results" / "h1-battery" / "levelzone-object-reference-census.json"
+NARRATION_DENOMINATOR_PATH = (
+    REPO_ROOT / "docs" / "replay-results" / "h1-battery" / "narration-reclassification-FINAL.json"
+)
+OUT_PATH = REPO_ROOT / "docs" / "replay-results" / "h1-battery" / "population-a-flip-step-remeasure.json"
+
+
+def main() -> None:
+    census = json.loads(CENSUS_PATH.read_text(encoding="utf-8"))
+    rows = census["rows"]
+    n_total_levelzone_rows = census["n"]
+    assert n_total_levelzone_rows == 16, f"census row count drifted: expected 16, got {n_total_levelzone_rows}"
+
+    narration = json.loads(NARRATION_DENOMINATOR_PATH.read_text(encoding="utf-8"))
+    dual_denominators = narration["dual_denominators"]
+
+    # Force the both-flags-ON scenario for this measurement only (restored after) — the
+    # dispatch branch this delivery touches is unreachable with either flag off, so that
+    # is the ONLY scenario in which "before" vs "after" differ at all.
+    prior_routing = os.environ.get("TF_LEVELZONE_ROUTING_ENABLED")
+    prior_resolver = os.environ.get("TF_LEVELZONE_RESOLVER_ENABLED")
+    os.environ["TF_LEVELZONE_ROUTING_ENABLED"] = "true"
+    os.environ["TF_LEVELZONE_RESOLVER_ENABLED"] = "true"
+
+    per_kind: dict[str, dict] = {
+        "named_sr_level": {"n": 0, "flipped_to_false": 0, "condition_ids": []},
+        "order_block_edge": {"n": 0, "flipped_to_false": 0, "condition_ids": []},
+        "swing": {"n": 0, "flipped_to_false": 0, "condition_ids": []},
+    }
+    non_population_a_rows = 0
+    pop_a_rows = 0
+
+    try:
+        for r in rows:
+            kind = classify_population_a_kind(r["object"])
+            is_pop_a = (not r["bare_anaphora"]) and kind is not None
+            if not is_pop_a:
+                non_population_a_rows += 1
+                continue
+            pop_a_rows += 1
+            assert kind in per_kind, f"unexpected kind {kind!r} for {r['condition_id']}"
+
+            cond = {"id": r["condition_id"], "type": "WAIT_STRUCTURE", "object": r["object"], "role": r["role"]}
+            b_before = bind_condition(cond)  # code AS OF pre-flip-step commit would return True here
+            approximation_before = True  # structural: base_approximation was True for every kind pre-flip
+            approximation_after = b_before.approximation  # code AS-BUILT (post-flip) returns this now
+
+            per_kind[kind]["n"] += 1
+            per_kind[kind]["condition_ids"].append(r["condition_id"])
+            if approximation_before is True and approximation_after is False:
+                per_kind[kind]["flipped_to_false"] += 1
+    finally:
+        if prior_routing is None:
+            os.environ.pop("TF_LEVELZONE_ROUTING_ENABLED", None)
+        else:
+            os.environ["TF_LEVELZONE_ROUTING_ENABLED"] = prior_routing
+        if prior_resolver is None:
+            os.environ.pop("TF_LEVELZONE_RESOLVER_ENABLED", None)
+        else:
+            os.environ["TF_LEVELZONE_RESOLVER_ENABLED"] = prior_resolver
+
+    assert pop_a_rows == 7, f"expected 7 Population-A rows per the frozen census, got {pop_a_rows}"
+    assert non_population_a_rows == 9, f"expected 9 non-Population-A level/zone rows, got {non_population_a_rows}"
+
+    total_flipped = sum(per_kind[k]["flipped_to_false"] for k in per_kind)
+    assert total_flipped == 6, f"expected exactly 6 rows to de-approximate, got {total_flipped}"
+    assert per_kind["named_sr_level"]["flipped_to_false"] == 4
+    assert per_kind["order_block_edge"]["flipped_to_false"] == 2
+    assert per_kind["swing"]["flipped_to_false"] == 0
+
+    # NULL BASELINE (R-100 §2 / R-129 §1 discipline, same structural-null pattern as
+    # test_r3_binding_engagement_and_evaluation_observability_are_reported_separately_real_corpus's
+    # "NULL (resolver flag off): 0/7"): with TF_LEVELZONE_RESOLVER_ENABLED off, the Population-A
+    # resolver dispatch branch is UNREACHABLE — every level/zone binding falls back to
+    # LEVELZONE_NATIVE_PRIMITIVE or the base structure primitive, both of which always assign
+    # approximation=meta.base_approximation (True). This is a structural certainty (proven by
+    # test_flag_off_binding_plan_byte_identical_to_pre_delivery_baseline), not a sampled
+    # statistic, so the null flip-count is deterministically 0 for both denominators below.
+    null_flipped_resolver_off = 0
+    null_rate_among_pop_a = 1.0
+    null_rate_among_all_levelzone = 1.0
+
+    rate_before_among_pop_a = 1.0  # every Population-A row was approximation=True pre-flip, structurally
+    rate_after_among_pop_a = (pop_a_rows - total_flipped) / pop_a_rows
+    rate_before_among_all_levelzone = 1.0  # every level/zone row (Population A+B) was approximation=True
+    rate_after_among_all_levelzone = (n_total_levelzone_rows - total_flipped) / n_total_levelzone_rows
+
+    out = {
+        "artifact": "population-a-flip-step-remeasure",
+        "packet": "docs/designs/packet-population-a-flip-step-2026-07-20.md",
+        "authority": "R-143 §3 (main sequence, item 1)",
+        "APPEND_ONLY": True,
+        "does_not_touch": [
+            "docs/replay-results/h1-battery/wire1-dod-HONEST-FLOOR.json",
+            "docs/replay-results/h1-battery/wire1-dod-remeasure.json",
+        ],
+        "production_impact_today": {
+            "value": "ZERO",
+            "reason": (
+                "TF_LEVELZONE_ROUTING_ENABLED and TF_LEVELZONE_RESOLVER_ENABLED both default "
+                "'false' (unset). The dispatch branch this delivery's approximation flip lives "
+                "in (src/engine/spec_family_bindings.py, Population-A resolver block) is "
+                "unreachable unless BOTH are explicitly set 'true'. Every number below describes "
+                "the both-flags-ON hypothetical, not today's live behavior."
+            ),
+            "verified_by_test": (
+                "src/engine/tests/test_levelzone_population_a_resolver.py::"
+                "test_flag_off_binding_plan_byte_identical_to_pre_delivery_baseline"
+            ),
+        },
+        "scope_line": (
+            "Census source: docs/replay-results/h1-battery/levelzone-object-reference-census.json "
+            "(n=16 level/zone rows, frozen R-097 §3(i) artifact). Both env flags forced ON for "
+            "this measurement only. 'before' is structural (every level/zone binding's "
+            "approximation was True prior to this delivery — the resolver code path itself is "
+            "new as of commit 893b8dbc and never emitted approximation=False before this packet); "
+            "'after' is the AS-BUILT bind_condition() output post-flip."
+        ),
+        "dual_denominators": {
+            "with_narration_ALL_conditions": dual_denominators["with_narration_ALL_conditions"],
+            "without_narration_PRIMARY": dual_denominators["without_narration_PRIMARY"],
+            "note": (
+                "Carried per R-093 §3 standing convention (every artifact rides both corpus-wide "
+                "condition denominators). These 124/111 figures are the corpus-wide narration "
+                "denominators and are NOT specific to the 16-row level/zone census below — they "
+                "are reproduced here unmodified from narration-reclassification-FINAL.json, primary "
+                "reading is without-narration (111)."
+            ),
+            "source": "docs/replay-results/h1-battery/narration-reclassification-FINAL.json",
+        },
+        "ceiling": {
+            "n_level_zone_rows_total": n_total_levelzone_rows,
+            "n_population_a_rows": pop_a_rows,
+            "n_population_a_rows_null": 0,
+            "n_non_population_a_rows": non_population_a_rows,
+            "n_non_population_a_rows_null": 0,
+            "note": (
+                "9 of 16 level/zone rows are UNRESOLVABLE-AS-BUILT (bare anaphora or no kind "
+                "matched) and out of this delivery's reach entirely; of the remaining 7 "
+                "Population-A rows, 1 is swing (routed, not de-approximated) and 6 are "
+                "named_sr_level/order_block_edge (de-approximated). At most 6 of 16 rows can ever "
+                "move under this delivery."
+            ),
+        },
+        "per_kind_attribution": {
+            kind: {
+                "n": v["n"],
+                "n_null": 0,
+                "flipped_to_false": v["flipped_to_false"],
+                "still_true": v["n"] - v["flipped_to_false"],
+                "condition_ids": v["condition_ids"],
+            }
+            for kind, v in per_kind.items()
+        },
+        "corpus_rate_among_population_a_rows_hypothetical_both_flags_on": {
+            "n": pop_a_rows,
+            "n_null": 0,
+            "rate_BEFORE": rate_before_among_pop_a,
+            "rate_AFTER": round(rate_after_among_pop_a, 4),
+            "delta": round(rate_after_among_pop_a - rate_before_among_pop_a, 4),
+            "delta_attributed_named_sr_level": round(-(per_kind["named_sr_level"]["flipped_to_false"] / pop_a_rows), 4),
+            "delta_attributed_order_block_edge": round(
+                -(per_kind["order_block_edge"]["flipped_to_false"] / pop_a_rows), 4
+            ),
+            "delta_attributed_swing": 0.0,
+            "null_baseline_resolver_flag_off": {
+                "n": pop_a_rows,
+                "flipped": null_flipped_resolver_off,
+                "rate": null_rate_among_pop_a,
+                "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off",
+            },
+        },
+        "corpus_rate_among_all_level_zone_rows_hypothetical_both_flags_on": {
+            "n": n_total_levelzone_rows,
+            "n_null": 0,
+            "rate_BEFORE": rate_before_among_all_levelzone,
+            "rate_AFTER": round(rate_after_among_all_levelzone, 4),
+            "delta": round(rate_after_among_all_levelzone - rate_before_among_all_levelzone, 4),
+            "delta_attributed_named_sr_level": round(
+                -(per_kind["named_sr_level"]["flipped_to_false"] / n_total_levelzone_rows), 4
+            ),
+            "delta_attributed_order_block_edge": round(
+                -(per_kind["order_block_edge"]["flipped_to_false"] / n_total_levelzone_rows), 4
+            ),
+            "delta_attributed_swing": 0.0,
+            "null_baseline_resolver_flag_off": {
+                "n": n_total_levelzone_rows,
+                "flipped": null_flipped_resolver_off,
+                "rate": null_rate_among_all_levelzone,
+                "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off",
+            },
+        },
+        "swing_floor_unchanged": {
+            "n": per_kind["swing"]["n"],
+            "n_null": 0,
+            "still_approximation_true": per_kind["swing"]["n"] - per_kind["swing"]["flipped_to_false"],
+            "reason": "n=1, below the n>=2 de-approximation floor (R-102 §2). Not flipped. Never argued for here.",
+        },
+        "deapproximated_kinds_set": sorted(POPULATION_A_DEAPPROXIMATED_KINDS),
+    }
+
+    OUT_PATH.write_text(json.dumps(out, indent=1, sort_keys=False) + "\n", encoding="utf-8")
+    print(f"wrote {OUT_PATH}")
+    print(json.dumps(out["per_kind_attribution"], indent=1))
+    print(json.dumps(out["corpus_rate_among_all_level_zone_rows_hypothetical_both_flags_on"], indent=1))
+
+
+if __name__ == "__main__":
+    main()

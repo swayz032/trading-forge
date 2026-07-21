@@ -207,6 +207,42 @@ reason documented on LEVELZONE_NATIVE_PRIMITIVE above — spec_condition_compile
 `elif b.primitive == ...` dispatch must be able to tell "resolved per-condition level" apart
 from "shared EMA(20) proxy" even though a reader might expect them to share a marker."""
 
+# ─── Population-A Flip Step (docs/designs/packet-population-a-flip-step-2026-07-20.md)
+# ───────────────────────────────────────────────────────────────────────────────────
+# THE FIRST approximation=False OF THE ENTIRE CAMPAIGN. Two of the three Population-A
+# kinds have now separately EARNED a de-approximation grade on their own evidence — this
+# set is the ONLY place that evidence is allowed to change what `bind_condition` returns,
+# per-kind, never a blanket flip of the resolver path:
+#
+#   named_sr_level  -- earned by BOTH: (1) upstream detect_buyside_liquidity /
+#                       detect_sellside_liquidity fixed and graded Band 8, commit 7e3247ca
+#                       (AR-107: causal-clustering defect corrected); AND (2) this kind's own
+#                       per-kind causal-safety test passed (0/160 value-null, 0/28
+#                       activation-null, plants fired on both polarities, non-NaN-verified) —
+#                       R-136 discharge.
+#   order_block_edge -- earned by: detect_bullish_ob probed CLEAN 0/42 and detect_bearish_ob
+#                       probed CLEAN 0/47 under fired plant-catches, two independent
+#                       production-alignment passes (AR-117, commit a2604d39), with
+#                       order_flow.py carrying no defect across the wider 19/19 detector
+#                       sweep (AR-120, commit a87bbea3).
+#
+#   swing             -- STAYS approximation=True. n=1 in the census (only one Population-A
+#                       corpus row names a swing referent in-span) — the two-different-
+#                       levels discrimination check this campaign requires before trusting a
+#                       kind is UNRUNNABLE inside a population of one. De-approximation floor
+#                       is n>=2 (R-102 §2). swing ROUTES through the same resolver machinery
+#                       (test_swing_kind_routes_but_approximation_never_flips proves this by
+#                       test) but its disposition remains UNVERIFIED-BY-SAMPLE. Do not add
+#                       swing here without a second, independent Population-A swing row
+#                       entering the census and passing its own causal-safety test.
+#
+# Still gated behind BOTH TF_LEVELZONE_ROUTING_ENABLED and TF_LEVELZONE_RESOLVER_ENABLED
+# (both default OFF) — this set changes what approximation VALUE the resolver path assigns
+# once/if that sub-wire is promoted to default-on; it does not, by itself, change any
+# production output today (ship gates STRICT, default OFF, same as every other flag in this
+# module). The claim stands only once graded — see the packet's Rollback section.
+POPULATION_A_DEAPPROXIMATED_KINDS: frozenset[str] = frozenset({"named_sr_level", "order_block_edge"})
+
 
 def classify_population_a_kind(object_text: str) -> str | None:
     """Returns the Population-A reference kind ("swing" | "order_block_edge" |
@@ -662,23 +698,31 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         # primitive, so a Population-A-classified condition gets the per-condition resolved
         # level instead of the shared proxy. Requires BOTH flags: the pre-existing routing
         # flag (this condition would otherwise get retest_touch_check at all) AND the new,
-        # independent resolver flag. approximation is DELIBERATELY still meta.base_
-        # approximation (True) — packet hard constraint: this delivery lands the routing,
-        # never the fidelity claim (approximation=False is a separate, later,
-        # independently-graded step, for every kind including named_sr_level/
-        # order_block_edge that would otherwise qualify).
-        if levelzone_resolver_enabled() and classify_population_a_kind(obj) is not None:
-            return ConditionBinding(
-                condition_id=cond_id,
-                type=cond_type,
-                role=role,
-                object=obj,
-                bindable=True,
-                primitive=LEVELZONE_RESOLVER_PRIMITIVE,
-                approximation=meta.base_approximation,
-                executed=meta.executed,
-                reason=None,
-            )
+        # independent resolver flag.
+        #
+        # approximation, PER-KIND (docs/designs/packet-population-a-flip-step-2026-07-20.md):
+        # named_sr_level and order_block_edge are FALSE here — each independently earned a
+        # de-approximation grade (see POPULATION_A_DEAPPROXIMATED_KINDS docstring above for
+        # the citations). Every other Population-A kind (swing) stays at meta.base_
+        # approximation (True) — swing's population is n=1, below the n>=2 de-approximation
+        # floor, so it routes through this same primitive without a fidelity claim attached.
+        if levelzone_resolver_enabled():
+            pop_a_kind = classify_population_a_kind(obj)
+            if pop_a_kind is not None:
+                resolved_approximation = (
+                    False if pop_a_kind in POPULATION_A_DEAPPROXIMATED_KINDS else meta.base_approximation
+                )
+                return ConditionBinding(
+                    condition_id=cond_id,
+                    type=cond_type,
+                    role=role,
+                    object=obj,
+                    bindable=True,
+                    primitive=LEVELZONE_RESOLVER_PRIMITIVE,
+                    approximation=resolved_approximation,
+                    executed=meta.executed,
+                    reason=None,
+                )
         return ConditionBinding(
             condition_id=cond_id,
             type=cond_type,

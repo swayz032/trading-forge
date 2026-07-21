@@ -1,0 +1,105 @@
+{
+ "artifact": "population-a-flip-step-remeasure",
+ "packet": "docs/designs/packet-population-a-flip-step-2026-07-20.md",
+ "authority": "R-143 \u00a73 (main sequence, item 1)",
+ "APPEND_ONLY": true,
+ "does_not_touch": [
+  "docs/replay-results/h1-battery/wire1-dod-HONEST-FLOOR.json",
+  "docs/replay-results/h1-battery/wire1-dod-remeasure.json"
+ ],
+ "production_impact_today": {
+  "value": "ZERO",
+  "reason": "TF_LEVELZONE_ROUTING_ENABLED and TF_LEVELZONE_RESOLVER_ENABLED both default 'false' (unset). The dispatch branch this delivery's approximation flip lives in (src/engine/spec_family_bindings.py, Population-A resolver block) is unreachable unless BOTH are explicitly set 'true'. Every number below describes the both-flags-ON hypothetical, not today's live behavior.",
+  "verified_by_test": "src/engine/tests/test_levelzone_population_a_resolver.py::test_flag_off_binding_plan_byte_identical_to_pre_delivery_baseline"
+ },
+ "scope_line": "Census source: docs/replay-results/h1-battery/levelzone-object-reference-census.json (n=16 level/zone rows, frozen R-097 \u00a73(i) artifact). Both env flags forced ON for this measurement only. 'before' is structural (every level/zone binding's approximation was True prior to this delivery \u2014 the resolver code path itself is new as of commit 893b8dbc and never emitted approximation=False before this packet); 'after' is the AS-BUILT bind_condition() output post-flip.",
+ "dual_denominators": {
+  "with_narration_ALL_conditions": 124,
+  "without_narration_PRIMARY": 111,
+  "note": "Carried per R-093 \u00a73 standing convention (every artifact rides both corpus-wide condition denominators). These 124/111 figures are the corpus-wide narration denominators and are NOT specific to the 16-row level/zone census below \u2014 they are reproduced here unmodified from narration-reclassification-FINAL.json, primary reading is without-narration (111).",
+  "source": "docs/replay-results/h1-battery/narration-reclassification-FINAL.json"
+ },
+ "ceiling": {
+  "n_level_zone_rows_total": 16,
+  "n_population_a_rows": 7,
+  "n_population_a_rows_null": 0,
+  "n_non_population_a_rows": 9,
+  "n_non_population_a_rows_null": 0,
+  "note": "9 of 16 level/zone rows are UNRESOLVABLE-AS-BUILT (bare anaphora or no kind matched) and out of this delivery's reach entirely; of the remaining 7 Population-A rows, 1 is swing (routed, not de-approximated) and 6 are named_sr_level/order_block_edge (de-approximated). At most 6 of 16 rows can ever move under this delivery."
+ },
+ "per_kind_attribution": {
+  "named_sr_level": {
+   "n": 4,
+   "n_null": 0,
+   "flipped_to_false": 4,
+   "still_true": 0,
+   "condition_ids": [
+    "WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0",
+    "WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0",
+    "WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1",
+    "WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0"
+   ]
+  },
+  "order_block_edge": {
+   "n": 2,
+   "n_null": 0,
+   "flipped_to_false": 2,
+   "still_true": 0,
+   "condition_ids": [
+    "WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9",
+    "WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10"
+   ]
+  },
+  "swing": {
+   "n": 1,
+   "n_null": 0,
+   "flipped_to_false": 0,
+   "still_true": 1,
+   "condition_ids": [
+    "WAIT_STRUCTURE:the-next-thing-i-look-for-is-a-market-st#2"
+   ]
+  }
+ },
+ "corpus_rate_among_population_a_rows_hypothetical_both_flags_on": {
+  "n": 7,
+  "n_null": 0,
+  "rate_BEFORE": 1.0,
+  "rate_AFTER": 0.1429,
+  "delta": -0.8571,
+  "delta_attributed_named_sr_level": -0.5714,
+  "delta_attributed_order_block_edge": -0.2857,
+  "delta_attributed_swing": 0.0,
+  "null_baseline_resolver_flag_off": {
+   "n": 7,
+   "flipped": 0,
+   "rate": 1.0,
+   "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off"
+  }
+ },
+ "corpus_rate_among_all_level_zone_rows_hypothetical_both_flags_on": {
+  "n": 16,
+  "n_null": 0,
+  "rate_BEFORE": 1.0,
+  "rate_AFTER": 0.625,
+  "delta": -0.375,
+  "delta_attributed_named_sr_level": -0.25,
+  "delta_attributed_order_block_edge": -0.125,
+  "delta_attributed_swing": 0.0,
+  "null_baseline_resolver_flag_off": {
+   "n": 16,
+   "flipped": 0,
+   "rate": 1.0,
+   "basis": "structural (proven by test, not sampled) -- resolver dispatch branch unreachable with flag off"
+  }
+ },
+ "swing_floor_unchanged": {
+  "n": 1,
+  "n_null": 0,
+  "still_approximation_true": 1,
+  "reason": "n=1, below the n>=2 de-approximation floor (R-102 \u00a72). Not flipped. Never argued for here."
+ },
+ "deapproximated_kinds_set": [
+  "named_sr_level",
+  "order_block_edge"
+ ]
+}

@@ -12,10 +12,17 @@
 
 Scope-lock (packet §3): Population-A ONLY (named_sr_level / order_block_edge / swing,
 bare_anaphora=false). Population B (bare anaphora) is PROHIBITED — never resolved, never
-routed to this primitive. approximation MUST stay True everywhere in this delivery,
-including for named_sr_level/order_block_edge which would otherwise qualify — no
-approximation=False flip lands here (that is a separate, later, independently-graded
-step).
+routed to this primitive.
+
+UPDATED by docs/designs/packet-population-a-flip-step-2026-07-20.md: approximation is no
+longer uniformly True for every Population-A kind. named_sr_level and order_block_edge now
+resolve approximation=False (each independently earned a de-approximation grade — see
+POPULATION_A_DEAPPROXIMATED_KINDS in src/engine/spec_family_bindings.py for citations).
+swing still resolves approximation=True (n=1, below the n>=2 de-approximation floor,
+R-102 §2). The tests below that previously asserted "True for every kind" (this file's
+original R7 block) have been SPLIT per-kind rather than edited in place — see the R9 block
+near the bottom for the flip's own evidence-citing tests, and test_swing_kind_routes_but_
+approximation_never_flips (unchanged) for the swing floor proof.
 
 Every test that flips TF_LEVELZONE_ROUTING_ENABLED / TF_LEVELZONE_RESOLVER_ENABLED
 restores prior env state in a try/finally — same discipline as test_levelzone_routing.py.
@@ -192,15 +199,29 @@ def test_classify_population_a_kind_reproduces_census_membership_exactly():
 # Binding-plan level (spec_family_bindings.py)
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
-@pytest.mark.parametrize("obj", ["support zone", "demand zone", "previous high"])
-def test_population_a_object_binds_to_resolver_primitive_when_both_flags_enabled(obj):
+@pytest.mark.parametrize(
+    "obj,expected_approximation",
+    [
+        ("support zone", False),   # named_sr_level -- de-approximated (R-136, commit 7e3247ca)
+        ("demand zone", False),    # order_block_edge -- de-approximated (AR-117, commit a2604d39)
+        ("previous high", True),   # swing -- UNVERIFIED-BY-SAMPLE, n=1, stays approximated
+    ],
+)
+def test_population_a_object_binds_to_resolver_primitive_when_both_flags_enabled(obj, expected_approximation):
+    """UPDATED by the Population-A flip-step packet (2026-07-20): this test previously
+    asserted approximation is True for ALL three parametrized objects (packet hard
+    constraint at the time: no approximation=False anywhere in that delivery). It now
+    asserts the PER-KIND flip explicitly — named_sr_level and order_block_edge earned
+    approximation=False, swing did not (n=1, below the n>=2 de-approximation floor)."""
     cond = {"id": "c1", "type": "WAIT_STRUCTURE", "object": obj, "role": "spine"}
     with both_flags(True):
         b = bind_condition(cond)
     assert b.bindable is True
     assert b.primitive == LEVELZONE_RESOLVER_PRIMITIVE
     assert b.primitive == "levelzone_routing.population_a_resolver"
-    assert b.approximation is True, "packet hard constraint: NO approximation=False in this delivery"
+    assert b.approximation is expected_approximation, (
+        f"{obj!r}: expected approximation={expected_approximation}, got {b.approximation}"
+    )
 
 
 def test_population_b_object_falls_back_to_native_primitive_even_with_both_flags_enabled():
@@ -609,20 +630,51 @@ def test_r4_resolver_level_series_is_full_length_every_bar_no_holding_beyond_det
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
-# R7: approximation stays True everywhere in this delivery, including swing.
+# R7 [SUPERSEDED by docs/designs/packet-population-a-flip-step-2026-07-20.md]: this block
+# originally asserted approximation stays True for EVERY Population-A kind and polarity,
+# including named_sr_level/order_block_edge (the flip-step packet's own delivery had not
+# landed yet). That assertion is now FALSE for two of the three kinds by design — see R9
+# below, which replaces this test with a per-kind expectation and keeps the swing half of
+# the original claim alive (still True, still asserted, just split out).
 # ═══════════════════════════════════════════════════════════════════════════════════════
 
 @pytest.mark.parametrize(
-    "obj",
-    ["price found support here", "price found resistance here", "a demand zone formed",
-     "a supply zone formed", "the swing low held", "the swing high held"],
+    "obj,kind,expected_approximation",
+    [
+        ("price found support here", "named_sr_level", False),
+        ("price found resistance here", "named_sr_level", False),
+        ("a demand zone formed", "order_block_edge", False),
+        ("a supply zone formed", "order_block_edge", False),
+        ("the swing low held", "swing", True),
+        ("the swing high held", "swing", True),
+    ],
 )
-def test_r7_approximation_stays_true_for_every_population_a_kind_and_polarity(obj):
+def test_r9_approximation_flips_per_kind_named_sr_level_and_order_block_edge_only(obj, kind, expected_approximation):
+    """R9 (Population-A flip-step, docs/designs/packet-population-a-flip-step-2026-07-20.md):
+    approximation is now FALSE for every named_sr_level/order_block_edge polarity (both
+    bullish- and bearish-leaning object text), and remains True for every swing polarity.
+    Replaces R7 above, which this packet's own delivery falsifies for 4 of its 6 cases —
+    see the module docstring's UPDATED note; R7's assertion is not silently edited, it is
+    explicitly superseded here with the old text left in place as a receipt of what changed
+    and why."""
+    assert classify_population_a_kind(obj) == kind
     df = _synthetic_df(n=150, seed=3)
     cond = {"id": "s1", "type": "WAIT_STRUCTURE", "object": obj, "role": "spine"}
     with both_flags(True):
         strat = _run_single_condition_spec(cond, df)
-    assert strat.approximation is True, f"approximation flipped False for {obj!r} — packet hard constraint violated"
+    assert strat.approximation is expected_approximation, (
+        f"{obj!r} ({kind}): expected approximation={expected_approximation}, got {strat.approximation}"
+    )
+
+
+def test_r9_deapproximated_kinds_set_names_exactly_named_sr_level_and_order_block_edge():
+    """F1 evidence-at-the-flip-site proof, executable form: the exact set the code branches
+    on is {"named_sr_level", "order_block_edge"} — not a superset that would silently pull
+    in swing, not a subset that would under-deliver the packet's two named kinds."""
+    from src.engine.spec_family_bindings import POPULATION_A_DEAPPROXIMATED_KINDS
+
+    assert POPULATION_A_DEAPPROXIMATED_KINDS == frozenset({"named_sr_level", "order_block_edge"})
+    assert "swing" not in POPULATION_A_DEAPPROXIMATED_KINDS
 
 
 # ═══════════════════════════════════════════════════════════════════════════════════════
