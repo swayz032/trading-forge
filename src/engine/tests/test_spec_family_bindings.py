@@ -1217,13 +1217,32 @@ def test_role_resolver_never_emits_an_orphan_zone(_role_resolver_on):
     # co-factor added this wave is inside the sweep. These are the rows that
     # newly BIND, so they are exactly where a new orphan emission could appear.
     texts += _BATCH6_ACTION_POSITIVES + _BATCH6_ACTION_NEGATIVES + _BATCH6_KNOWN_FALSE_NEGATIVES
-    assert len(texts) >= 26 + 13 + 4 + 14 + 6 + 3 + 15 + 30 + 4
+    # FOURTH PASS: the government-rule population, for the same reason — the
+    # batch-7 positives are the rows that newly BIND this wave, so they are
+    # exactly where a new orphan emission could appear.
+    texts += (
+        _BATCH7_GOVERNED_POSITIVES
+        + _BATCH7_GOVERNED_NEGATIVES
+        + _BATCH8_AMBIGUOUS_ACTION_NEGATIVES
+        + _BATCH8_PREEXISTING_LEAKS
+        + _BATCH8_KNOWN_FALSE_NEGATIVES
+    )
+    assert len(texts) >= 26 + 13 + 4 + 14 + 6 + 3 + 15 + 30 + 4 + 6 + 24 + 19 + 3 + 5
     emitted = set()
+    newly_binding = set()
     for text in texts:
         binding = bind_condition({"id": "orphan:sweep", "type": "WAIT_SESSION", "object": text, "role": "spine"})
         if binding.session_zone is not None:
             emitted.add(binding.session_zone)
+            if text in _BATCH7_GOVERNED_POSITIVES:
+                newly_binding.add(binding.session_zone)
     assert emitted, "sweep emitted no zones at all — vacuous"
+    # ★ ANTI-VACUITY, sharpened for this pass: it is not enough that the sweep
+    # emitted SOME zone (the inherited rows guarantee that regardless of what
+    # the fourth pass does). The rows this pass newly admits must themselves
+    # have emitted real zones, or the orphan claim is being made about a
+    # population that never reached the zone table at all.
+    assert newly_binding, "this pass's newly-admitted rows emitted NO zone — the orphan claim is vacuous for them"
     assert not (emitted & orphans), f"role resolver newly emitted orphan zone(s): {emitted & orphans}"
 
 
@@ -2085,3 +2104,336 @@ def test_batch6_known_false_negatives_this_pass_did_not_close(_role_resolver_on,
         f"{text!r} now recognizes — verify the batch-6 negative fence still passes "
         "(especially its ordinary-life sibling) and move this row out with a stated reason"
     )
+
+
+# ════════════════════════════════════════════════════════════════════════════
+# FOURTH PASS — the discriminator is GOVERNMENT, not the preposition
+# ════════════════════════════════════════════════════════════════════════════
+#
+# The third pass loosened the market-context co-factor so a trading ACTION can
+# satisfy it. That worked and is preserved untouched. The limiter then moved to
+# _session_clock_does_work — the clock-role test the third pass deliberately
+# left alone — which is why three known misses fire the action conjunct and
+# still die:
+#
+#   "...so I FLATTEN before that"              anaphoric complement
+#   "I SCALE OUT into 3:45 p.m."               `into` not in the span-prep set
+#   "I CLOSE EVERY POSITION at 3pm on Fridays" `at` not in the span-prep set
+#
+# ★ THE NEW RULE, structurally. The three pre-existing clock-role tests all ask
+# a question about the clock's own local NEIGHBOURHOOD — which preposition sits
+# in front of it, which noun sits behind it, whether it is the whole object. A
+# neighbourhood question cannot separate two sentences whose neighbourhoods are
+# identical, and "garbage pickup is AT 8 a.m. on Thursdays" / "close every
+# position AT 3pm on Fridays" is exactly that pair.
+#
+# The fourth test asks instead: WHAT PREDICATE GOVERNS THE PP THE CLOCK HEADS?
+# The clock does work iff a trading-action construction's right edge is
+# immediately followed — modulo a closed set of domain-free adverbs — by a
+# temporal preposition whose complement IS that clock. Government is
+# directional and adjacent, so mere co-presence fails. Because government is
+# what carries the discrimination, the preposition no longer has to, which is
+# why `at`/`into` may count in this position and only in this position.
+#
+# The ANAPHORIC variant is the same government relation with a NOMINALLY EMPTY
+# complement — a bare that/this/it/then with no head noun. Such a pro-form has
+# no descriptive content and is resolved by EXHAUSTION: admitted only when the
+# text holds EXACTLY ONE clock token, and that token precedes it. Zero
+# antecedents, or two, and the referent is undetermined and refused. The
+# mechanism is emptiness + uniqueness + government; matching the word "that" is
+# a trigger, never the rule.
+#
+# ★ AND THE HONEST HALF. A first draft licensed all three action constructions.
+# Batch 8 below — authored at this rule specifically, and run against it for
+# the first time only when complete — measured 13 regressions. The diagnosis is
+# that _session_clock_does_work had been doing FP work FOR the action conjunct,
+# so the polysemous constructions may not license a governed clock. The third
+# target ("close every position at 3pm") therefore does NOT land; pinned below.
+
+_BATCH7_GOVERNED_POSITIVES = [
+    # (A2) unambiguous position-operation verb + a MENTION preposition
+    "flatten everything right at 9:45 a.m.",
+    "I scale out into 3:45 p.m.",
+    "scale out around 11 a.m. and let the runner go",
+    # (C) negated bare gerund + a preposition the span-prep set never had
+    "no trading into 9:30 a.m.",
+    # the ANAPHORIC form — the referent is in a prior clause
+    "the news comes out at 8:30 a.m. so I flatten before that",
+    "the data drops at 9:45 a.m. and I scale out before that",
+]
+
+# Ordinary life, SAME prepositional and anaphoric shapes. "at <time> on <day>"
+# doing non-trading work is the critical control and heads the list.
+_BATCH7_GOVERNED_NEGATIVES = [
+    "garbage pickup is at 8 a.m. on Thursdays",
+    "the recycling truck comes at 7 a.m. on Fridays",
+    "the yoga class is at 6 a.m. on Mondays",
+    "close the store at 9 p.m. on Fridays",
+    "cut the cake at 3 p.m. on Saturdays",
+    "take the medication at 9 a.m. on weekdays",
+    "hold the elevator at 8:15 a.m. so the movers can load",
+    "the museum takes the last entry at 4 p.m. on Sundays",
+    "they take entries at 9 a.m. on Saturdays for the contest",
+    "we close the applications at 5 p.m. on Fridays",
+    "the trade-in counter closes at 5 p.m. on Fridays",
+    # ANAPHORIC shape, ordinary life
+    "the bus leaves at 6 a.m. so I shower before that",
+    "the movers arrive at 9 a.m. so I pack before that",
+    "the ceremony is at 3 p.m. and we eat after that",
+    "my flight is at 6 a.m. so I sleep before that",
+    "the alarm goes at 5 a.m. and I get up right after that",
+    "the shop opens at 10 a.m. so I queue before that",
+    "the tour starts at 10:30 a.m. and we leave before that",
+    "the kids get home at 3:15 p.m. so I cook before that",
+    # CO-PRESENCE without government — a real trading action AND a clock, but
+    # the PP hangs off a different verb.
+    "I closed the position and the ceremony starts at 3 p.m.",
+    "we hold the runners and the parade begins at 2 p.m.",
+    # the complement is NOT nominally empty — determiner + noun, not anaphora
+    "we lit the candles at 7 p.m. and moved into that room",
+    "he parks at 8 a.m. before that meeting",
+    # TWO clock tokens => no unique antecedent => anaphora refused.
+    # NB deliberately avoids the word "lunch": the LEGACY resolve_session_keyword
+    # binds it to the orphan zone `lunch_blackout` before this delivery's
+    # resolver is ever consulted (see
+    # test_found_not_fixed_legacy_keyword_resolver_binds_ordinary_prose), which
+    # would make this row measure that pre-existing defect instead of this rule.
+    "the news is at 9 a.m. and the recap is at 12 p.m. so I flatten before that",
+]
+
+
+@pytest.mark.parametrize("text", _BATCH7_GOVERNED_POSITIVES)
+def test_batch7_action_governed_clocks_now_bind(_role_resolver_on, text):
+    """★ THE CLASS THIS PASS ADMITS, one polarity."""
+    assert classify_session_role(text).recognized is True, f"still missing: {text!r}"
+
+
+@pytest.mark.parametrize("text", _BATCH7_GOVERNED_NEGATIVES)
+def test_batch7_same_shapes_in_ordinary_life_are_still_refused(_role_resolver_on, text):
+    """★ THE PROHIBITED REGRESSION, fenced at BOTH layers. Every row shares the
+    prepositional or anaphoric shape of a positive above; "at <time> on <day>"
+    doing non-trading work is the critical control."""
+    assert classify_session_role(text).recognized is False, f"false positive: {text!r}"
+    binding = bind_condition({"id": "b7:neg", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None, f"SILENTLY BOUND {binding.session_zone!r}: {text!r}"
+
+
+def test_batch7_what_the_new_rule_admits_that_6a56618b_did_not(_role_resolver_on):
+    """★ CHECKLIST ITEM 2 — the standing obligation: state what the rule now
+    ADMITS that it did not before, and TEST that class as a differential
+    against the baseline module loaded from git, never a hand-copied number.
+
+    Three assertions, and the third is what makes it a control:
+      1. every batch-7 positive was REJECTED at 6a56618b and is ADMITTED now —
+         so the admitted class is exactly this set, computed not remembered;
+      2. the newly-admitted count is non-zero (the instrument discriminates);
+      3. BOTH versions reject all batch-7 and batch-8 negatives — the recall was
+         not bought with false positives. If a future change buys recall by
+         re-admitting prose, this fails before the recall assertion does."""
+    old = _load_module_at_ref("6a56618b")
+    import src.engine.spec_family_bindings as today
+
+    old_admits = [t for t in _BATCH7_GOVERNED_POSITIVES if old.classify_session_role(t).recognized]
+    new_admits = [t for t in _BATCH7_GOVERNED_POSITIVES if today.classify_session_role(t).recognized]
+    assert old_admits == [], f"baseline already admitted these, so they are not this pass's class: {old_admits}"
+    assert len(new_admits) == len(_BATCH7_GOVERNED_POSITIVES), (
+        f"admitted only {len(new_admits)}/{len(_BATCH7_GOVERNED_POSITIVES)}: "
+        f"{[t for t in _BATCH7_GOVERNED_POSITIVES if t not in new_admits]}"
+    )
+    assert old_admits != new_admits, "THE CONTROL DID NOT MOVE"
+
+    guarded = _BATCH7_GOVERNED_NEGATIVES + _BATCH8_AMBIGUOUS_ACTION_NEGATIVES
+    old_fp = [t for t in guarded if old.classify_session_role(t).recognized]
+    new_fp = [t for t in guarded if today.classify_session_role(t).recognized]
+    assert old_fp == [], f"baseline leaked on this pass's negatives (re-scope the claim): {old_fp}"
+    assert new_fp == [], f"★ THE PROHIBITED REGRESSION — this pass added false positives: {new_fp}"
+
+
+# ─── Batch 8: the batch that broke this pass's first draft ──────────────────
+#
+# Authored AFTER the rule was written and aimed squarely at what it newly
+# admits: ordinary-life sentences that each carry a REAL third-pass action
+# construction plus a governed clock. It measured 13 leaks against the first
+# draft. All 13 are refused now, by restricting which constructions may license
+# a governed clock — see _session_government_licensed_action_edges.
+
+_BATCH8_AMBIGUOUS_ACTION_NEGATIVES = [
+    # (A1) copula + "flat" — soda, champagne, tyres, an audience
+    "the soda goes flat at 3 p.m. if you leave the cap off",
+    "the tyre went flat at 6 a.m. on the motorway",
+    "the crowd stayed flat at 8 p.m. despite the encore",
+    "the notes came out flat at 7 p.m. during the recital",
+    "the champagne goes flat into the 6 p.m. toast",
+    # (B) transaction verb + position noun — a footrace, a notary, a job fair,
+    # a raffle, an estate
+    "hold the runners at 6 a.m. at the starting line",
+    "the coach holds the runners at 6 a.m. before the race",
+    "close the contracts at 5 p.m. with the notary",
+    "liquidate the contracts at 3 p.m. through the estate lawyer",
+    "we hold the positions at 9 a.m. for the job fair",
+    "close the positions at 5 p.m. on Friday, the listings expire",
+    "we close the entries at 5 p.m. for the raffle",
+    "close the contracts into 5 p.m. tomorrow",
+    "trim the hedges at 7 a.m. before it gets hot",
+    "dump the recycling at 6 a.m. on Tuesdays",
+    "offload the trailer at 5 a.m. at the depot",
+    # (B)/(A1) in the ANAPHORIC frame
+    "the race is at 6 a.m. so we hold the runners before that",
+    "the notary is at 5 p.m. so we close the contracts before that",
+    "the job fair is at 9 a.m. so we hold the positions before that",
+]
+
+
+@pytest.mark.parametrize("text", _BATCH8_AMBIGUOUS_ACTION_NEGATIVES)
+def test_batch8_ambiguous_actions_may_not_license_a_governed_clock(_role_resolver_on, text):
+    """★ THE MEASURED FINDING OF THIS PASS, pinned.
+
+    Every row here carries a genuine third-pass trading-action construction AND
+    a governed clock, and every one is ordinary English. The first draft of the
+    government rule admitted 13 of them. The fix was not a longer exclusion list
+    but a smaller LICENSING set: only constructions with no ordinary reading in
+    this frame — (A2) flatten/scale-out/stopped-out and (C) the negated bare
+    gerund — may license a governed clock.
+
+    The lesson recorded: _session_clock_does_work had been doing false-positive
+    work FOR the action conjunct. Any future loosening of the clock-role test
+    must re-measure this batch, not assume the action conjunct is precise."""
+    assert classify_session_role(text).recognized is False, f"false positive: {text!r}"
+    binding = bind_condition({"id": "b8:neg", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.session_zone is None, f"SILENTLY BOUND {binding.session_zone!r}: {text!r}"
+
+
+_BATCH8_PREEXISTING_LEAKS = [
+    # These leak at 6a56618b TOO, through _SESSION_CLOCK_SPAN_PREP_RE, which
+    # this pass did not touch. Recorded so the batch-8 result is not credited
+    # with fixing something it did not, and so the pre-existing defect is
+    # visible rather than absorbed.
+    "the champagne will be flat by 6 p.m. if we open it now",
+    "the soda goes flat before 3 p.m. anyway",
+    "hold the runners until 6 a.m. at the starting line",
+]
+
+
+def test_batch8_preexisting_leaks_are_attributed_to_the_parent_not_to_this_pass(_role_resolver_on):
+    """★ ATTRIBUTION, measured rather than claimed. Three batch-8 rows leak, and
+    all three leak at the BASELINE as well — through the span-preposition path
+    this pass never touched. Asserting they leak on BOTH sides is what stops
+    this pass from being blamed for them AND stops it from quietly counting
+    them as pre-existing without checking."""
+    old = _load_module_at_ref("6a56618b")
+    import src.engine.spec_family_bindings as today
+
+    for text in _BATCH8_PREEXISTING_LEAKS:
+        assert old.classify_session_role(text).recognized is True, (
+            f"{text!r} does NOT leak at the baseline — it is a regression this pass introduced"
+        )
+        assert today.classify_session_role(text).recognized is True, (
+            f"{text!r} no longer leaks — good, but the attribution note above must be re-derived"
+        )
+
+
+_BATCH8_KNOWN_FALSE_NEGATIVES = [
+    # ★ THE TARGET THIS PASS COULD NOT CLOSE, and its reason.
+    #
+    # "close every position at 3pm on Fridays" is the canonical (B) example and
+    # was a named target. It is refused, by the same rule that refuses "we close
+    # the positions at 5 p.m. on Friday, the listings expire" and "we hold the
+    # positions at 9 a.m. for the job fair" — both in the batch-8 fence above.
+    # They are the SAME construction, the SAME preposition and the SAME clock
+    # shape, differing only in what the surrounding world is about. Licensing
+    # (B) to govern a clock re-admitted 8 ordinary-life rows in the measured
+    # first draft.
+    #
+    # Not fixed by keying on "every" (surface tuning of the kind that has failed
+    # four times in this module) nor by a trailing-noun blacklist (the failure
+    # mode already recorded in test_batch6_objectless_gerund_is_a_frame_test_
+    # not_a_blacklist). Stated instead.
+    "I close every position at 3pm on Fridays",
+    "close every position at 11 a.m.",
+    "exit all positions at 4 p.m.",
+    # (A1) copula + "flat" governed by a mention preposition — same reason,
+    # measured against soda/champagne/tyres/an audience.
+    "be flat at 3:50 p.m.",
+    "the data drops at 8:30 a.m. and I get flat before that",
+]
+
+
+@pytest.mark.parametrize("text", _BATCH8_KNOWN_FALSE_NEGATIVES)
+def test_batch8_known_false_negatives_this_pass_did_not_close(_role_resolver_on, text):
+    """★ WHAT THIS PASS DID NOT FIX, pinned as a failing-visible receipt rather
+    than as a paragraph in a commit message.
+
+    Each row is genuine teaching that is still refused, and each is refused for
+    a stated structural reason with a named ordinary-life sibling in the
+    batch-8 fence. If a later change recovers one, this test fails and the
+    recovery must be re-justified against that sibling."""
+    assert classify_session_role(text).recognized is False, (
+        f"{text!r} now recognizes — verify the batch-8 ambiguous-action fence still "
+        "passes (especially its ordinary-life sibling) and move this row out with a reason"
+    )
+
+
+def test_batch8_new_tests_fail_against_the_baseline_source(_role_resolver_on):
+    """★ FAILING-FIRST, PROVEN — checklist item 5, as a differential rather than
+    as a git-stash ritual, so nothing in the worktree is disturbed.
+
+    The baseline module is loaded from 6a56618b and the batch-7 positives are
+    run through it. Every one must FAIL there, which is precisely what makes
+    test_batch7_action_governed_clocks_now_bind a red-before-green receipt
+    rather than a test written to pass whatever the code already does."""
+    old = _load_module_at_ref("6a56618b")
+    failures_at_baseline = [t for t in _BATCH7_GOVERNED_POSITIVES if not old.classify_session_role(t).recognized]
+    assert failures_at_baseline == _BATCH7_GOVERNED_POSITIVES, (
+        "at least one batch-7 positive already passed at 6a56618b, so the new tests were "
+        f"not failing-first: {[t for t in _BATCH7_GOVERNED_POSITIVES if t not in failures_at_baseline]}"
+    )
+
+
+def test_batch8_government_is_directional_and_neither_half_fires_alone(_role_resolver_on):
+    """★ THE ANTI-LEXICON PROOF for this pass. The rule is a GOVERNMENT test, so
+    each half in isolation must be refused: a licensed action with no governed
+    clock, and a governed clock with no licensed action."""
+    from src.engine.spec_family_bindings import (
+        _SESSION_CLOCK_TOKEN_RE,
+        _session_action_governed_clock,
+        _session_government_licensed_action_edges,
+    )
+
+    def governed(text):
+        return _session_action_governed_clock(text, list(_SESSION_CLOCK_TOKEN_RE.finditer(text)))
+
+    # licensed action, but the PP hangs off a DIFFERENT verb — refused.
+    assert governed("I flatten the book and the ceremony starts at 3 p.m.") is False
+    # a governed clock, but no licensed action at all — refused.
+    assert governed("garbage pickup is at 8 a.m. on Thursdays") is False
+    assert _session_government_licensed_action_edges("garbage pickup is at 8 a.m.") == []
+    # together, adjacent and in order — fires.
+    assert governed("I flatten at 9:45 a.m.") is True
+    # ...and an unknown intervening word breaks the relation.
+    assert governed("I flatten the dough at 9:45 a.m.") is False
+
+
+def test_batch8_anaphora_is_uniqueness_not_the_word_that(_role_resolver_on):
+    """★ THE ANAPHORIC MECHANISM, pinned as the three properties it actually
+    rests on rather than as a word match.
+
+    (1) EMPTINESS: "before that CANDLE" is determiner+noun, not a pro-form.
+    (2) UNIQUENESS: two clock tokens leave the referent undetermined.
+    (3) GOVERNMENT: the PP must hang off the licensed action.
+    Remove any one and the rule refuses."""
+    from src.engine.spec_family_bindings import _SESSION_CLOCK_TOKEN_RE, _session_action_governed_clock
+
+    def governed(text):
+        return _session_action_governed_clock(text, list(_SESSION_CLOCK_TOKEN_RE.finditer(text)))
+
+    base = "the news comes out at 8:30 a.m. so I flatten before that"
+    assert governed(base) is True
+    # (1) a head noun after the pro-form -> not anaphora
+    assert governed("the news comes out at 8:30 a.m. so I flatten before that candle") is False
+    # (2) a second clock token -> no unique antecedent
+    assert governed("the news is at 8:30 a.m. and lunch at 12 p.m. so I flatten before that") is False
+    # (3) the anaphor must be governed BY the action, not merely co-present
+    assert governed("the news comes out at 8:30 a.m. so I have coffee before that, then I flatten") is False
+    # ...and the antecedent must PRECEDE the anaphor.
+    assert governed("I flatten before that and the news comes out at 8:30 a.m.") is False

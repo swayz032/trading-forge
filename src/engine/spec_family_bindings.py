@@ -1031,6 +1031,14 @@ def _session_clock_does_work(norm: str, clock_tokens: list[re.Match]) -> bool:
         return True
     if _SESSION_CLOCK_DEMONSTRATIVE_RE.search(norm):
         return True
+    # ★ FOURTH PASS. A fourth structural way for the clock to be doing work:
+    # the PP it heads is governed by the instruction's own trading predicate.
+    # See _session_action_governed_clock — this is not a longer preposition
+    # list; the discriminator moved from the preposition to the government
+    # relation, which is why mention-prepositions ("at", "into") can now count
+    # in this position and only in this position.
+    if _session_action_governed_clock(norm, clock_tokens):
+        return True
     return any(_SESSION_CLOCK_ATTRIBUTIVE_RE.match(norm[token.end():]) for token in clock_tokens)
 
 
@@ -1279,6 +1287,258 @@ def _session_has_trading_action(norm: str) -> bool:
         or _SESSION_ACTION_ON_POSITION_RE.search(norm) is not None
         or _SESSION_NEGATED_TRADING_RE.search(norm) is not None
     )
+
+
+# ─── FOURTH PASS: the discriminator is GOVERNMENT, not the preposition ──────
+#
+# ★ THE DEFECT THIS FIXES. The third pass loosened the market-context co-factor
+# so a trading ACTION can satisfy it, and that worked. But three known misses
+# fire the action conjunct and still die, because the LIMITER moved to
+# _session_clock_does_work — the clock-role test, which the third pass
+# deliberately left untouched:
+#
+#   "...so I FLATTEN before that"          — `flatten` is named verbatim in
+#                                             _SESSION_POSITION_STATE_RE
+#   "I SCALE OUT into 3:45 p.m."            — `scale out` is named verbatim
+#   "I CLOSE EVERY POSITION at 3pm on Fridays"
+#                                           — the canonical (B) example
+#
+# Each has a clock that genuinely governs the action. Each fails the clock-role
+# test, for a reason that is purely about the SURFACE of the clock's immediate
+# neighbourhood: `at` and `into` are not in _SESSION_CLOCK_SPAN_PREP_RE's set,
+# and `before that` puts an anaphor where that set demands a numeral.
+#
+# ★ TWO OF THE THREE LAND. The third does NOT, and the reason is the measured
+# finding of this pass rather than an oversight: see
+# _session_government_licensed_action_edges. In short — the clock-role test was
+# silently doing false-positive work FOR the action conjunct, so the polysemous
+# action constructions (copula + `flat`; transaction-verb + position-noun) may
+# not license a governed clock without re-opening the FP class. "close every
+# position at 3pm" is refused by the same rule that refuses "we close the
+# positions at 5 p.m., the listings expire". Pinned as a failing-visible test.
+#
+# ★ THE TRAP, and why simply adding prepositions is the banned repair.
+# "garbage pickup is AT 8 a.m. on Thursdays" has the IDENTICAL prepositional
+# shape as "close every position AT 3pm on Fridays". Adding `at` to
+# _SESSION_CLOCK_SPAN_PREP_RE would make that test very nearly vacuous —
+# essentially every clock in English prose is introduced by `at` — and would
+# hand the entire discrimination back to the market co-factor, which is the
+# lexicon layer that failed four times running. That is precisely the FP class
+# the second pass spent two passes closing.
+#
+# ★ THE RULE, stated structurally. The three existing clock-role tests all ask
+# a question about the clock's own local neighbourhood: which preposition sits
+# in front of it (_SESSION_CLOCK_SPAN_PREP_RE), which noun sits behind it
+# (_SESSION_CLOCK_ATTRIBUTIVE_RE), whether it is the entire object
+# (_session_text_is_constituted_by). A neighbourhood question cannot separate
+# two sentences whose neighbourhoods are identical, which is exactly the
+# garbage-pickup/close-every-position pair.
+#
+# This asks a different question: WHAT PREDICATE GOVERNS THE PREPOSITIONAL
+# PHRASE THE CLOCK HEADS? A temporal PP is doing work in an instruction when it
+# modifies that instruction's own verb. So:
+#
+#     the clock does work iff a TRADING-ACTION CONSTRUCTION's right edge is
+#     immediately followed — modulo a closed set of domain-free adverbs — by a
+#     temporal preposition whose complement IS that clock token.
+#
+# Government is directional and adjacent, so co-presence is not enough: "I
+# closed the position and the ceremony starts at 3 p.m." carries a full-strength
+# trading action AND a clock, and is refused, because the PP hangs off
+# "starts", not off "closed". Once government is what carries the
+# discrimination, the preposition no longer has to — which is why `at` may
+# count HERE and nowhere else. "garbage pickup is at 8 a.m." has no trading
+# predicate at all, so there is nothing for the PP to be governed by.
+#
+# ★ THE ANAPHORIC VARIANT, and why it is not "matching the word `that`".
+# A temporal preposition demands a temporal complement. When its complement is
+# a NOMINALLY EMPTY pro-form — a bare `that`/`this`/`it`/`then` with no head
+# noun after it — the complement carries no descriptive content of its own and
+# can only be resolved by antecedence. This module resolves it by EXHAUSTION,
+# never by lexical match: the reference is admitted only when the text contains
+# EXACTLY ONE clock token and that token PRECEDES the pro-form. Zero
+# antecedents, or two or more, means the referent is undetermined and the rule
+# refuses. Matching the word `that` is a necessary trigger, but the mechanism
+# is emptiness (no head noun) + uniqueness (exactly one antecedent) +
+# government (the same adjacency the clock branch requires). "that CANDLE" and
+# "that ZONE" are not pro-forms at all and never reach the rule.
+#
+# ★ WHAT IT DELIBERATELY DOES NOT DO. It is a new way to satisfy
+# _session_clock_does_work; it does NOT move the trading-action co-factor
+# outside that conjunct, and it does NOT touch the action conjunct itself (the
+# three construction regexes above are READ for their match spans and are
+# otherwise untouched — the third pass fixed them and they are no longer the
+# binding constraint). Bare-mention clocks with no trading predicate — "the
+# trendline break at 8:30 a.m. is the trigger" — are still missed, unchanged.
+
+_SESSION_GOVERNED_ADVERB_FILLER: frozenset[str] = frozenset(
+    {
+        # degree / frequency / manner adverbs and bare quantifier objects — a
+        # CLOSED set, every member domain-free, so an unknown intervening word
+        # breaks the government relation by default (same whitelist discipline
+        # as _SESSION_ACTION_DETERMINERS / _SESSION_NOUN_QUALIFIER_ALLOWED).
+        "right", "sharp", "sharply", "always", "usually", "typically",
+        "normally", "completely", "fully", "entirely", "immediately",
+        "automatically", "manually", "generally", "often", "sometimes",
+        "already", "just", "only", "also", "then", "everything", "all",
+        "again", "hard", "quickly", "straight",
+    }
+)
+
+_SESSION_GOVERNED_SELECTION_PREP_RE = re.compile(
+    r"^\s*(?:going\s+into|right\s+(?:into|before|after|at)|ahead\s+of|prior\s+to|"
+    r"through|towards|toward|between|before|after|until|from|into|till|past|by|to)"
+    r"\s+(?:the\s+)?",
+    re.IGNORECASE,
+)
+"""Temporal prepositions that already SELECT or DELIMIT on their own. Anything
+here is safe in the governed position and is also, mostly, already covered by
+_SESSION_CLOCK_SPAN_PREP_RE — kept explicit so the governed branch does not
+depend on that other regex's exact membership."""
+
+_SESSION_GOVERNED_MENTION_PREP_RE = re.compile(
+    r"^\s*(?:at|around|about|near)\s+(?:the\s+)?",
+    re.IGNORECASE,
+)
+"""Prepositions that in isolation mark a MERE MENTION — the garbage-pickup
+class. They count ONLY in the governed position. This is the whole point of the
+pass: `at` is not evidence, but `<trading predicate> at <clock>` is."""
+
+_SESSION_COPULA_FLAT_TAIL_RE = re.compile(r"\bflat$", re.IGNORECASE)
+"""★ THE LICENSING RESTRICTION, and it is the main measured finding of this
+pass. See _session_government_licensed_action_edges."""
+
+_SESSION_TEMPORAL_PROFORM_RE = re.compile(
+    r"^(?:that|this|it|then|there)\b"
+    # NOMINALLY EMPTY: what follows must be a clause boundary or a function
+    # word — never the start of a noun phrase. Same frame test, and the same
+    # reasoning, as the objectless-gerund lookahead in
+    # _SESSION_NEGATED_TRADING_RE: a blacklist of possible head nouns never
+    # closes; a grammatical frame does. "before that CANDLE" and "into that
+    # ZONE" are ordinary determiner+noun and are refused here.
+    r"(?=\s*(?:$|[,.;:!?)—-]|\b(?:and|or|but|so|because|since|if|when|while|"
+    r"i|we|you|he|she|they|is|was|are|were|do|does|did|don'?t|doesn'?t|"
+    r"to|for|at|on|in|as|then|though|anyway|instead)\b))",
+    re.IGNORECASE,
+)
+
+
+def _session_strip_governed_filler(norm: str, start: int) -> tuple[str, int]:
+    """Advance past up to two closed-set adverbs sitting between a trading
+    action's right edge and the preposition that governs its temporal PP
+    ("flatten EVERYTHING before 3:50", "close the position RIGHT at 3 p.m.").
+    Returns (remainder, absolute-offset-of-remainder). No preposition is a
+    member of the filler set, so stripping can never skip past the governor."""
+    idx = start
+    for _ in range(2):
+        step = re.match(r"\s+([A-Za-z']+)", norm[idx:])
+        if step is None or step.group(1).lower() not in _SESSION_GOVERNED_ADVERB_FILLER:
+            break
+        idx += step.end()
+    return norm[idx:], idx
+
+
+def _session_government_licensed_action_edges(norm: str) -> list[int]:
+    """Right-edge index of every trading-action construction that is allowed to
+    LICENSE a governed clock. READS the third pass's three construction regexes
+    for their match spans; changes none of them.
+
+    ★ THIS SET IS STRICTLY SMALLER THAN _session_has_trading_action's, and the
+    gap is the honest finding of the fourth pass — recorded here rather than in
+    a commit message, and pinned by
+    test_batch8_ambiguous_actions_may_not_license_a_governed_clock.
+
+    A first draft licensed ALL THREE constructions. Adversarial batch 8 — 22
+    ordinary-life sentences each carrying a real third-pass action construction
+    plus a governed clock, authored specifically at this rule and run against it
+    for the first time only when complete — measured 13 leaks, every one a
+    regression this pass would have introduced:
+
+        "the soda GOES FLAT at 3 p.m."          "the crowd STAYED FLAT at 8 p.m."
+        "HOLD THE RUNNERS at 6 a.m. at the starting line"   (a footrace)
+        "CLOSE THE CONTRACTS at 5 p.m. with the notary"     (a legal deal)
+        "we HOLD THE POSITIONS at 9 a.m. for the job fair"  (job openings)
+        "the notary is at 5 p.m. so we CLOSE THE CONTRACTS before that"
+
+    The diagnosis is not that the new rule is wrong; it is that
+    _session_clock_does_work was silently DOING FP WORK FOR the action conjunct.
+    The (A1) copula frame (`be`/`get`/`go`/`stay` + `flat`) and the whole (B)
+    transaction-verb-plus-position-noun construction are polysemous — soda and
+    champagne go flat, races have runners, estates have contracts, job boards
+    have positions, raffles have entries — and the ONLY thing that kept that
+    polysemy from binding a killzone window was the clock-role test refusing
+    `at`. Removing that refusal for them re-opens the class the second pass
+    spent two passes closing. So they are NOT licensed.
+
+    LICENSED (no ordinary-English reading in this frame, verified against the
+    same batch):
+      - (A2) `flatten` / `scale in|out` / `stopped out` — the position-operation
+        verbs. Detected by ELIMINATION, not by a re-authored copy of the
+        alternation: every (A1) match ends in the bare word `flat`, and no (A2)
+        match does (`flatten` has no word boundary after `flat`). So the
+        licensing test reads the third pass's own regex output rather than
+        duplicating its vocabulary, and cannot drift from it.
+      - (C) the negated/ceased bare trade-gerund — `no trading`, `stop
+        trading`. Already frame-tested for objectlessness upstream.
+
+    NOT LICENSED: (A1) copula + `flat`, and all of (B).
+
+    ★ THE COST, stated plainly. This is why "I close every position at 3pm on
+    Fridays" — a named target of this pass, and the canonical (B) example —
+    is STILL MISSED. It is refused by the same rule that refuses "we close the
+    positions at 5 p.m. on Friday, the listings expire", and nothing available
+    at this layer separates them: they are the same construction, the same
+    preposition, the same clock shape, differing only in what the surrounding
+    world is about. Pinned as a failing-visible test rather than fixed by
+    keying on `every` or on a trailing-noun blacklist — the first is surface
+    tuning, the second is the blacklist failure mode already recorded in
+    test_batch6_objectless_gerund_is_a_frame_test_not_a_blacklist."""
+    edges: list[int] = []
+    for match in _SESSION_POSITION_STATE_RE.finditer(norm):
+        if _SESSION_COPULA_FLAT_TAIL_RE.search(match.group(0)) is None:
+            edges.append(match.end())
+    edges.extend(match.end() for match in _SESSION_NEGATED_TRADING_RE.finditer(norm))
+    return edges
+
+
+def _session_action_governed_clock(norm: str, clock_tokens: list[re.Match]) -> bool:
+    """★ THE FOURTH-PASS CLOCK-ROLE RULE. See the block comment above.
+
+    True iff a trading-action construction directly governs a temporal PP whose
+    complement is either (a) one of `clock_tokens`, or (b) a nominally-empty
+    temporal pro-form whose ONLY possible antecedent is the text's single clock
+    token. Purely structural: no session vocabulary is consulted, no keyword
+    list is widened, and both halves must appear in this order and adjacency."""
+    if not clock_tokens:
+        return False
+    edges = _session_government_licensed_action_edges(norm)
+    if not edges:
+        return False
+
+    token_starts = {token.start() for token in clock_tokens}
+    # Anaphora needs a UNIQUE antecedent — resolution by exhaustion, not by
+    # picking the nearest of several candidates (which would be a guess).
+    sole_clock_end = clock_tokens[0].end() if len(clock_tokens) == 1 else None
+
+    for edge in edges:
+        rest, offset = _session_strip_governed_filler(norm, edge)
+        prep = _SESSION_GOVERNED_SELECTION_PREP_RE.match(rest)
+        selection = prep is not None
+        if prep is None:
+            prep = _SESSION_GOVERNED_MENTION_PREP_RE.match(rest)
+        if prep is None:
+            continue
+        complement_at = offset + prep.end()
+        if complement_at in token_starts:
+            return True
+        if (
+            selection
+            and sole_clock_end is not None
+            and sole_clock_end <= complement_at
+            and _SESSION_TEMPORAL_PROFORM_RE.match(norm[complement_at:])
+        ):
+            return True
+    return False
 
 
 def _session_is_about_markets(norm: str) -> bool:
