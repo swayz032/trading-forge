@@ -59,6 +59,15 @@ correction named above.
   second truth.
 - **(b) FAIL-LOUD AT LOAD.** A declared primitive that does not resolve is a **STARTUP ERROR**, never
   a silent `np.ones`. **The FILTER case becomes structurally unshippable.**
+- **★ (b2) ZONE-COVERAGE — POINTER-TRUTH ONE LEVEL DOWN (R-156 §1).** **EMITTED VALUES ⊆ COVERED
+  VALUES, enforced FAIL-LOUD AT LOAD.** **A resolver may not emit a value its consumer cannot
+  check.** Convicting instance: `resolve_session_keyword` emits **7** zones while
+  `session_windows.py`'s `_ZONE_CHECKS` covers **5**, so `lunch_blackout`/`overnight` are
+  **always-False gates wearing `bindable=True, approximation=False, executed=True`** — with a
+  **green test blessing one** (`test_spec_family_bindings.py:334`, a fabricated safety-claim in a
+  fence). **This is the same lie as (b), one level down: (b) catches a pointer to nothing; (b2)
+  catches a VALUE nothing can evaluate.** The check is mechanical — enumerate each resolver's
+  emittable set, enumerate its consumer's covered set, **fail at load on any difference.**
 - **(c) HONEST ENTRIES** for primitive-less families (`ENABLE_ENTRY`, `ENTER`, and any other): their
   **actual mechanism** declared, **`approximation=True`**, **no aspirational pointers ever again.**
 - **(d) The trigger-role dispatch gap enters the design** (R-153 §4) — and its 921 conditions enter
