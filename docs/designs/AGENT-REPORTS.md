@@ -4,6 +4,26 @@
 
 ---
 
+## AR-160 · 2026-07-21 · ★★★ **THE ANSWER KEY SURVIVES: 19 of 21 CONFIRMED, judge CALIBRATED 15/15 on controls.** ★★ **And the correction runs AGAINST me — corrected FN is 61.9%, WORSE than the 57.1% it replaces.** Second judge dispatched per R-167's QA form before any key edit. Third pass still NOT dispatched.
+
+**1. ★ THE CALIBRATION CONTROL FIRED FIRST, and it earns the judge its standing: 15/15 on the obvious non-teachings.** *"garbage pickup is at 8 a.m. on Thursdays"*, *"he was saved by the bell"*, *"our team standup is at 9:30 a.m."*, *"the plumber… between 9 a.m. and 12 p.m."* — **all correctly refused.** ★ The judge **independently flagged the two hardest controls unprompted**: *"B24 and B40 are the two items that most sharply separate genuine reading from clock-time pattern matching — both are C despite carrying the most A-looking time syntax in the set. If this set is instrumenting a classifier, those four are where a false green would show up."* **It identified the corpus's own discriminating rows without being told the corpus was instrumenting anything.**
+
+**2. ★★ THE VERDICT ON THE KEY: 19/21 CONFIRMED, 2 OVERTURNED. Agreement 38/42 = 90.5%.**
+- **OVERTURNED (keyed `should_bind`, judge says teaching-but-no-computable-window):** `E16` *"the opening bell is when I start my clock"* — *"a start point with no derivable end and no market named"* · `E19` *"London killzone entries only"* — *"'killzone' has no single agreed clock definition."* **Both reasons are sound and neither is a stretch.**
+- **PROMOTED the other way (keyed unbound, judge says computable):** `F02` *"avoid entries between 12 p.m. and 1 p.m."* — *"bounded window governs entries"* · `F09` *"I am flat by 4 p.m. every single day"* — *"hard exit deadline."* **Also sound.**
+
+**3. ★★★ AND HERE IS THE PART I WANT ON THE RECORD: THE CORRECTION MAKES MY NUMBER WORSE, NOT BETTER.** **Corrected FN = 13/21 = 61.9%, up from 57.1%.** Why: **the two overturned rows were NOT among the misses** — they currently bind, so removing them relieves nothing — **while one promoted row (`F09`) IS failing and ADDS a miss.** **I pre-registered the consequence in AR-159 §6 before seeing a single verdict, and it landed against the reading that would have been convenient.** That is the whole reason to pre-register. **The fence's FN finding does not merely survive adjudication — it hardens.**
+
+**4. ★ A SECOND-ORDER FINDING falls out of the two overturned rows.** `E16` and `E19` **currently BIND** — but the calibrated judge says they have **no computable window.** So under the corrected key they are not misses; **they are OVER-BINDS — a small false-positive class the fence did not previously score.** *"London killzone entries only"* binding a definite window is the resolver **inventing precision the text does not carry.** Adjacent to the fabricated-fallback ban. **Not folded into the third pass silently — named here for your ruling.**
+
+**5. SECOND JUDGE DISPATCHED, per R-167 §3's QA form, BEFORE any key edit.** 4 of 42 rows moved and the headline shifted 4.8pp — **I judge that material, and the fact that it moved against my interest is not a reason to skip the check.** Sample: **the 4 disputed rows + 12 controls, reshuffled with NEW ids (`X..`) so it cannot correlate to judge 1**, no indication which are disputed, same no-prior brief. **It is additionally asked to reason explicitly about the A-vs-B line** — *is a concrete window genuinely derivable, or does the phrase only SOUND specific* — since that is the exact axis both overturns turned on.
+
+**6. THE THIRD PASS HAS A PRECISE TARGET LIST, and is still NOT dispatched** (R-167 §4 holds until the key is settled): **`E03 E05 E07 E08 E09 E10 E11 E13 E14 E17 E18 E21 F09`** — 13 rows, each an independently-confirmed genuine session teaching the resolver now misses.
+
+**7. Method note:** the fence was re-run with **no agent live** and a clean `src/` tree (`git status --porcelain src/` → 0). Two rows disagreed **in each direction**, which is itself mild evidence the judge was not applying a systematic bias — a judge shading one way would not have promoted two rows into the class it was shrinking.
+
+**Holds:** the FP mechanism win **unchanged and unaffected by any of this** · flags OFF · enforcement re-ratify parked · the 77 sealed.
+
 ## AR-159 · 2026-07-21 · ★★ THE ANSWER KEY IS OUT FOR BLIND ADJUDICATION (R-167 §3) — 21 positives interleaved with **21 distractors**, **no-prior form**, blinded IDs. ★ **The distractors double as a CALIBRATION CONTROL on the judge itself.** No third pass dispatched.
 
 **1. THE BLIND SET, built deterministically (seed `20260721`, reproducible, not cherry-picked):** the fence's **21 `should_bind` positives** — the judgment rows under adjudication — interleaved with **21 distractors: 15 `should_refuse` + 6 `should_recognize_unbound`**, shuffled, and **re-identified `B01…B42` so the original row IDs leak nothing.** The judge sees **texts only** — no labels, no subset names, no counts, no report, no ruling, and an explicit instruction **not to open the fence file, the reports, or the rulings**, because reading them would contaminate the verdicts and void them.
