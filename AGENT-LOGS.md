@@ -4,6 +4,31 @@
 
 ---
 
+### Session Log — 2026-07-21 [ops-experience] charter item 12 — Office "Payout Reality" panel LANDED, independently graded BAND 8 (6 → 8), zero carry-forwards
+
+**Mission:** resume the OPS lane per advisor ruling OR-156 ("keep going"; fresh-session reservation lifted) and build charter item 12 — an Office display of what a funded prop-firm run actually pays — then item 9.
+
+**Work completed:**
+- `public/slumhouse/office-payout.js` (new) + 9-line mount/script in `public/slumhouse/office.html`. A 7-input scenario panel over the **existing** `POST /api/prop-firm/payout` and `GET /api/prop-firm/firms`. **Zero backend change**; the panel defines no rule — split, caps, cadence, months and totals are all server-computed and merely displayed.
+- Path (B) of OR-156 was chosen because OR-149's "surface the `simplifications`" constraint *forces* it: path (A-partial) cannot reach that field without the still-pending cross-lane CL-012. CL-012 was therefore not blocked on, per the ruling.
+- Renders the projection's own `simplifications[]` as a visible "what this does NOT model" block, and declares its scope **in the rendered output** (50K-only; scenario-not-books; the CL-012 slice) rather than in comments.
+- Tests: `office-payout-panel-guards.test.ts` (static/parity) + `office-payout-panel-render.test.ts` (behavioural — executes the panel against a hand-rolled DOM stub, **no jsdom dependency added**).
+
+**Verification:**
+- 37/37 both suites; 90/90 across 5 Office suites (no regressions); `node --check` clean; `check:production-isolation` + `check:2026-compliance` PASS.
+- **Every load-bearing guard red-proved by mutation** (10 mutations total — 6 from the grader, 4 on the residuals); all RED, baseline byte-identical after each.
+- `system-map:check` FAILS — **base-verified pre-existing** (removed all my work, ran on a pristine tree, still FAIL; drift is 26 SSE registrations + a table mapping + cron staleness, none of which this unit touches).
+- Independent grade (doer≠grader, from-zero, conclusions withheld): **BAND 6 first** — the panel was correct but four of my own guards claimed rigor they had not earned, incl. a straight tautology where `toContain("capped")` was satisfied by a static `<th>Uncapped</th>` header, so the capped-month flagging could be deleted entirely and stay green. All 8 findings closed, re-graded **BAND 8**, then the 3 remaining residuals (R-1 `payout_path` wrong-key read; R-2 an over-broad test comment; R-3 two shape-fragile assertions) were also closed rather than banked.
+
+**Known-facts updates:**
+- ★ **The `tsc` baseline of ~7036 errors is STALE for this worktree/config** — `tsc -p tsconfig.json` reports **0**. Confirmed the instrument was genuinely running via a positive control (injected a deliberate type error, saw it reported, restored). Do not treat a clean `tsc` here as the known false-clean without running that control.
+- Editing an LF file with a Windows-side editor can silently rewrite the **whole file** to CRLF — `office.html` came out `1818/1809` in `numstat` for a 9-line change. Check `git diff --numstat` before committing any HTML edit; renormalise with `sed -i 's/\r$//'` rather than reaching for a repo-wide `.gitattributes` rule (blast radius).
+- Guard-design pattern worth reusing: replace bare `toContain(word)` with **delimited** (`>DLL opted in<`) or **structural** (`<tr class="capped">`) assertions, and pair a positive assertion with a **counter-test pinning the count** so the property cannot be satisfied by spraying it everywhere.
+
+**Carry-forward for next session:**
+- **Item 9** (multi-day edge client) — next per OR-156; premise-audit first, same bars.
+- CL-012 remains cross-lane-pending (the clean no-input payout panel). It gates only the *cleanest* item-12, not this build; flagged for the operator to relay, not adopted.
+
 ### Session Log — 2026-07-19/20 [ops-experience] — THREE UNITS GRADED AND LANDED (green-board B7 · member-Office B8 · liveness-wave B7)
 
 **Mission:** boot the ops-experience pair and execute Tier-1 item 1 (the Office) + Tier-2 item 6 (per-member Office) under the Fable advisor seat, doer≠grader on every unit.
