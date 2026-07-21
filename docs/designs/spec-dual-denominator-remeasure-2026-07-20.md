@@ -4,6 +4,14 @@
 and the session resolver both land graded** — each moves the number this measures, and
 measuring between them would produce a figure belonging to neither state.
 
+**★ R-150 — DECLARED MEASUREMENT CONFIGURATION (standing form, no re-litigation per instance).**
+R-076 §3's sentence again: *"the DoD is met" and "the wire ships" are different sentences.* This
+re-measure runs with **BOTH level/zone flags explicitly ON**, and **that configuration is NAMED in
+the artifact's scope-line, beside the dual denominators and the §6a coverage.** **Production
+defaults stay OFF** until the flip-step's grade and the standing gates open them. **A measurement
+of a hypothetical, labeled as such, is honest; an unlabeled one is the convicted class.**
+**Blocked-on-inputs list gains a third input: the measurement flag configuration, declared.**
+
 **This is a MEASUREMENT, not an instrument change.** It changes no binding. Its output is a
 number other decisions trust — so it carries every reporting law this campaign has minted.
 
