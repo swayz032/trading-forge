@@ -4,6 +4,29 @@
 
 ---
 
+## AR-186 · 2026-07-21 · ★★★ **THE RE-MEASURE IS COMPLETE — `d09827f6`.** Rate **1.0000 → 0.9531** · §6a coverage **0/155 → 6/155** · **987 by-gap primary, 2694 by-design beside, never merged.** ★★★ **AND ITS RECONCILIATION CAUGHT THE VANISHING-DENOMINATOR DEFECT LIVE, IN ITS OWN MEASUREMENT: the rate improved while coverage worsened.**
+
+**1. THE NUMBERS, each naming its window (two corpora, REPORTED SEPARATELY, NEVER POOLED):**
+**Corpus A — 16 shakedown specs / 155 taught conditions:** binding-approximation **1.0000 (null) → 0.9531 (n=128)** · **§6a coverage 0/155 → 6/155 = 0.0387** · **unbound 27 of 155, travelling beside the rate.** **Per-kind:** `named_sr_level` **4** · `order_block_edge` **2** · `swing` **0** — **the ceiling hit exactly: 6 of 16**, 9 unresolvable-as-built.
+**Corpus B — 120 or-branches / 6450 taught:** **never-evaluated-by-GAP 987 (primary, a DEFECT)** · **never-evaluated-by-DESIGN 2694 (context)** — **never merged.** ★ **And it established that Corpus A holds ZERO trigger-role conditions, so the 987 is Corpus B's alone** — the scope discipline my own relay failed, applied without being asked.
+
+**2. ★★★ THE FINDING OF THE NIGHT — §6a CAUGHT ITSELF.** Reconciling against an instrument **outside its own pipeline** (the frozen R-082 census): **census 129 bindable vs live 128.** Localized to **one row** — a `WAIT_SESSION` resolving to `overnight`, a zone `session_windows` emits and `is_in_killzone` cannot check. The session lane's honest-partial closure **refuses it rather than binding it falsely.** ★★ **So it left the RATE'S DENOMINATOR and entered the UNBOUND COUNT: the rate improved while coverage worsened.** Its own words: ***"That is the vanishing-denominator defect §6a exists to expose, observed live in my own measurement. The greens never would have shown it."***
+★★★ **§6a was written because a spec could improve its score by becoming LESS bindable. It has now demonstrated that on the very measurement that introduced it — and the single-number rate would have reported PROGRESS.** **This is the campaign's thesis, proven by the instrument the campaign built, against itself.**
+
+**3. ★★ THE 987 WAS RE-DERIVED, NOT ADOPTED — THREE PATHS, AND IT NAMES WHICH ONE WOULD HAVE CAUGHT 921.** Role tally **987** · complement `6450−2769−2694` **987** · **family-breakdown sum 987, reproducing all ELEVEN families exactly.** ★ ***"The family path is the one that would have caught 921 — 921 sums FIVE families and omits 66 across SIX."*** **It did not merely confirm my number; it identified the derivation that makes my failure impossible to repeat.**
+
+**4. RECONCILIATION, EXACT:** `2769 + 2694 + 987 = 6450` · `128 + 27 = 155`. **Both hold.** **Greens are necessary; reconciliation is sufficient — and here reconciliation is what found the finding.**
+
+**5. ★ IT DECLARED A CONTROL THAT DOES NOT DISCRIMINATE, rather than counting it.** 8 asserts, each red-proved by injected fault → exit 1, clean control → exit 0. **But: *"One control did NOT discriminate and is recorded as such"*** — the ungraded-kind subset guard **cannot fire against this corpus** (only 3 kinds occur; swing is caught by a prior assert), so its body was red-proved with that assert disabled. ★ **A control that cannot fire on the corpus it ships with, DECLARED as such, is the discipline this campaign spent the night learning.**
+
+**6. AND IT FOUND A BUG IN ITS OWN REPRODUCIBILITY.** Byte-identical across three `PYTHONHASHSEED=random` runs — **after it found and fixed a set-iteration bug that made two runs differ in BYTES while agreeing in every VALUE.** **Reproducible-in-values is not reproducible-in-bytes, and it checked the stronger one.** I re-ran the generator myself: **exit 0**, artifact present, `0.9531` / `987` / `2694` / `0.0387` all confirmed in the committed JSON, both never-evaluated lines named separately.
+
+**7. APPEND-ONLY PROVEN BY HASHING** — 5 prior artifacts hashed before and after, asserted equal. **`124/111` ride unmodified, labeled as the narration population and explicitly NOT substitutable for either corpus denominator.** Scope: **exactly 2 files**, no engine code, nothing swept in.
+
+**8. ★ THE CAVEAT IT VOLUNTEERED, unprompted:** *"the '5 rows nobody can explain' is carried from the brief as a stated limitation — **I did not independently re-verify that residue, and the artifact records it as a scope limit, not as a result of mine.**"* **It refused to inherit someone else's finding as its own evidence.** That is the exact failure I committed with the 16-spec census, declined by the agent I briefed about it.
+
+**Holds:** flags OFF in production (**every AFTER figure is a labeled hypothetical**) · engine loads under all pins · the 77 sealed.
+
 ## AR-185 · 2026-07-21 · ★★★ **THE RE-MEASURE IS DISPATCHED — receipt held here.** Your one owed line is discharged: **both extra superlatives were dispositioned IN-WAVE, and both corrections RECORD WHAT THEY REPLACED.** The lane is closed behind it.
 
 **1. ★ THE OWED LINE, VERIFIED BY READING (not grepping — I have earned that caution three times today).**
