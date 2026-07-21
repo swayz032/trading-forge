@@ -11,11 +11,14 @@ from __future__ import annotations
 
 import json
 import os
+from datetime import UTC
 
 import pytest
 
 from src.engine.spec_family_bindings import (
+    _REAL_ZONE_INTERVALS,
     MIN_SPINE_BOUND_RATIO,
+    SESSION_KEYWORDS,
     SESSION_TEACHING_UNBOUND_REASON,
     bind_condition,
     classify_session_role,
@@ -326,18 +329,30 @@ def test_bare_am_pm_tokens_in_prose_never_bind_as_session(prose):
     assert binding.reason == "no_recognized_session_keyword"
 
 
-@pytest.mark.parametrize(
-    ("phrase", "expected_zone"),
-    [
-        ("we trade the ny am session only", "ny_am"),
-        ("wait for the london open before entering", "london"),
-        ("skip the lunch hour entirely", "lunch_blackout"),
-    ],
-)
+# ANTI-VACUITY COMPANION. Without this, the fence above would pass just as
+# happily if resolve_session_keyword were broken to always return None —
+# a dead matcher and a correct one are indistinguishable on negative cases.
+#
+# ★ R-156 §2 FIX. This list previously carried a third case,
+# ("skip the lunch hour entirely", "lunch_blackout"), asserting bindable=True
+# with session_zone="lunch_blackout". That was A GREEN TEST BLESSING AN
+# ALWAYS-FALSE RUNTIME GATE: "lunch_blackout" is not a key of
+# session_windows._ZONE_CHECKS, so is_in_killzone(ts, "lunch_blackout")
+# returns False for EVERY timestamp that will ever exist. The assertion was
+# literally true about the binding and entirely false about the behavior —
+# a fabricated safety-claim inside a fence.
+#
+# It is NOT deleted (that would lose the coverage). It is relocated below
+# into a test that states the truth explicitly and TRIPWIRES when the
+# orphan-zone defect is finally fixed by the lane that owns it.
+_REAL_SESSION_PHRASE_CASES = [
+    ("we trade the ny am session only", "ny_am"),
+    ("wait for the london open before entering", "london"),
+]
+
+
+@pytest.mark.parametrize(("phrase", "expected_zone"), _REAL_SESSION_PHRASE_CASES)
 def test_real_session_phrases_still_bind(phrase, expected_zone):
-    # ANTI-VACUITY COMPANION. Without this, the fence above would pass just as
-    # happily if resolve_session_keyword were broken to always return None —
-    # a dead matcher and a correct one are indistinguishable on negative cases.
     assert resolve_session_keyword(phrase) == expected_zone
     binding = bind_condition(
         {
@@ -349,6 +364,135 @@ def test_real_session_phrases_still_bind(phrase, expected_zone):
     )
     assert binding.bindable is True
     assert binding.session_zone == expected_zone
+
+
+# ─── Orphan-zone honesty (R-156 §2) ─────────────────────────────────────────
+#
+# The coverage gap itself — SESSION_KEYWORDS emits 7 zone names while
+# session_windows._ZONE_CHECKS can evaluate only 5 — is a PRE-EXISTING defect
+# owned by a different lane (a packet writing an "emitted values ⊆ covered
+# values, fail-loud at load" contract). NOTHING here fixes it. These tests
+# exist so that no test in this file can go on CERTIFYING it as working.
+
+
+def _covered_zone_names() -> set[str]:
+    """Zones is_in_killzone() can actually evaluate. Derived from the dispatch
+    table itself — never hand-transcribed, so it cannot drift out of date."""
+    from src.engine.session_windows import _ZONE_CHECKS
+
+    return set(_ZONE_CHECKS)
+
+
+def _emittable_zone_names() -> set[str]:
+    """Every zone name a WAIT_SESSION binding can carry: the keyword table's
+    zones plus the role resolver's computable zones. Also derived, not typed."""
+    return set(SESSION_KEYWORDS) | set(_REAL_ZONE_INTERVALS)
+
+
+def _orphan_zone_names() -> set[str]:
+    return _emittable_zone_names() - _covered_zone_names()
+
+
+def test_orphan_zone_set_is_exactly_the_known_pre_existing_defect():
+    """Pins the derived sets so this file's other honesty checks cannot
+    silently go vacuous (e.g. if _ZONE_CHECKS grew to cover everything, or if
+    a new uncovered zone name were introduced upstream)."""
+    assert _covered_zone_names() == {"london", "ny_am", "ny_pm", "silver_bullet", "macro_window"}
+    assert _orphan_zone_names() == {"lunch_blackout", "overnight"}
+
+
+def test_lunch_binding_is_recorded_as_a_dead_gate_not_blessed_as_working():
+    """THE RELOCATED :334 CASE, stated truthfully.
+
+    "skip the lunch hour entirely" really does bind, and really does carry
+    session_zone="lunch_blackout" — that half of the old assertion was true.
+    What the old test did NOT say, and what made it a fabricated safety-claim,
+    is that the zone it certified is one is_in_killzone() can never evaluate
+    True for. Both halves are asserted here, together.
+
+    TRIPWIRE: when the owning lane closes the coverage gap, the final
+    assertion starts failing and this test must be rewritten to assert the
+    now-working behavior. That failure is the POINT — it is how this file
+    finds out, instead of reporting green either way."""
+    from datetime import datetime, timedelta
+
+    from src.engine.session_windows import is_in_killzone
+
+    binding = bind_condition(
+        {
+            "id": "regression:orphan-zone",
+            "type": "WAIT_SESSION",
+            "object": "skip the lunch hour entirely",
+            "role": "confluence",
+        }
+    )
+    assert binding.bindable is True
+    assert binding.session_zone == "lunch_blackout"
+
+    # ...and the consumer can never act on it. Every minute of a full day,
+    # not a spot check — including 11:30–13:30 ET, the window the zone NAMES.
+    base = datetime(2026, 7, 20, 0, 0, tzinfo=UTC)
+    ever_true = any(is_in_killzone(base + timedelta(minutes=i), "lunch_blackout") for i in range(24 * 60))
+    assert ever_true is False, (
+        "ORPHAN-ZONE DEFECT CLOSED by another lane — lunch_blackout is now checkable. "
+        "This test asserted the defect; rewrite it to assert the working behavior."
+    )
+
+
+def test_no_anti_vacuity_case_certifies_a_zone_the_killzone_gate_cannot_check():
+    """Structural version of the :334 fix: no case in the anti-vacuity fence
+    may expect an orphan zone. This is exactly what the removed case did."""
+    orphans = _orphan_zone_names()
+    offenders = [(p, z) for p, z in _REAL_SESSION_PHRASE_CASES if z in orphans]
+    assert offenders == [], f"anti-vacuity fence certifies uncheckable zone(s): {offenders}"
+
+
+def test_sibling_sweep_no_session_test_asserts_an_uncheckable_zone():
+    """THE MINI-SWEEP (R-156 §2) as a PERMANENT check, not a one-time grep.
+
+    Method: derive the orphan set programmatically (above), then AST-scan
+    every test module that imports a session surface for a string literal
+    equal to an orphan zone name. Any hit outside this module (which holds
+    the one registered known-defect test) is a new sibling and fails here.
+
+    Scoping note: modules that never touch spec_family_bindings/
+    session_windows are excluded on purpose. Other subsystems use these same
+    words in unrelated namespaces — session_context._get_session()'s own
+    label vocabulary, gate_block_analyzer's gate KEYS, firm-rule
+    "overnight_allowed" — and those are not siblings of this defect.
+
+    A literal-scan over-approximates (it cannot tell an assertion from a
+    comment), which is the safe direction for a tripwire: it can nag, never
+    miss."""
+    import ast
+    import pathlib
+
+    orphans = _orphan_zone_names()
+    repo_root = pathlib.Path(__file__).resolve().parents[3]
+    this_module = pathlib.Path(__file__).resolve()
+
+    offenders: list[tuple[str, int, str]] = []
+    scanned = 0
+    for path in sorted((repo_root / "src").rglob("test_*.py")):
+        try:
+            source = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if "spec_family_bindings" not in source and "session_windows" not in source:
+            continue
+        scanned += 1
+        if path.resolve() == this_module:
+            continue
+        try:
+            tree = ast.parse(source)
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Constant) and isinstance(node.value, str) and node.value in orphans:
+                offenders.append((str(path.relative_to(repo_root)), node.lineno, node.value))
+
+    assert scanned >= 1, "sweep matched no session-related test module — the sweep itself is broken"
+    assert offenders == [], f"test(s) referencing an uncheckable session zone: {offenders}"
 
 
 # ─── Role-Aware Session Resolver (docs/designs/packet-role-aware-session-
@@ -458,6 +602,57 @@ def test_s1_premise_audit_production_boundary_varying_condition_text_moves_the_b
         (filler.bindable, filler.session_zone, filler.reason),
     }
     assert len(outcomes) == 3, "production-boundary liveness: distinct condition text must move the bound outcome"
+
+
+# The four texts below are chosen so each lands in a DIFFERENT real killzone
+# by arithmetic, not by hope:
+#   ny_am         [07:00,10:00)  <- NYSE cash open anchor, 9:30
+#   london        [02:00,05:00)  <- a lone 3:00 a.m. token
+#   silver_bullet [10:00,11:00)  <- 10:30 a.m., which is OUTSIDE ny_am's end
+#   ny_pm         [13:30,16:00)  <- 14:30 on a 24-hour clock (the H2 case)
+_S1_DISTINCT_ZONE_CASES = [
+    ("the first two-minute candle off the Bell closes over the 20 SMA and vwap", "ny_am"),
+    ("the london range forms after 3:00 a.m. EST", "london"),
+    ("I take the setup at 10:30 a.m.", "silver_bullet"),
+    ("wait until 14:30 EST for the afternoon push", "ny_pm"),
+]
+
+
+def test_s1_premise_audit_selector_yields_at_least_three_distinct_bound_zones(_role_resolver_on):
+    """★ M2 FIX (independent grade, BAND 6).
+
+    The old S1 audit above varies the condition text and shows three
+    different OUTCOMES (bound / recognized-unbound / refused) — but every
+    zone assertion in this entire file was "ny_am". That cannot distinguish
+    a working session SELECTOR from a function that recognizes variably and
+    then returns the constant "ny_am". Packet §4 item 1 asks to watch the
+    BOUND SESSION WINDOW differ per condition, and nothing here did.
+
+    The independent grader established that the selector really does
+    discriminate (it obtained ny_pm / silver_bullet / london / ny_am from
+    fresh production-boundary inputs) — but that receipt was the GRADER'S,
+    not the delivery's. This test makes it the delivery's own.
+
+    Everything goes through bind_condition(), the production entry point —
+    never classify_session_role() directly."""
+    observed = {}
+    for text, expected_zone in _S1_DISTINCT_ZONE_CASES:
+        binding = bind_condition(
+            {"id": f"premise:zone:{expected_zone}", "type": "WAIT_SESSION", "object": text, "role": "spine"}
+        )
+        assert binding.bindable is True, f"{text!r} expected to bind"
+        assert binding.approximation is True, "S8: never approximation=False in this packet"
+        assert binding.session_zone == expected_zone, (
+            f"{text!r} bound {binding.session_zone!r}, expected {expected_zone!r}"
+        )
+        observed[expected_zone] = binding.session_zone
+
+    distinct = set(observed.values())
+    assert len(distinct) >= 3, f"selector is not discriminating: only {distinct} across {len(_S1_DISTINCT_ZONE_CASES)} texts"
+    # Anti-constant: the historically-only-asserted value must not be the
+    # whole story. If someone reduced the selector to `return "ny_am"`, the
+    # per-case assertions above fail AND this one does.
+    assert distinct - {"ny_am"}, "every bound zone is still ny_am — the selector is indistinguishable from a constant"
 
 
 def test_s1_flag_off_is_the_null_hypothesis_at_the_same_production_boundary():
@@ -675,3 +870,456 @@ def test_s9_mistype_and_binary_resisting_rows_produce_zero_new_bindings(_role_re
         if verdict == "entry_mechanics_mistype" or cid in BINARY_RESISTING_CONDITION_IDS:
             binding = bind_condition({"id": cid, "type": "WAIT_SESSION", "object": obj, "role": "spine"})
             assert binding.bindable is False, f"{cid} ({verdict}) must never be bound by the role resolver"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# ★ THE REGRESSION FENCE — the independent grader's OWN corpus, made permanent
+# ═══════════════════════════════════════════════════════════════════════════
+#
+# WHY THIS EXISTS. The delivery above was specified by, and tested against,
+# the same 26 rows. An independent grade then built a FRESH 33-input corpus
+# from production-boundary inputs and measured 33.3% false-positive /
+# 46.7% false-negative — and ruled the "role-aware" resolver a disguised
+# keyword list with a proximity window. A resolver graded only by the rows
+# that specified it can never discover that. These rows are therefore fenced
+# here permanently, as a SECOND population the resolver must survive.
+#
+# PROVENANCE, stated exactly (the grader's full 33 inputs were not handed
+# over verbatim — only the 13 it recorded as FAILURES):
+#   - 13 rows below are DOCUMENTED: the grader's 6 false positives and 7
+#     false negatives, quoted from the grade. These are the load-bearing
+#     rows; every one of them was a defect at commit ee49fdca.
+#   - The remaining 20 (to reach the grader's 15-positive / 18-negative
+#     shape) are drawn AT RUNTIME from the 26-row battery, which carries its
+#     own INDEPENDENT blind-grade verdicts. They are not authored here —
+#     authoring the filler would be re-fitting the instrument to its own
+#     author, the exact defect this fence exists to prevent.
+#
+# EXPECTATIONS ARE THIS DELIVERY'S RULINGS, NOT THE GRADER'S RAW WISH.
+# The brief is explicit that blindly making all 15 positives bind is the
+# BANNED repair. Each row therefore carries an explicit disposition and a
+# reason. Where a ruling DISAGREES with the grader (one row: bare "reopen"),
+# the disagreement is recorded here in the open and counted AGAINST this
+# delivery in the re-measured rate below — never quietly reclassified.
+
+# --- the 6 documented FALSE POSITIVES: must be refused outright ------------
+GRADER_FALSE_POSITIVE_INPUTS = [
+    # H1: bare `the\s+bell` in the anchor alternation matched ordinary prose.
+    ("the bell pepper analogy I use for position sizing", "H1 bare-bell: a vegetable"),
+    ("he was saved by the bell on that one", "H1 bare-bell: an idiom"),
+    ("I ring the bell every time I hit my daily target", "H1 bare-bell: a personal ritual"),
+    # M1: a bare timezone phrase was sufficient clock context on its own.
+    ("we had a 3:00 coaching session with the mentor yesterday, eastern time", "M1 tz-only clock context"),
+    # Market-object conjunct: the two weakest role markers fired on grammar alone.
+    ("prior to the session I like to drink my coffee and stretch", "temporal-preposition on a morning routine"),
+    ("start a new session in the terminal before running the backtest", "boundary-verb on a SHELL session"),
+]
+
+# --- the 7 documented FALSE NEGATIVES, each with an explicit disposition ---
+# expected_recognized / expected_zone (None = recognized but honestly unbound;
+# binding it would require inventing a window, or would emit an orphan zone).
+GRADER_FALSE_NEGATIVE_INPUTS = [
+    (
+        "cash open",
+        True,
+        "ny_am",
+        "NYSE cash open = 9:30 ET, the module's one non-guessed minute constant. Real bind.",
+    ),
+    (
+        "cash equity open",
+        True,
+        "ny_am",
+        "Same anchor, longer form. Real bind.",
+    ),
+    (
+        "the New York bell",
+        True,
+        "ny_am",
+        "NYSE opening bell, qualified by a market name. Real bind — and the SAFE "
+        "member of the phrase class whose BARE form (H1) had to be removed.",
+    ),
+    (
+        "8am",
+        True,
+        "ny_am",
+        "Morphology bug: the clock regex demanded a colon, so a colon-less token "
+        "was invisible. 08:00 ET falls inside ny_am [07:00,10:00). Real bind.",
+    ),
+    (
+        "Asian session",
+        True,
+        None,
+        "Morphology bug FIXED (\\basia\\b could not see 'Asian') so it is now RECOGNIZED "
+        "— but deliberately NOT bound. Asian hours map to `overnight`, an ORPHAN zone "
+        "is_in_killzone() can never return True for. An honest unbound beats a bind the "
+        "consumer would silently ignore.",
+    ),
+    (
+        "European open",
+        True,
+        None,
+        "RECOGNIZED as genuine session teaching, NOT bound: no non-guessed minute "
+        "constant exists for a non-NYSE open (08:00 London = 03:00 ET; 08:00 CET = "
+        "02:00 ET for Frankfurt). Picking one would be the exact 'silently binds the "
+        "WRONG window' failure this module refuses.",
+    ),
+    (
+        "reopen",
+        False,
+        None,
+        "★ DISAGREEMENT WITH THE GRADER, recorded openly. The morphology defect is real "
+        "and IS fixed (the boundary-verb alternation now carries re-?opens?, so "
+        "'the session reopens' recognizes — see the companion test). But the bare "
+        "TOKEN 'reopen', alone, with no session noun and no market object, is exactly "
+        "the bare-token matching packet §3 prohibits. Recognizing it would be the "
+        "banned repair. Counted as a REMAINING false negative in the re-measure below.",
+    ),
+]
+
+# The grader's diagnosis for this row was that `\bopens?\b` matches INSIDE
+# "reopen". It does not — \b requires a boundary, and "re|open" has none. The
+# defect was the opposite one (the verb list could not see the prefixed form).
+# Fenced so the real mechanism cannot be re-misdiagnosed.
+
+
+def test_grader_diagnosis_for_reopen_was_the_inverse_mechanism():
+    import re
+
+    assert re.search(r"\bopens?\b", "reopen") is None, (
+        "the word-boundary already prevented matching inside 'reopen'; "
+        "the real defect was that the verb list could not see the prefixed form"
+    )
+    from src.engine.spec_family_bindings import SESSION_BOUNDARY_VERB_RE
+
+    assert SESSION_BOUNDARY_VERB_RE.search("the session reopens again") is not None
+
+
+@pytest.mark.parametrize(
+    ("text", "why"), GRADER_FALSE_POSITIVE_INPUTS, ids=[t[:34] for t, _ in GRADER_FALSE_POSITIVE_INPUTS]
+)
+def test_fence_grader_false_positives_are_refused(_role_resolver_on, text, why):
+    """Each of these bound (or recognized) ordinary prose at ee49fdca. None
+    may do so again. Checked at BOTH layers — recognition and the production
+    binding boundary — because a resolver that 'recognizes' prose and then
+    happens not to compute a zone for it is still wrong, and would start
+    binding the moment a zone became computable."""
+    result = classify_session_role(text)
+    assert result.recognized is False, f"false positive re-opened ({why}): {text!r}"
+    binding = bind_condition({"id": "fence:fp", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None
+    assert binding.reason == "no_recognized_session_keyword"
+
+
+@pytest.mark.parametrize(
+    ("text", "expect_recognized", "expect_zone", "why"),
+    GRADER_FALSE_NEGATIVE_INPUTS,
+    ids=[t[:24] for t, _, _, _ in GRADER_FALSE_NEGATIVE_INPUTS],
+)
+def test_fence_grader_false_negatives_hold_their_stated_disposition(
+    _role_resolver_on, text, expect_recognized, expect_zone, why
+):
+    """Not "these must all bind" — that is the banned repair. Each row holds
+    the SPECIFIC disposition this delivery ruled for it, so a later change
+    that quietly widens (binds "European open" to a guessed window) or
+    quietly narrows (drops the "8am" morphology fix) both fail here."""
+    result = classify_session_role(text)
+    assert result.recognized is expect_recognized, f"{text!r}: {why}"
+    binding = bind_condition({"id": "fence:fn", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.session_zone == expect_zone, f"{text!r}: {why}"
+    if expect_zone is not None:
+        assert binding.bindable is True
+        assert binding.approximation is True, "S8: never approximation=False in this packet"
+    else:
+        assert binding.bindable is False
+
+
+def test_fence_morphology_fixes_are_real_not_incidental(_role_resolver_on):
+    """The two morphology defects, exercised on realistic sentences rather
+    than on the grader's bare tokens — so the fence proves the RULE changed,
+    not that one string was special-cased."""
+    # "Asian" is now visible to the named-session rule (\basia\b was not).
+    assert classify_session_role("we mark the Asian session high and low").recognized is True
+    # A prefixed boundary verb is now visible (re-?opens?).
+    assert classify_session_role("price is being reset as soon as the session reopens again").recognized is True
+    # ...and neither newly BINDS anything (both are honestly unbound).
+    for text in ("we mark the Asian session high and low", "price is being reset as soon as the session reopens again"):
+        binding = bind_condition({"id": "fence:morph", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+        assert binding.bindable is False
+        assert binding.reason == SESSION_TEACHING_UNBOUND_REASON
+
+
+# ─── H1 / M1 / H2: one named test per named defect ──────────────────────────
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "the bell pepper analogy I use for position sizing",
+        "he was saved by the bell on that one",
+        "I ring the bell every time I hit my daily target",
+    ],
+)
+def test_h1_bare_bell_never_binds_ordinary_prose(_role_resolver_on, text):
+    """H1. The anchor alternation carried a bare `the\\s+bell` while its own
+    docstring claimed "Deliberately NOT 'bell' bare (would false-positive on
+    unrelated prose)" — the regex contradicted its own safety claim, and
+    bound a WRONG session window (ny_am) to prose.
+
+    FAILS AT ee49fdca: all three returned bindable=True, session_zone=ny_am."""
+    binding = bind_condition({"id": "h1", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None
+
+
+def test_h1_both_calibration_fixtures_still_bind_after_removing_bare_bell(_role_resolver_on):
+    """The other half of H1, and the half that could have gone wrong: the
+    claim that `opening bell` and `off the bell` already cover both S2
+    calibration fixtures is VERIFIED by running them, not assumed. (The
+    dedicated S2 test above also covers this; duplicated here on purpose so
+    the H1 removal carries its own proof next to it.)"""
+    from src.engine.spec_family_bindings import SESSION_ANCHOR_PHRASE_RE
+
+    assert SESSION_ANCHOR_PHRASE_RE.search(_KNOWN_GOOD_OFF_THE_BELL) is not None
+    assert SESSION_ANCHOR_PHRASE_RE.search(_KNOWN_GOOD_OPENING_BELL) is not None
+    for text in (_KNOWN_GOOD_OFF_THE_BELL, _KNOWN_GOOD_OPENING_BELL):
+        binding = bind_condition({"id": "h1:calib", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+        assert binding.bindable is True
+        assert binding.session_zone == "ny_am"
+
+
+def test_m1_bare_timezone_phrase_is_not_sufficient_clock_context(_role_resolver_on):
+    """M1. "eastern time" is ordinary scheduling English; on its own it made
+    an unrelated 3:00 into a bound london window.
+
+    FAILS AT ee49fdca: bindable=True, session_zone=london.
+
+    The companion assertion is what keeps the fix from being a deletion: a
+    timezone marker DOES still count when the clock token is governed by a
+    span preposition, so genuine inputs survive."""
+    coaching = bind_condition(
+        {
+            "id": "m1:neg",
+            "type": "WAIT_SESSION",
+            "object": "we had a 3:00 coaching session with the mentor yesterday, eastern time",
+            "role": "spine",
+        }
+    )
+    assert coaching.bindable is False
+    assert coaching.session_zone is None
+
+    genuine = bind_condition(
+        {"id": "m1:pos", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon push", "role": "spine"}
+    )
+    assert genuine.bindable is True, "narrowing must not have deleted the timezone path outright"
+
+
+def test_m1_no_corpus_row_depended_on_the_bare_timezone_alternative(_role_resolver_on):
+    """The measurement the fix was based on, kept as a check rather than a
+    claim in a commit message: every row of the 26-row corpus that recognizes
+    via a clock token still recognizes. If narrowing tier-2 context had cost
+    a genuine row, this is where it would show."""
+    for cid, verdict, obj in _session_ab_rows():
+        if verdict != "session_teaching":
+            continue
+        assert classify_session_role(obj).recognized is True, f"{cid} lost recognition to the M1 narrowing"
+
+
+def test_h2_24_hour_clock_times_do_not_silently_become_am(_role_resolver_on):
+    """H2 (latent). `h = hour % 12` with meridiem=None mapped 14:30 -> 2:30,
+    binding london where ny_pm is correct. No 24-hour token exists in the
+    26-row corpus, and the inline comment justified AM-defaulting because it
+    "matches every corpus row" — a rule fitted to the sample and then
+    defended by the same sample.
+
+    FAILS AT ee49fdca: session_zone == "london"."""
+    from src.engine.spec_family_bindings import _session_clock_token_minutes
+
+    # Unit level: the arithmetic itself.
+    assert _session_clock_token_minutes(14, 30, None) == 14 * 60 + 30
+    assert _session_clock_token_minutes(23, 0, None) == 23 * 60
+    # Hours 1-12 stay genuinely ambiguous and keep the corpus-supported AM read.
+    assert _session_clock_token_minutes(9, 30, None) == 9 * 60 + 30
+    assert _session_clock_token_minutes(3, 0, "p.m.") == 15 * 60
+
+    # Production boundary: the zone actually moves.
+    binding = bind_condition(
+        {"id": "h2", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon push", "role": "spine"}
+    )
+    assert binding.bindable is True
+    assert binding.session_zone == "ny_pm", f"24-hour token bound {binding.session_zone!r}, expected ny_pm"
+
+
+# ─── Checklist item 8: no new orphan-zone emission, PROVEN ──────────────────
+
+
+def test_role_resolver_never_emits_an_orphan_zone(_role_resolver_on):
+    """Swept over every input this wave touches — the 26-row battery, all 13
+    documented grader rows, and the S1 distinct-zone texts — with the flag
+    ON. Not asserted from the shape of _REAL_ZONE_INTERVALS; measured from
+    actual bindings at the production boundary."""
+    orphans = _orphan_zone_names()
+    texts = [obj for _cid, _v, obj in _session_ab_rows()]
+    texts += [t for t, _ in GRADER_FALSE_POSITIVE_INPUTS]
+    texts += [t for t, _, _, _ in GRADER_FALSE_NEGATIVE_INPUTS]
+    texts += [t for t, _ in _S1_DISTINCT_ZONE_CASES]
+    assert len(texts) >= 26 + 13 + 4
+    emitted = set()
+    for text in texts:
+        binding = bind_condition({"id": "orphan:sweep", "type": "WAIT_SESSION", "object": text, "role": "spine"})
+        if binding.session_zone is not None:
+            emitted.add(binding.session_zone)
+    assert emitted, "sweep emitted no zones at all — vacuous"
+    assert not (emitted & orphans), f"role resolver newly emitted orphan zone(s): {emitted & orphans}"
+
+
+# ─── The re-measure: FP/FN rates on the 33-input shape, with n ──────────────
+
+
+def _fence_corpus_33() -> tuple[list[str], list[str]]:
+    """(positives, negatives) reconstructing the grader's 15/18 split.
+
+    The 13 documented rows are literals above. The other 20 are drawn from
+    the 26-row battery, which carries INDEPENDENT blind-grade verdicts —
+    deliberately not authored here, so this delivery cannot grade itself on
+    inputs of its own choosing. Selection is `sorted()[:n]`, i.e. fixed and
+    non-cherry-picked, not "the ones that pass"."""
+    rows = _session_ab_rows()
+    teaching = sorted(obj for _c, v, obj in rows if v == "session_teaching")
+    mistype = sorted(obj for _c, v, obj in rows if v == "entry_mechanics_mistype")
+
+    positives = [t for t, _, _, _ in GRADER_FALSE_NEGATIVE_INPUTS] + teaching[:8]
+    negatives = (
+        [t for t, _ in GRADER_FALSE_POSITIVE_INPUTS]
+        + mistype[:9]
+        + ["I am watching for the setup to form", "this is where I am entering the trade", "pm me if you want the indicator"]
+    )
+    return positives, negatives
+
+
+def test_remeasured_fp_fn_rates_on_the_33_input_fence(_role_resolver_on):
+    """CHECKLIST ITEM 4. The grader's baseline at ee49fdca was
+    33.3% FP (6/18) / 46.7% FN (7/15). Re-measured here on the same shape.
+
+    Scored against the GRADER'S expectation, not this delivery's rulings —
+    the one row where they disagree (bare "reopen") is counted as a MISS
+    against us. Scoring against our own dispositions would make this
+    tautologically 0/0, which is the caption-is-a-claim failure."""
+    positives, negatives = _fence_corpus_33()
+    assert (len(positives), len(negatives)) == (15, 18), "corpus shape drifted from the grader's 15/18"
+
+    false_neg = [t for t in positives if not classify_session_role(t).recognized]
+    false_pos = [t for t in negatives if classify_session_role(t).recognized]
+
+    fp_rate = len(false_pos) / len(negatives)
+    fn_rate = len(false_neg) / len(positives)
+
+    assert false_pos == [], f"FP rate {fp_rate:.1%} (n={len(negatives)}); offenders: {false_pos}"
+    # The single accepted, openly-recorded miss: the bare token "reopen",
+    # which we rule out of reach BY DESIGN (recognizing it is the banned
+    # bare-token repair). If this list changes, the rate must be re-reported.
+    assert false_neg == ["reopen"], f"FN rate {fn_rate:.1%} (n={len(positives)}); misses: {false_neg}"
+    assert fp_rate == 0.0
+    assert round(fn_rate, 3) == round(1 / 15, 3)
+
+
+# ─── M3: S7 as a TRUE parent-diff, not a hand-copied expectation ────────────
+
+
+_PREPACKET_REF = "ee49fdca~1"
+_MODULE_REL_PATH = "src/engine/spec_family_bindings.py"
+
+
+def _load_prepacket_module():
+    """Load the module AS IT WAS before the packet landed, straight from git.
+
+    This is what makes S7 a differential instead of an assertion. The module
+    is stdlib-only by deliberate design (its "zero import surface" property,
+    documented in its own header), which is precisely what makes exec'ing a
+    historical revision of it safe and dependency-free."""
+    import importlib.util
+    import subprocess
+
+    try:
+        source = subprocess.run(
+            ["git", "show", f"{_PREPACKET_REF}:{_MODULE_REL_PATH}"],
+            cwd=os.path.dirname(os.path.abspath(__file__)),
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+    except (OSError, subprocess.SubprocessError) as exc:  # pragma: no cover
+        pytest.skip(f"git unavailable for parent-diff: {exc}")
+    if source.returncode != 0 or not source.stdout.strip():
+        pytest.skip(f"pre-packet revision {_PREPACKET_REF} unavailable: {source.stderr.strip()[:200]}")
+
+    import sys
+
+    name = "_prepacket_spec_family_bindings"
+    spec = importlib.util.spec_from_loader(name, loader=None)
+    module = importlib.util.module_from_spec(spec)
+    # @dataclass resolves string annotations via sys.modules[cls.__module__],
+    # so the module must be registered BEFORE its body executes.
+    sys.modules[name] = module
+    try:
+        exec(compile(source.stdout, f"<{_PREPACKET_REF}:{_MODULE_REL_PATH}>", "exec"), module.__dict__)
+    except Exception:
+        sys.modules.pop(name, None)
+        raise
+    return module
+
+
+def test_m3_prepacket_module_really_is_pre_packet():
+    """Anti-vacuity for the differential below: if the loaded revision
+    already had the resolver, the diff would be comparing the change to
+    itself and would pass no matter what."""
+    prepacket = _load_prepacket_module()
+    assert not hasattr(prepacket, "classify_session_role"), (
+        f"{_PREPACKET_REF} already contains the role resolver — the parent-diff is vacuous"
+    )
+    assert hasattr(prepacket, "bind_condition"), "pre-packet module missing the production entry point"
+
+
+def test_m3_s7_flag_off_is_byte_identical_to_the_parent_commit(monkeypatch):
+    """★ M3 FIX. S7 previously HARDCODED the expected pre-packet result
+    (bindable=False / reason=no_recognized_session_keyword / zone=None /
+    approximation=False) and called that "PROVEN, not asserted". It was
+    correct-but-hand-copied — a fabricated safety-claim on a boundary, since
+    nothing in the test actually consulted the parent.
+
+    This runs the ACTUAL parent revision of the module and diffs its
+    bind_condition() output field-by-field against today's, flag OFF, over
+    the full 26-row population. If the flag-off path ever drifts, the parent
+    itself is the witness."""
+    monkeypatch.delenv("TF_SESSION_ROLE_RESOLVER_ENABLED", raising=False)
+    prepacket = _load_prepacket_module()
+
+    rows = _session_ab_rows()
+    assert len(rows) == 26
+    mismatches = []
+    for cid, _verdict, obj in rows:
+        condition = {"id": cid, "type": "WAIT_SESSION", "object": obj, "role": "spine"}
+        before = prepacket.bind_condition(dict(condition)).to_dict()
+        after = bind_condition(dict(condition)).to_dict()
+        if before != after:
+            mismatches.append((cid, before, after))
+    assert mismatches == [], f"flag-OFF drift vs {_PREPACKET_REF}: {mismatches[:3]}"
+
+
+def test_m3_parent_diff_would_catch_a_flag_off_regression(monkeypatch):
+    """The differential's own control. A diff that passes is only meaningful
+    if it CAN fail — so flip the flag ON and confirm the same comparison
+    reports drift. Without this, a broken loader that silently returned the
+    current module would look identical and green."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    prepacket = _load_prepacket_module()
+
+    drifted = 0
+    for cid, _verdict, obj in _session_ab_rows():
+        condition = {"id": cid, "type": "WAIT_SESSION", "object": obj, "role": "spine"}
+        if prepacket.bind_condition(dict(condition)).to_dict() != bind_condition(dict(condition)).to_dict():
+            drifted += 1
+    assert drifted > 0, (
+        "flag ON produced ZERO differences from the parent commit — the resolver is inert, "
+        "or the parent-diff instrument is comparing the module to itself"
+    )

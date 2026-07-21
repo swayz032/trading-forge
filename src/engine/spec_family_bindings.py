@@ -653,34 +653,96 @@ def resolve_session_keyword(object_text: str) -> str | None:
 # a separate, later, independently-graded step, same two-step discipline as
 # the Population-A flip-step packet landing alongside this one).
 SESSION_ANCHOR_PHRASE_RE = re.compile(
-    r"\b(opening\s+bell|the\s+bell|off\s+the\s+bell|market\s+open|nyse\s+open|"
+    r"\b(opening\s+bell|off\s+the\s+bell|new\s+york\s+bell|ny\s+bell|"
+    r"market\s+open|nyse\s+open|cash\s+(?:equity\s+)?open|"
     r"new\s+york\s+stock\s+exchange\s+open)\b",
     re.IGNORECASE,
 )
 """A named, concrete market-open anchor (NYSE cash open, 9:30 ET) — the
 Known-GOOD calibration fixtures from the packet's own grade ("the first
 two-minute candle OFF THE BELL", "drops at the OPENING BELL") are both named
-instances of this exact phrase class. Deliberately NOT "bell" bare (would
-false-positive on unrelated prose) and NOT "open" bare (way too common a
-word) — always a 2-3 word phrase anchored on "bell"/"open" together with a
-market-open-specific qualifier."""
+instances of this exact phrase class. Deliberately NOT "bell" bare and NOT
+"open" bare (way too common a word) — always a 2-3 word phrase anchored on
+"bell"/"open" together with a market-open-specific qualifier.
 
-_SESSION_CLOCK_TOKEN_RE = re.compile(r"\b(\d{1,2}):([0-5]\d)\s*(a\.?m\.?|p\.?m\.?)?", re.IGNORECASE)
-_SESSION_CLOCK_CONTEXT_RE = re.compile(
-    r"\b(a\.m\.|p\.m\.|am|pm|est|edt|eastern\s+time|eastern|utc\s*-?\s*4|utc\s+minus\s+4|"
-    r"new\s+york\s+stock\s+exchange|nyse)\b",
+★ H1 FIX (independent grade, BAND 6): this alternation previously carried a
+bare `the\\s+bell` alternative, which CONTRADICTED the safety claim this very
+docstring made. It false-bound ordinary prose to a real session window —
+"the BELL PEPPER analogy I use for position sizing", "he was SAVED BY THE
+BELL on that one", "I RING THE BELL every time I hit my daily target" all
+returned bindable=True/session_zone=ny_am. Removed. The two calibration
+fixtures are covered by `opening\\s+bell` and `off\\s+the\\s+bell`
+respectively (proven by test_s2_known_good_bell_rows_are_bound, which is run
+against this regex, not assumed). `new\\s+york\\s+bell` / `ny\\s+bell` /
+`cash\\s+(equity\\s+)?open` are the SPECIFIC, qualified members of the same
+2-3-word anchor class that the grader recorded as false negatives — each
+names the NYSE cash open (9:30 ET) unambiguously, so each carries a real,
+already-constant minute anchor rather than a guess."""
+
+_SESSION_CLOCK_TOKEN_RE = re.compile(
+    # Alt 1: H:MM, optional attached meridiem ("9:30", "3:00 a.m.").
+    # Alt 2: bare hour, meridiem REQUIRED ("8am", "2 p.m.") — a bare hour with
+    # no meridiem is never a clock token (that would match "20 SMA", "5 min").
+    r"\b(?:(?P<h1>\d{1,2}):(?P<m1>[0-5]\d)\s*(?P<mer1>a\.?m\.?|p\.?m\.?)?(?![a-z])"
+    r"|(?P<h2>\d{1,2})\s*(?P<mer2>a\.?m\.?|p\.?m\.?)(?![a-z]))",
     re.IGNORECASE,
 )
-"""A digit-colon-digit token (e.g. "9:30", "3:00 a.m.") only counts as a
-wall-clock anchor when EITHER it carries its own a.m./p.m. marker OR the
-surrounding text carries some other ET-time-context marker (EST/eastern/
-UTC-4/NYSE) — never a bare "H:MM" with zero corroborating context. This
-mirrors resolve_session_keyword's own conservative-match philosophy: a miss
-is honest, a guessed reading is not."""
+"""H2/FN-morphology FIX: alternative 2 is new. The grader recorded "8am" as a
+false negative — the previous pattern required a colon, so a colon-less
+wall-clock token was invisible. The meridiem is MANDATORY in the colon-less
+form (and guarded by `(?![a-z])` so "among"/"amp" cannot supply it), which
+keeps the pre-existing bare-"am"/"pm" fence intact: bare-token prose has no
+adjacent digit and therefore still produces zero clock tokens."""
+
+
+def _session_clock_token_parts(match: re.Match) -> tuple[int, int, str | None]:
+    """(hour, minute, meridiem-or-None) for either _SESSION_CLOCK_TOKEN_RE
+    alternative — keeps callers free of the two-alternative group layout."""
+    if match.group("h1") is not None:
+        return int(match.group("h1")), int(match.group("m1")), match.group("mer1")
+    return int(match.group("h2")), 0, match.group("mer2")
+
+
+_SESSION_CLOCK_MARKET_CONTEXT_RE = re.compile(
+    r"\b(new\s+york\s+stock\s+exchange|nyse|utc\s*-?\s*4|utc\s+minus\s+4|"
+    r"market\s+open|opening\s+bell|cash\s+open|kill\s?zone)\b",
+    re.IGNORECASE,
+)
+"""TIER 1 clock context — names the MARKET itself, so it is sufficient on its
+own to read an unmarked "H:MM" as a wall-clock market reference."""
+
+_SESSION_CLOCK_TZ_CONTEXT_RE = re.compile(
+    r"\b(a\.m\.|p\.m\.|am|pm|est|edt|eastern\s+time|eastern)\b",
+    re.IGNORECASE,
+)
+"""TIER 2 clock context — a bare TIMEZONE phrase. NOT sufficient on its own
+(M1 FIX): "eastern time" is ordinary English scheduling vocabulary, and on
+its own it bound "we had a 3:00 coaching session with the mentor yesterday,
+EASTERN TIME" to the london window. A tier-2 marker now counts only when the
+clock token is additionally GOVERNED by a span/selection preposition (see
+_SESSION_CLOCK_SPAN_PREP_RE) — i.e. the time is doing delimiting work in the
+instruction, not merely being mentioned.
+
+MEASURED, not guessed: zero rows of the 26-row grading corpus depend on the
+tier-2 alternatives alone. The three rows carrying "Eastern time"/"EST" all
+also carry their own a.m./p.m. meridiem (which never needed context at all),
+and the only two context-dependent rows are corroborated by TIER 1 markers
+("UTC minus 4", "New York Stock Exchange"). Deleting the timezone alternative
+outright was therefore possible but would have lost genuine inputs like "wait
+until 14:30 EST"; narrowing it is the smaller, better-targeted change."""
+
+_SESSION_CLOCK_SPAN_PREP_RE = re.compile(
+    r"\b(from|until|till|through|between|starting|after|before|by|to)\s+"
+    r"(?:the\s+)?\d{1,2}(?::[0-5]\d)?\b",
+    re.IGNORECASE,
+)
+"""A temporal preposition directly governing a clock numeral ("UNTIL 14:30",
+"FROM 9:30 to 9:45") — the corroboration a tier-2 timezone-only context must
+carry. "had a 3:00 coaching session" carries no such governor."""
 
 SESSION_BOUNDARY_VERB_RE = re.compile(
-    r"\bsession\b.{0,20}?\b(opens?|starts?|begins?|resets?)\b"
-    r"|\b(opens?|starts?|begins?|resets?)\b.{0,20}?\bsession\b",
+    r"\bsession\b.{0,20}?\b(re-?opens?|opens?|starts?|begins?|resets?)\b"
+    r"|\b(re-?opens?|opens?|starts?|begins?|resets?)\b.{0,20}?\bsession\b",
     re.IGNORECASE,
 )
 """The word "session" co-occurring with a boundary verb ("session STARTS
@@ -708,19 +770,78 @@ verified by the bare-am/pm regression fence below (test class carries a
 "prior to" preposition with no session noun anywhere in the sentence)."""
 
 SESSION_LIQUIDITY_LEVEL_ENUM_RE = re.compile(r"\b(draw[\s-]on[\s-]liquidity|key\s+level)\b", re.IGNORECASE)
-SESSION_NAMED_TOKEN_RE = re.compile(r"\b(london|new\s+york|ny|asia|pre[\s-]?market)\b", re.IGNORECASE)
+SESSION_NAMED_TOKEN_RE = re.compile(r"\b(london|new\s+york|ny|asian?|pre[\s-]?market)\b", re.IGNORECASE)
 """"draw on liquidity"/"key level" enumeration co-occurring with a named
 session token ("Asia high", "London low", "pre-market highs") — this is the
 session_range level/zone kind (see block comment above): genuinely session
 vocabulary, but a LEVEL reference rather than a time window, so it is
 recognized but never zone-mapped (see classify_session_role)."""
 
-SESSION_NAMED_WORD_RE = re.compile(r"\b(london|new\s+york|ny|asia)\s+session\b", re.IGNORECASE)
+SESSION_MARKET_OBJECT_RE = re.compile(
+    r"\b(candles?|bars?|charts?|prices?|patterns?|engulfing|fair\s+value|fvg|"
+    r"gaps?|sweeps?|liquidity|trend|trendlines?|lines?|levels?|zones?|ranges?|"
+    r"vwap|v-wop|sma|ema|volume|entries|entry|trades?|setups?|positions?|"
+    r"orders?|stops?|targets?|long|short|buy|sell|bullish|bearish|breakouts?|"
+    r"reversals?|markets?|highs?|lows?)\b",
+    re.IGNORECASE,
+)
+"""A price/chart OBJECT the instruction is about — the required co-factor for
+the two weakest role markers below (boundary-verb and temporal-preposition).
+
+★ M1/H1-class FIX (independent grade, BAND 6). Both of those markers fire on
+the ENGLISH SHAPE of a sentence alone, so both false-bound ordinary prose
+that happens to contain the word "session":
+  - "PRIOR TO THE SESSION I like to drink my coffee and stretch"
+      (temporal preposition + session noun — but the governed object is a
+       morning routine, not a chart object)
+  - "START a new SESSION in the terminal before running the backtest"
+      (boundary verb + session noun — but it is a SHELL session)
+Neither is session teaching. Requiring a market object turns each marker from
+"this sentence has the grammar of a session reference" into "this sentence is
+about a market thing AND has the grammar of a session reference."
+
+★ WHY THIS IS NOT THE BANNED REPAIR (packet §3 prohibits widening
+SESSION_KEYWORDS / bare-token matching): this lexicon is a REQUIRED CONJUNCT,
+never a disjunct. It is ANDed onto two existing markers, so it can only ever
+NARROW recognition — it is structurally incapable of binding anything that
+was not already bound. A lexicon used this way cannot produce a false
+positive; the worst it can do is produce a false NEGATIVE, which is the
+honest failure direction this module already prefers everywhere else.
+
+Validated against BOTH populations, not fitted to one: all 5 rows of the
+26-row grading corpus that depend on these two markers still recognize
+(they carry "candle"/"pattern"/"engulfing"/"fair value"/"line"), and both
+grader-recorded false positives above are refused."""
+
+SESSION_NAMED_WORD_RE = re.compile(r"\b(london|new\s+york|ny|asian?)\s+session\b", re.IGNORECASE)
 """A proper session name directly compounded with the literal word
 "session" ("New York session", as in "For the session indicator, I'm using
 New York session by James Davey") — a concrete, unambiguous session
 reference distinct from a generic possessive ("your session", "my
 session") which carries no proper name and does not match here."""
+
+SESSION_NAMED_MARKET_OPEN_RE = re.compile(
+    r"\b(european|europe|asian|asia|tokyo|frankfurt|sydney|globex)\s+(opens?|closes?)\b",
+    re.IGNORECASE,
+)
+"""A NON-NYSE market's open/close ("EUROPEAN OPEN", "Tokyo open") — genuine
+session teaching, recorded by the independent grade as a false negative.
+
+RECOGNITION-ONLY, NEVER ZONE-MAPPED — and that refusal is the point. This
+module owns exactly one non-guessed minute constant
+(_SESSION_MARKET_OPEN_MINUTE, the NYSE cash open at 9:30 ET). There is no
+comparable constant for "European open": it is 08:00 London = 03:00 ET, or
+08:00 CET = 02:00 ET for Frankfurt, and picking one would be exactly the
+guess resolve_session_keyword's docstring warns against ("a miss is honest,
+a false positive silently binds the WRONG window"). "Asian"/"Globex" hours
+are worse still — they map to `overnight`, which is one of the two ORPHAN
+zone names is_in_killzone() can never evaluate True for, so binding them
+would be strictly worse than leaving them unbound.
+
+So these rows land in the recognized-but-unbound state with
+SESSION_TEACHING_UNBOUND_REASON: "we correctly SAW this is session teaching;
+we have no primitive that can compute it." An honest refusal beats a
+fabricated bind."""
 
 _REAL_ZONE_INTERVALS: dict[str, tuple[tuple[int, int], ...]] = {
     "london": ((120, 300),),
@@ -773,16 +894,26 @@ def _session_best_real_zone_for_range(start_min: int, end_min: int) -> str | Non
 
 
 def _session_clock_token_minutes(hour: int, minute: int, meridiem: str | None) -> int:
+    """Minute-of-day for a parsed clock token.
+
+    ★ H2 FIX (independent grade, BAND 6). This function previously did an
+    unconditional `h = hour % 12`, so an unmarked 24-hour token silently
+    became its AM twin: "wait until 14:30 EST" read as 2:30 and bound the
+    LONDON window when the correct answer is ny_pm. The inline comment
+    defending that behavior said AM-defaulting "matches every corpus row" —
+    but no 24-hour token exists anywhere in the 26-row corpus, so the rule
+    was fitted to the sample AND defended by the same sample. A rule whose
+    only evidence is the absence of the counterexample is not evidence.
+
+    An unmarked hour >= 13 is unambiguously 24-hour: there is no 14 a.m.
+    Only hours 1-12 remain genuinely meridiem-ambiguous, and only those keep
+    the AM default (which IS corpus-supported: every unmarked corpus token is
+    a 9:30/9:45 pre-market reference)."""
+    if meridiem is None and hour >= 13:
+        return hour * 60 + minute  # 24-hour clock; no meridiem can apply
     h = hour % 12
     if meridiem and meridiem.strip().lower().startswith("p"):
         h += 12
-    # meridiem is None or starts with "a": no adjustment. Every unmarked
-    # digit-colon-digit token this resolver ever reaches has already passed
-    # _SESSION_CLOCK_CONTEXT_RE (an ET/NYSE market-hours context marker
-    # elsewhere in the same condition text), and every such token in the
-    # calibration corpus is a pre-market/AM reference (e.g. "9:30 to 9:45" /
-    # "UTC minus 4") — defaulting unmarked hours to AM is the reading that
-    # matches every corpus row, never a guess made in a vacuum.
     return h * 60 + minute
 
 
@@ -827,15 +958,30 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         anchor_minutes.append(_SESSION_MARKET_OPEN_MINUTE)
 
     clock_tokens = list(_SESSION_CLOCK_TOKEN_RE.finditer(norm))
-    if clock_tokens and (any(m.group(3) for m in clock_tokens) or _SESSION_CLOCK_CONTEXT_RE.search(norm)):
-        recognized = True
-        for m in clock_tokens:
-            anchor_minutes.append(_session_clock_token_minutes(int(m.group(1)), int(m.group(2)), m.group(3)))
+    if clock_tokens:
+        parts = [_session_clock_token_parts(m) for m in clock_tokens]
+        # A clock token is a wall-clock market anchor when EITHER it carries
+        # its own meridiem, OR a TIER-1 market-naming context corroborates it,
+        # OR a TIER-2 timezone-only context does AND the token is governed by
+        # a span/selection preposition (M1 — a bare timezone phrase is no
+        # longer sufficient context on its own).
+        has_meridiem = any(mer for _h, _m, mer in parts)
+        tier1 = _SESSION_CLOCK_MARKET_CONTEXT_RE.search(norm)
+        tier2 = _SESSION_CLOCK_TZ_CONTEXT_RE.search(norm) and _SESSION_CLOCK_SPAN_PREP_RE.search(norm)
+        if has_meridiem or tier1 or tier2:
+            recognized = True
+            for hour, minute, mer in parts:
+                anchor_minutes.append(_session_clock_token_minutes(hour, minute, mer))
 
-    if SESSION_BOUNDARY_VERB_RE.search(norm):
+    # The two weakest markers additionally require a price/chart object in the
+    # same text — see SESSION_MARKET_OBJECT_RE. Required CONJUNCT, so this can
+    # only narrow recognition, never widen it.
+    has_market_object = SESSION_MARKET_OBJECT_RE.search(norm) is not None
+
+    if SESSION_BOUNDARY_VERB_RE.search(norm) and has_market_object:
         recognized = True
 
-    if SESSION_TEMPORAL_PREPOSITION_RE.search(norm):
+    if SESSION_TEMPORAL_PREPOSITION_RE.search(norm) and has_market_object:
         recognized = True
 
     if SESSION_LIQUIDITY_LEVEL_ENUM_RE.search(norm) and SESSION_NAMED_TOKEN_RE.search(norm):
@@ -847,6 +993,13 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         recognized = True
 
     if SESSION_NAMED_WORD_RE.search(norm):
+        recognized = True
+
+    if SESSION_NAMED_MARKET_OPEN_RE.search(norm):
+        # Recognized, but deliberately contributes NO anchor minute — see
+        # SESSION_NAMED_MARKET_OPEN_RE: no non-guessed minute constant exists
+        # for a non-NYSE open, and the zones they would imply are the two
+        # orphan names is_in_killzone() can never return True for.
         recognized = True
 
     zone: str | None = None
