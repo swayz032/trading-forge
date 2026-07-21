@@ -1162,172 +1162,172 @@
    },
    "asserts": [
     {
-     "line": 551,
+     "line": 579,
      "disposition": "SOURCE_INVARIANT",
      "test": "unexpected_disposition_keys == set()"
     },
     {
-     "line": 555,
+     "line": 583,
      "disposition": "SOURCE_INVARIANT",
      "test": "undispositioned == []"
     },
     {
-     "line": 621,
+     "line": 649,
      "disposition": "SOURCE_INVARIANT",
      "test": "derivation['closes_exactly']"
     },
     {
-     "line": 3397,
+     "line": 3430,
      "disposition": "SOURCE_INVARIANT",
      "test": "len(set(got.values())) == len(cases)"
     },
     {
-     "line": 3404,
+     "line": 3437,
      "disposition": "SOURCE_INVARIANT",
      "test": "not got[flat].startswith('SAME_DIRECTION')"
     },
     {
-     "line": 3456,
+     "line": 3489,
      "disposition": "DATA_SENSITIVE",
      "test": "inval_on_concrete <= inval_off_concrete"
     },
     {
-     "line": 4140,
+     "line": 4173,
      "disposition": "DATA_SENSITIVE",
      "test": "path1 == path2 == path3"
     },
     {
-     "line": 4188,
+     "line": 4221,
      "disposition": "DATA_SENSITIVE",
      "test": "a_before['n_bindable'] == a_after['n_bindable']"
     },
     {
-     "line": 4251,
+     "line": 4284,
      "disposition": "DATA_SENSITIVE",
      "test": "per_kind.get('swing', {}).get('n_flipped', 0) == 0"
     },
     {
-     "line": 4259,
+     "line": 4292,
      "disposition": "DATA_SENSITIVE",
      "test": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}"
     },
     {
-     "line": 4278,
+     "line": 4311,
      "disposition": "DATA_SENSITIVE",
      "test": "a_roles.get('trigger', 0) == 0"
     },
     {
-     "line": 4361,
+     "line": 4394,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']"
     },
     {
-     "line": 4367,
+     "line": 4400,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']"
     },
     {
-     "line": 4371,
+     "line": 4404,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']"
     },
     {
-     "line": 4378,
+     "line": 4411,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_teachings + graded_mis_types + graded_undecidable == ws_taught"
     },
     {
-     "line": 4410,
+     "line": 4443,
      "disposition": "DATA_SENSITIVE",
      "test": "sourcing['PASS']"
     },
     {
-     "line": 4469,
+     "line": 4502,
      "disposition": "DATA_SENSITIVE",
      "test": "_ack_entry is None or ack_prov['ALL_VERIFIED']"
     },
     {
-     "line": 4528,
+     "line": 4561,
      "disposition": "DATA_SENSITIVE",
      "test": "ws_session_resolvable <= graded_teachings"
     },
     {
-     "line": 4663,
+     "line": 4696,
      "disposition": "DATA_SENSITIVE",
      "test": "n_levelzone_rows == 16"
     },
     {
-     "line": 4665,
+     "line": 4698,
      "disposition": "DATA_SENSITIVE",
      "test": "total_flipped <= 6"
     },
     {
-     "line": 4690,
+     "line": 4723,
      "disposition": "DATA_SENSITIVE",
      "test": "_ceiling_path1 == _ceiling_path2"
     },
     {
-     "line": 4715,
+     "line": 4748,
      "disposition": "DATA_SENSITIVE",
      "test": "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE"
     },
     {
-     "line": 4735,
+     "line": 4768,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['never_evaluated_total'] == never_by_gap"
     },
     {
-     "line": 4739,
+     "line": 4772,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['all_entry_conditions'] == b_total"
     },
     {
-     "line": 5999,
+     "line": 6032,
      "disposition": "SOURCE_INVARIANT",
      "test": "OUT_PATH not in APPEND_ONLY_GUARDED"
     },
     {
-     "line": 6172,
+     "line": 6205,
      "disposition": "SOURCE_INVARIANT",
      "test": "not sys.flags.optimize"
     },
     {
-     "line": 6714,
+     "line": 6747,
      "disposition": "SOURCE_INVARIANT",
      "test": "publish_path['PASS']"
     },
     {
-     "line": 6720,
+     "line": 6753,
      "disposition": "SOURCE_INVARIANT",
      "test": "spawn['PASS']"
     },
     {
-     "line": 6726,
+     "line": 6759,
      "disposition": "DATA_SENSITIVE",
      "test": "census['PASS']"
     },
     {
-     "line": 6743,
+     "line": 6776,
      "disposition": "DATA_SENSITIVE",
      "test": "evidential['PASS']"
     },
     {
-     "line": 6756,
+     "line": 6789,
      "disposition": "SOURCE_INVARIANT",
      "test": "discrimination['REVIVAL_FAMILY']['PASS']"
     },
     {
-     "line": 6762,
+     "line": 6795,
      "disposition": "DATA_SENSITIVE",
      "test": "gate['PASS']"
     },
     {
-     "line": 6802,
+     "line": 6835,
      "disposition": "DATA_SENSITIVE",
      "test": "head_check['all_match']"
     },
     {
-     "line": 6812,
+     "line": 6853,
      "disposition": "DATA_SENSITIVE",
      "test": "before_hashes == after_hashes"
     }
@@ -2268,11 +2268,11 @@
      "path": "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.DATA_SENSITIVE_derivation",
      "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
      "numerals": [
+      "10",
       "14",
-      "24",
-      "10"
+      "24"
      ],
-     "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately cannot: the ledger is scored against the DECLARED table, not the perturbed one, so that the axis leaves this assert armed). Wired but untested by this family, and named as such rather than counted as coverage."
+     "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. The numerals registration is now itself COMPUTED from those same two constants, so it tracks the ledger by construction. No axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately cannot: the ledger is scored against the DECLARED table, not the perturbed one, so that the axis leaves this assert armed). Wired but untested by this family, and named as such rather than counted as coverage."
     },
     {
      "path": "$.SELF_ACCOUNTING.ASSERT_CENSUS.SPLIT_DERIVATION_R219.SOURCE_INVARIANT_derivation",
@@ -2281,7 +2281,7 @@
       "10",
       "5"
      ],
-     "why": "Same construction, same reason, other half of the split."
+     "why": "Same construction, same reason, other half of the split -- also COMPUTED from the ledger, not typed."
     },
     {
      "path": "$.WHAT_THIS_MAY_NOT_DO[0]",
@@ -2384,7 +2384,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 3041,
+    "line": 3074,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "head_blob_bytes",
@@ -2393,7 +2393,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 3056,
+    "line": 3089,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "tracked_files",
@@ -2478,7 +2478,7 @@
     "match": true,
     "byte_exact": false,
     "line_ending_divergence_only": true,
-    "worktree_crlf_count": 6821,
+    "worktree_crlf_count": 7005,
     "head_crlf_count": 0
    },
    {
