@@ -4,6 +4,28 @@
 
 ---
 
+## AR-161 · 2026-07-21 · ★★★ **THE KEY IS SETTLED — TWO INDEPENDENT JUDGES, UNANIMOUS ON ALL FOUR DISPUTES, BOTH CALIBRATED (15/15 and 12/12).** Corrected FN **61.9%** is final. ★★ **The third pass is DISPATCHED against 13 adjudicated misses — with the class characterized and the LITERALS WITHHELD, so the seal survives the fix.**
+
+**1. THE QA JUDGE CONFIRMS EVERY DISPUTE, INDEPENDENTLY.** Fresh judge, **re-shuffled with new `X..` ids so it could not correlate to judge 1**, no indication which rows were disputed:
+- `E16` *"the opening bell is when I start my clock"* → **both judges: teaching, NO computable window.** J2: *"it sets a zero point for an unspecified count."*
+- `E19` *"London killzone entries only"* → **both: no computable window.** J2 went further and **cited the actual spread**: *"sources give 2-5 a.m. ET, others 7-10 a.m. London — sounds precise, isn't."*
+- `F02`, `F09` → **both: genuinely computable, promote.**
+**4/4 unanimous. And 12/12 on controls — judge 2 is calibrated too.** ★ **Two independently-calibrated judges agreeing on every disputed row is the strongest form of key validation available here. The key is settled; I am not sending a third.**
+
+**2. THE CORRECTED NUMBER IS FINAL AND IT IS WORSE THAN MINE: FN 13/21 = 61.9%** (was 57.1%). **Both overturns removed rows that were NOT missing** (they currently bind), while a promotion **added** one that is. **I pre-registered this consequence before any verdict existed** — it landed against the convenient reading, twice over, and it stands.
+
+**3. ★ THE THIRD PASS IS DISPATCHED, AND THE SEAL SURVIVED THE BRIEFING — this was the hard part.** The 13 misses are fence rows. **Handing the fixer its target literals would have destroyed the very instrument that found them.** So I read them myself, **characterized the CLASS, and withheld every literal.** The class: **the clock genuinely does work AND the sentence carries an explicit trading ACTION** — *flatten · scale out · close every position · be flat by · only watching, not trading · take one trade · look for the sweep · do not touch it until.* **What they lack is a market NOUN** — and the current rule requires market *context* as a co-factor, so a sentence whose market-ness lives in its **VERB** fails and is rejected.
+
+**4. ★★ THE DIAGNOSIS IS THE PREDECESSOR'S OWN INSIGHT, UNDER-APPLIED.** It proved through **four failed lexicon drafts** that market NOUNS are not the discriminator — then kept a market-context lexicon as the co-factor anyway. **The trading ACTION is the signal: a sentence commanding a position action at a clock time is a trading instruction whether or not it names an instrument.** The fix is to finish the turn it already started.
+
+**5. AND THE TRAP IS NAMED IN THE BRIEF, because the obvious repair is the wrong one.** Ordinary life also has verbs and clock times (*daycare by 8 a.m.*, *board the ferry at 7:20*). **A naive "verb + clock ⇒ bind" rule reopens the exact FP class closed at real cost.** The discriminator is **what the verb acts upon** — a position, an entry/exit, an order, an observation of price. ***Being somewhere by a time is not a trading action; being FLAT by a time is.*** It is told explicitly **not to solve this with a verb lexicon and stop** — a verb list fails the same way the four noun lists did unless it does grammatical work.
+
+**6. THE FP WIN IS FENCED AS A HARD CONSTRAINT:** *"if your change raises false positives, it has failed regardless of what it does to false negatives."* **Both axes must be reported.** A one-axis improvement is a regression, and that is now stated as a pass/fail condition rather than a hope.
+
+**7. Your over-bind ruling (R-169) is received and I am NOT folding it into this pass** — `E16`/`E19` currently bind windows their texts do not carry, which you have confirmed as **fabricated precision**. Adding it here would blur the measurement of the FN fix. **It travels as its own item unless you direct otherwise.**
+
+**Holds:** FP mechanism win preserved and fenced · flags OFF · enforcement re-ratify still parked · the 77 sealed.
+
 ## AR-160 · 2026-07-21 · ★★★ **THE ANSWER KEY SURVIVES: 19 of 21 CONFIRMED, judge CALIBRATED 15/15 on controls.** ★★ **And the correction runs AGAINST me — corrected FN is 61.9%, WORSE than the 57.1% it replaces.** Second judge dispatched per R-167's QA form before any key edit. Third pass still NOT dispatched.
 
 **1. ★ THE CALIBRATION CONTROL FIRED FIRST, and it earns the judge its standing: 15/15 on the obvious non-teachings.** *"garbage pickup is at 8 a.m. on Thursdays"*, *"he was saved by the bell"*, *"our team standup is at 9:30 a.m."*, *"the plumber… between 9 a.m. and 12 p.m."* — **all correctly refused.** ★ The judge **independently flagged the two hardest controls unprompted**: *"B24 and B40 are the two items that most sharply separate genuine reading from clock-time pattern matching — both are C despite carrying the most A-looking time syntax in the set. If this set is instrumenting a classifier, those four are where a false green would show up."* **It identified the corpus's own discriminating rows without being told the corpus was instrumenting anything.**
