@@ -57,6 +57,52 @@ _spec.loader.exec_module(_w1)
 
 DEFERRED_FAMILIES = {"WAIT_RETEST", "WAIT_CONFIRMATION", "FILTER"}
 
+# ============================================================ R-229: GATES THAT -O CANNOT STRIP
+# ★ Three gates in main() were bare `assert`s, and every one guards a PUBLISHED figure: the
+# tier-A clean strategy count (twice, against the receipt's own pin) and the family-enumeration
+# closure. `python -O` strips assert statements, so `python -O tier_a_compile_census.py` wrote
+# tier-a-compile-census.json with all three absent -- and the file publishes unconditionally
+# afterwards, so nothing in the artifact would record that they had not run.
+# Predicates below are AST-identical to the asserts they replace; only the wrapper changed.
+GATE_BOUNDARIES: dict[str, str] = {
+    "RECEIPT_RECONCILIATION": (
+        "Reconciles the selection derived here against the receipt's own pinned counts. It "
+        "checks the DERIVATION against the receipt -- it cannot tell whether the receipt itself "
+        "is right, which is a question for whatever certified it."
+    ),
+    "FAMILY_ENUMERATION_CLOSURE": (
+        "Checks that the family histogram sums to the condition count, i.e. that no condition "
+        "fell outside the FAMILY_META universe. It says nothing about whether each condition "
+        "was classified CORRECTLY -- only that every one landed in some declared bucket."
+    ),
+}
+
+
+def refuse_unless(ok: bool, gate: str, message: str) -> None:
+    """A guard REFUSES: never `assert` (-O strips it), never exit 1 (that reads as a crash).
+
+    A refusal is a VERDICT and gets exit code 2. The boundary prints WITH the refusal.
+    """
+    if ok:
+        return
+    boundary = GATE_BOUNDARIES.get(gate, "(no boundary declared -- this is itself a defect)")
+    sys.stderr.write(
+        f"\n{'=' * 78}\nGUARD REFUSED: {gate}\n{'=' * 78}\n{message}\n\n"
+        f"  WHAT THIS GATE DOES NOT COVER (printed beside every verdict, red or green):\n"
+        f"    {boundary}\n\n"
+        "REFUSING TO PUBLISH. Exit 2 -- this is a guard verdict, not a crash.\n"
+    )
+    raise SystemExit(2)
+
+
+def refuse_if_optimized() -> None:
+    """Name the flag, not the symptom -- asserts in the import closure are stripped too."""
+    refuse_unless(not sys.flags.optimize, "OPTIMIZED_MODE", (
+        "This generator was invoked under `python -O`, which strips every `assert` statement in "
+        "this process. The gates in main() survive as refusals, but nothing can vouch for "
+        "asserts in the modules this file imports. Re-run without -O."
+    ))
+
 
 def sha256_file(p):
     return hashlib.sha256(open(p, "rb").read()).hexdigest()
@@ -99,13 +145,18 @@ def bind_status(b):
 
 
 def main():
+    refuse_if_optimized()
     receipt = json.load(open(RECEIPT, encoding="utf-8"))
     keep, dropped = select_clean_strategies(receipt)
 
     # Arithmetic self-check against the receipt's own pin (two-path, not a re-read).
-    assert len(keep) == receipt["tier_a_clean_strategy_count"], (
-        f"selection {len(keep)} != receipt pin {receipt['tier_a_clean_strategy_count']}")
-    assert len(keep) + len(dropped) == receipt["total_strategies"]
+    refuse_unless(len(keep) == receipt["tier_a_clean_strategy_count"], "RECEIPT_RECONCILIATION",
+                  f"selection {len(keep)} != receipt pin {receipt['tier_a_clean_strategy_count']}")
+    # This one carried NO message as an assert -- a partition that failed to close would have
+    # raised a bare AssertionError naming neither side. Predicate unchanged.
+    refuse_unless(len(keep) + len(dropped) == receipt["total_strategies"], "RECEIPT_RECONCILIATION",
+                  f"kept {len(keep)} + dropped {len(dropped)} != receipt total "
+                  f"{receipt['total_strategies']} -- the selection partition does not close")
 
     specs, failures = [], []
     for stub in sorted(keep):
@@ -189,7 +240,8 @@ def main():
     # FAMILY MIX — enumerated over the FAMILY_META universe (zeros included).
     fam_obs = Counter(c["type"] for c in all_conds)
     family_mix = {f: fam_obs.get(f, 0) for f in sorted(FAMILY_META)}
-    assert sum(family_mix.values()) == n, "family enumeration does not close on n"
+    refuse_unless(sum(family_mix.values()) == n, "FAMILY_ENUMERATION_CLOSURE",
+                  f"family enumeration does not close on n: {sum(family_mix.values())} != {n}")
 
     status_counts = Counter(c["bind_status"] for c in all_conds)
     spine_conds = [c for c in all_conds if c["load_bearing_spine"]]
@@ -276,12 +328,69 @@ def main():
         "bind_status_counts": dict(status_counts),
         "n_spine_or_trigger": len(spine_conds),
         "spine_bind_status_counts": dict(Counter(c["bind_status"] for c in spine_conds)),
+        # ★★ R-229 §8: THIS RANKING IS SUPERSEDED, AND THE DEAD NUMBER IS ITS SORT KEY.
+        # Read the marker below before citing anything in this block or in reaim_analysis.
+        "SUPERSESSION_MARKER": {
+            "status": "SUPERSEDED -- do not cite unlock_ranking_load_bearing or reaim_analysis",
+            "what_is_dead": (
+                "This artifact was generated under the PREFIX classifier. Its published "
+                "unlock ranking put WAIT_STRUCTURE first with 31 load-bearing conditions "
+                "across 11 specs, and 31 > 10 > 5 IS the sort order -- so the dead number is "
+                "not a detail inside the output, it is the key that produced the output."
+            ),
+            "what_replaced_it": (
+                "The classifier fix landed (see docs/replay-results/classifier-fix/). "
+                "Re-measured on the SAME corpus with the SAME instrument, read-only: "
+                "UNTYPED 26 conditions across 9 specs, WAIT_STRUCTURE 18 across 7, "
+                "WAIT_CONFIRMATION 4 across 3, WAIT_SESSION 2 across 2, WAIT_RETEST 2 across "
+                "1, FILTER 1 across 1. Spine bind status moves from "
+                "{APPROXIMATED: 43, UNBOUND: 10} to {UNBOUND: 28, APPROXIMATED: 25}."
+            ),
+            "the_ranking_does_not_merely_shrink_IT_REORDERS": (
+                "WAIT_STRUCTURE is no longer #1. UNTYPED is, and UNTYPED is not a family that "
+                "can be wired -- it is the absence of a type. A re-aim that reads position [0] "
+                "of this list would now be aimed at something unwireable, which is why this "
+                "marker names the reorder rather than only the smaller count."
+            ),
+            "the_re_aim_it_justified": "SUSPENDED",
+            "why_the_number_is_not_simply_corrected_here": (
+                "Regenerating this artifact would silently restate every figure in it under a "
+                "classifier the published run never used, which is a different measurement "
+                "wearing this one's filename. The marker is the honest minimum: it says what "
+                "is dead, what replaced it, and that the decision it fed is suspended."
+            ),
+            "reproduce": (
+                "★ THIS GENERATOR NO LONGER RUNS TO COMPLETION ON CURRENT DATA, and that is a "
+                "finding, not a defect in this marker. Re-run it and FAMILY_ENUMERATION_CLOSURE "
+                "refuses with exit 2: the family histogram sums to 56 against 99 conditions. "
+                "The 43 missing conditions are the UNTYPED ones the classifier fix introduced, "
+                "and UNTYPED is not a member of the FAMILY_META universe this census enumerates "
+                "over -- so they fall out of family_mix entirely."
+            ),
+            "WHY_THIS_MATTERS_MORE_THAN_THE_STALE_RANKING": (
+                "That closure check was a bare `assert` until R-229. Under `python -O` it would "
+                "have been stripped, and this generator would have PUBLISHED a family_mix "
+                "silently omitting 43 of 99 conditions -- a census that had lost nearly half "
+                "its population while reporting a complete-looking histogram. The gate did not "
+                "become useful when it was converted; it became UNSKIPPABLE, and the first "
+                "thing it did was refuse."
+            ),
+            "NOT_FIXED_HERE_AND_WHY": (
+                "Widening the enumeration to admit UNTYPED would change what this census "
+                "MEASURES, which is not an enforcement-mechanism change and does not belong in "
+                "the unit that converted the gates. It is left refusing -- loudly, at exit 2 -- "
+                "rather than quietly widened. A generator that refuses is safe; one that "
+                "publishes a half-population histogram is not."
+            ),
+        },
         "unlock_ranking_load_bearing": [
             {"family": f, "n_load_bearing_conditions_unlocked": c,
              "n_specs_touched": len(unlock_specs.get(f, ())),
-             "specs": sorted(unlock_specs.get(f, ()))}
+             "specs": sorted(unlock_specs.get(f, ())),
+             "SUPERSEDED": "see SUPERSESSION_MARKER -- prefix-classifier vintage"}
             for f, c in unlock.most_common()],
         "reaim_analysis": reaim,
+        "reaim_analysis_SUPERSEDED": "see SUPERSESSION_MARKER -- prefix-classifier vintage",
         "session_mistype_class": {
             "note": ("R-083 §2(ii) registered this class for explicit hunting on tier-a. "
                      "A WAIT_SESSION condition whose text resolves to NO session zone is "
