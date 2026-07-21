@@ -2695,7 +2695,19 @@ def test_both_flag_arms_agree_on_every_refusal_path_object(monkeypatch):
     all_objects = _all_wait_session_objects()
     if not all_objects:
         pytest.skip("docs/ corpora unavailable in this checkout")
-    assert len(all_objects) == 395, f"WAIT_SESSION object census moved: {len(all_objects)} (expected 395)"
+    # ★ THE CENSUS CARRIES ITS BOUNDARY. An independent grade measured 396
+    # where this said 395; resolved by measurement rather than by credibility,
+    # and BOTH are right under different definitions:
+    #   395 = distinct WAIT_SESSION objects with a NON-EMPTY object string
+    #   396 = the above plus the empty-string object, which really does occur
+    #         (or-branches-full-corpus-specs-2026-07-05.json carries
+    #         WAIT_SESSION conditions with object: "")
+    # A bare "395" was underspecified, not wrong. The empty object is
+    # flag-invariant too (both arms: bindable=False,
+    # reason=no_recognized_session_keyword), so the invariance claim holds
+    # over 396; only the receipt figure needed its boundary.
+    assert len(all_objects) == 395, f"non-empty WAIT_SESSION census moved: {len(all_objects)} (expected 395)"
+    assert len(all_objects | {""}) == 396, "census-including-empty-object boundary moved"
     refusal_path = [
         o for o in all_objects
         if resolve_session_keyword(o) is None and refused_session_zone(o) is not None
@@ -2900,3 +2912,72 @@ def test_anchor_phrase_government_discriminates_endpoint_from_gloss(label, text,
     match = SESSION_ANCHOR_PHRASE_RE.search(text)
     assert match is not None, f"fixture must contain an anchor phrase: {text!r}"
     assert _session_anchor_phrase_is_governed_endpoint(text, match.start()) is governed, label
+
+
+def test_ungoverned_gloss_does_not_extend_the_span_when_clock_endpoints_exist(monkeypatch):
+    """★ THE SECOND, RESIDUAL ROUTE TO A COMPLEMENT BIND — found by continuing
+    to attack the hole fix after it was already green and committed.
+
+    Government fixed the WRAP test, but min/max still spanned an ungoverned
+    gloss to a clock token, reaching the complement by another road:
+
+        "hold from 4:00 p.m. eastern during market open on ES"
+            gloss(570) + token(960) -> min/max (570, 960) -> ny_pm
+
+    ("during" is correctly NOT a range-bounding preposition, so widening the
+    governor list would have been the wrong fix.) A gloss now contributes no
+    anchor at all when real clock endpoints are present."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    result = classify_session_role("hold from 4:00 p.m. eastern during market open on ES")
+    assert result.zone is None, f"complement-bound to {result.zone!r} via the gloss/token span"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "the first two-minute candle off the bell",
+        "price drops at the opening bell",
+    ],
+)
+def test_sole_anchor_phrase_still_supplies_its_zone(monkeypatch, text):
+    """★ NEGATIVE CONTROL for the test above, and the reason the gloss rule is
+    conditioned on clock endpoints existing rather than applied unconditionally.
+
+    These are graded calibration fixtures: both ungoverned, both carrying NO
+    clock token. When the phrase is the SOLE anchor it must still supply the
+    zone — dropping it here would move a graded constant by side-effect, which
+    this packet is forbidden from doing."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    assert classify_session_role(text).zone == "ny_am"
+
+
+@pytest.mark.parametrize("flag_state", ["false", "true"])
+def test_empty_object_wait_session_is_flag_invariant(monkeypatch, flag_state):
+    """The 396th census member — a WAIT_SESSION whose `object` is the empty
+    string, which really occurs in the corpus. It must be flag-invariant like
+    every other refusal-path row, so the invariance claim holds over the full
+    396 and not merely the 395 non-empty ones."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", flag_state)
+    binding = bind_condition({"id": "p:6", "type": "WAIT_SESSION", "object": "", "role": "spine"})
+    assert binding.bindable is False
+    assert binding.session_zone is None
+    assert binding.reason == "no_recognized_session_keyword"
+
+
+def test_asia_session_reason_string_changes_under_the_flag_and_that_is_declared(monkeypatch):
+    """★ AN UNDECLARED DELTA, found by the independent grade and pinned here.
+
+    The packet claimed the flag-ON delta was 2 objects. It is 3. `asia session`
+    also changes — not from refusal to bind (the safety claim holds: it refuses
+    in both states), but its REASON STRING moves:
+
+        base flag-ON: session_teaching_recognized_no_computable_window
+        this  flag-ON: session_zone_refused_uncomputable_window:overnight
+
+    Both are honest refusals, and the newer one is strictly more informative
+    (it names the zone). But any downstream ledger keyed on `reason` sees it,
+    so it is declared here rather than discovered downstream."""
+    monkeypatch.setenv("TF_SESSION_ROLE_RESOLVER_ENABLED", "true")
+    binding = bind_condition({"id": "p:7", "type": "WAIT_SESSION", "object": "asia session", "role": "spine"})
+    assert binding.bindable is False
+    assert binding.reason == "session_zone_refused_uncomputable_window:overnight"

@@ -2059,16 +2059,18 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
     wrap_points: list[tuple[int, int]] = []
 
     anchor_phrase = SESSION_ANCHOR_PHRASE_RE.search(norm)
+    anchor_phrase_governed = bool(
+        anchor_phrase and _session_anchor_phrase_is_governed_endpoint(norm, anchor_phrase.start())
+    )
     if anchor_phrase:
         recognized = True
-        anchor_minutes.append(_SESSION_MARKET_OPEN_MINUTE)
         # ★ The phrase joins the wrap sequence ONLY when a span preposition
         # governs it, i.e. it is a range ENDPOINT and not a descriptive gloss.
         # See _session_anchor_phrase_is_governed_endpoint — this distinction is
         # what lets the wrap test catch "from 4:00 p.m. until MARKET OPEN"
         # without re-manufacturing the phantom wraps a positional-only rule
         # produced.
-        if _session_anchor_phrase_is_governed_endpoint(norm, anchor_phrase.start()):
+        if anchor_phrase_governed:
             wrap_points.append((anchor_phrase.start(), _SESSION_MARKET_OPEN_MINUTE))
 
     # ★ SECOND-PASS: the weak markers' required co-factor is now the STRONG
@@ -2202,6 +2204,23 @@ def classify_session_role(object_text: str) -> SessionRoleResult:
         # for a non-NYSE open, and the zones they would imply are the two
         # orphan names is_in_killzone() can never return True for.
         recognized = True
+
+    # ★ RESIDUAL-HOLE CLOSURE. An UNGOVERNED anchor phrase is a descriptive
+    # gloss, so it must not EXTEND the taught span when real clock endpoints
+    # are present — otherwise min/max still spans gloss<->token and can yield
+    # the complement by a second route:
+    #
+    #   "hold from 4:00 p.m. eastern during market open on ES"
+    #       ungoverned gloss (570) + token (960) -> min/max (570, 960) -> ny_pm
+    #
+    # which is the RTH afternoon again, the complement of a 16:00-onward
+    # teaching. When the phrase is the SOLE anchor it still supplies the zone:
+    # that is what the graded calibration fixtures depend on ("the first
+    # two-minute candle off the bell", "drops at the opening bell" — both
+    # ungoverned, both carrying no clock token at all), and dropping it there
+    # would move a graded constant by side-effect.
+    if anchor_phrase and (anchor_phrase_governed or not anchor_minutes):
+        anchor_minutes.append(_SESSION_MARKET_OPEN_MINUTE)
 
     zone: str | None = None
     refusal: str | None = None

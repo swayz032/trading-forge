@@ -112,7 +112,7 @@ currently unbound becomes bound. Zone binds only ever become refusals.
 consult in `_bind_condition_dispatch`. A phrase naming a refused zone is refused
 **regardless of flag state**. The refusal survives the flag unconditionally.
 
-**(ii) Wrapping windows are explicitly REFUSED, never complement-bound.** Derive the anchor
+**(ii) Wrapping windows are explicitly REFUSED rather than complement-bound** — best-effort, NOT a guarantee (see 4c for the measured residual holes). Derive the anchor
 span from the **text-ordered** token sequence rather than `min`/`max`. If any adjacent pair
 goes backwards, the window wraps midnight → return a named refusal
 `wrapping_window_unrepresentable`, carried on `SessionRoleResult.refusal` and surfaced as the
@@ -255,6 +255,69 @@ pinned by `test_anchor_phrase_gloss_is_not_read_as_a_range_endpoint`.
 **The graded constants are what caught both.** They are owned by the population-completion
 unit and must never move by side-effect — and because they must not move, their movement was
 a working alarm. Final state: `bound_count == 8` assertion green, constants untouched.
+
+---
+
+## 4c. INDEPENDENT GRADE — **BAND 6/10**, and the corrections it forced
+
+Graded by an independent agent (doer ≠ grader) against pinned worktrees at `4e8cd4ba`,
+`786cd6ce`, `3f1df5fa`. **It found the shipped hole in `786cd6ce` on its own, before being
+told.** Its criticisms are recorded here in full because they are correct.
+
+### ★ THE HEADLINE CLAIM WAS OVERSTATED — corrected
+
+This packet wrote *"WRAPPING WINDOWS ARE REFUSED BY NAME … **never** complement-bound."*
+**That is a guarantee this implementation does not provide, and the word "never" is
+withdrawn.** The wrap detector is a **best-effort filter**, not a proof. Measured residual
+failure modes at `3f1df5fa`, all constructed by the grader:
+
+**(a) Wrapping windows that still complement-bind (6):** a content word between the governor
+and the phrase (`until the **next** market open`, `tomorrows`, `following`), a governor not in
+the list (`past`, `til`), or no preposition at all (`4:00 p.m. eastern , market open`).
+All bind `ny_pm`.
+
+**(b) False refusals — a gloss governed by a list word re-manufactures the phantom wrap (3):**
+`the first 15 minutes **after** market open` is refused. The two corpus fixtures use `of`
+(excluded) and `into` (included); swapping `of`→`after` — a semantically identical gloss —
+brings the bug back. **The governor list is fitted to the fixtures**, and `after`/`before`/
+`by`/`between` are gloss-forming as often as endpoint-forming.
+
+**(c) Pre-existing false refusals from the wrap test itself (3):** narrative ordering
+(`enter at 10:00 a.m. after the 9:30 a.m. open confirms`) and multi-window teachings
+(`9:30 to 9:45 a.m. then 3:00 to 3:15 p.m.`) contain a backwards adjacent pair without being
+wraps. Boundary: the test fires on **any strictly-decreasing adjacent clock-token pair**, with
+no model of range structure. Corpus exposure **0 of 396**.
+
+**Both error classes have one root cause: the detector has no notion of range structure.**
+Closing them properly is a redesign, not a patch, and it is **NOT** done here. Per this
+module's own standing rule ("a miss is honest, a false positive silently binds the WRONG
+window") the (b)/(c) misses are the tolerable class and the (a) binds are not — so **(a) is
+the open defect**, and it is why the flag stays a BLOCKER.
+
+### ★ FLAG PROMOTION: STILL BLOCKED — on the grader's measurements, not mine
+
+`TF_SESSION_ROLE_RESOLVER_ENABLED=true` today still complement-binds 6 constructed wrapping
+shapes and falsely refuses 4 non-wrapping ones. **The flag is not safe to promote.** That was
+the packet's purpose: it removed the two corpus instances and the headline inversion, it did
+not make the resolver sound.
+
+### Receipt corrections (each verified independently before accepting)
+
+| claim as written | corrected | how resolved |
+|---|---|---|
+| "all **395** WAIT_SESSION objects" | **395 non-empty / 396 including the empty-string object** | Grader measured 396, I measured 395 three ways. Resolved by MEASUREMENT, not credibility: both right under different definitions — `or-branches-full-corpus-specs-2026-07-05.json` carries `WAIT_SESSION` rows with `object: ""`. A bare 395 was **underspecified, not wrong**. The empty object is flag-invariant too, so invariance holds over 396. Now pinned by test with its boundary. |
+| flag-ON delta is **2** objects | **3** | `asia session` also changes — refusal→refusal, but `session_teaching_recognized_no_computable_window` → `session_zone_refused_uncomputable_window:overnight`. Safety claim holds (no unbound becomes bound; 0 such objects); the **reason string** moves and a ledger keyed on it would see it. Now declared and pinned by test. |
+| V10 "post-fix Python matches the TS mirror" | **true on the 2 defect objects; NOT global** | Python flag-ON still diverges from TS on **24 of 396** objects (27 before). Parity is restored *on the defect*, not globally. Flag is OFF, so live parity is intact. |
+
+### What the grade confirmed as TRUE
+
+Graded constants unmoved (`bound_count == 8`, `recognized_count == 17` identical at all three
+SHAs; test diff is **+290 / −0**, arithmetically incapable of moving them) · sealed fence
+`git diff` **empty**, 17 red with identical ids at all three SHAs · flag-OFF invariance **0
+differ** · 9 refusal-path objects, 2 preempted · new tests genuinely armed (**≥7** red on
+pre-fix logic) · **the brief-correction claims, called "the packet's most defensible
+finding"** · scope discipline (exactly 3 files) · anchor-trap control genuinely unchanged
+(2 bound before and after).
 
 ## 5. ROLLBACK
 
