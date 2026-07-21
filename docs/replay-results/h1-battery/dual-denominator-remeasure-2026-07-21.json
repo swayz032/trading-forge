@@ -651,6 +651,30 @@
   "max_de_approximable": 6,
   "observed_de_approximated": 6,
   "n_unresolvable_as_built": 9,
+  "max_de_approximable_derivation": {
+   "path1_forward_graded_rows": 7,
+   "path1_forward_bare_among_graded": 1,
+   "path1_forward_result": 6,
+   "path2_complement_total_rows": 16,
+   "path2_complement_no_graded_kind": 9,
+   "path2_complement_result": 6,
+   "paths_agree": true,
+   "graded_kinds": [
+    "named_sr_level",
+    "order_block_edge"
+   ],
+   "was_previously": "a typed literal, unchecked, among computed neighbours"
+  },
+  "max_de_approximable_mechanism_correction": {
+   "standing_account_was": "total rows minus unresolvable, then minus swing",
+   "swing_rows_carrying_a_graded_kind": 0,
+   "why_the_standing_account_is_wrong": "swing carries no graded kind, so swing is not in the forward path's population at all and cannot be subtracted from it. The arithmetic happened to land on the right value by the wrong mechanism.",
+   "actual_subtrahend_kind": "bare_anaphora",
+   "actual_subtrahend_condition_ids": [
+    "WAIT_STRUCTURE:if-you-first-establish-where-your-suppor#1"
+   ],
+   "why_that_row_is_excluded": "it names a graded kind but resolves its object anaphorically, so there is no antecedent for the primitive to bind to"
+  },
   "swing": "2 rows, routed-but-approximate, and they stay approximation=True by the ANCHOR-VS-TAUGHT-OBJECT REFUSAL recorded in swing_disposition_ground -- a property of what the primitive EMITS, independent of this row count and of the flip's grade scope. It is NOT the n>=2 de-approximation floor, which this population MEETS rather than falls below; that was the withdrawn reason, and it rested on a count that was numerically false.",
   "swing_disposition_ground": "A swing is the ANCHOR of a fibonacci retracement. The TAUGHT OBJECT is the 50/61.8% line, and the level/zone primitive does not emit that line -- so there is nothing for a swing row to bind TO. The refusal is about what is emitted, so no row count and no widening of the flip's grade can move it.",
   "swing_disposition_ground_ruling": "AR-199 s1",
@@ -892,10 +916,10 @@
   "unflattering_reading": "All 27 WAIT_SESSION conditions in Corpus A are UNBOUND in both arms. The session lane -- the only family whose runtime primitive is real -- recovered nothing in this configuration, and the honest-partial closure moved the unbound count the WRONG way: 27 unbound post-closure against the 26 of the pre-closure note, because the 27th row's binding was withdrawn as fake rather than lost (see THE_26_VS_27_ACCOUNTING). This is the least flattering number available and it is stated for that reason."
  },
  "SELF_ACCOUNTING": {
-  "n_asserts_in_this_generator": 30,
+  "n_asserts_in_this_generator": 32,
   "ASSERT_CENSUS": {
-   "n_asserts_total": 30,
-   "n_DATA_SENSITIVE": 20,
+   "n_asserts_total": 32,
+   "n_DATA_SENSITIVE": 22,
    "n_SOURCE_INVARIANT": 10,
    "SPLIT_DERIVATION_R219": {
     "WHY_THIS_EXISTS": "This split has now held three different values, each replacing the last with no record of WHICH asserts moved it. A third value without a derivation is not a number yet. The prior values are carried as numeric fields below rather than typed into this sentence -- a record, not a live claim. This closes the arithmetic against the file's git history, which is outside the AST that produces the total.",
@@ -983,16 +1007,28 @@
       "commit": "THIS_WAVE"
      },
      {
+      "assert": "_ceiling_path1 == _ceiling_path2",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "H1-W4 -- max_de_approximable computed from two paths",
+      "commit": "THIS_WAVE"
+     },
+     {
+      "assert": "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE",
+      "disposition": "DATA_SENSITIVE",
+      "added_by": "H1-W4 -- computed ceiling reconciled against the literal the probe targets",
+      "commit": "THIS_WAVE"
+     },
+     {
       "assert": "ws_session_resolvable <= graded_teachings",
       "disposition": "DATA_SENSITIVE",
       "added_by": "R-220 s1 -- reconciliation against the live session resolver",
       "commit": "THIS_WAVE"
      }
     ],
-    "DATA_SENSITIVE_derivation": "14 at baseline + 6 added = 20",
+    "DATA_SENSITIVE_derivation": "14 at baseline + 8 added = 22",
     "SOURCE_INVARIANT_derivation": "5 at baseline + 5 added = 10",
     "declared_now_in_ASSERT_DISPOSITIONS": {
-     "DATA_SENSITIVE": 20,
+     "DATA_SENSITIVE": 22,
      "SOURCE_INVARIANT": 10
     },
     "second_link_already_asserted_above": "every ASSERT_DISPOSITIONS key names exactly ONE assert in the AST, and every assert in the AST has exactly one key -- so a split that closes against the table closes against the file.",
@@ -1001,152 +1037,162 @@
    },
    "asserts": [
     {
-     "line": 440,
+     "line": 465,
      "disposition": "SOURCE_INVARIANT",
      "test": "unexpected_disposition_keys == set()"
     },
     {
-     "line": 444,
+     "line": 469,
      "disposition": "SOURCE_INVARIANT",
      "test": "undispositioned == []"
     },
     {
-     "line": 510,
+     "line": 535,
      "disposition": "SOURCE_INVARIANT",
      "test": "derivation['closes_exactly']"
     },
     {
-     "line": 3077,
+     "line": 3120,
      "disposition": "SOURCE_INVARIANT",
      "test": "len(set(got.values())) == len(cases)"
     },
     {
-     "line": 3084,
+     "line": 3127,
      "disposition": "SOURCE_INVARIANT",
      "test": "not got[flat].startswith('SAME_DIRECTION')"
     },
     {
-     "line": 3136,
+     "line": 3179,
      "disposition": "DATA_SENSITIVE",
      "test": "inval_on_concrete <= inval_off_concrete"
     },
     {
-     "line": 3421,
+     "line": 3464,
      "disposition": "DATA_SENSITIVE",
      "test": "path1 == path2 == path3"
     },
     {
-     "line": 3469,
+     "line": 3512,
      "disposition": "DATA_SENSITIVE",
      "test": "a_before['n_bindable'] == a_after['n_bindable']"
     },
     {
-     "line": 3532,
+     "line": 3575,
      "disposition": "DATA_SENSITIVE",
      "test": "per_kind.get('swing', {}).get('n_flipped', 0) == 0"
     },
     {
-     "line": 3540,
+     "line": 3583,
      "disposition": "DATA_SENSITIVE",
      "test": "set(per_kind) <= {'named_sr_level', 'order_block_edge'}"
     },
     {
-     "line": 3559,
+     "line": 3602,
      "disposition": "DATA_SENSITIVE",
      "test": "a_roles.get('trigger', 0) == 0"
     },
     {
-     "line": 3645,
+     "line": 3688,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_teachings == SESSION_SPLIT_DECLARED['A_genuine_session_teachings']"
     },
     {
-     "line": 3651,
+     "line": 3694,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_mis_types == SESSION_SPLIT_DECLARED['B_mis_types']"
     },
     {
-     "line": 3655,
+     "line": 3698,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_undecidable == SESSION_SPLIT_DECLARED['C_undecidable']"
     },
     {
-     "line": 3662,
+     "line": 3705,
      "disposition": "DATA_SENSITIVE",
      "test": "graded_teachings + graded_mis_types + graded_undecidable == ws_taught"
     },
     {
-     "line": 3677,
+     "line": 3720,
      "disposition": "DATA_SENSITIVE",
      "test": "ws_session_resolvable <= graded_teachings"
     },
     {
-     "line": 3811,
+     "line": 3854,
      "disposition": "DATA_SENSITIVE",
      "test": "n_levelzone_rows == 16"
     },
     {
-     "line": 3813,
+     "line": 3856,
      "disposition": "DATA_SENSITIVE",
      "test": "total_flipped <= 6"
     },
     {
-     "line": 3822,
+     "line": 3881,
+     "disposition": "DATA_SENSITIVE",
+     "test": "_ceiling_path1 == _ceiling_path2"
+    },
+    {
+     "line": 3906,
+     "disposition": "DATA_SENSITIVE",
+     "test": "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE"
+    },
+    {
+     "line": 3926,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['never_evaluated_total'] == never_by_gap"
     },
     {
-     "line": 3826,
+     "line": 3930,
      "disposition": "DATA_SENSITIVE",
      "test": "enf['all_entry_conditions'] == b_total"
     },
     {
-     "line": 4793,
+     "line": 4928,
      "disposition": "SOURCE_INVARIANT",
      "test": "OUT_PATH not in APPEND_ONLY_GUARDED"
     },
     {
-     "line": 4891,
+     "line": 5026,
      "disposition": "SOURCE_INVARIANT",
      "test": "not sys.flags.optimize"
     },
     {
-     "line": 5433,
+     "line": 5568,
      "disposition": "SOURCE_INVARIANT",
      "test": "publish_path['PASS']"
     },
     {
-     "line": 5439,
+     "line": 5574,
      "disposition": "SOURCE_INVARIANT",
      "test": "spawn['PASS']"
     },
     {
-     "line": 5445,
+     "line": 5580,
      "disposition": "DATA_SENSITIVE",
      "test": "census['PASS']"
     },
     {
-     "line": 5462,
+     "line": 5597,
      "disposition": "DATA_SENSITIVE",
      "test": "evidential['PASS']"
     },
     {
-     "line": 5475,
+     "line": 5610,
      "disposition": "SOURCE_INVARIANT",
      "test": "discrimination['REVIVAL_FAMILY']['PASS']"
     },
     {
-     "line": 5481,
+     "line": 5616,
      "disposition": "DATA_SENSITIVE",
      "test": "gate['PASS']"
     },
     {
-     "line": 5521,
+     "line": 5656,
      "disposition": "DATA_SENSITIVE",
      "test": "head_check['all_match']"
     },
     {
-     "line": 5531,
+     "line": 5666,
      "disposition": "DATA_SENSITIVE",
      "test": "before_hashes == after_hashes"
     }
@@ -1199,7 +1245,7 @@
    },
    "n_DISCRIMINATING": 4,
    "n_REVIVED_BY_VALUE_INJECTION": 12,
-   "n_REACHED_BUT_NO_PROBE_FAILS_IT": 4,
+   "n_REACHED_BUT_NO_PROBE_FAILS_IT": 6,
    "n_NOT_REACHED_BY_THIS_PROBE_FAMILY": 10,
    "REVIVAL_FAMILY": {
     "WHY_IT_IS_REPORTED_APART": "An AXIS perturbs a SOURCE and requires the whole artifact to stay consistent; it earns the word DISCRIMINATING. A REVIVAL PROBE injects a value at the point of use. It proves the assert is LIVE and capable of failing, and nothing about whether a real corpus can reach that state. Pooling the two would inflate the very safety figure this census exists to deflate.",
@@ -1271,7 +1317,10 @@
     "MISDIRECTED_PROBES_THIS_IS_THE_RED": [],
     "PASS": true
    },
-   "suspected_dead_asserts": [],
+   "suspected_dead_asserts": [
+    "_ceiling_path1 == _ceiling_path2",
+    "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE"
+   ],
    "asserts_this_family_CANNOT_JUDGE": [
     "OUT_PATH not in APPEND_ONLY_GUARDED",
     "before_hashes == after_hashes",
@@ -1295,6 +1344,16 @@
      "revived_by_COMPUTED": [],
      "verdict": "NOT_REACHED_BY_THIS_PROBE_FAMILY",
      "WHY_NO_EVIDENCE": "It does not execute during a probe build -- it lives outside build_artifact (in main(), around the write and the git checks). This probe family says NOTHING about it either way, and saying nothing is the honest report."
+    },
+    {
+     "assert": "_ceiling_path1 == _ceiling_path2",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [],
+     "verdict": "REACHED_BUT_NO_PROBE_FAILS_IT",
+     "SUSPECTED_DEAD": "declared DATA_SENSITIVE, it RAN under every probe, and none could make it fire. Either this family is missing a probe that reaches its subject, or no data reaches it and the declaration is wrong. Not a silent pass."
     },
     {
      "assert": "a_before['n_bindable'] == a_after['n_bindable']",
@@ -1482,6 +1541,16 @@
      "verdict": "DISCRIMINATING"
     },
     {
+     "assert": "max_de_approximable == CEILING_LITERAL_SPELLED_IN_ASSERT_AND_PROBE",
+     "declared_disposition": "DATA_SENSITIVE",
+     "executed_during_a_probe_build": true,
+     "discriminated_by_COMPUTED": [],
+     "n_probes_that_fail_it": 0,
+     "revived_by_COMPUTED": [],
+     "verdict": "REACHED_BUT_NO_PROBE_FAILS_IT",
+     "SUSPECTED_DEAD": "declared DATA_SENSITIVE, it RAN under every probe, and none could make it fire. Either this family is missing a probe that reaches its subject, or no data reaches it and the declaration is wrong. Not a silent pass."
+    },
+    {
      "assert": "n_levelzone_rows == 16",
      "declared_disposition": "DATA_SENSITIVE",
      "executed_during_a_probe_build": true,
@@ -1631,12 +1700,12 @@
    "SESSION_GRADE_REALLOCATION": "One WAIT_SESSION row is reallocated from the externally-graded genuine-teaching bucket to the mis-typed bucket (17/9 -> 16/10). The SUM is deliberately preserved, so `graded_teachings + graded_mis_types + orphan_zone_refusal == ws_taught` stays armed and passing -- the axis moves the split without breaking the closure it must respect. MOVES: the 26-vs-27 accounting terms."
   },
   "n_axes": 6,
-  "n_leaves_compared": 720,
+  "n_leaves_compared": 750,
   "n_numeric_leaves_that_moved": 159,
   "n_moved_numeral_spellings": 88,
   "scoping_rule": "A prose field is answerable for the moved numbers within its own container's subtree -- its siblings and their descendants. Wider scoping convicts on numeral collision; narrower scoping would let a block quote its own parent's number and freeze.",
-  "n_prose_fields_examined": 287,
-  "n_identifier_fields_skipped": 85,
+  "n_prose_fields_examined": 307,
+  "n_identifier_fields_skipped": 91,
   "identifier_keys_excluded_as_not_prose": [
    "added_by",
    "artifact",
@@ -1676,14 +1745,14 @@
    "DRIFT_LATTICE_CASE_WITHDRAWAL",
    "SESSION_GRADE_REALLOCATION"
   ],
-  "n_prose_leaves": 189,
-  "n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF": 130,
-  "n_numeral_carrying_prose_leaves": 59,
-  "COVERAGE": "36/59",
-  "coverage_rate": 0.6102,
+  "n_prose_leaves": 203,
+  "n_prose_leaves_numeral_free_UNCONVICTABLE_BY_PROOF": 143,
+  "n_numeral_carrying_prose_leaves": 60,
+  "COVERAGE": "36/60",
+  "coverage_rate": 0.6,
   "n_RESPONSIVE": 34,
   "n_COVERED": 2,
-  "n_EXEMPTED_STRUCTURAL": 15,
+  "n_EXEMPTED_STRUCTURAL": 16,
   "n_CARRIED_UNVERIFIABLE_NOT_COVERAGE": 8,
   "WHAT_CARRIED_UNVERIFIABLE_MEANS": "A genuine measurement, interpolated from the field it describes, that NO axis in this family moves. The wiring is visible in the source but UNTESTED by this gate, so it is deliberately excluded from the coverage figure rather than counted as a pass. Growth in this bucket means the axis family is too narrow, and it is reported where that is impossible to miss.",
   "n_UNREACHED_THIS_IS_THE_RED": 0,
@@ -1836,6 +1905,14 @@
       "2"
      ],
      "why": "The n>=2 de-approximation floor (R-102 s2), interpolated from DE_APPROXIMATION_FLOOR. A policy constant, not a measurement."
+    },
+    {
+     "path": "$.CEILING.max_de_approximable_mechanism_correction.actual_subtrahend_condition_ids[0]",
+     "kind": "SECTION_IDENTIFIER",
+     "numerals": [
+      "1"
+     ],
+     "why": "The trailing '#1' is the ordinal inside a condition_id -- an identifier spelled with a digit. The quantity this field is about (how many graded rows are bare anaphora) is published as a NUMBER beside it, where an axis can reach it."
     },
     {
      "path": "$.CEILING.swing",
@@ -2002,8 +2079,8 @@
      "kind": "INTERPOLATED_BUT_NO_AXIS_MOVES_ITS_SOURCE",
      "numerals": [
       "14",
-      "20",
-      "6"
+      "22",
+      "8"
      ],
      "why": "Every term is interpolated -- the baseline from ASSERT_SPLIT_BASELINE, the addition count from ASSERTS_ADDED_SINCE_BASELINE, the total from their sum. No axis moves either constant (ASSERT_DISPOSITION_RECLASSIFICATION deliberately cannot: the ledger is scored against the DECLARED table, not the perturbed one, so that the axis leaves this assert armed). Wired but untested by this family, and named as such rather than counted as coverage."
     },
@@ -2031,7 +2108,7 @@
   "structural_entries_that_matched_nothing": [],
   "identifier_exclusion_audit": {
    "WHY": "IDENTIFIER_KEYS excludes fields by exact NAME. This checks that each excluded field really holds an identifier, by requiring that it quote no moved measurement as a free-standing word. Membership earned by content, not by a name that sounds path-like.",
-   "n_identifier_leaves_audited": 154,
+   "n_identifier_leaves_audited": 160,
    "leaks": [],
    "PASS": true
   },
@@ -2048,13 +2125,13 @@
    "FIRST_PERSON_EVIDENTIAL": "'we saw', 'we then measured' -- a narrator claiming to have looked.",
    "OPPOSED_DIRECTION_PAIR": "A frozen sentence claiming one quantity rose while another fell. Caption 1's 'the rate improves while coverage worsens', in general form."
   },
-  "n_frozen_prose_leaves_SCORED": 147,
+  "n_frozen_prose_leaves_SCORED": 161,
   "n_flagged": 2,
   "n_convictions": 0,
   "n_adjudicated": 2,
   "precision_COMPUTED": {
    "WHAT_IT_MEANS": "Of the frozen prose leaves these rules flagged on THIS run, the share that needed an adjudication rather than a repair. A rising adjudication share is the signature of a rule that has started crying wolf, and it is visible here on the run that causes it rather than after the guard has been switched off.",
-   "flagged_over_scored": 0.0136,
+   "flagged_over_scored": 0.0124,
    "adjudicated_over_flagged": 1.0
   },
   "REJECTED_RULE_FAMILIES_AND_THEIR_MEASUREMENTS": {
@@ -2117,7 +2194,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 2721,
+    "line": 2764,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "head_blob_bytes",
@@ -2126,7 +2203,7 @@
    {
     "module": "__main__",
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
-    "line": 2736,
+    "line": 2779,
     "primitive": "subprocess.run",
     "kind": "CALL_SPAWNS",
     "enclosing_function": "tracked_files",
@@ -2161,7 +2238,7 @@
     "boundary": "NUMERAL-FREE CLAIMS. The gate convicts by intersecting a sentence's own numerals with the moved spellings, so a claim carrying NO numeral -- a bare direction word like 'improved', 'degraded', 'exclusive' -- cannot be convicted by it under any axis. This is caption 1's own shape.",
     "status": "CHECKED",
     "closed_by": "the EVIDENTIAL-CLAIM GATE (R-219 (2))",
-    "evidence_COMPUTED": "130 of 189 prose leaves carry no numeral and are outside the CAPTION gate's reach BY PROOF -- but they are inside the evidential gate's: it scores 147 frozen prose leaves without needing a numeral at all, and convicts 0 of them on this run",
+    "evidence_COMPUTED": "143 of 203 prose leaves carry no numeral and are outside the CAPTION gate's reach BY PROOF -- but they are inside the evidential gate's: it scores 161 frozen prose leaves without needing a numeral at all, and convicts 0 of them on this run",
     "what_fails_if_crossed": "assert evidential['PASS'] -- a frozen string claiming an observation turns this RED with no perturbation required, because a literal cannot have observed anything whatever the data does.",
     "\u2605_THE_PREMISE_THIS_ENTRY_CARRIED_IS_REFUTED": "This entry said caption 1 was numeral-free and therefore unreachable. Run against caption 1's LITERAL bytes rather than a sentence built to its shape, that is false: the text contains 'section 6a', and 6 moves in its own container -- so the caption gate convicts it by NUMERAL COLLISION on a section identifier. A true conviction for a false reason, and one that would vanish the moment the section were renumbered. The blind spot was real; the example chosen to illustrate it was not an example of it. Demonstrated by --caption1-literal-replay.",
     "the_residual_that_is_still_open": "A direction claim that is genuinely numeral-free AND carries no evidential vocabulary remains unreachable by every gate here. The general direction detector was measured and refused on its numbers -- see the evidential gate's REJECTED_RULE_FAMILIES block. --direction-replay still demonstrates that residual against a purpose-built numeral-free sentence."
@@ -2170,14 +2247,14 @@
     "n": 3,
     "boundary": "MEASUREMENTS NO AXIS MOVES. A value that is interpolated but that no axis shifts is indistinguishable here from a typed one.",
     "status": "OPEN",
-    "evidence_COMPUTED": "8 numeral-carrying leaves sit in CARRIED_UNVERIFIABLE, excluded from the 36/59 coverage figure rather than counted in it",
+    "evidence_COMPUTED": "8 numeral-carrying leaves sit in CARRIED_UNVERIFIABLE, excluded from the 36/60 coverage figure rather than counted in it",
     "what_would_close_it": "An axis that moves each one's source; enumerated per entry."
    },
    {
     "n": 4,
     "boundary": "ASSERTS OUTSIDE build_artifact. The discrimination probe family rebuilds the artifact, so asserts in main() never execute under it.",
     "status": "OPEN",
-    "evidence_COMPUTED": "10 asserts are outside the family's reach; 0 others ran under every probe and none could fail them (SUSPECTED DEAD)",
+    "evidence_COMPUTED": "10 asserts are outside the family's reach; 2 others ran under every probe and none could fail them (SUSPECTED DEAD)",
     "what_would_close_it": "Probes that perturb the write path and the git object store, which this wave did not build."
    }
   ],
@@ -2200,10 +2277,7 @@
     "path": "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 5540,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-battery/family-meta-enforcement-delta.json",
@@ -2251,136 +2325,91 @@
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/0xygpCMwxbQ__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 185,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/4cT8WTyxhYY__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 163,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/_LS6qcSlDCs__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 111,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/CLDEIsNpVRc__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 176,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/DLwVqcLRcfw__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 133,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/DLwVqcLRcfw__s1.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 111,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/dV7chra4u4Q__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 150,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/E9MzEC_yNoM__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 55,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/E9MzEC_yNoM__s1.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 159,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/IyFioFkRgWo__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 111,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/kFyD3H6I1I8__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 293,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/PVMgOxHUqFA__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 150,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/R5L890juvRw__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 137,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/W7nlnHTUZQU__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 159,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/WEhmadJArQo__s0.spec.json",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 319,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "docs/replay-results/or-branches-full-corpus-specs-2026-07-05.json",
@@ -2398,10 +2427,7 @@
     "path": "src/engine/family_meta_enforcement.py",
     "status": "OK",
     "match": true,
-    "byte_exact": false,
-    "line_ending_divergence_only": true,
-    "worktree_crlf_count": 621,
-    "head_crlf_count": 0
+    "byte_exact": true
    },
    {
     "path": "src/engine/spec_family_bindings.py",
@@ -2412,8 +2438,8 @@
   ],
   "n_tracked_checked": 27,
   "n_untracked": 0,
-  "n_byte_exact": 10,
-  "n_line_ending_divergence_only": 17,
+  "n_byte_exact": 27,
+  "n_line_ending_divergence_only": 0,
   "all_match": true,
   "traced_reads": [
    "docs/replay-results/h1-battery/dual_denominator_remeasure.py",
