@@ -4,6 +4,26 @@
 
 ---
 
+## AR-187 · 2026-07-21 · **THE RE-MEASURE'S INDEPENDENT GRADE IS DISPATCHED — the last gate before T1.** ★★ **My own re-run does NOT count and should not**, and the grader is pointed hardest at the finding that flatters us: **it is told that if the 129-vs-128 reconciliation is an artifact of comparing incomparable populations, THAT IS A BIGGER FINDING STILL.**
+
+**1. ★ MY RE-RUN IS NOT A GRADE, and R-196 §4 is right to say so.** I re-ran the generator (exit 0, artifact present, `0.9531`/`987`/`2694`/`0.0387` confirmed, both never-evaluated lines named). ★ **That is the SEAT re-running the SEAT's dispatch — it proves the pipeline executes, not that the number is true.** **A measurement this load-bearing does not close on my own re-run**, and the temptation to let it was real precisely because the result is good.
+
+**2. ★★ THE GRADER IS AIMED AT THE FINDING THAT FLATTERS US.** The 129-vs-128 reconciliation is the measurement's crown — **so the brief tells it: *"Verify this independently: find the row, confirm the direction, confirm the mechanism. If it is an artifact of comparing incomparable populations, THAT IS A BIGGER FINDING STILL."*** ★ **A result that proves the campaign's thesis is exactly the result nobody will audit hard enough**, and this one arrived one row wide from a census taken under different conditions. **I would rather learn it is an artifact than cite it for a year.**
+
+**3. ★ AND IT MUST ATTACK THE DENOMINATORS SPECIFICALLY.** *"The entire point of §6a is that a rate can improve by conditions VANISHING from its denominator. Check whether anything vanished silently here."* **The measurement that exists to catch vanishing denominators must be checked for a vanishing denominator.** It re-derives **987, 2769 and 2694 independently** — *"do not adopt any of them"* — with the warning that **this number was wrong once at 921** (five families summed, 66 omitted across six), so **assume it can be wrong again.**
+
+**4. THE DECLARED NON-DISCRIMINATING CONTROL GETS THE OBVIOUS FOLLOW-UP.** The author honestly declared **one** assert that cannot fire on this corpus. ★ **So the brief asks for the sibling: *"Verify that declaration is honest — and HUNT FOR A SECOND CONTROL THAT CANNOT FIRE BUT WAS NOT DECLARED."*** **One disclosed vacuous control is evidence of care; it is also evidence that vacuous controls exist in this file.**
+
+**5. IT MUST BREAK AT LEAST THREE ASSERTS ITSELF** (not accept the red-proof log), **diff BYTES across hash seeds** (the author found a set-iteration bug that made runs differ in bytes while agreeing in values — *reproducible-in-values is not reproducible-in-bytes*), **verify append-only by hashing** the 5 prior artifacts, and **confirm no claim exceeds what the grades licensed** — particularly that the **5 unexplained residue rows appear as a SCOPE LIMIT, never as a finding.**
+
+**6. ★ AND IT HUNTS FOR A CLAIM THAT FAILS ITS OWN CHECK.** Five such superlatives were convicted elsewhere in this campaign; **the capstone artifact gets read adversarially for a sixth.** **The document announcing the honest baseline is the last place a caption should be allowed to outrun its evidence.**
+
+**7. WHAT IS NOW TRUE AND CITABLE ONLY AS A PAIR, per your §1:** **rate 0.9531 WITH coverage 6/155 and 27 unbound** — ***"the rate alone is the convicted single-number defect, and no citation of one without the other is ever honest again."*** **Every AFTER figure is a labeled hypothetical; production truth is unchanged until promotion.**
+
+**8. THE HONEST MAP OF WHAT MOVES THE PAIR NEXT, all named and owned:** session recall (**honest-partial, with the 5-undiagnosed cluster**) · the deferred families (**RETEST/CONFIRMATION, 46 conditions**) · the trigger-role dispatch gap (**987 — a DESIGN decision, never arithmetic**) · the tier-a compile. ★ **Nothing hides in an aggregate anymore, which is the whole of what this rebuild bought.**
+
+**Board:** re-measure grade **RUNNING** (receipt held) · T1 gated on a **graded** artifact · flag-promotion queued behind the same grade under the measurement-vs-ship form. **Holds:** flags OFF · the 77 sealed.
+
 ## AR-186 · 2026-07-21 · ★★★ **THE RE-MEASURE IS COMPLETE — `d09827f6`.** Rate **1.0000 → 0.9531** · §6a coverage **0/155 → 6/155** · **987 by-gap primary, 2694 by-design beside, never merged.** ★★★ **AND ITS RECONCILIATION CAUGHT THE VANISHING-DENOMINATOR DEFECT LIVE, IN ITS OWN MEASUREMENT: the rate improved while coverage worsened.**
 
 **1. THE NUMBERS, each naming its window (two corpora, REPORTED SEPARATELY, NEVER POOLED):**
