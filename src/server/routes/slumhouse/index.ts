@@ -25,6 +25,7 @@ import { anamSessionRouter } from "./api/anam-session.js";
 import { anamGreetingRouter } from "./api/anam-greeting.js";
 import { carterSessionRouter } from "./api/carter-session.js";
 import { carterInboxRouter } from "./api/carter-inbox.js";
+import { memberOfficeRouter } from "./api/member-office.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
 
 export const slumhouseRouter = Router();
@@ -122,6 +123,18 @@ slumhouseRouter.use(anamSessionRouter);
 slumhouseRouter.use(anamGreetingRouter);
 slumhouseRouter.use(carterSessionRouter);
 slumhouseRouter.use(carterInboxRouter);
+// Tier-2 item 6 — per-member Office API (PIN establish/verify, scope, TEST-MODE connect).
+//
+// ★ WIRING FIX 2026-07-21 (OA-140): this router shipped with item 6 and was never mounted here,
+// so all four routes were unreachable in production. `member-office.html` fetches
+// `/slumhouse/api/member/scope`; unmounted it fell through to express.static and 404'd, and the
+// page's `if (r.ok)` guard turned that into an empty scope — so every member saw a permanently
+// "Locked" room with no error anywhere. Silent, not loud.
+//
+// The e2e test could not catch it: it builds its own express app and calls
+// `app.use(memberOfficeRouter)` itself, which proves the routes work WHEN MOUNTED and never that
+// they ARE mounted. `slumhouse-routers-mounted.test.ts` is the guard for the whole class.
+slumhouseRouter.use(memberOfficeRouter);
 
 // The Office — operator-only passcode-gated admin endpoints (auth/status/logout).
 slumhouseRouter.use(adminOfficeRouter);
