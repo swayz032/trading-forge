@@ -197,6 +197,47 @@ by an implementation that was written independently and never changed. This is t
 reconciliation-against-something-outside-its-own-pipeline check; the greens above are
 necessary, this is the sufficient one.
 
+### ★★ A HOLE THIS PACKET'S FIRST **LANDED** VERSION SHIPPED — green, and no test caught it
+
+Closed in **`3f1df5fa`**. Present in `786cd6ce`, which was committed with 316 green tests.
+
+Found by adversarially probing the packet's own design decision, **not** by a failing test.
+To kill the two phantom wraps below, the first landed version excluded the anchor phrase
+from the ordered wrap test **outright**. That left a wrapping window expressed as
+`<clock> until MARKET OPEN` carrying only ONE clock token — no backwards step, no wrap
+detected, and `min`/`max` silently produced the complement:
+
+```
+"trade the range from 4:00 p.m. eastern until market open on the NYSE"
+    clock tokens [960]  ->  no backwards step  ->  no wrap detected
+    min/max over {570(phrase), 960} = (570, 960)  ->  ny_pm
+```
+
+`ny_pm` is 13:30–16:00 ET: the RTH afternoon, **the complement of the 16:00→09:30 range the
+sentence teaches.** This is the packet's own defect escaping through the packet's own remedy,
+on a sentence that is semantically the *same teaching* as the originating corpus row
+("when the market actually closes until when the market opens").
+
+**Fix: the discriminator is GOVERNMENT, not position.** An anchor phrase joins the ordered
+wrap sequence when a span preposition governs it (a range **endpoint**) and stays out when it
+does not (a descriptive **gloss**). The governor must reach the phrase across scaffold /
+market-name filler only, never across a content word — otherwise any preposition anywhere in
+a long sentence would license any phrase. Both motivating rows stay correct:
+
+| row | government | wrap sequence | verdict |
+|---|---|---|---|
+| "…all the way up **INTO** New York market open, …9:30 a.m." | governed | `[180, 570, 570]` | monotone → binds `ny_am` |
+| "…the first 15 minutes **OF** the New York Stock Exchange open" | ungoverned gloss | `[570, 585]` | monotone → binds `ny_am` |
+
+Shipped with a **negative control** (`test_forward_span_from_the_anchor_phrase_is_not_refused`)
+so "refuse everything" cannot pass the new tests, plus a 6-case government-discrimination
+table. `test_spec_family_bindings.py` **316 → 327** pass.
+
+**The lesson, recorded against this packet and not softened because the author found it:
+a remedy is a new surface, and this one had the same defect class as the thing it fixed.**
+Greenness over a hole is exactly what the sealed corpus and the graded constants could not
+catch — only adversarially attacking one's own design decision did.
+
 ### ★ TWO BUGS THIS PACKET'S OWN FIRST CUTS SHIPPED — caught by test, not by review
 
 Both from one wrong premise: *"the order anchors were discovered is the order they appear
