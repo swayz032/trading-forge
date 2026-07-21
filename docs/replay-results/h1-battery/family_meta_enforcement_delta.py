@@ -530,10 +530,23 @@ json.dump(
         ),
         "enforcement_status_all_pins": status,
     },
-    open(os.path.join(OUTDIR, "family-meta-enforcement-delta.json"), "w", newline="\n"),
+    # ★ H1-W4 D3 -- BOTH AXES PINNED. newline="\n" was already here; encoding was NOT, so this
+    # writer took the platform's locale codepage (cp1252 on this box, UTF-8 elsewhere). Today
+    # that is INERT and measurably so: json.dump defaults to ensure_ascii=True, the committed
+    # file is 110302 bytes with 0 non-ASCII and 0 CRLF, and ASCII is identical under both
+    # codecs. It is pinned anyway because the inertness is contingent on a default nobody
+    # declared -- a single ensure_ascii=False would turn a silent platform divergence on, in a
+    # file that is a DECLARED INPUT of the capstone and therefore hash-guarded.
+    open(os.path.join(OUTDIR, "family-meta-enforcement-delta.json"), "w",
+         encoding="utf-8", newline="\n"),
     indent=1,
     default=str,
 )
-open(os.path.join(OUTDIR, "family-meta-enforcement-delta.log"), "w", encoding="utf-8").write("\n".join(LINES))
+# ★ H1-W4 D3 -- THIS is the writer that was actually unpinned, and it was not inert. It had
+# encoding but no newline, so Python's universal-newlines translation wrote CRLF: the .log on
+# disk carries 116 CRLF of 116 line endings and 438 non-ASCII bytes. It is untracked output, so
+# nothing hash-guarded moves when it becomes LF.
+open(os.path.join(OUTDIR, "family-meta-enforcement-delta.log"), "w",
+     encoding="utf-8", newline="\n").write("\n".join(LINES))
 P("")
 P("DONE")

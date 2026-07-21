@@ -45,7 +45,9 @@ import numpy as np, polars as pl
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 os.chdir(ROOT); sys.path.insert(0, ROOT)
-OUT = open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))), "family-meta-reachability-sweep.log"), "w", encoding="utf-8", buffering=1)
+# ★ H1-W4 D3 -- newline pinned. Had encoding but no newline, so universal-newlines translation
+# emitted CRLF on Windows and LF elsewhere: the same run produced different bytes per platform.
+OUT = open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))), "family-meta-reachability-sweep.log"), "w", encoding="utf-8", newline="\n", buffering=1)
 def P(*a):
     s = " ".join(str(x) for x in a); OUT.write(s + "\n")
 
@@ -220,6 +222,7 @@ for f in glob.glob("src/**/*.py", recursive=True):
                 P(f"  {f}:{nd.lineno} {nm}(pos={len(nd.args)}, kw={kws})")
 
 json.dump({"families":RES,"controls":CONTROLS,"corpus":CORP,"n":N,"corpus_n":len(dfc),"n_specs":len(SPECS)},
-          open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),"family-meta-reachability-sweep-latest.json"),"w", newline="\n"), indent=1, default=str)
+          # ★ H1-W4 D3 -- encoding pinned; newline was already pinned here.
+          open(os.path.join(os.environ.get("TMPOUT", os.path.dirname(os.path.abspath(__file__))),"family-meta-reachability-sweep-latest.json"),"w", encoding="utf-8", newline="\n"), indent=1, default=str)
 P("\nDONE")
 OUT.close()
