@@ -178,6 +178,25 @@ rule. Arms proven distinct: the pinned module lacks
 
 Verification script exits **2** on any failure (guard refusal), never `assert`.
 
+### ★ V10 — CROSS-LANGUAGE RECONCILIATION (outside the Python pipeline entirely)
+
+`src/server/lib/spec-family-bindings.ts` is the TS mirror. It implements **no role resolver
+at all** — its WAIT_SESSION order is `resolveSessionKeyword()` → `refusedSessionZone()` →
+refuse (`:269-289`). Executed against both preempted objects (`tsx`, unmodified mirror):
+
+```
+{"bindable":false,"reason":"session_zone_refused_uncomputable_window:overnight","sessionZone":null}
+{"bindable":false,"reason":"session_zone_refused_uncomputable_window:overnight","sessionZone":null}
+```
+
+- **PRE-FIX Python, flag ON:** `bindable=True, zone=ny_am` → **DIVERGED from the mirror.**
+- **POST-FIX Python, flag ON:** byte-identical to the mirror above.
+
+So the defect was **also a latent cross-language parity break**, and the fix is corroborated
+by an implementation that was written independently and never changed. This is the
+reconciliation-against-something-outside-its-own-pipeline check; the greens above are
+necessary, this is the sufficient one.
+
 ### ★ TWO BUGS THIS PACKET'S OWN FIRST CUTS SHIPPED — caught by test, not by review
 
 Both from one wrong premise: *"the order anchors were discovered is the order they appear
