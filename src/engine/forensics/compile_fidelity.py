@@ -192,6 +192,31 @@ def _norm(text: str) -> str:
     return " ".join((text or "").strip().lower().split())
 
 
+def _has_visible_content(value: object) -> bool:
+    """CATEGORICAL presence predicate for a string field: True iff `value` is a str carrying at
+    least one VISIBLE, meaningful character — a POSITIVE content requirement (mirrors
+    MIN_ANCHOR_TOKENS' 'require content, never blacklist chars'), NOT an enumerated deny-list of
+    known-bad code points (which re-opens on the next invisible codepoint). A character counts as
+    visible iff `str.isprintable()` is True AND it is not whitespace. This closes the WHOLE
+    invisible class in one predicate — plain/Unicode whitespace AND every zero-width / format /
+    default-ignorable code point (U+200B/C/D ZW*, U+FEFF BOM, U+2060 word-joiner, U+00AD soft
+    hyphen, U+2061 function-application, U+180E, and any future addition) — because membership is
+    decided by Unicode CATEGORY, not a remembered char list:
+      * `str.isprintable()` is False for every Unicode 'Other' (Cc, Cf, Cs, Co, Cn) and 'Separator'
+        (Zs, Zl, Zp) code point EXCEPT the single printable ASCII space U+0020 — so all zero-width
+        / format / default-ignorable characters (category Cf/Cc) and all non-ASCII whitespace
+        (NBSP U+00A0, ideographic space U+3000, …) are rejected outright.
+      * `not ch.isspace()` removes that one lingering printable ASCII space (and, redundantly, the
+        rest of the whitespace class), so a whitespace-only string is rejected too.
+    A non-str (None, a missing field, or any non-string value) carries no visible string content
+    and is False — fail-closed: an absent/malformed field is NOT a present disposition, anchor,
+    provenance link, or reader identity. The bytes it would `str()` to are never treated as
+    provenance."""
+    if not isinstance(value, str):
+        return False
+    return any(ch.isprintable() and not ch.isspace() for ch in value)
+
+
 def _spec_body(artifact: dict) -> dict | None:
     if not isinstance(artifact, dict):
         return None
@@ -318,15 +343,20 @@ def _verdict_for_condition(cond: dict, bindings: dict[str, ConditionBinding]) ->
         checks.append(CheckResult("i", True, f"family {ctype} recognized"))
     else:
         checks.append(CheckResult("i", False, f"family {ctype!r} not in FAMILY_META"))
-    if cond.get("type_confidence") in (None, ""):
-        checks.append(CheckResult("i_conf", False, "type_confidence not recorded"))
+    if not _has_visible_content(cond.get("type_confidence")):
+        checks.append(CheckResult("i_conf", False, "type_confidence not recorded (absent/blank/invisible)"))
     else:
         checks.append(CheckResult("i_conf", True, f"confidence={cond.get('type_confidence')}"))
 
     # §0 classification audit (rides Leg A(v) / §4 m7): non-LB WITHOUT a disposition is a FAIL.
-    # A blank/whitespace-only disposition is semantically NO disposition (m7 fail-closed): a
-    # truthy "   " must not satisfy the presence check any more than "" does.
-    if not load_bearing and not (disposition or "").strip():
+    # "Present" is CATEGORICAL — a disposition counts only if it carries >=1 VISIBLE character
+    # (`_has_visible_content`). A blank/whitespace-only disposition is semantically NO disposition,
+    # AND so is a zero-width / Unicode-format-only one (U+200B/FEFF/2060/00AD/…): `str.strip()`
+    # removes only isspace() chars, so a truthy-but-invisible "​" would otherwise satisfy the
+    # presence check while being invisible to BOTH this gate AND the Phase-2 fresh reader — a
+    # two-guard bypass worse than a visible ".". The visible-content predicate rejects the whole
+    # invisible class by Unicode category, not a char deny-list.
+    if not load_bearing and not _has_visible_content(disposition):
         checks.append(CheckResult("v_nonlb", False, "marked non-load-bearing WITHOUT a disposition (§0/m7)"))
     elif not load_bearing:
         checks.append(CheckResult("v_nonlb", True, "non-LB with disposition (Phase-2 countersign owed)"))
@@ -444,11 +474,19 @@ def _cert_key_invalid(cert: dict, key: str) -> bool:
     if val is None:
         return True
     if key == "video":
-        return not str(val).strip()
+        # Visible-content presence (same categorical predicate as the m7 disposition gate): a
+        # zero-width / format-only video link (e.g. a lone U+200B) survives `str.strip()` and would
+        # certify as a valid extraction link while being semantically empty — reject the whole
+        # invisible class, not just isspace() whitespace.
+        return not _has_visible_content(val)
     if key == "conditions":
         if not isinstance(val, list) or not val:
             return True
-        return not all(isinstance(c, dict) and str(c.get("quote_anchor", "")).strip() for c in val)
+        # Each entry's quote_anchor must carry VISIBLE content — a zero-width/format-only anchor is
+        # no anchor. (Net-caught downstream by the MIN_ANCHOR_TOKENS floor too, but the validity
+        # layer must not itself launder an invisible anchor into a "well-formed" ledger; closing it
+        # here keeps the class shut if that floor is ever refactored.)
+        return not all(isinstance(c, dict) and _has_visible_content(c.get("quote_anchor", "")) for c in val)
     return False
 
 
@@ -489,8 +527,12 @@ def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None
         # strict gate forces nothing on honest inputs.
         art_video = artifact.get("video")
         cert_video = certificate.get("video")
-        art_norm = _norm(str(art_video)) if art_video is not None else ""
-        cert_norm = _norm(str(cert_video)) if cert_video is not None else ""
+        # Presence is CATEGORICAL: a zero-width / format-only artifact video is as absent/blank as
+        # None (it normalizes to "" here → the honest "unverifiable" BLOCK branch below), never a
+        # spuriously-"present" link that would only be caught as a confusing "mismatch". cert_video
+        # is already guaranteed visible upstream (it passed _cert_key_invalid).
+        art_norm = _norm(str(art_video)) if _has_visible_content(art_video) else ""
+        cert_norm = _norm(str(cert_video)) if _has_visible_content(cert_video) else ""
         if art_norm and cert_norm and art_norm == cert_norm:
             out.append(CheckResult("vi_cert", True, "certificate linked to extraction"))
         elif not art_norm:
@@ -654,7 +696,10 @@ def countersign_phase2(seal: Phase1Seal, countersignatures: dict[str, dict] | No
             complete = False
             reasons.append(f"{cid}: no countersignature (fail-closed)")
             continue
-        if not cs.get("reader_id"):
+        if not _has_visible_content(cs.get("reader_id")):
+            # Reader identity presence is CATEGORICAL — a zero-width / format-only (or
+            # whitespace-only) reader_id is no identity and must not satisfy completeness, or an
+            # invisible "reader" would clear the fresh-reader countersign the whole leg leans on.
             complete = False
             reasons.append(f"{cid}: countersignature missing reader_id")
         for rowname in COUNTERSIGN_ROWS:

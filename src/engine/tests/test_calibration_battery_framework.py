@@ -18,12 +18,13 @@ from src.engine.forensics.calibration_battery import (
     MutationCase,
     run_calibration,
 )
-from src.engine.forensics.compile_fidelity import PASS
+from src.engine.forensics.compile_fidelity import PASS, run_leg_a, run_leg_a_phase1
 from src.engine.tests._forensics_fixtures import (
     _mutant_inputs,
     _rehash,
     clean_artifact,
     clean_certificate,
+    clean_countersignatures,
     clean_inputs,
     m2_both_forms_cases,
     m2_launder_drop_inputs,
@@ -378,8 +379,9 @@ def test_r272_m4_companion_reaches_the_false_flag_row_non_vacuously():
 
 def test_r272_five_real_slots_config_stays_placeholder():
     # HISTORICAL R-272 configuration: with only m1..m5 real and m6/m7 placeholder, the battery
-    # stays HARNESS_DEMONSTRATED_ON_PLACEHOLDERS. (R-273 then certified m6; m7 remains blocked by a
-    # residual hole — see test_r273_final_wave_is_blocked_at_placeholder_by_the_m7_residual.)
+    # stays HARNESS_DEMONSTRATED_ON_PLACEHOLDERS. (R-273 then certified m6; m7's detector residual is
+    # since CLOSED but its both-forms MutationCase is grader-owned, so the m7 slot stays a
+    # placeholder — see test_r273_final_wave_is_blocked_at_placeholder_by_the_unauthored_m7_slot.)
     slots = dict(placeholder_cases())      # m6, m7 stay placeholders
     slots.update(robust_six_real_cases())  # m1, m3, m4, m5 real
     slots["m2"] = m2_both_forms_cases()    # m2 real (both forms)
@@ -397,8 +399,12 @@ def test_r272_five_real_slots_config_stays_placeholder():
 # R-273 — the m6/m7 fail-open holes were FIXED by an independent doer. Grader re-attack:
 #   m6 cross-link fix is SOLID (every unlinkable/broken-chain state BLOCKs; only genuine same-id
 #      matches under _norm PASS) → m6 CERTIFIED with both-forms.
-#   m7 disposition fix is PARTIAL — a residual fail-open remains (zero-width/format chars) → m7
-#      WITHHELD; the residual is the next doer loop.
+#   m7 disposition — the grader's re-attack found a residual zero-width/format fail-open; a SECOND
+#      doer loop then closed it CATEGORICALLY (`_has_visible_content`, compile_fidelity.py) and
+#      SWEPT the whole presence-check class (see the SWEEP red-proofs below). m7 is now
+#      detector-SOLID; the m7 both-forms MutationCase remains the independent grader's to author
+#      (doer != grader), so the m7 SLOT stays a placeholder until then — NOT because of any
+#      surviving hole.
 # =========================================================================== #
 def test_r273_m6_both_forms_certify_the_slot():
     # m6 slot carries TWO real cases (naive mismatch + unlinkable-null-video, the founding
@@ -422,35 +428,48 @@ def test_r273_m6_both_forms_certify_the_slot():
         "m6-cert-names-different-extraction", "m6-unlinkable-null-artifact-video"}
 
 
-def test_r273_m7_zero_width_disposition_is_a_RESIDUAL_HOLE_tripwire():
-    # RESIDUAL DETECTOR HOLE (grader re-attack of the m7 fix). The doer's fix `not (disposition or
-    # "").strip()` (compile_fidelity.py:329) closes ASCII/Unicode-whitespace dispositions, but
-    # `str.strip()` only removes chars with isspace()==True. Zero-width / Unicode-format characters
-    # (U+200B ZWSP, U+200C, U+200D, U+FEFF, U+2060) are NOT whitespace, survive strip, and a
-    # non_lb_disposition made of one of them — semantically empty, invisible to BOTH the automated
-    # check AND the Phase-2 fresh reader — STILL PASSes v_nonlb. This TRIPWIRE asserts the current
-    # (fail-open) behavior and SELF-DESTRUCTS when a doer closes it (e.g. reject the whole Unicode
-    # default-ignorable/format class, or require >=1 visible character). Then author m7 both-forms.
-    for zw in ["​", "‌", "‍", "﻿", "⁠"]:
+def test_r273_m7_zero_width_disposition_now_fails_v_nonlb_categorically():
+    # RED-PROOF REGRESSION (was the self-destructing R-273 residual-hole TRIPWIRE; the second doer
+    # loop closed the hole, so the tripwire fired and is REPLACED by this fail-CLOSED contract).
+    # The m7 fix is CATEGORICAL -- not str.strip() (which removes only isspace() chars and let
+    # zero-width / format code points survive as truthy content) but a VISIBLE-CONTENT predicate
+    # (_has_visible_content): a non_lb_disposition made ONLY of zero-width / Unicode-format /
+    # default-ignorable characters is semantically empty AND invisible to BOTH the automated check
+    # and the Phase-2 fresh reader, so it must FAIL v_nonlb exactly like "" / "   " do. Proven NOT
+    # by a 5-char deny-list but by Unicode category: the 5 originally-catalogued chars PLUS 3 that
+    # were NEVER in that list (U+00AD soft hyphen, U+2061 function-application, U+180E) all BLOCK --
+    # a deny-list would have re-opened on these.
+    known = ["​", "‌", "‍", "﻿", "⁠"]
+    beyond = ["­", "⁡", "᠎"]  # NOT in the catalogued 5 -> a blacklist would miss them
+    for zw in known + beyond:
         r = m7_zero_width_disposition_inputs(zw).run()
-        assert r.verdict == PASS, f"TRIPWIRE FIRED: m7 zero-width hole for {zw!r} appears FIXED — author m7 both-forms and delete this tripwire"
-        assert "v_nonlb" not in r.checks_failed, repr(zw)
-    # DISCRIMINATION: ordinary Unicode WHITESPACE (isspace True) IS caught by the fix — proving the
-    # residual is specifically the zero-width/format class, not a regression of the doer's fix.
-    for ws in [" ", "　", " ", "   "]:
+        assert r.verdict != PASS, f"m7 zero-width hole RE-OPENED for {zw!r} (U+{ord(zw):04X})"
+        assert "v_nonlb" in r.checks_failed, repr(zw)
+    # DISCRIMINATION (no false-BLOCK, no over-block): ordinary Unicode WHITESPACE is (still) caught,
+    # and -- crucially -- a REAL visible disposition on a non-LB condition still PASSes v_nonlb, so
+    # the gate rejects the invisible class specifically, not all non-ASCII, and does not over-block.
+    for ws in [" ", "　", " ", "   "]:  # ASCII space, ideographic space, NBSP, multi-space
         a = clean_artifact()
         a["spec"]["entry_conditions"][0]["load_bearing"] = False
         a["spec"]["entry_conditions"][0]["non_lb_disposition"] = ws
         _rehash(a)
         assert "v_nonlb" in _mutant_inputs(a).run().checks_failed, repr(ws)
+    real = clean_artifact()
+    real["spec"]["entry_conditions"][0]["load_bearing"] = False
+    real["spec"]["entry_conditions"][0]["non_lb_disposition"] = "phase-2 countersign owed"
+    _rehash(real)
+    assert "v_nonlb" not in _mutant_inputs(real).run().checks_failed  # real disposition NOT blocked
 
 
-def test_r273_final_wave_is_blocked_at_placeholder_by_the_m7_residual():
-    # THE R-273 WAVE RESULT: m2 both-forms + m1/m3/m4/m5 robust + m6 both-forms are all CERTIFIED
-    # (6 real slots), but m7 stays a PLACEHOLDER because its residual zero-width hole is unclosed.
-    # Overall status therefore stays HARNESS_DEMONSTRATED_ON_PLACEHOLDERS — STATUS_CALIBRATED is
-    # NOT reached, blocked solely by m7. (When the m7 residual is fixed and m7 both-forms authored,
-    # this test updates to assert STATUS_CALIBRATED.)
+def test_r273_final_wave_is_blocked_at_placeholder_by_the_unauthored_m7_slot():
+    # THE WAVE RESULT: m2 both-forms + m1/m3/m4/m5 robust + m6 both-forms are all CERTIFIED (6 real
+    # slots), and m7 stays a PLACEHOLDER. NOTE (post-residual-fix): the m7 DETECTOR residual
+    # (zero-width/format disposition) is now CLOSED — see
+    # test_r273_m7_zero_width_disposition_now_fails_v_nonlb_categorically. m7 stays a placeholder
+    # ONLY because the m7 both-forms MutationCase is the INDEPENDENT grader's to author (doer !=
+    # grader), NOT because of any surviving hole. Overall status therefore stays
+    # HARNESS_DEMONSTRATED_ON_PLACEHOLDERS — STATUS_CALIBRATED is NOT reached, blocked solely by the
+    # unauthored m7 slot. (When the grader authors m7 both-forms, this test updates to CALIBRATED.)
     slots = dict(placeholder_cases())      # m7 stays placeholder
     slots.update(robust_six_real_cases())  # m1, m3, m4, m5 real
     slots["m2"] = m2_both_forms_cases()    # m2 real
@@ -523,3 +542,78 @@ def test_m7_whitespace_disposition_fails_v_nonlb():
     ok = clean_inputs().run()
     assert "v_nonlb" not in ok.checks_failed
     assert ok.verdict == PASS
+
+
+# =========================================================================== #
+# SWEEP: fix-the-CLASS-not-the-instance. m7's zero-width bypass is one instance of a CLASS —
+# "a string presence / non-empty check that treats invisible (zero-width / Unicode-format /
+# default-ignorable) characters as content." The doer SWEPT compile_fidelity.py and closed every
+# sibling with the SAME categorical predicate (`_has_visible_content`). These red-proofs pin each
+# swept sibling: an invisible-only value now BLOCKs on its target check, and a visible control
+# still PASSes (discriminating). Siblings fixed: the certificate `video` link and per-condition
+# `quote_anchor` validity (`_cert_key_invalid`), the per-condition `type_confidence` presence
+# (i_conf), and the Phase-2 `reader_id` identity presence. AUDITED-AND-IMMUNE (no fix, no
+# red-proof): the `spec_hash` presence test — a zero-width spec_hash is truthy but routes to the
+# exact-hash-equality MISMATCH BLOCK, never a fail-open. Detector authored by the doer; battery
+# MutationCases remain the independent grader's to author (doer != grader).
+# =========================================================================== #
+# 5 originally-catalogued zero-width chars + 3 NOT in that list (a deny-list would miss the tail).
+_FORMAT_CHARS = ["​", "‌", "‍", "﻿", "⁠", "­", "⁡", "᠎"]
+
+
+def test_sweep_cert_video_invisible_link_blocks_vi_cert():
+    # SIBLING (net fail-open before the sweep): an all-invisible video on BOTH artifact and cert
+    # would `_norm`-match itself and certify a clean provenance link. Now every invisible link is
+    # rejected as no-content → vi_cert BLOCK.
+    for zw in _FORMAT_CHARS:
+        a = clean_artifact()
+        a["video"] = zw
+        cert = clean_certificate(a["spec"])
+        cert["video"] = zw
+        r = _mutant_inputs(a, cert=cert).run()
+        assert r.verdict != PASS, f"invisible video certified clean: {zw!r} (U+{ord(zw):04X})"
+        assert "vi_cert" in r.checks_failed, repr(zw)
+    # DISCRIMINATION: a real matching video links clean and the fixture passes whole.
+    ok = clean_inputs().run()
+    assert "vi_cert" not in ok.checks_failed and ok.verdict == PASS
+
+
+def test_sweep_cert_conditions_invisible_anchor_is_invalid():
+    # SIBLING (bypassed the validity layer; net-caught downstream by MIN_ANCHOR_TOKENS, now closed
+    # at the validity layer too so the class stays shut if that floor is ever refactored).
+    from src.engine.forensics.compile_fidelity import _cert_key_invalid
+
+    for zw in _FORMAT_CHARS:
+        assert _cert_key_invalid({"video": "V", "conditions": [{"quote_anchor": zw}]}, "conditions") is True, repr(zw)
+    # DISCRIMINATION: a real >=2-token anchor is a valid ledger entry.
+    assert _cert_key_invalid({"video": "V", "conditions": [{"quote_anchor": "spine completion"}]}, "conditions") is False
+
+
+def test_sweep_i_conf_invisible_type_confidence_not_recorded():
+    # SIBLING (fail-open before the sweep: `in (None, "")` accepted BOTH invisible AND whitespace as
+    # "recorded"). Now a type_confidence with no visible content fails i_conf.
+    for zw in _FORMAT_CHARS + ["", "   ", "　"]:
+        a = clean_artifact()
+        a["spec"]["entry_conditions"][0]["type_confidence"] = zw
+        _rehash(a)
+        seal = run_leg_a_phase1(a, certificate=clean_certificate(a["spec"]))
+        assert "i_conf" in seal.checks_failed, repr(zw)
+    # DISCRIMINATION: a real confidence label is recorded (i_conf passes, fixture clean).
+    art = clean_artifact()
+    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    assert "i_conf" not in seal.checks_failed and seal.automated_verdict == PASS
+
+
+def test_sweep_reader_id_invisible_identity_is_incomplete_countersign():
+    # SIBLING (net fail-open before the sweep: an invisible/whitespace reader_id cleared the
+    # fresh-reader completeness check, so a "reader" with no identity could countersign the leg).
+    for zw in _FORMAT_CHARS + ["   ", "　"]:
+        a = clean_artifact()
+        cs = clean_countersignatures(a)
+        for k in cs:
+            cs[k] = {**cs[k], "reader_id": zw}
+        r = run_leg_a(a, certificate=clean_certificate(a["spec"]), countersignatures=cs)
+        assert r.verdict != PASS, f"invisible reader_id cleared the countersign: {zw!r}"
+        assert "countersign" in r.checks_failed, repr(zw)
+    # DISCRIMINATION: a real reader identity clears the countersign and the fixture passes whole.
+    assert clean_inputs().run().verdict == PASS
