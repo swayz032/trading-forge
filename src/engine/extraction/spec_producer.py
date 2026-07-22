@@ -409,11 +409,42 @@ def _untaught_exit(strategy: dict) -> bool:
     return bool(stop_untaught and targets_untaught)
 
 
+# (v) drop-audit anchor discipline, PRODUCER-LOCAL copy. `evidence` (stamped below)
+# is NOT diagnostics-only: the A2-hardened (v) certificate-drop audit in
+# `compile_fidelity._check_no_certificate_drops` consumes it (it builds per-condition
+# [object, evidence] texts and token-matches cert anchors against them for the 1:1
+# bijection). So the join here MUST use the same whole-token-boundary + minimum-anchor
+# discipline the consumer uses, or a bare-substring false-match would stamp a WRONG
+# anchor as `evidence`, which then trivially self-matches downstream and launders a
+# silent drop (fail-open). `_MIN_ANCHOR_TOKENS` mirrors compile_fidelity's
+# MIN_ANCHOR_TOKENS=2 and `_anchor_grounds` mirrors its `_token_boundary_contains`;
+# both are kept producer-local ON PURPOSE — a reverse import (extraction<-forensics)
+# would cycle (forensics imports this module), and hoisting into the STATUS_CALIBRATED
+# detector would perturb it. This is a synonymous implementation with a truthful
+# comment, not a false one.
+_MIN_ANCHOR_TOKENS: int = 2
+
+
+def _anchor_grounds(anchor_norm: str, hay: str) -> bool:
+    """WHOLE-TOKEN-boundary containment (both operands already `_norm`'d = lowercased,
+    single-spaced), the exact discipline of compile_fidelity._token_boundary_contains:
+    space-pad both and test `a in t or t in a`, so a bare fragment can only match as a
+    standalone token run, never inside a token. The anchor must additionally clear the
+    `_MIN_ANCHOR_TOKENS` floor, so a 1-token fragment cannot ground."""
+    if len(anchor_norm.split()) < _MIN_ANCHOR_TOKENS:
+        return False
+    a = f" {anchor_norm} "
+    t = f" {hay} "
+    return a in t or t in a
+
+
 def _cert_span_for(text: str, cert: Optional[dict]) -> Tuple[Dict[str, int], str]:
     """Best-effort join of a staging condition to the certificate's own
-    quote_anchor/char_span (the provenance link). span/evidence are NOT
-    parse-required and feed diagnostics only, so an unmatched condition gets
-    span {0,0} + its own prose as evidence -- honest, never fabricated."""
+    quote_anchor/char_span (the provenance link). An unmatched condition gets
+    span {0,0} + its own prose as evidence -- honest, never fabricated. The join is
+    WHOLE-TOKEN-boundary + minimum-anchor-tokens (see `_anchor_grounds`): a bare
+    coincidental substring must NOT ground, because the stamped `evidence` is consumed
+    by the (v) drop-audit's 1:1 bijection (a wrong stamp would launder a silent drop)."""
     if isinstance(cert, dict):
         hay = _norm(text)
         for c in cert.get("conditions", []) or []:
@@ -421,7 +452,7 @@ def _cert_span_for(text: str, cert: Optional[dict]) -> Tuple[Dict[str, int], str
             anchor_norm = _norm(anchor)
             if not anchor_norm or not hay:
                 continue
-            if anchor_norm in hay or hay in anchor_norm:
+            if _anchor_grounds(anchor_norm, hay):
                 s = c.get("char_span") or [0, 0]
                 return {"start": int(s[0]), "end": int(s[1])}, anchor
     return {"start": 0, "end": 0}, text

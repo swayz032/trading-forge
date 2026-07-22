@@ -643,7 +643,89 @@ def test_addendum_compound_representation_is_recorded_not_built():
 import copy as _copy  # noqa: E402
 
 from src.engine.extraction.spec_producer import _spec_hash  # noqa: E402
-from src.engine.forensics.compile_fidelity import run_leg_a_phase1  # noqa: E402
+from src.engine.forensics.compile_fidelity import BLOCK, PASS, run_leg_a, run_leg_a_phase1  # noqa: E402
+
+# ─── _cert_span_for token-boundary discipline · producer-side (v) anti-launder ──
+#
+# The producer stamps each condition's `evidence` via _cert_span_for. That field is
+# NOT diagnostics-only: the (v) certificate-drop audit consumes [object, evidence]
+# and token-matches cert anchors against it for the 1:1 bijection. Before the fix,
+# _cert_span_for grounded on a BARE bidirectional substring (no token boundary, no
+# token floor) — the exact pre-A2 weakness the detector already retired. A degraded
+# certificate whose anchor is a coincidental >=2-token BARE (non-whole-token) substring
+# of a condition's text got that WRONG anchor stamped as the condition's evidence, which
+# then trivially self-token-matched downstream and LAUNDERED a silent drop → fail-open
+# PASS. The fix routes _cert_span_for through whole-token-boundary + MIN_ANCHOR_TOKENS
+# containment, so a coincidental fragment can no longer ground.
+
+
+def _clean_countersigns_for(art, cert):
+    seal = run_leg_a_phase1(art, certificate=cert)
+    return {cid: {"reader_id": "fresh-reader-1", "reader_vintage": "v1",
+                  "typing": True, "polarity": True, "drops": True}
+            for cid in seal.countersign_required_ids}
+
+
+# Two WAIT_SESSION spine preconditions (pass (ii) honestly), NO explicit trigger so the
+# trigger is the last spine (no load-bearing ENABLE_ENTRY, which would fail (ii)).
+_RED_STRAT = {
+    "direction": "long",
+    "entry_sequence": [
+        {"action": "wait for the london killzone session", "role": "precondition"},
+        {"action": "only trade during the am session", "role": "precondition"},
+    ],
+}
+_S1_OBJ = "wait for the london killzone session"
+_S2_OBJ = "only trade during the am session"
+
+
+def test_degraded_cert_anchor_no_longer_launders_a_drop_through_evidence():
+    """RED case (reversion tripwire). Certificate anchor 'am sessio' is a coincidental
+    2-token BARE substring of S2's text ('...the am sessio-n') but NOT a whole-token
+    subsequence of it — a degraded/orphan quote with no honest grounding for S2. Post-
+    fix _cert_span_for REFUSES it: S2 keeps its honest fallback evidence (its own prose),
+    the degraded anchor finds no bijection edge, the drop surfaces → BLOCK on (v).
+
+    On REVERSION to the bare-substring predicate: 'am sessio' is stamped as S2.evidence,
+    self-matches downstream, the bijection completes and run_leg_a PASSes — BOTH asserts
+    below flip red. The fix is load-bearing, not defense-in-depth: it turns a live
+    fail-open (PASS) into the correct BLOCK."""
+    cert = {"video": "RED", "conditions": [
+        {"quote_anchor": _S1_OBJ, "char_span": [0, 0]},
+        {"quote_anchor": "am sessio", "char_span": [0, 0]},  # degraded: 2-token bare fragment
+    ]}
+    art = produce_spec_artifact(_RED_STRAT, video="RED", certificate=cert, transcript_chars=100)
+    s2 = art["spec"]["entry_conditions"][1]
+    assert s2["object"] == _S2_OBJ
+    # the wrong anchor must NOT be stamped as evidence (would be on reversion)
+    assert s2["evidence"] == _S2_OBJ, (
+        f"degraded anchor stamped as evidence: {s2['evidence']!r} — bare-substring grounding "
+        "resurrected (the launder is back)")
+    res = run_leg_a(art, certificate=cert, countersignatures=_clean_countersigns_for(art, cert))
+    assert res.verdict == BLOCK and "v" in res.checks_failed, (
+        f"degraded-anchor drop was NOT surfaced: verdict={res.verdict} "
+        f"checks_failed={sorted(res.checks_failed)} — (v) laundered the drop (fail-open)")
+
+
+def test_honest_cert_anchor_grounds_and_passes_leg_a_discriminating_control():
+    """DISCRIMINATING HONEST CONTROL (anti-vacuity). Same spec, but S2's certificate
+    anchor is the HONEST whole-token 'only trade during the am session'. _cert_span_for
+    grounds it (unchanged by the token-boundary fix — honest anchors are whole-token),
+    stamps it as evidence, the 1:1 bijection completes and run_leg_a PASSes. This proves
+    the RED BLOCK above fires on the DEGRADED anchor specifically, not because the audit
+    blocks everything — and it stays GREEN across the reversion (so it discriminates the
+    fix rather than merely tripping on it)."""
+    cert = {"video": "GRN", "conditions": [
+        {"quote_anchor": _S1_OBJ, "char_span": [0, 0]},
+        {"quote_anchor": _S2_OBJ, "char_span": [0, 0]},  # honest whole-token anchor
+    ]}
+    art = produce_spec_artifact(_RED_STRAT, video="GRN", certificate=cert, transcript_chars=100)
+    s2 = art["spec"]["entry_conditions"][1]
+    assert s2["evidence"] == _S2_OBJ  # honest anchor grounds and is stamped
+    res = run_leg_a(art, certificate=cert, countersignatures=_clean_countersigns_for(art, cert))
+    assert res.verdict == PASS, (
+        f"honest control did not pass: verdict={res.verdict} checks_failed={sorted(res.checks_failed)} "
+        "— the (v) audit would be vacuously blocking")
 
 
 def test_every_produced_condition_is_explicitly_load_bearing_true():
