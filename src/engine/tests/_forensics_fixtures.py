@@ -189,3 +189,91 @@ def placeholder_cases() -> dict[str, MutationCase]:
     cases["m7"] = MutationCase("m7", PLACEHOLDER_LABEL, "v_nonlb", _mutant_inputs(a), is_placeholder=True)
 
     return cases
+
+
+# --------------------------------------------------------------------------- #
+# m2 BOTH-FORMS — REAL (non-placeholder) grader-authored cases (R-268 §3 / R-267 §1).
+#
+# These are the FIRST live, non-placeholder m2 cases: the m2 slot must convict BOTH the
+# naive drop (orphan certificate entry → cardinality mismatch) AND the laundered drop
+# (drop a condition, refill its cert slot with a DUPLICATE of a kept anchor → distinctness/
+# unmatched), each with its OWN anti-vacuity companion on check (v). Authored in the
+# test/fixtures layer by the INDEPENDENT grader; the detector code is untouched.
+# --------------------------------------------------------------------------- #
+def m2_naive_drop_inputs() -> LegAInputs:
+    """m2-naive: drop the am-session spine from the spec but leave its ORPHAN entry in the
+    certificate. Taught count drops to 2 while the certificate keeps 3 anchors → the (v) 1:1
+    reconciliation fails on cardinality (n_cert != n_taught) AND the orphan is unmatched → BLOCK
+    on (v)."""
+    a = clean_artifact()
+    dropped = a["spec"]["entry_conditions"][1]  # the am-session spine
+    a["spec"]["entry_conditions"] = [c for c in a["spec"]["entry_conditions"] if c["id"] != dropped["id"]]
+    a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
+    _rehash(a)
+    cert = clean_certificate(a["spec"])  # london + ENABLE_ENTRY anchors (matches the 2 kept conds)
+    cert["conditions"].append({"quote_anchor": dropped["object"], "char_span": [0, 0]})  # ORPHAN
+    return _mutant_inputs(a, cert=cert)
+
+
+def m2_launder_drop_inputs() -> LegAInputs:
+    """m2-launder: drop the am-session spine, then REFILL its certificate slot with a DUPLICATE
+    of a KEPT condition's anchor (london's) so cardinality is PRESERVED (n_cert == n_taught == 2).
+    Cardinality no longer betrays the drop — but the 1:1 bipartite matching does: the duplicated
+    london anchor can only claim ONE taught condition, leaving the second cert entry unmatched
+    (laundered anchor) and the ENABLE_ENTRY taught condition with no matching cert entry (silent
+    drop). BLOCK on (v) via the distinctness constraint, NOT cardinality."""
+    a = clean_artifact()
+    dropped = a["spec"]["entry_conditions"][1]  # am-session spine
+    kept = a["spec"]["entry_conditions"][0]     # london spine (its anchor is duplicated)
+    a["spec"]["entry_conditions"] = [c for c in a["spec"]["entry_conditions"] if c["id"] != dropped["id"]]
+    a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
+    _rehash(a)
+    cert = clean_certificate(a["spec"])
+    cert["conditions"] = [
+        {"quote_anchor": kept["object"], "char_span": [0, 0]},
+        {"quote_anchor": kept["object"], "char_span": [0, 0]},  # DUPLICATE of a kept anchor
+    ]
+    return _mutant_inputs(a, cert=cert)
+
+
+def shared_anchor_legit_companion() -> LegAInputs:
+    """The launder case's PURPOSE-BUILT anti-vacuity companion: an ALL-PRESENT control in which
+    two DISTINCT present spine conditions are each grounded ONCE by a SHARED 2-token anchor
+    ("london session"), cardinality-matched. The 1:1 matching still succeeds (each cert entry is
+    assigned to a distinct present condition), so it PASSES (v) — proving the launder detector
+    fires on the DROP, not on any duplicate-looking anchor. (The stock clean fixture uses DISTINCT
+    anchors and never exercises the shared-anchor-legit property, so this must be purpose-built.)
+    Both conditions bind honestly to the recognized 'london session' keyword, so the control also
+    passes Leg A whole — the (v) pass is genuine, not a vacuous fail-closed skip."""
+    a = clean_artifact()
+    conds = a["spec"]["entry_conditions"]
+    conds[0]["object"] = "wait for the london session to open"
+    conds[0]["evidence"] = "london session"
+    conds[1]["object"] = "trade only in the london session"
+    conds[1]["evidence"] = "london session"
+    _rehash(a)
+    shared = "london session"
+    cert = {
+        "video": VIDEO,
+        "conditions": [
+            {"quote_anchor": shared, "char_span": [0, 0]},              # grounds spine cond 0
+            {"quote_anchor": shared, "char_span": [0, 0]},              # grounds spine cond 1 (SHARED)
+            {"quote_anchor": conds[2]["object"], "char_span": [0, 0]},  # ENABLE_ENTRY trigger
+        ],
+    }
+    return _mutant_inputs(a, cert=cert)
+
+
+def m2_both_forms_cases() -> list[MutationCase]:
+    """The two REAL (non-placeholder) m2 cases as a LIST for the m2 slot — naive drop + laundered
+    drop, each targeting (v), each with its OWN distinguishing anti-vacuity companion."""
+    return [
+        MutationCase(
+            "m2", "m2-naive-drop-orphan-cert", "v", m2_naive_drop_inputs(),
+            is_placeholder=False, companion=clean_inputs(),
+        ),
+        MutationCase(
+            "m2", "m2-launder-duplicate-anchor", "v", m2_launder_drop_inputs(),
+            is_placeholder=False, companion=shared_anchor_legit_companion(),
+        ),
+    ]

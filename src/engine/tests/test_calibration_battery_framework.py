@@ -19,7 +19,14 @@ from src.engine.forensics.calibration_battery import (
     run_calibration,
 )
 from src.engine.forensics.compile_fidelity import PASS
-from src.engine.tests._forensics_fixtures import clean_inputs, placeholder_cases
+from src.engine.tests._forensics_fixtures import (
+    clean_inputs,
+    m2_both_forms_cases,
+    m2_launder_drop_inputs,
+    m2_naive_drop_inputs,
+    placeholder_cases,
+    shared_anchor_legit_companion,
+)
 
 
 def test_seven_slots_are_the_frozen_set():
@@ -161,3 +168,162 @@ def test_multicase_slot_two_convicting_distinguishing_cases_is_ok():
     assert all(c.ok and c.convicted and c.distinguishes for c in sr.cases)
     assert result.status == STATUS_PLACEHOLDER, result.reasons
     assert result.status != STATUS_CALIBRATED
+
+
+# =========================================================================== #
+# JOB 2 — the REAL (non-placeholder) m2 BOTH-FORMS, permanently fixtured.
+# The m2 slot must convict BOTH the naive drop AND the laundered drop on check (v), each
+# distinguished by its OWN anti-vacuity companion (R-268 §3 (b)-leg / R-267 §1: the battery
+# grows the sub-case that defeated it). These are GRADER-authored in the fixtures layer; the
+# detector is untouched.
+# =========================================================================== #
+def test_m2_naive_and_launder_each_block_on_v():
+    # Each form, run standalone through Leg A, BLOCKs on the (v) drop-audit.
+    naive = m2_naive_drop_inputs().run()
+    assert naive.verdict != PASS
+    assert "v" in naive.checks_failed, sorted(naive.checks_failed)
+
+    launder = m2_launder_drop_inputs().run()
+    assert launder.verdict != PASS
+    assert "v" in launder.checks_failed, sorted(launder.checks_failed)
+
+
+def test_shared_anchor_companion_passes_v_non_vacuously():
+    # The launder companion must PASS (v) — and NON-vacuously: the certificate is well-formed
+    # (vi_cert passes) so the drop-audit actually RAN, and (v) is genuinely satisfied via the
+    # shared-anchor bijection (not skipped because the cert was malformed). It also passes whole.
+    res = shared_anchor_legit_companion().run()
+    assert "v" not in res.checks_failed, sorted(res.checks_failed)      # (v) passes
+    assert "vi_cert" not in res.checks_failed, sorted(res.checks_failed)  # drop-audit truly ran
+    assert res.verdict == PASS, res.summary                              # whole-clean known-good
+
+
+def test_m2_both_forms_certify_the_slot_but_status_stays_placeholder():
+    # THE JOB-2 CERTIFICATION: the m2 slot carries the two REAL cases as a LIST; both convict on
+    # (v); each is distinguished by its OWN per-case companion; and — because m1,m3..m7 are still
+    # placeholders — the OVERALL status stays PLACEHOLDER, proving m2 ALONE cannot fake CALIBRATED.
+    cases = placeholder_cases()
+    cases["m2"] = m2_both_forms_cases()
+    result = run_calibration(clean_inputs(), cases)
+
+    sr = result.slot_results["m2"]
+    assert sr.ok, sr.detail
+    assert len(sr.cases) == 2
+    assert not sr.is_placeholder                       # both m2 cases are REAL (non-placeholder)
+    assert [c.convicted for c in sr.cases] == [True, True]
+    assert [c.distinguishes for c in sr.cases] == [True, True]
+    assert [c.companion_source for c in sr.cases] == ["case", "case"]  # per-case companions used
+    assert [c.targeted_check for c in sr.cases] == ["v", "v"]
+    # labels record the two distinct forms
+    assert {c.label for c in sr.cases} == {"m2-naive-drop-orphan-cert", "m2-launder-duplicate-anchor"}
+
+    assert result.status == STATUS_PLACEHOLDER, result.reasons
+    assert result.status != STATUS_CALIBRATED
+
+
+# =========================================================================== #
+# JOB 1 — adversarial probes on the multi-case AGGREGATION (guard-design: the 5 ways a guard
+# silently stops guarding). These author NO live mutation content; they attack the plumbing.
+# =========================================================================== #
+def _all_real_slots():
+    """An all-REAL (non-placeholder) battery that yields CALIBRATED — the ceiling the probes push
+    against. Reuses the placeholder mechanics with is_placeholder=False (status-machine stand-in;
+    the live m1..m7 remain the grader's to author). This is the baseline a weakening would let
+    slip to a false CALIBRATED."""
+    return {
+        sid: MutationCase(c.slot_id, "grader-authored-STANDIN", c.targeted_check, c.mutant, is_placeholder=False)
+        for sid, c in placeholder_cases().items()
+    }
+
+
+def test_probe_all_real_baseline_is_calibrated():
+    # Control: the all-real baseline reaches CALIBRATED, so every probe below that does NOT reach
+    # CALIBRATED is discriminating (the guard actually had something to stop).
+    assert run_calibration(clean_inputs(), _all_real_slots()).status == STATUS_CALIBRATED
+
+
+def test_probe_placeholder_mixed_into_all_real_slot_blocks_calibrated():
+    # ATTACK: a slot that is otherwise all-real gains ONE placeholder case. The slot still reports
+    # ok=True, but is_placeholder=True must propagate (any-of-cases) → status drops to PLACEHOLDER,
+    # never CALIBRATED. Proves a placeholder cannot hide inside a multi-case slot.
+    g = _all_real_slots()
+    real = g["m2"]
+    ph = MutationCase("m2", "FRAMEWORK_DEMONSTRATION_PLACEHOLDER", real.targeted_check, real.mutant, is_placeholder=True)
+    g["m2"] = [real, ph]
+    result = run_calibration(clean_inputs(), g)
+    sr = result.slot_results["m2"]
+    assert sr.ok                       # both cases convict+distinguish
+    assert sr.is_placeholder           # but the placeholder taints the slot
+    assert result.status == STATUS_PLACEHOLDER, result.reasons
+    assert result.status != STATUS_CALIBRATED
+
+
+def test_probe_empty_case_list_fails_closed_to_incomplete():
+    # ATTACK: an EMPTY list for a slot must be treated as UNFILLED (fail-closed INCOMPLETE), never
+    # silently OK/CALIBRATED. A multi-case slot with zero cases is not "all cases passed".
+    g = _all_real_slots()
+    g["m3"] = []
+    result = run_calibration(clean_inputs(), g)
+    assert not result.slot_results["m3"].filled
+    assert result.status == STATUS_INCOMPLETE
+    assert result.status != STATUS_CALIBRATED
+
+
+def test_probe_and_over_cases_one_non_convicting_fails_the_slot():
+    # ATTACK: a slot OK must require EVERY case to convict (AND-over-cases), not ANY. Pair a real
+    # convicting case with one whose "mutant" is the clean spec (never convicts) → slot FAILS.
+    g = _all_real_slots()
+    g["m4"] = [g["m4"], MutationCase("m4", "STANDIN", "m4_false_flag", clean_inputs(), is_placeholder=False)]
+    result = run_calibration(clean_inputs(), g)
+    sr = result.slot_results["m4"]
+    assert not sr.ok
+    assert [c.convicted for c in sr.cases] == [True, False]
+    assert result.status == STATUS_FAILED, result.reasons
+
+
+def test_probe_per_case_companion_is_consulted_not_defaulted_to_global_clean():
+    # ATTACK (companion-consulted): give a REAL m2 case a per-case companion that itself FAILS (v)
+    # (the naive-drop mutant reused as a bogus "known-good"). If the harness defaulted a failing
+    # companion back to the global clean, the slot would still pass — it must NOT. distinguishes
+    # must flip False and the battery must FAIL.
+    #
+    # ★ PRE-WIDENING IMPOSSIBILITY: this probe cannot even be expressed on 59e6bf9a~1 — that
+    # MutationCase had no `companion` field (MutationCase(..., companion=...) raises TypeError) and
+    # run_calibration read a single GLOBAL clean for every slot. The widening is what makes a
+    # per-case companion a consulted, falsifiable input.
+    bogus = m2_naive_drop_inputs()  # BLOCKs on (v) → a companion that does NOT pass (v)
+    g = _all_real_slots()
+    g["m2"] = MutationCase("m2", "STANDIN", "v", m2_naive_drop_inputs(), is_placeholder=False, companion=bogus)
+    attack = run_calibration(clean_inputs(), g)
+    sr = attack.slot_results["m2"]
+    assert sr.cases[0].companion_source == "case"  # the per-case companion WAS consulted
+    assert not sr.clean_passes_target      # the per-case companion failed (v)
+    assert not sr.distinguishes
+    assert not sr.ok
+    assert attack.status == STATUS_FAILED, attack.reasons
+
+    # Control: the SAME mutant with NO per-case companion falls back to the global clean, which
+    # passes (v) → distinguishes → CALIBRATED. The only difference is the companion, proving it is
+    # consulted.
+    g2 = _all_real_slots()
+    g2["m2"] = MutationCase("m2", "STANDIN", "v", m2_naive_drop_inputs(), is_placeholder=False)
+    control = run_calibration(clean_inputs(), g2)
+    assert control.slot_results["m2"].cases[0].companion_source == "clean"
+    assert control.slot_results["m2"].distinguishes
+    assert control.status == STATUS_CALIBRATED, control.reasons
+
+
+def test_probe_status_order_failed_dominates_placeholder():
+    # ATTACK: fail-closed ordering — a FAILED slot must dominate a PLACEHOLDER slot.
+    g = _all_real_slots()
+    g["m1"] = MutationCase("m1", "STANDIN", "ii", clean_inputs(), is_placeholder=False)  # never convicts → FAIL
+    g["m5"] = MutationCase("m5", "FRAMEWORK_DEMONSTRATION_PLACEHOLDER", g["m5"].targeted_check, g["m5"].mutant, is_placeholder=True)
+    assert run_calibration(clean_inputs(), g).status == STATUS_FAILED
+
+
+def test_probe_status_order_incomplete_dominates_failed():
+    # ATTACK: fail-closed ordering — an UNFILLED slot must dominate a FAILED slot.
+    g = _all_real_slots()
+    del g["m6"]                                                                          # unfilled
+    g["m1"] = MutationCase("m1", "STANDIN", "ii", clean_inputs(), is_placeholder=False)  # failed
+    assert run_calibration(clean_inputs(), g).status == STATUS_INCOMPLETE
