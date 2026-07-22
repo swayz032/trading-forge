@@ -76,6 +76,18 @@ Keep this file short enough that pasting it is never a burden. If a trap stops b
 >    message a false caption about its own diff. ★ **A habit that does real work must not have
 >    exceptions; the exception is exactly where it fails.** **After committing, run
 >    `git show --stat HEAD` and confirm the file list is what you named.**
+> 6d. **★★★ A GRADER NEVER CHECKS OUT IN THE SHARED TREE — a bare `git checkout <sha>` (no `--`)
+>    DETACHES HEAD and reverts EVERY tracked file to that SHA.** For a before/after differential
+>    (pre-fix vs post-fix), moving the shared tree's HEAD to `<sha>~1` then `<sha>` **rewrites every
+>    working file to the old state** — the newest relay entries VANISH from the files (they stay safe
+>    under the branch ref, but the file on disk is reverted), and the grader's own measurement surface
+>    changes back underneath it on reattach, so **its verdict cannot carry a clean scope line and does
+>    not count.** This happened here: a fifth-attack grade walked `8f0ff2f0~1 → 8f0ff2f0` in the shared
+>    tree; AR-256 and R-268 disappeared from the files; recovered ZERO-LOSS only because the branch ref
+>    held and the ledger had been committed two hours earlier. **Before/after states come from
+>    `git show <sha>:<path>` into a standalone, or from a SEPARATE WORKTREE you own
+>    (`git worktree add --detach <tmp> <sha>`) — NEVER from moving the shared tree's HEAD.** cwd-verify
+>    was already mandated; this adds NEVER-CHECKOUT.
 > 7. **ANY COUNT THAT ENTERS A RECEIPT** (tests, deltas, timings) **must be measured in an isolated
 >    worktree pinned to your commit.** A number measured in a shared tree does not reproduce from
 >    the SHA. `git worktree add --detach <tmp> <sha>` → measure → `git worktree remove`.
