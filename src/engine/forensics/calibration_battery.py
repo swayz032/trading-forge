@@ -74,14 +74,52 @@ class MutationCase:
     """A grader-authored mutation for one slot. `is_placeholder` MUST be False for a real
     calibration — a True value can never yield status CALIBRATED. `targeted_check` names the
     Leg A check-code the mutation is designed to trip (e.g. 'ii', 'iv', 'vi', 'v', 'v_nonlb',
-    'm4_false_flag', 'countersign'); the anti-vacuity companion proves the CLEAN spec passes
-    exactly that check."""
+    'm4_false_flag', 'countersign'); the anti-vacuity companion proves a known-good spec passes
+    exactly that check.
+
+    `companion` is the OPTIONAL case-specific anti-vacuity companion: a known-good LegAInputs
+    that MUST PASS `targeted_check`. When None, the battery falls back to the GLOBAL clean spec
+    (preserving single-case behaviour). A per-case companion lets ONE slot carry MULTIPLE cases
+    that each convict a DIFFERENT form of the same defect while each supplying its own
+    distinguishing known-good (R-268 §3: the m2 slot must convict BOTH the naive and the
+    laundered drop, each with its own companion)."""
 
     slot_id: str
     label: str
     targeted_check: str
     mutant: LegAInputs
     is_placeholder: bool = False
+    companion: LegAInputs | None = None
+
+
+@dataclass
+class CaseResult:
+    """Per-case outcome inside a slot. A slot may carry several of these."""
+
+    label: str
+    is_placeholder: bool
+    convicted: bool            # Leg A BLOCKed the mutant
+    targeted_check: str
+    mutant_trips_target: bool  # the mutant fails the targeted check
+    companion_source: str      # "case" (per-case companion) | "clean" (global fallback)
+    clean_passes_target: bool  # the anti-vacuity companion passes the targeted check
+    distinguishes: bool        # mutant trips target AND companion passes it (anti-vacuity)
+    ok: bool                   # convicted AND distinguishes
+    detail: str
+
+    def to_dict(self) -> dict:
+        return {
+            "label": self.label,
+            "is_placeholder": self.is_placeholder,
+            "convicted": self.convicted,
+            "targeted_check": self.targeted_check,
+            "mutant_trips_target": self.mutant_trips_target,
+            "companion_source": self.companion_source,
+            "clean_passes_target": self.clean_passes_target,
+            "distinguishes": self.distinguishes,
+            "ok": self.ok,
+            "detail": self.detail,
+        }
 
 
 @dataclass
@@ -89,13 +127,14 @@ class SlotResult:
     slot_id: str
     filled: bool
     is_placeholder: bool
-    convicted: bool          # Leg A BLOCKed the mutant
-    targeted_check: str
-    mutant_trips_target: bool  # the mutant fails the targeted check
-    clean_passes_target: bool  # the clean spec passes the targeted check
-    distinguishes: bool        # mutant trips target AND clean passes it (anti-vacuity)
-    ok: bool                   # convicted AND distinguishes
+    convicted: bool          # ALL cases: Leg A BLOCKed the mutant
+    targeted_check: str      # single case → its check; multi → comma-joined
+    mutant_trips_target: bool  # ALL cases: the mutant fails the targeted check
+    clean_passes_target: bool  # ALL cases: the companion passes the targeted check
+    distinguishes: bool        # ALL cases: mutant trips target AND companion passes it
+    ok: bool                   # ALL cases convicted AND distinguished
     detail: str
+    cases: list[CaseResult] = field(default_factory=list)
 
     def to_dict(self) -> dict:
         return {
@@ -110,6 +149,8 @@ class SlotResult:
             "distinguishes": self.distinguishes,
             "ok": self.ok,
             "detail": self.detail,
+            "case_count": len(self.cases),
+            "cases": [c.to_dict() for c in self.cases],
         }
 
 
@@ -131,10 +172,54 @@ class BatteryResult:
         }
 
 
-def run_calibration(clean: LegAInputs, slots: dict[str, MutationCase]) -> BatteryResult:
+def _normalize_slot(raw: MutationCase | list[MutationCase] | None) -> list[MutationCase]:
+    """Normalize a slot value to a list of cases. A bare MutationCase → [case]; a None or an
+    empty list → [] (UNFILLED, fail-closed)."""
+    if raw is None:
+        return []
+    if isinstance(raw, MutationCase):
+        return [raw]
+    return list(raw)
+
+
+def _evaluate_case(case: MutationCase, clean_failed_checks: set[str]) -> CaseResult:
+    """Evaluate one mutation case: it must CONVICT (Leg A blocks the mutant) AND be
+    DISTINGUISHED by its anti-vacuity companion (the companion PASSES the targeted check). The
+    companion is the case's own `companion` when present, else the GLOBAL clean spec."""
+    mutant_result = case.mutant.run()
+    convicted = mutant_result.verdict != PASS
+    target = case.targeted_check
+    mutant_trips = target in mutant_result.checks_failed
+
+    if case.companion is not None:
+        companion_source = "case"
+        companion_failed = set(case.companion.run().checks_failed)
+        clean_passes_target = target not in companion_failed
+    else:
+        companion_source = "clean"
+        clean_passes_target = target not in clean_failed_checks
+
+    distinguishes = mutant_trips and clean_passes_target
+    ok = convicted and distinguishes
+    detail = (
+        f"mutant verdict={mutant_result.verdict}; trips {target!r}={mutant_trips}; "
+        f"companion({companion_source}) passes {target!r}={clean_passes_target}"
+    )
+    return CaseResult(
+        label=case.label, is_placeholder=case.is_placeholder, convicted=convicted,
+        targeted_check=target, mutant_trips_target=mutant_trips, companion_source=companion_source,
+        clean_passes_target=clean_passes_target, distinguishes=distinguishes, ok=ok, detail=detail,
+    )
+
+
+def run_calibration(
+    clean: LegAInputs, slots: dict[str, MutationCase | list[MutationCase]]
+) -> BatteryResult:
     """Run the §4 battery. The clean known-good spec must PASS whole; each of the seven slots
-    must be filled, its mutant convicted, and its anti-vacuity companion must distinguish the
-    mutant from the clean spec on the targeted check."""
+    must be filled with ONE OR MORE cases, EVERY case convicted, and each case's anti-vacuity
+    companion must distinguish its mutant on the targeted check. A slot value may be a single
+    MutationCase (legacy) or a list of them (multiple forms of one defect, each with its own
+    companion). A slot is OK iff every case in it is convicted AND distinguished."""
     reasons: list[str] = []
 
     clean_result = clean.run()
@@ -149,36 +234,47 @@ def run_calibration(clean: LegAInputs, slots: dict[str, MutationCase]) -> Batter
     any_unfilled = False
 
     for sid in REQUIRED_SLOTS:
-        case = slots.get(sid)
-        if case is None:
+        cases = _normalize_slot(slots.get(sid))
+        if not cases:
             any_unfilled = True
             slot_results[sid] = SlotResult(
                 slot_id=sid, filled=False, is_placeholder=False, convicted=False,
                 targeted_check="", mutant_trips_target=False, clean_passes_target=False,
-                distinguishes=False, ok=False, detail="UNFILLED — awaiting independent grader's mutation",
+                distinguishes=False, ok=False,
+                detail="UNFILLED — awaiting independent grader's mutation", cases=[],
             )
             continue
 
-        if case.is_placeholder:
-            any_placeholder = True
+        case_results = [_evaluate_case(c, clean_failed_checks) for c in cases]
 
-        mutant_result = case.mutant.run()
-        convicted = mutant_result.verdict != PASS
-        target = case.targeted_check
-        mutant_trips = target in mutant_result.checks_failed
-        clean_passes_target = target not in clean_failed_checks
-        distinguishes = mutant_trips and clean_passes_target
-        ok = convicted and distinguishes
+        # A slot is OK iff EVERY case convicts AND distinguishes. Aggregate booleans are AND
+        # over the cases (identity-preserving for a single-case slot).
+        slot_is_placeholder = any(cr.is_placeholder for cr in case_results)
+        convicted = all(cr.convicted for cr in case_results)
+        mutant_trips = all(cr.mutant_trips_target for cr in case_results)
+        clean_passes_target = all(cr.clean_passes_target for cr in case_results)
+        distinguishes = all(cr.distinguishes for cr in case_results)
+        ok = all(cr.ok for cr in case_results)
+        if slot_is_placeholder:
+            any_placeholder = True
         if not ok:
             any_failed = True
-        detail = (
-            f"mutant verdict={mutant_result.verdict}; trips {target!r}={mutant_trips}; "
-            f"clean passes {target!r}={clean_passes_target}"
-        )
+
+        if len(case_results) == 1:
+            targeted_check = case_results[0].targeted_check
+            detail = case_results[0].detail
+        else:
+            targeted_check = ",".join(cr.targeted_check for cr in case_results)
+            detail = (
+                f"{len(case_results)} cases; ok={ok}; "
+                + " | ".join(f"[{cr.label}] {cr.detail}" for cr in case_results)
+            )
+
         slot_results[sid] = SlotResult(
-            slot_id=sid, filled=True, is_placeholder=case.is_placeholder, convicted=convicted,
-            targeted_check=target, mutant_trips_target=mutant_trips,
-            clean_passes_target=clean_passes_target, distinguishes=distinguishes, ok=ok, detail=detail,
+            slot_id=sid, filled=True, is_placeholder=slot_is_placeholder, convicted=convicted,
+            targeted_check=targeted_check, mutant_trips_target=mutant_trips,
+            clean_passes_target=clean_passes_target, distinguishes=distinguishes, ok=ok,
+            detail=detail, cases=case_results,
         )
 
     # Status resolution — order matters; fail-closed.
