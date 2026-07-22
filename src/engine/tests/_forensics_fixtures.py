@@ -281,10 +281,13 @@ def m2_both_forms_cases() -> list[MutationCase]:
 
 # --------------------------------------------------------------------------- #
 # R-272 SIX-SLOT WAVE — REAL (non-placeholder) grader-authored cases for the remaining
-# slots whose class survived an adversarial evasion probe. m6 and m7 are DELIBERATELY
-# ABSENT here: their adversarial sub-cases DEFEATED the detector (fail-open holes — see the
-# TRIPWIRE tests in test_calibration_battery_framework.py), so per R-272 §2 their "pass" is
-# withheld pending a doer's fix. Detector code is untouched by all of this.
+# slots whose class survived an adversarial evasion probe. m6 and m7 are authored in their
+# own both-forms sections below (R-273 m6, R-277 m7): the adversarial sub-cases that once
+# DEFEATED the detector have since been fixed and are now carried as each slot's founding-
+# instance defeat lineage — see m6_both_forms_cases / m7_both_forms_cases and the TRIPWIRE
+# tests in test_calibration_battery_framework.py. With m2/m6/m7 all authored, all 7 slots
+# fill and the all-real battery reaches STATUS_CALIBRATED. Detector code is untouched by all
+# of this.
 # --------------------------------------------------------------------------- #
 def m1_mistyped_family_inputs() -> LegAInputs:
     """m1: a load-bearing structural spine (WAIT_SESSION, honest approximation=False) is
@@ -354,8 +357,8 @@ def m5_unstamped_exit_inputs() -> LegAInputs:
 
 def robust_six_real_cases() -> dict[str, MutationCase]:
     """The FOUR slots whose class survived the adversarial probe (m1, m3, m4, m5), each a REAL
-    (non-placeholder) case with its own anti-vacuity companion. m2 is authored separately
-    (both-forms); m6 and m7 are withheld (detector holes)."""
+    (non-placeholder) case with its own anti-vacuity companion. m2, m6, and m7 are authored
+    separately (both-forms), each carrying its founding-instance defeat lineage."""
     return {
         "m1": MutationCase("m1", "m1-mistyped-structure-as-filter", "ii",
                            m1_mistyped_family_inputs(), is_placeholder=False, companion=clean_inputs()),
@@ -376,12 +379,14 @@ def robust_six_real_cases() -> dict[str, MutationCase]:
 # Form B (unlinkable) is the FOUNDING INSTANCE of the hole this grader originally found — the
 # battery grows the sub-case that defeated it (R-267 §1).
 #
-# NOTE: m7 is NOT authored here. The grader's re-attack found a RESIDUAL fail-open in the m7 fix:
-# a zero-width / Unicode-format-character disposition (U+200B ZWSP, U+200C, U+200D, U+FEFF,
-# U+2060) is `isspace()==False`, survives `str.strip()`, and still PASSes v_nonlb — a
-# semantically-empty disposition invisible to BOTH the automated check and the Phase-2 fresh
-# reader. Per doer != grader the fix is a doer's next loop; m7 stays withheld (see the residual
-# tripwire in test_calibration_battery_framework.py).
+# NOTE: m7 is authored in its OWN both-forms section below (R-277). An earlier grader re-attack
+# had found a RESIDUAL fail-open in the m7 fix: a zero-width / Unicode-format-character
+# disposition (U+200B ZWSP, U+200C, U+200D, U+FEFF, U+2060) is `isspace()==False`, survives
+# `str.strip()`, and once PASSed v_nonlb — a semantically-empty disposition invisible to BOTH the
+# automated check and the Phase-2 fresh reader. The definitional `_has_visible_content` fix
+# (R-275/R-276) closed that class at its Unicode property; m7 now carries that residual as part of
+# its founding-instance defeat lineage and CONVICTS on v_nonlb (see the m7 both-forms section and
+# the tripwire in test_calibration_battery_framework.py).
 # --------------------------------------------------------------------------- #
 def m6_video_mismatch_inputs() -> LegAInputs:
     """m6 form A (naive broken chain): the certificate names a DIFFERENT extraction than the

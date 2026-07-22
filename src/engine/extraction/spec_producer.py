@@ -455,6 +455,13 @@ def _entry_condition(
         # so the approximation metric + survivor-forensics can read per-condition
         # classifier confidence.
         "type_confidence": conf,
+        # §0 survivor-forensics default, made EXPLICIT on every produced
+        # condition (pre-reg docs/designs/survivor-forensics-preregistration-
+        # 2026-07-19.md lines 13-15,93): absent => load-bearing, so True is the
+        # honest, auditable classification. The producer NEVER marks a condition
+        # non-LB (that is the reserved (b) advisor decision, not a producer
+        # heuristic); no non_lb_disposition is emitted.
+        "load_bearing": True,
     }
     return cond, conf
 
@@ -550,6 +557,8 @@ def produce_spec_artifact(
                 "type": "ENABLE_ENTRY", "object": "spine completion",
                 "role": "trigger", "span": {"start": 0, "end": 0},
                 "evidence": "synthesized spine-completion trigger", "type_confidence": CONF_CONFIDENT,
+                # §0 explicit default (see _entry_condition): load-bearing.
+                "load_bearing": True,
             }
             entry_conditions.append(synth)
             trigger_id = synth["id"]

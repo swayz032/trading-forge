@@ -629,3 +629,94 @@ def test_addendum_compound_representation_is_recorded_not_built():
     assert len(art["spec"]["entry_conditions"]) == 1, (
         "a prose condition produced more than one spec condition — compound "
         "representation was built; it was only supposed to be recorded")
+
+
+# ─── §0 load_bearing default · EXPLICIT on every produced condition ──────────
+#
+# Frozen pre-reg §0 (docs/designs/survivor-forensics-preregistration-2026-07-19.md
+# lines 13-15,93): a compiled condition with no `load_bearing` field is treated
+# load-bearing. The producer now makes that default EXPLICIT (load_bearing=True)
+# so the classification is auditable ON the artifact. The producer NEVER emits a
+# non_lb_disposition and NEVER marks a condition non-LB — that is the reserved (b)
+# advisor decision, not a producer heuristic.
+
+import copy as _copy  # noqa: E402
+
+from src.engine.extraction.spec_producer import _spec_hash  # noqa: E402
+from src.engine.forensics.compile_fidelity import run_leg_a_phase1  # noqa: E402
+
+
+def test_every_produced_condition_is_explicitly_load_bearing_true():
+    """Every produced taught condition — entry_conditions (spine, trigger,
+    confluence), the taught-stop invalidation, AND the synthesized terminal
+    ENABLE_ENTRY trigger — must carry `load_bearing is True` (the §0 default made
+    explicit). is True, not just truthy: the field is the literal default."""
+    # Stream 1: spine + explicit trigger + confluence + taught-stop invalidation.
+    strat = {
+        "direction": "long",
+        "entry_sequence": [
+            {"action": "wait for a break of structure to the upside", "role": "precondition"},
+            {"action": "enter on the retest of the demand zone", "role": "entry_trigger"},
+        ],
+        "confluences": [{"description": "high volume confirms the move"}],
+        "stop": {"description": "below the swing low", "level": None, "gestural": True},
+    }
+    art = produce_spec_artifact(strat, video="V", certificate=None)
+    body = art["spec"]
+    rows = list(body["entry_conditions"]) + list(body.get("invalidations") or [])
+    assert len(body["entry_conditions"]) >= 3 and body.get("invalidations"), (
+        "fixture must exercise spine, trigger, confluence AND invalidation streams")
+    for c in rows:
+        assert c["load_bearing"] is True, f"condition {c['id']} missing explicit load_bearing=True"
+
+    # Stream 2: the SYNTHESIZED terminal trigger (no trigger role, no spine → synth).
+    synth_strat = {"direction": "long", "confluences": [{"description": "volume rising"}]}
+    synth_art = produce_spec_artifact(synth_strat, video="V", certificate=None)
+    synth = [c for c in synth_art["spec"]["entry_conditions"]
+             if c["id"] == "ENABLE_ENTRY:spine-completion#trigger"]
+    assert synth, "expected a synthesized spine-completion trigger in this fixture"
+    assert synth[0]["load_bearing"] is True, "synthesized trigger missing explicit load_bearing=True"
+
+
+def test_detector_per_row_verdict_identical_explicit_true_vs_field_absent():
+    """The §0 no-op guarantee at the detector: a spec with explicit
+    `load_bearing: True` on every condition yields IDENTICAL per-row Leg-A
+    verdicts to the same spec with the field ABSENT (the detector defaults
+    absent→true, so explicit-true is indistinguishable). Hash-bearing fields are
+    excluded; the injected copy is re-stamped so (vi.a) stays in lockstep."""
+    strat = {
+        "direction": "long",
+        "entry_sequence": [
+            {"action": "wait for a break of structure to the upside", "role": "precondition"},
+            {"action": "price returns to the order block support level", "role": "precondition"},
+            {"action": "enter on the retest of the demand zone", "role": "entry_trigger"},
+        ],
+        "confluences": [{"description": "high volume confirms"}],
+        "stop": {"description": "below the swing low", "level": None, "gestural": True},
+    }
+    explicit = produce_spec_artifact(strat, video="V", certificate=None)
+    # every produced condition already carries explicit load_bearing=True
+    assert all(c["load_bearing"] is True
+               for c in explicit["spec"]["entry_conditions"] + (explicit["spec"].get("invalidations") or []))
+
+    absent = _copy.deepcopy(explicit)
+    for c in absent["spec"]["entry_conditions"] + (absent["spec"].get("invalidations") or []):
+        c.pop("load_bearing", None)
+    absent["spec_hash"] = _spec_hash(absent["spec"])  # re-stamp so (vi.a) verifies in lockstep
+
+    def _row_surface(art):
+        seal = run_leg_a_phase1(art, certificate=None)
+        return {
+            "automated_verdict": seal.automated_verdict,
+            "checks_failed": sorted(seal.checks_failed),
+            "rows": [
+                {"id": r.condition_id, "load_bearing": r.load_bearing,
+                 "ii_applicable": r.ii_applicable, "row_verdict": r.row_verdict,
+                 "fail_codes": sorted(r.fail_codes)}
+                for r in seal.rows
+            ],
+        }
+
+    assert _row_surface(explicit) == _row_surface(absent), (
+        "explicit load_bearing=True changed the Leg-A per-row verdict vs field-absent — "
+        "the §0 default is NOT a detector no-op")
