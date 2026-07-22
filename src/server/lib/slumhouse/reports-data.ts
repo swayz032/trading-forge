@@ -210,8 +210,12 @@ export async function assembleGptReports(opts: { scope: "night" | "all" }): Prom
 // SOAK scope — the hardening-rails nightly certification history (Rail 3).
 //
 // A DIFFERENT SHAPE from the GPT night critique: one immutable cert row per run,
-// carrying report_date / build_sha / verdict (green|drift|skipped|invalid) + the
-// full certificate JSONB. This is NOT a 7-slide critique — forcing it into the
+// carrying report_date / build_sha / verdict + the full certificate JSONB. The rig
+// that writes this table (scripts/rails/cert-rig.cjs → cert-diff.cjs) emits only
+// `green` (all invariants pass) or `drift` (any invariant fails); a `skipped` run is
+// recorded in a SEPARATE audit table, and `invalid` is never written. The renderer
+// still falls back gracefully for any other string. This is NOT a 7-slide critique —
+// forcing it into the
 // GptReport shape would fabricate slides that do not exist (HANDOFF §2). Read-side
 // takes the LATEST row per report_date (the table's own convention, migration 0202).
 //
@@ -226,7 +230,9 @@ export interface SoakReport {
   reportDate: string;
   /** The commit the rig certified, if the rig recorded it. */
   buildSha: string | null;
-  /** green | drift | skipped | invalid — the rig's own verdict string. */
+  /** The rig's own verdict string. In practice this table only ever holds `green` or
+   *  `drift` (see the type-level note above); typed as string so the renderer degrades
+   *  gracefully if the rig's vocabulary ever widens. */
   verdict: string;
   /**
    * A plain-English line pulled from the certificate JSONB IF the rig wrote one.

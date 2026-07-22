@@ -80,6 +80,16 @@ describe("reporting-room per-scope empty states are honest and distinct", () => 
     }
   });
 
+  it("★ soak/ab quiet screens carry NO number — an empty ball is prose + dashes, never a reading (F-1)", () => {
+    // rrRlEmpty guards $-amounts and signed decimals; these pure-prose crystal-ball
+    // idles are STRICTER — a genuinely-empty screen has no digit at all, so ANY number
+    // (a "$1,240", a "+0.34" Sharpe, a "0 of 40 checks" tally) is by construction a
+    // fabricated reading. The first pass shipped this guard on rrRlEmpty only; this
+    // closes the same tripwire on the soak + ab idle branches (grade F-1).
+    expect(soakQuiet, "soak idle leaked a digit — a fabricated reading on an empty screen").not.toMatch(/\d/);
+    expect(abQuiet, "ab idle leaked a digit — a fabricated reading on an empty screen").not.toMatch(/\d/);
+  });
+
   it("degraded/unreachable stay honest for the new scopes too (a read problem, nothing lost)", () => {
     for (const scope of ["soak", "ab"] as const) {
       const degraded = rrIdleHTML({ scope, degraded: true });
@@ -135,6 +145,7 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
       "function rrRenderRL(",
       "function rrRlEmpty(",
       "function rrPaperPaint(",
+      "function rrPaperEmptyHTML(",
       "function rrOnPaperEvent(",
     ]) {
       const exec = stripComments(sliceBalanced(officeSrc, fn));
@@ -152,9 +163,39 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
   });
 
   it("the paper floor stays honest-dark until a REAL sse event streams (no simulated tape)", () => {
-    const paper = stripComments(sliceBalanced(officeSrc, "function rrPaperPaint("));
-    expect(paper).toContain("Floor is dark");
-    expect(paper).toContain("nothing here is simulated");
-    expect(paper).not.toMatch(RANDOM_RE);
+    const empty = stripComments(sliceBalanced(officeSrc, "function rrPaperEmptyHTML("));
+    expect(empty).toContain("Floor is dark");
+    expect(empty).toContain("nothing here is simulated");
+    const paint = stripComments(sliceBalanced(officeSrc, "function rrPaperPaint("));
+    expect(paint).not.toMatch(RANDOM_RE);
+  });
+});
+
+// ── Residual 2 (OR-042 F-2): a dropped SSE stream must render DISTINCTLY from a
+//    genuinely-quiet floor. rrPaperEmptyHTML is pure, so both states are locked here. ──
+const rrPaperEmptyHTML = (() => {
+  const fn = sliceBalanced(officeSrc, "function rrPaperEmptyHTML(");
+  return vm.runInNewContext(`${fn}\n;rrPaperEmptyHTML`, {}) as (kind: string) => string;
+})();
+
+describe("immersive Paper Floor — disconnected renders distinctly from genuinely quiet", () => {
+  const quiet = rrPaperEmptyHTML("quiet");
+  const disconnected = rrPaperEmptyHTML("disconnected");
+
+  it("quiet and disconnected are distinct screens (a dropped feed is not a dark floor)", () => {
+    expect(quiet).not.toBe(disconnected);
+    expect(quiet).toContain("Floor is dark");
+    expect(disconnected).not.toContain("Floor is dark");
+    expect(disconnected).toMatch(/interrupted|dropped|reconnect/i);
+  });
+
+  it("★ disconnected blames the connection, says nothing is lost, and invents no reading", () => {
+    expect(disconnected).toMatch(/connection problem|not a quiet floor/i);
+    expect(disconnected).toMatch(/nothing has been lost/i);
+    // No fabricated reading while the stream is down (reading-shaped, like rrRlEmpty —
+    // the screen legitimately carries a structural <h2>, so guard $-amounts + deltas):
+    expect(disconnected).not.toMatch(/\$\d/);
+    expect(disconnected).not.toMatch(/[+-]\d+\.\d+/);
+    expect(disconnected).not.toMatch(/undefined|null|\b5\d\d\b/);
   });
 });

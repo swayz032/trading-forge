@@ -1434,18 +1434,25 @@
       // (not rl:*), strategy:promoted (not lifecycle:promoted), paper:tp1/2_filled.
       var RR_RL_EVENTS = ['signal:rl_ab_routed', 'quantum_rl:training_completed', 'quantum_rl:kill_switch_engaged'];
       var RR_PAPER_EVENTS = ['paper:trade', 'paper:signal', 'paper:pnl', 'paper:session_start', 'paper:session_stop', 'paper:tp1_filled', 'paper:tp2_filled', 'paper:be_stop_moved', 'paper:trail_tightened', 'paper:time_stop_flattened', 'signal:a_plus_rejected', 'signal:weighted_score_rejected', 'strategy:promoted', 'lifecycle:operator_absent_autopromoted'];
-      var rrES = null, rrRlRefresh = null, rrPaperTape = [], rrPaperCounts = { events: 0 };
+      var rrES = null, rrRlRefresh = null, rrPaperTape = [], rrPaperCounts = { events: 0 }, rrPaperConn = 'idle';
       function rrSSEConnect() {
         if (rrES || typeof EventSource === 'undefined') return;
         try {
           rrES = new EventSource('/api/sse/events');
+          rrPaperConn = 'connecting';
+          rrES.onopen = function () { rrPaperConn = 'open'; if (RR_STATE.type === 'paper') rrPaperPaint(); };
+          // OR-042 F-2: a dropped/failed stream must NOT collapse into "genuinely quiet".
+          // Mark it disconnected so the floor renders 'feed interrupted' distinctly from a dark
+          // floor — honest (we do not know it is quiet, so we do not say so).
+          rrES.onerror = function () { rrPaperConn = 'error'; if (RR_STATE.type === 'paper') rrPaperPaint(); };
           RR_RL_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnRlEvent); });
           RR_PAPER_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnPaperEvent); });
-        } catch (e) { rrES = null; }
+        } catch (e) { rrES = null; rrPaperConn = 'error'; }
       }
       function rrSSEClose() {
         if (rrES) { try { rrES.close(); } catch (e) {} rrES = null; }
         if (rrRlRefresh) { clearTimeout(rrRlRefresh); rrRlRefresh = null; }
+        rrPaperConn = 'idle';
       }
       function rrOnRlEvent() {
         if (RR_STATE.type !== 'rl' || rrRlRefresh) return; // debounce a burst into one refetch
@@ -1461,6 +1468,7 @@
       }
       function rrOnPaperEvent(ev) {
         var d = rrParse(ev);
+        rrPaperConn = 'open'; // a delivered event proves the stream is live — clears a stale error
         var name = ev && ev.type ? ev.type : 'event';
         var strat = d.strategy_name || d.strategyName || (d.strategy_id != null ? 'Strategy #' + d.strategy_id : (d.strategyId != null ? 'Strategy #' + d.strategyId : '—'));
         var now = new Date();
@@ -1548,26 +1556,43 @@
         rrSSEConnect();
         rrPaperPaint();
       }
+      // The two honest paper empties, pure so they can be locked in a test. 'quiet' =
+      // connected but nothing has traded; 'disconnected' = the live stream dropped, which
+      // is NOT the same as quiet and must never be shown as such (OR-042 F-2). Neither
+      // invents a reading.
+      function rrPaperEmptyHTML(kind) {
+        if (kind === 'disconnected') {
+          return '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Live feed interrupted</div><h2 class="empty-title">The floor feed dropped</h2>' +
+            '<p class="empty-body">The live connection to the paper floor was interrupted and is retrying. This is a connection problem, not a quiet floor — we are deliberately NOT calling it &ldquo;nothing is happening&rdquo;, because we do not know. Nothing has been lost; the tape resumes the moment the stream reconnects.</p>' +
+            '<p class="empty-note">Reconnecting to <code>/api/sse/events</code>. No reading is invented while the stream is down.</p></div>';
+        }
+        return '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Floor is dark</div><h2 class="empty-title">No paper activity yet</h2>' +
+          '<p class="empty-body">The paper engine has not emitted anything since this screen opened. The floor stays dark rather than drawing a fill that never happened — the moment the engine trades, its events stream in below.</p>' +
+          '<p class="empty-note">Live from <code>/api/sse/events</code>. Every row is a real engine event; nothing here is simulated.</p></div>';
+      }
       function rrPaperPaint() {
         var host = document.getElementById('imm-paper');
         if (!host || RR_STATE.type !== 'paper') return;
         var hasEvents = rrPaperTape.length > 0;
+        var disconnected = !hasEvents && rrPaperConn === 'error';
+        var pillCls = hasEvents ? 'good' : disconnected ? 'bad' : 'dim';
+        var pillTxt = hasEvents ? 'streaming' : disconnected ? 'feed interrupted' : 'idle';
+        var feedTxt = hasEvents ? 'streaming' : disconnected ? 'reconnecting' : 'waiting';
+        var feedCol = hasEvents ? 'var(--lime)' : disconnected ? 'var(--red)' : 'var(--mute)';
         var head = '<div class="imm-head"><div><div class="imm-eyebrow">Live Paper Engine · immersive</div><div class="imm-title">The floor, right now</div>' +
           '<div class="imm-subline">Every paper fill, stop move and signal the engine emits, streamed live. Read-only — the room never places an order.</div></div>' +
-          '<div class="imm-head-right"><span class="pillstat ' + (hasEvents ? 'good' : 'dim') + '"><span class="d"></span> ' + (hasEvents ? 'streaming' : 'idle') + '</span></div></div>';
+          '<div class="imm-head-right"><span class="pillstat ' + pillCls + '"><span class="d"></span> ' + pillTxt + '</span></div></div>';
         var agg = '<div class="imm-panel" style="margin-bottom:14px;"><div class="imm-agg">' +
           '<div class="a"><span class="k">Live events · this session</span><span class="v' + (hasEvents ? '' : ' dash') + '">' + (hasEvents ? rrPaperCounts.events : '—') + '</span></div><div class="sep"></div>' +
-          '<div class="a"><span class="k">Feed</span><span class="v" style="font-size:13px;color:' + (hasEvents ? 'var(--lime)' : 'var(--mute)') + ';">' + (hasEvents ? 'streaming' : 'waiting') + '</span></div></div></div>';
+          '<div class="a"><span class="k">Feed</span><span class="v" style="font-size:13px;color:' + feedCol + ';">' + feedTxt + '</span></div></div></div>';
         var body;
-        if (!hasEvents) {
-          body = '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Floor is dark</div><h2 class="empty-title">No paper activity yet</h2>' +
-            '<p class="empty-body">The paper engine has not emitted anything since this screen opened. The floor stays dark rather than drawing a fill that never happened — the moment the engine trades, its events stream in below.</p>' +
-            '<p class="empty-note">Live from <code>/api/sse/events</code>. Every row is a real engine event; nothing here is simulated.</p></div>';
-        } else {
+        if (hasEvents) {
           body = '<div class="imm-panel"><div class="imm-label">Live tape <span class="aside">newest first · real engine events</span></div>' +
             '<div class="tape-feed">' + rrPaperTape.map(function (x) {
               return '<div class="tape-item"><span class="tev">' + rrEsc(x.ev) + '</span><span class="tbody"><div class="tstrat">' + rrEsc(x.strat) + '</div><div class="tdesc">' + rrEsc(x.desc) + '</div></span><span class="tt2">' + rrEsc(x.t) + '</span></div>';
             }).join('') + '</div></div>';
+        } else {
+          body = rrPaperEmptyHTML(disconnected ? 'disconnected' : 'quiet');
         }
         host.innerHTML = head + agg + body + rrPaperSrc();
       }
