@@ -17,7 +17,8 @@ TABLE over the six sub-checks (i)-(vi) of §1-A and returns a CATEGORICAL PASS/B
         (§4's m4 false-flag exists because a mislabeled flag is how this leg gets gamed).
         Per §6a an UNBOUND taught condition (`bindable=False`) is an UNENFORCED condition and
         FAILS (ii) — it is never a neutral absence.
-  (iii) polarity/direction preserved (structural half here; semantic half → Phase-2).
+  (iii) polarity/direction: NO automated structural check exists here — polarity is verified
+        WHOLLY by the Phase-2 fresh-reader "polarity" countersign row (§1-B Phase 2).
   (iv)  house-default exit carries its provenance stamp — an unstamped house value is a FAIL
         (R-038 pin (b) / R-039 §5(c)); taught-param-verbatim is a Phase-2 countersign row.
   (v)   no silent drops: every taught condition present; a condition marked non-load-bearing
@@ -323,7 +324,9 @@ def _verdict_for_condition(cond: dict, bindings: dict[str, ConditionBinding]) ->
         checks.append(CheckResult("i_conf", True, f"confidence={cond.get('type_confidence')}"))
 
     # §0 classification audit (rides Leg A(v) / §4 m7): non-LB WITHOUT a disposition is a FAIL.
-    if not load_bearing and not disposition:
+    # A blank/whitespace-only disposition is semantically NO disposition (m7 fail-closed): a
+    # truthy "   " must not satisfy the presence check any more than "" does.
+    if not load_bearing and not (disposition or "").strip():
         checks.append(CheckResult("v_nonlb", False, "marked non-load-bearing WITHOUT a disposition (§0/m7)"))
     elif not load_bearing:
         checks.append(CheckResult("v_nonlb", True, "non-LB with disposition (Phase-2 countersign owed)"))
@@ -476,12 +479,24 @@ def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None
         invalid = [k for k in REQUIRED_CERT_KEYS if _cert_key_invalid(certificate, k)]
         out.append(CheckResult("vi_cert", False, f"certificate has missing/null/empty required provenance key(s) {invalid}; fail-closed BLOCK"))
     else:
+        # (m6) fail-CLOSED cross-link: PASS only when linkage is AFFIRMATIVELY verified — both
+        # ids present AND equal after `_norm`. Any unverifiable state BLOCKs. `cert_video` is
+        # already guaranteed present/non-blank (it passed _cert_key_invalid above), so the only
+        # unverifiable case is an ABSENT/blank artifact video: a certificate naming a DIFFERENT
+        # (or any) extraction while the artifact's own provenance is missing is UNLINKABLE and
+        # must never reconcile clean (the old guard fail-OPENed here — it fired only when BOTH
+        # were present). MEASURED: no honest corpus artifact carries a null/blank video, so this
+        # strict gate forces nothing on honest inputs.
         art_video = artifact.get("video")
         cert_video = certificate.get("video")
-        if art_video is not None and cert_video is not None and _norm(str(art_video)) != _norm(str(cert_video)):
-            out.append(CheckResult("vi_cert", False, f"certificate video {cert_video!r} != artifact video {art_video!r} (m6)"))
-        else:
+        art_norm = _norm(str(art_video)) if art_video is not None else ""
+        cert_norm = _norm(str(cert_video)) if cert_video is not None else ""
+        if art_norm and cert_norm and art_norm == cert_norm:
             out.append(CheckResult("vi_cert", True, "certificate linked to extraction"))
+        elif not art_norm:
+            out.append(CheckResult("vi_cert", False, "artifact video absent/blank — certificate linkage unverifiable; fail-closed BLOCK (m6)"))
+        else:
+            out.append(CheckResult("vi_cert", False, f"certificate video {cert_video!r} != artifact video {art_video!r} (m6)"))
 
         # (v) certificate-drop audit: every certificate condition should map to a spec condition.
         out.extend(_check_no_certificate_drops(spec, certificate))

@@ -391,49 +391,60 @@ def test_r272_full_seven_slot_run_is_blocked_at_placeholder_by_the_two_holes():
 
 
 # =========================================================================== #
-# DETECTOR HOLES found by the R-272 §2 adversarial probes. These TRIPWIRE tests assert the
-# CURRENT (fail-open) behavior and SELF-DESTRUCT when a doer fixes the detector — at which
-# point the m6 / m7 both-forms can be authored and the slot certified. They are DIAGNOSTIC:
-# they document a KNOWN broken state and must NOT be read as endorsing it. Detector untouched.
+# DETECTOR HOLES CLOSED — the two R-272 §2 fail-open holes (m6 null-artifact-video cross-link;
+# m7 whitespace-only disposition) are now FIXED in compile_fidelity.py. The self-destructing
+# TRIPWIRE tests that asserted the KNOWN-BROKEN (fail-open) state have fired and been removed
+# by design; these RED-PROOF regressions replace them and assert the fail-CLOSED contract. Each
+# pairs the hostile input (must now BLOCK) with a DISCRIMINATING honest control (must still PASS)
+# so a reversion to the fail-open guard breaks the test. Detector authored by the doer; battery
+# MutationCases (m6/m7 both-forms) remain the independent grader's to author (doer != grader).
 # =========================================================================== #
-def test_TRIPWIRE_m6_null_artifact_video_fails_open_KNOWN_HOLE():
-    # HOLE (m6 / broken spec<->certificate chain): a certificate naming a DIFFERENT extraction
-    # reconciles CLEAN when the artifact's own `video` is None — the cross-link guard at
-    # compile_fidelity.py:481 (`if art_video is not None and cert_video is not None and ...`)
-    # fail-OPENs on absent artifact provenance, contradicting the §3 fail-closed contract.
+def test_m6_absent_artifact_video_with_mismatched_cert_blocks_vi_cert():
+    # FIX (m6 fail-closed cross-link): a certificate naming a DIFFERENT extraction while the
+    # artifact's own `video` is absent (None) is UNLINKABLE — linkage is not affirmatively
+    # verified, so vi_cert BLOCKs (was fail-OPEN: the old guard fired only when BOTH ids present).
     a = clean_artifact()
     a["video"] = None                                   # artifact provenance absent
     cert = clean_certificate(a["spec"])
     cert["video"] = "SOME_OTHER_VIDEO_9999"             # cert points at a DIFFERENT extraction
     r = _mutant_inputs(a, cert=cert).run()
-    # KNOWN-BROKEN half (self-destructs when the guard is fixed to fail-closed):
-    assert r.verdict == PASS, "TRIPWIRE FIRED: m6 null-video hole appears FIXED — author m6 both-forms and delete this tripwire"
-    assert "vi_cert" not in r.checks_failed
-    # PROOF the guard would catch it if the artifact video were present (both-videos path works):
+    assert r.verdict != PASS
+    assert "vi_cert" in r.checks_failed                 # UNLINKABLE → fail-closed BLOCK
+
+    # the SAME different-cert break is still caught when the artifact video IS present:
     b = clean_artifact()
     cert_b = clean_certificate(b["spec"])
     cert_b["video"] = "SOME_OTHER_VIDEO_9999"
-    rb = _mutant_inputs(b, cert=cert_b).run()
-    assert "vi_cert" in rb.checks_failed                # the SAME break IS caught when video present
+    assert "vi_cert" in _mutant_inputs(b, cert=cert_b).run().checks_failed
+
+    # DISCRIMINATING honest control (no false-BLOCK): both ids present AND matching → vi_cert PASSES,
+    # and the fixture passes Leg A whole. A reversion to the fail-open guard leaves this green but
+    # flips the hostile assertion above red — this control makes the pair discriminating.
+    ok = clean_inputs().run()
+    assert "vi_cert" not in ok.checks_failed
+    assert ok.verdict == PASS
 
 
-def test_TRIPWIRE_m7_whitespace_disposition_fails_open_KNOWN_HOLE():
-    # HOLE (m7 / non-load-bearing WITHOUT a disposition): a WHITESPACE-ONLY non_lb_disposition
-    # ("   ") satisfies the presence check at compile_fidelity.py:326 (`not disposition`, no
-    # .strip()) and PASSES v_nonlb — while an EMPTY string is correctly caught. That asymmetry is
-    # the tell: a blank disposition is semantically "no disposition" yet slips.
+def test_m7_whitespace_disposition_fails_v_nonlb():
+    # FIX (m7): a WHITESPACE-ONLY non_lb_disposition ("   ") is semantically NO disposition — a
+    # non-load-bearing condition carrying it FAILS v_nonlb (was fail-OPEN: "   " was truthy and
+    # PASSED, while "" was caught — the asymmetry is now closed).
     a = clean_artifact()
     a["spec"]["entry_conditions"][0]["load_bearing"] = False
     a["spec"]["entry_conditions"][0]["non_lb_disposition"] = "   "   # blank content
     _rehash(a)
-    r = _mutant_inputs(a).run()
-    # KNOWN-BROKEN half (self-destructs when the disposition read is stripped):
-    assert r.verdict == PASS, "TRIPWIRE FIRED: m7 whitespace-disposition hole appears FIXED — author m7 both-forms and delete this tripwire"
-    assert "v_nonlb" not in r.checks_failed
-    # PROOF of the asymmetry: an EMPTY-STRING disposition on the same condition IS caught:
+    assert "v_nonlb" in _mutant_inputs(a).run().checks_failed
+
+    # empty-string form is (still) caught — the two blank forms now behave identically:
     b = clean_artifact()
     b["spec"]["entry_conditions"][0]["load_bearing"] = False
     b["spec"]["entry_conditions"][0]["non_lb_disposition"] = ""
     _rehash(b)
-    rb = _mutant_inputs(b).run()
-    assert "v_nonlb" in rb.checks_failed
+    assert "v_nonlb" in _mutant_inputs(b).run().checks_failed
+
+    # DISCRIMINATING honest control (no false-BLOCK): a non-LB condition with a REAL disposition
+    # (the clean fixture's ENABLE_ENTRY trigger) PASSES v_nonlb and the fixture passes whole. A
+    # reversion (dropping .strip()) leaves this green but flips the "   " assertion red.
+    ok = clean_inputs().run()
+    assert "v_nonlb" not in ok.checks_failed
+    assert ok.verdict == PASS
