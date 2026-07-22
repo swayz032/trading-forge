@@ -69,6 +69,12 @@ HOUSE_EXIT_SOURCE: str = "framework_overlay_style_c"
 PASS = "PASS"
 BLOCK = "BLOCK"
 
+# (vi) provenance shape-guard: a certificate is provenance, and a leg with zero provenance must
+# NOT certify clean. A certificate must be a dict carrying at minimum the extraction LINK
+# (`video`) and the condition ledger (`conditions`) the (v) drop-audit reconciles against.
+# `{}` and any non-dict are the founding fail-open fixtures — both BLOCK with a named reason.
+REQUIRED_CERT_KEYS: tuple[str, ...] = ("video", "conditions")
+
 # The semantic sub-checks a FRESH READER must countersign in Phase 2 (§1-B Phase 2):
 # (i) typing, (iii) polarity, (v) drops/dispositions incl. §0 non-LB dispositions.
 COUNTERSIGN_ROWS: tuple[str, ...] = ("typing", "polarity", "drops")
@@ -210,7 +216,6 @@ def run_leg_a_phase1(
     artifact: dict,
     *,
     certificate: dict | None = None,
-    binding_plan: BindingPlan | None = None,
 ) -> Phase1Seal:
     """Seal the per-condition compile-fidelity table. Fail-closed: a structural inability to
     run (no artifact, no spec, no conditions, empty binding) is a BLOCK, recorded as a
@@ -229,13 +234,15 @@ def run_leg_a_phase1(
         leg_failures.append(CheckResult("input", False, "spec carries zero taught conditions (fail-closed BLOCK)"))
         return _finish_phase1(str(artifact.get("spec_hash", "")), rows, leg_failures, {"input"})
 
-    # LIVE binding — the authority for (ii). Re-derived, never trusted from the record.
-    if binding_plan is None:
-        try:
-            binding_plan = compile_binding_plan(spec)
-        except Exception as exc:  # noqa: BLE001 — a compiler crash is a fail-closed BLOCK, not a raise
-            leg_failures.append(CheckResult("ii", False, f"binding compile raised: {exc!r} (fail-closed BLOCK)"))
-            return _finish_phase1(str(artifact.get("spec_hash", "")), rows, leg_failures, {"ii"})
+    # LIVE binding — the authority for (ii). ALWAYS re-derived fresh from the live code path,
+    # NEVER accepted from a caller: a caller-injected plan would be an ungated bypass of the
+    # very re-derivation (ii) exists to enforce (R-260 deliverable #3 — the parameter is
+    # removed entirely). A compiler crash is a fail-closed BLOCK, not a raise.
+    try:
+        binding_plan = compile_binding_plan(spec)
+    except Exception as exc:  # noqa: BLE001
+        leg_failures.append(CheckResult("ii", False, f"binding compile raised: {exc!r} (fail-closed BLOCK)"))
+        return _finish_phase1(str(artifact.get("spec_hash", "")), rows, leg_failures, {"ii"})
     bindings = _binding_index(binding_plan)
 
     # (vi) provenance chain — leg level.
@@ -369,19 +376,36 @@ def _is_provenance_only(ctype: str, binding: ConditionBinding | None) -> bool:
     return False
 
 
+def _honest_approximation(binding: ConditionBinding) -> bool:
+    """The (ii) approximation truth, anchored to the ENFORCED HONEST accounting and INDEPENDENT
+    of the production flag (R-260 §1). With TF_FAMILY_META_ENFORCED OFF (the default),
+    `binding.approximation` carries `effective_approximation()` = the LEGACY convenience label —
+    which for ENABLE_ENTRY/ENTER/INVALIDATE is `False` while the honest value is `True` (the
+    FAMILY_META comments call the legacy value a fidelity lie). A gate that guards fidelity must
+    read the honest value, never the router's convenience. The read is flag-independent and
+    does NOT flip any flag. Unknown family (not in FAMILY_META) → fall back to the binding's own
+    flag (the row's (i) check already fails an unrecognized family, so it blocks regardless)."""
+    meta = FAMILY_META.get(binding.type)
+    if meta is None:
+        return bool(binding.approximation)
+    return meta.enforced_honest_approximation()
+
+
 def _check_concretely_bound(cid: str, binding: ConditionBinding | None) -> CheckResult:
     """(ii) categorical: a load-bearing condition PASSES iff it is bindable AND executed AND
-    approximation is False — all re-derived from the live binding. §6a: bindable=False is an
-    UNENFORCED taught condition, a FAIL, never a neutral absence."""
+    its HONEST enforced approximation is False — bindable/executed re-derived from the live
+    binding; approximation anchored to the enforced honest accounting (R-260 §1), never the
+    flag-gated convenience label. §6a: bindable=False is an UNENFORCED taught condition, a FAIL,
+    never a neutral absence."""
     if binding is None:
         return CheckResult("ii", False, f"no live binding for condition {cid!r} (unenforced; §6a)")
     if not binding.bindable:
         return CheckResult("ii", False, f"unbound taught condition ({binding.reason or 'no primitive'}); §6a unenforced")
     if not binding.executed:
         return CheckResult("ii", False, "bound but not executed in production (fidelity gap)")
-    if binding.approximation:
-        return CheckResult("ii", False, f"bound to an approximation (proxy/pass-through): {binding.primitive!r}")
-    return CheckResult("ii", True, f"concretely bound approximation=False -> {binding.primitive!r}")
+    if _honest_approximation(binding):
+        return CheckResult("ii", False, f"bound to an approximation (proxy/pass-through, honest accounting): {binding.primitive!r}")
+    return CheckResult("ii", True, f"concretely bound honest approximation=False -> {binding.primitive!r}")
 
 
 def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None) -> list[CheckResult]:
@@ -399,12 +423,19 @@ def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None
     else:
         out.append(CheckResult("vi", True, f"spec_hash verifies ({stored[:12]})"))
 
-    # (vi.b) certificate supplied and linked to the same extraction. Missing => BLOCK.
+    # (vi.b) certificate supplied, WELL-FORMED, and linked to the same extraction. Missing,
+    # non-dict, or missing a required provenance key => BLOCK (fail-closed; a `{}` / non-dict
+    # certificate is zero provenance and must never certify clean).
     if certificate is None:
         out.append(CheckResult("vi_cert", False, "no certificate supplied (fail-closed BLOCK)"))
+    elif not isinstance(certificate, dict):
+        out.append(CheckResult("vi_cert", False, f"certificate is not a dict (type {type(certificate).__name__}); fail-closed BLOCK"))
+    elif [k for k in REQUIRED_CERT_KEYS if k not in certificate]:
+        missing = [k for k in REQUIRED_CERT_KEYS if k not in certificate]
+        out.append(CheckResult("vi_cert", False, f"certificate missing required provenance key(s) {missing}; fail-closed BLOCK"))
     else:
         art_video = artifact.get("video")
-        cert_video = certificate.get("video") if isinstance(certificate, dict) else None
+        cert_video = certificate.get("video")
         if art_video is not None and cert_video is not None and _norm(str(art_video)) != _norm(str(cert_video)):
             out.append(CheckResult("vi_cert", False, f"certificate video {cert_video!r} != artifact video {art_video!r} (m6)"))
         else:
@@ -479,6 +510,13 @@ def countersign_phase2(seal: Phase1Seal, countersignatures: dict[str, dict] | No
         return Phase2Result(True, True, PASS, ["no rows required countersign"])
     if not countersignatures:
         return Phase2Result(False, False, BLOCK, ["no countersignatures supplied (fail-closed BLOCK)"])
+    if not isinstance(countersignatures, dict):
+        # A malformed (non-dict) countersignatures object is a fail-closed BLOCK, never an
+        # uncaught AttributeError — a crash is not a fail-closed refusal.
+        return Phase2Result(
+            False, False, BLOCK,
+            [f"countersignatures is not a dict (type {type(countersignatures).__name__}); fail-closed BLOCK"],
+        )
 
     complete = True
     clean = True
@@ -512,12 +550,11 @@ def run_leg_a(
     *,
     certificate: dict | None = None,
     countersignatures: dict[str, dict] | None = None,
-    binding_plan: BindingPlan | None = None,
 ) -> LegAResult:
     """Full Leg A: Phase-1 seal, then (only if the automated checks pass) the Phase-2 fresh-
     reader countersign. Categorical PASS iff Phase-1 automated PASS AND Phase-2 countersign
     complete+clean. Fail-closed everywhere else."""
-    seal = run_leg_a_phase1(artifact, certificate=certificate, binding_plan=binding_plan)
+    seal = run_leg_a_phase1(artifact, certificate=certificate)
     checks_failed = set(seal.checks_failed)
 
     if seal.automated_verdict == BLOCK:

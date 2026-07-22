@@ -590,6 +590,20 @@ class FamilyMeta:
             return self.base_approximation
         return self.enforced_approximation
 
+    def enforced_honest_approximation(self) -> bool:
+        """The approximation truth under the ENFORCED honest accounting, FLAG-INDEPENDENT —
+        the value a fidelity measurement must anchor to regardless of production routing. This
+        is the approximation-column parallel of `enforced_declaration()`: the enforced column
+        is readable without the flag being on (that is how the fail-loud checks interrogate it),
+        and with the flag OFF `effective_approximation()` deliberately returns the LEGACY
+        convenience value — some of which the FAMILY_META comments themselves call fidelity
+        lies (`enforced_approximation=True` on ENABLE_ENTRY/ENTER/INVALIDATE). A gate that
+        guards fidelity must never anchor to that convenience label; it anchors HERE (R-260 §1).
+        `enforced_approximation is None` means "the legacy value was already honest"."""
+        if self.enforced_approximation is None:
+            return self.base_approximation
+        return self.enforced_approximation
+
 
 FAMILY_META: dict[str, FamilyMeta] = {
     # ── REACHABLE in the baseline sweep: the declared primitive is the one that runs. The

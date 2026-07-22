@@ -29,8 +29,19 @@ def _rehash(artifact: dict) -> dict:
 
 
 def clean_spec_body() -> dict:
-    """Every condition binds approximation=False (two WAIT_SESSION spine conditions on distinct
-    real killzones, an ENABLE_ENTRY trigger, an INVALIDATE) + a correctly-stamped house exit."""
+    """The honest-good known-good spec: its LOAD-BEARING (ii)-applicable conditions are two
+    WAIT_SESSION spine conditions on distinct real killzones, which are GENUINELY honest-bound
+    (approximation=False under the enforced honest accounting) — the RIGHT reason it passes
+    Leg A(ii), never a convenience label (R-260 §1).
+
+    The ENABLE_ENTRY entry trigger is dispositioned NON-load-bearing: by its family declaration
+    it is `gates=False` — it computes no independent per-bar signal, the trigger IS the
+    conjunction of the spine conditions, each of which is load-bearing and audited under (ii).
+    So it carries no independent binding to audit; the disposition states exactly that. (A
+    LOAD-BEARING ENABLE_ENTRY/ENTER or INVALIDATE now honestly FAILS (ii) — enforced
+    approximation=True — so none may appear load-bearing in a whole-passing fixture; the
+    INVALIDATE-leaning and ENABLE_ENTRY-leaning BLOCK cases are exercised by dedicated
+    red-proofs.)"""
     entry = [
         {
             "id": "WAIT_SESSION:london#0", "type": "WAIT_SESSION",
@@ -46,13 +57,11 @@ def clean_spec_body() -> dict:
             "id": "ENABLE_ENTRY:t#2", "type": "ENABLE_ENTRY", "object": "spine completion",
             "role": "trigger", "span": {"start": 0, "end": 0}, "evidence": "trigger",
             "type_confidence": "confident",
-        },
-    ]
-    inval = [
-        {
-            "id": "INVALIDATE:s#3", "type": "INVALIDATE", "object": "stop below the swing low",
-            "role": "invalidation", "span": {"start": 0, "end": 0}, "evidence": "swing low stop",
-            "type_confidence": "confident",
+            "load_bearing": False,
+            "non_lb_disposition": (
+                "structural entry trigger (role=trigger); gates=False by family — the trigger is "
+                "the spine conjunction, whose members are load-bearing and audited under (ii)"
+            ),
         },
     ]
     return {
@@ -60,7 +69,7 @@ def clean_spec_body() -> dict:
         "entry_conditions": entry,
         "and_groups": [[c["id"] for c in entry]],
         "or_branches": [],
-        "invalidations": inval,
+        "invalidations": [],
         "entry_trigger_id": "ENABLE_ENTRY:t#2",
         "framework_overlay": {"exit": _HOUSE_DEFAULT_EXIT, "exit_source": HOUSE_EXIT_SOURCE},
     }
@@ -126,11 +135,14 @@ def placeholder_cases() -> dict[str, MutationCase]:
     _rehash(a)
     cases["m1"] = MutationCase("m1", PLACEHOLDER_LABEL, "ii", _mutant_inputs(a), is_placeholder=True)
 
-    # m2 — silently-dropped taught condition: drop the INVALIDATE from the spec but keep it in
-    # the certificate → certificate-drop audit (v).
+    # m2 — silently-dropped taught condition: drop a spine condition from the spec but keep it
+    # in the certificate → certificate-drop audit (v). (Was the INVALIDATE, removed from the
+    # honest-good fixture because a load-bearing INVALIDATE now honestly fails (ii); a dropped
+    # spine exercises the same (v) drop-audit.)
     a = clean_artifact()
-    dropped = a["spec"]["invalidations"][0]
-    a["spec"]["invalidations"] = []
+    dropped = a["spec"]["entry_conditions"][1]  # the am-session spine
+    a["spec"]["entry_conditions"] = [c for c in a["spec"]["entry_conditions"] if c["id"] != dropped["id"]]
+    a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
     _rehash(a)
     cert = clean_certificate(a["spec"])
     cert["conditions"].append({"quote_anchor": dropped["object"], "char_span": [0, 0]})
