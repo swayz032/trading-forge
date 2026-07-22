@@ -28,6 +28,7 @@ import { exchangeCodeForToken, fetchDiscordUser } from "../../lib/slumhouse/disc
 import { signSession, verifySession, COOKIE_NAME } from "../../lib/slumhouse/session.js";
 import { logger } from "../../lib/logger.js";
 import { insertAuditRowSafe } from "../../lib/audit-log-helper.js";
+import { readSlumhouseCookie } from "../../lib/slumhouse/cookie.js";
 
 const SESSION_TTL_SEC = 60 * 60 * 24 * 14; // 14 days
 
@@ -168,14 +169,13 @@ export function handleLogout(_req: Request, res: Response): void {
  * shell renders before the API auth check fires.
  */
 export function handleLaunch(req: Request, res: Response): void {
-  const raw = req.headers.cookie ?? "";
-  const match = raw.match(/(?:^|;\s*)slumhouse_sid=([^;]+)/);
-  if (!match) {
+  const token = readSlumhouseCookie(req.headers.cookie, COOKIE_NAME);
+  if (!token) {
     res.redirect(302, "/slumhouse/login.html");
     return;
   }
   try {
-    const verified = verifySession(decodeURIComponent(match[1]));
+    const verified = verifySession(token);
     if (verified?.ok && verified.discordUserId) {
       res.redirect(302, "/slumhouse/crib.html");
       return;

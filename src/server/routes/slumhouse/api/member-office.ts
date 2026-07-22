@@ -44,6 +44,7 @@ import {
   verifyPinTicket,
 } from "../../../lib/slumhouse/pin-ticket.js";
 import { insertAuditRowSafe } from "../../../lib/audit-log-helper.js";
+import { readSlumhouseCookie } from "../../../lib/slumhouse/cookie.js";
 
 export const memberOfficeRouter = Router();
 
@@ -53,9 +54,9 @@ function roleOf(req: SlumhouseRequest): "operator" | "member" {
 }
 
 function readCookie(req: SlumhouseRequest, name: string): string | null {
-  const header = req.headers.cookie ?? "";
-  const m = header.match(new RegExp(`(?:^|;\\s*)${name}=([^;]+)`));
-  return m ? decodeURIComponent(m[1]) : null;
+  // Duplicate-aware, fail-closed parse (see lib/slumhouse/cookie.ts). A forged
+  // duplicate placed first must not beat the legitimate PIN ticket.
+  return readSlumhouseCookie(req.headers.cookie, name);
 }
 
 /**

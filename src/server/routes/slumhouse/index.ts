@@ -27,6 +27,7 @@ import { carterSessionRouter } from "./api/carter-session.js";
 import { carterInboxRouter } from "./api/carter-inbox.js";
 import { memberOfficeRouter } from "./api/member-office.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
+import { readSlumhouseCookie } from "../../lib/slumhouse/cookie.js";
 
 export const slumhouseRouter = Router();
 
@@ -59,14 +60,13 @@ export function handleSlumhouseFallback(req: Request, res: Response, next: NextF
     return;
   }
 
-  const raw = req.headers.cookie ?? "";
-  const match = raw.match(/(?:^|;\s*)slumhouse_sid=([^;]+)/);
-  if (!match) {
+  const token = readSlumhouseCookie(req.headers.cookie, "slumhouse_sid");
+  if (!token) {
     res.redirect(302, "/slumhouse/login.html");
     return;
   }
   try {
-    const verified = verifySession(decodeURIComponent(match[1]));
+    const verified = verifySession(token);
     if (verified?.ok && verified.discordUserId) {
       res.redirect(302, "/slumhouse/crib.html");
       return;
@@ -94,14 +94,13 @@ slumhouseRouter.get([
   "/slumhouse/recipe.html",
   "/slumhouse/",
 ], (req, res, next) => {
-  const raw = req.headers.cookie ?? "";
-  const match = raw.match(/(?:^|;\s*)slumhouse_sid=([^;]+)/);
-  if (!match) {
+  const token = readSlumhouseCookie(req.headers.cookie, "slumhouse_sid");
+  if (!token) {
     res.redirect(302, "/slumhouse/login.html");
     return;
   }
   try {
-    const verified = verifySession(decodeURIComponent(match[1]));
+    const verified = verifySession(token);
     if (!verified?.ok || !verified.discordUserId) {
       res.redirect(302, "/slumhouse/login.html");
       return;
