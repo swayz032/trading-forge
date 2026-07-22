@@ -431,19 +431,37 @@ def test_r273_m6_both_forms_certify_the_slot():
 def test_r273_m7_zero_width_disposition_now_fails_v_nonlb_categorically():
     # RED-PROOF REGRESSION (was the self-destructing R-273 residual-hole TRIPWIRE; the second doer
     # loop closed the hole, so the tripwire fired and is REPLACED by this fail-CLOSED contract).
-    # The m7 fix is CATEGORICAL -- not str.strip() (which removes only isspace() chars and let
-    # zero-width / format code points survive as truthy content) but a VISIBLE-CONTENT predicate
-    # (_has_visible_content): a non_lb_disposition made ONLY of zero-width / Unicode-format /
-    # default-ignorable characters is semantically empty AND invisible to BOTH the automated check
-    # and the Phase-2 fresh reader, so it must FAIL v_nonlb exactly like "" / "   " do. Proven NOT
-    # by a 5-char deny-list but by Unicode category: the 5 originally-catalogued chars PLUS 3 that
-    # were NEVER in that list (U+00AD soft hyphen, U+2061 function-application, U+180E) all BLOCK --
-    # a deny-list would have re-opened on these.
+    # The m7 fix is DEFINITIONAL -- not str.strip() (removes only isspace()), not a char deny-list
+    # (re-opens on the next invisible codepoint), but a VISIBLE-CONTENT predicate
+    # (_has_visible_content) requiring >=1 char that is isprintable(), non-space, NOT
+    # `Default_Ignorable_Code_Point`, and not a lone combining/enclosing mark. A non_lb_disposition
+    # made ONLY of invisible characters is semantically empty AND invisible to BOTH the automated
+    # check and the Phase-2 fresh reader, so it must FAIL v_nonlb exactly like "" / "   " do.
+    # Proven across THREE tiers so the close is by PROPERTY, not enumeration:
+    #   (a) the 5 originally-catalogued zero-width/format chars (str.isprintable() already False);
+    #   (b) 3 format chars NEVER in that list (U+00AD soft hyphen, U+2061 function-application,
+    #       U+180E) -- a 5-char deny-list would have re-opened on these;
+    #   (c) the R-275 RESIDUAL class -- variation selectors + Hangul fillers that str.isprintable()
+    #       reports TRUE (see the `residual` list below), incl. >=2 codepoints the fix does NOT
+    #       special-case. This is the exact "re-opens on the next invisible one" failure, now shut.
     known = ["​", "‌", "‍", "﻿", "⁠"]
     beyond = ["­", "⁡", "᠎"]  # NOT in the catalogued 5 -> a blacklist would miss them
-    for zw in known + beyond:
+    # (c) R-275 RESIDUAL class — str.isprintable() reports TRUE for these (category Mn variation
+    # selectors / category Lo Hangul fillers), so the OLD isprintable-only predicate FAIL-OPENED on
+    # them. They block now because they carry Default_Ignorable_Code_Point, NOT because they are
+    # named. Built by codepoint (never invisible source literals). Includes >=2 codepoints the fix
+    # does NOT special-case: U+E0100 (variation-selector-supplement), U+1160 (Hangul jungseong
+    # filler), U+2064 (invisible plus).
+    residual = [
+        chr(0xFE00), chr(0xFE0F),          # VARIATION SELECTOR-1 / -16 (Mn) — named residuals
+        chr(0x115F), chr(0x3164),          # HANGUL CHOSEONG / HANGUL FILLER (Lo) — named residuals
+        chr(0xE0100), chr(0x1160), chr(0x2064),  # NOT special-cased -> definitional close proves it
+    ]
+    # LONE combining/enclosing marks render nothing on their own -> also absent (Mn/Me clause):
+    lone_marks = [chr(0x0301), chr(0x20DD)]  # COMBINING ACUTE (cc=230) / ENCLOSING CIRCLE (Me, cc=0)
+    for zw in known + beyond + residual + lone_marks:
         r = m7_zero_width_disposition_inputs(zw).run()
-        assert r.verdict != PASS, f"m7 zero-width hole RE-OPENED for {zw!r} (U+{ord(zw):04X})"
+        assert r.verdict != PASS, f"m7 invisible hole RE-OPENED for {zw!r} (U+{ord(zw):04X})"
         assert "v_nonlb" in r.checks_failed, repr(zw)
     # DISCRIMINATION (no false-BLOCK, no over-block): ordinary Unicode WHITESPACE is (still) caught,
     # and -- crucially -- a REAL visible disposition on a non-LB condition still PASSes v_nonlb, so
@@ -459,6 +477,13 @@ def test_r273_m7_zero_width_disposition_now_fails_v_nonlb_categorically():
     real["spec"]["entry_conditions"][0]["non_lb_disposition"] = "phase-2 countersign owed"
     _rehash(real)
     assert "v_nonlb" not in _mutant_inputs(real).run().checks_failed  # real disposition NOT blocked
+    # A base letter carrying a COMBINING accent is legitimate visible content (the base 'e' is ink);
+    # the predicate must NOT over-reject a valid base+mark sequence (only a LONE mark is absent).
+    accented = clean_artifact()
+    accented["spec"]["entry_conditions"][0]["load_bearing"] = False
+    accented["spec"]["entry_conditions"][0]["non_lb_disposition"] = "caf" + "e" + chr(0x0301) + " owed"
+    _rehash(accented)
+    assert "v_nonlb" not in _mutant_inputs(accented).run().checks_failed  # base+combining PASSES
 
 
 def test_r273_final_wave_is_blocked_at_placeholder_by_the_unauthored_m7_slot():
@@ -559,6 +584,17 @@ def test_m7_whitespace_disposition_fails_v_nonlb():
 # =========================================================================== #
 # 5 originally-catalogued zero-width chars + 3 NOT in that list (a deny-list would miss the tail).
 _FORMAT_CHARS = ["​", "‌", "‍", "﻿", "⁠", "­", "⁡", "᠎"]
+
+
+# R-275 RESIDUAL class appended (str.isprintable() reports TRUE for these): variation selectors
+# (category Mn) + Hangul fillers (category Lo). Built by codepoint (no invisible source literals),
+# and INCLUDES >=2 codepoints the fix does NOT special-case (U+E0100 variation-selector-supplement,
+# U+1160 Hangul jungseong filler, U+2064 invisible plus). Appended to _FORMAT_CHARS so ALL FOUR
+# sweep red-proofs below drive the whole invisible class -- Cf/Cc catalogued tail AND the residuals
+# -- through the SAME categorical predicate, proving the close is definitional, not enumerated.
+_FORMAT_CHARS = _FORMAT_CHARS + [
+    chr(0xFE00), chr(0xFE0F), chr(0x115F), chr(0x3164), chr(0xE0100), chr(0x1160), chr(0x2064),
+]
 
 
 def test_sweep_cert_video_invisible_link_blocks_vi_cert():
