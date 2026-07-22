@@ -408,6 +408,32 @@ def _check_concretely_bound(cid: str, binding: ConditionBinding | None) -> Check
     return CheckResult("ii", True, f"concretely bound honest approximation=False -> {binding.primitive!r}")
 
 
+def _cert_key_invalid(cert: dict, key: str) -> bool:
+    """A required provenance key is INVALID — as absent as missing — when it is missing, None,
+    an empty/whitespace string, or an empty/anchorless collection. Key PRESENCE is not enough:
+    a present-but-null key carries zero provenance and must never certify clean (the residual
+    behind the original F-2's fail-open class). Validity per key:
+      - `video`      : a non-empty (non-whitespace) extraction link.
+      - `conditions` : a NON-EMPTY list carrying at least one dict with a non-empty
+                       `quote_anchor` — the field the (v) drop-audit reconciles against. None,
+                       [], a non-list, or an all-anchorless list is a zero-provenance ledger.
+    (Choice stated: `conditions` validity keys on `quote_anchor` presence because that anchor
+    is the ONLY provenance the drop-audit can reconcile a spec condition against; a ledger with
+    no reconcilable anchor is provenance in name only.)"""
+    if key not in cert:
+        return True
+    val = cert[key]
+    if val is None:
+        return True
+    if key == "video":
+        return not str(val).strip()
+    if key == "conditions":
+        if not isinstance(val, list) or not val:
+            return True
+        return not any(isinstance(c, dict) and str(c.get("quote_anchor", "")).strip() for c in val)
+    return False
+
+
 def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None) -> list[CheckResult]:
     """(vi) spec_hash ↔ certificate ↔ extraction, plus (iv) house-default exit stamp and (v)
     certificate-drop audit — the leg-level checks."""
@@ -423,16 +449,17 @@ def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None
     else:
         out.append(CheckResult("vi", True, f"spec_hash verifies ({stored[:12]})"))
 
-    # (vi.b) certificate supplied, WELL-FORMED, and linked to the same extraction. Missing,
-    # non-dict, or missing a required provenance key => BLOCK (fail-closed; a `{}` / non-dict
+    # (vi.b) certificate supplied, WELL-FORMED (present AND valid — not merely a key with a
+    # null/empty value), and linked to the same extraction. Missing, non-dict, or any required
+    # provenance key missing-OR-null => BLOCK (fail-closed; a `{}`, non-dict, or null-valued
     # certificate is zero provenance and must never certify clean).
     if certificate is None:
         out.append(CheckResult("vi_cert", False, "no certificate supplied (fail-closed BLOCK)"))
     elif not isinstance(certificate, dict):
         out.append(CheckResult("vi_cert", False, f"certificate is not a dict (type {type(certificate).__name__}); fail-closed BLOCK"))
-    elif [k for k in REQUIRED_CERT_KEYS if k not in certificate]:
-        missing = [k for k in REQUIRED_CERT_KEYS if k not in certificate]
-        out.append(CheckResult("vi_cert", False, f"certificate missing required provenance key(s) {missing}; fail-closed BLOCK"))
+    elif [k for k in REQUIRED_CERT_KEYS if _cert_key_invalid(certificate, k)]:
+        invalid = [k for k in REQUIRED_CERT_KEYS if _cert_key_invalid(certificate, k)]
+        out.append(CheckResult("vi_cert", False, f"certificate has missing/null/empty required provenance key(s) {invalid}; fail-closed BLOCK"))
     else:
         art_video = artifact.get("video")
         cert_video = certificate.get("video")

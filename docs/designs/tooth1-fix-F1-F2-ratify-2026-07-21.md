@@ -118,3 +118,33 @@ the four `compile_fidelity.py` edits, the fixture rebuild, and the new tests com
 together. No flag, no migration, no live default, no frozen hash. The `binding_plan` removal
 restores trivially (re-add the kwarg). Nothing downstream depends on the changed code (inert
 detector).
+
+---
+
+## AMENDMENT A1 — F-2 validity residual (post-re-grade, 2026-07-21)
+
+The same independent grader re-attacked the fixed surface (a fix is a new surface) and found a
+narrower instance of the original F-2 fail-open class: the certificate shape-guard checked key
+**presence** (`k not in certificate`), not key **validity**. A certificate carrying both
+required keys **present but null/empty** slipped through to a clean pass:
+`{'video':None,'conditions':None}` → PASS, `{'video':None,'conditions':[]}` → PASS
+(reproduced end-to-end: a null-provenance certificate certified a `ROBUST-SURVIVOR` clean pass).
+Mechanism: the presence list was empty for present-but-null keys, and the mismatch guard
+`cert_video is not None` then never fired.
+
+**Fix (scoped, additive/predicate-strengthening):** the guard now checks VALIDITY via
+`_cert_key_invalid()` — a required key that is missing, `None`, empty/whitespace string, or an
+empty/anchorless collection is as absent as a missing key → BLOCK with the named `vi_cert`
+reason. **Valid-`conditions` choice (stated per the ambiguity call):** a NON-EMPTY list carrying
+at least one dict with a non-empty `quote_anchor` — because `quote_anchor` is the only
+provenance the (v) drop-audit can reconcile a spec condition against; a ledger with no
+reconcilable anchor is provenance in name only.
+
+**No regression:** `{}`, non-dict, and missing-key still BLOCK; F-1, the bypass removal, and the
+honest-good fixture's real certificate (populated video + anchor-bearing conditions) still PASS
+for the right reason. **Blast radius (R-261 mint):** corpus re-run unchanged — 18/18 BLOCK, 0
+pass Leg A(ii), 183 ii-fail rows (identical to the pre-amendment fix; the change touches only
+certificate validation, no `approximation` accounting), 0 verdict flips, no published number
+moved. Registered as revival probes (`test_f2_null_valued_certificate_keys_block`,
+`test_f2_honest_good_certificate_passes_for_the_right_reason`). Does NOT self-certify — the same
+grader re-attacks after.

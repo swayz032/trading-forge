@@ -255,6 +255,42 @@ def test_f2_certificate_missing_required_key_blocks():
     assert "vi_cert" in seal.checks_failed
 
 
+def test_f2_null_valued_certificate_keys_block():
+    """Re-grade residual (a fix is a new surface): a certificate whose required keys are PRESENT
+    but null/empty carries zero provenance and must BLOCK — key presence is not validity. Under
+    the presence-only guard `{'video':None,'conditions':None}` slipped through to a clean pass."""
+    art = clean_artifact()
+    vid = art["video"]
+    residuals = [
+        {"video": None, "conditions": None},
+        {"video": None, "conditions": []},
+        {"video": vid, "conditions": None},
+        {"video": vid, "conditions": []},
+        {"video": vid, "conditions": [{"char_span": [0, 0]}]},  # anchorless ledger
+        {"video": "   ", "conditions": [{"quote_anchor": "x"}]},  # whitespace-only link
+    ]
+    for cert in residuals:
+        seal = run_leg_a_phase1(art, certificate=cert)
+        assert seal.automated_verdict == BLOCK, cert
+        assert "vi_cert" in seal.checks_failed, cert
+    # end-to-end: the null-provenance certificate must NOT certify a clean ROBUST-SURVIVOR pass
+    full = run_leg_a(art, certificate={"video": None, "conditions": None},
+                     countersignatures=clean_countersignatures(art))
+    assert full.verdict == BLOCK
+
+
+def test_f2_honest_good_certificate_passes_for_the_right_reason():
+    """Anti-vacuity for the validity guard: the honest-good fixture's REAL certificate PASSes
+    (vi_cert) precisely because its video AND conditions are genuinely populated (a non-empty
+    ledger of anchor-bearing conditions) — not a present-but-null shell."""
+    art = clean_artifact()
+    cert = clean_certificate(art["spec"])
+    assert cert["video"] and cert["conditions"] and all(c.get("quote_anchor") for c in cert["conditions"])
+    seal = run_leg_a_phase1(art, certificate=cert)
+    assert seal.automated_verdict == PASS, sorted(seal.checks_failed)
+    assert "vi_cert" not in seal.checks_failed
+
+
 def test_f2b_nondict_countersignatures_is_graceful_block_not_crash():
     """A malformed (non-dict) countersignatures object must fail-closed BLOCK, never raise an
     uncaught AttributeError (a crash is not a fail-closed refusal)."""
