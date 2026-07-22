@@ -368,3 +368,62 @@ def robust_six_real_cases() -> dict[str, MutationCase]:
         "m5": MutationCase("m5", "m5-house-exit-unstamped", "iv",
                            m5_unstamped_exit_inputs(), is_placeholder=False, companion=clean_inputs()),
     }
+
+
+# --------------------------------------------------------------------------- #
+# R-273 — m6 BOTH-FORMS (the m6 fail-closed cross-link fix is now SOLID; grader re-attack found
+# NO residual). Two REAL cases, each BLOCKing 'vi_cert', each with a companion that PASSes it.
+# Form B (unlinkable) is the FOUNDING INSTANCE of the hole this grader originally found — the
+# battery grows the sub-case that defeated it (R-267 §1).
+#
+# NOTE: m7 is NOT authored here. The grader's re-attack found a RESIDUAL fail-open in the m7 fix:
+# a zero-width / Unicode-format-character disposition (U+200B ZWSP, U+200C, U+200D, U+FEFF,
+# U+2060) is `isspace()==False`, survives `str.strip()`, and still PASSes v_nonlb — a
+# semantically-empty disposition invisible to BOTH the automated check and the Phase-2 fresh
+# reader. Per doer != grader the fix is a doer's next loop; m7 stays withheld (see the residual
+# tripwire in test_calibration_battery_framework.py).
+# --------------------------------------------------------------------------- #
+def m6_video_mismatch_inputs() -> LegAInputs:
+    """m6 form A (naive broken chain): the certificate names a DIFFERENT extraction than the
+    artifact (both video ids present, mismatched after `_norm`) → cross-link BLOCK on 'vi_cert'."""
+    a = clean_artifact()
+    cert = clean_certificate(a["spec"])
+    cert["video"] = "SOME_OTHER_VIDEO_9999"
+    return _mutant_inputs(a, cert=cert)
+
+
+def m6_unlinkable_null_video_inputs() -> LegAInputs:
+    """m6 form B (unlinkable — the FOUNDING INSTANCE of the original fail-open): the artifact's own
+    `video` is absent (None) while the certificate names an extraction. Linkage cannot be
+    affirmatively verified → fail-CLOSED BLOCK on 'vi_cert' (the pre-fix guard fired only when
+    BOTH ids were present, so this slipped clean)."""
+    a = clean_artifact()
+    a["video"] = None
+    cert = clean_certificate(a["spec"])
+    cert["video"] = "SOME_OTHER_VIDEO_9999"
+    return _mutant_inputs(a, cert=cert)
+
+
+def m6_both_forms_cases() -> list[MutationCase]:
+    """The two REAL m6 cases as a LIST for the m6 slot — naive mismatch + unlinkable-null-video,
+    each targeting 'vi_cert', each distinguished by the clean matching-video companion (which the
+    cross-link REACHES and verifies equal → PASSES 'vi_cert', non-vacuous)."""
+    return [
+        MutationCase("m6", "m6-cert-names-different-extraction", "vi_cert",
+                     m6_video_mismatch_inputs(), is_placeholder=False, companion=clean_inputs()),
+        MutationCase("m6", "m6-unlinkable-null-artifact-video", "vi_cert",
+                     m6_unlinkable_null_video_inputs(), is_placeholder=False, companion=clean_inputs()),
+    ]
+
+
+def m7_zero_width_disposition_inputs(zw_char: str = "​") -> LegAInputs:
+    """m7 RESIDUAL sub-case: a non-load-bearing condition whose non_lb_disposition is a single
+    zero-width / Unicode-format character (default U+200B ZWSP). It is semantically empty yet
+    `str.strip()` does not remove it, so the fixed detector STILL PASSes v_nonlb — the residual
+    fail-open. Held here for the tripwire; NOT a certified case (the detector must convict it
+    first)."""
+    a = clean_artifact()
+    a["spec"]["entry_conditions"][0]["load_bearing"] = False
+    a["spec"]["entry_conditions"][0]["non_lb_disposition"] = zw_char
+    _rehash(a)
+    return _mutant_inputs(a)

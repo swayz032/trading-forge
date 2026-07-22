@@ -30,6 +30,10 @@ from src.engine.tests._forensics_fixtures import (
     m2_naive_drop_inputs,
     m4_false_flag_inputs,
     m4_matching_label_companion,
+    m6_both_forms_cases,
+    m6_unlinkable_null_video_inputs,
+    m6_video_mismatch_inputs,
+    m7_zero_width_disposition_inputs,
     placeholder_cases,
     robust_six_real_cases,
     shared_anchor_legit_companion,
@@ -339,8 +343,8 @@ def test_probe_status_order_incomplete_dominates_failed():
 # =========================================================================== #
 # R-272 SIX-SLOT WAVE — REAL grader-authored cases for the four slots whose class survived
 # an adversarial evasion probe (m1, m3, m4, m5). Each convicts on its targeted check and is
-# distinguished by its own anti-vacuity companion. m6 and m7 are WITHHELD — their adversarial
-# sub-cases DEFEATED the detector (see the TRIPWIRE tests below), so CALIBRATED is not reached.
+# distinguished by its own anti-vacuity companion. (m6/m7 were withheld in R-272 as detector
+# holes; R-273 below certifies m6 after the fix and keeps m7 withheld on a residual hole.)
 # =========================================================================== #
 def test_r272_four_robust_slots_each_convict_and_distinguish():
     reals = robust_six_real_cases()
@@ -372,11 +376,10 @@ def test_r272_m4_companion_reaches_the_false_flag_row_non_vacuously():
     assert comp.verdict == PASS  # whole-clean known-good, the row evaluated to a MATCH
 
 
-def test_r272_full_seven_slot_run_is_blocked_at_placeholder_by_the_two_holes():
-    # THE WAVE RESULT: m2 both-forms + the four robust reals are certified, but m6 and m7 remain
-    # PLACEHOLDERS (detector holes withhold their pass). Census: 5 real slots, 2 placeholder →
-    # overall status stays HARNESS_DEMONSTRATED_ON_PLACEHOLDERS, NOT CALIBRATED. This is the
-    # machine-checked proof that the wave does not reach STATUS_CALIBRATED.
+def test_r272_five_real_slots_config_stays_placeholder():
+    # HISTORICAL R-272 configuration: with only m1..m5 real and m6/m7 placeholder, the battery
+    # stays HARNESS_DEMONSTRATED_ON_PLACEHOLDERS. (R-273 then certified m6; m7 remains blocked by a
+    # residual hole — see test_r273_final_wave_is_blocked_at_placeholder_by_the_m7_residual.)
     slots = dict(placeholder_cases())      # m6, m7 stay placeholders
     slots.update(robust_six_real_cases())  # m1, m3, m4, m5 real
     slots["m2"] = m2_both_forms_cases()    # m2 real (both forms)
@@ -386,6 +389,78 @@ def test_r272_full_seven_slot_run_is_blocked_at_placeholder_by_the_two_holes():
     ph_slots = {sid for sid, sr in result.slot_results.items() if sr.is_placeholder}
     assert real_slots == {"m1", "m2", "m3", "m4", "m5"}
     assert ph_slots == {"m6", "m7"}
+    assert result.status == STATUS_PLACEHOLDER, result.reasons
+    assert result.status != STATUS_CALIBRATED
+
+
+# =========================================================================== #
+# R-273 — the m6/m7 fail-open holes were FIXED by an independent doer. Grader re-attack:
+#   m6 cross-link fix is SOLID (every unlinkable/broken-chain state BLOCKs; only genuine same-id
+#      matches under _norm PASS) → m6 CERTIFIED with both-forms.
+#   m7 disposition fix is PARTIAL — a residual fail-open remains (zero-width/format chars) → m7
+#      WITHHELD; the residual is the next doer loop.
+# =========================================================================== #
+def test_r273_m6_both_forms_certify_the_slot():
+    # m6 slot carries TWO real cases (naive mismatch + unlinkable-null-video, the founding
+    # instance of the original hole); both BLOCK on 'vi_cert'; each is distinguished by the clean
+    # matching-video companion. The slot is OK and non-placeholder.
+    assert "vi_cert" in m6_video_mismatch_inputs().run().checks_failed
+    assert "vi_cert" in m6_unlinkable_null_video_inputs().run().checks_failed
+
+    slots = dict(placeholder_cases())
+    slots.update(robust_six_real_cases())
+    slots["m2"] = m2_both_forms_cases()
+    slots["m6"] = m6_both_forms_cases()
+    result = run_calibration(clean_inputs(), slots)
+    sr = result.slot_results["m6"]
+    assert sr.ok, sr.detail
+    assert len(sr.cases) == 2
+    assert not sr.is_placeholder
+    assert [c.convicted for c in sr.cases] == [True, True]
+    assert [c.distinguishes for c in sr.cases] == [True, True]
+    assert {c.label for c in sr.cases} == {
+        "m6-cert-names-different-extraction", "m6-unlinkable-null-artifact-video"}
+
+
+def test_r273_m7_zero_width_disposition_is_a_RESIDUAL_HOLE_tripwire():
+    # RESIDUAL DETECTOR HOLE (grader re-attack of the m7 fix). The doer's fix `not (disposition or
+    # "").strip()` (compile_fidelity.py:329) closes ASCII/Unicode-whitespace dispositions, but
+    # `str.strip()` only removes chars with isspace()==True. Zero-width / Unicode-format characters
+    # (U+200B ZWSP, U+200C, U+200D, U+FEFF, U+2060) are NOT whitespace, survive strip, and a
+    # non_lb_disposition made of one of them — semantically empty, invisible to BOTH the automated
+    # check AND the Phase-2 fresh reader — STILL PASSes v_nonlb. This TRIPWIRE asserts the current
+    # (fail-open) behavior and SELF-DESTRUCTS when a doer closes it (e.g. reject the whole Unicode
+    # default-ignorable/format class, or require >=1 visible character). Then author m7 both-forms.
+    for zw in ["​", "‌", "‍", "﻿", "⁠"]:
+        r = m7_zero_width_disposition_inputs(zw).run()
+        assert r.verdict == PASS, f"TRIPWIRE FIRED: m7 zero-width hole for {zw!r} appears FIXED — author m7 both-forms and delete this tripwire"
+        assert "v_nonlb" not in r.checks_failed, repr(zw)
+    # DISCRIMINATION: ordinary Unicode WHITESPACE (isspace True) IS caught by the fix — proving the
+    # residual is specifically the zero-width/format class, not a regression of the doer's fix.
+    for ws in [" ", "　", " ", "   "]:
+        a = clean_artifact()
+        a["spec"]["entry_conditions"][0]["load_bearing"] = False
+        a["spec"]["entry_conditions"][0]["non_lb_disposition"] = ws
+        _rehash(a)
+        assert "v_nonlb" in _mutant_inputs(a).run().checks_failed, repr(ws)
+
+
+def test_r273_final_wave_is_blocked_at_placeholder_by_the_m7_residual():
+    # THE R-273 WAVE RESULT: m2 both-forms + m1/m3/m4/m5 robust + m6 both-forms are all CERTIFIED
+    # (6 real slots), but m7 stays a PLACEHOLDER because its residual zero-width hole is unclosed.
+    # Overall status therefore stays HARNESS_DEMONSTRATED_ON_PLACEHOLDERS — STATUS_CALIBRATED is
+    # NOT reached, blocked solely by m7. (When the m7 residual is fixed and m7 both-forms authored,
+    # this test updates to assert STATUS_CALIBRATED.)
+    slots = dict(placeholder_cases())      # m7 stays placeholder
+    slots.update(robust_six_real_cases())  # m1, m3, m4, m5 real
+    slots["m2"] = m2_both_forms_cases()    # m2 real
+    slots["m6"] = m6_both_forms_cases()    # m6 real (R-273)
+    result = run_calibration(clean_inputs(), slots)
+
+    real_slots = {sid for sid, sr in result.slot_results.items() if sr.filled and not sr.is_placeholder}
+    ph_slots = {sid for sid, sr in result.slot_results.items() if sr.is_placeholder}
+    assert real_slots == {"m1", "m2", "m3", "m4", "m5", "m6"}
+    assert ph_slots == {"m7"}
     assert result.status == STATUS_PLACEHOLDER, result.reasons
     assert result.status != STATUS_CALIBRATED
 
