@@ -712,6 +712,13 @@ def _check_no_certificate_drops(spec: dict, certificate: dict) -> list[CheckResu
     matched = _max_bipartite_matching(edges, len(taught))
     n_cert, n_taught = len(cert_anchors), len(taught)
 
+    # R-282 COUPLING INVARIANT: this 1:1 distinctness (matched == n_taught) is JOINTLY
+    # LOAD-BEARING with spec_producer._anchor_grounds' token-boundary stamp. The producer
+    # can still stamp a spurious cross-edge, but only onto an already-object-matched
+    # condition; a genuinely dropped condition gets zero edges and it is THIS distinctness
+    # that convicts it. Weaken this back toward a flattened-pool membership test and the
+    # producer stamp launders a drop again even with the token-boundary upstream — do not
+    # relax either half without re-hardening the other.
     if n_cert != n_taught:
         out.append(CheckResult("v", False, f"certificate cardinality {n_cert} != taught-condition count {n_taught}; provenance ledger is not 1:1 (m2)"))
     if matched < n_cert:

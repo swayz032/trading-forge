@@ -442,7 +442,14 @@ def _cert_span_for(text: str, cert: Optional[dict]) -> Tuple[Dict[str, int], str
     """Best-effort join of a staging condition to the certificate's own
     quote_anchor/char_span (the provenance link). An unmatched condition gets
     span {0,0} + its own prose as evidence -- honest, never fabricated. The join is
-    WHOLE-TOKEN-boundary + minimum-anchor-tokens (see `_anchor_grounds`): a bare
+    WHOLE-TOKEN-boundary + minimum-anchor-tokens (see `_anchor_grounds`; R-282 COUPLING
+    INVARIANT — this producer-side token-boundary is JOINTLY LOAD-BEARING with
+    compile_fidelity's (v) 1:1 bijection distinctness: the whole-token wrong-slot launder
+    is closed only by BOTH. This stamp can still create a spurious cross-edge, but only
+    onto an already-object-matched condition; it is the bijection's distinctness
+    (`matched == n_taught`) that convicts a genuinely dropped condition. Weaken (v) back
+    toward a flattened-pool membership test and this stamp launders AGAIN even with the
+    token-boundary here — do not relax either half without re-hardening the other): a bare
     coincidental substring must NOT ground, because the stamped `evidence` is consumed
     by the (v) drop-audit's 1:1 bijection (a wrong stamp would launder a silent drop)."""
     if isinstance(cert, dict):
