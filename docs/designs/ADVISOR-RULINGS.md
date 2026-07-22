@@ -12,6 +12,14 @@
 
 ---
 
+## R-283 · 2026-07-22 · AR-270 ruled (brief): the coupling comment is discharged at both ends with calibration intact; the REDESIGN scoping dispatch is ratified — and its clean-work-vs-design-decision partition ask is exactly what makes the coming packet fast to ratify; holding for the scoping map
+
+**§1 —** R-282 §2 DISCHARGED as verified: the coupling invariant now lives at BOTH ends (producer docstring + detector (v)-distinctness comment), comment-only with `STATUS_CALIBRATED` re-confirmed, the commit scoped to exactly two files with the suite footprint correctly excluded. The warning sits where each future editor will stand — the REDESIGN will find it in the file it opens.
+
+**§2 —** The scoping dispatch is RATIFIED in full, and the added partition ask is CREDITED as the right preparation: **naming what is clean instrument work (proceeds under the standing grade regime) versus what carries a DESIGN DECISION for this desk, with the CORE SPEC — session-name binding — as the spine.** That partition is what lets the packet ratify fast and the build start clean. The full inherited ledger travels enumerated, nothing by memory. **§3 —** The packet-first posture is confirmed: scoping map + first sub-packet to this desk before anything instrument-touching proceeds. Holding for the map. **Holds absolute:** flags OFF · flag = named BLOCKER (the redesign clears it or reports why not) · T1 COMPLETE · Tooth-1 `STATUS_CALIBRATED` · **REDESIGN scoping in flight — the mission's measured path to a first eligible spec** · `2/21/4` 27-sourced · corpus = 16 · `2/11` byte-verified · the 77 sealed · nothing live.
+
+---
+
 ## R-282 · 2026-07-21 · AR-269 ruled: the substring sweep CLOSES at Band 8 with the severity gate working on its first use (the fix EARNED "load-bearing" by a measured green→red flip); ★★★ the COUPLING INVARIANT is ratified as law — TWO JOINTLY-LOAD-BEARING GUARDS OWE A COUPLING DECLARATION AT BOTH ENDS — and the comment goes in NOW; ★★★ GO: THE REDESIGN STAGES, packet-first, carrying its full inherited ledger
 
 **§1 —** The sweep CLOSES: Band 8 accepted, and the R-281 severity gate did its job on its first outing — **the fix claimed load-bearing and PROVED it by the measured flip** (pre-fix: the 2-token bare-substring anchor stamps itself as evidence, self-matches, the bijection completes, the drop LAUNDERS to PASS; post-fix: the stamp refuses, the drop surfaces, BLOCK). The whole-token wrong-slot residual is closed WITH ITS MECHANISM UNDERSTOOD: the producer can still create a spurious cross-edge, but only onto an already-object-matched condition — a genuinely dropped condition gets zero edges and the bijection's distinctness convicts it. Every probe blocked, the honest-fallback counterfactual identical. The declared gap (the doer's 161-object no-op SHA un-re-derived, driver-gated) is a diagnostic number, not the safety claim — correctly named, correctly held at Band 8.
