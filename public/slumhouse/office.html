@@ -270,6 +270,118 @@
     .rr-idle-dot { display: inline-flex; align-items: center; gap: 10px; margin-top: 28px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.16em; color: var(--dim); }
     .rr-idle-dot i { width: 9px; height: 9px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px rgba(163,255,18,0.85); animation: rr-pulse 1.8s ease-in-out infinite; }
     @keyframes rr-pulse { 0%, 100% { opacity: 0.3; transform: scale(0.82); } 50% { opacity: 1; transform: scale(1.15); } }
+
+    /* ══ Reporting Room upgrade (ops-experience 2026-07-21): report-type toggle
+       + immersive RL / Paper surfaces. READ-ONLY display; lime office identity. ══ */
+    .rr-typetog { position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 6;
+      display: flex; gap: 2px; background: rgba(4,6,4,0.72); border: 1px solid rgba(163,255,18,0.16);
+      border-radius: 999px; padding: 4px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); max-width: calc(100vw - 24px); }
+    .rr-typeink { position: absolute; z-index: 0; top: 4px; bottom: 4px; border-radius: 999px; background: rgba(163,255,18,0.10);
+      box-shadow: inset 0 0 0 1px rgba(163,255,18,0.4), 0 0 20px rgba(163,255,18,0.12);
+      transition: left 0.32s cubic-bezier(0.3,0.9,0.3,1), width 0.32s cubic-bezier(0.3,0.9,0.3,1); }
+    .rr-type { position: relative; z-index: 1; appearance: none; background: none; border: none; cursor: pointer; font-family: inherit;
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600;
+      letter-spacing: 0.01em; color: var(--dim); white-space: nowrap; transition: color 0.15s; }
+    .rr-type:hover { color: rgba(255,255,255,0.82); }
+    .rr-type.on { color: var(--ink); }
+    .rr-type .imm-flag { font-size: 8px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--lime);
+      background: rgba(163,255,18,0.12); border: 1px solid rgba(163,255,18,0.30); border-radius: 4px; padding: 1px 4px; }
+    .rr-type:focus-visible { outline: 2px solid var(--lime); outline-offset: 3px; }
+    .rr-ro-chip { position: fixed; top: 18px; right: 16px; z-index: 6; display: inline-flex; align-items: center; gap: 6px;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim);
+      background: rgba(255,255,255,0.03); border: 1px solid #222722; border-radius: 999px; padding: 6px 10px; }
+
+    /* immersive full-bleed surface (Quantum RL / Paper Floor) — pure black, below the chrome */
+    .rr-immersive { position: fixed; inset: 62px 0 0 0; z-index: 3; display: none; overflow-y: auto; -webkit-overflow-scrolling: touch;
+      background: #000; border-top: 1px solid rgba(163,255,18,0.14); box-shadow: inset 0 1px 0 rgba(163,255,18,0.05), inset 0 40px 120px rgba(0,0,0,0.6); }
+    .rr-immersive.rr-imm-on { display: block; }
+    .imm-screen { max-width: 1160px; margin: 0 auto; padding: 26px 22px 72px; display: none; }
+    .imm-screen.on { display: block; }
+    .imm-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 18px; border-bottom: 1px solid #161616; }
+    .imm-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--lime); text-shadow: 0 0 12px rgba(163,255,18,0.35); }
+    .imm-title { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 6px 0 0; }
+    .imm-subline { font-size: 12.5px; color: var(--dim); margin-top: 5px; max-width: 460px; line-height: 1.5; }
+    .imm-head-right { display: flex; align-items: center; gap: 12px; }
+    .imm-panel { position: relative; background: linear-gradient(180deg, rgba(10,12,10,0.55), rgba(0,0,0,0.4)); border: 1px solid #161616; border-radius: 16px; padding: 16px 18px; }
+    .imm-panel::before { content: ""; position: absolute; top: 0; left: 22px; right: 22px; height: 1px; background: linear-gradient(90deg, transparent, rgba(163,255,18,0.18), transparent); }
+    .imm-panel + .imm-panel, .imm-band, .imm-2col { margin-top: 14px; }
+    .imm-2col { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 14px; }
+    @media (max-width: 900px) { .imm-2col { grid-template-columns: minmax(0,1fr); } }
+    .imm-label { font-size: 10.5px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .imm-label .aside { margin-left: auto; font-weight: 600; letter-spacing: 0.02em; text-transform: none; color: var(--mute); font-family: var(--num-font); }
+    .imm-band { display: grid; grid-template-columns: repeat(5, minmax(0,1fr)); gap: 12px; }
+    @media (max-width: 860px) { .imm-band { grid-template-columns: repeat(3, minmax(0,1fr)); } }
+    @media (max-width: 560px) { .imm-band { grid-template-columns: repeat(2, minmax(0,1fr)); } }
+
+    .stat { position: relative; overflow: hidden; background: #000; border: 1px solid #161616; border-radius: 14px; padding: 13px 14px; min-height: 96px;
+      display: flex; flex-direction: column; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.015); }
+    .stat::before { content: ""; position: absolute; top: 0; left: 16px; right: 16px; height: 1px; background: linear-gradient(90deg, transparent, rgba(163,255,18,0.16), transparent); }
+    .stat .row { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 6px; }
+    .stat .lbl { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); font-weight: 600; }
+    .stat .trend { font-family: var(--num-font); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; background: rgba(163,255,18,0.12); color: var(--lime); }
+    .stat .trend.down { background: rgba(255,99,99,0.10); color: var(--red); } .stat .trend.flat { background: rgba(255,255,255,0.06); color: var(--dim); }
+    .stat .val { font-family: var(--num-font); font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -0.02em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+    .stat .val.good { color: var(--lime); } .stat .val.bad { color: var(--red); } .stat .val.info { color: var(--blue); } .stat .val.dash { color: var(--mute); }
+    .stat .vsub { font-size: 10px; color: var(--dim); margin-top: 5px; }
+    .stat.kill { align-items: center; text-align: center; }
+    .ks { position: relative; margin: 6px auto 8px; }
+    .kstrack { position: relative; width: 82px; height: 34px; border-radius: 17px; border: 1px solid #0a0a0a; background: linear-gradient(180deg, #1a2a05, #0a1500);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), inset 0 0 12px rgba(163,255,18,0.18), 0 0 18px rgba(163,255,18,0.15); }
+    .ksknob { position: absolute; top: 3px; left: 3px; width: 26px; height: 26px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #f0ffd1, #a3ff12 55%, #6dd900 100%);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.7), inset 0 2px 2px rgba(255,255,255,0.35), 0 0 16px rgba(163,255,18,0.55); transition: left 0.3s cubic-bezier(0.5,1.6,0.5,1); }
+    .ks.engaged .kstrack { background: linear-gradient(180deg, #2a0505, #150000); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9), inset 0 0 12px rgba(255,99,99,0.18); }
+    .ks.engaged .ksknob { left: 53px; background: radial-gradient(circle at 35% 30%, #ffcccc, #ff6363 55%, #c41515 100%); box-shadow: 0 2px 4px rgba(0,0,0,0.7), 0 0 16px rgba(255,99,99,0.55); }
+    .ks.dormant .kstrack { background: linear-gradient(180deg,#141414,#0a0a0a); box-shadow: inset 0 2px 4px rgba(0,0,0,0.9); }
+    .ks.dormant .ksknob { left: 28px; background: radial-gradient(circle at 35% 30%, #9aa09a, #5a5f5a 60%, #3a3d3a); box-shadow: 0 2px 4px rgba(0,0,0,0.7); }
+
+    .pillstat { display: inline-flex; align-items: center; gap: 6px; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 999px; padding: 4px 10px; font-family: var(--num-font); }
+    .pillstat.good { color: var(--lime); background: rgba(163,255,18,0.12); border: 1px solid rgba(163,255,18,0.30); }
+    .pillstat.warn { color: var(--warm); background: rgba(255,184,77,0.10); border: 1px solid rgba(255,184,77,0.30); }
+    .pillstat.bad  { color: var(--red);  background: rgba(255,99,99,0.10);  border: 1px solid rgba(255,99,99,0.30); }
+    .pillstat.info { color: var(--blue); background: rgba(96,165,250,0.10); border: 1px solid rgba(96,165,250,0.30); }
+    .pillstat.dim  { color: var(--dim);  background: rgba(255,255,255,0.04); border: 1px solid #222722; }
+    .pillstat .d { width: 7px; height: 7px; border-radius: 50%; background: currentColor; box-shadow: 0 0 8px currentColor; }
+    .imm-verdict { font-family: var(--num-font); font-size: 21px; font-weight: 800; letter-spacing: 0.02em; text-transform: uppercase; color: var(--warm); text-shadow: 0 0 16px rgba(255,184,77,0.3); }
+    .imm-verdict.good { color: var(--lime); text-shadow: 0 0 16px rgba(163,255,18,0.35); }
+    .imm-verdict.bad { color: var(--red); text-shadow: 0 0 16px rgba(255,99,99,0.3); }
+
+    /* immersive honest-empty */
+    .empty-panel { text-align: center; padding: 40px 30px 34px; }
+    .empty-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mute); margin: 6px 0 8px; }
+    .empty-title { font-size: 23px; font-weight: 800; color: rgba(255,255,255,0.82); margin: 0; }
+    .empty-body { font-size: 13px; color: var(--dim); line-height: 1.6; max-width: 480px; margin: 10px auto 0; }
+    .empty-note { font-size: 11px; color: var(--mute); line-height: 1.6; margin: 18px auto 0; max-width: 560px; }
+    .empty-note code, .imm-src code { font-family: var(--num-font); color: var(--dim); background: rgba(255,255,255,0.03); border: 1px solid #222722; padding: 1px 6px; border-radius: 6px; font-size: 10px; }
+    .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 10px; margin-top: 18px; }
+    .tile { padding: 11px 13px; border-radius: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); }
+    .tile.dash { background: rgba(255,255,255,0.02); border-style: dashed; }
+    .tile .k { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--mute); margin-bottom: 6px; }
+    .tile .v { font-size: 15px; font-weight: 700; color: var(--ink); font-family: var(--num-font); } .tile .v.good { color: var(--lime); } .tile.dash .v { color: var(--mute); }
+    .tile .s { margin-top: 5px; font-size: 10.5px; color: var(--dim); }
+    .imm-src { margin-top: 18px; font-size: 10.5px; color: var(--mute); line-height: 1.6; display: flex; gap: 8px; align-items: flex-start; border-top: 1px solid #161616; padding-top: 12px; }
+    .imm-src .lock { color: var(--lime); flex-shrink: 0; }
+
+    /* paper floor: aggregate strip + live tape (fed ONLY by real SSE events) */
+    .imm-agg { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
+    .imm-agg .a { display: flex; flex-direction: column; gap: 2px; } .imm-agg .a .k { font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mute); }
+    .imm-agg .a .v { font-family: var(--num-font); font-size: 17px; font-weight: 700; color: var(--ink); } .imm-agg .a .v.dash { color: var(--mute); }
+    .imm-agg .sep { width: 1px; align-self: stretch; background: #222722; }
+    .tape-feed { display: flex; flex-direction: column; gap: 2px; max-height: 460px; overflow-y: auto; scrollbar-width: none; margin-top: 8px; } .tape-feed::-webkit-scrollbar { display: none; }
+    .tape-empty { padding: 22px 4px; text-align: center; color: var(--mute); font-size: 12px; }
+    .tape-item { display: grid; grid-template-columns: auto 1fr auto; gap: 9px; align-items: center; padding: 9px 4px; border-bottom: 1px solid #161616; font-size: 11.5px; }
+    .tape-item:last-child { border-bottom: none; }
+    .tape-item .tev { font-family: var(--num-font); font-size: 8.5px; padding: 2px 6px; border-radius: 5px; white-space: nowrap; background: rgba(255,255,255,0.04); }
+    .tape-item .tbody { min-width: 0; } .tape-item .tbody .tstrat { color: rgba(255,255,255,0.82); font-weight: 600; } .tape-item .tbody .tdesc { color: var(--mute); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tape-item .tt2 { font-family: var(--num-font); font-size: 9px; color: var(--mute); }
+
+    @media (max-width: 780px) {
+      .rr-typetog { top: 56px; left: 8px; right: 8px; max-width: none; transform: none; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
+      .rr-typetog::-webkit-scrollbar { display: none; }
+      .rr-immersive { inset: 104px 0 0 0; }
+      .rr-content { padding-top: 118px; }
+      .rr-ro-chip { display: none; }
+    }
+
     /* explicit ON / OFF meanings (color-coded) */
     .of-onoff { margin-top: 16px; display: flex; flex-direction: column; gap: 10px; }
     .of-on, .of-off { display: flex; gap: 12px; align-items: baseline; font-size: 15px; line-height: 1.4; color: var(--ink); }
@@ -925,13 +1037,30 @@
     </video>
     <div class="rr-veil"></div>
     <button class="rr-exit" type="button" data-rr-exit>&#8592; The Office</button>
-    <div class="rr-content">
-      <div class="rr-eyebrow">GPT-5 Analyst · runs every night</div>
-      <h1 class="rr-title">The Reporting Room</h1>
-      <div class="rr-sub">What the GPT-5 analyst wrote about the bot's trades while you slept.</div>
+    <!-- report-TYPE toggle (ops-experience 2026-07-21). Night/Soak/Weekly-A/B ride the
+         crystal ball; Quantum-RL/Paper take over the immersive surface. READ-ONLY. -->
+    <nav class="rr-typetog" id="rr-typetog" role="tablist" aria-label="Report type">
+      <span class="rr-typeink" id="rr-typeink" aria-hidden="true"></span>
+      <button class="rr-type on" type="button" role="tab" aria-selected="true" data-rr-type="night">&#127769; Night Agent</button>
+      <button class="rr-type" type="button" role="tab" aria-selected="false" data-rr-type="soak">&#129657; Soak Test</button>
+      <button class="rr-type" type="button" role="tab" aria-selected="false" data-rr-type="ab">&#128200; Weekly A/B</button>
+      <button class="rr-type" type="button" role="tab" aria-selected="false" data-rr-type="rl">&#9883; Quantum RL <span class="imm-flag">Full</span></button>
+      <button class="rr-type" type="button" role="tab" aria-selected="false" data-rr-type="paper">&#128225; Paper Floor <span class="imm-flag">Full</span></button>
+    </nav>
+    <span class="rr-ro-chip" title="This room only reads data — it can never change trading state.">&#9673; Read-only</span>
+    <div class="rr-content" id="rr-content">
+      <div class="rr-eyebrow" id="rr-eyebrow">GPT-5 Analyst · runs every night</div>
+      <h1 class="rr-title" id="rr-title">The Reporting Room</h1>
+      <div class="rr-sub" id="rr-sub">What the GPT-5 analyst wrote about the bot's trades while you slept.</div>
       <div id="rr-body">
         <div class="rr-placeholder">The morning read goes here — you're telling me how you want the reports laid out. The room's built; the desk is being set.</div>
       </div>
+    </div>
+    <!-- immersive surface: Quantum RL (real /api/ab-comparison scalars + SSE) and
+         Paper Floor (real SSE tape). Honest-empty pre-deploy — never a fabricated read. -->
+    <div class="rr-immersive" id="rr-immersive">
+      <div class="imm-screen" id="imm-rl"></div>
+      <div class="imm-screen" id="imm-paper"></div>
     </div>
   </section>
 
@@ -1011,7 +1140,9 @@
         var v = room.querySelector('.rr-bg');
         if (v) { try { v.currentTime = 0; var p = v.play(); if (p && p.catch) p.catch(function () {}); } catch (e) {} }
         document.body.style.overflow = 'hidden';
+        RR_STATE.type = RR_STATE.type || 'night';
         renderReports();
+        requestAnimationFrame(function () { var on = document.querySelector('#rr-typetog .rr-type.on'); if (on) rrMoveInk(on); });
       }
 
       // ── GPT trade-report cards (3D thin premium) ──────────────────────────
@@ -1031,7 +1162,7 @@
         entryQuality: 0.82, model: 'GPT-5.4', critiquedAt: '3:04 AM'
       };
       function rrGradeClass(g) { var c = String(g || '').charAt(0).toUpperCase(); return c === 'A' ? 'g-a' : c === 'B' ? 'g-b' : c === 'C' ? 'g-c' : 'g-d'; }
-      var RR_STATE = { idx: 0, n: 0, timer: null, reports: [], accounts: [], account: 'all', reportIdx: 0, stats: null, degraded: false, unreachable: false };
+      var RR_STATE = { type: 'night', idx: 0, n: 0, timer: null, reports: [], accounts: [], account: 'all', reportIdx: 0, stats: null, degraded: false, unreachable: false, soak: [], soakIdx: 0, ab: null };
       var RR_PREMIUM = [[/silver\s*bullet/i,'Silver Bullet'],[/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i,'Opening Heist'],[/mean\s*revers|rubber|revert/i,'The Rubber Band'],[/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i,'The Bounce'],[/resist|supply\s*zone|rejection|reject/i,'The Rejection'],[/break\s*out|breakout|range\s*break/i,'The Breakout'],[/squeeze|bollinger|keltner|coil|nr7/i,'Squeeze Play'],[/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i,'The Trap'],[/reversal|reverse|\bflip\b/i,'The Flip'],[/vwap|\bfade\b/i,'The Fade'],[/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i,'Gap & Go'],[/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i,'The Sweep'],[/trend|continuation|momentum|pullback|rider/i,'Trend Rider'],[/scalp/i,'Quick Bite'],[/\brsi\b|oversold|overbought|connors/i,'The Dip Snatch'],[/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i,'The Crossover']];
       var RR_FILLER = {i:1,use:1,my:1,the:1,a:1,an:1,of:1,or:1,and:1,to:1,look:1,lets:1,"let's":1,minute:1,min:1,trade:1,strategy:1,setup:1,entry:1,overall:1,using:1,with:1,on:1,for:1,how:1};
       function rrCleanName(name){var n=String(name||'').replace(/_/g,' ').replace(/\s+(mes|mnq|mcl|es|nq|cl)\b/gi,'').replace(/\s+\d+\s*m(in)?\b/gi,'').replace(/\s+\d+\s*h\b/gi,'').replace(/\s+/g,' ').trim();var w=n.split(' ').filter(Boolean);var k=w.filter(function(x){return !RR_FILLER[x.toLowerCase()];});return ((k.length?k:w).slice(0,3).join(' ').trim())||'House Special';}
@@ -1084,8 +1215,16 @@
       // field nothing renders is not a fix, it is a fix that stopped one layer short.
       //
       // Quiet is only good news when we know it is quiet.
+      // Scope-aware (ops-experience 2026-07-21): the failure states (unreachable /
+      // degraded) keep their exact wording across ALL scopes — a read problem is a
+      // read problem, and it must never masquerade as "quiet / no data". Only the
+      // genuinely-empty case is scope-specific: night = "quiet ball", soak = "no soak
+      // runs yet", weekly-A/B = "no A/B sessions yet". Every empty is honest dashes,
+      // never a fabricated verdict/delta. (Night, no scope → byte-identical to before.)
       function rrIdleHTML(state) {
         var s = state || {};
+        var scope = s.scope || 'night';
+        var mark = scope === 'soak' ? 'Reliability Desk' : scope === 'ab' ? 'A/B Analyst' : 'GPT-5 Analyst';
         var title, sub, dot;
         if (s.unreachable) {
           title = 'Can\'t reach the report desk';
@@ -1095,6 +1234,14 @@
           title = 'Reports are not readable right now';
           sub = 'The report desk answered, but it could not read your reports back. We are deliberately NOT showing "no trades" here, because we genuinely do not know whether the bot traded last night. Nothing has been lost — this is a read problem, not a trading problem.';
           dot = 'The desk is looking into it';
+        } else if (scope === 'soak') {
+          title = 'No soak runs yet';
+          sub = 'The soak test runs the whole system unattended for days and records how it held up. No soak certificate has been written yet, so the desk shows honest dashes rather than inventing a verdict. Your first soak result appears here after the rig runs a full window.';
+          dot = 'Waiting for the first soak run';
+        } else if (scope === 'ab') {
+          title = 'No A/B sessions yet';
+          sub = 'The weekly digest compares the RL challenger against the baseline. The challenger only starts logging sessions after you deploy, so there is nothing to compare yet — and the ball says so instead of inventing an edge. Your first digest appears once live sessions exist.';
+          dot = 'Waiting on the first live session';
         } else {
           title = 'The ball is quiet';
           sub = 'GPT-5 reads every trade your bot takes and tells the story here — the grade, what worked, the fix, and why it happened. No trades yet, so there\'s nothing to read. Your first report appears the morning after the bot trades.';
@@ -1102,7 +1249,7 @@
         }
         return '<div class="rr-stage"><div class="rr-mist"></div><div class="rr-mist b"></div><div class="rr-mist c"></div><div class="rr-glass"></div>' +
           '<div class="rr-idle">' +
-            '<div class="rr-idle-mark">GPT-5 Analyst</div>' +
+            '<div class="rr-idle-mark">' + rrEsc(mark) + '</div>' +
             '<div class="rr-idle-title">' + rrEsc(title) + '</div>' +
             '<div class="rr-idle-sub">' + rrEsc(sub) + '</div>' +
             '<div class="rr-idle-dot"><i></i> ' + rrEsc(dot) + '</div>' +
@@ -1113,6 +1260,10 @@
         var body = document.getElementById('rr-body');
         if (!body) return;
         rrStopPlay();
+        // Per-scope discriminated render: soak and weekly-A/B are DIFFERENT shapes,
+        // not the 7-slide GPT critique. Night falls through to the original path below.
+        if (RR_STATE.type === 'soak') { rrPaintSoak(body); return; }
+        if (RR_STATE.type === 'ab') { rrPaintAb(body); return; }
         var isEx = RR_STATE.reports.length === 0;
         if (isEx) { body.innerHTML = rrIdleHTML(RR_STATE); return; }
         var filtered = rrFiltered();
@@ -1145,39 +1296,295 @@
         body.querySelectorAll('[data-rep]').forEach(function (c) { c.addEventListener('click', function () { RR_STATE.reportIdx = +c.getAttribute('data-rep'); paintRoom(); }); });
         rrAutoPlay();
       }
-      function renderReports() {
+      // ════ Report-type dispatch (ops-experience 2026-07-21 observability upgrade) ════
+      // renderReports() honours RR_STATE.type. Night/Soak/Weekly-A/B fetch the per-scope
+      // discriminated payload and paint the crystal ball; Quantum-RL/Paper take over the
+      // immersive surface. Every path is READ-ONLY — display, subscribe, never POST.
+      var RR_BALL_TYPES = { night: 1, soak: 1, ab: 1 };
+      var RR_HEADERS = {
+        night: ['GPT-5 Analyst · runs every night', 'The Reporting Room', 'What the GPT-5 analyst wrote about the bot\'s trades while you slept.'],
+        soak:  ['Reliability desk · unattended endurance', 'The Soak Report', 'Proof the system can run for days on its own without a human touching it.'],
+        ab:    ['Quant desk · weekly roll-up', 'The A/B Digest', 'How the RL challenger stacked up against the baseline this week.']
+      };
+      function rrMoney(n, sign) { n = Number(n) || 0; return (n < 0 ? '-' : (sign ? '+' : '')) + '$' + Math.abs(Math.round(n)).toLocaleString('en-US'); }
+      function rrTile(k, v, s, dash) { return '<div class="tile' + (dash ? ' dash' : '') + '"><div class="k">' + k + '</div><div class="v">' + v + '</div><div class="s">' + s + '</div></div>'; }
+      function rrScopeParam(t) { return t === 'soak' ? 'soak' : t === 'ab' ? 'weekly-ab' : 'night'; }
+      function rrSetHeader(t) {
+        var h = RR_HEADERS[t]; if (!h) return;
+        var eb = document.getElementById('rr-eyebrow'); if (eb) eb.textContent = h[0];
+        var ti = document.getElementById('rr-title'); if (ti) ti.textContent = h[1];
+        var sb = document.getElementById('rr-sub'); if (sb) sb.textContent = h[2];
+      }
+      function rrMoveInk(btn) { var ink = document.getElementById('rr-typeink'); if (ink && btn) { ink.style.left = btn.offsetLeft + 'px'; ink.style.width = btn.offsetWidth + 'px'; } }
+      function rrSetToggle(t) {
+        var btns = document.querySelectorAll('#rr-typetog .rr-type');
+        btns.forEach(function (b) { var on = b.getAttribute('data-rr-type') === t; b.classList.toggle('on', on); b.setAttribute('aria-selected', on ? 'true' : 'false'); if (on) rrMoveInk(b); });
+      }
+      function renderReports() { rrRenderType(RR_STATE.type || 'night'); }
+      function rrRenderType(type) {
+        RR_STATE.type = type;
+        rrSetToggle(type);
+        var ball = !!RR_BALL_TYPES[type];
+        var content = document.getElementById('rr-content');
+        var imm = document.getElementById('rr-immersive');
+        if (content) content.style.display = ball ? '' : 'none';
+        if (imm) imm.classList.toggle('rr-imm-on', !ball);
+        var rlScreen = document.getElementById('imm-rl'); if (rlScreen) rlScreen.classList.toggle('on', type === 'rl');
+        var paperScreen = document.getElementById('imm-paper'); if (paperScreen) paperScreen.classList.toggle('on', type === 'paper');
+        rrStopPlay();
+        if (type === 'rl') { rrRenderRL(); return; }
+        if (type === 'paper') { rrRenderPaper(); return; }
+        rrSetHeader(type);
         var body = document.getElementById('rr-body');
-        if (!body) return;
-        body.innerHTML = '<div class="rr-summary">Reading the ball…</div>';
-        fetch('/slumhouse/api/reports?scope=night', { credentials: 'same-origin' })
+        if (body) body.innerHTML = '<div class="rr-summary">Reading the ball…</div>';
+        fetch('/slumhouse/api/reports?scope=' + rrScopeParam(type), { credentials: 'same-origin' })
           .then(function (res) { return res.ok ? res.json() : null; })
           .then(function (data) {
-            RR_STATE.reports = (data && Array.isArray(data.reports)) ? data.reports : [];
-            RR_STATE.accounts = (data && Array.isArray(data.accounts)) ? data.accounts : [];
-            RR_STATE.stats = (data && data.stats) || null;
-            // `data === null` means a non-2xx response — the request landed but the desk
-            // refused it. That is NOT a quiet night either, so it is carried as its own
-            // state rather than collapsing into the empty case.
+            if (RR_STATE.type !== type) return; // operator toggled away mid-flight
+            // `data === null` = non-2xx: the request landed but the desk refused it —
+            // carried as unreachable, never collapsed into a quiet/empty read.
             RR_STATE.unreachable = !data;
             RR_STATE.degraded = !!(data && data.degraded);
-            RR_STATE.account = 'all'; RR_STATE.reportIdx = 0;
+            if (type === 'soak') {
+              RR_STATE.soak = (data && Array.isArray(data.soak)) ? data.soak : [];
+              RR_STATE.soakIdx = 0;
+            } else if (type === 'ab') {
+              RR_STATE.ab = (data && data.ab) || null;
+            } else {
+              RR_STATE.reports = (data && Array.isArray(data.reports)) ? data.reports : [];
+              RR_STATE.accounts = (data && Array.isArray(data.accounts)) ? data.accounts : [];
+              RR_STATE.stats = (data && data.stats) || null;
+              RR_STATE.account = 'all'; RR_STATE.reportIdx = 0;
+            }
             paintRoom();
           })
           .catch(function () {
-            RR_STATE.reports = []; RR_STATE.accounts = []; RR_STATE.stats = null;
+            if (RR_STATE.type !== type) return;
             RR_STATE.unreachable = true; RR_STATE.degraded = false;
+            if (type === 'soak') { RR_STATE.soak = []; }
+            else if (type === 'ab') { RR_STATE.ab = null; }
+            else { RR_STATE.reports = []; RR_STATE.accounts = []; RR_STATE.stats = null; }
             paintRoom();
           });
+      }
+
+      // ── shared crystal-ball mount (soak / weekly-A/B reuse the night ball idiom) ──
+      function rrMountBall(body, summaryHTML, slides, extraHTML) {
+        RR_STATE.n = slides.length; RR_STATE.idx = 0;
+        body.innerHTML =
+          '<div class="rr-summary">' + summaryHTML + '</div>' + (extraHTML || '') +
+          '<div class="rr-stage"><div class="rr-mist"></div><div class="rr-mist b"></div><div class="rr-mist c"></div><div class="rr-glass"></div>' +
+            '<div class="rr-slides">' + slides.map(function (s, i) { return '<div class="rr-slide' + (i === 0 ? ' active' : '') + '">' + s + '</div>'; }).join('') + '</div>' +
+          '</div>' +
+          '<div class="rr-nav"><button class="rr-arrow" type="button" data-rr-prev>&#8249;</button><div class="rr-dots">' + slides.map(function (_, i) { return '<span class="rr-dot' + (i === 0 ? ' on' : '') + '" data-dot="' + i + '"></span>'; }).join('') + '</div><button class="rr-arrow" type="button" data-rr-next>&#8250;</button></div>';
+        var pv = body.querySelector('[data-rr-prev]'); if (pv) pv.addEventListener('click', function () { rrGo(RR_STATE.idx - 1); rrAutoPlay(); });
+        var nx = body.querySelector('[data-rr-next]'); if (nx) nx.addEventListener('click', function () { rrGo(RR_STATE.idx + 1); rrAutoPlay(); });
+        body.querySelectorAll('.rr-dot').forEach(function (d, i) { d.addEventListener('click', function () { rrGo(i); rrAutoPlay(); }); });
+        rrAutoPlay();
+      }
+
+      // ── Soak ball (cert-verdict shape from rails_nightly_reports) ─────────────
+      function rrVerdictClass(v) { var s = String(v || '').toLowerCase(); return s === 'green' ? 'g-a' : s === 'drift' ? 'g-c' : s === 'invalid' ? 'g-d' : 'g-c'; }
+      function rrVerdictLabel(v) { var s = String(v || '').toLowerCase(); return s === 'green' ? 'PASS' : s ? s.toUpperCase() : '—'; }
+      function rrPaintSoak(body) {
+        if (RR_STATE.unreachable || RR_STATE.degraded || !RR_STATE.soak || RR_STATE.soak.length === 0) {
+          body.innerHTML = rrIdleHTML({ scope: 'soak', degraded: RR_STATE.degraded, unreachable: RR_STATE.unreachable });
+          return;
+        }
+        var rows = RR_STATE.soak;
+        if (RR_STATE.soakIdx >= rows.length) RR_STATE.soakIdx = 0;
+        var r = rows[RR_STATE.soakIdx];
+        var picker = rows.length > 1 ? '<div class="rr-picker">' + rows.map(function (x, i) {
+          return '<span class="rr-chipR' + (i === RR_STATE.soakIdx ? ' on' : '') + '" data-soak="' + i + '"><b class="' + rrVerdictClass(x.verdict) + '">' + rrEsc(rrVerdictLabel(x.verdict)) + '</b>' + rrEsc(x.reportDate) + '</span>';
+        }).join('') + '</div>' : '';
+        var sha = r.buildSha ? String(r.buildSha).slice(0, 10) : 'build sha not recorded';
+        var slides = [];
+        slides.push('<div class="rr-vg ' + rrVerdictClass(r.verdict) + '">' + rrEsc(rrVerdictLabel(r.verdict)) + '</div>' +
+          '<div class="rr-vname">Nightly soak <span>' + rrEsc(r.reportDate) + '</span></div>' +
+          '<div class="rr-vsub">certification rig &middot; ' + rrEsc(sha) + '</div>');
+        if (r.checks) slides.push('<div class="rr-mlabel">Checks</div><div class="rr-mtext">' + rrEsc(String(r.checks.passed)) + ' of ' + rrEsc(String(r.checks.total)) + ' checks passed on this run.</div>');
+        if (r.summary) slides.push('<div class="rr-mlabel">The read</div><div class="rr-quote">&ldquo;' + rrEsc(r.summary) + '&rdquo;</div>');
+        slides.push('<div class="rr-mlabel">What this is</div><div class="rr-mtext">The soak rig runs the whole system unattended and writes one certificate a night: <b style="color:var(--lime)">green</b> held, <b style="color:var(--warm)">drift</b> moved, <b style="color:var(--dim)">skipped</b> did not run, <b style="color:var(--red)">invalid</b> could not certify. This run: <b>' + rrEsc(rrVerdictLabel(r.verdict)) + '</b>.</div>');
+        rrMountBall(body, 'Latest nightly certification of the whole system — verdict, date and the build it certified. One matter at a time.', slides, picker);
+        body.querySelectorAll('[data-soak]').forEach(function (c) { c.addEventListener('click', function () { RR_STATE.soakIdx = +c.getAttribute('data-soak'); paintRoom(); }); });
+      }
+
+      // ── Weekly-A/B ball (Sharpe / P&L delta shape from /api/ab-comparison) ────
+      function rrPaintAb(body) {
+        var ab = RR_STATE.ab;
+        if (RR_STATE.unreachable || RR_STATE.degraded || !ab || !ab.hasData) {
+          body.innerHTML = rrIdleHTML({ scope: 'ab', degraded: RR_STATE.degraded, unreachable: RR_STATE.unreachable });
+          return;
+        }
+        var sd = Number(ab.sharpeDelta) || 0, pd = Number(ab.pnlDelta) || 0, pos = sd >= 0;
+        var ch = ab.challenger || {}, ba = ab.baseline || {}, ks = ab.killSwitch || {};
+        var slides = [];
+        slides.push('<div class="rr-vg ' + (pos ? 'g-a' : 'g-d') + '">' + rrEsc((sd >= 0 ? '+' : '') + sd.toFixed(2)) + '</div>' +
+          '<div class="rr-vname">Sharpe &Delta; <span>challenger &minus; baseline</span></div>' +
+          '<div class="rr-vr ' + (pd >= 0 ? 'pos' : 'neg') + '">' + rrMoney(pd, true) + ' P&amp;L</div>' +
+          '<div class="rr-vsub">' + rrEsc(String(ch.trades != null ? ch.trades : 0)) + ' vs ' + rrEsc(String(ba.trades != null ? ba.trades : 0)) + ' trades</div>');
+        slides.push('<div class="rr-mlabel">The numbers</div><div class="rr-mtext">Challenger rolling-20 Sharpe <b>' + rrEsc((Number(ch.sharpe) || 0).toFixed(2)) + '</b> vs baseline <b>' + rrEsc((Number(ba.sharpe) || 0).toFixed(2)) + '</b>. Cumulative P&amp;L edge <b>' + rrMoney(pd, true) + '</b>.</div>');
+        var ksTxt = ks.currentlyDormant ? 'dormant — the RL is not routing' : ks.isArmed ? 'armed — watching for a breach' : 'not armed';
+        slides.push('<div class="rr-mlabel">Kill switch</div><div class="rr-mtext">' + rrEsc(ksTxt) + '. This is the digest — the live per-tile detail lives in the immersive <b style="color:var(--lime)">Quantum RL</b> screen up top.</div>');
+        rrMountBall(body, 'RL challenger vs baseline — this week\'s edge from the live A/B accounts. The immersive Quantum RL screen has the full dashboard.', slides);
+      }
+
+      // ════ Read-only SSE for the immersive screens (verified event names) ════
+      // NB: names verified against src/server/routes/sse.ts emitters — quantum_rl:*
+      // (not rl:*), strategy:promoted (not lifecycle:promoted), paper:tp1/2_filled.
+      var RR_RL_EVENTS = ['signal:rl_ab_routed', 'quantum_rl:training_completed', 'quantum_rl:kill_switch_engaged'];
+      var RR_PAPER_EVENTS = ['paper:trade', 'paper:signal', 'paper:pnl', 'paper:session_start', 'paper:session_stop', 'paper:tp1_filled', 'paper:tp2_filled', 'paper:be_stop_moved', 'paper:trail_tightened', 'paper:time_stop_flattened', 'signal:a_plus_rejected', 'signal:weighted_score_rejected', 'strategy:promoted', 'lifecycle:operator_absent_autopromoted'];
+      var rrES = null, rrRlRefresh = null, rrPaperTape = [], rrPaperCounts = { events: 0 };
+      function rrSSEConnect() {
+        if (rrES || typeof EventSource === 'undefined') return;
+        try {
+          rrES = new EventSource('/api/sse/events');
+          RR_RL_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnRlEvent); });
+          RR_PAPER_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnPaperEvent); });
+        } catch (e) { rrES = null; }
+      }
+      function rrSSEClose() {
+        if (rrES) { try { rrES.close(); } catch (e) {} rrES = null; }
+        if (rrRlRefresh) { clearTimeout(rrRlRefresh); rrRlRefresh = null; }
+      }
+      function rrOnRlEvent() {
+        if (RR_STATE.type !== 'rl' || rrRlRefresh) return; // debounce a burst into one refetch
+        rrRlRefresh = setTimeout(function () { rrRlRefresh = null; if (RR_STATE.type === 'rl') rrRenderRL(); }, 1200);
+      }
+      function rrParse(ev) { try { return ev && ev.data ? JSON.parse(ev.data) : {}; } catch (e) { return {}; } }
+      function rrPaperDesc(name, d) {
+        if (name === 'strategy:promoted' || name === 'lifecycle:operator_absent_autopromoted') return 'promoted' + (d.to_stage ? ' to ' + d.to_stage : (d.stage ? ' to ' + d.stage : ''));
+        if (name === 'signal:a_plus_rejected' || name === 'signal:weighted_score_rejected') return 'signal rejected' + (d.reason ? ' · ' + d.reason : '');
+        if (name === 'paper:pnl' && d.pnl != null) return 'P&L ' + rrMoney(Number(d.pnl), true);
+        if (d.direction) return String(name.split(':')[1] || name).replace(/_/g, ' ') + ' · ' + d.direction;
+        return String(name.split(':')[1] || name).replace(/_/g, ' ');
+      }
+      function rrOnPaperEvent(ev) {
+        var d = rrParse(ev);
+        var name = ev && ev.type ? ev.type : 'event';
+        var strat = d.strategy_name || d.strategyName || (d.strategy_id != null ? 'Strategy #' + d.strategy_id : (d.strategyId != null ? 'Strategy #' + d.strategyId : '—'));
+        var now = new Date();
+        var t = [now.getHours(), now.getMinutes(), now.getSeconds()].map(function (x) { return String(x).padStart(2, '0'); }).join(':');
+        rrPaperTape.unshift({ ev: name, strat: String(strat), desc: rrPaperDesc(name, d), t: t });
+        if (rrPaperTape.length > 24) rrPaperTape.pop();
+        rrPaperCounts.events += 1;
+        if (RR_STATE.type === 'paper') rrPaperPaint();
+      }
+
+      // ── Immersive Quantum RL (real /api/ab-comparison/recent scalars) ─────────
+      function rrStatTile(lbl, val, cls, trend, tdir, vsub) {
+        return '<div class="stat"><div class="row"><span class="lbl">' + lbl + '</span>' + (trend ? '<span class="trend ' + (tdir || '') + '">' + trend + '</span>' : '') + '</div>' +
+          '<div class="val ' + (cls || '') + '">' + val + '</div><div class="vsub">' + (vsub || '') + '</div></div>';
+      }
+      function rrKillTile(ks) {
+        var armed = !!(ks && ks.is_armed && !ks.currently_dormant);
+        var label = armed ? 'ARMED' : 'DORMANT';
+        var sub = armed ? 'watching · halts RL on breach' : 'RL not routing';
+        return '<div class="stat kill"><div class="row" style="width:100%;"><span class="lbl">Kill switch</span><span class="trend flat">' + (armed ? 'safe' : 'dormant') + '</span></div>' +
+          '<div class="ks ' + (armed ? 'armed' : 'dormant') + '"><div class="kstrack"><div class="ksknob"></div></div></div>' +
+          '<div class="val ' + (armed ? 'good' : 'dash') + '" style="font-size:15px;">' + label + '</div><div class="vsub">' + sub + '</div></div>';
+      }
+      function rrRlSrc() {
+        return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> reads <code>GET /api/ab-comparison/recent</code> (<code>rolling_20_session_sharpe</code>, <code>sharpe_delta</code>, <code>pnl_delta</code>, kill switch) and refreshes on <code>signal:rl_ab_routed</code> / <code>quantum_rl:training_completed</code> / <code>quantum_rl:kill_switch_engaged</code>. Baseline = sub-account 1, challenger = sub-account 2. Nothing here arms or disarms anything.</span></div>';
+      }
+      function rrRlEmpty(host, degraded) {
+        if (!host) return;
+        host.innerHTML =
+          '<div class="imm-head"><div><div class="imm-eyebrow">Challenger vs Baseline · immersive</div><div class="imm-title">Is the RL worth trusting yet?</div></div>' +
+            '<div class="imm-head-right"><span class="pillstat ' + (degraded ? 'bad' : 'warn') + '"><span class="d"></span> ' + (degraded ? 'Feed unavailable' : 'No sessions yet') + '</span><span class="pillstat dim">RL not routing</span></div></div>' +
+          '<div class="imm-panel empty-panel">' +
+            '<div class="ks dormant" style="margin:6px auto 4px;"><div class="kstrack"><div class="ksknob"></div></div></div>' +
+            '<div class="empty-eyebrow">' + (degraded ? 'Could not read the A/B desk' : 'Awaiting first session') + '</div>' +
+            '<h2 class="empty-title">' + (degraded ? 'A/B data is not readable right now' : 'No A/B data yet') + '</h2>' +
+            '<p class="empty-body">' + (degraded ? 'The A/B desk did not answer cleanly. Nothing has been lost — this is a read problem, not a trading problem, and the screen shows dashes rather than a made-up reading.' : 'The RL challenger starts logging the moment you deploy. Until then there is nothing to compare against the baseline — and this screen will not invent a reading.') + '</p>' +
+            '<div class="tiles">' + rrTile('Sharpe &Delta;', '—', 'goes live on deploy', true) + rrTile('Cumulative P&amp;L &Delta;', '—', 'goes live on deploy', true) + rrTile('Rolling-20 Sharpe', '—', 'no sessions recorded', true) + rrTile('Kill switch', '—', 'arms when RL goes live', true) + '</div>' +
+          '</div>' + rrRlSrc();
+      }
+      function rrRenderRL() {
+        var host = document.getElementById('imm-rl');
+        if (!host) return;
+        rrSSEConnect();
+        if (!host.getAttribute('data-loaded')) host.innerHTML = '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Loading</div><h2 class="empty-title">Reading the A/B desk…</h2></div>';
+        fetch('/api/ab-comparison/recent', { credentials: 'same-origin' })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function (data) {
+            if (RR_STATE.type !== 'rl') return;
+            host.setAttribute('data-loaded', '1');
+            if (!data) { rrRlEmpty(host, true); return; }
+            var s1 = data.sub_account_1 || {}, s2 = data.sub_account_2 || {}, delta = data.delta || {}, ks = data.kill_switch_status || {};
+            var trades = (Number(s1.trade_count) || 0) + (Number(s2.trade_count) || 0);
+            if (trades === 0) { rrRlEmpty(host, false); return; }
+            var sd = Number(delta.sharpe_delta) || 0, pd = Number(delta.pnl_delta) || 0;
+            var verdict = sd >= 0 ? 'CHALLENGER AHEAD' : 'CHALLENGER BEHIND';
+            host.innerHTML =
+              '<div class="imm-head"><div><div class="imm-eyebrow">Challenger vs Baseline · immersive</div><div class="imm-title">Is the RL worth trusting yet?</div>' +
+                '<div class="imm-subline">The challenger runs in shadow beside the baseline. It never sizes a live trade — this screen only reports whether it has earned the right to.</div></div>' +
+                '<div class="imm-head-right"><div style="text-align:right;"><div class="imm-label" style="justify-content:flex-end;margin-bottom:6px;">RL verdict</div><span class="imm-verdict ' + (sd >= 0 ? 'good' : 'bad') + '">' + verdict + '</span></div></div></div>' +
+              '<div class="imm-band">' +
+                rrStatTile('Sharpe &Delta;', (sd >= 0 ? '+' : '') + sd.toFixed(2), sd >= 0 ? 'good' : 'bad', (sd >= 0 ? '+' : '') + sd.toFixed(2), sd >= 0 ? '' : 'down', 'challenger − baseline') +
+                rrStatTile('Cumulative P&L &Delta;', rrMoney(pd, true), pd >= 0 ? 'good' : 'bad', pd >= 0 ? 'ahead' : 'behind', pd >= 0 ? '' : 'down', 'challenger vs baseline') +
+                rrStatTile('Challenger Sharpe', (Number(s2.rolling_20_session_sharpe) || 0).toFixed(2), 'info', 'rolling-20', 'flat', 'sub-account 2') +
+                rrStatTile('Baseline Sharpe', (Number(s1.rolling_20_session_sharpe) || 0).toFixed(2), '', 'rolling-20', 'flat', 'sub-account 1') +
+                rrKillTile(ks) +
+              '</div>' +
+              '<div class="imm-2col"><div class="imm-panel"><div class="imm-label">Sessions &amp; drawdown <span class="aside">from the live A/B accounts</span></div>' +
+                '<div class="tiles">' +
+                  '<div class="tile"><div class="k">Challenger trades</div><div class="v good">' + (Number(s2.trade_count) || 0) + '</div><div class="s">sub-account 2</div></div>' +
+                  '<div class="tile"><div class="k">Baseline trades</div><div class="v">' + (Number(s1.trade_count) || 0) + '</div><div class="s">sub-account 1</div></div>' +
+                  '<div class="tile"><div class="k">Max drawdown &Delta;</div><div class="v">' + rrMoney(Number(delta.drawdown_delta) || 0, true) + '</div><div class="s">challenger − baseline</div></div>' +
+                '</div></div>' +
+                '<div class="imm-panel"><div class="imm-label">This screen is a read-out, not a control</div><p class="empty-body" style="margin:8px 0 0;text-align:left;">There is no button here to arm, disarm, promote or size anything — the room can only look. The kill switch above shows state; it cannot be flipped from this room.</p>' + (data.last_updated ? '<div class="vsub" style="margin-top:10px;color:var(--mute);">Updated ' + rrEsc(rrFmtTime(new Date(data.last_updated).toISOString())) + '</div>' : '') + '</div></div>' +
+              rrRlSrc();
+          })
+          .catch(function () { if (RR_STATE.type === 'rl') rrRlEmpty(document.getElementById('imm-rl'), true); });
+      }
+
+      // ── Immersive Paper Floor (real SSE tape; honest-dark until an event streams) ──
+      function rrPaperSrc() {
+        return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> subscribes to <code>/api/sse/events</code> — paper fills &amp; stop moves (<code>paper:tp1_filled</code>, <code>paper:be_stop_moved</code>, <code>paper:trail_tightened</code>), signals (<code>paper:signal</code>, <code>signal:a_plus_rejected</code>) and promotions (<code>strategy:promoted</code>). The room only listens — it places no orders and moves no stops.</span></div>';
+      }
+      function rrRenderPaper() {
+        if (!document.getElementById('imm-paper')) return;
+        rrSSEConnect();
+        rrPaperPaint();
+      }
+      function rrPaperPaint() {
+        var host = document.getElementById('imm-paper');
+        if (!host || RR_STATE.type !== 'paper') return;
+        var hasEvents = rrPaperTape.length > 0;
+        var head = '<div class="imm-head"><div><div class="imm-eyebrow">Live Paper Engine · immersive</div><div class="imm-title">The floor, right now</div>' +
+          '<div class="imm-subline">Every paper fill, stop move and signal the engine emits, streamed live. Read-only — the room never places an order.</div></div>' +
+          '<div class="imm-head-right"><span class="pillstat ' + (hasEvents ? 'good' : 'dim') + '"><span class="d"></span> ' + (hasEvents ? 'streaming' : 'idle') + '</span></div></div>';
+        var agg = '<div class="imm-panel" style="margin-bottom:14px;"><div class="imm-agg">' +
+          '<div class="a"><span class="k">Live events · this session</span><span class="v' + (hasEvents ? '' : ' dash') + '">' + (hasEvents ? rrPaperCounts.events : '—') + '</span></div><div class="sep"></div>' +
+          '<div class="a"><span class="k">Feed</span><span class="v" style="font-size:13px;color:' + (hasEvents ? 'var(--lime)' : 'var(--mute)') + ';">' + (hasEvents ? 'streaming' : 'waiting') + '</span></div></div></div>';
+        var body;
+        if (!hasEvents) {
+          body = '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Floor is dark</div><h2 class="empty-title">No paper activity yet</h2>' +
+            '<p class="empty-body">The paper engine has not emitted anything since this screen opened. The floor stays dark rather than drawing a fill that never happened — the moment the engine trades, its events stream in below.</p>' +
+            '<p class="empty-note">Live from <code>/api/sse/events</code>. Every row is a real engine event; nothing here is simulated.</p></div>';
+        } else {
+          body = '<div class="imm-panel"><div class="imm-label">Live tape <span class="aside">newest first · real engine events</span></div>' +
+            '<div class="tape-feed">' + rrPaperTape.map(function (x) {
+              return '<div class="tape-item"><span class="tev">' + rrEsc(x.ev) + '</span><span class="tbody"><div class="tstrat">' + rrEsc(x.strat) + '</div><div class="tdesc">' + rrEsc(x.desc) + '</div></span><span class="tt2">' + rrEsc(x.t) + '</span></div>';
+            }).join('') + '</div></div>';
+        }
+        host.innerHTML = head + agg + body + rrPaperSrc();
       }
       function exitReportingRoom() {
         var room = document.getElementById('reporting-room');
         if (room) { room.classList.remove('rr-open'); room.setAttribute('aria-hidden', 'true'); }
         document.body.style.overflow = '';
         if (typeof rrStopPlay === 'function') rrStopPlay();
+        if (typeof rrSSEClose === 'function') rrSSEClose(); // drop the live SSE stream on the way out
       }
       (function () {
         var x = document.querySelector('[data-rr-exit]');
         if (x) x.addEventListener('click', exitReportingRoom);
+        document.querySelectorAll('#rr-typetog .rr-type').forEach(function (b) {
+          b.addEventListener('click', function () { rrRenderType(b.getAttribute('data-rr-type')); });
+        });
+        window.addEventListener('resize', function () { var on = document.querySelector('#rr-typetog .rr-type.on'); if (on) rrMoveInk(on); });
         document.addEventListener('keydown', function (e) {
           if (e.key === 'Escape') { var r = document.getElementById('reporting-room'); if (r && r.classList.contains('rr-open')) exitReportingRoom(); }
         });

@@ -12,6 +12,8 @@
  */
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
+import { logger } from "../logger.js";
+import { buildABComparisonData } from "../../routes/ab-comparison.js";
 
 export interface GptReport {
   id: string;
@@ -202,4 +204,184 @@ export async function assembleGptReports(opts: { scope: "night" | "all" }): Prom
       ? { degraded: true, error: degradedSources.join(",") }
       : {}),
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SOAK scope — the hardening-rails nightly certification history (Rail 3).
+//
+// A DIFFERENT SHAPE from the GPT night critique: one immutable cert row per run,
+// carrying report_date / build_sha / verdict (green|drift|skipped|invalid) + the
+// full certificate JSONB. This is NOT a 7-slide critique — forcing it into the
+// GptReport shape would fabricate slides that do not exist (HANDOFF §2). Read-side
+// takes the LATEST row per report_date (the table's own convention, migration 0202).
+//
+// Honest-empty: an empty rails table (the rig is inert until it writes its first
+// nightly certificate) returns `soak: []` with NO degraded flag — a genuinely
+// empty history, not a failure. A query failure sets `degraded: true`, exactly as
+// the night scope does, so "the desk is broken" never masquerades as "no soak runs".
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface SoakReport {
+  /** ISO date (YYYY-MM-DD) — one calendar night per row. */
+  reportDate: string;
+  /** The commit the rig certified, if the rig recorded it. */
+  buildSha: string | null;
+  /** green | drift | skipped | invalid — the rig's own verdict string. */
+  verdict: string;
+  /**
+   * A plain-English line pulled from the certificate JSONB IF the rig wrote one.
+   * Null when absent — never fabricated. The rig's certificate shape is not frozen
+   * (it is inert pre-first-run), so only string fields that actually exist surface.
+   */
+  summary: string | null;
+  /** Optional {passed,total} check tally IF the certificate carries one, else null. */
+  checks: { passed: number; total: number } | null;
+}
+
+export interface SoakPayload {
+  scope: "soak";
+  soak: SoakReport[];
+  degraded?: boolean;
+  error?: string;
+}
+
+/** Read a string field off the certificate JSONB only if it is genuinely a non-empty string. */
+function certString(cert: Record<string, unknown>, key: string): string | null {
+  const v = cert[key];
+  return typeof v === "string" && v.trim().length > 0 ? v : null;
+}
+
+export async function assembleSoakReports(): Promise<SoakPayload> {
+  const degradedSources: string[] = [];
+
+  const rows = (await db
+    .execute(sql`
+      SELECT DISTINCT ON (report_date)
+        report_date AS report_date,
+        build_sha   AS build_sha,
+        verdict     AS verdict,
+        certificate AS certificate
+      FROM rails_nightly_reports
+      ORDER BY report_date DESC, id DESC
+      LIMIT 60
+    `)
+    .catch(() => {
+      degradedSources.push("soak_query_failed");
+      return [] as unknown[];
+    })) as Array<{
+    report_date: string | Date;
+    build_sha: string | null;
+    verdict: string;
+    certificate: unknown;
+  }>;
+
+  const soak: SoakReport[] = rows.map((r) => {
+    const cert = (r.certificate ?? {}) as Record<string, unknown>;
+    // Defensive, no-fabrication check tally: only when the certificate actually
+    // carries a numeric passed/total pair.
+    const checksRaw = cert.checks as Record<string, unknown> | undefined;
+    const passed = checksRaw && typeof checksRaw.passed === "number" ? checksRaw.passed : null;
+    const total = checksRaw && typeof checksRaw.total === "number" ? checksRaw.total : null;
+
+    return {
+      reportDate:
+        r.report_date instanceof Date
+          ? r.report_date.toISOString().slice(0, 10)
+          : String(r.report_date).slice(0, 10),
+      buildSha: r.build_sha ?? null,
+      verdict: String(r.verdict ?? ""),
+      summary:
+        certString(cert, "summary") ??
+        certString(cert, "headline") ??
+        certString(cert, "note"),
+      checks: passed != null && total != null ? { passed, total } : null,
+    };
+  });
+
+  return {
+    scope: "soak",
+    soak,
+    ...(degradedSources.length > 0
+      ? { degraded: true, error: degradedSources.join(",") }
+      : {}),
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WEEKLY-A/B scope — the RL challenger vs baseline digest.
+//
+// A THIRD SHAPE: Sharpe / P&L deltas, not a critique and not a cert verdict. This
+// READ-ONLY CONSUMES the money-path-produced A/B data by importing the SAME builder
+// `/api/ab-comparison/recent` uses (`buildABComparisonData`, already a shared export
+// consumed by carter-reads.ts) — we do NOT re-query their tables and we do NOT edit
+// their code (HANDOFF §3, §5).
+//
+// Honest-empty: pre-deploy the challenger has not routed, so both sub-accounts have
+// trade_count 0 → `hasData: false`. The room renders "no A/B sessions yet — live on
+// deploy", never a fabricated delta. A builder throw → `ab: null, degraded: true`.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface WeeklyAbSide {
+  sharpe: number;
+  pnl: number;
+  drawdown: number;
+  trades: number;
+}
+
+export interface WeeklyAbPayload {
+  scope: "weekly-ab";
+  ab: {
+    /** False until the challenger has logged at least one paper session (pre-deploy = false). */
+    hasData: boolean;
+    sharpeDelta: number;
+    pnlDelta: number;
+    drawdownDelta: number;
+    challenger: WeeklyAbSide;
+    baseline: WeeklyAbSide;
+    killSwitch: { isArmed: boolean; currentlyDormant: boolean; lastEvaluated: string | null };
+    lastUpdated: string | null;
+  } | null;
+  degraded?: boolean;
+  error?: string;
+}
+
+export async function assembleWeeklyAbReports(): Promise<WeeklyAbPayload> {
+  try {
+    const p = await buildABComparisonData();
+    const hasData = p.sub_account_1.trade_count + p.sub_account_2.trade_count > 0;
+    return {
+      scope: "weekly-ab",
+      ab: {
+        hasData,
+        sharpeDelta: p.delta.sharpe_delta,
+        pnlDelta: p.delta.pnl_delta,
+        drawdownDelta: p.delta.drawdown_delta,
+        challenger: {
+          sharpe: p.sub_account_2.rolling_20_session_sharpe,
+          pnl: p.sub_account_2.cumulative_pnl,
+          drawdown: p.sub_account_2.max_drawdown,
+          trades: p.sub_account_2.trade_count,
+        },
+        baseline: {
+          sharpe: p.sub_account_1.rolling_20_session_sharpe,
+          pnl: p.sub_account_1.cumulative_pnl,
+          drawdown: p.sub_account_1.max_drawdown,
+          trades: p.sub_account_1.trade_count,
+        },
+        killSwitch: {
+          isArmed: p.kill_switch_status.is_armed,
+          currentlyDormant: p.kill_switch_status.currently_dormant,
+          lastEvaluated: p.kill_switch_status.last_evaluated
+            ? new Date(p.kill_switch_status.last_evaluated).toISOString()
+            : null,
+        },
+        lastUpdated: p.last_updated ? new Date(p.last_updated).toISOString() : null,
+      },
+    };
+  } catch (err) {
+    // Fail-soft to honest-empty, same contract as the other assemblers: a broken
+    // read is carried as `degraded`, never a silent-empty that reads as "no edge yet".
+    logger.warn({ err }, "slumhouse weekly-ab assemble failed — returning degraded payload");
+    return { scope: "weekly-ab", ab: null, degraded: true, error: "ab_comparison_failed" };
+  }
 }
