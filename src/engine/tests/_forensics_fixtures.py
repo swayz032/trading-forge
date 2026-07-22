@@ -277,3 +277,94 @@ def m2_both_forms_cases() -> list[MutationCase]:
             is_placeholder=False, companion=shared_anchor_legit_companion(),
         ),
     ]
+
+
+# --------------------------------------------------------------------------- #
+# R-272 SIX-SLOT WAVE — REAL (non-placeholder) grader-authored cases for the remaining
+# slots whose class survived an adversarial evasion probe. m6 and m7 are DELIBERATELY
+# ABSENT here: their adversarial sub-cases DEFEATED the detector (fail-open holes — see the
+# TRIPWIRE tests in test_calibration_battery_framework.py), so per R-272 §2 their "pass" is
+# withheld pending a doer's fix. Detector code is untouched by all of this.
+# --------------------------------------------------------------------------- #
+def m1_mistyped_family_inputs() -> LegAInputs:
+    """m1: a load-bearing structural spine (WAIT_SESSION, honest approximation=False) is
+    mis-typed as FILTER (a proxy/pass-through family whose enforced-honest approximation is
+    True). The live re-derived binding makes (ii) categorical: a load-bearing proxy is an
+    approximation → BLOCK on (ii). (Every non-session family is honest-approx=True, so there is
+    NO honest family to hide a mistyped structural spine in — the class has no (ii)-evasion.)"""
+    a = clean_artifact()
+    a["spec"]["entry_conditions"][0]["type"] = "FILTER"
+    _rehash(a)
+    return _mutant_inputs(a)
+
+
+def m3_polarity_dissent_inputs() -> LegAInputs:
+    """m3: the artifact is structurally clean, but the INDEPENDENT fresh reader DISSENTS on the
+    polarity row for one condition (polarity=False). Polarity is a Phase-2 semantic judgement;
+    a dissent fail-closes the countersign → BLOCK on 'countersign'."""
+    a = clean_artifact()
+    cs = clean_countersignatures(a)
+    first_id = next(iter(cs))
+    cs[first_id] = {**cs[first_id], "polarity": False}
+    return _mutant_inputs(a, countersigns=cs)
+
+
+def m3_polarity_clean_companion() -> LegAInputs:
+    """m3 companion: the SAME artifact with a CLEAN (all-agree) fresh-reader countersign — the
+    automated leg passes so Phase-2 actually runs and the countersign check is genuinely reached
+    and PASSES (non-vacuous)."""
+    return clean_inputs()
+
+
+def m4_false_flag_inputs() -> LegAInputs:
+    """m4: a proxy-bound LOAD-BEARING condition (WAIT_STRUCTURE, live honest approximation=True)
+    whose stored record CLAIMS approximation=False. The m4 row re-derives the live flag and
+    convicts the lie → BLOCK on 'm4_false_flag' (the row also fails (ii), as an honest proxy
+    should)."""
+    a = clean_artifact()
+    a["spec"]["entry_conditions"].append({
+        "id": "WAIT_STRUCTURE:x#9", "type": "WAIT_STRUCTURE",
+        "object": "wait for a break of structure", "role": "spine",
+        "span": {"start": 0, "end": 0}, "evidence": "bos", "type_confidence": "confident",
+        "approximation": False,  # the false flag
+    })
+    a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
+    _rehash(a)
+    return _mutant_inputs(a, cert=clean_certificate(a["spec"]))
+
+
+def m4_matching_label_companion() -> LegAInputs:
+    """m4 companion: a WAIT_SESSION (live honest approximation=False) whose stored record HONESTLY
+    claims approximation=False — the m4 row is genuinely REACHED and evaluated as a MATCH (PASS),
+    not merely absent. The spec is otherwise clean and passes Leg A whole (non-vacuous)."""
+    a = clean_artifact()
+    a["spec"]["entry_conditions"][0]["approximation"] = False  # matches the live binding
+    _rehash(a)
+    return _mutant_inputs(a)
+
+
+def m5_unstamped_exit_inputs() -> LegAInputs:
+    """m5: the house-default exit VALUE is present in the framework overlay but its provenance
+    stamp (exit_source) is stripped (None). A present-but-unstamped house exit → BLOCK on (iv)."""
+    a = clean_artifact()
+    a["spec"]["framework_overlay"] = {"exit": _HOUSE_DEFAULT_EXIT, "exit_source": None}
+    _rehash(a)
+    return _mutant_inputs(a)
+
+
+def robust_six_real_cases() -> dict[str, MutationCase]:
+    """The FOUR slots whose class survived the adversarial probe (m1, m3, m4, m5), each a REAL
+    (non-placeholder) case with its own anti-vacuity companion. m2 is authored separately
+    (both-forms); m6 and m7 are withheld (detector holes)."""
+    return {
+        "m1": MutationCase("m1", "m1-mistyped-structure-as-filter", "ii",
+                           m1_mistyped_family_inputs(), is_placeholder=False, companion=clean_inputs()),
+        "m3": MutationCase("m3", "m3-fresh-reader-polarity-dissent", "countersign",
+                           m3_polarity_dissent_inputs(), is_placeholder=False,
+                           companion=m3_polarity_clean_companion()),
+        "m4": MutationCase("m4", "m4-proxy-mislabeled-approx-false", "m4_false_flag",
+                           m4_false_flag_inputs(), is_placeholder=False,
+                           companion=m4_matching_label_companion()),
+        "m5": MutationCase("m5", "m5-house-exit-unstamped", "iv",
+                           m5_unstamped_exit_inputs(), is_placeholder=False, companion=clean_inputs()),
+    }

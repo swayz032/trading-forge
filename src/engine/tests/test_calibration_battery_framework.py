@@ -20,11 +20,18 @@ from src.engine.forensics.calibration_battery import (
 )
 from src.engine.forensics.compile_fidelity import PASS
 from src.engine.tests._forensics_fixtures import (
+    _mutant_inputs,
+    _rehash,
+    clean_artifact,
+    clean_certificate,
     clean_inputs,
     m2_both_forms_cases,
     m2_launder_drop_inputs,
     m2_naive_drop_inputs,
+    m4_false_flag_inputs,
+    m4_matching_label_companion,
     placeholder_cases,
+    robust_six_real_cases,
     shared_anchor_legit_companion,
 )
 
@@ -327,3 +334,106 @@ def test_probe_status_order_incomplete_dominates_failed():
     del g["m6"]                                                                          # unfilled
     g["m1"] = MutationCase("m1", "STANDIN", "ii", clean_inputs(), is_placeholder=False)  # failed
     assert run_calibration(clean_inputs(), g).status == STATUS_INCOMPLETE
+
+
+# =========================================================================== #
+# R-272 SIX-SLOT WAVE — REAL grader-authored cases for the four slots whose class survived
+# an adversarial evasion probe (m1, m3, m4, m5). Each convicts on its targeted check and is
+# distinguished by its own anti-vacuity companion. m6 and m7 are WITHHELD — their adversarial
+# sub-cases DEFEATED the detector (see the TRIPWIRE tests below), so CALIBRATED is not reached.
+# =========================================================================== #
+def test_r272_four_robust_slots_each_convict_and_distinguish():
+    reals = robust_six_real_cases()
+    assert set(reals) == {"m1", "m3", "m4", "m5"}
+    # Seed the other slots with placeholders so the battery runs; assert per-slot outcomes.
+    slots = dict(placeholder_cases())
+    slots.update(reals)
+    slots["m2"] = m2_both_forms_cases()
+    result = run_calibration(clean_inputs(), slots)
+    for sid, case in reals.items():
+        sr = result.slot_results[sid]
+        assert sr.ok, (sid, sr.detail)
+        assert sr.convicted, (sid, sr.detail)
+        assert sr.mutant_trips_target, (sid, sr.detail)      # tripped its targeted check
+        assert sr.clean_passes_target, (sid, sr.detail)      # companion passes that check
+        assert sr.distinguishes, (sid, sr.detail)
+        assert not sr.is_placeholder, sid
+        assert sr.targeted_check == case.targeted_check, sid
+
+
+def test_r272_m4_companion_reaches_the_false_flag_row_non_vacuously():
+    # The m4 companion must PASS 'm4_false_flag' because the row is REACHED and MATCHES (not
+    # because the row is absent). Prove both: the mutant's row FAILS, the companion's row PASSES
+    # AND the companion carries an approximation label (so the row genuinely evaluated).
+    mut = m4_false_flag_inputs().run()
+    assert "m4_false_flag" in mut.checks_failed
+    comp = m4_matching_label_companion().run()
+    assert "m4_false_flag" not in comp.checks_failed
+    assert comp.verdict == PASS  # whole-clean known-good, the row evaluated to a MATCH
+
+
+def test_r272_full_seven_slot_run_is_blocked_at_placeholder_by_the_two_holes():
+    # THE WAVE RESULT: m2 both-forms + the four robust reals are certified, but m6 and m7 remain
+    # PLACEHOLDERS (detector holes withhold their pass). Census: 5 real slots, 2 placeholder →
+    # overall status stays HARNESS_DEMONSTRATED_ON_PLACEHOLDERS, NOT CALIBRATED. This is the
+    # machine-checked proof that the wave does not reach STATUS_CALIBRATED.
+    slots = dict(placeholder_cases())      # m6, m7 stay placeholders
+    slots.update(robust_six_real_cases())  # m1, m3, m4, m5 real
+    slots["m2"] = m2_both_forms_cases()    # m2 real (both forms)
+    result = run_calibration(clean_inputs(), slots)
+
+    real_slots = {sid for sid, sr in result.slot_results.items() if sr.filled and not sr.is_placeholder}
+    ph_slots = {sid for sid, sr in result.slot_results.items() if sr.is_placeholder}
+    assert real_slots == {"m1", "m2", "m3", "m4", "m5"}
+    assert ph_slots == {"m6", "m7"}
+    assert result.status == STATUS_PLACEHOLDER, result.reasons
+    assert result.status != STATUS_CALIBRATED
+
+
+# =========================================================================== #
+# DETECTOR HOLES found by the R-272 §2 adversarial probes. These TRIPWIRE tests assert the
+# CURRENT (fail-open) behavior and SELF-DESTRUCT when a doer fixes the detector — at which
+# point the m6 / m7 both-forms can be authored and the slot certified. They are DIAGNOSTIC:
+# they document a KNOWN broken state and must NOT be read as endorsing it. Detector untouched.
+# =========================================================================== #
+def test_TRIPWIRE_m6_null_artifact_video_fails_open_KNOWN_HOLE():
+    # HOLE (m6 / broken spec<->certificate chain): a certificate naming a DIFFERENT extraction
+    # reconciles CLEAN when the artifact's own `video` is None — the cross-link guard at
+    # compile_fidelity.py:481 (`if art_video is not None and cert_video is not None and ...`)
+    # fail-OPENs on absent artifact provenance, contradicting the §3 fail-closed contract.
+    a = clean_artifact()
+    a["video"] = None                                   # artifact provenance absent
+    cert = clean_certificate(a["spec"])
+    cert["video"] = "SOME_OTHER_VIDEO_9999"             # cert points at a DIFFERENT extraction
+    r = _mutant_inputs(a, cert=cert).run()
+    # KNOWN-BROKEN half (self-destructs when the guard is fixed to fail-closed):
+    assert r.verdict == PASS, "TRIPWIRE FIRED: m6 null-video hole appears FIXED — author m6 both-forms and delete this tripwire"
+    assert "vi_cert" not in r.checks_failed
+    # PROOF the guard would catch it if the artifact video were present (both-videos path works):
+    b = clean_artifact()
+    cert_b = clean_certificate(b["spec"])
+    cert_b["video"] = "SOME_OTHER_VIDEO_9999"
+    rb = _mutant_inputs(b, cert=cert_b).run()
+    assert "vi_cert" in rb.checks_failed                # the SAME break IS caught when video present
+
+
+def test_TRIPWIRE_m7_whitespace_disposition_fails_open_KNOWN_HOLE():
+    # HOLE (m7 / non-load-bearing WITHOUT a disposition): a WHITESPACE-ONLY non_lb_disposition
+    # ("   ") satisfies the presence check at compile_fidelity.py:326 (`not disposition`, no
+    # .strip()) and PASSES v_nonlb — while an EMPTY string is correctly caught. That asymmetry is
+    # the tell: a blank disposition is semantically "no disposition" yet slips.
+    a = clean_artifact()
+    a["spec"]["entry_conditions"][0]["load_bearing"] = False
+    a["spec"]["entry_conditions"][0]["non_lb_disposition"] = "   "   # blank content
+    _rehash(a)
+    r = _mutant_inputs(a).run()
+    # KNOWN-BROKEN half (self-destructs when the disposition read is stripped):
+    assert r.verdict == PASS, "TRIPWIRE FIRED: m7 whitespace-disposition hole appears FIXED — author m7 both-forms and delete this tripwire"
+    assert "v_nonlb" not in r.checks_failed
+    # PROOF of the asymmetry: an EMPTY-STRING disposition on the same condition IS caught:
+    b = clean_artifact()
+    b["spec"]["entry_conditions"][0]["load_bearing"] = False
+    b["spec"]["entry_conditions"][0]["non_lb_disposition"] = ""
+    _rehash(b)
+    rb = _mutant_inputs(b).run()
+    assert "v_nonlb" in rb.checks_failed
