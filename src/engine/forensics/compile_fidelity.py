@@ -491,41 +491,98 @@ def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None
     return out
 
 
-def _anchor_maps_to_spec(anchor: str, spec_texts: list[str]) -> bool:
+def _token_boundary_contains(anchor: str, text: str) -> bool:
     """TOKEN-BOUNDARY containment (both operands already `_norm`'d = lowercased, single-spaced):
-    the anchor is a whole-token subsequence of a spec text, or a spec text is a whole-token
-    subsequence of the anchor. Space-padding is what makes it token-boundary: a bare fragment
-    (e.g. 'a') can no longer match INSIDE a token ('wait'), only as a standalone token run."""
+    the anchor is a whole-token subsequence of `text`, or `text` is a whole-token subsequence of
+    the anchor. Space-padding is what makes it token-boundary: a bare fragment (e.g. 'a') can no
+    longer match INSIDE a token ('wait'), only as a standalone token run."""
     a = f" {anchor} "
-    return any(a in f" {st} " or f" {st} " in a for st in spec_texts)
+    t = f" {text} "
+    return a in t or t in a
+
+
+def _max_bipartite_matching(edges: list[list[int]], n_right: int) -> int:
+    """Kuhn's augmenting-path maximum bipartite matching. `edges[i]` = the right-node indices
+    left-node i (a certificate entry) may claim; a right node (a taught spec condition) is
+    claimed by AT MOST ONE left node. Returns the matching size. Sizes here are a handful of
+    conditions, so the O(V·E) simplicity is fine."""
+    match_right = [-1] * n_right
+
+    def augment(u: int, seen: list[bool]) -> bool:
+        for v in edges[u]:
+            if not seen[v]:
+                seen[v] = True
+                if match_right[v] == -1 or augment(match_right[v], seen):
+                    match_right[v] = u
+                    return True
+        return False
+
+    size = 0
+    for u in range(len(edges)):
+        if augment(u, [False] * n_right):
+            size += 1
+    return size
 
 
 def _check_no_certificate_drops(spec: dict, certificate: dict) -> list[CheckResult]:
+    """(v) 1:1 RECONCILIATION (bijection), the A3 redesign. The old audit asked only "does this
+    anchor appear SOMEWHERE in a flattened pool" — no distinctness, so m2 was launderable: drop
+    a taught condition and refill its certificate slot with a DUPLICATE of a kept condition's
+    anchor and every entry still 'mapped'. Now each certificate entry must claim a DISTINCT
+    taught condition (maximum matching): a duplicated/reused anchor cannot cover two slots, an
+    unmatched certificate entry is unreconciled provenance, and an unmatched taught condition is
+    the silent drop (m2) — un-launderable."""
     if not isinstance(certificate, dict):
         return []
     cert_conditions = certificate.get("conditions") or []
     if not isinstance(cert_conditions, list) or not cert_conditions:
         return []  # nothing to reconcile against; (v) drop-audit is vacuously satisfied
-    spec_texts = [_norm(str(c.get("object", ""))) for c in _taught_conditions(spec)]
-    spec_texts += [_norm(str(c.get("evidence", ""))) for c in _taught_conditions(spec)]
-    spec_texts = [t for t in spec_texts if t]
     out: list[CheckResult] = []
+
+    # Certificate anchors (validity is gated upstream at vi_cert; stay defensive). A sub-threshold
+    # anchor is a fabricated/meaningless anchor → fail-closed (v) drop, before matching.
+    cert_anchors: list[str] = []
     for cc in cert_conditions:
         if not isinstance(cc, dict):
             continue
         anchor = _norm(str(cc.get("quote_anchor", "")))
         if not anchor:
             continue
-        # SPECIFICITY floor: a sub-threshold anchor (single char/word, punctuation) is a
-        # fabricated/meaningless anchor — a fail-closed (v) drop, NOT a free pass. The old bare
-        # substring `any(anchor in st ...)` let a one-char anchor reconcile against every text.
         if len(anchor.split()) < MIN_ANCHOR_TOKENS:
             out.append(CheckResult("v", False, f"certificate condition {anchor[:40]!r} below minimum anchor specificity ({MIN_ANCHOR_TOKENS}+ tokens); fabricated/meaningless anchor (m2)"))
             continue
-        if not _anchor_maps_to_spec(anchor, spec_texts):
-            out.append(CheckResult("v", False, f"certificate condition {anchor[:40]!r} has no spec condition (silent drop; m2)"))
+        cert_anchors.append(anchor)
+    if out:
+        return out  # fabricated anchors already convict; the 1:1 matching is moot
+
+    # Per-condition texts (object + evidence) — NOT a flattened pool, so an anchor is scored
+    # against ITS candidate conditions, one at a time.
+    taught = _taught_conditions(spec)
+    cond_texts: list[list[str]] = []
+    for c in taught:
+        texts = [_norm(str(c.get("object", ""))), _norm(str(c.get("evidence", "")))]
+        cond_texts.append([t for t in texts if t])
+
+    # Edges: certificate entry i → taught condition j if the anchor token-matches any of j's
+    # texts. An anchor that ambiguously matches several conditions keeps edges to all of them —
+    # the matching resolves the ambiguity by assigning it to whichever leaves a 1:1 possible; it
+    # is only fatal when it breaks the bijection (a shared quote grounding two DISTINCT present
+    # conditions, each claimed once, is legitimate — and MEASURED absent in the honest corpus).
+    edges = [
+        [j for j, texts in enumerate(cond_texts) if any(_token_boundary_contains(anchor, t) for t in texts)]
+        for anchor in cert_anchors
+    ]
+    matched = _max_bipartite_matching(edges, len(taught))
+    n_cert, n_taught = len(cert_anchors), len(taught)
+
+    if n_cert != n_taught:
+        out.append(CheckResult("v", False, f"certificate cardinality {n_cert} != taught-condition count {n_taught}; provenance ledger is not 1:1 (m2)"))
+    if matched < n_cert:
+        out.append(CheckResult("v", False, f"{n_cert - matched} certificate entr{'y' if n_cert - matched == 1 else 'ies'} do not reconcile to a DISTINCT taught condition (duplicated/laundered anchor; m2)"))
+    if matched < n_taught:
+        out.append(CheckResult("v", False, f"{n_taught - matched} taught condition(s) have no matching certificate entry (silent drop; m2)"))
     if not out:
-        out.append(CheckResult("v", True, "every certificate condition maps to a spec condition"))
+        out.append(CheckResult("v", True, "certificate reconciles 1:1 with taught conditions (bijection)"))
     return out
 
 

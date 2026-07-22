@@ -334,6 +334,59 @@ def test_f2_a2_honest_certificate_anchors_clear_the_specificity_floor():
     assert "v" not in seal.checks_failed and "vi_cert" not in seal.checks_failed
 
 
+def test_f2_a3_drop_audit_is_a_bijection_launder_and_cardinality_block():
+    """Amendment A3 (structural — defeats the canonical m2 class). The drop-audit was never a
+    bijection: a flattened pool + `any(anchor matches somewhere)` had no distinctness, so a
+    dropped taught condition could be LAUNDERED behind a duplicate of a kept condition's anchor.
+    Now it is a 1:1 reconciliation (maximum matching): each certificate entry must claim a
+    DISTINCT taught condition."""
+    london = "wait for the london killzone session"
+
+    # Laundered drop: drop WAIT_SESSION:am#1, refill its slot with a DUPLICATE london anchor.
+    a = clean_artifact()
+    a["spec"]["entry_conditions"] = [c for c in a["spec"]["entry_conditions"] if c["id"] != "WAIT_SESSION:am#1"]
+    a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
+    a["spec_hash"] = _spec_hash(a["spec"])
+    laundered = {"video": a["video"], "conditions": [
+        {"quote_anchor": london, "char_span": [0, 0]},
+        {"quote_anchor": london, "char_span": [0, 0]},   # laundered am slot
+        {"quote_anchor": "spine completion", "char_span": [0, 0]},
+    ]}
+    res = run_leg_a(a, certificate=laundered, countersignatures=clean_countersignatures(a))
+    assert res.verdict == BLOCK
+    assert "v" in res.checks_failed
+
+    art = clean_artifact()
+    cs = clean_countersignatures(art)
+
+    def verdict(conditions, artifact=art):
+        cert = {"video": artifact["video"], "conditions": conditions}
+        return run_leg_a(artifact, certificate=cert, countersignatures=cs).verdict
+
+    # 6 entries all one anchor vs 3 real conditions → cardinality + duplication → BLOCK.
+    assert verdict([{"quote_anchor": london, "char_span": [0, 0]} for _ in range(6)]) == BLOCK
+    # 3 entries, only 2 distinct anchors (one duplicated) vs 3 conditions → BLOCK (dup can't
+    # cover two slots, and the third condition is left unmatched).
+    assert verdict([
+        {"quote_anchor": london, "char_span": [0, 0]},
+        {"quote_anchor": london, "char_span": [0, 0]},
+        {"quote_anchor": "spine completion", "char_span": [0, 0]},
+    ]) == BLOCK
+
+
+def test_f2_a3_honest_certificate_reconciles_1to1():
+    """Anti-vacuity for the bijection: the honest fixture's REAL cert PASSes because it is a
+    genuine 1:1 ledger — one distinct anchor per taught condition (measured: zero cross-condition
+    phrasing overlap, so the strict matching forces nothing)."""
+    art = clean_artifact()
+    cert = clean_certificate(art["spec"])
+    n_taught = len(art["spec"]["entry_conditions"]) + len(art["spec"].get("invalidations") or [])
+    assert len(cert["conditions"]) == n_taught  # 1:1 cardinality
+    seal = run_leg_a_phase1(art, certificate=cert)
+    assert seal.automated_verdict == PASS, sorted(seal.checks_failed)
+    assert "v" not in seal.checks_failed
+
+
 def test_f2b_nondict_countersignatures_is_graceful_block_not_crash():
     """A malformed (non-dict) countersignatures object must fail-closed BLOCK, never raise an
     uncaught AttributeError (a crash is not a fail-closed refusal)."""

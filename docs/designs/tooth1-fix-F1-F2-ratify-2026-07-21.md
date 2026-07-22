@@ -192,3 +192,43 @@ radius (R-261 mint):** corpus re-run unchanged — 18/18 BLOCK, 0 pass Leg A(ii)
 `test_f2_a2_any_not_all_and_anchor_specificity_block`,
 `test_f2_a2_honest_certificate_anchors_clear_the_specificity_floor`. Does NOT self-certify — the
 same grader re-attacks after.
+
+---
+
+## AMENDMENT A3 — the drop-audit was never a bijection (structural; defeats canonical m2)
+
+The fourth re-attack found that A1/A2 hardened anchor *validity* but never touched anchor
+*correspondence*. `_check_no_certificate_drops` built `spec_texts` as a **single flattened pool**
+across every taught condition's object+evidence and asked only `any(anchor token-matches
+somewhere)` — "does this anchor appear SOMEWHERE," never "does it correspond to ITS condition."
+No distinctness / cardinality / bijection. So m2 (silently-dropped taught condition) — the class
+this audit exists to catch — was defeatable:
+
+- **Laundered drop (m2 defeated, verified):** drop `WAIT_SESSION:am#1` from the compiled spec
+  and refill its certificate slot with a DUPLICATE of the kept condition's anchor
+  (`"wait for the london killzone session"`) → PASS. The dropped safety-relevant condition is
+  laundered behind another condition's valid anchor.
+- **No cardinality (verified):** a certificate claiming 6 conditions, all one anchor, against a
+  3-condition spec → PASS.
+
+**Fix — a 1:1 RECONCILIATION (maximum bipartite matching), not a threshold tweak.** Each
+certificate entry must claim a DISTINCT taught condition; per-condition texts replace the
+flattened pool; `_max_bipartite_matching` (Kuhn) computes the matching. BLOCK when: cardinality
+`|cert| != |taught|`; any certificate entry unmatched (duplicated/laundered anchor); any taught
+condition unmatched (the silent drop — now un-launderable). **Ambiguous-anchor choice (STATED):**
+an anchor that token-matches several conditions keeps edges to all; the matching resolves it and
+it is only fatal when it breaks the 1:1 — a shared quote grounding two DISTINCT present
+conditions, each claimed once, is legitimate. **MEASURED:** the honest corpus has **zero**
+cross-condition phrasing overlap, so the strict bijection forces nothing (a legitimate
+anchorless/shared case would route through the §0 disposition lane, never a gate weakening).
+
+**No regression:** all prior BLOCKs (F-1; every F-2 shape — `{}`, non-dict, null-value,
+missing-key, any→all, junk/short anchor; bypass removal) stay closed; m2 placeholder still
+convicts and the honest-good real certificate still PASSes for the right reason (a genuine 1:1
+ledger, one distinct anchor per taught condition). **Blast radius (R-261 mint):** corpus re-run
+unchanged — 18/18 BLOCK, 0 pass Leg A(ii), 183 ii-fail rows (corpus specs carry no certificate;
+this change touches only certificate reconciliation, no `approximation` accounting), 0 verdict
+flips, no published number moved. Revival probes:
+`test_f2_a3_drop_audit_is_a_bijection_launder_and_cardinality_block`,
+`test_f2_a3_honest_certificate_reconciles_1to1`. Does NOT self-certify — the same grader
+re-attacks after.
