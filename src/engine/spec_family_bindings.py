@@ -811,6 +811,54 @@ def refused_session_zone(object_text: str) -> str | None:
     return None
 
 
+# ─── Session-NAME → canonical-window resolver (REDESIGN sub-packet 1, R-284
+# Decision A) ────────────────────────────────────────────────────────────────
+# The HONEST name lane: a taught session NAME that maps into the CLOSED ENUM of
+# first-class exact-window zones and carries NO clock token binds to its EXACT
+# killzone window with approximation=False, because the enforced primitive
+# (session_windows.is_in_killzone) evaluates that exact window — there is no
+# clock derivation in the path, so the flag is truthful. The name→zone mapping
+# IS `SESSION_KEYWORDS` (already the module's closed, deliberately-narrow,
+# unambiguous-only enum; NO fuzzy matching). The pinned refusal cases
+# (ambiguous / orphan-zone / wrap-window / clock-derived-coarse / unrecognized)
+# are NOT this function's job — it returns None for all of them and the caller
+# routes each to its correct NAMED refusal reason
+# (packet-session-refusal-precedence-2026-07-21.md).
+SESSION_NAME_ROUTE_PRIMITIVE: str = "session_windows.is_in_killzone"
+
+
+def session_zone_window_repr(zone: str) -> str:
+    """The exact [start,end) minute-of-day window(s) is_in_killzone evaluates for
+    `zone`, formatted for the (ii) scope line (R-284 §1 pin (vi)). Empty string
+    for a zone with no computable window (never reached on a name-route bind)."""
+    intervals = _REAL_ZONE_INTERVALS.get(zone)
+    if not intervals:
+        return ""
+    return ",".join(f"[{s},{e})" for s, e in intervals)
+
+
+def resolve_session_name_to_window(object_text: str) -> tuple[str, str] | None:
+    """Honest session-NAME → canonical-window resolution (R-284 Decision A §1(a)).
+
+    Returns `(zone, scope_path)` for an UNAMBIGUOUS session NAME in the closed
+    enum that carries NO clock token — `bindable=True, approximation=False`,
+    primitive `is_in_killzone`. Returns None for everything else (clock present,
+    or no closed-enum name), leaving the caller to route the correct refusal.
+
+    Pinned (i): NO clock tokens ANYWHERE in the name path — a phrase carrying a
+    clock is clock-derived-coarse, not a name, and refuses. Pinned: NO fuzzy
+    matching — the enum is the exact `SESSION_KEYWORDS` phrase set."""
+    if not object_text:
+        return None
+    # (i) A clock token anywhere disqualifies the name path outright.
+    if _SESSION_CLOCK_TOKEN_RE.search(object_text.strip()):
+        return None
+    zone = resolve_session_keyword(object_text)
+    if zone is None:
+        return None
+    return zone, f"name-route|zone={zone}|window={session_zone_window_repr(zone)}"
+
+
 # ─── Role-Aware Session Resolver (docs/designs/packet-role-aware-session-
 # resolver-2026-07-20.md) ───────────────────────────────────────────────────
 # R-085 §2 / R-088 §3 / R-143 §3 item 2. ★ CORRECTED (R-185 §2, orphan-zone
@@ -2415,20 +2463,51 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         )
 
     if meta.requires_session_keyword:
-        zone = resolve_session_keyword(obj)
-        if zone is not None:
-            return ConditionBinding(
-                condition_id=cond_id,
-                type=cond_type,
-                role=role,
-                object=obj,
-                bindable=True,
-                primitive=meta.effective_primitive(),
-                approximation=meta.effective_approximation(),
-                executed=meta.executed,
-                reason=None,
-                session_zone=zone,
-            )
+        # ── NAME-ROUTE (REDESIGN sub-packet 1, R-284 Decision A §1(a)), gated on
+        # TF_SESSION_ROLE_RESOLVER_ENABLED. An unambiguous CLOSED-ENUM session
+        # NAME carrying NO clock binds to its EXACT killzone window:
+        # bindable=True, approximation=False, primitive is_in_killzone (the one
+        # (ii)-eligible honest lane — no clock derivation, so the flag is
+        # truthful). The scope-line path (name-route|zone|window) is emitted by
+        # the (ii) detector from session_zone (§1 pin (vi)). On a miss, the flow
+        # falls to the orphan/wrap/recognized-no-window REFUSAL routing below —
+        # under flag ON there is NO coarse approximation=True bind.
+        #
+        # ★ FLAG OFF (default): the pre-REDESIGN keyword bind, BYTE-IDENTICAL —
+        # same primitive (effective_primitive()), same approximation, same
+        # fields. The name-route lane never executes; the resolver block below
+        # is skipped; nothing about the flag-off tree moves.
+        if session_role_resolver_enabled():
+            name = resolve_session_name_to_window(obj)
+            if name is not None:
+                zone, _path = name
+                return ConditionBinding(
+                    condition_id=cond_id,
+                    type=cond_type,
+                    role=role,
+                    object=obj,
+                    bindable=True,
+                    primitive=SESSION_NAME_ROUTE_PRIMITIVE,
+                    approximation=False,
+                    executed=meta.executed,
+                    reason=None,
+                    session_zone=zone,
+                )
+        else:
+            zone = resolve_session_keyword(obj)
+            if zone is not None:
+                return ConditionBinding(
+                    condition_id=cond_id,
+                    type=cond_type,
+                    role=role,
+                    object=obj,
+                    bindable=True,
+                    primitive=meta.effective_primitive(),
+                    approximation=meta.effective_approximation(),
+                    executed=meta.executed,
+                    reason=None,
+                    session_zone=zone,
+                )
         # ── ORPHAN-ZONE REFUSAL — CONSULTED BEFORE THE ROLE RESOLVER.
         # (packet-session-refusal-precedence-2026-07-21.md, scope item (i).)
         #
@@ -2491,23 +2570,30 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         if session_role_resolver_enabled():
             role_result = classify_session_role(obj)
             if role_result.zone is not None:
-                # Genuine session teaching AND a real, computable killzone
-                # window was found (clock-time/anchor-phrase overlap) —
-                # bindable, but approximation=True: a coarse containment
-                # proxy against one of the 5 real windows, never the exact
-                # phrase-match contract resolve_session_keyword carries
-                # (S8 — no approximation=False in this packet).
+                # ★ CLOCK-DERIVED COARSE OVERLAP — REFUSED, never bound (R-284
+                # Decision A §1(b) + build item 1). A window derived from
+                # clock/anchor min-max overlap against one of the 5 real
+                # killzones is an approximation=True PROXY, not the exact
+                # window is_in_killzone evaluates. The old lane bound it
+                # approximation=True; that bind then rode the family-level
+                # honest read (WAIT_SESSION honest=False) straight through
+                # (ii) — the hole the REDESIGN scoping surfaced. There is no
+                # honest exact window to bind, so this is refused with the
+                # recognized-no-computable-window reason (a coarse-derivable
+                # zone is precisely "recognized but no window we can honestly
+                # gate on"). The (ii) detector's binding-level conjunction is
+                # the second, independent guard on the same class.
                 return ConditionBinding(
                     condition_id=cond_id,
                     type=cond_type,
                     role=role,
                     object=obj,
-                    bindable=True,
-                    primitive=meta.effective_primitive(),
-                    approximation=True,
-                    executed=meta.executed,
-                    reason=None,
-                    session_zone=role_result.zone,
+                    bindable=False,
+                    primitive=None,
+                    approximation=False,
+                    executed=False,
+                    reason=SESSION_TEACHING_UNBOUND_REASON,
+                    session_zone=None,
                 )
             if role_result.refusal is not None:
                 # ★ A taught window that WRAPS MIDNIGHT. Refused BY NAME and

@@ -26,7 +26,7 @@
   },
   "n_empty_concepts": 18,
   "specs_touched": 14,
-  "mistyped_session_carried": 26,
+  "mistyped_session_carried": 27,
   "rows": [
     {
       "condition_id": "WAIT_RETEST:patiently-wait-for-you-know-price-to-get#4",
@@ -731,6 +731,16 @@
       "type": "WAIT_SESSION",
       "role": "spine",
       "object": "as the New York session opens we are still right on Fair Value we start running up",
+      "tf_class": "TF_UNSPECIFIED",
+      "concepts": [],
+      "narration_candidate_OLD_RULE": true
+    },
+    {
+      "condition_id": "WAIT_SESSION:overnight-pre-market-range-we-are-going#6",
+      "file": "W7nlnHTUZQU__s0.spec.json",
+      "type": "WAIT_SESSION",
+      "role": "confluence",
+      "object": "overnight/pre-market range: we are going to focus primarily when the market actually closes until when the market opens, which is going to be from 400 p.m. EST all the way until 9:30 a.m. EST -- identify the highest point of price action (overnight high) and the lowest point of price action (overnight low)",
       "tf_class": "TF_UNSPECIFIED",
       "concepts": [],
       "narration_candidate_OLD_RULE": true

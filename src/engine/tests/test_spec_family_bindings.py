@@ -603,18 +603,21 @@ def test_s2_known_bad_row_is_refused(_role_resolver_on):
 
 
 @pytest.mark.parametrize("text", [_KNOWN_GOOD_OFF_THE_BELL, _KNOWN_GOOD_OPENING_BELL])
-def test_s2_known_good_bell_rows_are_bound(_role_resolver_on, text):
-    """The grader's "opening bell" / "off the Bell" rows (session_teaching
-    verdict, session-ab-blind-grade-RESULT.json) — 9:30 ET market open falls
-    inside the real ny_am killzone [7:00,10:00), so these get a genuine,
-    computable, non-fabricated zone."""
+def test_s2_known_good_bell_rows_are_recognized_but_refused_under_name_first(_role_resolver_on, text):
+    """★ REDESIGN sub-packet 1 (R-284 Decision A). The grader's "opening bell" /
+    "off the Bell" rows are still RECOGNIZED as session teaching (classify_session_role
+    unchanged), but the opening bell is a clock-derived-coarse ANCHOR INSTANT
+    (9:30 ET), not a closed-enum session NAME with an exact window. Under the
+    name-first lane it is REFUSED — recognized-but-no-computable-window — rather
+    than coarse-bound ny_am approximation=True. The governed blind grade (A/B/C =
+    2/21/4) categorizes both as B (the session term is only an anchor for a price
+    object), which is exactly this refusal."""
     result = classify_session_role(text)
     assert result.recognized is True
-    assert result.zone == "ny_am"
     binding = bind_condition({"id": "calib:known-good", "type": "WAIT_SESSION", "object": text, "role": "spine"})
-    assert binding.bindable is True
-    assert binding.session_zone == "ny_am"
-    assert binding.approximation is True, "S8: never approximation=False in this packet"
+    assert binding.bindable is False
+    assert binding.session_zone is None
+    assert binding.reason == SESSION_TEACHING_UNBOUND_REASON
 
 
 # ─── S1: premise audit at the PRODUCTION BOUNDARY (not an interior argument) ─
@@ -627,9 +630,20 @@ def test_s1_premise_audit_production_boundary_varying_condition_text_moves_the_b
     proves a function is a function; that omission sank an earlier packet
     (WIRE-2, AR-142 — the primitive NAMED is not always the primitive that
     EXECUTES, so the production boundary is the only honest place to test)."""
-    london_ish = bind_condition(
+    # ★ REDESIGN sub-packet 1: the bound outcome comes from an unambiguous
+    # closed-enum session NAME (approximation=False, is_in_killzone), NOT from a
+    # clock derivation. A clock-carrying teaching is now recognized-but-refused.
+    name_bound = bind_condition(
         {
             "id": "premise:a",
+            "type": "WAIT_SESSION",
+            "object": "only trade during the london killzone session",
+            "role": "spine",
+        }
+    )
+    clock_refused = bind_condition(
+        {
+            "id": "premise:a2",
             "type": "WAIT_SESSION",
             "object": "go to your 5minut time frame, find 3:00 a.m. EST all the way until market open",
             "role": "spine",
@@ -647,15 +661,17 @@ def test_s1_premise_audit_production_boundary_varying_condition_text_moves_the_b
         {"id": "premise:c", "type": "WAIT_SESSION", "object": _KNOWN_BAD_TEXT, "role": "spine"}
     )
 
-    # Three different condition texts through the SAME production entry point
-    # produce three DIFFERENT outcomes -- the resolver's decision moves with
-    # the text, not a constant baked in behind the flag.
-    assert london_ish.bindable is True and london_ish.session_zone == "ny_am" and london_ish.approximation is True
+    # Four different condition texts through the SAME production entry point
+    # produce distinct outcomes -- the decision moves with the text, and the ONLY
+    # bind is the honest name-route one (approximation=False), never a clock proxy.
+    assert name_bound.bindable is True and name_bound.session_zone == "london" and name_bound.approximation is False
+    assert name_bound.primitive == "session_windows.is_in_killzone"
+    assert clock_refused.bindable is False and clock_refused.reason == SESSION_TEACHING_UNBOUND_REASON
     assert unbound_recognized.bindable is False and unbound_recognized.reason == SESSION_TEACHING_UNBOUND_REASON
     assert filler.bindable is False and filler.reason == "no_recognized_session_keyword"
     outcomes = {
-        (london_ish.bindable, london_ish.session_zone, london_ish.reason),
-        (unbound_recognized.bindable, unbound_recognized.session_zone, unbound_recognized.reason),
+        (name_bound.bindable, name_bound.session_zone, name_bound.reason),
+        (clock_refused.bindable, clock_refused.session_zone, clock_refused.reason),
         (filler.bindable, filler.session_zone, filler.reason),
     }
     assert len(outcomes) == 3, "production-boundary liveness: distinct condition text must move the bound outcome"
@@ -667,22 +683,15 @@ def test_s1_premise_audit_production_boundary_varying_condition_text_moves_the_b
 #   london        [02:00,05:00)  <- a lone 3:00 a.m. token
 #   silver_bullet [10:00,11:00)  <- 10:30 a.m., which is OUTSIDE ny_am's end
 #   ny_pm         [13:30,16:00)  <- 14:30 on a 24-hour clock (the H2 case)
+# ★ REDESIGN sub-packet 1: the ZONE SELECTOR is now driven by unambiguous
+# closed-enum session NAMES (no clock tokens), each landing in a DIFFERENT
+# first-class killzone by NAME, not by a clock-derived overlap. These are
+# synthetic probes of the name→window map, not corpus data.
 _S1_DISTINCT_ZONE_CASES = [
-    ("the first two-minute candle off the Bell closes over the 20 SMA and vwap", "ny_am"),
-    # "range" alone is ambiguous vocabulary (a salary range, a mountain
-    # range); the second-pass rule requires one unambiguous market term or two
-    # distinct ambiguous ones, so this synthetic selector probe now names the
-    # chart explicitly. Zone expectation is unchanged.
-    ("the london range forms on the chart after 3:00 a.m. EST", "london"),
-    # Was "I take the setup AT 10:30 a.m." — rewritten to a SELECTING form
-    # because the second-pass rule refuses bare-mention clocks (see
-    # _session_clock_does_work). This is a synthetic probe of the ZONE
-    # SELECTOR, not corpus data, so rewriting it is legitimate; the fact that
-    # the "at"-mention form no longer recognizes is a real, accepted false
-    # negative and is recorded as such in
-    # test_known_false_negatives_of_the_does_work_rule below, not hidden here.
-    ("I take the setup after 10:30 a.m.", "silver_bullet"),
-    ("wait until 14:30 EST for the afternoon candle", "ny_pm"),
+    ("only trade during the am session", "ny_am"),
+    ("wait for the london killzone session", "london"),
+    ("the silver bullet window", "silver_bullet"),
+    ("trade the ny pm session", "ny_pm"),
 ]
 
 
@@ -709,7 +718,10 @@ def test_s1_premise_audit_selector_yields_at_least_three_distinct_bound_zones(_r
             {"id": f"premise:zone:{expected_zone}", "type": "WAIT_SESSION", "object": text, "role": "spine"}
         )
         assert binding.bindable is True, f"{text!r} expected to bind"
-        assert binding.approximation is True, "S8: never approximation=False in this packet"
+        # ★ REDESIGN: the honest name route is approximation=False (is_in_killzone
+        # evaluates the EXACT window), never a clock-derived proxy.
+        assert binding.approximation is False, "name-route binds the exact window, approximation=False"
+        assert binding.primitive == "session_windows.is_in_killzone"
         assert binding.session_zone == expected_zone, (
             f"{text!r} bound {binding.session_zone!r}, expected {expected_zone!r}"
         )
@@ -775,23 +787,18 @@ BINARY_RESISTING_CONDITION_IDS = frozenset(
     }
 )
 
-# The 8-of-17 rows for which classify_session_role finds a concrete,
-# computable clock-time/anchor-phrase span (see module comment on
-# classify_session_role) -- everything else in the 17 is recognized but
-# stays honestly unbound (ambiguous named session, or a session-range LEVEL
-# reference deferred to the out-of-scope level/zone subsystem).
-SESSION_TEACHING_BOUND_CONDITION_IDS = frozenset(
-    {
-        "WAIT_SESSION:after-3-00-a-m-eastern-time-all-the-way#1",
-        "WAIT_SESSION:go-to-your-5minut-time-frame-find-3-00-a#2",
-        "WAIT_SESSION:i-m-looking-at-two-candles-this-one-at-7#2",
-        "WAIT_SESSION:if-i-can-find-a-stock-that-opens-weak-on#4",
-        "WAIT_SESSION:it-s-called-opening-range-with-breakouts#18",
-        "WAIT_SESSION:marking-out-the-top-and-the-bottom-of-th#6",
-        "WAIT_SESSION:the-first-two-minute-candle-off-the-bell#0",
-        "WAIT_SESSION:when-the-stock-actually-breaks-above-the#0",
-    }
-)
+# ★ REDESIGN sub-packet 1 (R-284 Decision B) — CORRECTED FROM THE DEAD 8-of-17.
+# The old set named the 8 rows for which classify_session_role derived a
+# CLOCK/anchor-overlap span. That was the REFUTED "grade-was-the-resolver"
+# number (AR-203): those 8 are all clock-derived-coarse proxies (approximation=
+# True), which the governed blind grade (A/B/C = 2/21/4) categorizes as B — the
+# session term is only an ANCHOR for a price object, not a taught session window.
+# Under the honest name-first lane NONE of the 27 corpus rows binds by name (the
+# two genuine session teachings, A=2, are a bare-"session" reference and a
+# clock-carrying "two candles at 7/8am" pair — neither is an unambiguous
+# closed-enum NAME with no clock). So the concretely-name-bound set is EMPTY, and
+# the session value ceiling (≤2) is not reached on this corpus.
+SESSION_TEACHING_BOUND_CONDITION_IDS: frozenset[str] = frozenset()
 
 
 @pytest.mark.parametrize("cid,verdict,obj", _session_ab_rows(), ids=lambda v: v if isinstance(v, str) else "")
@@ -821,11 +828,18 @@ def test_s3_role_resolver_reproduces_the_grade_that_specified_it(_role_resolver_
         assert binding.reason == "no_recognized_session_keyword"
         return
 
-    # verdict == "session_teaching": the named target population (17 rows).
+    # verdict == "session_teaching": recognized as genuine session teaching, but
+    # under the name-first lane (R-284) NONE of these binds — every one is a
+    # clock/anchor-coarse or ambiguous-named row with no exact closed-enum window,
+    # so it is honestly REFUSED with the recognized-no-window reason. (The dead
+    # 8-of-17 "bound" set is retired; see SESSION_TEACHING_BOUND_CONDITION_IDS.)
     assert result.recognized is True, f"genuine session-teaching row {cid} must be recognized"
     if cid in SESSION_TEACHING_BOUND_CONDITION_IDS:
+        # Empty on this corpus; retained so a future corpus row that DOES carry
+        # an unambiguous closed-enum name would assert the honest name bind.
         assert binding.bindable is True, f"{cid} expected a real computable zone"
-        assert binding.approximation is True
+        assert binding.approximation is False
+        assert binding.primitive == "session_windows.is_in_killzone"
         assert binding.session_zone is not None
     else:
         assert binding.bindable is False, f"{cid} expected recognized-but-no-computable-window"
@@ -852,49 +866,123 @@ def test_s3_recognition_never_fires_on_the_pre_existing_bare_am_pm_fence(_role_r
         assert binding.reason == "no_recognized_session_keyword"
 
 
-# ─── S6: re-measure with dual denominators + null/n, over the grade's own sample ─
+# ─── S6: coverage_6a RE-DERIVED ON THE GOVERNED POPULATION (R-284 Decision B) ─
 #
-# NOTE ON DENOMINATORS: the packet's own checklist text names "124 / 111
-# primary" -- those are the WAIT_STRUCTURE narration-reclassification
-# denominators (78 structure + 46 deferred, R-093/AR-082), a DIFFERENT
-# packet's population. They do not apply to WAIT_SESSION. The honest
-# denominators for THIS family (AR-074/AR-124, corpus-wide over 16 specs):
-# 27 total WAIT_SESSION conditions, 1 pre-existing bind, 26 unbound, split
-# 17 session_teaching / 9 entry_mechanics_mistype by the independent blind
-# grade. See this packet's completion report for the flagged discrepancy.
+# ★ THE DEAD 8/17 IS RETIRED. The old assert pinned coverage_6a == 8/17, where
+# the numerator (8) was classify_session_role's CLOCK-derived coarse zones and
+# the denominator (17) was the blind grade's session_teaching count. That split
+# is REFUTED (AR-203: the blind grade WAS the resolver — 26/26 concordance, not
+# independent), so it cannot be the coverage denominator.
+#
+# THE GOVERNED POPULATION is the criterion-faithful 27-row blind adjudication
+# (docs/replay-results/blind-readjudication/blind-second-judge-LOCKED.json):
+#   A = 2  genuine session teaching (the session/clock/calendar IS the taught object)
+#   B = 21 the session term is only an ANCHOR; the taught object is a level/pattern/mechanic
+#   C = 4  no taught session condition at all (indicator/platform setup, vacuous narration)
+# 2 + 21 + 4 = 27. "session value ceiling ≤ 2" is A.
+#
+# THE METRIC, semantics restated so the key states the question its numerator
+# and denominator answer:
+#   coverage_6a  =  (WAIT_SESSION conditions the HONEST NAME ROUTE concretely
+#                    binds to an EXACT killzone window, approximation=False)
+#                 ÷ (A — the genuine session teachings, the only rows for which
+#                    binding a session window is the correct thing to do)
+# On this corpus the numerator is 0: the two A rows are a bare-"session"
+# reference and a clock-carrying "two candles at 7/8am" pair, NEITHER an
+# unambiguous closed-enum NAME with no clock — so coverage_6a = 0/2 = 0.0. This
+# is the honest yield the ledger's caveat states (mechanism, not a large count).
 
-def test_s6_coverage_counts_carry_their_null_and_their_n(_role_resolver_on):
+_GOVERNED_GRADE_FILE = "../../../docs/replay-results/blind-readjudication/blind-second-judge-LOCKED.json"
+
+
+def _governed_split() -> dict:
+    path = os.path.join(os.path.dirname(__file__), _GOVERNED_GRADE_FILE)
+    if not os.path.isfile(path):
+        pytest.skip(f"governed grade unavailable at {path}")
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)["counts"]
+
+
+def _corpus_wait_session_rows() -> list[tuple[str, str]]:
+    """All 27 WAIT_SESSION conditions of the governed corpus (16 shakedown specs),
+    in the blind-judge's iteration order — the population the split is sourced from."""
+    d = os.path.join(
+        os.path.dirname(__file__), "..", "..", "..",
+        "docs", "replay-results", "h1-scripts", "claude-rung-v32", "shakedown_specs",
+    )
+    if not os.path.isdir(d):
+        pytest.skip(f"corpus unavailable at {d}")
+    rows: list[tuple[str, str]] = []
+    for f in sorted(os.listdir(d)):
+        if not f.endswith(".spec.json"):
+            continue
+        with open(os.path.join(d, f), encoding="utf-8") as fh:
+            spec = json.load(fh)
+        for c in spec.get("spec", {}).get("entry_conditions", []):
+            if c.get("type") == "WAIT_SESSION":
+                rows.append((c.get("id", ""), c.get("object", "")))
+    return rows
+
+
+def test_s6_coverage_6a_re_derives_on_the_governed_population(_role_resolver_on):
+    governed = _governed_split()
+    a, b, c, total = governed["A"], governed["B"], governed["C"], governed["total"]
+    # Governed split integrity — COMPUTED from the grade file, no literal pinned.
+    assert a + b + c == total, f"governed A/B/C must partition the population: {a}+{b}+{c} != {total}"
+    corpus = _corpus_wait_session_rows()
+    assert len(corpus) == total, f"corpus rows ({len(corpus)}) must equal governed total ({total})"
+
+    # Numerator — COMPUTED at the PRODUCTION boundary (bind_condition), the honest
+    # name route: bindable AND approximation=False AND the exact-window primitive.
+    name_bound = 0
+    for cid, obj in corpus:
+        binding = bind_condition({"id": cid, "type": "WAIT_SESSION", "object": obj, "role": "spine"})
+        if binding.bindable and binding.approximation is False and binding.session_zone is not None:
+            assert binding.primitive == "session_windows.is_in_killzone", cid
+            name_bound += 1
+
+    # The session value ceiling: honest binds can never exceed the genuine
+    # session teachings (A). Computed, not assumed.
+    assert name_bound <= a, f"name-route bound {name_bound} > genuine teachings A={a} (ceiling breached)"
+
+    coverage_6a = name_bound / a  # of the genuine session teachings, the fraction honestly enforced
+    # No expected value is hardcoded: coverage is derived from the resolver over
+    # the governed corpus. On this corpus name_bound == 0, so coverage is 0.0.
+    assert coverage_6a == name_bound / a
+    assert 0.0 <= coverage_6a <= 1.0
+
+
+def test_s6_dead_17_denominator_stays_retired(_role_resolver_on):
+    """★ FOUNDING-FIXTURE (R-284 Decision B): if the dead session_teaching count
+    (17) or the refuted coarse bound count (8) ever comes back as the coverage
+    basis, this goes RED. The denominator is the GOVERNED A (genuine teachings),
+    which is NOT 17; the numerator is the honest name route, which is NOT the 8
+    clock-derived coarse zones classify_session_role still computes."""
     rows = _session_ab_rows()
-    n_total = len(rows)
-    n_mistype = sum(1 for _, v, _ in rows if v == "entry_mechanics_mistype")
-    n_teaching = sum(1 for _, v, _ in rows if v == "session_teaching")
-    assert n_total == 26
-    assert n_mistype == 9
-    assert n_teaching == 17
+    dead_teaching = sum(1 for _, v, _ in rows if v == "session_teaching")
+    dead_coarse_bound = sum(1 for _, _v, obj in rows if classify_session_role(obj).zone is not None)
+    governed = _governed_split()
 
-    recognized_count = 0
-    bound_count = 0
-    null_count = 0  # recognized=True but zone=None -- the "unbound count travels beside the rate"
-    false_positive_count = 0
-    for _cid, verdict, obj in rows:
-        result = classify_session_role(obj)
-        if verdict == "session_teaching":
-            if result.recognized:
-                recognized_count += 1
-            if result.zone is not None:
-                bound_count += 1
-            else:
-                null_count += 1
-        elif result.recognized:
-            false_positive_count += 1
+    # The dead numbers are still exactly what they were — they are just no longer
+    # the coverage basis. Asserting them here freezes them AS the refuted values.
+    assert dead_teaching == 17, "the dead session_teaching count"
+    assert dead_coarse_bound == 8, "the dead clock-derived coarse-bound count"
 
-    assert recognized_count == 17, f"recognized {recognized_count}/{n_teaching} taught session rows"
-    assert bound_count == 8, f"bound-and-concrete {bound_count}/{n_teaching} (the rate)"
-    assert null_count == 9, f"recognized-but-unbound {null_count}/{n_teaching} (the null the rate must carry beside it)"
-    assert false_positive_count == 0, "zero false positives on the 9 mis-typed rows -- the whole point of role-awareness"
-    # §6a coverage = bound-and-concrete / all taught (here: the 17-row target population)
-    coverage_6a = bound_count / n_teaching
-    assert round(coverage_6a, 4) == round(8 / 17, 4)
+    # The governed denominator (A) is a DIFFERENT number, and the coverage the
+    # engine now reports must use it, never the dead 17 or the dead 8.
+    assert governed["A"] != dead_teaching, "coverage denominator must NOT be the dead 17"
+    assert governed["A"] == 2, "governed genuine-session-teaching count (session ceiling)"
+
+    # Production-boundary proof the dead 8 is not a live bind count: every one of
+    # those clock-derived coarse rows is now REFUSED (bindable=False) — the coarse
+    # bind was removed at the source, not merely relabeled.
+    coarse_but_bound = 0
+    for _cid, _v, obj in rows:
+        if classify_session_role(obj).zone is not None:
+            b = bind_condition({"id": "dead17", "type": "WAIT_SESSION", "object": obj, "role": "spine"})
+            if b.bindable:
+                coarse_but_bound += 1
+    assert coarse_but_bound == 0, "no clock-derived coarse row may still produce a live bind"
 
 
 # ─── S7: flag-off byte-identity PROVEN, not asserted ────────────────────────
@@ -1015,28 +1103,34 @@ GRADER_FALSE_NEGATIVE_INPUTS = [
     (
         "cash open",
         True,
-        "ny_am",
-        "NYSE cash open = 9:30 ET, the module's one non-guessed minute constant. Real bind.",
+        None,
+        "★ REDESIGN sub-packet 1 (R-284 Decision A): an OPENING-BELL / cash-open "
+        "ANCHOR is a clock-derived-coarse proxy (an instant contained in ny_am), "
+        "NOT a closed-enum session NAME. The name-first lane refuses it — "
+        "recognized session teaching, no exact window is_in_killzone evaluates. "
+        "(Pre-REDESIGN it coarse-bound ny_am approximation=True; that bind failed "
+        "(ii) at the family read and is now refused at the source.)",
     ),
     (
         "cash equity open",
         True,
-        "ny_am",
-        "Same anchor, longer form. Real bind.",
+        None,
+        "Same anchor, longer form. Clock-derived-coarse → refused under name-first.",
     ),
     (
         "the New York bell",
         True,
-        "ny_am",
-        "NYSE opening bell, qualified by a market name. Real bind — and the SAFE "
-        "member of the phrase class whose BARE form (H1) had to be removed.",
+        None,
+        "NYSE opening bell qualified by a market name — still an anchor INSTANT, "
+        "not an exact-window zone NAME. Recognized, refused under name-first.",
     ),
     (
         "8am",
         True,
-        "ny_am",
-        "Morphology bug: the clock regex demanded a colon, so a colon-less token "
-        "was invisible. 08:00 ET falls inside ny_am [07:00,10:00). Real bind.",
+        None,
+        "A bare clock token. Under name-first (i) NO clock tokens in the name path, "
+        "so this is clock-derived-coarse → refused. (Pre-REDESIGN it coarse-bound "
+        "ny_am; the morphology fix stays real at the recognition layer.)",
     ),
     (
         "Asian session",
@@ -1175,20 +1269,23 @@ def test_h1_bare_bell_never_binds_ordinary_prose(_role_resolver_on, text):
     assert binding.session_zone is None
 
 
-def test_h1_both_calibration_fixtures_still_bind_after_removing_bare_bell(_role_resolver_on):
-    """The other half of H1, and the half that could have gone wrong: the
-    claim that `opening bell` and `off the bell` already cover both S2
-    calibration fixtures is VERIFIED by running them, not assumed. (The
-    dedicated S2 test above also covers this; duplicated here on purpose so
-    the H1 removal carries its own proof next to it.)"""
+def test_h1_both_calibration_fixtures_are_recognized_then_refused_under_name_first(_role_resolver_on):
+    """The other half of H1. The bare-`the bell` removal is still real at the
+    RECOGNITION layer (the anchor alternation still matches `opening bell` /
+    `off the bell`), but ★ REDESIGN sub-packet 1 (R-284): an opening-bell anchor
+    is clock-derived-coarse, not a closed-enum NAME, so the production boundary
+    REFUSES both fixtures rather than coarse-binding ny_am. Recognition without a
+    coarse bind is exactly the honest state the name-first lane targets."""
     from src.engine.spec_family_bindings import SESSION_ANCHOR_PHRASE_RE
 
     assert SESSION_ANCHOR_PHRASE_RE.search(_KNOWN_GOOD_OFF_THE_BELL) is not None
     assert SESSION_ANCHOR_PHRASE_RE.search(_KNOWN_GOOD_OPENING_BELL) is not None
     for text in (_KNOWN_GOOD_OFF_THE_BELL, _KNOWN_GOOD_OPENING_BELL):
+        assert classify_session_role(text).recognized is True
         binding = bind_condition({"id": "h1:calib", "type": "WAIT_SESSION", "object": text, "role": "spine"})
-        assert binding.bindable is True
-        assert binding.session_zone == "ny_am"
+        assert binding.bindable is False
+        assert binding.session_zone is None
+        assert binding.reason == SESSION_TEACHING_UNBOUND_REASON
 
 
 def test_m1_bare_timezone_phrase_is_not_sufficient_clock_context(_role_resolver_on):
@@ -1210,11 +1307,17 @@ def test_m1_bare_timezone_phrase_is_not_sufficient_clock_context(_role_resolver_
     )
     assert coaching.bindable is False
     assert coaching.session_zone is None
+    assert coaching.reason == "no_recognized_session_keyword", "ordinary prose is not even recognized"
 
+    # ★ REDESIGN sub-packet 1: the timezone-governed clock path still RECOGNIZES
+    # (classify_session_role unchanged), so the narrowing was not a deletion — but
+    # the production boundary now REFUSES it (clock-derived-coarse), never a bind.
     genuine = bind_condition(
         {"id": "m1:pos", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon candle", "role": "spine"}
     )
-    assert genuine.bindable is True, "narrowing must not have deleted the timezone path outright"
+    assert classify_session_role("wait until 14:30 EST for the afternoon candle").recognized is True
+    assert genuine.bindable is False, "clock-derived-coarse is refused under name-first, not coarse-bound"
+    assert genuine.reason == SESSION_TEACHING_UNBOUND_REASON
 
 
 def test_m1_no_corpus_row_depended_on_the_bare_timezone_alternative(_role_resolver_on):
@@ -1245,12 +1348,18 @@ def test_h2_24_hour_clock_times_do_not_silently_become_am(_role_resolver_on):
     assert _session_clock_token_minutes(9, 30, None) == 9 * 60 + 30
     assert _session_clock_token_minutes(3, 0, "p.m.") == 15 * 60
 
-    # Production boundary: the zone actually moves.
+    # ★ REDESIGN sub-packet 1: the H2 arithmetic fix stays real at the unit level
+    # (14:30 → ny_pm, not london), and classify_session_role still DERIVES ny_pm
+    # from it — but the production boundary now REFUSES the clock-derived-coarse
+    # row instead of binding, so a 24-hour token can no longer silently bind the
+    # WRONG (london) window either. The defect is closed at the source.
+    assert classify_session_role("wait until 14:30 EST for the afternoon candle").zone == "ny_pm"
     binding = bind_condition(
         {"id": "h2", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon candle", "role": "spine"}
     )
-    assert binding.bindable is True
-    assert binding.session_zone == "ny_pm", f"24-hour token bound {binding.session_zone!r}, expected ny_pm"
+    assert binding.bindable is False
+    assert binding.session_zone is None
+    assert binding.reason == SESSION_TEACHING_UNBOUND_REASON
 
 
 # ─── Checklist item 8: no new orphan-zone emission, PROVEN ──────────────────
@@ -1284,21 +1393,26 @@ def test_role_resolver_never_emits_an_orphan_zone(_role_resolver_on):
         + _BATCH8_KNOWN_FALSE_NEGATIVES
     )
     assert len(texts) >= 26 + 13 + 4 + 14 + 6 + 3 + 15 + 30 + 4 + 6 + 24 + 19 + 3 + 5
+    # ★ REDESIGN sub-packet 1: under the name-first lane NONE of the corpus /
+    # adversarial / batch texts BINDS at the production boundary (they are all
+    # clock/anchor-coarse or mistype → refused). So the anti-vacuity anchor is the
+    # honest NAME binds: an unambiguous closed-enum session NAME must emit a real,
+    # non-orphan zone. The orphan claim must be made about a population that
+    # actually reaches the zone table, and the name route is that population now.
+    texts += [t for t, _ in _S1_DISTINCT_ZONE_CASES]
     emitted = set()
     newly_binding = set()
+    name_texts = {t for t, _ in _S1_DISTINCT_ZONE_CASES}
     for text in texts:
         binding = bind_condition({"id": "orphan:sweep", "type": "WAIT_SESSION", "object": text, "role": "spine"})
         if binding.session_zone is not None:
             emitted.add(binding.session_zone)
-            if text in _BATCH7_GOVERNED_POSITIVES:
+            if text in name_texts:
                 newly_binding.add(binding.session_zone)
     assert emitted, "sweep emitted no zones at all — vacuous"
-    # ★ ANTI-VACUITY, sharpened for this pass: it is not enough that the sweep
-    # emitted SOME zone (the inherited rows guarantee that regardless of what
-    # the fourth pass does). The rows this pass newly admits must themselves
-    # have emitted real zones, or the orphan claim is being made about a
-    # population that never reached the zone table at all.
-    assert newly_binding, "this pass's newly-admitted rows emitted NO zone — the orphan claim is vacuous for them"
+    # ANTI-VACUITY: the honest name route must itself emit real zones, or the
+    # orphan claim is about a population that never reached the zone table.
+    assert newly_binding, "the name route emitted NO zone — the orphan claim is vacuous for the binding population"
     assert not (emitted & orphans), f"role resolver newly emitted orphan zone(s): {emitted & orphans}"
 
 
@@ -1500,10 +1614,14 @@ def test_high2_colonless_token_still_works_and_the_discriminator_is_role_not_mor
     visible to an already-unsound sufficiency rule.
 
     So the colon-less form STAYS and the role test removes both classes."""
-    # (a) the morphology fix is intact — bare "8am" is still a real bind.
+    # (a) the morphology fix is intact at the RECOGNITION layer — bare "8am" is
+    # still SEEN. ★ REDESIGN sub-packet 1: it no longer BINDS (a clock token is
+    # clock-derived-coarse, refused under name-first), so the fix is proven where
+    # it lives (recognition) without a coarse ny_am bind at the production boundary.
     assert classify_session_role("8am").recognized is True
     binding = bind_condition({"id": "h2:8am", "type": "WAIT_SESSION", "object": "8am", "role": "spine"})
-    assert binding.session_zone == "ny_am"
+    assert binding.bindable is False
+    assert binding.reason == SESSION_TEACHING_UNBOUND_REASON
 
     # (b) colon-less prose is refused...
     for text in ("call me back at 5pm if you get a chance", "the library closes at 8 p.m. on weekends"):

@@ -61,6 +61,7 @@ from src.engine.spec_family_bindings import (
     BindingPlan,
     ConditionBinding,
     compile_binding_plan,
+    session_zone_window_repr,
 )
 
 # Mirror of the exit_source literal spec_producer.py:580 stamps alongside _HOUSE_DEFAULT_EXIT.
@@ -507,11 +508,28 @@ def _honest_approximation(binding: ConditionBinding) -> bool:
     FAMILY_META comments call the legacy value a fidelity lie). A gate that guards fidelity must
     read the honest value, never the router's convenience. The read is flag-independent and
     does NOT flip any flag. Unknown family (not in FAMILY_META) → fall back to the binding's own
-    flag (the row's (i) check already fails an unrecognized family, so it blocks regardless)."""
+    flag (the row's (i) check already fails an unrecognized family, so it blocks regardless).
+
+    ★ R-284 DECISION A — (ii)-HONESTY IS THE CONJUNCTION OF BOTH LEVELS. A bind is honest
+    (approximation=False) IFF the FAMILY's enforced honest accounting is False AND the LIVE
+    BINDING's own path declares no approximation. Equivalently, it IS an approximation when
+    EITHER level says so — so this returns the DISJUNCTION. R-260's family anchor is preserved
+    (it still convicts the ENABLE_ENTRY/ENTER/INVALIDATE convenience-label lie by itself); the
+    binding-level term is ADDED, closing the hole the REDESIGN scoping surfaced: a WAIT_SESSION
+    family reads honest=False, so a CLOCK-DERIVED coarse-overlap proxy (`approximation=True` on
+    the binding) used to be certified honest through the family read alone. Now that same coarse
+    proxy FAILS (ii). The name→canonical-window route stays eligible: its binding declares
+    approximation=False, so both terms are False.
+
+    ★ THE m4 HINGE — this reads `binding.approximation`, the LIVE re-derived binding value
+    (run_leg_a_phase1 always re-derives from compile_binding_plan; a caller cannot inject a
+    plan). It NEVER trusts a spec-record's stored `approximation` stamp. Trusting the stamp
+    would re-open the false-flag class m4 convicts: a proxy record could mislabel itself
+    approximation=False and launder past (ii). The live re-derivation is what keeps m4 safe."""
     meta = FAMILY_META.get(binding.type)
     if meta is None:
         return bool(binding.approximation)
-    return meta.enforced_honest_approximation()
+    return meta.enforced_honest_approximation() or bool(binding.approximation)
 
 
 def _check_concretely_bound(cid: str, binding: ConditionBinding | None) -> CheckResult:
@@ -528,7 +546,25 @@ def _check_concretely_bound(cid: str, binding: ConditionBinding | None) -> Check
         return CheckResult("ii", False, "bound but not executed in production (fidelity gap)")
     if _honest_approximation(binding):
         return CheckResult("ii", False, f"bound to an approximation (proxy/pass-through, honest accounting): {binding.primitive!r}")
+    # (vi) SCOPE-LINE PATH (R-284 §1 pin) — a name-route session bind carries its
+    # path (route, zone, exact window) so a (ii) PASS names WHY it is honest.
+    scope_path = _session_scope_path(binding)
+    if scope_path:
+        return CheckResult("ii", True, f"concretely bound honest approximation=False -> {binding.primitive!r} [{scope_path}]")
     return CheckResult("ii", True, f"concretely bound honest approximation=False -> {binding.primitive!r}")
+
+
+def _session_scope_path(binding: ConditionBinding) -> str:
+    """The name-route scope line (name-route|zone=<z>|window=<[s,e)...>) for a
+    WAIT_SESSION name bind, or "" for any other bind. Reads the LIVE binding's
+    session_zone and the exact window is_in_killzone evaluates for it."""
+    if binding.type != "WAIT_SESSION" or not binding.session_zone:
+        return ""
+    try:
+        window = session_zone_window_repr(binding.session_zone)
+    except Exception:  # noqa: BLE001 — a scope-line decoration never fails the check
+        return ""
+    return f"name-route|zone={binding.session_zone}|window={window}"
 
 
 def _cert_key_invalid(cert: dict, key: str) -> bool:

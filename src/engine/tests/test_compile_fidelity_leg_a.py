@@ -410,3 +410,78 @@ def test_binding_plan_override_bypass_removed():
         run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]), binding_plan=object())
     with pytest.raises(TypeError):
         run_leg_a(art, binding_plan=object())
+
+
+# --------------------------------------------------------------------------- #
+# ★ FIRST-ELIGIBLE RECEIPT (REDESIGN sub-packet 1, R-284 §1 pin (vi)) —
+# the end-to-end proof this whole campaign was building toward: a spec whose
+# load-bearing WAIT_SESSION condition is bound BY NAME reaches Leg A(ii) PASS,
+# and the (ii) scope line names its PATH (name-route | zone | exact window).
+# --------------------------------------------------------------------------- #
+def test_first_eligible_receipt_name_bound_wait_session_passes_ii_with_scope_path():
+    """A WAIT_SESSION condition whose object is an unambiguous CLOSED-ENUM session
+    NAME ("london killzone session") binds to the EXACT killzone window —
+    approximation=False, the enforced primitive is_in_killzone evaluates that
+    window — so it is (ii)-ELIGIBLE and PASSES. Decision A §1(a) made honest, and
+    the scope line carries the name-route path.
+
+    ★ THE APPROXIMATION CAVEAT (stated, not hidden): static approximation=False is
+    NECESSARY, not SUFFICIENT. This receipt is the STATIC compile-fidelity half —
+    it proves no clock derivation is in the path. The RUNTIME companion (R-284 §1
+    pin (v): the candidate's verdict window must show the family ran REAL at the
+    T1 engagement bar) is OUT OF THIS SUB-PACKET'S SCOPE and is not asserted here.
+    """
+    art = clean_artifact()  # its load-bearing (ii) rows are name-bound WAIT_SESSION spine
+    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+
+    ii_rows = [r for r in seal.rows if r.ii_applicable]
+    assert ii_rows, "receipt requires a load-bearing (ii)-applicable condition"
+    assert {r.type for r in ii_rows} == {"WAIT_SESSION"}
+
+    saw_path = False
+    for r in ii_rows:
+        ii = [c for c in r.checks if c.code == "ii"][0]
+        assert ii.passed, (r.condition_id, ii.reason)
+        # (vi) the scope line names route + zone + exact window.
+        assert "name-route|zone=" in ii.reason and "|window=[" in ii.reason, ii.reason
+        saw_path = True
+    assert saw_path
+
+    # End-to-end: the whole Leg A PASSes (not just the (ii) row in isolation).
+    full = run_leg_a(
+        art,
+        certificate=clean_certificate(art["spec"]),
+        countersignatures=clean_countersignatures(art),
+    )
+    assert full.verdict == PASS, (sorted(full.checks_failed), full.summary)
+
+
+def test_first_eligible_receipt_clock_derived_peer_is_refused_not_eligible():
+    """The other half of the receipt — the discriminator. Swap the honest name for
+    a clock-derived coarse teaching (same WAIT_SESSION family, flag ON) and the
+    condition is REFUSED at the bind (bindable=False) → (ii) BLOCKs. The eligible
+    row is eligible for the RIGHT reason (a name→exact-window), never a coarse
+    proxy that the family-level honest read used to wave through."""
+    import os
+
+    from src.engine.spec_family_bindings import bind_condition
+
+    prev = os.environ.get("TF_SESSION_ROLE_RESOLVER_ENABLED")
+    os.environ["TF_SESSION_ROLE_RESOLVER_ENABLED"] = "true"
+    try:
+        name_bound = bind_condition(
+            {"id": "r:name", "type": "WAIT_SESSION", "object": "the london killzone session", "role": "spine"}
+        )
+        clock_coarse = bind_condition(
+            {"id": "r:clock", "type": "WAIT_SESSION", "object": "wait until 14:30 EST for the afternoon candle", "role": "spine"}
+        )
+    finally:
+        if prev is None:
+            os.environ.pop("TF_SESSION_ROLE_RESOLVER_ENABLED", None)
+        else:
+            os.environ["TF_SESSION_ROLE_RESOLVER_ENABLED"] = prev
+
+    assert name_bound.bindable is True and name_bound.approximation is False
+    assert name_bound.primitive == "session_windows.is_in_killzone"
+    assert clock_coarse.bindable is False, "clock-derived coarse must refuse, never bind approximation=True"
+    assert clock_coarse.reason == "session_teaching_recognized_no_computable_window"
