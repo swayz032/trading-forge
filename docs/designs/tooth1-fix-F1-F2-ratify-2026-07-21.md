@@ -148,3 +148,47 @@ certificate validation, no `approximation` accounting), 0 verdict flips, no publ
 moved. Registered as revival probes (`test_f2_null_valued_certificate_keys_block`,
 `test_f2_honest_good_certificate_passes_for_the_right_reason`). Does NOT self-certify — the same
 grader re-attacks after.
+
+---
+
+## AMENDMENT A2 — two compounding weaknesses on the `_cert_key_invalid` surface (a fix is a new surface)
+
+The re-grade rose 5→6 and re-attacked the new validity surface; two compounding weaknesses,
+both the any-vs-each shape:
+
+- **Attack A (ANY-not-ALL):** `_cert_key_invalid`'s `conditions` branch validated with
+  `any(... quote_anchor ...)` — a ledger of 5 anchorless entries riding 1 valid anchor passed.
+  Aggregate-hides-individual blindness at the certificate layer.
+- **Attack B (unbounded substring):** `_check_no_certificate_drops` matched with bare
+  `anchor in st` — a one-char anchor `"a"` reconciled against essentially every spec text, so
+  `certificate.conditions = [{"quote_anchor": "a"}]` rode to a full `ROBUST-SURVIVOR` PASS. The
+  two compounded: `"a"` passed the (non-empty) validity gate AND the drop-audit.
+
+**Fix (two parts, both required):**
+1. **`any` → `all`:** every conditions entry must be a dict carrying a non-empty `quote_anchor`;
+   one anchorless entry makes the ledger provenance-incomplete → BLOCK `vi_cert`.
+2. **Anchor specificity:** a new `MIN_ANCHOR_TOKENS = 2` floor + token-boundary matching
+   (`_anchor_maps_to_spec`, space-padded) replaces bare substring — a sub-threshold anchor
+   (single char/word, punctuation) is a fabricated/meaningless anchor → fail-closed (v) drop.
+
+**Threshold, MEASURED (not typed to pass):** the shortest legitimate anchor in the honest corpus
+is **2 tokens / 16 chars** (`"spine completion"`); every real 18-corpus taught-text is
+**≥ 4 tokens / 22 chars** (shortest `"literally a abc setup."`). So a 2-token floor sits AT the
+honest-corpus minimum — it accepts every legitimate anchor and rejects single chars, single
+words, and punctuation.
+
+**Anchorless-legitimacy question (ruled — routing, not gate-weakening):** MEASURED — **no honest
+condition is anchorless** (every honest cert entry carries its taught condition's `object` text
+as its anchor), so the strict `all` gate forces nothing. Per the ruling, a genuinely-legitimate
+anchorless condition would be carried through the **§0 disposition lane**, never through a gate
+taught to accept a missing anchor (that would re-open the hole). The gate stays strict.
+
+**No regression:** all prior BLOCKs (`{}`, non-dict, missing-key, null-value; F-1 retype /
+INVALIDATE-leaning / ENABLE_ENTRY-leaning; bypass removal) stay closed; the honest-good real
+certificate still PASSes for the right reason (every anchor present AND ≥ 2 tokens). **Blast
+radius (R-261 mint):** corpus re-run unchanged — 18/18 BLOCK, 0 pass Leg A(ii), 183 ii-fail rows
+(corpus specs carry no certificate; this change touches only certificate validation, no
+`approximation` accounting), 0 verdict flips, no published number moved. Revival probes:
+`test_f2_a2_any_not_all_and_anchor_specificity_block`,
+`test_f2_a2_honest_certificate_anchors_clear_the_specificity_floor`. Does NOT self-certify — the
+same grader re-attacks after.

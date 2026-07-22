@@ -75,6 +75,16 @@ BLOCK = "BLOCK"
 # `{}` and any non-dict are the founding fail-open fixtures — both BLOCK with a named reason.
 REQUIRED_CERT_KEYS: tuple[str, ...] = ("video", "conditions")
 
+# (v) drop-audit anchor SPECIFICITY floor. A groundable transcript quote is a multi-token
+# PHRASE, not a bare character/word — and it must be matched on TOKEN BOUNDARIES, never as an
+# arbitrary substring (the pre-existing weakness the validity gate now leans on: a one-char
+# anchor 'a' substring-matched essentially every spec text). MEASURED floor: the shortest
+# legitimate anchor in the honest corpus is 2 tokens / 16 chars ("spine completion"); every
+# real corpus taught-text is >= 4 tokens / 22 chars. So 2 tokens sits AT the honest-corpus
+# minimum — it accepts every legitimate anchor and rejects single chars, single words, and
+# punctuation. A sub-threshold anchor is a fabricated/meaningless anchor -> fail-closed (v) drop.
+MIN_ANCHOR_TOKENS: int = 2
+
 # The semantic sub-checks a FRESH READER must countersign in Phase 2 (§1-B Phase 2):
 # (i) typing, (iii) polarity, (v) drops/dispositions incl. §0 non-LB dispositions.
 COUNTERSIGN_ROWS: tuple[str, ...] = ("typing", "polarity", "drops")
@@ -410,16 +420,21 @@ def _check_concretely_bound(cid: str, binding: ConditionBinding | None) -> Check
 
 def _cert_key_invalid(cert: dict, key: str) -> bool:
     """A required provenance key is INVALID — as absent as missing — when it is missing, None,
-    an empty/whitespace string, or an empty/anchorless collection. Key PRESENCE is not enough:
+    an empty/whitespace string, or an empty/incomplete collection. Key PRESENCE is not enough:
     a present-but-null key carries zero provenance and must never certify clean (the residual
     behind the original F-2's fail-open class). Validity per key:
       - `video`      : a non-empty (non-whitespace) extraction link.
-      - `conditions` : a NON-EMPTY list carrying at least one dict with a non-empty
+      - `conditions` : a NON-EMPTY list in which EVERY entry is a dict carrying a non-empty
                        `quote_anchor` — the field the (v) drop-audit reconciles against. None,
-                       [], a non-list, or an all-anchorless list is a zero-provenance ledger.
-    (Choice stated: `conditions` validity keys on `quote_anchor` presence because that anchor
-    is the ONLY provenance the drop-audit can reconcile a spec condition against; a ledger with
-    no reconcilable anchor is provenance in name only.)"""
+                       [], a non-list, or a list with ANY anchorless/blank entry is a
+                       provenance-incomplete ledger (fail-closed BLOCK).
+    (Two choices STATED. (1) `conditions` validity keys on `quote_anchor` because that anchor is
+    the ONLY provenance the drop-audit can reconcile a spec condition against; a ledger with no
+    reconcilable anchor is provenance in name only. (2) The per-entry test is `all`, NOT `any`
+    (the A2 fix): an aggregate 'some entry has an anchor' let anchorless entries ride one valid
+    anchor. A genuinely-legitimate anchorless taught condition is routed through the §0
+    DISPOSITION lane — NOT through a gate taught to accept a missing anchor, which would re-open
+    the hole. Measured: no honest condition is anchorless, so the strict `all` forces nothing.)"""
     if key not in cert:
         return True
     val = cert[key]
@@ -430,7 +445,7 @@ def _cert_key_invalid(cert: dict, key: str) -> bool:
     if key == "conditions":
         if not isinstance(val, list) or not val:
             return True
-        return not any(isinstance(c, dict) and str(c.get("quote_anchor", "")).strip() for c in val)
+        return not all(isinstance(c, dict) and str(c.get("quote_anchor", "")).strip() for c in val)
     return False
 
 
@@ -476,6 +491,15 @@ def _check_provenance_chain(artifact: dict, spec: dict, certificate: dict | None
     return out
 
 
+def _anchor_maps_to_spec(anchor: str, spec_texts: list[str]) -> bool:
+    """TOKEN-BOUNDARY containment (both operands already `_norm`'d = lowercased, single-spaced):
+    the anchor is a whole-token subsequence of a spec text, or a spec text is a whole-token
+    subsequence of the anchor. Space-padding is what makes it token-boundary: a bare fragment
+    (e.g. 'a') can no longer match INSIDE a token ('wait'), only as a standalone token run."""
+    a = f" {anchor} "
+    return any(a in f" {st} " or f" {st} " in a for st in spec_texts)
+
+
 def _check_no_certificate_drops(spec: dict, certificate: dict) -> list[CheckResult]:
     if not isinstance(certificate, dict):
         return []
@@ -492,8 +516,13 @@ def _check_no_certificate_drops(spec: dict, certificate: dict) -> list[CheckResu
         anchor = _norm(str(cc.get("quote_anchor", "")))
         if not anchor:
             continue
-        mapped = any(anchor in st or st in anchor for st in spec_texts)
-        if not mapped:
+        # SPECIFICITY floor: a sub-threshold anchor (single char/word, punctuation) is a
+        # fabricated/meaningless anchor — a fail-closed (v) drop, NOT a free pass. The old bare
+        # substring `any(anchor in st ...)` let a one-char anchor reconcile against every text.
+        if len(anchor.split()) < MIN_ANCHOR_TOKENS:
+            out.append(CheckResult("v", False, f"certificate condition {anchor[:40]!r} below minimum anchor specificity ({MIN_ANCHOR_TOKENS}+ tokens); fabricated/meaningless anchor (m2)"))
+            continue
+        if not _anchor_maps_to_spec(anchor, spec_texts):
             out.append(CheckResult("v", False, f"certificate condition {anchor[:40]!r} has no spec condition (silent drop; m2)"))
     if not out:
         out.append(CheckResult("v", True, "every certificate condition maps to a spec condition"))

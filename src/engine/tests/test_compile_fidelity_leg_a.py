@@ -291,6 +291,49 @@ def test_f2_honest_good_certificate_passes_for_the_right_reason():
     assert "vi_cert" not in seal.checks_failed
 
 
+def test_f2_a2_any_not_all_and_anchor_specificity_block():
+    """Amendment A2 (a fix is a new surface): two compounding weaknesses on the validity gate.
+    Attack A — a conditions list where MOST entries are anchorless rode ONE valid anchor
+    (aggregate `any` blindness) → now BLOCK (per-entry `all`). Attack B — a single meaningless
+    one-char anchor 'a' reconciled against every spec text via unbounded substring → now BLOCK
+    (min-token specificity + token-boundary). Plus whitespace-only, punctuation, single-word."""
+    art = clean_artifact()
+    cs = clean_countersignatures(art)
+
+    def verdict(conditions):
+        cert = clean_certificate(art["spec"])
+        cert["conditions"] = conditions
+        return run_leg_a(art, certificate=cert, countersignatures=cs).verdict
+
+    # Attack A: 5 anchorless entries riding 1 valid anchor
+    assert verdict(
+        [{"quote_anchor": "", "char_span": [0, 0]} for _ in range(5)]
+        + [{"quote_anchor": "wait for the london killzone session", "char_span": [0, 0]}]
+    ) == BLOCK
+    # Attack B: a single meaningless one-character anchor
+    assert verdict([{"quote_anchor": "a", "char_span": [0, 0]}]) == BLOCK
+    # whitespace-only, pure-punctuation, and a single real word are all sub-specificity → BLOCK
+    assert verdict([{"quote_anchor": "   ", "char_span": [0, 0]}]) == BLOCK
+    assert verdict([{"quote_anchor": "!!!", "char_span": [0, 0]}]) == BLOCK
+    assert verdict([{"quote_anchor": "the", "char_span": [0, 0]}]) == BLOCK
+
+
+def test_f2_a2_honest_certificate_anchors_clear_the_specificity_floor():
+    """Anti-vacuity for the A2 threshold: the honest fixture's REAL cert PASSes because every
+    anchor is present AND clears the measured 2-token floor (its shortest, 'spine completion',
+    is exactly 2 tokens — the honest-corpus minimum the threshold is derived from)."""
+    from src.engine.forensics.compile_fidelity import MIN_ANCHOR_TOKENS, _norm
+
+    art = clean_artifact()
+    cert = clean_certificate(art["spec"])
+    for c in cert["conditions"]:
+        anchor = _norm(str(c.get("quote_anchor", "")))
+        assert anchor and len(anchor.split()) >= MIN_ANCHOR_TOKENS, c
+    seal = run_leg_a_phase1(art, certificate=cert)
+    assert seal.automated_verdict == PASS, sorted(seal.checks_failed)
+    assert "v" not in seal.checks_failed and "vi_cert" not in seal.checks_failed
+
+
 def test_f2b_nondict_countersignatures_is_graceful_block_not_crash():
     """A malformed (non-dict) countersignatures object must fail-closed BLOCK, never raise an
     uncaught AttributeError (a crash is not a fail-closed refusal)."""
