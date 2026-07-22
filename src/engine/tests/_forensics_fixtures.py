@@ -417,13 +417,55 @@ def m6_both_forms_cases() -> list[MutationCase]:
 
 
 def m7_zero_width_disposition_inputs(zw_char: str = "​") -> LegAInputs:
-    """m7 RESIDUAL sub-case: a non-load-bearing condition whose non_lb_disposition is a single
-    zero-width / Unicode-format character (default U+200B ZWSP). It is semantically empty yet
-    `str.strip()` does not remove it, so the fixed detector STILL PASSes v_nonlb — the residual
-    fail-open. Held here for the tripwire; NOT a certified case (the detector must convict it
-    first)."""
+    """A non-load-bearing condition whose non_lb_disposition is a single invisible character
+    (default U+200B ZWSP). Since the DEFINITIONAL `_has_visible_content` fix (R-275/R-276), such a
+    disposition is convicted → BLOCK v_nonlb. Used by the categorical regression driving the whole
+    invisible class, and by m7 both-forms below."""
     a = clean_artifact()
     a["spec"]["entry_conditions"][0]["load_bearing"] = False
     a["spec"]["entry_conditions"][0]["non_lb_disposition"] = zw_char
     _rehash(a)
     return _mutant_inputs(a)
+
+
+# --------------------------------------------------------------------------- #
+# R-277 — m7 BOTH-FORMS. The invisible-disposition class is closed DEFINITIONALLY at its defining
+# Unicode property (Default_Ignorable_Code_Point + combining/whitespace/non-printable); grader
+# re-attack confirmed it TERMINAL for that class. The m7 slot now carries its FULL defeat lineage
+# (founding-instance law, like m2's launder and m6's null-video): the plain-blank form that
+# defeated the original no-strip check, the zero-width/format form that defeated the `.strip()`
+# fix, AND the Default_Ignorable variation-selector form that defeated the `.isprintable()` fix —
+# each now CONVICTED on v_nonlb. Companion = a non-LB condition WITH a real visible disposition
+# (the clean fixture's ENABLE_ENTRY trigger) that PASSes v_nonlb non-vacuously.
+#
+# OUT-OF-CLASS NOTE (reported to the advisor, NOT a certified defeat): U+2800 BRAILLE PATTERN
+# BLANK (category So) renders blank but is a PRINTABLE, ASSIGNED, non-Default_Ignorable SYMBOL, so
+# it passes `_has_visible_content` — the same bucket as a lone visible "x". It is NOT in the
+# invisible-by-Unicode-property class the terminal fix closes and is not definitionally closable
+# (no Unicode property marks it invisible; only a deny-list would, which the design rejects). The
+# meaningfulness of a visible-but-trivial disposition is the Phase-2 fresh-reader's remit, not the
+# automated presence gate's. See test_m7_braille_blank_is_out_of_class_phase2_owned.
+# --------------------------------------------------------------------------- #
+def m7_no_visible_disposition_inputs(disposition: str) -> LegAInputs:
+    """A non-LB condition carrying a SEMANTICALLY-EMPTY disposition (ASCII/Unicode whitespace,
+    zero-width/format, or any Default_Ignorable char). The definitional `_has_visible_content`
+    convicts all of them → BLOCK v_nonlb."""
+    a = clean_artifact()
+    a["spec"]["entry_conditions"][0]["load_bearing"] = False
+    a["spec"]["entry_conditions"][0]["non_lb_disposition"] = disposition
+    _rehash(a)
+    return _mutant_inputs(a)
+
+
+def m7_both_forms_cases() -> list[MutationCase]:
+    """The REAL m7 cases as a LIST — the full defeat lineage of the invisible-disposition class,
+    each targeting v_nonlb, each distinguished by the clean visible-disposition companion (a non-LB
+    ENABLE_ENTRY trigger WITH a real disposition, which REACHES and PASSES v_nonlb)."""
+    return [
+        MutationCase("m7", "m7-plain-whitespace-disposition", "v_nonlb",
+                     m7_no_visible_disposition_inputs("   "), is_placeholder=False, companion=clean_inputs()),
+        MutationCase("m7", "m7-zero-width-format-disposition", "v_nonlb",
+                     m7_no_visible_disposition_inputs("​"), is_placeholder=False, companion=clean_inputs()),
+        MutationCase("m7", "m7-default-ignorable-variation-selector-disposition", "v_nonlb",
+                     m7_no_visible_disposition_inputs("️"), is_placeholder=False, companion=clean_inputs()),
+    ]

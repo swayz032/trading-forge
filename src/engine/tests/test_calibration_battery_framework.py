@@ -8,6 +8,8 @@ closes to INCOMPLETE.
 
 from __future__ import annotations
 
+import unicodedata
+
 from src.engine.forensics.calibration_battery import (
     PLACEHOLDER_LABEL,
     REQUIRED_SLOTS,
@@ -18,7 +20,13 @@ from src.engine.forensics.calibration_battery import (
     MutationCase,
     run_calibration,
 )
-from src.engine.forensics.compile_fidelity import PASS, run_leg_a, run_leg_a_phase1
+from src.engine.forensics.compile_fidelity import (
+    PASS,
+    _has_visible_content,
+    _is_default_ignorable,
+    run_leg_a,
+    run_leg_a_phase1,
+)
 from src.engine.tests._forensics_fixtures import (
     _mutant_inputs,
     _rehash,
@@ -34,6 +42,8 @@ from src.engine.tests._forensics_fixtures import (
     m6_both_forms_cases,
     m6_unlinkable_null_video_inputs,
     m6_video_mismatch_inputs,
+    m7_both_forms_cases,
+    m7_no_visible_disposition_inputs,
     m7_zero_width_disposition_inputs,
     placeholder_cases,
     robust_six_real_cases,
@@ -486,27 +496,68 @@ def test_r273_m7_zero_width_disposition_now_fails_v_nonlb_categorically():
     assert "v_nonlb" not in _mutant_inputs(accented).run().checks_failed  # base+combining PASSES
 
 
-def test_r273_final_wave_is_blocked_at_placeholder_by_the_unauthored_m7_slot():
-    # THE WAVE RESULT: m2 both-forms + m1/m3/m4/m5 robust + m6 both-forms are all CERTIFIED (6 real
-    # slots), and m7 stays a PLACEHOLDER. NOTE (post-residual-fix): the m7 DETECTOR residual
-    # (zero-width/format disposition) is now CLOSED — see
-    # test_r273_m7_zero_width_disposition_now_fails_v_nonlb_categorically. m7 stays a placeholder
-    # ONLY because the m7 both-forms MutationCase is the INDEPENDENT grader's to author (doer !=
-    # grader), NOT because of any surviving hole. Overall status therefore stays
-    # HARNESS_DEMONSTRATED_ON_PLACEHOLDERS — STATUS_CALIBRATED is NOT reached, blocked solely by the
-    # unauthored m7 slot. (When the grader authors m7 both-forms, this test updates to CALIBRATED.)
-    slots = dict(placeholder_cases())      # m7 stays placeholder
-    slots.update(robust_six_real_cases())  # m1, m3, m4, m5 real
-    slots["m2"] = m2_both_forms_cases()    # m2 real
-    slots["m6"] = m6_both_forms_cases()    # m6 real (R-273)
+# =========================================================================== #
+# R-277 — m7 CERTIFIED. The invisible-disposition class is closed DEFINITIONALLY (terminal per
+# R-276). The grader re-attacked the definitional fix across the whole invisible class and it
+# held; m7 both-forms are authored with the full defeat lineage → the battery reaches
+# STATUS_CALIBRATED (all 7 slots real).
+# =========================================================================== #
+def test_r277_m7_both_forms_all_convict_v_nonlb_with_full_defeat_lineage():
+    # Each m7 form (plain-whitespace, zero-width/format, Default_Ignorable variation-selector) is a
+    # SEMANTICALLY-EMPTY disposition the detector must now convict on v_nonlb.
+    for label, disp in [
+        ("plain-whitespace", "   "),
+        ("zero-width-format", "​"),               # U+200B ZWSP
+        ("default-ignorable-VS16", "️"),          # U+FE0F variation selector (isprintable True)
+    ]:
+        r = m7_no_visible_disposition_inputs(disp).run()
+        assert r.verdict != PASS, (label, disp)
+        assert "v_nonlb" in r.checks_failed, (label, sorted(r.checks_failed))
+    # Companion: a non-LB condition WITH a real visible disposition PASSes v_nonlb (non-vacuous —
+    # the clean ENABLE_ENTRY trigger is non-LB with a disposition, reaching and passing v_nonlb).
+    ok = clean_inputs().run()
+    assert "v_nonlb" not in ok.checks_failed
+    assert ok.verdict == PASS
+
+
+def test_r277_m7_slot_certified_and_battery_reaches_STATUS_CALIBRATED():
+    # THE TERMINAL RESULT: all seven slots carry REAL grader-authored cases — m2 both-forms, m6
+    # both-forms, m7 three-form defeat lineage, and the four robust singletons — every one
+    # convicting on its targeted check and distinguished by its own anti-vacuity companion, NONE a
+    # placeholder → STATUS_CALIBRATED.
+    slots = dict(robust_six_real_cases())  # m1, m3, m4, m5 real
+    slots["m2"] = m2_both_forms_cases()
+    slots["m6"] = m6_both_forms_cases()
+    slots["m7"] = m7_both_forms_cases()
     result = run_calibration(clean_inputs(), slots)
 
     real_slots = {sid for sid, sr in result.slot_results.items() if sr.filled and not sr.is_placeholder}
     ph_slots = {sid for sid, sr in result.slot_results.items() if sr.is_placeholder}
-    assert real_slots == {"m1", "m2", "m3", "m4", "m5", "m6"}
-    assert ph_slots == {"m7"}
-    assert result.status == STATUS_PLACEHOLDER, result.reasons
-    assert result.status != STATUS_CALIBRATED
+    assert real_slots == {"m1", "m2", "m3", "m4", "m5", "m6", "m7"}
+    assert ph_slots == set()
+    for sid in REQUIRED_SLOTS:
+        sr = result.slot_results[sid]
+        assert sr.ok and sr.convicted and sr.distinguishes and not sr.is_placeholder, (sid, sr.detail)
+    assert result.status == STATUS_CALIBRATED, result.reasons
+
+
+def test_m7_braille_blank_is_out_of_class_phase2_owned():
+    # OUT-OF-CLASS BOUNDARY (grader finding, NOT a certified detector defeat). U+2800 BRAILLE
+    # PATTERN BLANK renders as a blank cell but is a PRINTABLE, ASSIGNED, non-Default_Ignorable
+    # SYMBOL (category So) — so `_has_visible_content` accepts it, exactly as it accepts a lone
+    # visible "x". It is NOT in the invisible-by-Unicode-property class the terminal fix closes,
+    # and is NOT definitionally closable (no Unicode property marks it invisible; only a deny-list
+    # would, which the design rejects). Whether a blank-glyph disposition is a MEANINGFUL
+    # justification is the Phase-2 fresh-reader's semantic remit — the same gate that judges a lone
+    # "x". This test documents the boundary; if a future doer chooses to reject U+2800, it flips
+    # and prompts review. It does NOT block STATUS_CALIBRATED.
+    braille_blank = "⠀"  # U+2800
+    assert unicodedata.category(braille_blank) == "So"
+    assert not _is_default_ignorable(ord(braille_blank))   # outside the terminal-closed class
+    assert _has_visible_content(braille_blank)             # accepted as visible-by-property content
+    assert _has_visible_content("x")                       # same bucket as a lone visible letter
+    # the invisible-by-property class itself remains closed (control):
+    assert not _has_visible_content("​")                   # U+200B ZWSP — Default_Ignorable, rejected
 
 
 # =========================================================================== #
