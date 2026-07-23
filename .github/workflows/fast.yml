@@ -36,8 +36,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-          cache-dependency-path: ci/requirements-fast.txt
+          # Do not enable setup-python's global pip cache on this persistent
+          # runner. It previously tried to archive 9+ GB of unrelated wheels
+          # during post-job cleanup; the bounded fast requirements install in
+          # under a minute without that failure-prone disk amplification.
 
       - name: Verify capped runner toolchain
         shell: bash

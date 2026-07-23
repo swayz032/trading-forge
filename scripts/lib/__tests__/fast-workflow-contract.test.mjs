@@ -27,6 +27,16 @@ test("Fast Lane provisions, migrates, and cleans an isolated per-run database", 
   assert.match(workflow.slice(cleanup), /if: always\(\)/);
 });
 
+test("Fast Lane does not archive the persistent runner's global pip cache", () => {
+  const workflow = readFileSync(FAST_WORKFLOW, "utf8");
+  const setupPython = workflow.indexOf("actions/setup-python@v5");
+  const nextStep = workflow.indexOf("\n      - name:", setupPython);
+  const setupBlock = workflow.slice(setupPython, nextStep);
+
+  assert.ok(setupPython >= 0, "Fast Lane must configure Python explicitly");
+  assert.doesNotMatch(setupBlock, /^\s*cache:\s*pip\s*$/m);
+});
+
 test("Fast Lane Python dependencies cover modules imported during pytest collection", () => {
   const requirements = readFileSync("ci/requirements-fast.txt", "utf8");
   assert.match(requirements, /^pytest(?:[<=>]|$)/m);
