@@ -11,5 +11,7 @@ describe("Reporting Room operator authorization wiring", () => {
 
     expect(source).toContain("requireSlumhouseUserOrAdmin");
     expect(source).not.toMatch(/reportsApiRouter\.get\([\s\S]*?requireSlumhouseUser,/);
+    expect(source).toContain('raw === "paper-floor"');
+    expect(source).toContain("assemblePaperFloorReports(getActiveStreams())");
   });
 });

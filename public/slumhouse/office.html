@@ -392,6 +392,30 @@
     @keyframes ghost-flow { to { stroke-dashoffset: -240; } }
     @keyframes orbit-spin { to { transform: rotate(360deg); } }
     @keyframes node-breathe { 0%,100% { opacity:.34; } 50% { opacity:1; } }
+    .fight-night-empty .premium-canvas { perspective: 1100px; background: radial-gradient(ellipse at 50% 68%,rgba(163,255,18,.08),transparent 42%); }
+    .fight-night-empty .arena-photo-stage { min-height: 520px; isolation: isolate; }
+    .fight-night-empty .arena-photo { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 56%; filter: saturate(.9) contrast(1.07) brightness(.76); transform: scale(1.015); animation: arena-photo-drift 12s ease-in-out infinite; }
+    .fight-night-empty .arena-photo-scrim { position: absolute; z-index: 3; inset: 0; pointer-events: none; background: linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.04) 48%,rgba(0,0,0,.7)),radial-gradient(circle at 50% 54%,transparent 20%,rgba(0,0,0,.28) 78%); box-shadow: inset 0 0 90px rgba(0,0,0,.76); }
+    .fight-night-empty .arena-photo-hud { position: absolute; z-index: 4; top: 26px; left: 50%; transform: translateX(-50%); width: min(620px,calc(100% - 48px)); text-align: center; text-shadow: 0 3px 24px #000; }
+    .fight-night-empty .arena-photo-hud .feed { color: #caff75; font: 800 10px/1 var(--num-font); letter-spacing: .28em; text-transform: uppercase; }
+    .fight-night-empty .arena-photo-hud .title { margin-top: 9px; color: #fff; font-size: clamp(24px,3vw,42px); font-weight: 950; font-style: italic; letter-spacing: -.035em; text-transform: uppercase; }
+    .fight-night-empty .arena-photo-hud .sub { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 7px 11px; border: 1px solid rgba(163,255,18,.28); border-radius: 999px; background: rgba(0,0,0,.48); color: rgba(255,255,255,.72); font: 750 9px/1 var(--num-font); letter-spacing: .15em; text-transform: uppercase; backdrop-filter: blur(10px); }
+    .fight-night-empty .arena-photo-hud .sub i { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); animation: rr-pulse 1.8s ease-in-out infinite; }
+    .fight-night-empty .arena-photo-stage > .premium-svg { position: relative; z-index: 1; opacity: .35; }
+    .fight-night-empty .arena-camera { transform-origin: 50% 62%; animation: arena-breathe 7s ease-in-out infinite; }
+    .fight-night-empty .arena-light { transform-box: fill-box; transform-origin: top center; animation: arena-sweep 7.5s ease-in-out infinite; }
+    .fight-night-empty .arena-light.right { animation-delay: -3.75s; }
+    .fight-night-empty .arena-crowd { animation: crowd-breathe 3.2s ease-in-out infinite; }
+    .fight-night-empty .arena-crowd.delay { animation-delay: -1.6s; }
+    .fight-night-empty .arena-vs { transform-box: fill-box; transform-origin: center; animation: versus-breathe 2.4s ease-in-out infinite; }
+    .fight-night-empty .arena-card { animation: corner-flicker 4.8s ease-in-out infinite; }
+    .fight-night-empty .arena-card.red { animation-delay: -2.4s; }
+    @keyframes arena-breathe { 0%,100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-4px) scale(1.008); } }
+    @keyframes arena-sweep { 0%,100% { opacity:.28; transform: rotate(-5deg); } 50% { opacity:.72; transform: rotate(5deg); } }
+    @keyframes crowd-breathe { 0%,100% { opacity:.22; } 50% { opacity:.48; } }
+    @keyframes versus-breathe { 0%,100% { opacity:.72; transform: scale(.94); } 50% { opacity:1; transform: scale(1.06); } }
+    @keyframes corner-flicker { 0%,100% { opacity:.58; } 48% { opacity:.9; } 52% { opacity:.68; } 58% { opacity:.94; } }
+    @keyframes arena-photo-drift { 0%,100% { transform: scale(1.015) translate3d(0,0,0); } 50% { transform: scale(1.035) translate3d(0,-3px,0); } }
     @media (max-width: 780px) {
       .imm-screen { min-height: calc(100vh - 104px); padding: 20px 12px 54px; }
       .premium-empty, .premium-scene { min-height: 500px; }
@@ -411,6 +435,60 @@
     .tape-item .tev { font-family: var(--num-font); font-size: 8.5px; padding: 2px 6px; border-radius: 5px; white-space: nowrap; background: rgba(255,255,255,0.04); }
     .tape-item .tbody { min-width: 0; } .tape-item .tbody .tstrat { color: rgba(255,255,255,0.82); font-weight: 600; } .tape-item .tbody .tdesc { color: var(--mute); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .tape-item .tt2 { font-family: var(--num-font); font-size: 9px; color: var(--mute); }
+
+    /* Paper Floor fight card — real DB-backed paper results, read-only. */
+    .fight-board { position: relative; overflow: hidden; }
+    .fight-board.live { padding: 14px; border: 1px solid rgba(163,255,18,.14); border-radius: 18px; background: #020302; }
+    .fight-live-arena { position: relative; min-height: 330px; margin: -14px -14px 0; overflow: hidden; border-radius: 18px 18px 0 0; background: #020302 url('/slumhouse/images/paper-fight-night-arena-v2.png') 50% 58%/cover no-repeat; }
+    .fight-live-arena::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.08) 45%,#020302 100%),radial-gradient(circle at 50% 56%,transparent 16%,rgba(0,0,0,.22) 84%); }
+    .fight-live-hud { position: absolute; z-index: 1; top: 24px; left: 50%; width: min(680px,calc(100% - 36px)); transform: translateX(-50%); text-align: center; text-shadow: 0 3px 24px #000; }
+    .fight-live-hud .k { color: #caff75; font: 850 10px/1 var(--num-font); letter-spacing: .28em; text-transform: uppercase; }
+    .fight-live-hud .t { margin-top: 9px; color: #fff; font-size: clamp(25px,3.1vw,43px); font-weight: 950; font-style: italic; letter-spacing: -.04em; text-transform: uppercase; }
+    .fight-live-hud .s { margin-top: 8px; color: rgba(255,255,255,.74); font: 700 10px/1.4 var(--num-font); letter-spacing: .1em; text-transform: uppercase; }
+    .fight-board.live .fight-score { z-index: 3; margin-top: -60px; border-color: rgba(163,255,18,.24); box-shadow: 0 20px 48px rgba(0,0,0,.44); backdrop-filter: blur(16px); }
+    .fight-board.live .fight-score > div { background: linear-gradient(150deg,rgba(8,11,8,.9),rgba(2,3,2,.88)); }
+    .fight-board.live .fight-score .main { background: radial-gradient(circle at 0 0,rgba(163,255,18,.15),transparent 58%),linear-gradient(150deg,rgba(10,15,8,.91),rgba(2,3,2,.88)); }
+    .fight-board.live .fighter { background: radial-gradient(circle at 95% 4%,color-mix(in srgb,var(--corner) 17%,transparent),transparent 42%),linear-gradient(155deg,rgba(11,14,11,.94),rgba(3,4,3,.9) 68%); backdrop-filter: blur(15px); }
+    .fight-board::before { content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .45;
+      background: repeating-linear-gradient(0deg, transparent 0 54px, rgba(163,255,18,.025) 55px 56px); }
+    .fight-score { position: relative; z-index: 1; display: grid; grid-template-columns: 1.35fr repeat(4,minmax(110px,.65fr)); gap: 1px;
+      overflow: hidden; border: 1px solid #1a2118; border-radius: 15px; background: #151a14; margin-bottom: 14px; }
+    .fight-score > div { min-height: 78px; padding: 15px 17px; background: linear-gradient(150deg,#080b08,#020302); display: flex; flex-direction: column; justify-content: center; }
+    .fight-score .main { background: radial-gradient(circle at 0 0,rgba(163,255,18,.11),transparent 58%),linear-gradient(150deg,#0a0f08,#020302); }
+    .fight-k { color: var(--mute); font: 700 9px/1 var(--num-font); letter-spacing: .16em; text-transform: uppercase; }
+    .fight-v { margin-top: 7px; color: #fff; font: 800 18px/1 var(--num-font); }
+    .fight-v.good { color: var(--lime); } .fight-v.bad { color: var(--red); }
+    .fight-main-title { margin-top: 7px; color: #fff; font-size: 21px; font-weight: 850; letter-spacing: -.025em; }
+    .fight-main-sub { margin-top: 5px; color: var(--dim); font-size: 10.5px; }
+    .fighter-grid { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(auto-fit,minmax(330px,1fr)); gap: 12px; }
+    .fighter { --corner: #70806a; position: relative; min-width: 0; overflow: hidden; border: 1px solid rgba(255,255,255,.075); border-radius: 16px;
+      background: radial-gradient(circle at 95% 4%,color-mix(in srgb,var(--corner) 14%,transparent),transparent 42%),linear-gradient(155deg,#0b0e0b,#030403 68%); }
+    .fighter.leader { --corner: var(--lime); border-color: rgba(163,255,18,.34); box-shadow: 0 0 34px rgba(163,255,18,.07),inset 0 1px rgba(163,255,18,.16); }
+    .fighter.positive:not(.leader) { --corner: #60a5fa; } .fighter.negative { --corner: var(--red); }
+    .fighter-top { display: flex; align-items: center; gap: 12px; padding: 16px 17px 13px; border-bottom: 1px solid rgba(255,255,255,.055); }
+    .fighter-rank { width: 42px; height: 42px; flex: 0 0 42px; display: grid; place-items: center; border-radius: 50%; color: var(--corner);
+      border: 1px solid color-mix(in srgb,var(--corner) 42%,transparent); background: color-mix(in srgb,var(--corner) 8%,#030403); font: 900 16px/1 var(--num-font); box-shadow: 0 0 18px color-mix(in srgb,var(--corner) 12%,transparent); }
+    .fighter.leader .fighter-rank::after { content: "LEADER"; position: absolute; top: 10px; right: 13px; color: var(--lime); font: 800 8px/1 var(--num-font); letter-spacing: .14em; }
+    .fighter-name { min-width: 0; color: #fff; font-size: 15px; font-weight: 800; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fighter-meta { margin-top: 4px; color: var(--dim); font: 600 9px/1 var(--num-font); letter-spacing: .1em; text-transform: uppercase; }
+    .fighter-pnl { margin-left: auto; text-align: right; padding-right: 2px; }
+    .fighter-pnl .money { color: var(--corner); font: 850 23px/1 var(--num-font); letter-spacing: -.03em; }
+    .fighter-pnl .ret { margin-top: 5px; color: var(--dim); font: 700 9px/1 var(--num-font); }
+    .fighter-round { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 1px; background: rgba(255,255,255,.045); }
+    .fighter-round > div { min-width: 0; padding: 12px 13px; background: rgba(0,0,0,.68); }
+    .fighter-round .k { color: var(--mute); font: 700 8px/1 var(--num-font); letter-spacing: .1em; text-transform: uppercase; }
+    .fighter-round .v { margin-top: 6px; color: rgba(255,255,255,.86); font: 750 12px/1 var(--num-font); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fighter-meter { position: relative; height: 5px; margin: 13px 17px 0; overflow: hidden; border-radius: 99px; background: rgba(255,255,255,.055); }
+    .fighter-meter span { position: absolute; inset: 0 auto 0 50%; width: var(--power); background: linear-gradient(90deg,color-mix(in srgb,var(--corner) 55%,transparent),var(--corner)); box-shadow: 0 0 12px var(--corner); }
+    .fighter.negative .fighter-meter span { right: 50%; left: auto; background: linear-gradient(90deg,var(--corner),color-mix(in srgb,var(--corner) 55%,transparent)); }
+    .fighter-corner { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 17px 15px; }
+    .feed-badge { display: inline-flex; align-items: center; gap: 7px; min-width: 0; color: var(--dim); font: 700 9px/1 var(--num-font); letter-spacing: .08em; text-transform: uppercase; }
+    .feed-badge i { width: 7px; height: 7px; flex: 0 0 7px; border-radius: 50%; background: var(--red); box-shadow: 0 0 9px var(--red); }
+    .feed-badge.on i { background: var(--lime); box-shadow: 0 0 9px var(--lime); } .feed-badge.paused i { background: var(--warm); box-shadow: 0 0 9px var(--warm); }
+    .position-badge { min-width: 0; color: var(--dim); font: 650 9px/1.25 var(--num-font); text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .fight-tied { color: var(--warm); }
+    @media (max-width: 900px) { .fight-score { grid-template-columns: repeat(2,1fr); } .fight-score .main { grid-column: 1/-1; } }
+    @media (max-width: 560px) { .fighter-grid { grid-template-columns: 1fr; } .fighter-round { grid-template-columns: repeat(2,1fr); } }
 
     @media (max-width: 780px) {
       .rr-typetog { top: 56px; left: 8px; right: 8px; max-width: none; transform: none; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
@@ -1472,24 +1550,40 @@
       // (not rl:*), strategy:promoted (not lifecycle:promoted), paper:tp1/2_filled.
       var RR_RL_EVENTS = ['signal:rl_ab_routed', 'quantum_rl:training_completed', 'quantum_rl:kill_switch_engaged'];
       var RR_PAPER_EVENTS = ['paper:trade', 'paper:signal', 'paper:pnl', 'paper:session_start', 'paper:session_stop', 'paper:tp1_filled', 'paper:tp2_filled', 'paper:be_stop_moved', 'paper:trail_tightened', 'paper:time_stop_flattened', 'signal:a_plus_rejected', 'signal:weighted_score_rejected', 'strategy:promoted', 'lifecycle:operator_absent_autopromoted'];
-      var rrES = null, rrRlRefresh = null, rrPaperTape = [], rrPaperCounts = { events: 0 }, rrPaperConn = 'idle';
+      var rrES = null, rrRlRefresh = null, rrPaperRefresh = null, rrSseErrorTimer = null, rrPaperData = null, rrPaperLoading = false;
+      var rrPaperTape = [], rrPaperCounts = { events: 0 }, rrPaperConn = 'idle';
       function rrSSEConnect() {
         if (rrES || typeof EventSource === 'undefined') return;
         try {
           rrES = new EventSource('/api/sse/events');
           rrPaperConn = 'connecting';
-          rrES.onopen = function () { rrPaperConn = 'open'; if (RR_STATE.type === 'paper') rrPaperPaint(); };
+          rrES.onopen = function () {
+            if (rrSseErrorTimer) { clearTimeout(rrSseErrorTimer); rrSseErrorTimer = null; }
+            rrPaperConn = 'open';
+            if (RR_STATE.type === 'paper') rrPaperPaint();
+          };
           // OR-042 F-2: a dropped/failed stream must NOT collapse into "genuinely quiet".
           // Mark it disconnected so the floor renders 'feed interrupted' distinctly from a dark
           // floor — honest (we do not know it is quiet, so we do not say so).
-          rrES.onerror = function () { rrPaperConn = 'error'; if (RR_STATE.type === 'paper') rrPaperPaint(); };
+          rrES.onerror = function () {
+            rrPaperConn = 'connecting';
+            if (rrSseErrorTimer) return;
+            rrSseErrorTimer = setTimeout(function () {
+              rrSseErrorTimer = null;
+              if (!rrES || rrES.readyState === 1) return;
+              rrPaperConn = 'error';
+              if (RR_STATE.type === 'paper') rrPaperPaint();
+            }, 5000);
+          };
           RR_RL_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnRlEvent); });
           RR_PAPER_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnPaperEvent); });
         } catch (e) { rrES = null; rrPaperConn = 'error'; }
       }
       function rrSSEClose() {
         if (rrES) { try { rrES.close(); } catch (e) {} rrES = null; }
+        if (rrSseErrorTimer) { clearTimeout(rrSseErrorTimer); rrSseErrorTimer = null; }
         if (rrRlRefresh) { clearTimeout(rrRlRefresh); rrRlRefresh = null; }
+        if (rrPaperRefresh) { clearTimeout(rrPaperRefresh); rrPaperRefresh = null; }
         rrPaperConn = 'idle';
       }
       function rrOnRlEvent() {
@@ -1514,7 +1608,13 @@
         rrPaperTape.unshift({ ev: name, strat: String(strat), desc: rrPaperDesc(name, d), t: t });
         if (rrPaperTape.length > 24) rrPaperTape.pop();
         rrPaperCounts.events += 1;
-        if (RR_STATE.type === 'paper') rrPaperPaint();
+        if (RR_STATE.type === 'paper') {
+          rrPaperPaint();
+          if (!rrPaperRefresh) rrPaperRefresh = setTimeout(function () {
+            rrPaperRefresh = null;
+            if (RR_STATE.type === 'paper') rrFetchPaperFloor();
+          }, 700);
+        }
       }
 
       // ── Immersive Quantum RL (real /api/ab-comparison/recent scalars) ─────────
@@ -1592,23 +1692,67 @@
 
       // ── Immersive Paper Floor (real SSE tape; honest-dark until an event streams) ──
       function rrPaperSrc() {
-        return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> subscribes to <code>/api/sse/events</code> — paper fills &amp; stop moves (<code>paper:tp1_filled</code>, <code>paper:be_stop_moved</code>, <code>paper:trail_tightened</code>), signals (<code>paper:signal</code>, <code>signal:a_plus_rejected</code>) and promotions (<code>strategy:promoted</code>). The room only listens — it places no orders and moves no stops.</span></div>';
+        return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> the fight card reads <code>/slumhouse/api/reports?scope=paper-floor</code> from paper sessions, trades and open positions; each corner carries its real <b>Massive</b> stream state. <code>/api/sse/events</code> triggers score refreshes and supplies the round-by-round tape. The room only observes — it places no orders and moves no stops.</span></div>';
       }
       function rrRenderPaper() {
         if (!document.getElementById('imm-paper')) return;
         rrSSEConnect();
-        rrPaperPaint();
+        rrFetchPaperFloor();
+      }
+      function rrFetchPaperFloor() {
+        if (rrPaperLoading) return;
+        rrPaperLoading = true;
+        var host = document.getElementById('imm-paper');
+        if (host && !rrPaperData) host.innerHTML = '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Opening the arena</div><h2 class="empty-title">Reading every paper corner…</h2></div>';
+        fetch('/slumhouse/api/reports?scope=paper-floor', { credentials: 'same-origin' })
+          .then(function (res) { return res.ok ? res.json() : null; })
+          .then(function (data) {
+            rrPaperLoading = false;
+            if (RR_STATE.type !== 'paper') return;
+            rrPaperData = data || { scope: 'paper-floor', fighters: [], summary: null, degraded: true, error: 'paper_floor_unreachable' };
+            rrPaperPaint();
+          })
+          .catch(function () {
+            rrPaperLoading = false;
+            if (RR_STATE.type !== 'paper') return;
+            rrPaperData = { scope: 'paper-floor', fighters: [], summary: null, degraded: true, error: 'paper_floor_unreachable' };
+            rrPaperPaint();
+          });
       }
       // The two honest paper empties, pure so they can be locked in a test. 'quiet' =
       // connected but nothing has traded; 'disconnected' = the live stream dropped, which
       // is NOT the same as quiet and must never be shown as such (OR-042 F-2). Neither
       // invents a reading.
+      function rrPaperFightNightVectorFallbackHTML() {
+        return '<div class="imm-panel premium-empty fight-night-empty"><div class="premium-scene"><div class="premium-canvas"><svg class="premium-svg" viewBox="0 0 1200 540" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Decorative 3D Paper Fight Night arena awaiting real Massive-backed strategy sessions">' +
+          '<defs><linearGradient id="fn-bg" x2="0" y2="1"><stop stop-color="#030504"/><stop offset=".62" stop-color="#070908"/><stop offset="1" stop-color="#000"/></linearGradient><radialGradient id="fn-roof"><stop stop-color="#d9ff9d" stop-opacity=".16"/><stop offset="1" stop-color="#a3ff12" stop-opacity="0"/></radialGradient><linearGradient id="fn-blue"><stop stop-color="#78b7ff"/><stop offset="1" stop-color="#132d48"/></linearGradient><linearGradient id="fn-red"><stop stop-color="#ff765e"/><stop offset="1" stop-color="#46130e"/></linearGradient><linearGradient id="fn-mat" x2="0" y2="1"><stop stop-color="#182017"/><stop offset="1" stop-color="#060806"/></linearGradient><linearGradient id="fn-rope"><stop stop-color="#f4ffe2"/><stop offset=".5" stop-color="#a3ff12"/><stop offset="1" stop-color="#46572c"/></linearGradient><filter id="fn-glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="fn-soft"><feGaussianBlur stdDeviation="18"/></filter></defs>' +
+          '<rect width="1200" height="540" fill="url(#fn-bg)"/><ellipse cx="600" cy="56" rx="420" ry="170" fill="url(#fn-roof)"/>' +
+          '<g class="arena-light"><path d="M155 0L390 390H515L244 0Z" fill="#60a5fa" opacity=".08"/><ellipse cx="449" cy="384" rx="132" ry="28" fill="#60a5fa" opacity=".09" filter="url(#fn-soft)"/></g><g class="arena-light right"><path d="M1045 0L810 390H685L956 0Z" fill="#a3ff12" opacity=".1"/><ellipse cx="751" cy="384" rx="132" ry="28" fill="#a3ff12" opacity=".1" filter="url(#fn-soft)"/></g>' +
+          '<g opacity=".7"><path d="M0 314Q158 252 322 310T640 302T908 306T1200 298V430H0Z" fill="#060806"/><g class="arena-crowd" fill="#8ba176"><circle cx="35" cy="329" r="3"/><circle cx="78" cy="307" r="2"/><circle cx="126" cy="324" r="3"/><circle cx="177" cy="293" r="2"/><circle cx="223" cy="315" r="3"/><circle cx="284" cy="299" r="2"/><circle cx="914" cy="311" r="3"/><circle cx="969" cy="291" r="2"/><circle cx="1020" cy="321" r="3"/><circle cx="1069" cy="301" r="2"/><circle cx="1123" cy="323" r="3"/><circle cx="1170" cy="294" r="2"/></g><g class="arena-crowd delay" fill="#60a5fa"><circle cx="52" cy="354" r="2"/><circle cx="148" cy="347" r="2"/><circle cx="249" cy="353" r="2"/><circle cx="944" cy="350" r="2"/><circle cx="1051" cy="347" r="2"/><circle cx="1151" cy="352" r="2"/></g></g>' +
+          '<g class="arena-camera"><path d="M280 333L920 333L1038 491L162 491Z" fill="#020302" stroke="#a3ff12" stroke-opacity=".13"/><path d="M337 297L863 297L947 437L253 437Z" fill="url(#fn-mat)" stroke="#879378" stroke-opacity=".35"/><path d="M337 297L253 437M863 297L947 437" stroke="#dfffb5" stroke-opacity=".4"/>' +
+          '<g fill="none" stroke="url(#fn-rope)" stroke-width="4"><path d="M300 272L900 272L1001 450L199 450Z"/><path d="M312 284L888 284L980 438L220 438Z"/><path d="M324 296L876 296L959 426L241 426Z"/></g>' +
+          '<g fill="#151a14" stroke="#a3ff12" stroke-opacity=".55"><rect x="286" y="255" width="24" height="206" rx="5"/><rect x="890" y="255" width="24" height="206" rx="5"/><rect x="187" y="432" width="25" height="66" rx="5"/><rect x="988" y="432" width="25" height="66" rx="5"/></g>' +
+          '<path d="M355 405L845 405" stroke="#a3ff12" stroke-opacity=".07" stroke-width="2"/><text x="600" y="392" text-anchor="middle" fill="#a3ff12" fill-opacity=".13" font-family="Arial" font-size="46" font-weight="900" letter-spacing="9" transform="skewX(-8)">PAPER FIGHT NIGHT</text>' +
+          '<g class="arena-card" transform="translate(320 307)"><path d="M0 0L140-10L168 115L18 124Z" fill="#07111b" stroke="#60a5fa" stroke-opacity=".55"/><path d="M55 77Q52 43 74 31Q96 43 93 77L115 102H34Z" fill="url(#fn-blue)" opacity=".42"/><circle cx="74" cy="24" r="18" fill="#60a5fa" opacity=".24"/><text x="78" y="146" text-anchor="middle" fill="#8fc5ff" font-family="monospace" font-size="10" font-weight="700" letter-spacing="3">CORNER 01</text></g>' +
+          '<g class="arena-card red" transform="translate(712 297)"><path d="M28 0L168 10L150 134L0 125Z" fill="#180907" stroke="#ff6048" stroke-opacity=".48"/><path d="M61 87Q58 53 80 41Q102 53 99 87L121 112H40Z" fill="url(#fn-red)" opacity=".38"/><circle cx="80" cy="34" r="18" fill="#ff6048" opacity=".22"/><text x="84" y="156" text-anchor="middle" fill="#ff9b89" font-family="monospace" font-size="10" font-weight="700" letter-spacing="3">CORNER 02</text></g>' +
+          '<g class="arena-vs" transform="translate(600 347)"><circle r="49" fill="#050705" stroke="#a3ff12" stroke-opacity=".44" filter="url(#fn-glow)"/><circle r="38" fill="none" stroke="#fff" stroke-opacity=".11"/><text y="9" text-anchor="middle" fill="#f4ffe7" font-family="Arial" font-size="28" font-weight="900" font-style="italic">VS</text></g></g>' +
+          '<g transform="translate(600 92)"><text text-anchor="middle" fill="#a3ff12" font-family="monospace" font-size="11" font-weight="700" letter-spacing="6">MASSIVE MARKET FEED</text><text y="35" text-anchor="middle" fill="#fff" font-family="Arial" font-size="30" font-weight="900" letter-spacing="2">FIGHTERS LOADING</text><path d="M453 53H747" stroke="#a3ff12" stroke-opacity=".24"/><circle cx="600" cy="53" r="4" fill="#a3ff12" class="pulse-node" filter="url(#fn-glow)"/></g>' +
+          '<g fill="#829079" font-family="monospace" font-size="9" letter-spacing="2"><text x="73" y="492">NO SIMULATED SCORES</text><text x="1127" y="492" text-anchor="end">REAL SESSIONS ONLY</text></g></svg></div>' +
+          '<div class="premium-caption"><div><div class="premium-kicker">Paper Fight Night · pre-bell arena</div><div class="premium-name">The ring is ready. Real strategies take the corners.</div><div class="premium-copy"><span class="empty-eyebrow">Fighters loading</span> The first real Massive-backed paper sessions will replace these decorative corner silhouettes with ranked strategy cards, W–L records, positions and net paper P&amp;L. No preview score is fabricated.</div></div><div class="premium-state">Massive feed — waiting</div></div></div></div>' +
+          '<p class="empty-note">This is a decorative video-game arena, not a performance reading. Real sessions automatically replace it through <code>/slumhouse/api/reports?scope=paper-floor</code>.</p>';
+      }
+      function rrPaperFightNightEmptyHTML() {
+        return rrPaperFightNightVectorFallbackHTML().replace('<div class="premium-canvas">',
+          '<div class="premium-canvas arena-photo-stage"><img class="arena-photo" src="/slumhouse/images/paper-fight-night-arena-v2.png" alt="" aria-hidden="true">' +
+          '<div class="arena-photo-scrim"></div><div class="arena-photo-hud"><div class="feed">Paper Fight Night · Massive</div><div class="title">Fighters loading</div><div class="sub"><i></i>Waiting for real paper sessions</div></div>');
+      }
       function rrPaperEmptyHTML(kind) {
         if (kind === 'disconnected') {
           return '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Live feed interrupted</div><h2 class="empty-title">The floor feed dropped</h2>' +
             '<p class="empty-body">The live connection to the paper floor was interrupted and is retrying. This is a connection problem, not a quiet floor — we are deliberately NOT calling it &ldquo;nothing is happening&rdquo;, because we do not know. Nothing has been lost; the tape resumes the moment the stream reconnects.</p>' +
             '<p class="empty-note">Reconnecting to <code>/api/sse/events</code>. No reading is invented while the stream is down.</p></div>';
         }
+        if (kind === 'quiet') return rrPaperFightNightEmptyHTML();
         return '<div class="imm-panel premium-empty"><div class="premium-scene"><div class="premium-canvas"><svg class="premium-svg" viewBox="0 0 1200 470" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Decorative paper execution operations floor; awaiting live engine events">' +
           '<defs><pattern id="pf-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#a3ff12" stroke-opacity=".04"/></pattern><linearGradient id="pf-rail"><stop stop-color="#60a5fa" stop-opacity=".18"/><stop offset=".55" stop-color="#a3ff12" stop-opacity=".85"/><stop offset="1" stop-color="#a3ff12" stop-opacity=".08"/></linearGradient><radialGradient id="pf-halo"><stop stop-color="#a3ff12" stop-opacity=".24"/><stop offset="1" stop-color="#a3ff12" stop-opacity="0"/></radialGradient><filter id="pf-glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
           '<rect width="1200" height="470" fill="url(#pf-grid)"/><ellipse cx="620" cy="420" rx="570" ry="190" fill="url(#pf-halo)" opacity=".2"/>' +
@@ -1625,27 +1769,76 @@
           '<div class="premium-caption"><div><div class="premium-kicker">Paper operations deck</div><div class="premium-name">The execution floor is armed for observation</div><div class="premium-copy"><span class="empty-eyebrow">Floor is dark</span> No paper activity yet. Real signals, risk decisions, fills and stop events will illuminate these bays as they stream in; nothing here is simulated.</div></div><div class="premium-state">Event stream — waiting</div></div></div></div>' +
           '<p class="empty-note">Live from <code>/api/sse/events</code>. The architecture scene is decorative; every future tape row will be a real engine event.</p>';
       }
+      function rrPaperFightHTML(data) {
+        var fighters = data && Array.isArray(data.fighters) ? data.fighters : [];
+        if (!fighters.length) return '';
+        var summary = data.summary || {};
+        var leaderIds = Array.isArray(summary.leaderStrategyIds) ? summary.leaderStrategyIds : [];
+        var tied = !!summary.tiedForLead;
+        var soleLeader = !tied && leaderIds.length === 1 ? leaderIds[0] : null;
+        var maxAbs = fighters.reduce(function (m, f) { return Math.max(m, Math.abs(Number(f.netPnl) || 0)); }, 0) || 1;
+        var leader = fighters[0] || {};
+        var mainTitle = tied ? 'Dead even at the bell' : rrEsc(leader.strategyName || 'No leader yet');
+        var mainSub = tied ? 'Multiple strategies share the top net paper P&amp;L.' : 'Currently leads on net paper P&amp;L — the scoreboard never uses backtest results.';
+        var score = '<div class="fight-score"><div class="main"><div class="fight-k">Fight night · current leader</div><div class="fight-main-title' + (tied ? ' fight-tied' : '') + '">' + mainTitle + '</div><div class="fight-main-sub">' + mainSub + '</div></div>' +
+          '<div><div class="fight-k">Active corners</div><div class="fight-v">' + rrEsc(String(Number(summary.activeStrategies) || 0)) + '</div></div>' +
+          '<div><div class="fight-k">Open positions</div><div class="fight-v">' + rrEsc(String(Number(summary.openPositions) || 0)) + '</div></div>' +
+          '<div><div class="fight-k">Combined P&amp;L</div><div class="fight-v ' + ((Number(summary.combinedNetPnl) || 0) >= 0 ? 'good' : 'bad') + '">' + rrMoney(Number(summary.combinedNetPnl) || 0, true) + '</div></div>' +
+          '<div><div class="fight-k">Scoring</div><div class="fight-v" style="font-size:12px;">NET PAPER P&amp;L</div></div></div>';
+        var arena = '<div class="fight-live-arena"><div class="fight-live-hud"><div class="k">Paper Fight Night · Massive</div><div class="t">The fight card is live</div><div class="s">' + rrEsc(String(fighters.length)) + ' real strategy corner' + (fighters.length === 1 ? '' : 's') + ' loaded · scores below are persisted paper results</div></div></div>';
+        var cards = fighters.map(function (f) {
+          var pnl = Number(f.netPnl) || 0, ret = Number(f.returnPct) || 0;
+          var cls = f.strategyId === soleLeader ? ' leader' : pnl > 0 ? ' positive' : pnl < 0 ? ' negative' : '';
+          var power = Math.max(2, Math.min(50, Math.abs(pnl) / maxAbs * 50));
+          var feed = f.feed || {}, feedCls = feed.connected ? ' on' : feed.state === 'paused' ? ' paused' : '';
+          var feedText = feed.connected ? 'Massive connected' : feed.state === 'paused' ? 'Massive paused' : feed.state === 'not_started' ? 'Massive waiting' : 'Massive disconnected';
+          var positions = Array.isArray(f.positions) ? f.positions : [];
+          var p = positions[0];
+          var posText = p ? rrEsc(String(p.symbol || '') + ' · ' + String(p.side || '').toUpperCase() + ' · ' + String(Number(p.contracts) || 0) + ' ctr') + ' · ' + rrMoney(Number(p.unrealizedPnl) || 0, true) + (positions.length > 1 ? ' · +' + (positions.length - 1) + ' more' : '') : 'No open position';
+          var wr = f.winRate == null ? '—' : (Number(f.winRate) * 100).toFixed(1) + '%';
+          var symbols = Array.isArray(f.symbols) ? f.symbols.join(' / ') : '';
+          var retText = (ret >= 0 ? '+' : '') + ret.toFixed(2) + '% return';
+          return '<article class="fighter' + cls + '" data-strategy-id="' + rrEsc(String(f.strategyId || '')) + '"><div class="fighter-top">' +
+            '<div class="fighter-rank">#' + rrEsc(String(Number(f.rank) || '—')) + '</div><div style="min-width:0;"><div class="fighter-name">' + rrEsc(f.strategyName || 'Strategy') + '</div><div class="fighter-meta">' + rrEsc(symbols || '—') + (f.timeframe ? ' · ' + rrEsc(String(f.timeframe)) : '') + ' · ' + rrEsc(String(f.status || '')) + '</div></div>' +
+            '<div class="fighter-pnl"><div class="money">' + rrMoney(pnl, true) + '</div><div class="ret">' + rrEsc(retText) + '</div></div></div>' +
+            '<div class="fighter-round"><div><div class="k">Record</div><div class="v">' + rrEsc(String(Number(f.wins) || 0)) + '–' + rrEsc(String(Number(f.losses) || 0)) + '</div></div>' +
+            '<div><div class="k">Win rate</div><div class="v">' + rrEsc(wr) + '</div></div>' +
+            '<div><div class="k">Realized</div><div class="v">' + rrMoney(Number(f.realizedPnl) || 0, true) + '</div></div>' +
+            '<div><div class="k">Unrealized</div><div class="v">' + rrMoney(Number(f.unrealizedPnl) || 0, true) + '</div></div></div>' +
+            '<div class="fighter-meter" aria-label="Relative net paper P and L"><span style="--power:' + power.toFixed(2) + '%"></span></div>' +
+            '<div class="fighter-corner"><div class="feed-badge' + feedCls + '"><i></i>' + rrEsc(feedText) + '</div><div class="position-badge">' + posText + '</div></div></article>';
+        }).join('');
+        return '<div class="fight-board live">' + arena + score + '<div class="fighter-grid">' + cards + '</div></div>';
+      }
       function rrPaperPaint() {
         var host = document.getElementById('imm-paper');
         if (!host || RR_STATE.type !== 'paper') return;
+        var data = rrPaperData || { fighters: [], summary: null };
+        var fighters = Array.isArray(data.fighters) ? data.fighters : [];
         var hasEvents = rrPaperTape.length > 0;
         var disconnected = !hasEvents && rrPaperConn === 'error';
-        var pillCls = hasEvents ? 'good' : disconnected ? 'bad' : 'dim';
-        var pillTxt = hasEvents ? 'streaming' : disconnected ? 'feed interrupted' : 'idle';
+        var degraded = !!data.degraded;
+        var pillCls = degraded ? 'bad' : hasEvents ? 'good' : disconnected ? 'bad' : fighters.length ? 'info' : 'dim';
+        var pillTxt = degraded ? 'scoreboard unavailable' : hasEvents ? 'round live' : disconnected ? 'event feed interrupted' : fighters.length ? 'corners live' : 'idle';
         var feedTxt = hasEvents ? 'streaming' : disconnected ? 'reconnecting' : 'waiting';
         var feedCol = hasEvents ? 'var(--lime)' : disconnected ? 'var(--red)' : 'var(--mute)';
-        var head = '<div class="imm-head"><div><div class="imm-eyebrow">Live Paper Engine · immersive</div><div class="imm-title">The floor, right now</div>' +
-          '<div class="imm-subline">Every paper fill, stop move and signal the engine emits, streamed live. Read-only — the room never places an order.</div></div>' +
+        var head = '<div class="imm-head"><div><div class="imm-eyebrow">Paper Fight Night · Massive-fed · immersive</div><div class="imm-title">Which strategy is winning?</div>' +
+          '<div class="imm-subline">Every active paper strategy in its own corner, ranked by real net paper P&amp;L. Massive supplies the bars; the engine keeps each strategy score independent.</div></div>' +
           '<div class="imm-head-right"><span class="pillstat ' + pillCls + '"><span class="d"></span> ' + pillTxt + '</span></div></div>';
         var agg = '<div class="imm-panel" style="margin-bottom:14px;"><div class="imm-agg">' +
-          '<div class="a"><span class="k">Live events · this session</span><span class="v' + (hasEvents ? '' : ' dash') + '">' + (hasEvents ? rrPaperCounts.events : '—') + '</span></div><div class="sep"></div>' +
+          '<div class="a"><span class="k">Strategies in the arena</span><span class="v' + (fighters.length ? '' : ' dash') + '">' + (fighters.length ? fighters.length : '—') + '</span></div><div class="sep"></div>' +
+          '<div class="a"><span class="k">Events seen · this screen</span><span class="v' + (hasEvents ? '' : ' dash') + '">' + (hasEvents ? rrPaperCounts.events : '—') + '</span></div><div class="sep"></div>' +
           '<div class="a"><span class="k">Feed</span><span class="v" style="font-size:13px;color:' + feedCol + ';">' + feedTxt + '</span></div></div></div>';
         var body;
-        if (hasEvents) {
-          body = '<div class="imm-panel"><div class="imm-label">Live tape <span class="aside">newest first · real engine events</span></div>' +
+        if (degraded) {
+          body = rrPaperEmptyHTML('disconnected');
+        } else if (fighters.length) {
+          body = '<div class="imm-panel">' + rrPaperFightHTML(data) + '</div>' +
+            '<div class="imm-panel"><div class="imm-label">Round-by-round tape <span class="aside">newest first · real engine events only</span></div>' +
+            (hasEvents ?
             '<div class="tape-feed">' + rrPaperTape.map(function (x) {
               return '<div class="tape-item"><span class="tev">' + rrEsc(x.ev) + '</span><span class="tbody"><div class="tstrat">' + rrEsc(x.strat) + '</div><div class="tdesc">' + rrEsc(x.desc) + '</div></span><span class="tt2">' + rrEsc(x.t) + '</span></div>';
-            }).join('') + '</div></div>';
+            }).join('') + '</div>' : '<div class="tape-empty">The bell is quiet. Strategy scores above come from persisted paper results; the tape starts with the next real engine event.</div>') + '</div>';
         } else {
           body = rrPaperEmptyHTML(disconnected ? 'disconnected' : 'quiet');
         }

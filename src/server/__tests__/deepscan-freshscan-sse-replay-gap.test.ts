@@ -5,9 +5,39 @@
  * counter back past it → no gap signalled → real post-restart events silently dropped.
  */
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import { computeReplayGap } from "../lib/sse-replay-gap.js";
 
 const BOOT = "aaaa1111";
+
+describe("SSE proxy transport hardening", () => {
+  const source = fs.readFileSync(path.resolve(process.cwd(), "src/server/routes/sse.ts"), "utf8");
+  const relayServer = fs.readFileSync(path.resolve(process.cwd(), "railway-relay/server.js"), "utf8");
+  const relayClient = fs.readFileSync(path.resolve(process.cwd(), "scripts/tower-relay-client.cjs"), "utf8");
+
+  it("flushes an unbuffered response immediately and keeps proxy idle time below 30 seconds", () => {
+    expect(source).toContain("const HEARTBEAT_INTERVAL_MS = 15_000");
+    expect(source).toContain('"Cache-Control": "no-cache, no-transform"');
+    expect(source).toContain("res.flushHeaders()");
+    expect(source).toContain('res.write(`retry: 2000\\n:${" ".repeat(2048)}\\n`)');
+    expect(source).toContain("req.socket.setKeepAlive(true, HEARTBEAT_INTERVAL_MS)");
+  });
+
+  it("streams event responses across the WebSocket relay instead of waiting for response end", () => {
+    for (const frame of ["response_start", "response_chunk", "response_end"]) {
+      expect(relayServer).toContain(`msg.type === \"${frame}\"`);
+      expect(relayClient).toContain(`type: \"${frame}\"`);
+    }
+    expect(relayClient).toContain('/^text\\/event-stream\\b/i');
+    expect(relayClient).toContain('msg.type === "cancel"');
+    expect(relayServer).toContain('sendFrame(tower, { type: "cancel", id })');
+    expect(relayServer).toContain("protocolVersion: RELAY_PROTOCOL_VERSION");
+    expect(relayServer).toContain("const RELAY_PROTOCOL_VERSION = 2");
+    expect(relayServer).toContain('if (msg.type !== "response") return');
+    expect(relayClient).toContain("sendResponse(ws, msg.id, res.statusCode, res.headers, body)");
+  });
+});
 
 describe("fresh-scan HIGH#8 — computeReplayGap boot-mismatch restart detection", () => {
   it("THE BUG CASE: small lastSeenSeq, counter climbed back past it after restart → gap (was missed)", () => {

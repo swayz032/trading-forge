@@ -155,6 +155,9 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
       "function rrRenderRL(",
       "function rrRlEmpty(",
       "function rrPaperPaint(",
+      "function rrPaperFightHTML(",
+      "function rrPaperFightNightVectorFallbackHTML(",
+      "function rrPaperFightNightEmptyHTML(",
       "function rrPaperEmptyHTML(",
       "function rrOnPaperEvent(",
     ]) {
@@ -173,19 +176,121 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
   });
 
   it("the paper floor stays honest-dark until a REAL sse event streams (no simulated tape)", () => {
-    const empty = stripComments(sliceBalanced(officeSrc, "function rrPaperEmptyHTML("));
-    expect(empty).toContain("Floor is dark");
-    expect(empty).toContain("nothing here is simulated");
+    const empty = stripComments(
+      sliceBalanced(officeSrc, "function rrPaperFightNightVectorFallbackHTML(") +
+      sliceBalanced(officeSrc, "function rrPaperFightNightEmptyHTML("),
+    );
+    expect(empty).toContain("FIGHTERS LOADING");
+    expect(empty).toContain("NO SIMULATED SCORES");
     const paint = stripComments(sliceBalanced(officeSrc, "function rrPaperPaint("));
     expect(paint).not.toMatch(RANDOM_RE);
+  });
+});
+
+const rrPaperFightHTML = (() => {
+  const esc = sliceBalanced(officeSrc, "function rrEsc(");
+  const money = sliceBalanced(officeSrc, "function rrMoney(");
+  const fight = sliceBalanced(officeSrc, "function rrPaperFightHTML(");
+  return vm.runInNewContext(`${esc}\n${money}\n${fight}\n;rrPaperFightHTML`, {}) as (
+    data: Record<string, unknown>,
+  ) => string;
+})();
+
+describe("Paper Fight Night — real all-strategy comparison renderer", () => {
+  const fighter = (over: Record<string, unknown> = {}) => ({
+    rank: 1,
+    sessionId: "session-a",
+    strategyId: "strategy-a",
+    strategyName: "London Sweep",
+    symbols: ["MES"],
+    timeframe: "5m",
+    status: "active",
+    netPnl: 1250,
+    returnPct: 2.5,
+    realizedPnl: 1100,
+    unrealizedPnl: 150,
+    trades: 12,
+    wins: 8,
+    losses: 4,
+    winRate: 8 / 12,
+    positions: [{ symbol: "MES", side: "long", contracts: 2, unrealizedPnl: 150 }],
+    feed: { provider: "Massive", connected: true, state: "connected", symbols: ["MES"] },
+    ...over,
+  });
+
+  it("renders every strategy corner, the real scoring basis, and Massive state", () => {
+    const html = rrPaperFightHTML({
+      fighters: [
+        fighter(),
+        fighter({
+          rank: 2,
+          strategyId: "strategy-b",
+          strategyName: "NY Reversal",
+          symbols: ["MNQ"],
+          netPnl: -250,
+          returnPct: -0.5,
+          realizedPnl: -250,
+          unrealizedPnl: 0,
+          wins: 2,
+          losses: 3,
+          winRate: 0.4,
+          positions: [],
+          feed: { provider: "Massive", connected: false, state: "disconnected", symbols: ["MNQ"] },
+        }),
+      ],
+      summary: {
+        activeStrategies: 2,
+        openPositions: 1,
+        combinedNetPnl: 1000,
+        leaderStrategyIds: ["strategy-a"],
+        tiedForLead: false,
+      },
+    });
+    expect(html).toContain("London Sweep");
+    expect(html).toContain("NY Reversal");
+    expect(html).toContain("NET PAPER P&amp;L");
+    expect(html).toContain("Massive connected");
+    expect(html).toContain("Massive disconnected");
+    expect(html).toContain('class="fight-board live"');
+    expect(html).toContain('class="fight-live-arena"');
+    expect(html).toContain("The fight card is live");
+    expect(html).toContain('class="fighter leader"');
+    expect(html).toContain("8–4");
+    expect(html).toContain("MES · LONG · 2 ctr");
+  });
+
+  it("shows an honest tie and escapes strategy names", () => {
+    const html = rrPaperFightHTML({
+      fighters: [fighter({ strategyName: "<script>bad</script>" }), fighter({ strategyId: "strategy-b", strategyName: "Twin" })],
+      summary: { activeStrategies: 2, openPositions: 0, combinedNetPnl: 2500, leaderStrategyIds: ["strategy-a", "strategy-b"], tiedForLead: true },
+    });
+    expect(html).toContain("Dead even at the bell");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;bad&lt;/script&gt;");
+  });
+
+  it("returns no fight card when no persisted fighters exist", () => {
+    expect(rrPaperFightHTML({ fighters: [], summary: {} })).toBe("");
+  });
+});
+
+describe("Paper Fight Night SSE reconnect display", () => {
+  it("gives EventSource five seconds to auto-reconnect before showing a dropped feed", () => {
+    const connect = stripComments(sliceBalanced(officeSrc, "function rrSSEConnect("));
+    expect(connect).toContain("rrPaperConn = 'connecting'");
+    expect(connect).toMatch(/setTimeout\(function \(\) \{[\s\S]*rrPaperConn = 'error'/);
+    expect(connect).toContain("rrES.readyState === 1");
+    expect(connect).toContain("}, 5000)");
   });
 });
 
 // ── Residual 2 (OR-042 F-2): a dropped SSE stream must render DISTINCTLY from a
 //    genuinely-quiet floor. rrPaperEmptyHTML is pure, so both states are locked here. ──
 const rrPaperEmptyHTML = (() => {
+  const fallback = sliceBalanced(officeSrc, "function rrPaperFightNightVectorFallbackHTML(");
+  const arena = sliceBalanced(officeSrc, "function rrPaperFightNightEmptyHTML(");
   const fn = sliceBalanced(officeSrc, "function rrPaperEmptyHTML(");
-  return vm.runInNewContext(`${fn}\n;rrPaperEmptyHTML`, {}) as (kind: string) => string;
+  return vm.runInNewContext(`${fallback}\n${arena}\n${fn}\n;rrPaperEmptyHTML`, {}) as (kind: string) => string;
 })();
 
 describe("immersive Paper Floor — disconnected renders distinctly from genuinely quiet", () => {
@@ -194,17 +299,21 @@ describe("immersive Paper Floor — disconnected renders distinctly from genuine
 
   it("quiet and disconnected are distinct screens (a dropped feed is not a dark floor)", () => {
     expect(quiet).not.toBe(disconnected);
-    expect(quiet).toContain("Floor is dark");
-    expect(disconnected).not.toContain("Floor is dark");
+    expect(quiet).toContain("FIGHTERS LOADING");
+    expect(disconnected).not.toContain("FIGHTERS LOADING");
     expect(disconnected).toMatch(/interrupted|dropped|reconnect/i);
   });
 
-  it("quiet ships a premium operations-floor visual that is explicitly non-simulated", () => {
+  it("quiet ships a premium 3D fight-night arena that is explicitly non-simulated", () => {
     expect(quiet).toContain('class="premium-scene"');
     expect(quiet).toContain('class="premium-svg"');
-    expect(quiet).toContain("PAPER EXECUTION FLOOR");
-    expect(quiet).toMatch(/nothing here is simulated/i);
-    expect(disconnected).not.toContain("PAPER EXECUTION FLOOR");
+    expect(quiet).toContain("PAPER FIGHT NIGHT");
+    expect(quiet).toContain("CORNER 01");
+    expect(quiet).toContain("CORNER 02");
+    expect(quiet).toContain("/slumhouse/images/paper-fight-night-arena-v2.png");
+    expect(fs.existsSync(path.resolve(PUB_DIR, "images/paper-fight-night-arena-v2.png"))).toBe(true);
+    expect(quiet).toMatch(/No preview score is fabricated|not a performance reading/i);
+    expect(disconnected).not.toContain("PAPER FIGHT NIGHT");
   });
 
   it("★ disconnected blames the connection, says nothing is lost, and invents no reading", () => {

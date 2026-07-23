@@ -55,7 +55,7 @@ function pushToRingBuffer(entry: BufferedEvent): void {
 
 // ─── SSE heartbeat ────────────────────────────────────────────
 // Keeps connections alive through proxies and removes stale clients.
-const HEARTBEAT_INTERVAL_MS = 30_000;
+const HEARTBEAT_INTERVAL_MS = 15_000;
 // F8 FIX: capture the interval handle and unref() it so test runners (Jest/Vitest)
 // exit cleanly. unref() is a Node.js-specific method; we guard for environments
 // (e.g. some Bun builds) that may not expose it.
@@ -91,11 +91,14 @@ router.get("/events", (req: Request, res: Response) => {
   req.setTimeout(0);
 
   res.writeHead(200, {
-    "Content-Type": "text/event-stream",
-    "Cache-Control": "no-cache",
+    "Content-Type": "text/event-stream; charset=utf-8",
+    "Cache-Control": "no-cache, no-transform",
     Connection: "keep-alive",
     "X-Accel-Buffering": "no",
   });
+  res.flushHeaders();
+  req.socket.setKeepAlive(true, HEARTBEAT_INTERVAL_MS);
+  res.write(`retry: 2000\n:${" ".repeat(2048)}\n`);
 
   // ── Replay missed events on reconnect ──
   // EventSource sets `Last-Event-ID` header to the last `id:` it received. Format is `<bootId>.<seq>`

@@ -19,6 +19,7 @@ if (!TOKEN) { console.error("FATAL: RELAY_TOKEN env var required"); process.exit
 
 const REQUEST_TIMEOUT_MS = Number(process.env.RELAY_REQUEST_TIMEOUT_MS || 90000);
 const MAX_BODY_BYTES = Number(process.env.RELAY_MAX_BODY_BYTES || 50 * 1024 * 1024); // 50 MB
+const RELAY_PROTOCOL_VERSION = 2;
 
 // F-1 (deep-scan): constant-time token comparison. A plain `!==` on a secret token
 // leaks length + shared-prefix length through early-exit timing — the exact fix the
@@ -78,7 +79,7 @@ function guardSensitiveProxy(req, res) {
 }
 
 let tower = null;          // current WS connection from tower (singleton)
-const pending = new Map(); // requestId -> { res, timer }
+const pending = new Map(); // requestId -> { res, timer, started }
 
 function sendFrame(ws, obj) {
   try { ws.send(JSON.stringify(obj)); } catch (e) { console.error("send err:", e.message); }
@@ -99,7 +100,7 @@ const server = http.createServer((req, res) => {
   // Health endpoint (does not require tower)
   if (req.url === "/__relay/health") {
     res.writeHead(200, { "content-type": "application/json" });
-    return res.end(JSON.stringify({ ok: true, tower: !!tower, pending: pending.size }));
+    return res.end(JSON.stringify({ ok: true, tower: !!tower, pending: pending.size, protocolVersion: RELAY_PROTOCOL_VERSION }));
   }
 
   // S1: refuse destructive Ollama proxy calls + enforce optional proxy token (before tower check).
@@ -127,7 +128,14 @@ const server = http.createServer((req, res) => {
         try { res.writeHead(504, { "content-type": "text/plain" }); res.end("relay timeout"); } catch (_) {}
       }
     }, REQUEST_TIMEOUT_MS);
-    pending.set(id, { res, timer });
+    pending.set(id, { res, timer, started: false });
+    res.on("close", () => {
+      const slot = pending.get(id);
+      if (!slot) return;
+      clearTimeout(slot.timer);
+      pending.delete(id);
+      if (tower && tower.readyState === 1) sendFrame(tower, { type: "cancel", id });
+    });
     sendFrame(tower, {
       type: "request", id,
       method: req.method,
@@ -177,13 +185,31 @@ wss.on("connection", (ws) => {
   ws.on("message", (data) => {
     let msg;
     try { msg = JSON.parse(data.toString()); } catch (e) { return; }
-    if (msg.type !== "response") return;
     const slot = pending.get(msg.id);
     if (!slot) return;
-    clearTimeout(slot.timer);
-    pending.delete(msg.id);
     try {
-      // Filter hop-by-hop headers
+      if (msg.type === "response_start") {
+        clearTimeout(slot.timer);
+        slot.started = true;
+        const hdrs = { ...(msg.headers || {}) };
+        ["transfer-encoding", "connection", "keep-alive", "content-length"].forEach((k) => delete hdrs[k]);
+        slot.res.writeHead(msg.status || 502, hdrs);
+        slot.res.flushHeaders();
+        return;
+      }
+      if (msg.type === "response_chunk") {
+        if (slot.started && !slot.res.destroyed) slot.res.write(Buffer.from(msg.body || "", "base64"));
+        return;
+      }
+      if (msg.type === "response_end") {
+        clearTimeout(slot.timer);
+        pending.delete(msg.id);
+        if (!slot.res.destroyed) slot.res.end();
+        return;
+      }
+      if (msg.type !== "response") return;
+      clearTimeout(slot.timer);
+      pending.delete(msg.id);
       const hdrs = { ...(msg.headers || {}) };
       ["transfer-encoding", "connection", "keep-alive"].forEach((k) => delete hdrs[k]);
       slot.res.writeHead(msg.status || 502, hdrs);
