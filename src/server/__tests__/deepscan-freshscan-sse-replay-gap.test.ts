@@ -32,6 +32,8 @@ describe("SSE proxy transport hardening", () => {
     expect(relayClient).toContain('/^text\\/event-stream\\b/i');
     expect(relayClient).toContain('msg.type === "cancel"');
     expect(relayServer).toContain('sendFrame(tower, { type: "cancel", id })');
+    expect(relayServer).toContain("protocolVersion: RELAY_PROTOCOL_VERSION");
+    expect(relayServer).toContain("const RELAY_PROTOCOL_VERSION = 2");
     expect(relayServer).toContain('if (msg.type !== "response") return');
     expect(relayClient).toContain("sendResponse(ws, msg.id, res.statusCode, res.headers, body)");
   });

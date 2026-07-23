@@ -15643,6 +15643,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Kept the same photoreal arena in the populated state: real leader, aggregate score, and per-strategy cards layer over the ring instead of replacing it with a flat dashboard.
 - Fixed the public paper event feed transport after a 45-second authenticated Railway probe received no SSE sentinel: headers now flush immediately, `no-transform` disables intermediary rewriting, a 2 KB prelude defeats proxy buffering, socket/stream keepalives run every 15 seconds, and the Office allows a five-second EventSource auto-reconnect grace before showing a real disconnect.
 - A local-vs-public probe then isolated the remaining defect to the custom HTTP-over-WebSocket relay: its original protocol buffered every backend response until `end`, which can never occur for SSE. Added backward-compatible streaming frames (`response_start`, `response_chunk`, `response_end`) plus downstream `cancel`; ordinary finite API responses retain the legacy single-frame path. Active streams are cleaned up on browser close and relay loss.
+- Relay health now advertises `protocolVersion: 2` so rollout can verify the streaming server is live before restarting the tower client, preventing an unsafe mixed-version cutover.
 - Added backend, authentication, honesty, escaping, feed-state, ordering, and tie-regression tests. Prop-firm rules and extraction work were untouched.
 
 **Verification:**

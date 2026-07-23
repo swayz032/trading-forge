@@ -19,6 +19,7 @@ if (!TOKEN) { console.error("FATAL: RELAY_TOKEN env var required"); process.exit
 
 const REQUEST_TIMEOUT_MS = Number(process.env.RELAY_REQUEST_TIMEOUT_MS || 90000);
 const MAX_BODY_BYTES = Number(process.env.RELAY_MAX_BODY_BYTES || 50 * 1024 * 1024); // 50 MB
+const RELAY_PROTOCOL_VERSION = 2;
 
 // F-1 (deep-scan): constant-time token comparison. A plain `!==` on a secret token
 // leaks length + shared-prefix length through early-exit timing — the exact fix the
@@ -99,7 +100,7 @@ const server = http.createServer((req, res) => {
   // Health endpoint (does not require tower)
   if (req.url === "/__relay/health") {
     res.writeHead(200, { "content-type": "application/json" });
-    return res.end(JSON.stringify({ ok: true, tower: !!tower, pending: pending.size }));
+    return res.end(JSON.stringify({ ok: true, tower: !!tower, pending: pending.size, protocolVersion: RELAY_PROTOCOL_VERSION }));
   }
 
   // S1: refuse destructive Ollama proxy calls + enforce optional proxy token (before tower check).
