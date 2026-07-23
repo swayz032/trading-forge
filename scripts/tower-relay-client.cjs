@@ -26,6 +26,7 @@ const { URL } = require("url");
 // before a new connection is opened. The relay server additionally enforces
 // singleton at the server side via req.headers["sec-websocket-protocol"].
 let currentWs = null;
+const activeRequests = new Map();
 
 const SERVER = process.env.RELAY_SERVER;
 const TOKEN = process.env.RELAY_TOKEN;
@@ -159,12 +160,20 @@ function connect() {
     heartbeat(ws);
     let msg;
     try { msg = JSON.parse(data.toString()); } catch (e) { return; }
+    if (msg.type === "cancel") {
+      const active = activeRequests.get(msg.id);
+      if (active) active.destroy(new Error("relay downstream closed"));
+      activeRequests.delete(msg.id);
+      return;
+    }
     if (msg.type !== "request") return;
     proxyRequest(ws, msg);
   });
 
   ws.on("close", (code, reason) => {
     if (ws.heartbeatTimer) clearTimeout(ws.heartbeatTimer);
+    for (const req of activeRequests.values()) req.destroy(new Error("relay websocket closed"));
+    activeRequests.clear();
     // F-7: Code 4001 = this connection was superseded by a newer call to connect().
     // Do NOT schedule a reconnect — the newer connection owns the session.
     if (code === 4001) {
@@ -225,14 +234,35 @@ function proxyRequest(ws, msg) {
     headers,
   };
 
+  let streamStarted = false;
+  let streamEnded = false;
+  const finishStream = () => {
+    if (!streamStarted || streamEnded) return;
+    streamEnded = true;
+    activeRequests.delete(msg.id);
+    sendRelayFrame(ws, { type: "response_end", id: msg.id });
+  };
+
   const req = http.request(opts, (res) => {
+    const isEventStream = /^text\/event-stream\b/i.test(String(res.headers["content-type"] || ""));
+    if (isEventStream) {
+      streamStarted = true;
+      sendRelayFrame(ws, { type: "response_start", id: msg.id, status: res.statusCode, headers: res.headers });
+      res.on("data", (c) => sendRelayFrame(ws, { type: "response_chunk", id: msg.id, body: c.toString("base64") }));
+      res.on("end", finishStream);
+      res.on("close", finishStream);
+      res.on("error", finishStream);
+      return;
+    }
     const chunks = [];
     res.on("data", (c) => chunks.push(c));
     res.on("end", () => {
+      activeRequests.delete(msg.id);
       const body = chunks.length ? Buffer.concat(chunks).toString("base64") : null;
       sendResponse(ws, msg.id, res.statusCode, res.headers, body);
     });
   });
+  activeRequests.set(msg.id, req);
 
   // Pass 6 / Track C F-7: per-request timeout. setTimeout() arms the
   // socket timer; the callback fires once after the configured idle period
@@ -244,6 +274,8 @@ function proxyRequest(ws, msg) {
   });
 
   req.on("error", (e) => {
+    activeRequests.delete(msg.id);
+    if (streamStarted) { finishStream(); return; }
     sendResponse(ws, msg.id, 502, { "content-type": "text/plain" }, Buffer.from(`tower backend error: ${e.message}`).toString("base64"));
   });
 
@@ -251,6 +283,12 @@ function proxyRequest(ws, msg) {
     try { req.write(Buffer.from(msg.body, "base64")); } catch (e) { /* ignore */ }
   }
   req.end();
+}
+
+function sendRelayFrame(ws, frame) {
+  if (ws.readyState !== 1) return;
+  try { ws.send(JSON.stringify(frame)); }
+  catch (e) { console.error("send stream frame err:", e.message); }
 }
 
 function sendResponse(ws, id, status, headers, body) {

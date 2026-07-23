@@ -13,6 +13,8 @@ const BOOT = "aaaa1111";
 
 describe("SSE proxy transport hardening", () => {
   const source = fs.readFileSync(path.resolve(process.cwd(), "src/server/routes/sse.ts"), "utf8");
+  const relayServer = fs.readFileSync(path.resolve(process.cwd(), "railway-relay/server.js"), "utf8");
+  const relayClient = fs.readFileSync(path.resolve(process.cwd(), "scripts/tower-relay-client.cjs"), "utf8");
 
   it("flushes an unbuffered response immediately and keeps proxy idle time below 30 seconds", () => {
     expect(source).toContain("const HEARTBEAT_INTERVAL_MS = 15_000");
@@ -20,6 +22,18 @@ describe("SSE proxy transport hardening", () => {
     expect(source).toContain("res.flushHeaders()");
     expect(source).toContain('res.write(`retry: 2000\\n:${" ".repeat(2048)}\\n`)');
     expect(source).toContain("req.socket.setKeepAlive(true, HEARTBEAT_INTERVAL_MS)");
+  });
+
+  it("streams event responses across the WebSocket relay instead of waiting for response end", () => {
+    for (const frame of ["response_start", "response_chunk", "response_end"]) {
+      expect(relayServer).toContain(`msg.type === \"${frame}\"`);
+      expect(relayClient).toContain(`type: \"${frame}\"`);
+    }
+    expect(relayClient).toContain('/^text\\/event-stream\\b/i');
+    expect(relayClient).toContain('msg.type === "cancel"');
+    expect(relayServer).toContain('sendFrame(tower, { type: "cancel", id })');
+    expect(relayServer).toContain('if (msg.type !== "response") return');
+    expect(relayClient).toContain("sendResponse(ws, msg.id, res.statusCode, res.headers, body)");
   });
 });
 

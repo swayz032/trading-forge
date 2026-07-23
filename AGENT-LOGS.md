@@ -15642,10 +15642,12 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Upgraded that arena with a project-local photorealistic 3D boxing render (`public/slumhouse/images/paper-fight-night-arena-v2.png`), cinematic live-status overlays, and the vector arena retained underneath as a graceful image-load fallback. A regression test now fails if the production image asset is missing.
 - Kept the same photoreal arena in the populated state: real leader, aggregate score, and per-strategy cards layer over the ring instead of replacing it with a flat dashboard.
 - Fixed the public paper event feed transport after a 45-second authenticated Railway probe received no SSE sentinel: headers now flush immediately, `no-transform` disables intermediary rewriting, a 2 KB prelude defeats proxy buffering, socket/stream keepalives run every 15 seconds, and the Office allows a five-second EventSource auto-reconnect grace before showing a real disconnect.
+- A local-vs-public probe then isolated the remaining defect to the custom HTTP-over-WebSocket relay: its original protocol buffered every backend response until `end`, which can never occur for SSE. Added backward-compatible streaming frames (`response_start`, `response_chunk`, `response_end`) plus downstream `cancel`; ordinary finite API responses retain the legacy single-frame path. Active streams are cleaned up on browser close and relay loss.
 - Added backend, authentication, honesty, escaping, feed-state, ordering, and tie-regression tests. Prop-firm rules and extraction work were untouched.
 
 **Verification:**
-- Focused Reporting Room + SSE transport suite: 36/36 passed.
+- Focused Reporting Room + SSE/relay transport suite: 37/37 passed.
+- `node --check railway-relay/server.js` and `node --check scripts/tower-relay-client.cjs`: passed.
 - Full serial Vitest: 13,214 passed, 42 skipped, 0 failed; 4,111/4,111 suites passed.
 - Full pytest with a worktree-local temp root: 7,597 passed, 34 skipped, 0 failed.
 - Read-only live-schema probe: `paper-floor`, `degraded=false`, 0 current active/paused fighters; honest-empty path selected.
