@@ -251,6 +251,9 @@ describe("Paper Fight Night — real all-strategy comparison renderer", () => {
     expect(html).toContain("NET PAPER P&amp;L");
     expect(html).toContain("Massive connected");
     expect(html).toContain("Massive disconnected");
+    expect(html).toContain('class="fight-board live"');
+    expect(html).toContain('class="fight-live-arena"');
+    expect(html).toContain("The fight card is live");
     expect(html).toContain('class="fighter leader"');
     expect(html).toContain("8–4");
     expect(html).toContain("MES · LONG · 2 ctr");
@@ -268,6 +271,16 @@ describe("Paper Fight Night — real all-strategy comparison renderer", () => {
 
   it("returns no fight card when no persisted fighters exist", () => {
     expect(rrPaperFightHTML({ fighters: [], summary: {} })).toBe("");
+  });
+});
+
+describe("Paper Fight Night SSE reconnect display", () => {
+  it("gives EventSource five seconds to auto-reconnect before showing a dropped feed", () => {
+    const connect = stripComments(sliceBalanced(officeSrc, "function rrSSEConnect("));
+    expect(connect).toContain("rrPaperConn = 'connecting'");
+    expect(connect).toMatch(/setTimeout\(function \(\) \{[\s\S]*rrPaperConn = 'error'/);
+    expect(connect).toContain("rrES.readyState === 1");
+    expect(connect).toContain("}, 5000)");
   });
 });
 

@@ -5,9 +5,23 @@
  * counter back past it → no gap signalled → real post-restart events silently dropped.
  */
 import { describe, it, expect } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import { computeReplayGap } from "../lib/sse-replay-gap.js";
 
 const BOOT = "aaaa1111";
+
+describe("SSE proxy transport hardening", () => {
+  const source = fs.readFileSync(path.resolve(process.cwd(), "src/server/routes/sse.ts"), "utf8");
+
+  it("flushes an unbuffered response immediately and keeps proxy idle time below 30 seconds", () => {
+    expect(source).toContain("const HEARTBEAT_INTERVAL_MS = 15_000");
+    expect(source).toContain('"Cache-Control": "no-cache, no-transform"');
+    expect(source).toContain("res.flushHeaders()");
+    expect(source).toContain('res.write(`retry: 2000\\n:${" ".repeat(2048)}\\n`)');
+    expect(source).toContain("req.socket.setKeepAlive(true, HEARTBEAT_INTERVAL_MS)");
+  });
+});
 
 describe("fresh-scan HIGH#8 — computeReplayGap boot-mismatch restart detection", () => {
   it("THE BUG CASE: small lastSeenSeq, counter climbed back past it after restart → gap (was missed)", () => {

@@ -15640,10 +15640,12 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Rebuilt Paper Floor as a premium Fight Night board with one card per strategy, leader/tie treatment, W-L record, win rate, realized/unrealized P&L, return, positions, Massive feed state, and the existing SSE event tape as the round-by-round feed.
 - Replaced the zero-session operations diagram with a premium animated 3D video-game Fight Night arena: lit ring, two decorative contender corners, crowd/spotlight motion, and explicit Massive waiting state. It carries no simulated names, scores, or performance readings and is replaced automatically by real fighter cards.
 - Upgraded that arena with a project-local photorealistic 3D boxing render (`public/slumhouse/images/paper-fight-night-arena-v2.png`), cinematic live-status overlays, and the vector arena retained underneath as a graceful image-load fallback. A regression test now fails if the production image asset is missing.
+- Kept the same photoreal arena in the populated state: real leader, aggregate score, and per-strategy cards layer over the ring instead of replacing it with a flat dashboard.
+- Fixed the public paper event feed transport after a 45-second authenticated Railway probe received no SSE sentinel: headers now flush immediately, `no-transform` disables intermediary rewriting, a 2 KB prelude defeats proxy buffering, socket/stream keepalives run every 15 seconds, and the Office allows a five-second EventSource auto-reconnect grace before showing a real disconnect.
 - Added backend, authentication, honesty, escaping, feed-state, ordering, and tie-regression tests. Prop-firm rules and extraction work were untouched.
 
 **Verification:**
-- Focused Reporting Room suite: 28/28 passed.
+- Focused Reporting Room + SSE transport suite: 36/36 passed.
 - Full serial Vitest: 13,214 passed, 42 skipped, 0 failed; 4,111/4,111 suites passed.
 - Full pytest with a worktree-local temp root: 7,597 passed, 34 skipped, 0 failed.
 - Read-only live-schema probe: `paper-floor`, `degraded=false`, 0 current active/paused fighters; honest-empty path selected.
