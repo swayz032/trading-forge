@@ -6,12 +6,12 @@ import polars as pl
 import pytest
 
 from src.engine.indicators.price_delivery import (
+    compute_consequent_encroachment,
     detect_fvg,
     detect_ifvg,
-    compute_consequent_encroachment,
-    detect_volume_imbalance,
-    detect_opening_gap,
     detect_liquidity_void,
+    detect_opening_gap,
+    detect_volume_imbalance,
 )
 
 
@@ -209,11 +209,11 @@ class TestLiquidityVoid:
         highs = [101.0] * 20
         lows = [99.0] * 20
         closes = [100.5] * 20
-        # Bar 10: massive bullish candle
-        opens[10] = 100.0
-        highs[10] = 120.0
-        lows[10] = 99.0
-        closes[10] = 119.0
+        # Bar 15: massive bullish candle after the 14-bar ATR warmup.
+        opens[15] = 100.0
+        highs[15] = 120.0
+        lows[15] = 99.0
+        closes[15] = 119.0
         df = _make_ohlcv(opens, highs, lows, closes)
         result = detect_liquidity_void(df, threshold=2.0)
         assert len(result) > 0, "Should detect void on massive candle"

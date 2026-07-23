@@ -18,17 +18,11 @@ from __future__ import annotations
 
 import json
 import math
-import os
-import sys
-import tempfile
-import types
 from pathlib import Path
-from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import numpy as np
 import pytest
-
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -60,7 +54,7 @@ def _make_synthetic_ohlcv(
 
     bars = []
     for i, close in enumerate(prices):
-        spread = close * 0.0002
+        close * 0.0002
         noise_h = abs(rng.normal(0, close * 0.005))
         noise_l = abs(rng.normal(0, close * 0.005))
         high = close + noise_h
@@ -174,8 +168,9 @@ class TestConfigSchema:
         assert cfg.mode == "calibrate"
 
     def test_invalid_mode_rejected(self):
-        import src.engine.synthetic_market_simulator as m
         from pydantic import ValidationError
+
+        import src.engine.synthetic_market_simulator as m
         with pytest.raises((ValidationError, ValueError)):
             m.SyntheticSimulatorConfig(mode="invalid_mode")
 
@@ -253,12 +248,14 @@ class TestStylizedFacts:
         sigma2 = [0.01 ** 2]
         rets = []
         for _ in range(n):
-            eps = rng.standard_normal()
+            # Student-t(4), variance-normalized: GARCH clustering plus the
+            # production gate's required institutional fat tails (excess >= 3).
+            eps = rng.standard_t(4) / math.sqrt(2.0)
             r = math.sqrt(sigma2[-1]) * eps
             rets.append(r)
             sigma2.append(omega + alpha * r**2 + beta * sigma2[-1])
         rets = np.array(rets)
-        # Use default threshold (0.3); GARCH(1,1) data reliably exceeds this
+        # Use the production excess-kurtosis threshold (3.0).
         passed, stats = m.run_stylized_fact_tests(rets)
         # GARCH data has positive kurtosis by construction — should pass
         assert passed, f"GARCH data should pass stylized facts. Stats: {stats}"
@@ -372,8 +369,8 @@ class TestCalibrateMode:
         omega, alpha, beta = 0.00001, 0.10, 0.85
         sigma2 = [0.01 ** 2]
         prices = [100.0]
-        for i in range(n):
-            eps = rng.standard_normal()
+        for _i in range(n):
+            eps = rng.standard_t(4) / math.sqrt(2.0)
             r = math.sqrt(sigma2[-1]) * eps
             prices.append(prices[-1] * math.exp(r))
             sigma2.append(omega + alpha * r**2 + beta * sigma2[-1])
@@ -510,7 +507,7 @@ class TestGPUCPUFallback:
             pytest.skip("PyTorch not available")
 
         bars = _make_synthetic_ohlcv(n_bars=300, seed=42)
-        df = _bars_to_polars(bars)
+        _bars_to_polars(bars)
 
         simulator = m.SyntheticMarketSimulator(
             m.SyntheticSimulatorConfig(
@@ -607,7 +604,7 @@ class TestRoundTrip:
             train_result = simulator.train()
 
         assert train_result["trained"] is True
-        model_version = train_result["model_version"]
+        train_result["model_version"]
 
         # Generate regimes
         cfg_gen = m.SyntheticSimulatorConfig(
@@ -728,7 +725,7 @@ class TestModelSerialization:
                 symbols=["MES"], latent_dim=8, hidden_dim=32,
                 seq_len=20, batch_size=16, start="2024-01-01", end="2024-12-31",
             ))
-            result = sim.train()
+            sim.train()
 
         # model_dir/latest must contain model state and config
         latest_dir = Path(model_dir) / "latest"

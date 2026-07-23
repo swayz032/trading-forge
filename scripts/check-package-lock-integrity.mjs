@@ -25,6 +25,44 @@ export function findVersionlessPackageEntries(lockfile) {
   return invalid;
 }
 
+function dependencyCandidates(packagePath, dependencyName) {
+  const candidates = [];
+  let current = packagePath;
+  while (current) {
+    candidates.push(`${current}/node_modules/${dependencyName}`);
+    const nestedBoundary = current.lastIndexOf("/node_modules/");
+    if (nestedBoundary === -1) break;
+    current = current.slice(0, nestedBoundary);
+  }
+  candidates.push(`node_modules/${dependencyName}`);
+  return [...new Set(candidates)];
+}
+
+export function findUnresolvedPackageDependencies(lockfile) {
+  const packages = lockfile?.packages;
+  if (!packages || typeof packages !== "object" || Array.isArray(packages)) {
+    throw new Error('package-lock.json must contain a "packages" object');
+  }
+
+  const unresolved = [];
+  for (const [packagePath, metadata] of Object.entries(packages)) {
+    if (!metadata || typeof metadata !== "object") continue;
+    const declared = {
+      ...(metadata.dependencies ?? {}),
+      ...(metadata.optionalDependencies ?? {}),
+    };
+    for (const dependencyName of Object.keys(declared)) {
+      const resolved = dependencyCandidates(packagePath, dependencyName).some(
+        (candidate) => packages[candidate] && typeof packages[candidate] === "object",
+      );
+      if (!resolved) {
+        unresolved.push({ packagePath: packagePath || "<root>", dependencyName });
+      }
+    }
+  }
+  return unresolved;
+}
+
 export function checkPackageLock(lockfile) {
   const invalid = findVersionlessPackageEntries(lockfile);
   if (invalid.length > 0) {
@@ -32,6 +70,17 @@ export function checkPackageLock(lockfile) {
       [
         "versionless non-link package entries:",
         ...invalid.map((packagePath) => `  - ${packagePath}`),
+      ].join("\n"),
+    );
+  }
+  const unresolved = findUnresolvedPackageDependencies(lockfile);
+  if (unresolved.length > 0) {
+    throw new Error(
+      [
+        "declared dependencies missing from the lockfile package graph:",
+        ...unresolved.map(
+          ({ packagePath, dependencyName }) => `  - ${packagePath} -> ${dependencyName}`,
+        ),
       ].join("\n"),
     );
   }

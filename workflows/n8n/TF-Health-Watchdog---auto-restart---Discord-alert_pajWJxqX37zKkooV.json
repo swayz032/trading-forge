@@ -50,7 +50,8 @@
         }
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "code-track",
@@ -176,7 +177,8 @@
         }
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     },
     {
       "id": "http-discord",
@@ -203,7 +205,8 @@
         }
       },
       "retryOnFail": true,
-      "maxTries": 2
+      "maxTries": 2,
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -362,7 +365,8 @@
           }
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "code-track",
@@ -488,7 +492,8 @@
           }
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       },
       {
         "id": "http-discord",
@@ -515,7 +520,8 @@
           }
         },
         "retryOnFail": true,
-        "maxTries": 2
+        "maxTries": 2,
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {

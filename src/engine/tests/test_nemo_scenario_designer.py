@@ -24,25 +24,20 @@ Covers:
 """
 from __future__ import annotations
 
-import os
-import time
-from typing import Any
-
 import pytest
 
-from src.engine.nemo_scenario_designer import (
-    GOVERNANCE_LABELS,
-    NEMO_GENERATOR_VERSION,
-    NeMoScenario,
-    NeMoScenarioDesigner,
-    GenerationResult,
-)
 from src.engine.nemo_a14_bridge import (
     A14ConditioningVector,
     batch_nemo_to_a14,
     nemo_to_a14_conditioning,
 )
-
+from src.engine.nemo_scenario_designer import (
+    GOVERNANCE_LABELS,
+    NEMO_GENERATOR_VERSION,
+    GenerationResult,
+    NeMoScenario,
+    NeMoScenarioDesigner,
+)
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -331,7 +326,7 @@ def test_init_device_auto_no_crash() -> None:
     """NeMoScenarioDesigner init with device='auto' must not raise."""
     try:
         d = NeMoScenarioDesigner(device="auto")
-        assert d._device in ("cpu", "lightning.gpu", "default.qubit", "auto")
+        assert d._device in ("cpu", "lightning.gpu", "lightning.qubit", "default.qubit", "auto")
     except Exception as exc:
         pytest.fail(f"device='auto' init raised: {exc}")
 

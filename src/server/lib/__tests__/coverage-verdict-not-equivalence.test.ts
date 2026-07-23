@@ -19,7 +19,8 @@
  * the SAME hard-equivalence artifact -> coverage_verdict measures a property OUTSIDE the equivalence
  * definition (quality), not equivalence itself.
  */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+vi.hoisted(() => { process.env.DATABASE_URL ||= "postgresql://unused:unused@127.0.0.1:1/unused"; });
 import { computeCoverageVerdict, type SpeakerItem, type ExtractionSnapshot } from "../extraction-coverage-gate.js";
 
 // 7 PRIMARY speaker items — BYTE-IDENTICAL in artifact A and B (same count AND same content).

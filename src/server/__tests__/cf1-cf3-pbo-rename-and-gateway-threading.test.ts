@@ -127,10 +127,10 @@ describe("CF3 — lifecycle-service.ts PILOT auto-promote threads gatewayOptions
     expect(src).toContain("sGatewayOpts");
   });
 
-  it("PILOT auto-promote passes sGatewayOpts as 10th arg to compileDualPineExport", () => {
+  it("PILOT auto-promote passes sGatewayOpts as arg 10 and system authority as arg 11", () => {
     const src = readSrc("src/server/services/lifecycle-service.ts");
     // Verify sGatewayOpts is used in the PILOT retry call
-    const retryCallIdx = src.indexOf("await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined, undefined, undefined, undefined, undefined, sGatewayOpts)");
+    const retryCallIdx = src.indexOf('await compileDualPineExport(s.id, undefined, undefined, true, correlationId ?? undefined, undefined, undefined, undefined, undefined, sGatewayOpts, "system")');
     expect(retryCallIdx).toBeGreaterThan(-1);
   });
 });

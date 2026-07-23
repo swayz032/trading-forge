@@ -43,19 +43,17 @@ Coverage:
 from __future__ import annotations
 
 import datetime as dt
+
 import pytest
-from zoneinfo import ZoneInfo
 
 from src.engine.entry_windows import (
+    is_bar_in_any_window,
+    is_bar_in_window,
     parse_entry_window,
     parse_entry_windows,
-    is_bar_in_window,
-    is_bar_in_any_window,
     window_to_pine_time_string,
-    EntryWindow,
 )
 from src.engine.pine_compiler import _build_session_filter
-
 
 # ─── Parser tests ─────────────────────────────────────────────────────────────
 
@@ -159,7 +157,7 @@ def _make_et_utc(et_hour: int, et_min: int, summer: bool = False) -> dt.datetime
     utc_h = et_hour + offset
     date = dt.date(2025, 7, 15) if summer else dt.date(2025, 1, 15)
     return dt.datetime(date.year, date.month, date.day, utc_h, et_min, 0,
-                       tzinfo=dt.timezone.utc)
+                       tzinfo=dt.UTC)
 
 
 class TestIsBarInWindow:
@@ -204,12 +202,12 @@ class TestIsBarInWindow:
 
     def test_dst_transition_spring_forward_inside(self):
         # March 9, 2025 — after spring-forward: UTC 14:00 = 10:00 EDT
-        bar = dt.datetime(2025, 3, 9, 14, 0, 0, tzinfo=dt.timezone.utc)
+        bar = dt.datetime(2025, 3, 9, 14, 0, 0, tzinfo=dt.UTC)
         assert is_bar_in_window(bar, self.w) is True
 
     def test_dst_transition_fall_back_inside(self):
         # November 2, 2025 — after fall-back: UTC 15:00 = 10:00 EST
-        bar = dt.datetime(2025, 11, 2, 15, 0, 0, tzinfo=dt.timezone.utc)
+        bar = dt.datetime(2025, 11, 2, 15, 0, 0, tzinfo=dt.UTC)
         assert is_bar_in_window(bar, self.w) is True
 
 
@@ -320,27 +318,31 @@ def _make_minimal_backtest_result(
     every bar so we can count how many are masked.
     """
     import polars as pl
+
     from src.engine.backtester import run_backtest
     from src.engine.config import (
         BacktestRequest,
-        StrategyConfig,
         IndicatorConfig,
-        StopConfig,
         PositionSizeConfig,
+        StopConfig,
+        StrategyConfig,
     )
 
     # Build a synthetic DataFrame with 20 bars.
-    # Bars alternate between 09:00 ET and 10:00 ET (winter, EST = UTC-5).
-    # 09:00 ET = 14:00 UTC (should be blocked by "09:45-12:00 ET" window)
+    # Bars alternate between 09:15 ET and 10:00 ET (winter, EST = UTC-5).
+    # 09:15 avoids the independent default 08:30-09:00 ET event blackout while
+    # remaining outside the declared entry window.
+    # 09:15 ET = 14:15 UTC (should be blocked by "09:45-12:00 ET" window)
     # 10:00 ET = 15:00 UTC (should NOT be blocked)
     n_bars = 20
     timestamps_utc = []
     for i in range(n_bars):
         day = dt.date(2024, 1, 2 + i // 2)
-        # Alternate: even bars at 09:00 ET (14:00 UTC), odd bars at 10:00 ET (15:00 UTC)
+        # Alternate: even bars at 09:15 ET, odd bars at 10:00 ET.
         utc_hour = 14 if i % 2 == 0 else 15
-        ts = dt.datetime(day.year, day.month, day.day, utc_hour, 0, 0,
-                         tzinfo=dt.timezone.utc)
+        utc_minute = 15 if i % 2 == 0 else 0
+        ts = dt.datetime(day.year, day.month, day.day, utc_hour, utc_minute, 0,
+                         tzinfo=dt.UTC)
         timestamps_utc.append(ts.isoformat())
 
     price = 5000.0
@@ -360,7 +362,7 @@ def _make_minimal_backtest_result(
         timeframe="1m",
         indicators=[IndicatorConfig(type="atr", period=14)],
         entry_long="close > open",   # always true (close = price+1 > price)
-        entry_short="",
+        entry_short="close < low",      # never true (sentinel)
         exit="high < low",           # never true (sentinel)
         stop_loss=StopConfig(type="atr", multiplier=1.5),
         position_size=PositionSizeConfig(
@@ -370,14 +372,17 @@ def _make_minimal_backtest_result(
         allowed_entry_windows=allowed_entry_windows,
     )
 
-    request = BacktestRequest(strategy=strategy_cfg)
+    request = BacktestRequest(
+        strategy=strategy_cfg,
+        start_date="2024-01-02",
+        end_date="2024-01-12",
+        max_trades_per_day=10,
+    )
     try:
         result = run_backtest(request, data=data)
         return result
     except Exception as exc:
-        # If backtester fails on the tiny df (warm-up insufficient etc.) return empty result
-        # so the skipped_outside_window_count field is still tested
-        return {"engine_audit": {"skipped_outside_window_count": 0}, "_error": str(exc)}
+        raise AssertionError(f"minimal backtest failed: {exc}") from exc
 
 
 class TestBacktesterWindowMask:
@@ -395,12 +400,12 @@ class TestBacktesterWindowMask:
     def test_window_mask_reduces_entries(self):
         """With "09:45-12:00 ET" window, bars at 09:00 ET should be blocked.
 
-        We have 10 bars at 09:00 ET (blocked) and 10 bars at 10:00 ET (allowed).
-        skipped_outside_window_count should be >= 10 (the 09:00 ET bars).
+        We have 10 bars at 09:15 ET (blocked) and 10 bars at 10:00 ET (allowed).
+        skipped_outside_window_count should be >= 10 (the 09:15 ET bars).
         """
         result = _make_minimal_backtest_result(["09:45-12:00 ET"])
         skipped = result.get("engine_audit", {}).get("skipped_outside_window_count", 0)
-        # 10 bars at 09:00 ET should be blocked
+        # 10 bars at 09:15 ET should be blocked
         assert skipped >= 10, f"Expected >= 10 skipped bars, got {skipped}"
 
     def test_engine_audit_key_present(self):

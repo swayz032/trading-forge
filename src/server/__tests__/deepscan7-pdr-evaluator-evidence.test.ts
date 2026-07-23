@@ -49,7 +49,14 @@ function legacyHeavyInput(overrides: Partial<PaperToDeployReadyGateInput> = {}):
     // predate this campaign's base SHA). This fixture must now supply passing
     // evidence for those two gates to reach the PASS branch at all — every other
     // gate below is still exercised in its legacy/incomplete state.
-    walkForwardResults: { wf_metadata: { dsr_pass: true } },
+    walkForwardResults: {
+      wfe_overall: 0.88,
+      wfe_status: null,
+      param_stability: { drift_classification: "stable", drift_confidence: 0.95 },
+      wf_metadata: { dsr_pass: true, dsr_unavailable: false, dsr: 0.92 },
+      wf_metadata_mode: "cpcv",
+      wf_metadata_n_paths: 20,
+    },
     orchGates: null,
     bifInput: { bif: 1.0, kEff: 5 },
     compositeShadow: null,

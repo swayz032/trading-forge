@@ -2,6 +2,7 @@
 
 import json
 import math
+import sys
 from datetime import datetime, timedelta
 
 import numpy as np
@@ -197,7 +198,7 @@ class TestBacktesterOutput:
         assert "daily_pnls" in result
         assert "execution_time_ms" in result
 
-    def test_zero_trade_backtest_does_not_crash(self):
+    def test_zero_trade_backtest_does_not_crash(self, monkeypatch, real_vectorbt_module):
         """C2 regression (deepscan5 2026-06-29): a backtest that produces ZERO trades
         must return a clean empty result, not raise UnboundLocalError.
 
@@ -208,6 +209,10 @@ class TestBacktesterOutput:
         added the refs without zero-trade defaults; deepscan5 hoisted the defaults.
         """
         from src.engine.backtester import run_backtest
+
+        # Collection-time doubles in unrelated legacy tests must not determine
+        # this integration test's portfolio output.
+        monkeypatch.setitem(sys.modules, "vectorbt", real_vectorbt_module)
 
         config = BacktestRequest(
             strategy=StrategyConfig(

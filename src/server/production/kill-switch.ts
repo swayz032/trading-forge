@@ -1262,8 +1262,9 @@ async function runLayerWithTimeout(
   // not block trading.
   failClosedOnTimeout: boolean = false,
 ): Promise<HaltDecision> {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
   const timeoutPromise: Promise<HaltDecision> = new Promise((resolve) => {
-    const timer = setTimeout(() => {
+    timeoutHandle = setTimeout(() => {
       // A force-close already in flight forces HALTED regardless (FIX 1b, account-scoped).
       const forceCloseInFlight = _isForceCloseInFlight(scopeAccountKeyForForceCloseCheck);
       const halted = failClosedOnTimeout || forceCloseInFlight;
@@ -1295,10 +1296,17 @@ async function runLayerWithTimeout(
       resolve(halted ? { halted: true, reason: reason ?? "layer_timeout_fail_closed", layer } : { halted: false, layer });
     }, LAYER_CHECK_TIMEOUT_MS);
     // Prevent the timeout timer from keeping Node alive if the check resolves first
-    if (typeof timer.unref === "function") timer.unref();
+    if (typeof timeoutHandle.unref === "function") timeoutHandle.unref();
   });
 
-  return Promise.race([checkFn(), timeoutPromise]);
+  try {
+    return await Promise.race([checkFn(), timeoutPromise]);
+  } finally {
+    // Promise.race does not cancel losing work. Without this cleanup, every fast,
+    // successful layer check still fired its timeout callback 100ms later, writing
+    // a false failure audit and leaking work beyond the caller/test lifecycle.
+    if (timeoutHandle !== undefined) clearTimeout(timeoutHandle);
+  }
 }
 
 // ─── KillSwitch ───────────────────────────────────────────────────────────────

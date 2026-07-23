@@ -111,30 +111,26 @@ describe("Wave 23F Track D — entry_quality block emitted on INSERT", () => {
 
 describe("Wave 23F Track D — symbols[] column emitted on INSERT", () => {
   it("symbols column is written on INSERT (top-level, not inside config)", () => {
-    // The INSERT values block must contain `symbols: symbolsArray`
+    // Each market is now a separate strategy row, so the leader row carries one symbol.
     const match = src.match(
-      /db\.insert\(strategies\)[\s\S]*?symbols:\s*symbolsArray/
+      /db\.insert\(strategies\)[\s\S]*?symbols:\s*symbolsArrayWithFanOut/
     );
-    expect(match, "INSERT must emit symbols: symbolsArray as a top-level column").toBeTruthy();
+    expect(match, "INSERT must emit symbols as a top-level column").toBeTruthy();
   });
 
-  it("symbolsArray is built with array guard on extracted symbols", () => {
-    expect(src).toContain("Array.isArray((extractedIdea as any)?.symbols) && (extractedIdea as any).symbols.length > 0");
+  it("leader symbols array is built from the actual routed market", () => {
+    expect(src).toContain("const symbolsArrayWithFanOut = [leaderSymbol]");
   });
 
-  it("symbolsArray falls back to [market] when extracted symbols absent", () => {
-    // The fallback must be `: [market]` after the extracted symbols guard
-    const match = src.match(
-      /symbolsArray.*=.*Array\.isArray.*\?[\s\S]*?:\s*\[market\]/
-    );
-    expect(match, "symbolsArray must fall back to [market] when no symbols in extracted_idea").toBeTruthy();
+  it("leader symbol falls back to the bucket market", () => {
+    expect(src).toContain("const leaderSymbol = wave25Defaults.symbols[0] ?? market");
   });
 
   it("multi-symbol arrays pass through without truncation", () => {
     // The symbolsArray assignment does NOT slice or take first element
     // Verify the assignment line itself has no .slice(0,1) or [0] truncation
     const assignmentBlock = src.match(
-      /const symbolsArray[\s\S]*?;/
+      /const symbolsArrayWithFanOut[\s\S]*?;/
     );
     expect(assignmentBlock).toBeTruthy();
     if (assignmentBlock) {
@@ -184,14 +180,14 @@ describe("Wave 23F Track D — audit log emission", () => {
 
   it("entry_quality_attached audit evidence includes symbols and symbols_count", () => {
     const match = src.match(
-      /graduation\.entry_quality_attached[\s\S]*?symbols_count:\s*symbolsArray\.length[\s\S]*?symbols:\s*symbolsArray/
+      /graduation\.entry_quality_attached[\s\S]*?symbols_count:\s*createdMarkets\.length[\s\S]*?symbols:\s*createdMarkets/
     );
     expect(match, "entry_quality_attached audit must include symbols_count and symbols").toBeTruthy();
   });
 
   it("graduation.symbols_multi_market audit row is emitted conditionally on symbols.length > 1", () => {
     const match = src.match(
-      /if\s*\(\s*symbolsArray\.length\s*>\s*1\s*\)[\s\S]*?"graduation\.symbols_multi_market"/
+      /if\s*\(\s*createdMarkets\.length\s*>\s*1\s*\)[\s\S]*?"graduation\.symbols_multi_market"/
     );
     expect(
       match,
@@ -207,7 +203,7 @@ describe("Wave 23F Track D — audit log emission", () => {
     // The action string should always appear inside a conditional (inside `if (symbolsArray.length > 1)`)
     // We verify this by confirming the block appears within the if-guard in the source
     const guardedMatch = src.match(
-      /symbolsArray\.length\s*>\s*1[\s\S]{0,500}graduation\.symbols_multi_market/
+      /createdMarkets\.length\s*>\s*1[\s\S]{0,500}graduation\.symbols_multi_market/
     );
     expect(guardedMatch, "symbols_multi_market must be guarded by symbolsArray.length > 1").toBeTruthy();
   });

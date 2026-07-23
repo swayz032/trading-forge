@@ -29,10 +29,8 @@ from __future__ import annotations
 import dataclasses
 import json
 from datetime import datetime, timedelta
-from typing import Optional
 
 import polars as pl
-import pytest
 
 from src.engine.context.bias_engine import (
     REGIME_VALUES,
@@ -42,7 +40,6 @@ from src.engine.context.bias_engine import (
 )
 from src.engine.context.htf_context import HTFContext
 from src.engine.context.session_context import SessionContext
-
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -627,8 +624,8 @@ class TestEdgeCases:
         assert label != "EXPANSION"
 
     def test_regime_values_constant_has_all_eight(self):
-        """Canonical REGIME_VALUES must have exactly 8 entries."""
-        assert len(REGIME_VALUES) == 8
+        """Canonical REGIME_VALUES includes all nine current labels."""
+        assert len(REGIME_VALUES) == 9
         assert "TRENDING_UP" in REGIME_VALUES
         assert "TRENDING_DOWN" in REGIME_VALUES
         assert "RANGE_BOUND" in REGIME_VALUES
@@ -636,4 +633,5 @@ class TestEdgeCases:
         assert "COMPRESSION" in REGIME_VALUES
         assert "HIGH_VOL_MACRO" in REGIME_VALUES
         assert "LOW_LIQ_CHOP" in REGIME_VALUES
+        assert "LATE_CYCLE_OVERHEATING" in REGIME_VALUES
         assert "NO_TRADE" in REGIME_VALUES

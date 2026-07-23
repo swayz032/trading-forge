@@ -24,8 +24,8 @@ import numpy as np
 import polars as pl
 import pytest
 
-from src.engine.sizing import compute_position_sizes, compute_risk_derived_contracts
 from src.engine.config import CONTRACT_SPECS, PositionSizeConfig
+from src.engine.sizing import compute_position_sizes, compute_risk_derived_contracts
 
 MES = CONTRACT_SPECS["MES"]  # tick_size=0.25, point_value=5.0
 
@@ -65,6 +65,29 @@ def _sizes(atr_list, profit_tier=None):
         symbol=None,  # legacy bare mult×atr → predictable per-bar math
     )
     return sizes, over_risk
+
+
+class TestLegacyPartialConfigFallbacks:
+    """Partial legacy configs use the same safe defaults as paper execution."""
+
+    @pytest.mark.parametrize("symbol", ["MES", "MNQ", "MCL", "UNKNOWN"])
+    def test_partial_config_resolves_without_none_arithmetic(self, symbol):
+        df = pl.DataFrame({"atr_14": [1.0]})
+        sizes, over_risk = compute_position_sizes(
+            df,
+            PositionSizeConfig(type="risk_derived_pyramid"),
+            MES,
+            atr_period=14,
+            profit_scaling_tier={
+                "firm": "mffu",
+                "account_balance": 50_000.0,
+                "account_pnl_total": 0.0,
+            },
+            symbol=symbol,
+        )
+
+        assert sizes.tolist() == [6.0]
+        assert over_risk.tolist() == [False]
 
 
 class TestHigh2Reachability:

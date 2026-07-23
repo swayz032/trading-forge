@@ -355,7 +355,7 @@ describe("B1 (F-2) — needsFirstTimeFreeze honored on the manual path", () => {
     const res = await svc().promoteStrategy(STRAT_ID, "PAPER", "DEPLOY_READY", {});
 
     expect(mockFreezePolicy).toHaveBeenCalledTimes(1);
-    expect(mockFreezePolicy).toHaveBeenCalledWith(STRAT_ID, "COMPRESSION");
+    expect(mockFreezePolicy).toHaveBeenCalledWith(STRAT_ID, "COMPRESSION", "PAPER");
     expect(res.success).toBe(false); // blocked downstream by the evidence governor
   });
 
@@ -370,7 +370,7 @@ describe("B1 (F-2) — needsFirstTimeFreeze honored on the manual path", () => {
 
     await svc().promoteStrategy(STRAT_ID, "PAPER", "DEPLOY_READY", {});
 
-    expect(mockFreezePolicy).toHaveBeenCalledWith(STRAT_ID, "UNKNOWN");
+    expect(mockFreezePolicy).toHaveBeenCalledWith(STRAT_ID, "UNKNOWN", "PAPER");
   });
 
   it("does NOT call freezePolicyForStrategy when the evaluator does not request a freeze (existing hash)", async () => {

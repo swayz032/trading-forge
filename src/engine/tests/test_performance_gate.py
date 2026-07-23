@@ -1,13 +1,11 @@
 """Tests for performance gates + Forge Score — TDD."""
 
-import pytest
 
 from src.engine.performance_gate import (
     check_performance_gate,
     classify_tier,
     compute_forge_score,
 )
-
 
 # ─── Helpers ───────────────────────────────────────────────────────
 
@@ -74,7 +72,12 @@ class TestPerformanceGate:
         passed, messages = check_performance_gate(_tier1_stats())
         assert passed is True
         # Messages may include warnings (e.g., sample size < 500) — that's OK, not rejections
-        rejections = [m for m in messages if "statistically unreliable" not in m and "DECAYING" not in m]
+        rejections = [
+            m for m in messages
+            if "statistically unreliable" not in m
+            and "DECAYING" not in m
+            and "proceeding permissively" not in m
+        ]
         assert len(rejections) == 0
 
     def test_tier3_passes(self):

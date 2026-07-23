@@ -104,7 +104,8 @@ async function postScoutExtract(body: unknown): Promise<{ status: number; json: 
 }
 
 const VALID_MARKDOWN_MIN =
-  "MES strategy: enter long on EMA crossover with 14 ATR stop. ".repeat(3);
+  "MES strategy on the 5 and 15 minute charts: use 8, 9, and 21 EMA signals with a 14 ATR period, " +
+  "1 or 1.5 ATR stop, 2.5 or 3 ATR target, and at most 3, 4, or 10 micro contracts. ".repeat(3);
 
 describe("POST /api/agent/scout-extract", () => {
   beforeEach(() => {

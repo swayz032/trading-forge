@@ -219,7 +219,7 @@ describe("W23G.11 min_factors_satisfied < total (N-of-M)", () => {
     // Note about fallback emitted
     const notes = compiled!.compileNotes.join(" ");
     expect(notes).toContain("min_factors_satisfied=2");
-    expect(notes).toContain("conservative fallback");
+    expect(notes).toContain("n_of_m_downgraded_to_and_all");
   });
 });
 
@@ -252,7 +252,7 @@ describe("W23G.11 backward compat: legacy single-indicator strategy", () => {
     };
     const result = compileDslWithConfluence(input);
     expect(result).not.toBeNull();
-    expect(result!.entry_long).toBe("rsi_14 < 30");
+    expect(result!.entry_long).toBe("rsi_14 crosses_above 30");
     expect(result!.entry_short).toBe("high < low"); // never-true sentinel for long-only
   });
 
@@ -392,7 +392,7 @@ describe("W23H.1 audit acceptance: MTF strategy config (active gate)", () => {
     expect(compiled!.entry_long).toContain("rsi_4h < 50");
     expect(compiled!.entry_long).toContain("AND");
     // Primary signal still present
-    expect(compiled!.entry_long).toContain("rsi_14 < 30");
+    expect(compiled!.entry_long).toContain("rsi_14 crosses_above 30");
     // mtfUnsupported no longer set (W23H.1)
     expect(compiled!.mtfUnsupported).toBeFalsy();
     // Grammar is parseable (contains comparisons)
@@ -519,7 +519,7 @@ describe("W23G.11 direction=short with confirming indicators", () => {
     // Long side: rsi_reversal with direction=short → "high < low" sentinel (never-true)
     expect(compiled!.entry_long).toBe("high < low");
     // Short side: rsi > overbought AND close > vwap (fade above vwap)
-    expect(compiled!.entry_short).toContain("rsi_14 > 70");
+    expect(compiled!.entry_short).toContain("rsi_14 crosses_below 70");
     expect(compiled!.entry_short).toContain("AND");
     expect(compiled!.entry_short).toContain("vwap");
   });

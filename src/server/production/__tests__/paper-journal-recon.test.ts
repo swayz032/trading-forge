@@ -99,6 +99,7 @@ vi.mock("../../db/schema.js", () => ({
   },
   productionTrades: {
     tableName: "production_trades",
+    id: { name: "id" },
     strategyId: { name: "strategy_id" },   // Finding 3 fix: needed for per-strategy SUM filter
     barTimestamp: { name: "bar_timestamp" },
     expectedPnl: { name: "expected_pnl" },
@@ -607,11 +608,13 @@ describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () =
       [{ cnt: "1" }],  // broker count A
       [{ cnt: "1" }],  // tv count A
       [{ total: "100" , populated: "1" }],  // broker SUM A — matches paper ($100 each = no drift)
+      [{ id: 1, barTimestamp: tradeDate, expectedPnl: "100" }], // per-trade rows A
       // strategy B
       [{ id: "tb-1", pnl: "400", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }],  // broker count B
       [{ cnt: "1" }],  // tv count B
       [{ total: "400" , populated: "1" }],  // broker SUM B — matches paper ($400 each = no drift)
+      [{ id: 2, barTimestamp: tradeDate, expectedPnl: "400" }], // per-trade rows B
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-28"));
@@ -642,10 +645,12 @@ describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () =
       [{ id: "ta-2", pnl: "100", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }], [{ cnt: "1" }],
       [{ total: "100" , populated: "1" }],
+      [{ id: 3, barTimestamp: tradeDate, expectedPnl: "100" }],
       // B
       [{ id: "tb-2", pnl: "200", contracts: 1, exitTime: tradeDate, entryTime: tradeDate }],
       [{ cnt: "1" }], [{ cnt: "1" }],
       [{ total: "50" , populated: "1" }],   // $150 drift — CRITICAL for MNQ (tolerance=1.00)
+      [{ id: 4, barTimestamp: tradeDate, expectedPnl: "50" }],
     );
 
     const result = await runPaperJournalRecon(new Date("2026-06-28"));
@@ -660,8 +665,13 @@ describe("Finding 3 — broker P&L SUM must be per-strategy, not combined", () =
     expect(resultA?.pnlDriftExceedsTolerance).toBe(false);
     // Strategy B has drift
     expect(resultB?.pnlDriftExceedsTolerance).toBe(true);
-    // Exactly one CRITICAL alert — for strategy B only
-    expect(state.criticalAlerts).toHaveLength(1);
+    // The same drifting strategy emits both independent safety signals: daily
+    // aggregate drift and per-trade drift. Strategy A emits neither.
+    expect(state.criticalAlerts).toHaveLength(2);
+    expect(state.criticalAlerts.map((alert) => alert.title)).toEqual([
+      expect.stringContaining("Drift detected"),
+      expect.stringContaining("Per-trade drift detected"),
+    ]);
   });
 
 });

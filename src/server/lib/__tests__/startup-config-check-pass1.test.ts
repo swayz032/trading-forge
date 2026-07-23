@@ -41,6 +41,7 @@ const VALID_ENV: Record<string, string> = {
   LIVE_ORDER_GATEWAY_URL: "https://tf-relay-production.up.railway.app",
   TRADING_FORGE_PUBLIC_URL: "https://tf-relay-production.up.railway.app",
   SLUMDAWG_WEBHOOK_SECRET: "c".repeat(32),
+  ADMIN_PROMOTE_HMAC_SECRET: "d".repeat(32),
 };
 
 /** Deploy-time placeholder that must trigger a warning even though it's set. */

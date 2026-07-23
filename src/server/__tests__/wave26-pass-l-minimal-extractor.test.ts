@@ -388,8 +388,8 @@ describe("Pass L #9 Tweak 2 — MCL pre-EIA cron registered", () => {
     expect(schedSrc).toContain('registerJob("mcl-pre-eia-stop-tighten"');
   });
 
-  it("cron schedule is '0 14,15 * * 3' (Wed, double-fire UTC for DST)", () => {
-    expect(schedSrc).toMatch(/cron\.schedule\("0 14,15 \* \* 3"/);
+  it("UTC schedule is '0 14,15 * * 3' (Wed, double-fire UTC for DST)", () => {
+    expect(schedSrc).toMatch(/scheduleUtc\("0 14,15 \* \* 3"/);
   });
 
   it("ET-hour guard filters to exactly 10:00 ET", () => {

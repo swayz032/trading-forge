@@ -28,6 +28,10 @@ vi.mock("../../lib/audit-log-helper.js", () => ({
   insertAuditRowSafe: (...args: unknown[]) => mockAudit(...args),
 }));
 
+vi.mock("../../lib/carter/carter-research.js", () => ({
+  ollamaSynthesize: vi.fn(async () => null),
+}));
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import {
   startAndStoreResearch,

@@ -360,7 +360,7 @@ describe("opening-auction-service", () => {
 // ─── Tests: ORB DSL Fixture ───────────────────────────────────────────────────
 
 describe("opening_range_breakout_mes DSL fixture", () => {
-  it("has use_opening_auction_bias field set to true", async () => {
+  it("does not carry the removed use_opening_auction_bias field", async () => {
     const { readFileSync } = await import("fs");
     const { resolve } = await import("path");
 
@@ -377,7 +377,7 @@ describe("opening_range_breakout_mes DSL fixture", () => {
       return;
     }
 
-    expect(fixture.use_opening_auction_bias).toBe(true);
+    expect(fixture.use_opening_auction_bias).toBeUndefined();
     expect(fixture.symbol).toBe("MES");
     expect(fixture.preferred_regime).toBe("OPENING_RANGE");
   });

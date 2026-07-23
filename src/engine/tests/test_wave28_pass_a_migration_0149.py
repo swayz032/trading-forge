@@ -83,10 +83,10 @@ class TestRequiredColumns:
         assert re.search(r"\bid\s+BIGSERIAL\b", _sql(), re.IGNORECASE), \
             "id column must be BIGSERIAL"
 
-    def test_column_strategy_id_integer_not_null(self):
+    def test_column_strategy_id_uuid_not_null(self):
         sql = _sql()
-        assert re.search(r"\bstrategy_id\s+INTEGER\s+NOT\s+NULL\b", sql, re.IGNORECASE), \
-            "strategy_id must be INTEGER NOT NULL"
+        assert re.search(r"\bstrategy_id\s+UUID\s+NOT\s+NULL\b", sql, re.IGNORECASE), \
+            "strategy_id must be UUID NOT NULL to match strategies.id"
 
     def test_column_evaluated_at_timestamptz(self):
         assert re.search(r"\bevaluated_at\s+TIMESTAMPTZ\b", _sql(), re.IGNORECASE), \

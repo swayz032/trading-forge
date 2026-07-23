@@ -78,6 +78,7 @@ vi.mock("../db/schema.js", () => ({
     symbol: "symbol",
     lifecycleState: "lifecycle_state",
     regimeTrainedOn: "regime_trained_on",
+    updatedAt: "updated_at",
   },
   biasState: {
     regimeLabel: "regime_label",
@@ -171,6 +172,13 @@ beforeEach(() => {
   mockNotifyWarning.mockClear();
   mockPromoteStrategy.mockClear().mockResolvedValue({ success: true });
   mockDbSelect.mockReset();
+  // Every invocation now begins with the production zombie-DECLINING recovery sweep.
+  // Keep that query empty so each test's queued rows continue to describe the main
+  // DEPLOYED-strategy query and its bias-state reads.
+  mockDbSelect.mockReturnValueOnce({
+    from: vi.fn().mockReturnThis(),
+    where: vi.fn().mockResolvedValue([]),
+  });
   (appendFamilyGradePostscript as ReturnType<typeof vi.fn>).mockClear();
 });
 
@@ -231,7 +239,7 @@ describe("runRegimeDriftDetector — regime drift detection", () => {
     const result = await runRegimeDriftDetector({ asOf: makeAsOf(17) });
 
     expect(result.status).toBe("skipped_dst_guard");
-    expect(mockDbSelect).not.toHaveBeenCalled();
+    expect(mockDbSelect).toHaveBeenCalledTimes(1); // zombie recovery sweep only
     expect(mockPromoteStrategy).not.toHaveBeenCalled();
 
     const auditCall = mockInsertAuditRowSafe.mock.calls.find(
@@ -245,7 +253,7 @@ describe("runRegimeDriftDetector — regime drift detection", () => {
     const result = await runRegimeDriftDetector({ asOf: makeAsOf(19) });
 
     expect(result.status).toBe("skipped_dst_guard");
-    expect(mockDbSelect).not.toHaveBeenCalled();
+    expect(mockDbSelect).toHaveBeenCalledTimes(1); // zombie recovery sweep only
 
     const auditCall = mockInsertAuditRowSafe.mock.calls.find(
       (c) => c[0].action === "regime_drift_detector.skipped_dst_guard",

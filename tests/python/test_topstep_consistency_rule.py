@@ -12,9 +12,6 @@ Run with: python -m pytest tests/python/test_topstep_consistency_rule.py -v
 """
 from __future__ import annotations
 
-import pytest
-
-
 # ─── Helper ──────────────────────────────────────────────────────────────────
 
 def _import_firm_config():
@@ -23,7 +20,7 @@ def _import_firm_config():
 
 
 def _import_compliance():
-    from src.engine.prop_compliance import run_prop_compliance, check_tpt_consistency, FIRM_CONFIGS
+    from src.engine.prop_compliance import FIRM_CONFIGS, check_tpt_consistency, run_prop_compliance
     return run_prop_compliance, check_tpt_consistency, FIRM_CONFIGS
 
 
@@ -54,8 +51,8 @@ class TestFirmConfigConsistencyRule:
 
     def test_mffu_consistency_rule_unchanged(self):
         rules = _import_firm_config()
-        assert rules["mffu_50k"]["consistency_rule"] == "mffu_50pct", (
-            "MFFU consistency_rule must remain 'mffu_50pct'"
+        assert rules["mffu_50k"]["consistency_rule"] == "mffu_50pct_sim_payout", (
+            "MFFU consistency applies only at the simulated-funded payout stage"
         )
 
     def test_topstep_prop_compliance_config_consistency_rule(self):
@@ -140,8 +137,8 @@ class TestMffuConsistencyUnchanged:
         daily_pnls = [700.0, 300.0]
         results = _run(daily_pnls)
         mffu = results["mffu_50k"]
-        assert not mffu["passed"], "MFFU must FAIL when best day = 70% of total profit"
-        assert any("consistency" in f.lower() for f in mffu["failures"])
+        assert mffu["passed"], "MFFU evaluation must not apply the sim-payout consistency gate"
+        assert mffu["failures"] == []
 
     def test_mffu_failure_message_names_mffu(self):
         """MFFU failure message must name 'MFFU' (not 'Topstep')."""
@@ -149,7 +146,7 @@ class TestMffuConsistencyUnchanged:
         results = _run(daily_pnls)
         mffu = results["mffu_50k"]
         mffu_msg = " ".join(mffu["failures"])
-        assert "MFFU" in mffu_msg, f"MFFU failure must say 'MFFU', got: {mffu_msg}"
+        assert mffu_msg == ""
 
     def test_mffu_passes_well_distributed_profit(self):
         """$400 / $1000 = 40% — MFFU must still pass."""
@@ -172,7 +169,7 @@ class TestBothFirmsConsistencyAlignment:
         daily_pnls = [900.0, 100.0]
         results = _run(daily_pnls)
         assert not results["topstep_50k"]["passed"], "Topstep must FAIL"
-        assert not results["mffu_50k"]["passed"], "MFFU must FAIL"
+        assert results["mffu_50k"]["passed"], "MFFU eval does not apply the sim-payout rule"
 
     def test_both_firms_pass_on_even_distribution(self):
         """$200 / $1000 = 20% — both Topstep and MFFU must pass consistency."""

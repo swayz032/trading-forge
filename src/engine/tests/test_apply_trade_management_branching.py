@@ -112,41 +112,16 @@ def _make_adaptive_ctx(
 # ─── Import _apply_adaptive_management without triggering vectorbt ────────────
 
 def _get_adaptive_fn():
-    """Import _apply_adaptive_management by mocking out vectorbt and heavy deps.
+    """Import the canonical adaptive-management function without leaking mocks.
 
     The adaptive management function has NO vectorbt dependency at runtime —
     vectorbt is only used in the broader backtester for signal generation.
-    We mock the module-level vectorbt import so the import completes instantly.
+    Repository conftest owns dependency initialization for suite isolation.
     """
-    import sys
-    import types
-
     # Build a minimal mock for vectorbt so the module-level `import vectorbt as vbt`
     # doesn't hang. Only the vbt.Portfolio.from_signals call in run_class_backtest
     # uses vbt — not in _apply_adaptive_management.
-    if "vectorbt" not in sys.modules:
-        vbt_mock = types.ModuleType("vectorbt")
-        vbt_mock.Portfolio = MagicMock()
-        sys.modules["vectorbt"] = vbt_mock
-
     # Also mock other heavy optional imports that may hang
-    heavy_mocks = [
-        "src.engine.nvtx_markers",
-        "src.engine.decay.half_life",
-        "src.engine.decay.sub_signals",
-        "src.engine.prop_sim",
-        "src.engine.cross_validation",
-    ]
-    for mod_name in heavy_mocks:
-        if mod_name not in sys.modules:
-            mock_mod = types.ModuleType(mod_name)
-            # Add commonly-needed attributes
-            for attr in ["range_push", "range_pop", "fit_decay",
-                         "composite_decay_score", "simulate_all_firms",
-                         "run_cross_validation"]:
-                setattr(mock_mod, attr, MagicMock(return_value={}))
-            sys.modules[mod_name] = mock_mod
-
     from src.engine.backtester import _apply_adaptive_management
     return _apply_adaptive_management
 
@@ -180,7 +155,7 @@ def _get_backtester_signatures() -> dict:
                 else:
                     params[arg.arg] = inspect.Parameter.empty
             # kwonlyargs with kw_defaults
-            for arg, dnode in zip(node.args.kwonlyargs, node.args.kw_defaults):
+            for arg, dnode in zip(node.args.kwonlyargs, node.args.kw_defaults, strict=False):
                 if dnode and isinstance(dnode, ast.Constant):
                     params[arg.arg] = dnode.value
                 else:

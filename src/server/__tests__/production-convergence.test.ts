@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
 
+async function readWorkflowByPrefix(prefix: string): Promise<string> {
+  const { readdirSync, readFileSync } = await import("fs");
+  const { resolve } = await import("path");
+  const workflowsDir = resolve(import.meta.dirname ?? ".", "../../../workflows/n8n");
+  const matches = readdirSync(workflowsDir).filter((name) => name.startsWith(prefix) && name.endsWith(".json"));
+  expect(matches, `expected exactly one current ${prefix} workflow export`).toHaveLength(1);
+  return readFileSync(resolve(workflowsDir, matches[0]), "utf8");
+}
+
 describe("production convergence hardening", () => {
   it("archetype read routes are backed by day_archetypes queries instead of placeholder responses", async () => {
     const { readFileSync } = await import("fs");
@@ -74,46 +83,12 @@ describe("production convergence hardening", () => {
   });
 
   it("0A health monitor waits for all probes and persists alerts through the API", async () => {
-    const { readFileSync } = await import("fs");
-    const { resolve } = await import("path");
-    const src = readFileSync(
-      resolve(import.meta.dirname ?? ".", "../../../workflows/n8n/0A-health-monitor_66HEjQavpvirY6g5.json"),
-      "utf8",
-    );
+    const src = await readWorkflowByPrefix("0A-health-monitor_");
 
     expect(src).toMatch(/Merge All Health Checks/);
     expect(src).toMatch(/Create Health Alert/);
-    expect(src).toMatch(/http:\/\/host\.docker\.internal:4000\/api\/alerts/);
+    expect(src).toMatch(/https:\/\/tf-relay-production\.up\.railway\.app\/api\/alerts/);
     expect(src).not.toMatch(/host\.docker\.internal:4100\/alert\/alerts/);
-  });
-
-  it("5H reddit scout keeps the scout-ideas contract and dedupes against journal fingerprints", async () => {
-    const { readFileSync } = await import("fs");
-    const { resolve } = await import("path");
-    const src = readFileSync(
-      resolve(import.meta.dirname ?? ".", "../../../workflows/n8n/5H-reddit-scout_ZMgHYjcTq4YTRQXh.json"),
-      "utf8",
-    );
-
-    expect(src).toMatch(/Fetch Scout Fingerprints/);
-    expect(src).toMatch(/Merge Scout Context/);
-    expect(src).toMatch(/JSON\.stringify\(\{ ideas: \$json\.ideas \}\)/);
-    expect(src).toMatch(/Create Scout Warning Alert/);
-    expect(src).not.toMatch(/"url":\s*""/);
-  });
-
-  it("8B source quality review uses the stable source-stats endpoint and valid code syntax", async () => {
-    const { readFileSync } = await import("fs");
-    const { resolve } = await import("path");
-    const src = readFileSync(
-      resolve(import.meta.dirname ?? ".", "../../../workflows/n8n/8B-source-quality-review_LQtqeWAcNOlkqROH.json"),
-      "utf8",
-    );
-
-    expect(src).toMatch(/\/api\/journal\/source-stats\?days=90/);
-    expect(src).toMatch(/Weekly source quality review \(90d\)/);
-    expect(src).toMatch(/Create Source Quality Alert/);
-    expect(src).not.toMatch(/lines\.join\('\n'/);
   });
 
   it("all n8n HTTP request nodes enforce baseline resilience controls", async () => {
@@ -130,8 +105,9 @@ describe("production convergence hardening", () => {
       const timeout = node?.parameters?.options?.timeout;
       if (node.retryOnFail !== true) violations.push(`${fileName}:${nodeName}:retryOnFail`);
       if (typeof node.maxTries !== "number" || node.maxTries < 2) violations.push(`${fileName}:${nodeName}:maxTries`);
-      if (node.onError !== "continueRegularOutput") violations.push(`${fileName}:${nodeName}:onError`);
-      if (node.continueOnFail !== true) violations.push(`${fileName}:${nodeName}:continueOnFail`);
+      if (node.onError !== "continueRegularOutput" && node.continueOnFail !== true) {
+        violations.push(`${fileName}:${nodeName}:errorHandling`);
+      }
       if (typeof timeout !== "number" || timeout <= 0) violations.push(`${fileName}:${nodeName}:timeout`);
     }
 

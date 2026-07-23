@@ -55,7 +55,6 @@ import sys
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Optional
 
 import requests
 
@@ -110,7 +109,6 @@ def _run_backtest_for_strategy(
     """
     from src.engine.backtester import run_class_backtest
     from src.engine.config import AdaptiveExitContext
-    from src.engine.data_loader import load_ohlcv
 
     info = STRATEGY_REGISTRY[strategy_key]
     strategy_cls_path = info["class"]
@@ -470,7 +468,7 @@ def run_ab_report(
     start_date: str,
     end_date: str,
     api_base: str = "http://localhost:4000",
-    output_path: Optional[str] = None,
+    output_path: str | None = None,
 ) -> dict:
     """Execute the A/B comparison and return structured result.
 
@@ -508,13 +506,13 @@ def run_ab_report(
 
         # Run static
         t0 = time.perf_counter()
-        print(f"[ab]   Running static_styleC...", file=sys.stderr)
+        print("[ab]   Running static_styleC...", file=sys.stderr)
         static_result = _run_backtest_for_strategy(strat, "static_styleC", start_date, end_date)
         t_static = time.perf_counter() - t0
 
         # Run adaptive
         t1 = time.perf_counter()
-        print(f"[ab]   Running adaptive...", file=sys.stderr)
+        print("[ab]   Running adaptive...", file=sys.stderr)
         adaptive_result = _run_backtest_for_strategy(strat, "adaptive", start_date, end_date)
         t_adaptive = time.perf_counter() - t1
 
@@ -573,7 +571,7 @@ def run_ab_report(
         }
         _emit_audit_event("wave25.exit_engine_ab_regression_detected", regression_payload, api_base)
         _send_discord_alert(
-            f"[CRITICAL] Wave 25 A/B regression detected:\n"
+            "[CRITICAL] Wave 25 A/B regression detected:\n"
             + "\n".join(f"  - {f}" for f in all_blocking_failures),
             api_base,
         )
@@ -588,7 +586,7 @@ def run_ab_report(
         adaptive_wired=ADAPTIVE_WIRED,
     )
 
-    report_file: Optional[str] = None
+    report_file: str | None = None
     if output_path is None:
         # Default: docs/wave25-exit-engine-ab-report.md next to the trading-forge root
         script_dir = Path(__file__).parent
@@ -598,7 +596,8 @@ def run_ab_report(
     else:
         report_file = output_path
 
-    Path(report_file).write_text(report_md, encoding="utf-8")
+    with Path(report_file).open("w", encoding="utf-8", newline="\n") as report_handle:
+        report_handle.write(report_md)
     print(f"\n[ab] Report written: {report_file}", file=sys.stderr)
 
     return {

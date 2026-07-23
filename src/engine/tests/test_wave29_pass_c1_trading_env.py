@@ -29,7 +29,7 @@ import json
 import os
 import sys
 import types
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
 import numpy as np
@@ -145,7 +145,7 @@ class TestMigration0152Idempotency:
         """Journal _journal.json must have an entry for this migration."""
         import pathlib
         journal_path = pathlib.Path(__file__).parents[2] / "server" / "db" / "migrations" / "meta" / "_journal.json"
-        journal = json.loads(journal_path.read_text())
+        journal = json.loads(journal_path.read_text(encoding="utf-8"))
         tags = [e["tag"] for e in journal["entries"]]
         assert "0158_quantum_rl_runs" in tags, f"0158_quantum_rl_runs not in journal. Found: {tags[-5:]}"
 
@@ -299,7 +299,7 @@ class TestLoadProductionStateAt:
         """_load_production_state_at must return dict with all 25 PRODUCTION_STATE_FIELDS."""
         from src.engine.quantum_rl_agent import _load_production_state_at
 
-        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
 
         # Mock the DB connection so test works without a real DB
         mock_conn = MagicMock()
@@ -357,7 +357,7 @@ class TestLoadProductionStateAt:
                 "session_health": "rth_open",
                 "primary_driver": "none",
             }),
-            "created_at": datetime(2024, 6, 15, 14, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2024, 6, 15, 14, 0, 0, tzinfo=UTC),
         }
         mock_cursor.fetchone.side_effect = [
             bias_row,             # bias_state query
@@ -397,7 +397,7 @@ class TestLoadProductionStateAt:
         must pass through the normalization table unchanged (not remapped)."""
         from src.engine.quantum_rl_agent import _load_production_state_at
 
-        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
         bias_row = {
@@ -407,7 +407,7 @@ class TestLoadProductionStateAt:
             "narrative_state": None,
             "htf_narrative": None,
             "regime_evidence": None,
-            "created_at": datetime(2024, 6, 15, 14, 0, 0, tzinfo=timezone.utc),
+            "created_at": datetime(2024, 6, 15, 14, 0, 0, tzinfo=UTC),
         }
         mock_cursor.fetchone.side_effect = [bias_row, None]
         mock_cursor.fetchall.return_value = []
@@ -424,7 +424,7 @@ class TestLoadProductionStateAt:
         """Must return None (not raise) when DATABASE_URL is not set."""
         from src.engine.quantum_rl_agent import _load_production_state_at
 
-        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
         env_without_url = {k: v for k, v in os.environ.items() if k != "DATABASE_URL"}
         with patch.dict(os.environ, env_without_url, clear=True):
             result = _load_production_state_at(ts, "MES")
@@ -440,7 +440,7 @@ class TestLoadProductionStateFailOpen:
         """When no bias_state row found, all bias fields must be None (not raise)."""
         from src.engine.quantum_rl_agent import _load_production_state_at
 
-        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
         # fetchone returns None for all DB queries — no bias row, no liquidity row
@@ -464,7 +464,7 @@ class TestLoadProductionStateFailOpen:
         """DB connection failure must return None (not raise)."""
         from src.engine.quantum_rl_agent import _load_production_state_at
 
-        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=timezone.utc)
+        ts = datetime(2024, 6, 15, 14, 30, 0, tzinfo=UTC)
         with patch("psycopg2.connect", side_effect=Exception("connection refused")):
             with patch.dict(os.environ, {"DATABASE_URL": "postgresql://test/test"}):
                 result = _load_production_state_at(ts, "MES")
@@ -612,7 +612,7 @@ class TestTradingEnvConstructor:
         features = _make_features()
         try:
             TradingEnv(prices, features, n_actions=3)
-            assert False, "Should have raised"
+            raise AssertionError("Should have raised")
         except ValueError as e:
             assert "day-trader" in str(e).lower() or "LONG/FLAT" in str(e) or "2-action" in str(e)
 
@@ -650,8 +650,8 @@ class TestLoadBacktestBarData:
         # IS trade (should be retained)
         is_trade = MagicMock()
         is_trade.__getitem__ = lambda self, k: {
-            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
-            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=timezone.utc),
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=UTC),
+            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=UTC),
             "direction": "long",
             "entry_price": 4200.0,
             "exit_price": 4215.0,
@@ -667,8 +667,8 @@ class TestLoadBacktestBarData:
         # OOS trade (should be purged with cpcv_purge=True)
         oos_trade = MagicMock()
         oos_trade.__getitem__ = lambda self, k: {
-            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=timezone.utc),
-            "exit_time": datetime(2024, 5, 10, 11, 0, tzinfo=timezone.utc),
+            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=UTC),
+            "exit_time": datetime(2024, 5, 10, 11, 0, tzinfo=UTC),
             "direction": "long",
             "entry_price": 4350.0,
             "exit_price": 4365.0,
@@ -706,15 +706,15 @@ class TestLoadBacktestBarData:
             "oos_start": "2024-04-01", "oos_end": "2024-06-30",
         }
         is_trade = {
-            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
-            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=timezone.utc),
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=UTC),
+            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=UTC),
             "direction": "long", "entry_price": 4200.0, "exit_price": 4215.0,
             "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
             "session_type": "rth", "macro_regime": "TRENDING",
         }
         oos_trade = {
-            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=timezone.utc),
-            "exit_time": datetime(2024, 5, 10, 11, 0, tzinfo=timezone.utc),
+            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=UTC),
+            "exit_time": datetime(2024, 5, 10, 11, 0, tzinfo=UTC),
             "direction": "long", "entry_price": 4350.0, "exit_price": 4365.0,
             "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
             "session_type": "rth", "macro_regime": "RANGE_BOUND",
@@ -750,8 +750,8 @@ class TestLoadBacktestBarData:
             "oos_start": "2024-04-01", "oos_end": "2024-06-30",
         }
         is_trade = {
-            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
-            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=timezone.utc),
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=UTC),
+            "exit_time": datetime(2024, 2, 15, 11, 0, tzinfo=UTC),
             "direction": "long", "entry_price": 4200.0, "exit_price": 4215.0,
             "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
             "session_type": "rth", "macro_regime": "TRENDING",
@@ -783,7 +783,7 @@ class TestLoadBacktestBarData:
 
         trade_a = MagicMock()
         trade_a.__getitem__ = lambda self, k: {
-            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=timezone.utc),
+            "entry_time": datetime(2024, 2, 15, 10, 30, tzinfo=UTC),
             "exit_time": None, "direction": "long",
             "entry_price": 4200.0, "exit_price": 4215.0,
             "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,
@@ -796,7 +796,7 @@ class TestLoadBacktestBarData:
 
         trade_b = MagicMock()
         trade_b.__getitem__ = lambda self, k: {
-            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=timezone.utc),
+            "entry_time": datetime(2024, 5, 10, 10, 30, tzinfo=UTC),
             "exit_time": None, "direction": "long",
             "entry_price": 4350.0, "exit_price": 4365.0,
             "pnl": 15.0, "net_pnl": 12.5, "contracts": 1, "commission": 2.5,

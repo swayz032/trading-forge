@@ -1,41 +1,32 @@
-# -*- coding: utf-8 -*-
 """Tests for NeMo Scenario Designer — data_designer wiring.
 
 All tests mock `data_designer` — no real API calls are ever made.
 NVIDIA_API_KEY absence is intentional for the fallback tests.
-Vectorbt is blocked from import to prevent pytest collection hang.
+The stochastic renderer is isolated without leaking package stubs into the
+rest of the pytest session.
 """
 from __future__ import annotations
 
-import hashlib
 import importlib
-import os
+import pathlib as _pathlib_early
 import sys
 import types
-from typing import Any
-from unittest.mock import MagicMock, patch
+from dataclasses import dataclass
 
 import pytest
 
 # ─── Block vectorbt / heavy GPU packages before any engine import ─────────────
-for _mod in ("vectorbt", "hmmlearn", "arch"):
-    if _mod not in sys.modules:
-        sys.modules[_mod] = types.ModuleType(_mod)
-
 # ─── Provide a minimal mock for the stochastic_regime_generator ScenarioSpec ─
 # We need this so nemo_scenario_designer can import NAMED_SCENARIOS.
 # Actual stochastic math is NOT executed in these tests.
 _synthetic_pkg = types.ModuleType("src.engine.synthetic")
 # __path__ required so 'from src.engine.synthetic import populate_regime_bank' resolves
 # to the real file on disk even though the package object is a stub.
-import pathlib as _pathlib_early
 _synthetic_pkg.__path__ = [
     str(_pathlib_early.Path(__file__).parent.parent.parent / "src" / "engine" / "synthetic")
 ]
 _synthetic_pkg.__package__ = "src.engine.synthetic"
 _stochastic_mod = types.ModuleType("src.engine.synthetic.stochastic_regime_generator")
-
-from dataclasses import dataclass, field as dc_field
 
 
 @dataclass
@@ -76,22 +67,9 @@ _stochastic_mod.NAMED_SCENARIOS = _MOCK_NAMED_SCENARIOS
 _stochastic_mod.GENERATOR_MODEL_VERSION = "stochastic_v1.0"
 _stochastic_mod.GOVERNANCE_LABELS = {"decision_role": "challenger_only"}
 
-_src_stub = types.ModuleType("src")
-_engine_stub = types.ModuleType("src.engine")
-# __path__ is required so Python's import system can find sub-modules
-# (e.g. nemo_scenario_designer.py) via the real file system even though
-# we've replaced the package object with a stub.
-import pathlib as _pathlib
-_engine_real_dir = str(_pathlib.Path(__file__).parent.parent.parent / "src" / "engine")
-_engine_stub.__path__ = [_engine_real_dir]
-_engine_stub.__package__ = "src.engine"
-_src_stub.__path__ = [str(_pathlib.Path(__file__).parent.parent.parent / "src")]
-_src_stub.__package__ = "src"
-
-sys.modules["src"] = _src_stub
-sys.modules["src.engine"] = _engine_stub
-sys.modules["src.engine.synthetic"] = _synthetic_pkg
-sys.modules["src.engine.synthetic.stochastic_regime_generator"] = _stochastic_mod
+_STOCHASTIC_MODULE_KEY = "src.engine.synthetic.stochastic_regime_generator"
+_original_stochastic_module = sys.modules.get(_STOCHASTIC_MODULE_KEY)
+sys.modules[_STOCHASTIC_MODULE_KEY] = _stochastic_mod
 
 
 def _make_mock_dd_module():
@@ -177,7 +155,6 @@ def _make_mock_dd_module():
     # PreviewResults mock — returns a pandas DataFrame
     class _PreviewResults:
         def __init__(self, df):
-            import pandas as pd
             self.dataset = df
 
     # DataDesigner interface mock
@@ -230,6 +207,19 @@ from src.engine import nemo_scenario_designer as nsd  # noqa: E402
 # Re-import so module picks up the mocked data_designer
 importlib.reload(nsd)
 
+# The module may already have been imported by an earlier collected test.
+# Pin only this module-under-test's renderer contract to the lightweight test
+# doubles; do not replace the repository's package objects in sys.modules.
+nsd.ScenarioSpec = _MockScenarioSpec
+nsd.NAMED_SCENARIOS = _MOCK_NAMED_SCENARIOS
+
+# nsd captured the mocked contracts above. Restore the canonical renderer now
+# so importing this test module cannot contaminate unrelated engine tests.
+if _original_stochastic_module is not None:
+    sys.modules[_STOCHASTIC_MODULE_KEY] = _original_stochastic_module
+else:
+    sys.modules.pop(_STOCHASTIC_MODULE_KEY, None)
+
 ScenarioSpec = _MockScenarioSpec
 NAMED_SCENARIOS = _MOCK_NAMED_SCENARIOS
 
@@ -257,7 +247,7 @@ class TestFallbackToNamedScenarios:
         designer = nsd.NeMoScenarioDesigner()
         result = designer.generate_scenarios(count=8, seed=42)
         for spec in result.specs:
-            assert isinstance(spec, _MockScenarioSpec)
+            assert isinstance(spec, nsd.ScenarioSpec)
 
     def test_fallback_when_data_designer_import_mocked_absent(self, monkeypatch):
         """When data_designer import is masked absent, fall back cleanly."""
@@ -289,7 +279,7 @@ class TestFallbackToNamedScenarios:
         monkeypatch.delenv("NVIDIA_API_KEY", raising=False)
         designer = nsd.NeMoScenarioDesigner()
         with caplog.at_level(logging.INFO):
-            result = designer.generate_scenarios(count=8, seed=42)
+            designer.generate_scenarios(count=8, seed=42)
         # At least one log record should mention fallback
         fallback_logs = [r for r in caplog.records if "fallback" in r.message.lower()]
         assert len(fallback_logs) >= 1
@@ -319,7 +309,7 @@ class TestDataDesignerPath:
         designer = nsd.NeMoScenarioDesigner()
         result = designer.generate_scenarios(count=8, seed=42)
         for spec in result.specs:
-            assert isinstance(spec, _MockScenarioSpec)
+            assert isinstance(spec, nsd.ScenarioSpec)
             assert spec.vol_annual > 0
             # drift_annual can be negative
             assert isinstance(spec.drift_annual, float)
@@ -667,15 +657,14 @@ class TestPopulateRegimeBankIntegration:
             def severity_check(self, df, scenario_name):
                 return True, {}
 
-        _stochastic_mod.StochasticRegimeGenerator = _FakeGen
-
         from src.engine.synthetic import populate_regime_bank as prb
-        importlib.reload(prb)
+        monkeypatch.setattr(prb, "StochasticRegimeGenerator", _FakeGen)
+        canonical_scenarios = list(prb.NAMED_SCENARIOS.keys())
 
         config = {
             "symbols": ["MES"],
             "timeframes": ["5min"],
-            "scenarios": list(NAMED_SCENARIOS.keys())[:2],
+            "scenarios": canonical_scenarios[:2],
             "seed": 42,
             "output_dir": str(tmp_path),
             "max_batches": 1,
@@ -698,7 +687,7 @@ class TestPopulateRegimeBankIntegration:
                 pass
 
             def generate(self, scenario_name):
-                assert scenario_name in NAMED_SCENARIOS, (
+                assert scenario_name in canonical_scenarios, (
                     f"Unknown scenario requested: {scenario_name}"
                 )
                 return pl.DataFrame({"open": [1.0], "high": [1.1], "low": [0.9], "close": [1.0], "volume": [100.0]})
@@ -709,15 +698,14 @@ class TestPopulateRegimeBankIntegration:
             def severity_check(self, df, scenario_name):
                 return True, {}
 
-        _stochastic_mod.StochasticRegimeGenerator = _FakeGen
-
         from src.engine.synthetic import populate_regime_bank as prb
-        importlib.reload(prb)
+        monkeypatch.setattr(prb, "StochasticRegimeGenerator", _FakeGen)
+        canonical_scenarios = list(prb.NAMED_SCENARIOS.keys())
 
         config = {
             "symbols": ["MES"],
             "timeframes": ["5min"],
-            "scenarios": list(NAMED_SCENARIOS.keys()),
+            "scenarios": canonical_scenarios,
             "seed": 0,
             "output_dir": str(tmp_path),
             "max_batches": 1,
@@ -725,4 +713,4 @@ class TestPopulateRegimeBankIntegration:
             "dry_run": True,
         }
         result = prb.run_populate(config)
-        assert result["generated"] == len(NAMED_SCENARIOS)
+        assert result["generated"] == len(canonical_scenarios)

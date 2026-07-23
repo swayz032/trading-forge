@@ -31,7 +31,9 @@ testpaths = ["src/engine/tests", "tests/python"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-pythonpath = ["."]
+# Resolve the engine from this checkout before any user-site editable install.
+# Keeping the repository root second still supports explicit `src.engine` imports.
+pythonpath = ["src", "."]
 filterwarnings = [
     "ignore:CUDA path could not be detected:UserWarning",
 ]

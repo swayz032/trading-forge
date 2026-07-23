@@ -27,8 +27,8 @@ import math
 import os
 import sys
 import time
+from datetime import UTC
 from pathlib import Path
-from typing import Optional
 
 import click
 import numpy as np
@@ -201,7 +201,7 @@ def _dst_correct_et_hour(utc_dt) -> str:
 
     # Ensure timezone-aware datetime
     if utc_dt.tzinfo is None:
-        utc_dt = utc_dt.replace(tzinfo=_dt_mod.timezone.utc)
+        utc_dt = utc_dt.replace(tzinfo=_dt_mod.UTC)
 
     # Prefer zoneinfo (stdlib, Python 3.9+)
     try:
@@ -559,8 +559,8 @@ def apply_eligibility_gate(
 
 
 def _build_eligibility_gate_mode_disclosure(
-    long_gate_stats: Optional[dict] = None,
-    short_gate_stats: Optional[dict] = None,
+    long_gate_stats: dict | None = None,
+    short_gate_stats: dict | None = None,
 ) -> dict:
     """C-3 fix (deep-scan #18c, 2026-07-05): build the additive
     ``result["eligibility_gate_mode"]`` disclosure dict from the raw
@@ -661,7 +661,7 @@ def _apply_backtest_parity_gates(
     direction: str,
     symbol: str,
     strategy_name: str,
-    compliance_mode_override: Optional[str] = None,
+    compliance_mode_override: str | None = None,
 ) -> tuple[np.ndarray, dict]:
     """G2 parity gate. Default enforce; env-var toggle to shadow or off.
 
@@ -872,7 +872,7 @@ def _apply_backtest_parity_gates(
         if should_filter is not None:
             close_np = df["close"].to_numpy()
             atr_np = df["atr_14"].to_numpy() if "atr_14" in df.columns else None
-            for bar_idx, idx in enumerate(signal_indices):
+            for _bar_idx, idx in enumerate(signal_indices):
                 parity_stats["anti_setup_evaluated"] += 1
                 hour = None
                 if "ts_et" in df.columns:
@@ -989,7 +989,7 @@ def _compliance_violation_check_enabled() -> bool:
 
 def detect_trade_compliance_violations(
     trades: list[dict],
-    firm_key: Optional[str],
+    firm_key: str | None,
     starting_balance: float,
     host: str = "skytech-tower",
 ) -> list[dict]:
@@ -1078,7 +1078,7 @@ def _apply_naked_management(
     atr_np: np.ndarray,
     spec,
     df,
-    open_np: Optional[np.ndarray] = None,
+    open_np: np.ndarray | None = None,
     atr_stop_multiplier: float = 1.5,
     structural_stop_map: dict | None = None,
 ) -> list[dict]:
@@ -1097,7 +1097,6 @@ def _apply_naked_management(
     This function is deterministic: same inputs → same outputs.
     """
     from datetime import datetime as _dt
-    from datetime import timezone as _tz
 
     from src.engine.exits.style_d_handler import _is_time_stop
 
@@ -1149,9 +1148,9 @@ def _apply_naked_management(
                         else _dt.fromisoformat(str(_raw_ts))
                     )
                     _dt_utc = (
-                        _dt_val.astimezone(_tz.utc)
+                        _dt_val.astimezone(UTC)
                         if _dt_val.tzinfo is not None
-                        else _dt_val.replace(tzinfo=_tz.utc)
+                        else _dt_val.replace(tzinfo=UTC)
                     )
                     if _is_time_stop(_dst_correct_et_hour(_dt_utc)):
                         exit_price = float(close_np[bar]) if bar < len(close_np) else original_exit_p
@@ -1189,7 +1188,7 @@ def _apply_stop_only_management(
     atr_np: np.ndarray,
     spec,
     df,
-    open_np: Optional[np.ndarray] = None,
+    open_np: np.ndarray | None = None,
     atr_stop_multiplier: float = 1.5,
     structural_stop_map: dict | None = None,
 ) -> list[dict]:
@@ -1206,7 +1205,6 @@ def _apply_stop_only_management(
     15:55 ET time-stop is always applied — it is an invariant, not overlay.
     """
     from datetime import datetime as _dt
-    from datetime import timezone as _tz
 
     from src.engine.exits.style_d_handler import _is_time_stop
 
@@ -1271,9 +1269,9 @@ def _apply_stop_only_management(
                         else _dt.fromisoformat(str(_raw_ts))
                     )
                     _dt_utc = (
-                        _dt_val.astimezone(_tz.utc)
+                        _dt_val.astimezone(UTC)
                         if _dt_val.tzinfo is not None
-                        else _dt_val.replace(tzinfo=_tz.utc)
+                        else _dt_val.replace(tzinfo=UTC)
                     )
                     if _is_time_stop(_dst_correct_et_hour(_dt_utc)):
                         exit_price = float(close_np[bar]) if bar < len(close_np) else bar_open
@@ -1331,9 +1329,9 @@ def _apply_trade_management(
     close_np: np.ndarray,
     atr_np: np.ndarray,
     spec,
-    htf_cache: Optional[dict],
+    htf_cache: dict | None,
     df,
-    open_np: Optional[np.ndarray] = None,
+    open_np: np.ndarray | None = None,
     atr_stop_multiplier: float = 1.5,
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext]
@@ -1405,7 +1403,7 @@ def _apply_trade_management(
     # adaptive_ctx may be set even when exit_engine=static_styleC (e.g. caller
     # provides context for TP2 mapping but prefers the static exit rules).
     # Falls through gracefully when no context available.
-    _static_liq_snapshot: Optional[list] = None
+    _static_liq_snapshot: list | None = None
     if adaptive_ctx is not None and hasattr(adaptive_ctx, "liquidity_snapshot"):
         _raw_snap = adaptive_ctx.liquidity_snapshot
         if _raw_snap:
@@ -1428,11 +1426,11 @@ def _apply_static_styleC_management(
     close_np: np.ndarray,
     atr_np: np.ndarray,
     spec,
-    htf_cache: Optional[dict],
+    htf_cache: dict | None,
     df,
-    open_np: Optional[np.ndarray] = None,
+    open_np: np.ndarray | None = None,
     atr_stop_multiplier: float = 1.5,
-    liquidity_snapshot: Optional[list] = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
+    liquidity_snapshot: list | None = None,  # Wave 1 Track 1A: intraday levels for TP2 mapping
     structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
 ) -> list[dict]:
     """Style C static trade management.
@@ -1476,7 +1474,7 @@ def _apply_static_styleC_management(
     ts_col = "ts_event"
     has_ts = ts_col in df.columns
     # W27.5 P-D.5: extract volume once per call; None when column absent (legacy fixtures).
-    _vol_np_static: Optional[np.ndarray] = (
+    _vol_np_static: np.ndarray | None = (
         df["volume"].to_numpy() if "volume" in df.columns else None
     )
     _symbol_static: str = getattr(spec, "symbol", None) or "UNKNOWN"
@@ -1490,7 +1488,6 @@ def _apply_static_styleC_management(
     )
     if _USE_PARTIALS:
         from datetime import datetime as _sc_dt
-        from datetime import timezone as _sc_tz
 
         from src.engine.exits.style_c_handler import (  # noqa: PLC0415
             RUNNER_FRACTION_C,
@@ -1619,9 +1616,9 @@ def _apply_static_styleC_management(
                             else _sc_dt.fromisoformat(str(_raw_ts_p))
                         )
                         _dt_utc_p = (
-                            _dt_p.astimezone(_sc_tz.utc)
+                            _dt_p.astimezone(UTC)
                             if _dt_p.tzinfo is not None
-                            else _dt_p.replace(tzinfo=_sc_tz.utc)
+                            else _dt_p.replace(tzinfo=UTC)
                         )
                         if _is_time_stop(_dst_correct_et_hour(_dt_utc_p)):
                             exit_price_p = (
@@ -1943,7 +1940,7 @@ def _apply_adaptive_management(
     spec,
     df,
     adaptive_ctx,   # AdaptiveExitContext — required (caller already checked not None)
-    open_np: Optional[np.ndarray] = None,
+    open_np: np.ndarray | None = None,
     atr_stop_multiplier: float = 1.5,
     structural_stop_map: dict | None = None,  # H5 fix (deep-scan #15, 2026-07-03)
 ) -> list[dict]:
@@ -1982,7 +1979,6 @@ def _apply_adaptive_management(
     Returns list of managed trade dicts matching _apply_static_styleC_management schema.
     """
     from datetime import datetime as _dt
-    from datetime import timezone as _tz
 
     from src.engine.exits.adaptive_exits import (
         PRE_LUNCH_TRIGGER_REGIMES,
@@ -1999,7 +1995,7 @@ def _apply_adaptive_management(
     # df may be Polars or pandas depending on the caller path.
     try:
         if "volume" in df.columns:
-            vol_np: Optional[np.ndarray] = df["volume"].to_numpy()
+            vol_np: np.ndarray | None = df["volume"].to_numpy()
         else:
             vol_np = None
     except Exception:
@@ -2032,9 +2028,9 @@ def _apply_adaptive_management(
         """
         try:
             if bar_ts_val.tzinfo is not None:
-                utc_dt = bar_ts_val.astimezone(_tz.utc)
+                utc_dt = bar_ts_val.astimezone(UTC)
             else:
-                utc_dt = bar_ts_val.replace(tzinfo=_tz.utc)
+                utc_dt = bar_ts_val.replace(tzinfo=UTC)
             return _dst_correct_et_hour(utc_dt)
         except Exception:
             return "00:00"
@@ -2846,11 +2842,11 @@ def _validate_bar_count(
     if expected > 0 and abs(actual - expected) / expected > 0.10:
         warnings.warn(
             f"Bar count mismatch: expected ~{expected}, got {actual}. "
-            f"Wrong timeframe data? (timeframe={timeframe})"
+            f"Wrong timeframe data? (timeframe={timeframe})", stacklevel=2
         )
 
 
-def _build_run_receipt(config: "StrategyConfig", dataset_hash: str = "") -> dict:
+def _build_run_receipt(config: StrategyConfig, dataset_hash: str = "") -> dict:
     """Build a run receipt for reproducibility tracking."""
     import hashlib
     import subprocess
@@ -3247,7 +3243,7 @@ def _compute_slippage_survival_block(trades_list: list[dict]) -> dict:
     (audit-able) rather than silently absent (the #1 pinned producer-gate
     disconnect failure class).
     """
-    from datetime import datetime, timezone
+    from datetime import datetime
 
     try:
         from src.engine.statistics.slippage_survival import compute_slippage_survival
@@ -3266,7 +3262,7 @@ def _compute_slippage_survival_block(trades_list: list[dict]) -> dict:
             min_pf=_parse_slippage_survival_min_pf(),
             min_trades=_parse_slippage_survival_min_trades(),
         )
-        block["computed_at"] = datetime.now(timezone.utc).isoformat()
+        block["computed_at"] = datetime.now(UTC).isoformat()
         return block
     except Exception as _ss_err:
         print(
@@ -3278,7 +3274,7 @@ def _compute_slippage_survival_block(trades_list: list[dict]) -> dict:
             "schema_version": 1,
             "error": str(_ss_err)[:300],
             "n_trades": len(trades_list) if isinstance(trades_list, list) else 0,
-            "computed_at": datetime.now(timezone.utc).isoformat(),
+            "computed_at": datetime.now(UTC).isoformat(),
         }
 
 
@@ -3293,9 +3289,9 @@ def _apply_dsl_stop_loss_and_time_stop(
     timestamps: list | np.ndarray,
     stop_multiplier: float = 1.5,
     symbol: str = "MES",
-    close_np: Optional[np.ndarray] = None,
-    ts_et_timestamps: Optional[list] = None,
-    vix_np: Optional[np.ndarray] = None,
+    close_np: np.ndarray | None = None,
+    ts_et_timestamps: list | None = None,
+    vix_np: np.ndarray | None = None,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, dict]:
     """Enforce ATR stop ceiling and 15:55 ET time-stop for DSL strategies.
 
@@ -3411,7 +3407,7 @@ def _apply_dsl_stop_loss_and_time_stop(
                 _utc_dt = _dt_module.datetime.fromisoformat(_raw_clean)
                 if _utc_dt.tzinfo is None:
                     # Assume UTC for tz-naive timestamps from historical Parquet data
-                    _utc_dt = _utc_dt.replace(tzinfo=_dt_module.timezone.utc)
+                    _utc_dt = _utc_dt.replace(tzinfo=_dt_module.UTC)
                 _et_str_converted = _dst_correct_et_hour(_utc_dt)
                 _legacy_is_1555 = _et_time_ge_flatten(_et_str_converted)
             except Exception:
@@ -3703,11 +3699,11 @@ def _apply_dll_halt_to_entries(
 
 def run_backtest(
     request: BacktestRequest,
-    data: Optional[pl.DataFrame] = None,
+    data: pl.DataFrame | None = None,
     fill_rate: float = 1.0,
     use_eligibility_gate: bool = True,
     spread_multiplier: float = 1.0,
-    warmup_data: Optional[pl.DataFrame] = None,
+    warmup_data: pl.DataFrame | None = None,
 ) -> dict:
     """Run a single backtest and return metrics dict.
 
@@ -3998,8 +3994,8 @@ def run_backtest(
         # The mask only suppresses entry signals during the high-risk windows.
         _ts_series = df["ts_event"]
 
-        def _build_default_event_mask_et(ts_et_series: "pl.Series") -> "np.ndarray":
-            """Return a bool mask: True = ALLOW trade, False = SIT_OUT.
+        def _build_default_event_mask_et(ts_et_series: pl.Series) -> np.ndarray:
+            """Return a bool mask: True = SIT_OUT, False = allow trade.
 
             Blocks bars falling in 8:30-9:00 ET and 14:00-14:30 ET windows.
             M3 FIX: Uses ts_et directly (Eastern Time) — zero DST ambiguity.
@@ -4007,7 +4003,8 @@ def run_backtest(
             """
             import numpy as _np_ev
             n = len(ts_et_series)
-            mask = _np_ev.ones(n, dtype=bool)  # True = allow
+            # Match generate_event_mask() and generate_signals(): True blocks.
+            mask = _np_ev.zeros(n, dtype=bool)
 
             for i in range(n):
                 ts_val = ts_et_series[i]
@@ -4030,7 +4027,7 @@ def run_backtest(
                     in_fomc_window = (14 * 60 + 0) <= total_min < (14 * 60 + 30)
 
                     if in_morning_window or in_fomc_window:
-                        mask[i] = False
+                        mask[i] = True
                 except Exception:
                     continue
             return mask
@@ -4040,10 +4037,11 @@ def run_backtest(
             event_mask = _build_default_event_mask_et(df["ts_et"])
         else:
             # Legacy fallback — ts_et not available (should be rare post-data-loader fix)
-            def _build_default_event_mask_utc(ts_series: "pl.Series") -> "np.ndarray":
+            def _build_default_event_mask_utc(ts_series: pl.Series) -> np.ndarray:
                 import numpy as _np_ev
                 n = len(ts_series)
-                mask = _np_ev.ones(n, dtype=bool)
+                # Match generate_event_mask() and generate_signals(): True blocks.
+                mask = _np_ev.zeros(n, dtype=bool)
                 for i in range(n):
                     ts_val = ts_series[i]
                     if ts_val is None:
@@ -4058,12 +4056,12 @@ def run_backtest(
                         in_morning_window = (12 * 60 + 30) <= total_min < (14 * 60 + 0)
                         in_fomc_window = (18 * 60 + 0) <= total_min < (19 * 60 + 30)
                         if in_morning_window or in_fomc_window:
-                            mask[i] = False
+                            mask[i] = True
                     except Exception:
                         continue
                 return mask
             event_mask = _build_default_event_mask_utc(_ts_series)
-        _masked_bars = int((~event_mask).sum())
+        _masked_bars = int(event_mask.sum())
         if _masked_bars > 0:
             print(
                 f"Default event blackout: masking {_masked_bars} bars "
@@ -4140,7 +4138,7 @@ def run_backtest(
                     try:
                         bar_dt = _dt.datetime.fromisoformat(ts_str)
                         if bar_dt.tzinfo is None:
-                            bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
+                            bar_dt = bar_dt.replace(tzinfo=_dt.UTC)
                     except Exception:
                         # Unparseable timestamp — fail-CLOSED (drop signal)
                         bad_timestamp_entry_window_count += (1 if el else 0) + (1 if es else 0)
@@ -4151,7 +4149,7 @@ def run_backtest(
                 elif isinstance(ts_val, _dt.datetime):
                     bar_dt = ts_val
                     if bar_dt.tzinfo is None:
-                        bar_dt = bar_dt.replace(tzinfo=_dt.timezone.utc)
+                        bar_dt = bar_dt.replace(tzinfo=_dt.UTC)
                 else:
                     # Unknown/None type — fail-CLOSED (drop signal)
                     bad_timestamp_entry_window_count += (1 if el else 0) + (1 if es else 0)
@@ -4274,7 +4272,7 @@ def run_backtest(
     # per-bar VIX ATR path in _apply_static_styleC_management (vix_np array).
     _margin_expansion_audit_dsl: dict = {}
     # Initialized here so post-sizing per-bar cap can reference even when VIX absent.
-    _vix_rolling_max_np: Optional[np.ndarray] = None
+    _vix_rolling_max_np: np.ndarray | None = None
     _base_mc_for_vix_perbar: int = max_contracts if max_contracts is not None else 100
     if "vix" in df.columns:
         from src.engine.margin_expansion import (
@@ -4463,7 +4461,7 @@ def run_backtest(
     )
     # When symmetric mode is OFF, still apply session multipliers to entries only.
     # We track the non-session-multiplied exit slip for the audit delta.
-    _slippage_arr_no_session: Optional[np.ndarray] = None
+    _slippage_arr_no_session: np.ndarray | None = None
     if not _exit_slippage_symmetric and combined_slippage_mult is not None:
         # Re-compute WITH multipliers for entry-only tracking (for asymmetry_delta audit)
         _slippage_arr_session = compute_slippage(
@@ -4485,7 +4483,7 @@ def run_backtest(
     # Without this, apply_eligibility_gate() and _apply_trade_management() both
     # receive htf_cache=None — passthrough no-op mode.  With the cache, the gate
     # evaluates bias/playbook/location/structural-TP for every DSL signal.
-    _dsl_htf_cache: Optional[dict] = None
+    _dsl_htf_cache: dict | None = None
     _dsl_strategy_name = getattr(config, "name", "") or ""
     _dsl_htf_passthrough_reason: str = ""  # FIX 2 (deep-scan #10): captured for gate disclosure
     try:
@@ -4554,8 +4552,8 @@ def run_backtest(
     # _dsl_short_gate_stats default to None so a run with
     # use_eligibility_gate=False (or no entry_short column) still produces a
     # well-shaped (if partially null) disclosure dict.
-    _dsl_long_gate_stats: Optional[dict] = None
-    _dsl_short_gate_stats: Optional[dict] = None
+    _dsl_long_gate_stats: dict | None = None
+    _dsl_short_gate_stats: dict | None = None
     if use_eligibility_gate:
         entries_np, exits_np, _dsl_long_gate_stats = apply_eligibility_gate(
             entries_np, exits_np, df,
@@ -4602,7 +4600,7 @@ def run_backtest(
     # ─── G2 parity gate (skip + anti-setup, default off) ────────
     # W27.5 C.2: per-backtest compliance_mode override wins over env var.
     # Reads from request config dict (BacktestRequest.strategy fields or raw config).
-    _per_backtest_compliance_mode: Optional[str] = getattr(config, "compliance_mode", None)
+    _per_backtest_compliance_mode: str | None = getattr(config, "compliance_mode", None)
     if _per_backtest_compliance_mode is None:
         # Also check the raw request-level config dict if strategy config doesn't have it
         _req_raw_config = getattr(request, "_raw_config", None)
@@ -4690,7 +4688,7 @@ def run_backtest(
         shifted_long_mask = entries_np.astype(bool)
         long_pre_shift_indices = np.where(shifted_long_mask)[0] - 1
         long_valid = long_pre_shift_indices >= 0
-        for idx, pre_idx in zip(np.where(shifted_long_mask)[0][long_valid], long_pre_shift_indices[long_valid]):
+        for idx, pre_idx in zip(np.where(shifted_long_mask)[0][long_valid], long_pre_shift_indices[long_valid], strict=False):
             sizes[idx] = long_adjusted_sizes[pre_idx]
 
     # ─── Convert to Pandas at vectorbt boundary (CLAUDE.md rule) ─
@@ -4791,7 +4789,7 @@ def run_backtest(
             shifted_short_mask = short_entries_np.astype(bool)
             pre_shift_indices = np.where(shifted_short_mask)[0] - 1
             valid = pre_shift_indices >= 0
-            for idx, pre_idx in zip(np.where(shifted_short_mask)[0][valid], pre_shift_indices[valid]):
+            for idx, pre_idx in zip(np.where(shifted_short_mask)[0][valid], pre_shift_indices[valid], strict=False):
                 sizes[idx] = short_adjusted_sizes[pre_idx]
         short_entries_pd = pl.Series("entry_short", short_entries_np).to_pandas()
     else:
@@ -5000,7 +4998,7 @@ def run_backtest(
         # The margin-expansion peak-of-window path in margin_expansion.py is LEFT
         # UNCHANGED — it has a documented CME-regime rationale and uses a different
         # code path not touched here.
-        _vix_np_for_stop: Optional[np.ndarray] = None
+        _vix_np_for_stop: np.ndarray | None = None
         if "vix" in df.columns:
             _vix_np_for_stop = df["vix"].to_numpy()
 
@@ -5648,7 +5646,7 @@ def run_backtest(
     # (same units → σ_diff is a $ std-dev, IR is dimensionless ratio).
     #
     # When the price data does not span enough dates, information_ratio = None.
-    information_ratio: Optional[float] = None
+    information_ratio: float | None = None
     try:
         from src.engine.risk_metrics import compute_information_ratio as _compute_ir
 
@@ -6387,7 +6385,7 @@ def _build_expected_signals_from_trades(trades_list: list[dict], max_signals: in
                     try:
                         # Strip fractional seconds + timezone if present for portability
                         _parsed = _dt.datetime.fromisoformat(ts_str[:19])
-                        signal_ts = int(_parsed.replace(tzinfo=_dt.timezone.utc).timestamp())
+                        signal_ts = int(_parsed.replace(tzinfo=_dt.UTC).timestamp())
                     except ValueError:
                         pass  # leave signal_ts = 0; window filter will exclude it
 
@@ -6575,8 +6573,8 @@ _SURVIVAL_FIRM_KEY_MAP: dict[str, tuple[str, str]] = {
 
 
 def _compute_survival_results_for_gate(
-    daily_pnl_records: list[dict], firm_key: Optional[str],
-) -> Optional[dict]:
+    daily_pnl_records: list[dict], firm_key: str | None,
+) -> dict | None:
     """C4 gate input: score `daily_pnl_records` for prop-firm survival via
     survival_scorer.survival_score(), for compute_forge_score()'s
     `survival_results` param.
@@ -6802,20 +6800,20 @@ def run_class_backtest(
     # (no pydantic layer), so None is an unambiguous "caller didn't pass a
     # commission" sentinel — unlike the old 0.62 default, which was
     # indistinguishable from an explicit `commission_per_side=0.62` call.
-    commission_per_side: Optional[float] = None,
-    firm_key: Optional[str] = None,
-    data: Optional[pl.DataFrame] = None,
-    fixed_contracts: Optional[int] = None,
-    htf_cache: Optional[dict] = None,
-    daily_data: Optional[pl.DataFrame] = None,
+    commission_per_side: float | None = None,
+    firm_key: str | None = None,
+    data: pl.DataFrame | None = None,
+    fixed_contracts: int | None = None,
+    htf_cache: dict | None = None,
+    daily_data: pl.DataFrame | None = None,
     skip_eligibility_gate: bool = False,
     max_trades_per_day: int = 2,
     use_performance_gate: bool = True,
-    warmup_data: Optional[pl.DataFrame] = None,
+    warmup_data: pl.DataFrame | None = None,
     exit_engine: str = "static_styleC",
     adaptive_ctx=None,  # type: Optional[AdaptiveExitContext] — Wave 25 Gap B
     exit_policy: str = "full_overlay",  # layer4-replay: "naked" | "stop_only" | "full_overlay"
-    fill_model: Optional[FillProbabilityConfig] = None,
+    fill_model: FillProbabilityConfig | None = None,
 ) -> dict:
     """Run a backtest using a BaseStrategy class instance.
 
@@ -6918,8 +6916,8 @@ def run_class_backtest(
     # Strategies that declare htf_tf/itf_tf/trigger_tf have those TFs loaded here
     # and passed into compute_htf_context for richer context.
     # Strategies without these declarations get existing 2-TF behaviour (back-compat).
-    _four_h_data: "pl.DataFrame | None" = None
-    _one_h_data: "pl.DataFrame | None" = None
+    _four_h_data: pl.DataFrame | None = None
+    _one_h_data: pl.DataFrame | None = None
     if hasattr(strategy, "htf_tf") and strategy.htf_tf:
         _declared_htf_tf = strategy.htf_tf
     elif hasattr(strategy, "bias_timeframe") and strategy.bias_timeframe:
@@ -7130,7 +7128,7 @@ def run_class_backtest(
         )
         # G2 parity gate (skip + anti-setup + compliance gate)
         # W27.5 C.2: read compliance_mode from strategy object if available.
-        _cls_compliance_mode: Optional[str] = getattr(strategy, "compliance_mode", None)
+        _cls_compliance_mode: str | None = getattr(strategy, "compliance_mode", None)
         long_entries_np, _parity_long = _apply_backtest_parity_gates(
             long_entries_np, df, "long", symbol, strategy.name,
             compliance_mode_override=_cls_compliance_mode,
@@ -7332,7 +7330,7 @@ def run_class_backtest(
             else (df["ts_event"].to_list() if "ts_event" in df.columns else None)
         )
         _guard_ts_et_cls = df["ts_et"].to_list() if "ts_et" in df.columns else None
-        _guard_vix_np_cls: Optional[np.ndarray] = df["vix"].to_numpy() if "vix" in df.columns else None
+        _guard_vix_np_cls: np.ndarray | None = df["vix"].to_numpy() if "vix" in df.columns else None
         _guard_stop_mult_cls = (
             float(strategy.config.stop_loss.multiplier)
             if hasattr(strategy, "config") and hasattr(strategy.config, "stop_loss") and strategy.config.stop_loss
@@ -8080,7 +8078,7 @@ def run_class_backtest(
     sample_confidence = "HIGH" if total_trades >= 500 else "MEDIUM" if total_trades >= 200 else "LOW"
 
     # ─── A13: Information Ratio (run_class_backtest path) ────────
-    information_ratio_class: Optional[float] = None
+    information_ratio_class: float | None = None
     try:
         from src.engine.risk_metrics import (
             compute_information_ratio as _compute_ir_class,  # noqa: PLC0415
@@ -8313,11 +8311,11 @@ def _load_strategy_class(class_path: str) -> BaseStrategy:
         "Python harness stubs until framework-overlay wiring lands in P7.A5."
     ),
 )
-def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_class: Optional[str], run_b15_battery_flag: bool = False, exit_engine: str = "static_styleC"):
+def main(config_input: str, backtest_id: str | None, mode: str, strategy_class: str | None, run_b15_battery_flag: bool = False, exit_engine: str = "static_styleC"):
     """Run backtest engine. Outputs JSON to stdout, errors to stderr."""
     try:
         if os.path.isfile(config_input):
-            with open(config_input, 'r') as f:
+            with open(config_input) as f:
                 config = json.load(f)
         else:
             config = json.loads(config_input)
@@ -8342,7 +8340,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
     # handled in this branch. None when absent — every pre-existing JSON
     # config (no "fill_model" key) resolves to None, byte-identical to
     # pre-fix behavior on both dispatch paths.
-    _cls_fill_model_cfg: Optional[FillProbabilityConfig] = None
+    _cls_fill_model_cfg: FillProbabilityConfig | None = None
     if isinstance(config, dict) and config.get("fill_model"):
         try:
             _cls_fill_model_cfg = FillProbabilityConfig.model_validate(config["fill_model"])
@@ -8563,7 +8561,7 @@ def main(config_input: str, backtest_id: Optional[str], mode: str, strategy_clas
         # NameError when the parity shadow block below reads it unconditionally.
         # WF mode sets this to the loaded DataFrame; single mode passes None to
         # run_parity_shadow() which treats None as "parity not supported → ran=False".
-        _preloaded_data: Optional[pl.DataFrame] = None
+        _preloaded_data: pl.DataFrame | None = None
 
         # ─── Phase 12: per-stage timing ──────────────────────────────
         _t0 = time.perf_counter()

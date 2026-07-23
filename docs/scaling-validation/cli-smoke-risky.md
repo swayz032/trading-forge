@@ -23,23 +23,23 @@
 
 | Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Consistency fail |
 |---|---|---|---|---|---|---|
-| 50 | 100.00% | 5% | UNSAFE (100.0% breach >= 5% gate) | 0.0% | 0.0% | 0.0% |
+| 50 | 31.00% | 5% | UNSAFE (31.0% breach >= 5% gate) | 69.0% | 0.0% | 0.0% |
 
 ## Plain-English Verdict Per Tier
 
 ### Tier 50 contracts — UNSAFE
 
-About 100.0% of simulated runs ended in a breach — more than 1 in 5. Trading at this contract size on this strategy's P&L distribution is high-risk. Do not advance to this tier without substantially better per-trade P&L or a much larger buffer.
+About 31.0% of simulated runs ended in a breach — more than 1 in 5. Trading at this contract size on this strategy's P&L distribution is high-risk. Do not advance to this tier without substantially better per-trade P&L or a much larger buffer.
 
 **Breach reason breakdown:**
 
-- Hit daily loss limit: 500 sims (100.0%)
+- Hit daily loss limit: 155 sims (31.0%)
 
 **Simulated max-drawdown percentiles (from account peak):**
 
 | P50 | P75 | P90 | P95 | P99 |
 |---|---|---|---|---|
-| $2000 | $2000 | $2000 | $2395 | $2994 |
+| $5000 | $7000 | $8288 | $9050 | $12000 |
 
 ## Honest Scope Disclosure
 

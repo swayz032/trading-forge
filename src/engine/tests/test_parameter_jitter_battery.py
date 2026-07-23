@@ -15,28 +15,21 @@ Covers:
 """
 from __future__ import annotations
 
-import copy
 import json
 import math
-import os
-import random
-from unittest.mock import MagicMock, patch
-
-import pytest
+from unittest.mock import patch
 
 from src.engine.parameter_jitter_battery import (
     DEFAULT_PSI_THRESHOLD,
     DEFAULT_RWS_THRESHOLD,
     DEFAULT_SDR_THRESHOLD,
     _extract_numeric_params,
-    _run_backtest_for_dsl,
     _sharpe_from_monthly_returns,
     compute_psi,
     compute_rws,
     compute_sdr,
     run_b15_battery,
 )
-
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -47,7 +40,10 @@ def _make_base_result(sharpe: float = 1.8, monthly_returns: list[float] | None =
         monthly_returns = [0.01] * 24
     return {
         "oos_metrics": {"sharpe_ratio": sharpe},
-        "monthly_returns": {f"2024-{(i % 12) + 1:02d}": r for i, r in enumerate(monthly_returns)},
+        "monthly_returns": {
+            f"{2024 + i // 12}-{(i % 12) + 1:02d}": r
+            for i, r in enumerate(monthly_returns)
+        },
         "equity_curve": [1000.0 + i * 10 for i in range(len(monthly_returns) * 21)],
     }
 
@@ -210,7 +206,7 @@ class TestComputeSdr:
             out2 = compute_sdr(dsl, base_result, n_perturbations=10, seed=99)
         assert out1["sdr"] == out2["sdr"]
         # Param sets should be identical
-        for p1, p2 in zip(out1["perturbations"], out2["perturbations"]):
+        for p1, p2 in zip(out1["perturbations"], out2["perturbations"], strict=False):
             assert p1["params"] == p2["params"]
 
     def test_negative_base_sharpe_returns_zero_sdr(self):
@@ -316,7 +312,8 @@ class TestRunB15Battery:
 
     def test_rws_failure_blocks(self):
         # Volatile months → RWS > 0.20
-        volatile = [0.10, -0.10] * 12
+        volatile = ([0.10, 0.08, 0.12, 0.09, 0.11, 0.07]
+                    + [-0.10, -0.08, -0.12, -0.09, -0.11, -0.07]) * 2
         base_result = _make_base_result(sharpe=2.0, monthly_returns=volatile)
         dsl = _make_stable_dsl()
         with patch(

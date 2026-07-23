@@ -118,7 +118,7 @@ describe("B6/M3 — start/continue the internal stream (not stop it) on toState=
     // The B6 discipline (no `(async () => {...})()` wrapper) carries forward —
     // only the STREAM ACTION inverted from stopStream to startStream.
     const block = src.slice(m3Idx, m3Idx + 4500);
-    expect(block).toContain("startStream(activeSessId, symbols)");
+    expect(block).toContain("await startStream(activeSessId, symbols)");
   });
 
   it("no fire-and-forget IIFE wraps the startStream call", () => {
@@ -128,16 +128,13 @@ describe("B6/M3 — start/continue the internal stream (not stop it) on toState=
     expect(block).not.toContain("(async () => {");
   });
 
-  it("the startStream attempt happens before the strategyPromotions.labels() call (in the same transition block)", () => {
-    // Both are inside the toState===PAPER post-transition block; startStream's
-    // try/catch (success or swallowed failure) must resolve before the
-    // strategyPromotions counter fires — same ordering B6 established for stopStream.
-    const block = src.slice(m3Idx, m3Idx + 10500);
+  it("the awaited startStream attempt happens before the authority audit", () => {
+    const block = src.slice(m3Idx, m3Idx + 12500);
     const startLocalIdx = block.indexOf("startStream(activeSessId, symbols)");
-    const promLocalIdx = block.indexOf("strategyPromotions.labels(");
+    const authorityLocalIdx = block.indexOf("paper.engine_authority_declared");
     expect(startLocalIdx).toBeGreaterThan(-1);
-    expect(promLocalIdx).toBeGreaterThan(-1);
-    expect(startLocalIdx).toBeLessThan(promLocalIdx);
+    expect(authorityLocalIdx).toBeGreaterThan(-1);
+    expect(startLocalIdx).toBeLessThan(authorityLocalIdx);
   });
 
   it("writes paper.start_stream_failed_on_transition audit if startStream throws but does not block transition", () => {
@@ -174,7 +171,7 @@ describe("B6/M3 — start/continue the internal stream (not stop it) on toState=
     // engine would keep writing fills for a TradersPost-authoritative strategy.
     expect(src).toContain('if (fromState === "PAPER" && isBrokerAuthoritativeState(toState)) {');
     const siblingIdx = src.indexOf('if (fromState === "PAPER" && isBrokerAuthoritativeState(toState)) {');
-    const siblingBlock = src.slice(siblingIdx, siblingIdx + 2000);
+    const siblingBlock = src.slice(siblingIdx, siblingIdx + 5000);
     expect(siblingBlock).toContain("await stopStream(leavingSessId)");
   });
 });

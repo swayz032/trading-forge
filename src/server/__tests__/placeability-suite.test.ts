@@ -9,7 +9,10 @@
  * Coverage / Placeability / Compilability are measured SEPARATELY here (operator Layer 2). The
  * histograms tell Layer 3 exactly what to fix and in what order.
  */
-import { describe, it, expect, beforeAll } from "vitest";
+import { describe, it, expect, beforeAll, vi } from "vitest";
+vi.hoisted(() => {
+  process.env.DATABASE_URL ||= "postgresql://x:x@localhost:5432/x";
+});
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { scorePlaceability, type PlaceabilityFailureReason } from "../lib/placeability-score.js";
@@ -24,6 +27,9 @@ const VIDS = [
   "UBvfsImdI2U", "2LnFWQ10-0E", "z3Qn3fBoe2I", "iU8ww5MC2FQ", "SY2jXlW9bt4", "D1Ipi8Cfl8o",
   "W7nlnHTUZQU", "ktkqq7QsN9Q",
 ];
+const HAS_BENCHMARK_CACHE = VIDS.every((vid) =>
+  existsSync(join(CACHE_DIR, `${vid}.result.json`)) && existsSync(join(CACHE_DIR, `${vid}.transcript.txt`)),
+);
 
 // deriveEntryIndicator lives in the DB-coupled graduator — load it dynamically after setting a
 // dummy DATABASE_URL so this pure-data test can run without a real DB.
@@ -45,7 +51,7 @@ function loadCache(vid: string): Record<string, unknown> | null {
   }
 }
 
-describe("PLACEABILITY regression suite — Coverage vs Placeability vs Compilability", () => {
+describe.skipIf(!HAS_BENCHMARK_CACHE)("PLACEABILITY regression suite — Coverage vs Placeability vs Compilability", () => {
   it("scores all benchmark caches + prints failure-reason histogram", () => {
     const rows: string[] = [];
     const failureHist: Record<string, number> = {};

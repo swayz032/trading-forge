@@ -1,6 +1,6 @@
 # Wave 25 Pass 7 — Exit Engine A/B Report
 
-**Run date:** 2026-07-19 00:02 UTC
+**Run date:** 2026-07-23 09:33 UTC
 **Window:** 2025-01-01 → 2025-01-07
 **Strategies tested:** 1
 **Non-regression gate enforcement:** ADVISORY (logged, not blocking)

@@ -1,4 +1,5 @@
 import { defineConfig } from "vitest/config";
+import { NO_DATABASE_TEST_EXCLUDES } from "./vitest.db-policy";
 
 // Wave 24 Pass 2 Item 23: switched from threads pool to forks pool.
 // tinypool's threads mode hits VirtualAlloc failures on Windows 16 GB RAM
@@ -10,6 +11,7 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/**/*.test.ts"],
+    exclude: process.env.DATABASE_URL ? [] : NO_DATABASE_TEST_EXCLUDES,
     pool: "forks", // threads → forks: eliminates VirtualAlloc OOM on Windows
     poolOptions: {
       forks: {

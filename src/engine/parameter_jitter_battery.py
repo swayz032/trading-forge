@@ -58,7 +58,7 @@ from __future__ import annotations
 import copy
 import math
 import random
-from typing import Any, Optional
+from typing import Any
 
 # ─── Default thresholds per QuantForgeAnalytics 2026-05-16 spec ───────────────
 DEFAULT_SDR_THRESHOLD = 0.85
@@ -179,7 +179,7 @@ def _get_nested(dsl: dict, dotpath: str) -> Any:
 
 # ─── Backtest runner wrapper ──────────────────────────────────────────────────
 
-def _run_backtest_for_dsl(dsl: dict) -> Optional[float]:
+def _run_backtest_for_dsl(dsl: dict) -> float | None:
     """Run a single backtest for the given DSL and return its Sharpe ratio.
 
     Returns None if the backtest fails or produces an invalid result.
@@ -416,7 +416,9 @@ def compute_rws(
         if len(equity_vals) >= 2:
             # Approximate monthly returns: chunk into 21-bar "months" (trading days)
             bars_per_month = 21
-            n_months = len(equity_vals) // bars_per_month
+            # Each return needs both a start and an end observation. With N
+            # observations, the final valid end index is N-1.
+            n_months = (len(equity_vals) - 1) // bars_per_month
             for i in range(n_months):
                 start_eq = equity_vals[i * bars_per_month]
                 end_eq = equity_vals[(i + 1) * bars_per_month]
@@ -488,7 +490,7 @@ def _sharpe_from_monthly_returns(returns: list[float]) -> float:
 def run_b15_battery(
     strategy_dsl: dict,
     base_backtest_result: dict,
-    params: Optional[dict] = None,
+    params: dict | None = None,
 ) -> dict:
     """Run the full B15 Parameter Robustness Battery.
 
@@ -626,8 +628,8 @@ def run_b15_ablation(
     strategy_dsl: dict,
     base_backtest_result: dict,
     factor_name: str,
-    ablated_backtest_result: Optional[dict] = None,
-    params: Optional[dict] = None,
+    ablated_backtest_result: dict | None = None,
+    params: dict | None = None,
 ) -> dict:
     """Factor-level ablation on top of the B15 battery.
 

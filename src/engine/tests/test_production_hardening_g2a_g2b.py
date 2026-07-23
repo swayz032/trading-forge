@@ -14,14 +14,10 @@ G2b (classifier exception → classifier_error):
 
 from __future__ import annotations
 
-import sys
 from datetime import datetime, timedelta
 from typing import Any
-from unittest.mock import patch, MagicMock
 
 import polars as pl
-import pytest
-
 
 # ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -171,6 +167,7 @@ class TestG2bClassifierErrorSourceContract:
     def test_exception_handler_uses_classifier_error_in_source(self):
         """Source text must contain the G2b fix: _rc_classification = 'classifier_error'."""
         import inspect
+
         import src.engine.walk_forward as wf_module
         source = inspect.getsource(wf_module.run_walk_forward)
         assert '_rc_classification = "classifier_error"' in source, (
@@ -181,6 +178,7 @@ class TestG2bClassifierErrorSourceContract:
     def test_exception_handler_does_not_use_indeterminate_as_fallback(self):
         """The exception branch must NOT map to 'indeterminate' (original defect)."""
         import inspect
+
         import src.engine.walk_forward as wf_module
         source = inspect.getsource(wf_module.run_walk_forward)
         # Find the exception handler block specifically. It must not assign indeterminate
@@ -188,8 +186,8 @@ class TestG2bClassifierErrorSourceContract:
         # and verify the old pattern is gone from that region.
         exc_block_start = source.find("classifier CRASH must NOT")
         assert exc_block_start != -1, "G2b comment marker not found in exception block"
-        exc_block = source[exc_block_start:exc_block_start + 600]
-        assert '"indeterminate"' not in exc_block, (
+        exc_block = source[exc_block_start:source.find("param_stability =", exc_block_start)]
+        assert '_rc_classification = "indeterminate"' not in exc_block, (
             "G2b regression: exception handler block still assigns 'indeterminate'. "
             "The block must assign 'classifier_error' instead."
         )
@@ -197,10 +195,11 @@ class TestG2bClassifierErrorSourceContract:
     def test_exception_handler_sets_confidence_to_none(self):
         """Source must set _rc_confidence = None (not 0.5) in the exception branch."""
         import inspect
+
         import src.engine.walk_forward as wf_module
         source = inspect.getsource(wf_module.run_walk_forward)
         exc_block_start = source.find("classifier CRASH must NOT")
-        exc_block = source[exc_block_start:exc_block_start + 600]
+        exc_block = source[exc_block_start:source.find("param_stability =", exc_block_start)]
         assert "_rc_confidence = None" in exc_block, (
             "G2b: exception handler must set _rc_confidence = None. "
             "Old code set it to 0.5 which created a pseudo-confidence for a crashed classifier."
@@ -251,6 +250,7 @@ class TestG2bGenuineIndeterminate:
         Verify via source: the success path must use _drift_classification.classification.
         """
         import inspect
+
         import src.engine.walk_forward as wf_module
         source = inspect.getsource(wf_module.run_walk_forward)
         # The success path must copy the classification field directly
@@ -262,6 +262,7 @@ class TestG2bGenuineIndeterminate:
     def test_successful_classify_confidence_preserved_in_source(self):
         """Confidence must also be copied verbatim from the classifier result."""
         import inspect
+
         import src.engine.walk_forward as wf_module
         source = inspect.getsource(wf_module.run_walk_forward)
         assert "_rc_confidence = _drift_classification.confidence" in source, (
