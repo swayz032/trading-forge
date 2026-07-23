@@ -539,6 +539,7 @@ async function withRetry(
   name: string,
   fn: () => Promise<void>,
   maxRetries = 3,
+  rethrowAfterExhaustion = false,
 ): Promise<void> {
   // Check if job is disabled
   const health = getJobHealth(name);
@@ -615,6 +616,9 @@ async function withRetry(
       ),
       { job: name, attempts: attempt, maxRetries },
     );
+  }
+  if (rethrowAfterExhaustion) {
+    throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
   }
   } finally {
     cronJobsConcurrent.dec();
@@ -6292,7 +6296,7 @@ except Exception as e:
       logger.info({ job: "daily-reconciliation" }, "running pipeline-gate-exempt daily reconciliation (4:15 PM ET confirmed)");
       const t0 = Date.now();
       try {
-        await withRetry("daily-reconciliation", SCHEDULER_JOBS["daily-reconciliation"].run, 1);
+        await withRetry("daily-reconciliation", SCHEDULER_JOBS["daily-reconciliation"].run, 1, true);
         markJobRun("daily-reconciliation");
         emitJobComplete("daily-reconciliation", Date.now() - t0);
       } catch (err) {
@@ -6338,7 +6342,7 @@ except Exception as e:
       logger.info({ job: "weekly-drift-detection" }, "running pipeline-gate-exempt weekly drift detection (6:00 PM ET Sunday confirmed)");
       const t0 = Date.now();
       try {
-        await withRetry("weekly-drift-detection", SCHEDULER_JOBS["weekly-drift-detection"].run, 1);
+        await withRetry("weekly-drift-detection", SCHEDULER_JOBS["weekly-drift-detection"].run, 1, true);
         markJobRun("weekly-drift-detection");
         emitJobComplete("weekly-drift-detection", Date.now() - t0);
       } catch (err) {

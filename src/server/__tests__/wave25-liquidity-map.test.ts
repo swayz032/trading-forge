@@ -27,6 +27,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fileURLToPath } from "node:url";
 
 // ─── Module mocks (must be before imports that pull db/schema) ────────────────
 
@@ -667,10 +668,7 @@ describe("Cron — liquidity-map-refresh registration (static check)", () => {
     //
     // This is the same pattern used in wave25-drift-cron-gate-exempt.test.ts.
     const fs = await import("fs");
-    const path = await import("path");
-    const schedulerPath = path.resolve(
-      "C:/Users/tonio/Projects/trading-forge/trading-forge/src/server/scheduler.ts",
-    );
+    const schedulerPath = fileURLToPath(new URL("../scheduler.ts", import.meta.url));
     const src = fs.readFileSync(schedulerPath, "utf-8");
 
     // Job must be registered

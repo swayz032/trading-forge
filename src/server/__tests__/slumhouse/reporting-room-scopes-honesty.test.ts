@@ -126,6 +126,16 @@ describe("immersive Quantum-RL empty state — honest dashes, no fabrication", (
     expect(host.innerHTML).not.toMatch(/[+-]\d+\.\d+/); // no fabricated Sharpe/delta
   });
 
+  it("ships the full premium telemetry arena while labeling its geometry as decorative", () => {
+    const host = { innerHTML: "" };
+    rrRlEmpty(host, false);
+    expect(host.innerHTML).toContain('class="premium-scene"');
+    expect(host.innerHTML).toContain('class="premium-svg"');
+    expect(host.innerHTML).toContain("QUANTUM RL CHALLENGER");
+    expect(host.innerHTML).toMatch(/decorative system (architecture|map)/i);
+    expect(host.innerHTML).toMatch(/not simulated performance|no line, node or orbit is a performance reading/i);
+  });
+
   it("degraded (feed unreadable) is distinct and blames the read, not the bot", () => {
     const empty = { innerHTML: "" };
     rrRlEmpty(empty, false);
@@ -187,6 +197,14 @@ describe("immersive Paper Floor — disconnected renders distinctly from genuine
     expect(quiet).toContain("Floor is dark");
     expect(disconnected).not.toContain("Floor is dark");
     expect(disconnected).toMatch(/interrupted|dropped|reconnect/i);
+  });
+
+  it("quiet ships a premium operations-floor visual that is explicitly non-simulated", () => {
+    expect(quiet).toContain('class="premium-scene"');
+    expect(quiet).toContain('class="premium-svg"');
+    expect(quiet).toContain("PAPER EXECUTION FLOOR");
+    expect(quiet).toMatch(/nothing here is simulated/i);
+    expect(disconnected).not.toContain("PAPER EXECUTION FLOOR");
   });
 
   it("★ disconnected blames the connection, says nothing is lost, and invents no reading", () => {

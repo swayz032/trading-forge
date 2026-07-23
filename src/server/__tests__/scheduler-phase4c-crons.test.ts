@@ -110,11 +110,14 @@ vi.mock("../services/settlement-reconciliation-service.js", () => ({
 vi.mock("../services/opening-auction-service.js", () => ({ runAuctionImbalancePull: vi.fn() }));
 
 // Phase 4B stubs — these files don't exist yet (Phase 4B in parallel)
+const mockRunDailyReconciliation = vi.fn().mockResolvedValue(undefined);
+const mockRunWeeklyDriftDetection = vi.fn().mockResolvedValue(undefined);
+
 vi.mock("../production/reconciliation-service.js", () => ({
-  runDailyReconciliation: vi.fn().mockResolvedValue(undefined),
+  runDailyReconciliation: mockRunDailyReconciliation,
 }));
 vi.mock("../production/drift-detector.js", () => ({
-  runWeeklyDriftDetection: vi.fn().mockResolvedValue(undefined),
+  runWeeklyDriftDetection: mockRunWeeklyDriftDetection,
 }));
 
 // ─── Tests ────────────────────────────────────────────────────────────────────
@@ -126,6 +129,8 @@ describe("Phase 4C cron registrations in scheduler", () => {
     vi.clearAllMocks();
     cronScheduleCalls.length = 0;
     mockIsPipelineActive.mockResolvedValue(false); // pipeline PAUSED for bypass tests
+    mockRunDailyReconciliation.mockResolvedValue(undefined);
+    mockRunWeeklyDriftDetection.mockResolvedValue(undefined);
 
     // Re-import scheduler and call initScheduler to register crons
     vi.resetModules();
@@ -187,17 +192,16 @@ describe("Phase 4C cron registrations in scheduler", () => {
   });
 
   it("4. cron callback wraps daily-reconciliation errors in try/catch (notifyCritical path is reachable)", async () => {
-    // This test verifies the error-handling branch is structurally present in the cron callback
-    // by inspecting that the catch block is reachable. We do this by calling the cron with the
-    // WRONG ET hour so it returns early, and verifying notifyCritical was NOT called on early-exit
-    // (showing the guard is before the try/catch block).
+    // Inject a persistent failure so both the initial call and configured retry
+    // exhaust, then prove the outer cron handler emits its critical alert.
     const reconCron = cronScheduleCalls.find((c) => c.expr === "15 20,21 * * 1-5");
     expect(reconCron).toBeDefined();
+    mockRunDailyReconciliation.mockRejectedValue(new Error("reconciliation test failure"));
 
-    // Fire with wrong ET hour (no-op path — returns without calling job)
+    // Fire at the guarded 4 PM ET hour so the job executes.
     const origLocale = Date.prototype.toLocaleString;
     Date.prototype.toLocaleString = function (locale?: string | string[], opts?: Intl.DateTimeFormatOptions) {
-      if (opts?.hour === "numeric" && opts?.timeZone === "America/New_York") return "9"; // wrong hour
+      if (opts?.hour === "numeric" && opts?.timeZone === "America/New_York") return "16";
       return origLocale.call(this, locale as string, opts);
     };
 
@@ -207,30 +211,31 @@ describe("Phase 4C cron registrations in scheduler", () => {
       Date.prototype.toLocaleString = origLocale;
     }
 
-    // Guard works — no notifyCritical on wrong-hour fire
-    expect(mockNotifyCritical).not.toHaveBeenCalled();
-
-    // Confirm that the cron body structure routes errors through notifyCritical:
-    // the actual error path is tested in the scheduler integration; the cron source
-    // confirms the try/catch+notifyCritical pattern by inspection.
-    const cronSrc = reconCron!.cb.toString();
-    expect(cronSrc).toContain("notifyCritical");
-    expect(cronSrc).toContain("reconciliation-cron-failed");
+    // The real error path runs through withRetry before surfacing the critical alert.
+    expect(mockRunDailyReconciliation).toHaveBeenCalled();
+    expect(mockNotifyCritical).toHaveBeenCalledWith(
+      "reconciliation-cron-failed",
+      expect.stringContaining("reconciliation test failure"),
+      expect.objectContaining({
+        error: "reconciliation test failure",
+        job: "daily-reconciliation",
+      }),
+    );
   });
 
   it("5. cron callback wraps weekly-drift-detection errors in try/catch (notifyCritical path is reachable)", async () => {
-    // weekly-drift-2sigma-check shares this "0 22,23 * * 0" expression and is registered first, so a
-    // bare .find() on the expression captures the WRONG (2sigma) cron — which has no notifyCritical/
-    // drift-cron-failed. Disambiguate on the job-lock name to get weekly-drift-detection specifically.
+    // weekly-drift-2sigma-check shares this expression and is registered first;
+    // weekly-drift-detection is the later registration.
     const driftCron = cronScheduleCalls
       .filter((c) => c.expr === "0 22,23 * * 0")
-      .find((c) => c.cb.toString().includes("weekly-drift-detection"));
+      .at(-1);
     expect(driftCron).toBeDefined();
+    mockRunWeeklyDriftDetection.mockRejectedValue(new Error("drift test failure"));
 
-    // Fire with wrong ET hour
+    // Fire at the guarded 6 PM ET hour so the job executes.
     const origLocale = Date.prototype.toLocaleString;
     Date.prototype.toLocaleString = function (locale?: string | string[], opts?: Intl.DateTimeFormatOptions) {
-      if (opts?.hour === "numeric" && opts?.timeZone === "America/New_York") return "9"; // wrong hour
+      if (opts?.hour === "numeric" && opts?.timeZone === "America/New_York") return "18";
       return origLocale.call(this, locale as string, opts);
     };
 
@@ -240,11 +245,15 @@ describe("Phase 4C cron registrations in scheduler", () => {
       Date.prototype.toLocaleString = origLocale;
     }
 
-    expect(mockNotifyCritical).not.toHaveBeenCalled();
-
-    const cronSrc = driftCron!.cb.toString();
-    expect(cronSrc).toContain("notifyCritical");
-    expect(cronSrc).toContain("drift-cron-failed");
+    expect(mockRunWeeklyDriftDetection).toHaveBeenCalled();
+    expect(mockNotifyCritical).toHaveBeenCalledWith(
+      "drift-cron-failed",
+      expect.stringContaining("drift test failure"),
+      expect.objectContaining({
+        error: "drift test failure",
+        job: "weekly-drift-detection",
+      }),
+    );
   });
 
   it("6. reconciliation cron expression covers both EDT (UTC-4, hour 20) and EST (UTC-5, hour 21) at 4:15 PM ET", () => {

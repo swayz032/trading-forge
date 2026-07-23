@@ -295,7 +295,7 @@
     .rr-immersive { position: fixed; inset: 62px 0 0 0; z-index: 3; display: none; overflow-y: auto; -webkit-overflow-scrolling: touch;
       background: #000; border-top: 1px solid rgba(163,255,18,0.14); box-shadow: inset 0 1px 0 rgba(163,255,18,0.05), inset 0 40px 120px rgba(0,0,0,0.6); }
     .rr-immersive.rr-imm-on { display: block; }
-    .imm-screen { max-width: 1160px; margin: 0 auto; padding: 26px 22px 72px; display: none; }
+    .imm-screen { width: min(1540px, 100%); min-height: calc(100vh - 62px); margin: 0 auto; padding: 26px 28px 72px; display: none; }
     .imm-screen.on { display: block; }
     .imm-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 18px; border-bottom: 1px solid #161616; }
     .imm-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--lime); text-shadow: 0 0 12px rgba(163,255,18,0.35); }
@@ -360,6 +360,44 @@
     .tile .s { margin-top: 5px; font-size: 10.5px; color: var(--dim); }
     .imm-src { margin-top: 18px; font-size: 10.5px; color: var(--mute); line-height: 1.6; display: flex; gap: 8px; align-items: flex-start; border-top: 1px solid #161616; padding-top: 12px; }
     .imm-src .lock { color: var(--lime); flex-shrink: 0; }
+
+    /* Premium honest-empty scenes. These are decorative system maps, never
+       readings: real data replaces the entire scene as soon as it exists. */
+    .premium-empty { overflow: hidden; padding: 0; min-height: 560px; text-align: left;
+      background:
+        radial-gradient(circle at 22% 20%, rgba(163,255,18,.08), transparent 34%),
+        radial-gradient(circle at 82% 74%, rgba(96,165,250,.07), transparent 36%),
+        linear-gradient(150deg, rgba(8,12,8,.98), rgba(0,0,0,.98) 58%, rgba(5,8,6,.98)); }
+    .premium-empty::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: linear-gradient(105deg, transparent 20%, rgba(255,255,255,.022) 42%, transparent 62%);
+      transform: translateX(-80%); animation: premium-scan 8s ease-in-out infinite; }
+    @keyframes premium-scan { 0%,35% { transform: translateX(-80%); opacity: 0; } 50% { opacity: 1; } 72%,100% { transform: translateX(85%); opacity: 0; } }
+    .premium-scene { position: relative; min-height: 560px; display: grid; grid-template-rows: 1fr auto; }
+    .premium-canvas { position: relative; min-height: 430px; overflow: hidden; }
+    .premium-svg { display: block; width: 100%; height: 100%; min-height: 430px; }
+    .premium-caption { position: relative; z-index: 2; display: flex; justify-content: space-between; align-items: flex-end; gap: 24px;
+      padding: 22px 28px 25px; border-top: 1px solid rgba(163,255,18,.12); background: linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.86)); }
+    .premium-kicker { color: var(--lime); font: 700 10px/1 var(--num-font); letter-spacing: .22em; text-transform: uppercase; }
+    .premium-name { margin-top: 8px; color: #fff; font-size: clamp(20px,2vw,30px); font-weight: 800; letter-spacing: -.025em; }
+    .premium-copy { max-width: 620px; color: var(--dim); font-size: 12px; line-height: 1.55; }
+    .premium-state { flex: 0 0 auto; color: rgba(255,255,255,.62); font: 700 10px/1 var(--num-font); letter-spacing: .14em; text-transform: uppercase;
+      border: 1px solid rgba(163,255,18,.25); border-radius: 999px; padding: 9px 12px; background: rgba(163,255,18,.055); }
+    .premium-state::before { content: ""; display: inline-block; width: 6px; height: 6px; margin-right: 7px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); animation: rr-pulse 1.8s ease-in-out infinite; }
+    .premium-svg .ghost-line { stroke-dasharray: 8 12; animation: ghost-flow 13s linear infinite; }
+    .premium-svg .ghost-line.reverse { animation-direction: reverse; animation-duration: 17s; }
+    .premium-svg .orbit { transform-box: fill-box; transform-origin: center; animation: orbit-spin 28s linear infinite; }
+    .premium-svg .orbit.slow { animation-direction: reverse; animation-duration: 42s; }
+    .premium-svg .pulse-node { animation: node-breathe 2.8s ease-in-out infinite; }
+    .premium-svg .pulse-node.delay { animation-delay: -1.4s; }
+    @keyframes ghost-flow { to { stroke-dashoffset: -240; } }
+    @keyframes orbit-spin { to { transform: rotate(360deg); } }
+    @keyframes node-breathe { 0%,100% { opacity:.34; } 50% { opacity:1; } }
+    @media (max-width: 780px) {
+      .imm-screen { min-height: calc(100vh - 104px); padding: 20px 12px 54px; }
+      .premium-empty, .premium-scene { min-height: 500px; }
+      .premium-canvas, .premium-svg { min-height: 360px; }
+      .premium-caption { align-items: flex-start; flex-direction: column; padding: 18px; }
+    }
 
     /* paper floor: aggregate strip + live tape (fed ONLY by real SSE events) */
     .imm-agg { display: flex; gap: 14px; flex-wrap: wrap; align-items: center; }
@@ -1497,16 +1535,21 @@
       }
       function rrRlEmpty(host, degraded) {
         if (!host) return;
+        var visual = '<div class="premium-scene"><div class="premium-canvas"><svg class="premium-svg" viewBox="0 0 1200 470" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Decorative Quantum RL challenger versus baseline telemetry arena; awaiting live data">' +
+          '<defs><pattern id="rl-grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#a3ff12" stroke-opacity=".045"/></pattern><radialGradient id="rl-core"><stop offset="0" stop-color="#dfff9d"/><stop offset=".28" stop-color="#a3ff12"/><stop offset="1" stop-color="#173500" stop-opacity="0"/></radialGradient><linearGradient id="rl-link"><stop stop-color="#60a5fa" stop-opacity=".12"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#a3ff12" stop-opacity=".18"/></linearGradient><filter id="rl-glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+          '<rect width="1200" height="470" fill="url(#rl-grid)"/><ellipse cx="600" cy="232" rx="520" ry="185" fill="none" stroke="#fff" stroke-opacity=".035"/>' +
+          '<g opacity=".62"><path class="ghost-line" d="M130 235 C280 82 410 88 596 232 S925 374 1070 235" fill="none" stroke="url(#rl-link)" stroke-width="2"/><path class="ghost-line reverse" d="M130 235 C300 390 430 360 596 232 S900 78 1070 235" fill="none" stroke="url(#rl-link)"/></g>' +
+          '<g transform="translate(330 232)"><circle r="128" fill="#081019" fill-opacity=".34" stroke="#60a5fa" stroke-opacity=".15"/><g class="orbit slow"><ellipse rx="164" ry="70" fill="none" stroke="#60a5fa" stroke-opacity=".18" stroke-dasharray="5 14"/><circle cx="-148" cy="-28" r="5" fill="#60a5fa" class="pulse-node"/></g><circle r="78" fill="none" stroke="#60a5fa" stroke-opacity=".22"/><path d="M-58 25L-31-8L-6 6L22-38L54-12" fill="none" stroke="#60a5fa" stroke-opacity=".5" stroke-width="3"/><circle r="6" fill="#60a5fa" filter="url(#rl-glow)"/><text y="174" text-anchor="middle" fill="#8aa1b8" font-size="11" font-family="monospace" letter-spacing="4">BASELINE</text></g>' +
+          '<g transform="translate(870 232)"><circle r="128" fill="#0b1204" fill-opacity=".42" stroke="#a3ff12" stroke-opacity=".2"/><g class="orbit"><ellipse rx="164" ry="70" fill="none" stroke="#a3ff12" stroke-opacity=".28" stroke-dasharray="7 12"/><circle cx="149" cy="-27" r="6" fill="#a3ff12" class="pulse-node delay" filter="url(#rl-glow)"/></g><circle r="78" fill="none" stroke="#a3ff12" stroke-opacity=".28"/><path d="M-58 30L-35 8L-9 19L17-27L57-48" fill="none" stroke="#a3ff12" stroke-opacity=".72" stroke-width="3"/><circle r="8" fill="#a3ff12" filter="url(#rl-glow)"/><text y="174" text-anchor="middle" fill="#b7d58b" font-size="11" font-family="monospace" letter-spacing="4">QUANTUM RL CHALLENGER</text></g>' +
+          '<g transform="translate(600 232)"><circle r="52" fill="url(#rl-core)" opacity=".18"/><path d="M0-32L28-16V16L0 32L-28 16V-16Z" fill="#050805" stroke="#d9ff98" stroke-opacity=".42"/><text text-anchor="middle" y="5" fill="#f3ffe2" font-size="12" font-family="monospace" font-weight="700" letter-spacing="2">VS</text></g>' +
+          '<g fill="#a3ff12" opacity=".7"><circle cx="94" cy="90" r="2"/><circle cx="1110" cy="116" r="2"/><circle cx="1040" cy="385" r="2"/><circle cx="173" cy="382" r="2"/></g></svg></div>' +
+          '<div class="premium-caption"><div><div class="premium-kicker">Quantum decision arena</div><div class="premium-name">Shadow intelligence, standing by</div><div class="premium-copy">Baseline and challenger telemetry will take over this arena when the first RL session lands. The scene is decorative system architecture — no line, node or orbit is a performance reading.</div></div><div class="premium-state">Telemetry — waiting</div></div></div>';
         host.innerHTML =
           '<div class="imm-head"><div><div class="imm-eyebrow">Challenger vs Baseline · immersive</div><div class="imm-title">Is the RL worth trusting yet?</div></div>' +
             '<div class="imm-head-right"><span class="pillstat ' + (degraded ? 'bad' : 'warn') + '"><span class="d"></span> ' + (degraded ? 'Feed unavailable' : 'No sessions yet') + '</span><span class="pillstat dim">RL not routing</span></div></div>' +
-          '<div class="imm-panel empty-panel">' +
-            '<div class="ks dormant" style="margin:6px auto 4px;"><div class="kstrack"><div class="ksknob"></div></div></div>' +
-            '<div class="empty-eyebrow">' + (degraded ? 'Could not read the A/B desk' : 'Awaiting first session') + '</div>' +
-            '<h2 class="empty-title">' + (degraded ? 'A/B data is not readable right now' : 'No A/B data yet') + '</h2>' +
-            '<p class="empty-body">' + (degraded ? 'The A/B desk did not answer cleanly. Nothing has been lost — this is a read problem, not a trading problem, and the screen shows dashes rather than a made-up reading.' : 'The RL challenger starts logging the moment you deploy. Until then there is nothing to compare against the baseline — and this screen will not invent a reading.') + '</p>' +
-            '<div class="tiles">' + rrTile('Sharpe &Delta;', '—', 'goes live on deploy', true) + rrTile('Cumulative P&amp;L &Delta;', '—', 'goes live on deploy', true) + rrTile('Rolling-20 Sharpe', '—', 'no sessions recorded', true) + rrTile('Kill switch', '—', 'arms when RL goes live', true) + '</div>' +
-          '</div>' + rrRlSrc();
+          '<div class="imm-panel premium-empty">' + visual + '</div>' +
+          '<div class="tiles">' + rrTile('Sharpe &Delta;', '—', 'goes live on deploy', true) + rrTile('Cumulative P&amp;L &Delta;', '—', 'goes live on deploy', true) + rrTile('Rolling-20 Sharpe', '—', 'no sessions recorded', true) + rrTile('Kill switch', '—', 'arms when RL goes live', true) + '</div>' +
+          '<p class="empty-note">' + (degraded ? 'The A/B desk is not readable right now. Nothing has been lost — this is a read problem, not a trading problem.' : 'No A/B data yet. The visual above is a labeled system map, not simulated performance.') + '</p>' + rrRlSrc();
       }
       function rrRenderRL() {
         var host = document.getElementById('imm-rl');
@@ -1566,9 +1609,21 @@
             '<p class="empty-body">The live connection to the paper floor was interrupted and is retrying. This is a connection problem, not a quiet floor — we are deliberately NOT calling it &ldquo;nothing is happening&rdquo;, because we do not know. Nothing has been lost; the tape resumes the moment the stream reconnects.</p>' +
             '<p class="empty-note">Reconnecting to <code>/api/sse/events</code>. No reading is invented while the stream is down.</p></div>';
         }
-        return '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Floor is dark</div><h2 class="empty-title">No paper activity yet</h2>' +
-          '<p class="empty-body">The paper engine has not emitted anything since this screen opened. The floor stays dark rather than drawing a fill that never happened — the moment the engine trades, its events stream in below.</p>' +
-          '<p class="empty-note">Live from <code>/api/sse/events</code>. Every row is a real engine event; nothing here is simulated.</p></div>';
+        return '<div class="imm-panel premium-empty"><div class="premium-scene"><div class="premium-canvas"><svg class="premium-svg" viewBox="0 0 1200 470" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Decorative paper execution operations floor; awaiting live engine events">' +
+          '<defs><pattern id="pf-grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#a3ff12" stroke-opacity=".04"/></pattern><linearGradient id="pf-rail"><stop stop-color="#60a5fa" stop-opacity=".18"/><stop offset=".55" stop-color="#a3ff12" stop-opacity=".85"/><stop offset="1" stop-color="#a3ff12" stop-opacity=".08"/></linearGradient><radialGradient id="pf-halo"><stop stop-color="#a3ff12" stop-opacity=".24"/><stop offset="1" stop-color="#a3ff12" stop-opacity="0"/></radialGradient><filter id="pf-glow"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
+          '<rect width="1200" height="470" fill="url(#pf-grid)"/><ellipse cx="620" cy="420" rx="570" ry="190" fill="url(#pf-halo)" opacity=".2"/>' +
+          '<g fill="none" stroke="#fff" stroke-opacity=".055"><path d="M70 388H1130"/><path d="M115 335H1085"/><path d="M170 282H1030"/></g>' +
+          '<g transform="translate(92 90)"><rect width="238" height="250" rx="18" fill="#071018" fill-opacity=".58" stroke="#60a5fa" stroke-opacity=".2"/><text x="24" y="38" fill="#8aa1b8" font-family="monospace" font-size="10" letter-spacing="3">SIGNAL INTAKE</text><path d="M24 76H210M24 112H166M24 148H194M24 184H145" stroke="#60a5fa" stroke-opacity=".18" stroke-width="8" stroke-linecap="round"/><circle cx="208" cy="218" r="6" fill="#60a5fa" class="pulse-node" filter="url(#pf-glow)"/><text x="24" y="224" fill="#60768b" font-family="monospace" font-size="9" letter-spacing="2">STANDBY</text></g>' +
+          '<path class="ghost-line" d="M330 214H472" fill="none" stroke="url(#pf-rail)" stroke-width="3"/><g transform="translate(472 143)"><path d="M70 0L140 40V122L70 162L0 122V40Z" fill="#091005" stroke="#a3ff12" stroke-opacity=".3"/><circle cx="70" cy="81" r="35" fill="none" stroke="#a3ff12" stroke-opacity=".18"/><path d="M53 82L66 95L91 63" fill="none" stroke="#a3ff12" stroke-opacity=".68" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><text x="70" y="190" text-anchor="middle" fill="#9cb773" font-family="monospace" font-size="10" letter-spacing="3">RISK GATE</text></g>' +
+          '<path class="ghost-line reverse" d="M612 224H742" fill="none" stroke="url(#pf-rail)" stroke-width="3"/>' +
+          '<g transform="translate(742 80)"><rect width="366" height="272" rx="18" fill="#091006" fill-opacity=".62" stroke="#a3ff12" stroke-opacity=".2"/><text x="24" y="38" fill="#b7d58b" font-family="monospace" font-size="10" letter-spacing="3">PAPER EXECUTION FLOOR</text>' +
+          '<g transform="translate(24 66)"><rect width="145" height="74" rx="11" fill="#a3ff12" fill-opacity=".035" stroke="#a3ff12" stroke-opacity=".15"/><circle cx="22" cy="23" r="5" fill="#a3ff12" opacity=".45"/><text x="37" y="27" fill="#8eaa67" font-family="monospace" font-size="9" letter-spacing="2">ENTRY BAY</text><path d="M18 51H126" stroke="#a3ff12" stroke-opacity=".11" stroke-width="6" stroke-linecap="round"/></g>' +
+          '<g transform="translate(193 66)"><rect width="145" height="74" rx="11" fill="#a3ff12" fill-opacity=".035" stroke="#a3ff12" stroke-opacity=".15"/><circle cx="22" cy="23" r="5" fill="#a3ff12" opacity=".45"/><text x="37" y="27" fill="#8eaa67" font-family="monospace" font-size="9" letter-spacing="2">RISK BAY</text><path d="M18 51H126" stroke="#a3ff12" stroke-opacity=".11" stroke-width="6" stroke-linecap="round"/></g>' +
+          '<g transform="translate(24 156)"><rect width="145" height="74" rx="11" fill="#a3ff12" fill-opacity=".035" stroke="#a3ff12" stroke-opacity=".15"/><circle cx="22" cy="23" r="5" fill="#a3ff12" opacity=".45"/><text x="37" y="27" fill="#8eaa67" font-family="monospace" font-size="9" letter-spacing="2">STOP BAY</text><path d="M18 51H126" stroke="#a3ff12" stroke-opacity=".11" stroke-width="6" stroke-linecap="round"/></g>' +
+          '<g transform="translate(193 156)"><rect width="145" height="74" rx="11" fill="#a3ff12" fill-opacity=".035" stroke="#a3ff12" stroke-opacity=".15"/><circle cx="22" cy="23" r="5" fill="#a3ff12" class="pulse-node delay"/><text x="37" y="27" fill="#b7d58b" font-family="monospace" font-size="9" letter-spacing="2">EVENT TAPE</text><path d="M18 51H126" stroke="#a3ff12" stroke-opacity=".18" stroke-width="6" stroke-linecap="round"/></g></g>' +
+          '<path class="ghost-line" d="M88 390 C270 350 410 430 590 382 S916 348 1120 392" fill="none" stroke="#a3ff12" stroke-opacity=".19" stroke-width="2"/><g fill="#a3ff12" opacity=".7"><circle cx="89" cy="390" r="3"/><circle cx="590" cy="382" r="3"/><circle cx="1120" cy="392" r="3"/></g></svg></div>' +
+          '<div class="premium-caption"><div><div class="premium-kicker">Paper operations deck</div><div class="premium-name">The execution floor is armed for observation</div><div class="premium-copy"><span class="empty-eyebrow">Floor is dark</span> No paper activity yet. Real signals, risk decisions, fills and stop events will illuminate these bays as they stream in; nothing here is simulated.</div></div><div class="premium-state">Event stream — waiting</div></div></div></div>' +
+          '<p class="empty-note">Live from <code>/api/sse/events</code>. The architecture scene is decorative; every future tape row will be a real engine event.</p>';
       }
       function rrPaperPaint() {
         var host = document.getElementById('imm-paper');

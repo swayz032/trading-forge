@@ -19,7 +19,7 @@ jobs:
     env:
       NODE_ENV: test
       TF_RUNTIME_STAGE: preprod
-      DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_ci
+      DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_ci_${{ github.run_id }}
       API_KEY: ci-placeholder-api-key
       N8N_BASE_URL: http://localhost:5678
       N8N_API_KEY: ci-placeholder-n8n-key
@@ -36,8 +36,10 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          cache: pip
-          cache-dependency-path: ci/requirements-fast.txt
+          # Do not enable setup-python's global pip cache on this persistent
+          # runner. It previously tried to archive 9+ GB of unrelated wheels
+          # during post-job cleanup; the bounded fast requirements install in
+          # under a minute without that failure-prone disk amplification.
 
       - name: Verify capped runner toolchain
         shell: bash
@@ -62,6 +64,29 @@ jobs:
           . .venv/bin/activate
           python -m pip install --disable-pip-version-check -q -r ci/requirements-fast.txt
           echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+
+      - name: Provision isolated PostgreSQL test database
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -d postgres -v ON_ERROR_STOP=1 <<'SQL'
+          DO $do$
+          BEGIN
+            IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'forge') THEN
+              CREATE ROLE forge LOGIN PASSWORD 'forge_ci';
+            ELSE
+              ALTER ROLE forge WITH LOGIN PASSWORD 'forge_ci';
+            END IF;
+          END
+          $do$;
+          SQL
+          ci_database="trading_forge_ci_${GITHUB_RUN_ID}"
+          [[ "$ci_database" =~ ^trading_forge_ci_[0-9]+$ ]]
+          dropdb --if-exists --force "$ci_database"
+          createdb --owner=forge "$ci_database"
+
+      - name: Apply database migrations
+        run: npm run db:migrate
 
       - name: TypeScript typecheck
         run: node node_modules/typescript/bin/tsc --noEmit
@@ -156,3 +181,13 @@ jobs:
           test "${{ steps.vitest_compare.outcome }}" = "success"
           test "${{ steps.pytest_compare.outcome }}" = "success"
           echo "FAST_LANE_GREEN"
+
+      - name: Remove isolated PostgreSQL test database
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${GITHUB_RUN_ID:-}"
+          ci_database="trading_forge_ci_${GITHUB_RUN_ID}"
+          [[ "$ci_database" =~ ^trading_forge_ci_[0-9]+$ ]]
+          dropdb --if-exists --force "$ci_database"

@@ -14252,6 +14252,21 @@ Also restored Anam.ai persona during this session:
 
 **Carry-forward:** None.
 
+### 2026-07-23 — Reporting Room premium empty-state hardening
+
+**Work completed:**
+- Expanded the Quantum RL and Paper Floor surfaces from compact empty cards into full-width immersive scenes while preserving the existing read-only/live-data replacement behavior.
+- Added a responsive animated SVG telemetry arena for Quantum RL and an execution-operations deck for Paper Floor. Both scenes are explicitly labeled as decorative architecture and contain no simulated metrics, fills, or performance readings.
+- Added regression locks requiring both premium scenes and their non-simulated labeling so later UI edits cannot silently collapse them back to compact placeholders or present decorative geometry as evidence.
+
+**Verification:**
+- Reporting Room honesty/auth tests: 15/15 passed; `git diff --check` passed.
+- Public relay visual inspection at 1920x1080 passed for both screens.
+- Runtime `office.html` SHA-256 matched the tested release-worktree file exactly after deployment.
+- Screenshots: `output/playwright/reporting-room-quantum-premium.png` and `output/playwright/reporting-room-paper-premium.png`.
+
+**Carry-forward:** None.
+
 ---
 
 ## Session Log — kill-switch H6 fix (2026-06-23)
@@ -16148,3 +16163,25 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - `npm audit --audit-level=low`: 0 vulnerabilities.
 
 **GitHub status:** Live remote `main` CI run 29889691802 remains red on the old malformed lockfile commit. This hardening branch has no remote PR/run and was not pushed without operator authorization; local GitHub-equivalent commands are green.
+
+### Session Log — 2026-07-23 Reporting Room production wiring
+
+**Mission:** Finish the approved Ops Advisor Reporting Room work and make the five report surfaces visible on the production Office without disturbing extraction or prop-firm rules.
+
+**Work completed:**
+- Diagnosed the missing toggle as deployment drift: the NSSM service was serving a dirty developer checkout at `404a3396`, while the approved five-surface implementation was already merged to `origin/main` at `b6504391`.
+- Synchronized only the three reviewed Reporting Room runtime files after confirming no overlap with concurrent agent changes, then restarted `TradingForgeAPI` through the HMAC-signed self-restart endpoint. n8n remained online.
+- Fixed the remaining integration defect: `/slumhouse/api/reports` now accepts the Office admin session through `requireSlumhouseUserOrAdmin`; previously it accepted only a mapped Discord session, so an operator-only Office login could see the controls but could not load their data.
+- Added a regression test that locks the operator authorization wiring. No trading, lifecycle, extraction, execution, or prop-firm rule logic changed.
+- Replaced two coverage-transform-sensitive scheduler `Function.toString()` assertions with real failure injection. The stronger tests exposed and closed an existing alerting bug: `withRetry()` suppressed exhausted reconciliation/drift errors before their outer critical-alert handlers could run. Added a narrow opt-in rethrow for those two safety jobs only; every other scheduler job retains its existing retry behavior.
+
+**Verification:**
+- Focused Reporting Room suite: 24/24 tests passed.
+- Exact runtime blob verification passed for `office.html`, `reports-data.ts`, and `reports.ts` before the authorization fix.
+- Local authenticated probes: Night Agent, Soak Test, and Weekly A/B all returned HTTP 200 with their scope-specific shapes and no degraded flag.
+- Public Railway relay: Office HTTP 200, all five labels present, passcode auth HTTP 200, and all three report scopes HTTP 200.
+- Headed Playwright inspection confirmed the five-tab toggle and rendered both immersive Quantum RL and Paper Floor surfaces; screenshot captured at `output/playwright/reporting-room-paper-floor.png`.
+- Post-restart health: API healthy, database healthy, n8n healthy, and `TradingForgeAPI` Running.
+- Scheduler Phase 4C regression suite: 8/8 passed with both exhausted-retry critical-alert paths executed; `npx tsc --noEmit` passed.
+
+**Carry-forward:** None.

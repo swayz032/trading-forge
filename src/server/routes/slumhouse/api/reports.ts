@@ -11,7 +11,10 @@
  * Unknown scopes fall back to `night`. Everything here is READ-ONLY display.
  */
 import { Router, type Response } from "express";
-import { requireSlumhouseUser, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
+import {
+  requireSlumhouseUserOrAdmin,
+  type SlumhouseRequest,
+} from "../../../lib/slumhouse/require-session.js";
 import {
   assembleGptReports,
   assembleSoakReports,
@@ -23,7 +26,7 @@ export const reportsApiRouter = Router();
 
 reportsApiRouter.get(
   "/slumhouse/api/reports",
-  requireSlumhouseUser,
+  requireSlumhouseUserOrAdmin,
   async (req: SlumhouseRequest, res: Response) => {
     const raw = req.query.scope;
     const scope: "night" | "all" | "soak" | "weekly-ab" =

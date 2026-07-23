@@ -104,9 +104,11 @@ describe("startup-config-check — deepscan17 G-1 (boot launcher self-check)", (
 
   it(
     "warns BOOT_LAUNCHER_NOT_ACTIVE + fires notifyCritical when NODE_ENV=production and marker unset (native platform)",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
-      async () => {
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
+        async () => {
         const { checkStartupSecrets } = await import("../startup-config-check.js");
         const result = await checkStartupSecrets();
         expect(result.warnings).toContain("BOOT_LAUNCHER_NOT_ACTIVE");
@@ -116,20 +118,24 @@ describe("startup-config-check — deepscan17 G-1 (boot launcher self-check)", (
         const body = notifyCriticalMock.mock.calls[0]?.[1] as string;
         expect(body).toContain("install-tower-launcher.ps1");
         expect(body).toContain("For family members");
-      },
+        },
+      ),
     ),
   );
 
   it(
     "does NOT warn when NODE_ENV=production and marker IS set",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: "1" },
-      async () => {
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: "1" },
+        async () => {
         const { checkStartupSecrets } = await import("../startup-config-check.js");
         const result = await checkStartupSecrets();
         expect(result.warnings).not.toContain("BOOT_LAUNCHER_NOT_ACTIVE");
         expect(notifyCriticalMock).not.toHaveBeenCalled();
-      },
+        },
+      ),
     ),
   );
 
@@ -164,13 +170,16 @@ describe("startup-config-check — deepscan17 G-1 (boot launcher self-check)", (
 
   it(
     "isBootLauncherCheckApplicable / isBootLauncherActive pure predicates match env",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: "1" },
-      async () => {
-        const mod = await import("../startup-config-check.js");
-        expect(mod.isBootLauncherCheckApplicable()).toBe(true);
-        expect(mod.isBootLauncherActive()).toBe(true);
-      },
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: "1" },
+        async () => {
+          const mod = await import("../startup-config-check.js");
+          expect(mod.isBootLauncherCheckApplicable()).toBe(true);
+          expect(mod.isBootLauncherActive()).toBe(true);
+        },
+      ),
     ),
   );
 });
@@ -187,13 +196,15 @@ describe("startup-config-check — deepscan17 G-1 daily reminder (runBootConfigR
 
   it(
     "re-fires notifyCritical + notifyWarning on each tick while both gaps persist",
-    withEnv(
-      {
-        NODE_ENV: "production",
-        TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined,
-        LIVE_ORDER_HMAC_SECRET: undefined,
-      },
-      async () => {
+    withPlatform(
+      "win32",
+      withEnv(
+        {
+          NODE_ENV: "production",
+          TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined,
+          LIVE_ORDER_HMAC_SECRET: undefined,
+        },
+        async () => {
         const { runBootConfigReminderCheck } = await import("../startup-config-check.js");
         await runBootConfigReminderCheck();
         expect(notifyCriticalMock).toHaveBeenCalledTimes(1);
@@ -203,7 +214,8 @@ describe("startup-config-check — deepscan17 G-1 daily reminder (runBootConfigR
         await runBootConfigReminderCheck();
         expect(notifyCriticalMock).toHaveBeenCalledTimes(2);
         expect(notifyWarningMock).toHaveBeenCalledTimes(2);
-      },
+        },
+      ),
     ),
   );
 
@@ -226,15 +238,18 @@ describe("startup-config-check — deepscan17 G-1 daily reminder (runBootConfigR
 
   it(
     "fail-soft: a thrown notify never propagates out of the reminder tick",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
-      async () => {
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
+        async () => {
         notifyCriticalMock.mockImplementationOnce(() => {
           throw new Error("discord webhook down");
         });
         const { runBootConfigReminderCheck } = await import("../startup-config-check.js");
         await expect(runBootConfigReminderCheck()).resolves.toBeUndefined();
-      },
+        },
+      ),
     ),
   );
 });
@@ -258,9 +273,11 @@ describe("startup-config-check — deepscan17 G-1 reminder scheduler (start/stop
 
   it(
     "re-fires the boot-launcher alert 24h after start() while the gap persists, and stop() halts further ticks",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
-      async () => {
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
+        async () => {
         const { startBootConfigReminderMonitor, stopBootConfigReminderMonitor } = await import(
           "../startup-config-check.js"
         );
@@ -277,22 +294,26 @@ describe("startup-config-check — deepscan17 G-1 reminder scheduler (start/stop
         stopBootConfigReminderMonitor();
         await vi.advanceTimersByTimeAsync(ONE_DAY_MS);
         expect(notifyCriticalMock).toHaveBeenCalledTimes(2); // no further ticks after stop()
-      },
+        },
+      ),
     ),
   );
 
   it(
     "start() is idempotent — calling it twice does not double-schedule",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
-      async () => {
-        const { startBootConfigReminderMonitor } = await import("../startup-config-check.js");
-        startBootConfigReminderMonitor();
-        startBootConfigReminderMonitor();
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
+        async () => {
+          const { startBootConfigReminderMonitor } = await import("../startup-config-check.js");
+          startBootConfigReminderMonitor();
+          startBootConfigReminderMonitor();
 
-        await vi.advanceTimersByTimeAsync(ONE_DAY_MS);
-        expect(notifyCriticalMock).toHaveBeenCalledTimes(1); // not 2
-      },
+          await vi.advanceTimersByTimeAsync(ONE_DAY_MS);
+          expect(notifyCriticalMock).toHaveBeenCalledTimes(1); // not 2
+        },
+      ),
     ),
   );
 });
