@@ -15639,6 +15639,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Added deterministic net-paper-P&L ranking, displayed-cent tie handling, aggregate fight-card totals, and fail-soft degraded responses.
 - Rebuilt Paper Floor as a premium Fight Night board with one card per strategy, leader/tie treatment, W-L record, win rate, realized/unrealized P&L, return, positions, Massive feed state, and the existing SSE event tape as the round-by-round feed.
 - Replaced the zero-session operations diagram with a premium animated 3D video-game Fight Night arena: lit ring, two decorative contender corners, crowd/spotlight motion, and explicit Massive waiting state. It carries no simulated names, scores, or performance readings and is replaced automatically by real fighter cards.
+- Upgraded that arena with a project-local photorealistic 3D boxing render (`public/slumhouse/images/paper-fight-night-arena-v2.png`), cinematic live-status overlays, and the vector arena retained underneath as a graceful image-load fallback. A regression test now fails if the production image asset is missing.
 - Added backend, authentication, honesty, escaping, feed-state, ordering, and tie-regression tests. Prop-firm rules and extraction work were untouched.
 
 **Verification:**

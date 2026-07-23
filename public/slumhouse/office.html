@@ -393,6 +393,15 @@
     @keyframes orbit-spin { to { transform: rotate(360deg); } }
     @keyframes node-breathe { 0%,100% { opacity:.34; } 50% { opacity:1; } }
     .fight-night-empty .premium-canvas { perspective: 1100px; background: radial-gradient(ellipse at 50% 68%,rgba(163,255,18,.08),transparent 42%); }
+    .fight-night-empty .arena-photo-stage { min-height: 520px; isolation: isolate; }
+    .fight-night-empty .arena-photo { position: absolute; z-index: 2; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 56%; filter: saturate(.9) contrast(1.07) brightness(.76); transform: scale(1.015); animation: arena-photo-drift 12s ease-in-out infinite; }
+    .fight-night-empty .arena-photo-scrim { position: absolute; z-index: 3; inset: 0; pointer-events: none; background: linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.04) 48%,rgba(0,0,0,.7)),radial-gradient(circle at 50% 54%,transparent 20%,rgba(0,0,0,.28) 78%); box-shadow: inset 0 0 90px rgba(0,0,0,.76); }
+    .fight-night-empty .arena-photo-hud { position: absolute; z-index: 4; top: 26px; left: 50%; transform: translateX(-50%); width: min(620px,calc(100% - 48px)); text-align: center; text-shadow: 0 3px 24px #000; }
+    .fight-night-empty .arena-photo-hud .feed { color: #caff75; font: 800 10px/1 var(--num-font); letter-spacing: .28em; text-transform: uppercase; }
+    .fight-night-empty .arena-photo-hud .title { margin-top: 9px; color: #fff; font-size: clamp(24px,3vw,42px); font-weight: 950; font-style: italic; letter-spacing: -.035em; text-transform: uppercase; }
+    .fight-night-empty .arena-photo-hud .sub { display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 7px 11px; border: 1px solid rgba(163,255,18,.28); border-radius: 999px; background: rgba(0,0,0,.48); color: rgba(255,255,255,.72); font: 750 9px/1 var(--num-font); letter-spacing: .15em; text-transform: uppercase; backdrop-filter: blur(10px); }
+    .fight-night-empty .arena-photo-hud .sub i { width: 6px; height: 6px; border-radius: 50%; background: var(--lime); box-shadow: 0 0 12px var(--lime); animation: rr-pulse 1.8s ease-in-out infinite; }
+    .fight-night-empty .arena-photo-stage > .premium-svg { position: relative; z-index: 1; opacity: .35; }
     .fight-night-empty .arena-camera { transform-origin: 50% 62%; animation: arena-breathe 7s ease-in-out infinite; }
     .fight-night-empty .arena-light { transform-box: fill-box; transform-origin: top center; animation: arena-sweep 7.5s ease-in-out infinite; }
     .fight-night-empty .arena-light.right { animation-delay: -3.75s; }
@@ -406,6 +415,7 @@
     @keyframes crowd-breathe { 0%,100% { opacity:.22; } 50% { opacity:.48; } }
     @keyframes versus-breathe { 0%,100% { opacity:.72; transform: scale(.94); } 50% { opacity:1; transform: scale(1.06); } }
     @keyframes corner-flicker { 0%,100% { opacity:.58; } 48% { opacity:.9; } 52% { opacity:.68; } 58% { opacity:.94; } }
+    @keyframes arena-photo-drift { 0%,100% { transform: scale(1.015) translate3d(0,0,0); } 50% { transform: scale(1.035) translate3d(0,-3px,0); } }
     @media (max-width: 780px) {
       .imm-screen { min-height: calc(100vh - 104px); padding: 20px 12px 54px; }
       .premium-empty, .premium-scene { min-height: 500px; }
@@ -1688,7 +1698,7 @@
       // connected but nothing has traded; 'disconnected' = the live stream dropped, which
       // is NOT the same as quiet and must never be shown as such (OR-042 F-2). Neither
       // invents a reading.
-      function rrPaperFightNightEmptyHTML() {
+      function rrPaperFightNightVectorFallbackHTML() {
         return '<div class="imm-panel premium-empty fight-night-empty"><div class="premium-scene"><div class="premium-canvas"><svg class="premium-svg" viewBox="0 0 1200 540" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Decorative 3D Paper Fight Night arena awaiting real Massive-backed strategy sessions">' +
           '<defs><linearGradient id="fn-bg" x2="0" y2="1"><stop stop-color="#030504"/><stop offset=".62" stop-color="#070908"/><stop offset="1" stop-color="#000"/></linearGradient><radialGradient id="fn-roof"><stop stop-color="#d9ff9d" stop-opacity=".16"/><stop offset="1" stop-color="#a3ff12" stop-opacity="0"/></radialGradient><linearGradient id="fn-blue"><stop stop-color="#78b7ff"/><stop offset="1" stop-color="#132d48"/></linearGradient><linearGradient id="fn-red"><stop stop-color="#ff765e"/><stop offset="1" stop-color="#46130e"/></linearGradient><linearGradient id="fn-mat" x2="0" y2="1"><stop stop-color="#182017"/><stop offset="1" stop-color="#060806"/></linearGradient><linearGradient id="fn-rope"><stop stop-color="#f4ffe2"/><stop offset=".5" stop-color="#a3ff12"/><stop offset="1" stop-color="#46572c"/></linearGradient><filter id="fn-glow"><feGaussianBlur stdDeviation="7" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter><filter id="fn-soft"><feGaussianBlur stdDeviation="18"/></filter></defs>' +
           '<rect width="1200" height="540" fill="url(#fn-bg)"/><ellipse cx="600" cy="56" rx="420" ry="170" fill="url(#fn-roof)"/>' +
@@ -1705,6 +1715,11 @@
           '<g fill="#829079" font-family="monospace" font-size="9" letter-spacing="2"><text x="73" y="492">NO SIMULATED SCORES</text><text x="1127" y="492" text-anchor="end">REAL SESSIONS ONLY</text></g></svg></div>' +
           '<div class="premium-caption"><div><div class="premium-kicker">Paper Fight Night · pre-bell arena</div><div class="premium-name">The ring is ready. Real strategies take the corners.</div><div class="premium-copy"><span class="empty-eyebrow">Fighters loading</span> The first real Massive-backed paper sessions will replace these decorative corner silhouettes with ranked strategy cards, W–L records, positions and net paper P&amp;L. No preview score is fabricated.</div></div><div class="premium-state">Massive feed — waiting</div></div></div></div>' +
           '<p class="empty-note">This is a decorative video-game arena, not a performance reading. Real sessions automatically replace it through <code>/slumhouse/api/reports?scope=paper-floor</code>.</p>';
+      }
+      function rrPaperFightNightEmptyHTML() {
+        return rrPaperFightNightVectorFallbackHTML().replace('<div class="premium-canvas">',
+          '<div class="premium-canvas arena-photo-stage"><img class="arena-photo" src="/slumhouse/images/paper-fight-night-arena-v2.png" alt="" aria-hidden="true">' +
+          '<div class="arena-photo-scrim"></div><div class="arena-photo-hud"><div class="feed">Paper Fight Night · Massive</div><div class="title">Fighters loading</div><div class="sub"><i></i>Waiting for real paper sessions</div></div>');
       }
       function rrPaperEmptyHTML(kind) {
         if (kind === 'disconnected') {

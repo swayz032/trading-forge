@@ -156,6 +156,7 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
       "function rrRlEmpty(",
       "function rrPaperPaint(",
       "function rrPaperFightHTML(",
+      "function rrPaperFightNightVectorFallbackHTML(",
       "function rrPaperFightNightEmptyHTML(",
       "function rrPaperEmptyHTML(",
       "function rrOnPaperEvent(",
@@ -175,7 +176,10 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
   });
 
   it("the paper floor stays honest-dark until a REAL sse event streams (no simulated tape)", () => {
-    const empty = stripComments(sliceBalanced(officeSrc, "function rrPaperFightNightEmptyHTML("));
+    const empty = stripComments(
+      sliceBalanced(officeSrc, "function rrPaperFightNightVectorFallbackHTML(") +
+      sliceBalanced(officeSrc, "function rrPaperFightNightEmptyHTML("),
+    );
     expect(empty).toContain("FIGHTERS LOADING");
     expect(empty).toContain("NO SIMULATED SCORES");
     const paint = stripComments(sliceBalanced(officeSrc, "function rrPaperPaint("));
@@ -270,9 +274,10 @@ describe("Paper Fight Night — real all-strategy comparison renderer", () => {
 // ── Residual 2 (OR-042 F-2): a dropped SSE stream must render DISTINCTLY from a
 //    genuinely-quiet floor. rrPaperEmptyHTML is pure, so both states are locked here. ──
 const rrPaperEmptyHTML = (() => {
+  const fallback = sliceBalanced(officeSrc, "function rrPaperFightNightVectorFallbackHTML(");
   const arena = sliceBalanced(officeSrc, "function rrPaperFightNightEmptyHTML(");
   const fn = sliceBalanced(officeSrc, "function rrPaperEmptyHTML(");
-  return vm.runInNewContext(`${arena}\n${fn}\n;rrPaperEmptyHTML`, {}) as (kind: string) => string;
+  return vm.runInNewContext(`${fallback}\n${arena}\n${fn}\n;rrPaperEmptyHTML`, {}) as (kind: string) => string;
 })();
 
 describe("immersive Paper Floor — disconnected renders distinctly from genuinely quiet", () => {
@@ -292,6 +297,8 @@ describe("immersive Paper Floor — disconnected renders distinctly from genuine
     expect(quiet).toContain("PAPER FIGHT NIGHT");
     expect(quiet).toContain("CORNER 01");
     expect(quiet).toContain("CORNER 02");
+    expect(quiet).toContain("/slumhouse/images/paper-fight-night-arena-v2.png");
+    expect(fs.existsSync(path.resolve(PUB_DIR, "images/paper-fight-night-arena-v2.png"))).toBe(true);
     expect(quiet).toMatch(/No preview score is fabricated|not a performance reading/i);
     expect(disconnected).not.toContain("PAPER FIGHT NIGHT");
   });
