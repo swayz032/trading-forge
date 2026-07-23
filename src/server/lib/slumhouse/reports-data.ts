@@ -391,3 +391,240 @@ export async function assembleWeeklyAbReports(): Promise<WeeklyAbPayload> {
     return { scope: "weekly-ab", ab: null, degraded: true, error: "ab_comparison_failed" };
   }
 }
+
+export interface PaperFloorPosition {
+  id: string;
+  symbol: string;
+  side: string;
+  contracts: number;
+  entryPrice: number;
+  currentPrice: number | null;
+  unrealizedPnl: number;
+  entryTime: string;
+}
+
+export interface PaperFloorFighter {
+  rank: number;
+  sessionId: string;
+  strategyId: string;
+  strategyName: string;
+  symbols: string[];
+  timeframe: string | null;
+  status: string;
+  startedAt: string;
+  lastActivityAt: string | null;
+  startingCapital: number;
+  currentEquity: number;
+  netPnl: number;
+  returnPct: number;
+  realizedPnl: number;
+  unrealizedPnl: number;
+  trades: number;
+  wins: number;
+  losses: number;
+  winRate: number | null;
+  openPositionCount: number;
+  positions: PaperFloorPosition[];
+  feed: {
+    provider: "Massive";
+    connected: boolean;
+    state: "connected" | "disconnected" | "paused" | "not_started";
+    symbols: string[];
+  };
+}
+
+export interface PaperFloorPayload {
+  scope: "paper-floor";
+  fighters: PaperFloorFighter[];
+  summary: {
+    activeStrategies: number;
+    pausedStrategies: number;
+    openPositions: number;
+    combinedNetPnl: number;
+    leaderStrategyIds: string[];
+    tiedForLead: boolean;
+    scoreBasis: "net_paper_pnl";
+  };
+  degraded?: boolean;
+  error?: string;
+}
+
+type PaperStreamSnapshot = ReadonlyMap<string, { symbols: string[]; connected: boolean }>;
+
+function numeric(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export async function assemblePaperFloorReports(
+  streams: PaperStreamSnapshot = new Map(),
+): Promise<PaperFloorPayload> {
+  let queryFailed = false;
+  const rows = (await db.execute(sql`
+    WITH trade_stats AS (
+      SELECT
+        session_id,
+        COUNT(*)::int AS trades,
+        COUNT(*) FILTER (WHERE pnl::numeric > 0)::int AS wins,
+        COUNT(*) FILTER (WHERE pnl::numeric < 0)::int AS losses,
+        COALESCE(SUM(pnl::numeric), 0) AS realized_pnl,
+        MAX(exit_time) AS last_trade_at
+      FROM paper_trades
+      GROUP BY session_id
+    ),
+    open_position_stats AS (
+      SELECT
+        session_id,
+        COUNT(*)::int AS open_position_count,
+        COALESCE(SUM(unrealized_pnl::numeric), 0) AS unrealized_pnl,
+        MAX(entry_time) AS last_position_at,
+        jsonb_agg(
+          jsonb_build_object(
+            'id', id::text,
+            'symbol', symbol,
+            'side', side,
+            'contracts', contracts,
+            'entryPrice', entry_price,
+            'currentPrice', current_price,
+            'unrealizedPnl', unrealized_pnl,
+            'entryTime', entry_time
+          ) ORDER BY entry_time DESC
+        ) AS positions
+      FROM paper_positions
+      WHERE closed_at IS NULL
+      GROUP BY session_id
+    )
+    SELECT
+      ps.id::text AS session_id,
+      ps.strategy_id::text AS strategy_id,
+      COALESCE(s.name, 'Strategy') AS strategy_name,
+      COALESCE(s.symbols, ARRAY[s.symbol]) AS symbols,
+      s.timeframe AS timeframe,
+      ps.status AS status,
+      ps.started_at AS started_at,
+      ps.last_signal_time AS last_signal_at,
+      ps.starting_capital AS starting_capital,
+      ps.current_equity AS current_equity,
+      COALESCE(ts.trades, 0) AS trades,
+      COALESCE(ts.wins, 0) AS wins,
+      COALESCE(ts.losses, 0) AS losses,
+      COALESCE(ts.realized_pnl, 0) AS realized_pnl,
+      ts.last_trade_at AS last_trade_at,
+      COALESCE(ops.open_position_count, 0) AS open_position_count,
+      COALESCE(ops.unrealized_pnl, 0) AS unrealized_pnl,
+      ops.last_position_at AS last_position_at,
+      COALESCE(ops.positions, '[]'::jsonb) AS positions
+    FROM paper_sessions ps
+    LEFT JOIN strategies s ON s.id = ps.strategy_id
+    LEFT JOIN trade_stats ts ON ts.session_id = ps.id
+    LEFT JOIN open_position_stats ops ON ops.session_id = ps.id
+    WHERE ps.status IN ('active', 'paused')
+      AND ps.strategy_id IS NOT NULL
+    ORDER BY ps.started_at ASC
+  `).catch((err) => {
+    queryFailed = true;
+    logger.warn({ err }, "slumhouse paper-floor assemble failed — returning degraded payload");
+    return [] as unknown[];
+  })) as Array<Record<string, unknown>>;
+
+  const fighters = rows.map((row) => {
+    const sessionId = String(row.session_id);
+    const stream = streams.get(sessionId);
+    const status = String(row.status ?? "active");
+    const startingCapital = numeric(row.starting_capital);
+    const currentEquity = numeric(row.current_equity);
+    const netPnl = currentEquity - startingCapital;
+    const trades = numeric(row.trades);
+    const wins = numeric(row.wins);
+    const symbols = Array.isArray(row.symbols) ? row.symbols.map(String) : [];
+    const positionsRaw = Array.isArray(row.positions) ? row.positions : [];
+    const activity = [row.last_signal_at, row.last_trade_at, row.last_position_at]
+      .filter((value): value is string | Date => value instanceof Date || typeof value === "string")
+      .map((value) => new Date(value).getTime())
+      .filter(Number.isFinite);
+    const feedState = status === "paused"
+      ? "paused"
+      : !stream
+        ? "not_started"
+        : stream.connected
+          ? "connected"
+          : "disconnected";
+
+    return {
+      rank: 0,
+      sessionId,
+      strategyId: String(row.strategy_id),
+      strategyName: String(row.strategy_name ?? "Strategy"),
+      symbols,
+      timeframe: row.timeframe == null ? null : String(row.timeframe),
+      status,
+      startedAt: new Date(row.started_at as string | Date).toISOString(),
+      lastActivityAt: activity.length > 0 ? new Date(Math.max(...activity)).toISOString() : null,
+      startingCapital,
+      currentEquity,
+      netPnl,
+      returnPct: startingCapital > 0 ? (netPnl / startingCapital) * 100 : 0,
+      realizedPnl: numeric(row.realized_pnl),
+      unrealizedPnl: numeric(row.unrealized_pnl),
+      trades,
+      wins,
+      losses: numeric(row.losses),
+      winRate: trades > 0 ? wins / trades : null,
+      openPositionCount: numeric(row.open_position_count),
+      positions: positionsRaw.map((position) => {
+        const p = position as Record<string, unknown>;
+        return {
+          id: String(p.id),
+          symbol: String(p.symbol ?? ""),
+          side: String(p.side ?? ""),
+          contracts: numeric(p.contracts),
+          entryPrice: numeric(p.entryPrice),
+          currentPrice: p.currentPrice == null ? null : numeric(p.currentPrice),
+          unrealizedPnl: numeric(p.unrealizedPnl),
+          entryTime: new Date(p.entryTime as string | Date).toISOString(),
+        };
+      }),
+      feed: {
+        provider: "Massive" as const,
+        connected: feedState === "connected",
+        state: feedState,
+        symbols: stream?.symbols?.length ? [...stream.symbols] : symbols,
+      },
+    } satisfies PaperFloorFighter;
+  });
+
+  fighters.sort((a, b) =>
+    Math.round(b.netPnl * 100) - Math.round(a.netPnl * 100) ||
+    a.strategyName.localeCompare(b.strategyName),
+  );
+  let priorScore: number | null = null;
+  let priorRank = 0;
+  fighters.forEach((fighter, index) => {
+    const score = Math.round(fighter.netPnl * 100) / 100;
+    if (priorScore === null || score !== priorScore) priorRank = index + 1;
+    fighter.rank = priorRank;
+    priorScore = score;
+  });
+
+  const leadScore = fighters.length > 0 ? Math.round(fighters[0].netPnl * 100) / 100 : null;
+  const leaderStrategyIds = leadScore == null
+    ? []
+    : fighters
+        .filter((fighter) => Math.round(fighter.netPnl * 100) / 100 === leadScore)
+        .map((fighter) => fighter.strategyId);
+
+  return {
+    scope: "paper-floor",
+    fighters,
+    summary: {
+      activeStrategies: fighters.filter((fighter) => fighter.status === "active").length,
+      pausedStrategies: fighters.filter((fighter) => fighter.status === "paused").length,
+      openPositions: fighters.reduce((total, fighter) => total + fighter.openPositionCount, 0),
+      combinedNetPnl: fighters.reduce((total, fighter) => total + fighter.netPnl, 0),
+      leaderStrategyIds,
+      tiedForLead: leaderStrategyIds.length > 1,
+      scoreBasis: "net_paper_pnl",
+    },
+    ...(queryFailed ? { degraded: true, error: "paper_floor_query_failed" } : {}),
+  };
+}

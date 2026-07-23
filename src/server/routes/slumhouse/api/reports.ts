@@ -8,6 +8,7 @@
  *   scope=night (default) / all → GptReport[] 7-slide critique   (assembleGptReports)
  *   scope=soak                  → cert-verdict rows              (assembleSoakReports)
  *   scope=weekly-ab             → Sharpe / P&L delta             (assembleWeeklyAbReports)
+ *   scope=paper-floor           → all-strategy paper fight card  (assemblePaperFloorReports)
  * Unknown scopes fall back to `night`. Everything here is READ-ONLY display.
  */
 import { Router, type Response } from "express";
@@ -17,6 +18,7 @@ import {
 } from "../../../lib/slumhouse/require-session.js";
 import {
   assembleGptReports,
+  assemblePaperFloorReports,
   assembleSoakReports,
   assembleWeeklyAbReports,
 } from "../../../lib/slumhouse/reports-data.js";
@@ -29,8 +31,16 @@ reportsApiRouter.get(
   requireSlumhouseUserOrAdmin,
   async (req: SlumhouseRequest, res: Response) => {
     const raw = req.query.scope;
-    const scope: "night" | "all" | "soak" | "weekly-ab" =
-      raw === "all" ? "all" : raw === "soak" ? "soak" : raw === "weekly-ab" ? "weekly-ab" : "night";
+    const scope: "night" | "all" | "soak" | "weekly-ab" | "paper-floor" =
+      raw === "all"
+        ? "all"
+        : raw === "soak"
+          ? "soak"
+          : raw === "weekly-ab"
+            ? "weekly-ab"
+            : raw === "paper-floor"
+              ? "paper-floor"
+              : "night";
     try {
       if (scope === "soak") {
         res.json(await assembleSoakReports());
@@ -38,6 +48,11 @@ reportsApiRouter.get(
       }
       if (scope === "weekly-ab") {
         res.json(await assembleWeeklyAbReports());
+        return;
+      }
+      if (scope === "paper-floor") {
+        const { getActiveStreams } = await import("../../../services/paper-trading-stream.js");
+        res.json(await assemblePaperFloorReports(getActiveStreams()));
         return;
       }
       res.json(await assembleGptReports({ scope }));
@@ -63,6 +78,24 @@ reportsApiRouter.get(
       }
       if (scope === "weekly-ab") {
         res.json({ scope: "weekly-ab", ab: null, degraded: true, error: "reports_query_failed" });
+        return;
+      }
+      if (scope === "paper-floor") {
+        res.json({
+          scope: "paper-floor",
+          fighters: [],
+          summary: {
+            activeStrategies: 0,
+            pausedStrategies: 0,
+            openPositions: 0,
+            combinedNetPnl: 0,
+            leaderStrategyIds: [],
+            tiedForLead: false,
+            scoreBasis: "net_paper_pnl",
+          },
+          degraded: true,
+          error: "reports_query_failed",
+        });
         return;
       }
       res.json({

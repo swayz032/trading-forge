@@ -15630,6 +15630,28 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-23 Paper Floor Fight Night hardening
+
+**Mission:** Make the existing Paper Floor show every active or paused paper strategy at once as a read-only performance contest, using the existing Massive-backed paper stream and persisted paper results.
+
+**Work completed:**
+- Added an authenticated `paper-floor` Reporting Room scope that aggregates active and paused paper sessions, trade results, equity, open positions, and the live Massive stream state without changing any trading or execution path.
+- Added deterministic net-paper-P&L ranking, displayed-cent tie handling, aggregate fight-card totals, and fail-soft degraded responses.
+- Rebuilt Paper Floor as a premium Fight Night board with one card per strategy, leader/tie treatment, W-L record, win rate, realized/unrealized P&L, return, positions, Massive feed state, and the existing SSE event tape as the round-by-round feed.
+- Added backend, authentication, honesty, escaping, feed-state, ordering, and tie-regression tests. Prop-firm rules and extraction work were untouched.
+
+**Verification:**
+- Focused Reporting Room suite: 28/28 passed.
+- Full serial Vitest: 13,214 passed, 42 skipped, 0 failed; 4,111/4,111 suites passed.
+- Full pytest with a worktree-local temp root: 7,597 passed, 34 skipped, 0 failed.
+- Read-only live-schema probe: `paper-floor`, `degraded=false`, 0 current active/paused fighters; honest-empty path selected.
+- `npx tsc --noEmit`, `git diff --check`, production isolation, 2026 compliance, and system-map drift: passed.
+- A parallel full Vitest invocation was stopped by the local Windows/V8 pagefile limit, not an assertion failure; the repository's one-worker CI command completed cleanly.
+
+**Known-facts updates:** Massive already owns the shared live futures WebSocket connections for paper sessions. Paper Fight Night is a read-only projection over those sessions and their persisted metrics; it does not create a second feed or execution path.
+
+**Carry-forward:** None.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)

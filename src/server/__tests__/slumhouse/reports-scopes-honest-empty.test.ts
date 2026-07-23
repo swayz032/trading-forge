@@ -21,7 +21,11 @@ vi.mock("../../routes/ab-comparison.js", () => ({ buildABComparisonData: vi.fn()
 
 import { db } from "../../db/index.js";
 import { buildABComparisonData } from "../../routes/ab-comparison.js";
-import { assembleSoakReports, assembleWeeklyAbReports } from "../../lib/slumhouse/reports-data.js";
+import {
+  assemblePaperFloorReports,
+  assembleSoakReports,
+  assembleWeeklyAbReports,
+} from "../../lib/slumhouse/reports-data.js";
 
 const dbExecute = db.execute as unknown as ReturnType<typeof vi.fn>;
 const abBuild = buildABComparisonData as unknown as ReturnType<typeof vi.fn>;
@@ -115,5 +119,112 @@ describe("assembleWeeklyAbReports — Sharpe/P&L delta shape, honest-empty", () 
     const out = await assembleWeeklyAbReports();
     expect(out.ab).toBeNull();
     expect(out.degraded).toBe(true);
+  });
+});
+
+describe("assemblePaperFloorReports — all-strategy fight card", () => {
+  const row = (over: Record<string, unknown> = {}) => ({
+    session_id: "session-a",
+    strategy_id: "strategy-a",
+    strategy_name: "London Sweep",
+    symbols: ["MES"],
+    timeframe: "5m",
+    status: "active",
+    started_at: new Date("2026-07-23T12:00:00Z"),
+    last_signal_at: new Date("2026-07-23T14:00:00Z"),
+    starting_capital: "50000",
+    current_equity: "51250",
+    trades: 12,
+    wins: 8,
+    losses: 4,
+    realized_pnl: "1100",
+    unrealized_pnl: "150",
+    open_position_count: 1,
+    last_trade_at: new Date("2026-07-23T13:55:00Z"),
+    last_position_at: new Date("2026-07-23T13:58:00Z"),
+    positions: [{
+      id: "position-a",
+      symbol: "MES",
+      side: "long",
+      contracts: 2,
+      entryPrice: "6350.25",
+      currentPrice: "6352.00",
+      unrealizedPnl: "150",
+      entryTime: new Date("2026-07-23T13:58:00Z"),
+    }],
+    ...over,
+  });
+
+  it("honest empty returns no fighters and is not degraded", async () => {
+    dbExecute.mockResolvedValue([]);
+    const out = await assemblePaperFloorReports(new Map());
+    expect(out.scope).toBe("paper-floor");
+    expect(out.fighters).toEqual([]);
+    expect(out.summary.activeStrategies).toBe(0);
+    expect(out.degraded).toBeUndefined();
+  });
+
+  it("ranks every strategy by actual net equity P&L and carries Massive stream state", async () => {
+    dbExecute.mockResolvedValue([
+      row(),
+      row({
+        session_id: "session-b",
+        strategy_id: "strategy-b",
+        strategy_name: "NY Reversal",
+        symbols: ["MNQ"],
+        current_equity: "49750",
+        realized_pnl: "-250",
+        unrealized_pnl: "0",
+        trades: 5,
+        wins: 2,
+        losses: 3,
+        open_position_count: 0,
+        positions: [],
+      }),
+    ]);
+    const streams = new Map([
+      ["session-a", { symbols: ["MES"], connected: true }],
+      ["session-b", { symbols: ["MNQ"], connected: false }],
+    ]);
+    const out = await assemblePaperFloorReports(streams);
+
+    expect(out.fighters.map((fighter) => fighter.strategyId)).toEqual(["strategy-a", "strategy-b"]);
+    expect(out.fighters[0]).toMatchObject({
+      rank: 1,
+      netPnl: 1250,
+      returnPct: 2.5,
+      winRate: 8 / 12,
+      openPositionCount: 1,
+      feed: { provider: "Massive", connected: true, state: "connected" },
+    });
+    expect(out.fighters[0].positions[0]).toMatchObject({ symbol: "MES", side: "long", unrealizedPnl: 150 });
+    expect(out.fighters[1]).toMatchObject({ rank: 2, netPnl: -250, feed: { state: "disconnected" } });
+    expect(out.summary).toMatchObject({
+      activeStrategies: 2,
+      openPositions: 1,
+      combinedNetPnl: 1000,
+      leaderStrategyIds: ["strategy-a"],
+      tiedForLead: false,
+      scoreBasis: "net_paper_pnl",
+    });
+  });
+
+  it("does not invent a winner when top net P&L is tied to the cent", async () => {
+    dbExecute.mockResolvedValue([
+      row(),
+      row({ session_id: "session-b", strategy_id: "strategy-b", strategy_name: "Twin", current_equity: "51250.004" }),
+    ]);
+    const out = await assemblePaperFloorReports();
+    expect(out.fighters.map((fighter) => fighter.rank)).toEqual([1, 1]);
+    expect(out.summary.tiedForLead).toBe(true);
+    expect(out.summary.leaderStrategyIds).toEqual(["strategy-a", "strategy-b"]);
+  });
+
+  it("query failure is visibly degraded rather than a quiet arena", async () => {
+    dbExecute.mockRejectedValue(new Error("paper tables unavailable"));
+    const out = await assemblePaperFloorReports();
+    expect(out.fighters).toEqual([]);
+    expect(out.degraded).toBe(true);
+    expect(out.error).toBe("paper_floor_query_failed");
   });
 });

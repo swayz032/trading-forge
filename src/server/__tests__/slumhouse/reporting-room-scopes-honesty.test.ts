@@ -155,6 +155,7 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
       "function rrRenderRL(",
       "function rrRlEmpty(",
       "function rrPaperPaint(",
+      "function rrPaperFightHTML(",
       "function rrPaperEmptyHTML(",
       "function rrOnPaperEvent(",
     ]) {
@@ -178,6 +179,90 @@ describe("reporting-room upgrade source — no fabricated data geometry", () => 
     expect(empty).toContain("nothing here is simulated");
     const paint = stripComments(sliceBalanced(officeSrc, "function rrPaperPaint("));
     expect(paint).not.toMatch(RANDOM_RE);
+  });
+});
+
+const rrPaperFightHTML = (() => {
+  const esc = sliceBalanced(officeSrc, "function rrEsc(");
+  const money = sliceBalanced(officeSrc, "function rrMoney(");
+  const fight = sliceBalanced(officeSrc, "function rrPaperFightHTML(");
+  return vm.runInNewContext(`${esc}\n${money}\n${fight}\n;rrPaperFightHTML`, {}) as (
+    data: Record<string, unknown>,
+  ) => string;
+})();
+
+describe("Paper Fight Night — real all-strategy comparison renderer", () => {
+  const fighter = (over: Record<string, unknown> = {}) => ({
+    rank: 1,
+    sessionId: "session-a",
+    strategyId: "strategy-a",
+    strategyName: "London Sweep",
+    symbols: ["MES"],
+    timeframe: "5m",
+    status: "active",
+    netPnl: 1250,
+    returnPct: 2.5,
+    realizedPnl: 1100,
+    unrealizedPnl: 150,
+    trades: 12,
+    wins: 8,
+    losses: 4,
+    winRate: 8 / 12,
+    positions: [{ symbol: "MES", side: "long", contracts: 2, unrealizedPnl: 150 }],
+    feed: { provider: "Massive", connected: true, state: "connected", symbols: ["MES"] },
+    ...over,
+  });
+
+  it("renders every strategy corner, the real scoring basis, and Massive state", () => {
+    const html = rrPaperFightHTML({
+      fighters: [
+        fighter(),
+        fighter({
+          rank: 2,
+          strategyId: "strategy-b",
+          strategyName: "NY Reversal",
+          symbols: ["MNQ"],
+          netPnl: -250,
+          returnPct: -0.5,
+          realizedPnl: -250,
+          unrealizedPnl: 0,
+          wins: 2,
+          losses: 3,
+          winRate: 0.4,
+          positions: [],
+          feed: { provider: "Massive", connected: false, state: "disconnected", symbols: ["MNQ"] },
+        }),
+      ],
+      summary: {
+        activeStrategies: 2,
+        openPositions: 1,
+        combinedNetPnl: 1000,
+        leaderStrategyIds: ["strategy-a"],
+        tiedForLead: false,
+      },
+    });
+    expect(html).toContain("London Sweep");
+    expect(html).toContain("NY Reversal");
+    expect(html).toContain("NET PAPER P&amp;L");
+    expect(html).toContain("Massive connected");
+    expect(html).toContain("Massive disconnected");
+    expect(html).toContain('class="fighter leader"');
+    expect(html).toContain("8–4");
+    expect(html).toContain("MES · LONG · 2 ctr");
+  });
+
+  it("shows an honest tie and escapes strategy names", () => {
+    const html = rrPaperFightHTML({
+      fighters: [fighter({ strategyName: "<script>bad</script>" }), fighter({ strategyId: "strategy-b", strategyName: "Twin" })],
+      summary: { activeStrategies: 2, openPositions: 0, combinedNetPnl: 2500, leaderStrategyIds: ["strategy-a", "strategy-b"], tiedForLead: true },
+    });
+    expect(html).toContain("Dead even at the bell");
+    expect(html).not.toContain("<script>");
+    expect(html).toContain("&lt;script&gt;bad&lt;/script&gt;");
+  });
+
+  it("returns no fight card when no persisted fighters exist", () => {
+    expect(rrPaperFightHTML({ fighters: [], summary: {} })).toBe("");
   });
 });
 
