@@ -16148,3 +16148,23 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - `npm audit --audit-level=low`: 0 vulnerabilities.
 
 **GitHub status:** Live remote `main` CI run 29889691802 remains red on the old malformed lockfile commit. This hardening branch has no remote PR/run and was not pushed without operator authorization; local GitHub-equivalent commands are green.
+
+### Session Log — 2026-07-23 Reporting Room production wiring
+
+**Mission:** Finish the approved Ops Advisor Reporting Room work and make the five report surfaces visible on the production Office without disturbing extraction or prop-firm rules.
+
+**Work completed:**
+- Diagnosed the missing toggle as deployment drift: the NSSM service was serving a dirty developer checkout at `404a3396`, while the approved five-surface implementation was already merged to `origin/main` at `b6504391`.
+- Synchronized only the three reviewed Reporting Room runtime files after confirming no overlap with concurrent agent changes, then restarted `TradingForgeAPI` through the HMAC-signed self-restart endpoint. n8n remained online.
+- Fixed the remaining integration defect: `/slumhouse/api/reports` now accepts the Office admin session through `requireSlumhouseUserOrAdmin`; previously it accepted only a mapped Discord session, so an operator-only Office login could see the controls but could not load their data.
+- Added a regression test that locks the operator authorization wiring. No trading, lifecycle, extraction, execution, or prop-firm rule logic changed.
+
+**Verification:**
+- Focused Reporting Room suite: 24/24 tests passed.
+- Exact runtime blob verification passed for `office.html`, `reports-data.ts`, and `reports.ts` before the authorization fix.
+- Local authenticated probes: Night Agent, Soak Test, and Weekly A/B all returned HTTP 200 with their scope-specific shapes and no degraded flag.
+- Public Railway relay: Office HTTP 200, all five labels present, passcode auth HTTP 200, and all three report scopes HTTP 200.
+- Headed Playwright inspection confirmed the five-tab toggle and rendered both immersive Quantum RL and Paper Floor surfaces; screenshot captured at `output/playwright/reporting-room-paper-floor.png`.
+- Post-restart health: API healthy, database healthy, n8n healthy, and `TradingForgeAPI` Running.
+
+**Carry-forward:** None.
