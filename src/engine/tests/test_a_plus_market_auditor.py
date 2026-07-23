@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import os
 import sys
-from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -26,20 +25,18 @@ import pytest
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "..", ".."))
 
 from src.engine.a_plus_market_auditor import (
+    EDGE_SCORE_WEIGHTS,
+    ENTANGLEMENT_STRENGTH_THRESHOLD,
     GOVERNANCE_LABELS,
+    NOISE_SCORE_THRESHOLD,
+    P_TARGET_HIT_THRESHOLD,
     AuditInput,
-    MarketEvidence,
     AuditResult,
     compute_edge_score,
     run_cross_market_entanglement,
-    run_market_audit,
     run_full_scan,
-    EDGE_SCORE_WEIGHTS,
-    P_TARGET_HIT_THRESHOLD,
-    NOISE_SCORE_THRESHOLD,
-    ENTANGLEMENT_STRENGTH_THRESHOLD,
+    run_market_audit,
 )
-
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -180,8 +177,10 @@ class TestObservationMode:
         }
         corr = _make_correlation_matrix()
         result = run_full_scan(market_inputs, corr, seed=42)
-        assert result.observation_mode is True
-        assert result.winner_market is None
+        # QCNN noise remains challenger-only until calibrated; it cannot switch
+        # the authoritative scanner into observation mode.
+        assert result.observation_mode is False
+        assert result.winner_market is not None
 
     def test_observation_mode_result_schema(self) -> None:
         market_inputs = {
@@ -462,4 +461,5 @@ class TestRunMarketAudit:
                          p_target_hit_override=0.60, noise_score_override=0.80, seed=42)
         ev = run_market_audit(inp, entanglement_strength=0.5)
         assert ev.passes_p_target_gate is False
-        assert ev.passes_noise_gate is False
+        # The uncalibrated quantum noise score is evidence-only.
+        assert ev.passes_noise_gate is True

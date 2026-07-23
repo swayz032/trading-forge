@@ -24,7 +24,7 @@ import sys
 import time
 from collections import deque
 from datetime import datetime
-from typing import Any, Optional
+from typing import Any
 
 import numpy as np
 from pydantic import BaseModel, Field
@@ -183,8 +183,8 @@ _REGIME_LABEL_TO_RL_VOCAB: dict[str, str] = {
 def _load_production_state_at(
     timestamp: datetime,
     symbol: str,
-    strategy_id: Optional[int] = None,
-) -> Optional[dict[str, Any]]:
+    strategy_id: int | None = None,
+) -> dict[str, Any] | None:
     """Load the full production state vector for a given timestamp and symbol.
 
     Reads from:
@@ -497,7 +497,7 @@ def _load_production_state_at(
     return state
 
 
-def _safe_float(val: Any) -> Optional[float]:
+def _safe_float(val: Any) -> float | None:
     """Convert value to float or None."""
     if val is None:
         return None
@@ -507,7 +507,7 @@ def _safe_float(val: Any) -> Optional[float]:
         return None
 
 
-def _safe_int(val: Any) -> Optional[int]:
+def _safe_int(val: Any) -> int | None:
     """Convert value to int or None."""
     if val is None:
         return None
@@ -559,7 +559,7 @@ def _classify_killzone(ts: datetime) -> str:
     return "none"
 
 
-def _try_compute_noise_score(state: dict[str, Any]) -> Optional[float]:
+def _try_compute_noise_score(state: dict[str, Any]) -> float | None:
     """Attempt to compute QCNN noise score from current state features.
 
     Fail-open: returns None when entropy filter module unavailable or
@@ -674,7 +674,7 @@ class VQCConfig(BaseModel):
     n_actions: int = 2    # Wave 29 Pass C: LONG/FLAT only per day-trader mandate (CLAUDE.md §4)
     learning_rate: float = 0.01
     device: str = "default.qubit"  # default.qubit | lightning.qubit | lightning.gpu | braket.aws.sv1 | braket.aws.ionq
-    cloud_config: Optional[dict] = None  # CloudBackendConfig as dict (opt-in only)
+    cloud_config: dict | None = None  # CloudBackendConfig as dict (opt-in only)
     max_cloud_evaluations: int = 100     # Cost control: switch to local after this many cloud circuit evaluations
     opt_in_cloud: bool = False           # Second gate: must be True AND QUANTUM_CLOUD_ENABLED=true to use cloud QPU
 
@@ -750,10 +750,10 @@ class TradingEnv:
         features: np.ndarray,
         seed: int = 42,
         n_actions: int = 2,
-        production_states: Optional[list[dict]] = None,
-        ci_high_values: Optional[list[float]] = None,
-        reward_alpha: Optional[float] = None,
-        reward_beta: Optional[float] = None,
+        production_states: list[dict] | None = None,
+        ci_high_values: list[float] | None = None,
+        reward_alpha: float | None = None,
+        reward_beta: float | None = None,
     ):
         """Initialize TradingEnv.
 
@@ -789,8 +789,8 @@ class TradingEnv:
         self.rng = np.random.default_rng(seed)
 
         # Production state vector (Wave 29 Pass C.1 extension)
-        self._production_states: Optional[list[dict]] = production_states
-        self._ci_high_values: Optional[list[float]] = ci_high_values
+        self._production_states: list[dict] | None = production_states
+        self._ci_high_values: list[float] | None = ci_high_values
 
         # Reward hyperparameters (env-configurable)
         self._reward_alpha = (
@@ -857,7 +857,8 @@ class TradingEnv:
         drawdown = peak - pnl_arr
         max_dd = float(np.max(drawdown))
         # Normalize by ATR-proxy (use price range as fallback)
-        normalizer = max(abs(self.prices[self.step_idx]) * 0.01, 1.0)
+        price_idx = min(self.step_idx, len(self.prices) - 1)
+        normalizer = max(abs(self.prices[price_idx]) * 0.01, 1.0)
         return min(max_dd / normalizer, 10.0)  # cap at 10 to prevent reward explosion
 
     def _get_ci_high(self) -> float:
@@ -872,8 +873,8 @@ class TradingEnv:
     def compute_shaped_reward(
         self,
         realized_r: float,
-        ci_high: Optional[float] = None,
-        drawdown_penalty: Optional[float] = None,
+        ci_high: float | None = None,
+        drawdown_penalty: float | None = None,
     ) -> tuple[float, float, float]:
         """Compute shaped reward with ci_high and drawdown penalties.
 
@@ -911,6 +912,9 @@ class TradingEnv:
 
         Signature preserved for backward-compat with training loop callers.
         """
+        if action not in (0, 1):
+            raise ValueError(f"TradingEnv action must be 0 (act) or 1 (skip), got {action}")
+
         realized_reward = 0.0
         price = self.prices[self.step_idx]
 
@@ -1103,7 +1107,7 @@ def build_vqc_policy(config: VQCConfig):
 
         # Variational layers
         param_idx = 0
-        for layer in range(config.n_layers):
+        for _layer in range(config.n_layers):
             for qubit in range(config.n_qubits):
                 qml.RY(params[param_idx], wires=qubit)
                 param_idx += 1
@@ -1194,7 +1198,7 @@ def train_quantum_agent(
         and os.environ.get("QUANTUM_CLOUD_ENABLED", "").lower() == "true"
         and config.device.startswith("braket.aws")
     )
-    _rl_cache_key: Optional[dict] = None
+    _rl_cache_key: dict | None = None
     if not _rl_is_cloud and _rl_cache is not None:
         import hashlib as _hashlib
         _prices_hash = _hashlib.sha256(env.prices.tobytes()).hexdigest()[:16]
@@ -1254,7 +1258,7 @@ def train_quantum_agent(
 
         epsilon = max(0.01, 1.0 - episode / train_config.episodes)
 
-        for step in range(train_config.max_steps_per_episode):
+        for _step in range(train_config.max_steps_per_episode):
             # Cloud evaluation budget guard — rebuild agent with local device when limit hit
             if _cloud_device_active and _cloud_evals >= _max_cloud_evals:
                 import logging as _logging
@@ -1368,7 +1372,7 @@ def compare_vs_classical_rl(
         state = env.reset()
         epsilon = max(0.01, 1.0 - episode / train_config.episodes)
 
-        for step in range(train_config.max_steps_per_episode):
+        for _step in range(train_config.max_steps_per_episode):
             action = classical.select_action(state, epsilon)
             next_state, reward, done = env.step(action)
             classical.update(state, action, reward, next_state)
@@ -1607,7 +1611,7 @@ def compute_effective_confidence(raw_confidence: float, n_trades_observed: int) 
 
 def should_use_static_router_epsilon_greedy(
     n_trades_observed: int,
-    seed: Optional[int] = None,
+    seed: int | None = None,
 ) -> bool:
     """Return True with 20% probability when n_trades_observed < 200.
 
@@ -1642,7 +1646,7 @@ def _emit_audit_row(
     entity_id: str,
     status: str,
     result: dict,
-    db_url: Optional[str] = None,
+    db_url: str | None = None,
 ) -> None:
     """Insert a row into audit_log via psycopg2. Fail-soft."""
     _url = db_url or os.environ.get("DATABASE_URL")
@@ -1795,7 +1799,7 @@ def train_regime_conditioned_policies(
     # invocation, which was swallowed by the except below and silently left
     # backtest_id=None, guaranteeing `bars` stayed empty regardless of the F-1
     # INSERT-shape bug. Keep the DB-native UUID string as-is.
-    backtest_id: Optional[str] = None
+    backtest_id: str | None = None
     if db_url:
         try:
             import psycopg2
@@ -2684,7 +2688,7 @@ if __name__ == "__main__":
     # Support both inline JSON and file path
     raw = args.input_json
     if raw.endswith(".json"):
-        with open(raw, "r") as f:
+        with open(raw) as f:
             config = json.load(f)
     else:
         config = json.loads(raw)

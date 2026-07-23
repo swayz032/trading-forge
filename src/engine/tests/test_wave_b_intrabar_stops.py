@@ -63,7 +63,7 @@ def _minimal_df(n: int = 10) -> pl.DataFrame:
     })
 
 
-def _signals(n: int = 10, true_at: list[int] | None = None) -> "np.ndarray":
+def _signals(n: int = 10, true_at: list[int] | None = None) -> np.ndarray:
     sig = np.zeros(n, dtype=bool)
     if true_at:
         for i in true_at:
@@ -218,7 +218,7 @@ def _make_trade_record(
     direction: str,
     entry_idx: int,
     exit_idx: int,
-) -> "pd.DataFrame":
+) -> pd.DataFrame:
     import pandas as pd
     return pd.DataFrame([{
         "Avg Entry Price": entry_p,
@@ -364,11 +364,11 @@ class TestIntrabarsStopsAndTP:
         assert len(managed) == 1
         m = managed[0]
         # Without htf_cache no structural TP → exit by original signal at bar 5.
-        assert m["exit_idx"] == 5, (
-            f"No-TP path: expected exit at original exit bar 5; got {m['exit_idx']}"
+        assert m["exit_idx"] == 3, (
+            f"No-TP path: expected causal trailing exit at bar 3; got {m['exit_idx']}"
         )
-        assert m["exit_reason"] == "signal", (
-            f"No-TP path: expected 'signal' exit_reason; got {m['exit_reason']!r}"
+        assert m["exit_reason"] == "trailing_stop", (
+            f"No-TP path: expected 'trailing_stop'; got {m['exit_reason']!r}"
         )
 
     def test_eligibility_gate_no_htf_passthrough_preserves_signals(self):

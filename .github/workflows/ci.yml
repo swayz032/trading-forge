@@ -11,10 +11,9 @@ on:
     branches: [main, develop, "hardening/**"]
 
 env:
-  # Node 24 matches the tower/production runtime (v24.13.0 / npm 11). CI previously
-  # pinned Node 22 (npm 10), whose semver parser rejected the npm-11-generated
-  # package-lock.json with "Invalid Version" — npm ci died on step 1 and every
-  # downstream job (needs: lint) silently skipped, so CI tested nothing. (2026-07-11)
+  # Node 24 matches the tower/production major. Lockfile structure is checked before
+  # npm ci because a Windows-generated versionless optional-dependency stub has twice
+  # made npm/arborist abort on Linux before any safety gate could run.
   NODE_VERSION: "24"
   PYTHON_VERSION: "3.12"
   TF_RUNTIME_STAGE: preprod
@@ -36,6 +35,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Package-lock structural integrity (pre-install)
+        run: node scripts/check-package-lock-integrity.mjs
       - run: npm ci
       - name: System map drift gate
         run: npm run system-map:check
@@ -112,6 +113,8 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
+      - name: Package-lock structural integrity (pre-install)
+        run: node scripts/check-package-lock-integrity.mjs
       - run: npm ci
 
       - name: Run migrations
@@ -129,7 +132,7 @@ jobs:
       - name: Run vitest → JSON report for baseline (advisory)
         continue-on-error: true
         run: |
-          npx vitest run --reporter=json --outputFile=ci/vitest-results.json || true
+          node node_modules/vitest/vitest.mjs run --pool=threads --maxWorkers=1 --minWorkers=1 --reporter=json --outputFile=ci/vitest-results.json || true
           echo "--- vitest-results.json bytes: $(wc -c < ci/vitest-results.json 2>/dev/null || echo MISSING) ---"
           head -c 120 ci/vitest-results.json 2>/dev/null || true
 
@@ -193,6 +196,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
+          node scripts/check-package-lock-integrity.mjs
           npm ci
           python -m pip install --upgrade pip
           pip install -r src/engine/requirements.txt
@@ -262,6 +266,7 @@ jobs:
 
       - name: Install Python dependencies
         run: |
+          node scripts/check-package-lock-integrity.mjs
           npm ci
           python -m pip install --upgrade pip
           pip install -r src/engine/requirements.txt
@@ -305,6 +310,8 @@ jobs:
       - name: Install Python dependencies (CI-light — parity gates import the engine)
         run: pip install -r ci/requirements-fast.txt
 
+      - name: Package-lock structural integrity (pre-install)
+        run: node scripts/check-package-lock-integrity.mjs
       - run: npm ci
       - name: System map drift gate
         run: npm run system-map:check

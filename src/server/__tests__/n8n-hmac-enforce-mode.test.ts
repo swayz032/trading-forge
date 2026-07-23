@@ -6,7 +6,8 @@
  * with N8N_WEBHOOK_SECRET set. The fix defaults to ENFORCE when a secret is configured, WARN only when
  * unset (verifyN8nHmac itself fail-closes in prod for an unset secret). This pins that contract.
  */
-import { describe, it, expect, afterEach } from "vitest";
+import { describe, it, expect, afterEach, vi } from "vitest";
+vi.hoisted(() => { process.env.DATABASE_URL ||= "postgresql://unused:unused@127.0.0.1:1/unused"; });
 import { getHmacEnforceMode } from "../routes/n8n-tracking.js";
 
 const SAVED_MODE = process.env.N8N_HMAC_ENFORCE_MODE;

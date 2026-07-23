@@ -32,7 +32,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -113,9 +112,9 @@ _VALID_ARCHETYPE_GATEWAY_MODES: frozenset[str] = frozenset({"tf_gateway", "direc
 def _build_archetype_alert_pine(
     key: str,
     display_name: str,
-    gateway_mode: Optional[str] = None,
-    account_id: Optional[str] = None,
-    live_order_token: Optional[str] = None,
+    gateway_mode: str | None = None,
+    account_id: str | None = None,
+    live_order_token: str | None = None,
 ) -> str:
     """Build a minimal alert-only Pine v5 script for a structural archetype.
 
@@ -374,7 +373,7 @@ def _build_pine_indicator_var(
     ind_type: str,
     params: dict,
     idx: int,
-    strategy: Optional[dict] = None,
+    strategy: dict | None = None,
 ) -> tuple[str, str]:
     """Build Pine variable declaration for an indicator.
 
@@ -406,7 +405,7 @@ def _build_pine_indicator_var(
     """
     # Resolve gateway_mode from strategy config (injected by pine-export-service.ts).
     # None = default/backward-compat (generic-signal payload).
-    gateway_mode: Optional[str] = None
+    gateway_mode: str | None = None
     if strategy is not None:
         gateway_mode = strategy.get("config", {}).get("gateway_mode")
 
@@ -415,8 +414,8 @@ def _build_pine_indicator_var(
     # substituted into the alertcondition message at compile time so the emitted Pine
     # contains real credentials.  When absent, literal placeholders survive for the
     # operator-manual substitution path (legacy).
-    _compile_account_id: Optional[str] = None
-    _compile_live_order_token: Optional[str] = None
+    _compile_account_id: str | None = None
+    _compile_live_order_token: str | None = None
     if strategy is not None:
         _config = strategy.get("config", {}) if isinstance(strategy.get("config"), dict) else {}
         _compile_account_id = _config.get("account_id") or None
@@ -599,7 +598,7 @@ def _build_exit_condition(strategy: dict) -> tuple[str, str]:
     return sl_line, tp_line
 
 
-def _build_exit_signal_pine(strategy: dict, indicator_vars: Optional[dict[str, str]] = None) -> tuple[str, str]:
+def _build_exit_signal_pine(strategy: dict, indicator_vars: dict[str, str] | None = None) -> tuple[str, str]:
     """Generate Pine exit_long_signal / exit_short_signal expressions from strategy config.
 
     P2-3: Reads exit_type from strategy config.
@@ -764,7 +763,7 @@ if state == 6  // RISK_LOCKOUT
 """
 
 
-def _build_prop_overlay(firm_key: Optional[str]) -> str:
+def _build_prop_overlay(firm_key: str | None) -> str:
     """Generate prop-firm risk overlay constants (limits, commission, max_contracts).
 
     FIX 1: This function now emits ONLY the static constants and declares
@@ -903,7 +902,7 @@ if barstate.isfirst
 """
 
 
-def _build_risk_intelligence_overlay(risk_intel: Optional[dict]) -> str:
+def _build_risk_intelligence_overlay(risk_intel: dict | None) -> str:
     """Generate Pine constants and table rows for quantum/MC risk intelligence.
 
     Args:
@@ -1001,8 +1000,8 @@ alertcondition(risk_lockout and not risk_lockout[1], title="Risk Lockout", messa
 
 
 def _build_session_filter(
-    session_filter: Optional[str],
-    allowed_entry_windows: Optional[list[str]] = None,
+    session_filter: str | None,
+    allowed_entry_windows: list[str] | None = None,
 ) -> str:
     """Generate Pine session time filter.
 
@@ -1114,7 +1113,7 @@ bgcolor(state == 2 ? color.new(color.green, 92) : state == 4 ? color.new(color.r
 # emitter only, see _build_archetype_alert_pine docstring).
 
 
-def _resolve_archetype_prefix(strategy: dict) -> Optional[str]:
+def _resolve_archetype_prefix(strategy: dict) -> str | None:
     """Return the archetype/uncatalogued ind_type string if this strategy's
     entry indicator is a structural archetype, else None.
 
@@ -1136,7 +1135,7 @@ def _resolve_archetype_prefix(strategy: dict) -> Optional[str]:
     return None
 
 
-def _build_archetype_alerts_json(strategy_name: str, key: str, gateway_mode: Optional[str]) -> dict:
+def _build_archetype_alerts_json(strategy_name: str, key: str, gateway_mode: str | None) -> dict:
     """Build alerts_json metadata describing an archetype recipe's single alertcondition.
 
     Mirrors the ACTUAL alertcondition() emitted by _build_archetype_alert_pine
@@ -1190,7 +1189,7 @@ def _compile_archetype_only(
     exportability: ExportabilityResult,
     strategy_name: str,
     export_type: str = "pine_indicator",
-) -> "CompilerResult":
+) -> CompilerResult:
     """compile_strategy() counterpart of the P-1 fix — see module note above.
 
     Emits the archetype recipe (already a complete Pine v5 script) VERBATIM
@@ -1237,11 +1236,11 @@ def _compile_archetype_only(
 
 def compile_strategy(
     strategy,
-    firm_key: Optional[str] = None,
-    risk_intelligence: Optional[dict] = None,
-    recipient_qty: Optional[int] = None,
-    recipient_label: Optional[str] = None,
-    hmac_secret: Optional[str] = None,
+    firm_key: str | None = None,
+    risk_intelligence: dict | None = None,
+    recipient_qty: int | None = None,
+    recipient_label: str | None = None,
+    hmac_secret: str | None = None,
 ) -> CompilerResult:
     """Compile a StrategyDSL (dict or Pydantic model) to Pine Script v5 artifacts.
 
@@ -1265,6 +1264,9 @@ def compile_strategy(
     Returns:
         CompilerResult with exportability score and Pine artifacts
     """
+    if firm_key is not None and firm_key not in FIRM_RULES:
+        raise ValueError(f"Unsupported firm_key: {firm_key}")
+
     # Normalize: accept both Pydantic models and plain dicts
     if hasattr(strategy, "model_dump"):
         strategy = strategy.model_dump()
@@ -1644,9 +1646,9 @@ class DualArtifactResult(BaseModel):
     pine_version: str = "v5"
     content_hash: str = ""
     # Both artifacts always present when exportable=True
-    indicator_artifact: Optional[PineArtifact] = None   # indicator() + alertcondition()
-    strategy_artifact: Optional[PineArtifact] = None    # strategy() + strategy.entry/exit() + webhook
-    alerts_artifact: Optional[PineArtifact] = None      # alerts_json metadata
+    indicator_artifact: PineArtifact | None = None   # indicator() + alertcondition()
+    strategy_artifact: PineArtifact | None = None    # strategy() + strategy.entry/exit() + webhook
+    alerts_artifact: PineArtifact | None = None      # alerts_json metadata
     # Routing hints for caller
     indicator_firms: list[str] = Field(default_factory=list)   # manual-approval firms
     strategy_firms: list[str] = Field(default_factory=list)    # ATS firms
@@ -1729,10 +1731,10 @@ alertcondition(risk_lockout and not risk_lockout[1], title="Risk Lockout",
 
 def _build_marker_alertcondition(
     strategy_id: str,
-    account_id: Optional[str],
-    secret_check_long: Optional[str],
-    secret_check_short: Optional[str],
-    secret_check_exit: Optional[str],
+    account_id: str | None,
+    secret_check_long: str | None,
+    secret_check_short: str | None,
+    secret_check_exit: str | None,
 ) -> str:
     """Emit the Track 8 marker alertcondition() block.
 
@@ -1815,8 +1817,8 @@ def _build_strategy_webhook_alerts(
     strategy_name: str,
     symbol: str,
     strategy_id: str,
-    hmac_input_var: Optional[str] = None,
-    gateway_mode: Optional[str] = None,
+    hmac_input_var: str | None = None,
+    gateway_mode: str | None = None,
 ) -> str:
     """Pine alertcondition() block for STRATEGY artifact.
 
@@ -1963,7 +1965,7 @@ alertcondition(time_to_close and strategy.position_size != 0, title="TP Time Sto
 """
 
 
-def _build_atr_qty_block(firm_key: Optional[str], atr_period: int) -> str:
+def _build_atr_qty_block(firm_key: str | None, atr_period: int) -> str:
     """P0-1: Build ATR-scaled position sizing block.
 
     Mirrors sizing.py: contracts = target_risk / (ATR * pointvalue).
@@ -2193,8 +2195,8 @@ def _build_shared_preamble(
     use_target: bool,
     prop_overlay: str,
     risk_intel_overlay: str,
-    firm_key: Optional[str] = None,
-    indicator_vars: Optional[dict[str, str]] = None,
+    firm_key: str | None = None,
+    indicator_vars: dict[str, str] | None = None,
 ) -> str:
     """Build the shared Pine logic block (indicators, signals, state).
 
@@ -2310,8 +2312,8 @@ def _build_strategy_artifact(
     tp_distance: str,
     use_target: bool,
     manual_approval_firm: bool = False,
-    hmac_input_var: Optional[str] = None,
-    gateway_mode: Optional[str] = None,
+    hmac_input_var: str | None = None,
+    gateway_mode: str | None = None,
 ) -> str:
     """Wrap shared logic in strategy() declaration for ATS firms.
 
@@ -2425,10 +2427,10 @@ def _compile_dual_archetype_only(
     exportability: ExportabilityResult,
     strategy_name: str,
     safe_name: str,
-    strategy_id: Optional[str],
-    account_id: Optional[str],
-    live_order_token: Optional[str],
-) -> "DualArtifactResult":
+    strategy_id: str | None,
+    account_id: str | None,
+    live_order_token: str | None,
+) -> DualArtifactResult:
     """compile_dual_artifacts() counterpart of the Deep-Scan #18b P-1 fix.
 
     See the module note above _compile_archetype_only for the two-declaration
@@ -2507,14 +2509,14 @@ def _compile_dual_archetype_only(
 
 def compile_dual_artifacts(
     strategy,
-    firm_key: Optional[str] = None,
-    risk_intelligence: Optional[dict] = None,
-    strategy_id: Optional[str] = None,
-    recipient_qty: Optional[int] = None,
-    recipient_label: Optional[str] = None,
-    hmac_secret: Optional[str] = None,
-    account_id: Optional[str] = None,
-    live_order_token: Optional[str] = None,
+    firm_key: str | None = None,
+    risk_intelligence: dict | None = None,
+    strategy_id: str | None = None,
+    recipient_qty: int | None = None,
+    recipient_label: str | None = None,
+    hmac_secret: str | None = None,
+    account_id: str | None = None,
+    live_order_token: str | None = None,
 ) -> DualArtifactResult:
     """Compile a StrategyDSL to BOTH Pine artifacts from the same logic.
 
@@ -2544,6 +2546,9 @@ def compile_dual_artifacts(
         DualArtifactResult with indicator_artifact and strategy_artifact both set
         when exportable=True.
     """
+    if firm_key is not None and firm_key not in FIRM_RULES:
+        raise ValueError(f"Unsupported firm_key: {firm_key}")
+
     # Normalize: accept both Pydantic models and plain dicts
     if hasattr(strategy, "model_dump"):
         strategy = strategy.model_dump()
@@ -2783,7 +2788,7 @@ qty_final := {recipient_qty}
     # in alertcondition messages via _build_strategy_webhook_alerts — eliminates the broken
     # post-hoc str.replace approach which produced invalid Pine v5 syntax.
     # When hmac_secret is present, alert messages reference `hmac_input` directly via Pine + concat.
-    _hmac_input_var_name: Optional[str] = "hmac_input" if hmac_secret else None
+    _hmac_input_var_name: str | None = "hmac_input" if hmac_secret else None
 
     # Pass 4 Track A — gateway_mode resolution.
     # Read from strategy.config.gateway_mode (sub-dict on the strategy DSL object).
@@ -2791,7 +2796,7 @@ qty_final := {recipient_qty}
     # 'direct'/None → emit TradersPost direct payload (backward-compat, legacy path).
     # Invalid value  → ValueError raised inside _build_strategy_webhook_alerts.
     _strategy_config: dict = strategy.get("config", {}) if isinstance(strategy.get("config"), dict) else {}
-    _gateway_mode: Optional[str] = _strategy_config.get("gateway_mode")
+    _gateway_mode: str | None = _strategy_config.get("gateway_mode")
 
     strategy_code = _build_strategy_artifact(
         strategy_name=strategy_name,
@@ -3058,14 +3063,14 @@ if __name__ == "__main__":
     firm_key = args.firm_key or config.get("firm_key")
     risk_intelligence = config.get("risk_intelligence")
     # T6: Per-recipient params read from config JSON (injected by pine-export-recipient-service.ts)
-    recipient_qty: Optional[int] = config.get("recipient_qty")
-    recipient_label: Optional[str] = config.get("recipient_label")
-    hmac_secret: Optional[str] = config.get("hmac_secret")
+    recipient_qty: int | None = config.get("recipient_qty")
+    recipient_label: str | None = config.get("recipient_label")
+    hmac_secret: str | None = config.get("hmac_secret")
     # BUG-1 fix: read account_id from config so marker alertcondition block is emitted
-    account_id: Optional[str] = config.get("account_id")
+    account_id: str | None = config.get("account_id")
     # hardening/phase-0: read live_order_token from config (injected by pine-export-service.ts)
     # for compile-time substitution in tf_gateway archetype Pine artifacts.
-    live_order_token: Optional[str] = config.get("live_order_token")
+    live_order_token: str | None = config.get("live_order_token")
 
     if args.dual:
         dual_result = compile_dual_artifacts(

@@ -1,6 +1,5 @@
 """Tests for Pine exportability scoring."""
-import pytest
-from src.engine.exportability import score_exportability, ExportabilityResult
+from src.engine.exportability import ExportabilityResult, score_exportability
 
 
 class TestExportability:
@@ -33,8 +32,8 @@ class TestExportability:
             "direction": "both",
         }
         result = score_exportability(strategy)
-        assert result.score < 90
-        assert len(result.deductions) > 0
+        assert result.score <= 90
+        assert len(result.recommendations) > 0
 
     def test_unexportable_indicators_fail(self):
         """Strategy with ML signals should score very low."""

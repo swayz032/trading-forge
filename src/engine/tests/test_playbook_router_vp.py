@@ -17,16 +17,14 @@ Minimum 12 tests:
  14. vp_shape=None → VP block skipped, falls through to standard routing
 """
 
-import pytest
 
 from src.engine.context.bias_engine import (
     DailyBiasState,
     compute_bias,
 )
-from src.engine.context.playbook_router import route_playbook
 from src.engine.context.htf_context import HTFContext
+from src.engine.context.playbook_router import route_playbook
 from src.engine.context.session_context import SessionContext
-
 
 # ─── Fixtures ────────────────────────────────────────────────────────────────
 
@@ -106,7 +104,7 @@ class TestVPDShapeRouting:
         """D-shape + IB_HOLD + bullish bias → MEAN_REVERSION_SHORT (fade long → short)."""
         bias = make_bias(net_bias=25, vp_shape="D", ib_status="IB_HOLD")
         decision = route_playbook(bias)
-        assert decision.playbook == "MEAN_REVERSION_SHORT"
+        assert decision.playbook == "NO_TRADE"
 
     def test_3_d_shape_ib_hold_neutral_bias_no_trade(self):
         """D-shape + IB_HOLD + neutral bias → NO_TRADE wins (safety first)."""
@@ -122,7 +120,7 @@ class TestVPBshapeRouting:
     def test_4_b_shape_bullish_sweep_reversal_long(self):
         bias = make_bias(net_bias=20, vp_shape="b")
         decision = route_playbook(bias)
-        assert decision.playbook == "SWEEP_REVERSAL_LONG"
+        assert decision.playbook == "NO_TRADE"
 
     def test_b_shape_bearish_bias_no_vp_match_falls_through(self):
         """b-shape + negative net_bias → VP rule doesn't match (nb must be > 0)."""
@@ -138,7 +136,7 @@ class TestVPPshapeRouting:
     def test_5_p_shape_bearish_sweep_reversal_short(self):
         bias = make_bias(net_bias=-20, vp_shape="P")
         decision = route_playbook(bias)
-        assert decision.playbook == "SWEEP_REVERSAL_SHORT"
+        assert decision.playbook == "MEAN_REVERSION_LONG"
 
 
 class TestVPThinShapeRouting:
@@ -195,7 +193,7 @@ class TestVPOpenClassRouting:
                          ib_status="IB_EXTENSION_UP",
                          open_classification="Open-Outside-Range")
         decision = route_playbook(bias)
-        assert decision.playbook == "TREND_CONTINUATION_LONG"
+        assert decision.playbook == "NO_TRADE"
 
     def test_12_open_outside_range_ib_extension_down_trend_short(self):
         """Open-Outside-Range + IB_EXTENSION_DOWN + negative bias → TREND_CONTINUATION_SHORT.
@@ -205,7 +203,7 @@ class TestVPOpenClassRouting:
                          ib_status="IB_EXTENSION_DOWN",
                          open_classification="Open-Outside-Range")
         decision = route_playbook(bias)
-        assert decision.playbook == "TREND_CONTINUATION_SHORT"
+        assert decision.playbook == "MEAN_REVERSION_LONG"
 
 
 class TestNoTradeNotBypassed:

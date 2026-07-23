@@ -2,7 +2,8 @@
 
 Pins that:
 1. risk_derived_pyramid is a valid type literal.
-2. All new fields accept their default values.
+2. Legacy-compatible optional fields remain unset until the sizing runtime
+   resolves the audited paper-path fallbacks.
 3. Validators reject out-of-range inputs.
 4. backward-compat: fixed and dynamic_atr still work unchanged.
 """
@@ -22,12 +23,12 @@ class TestPositionSizeConfigRiskDerivedPyramid:
 
     def test_risk_derived_pyramid_defaults(self):
         cfg = PositionSizeConfig(type="risk_derived_pyramid")
-        assert cfg.base_contracts == 4
-        assert cfg.tier_increment == 2
-        assert cfg.tier_threshold_dollars == 3000.0
-        assert cfg.max_risk_pct_per_trade == 0.02
-        assert cfg.personal_dll_pct == 0.67
-        assert cfg.liquidity_comfort_cap == 100
+        assert cfg.base_contracts is None
+        assert cfg.tier_increment is None
+        assert cfg.tier_threshold_dollars is None
+        assert cfg.max_risk_pct_per_trade is None
+        assert cfg.personal_dll_pct is None
+        assert cfg.liquidity_comfort_cap is None
         assert cfg.topstep_account_cap_override is None
         assert cfg.firm_contract_cap is None
 

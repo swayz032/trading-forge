@@ -110,7 +110,9 @@ class UnicornStrategy(BaseStrategy):
             # bar in the window (ascending scan => first hit IS earliest;
             # never-valid sentinel = None when no match exists).
             disp_valid_from = None
-            for d in range(max(0, b_broken_at - 1), min(n, b_broken_at + 2)):
+            # Displacement must exist by the break bar; future displacement
+            # cannot retroactively create a tradeable Unicorn zone.
+            for d in range(max(0, b_broken_at - 1), min(n, b_broken_at + 1)):
                 d_val = disp_list[d]
                 if d_val is not None:
                     # Displacement direction must match breaker direction

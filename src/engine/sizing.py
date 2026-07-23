@@ -95,6 +95,17 @@ PYRAMID_GRADUATION_PNL: float = TRACK3_CONFIG.PYRAMID_GRADUATION_PNL  # $30K tri
 
 logger = logging.getLogger(__name__)
 
+# Keep the Python backtest fallback contract aligned with
+# src/server/lib/position-size-fallback.ts. Graduated strategies normally carry
+# every field explicitly; these values only protect legacy/partial configs that
+# PositionSizeConfig intentionally continues to accept for backward compatibility.
+_POSITION_SIZE_FALLBACK_BASE_CONTRACTS = 6
+_POSITION_SIZE_FALLBACK_TIER_INCREMENT = 3
+_POSITION_SIZE_FALLBACK_TIER_THRESHOLD_DOLLARS = 3000.0
+_POSITION_SIZE_FALLBACK_MAX_RISK_PCT_PER_TRADE = 0.02
+_POSITION_SIZE_FALLBACK_LIQUIDITY_CAPS = {"MES": 100, "MNQ": 50, "MCL": 30}
+_POSITION_SIZE_FALLBACK_LIQUIDITY_CAP_DEFAULT = 50
+
 # ── Wave 24 Pass 2 — Vol-scale + liquidity-haircut (backtest parity) ──────────
 # Mirror of risk-sizing.ts: computeVolScale() + computeLiquidityHaircut().
 # Identical math, identical env-var thresholds, identical fail-open semantics.
@@ -1033,6 +1044,37 @@ def compute_position_sizes(
     # Then pyramid floor is applied element-wise (matches Wave 23 behavior).
     # Return: per-bar size array (not a scalar flat array).
     if config.type == "risk_derived_pyramid":
+        # PositionSizeConfig keeps these fields Optional so pre-Wave-21 configs
+        # remain loadable. Resolve the same audited fallbacks used by the live
+        # TypeScript path before any arithmetic; never pass None into risk math.
+        _base_contracts = (
+            config.base_contracts
+            if config.base_contracts is not None
+            else _POSITION_SIZE_FALLBACK_BASE_CONTRACTS
+        )
+        _tier_increment = (
+            config.tier_increment
+            if config.tier_increment is not None
+            else _POSITION_SIZE_FALLBACK_TIER_INCREMENT
+        )
+        _tier_threshold_dollars = (
+            config.tier_threshold_dollars
+            if config.tier_threshold_dollars is not None
+            else _POSITION_SIZE_FALLBACK_TIER_THRESHOLD_DOLLARS
+        )
+        _max_risk_pct_per_trade = (
+            config.max_risk_pct_per_trade
+            if config.max_risk_pct_per_trade is not None
+            else _POSITION_SIZE_FALLBACK_MAX_RISK_PCT_PER_TRADE
+        )
+        _symbol_key = str(symbol or "").upper()
+        _liquidity_comfort_cap = (
+            config.liquidity_comfort_cap
+            if config.liquidity_comfort_cap is not None
+            else _POSITION_SIZE_FALLBACK_LIQUIDITY_CAPS.get(
+                _symbol_key, _POSITION_SIZE_FALLBACK_LIQUIDITY_CAP_DEFAULT
+            )
+        )
         atr_col = f"atr_{atr_period}"
         if atr_col in df.columns:
             _atr_arr = df[atr_col].to_numpy().astype(np.float64)
@@ -1082,11 +1124,11 @@ def compute_position_sizes(
         # legacy bare mult×atr, byte-identical to pre-Wave-2 behavior).
         _resolved_stop_mult = stop_multiplier if stop_multiplier is not None else 1.5
         sizing_result = compute_risk_derived_contracts(
-            base_contracts=config.base_contracts,
-            tier_increment=config.tier_increment,
-            tier_threshold_dollars=config.tier_threshold_dollars,
-            max_risk_pct_per_trade=config.max_risk_pct_per_trade,
-            liquidity_comfort_cap=config.liquidity_comfort_cap,
+            base_contracts=_base_contracts,
+            tier_increment=_tier_increment,
+            tier_threshold_dollars=_tier_threshold_dollars,
+            max_risk_pct_per_trade=_max_risk_pct_per_trade,
+            liquidity_comfort_cap=_liquidity_comfort_cap,
             account_balance=account_balance,
             cumulative_profit=cumulative_profit,
             atr_points=atr_for_sizing,
@@ -1147,7 +1189,7 @@ def compute_position_sizes(
         # risk_dollars extracted from evidence (set by compute_risk_derived_contracts)
         risk_dollars_scalar = float(
             sizing_result.evidence.get(
-                "risk_dollars", account_balance * config.max_risk_pct_per_trade
+                "risk_dollars", account_balance * _max_risk_pct_per_trade
             )
         )
         # F-7 fix (2026-05-20): when firm_cap AND max_contracts are both None
@@ -1160,7 +1202,7 @@ def compute_position_sizes(
             effective_firm_cap_bar = int(max_contracts)
         else:
             effective_firm_cap_bar = 10**9
-        liquidity_cap_bar = int(config.liquidity_comfort_cap)
+        liquidity_cap_bar = int(_liquidity_comfort_cap)
         pyramid_tier_bar = int(sizing_result.pyramid_tier)
         # NOTE (ruff F841 cleanup, capital-safety-compliance-gates wave
         # 2026-07-17): `base_contr` and `account_is_healthy_bar` were unused

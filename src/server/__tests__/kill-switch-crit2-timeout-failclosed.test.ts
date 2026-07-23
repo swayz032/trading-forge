@@ -23,11 +23,34 @@ vi.mock("../lib/logger.js", () => ({ logger: { info: vi.fn(), warn: vi.fn(), err
 vi.mock("../lib/audit-log-helper.js", () => ({ insertAuditRow: vi.fn().mockResolvedValue(undefined), insertAuditRowSafe: vi.fn().mockResolvedValue(undefined) }));
 
 import { _runLayerWithTimeoutForTests, _setForceCloseInFlightForTests } from "../production/kill-switch.js";
+import { insertAuditRow } from "../lib/audit-log-helper.js";
 
 // A check that never resolves within the 100ms LAYER_CHECK_TIMEOUT_MS budget.
 const slowCheck = () => new Promise<{ halted: boolean }>(() => { /* never resolves */ });
 
 describe("CRIT-2 — force-close-triggering layers fail CLOSED on timeout", () => {
+  it("cancels the losing timeout after a fast check resolves", async () => {
+    vi.useFakeTimers();
+    vi.mocked(insertAuditRow).mockClear();
+    try {
+      const d = await _runLayerWithTimeoutForTests(
+        5,
+        async () => ({ halted: false }),
+        "corr-fast",
+        undefined,
+        false,
+      );
+      expect(d.halted).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(101);
+      expect(insertAuditRow).not.toHaveBeenCalledWith(
+        expect.objectContaining({ action: "kill_switch.layer_5_timeout" }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("L2 (failClosedOnTimeout=true) times out → HALTED (fail-closed), reason layer_timeout_fail_closed", async () => {
     const d = await _runLayerWithTimeoutForTests(2, slowCheck, "corr", undefined, true);
     expect(d.halted).toBe(true);

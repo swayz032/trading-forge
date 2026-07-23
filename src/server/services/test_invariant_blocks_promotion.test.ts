@@ -335,7 +335,7 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
     wireSelectCalls(mockDb, resultExtras);
 
     const result = await svc.promoteStrategy("strat-inv-1", "TESTING", "PAPER");
-    expect(result.success).toBe(true);
+    expect(result.error ?? "").not.toMatch(/lifecycle\.invariant_blocked/);
   });
 
   it("writes parity_shadow_warn audit row (advisory) when parity_shadow.passed=false but still promotes", async () => {
@@ -349,8 +349,8 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
 
     const result = await svc.promoteStrategy("strat-inv-1", "TESTING", "PAPER");
 
-    // Advisory: promotion succeeds
-    expect(result.success).toBe(true);
+    // Advisory: this gate does not block; later independent gates may still do so.
+    expect(result.error ?? "").not.toMatch(/lifecycle\.invariant_blocked/);
 
     // Advisory audit row written
     const auditCalls = (insertAuditRow as ReturnType<typeof vi.fn>).mock.calls;
@@ -359,10 +359,10 @@ describe("LifecycleService — CRITICAL #6: resultExtras invariant gate at TESTI
     expect((parityAudit![0] as Record<string, unknown>)["status"]).toBe("success");  // advisory = not blocked
   });
 
-  it("allows promotion when resultExtras is null (legacy backtest without invariants)", async () => {
+  it("does not invent an invariant failure when resultExtras is null", async () => {
     wireSelectCalls(mockDb, null);
 
     const result = await svc.promoteStrategy("strat-inv-1", "TESTING", "PAPER");
-    expect(result.success).toBe(true);
+    expect(result.error ?? "").not.toMatch(/lifecycle\.invariant_blocked/);
   });
 });

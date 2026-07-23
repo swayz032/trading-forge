@@ -21,6 +21,8 @@ from unittest.mock import patch
 
 import pytest
 
+import src.engine.quantum_adversarial_stress as quantum_adversarial_stress
+
 # Import the module under test
 from src.engine.quantum_adversarial_stress import (
     WALL_CLOCK_LIMIT_S,
@@ -41,7 +43,8 @@ def enable_adversarial_stress(monkeypatch):
     """Patch the module-level flag to True for all tests in this file that exercise
     real execution paths. Tests in TestFeatureFlag explicitly override this fixture."""
     monkeypatch.setattr(
-        "src.engine.quantum_adversarial_stress.QUANTUM_ADVERSARIAL_STRESS_ENABLED",
+        quantum_adversarial_stress,
+        "QUANTUM_ADVERSARIAL_STRESS_ENABLED",
         True,
     )
 

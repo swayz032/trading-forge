@@ -6,7 +6,7 @@
 > the `## Canonical Values` block below. Drift triggers CI failure.
 >
 > Effective: 2026-01-12 (TopstepX-only platform lockdown).
-> Last reviewed: 2026-06-22.
+> Last reviewed: 2026-07-23 (operator-confirmed manual review; rule values unchanged).
 > Promo added: 2026-06-02 (voluntary-DLL doubles XFA payout cap).
 > Evidence source: docs/institutional-evidence/firm-rules-freshness-2026-06-22.md
 

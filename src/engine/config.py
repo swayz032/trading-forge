@@ -31,7 +31,7 @@ from __future__ import annotations  # noqa: I001
 import os
 import sys
 from dataclasses import dataclass
-from typing import Literal, Optional
+from typing import Literal
 
 from datetime import datetime
 
@@ -166,7 +166,7 @@ def get_contract_spec(symbol: str) -> ContractSpec:
 
 def resolve_contract_spec(
     symbol: str,
-    contract_class: Optional[str] = None,
+    contract_class: str | None = None,
 ) -> ContractSpec:
     """Resolve the ContractSpec for a symbol with Phase 5 safety gating.
 
@@ -292,6 +292,13 @@ VALID_SYMBOLS = set(CONTRACT_SPECS.keys())
 class _Track3Config:
     MES_PYRAMID_CAP: int = 30
     PYRAMID_GRADUATION_PNL: float = 3_000.0  # +3 contracts per +$3K cumulative profit
+    # Legacy Style-D positions can remain open across a deployment.  Keep their
+    # exit contract complete even though new positions use canonical Style C.
+    TP1_AT_R: float = 1.0
+    TP1_FRACTION: float = 0.50
+    CHANDELIER_PERIOD: int = 22
+    CHANDELIER_MULT: float = 2.0
+    TRAIL_METHOD: str = "tighter_of"
     # Hard time-stop: flatten all positions at 15:55 ET (5 minutes before RTH close).
     # Per CLAUDE.md §4: "Time-stop: hard flatten 15:55 ET".
     # Configurable via env var TIME_STOP_FLATTEN_ET (default "15:55").
@@ -321,18 +328,18 @@ class IndicatorConfig(BaseModel):
     type: str
     period: int = 14
     # MACD-specific
-    fast: Optional[int] = None
-    slow: Optional[int] = None
-    signal: Optional[int] = None
+    fast: int | None = None
+    slow: int | None = None
+    signal: int | None = None
     # Bollinger-specific
     std_dev: float = 2.0
     # Opening Range Breakout-specific (Phase 9)
-    range_minutes: Optional[int] = None        # OR window length in minutes (default 15)
-    session_start_et: Optional[str] = None     # Session open in ET, "HH:MM" (default "09:30")
+    range_minutes: int | None = None        # OR window length in minutes (default 15)
+    session_start_et: str | None = None     # Session open in ET, "HH:MM" (default "09:30")
     # Anchored VWAP-specific (Wave 25 Pass 5)
     # anchor_ts: the bar timestamp from which cumulative VWAP accumulates.
     # Bars before anchor_ts receive null in the output column.
-    anchor_ts: Optional[datetime] = None
+    anchor_ts: datetime | None = None
 
     @field_validator("type")
     @classmethod
@@ -349,7 +356,7 @@ class IndicatorConfig(BaseModel):
 class StopConfig(BaseModel):
     type: Literal["atr", "fixed", "trailing_atr"]
     multiplier: float = 2.0
-    fixed_points: Optional[float] = None
+    fixed_points: float | None = None
 
 
 # ─── Position Size Config ─────────────────────────────────────────
@@ -366,32 +373,32 @@ class PositionSizeConfig(BaseModel):
 
     # Wave 21 E.1 — risk_derived_pyramid fields (all optional for backward compat)
     # base_contracts: starting pyramid tier (floor). Pyramid ramps from here.
-    base_contracts: Optional[int] = None
+    base_contracts: int | None = None
     # tier_increment: contracts added per tier_threshold_dollars of cumulative profit.
-    tier_increment: Optional[int] = None
+    tier_increment: int | None = None
     # tier_threshold_dollars: profit step triggering next pyramid tier.
-    tier_threshold_dollars: Optional[float] = None
+    tier_threshold_dollars: float | None = None
     # max_risk_pct_per_trade: fraction of risk-base to risk per trade (e.g. 0.02 = 2%).
-    max_risk_pct_per_trade: Optional[float] = None
+    max_risk_pct_per_trade: float | None = None
     # personal_dll_pct: fraction of firm DLL that triggers personal halt (default 0.67).
-    personal_dll_pct: Optional[float] = None
+    personal_dll_pct: float | None = None
     # liquidity_comfort_cap: per-symbol contract ceiling from book-depth analysis.
-    liquidity_comfort_cap: Optional[int] = None
+    liquidity_comfort_cap: int | None = None
     # topstep_account_cap_override: override firm cap for Topstep trailing-DD math.
-    topstep_account_cap_override: Optional[int] = None
+    topstep_account_cap_override: int | None = None
     # firm_contract_cap: explicit per-firm tier cap from firm_config.py.
-    firm_contract_cap: Optional[int] = None
+    firm_contract_cap: int | None = None
 
     @field_validator("base_contracts")
     @classmethod
-    def validate_base_contracts(cls, v: Optional[int]) -> Optional[int]:
+    def validate_base_contracts(cls, v: int | None) -> int | None:
         if v is not None and v <= 0:
             raise ValueError(f"base_contracts must be > 0, got {v}")
         return v
 
     @field_validator("max_risk_pct_per_trade")
     @classmethod
-    def validate_max_risk_pct(cls, v: Optional[float]) -> Optional[float]:
+    def validate_max_risk_pct(cls, v: float | None) -> float | None:
         if v is not None and not (0 < v <= 0.05):
             raise ValueError(
                 f"max_risk_pct_per_trade must be in (0, 0.05], got {v}. "
@@ -401,7 +408,7 @@ class PositionSizeConfig(BaseModel):
 
     @field_validator("personal_dll_pct")
     @classmethod
-    def validate_personal_dll_pct(cls, v: Optional[float]) -> Optional[float]:
+    def validate_personal_dll_pct(cls, v: float | None) -> float | None:
         if v is not None and not (0 < v <= 1.0):
             raise ValueError(
                 f"personal_dll_pct must be in (0, 1.0], got {v}. "
@@ -410,7 +417,7 @@ class PositionSizeConfig(BaseModel):
         return v
 
     @model_validator(mode="after")
-    def validate_fixed_contracts_not_default(self) -> "PositionSizeConfig":
+    def validate_fixed_contracts_not_default(self) -> PositionSizeConfig:
         """H7 FIX: Fail-fast if fixed_contracts=1 (the default) is used without
         an explicit override. A silent fixed_contracts=1 in production backtests
         means every strategy silently trades 1 contract regardless of account size,
@@ -446,16 +453,16 @@ class StrategyConfig(BaseModel):
     entry_short: str
     exit: str
     stop_loss: StopConfig
-    take_profit: Optional[StopConfig] = None
+    take_profit: StopConfig | None = None
     position_size: PositionSizeConfig
     overnight_hold: bool = False
-    preferred_regime: Optional[str] = None
+    preferred_regime: str | None = None
     # Optional execution-realism fields mirrored from TS BacktestConfig.
     # overnight_hold is consumed by simulate_all_firms() (line ~2676 in backtester.py).
     # fill_rate/spread_multiplier are consumed as positional args to run_backtest()
     # but not yet wired through from StrategyConfig — see backtester.py TODO.
-    fill_rate: Optional[float] = 1.0
-    spread_multiplier: Optional[float] = 1.0
+    fill_rate: float | None = 1.0
+    spread_multiplier: float | None = 1.0
     # W23H.1 — Multi-Timeframe fields.
     # bias_timeframe: HTF used for trend-bias gating (e.g. '4h', '1d').
     #   When non-null, run_backtest() loads this TF, computes HTF indicators with
@@ -466,8 +473,8 @@ class StrategyConfig(BaseModel):
     # bias_condition: raw bias condition string (e.g. 'ema_50_4h > ema_200_4h').
     #   Stored for audit/debug. Not re-evaluated at backtest time — it is already
     #   compiled into entry_long/entry_short by dsl-compiler.ts.
-    bias_timeframe: Optional[str] = None
-    bias_condition: Optional[str] = None
+    bias_timeframe: str | None = None
+    bias_condition: str | None = None
 
     # W23H.3 — Allowed entry windows.
     # When non-empty, entry signals are masked to bars that fall in at least one window.
@@ -475,7 +482,7 @@ class StrategyConfig(BaseModel):
     # Format: ["HH:MM-HH:MM TZ", ...] e.g. ["09:45-12:00 ET", "13:30-15:30 ET"].
     # Validated at parse time by parse_entry_windows() — ValueError on malformed spec.
     # Parity: mirrors paper-signal-service.ts window check and Pine time() emission.
-    allowed_entry_windows: Optional[list[str]] = None
+    allowed_entry_windows: list[str] | None = None
 
     @field_validator("overnight_hold")
     @classmethod
@@ -578,7 +585,7 @@ class LiquidityLevelSnapshot:
                              # |'naked_poc'|'untouched_fvg'|'untouched_ob'|'eqh'|'eql'|'hod'|'lod'
     price: float
     htf_significance: int    # 1-5 (5 = highest significance)
-    sweep_probability: Optional[float] = None   # [0,1] or None if not yet computed
+    sweep_probability: float | None = None   # [0,1] or None if not yet computed
 
 
 @dataclass
@@ -600,7 +607,7 @@ class AdaptiveExitContext:
             partial close (default 0.6 per W25.14).
     """
     liquidity_snapshot: list  # list[LiquidityLevelSnapshot] — list for JSON serializability
-    regime_at_entry: Optional[str] = None
+    regime_at_entry: str | None = None
     pre_lunch_threshold_r: float = 0.3
     delta_div_threshold: float = 0.6
 
@@ -625,7 +632,7 @@ class BacktestRequest(BaseModel):
     # model_fields_set check (run_backtest) plus its `if commission is None`
     # defensive net resolve None → spec.default_commission, so effective
     # behavior for every existing MES/MNQ/MCL caller is byte-identical.
-    commission_per_side: Optional[float] = None
+    commission_per_side: float | None = None
     mode: Literal["single", "walkforward"] = "single"
     walk_forward_splits: int = 5
     # deep-scan Backtest re-cert HIGH: was 0, which OVERRODE run_walk_forward()'s Wave-C-hardened
@@ -635,9 +642,9 @@ class BacktestRequest(BaseModel):
     # BacktestRequest (they now purge 20 bars) — historical metrics are non-comparable; re-run before trusting.
     embargo_bars: int = 20  # Bars to skip between IS/OOS (prevents data leakage; AFML purge+embargo)
     max_trades_per_day: int = 2  # Max entries per calendar day (long + short combined)
-    firm_key: Optional[str] = None
-    event_calendar: Optional[EventCalendarConfig] = None
-    fill_model: Optional[FillProbabilityConfig] = None
+    firm_key: str | None = None
+    event_calendar: EventCalendarConfig | None = None
+    fill_model: FillProbabilityConfig | None = None
     # Wave 24 Pass 2 — vol-scale + liquidity-haircut parity with paper engine.
     # vix_now: spot VIX at backtest run time (scalar, not time-series).
     #   None → vol-scale = 1.0 (fail-open). Emits parity_warn.no_vix_in_backtest.
@@ -645,8 +652,8 @@ class BacktestRequest(BaseModel):
     #   by the caller. None → liquidity-haircut = 1.0 (fail-open). Historical
     #   book-depth series are not available in Parquet; caller provides a scalar ratio
     #   or omits it. Parity gap is documented in result["parity_metadata"] when absent.
-    vix_now: Optional[float] = None
-    top3_depth_ratio: Optional[float] = None  # currentTop3Depth / baseline20dMedian
+    vix_now: float | None = None
+    top3_depth_ratio: float | None = None  # currentTop3Depth / baseline20dMedian
     # W25.17 A/B flag — which exit engine to use for this run.
     # "static_styleC"  → existing Style C 33/33/34 TP1/TP2/runner path (default, backward-compat).
     # "adaptive"       → adaptive exit engine (Wave 25 Gap B — Python mirror of adaptive-exit-engine.ts).
@@ -656,7 +663,7 @@ class BacktestRequest(BaseModel):
     # Populated by the TS launch helper when exit_engine="adaptive".
     # None → adaptive path bails gracefully to static_styleC (backward compat).
     # See AdaptiveExitContext dataclass above for full contract documentation.
-    adaptive_exit_context: Optional[object] = None  # type: Optional[AdaptiveExitContext]
+    adaptive_exit_context: object | None = None  # type: Optional[AdaptiveExitContext]
     # F-4 Wave 4 Track 4C Research Governance: cumulative mutation trial count for this
     # strategy across all evolution cycles. Used by walk_forward.py CPCV DSR to compute
     # the correct effective n_trials = max(cpcv_paths, trial_n_total), preventing 2–5×
@@ -688,9 +695,9 @@ class BacktestResult(BaseModel):
     execution_time_ms: int = 0
     tier: str = ""
     forge_score: float = 0.0
-    walk_forward_results: Optional[dict] = None
-    prop_compliance: Optional[dict] = None
-    run_receipt: Optional[dict] = None
+    walk_forward_results: dict | None = None
+    prop_compliance: dict | None = None
+    run_receipt: dict | None = None
 
 
 # ─── Run Receipt (Reproducibility) ───────────────────────────
@@ -766,7 +773,7 @@ class MonteCarloRequest(BaseModel):
     # F-10 FIX: actual round-trip commission used in the backtest (both sides, $).
     # Pass bt.config.commission_per_side * 2 from the TS bridge.
     # When None, simulate_firm_survival falls back to $1.24 default and emits a warning.
-    backtest_commission_rt: Optional[float] = None
+    backtest_commission_rt: float | None = None
     # F-12 FIX: observed avg trades per day from the backtest.
     # Pass bt.totalTrades / bt.totalTradingDays from the TS bridge.
     # Consumed by simulate_firm_survival as daily_trades_per_day for commission delta math.
@@ -775,7 +782,7 @@ class MonteCarloRequest(BaseModel):
     # Pass backtests.firm_rules_version from the DB row.  MC asserts this matches
     # the current compute_firm_rules_version() before running any simulation.
     # None means the backtest predates the drift-check feature; MC runs with a warning.
-    backtest_firm_rules_version: Optional[str] = None
+    backtest_firm_rules_version: str | None = None
 
     # Wave 27.5 Pass C.1 — HIGH #8: Optional outlier truncation.
     # Trims extreme individual trade P&Ls to ±multiplier × |worst_month| before
@@ -785,7 +792,7 @@ class MonteCarloRequest(BaseModel):
     # Institutional default: 2.0.  Set MC_TRIM_OUTLIER_MULTIPLIER env var to activate.
     # WARNING: trimming reduces tail-risk reflection of true catastrophic events.
     # Use with care — opt-IN only.
-    trim_outlier_multiplier: Optional[float] = None
+    trim_outlier_multiplier: float | None = None
 
     @field_validator("num_simulations")
     @classmethod

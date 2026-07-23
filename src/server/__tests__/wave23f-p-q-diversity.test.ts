@@ -51,11 +51,11 @@ describe("W23F.V operator-curated query set (replaces W23F.P concept groups)", (
     expect(SCOUT_RUNNER).toMatch(/return \[\.\.\.base, \.\.\.ALL_CONCEPT_QUERIES\]/);
   });
 
-  it("operator set has exactly 8 queries (no scope creep)", () => {
+  it("operator set has the 13 manually curated production queries", () => {
     // Match the array initializer that follows the equals sign
     const block = SCOUT_RUNNER.match(/OPERATOR_QUERY_TEMPLATES[^=]*=\s*\[([\s\S]*?)\];/)?.[1] ?? "";
     const lines = block.split("\n").filter(l => /^\s*"/.test(l));
-    expect(lines.length).toBe(8);
+    expect(lines.length).toBe(13);
   });
 });
 

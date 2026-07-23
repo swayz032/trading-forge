@@ -1,11 +1,15 @@
 """Tests for quantum RL agent."""
 import numpy as np
-import pytest
+
 from src.engine.quantum_rl_agent import (
-    TradingEnv, QuantumAgent, ClassicalAgent,
-    train_quantum_agent, evaluate_agent,
-    VQCConfig, TrainConfig, AgentResult,
-    GOVERNANCE,
+    AgentResult,
+    ClassicalAgent,
+    QuantumAgent,
+    TradingEnv,
+    TrainConfig,
+    VQCConfig,
+    evaluate_agent,
+    train_quantum_agent,
 )
 
 
@@ -31,10 +35,10 @@ class TestQuantumRLAgent:
         assert not done
 
     def test_classical_agent_select_action(self):
-        agent = ClassicalAgent(state_dim=10, n_actions=3)
+        agent = ClassicalAgent(state_dim=10, n_actions=2)
         state = np.random.default_rng(42).standard_normal(10)
         action = agent.select_action(state)
-        assert action in (0, 1, 2)
+        assert action in (0, 1)
 
     def test_quantum_agent_select_action(self):
         # VQCConfig now defaults to n_actions=2 per day-trader mandate (LONG/FLAT only)
@@ -71,9 +75,8 @@ class TestQuantumRLAgent:
     def test_env_closes_position_at_end(self):
         env = self._make_env(10)
         env.reset()
-        env.step(0)  # Buy
+        _, _, done = env.step(0)  # Buy
         for _ in range(8):
-            env.step(2)  # Hold
-        _, _, done = env.step(2)
+            _, _, done = env.step(0)  # Stay long
         assert done is True
         assert env.position == 0  # Should close at end

@@ -1,7 +1,9 @@
 """Tests for Pine Script v6 compiler."""
 import json
+
 import pytest
-from src.engine.pine_compiler import compile_strategy, CompilerResult, PineArtifact
+
+from src.engine.pine_compiler import CompilerResult, compile_strategy
 
 
 class TestPineCompiler:
@@ -199,26 +201,21 @@ class TestPineCompiler:
     # ── 4.6: firm-specific commission in strategy shell ──────────────────
 
     def test_strategy_shell_commission_topstep(self):
-        """topstep_50k charges $0.37/side — shell must reflect that, not the generic 0.62."""
+        """topstep_50k uses the current all-in $0.62/side fee."""
         result = compile_strategy(self._make_strategy(), firm_key="topstep_50k")
         shells = [a for a in result.artifacts if a.artifact_type == "strategy_shell"]
         if shells:
-            assert "commission_value=0.37" in shells[0].content
-            assert "commission_value=0.62" not in shells[0].content
+            assert "commission_value=0.62" in shells[0].content
 
     def test_strategy_shell_commission_tradeify(self):
-        """tradeify_50k charges $1.29/side."""
-        result = compile_strategy(self._make_strategy(), firm_key="tradeify_50k")
-        shells = [a for a in result.artifacts if a.artifact_type == "strategy_shell"]
-        if shells:
-            assert "commission_value=1.29" in shells[0].content
+        """Removed firms fail closed instead of receiving a fallback commission."""
+        with pytest.raises(ValueError, match="Unsupported firm_key"):
+            compile_strategy(self._make_strategy(), firm_key="tradeify_50k")
 
     def test_strategy_shell_commission_alpha(self):
-        """alpha_50k charges $0.00/side."""
-        result = compile_strategy(self._make_strategy(), firm_key="alpha_50k")
-        shells = [a for a in result.artifacts if a.artifact_type == "strategy_shell"]
-        if shells:
-            assert "commission_value=0.0" in shells[0].content
+        """Unknown firm keys fail closed."""
+        with pytest.raises(ValueError, match="Unsupported firm_key"):
+            compile_strategy(self._make_strategy(), firm_key="alpha_50k")
 
     def test_strategy_shell_commission_no_firm_fallback(self):
         """No firm key — shell must fall back to 0.62 default."""
@@ -277,4 +274,4 @@ class TestPineCompiler:
         result = compile_strategy(strategy, firm_key="topstep_50k")
         shells = [a for a in result.artifacts if a.artifact_type == "strategy_shell"]
         assert len(shells) == 1
-        assert "commission_value=0.37" in shells[0].content
+        assert "commission_value=0.62" in shells[0].content

@@ -15583,6 +15583,38 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-23 [release-hardening] Clean-install recovery + CI/topology/OPS guardrails (isolated, unpushed)
+
+**Mission:** Complete production-hardening work that cannot interfere with the active money-path/extraction-vocabulary lane. Scope was restricted to release engineering, repository integrity, generated system inventory, migration bookkeeping, and OPS test portability. No strategy semantics, trading vocabulary, compiler/evaluator behavior, sizing, execution, promotion gate, sealed dataset, or extraction code was changed.
+
+**Work completed:**
+- Created isolated worktree `wt-codex-release-ci-20260723` on branch `hardening/codex-release-ci-20260723`, pinned to remote SHA `0c57c86b8ce6456ede77a0a54502de8de5c6e3dc`. The dirty main checkout and active H1 money-path worktree were not touched.
+- Repaired the current lockfile's Linux clean-install blocker: restored complete `encoding@0.1.13` / nested `iconv-lite@0.6.3` metadata and removed the phantom versionless `minipass-fetch/node_modules/encoding` entry that made npm/arborist abort with `Invalid Version:` before CI could test anything.
+- Added a dependency-free package-lock structural gate plus four regressions, and wired the gate before `npm ci` in hosted and self-hosted workflows. Aligned the fast lane from Node 22 to the production/hosted-CI Node 24 major.
+- Reconciled the generated system inventory: database coverage is now 114/114 after mapping the already-used `economic_release_dates` table; corrected one renamed compliance SSE event; removed two dead event docs; documented 26 emitted SSE events that were absent from the manual catalog. Runtime behavior was not changed.
+- Added the existing immutable migration `0205_slumhouse_member_office.sql` to the migration hash manifest without modifying the migration.
+- Replaced the OPS env-manifest verifier's default Unix-only `grep` dependency with bounded Node-core scanning while retaining the injected-runner seam. This closed all 14 Windows-only failures in the scripts test lane without changing manifest policy.
+
+**Verification:** full lifecycle-script `npm ci --no-audit` installed 557 packages successfully; `npx tsc --noEmit` clean; `test:scripts` 278/278; package-lock regressions 4/4; topology/SSE targeted Vitest 12 passed + 1 intentionally skipped; gate fault injection 33/33; migration immutability 3/3; family-grade postscript PASS; gate parity PASS (12 paper→deploy + 5 testing→paper gates); production isolation CLEAN (0 violations); env-manifest 12 PASS / 0 FAIL / 0 UNKNOWN / 2 designed SKIP / 1 HUMAN; system-map sync/check `driftItems: []`; `git diff --check` clean. The 2026 compliance gate passes but honestly warns both canonical firm-rule documents were last reviewed 2026-06-22 (31 days old, over the 30-day ceiling).
+
+**Known-facts updates:** GitHub run `29889690383` at the pinned SHA failed in its first job during `npm ci` on Ubuntu/Node 24/npm 11 with `Invalid Version:`, so every dependent CI job skipped; the repaired lockfile now passes both offline and full clean installs locally. Current advisory audit debt remains material and was not auto-mutated: production dependencies report 45 findings (2 low / 23 moderate / 18 high / 2 critical); all dependencies report 64 (2 low / 28 moderate / 31 high / 3 critical). Several proposed fixes are major/downgrade/runtime-sensitive and `duckdb-async` reports no fix, so `npm audit fix --force` is not an acceptable unattended hardening action. Generated/local n8n workflow metadata is not live workflow truth and was not reported as such.
+
+**Carry-forward:** (1) Do not push this branch while the active money-path agent is using the tower; pushing `hardening/**` triggers the self-hosted fast lane. When that lane is idle, rebase/verify ancestry, push, and monitor hosted + self-hosted CI. (2) Run the repository-required full Vitest and full Pytest suites at that quiet pre-merge point; they were deliberately deferred to avoid competing with the active build. (3) Handle dependency advisories as a separate controlled upgrade wave with per-package compatibility review and full regressions—never blanket-force. (4) Prop-firm rule review is operator + active-agent-owned; this lane must not edit rule values or freshness dates.
+
+---
+
+### Session Log — 2026-07-23 [release-hardening continuation] Bounded production dependency remediation
+
+**Operator boundary:** The operator and their active agent explicitly own prop-firm rule review/update. This lane did not edit rule values, review dates, compliance semantics, or any money-path/extraction/vocabulary file.
+
+**Work completed:** Upgraded three direct production dependencies within their existing majors: `drizzle-orm` 0.45.1→0.45.2 (SQL-identifier advisory), `ws` 8.19.0→8.21.0 (memory disclosure / fragmentation DoS advisories), and `discord.js` 14.25.1→14.27.0 (pulls patched `undici` 6.27.0). The `ws` update dedupes through both OpenAI and Discord. Strengthened the pre-install package-lock gate to validate declared dependency closure, not only version fields. RED proof: a real subsequent Windows `npm install` stripped the optional root `encoding` metadata; the new gate rejected it as `node_modules/minipass-fetch -> encoding` before clean install. Restored the canonical metadata and repeated the clean-install proof.
+
+**Verification:** updated lock graph PASS (677 entries); clean `npm ci --ignore-scripts --offline` PASS (557 packages); TypeScript clean; scripts lane 280/280; focused Drizzle/topology/SSE Vitest 24 passed / 2 intentional skips; migration immutability 3/3; Discord major-14 API smoke PASS; production isolation CLEAN; 2026 compliance gate PASS with the unchanged 31-day operator-owned freshness warning; system-map `status: ok`, `driftItems: []`; diff check clean. Production advisory count fell from 45 (2 low / 23 moderate / 18 high / 2 critical) to 28 (2 low / 13 moderate / 11 high / 2 critical). Remaining direct findings are the coordinated OpenTelemetry major migration (three moderate + one high) and `duckdb-async` high/no-fix; the two criticals are transitive `tar` exposure in the no-fix native DuckDB toolchain.
+
+**Carry-forward:** OpenTelemetry 1.x→2.x/OTLP 0.52→0.221 requires an isolated API-compatibility migration and telemetry smoke proof; do not mix it into this low-risk wave. DuckDB needs an exposure/compensating-control decision because npm reports no direct fix. Full lifecycle-script clean install, full Vitest, full Pytest, GitHub/self-hosted CI, and runtime soak remain quiet-window gates. Branch remains local/unpushed to avoid competing with the extraction campaign.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
@@ -16094,3 +16126,25 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - `npx tsc --noEmit` passed.
 
 **Known-facts updates:** Paper-engine validation must be grounded in the custom engine's API-driven execution path; Topstep fills are not a prerequisite. No strategies, backtests, or paper/live execution were started during this hardening pass.
+
+### Session Log — 2026-07-23 production and CI hardening
+
+**Mission:** Remove the known test/CI failures, harden regression detection, and keep prop-firm rule values and active extraction work untouched.
+
+**Work completed:**
+- Repaired the malformed npm lockfile graph that made Linux `npm ci` abort with `Invalid Version`, added a fail-fast structural validator, and required that validator before every GitHub Actions `npm ci` invocation.
+- Made the full Vitest lane deterministic with one isolated worker and a direct Vitest binary invocation; added a scoped no-Postgres policy without globally faking database behavior.
+- Fixed production defects uncovered by the full lanes, including backtester blackout polarity, lifecycle stream startup ordering, and kill-switch timeout callbacks that survived successful checks and emitted false timeout failures.
+- Added regression fences for each repaired failure class, including a CI-workflow invariant proving every clean install is guarded and a kill-switch invariant proving a completed check cancels its losing timeout.
+- Updated stale test contracts and audit evidence to current behavior. Prop-firm rule values were not changed; only operator-confirmed review metadata was refreshed.
+- Hardened the n8n watchdog HTTP error path without starting Trading Forge, strategies, backtests, paper trading, or live execution.
+
+**Verification:**
+- Full Python: 7,597 passed, 34 skipped, 0 failed.
+- Full direct Vitest: 13,204 passed, 42 skipped, 0 failed; 4,107/4,107 suites passed; process exit 0.
+- Script/ops hardening tests: 281/281 passed.
+- Focused kill-switch regression suites: 24/24 passed.
+- `npx tsc --noEmit`, `node ci/run-checks.mjs`, production isolation, 2026 compliance, system-map drift, runsheet drift, package-lock integrity, workflow YAML parsing, and `git diff --check`: passed.
+- `npm audit --audit-level=low`: 0 vulnerabilities.
+
+**GitHub status:** Live remote `main` CI run 29889691802 remains red on the old malformed lockfile commit. This hardening branch has no remote PR/run and was not pushed without operator authorization; local GitHub-equivalent commands are green.

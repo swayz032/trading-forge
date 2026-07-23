@@ -27,7 +27,6 @@ Persistence:
 """
 from __future__ import annotations
 
-import json
 import logging
 import os
 import warnings
@@ -86,7 +85,7 @@ class HmmRegimeModel:
         }
 
     @classmethod
-    def from_dict(cls, d: dict[str, Any]) -> "HmmRegimeModel":
+    def from_dict(cls, d: dict[str, Any]) -> HmmRegimeModel:
         return cls(
             means=np.array(d["means"]),
             covars=np.array(d["covars"]),
@@ -183,24 +182,46 @@ def fit_hmm_regimes(
             f"valid log-returns remain (need >= {min_required})."
         )
 
+    # Fit in percentage-return units. Raw log returns (~1e-4 to 1e-2) are
+    # poorly scaled for EM and can collapse states; transform parameters back
+    # afterward so the persisted/prediction contract remains raw log returns.
+    fit_scale = 100.0
+    fit_returns = log_returns_clean * fit_scale
+
     model = GaussianHMM(
         n_components=n_states,
         covariance_type="full",
+        min_covar=1e-8,
         n_iter=200,
         random_state=random_state,
         tol=1e-4,
+        init_params="",
     )
+    # Deterministic, non-collapsing initialization for ordered return regimes.
+    # Random EM starts regularly merge the positive/negative states on quiet
+    # futures samples. Quantile means plus a sticky transition prior give EM a
+    # valid starting topology without imposing final labels.
+    quantiles = np.linspace(0.15, 0.85, n_states)
+    model.means_ = np.quantile(fit_returns[:, 0], quantiles).reshape(-1, 1)
+    global_var = max(float(np.var(fit_returns[:, 0])), 1e-6)
+    model.covars_ = np.full((n_states, 1, 1), global_var)
+    off_diag = 0.05 / max(n_states - 1, 1)
+    model.transmat_ = np.full((n_states, n_states), off_diag)
+    np.fill_diagonal(model.transmat_, 0.95)
+    model.startprob_ = np.full(n_states, 1.0 / n_states)
 
     with warnings.catch_warnings():
         # hmmlearn may emit ConvergenceWarning on short series — not fatal for advisory overlay
         warnings.simplefilter("ignore")
-        model.fit(log_returns_clean)
+        model.fit(fit_returns)
 
-    label_map = _build_label_map(model.means_)
+    means_raw = model.means_ / fit_scale
+    covars_raw = model.covars_ / (fit_scale ** 2)
+    label_map = _build_label_map(means_raw)
 
     return HmmRegimeModel(
-        means=model.means_,
-        covars=model.covars_,
+        means=means_raw,
+        covars=covars_raw,
         transmat=model.transmat_,
         startprob=model.startprob_,
         label_map=label_map,

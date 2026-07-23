@@ -3383,7 +3383,7 @@ export class LifecycleService {
               symbols.push(String(stratConfigForStream.symbol));
             }
             if (symbols.length > 0) {
-              startStream(activeSessId, symbols);
+              await startStream(activeSessId, symbols);
               streamRunning = true;
               logger.info({ strategyId: id, sessionId: activeSessId, symbols }, "→PAPER: started internal stream (internal-engine authority declared)");
             } else {

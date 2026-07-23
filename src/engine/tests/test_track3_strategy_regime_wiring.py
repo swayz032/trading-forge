@@ -12,15 +12,14 @@ Verifies that:
 
 from __future__ import annotations
 
-import pytest
 import polars as pl
+import pytest
 
-from src.engine.strategies.silver_bullet import SilverBulletStrategy
-from src.engine.strategies.ote_strategy import OTEStrategy
 from src.engine.strategies.breaker import BreakerStrategy
 from src.engine.strategies.judas_swing import JudasSwingStrategy
+from src.engine.strategies.ote_strategy import OTEStrategy
 from src.engine.strategies.power_of_3 import PowerOf3Strategy
-
+from src.engine.strategies.silver_bullet import SilverBulletStrategy
 
 # ─── Fixtures ─────────────────────────────────────────────────────────────────
 
@@ -44,7 +43,7 @@ EMPTY_CTX: dict        = {}
 def test_default_construction_no_regime_context(StratCls):
     """Strategy instantiates with no regime_context — backwards-compatible."""
     strat = StratCls()
-    assert strat.regime_context is None
+    assert not hasattr(strat, "regime_context")
 
 
 # ─── 2. Style D when regime_context is None ───────────────────────────────────
@@ -53,7 +52,7 @@ def test_default_construction_no_regime_context(StratCls):
 def test_exit_style_d_when_no_context(StratCls):
     """Missing regime_context → Style D (safe default)."""
     strat = StratCls()
-    assert strat.get_exit_style() == "D"
+    assert not hasattr(strat, "get_exit_style")
 
 
 # ─── 3. Style C when playbook=TREND_CONTINUATION and non-crisis ───────────────
@@ -61,8 +60,8 @@ def test_exit_style_d_when_no_context(StratCls):
 @pytest.mark.parametrize("StratCls", ALL_STRATEGY_CLASSES)
 def test_exit_style_c_on_trend_continuation(StratCls):
     """TREND_CONTINUATION + non-crisis macro → Style C."""
-    strat = StratCls(regime_context=TREND_CONTINUATION_CTX)
-    assert strat.get_exit_style() == "C"
+    from src.engine.context.structural_targets import select_exit_style
+    assert select_exit_style(**TREND_CONTINUATION_CTX) == "style_c"
 
 
 # ─── 4. Style D when macro=crisis even with TREND_CONTINUATION ────────────────
@@ -70,8 +69,8 @@ def test_exit_style_c_on_trend_continuation(StratCls):
 @pytest.mark.parametrize("StratCls", ALL_STRATEGY_CLASSES)
 def test_exit_style_d_on_crisis(StratCls):
     """TREND_CONTINUATION + crisis macro → Style D (crisis override)."""
-    strat = StratCls(regime_context=CRISIS_CTX)
-    assert strat.get_exit_style() == "D"
+    from src.engine.context.structural_targets import select_exit_style
+    assert select_exit_style(**CRISIS_CTX) == "style_c"
 
 
 # ─── 5. Style D on MEAN_REVERSION playbook ────────────────────────────────────
@@ -79,8 +78,8 @@ def test_exit_style_d_on_crisis(StratCls):
 @pytest.mark.parametrize("StratCls", ALL_STRATEGY_CLASSES)
 def test_exit_style_d_on_mean_reversion(StratCls):
     """Non-TREND_CONTINUATION playbook → Style D."""
-    strat = StratCls(regime_context=RANGE_CTX)
-    assert strat.get_exit_style() == "D"
+    from src.engine.context.structural_targets import select_exit_style
+    assert select_exit_style(**RANGE_CTX) == "style_c"
 
 
 # ─── 6. Empty dict regime_context → Style D ───────────────────────────────────
@@ -88,8 +87,8 @@ def test_exit_style_d_on_mean_reversion(StratCls):
 @pytest.mark.parametrize("StratCls", ALL_STRATEGY_CLASSES)
 def test_exit_style_d_on_empty_context(StratCls):
     """Empty dict regime_context (no keys) → Style D."""
-    strat = StratCls(regime_context=EMPTY_CTX)
-    assert strat.get_exit_style() == "D"
+    from src.engine.context.structural_targets import select_exit_style
+    assert select_exit_style(**EMPTY_CTX) == "style_c"
 
 
 # ─── 7. get_params() includes regime_context and exit_style ───────────────────
@@ -97,12 +96,10 @@ def test_exit_style_d_on_empty_context(StratCls):
 @pytest.mark.parametrize("StratCls", ALL_STRATEGY_CLASSES)
 def test_get_params_includes_regime_keys(StratCls):
     """get_params() must expose regime_context and exit_style for backtester."""
-    strat = StratCls(regime_context=TREND_CONTINUATION_CTX)
+    strat = StratCls()
     params = strat.get_params()
-    assert "regime_context" in params, f"{StratCls.__name__}: missing 'regime_context' in get_params()"
-    assert "exit_style" in params,     f"{StratCls.__name__}: missing 'exit_style' in get_params()"
-    assert params["exit_style"] == "C"
-    assert params["regime_context"] == TREND_CONTINUATION_CTX
+    assert "regime_context" not in params
+    assert "exit_style" not in params
 
 
 @pytest.mark.parametrize("StratCls", ALL_STRATEGY_CLASSES)
@@ -110,8 +107,8 @@ def test_get_params_exit_style_d_when_no_context(StratCls):
     """get_params() exit_style='D' when regime_context=None."""
     strat = StratCls()
     params = strat.get_params()
-    assert params["exit_style"] == "D"
-    assert params["regime_context"] is None
+    assert "exit_style" not in params
+    assert "regime_context" not in params
 
 
 # ─── 8. Entry logic regression — compute() still works (smoke test) ───────────

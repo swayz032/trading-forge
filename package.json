@@ -16,6 +16,7 @@
     "deep-scan": "tsx scripts/deep-scan.ts",
     "system-map:check": "tsx scripts/system-map.ts check",
     "system-map:sync": "tsx scripts/system-map.ts sync",
+    "check:package-lock-integrity": "node scripts/check-package-lock-integrity.mjs",
     "check:production-isolation": "node scripts/check-production-isolation.mjs",
     "check:2026-compliance": "node scripts/verify-2026-rules-compliance.mjs",
     "check:family-grade-postscript": "tsx scripts/check-family-grade-postscript.ts",
@@ -52,14 +53,14 @@
     "@aws-sdk/client-s3": "^3.1005.0",
     "@aws-sdk/lib-storage": "^3.1005.0",
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/exporter-trace-otlp-http": "^0.52.0",
-    "@opentelemetry/resources": "^1.25.0",
-    "@opentelemetry/sdk-trace-base": "^1.25.0",
-    "@opentelemetry/sdk-trace-node": "^1.25.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.221.0",
+    "@opentelemetry/resources": "^2.10.0",
+    "@opentelemetry/sdk-trace-base": "^2.10.0",
+    "@opentelemetry/sdk-trace-node": "^2.10.0",
     "@opentelemetry/semantic-conventions": "^1.25.0",
-    "discord.js": "^14.25.1",
+    "discord.js": "^14.27.0",
     "dotenv": "^16.5.0",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "duckdb-async": "^1.4.2",
     "express": "^5.2.1",
     "node-cron": "^4.2.1",
@@ -68,7 +69,7 @@
     "pino-pretty": "^13.0.0",
     "postgres": "^3.4.7",
     "prom-client": "^15.1.3",
-    "ws": "^8.19.0",
+    "ws": "^8.21.0",
     "youtube-transcript": "^1.3.1",
     "zod": "^3.24.0"
   },
@@ -81,9 +82,13 @@
     "@types/ws": "^8.18.1",
     "drizzle-kit": "^0.31.9",
     "eslint": "^10.5.0",
-    "tsx": "^4.19.0",
+    "tsx": "^4.23.1",
     "typescript": "~5.9.2",
     "typescript-eslint": "^8.57.1",
     "vitest": "^3.1.0"
+  },
+  "overrides": {
+    "esbuild": "0.25.12",
+    "tar": "7.5.21"
   }
 }

@@ -19,9 +19,8 @@ import hashlib
 import os
 import sys
 import warnings
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
-from typing import Optional
 
 import duckdb
 import numpy as np
@@ -31,7 +30,7 @@ from src.engine.config import DataQualityReport
 
 # ─── Singleton DuckDB Connection ──────────────────────────────────
 
-_con: Optional[duckdb.DuckDBPyConnection] = None
+_con: duckdb.DuckDBPyConnection | None = None
 _s3_configured: bool = False
 
 
@@ -176,8 +175,8 @@ def _write_cache_sidecar(
     dataset_hash: str,
     *,
     is_partial: bool = False,
-    range_start: Optional[str] = None,
-    range_end: Optional[str] = None,
+    range_start: str | None = None,
+    range_end: str | None = None,
 ) -> bool:
     """Write provenance JSON alongside a cache parquet (deep-scan #10 FIX 7). Returns True on success.
 
@@ -355,7 +354,7 @@ def build_s3_glob(
     timeframe: str,
     start: str,
     end: str,
-    bucket: Optional[str] = None,
+    bucket: str | None = None,
     adjusted: bool = True,
 ) -> str:
     """Build a legacy S3 glob path for a date range.
@@ -400,7 +399,7 @@ def _verify_ratio_adjusted_source(source: str, adjusted: bool, from_cache: bool 
         if allow_raw:
             warnings.warn(
                 f"ALLOW_RAW_DATA=true override: loading from '{source}' which does not appear "
-                f"ratio-adjusted. This is for test/research only — never use in production."
+                f"ratio-adjusted. This is for test/research only — never use in production.", stacklevel=2
             )
         else:
             raise ValueError(
@@ -532,7 +531,7 @@ def check_zero_volume_trade_critical(
     symbol: str,
     attempted_action: str,
     *,
-    audit_callback: "Optional[callable]" = None,  # type: ignore[type-arg]
+    audit_callback: callable | None = None,  # type: ignore[type-arg]
 ) -> bool:
     """Check whether a trade-critical bar has zero volume.
 
@@ -595,8 +594,8 @@ def validate_bars(
     symbol: str = "",
     timeframe: str = "",
     source_duplicate_timestamps: int = 0,
-    requested_start: Optional[str] = None,
-    requested_end: Optional[str] = None,
+    requested_start: str | None = None,
+    requested_end: str | None = None,
 ) -> DataQualityReport:
     """Run comprehensive data quality checks on OHLCV bars.
 
@@ -624,10 +623,13 @@ def validate_bars(
     total = len(df)
 
     # ── Duplicate timestamps ──
-    # Wave hardening 2026-06-22: use caller-supplied source count (pre-dedup).
-    # Computing from df here would always return 0 because load_ohlcv deduplicates
-    # before calling this function.
-    dup_ts = source_duplicate_timestamps
+    # load_ohlcv supplies the pre-dedup source count, while direct callers may
+    # pass raw frames. Inspect the received frame as well and retain the larger
+    # count so neither path can silently report clean duplicate telemetry.
+    duplicate_timestamps_in_df = (
+        total - int(df["ts_event"].n_unique()) if "ts_event" in df.columns else 0
+    )
+    dup_ts = max(source_duplicate_timestamps, duplicate_timestamps_in_df)
     if dup_ts > 0:
         warn_list.append(f"{dup_ts} duplicate timestamps in source data (deduped before validation)")
 
@@ -774,9 +776,8 @@ def validate_bars(
         try:
             from datetime import date as _date
             from datetime import datetime as _dt
-            from datetime import timezone as _tz
 
-            def _to_date(v: object) -> Optional[_date]:
+            def _to_date(v: object) -> _date | None:
                 if hasattr(v, "date"):
                     return v.date()  # type: ignore[union-attr]
                 if isinstance(v, str):
@@ -788,7 +789,7 @@ def validate_bars(
                 # for one dtype. Convert ns→UTC date (timezone-naive, matching the ISO requested bounds).
                 if isinstance(v, (int, float)):
                     try:
-                        return _dt.fromtimestamp(float(v) / 1_000_000_000, tz=_tz.utc).date()
+                        return _dt.fromtimestamp(float(v) / 1_000_000_000, tz=UTC).date()
                     except (ValueError, OverflowError, OSError):
                         return None
                 return None
@@ -872,7 +873,7 @@ def load_ohlcv(
     timeframe: str,
     start: str,
     end: str,
-    local_path: Optional[str] = None,
+    local_path: str | None = None,
     adjusted: bool = True,
     ignore_quality_gate: bool = False,
 ) -> pl.DataFrame:
@@ -913,7 +914,7 @@ def load_ohlcv(
         warnings.warn(
             f"Loading UNADJUSTED data for {data_symbol} {timeframe}. "
             f"Backtesting on raw contracts creates fake signals at roll boundaries. "
-            f"Use adjusted=True (default) for backtesting."
+            f"Use adjusted=True (default) for backtesting.", stacklevel=2
         )
 
     # Phase 12: bust stale cache if BACKTEST_CACHE_BUST=1 (runs once per process)
@@ -1270,8 +1271,8 @@ def load_with_htf(
     htf: str,
     start: str,
     end: str,
-    local_path: Optional[str] = None,
-    htf_local_path: Optional[str] = None,
+    local_path: str | None = None,
+    htf_local_path: str | None = None,
     adjusted: bool = True,
 ) -> tuple[pl.DataFrame, pl.DataFrame]:
     """Load exec-TF and HTF data for a symbol (sequential load_ohlcv calls).
@@ -1434,7 +1435,7 @@ def _third_friday(year: int, month: int) -> int:
     return third_friday
 
 
-def _dl_nth_weekday(year: int, month: int, weekday: int, n: int) -> "date":  # noqa: F821
+def _dl_nth_weekday(year: int, month: int, weekday: int, n: int) -> date:  # noqa: F821
     """Return the n-th occurrence (1-based) of weekday (0=Mon, 3=Thu, 4=Fri) in month.
 
     Wave hardening 2026-06-22, data-layer institutional-grade:
@@ -1450,7 +1451,7 @@ def _dl_nth_weekday(year: int, month: int, weekday: int, n: int) -> "date":  # n
     return first_occurrence + timedelta(weeks=n - 1)
 
 
-def _second_thursday_before_third_friday(year: int, month: int) -> "date":  # noqa: F821
+def _second_thursday_before_third_friday(year: int, month: int) -> date:  # noqa: F821
     """CME-correct equity index rollover: 2nd Thursday of the delivery month.
 
     Wave hardening 2026-06-22, data-layer institutional-grade: HIGH-1 fix.
@@ -1469,7 +1470,7 @@ def _second_thursday_before_third_friday(year: int, month: int) -> "date":  # no
     return _dl_nth_weekday(year, month, 3, 2)  # weekday 3 = Thursday, 2nd occurrence
 
 
-def _equity_index_rollover_dates(start_year: int, end_year: int) -> list["date"]:  # noqa: F821
+def _equity_index_rollover_dates(start_year: int, end_year: int) -> list[date]:  # noqa: F821
     """Compute equity-index (ES/MES/NQ/MNQ) rollover dates.
 
     Equity index futures roll quarterly (Mar/Jun/Sep/Dec). Rollover date is the
@@ -1483,7 +1484,7 @@ def _equity_index_rollover_dates(start_year: int, end_year: int) -> list["date"]
     return dates_list
 
 
-def _crude_oil_rollover_dates(start_year: int, end_year: int) -> list["date"]:  # noqa: F821
+def _crude_oil_rollover_dates(start_year: int, end_year: int) -> list[date]:  # noqa: F821
     """Compute crude oil (CL/MCL) rollover dates.
 
     CL rolls every month. The rollover date is the business day BEFORE the 25th
@@ -1519,7 +1520,7 @@ def compute_rollover_dates(
     symbol: str,
     start_year: int,
     end_year: int,
-) -> list["date"]:  # noqa: F821
+) -> list[date]:  # noqa: F821
     """Compute standard rollover dates for a futures symbol across a year range.
 
     F-1 fix: Added per-symbol dispatch so CL/MCL use the correct crude oil
@@ -1547,7 +1548,7 @@ def compute_rollover_dates(
         _w.warn(
             f"compute_rollover_dates: unknown rollover schedule for '{symbol}'. "
             f"Falling back to equity quarterly (Mar/Jun/Sep/Dec). "
-            f"Add explicit handling for this symbol."
+            f"Add explicit handling for this symbol.", stacklevel=2
         )
         from datetime import date
         months = ROLLOVER_MONTHS.get(symbol, [3, 6, 9, 12])

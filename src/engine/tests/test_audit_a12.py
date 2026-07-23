@@ -39,7 +39,7 @@ from __future__ import annotations
 
 import re
 from collections import OrderedDict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import numpy as np
@@ -66,7 +66,7 @@ REPORT_PATH = REPO_ROOT / "docs" / "A12-AUDIT-REPORT.md"
 
 
 # Use OrderedDict so the report is deterministic regardless of test order.
-AUDIT_RESULTS: "OrderedDict[int, dict]" = OrderedDict()
+AUDIT_RESULTS: OrderedDict[int, dict] = OrderedDict()
 
 
 def record(category: int, name: str, status: str, evidence: str,
@@ -378,11 +378,11 @@ def test_cat04_backtest_fill_assumptions():
     if not rsi_extreme:
         failures.append("fill_model.py missing RSI extreme limit fill probability")
 
-    # b) Stop slippage 2x
-    stop_2x = "* 2.0" in sl and ('order_type == "stop"' in sl or 'order_type == "stop_market"' in sl)
-    findings.append(f"slippage 2x for stop/stop_market: {'OK' if stop_2x else 'MISSING'}")
-    if not stop_2x:
-        failures.append("slippage.py missing 2x multiplier for stop orders")
+    # b) Market-stop orders are prohibited; stop-limit remains supported.
+    stop_policy = 'order_type in ("stop", "stop_market")' in sl and "raise ValueError" in sl
+    findings.append(f"stop/stop_market prohibition: {'OK' if stop_policy else 'MISSING'}")
+    if not stop_policy:
+        failures.append("slippage.py missing fail-closed stop/stop_market prohibition")
 
     # c) Limit slippage 0.5x
     limit_half = "* 0.5" in sl and 'order_type == "limit"' in sl
@@ -508,8 +508,8 @@ def test_cat05_pnl_math():
     # c) Per-firm commissions — 2026-05-19 phase19/phase20 stripped 6 legacy
     # firms (TPT/Apex/FFN/Alpha/Tradeify/Earn2Trade). Topstep + MFFU only.
     expected_commissions = {
-        "topstep_50k": 0.37,
-        "mffu_50k": 0.62,
+        "topstep_50k": 0.62,
+        "mffu_50k": 0.95,
     }
     for firm, expected_per_side in expected_commissions.items():
         if firm not in FIRM_COMMISSIONS:
@@ -753,8 +753,8 @@ def test_cat08_paper_backtest_parity():
     if not backtest_3x:
         failures.append("liquidity.py overnight slippage != 3.0x")
 
-    # c) Commission per-side from getCommissionPerSide(firmId)
-    paper_per_side = "getCommissionPerSide(sessionForFirm?.firmId)" in paper
+    # c) Commission per-side from the symbol- and firm-aware canonical resolver.
+    paper_per_side = "getCommissionPerSideBySymbol(pos.symbol, sessionForFirm?.firmId" in paper
     findings.append(f"paper getCommissionPerSide(firmId): {'OK' if paper_per_side else 'MISSING'}")
     if not paper_per_side:
         failures.append("paper-execution-service.ts does not pull commission from per-firm config")
@@ -817,29 +817,11 @@ def test_cat09_daily_pnl_aggregation():
     risk_gate = _read("src/server/services/paper-risk-gate.ts")
     paper = _read("src/server/services/paper-execution-service.ts")
 
-    # a) Daily P&L aggregation date: toEasternDateString uses calendar midnight, NOT 5pm ET cutoff
-    midnight_rollover = (
-        "toEasternDateString" in risk_gate
-        and "isUsDst" in risk_gate
-        and ".toISOString().split" in risk_gate
-    )
-    findings.append(f"toEasternDateString uses calendar ET midnight: {'YES' if midnight_rollover else 'no'}")
-    if midnight_rollover:
-        # This is the critical Cat 9 finding: futures trading day rolls at 5pm ET,
-        # not calendar midnight. A trade closed at 17:30 ET on Tue counts as the
-        # WED trading day per CME convention. Current code attributes it to TUE.
-        soft_findings.append(
-            "FINDING: toEasternDateString() uses calendar ET midnight rollover for "
-            "dailyPnlBreakdown keys (paper-risk-gate.ts:16-21). Futures trading day "
-            "rolls at 5:00 PM ET per CME convention. Trades closed 17:00–23:59 ET "
-            "are attributed to the WRONG trading day. Affects daily loss limit "
-            "enforcement and consistency rule calculation."
-        )
-        # We flag this as a FAIL because daily-loss-limit is a kill-switch input
-        failures.append(
-            "Daily P&L aggregation uses calendar midnight ET, not CME 5pm ET cutoff "
-            "(paper-risk-gate.ts:16-21)"
-        )
+    # a) Daily P&L uses the canonical CME 5pm ET futures-day cutoff.
+    futures_rollover = "toFuturesTradingDayString" in risk_gate and "toFuturesTradingDayString" in paper
+    findings.append(f"CME 5pm ET futures trading-day attribution: {'OK' if futures_rollover else 'MISSING'}")
+    if not futures_rollover:
+        failures.append("Daily P&L aggregation is missing the CME 5pm ET futures-day helper")
 
     # b) Consecutive losses counter resets when a winning trade is encountered.
     # Look for the canonical pattern: a counter init AND an `else break` inside
@@ -860,23 +842,13 @@ def test_cat09_daily_pnl_aggregation():
     # mark-to-market update uses `currentEquity + unrealizedDelta` (intraday).
     # peakEquity then takes GREATEST of either path → HWM is on MARKED-TO-MARKET.
     # This is INCORRECT for most prop firms whose trailing DD HWM is on CLOSED equity.
-    hwm_uses_unrealized = (
-        "peakEquity: sql`GREATEST(${paperSessions.peakEquity}::numeric, ${paperSessions.currentEquity}::numeric + ${totalUnrealizedDelta})" in paper
-    )
-    findings.append(f"peakEquity HWM updated from MARKED-TO-MARKET (unrealized) equity: {'YES' if hwm_uses_unrealized else 'no'}")
-    if hwm_uses_unrealized:
-        # Critical finding: per docs/prop-firm-rules.md, Topstep/Apex EOD trailing
-        # DD uses CLOSED equity. Updating HWM intraday from unrealized PnL
-        # over-tightens the trailing DD floor.
-        failures.append(
-            "peakEquity (trailing DD HWM) is updated from MARKED-TO-MARKET equity "
-            "(paper-execution-service.ts:1622). Per Topstep/Apex EOD trailing DD spec, "
-            "HWM must update from CLOSED equity (post-trade-close) only. Intraday MTM "
-            "updates over-tighten the floor and trigger false breaches."
-        )
+    realized_hwm = "realizedPeakEquity" in paper and "GREATEST(${paperSessions.realizedPeakEquity}" in paper
+    findings.append(f"closed-equity trailing-DD HWM uses realizedPeakEquity: {'OK' if realized_hwm else 'MISSING'}")
+    if not realized_hwm:
+        failures.append("paper execution is missing the closed-equity realizedPeakEquity HWM")
 
     # d) Consistency rule check called after trade close
-    consistency_after_close = "checkConsistencyRule(session, netPnl)" in paper
+    consistency_after_close = "await checkConsistencyRule(session)" in paper
     findings.append(f"checkConsistencyRule called after trade close: {'OK' if consistency_after_close else 'MISSING'}")
     if not consistency_after_close:
         failures.append("checkConsistencyRule not invoked post-close")
@@ -921,7 +893,7 @@ def test_cat10_compliance_accuracy():
     # a) Per-firm DLL — 2026-05-19 legacy purge: Topstep + MFFU only.
     expected_dll = {
         "topstep_50k": 1000,
-        "mffu_50k": None,
+        "mffu_50k": 1000,
     }
     for firm, expected in expected_dll.items():
         actual = FIRM_RULES.get(firm, {}).get("daily_loss_limit")
@@ -978,7 +950,7 @@ def test_cat10_compliance_accuracy():
         failures.append("compliance_gate.check_kill_switch missing one of [DLL, consec_losses, max_trades]")
 
     # e) Per-firm contract caps — 2026-05-19 micros corrected to 50 (was 15).
-    EXPECTED_MICRO_CAP = 50
+    expected_micro_caps = {"topstep_50k": 50, "mffu_50k": 40}
     for firm in ["topstep_50k", "mffu_50k"]:
         if firm not in FIRM_CONTRACT_CAPS:
             failures.append(f"FIRM_CONTRACT_CAPS missing {firm}")
@@ -990,9 +962,10 @@ def test_cat10_compliance_accuracy():
                 findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}]: MISSING")
                 continue
             actual_cap = FIRM_CONTRACT_CAPS[firm][sym]
-            if actual_cap != EXPECTED_MICRO_CAP:
-                failures.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap} (expected {EXPECTED_MICRO_CAP})")
-                findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: MISMATCH (expected {EXPECTED_MICRO_CAP})")
+            expected_cap = expected_micro_caps[firm]
+            if actual_cap != expected_cap:
+                failures.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap} (expected {expected_cap})")
+                findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: MISMATCH (expected {expected_cap})")
             else:
                 findings.append(f"FIRM_CONTRACT_CAPS[{firm}][{sym}] = {actual_cap}: OK")
 
@@ -1392,7 +1365,8 @@ def _emit_report_at_module_end(request):
             }
 
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    REPORT_PATH.write_text(_render_report(), encoding="utf-8")
+    with REPORT_PATH.open("w", encoding="utf-8", newline="\n") as report_file:
+        report_file.write(_render_report())
 
 
 def _render_report() -> str:
@@ -1403,10 +1377,10 @@ def _render_report() -> str:
     lines: list[str] = []
     lines.append("# A12 — 12-Category Code Audit Report")
     lines.append("")
-    lines.append(f"**Generated:** {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S UTC')}  ")
-    lines.append("**Auditor:** W12 Team B (trading-forge-architect)  ")
-    lines.append("**Plan:** PART A §A12 of `C:\\Users\\tonio\\.claude\\plans\\reflective-dancing-moth.md`  ")
-    lines.append("**Scope:** Read-only static + numerical audit of existing Trading Forge code.  ")
+    lines.append(f"**Generated:** {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S UTC')}")
+    lines.append("**Auditor:** W12 Team B (trading-forge-architect)")
+    lines.append("**Plan:** PART A §A12 of `C:\\Users\\tonio\\.claude\\plans\\reflective-dancing-moth.md`")
+    lines.append("**Scope:** Read-only static + numerical audit of existing Trading Forge code.")
     lines.append("**Test file:** `src/engine/tests/test_audit_a12.py`")
     lines.append("")
     lines.append("## Summary")

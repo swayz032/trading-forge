@@ -39,11 +39,14 @@
 //      cannot run must never condemn the box.
 "use strict";
 const { execFileSync } = require("node:child_process");
+const { readFileSync, readdirSync } = require("node:fs");
 const path = require("node:path");
 const { VARS, CLASSES, validate } = require("./recovery-env-manifest.cjs");
 
 const ROOT = path.resolve(__dirname, "..", "..");
 const SCAN_DIRS = ["src", "scripts"];
+const SCAN_EXTENSIONS = new Set([".ts", ".js", ".cjs", ".mjs", ".py"]);
+const SKIP_DIRS = new Set(["node_modules", ".venv", ".git", "dist"]);
 
 // Exclusions. NOTE the Python convention `test_*.py` — omitting it silently inflated
 // DATABASE_URL from 115 read sites to 171 during this build. A test-file filter is
@@ -59,7 +62,60 @@ const TEST_RE = /__tests__|\.test\.|\.spec\.|[\\/]test_|[\\/]tests?[\\/]|conftes
 // An instrument must not be part of what it measures.
 const SELF_RE = /verify-env-manifest\.cjs|recovery-env-manifest\.cjs/i;
 
+function collectScanFiles(root) {
+  const files = [];
+  const visit = (relativeDir) => {
+    for (const entry of readdirSync(path.join(root, relativeDir), { withFileTypes: true })) {
+      if (entry.isSymbolicLink()) continue;
+      const relativePath = path.join(relativeDir, entry.name);
+      if (entry.isDirectory()) {
+        if (!SKIP_DIRS.has(entry.name)) visit(relativePath);
+      } else if (entry.isFile() && SCAN_EXTENSIONS.has(path.extname(entry.name))) {
+        files.push(relativePath);
+      }
+    }
+  };
+  for (const scanDir of SCAN_DIRS) visit(scanDir);
+  return files;
+}
+
+function readSitesWithNode(name, root) {
+  const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const readPattern = new RegExp(
+    `process\\.env\\.${escapedName}\\b|process\\.env\\[["']${escapedName}["']\\]|` +
+      `os\\.environ\\.get\\(["']${escapedName}["']|os\\.environ\\[["']${escapedName}["']\\]`,
+  );
+  const sites = [];
+  for (const relativePath of collectScanFiles(root)) {
+    if (TEST_RE.test(relativePath) || SELF_RE.test(relativePath)) continue;
+    const lines = readFileSync(path.join(root, relativePath), "utf8").split(/\r?\n/);
+    for (let index = 0; index < lines.length; index += 1) {
+      if (readPattern.test(lines[index])) {
+        sites.push(`${relativePath}:${index + 1}:${lines[index]}`);
+      }
+    }
+  }
+  return sites;
+}
+
+function surfaceCoverageWithNode(vars, root) {
+  const declared = new Set(vars.map((v) => v.name));
+  const gaps = [];
+  const emptyDefaultPattern =
+    /process\.env\.([A-Z][A-Z0-9_]*)\s*(?:\|\||\?\?)\s*""/g;
+  for (const surface of GOVERNED_SURFACES) {
+    const source = readFileSync(path.join(root, surface.file), "utf8");
+    for (const match of source.matchAll(emptyDefaultPattern)) {
+      if (!declared.has(match[1])) {
+        gaps.push({ name: match[1], file: surface.file, why: surface.why });
+      }
+    }
+  }
+  return gaps;
+}
+
 function readSites(name, { runner = execFileSync, root = ROOT } = {}) {
+  if (runner === execFileSync) return readSitesWithNode(name, root);
   const pattern =
     `process\\.env\\.${name}\\b|process\\.env\\[["']${name}["']\\]|` +
     `os\\.environ\\.get\\(["']${name}["']|os\\.environ\\[["']${name}["']\\]`;
@@ -187,6 +243,7 @@ const GOVERNED_SURFACES = [
 ];
 
 function surfaceCoverage(vars = VARS, { runner = execFileSync, root = ROOT } = {}) {
+  if (runner === execFileSync) return surfaceCoverageWithNode(vars, root);
   const declared = new Set(vars.map((v) => v.name));
   const gaps = [];
   for (const s of GOVERNED_SURFACES) {

@@ -64,8 +64,6 @@ vi.mock("../db/schema.js", () => ({
   pilotSessions: {},
   backtests: {},
   systemParameters: {},
-    // @ts-ignore — test-only: partial db schema mock; complianceRulesets not in the TypedKillSwitchDeps interface shape required by the real signature (W0.3 2026-06-22)
-  complianceRulesets: {},
   complianceDriftLog: {},
   strategyMemory: {},
   strategyDslFeatures: {},

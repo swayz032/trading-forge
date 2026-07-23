@@ -15,7 +15,8 @@
  * is preserved.
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+vi.hoisted(() => { process.env.DATABASE_URL ||= "postgresql://unused:unused@127.0.0.1:1/unused"; });
 import { deriveRlTrainingSeed } from "../lib/quantum-rl-training-runner.js";
 
 const MAX_UINT32 = 2 ** 32 - 1;

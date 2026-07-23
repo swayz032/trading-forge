@@ -85,6 +85,10 @@ vi.mock("../lib/notification-helpers.js", () => ({
     (body: string, what: string, action: string) =>
       `${body}\n\n--- For family members ---\nWhat this means: ${what}\nWhat to do: ${action}`,
   ),
+  applyFamilyFallback: vi.fn((body: string, critical: boolean) => {
+    if (!critical || body.includes("--- For family members ---")) return body;
+    return `${body}\n\n--- For family members ---\nWhat this means: The trading system detected a critical issue. Auto-remediation was attempted.\nWhat to do: No immediate action needed — wait 5 minutes. If you see multiple alerts in a row, call Tony.`;
+  }),
 }));
 
 vi.mock("../lib/metrics-registry.js", () => ({

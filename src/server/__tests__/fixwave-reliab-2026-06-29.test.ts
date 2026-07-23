@@ -47,6 +47,7 @@ vi.mock("../services/notification-service.js", () => ({
 
 vi.mock("../lib/notification-helpers.js", () => ({
   appendFamilyGradePostscript: vi.fn((...args: string[]) => args.join(" | ")),
+  applyFamilyFallback: vi.fn((body: string) => body),
 }));
 
 vi.mock("../db/index.js", () => ({

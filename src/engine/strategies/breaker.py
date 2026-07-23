@@ -173,7 +173,10 @@ class BreakerStrategy(BaseStrategy):
                     # so the first hit found IS the earliest (never-valid
                     # sentinel = None when no match exists anywhere in window).
                     valid_from = None
-                    for check_bar in range(max(0, broken_at - 3), min(n, broken_at + 4)):
+                    # A breaker must be confirmed no later than the break bar.
+                    # Later BOS observations describe a different, future
+                    # structure and cannot retroactively validate this zone.
+                    for check_bar in range(max(0, broken_at - 3), min(n, broken_at + 1)):
                         if bos_list[check_bar] is not None:
                             # Bullish breaker = bearish OB broken = bearish BOS at break
                             if breaker_type == "bullish_breaker" and bos_list[check_bar] == "bullish":

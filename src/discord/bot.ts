@@ -251,11 +251,19 @@ function buildSlumdawgVerdictEmbed(result: IngestResult, sourceUrl: string): Emb
     // Plain English "Slumdawg's Take" — built from the extracted idea fields
     const moodLine = humanizeRegime(firstIdea?.preferred_regime);
     const triggerLine = humanizeTrigger(firstIdea?.entry_indicator);
-    const factorBullets = (firstIdea?.confluence_factors ?? []).slice(0, 4).map(f => `  • ${humanizeFactor(f)}`).join("\n") || "  • —";
-    const takeLines: string[] = [];
-    takeLines.push(`Looking for a market that's **${moodLine}**.`);
-    if (firstIdea?.entry_indicator) takeLines.push(`Slumdawg waits for **${triggerLine}** before he pulls the trigger.`);
-    takeLines.push(`What needs to check off first:\n${factorBullets}`);
+    const recipeSteps = [
+      ...(firstIdea?.entry_indicator ? [`Wait for **${triggerLine}**.`] : []),
+      ...(firstIdea?.confluence_factors ?? []).slice(0, 4).map((f) => `Confirm **${humanizeFactor(f)}**.`),
+    ];
+    const numberedRecipe = recipeSteps.length > 0
+      ? recipeSteps.map((step, i) => `${i + 1}. ${step}`).join("\n")
+      : "1. Wait for the extracted entry rules to line up.";
+    const takeLines: string[] = [
+      `Best when the market is **${moodLine}**.`,
+      `**How to take the trade**\n${numberedRecipe}`,
+      "🛑 **Stop:** framework default structural/ATR protection — never fixed-point.",
+      "💰 **Target:** framework default risk-multiple target and managed runner.",
+    ];
 
     e.setColor(SLUMDAWG_COLOR.success)
       .setTitle(stratCount > 0

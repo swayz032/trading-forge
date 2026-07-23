@@ -393,7 +393,7 @@ def _run_walk_forward_cpcv(
     all_is_pnls: list[float] = []
 
     _shared_req = BacktestRequest(
-        strategy=config,
+        strategy=config.model_dump(),
         start_date=request.start_date,
         end_date=request.end_date,
         slippage_ticks=request.slippage_ticks,
@@ -1443,7 +1443,7 @@ def run_walk_forward(
     # Build the shared OOS request template (config is the same for all windows when
     # not optimizing — each worker uses the same request but different data slices)
     _shared_oos_request = BacktestRequest(
-        strategy=config,
+        strategy=config.model_dump(),
         start_date=request.start_date,
         end_date=request.end_date,
         slippage_ticks=request.slippage_ticks,
@@ -1523,7 +1523,7 @@ def run_walk_forward(
                     print(f"    Optimized: applied {opt_result_serial['best_params']} (IS Sharpe={opt_result_serial['best_score']:.4f})", file=sys.stderr)
 
             _opt_req = BacktestRequest(
-                strategy=best_config,
+                strategy=best_config.model_dump(),
                 start_date=request.start_date,
                 end_date=request.end_date,
                 slippage_ticks=request.slippage_ticks,
@@ -1550,7 +1550,7 @@ def run_walk_forward(
     # fall back to wfe_overall=None at aggregation (no crash, no silent wrong value).
     _is_results_for_wfe: list[dict] = []
     _wfe_is_request = BacktestRequest(
-        strategy=config,
+        strategy=config.model_dump(),
         start_date=request.start_date,
         end_date=request.end_date,
         slippage_ticks=request.slippage_ticks,

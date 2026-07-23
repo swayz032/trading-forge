@@ -12,12 +12,12 @@ Tests:
 """
 
 import math
+
 import pytest
 
-from src.engine.graveyard.similarity import cosine_similarity, find_similar
-from src.engine.graveyard.failure_tagger import tag_failure, FAILURE_MODES
+from src.engine.graveyard.failure_tagger import FAILURE_MODES, tag_failure
 from src.engine.graveyard.graveyard_gate import corpse_check
-
+from src.engine.graveyard.similarity import cosine_similarity, find_similar
 
 # ─── Cosine Similarity ──────────────────────────────────────────
 
@@ -188,9 +188,9 @@ class TestCorpseCheck:
                 vec = [v / norm for v in vec]
             return vec
 
-        monkeypatch.setattr(
-            "src.engine.graveyard.graveyard_gate.embed_strategy", fake_embed
-        )
+        from src.engine.graveyard import graveyard_gate
+
+        monkeypatch.setattr(graveyard_gate, "embed_strategy", fake_embed)
 
     def _make_corpus_entry(self, name: str, failure_modes: list[str] | None = None):
         """Build a graveyard corpus entry with a fake embedding."""

@@ -13,34 +13,34 @@ Tests:
 - Monthly budget scoring at boundary values
 """
 
-import pytest
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 
-from src.engine.skip_engine.skip_classifier import (
-    classify_session,
-    _score_event_proximity,
-    _score_vix_level,
-    _score_overnight_gap,
-    _score_premarket_volume,
-    _score_day_of_week,
-    _score_loss_streak,
-    _score_monthly_budget,
-    _score_correlation_spike,
-    _score_calendar_filter,
-    _score_quantum_entropy,
-    SIGNAL_WEIGHTS,
-    SKIP_SCORE_THRESHOLD,
-    REDUCE_SCORE_THRESHOLD,
-)
+import pytest
+
 from src.engine.skip_engine.calendar_filter import (
+    EVENT_BLACKOUT_MINUTES,
     calendar_check,
     check_economic_event,
-    EVENT_BLACKOUT_MINUTES,
 )
-from src.engine.skip_engine.session_monitor import SessionMonitor
 from src.engine.skip_engine.historical_skip_stats import backtest_skip_engine
 from src.engine.skip_engine.premarket_analyzer import collect_premarket_signals
-
+from src.engine.skip_engine.session_monitor import SessionMonitor
+from src.engine.skip_engine.skip_classifier import (
+    REDUCE_SCORE_THRESHOLD,
+    SIGNAL_WEIGHTS,
+    SKIP_SCORE_THRESHOLD,
+    _score_calendar_filter,
+    _score_correlation_spike,
+    _score_day_of_week,
+    _score_event_proximity,
+    _score_loss_streak,
+    _score_monthly_budget,
+    _score_overnight_gap,
+    _score_premarket_volume,
+    _score_quantum_entropy,
+    _score_vix_level,
+    classify_session,
+)
 
 # ─── Fixtures ────────────────────────────────────────────────────
 
@@ -418,8 +418,8 @@ class TestCalendarFilter:
         assert result["economic_event_name"] == "CPI"
 
     def test_economic_event_nfp_day_level(self):
-        """Day-level check: NFP day (2026-01-09) should flag as economic event."""
-        result = calendar_check(date(2026, 1, 9))
+        """Day-level check: first Friday NFP day should flag as an event."""
+        result = calendar_check(date(2026, 1, 2))
         assert result["is_economic_event"] is True
         assert result["economic_event_name"] == "NFP"
 
@@ -440,7 +440,7 @@ class TestCheckEconomicEvent:
 
     def _fomc_utc(self, hour: int, minute: int) -> datetime:
         """Build a UTC datetime for 2026-03-18 at the given HH:MM UTC."""
-        return datetime(2026, 3, 18, hour, minute, tzinfo=timezone.utc)
+        return datetime(2026, 3, 18, hour, minute, tzinfo=UTC)
 
     def test_fomc_inside_window_at_event_time(self):
         """Exactly at FOMC time (18:00 UTC) should be inside window."""
@@ -479,23 +479,23 @@ class TestCheckEconomicEvent:
         assert name == ""
 
     def test_nfp_inside_window(self):
-        """NFP 2026-01-09 08:30 ET = 13:30 UTC (EST, no DST in January)."""
+        """NFP 2026-01-02 08:30 ET = 13:30 UTC (EST, no DST in January)."""
         # January → EST (UTC-5): 08:30 ET = 13:30 UTC
-        dt = datetime(2026, 1, 9, 13, 30, tzinfo=timezone.utc)
+        dt = datetime(2026, 1, 2, 13, 30, tzinfo=UTC)
         is_event, name, _ = check_economic_event(dt)
         assert is_event is True
         assert name == "NFP"
 
     def test_cpi_inside_window(self):
         """CPI 2026-01-14 08:30 ET = 13:30 UTC (EST)."""
-        dt = datetime(2026, 1, 14, 13, 30, tzinfo=timezone.utc)
+        dt = datetime(2026, 1, 14, 13, 30, tzinfo=UTC)
         is_event, name, _ = check_economic_event(dt)
         assert is_event is True
         assert name == "CPI"
 
     def test_no_event_on_nondate(self):
         """A random datetime with no event scheduled should return False."""
-        dt = datetime(2026, 3, 10, 15, 0, tzinfo=timezone.utc)  # random Tuesday
+        dt = datetime(2026, 3, 10, 15, 0, tzinfo=UTC)  # random Tuesday
         is_event, name, _ = check_economic_event(dt)
         assert is_event is False
         assert name == ""
@@ -511,7 +511,7 @@ class TestCheckEconomicEvent:
     def test_2027_fomc_included(self):
         """FOMC 2027-01-27 at 14:00 ET should be detected (2027 dates present)."""
         # 2027-01-27 → EST (UTC-5): 14:00 ET = 19:00 UTC
-        dt = datetime(2027, 1, 27, 19, 0, tzinfo=timezone.utc)
+        dt = datetime(2027, 1, 27, 19, 0, tzinfo=UTC)
         is_event, name, _ = check_economic_event(dt)
         assert is_event is True
         assert name == "FOMC"
@@ -525,7 +525,7 @@ class TestCheckEconomicEvent:
 
     def test_calendar_check_datetime_precision_clear(self):
         """calendar_check with check_datetime far from any event should not block."""
-        dt = datetime(2026, 3, 10, 15, 0, tzinfo=timezone.utc)  # no event
+        dt = datetime(2026, 3, 10, 15, 0, tzinfo=UTC)  # no event
         result = calendar_check(check_datetime=dt)
         assert result["is_economic_event"] is False
 

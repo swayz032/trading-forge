@@ -16,6 +16,7 @@
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import path from "path";
+import type { SpanProcessor } from "@opentelemetry/sdk-trace-base";
 
 // ─── Resolve package version at module load time ─────────────────────────────
 
@@ -65,15 +66,14 @@ try {
   const { NodeTracerProvider } = await import("@opentelemetry/sdk-trace-node");
   const { SimpleSpanProcessor, BatchSpanProcessor, ConsoleSpanExporter } = await import("@opentelemetry/sdk-trace-base");
   const { OTLPTraceExporter } = await import("@opentelemetry/exporter-trace-otlp-http");
-  const { Resource } = await import("@opentelemetry/resources");
-  const { SEMRESATTRS_SERVICE_NAME, SEMRESATTRS_SERVICE_VERSION } = await import("@opentelemetry/semantic-conventions");
+  const { resourceFromAttributes } = await import("@opentelemetry/resources");
+  const { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } = await import("@opentelemetry/semantic-conventions");
 
-  const resource = new Resource({
-    [SEMRESATTRS_SERVICE_NAME]: "trading-forge",
-    [SEMRESATTRS_SERVICE_VERSION]: resolveServiceVersion(),
+  const resource = resourceFromAttributes({
+    [ATTR_SERVICE_NAME]: "trading-forge",
+    [ATTR_SERVICE_VERSION]: resolveServiceVersion(),
   });
-
-  const provider = new NodeTracerProvider({ resource });
+  const spanProcessors: SpanProcessor[] = [];
 
   if (otlpEndpoint) {
     // Real export — OTLP HTTP to the configured collector
@@ -81,15 +81,16 @@ try {
     const processor = isDev
       ? new SimpleSpanProcessor(exporter)   // immediate flush in dev for easier debugging
       : new BatchSpanProcessor(exporter);   // efficient batching in prod
-    provider.addSpanProcessor(processor);
+    spanProcessors.push(processor);
     OTEL_AVAILABLE = true;
   } else if (isDev) {
     // Dev without a collector: emit to console so spans are visible locally
-    provider.addSpanProcessor(new SimpleSpanProcessor(new ConsoleSpanExporter()));
+    spanProcessors.push(new SimpleSpanProcessor(new ConsoleSpanExporter()));
     OTEL_AVAILABLE = true;
   }
   // Prod without endpoint: provider registered with no processor → spans are no-ops at the SDK level
 
+  const provider = new NodeTracerProvider({ resource, spanProcessors });
   provider.register();
   tracer = trace.getTracer("trading-forge");
 

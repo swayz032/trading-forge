@@ -30,6 +30,10 @@ function runProbe(env) {
       HOME: process.env.HOME || process.env.USERPROFILE,
       USERPROFILE: process.env.USERPROFILE || process.env.HOME,
       TEMP: process.env.TEMP, TMP: process.env.TMP,
+      // actions/setup-python supplies dynamic-loader paths for its relocatable
+      // interpreter. Preserve those paths without inheriting AWS credentials.
+      ...(process.env.LD_LIBRARY_PATH ? { LD_LIBRARY_PATH: process.env.LD_LIBRARY_PATH } : {}),
+      ...(process.env.DYLD_LIBRARY_PATH ? { DYLD_LIBRARY_PATH: process.env.DYLD_LIBRARY_PATH } : {}),
       ...env,
     },
   });

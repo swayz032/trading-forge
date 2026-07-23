@@ -23,25 +23,25 @@
 
 | Tier (contracts) | Breach % | Gate | Verdict | Eval pass rate | 6-mo survival | Consistency fail |
 |---|---|---|---|---|---|---|
-| 9 | 19.00% | 5% | UNSAFE (19.0% breach >= 5% gate) | 72.0% | 0.0% | 1.0% |
+| 9 | 9.00% | 5% | UNSAFE (9.0% breach >= 5% gate) | 80.0% | 0.0% | 0.0% |
 
 ## Plain-English Verdict Per Tier
 
 ### Tier 9 contracts — UNSAFE
 
-About 19.0% of simulated runs ended in a breach. This tier carries material risk: roughly 1 in 5 simulated 6-month periods hits the floor. Waiting for a larger buffer before using this size is strongly recommended.
+About 9.0% of simulated runs breached — just over the 5% gate. At this size the account buffer is tight. Consider staying at the previous tier until more winning weeks add cushion.
 
 **Breach reason breakdown:**
 
-- Hit EOD trailing drawdown floor: 18 sims (18.0%)
-- Never hit profit target (not a breach): 9 sims (9.0%)
-- Consistency rule violation (>50% profit in one day): 1 sims (1.0%)
+- Hit EOD trailing drawdown floor: 8 sims (8.0%)
+- Hit daily loss limit: 1 sims (1.0%)
+- Never hit profit target (not a breach): 11 sims (11.0%)
 
 **Simulated max-drawdown percentiles (from account peak):**
 
 | P50 | P75 | P90 | P95 | P99 |
 |---|---|---|---|---|
-| $1434 | $1609 | $2341 | $2341 | $2351 |
+| $1434 | $1609 | $2341 | $2612 | $3081 |
 
 ## Honest Scope Disclosure
 

@@ -12,15 +12,13 @@ Verifies:
 - Firm routing lists correct
 """
 import json
-import pytest
-from src.engine.pine_compiler import (
-    compile_dual_artifacts,
-    DualArtifactResult,
-    PineArtifact,
-    ATS_FIRMS,
-    MANUAL_APPROVAL_FIRMS,
-)
 
+import pytest
+
+from src.engine.pine_compiler import (
+    DualArtifactResult,
+    compile_dual_artifacts,
+)
 
 # ─── Fixtures ────────────────────────────────────────────────────────
 
@@ -95,12 +93,8 @@ class TestDualArtifactShape:
     def test_firm_routing_lists_populated(self):
         result = compile_dual_artifacts(_make_strategy())
         if result.exportable:
-            assert len(result.indicator_firms) > 0
-            assert len(result.strategy_firms) > 0
-            # Apex must be in manual-approval list
-            assert "apex_50k" in result.indicator_firms
-            # Topstep must be in ATS list
-            assert "topstep_50k" in result.strategy_firms
+            assert result.indicator_firms == []
+            assert set(result.strategy_firms) == {"topstep_50k", "mffu_50k"}
 
 
 # ─── INDICATOR Artifact Invariants ───────────────────────────────────
@@ -217,15 +211,15 @@ class TestStrategyArtifact:
 
     def test_traderspost_buy_action(self):
         code = self._get_strategy()
-        assert '"action": "buy"' in code
+        assert '"action":"buy"' in code
 
     def test_traderspost_sell_action(self):
         code = self._get_strategy()
-        assert '"action": "sell"' in code
+        assert '"action":"sell"' in code
 
     def test_traderspost_exit_action(self):
         code = self._get_strategy()
-        assert '"action": "exit"' in code
+        assert '"action":"exit"' in code
 
     def test_traderspost_symbol_is_continuous(self):
         """Symbol in webhook payload must be TradingView continuous contract ticker."""
@@ -245,7 +239,7 @@ class TestStrategyArtifact:
     def test_risk_lockout_cancel_alert(self):
         """Risk lockout must emit cancel action for TradersPost."""
         code = self._get_strategy()
-        assert '"action": "cancel"' in code
+        assert '"action":"cancel"' in code
 
     def test_prop_overlay_present(self):
         code = self._get_strategy()
@@ -259,12 +253,12 @@ class TestStrategyArtifact:
     def test_commission_topstep(self):
         r = compile_dual_artifacts(_make_strategy(), firm_key="topstep_50k")
         code = r.strategy_artifact.content
-        assert "commission_value=0.37" in code
+        assert "commission_value=0.62" in code
 
     def test_commission_tradeify(self):
-        r = compile_dual_artifacts(_make_strategy(), firm_key="tradeify_50k")
+        r = compile_dual_artifacts(_make_strategy(), firm_key="mffu_50k")
         code = r.strategy_artifact.content
-        assert "commission_value=1.29" in code
+        assert "commission_value=0.95" in code
 
     def test_commission_no_firm_fallback(self):
         r = compile_dual_artifacts(_make_strategy())
@@ -405,10 +399,8 @@ class TestRiskIntelligence:
 class TestDegradationNotes:
     def test_manual_approval_firm_triggers_note(self):
         """When firm_key is a manual-approval firm, degradation note must warn against ATS use."""
-        r = compile_dual_artifacts(_make_strategy(), firm_key="apex_50k")
-        if r.exportable:
-            notes = " ".join(r.degradation_notes)
-            assert "apex_50k" in notes or "manual" in notes.lower() or "automated" in notes.lower()
+        with pytest.raises(ValueError, match="Unsupported firm_key"):
+            compile_dual_artifacts(_make_strategy(), firm_key="apex_50k")
 
     def test_no_target_triggers_degradation_note(self):
         """Missing take_profit_atr_multiple must surface a degradation note about na target."""
@@ -435,7 +427,7 @@ class TestBackwardCompatibility:
     """compile_strategy() must still pass all existing tests — dual path is additive."""
 
     def test_compile_strategy_still_works(self):
-        from src.engine.pine_compiler import compile_strategy, CompilerResult
+        from src.engine.pine_compiler import CompilerResult, compile_strategy
         s = _make_strategy()
         result = compile_strategy(s)
         assert isinstance(result, CompilerResult)

@@ -14,7 +14,10 @@ vi.mock("../db/index.js", () => ({
 vi.mock("../routes/sse.js", () => ({ broadcastSSE: vi.fn() }));
 vi.mock("../lib/logger.js", () => ({ logger: { info: vi.fn(), warn: vi.fn(), error: vi.fn(), debug: vi.fn() } }));
 vi.mock("../services/notification-service.js", () => ({ notifyWarning: vi.fn(), notifyInfo: vi.fn() }));
-vi.mock("../lib/notification-helpers.js", () => ({ appendFamilyGradePostscript: vi.fn((s: string) => s) }));
+vi.mock("../lib/notification-helpers.js", () => ({
+  appendFamilyGradePostscript: vi.fn((s: string) => s),
+  applyFamilyFallback: vi.fn((s: string) => s),
+}));
 vi.mock("../lib/metrics-registry.js", () => ({ warningSeverityDiscordRoutedTotal: { inc: vi.fn() } }));
 
 import { AlertFactory } from "../services/alert-service.js";

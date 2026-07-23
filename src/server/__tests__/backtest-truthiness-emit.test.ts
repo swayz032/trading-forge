@@ -432,7 +432,10 @@ describe("backtest truthiness emit", () => {
     await runBacktest(STRATEGY_ID, BASE_CONFIG as Parameters<typeof runBacktest>[1], undefined, BACKTEST_ID, "test-corr-no-discord");
     await drainAsync();
 
-    expect(notifyCriticalMock).not.toHaveBeenCalled();
+    const truthinessCritical = notifyCriticalMock.mock.calls.find(
+      (call: unknown[]) => String(call[0]).includes("BACKTEST TRUTHINESS FAILURE"),
+    );
+    expect(truthinessCritical).toBeUndefined();
 
     // No truthiness failure audit row should be written
     const auditCalls = insertAuditRowMock.mock.calls;
