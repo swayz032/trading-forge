@@ -740,12 +740,14 @@
       "paper signal evaluations"
     ],
     "reads_from": [
+      "economic_release_dates",
       "market_data_meta",
       "macro_snapshots",
       "paper_signal_logs",
       "skip_decisions"
     ],
     "writes_to": [
+      "economic_release_dates",
       "paper_sessions",
       "paper_positions",
       "paper_trades",
@@ -843,6 +845,7 @@
       "daily_statistics",
       "daily_volume_profile_levels",
       "data_sync_jobs",
+      "economic_release_dates",
       "exchange_outages",
       "macro_features",
       "macro_regime_states",

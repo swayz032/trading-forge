@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-20T16:22:30.566Z",
+  "generatedAt": "2026-07-23T06:12:11.121Z",
   "manualTradingViewDeployOnly": true,
   "runtimeControls": {
     "enforced": true,
@@ -286,7 +286,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 367h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 429h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -304,7 +304,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 369h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 431h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -322,7 +322,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 370h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 432h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -340,7 +340,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 353h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 415h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -358,7 +358,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 362h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 424h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -376,7 +376,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 368h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 430h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -394,7 +394,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 369h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 430h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -412,7 +412,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 465h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 527h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -430,7 +430,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 411h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 473h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -448,7 +448,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 403h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 465h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -466,7 +466,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 353h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 415h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -484,7 +484,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 365h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 427h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -521,7 +521,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 402h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 464h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -539,7 +539,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 411h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 472h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -557,7 +557,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 411h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 473h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -594,7 +594,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 350h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 411h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       },
       {
@@ -612,7 +612,7 @@
         "sourceValidationErrors": [],
         "liveSyncStatus": "live-aligned",
         "notes": [
-          "Last known success is 352h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
+          "Last known success is 414h old, exceeding the 192h staleness ceiling — treat as unverified, not healthy."
         ]
       }
     ]
@@ -825,14 +825,12 @@
       "routes": 80,
       "schedulerJobs": 112,
       "engineSubsystems": 29,
-      "databaseTables": 113
+      "databaseTables": 114
     },
     "missingRoutes": [],
     "missingSchedulerJobs": [],
     "missingEngineSubsystems": [],
-    "missingDatabaseTables": [
-      "economic_release_dates"
-    ],
+    "missingDatabaseTables": [],
     "subsystemsMissingAudit": [],
     "subsystemsMissingAuditActions": [],
     "subsystemsMissingMetrics": [],
@@ -2538,6 +2536,7 @@
           "daily_statistics",
           "daily_volume_profile_levels",
           "data_sync_jobs",
+          "economic_release_dates",
           "exchange_outages",
           "harsh_regime_phase",
           "live and historical market data",
@@ -9637,6 +9636,7 @@
         "daily_statistics",
         "daily_volume_profile_levels",
         "data_sync_jobs",
+        "economic_release_dates",
         "exchange_outages",
         "harsh_regime_phase",
         "live and historical market data",

@@ -16,6 +16,7 @@
     "deep-scan": "tsx scripts/deep-scan.ts",
     "system-map:check": "tsx scripts/system-map.ts check",
     "system-map:sync": "tsx scripts/system-map.ts sync",
+    "check:package-lock-integrity": "node scripts/check-package-lock-integrity.mjs",
     "check:production-isolation": "node scripts/check-production-isolation.mjs",
     "check:2026-compliance": "node scripts/verify-2026-rules-compliance.mjs",
     "check:family-grade-postscript": "tsx scripts/check-family-grade-postscript.ts",

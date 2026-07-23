@@ -205,5 +205,6 @@
   "0201_paper_positions_entry_contracts.sql": "9008ba413f4fd5f3d345d03996b321e9a7a4e9eb6cc7168a7a4914aa0c58e354",
   "0202_rails_nightly_reports.sql": "62d585dbeec592b2a64ff1d2ef8941f33f03152fc4caab0e5667abda229e9f51",
   "0203_live_schema_drift_forward_fix.sql": "f34f959aa61ee1bed485e46c801dcc589af6d95c19b31ee809fb30c288999d20",
-  "0204_paper_pending_entries.sql": "5e46376e916d37a8402a60451c333a08d43a8b5eeb3dba3f14bd201513bc6d80"
+  "0204_paper_pending_entries.sql": "5e46376e916d37a8402a60451c333a08d43a8b5eeb3dba3f14bd201513bc6d80",
+  "0205_slumhouse_member_office.sql": "e368b286ea6536269fb4b1b02a770d77e714c4b4ea55a2f8135ef4ba8f547813"
 }

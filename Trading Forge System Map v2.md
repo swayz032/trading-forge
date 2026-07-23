@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-20T16:22:30.566Z`.
+Updated automatically from the repo on `2026-07-23T06:12:11.121Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -57,7 +57,7 @@ Updated automatically from the repo on `2026-07-20T16:22:30.566Z`.
 - Route coverage: `80/80`
 - Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
-- Database coverage: `113/114`
+- Database coverage: `114/114`
 - Autonomous subsystems with audit coverage: `57/57`
 - Autonomous subsystems with audit actions: `57/57`
 - Autonomous subsystems with telemetry evidence: `57/57`
@@ -764,11 +764,11 @@ Updated automatically from the repo on `2026-07-20T16:22:30.566Z`.
 
 ---
 
-### compliance:collaborative_trading_warning
-- **Emitter:** `src/server/services/strategy-assignment-service.ts:328`
-- **Payload shape:** `{ strategyId, accountIds }`
+### compliance:collaborative_trading_blocked
+- **Emitter:** `src/server/services/strategy-assignment-service.ts`
+- **Payload shape:** `{ strategyId, firmId, affectedAccountIds, familyMemberLabels, rule, blocked, timestamp }`
 - **Listeners:** `useSSE.ts` → 12-second error toast + invalidates compliance+alerts.
-- **Purpose:** MFFU collaborative-trading ban triggered — 2+ family members on same strategy.
+- **Purpose:** MFFU collaborative-trading ban risk blocked before assignment (fail-closed).
 
 ### compliance:drift_detected (W9-3, 2026-05-17)
 - **Emitter:** `src/server/services/compliance-refresh-service.ts:153` (after Discord notification).
@@ -1031,14 +1031,6 @@ Updated automatically from the repo on `2026-07-20T16:22:30.566Z`.
 - **Emitter:** `src/server/services/pine-export-recipient-service.ts` + `src/server/routes/pine-export.ts` (Wave 9 W9-2)
 - **Purpose:** Pine export failed; typed errorCode (pipeline_paused, strategy_not_found, account_not_found, compilation_failed, hmac_persist_failed, internal_error).
 
-### strategy:analysis-error
-- **Emitter:** `src/server/services/agent-service.ts`
-- **Purpose:** Strategy deep-analysis pipeline raised an error during run.
-
-### strategy:analyzed
-- **Emitter:** `src/server/services/agent-service.ts`
-- **Purpose:** Strategy deep-analysis pipeline completed; results persisted.
-
 ### strategy:paper-vs-backtest-alert
 - **Emitter:** `src/server/scheduler.ts` (paper-vs-backtest cron)
 - **Purpose:** Live paper P&L diverged from backtest expectation beyond threshold.
@@ -1192,6 +1184,32 @@ Updated automatically from the repo on `2026-07-20T16:22:30.566Z`.
 - **Emitter:** `src/server/services/paper-trading-stream.ts::evaluateFeedGap()`
 - **Payload shape:** `{ symbol: string, gapMinutes: number, classification: "PROVIDER_GAP" }`
 - **Purpose:** Fired ONLY for `PROVIDER_GAP` classifications (the operationally actionable case — see `src/server/lib/feed-gap-classifier.ts`). Routine `MARKET_CLOSED`/`EXPECTED_NO_TRADE` classifications are audit-row-only (no SSE) to avoid spamming the dashboard, especially overnight. PURE OBSERVABILITY — never gates, blocks, or pauses signal evaluation, order lifecycle, or any promotion input. Listeners: none yet (Future dashboard panel — operator-visible feed-health tile).
+
+### Release-hardening inventory reconciliation (2026-07-23)
+
+### archetype:evaluator_failed / archetype:signal_received / archetype:signal_resolved
+- **Emitter:** `src/server/lib/archetype-routing-observability.ts`
+- **Purpose:** Trace an archetype-routed signal from receipt through resolution, including evaluator failures.
+
+### factory:archetype_signal_fired / factory:bidirectional_rejected / factory:framework_overlay_applied / factory:scout_idea_extracted / factory:strategy_created / factory:thin_confluence_graduated
+- **Emitter:** Factory services using the `FACTORY_EVENTS` catalog in `src/server/routes/sse.ts`.
+- **Purpose:** Trace extraction, validation, overlay, graduation, strategy creation, and archetype signal emission.
+
+### kill_switch:trailing_dd_force_close
+- **Emitter:** `src/server/production/kill-switch.ts`
+- **Purpose:** Layer-3 trailing-drawdown threshold triggered a correlated force-close attempt.
+
+### lifecycle:auto_graveyard / lifecycle:b14_evaluated / lifecycle:backtest_stale / lifecycle:bif_evaluated / lifecycle:compliance_drift_blocked / lifecycle:frozen_policy_drift_blocked / lifecycle:paper_to_deploy_ready_blocked / lifecycle:parameter_drift_evaluated / lifecycle:portfolio_drift_demoted / lifecycle:promotion_evidence_incomplete / lifecycle:shadow_to_paper_blocked / lifecycle:slippage_survival_evaluated / lifecycle:wfe_evaluated
+- **Emitter:** Lifecycle services and schedulers using the `LIFECYCLE_GATE_EVENTS` catalog in `src/server/routes/sse.ts`.
+- **Purpose:** Operator-visible promotion evidence, gate verdicts, automatic demotions, stale evidence, and blocked transitions.
+
+### pine:refused_shadow_strategy
+- **Emitter:** `src/server/lib/pine-shadow-observability.ts`
+- **Purpose:** Pine export refused because the strategy remained in SHADOW or another non-exportable lifecycle state.
+
+### profit_governor:shadow_milestone
+- **Emitter:** `src/server/services/paper-signal-service.ts`
+- **Purpose:** Observability-only profit-governor zone change; it never blocks signal evaluation.
 
 ---
 

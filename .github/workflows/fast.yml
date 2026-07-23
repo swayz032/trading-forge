@@ -29,7 +29,8 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          # Match the production and hosted-CI Node major.
+          node-version: "24"
           cache: npm
 
       - uses: actions/setup-python@v5
@@ -46,6 +47,9 @@ jobs:
           npm --version
           python --version
           test "$(nproc)" -le 4
+
+      - name: Package-lock structural integrity (pre-install)
+        run: node scripts/check-package-lock-integrity.mjs
 
       - name: Install Node dependencies
         run: npm ci

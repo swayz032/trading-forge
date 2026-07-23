@@ -15583,6 +15583,26 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-23 [release-hardening] Clean-install recovery + CI/topology/OPS guardrails (isolated, unpushed)
+
+**Mission:** Complete production-hardening work that cannot interfere with the active money-path/extraction-vocabulary lane. Scope was restricted to release engineering, repository integrity, generated system inventory, migration bookkeeping, and OPS test portability. No strategy semantics, trading vocabulary, compiler/evaluator behavior, sizing, execution, promotion gate, sealed dataset, or extraction code was changed.
+
+**Work completed:**
+- Created isolated worktree `wt-codex-release-ci-20260723` on branch `hardening/codex-release-ci-20260723`, pinned to remote SHA `0c57c86b8ce6456ede77a0a54502de8de5c6e3dc`. The dirty main checkout and active H1 money-path worktree were not touched.
+- Repaired the current lockfile's Linux clean-install blocker: restored complete `encoding@0.1.13` / nested `iconv-lite@0.6.3` metadata and removed the phantom versionless `minipass-fetch/node_modules/encoding` entry that made npm/arborist abort with `Invalid Version:` before CI could test anything.
+- Added a dependency-free package-lock structural gate plus four regressions, and wired the gate before `npm ci` in hosted and self-hosted workflows. Aligned the fast lane from Node 22 to the production/hosted-CI Node 24 major.
+- Reconciled the generated system inventory: database coverage is now 114/114 after mapping the already-used `economic_release_dates` table; corrected one renamed compliance SSE event; removed two dead event docs; documented 26 emitted SSE events that were absent from the manual catalog. Runtime behavior was not changed.
+- Added the existing immutable migration `0205_slumhouse_member_office.sql` to the migration hash manifest without modifying the migration.
+- Replaced the OPS env-manifest verifier's default Unix-only `grep` dependency with bounded Node-core scanning while retaining the injected-runner seam. This closed all 14 Windows-only failures in the scripts test lane without changing manifest policy.
+
+**Verification:** full lifecycle-script `npm ci --no-audit` installed 557 packages successfully; `npx tsc --noEmit` clean; `test:scripts` 278/278; package-lock regressions 4/4; topology/SSE targeted Vitest 12 passed + 1 intentionally skipped; gate fault injection 33/33; migration immutability 3/3; family-grade postscript PASS; gate parity PASS (12 paper→deploy + 5 testing→paper gates); production isolation CLEAN (0 violations); env-manifest 12 PASS / 0 FAIL / 0 UNKNOWN / 2 designed SKIP / 1 HUMAN; system-map sync/check `driftItems: []`; `git diff --check` clean. The 2026 compliance gate passes but honestly warns both canonical firm-rule documents were last reviewed 2026-06-22 (31 days old, over the 30-day ceiling).
+
+**Known-facts updates:** GitHub run `29889690383` at the pinned SHA failed in its first job during `npm ci` on Ubuntu/Node 24/npm 11 with `Invalid Version:`, so every dependent CI job skipped; the repaired lockfile now passes both offline and full clean installs locally. Current advisory audit debt remains material and was not auto-mutated: production dependencies report 45 findings (2 low / 23 moderate / 18 high / 2 critical); all dependencies report 64 (2 low / 28 moderate / 31 high / 3 critical). Several proposed fixes are major/downgrade/runtime-sensitive and `duckdb-async` reports no fix, so `npm audit fix --force` is not an acceptable unattended hardening action. Generated/local n8n workflow metadata is not live workflow truth and was not reported as such.
+
+**Carry-forward:** (1) Do not push this branch while the active money-path agent is using the tower; pushing `hardening/**` triggers the self-hosted fast lane. When that lane is idle, rebase/verify ancestry, push, and monitor hosted + self-hosted CI. (2) Run the repository-required full Vitest and full Pytest suites at that quiet pre-merge point; they were deliberately deferred to avoid competing with the active build. (3) Handle dependency advisories as a separate controlled upgrade wave with per-package compatibility review and full regressions—never blanket-force. (4) Re-verify MFFU and Topstep rules from current primary sources before the next promotion cycle; do not merely refresh dates.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
