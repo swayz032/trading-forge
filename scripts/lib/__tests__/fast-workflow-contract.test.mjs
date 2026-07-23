@@ -31,6 +31,7 @@ test("Fast Lane Python dependencies cover modules imported during pytest collect
   const requirements = readFileSync("ci/requirements-fast.txt", "utf8");
   assert.match(requirements, /^pytest(?:[<=>]|$)/m);
   assert.match(requirements, /^click(?:[<=>]|$)/m);
+  assert.match(requirements, /^vectorbt(?:[<=>]|$)/m);
 });
 
 test("repository tests do not embed a developer-machine source path", () => {
