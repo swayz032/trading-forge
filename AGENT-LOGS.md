@@ -14252,6 +14252,21 @@ Also restored Anam.ai persona during this session:
 
 **Carry-forward:** None.
 
+### 2026-07-23 — Reporting Room premium empty-state hardening
+
+**Work completed:**
+- Expanded the Quantum RL and Paper Floor surfaces from compact empty cards into full-width immersive scenes while preserving the existing read-only/live-data replacement behavior.
+- Added a responsive animated SVG telemetry arena for Quantum RL and an execution-operations deck for Paper Floor. Both scenes are explicitly labeled as decorative architecture and contain no simulated metrics, fills, or performance readings.
+- Added regression locks requiring both premium scenes and their non-simulated labeling so later UI edits cannot silently collapse them back to compact placeholders or present decorative geometry as evidence.
+
+**Verification:**
+- Reporting Room honesty/auth tests: 15/15 passed; `git diff --check` passed.
+- Public relay visual inspection at 1920x1080 passed for both screens.
+- Runtime `office.html` SHA-256 matched the tested release-worktree file exactly after deployment.
+- Screenshots: `output/playwright/reporting-room-quantum-premium.png` and `output/playwright/reporting-room-paper-premium.png`.
+
+**Carry-forward:** None.
+
 ---
 
 ## Session Log — kill-switch H6 fix (2026-06-23)
