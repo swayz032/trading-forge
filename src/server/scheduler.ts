@@ -31,7 +31,7 @@ import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 const execFileAsync = promisify(execFile);
 import { cronJobsConcurrent } from "./lib/metrics-registry.js";
-import { eq, and, gte, lte, desc, inArray, isNull, isNotNull, min, sql } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, inArray, isNull, isNotNull, sql } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { strategies, paperSessions, paperPositions, paperTrades, paperSignalLogs, backtests, agentJobs, systemJournal, skipDecisions, auditLog, dayArchetypes, tournamentResults, macroSnapshots, macroFeatures, macroRegimeStates, lifecycleTransitions, harshRegimePhase, strategyExports, strategyExportArtifacts } from "./db/schema.js";
 import type { monteCarloRuns as MonteCarloRunsTable, sqaOptimizationRuns as SqaOptimizationRunsTable, quboTimingRuns as QuboTimingRunsTable, tensorPredictions as TensorPredictionsTable, rlTrainingRuns as RlTrainingRunsTable, quantumMcRuns as QuantumMcRunsTable, deeparTrainingRuns as DeeparTrainingRunsTable } from "./db/schema.js";
@@ -4462,15 +4462,16 @@ except Exception as e:
     try {
       const [row] = await db
         .select({
-          earliest: min(lifecycleTransitions.createdAt),
+          createdAt: lifecycleTransitions.createdAt,
           strategyId: lifecycleTransitions.strategyId,
         })
         .from(lifecycleTransitions)
         .where(eq(lifecycleTransitions.toState, "PAPER"))
+        .orderBy(asc(lifecycleTransitions.createdAt))
         .limit(1);
 
-      if (row?.earliest) {
-        earliestPaperActivation = new Date(row.earliest as unknown as string | number | Date);
+      if (row?.createdAt) {
+        earliestPaperActivation = new Date(row.createdAt as unknown as string | number | Date);
         firstStrategyId = row.strategyId ?? null;
       }
     } catch (err) {
@@ -5235,6 +5236,13 @@ except Exception as e:
       process.env.TF_BACKEND_URL ??
       process.env.TF_BACKEND_PUBLIC_URL ??
       "http://localhost:4000";
+    const pythonCmd = process.env.PYTHON_BIN ??
+      (process.platform === "win32" ? "C:\\Program Files\\Python313\\python.exe" : "python3");
+    const pythonPath = [
+      process.env.TF_PYTHON_USER_SITE ?? "C:\\Users\\tonio\\AppData\\Roaming\\Python\\Python313\\site-packages",
+      "C:\\Program Files\\Python313\\Lib\\site-packages",
+      process.env.PYTHONPATH ?? "",
+    ].filter(Boolean).join(process.platform === "win32" ? ";" : ":");
 
     for (const sym of symbols) {
       await new Promise<void>((resolve, reject) => {
@@ -5245,9 +5253,13 @@ except Exception as e:
           "--apply",
           "--backend-url", backendUrl,
         ];
-        const proc = spawn("python", args, {
+        const proc = spawn(pythonCmd, args, {
           cwd: process.cwd(),
-          env: { ...process.env as Record<string, string> },
+          env: {
+            ...process.env as Record<string, string>,
+            PYTHONUSERSITE: "1",
+            PYTHONPATH: pythonPath,
+          },
           stdio: ["ignore", "pipe", "pipe"],
         });
 

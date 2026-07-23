@@ -15659,6 +15659,35 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** None.
 
+### Session Log — 2026-07-23 Railway Hobby cutover and runtime hardening
+
+**Mission:** Move only Trading Forge from the old billed Railway workspace to the new Hobby project, preserve Aspire, prove live transport, and close runtime failures exposed by cutover.
+
+**Work completed:**
+- Migrated the full PostgreSQL database into a fresh 5 GB Railway volume and froze source writers for the final copy.
+- Moved n8n 2.10.3 with its encryption key and required workflow environment, rewrote all 184 live workflow relay references, and kept all 20 live workflows active.
+- Cut the tower relay to protocol v2 on the new Railway domain and repaired the canonical service checkout so SSE response frames stream instead of buffering until disconnect.
+- Installed the official PostgreSQL 18.4 Windows client and updated local `PG_DUMP_PATH`; the backup service produced and validated a real 193,427,949-byte public-schema dump.
+- Stopped all three old Trading Forge deployments after validation; services and volumes were retained for rollback. Aspire was untouched.
+- Fixed the existing harsh-regime activation query to select the earliest PAPER transition by ordering instead of mixing an aggregate with a non-grouped strategy id.
+- Fixed `naked-poc-sync-daily` to use the configured hardened Python interpreter and explicit user-site `PYTHONPATH`, matching the production Python runner.
+
+**Verification:**
+- Database parity: 243/243 tables exact, zero row-count mismatches.
+- New Railway: Postgres, relay, and n8n each have one successful active deployment; old project has zero active deployments.
+- Public API 200 with database=ok and n8n=ok; relay protocol v2 reports tower=true.
+- Public SSE: HTTP 200, connected sentinel received, heartbeat received.
+- Live n8n API: 20 returned, 20 active/non-archived, zero old relay references.
+- Backup smoke: 193,427,949 bytes, schema validation passed.
+- Runtime regression suites: 50/50 passed; all three hard gates passed.
+- Main commit `24e4609d` GitHub CI, Fast Lane, and Metric Snapshot workflows passed.
+
+**Known-facts updates:** New production Postgres is version 18, so the old PG17 dump client is incompatible. The Windows relay/API NSSM services need one elevated restart after runtime-file/environment cutover; hidden user-session processes currently preserve API and new-relay availability until that restart or reboot.
+
+**Carry-forward:** Rotate every Railway/account/project token disclosed in chat and the relay/database credentials exposed during migration. Perform one elevated restart of `TradingForgeAPI` and `TFRelayClient`, then verify only the NSSM-owned processes remain.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
