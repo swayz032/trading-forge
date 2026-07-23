@@ -15686,6 +15686,23 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** Rotate every Railway/account/project token disclosed in chat and the relay/database credentials exposed during migration. Perform one elevated restart of `TradingForgeAPI` and `TFRelayClient`, then verify only the NSSM-owned processes remain.
 
+### Session Log — 2026-07-23 post-freeze CI runner hardening
+
+**Mission:** Resume the interrupted post-cutover merge, diagnose the sole PR failure, and remove the workstation as a CI availability dependency.
+
+**Work completed:**
+- Confirmed 18/19 PR checks passed; the Fast Lane self-hosted runner disappeared during report collection when the workstation froze, leaving no assertion log or failed step conclusion.
+- Replaced the single-machine `[self-hosted, linux, wsl-tower]` target with GitHub-managed `ubuntu-latest` and a health-checked PostgreSQL 17 service.
+- Preserved the complete Fast Lane gate sequence, isolated per-run database, one-worker full Vitest collection, baseline comparisons, and fail-closed final verdict.
+- Added a workflow contract test that rejects reintroduction of a self-hosted/WSL dependency and requires the managed PostgreSQL health check.
+- Removed the exact 578 MB migration SQL/dump/archive artifacts from `C:\tmp` after parity and backup validation.
+
+**Verification:** Focused workflow contract tests 5/5 passed; `git diff --check` passed. Live API reports status=ok, database=ok, n8n=ok; relay reports protocol v2 and tower=true; live n8n API reports 20/20 active, non-archived workflows.
+
+**Known-facts updates:** Fast Lane must not depend on the tower workstation being online. Tower-local soak/full-lane duties remain local, but push/PR enforcement now runs on GitHub-managed infrastructure.
+
+**Carry-forward:** Merge only after the replacement managed-runner Fast Lane and all other PR checks pass. The elevated NSSM consolidation and credential rotation from the preceding entry remain operator actions.
+
 ---
 
 ## Known-Facts Pin — Stop Misdiagnosing These

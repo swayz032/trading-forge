@@ -27,7 +27,17 @@ test("Fast Lane provisions, migrates, and cleans an isolated per-run database", 
   assert.match(workflow.slice(cleanup), /if: always\(\)/);
 });
 
-test("Fast Lane does not archive the persistent runner's global pip cache", () => {
+test("Fast Lane uses a managed runner and a health-checked PostgreSQL service", () => {
+  const workflow = readFileSync(FAST_WORKFLOW, "utf8");
+
+  assert.match(workflow, /runs-on:\s*ubuntu-latest/);
+  assert.doesNotMatch(workflow, /self-hosted|wsl-tower/);
+  assert.match(workflow, /image:\s*postgres:17/);
+  assert.match(workflow, /--health-cmd\s+"pg_isready -U postgres -d postgres"/);
+  assert.match(workflow, /PGHOST:\s*localhost/);
+});
+
+test("Fast Lane does not archive a global pip cache", () => {
   const workflow = readFileSync(FAST_WORKFLOW, "utf8");
   const setupPython = workflow.indexOf("actions/setup-python@v5");
   const nextStep = workflow.indexOf("\n      - name:", setupPython);
