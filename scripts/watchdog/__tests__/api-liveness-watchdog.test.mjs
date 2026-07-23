@@ -8,15 +8,26 @@
 // under test is the path that ships.
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import path from "node:path";
 import fs from "node:fs";
 
 const script = path.resolve(import.meta.dirname, "..", "api-liveness-watchdog.ps1");
 
-function selfTest() {
+function findPowerShell() {
+  const candidates = process.platform === "win32" ? ["powershell", "pwsh"] : ["pwsh"];
+  return candidates.find((candidate) => {
+    const probe = spawnSync(candidate, ["-NoProfile", "-Command", "exit 0"], {
+      encoding: "utf-8",
+      windowsHide: true,
+    });
+    return !probe.error && probe.status === 0;
+  });
+}
+
+function selfTest(powerShell) {
   const out = execFileSync(
-    "powershell",
+    powerShell,
     ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", script, "-SelfTest"],
     { encoding: "utf-8", timeout: 120_000 },
   );
@@ -27,44 +38,46 @@ function selfTest() {
   };
 }
 
-const R = selfTest();
+const powerShell = findPowerShell();
+const R = powerShell ? selfTest(powerShell) : null;
+const powerShellTest = R ? test : test.skip;
 
-test("a live API is healthy", () => {
+powerShellTest("a live API is healthy", () => {
   assert.equal(R.verdicts.http200.verdict, "UP");
   assert.equal(R.verdicts.http200.healthy, true);
 });
 
 // The false positive that would train the operator to ignore the watchdog.
-test("503 auth_not_configured is HEALTHY, not an outage", () => {
+powerShellTest("503 auth_not_configured is HEALTHY, not an outage", () => {
   assert.equal(R.verdicts.auth_gated_503.verdict, "AUTH_GATED_UP");
   assert.equal(R.verdicts.auth_gated_503.healthy, true, "the documented secure state must never page");
 });
 
-test("any HTTP response counts as serving — even a 500", () => {
+powerShellTest("any HTTP response counts as serving — even a 500", () => {
   assert.equal(R.verdicts.other_503.healthy, true);
   assert.equal(R.verdicts.http500.healthy, true);
 });
 
 // The actual 07-18 signature: nothing listening at all.
-test("connection refused is DOWN — the incident signature", () => {
+powerShellTest("connection refused is DOWN — the incident signature", () => {
   assert.equal(R.verdicts.refused.verdict, "DOWN");
   assert.equal(R.verdicts.refused.healthy, false);
 });
 
-test("timeouts and probe faults are AMBIGUOUS and count as unhealthy, never silently ignored", () => {
+powerShellTest("timeouts and probe faults are AMBIGUOUS and count as unhealthy, never silently ignored", () => {
   for (const c of ["timeout", "probe_error", "unknown"]) {
     assert.equal(R.verdicts[c].verdict, "AMBIGUOUS", c);
     assert.equal(R.verdicts[c].healthy, false, `${c} must not pass quietly`);
   }
 });
 
-test("alerting: quiet when healthy, fires at the threshold, not before", () => {
+powerShellTest("alerting: quiet when healthy, fires at the threshold, not before", () => {
   assert.equal(R.actions.healthy_quiet, "NONE");
   assert.equal(R.actions.below_threshold, "NONE", "2 of 3 misses must not page");
   assert.equal(R.actions.threshold, "ALERT");
 });
 
-test("alerting is rate-limited, and recovery says so exactly once", () => {
+powerShellTest("alerting is rate-limited, and recovery says so exactly once", () => {
   assert.equal(R.actions.rate_limited, "NONE", "must not re-page every 5 minutes while down");
   assert.equal(R.actions.realert, "REALERT");
   assert.equal(R.actions.healthy_recover, "RECOVERY");
