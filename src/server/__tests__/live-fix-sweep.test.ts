@@ -10,7 +10,7 @@
 
 import { describe, it, expect, vi, beforeEach, beforeAll } from "vitest";
 import * as nodeFs from "node:fs";
-import * as nodePath from "node:path";
+import { fileURLToPath } from "node:url";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // F-1: Kill switch DLL + trailing-DD layers — structural / source-code checks
@@ -20,9 +20,7 @@ import * as nodePath from "node:path";
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("Kill Switch — Layer 2+3 real implementation (F-1)", () => {
-  const killSwitchPath = nodePath.resolve(
-    "C:/Users/tonio/Projects/trading-forge/trading-forge/src/server/production/kill-switch.ts",
-  );
+  const killSwitchPath = fileURLToPath(new URL("../production/kill-switch.ts", import.meta.url));
 
   it("no longer contains 'phase_4c_pending' stub text for layer 2", () => {
     const source = nodeFs.readFileSync(killSwitchPath, "utf-8");
@@ -83,8 +81,8 @@ describe("Kill Switch — Layer 2+3 real implementation (F-1)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("Calendar gate — Python spawn storm prevention (F-2)", () => {
-  const signalServicePath = nodePath.resolve(
-    "C:/Users/tonio/Projects/trading-forge/trading-forge/src/server/services/paper-signal-service.ts",
+  const signalServicePath = fileURLToPath(
+    new URL("../services/paper-signal-service.ts", import.meta.url),
   );
 
   it("getCachedSignalCalendarStatus has try/catch wrapping the subprocess call", () => {
@@ -258,8 +256,8 @@ describe("Correlated position guard — Topstep multi-account exception (F-3)", 
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("Compliance refresh service — firm ID lowercase (F-5)", () => {
-  const filePath = nodePath.resolve(
-    "C:/Users/tonio/Projects/trading-forge/trading-forge/src/server/services/compliance-refresh-service.ts",
+  const filePath = fileURLToPath(
+    new URL("../services/compliance-refresh-service.ts", import.meta.url),
   );
 
   it("FIRMS array no longer contains Titlecase 'MFFU' as a string value", () => {
@@ -305,8 +303,8 @@ describe("Compliance refresh service — firm ID lowercase (F-5)", () => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 describe("compliance_gate.py — MFFU check_violation wiring (F-15)", () => {
-  const gatePath = nodePath.resolve(
-    "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/compliance/compliance_gate.py",
+  const gatePath = fileURLToPath(
+    new URL("../../engine/compliance/compliance_gate.py", import.meta.url),
   );
 
   it("check_violation calls check_two_percent_rule for MFFU", () => {

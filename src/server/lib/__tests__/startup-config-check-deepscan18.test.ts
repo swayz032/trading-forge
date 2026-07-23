@@ -79,6 +79,19 @@ function withEnv(
   };
 }
 
+const REAL_PLATFORM = process.platform;
+
+function withPlatform(platform: NodeJS.Platform, test: () => Promise<void>): () => Promise<void> {
+  return async () => {
+    Object.defineProperty(process, "platform", { value: platform });
+    try {
+      await test();
+    } finally {
+      Object.defineProperty(process, "platform", { value: REAL_PLATFORM });
+    }
+  };
+}
+
 describe("startup-config-check — deepscan18 G-2 shouldAutoApplyLauncher (pure decision)", () => {
   const BASE_STATE = {
     applicable: true,
@@ -188,30 +201,36 @@ describe("startup-config-check — deepscan18 G-2 attemptBootLauncherAutoApply V
   it(
     "ALWAYS returns 'skipped' under vitest, even with every gate otherwise satisfied — proves this test run " +
       "cannot execute a real nssm/DB side effect on this box (which has a real nssm.exe + tower-boot.mjs on disk)",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
-      async () => {
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
+        async () => {
         expect(process.env.VITEST).toBeTruthy();
         const { attemptBootLauncherAutoApply } = await import("../startup-config-check.js");
         const outcome = await attemptBootLauncherAutoApply();
         expect(outcome).toBe("skipped");
         // No mutation, no restart, no notify — the guard returns before any of that.
         expect(notifyCriticalMock).not.toHaveBeenCalled();
-      },
+        },
+      ),
     ),
   );
 
   it(
     "checkStartupSecrets() does not crash and falls back to the original alert path while under vitest",
-    withEnv(
-      { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
-      async () => {
-        const { checkStartupSecrets } = await import("../startup-config-check.js");
-        const result = await checkStartupSecrets();
-        expect(result.warnings).toContain("BOOT_LAUNCHER_NOT_ACTIVE");
-        expect(result.warnings).not.toContain("BOOT_LAUNCHER_AUTO_APPLIED");
-        expect(notifyCriticalMock).toHaveBeenCalledTimes(1);
-      },
+    withPlatform(
+      "win32",
+      withEnv(
+        { NODE_ENV: "production", TF_LAUNCHED_VIA_BOOT_WRAPPER: undefined },
+        async () => {
+          const { checkStartupSecrets } = await import("../startup-config-check.js");
+          const result = await checkStartupSecrets();
+          expect(result.warnings).toContain("BOOT_LAUNCHER_NOT_ACTIVE");
+          expect(result.warnings).not.toContain("BOOT_LAUNCHER_AUTO_APPLIED");
+          expect(notifyCriticalMock).toHaveBeenCalledTimes(1);
+        },
+      ),
     ),
   );
 });

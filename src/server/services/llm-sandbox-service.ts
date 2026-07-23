@@ -119,7 +119,15 @@ function buildSandboxEnv(): NodeJS.ProcessEnv {
 
   // Only pass through non-sensitive env vars
   const allowedEnvPrefixes = ["PATH", "SYSTEMROOT", "TEMP", "TMP", "HOME", "USER", "LANG", "LC_"];
-  const allowedEnvExact = ["PYTHONPATH", "PYTHONDONTWRITEBYTECODE", "PYTHONUNBUFFERED"];
+  const allowedEnvExact = [
+    "PYTHONPATH",
+    "PYTHONDONTWRITEBYTECODE",
+    "PYTHONUNBUFFERED",
+    // setup-python builds can require their own shared-library directory. These
+    // contain no credentials and are required for the interpreter to start.
+    "LD_LIBRARY_PATH",
+    "DYLD_LIBRARY_PATH",
+  ];
 
   for (const [key, value] of Object.entries(process.env)) {
     if (!value) continue;
