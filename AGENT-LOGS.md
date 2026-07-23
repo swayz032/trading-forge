@@ -16158,6 +16158,7 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - Synchronized only the three reviewed Reporting Room runtime files after confirming no overlap with concurrent agent changes, then restarted `TradingForgeAPI` through the HMAC-signed self-restart endpoint. n8n remained online.
 - Fixed the remaining integration defect: `/slumhouse/api/reports` now accepts the Office admin session through `requireSlumhouseUserOrAdmin`; previously it accepted only a mapped Discord session, so an operator-only Office login could see the controls but could not load their data.
 - Added a regression test that locks the operator authorization wiring. No trading, lifecycle, extraction, execution, or prop-firm rule logic changed.
+- Replaced two coverage-transform-sensitive scheduler `Function.toString()` assertions with real failure injection. The stronger tests exposed and closed an existing alerting bug: `withRetry()` suppressed exhausted reconciliation/drift errors before their outer critical-alert handlers could run. Added a narrow opt-in rethrow for those two safety jobs only; every other scheduler job retains its existing retry behavior.
 
 **Verification:**
 - Focused Reporting Room suite: 24/24 tests passed.
@@ -16166,5 +16167,6 @@ For current operating rules, see `CLAUDE.md`. For subsystem architecture details
 - Public Railway relay: Office HTTP 200, all five labels present, passcode auth HTTP 200, and all three report scopes HTTP 200.
 - Headed Playwright inspection confirmed the five-tab toggle and rendered both immersive Quantum RL and Paper Floor surfaces; screenshot captured at `output/playwright/reporting-room-paper-floor.png`.
 - Post-restart health: API healthy, database healthy, n8n healthy, and `TradingForgeAPI` Running.
+- Scheduler Phase 4C regression suite: 8/8 passed with both exhausted-retry critical-alert paths executed; `npx tsc --noEmit` passed.
 
 **Carry-forward:** None.
