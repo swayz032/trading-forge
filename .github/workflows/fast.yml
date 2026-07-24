@@ -14,12 +14,30 @@ concurrency:
 jobs:
   fast:
     name: Machine-enforced push verdict
-    runs-on: [self-hosted, linux, wsl-tower]
+    runs-on: ubuntu-latest
     timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     env:
       NODE_ENV: test
       TF_RUNTIME_STAGE: preprod
       DATABASE_URL: postgresql://forge:forge_ci@localhost:5432/trading_forge_ci_${{ github.run_id }}
+      PGHOST: localhost
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: postgres
       API_KEY: ci-placeholder-api-key
       N8N_BASE_URL: http://localhost:5678
       N8N_API_KEY: ci-placeholder-n8n-key
@@ -36,19 +54,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-          # Do not enable setup-python's global pip cache on this persistent
-          # runner. It previously tried to archive 9+ GB of unrelated wheels
-          # during post-job cleanup; the bounded fast requirements install in
-          # under a minute without that failure-prone disk amplification.
+          # The bounded fast requirements install quickly without a cache and
+          # avoid cache upload/download failures becoming part of the gate.
 
-      - name: Verify capped runner toolchain
+      - name: Verify runner toolchain
         shell: bash
         run: |
           set -euo pipefail
           node --version
           npm --version
           python --version
-          test "$(nproc)" -le 4
+          test "$(nproc)" -ge 2
 
       - name: Package-lock structural integrity (pre-install)
         run: node scripts/check-package-lock-integrity.mjs

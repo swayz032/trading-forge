@@ -15659,6 +15659,52 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** None.
 
+### Session Log — 2026-07-23 Railway Hobby cutover and runtime hardening
+
+**Mission:** Move only Trading Forge from the old billed Railway workspace to the new Hobby project, preserve Aspire, prove live transport, and close runtime failures exposed by cutover.
+
+**Work completed:**
+- Migrated the full PostgreSQL database into a fresh 5 GB Railway volume and froze source writers for the final copy.
+- Moved n8n 2.10.3 with its encryption key and required workflow environment, rewrote all 184 live workflow relay references, and kept all 20 live workflows active.
+- Cut the tower relay to protocol v2 on the new Railway domain and repaired the canonical service checkout so SSE response frames stream instead of buffering until disconnect.
+- Installed the official PostgreSQL 18.4 Windows client and updated local `PG_DUMP_PATH`; the backup service produced and validated a real 193,427,949-byte public-schema dump.
+- Stopped all three old Trading Forge deployments after validation; services and volumes were retained for rollback. Aspire was untouched.
+- Fixed the existing harsh-regime activation query to select the earliest PAPER transition by ordering instead of mixing an aggregate with a non-grouped strategy id.
+- Fixed `naked-poc-sync-daily` to use the configured hardened Python interpreter and explicit user-site `PYTHONPATH`, matching the production Python runner.
+
+**Verification:**
+- Database parity: 243/243 tables exact, zero row-count mismatches.
+- New Railway: Postgres, relay, and n8n each have one successful active deployment; old project has zero active deployments.
+- Public API 200 with database=ok and n8n=ok; relay protocol v2 reports tower=true.
+- Public SSE: HTTP 200, connected sentinel received, heartbeat received.
+- Live n8n API: 20 returned, 20 active/non-archived, zero old relay references.
+- Backup smoke: 193,427,949 bytes, schema validation passed.
+- Runtime regression suites: 50/50 passed; all three hard gates passed.
+- Main commit `24e4609d` GitHub CI, Fast Lane, and Metric Snapshot workflows passed.
+
+**Known-facts updates:** New production Postgres is version 18, so the old PG17 dump client is incompatible. The Windows relay/API NSSM services need one elevated restart after runtime-file/environment cutover; hidden user-session processes currently preserve API and new-relay availability until that restart or reboot.
+
+**Carry-forward:** Rotate every Railway/account/project token disclosed in chat and the relay/database credentials exposed during migration. Perform one elevated restart of `TradingForgeAPI` and `TFRelayClient`, then verify only the NSSM-owned processes remain.
+
+### Session Log — 2026-07-23 post-freeze CI runner hardening
+
+**Mission:** Resume the interrupted post-cutover merge, diagnose the sole PR failure, and remove the workstation as a CI availability dependency.
+
+**Work completed:**
+- Confirmed 18/19 PR checks passed; the Fast Lane self-hosted runner disappeared during report collection when the workstation froze, leaving no assertion log or failed step conclusion.
+- Replaced the single-machine `[self-hosted, linux, wsl-tower]` target with GitHub-managed `ubuntu-latest` and a health-checked PostgreSQL 17 service.
+- Preserved the complete Fast Lane gate sequence, isolated per-run database, one-worker full Vitest collection, baseline comparisons, and fail-closed final verdict.
+- Added a workflow contract test that rejects reintroduction of a self-hosted/WSL dependency and requires the managed PostgreSQL health check.
+- Removed the exact 578 MB migration SQL/dump/archive artifacts from `C:\tmp` after parity and backup validation.
+
+**Verification:** Focused workflow contract tests 5/5 passed; `git diff --check` passed. Live API reports status=ok, database=ok, n8n=ok; relay reports protocol v2 and tower=true; live n8n API reports 20/20 active, non-archived workflows.
+
+**Known-facts updates:** Fast Lane must not depend on the tower workstation being online. Tower-local soak/full-lane duties remain local, but push/PR enforcement now runs on GitHub-managed infrastructure.
+
+**Carry-forward:** Merge only after the replacement managed-runner Fast Lane and all other PR checks pass. The elevated NSSM consolidation and credential rotation from the preceding entry remain operator actions.
+
+---
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
