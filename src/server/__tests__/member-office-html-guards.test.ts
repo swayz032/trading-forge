@@ -30,6 +30,20 @@ describe("F-3: Carter is absent by route, and stays absent", () => {
   });
 });
 
+describe("member Office contains no operator-only reporting surfaces", () => {
+  it.each(["reporting room", "system metrics", "learning loop"])("has no %s surface", (label) => {
+    expect(liveMarkup.toLowerCase()).not.toContain(label);
+  });
+});
+
+describe("member Office renders account-scoped bot truth", () => {
+  it("loads the same authenticated crib data that powers homepage performance", () => {
+    expect(liveMarkup).toContain('fetch("/slumhouse/api/crib"');
+    expect(liveMarkup).toContain("data.accountUnmapped");
+    expect(liveMarkup).toContain("data.accountDisclosure");
+  });
+});
+
 describe("F-4: the key input is cleared on EVERY path", () => {
   it("the clear runs in a finally block, not only after a successful fetch", () => {
     // Previously the clear sat after the fetch, so a network throw left the key in the DOM.

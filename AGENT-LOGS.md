@@ -15705,6 +15705,30 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 ---
 
+### Session Log — 2026-07-23 Slumhouse member Office hardening
+
+**Mission:** Finish the existing per-member Slumhouse Office wiring so members land in their own PIN-gated room, see only their account-scoped bot performance, and never receive operator-only surfaces.
+
+**Work completed:**
+- Added server-side role routing from the shared Office URL: valid non-operator Discord sessions are redirected to `member-office.html`, while jersey 0 remains on the passcode-gated operator Office.
+- Added the member Office to the authenticated pre-static gate and returned a server-authoritative role/Office path from the member scope API.
+- Kept the existing Crib performance cards and attached viewer identity metadata; the numbers still come from the signed-in user's `broker_account_id`, assigned strategies, paper sessions, and trades.
+- Personalized the Crib title, welcome dialog, and account-stat labels from the authenticated Discord display name, and made shared Office navigation resolve to the correct role-specific page.
+- Wired real read-only Crib data into the member Office cards, preserved honest unmapped/offline states, and added the missing member header/navigation.
+- Added floating TopstepX and MFFU/TradersPost connection cards to both Office experiences in designated-test-key mode only. No real credential storage, broker calls, account mutation, or live execution path was added.
+- Added permanent regression coverage for role routing, account-owner metadata, forbidden operator surfaces, navigation rewriting, lock visibility, and secret clearing.
+
+**Verification:**
+- Focused Slumhouse suite: 38/38 passed before the final presentation-only theme correction; full Vitest suite passed with process exit 0.
+- Full Python: 7,597 passed, 34 skipped, 0 failed.
+- Production isolation, 2026 compliance, and system-map drift hard gates passed.
+- Playwright mocked-auth browser verification rendered the member-safe cards and account performance with zero console errors; the visual run caught and fixed a shared theme-variable collision.
+- Full-project `tsc --noEmit` remains blocked only by the pre-existing OpenTelemetry dependency mismatch at `src/server/lib/tracing.ts:69` (`resourceFromAttributes` absent from the installed package); touched Slumhouse modules reported no TypeScript errors.
+
+**Known-facts updates:** `Kee` is an existing fake test fixture, not a live Discord member. Production personalization uses the current authenticated user's Discord `global_name`/username. Member performance is scoped by `slumhouse_users.broker_account_id`; an unmapped account must disclose unavailable data rather than display a misleading zero.
+
+**Carry-forward:** Live TopstepX/TradersPost credential onboarding remains a money-path Phase 5 task requiring an encrypted vault and explicit execution authorization. The visible cards remain fail-closed test-mode validation until then.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)

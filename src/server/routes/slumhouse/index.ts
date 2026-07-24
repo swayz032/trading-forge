@@ -28,6 +28,9 @@ import { carterInboxRouter } from "./api/carter-inbox.js";
 import { memberOfficeRouter } from "./api/member-office.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
 import { readSlumhouseCookie } from "../../lib/slumhouse/cookie.js";
+import { db } from "../../db/index.js";
+import { slumhouseUsers } from "../../db/schema.js";
+import { eq } from "drizzle-orm";
 
 export const slumhouseRouter = Router();
 
@@ -51,7 +54,7 @@ export function handleSlumhouseFallback(req: Request, res: Response, next: NextF
     next();
     return;
   }
-  if (pathName === "/slumhouse/login.html" || pathName === "/slumhouse/launch" || pathName === "/slumhouse/crib.html" || pathName === "/slumhouse/kitchen.html" || pathName === "/slumhouse/recipe.html" || pathName === "/slumhouse/" || pathName === "/slumhouse/office.html") {
+  if (pathName === "/slumhouse/login.html" || pathName === "/slumhouse/launch" || pathName === "/slumhouse/crib.html" || pathName === "/slumhouse/kitchen.html" || pathName === "/slumhouse/recipe.html" || pathName === "/slumhouse/" || pathName === "/slumhouse/office.html" || pathName === "/slumhouse/member-office.html") {
     // office.html is the operator-only Office — gated by its OWN passcode
     // (slumhouse_admin_sid), NOT the friend Discord session. Allow the HTML to
     // load so its passcode lock screen can render; sensitive admin endpoints
@@ -92,6 +95,7 @@ slumhouseRouter.get([
   "/slumhouse/crib.html",
   "/slumhouse/kitchen.html",
   "/slumhouse/recipe.html",
+  "/slumhouse/member-office.html",
   "/slumhouse/",
 ], (req, res, next) => {
   const token = readSlumhouseCookie(req.headers.cookie, "slumhouse_sid");
@@ -111,6 +115,35 @@ slumhouseRouter.get([
   }
   next();
 });
+
+export async function redirectMemberFromOperatorOffice(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<void> {
+  const token = readSlumhouseCookie(req.headers.cookie, "slumhouse_sid");
+  if (!token) { next(); return; }
+  try {
+    const verified = verifySession(token);
+    if (!verified?.ok || !verified.discordUserId) { next(); return; }
+    const rows = await db.select({
+      jerseyNumber: slumhouseUsers.jerseyNumber,
+      sessionEpoch: slumhouseUsers.sessionEpoch,
+    }).from(slumhouseUsers).where(eq(slumhouseUsers.discordUserId, verified.discordUserId)).limit(1);
+    const user = rows[0];
+    if (user && (user.sessionEpoch ?? 0) === (verified.epoch ?? 0) && user.jerseyNumber !== 0) {
+      res.redirect(302, "/slumhouse/member-office.html");
+      return;
+    }
+  } catch {
+    // The operator passcode shell remains available during a database outage.
+  }
+  next();
+}
+
+// Shared navigation historically points to office.html. A valid non-operator session is
+// resolved server-side before static files so members never receive the admin Office shell.
+slumhouseRouter.get("/slumhouse/office.html", redirectMemberFromOperatorOffice);
 
 // API namespaces (full /slumhouse/api/... paths already declared in each module)
 slumhouseRouter.use(cribApiRouter);
