@@ -307,6 +307,7 @@
         value: bag.todayBag,
         valueClass: bag.todayBagRaw < 0 ? "red" : bag.todayBagRaw > 0 ? "green" : "",
         spark: bag.todayBagSpark,
+        placeholderTone: bag.todayBagRaw < 0 ? "red" : "green",
         sub: bag.tradesToday.count > 0
           ? `${bag.tradesToday.wins}W · ${bag.tradesToday.losses}L`
           : "no trades yet",
@@ -317,6 +318,7 @@
         label: botLabel + " · Trades Today",
         value: String(bag.tradesToday.count),
         spark: bag.tradesSpark,
+        placeholderTone: bag.tradesToday.losses > bag.tradesToday.wins ? "red" : "green",
         sub: `${bag.tradesToday.wins} wins · ${bag.tradesToday.losses} losses`,
       }));
 
@@ -324,6 +326,8 @@
       b.appendChild(stat({
         label: botLabel + " · Open Right Now",
         value: String(bag.openNow),
+        spark: [],
+        placeholderTone: bag.openNow > 0 ? "green" : "red",
         sub: bag.openNow > 0 ? "live positions" : "none open",
       }));
 
@@ -373,11 +377,24 @@
             el("div", { class: `sh-feed-thumb ${sourceClass}` }, sourceIcon),
             el("div", {},
               el("div", { class: "sh-feed-name" }, f.name),
-              el("div", { class: "sh-feed-meta" }, `${f.source} · ${f.ageMin}m ago`),
+              el("div", { class: "sh-feed-meta" }, `${f.source} · ${formatAgeMinutes(f.ageMin)}`),
             ),
             el("div", { class: `sh-feed-status ${statusClass}` }, f.status),
           ));
         }
+      }
+
+      function formatAgeMinutes(rawMinutes) {
+        const minutes = Math.max(0, Math.floor(Number(rawMinutes) || 0));
+        if (minutes < 1) return "just now";
+        if (minutes < 60) return `${minutes} min ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hr ago`;
+        const days = Math.floor(hours / 24);
+        const remainderHours = hours % 24;
+        if (days < 7) return remainderHours ? `${days}d ${remainderHours}h ago` : `${days}d ago`;
+        const weeks = Math.floor(days / 7);
+        return `${weeks} ${weeks === 1 ? "week" : "weeks"} ago`;
       }
 
       // ─── Pot — premium chips with floating steam (no chart) ─────────
@@ -393,27 +410,13 @@
               ),
               el("div", { class: "sh-chip-stage" }, s.stage),
             ),
-            el("div", { class: "sh-chip-name", title: s.name }, shortName(s.name)),
+            el("div", { class: "sh-chip-name", title: s.name }, s.name),
             el("div", { class: "sh-chip-foot" },
               el("div", { class: "sh-chip-pnl" }, s.netPnl),
               el("div", { class: "sh-chip-meta" }, `${s.tradesCount} plays`),
             ),
           ));
         }
-      }
-
-      // Pretty-truncates a raw strategy name like
-      // "extreme_band_reversal_strategy_mes_5m" → "Extreme Band Reversal"
-      // Removes common operator suffixes, replaces underscores, title-cases,
-      // and caps at ~22 chars so the chip stays clean.
-      function shortName(raw) {
-        const SUFFIX = /(_(mes|mnq|mcl|m15|m5|m1|h1|h4|5m|15m|30m|1h|4h|daily|weekly|long_v\d+|short_v\d+|short|long)){1,}$/i;
-        let s = String(raw || "");
-        for (let i = 0; i < 3; i++) s = s.replace(SUFFIX, ""); // strip up to 3 layered suffixes
-        s = s.replace(/_/g, " ").trim();
-        s = s.replace(/\b\w/g, (c) => c.toUpperCase());
-        if (s.length > 22) s = s.slice(0, 20) + "…";
-        return s;
       }
 
       // ─── Crew ───────────────────────────────────────────────────────
@@ -551,19 +554,36 @@
       node.appendChild(el("div", { class: "sh-stat-sub" }, opts.sub || ""));
 
       // Chart slot — bottom 60% of card, full-bleed.
-      // - If opts.spark is an array → render sparkline (real or placeholder).
+      // - If opts.spark has backend observations → render the real sparkline.
+      // - If no observations exist → render a clearly labelled ambient standby
+      //   wave. It is decorative, not plotted data, and carries no trend pill.
       // - If opts.spark === null → leave slot empty (caller will inject
       //   custom content, e.g. the SVG pot chart on the "In the Pot" tile).
       const sparkBox = el("div", { class: "sh-stat-spark" });
       if (opts.spark !== null) {
-        const spark = (opts.spark && opts.spark.length >= 2)
-          ? opts.spark
-          : baselineSpark(opts.value);
-        sparkBox.appendChild(sparkline(spark, { width: 320, height: 110 }));
+        if (opts.spark && opts.spark.length >= 2) {
+          sparkBox.appendChild(sparkline(opts.spark, { width: 320, height: 110 }));
+        } else {
+          sparkBox.appendChild(standbyWave(opts.placeholderTone));
+        }
       }
       node.appendChild(sparkBox);
 
       return node;
+    }
+
+    function standbyWave(tone) {
+      const { el } = SH;
+      const safeTone = tone === "red" ? "red" : "green";
+      return el("div", {
+        class: "sh-standby-wave " + safeTone,
+        role: "img",
+        "aria-label": "Decorative standby visual. Awaiting real account data.",
+      },
+      el("span", { class: "sh-standby-ribbon back" }),
+      el("span", { class: "sh-standby-ribbon middle" }),
+      el("span", { class: "sh-standby-ribbon front" }),
+      el("span", { class: "sh-standby-copy" }, "AWAITING REAL DATA"));
     }
 
     // Generates a 12-point subtle placeholder series. Used when the backend

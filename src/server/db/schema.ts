@@ -2805,6 +2805,19 @@ export const brokerAccounts = pgTable(
   ],
 );
 
+/** Encrypted member-entered broker credentials. Ciphertext is useless without the deployment
+ * master key; plaintext is never stored or returned. broker_accounts points here with
+ * api_key_vault_ref = dbvault:<credential_id>. */
+export const brokerCredentialVault = pgTable("broker_credential_vault", {
+  credentialId: uuid("credential_id").primaryKey().defaultRandom(),
+  ciphertext: text("ciphertext").notNull(),
+  iv: text("iv").notNull(),
+  authTag: text("auth_tag").notNull(),
+  keyVersion: integer("key_version").notNull().default(1),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ─── Instance Config ──────────────────────────────────────────────────────────
 export const instanceConfig = pgTable("instance_config", {
   id: integer("id").primaryKey().default(1),

@@ -5151,7 +5151,8 @@
     "database_tables": [
       "slumhouse_users",
       "slumhouse_member_pins",
-      "slumhouse_connect_test"
+      "slumhouse_connect_test",
+      "broker_credential_vault"
     ],
     "learning_from": [],
     "learning_assets": [],

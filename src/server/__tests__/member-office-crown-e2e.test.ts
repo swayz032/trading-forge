@@ -17,7 +17,7 @@ import express from "express";
 import type { Server } from "node:http";
 import { createTestDb, type TestDb } from "./helpers/pglite-db.js";
 import { slumhouseUsers, slumhouseMemberPins } from "../db/schema.js";
-import { signPinTicket, PIN_COOKIE_NAME } from "../lib/slumhouse/pin-ticket.js";
+import { PIN_COOKIE_NAME } from "../lib/slumhouse/pin-ticket.js";
 
 const M1 = "crown-member-one";
 const M2 = "crown-member-two";
@@ -150,13 +150,13 @@ describe("CSRF: a foreign origin cannot drive the member's own routes", () => {
     expect(res.status).toBe(403);
   });
 
-  it("rejects a foreign-origin connect-test", async () => {
+  it("the retired fake connect route no longer exists", async () => {
     const res = await fetch(`${base}/slumhouse/api/member/connect-test`, {
       method: "POST",
       headers: { "content-type": "application/json", "x-test-session-user": M1, origin: FOREIGN },
       body: JSON.stringify({ brokerKind: "topstepx", key: "TESTKEY-1" }),
     });
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(404);
   });
 
   it("★ the SAME request without the foreign origin is NOT blocked — the origin is what decided", () => {
@@ -273,17 +273,14 @@ describe("CROWN PROPERTY, through the real router: one member's ticket cannot op
     }
   });
 
-  // The connect-card path enforces scope independently — a stolen ticket must not write either.
-  it("M1 with M2's ticket is refused by the connect-card route and writes nothing", async () => {
+  // Broker health enforces scope independently — a stolen ticket must not expose readiness.
+  it("M1 with M2's ticket is refused by the broker-health route", async () => {
     const m2Ticket = await establishAndTicket(M2);
-    const res = await fetch(`${base}/slumhouse/api/member/connect-test`, {
-      method: "POST",
+    const res = await fetch(`${base}/slumhouse/api/member/broker-health`, {
       headers: {
-        "content-type": "application/json",
         "x-test-session-user": M1,
         cookie: `${PIN_COOKIE_NAME}=${encodeURIComponent(m2Ticket)}`,
       },
-      body: JSON.stringify({ brokerKind: "topstepx", key: "TESTKEY-abcd1234" }),
     });
     expect(res.status).toBe(403);
   });

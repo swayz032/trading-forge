@@ -11,6 +11,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { getExecutionMode } from "../execution-mode.js";
 import { unmappedAccountDisclosure, liveModeDataDisclosure } from "./translate.js";
+import { resolvePremiumName } from "./premium-names.js";
 
 export type CribData = {
   banner: {
@@ -323,7 +324,7 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
 
   // 6. Pot horizontal feed — strategies currently in testing stages with recent P&L
   const potRows = (await db.execute(sql`
-    SELECT s.id::text AS id, s.name, s.lifecycle_state AS stage,
+    SELECT s.id::text AS id, s.name, s.symbols, s.timeframe, s.config, s.lifecycle_state AS stage,
       COALESCE(
         (SELECT SUM(pt.pnl::float)
          FROM paper_trades pt
@@ -364,6 +365,7 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
   `).catch(() => [] as any[])) as any[];
 
   const todayPnl = Number(todayRow?.today_pnl ?? 0);
+  const potNameCounts = new Map<string, number>();
   return {
     banner: {
       todayBag: formatBag(todayPnl),
@@ -386,13 +388,24 @@ export async function assembleCribData(args: { brokerAccountId: string | null })
       status: String(r["status"] ?? "?"),
       ageMin: Number(r["ageMin"] ?? r["age_min"] ?? 0),
     })),
-    pot: potRows.map((r) => ({
-      id: String(r.id),
-      name: String(r.name ?? "unnamed"),
-      stage: String(r.stage ?? ""),
-      netPnl: formatBag(Number(r.net_pnl ?? 0)),
-      tradesCount: Number(r.trades_count ?? 0),
-    })),
+    pot: potRows.map((r) => {
+      const named = resolvePremiumName({
+        name: String(r.name ?? "unnamed"),
+        symbols: Array.isArray(r.symbols) ? r.symbols.map(String) : [],
+        timeframe: String(r.timeframe ?? ""),
+        config: r.config && typeof r.config === "object" ? r.config : null,
+      });
+      const occurrence = (potNameCounts.get(named.displayName) ?? 0) + 1;
+      potNameCounts.set(named.displayName, occurrence);
+      return {
+        id: String(r.id),
+        name: named.displayName,
+        stage: String(r.stage ?? ""),
+        netPnl: formatBag(Number(r.net_pnl ?? 0)),
+        tradesCount: Number(r.trades_count ?? 0),
+        duplicate: occurrence > 1,
+      };
+    }).filter((card) => !card.duplicate).map(({ duplicate: _duplicate, ...card }) => card),
     crew: crewRows.map((r) => ({
       jersey: Number(r.jersey ?? 0),
       displayName: String(r.display_name ?? "?"),

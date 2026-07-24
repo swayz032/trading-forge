@@ -28,13 +28,13 @@ describe("menu-data", () => {
     const { assembleNowServing } = await import("../../lib/slumhouse/menu-data.js");
     const champions = await assembleNowServing();
 
-    // two families: orb (2 variants) + vwap_fade (1 variant)
+    // two families: the duplicate orb definition collapses to its DEPLOYED champion.
     expect(champions).toHaveLength(2);
     const orb = champions.find((c) => c.premiumName === "Opening Heist");
     expect(orb).toBeDefined();
     expect(orb?.id).toBe("s1"); // DEPLOYED beats DECLINING for champion
     expect(orb?.symbol).toBe("MES");
-    expect(orb?.variantCount).toBe(2);
+    expect(orb?.variantCount).toBe(1);
     expect(orb?.lifecycleState).toBe("DEPLOYED");
     expect(orb?.monthMade).toBe("+$8,420");
 

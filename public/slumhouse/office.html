@@ -297,6 +297,13 @@
     .rr-immersive.rr-imm-on { display: block; }
     .imm-screen { width: min(1540px, 100%); min-height: calc(100vh - 62px); margin: 0 auto; padding: 26px 28px 72px; display: none; }
     .imm-screen.on { display: block; }
+    /* Quantum/Paper are true full-page rooms. Keep the report-type chrome, but remove the
+       Reporting Room movie and let the immersive surface own every pixel behind it. */
+    .rr-room.rr-imm-mode { overflow: hidden; background: #000; }
+    .rr-room.rr-imm-mode .rr-bg, .rr-room.rr-imm-mode .rr-veil, .rr-room.rr-imm-mode .rr-content { display: none; }
+    .rr-room.rr-imm-mode .rr-immersive { inset: 0; padding-top: 62px; border-top: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    .rr-room.rr-imm-mode .rr-immersive::-webkit-scrollbar { width: 0; height: 0; display: none; }
+    .rr-room.rr-imm-mode .imm-screen { width: 100%; min-height: 100vh; padding-top: 24px; }
     .imm-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 18px; border-bottom: 1px solid #161616; }
     .imm-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--lime); text-shadow: 0 0 12px rgba(163,255,18,0.35); }
     .imm-title { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 6px 0 0; }
@@ -416,6 +423,28 @@
     @keyframes versus-breathe { 0%,100% { opacity:.72; transform: scale(.94); } 50% { opacity:1; transform: scale(1.06); } }
     @keyframes corner-flicker { 0%,100% { opacity:.58; } 48% { opacity:.9; } 52% { opacity:.68; } 58% { opacity:.94; } }
     @keyframes arena-photo-drift { 0%,100% { transform: scale(1.015) translate3d(0,0,0); } 50% { transform: scale(1.035) translate3d(0,-3px,0); } }
+    .rl-race-arena { position: relative; min-height: clamp(520px,67vh,780px); overflow: hidden; border-radius: 18px;
+      border: 1px solid rgba(163,255,18,.2); background:#020403; isolation:isolate; }
+    .rl-race-photo { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; object-position:center 56%;
+      filter:saturate(1.04) contrast(1.08) brightness(.78); transform:scale(1.015); animation:arena-photo-drift 11s ease-in-out infinite; }
+    .rl-race-scrim { position:absolute; inset:0; z-index:2; background:
+      linear-gradient(180deg,rgba(0,0,0,.74),transparent 26%,transparent 68%,rgba(0,0,0,.88)),
+      radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.38) 100%); }
+    .rl-race-hud { position:absolute; inset:0; z-index:3; pointer-events:none; display:grid; grid-template-columns:1fr auto 1fr; align-items:start; padding:24px; }
+    .rl-racer { max-width:330px; padding:15px 17px; border-radius:14px; background:rgba(0,0,0,.58); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.13); }
+    .rl-racer.quantum { justify-self:end; text-align:right; border-color:rgba(163,255,18,.38); }
+    .rl-racer.baseline { border-color:rgba(96,165,250,.35); }
+    .rl-racer .car { font:900 clamp(16px,2vw,25px)/1 var(--num-font); letter-spacing:.02em; text-transform:uppercase; }
+    .rl-racer.quantum .car { color:var(--lime); }.rl-racer.baseline .car{color:#8fc5ff}
+    .rl-racer .model { margin-top:6px; color:rgba(255,255,255,.65); font:700 9px/1 var(--num-font); letter-spacing:.18em; text-transform:uppercase; }
+    .rl-racer .score { margin-top:10px; color:#fff; font:800 13px/1.4 var(--num-font); }
+    .rl-race-vs { align-self:start; margin:10px 18px; padding:12px 14px; border-radius:50%; color:#fff; font:950 15px/1 var(--num-font);
+      background:rgba(0,0,0,.7); border:1px solid rgba(163,255,18,.42); box-shadow:0 0 28px rgba(163,255,18,.16); }
+    .rl-race-bottom { position:absolute; z-index:4; left:22px; right:22px; bottom:18px; display:flex; align-items:flex-end; justify-content:space-between; gap:18px; }
+    .rl-race-call { max-width:720px; text-shadow:0 3px 20px #000; }.rl-race-call b{display:block;color:#fff;font-size:clamp(21px,3vw,39px);font-style:italic;text-transform:uppercase}
+    .rl-race-call span{display:block;margin-top:6px;color:rgba(255,255,255,.7);font-size:11px;line-height:1.5}
+    .rl-race-state { flex:0 0 auto;padding:9px 12px;border-radius:999px;background:rgba(0,0,0,.64);border:1px solid rgba(163,255,18,.35);color:var(--lime);font:800 9px/1 var(--num-font);letter-spacing:.14em;text-transform:uppercase}
+    @media(max-width:720px){.rr-room.rr-imm-mode .rr-immersive{padding-top:104px}.rl-race-hud{padding:12px}.rl-racer{max-width:43%;padding:10px}.rl-race-vs{margin:8px 5px}.rl-race-bottom{left:12px;right:12px;bottom:12px}.rl-race-state{display:none}}
     @media (max-width: 780px) {
       .imm-screen { min-height: calc(100vh - 104px); padding: 20px 12px 54px; }
       .premium-empty, .premium-scene { min-height: 500px; }
@@ -489,6 +518,13 @@
     .fight-tied { color: var(--warm); }
     @media (max-width: 900px) { .fight-score { grid-template-columns: repeat(2,1fr); } .fight-score .main { grid-column: 1/-1; } }
     @media (max-width: 560px) { .fighter-grid { grid-template-columns: 1fr; } .fighter-round { grid-template-columns: repeat(2,1fr); } }
+    @media (min-width: 1200px) {
+      #imm-paper { max-width: 1760px; padding-left: clamp(24px,2.4vw,44px); padding-right: clamp(24px,2.4vw,44px); }
+      #imm-paper .fight-live-arena { min-height: clamp(430px,52vh,650px); background-position: 50% 56%; }
+      #imm-paper .fight-live-hud { top: 34px; }
+      #imm-paper .fight-score { grid-template-columns: minmax(300px,1.55fr) repeat(4,minmax(130px,.62fr)); }
+      #imm-paper .fighter-grid { grid-template-columns: repeat(auto-fit,minmax(390px,1fr)); gap: 16px; }
+    }
 
     @media (max-width: 780px) {
       .rr-typetog { top: 56px; left: 8px; right: 8px; max-width: none; transform: none; overflow-x: auto; justify-content: flex-start; scrollbar-width: none; }
@@ -974,12 +1010,12 @@
       .cc-ring-pulse, .cc-glow::before, .cc-glow::after { animation: none; }
     }
     .of-broker-card {
-      position: fixed; right: 22px; bottom: 22px; z-index: 120; width: min(360px, calc(100vw - 44px));
-      padding: 18px; border-radius: 18px; color: #fff;
-      background: rgba(8,12,9,0.82); border: 1px solid rgba(163,255,18,0.32);
+      width: min(470px, calc(100vw - 44px)); padding: 24px; border-radius: 18px; color: #fff;
+      background: rgba(8,12,9,0.97); border: 1px solid rgba(163,255,18,0.32);
       box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 28px 70px rgba(0,0,0,0.68), 0 0 36px rgba(163,255,18,0.10);
       backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
     }
+    .of-broker-card::backdrop { background: rgba(0,0,0,.76); backdrop-filter: blur(7px); }
     .of-broker-card h2 { margin: 0; color: #a3ff12; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
     .of-broker-card label { display: block; margin: 10px 0 4px; color: rgba(255,255,255,0.62); font-size: 11px; }
     .of-broker-card select, .of-broker-card input { width: 100%; padding: 9px 11px; border-radius: 10px; color: #fff; background: rgba(0,0,0,0.48); border: 1px solid rgba(255,255,255,0.14); }
@@ -1087,20 +1123,20 @@
     <div id="of-toast" class="of-toast" aria-live="polite"></div>
   </div>
 
-  <section id="of-broker-card" class="of-broker-card of-hide" aria-label="Connect your broker">
-    <h2>Connect your broker</h2>
-    <span class="of-broker-pill">Test mode · no live orders</span>
-    <label for="of-broker-kind">Broker</label>
-    <select id="of-broker-kind">
-      <option value="topstepx">TopstepX</option>
-      <option value="traderspost">MFFU / TradersPost</option>
-    </select>
-    <label for="of-broker-key">Test key</label>
-    <input id="of-broker-key" type="password" autocomplete="off" spellcheck="false" placeholder="TESTKEY-…" />
-    <button id="of-broker-submit" type="button">Validate</button>
+  <dialog id="of-broker-card" class="of-broker-card" aria-label="Broker health">
+    <h2>Connect Your Prop Firm</h2>
+    <span class="of-broker-pill">Real account readiness</span>
     <div id="of-broker-status" class="of-broker-status" role="status" aria-live="polite"></div>
-    <p class="of-broker-copy">This validates the existing account-connection workflow without touching live execution or saving real credentials. Sign in with Discord first so the test belongs to your account.</p>
-  </section>
+    <p class="of-broker-copy">TopstepX connects directly. Other prop firms connect through your real TradersPost account. Credentials go only to encrypted server storage.</p>
+    <label for="of-broker-kind">Connection route</label>
+    <select id="of-broker-kind"><option value="topstepx">TopstepX direct</option><option value="traderspost">Other prop firm via TradersPost</option></select>
+    <div id="of-broker-firm-wrap" class="of-hide"><label for="of-broker-firm">Prop firm ID (example: mffu)</label><input id="of-broker-firm" maxlength="32" autocomplete="off"></div>
+    <label for="of-broker-account">Prop-firm account ID</label><input id="of-broker-account" maxlength="80" autocomplete="off">
+    <label for="of-broker-key"><span id="of-broker-key-label">TopstepX API key</span></label><input id="of-broker-key" type="password" maxlength="4096" autocomplete="off" spellcheck="false">
+    <a id="of-traderspost-link" class="of-broker-copy of-hide" href="https://app.traderspost.io/" target="_blank" rel="noopener noreferrer">Open TradersPost and connect your broker →</a>
+    <button id="of-broker-submit" type="button">Save Secure Connection</button>
+    <button id="of-broker-close" type="button">Close</button>
+  </dialog>
 
   <!-- ═══ CARTER CONNECT OVERLAY (full-screen, hidden by default) ═══ -->
   <div id="carter-call" aria-hidden="true">
@@ -1219,8 +1255,8 @@
       var submit = document.getElementById('of-submit');
       var msg = document.getElementById('of-msg');
       var brokerCard = document.getElementById('of-broker-card');
-      var brokerKey = document.getElementById('of-broker-key');
       var brokerStatus = document.getElementById('of-broker-status');
+      var brokerKey = document.getElementById('of-broker-key');
 
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
@@ -1228,6 +1264,8 @@
           cover: '/slumhouse/images/carter-cover.png?v=3', connectLabel: 'Connect to Carter' },
         { id: 'reporting', connect: true, eyebrow: 'GPT-5 Analyst', title: 'Reporting Room',
           cover: '/slumhouse/images/office-reporting.png?v=2', connectLabel: 'Enter Reporting Room' },
+        { id: 'broker_health', connect: true, eyebrow: 'Real account wiring', title: 'Broker Health',
+          cover: '/slumhouse/images/prop-firm-account-cover.png?v=1', connectLabel: 'Connect Your Prop Firm' },
         { id: 'bot_power', eyebrow: 'Main switch', title: 'Bot Power',
           on: 'The whole bot runs — it makes trades, finds and promotes new strategies, and runs its scheduled jobs.',
           off: 'The whole bot pauses — no new trades AND no strategy discovery, no promotions, no scheduled jobs. (Turns RED if it pauses itself for safety; flip ON to resume.)' },
@@ -1473,6 +1511,15 @@
         RR_STATE.type = type;
         rrSetToggle(type);
         var ball = !!RR_BALL_TYPES[type];
+        var room = document.getElementById('reporting-room');
+        if (room) {
+          room.classList.toggle('rr-imm-mode', !ball);
+          var roomVideo = room.querySelector('.rr-bg');
+          if (roomVideo) {
+            if (ball) { var playPromise = roomVideo.play(); if (playPromise && playPromise.catch) playPromise.catch(function () {}); }
+            else roomVideo.pause();
+          }
+        }
         var content = document.getElementById('rr-content');
         var imm = document.getElementById('rr-immersive');
         if (content) content.style.display = ball ? '' : 'none';
@@ -1582,17 +1629,18 @@
       // (not rl:*), strategy:promoted (not lifecycle:promoted), paper:tp1/2_filled.
       var RR_RL_EVENTS = ['signal:rl_ab_routed', 'quantum_rl:training_completed', 'quantum_rl:kill_switch_engaged'];
       var RR_PAPER_EVENTS = ['paper:trade', 'paper:signal', 'paper:pnl', 'paper:session_start', 'paper:session_stop', 'paper:tp1_filled', 'paper:tp2_filled', 'paper:be_stop_moved', 'paper:trail_tightened', 'paper:time_stop_flattened', 'signal:a_plus_rejected', 'signal:weighted_score_rejected', 'strategy:promoted', 'lifecycle:operator_absent_autopromoted'];
-      var rrES = null, rrRlRefresh = null, rrPaperRefresh = null, rrSseErrorTimer = null, rrPaperData = null, rrPaperLoading = false;
+      var rrES = null, rrRlRefresh = null, rrPaperRefresh = null, rrSseErrorTimer = null, rrSseRecoverTimer = null, rrPaperData = null, rrPaperLoading = false;
       var rrPaperTape = [], rrPaperCounts = { events: 0 }, rrPaperConn = 'idle';
       function rrSSEConnect() {
         if (rrES || typeof EventSource === 'undefined') return;
         try {
-          rrES = new EventSource('/api/sse/events');
+          rrES = new EventSource('/slumhouse/api/sse/events');
           rrPaperConn = 'connecting';
           rrES.onopen = function () {
             if (rrSseErrorTimer) { clearTimeout(rrSseErrorTimer); rrSseErrorTimer = null; }
+            if (rrSseRecoverTimer) { clearTimeout(rrSseRecoverTimer); rrSseRecoverTimer = null; }
             rrPaperConn = 'open';
-            if (RR_STATE.type === 'paper') rrPaperPaint();
+            if (RR_STATE.type === 'paper') { rrFetchPaperFloor(); rrPaperPaint(); }
           };
           // OR-042 F-2: a dropped/failed stream must NOT collapse into "genuinely quiet".
           // Mark it disconnected so the floor renders 'feed interrupted' distinctly from a dark
@@ -1606,6 +1654,16 @@
               rrPaperConn = 'error';
               if (RR_STATE.type === 'paper') rrPaperPaint();
             }, 5000);
+            // Native EventSource normally reconnects itself. Some proxies leave it
+            // CONNECTING forever after a deploy/network transition, so recycle the
+            // object after a bounded grace period. Only one watchdog may exist.
+            if (!rrSseRecoverTimer) rrSseRecoverTimer = setTimeout(function () {
+              rrSseRecoverTimer = null;
+              if (!rrES || rrES.readyState === 1) return;
+              try { rrES.close(); } catch (e) {}
+              rrES = null;
+              rrSSEConnect();
+            }, 8000);
           };
           RR_RL_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnRlEvent); });
           RR_PAPER_EVENTS.forEach(function (e) { rrES.addEventListener(e, rrOnPaperEvent); });
@@ -1614,6 +1672,7 @@
       function rrSSEClose() {
         if (rrES) { try { rrES.close(); } catch (e) {} rrES = null; }
         if (rrSseErrorTimer) { clearTimeout(rrSseErrorTimer); rrSseErrorTimer = null; }
+        if (rrSseRecoverTimer) { clearTimeout(rrSseRecoverTimer); rrSseRecoverTimer = null; }
         if (rrRlRefresh) { clearTimeout(rrRlRefresh); rrRlRefresh = null; }
         if (rrPaperRefresh) { clearTimeout(rrPaperRefresh); rrPaperRefresh = null; }
         rrPaperConn = 'idle';
@@ -1665,7 +1724,7 @@
       function rrRlSrc() {
         return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> reads <code>GET /api/ab-comparison/recent</code> (<code>rolling_20_session_sharpe</code>, <code>sharpe_delta</code>, <code>pnl_delta</code>, kill switch) and refreshes on <code>signal:rl_ab_routed</code> / <code>quantum_rl:training_completed</code> / <code>quantum_rl:kill_switch_engaged</code>. Baseline = sub-account 1, challenger = sub-account 2. Nothing here arms or disarms anything.</span></div>';
       }
-      function rrRlEmpty(host, degraded) {
+      function rrRlEmptyLegacy(host, degraded) {
         if (!host) return;
         var visual = '<div class="premium-scene"><div class="premium-canvas"><svg class="premium-svg" viewBox="0 0 1200 470" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Decorative Quantum RL challenger versus baseline telemetry arena; awaiting live data">' +
           '<defs><pattern id="rl-grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#a3ff12" stroke-opacity=".045"/></pattern><radialGradient id="rl-core"><stop offset="0" stop-color="#dfff9d"/><stop offset=".28" stop-color="#a3ff12"/><stop offset="1" stop-color="#173500" stop-opacity="0"/></radialGradient><linearGradient id="rl-link"><stop stop-color="#60a5fa" stop-opacity=".12"/><stop offset=".5" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#a3ff12" stop-opacity=".18"/></linearGradient><filter id="rl-glow"><feGaussianBlur stdDeviation="6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>' +
@@ -1682,6 +1741,32 @@
           '<div class="imm-panel premium-empty">' + visual + '</div>' +
           '<div class="tiles">' + rrTile('Sharpe &Delta;', '—', 'goes live on deploy', true) + rrTile('Cumulative P&amp;L &Delta;', '—', 'goes live on deploy', true) + rrTile('Rolling-20 Sharpe', '—', 'no sessions recorded', true) + rrTile('Kill switch', '—', 'arms when RL goes live', true) + '</div>' +
           '<p class="empty-note">' + (degraded ? 'The A/B desk is not readable right now. Nothing has been lost — this is a read problem, not a trading problem.' : 'No A/B data yet. The visual above is a labeled system map, not simulated performance.') + '</p>' + rrRlSrc();
+      }
+      function rrRlRaceArena(s1, s2, delta, hasData, degraded) {
+        s1 = s1 || {}; s2 = s2 || {}; delta = delta || {};
+        var baseSharpe = hasData ? (Number(s1.rolling_20_session_sharpe) || 0).toFixed(2) : '—';
+        var qSharpe = hasData ? (Number(s2.rolling_20_session_sharpe) || 0).toFixed(2) : '—';
+        var sd = Number(delta.sharpe_delta) || 0;
+        var headline = degraded ? 'Telemetry link unavailable' : (hasData ? (sd >= 0 ? 'Quantum RL has the racing line' : 'Classical baseline holds the lead') : 'Engines staged. Awaiting the first session.');
+        var state = degraded ? 'Feed unavailable' : (hasData ? 'Live telemetry' : 'Telemetry waiting');
+        return '<div class="rl-race-arena">' +
+          '<img class="rl-race-photo" src="/slumhouse/images/quantum-race-arena.png?v=1" alt="Quantum RL Aventador and Classical Baseline Urus in a cinematic telemetry race arena">' +
+          '<div class="rl-race-scrim"></div><div class="rl-race-hud">' +
+            '<div class="rl-racer baseline"><div class="car">Classical Baseline</div><div class="model">Urus · control lane</div><div class="score">Rolling-20 Sharpe&nbsp; ' + rrEsc(baseSharpe) + '</div></div>' +
+            '<div class="rl-race-vs">VS</div>' +
+            '<div class="rl-racer quantum"><div class="car">Quantum RL</div><div class="model">Aventador · challenger lane</div><div class="score">Rolling-20 Sharpe&nbsp; ' + rrEsc(qSharpe) + '</div></div>' +
+          '</div><div class="rl-race-bottom"><div class="rl-race-call"><b>' + rrEsc(headline) + '</b><span>' +
+            (hasData ? 'Real A/B telemetry drives this race HUD. The arena remains; only measured scores, leader state and session telemetry change.' : 'This cinematic grid is a standby scene. No speed, lead or performance is claimed before real A/B sessions arrive.') +
+          '</span></div><div class="rl-race-state">' + rrEsc(state) + '</div></div></div>';
+      }
+      function rrRlEmpty(host, degraded) {
+        if (!host) return;
+        host.innerHTML =
+          '<div class="imm-head"><div><div class="imm-eyebrow">Quantum Race Lab · full-screen immersive</div><div class="imm-title">Quantum RL vs Classical Baseline</div></div>' +
+            '<div class="imm-head-right"><span class="pillstat ' + (degraded ? 'bad' : 'warn') + '"><span class="d"></span> ' + (degraded ? 'Feed unavailable' : 'No sessions yet') + '</span><span class="pillstat dim">RL not routing</span></div></div>' +
+          rrRlRaceArena(null, null, null, false, degraded) +
+          '<div class="tiles">' + rrTile('Sharpe &Delta;', '—', 'goes live on deploy', true) + rrTile('Cumulative P&amp;L &Delta;', '—', 'goes live on deploy', true) + rrTile('Rolling-20 Sharpe', '—', 'no sessions recorded', true) + rrTile('Kill switch', '—', 'arms when RL goes live', true) + '</div>' +
+          '<p class="empty-note">' + (degraded ? 'The A/B desk is not readable right now. Nothing has been lost — this is a read problem, not a trading problem.' : 'No A/B data yet. The wrapped cars and track are decorative; no result is simulated.') + '</p>' + rrRlSrc();
       }
       function rrRenderRL() {
         var host = document.getElementById('imm-rl');
@@ -1703,6 +1788,7 @@
               '<div class="imm-head"><div><div class="imm-eyebrow">Challenger vs Baseline · immersive</div><div class="imm-title">Is the RL worth trusting yet?</div>' +
                 '<div class="imm-subline">The challenger runs in shadow beside the baseline. It never sizes a live trade — this screen only reports whether it has earned the right to.</div></div>' +
                 '<div class="imm-head-right"><div style="text-align:right;"><div class="imm-label" style="justify-content:flex-end;margin-bottom:6px;">RL verdict</div><span class="imm-verdict ' + (sd >= 0 ? 'good' : 'bad') + '">' + verdict + '</span></div></div></div>' +
+              rrRlRaceArena(s1, s2, delta, true, false) +
               '<div class="imm-band">' +
                 rrStatTile('Sharpe &Delta;', (sd >= 0 ? '+' : '') + sd.toFixed(2), sd >= 0 ? 'good' : 'bad', (sd >= 0 ? '+' : '') + sd.toFixed(2), sd >= 0 ? '' : 'down', 'challenger − baseline') +
                 rrStatTile('Cumulative P&L &Delta;', rrMoney(pd, true), pd >= 0 ? 'good' : 'bad', pd >= 0 ? 'ahead' : 'behind', pd >= 0 ? '' : 'down', 'challenger vs baseline') +
@@ -1724,7 +1810,7 @@
 
       // ── Immersive Paper Floor (real SSE tape; honest-dark until an event streams) ──
       function rrPaperSrc() {
-        return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> the fight card reads <code>/slumhouse/api/reports?scope=paper-floor</code> from paper sessions, trades and open positions; each corner carries its real <b>Massive</b> stream state. <code>/api/sse/events</code> triggers score refreshes and supplies the round-by-round tape. The room only observes — it places no orders and moves no stops.</span></div>';
+        return '<div class="imm-src"><span class="lock">&#9673;</span><span><b>Live wiring (read-only):</b> the fight card reads <code>/slumhouse/api/reports?scope=paper-floor</code> from paper sessions, trades and open positions; each corner carries its real <b>Massive</b> stream state. <code>/slumhouse/api/sse/events</code> triggers score refreshes and supplies the round-by-round tape. The room only observes — it places no orders and moves no stops.</span></div>';
       }
       function rrRenderPaper() {
         if (!document.getElementById('imm-paper')) return;
@@ -1782,7 +1868,7 @@
         if (kind === 'disconnected') {
           return '<div class="imm-panel empty-panel"><div class="empty-eyebrow">Live feed interrupted</div><h2 class="empty-title">The floor feed dropped</h2>' +
             '<p class="empty-body">The live connection to the paper floor was interrupted and is retrying. This is a connection problem, not a quiet floor — we are deliberately NOT calling it &ldquo;nothing is happening&rdquo;, because we do not know. Nothing has been lost; the tape resumes the moment the stream reconnects.</p>' +
-            '<p class="empty-note">Reconnecting to <code>/api/sse/events</code>. No reading is invented while the stream is down.</p></div>';
+            '<p class="empty-note">Reconnecting to <code>/slumhouse/api/sse/events</code>. No reading is invented while the stream is down.</p></div>';
         }
         if (kind === 'quiet') return rrPaperFightNightEmptyHTML();
         return '<div class="imm-panel premium-empty"><div class="premium-scene"><div class="premium-canvas"><svg class="premium-svg" viewBox="0 0 1200 470" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Decorative paper execution operations floor; awaiting live engine events">' +
@@ -1799,7 +1885,7 @@
           '<g transform="translate(193 156)"><rect width="145" height="74" rx="11" fill="#a3ff12" fill-opacity=".035" stroke="#a3ff12" stroke-opacity=".15"/><circle cx="22" cy="23" r="5" fill="#a3ff12" class="pulse-node delay"/><text x="37" y="27" fill="#b7d58b" font-family="monospace" font-size="9" letter-spacing="2">EVENT TAPE</text><path d="M18 51H126" stroke="#a3ff12" stroke-opacity=".18" stroke-width="6" stroke-linecap="round"/></g></g>' +
           '<path class="ghost-line" d="M88 390 C270 350 410 430 590 382 S916 348 1120 392" fill="none" stroke="#a3ff12" stroke-opacity=".19" stroke-width="2"/><g fill="#a3ff12" opacity=".7"><circle cx="89" cy="390" r="3"/><circle cx="590" cy="382" r="3"/><circle cx="1120" cy="392" r="3"/></g></svg></div>' +
           '<div class="premium-caption"><div><div class="premium-kicker">Paper operations deck</div><div class="premium-name">The execution floor is armed for observation</div><div class="premium-copy"><span class="empty-eyebrow">Floor is dark</span> No paper activity yet. Real signals, risk decisions, fills and stop events will illuminate these bays as they stream in; nothing here is simulated.</div></div><div class="premium-state">Event stream — waiting</div></div></div></div>' +
-          '<p class="empty-note">Live from <code>/api/sse/events</code>. The architecture scene is decorative; every future tape row will be a real engine event.</p>';
+          '<p class="empty-note">Live from <code>/slumhouse/api/sse/events</code>. The architecture scene is decorative; every future tape row will be a real engine event.</p>';
       }
       function rrPaperFightHTML(data) {
         var fighters = data && Array.isArray(data.fighters) ? data.fighters : [];
@@ -1912,7 +1998,7 @@
               '</div>';
             el.addEventListener('click', function () { if (i !== ofCur) ofGo(i); });
             var cbtn = el.querySelector('[data-connect]');
-            cbtn.addEventListener('click', function (e) { e.stopPropagation(); if (cd.id === 'reporting') enterReportingRoom(); else connectCarter(); });
+            cbtn.addEventListener('click', function (e) { e.stopPropagation(); if (cd.id === 'reporting') enterReportingRoom(); else if (cd.id === 'broker_health') openBrokerHealth(); else connectCarter(); });
             ofTrack.appendChild(el);
             var cdot = document.createElement('button');
             cdot.className = 'of-dot'; cdot.type = 'button';
@@ -2125,7 +2211,6 @@
         lockSec.classList.add('of-hide');
         shellSec.classList.remove('of-hide');
         lockBtn.classList.remove('of-hide');
-        brokerCard.classList.remove('of-hide');
         initCarousel();
         // Layer-4 Office P0: wake the risk-truth + approvals modules.
         document.dispatchEvent(new CustomEvent('office:unlocked'));
@@ -2133,8 +2218,7 @@
       function showLocked() {
         shellSec.classList.add('of-hide');
         lockBtn.classList.add('of-hide');
-        brokerCard.classList.add('of-hide');
-        brokerKey.value = '';
+        if (brokerCard.open) brokerCard.close();
         brokerStatus.textContent = '';
         lockSec.classList.remove('of-hide');
         // Layer-4 Office P0: hide + stop the risk-truth + approvals modules.
@@ -2145,29 +2229,59 @@
         setTimeout(function () { input.value = ''; }, 400);
       }
 
-      document.getElementById('of-broker-submit').addEventListener('click', function () {
-        brokerStatus.textContent = 'Checking…';
-        fetch('/slumhouse/api/member/connect-test', {
-          method: 'POST', credentials: 'same-origin',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            brokerKind: document.getElementById('of-broker-kind').value,
-            key: brokerKey.value
-          })
-        })
+      function openBrokerHealth() {
+        brokerStatus.textContent = 'Checking real account mapping…';
+        brokerCard.showModal();
+        fetch('/slumhouse/api/member/broker-health', { credentials: 'same-origin' })
           .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })
           .then(function (result) {
             if (result.status === 401 || result.status === 403) {
-              brokerStatus.textContent = 'Sign in with Discord first so this connection is scoped to you.';
-            } else if (result.body && result.body.status === 'validated') {
-              brokerStatus.textContent = result.body.display || 'Connected in test mode.';
+              brokerStatus.textContent = 'Your signed-in identity is not cleared to read this account.';
+            } else if (result.body && result.body.mapped) {
+              var b = result.body;
+              brokerStatus.textContent = 'Account: ' + (b.maskedAccount || 'not assigned') + ' · Route: ' + (b.broker || 'unknown') + ' · Vault: ' + (b.credentialReady ? 'ready' : 'not loaded') + ' · Adapter: ' + (b.adapterReady ? 'healthy' : 'not ready') + ' · LIVE EXECUTION LOCKED';
             } else {
-              brokerStatus.textContent = 'Use a designated TESTKEY- key. Nothing was saved.';
+              brokerStatus.textContent = 'No real broker account is mapped to this Discord identity yet. LIVE EXECUTION LOCKED.';
             }
           })
-          .catch(function () { brokerStatus.textContent = 'Cannot reach the office. Nothing was saved.'; })
-          .finally(function () { brokerKey.value = ''; });
+          .catch(function () { brokerStatus.textContent = 'Broker health is unavailable. LIVE EXECUTION LOCKED.'; });
+      }
+      document.getElementById('of-broker-close').addEventListener('click', function () { brokerCard.close(); });
+      function brokerMode() {
+        var tp = document.getElementById('of-broker-kind').value === 'traderspost';
+        document.getElementById('of-broker-firm-wrap').classList.toggle('of-hide', !tp);
+        document.getElementById('of-traderspost-link').classList.toggle('of-hide', !tp);
+        document.getElementById('of-broker-key-label').textContent = tp ? 'TradersPost webhook key' : 'TopstepX API key';
+      }
+      document.getElementById('of-broker-kind').addEventListener('change', brokerMode);
+      document.getElementById('of-broker-submit').addEventListener('click', function () {
+        brokerStatus.textContent = 'Encrypting and mapping…';
+        fetch('/slumhouse/api/member/broker-enroll', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brokerType: document.getElementById('of-broker-kind').value,
+            firm: document.getElementById('of-broker-firm').value,
+            accountId: document.getElementById('of-broker-account').value,
+            credential: brokerKey.value
+          })
+        }).then(function (r) {
+          return r.json().catch(function () { return {}; }).then(function (body) { return { ok: r.ok, body: body }; });
+        }).then(function (result) {
+          if (result.ok) {
+            brokerStatus.textContent = 'Saved securely. Account mapped; live execution remains locked.';
+          } else if (result.body.error === 'secure_vault_unavailable') {
+            brokerStatus.textContent = 'Secure credential vault is not configured on this deployment yet.';
+          } else {
+            brokerStatus.textContent = 'Connection was not saved. Check the fields and try again.';
+          }
+        }).catch(function () {
+          brokerStatus.textContent = 'Connection service unavailable. Nothing was saved.';
+        }).finally(function () {
+          brokerKey.value = '';
+        });
       });
+      brokerMode();
       function setMsg(text, cls) {
         msg.textContent = text || '';
         msg.className = 'of-msg' + (cls ? ' ' + cls : '');
