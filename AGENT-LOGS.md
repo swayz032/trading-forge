@@ -1,5 +1,15 @@
 # Trading Forge — Build History & Pass-by-Pass Execution Records
 
+### Session Log — 2026-07-23 [Codex] Slumhouse passcode migration incident repaired
+
+**Incident:** After moving the public Slumhouse from `tf-relay-production.up.railway.app` to `trading-forge-production.up.railway.app`, Discord OAuth succeeded but the operator Office reported a correct passcode as wrong.
+
+**Root cause and repair:** `SLUMHOUSE_ALLOWED_ORIGINS` in the live tower `.env` still allowed only the retired Railway origin. `POST /slumhouse/admin/auth` correctly returned `403 forbidden_origin`; `office.html` incorrectly collapsed that response into “Wrong passcode.” Updated the live and clean-runtime allowlists to the new origin and restarted through the HMAC-authenticated self-restart route. Public diagnostic using the configured value returned `200`, `ok:true`, and an admin cookie.
+
+**Regression hardening:** The Office now renders a distinct security-configuration message for `403 forbidden_origin`, reserves “Wrong passcode” for `401`, and reports an honest generic authentication failure for other statuses. Added `office-auth-ui-guards.test.ts`; targeted auth verification: 2 files, 35 tests passed.
+
+**Known fact:** A Railway-domain migration must update both `DISCORD_REDIRECT_URI` and `SLUMHOUSE_ALLOWED_ORIGINS`. A successful Discord login does not prove same-origin Office POSTs are allowed.
+
 > Historical journal of subsystem builds and plan execution. **CLAUDE.md is the living rules; this file is the diary.** When a future agent needs to know "what did we build in W11?" or "what did Pass 2.1 close?" — this is where the answer lives. Implementation details and current state live in `Trading Forge System Map v2.md`.
 
 ---
