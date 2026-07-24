@@ -2205,7 +2205,12 @@
             if (res.status === 200 && res.body && res.body.ok) { setMsg('', ''); showUnlocked(); return; }
             if (res.status === 429) { setMsg('Too many attempts — locked out, try again later.', 'err'); return; }
             if (res.status === 503) { setMsg('Office not configured — set SLUMHOUSE_ADMIN_PASSCODE in .env.', 'warn'); return; }
-            setMsg('Wrong passcode.', 'err');
+            if (res.status === 403 && res.body && res.body.error === 'forbidden_origin') {
+              setMsg('Office security blocked this site address — check SLUMHOUSE_ALLOWED_ORIGINS.', 'err');
+              return;
+            }
+            if (res.status === 401) { setMsg('Wrong passcode.', 'err'); return; }
+            setMsg('Office authentication failed — try again or check server health.', 'err');
           })
           .catch(function () { submit.disabled = false; setMsg('Network error — try again.', 'err'); });
       });
