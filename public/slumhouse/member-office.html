@@ -4,6 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Your Office · Slumhouse</title>
+<link rel="stylesheet" href="/slumhouse/slumhouse.css" />
 <!--
   Per-member Slumhouse office (Tier-2 item 6; operator directive OR-003 §1 / OR-013 §2).
 
@@ -35,12 +36,12 @@
     --emerald: #10B981;
     --emerald-dim: rgba(16, 185, 129, 0.18);
     --emerald-glow: rgba(16, 185, 129, 0.35);
-    --ink: #050706;
+    --member-ink: #050706;
     --glass: rgba(8, 10, 9, 0.55);
   }
   * { box-sizing: border-box; }
   body {
-    margin: 0; min-height: 100vh; background: var(--ink); color: #fff;
+    margin: 0; min-height: 100vh; background: var(--member-ink); color: #fff;
     font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     background-image: radial-gradient(1200px 600px at 50% -10%, rgba(16,185,129,0.10), transparent 60%);
   }
@@ -80,7 +81,7 @@
   input:focus, select:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(16,185,129,0.16); }
   button {
     width: 100%; margin-top: 12px; padding: 10px; border-radius: 10px; cursor: pointer;
-    font-size: 13px; font-weight: 700; color: var(--ink); background: var(--emerald); border: 0;
+    font-size: 13px; font-weight: 700; color: var(--member-ink); background: var(--emerald); border: 0;
   }
   button:hover { filter: brightness(1.08); }
   .status { margin-top: 10px; font-size: 12px; min-height: 17px; }
@@ -89,6 +90,18 @@
 </style>
 </head>
 <body>
+  <header class="sh-header">
+    <a class="sh-logo" href="/slumhouse/crib.html" aria-label="Slumhouse">
+      <div class="sh-logo-text"><span class="sh-logo-name">SLUMHOUSE</span><span class="sh-logo-sub">/ YOUR OFFICE</span></div>
+    </a>
+    <nav class="sh-nav">
+      <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
+      <a class="sh-pill" href="/slumhouse/kitchen.html">The Kitchen</a>
+      <a class="sh-pill" href="/slumhouse/recipe.html">The Recipe</a>
+      <a class="sh-pill active" href="/slumhouse/member-office.html">Your Office</a>
+    </nav>
+    <div class="sh-header-spacer"><a class="sh-signout" href="/slumhouse/auth/logout">Sign out</a></div>
+  </header>
   <div class="wrap">
     <div class="eyebrow">Slumhouse</div>
     <h1 id="greeting">Your office</h1>
@@ -133,7 +146,7 @@
   </section>
 
   <!-- Floating broker-connect card. TEST MODE ONLY until the money path's Phase 5. -->
-  <section class="float" id="connect-card" aria-label="Connect your broker">
+  <section class="float" id="connect-card" aria-label="Connect your broker" style="display:none">
     <h2>Connect your broker</h2>
     <div class="testpill">Test mode · no live orders</div>
     <label for="broker">Broker</label>
@@ -152,6 +165,7 @@
     </p>
   </section>
 
+<script src="/slumhouse/slumhouse.js"></script>
 <script>
   // The page renders what the SERVER authorised. It performs no access decisions of its own —
   // member-office-scope.ts is the single authority, so this file cannot drift from it.
@@ -161,6 +175,44 @@
     agent_heartbeat: ["Agent heartbeat",  "Is your bot awake?"],
     payout_tracker:  ["Payout tracker",   "Progress toward your next payout"],
   };
+
+  function surfaceCopy(surface, data, displayName) {
+    const bag = data && data.banner;
+    if (surface === "my_room") {
+      return bag
+        ? [displayName + "'s bot", bag.todayBag + " today · " + bag.tradesToday.count + " trades"]
+        : [displayName + "'s bot", "Bot performance is unavailable right now"];
+    }
+    if (surface === "ready_checklist") {
+      if (!data) return ["Status unavailable", "Cannot reach the bot right now"];
+      return data.accountUnmapped
+        ? ["Account connection needed", data.accountDisclosure || "Your prop-firm account is not mapped yet"]
+        : ["Account linked", data.executionModeLabel + " performance is scoped to your account"];
+    }
+    if (surface === "agent_heartbeat") {
+      if (!bag) return ["Unknown", "Cannot reach the bot right now"];
+      return bag.killSwitch === "green"
+        ? ["Bot ready", data.executionModeLabel + " · safety checks reporting green"]
+        : ["Safety stop", "The bot is not cleared to open new trades"];
+    }
+    if (surface === "payout_tracker") {
+      return ["Waiting for funded data", "No member payout figure is available yet"];
+    }
+    return ["Unavailable", "No data"];
+  }
+
+  function renderSurfaceCards(grid, shown, data, displayName) {
+    grid.replaceChildren();
+    shown.forEach((surface) => {
+      const labels = SURFACE_LABELS[surface];
+      const copy = surfaceCopy(surface, data, displayName);
+      grid.appendChild(SH.el("div", { class: "card", "data-surface": surface },
+        SH.el("h2", {}, labels[0]),
+        SH.el("div", { class: "val" }, copy[0]),
+        SH.el("div", { class: "note" }, copy[1]),
+      ));
+    });
+  }
 
   async function boot() {
     let scope = { surfaces: [], displayName: null };
@@ -187,14 +239,18 @@
     }
     // Authorised: the lock is satisfied, so the PIN form goes away.
     document.getElementById("pin-card").style.display = "none";
-    grid.innerHTML = shown.map((s) => {
-      const [title, note] = SURFACE_LABELS[s];
-      return `<div class="card"><h2>${title}</h2><div class="val">—</div><div class="note">${note}</div></div>`;
-    }).join("");
+    let botData = null;
+    try {
+      const r = await fetch("/slumhouse/api/crib", { credentials: "same-origin" });
+      if (r.ok) botData = await r.json();
+    } catch { /* visible unavailable copy is rendered below */ }
+    renderSurfaceCards(grid, shown, botData, scope.displayName || "Your");
 
     // The connect card only exists if the server said this member may see it.
     if (!(scope.surfaces || []).includes("connect_card")) {
       document.getElementById("connect-card").style.display = "none";
+    } else {
+      document.getElementById("connect-card").style.display = "";
     }
   }
 

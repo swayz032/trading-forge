@@ -353,7 +353,24 @@ function potChart(count, opts) {
   return svg;
 }
 
-window.SH = { fetchJSON, el, sparkline, sparkTrend, potChart };
+const identityReady = (async function loadViewerIdentity() {
+  if (!document.querySelector(".sh-header")) return null;
+  try {
+    const res = await fetch("/slumhouse/api/member/scope", { credentials: "same-origin" });
+    if (!res.ok) return null;
+    const viewer = await res.json();
+    if (typeof viewer.officePath === "string") {
+      document.querySelectorAll('a[href="/slumhouse/office.html"]').forEach((link) => {
+        link.setAttribute("href", viewer.officePath);
+      });
+    }
+    return viewer;
+  } catch (_) {
+    return null;
+  }
+}());
+
+window.SH = { fetchJSON, el, sparkline, sparkTrend, potChart, identityReady };
 
 // ─── Inactivity auto-signout ──────────────────────────────────────────
 // Default 30 min idle → /slumhouse/auth/logout. Warning modal at 28 min

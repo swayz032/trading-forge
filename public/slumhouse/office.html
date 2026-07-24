@@ -973,6 +973,20 @@
     @media (prefers-reduced-motion: reduce) {
       .cc-ring-pulse, .cc-glow::before, .cc-glow::after { animation: none; }
     }
+    .of-broker-card {
+      position: fixed; right: 22px; bottom: 22px; z-index: 120; width: min(360px, calc(100vw - 44px));
+      padding: 18px; border-radius: 18px; color: #fff;
+      background: rgba(8,12,9,0.82); border: 1px solid rgba(163,255,18,0.32);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 28px 70px rgba(0,0,0,0.68), 0 0 36px rgba(163,255,18,0.10);
+      backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+    }
+    .of-broker-card h2 { margin: 0; color: #a3ff12; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+    .of-broker-card label { display: block; margin: 10px 0 4px; color: rgba(255,255,255,0.62); font-size: 11px; }
+    .of-broker-card select, .of-broker-card input { width: 100%; padding: 9px 11px; border-radius: 10px; color: #fff; background: rgba(0,0,0,0.48); border: 1px solid rgba(255,255,255,0.14); }
+    .of-broker-card button { width: 100%; margin-top: 12px; padding: 10px; border: 0; border-radius: 10px; color: #071000; background: #a3ff12; font-weight: 800; cursor: pointer; }
+    .of-broker-pill { display: inline-block; margin: 7px 0 2px; padding: 3px 9px; border-radius: 999px; color: #ffce5c; background: rgba(255,206,92,0.10); border: 1px solid rgba(255,206,92,0.35); font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+    .of-broker-copy, .of-broker-status { margin: 9px 0 0; color: rgba(255,255,255,0.52); font-size: 11px; line-height: 1.45; }
+    .of-broker-status { min-height: 16px; color: #a3ff12; }
   </style>
 </head>
 <body>
@@ -1072,6 +1086,21 @@
          instead of a silent no-op. Driven by ofToast() in the switch script below. -->
     <div id="of-toast" class="of-toast" aria-live="polite"></div>
   </div>
+
+  <section id="of-broker-card" class="of-broker-card of-hide" aria-label="Connect your broker">
+    <h2>Connect your broker</h2>
+    <span class="of-broker-pill">Test mode · no live orders</span>
+    <label for="of-broker-kind">Broker</label>
+    <select id="of-broker-kind">
+      <option value="topstepx">TopstepX</option>
+      <option value="traderspost">MFFU / TradersPost</option>
+    </select>
+    <label for="of-broker-key">Test key</label>
+    <input id="of-broker-key" type="password" autocomplete="off" spellcheck="false" placeholder="TESTKEY-…" />
+    <button id="of-broker-submit" type="button">Validate</button>
+    <div id="of-broker-status" class="of-broker-status" role="status" aria-live="polite"></div>
+    <p class="of-broker-copy">This validates the existing account-connection workflow without touching live execution or saving real credentials. Sign in with Discord first so the test belongs to your account.</p>
+  </section>
 
   <!-- ═══ CARTER CONNECT OVERLAY (full-screen, hidden by default) ═══ -->
   <div id="carter-call" aria-hidden="true">
@@ -1189,6 +1218,9 @@
       var input = document.getElementById('of-passcode');
       var submit = document.getElementById('of-submit');
       var msg = document.getElementById('of-msg');
+      var brokerCard = document.getElementById('of-broker-card');
+      var brokerKey = document.getElementById('of-broker-key');
+      var brokerStatus = document.getElementById('of-broker-status');
 
       // ── Pass 3: floating 3D switch-card carousel (empty shells, no switches yet) ──
       var OF_CARDS = [
@@ -2093,6 +2125,7 @@
         lockSec.classList.add('of-hide');
         shellSec.classList.remove('of-hide');
         lockBtn.classList.remove('of-hide');
+        brokerCard.classList.remove('of-hide');
         initCarousel();
         // Layer-4 Office P0: wake the risk-truth + approvals modules.
         document.dispatchEvent(new CustomEvent('office:unlocked'));
@@ -2100,6 +2133,9 @@
       function showLocked() {
         shellSec.classList.add('of-hide');
         lockBtn.classList.add('of-hide');
+        brokerCard.classList.add('of-hide');
+        brokerKey.value = '';
+        brokerStatus.textContent = '';
         lockSec.classList.remove('of-hide');
         // Layer-4 Office P0: hide + stop the risk-truth + approvals modules.
         document.dispatchEvent(new CustomEvent('office:locked'));
@@ -2108,6 +2144,30 @@
         setTimeout(function () { input.value = ''; input.focus(); }, 60);
         setTimeout(function () { input.value = ''; }, 400);
       }
+
+      document.getElementById('of-broker-submit').addEventListener('click', function () {
+        brokerStatus.textContent = 'Checking…';
+        fetch('/slumhouse/api/member/connect-test', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brokerKind: document.getElementById('of-broker-kind').value,
+            key: brokerKey.value
+          })
+        })
+          .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { return { status: r.status, body: j }; }); })
+          .then(function (result) {
+            if (result.status === 401 || result.status === 403) {
+              brokerStatus.textContent = 'Sign in with Discord first so this connection is scoped to you.';
+            } else if (result.body && result.body.status === 'validated') {
+              brokerStatus.textContent = result.body.display || 'Connected in test mode.';
+            } else {
+              brokerStatus.textContent = 'Use a designated TESTKEY- key. Nothing was saved.';
+            }
+          })
+          .catch(function () { brokerStatus.textContent = 'Cannot reach the office. Nothing was saved.'; })
+          .finally(function () { brokerKey.value = ''; });
+      });
       function setMsg(text, cls) {
         msg.textContent = text || '';
         msg.className = 'of-msg' + (cls ? ' ' + cls : '');

@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   verifySession: vi.fn(),
+  officeUsers: vi.fn(),
 }));
 
 vi.mock("../../lib/slumhouse/session.js", () => ({
@@ -9,7 +10,7 @@ vi.mock("../../lib/slumhouse/session.js", () => ({
 }));
 vi.mock("../../db/index.js", () => ({
   db: {
-    select: vi.fn(),
+    select: () => ({ from: () => ({ where: () => ({ limit: () => mocks.officeUsers() }) }) }),
     insert: vi.fn(),
     update: vi.fn(),
   },
@@ -42,6 +43,7 @@ describe("slumhouse router fallback", () => {
   beforeEach(() => {
     process.env.SLUMHOUSE_SESSION_SECRET = "test-secret-32-chars-min-xxxxxxxxxx";
     mocks.verifySession.mockReset();
+    mocks.officeUsers.mockReset();
   });
 
   it("sends signed-in users to crib when an unknown html route is hit", async () => {
@@ -75,5 +77,29 @@ describe("slumhouse router fallback", () => {
     expect(nextCalled).toBe(false);
     expect(res.statusCode).toBe(302);
     expect(res.redirectTo).toBe("/slumhouse/login.html");
+  });
+
+  it("redirects a signed-in member away from the operator Office shell", async () => {
+    mocks.verifySession.mockReturnValue({ ok: true, discordUserId: "111", epoch: 2 });
+    mocks.officeUsers.mockResolvedValue([{ jerseyNumber: 25, sessionEpoch: 2 }]);
+    const { redirectMemberFromOperatorOffice } = await import("../../routes/slumhouse/index.js");
+    const req: any = { headers: { cookie: "slumhouse_sid=good" } };
+    const res = mockRes();
+    let nextCalled = false;
+    await redirectMemberFromOperatorOffice(req, res, () => { nextCalled = true; });
+    expect(nextCalled).toBe(false);
+    expect(res.redirectTo).toBe("/slumhouse/member-office.html");
+  });
+
+  it("leaves jersey zero on the passcode-gated operator Office", async () => {
+    mocks.verifySession.mockReturnValue({ ok: true, discordUserId: "111", epoch: 0 });
+    mocks.officeUsers.mockResolvedValue([{ jerseyNumber: 0, sessionEpoch: 0 }]);
+    const { redirectMemberFromOperatorOffice } = await import("../../routes/slumhouse/index.js");
+    const req: any = { headers: { cookie: "slumhouse_sid=good" } };
+    const res = mockRes();
+    let nextCalled = false;
+    await redirectMemberFromOperatorOffice(req, res, () => { nextCalled = true; });
+    expect(nextCalled).toBe(true);
+    expect(res.redirectTo).toBeNull();
   });
 });

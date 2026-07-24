@@ -14,6 +14,14 @@
 // DENIES. A scoping bug that fails open is a privacy breach between family members.
 export type OfficeRole = "operator" | "member";
 
+export function officeRoleForJersey(jerseyNumber: number | null | undefined): OfficeRole {
+  return jerseyNumber === 0 ? "operator" : "member";
+}
+
+export function officePathForRole(role: OfficeRole): string {
+  return role === "operator" ? "/slumhouse/office.html" : "/slumhouse/member-office.html";
+}
+
 /** Every addressable Office surface. Adding one here forces an explicit access decision. */
 export const OFFICE_SURFACES = [
   "my_room",          // the member's own office

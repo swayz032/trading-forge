@@ -7,7 +7,7 @@ const mocks = vi.hoisted(() => ({
     pot: [],
     crew: [],
   }),
-  select: vi.fn().mockResolvedValue([{ discordUserId: "111", brokerAccountId: "00000000-0000-0000-0000-000000000001", displayName: "Kee" }]),
+  select: vi.fn().mockResolvedValue([{ discordUserId: "111", brokerAccountId: "00000000-0000-0000-0000-000000000001", displayName: "Kee", jerseyNumber: 25 }]),
 }));
 
 vi.mock("../../lib/slumhouse/crib-data.js", () => ({ assembleCribData: mocks.assembleCribData }));
@@ -26,7 +26,7 @@ beforeEach(() => {
   process.env.SLUMHOUSE_SESSION_SECRET = "test-secret-32-chars-min-xxxxxxxxxx";
   mocks.assembleCribData.mockClear();
   mocks.select.mockClear();
-  mocks.select.mockResolvedValue([{ discordUserId: "111", brokerAccountId: "00000000-0000-0000-0000-000000000001", displayName: "Kee" }]);
+  mocks.select.mockResolvedValue([{ discordUserId: "111", brokerAccountId: "00000000-0000-0000-0000-000000000001", displayName: "Kee", jerseyNumber: 25 }]);
 });
 
 describe("crib api route", () => {
@@ -65,11 +65,26 @@ describe("crib api route", () => {
     const { signSession } = await import("../../lib/slumhouse/session.js");
     const sid = signSession({ discordUserId: "111", ttlSec: 60 });
     const { getCrib } = await import("../../routes/slumhouse/api/crib.js");
-    const req: any = { headers: { cookie: `slumhouse_sid=${sid}` }, slumhouseUser: { discordUserId: "111", brokerAccountId: null } };
+    const req: any = { headers: { cookie: `slumhouse_sid=${sid}` }, slumhouseUser: { discordUserId: "111", brokerAccountId: null, displayName: "Kee", jerseyNumber: 25 } };
     const res = mockRes();
     await getCrib(req, res);
     expect(res.statusCode).toBe(200);
     expect(res.body.banner.todayBag).toBe("+$2,847");
+    expect(res.body.viewer).toEqual({
+      displayName: "Kee",
+      role: "member",
+      officePath: "/slumhouse/member-office.html",
+      botLabel: "Kee's bot",
+    });
     expect(mocks.assembleCribData).toHaveBeenCalledWith({ brokerAccountId: null });
+  });
+
+  it("keeps jersey zero on the operator Office path", async () => {
+    const { getCrib } = await import("../../routes/slumhouse/api/crib.js");
+    const req: any = { slumhouseUser: { discordUserId: "111", brokerAccountId: null, displayName: "Tony", jerseyNumber: 0 } };
+    const res = mockRes();
+    await getCrib(req, res);
+    expect(res.body.viewer.officePath).toBe("/slumhouse/office.html");
+    expect(res.body.viewer.role).toBe("operator");
   });
 });

@@ -82,8 +82,8 @@
   </header>
 
   <div class="sh-page">
-    <h1 class="sh-title">The Crib</h1>
-    <p class="sh-sub">Slumdawg's home — talk to him, see what's cooking.
+    <h1 class="sh-title" id="sh-page-title">The Crib</h1>
+    <p class="sh-sub" id="sh-page-sub">Your bot's home — talk to it, see what's cooking.
       <span id="sh-exec-mode-badge" style="display:none;margin-left:10px;font-size:9px;padding:3px 10px;border-radius:999px;letter-spacing:0.1em;text-transform:uppercase;font-weight:700;vertical-align:middle;"></span>
     </p>
 
@@ -164,6 +164,10 @@
       // Live chips pulled from /crib API (best-effort — modal still works without)
       SH.fetchJSON("/slumhouse/api/crib").then(data => {
         if (!data || !data.banner) return;
+        if (data.viewer && data.viewer.displayName) {
+          backdrop.querySelector(".sw-eyebrow").textContent = data.viewer.displayName;
+          backdrop.querySelector("#sw-title").textContent = "Welcome back, " + data.viewer.displayName;
+        }
         const chips = backdrop.querySelector("#sw-chips");
         const b = data.banner;
         const todayCls = b.todayBagRaw < 0 ? "red" : b.todayBagRaw > 0 ? "" : "dim";
@@ -258,6 +262,19 @@
       cribInitialRenderOk = true;
       const { el, sparkline, sparkTrend } = SH;
 
+      const viewer = data.viewer || {};
+      const botLabel = viewer.botLabel || "Your bot";
+      if (viewer.displayName) {
+        document.getElementById("sh-page-title").textContent = viewer.displayName + "'s Crib";
+        document.getElementById("sh-page-sub").childNodes[0].nodeValue =
+          "Welcome back, " + viewer.displayName + " — here’s " + botLabel + " right now. ";
+      }
+      if (viewer.officePath) {
+        document.querySelectorAll('a[href="/slumhouse/office.html"]').forEach((link) => {
+          link.setAttribute("href", viewer.officePath);
+        });
+      }
+
       // ─── Execution mode badge ───────────────────────────────────────
       (function () {
         const badge = document.getElementById("sh-exec-mode-badge");
@@ -286,7 +303,7 @@
 
       // Today's Bag
       b.appendChild(stat({
-        label: "Today's Bag",
+        label: botLabel + " · Today's Bag",
         value: bag.todayBag,
         valueClass: bag.todayBagRaw < 0 ? "red" : bag.todayBagRaw > 0 ? "green" : "",
         spark: bag.todayBagSpark,
@@ -297,7 +314,7 @@
 
       // Trades Today
       b.appendChild(stat({
-        label: "Trades Today",
+        label: botLabel + " · Trades Today",
         value: String(bag.tradesToday.count),
         spark: bag.tradesSpark,
         sub: `${bag.tradesToday.wins} wins · ${bag.tradesToday.losses} losses`,
@@ -305,7 +322,7 @@
 
       // Open Right Now (no real time series yet — falls back to baseline)
       b.appendChild(stat({
-        label: "Open Right Now",
+        label: botLabel + " · Open Right Now",
         value: String(bag.openNow),
         sub: bag.openNow > 0 ? "live positions" : "none open",
       }));

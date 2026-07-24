@@ -34,7 +34,13 @@ import { and, eq } from "drizzle-orm";
 import { db } from "../../../db/index.js";
 import { slumhouseMemberPins, slumhouseConnectTest } from "../../../db/schema.js";
 import { requireSlumhouseUser, checkSlumhouseOrigin, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
-import { evaluateOfficeScope, visibleSurfaces, type OfficeSurface } from "../../../lib/member-office-scope.js";
+import {
+  evaluateOfficeScope,
+  officePathForRole,
+  officeRoleForJersey,
+  visibleSurfaces,
+  type OfficeSurface,
+} from "../../../lib/member-office-scope.js";
 import { hashPin, verifyPin, evaluateAttempt, nextAttemptState, PIN_POLICY, PinPolicyError } from "../../../lib/member-pin.js";
 import { validateTestKey, assertStorable, redactKey } from "../../../lib/connect-wizard-mock.js";
 import {
@@ -50,7 +56,7 @@ export const memberOfficeRouter = Router();
 
 /** Members only. The operator has his own Office; this surface is not his. */
 function roleOf(req: SlumhouseRequest): "operator" | "member" {
-  return req.slumhouseUser?.jerseyNumber === 0 ? "operator" : "member";
+  return officeRoleForJersey(req.slumhouseUser?.jerseyNumber);
 }
 
 function readCookie(req: SlumhouseRequest, name: string): string | null {
@@ -221,9 +227,10 @@ memberOfficeRouter.get(
   async (req: SlumhouseRequest, res: Response) => {
     const user = req.slumhouseUser!;
     const viewerId = user.discordUserId;
-    const surfaces = visibleSurfaces(roleOf(req), viewerId, pinSatisfied(req, viewerId, Date.now()));
+    const role = roleOf(req);
+    const surfaces = visibleSurfaces(role, viewerId, pinSatisfied(req, viewerId, Date.now()));
     // displayName is the member's own; no roster, no other member's data, ever.
-    res.json({ displayName: user.displayName, surfaces });
+    res.json({ displayName: user.displayName, role, officePath: officePathForRole(role), surfaces });
   },
 );
 
