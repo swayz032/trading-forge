@@ -177,42 +177,57 @@ which is not the lane that will run the backtest.**
 · "the W7nln phantom does not exist" (real in production) · "the artifact is
 stale = FALSE" (it is UNSCOPED — right conclusion, wrong reason).
 
-## AUTHORIZED NOW (worker, in order) — REORDERED BY R-418
-1. ★★★ **THE REFUSAL-PORT — surgical migration into `runtime-production`, NOT a
-   merge of the campaign lane.** Port `refused_session_zone` +
-   `REFUSED_SESSION_KEYWORDS` + `session_refusal_reason` + the unflagged refusal
-   block (campaign `spec_family_bindings.py:2549-2560`, `:492-495`), and remove
-   `lunch_blackout`/`overnight` from production's `SESSION_KEYWORDS:275-283`.
-   **Branch off the deploy branch -> PR -> CI -> my merge.**
-   **ACCEPTANCE = the regression matrix, each row RED without the port and GREEN
-   with it, run in the PRODUCTION tree, every line naming its tree:**
-   - `overnight` + no configured interval -> `REFUSE_MISSING_SESSION_CLOCK`
-   - `overnight` explicitly defined 16:00-09:30 -> bind, cross-midnight interval
-   - a configured session (RTH) -> bind normally
-   - recognized session, missing timezone/calendar basis -> refuse / unresolved
-   - unresolved session -> strategy CANNOT enter backtesting
-   Then re-run the 16-spec sweep post-port, reporting BOTH trees with the verb
-   attached (PRINTS / IS). **First observable: the matrix RED against unported
-   production, ~30 min.**
-   ★ **Forbidden in this PR:** merging the campaign lane wholesale · enabling any
-   campaign-only flag · touching the onboarding writer · spec edits · `.env`.
-2. **Trace what the consumer does with a refused/unbound session row** — decides
-   whether a wrong backtest CRASHES or quietly reports a plausible number.
-   [HYPOTHESIS to test, not to assume]: always-true filter · always-false ·
-   default substitution · inconsistent null · silently omitted rule.
-3. **corpus_B charter DRAFT** — `term_definition` schema + precedence chain
-   (explicit trader definition -> trader glossary -> family -> canonical ->
-   unresolved), then the SEVERED-DEFINITION class, then the fidelity ladder.
-4. **Parity check's third leg** — `check-pglite-ddl-parity` reads the MIGRATIONS.
-5. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103`.
-6. **Revival-probe diagnosis** — diagnosis only; repair after I rule.
+## AUTHORIZED NOW — port is BUILD-READY, NOT BUILT (AR-382, desk-verified)
+★ **Worker handed off on context. Nothing half-written: no branch, no worktree,
+no code.** The task stays FILED and authorized to the seat, not withdrawn.
+
+★★ **THE PORT IS SMALLER THAN IT LOOKED — dependency surface proven clean.**
+[MEASURED HERE, TREE `runtime-production`] `spec_family_bindings.py:402-406`
+already contains the identical matcher idiom (`norm = f" {text.strip().lower()} "`
++ the same three-way `in / startswith / endswith` test), **so no helper needs
+porting.** [MEASURED HERE, TREE campaign] the four symbols exist at `:492`
+(`REFUSED_SESSION_KEYWORDS`), `:498` (`session_refusal_reason`), `:781`
+(`_session_phrase_hit`), `:803` (`refused_session_zone`).
+
+**THE EXACT DIFF — `runtime-production/src/engine/spec_family_bindings.py`:**
+1. **REMOVE** `lunch_blackout` + `overnight` entries from `SESSION_KEYWORDS:275-283`.
+2. **ADD** `REFUSED_SESSION_KEYWORDS` with those two (campaign `:492-495`).
+3. **ADD** `session_refusal_reason()` -> `session_zone_refused_uncomputable_window:{zone}`.
+4. **ADD** `refused_session_zone()` using production's existing inline matcher.
+5. **ADD** the unflagged refusal block in `_bind_condition_dispatch`, **before**
+   the `resolve_session_keyword` path (campaign `:2549-2560`).
+★★★ **`bindable=False` + `primitive=None` + `approximation=True` is the trio that
+keeps the row OUT of the concrete count. Change any one and the false concrete
+comes back.**
+
+**RED MATRIX — write FIRST, prove RED against unported production:**
+| case | expected |
+|---|---|
+| `overnight`, no configured interval | `session_zone_refused_uncomputable_window:overnight` |
+| `overnight` defined 16:00-09:30 | bind, cross-midnight interval |
+| ★ **configured session (RTH / `ny_am`)** | **bind normally — THE DISCRIMINATOR** |
+| recognized session, no tz/calendar basis | refuse / unresolved |
+| unresolved session | cannot enter backtesting — **gated by the open question** |
+★★ **Without the discriminator row the suite cannot tell "the port works" from
+"the port refuses everything" — and a refusal-shaped fix is exactly the kind that
+passes by over-refusing.**
+
+★★★ **OPEN QUESTION THAT MAY RE-SCOPE THE PORT BEFORE IT IS WRITTEN —
+DO THIS FIRST (R-418 item 2):** [UNTRACED] what does the consumer do with
+`bindable=False` / a refused row? R-418's own stop condition says **stop if the
+port cannot make a refused binding fatal without touching the onboarding
+writer.** Row 5 may not be satisfiable inside this PR's scope. **Trace it, then
+build.**
+
+**THEN, in order:** the port (above) · corpus_B charter · parity third leg ·
+`OUT_PATH` date-stamp · revival probes.
 
 ★★★ **STOP AND REPORT IMMEDIATELY if `backtests total > 0` before the port lands
-— that is LOADED -> FIRED and it outranks everything.**
+— LOADED -> FIRED, outranks everything.**
 ★★ **STANDING (R-414): audit the desk's CONSISTENCY, not just its instructions.**
-★ **RULING CADENCE (operator, 2026-07-28): the desk now takes an external second
+★ **RULING CADENCE (operator, 2026-07-28): the desk takes an external second
 opinion BEFORE writing a ruling.** Findings are verified and parked meanwhile —
-**the worker does NOT wait on a held ruling; it continues down this queue.**
+**never wait on a held ruling; continue down this queue.**
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes · flag
