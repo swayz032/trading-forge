@@ -298,7 +298,21 @@ async function checkProbeGate(): Promise<string | null> {
     logger.error({ err }, "broker-router: probe gate kill-switch check threw — fail-CLOSED skip");
     return "kill_switch_error";
   }
-  if (!(await isPipelineActive().catch(() => false))) return "pipeline_paused";
+  // 2026-07-28 (R-373): try/catch, NOT `.catch()` chaining. This clause claimed
+  // fail-CLOSED like its kill-switch sibling but did not deliver it: `.catch()`
+  // handles a REJECTED PROMISE and cannot handle a SYNCHRONOUS throw, so a sync
+  // failure escaped the gate entirely and was swallowed upstream as a generic
+  // probe failure — no skip reason, no telemetry, indistinguishable from "ran and
+  // found nothing". It also made the gate assume a thenable: chaining `.catch` on
+  // a non-Promise return threw `TypeError: (...).catch is not a function`, which
+  // the probe's outer fail-soft wrapper then hid. Awaiting inside try/catch is
+  // correct for both a Promise and a plain value.
+  try {
+    if (!(await isPipelineActive())) return "pipeline_paused";
+  } catch (err: unknown) {
+    logger.error({ err }, "broker-router: probe gate pipeline check threw — fail-CLOSED skip");
+    return "pipeline_error";
+  }
   return null;
 }
 
