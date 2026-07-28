@@ -4,6 +4,73 @@
 
 ---
 
+## AR-384 · 2026-07-28 · ★★★ **THE CONSUMER DOES NOT IGNORE `bindable=False` — IT CONVERTS IT INTO `np.ones(n)`, AN ALWAYS-TRUE PASS-THROUGH, AT `spec_condition_compiler.py:616-620`, WITH A COMMENT SAYING SO.** ★★★ **R-419's PRE-REGISTERED ARM 2 FIRES: TWO-LOCATION FIX, RESOLVER + FAIL-CLOSED PREFLIGHT.** ★★★ **AND THE FINDING THAT RE-SCOPES THE PORT: THE RESOLVER-ONLY PORT WOULD *ITSELF* PERFORM THE CONVERSION R-419'S INVARIANT FORBIDS — it turns a restrictive (wrong) session mask into NO filter at all. Shipping step 1 without step 2 makes production STRICTLY MORE PERMISSIVE than it is today**
+
+**RULING ID:** R-419 (pre-registration) / R-418 item (2) · **TASK ID:** consumer trace · **TREE: `runtime-production`, `a674f1ed`, on every line below** (`spec_family_bindings.py` 35,046 B, `spec_condition_compiler.py` 48,853 B — both `wc -c` verified this session) · **RECOMMENDATION:** **APPROVAL_REQUESTED for the two-location scope. Read-only; nothing built.**
+
+**Resolves AR-383's START-RECEIPT.** No live-DB read taken (those are the desk's).
+
+### ★★★ §1 — THE ANSWER: THE CONSUMER IGNORES THE REFUSAL, AND THEN ACTIVELY WIDENS IT
+
+`spec_condition_compiler.py:616-620`, in `compute()`'s spine loop — **quoted verbatim, not summarised:**
+```python
+            if not b.bindable:
+                # Permitted-through unbound spine condition (ratio allowed it) —
+                # pass-through, never gates. Honest default per module docstring.
+                per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
+                continue
+```
+★★★ **An unbindable SPINE rule becomes an all-true array**, then `:696` ANDs it into `spine_satisfied` — where an all-true operand is the AND identity, i.e. **the rule is arithmetically deleted.** **R-417's failure mode #1 ("always-true filter") is no longer [HYPOTHESIS]; it is MEASURED, at the line, in the tree that runs.**
+
+### §2 — AND THERE IS NO GATE ANYWHERE ELSE. THE NULL, CONTROL-PROBED.
+
+- **`plan.compiled` has exactly TWO readers in the whole production tree**, and neither refuses anything: `spec_condition_compiler.py:320` (`get_default_config()` — metadata) and `spec_family_bindings.py:594` (`to_dict()` — serialization). `compile_binding_plan` computes `compiled=False` at `:705` **and nothing consumes it.**
+- **`backtester.py:8471` fires the Band-C branch on the mere PRESENCE of `config["compiled_spec"]`** — it never consults `compiled`, `queue_reasons`, `spine_bound`, or any binding state.
+- **`queue_reasons` has one non-test consumer: `spec-onboarding-service.ts:668`**, where it is written *into* `binding_plan_summary` as audit payload. **It is cargo, not a gate.**
+- **`src/server/routes/backtests.ts`: `grep -c compiled_spec` → `0`.** The route has no concept of binding state. ★ **CONTROL PROBE for that null:** same file `wc -l` → **596**, `grep -c strat` → **53** (path live, file real); and the same `compiled_spec` grep over `backtester.py` → **5** (token findable where it must exist). **The zero is an absence, not a bad path.**
+
+### ★★★ §3 — THE FINDING THAT CHANGES THE PORT'S SHAPE (beyond the pre-registration)
+
+Today, a recognized session keyword binds at `spec_family_bindings.py:496-497` → `bindable=True`, `executed=True`, `session_zone=zone`, and `_eval_wait_session` (`spec_condition_compiler.py:325-333`) returns `is_in_killzone(ts, zone)` per bar — **a genuinely RESTRICTIVE mask (zeros outside the zone).**
+
+★★★ **So for a SPINE `overnight` row the resolver-only port is a REGRESSION IN THE INVARIANT'S OWN TERMS:**
+
+| | today (unported) | after resolver-only port | after resolver + preflight |
+|---|---|---|---|
+| binding | `bindable=True`, `approximation=False` — **a false concrete** | `bindable=False` — **honest** | `bindable=False` — honest |
+| execution | `is_in_killzone(...)` mask — **wrong window, but a window** | ★★★ **`np.ones(n)` — NO window. Trades permitted on EVERY bar** | **backtest REFUSED** |
+
+★★★ **Step 1 alone converts "cannot implement this rule" into "run without this rule" — the exact sentence R-419 minted as the invariant.** The port would make the resolver honest and the executor *more* permissive in the same commit. **The preflight is not an expansion of scope; it is what stops the port from being a net harm.** ★★ **Both locations must land in the SAME PR** — a merged step 1 with step 2 "queued" is the worse of the three columns.
+
+### §4 — THE SILENT-DROP CHANNELS, ENUMERATED (R-419's UNKNOWN-ROLE arm is not hypothetical)
+
+- **CONFLUENCE rows are NEVER EVALUATED AT ALL.** `:605` selects `b.role == "spine"` and is the loop's only source. **[MEASURED] `grep -n "role == \"confluence\"" spec_condition_compiler.py` → no hit.** So a confluence refusal changes no trade — its defect is purely the inflated concrete count. ★ **This matters for `W7nl[6]`, which AR-382 recorded as `role=confluence`: the false concrete there is a REPORTING defect, not an execution one.**
+- **`role` IS NOT RELIABLY POPULATED — R-419's `[UNENUMERATED]` is confirmed present in code.** `spec_family_bindings.py:562`: `role = demoted_role if demoted_role is not None else str(condition.get("role", "") or "")` — **an empty-string fallback.** A row with a missing role matches neither `:661` (`spine`) nor `:662` (`confluence`): it is **excluded from `spine_total`, from the ratio, from `queue_reasons`, AND from execution.** ★★★ **Today the unknown-role arm fails OPEN and leaves no trace in any counter.** R-419's REFUSE-BY-DEFAULT is therefore a live behaviour change, not a formality, and the docstring note it ordered is warranted.
+
+### §5 — DISPOSITION AGAINST THE PRE-REGISTRATION (R-419, decided before this data existed)
+
+> *"IF the consumer currently IGNORES them → the port EXPANDS to a two-location safety fix: resolver correction + a fail-closed backtest preflight."*
+
+★★★ **ARM 2. Unambiguous — not the "cannot determine" arm.** The preflight belongs at the **`backtester.py:8471` Band-C entry**, before `from_compiled_spec` at `:8492`: it is the narrowest point that (a) sees the whole `compiled_spec`, (b) is downstream of every producer, and (c) is **not the onboarding writer** (still forbidden). Refusal payload is free at that site per R-419 — `condition_id`, `type`, `role`, `object`, `reason` are all `ConditionBinding` fields (`:372-385`).
+
+★★ **One matrix row I must flag as NOT satisfiable at the resolver, by construction:** *"unbindable mandatory rule silently omitted → TEST FAILS"* can only be red-proofed **against the preflight**, because the omission happens at `:616` and `:605`, in the other file. **Testing it against the resolver alone would produce a green that means nothing.**
+
+**Files changed:** none — read-only throughout. **Commands:** all `sed -n`/`grep -n`/`wc` against `C:\Users\tonio\Projects\trading-forge\runtime-production`, cwd `pwd`-verified before the citing greps.
+**Remaining uncertainty:** ★ **[UNMEASURED — the desk's, per R-419]** the spine-vs-confluence-vs-empty role split across the 27 loaded strategies. **My trace makes that count decision-relevant rather than merely interesting: SPINE rows are the always-true exposure, CONFLUENCE rows are cosmetic, EMPTY rows vanish from every counter.** ★ **[UNTRACED]** whether `walk_forward`'s path (`:8500`) bypasses the proposed preflight site — **must be checked before the preflight is written, or the gate has a second door.**
+**Risk:** the preflight is fail-closed by design; if role data is poor it will refuse strategies that run today. **That is R-419's intended direction, and with `backtests total: 0` it blocks nothing that has ever executed.**
+
+**Next smallest task (ONE):** build the **RED matrix first** against unported production — starting with the always-true row (`overnight` spine → assert the rule gates, watch it fail) — because that row is the one that proves the preflight is load-bearing.
+
+---
+
+## AR-383 · 2026-07-28 · **START-RECEIPT — R-418 item (2), the consumer trace. FRESH SEAT, cold-started from R-418 + AR-382 + STATE.**
+
+**RULING ID:** R-418 item (2) · **TASK ID:** consumer behaviour of a refused / `bindable=False` row · **TREE: `runtime-production` (`a674f1ed`, `spec_family_bindings.py` = 35,046 B, verified).**
+
+**START-RECEIPT (§10 form).** **Task:** trace what the consumer does with `bindable=False` / a refused binding, per AR-382's open question — **it decides whether red-matrix row 5 ("unresolved session → strategy cannot enter backtesting") is satisfiable without touching the onboarding writer, which is R-418's own STOP condition.** **First observable artifact:** the consumer chain, line-cited in `runtime-production`, with the row-5 verdict (SATISFIABLE / STOP). **ETA: this working block.** **Read-only throughout** — no branch, no code, no live-DB read (live reads are the desk's, R-418). **The port is NOT started and will not be started until this trace answers row 5.**
+
+---
+
 ## AR-382 · 2026-07-28 · **REFUSAL-PORT SCOPED TO THE LINE — the dependency surface is CLEAN (3 symbols, no new helper needed: production already has the identical matcher inline).** ★★ **HANDOFF DECLARED before writing it — this change lands in the lane that executes the tower, and I am at the end of a very long session. The contract below is complete enough to start from cold**
 
 **RULING ID:** R-418 · **TASK ID:** the refusal-port · **RECOMMENDATION:** **BUILD-READY, NOT BUILT.** Handoff is self-assessment (§10); the task stays filed, not abandoned.
