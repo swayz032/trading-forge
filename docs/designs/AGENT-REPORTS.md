@@ -4,6 +4,60 @@
 
 ---
 
+## AR-369 · 2026-07-28 · **R-403 item (4) DONE — `hmac_secret_encrypted` added to `schema.ts` by hand (`e507ae33`), PR #27 unblocked.** ★★ **Red-proofed in BOTH directions with the test's column intact throughout — green-by-deletion would have been the failure and I measured that it wasn't**
+
+**RULING ID:** R-403 · **TASK ID:** item (4) schema snapshot column · **BRANCH:** `hardening/hmac-pair-binding-test-20260728` · **COMMIT:** `e507ae33` · **RECOMMENDATION:** APPROVAL_REQUESTED.
+
+**Objective.** Make `check:pglite-ddl-parity` green **without** removing a real column from a correct test.
+
+**Root cause (yours, confirmed at my end).** `hmac_secret_encrypted` occurs **0 times** in `schema.ts` while being real everywhere else. The parity check is **directional** — it diffs hand-rolled DDL against `schema.ts`, calls that file "the source of truth", and attributes every disagreement to the test. Its printed remedy — *"update the CORE_DDL / inline test DDL to match src/server/db/schema.ts"* — **would have deleted a live column from a correct test.**
+
+**Implementation.** One line + a comment block in `accountStrategyAssignments`:
+```ts
+hmacSecretEncrypted: bytea("hmac_secret_encrypted"),
+```
+★ Used the **existing** `bytea` `customType` already defined at `schema.ts:54` (precedent: `signalVectorCompressed`, `featureVectorCompressed`, `conditioningVectorCompressed`) — **no new type machinery invented for a one-column fix.** Nullable, matching `ADD COLUMN IF NOT EXISTS hmac_secret_encrypted BYTEA`. The comment records why it was hand-added, that `db:generate` stays forbidden, and that the guard's own remedy points at the artifact it never checks.
+
+**★★ RED-PROOF, BOTH DIRECTIONS, MEASURED UNPIPED.** Your acceptance was explicit that green-by-deletion is a FAIL and that you would read the diff. I measured it rather than asserting it:
+
+```
+test's column present?  → src/server/services/__tests__/hmac-secret-pair-binding.test.ts:65
+                           "hmac_secret_encrypted BYTEA,"   ← intact, never touched
+
+WITHOUT the schema column → REAL exit 1
+   [check-pglite-ddl-parity] DRIFT — 1 hand-rolled DDL column(s) do not match schema.ts:
+     [hmac-secret-pair-binding.test.ts] account_strategy_assignments.hmac_secret_encrypted
+WITH the schema column    → REAL exit 0
+   [check-pglite-ddl-parity] CLEAN — 36 hand-rolled schema-mirror table(s) match schema.ts
+                             across 29 DDL file(s) (12 synthetic skipped; 116 schema tables)
+```
+★ I removed the column a second time **specifically to confirm the checker was reading my file** — a green I have seen only once is not evidence the instrument ran. The mutation was verified to change the file before the result was believed. **Exit codes taken without a pipe**, per the trap that has now bitten this campaign five times.
+
+**Tests.** `hmac-secret-pair-binding` **7/7**. Adjacent suites that read this table — `pine-export-recipient-service` + `strategy-assignment-service` — **36/36**. Your STOP CONDITION (adding the column turning something else red, implying a consumer depended on the stale shape) is **NOT triggered**.
+
+**Commands.**
+```
+node node_modules/tsx/dist/cli.mjs scripts/check-pglite-ddl-parity.ts   → exit 0 (CLEAN)
+<column removed>                                                        → exit 1 (DRIFT)
+<restored>                                                              → exit 0
+npx vitest run …hmac-secret-pair-binding.test.ts                        → 7 passed
+npx vitest run …pine-export-recipient-service …strategy-assignment-service → 36 passed
+```
+
+**Architecture boundaries NOT touched.** ★ **`db:generate` NOT run** and stays forbidden · no migration edited · **the test's DDL untouched** · no frozen instrument · nothing in the SMC surface.
+
+**Files changed:** `src/server/db/schema.ts` (+12: one column + its provenance comment).
+
+**Remaining uncertainty.** ★ **[UNENUMERATED, and I did not close it]** you flagged that other `schema.ts` columns may be stale and that the true count is likely >3. **I fixed the one the failure named and did NOT census the file** — a census is a different unit with a different red-proof, and doing it opportunistically inside this fix would have made the diff unreviewable. **It remains open and should not be read as clean.**
+
+**Risk.** Additive nullable column in a snapshot that already lagged reality; CI is the arbiter.
+
+**Recommendation:** merge PR #27 on green — your R-395 approval is still unspent. ★ Item (5), the parity check's **third leg reading the migrations**, stays queued: as it stands the guard can only ever propagate `schema.ts` drift, never detect it.
+
+**Next smallest task (ONE):** report PR #27's CI verdict when it lands — then the item-3 sweep or the SMC re-scope, whichever you rule first.
+
+---
+
 ## AR-368 · 2026-07-28 · ★★★ **STOP — `IyFioFkRgWo__s0` CANNOT REACH 6/6 HONESTLY, AND I WILL NOT FABRICATE THE THREE THAT WOULD GET IT THERE. I read the CONDITION TEXT — the first person in this chain to do so — and three of the six are not conditions at all.** ★★ **The spec's OWN metrics agree: `n_unmatched: 3`. "The first concrete path to Phase 1 exit" is not a path**
 
 **RULING ID:** R-402 · **TASK ID:** SMC build, re-scoped to `IyFioFkRgWo__s0` · **RECOMMENDATION:** **BLOCKED — and this is a REFUSAL under `worker-execution` §6, not a request for help.**
