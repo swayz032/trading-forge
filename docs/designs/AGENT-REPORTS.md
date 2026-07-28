@@ -4,6 +4,95 @@
 
 ---
 
+## AR-355 · 2026-07-28 · ★★★ **R-390's ARITHMETIC IS RIGHT AND ITS MECHANISM IS WRONG: THERE IS NO PASS-1 EXCLUSION "BY CONSTRUCTION" — THE PASS 2 LOOP EXCLUDES NOTHING.** ★★★ **`0128` IS FULLY IDEMPOTENT AND APPLIES FINE; IT FAILED YOUR REPLAY BECAUSE THAT PGlite HAD NO `pgcrypto`. The note R-390 wrote for future readers would tell them to wave off a live alarm** · **PR #22 IS GREEN (19/19)**
+
+**RULING ID:** R-390 · **TASK ID:** items 2+4 · **RECOMMENDATION:** **APPROVAL_REQUESTED on #22 (green)** · **REVISION_REQUIRED on R-390's "Note for whoever re-runs the raw replay"**
+
+---
+
+### ★★★ THE MECHANISM CLAIM, TESTED DIRECTLY (premise-audit law: a packet's MECHANISM claim gets its OWN test)
+
+R-390 reconciles 11-vs-10 as a population difference and adds:
+
+> *"Note for whoever re-runs the raw replay: a pass-1 failure (today only `0128_hmac_secret_encryption`) is **excluded** from this comparison **by construction** — it never applied, so it cannot fail to re-apply."*
+
+**I did not argue the totals. I read the loop. There is no exclusion — not by construction, not at all:**
+
+```ts
+for (const entry of journal.entries) {                       // ALL entries. No filter.
+  const sqlPath = path.join(MIGRATIONS_DIR, `${entry.tag}.sql`);
+  if (fs.existsSync(sqlPath) === false) continue;            // the ONLY skip: file absent on disk
+  const statements = splitStatements(readUtf8StripBom(sqlPath));
+  try { for (const stmt of statements) await pg.exec(stmt); }
+  catch (err) { failures.push({ tag: entry.tag, idx: entry.idx, error: (err as Error).message }); }
+}
+```
+
+Nothing consults PASS 1. **A migration that fails BOTH passes lands in `failures`, is absent from the register, therefore lands in `unexpected`, therefore FAILS the gate — correctly.** ★★ **So the note is not merely inaccurate, it is load-bearing in the wrong direction: it instructs the next reader to dismiss exactly the observation the gate exists to raise. That is the fifth way a guard silently stops guarding — not code that stops firing, but documentation that teaches people to ignore it.**
+
+★ **And the populations were never different.** Your replay's population and this test's population are the same one — every journal entry. Same population, different results ⇒ **the difference is the HARNESS, not the set.**
+
+### ★★★ ROOT CAUSE, NAMED AND PROVEN: your PGlite had no `pgcrypto`
+
+`0128_hmac_secret_encryption.sql` in full is **unconditionally idempotent**:
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+ALTER TABLE account_strategy_assignments ADD COLUMN IF NOT EXISTS hmac_secret_encrypted BYTEA;
+COMMENT ON COLUMN ...;                      -- idempotent by definition
+DO $$ ... v_key := current_setting('app.hmac_encryption_key', true);
+        IF v_key IS NULL OR v_key = '' THEN RAISE NOTICE '...skipping backfill'; RETURN; END IF;
+        UPDATE ... WHERE hmac_secret IS NOT NULL AND hmac_secret_encrypted IS NULL; ... $$;
+```
+
+`IF NOT EXISTS` throughout, and the backfill is a **guarded no-op** when the GUC is unset (which it is, in any test DB). **There is no statement in that file that can fail on re-apply against a Postgres with pgcrypto.** The one statement that can fail against a Postgres *without* it is line 1.
+
+**This harness (line 172):** `pg = new PGlite({ extensions: { pgcrypto } })` — and the file's own header already documents why: *"0104_concept_fingerprint.sql calls the pgcrypto digest() function before 0128 ever CREATE EXTENSIONs pgcrypto (idx 130 > 107)."*
+
+**Measured, from the CI artifact rather than argued:**
+- `PASS 1` **THROWS on its first failure** (line 197). PASS 1 **PASSED** ⇒ **the pass-1 failure set is EMPTY in this harness. `0128` applies.**
+- `PASS 2` passed with `unexpected == []` ⇒ **`0128` re-applies too.**
+
+★★ **So `0128` is not a pass-1 failure "today". It is a pass-1 failure *on a PGlite instance lacking a capability real Postgres has*. R-390 embalms an instrument artifact as a fact about a migration — and prod's Postgres has pgcrypto, so the fact is false where it matters.**
+
+★★★ **This is the exact class R-389 named four hours ago as one of the three lying instruments — *"a hand-built pglite fixture that passed a migration the real chain rejected."* It bit again, in the opposite polarity, inside the ruling that was diagnosing instrument disagreement. Your own lesson — AUDIT THE INSTRUMENT BEFORE THE WORLD — applies to the instrument that produced the "eleven", and neither of us pointed it at that one: I audited my count, you audited yours, and we both treated the replay's output as ground truth while reconciling it.**
+
+### ★ WHAT I ACCEPT WITHOUT QUALIFICATION
+
+**The amended stop condition is right and I am adopting it as written.** Membership, not cardinality; only permitted new member vs base is `0159`; a disappearing member is equally a finding. ★ It is also *already what the code does* — lines 249-251 assert both directions — so the gate and the ruling now agree in shape, which they did not before. **Only the pass-1 note needs to go.**
+
+---
+
+### VERDICT — PR #22 (item 4) IS GREEN: **19 pass · 0 pending · 0 fail**
+
+The two stragglers I flagged were both `Build Check` on the duplicated CI runs; `Python Tests + Coverage` had already passed. Final state, all checks SUCCESS. Combined with AR-354's evidence (A-11 six passing on assertions not TypeErrors; both DISCRIMINATES controls green; failure set byte-identical to #19's nine baseline suppressions), **#22 meets every acceptance command in R-389.**
+
+**PR #19** is re-running on new heads (`20bb7748`, now `63829829`) — see below.
+
+---
+
+### FIXES PUSHED (`20bb7748`, `63829829`) — both on my own surface, both same-wave
+
+1. **`20bb7748`** (reported in AR-354): three false captions describing the register as pre-0066-only; and the `missingExpected` message rewritten so a class-(2) entry going quiet reads as an **alarm** (0208's CHECK stopped rejecting) rather than good news that invites deleting the line.
+2. **`63829829`** (this report): the PASS 2 loop now carries a comment stating **it excludes nothing**, why that belief arose, and the pgcrypto root cause — so R-390's note cannot be re-derived from the code. Plus two stale hardcoded journal totals removed: header prose and the PASS 1 title both said **"201" while the journal holds 211**. ★ Made **absent**, not re-pinned — PASS 1 already binds it dynamically (`expect(plan.toApply.length).toBe(journal.entries.length)`), and re-pinning a total just schedules the next stale caption.
+
+**Files changed:** `src/server/__tests__/fresh-bootstrap-migration-replay.test.ts` only (comments, one test-title string, two assert messages). **No assertion logic touched.**
+
+### ★ HONEST MEASUREMENT NOTE — I nearly shipped a fourth lying instrument
+
+I ran `npx tsc --noEmit -p .` in `wt-paper-notype-20260728`, read `exit=0`, and was about to report a clean typecheck. **Two independent reasons that number was meaningless:** the exit code came through `| tail` (so it was *tail's*), and **`node_modules` does not exist in this worktree at all** — `node ./node_modules/typescript/bin/tsc --version` → `MODULE_NOT_FOUND`. That was the documented worktree troll stub. **I cannot typecheck locally here and am not claiming to have.** CI's Lint/Build Check is the instrument; the change is comments plus one string literal.
+
+---
+
+**Architecture boundaries NOT touched:** no `routeOrder()` refactor · no migration file edited · no register membership changed (still the ten, delta still exactly `0159`).
+**Risk:** none to logic; #19 re-runs CI.
+**Remaining uncertainty:** #19's verdict on `63829829`. Nothing else outstanding on #22.
+**Both merges and both deploys remain yours** under R-377/R-381, incl. the live-DB `paper_sim` re-verification on #19.
+
+**Next smallest task (ONE):** report PR #19's verdict on head `63829829` when it lands.
+
+---
+
 ## AR-354 · 2026-07-28 · **BOTH CI VERDICTS, VERBATIM (R-389 authorized next action)** — and ★★★ **THE "PINNED ELEVEN" DOES NOT EXIST: THE REGISTER HOLDS TEN. I MISCOUNTED IN AR-352, YOU ADOPTED MY NUMBER INTO R-389's STOP CONDITION, AND A WRONG THRESHOLD IS NOW IN A RULING**
 
 **RULING ID:** R-389 · **TASK ID:** items 2+4 CI settle · **RECOMMENDATION:** APPROVAL_REQUESTED (both) — **but read the correction first; it changes a gate you wrote.**
