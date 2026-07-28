@@ -4,6 +4,69 @@
 
 ---
 
+## AR-368 · 2026-07-28 · ★★★ **STOP — `IyFioFkRgWo__s0` CANNOT REACH 6/6 HONESTLY, AND I WILL NOT FABRICATE THE THREE THAT WOULD GET IT THERE. I read the CONDITION TEXT — the first person in this chain to do so — and three of the six are not conditions at all.** ★★ **The spec's OWN metrics agree: `n_unmatched: 3`. "The first concrete path to Phase 1 exit" is not a path**
+
+**RULING ID:** R-402 · **TASK ID:** SMC build, re-scoped to `IyFioFkRgWo__s0` · **RECOMMENDATION:** **BLOCKED — and this is a REFUSAL under `worker-execution` §6, not a request for help.**
+
+**START-RECEIPT superseded:** no RED test will be written against this target. Reason below; nothing written.
+
+---
+
+### ★★★ THE SIX CONDITIONS, VERBATIM — every prior reading in this chain used TYPES ONLY
+
+| # | type | conf. | the actual taught text |
+|---|---|---|---|
+| 0 | WAIT_STRUCTURE | confident | *"time your entries once you have allowed the **first 5 to 15 minutes to pass**…"* |
+| 1 | WAIT_STRUCTURE | confident | *"establish where your **support level** is at … find and spot the **demand zones**"* |
+| 2 | WAIT_STRUCTURE | **unmatched** | *"the stock came down and **it hit right there** that's our entry"* |
+| 3 | WAIT_STRUCTURE | **unmatched** | *"**I got the 5 minute chart**"* |
+| 4 | WAIT_CONFIRMATION | approximate | *"this **13 EMA** operated as initial support … candle wick came down **bounced off** of that"* |
+| 5 | WAIT_STRUCTURE | **unmatched** | *"**you don't have to take every one of these** … you can find one or two"* |
+
+★★★ **Three of the six are not compilable conditions, and not because a detector is missing:**
+
+- **[3] "I got the 5 minute chart" is a TIMEFRAME DECLARATION.** It is not a condition in any reading. It has been mis-typed WAIT_STRUCTURE by the extractor.
+- **[5] "you don't have to take every one of these" is the teacher explicitly saying the setup is OPTIONAL.** Binding it as a required condition **inverts the taught meaning.**
+- **[2] "it hit right there" is CHART-DEICTIC** — it points at a place on a chart the viewer can see. This is the **VISUAL_DEPENDENCY** class the corpus taxonomy already names. **No text-derived rule recovers "there".**
+
+★★ **The spec's own `approximation_metrics` corroborate independently: `n_confident: 2 · n_approximate: 1 · n_unmatched: 3` — and it self-declares `bias_direction: "OPTIMISTIC_LOOSER_THAN_TAUGHT"`. The artifact has been telling us this the whole time.**
+
+### WHAT IS ACTUALLY BINDABLE — 2, maybe 3, of 6
+
+- **[1] support / demand zone** → genuinely SMC: `named_sr_level` / `order_block_edge`, **the two kinds already proven to flip.** ★ Real.
+- **[4] 13 EMA + wick bounce** → mechanically definable (EMA(13), wick touch, close-back-above). Typed WAIT_CONFIRMATION, `approximate`. ★ Real.
+- **[0] "first 5 to 15 minutes to pass"** → mechanically definable, **but it is a BAR_TIMING / opening-window rule wearing a WAIT_STRUCTURE type.** Binding it *as structure* would be a POINTER LIE (R-153); binding it honestly means BAR_TIMING — **which R-303 §5 ranks fourth, not here.**
+
+**Ceiling: 3 of 6, and only by fixing a mis-type. Conditions [2], [3], [5] cannot be bound without inventing rules the teacher never gave.**
+
+### ★★★ WHY I AM REFUSING RATHER THAN ASKING
+
+R-402: *"a perfect SMC build reports 0/16 → 0/16 … that is an argument for a better INSTRUMENT, never for an easier finish line,"* and *"this campaign's most-convicted error is optimising the measured quantity while destroying what it measures."*
+
+★★★ **Making `IyFioFkRgWo__s0` read 6/6 requires binding a timeframe declaration, a chart gesture, and an explicit "this is optional" as though they were load-bearing rules. That would move the gate from 0/16 to 1/16 — Phase 1 would EXIT — on three fabricated conditions. It is the most-convicted error, aimed at the campaign's finish line, and it would be invisible downstream because the gate would read GREEN.**
+
+`worker-execution` §6: *"The source does not provide enough information to compile this condition deterministically. Marking `UNRESOLVED_SOURCE_AMBIGUITY` rather than inventing behaviour — that is expert behaviour, not failure."* §4: source-owned entry logic is never silently rewritten. **[5] is not ambiguous; it is a clear statement that the setup is discretionary, and compiling it as mandatory reverses it.**
+
+### ★ THE DEEPER FINDING — THE LEADING SPEC LEADS FOR THE WRONG REASON
+
+`IyFioFkRgWo__s0` ranks first at 1/6 with **zero WAIT_SESSION** conditions, which R-402 correctly noted lets it sidestep the 27-strong unbound class. ★★ **But it also has the corpus's highest unmatched share — 3 of 6 — so it leads partly because its conditions were typed loosely enough to look bindable.** **[HYPOTHESIS, n=1, explicitly not generalised]** if `n_unmatched` is high across corpus_A, then "specs fully bound" may be unreachable for reasons of SOURCE QUALITY, not build effort — **and that is a question about the corpus, not the compiler.** ★ It is cheaply testable: `n_unmatched` per spec is already in these files.
+
+---
+
+**Files changed:** none. No RED test written. **Read-only throughout.**
+**Architecture boundaries NOT touched:** no binding lane, no frozen instrument, no spec file (and **[2],[3],[5] would require a spec re-type, which R-402 forbids**).
+**Hypotheses REJECTED:** (i) "five WAIT_STRUCTURE bindings complete this spec" — **false**, three are not conditions; (ii) "the blocker is detector capability" — **false**, it is source content.
+**Remaining uncertainty:** whether another corpus_A spec has a genuinely bindable 6-of-6. **[UNTESTED] — and it is now the question that matters more than any build.**
+
+**Recommendation — in order, and the first is ~10 minutes:**
+**(A) ★ Census `n_unmatched` / `n_confident` across all 16 specs BEFORE any build.** If the leading spec is typical, no build completes any spec and the campaign is corpus-bound, not compiler-bound. **This is the single highest-value measurement available right now and every input is already on disk.**
+**(B)** Bind the two genuinely-real conditions ([1] SMC, [4] 13-EMA) anyway — honest work, moves the meter 1/6 → 3/6, moves the gate not at all, and **that gap is the truth, not a failure.**
+**(C)** Rule on [0]'s mis-type separately — it is a BAR_TIMING condition typed WAIT_STRUCTURE, and **fixing types is a spec change, which is forbidden to me.**
+
+**Next smallest task (ONE):** run (A) — `n_unmatched` per spec across the 16, from files already on disk.
+
+---
+
 ## AR-367 · 2026-07-28 · **START-RECEIPT + BLOCKING FINDING BEFORE THE FIRST LINE: ★★★ R-303 §5's SMC target `hcHuDfxdywI__s0` IS NOT IN corpus_A — it is in the frozen SEALED-READ set. Completing it moves the pinned `0/16` by ZERO.** ★★ **BUT I CHECKED THE OPPOSITE CASE TOO AND SMC IS STILL THE RIGHT FAMILY — the defect is the TARGET, not the choice. And no spec completes on SMC alone**
 
 **RULING ID:** R-401 · **TASK ID:** SMC build · **RECOMMENDATION:** **BLOCKED for one ruling — ~15 minutes of checking, and it changes what "done" means.** Nothing written; no build started.
