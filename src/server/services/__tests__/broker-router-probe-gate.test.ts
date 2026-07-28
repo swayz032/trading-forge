@@ -109,14 +109,31 @@ async function runProbe(): Promise<void> {
  * the thing it protects is LOW — this is a key-revocation detector, not a safety
  * gate — but the guard is nearly free.
  *
- * RED-PROOF: delete the `startBootProbe();` call in index.ts and this goes RED.
+ * RED-PROOF (both mutations, R-368): delete the `startBootProbe();` call → RED;
+ * COMMENT IT OUT → RED. The second is the one that matters — nobody deletes a
+ * boot call, they comment it out while debugging a slow boot and mean to put it
+ * back. The first version of this guard matched commented text and stayed green.
+ *
+ * ★ BOUND, stated because the name used to over-claim: THIS GUARD PROVES
+ * TEXTUAL PRESENCE, NOT EXECUTION. A call relocated into a dead branch, an
+ * early-return path or an `if (false)` block still satisfies it. Proving the
+ * probe actually runs needs a boot harness, which is disproportionate for a
+ * LOW-severity key-revocation diagnostic.
  */
 describe("boot probe is actually started (R-367 static guard)", () => {
   const indexSrc = readFileSync(resolve(import.meta.dirname, "../../index.ts"), "utf8");
 
-  it("index.ts calls startBootProbe() exactly once", () => {
-    const calls = indexSrc.match(/startBootProbe\(\)/g) ?? [];
-    expect(calls).toHaveLength(1);
+  it("index.ts contains exactly one non-commented startBootProbe() call site", () => {
+    // Line-SHAPE assertion, not comment-stripping. A first attempt stripped
+    // comments with /\/\*[\s\S]*?\*\//g and broke on the real file: an unpaired
+    // `/*` inside a string or glob swallows everything up to the next `*/`,
+    // including real code. Requiring the statement to START its line needs no
+    // stripping — `// startBootProbe();` and `/* startBootProbe(); */` both fail
+    // to match because the line begins with the comment token, not the call.
+    const callLines = indexSrc
+      .split("\n")
+      .filter((line) => /^\s*startBootProbe\(\)\s*;/.test(line));
+    expect(callLines).toHaveLength(1);
   });
 
   it("index.ts imports startBootProbe from broker-router", () => {
