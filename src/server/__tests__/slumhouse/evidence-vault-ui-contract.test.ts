@@ -22,7 +22,7 @@ describe("Media Evidence Vault production contract", () => {
     expect(page).toContain('data-mode="workers"');
     expect(page).toContain("Today's strategies &amp; sources");
     expect(page).toContain("Full strategy library");
-    expect(page).toContain("Every configured worker, one floor");
+    expect(page).toContain("The real readers, judges, and local lane");
     expect(page).toContain('class="panel main-stage is-empty"');
     expect(page).toContain('class="panel right-rail"');
     expect(page).toContain(".main-stage{display:block");
@@ -52,6 +52,8 @@ describe("Media Evidence Vault production contract", () => {
     expect(page).not.toMatch(/Math\.random|fixture|demo video|sample transcript/i);
     expect(page).toContain("payload.videos");
     expect(page).toContain("payload.stats.today");
-    expect(page).toContain("No fictional worker, model, or job is displayed.");
+    expect(page).toContain("Only extraction-system roles are shown");
+    expect(page).toContain("legacy application-router roles are excluded");
+    expect(page).not.toContain("canonical model router");
   });
 });
