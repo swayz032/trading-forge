@@ -550,11 +550,17 @@ describe("A-11 broker-router TradersPost key probe", () => {
       values: vi.fn().mockResolvedValue(undefined),
     });
 
-    global.fetch = vi.fn().mockResolvedValue({ status: 400, ok: false }) as unknown as typeof fetch;
+    const fetchMock = vi.fn().mockResolvedValue({ status: 400, ok: false });
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const { probeTradersPostApiKeys } = await import("../services/broker-router.js");
     await probeTradersPostApiKeys();
 
+    // R-370: WITNESS FIRST, then the absence. `not.toHaveBeenCalled()` alone is
+    // satisfied by a probe that never ran, so it could not detect a regression of
+    // the very gate/inertness fix this suite guards. Proving fetch fired makes
+    // this "ran and correctly stayed silent" instead of "silent for any reason".
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(notifyMod.notifyWarning).not.toHaveBeenCalled();
   });
 
@@ -564,10 +570,17 @@ describe("A-11 broker-router TradersPost key probe", () => {
 
     const { fromMock } = makeSelectChainNoLimit([]); // no accounts
     (db.select as ReturnType<typeof vi.fn>).mockReturnValue({ from: fromMock });
+    const fetchMock = vi.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const { probeTradersPostApiKeys } = await import("../services/broker-router.js");
     await probeTradersPostApiKeys();
 
+    // R-370: prove this is an EMPTY-ACCOUNT no-op, not a DISABLED-PROBE no-op.
+    // db.select firing witnesses the probe reached its account query; fetch not
+    // firing is then a real result rather than a consequence of never starting.
+    expect(db.select).toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(notifyMod.notifyWarning).not.toHaveBeenCalled();
   });
 
@@ -582,10 +595,17 @@ describe("A-11 broker-router TradersPost key probe", () => {
       values: vi.fn().mockResolvedValue(undefined),
     });
 
-    global.fetch = vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) as unknown as typeof fetch;
+    const fetchMock = vi.fn().mockRejectedValue(new Error("ECONNREFUSED"));
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const { probeTradersPostApiKeys } = await import("../services/broker-router.js");
     await expect(probeTradersPostApiKeys()).resolves.not.toThrow();
+
+    // R-370: fail-softness is only meaningful if a failure actually occurred.
+    // A probe that never ran also "does not throw" — so assert the network call
+    // was attempted (and rejected) before crediting the graceful outcome.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await expect(fetchMock.mock.results[0]?.value).rejects.toThrow("ECONNREFUSED");
   });
 
   it("probeTradersPostApiKeys does NOT expose apiKey in log output on failure", async () => {
@@ -611,6 +631,11 @@ describe("A-11 broker-router TradersPost key probe", () => {
       ...(logger.info as ReturnType<typeof vi.fn>).mock.calls,
     ];
     const logStr = JSON.stringify(allLogCalls);
+    // R-370: "the logs do not contain the key" is trivially true of a probe that
+    // logged nothing — i.e. of a probe that never ran. Witness that logging
+    // actually happened first, so this asserts "we logged, and the secret was not
+    // in it" rather than "we logged nothing."
+    expect(allLogCalls.length).toBeGreaterThan(0);
     expect(logStr).not.toContain("fake-api-key");
   });
 });
