@@ -4,6 +4,64 @@
 
 ---
 
+## AR-364 · 2026-07-28 · ★★★ **THE METER CANNOT BE BUILT YET AND I AM STOPPING ON YOUR OWN STOP CONDITION — three blockers, and the third would have MANUFACTURED A FALSE FINDING: the concordance check you ordered compares against a table over ELEVEN specs, but there are NINETEEN spec YAMLs on disk and ADVISOR-STATE says the corpus is SIXTEEN. A mismatch was guaranteed for POPULATION reasons and would have read as a meter defect**
+
+**RULING ID:** R-398 · **TASK ID:** build the Phase-1 meter · **RECOMMENDATION:** **BLOCKED — two pins needed before a line of the meter is written. Neither is large; both are yours.**
+
+I read R-303 in full (5,968 chars) rather than the passages my own regex extracted — **my first extraction printed only the keywords and no context, which is an instrument returning nothing and looking like an answer.** Three blockers, each measured.
+
+---
+
+### ★★★ BLOCKER 1 — THE POPULATION IS THREE DIFFERENT NUMBERS
+
+```
+R-303 §1 deciding table : 53 load-bearing conditions / ELEVEN specs
+ADVISOR-STATE           : corpus = SIXTEEN
+src/engine/specs/*.yaml : NINETEEN on disk
+```
+(`breaker · eqhl_raid · ict_2022 · ict_scalp · ict_swing · iofed · judas_swing · london_raid · midnight_open · mitigation · ny_lunch_reversal · ote · power_of_3 · propulsion · quarterly_swing · silver_bullet · smt_reversal · turtle_soup · unicorn`, plus a `research/` dir.)
+
+★★★ **You ordered: "FIRST acceptance is a CONCORDANCE CHECK against R-303's hand table: 53 / 26 / EXACT-NOW 0 / STRICT 1 / PRIMARY 3" with "any disagreement → STOP and report."** A meter walking `specs/*.yaml` walks **nineteen**. It would return a condition count far from 53 **and the disagreement would be about WHICH SPECS, not about classification.** ★★ **I would have reported a mismatch, you would have had to rule on it, and the finding would have been an artifact of my population — the exact class that produced "the pinned eleven" this morning and `0128` this afternoon. A census is bounded by its population before its pattern, and nobody has said which eleven.**
+
+**PIN NEEDED:** the eleven spec identifiers R-303's table covered. Without them the concordance check is not a check.
+
+### ★★ BLOCKER 2 — THE DEFINITIONS ARE NOT IN R-303
+
+R-303 **uses** EXACT-NOW / DE-APPROXIMABLE / UNTYPED and attributes the counts to a **prior census** — *"53 load-bearing conditions / 11 specs (26 UNTYPED — **prior census verified EXACTLY**)"* — **but defines none of them.** `EXACT-NOW` appears in exactly five rulings: **R-299, R-303, R-343, R-397, R-398.** R-299 is the pre-commitment; the operative definitions are in it or in the census it cites, **not in the ruling that tabulated them.**
+
+★ **I will not reconstruct the definitions from usage.** Encoding a guessed definition into the instrument that will henceforth define Phase-1 progress is how a wrong rule becomes permanent and unfalsifiable — **the meter would then be graded by the prose it was reverse-engineered from, which is one path twice.**
+
+**PIN NEEDED:** the ruling that DEFINES the three classes, cited by number.
+
+### ★ BLOCKER 3 — ONE COLUMN IS EXPLICITLY A HUMAN JUDGEMENT, AND YOUR STOP CONDITION COVERS IT
+
+R-303 §6: **"27/53 BOUNDARY is high — this corpus mostly sits on the seam where a real mechanical object wears an unquantified adjective."**
+
+★★ **"An unquantified adjective" is not a machine-decidable predicate — it is a reading of what a teacher meant.** Your stop condition: *"stop if the classification cannot be made without a judgement call the script would be faking — name the judgement rather than encoding it silently."* **I am naming it: BOUNDARY (27 of 53, more than half the table) is that judgement.**
+
+**Consequence for scope, and it is good news:** a meter can honestly emit **EXACT-NOW / DE-APPROXIMABLE / UNTYPED** and the **all-conditions-bound spec count** — which is what Phase 1's exit actually turns on — while **reporting BOUNDARY as `HUMAN-CALL: unresolved`** rather than inventing a threshold. ★ **That is a smaller, fully honest meter, and it still answers the question the phase gate asks.**
+
+---
+
+### WHAT IS ALREADY CONFIRMED AND NOT BLOCKED
+
+★ The **build** remains startable (AR-363): `spec_family_bindings.py` (35 KB), `spec_condition_compiler.py` (49 KB), the SMC specs on disk. **Nothing here contradicts R-303 §3** — this is a blocker on MEASUREMENT, not on capability.
+
+★ **[NOTED — may reduce the meter's cost]** R-303 §3: *"The UNTYPED census's 'cannot compute' was correctly scoped to `FAMILY_META`; mechanizability sees the wider truth."* So UNTYPED is defined **relative to `FAMILY_META`** — a structure that exists in code. **If the classes are all `FAMILY_META`-relative, most of the meter may be mechanical after all.** I did not open `spec_condition_compiler.py` to check; that is the first thing to do once Blocker 2 is pinned.
+
+---
+
+**Files changed:** none — read-only throughout. **Forbidden surfaces untouched:** no binding module, no spec YAML.
+**Hypotheses REJECTED:** (i) "R-303 defines the classes" — **false**, it cites a prior census; (ii) "the meter can be concordance-checked today" — **false**, population unpinned.
+**Remaining uncertainty:** whether the classes are fully `FAMILY_META`-derivable (Blocker 2 gates this).
+**Risk of proceeding without the pins:** a mismatch report that reads as a classification finding but is a population artifact — **and it would land in the record as Phase-1 evidence.**
+
+**Recommendation:** pin (1) the eleven specs and (2) the defining ruling. **Then the meter is a short, honest script and I can red-proof it against the hand table properly.** ★ Alternatively, if the eleven cannot be recovered, say so — **then the correct first act is to re-run the census on a NAMED population and let R-303's table become history rather than the standard.**
+
+**Next smallest task (ONE):** on your pins — open `spec_condition_compiler.py`, confirm the three classes are `FAMILY_META`-derivable, and scope the meter against the named eleven.
+
+---
+
 ## AR-363 · 2026-07-28 · **SMC STARTABILITY CONFIRMED — the binding lane EXISTS in code (`spec_family_bindings.py` + `spec_condition_compiler.py`), the SMC specs exist as YAML, R-303 §3 holds.** ★★★ **BUT R-397's ACCEPTANCE CANNOT BE SATISFIED AS WRITTEN: `EXACT-NOW` HAS NO INSTRUMENT — literal zero occurrences repo-wide. The number the desk says is the ONLY measure of Phase-1 movement exists only as prose in a ruling**
 
 **RULING ID:** R-397 · **TASK ID:** SMC build — startability confirmation (the step R-397 required BEFORE building and graded `[UNPROVEN]`) · **RECOMMENDATION:** **BLOCKED on one ruling — build the meter first, or restate the acceptance.**
