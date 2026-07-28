@@ -4,6 +4,47 @@
 
 ---
 
+## AR-362 · 2026-07-28 · **SWEEP INCREMENT: claim 2 of 9 verified — `reconciliation-service.ts:397` is TRUE.** ★★ **Which is the more useful result than another false one: the build-state class is NOT uniformly rotten, so it cannot be swept-and-deleted — each literal needs its own verification** · **HANDOFF DECLARED (self-assessment, §10)**
+
+**RULING ID:** R-395/R-396 · **TASK ID:** item 3 — string-literal sweep, increment · **RECOMMENDATION:** APPROVAL_REQUESTED for the increment; **7 of 9 remain unverified and I am handing off rather than starting an eighth I cannot finish well.**
+
+### CLAIM 2 — `reconciliation-service.ts:397`, VERIFIED **TRUE**
+
+Literal: *"reconciliation: MFFU snapshot captured but PnL extraction not yet wired (Phase 4C)"*
+
+**[MEASURED]** `fetchMffuDashboardPnl()` (`:374`) reaches `:398` and `return null` — **it genuinely does not extract a PnL.** Corroborated by two independent sites that would have to be edited together to make the literal lie: the docstring at `:368` (*"In a future phase, the snapshot service can extract structured PnL"*) and the inline at `:393-394` (*"Return null until the Playwright scraper extracts the balance field"*). The caller at `:500` consumes the `null`.
+
+★★ **This is the valuable half of the pair.** Claim 1 (`enabled_firms`) was **FALSE and persisted to `audit_log`**; claim 2 is **TRUE and self-consistent**. **So the class cannot be dispositioned in bulk — "these literals are stale, delete them" would have destroyed a correct one, and "these literals are fine" would have left a false one writing into the Trust Spine on every boot.** ★ **A mixed population is the case where a sweep MUST be per-item, and two data points are enough to establish that it is mixed.**
+
+★ **[NOTED, not adopted]** `:231` carries a related consequence comment — *"unpopulated column makes |mffu_pnl - 0| = mffu_pnl → a false RED once the degraded-source…"* — i.e. someone already reasoned about what the unwired PnL does downstream. **I did not verify that reasoning; it is a different claim and out of this unit's scope.**
+
+### RUNNING TALLY — build-state class (9)
+| # | literal | verdict |
+|---|---|---|
+| 1 | `index.ts:1580` / `:1632` — enabled_firms not wired | ★ **FALSE** — wired, gates routing, and persisted to `audit_log` every boot |
+| 2 | `reconciliation-service.ts:397` — MFFU PnL not wired | **TRUE** |
+| 3–9 | paper-signal-service · pine-delivery-service · agent-service · quantum_mc.py · tensor_signal_model.py · walk_forward.py · openai-proxy | **UNVERIFIED** |
+
+**Absence from the verified rows is not a pass** — 7 are simply unexamined.
+
+---
+
+### ★ HANDOFF — declared, not requested (§10: *"hand off at a context limit rather than starting what you cannot finish; the declaration is SELF-ASSESSMENT"*)
+
+I am deep into a long session and the remaining sub-items (7 claims, then consequence-ranked flag enumeration, then the floors) are each large enough that starting one now risks **a partial result that reads as complete — this campaign's most-convicted shape.** State a fresh seat needs, so nothing is reconstructed:
+
+- **Open PR:** **#27** (pair-binding test) — **APPROVED R-395**, desk merges on CI green. One file, zero production code. Nothing for the worker.
+- **Landed today by this seat:** PR #19 + #22 (merged, deployed, live-verified R-393) · AR-354→AR-361.
+- **Blocked on a ruling:** the `enabled_firms` audit-log literals — options (a) delete / (b) narrow / (c) stop emitting a hand-maintained `follow_ups` array at boot. **I lean (c) and can red-proof it; it writes to `audit_log`, so it is the desk's call.**
+- **Instrument:** the census is reproducible from AR-361's published pattern + surface. **Deliberately not committed** — a second copy of a predicate is drift-bait.
+- **Worktree:** `wt-hmac-pairbind-20260728`, branch `hardening/hmac-pair-binding-test-20260728`, `node_modules` junctioned to the **campaign checkout** (asserted NOT `runtime-production` before creating it). Safe to delete once #27 merges.
+- **Standing traps re-earned today, for whoever reads this next:** verify the instrument before believing a negative · a monitor's silence is not a reading · a count is a lossy projection of a set · a pattern matching a WORD cannot separate its senses · `npx tsc` in a worktree without `node_modules` is a stub that exits 0.
+
+**Files changed this increment:** none — verification only.
+**Next smallest task (ONE) for the next seat:** verify claim 3 — `paper-signal-service.ts:3956` (*"priorSessionVolume DAL not wired"*), same method: read the function, find two independent corroborating sites or a contradiction.
+
+---
+
 ## AR-361 · 2026-07-28 · **STRING-LITERAL PRECONDITION SWEEP — census built, and ★★★ I AM REPORTING MY PATTERN'S DEFECT BEFORE ITS COUNT: 296 hits is a LIE OF OVER-COLLECTION. "Unreachable" has THREE unrelated senses in this codebase and my regex conflated all three; the real R-336 class is ~9, not 296** · ★★★ **FIRST VERIFIED CLAIM IS FALSE — AND IT IS WRITTEN INTO `audit_log` ON EVERY BOOT**
 
 **RULING ID:** R-395 · **TASK ID:** item 3 — precondition sweep over string-literal surfaces · **RECOMMENDATION:** APPROVAL_REQUESTED for the taxonomy; **the remaining 8 claims are unverified and I am labelling this PARTIAL.**
