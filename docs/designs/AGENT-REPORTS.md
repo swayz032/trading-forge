@@ -4,6 +4,30 @@
 
 ---
 
+## AR-357 · 2026-07-28 · **PR #19 GREEN 19/19 AND MERGED; PR #22 MERGED `3b92792a`.** Membership verdict from AR-356 stands unchanged on the settled run · **Taking item 3, first sub-item: server-derived `strategy_id`**
+
+**RULING ID:** R-391 / R-392 · **TASK ID:** item 2 close-out → item 3 open · **RECOMMENDATION:** informational; **the deploy and the live-DB re-verification are yours.**
+
+**RESULT.** `gh pr checks 19` → **SUCCESS=19, non-success=0**, head `63829829`. `gh pr view 19` → **MERGED**. `gh pr view 22` → **MERGED** at `2026-07-28T20:46:19Z`, merge commit **`3b92792a`**.
+
+★ **Nothing in AR-356's membership verdict moves:** the two checks that were still in flight when I filed it were the duplicated `Python Tests + Coverage` jobs, and both landed SUCCESS. The set result stands as reported — failing set **==** register exactly; **ADDED vs base `b2af6c1a` = `0159_broker_accounts_ab_paper_routing` and nothing else; REMOVED = none**; `"verdict": "GREEN"`, `"newFailures": []`; suite 13452 passed / 9 failed, the nine baseline suppressions unchanged.
+
+★ **[NOT VERIFIED BY ME, DELIBERATELY]** that the tower is *running* either change. **LANDED ≠ RUNNING** — the box executes from `runtime-production`, and R-391 holds #22's deploy to land together with #19 in one restart. **The deploy, and the re-verification that the two live rows read `paper_sim` on the REAL DB, are yours under R-377/R-381.** I am not touching production.
+
+---
+
+**OPENING ITEM 3 — first sub-item: server-derived `strategy_id`.** Read-only scoping done while CI ran, so the next report starts from evidence rather than a plan:
+
+`src/server/routes/tradingview-webhook.ts` accepts `strategy_id` **from the payload** (`z.string().uuid()`), then resolves the HMAC secret per `(account_id, strategy_id)` out of `account_strategy_assignments`, and the signature covers the fixed field order `{strategy_id}|{account_id}|…`.
+
+★ **So the question is NOT the one the queue item's name suggests.** "Client-supplied" is not itself the defect — the field is bound by a secret that is keyed to the very pair being claimed, so forging a different `strategy_id` requires already holding that pair's secret. **The real question is whether the assignment lookup PROVES the caller owns that pair, or merely finds a row for it** — and, separately, what happens on the paths where no secret exists. **That is where I will open it, and I will say which layer is wrong before I change a line.**
+
+**Files changed:** none this report. **Risk:** none. **Remaining uncertainty:** the item-3 question above, unanswered until measured.
+
+**Next smallest task (ONE):** determine whether `lookupHmacSecret(account_id, strategy_id)` establishes ownership or only existence — and report which, with the lines.
+
+---
+
 ## AR-356 · 2026-07-28 · **PR #19 MEMBERSHIP RESULT (R-390 form — the SET, no count as the verdict): failing set == register EXACTLY; the only new member versus base is `0159`; nothing disappeared. STOP CONDITION SATISFIED** · ★★★ **AND I BUILT R-392's EXACT FAILURE MODE MINUTES AFTER READING IT: my PR-19 watcher depended on `jq`, which is not installed here — it was DEAD from the moment I armed it and its silence was indistinguishable from "still running"**
 
 **RULING ID:** R-391 · **TASK ID:** PR #19 membership report · **RECOMMENDATION:** **APPROVAL_REQUESTED** — 15/17 SUCCESS, 0 fail; the two outstanding are duplicate `Python Tests + Coverage` jobs still running.
