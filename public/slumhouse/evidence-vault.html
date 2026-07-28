@@ -18,6 +18,29 @@
     body.embed .shell{padding-top:76px}body.embed header .back{display:none}body.embed .title{font-size:34px}
     @media(max-width:1100px){body{overflow:auto}.shell{height:auto;min-height:100vh}.vault{grid-template-columns:300px 1fr}.reader{grid-column:1/-1;height:65vh}.stats{grid-template-columns:repeat(3,1fr)}.search{grid-column:1/-1}.screening{min-height:600px}}
     @media(max-width:700px){.shell{padding:16px}.vault{display:block}.panel{margin-bottom:12px}.video-list{height:430px}.screening{min-height:0}.reader{height:70vh}.stats{grid-template-columns:repeat(3,1fr)}.stat{padding:10px}.stat b{font-size:18px}.sub,.seal{display:none}}
+    /* Premium archive layout: one main stage + one quiet right rail. */
+    body:before{background:linear-gradient(90deg,rgba(0,0,0,.48),rgba(0,0,0,.12) 52%,rgba(0,0,0,.58)),linear-gradient(0deg,rgba(0,0,0,.58),rgba(0,0,0,.02) 62%,rgba(0,0,0,.48)),url('/slumhouse/assets/media-evidence-vault.png') center/cover no-repeat;filter:saturate(.9) contrast(1.04)}
+    .shell{padding:20px 24px 24px;grid-template-rows:auto minmax(0,1fr);gap:14px}
+    header{align-items:center;padding:0 2px}.title{font-size:clamp(27px,2.5vw,42px)}.sub{max-width:560px;color:rgba(236,230,218,.68)}
+    .vault{display:grid;grid-template-columns:minmax(0,1fr) minmax(292px,342px);gap:14px}
+    .panel{border:1px solid rgba(236,224,198,.14);border-radius:16px;background:linear-gradient(145deg,rgba(3,4,3,.6),rgba(2,3,2,.42));backdrop-filter:blur(14px) saturate(1.1);box-shadow:0 18px 55px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035)}
+    .main-stage{display:grid;grid-template-columns:minmax(285px,38%) minmax(0,1fr);min-height:0;background:linear-gradient(145deg,rgba(3,4,3,.4),rgba(2,3,2,.22))}
+    .screening{min-width:0;border-right:1px solid rgba(236,224,198,.12);background:rgba(0,0,0,.1)}
+    .screening>.empty{min-height:100%;background:radial-gradient(circle at 50% 38%,rgba(197,161,95,.08),transparent 44%)}
+    .reader{min-width:0;display:grid;grid-template-rows:52px minmax(0,1fr);background:linear-gradient(180deg,rgba(3,4,3,.12),rgba(2,3,2,.26))}
+    .panel-head{height:52px;padding:0 15px;background:rgba(0,0,0,.16);border-bottom-color:rgba(236,224,198,.11)}
+    .transcript{padding:26px 34px 64px;font-size:16px;line-height:1.92;color:rgba(245,239,227,.88)}
+    .hero{aspect-ratio:16/9}.detail{padding:18px 19px}.detail h2{font-size:25px}.provenance{border-color:rgba(236,224,198,.11);background:rgba(0,0,0,.18)}
+    .right-rail{min-height:0;display:grid;grid-template-rows:auto auto auto minmax(0,1fr);overflow:hidden;background:linear-gradient(160deg,rgba(4,5,4,.7),rgba(2,3,2,.5))}
+    .rail-title{padding:16px 16px 12px;border-bottom:1px solid rgba(236,224,198,.11)}.rail-title strong{display:block;color:#dcc796;font:900 9px/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase}.rail-title span{display:block;margin-top:7px;color:rgba(225,218,205,.55);font-size:10px;line-height:1.45}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid rgba(236,224,198,.11)}
+    .stat{min-width:0;border:0;border-right:1px solid rgba(236,224,198,.1);border-radius:0;background:transparent;backdrop-filter:none;padding:13px 11px}.stat:last-child{border-right:0}.stat b{font-size:21px}.stat span{font-size:7px;line-height:1.35}
+    .search{margin:10px;border:1px solid rgba(236,224,198,.12);border-radius:11px;background:rgba(0,0,0,.28);backdrop-filter:none;padding:6px 7px}.search input{font-size:11px}.search button{padding:8px 10px;border-radius:8px;font-size:9px}
+    .intake{min-height:0;display:grid;grid-template-rows:46px minmax(0,1fr);border-top:1px solid rgba(236,224,198,.08)}.intake .panel-head{height:46px}.video-list{height:auto;padding:7px}
+    .video-card{grid-template-columns:76px minmax(0,1fr);gap:9px;padding:7px;border-bottom:1px solid rgba(255,255,255,.035);border-radius:10px}.thumb{width:76px;border-radius:7px}.v-title{font-size:10px}.v-meta{font-size:8px}.video-card.on{border-color:rgba(197,161,95,.28);background:rgba(197,161,95,.075)}
+    body.embed .shell{padding-top:70px}
+    @media(max-width:1100px){body{overflow:auto}.shell{height:auto;min-height:100vh}.vault{grid-template-columns:1fr}.main-stage{min-height:720px}.right-rail{height:620px}.reader{grid-column:auto;height:auto}.stats{grid-template-columns:repeat(3,1fr)}.search{grid-column:auto}.screening{min-height:0}}
+    @media(max-width:700px){.shell{padding:14px}.main-stage{display:block;min-height:0}.screening{border-right:0;border-bottom:1px solid rgba(236,224,198,.12)}.reader{height:68vh}.right-rail{height:600px}.transcript{padding:22px}.panel{margin-bottom:0}.video-list{height:auto}.sub,.seal{display:none}}
   </style>
 </head>
 <body>
@@ -26,16 +49,17 @@
       <div><a class="back" href="/slumhouse/crib.html">← The Crib</a><div class="eyebrow">Slumhouse · Source intelligence</div><h1 class="title">The Media Evidence Vault</h1><div class="sub">Daily YouTube discoveries, complete source transcripts, and every strategy receipt tied back to the video that taught it.</div></div>
       <div class="seal">Read-only evidence archive</div>
     </header>
-    <section class="stats" aria-label="Archive totals">
-      <div class="stat"><b id="stat-today">—</b><span>Found today</span></div>
-      <div class="stat"><b id="stat-ready">—</b><span>Transcripts ready</span></div>
-      <div class="stat"><b id="stat-total">—</b><span>Videos archived</span></div>
-      <form class="search" id="search"><input id="query" type="search" autocomplete="off" placeholder="Search title, channel, query, or video ID"><button type="submit">Search</button></form>
-    </section>
     <section class="vault">
-      <div class="panel"><div class="panel-head"><strong>Daily intake</strong><button class="today-only" id="today-only" type="button">Today only</button></div><div class="video-list" id="video-list"><div class="empty">Opening the archive…</div></div></div>
-      <div class="panel screening" id="screening"><div class="empty"><div><b>No evidence selected</b>Choose a real video from the daily intake.</div></div></div>
-      <div class="panel reader"><div class="panel-head"><strong>Full transcript</strong><span class="wordmark" id="wordmark">Evidence text</span></div><div class="transcript unavailable" id="transcript">Select a video to read its archived transcript.</div></div>
+      <section class="panel main-stage" aria-label="Selected video evidence">
+        <div class="screening" id="screening"><div class="empty"><div><b>The stage is ready</b>Select a real discovery from the right rail.</div></div></div>
+        <div class="reader"><div class="panel-head"><strong>Full transcript</strong><span class="wordmark" id="wordmark">Evidence text</span></div><div class="transcript unavailable" id="transcript">Select a video to read its archived transcript.</div></div>
+      </section>
+      <aside class="panel right-rail" aria-label="Daily media intake">
+        <div class="rail-title"><strong>Today's intake</strong><span>New source evidence arrives here as the extraction agents find it.</span></div>
+        <section class="stats" aria-label="Archive totals"><div class="stat"><b id="stat-today">—</b><span>Today</span></div><div class="stat"><b id="stat-ready">—</b><span>Ready</span></div><div class="stat"><b id="stat-total">—</b><span>Archive</span></div></section>
+        <form class="search" id="search"><input id="query" type="search" autocomplete="off" placeholder="Search the archive"><button type="submit">Search</button></form>
+        <div class="intake"><div class="panel-head"><strong>Daily discoveries</strong><button class="today-only" id="today-only" type="button">Today only</button></div><div class="video-list" id="video-list"><div class="empty">Opening the archive…</div></div></div>
+      </aside>
     </section>
   </main>
   <script>
