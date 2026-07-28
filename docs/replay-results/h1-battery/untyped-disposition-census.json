@@ -1,0 +1,943 @@
+{
+  "artifact": "untyped-disposition-census",
+  "generator": "docs/replay-results/h1-battery/untyped_disposition_census.py",
+  "reproduce": "python docs/replay-results/h1-battery/untyped_disposition_census.py",
+  "ruling": "ADVISOR-RULINGS R-218 SS1 (chartered) re-sited CENSUS-SIDE by R-293 SS1",
+  "mint_implemented": "AN ACCOUNTING FIX LANDS AT THE ACCOUNTING LAYER",
+  "WHAT_THIS_ARTIFACT_IS": "DENOMINATOR HONESTY. The earned, per-condition disposition of every LOAD-BEARING UNTYPED condition on the tier-A 11: what the trader was actually teaching, and therefore what the UNTYPED sink is standing in for on each row. It converts one undifferentiated blob into three populations with different owners.",
+  "WHAT_THIS_ARTIFACT_IS_NOT": "ELIGIBILITY RECOVERY. It recovers zero eligible specs -- see the ZERO_YIELD key, whose figure is MEASURED by re-running the production binder over a dispositioned arm, not asserted. Do not read any count here as a gain.",
+  "ZERO_YIELD__n_specs_made_ELIGIBLE_by_these_dispositions_out_of_11": 0,
+  "ZERO_YIELD_STATEMENT": {
+    "plainly": "THIS ARTIFACT RECOVERS 0 ELIGIBLE SPECS. Nothing here makes any strategy compile, bind, or pass a gate that did not before. Eligible specs BEFORE these dispositions: 0 of 11. Eligible specs AFTER applying every disposition in the most favourable way possible: 0 of 11. Delta: 0.",
+    "why_zero_even_for_the_11_typed_rows": "Four of the five target families (WAIT_STRUCTURE, WAIT_RETEST, WAIT_CONFIRMATION, WAIT_BIAS) bind with approximation=True -- an ungated np.ones pass-through that is LOOSER than taught and therefore does NOT count as a BIND. A re-type would turn an honest unbound into a BOUND-BUT-APPROXIMATED row: the accounting improves, the gate does not. That is precisely the hollow compile this work was ordered to stop, and it is why the dispositions live here and not in the producer.",
+    "the_one_family_that_binds_non_approximated_is_a_WARNING_not_a_yield": "ENTER binds with approximation=False (MEASURED -- see counterfactual_bind_probe). That is WORSE, not better: its spine_completion_trigger fires on spine completion and carries none of the taught timing, so a re-type would produce a row that looks like a genuine bind while having silently discarded the teaching, with nothing downstream flagging it. Exactly one row in this table targets ENTER and it is flagged for this reason.",
+    "WAIT_SESSION_note": "WAIT_SESSION is the only family whose bind is non-approximated AND content-checked -- but it binds only when the prose resolves to a known session zone, and the probe below shows it returning no_recognized_session_keyword on this corpus. The mission teaches no clean session names, so it is not an escape hatch either.",
+    "measured_not_asserted": "Both arms were produced by running compile_binding_plan (production binder, flags OFF) in this process. The dispositioned arm is an in-memory deepcopy; no producer output changed.",
+    "the_zero_is_a_MEASURED_zero_not_a_NO_OP": {
+      "why_this_matters": "A dispositioned arm that silently failed to apply anything would also report a delta of 0. The arm is therefore required to BITE, and the bite is published here: it moved condition-level binding and STILL completed no spec.",
+      "n_retypes_actually_applied_to_spec_copies": 11,
+      "n_drops_actually_applied_to_spec_copies": 2,
+      "n_non_binding_conditions_baseline": 94,
+      "n_non_binding_conditions_dispositioned": 91,
+      "n_conditions_the_arm_moved": 3,
+      "and_yet_n_specs_completed": 0
+    }
+  },
+  "JUDGMENT_PROVENANCE": {
+    "these_dispositions_are": "AN EARNED CENSUS JUDGMENT, made row by row",
+    "these_dispositions_are_NOT": "a classifier output. No code assigned any category below. Nothing here runs at produce time, and re-running _classify_family on these rows returns UNTYPED for all of them -- which is the point: the classifier's answer is honest and this is a different KIND of answer, made by a layer entitled to make it.",
+    "criterion_applied": "THE TYPE MUST PRESERVE THE TEACHING. A target family is nominated only when compiling to that family's declared primitive would keep the taught object rather than substitute a different one. Where no primitive could keep it, the row stays UNTYPED and says what is missing.",
+    "doer_is_not_grader": "The judgments here were made by the implementer of this artifact. They are re-derivable: every row carries its taught text, the producer's own type_confidence, and the reasoning, so a grader can disagree row by row without re-reading the corpus.",
+    "boundary_calls_are_FLAGGED_not_hidden": "Rows where a competent grader could land differently carry `boundary_call_flagged: true` and a note naming the alternative reading and why it lost. They are not smoothed over to make the table look cleaner than the evidence is.",
+    "n_boundary_calls_flagged": 13
+  },
+  "scope_line": "corpus = tier-A certified clean strategies (n=11 compiled of 11 certified clean) | extractions = persisted sealed-read WD phase_b | producer = src/engine/extraction/spec_producer.py READ-ONLY | binder = compile_binding_plan, ALL FLAGS OFF | no bars, no battery, no survivor arithmetic | dispositions are census-side records and are consumed by NOTHING at runtime",
+  "extraction_source": "C:\\Users\\tonio\\AppData\\Local\\Temp\\claude\\C--Users-tonio-Projects-trading-forge\\d96dba1d-d874-4c26-8026-7ec19a8674ae\\scratchpad\\SEALED-READ\\phase_b",
+  "selection_rule_source": "IMPORTED from docs/replay-results/h1-battery/tier_a_compile_census.py (select_clean_strategies + binds) -- never restated, so this artifact cannot drift from the census it companions",
+  "DERIVATION_RE_DERIVED_IN_THIS_RUN": {
+    "note": "Every figure below was recomputed from the corpus in this process. Nothing was read from tier-a-compile-census.json.",
+    "n_specs_compiled_over_n_specs_selected": {
+      "numerator": 11,
+      "denominator": 11,
+      "question": "how many of the selected tier-A clean strategies compiled"
+    },
+    "n_taught_conditions_total": 99,
+    "n_typed_conditions_over_all_taught_conditions": {
+      "numerator": 56,
+      "denominator": 99,
+      "question": "how many taught conditions carry SOME FAMILY_META family"
+    },
+    "n_UNTYPED_conditions_over_all_taught_conditions": {
+      "numerator": 43,
+      "denominator": 99,
+      "question": "how many taught conditions carry NO family at all"
+    },
+    "closure_identity": "typed=56 + UNTYPED=43 == total=99",
+    "closure_holds": true,
+    "n_LOAD_BEARING_UNTYPED_over_all_UNTYPED": {
+      "numerator": 26,
+      "denominator": 43,
+      "question": "of the conditions the producer could not type, how many sit on a spine or trigger role -- i.e. how many actually gate a trade. THIS NUMERATOR IS THE POPULATION THIS ARTIFACT DISPOSITIONS."
+    },
+    "n_LOAD_BEARING_UNTYPED_over_all_taught_conditions": {
+      "numerator": 26,
+      "denominator": 99,
+      "question": "what share of everything these traders taught is both trade-gating and un-typeable by the shipped classifier"
+    },
+    "load_bearing_rule": "role in ('spine','trigger') -- the tier-A census's own rule",
+    "per_spec": [
+      {
+        "stub": "0RBexa9JpIg__s0",
+        "spec_hash": "d50da8d8965df64b3c3d85498af216e8faee78dd6bd4c9f11899687aab96b89c",
+        "n_conditions": 8,
+        "n_untyped": 4,
+        "n_load_bearing_untyped": 1
+      },
+      {
+        "stub": "ExB66jcyKxg__s0",
+        "spec_hash": "90f5e8c1569d68e6fc2bd2b13c0c34eb0b08ec2c97a9787705b12ca96be2b472",
+        "n_conditions": 9,
+        "n_untyped": 6,
+        "n_load_bearing_untyped": 1
+      },
+      {
+        "stub": "LD1FEbwXU4o__s0",
+        "spec_hash": "ad092841a6870509c8f5f54cd1e1942c6ddba7b03b890bb678dbeac6808ab132",
+        "n_conditions": 13,
+        "n_untyped": 7,
+        "n_load_bearing_untyped": 3
+      },
+      {
+        "stub": "YGdFksLavKE__s0",
+        "spec_hash": "12a5361c1dab67c6c78f7e2ea3384f8e39a08668c8f7e524c551787b9da671e8",
+        "n_conditions": 11,
+        "n_untyped": 8,
+        "n_load_bearing_untyped": 7
+      },
+      {
+        "stub": "YqY0OkL5LMI__s0",
+        "spec_hash": "1f67199ecdf3116f52c6682e3b1b40acaedb66379ec4d474c5a8cf7b4fcd2223",
+        "n_conditions": 7,
+        "n_untyped": 4,
+        "n_load_bearing_untyped": 3
+      },
+      {
+        "stub": "YqY0OkL5LMI__s1",
+        "spec_hash": "2b91570dddedd219635ab44cc700527b8ab3f30911312fe5db7a9cc1b23d6ff9",
+        "n_conditions": 8,
+        "n_untyped": 0,
+        "n_load_bearing_untyped": 0
+      },
+      {
+        "stub": "dENM6gt8ZRg__s0",
+        "spec_hash": "2f2d5aa254b006fee01347ef444aea1c93744d42588f4f6e3bc7dbf04ac731c3",
+        "n_conditions": 7,
+        "n_untyped": 5,
+        "n_load_bearing_untyped": 3
+      },
+      {
+        "stub": "hcHuDfxdywI__s0",
+        "spec_hash": "c9215bf58527419cffa75289245b1ff43e410da0ef6ed35f82f2e756e6cfaf7f",
+        "n_conditions": 10,
+        "n_untyped": 1,
+        "n_load_bearing_untyped": 1
+      },
+      {
+        "stub": "pKzXxB9Blts__s0",
+        "spec_hash": "5085acdc25ce672eb3241decade1625832f09d335fd83b988eeec372c9f4015f",
+        "n_conditions": 10,
+        "n_untyped": 5,
+        "n_load_bearing_untyped": 4
+      },
+      {
+        "stub": "st5e-YJRfKc__s0",
+        "spec_hash": "b109c7daad354e0f22165041fdebf32e029a70c4205c6c66f0e634b37677ea92",
+        "n_conditions": 11,
+        "n_untyped": 0,
+        "n_load_bearing_untyped": 0
+      },
+      {
+        "stub": "st5e-YJRfKc__s1",
+        "spec_hash": "882fc04e4db35c25a3df4f4dad0734cff9f2c33aeaa98d863ddd23aa1850f6d9",
+        "n_conditions": 5,
+        "n_untyped": 3,
+        "n_load_bearing_untyped": 3
+      }
+    ]
+  },
+  "DISPOSITION_ROLLUP": {
+    "population": 26,
+    "counts_by_category_over_the_load_bearing_UNTYPED_population": {
+      "numerators": {
+        "DISPOSITIONED_TYPED": 11,
+        "DROPPED_NOT_A_TAUGHT_TRADE_CONDITION": 2,
+        "LEFT_UNTYPED_DEIXIS": 5,
+        "LEFT_UNTYPED_NEW_FAMILY_DEMAND": 8
+      },
+      "denominator": 26,
+      "question": "of the load-bearing conditions the producer could not type, how many were REAL TEACHING it should have typed, how many were never trade conditions at all, and how many are honest gaps awaiting their own lane"
+    },
+    "DISPOSITIONED_TYPED_target_family_mix": {
+      "numerators": {
+        "ENTER": 1,
+        "WAIT_BIAS": 3,
+        "WAIT_CONFIRMATION": 1,
+        "WAIT_RETEST": 2,
+        "WAIT_STRUCTURE": 4
+      },
+      "denominator": 11,
+      "question": "among the mis-emits that carry real teaching, which family would have PRESERVED that teaching -- a record of what the classifier should have said, NOT an instruction to make it say so"
+    },
+    "what_each_category_means": {
+      "DISPOSITIONED_TYPED": "REAL TEACHING, MIS-EMITTED. The trader taught a recognisable object that an EXISTING FAMILY_META family owns. The producer missed it on vocabulary coverage or refused an adjudicable tie. Owner: the classifier-vocabulary lane. NOTE the target family is recorded, NOT applied -- see ZERO_YIELD_STATEMENT.",
+      "DROPPED_NOT_A_TAUGHT_TRADE_CONDITION": "NOT A TAUGHT TRADE CONDITION. Metadata or narration that entered the condition list by mistake. These rows should leave the load-bearing denominator entirely -- they are not gaps to be closed, they are over-collection by the extractor. Owner: the extraction lane.",
+      "LEFT_UNTYPED_DEIXIS": "HONEST GAP -- UNRESOLVED POINTER. The taught object exists only as something the trader indicated on screen ('here', 'this', 'the long mark'). No family can be nominated because the OBJECT is missing, not the type. Owner: the deixis-resolution lane. LEFT UNTYPED ON PURPOSE.",
+      "LEFT_UNTYPED_NEW_FAMILY_DEMAND": "HONEST GAP -- NO PRIMITIVE EXISTS. The taught object is concrete and mechanical but nothing in FAMILY_META can compute it (VWAP bands, volume-profile POC, MA cross, multi-bar candle patterns, anchored series). Typing it to a near neighbour would substitute a different computation for the taught one. Owner: the new-family lane. LEFT UNTYPED ON PURPOSE."
+    },
+    "why_the_last_two_categories_STAY_UNTYPED": "UNTYPED with reason=unknown_condition_type is the HONEST output for both of them: the binder fails closed and the row reads as 'not represented'. Any type at all would make it read as 'represented' -- the flattering direction. These 13 are not a backlog this artifact failed to clear; they are correctly refused pending work that does not exist yet."
+  },
+  "counterfactual_bind_probe": {
+    "what_this_measures": "For each family this table nominates (plus WAIT_SESSION and UNTYPED as controls), what the PRODUCTION binder returns for a REAL corpus condition re-typed to that family. This is the DIRECT TEST of the mechanism claim that re-typing manufactures hollow compiles.",
+    "method": "in-memory deepcopy of the compiled spec for 0RBexa9JpIg__s0; its UNTYPED conditions re-typed; compile_binding_plan run with flags OFF; the copy discarded. The producer emitted nothing different and no spec_hash moved.",
+    "probe_spec": "0RBexa9JpIg__s0",
+    "UNTYPED_is_the_control": "the UNTYPED row below is the SHIPPED state and shows an HONEST unbound (bindable=False, unknown_condition_type). Every other row is what a re-type would replace it with.",
+    "results": {
+      "ENTER": {
+        "bindable": true,
+        "approximation": false,
+        "executed": true,
+        "unbound_reason": null,
+        "primitive": "spine_completion_trigger",
+        "counts_as_a_BIND": true
+      },
+      "UNTYPED": {
+        "bindable": false,
+        "approximation": false,
+        "executed": false,
+        "unbound_reason": "unknown_condition_type",
+        "primitive": null,
+        "counts_as_a_BIND": false
+      },
+      "WAIT_BIAS": {
+        "bindable": true,
+        "approximation": true,
+        "executed": true,
+        "unbound_reason": null,
+        "primitive": "bias_engine.classify_institutional_regime",
+        "counts_as_a_BIND": false
+      },
+      "WAIT_CONFIRMATION": {
+        "bindable": true,
+        "approximation": true,
+        "executed": true,
+        "unbound_reason": null,
+        "primitive": "spec_condition_compiler.candle_confirmation_check",
+        "counts_as_a_BIND": false
+      },
+      "WAIT_RETEST": {
+        "bindable": true,
+        "approximation": true,
+        "executed": true,
+        "unbound_reason": null,
+        "primitive": "spec_condition_compiler.retest_touch_check",
+        "counts_as_a_BIND": false
+      },
+      "WAIT_SESSION": {
+        "bindable": false,
+        "approximation": false,
+        "executed": false,
+        "unbound_reason": "no_recognized_session_keyword",
+        "primitive": null,
+        "counts_as_a_BIND": false
+      },
+      "WAIT_STRUCTURE": {
+        "bindable": true,
+        "approximation": true,
+        "executed": true,
+        "unbound_reason": null,
+        "primitive": "structure_engine.compute_structure_state",
+        "counts_as_a_BIND": false
+      }
+    },
+    "reading": "bindable=True with approximation=True is NOT a bind: it degrades to an ungated pass-through, so the condition stops gating anything while the row reports as bound. counts_as_a_BIND applies the tier-A census's own predicate (bindable AND NOT approximation AND executed)."
+  },
+  "eligibility_arms": {
+    "criterion": "R-042 SS5 with the frozen-forensics default: a spec is ELIGIBLE iff EVERY taught condition in its denominator BINDS (bindable AND NOT approximation AND executed)",
+    "baseline": {
+      "what_it_is": "the shipped compile, nothing changed",
+      "n_eligible_over_n_specs": {
+        "numerator": 0,
+        "denominator": 11
+      },
+      "eligible": [],
+      "per_spec": [
+        {
+          "stub": "0RBexa9JpIg__s0",
+          "n_taught_in_denominator": 8,
+          "n_binding": 1,
+          "n_still_not_binding": 7,
+          "eligible": false
+        },
+        {
+          "stub": "ExB66jcyKxg__s0",
+          "n_taught_in_denominator": 9,
+          "n_binding": 1,
+          "n_still_not_binding": 8,
+          "eligible": false
+        },
+        {
+          "stub": "LD1FEbwXU4o__s0",
+          "n_taught_in_denominator": 13,
+          "n_binding": 1,
+          "n_still_not_binding": 12,
+          "eligible": false
+        },
+        {
+          "stub": "YGdFksLavKE__s0",
+          "n_taught_in_denominator": 11,
+          "n_binding": 0,
+          "n_still_not_binding": 11,
+          "eligible": false
+        },
+        {
+          "stub": "YqY0OkL5LMI__s0",
+          "n_taught_in_denominator": 7,
+          "n_binding": 1,
+          "n_still_not_binding": 6,
+          "eligible": false
+        },
+        {
+          "stub": "YqY0OkL5LMI__s1",
+          "n_taught_in_denominator": 8,
+          "n_binding": 0,
+          "n_still_not_binding": 8,
+          "eligible": false
+        },
+        {
+          "stub": "dENM6gt8ZRg__s0",
+          "n_taught_in_denominator": 7,
+          "n_binding": 0,
+          "n_still_not_binding": 7,
+          "eligible": false
+        },
+        {
+          "stub": "hcHuDfxdywI__s0",
+          "n_taught_in_denominator": 10,
+          "n_binding": 0,
+          "n_still_not_binding": 10,
+          "eligible": false
+        },
+        {
+          "stub": "pKzXxB9Blts__s0",
+          "n_taught_in_denominator": 10,
+          "n_binding": 0,
+          "n_still_not_binding": 10,
+          "eligible": false
+        },
+        {
+          "stub": "st5e-YJRfKc__s0",
+          "n_taught_in_denominator": 11,
+          "n_binding": 1,
+          "n_still_not_binding": 10,
+          "eligible": false
+        },
+        {
+          "stub": "st5e-YJRfKc__s1",
+          "n_taught_in_denominator": 5,
+          "n_binding": 0,
+          "n_still_not_binding": 5,
+          "eligible": false
+        }
+      ]
+    },
+    "dispositioned": {
+      "what_it_is": "the MOST FAVOURABLE reading of this table: all 11 typed rows take their target family, both dropped rows leave the denominator, the 13 honest gaps stay UNTYPED. An upper bound on what these dispositions could buy, applied in memory only.",
+      "n_eligible_over_n_specs": {
+        "numerator": 0,
+        "denominator": 11
+      },
+      "eligible": [],
+      "per_spec": [
+        {
+          "stub": "0RBexa9JpIg__s0",
+          "n_taught_in_denominator": 8,
+          "n_binding": 1,
+          "n_still_not_binding": 7,
+          "eligible": false
+        },
+        {
+          "stub": "ExB66jcyKxg__s0",
+          "n_taught_in_denominator": 9,
+          "n_binding": 1,
+          "n_still_not_binding": 8,
+          "eligible": false
+        },
+        {
+          "stub": "LD1FEbwXU4o__s0",
+          "n_taught_in_denominator": 12,
+          "n_binding": 1,
+          "n_still_not_binding": 11,
+          "eligible": false
+        },
+        {
+          "stub": "YGdFksLavKE__s0",
+          "n_taught_in_denominator": 11,
+          "n_binding": 0,
+          "n_still_not_binding": 11,
+          "eligible": false
+        },
+        {
+          "stub": "YqY0OkL5LMI__s0",
+          "n_taught_in_denominator": 6,
+          "n_binding": 1,
+          "n_still_not_binding": 5,
+          "eligible": false
+        },
+        {
+          "stub": "YqY0OkL5LMI__s1",
+          "n_taught_in_denominator": 8,
+          "n_binding": 0,
+          "n_still_not_binding": 8,
+          "eligible": false
+        },
+        {
+          "stub": "dENM6gt8ZRg__s0",
+          "n_taught_in_denominator": 7,
+          "n_binding": 1,
+          "n_still_not_binding": 6,
+          "eligible": false
+        },
+        {
+          "stub": "hcHuDfxdywI__s0",
+          "n_taught_in_denominator": 10,
+          "n_binding": 0,
+          "n_still_not_binding": 10,
+          "eligible": false
+        },
+        {
+          "stub": "pKzXxB9Blts__s0",
+          "n_taught_in_denominator": 10,
+          "n_binding": 0,
+          "n_still_not_binding": 10,
+          "eligible": false
+        },
+        {
+          "stub": "st5e-YJRfKc__s0",
+          "n_taught_in_denominator": 11,
+          "n_binding": 1,
+          "n_still_not_binding": 10,
+          "eligible": false
+        },
+        {
+          "stub": "st5e-YJRfKc__s1",
+          "n_taught_in_denominator": 5,
+          "n_binding": 0,
+          "n_still_not_binding": 5,
+          "eligible": false
+        }
+      ]
+    },
+    "delta_n_eligible_specs": 0
+  },
+  "LIVE_PRODUCER_UNTOUCHED": {
+    "claim": "no condition's emitted `type` and no `spec_hash` was changed by this packet; the dispositions are recorded here and applied NOWHERE",
+    "spec_hash_digest": {
+      "0RBexa9JpIg__s0": "d50da8d8965df64b3c3d85498af216e8faee78dd6bd4c9f11899687aab96b89c",
+      "ExB66jcyKxg__s0": "90f5e8c1569d68e6fc2bd2b13c0c34eb0b08ec2c97a9787705b12ca96be2b472",
+      "LD1FEbwXU4o__s0": "ad092841a6870509c8f5f54cd1e1942c6ddba7b03b890bb678dbeac6808ab132",
+      "YGdFksLavKE__s0": "12a5361c1dab67c6c78f7e2ea3384f8e39a08668c8f7e524c551787b9da671e8",
+      "YqY0OkL5LMI__s0": "1f67199ecdf3116f52c6682e3b1b40acaedb66379ec4d474c5a8cf7b4fcd2223",
+      "YqY0OkL5LMI__s1": "2b91570dddedd219635ab44cc700527b8ab3f30911312fe5db7a9cc1b23d6ff9",
+      "dENM6gt8ZRg__s0": "2f2d5aa254b006fee01347ef444aea1c93744d42588f4f6e3bc7dbf04ac731c3",
+      "hcHuDfxdywI__s0": "c9215bf58527419cffa75289245b1ff43e410da0ef6ed35f82f2e756e6cfaf7f",
+      "pKzXxB9Blts__s0": "5085acdc25ce672eb3241decade1625832f09d335fd83b988eeec372c9f4015f",
+      "st5e-YJRfKc__s0": "b109c7daad354e0f22165041fdebf32e029a70c4205c6c66f0e634b37677ea92",
+      "st5e-YJRfKc__s1": "882fc04e4db35c25a3df4f4dad0734cff9f2c33aeaa98d863ddd23aa1850f6d9"
+    },
+    "emitted_type_digest": "3a5a806fba63850aa9c7dea7548adce4fa1d7de093c34dd30410a52608870c77",
+    "how_to_verify": "check out the parent commit, run this generator, and compare spec_hash_digest and emitted_type_digest. Both are computed from the LIVE producer in whatever tree the generator runs in, so a producer change would move them."
+  },
+  "gate_boundaries_printed_beside_every_verdict": {
+    "POPULATION_IDENTITY": "Checks that the disposition table covers EXACTLY the load-bearing UNTYPED population re-derived from the corpus in this run -- no orphan row, no uncovered condition, and every covered row still UNTYPED and still load-bearing. It CANNOT tell whether a disposition is CORRECT; correctness of a judgment is what an independent grader re-derives.",
+    "TAUGHT_TEXT_DRIFT": "Checks that the prose each disposition was judged against is byte-identical (by hash) to the prose the corpus emits today. It catches a corpus or producer change silently re-pointing a judgment at different words. It says nothing about whether the judgment on those words was right.",
+    "CATEGORY_CLOSURE": "Checks that every row carries exactly one category from the closed set and that the category counts sum to the derived population. It is an internal consistency pin on the table's SHAPE, not independent evidence about the corpus -- the population count it closes against IS derived, the split across categories is the judgment being recorded.",
+    "ZERO_YIELD_ARM_ACTUALLY_BIT": "** THE HAZARD THIS GATE EXISTS FOR: a zero-yield result that is zero because the dispositioned arm DID NOTHING. If a stub or condition_id in the table failed to match, no re-type would be applied, the two arms would be the same compile, and the delta would be 0 -- a number that looks like the finding and is actually a no-op. So this gate requires (a) that exactly as many re-types and drops were APPLIED to spec copies as the table declares, and (b) that the mutation BIT: strictly fewer non-binding conditions in the dispositioned arm than in the baseline. It proves the zero is a MEASURED zero; it does not prove any disposition is right, and it says nothing about whether zero is the right answer -- only that the arm was capable of returning a different one.",
+    "EVERY_CONDITION_HAS_A_BINDING": "Checks the binder emitted a binding row for every taught condition in both arms, so a missing binding cannot be silently read as 'does not bind' and quietly inflate the not-binding count. It says nothing about whether a binding is correct."
+  },
+  "rows": [
+    {
+      "spec_id": "0RBexa9JpIg__s0",
+      "condition_id": "UNTYPED:you-need-to-identify-the-direction-of-th#0",
+      "taught_text": "you need to identify the direction of the trend and can do this by simply using a 4 hour time frame and a trend line",
+      "taught_text_sha16": "f541bd0368b0a9a9",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_BIAS",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "The taught object is DIRECTIONAL BIAS READ ON A HIGHER FRAME -- 'the direction of the trend' established on a 4-hour chart. That is verbatim the WAIT_BIAS semantic ('which way, on the higher frame'), and bias_engine.classify_institutional_regime is the family's declared primitive. The classifier scored NOTHING (unmatched) because its WAIT_BIAS stems require the literal forms 'trend is' / 'higher time frame', and this trader said 'direction of the trend' / '4 hour time frame'. The miss is vocabulary coverage, not an absent concept.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": "bias_engine.classify_institutional_regime",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "ExB66jcyKxg__s0",
+      "condition_id": "UNTYPED:whenever-the-candle-crosses-the-moving-a#0",
+      "taught_text": "whenever the candle crosses the moving average line and closes with a strong candle, you take the trade",
+      "taught_text_sha16": "1329d5605e545549",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "MOVING-AVERAGE CROSS: a price/indicator relational primitive -- 'has the candle crossed the MA line, and in which direction'. Requires an MA series (period + type taught or defaulted) and a cross detector. No FAMILY_META family owns an indicator series: structure_engine reads structure, bias_engine reads regime, entry_quality reads confluence presence. There is no MA anywhere in the declared family universe.",
+      "evidence_for_the_call": "Classifier scored zero on all seven keyword families, which is the correct answer -- 'moving average' is not a stem in ANY of them. Typing it WAIT_CONFIRMATION on the trailing 'closes with a strong candle' would keep the confirmation half and DISCARD the cross, which is the actual trigger.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- compound row. It teaches an MA cross AND a strong-close confirmation. It is filed as new-family demand because the cross is the trigger and has no home; the confirmation half would fit an existing family and is the part a hasty typing would seize on.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "LD1FEbwXU4o__s0",
+      "condition_id": "UNTYPED:drop-to-the-5minut-or-the-1-minute-chart#2",
+      "taught_text": "Drop to the 5minut or the 1 minute chart if you're feeling a little bit risky",
+      "taught_text_sha16": "e636db757b69b71c",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "DROPPED_NOT_A_TAUGHT_TRADE_CONDITION",
+      "target_family": null,
+      "drop_disposition": "AN EXECUTION-TIMEFRAME DECLARATION, NOT A TRADE CONDITION. 'Drop to the 5 minute or the 1 minute chart' tells the reader WHICH CHART TO COMPILE ON. It is spec METADATA (the execution timeframe field), and nothing about it is a state of the market that could be true or false at a given bar -- so there is no predicate for any primitive to evaluate. Typing it to ANY family would manufacture a gate out of a setting. It is additionally OPTIONAL in the trader's own words ('if you're feeling a little bit risky'), which no condition slot can express. Correct home: the spec's timeframe metadata; correct disposition HERE: not a taught trade condition, remove from the load-bearing denominator.",
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": null,
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "LD1FEbwXU4o__s0",
+      "condition_id": "UNTYPED:look-for-price-rapidly-approaching-a-zon#3",
+      "taught_text": "Look for price rapidly approaching a zone. You want to see volume spike, a quick tap, and a rejection",
+      "taught_text_sha16": "aa9c2c858b8c70ba",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "ambiguous",
+      "why_the_producer_emitted_UNTYPED": "ambiguous -- two or more families TIED on evidence and the classifier refused to adjudicate",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_CONFIRMATION",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "Four families tied at 1 (zone / tap / rejection / volume) -- a genuinely COMPOUND row teaching a sequence: approach a zone, volume spike, quick tap, rejection. ADJUDICATION: the DECISIVE event, the one whose absence cancels the trade, is the REJECTION printed at the zone; the zone and the tap are its location and its precondition. candle_confirmation_check is therefore the primitive that keeps the most teaching.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED. A 4-way tie on a compound row. No single family can carry all four clauses; typing it WAIT_CONFIRMATION keeps the rejection and LOSES the volume-spike and the zone identity. This row is real evidence for compound representation (sibling conditions), which is a compiler capability that does not exist. A grader could defensibly call this WAIT_STRUCTURE or WAIT_RETEST instead.",
+      "target_family_declared_primitive": "spec_condition_compiler.candle_confirmation_check",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "LD1FEbwXU4o__s0",
+      "condition_id": "UNTYPED:you-can-identify-areas-that-have-not-bee#1",
+      "taught_text": "you can identify areas that have not been tapped yet where the liquidity should be living",
+      "taught_text_sha16": "108a370944c65bbc",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "ambiguous",
+      "why_the_producer_emitted_UNTYPED": "ambiguous -- two or more families TIED on evidence and the classifier refused to adjudicate",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_STRUCTURE",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "The taught object is an UNTAPPED LIQUIDITY AREA -- a structural feature located on the chart. 'liquidity' is an explicitly declared WAIT_STRUCTURE stem. The classifier tied 1-1 (WAIT_RETEST 'tap' vs WAIT_STRUCTURE 'liquidity') and honestly refused. ADJUDICATION: the 'tap' here is NEGATED -- 'areas that have NOT been tapped yet'. It is a property distinguishing which level to mark, not a retest event to wait for, so the retest evidence is spurious and WAIT_STRUCTURE wins outright.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": "structure_engine.compute_structure_state",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "YGdFksLavKE__s0",
+      "condition_id": "UNTYPED:firstly-the-candlestick-will-need-to-be#2",
+      "taught_text": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend.",
+      "taught_text_sha16": "f2675adf75bcb311",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_BIAS",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "The trader states the PURPOSE in the same breath as the observable: a green candlestick 'shows us that we are currently in an uptrend'. The taught object is therefore a DIRECTIONAL REGIME READ, which is the WAIT_BIAS semantic; the candle colour is the trader's proxy for it. Classifier scored nothing -- 'uptrend' is not a WAIT_BIAS stem ('trend is' / 'overall trend' are).",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": "bias_engine.classify_institutional_regime",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "YGdFksLavKE__s0",
+      "condition_id": "UNTYPED:firstly-the-candlesticks-will-need-to-be#5",
+      "taught_text": "firstly the candlesticks will need to be red, which indicates that the trend of the market is currently bearish.",
+      "taught_text_sha16": "030bc83beb831c64",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_BIAS",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "The SHORT-side mirror of the row above, and stated even more explicitly: red candlesticks 'indicate that the trend of the market is currently bearish'. Taught object = directional regime. Same miss for the same reason ('the trend of the market' is not the stem 'trend is').",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": "bias_engine.classify_institutional_regime",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "YGdFksLavKE__s0",
+      "condition_id": "UNTYPED:for-a-sell-position-we-will-need-for-the#1",
+      "taught_text": "For a sell position we will need for the price to break below the lower V-wap band.",
+      "taught_text_sha16": "ce6cae6160161499",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "VWAP BAND BREAK, short side -- the exact mirror of the row above: price breaking below the LOWER VWAP band. Same absent primitive.",
+      "evidence_for_the_call": "Scored zero on every family; same absent VWAP series.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "YGdFksLavKE__s0",
+      "condition_id": "UNTYPED:lastly-we-will-need-to-make-sure-that-th#7",
+      "taught_text": "Lastly, we will need to make sure that the point of control line is within the V-wap bands. As you can see all of the conditions have been met so let's enter into the position.",
+      "taught_text_sha16": "9f0897790cee248a",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "VOLUME-PROFILE POINT OF CONTROL inside the VWAP bands -- the short-side restatement of the row above. Same two absent primitives.",
+      "evidence_for_the_call": "Scored zero. Trailing 'so let's enter into the position' is again a spine-completion clause riding on the real test.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED for the same compound reason as its long-side twin.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "YGdFksLavKE__s0",
+      "condition_id": "UNTYPED:secondly-the-price-must-break-above-the#3",
+      "taught_text": "Secondly, the price must break above the upper V-wap band. This shows us that the price might break out which would cause an even bigger increase in price.",
+      "taught_text_sha16": "2c7111f688aba7eb",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "VWAP BAND BREAK -- the same upper-band break, restated by the trader as step 2 of the enumerated checklist. Same absent primitive.",
+      "evidence_for_the_call": "Scored zero. The trailing sentence is rationale ('which would cause an even bigger increase in price'), not a second condition.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "YGdFksLavKE__s0",
+      "condition_id": "UNTYPED:thirdly-the-point-of-control-must-be-wit#4",
+      "taught_text": "Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position.",
+      "taught_text_sha16": "f1ca0b852bd302f0",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "VOLUME-PROFILE POINT OF CONTROL, plus a CONTAINMENT test of that POC against the VWAP bands. Needs a volume-at-price distribution (POC = the price with maximum traded volume) AND the VWAP band series. Two absent primitives, neither in FAMILY_META. FILTER's confluence_factor_presence is a keyword-presence check, not a volume-profile computation, so it is not a home.",
+      "evidence_for_the_call": "Scored zero. The row's closing clause ('when all of these conditions have been met we will enter') is a spine-completion statement, which would tempt an ENTER typing -- but the load-bearing content is the POC-inside-bands test, which ENTER's trigger cannot evaluate.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- compound row carrying both a new-family test and an ENTER clause. Filed as new-family demand because the test is what gates the entry.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "YGdFksLavKE__s0",
+      "condition_id": "UNTYPED:we-will-enter-into-a-buy-position-whenev#0",
+      "taught_text": "We will enter into a buy position whenever the price breaks out above the upper V-wap band.",
+      "taught_text_sha16": "7f651f80815c77d1",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "VWAP BAND BREAK: a VWAP series with standard-deviation bands, plus a 'price closes/breaks beyond the upper band' detector. FAMILY_META has no VWAP primitive at all -- the nearest, structure_engine, computes structural levels from price action, not a volume-weighted mean and its bands.",
+      "evidence_for_the_call": "Scored zero on every family ('v-wap' is not a stem anywhere). The row also names the ENTRY, but the entry is CONDITIONED on the band break -- typing it ENTER would keep 'we buy' and discard the only thing that decides WHEN.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "YqY0OkL5LMI__s0",
+      "condition_id": "UNTYPED:it-gapped-up-a-bit-from-the-previous-day#1",
+      "taught_text": "it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday",
+      "taught_text_sha16": "fff72ce6877fb4c0",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "ambiguous",
+      "why_the_producer_emitted_UNTYPED": "ambiguous -- two or more families TIED on evidence and the classifier refused to adjudicate",
+      "category": "DROPPED_NOT_A_TAUGHT_TRADE_CONDITION",
+      "target_family": null,
+      "drop_disposition": "PURE NARRATION. Past-tense recounting of what one specific instrument did on one specific morning ('it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday'). There is no imperative, no threshold, no rule the reader is told to apply -- the trader is reading the tape aloud to set the scene for the setup taught elsewhere in the same strategy. A narration row is not an unbound condition; it is a row that should never have entered the condition list, so it leaves the denominator rather than joining the honest-gap queue.",
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": null,
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- narration-vs-teaching. The gap and the prior-day high it names ARE structural facts, and a grader who reads 'opened up near Friday's high' as an implied gap-and-go precondition would type it WAIT_STRUCTURE. It is dropped because the trader gives no threshold, no direction and no instruction -- contrast its sibling #2 in the same spec, which is kept as real teaching precisely because it supplies 18.74.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "YqY0OkL5LMI__s0",
+      "condition_id": "UNTYPED:it-was-a-really-solid-setup-for-a-pushba#2",
+      "taught_text": "it was a really solid setup for a pushback into the 20s if it was able to start breaking out above that Friday high of day which was 18.74",
+      "taught_text_sha16": "a995895a8d7df6b5",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_STRUCTURE",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "Inside a past-tense wrapper sits a concrete, fully specified level rule: 'if it was able to start breaking out above that Friday high of day which was 18.74'. A named prior-session high WITH ITS PRICE is a structural level and a break of it is a structure event -- structure_engine is the primitive that keeps that teaching. The classifier scored zero because the stem is 'high of the' and the trader said 'high of day'.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- the level-vs-narration boundary. The clause is delivered as commentary on a chart already drawn ('it WAS a really solid setup'), so a grader could route it to the DROPPED narration bucket alongside its sibling #1 in the same spec. It is kept as real teaching because, unlike that sibling, it names a threshold and a direction that a compiler could act on.",
+      "target_family_declared_primitive": "structure_engine.compute_structure_state",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "YqY0OkL5LMI__s0",
+      "condition_id": "UNTYPED:this-had-a-double-inside-bar-set-up-on-t#0",
+      "taught_text": "this had a double inside bar set up on the daily chart",
+      "taught_text_sha16": "d6f523b47869f598",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "MULTI-BAR CANDLESTICK PATTERN DETECTOR -- specifically INSIDE BAR and its n-fold form (a bar whose range is contained by its predecessor's, twice consecutively), evaluated on a declared higher timeframe (daily). WAIT_CONFIRMATION's candle_confirmation_check evaluates a SINGLE confirming/rejecting candle at a level; it has no notion of a multi-bar containment pattern and no level to anchor to here.",
+      "evidence_for_the_call": "Scored zero on every family ('inside bar' is not a stem). This is the strategy's setup condition, not decoration -- the whole trade is named after it.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- narration-vs-demand. Phrased in the past tense about a specific chart ('THIS HAD a double inside bar'), so it shares surface form with the dropped narration row in the same spec. It is kept as a real demand because it names a REPEATABLE, mechanically detectable pattern with a stated timeframe, which narration does not.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "dENM6gt8ZRg__s0",
+      "condition_id": "UNTYPED:after-the-breakout-we-wait-for-a-retest#2",
+      "taught_text": "After the breakout, we wait for a retest. A retest is valid if the candle opened outside the range, the wick dipped inside, and the close is back outside.",
+      "taught_text_sha16": "e6daac0187d2bdf1",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "ambiguous",
+      "why_the_producer_emitted_UNTYPED": "ambiguous -- two or more families TIED on evidence and the classifier refused to adjudicate",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_RETEST",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "The trader names the object with the family's own word and then DEFINES it ('a retest is valid if the candle opened outside the range, the wick dipped inside, and the close is back outside'). retest_touch_check is the declared primitive. The classifier tied 4-way (retest / range / wick / open) purely because the trader's DEFINITION of the retest drags in three other families' stems -- the definition of a term should not outvote the term.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": "spec_condition_compiler.retest_touch_check",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "dENM6gt8ZRg__s0",
+      "condition_id": "UNTYPED:entry-is-on-the-open-of-the-next-candle#4",
+      "taught_text": "Entry is on the open of the next candle after the retest.",
+      "taught_text_sha16": "281cf0407877af01",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "ambiguous",
+      "why_the_producer_emitted_UNTYPED": "ambiguous -- two or more families TIED on evidence and the classifier refused to adjudicate",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "ENTER",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "This is the ENTRY ITSELF, stated as the completion of the preceding spine ('entry is on the open of the next candle after the retest'), which is exactly what ENTER's spine_completion_trigger primitive represents. The classifier tied 1-1 between WAIT_SESSION ('open') and WAIT_RETEST ('retest'); BOTH are spurious -- 'open' here is a CANDLE open, not a session open, and the retest is the antecedent this entry follows, not the entry.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED FOR A REASON THAT CUTS AGAINST THIS ROW'S OWN DISPOSITION: ENTER is the ONE target family in this table that binds NON-approximated (see counterfactual_bind_probe). Its primitive fires on spine completion and does NOT carry the taught 'open of the NEXT candle' timing -- so a re-type here would produce a row that looks like a GENUINE bind while having discarded the bar-open semantics. That is a worse hollow bind than the approximated kind, because nothing downstream flags it. Recorded, not acted on.",
+      "target_family_declared_primitive": "spine_completion_trigger",
+      "would_this_retype_BIND": true
+    },
+    {
+      "spec_id": "dENM6gt8ZRg__s0",
+      "condition_id": "UNTYPED:then-we-wait-for-a-breakout-a-breakout-i#1",
+      "taught_text": "Then we wait for a breakout. A breakout is only valid if the candle body closes completely outside the range. Not a wick. Not a touch. A full close.",
+      "taught_text_sha16": "7574ae004de0727a",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "ambiguous",
+      "why_the_producer_emitted_UNTYPED": "ambiguous -- two or more families TIED on evidence and the classifier refused to adjudicate",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_STRUCTURE",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "A RANGE BREAK with an explicit validity rule ('the candle body closes completely outside the range. Not a wick. Not a touch.'). 'range' is a declared WAIT_STRUCTURE stem and the taught object is the range boundary being taken out. The classifier tied 1-1 against WAIT_CONFIRMATION on 'wick'. ADJUDICATION: 'not a wick' is an EXCLUSION clause -- the trader is ruling a wick OUT, so the wick is not the taught object at all, and WAIT_STRUCTURE wins outright.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": "structure_engine.compute_structure_state",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "hcHuDfxdywI__s0",
+      "condition_id": "UNTYPED:the-change-of-character-acted-as-an-entr#4",
+      "taught_text": "the change of character acted as an entry trigger rather than a reversal signal",
+      "taught_text_sha16": "d21743eaf8317084",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_STRUCTURE",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "'Change of character' (CHoCH) is a named MARKET-STRUCTURE event, sibling to break-of-structure, and structure_engine.compute_structure_state is the declared primitive for that class. Classifier scored zero: CHoCH is absent from the WAIT_STRUCTURE stem list even though 'break of structure' and 'market structure' are present -- a coverage hole in one vocabulary, not a missing concept.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- the structure-vs-narration boundary. The sentence is phrased as retrospective interpretation ('ACTED AS an entry trigger RATHER THAN a reversal signal'), i.e. the trader explaining a past read. It is kept as real teaching because the distinction it draws (CHoCH as trigger, not as reversal) is a rule the trader applies, but a grader could route it to narration.",
+      "target_family_declared_primitive": "structure_engine.compute_structure_state",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "pKzXxB9Blts__s0",
+      "condition_id": "UNTYPED:that-means-short-from-here-short-from-he#5",
+      "taught_text": "that means short from here short from here",
+      "taught_text_sha16": "865c668f6cf0ea7a",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_DEIXIS",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": "'short from HERE' -- the entry price/level, which is the cursor position on the trader's chart. Also 'THAT means' -- the antecedent condition that licenses the short. Both referents are visual; the sentence names no level, no instrument state, and no threshold.",
+      "demanded_primitive": null,
+      "evidence_for_the_call": "Scored zero on every family. Note this row is an ENTRY instruction, so it is adjacent to ENTER -- but ENTER's spine_completion_trigger would fire on spine completion and silently invent the 'here' the trader never stated. Left UNTYPED: an unresolved entry level is a missing referent, not a missing family.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "pKzXxB9Blts__s0",
+      "condition_id": "UNTYPED:there-s-a-second-test-right-here-and-tha#7",
+      "taught_text": "there's a second test right here, and that means another short from this place",
+      "taught_text_sha16": "6310d0a456cbd499",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_DEIXIS",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": "'a second test RIGHT HERE' and 'another short from THIS PLACE' -- both the tested level and the entry location are cursor references. A 'second test' also presupposes a FIRST test that the text never identifies, so the row additionally needs the ordinal antecedent.",
+      "demanded_primitive": null,
+      "evidence_for_the_call": "Scored zero. The word 'test' is close to the WAIT_RETEST semantic, and a reader could be tempted to type it -- but retest_touch_check needs a LEVEL to touch, and this row's level exists only on screen. Typing it would produce a retest against a level chosen by the binder, not by the trader.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- deixis-vs-retest. This is the nearest-miss row in the table: the taught EVENT (a second test of a level) is squarely WAIT_RETEST, and only the missing referent keeps it out. If the deixis lane resolves the level, this row becomes a WAIT_RETEST candidate immediately.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "pKzXxB9Blts__s0",
+      "condition_id": "UNTYPED:this-needs-to-be-followed-by-a-trend-act#1",
+      "taught_text": "this needs to be followed by a trend activity, a strong trend activity like this one",
+      "taught_text_sha16": "2925095f5c2c8472",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_DEIXIS",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": "TWO unresolved pointers. (a) 'THIS needs to be followed by...' -- the antecedent setup, which exists only as the chart region the trader was pointing at. (b) 'a strong trend activity LIKE THIS ONE' -- the quantitative threshold for 'strong' is delegated entirely to an on-screen exemplar. Resolving this row needs the visual antecedent AND a measurable definition of trend strength; the prose supplies neither.",
+      "demanded_primitive": null,
+      "evidence_for_the_call": "Classifier scored zero on every family, correctly: there is no taught OBJECT in the text at all, only a relation between two things it does not name. Left UNTYPED on purpose -- pending the deixis-resolution lane, not pending a vocabulary fix.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "pKzXxB9Blts__s0",
+      "condition_id": "UNTYPED:you-want-to-anchor-the-view-up-to-that-c#2",
+      "taught_text": "you want to anchor the view up to that candle, to the last candle of the rotation, which is the first candle of the sell-off, usually",
+      "taught_text_sha16": "52f350db36f37e2e",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_NEW_FAMILY_DEMAND",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": "ANCHORED INDICATOR PLACEMENT -- an anchor-bar selector ('the last candle of the rotation, the first candle of the sell-off') feeding an anchored series (anchored VWAP / anchored profile). Two things absent from FAMILY_META: a rotation/sell-off segmenter to find the anchor bar, and any anchored series to attach to it. No declared primitive takes an anchor argument at all.",
+      "evidence_for_the_call": "Scored zero on every family. This is an INSTRUMENT-SETUP instruction that is nevertheless load-bearing -- every later condition in this strategy is read off the anchored view -- so it is not droppable as metadata the way an execution-timeframe declaration is.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- new-family-demand vs deixis. The row contains the pointer 'THAT candle', which is deictic; it is filed as new-family demand because the trader IMMEDIATELY self-resolves the pointer in the same sentence ('to the last candle of the rotation, which is the first candle of the sell-off'), so the referent is stated in prose -- what is missing is the primitive that could find it, not the referent.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "st5e-YJRfKc__s1",
+      "condition_id": "UNTYPED:in-this-case-price-pulled-back#1",
+      "taught_text": "in this case price pulled back",
+      "taught_text_sha16": "ca105c64cfbf494a",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "DISPOSITIONED_TYPED",
+      "target_family": "WAIT_RETEST",
+      "drop_disposition": null,
+      "referent_required": null,
+      "demanded_primitive": null,
+      "evidence_for_the_call": "The taught object is a PULLBACK -- price returning toward a prior level after the breakout named in the preceding condition. 'pull back' IS a declared WAIT_RETEST stem; it scored zero only because the trader inflected it as 'pulled back', and the stem matcher's inflection tail cannot reach an affix that lands INSIDE a two-token stem.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- the deixis boundary. The clause opens 'in this case', a pointer at an on-screen example. It is dispositioned as real teaching rather than deixis because the pointer scopes the EXAMPLE while the taught object ('price pulled back') is fully named in the text; contrast the deixis rows, where the pointer IS the object.",
+      "target_family_declared_primitive": "spec_condition_compiler.retest_touch_check",
+      "would_this_retype_BIND": false
+    },
+    {
+      "spec_id": "st5e-YJRfKc__s1",
+      "condition_id": "UNTYPED:the-initial-breakout-took-place#0",
+      "taught_text": "the initial breakout took place",
+      "taught_text_sha16": "6c3fce398113df52",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_DEIXIS",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": "'THE initial breakout' -- a definite article with no antecedent in the condition text. What was broken (which range, which level, on which timeframe) is never stated; it is the structure the trader had already drawn on the chart. Resolving needs the broken level's identity.",
+      "demanded_primitive": null,
+      "evidence_for_the_call": "Scored zero on every family. The row cannot be typed WAIT_STRUCTURE the way dENM6gt8ZRg's breakout row can, because that row DEFINES its range and its validity rule while this one supplies five words of past-tense reference.",
+      "boundary_call_flagged": true,
+      "boundary_call_note": "FLAGGED -- deixis-vs-narration. 'took place' is past tense and could be read as narration and dropped. It is kept in the UNTYPED queue rather than dropped because it is the first condition of the spec's spine and the two conditions after it depend on it -- it is doing structural work in the sequence, which narration does not.",
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    },
+    {
+      "spec_id": "st5e-YJRfKc__s1",
+      "condition_id": "UNTYPED:then-we-re-looking-for-an-entry-back-tow#2",
+      "taught_text": "then we're looking for an entry back towards the long mark",
+      "taught_text_sha16": "20ca9c59708f4967",
+      "producer_emitted_type": "UNTYPED",
+      "producer_type_confidence": "unmatched",
+      "why_the_producer_emitted_UNTYPED": "unmatched -- no family produced ANY keyword evidence",
+      "category": "LEFT_UNTYPED_DEIXIS",
+      "target_family": null,
+      "drop_disposition": null,
+      "referent_required": "'THE LONG MARK' -- a named object that is never defined anywhere in the taught text. It is the trader's own on-chart annotation. Resolving needs the price (or the rule that derives it) that the long mark denotes.",
+      "demanded_primitive": null,
+      "evidence_for_the_call": "Scored zero. Like the 'short from here' row this is an ENTRY instruction whose entry LOCATION is the unresolved part, so ENTER would bind a trigger with no location. Left UNTYPED pending the referent.",
+      "boundary_call_flagged": false,
+      "boundary_call_note": null,
+      "target_family_declared_primitive": null,
+      "would_this_retype_BIND": null
+    }
+  ]
+}
