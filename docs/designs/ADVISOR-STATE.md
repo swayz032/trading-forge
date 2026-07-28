@@ -177,6 +177,38 @@ which is not the lane that will run the backtest.**
 · "the W7nln phantom does not exist" (real in production) · "the artifact is
 stale = FALSE" (it is UNSCOPED — right conclusion, wrong reason).
 
+## ★★★ TRACE ANSWER LANDED (AR-384, desk-verified) — WORSE THAN "IGNORES"
+**[MEASURED HERE, TREE `runtime-production`, `spec_condition_compiler.py:616-620`]**
+```python
+if not b.bindable:
+    # Permitted-through unbound spine condition (ratio allowed it) -
+    # pass-through, never gates. Honest default per module docstring.
+    per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
+    continue
+```
+★★★ **An unbindable rule is not dropped — it is converted into ALWAYS TRUE on
+every bar.** A rule meaning *"only trade during X"* becomes *"trade always."*
+That is GPT's hypothesis #1 (always-true filter), confirmed in code, and it is
+the literal form of the invariant's violation: **"cannot implement this rule"
+became "run without this rule."**
+
+**THE PARTIAL GUARD — real, but the WRONG SHAPE.**
+[MEASURED HERE] `spec_family_bindings.py:285` `MIN_SPINE_BOUND_RATIO = 0.5` and
+`:705` `if spine and spine_ratio < MIN_SPINE_BOUND_RATIO: compiled = False`.
+★★ So a spec whose spine is **mostly** unbindable IS refused. **But it is a
+CARDINALITY test: 9-of-10 spine conditions binding = ratio 0.9 = compiled, while
+the 10th — the mandatory `overnight` session rule — silently becomes always-true.**
+★★★ **This desk's own law names the defect: when a population may grow but must
+not shrink, assert MEMBERSHIP, not cardinality. A ratio cannot express "THIS
+condition is mandatory," which is exactly what a session constraint is.**
+★ **[UNMEASURED]** whether each of the 27 loaded strategies passes the 0.5 ratio
+— but the gate's SHAPE already proves it cannot catch the single-mandatory case.
+
+**PRE-REGISTRATION FIRES (R-419):** the consumer does not merely ignore
+unbindable rules, it fabricates a passing value -> **TWO-LOCATION FIX IS
+SELECTED: resolver correction + fail-closed backtest preflight.** Expected
+outcome, not a scope failure. **Ruling HELD pending the external second opinion.**
+
 ## ★★★ PRE-REGISTERED — THE TRACE'S ANSWER ALREADY SELECTS THE PORT'S SCOPE (R-419)
 Written BEFORE AR-383's finding landed, so it cannot be argued either way:
 - **preflight ALREADY refuses mandatory unbindable rules** -> the 5 resolver
