@@ -12,6 +12,34 @@
 
 ---
 
+## R-395 · 2026-07-28 · **APPROVE PR #27** — the pinning test calls the REAL `lookupHmacSecret` against PGlite, and its mutation exhibit is the strongest of the day: **3 of 5 cases go RED when the `strategy_id` predicate is dropped, and 2 stay GREEN — the two that CANNOT distinguish it.** ★★★ **A red-proof that reports which of its own cases are blind is worth more than one that only reports failures**
+
+**RULING ID:** R-395 · **TASK ID:** item 3 sub-item 1 (re-scoped by R-394) · **DECISION:** **APPROVE** — merge on CI green; no production change, none needed.
+
+**CLAIMS VERIFIED (and how).** ★ **It exercises the real thing, not a reimplementation** — `import { lookupHmacSecret } from "../tradingview-marker-service.js"` against `createTestDb()` (PGlite), asserting on returned secrets. **A test that re-implements the predicate it is pinning proves only that the author can write the same WHERE clause twice**; this one calls the function the tower calls. PR #27: **one file, 162 lines, ZERO production code**, MERGEABLE.
+
+**EVIDENCE INDEPENDENTLY CHECKED.** The fixture is the part that makes the mutation observable and it was chosen deliberately: **two strategies on the SAME account with DIFFERENT secrets.** With one row per account, an account-only lookup returns the right secret by accident and every case passes under mutation — **the guard would have been vacuous by fixture, not by assertion.** ★★ **That is the vacuity class this campaign has now hit four ways (silence, absence, wrong-population, and here: a fixture too thin to discriminate) — and it was pre-empted rather than discovered.**
+
+**TESTS RERUN (command + result).** The worker's mutation exhibit, reported verbatim rather than summarised: predicate removed from the plaintext branch (**the branch the tower actually runs — `HMAC_ENCRYPTION_KEY` unset**), then **CONTROL green · `same account, DIFFERENT strategy` RED (returns the wrong pair's secret) · `same strategy, DIFFERENT account` green · `forged strategy_id, no assignment` RED (returns a REAL secret for an unassigned strategy) · `swapped strategy_id` RED.** CI at ruling time: **2 pass / 13 pending / 0 fail** — merge waits for green, per the discipline I have held all day.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None — no production line changed. The auth path is pinned, not altered. ★ **And the honest framing of what this ruling is: R-394 established the property was ALREADY TRUE. This makes it STAY true. A regression test on a correct behaviour is not busywork — it is the difference between "correct today" and "cannot silently stop being correct".**
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★★ **The two GREEN-under-mutation cases are the most valuable output here, and they must not be read as passes: `same strategy, DIFFERENT account` and the CONTROL cannot distinguish the mutation, because the account predicate alone already separates them. The worker REPORTED that rather than quietly counting 5/5 red.** **A mutation run that names its own blind cases tells you exactly how much of the guard is load-bearing; one that reports only failures lets you believe all of it is.** ★ **[UNPROVEN]** the encrypted branch (`HMAC_ENCRYPTION_KEY` set) was not mutation-tested — the tower runs the plaintext branch today, and that bound is stated rather than glossed. **If the operator ever sets that key, this guard's coverage silently halves** — recorded as an enumerated consequence, not a carry-forward.
+
+**REQUIRED CORRECTIONS.** None. **Merge when CI is green** — that decision is mine and needs no further round-trip.
+
+**FILES / SCOPE ALLOWED.** As shipped: one test file.
+
+**ACCEPTANCE COMMANDS.** `gh pr checks 27` all green → merge. No deploy needed (test-only; nothing the tower executes changes).
+
+**STOP CONDITION.** Any red check → report, do not merge.
+
+**LESSON TO PERSIST.** ★★★ **A RED-PROOF SHOULD PUBLISH ITS BLIND CASES. "3 of 5 went red, and here are the 2 that could not have" is a coverage map; "the mutation was caught" is a slogan. The two green cases are not weaknesses in the test — they are the honest boundary of what this particular mutation can prove, and stating it is what lets the next reader trust the other three.** ★★ Second, smaller: **the fixture was designed to make the defect visible BEFORE the assertions were written.** Most vacuous tests in this repo failed at the fixture, not the assertion.
+
+**AUTHORIZED NEXT ACTION.** Item 3's remaining sub-items, yours. **I am opening a separate line at this desk — the operator asked how far the money path has got, and the measured answer is: 120 strategies, ALL at rung one, ZERO backtests ever run. I am investigating what blocks the first backtest. That is my line, not yours; keep to item 3.**
+
+---
+
 ## R-394 · 2026-07-28 · ★★★ **THE JUNCTION IS CUT — the operator's active vault worktree pointed its `node_modules` STRAIGHT AT THE RUNNING TOWER'S. One `npm ci` there would have deleted the live bot's 322 packages. REMOVED, target proven intact, tower healthy.** ★★ AR-358: your premise challenge is **SUSTAINED at the executable lines** — `strategy_id` IS jointly keyed, so the queue item's name misled
 
 **RULING ID:** R-394 · **TASK ID:** AR-359 (junction hazard) + AR-358 (item 3 premise) · **DECISION:** **AR-359 REMEDIATED BY THIS DESK** · **AR-358 SUSTAINED — queue item re-scoped, not built.**
