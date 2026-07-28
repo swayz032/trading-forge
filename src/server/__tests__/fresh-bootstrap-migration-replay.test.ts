@@ -63,9 +63,10 @@
  * `toApply` on the ACTUAL prod DB, where the objects it creates already exist. This is the ONLY
  * way to exercise class 2 (a single fresh pass can never observe a missing IF NOT EXISTS) and is
  * the precondition that was verified BEFORE regenerating migrations-hash-manifest.json for the
- * 23 files this pass edited. The failures pinned in PASS2_KNOWN_NONIDEMPOTENT are the pre-0066
- * carry-forward boundary (documented above) — an assertion (not a skip) so a NEW non-idempotent
- * regression anywhere in the 201-file journal fails this test loudly.
+ * 23 files this pass edited. The failures pinned in PASS2_KNOWN_NONIDEMPOTENT are TWO classes —
+ * the pre-0066 carry-forward boundary AND "superseded by design" (see the register's own note at
+ * its declaration; do not re-derive the reason from this line) — an assertion (not a skip) so a
+ * NEW non-idempotent regression anywhere in the 201-file journal fails this test loudly.
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
@@ -251,15 +252,21 @@ describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
 
       expect(
         unexpected,
-        `UNEXPECTED non-idempotent migration(s) — a file outside the documented pre-0066 carry-forward ` +
-          `boundary is NOT safe to re-apply. This means editing it (even to fix an unrelated bug) would ` +
-          `crash-loop prod once its hash changes. Details: ${JSON.stringify(unexpected, null, 2)}`,
+        `UNEXPECTED non-idempotent migration(s) — a file outside the pinned register is NOT safe to ` +
+          `re-apply. This means editing it (even to fix an unrelated bug) would crash-loop prod once its ` +
+          `hash changes. Before adding it to PASS2_KNOWN_NONIDEMPOTENT, read that register's note and ` +
+          `state WHICH class it belongs to: (1) pre-0066 bare-create carry-forward, or (2) superseded ` +
+          `by design. If it is neither, it is a REGRESSION and the migration is what needs fixing, not ` +
+          `the list. Details: ${JSON.stringify(unexpected, null, 2)}`,
       ).toEqual([]);
       expect(
         missingExpected,
-        `Pinned pre-0066 carry-forward migration(s) unexpectedly became idempotent-safe — great news, ` +
-          `but remove them from PASS2_KNOWN_NONIDEMPOTENT (and consider regenerating ` +
-          `migrations-hash-manifest.json if you intentionally fixed them): ${missingExpected.join(", ")}`,
+        `Pinned migration(s) unexpectedly became idempotent-safe — remove them from ` +
+          `PASS2_KNOWN_NONIDEMPOTENT (and consider regenerating migrations-hash-manifest.json if you ` +
+          `intentionally fixed them). NOTE THE TWO CLASSES: for a class-(1) pre-0066 entry this is good ` +
+          `news. For a class-(2) "superseded by design" entry it is NOT — it means the LATER constraint ` +
+          `that was supposed to reject this migration has stopped rejecting it, so check that constraint ` +
+          `still exists before deleting the line: ${missingExpected.join(", ")}`,
       ).toEqual([]);
     },
     120_000,
