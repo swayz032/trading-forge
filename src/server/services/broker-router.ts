@@ -21,13 +21,14 @@
  */
 
 import { eq, desc } from "drizzle-orm";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
 import { auditLog, brokerAccounts, productionTrades, strategies, complianceRulesets } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { loadBrokerCredentials } from "../lib/credential-loader.js";
+import { isLiveExecutionConfigured } from "../lib/execution-mode.js";
 import { submitWebhookOrder, buildDeterministicIdempotencyKey } from "../integrations/traderspost/client.js";
 import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
@@ -141,7 +142,8 @@ CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
 //   • HTTP 5xx / timeout / network error → probe_failed (don't emit warning)
 //
 // No new scheduler cron is added — probe fires:
-//   (a) Once at boot (via setImmediate after module load) — primary signal.
+//   (a) Once at boot via startBootProbe(), called explicitly from index.ts —
+//       NOT at module load (R-365: import must never schedule broker contact).
 //   (b) Lazily inside routeOrder() for the traderspost path — when the per-account
 //       probe result is >4h old, a non-blocking async re-probe is fired. The
 //       in-flight probe doesn't delay the current order; the NEXT order sees
@@ -262,10 +264,68 @@ async function probeSingleTradersPostKey(
 }
 
 /**
+ * Opt-in flag for the credential probe. Default OFF (exact string "true", the
+ * same convention as SERVER_MEDIATED_EXECUTION_ENABLED).
+ */
+export function isKeyProbeEnabled(): boolean {
+  return process.env.BROKER_KEY_PROBE_ENABLED === "true";
+}
+
+/**
+ * 2026-07-28 (R-359): the probe POSTs a real credential to the live TradersPost
+ * endpoint, so it must clear the same stack as every other broker contact.
+ * Before this it cleared NOTHING — no flag, no kill switch, no pipeline check —
+ * and fired from module scope, so any import (test, script, REPL) triggered it.
+ * It was harmless only because no credential resolved: safety by starvation.
+ *
+ * Returns a skip reason, or null to proceed. Every error path returns a reason
+ * (fail-CLOSED): the probe is a diagnostic, so refusing to run it can never be
+ * worse than running it unauthorised.
+ */
+async function checkProbeGate(): Promise<string | null> {
+  if (!isKeyProbeEnabled()) return "probe_disabled";
+  // A credential probe only has a consumer when live routing is configured.
+  if (!isLiveExecutionConfigured()) return "live_execution_not_configured";
+  // Scoped, never bare: a zero-opts call falls back to documented GLOBAL
+  // behaviour and mints its own random correlationId, which is unjoinable.
+  // A boot probe legitimately has no account/firm scope, so it supplies a
+  // correlationId only — guarded by the F-2-scoping regression test.
+  try {
+    if (await killSwitch.isHaltedForProduction({ correlationId: randomUUID() })) {
+      return "production_halt";
+    }
+  } catch (err: unknown) {
+    logger.error({ err }, "broker-router: probe gate kill-switch check threw — fail-CLOSED skip");
+    return "kill_switch_error";
+  }
+  // 2026-07-28 (R-373): try/catch, NOT `.catch()` chaining. This clause claimed
+  // fail-CLOSED like its kill-switch sibling but did not deliver it: `.catch()`
+  // handles a REJECTED PROMISE and cannot handle a SYNCHRONOUS throw, so a sync
+  // failure escaped the gate entirely and was swallowed upstream as a generic
+  // probe failure — no skip reason, no telemetry, indistinguishable from "ran and
+  // found nothing". It also made the gate assume a thenable: chaining `.catch` on
+  // a non-Promise return threw `TypeError: (...).catch is not a function`, which
+  // the probe's outer fail-soft wrapper then hid. Awaiting inside try/catch is
+  // correct for both a Promise and a plain value.
+  try {
+    if (!(await isPipelineActive())) return "pipeline_paused";
+  } catch (err: unknown) {
+    logger.error({ err }, "broker-router: probe gate pipeline check threw — fail-CLOSED skip");
+    return "pipeline_error";
+  }
+  return null;
+}
+
+/**
  * Probe all enabled TradersPost accounts.
- * Called at boot (setImmediate) and on demand. Fail-soft — never throws.
+ * Gated by checkProbeGate() — see BROKER_KEY_PROBE_ENABLED. Fail-soft — never throws.
  */
 export async function probeTradersPostApiKeys(): Promise<void> {
+  const skipReason = await checkProbeGate();
+  if (skipReason) {
+    logger.debug({ skipReason }, "broker-router: A-11: key probe skipped (gated)");
+    return;
+  }
   try {
     const accounts = await db
       .select({ accountId: brokerAccounts.accountId, enabled: brokerAccounts.enabled })
@@ -300,13 +360,30 @@ export async function probeTradersPostApiKeys(): Promise<void> {
   }
 }
 
-// Boot-time probe — fires after module load (setImmediate gives the server
-// time to finish starting before we hit the vault and the TradersPost endpoint).
-setImmediate(() => {
-  void probeTradersPostApiKeys().catch((e: unknown) => {
-    logger.warn({ err: e }, "broker-router: A-11: boot-time key probe failed silently (non-blocking)");
+/**
+ * Start the boot-time credential probe. Call ONCE from the application entry
+ * point — never at module scope.
+ *
+ * 2026-07-28 (R-365): module scope schedules NOTHING, in any flag state. The
+ * original defect was that `setImmediate` at import time made IMPORT equal
+ * INTENT — a unit test, a script, a migration runner or a REPL that merely
+ * imported this module scheduled an outbound POST to the live broker. R-359
+ * put that scheduling behind a flag, which only made the property CONDITIONAL:
+ * with the flag on — the exact state the operator is in the day they want a
+ * probe — import meant intent again for every importer in the system. Safe by
+ * DEFAULT is not safe by DESIGN. An importer now gets an inert module and an
+ * unexported side effect; only an explicit call schedules anything.
+ *
+ * The gate itself is unchanged: checkProbeGate() still decides whether the
+ * probe may contact a broker (flag, live-config, kill switch, pipeline).
+ */
+export function startBootProbe(): void {
+  setImmediate(() => {
+    void probeTradersPostApiKeys().catch((e: unknown) => {
+      logger.warn({ err: e }, "broker-router: A-11: boot-time key probe failed silently (non-blocking)");
+    });
   });
-});
+}
 
 // ─── F-5: killSwitch import verification (module-load time) ───────────────────
 // killSwitch is exported as a named `const killSwitch = new KillSwitch()` from
