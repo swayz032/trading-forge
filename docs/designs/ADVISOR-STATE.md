@@ -177,26 +177,42 @@ which is not the lane that will run the backtest.**
 · "the W7nln phantom does not exist" (real in production) · "the artifact is
 stale = FALSE" (it is UNSCOPED — right conclusion, wrong reason).
 
-## AUTHORIZED NOW (worker, in order)
-1. ~~Trace `compiled_spec`~~ **DONE (AR-381) — answer YES, ARMED.** Desk-verified.
-   **Do not wait on its ruling; it is held pending an external second opinion.
-   CONTINUE TO ITEM 2 — you are not blocked.**
-2. **Structural inventory** of the campaign<->production binding-lane
-   divergence — categories present in one lane and absent in the other, with
-   byte-anchored evidence. Not a line dump.
-3. **corpus_B charter DRAFT** — lead with the `term_definition` schema +
-   precedence chain (explicit trader definition -> trader glossary -> family ->
-   canonical -> unresolved), then the SEVERED-DEFINITION class, then the
-   four-rung fidelity ladder.
-4. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
-   MIGRATIONS (R-403).
+## AUTHORIZED NOW (worker, in order) — REORDERED BY R-418
+1. ★★★ **THE REFUSAL-PORT — surgical migration into `runtime-production`, NOT a
+   merge of the campaign lane.** Port `refused_session_zone` +
+   `REFUSED_SESSION_KEYWORDS` + `session_refusal_reason` + the unflagged refusal
+   block (campaign `spec_family_bindings.py:2549-2560`, `:492-495`), and remove
+   `lunch_blackout`/`overnight` from production's `SESSION_KEYWORDS:275-283`.
+   **Branch off the deploy branch -> PR -> CI -> my merge.**
+   **ACCEPTANCE = the regression matrix, each row RED without the port and GREEN
+   with it, run in the PRODUCTION tree, every line naming its tree:**
+   - `overnight` + no configured interval -> `REFUSE_MISSING_SESSION_CLOCK`
+   - `overnight` explicitly defined 16:00-09:30 -> bind, cross-midnight interval
+   - a configured session (RTH) -> bind normally
+   - recognized session, missing timezone/calendar basis -> refuse / unresolved
+   - unresolved session -> strategy CANNOT enter backtesting
+   Then re-run the 16-spec sweep post-port, reporting BOTH trees with the verb
+   attached (PRINTS / IS). **First observable: the matrix RED against unported
+   production, ~30 min.**
+   ★ **Forbidden in this PR:** merging the campaign lane wholesale · enabling any
+   campaign-only flag · touching the onboarding writer · spec edits · `.env`.
+2. **Trace what the consumer does with a refused/unbound session row** — decides
+   whether a wrong backtest CRASHES or quietly reports a plausible number.
+   [HYPOTHESIS to test, not to assume]: always-true filter · always-false ·
+   default substitution · inconsistent null · silently omitted rule.
+3. **corpus_B charter DRAFT** — `term_definition` schema + precedence chain
+   (explicit trader definition -> trader glossary -> family -> canonical ->
+   unresolved), then the SEVERED-DEFINITION class, then the fidelity ladder.
+4. **Parity check's third leg** — `check-pglite-ddl-parity` reads the MIGRATIONS.
 5. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103`.
 6. **Revival-probe diagnosis** — diagnosis only; repair after I rule.
 
-★★ **STANDING WORKER DUTY (R-414): audit the desk's CONSISTENCY, not just its
-instructions.** The worker found R-412 carrying a rejection built on a premise
-R-413 had already overturned, and filed it as a finding instead of assuming the
-desk had reconciled them.
+★★★ **STOP AND REPORT IMMEDIATELY if `backtests total > 0` before the port lands
+— that is LOADED -> FIRED and it outranks everything.**
+★★ **STANDING (R-414): audit the desk's CONSISTENCY, not just its instructions.**
+★ **RULING CADENCE (operator, 2026-07-28): the desk now takes an external second
+opinion BEFORE writing a ruling.** Findings are verified and parked meanwhile —
+**the worker does NOT wait on a held ruling; it continues down this queue.**
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes · flag
