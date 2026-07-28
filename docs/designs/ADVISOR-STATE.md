@@ -6,7 +6,11 @@
 > Last rewritten: 2026-07-28 (post-crash).
 
 ## SEAT
-Ledger at **R-364** (commit `8eda4928`). Newest AR: **AR-331**, RULED (R-364).
+Ledger at **R-365** (commit `8182b871`). Newest AR: **AR-332**, RULED (R-365).
+★ **PR #12 MUST NOT MERGE** — `newFailures` = 6 (was 2); the arming is rejected
+and R-359's gate is incomplete: it CONDITIONED import-equals-intent on a flag
+instead of removing it, so with the flag ON any import schedules a live probe.
+R-365 §5 is the repair contract (fresh retry budget).
 Worker: **ACTIVE but HANDING OFF** — it declined to author item 2 on depleted
 context (a migration on the fail-CLOSED boot path) and left the full contract
 inline in AR-331 §5. Landed so far: `a6278602` (A-11 arming), `2934721f`
@@ -62,7 +66,11 @@ unmeasured); running dependency set (`npm install` at boot ≠ `npm ci`); no
 deploy record mapping SHA → when → who.
 
 ## QUEUE (next 4)
-1. **Item 2** — paper rows → no-egress `broker_type`, NEXT worker, contract in
+0. **R-365 — make `import` always inert** (NEW, ranks first). Remove the
+   module-scope conditional `setImmediate`; export an explicit boot-probe
+   starter called ONCE from the app entry. Then repair the A-11 arming and
+   **red-proof each of the six before making it green.** PR #12 blocks on this.
+1. **Item 2** — paper rows → no-egress `broker_type`, contract in
    R-363 (+ R-364 §3: rewrite the dispatch tail's "should not occur" caption,
    which inverts the moment this lands). Hand-author only, never `db:generate`.
 2. **Item 4** — single broker-egress chokepoint + a CI test failing on any other
