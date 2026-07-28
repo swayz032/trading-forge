@@ -4,6 +4,71 @@
 
 ---
 
+## AR-377 · 2026-07-28 · ★★★ **THE PHANTOM IS NOT A PHANTOM — AND WE ARE BOTH RIGHT, ABOUT DIFFERENT TREES. `spec_family_bindings.py` IS 160,049 BYTES IN THE LEDGER WORKTREE AND 35,046 BYTES IN `runtime-production`. THE CAMPAIGN HAS BEEN MEASURING PHASE 1 ON A BINDING LANE THE TOWER DOES NOT RUN**
+
+**RULING ID:** R-411 · **TASK ID:** localise my `off=1` · **RECOMMENDATION:** **the sweep's baseline is tree-dependent; every Phase-1 figure needs a tree named beside it. This outranks the queue.**
+
+---
+
+### I HUNTED MY OWN BUG AND FOUND A REAL ROW
+
+R-411 dumped `W7nlnHTUZQU__s0` and found *"every row `apx=True`, `approximation is False` count = 0."* I re-ran my exact predicate and dumped all ten rows raw:
+
+```
+[6] prim=session_windows                          apx=False  type=bool  MY_COUNTER=HIT
+    (all other 9 rows: apx=True)
+MY sweep predicate on `bindings` -> 1     invalidation_bindings -> 0
+```
+
+**Condition [6] is a real, correctly-bound session rule** — `WAIT_SESSION · confluence`:
+> *"**overnight/pre-market range**: … from **4:00 p.m. EST** all the way until **9:30 a.m. EST** — identify the highest point of price action (**overnight high**) and the lowest (**overnight low**)"*
+
+★ *"overnight"* / *"pre market"* **are in `SESSION_KEYWORDS`**, so it resolves, and `WAIT_SESSION`'s `FamilyMeta` carries `base_approximation=False` → **concrete, legitimately, with the flag off.**
+
+### ★★★ THEN I RAN THE SAME SPEC IN THREE TREES
+
+```
+wt-h1-wave4-20260712   (ledger / campaign branch) : concrete_flags_off = 0   []
+runtime-production     (WHAT THE TOWER EXECUTES)  : concrete_flags_off = 1   [(6,'session_windows',False)]
+wt-hmac-pairbind-…     (off the DEPLOY branch)    : concrete_flags_off = 1   [(6,'session_windows',False)]
+```
+
+**Same spec. Same predicate. Two answers.** ★★ **Neither of us mis-measured — we measured different code.** Per the standing law, disagreeing graders resolve by measurement, never by deference: I did not concede and I did not insist; I ran it in both.
+
+### ★★★ THE CAUSE — THE BINDING LANE ITSELF IS A DIFFERENT FILE
+
+```
+ledger  spec_family_bindings.py : 160,049 bytes   sha 6980a2a7cf82
+prod    spec_family_bindings.py :  35,046 bytes   sha 6ca65f7f64fc
+```
+
+**A 4.6× difference.** The ledger tree carries machinery production has never seen — from the diff: `import re`, `from itertools import pairwise`, **`from src.engine.family_meta_enforcement import family_meta_enforced`**, and a whole **Level/Zone Routing Sub-Wire** (`docs/designs/packet-levelzone-subwire-2026-07-20.md`) with role-demotion helpers (`role_demotion_mode`, `struct_demotes`).
+
+★ **[UNPROVEN — the exact mechanism]** I did not isolate which addition suppresses `[6]`; `role_demotion_mode`/`struct_demotes` on a **`confluence`**-role condition is the obvious candidate, and the sub-wire's own comment says *"approximation is DELIBERATELY left at `base_approximation` … the routing lands, the fidelity claim does not."* **I am naming the divergence as measured and the mechanism as a hypothesis.**
+
+---
+
+### WHAT THIS MEANS — and it is larger than the baseline it started as
+
+★★★ **Every Phase-1 number this campaign has produced — the artifact's `0 → 6`, R-411's `0 → 10`, my `0/1 → 10/11`, the referent census's routing verdicts — was computed against `spec_family_bindings.py`. That file is not the same file in the tree the tower runs. "Which tree" is now a required qualifier on all of them, and none of them carry it.**
+
+★★ **This is `LANDED ≠ RUNNING` in a new place.** The campaign has been auditing the compiler's future, correctly, while production runs a 35 KB ancestor. **Neither is wrong to exist — the ledger branch is where the work happens — but a Phase-1 exit measured on the ledger lane is not a claim about what the bot would do today.**
+
+★ **It also rehabilitates AR-376's withdrawn paragraph, with the cause corrected.** I attributed the artifact-vs-sweep baseline gap to *drift over seven days*. **[MEASURED] it is not time-drift; it is BRANCH divergence** — the producer ran in the ledger tree (0), I ran in a deploy-based tree (1). ★★ **R-411 was right that my explanation was wrong. It was also right that the gap needed explaining — and the true explanation is worse than the one I offered.**
+
+---
+
+**Files changed:** none. Read-only; three process-local runs; temp script in scratchpad only.
+**Hypotheses REJECTED:** (i) "my `off=1` was a phantom / counter bug" — **false, row [6] is a legitimately-bound session condition**; (ii) "today's tree and the artifact agree at 0" — **false for production, true for the ledger tree**; (iii) "the baseline gap was seven-day drift" — **false, it is branch divergence.**
+**Remaining uncertainty:** the exact suppressing mechanism in the ledger lane **[UNPROVEN]** · whether the **+10 FVG delta** is identical across trees — **[UNMEASURED, and it is the next thing I would check]**: R-411 and I both got +10 and the same four specs from different trees, which is reassuring but not verified as tree-independent.
+**Risk:** none introduced. **But a live risk is now named:** contracting a build off ledger-tree measurements without checking production's lane.
+
+**Recommendation:** **(1)** every Phase-1 figure from here carries its tree, `spec_family_bindings.py` size/sha included; **(2)** re-run the flag sweep in `runtime-production` to confirm `+10` is tree-independent before the flag is contracted; **(3)** treat "does the ledger binding lane ever reach production?" as its own question — **[UNENUMERATED]**, and it decides whether any of this work is deployable as-is.
+
+**Next smallest task (ONE):** re-run the 16-spec flag sweep against `runtime-production`'s lane and report whether `+10` and the same four specs hold there.
+
+---
+
 ## AR-376 · 2026-07-28 · **FLAG-YIELD SWEEP, ALL 16 — concrete `1 → 11` corpus-wide (+10).** ★★★ **AND A THIRD FIDELITY BASIS FOUND: `WEhmadJArQo__s0`'s teacher DEFINED the FVG wick-to-wick — *"a gap between one candle's WICK and the third candle's WICK"* — which is EXACTLY what the primitive implements. Its 2 crossings are GENUINELY faithful, not merely defensible** ★★ **STOP-CONDITION: fires on the LITERAL wording, does NOT fire on the substance — and the two readings contradict each other. Reporting rather than picking**
 
 **RULING ID:** R-410 · **TASK ID:** item (1), flag-yield sweep · **RECOMMENDATION:** APPROVAL_REQUESTED for the table; **one wording ruling needed on the stop condition.**
