@@ -6,11 +6,13 @@
 > Last rewritten: 2026-07-28 (post-crash).
 
 ## SEAT
-Ledger at **R-363** (commit `f9b2c1d3`). Newest AR: **AR-330**, RULED (R-363).
-Worker: **ACTIVE** — authoring queue item 2 (paper rows → no-egress
-`broker_type`). R-360 §6 landed (`a6278602`) and R-362 §5's comment landed
-(`2934721f`); CI on `a6278602` still owes `newFailures` + the explicit HTTP-400
-vacuity verdict. Nothing waits on me. **The item-2 APPLY waits on the operator.**
+Ledger at **R-364** (commit `8eda4928`). Newest AR: **AR-331**, RULED (R-364).
+Worker: **ACTIVE but HANDING OFF** — it declined to author item 2 on depleted
+context (a migration on the fail-CLOSED boot path) and left the full contract
+inline in AR-331 §5. Landed so far: `a6278602` (A-11 arming), `2934721f`
+(mock comment), `0ec5c981` → **PR #13** (item 3, derived `<FIRM>_API_KEY`
+fallback removed). **Item 2 belongs to the NEXT worker.** Nothing waits on me.
+**The item-2 APPLY waits on the operator.** ⚠ R-363 §2 is WITHDRAWN (R-364 §1).
 Advisor rig: 2s **content-hash** report poll + 15-min idle watchdog (both were
 mtime-based and were tripped by my own pre-commit hook; hashing is immune, and
 the watchdog now excludes my own `R-NNN` / `ADVISOR-STATE` commits so they
@@ -60,9 +62,13 @@ unmeasured); running dependency set (`npm install` at boot ≠ `npm ci`); no
 deploy record mapping SHA → when → who.
 
 ## QUEUE (next 4)
-1. R-360 §6 (arm the A-11 tests; answer the vacuity question). 2. Paper accounts
-→ no-egress `broker_type`. 3. Remove derived credential fallback. 4. Egress
-chokepoint + bypass test. Then: server-derived `strategy_id`; `npm ci` at boot;
+1. **Item 2** — paper rows → no-egress `broker_type`, NEXT worker, contract in
+   R-363 (+ R-364 §3: rewrite the dispatch tail's "should not occur" caption,
+   which inverts the moment this lands). Hand-author only, never `db:generate`.
+2. **Item 4** — single broker-egress chokepoint + a CI test failing on any other
+   module's broker `fetch`. Unblocked, needs no further authorization.
+3. **Report PR #12's HTTP-400 vacuity verdict** (rides the pending Node Tests).
+4. Then: server-derived `strategy_id`; `npm ci` at boot. Then: server-derived `strategy_id`; `npm ci` at boot;
 string-literal precondition sweep; consequence-ranked flag enumeration; the
 floors; 3-ii/3-iii; the builds (SMC → ORB+RANGE_EVENT → BAR_TIMING → SESSION_CLOCK).
 
