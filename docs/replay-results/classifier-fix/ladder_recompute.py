@@ -34,9 +34,26 @@ THE TWO ARMS, AND WHY THEY ARE REPRODUCIBLE
   are PROVEN distinct before any differential is reported.
 
 INSTRUMENT REUSE (never restate a classifier): the corpus selection rule, the
-BINDS predicate and `bind_status` are imported BY PATH from
-`docs/replay-results/h1-battery/tier_a_compile_census.py`, so this ladder cannot
-drift from the census it is read beside.
+LOAD-BEARING predicate (`is_load_bearing`), the BINDS predicate and `bind_status`
+are all imported BY PATH from
+`docs/replay-results/h1-battery/tier_a_compile_census.py`.
+
+  ★ THIS PARAGRAPH USED TO BE A FALSE PROTECTION CLAIM, and that is why it is
+  written out rather than quietly corrected (R-306 §3(i)). It ended "so this
+  ladder cannot drift from the census it is read beside" while the LOAD-BEARING
+  predicate -- the one rule that DEFINES which conditions this ladder counts, and
+  the source of its own published `load_bearing_spine` key -- was RESTATED here as
+  a literal `c["role"] in ("spine", "trigger")`. A claimed protection that is not
+  wired is the same species of false safeguard claim as a claimed absence that is
+  not true. The literal is gone; the predicate is imported like the other three,
+  so the sentence now describes something real.
+
+  WHAT THE PROTECTION COVERS, EXACTLY (a bounded claim, not an unbounded one): the
+  import removes drift BETWEEN THESE TWO FILES on THESE FOUR RULES. It does not
+  make the ladder agree with the census on anything else it computes, and it does
+  not make any of the four rules CORRECT -- a wrong rule imported is a wrong rule
+  shared, and single-sourcing converts a silent disagreement into a shared answer,
+  not into a verified one.
 
 HYPOTHETICAL: production flags are OFF, no `.spec.json` on disk is rewritten,
 the 77 sealed corpus is untouched. Every "after wiring" figure is a labeled
@@ -255,7 +272,12 @@ def compile_arm(producer, census, keep, phase_b):
                 "stable_key": c["id"].split(":", 1)[-1],
                 "type": c["type"],
                 "role": c["role"],
-                "load_bearing_spine": c["role"] in ("spine", "trigger"),
+                # ★ R-306 §3(i)/§5: IMPORTED, never restated. This line was the third live
+                # restatement of the load-bearing rule -- the two census-side ones were
+                # single-sourced a wave earlier and this one survived, under a docstring that
+                # claimed the opposite. `census` is the tier-A census module already loaded by
+                # path in main(); `is_load_bearing` is its single definition.
+                "load_bearing_spine": census.is_load_bearing(c),
                 "bind_status": census.bind_status(b) if b else "NO_BINDING_EMITTED",
             })
         specs.append({"stub": stub, "conditions": conds,
@@ -444,7 +466,9 @@ def main(argv=None) -> int:
             "instrument_reuse": ("selection rule, BINDS predicate and bind_status imported by "
                                  "path from docs/replay-results/h1-battery/"
                                  "tier_a_compile_census.py -- never restated"),
-            "extraction_source": phase_b,
+            # repo-relative (see census.PHASE_B_REL) -- absolute paths here are
+            # worktree-specific and do not reproduce across checkouts.
+            "extraction_source": census.PHASE_B_REL,
             "extraction_sha256": {
                 s["stub"]: s["extraction_sha256"]
                 for s in arms_raw["AFTER_fixed_classifier"]},

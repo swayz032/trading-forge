@@ -108,6 +108,7 @@ _tac = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_tac)
 
 PHASE_B = _tac.PHASE_B
+PHASE_B_REL = _tac.PHASE_B_REL
 RECEIPT = _tac.RECEIPT
 LOAD_BEARING_ROLES = _tac.LOAD_BEARING_ROLES
 is_load_bearing = _tac.is_load_bearing
@@ -835,15 +836,30 @@ def main():  # noqa: C901
                           f"{r['condition_id']} is flagged fuzzy with no fuzzy_note")
 
     # ------------------------------------- COUNTERFACTUAL BIND PROBE (MEASURED)
-    # ★ The mechanism claim gets its OWN direct test. For every target family in
-    # this table, take a REAL corpus condition, re-type an IN-MEMORY deepcopy, and
-    # ask the PRODUCTION binder what it returns. Nothing is written back.
+    # ★ The mechanism claim gets its OWN direct test. Take a REAL corpus condition,
+    # re-type an IN-MEMORY deepcopy to each family in turn, and ask the PRODUCTION
+    # binder what it returns. Nothing is written back.
+    #
+    # ★★ R-306 §3(ii) — THE LOOP IS SWEPT AT THE WIDTH THE PROSE ASSERTS. This loop
+    # used to run over the 5 nominated target families ∪ {WAIT_SESSION, UNTYPED} = 7,
+    # while the corrected prose beside it claimed "no family in FAMILY_META reaches a
+    # (ii) PASS on this row (swept)" -- a 14-FAMILY claim citing a 7-FAMILY probe. A
+    # caption wider than its instrument is the same defect the surrounding correction
+    # was written to cure, recurring ON the replacement sentence. The universe is now
+    # enumerated FROM FAMILY_META itself (never a handed list, so a new family enters
+    # the sweep automatically), plus UNTYPED as the shipped-state control. The published
+    # answer does not move -- 0 reach a (ii) PASS at either width -- but the claim is now
+    # SELF-EVIDENCED, and the denominator rides in the VALUE (`families_swept`), not in
+    # the prose, so a JSON-only reader can see the width without being told it.
     probe_stub, probe_art = next((s, a) for s, a in specs
                                  if any(c["type"] == UNTYPED_FAMILY
                                         for c in a["spec"]["entry_conditions"]))
+    # The OLD loop's width, kept as a COMPUTED value: the correction note below states what
+    # it is correcting, and a REMEMBERED width in that note would be a hand-copied number.
+    nominated_targets = sorted({r["target_family"] for r in DISPOSITIONS
+                                if r["category"] == CAT_TYPED})
     probe = {}
-    for fam in sorted({r["target_family"] for r in DISPOSITIONS if r["category"] == CAT_TYPED}
-                      | {"WAIT_SESSION", UNTYPED_FAMILY}):
+    for fam in sorted(set(FAMILY_META) | {UNTYPED_FAMILY}):
         sp = copy.deepcopy(probe_art["spec"])
         ids = []
         for c in sp["entry_conditions"] + sp["invalidations"]:
@@ -881,6 +897,23 @@ def main():  # noqa: C901
                 "leg_a_ii_reason": ii.reason if ii else None,
             },
         }
+
+    # ★ Computed ONCE and rendered into BOTH the prose and the published key. A numeral
+    # typed by hand into a sentence is a SECOND instrument that can disagree with the first;
+    # rendering it from the same variable is what makes the sentence self-evidencing rather
+    # than merely accompanied by evidence.
+    n_ii_pass_family_meta = sum(
+        1 for f, p in probe.items()
+        if f in FAMILY_META
+        and p["LEVEL_QUALIFIER__the_enforced_read_of_this_same_row"]["leg_a_ii_PASSES"])
+    n_ii_pass_all_probed = sum(
+        1 for p in probe.values()
+        if p["LEVEL_QUALIFIER__the_enforced_read_of_this_same_row"]["leg_a_ii_PASSES"])
+    # Widening the loop widened what the BINDING level shows too: 'the only row that reads as
+    # a bind' was scoped to this table's nominations and would be misread as a probe-wide
+    # claim now that the probe is FAMILY_META-wide. Computed here, rendered into that prose.
+    bind_true_families = sorted(f for f, p in probe.items() if p["counts_as_a_BIND"])
+    n_bind_true_probed = len(bind_true_families)
 
     # ------------------------------------- ZERO-YIELD ARM (MEASURED, NOT CLAIMED)
     # BASELINE arm  : the shipped compile, untouched.
@@ -1075,8 +1108,16 @@ def main():  # noqa: C901
                 "** CORRECTION OF RECORD (R-301 SS2): this key previously said the re-type "
                 "would pass 'with nothing downstream flagging it'. THAT WAS MEASURED FALSE. "
                 "Leg A(ii) is downstream and DOES flag it, via the R-260 family anchor -- and "
-                "no family in FAMILY_META reaches a (ii) PASS on this row (swept; see "
-                "how_many_families_reach_a_Leg_A_ii_PASS_on_this_row). A CLAIMED ABSENCE OF A "
+                f"no family in FAMILY_META reaches a (ii) PASS on this row. ** SWEPT AT THE "
+                f"WIDTH THIS SENTENCE ASSERTS (R-306 SS3(ii)): {n_ii_pass_family_meta} of the "
+                f"{len(FAMILY_META)} declared families reach a Leg A(ii) PASS, and "
+                f"{n_ii_pass_all_probed} of the {len(probe)} rows probed including the UNTYPED "
+                f"control -- every figure COMPUTED from the loop that ran, roster and "
+                f"denominator in `counterfactual_bind_probe.families_swept`. This sentence "
+                f"previously cited a probe over only the {len(nominated_targets)} families "
+                f"this table NOMINATES plus 2 controls: a FAMILY_META-wide claim resting on a "
+                f"7-row instrument. The answer did not change; the evidence now covers the "
+                f"claim. ** A CLAIMED ABSENCE OF A "
                 "SAFEGUARD IS A CLAIM EXACTLY LIKE A CLAIMED PRESENCE and owes the same "
                 "wiring-verify; that this one erred in the CONSERVATIVE direction (it made "
                 "the safer census-side siting look MORE necessary) is the aggravator, not the "
@@ -1084,8 +1125,16 @@ def main():  # noqa: C901
                 "spine_completion_trigger fires on spine completion and carries none of the "
                 "taught 'open of the NEXT candle' timing, so a re-type would produce a row "
                 "that reads as a GENUINE bind under THIS census's own bind predicate -- "
-                "counts_as_a_BIND=True, the flattering answer, the only such row in the "
-                "table -- while the enforced honest accounting convicts it. The hazard is a "
+                f"counts_as_a_BIND=True, the flattering answer, and the only such row AMONG "
+                f"THE {len(nominated_targets)} FAMILIES THIS TABLE NOMINATES -- while the "
+                f"enforced honest accounting convicts it. ** SCOPE OF THAT 'ONLY' (R-306 "
+                f"SS3(ii), surfaced by widening the probe): it is scoped to the NOMINATED "
+                f"targets, not to the probe. Across all {len(probe)} probed rows, "
+                f"{n_bind_true_probed} read as counts_as_a_BIND=True at the binding level "
+                f"({', '.join(bind_true_families)}); every one of them still FAILS Leg A(ii), "
+                f"which is why the widened sweep moves no answer. The narrower 'only' is a "
+                f"statement about this table's nominations and must not be read as a statement "
+                f"about FAMILY_META. The hazard is a "
                 "DISAGREEMENT BETWEEN LEVELS that a binding-level reader would never see, not "
                 "an absent downstream check. Exactly one row in this table targets ENTER and "
                 "it is flagged for this reason."),
@@ -1192,7 +1241,9 @@ def main():  # noqa: C901
             f"compile_binding_plan, ALL FLAGS OFF | no bars, no battery, no survivor "
             f"arithmetic | dispositions are census-side records and are consumed by "
             f"NOTHING at runtime"),
-        "extraction_source": PHASE_B,
+        # repo-relative (tier_a_compile_census.PHASE_B_REL) -- an absolute path here is
+        # worktree-specific and would break byte-reproduction across checkouts.
+        "extraction_source": PHASE_B_REL,
         "selection_rule_source": (
             "IMPORTED from docs/replay-results/h1-battery/tier_a_compile_census.py "
             "(select_clean_strategies + binds + is_load_bearing) -- never restated, so "
@@ -1290,10 +1341,15 @@ def main():  # noqa: C901
 
         "counterfactual_bind_probe": {
             "what_this_measures": (
-                "For each family this table nominates (plus WAIT_SESSION and UNTYPED as "
-                "controls), what the PRODUCTION binder returns for a REAL corpus "
-                "condition re-typed to that family. This is the DIRECT TEST of the "
-                "mechanism claim that re-typing manufactures hollow compiles."),
+                f"For EVERY family in FAMILY_META (all {len(FAMILY_META)}, enumerated from "
+                f"the universe itself and not from a handed list), plus UNTYPED as the "
+                f"shipped-state control, what the PRODUCTION binder returns for a REAL "
+                f"corpus condition re-typed to that family. This is the DIRECT TEST of the "
+                f"mechanism claim that re-typing manufactures hollow compiles. R-306 SS3(ii): "
+                f"the loop previously ran over only the families this table NOMINATES (5) plus "
+                f"two controls, while the prose beside it made a FAMILY_META-wide claim -- a "
+                f"caption wider than its instrument. The width is now the asserted width, and "
+                f"it is published in `families_swept` so the value carries its own denominator."),
             "method": (
                 f"in-memory deepcopy of the compiled spec for {probe_stub}; its UNTYPED "
                 f"conditions re-typed; compile_binding_plan run with flags OFF; the copy "
@@ -1317,9 +1373,25 @@ def main():  # noqa: C901
                 "the binding level, leg_a_ii_PASSES=False at the enforced level -- and that "
                 "disagreement, not any absence of a downstream check, is what makes it a "
                 "warning."),
-            "how_many_families_reach_a_Leg_A_ii_PASS_on_this_row": sum(
-                1 for p in probe.values()
-                if p["LEVEL_QUALIFIER__the_enforced_read_of_this_same_row"]["leg_a_ii_PASSES"]),
+            "how_many_families_reach_a_Leg_A_ii_PASS_on_this_row": n_ii_pass_all_probed,
+            # ★ R-306 §3(ii) — THE DENOMINATOR RIDES IN THE VALUE. A bare numerator makes a
+            # JSON-only reader guess the width, and guessing is how a 7-family probe came to
+            # carry a 14-family sentence. Every figure here is COMPUTED from the loop that
+            # actually ran, so the published width cannot drift from the sweep.
+            "families_swept": {
+                "n_probed": len(probe),
+                "n_FAMILY_META_families_probed": len(set(probe) & set(FAMILY_META)),
+                "n_FAMILY_META_families_declared": len(FAMILY_META),
+                "every_declared_family_was_probed": set(FAMILY_META) <= set(probe),
+                "controls_outside_FAMILY_META": sorted(set(probe) - set(FAMILY_META)),
+                "families": sorted(probe),
+                "how_to_read_the_numerator_above": (
+                    f"the numerator is out of n_probed={len(probe)}, which is "
+                    f"n_FAMILY_META_families_declared={len(FAMILY_META)} plus the "
+                    f"{len(set(probe) - set(FAMILY_META))} out-of-universe control(s) "
+                    f"{sorted(set(probe) - set(FAMILY_META))}. Read any FAMILY_META-wide "
+                    f"claim about this row against these two numbers, not against prose."),
+            },
         },
 
         "eligibility_arms": {

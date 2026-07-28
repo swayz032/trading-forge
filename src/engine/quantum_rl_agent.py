@@ -86,8 +86,16 @@ RL_RUNS_GOVERNANCE = {
 # Reward formula: realized_R − α × max(0, ci_high − _RL_CI_HIGH_THRESHOLD) − β × drawdown_penalty
 #
 # _RL_CI_HIGH_THRESHOLD reads B14_RUIN_CI_HIGH_THRESHOLD from env (default 0.20,
-# tightened from 0.40 on 2026-06-22) so it always tracks the production gate in
-# b14-ci-gate.ts::getB14CiHighThreshold(). Single source of truth.
+# tightened from 0.40 on 2026-06-22), the SAME env key that the production gate in
+# b14-ci-gate.ts::getB14CiHighThreshold() reads.
+#
+# ★ SCOPE OF THAT TRACKING (corrected by the R-306 §5 false-safeguard class sweep; this
+# comment used to end "so it always tracks the production gate ... Single source of truth"):
+# the tracking holds WHENEVER THE ENV KEY IS SET -- both sides then take the same string.
+# It does NOT hold for the DEFAULT: 0.20 is typed here in Python and typed again in
+# b14-ci-gate.ts (`if (raw === undefined || raw === "") return 0.20;`). With the key unset,
+# which is the normal case, these are two independent literals in two languages and nothing
+# checks them against each other. "Always" and "single source of truth" were both too wide.
 #
 # NOTE on frozen-policy SHA-256 contract (Wave 29 Pass B):
 #   The frozen-policy hash covers {entry_quality, position_size, stop_loss,

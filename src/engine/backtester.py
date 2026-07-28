@@ -2644,7 +2644,10 @@ def _compute_long_short_split(trades_list: list[dict]) -> dict:
 # RTH-only figures (390min = 78 5min bars) are wrong for futures which trade
 # nearly 24h. data_loader.py:323 uses 172 5min bars for Globex.
 # Aligned here to eliminate false "too few bars" warnings.
-# FIX 4 (deep-scan #10 F-11): use EMPIRICAL_BARS_PER_DAY from data_loader as single source.
+# FIX 4 (deep-scan #10 F-11): use EMPIRICAL_BARS_PER_DAY from data_loader as the source.
+# SCOPE OF "single source" (R-306 §5 class sweep): true of the ** spread ** below, which takes
+# every key from data_loader; NOT true of the "4hr" alias, which is a hand-transcribed mirror
+# of EMPIRICAL_BARS_PER_DAY["4hour"] and can go stale independently of it.
 # Previous "15min": 92 was theoretical; empirical CME data shows 58. Using 92 caused false
 # bar-count alarms on real CME ratio-adjusted data. data_loader.EMPIRICAL_BARS_PER_DAY
 # documents the measurement methodology (10.6 years of CME Globex continuous data).
@@ -2880,9 +2883,17 @@ def _apply_max_trades_per_day(
 #   MCL / CL: 0.25 → 1.00  (1pt = 100 ticks; old 0.25 = 25 ticks was far too tight)
 #   MES / ES: 14.0 (unchanged)
 #
-# IMPORTANT: reads the SAME env vars as gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS
-# so the two tables can NEVER diverge.  Any change here must also update the defaults
-# in gate_block_analyzer.py (env var keys: STOP_CEILING_PTS_MES / _MNQ / _MCL).
+# ENV-VAR PARITY, NOT SINGLE-SOURCING.  This comment used to read "so the two tables can
+# NEVER diverge" -- a protection claim its OWN next sentence contradicted, corrected by the
+# R-306 §5 false-safeguard class sweep.  Stating it exactly:
+#   TRUE      -- this table and gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS read the SAME
+#                env var keys (STOP_CEILING_PTS_MES / _MNQ / _MCL), so whenever a key IS SET
+#                both sides take that value and agree by construction.
+#   NOT TRUE  -- the DEFAULTS are hand-typed here AND hand-typed again in
+#                gate_block_analyzer.py (14.0 / 62.0 / 1.00 in both).  The keys are UNSET in
+#                normal operation, so the SHIPPED values come from two independent literals.
+#                They CAN diverge, and nothing detects it if they do.
+# Any change here must also update the defaults in gate_block_analyzer.py.
 _STOP_CEILING_DEFAULTS: dict[str, tuple[str, float]] = {
     # symbol → (env_var_key, default_value)
     "MES": ("STOP_CEILING_PTS_MES", 14.0),
@@ -2910,9 +2921,13 @@ def _symbol_of_spec(spec) -> str:
 def _get_stop_ceiling_for_symbol(symbol: str) -> float:
     """Return the maximum allowed stop distance (in points) for a given symbol.
 
-    Reads env vars (STOP_CEILING_PTS_MES / _MNQ / _MCL) so this function and
-    gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS share a single source of truth
-    and can never diverge.
+    Reads env vars (STOP_CEILING_PTS_MES / _MNQ / _MCL), which this function and
+    gate_block_analyzer.STRUCTURAL_STOP_CEILING_PTS share -- so the two agree by
+    construction WHENEVER A KEY IS SET.  They do NOT share a single source of truth
+    for the DEFAULTS: those are hand-typed in both files and the keys are unset in
+    normal operation.  (This docstring said "share a single source of truth and can
+    never diverge"; corrected by the R-306 §5 false-safeguard class sweep.  See the
+    _STOP_CEILING_DEFAULTS comment above for the full statement.)
 
     Wave 1 Track 1A 2026-06-27 defaults:
         MES / ES  → 14.0 points (STOP_CEILING_PTS_MES, unchanged)

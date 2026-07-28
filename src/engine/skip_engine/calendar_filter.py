@@ -16,9 +16,20 @@ Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — correct T1 set:
     EIA: Crude Oil Inventories, Wednesday 10:30 ET (Thursday 11:00 ET on weeks
       with a Monday US federal holiday).  T1 for energy traders (CL/MCL) only.
 
-  Both are sourced from economic_calendar.py::STATIC_EVENTS via
-  _build_extended_t1_events() to keep a single source of truth.  A parity test
-  (src/engine/tests/test_calendar_filter_blackout.py) guards this drift.
+  FOMC_MINUTES is sourced from economic_calendar.py::STATIC_EVENTS via
+  _build_extended_events(), so for that event type there is a single source.
+
+  ★ CORRECTED BY THE R-306 §5 FALSE-SAFEGUARD CLASS SWEEP.  This paragraph used to read
+  "Both are sourced from economic_calendar.py::STATIC_EVENTS via _build_extended_t1_events()
+  to keep a single source of truth."  Two things were wrong with it:
+    (1) `_build_extended_t1_events` DOES NOT EXIST anywhere in the repo -- the claim named a
+        safeguard function that was never written.  The real builder is
+        `_build_extended_events()`.
+    (2) "Both" was false: `_build_extended_events()` iterates `("FOMC_MINUTES",)` ONLY, and
+        its own docstring says EIA is excluded here (product-scoped to MCL in Phase 2).
+        EIA is therefore NOT sourced from STATIC_EVENTS by this module.
+  A claimed protection that is not wired -- and here, one whose named mechanism does not
+  exist -- is the same species of defect as a claimed absence that is not true.
 
   Retail Sales: MFFU §5 also lists Retail Sales.  economic_calendar.py does NOT
   have confirmed Retail Sales dates.  DO NOT invent them; see TODO below.
@@ -26,7 +37,6 @@ Wave hardening 2026-06-22 Phase 1, MFFU Feb-2026 policy — correct T1 set:
 
 from __future__ import annotations
 
-import warnings
 from datetime import date, datetime, timedelta, timezone
 from functools import lru_cache
 
@@ -36,7 +46,6 @@ from functools import lru_cache
 # economic_calendar.py is pure data (no vectorbt / polars side-effects at import
 # time) so the @lru_cache performance contract of this module is unaffected.
 from src.engine.economic_calendar import STATIC_EVENTS as _EC_STATIC_EVENTS
-
 
 # ─── D5: Dynamic Holiday Calendar ────────────────────────────────────────────
 # Previous behavior: hardcoded 2026 and 2027 lists; any year >= 2028 returned []
@@ -662,8 +671,8 @@ def calendar_check(
 
 if __name__ == "__main__":
     import json
-    import sys
     import os
+    import sys
 
     # Accept config via --config file path or stdin
     config_path = None

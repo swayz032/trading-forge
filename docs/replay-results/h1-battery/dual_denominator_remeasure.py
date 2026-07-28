@@ -3812,8 +3812,16 @@ def measure_live_reconciliation_pair() -> tuple[int, int]:
     Exists so the polarity demonstration's one non-synthetic row is read from
     the corpus and the declared split instead of typed into a case list. The
     build derives component A through _axis_session_grade_split so the
-    perturbation axes can move it; this reads the same function with the same
-    literals, so the two cannot disagree without the split guard firing.
+    perturbation axes can move it; this reads the same FUNCTION, so an axis that
+    moves the function moves both call sites together.
+
+    ★ ONE-DIRECTIONAL, corrected by the R-306 §5 false-safeguard class sweep. This
+    used to end "with the same literals, so the two cannot disagree without the split
+    guard firing". The ARGUMENTS `(2, 21)` are typed at BOTH call sites (here and at
+    the build site). The split guard compares the BUILD site's result against
+    SESSION_SPLIT_DECLARED, so editing the build site alone DOES fire it -- but
+    editing THIS call site alone does not, and the two would then disagree silently.
+    The protection covers one direction, not both.
     """
     n_zone_bound = measure_shipped_session_resolvable(load_corpus_a())
     component_a, _ = _axis_session_grade_split(2, 21)

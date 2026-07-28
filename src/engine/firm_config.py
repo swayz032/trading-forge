@@ -105,9 +105,15 @@ INITIAL_CONTRACT_CAPS: dict[str, int] = {
 
 
 # ─── Full Firm Rules (mirrors src/shared/firm-config.ts) ─────────
-# Single source of truth for Python code. Keep in sync with TypeScript shared config.
-# prop_compliance.py has its own FIRM_CONFIGS dict that duplicates some of these
-# rules. Both must stay in sync.
+# ★ NOT a single source of truth, and the two lines that follow always said so -- the
+# headline claimed more than its own footnote allowed, so the headline is corrected rather
+# than the footnote deleted (R-306 §5 false-safeguard class sweep; this read "Single source
+# of truth for Python code"). WHAT IS TRUE: this is the RICHEST Python table and the one to
+# prefer. WHAT IS NOT: prop_compliance.py::FIRM_CONFIGS re-types a subset of the same rules
+# (monthly_fee 85, profit_target 3000, max_drawdown 2000, trailing, payout_split, ...) and
+# imports only FIRM_COMMISSIONS from here -- so those values live in two Python literals and
+# nothing enforces agreement. Keep in sync with TypeScript shared config AND with
+# prop_compliance.py; all three are hand-synced.
 
 FIRM_RULES: dict[str, dict] = {
     "topstep_50k": {

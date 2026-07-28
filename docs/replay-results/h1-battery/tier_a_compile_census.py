@@ -8,7 +8,9 @@ to run on them, so the pre-registered prediction gets its test.
 CORPUS (named in every scope line): tier-a certified clean strategies, n=11 of 13,
 drawn from the 9 clean video-units of `tier-a-clean-strategy-receipt.json`.
 Extractions read from the PERSISTED SEALED-READ WD (phase_b/), the same artifacts
-the certification receipt was replayed from.
+the certification receipt was replayed from -- now the COMMITTED, manifest-verified
+copy at docs/replay-results/h1-sealed-read-frozen/SEALED-READ/ rather than the temp
+scratchpad it used to name (R-306 §5(i); see the SEALED_WD block below).
 
 COMPLETENESS (never sum a handed list): the family axis is enumerated from the
 FAMILY_META universe itself (all 14 declared families, zeros included). Concept and
@@ -37,9 +39,36 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 sys.path.insert(0, ROOT)
 
-SEALED_WD = (r"C:\Users\tonio\AppData\Local\Temp\claude"
-             r"\C--Users-tonio-Projects-trading-forge"
-             r"\d96dba1d-d874-4c26-8026-7ec19a8674ae\scratchpad\SEALED-READ")
+# ============================================================ R-306 §5(i): THE EVIDENCE BASE,
+# ============================================================ POINTED AT THE COMMITTED COPY
+# ★ This constant used to name a WINDOWS TEMP SCRATCHPAD
+# (...\AppData\Local\Temp\claude\...\d96dba1d-...\scratchpad\SEALED-READ) -- the only place the
+# H1 sealed-read evidence existed, with no git-tracked copy in any branch. The producing vintage
+# (`h1-certified-reader-v3.2` on claude-opus-4-8) is DEAD as a runnable instrument, so one routine
+# temp cleanup would have been permanent, unrecoverable loss of the certificate's own evidence.
+# R-296 §1 ruled the evidence itself committed (a manifest over irreplaceable evidence is a
+# tombstone), and it now lives in-repo under docs/replay-results/h1-sealed-read-frozen/ with a
+# 275-entry MANIFEST.sha256 and `.gitattributes * -text` so the bytes survive checkout unchanged.
+#
+# THE RE-POINT IS DIGEST-GATED, NOT TRUSTED: the two copies were proven byte-identical over all
+# 13 phase_b extractions (sha256), and this generator PUBLISHES `extraction_sha256` per spec, so
+# any reader can re-derive that identity from the artifact itself.
+#
+# WHAT THIS CHANGES AND WHAT IT DOES NOT: it changes PROVENANCE (which bytes on disk are read),
+# not DATA -- the census's numbers are identical from either source. It does NOT make the
+# artifact reproducible on the certified vintage; that capability is gone and stays gone (R-294).
+#
+# RESOLVED FROM THIS FILE'S OWN LOCATION (ROOT is HERE/../../..), never a hardcoded user path,
+# so it is correct in the canonical checkout and in every worktree.
+#
+# ★ THE PUBLISHED PROVENANCE IS THE REPO-RELATIVE FORM (PHASE_B_REL), NOT THE RESOLVED
+# ABSOLUTE PATH. The absolute path is worktree-specific -- publishing it would mean this
+# artifact could not regenerate byte-identically between the canonical checkout and any
+# worktree, which is the same non-reproducibility the temp path had, merely relocated.
+# PHASE_B stays absolute because it is what os.path.join and open() need.
+SEALED_WD_REL = "docs/replay-results/h1-sealed-read-frozen/SEALED-READ"
+SEALED_WD = os.path.join(ROOT, *SEALED_WD_REL.split("/"))
+PHASE_B_REL = SEALED_WD_REL + "/phase_b"
 PHASE_B = os.path.join(SEALED_WD, "phase_b")
 RECEIPT = os.path.join(HERE, "tier-a-clean-strategy-receipt.json")
 OUT = os.path.join(HERE, "tier-a-compile-census.json")
@@ -437,7 +466,9 @@ def main():
             f"phase_b · compiler = src/engine/extraction/spec_producer.py · binder = "
             f"compile_binding_plan with ALL FLAGS OFF (legacy column) · no bars, no battery, "
             f"no survivor arithmetic"),
-        "extraction_source": PHASE_B,
+        # repo-relative, so this key is identical from the canonical checkout and every
+        # worktree; the absolute resolution is printed by the run, not published.
+        "extraction_source": PHASE_B_REL,
         "receipt_source": "docs/replay-results/h1-battery/tier-a-clean-strategy-receipt.json",
         "selection_rule": (
             "clean strategies derived from the receipt's per-video rollup "
