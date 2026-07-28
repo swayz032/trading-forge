@@ -4,6 +4,76 @@
 
 ---
 
+## AR-373 · 2026-07-28 · **REFERENT CENSUS COMPLETE — 27 of 27.** ★★★ **THREE SPECS, THREE *DIFFERENT* REASONS THE SAME `WAIT_SESSION` TYPE IS UNBOUND — mis-typed geometry (`-igp`), session LEVELS (`CLDE`), session TIME (`_LS6`). Only the third is a vocabulary gap; a keyword build binds 2 of the 6.** ★★★ **AND THE CENSUS'S REAL HEADLINE: EVERY PRIMITIVE THESE SPECS NEED ALREADY EXISTS AND NOTHING ROUTES TO IT — FVG, session-levels, VWAP: all present in the engine, all absent from `FAMILY_META`'s 14 families. R-303 §3 was right, and this is its proof**
+
+**RULING ID:** R-407 · **TASK ID:** census item (1), final spec · **RECOMMENDATION:** **the fourth "build" is a ROUTING build, not a detector build.**
+
+**CENSUS COMPLETE: 27 of 27 conditions across all three clean specs.** No honest-partial clause needed.
+
+---
+
+### `_LS6qcSlDCs__s0` — the two `WAIT_SESSION` conditions, verbatim and first
+
+**[0] `WAIT_SESSION` · spine · approximate**
+> *"when the stock actually breaks above the **v-wop** after being below it **at the opening bell** i'm looking to buy on those pull backs looking for the **v-wap to hold it up as support**"*
+
+**[4] `WAIT_SESSION` · confluence · approximate**
+> *"if i can find a **stock** that opens weak on the day and actually drops **at the opening bell** below the v-wop and then **breaks above it with some volume** coming in that's my favorite area to dip buy into"*
+
+*(`v-wop` / `v-wap` are transcription artifacts of **VWAP**.)*
+
+| # | type · conf | text (abridged) | (i) | (ii) | (iii) |
+|---|---|---|---|---|---|
+| 0 | **WAIT_SESSION** · apx | break above VWAP after being below at the **opening bell**; buy pullbacks, VWAP as support | ✅ | ✅ VWAP standard | ❌ binds only the time qualifier; **drops the VWAP rule** |
+| 1 | WAIT_RETEST · apx | *"using that **VWAP level** as that big milestone … buying on the pullbacks to test as a support area"* | ✅ | ✅ | ❌ EMA(20) proximity ≠ VWAP |
+| 2 | WAIT_RETEST · apx **(trigger)** | *"buy the pullback into that first few bounces … momentum coming in after"* | ✅ | ✅ | ❌ EMA(20) |
+| 3 | FILTER · **confident** | *"volume come in … a ton of green candles in a row … shows a lot of strength"* | ✅ | ✅ | ⚠️ **BOUNDARY** ("a ton", "a lot") |
+| 4 | **WAIT_SESSION** · apx | opens weak, drops below VWAP at the **opening bell**, breaks above **with volume** | ✅ | ✅ | ❌ same as [0] |
+| 5 | WAIT_RETEST · apx | *"pullbacks after big runs … especially to the VWAP or a **whole dollar level**"* | ✅ | ⚠️ **equities concept** | ❌ EMA(20) |
+
+**(i) 6 of 6 carry rules. (ii) referents resolve** — VWAP is a standard, mechanically-defined object. ★ **`_LS6` SURVIVES (i)+(ii)** — but see the two cautions below.
+
+★ **[CAUTION 1 — domain]** this is a **STOCK** strategy: *"if i can find a stock"*, *"a whole dollar level"*. The campaign trades **MES / MNQ / MCL futures**. Whole-dollar round numbers are an equities behaviour. **Not disqualifying under your rule, but it is a materially weaker Phase-1 target than `CLDE`.**
+★ **[CAUTION 2]** `direction: long` only · **`invalidations: []` — the trader taught no stop** · `n_executed_bindable: 4` of 6 · `n_confident: 1` of 6 (weakest of the three).
+
+---
+
+### ★★★ THE THREE-WAY SPLIT — the same type field, three unrelated causes
+
+| spec | its 2 unbound `WAIT_SESSION` conditions are really… | would a SESSION_CLOCK **keyword** build bind them? |
+|---|---|---|
+| `-igp` | **mis-typed FVG candle geometry** (*close of candle 1 → open of candle 3*) — no session concept at all | ❌ nothing to match |
+| `CLDE` | **session-derived LEVELS** (*Asia high/low, London high/low, PDH/PDL, EQH/EQL*) | ❌ concept hole — a level is not a window |
+| `_LS6` | **session TIME** (*"at the opening bell"*) — genuinely a time-window concept | ✅ **YES** — and **[MEASURED] `"opening bell"` is genuinely absent from `SESSION_KEYWORDS`** |
+
+★★★ **So SESSION_CLOCK-as-vocabulary binds exactly 2 of the 6 unbound conditions across the three survivors — and they belong to the weakest spec.** ★★ **This is your R-407 lesson landing in the other direction too: for `CLDE` the vocabulary looked like the gap and the concept was; for `_LS6` it genuinely IS the vocabulary. Same symptom, opposite diagnosis, and only reading the text separates them.**
+
+### ★★★ THE HEADLINE: THE DETECTORS ALL EXIST; NOTHING ROUTES TO THEM
+
+**[MEASURED, all four greps at the shipped tree]**
+
+| what the surviving specs need | does the primitive exist? | is it routed by any `FAMILY_META` family? |
+|---|---|---|
+| **FVG / imbalance** (`-igp` 4 conds, `CLDE` 6) | ✅ `fvg_native.compute_fvg_signal`, **`approximation=False`** | ⚠️ **only behind `TF_FVG_IDENTITY_ENABLED` (default OFF)** |
+| **session-derived levels** (`CLDE` 2) | ✅ `liquidity_levels` carries `Asian`/`London`/`PDH`/`PDL`/`EQH`/`EQL` | ❌ **zero references in `spec_family_bindings.py`** |
+| **VWAP** (`_LS6` 5 of 6) | ✅ `compute_vwap_with_bands` (`core.py:271`), `compute_anchored_vwap` (`:379`) | ❌ **zero routing — the only mentions are a comment noting a vwap spec "correctly stays queued"** |
+
+★★★ **`FAMILY_META`'s entire vocabulary is 14 families — `WAIT_SESSION · WAIT_STRUCTURE · VERIFY_STRUCTURE · WAIT_BIAS · CONFIRM_DIRECTION · WAIT_RETEST · FILTER · WAIT_CONFIRMATION · INVALIDATE · ENABLE_ENTRY · ENTER · EXIT_HINT · RESET · EXCEPTION` — and NOT ONE names an FVG, a session level, or a VWAP.** So every one of these conditions falls through to a generic binder (`structure_engine`, `session_windows`, or an **EMA(20) proximity check**) that is a different event class from what was taught. **That is why `binding_approximation_rate` is 1.00 on all three specs and `n_bound_and_concrete` is 0.**
+
+★★ **This is R-303 §3 — *"the missing piece is the BINDING LANE, not the detectors"* — demonstrated concretely rather than asserted, three specs and three primitives deep. The corpus is not detector-poor. It is ROUTING-poor.**
+
+---
+
+**Files changed:** none. Read-only throughout. **No flag flipped — the sizing experiment (item 2) has not started.**
+**Hypotheses REJECTED:** (i) "the three specs' unbound conditions share a cause" — **false, three distinct causes**; (ii) "SESSION_CLOCK is worthless" — **false, it binds `_LS6`'s two**; (iii) "these specs need new detectors" — **false, all three primitives exist unrouted**.
+**Remaining uncertainty:** whether `fvg_native` binds `CLDE`/`-igp` in practice — **that is exactly item (2), unstarted.** Whether the `liquidity_levels` and VWAP primitives are *reachable* from the binding lane's call signature is **[UNVERIFIED]** — I proved they are not referenced, not that they are easy to reference.
+
+**Recommendation for the fourth target, on the completed census:** **`CLDE` (10/10 achievable without a spec edit)** via **(a)** the FVG flag and **(b)** a session-LEVEL lane; `-igp` rides (a) but needs its two mis-typed conditions re-typed, which is forbidden. ★ **`_LS6` is the only one a keyword build helps, and it is the weakest (stock-domain, no taught stop, 1 of 6 confident) — I would not spend the build on it.**
+
+**Next smallest task (ONE):** item (2) — the in-process binding-plan diff for `-igp` and `CLDE`, `TF_FVG_IDENTITY_ENABLED` off vs on, reporting per condition which binder it routes to and whether the artifact's own definition counts it concrete.
+
+---
+
 ## AR-372 · 2026-07-28 · **REFERENT CENSUS SPEC 2 of 3 — `CLDEIsNpVRc__s0` SURVIVES (i)+(ii) AND IS THE STRONGEST TARGET YET: 0 unmatched, it DEFINES "draw on liquidity" itself, and it carries a hard clock anchor ("after 9:30")** ★★★ **ITS TWO `WAIT_SESSION` CONDITIONS *ARE* GENUINELY SESSION-RELATED — SO MY `-igp` FINDING DOES NOT GENERALISE. But they need session-derived LEVELS, not session TIME WINDOWS, so SESSION_CLOCK STILL DOES NOT BIND THEM** ★★ **And it is a SECOND FVG strategy — 6 of 10 conditions name fair value gaps**
 
 **RULING ID:** R-406 · **TASK ID:** census (1) of the authorized order · **RECOMMENDATION:** informational; **`CLDE` displaces `-igp` as the strongest fourth-target candidate, and the FVG flag now governs two specs, not one.**
