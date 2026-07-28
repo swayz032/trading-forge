@@ -14,6 +14,8 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 
 // ─── Mock factories (mirrors broker-router-non-success-discord.test.ts) ───────
 
@@ -93,6 +95,34 @@ async function runProbe(): Promise<void> {
   const mod = await import("../broker-router.js");
   await mod.probeTradersPostApiKeys();
 }
+
+/**
+ * R-367: the inertness fix (R-365) traded an un-deletable module-scope side
+ * effect for a SINGLE call site in index.ts. That is the right trade, but it
+ * introduces a failure the old design could not have: delete, comment out or
+ * reorder that one line and the probe silently never runs, with nothing red
+ * anywhere. A diagnostic's ABSENCE is invisible by construction — the alert it
+ * fails to raise is the only thing that would have reported it missing.
+ *
+ * Static source guard, same shape as broker-router.test.ts's F-2 scoping guard
+ * (which caught a real regression 18 minutes after it was written). Severity of
+ * the thing it protects is LOW — this is a key-revocation detector, not a safety
+ * gate — but the guard is nearly free.
+ *
+ * RED-PROOF: delete the `startBootProbe();` call in index.ts and this goes RED.
+ */
+describe("boot probe is actually started (R-367 static guard)", () => {
+  const indexSrc = readFileSync(resolve(import.meta.dirname, "../../index.ts"), "utf8");
+
+  it("index.ts calls startBootProbe() exactly once", () => {
+    const calls = indexSrc.match(/startBootProbe\(\)/g) ?? [];
+    expect(calls).toHaveLength(1);
+  });
+
+  it("index.ts imports startBootProbe from broker-router", () => {
+    expect(indexSrc).toMatch(/import\s*\{[^}]*\bstartBootProbe\b[^}]*\}\s*from\s*["'][^"']*broker-router\.js["']/);
+  });
+});
 
 describe("broker-router boot probe gate (R-359)", () => {
   let fetchSpy: ReturnType<typeof vi.fn>;
