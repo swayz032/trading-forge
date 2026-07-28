@@ -102,4 +102,26 @@ describe("slumhouse router fallback", () => {
     expect(nextCalled).toBe(true);
     expect(res.redirectTo).toBeNull();
   });
+
+  it("lets an Office admin session open the shared evidence-vault shell", async () => {
+    const { signAdminSession } = await import("../../lib/slumhouse/admin-session.js");
+    const { gateEvidenceVaultHtml } = await import("../../routes/slumhouse/index.js");
+    const token = signAdminSession(60);
+    const req: any = { headers: { cookie: `slumhouse_admin_sid=${token}` } };
+    const res = mockRes();
+    let nextCalled = false;
+    gateEvidenceVaultHtml(req, res, () => { nextCalled = true; });
+    expect(nextCalled).toBe(true);
+    expect(res.redirectTo).toBeNull();
+  });
+
+  it("still redirects an anonymous evidence-vault request to login", async () => {
+    const { gateEvidenceVaultHtml } = await import("../../routes/slumhouse/index.js");
+    const req: any = { headers: {} };
+    const res = mockRes();
+    let nextCalled = false;
+    gateEvidenceVaultHtml(req, res, () => { nextCalled = true; });
+    expect(nextCalled).toBe(false);
+    expect(res.redirectTo).toBe("/slumhouse/login.html");
+  });
 });
