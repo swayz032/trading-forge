@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-367.
 
 ## SEAT
-Ledger at **R-368**. Newest AR: **AR-335**, RULED. Worker: **handed off** — it
+Ledger at **R-369**. Newest AR: **AR-336**, RULED. Worker: **handed off** — it
 declined to author item 2 on depleted context and left its contract inline in
 AR-331 §5. Advisor rig: 2s content-hash report poll + 15-min idle watchdog
 (both hash-based; my own pre-commit hook stamps mtimes, and the watchdog
@@ -16,9 +16,11 @@ excludes my `R-NNN`/`ADVISOR-STATE` commits so they cannot mask worker silence).
 **R-365 §5(1) is DONE** (`eb4e390a`, verified R-367): import is inert in every
 flag state; `startBootProbe()` called once at `index.ts:832`. REMAINING:
 **red-proof each of the six before making it green** (§5(3)), keep the
-probe-gate DISCRIMINATES case green, plus **R-368 §3–§4**: the call-site guard is shipped but stays GREEN when the
-call is COMMENTED OUT — strip comment lines, red-proof BOTH mutations, and
-rename it to what it measures (textual presence, not execution).
+probe-gate DISCRIMINATES case green, The call-site guard is DONE and verified across 6 inputs (R-369 §1).
+**§5(3) is RESTATED (R-369 §4)**: the six must be shown RED→GREEN across the
+fix, AND each must name the observable its assertion depends on (the spy/mock
+the probe must touch) — an assertion satisfiable by a function that does
+nothing is still vacuous. Plus R-369 §3's one-line bound in the guard comment.
 `checkProbeGate()` itself is correct — do not touch it. Fresh retry budget 2.
 Then item 2 (R-363 + R-364 §3), then item 4. Authoring + PR only.
 
