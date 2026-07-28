@@ -98,23 +98,38 @@ ENTIRELY on CLDE + _LS6 — specifically whether their four unbound WAIT_SESSION
 conditions are REAL session rules (SESSION_CLOCK-bindable) or mis-types
 (extraction-side only).**
 
-1. **Census `CLDEIsNpVRc__s0`** (10 cond; quote its 2 WAIT_SESSION verbatim
-   FIRST) — first observable: its table, ~15 min. Same three questions:
-   (i) real rule? (ii) referent has antecedent IN spec? (iii) primitive = same
-   event class? + `transcript_chars` (0 for 2-of-2 so far).
-2. **Census `_LS6qcSlDCs__s0`** (6 cond), same form.
-3. **FVG SIZING EXPERIMENT (R-406, behind the census):** in-process binding-plan
-   diff for `-igp`'s 11 — which binder each routes to, `TF_FVG_IDENTITY_ENABLED`
-   false vs true, and which would count CONCRETE by the artifact's own
-   definition. **Process-local env only; no file writes; no `.env`; no publish;
-   producer untouched. Reading `compute_fvg_signal` in scope** (is the 3-candle
-   geometry faithful?). A route that binds approximate is REPORTED approximate.
-4. **SESSION_CLOCK — HELD pending the census's mis-type:real-session split.**
-5. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
+★★★ **CENSUS 2/3 (AR-372 → R-407): `CLDE` SURVIVES AND IS LEAD CANDIDATE —
+0 unmatched, defines its own draw-on-liquidity (Asia/London/PD high-low,
+EQH/EQL), hard 9:30 clock, and its ceiling is 10/10 WITHOUT any spec edit:**
+FVG flag governs its 6 FVG-naming conditions; its 2 unbound ([0],[1]) are
+session-derived LEVEL asks a new lane binds from their own text.
+★★★ **[MEASURED at the desk] the session lane's ontology is TIME-WINDOWS ONLY**
+(`spec_family_bindings.py:477-483`: london session/open/killzone, ny am/pm,
+silver bullet, macro window) — **"Asia high"/"PDH" match nothing, so the
+binder's refusal is HONEST. Do NOT "fix" it by adding "asia high" to the
+keywords — that binds a level-ask to a window primitive (the [7] defect class).**
+The needed **session-LEVELS lane's parts exist, unwired** [MEASURED]:
+`sessions.py:15-16,:52-70` (window bounds+masks) · `liquidity.py:145,:186`
+(EQH/EQL), `:223,:293` (sweep/raid over supplied levels) ·
+`open_relative_to_value.py:49-95` (prior-session H/L) — composition, not
+invention. **Named, NOT yet authorized to build** (enters the order on the
+census+sizing ruling).
+
+1. **Census `_LS6qcSlDCs__s0`** (6 cond; WAIT_SESSION pair verbatim first) —
+   in flight; same three questions + `transcript_chars` (0 for 3-of-3 so far).
+2. **FVG SIZING EXPERIMENT — over BOTH `-igp` AND `CLDE` (R-407):** in-process
+   binding-plan diff, `TF_FVG_IDENTITY_ENABLED` false vs true, per-condition
+   routing, concrete-by-the-artifact's-definition marked. **Process-local env
+   only; no file writes; no `.env`; no publish; producer untouched. Reading
+   `compute_fvg_signal` in scope** (is the 3-candle geometry faithful?).
+   A route that binds approximate is REPORTED approximate.
+3. **SESSION_CLOCK — HELD.** [MEASURED] neither `-igp`'s mis-types nor `CLDE`'s
+   level-asks are time-window customers; none found among the 27 yet.
+4. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
    MIGRATIONS, so `schema.ts` drift becomes detectable instead of propagatable.
-6. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
+5. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
    the 2026-07-21 filename; a publish would overwrite pinned evidence misdated.
-7. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
+6. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
    ENTRY_WITHDRAWN`, `..._PAIR_DRIFTED` → `NO_ASSERT_FIRED`). **Diagnosis only;
    repair after I rule.**
 
