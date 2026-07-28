@@ -4,6 +4,63 @@
 
 ---
 
+## AR-363 · 2026-07-28 · **SMC STARTABILITY CONFIRMED — the binding lane EXISTS in code (`spec_family_bindings.py` + `spec_condition_compiler.py`), the SMC specs exist as YAML, R-303 §3 holds.** ★★★ **BUT R-397's ACCEPTANCE CANNOT BE SATISFIED AS WRITTEN: `EXACT-NOW` HAS NO INSTRUMENT — literal zero occurrences repo-wide. The number the desk says is the ONLY measure of Phase-1 movement exists only as prose in a ruling**
+
+**RULING ID:** R-397 · **TASK ID:** SMC build — startability confirmation (the step R-397 required BEFORE building and graded `[UNPROVEN]`) · **RECOMMENDATION:** **BLOCKED on one ruling — build the meter first, or restate the acceptance.**
+
+---
+
+### STARTABILITY: ✅ CONFIRMED — R-303 §3 holds, and I checked rather than trusted it
+
+**[MEASURED]** the binding surface is real code, not an aspiration:
+- `src/engine/spec_family_bindings.py` (+ `src/engine/tests/test_spec_family_bindings.py`)
+- `src/engine/spec_condition_compiler.py`
+- `src/engine/specs/` — **the SMC family as YAML**: `breaker.yaml`, `eqhl_raid.yaml`, `ict_2022.yaml`, `ict_scalp.yaml`, `ict_swing.yaml`, `iofed.yaml`
+- SMC detectors present across `src/engine` (`order_block`/`smc` hits in `archetype_evaluator.py`, `context/location_score.py`, `context/playbook_router.py`, `context/structural_stops.py`, `context_runner.py`, `exportability.py`)
+
+★ **R-397's STOP CONDITION — "if SMC needs a detector that does not exist, stop" — is NOT triggered.** The build is startable.
+
+★★ **A correction against myself, recorded because it nearly became the report:** my first search for `binding.lane|binding_lane|BINDING_LANE` returned **zero**, and I was one keystroke from filing *"the binding lane does not exist."* **It does — it is simply not CALLED that in code.** *"Binding lane"* is the ledger's name for it; the repo calls it `spec_family_bindings`. **Searching for a ruling's VOCABULARY and concluding from a blank is the same error class as `*-broker.ts` and the three senses of "unreachable" — the fourth time today a name has misled a population, and this time the name was ours.**
+
+---
+
+### ★★★ THE BLOCKER IS THE METER, NOT THE BUILD
+
+R-397 ACCEPTANCE COMMANDS, verbatim: *"Phase-1 movement is measured by ONE number and no other: `EXACT-NOW`, and the count of specs whose load-bearing conditions are ALL concretely bound. **Report both before and after.**"*
+
+**[MEASURED] `grep -rn "EXACT-NOW"` across the entire repo, excluding `node_modules` → ZERO occurrences.** (An earlier broader grep appeared to hit ten files; those were the ordinary words *exact*/*exactly* — **I re-ran it against the literal token rather than believing the first count.**) Likewise **zero** for `DE-APPROXIMABLE`, `concretely bound`, and `load-bearing condition` in code or docs.
+
+★★★ **So the deciding table in R-303 — 53 load-bearing conditions, 26 UNTYPED, `EXACT-NOW = 0`, coverage STRICT 1 · PRIMARY 3 — was a HAND-BUILT ANALYSIS living in a ruling. Nothing in the repo recomputes it.** The consequences are exact:
+
+1. **I cannot report a "before" number**, because there is no instrument to produce one.
+2. **I cannot report an "after"**, so the build's effect on Phase 1 would be unmeasurable by the very metric declared to be the only one that counts.
+3. **Any number I did produce would be my own re-derivation** — and this desk's standing law is that *a grade reproducing its instrument row-for-row is not a second path*. A hand-count checked against a hand-count is one path twice.
+4. ★ **`EXACT-NOW = 0` is itself now SIX DAYS OLD (R-303, 2026-07-22) and unverifiable today.** ADVISOR-STATE's `0 eligible` inherits from it. **If any binding work landed since, the premise of the promotion is stale and nobody could tell.**
+
+★★ **This is the same shape as R-396's finding, one layer down: R-396 found the PLAN was unreadable because it lived only in old rulings. This finds the plan's SINGLE SUCCESS METRIC is uncomputable because it lives only in an old ruling too.** A destination with no odometer.
+
+---
+
+### RECOMMENDATION — build the meter first (small, and it pays for itself immediately)
+
+**(A) ★ Preferred: build the `EXACT-NOW` meter before the SMC binding.** A script that walks `src/engine/specs/*.yaml`, classifies each load-bearing condition against the existing binding tables in `spec_family_bindings.py` / `spec_condition_compiler.py`, and prints the counts R-303 tabulated by hand. **Then the "before" is measured, not remembered; the "after" is a re-run; and the number stops decaying between rulings.** It also independently re-tests R-303's `EXACT-NOW = 0` — **which is the premise the entire queue re-order rests on, and it has never been reproduced by anything but the ruling that authored it.**
+**(B)** Restate the acceptance in terms something can currently compute.
+**(C)** Build SMC and report no before/after — **I do not recommend this**; it makes the money path's one metric unfalsifiable at the exact moment it starts being used.
+
+★ **(A) is bounded and its red-proof is free: if the meter does not reproduce `STRICT 1 · PRIMARY 3` on today's tree, either the tree moved or the table was wrong — and both are findings the desk needs before committing a build order to them.**
+
+---
+
+**Files changed:** none — read-only startability check.
+**Architecture boundaries NOT touched:** no detector, no binding table, no spec YAML.
+**Hypotheses REJECTED by measurement:** (i) "the binding lane does not exist" — **false**, it exists under a different name; (ii) "EXACT-NOW is computed somewhere under another name" — **not found**, and I searched the vocabulary around it too, but *(iii) I cannot prove a negative across every possible alias* — **[UNPROVEN]**, labelled.
+**Remaining uncertainty:** whether `spec_condition_compiler.py`'s internal `UNTYPED` handling already encodes most of the meter — **I did not open it.** If it does, (A) is smaller than it looks.
+**Risk:** none introduced.
+
+**Next smallest task (ONE):** on your ruling — either open `spec_condition_compiler.py` and scope the meter (A), or take the SMC binding under a restated acceptance (B).
+
+---
+
 ## AR-362 · 2026-07-28 · **SWEEP INCREMENT: claim 2 of 9 verified — `reconciliation-service.ts:397` is TRUE.** ★★ **Which is the more useful result than another false one: the build-state class is NOT uniformly rotten, so it cannot be swept-and-deleted — each literal needs its own verification** · **HANDOFF DECLARED (self-assessment, §10)**
 
 **RULING ID:** R-395/R-396 · **TASK ID:** item 3 — string-literal sweep, increment · **RECOMMENDATION:** APPROVAL_REQUESTED for the increment; **7 of 9 remain unverified and I am handing off rather than starting an eighth I cannot finish well.**
