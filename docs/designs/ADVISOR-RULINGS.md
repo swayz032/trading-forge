@@ -12,6 +12,36 @@
 
 ---
 
+## R-396 · 2026-07-28 · ★★★ **OPERATOR CAUGHT THE DESK NOT KNOWING ITS OWN PLAN — cause is structural, not forgetfulness: THE MONEY-PATH BLUEPRINT LIVES IN THE LEDGER'S EARLY RULINGS (R-053..R-061) AND THE COLD-START ORDER SAYS, VERBATIM, `Do not read the ledger from the top.`** I answered "what phase are we in" with lifecycle states, which is not the plan. **Phase ladder now carried in ADVISOR-STATE; onboarding read-order fixed.** ★★ And this ruling was BLOCKED by my own R-392 mechanism gate on its first submission — receipt in FAILED CONDITIONS
+
+**RULING ID:** R-396 · **TASK ID:** operator question — "what phase are we in on the money-path plan" · **DECISION:** **CORRECTION (mine) + permanent structural fix.**
+
+**CLAIMS VERIFIED (and how).** Asked what phase we are in, I answered from `strategies.lifecycle_state` (120 rows, all CANDIDATE) and backtest counts. **That is the PIPELINE's state, not the PLAN's phase.** The operator's correction — *"I'm talking about the phases, we built the money path plan… Fable 5 built the plan"* — is right. **[MEASURED HERE]** the plan is **BLUEPRINT v1→v3**, authored across **R-053, R-054, R-055, R-057, R-061 on 2026-07-19**, and it exists nowhere else: no `docs/**` plan file carries it, and a grep for plan-doc references across the whole ledger returned **zero** pointers.
+
+**EVIDENCE INDEPENDENTLY CHECKED — the ladder, extracted verbatim from those rulings:** **Phase 1 SPEC COMPILATION** (exit: *">=1 tier-A spec compiles with ALL load-bearing conditions concretely bound AND the compile-fidelity forensics gate passes calibration"*) · **Phase 2 BATTERY/WAVE** with failure-attribution pre-registered before any verdict (edge-absent · compile-fidelity-loss · overlay-caused) plus the taught-exit overlay A/B · **Phase 3 CONVEYOR, not a queue** (internal-paper + shadow-accumulation concurrent per strategy; eval-odds pre-compute pointing B14 at the Combine's own trailing-DD and profit target) · **Phase 3→4 seam DEPLOY-IN-SEASON** (deploy only when the survivor's forensics-named regime is live; else paper standby) · **Phase 3.5 FIRST THIRTY FUNDED DAYS** (payout cadence under 20/80 reserve; advisor recommendation on record = CONSISTENCY lane) · **PRE-POSITIONED LAST MILE** — the operator's spend decision, triggered when the first real-fidelity battery wave shows promise.
+
+**TESTS RERUN (command + result).** Where we are: **Phase 1, exit condition NOT met** — `[ARTIFACT-SOURCED] corpus = 16` · `[CORROBORATED] 0 eligible today`. Pipeline side: 120 strategies at rung one, **0 backtests ever**, 0 paper sessions. ★ **Today's entire R-359→R-395 broker-safety chain is NOT ON THIS LADDER** — it is the "nothing live" hardening that must hold before any phase runs with money. Real work, zero phase progress, and the operator deserved that said plainly rather than dressed as advancement.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in code; one in the campaign's information architecture (below).
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★★ **THE STRUCTURAL DEFECT, quoted rather than characterised: `advisor-onboarding` §1 reads `Do not read the ledger from the top. It is append-only and hundreds of rulings deep; almost all of it is history you do not need to act.` [MEASURED — I read that line] That instruction is correct for in-flight work and wrong for the plan, because the plan was written at the top and never lifted forward — [MEASURED] `ADVISOR-STATE.md` contained no plan block before this ruling, and I had to add it.** Consequence, graded **[HYPOTHESIS, though I know of no counter-example]**: every fresh advisor seated since 2026-07-19 would have hit the same wall. ★ **[UNPROVEN]** whether R-053/R-054 hold phase content beyond what I extracted — I read the definitions and exit conditions, not every clause; **the block I wrote is a faithful summary, not a substitute, and says so.**
+
+★★★ **AND THE RECEIPT THAT MATTERS MORE THAN THE RULING: this entry was REFUSED by `ruling-mechanism-guard.ps1` on its first submission**, for the sentence *"a read order optimised for what is in flight is blind by construction to where are we going"* — a mechanism claim with its evidence in a different paragraph. **I did not reword around it; I attached the quoted skill line above.** R-392 predicted the only honest test of that gate would be "the next time one of these guards blocks me and I am annoyed by it." **It blocked me four hours later, on a true claim that was carrying its proof too far away, and the fix took one edit.**
+
+**REQUIRED CORRECTIONS — both landed.** **(1)** `ADVISOR-STATE.md` now carries **`## THE PLAN`**: the full ladder, Phase 1 marked **WE ARE HERE** with its unmet exit condition, the last-mile spend trigger, and the note that today's chain is off-ladder. **(2)** `advisor-onboarding` §1 now flags that block as required reading, quotes why the plan is invisible to the cold-start order, and tells a future seat to **reconstruct it from the BLUEPRINT rulings if it goes missing.**
+
+**FILES / SCOPE ALLOWED.** `ADVISOR-STATE.md` · `.claude/skills/advisor-onboarding/SKILL.md` · this ledger.
+
+**ACCEPTANCE COMMANDS.** A cold advisor reading only STATE can now name the phase, its exit condition, and the distance to money without opening the ledger's history.
+
+**STOP CONDITION.** n/a.
+
+**LESSON TO PERSIST.** ★★★ **A COMPRESSION RULE IS A POLICY ABOUT WHAT YOU WILL NEVER SEE AGAIN.** "Do not read the old rulings" was written to control cost and it silently classified the campaign's DESTINATION as history. **The fix is not to read more — it is that anything the ledger will need FOREVER must be lifted into the file the cold start actually reads, at the moment it is written.** ★★ **Corollary: the operator is the only participant with continuity across every session, which is why he caught this and no seat did. "How do you not know that" almost always names a structural gap in what the seat is handed — and the durable fix belongs in the handoff surface, never in a resolution to remember.**
+
+**AUTHORIZED NEXT ACTION.** Worker: item 3's remaining sub-items, unchanged. Desk: **Phase 1's exit needs ≥1 tier-A spec compiled with the fidelity gate calibrated, and today reads `0 eligible` — I am investigating what stands between 16 corpus specs and one eligible spec.** That is this desk's line, not the worker's.
+
+---
+
 ## R-395 · 2026-07-28 · **APPROVE PR #27** — the pinning test calls the REAL `lookupHmacSecret` against PGlite, and its mutation exhibit is the strongest of the day: **3 of 5 cases go RED when the `strategy_id` predicate is dropped, and 2 stay GREEN — the two that CANNOT distinguish it.** ★★★ **A red-proof that reports which of its own cases are blind is worth more than one that only reports failures**
 
 **RULING ID:** R-395 · **TASK ID:** item 3 sub-item 1 (re-scoped by R-394) · **DECISION:** **APPROVE** — merge on CI green; no production change, none needed.
