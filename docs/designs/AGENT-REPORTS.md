@@ -4,6 +4,74 @@
 
 ---
 
+## AR-375 · 2026-07-28 · **FVG FIDELITY CHECK — VERDICT: ★ PARTIAL, with the divergence named and its DIRECTION measured.** ★★★ **The primitive implements the CLASSIC ICT rule (`high[i-2] / low[i]`); `-igp`'s teacher explicitly taught `close[i-2] → open[i]`. Same 3-candle window, DIFFERENT boundaries — and the divergence is STRICTER than taught, not looser** ★★★ **THE STING: the teacher's definition lives in conditions [1] and [3] — the two UNBOUND mis-typed `WAIT_SESSION` rows. The spec's own definition is INVISIBLE to the binder that contradicts it**
+
+**RULING ID:** R-409 · **TASK ID:** item (1), the gating fidelity check · **RECOMMENDATION:** **the seven crossings are NOT a liability — but `approximation=False` overstates fidelity for `-igp` specifically, and the distinction is per-spec, not per-primitive.**
+
+---
+
+### (a) SIDE-BY-SIDE — taught rule vs the executable lines
+
+**TAUGHT** (`-igpOZs8LsM__s0`, conditions [0], [1], [3] — verbatim):
+> [0] *"the gap you know is created between **three candlesticks**"*
+> [1] *"the gap from the **closing point of the first candle** to the **opening point of the third candle**. So the gap in between is what is called an imbalance"*
+> [3] *"…**map it out from the closing points** when it's a sell … from the **closing point of the first candle** and also the **opening point of the third candle**"*
+
+**IMPLEMENTED** (`src/engine/indicators/fvg_native.py:77-96`):
+```python
+bullish_mask = low[2:] > high[:-2]        # bullish FVG at i:  low[i]  > high[i-2]
+bearish_mask = high[2:] < low[:-2]        # bearish FVG at i:  high[i] < low[i-2]
+FVGZone(upper=low[i],     lower=high[i-2])    # bullish band
+FVGZone(upper=low[i-2],   lower=high[i])      # bearish band
+```
+Module docstring `:17-19`: *"**RULE (classic ICT 3-candle imbalance)** … gap between candle i-2's **high** and candle i's **low**"*. `compute_fvg_signal` docstring `:159-161`: *"`open_` / `close` are accepted for call-shape symmetry … but are **unused by the classic high/low imbalance rule**."*
+
+| aspect | taught | implemented | verdict |
+|---|---|---|---|
+| window | 3 candlesticks | bars `i-2, i-1, i` | ✅ **FAITHFUL** |
+| middle candle = displacement | *"the gap in between"* | *"middle candle (i-1) … creates the imbalance"* | ✅ **FAITHFUL** |
+| look-ahead | — | reads only `i-2, i-1, i` | ✅ **CLEAN** |
+| direction handling | bullish + bearish taught separately | separate masks | ✅ **FAITHFUL** |
+| **zone BOUNDARIES** | **close[i-2] → open[i]** | **high[i-2] → low[i]** | ❌ **DIVERGENT** |
+
+**VERDICT: PARTIAL — structurally faithful, boundary-divergent.**
+
+### ★★ THE DIRECTION OF THE DIVERGENCE — measured, and it is the reassuring direction
+
+For a bullish gap: `high[i-2] ≥ close[i-2]` and `low[i] ≤ open[i]`, therefore **the implemented band `[high[i-2], low[i]]` is a SUBSET of the taught band `[close[i-2], open[i]]`.** And the detection predicate `low[i] > high[i-2]` is **strictly harder to satisfy** than the taught `close[i-2] < open[i]`.
+
+★★★ **So the primitive fires LESS OFTEN and marks SMALLER zones than the teacher taught. It is STRICTER — the opposite of the corpus's declared `OPTIMISTIC_LOOSER_THAN_TAUGHT` bias, and the opposite of every mis-binding found today** (the wick-vs-close confirmation and the EMA-vs-structural-level retest both ran loose). **A stricter binding cannot manufacture trades the teacher never sanctioned; it can only miss trades the teacher would have taken.** ★ That is a materially safer failure mode for a money path, and it is why I am **not** calling this a liability.
+
+### ★★★ THE STING — the spec's own definition is invisible to the binder
+
+`-igp`'s close→open definition lives in conditions **[1] and [3]** — and **[MEASURED, AR-374] those are exactly the two rows that come back `UNBOUND(no_recognized_session_keyword)`, flag on or off.** They are the mis-typed `WAIT_SESSION` geometry rows.
+
+★★ **So the teacher DID say how to build the object — precisely, mechanically, twice — and the dispatcher never sees it, because the definition was typed into a family that discards it. The binder then supplies the canonical definition from its own knowledge and the plan is stamped `approximation=False`.** ★★★ **`approximation=False` is a claim that the taught rule is bound exactly. Here it means "bound exactly to the CLASSIC rule" — and for this spec those are different rules. Caption-is-a-claim, on the one field the Phase-1 gate reads.**
+
+### ★ AND IT IS PER-SPEC, NOT PER-PRIMITIVE — the distinction that should govern the ruling
+
+| spec | did the teacher define FVG boundaries? | is `approximation=False` defensible? |
+|---|---|---|
+| **`CLDE`** | ❌ says *"5-minute fair value gap"*, never defines boundaries | ✅ **YES** — canonical ICT is the reasonable reading of an undefined term |
+| **`-igp`** | ✅ **explicitly, twice** (`close[i-2] → open[i]`) | ❌ **NO** — the primitive contradicts the spec's own words |
+
+★★ **`CLDE`'s 3 crossings are honest. `-igp`'s 4 are concrete about a rule its teacher did not teach.** That inverts AR-374's "for a flag-only first step, `-igp` is the larger number" — **the larger number is the less faithful one.**
+
+---
+
+**STOP CONDITION check (R-409):** *"stop and report if (a) finds the primitive DIVERGENT."* ★ **It is PARTIAL, not DIVERGENT — faithful in structure, divergent in one named parameter, in the conservative direction. I am reporting and holding items (2) and (3) for your ruling rather than assuming which way PARTIAL resolves.**
+
+**Files changed:** none. Read-only. No flag flipped outside the earlier process-local experiment.
+**Hypotheses REJECTED:** (i) "the primitive is a faithful implementation of the taught rule" — **false, boundaries differ**; (ii) "a divergence here would be the usual loose direction" — **false, it is stricter**; (iii) "fidelity is a property of the primitive" — **false, it is a property of primitive × spec.**
+**Remaining uncertainty:** the **magnitude** of the difference on real bars — how many zones the close/open rule would find that high/low misses. **[UNMEASURED]** — it needs price data and is a different unit; `scripts/fvg-experiment-controlled-run.py` (the SDS harness) is built for exactly that comparison.
+**Risk:** none introduced.
+
+**Recommendation:** **(1)** rule PARTIAL as **acceptable for `CLDE`, qualified for `-igp`** — and if the flag graduates, its record should say *"binds the classic ICT rule"*, not *"binds the taught rule"*, so no future reader inherits the overstatement; **(2)** the real fix for `-igp` is upstream — its close→open definition needs to reach the binder, which today is a forbidden spec re-type and therefore **a corpus_B charter item**: ★ **"capture the teacher's OWN definition of an object as a definition, not as a condition typed by keyword."** That is the first concrete corpus_B requirement this census has produced, and it came from the fidelity check rather than the referent pass.
+
+**Next smallest task (ONE):** on your ruling — item (2) the 16-spec flag-yield sweep, or run the SDS harness to measure the close/open-vs-high/low magnitude on real bars.
+
+---
+
 ## AR-374 · 2026-07-28 · **FVG SIZING EXPERIMENT — RUN AGAINST THE REAL DISPATCHER. ★★★ THE FLAG WORKS: 7 conditions across the two specs move `approximate → CONCRETE` (`-igp` 0→4, `CLDE` 0→3) — the first `approximation=False` bindings either spec has ever had.** ★★★ **BUT IT DOES NOT EXIT PHASE 1, AND I MUST CORRECT THE EXPECTED CONTRACT: `CLDE` 10/10 IS NOT REACHABLE FROM "FVG FLAG + SESSION-LEVELS LANE" — that path tops out at 5 of 10 concrete, and the other five need four MORE lanes**
 
 **RULING ID:** R-408 · **TASK ID:** sizing experiment · **RECOMMENDATION:** **build the flag path (cheapest, real, already reviewed-by-design) — but the build contract must NOT promise a Phase-1 exit.**
