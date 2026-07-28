@@ -122,6 +122,29 @@ flag** — graduation runs the SDS harness review per the flag's own docstring.
 - ★★★ **IT ACTIVATES ON THE FIRST BAND-C BACKTEST — which is what this campaign
   exists to produce.**
 
+## ★★★ ARMED — AWAITING RULING (AR-381, desk-verified; NOT YET RULED)
+**LATENT -> ARMED.** [MEASURED HERE, TREE `runtime-production`] a production
+backtest config **can** carry `compiled_spec` today, unconditionally:
+`spec-onboarding-service.ts:647-650` builds `finalConfig` with a `compiled_spec`
+key (no flag, no env var, no operator step) -> `:756` persists it to
+`strategies.config` -> `backtester.py:8471` Band-C branch fires on the key's
+presence -> `:8492 from_compiled_spec(...)` -> `spec_condition_compiler.py:226
+compile_binding_plan(...)` **in the 35,046 B production lane** — the one that
+emits the false concrete.
+★★ **[MEASURED, `:656-659` verbatim] the design DELIBERATELY stores only a
+summary and recomputes the real plan in the engine at backtest time** — sound
+design, and it means the divergent lane is the one that decides the answer.
+★ **[NOT CHECKED] whether any strategy row carries a `compiled_spec` right now**
+— a live-DB read, and live reads are the desk's.
+★★★ **NOTHING IS AT RISK TODAY: [MEASURED on the live DB] 0 backtests ever,
+0 paper sessions, 0 broker credentials. ARMED means the next Band-C backtest
+would use the wrong lane — not that anything is running.**
+
+**RULING HELD** — operator directive 2026-07-28: *"wait for gpt6 opinion from
+now on before you do a ruling."* This finding is verified and parked, not
+forgotten. **The gate stands: no Band-C backtest before the refusal-port lands
+(R-417's 5 steps + pre-backtest invariant).**
+
 ## ★★★ NEW PHASE-2 PREREQUISITE (R-415) — assignee: THIS SEAT
 **"Before the first Band-C backtest runs, the desk rules which binding lane is
 authoritative and the executing tree carries it."** Settled on COMPILER
@@ -143,10 +166,9 @@ which is not the lane that will run the backtest.**
 stale = FALSE" (it is UNSCOPED — right conclusion, wrong reason).
 
 ## AUTHORIZED NOW (worker, in order)
-1. **Trace `compiled_spec`** from `spec-onboarding-service.ts` to
-   `/api/backtests`: can a production backtest config carry it TODAY?
-   Read-only, name the tree on every line. **STOP and report if YES — that
-   moves this LATENT -> ARMED.** First observable: call path + yes/no, ~15 min.
+1. ~~Trace `compiled_spec`~~ **DONE (AR-381) — answer YES, ARMED.** Desk-verified.
+   **Do not wait on its ruling; it is held pending an external second opinion.
+   CONTINUE TO ITEM 2 — you are not blocked.**
 2. **Structural inventory** of the campaign<->production binding-lane
    divergence — categories present in one lane and absent in the other, with
    byte-anchored evidence. Not a line dump.
