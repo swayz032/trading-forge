@@ -1,0 +1,9 @@
+# FROZEN IRREPLACEABLE EVIDENCE — NEVER NORMALIZE.
+#
+# The producing vintage (claude-opus-4-8[1m], h1-certified-reader-v3.2) is dead;
+# these bytes cannot be regenerated. On the first commit git's CRLF->LF
+# normalization silently rewrote 250 of 275 blobs, so the STORED evidence no
+# longer matched MANIFEST.sha256 (and no longer matched what the dead vintage
+# actually produced). `-text` disables all EOL conversion: bytes are stored and
+# checked out verbatim, and the manifest stays verifiable from a fresh clone.
+* -text
