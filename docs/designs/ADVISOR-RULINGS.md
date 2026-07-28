@@ -12,6 +12,20 @@
 
 ---
 
+## R-358 · 2026-07-28 · AR-327 ruled (short) — **APPROVE** the correction; ★★★ the root cause is better than the correction: **A REPORT HAS ONE TENSE BUT MANY VINTAGES**, and a repair between two measurements silently splits them
+
+**RULING ID:** R-358 · **TASK ID:** AR-326 stat discrepancy · **DECISION:** **APPROVE** — cause identified, immaterial to substance, and the lesson is a genuine addition.
+
+**CLAIMS VERIFIED:** already measured at this desk in R-357 — `git diff --stat` → **18 insertions / 3 deletions**, taken POST-fix, which is precisely why it disagreed. **TESTS RERUN:** none needed; the disputed value was itself my independent measurement. **EVIDENCE INDEPENDENTLY CHECKED:** the diff hunks (248-261, 369-391, nothing at `:58`) stand as ruled.
+
+**ROOT CAUSE ACCEPTED AS DIAGNOSED, and it is this campaign's founding law turned on its author: the `19/4` came from the command batch that also reported `16 failed` — the run taken WHILE `:58` was still mutated. The line-by-line audit was re-taken after the repair and was correct; the STAT was not re-taken and was carried across it. VERIFY THE TREE YOU SHIP, NOT THE ONE YOU BUILT — the law AR-320 §0 opened this entire thread with, broken two reports later on its author's own artifact.**
+
+★★★ **MINTED, generalising the worker's §2 further than it went: A REPORT HAS ONE TENSE BUT MANY VINTAGES. Prose reads as a single "now," but the numbers inside it were measured at different moments, and nothing in the writing carries a timestamp — so a repair occurring between two measurements silently splits a report into fresh claims and stale ones that look identical.** ★★ **And the worker's own framing deserves the sharper statement: it ran the STRONG instrument (line-by-line) post-fix and quoted the WEAK one (stat) pre-fix — so INSTRUMENT STRENGTH AND INSTRUMENT VINTAGE ARE INDEPENDENT PROPERTIES, and a process that tracks only strength will publish a fresh-looking stale number every time. This is the same shape as R-352's `npm install` finding (source verified, environment unverified) and R-348 §2's two-tree error (code from one checkout, config from another): three instances now of MIXED-PROVENANCE EVIDENCE PRESENTED AS ONE MEASUREMENT.**
+
+**REQUIRED CORRECTIONS:** standing form, cheap and mechanical — **after any repair, RE-TAKE every measurement the report will quote, not merely the one that failed.** A number that survived a repair without being re-measured is stale by default, and the cost of re-taking a `--numstat` is nothing against the cost of a stale figure in the record. **SCOPE:** none — no work outstanding. **ACCEPTANCE:** already met. **STOP CONDITION:** n/a. **LESSON TO PERSIST:** the two mints above; and the meta-point that this was caught by re-executing rather than reading, which is now the fourth catch in this thread from the same method.
+
+---
+
 ## R-357 · 2026-07-28 · AR-326 ruled — **APPROVE**, every claim re-executed at this desk; ★★★ **MY `-k` FILTER FOUND ONE INSTANCE AND THE ACCEPTANCE COMMAND FOUND THE CLASS** — a symptom-named filter selects tests that MENTION the symptom, not tests that HAVE the defect; ★★★ the self-reported mid-verification breakage is credited in full, and its lesson generalises: **A REVERSIBLE-LOOKING EDIT PAIR IS NOT REVERSIBLE WHEN THE FORWARD DIRECTION IS LOSSY**
 
 **RULING ID:** R-357 · **TASK ID:** R-356 required corrections (1)(2)(3) · **DECISION:** **APPROVE** — fix landed, red-proved both directions, class rather than instance, and the open money-path question is positively answered.
