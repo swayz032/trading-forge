@@ -292,3 +292,45 @@ export async function submitWebhookOrder(
     }
   }
 }
+
+// ─── Credential probe transport (item 4, R-349 §2) ───────────────────────────
+
+/**
+ * Perform the credential-validity probe request.
+ *
+ * WHY IT LIVES HERE: this module is the ONE place permitted to open an HTTP
+ * connection to a TradersPost host, enforced by
+ * `services/__tests__/broker-egress-chokepoint.test.ts`. The probe previously
+ * ran its own `fetch` from broker-router.ts against a duplicate copy of the same
+ * base-URL constant — a second egress point with its own timeout, its own URL
+ * resolution, and no shared contract with the order path. Two egress points mean
+ * two sets of behaviour to keep correct; the enumeration that found them was done
+ * by hand and does not re-run itself.
+ *
+ * This function is TRANSPORT ONLY. It deliberately does NOT decide whether the
+ * probe may run — `checkProbeGate()` in broker-router.ts owns that, and moving
+ * the decision here would scatter the gate the same way the fetch was scattered.
+ *
+ * SECURITY: the caller's apiKey is placed in the body and must never be logged.
+ * Returns the raw status so the caller keeps its 401/403-vs-4xx interpretation.
+ */
+export async function probeCredentialTransport(
+  apiKey: string,
+  timeoutMs: number,
+): Promise<{ ok: true; status: number } | { ok: false; isAbort: boolean }> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const resp = await fetch(TRADERSPOST_WEBHOOK_BASE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ apiKey }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+    return { ok: true, status: resp.status };
+  } catch (err: unknown) {
+    clearTimeout(timeoutId);
+    return { ok: false, isAbort: err instanceof Error && err.name === "AbortError" };
+  }
+}

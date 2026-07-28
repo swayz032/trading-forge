@@ -29,7 +29,7 @@ import { broadcastSSE } from "../routes/sse.js";
 import { isActive as isPipelineActive } from "./pipeline-control-service.js";
 import { loadBrokerCredentials } from "../lib/credential-loader.js";
 import { isLiveExecutionConfigured } from "../lib/execution-mode.js";
-import { submitWebhookOrder, buildDeterministicIdempotencyKey } from "../integrations/traderspost/client.js";
+import { submitWebhookOrder, buildDeterministicIdempotencyKey, probeCredentialTransport } from "../integrations/traderspost/client.js";
 import type { IdempotencyKeyInputs } from "../integrations/traderspost/client.js";
 import { buildWebhookPayload } from "../integrations/traderspost/webhook-builder.js";
 import type { WebhookSignal } from "../integrations/traderspost/webhook-builder.js";
@@ -177,20 +177,23 @@ async function probeSingleTradersPostKey(
 ): Promise<"valid" | "revoked" | "probe_failed"> {
   // Minimal payload: include only apiKey. TradersPost should reject on missing
   // required fields (400/422) if the key is valid, or reject on the key itself (401).
-  const payload = JSON.stringify({ apiKey });
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), TP_PROBE_TIMEOUT_MS);
-
+  // 2026-07-28 (item 4, R-349 §2): the HTTP call now lives in the traderspost
+  // client — the ONE module permitted to reach a broker host, enforced by
+  // broker-egress-chokepoint.test.ts. This function keeps the INTERPRETATION
+  // (401/403 = revoked, other 4xx = key valid, else inconclusive) because that is
+  // probe policy, not transport. Only the socket moved; the semantics did not.
   let probeResult: "valid" | "revoked" | "probe_failed";
-  try {
-    const resp = await fetch(TP_PROBE_BASE_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // SECURITY: payload contains apiKey — must never be logged
-      body: payload,
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
+  {
+    const transport = await probeCredentialTransport(apiKey, TP_PROBE_TIMEOUT_MS);
+    if (!transport.ok) {
+      logger.debug(
+        { accountId, isAbort: transport.isAbort },
+        "broker-router: TP key probe network/timeout error (inconclusive)",
+      );
+      _tpKeyProbeCache.set(accountId, { result: "probe_failed", probedAt: new Date() });
+      return "probe_failed";
+    }
+    const resp = { status: transport.status };
 
     if (resp.status === 401 || resp.status === 403) {
       probeResult = "revoked";
@@ -205,14 +208,6 @@ async function probeSingleTradersPostKey(
       );
       probeResult = "probe_failed";
     }
-  } catch (fetchErr: unknown) {
-    clearTimeout(timeoutId);
-    const isAbort = fetchErr instanceof Error && fetchErr.name === "AbortError";
-    logger.debug(
-      { accountId, isAbort },
-      "broker-router: TP key probe network/timeout error (inconclusive)",
-    );
-    probeResult = "probe_failed";
   }
 
   // Cache the result
