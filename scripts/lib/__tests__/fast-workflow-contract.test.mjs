@@ -37,6 +37,18 @@ test("Fast Lane uses a managed runner and a health-checked PostgreSQL service", 
   assert.match(workflow, /PGHOST:\s*localhost/);
 });
 
+test("Fast Lane isolates full Vitest workers from Node V8 thread-pool crashes", () => {
+  const workflow = readFileSync(FAST_WORKFLOW, "utf8");
+  const vitest = workflow.indexOf("Collect full Vitest report");
+  const pytest = workflow.indexOf("Collect fast pytest report", vitest);
+  const vitestBlock = workflow.slice(vitest, pytest);
+
+  assert.ok(vitest >= 0, "Fast Lane must collect the full Vitest report");
+  assert.match(vitestBlock, /--pool=forks/);
+  assert.doesNotMatch(vitestBlock, /--pool=threads/);
+  assert.match(vitestBlock, /--outputFile=ci\/out\/vitest\.json/);
+});
+
 test("Fast Lane does not archive a global pip cache", () => {
   const workflow = readFileSync(FAST_WORKFLOW, "utf8");
   const setupPython = workflow.indexOf("actions/setup-python@v5");

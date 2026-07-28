@@ -154,7 +154,10 @@ jobs:
       - name: Collect full Vitest report
         id: vitest_report
         continue-on-error: true
-        run: node node_modules/vitest/vitest.mjs run --pool=threads --maxWorkers=1 --minWorkers=1 --reporter=json --outputFile=ci/out/vitest.json
+        # Process isolation avoids the intermittent Node 24/V8 WASM JIT teardown crash
+        # seen in the thread pool. That native crash exits before Vitest can flush the
+        # JSON evidence, producing a false-red baseline verdict even when tests pass.
+        run: node node_modules/vitest/vitest.mjs run --pool=forks --maxWorkers=1 --minWorkers=1 --reporter=json --outputFile=ci/out/vitest.json
 
       - name: Collect fast pytest report
         id: pytest_report

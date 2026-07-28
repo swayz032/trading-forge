@@ -15847,7 +15847,9 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Known-facts updates:** The nightly review role is GPT-5.6 Sol / Flex / medium reasoning. Night Agent creation is Learning-Loop-gated; the room itself remains read-only. Prompt-cache use is verified from returned usage receipts, never inferred.
 
-**Carry-forward:** Push through GitHub CI, merge to main, verify Railway deployment, then synchronize the committed 14A model/cache settings to live n8n when live API access is available.
+**Same-session CI hardening:** The first GitHub Fast Lane reached the end of the full Vitest run but Node 24/V8 crashed during WASM JIT teardown (`Check failed: jit_page_->allocations_.erase(addr) == 1`, exit 133) before the JSON reporter flushed `ci/out/vitest.json`. The tests were not the failure; the absent evidence made the baseline comparator correctly fail closed. Fast Lane now uses a one-worker `forks` pool so each test worker is process-isolated from that V8 thread teardown path. A workflow contract test prevents reintroducing the thread pool or dropping the JSON output path. The exact full forked command completed locally with 13,262 passed, 0 failed, wrote a valid 4.99 MB JSON report, and the frozen-baseline comparator returned GREEN.
+
+**Carry-forward:** Merge after the repaired GitHub Fast Lane and remaining required checks are green, verify Railway deployment, then synchronize the committed 14A model/cache settings to live n8n when live API access is available.
 
 ## Known-Facts Pin — Stop Misdiagnosing These
 
