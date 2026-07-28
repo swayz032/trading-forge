@@ -3,7 +3,7 @@
 > **Rewritten in place, never appended.** Cold-start read for a fresh advisor:
 > this file, then the last 3–5 rulings, then the newest 1–2 ARs. Do not read the
 > ledger from the top. Invoke `advisor-ruling` before any ruling.
-> Last rewritten: 2026-07-28, current through R-377.
+> Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
 Ledger at **R-380**. Newest AR: **AR-344**, RULED (R-380). Worker:
