@@ -21,7 +21,7 @@
  */
 
 import { eq, desc } from "drizzle-orm";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { db } from "../db/index.js";
 import { auditLog, brokerAccounts, productionTrades, strategies, complianceRulesets } from "../db/schema.js";
 import { logger } from "../lib/logger.js";
@@ -285,8 +285,14 @@ async function checkProbeGate(): Promise<string | null> {
   if (!isKeyProbeEnabled()) return "probe_disabled";
   // A credential probe only has a consumer when live routing is configured.
   if (!isLiveExecutionConfigured()) return "live_execution_not_configured";
+  // Scoped, never bare: a zero-opts call falls back to documented GLOBAL
+  // behaviour and mints its own random correlationId, which is unjoinable.
+  // A boot probe legitimately has no account/firm scope, so it supplies a
+  // correlationId only — guarded by the F-2-scoping regression test.
   try {
-    if (await killSwitch.isHaltedForProduction()) return "production_halt";
+    if (await killSwitch.isHaltedForProduction({ correlationId: randomUUID() })) {
+      return "production_halt";
+    }
   } catch (err: unknown) {
     logger.error({ err }, "broker-router: probe gate kill-switch check threw — fail-CLOSED skip");
     return "kill_switch_error";
