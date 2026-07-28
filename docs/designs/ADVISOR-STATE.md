@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-367.
 
 ## SEAT
-Ledger at **R-371**. Newest AR: **AR-337**, RULED. ⚠ R-370 §5's "next seat"
+Ledger at **R-373**. Newest AR: **AR-339**, RULED. ⚠ R-370 §5's "next seat"
 disposition is WITHDRAWN (R-371): tasks are authorized TO THE SEAT, never to a
 future session; a worker's handoff declaration is self-assessment, not a
 transfer of authorization. Worker: **handed off** — it
@@ -20,7 +20,13 @@ excludes my `R-NNN`/`ADVISOR-STATE` commits so they cannot mask worker silence).
 flag state; `startBootProbe()` called once at `index.ts:832`. REMAINING:
 **red-proof each of the six before making it green** (§5(3)), keep the
 probe-gate DISCRIMINATES case green, The call-site guard is DONE and verified across 6 inputs (R-369 §1).
-**§5(3)(b) EXECUTED — 4 of the 6 are VACUOUS BY CONSTRUCTION** (only negative
+**ROOT CAUSE (R-373): the A-11 pipeline mock returns a BARE BOOLEAN and the
+gate chains `.catch()` on it — TypeError, swallowed by the probe's fail-soft
+wrapper, so the probe never ran in that suite. Fix: `mockResolvedValue(true)` +
+bring the gate's pipeline clause to `try/catch` like its kill-switch clause.
+**R-370 §4's mutation acceptance is ALREADY MET** — the armed run is the
+red-proof (same dead-probe condition: pre-rewrite GREEN, post-rewrite RED).
+OLD: §5(3)(b) EXECUTED — 4 of the 6 are VACUOUS BY CONSTRUCTION** (only negative
 assertions; they cannot detect a regression of this very fix). **PR #12 now
 BLOCKS on rewriting those four** per R-370 §3's spec (prove the path ran, then
 prove the absence), with R-370 §4's CI-as-runner mutation proof: land the
