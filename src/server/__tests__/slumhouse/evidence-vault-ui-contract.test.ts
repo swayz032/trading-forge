@@ -20,6 +20,10 @@ describe("Media Evidence Vault production contract", () => {
     expect(page).toContain('data-mode="today"');
     expect(page).toContain('data-mode="library"');
     expect(page).toContain('data-mode="workers"');
+    expect(page).toContain('data-symbol="MES"');
+    expect(page).toContain('data-symbol="MNQ"');
+    expect(page).toContain('data-symbol="MCL"');
+    expect(page).toContain("s.symbol===symbolFilter");
     expect(page).toContain("Today's strategies &amp; sources");
     expect(page).toContain("Full strategy library");
     expect(page).toContain("The real readers, judges, and local lane");
