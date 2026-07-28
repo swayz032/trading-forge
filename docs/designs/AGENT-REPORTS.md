@@ -4,6 +4,76 @@
 
 ---
 
+## AR-382 · 2026-07-28 · **REFUSAL-PORT SCOPED TO THE LINE — the dependency surface is CLEAN (3 symbols, no new helper needed: production already has the identical matcher inline).** ★★ **HANDOFF DECLARED before writing it — this change lands in the lane that executes the tower, and I am at the end of a very long session. The contract below is complete enough to start from cold**
+
+**RULING ID:** R-418 · **TASK ID:** the refusal-port · **RECOMMENDATION:** **BUILD-READY, NOT BUILT.** Handoff is self-assessment (§10); the task stays filed, not abandoned.
+
+---
+
+### ★ THE PORT IS SMALLER THAN IT LOOKS — dependency surface proven clean
+
+`refused_session_zone` depends on campaign's `_session_phrase_hit` (`:781-786`):
+```python
+norm = f" {object_text.strip().lower()} "
+return any(f" {kw} " in norm or norm.strip().startswith(kw) or norm.strip().endswith(kw) for kw in keywords)
+```
+**[MEASURED] production already contains that exact idiom inline** at `resolve_session_keyword` (`spec_family_bindings.py:402-406`, `runtime-production`) — same normalisation, same three-way match. ★ **So `_session_phrase_hit` does NOT need porting; the new function can use production's existing form and stay byte-consistent with its sibling.** That keeps the diff to three added symbols and one keyword move, exactly as R-418 scoped it, with **no new helper and no import surface change** (the module's stdlib-only purity contract holds).
+
+### THE EXACT DIFF — `runtime-production/src/engine/spec_family_bindings.py`
+
+**1. REMOVE two entries from `SESSION_KEYWORDS` (`:275-283`)** — currently:
+```python
+"lunch_blackout": ("lunch", "midday", "noon session"),
+"overnight": ("overnight", "globex", "asia session", "pre market", "premarket"),
+```
+**2. ADD `REFUSED_SESSION_KEYWORDS`** (campaign `:492-495`) with those two entries, carrying the campaign's comment (*"zero effective demand; `overnight` has no single defensible clock"*).
+**3. ADD `session_refusal_reason(refused_zone) -> f"session_zone_refused_uncomputable_window:{refused_zone}"`** (campaign `:498-504`) — its docstring distinguishes it from `no_recognized_session_keyword` and must be carried verbatim, because that distinction IS the finding.
+**4. ADD `refused_session_zone(object_text) -> str | None`** (campaign `:803-811`), using production's inline matcher idiom.
+**5. ADD the unflagged refusal block** in `_bind_condition_dispatch` (campaign `:2549-2560`) — **before** the `resolve_session_keyword` path:
+```python
+refused = refused_session_zone(obj)
+if refused is not None:
+    return ConditionBinding(condition_id=cond_id, type=cond_type, role=role, object=obj,
+                            bindable=False, primitive=None, approximation=True,
+                            executed=False, reason=session_refusal_reason(refused),
+                            session_zone=None)
+```
+★ **`approximation=True` + `bindable=False` + `primitive=None` is the combination that keeps it OUT of the concrete count** — that trio is the fix; changing any one of them re-creates the false concrete.
+
+### THE RED MATRIX — write these FIRST, prove RED against unported production
+
+| case | expected | RED without the port because… |
+|---|---|---|
+| `overnight` phrase, no configured interval | `REFUSE_MISSING_SESSION_CLOCK` (`session_zone_refused_uncomputable_window:overnight`) | today it binds `session_windows`, `approximation=False` |
+| `overnight` explicitly defined 16:00–09:30 | bind, cross-midnight interval | today no interval concept exists |
+| a configured session (RTH / `ny_am`) | bind normally | must stay GREEN both ways — **this is the DISCRIMINATOR** |
+| recognized session, no timezone/calendar basis | refuse or remain unresolved | — |
+| unresolved session | strategy cannot enter backtesting | consumer behaviour — **see the open question below** |
+
+★★ **The third row is the control.** Without it the suite cannot distinguish "the port works" from "the port refuses everything", and a refusal-shaped fix is exactly the kind that goes silently over-broad.
+
+### ★★★ THE OPEN QUESTION THAT MAY BLOCK ROW 5 — flagged before anyone starts
+
+R-418's own stop condition: *"stop if the port cannot make a refused binding fatal without touching the onboarding writer."* ★ **[UNTRACED] I did not verify what the consumer does with `bindable=False`.** `MIN_SPINE_BOUND_RATIO = 0.5` (`:506`) decides compiled-vs-queued, so a refused **spine** condition may simply lower the ratio rather than block — **and `W7nl[6]` is `role=confluence`, which may not affect the ratio at all.** **If a refused confluence row cannot make the strategy non-backtestable from inside the binding lane, row 5 is unsatisfiable within scope and that is a STOP, not a workaround.** That trace is R-418's item (2) and I would do it **before** writing the port, not after.
+
+---
+
+### ★ HANDOFF — declared, with state
+
+- **Not started:** no branch, no worktree, no code. **Nothing half-written anywhere.**
+- **Open PR:** **#27** (pair-binding test + `schema.ts` column `e507ae33`) — approved R-395, merge-on-green is the desk's.
+- **Standing facts a cold seat needs:** LOADED, **120/120** strategies carry `compiled_spec` · **0 backtests ever** (the stop: report immediately if `backtests total > 0` before the port lands) · campaign lane 160,049 B vs production 35,046 B · citable sweep **`0 → 10`, campaign tree**, production's extra `1` is a **false** concrete.
+- ★ **Every figure carries its tree from here (R-413).** The verb matters too (R-417): production **PRINTS** 11; the honest count **IS** 10.
+- **Queued behind the port:** consumer trace (item 2) · corpus_B charter (item 3) · parity third leg · `OUT_PATH` date-stamp · revival probes.
+
+**Files changed:** none this report. Read-only throughout.
+**Remaining uncertainty:** the consumer-fatality question above — **it may re-scope the port before it is written.**
+**Risk of the handoff:** none. **Risk of NOT handing off:** a half-applied refusal in the tree that executes the tower, which is the one place a partial result must never land.
+
+**Next smallest task (ONE) for the next seat:** R-418 item (2) — trace what the consumer does with `bindable=False` / a refused row, and confirm row 5 of the matrix is satisfiable **before** writing the port.
+
+---
+
 ## AR-381 · 2026-07-28 · ★★★ **STOP CONDITION TRIPPED — YES. A PRODUCTION BACKTEST CONFIG CAN CARRY `compiled_spec` TODAY. LATENT → ARMED.** ★★ **The producer is not flag-gated, it persists to `strategies.config`, and its own comment states the design intent: the Python engine RECOMPUTES the binding plan at backtest time via `compile_binding_plan` — the exact function whose two trees disagree**
 
 **RULING ID:** R-416 item (1) · **TASK ID:** `compiled_spec` trace · **TREE: `runtime-production` on every line.** · **RECOMMENDATION:** **stopping here as instructed. This is yours to rule before anything proceeds.**
