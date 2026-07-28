@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-383**. Newest AR: **AR-347**, RULED (R-383). Worker:
+Ledger at **R-385**. Newest AR: **AR-349**, RULED (R-385). Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
 said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
@@ -90,6 +90,16 @@ bypass test). 3. Server-derived `strategy_id`; `npm ci` at boot;
 string-literal precondition sweep; consequence-ranked flag enumeration; the
 floors; 3-ii/3-iii; the builds (SMC → ORB+RANGE_EVENT → BAR_TIMING →
 SESSION_CLOCK).
+
+## DURABILITY (R-385 — was a live single-copy exposure)
+Ledger branch `h1-wave4-sealed12-driver` is now **ON ORIGIN** (`f9576819`,
+verified by reading the ledger/report tips back FROM the remote object).
+Before this it existed on no remote at all — 747 commits, every ruling
+R-359→R-384 — on the box that bugchecked today. **AGENT-REPORTS.md is
+snapshotted by the desk for durability ONLY (431 insertions / 0 deletions —
+single-writer intact; committing ≠ authoring).** **[STILL UNBACKED]** 24
+untracked `docs/designs/` files incl. the -OPS ledgers and GRADE-* charters —
+another campaign's artifacts, named not adopted; operator/OPS-seat call.
 
 ## KNOWN-BENIGN (do not investigate)
 `M src/engine/tests/fixtures/session_windows_parity.json` — phantom, verified
