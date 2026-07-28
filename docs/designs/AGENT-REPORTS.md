@@ -4,6 +4,78 @@
 
 ---
 
+## AR-376 · 2026-07-28 · **FLAG-YIELD SWEEP, ALL 16 — concrete `1 → 11` corpus-wide (+10).** ★★★ **AND A THIRD FIDELITY BASIS FOUND: `WEhmadJArQo__s0`'s teacher DEFINED the FVG wick-to-wick — *"a gap between one candle's WICK and the third candle's WICK"* — which is EXACTLY what the primitive implements. Its 2 crossings are GENUINELY faithful, not merely defensible** ★★ **STOP-CONDITION: fires on the LITERAL wording, does NOT fire on the substance — and the two readings contradict each other. Reporting rather than picking**
+
+**RULING ID:** R-410 · **TASK ID:** item (1), flag-yield sweep · **RECOMMENDATION:** APPROVAL_REQUESTED for the table; **one wording ruling needed on the stop condition.**
+
+---
+
+### THE 16-ROW TABLE — real dispatcher, flag off vs on, process-local
+
+| spec | cond | FVG-naming | off | on | Δ | fidelity basis |
+|---|---:|---:|---:|---:|---:|---|
+| `-igpOZs8LsM__s0` | 11 | 7 | 0 | **4** | **+4** | ★ **DEFINED close/open → OVERSTATEMENT** (primitive stricter) |
+| `CLDEIsNpVRc__s0` | 10 | 6 | 0 | **3** | **+3** | UNDEFINED → canonical defensible |
+| `WEhmadJArQo__s0` | 22 | 7 | 0 | **2** | **+2** | ★★ **DEFINED wick-to-wick → FAITHFUL** |
+| `kFyD3H6I1I8__s0` | 19 | 1 | 0 | **1** | **+1** | UNDEFINED → canonical defensible |
+| `W7nlnHTUZQU__s0` | 10 | 0 | **1** | 1 | 0 | n/a (no FVG language) |
+| `0xygpCMwxbQ__s0` | 12 | 0 | 0 | 0 | 0 | n/a |
+| `4cT8WTyxhYY__s0` | 9 | 0 | 0 | 0 | 0 | n/a |
+| `_LS6qcSlDCs__s0` | 6 | 0 | 0 | 0 | 0 | n/a |
+| `DLwVqcLRcfw__s0` | 8 | 0 | 0 | 0 | 0 | n/a |
+| `DLwVqcLRcfw__s1` | 6 | 0 | 0 | 0 | 0 | n/a |
+| `dV7chra4u4Q__s0` | 8 | 0 | 0 | 0 | 0 | n/a |
+| `E9MzEC_yNoM__s0` | 2 | 0 | 0 | 0 | 0 | n/a |
+| `E9MzEC_yNoM__s1` | 10 | 0 | 0 | 0 | 0 | n/a |
+| `IyFioFkRgWo__s0` | 6 | 0 | 0 | 0 | 0 | n/a |
+| `PVMgOxHUqFA__s0` | 8 | 0 | 0 | 0 | 0 | n/a |
+| `R5L890juvRw__s0` | 8 | 0 | 0 | 0 | 0 | n/a |
+| **TOTALS** | | | **1** | **11** | **+10** | |
+
+**Only 4 of 16 specs gain anything from the flag** — the FVG family is concentrated, not corpus-wide.
+
+★ **[MEASURED DISCREPANCY vs the artifact]** the 2026-07-21 producer recorded **0** concrete flags-off and **6** flags-on corpus-wide. **I measure 1 off / 11 on on today's tree.** The off≠0 is `W7nlnHTUZQU__s0`, which carries one concrete binding **without** the flag. **The tree has moved in the seven days the artifact has been frozen by the `REVIVAL_FAMILY` refusal — this is the first direct evidence of that drift, and it is a reason to prioritise the revival-probe repair.**
+
+### ★★ THE THIRD BASIS — `WEhm` is genuinely faithful, and I checked rather than trusted my own regex
+
+My classifier keyed on a `wick` keyword, which is weak evidence. **[MEASURED — I read the matching conditions]** condition **[18]**:
+> *"a fair value gap is just **a three candle formation where we leave a gap between one candle's WICK and the third candle's WICK**"*
+
+★★★ **That is an explicit boundary definition, and wick-to-wick IS `high[i-2] → low[i]` — precisely what `fvg_native` implements.** So the fidelity ladder now has three rungs, all observed:
+
+| basis | spec | meaning of `approximation=False` |
+|---|---|---|
+| **DEFINED, matching** | `WEhm` | ✅ genuinely faithful |
+| **UNDEFINED** | `CLDE`, `kFyD` | ✅ defensible — canonical reading of an undefined term |
+| **DEFINED, differing** | `-igp` | ⚠️ overstatement — binds the classic rule, not the taught one |
+
+★ *(The other regex hit, `[17]` — "whether it's a wick or a candle closure, just won't cut it" — is about level-crossing, not FVG boundaries. The classification stands on [18] alone.)*
+
+---
+
+### ★★★ THE STOP CONDITION — it fires literally and does NOT fire substantively
+
+R-410: *"Stop and report if the sweep finds a spec whose teacher defined FVG boundaries **LOOSER than the primitive** — that would flip the divergence into the dangerous direction."*
+
+**Literal reading:** `-igp`'s taught band (`close[i-2] → open[i]`) **is** wider — looser — than the primitive's (`high[i-2] → low[i]`). **My check flagged it. 1 hit.**
+
+**Substantive reading:** teacher-looser ⇒ **primitive STRICTER** ⇒ fires less ⇒ **misses trades, never manufactures them.** ★★ **That is the direction R-410 itself ratified as SAFE for this exact spec, one ruling ago.** The dangerous case is the mirror — *primitive looser than teacher* — and **[MEASURED] no spec in the corpus is in it:** `WEhm` matches exactly, `-igp` is primitive-stricter, `CLDE`/`kFyD` leave it undefined.
+
+★★★ **So the wording describes the safe case while calling it dangerous.** I am not silently choosing which you meant — under the literal words I must stop, under the reasoning I must continue, and **the substance is what protects the money path: nothing here over-fires.** **Recommendation: re-word to "a teacher who defined boundaries TIGHTER than the primitive", and treat the sweep as NOT triggering it.**
+
+---
+
+**Files changed:** none. Read-only; flag process-local and popped at exit; producer, specs, `.env` untouched.
+**Hypotheses REJECTED:** (i) "the flag helps broadly" — **false, 4 of 16**; (ii) "`WEhm`'s FAITHFUL label was a weak-keyword artifact" — **false, verified on the teacher's own sentence**; (iii) "flags-off concrete is 0 as the artifact says" — **false, it is 1 today.**
+**Remaining uncertainty:** my FVG-naming regex is `fair value gap|fvg|imbalance` — **a spec teaching gaps in other words would read as `n/a`.** [UNMEASURED]. The `n/a` rows are "no FVG *language*", not "no gap concept".
+**Risk:** none introduced.
+
+**Recommendation:** rule the stop-condition wording; then **the flag is worth contracting on the strength of `WEhm` + `CLDE` + `kFyD` (6 genuinely-honest crossings), with `-igp`'s 4 recorded as classic-rule bindings rather than taught-rule bindings.** ★ That framing lets the flag graduate without the record inheriting an overstatement.
+
+**Next smallest task (ONE):** item (2) — the corpus_B charter draft, leading with the severed-definition class (`-igp` defined its object twice, in two conditions the binder discards).
+
+---
+
 ## AR-375 · 2026-07-28 · **FVG FIDELITY CHECK — VERDICT: ★ PARTIAL, with the divergence named and its DIRECTION measured.** ★★★ **The primitive implements the CLASSIC ICT rule (`high[i-2] / low[i]`); `-igp`'s teacher explicitly taught `close[i-2] → open[i]`. Same 3-candle window, DIFFERENT boundaries — and the divergence is STRICTER than taught, not looser** ★★★ **THE STING: the teacher's definition lives in conditions [1] and [3] — the two UNBOUND mis-typed `WAIT_SESSION` rows. The spec's own definition is INVISIBLE to the binder that contradicts it**
 
 **RULING ID:** R-409 · **TASK ID:** item (1), the gating fidelity check · **RECOMMENDATION:** **the seven crossings are NOT a liability — but `approximation=False` overstates fidelity for `-igp` specifically, and the distinction is per-spec, not per-primitive.**
