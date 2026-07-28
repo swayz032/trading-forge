@@ -6,10 +6,13 @@
 > Last rewritten: 2026-07-28 (post-crash).
 
 ## SEAT
-Ledger at **R-360** (commit `3457d6f4`). Newest AR: **AR-327**, RULED (R-358).
-Worker: **DEAD — the 13:36 crash killed both CLI processes.** No worker session,
-no rulings-watcher. Its last acts are on the branch, not in the relay.
-Advisor rig re-armed: 2s report poll + 15-min dual-channel idle watchdog.
+Ledger at **R-361** (commit `aaa9aeb0`). Newest AR: **AR-328**, RULED (R-361).
+Worker: **ACTIVE** again after the 13:35:49 reboot; executing **R-360 §6** (arm
+the two A-11 probe tests + answer the vacuity question). Nothing waits on me.
+Advisor rig: 2s **content-hash** report poll + 15-min idle watchdog (both were
+mtime-based and were tripped by my own pre-commit hook; hashing is immune, and
+the watchdog now excludes my own `R-NNN` / `ADVISOR-STATE` commits so they
+cannot mask worker silence).
 
 ## AUTHORIZED NOW
 **R-360 §6** (complete contract, needs no further authorization): arm
@@ -41,6 +44,14 @@ is **UNENFORCED in code**; `'paper'` validates as a live TradersPost account and
 the credential fallback derives the baited name `PAPER_API_KEY`.
 **[HYPOTHESIS — UNTESTED]** the A-11 HTTP-400 negative case may now pass
 VACUOUSLY under the gate; CI is structurally blind to that class.
+**[MEASURED HERE]** Tower took a Windows `0x9F` bugcheck; boot `13:35:49`; the
+API self-restarted **25s after boot** with `nodeDependencies.missing: []` and
+`pythonDependencies.missing: []` — the 07-18 erosion class did NOT recur. **True
+outage ≤ ~7 min, freeze instant UNENUMERATED** — EventLog 6008's `13:15:55` is
+the last clean CHECKPOINT, not the failure moment (R-361 §4); AR-328's "~20 min"
+is superseded. Not TF software. **[UNENUMERATED — OPEN]** the offending driver
+(`MEMORY.DMP` retained) — an availability risk with a name, on a box heading
+toward live capital.
 **[ARTIFACT-SOURCED]** corpus = 16. **[CORROBORATED]** 0 eligible today.
 **[UNENUMERATED — OPEN]** legacy Conv-VAE generate path (declared dead,
 unmeasured); running dependency set (`npm install` at boot ≠ `npm ci`); no
