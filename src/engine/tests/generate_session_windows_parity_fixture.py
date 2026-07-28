@@ -63,6 +63,21 @@ void main();
 """
 
 
+def killzone_digest() -> str:
+    """sha256 of killzone.ts with newlines NORMALISED.
+
+    Hashing raw bytes would make the digest line-ending dependent: a checkout
+    with core.autocrlf=true produces a different hash for a semantically
+    identical file, firing the staleness guard with a misleading "killzone.ts
+    has changed" message. A guard that cries wolf on a checkout setting trains
+    people to regenerate reflexively, which is how a real change slips through.
+    Must stay identical to the digest in test_session_windows_parity.py.
+    """
+    return hashlib.sha256(
+        KILLZONE_TS.read_bytes().replace(b"\r\n", b"\n")
+    ).hexdigest()
+
+
 def boundary_minutes() -> list[int]:
     return sorted(
         {
@@ -117,7 +132,7 @@ def main() -> int:
         ),
         "zones": list(ZONES),
         "days": list(DAYS),
-        "killzone_ts_sha256": hashlib.sha256(KILLZONE_TS.read_bytes()).hexdigest(),
+        "killzone_ts_sha256": killzone_digest(),
         "answers": ts_answers,
     }
     FIXTURE.parent.mkdir(parents=True, exist_ok=True)

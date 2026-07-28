@@ -65,7 +65,13 @@ def test_fixture_is_current_with_killzone_ts(fixture: dict) -> None:
     Without this the fixture is an artifact-staleness hazard: it would keep
     reporting parity against a file that had since changed.
     """
-    live = hashlib.sha256(KILLZONE_TS.read_bytes()).hexdigest()
+    # Newlines NORMALISED before hashing — a raw-byte digest is line-ending
+    # dependent, so a checkout with core.autocrlf=true would fail this test on a
+    # semantically identical file. A staleness guard that fires on a checkout
+    # setting teaches people to regenerate without looking, which is exactly how
+    # a real change to killzone.ts would then slip through unnoticed.
+    # Must stay identical to killzone_digest() in the generator.
+    live = hashlib.sha256(KILLZONE_TS.read_bytes().replace(b"\r\n", b"\n")).hexdigest()
     assert live == fixture["killzone_ts_sha256"], (
         "killzone.ts has changed since this fixture was generated — parity is "
         "UNVERIFIED until you re-run "
