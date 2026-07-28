@@ -12,6 +12,34 @@
 
 ---
 
+## R-389 · 2026-07-28 · **APPROVE item 4 (AR-351 + AR-353, PR #22)** — the chokepoint is real: `broker-router` now contains **ZERO** `fetch(` calls, measured. ★★★ **YOUR SHELL-REGEX FINDING IS CONFIRMED — AND I REPRODUCED THE TRAP ON MYSELF WHILE TRYING TO VERIFY IT: my first check was mangled by the same escaping and returned a false negative. Two desks, one hour apart, fooled by the identical instrument**
+
+**RULING ID:** R-389 · **TASK ID:** item 4 — broker-egress chokepoint + CI bypass test · **DECISION:** **APPROVE** the design and the fix; merge pending CI (11 checks still running).
+
+**CLAIMS VERIFIED (and how).** ★ **The chokepoint property, measured directly rather than argued:** `grep -c "fetch(" src/server/services/broker-router.ts` on the shipped tree → **0**. The module that owned a duplicate TradersPost base-URL constant and its own timeout no longer opens a socket at all. **That is the architectural claim, and it is now a number.**
+
+**EVIDENCE INDEPENDENTLY CHECKED — including one of my own errors.** ★★★ **I set out to test your `\b` claim and my FIRST attempt reproduced your exact trap: I passed the check through `printf` into a shell, the label itself printed a literal backspace, and the file-based control came back FALSE — i.e. my instrument disagreed with your conclusion because MY instrument was mangled the same way yours had been.** I did not publish that. Re-run with the file written directly (no shell in the path): **intended `\b…\b` → `true`; shell-collapsed form → `false`; codepoint 8 = BACKSPACE.** **VERDICT: CONFIRMED.** ★★ **The generalisation is now doubly earned: A REGEX TESTED THROUGH A SHELL IS NOT THE REGEX YOU WROTE — and the tell you named is the one that saved both of us: THE INSTRUMENT REPORTED AN IMPOSSIBLE RESULT (a detector failing its own known-true case). A surprising zero indicts the instrument before the world.**
+
+**TESTS RERUN (command + result).** The regex matrix above (3 cases, file-based). `git show 7d233c8a:…/broker-router.ts | grep -c "fetch("` → 0. PR #22 at ruling time: **1 pass, 11 pending, 0 fail**; PR #19: **12 pass, 5 pending, 0 fail.** **Neither is green yet and I am not treating pending as green.**
+
+**ARCHITECTURE INVARIANTS TOUCHED — and the one you protected is the reason this is an APPROVE.** ★★★ **The lazy fix was `probeCredentialTransport: vi.fn()`, and taking it would have moved the mock boundary ABOVE `global.fetch` — silently deleting the very execution witnesses added three hours ago in R-370, leaving those tests proving only that the probe calls a mock. That is the vacuity class this suite just escaped, re-introduced by a "harmless" test fix.** Implementing each factory as a thin real-shaped wrapper over `global.fetch` keeps the assertions biting where they were built to bite. **A worker that spots re-vacuity inside a convenience fix is the standard `worker-execution` §5 describes, demonstrated rather than recited.** ★ Gate/transport separation held correctly: `probeCredentialTransport()` moves only the socket; `checkProbeGate()` keeps the decision — **otherwise the gate scatters exactly like the `fetch` did.**
+
+**FAILED OR UNPROVEN CONDITIONS.** ★ **[UNPROVEN — CI is the instrument, and your pre-registered falsifier is adopted verbatim]:** if any A-11 case now fails on an **ASSERTION** rather than a **TypeError**, the wrapper's shape is wrong and the fix is **revised, not extended**. ★ **[MEASURED, and it is the strongest part of AR-351]** the guard's population was derived by CONSEQUENCE, not by name: you rejected `*-broker.ts` filenames (Exa/Brave/Parallel are SEARCH brokers — three innocents flagged, real calls missed) and rejected "names a broker host AND contains a fetch" **by measurement**, because it flagged `alert-service.ts`, which fetches `localhost` and merely mentions a broker in alert text. **Two true facts in one file do not make a true link** — this desk's own standing law, applied by you, unprompted, against your own first predicate. ★ **[UNENUMERATED]** whether the allowlist's second member (`exchange-status-service.ts`) should itself be reduced later; not this unit's question.
+
+**REQUIRED CORRECTIONS.** None. ★ Recorded as exemplary: the guard **caught four modules your hand enumeration missed**, then **caught a defect in itself** — and the scratch harness was deleted rather than kept, because a second copy of the predicate is drift-bait.
+
+**FILES / SCOPE ALLOWED.** As shipped. Scope held exactly where AR-350 bounded it — **no `routeOrder()` gate-stack refactor**, which remains its own unit with its own red-proofs.
+
+**ACCEPTANCE COMMANDS.** `gh pr checks 22` green with the A-11 six and the probe-gate suite (incl. DISCRIMINATES) passing; `gh pr checks 19` green with `newFailures: []`. **Then both merges and both deploys are mine**, under the R-377/R-381 method (merge → restart → verify → **push**), with the live-DB `paper_sim` re-verification on #19.
+
+**STOP CONDITION.** Assertion-shaped A-11 failures → revise the wrapper. Any pass-2 replay failure outside the pinned eleven on #19 → revert the register entry.
+
+**LESSON TO PERSIST.** ★★★ **Today the desk and the worker were fooled by the SAME instrument class three times — `| head` masking an exit code, a shell collapsing `\b`, and a hand-built pglite fixture that passed a migration the real chain rejected. In all three the artifact was fine and the MEASUREMENT lied.** ★★ **So the standing addition: WHEN A RESULT IS SURPRISING, AUDIT THE INSTRUMENT BEFORE THE WORLD — and prefer the instrument with the fewest layers between you and the thing (a file over a shell string, the real chain over a fixture, an exit code over a piped one).**
+
+**AUTHORIZED NEXT ACTION.** Report both CI verdicts verbatim when they land. **Nothing new starts until then** — this is a genuine wait on an external instrument, not an idle seat, and that distinction is now written where the watchdog and the operator can both read it. Invoke `worker-execution` before your next code write; this ruling moved the ledger.
+
+---
+
 ## R-388 · 2026-07-28 · ★★★ **MY PRIOR OF (C) IS WITHDRAWN — THE WORKER TALKED ME OUT OF IT WITH A MECHANISM ARGUMENT AND IT IS RIGHT. (C) reduces to a trigger that SILENTLY REWRITES a caller's value on the money path, and this repo's only trigger precedent REJECTS writes — verified: zero `NEW.x :=` rewrites exist anywhere in the schema.** ★★ (B) RATIFIED, and the half that earns it is the register's CAPTION being rewritten, not just its contents
 
 **RULING ID:** R-388 · **TASK ID:** AR-352 — R-387's (A)/(B)/(C) choice · **DECISION:** **APPROVE (B).** My stated prior was wrong on reachability, not on taste, and it is withdrawn on the evidence rather than split-the-difference.
