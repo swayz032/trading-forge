@@ -12,6 +12,44 @@
 
 ---
 
+## R-403 · 2026-07-28 · **I CHECKED PR #27 AND IT IS RED — BUT NOT FOR THE REASON CI STATES** ★★★ **THE PARITY GUARD BLAMES THE WRONG ARTIFACT. `hmac_secret_encrypted` IS REAL — migration `0128:41` adds it, two production services read it, and I READ IT OFF THE LIVE DATABASE. `schema.ts` is stale, now TRIPLY. Following the guard's own printed remedy would DELETE A REAL COLUMN from a correct test**
+
+**RULING ID:** R-403 · **TASK ID:** desk-initiated — PR #27 disposition · **DECISION:** **DO NOT MERGE. DO NOT APPLY THE FIX CI PRESCRIBES. Fix the snapshot, not the test.**
+
+**CLAIMS VERIFIED (and how).** ★ **[MEASURED HERE]** PR #27 = 16 SUCCESS / **3 FAILURE** — `Build Check` ×2 + `Machine-enforced push verdict`; `MERGEABLE / UNSTABLE`. **Three reds, ONE defect mirrored** — the KNOWN-BENIGN pattern holds again, and an aggregate check remains a mirror rather than an instrument. ★★ **[MEASURED HERE]** the real failure, read from the job log **unpiped** after my first grep matched JSON keys named `failureCount` and told me nothing:
+```
+[check-pglite-ddl-parity] DRIFT - 1 hand-rolled DDL column(s) do not match schema.ts:
+  [hmac-secret-pair-binding.test.ts] account_strategy_assignments.hmac_secret_encrypted
+  - column NOT in schema.ts
+Fix: update the CORE_DDL / inline test DDL to match src/server/db/schema.ts (the source of truth).
+```
+
+**EVIDENCE INDEPENDENTLY CHECKED — I went looking for which side was wrong, and it was not the test.** ★★★ **[MEASURED HERE]** `hmac_secret_encrypted` occurs **0 times** in `src/server/db/schema.ts`; the table's declaration at `schema.ts:2773-2795` carries `hmacSecret: text("hmac_secret")` and **no encrypted column**. ★★★ **[MEASURED HERE]** it is nevertheless REAL: `migrations/0128_hmac_secret_encryption.sql:41` — `ADD COLUMN IF NOT EXISTS hmac_secret_encrypted BYTEA` — and **two production services read it**: `pine-export-recipient-service.ts:168,170-171,180,191` and `tradingview-marker-service.ts:288-289,299,316`, both decrypting via `pgp_sym_decrypt`. ★★★ **[MEASURED HERE, ON THE LIVE DATABASE, FROM `runtime-production` — the tree that RUNS]** `information_schema.columns` for `account_strategy_assignments` returns ten columns including **`hmac_secret_encrypted bytea`**, alongside `hmac_secret text`; **`pgcrypto` is installed.** Read-only session, metadata only, no secret value selected.
+
+**★★★ SO THE VERDICT INVERTS. The test's hand-rolled DDL is CORRECT — it describes the database that exists. `schema.ts` is the artifact that is wrong**, and it is now **stale in three places**: pre-0159 `firm_id`, pre-0208 `broker_type`, and missing 0128's `hmac_secret_encrypted` entirely.
+
+**★★★ THE GUARD'S PRESCRIBED REMEDY IS THE DEFECT.** `check-pglite-ddl-parity.ts:8` names the Drizzle schema "the source of truth" and its failure text instructs the reader to **update the test DDL to match `schema.ts`**. ★★ **[MEASURED HERE — I read the line, `:119`, that emits it]** the check is DIRECTIONAL: it detects test-DDL-vs-`schema.ts` disagreement and **attributes it to the test in every case**; there is no leg that reads the migrations, so **it is structurally unable to notice that the snapshot is the stale one.** Obeying it here would have deleted a live column from a correct test to satisfy a snapshot the campaign already forbids regenerating. **A guard that names a stale artifact "the source of truth" does not merely fail to catch drift — it INSTRUCTS you to propagate it.**
+
+**TESTS RERUN (command + result).** `gh pr checks 27 --json name,state` → the 16/3 split; `gh run view --job … --log-failed` unpiped → the DRIFT block above; `grep -c` on `schema.ts` → 0; `node` + `postgres` against the live DB from `runtime-production` → the column list above, exit 0.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None traded. Invariant 9 governs the disposition: **never take a real risk to remove an appearance** — and "make CI green by editing the test" is exactly that trade.
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★ **[MEASURED HERE] a genuinely good outcome worth recording: 0128's DDL DID execute in production.** This repo has a convicted case of a journal-marked-applied migration whose DDL never ran, so I treated the journal as no evidence and read the live catalogue instead — **the column is there.** That closes an open worry for 0128 specifically and for nothing else. ★ **[UNPROVEN]** whether any OTHER `schema.ts` column is stale — I checked the one the failure named and **did not census the file**; the true count of stale columns is UNENUMERATED and is very likely more than three. ★ **[UNPROVEN]** whether `hmac_secret_encrypted` is actually POPULATED in any row — existence is not population, and I deliberately selected no values.
+
+**REQUIRED CORRECTIONS.** **(a)** Add `hmac_secret_encrypted` (bytea, nullable) to `accountStrategyAssignments` in `schema.ts` **by hand** — one column that provably exists in the live catalogue. **`db:generate` remains FORBIDDEN**: regenerating from a doubly-stale snapshot is the larger hazard, and this edit makes the snapshot strictly more accurate, not less. **(b)** PR #27 then re-runs CI on its own merits; my R-395 approval was conditional on green and **remains unspent**. **(c)** Queue, do not build now: give the parity check a **third leg that reads the migrations**, so `schema.ts` drift is detectable rather than merely propagatable.
+
+**FILES / SCOPE ALLOWED.** `src/server/db/schema.ts` (the single column) and PR #27's branch. **Forbidden:** editing `hmac-secret-pair-binding.test.ts` to remove the column · `npm run db:generate` · touching any applied migration.
+
+**ACCEPTANCE COMMANDS.** `npm run check:pglite-ddl-parity` → green **with the test's column intact** (green achieved by deleting the column is a FAIL, and I will read the diff to confirm which happened). Then PR #27's full CI.
+
+**STOP CONDITION.** ★★ **This does NOT interrupt the SMC build.** R-402's items (1)-(3) run first; this is queued behind them. Stop and report if adding the column turns any other check red — that would mean something else was reading the stale shape and depending on it.
+
+**LESSON TO PERSIST.** ★★★ **A GUARD THAT NAMES ONE ARTIFACT "THE SOURCE OF TRUTH" INHERITS THAT ARTIFACT'S STALENESS AS AUTHORITY. This one printed a confident remedy that would have corrupted the correct file, and it would have been obeyed — the message reads like a verdict, it names a file and an action, and nothing in it hints that the reference could be the wrong one. The pattern to distrust is not a guard that fails; it is a guard whose FIX INSTRUCTION points at the artifact it never checks.** ★★ **And once more: `| head` / `grep` on a log nearly cost me the real failure — my first pass matched JSON keys named `failureCount` and returned twenty lines of noise. Read the log unpiped before believing anything about why CI is red.**
+
+**AUTHORIZED NEXT ACTION.** Unchanged and already running: **R-402 (1)-(3), the SMC build.** This ruling adds item (4) `schema.ts` column + item (5) the parity check's third leg, both behind the build. No round-trip needed for any of them.
+
+---
+
 ## R-402 · 2026-07-28 · **AR-367 — THE WORKER APPLIED R-400's JOIN LAW TO MY OWN INSTRUCTION AND CAUGHT IT BEFORE A LINE WAS WRITTEN** ★★★ **R-303 §5's SMC target `hcHuDfxdywI__s0` IS NOT IN corpus_A. STRUCK as a build target.** ★★★ **THE EXIT GATE DOES NOT MOVE — I refuse to redefine "≥1 spec fully bound" to make a build look successful. But the campaign now has its FIRST CONCRETE PATH TO PHASE 1 EXIT: `IyFioFkRgWo__s0` = 5 WAIT_STRUCTURE + 1 WAIT_CONFIRMATION**
 
 **RULING ID:** R-402 · **TASK ID:** SMC build, re-scoped · **DECISION:** **APPROVE the finding. REVISE the target. UNBLOCK — build now.**
