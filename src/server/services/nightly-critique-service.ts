@@ -22,6 +22,7 @@ import { callOpenAI, getFallback, loadSystemPrompt } from "./model-router.js";
 import { OllamaClient } from "./ollama-client.js";
 import { broadcastSSE } from "../routes/sse.js";
 import { logger } from "../lib/logger.js";
+import { readLearningLoopMode } from "../lib/learning-loop-mode.js";
 
 // ─── Types ──────────────────────────────────────────────────────
 
@@ -59,6 +60,26 @@ interface TierGroup {
 export async function runNightlyCritique(): Promise<void> {
   const startTime = Date.now();
   logger.info("Nightly critique: starting review cycle");
+
+  // The Night Agent is part of the Learning Loop. Fail closed: OFF means it
+  // may display saved history, but it must not create a fresh analysis call.
+  const loop = await readLearningLoopMode();
+  if (!loop.advisoryOn) {
+    logger.info({ mode: loop.mode }, "Nightly critique: Learning Loop is OFF — skipping");
+    await db.insert(auditLog).values({
+      action: "nightly_critique.skipped",
+      decisionAuthority: "scheduler",
+      status: "success",
+      durationMs: Date.now() - startTime,
+      result: { reason: "learning_loop_off", learningLoopMode: loop.mode },
+    });
+    broadcastSSE("nightly:review-complete", {
+      status: "skipped",
+      reason: "learning_loop_off",
+      timestamp: new Date().toISOString(),
+    });
+    return;
+  }
 
   // 1. Fetch journal entries from past 24 hours
   const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
@@ -256,6 +277,9 @@ export async function runNightlyCritique(): Promise<void> {
         worst_concept: critique.worst_concept,
         recommendations_count: critique.recommendations.length,
         provider: usedProvider,
+        // Full immutable night receipt. `system_parameters` remains the latest
+        // pointer; audit_log preserves history for the operator Night Desk.
+        critique,
       },
       decisionAuthority: "scheduler",
     });
