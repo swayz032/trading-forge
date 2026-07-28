@@ -4,6 +4,79 @@
 
 ---
 
+## AR-380 · 2026-07-28 · **(b) STRUCTURAL INVENTORY — and it INVERTS the divergence's meaning.** ★★★ **PRODUCTION'S EXTRA `1` IS A FALSE CONCRETE. `overnight` is an ORPHAN ZONE — a recognized `SESSION_KEYWORDS` phrase with NO evaluable killzone window — and production binds it to `session_windows` and stamps `approximation=False`. The campaign tree DELIBERATELY REFUSES it, in the DEFAULT path, with a named reason** ★★ **So the campaign lane is not "ahead with experimental flags": production carries a defect the campaign already diagnosed and fixed unconditionally**
+
+**RULING ID:** R-413 item (2) · **TASK ID:** structural inventory · **RECOMMENDATION:** **the campaign lane is CORRECT and production is WRONG on this binding — which reverses who must migrate toward whom.**
+
+*(Item (1) was filed in AR-379 — reached caller found, `backtester.py:8492`. R-414 predates it.)*
+
+---
+
+### THE INVENTORY — every line names its tree
+
+```
+TREE campaign   (wt-h1-wave4-20260712)  : 2,907 lines / 160,049 bytes
+TREE production (runtime-production)    :   744 lines /  35,046 bytes
+FAMILY_META families — campaign 14, production 14   (IDENTICAL vocabulary)
+```
+
+★ **The 14-family vocabulary is the same in both.** The entire 125 KB divergence is **resolvers and routing**, in three clusters:
+
+| cluster | campaign-only machinery | flag | default |
+|---|---|---|---|
+| **Session-role resolver** | `SessionRoleResult`, `classify_session_role`, `resolve_session_name_to_window`, `session_zone_window_repr`, + 13 `_session_*` helpers | `TF_SESSION_ROLE_RESOLVER_ENABLED` | **false** |
+| **Level/zone routing** | `resolve_levelzone_object`, `classify_population_a_kind`, `levelzone_routing_enabled`, `levelzone_resolver_enabled` | `TF_LEVELZONE_ROUTING_ENABLED`, `TF_LEVELZONE_RESOLVER_ENABLED` | **false** |
+| **FAMILY_META enforcement** | `family_meta_enforced` import | `TF_FAMILY_META_ENFORCED` | **false** |
+
+**Flags in BOTH trees:** `TF_FVG_IDENTITY_ENABLED`, `TF_COMPOSITION_BUNDLE_ENABLED`, `TF_OR_BRANCHES_ENABLED`, `TF_ROLE_DEMOTION_MODE`, `TF_CONFLUENCE_OVERLAY_DISABLED`.
+
+★★ **All four campaign-only flags default `false` — so none of them explains the 0-vs-1 I measured.** I checked rather than assumed, and that is what led to the real cause.
+
+### ★★★ THE REAL CAUSE — a refusal in the campaign's DEFAULT path
+
+`spec_family_bindings.py:2549-2560` (campaign, **not flag-gated**):
+```python
+refused = refused_session_zone(obj)
+if refused is not None:
+    return ConditionBinding(..., bindable=False, primitive=None,
+                            approximation=True, executed=False,
+                            reason=session_refusal_reason(refused), ...)
+```
+`:498-504` names the semantics exactly:
+> *"Distinct from BOTH `no_recognized_session_keyword` (we did not recognize it at all) and `SESSION_TEACHING_UNBOUND_REASON` — this one says **"recognized, and DELIBERATELY not bound, because the zone it names has no window `is_in_killzone` can evaluate."**"*
+
+**And `overnight` is precisely such a zone.** The campaign tree's own comments:
+- `:473` *"`overnight` were removed by the **orphan-zone closure**"*
+- `:491` *"(zero effective demand; **`overnight` has no single defensible clock**)"*
+- `:867` *"**The single binder bound `overnight` — an ORPHAN ZONE that…**"*
+
+**[MEASURED] `killzone.ts` defines exactly five zones — `london`, `ny_am`, `ny_pm`, `silver_bullet`, `macro_window`. There is no `overnight`.** Yet `SESSION_KEYWORDS["overnight"] = ("overnight", "globex", "asia session", "pre market", "premarket")` still matches the phrase.
+
+★★★ **So `W7nlnHTUZQU__s0[6]` — *"overnight/pre-market range … 4:00 p.m. EST … 9:30 a.m. EST"* — is a phrase production RECOGNIZES and CANNOT EVALUATE. Production binds it to `session_windows`, `approximation=False`, and it counts as CONCRETE. The campaign tree refuses it with `session_zone_refused_uncomputable_window:overnight`.**
+
+---
+
+### WHAT THIS CHANGES
+
+★★★ **AR-377/AR-379 framed this as "the campaign measures on a lane production doesn't run." That is true but too kind. The sharper statement: on this binding, PRODUCTION IS WRONG — it manufactures an `approximation=False` for a condition it has no clock to evaluate — and the campaign tree contains the diagnosis, the fix, and a named refusal reason, running unconditionally.**
+
+★★ **It also re-scores the sweep.** `campaign 0 → 10` vs `production 1 → 11`: **the extra production `1` is not a bonus concrete, it is a false one.** ★ **The honest citable figure is `0 → 10` — and the reason is NOT R-411's phantom (that was wrong, and AR-377 measured why); it is that production's baseline `1` is a defect.** **Two different routes to the same number, and only one of them is true.**
+
+★ **And it partly answers R-413's open question about which lane is authoritative:** on the one binding where they measurably differ, **the campaign lane is the correct one.** That is a single data point, not a general verdict — **[UNMEASURED] whether the campaign lane is correct everywhere it differs.**
+
+---
+
+**Files changed:** none. Read-only. No write to `runtime-production`.
+**Hypotheses REJECTED:** (i) "a campaign-only flag causes the 0-vs-1" — **false, all four default `false`**; (ii) "the divergence is extra capability the campaign is trialling" — **false at least here: it is a bug fix in the default path**; (iii) "production's `1` is a legitimate concrete binding" — **false, `overnight` has no evaluable window.**
+**Remaining uncertainty:** whether the campaign lane is correct at **every** point of divergence — **[UNMEASURED], one binding proven**. Whether `SESSION_KEYWORDS["overnight"]` should be removed outright or kept-and-refused — **a design question I am not deciding.**
+**Risk:** unchanged from AR-379 — **latent, reached, live on the first Band-C backtest.** ★ But the risk has a direction now: **the executing tree over-claims exactness on session phrases it cannot compute.**
+
+**Recommendation:** **(1)** record the citable sweep as **`0 → 10`, campaign tree, with production's `1` documented as a false concrete**; **(2)** treat "which lane is authoritative" as answered *in the campaign's favour on the evidence so far*, and make migrating the orphan-zone refusal into production a candidate for the first Band-C prerequisite; **(3)** then corpus_B.
+
+**Next smallest task (ONE):** enumerate the remaining points of divergence where the two lanes produce different bindings on the 16 specs — one run per tree, diffed per condition — so "which lane is authoritative" rests on the full set rather than one binding.
+
+---
+
 ## AR-379 · 2026-07-28 · ★★★ **STOP CONDITION MET — (a) FINDS A REACHED CALLER IN `runtime-production`. `backtester.py:8492` → `from_compiled_spec()` → `SpecConditionStrategy.__init__` → `compile_binding_plan()`. The production binding lane is WIRED INTO THE BACKTESTER, not dead code** ★★ **BUT IT IS REACHABLE-NOT-YET-EXERCISED: the branch requires `config["compiled_spec"]`, and this campaign's standing measured fact is ZERO backtests ever run**
 
 **RULING ID:** R-413 · **TASK ID:** (a) severity grep · **TREE: `runtime-production` (every line below).** · **RECOMMENDATION:** **latent, wired, one config key away from live. Reporting immediately per your stop condition rather than continuing to (b).**
