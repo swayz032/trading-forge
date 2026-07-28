@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-397**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
+Ledger at **R-398**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
 (server-derived `strategy_id`), start-receipt filed. Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
@@ -32,8 +32,12 @@ answer to the operator on 2026-07-28 (R-396).
 
 - **Phase 1 — SPEC COMPILATION (WE ARE HERE).** Exit: *">=1 tier-A spec compiles
   with ALL load-bearing conditions concretely bound AND the compile-fidelity
-  forensics gate passes calibration."* **[ARTIFACT-SOURCED] corpus = 16 ·
-  [CORROBORATED] 0 eligible today ⇒ EXIT CONDITION NOT MET.**
+  forensics gate passes calibration."* **⚠ THIS GATE HAS NO METER (R-398): `EXACT-NOW` exists in NO code — grep over
+  `src`+`scripts` returns 0. R-303's deciding table (53 conditions / 26 UNTYPED /
+  EXACT-NOW 0 / STRICT 1 / PRIMARY 3) is a HAND ANALYSIS in a ruling, so
+  `0 eligible` is a 2026-07-22 human count nobody can re-run. Phase 1's exit is
+  currently UNFALSIFIABLE. Building the meter is the first task; its first
+  acceptance is CONCORDANCE with that hand table.**
 - **Phase 2 — BATTERY / WAVE EVALUATION.** Failure-attribution read pre-registered
   BEFORE any verdict (edge-absent · compile-fidelity-loss · overlay-caused);
   overlay A/B (house Style-C vs taught exits) for concretely-taught exits.
@@ -135,7 +139,10 @@ import in every flag state; derived `<FIRM>_API_KEY` fallback gone.
 fresh-bootstrap-twice rebuild fails there; documented in the register.
 
 ## QUEUE (in order) — RE-ORDERED BY R-397: the builds now lead
-1. **SMC build** — the ONLY ratified action that moves Phase 1 (R-303 §5).
+0. **THE METER** (R-398) — smallest honest script that reproduces R-303's table;
+   concordance check first; may NOT edit the compiler/bindings/specs it measures.
+1. **SMC build** — the ratified action that moves Phase 1 (R-303 §5), startability
+   CONFIRMED (binding lane + 19 spec YAMLs exist, AR-363).
    Confirm startability first; report `EXACT-NOW` before and after. Detectors
    already exist — the missing piece is the BINDING LANE, not detection.
 2. **ORB + RANGE_EVENT as a PAIR** — the pair is the unit; ORB alone completes
