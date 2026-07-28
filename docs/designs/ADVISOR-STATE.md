@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-396**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
+Ledger at **R-397**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
 (server-derived `strategy_id`), start-receipt filed. Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
@@ -134,12 +134,20 @@ import in every flag state; derived `<FIRM>_API_KEY` fallback gone.
 ★ `0159` is permanently non-idempotent BY DESIGN (register class 2) — a
 fresh-bootstrap-twice rebuild fails there; documented in the register.
 
-## QUEUE (in order)
-1. Item 2 (contract above; apply = mine). 2. Item 4 (egress chokepoint + CI
-bypass test). 3. Server-derived `strategy_id`; `npm ci` at boot;
-string-literal precondition sweep; consequence-ranked flag enumeration; the
-floors; 3-ii/3-iii; the builds (SMC → ORB+RANGE_EVENT → BAR_TIMING →
-SESSION_CLOCK).
+## QUEUE (in order) — RE-ORDERED BY R-397: the builds now lead
+1. **SMC build** — the ONLY ratified action that moves Phase 1 (R-303 §5).
+   Confirm startability first; report `EXACT-NOW` before and after. Detectors
+   already exist — the missing piece is the BINDING LANE, not detection.
+2. **ORB + RANGE_EVENT as a PAIR** — the pair is the unit; ORB alone completes
+   nothing. Then **BAR_TIMING**, then **SESSION_CLOCK**.
+3. Remaining item-3 sweep items (string-literal precondition sweep,
+   consequence-ranked flag enumeration, the floors, 3-ii/3-iii) — legitimate,
+   but they cannot move Phase 1.
+★ Why the change: the hardening items outranked the builds while the broker path
+was open. It closed today (R-393, verified in production). The list outlived its
+premise by six days — R-303 ratified SMC-first on 07-22 and `[MEASURED]` there
+are zero SMC-build mentions in the ~40 newest rulings.
+
 
 ## DURABILITY (R-385 — was a live single-copy exposure)
 Ledger branch `h1-wave4-sealed12-driver` is now **ON ORIGIN** (`f9576819`,
