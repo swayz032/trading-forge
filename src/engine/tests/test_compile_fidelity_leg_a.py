@@ -523,7 +523,42 @@ def test_synchronized_drop_is_convicted_because_the_certificate_is_independent()
     fixture the rebuilt certificate silently forgot the dropped condition, cardinality still
     matched, and Leg A PASSed — the drop was INVISIBLE. With a transcript-independent
     certificate the dropped condition's quote survives the drop, so the ledger is no longer 1:1
-    → BLOCK on (v)."""
+    → BLOCK on (v).
+
+    ═══ ★★ LABEL — RED-PROOF **OF RECORD**, NOT A TRIPWIRE (R-302 §4). READ BEFORE COUNTING ═══
+    THIS TEST DOES NOT BITE. It is the headline demonstration that the R-291 §1 close WORKS; it
+    is NOT a guard that goes red if that close is undone. MEASURED, both applicable reversions,
+    this file + test_calibration_battery_framework.py:
+      · reversion (a) — re-couple `clean_certificate` to the spec (`{"quote_anchor": c["object"]}`):
+        this test stays GREEN. 1 test bites, and it is a sibling:
+        `test_clean_certificate_is_transcript_derived_never_spec_derived`.
+      · reversion (b) — restore `evidence` to `cond_texts` in `_check_no_certificate_drops`:
+        this test stays GREEN. 1 test bites, and it is a sibling:
+        `test_v_reconciles_against_object_only_never_evidence`.
+    It survives (a) because it rebuilds the certificate from the transcript through the fixture
+    it is testing — re-couple the fixture and the ASSERTION MOVES WITH IT; it survives (b)
+    because its anchors ground in `object` either way, so widening the match pool cannot break a
+    match that already held.
+
+    ★ WHY THE LABEL, AND WHY IT MUST NOT BE DELETED OR "STRENGTHENED" INTO A TRIPWIRE: an
+    UNLABELLED NON-BITER IS THE SEED OF THE GUARD-THAT-SILENTLY-STOPPED-GUARDING SPECIES. A
+    future census counting the R-291 §1 guards would read this one's name and headline star and
+    score it among the biters, inflating the protection the close is believed to have. It is
+    kept — a worked, readable exhibit of the defect and its cure is worth having — but it is
+    counted as an EXHIBIT, never as an alarm.
+
+    ★ WHERE THE BITE ACTUALLY LIVES — three siblings, each with its own reversion:
+      1. `test_clean_certificate_is_transcript_derived_never_spec_derived`  → bites reversion (a)
+      2. `test_v_reconciles_against_object_only_never_evidence`             → bites reversion (b)
+      3. `test_calibration_battery_framework.py::
+          test_r291_recoupling_the_fixture_certificate_drops_the_battery_out_of_CALIBRATED`
+         → the CONTAINMENT alarm: proves m2's conviction is CONDITIONAL on the certificate's
+           independence (re-coupled ⇒ battery falls CALIBRATED → FAILED), and red-proves at
+           birth against the hand-planted-orphan restoration.
+    If this test is ever made to bite, DELETE THIS LABEL in the same commit — a label that has
+    stopped being true is worse than none.
+    ═══════════════════════════════════════════════════════════════════════════════════════════
+    """
     art = clean_artifact()
     dropped = art["spec"]["entry_conditions"][1]
     art["spec"]["entry_conditions"] = [

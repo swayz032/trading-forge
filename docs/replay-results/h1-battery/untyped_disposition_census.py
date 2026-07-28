@@ -18,6 +18,10 @@ rejection is a measurement in the artifact rather than a remembered claim
                     the five target families -- a BOUND-BUT-APPROXIMATED row that
                     passes compile, degrades to an ungated pass-through, and
                     still fails Leg A(ii).
+                    The fifth (ENTER) is the LEVEL-DISAGREEMENT row: approximation
+                    =False at the BINDING level, and STILL a Leg A(ii) FAIL at the
+                    ENFORCED level (R-260 family anchor). Both levels are measured
+                    and published; the level is part of the claim (R-301 SS3).
 
 The accounting would improve while the gate did not. That is manufacturing the
 exact hollow compile the typing was ordered to STOP. Two further grounds
@@ -71,12 +75,33 @@ from src.engine.extraction.spec_producer import (  # noqa: E402
     UNTYPED_FAMILY,
     produce_spec_artifact,
 )
+
+# ★ R-301 §2/§3 — THE ENFORCED-LEVEL READ, IMPORTED SO IT IS MEASURED NOT ASSERTED.
+# This artifact used to claim that a re-type to ENTER had "nothing downstream
+# flagging it". That claimed ABSENCE is a claim exactly like a claimed presence and
+# owes the same wiring-verify -- and it fails one: Leg A(ii) IS downstream and DOES
+# flag it. Rather than swap one unverified sentence for another, the corrected claim
+# is WIRED: `_check_concretely_bound` is the production (ii) predicate and is CALLED
+# here, per family, in `counterfactual_bind_probe`. (Private by name, but it is the
+# exact predicate the ruling names; calling the public Leg A entry point would drag
+# certificates and countersignatures this read-only census has no business supplying.)
+from src.engine.forensics.compile_fidelity import _check_concretely_bound  # noqa: E402
 from src.engine.spec_family_bindings import FAMILY_META, compile_binding_plan  # noqa: E402
 
-# ★ THE SELECTION RULE AND THE BIND PREDICATE ARE IMPORTED, NEVER RESTATED.
-# tier_a_compile_census.py owns "which strategies are the tier-A 11" and "what
-# counts as a BIND". Restating either here would create a second instrument that
-# could silently disagree with the census this artifact is a companion to.
+# ★ THE SELECTION RULE, THE BIND PREDICATE AND THE LOAD-BEARING RULE ARE
+# IMPORTED, NEVER RESTATED. tier_a_compile_census.py owns "which strategies are
+# the tier-A 11", "what counts as a BIND", and "which conditions are LOAD-BEARING".
+# Restating any of them here would create a second instrument that could silently
+# disagree with the census this artifact is a companion to.
+#
+# ★ R-301 §5(ii) — THE SEAM THAT WAS OPEN AND IS NOW CLOSED. The first two were
+# genuinely imported; the LOAD-BEARING rule -- the one predicate that DEFINES the
+# population this artifact dispositions -- was RESTATED as a literal
+# (`c["role"] in ("spine", "trigger")`) in BOTH files, under prose claiming the
+# predicates were imported "so this artifact cannot drift". A claimed protection
+# that is not wired is the mirror of a claimed absence that is not true, and gets
+# the same cure: `is_load_bearing` is now defined ONCE, in tier_a_compile_census,
+# and imported here. The prose below now describes something that is real.
 _spec = importlib.util.spec_from_file_location(
     "tier_a_census", os.path.join(HERE, "tier_a_compile_census.py"))
 _tac = importlib.util.module_from_spec(_spec)
@@ -84,6 +109,8 @@ _spec.loader.exec_module(_tac)
 
 PHASE_B = _tac.PHASE_B
 RECEIPT = _tac.RECEIPT
+LOAD_BEARING_ROLES = _tac.LOAD_BEARING_ROLES
+is_load_bearing = _tac.is_load_bearing
 
 # --------------------------------------------------------------------------- #
 # Categories. A closed set -- the schema IS the decision boundary.
@@ -120,9 +147,15 @@ GATE_BOUNDARIES = {
         "no-op. So this gate requires (a) that exactly as many re-types and drops were "
         "APPLIED to spec copies as the table declares, and (b) that the mutation BIT: "
         "strictly fewer non-binding conditions in the dispositioned arm than in the "
-        "baseline. It proves the zero is a MEASURED zero; it does not prove any "
-        "disposition is right, and it says nothing about whether zero is the right "
-        "answer -- only that the arm was capable of returning a different one."),
+        "baseline. (c) R-301 SS4 ADDS THE DECOMPOSITION CLOSURE: the published parts of "
+        "the bite (denominator shrink + re-type flips - regressions) must SUM to the "
+        "measured total, with zero collateral movement on conditions the table never "
+        "touched. That third clause guards a DIFFERENT hazard from the first two -- they "
+        "ask whether the arm moved at all, it asks whether the published explanation of "
+        "the movement is the true one. It proves the zero is a MEASURED zero and its "
+        "bite an EXPLAINED one; it does not prove any disposition is right, and it says "
+        "nothing about whether zero is the right answer -- only that the arm was capable "
+        "of returning a different one."),
     "EVERY_CONDITION_HAS_A_BINDING": (
         "Checks the binder emitted a binding row for every taught condition in both arms, "
         "so a missing binding cannot be silently read as 'does not bind' and quietly "
@@ -325,12 +358,26 @@ DISPOSITIONS = (
         "fuzzy": True,
         "fuzzy_note": (
             "FLAGGED FOR A REASON THAT CUTS AGAINST THIS ROW'S OWN DISPOSITION: ENTER is "
-            "the ONE target family in this table that binds NON-approximated (see "
-            "counterfactual_bind_probe). Its primitive fires on spine completion and does "
-            "NOT carry the taught 'open of the NEXT candle' timing -- so a re-type here "
-            "would produce a row that looks like a GENUINE bind while having discarded "
-            "the bar-open semantics. That is a worse hollow bind than the approximated "
-            "kind, because nothing downstream flags it. Recorded, not acted on."),
+            "the ONE target family in this table that binds NON-approximated AT THE "
+            "BINDING LEVEL (see counterfactual_bind_probe). LEVEL QUALIFIER, REQUIRED "
+            "(R-301 SS3): at the ENFORCED / Leg A(ii) level the same row reads the "
+            "OPPOSITE -- _check_concretely_bound FAILS this re-type, 'bound to an "
+            "approximation (proxy/pass-through, honest accounting): "
+            "spine_completion_trigger', because the R-260 family anchor "
+            "(FAMILY_META['ENTER'].enforced_honest_approximation()=True) convicts the "
+            "family regardless of the per-binding flag. Its primitive fires on spine "
+            "completion and does NOT carry the taught 'open of the NEXT candle' timing -- "
+            "so a re-type here would produce a row that looks like a GENUINE bind while "
+            "having discarded the bar-open semantics. CORRECTED (R-301 SS2): this note "
+            "previously called that 'a worse hollow bind than the approximated kind, "
+            "because nothing downstream flags it'. THE 'NOTHING DOWNSTREAM FLAGS IT' "
+            "CLAUSE IS MEASURED FALSE and is struck -- Leg A(ii) IS downstream and DOES "
+            "flag it. What is true is narrower and is the real reason this row is "
+            "flagged: the row would be GENUINE-LOOKING at the binding level (the only "
+            "counts_as_a_BIND=True re-type in this table) while convicted at the enforced "
+            "level, so a reader applying the census's own bind predicate -- the predicate "
+            "in the sentence above -- would be misled where the four approximated "
+            "families visibly self-report. Recorded, not acted on."),
     },
     {
         "stub": "hcHuDfxdywI__s0",
@@ -695,6 +742,14 @@ def _plan_index(spec):
             + [x.to_dict() for x in plan.invalidation_bindings]}
 
 
+def _plan_objects(spec):
+    """The same plan as `_plan_index`, but the BINDING OBJECTS -- `_check_concretely_bound`
+    reads attributes, and the (ii) read must see the live re-derived binding, never a dict
+    round-trip that could drop a field."""
+    plan = compile_binding_plan(spec)
+    return {b.condition_id: b for b in list(plan.bindings) + list(plan.invalidation_bindings)}
+
+
 def main():  # noqa: C901
     refuse_if_optimized()
     receipt, keep, specs = _load_specs()
@@ -709,7 +764,7 @@ def main():  # noqa: C901
         conds = art["spec"]["entry_conditions"] + art["spec"]["invalidations"]
         n_lb_u = 0
         for c in conds:
-            load_bearing = c["role"] in ("spine", "trigger")
+            load_bearing = is_load_bearing(c)  # IMPORTED rule -- never restated
             all_conds.append((stub, c, load_bearing))
             if c["type"] == UNTYPED_FAMILY and load_bearing:
                 lb_untyped.append((stub, c))
@@ -796,8 +851,15 @@ def main():  # noqa: C901
                 ids.append(c["id"])
                 if fam != UNTYPED_FAMILY:
                     c["type"] = fam
-        idx = _plan_index(sp)
-        b = idx.get(ids[0]) or {}
+        objs = _plan_objects(sp)
+        bo = objs.get(ids[0])
+        b = bo.to_dict() if bo else {}
+        # ★ R-301 §3 — THE SECOND LEVEL, MEASURED. `approximation` below is the
+        # BINDING-level flag. Leg A(ii) does NOT read that flag alone: it anchors on
+        # the family's ENFORCED honest accounting (R-260 §1), so the two levels can
+        # DISAGREE -- and on ENTER they do. Publishing only the binding level is an
+        # unqualified claim that is false at the level a reader will assume.
+        ii = _check_concretely_bound(ids[0], bo) if bo else None
         probe[fam] = {
             "bindable": b.get("bindable"),
             "approximation": b.get("approximation"),
@@ -805,6 +867,19 @@ def main():  # noqa: C901
             "unbound_reason": b.get("reason"),
             "primitive": b.get("primitive"),
             "counts_as_a_BIND": bool(_tac.binds(b)) if b else False,
+            "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+                "level_of_the_fields_above": (
+                    "BINDING -- what compile_binding_plan stamped on this one binding"),
+                "level_of_the_fields_below": (
+                    "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, "
+                    "anchored on the FAMILY's enforced honest accounting (R-260 SS1), "
+                    "which is why it can and does disagree with the flag above"),
+                "family_enforced_honest_approximation": (
+                    FAMILY_META[fam].enforced_honest_approximation()
+                    if fam in FAMILY_META else None),
+                "leg_a_ii_PASSES": ii.passed if ii else None,
+                "leg_a_ii_reason": ii.reason if ii else None,
+            },
         }
 
     # ------------------------------------- ZERO-YIELD ARM (MEASURED, NOT CLAIMED)
@@ -816,6 +891,11 @@ def main():  # noqa: C901
     def eligibility(arm):
         elig, detail = [], []
         applied = {"retypes": 0, "drops": 0, "missing_bindings": []}
+        # ★ R-301 §4 -- the PER-CONDITION bind state of BOTH arms, kept so the
+        # compound bite count can be DECOMPOSED rather than published as a bare total.
+        # Recorded for every taught condition, including the dropped ones (whose
+        # baseline state is exactly what makes the denominator shrink move the count).
+        bind_map = {}
         for stub, art in specs:
             sp = copy.deepcopy(art["spec"])
             dropped_ids = set()
@@ -831,6 +911,9 @@ def main():  # noqa: C901
                         dropped_ids.add(c["id"])
                         applied["drops"] += 1
             idx = _plan_index(sp)
+            for c in sp["entry_conditions"] + sp["invalidations"]:
+                bind_map[(stub, c["id"])] = bool(
+                    c["id"] in idx and _tac.binds(idx[c["id"]]))
             taught = [c for c in sp["entry_conditions"] + sp["invalidations"]
                       if c["id"] not in dropped_ids]
             applied["missing_bindings"] += [[stub, c["id"]] for c in taught
@@ -846,10 +929,10 @@ def main():  # noqa: C901
                            "n_binding": len(taught) - len(nb),
                            "n_still_not_binding": len(nb),
                            "eligible": not nb})
-        return elig, detail, applied
+        return elig, detail, applied, bind_map
 
-    base_elig, base_detail, base_applied = eligibility("baseline")
-    disp_elig, disp_detail, disp_applied = eligibility("dispositioned")
+    base_elig, base_detail, base_applied, base_bind = eligibility("baseline")
+    disp_elig, disp_detail, disp_applied, disp_bind = eligibility("dispositioned")
     yield_specs = len(disp_elig) - len(base_elig)
 
     # ------------------------------------------------- GATE: the arm actually bit
@@ -873,6 +956,41 @@ def main():  # noqa: C901
                   f"the baseline's {base_nb} -- the mutation did not BITE, so the zero "
                   f"delta is indistinguishable from a no-op and must not be published as "
                   f"a measurement.")
+
+    # ----------------------------------------- R-301 §4: DECOMPOSE THE BITE
+    # ★ `n_conditions_the_arm_moved` COMPOUNDS TWO MECHANISMS. Undecomposed it invites
+    # the reading "N re-types bit", which is false. A compound count over heterogeneous
+    # mechanisms owes its decomposition, and "every number COMPUTED or ABSENT" applies
+    # to a number's PARTS as much as to its total -- so each part is derived here from
+    # the per-condition bind state of both arms, never transcribed.
+    moved_total = base_nb - disp_nb
+    typed_keys = [(r["stub"], r["condition_id"]) for r in DISPOSITIONS
+                  if r["category"] == CAT_TYPED]
+    drop_keys = [(r["stub"], r["condition_id"]) for r in DISPOSITIONS
+                 if r["category"] == CAT_DROPPED]
+    # (a) DENOMINATOR SHRINK: a dropped condition leaves the taught denominator. It
+    #     moves the count only if it was NON-BINDING in the baseline -- dropping a
+    #     BINDING condition would shrink the denominator without moving this measure.
+    moved_by_drop = [list(k) for k in drop_keys if not base_bind[k]]
+    # (b) RE-TYPE FLIP: a re-typed condition that was non-binding and now BINDS.
+    moved_by_retype_flip = [list(k) for k in typed_keys
+                            if not base_bind[k] and disp_bind[k]]
+    retype_moved_zero = [list(k) for k in typed_keys if base_bind[k] == disp_bind[k]]
+    retype_regressed = [list(k) for k in typed_keys if base_bind[k] and not disp_bind[k]]
+    # (c) COLLATERAL: any condition the table never touched whose bind state moved
+    #     anyway. Expected 0; measured, because an unexplained remainder would mean the
+    #     two arms differ somewhere the decomposition cannot see.
+    untouched = [k for k in base_bind if k not in set(typed_keys) | set(drop_keys)]
+    collateral = [list(k) for k in untouched if base_bind[k] != disp_bind[k]]
+    explained = len(moved_by_drop) + len(moved_by_retype_flip) - len(retype_regressed)
+    refuse_unless(
+        explained == moved_total and not collateral, "ZERO_YIELD_ARM_ACTUALLY_BIT",
+        f"the published decomposition does not close on the measured bite: "
+        f"{len(moved_by_drop)} drop(s) + {len(moved_by_retype_flip)} re-type flip(s) "
+        f"- {len(retype_regressed)} regression(s) = {explained}, against a measured "
+        f"{moved_total}; collateral movement on untouched conditions: {collateral}. A "
+        f"decomposition that does not sum to its total is a worse artifact than an "
+        f"undecomposed total.")
 
     # ------------------------------------------------------------------ EMIT
     rows = []
@@ -945,13 +1063,31 @@ def main():  # noqa: C901
                 "BOUND-BUT-APPROXIMATED row: the accounting improves, the gate does not. "
                 "That is precisely the hollow compile this work was ordered to stop, and "
                 "it is why the dispositions live here and not in the producer."),
-            "the_one_family_that_binds_non_approximated_is_a_WARNING_not_a_yield": (
-                "ENTER binds with approximation=False (MEASURED -- see "
-                "counterfactual_bind_probe). That is WORSE, not better: its "
-                "spine_completion_trigger fires on spine completion and carries none of "
-                "the taught timing, so a re-type would produce a row that looks like a "
-                "genuine bind while having silently discarded the teaching, with nothing "
-                "downstream flagging it. Exactly one row in this table targets ENTER and "
+            "the_one_family_that_binds_non_approximated_AT_THE_BINDING_LEVEL_is_a_WARNING_not_a_yield": (
+                "ENTER binds with approximation=False AT THE BINDING LEVEL (MEASURED -- see "
+                "counterfactual_bind_probe). ** THE LEVEL IS PART OF THE CLAIM (R-301 SS3), "
+                "required and not stylistic: that False is the per-binding flag, and at the "
+                "ENFORCED / Leg A(ii) level the SAME row reads the OPPOSITE -- "
+                "FAMILY_META['ENTER'].enforced_honest_approximation() is True, so the shipped "
+                "_check_concretely_bound FAILS the re-type with 'bound to an approximation "
+                "(proxy/pass-through, honest accounting): spine_completion_trigger'. Both "
+                "figures are MEASURED in this run and published side by side in the probe. "
+                "** CORRECTION OF RECORD (R-301 SS2): this key previously said the re-type "
+                "would pass 'with nothing downstream flagging it'. THAT WAS MEASURED FALSE. "
+                "Leg A(ii) is downstream and DOES flag it, via the R-260 family anchor -- and "
+                "no family in FAMILY_META reaches a (ii) PASS on this row (swept; see "
+                "how_many_families_reach_a_Leg_A_ii_PASS_on_this_row). A CLAIMED ABSENCE OF A "
+                "SAFEGUARD IS A CLAIM EXACTLY LIKE A CLAIMED PRESENCE and owes the same "
+                "wiring-verify; that this one erred in the CONSERVATIVE direction (it made "
+                "the safer census-side siting look MORE necessary) is the aggravator, not the "
+                "excuse. ** WHAT IS ACTUALLY TRUE, and why the row is still a warning: its "
+                "spine_completion_trigger fires on spine completion and carries none of the "
+                "taught 'open of the NEXT candle' timing, so a re-type would produce a row "
+                "that reads as a GENUINE bind under THIS census's own bind predicate -- "
+                "counts_as_a_BIND=True, the flattering answer, the only such row in the "
+                "table -- while the enforced honest accounting convicts it. The hazard is a "
+                "DISAGREEMENT BETWEEN LEVELS that a binding-level reader would never see, not "
+                "an absent downstream check. Exactly one row in this table targets ENTER and "
                 "it is flagged for this reason."),
             "WAIT_SESSION_note": (
                 "WAIT_SESSION is the only family whose bind is non-approximated AND "
@@ -974,6 +1110,50 @@ def main():  # noqa: C901
                 "n_non_binding_conditions_baseline": base_nb,
                 "n_non_binding_conditions_dispositioned": disp_nb,
                 "n_conditions_the_arm_moved": base_nb - disp_nb,
+                "DECOMPOSITION_of_n_conditions_the_arm_moved": {
+                    "why_this_is_published_and_not_optional": (
+                        "R-301 SS4. This total COMPOUNDS TWO MECHANISMS that have nothing "
+                        "in common: conditions LEAVING the denominator, and a condition "
+                        "actually starting to BIND. Left undecomposed it invites the "
+                        "reading 'the re-types bit', which is FALSE -- almost all of them "
+                        "moved it by exactly zero. A COMPOUND COUNT OVER HETEROGENEOUS "
+                        "MECHANISMS OWES ITS DECOMPOSITION, and every part below is "
+                        "COMPUTED from the per-condition bind state of both arms."),
+                    "from_DENOMINATOR_SHRINK__dropped_rows_that_were_non_binding": len(
+                        moved_by_drop),
+                    "from_RE_TYPE_FLIP__a_condition_that_was_not_binding_and_now_BINDS": len(
+                        moved_by_retype_flip),
+                    "n_applied_retypes_that_moved_the_measure_by_ZERO": len(
+                        retype_moved_zero),
+                    "n_applied_retypes_that_REGRESSED_a_bind_to_non_binding": len(
+                        retype_regressed),
+                    "n_untouched_conditions_whose_bind_state_moved_anyway": len(collateral),
+                    "taught_denominator_baseline_vs_dispositioned": {
+                        "baseline": n_total, "dispositioned": n_total - len(drop_keys),
+                        "note": (
+                            "the drops are the ONLY reason these differ; the re-types "
+                            "change a condition's type, never its presence")},
+                    "which_rows": {
+                        "the_drops_that_moved_it": moved_by_drop,
+                        "the_re_types_that_flipped_to_BIND": moved_by_retype_flip},
+                    "identity": (
+                        f"{len(moved_by_drop)} (denominator shrink) + "
+                        f"{len(moved_by_retype_flip)} (re-type flip) - "
+                        f"{len(retype_regressed)} (regression) == {base_nb - disp_nb} "
+                        f"(measured base_nb {base_nb} -> disp_nb {disp_nb})"),
+                    "identity_is_GUARDED": (
+                        "checked by the ZERO_YIELD_ARM_ACTUALLY_BIT gate, which also "
+                        "refuses on any collateral movement -- a decomposition that does "
+                        "not sum to its total would refuse to publish (exit 2)"),
+                    "what_this_STRENGTHENS": (
+                        "the R-293 census-side siting. The bite is real, so the zero is "
+                        "measured and not a no-op -- but the ONE re-type that moved the "
+                        "measure is the ENTER row, the very row whose bind is convicted at "
+                        "the ENFORCED level (see counterfactual_bind_probe's LEVEL_QUALIFIER "
+                        "block). The single 'improvement' the arm produced is an accounting "
+                        "gain the fidelity gate refuses -- which is precisely the hollow "
+                        "compile the typing was ordered to STOP, now visible as a number."),
+                },
                 "and_yet_n_specs_completed": yield_specs,
             },
         },
@@ -1015,8 +1195,13 @@ def main():  # noqa: C901
         "extraction_source": PHASE_B,
         "selection_rule_source": (
             "IMPORTED from docs/replay-results/h1-battery/tier_a_compile_census.py "
-            "(select_clean_strategies + binds) -- never restated, so this artifact "
-            "cannot drift from the census it companions"),
+            "(select_clean_strategies + binds + is_load_bearing) -- never restated, so "
+            "this artifact cannot drift from the census it companions. R-301 SS5(ii): "
+            "the LOAD-BEARING rule (`role in ('spine','trigger')`), the one predicate "
+            "that DEFINES the dispositioned population, WAS restated as a literal in "
+            "both files while this sentence claimed otherwise -- a claimed protection "
+            "that was not wired. It is now defined ONCE (tier_a_compile_census."
+            "is_load_bearing) and imported, so this sentence is now true of all three."),
 
         "DERIVATION_RE_DERIVED_IN_THIS_RUN": {
             "note": (
@@ -1045,7 +1230,10 @@ def main():  # noqa: C901
                 "question": (
                     "what share of everything these traders taught is both trade-gating "
                     "and un-typeable by the shipped classifier")},
-            "load_bearing_rule": "role in ('spine','trigger') -- the tier-A census's own rule",
+            "load_bearing_rule": (
+                f"role in {tuple(LOAD_BEARING_ROLES)} -- the tier-A census's own rule, "
+                f"RENDERED FROM THE IMPORTED CONSTANT (tier_a_compile_census.LOAD_BEARING_ROLES / "
+                f".is_load_bearing), not restated here; R-301 SS5(ii)"),
             "per_spec": per_spec,
         },
 
@@ -1121,7 +1309,17 @@ def main():  # noqa: C901
                 "bindable=True with approximation=True is NOT a bind: it degrades to an "
                 "ungated pass-through, so the condition stops gating anything while the "
                 "row reports as bound. counts_as_a_BIND applies the tier-A census's own "
-                "predicate (bindable AND NOT approximation AND executed)."),
+                "predicate (bindable AND NOT approximation AND executed) -- a BINDING-LEVEL "
+                "predicate. THE LEVEL IS PART OF THE CLAIM (R-301 SS3): every row also "
+                "carries LEVEL_QUALIFIER__the_enforced_read_of_this_same_row, which is what "
+                "the shipped Leg A(ii) gate concludes about the SAME binding. Read them "
+                "together. ENTER is the row where they disagree -- counts_as_a_BIND=True at "
+                "the binding level, leg_a_ii_PASSES=False at the enforced level -- and that "
+                "disagreement, not any absence of a downstream check, is what makes it a "
+                "warning."),
+            "how_many_families_reach_a_Leg_A_ii_PASS_on_this_row": sum(
+                1 for p in probe.values()
+                if p["LEVEL_QUALIFIER__the_enforced_read_of_this_same_row"]["leg_a_ii_PASSES"]),
         },
 
         "eligibility_arms": {
@@ -1191,15 +1389,26 @@ def main():  # noqa: C901
         print(f"  {f:<22} {k:>2}   binds? {probe[f]['counts_as_a_BIND']}  "
               f"(approximation={probe[f]['approximation']})")
     print("\n--- counterfactual bind probe (production binder, flags OFF) ---")
+    print("    BINDING level ............................  | ENFORCED level (Leg A(ii))")
     for f in sorted(probe):
         p = probe[f]
+        q = p["LEVEL_QUALIFIER__the_enforced_read_of_this_same_row"]
         print(f"  {f:<22} bindable={str(p['bindable']):<5} approx={str(p['approximation']):<5} "
-              f"BIND={str(p['counts_as_a_BIND']):<5} {p['unbound_reason'] or ''}")
+              f"BIND={str(p['counts_as_a_BIND']):<5} | (ii) PASS={str(q['leg_a_ii_PASSES']):<5} "
+              f"{p['unbound_reason'] or ''}")
+    print(f"  families reaching a Leg A(ii) PASS on this row: "
+          f"{out['counterfactual_bind_probe']['how_many_families_reach_a_Leg_A_ii_PASS_on_this_row']}"
+          f" of {len(probe)} probed")
     print("\n--- ZERO-YIELD (measured) ---")
     print(f"  arm BIT: {disp_applied['retypes']} re-types + {disp_applied['drops']} drops "
           f"applied; non-binding conditions {base_nb} -> {disp_nb} "
           f"({base_nb - disp_nb} moved). The zero below is therefore a MEASURED zero, "
           f"not a no-op.")
+    print(f"  BITE DECOMPOSED (R-301 SS4): {len(moved_by_drop)} from the DENOMINATOR SHRINK "
+          f"(drops leaving, {n_total} -> {n_total - len(drop_keys)}) + "
+          f"{len(moved_by_retype_flip)} RE-TYPE FLIP to BIND; "
+          f"{len(retype_moved_zero)} of {disp_applied['retypes']} applied re-types moved it "
+          f"by ZERO, {len(retype_regressed)} regressed, {len(collateral)} collateral.")
     print(f"  eligible BEFORE: {len(base_elig)}/{len(specs)}   "
           f"eligible AFTER all dispositions: {len(disp_elig)}/{len(specs)}   "
           f"DELTA = {yield_specs}")

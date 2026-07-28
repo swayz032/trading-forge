@@ -57,6 +57,24 @@ _spec.loader.exec_module(_w1)
 
 DEFERRED_FAMILIES = {"WAIT_RETEST", "WAIT_CONFIRMATION", "FILTER"}
 
+# ============================================================ R-301 §5(ii): THE LOAD-BEARING RULE,
+# ============================================================ DEFINED EXACTLY ONCE
+# ★ This predicate DEFINES the dispositioned population — which taught conditions actually gate a
+# trade, and therefore which UNTYPED ones the companion census (untyped_disposition_census.py) is
+# obliged to disposition. It used to be RESTATED as a literal `c["role"] in ("spine", "trigger")`
+# in BOTH files while the companion's prose claimed its predicates were imported "so this artifact
+# cannot drift". A claimed protection that is not wired is the same class of false safeguard claim
+# as a claimed absence that is not true (R-301 §2). So the rule now lives HERE, beside the other
+# shared definitions (PHASE_B, RECEIPT, binds), and the companion IMPORTS it. There is one
+# definition and one import; divergence is no longer expressible.
+LOAD_BEARING_ROLES: tuple[str, ...] = ("spine", "trigger")
+
+
+def is_load_bearing(cond: dict) -> bool:
+    """A taught condition is LOAD-BEARING iff its role is spine or trigger — i.e. iff it gates a
+    trade rather than annotating one. THE single source for that rule; never restate it."""
+    return cond["role"] in LOAD_BEARING_ROLES
+
 # ============================================================ R-229: GATES THAT -O CANNOT STRIP
 # ★ Three gates in main() were bare `assert`s, and every one guards a PUBLISHED figure: the
 # tier-A clean strategy count (twice, against the receipt's own pin) and the family-enumeration
@@ -257,7 +275,7 @@ def main():
                 "type": c["type"],
                 "role": c["role"],
                 "object": obj,
-                "load_bearing_spine": c["role"] in ("spine", "trigger"),
+                "load_bearing_spine": is_load_bearing(c),
                 "bind_status": bind_status(b) if b else "NO_BINDING_EMITTED",
                 "binds_to": (b or {}).get("primitive"),
                 "approximation": (b or {}).get("approximation"),

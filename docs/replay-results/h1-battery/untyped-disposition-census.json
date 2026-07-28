@@ -10,7 +10,7 @@
   "ZERO_YIELD_STATEMENT": {
     "plainly": "THIS ARTIFACT RECOVERS 0 ELIGIBLE SPECS. Nothing here makes any strategy compile, bind, or pass a gate that did not before. Eligible specs BEFORE these dispositions: 0 of 11. Eligible specs AFTER applying every disposition in the most favourable way possible: 0 of 11. Delta: 0.",
     "why_zero_even_for_the_11_typed_rows": "Four of the five target families (WAIT_STRUCTURE, WAIT_RETEST, WAIT_CONFIRMATION, WAIT_BIAS) bind with approximation=True -- an ungated np.ones pass-through that is LOOSER than taught and therefore does NOT count as a BIND. A re-type would turn an honest unbound into a BOUND-BUT-APPROXIMATED row: the accounting improves, the gate does not. That is precisely the hollow compile this work was ordered to stop, and it is why the dispositions live here and not in the producer.",
-    "the_one_family_that_binds_non_approximated_is_a_WARNING_not_a_yield": "ENTER binds with approximation=False (MEASURED -- see counterfactual_bind_probe). That is WORSE, not better: its spine_completion_trigger fires on spine completion and carries none of the taught timing, so a re-type would produce a row that looks like a genuine bind while having silently discarded the teaching, with nothing downstream flagging it. Exactly one row in this table targets ENTER and it is flagged for this reason.",
+    "the_one_family_that_binds_non_approximated_AT_THE_BINDING_LEVEL_is_a_WARNING_not_a_yield": "ENTER binds with approximation=False AT THE BINDING LEVEL (MEASURED -- see counterfactual_bind_probe). ** THE LEVEL IS PART OF THE CLAIM (R-301 SS3), required and not stylistic: that False is the per-binding flag, and at the ENFORCED / Leg A(ii) level the SAME row reads the OPPOSITE -- FAMILY_META['ENTER'].enforced_honest_approximation() is True, so the shipped _check_concretely_bound FAILS the re-type with 'bound to an approximation (proxy/pass-through, honest accounting): spine_completion_trigger'. Both figures are MEASURED in this run and published side by side in the probe. ** CORRECTION OF RECORD (R-301 SS2): this key previously said the re-type would pass 'with nothing downstream flagging it'. THAT WAS MEASURED FALSE. Leg A(ii) is downstream and DOES flag it, via the R-260 family anchor -- and no family in FAMILY_META reaches a (ii) PASS on this row (swept; see how_many_families_reach_a_Leg_A_ii_PASS_on_this_row). A CLAIMED ABSENCE OF A SAFEGUARD IS A CLAIM EXACTLY LIKE A CLAIMED PRESENCE and owes the same wiring-verify; that this one erred in the CONSERVATIVE direction (it made the safer census-side siting look MORE necessary) is the aggravator, not the excuse. ** WHAT IS ACTUALLY TRUE, and why the row is still a warning: its spine_completion_trigger fires on spine completion and carries none of the taught 'open of the NEXT candle' timing, so a re-type would produce a row that reads as a GENUINE bind under THIS census's own bind predicate -- counts_as_a_BIND=True, the flattering answer, the only such row in the table -- while the enforced honest accounting convicts it. The hazard is a DISAGREEMENT BETWEEN LEVELS that a binding-level reader would never see, not an absent downstream check. Exactly one row in this table targets ENTER and it is flagged for this reason.",
     "WAIT_SESSION_note": "WAIT_SESSION is the only family whose bind is non-approximated AND content-checked -- but it binds only when the prose resolves to a known session zone, and the probe below shows it returning no_recognized_session_keyword on this corpus. The mission teaches no clean session names, so it is not an escape hatch either.",
     "measured_not_asserted": "Both arms were produced by running compile_binding_plan (production binder, flags OFF) in this process. The dispositioned arm is an in-memory deepcopy; no producer output changed.",
     "the_zero_is_a_MEASURED_zero_not_a_NO_OP": {
@@ -20,6 +20,40 @@
       "n_non_binding_conditions_baseline": 94,
       "n_non_binding_conditions_dispositioned": 91,
       "n_conditions_the_arm_moved": 3,
+      "DECOMPOSITION_of_n_conditions_the_arm_moved": {
+        "why_this_is_published_and_not_optional": "R-301 SS4. This total COMPOUNDS TWO MECHANISMS that have nothing in common: conditions LEAVING the denominator, and a condition actually starting to BIND. Left undecomposed it invites the reading 'the re-types bit', which is FALSE -- almost all of them moved it by exactly zero. A COMPOUND COUNT OVER HETEROGENEOUS MECHANISMS OWES ITS DECOMPOSITION, and every part below is COMPUTED from the per-condition bind state of both arms.",
+        "from_DENOMINATOR_SHRINK__dropped_rows_that_were_non_binding": 2,
+        "from_RE_TYPE_FLIP__a_condition_that_was_not_binding_and_now_BINDS": 1,
+        "n_applied_retypes_that_moved_the_measure_by_ZERO": 10,
+        "n_applied_retypes_that_REGRESSED_a_bind_to_non_binding": 0,
+        "n_untouched_conditions_whose_bind_state_moved_anyway": 0,
+        "taught_denominator_baseline_vs_dispositioned": {
+          "baseline": 99,
+          "dispositioned": 97,
+          "note": "the drops are the ONLY reason these differ; the re-types change a condition's type, never its presence"
+        },
+        "which_rows": {
+          "the_drops_that_moved_it": [
+            [
+              "LD1FEbwXU4o__s0",
+              "UNTYPED:drop-to-the-5minut-or-the-1-minute-chart#2"
+            ],
+            [
+              "YqY0OkL5LMI__s0",
+              "UNTYPED:it-gapped-up-a-bit-from-the-previous-day#1"
+            ]
+          ],
+          "the_re_types_that_flipped_to_BIND": [
+            [
+              "dENM6gt8ZRg__s0",
+              "UNTYPED:entry-is-on-the-open-of-the-next-candle#4"
+            ]
+          ]
+        },
+        "identity": "2 (denominator shrink) + 1 (re-type flip) - 0 (regression) == 3 (measured base_nb 94 -> disp_nb 91)",
+        "identity_is_GUARDED": "checked by the ZERO_YIELD_ARM_ACTUALLY_BIT gate, which also refuses on any collateral movement -- a decomposition that does not sum to its total would refuse to publish (exit 2)",
+        "what_this_STRENGTHENS": "the R-293 census-side siting. The bite is real, so the zero is measured and not a no-op -- but the ONE re-type that moved the measure is the ENTER row, the very row whose bind is convicted at the ENFORCED level (see counterfactual_bind_probe's LEVEL_QUALIFIER block). The single 'improvement' the arm produced is an accounting gain the fidelity gate refuses -- which is precisely the hollow compile the typing was ordered to STOP, now visible as a number."
+      },
       "and_yet_n_specs_completed": 0
     }
   },
@@ -33,7 +67,7 @@
   },
   "scope_line": "corpus = tier-A certified clean strategies (n=11 compiled of 11 certified clean) | extractions = persisted sealed-read WD phase_b | producer = src/engine/extraction/spec_producer.py READ-ONLY | binder = compile_binding_plan, ALL FLAGS OFF | no bars, no battery, no survivor arithmetic | dispositions are census-side records and are consumed by NOTHING at runtime",
   "extraction_source": "C:\\Users\\tonio\\AppData\\Local\\Temp\\claude\\C--Users-tonio-Projects-trading-forge\\d96dba1d-d874-4c26-8026-7ec19a8674ae\\scratchpad\\SEALED-READ\\phase_b",
-  "selection_rule_source": "IMPORTED from docs/replay-results/h1-battery/tier_a_compile_census.py (select_clean_strategies + binds) -- never restated, so this artifact cannot drift from the census it companions",
+  "selection_rule_source": "IMPORTED from docs/replay-results/h1-battery/tier_a_compile_census.py (select_clean_strategies + binds + is_load_bearing) -- never restated, so this artifact cannot drift from the census it companions. R-301 SS5(ii): the LOAD-BEARING rule (`role in ('spine','trigger')`), the one predicate that DEFINES the dispositioned population, WAS restated as a literal in both files while this sentence claimed otherwise -- a claimed protection that was not wired. It is now defined ONCE (tier_a_compile_census.is_load_bearing) and imported, so this sentence is now true of all three.",
   "DERIVATION_RE_DERIVED_IN_THIS_RUN": {
     "note": "Every figure below was recomputed from the corpus in this process. Nothing was read from tier-a-compile-census.json.",
     "n_specs_compiled_over_n_specs_selected": {
@@ -64,7 +98,7 @@
       "denominator": 99,
       "question": "what share of everything these traders taught is both trade-gating and un-typeable by the shipped classifier"
     },
-    "load_bearing_rule": "role in ('spine','trigger') -- the tier-A census's own rule",
+    "load_bearing_rule": "role in ('spine', 'trigger') -- the tier-A census's own rule, RENDERED FROM THE IMPORTED CONSTANT (tier_a_compile_census.LOAD_BEARING_ROLES / .is_load_bearing), not restated here; R-301 SS5(ii)",
     "per_spec": [
       {
         "stub": "0RBexa9JpIg__s0",
@@ -188,7 +222,14 @@
         "executed": true,
         "unbound_reason": null,
         "primitive": "spine_completion_trigger",
-        "counts_as_a_BIND": true
+        "counts_as_a_BIND": true,
+        "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+          "level_of_the_fields_above": "BINDING -- what compile_binding_plan stamped on this one binding",
+          "level_of_the_fields_below": "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, anchored on the FAMILY's enforced honest accounting (R-260 SS1), which is why it can and does disagree with the flag above",
+          "family_enforced_honest_approximation": true,
+          "leg_a_ii_PASSES": false,
+          "leg_a_ii_reason": "bound to an approximation (proxy/pass-through, honest accounting): 'spine_completion_trigger'"
+        }
       },
       "UNTYPED": {
         "bindable": false,
@@ -196,7 +237,14 @@
         "executed": false,
         "unbound_reason": "unknown_condition_type",
         "primitive": null,
-        "counts_as_a_BIND": false
+        "counts_as_a_BIND": false,
+        "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+          "level_of_the_fields_above": "BINDING -- what compile_binding_plan stamped on this one binding",
+          "level_of_the_fields_below": "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, anchored on the FAMILY's enforced honest accounting (R-260 SS1), which is why it can and does disagree with the flag above",
+          "family_enforced_honest_approximation": null,
+          "leg_a_ii_PASSES": false,
+          "leg_a_ii_reason": "unbound taught condition (unknown_condition_type); \u00a76a unenforced"
+        }
       },
       "WAIT_BIAS": {
         "bindable": true,
@@ -204,7 +252,14 @@
         "executed": true,
         "unbound_reason": null,
         "primitive": "bias_engine.classify_institutional_regime",
-        "counts_as_a_BIND": false
+        "counts_as_a_BIND": false,
+        "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+          "level_of_the_fields_above": "BINDING -- what compile_binding_plan stamped on this one binding",
+          "level_of_the_fields_below": "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, anchored on the FAMILY's enforced honest accounting (R-260 SS1), which is why it can and does disagree with the flag above",
+          "family_enforced_honest_approximation": true,
+          "leg_a_ii_PASSES": false,
+          "leg_a_ii_reason": "bound to an approximation (proxy/pass-through, honest accounting): 'bias_engine.classify_institutional_regime'"
+        }
       },
       "WAIT_CONFIRMATION": {
         "bindable": true,
@@ -212,7 +267,14 @@
         "executed": true,
         "unbound_reason": null,
         "primitive": "spec_condition_compiler.candle_confirmation_check",
-        "counts_as_a_BIND": false
+        "counts_as_a_BIND": false,
+        "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+          "level_of_the_fields_above": "BINDING -- what compile_binding_plan stamped on this one binding",
+          "level_of_the_fields_below": "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, anchored on the FAMILY's enforced honest accounting (R-260 SS1), which is why it can and does disagree with the flag above",
+          "family_enforced_honest_approximation": true,
+          "leg_a_ii_PASSES": false,
+          "leg_a_ii_reason": "bound to an approximation (proxy/pass-through, honest accounting): 'spec_condition_compiler.candle_confirmation_check'"
+        }
       },
       "WAIT_RETEST": {
         "bindable": true,
@@ -220,7 +282,14 @@
         "executed": true,
         "unbound_reason": null,
         "primitive": "spec_condition_compiler.retest_touch_check",
-        "counts_as_a_BIND": false
+        "counts_as_a_BIND": false,
+        "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+          "level_of_the_fields_above": "BINDING -- what compile_binding_plan stamped on this one binding",
+          "level_of_the_fields_below": "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, anchored on the FAMILY's enforced honest accounting (R-260 SS1), which is why it can and does disagree with the flag above",
+          "family_enforced_honest_approximation": true,
+          "leg_a_ii_PASSES": false,
+          "leg_a_ii_reason": "bound to an approximation (proxy/pass-through, honest accounting): 'spec_condition_compiler.retest_touch_check'"
+        }
       },
       "WAIT_SESSION": {
         "bindable": false,
@@ -228,7 +297,14 @@
         "executed": false,
         "unbound_reason": "no_recognized_session_keyword",
         "primitive": null,
-        "counts_as_a_BIND": false
+        "counts_as_a_BIND": false,
+        "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+          "level_of_the_fields_above": "BINDING -- what compile_binding_plan stamped on this one binding",
+          "level_of_the_fields_below": "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, anchored on the FAMILY's enforced honest accounting (R-260 SS1), which is why it can and does disagree with the flag above",
+          "family_enforced_honest_approximation": false,
+          "leg_a_ii_PASSES": false,
+          "leg_a_ii_reason": "unbound taught condition (no_recognized_session_keyword); \u00a76a unenforced"
+        }
       },
       "WAIT_STRUCTURE": {
         "bindable": true,
@@ -236,10 +312,18 @@
         "executed": true,
         "unbound_reason": null,
         "primitive": "structure_engine.compute_structure_state",
-        "counts_as_a_BIND": false
+        "counts_as_a_BIND": false,
+        "LEVEL_QUALIFIER__the_enforced_read_of_this_same_row": {
+          "level_of_the_fields_above": "BINDING -- what compile_binding_plan stamped on this one binding",
+          "level_of_the_fields_below": "ENFORCED / Leg A(ii) -- what the shipped fidelity gate concludes, anchored on the FAMILY's enforced honest accounting (R-260 SS1), which is why it can and does disagree with the flag above",
+          "family_enforced_honest_approximation": true,
+          "leg_a_ii_PASSES": false,
+          "leg_a_ii_reason": "bound to an approximation (proxy/pass-through, honest accounting): 'structure_engine.compute_structure_state'"
+        }
       }
     },
-    "reading": "bindable=True with approximation=True is NOT a bind: it degrades to an ungated pass-through, so the condition stops gating anything while the row reports as bound. counts_as_a_BIND applies the tier-A census's own predicate (bindable AND NOT approximation AND executed)."
+    "reading": "bindable=True with approximation=True is NOT a bind: it degrades to an ungated pass-through, so the condition stops gating anything while the row reports as bound. counts_as_a_BIND applies the tier-A census's own predicate (bindable AND NOT approximation AND executed) -- a BINDING-LEVEL predicate. THE LEVEL IS PART OF THE CLAIM (R-301 SS3): every row also carries LEVEL_QUALIFIER__the_enforced_read_of_this_same_row, which is what the shipped Leg A(ii) gate concludes about the SAME binding. Read them together. ENTER is the row where they disagree -- counts_as_a_BIND=True at the binding level, leg_a_ii_PASSES=False at the enforced level -- and that disagreement, not any absence of a downstream check, is what makes it a warning.",
+    "how_many_families_reach_a_Leg_A_ii_PASS_on_this_row": 0
   },
   "eligibility_arms": {
     "criterion": "R-042 SS5 with the frozen-forensics default: a spec is ELIGIBLE iff EVERY taught condition in its denominator BINDS (bindable AND NOT approximation AND executed)",
@@ -441,7 +525,7 @@
     "POPULATION_IDENTITY": "Checks that the disposition table covers EXACTLY the load-bearing UNTYPED population re-derived from the corpus in this run -- no orphan row, no uncovered condition, and every covered row still UNTYPED and still load-bearing. It CANNOT tell whether a disposition is CORRECT; correctness of a judgment is what an independent grader re-derives.",
     "TAUGHT_TEXT_DRIFT": "Checks that the prose each disposition was judged against is byte-identical (by hash) to the prose the corpus emits today. It catches a corpus or producer change silently re-pointing a judgment at different words. It says nothing about whether the judgment on those words was right.",
     "CATEGORY_CLOSURE": "Checks that every row carries exactly one category from the closed set and that the category counts sum to the derived population. It is an internal consistency pin on the table's SHAPE, not independent evidence about the corpus -- the population count it closes against IS derived, the split across categories is the judgment being recorded.",
-    "ZERO_YIELD_ARM_ACTUALLY_BIT": "** THE HAZARD THIS GATE EXISTS FOR: a zero-yield result that is zero because the dispositioned arm DID NOTHING. If a stub or condition_id in the table failed to match, no re-type would be applied, the two arms would be the same compile, and the delta would be 0 -- a number that looks like the finding and is actually a no-op. So this gate requires (a) that exactly as many re-types and drops were APPLIED to spec copies as the table declares, and (b) that the mutation BIT: strictly fewer non-binding conditions in the dispositioned arm than in the baseline. It proves the zero is a MEASURED zero; it does not prove any disposition is right, and it says nothing about whether zero is the right answer -- only that the arm was capable of returning a different one.",
+    "ZERO_YIELD_ARM_ACTUALLY_BIT": "** THE HAZARD THIS GATE EXISTS FOR: a zero-yield result that is zero because the dispositioned arm DID NOTHING. If a stub or condition_id in the table failed to match, no re-type would be applied, the two arms would be the same compile, and the delta would be 0 -- a number that looks like the finding and is actually a no-op. So this gate requires (a) that exactly as many re-types and drops were APPLIED to spec copies as the table declares, and (b) that the mutation BIT: strictly fewer non-binding conditions in the dispositioned arm than in the baseline. (c) R-301 SS4 ADDS THE DECOMPOSITION CLOSURE: the published parts of the bite (denominator shrink + re-type flips - regressions) must SUM to the measured total, with zero collateral movement on conditions the table never touched. That third clause guards a DIFFERENT hazard from the first two -- they ask whether the arm moved at all, it asks whether the published explanation of the movement is the true one. It proves the zero is a MEASURED zero and its bite an EXPLAINED one; it does not prove any disposition is right, and it says nothing about whether zero is the right answer -- only that the arm was capable of returning a different one.",
     "EVERY_CONDITION_HAS_A_BINDING": "Checks the binder emitted a binding row for every taught condition in both arms, so a missing binding cannot be silently read as 'does not bind' and quietly inflate the not-binding count. It says nothing about whether a binding is correct."
   },
   "rows": [
@@ -764,7 +848,7 @@
       "demanded_primitive": null,
       "evidence_for_the_call": "This is the ENTRY ITSELF, stated as the completion of the preceding spine ('entry is on the open of the next candle after the retest'), which is exactly what ENTER's spine_completion_trigger primitive represents. The classifier tied 1-1 between WAIT_SESSION ('open') and WAIT_RETEST ('retest'); BOTH are spurious -- 'open' here is a CANDLE open, not a session open, and the retest is the antecedent this entry follows, not the entry.",
       "boundary_call_flagged": true,
-      "boundary_call_note": "FLAGGED FOR A REASON THAT CUTS AGAINST THIS ROW'S OWN DISPOSITION: ENTER is the ONE target family in this table that binds NON-approximated (see counterfactual_bind_probe). Its primitive fires on spine completion and does NOT carry the taught 'open of the NEXT candle' timing -- so a re-type here would produce a row that looks like a GENUINE bind while having discarded the bar-open semantics. That is a worse hollow bind than the approximated kind, because nothing downstream flags it. Recorded, not acted on.",
+      "boundary_call_note": "FLAGGED FOR A REASON THAT CUTS AGAINST THIS ROW'S OWN DISPOSITION: ENTER is the ONE target family in this table that binds NON-approximated AT THE BINDING LEVEL (see counterfactual_bind_probe). LEVEL QUALIFIER, REQUIRED (R-301 SS3): at the ENFORCED / Leg A(ii) level the same row reads the OPPOSITE -- _check_concretely_bound FAILS this re-type, 'bound to an approximation (proxy/pass-through, honest accounting): spine_completion_trigger', because the R-260 family anchor (FAMILY_META['ENTER'].enforced_honest_approximation()=True) convicts the family regardless of the per-binding flag. Its primitive fires on spine completion and does NOT carry the taught 'open of the NEXT candle' timing -- so a re-type here would produce a row that looks like a GENUINE bind while having discarded the bar-open semantics. CORRECTED (R-301 SS2): this note previously called that 'a worse hollow bind than the approximated kind, because nothing downstream flags it'. THE 'NOTHING DOWNSTREAM FLAGS IT' CLAUSE IS MEASURED FALSE and is struck -- Leg A(ii) IS downstream and DOES flag it. What is true is narrower and is the real reason this row is flagged: the row would be GENUINE-LOOKING at the binding level (the only counts_as_a_BIND=True re-type in this table) while convicted at the enforced level, so a reader applying the census's own bind predicate -- the predicate in the sentence above -- would be misled where the four approximated families visibly self-report. Recorded, not acted on.",
       "target_family_declared_primitive": "spine_completion_trigger",
       "would_this_retype_BIND": true
     },
