@@ -15773,6 +15773,8 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Added a generated premium screening-archive visual asset and desktop/mobile browser validation.
 - Refined the Vault into one uncluttered transparent-black main stage plus a narrow right intake rail, with thinner glass borders and reduced overlays so the generated archive environment remains visible behind live content.
 - Removed the erroneous attached transcript pane: selected video, provenance, linked strategy receipts, and transcript now flow through one continuous main stage; the right rail alone owns search, counters, filters, and discovery selection as the room remote.
+- Integrated that remote with three compact real-data views: today's discovered videos and linked strategies, the full strategy library with evidence-aware selection, and a worker roster derived directly from the canonical model router. The stage width is capped so the generated room remains visible; the rail has one three-way control instead of stacked navigation.
+- Worker tiles expose each configured model, provider, fallback, lane, and plain-language job. No Opus worker is fabricated because the production model router currently registers OpenAI/GPT and Ollama roles but no Anthropic/Opus role.
 - Registered the new table in the subsystem topology and synchronized generated system-map evidence.
 
 **Verification:**
@@ -15783,6 +15785,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - TypeScript build, production-isolation gate, 2026-compliance gate, system-map check, changed-file ESLint, and `git diff --check`: passed.
 - Playwright desktop and mobile visual flows rendered with no console errors.
 - Playwright revalidated both empty and populated 1920x1080 states after the single-stage correction; neither state renders a second attached screen.
+- Playwright revalidated the Today, Library, and Workers modes at 1920x1080 with populated contract data and no console errors. A live production-database probe returned 120 strategies and all 17 canonical model roles in 1.5 seconds including process startup.
 - Repository-wide deep scan remains red on pre-existing environment/repository findings: 186 legacy ESLint errors outside this change, stale/unreachable runtime evidence, missing `/api/production-status` topology evidence, and stale n8n workflow evidence. The files changed for this mission have zero ESLint errors.
 
 **Known-facts updates:** Production previously retained transcript fetch outcomes and short quote snippets, not durable full transcripts. Full transcripts become durable only after migration 0207 is deployed and new intake passes through one of the wired producers; historical full transcripts cannot be reconstructed from the prior database records alone.

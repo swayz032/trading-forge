@@ -16,11 +16,18 @@ describe("Media Evidence Vault production contract", () => {
   });
 
   it("shows daily intake, full transcript, source seals, and linked strategy receipts", () => {
-    expect(page).toContain("Today's intake");
+    expect(page).toContain("The remote");
+    expect(page).toContain('data-mode="today"');
+    expect(page).toContain('data-mode="library"');
+    expect(page).toContain('data-mode="workers"');
+    expect(page).toContain("Today's strategies &amp; sources");
+    expect(page).toContain("Full strategy library");
+    expect(page).toContain("Every configured worker, one floor");
     expect(page).toContain('class="panel main-stage is-empty"');
     expect(page).toContain('class="panel right-rail"');
     expect(page).toContain(".main-stage{display:block");
     expect(page).not.toContain("grid-template-columns:minmax(285px,38%)");
+    expect(page).not.toContain('id="today-only"');
     expect(page).toContain("Full transcript");
     expect(page).toContain("SHA-256 evidence seal");
     expect(page).toContain("/slumhouse/recipe.html?id=");
@@ -44,6 +51,7 @@ describe("Media Evidence Vault production contract", () => {
   it("contains no seeded cards or fabricated archive totals", () => {
     expect(page).not.toMatch(/Math\.random|fixture|demo video|sample transcript/i);
     expect(page).toContain("payload.videos");
-    expect(page).toContain("d.stats.today");
+    expect(page).toContain("payload.stats.today");
+    expect(page).toContain("No fictional worker, model, or job is displayed.");
   });
 });
