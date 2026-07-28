@@ -2861,6 +2861,18 @@ export const accountStrategyAssignments = pgTable(
     releasedToFamily: boolean("released_to_family").notNull().default(false),
     familyMemberLabel: text("family_member_label"),
     hmacSecret: text("hmac_secret"),
+    // Migration 0128 (`0128_hmac_secret_encryption.sql:41`): `ADD COLUMN IF NOT EXISTS
+    // hmac_secret_encrypted BYTEA`. Added to this snapshot BY HAND (R-403) — it was missing here
+    // while being real in the live catalogue and read by two production services
+    // (`tradingview-marker-service.lookupHmacSecret`, `pine-export-recipient-service`), both
+    // decrypting via pgp_sym_decrypt. Verified present on the production database.
+    //
+    // ★ It surfaced because `check:pglite-ddl-parity` calls THIS FILE "the source of truth" and
+    // therefore blamed a CORRECT test for the disagreement; following its printed remedy would
+    // have deleted a live column from that test. `db:generate` stays FORBIDDEN — regenerating
+    // from a multiply-stale snapshot is the larger hazard, whereas hand-adding a column that
+    // provably exists makes this file strictly more accurate.
+    hmacSecretEncrypted: bytea("hmac_secret_encrypted"),
     assignedAt: timestamp("assigned_at", { withTimezone: true }).notNull().defaultNow(),
     assignedBy: text("assigned_by").notNull(),
   },
