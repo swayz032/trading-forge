@@ -12,6 +12,40 @@
 
 ---
 
+## R-401 · 2026-07-28 · **AR-365 + AR-366 — PHASE 1'S EXIT CONDITION IS MEASURED AT LAST, AND IT IS NOT MET** ★★★ **APPROVED, WITH A DESK-FOUND CORRECTION THAT MAKES THE ANSWER WORSE: the `6` AR-365 grouped is the artifact's `AFTER_flags_on_HYPOTHETICAL` figure. TODAY'S FLAGS-OFF FIGURE IS `n_bound_and_concrete: 0` — zero of 155. The 0/16 verdict stands and is STRENGTHENED** ★★★ **SMC BUILD AUTHORIZED against a pinned, honestly-dated before-figure**
+
+**RULING ID:** R-401 · **TASK ID:** R-399 items (1) and (2) · **DECISION:** **APPROVE BOTH REPORTS. PIN THE CORRECTED FIGURE. PROCEED TO SMC.**
+
+**CLAIMS VERIFIED (and how) — I re-derived rather than re-ran their script.** ★★ **[MEASURED HERE]** `node` over `dual-denominator-remeasure-2026-07-21.json` at this desk: `corpus_A.rows` **n=16** · fields `spec, n_taught, n_bindable, n_unbound, n_binding_approximation, n_bound_and_concrete, ...` · **totals taught=155, bound_and_concrete=6, unbound=27, bindable=128** · **specs where `n_bound_and_concrete == n_taught`: 0 of 16.** ★ **[MEASURED HERE]** the category algebra AR-365 asserted — `n_taught == n_bindable + n_unbound` — **holds for 16/16 rows**, so `bound_and_concrete` is a subset of bindable and not its complement. **AR-365's arithmetic is correct in every particular I checked.**
+
+**EVIDENCE INDEPENDENTLY CHECKED — and here is what the grouping did not say.** ★★★ **[MEASURED HERE] `sum(rows[].n_bound_and_concrete) = 6`, and the artifact carries TWO sibling blocks: `corpus_A.BEFORE_flags_off.n_bound_and_concrete = 0` and `corpus_A.AFTER_flags_on_HYPOTHETICAL.n_bound_and_concrete = 6`. The row-level field the report grouped is the AFTER, HYPOTHETICAL one — the state where the flags are ON, which is not the state the tree is in.** ★★ **So "the best spec has 1 of 6 bound" describes a hypothetical; today's flags-off reading is `0 of 155 bound`, `section_6a_coverage = 0`.** The headline verdict is untouched — **0/16 under the hypothetical, and a fortiori 0/16 under flags-off** — but the pinned "before" must name which state it is in, or the next reader inherits a number from a world we are not living in.
+
+**TESTS RERUN (command + result).** My first probe reported `best spec: undefined` — **[MEASURED] my own instrument's defect, not a finding**: I keyed on `n_taught_conditions` (the artifact's TOP-LEVEL name) while the row field is `n_taught`. Re-keyed on the real field name → `IyFioFkRgWo__s0 1/6`, `PVMgOxHUqFA__s0 1/8`, `4cT8WTyxhYY__s0 1/9`. ★ **The same top-level-vs-row name collision the desk was warned about — "three different 16s can live in one artifact" — and it bit my verification script within ten minutes of my writing R-400 about join keys. Named, not hidden.**
+
+**AR-366 — THE PRODUCER'S REFUSAL IS A PASS, NOT A FAILURE.** ★★ **[RELAYED, and I did not re-run the generator]** `GUARD REFUSED: REVIVAL_FAMILY`, exit 2, two revival probes (`SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN`, `SESSION_ACKNOWLEDGMENT_PAIR_DRIFTED`) declared they would make `ws_session_resolvable <= graded_teachings` fire and observed `NO_ASSERT_FIRED`. ★★★ **This desk's own law is that a mutation is evidence only if it BITES — the producer is enforcing that law against itself and refusing to certify a measurement whose red-proof went silent. A generator that publishes anyway is the failure; this one is doing the right thing.** The reading is **stale by refusal, not stale by neglect**, and that distinction is the difference between a number to distrust and a number to cite with a date.
+
+**★★ THE WORKER CAUGHT THE INSTRUMENT LYING, TWICE, AND SAID SO.** `| tail` printed `exit=0` while the script itself said `Exit 2`; re-run unpiped → real exit 2. And it hashed two files it found modified rather than assuming they were its own. **[MEASURED by the worker] target artifact byte-identical across three draft runs.** That is the standard.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None. Read-only throughout; **[MEASURED by the worker] the producer was never run without `--draft`**, and no compiler, binding or spec file was touched.
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★★ **PHASE 1 EXIT — "≥1 tier-A spec compiles with ALL load-bearing conditions concretely bound" — IS NOT MET. 0 of 16.** ★ **[UNPROVEN]** whether the two revival probes are misdirected because their target asserts were legitimately renamed, or because something they guard regressed — **not diagnosed, and I am not letting a guess stand in for it.** ★ **[ARTIFACT-SOURCED, 2026-07-21, seven days old]** the whole reading; whether today's tree still yields 155/6 is unmeasurable until the probes are repaired.
+
+**★ SECOND HAZARD, ACCEPTED AND QUEUED.** `dual_denominator_remeasure.py:103` hardcodes `OUT_PATH = H1 / "dual-denominator-remeasure-2026-07-21.json"` — **[RELAYED]** a successful publish on any later day overwrites the pinned evidence of record under a false date. **Not a blocker for SMC** (nothing can publish while the guard refuses), but it is a live foot-gun the moment the probes are fixed, so it is queued ahead of the repair, not after it.
+
+**REQUIRED CORRECTIONS.** The pinned Phase-1 "before" figure is henceforth stated in this exact form, flag-state named: **`0 / 16 specs fully bound. Flags-off: 0 of 155 conditions bound_and_concrete. Flags-on hypothetical: 6 of 155. Source: dual-denominator-remeasure-2026-07-21.json, frozen 2026-07-21, refresh blocked by REVIVAL_FAMILY.`** No shorter form is citable.
+
+**FILES / SCOPE ALLOWED (SMC build, per R-303 §5).** The SMC family implementation and its tests. **Forbidden:** the four frozen instruments, the specs, and `dual_denominator_remeasure.py` (its repair is a separate queued item, not part of the build).
+
+**ACCEPTANCE COMMANDS.** The SMC family's own test suite, red-proofed at birth — RED without the implementation, GREEN with it. **The declared primitive must actually execute**, per R-153: a family whose declared primitive is not the one it runs is the POINTER LIE this campaign has already convicted three times.
+
+**STOP CONDITION.** Stop and report if the SMC build cannot execute its declared primitive without touching a frozen instrument, or if it needs a spec change. **Do not stop for a merge — that decision is mine and I will answer it in the same ruling.**
+
+**LESSON TO PERSIST.** ★★★ **A NUMBER'S FLAG-STATE IS PART OF ITS IDENTITY. `6` and `0` were both true of this artifact, sat six lines apart, and differed only by which hypothetical they belonged to — the grouping picked one up without noticing the other existed. That is the join-error shape from R-400 appearing in the WORKER'S output within the hour, which tells me the fix belongs in the ARTIFACT CONVENTION, not in either seat's discipline: a field whose value depends on a counterfactual should carry the counterfactual in its NAME. This artifact does exactly that — `AFTER_flags_on_HYPOTHETICAL` is a good name that did its job the moment anyone read the parent block.**
+
+**AUTHORIZED NEXT ACTION — to THIS seat, starting now.** ★★★ **BEGIN THE SMC BUILD** against the pinned before-figure above, per R-303 §5 order. **First observable: the SMC family's failing test, RED, within ~30 minutes** — post a START-RECEIPT if it will be longer. **Then, in order, without returning to me:** (2) date-stamp `OUT_PATH` so a publish can never overwrite a pinned artifact; (3) diagnose the two misdirected revival probes and report which of the two explanations holds — repair only after I rule on the diagnosis.
+
+---
+
 ## R-400 · 2026-07-28 · **OPERATOR: "how do you keep making mistakes — can you fix that?"** ★★★ **I CLASSIFIED THEM INSTEAD OF APOLOGISING AND THEY ARE ONE SHAPE: SIX JOIN ERRORS — two things each true, asserted to correspond, without checking the key.** ★★★ **The shape is STRUCTURAL to this seat: the desk's work IS joins, so its errors are join errors. Guard extended, red-proofed on my own six**
 
 **RULING ID:** R-400 · **TASK ID:** operator directive — stop the recurrence · **DECISION:** **PATTERN NAMED, MECHANISM SHIPPED, LIMIT STATED HONESTLY.**
