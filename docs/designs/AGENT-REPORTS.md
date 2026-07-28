@@ -4,6 +4,80 @@
 
 ---
 
+## AR-358 · 2026-07-28 · **ITEM 3 / server-derived `strategy_id` — THE QUEUE ITEM'S PREMISE IS WRONG AND I AM SAYING SO BEFORE BUILDING ANYTHING: the payload-supplied `strategy_id` IS cryptographically bound to the pair, so "derive it server-side" would fix nothing.** ★★★ **The real property is adjacent and bigger: BOTH proofs on these paths are STATIC BEARER CREDENTIALS that authenticate IDENTITY BUT NEVER CONTENT — and the compiler's own contract says the live-order one IS the raw `hmac_secret`, embedded at compile time**
+
+**RULING ID:** R-391 (item 3) · **TASK ID:** item 3, sub-item 1 · **RECOMMENDATION:** **BLOCKED — one question decides whether this is a finding or a non-issue, and I will not guess it.**
+
+---
+
+### WHAT I WAS ASKED TO LOOK AT, AND WHY THE NAME MISLEADS
+
+Queue item: *"server-derived `strategy_id`"* — the implied defect being that `strategy_id` arrives in the client payload (`tradingview-webhook.ts:110`, `z.string().uuid()`) and should instead be derived server-side.
+
+**[MEASURED] That premise does not hold.** `lookupHmacSecret` (`tradingview-marker-service.ts:276-303`) keys on **both** columns:
+
+```sql
+FROM account_strategy_assignments
+WHERE account_id = ${accountId}::uuid
+  AND strategy_id = ${strategyId}::uuid
+LIMIT 1
+```
+
+The secret returned is the one bound to **the exact pair the caller claims**, and the proof is then checked against that secret. **So claiming a different `strategy_id` retrieves a different secret, which the caller does not hold.** The field being client-supplied is not the vulnerability — the pair is bound cryptographically, not by trust.
+
+★ **Both callers fail CLOSED on a missing secret, with audit rows** — not silently:
+- `tradingview-webhook.ts:256-273` → `401 hmac_secret_not_found` + `tradingview_marker.hmac_secret_missing`
+- `live-order.ts:449-465` → `401 token_invalid` + `live_order.blocked_token_secret_missing`
+- `lookupHmacSecret:313-320` → in **production**, an encrypted column with no `HMAC_ENCRYPTION_KEY` returns `null` rather than falling back to plaintext (F-3).
+
+**So: "derive `strategy_id` server-side" would add ceremony and remove nothing.** ★★ **Building it would have been busywork that LOOKED like hardening — and would have left the actual property untouched, which is the failure mode worth avoiding here.**
+
+---
+
+### ★★★ THE PROPERTY THAT IS ACTUALLY THERE: identity-only proofs, on both paths
+
+**(a) Marker webhook, mode (b)** (`tradingview-webhook.ts:293-301`). `secret_check` is
+`HMAC_SHA256(secret, "{strategy_id}|{account_id}|marker_export")` — **a signature over a FIXED string.** It contains no nonce, no timestamp, and **none of the request body.** It proves *"I hold this pair's secret"* and nothing else. It is **constant for the lifetime of the secret** and therefore replayable indefinitely, and **every other field in the marker payload is unauthenticated** — `bar_timestamp` and `signal` included. Mode (a) (`hmac`) *does* cover canonical fields; mode (b) does not, and **either alone is accepted** (`isValid` from whichever is present).
+
+**(b) Live order gateway** — and this is the stronger one, quoted from the compiler's own contract at `pine_compiler.py:1668-1686`:
+
+> `live_order_token` — `account_strategy_assignments.hmac_secret` **static bearer (per-recipient secret)**
+> *"Pine cannot compute HMAC at alert-fire time — static-token mode … is the only viable path. The live_order_token is embedded at compile time (operator pastes via TradingView Settings panel, same UX as HMAC secret)."*
+
+`live-order.ts:468-473` then compares the supplied token against `dbSecret` with `timingSafeEqual`. **The token IS the secret.** Not a derivation of it, not a signature using it — the stored credential itself, travelling in the alert payload.
+
+★ `secret_check` is likewise emitted **as a literal** into the Pine artifact (`pine_compiler.py:1650`, inside the `alertcondition` message JSON).
+
+**[NOT A CRISIS — the mitigations are real and I checked them]** secrets are **per-`(account_id, strategy_id)`**, so one leaked credential is scoped to one pair, not an account or the system · a dedup guard (`live_order_pine_dedup`, migration 0170) rejects repeats of the same `bar_timestamp + action` · and **every broker route is gated shut today**, so this is a hardening question, not a live exposure. **I am not dressing a design constraint up as an incident.**
+
+---
+
+### ★ THE ONE QUESTION I WILL NOT GUESS — and it decides everything
+
+`pine_compiler.py`'s contract comment says both of these about `live_order_token`:
+
+> *"**embedded at compile time**"* … and … *"**operator pastes via TradingView Settings panel**"*
+
+**These are different security stories and only one can be true of the distributed artifact:**
+- **If embedded in the compiled Pine source**, then under the standing multi-user Pine distribution plan, **shipping someone a strategy file ships them a live credential for that pair** — and any recipient (or anyone they forward it to) can fire orders as that account+strategy until the secret is rotated.
+- **If pasted per-recipient into TradingView's Settings panel**, the artifact is credential-free, each recipient supplies their own, and the design is an ordinary per-user bearer token — acceptable, and the "Pine cannot compute HMAC at alert-fire time" constraint fully justifies it.
+
+★★ **A test cannot distinguish these from the code I have read — it is a question about what the export pipeline actually hands a recipient.** Per `worker-execution` §9 I am stopping here rather than picking the convenient reading. ★ **And note the shape: this is the SAME class as `PAPER_API_KEY` (R-364/AR-331) — a credential that is safe exactly as long as an assumption about who holds it holds, with nothing in code enforcing that assumption.**
+
+---
+
+**Files changed:** none — investigation only, read-only throughout.
+**Architecture boundaries NOT touched:** no auth path modified; no compiler change; no production read.
+**Hypotheses REJECTED by measurement:** (i) `strategy_id` is spoofable because it is client-supplied — **false**, the pair is bound by the secret; (ii) a null/missing secret falls through to an open path — **false**, both callers 401 with audit rows; (iii) plaintext fallback survives in production — **false**, F-3 fails closed.
+**Remaining uncertainty:** the embedded-vs-pasted question above. Everything else in this report is measured.
+**Risk if I had proceeded:** implementing "server-derived `strategy_id`" would have consumed a wave and hardened nothing.
+
+**Recommendation:** **BLOCKED pending one ruling** — do you want (A) me to trace the export pipeline end-to-end and determine what a recipient actually receives (read-only, bounded), or (B) is the pasted-per-recipient model already settled at this desk, in which case item 3 sub-item 1 closes as **NO DEFECT** and I move to the next sub-item (`npm ci` at boot)?
+
+**Next smallest task (ONE):** on your answer — either trace one real export artifact end-to-end, or close sub-item 1 and open `npm ci` at boot.
+
+---
+
 ## AR-357 · 2026-07-28 · **PR #19 GREEN 19/19 AND MERGED; PR #22 MERGED `3b92792a`.** Membership verdict from AR-356 stands unchanged on the settled run · **Taking item 3, first sub-item: server-derived `strategy_id`**
 
 **RULING ID:** R-391 / R-392 · **TASK ID:** item 2 close-out → item 3 open · **RECOMMENDATION:** informational; **the deploy and the live-DB re-verification are yours.**
