@@ -3,99 +3,80 @@
 > **Rewritten in place, never appended.** Cold-start read for a fresh advisor:
 > this file, then the last 3–5 rulings, then the newest 1–2 ARs. Do not read the
 > ledger from the top. Invoke `advisor-ruling` before any ruling.
-> Last rewritten: 2026-07-28 (post-crash).
+> Last rewritten: 2026-07-28, at R-366.
 
 ## SEAT
-Ledger at **R-366** (commit pending). Newest AR: **AR-333**, RULED (R-366).
-★ **PR #12 MUST NOT MERGE** — `newFailures` = 6 (was 2); the arming is rejected
-and R-359's gate is incomplete: it CONDITIONED import-equals-intent on a flag
-instead of removing it, so with the flag ON any import schedules a live probe.
-R-365 §5 is the repair contract (fresh retry budget).
-Worker: **ACTIVE but HANDING OFF** — it declined to author item 2 on depleted
-context (a migration on the fail-CLOSED boot path) and left the full contract
-inline in AR-331 §5. Landed so far: `a6278602` (A-11 arming), `2934721f`
-(mock comment), `0ec5c981` → **PR #13** (item 3, derived `<FIRM>_API_KEY`
-fallback removed). **Item 2 belongs to the NEXT worker.** Nothing waits on me.
-**The item-2 APPLY waits on the operator.** ⚠ R-363 §2 is WITHDRAWN (R-364 §1).
-Advisor rig: 2s **content-hash** report poll + 15-min idle watchdog (both were
-mtime-based and were tripped by my own pre-commit hook; hashing is immune, and
-the watchdog now excludes my own `R-NNN` / `ADVISOR-STATE` commits so they
-cannot mask worker silence).
+Ledger at **R-366**. Newest AR: **AR-333**, RULED. Worker: **handed off** — it
+declined to author item 2 on depleted context and left its contract inline in
+AR-331 §5. Advisor rig: 2s content-hash report poll + 15-min idle watchdog
+(both hash-based; my own pre-commit hook stamps mtimes, and the watchdog
+excludes my `R-NNN`/`ADVISOR-STATE` commits so they cannot mask worker silence).
 
 ## AUTHORIZED NOW
-**R-360 §6** (complete contract, needs no further authorization): arm
-`BROKER_KEY_PROBE_ENABLED="true"` in the two failing A-11 probe tests + answer
-the §5 vacuity question on the HTTP-400 sibling. Test files only; no source
-change. Then, without waiting: (2) paper accounts → a `broker_type` with no live
-egress; (3) remove the derived `${firmId}_API_KEY` fallback; (4) single
-broker-egress chokepoint + a CI test failing on any other module's broker fetch.
+**R-365 §5 — make `import` ALWAYS inert** (ranks first; PR #12 blocks on it).
+Remove `broker-router.ts`'s module-scope conditional `setImmediate`; export an
+explicit boot-probe starter invoked ONCE from the app entry. Then repair the
+A-11 arming, and **red-proof each of the six failures before making it green**.
+`checkProbeGate()` itself is correct — do not touch it. Fresh retry budget 2.
+Then item 2 (R-363 + R-364 §3), then item 4. Authoring + PR only.
 
 ## NOT AUTHORIZED
-A merge · a worktree update · any production write · a service restart or
-deploy · credential decryption · spend · edits inside `runtime-production` ·
-defaulting the probe flag ON · weakening or regex-dodging the F-2 static guard ·
-deleting/skipping any A-11 case.
+A merge · a worktree update · any production write (incl. the item-2 row
+UPDATE) · a service restart or deploy · credential decryption · spend · edits
+inside `runtime-production` · defaulting `BROKER_KEY_PROBE_ENABLED` ON ·
+weakening or regex-dodging the F-2 static guard · deleting/skipping any A-11
+case · making the six pass by DISARMING the flag (that re-creates the vacuity).
 
 ## STATE, WITH EVIDENCE GRADES
-**[MEASURED HERE]** PR #12 head `f7e00221`, MERGEABLE, 2 commits over the
-executing branch `969ba025`. The F-2 guard's own regex re-executed on three
-trees: base 0 · `f28d293f` 1 · `f7e00221` 0 ⇒ the breakage was ours and the fix
-is real. Gate: exact-string `"true"`, default OFF, **flag tested at MODULE
-SCOPE** so an unset flag schedules nothing at import; every `checkProbeGate()`
-error path returns a skip reason (fail-CLOSED); `randomUUID` imported at `:24`.
-New suite carries a DISCRIMINATES control + an INVARIANCE case.
-**[MEASURED BY GRADED INSTRUMENT]** CI baseline gate on `f7e00221`: `newFailures`
-= exactly the two A-11 401/403 cases (was 3; the F-2 one is closed).
-**[MEASURED HERE]** All 8 broker routes established shut (code, tower config,
-production DB). Migration 0159's "paper rows are NEVER routed to funded brokers"
-is **UNENFORCED in code**; `'paper'` validates as a live TradersPost account and
-the credential fallback derives the baited name `PAPER_API_KEY`.
-**[HYPOTHESIS — UNTESTED]** the A-11 HTTP-400 negative case may now pass
-VACUOUSLY under the gate; CI is structurally blind to that class.
-**[MEASURED HERE]** Tower took a Windows `0x9F` bugcheck; boot `13:35:49`; the
-API self-restarted **25s after boot** with `nodeDependencies.missing: []` and
-`pythonDependencies.missing: []` — the 07-18 erosion class did NOT recur. **True
-outage ≤ ~7 min, freeze instant UNENUMERATED** — EventLog 6008's `13:15:55` is
-the last clean CHECKPOINT, not the failure moment (R-361 §4); AR-328's "~20 min"
-is superseded. Not TF software. **[UNENUMERATED — OPEN]** the offending driver
-(`MEMORY.DMP` retained) — an availability risk with a name, on a box heading
-toward live capital.
+**[MEASURED HERE]** PR #12 head `2934721f`; `newFailures` = **6** (was 2 before
+the arming), verified from job `90359883693`. **MUST NOT MERGE.** The gate code
+itself is sound (F-2 guard regex re-run across three trees: base 0 · `f28d293f`
+1 · `f7e00221` 0; `randomUUID` imported; every `checkProbeGate()` error path
+fail-CLOSED; the probe-gate suite has DISCRIMINATES + INVARIANCE controls).
+**[MEASURED HERE]** **R-359's gate is INCOMPLETE**: it CONDITIONED
+import-equals-intent on a flag instead of removing it — with the flag ON, any
+import (test, script, migration runner, REPL) schedules a live broker POST.
+**[MEASURED HERE]** **Vacuity CONFIRMED at 4 tests**, not 1 — every one an
+ABSENCE assertion, which a disabled function satisfies trivially; CI is blind to
+the class because it reports new FAILURES only.
+**[MEASURED HERE]** PR #13 (item 3) removes the derived `<FIRM>_API_KEY`
+fallback; red-proof is the `PAPER_API_KEY` trap itself + a discrimination
+control. Unaffected by the PR #12 problem.
+**[MEASURED HERE]** All 8 broker routes established shut. Migration 0159's
+"paper rows are NEVER routed to funded brokers" is UNENFORCED in code; `'paper'`
+validates as a live TradersPost account. `broker-router.ts:1764` is default-deny
+on unknown types — and its "should not occur" caption INVERTS when item 2 lands.
+**[MEASURED HERE]** Tower took a `0x9F` bugcheck; API self-restarted **25s after
+boot**, 0 missing deps. **True outage ≤ ~7 min** (EventLog 6008's `13:15:55` is
+a checkpoint, not the failure instant). Not TF software.
 **[ARTIFACT-SOURCED]** corpus = 16. **[CORROBORATED]** 0 eligible today.
-**[UNENUMERATED — OPEN]** legacy Conv-VAE generate path (declared dead,
-unmeasured); running dependency set (`npm install` at boot ≠ `npm ci`); no
-deploy record mapping SHA → when → who.
+**[UNENUMERATED — OPEN]** the bugcheck's driver (`MEMORY.DMP` retained);
+`migrations/schema.ts:2377` still declares the pre-0159 narrow `firm_id` CHECK
+(never `db:generate` for item 2 — hand-author on 0159's template); legacy
+Conv-VAE path; `npm install` at boot ≠ `npm ci`; no SHA→when→who deploy record.
 
-## QUEUE (next 4)
-0. **R-365 — make `import` always inert** (NEW, ranks first). Remove the
-   module-scope conditional `setImmediate`; export an explicit boot-probe
-   starter called ONCE from the app entry. Then repair the A-11 arming and
-   **red-proof each of the six before making it green.** PR #12 blocks on this.
-1. **Item 2** — paper rows → no-egress `broker_type`, contract in
-   R-363 (+ R-364 §3: rewrite the dispatch tail's "should not occur" caption,
-   which inverts the moment this lands). Hand-author only, never `db:generate`.
-2. **Item 4** — single broker-egress chokepoint + a CI test failing on any other
-   module's broker `fetch`. Unblocked, needs no further authorization.
-3. **Report PR #12's HTTP-400 vacuity verdict** (rides the pending Node Tests).
-4. Then: server-derived `strategy_id`; `npm ci` at boot. Then: server-derived `strategy_id`; `npm ci` at boot;
-string-literal precondition sweep; consequence-ranked flag enumeration; the
-floors; 3-ii/3-iii; the builds (SMC → ORB+RANGE_EVENT → BAR_TIMING → SESSION_CLOCK).
+## QUEUE (in order)
+1. R-365 §5 import-inertness + arming repair + six red-proofs (PR #12 unblocks).
+2. Item 2 — paper rows → no-egress `broker_type` (R-363 ordering is mandatory;
+   the obvious sequence is illegal) + R-364 §3's caption rewrite.
+3. Item 4 — single broker-egress chokepoint + CI bypass test.
+4. Server-derived `strategy_id`; `npm ci` at boot; string-literal precondition
+   sweep; consequence-ranked flag enumeration; the floors; 3-ii/3-iii; the
+   builds (SMC → ORB+RANGE_EVENT → BAR_TIMING → SESSION_CLOCK).
 
 ## KNOWN-BENIGN (do not investigate)
-`M src/engine/tests/fixtures/session_windows_parity.json` — phantom; content
-hash-identical to HEAD (`0e7d4176b6fbcfe2`), verified twice. Do not touch the
-index to clear it.
-**A monitor event naming an OLD AR number (seen 13:55:33, "AR-319") is a TORN
-MID-WRITE READ, not a lost ledger** — a 2s poll can hash the report file while
-the worker is rewriting it; the next tick showed AR-330 correctly and every
-entry was present. The report watcher now waits for the hash to SETTLE before
-emitting. Verify before alarm: `grep -o '^## AR-[0-9]*' … | head` + file size.
+`M src/engine/tests/fixtures/session_windows_parity.json` — phantom, content
+hash-identical to HEAD (`0e7d4176b6fbcfe2`). Do not touch the index to clear it.
+**A monitor event naming an OLD AR number is a TORN MID-WRITE READ**, not a lost
+ledger (seen 13:55:33 as "AR-319"; next tick showed AR-330, nothing missing).
+The watcher now waits for the hash to settle. Verify before alarm.
+**Three red CI badges on PR #12 = ONE defect** — Node Tests on two triggers plus
+an aggregate check that mirrors them (R-366 §3).
 
 ## OPERATOR-FACING
-**DECISION PENDING (R-363 §7): applying the item-2 migration is a PRODUCTION
-WRITE** — it retypes the two live `broker_accounts` paper rows so they can no
-longer reach a live broker. Authoring + PR proceed without them; the apply lands
-only at their merge + worktree update. Upside: it closes the ungated-probe path
-a second, structural way (those rows leave the probe's selection set entirely).
-**Do not set `PAPER_API_KEY` or any `<FIRM>_API_KEY` on the tower.** **Do not buy
-the $29 Massive plan** until the paper engine is staged. `.claude/skills/` is not
-under version control — disk-only, no backup.
+**DECISION PENDING (R-363 §7):** applying the item-2 migration is a PRODUCTION
+WRITE — it retypes the two live `broker_accounts` paper rows. Authoring + PR
+proceed without them; the apply lands only at their merge + worktree update.
+**Do not set `PAPER_API_KEY` or any `<FIRM>_API_KEY` on the tower. Do not buy
+the $29 Massive plan** until the paper engine is staged. `.claude/skills/` is
+not under version control — disk-only, no backup.
