@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-380**. Newest AR: **AR-344**, RULED (R-380). Worker:
+Ledger at **R-381**. Newest AR: **AR-345**, RULED (R-381). Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
 said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
@@ -26,8 +26,14 @@ RE-ADD amended CHECK, one transaction, idempotent, pglite dry-run ×2);
 R-364 §3's caption rewrite at `broker-router.ts:1764` rides along; hand-author
 on 0159's template, **never `db:generate`** (`migrations/schema.ts:2377` still
 declares the pre-0159 narrow constraint); `migration-author` skill first.
-**The apply is MINE now** — PR → my verify → my merge → my deploy (R-377
-method). Then **item 4** — single broker-egress chokepoint + CI bypass test.
+**PR #19 is BLOCKED (R-381): three-way migration collision** — the operator
+shipped `0207_youtube_evidence_archive` (idx 210, applied) while we worked.
+Rebase onto **`b2af6c1a`** (pushed), rename to **0208**, journal **idx 211**,
+`when` **> 1785268800000**, touch nothing of the operator's entry. Substance
+RATIFIED (NOT VALID, ordering, 3-arm default-deny CHECK, CORE_DDL mirror,
+caption). **The apply is MINE** — PR → my verify → **my pglite dry-run ×2** →
+my merge → my deploy → **my push** (R-381 §4: publish is part of deploy).
+Then **item 4** — single broker-egress chokepoint + CI bypass test.
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes ·
@@ -60,6 +66,12 @@ default-deny, and its "should not occur" caption INVERTS when item 2 lands
 so quality compounds; REQUIRES retry + fallback tier for flex capacity misses;
 first nights observe-only).
 **[ARTIFACT-SOURCED]** corpus = 16. **[CORROBORATED]** 0 eligible today.
+**[MEASURED HERE]** origin `hardening/slumhouse-shared-office-parity-20260723`
+= **`b2af6c1a`** = the running box (FF-pushed R-381; before this, my deploy
+merge and the operator's 15:33 work existed on ZERO remote refs).
+**`migrations/schema.ts:2377-2378` is DOUBLY STALE** (pre-0159 `firm_id` +
+pre-0208 `broker_type`) — **never `db:generate`** until someone regenerates it
+deliberately; hand-editing a generated snapshot is its own hazard.
 **[UNENUMERATED — OPEN]** the 0x9F bugcheck's driver (`MEMORY.DMP` retained);
 legacy Conv-VAE path; `npm install` at boot ≠ `npm ci`; deploy records exist
 only as R-377's ledger entry (no standing mechanism).
