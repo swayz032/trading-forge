@@ -462,6 +462,11 @@
       font-size: 13px; font-weight: 800; box-shadow: 0 8px 22px rgba(200,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.25); transition: transform 0.15s, box-shadow 0.15s; }
     .r-yt:hover { transform: translateY(-2px); box-shadow: 0 14px 30px rgba(200,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.3); }
     .r-yt svg { flex: 0 0 auto; }
+    .r-source-actions { display:flex; align-items:center; justify-content:flex-end; gap:9px; flex-wrap:wrap; }
+    .r-evidence { display:inline-flex; align-items:center; gap:8px; text-decoration:none; white-space:nowrap;
+      color:#f3e7cd; background:linear-gradient(180deg,rgba(54,45,29,.94),rgba(17,15,11,.96)); padding:12px 15px; border-radius:12px;
+      border:1px solid rgba(197,161,95,.42); font-size:12px; font-weight:850; box-shadow:0 9px 24px rgba(0,0,0,.32),inset 0 1px rgba(255,255,255,.08); transition:transform .15s,border-color .15s; }
+    .r-evidence:hover { transform:translateY(-2px); border-color:rgba(163,255,18,.55); }
     /* Clickable gate rows + the swapped-in gate-metric card */
     .r-feed-click { cursor: pointer; border-radius: 8px; margin: 0 -8px; padding-left: 8px; padding-right: 8px; transition: background 0.12s; }
     .r-feed-click:hover { background: rgba(163,255,18,0.05); }
@@ -681,7 +686,14 @@
           var yt = r.youtubeUrl || ("https://www.youtube.com/results?search_query=" + encodeURIComponent(cleanName(r.identity.name) + " trading strategy"));
           var btn = el("a", { class: "r-yt", href: yt, target: "_blank", rel: "noopener", title: "Watch the video this play came from" });
           btn.innerHTML = '<svg viewBox="0 0 24 24" width="30" height="30" fill="currentColor" aria-hidden="true"><path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.6 12 3.6 12 3.6s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.5 9.4.5 9.4.5s7.5 0 9.4-.5a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.6V8.4l6.3 3.6-6.3 3.6z"/></svg><span>Watch the source</span>';
-          return btn;
+          var group = el("div", { class: "r-source-actions" }, btn);
+          var match = String(r.youtubeUrl || '').match(/(?:v=|youtu\.be\/|\/shorts\/|\/embed\/)([A-Za-z0-9_-]{11})/);
+          if (match) {
+            var evidence = el("a", { class: "r-evidence", href: "/slumhouse/evidence-vault.html?video=" + encodeURIComponent(match[1]), title: "Read the complete archived transcript and source evidence" });
+            evidence.innerHTML = '<span aria-hidden="true">▤</span><span>Transcript &amp; evidence</span>';
+            group.appendChild(evidence);
+          }
+          return group;
         })(),
       ));
 

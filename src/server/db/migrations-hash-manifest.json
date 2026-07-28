@@ -207,5 +207,6 @@
   "0203_live_schema_drift_forward_fix.sql": "f34f959aa61ee1bed485e46c801dcc589af6d95c19b31ee809fb30c288999d20",
   "0204_paper_pending_entries.sql": "5e46376e916d37a8402a60451c333a08d43a8b5eeb3dba3f14bd201513bc6d80",
   "0205_slumhouse_member_office.sql": "e368b286ea6536269fb4b1b02a770d77e714c4b4ea55a2f8135ef4ba8f547813",
-  "0206_broker_credential_vault.sql": "664647eb9d173074a8df8a2a030a9fddb9eab851cce6a55f44aa7714aaf7dc03"
+  "0206_broker_credential_vault.sql": "664647eb9d173074a8df8a2a030a9fddb9eab851cce6a55f44aa7714aaf7dc03",
+  "0207_youtube_evidence_archive.sql": "e5df66d11f4c2eaf7c360f52407d5f4c82434111117ae3852e98c932c99602c2"
 }

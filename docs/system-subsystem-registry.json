@@ -83,7 +83,8 @@
       "strategy_pending_mentions",
       "system_journal",
       "tournament_results",
-      "transcript_fetch_outcomes"
+      "transcript_fetch_outcomes",
+      "youtube_evidence_archive"
     ],
     "learning_from": [
       "system_journal",

@@ -27,6 +27,7 @@ import {
   MODE_AUTOPILOT,
 } from "../lib/learning-loop-mode.js";
 import { requireOfficeControlAuthority } from "../lib/office-control-guard.js";
+import { archiveYoutubeEvidence } from "../services/youtube-evidence-archive.js";
 
 export const adminRoutes = Router();
 
@@ -618,6 +619,27 @@ adminRoutes.post("/scout/operator-ingest", async (req, res) => {
           if (j.title) title = j.title;
         }
       } catch { /* keep default title */ }
+
+      // Operator/Slumdawg ingestion uses the same durable evidence contract as
+      // autonomous and n8n extraction. Do not continue if the source cannot be
+      // archived; the caller can safely retry this idempotent video ID.
+      try {
+        await archiveYoutubeEvidence({
+          youtubeUrl: url,
+          videoId,
+          title,
+          transcript,
+          sourceProvider: "operator_youtube_ingest",
+        });
+      } catch (archiveError) {
+        results.push({
+          url,
+          video_id: videoId,
+          status: "evidence_archive_failed",
+          error: archiveError instanceof Error ? archiveError.message : String(archiveError),
+        });
+        continue;
+      }
 
       // W23H-postmortem-fix18 (2026-05-21) — operator hard-reject of
       // swing-trader + screenshot/recap content. Trading Forge is day-trade

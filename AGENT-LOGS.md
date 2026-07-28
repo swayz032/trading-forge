@@ -15760,6 +15760,30 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** Require green GitHub Actions, merge, and verify the restarted public Railway relay serves the authenticated Slumhouse SSE bridge.
 
+### Session Log — 2026-07-28 Slumhouse Media Evidence Vault hardening
+
+**Mission:** Close the YouTube transcript evidence-loss gap and expose daily n8n/agent discoveries, durable transcripts, and their linked strategy receipts through a premium authenticated Slumhouse room without changing the money path.
+
+**Work completed:**
+- Added the additive `youtube_evidence_archive` table and an idempotent migration with unique video identity, transcript-state constraints, SHA-256 integrity seals, and public-access revocation.
+- Made all three transcript-producing paths persist evidence before extraction: n8n agent ingress, autonomous scout discovery, and operator/Slumdawg ingestion. Archive failures now stop extraction for that video instead of creating an evidence-less strategy.
+- Added the authenticated Media Evidence Vault API/read model and a full visual room showing today's discoveries, source thumbnails, provenance, transcript status, complete transcript text, integrity seal, and linked strategy receipts.
+- Added the Reporting Room `Evidence Vault` toggle and recipe-page `Transcript & evidence` deep link. Embedded report rooms remain full-page and member/admin authorization stays server-side.
+- Added a generated premium screening-archive visual asset and desktop/mobile browser validation.
+- Registered the new table in the subsystem topology and synchronized generated system-map evidence.
+
+**Verification:**
+- Full Python: 7,597 passed, 34 skipped, 0 failed.
+- Full Vitest: process exit 0 after the new migration tests were added; 0 failed.
+- Migration 0207 PGlite constraints/idempotency: 4/4 passed.
+- TypeScript build, production-isolation gate, 2026-compliance gate, system-map check, changed-file ESLint, and `git diff --check`: passed.
+- Playwright desktop and mobile visual flows rendered with no console errors.
+- Repository-wide deep scan remains red on pre-existing environment/repository findings: 186 legacy ESLint errors outside this change, stale/unreachable runtime evidence, missing `/api/production-status` topology evidence, and stale n8n workflow evidence. The files changed for this mission have zero ESLint errors.
+
+**Known-facts updates:** Production previously retained transcript fetch outcomes and short quote snippets, not durable full transcripts. Full transcripts become durable only after migration 0207 is deployed and new intake passes through one of the wired producers; historical full transcripts cannot be reconstructed from the prior database records alone.
+
+**Carry-forward:** Apply migration 0207 with the production deployment, verify the authenticated room/API, and allow the next n8n/scout ingestion to seed real evidence. Do not label the wider platform institutional-grade while the deep-scan runtime/evidence blockers remain unresolved.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)

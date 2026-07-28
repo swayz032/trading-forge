@@ -46,6 +46,7 @@ import { runBraveDiscovery } from "../services/brave-search-broker.js";
 import { checkNumericGrounding } from "../lib/extraction-grounding.js";
 import { broadcastSSE } from "./sse.js";
 import { notifyInfo } from "../services/notification-service.js";
+import { archiveYoutubeEvidence } from "../services/youtube-evidence-archive.js";
 import {
   crossValidatorCallsTotal,
   crossValidatorLatencySeconds,
@@ -548,6 +549,16 @@ agentRoutes.post("/transcript-extract", idempotencyMiddleware, async (req, res) 
   });
 
   try {
+    // Persist the complete source before asking the model to extract it. A
+    // storage failure is retryable and must not create evidence-less ideas.
+    await archiveYoutubeEvidence({
+      youtubeUrl,
+      title,
+      channel,
+      transcript,
+      sourceProvider: "n8n_transcript_extract",
+    });
+
     const raw = await callOpenAI("transcript_extractor", [
       { role: "user", content: userPayload },
     ]);
