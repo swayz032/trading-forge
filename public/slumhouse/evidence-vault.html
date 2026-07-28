@@ -63,8 +63,11 @@
     .stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(236,224,198,.11)}
     .stat{min-width:0;border-right:1px solid rgba(236,224,198,.1);padding:12px 10px}.stat:last-child{border-right:0}
     .stat b{display:block;font:500 20px/1 Georgia,serif}.stat span{display:block;margin-top:4px;color:#a89d88;text-transform:uppercase;letter-spacing:.13em;font-size:7px}
-    .search{display:flex;align-items:center;gap:7px;margin:9px;border:1px solid rgba(236,224,198,.12);border-radius:11px;background:rgba(0,0,0,.28);padding:6px 7px}
+    .search{display:flex;align-items:center;flex-wrap:wrap;gap:7px;margin:9px;border:1px solid rgba(236,224,198,.12);border-radius:11px;background:rgba(0,0,0,.28);padding:6px 7px}
     .search[hidden]{display:none}.search input{width:100%;border:0;outline:0;background:transparent;color:white;font-size:10px}.search button{border:0;border-radius:8px;background:var(--lime);color:#0a0c08;padding:8px 10px;font-size:8px;font-weight:900;cursor:pointer}
+    .search-row{width:100%;display:flex;align-items:center;gap:7px}.search-row input{flex:1;min-width:0}
+    .strategy-filters{width:100%;display:grid;grid-template-columns:repeat(4,1fr);gap:4px;padding-top:6px;border-top:1px solid rgba(236,224,198,.08)}.strategy-filters[hidden]{display:none}
+    .search .strategy-filter{padding:7px 3px;background:transparent;color:#8e8a82;border:1px solid rgba(236,224,198,.1);font:850 8px/1 ui-monospace,monospace}.search .strategy-filter.on{color:#111;background:var(--lime);border-color:var(--lime)}
     .remote-body{min-height:0;display:grid;grid-template-rows:42px minmax(0,1fr);border-top:1px solid rgba(236,224,198,.08)}
     .remote-list{min-height:0;overflow:auto;padding:7px;scrollbar-width:none}
     .remote-group{padding:10px 8px 5px;color:#a58e61;font:850 8px/1 ui-monospace,monospace;letter-spacing:.17em;text-transform:uppercase}
@@ -102,14 +105,14 @@
       <aside class="panel right-rail" aria-label="Evidence Vault remote">
         <div class="rail-title"><strong>The remote</strong><span>Control the stage without leaving the room.</span><div class="remote-modes" role="tablist" aria-label="Vault views"><button class="remote-mode on" data-mode="today" role="tab" aria-selected="true">Today</button><button class="remote-mode" data-mode="library" data-operator-view role="tab" aria-selected="false">Library</button><button class="remote-mode" data-mode="workers" data-operator-view role="tab" aria-selected="false">Workers</button></div></div>
         <section class="stats" aria-label="Current view totals"><div class="stat"><b id="stat-a">-</b><span id="label-a">Today</span></div><div class="stat"><b id="stat-b">-</b><span id="label-b">Ready</span></div><div class="stat"><b id="stat-c">-</b><span id="label-c">Archive</span></div></section>
-        <form class="search" id="search"><input id="query" type="search" autocomplete="off" placeholder="Search today's intake"><button type="submit">Find</button></form>
+        <form class="search" id="search"><div class="search-row"><input id="query" type="search" autocomplete="off" placeholder="Search today's intake"><button type="submit">Find</button></div><div class="strategy-filters" id="strategy-filters" hidden aria-label="Filter strategy library by instrument"><button class="strategy-filter on" type="button" data-symbol="ALL" aria-pressed="true">All</button><button class="strategy-filter" type="button" data-symbol="MES" aria-pressed="false">MES</button><button class="strategy-filter" type="button" data-symbol="MNQ" aria-pressed="false">MNQ</button><button class="strategy-filter" type="button" data-symbol="MCL" aria-pressed="false">MCL</button></div></form>
         <div class="remote-body"><div class="panel-head"><strong id="list-title">Today's strategies &amp; sources</strong><span class="wordmark" id="list-count">-</span></div><div class="remote-list" id="remote-list"><div class="empty">Opening the archive...</div></div></div>
       </aside>
     </section>
   </main>
   <script>
     (function(){
-      var params=new URLSearchParams(location.search),selectedId=params.get('video')||'',selectedStrategyId='',mode='today',payload=null;
+      var params=new URLSearchParams(location.search),selectedId=params.get('video')||'',selectedStrategyId='',mode='today',symbolFilter='ALL',payload=null;
       if(params.get('embed')==='1')document.body.classList.add('embed');
       function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
       function when(v){try{return new Date(v).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}catch(e){return ''}}
@@ -129,16 +132,18 @@
         else{var frontier=payload.workers.filter(function(w){return w.provider!=='ollama'}).length,local=payload.workers.filter(function(w){return w.provider==='ollama'}).length;a.textContent=payload.stats.workers;b.textContent=frontier;c.textContent=local;la.textContent='Workers';lb.textContent='Frontier';lc.textContent='Local'}
       }
       function paintRemote(){
-        if(!payload)return;var box=document.getElementById('remote-list'),title=document.getElementById('list-title'),count=document.getElementById('list-count'),search=document.getElementById('search'),html='',n=0;
+        if(!payload)return;var box=document.getElementById('remote-list'),title=document.getElementById('list-title'),count=document.getElementById('list-count'),search=document.getElementById('search'),filters=document.getElementById('strategy-filters'),html='',n=0;
         if(mode==='today'){
+          filters.hidden=true;
           var strategies=payload.strategies.filter(function(s){return s.sourceIsToday&&matches([s.name,s.symbol,s.timeframe,s.lifecycleState,s.sourceTitle||''])}),videos=payload.videos.filter(function(v){return v.isToday&&matches([v.title,v.channel||'',v.sourceQuery||''])});
           n=strategies.length+videos.length;title.textContent="Today's strategies & sources";search.hidden=false;
           if(strategies.length)html+='<div class="remote-group">Strategies extracted today</div>'+strategies.map(strategyCard).join('');
           if(videos.length)html+='<div class="remote-group">Videos discovered today</div>'+videos.map(videoCard).join('');
           if(!html)html='<div class="empty"><div><b>Nothing landed today yet</b>The intake stays ready without inventing activity.</div></div>';
         }else if(mode==='library'){
-          var library=payload.strategies.filter(function(s){return matches([s.name,s.symbol,s.timeframe,s.lifecycleState,s.sourceTitle||''])});n=library.length;title.textContent='Full strategy library';search.hidden=false;html=library.length?library.map(strategyCard).join(''):'<div class="empty"><div><b>No matching strategies</b>Try a different library search.</div></div>';
+          filters.hidden=false;var library=payload.strategies.filter(function(s){return (symbolFilter==='ALL'||s.symbol===symbolFilter)&&matches([s.name,s.symbol,s.timeframe,s.lifecycleState,s.sourceTitle||''])});n=library.length;title.textContent=symbolFilter==='ALL'?'Full strategy library':symbolFilter+' strategy library';search.hidden=false;html=library.length?library.map(strategyCard).join(''):'<div class="empty"><div><b>No matching strategies</b>Try another instrument or library search.</div></div>';
         }else{
+          filters.hidden=true;
           var frontierWorkers=payload.workers.filter(function(w){return w.provider!=='ollama'}),localWorkers=payload.workers.filter(function(w){return w.provider==='ollama'});n=payload.workers.length;title.textContent='Extraction crew';search.hidden=true;html='<div class="provider-summary"><b>'+frontierWorkers.length+'</b><span>Governed frontier readers and judges</span></div><div class="provider-summary"><b>'+localWorkers.length+'</b><span>Local extraction workers on the tower</span></div><div class="provider-summary"><b>'+payload.workers.length+'</b><span>Only extraction-system roles are shown</span></div>';
         }
         count.textContent=String(n);box.innerHTML=html;wireRemote();paintStats();
@@ -158,6 +163,7 @@
       function load(){var url='/slumhouse/api/evidence-vault?'+new URLSearchParams(selectedId?{video:selectedId}:{});fetch(url,{credentials:'same-origin'}).then(function(response){if(response.status===401){location.href='/slumhouse/login.html';throw new Error('auth')}if(!response.ok)throw new Error('unavailable');return response.json()}).then(function(data){payload=data;document.querySelectorAll('[data-operator-view]').forEach(function(button){button.hidden=!data.capabilities.operatorViews});selectedId=data.selected?data.selected.videoId:selectedId;paintRemote();if(mode==='workers')paintWorkers();else paintSelected(data.selected);if(selectedId){var next=new URL(location.href);next.searchParams.set('video',selectedId);history.replaceState(null,'',next)}}).catch(function(error){if(error.message==='auth')return;document.getElementById('remote-list').innerHTML='<div class="empty"><div><b>Vault connection interrupted</b>The service is unavailable. No empty-state claim is being made.</div></div>';paintSelected(null)})}
       document.getElementById('search').addEventListener('submit',function(event){event.preventDefault();paintRemote()});
       document.getElementById('query').addEventListener('input',paintRemote);
+      document.querySelectorAll('[data-symbol]').forEach(function(button){button.addEventListener('click',function(){symbolFilter=button.getAttribute('data-symbol')||'ALL';document.querySelectorAll('[data-symbol]').forEach(function(item){var on=item===button;item.classList.toggle('on',on);item.setAttribute('aria-pressed',on?'true':'false')});paintRemote()})});
       document.querySelectorAll('[data-mode]').forEach(function(button){button.addEventListener('click',function(){setMode(button.getAttribute('data-mode')||'today')})});
       load();
     })();

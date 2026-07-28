@@ -15775,6 +15775,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Removed the erroneous attached transcript pane: selected video, provenance, linked strategy receipts, and transcript now flow through one continuous main stage; the right rail alone owns search, counters, filters, and discovery selection as the room remote.
 - Integrated that remote with three compact real-data views: today's discovered videos and linked strategies, the full strategy library with evidence-aware selection, and the governed extraction crew. The stage width is capped so the generated room remains visible; the rail has one three-way control instead of stacked navigation.
 - CORRECTED 2026-07-28: the first worker view used the application-wide model router, which is not authoritative for the extraction crew. The Vault now follows the extraction campaign records: Claude Code headless Opus 5.0 is the successor transcript reader under certification, GPT-5.4 mini is the frontier evaluation lane, GPT-5.4 is the certification panel, and the tower Gemma atomizer is the local lane. Legacy generic-router roles and `gpt-5-mini` are excluded.
+- Added an instrument switch to the strategy-library remote so the operator can view All, MES, MNQ, or MCL street-name strategies without duplicating records or changing the canonical library.
 - Registered the new table in the subsystem topology and synchronized generated system-map evidence.
 
 **Verification:**
