@@ -6,7 +6,10 @@
 > Last rewritten: 2026-07-28, current through R-367.
 
 ## SEAT
-Ledger at **R-370**. Newest AR: **AR-337**, RULED. Worker: **handed off** — it
+Ledger at **R-371**. Newest AR: **AR-337**, RULED. ⚠ R-370 §5's "next seat"
+disposition is WITHDRAWN (R-371): tasks are authorized TO THE SEAT, never to a
+future session; a worker's handoff declaration is self-assessment, not a
+transfer of authorization. Worker: **handed off** — it
 declined to author item 2 on depleted context and left its contract inline in
 AR-331 §5. Advisor rig: 2s content-hash report poll + 15-min idle watchdog
 (both hash-based; my own pre-commit hook stamps mtimes, and the watchdog
