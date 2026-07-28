@@ -4,6 +4,75 @@
 
 ---
 
+## AR-374 · 2026-07-28 · **FVG SIZING EXPERIMENT — RUN AGAINST THE REAL DISPATCHER. ★★★ THE FLAG WORKS: 7 conditions across the two specs move `approximate → CONCRETE` (`-igp` 0→4, `CLDE` 0→3) — the first `approximation=False` bindings either spec has ever had.** ★★★ **BUT IT DOES NOT EXIT PHASE 1, AND I MUST CORRECT THE EXPECTED CONTRACT: `CLDE` 10/10 IS NOT REACHABLE FROM "FVG FLAG + SESSION-LEVELS LANE" — that path tops out at 5 of 10 concrete, and the other five need four MORE lanes**
+
+**RULING ID:** R-408 · **TASK ID:** sizing experiment · **RECOMMENDATION:** **build the flag path (cheapest, real, already reviewed-by-design) — but the build contract must NOT promise a Phase-1 exit.**
+
+**Method:** called the **real** `compile_binding_plan()` (`spec_family_bindings.py:599`), not a re-implementation. `TF_FVG_IDENTITY_ENABLED` set on `os.environ` of the experiment process only — the flag is read at call time by design (`fvg_identity_enabled()` docstring: *"Read at call time (not cached at import) so a controlled before/after comparison run in the SAME process … sees the flag change immediately"*). **No writes, no `.env`, producer untouched, flag popped at exit.**
+
+---
+
+### `-igpOZs8LsM__s0` — 11 conditions · **4 rows changed** · concrete **0 → 4**
+
+| # | type | flag OFF | flag ON |
+|---|---|---|---|
+| 0 | WAIT_STRUCTURE | `structure_engine.compute_structure_state` (apx) | *unchanged* |
+| 1 | **WAIT_SESSION** | **UNBOUND** `no_recognized_session_keyword` | *unchanged* |
+| **2** | WAIT_STRUCTURE | `structure_engine…` (apx) | ★ **`fvg_native.compute_fvg_signal` · approximation=False** |
+| 3 | **WAIT_SESSION** | **UNBOUND** | *unchanged* |
+| 4,5 | WAIT_RETEST | `retest_touch_check` (apx) | *unchanged* |
+| 6 | WAIT_BIAS | `bias_engine…` (apx) | *unchanged* |
+| **7** | WAIT_STRUCTURE | `structure_engine…` (apx) | ★ **`fvg_native` · False** |
+| **8** | WAIT_STRUCTURE | `structure_engine…` (apx) | ★ **`fvg_native` · False** |
+| 9 | WAIT_RETEST | `retest_touch_check` (apx) | *unchanged* |
+| **10** | WAIT_STRUCTURE | `structure_engine…` (apx) | ★ **`fvg_native` · False** |
+
+### `CLDEIsNpVRc__s0` — 10 conditions · **3 rows changed** · concrete **0 → 3**
+
+Changed: **[2], [6], [8]** → `fvg_native.compute_fvg_signal` · `approximation=False`.
+Unchanged: **[0],[1] UNBOUND** (session levels) · **[3]** `bias_engine` · **[4],[7]** `candle_confirmation_check` · **[5]** `retest_touch_check` · **[9]** `structure_engine` (*"displacement … shouldn't be choppy"* — **no FVG keyword, so it does not route even with the flag on**).
+
+★ **Reporting discipline you required, honoured:** a keyword match that routed but still bound approximate would have been reported as approximate. **None occurred — every routed row came back `approximation=False`.** ★ **And a display trap I guarded rather than propagated: UNBOUND rows print `approximation=False` too, because an unbound binding carries no approximation. My concrete counter requires `primitive IS NOT NULL **AND** approximation is False`, so the four unbound rows are excluded from the 4 and the 3.** Counting them would have inflated `-igp` to 6 and `CLDE` to 5.
+
+★★ **This also independently confirms R-406's resolution of my [UNRESOLVED]:** these two specs alone yield **7** concrete with the flag on, while the artifact's `AFTER_flags_on_HYPOTHETICAL` records **6 corpus-wide**. **7 > 6 ⇒ the artifact's hypothetical demonstrably did not include `TF_FVG_IDENTITY_ENABLED`.** Measured, not inferred.
+
+---
+
+### ★★★ THE CORRECTION — "CLDE 10/10" IS NOT REACHABLE FROM THE EXPECTED TWO LANES
+
+R-408's orientation named the expected shape as **FVG flag + session-levels lane, targeting `CLDE` 10/10**. **[MEASURED] that path reaches at most 5 of 10 concrete:**
+
+| CLDE condition | what it needs | covered by the expected contract? |
+|---|---|---|
+| [2],[6],[8] FVG | `fvg_native` | ✅ the flag — **3 concrete, measured** |
+| [0],[1] session **levels** | a session-LEVELS lane | ✅ *if* that lane binds `approximation=False` — **[UNPROVEN], the lane does not exist yet** |
+| **[5]** *"price has **swept** liquidity before tapping"* | a **sweep** primitive | ❌ currently `retest_touch_check` = EMA(20) proximity |
+| **[7]** *"**close below** this 1-minute FVG … your **inversion**"* | close-beyond-boundary | ❌ currently `candle_confirmation_check` = wick geometry |
+| **[4]** *"drop to 1-minute … lower-timeframe confirmation"* | timeframe-scoped confirmation | ❌ same wick binder |
+| **[3]** *"**tap into** … your 5-minute FVG"* | a retest — **mis-typed `WAIT_BIAS`** | ❌ routes to `classify_institutional_regime`; **re-typing is a spec edit, forbidden** |
+| **[9]** *"we should see **displacement** … not **choppy**"* | a displacement definition | ❌ **BOUNDARY — an unquantified adjective, the class R-405 pinned as human-call** |
+
+★★★ **So Phase 1's gate — ALL load-bearing conditions CONCRETE — is not cleared by two lanes. It needs the flag, a session-levels lane, a sweep primitive, a close-beyond-boundary confirmation, and a ruling on "displacement"; and [3] is blocked behind a forbidden spec edit regardless.** ★★ **I am saying this before the contract is written rather than after it under-delivers — a build promising 10/10 from two lanes would have shipped correct work and been recorded as a miss.**
+
+### WHAT THE FLAG IS ACTUALLY WORTH — and it is real
+
+**The METER moves substantially: 0 → 7 concrete across the two specs, corpus-wide `bound_and_concrete` 6 → ~13.** ★ **It is the first time anything in this corpus has crossed `approximate → concrete`, which R-404 called "the ONLY thing that counts."** The GATE stays `0/16`. **Both statements are true and the report must carry both** — that is the meter/gate split R-402 created for exactly this moment.
+
+★ **Flag graduation is NOT mine and I have not touched it:** per its own docstring the flag graduates through the **SDS harness review** (`docs/designs/fvg-identity-dispatch-experiment-2026-07-05.md`, Part C), and `scripts/fvg-experiment-controlled-run.py` exists to run it. **This sizing informs Phase-1 strategy; it does not substitute for that protocol** — your own note, and I am not routing around it.
+
+---
+
+**Files changed:** none. **Process-local env only; flag popped at exit; no `.env`, no producer, no spec.**
+**Hypotheses REJECTED:** (i) "the flag might route but still bind approximate" — **false, all 7 came back `approximation=False`**; (ii) "the artifact's flags-on hypothetical included this flag" — **false, 7 > 6**; (iii) "CLDE 10/10 from two lanes" — **false, 5 of 10**.
+**Remaining uncertainty:** whether a session-LEVELS lane can bind `approximation=False` — **[UNPROVEN], it does not exist**. Whether `fvg_native`'s signal is *correct*, not merely concrete — **I measured ROUTING, not fidelity; that is the SDS harness's question.**
+**Risk:** none — nothing was written.
+
+**Recommendation:** **(1)** contract the FVG flag path first — cheapest, measured, and its graduation protocol already exists; **(2)** scope the session-LEVELS lane second (`liquidity_levels` already carries `Asian`/`London`/`PDH`/`PDL`); **(3)** write the contract against **the meter**, and state plainly that the gate needs three further lanes plus a `displacement` ruling. ★ `-igp` gains **more** from the flag (4 vs 3) but `CLDE` remains the better *strategy* target; **for a flag-only first step, `-igp` is the larger number.**
+
+**Next smallest task (ONE):** on your contract — either scope the session-LEVELS lane, or run `scripts/fvg-experiment-controlled-run.py` to put the flag through its own SDS review.
+
+---
+
 ## AR-373 · 2026-07-28 · **REFERENT CENSUS COMPLETE — 27 of 27.** ★★★ **THREE SPECS, THREE *DIFFERENT* REASONS THE SAME `WAIT_SESSION` TYPE IS UNBOUND — mis-typed geometry (`-igp`), session LEVELS (`CLDE`), session TIME (`_LS6`). Only the third is a vocabulary gap; a keyword build binds 2 of the 6.** ★★★ **AND THE CENSUS'S REAL HEADLINE: EVERY PRIMITIVE THESE SPECS NEED ALREADY EXISTS AND NOTHING ROUTES TO IT — FVG, session-levels, VWAP: all present in the engine, all absent from `FAMILY_META`'s 14 families. R-303 §3 was right, and this is its proof**
 
 **RULING ID:** R-407 · **TASK ID:** census item (1), final spec · **RECOMMENDATION:** **the fourth "build" is a ROUTING build, not a detector build.**
