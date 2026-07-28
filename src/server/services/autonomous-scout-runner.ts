@@ -39,6 +39,7 @@ import { notifyWarning } from "../services/notification-service.js";
 import { appendFamilyGradePostscript } from "../lib/notification-helpers.js";
 import { insertAuditRow } from "../lib/audit-log-helper.js";
 import { broadcastSSE, FACTORY_EVENTS } from "../routes/sse.js";
+import { archiveYoutubeEvidence } from "./youtube-evidence-archive.js";
 
 const BACKEND_URL = `http://localhost:${process.env.PORT ?? 4000}`;
 const BRAVE_API_KEY = process.env.BRAVE_SEARCH_API_KEY || process.env.BRAVE_API_KEY || "";
@@ -1064,7 +1065,7 @@ async function _fetchYouTubeOrder(
 export async function fetchYouTubeTopVideos(
   conceptName: string,
   cycleCorrelationId?: string,
-): Promise<Array<{ url: string; title: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string; titleScore: number; combinedScore: number; videoId: string }>> {
+): Promise<Array<{ url: string; title: string; channel: string; source_pass: "captioned" | "uncaptioned"; sourceQuery: string; titleScore: number; combinedScore: number; videoId: string }>> {
   if (!YOUTUBE_API_KEY) {
     logger.warn({ conceptName }, "autonomous-scout: YOUTUBE_DATA_API_KEY not set — YouTube layer disabled");
     return [];
@@ -1205,6 +1206,7 @@ export async function fetchYouTubeTopVideos(
     return top.map((c) => ({
       url: c.url,
       title: c.title,
+      channel: c.channel,
       source_pass: (pass1Ids.has(c.videoId) ? "captioned" : "uncaptioned") as "captioned" | "uncaptioned",
       sourceQuery: query,
       titleScore: c.titleScore,
@@ -1691,6 +1693,26 @@ export async function runAutonomousScoutCycle(): Promise<CycleResult> {
       const vid = extractYoutubeId(v.url) ?? v.url;
       const retryResult = await fetchTranscriptWithRetry(vid);
       const transcript = retryResult.transcript ?? "";
+
+      try {
+        await archiveYoutubeEvidence({
+          youtubeUrl: v.url,
+          videoId: v.videoId,
+          title: v.title,
+          channel: v.channel,
+          transcript: transcript || null,
+          sourceProvider: "autonomous_youtube_scout",
+          sourceQuery: v.sourceQuery,
+          sourcePass: v.source_pass,
+          status: transcript.length > 0 ? "available" : "unavailable",
+        });
+      } catch (archiveError) {
+        logger.error(
+          { err: archiveError instanceof Error ? archiveError.message : String(archiveError), videoId: v.videoId, correlationId },
+          "autonomous-scout: evidence archive write failed; extraction skipped so source evidence is not lost",
+        );
+        continue;
+      }
 
       // Persist fetch outcome for cycle dashboard observability (fire-and-forget).
       db.insert(transcriptFetchOutcomes).values({

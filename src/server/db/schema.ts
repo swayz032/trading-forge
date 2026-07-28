@@ -3060,6 +3060,35 @@ export const transcriptFetchOutcomes = pgTable(
   ],
 );
 
+// ─── YouTube Evidence Archive ────────────────────────────────────────────────
+// Durable source evidence for every YouTube video sent through extraction.
+// Full transcripts previously existed only in process memory; this archive is
+// the read model behind the Slumhouse Media Evidence Vault.
+export const youtubeEvidenceArchive = pgTable(
+  "youtube_evidence_archive",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    videoId: text("video_id").notNull().unique(),
+    youtubeUrl: text("youtube_url").notNull(),
+    title: text("title").notNull(),
+    channel: text("channel"),
+    transcriptText: text("transcript_text"),
+    transcriptSha256: text("transcript_sha256"),
+    transcriptChars: integer("transcript_chars").notNull().default(0),
+    sourceProvider: text("source_provider").notNull(),
+    sourceQuery: text("source_query"),
+    sourcePass: text("source_pass"),
+    transcriptStatus: text("transcript_status").notNull().default("pending"),
+    discoveredAt: timestamp("discovered_at", { withTimezone: true }).notNull().defaultNow(),
+    transcriptFetchedAt: timestamp("transcript_fetched_at", { withTimezone: true }),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("idx_youtube_evidence_discovered").on(table.discoveredAt.desc()),
+    index("idx_youtube_evidence_status").on(table.transcriptStatus, table.discoveredAt.desc()),
+  ],
+);
+
 // ─── Pre-Market Sessions (W23H.2) ─────────────────────────────────────────────
 // Persisted pre-market context computed each day at 8:30 AM ET for every symbol.
 // Fields mirror the NQ-style 8-item checklist: overnight range, VIX proxy,

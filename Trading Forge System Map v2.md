@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-24T02:53:52.040Z`.
+Updated automatically from the repo on `2026-07-28T17:58:09.781Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -17,7 +17,7 @@ Updated automatically from the repo on `2026-07-24T02:53:52.040Z`.
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `29`
-- Database tables tracked: `115`
+- Database tables tracked: `116`
 
 ### Subsystem Runtime States
 - `active`: `68`
@@ -57,7 +57,7 @@ Updated automatically from the repo on `2026-07-24T02:53:52.040Z`.
 - Route coverage: `80/80`
 - Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
-- Database coverage: `115/115`
+- Database coverage: `116/116`
 - Autonomous subsystems with audit coverage: `57/57`
 - Autonomous subsystems with audit actions: `57/57`
 - Autonomous subsystems with telemetry evidence: `57/57`
@@ -596,6 +596,7 @@ Updated automatically from the repo on `2026-07-24T02:53:52.040Z`.
 - `walk_forward_windows`
 - `weekly_drift_reports`
 - `workflow_backups`
+- `youtube_evidence_archive`
 <!-- END GENERATED: topology -->
 
 ---
