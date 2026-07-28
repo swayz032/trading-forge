@@ -1838,7 +1838,17 @@ export async function routeOrder(
     return result;
   }
 
-  // ── Unknown broker_type (should not occur due to DB CHECK constraint) ───────
+  // ── Unhandled broker_type — DELIBERATELY LOAD-BEARING, NOT a dead branch ─────
+  // 2026-07-28 (migration 0207 / R-364 §3): this caption used to read "should not
+  // occur due to DB CHECK constraint". That was true until 0207 and is now FALSE.
+  // The two firm_id='paper' A/B rows (slumdawg-baseline, slumdawg-rl-challenger)
+  // carry broker_type='paper_sim', which matches NEITHER dispatch branch above —
+  // so they arrive HERE, by design, on every routing attempt, and this refusal is
+  // THE PRIMARY STRUCTURAL SHUT keeping paper accounts off a live broker.
+  // Migration 0159 promised in writing that paper rows are "NEVER routed to funded
+  // brokers" and nothing enforced it; this arm is now that enforcement.
+  // DO NOT "simplify" this away as unreachable — deleting it would silently route
+  // paper accounts into the TradersPost path a future branch might add.
   const result: BrokerResult = {
     success: false,
     reason: "unknown_broker_type",

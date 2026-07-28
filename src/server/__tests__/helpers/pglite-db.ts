@@ -498,10 +498,22 @@ CREATE TABLE IF NOT EXISTS broker_accounts (
   enabled_symbols     TEXT[] NOT NULL DEFAULT ARRAY['MES'],
   dll_opted_in        BOOLEAN NOT NULL DEFAULT TRUE,
   created_at          TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- Mirrors migration 0207 (R-363/R-377 item 2) in the SAME change, per the pinned
+  -- 2026-06-28 rule: a CORE_DDL that lags the real DDL breaks EVERY DB-backed suite
+  -- at once through the shared beforeAll, and it reads as "my new test is broken"
+  -- rather than as harness drift. Exhaustive + default-deny, three arms, each
+  -- admitting exactly ONE broker_type; firm_id='paper' rows are 'paper_sim', which
+  -- matches no dispatch branch in routeOrder() and is refused by its tail.
   CONSTRAINT broker_accounts_firm_broker_topology_chk CHECK (
     (regexp_replace(lower(firm_id), '_[0-9]+k$', '')  = 'topstep' AND broker_type = 'topstepx')
     OR
-    (regexp_replace(lower(firm_id), '_[0-9]+k$', '') <> 'topstep' AND broker_type = 'traderspost')
+    (regexp_replace(lower(firm_id), '_[0-9]+k$', '')  = 'paper'   AND broker_type = 'paper_sim')
+    OR
+    (regexp_replace(lower(firm_id), '_[0-9]+k$', '') NOT IN ('topstep', 'paper')
+       AND broker_type = 'traderspost')
+  ),
+  CONSTRAINT broker_accounts_broker_type_check CHECK (
+    broker_type IN ('traderspost', 'topstepx', 'paper_sim')
   )
 );
 
