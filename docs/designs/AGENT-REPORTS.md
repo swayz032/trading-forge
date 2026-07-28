@@ -4,6 +4,61 @@
 
 ---
 
+## AR-366 · 2026-07-28 · ★★★ **THE PRODUCER RUNS BUT ITS OWN GUARD REFUSES TO PUBLISH — `REVIVAL_FAMILY`, exit 2, two misdirected probes named. THE PHASE-1 READING CANNOT BE REFRESHED TODAY.** ★★ **And it would OVERWRITE the evidence of record: `OUT_PATH` is HARDCODED to `…-2026-07-21.json`, so today's numbers would land under a seven-day-old date**
+
+**RULING ID:** R-399 item (1) · **TASK ID:** producer re-runnability · **RECOMMENDATION:** **0/16 from the 2026-07-21 artifact stands as the only citable Phase-1 figure.** Two hazards for your ruling before any publish.
+
+---
+
+### ★★★ IT RUNS. IT REFUSES TO PUBLISH.
+
+```
+GUARD REFUSED: REVIVAL_FAMILY
+REVIVAL PROBE MISDIRECTED -- a probe declared it would make one assert fire and made a different one fire, or none:
+  SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN: declared 'ws_session_resolvable <= graded_teachings', observed 'NO_ASSERT_FIRED'
+  SESSION_ACKNOWLEDGMENT_PAIR_DRIFTED:    declared 'ws_session_resolvable <= graded_teachings', observed 'NO_ASSERT_FIRED'
+REFUSING TO PUBLISH. Exit 2 -- this is a guard verdict, not a crash.
+```
+
+★★ **This is the artifact's own red-proof machinery working exactly as designed: two probes that exist to prove specific asserts still BITE fired NOTHING, so the generator refuses to certify a measurement whose guards it cannot demonstrate are alive.** *"'Revived' would then be a claim nobody checked"* — its words. **A generator that refuses rather than publishes an unguarded number is the behaviour this campaign has spent the day trying to install everywhere else.**
+
+**Consequence, stated plainly:** **the 155/6 → 0/16 reading is frozen at 2026-07-21 and cannot be refreshed until those two probes are repaired.** It is not stale-by-neglect; **it is stale-by-refusal**, which is the better failure but is still a seven-day-old number underneath ADVISOR-STATE's live phase claim.
+
+### ★ SECOND HAZARD — PUBLISHING WOULD OVERWRITE THE EVIDENCE OF RECORD, MISDATED
+
+`dual_denominator_remeasure.py:103` → `OUT_PATH = H1 / "dual-denominator-remeasure-2026-07-21.json"` — **hardcoded.** A successful publish today would **overwrite in place** the artifact R-399 pinned, and the new numbers would carry **2026-07-21 in their own filename**. ★ **The filename is a caption claiming when the measurement was taken; publishing would make it lie, and the old numbers would be gone rather than superseded.** Whatever else is ruled, **that constant should take the run date before anyone publishes.**
+
+### DRAFT MODE VERIFIED HONEST — I checked rather than trusted the banner
+
+`publish_artifact()` refuses in draft **by `SystemExit` before serialisation** (deliberately not an `assert`, because `python -O` strips asserts — the gate would otherwise be removable by a flag).
+
+**[MEASURED] target artifact byte-identical across three draft runs:** `fd902bbeccc9997963c92d31` before and after.
+★ **[MEASURED] two other files showed as modified in `git status` and I did NOT assume they were mine:** `enum-consistency-22.json` and `_support_cache.json`. Hashed both, ran draft a third time, re-hashed — **UNCHANGED (`1d56fe2d3e34c523`, `4451f8b5192136b9`).** They are pre-existing modifications from other work in this shared tree. **My runs wrote nothing.**
+
+★★ **AND I ALMOST MISREPORTED THE VERDICT: my first run went through `| tail` and printed `exit=0` while the script itself said "Exit 2". Re-run without a pipe → REAL exit 2.** **That is the same `| head`/`| tail` exit-code trap this desk logged at 09:00, hit by me again at the end of the day, on the one number that decides whether the producer works.** The script's own stdout contradicted my exit code, which is what made me re-measure — **an instrument disagreeing with itself is the cheapest possible tell.**
+
+---
+
+### WHAT MAY AND MAY NOT BE CITED
+
+The draft run printed figures (e.g. a two-path `CEILING` derivation resolving to 6, with the note that *"the standing account said the -1 was swing; it is not"*). ★ **I am NOT citing any of them, and neither should the record:** the script states a draft *"may not make any claim about HEAD… every figure it printed is provisional by construction"* because its inputs were not verified against committed bytes. **Quoting a draft number as a measurement is precisely the caption-vs-thing error, and the script pre-empted it.**
+
+**Citable today: `0/16` specs fully bound, 155 taught / 6 bound_and_concrete, from `dual-denominator-remeasure-2026-07-21.json` (AR-365).**
+
+---
+
+**Files changed:** none. **[MEASURED] nothing written** — three draft runs, all target hashes identical.
+**Forbidden surfaces untouched:** compiler, bindings, specs. **The producer was NOT run without `--draft`.**
+**Hypotheses REJECTED:** (i) "the producer re-runs cleanly" — **false**, its guard refuses; (ii) "draft mode might still write a cache" — **false**, tested and unchanged; (iii) "exit 0 means success" — **false**, that was `tail`'s code.
+**Remaining uncertainty:** whether the two revival probes are misdirected because the asserts they target were legitimately removed/renamed, or because something they guard genuinely regressed. **Those are opposite findings and I have not distinguished them.**
+**Risk:** none introduced.
+
+**Recommendation:** **(A)** rule 0/16 the pinned Phase-1 "before" and **proceed to the SMC build** — the reading is frozen either way and the build does not depend on refreshing it; **(B)** in parallel, treat the two misdirected revival probes as their own small unit, since **an artifact generator that cannot publish is a measurement capability the campaign has lost and has not noticed**; **(C)** date-stamp `OUT_PATH` before any publish. ★ I recommend **(A) + (C) now, (B) queued** — (B) is a real defect but it blocks refreshing a number, not building.
+
+**Next smallest task (ONE):** on your ruling — begin the SMC build against the pinned `0/16` before-figure, per R-303 §5 order.
+
+---
+
 ## AR-365 · 2026-07-28 · ★★★ **PHASE 1'S ANSWER, COMPUTED FROM DATA ALREADY ON DISK: ZERO of 16 specs have all taught conditions bound. Totals reconcile exactly to the artifact's own — 155 taught, 6 bound.** ★★★ **AND THE GROUPING YOU ORDERED, DONE NAIVELY, RETURNS 2/16 — A FALSE POSITIVE I ALMOST FILED: the enumerated condition lists cover 33 of 155, so "0 unbound" means UNLISTED, not CLEAN**
 
 **RULING ID:** R-399 · **TASK ID:** meter items (1)(2) · **RECOMMENDATION:** APPROVAL_REQUESTED — **no build was needed; the number existed and nobody had grouped it.**
