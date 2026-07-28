@@ -55,18 +55,74 @@ invisible unless carried here. That gap cost a wrong operator answer (R-396).
 closed and deployed today.**
 
 ## AUTHORIZED NOW (worker, in order — no round-trip needed)
-1. **SMC BUILD** (R-303 §5, R-401). Allowed: the SMC family implementation + its
-   tests. Red-proofed at birth. ★ **The declared primitive must actually
-   EXECUTE** (R-153) — a family whose declared primitive is not the one it runs
-   is the POINTER LIE, convicted 3× here. Forbidden: the four frozen
-   instruments, the specs, `dual_denominator_remeasure.py`.
-2. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
+★★★ **THE TARGET CHANGED TWICE TODAY. R-303 §5's `hcHuDfxdywI__s0`: STRUCK (not
+in corpus_A). R-402's `IyFioFkRgWo__s0`: WITHDRAWN by R-404 — I ranked it on the
+`type` field and [MEASURED] 3 of its 6 conditions are `n_unmatched`: a timeframe
+declaration, a chart gesture, and the teacher saying the setup is OPTIONAL.
+BINDING THOSE WOULD INVERT THE TAUGHT STRATEGY. The worker refused. Correctly.**
+
+★★★ **READ THE CONDITION TEXT BEFORE BINDING ANYTHING. The `type` field is a
+CLAIM ABOUT TEXT, not a specification — this is now mandatory and precedes every
+build. Every spec self-declares `bias_direction: OPTIMISTIC_LOOSER_THAN_TAUGHT`.**
+
+1. **Read the two condition TEXTS of `E9MzEC_yNoM__s0` and report the verdict.**
+   ★★★ **[MEASURED] it is the ONLY spec in the corpus with ZERO unmatched AND
+   ZERO unbound** (`n_taught 2 · n_bindable 2 · n_unbound 0 · approx 2 ·
+   bound 0`). **If either text carries no real rule, REFUSE AGAIN — that is a
+   finding, not a failure.** First observable ~10 min.
+2. **If both are real, bind them `approximate → concrete`.** ★★ Only that
+   transition counts: `n_binding_approximation` ≠ `n_bound_and_concrete`, and
+   [MEASURED] `n_bound_and_concrete` is **0** for all four clean specs.
+3. **SESSION_CLOCK / `WAIT_SESSION`** — ★★★ **re-ranked from LAST to SECOND
+   (R-404): [MEASURED] all 27 unbound conditions in the corpus are typed
+   `WAIT_SESSION`, and it is the ONLY thing holding shut three of the four clean
+   specs (2 each).** Target `-igpOZs8LsM__s0` — **11 conditions, 8 confident,
+   0 unmatched — the SUBSTANTIVE exit target, the spec whose completion means a
+   real strategy compiles.**
+4. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
+   MIGRATIONS, so `schema.ts` drift becomes detectable instead of propagatable.
+5. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
    `dual-denominator-remeasure-2026-07-21.json`; a future publish would overwrite
    the pinned evidence of record under a false date.
-3. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
+6. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
    ENTRY_WITHDRAWN`, `..._PAIR_DRIFTED`, both declared `ws_session_resolvable <=
    graded_teachings`, both observed `NO_ASSERT_FIRED`). **Report the diagnosis;
    repair only after I rule on it.**
+
+★★ **PRE-REGISTERED (R-404), written before the build so it cannot be spun:**
+`E9MzEC_yNoM__s0` has only TWO conditions. Clearing the gate on it will be
+reported as *"gate cleared on the corpus's SMALLEST spec — the compiler can bind
+a complete spec end-to-end; it has NOT yet compiled a spec resembling a full
+strategy."* **The gate is not raised to exclude it and not reported bare.**
+
+## DONE THIS HOUR (verified at this desk, not relayed)
+★ **R-403 item (4) LANDED — `e507ae33`.** `hmacSecretEncrypted: bytea(...)` added
+to `schema.ts` by hand. **I read the diff as promised: 12 insertions, `schema.ts`
+ONLY, the test's column UNTOUCHED** (green-by-deletion would have been a FAIL).
+`bytea` is a real customType at `schema.ts:53`, already used 3×. **I re-ran the
+check directly (not via npm, unpiped): `EXIT=0`, `CLEAN — 24 hand-rolled
+schema-mirror tables across 18 DDL files`.** PR #27 CI re-running.
+
+★ Standing scope for all of the above — **Forbidden:** the four frozen
+instruments, the sealed-read set, the spec files, `dual_denominator_remeasure.py`
+(item 6 excepted), editing `hmac-secret-pair-binding.test.ts` to delete the
+column, `db:generate`, touching any applied migration.
+★★ **Invariant 3 binds hardest on item 1: five WAIT_STRUCTURE conditions in one
+spec is exactly where "A THEN B THEN C" gets flattened into a one-bar AND. It
+compiles to a STATE MACHINE.**
+
+## PR #27 — NOT MERGEABLE, AND NOT FOR THE REASON CI SAYS (R-403)
+16 SUCCESS / 3 FAILURE (3 reds = **one defect mirrored**). Real failure:
+`check-pglite-ddl-parity` DRIFT on `account_strategy_assignments.
+hmac_secret_encrypted`. ★★★ **The test is RIGHT and `schema.ts` is STALE:
+[MEASURED] migration `0128:41` adds the column, `pine-export-recipient-service.ts`
+and `tradingview-marker-service.ts` read it, and I read `hmac_secret_encrypted
+bytea` OFF THE LIVE DB from `runtime-production`. The guard's printed remedy
+("update the test DDL to match schema.ts") would DELETE A REAL COLUMN.** Green
+achieved by deleting the column is a FAIL — I will read the diff.
+★ Good news measured on the way: **0128's DDL really did execute in production**
+(checked the live catalogue, not the journal — this repo has a convicted case of
+journal-marked-applied-but-never-run).
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes · defaulting
