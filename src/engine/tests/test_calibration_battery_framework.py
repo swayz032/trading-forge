@@ -575,7 +575,7 @@ def test_m6_absent_artifact_video_with_mismatched_cert_blocks_vi_cert():
     # verified, so vi_cert BLOCKs (was fail-OPEN: the old guard fired only when BOTH ids present).
     a = clean_artifact()
     a["video"] = None                                   # artifact provenance absent
-    cert = clean_certificate(a["spec"])
+    cert = clean_certificate()
     cert["video"] = "SOME_OTHER_VIDEO_9999"             # cert points at a DIFFERENT extraction
     r = _mutant_inputs(a, cert=cert).run()
     assert r.verdict != PASS
@@ -583,7 +583,7 @@ def test_m6_absent_artifact_video_with_mismatched_cert_blocks_vi_cert():
 
     # the SAME different-cert break is still caught when the artifact video IS present:
     b = clean_artifact()
-    cert_b = clean_certificate(b["spec"])
+    cert_b = clean_certificate()
     cert_b["video"] = "SOME_OTHER_VIDEO_9999"
     assert "vi_cert" in _mutant_inputs(b, cert=cert_b).run().checks_failed
 
@@ -655,7 +655,7 @@ def test_sweep_cert_video_invisible_link_blocks_vi_cert():
     for zw in _FORMAT_CHARS:
         a = clean_artifact()
         a["video"] = zw
-        cert = clean_certificate(a["spec"])
+        cert = clean_certificate()
         cert["video"] = zw
         r = _mutant_inputs(a, cert=cert).run()
         assert r.verdict != PASS, f"invisible video certified clean: {zw!r} (U+{ord(zw):04X})"
@@ -683,11 +683,11 @@ def test_sweep_i_conf_invisible_type_confidence_not_recorded():
         a = clean_artifact()
         a["spec"]["entry_conditions"][0]["type_confidence"] = zw
         _rehash(a)
-        seal = run_leg_a_phase1(a, certificate=clean_certificate(a["spec"]))
+        seal = run_leg_a_phase1(a, certificate=clean_certificate())
         assert "i_conf" in seal.checks_failed, repr(zw)
     # DISCRIMINATION: a real confidence label is recorded (i_conf passes, fixture clean).
     art = clean_artifact()
-    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    seal = run_leg_a_phase1(art, certificate=clean_certificate())
     assert "i_conf" not in seal.checks_failed and seal.automated_verdict == PASS
 
 
@@ -699,7 +699,7 @@ def test_sweep_reader_id_invisible_identity_is_incomplete_countersign():
         cs = clean_countersignatures(a)
         for k in cs:
             cs[k] = {**cs[k], "reader_id": zw}
-        r = run_leg_a(a, certificate=clean_certificate(a["spec"]), countersignatures=cs)
+        r = run_leg_a(a, certificate=clean_certificate(), countersignatures=cs)
         assert r.verdict != PASS, f"invisible reader_id cleared the countersign: {zw!r}"
         assert "countersign" in r.checks_failed, repr(zw)
     # DISCRIMINATION: a real reader identity clears the countersign and the fixture passes whole.

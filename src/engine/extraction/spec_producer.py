@@ -409,19 +409,25 @@ def _untaught_exit(strategy: dict) -> bool:
     return bool(stop_untaught and targets_untaught)
 
 
-# (v) drop-audit anchor discipline, PRODUCER-LOCAL copy. `evidence` (stamped below)
-# is NOT diagnostics-only: the A2-hardened (v) certificate-drop audit in
-# `compile_fidelity._check_no_certificate_drops` consumes it (it builds per-condition
-# [object, evidence] texts and token-matches cert anchors against them for the 1:1
-# bijection). So the join here MUST use the same whole-token-boundary + minimum-anchor
-# discipline the consumer uses, or a bare-substring false-match would stamp a WRONG
-# anchor as `evidence`, which then trivially self-matches downstream and launders a
-# silent drop (fail-open). `_MIN_ANCHOR_TOKENS` mirrors compile_fidelity's
-# MIN_ANCHOR_TOKENS=2 and `_anchor_grounds` mirrors its `_token_boundary_contains`;
-# both are kept producer-local ON PURPOSE — a reverse import (extraction<-forensics)
-# would cycle (forensics imports this module), and hoisting into the STATUS_CALIBRATED
-# detector would perturb it. This is a synonymous implementation with a truthful
-# comment, not a false one.
+# R-282 COUPLING — RETIRED (R-291 §1 D2), and WHY. This block used to declare the join
+# below JOINTLY LOAD-BEARING with compile_fidelity's (v) 1:1 bijection, on the ground that
+# `evidence` was NOT diagnostics-only: the (v) certificate-drop audit built per-condition
+# [object, evidence] texts and token-matched certificate anchors against them, so a wrong
+# anchor stamped as `evidence` self-matched downstream and laundered a silent drop.
+# (v) NO LONGER READS `evidence` (object-only reconciliation, R-291 §1 D1) and
+# `_cert_span_for` NO LONGER STAMPS the anchor into it, so BOTH ends of that coupling are
+# gone. A coupling declaration must die when the coupling dies: nothing this module emits is
+# consumed by the (v) drop-audit any more, and the "do not relax either half without
+# re-hardening the other" instruction is withdrawn.
+#
+# THE DISCIPLINE STAYS, on its OWN (narrower, truthful) reason: `_cert_span_for` still stamps
+# the matched certificate entry's `char_span` onto the condition, and a bare coincidental
+# substring must not stamp a WRONG transcript offset as a condition's provenance span.
+# `_MIN_ANCHOR_TOKENS` mirrors compile_fidelity's MIN_ANCHOR_TOKENS=2 and `_anchor_grounds`
+# mirrors its `_token_boundary_contains`; both are kept producer-local ON PURPOSE — a reverse
+# import (extraction<-forensics) would cycle (forensics imports this module), and hoisting into
+# the STATUS_CALIBRATED detector would perturb it. This is a synonymous implementation with a
+# truthful comment, not a false one.
 _MIN_ANCHOR_TOKENS: int = 2
 
 
@@ -439,29 +445,29 @@ def _anchor_grounds(anchor_norm: str, hay: str) -> bool:
 
 
 def _cert_span_for(text: str, cert: Optional[dict]) -> Tuple[Dict[str, int], str]:
-    """Best-effort join of a staging condition to the certificate's own
-    quote_anchor/char_span (the provenance link). An unmatched condition gets
-    span {0,0} + its own prose as evidence -- honest, never fabricated. The join is
-    WHOLE-TOKEN-boundary + minimum-anchor-tokens (see `_anchor_grounds`; R-282 COUPLING
-    INVARIANT — this producer-side token-boundary is JOINTLY LOAD-BEARING with
-    compile_fidelity's (v) 1:1 bijection distinctness: the whole-token wrong-slot launder
-    is closed only by BOTH. This stamp can still create a spurious cross-edge, but only
-    onto an already-object-matched condition; it is the bijection's distinctness
-    (`matched == n_taught`) that convicts a genuinely dropped condition. Weaken (v) back
-    toward a flattened-pool membership test and this stamp launders AGAIN even with the
-    token-boundary here — do not relax either half without re-hardening the other): a bare
-    coincidental substring must NOT ground, because the stamped `evidence` is consumed
-    by the (v) drop-audit's 1:1 bijection (a wrong stamp would launder a silent drop)."""
+    """Best-effort join of a staging condition to the certificate's `char_span` (the
+    provenance link). Returns `(span, evidence)`.
+
+    ★ `evidence` is ALWAYS the condition's OWN prose (R-291 §1 D2). This function used to
+    return the matched certificate's `quote_anchor` as `evidence` — i.e. it copied the
+    certificate's text into the spec, and the (v) drop-audit then reconciled the certificate
+    against that copy of itself. With (v) object-only, that stamp has ZERO consumers, so it
+    is REMOVED: the honest unmatched-branch value (the condition's own prose) is now the
+    value on BOTH branches, and no certificate text is laundered into the spec record.
+    An unmatched condition additionally gets span {0,0} -- honest, never fabricated.
+
+    The join stays WHOLE-TOKEN-boundary + minimum-anchor-tokens (`_anchor_grounds`) so that a
+    bare coincidental substring cannot stamp a WRONG `char_span` onto a condition. That is now
+    this discipline's whole reason — see the retired-coupling note above `_MIN_ANCHOR_TOKENS`."""
     if isinstance(cert, dict):
         hay = _norm(text)
         for c in cert.get("conditions", []) or []:
-            anchor = c.get("quote_anchor") or ""
-            anchor_norm = _norm(anchor)
+            anchor_norm = _norm(c.get("quote_anchor") or "")
             if not anchor_norm or not hay:
                 continue
             if _anchor_grounds(anchor_norm, hay):
                 s = c.get("char_span") or [0, 0]
-                return {"start": int(s[0]), "end": int(s[1])}, anchor
+                return {"start": int(s[0]), "end": int(s[1])}, text
     return {"start": 0, "end": 0}, text
 
 

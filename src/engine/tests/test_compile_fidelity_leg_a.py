@@ -23,6 +23,7 @@ from src.engine.forensics.compile_fidelity import (
 )
 from src.engine.spec_family_bindings import FAMILY_META
 from src.engine.tests._forensics_fixtures import (
+    CLEAN_TRANSCRIPT,
     clean_artifact,
     clean_certificate,
     clean_countersignatures,
@@ -49,7 +50,7 @@ def test_known_good_synthetic_spec_passes_leg_a_whole():
 
 def test_known_good_passes_each_check_category():
     art = clean_artifact()
-    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    seal = run_leg_a_phase1(art, certificate=clean_certificate())
     assert seal.automated_verdict == PASS, sorted(seal.checks_failed)
     # every per-condition row passes its automated checks
     for row in seal.rows:
@@ -103,7 +104,7 @@ def test_missing_certificate_blocks_on_provenance():
 
 def test_missing_countersign_blocks_even_when_automated_passes():
     art = clean_artifact()
-    result = run_leg_a(art, certificate=clean_certificate(art["spec"]), countersignatures=None)
+    result = run_leg_a(art, certificate=clean_certificate(), countersignatures=None)
     assert result.verdict == BLOCK
     assert "countersign" in result.checks_failed
 
@@ -113,7 +114,7 @@ def test_dissenting_countersign_blocks():
     cs = clean_countersignatures(art)
     first = next(iter(cs))
     cs[first] = {**cs[first], "typing": False}
-    result = run_leg_a(art, certificate=clean_certificate(art["spec"]), countersignatures=cs)
+    result = run_leg_a(art, certificate=clean_certificate(), countersignatures=cs)
     assert result.verdict == BLOCK
     assert "countersign" in result.checks_failed
 
@@ -123,9 +124,9 @@ def test_dissenting_countersign_blocks():
 # --------------------------------------------------------------------------- #
 def test_phase1_seal_is_deterministic():
     art = clean_artifact()
-    cert = clean_certificate(art["spec"])
+    cert = clean_certificate()
     h1 = run_leg_a_phase1(art, certificate=cert).seal_hash
-    h2 = run_leg_a_phase1(clean_artifact(), certificate=clean_certificate(clean_artifact()["spec"])).seal_hash
+    h2 = run_leg_a_phase1(clean_artifact(), certificate=clean_certificate()).seal_hash
     assert h1 == h2 and len(h1) == 64
 
 
@@ -162,12 +163,12 @@ def test_f1_retype_to_enable_entry_blocks_on_ii():
     art = clean_artifact()
     art["spec"]["entry_conditions"][0]["type"] = "ENABLE_ENTRY"
     art["spec_hash"] = _spec_hash(art["spec"])
-    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    seal = run_leg_a_phase1(art, certificate=clean_certificate())
     row = seal.rows[0]
     ii = [c for c in row.checks if c.code == "ii"][0]
     assert row.ii_applicable and not ii.passed, (row.condition_id, ii.reason)
     assert "ii" in seal.checks_failed
-    full = run_leg_a(art, certificate=clean_certificate(art["spec"]), countersignatures=clean_countersignatures(art))
+    full = run_leg_a(art, certificate=clean_certificate(), countersignatures=clean_countersignatures(art))
     assert full.verdict == BLOCK
 
 
@@ -181,12 +182,12 @@ def test_f1_invalidate_leaning_spec_blocks_on_ii():
         "type_confidence": "confident",
     }]
     art["spec_hash"] = _spec_hash(art["spec"])
-    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    seal = run_leg_a_phase1(art, certificate=clean_certificate())
     inv = [r for r in seal.rows if r.type == "INVALIDATE"][0]
     ii = [c for c in inv.checks if c.code == "ii"][0]
     assert inv.ii_applicable and not ii.passed, ii.reason
     assert "ii" in seal.checks_failed
-    assert run_leg_a(art, certificate=clean_certificate(art["spec"])).verdict == BLOCK
+    assert run_leg_a(art, certificate=clean_certificate()).verdict == BLOCK
 
 
 def test_f1_load_bearing_enable_entry_spine_blocks_on_ii():
@@ -200,7 +201,7 @@ def test_f1_load_bearing_enable_entry_spine_blocks_on_ii():
     })
     art["spec"]["and_groups"] = [[c["id"] for c in art["spec"]["entry_conditions"]]]
     art["spec_hash"] = _spec_hash(art["spec"])
-    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    seal = run_leg_a_phase1(art, certificate=clean_certificate())
     ee = [r for r in seal.rows if r.condition_id == "ENABLE_ENTRY:spine#9"][0]
     ii = [c for c in ee.checks if c.code == "ii"][0]
     assert ee.ii_applicable and not ii.passed, ii.reason
@@ -213,7 +214,7 @@ def test_f1_honest_good_fixture_passes_for_the_right_reason():
     ENABLE_ENTRY/INVALIDATE slip through (the F-1 hole). The ENABLE_ENTRY trigger is present but
     dispositioned non-load-bearing (structural spine-conjunction trigger), so (ii) is n/a."""
     art = clean_artifact()
-    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    seal = run_leg_a_phase1(art, certificate=clean_certificate())
     assert seal.automated_verdict == PASS, sorted(seal.checks_failed)
     ii_rows = [r for r in seal.rows if r.ii_applicable]
     assert ii_rows, "fixture must have (ii)-applicable load-bearing rows"
@@ -284,7 +285,7 @@ def test_f2_honest_good_certificate_passes_for_the_right_reason():
     (vi_cert) precisely because its video AND conditions are genuinely populated (a non-empty
     ledger of anchor-bearing conditions) — not a present-but-null shell."""
     art = clean_artifact()
-    cert = clean_certificate(art["spec"])
+    cert = clean_certificate()
     assert cert["video"] and cert["conditions"] and all(c.get("quote_anchor") for c in cert["conditions"])
     seal = run_leg_a_phase1(art, certificate=cert)
     assert seal.automated_verdict == PASS, sorted(seal.checks_failed)
@@ -301,7 +302,7 @@ def test_f2_a2_any_not_all_and_anchor_specificity_block():
     cs = clean_countersignatures(art)
 
     def verdict(conditions):
-        cert = clean_certificate(art["spec"])
+        cert = clean_certificate()
         cert["conditions"] = conditions
         return run_leg_a(art, certificate=cert, countersignatures=cs).verdict
 
@@ -325,7 +326,7 @@ def test_f2_a2_honest_certificate_anchors_clear_the_specificity_floor():
     from src.engine.forensics.compile_fidelity import MIN_ANCHOR_TOKENS, _norm
 
     art = clean_artifact()
-    cert = clean_certificate(art["spec"])
+    cert = clean_certificate()
     for c in cert["conditions"]:
         anchor = _norm(str(c.get("quote_anchor", "")))
         assert anchor and len(anchor.split()) >= MIN_ANCHOR_TOKENS, c
@@ -379,7 +380,7 @@ def test_f2_a3_honest_certificate_reconciles_1to1():
     genuine 1:1 ledger — one distinct anchor per taught condition (measured: zero cross-condition
     phrasing overlap, so the strict matching forces nothing)."""
     art = clean_artifact()
-    cert = clean_certificate(art["spec"])
+    cert = clean_certificate()
     n_taught = len(art["spec"]["entry_conditions"]) + len(art["spec"].get("invalidations") or [])
     assert len(cert["conditions"]) == n_taught  # 1:1 cardinality
     seal = run_leg_a_phase1(art, certificate=cert)
@@ -391,7 +392,7 @@ def test_f2b_nondict_countersignatures_is_graceful_block_not_crash():
     """A malformed (non-dict) countersignatures object must fail-closed BLOCK, never raise an
     uncaught AttributeError (a crash is not a fail-closed refusal)."""
     art = clean_artifact()
-    cert = clean_certificate(art["spec"])
+    cert = clean_certificate()
     r = run_leg_a(art, certificate=cert, countersignatures=["not", "a", "dict"])  # must not raise
     assert r.verdict == BLOCK
     assert "countersign" in r.checks_failed
@@ -407,7 +408,7 @@ def test_binding_plan_override_bypass_removed():
     inject one to subvert the re-derivation."""
     art = clean_artifact()
     with pytest.raises(TypeError):
-        run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]), binding_plan=object())
+        run_leg_a_phase1(art, certificate=clean_certificate(), binding_plan=object())
     with pytest.raises(TypeError):
         run_leg_a(art, binding_plan=object())
 
@@ -432,7 +433,7 @@ def test_first_eligible_receipt_name_bound_wait_session_passes_ii_with_scope_pat
     T1 engagement bar) is OUT OF THIS SUB-PACKET'S SCOPE and is not asserted here.
     """
     art = clean_artifact()  # its load-bearing (ii) rows are name-bound WAIT_SESSION spine
-    seal = run_leg_a_phase1(art, certificate=clean_certificate(art["spec"]))
+    seal = run_leg_a_phase1(art, certificate=clean_certificate())
 
     ii_rows = [r for r in seal.rows if r.ii_applicable]
     assert ii_rows, "receipt requires a load-bearing (ii)-applicable condition"
@@ -450,7 +451,7 @@ def test_first_eligible_receipt_name_bound_wait_session_passes_ii_with_scope_pat
     # End-to-end: the whole Leg A PASSes (not just the (ii) row in isolation).
     full = run_leg_a(
         art,
-        certificate=clean_certificate(art["spec"]),
+        certificate=clean_certificate(),
         countersignatures=clean_countersignatures(art),
     )
     assert full.verdict == PASS, (sorted(full.checks_failed), full.summary)
@@ -485,3 +486,100 @@ def test_first_eligible_receipt_clock_derived_peer_is_refused_not_eligible():
     assert name_bound.primitive == "session_windows.is_in_killzone"
     assert clock_coarse.bindable is False, "clock-derived coarse must refuse, never bind approximation=True"
     assert clock_coarse.reason == "session_teaching_recognized_no_computable_window"
+
+
+# --------------------------------------------------------------------------- #
+# R-291 §1 — CERTIFICATE INDEPENDENCE + OBJECT-ONLY (v) RECONCILIATION.
+#
+# The (v) drop-audit is only an audit if the certificate is INDEPENDENT of the spec it
+# audits. Two circularity routes were live and are closed here:
+#   (a) the FIXTURE route — `clean_certificate` built `{"quote_anchor": c["object"]}`, so the
+#       calibrated baseline's certificate WAS the spec, verbatim;
+#   (b) the PRODUCER route — `spec_producer._cert_span_for` stamped the certificate's own
+#       quote_anchor into the condition's `evidence`, and (v) reconciled anchors against
+#       [object, evidence] — i.e. against a copy of the certificate itself.
+# --------------------------------------------------------------------------- #
+def test_clean_certificate_is_transcript_derived_never_spec_derived():
+    """STRUCTURAL GUARD on route (a). Every clean-certificate anchor must be a LITERAL quote of
+    the independent transcript, carry that quote's REAL char_span, and be a DISTINCT string from
+    every spec `object`. Re-couple the fixture to the spec (`quote_anchor: c["object"]`) and the
+    identity assert below goes red."""
+    cert = clean_certificate()
+    objects = {c["object"] for c in clean_artifact()["spec"]["entry_conditions"]}
+    assert cert["conditions"], "fixture certificate must not be empty"
+    for entry in cert["conditions"]:
+        anchor = entry["quote_anchor"]
+        start, end = entry["char_span"]
+        assert anchor in CLEAN_TRANSCRIPT, f"anchor {anchor!r} is not a transcript quote"
+        assert CLEAN_TRANSCRIPT[start:end] == anchor, f"char_span {[start, end]} does not locate {anchor!r}"
+        assert anchor not in objects, (
+            f"anchor {anchor!r} is verbatim a spec object — the certificate is spec-DERIVED again "
+            "and the (v) drop-audit is circular")
+
+
+def test_synchronized_drop_is_convicted_because_the_certificate_is_independent():
+    """★ THE FOUNDING SYNCHRONIZED-DROP RED-PROOF (R-291 §4). Drop a taught condition from the
+    spec and rebuild the certificate the ORDINARY fixture way. Under the old spec-derived
+    fixture the rebuilt certificate silently forgot the dropped condition, cardinality still
+    matched, and Leg A PASSed — the drop was INVISIBLE. With a transcript-independent
+    certificate the dropped condition's quote survives the drop, so the ledger is no longer 1:1
+    → BLOCK on (v)."""
+    art = clean_artifact()
+    dropped = art["spec"]["entry_conditions"][1]
+    art["spec"]["entry_conditions"] = [
+        c for c in art["spec"]["entry_conditions"] if c["id"] != dropped["id"]
+    ]
+    art["spec"]["and_groups"] = [[c["id"] for c in art["spec"]["entry_conditions"]]]
+    art["spec_hash"] = _spec_hash(art["spec"])
+    cert = clean_certificate()  # rebuilt AFTER the drop — and it still quotes the dropped condition
+    assert any("am session" in c["quote_anchor"] for c in cert["conditions"]), (
+        "the certificate stopped quoting the dropped condition — it is spec-derived again")
+    result = run_leg_a(art, certificate=cert, countersignatures=clean_countersignatures(art))
+    assert result.verdict == BLOCK and "v" in result.checks_failed, (
+        f"synchronized drop was NOT surfaced: verdict={result.verdict} "
+        f"checks_failed={sorted(result.checks_failed)}")
+
+
+def test_v_reconciles_against_object_only_never_evidence():
+    """★ OBJECT-ONLY BITE (route (b)). A certificate anchor that grounds ONLY in a condition's
+    `evidence` and NOT in its `object` must not reconcile: `evidence` is a field the certificate
+    itself used to author, so matching it is the audit checking the certificate against a copy
+    of itself. Restore `evidence` to `cond_texts` in `_check_no_certificate_drops` and this goes
+    green again (it PASSed before the change) — the assert is the reversion tripwire."""
+    body = {
+        "direction": "long",
+        "entry_conditions": [
+            {"id": "WAIT_SESSION:london#0", "type": "WAIT_SESSION",
+             "object": "wait for the london killzone session", "role": "spine",
+             "span": {"start": 0, "end": 0}, "evidence": "london killzone",
+             "type_confidence": "confident"},
+            {"id": "WAIT_SESSION:am#1", "type": "WAIT_SESSION",
+             "object": "only trade during the am session", "role": "spine",
+             "span": {"start": 0, "end": 0}, "evidence": "bos confirmation candle",
+             "type_confidence": "confident"},
+        ],
+        "or_branches": [], "invalidations": [], "entry_trigger_id": None,
+        "framework_overlay": clean_artifact()["spec"]["framework_overlay"],
+    }
+    body["and_groups"] = [[c["id"] for c in body["entry_conditions"]]]
+    art = {"video": "OBJONLY", "spec_hash": _spec_hash(body), "graph_canonical_hash": "",
+           "ledger_d": "UNKNOWN", "transcript_chars": 0, "spec": body}
+    # anchor #2 token-matches ONLY cond #1's `evidence`, never its `object`.
+    cert = {"video": "OBJONLY", "conditions": [
+        {"quote_anchor": "wait for the london killzone session", "char_span": [0, 0]},
+        {"quote_anchor": "bos confirmation candle", "char_span": [0, 0]},
+    ]}
+    result = run_leg_a(art, certificate=cert, countersignatures=clean_countersignatures(art))
+    assert result.verdict == BLOCK and "v" in result.checks_failed, (
+        f"an evidence-only anchor still reconciled: verdict={result.verdict} "
+        f"checks_failed={sorted(result.checks_failed)} — (v) is reading `evidence` again")
+
+    # DISCRIMINATING CONTROL: the same shape with an anchor that grounds in the OBJECT passes,
+    # so the BLOCK above is about WHERE the anchor grounded, not a blanket refusal.
+    cert_ok = {"video": "OBJONLY", "conditions": [
+        {"quote_anchor": "wait for the london killzone session", "char_span": [0, 0]},
+        {"quote_anchor": "only trade during the am session", "char_span": [0, 0]},
+    ]}
+    ok = run_leg_a(art, certificate=cert_ok, countersignatures=clean_countersignatures(art))
+    assert "v" not in ok.checks_failed, (
+        f"object-grounded control failed (v): {sorted(ok.checks_failed)} — (v) is vacuously blocking")

@@ -19,6 +19,48 @@ from src.engine.forensics.compile_fidelity import HOUSE_EXIT_SOURCE, run_leg_a_p
 
 VIDEO = "SYNTH_KNOWN_GOOD_0001"
 
+# --------------------------------------------------------------------------- #
+# ★ THE INDEPENDENT TRANSCRIPT (R-291 §1 D2) — the certificate's ONLY source.
+# --------------------------------------------------------------------------- #
+# `clean_certificate` used to build every anchor as `{"quote_anchor": c["object"]}` — the
+# certificate WAS the spec, verbatim. That made the whole CALIBRATED baseline ride a
+# spec-DERIVED certificate, and it made the (v) drop-audit CIRCULAR: a SYNCHRONIZED drop (drop
+# a condition from the spec while the fixture rebuilds the certificate from the POST-drop spec)
+# left cardinality matched and every anchor grounded, so the drop was INVISIBLE to (v).
+#
+# The fixture now carries a SYNTHETIC TRANSCRIPT and the certificate is a function of THAT
+# TRANSCRIPT ALONE — never of the spec body. Anchors are LITERAL substrings of the transcript
+# (their char_spans are the real offsets) that token-match the spec objects, exactly as an
+# honest independent fresh reader's quotes would. Because the certificate does not consult the
+# spec, dropping a condition from the spec no longer removes its quote from the certificate:
+# the drop surfaces as an unreconciled certificate entry → BLOCK on (v). That is the founding
+# synchronized-drop red-proof (see test_compile_fidelity_leg_a.py).
+CLEAN_TRANSCRIPT = (
+    "so here is the whole play. first we wait for the london killzone session to open and we "
+    "let it build. second we only trade during the am session window, nothing outside it. the "
+    "entry fires on spine completion once both of those are true. on some days you will also "
+    "want to wait for a break of structure before you commit, but that is optional."
+)
+
+#: Certificate anchors — LITERAL transcript quotes, authored here, NOT derived from any spec
+#: `object`. Each token-matches its intended condition's object (whole-token containment in one
+#: direction or the other) and NO other condition's, so the honest 1:1 bijection still completes.
+ANCHOR_LONDON = "the london killzone session"     # ⊂ "wait for the london killzone session"
+ANCHOR_AM = "during the am session"               # ⊂ "only trade during the am session"
+ANCHOR_TRIGGER = "on spine completion once"       # ⊃ "spine completion"
+ANCHOR_STRUCTURE = "a break of structure"         # ⊂ "wait for a break of structure"  (m4 only)
+
+#: The clean known-good spec's three taught conditions, in order.
+CLEAN_CERT_ANCHORS: tuple[str, ...] = (ANCHOR_LONDON, ANCHOR_AM, ANCHOR_TRIGGER)
+
+
+def transcript_cert_entry(quote: str) -> dict:
+    """One certificate entry built from the INDEPENDENT transcript. `quote` MUST be a literal
+    substring of `CLEAN_TRANSCRIPT` (`.index` raises otherwise — a fabricated quote cannot be
+    smuggled in) and its `char_span` is that substring's REAL offset in the transcript."""
+    start = CLEAN_TRANSCRIPT.index(quote)
+    return {"quote_anchor": quote, "char_span": [start, start + len(quote)]}
+
 
 def _rehash(artifact: dict) -> dict:
     """Recompute spec_hash over the (possibly mutated) spec body so provenance check (vi)
@@ -87,12 +129,16 @@ def clean_artifact() -> dict:
     }
 
 
-def clean_certificate(body: dict | None = None) -> dict:
-    body = body or clean_spec_body()
-    conds = (body.get("entry_conditions") or []) + (body.get("invalidations") or [])
+def clean_certificate(*, extra_anchors: tuple[str, ...] = ()) -> dict:
+    """The clean known-good certificate — a function of `CLEAN_TRANSCRIPT` ALONE.
+
+    ★ TAKES NO SPEC. That is the point (R-291 §1 D2): the certificate the (v) drop-audit
+    reconciles against must be INDEPENDENT of the spec it audits, or a synchronized drop is
+    invisible. `extra_anchors` lets a mutant that ADDS a taught condition quote the transcript
+    line that teaches it (m4) — the quotes are still transcript literals, never spec objects."""
     return {
         "video": VIDEO,
-        "conditions": [{"quote_anchor": c["object"], "char_span": [0, 0]} for c in conds],
+        "conditions": [transcript_cert_entry(q) for q in (*CLEAN_CERT_ANCHORS, *extra_anchors)],
     }
 
 
@@ -100,7 +146,7 @@ def clean_countersignatures(artifact: dict | None = None) -> dict:
     """A clean fresh-reader countersign for every row Phase 1 requires. (In production these are
     supplied by an independent fresh reader — here they stand in for that channel.)"""
     artifact = artifact or clean_artifact()
-    seal = run_leg_a_phase1(artifact, certificate=clean_certificate(artifact["spec"]))
+    seal = run_leg_a_phase1(artifact, certificate=clean_certificate())
     return {
         cid: {"reader_id": "fresh-reader-1", "reader_vintage": "v1", "typing": True, "polarity": True, "drops": True}
         for cid in seal.countersign_required_ids
@@ -111,7 +157,7 @@ def clean_inputs() -> LegAInputs:
     art = clean_artifact()
     return LegAInputs(
         artifact=art,
-        certificate=clean_certificate(art["spec"]),
+        certificate=clean_certificate(),
         countersignatures=clean_countersignatures(art),
     )
 
@@ -121,7 +167,7 @@ def clean_inputs() -> LegAInputs:
 # --------------------------------------------------------------------------- #
 def _mutant_inputs(artifact: dict, *, cert: dict | None = None, countersigns: dict | None = None) -> LegAInputs:
     art = artifact
-    cert = cert if cert is not None else clean_certificate(art["spec"])
+    cert = cert if cert is not None else clean_certificate()
     countersigns = countersigns if countersigns is not None else clean_countersignatures(art)
     return LegAInputs(artifact=art, certificate=cert, countersignatures=countersigns)
 
@@ -135,18 +181,18 @@ def placeholder_cases() -> dict[str, MutationCase]:
     _rehash(a)
     cases["m1"] = MutationCase("m1", PLACEHOLDER_LABEL, "ii", _mutant_inputs(a), is_placeholder=True)
 
-    # m2 — silently-dropped taught condition: drop a spine condition from the spec but keep it
-    # in the certificate → certificate-drop audit (v). (Was the INVALIDATE, removed from the
-    # honest-good fixture because a load-bearing INVALIDATE now honestly fails (ii); a dropped
-    # spine exercises the same (v) drop-audit.)
+    # m2 — silently-dropped taught condition: drop a spine condition from the spec while the
+    # TRANSCRIPT-INDEPENDENT certificate keeps quoting it → certificate-drop audit (v). (Was the
+    # INVALIDATE, removed from the honest-good fixture because a load-bearing INVALIDATE now
+    # honestly fails (ii); a dropped spine exercises the same (v) drop-audit.) The orphan is no
+    # longer hand-planted: `clean_certificate()` never consults the spec, so the dropped
+    # condition's transcript quote survives the drop on its own.
     a = clean_artifact()
     dropped = a["spec"]["entry_conditions"][1]  # the am-session spine
     a["spec"]["entry_conditions"] = [c for c in a["spec"]["entry_conditions"] if c["id"] != dropped["id"]]
     a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
     _rehash(a)
-    cert = clean_certificate(a["spec"])
-    cert["conditions"].append({"quote_anchor": dropped["object"], "char_span": [0, 0]})
-    cases["m2"] = MutationCase("m2", PLACEHOLDER_LABEL, "v", _mutant_inputs(a, cert=cert), is_placeholder=True)
+    cases["m2"] = MutationCase("m2", PLACEHOLDER_LABEL, "v", _mutant_inputs(a), is_placeholder=True)
 
     # m3 — flipped polarity: artifact clean, but the fresh reader DISSENTS on polarity for one
     # condition → the Phase-2 countersign channel (targeted check 'countersign').
@@ -167,7 +213,9 @@ def placeholder_cases() -> dict[str, MutationCase]:
     })
     a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
     _rehash(a)
-    cert = clean_certificate(a["spec"])
+    # the transcript teaches the added structure condition too, so the certificate quotes it —
+    # keeping this mutation single-axis (m4_false_flag), not also a (v) cardinality miss.
+    cert = clean_certificate(extra_anchors=(ANCHOR_STRUCTURE,))
     cases["m4"] = MutationCase("m4", PLACEHOLDER_LABEL, "m4_false_flag", _mutant_inputs(a, cert=cert), is_placeholder=True)
 
     # m5 — house-default exit missing its provenance stamp.
@@ -178,7 +226,7 @@ def placeholder_cases() -> dict[str, MutationCase]:
 
     # m6 — broken spec<->certificate chain: certificate names a different extraction.
     a = clean_artifact()
-    cert = clean_certificate(a["spec"])
+    cert = clean_certificate()
     cert["video"] = "SOME_OTHER_VIDEO_9999"
     cases["m6"] = MutationCase("m6", PLACEHOLDER_LABEL, "vi_cert", _mutant_inputs(a, cert=cert), is_placeholder=True)
 
@@ -201,18 +249,23 @@ def placeholder_cases() -> dict[str, MutationCase]:
 # test/fixtures layer by the INDEPENDENT grader; the detector code is untouched.
 # --------------------------------------------------------------------------- #
 def m2_naive_drop_inputs() -> LegAInputs:
-    """m2-naive: drop the am-session spine from the spec but leave its ORPHAN entry in the
-    certificate. Taught count drops to 2 while the certificate keeps 3 anchors → the (v) 1:1
-    reconciliation fails on cardinality (n_cert != n_taught) AND the orphan is unmatched → BLOCK
-    on (v)."""
+    """m2-naive (the FOUNDING SYNCHRONIZED-DROP instance, R-291 §4): drop the am-session spine
+    from the spec and rebuild the certificate the ordinary fixture way. Because the certificate
+    is a function of the INDEPENDENT transcript and not of the spec, it still quotes the dropped
+    condition ("during the am session"): taught count drops to 2 while the certificate keeps its
+    3 transcript anchors → the (v) 1:1 reconciliation fails on cardinality (n_cert != n_taught)
+    AND the orphaned quote is unmatched → BLOCK on (v).
+
+    ★ The orphan is STRUCTURAL, not hand-planted. Under the OLD spec-derived fixture
+    (`{"quote_anchor": c["object"]}`) this exact mutation PASSED: the certificate was rebuilt
+    from the POST-drop spec, so it silently forgot the dropped condition and cardinality still
+    matched. That is why the certificate may never be derived from the spec it audits."""
     a = clean_artifact()
     dropped = a["spec"]["entry_conditions"][1]  # the am-session spine
     a["spec"]["entry_conditions"] = [c for c in a["spec"]["entry_conditions"] if c["id"] != dropped["id"]]
     a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
     _rehash(a)
-    cert = clean_certificate(a["spec"])  # london + ENABLE_ENTRY anchors (matches the 2 kept conds)
-    cert["conditions"].append({"quote_anchor": dropped["object"], "char_span": [0, 0]})  # ORPHAN
-    return _mutant_inputs(a, cert=cert)
+    return _mutant_inputs(a)
 
 
 def m2_launder_drop_inputs() -> LegAInputs:
@@ -221,17 +274,19 @@ def m2_launder_drop_inputs() -> LegAInputs:
     Cardinality no longer betrays the drop — but the 1:1 bipartite matching does: the duplicated
     london anchor can only claim ONE taught condition, leaving the second cert entry unmatched
     (laundered anchor) and the ENABLE_ENTRY taught condition with no matching cert entry (silent
-    drop). BLOCK on (v) via the distinctness constraint, NOT cardinality."""
+    drop). BLOCK on (v) via the distinctness constraint, NOT cardinality.
+
+    The duplicated anchor is the REAL transcript quote for the kept london spine — a launderer
+    reuses a genuine quote; forging one would be convicted by (v)'s anchor floor instead."""
     a = clean_artifact()
     dropped = a["spec"]["entry_conditions"][1]  # am-session spine
-    kept = a["spec"]["entry_conditions"][0]     # london spine (its anchor is duplicated)
     a["spec"]["entry_conditions"] = [c for c in a["spec"]["entry_conditions"] if c["id"] != dropped["id"]]
     a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
     _rehash(a)
-    cert = clean_certificate(a["spec"])
+    cert = clean_certificate()
     cert["conditions"] = [
-        {"quote_anchor": kept["object"], "char_span": [0, 0]},
-        {"quote_anchor": kept["object"], "char_span": [0, 0]},  # DUPLICATE of a kept anchor
+        transcript_cert_entry(ANCHOR_LONDON),
+        transcript_cert_entry(ANCHOR_LONDON),  # DUPLICATE of a kept condition's anchor
     ]
     return _mutant_inputs(a, cert=cert)
 
@@ -333,7 +388,9 @@ def m4_false_flag_inputs() -> LegAInputs:
     })
     a["spec"]["and_groups"] = [[c["id"] for c in a["spec"]["entry_conditions"]]]
     _rehash(a)
-    return _mutant_inputs(a, cert=clean_certificate(a["spec"]))
+    # the transcript teaches the added structure condition too, so the independent certificate
+    # quotes it — keeping this mutation single-axis (m4_false_flag), not also a (v) cardinality miss.
+    return _mutant_inputs(a, cert=clean_certificate(extra_anchors=(ANCHOR_STRUCTURE,)))
 
 
 def m4_matching_label_companion() -> LegAInputs:
@@ -392,7 +449,7 @@ def m6_video_mismatch_inputs() -> LegAInputs:
     """m6 form A (naive broken chain): the certificate names a DIFFERENT extraction than the
     artifact (both video ids present, mismatched after `_norm`) → cross-link BLOCK on 'vi_cert'."""
     a = clean_artifact()
-    cert = clean_certificate(a["spec"])
+    cert = clean_certificate()
     cert["video"] = "SOME_OTHER_VIDEO_9999"
     return _mutant_inputs(a, cert=cert)
 
@@ -404,7 +461,7 @@ def m6_unlinkable_null_video_inputs() -> LegAInputs:
     BOTH ids were present, so this slipped clean)."""
     a = clean_artifact()
     a["video"] = None
-    cert = clean_certificate(a["spec"])
+    cert = clean_certificate()
     cert["video"] = "SOME_OTHER_VIDEO_9999"
     return _mutant_inputs(a, cert=cert)
 

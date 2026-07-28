@@ -728,13 +728,22 @@ def _check_no_certificate_drops(spec: dict, certificate: dict) -> list[CheckResu
     if out:
         return out  # fabricated anchors already convict; the 1:1 matching is moot
 
-    # Per-condition texts (object + evidence) — NOT a flattened pool, so an anchor is scored
-    # against ITS candidate conditions, one at a time.
+    # Per-condition texts: the spec's OWN `object` ONLY — NOT a flattened pool, so an anchor is
+    # scored against ITS candidate conditions, one at a time.
+    #
+    # ★ OBJECT-ONLY, AND WHY (R-291 §1 D1). This list used to be [object, evidence]. But a
+    # condition's `evidence` is not an independent text: `spec_producer._cert_span_for` stamped
+    # the CERTIFICATE'S OWN quote_anchor into it. Reconciling certificate anchors against
+    # `evidence` therefore reconciled the certificate against A COPY OF ITSELF — a self-match
+    # that certifies nothing. The pre-registration (§1-A(v)) pins the SEMANTIC "no silent drops",
+    # never the object-AND-evidence implementation, so dropping `evidence` from the reconciliation
+    # is a STRENGTHENING of the same pinned semantic: an anchor now has to ground in the taught
+    # condition's own prose, which the certificate did not author.
     taught = _taught_conditions(spec)
     cond_texts: list[list[str]] = []
     for c in taught:
-        texts = [_norm(str(c.get("object", ""))), _norm(str(c.get("evidence", "")))]
-        cond_texts.append([t for t in texts if t])
+        obj = _norm(str(c.get("object", "")))
+        cond_texts.append([obj] if obj else [])
 
     # Edges: certificate entry i → taught condition j if the anchor token-matches any of j's
     # texts. An anchor that ambiguously matches several conditions keeps edges to all of them —
@@ -748,13 +757,19 @@ def _check_no_certificate_drops(spec: dict, certificate: dict) -> list[CheckResu
     matched = _max_bipartite_matching(edges, len(taught))
     n_cert, n_taught = len(cert_anchors), len(taught)
 
-    # R-282 COUPLING INVARIANT: this 1:1 distinctness (matched == n_taught) is JOINTLY
-    # LOAD-BEARING with spec_producer._anchor_grounds' token-boundary stamp. The producer
-    # can still stamp a spurious cross-edge, but only onto an already-object-matched
-    # condition; a genuinely dropped condition gets zero edges and it is THIS distinctness
-    # that convicts it. Weaken this back toward a flattened-pool membership test and the
-    # producer stamp launders a drop again even with the token-boundary upstream — do not
-    # relax either half without re-hardening the other.
+    # R-282 COUPLING — RETIRED (R-291 §1 D2). This distinctness was previously declared JOINTLY
+    # LOAD-BEARING with spec_producer._anchor_grounds' anchor→`evidence` stamp: the stamp could
+    # manufacture a cross-edge, and only this bijection stopped it laundering a drop. That
+    # coupling is DEAD, at BOTH ends: (v) above no longer reads `evidence` at all (object-only
+    # reconciliation), so `_cert_span_for` no longer stamps the anchor and there is no producer
+    # text left for a certificate anchor to self-match against. A coupling declaration must die
+    # when the coupling dies, so the "do not relax either half" instruction is withdrawn — the
+    # two halves are now independent.
+    #
+    # STILL LOAD-BEARING ON ITS OWN: the 1:1 distinctness (matched == n_taught). A flattened-pool
+    # membership test would let one duplicated anchor cover two slots and re-open the m2 launder
+    # (see m2-launder-duplicate-anchor in the calibration battery) — that is this check's own
+    # reason to exist, owed to no other module.
     if n_cert != n_taught:
         out.append(CheckResult("v", False, f"certificate cardinality {n_cert} != taught-condition count {n_taught}; provenance ledger is not 1:1 (m2)"))
     if matched < n_cert:
