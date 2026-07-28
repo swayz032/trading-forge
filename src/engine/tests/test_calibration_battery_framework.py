@@ -704,3 +704,76 @@ def test_sweep_reader_id_invisible_identity_is_incomplete_countersign():
         assert "countersign" in r.checks_failed, repr(zw)
     # DISCRIMINATION: a real reader identity clears the countersign and the fixture passes whole.
     assert clean_inputs().run().verdict == PASS
+
+
+# =========================================================================== #
+# R-291 §1 CONTAINMENT — INDEPENDENT GRADER (unit 3-i grade, doer != grader).
+#
+# Unit 3-i removed the hand-planted orphan from `m2_naive_drop_inputs`, on the argument that a
+# TRANSCRIPT-INDEPENDENT certificate makes the orphan STRUCTURAL: the drop produces it without
+# help. That argument is only worth what its ALARM is worth. If a future doer re-couples
+# `clean_certificate` to the spec (the exact pre-unit circular form), the rebuilt certificate
+# silently forgets the dropped condition, cardinality re-matches, and m2-naive stops being a
+# drop at all — the mutation would go quietly vacuous.
+#
+# MEASURED HERE: it does not go quietly. The m2 slot is the tripwire.
+# =========================================================================== #
+def test_r291_recoupling_the_fixture_certificate_drops_the_battery_out_of_CALIBRATED(monkeypatch):
+    """★ CONTAINMENT RED-PROOF for the certificate-independence close.
+
+    ATTACK: restore the pre-unit circular fixture — `clean_certificate(body)` emitting
+    `{"quote_anchor": c["object"]}` and `_mutant_inputs` feeding it the MUTANT spec. m2-naive's
+    certificate is then rebuilt from the POST-drop spec, so it forgets the dropped condition and
+    Leg A PASSes it. The m2 slot is therefore NOT convicted and the ratified all-real battery
+    falls out of CALIBRATED to FAILED — a loud, machine-enforced refusal, not a silent green.
+
+    CONTROL (anti-vacuity): the SAME battery, fixture as shipped, IS CALIBRATED — so the FAILED
+    above is the re-coupling talking, not a battery that never reaches CALIBRATED.
+    """
+    from src.engine.forensics.calibration_battery import LegAInputs
+    from src.engine.tests import _forensics_fixtures as fx
+
+    def _ratified_battery():
+        slots = dict(robust_six_real_cases())
+        slots["m2"] = m2_both_forms_cases()
+        slots["m6"] = m6_both_forms_cases()
+        slots["m7"] = m7_both_forms_cases()
+        return run_calibration(clean_inputs(), slots)
+
+    # CONTROL — as shipped.
+    control = _ratified_battery()
+    assert control.status == STATUS_CALIBRATED, control.reasons
+    assert control.slot_results["m2"].ok
+
+    # ATTACK — the pre-unit circular fixture, restored verbatim.
+    def recoupled_certificate(body=None, *, extra_anchors=()):
+        body = body or fx.clean_spec_body()
+        conds = (body.get("entry_conditions") or []) + (body.get("invalidations") or [])
+        return {"video": fx.VIDEO,
+                "conditions": [{"quote_anchor": c["object"], "char_span": [0, 0]} for c in conds]}
+
+    def recoupled_mutant_inputs(artifact, *, cert=None, countersigns=None):
+        cert = cert if cert is not None else fx.clean_certificate(artifact["spec"])
+        countersigns = countersigns if countersigns is not None else fx.clean_countersignatures(artifact)
+        return LegAInputs(artifact=artifact, certificate=cert, countersignatures=countersigns)
+
+    monkeypatch.setattr(fx, "clean_certificate", recoupled_certificate)
+    monkeypatch.setattr(fx, "_mutant_inputs", recoupled_mutant_inputs)
+
+    # the re-coupled certificate really has forgotten the dropped condition (the circularity)
+    naive = fx.m2_naive_drop_inputs()
+    anchors = [c["quote_anchor"] for c in naive.certificate["conditions"]]
+    assert not any("am session" in a for a in anchors), (
+        f"the m2-naive certificate still quotes the DROPPED condition under a re-coupled "
+        f"fixture (anchors={anchors}). Either the re-coupling did not take effect, or the "
+        "orphan is HAND-PLANTED again — in which case this containment is gone: m2-naive would "
+        "convict whether or not the certificate is independent, and the independence close "
+        "would have no alarm.")
+    assert naive.run().verdict == PASS, (
+        "the circular fixture was expected to go BLIND to the drop (that is the defect being "
+        "contained); if it BLOCKs, this red-proof is no longer aimed at anything")
+
+    attacked = _ratified_battery()
+    assert not attacked.slot_results["m2"].convicted, attacked.slot_results["m2"].detail
+    assert attacked.status == STATUS_FAILED, (attacked.status, attacked.reasons)
+    assert attacked.status != STATUS_CALIBRATED
