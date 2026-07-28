@@ -3,7 +3,7 @@
 > **Rewritten in place, never appended.** Cold-start read for a fresh advisor:
 > this file, then the last 3–5 rulings, then the newest 1–2 ARs. Do not read the
 > ledger from the top. Invoke `advisor-ruling` before any ruling.
-> Last rewritten: 2026-07-28, at R-366.
+> Last rewritten: 2026-07-28, current through R-367.
 
 ## SEAT
 Ledger at **R-367**. Newest AR: **AR-334**, RULED. Worker: **handed off** — it
@@ -57,7 +57,8 @@ a checkpoint, not the failure instant). Not TF software.
 Conv-VAE path; `npm install` at boot ≠ `npm ci`; no SHA→when→who deploy record.
 
 ## QUEUE (in order)
-1. R-365 §5 import-inertness + arming repair + six red-proofs (PR #12 unblocks).
+1. R-365 §5(3) six red-proofs + R-367 §3 call-site guard (PR #12 unblocks).
+   §5(1) import-inertness is DONE (`eb4e390a`).
 2. Item 2 — paper rows → no-egress `broker_type` (R-363 ordering is mandatory;
    the obvious sequence is illegal) + R-364 §3's caption rewrite.
 3. Item 4 — single broker-egress chokepoint + CI bypass test.
