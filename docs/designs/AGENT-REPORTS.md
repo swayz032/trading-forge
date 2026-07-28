@@ -4,6 +4,74 @@
 
 ---
 
+## AR-361 · 2026-07-28 · **STRING-LITERAL PRECONDITION SWEEP — census built, and ★★★ I AM REPORTING MY PATTERN'S DEFECT BEFORE ITS COUNT: 296 hits is a LIE OF OVER-COLLECTION. "Unreachable" has THREE unrelated senses in this codebase and my regex conflated all three; the real R-336 class is ~9, not 296** · ★★★ **FIRST VERIFIED CLAIM IS FALSE — AND IT IS WRITTEN INTO `audit_log` ON EVERY BOOT**
+
+**RULING ID:** R-395 · **TASK ID:** item 3 — precondition sweep over string-literal surfaces · **RECOMMENDATION:** APPROVAL_REQUESTED for the taxonomy; **the remaining 8 claims are unverified and I am labelling this PARTIAL.**
+
+---
+
+### THE INSTRUMENT, PUBLISHED BEFORE ITS RESULT
+
+**Property swept** (not remembered phrasings): *a string literal a human will read as TRUE about the system's own state or capabilities* — the R-336/R-338 chain, where one literal became a specimen, became a ratified go-live blocker, became a plain-language safety fact for the operator across four hops with zero verifications.
+
+**Surface:** `src/server`, `src/engine`, `shared`, `src/shared` · `.ts .mjs .js .py` · **1,980 files in surface / 2,378 walked.**
+**Excluded, stated:** pure-comment lines (the caption class, separately swept), literals <18 chars or without a space (identifiers/enum keys — a different and already-swept class).
+**Classes:** EXISTENCE · IMPOSSIBLE · REQUIRES · DISABLED.
+
+**Raw counts: 296 total — EXISTENCE 115, IMPOSSIBLE 131, REQUIRES 40, DISABLED 10; 218 in tests, 78 in production code.**
+
+---
+
+### ★★★ THE COUNT IS WRONG AND HERE IS EXACTLY HOW — three sub-classes my pattern could not separate
+
+**(1) HOMOGRAPH FALSE POSITIVES — ~28 of the 32 production IMPOSSIBLE hits.** `"unreachable"` carries **three unrelated senses** here and my regex took all of them:
+- **network** — `"Ollama unreachable at ${baseUrl}"`, `"Broker APIs unreachable (Tradovate down)"`, 13 dead-man's-heartbeat/prop-firm-health variants. **True at print time, about the WORLD, not a build-state claim.**
+- **control-flow** — `"this verdict should be structurally unreachable"`, `"sticky write loop exited without success — should not happen"`. **These are the real class.**
+- **graph** — `"atom(s) unreachable from ENTER"`, `"entry unreachable — no confirmation compiled"`. **DSL reachability, a domain term.**
+
+★ **This is the `*-broker.ts` shape again** (item 4: Exa/Brave were SEARCH brokers). **A pattern matching a WORD cannot separate senses of that word, and the count it produces is not a finding.**
+
+**(2) SELF-VERIFYING LITERALS — the bulk of EXISTENCE.** `"hmmlearn not available"`, `"PennyLane not available"`, `"psycopg2 not available"`, `"pg_dump not available"`, `"Playwright not available"`, plus input-validation rejections (`"overnight windows not supported"`, `"Chained comparisons not supported"`). ★★ **These are TRUE BY CONSTRUCTION at the moment they print — the code only reaches them from the `ImportError`/`catch`/reject branch. The literal cannot go stale, because the condition is evaluated immediately before it.** Not the R-336 class and not worth a verification budget.
+
+**(3) THE ACTUAL R-336 CLASS — ~9 literals asserting THIS SYSTEM'S BUILD STATE.** Unverifiable at runtime, read as fact, and **silently false the moment someone wires the thing**:
+`index.ts:1632` · `index.ts:1580` · `reconciliation-service.ts:397` · `paper-signal-service.ts:3956` · `pine-delivery-service.ts:193` · `agent-service.ts:896` · `quantum_mc.py:479` · `tensor_signal_model.py:375` · `walk_forward.py:3144` (+ `openai-proxy.ts:199`).
+
+★★★ **So the honest headline is not "296 findings" — it is "a 296-hit pattern containing roughly 9 findings, and I can tell you which 287 are not."**
+
+---
+
+### ★★★ FIRST CLAIM VERIFIED — FALSE, AND PERSISTED TO THE TRUST SPINE
+
+**The literals** (`src/server/index.ts`, inside a boot-time `audit_log` write with `status: "success"`):
+```
+:1580  "instance_config.enabled_firms not yet read by strategy-assignment-service (hardcoded ['mffu','topstep'])"
+:1632  follow_ups: ["enabled_firms read from instance_config not yet wired"]
+```
+
+**[MEASURED] Both are FALSE:**
+- `getEnabledFirms()` **is defined in `strategy-assignment-service.ts:145`** — the very service the literal says has not been wired to it. It reads the `instance_config` singleton, caches with a TTL, and carries a deep-scan #15 hardening (last-successfully-read fallback).
+- It is **load-bearing on the money path**: `broker-router.ts:998` calls it as the **F-3 enabled-firms routing gate** — *"A firm not in that list is blocked here"* — with an F-6 empty-array guard falling back to `['topstep','mffu']`.
+- `startup-config-check.ts:1042` reads it too.
+- ★ Even the parenthetical is stale twice over: `["topstep","mffu"]` is a **DEFAULT fallback, not a hardcode**, and `strategy-assignment-service.ts:121` records it was **flipped on 2026-06-28** — so the literal's array order is wrong as well.
+
+★★ **THE CONSEQUENCE IS WHY THIS ONE MATTERS MORE THAN A STALE COMMENT: these literals are written into `audit_log` as a `follow_ups` array on every boot.** `audit_log` is append-only and is the Trust Spine. **A completed item is being persisted as outstanding, indefinitely, in the one record designed to be trusted** — and anyone querying open follow-ups reads a false one with a `status: "success"` row around it. **That is the R-336 chain with a durable store bolted to the end of it.**
+
+**[NOT PROPOSING A FIX YET]** — the literals are inside a boot audit write, so correcting them changes what lands in `audit_log`. **Options: (a) delete the two stale strings, (b) replace with the still-true narrow residue if any exists, (c) stop emitting a hand-maintained `follow_ups` array at boot entirely — a list nobody re-verifies is a stale-fact generator by construction.** ★ I lean (c) and can red-proof it, **but it writes to the audit trail and I am not touching that without a ruling.**
+
+---
+
+**Files changed:** none — census + verification only, read-only throughout.
+**Instrument:** `literal-census.mjs` (scratchpad, not committed — **a second copy of a predicate is drift-bait**; it is reproducible from the pattern published above).
+**Hypotheses REJECTED:** (i) "the count is the finding" — **no**, it over-collects ~30×; (ii) "dependency-availability literals are the risk" — **no**, they are self-verifying; (iii) "`enabled_firms` is genuinely unwired" — **no**, it gates routing today.
+**Remaining uncertainty — and this is PARTIAL, labelled:** **8 of the 9 build-state claims are UNVERIFIED.** I verified one. **Absence from this report is not a pass for the other eight.**
+**Risk:** none introduced.
+
+**Recommendation:** ratify the three-sub-class taxonomy so the next sweep does not re-collect the 287, then rule on (a)/(b)/(c) for the audit-log literals.
+
+**Next smallest task (ONE):** verify the next build-state claim — `reconciliation-service.ts:397` *"MFFU snapshot captured but PnL extraction not yet wired (Phase 4C)"* — because a false claim about **PnL extraction** is money-path-adjacent in the same way `enabled_firms` was.
+
+---
+
 ## AR-360 · 2026-07-28 · **ITEM 3 SUB-ITEM 1 CLOSED AS RE-SCOPED (R-394) — PR #27, one test file, ZERO production code.** ★★ **RED-PROOF RUN NOT ASSERTED: dropping the `strategy_id` predicate fails 3 of 7, and the two that STAY GREEN under the mutation are what make it a discrimination result rather than a uniform red**
 
 **RULING ID:** R-394 · **TASK ID:** item 3 sub-item 1 — pin the joint-keying property · **BRANCH:** `hardening/hmac-pair-binding-test-20260728` · **COMMIT:** `e6d33021` · **PR:** #27 · **RECOMMENDATION:** APPROVAL_REQUESTED.
