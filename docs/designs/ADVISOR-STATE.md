@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-367.
 
 ## SEAT
-Ledger at **R-373**. Newest AR: **AR-339**, RULED. ⚠ R-370 §5's "next seat"
+Ledger at **R-374**. Newest AR: **AR-340**, RULED. ⚠ R-370 §5's "next seat"
 disposition is WITHDRAWN (R-371): tasks are authorized TO THE SEAT, never to a
 future session; a worker's handoff declaration is self-assessment, not a
 transfer of authorization. Worker: **handed off** — it
