@@ -368,7 +368,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ model: 'gpt-5-mini', max_completion_tokens: 900, messages: [ { role: 'system', content: $json.systemPrompt }, { role: 'user', content: $json.userPrompt } ] }) }}",
+        "jsonBody": "={{ JSON.stringify({ model: 'gpt-5.6-sol', service_tier: 'flex', reasoning_effort: 'medium', prompt_cache_key: 'trading-forge:night-intelligence:v1', prompt_cache_retention: '24h', max_completion_tokens: 900, messages: [ { role: 'system', content: $json.systemPrompt }, { role: 'user', content: $json.userPrompt } ] }) }}",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1372,7 +1372,7 @@
           },
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={{ JSON.stringify({ model: 'gpt-5-mini', max_completion_tokens: 900, messages: [ { role: 'system', content: $json.systemPrompt }, { role: 'user', content: $json.userPrompt } ] }) }}",
+          "jsonBody": "={{ JSON.stringify({ model: 'gpt-5.6-sol', service_tier: 'flex', reasoning_effort: 'medium', prompt_cache_key: 'trading-forge:night-intelligence:v1', prompt_cache_retention: '24h', max_completion_tokens: 900, messages: [ { role: 'system', content: $json.systemPrompt }, { role: 'user', content: $json.userPrompt } ] }) }}",
           "sendHeaders": true,
           "headerParameters": {
             "parameters": [

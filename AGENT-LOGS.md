@@ -15826,6 +15826,31 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** None for the transcript backfill. New n8n/scout/operator intake already writes through the same durable archive and remains fail-closed on evidence persistence failure.
 
+### Session Log — 2026-07-28 Night Agent room and token-cache hardening
+
+**Mission:** Replace the old Night Agent report surface with a truthful premium operator room, bind it directly to the Learning Loop, and harden the nightly OpenAI token path without touching trading execution.
+
+**Work completed:**
+- Added an admin-only Night Desk API that assembles saved nightly critique history, trade reviews, intelligence, prompt tests, parameter changes, Learning Loop authority, and per-source read health without examples or fabricated fallback data.
+- Replaced the old Night Agent crystal-ball view with a full-page photorealistic office, one contained glass stage, a slim remote rail, plain-English Brief/Reviews/Changes views, internal invisible scrolling, and explicit degraded/empty states.
+- Bound fresh nightly critique creation to `Learning Loop >= OBSERVE` with fail-closed OFF behavior; AUTOPILOT still cannot bypass downstream testing or safety gates.
+- Routed nightly review and committed 14A nightly intelligence requests to GPT-5.6 Sol on Flex with medium reasoning, stable per-job prompt-cache keys, 24-hour cache retention, actual service-tier receipts, and cached-token telemetry. Fresh nightly evidence remains after the stable system prefix.
+- Persisted the full immutable nightly critique in audit history so earlier real nights can be selected in the room.
+
+**Verification:**
+- TypeScript build passed.
+- Full Vitest: 903 files passed, 6 skipped; 13,262 tests passed, 42 skipped, 0 failed.
+- Full pytest: 7,597 passed, 34 skipped, 0 failed.
+- Production isolation, 2026 compliance, and system-map drift gates passed.
+- Changed-file ESLint: 0 errors (2 inherited model-router warnings); repository-wide ESLint remains a pre-existing baseline backlog with 186 errors outside this change.
+- Playwright at 1920x1080 confirmed the Brief and Changes views fit the viewport and produced 0 console errors.
+
+**Known-facts updates:** The nightly review role is GPT-5.6 Sol / Flex / medium reasoning. Night Agent creation is Learning-Loop-gated; the room itself remains read-only. Prompt-cache use is verified from returned usage receipts, never inferred.
+
+**Same-session CI hardening:** The first GitHub Fast Lane reached the end of the full Vitest run but Node 24/V8 crashed during WASM JIT teardown (`Check failed: jit_page_->allocations_.erase(addr) == 1`, exit 133) before the JSON reporter flushed `ci/out/vitest.json`. The tests were not the failure; the absent evidence made the baseline comparator correctly fail closed. Fast Lane now uses a one-worker `forks` pool so each test worker is process-isolated from that V8 thread teardown path. A workflow contract test prevents reintroducing the thread pool or dropping the JSON output path. The exact full forked command completed locally with 13,262 passed, 0 failed, wrote a valid 4.99 MB JSON report, and the frozen-baseline comparator returned GREEN.
+
+**Carry-forward:** Merge after the repaired GitHub Fast Lane and remaining required checks are green, verify Railway deployment, then synchronize the committed 14A model/cache settings to live n8n when live API access is available.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)

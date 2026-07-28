@@ -141,6 +141,18 @@ describe("parseChatCompletionsResponse", () => {
     expect(r.text).toBe("");
     expect(r.finishReason).toBe("tool_calls");
   });
+
+  it("records cached prompt tokens and the actual processing tier", () => {
+    const r = parseChatCompletionsResponse({
+      model: "gpt-5.6-sol-2026-07-01",
+      service_tier: "flex",
+      choices: [{ message: { content: "{}" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 2048, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 1536 } },
+    });
+    expect(r.cachedTokens).toBe(1536);
+    expect(r.model).toBe("gpt-5.6-sol-2026-07-01");
+    expect(r.serviceTier).toBe("flex");
+  });
 });
 
 // ─── parseResponsesApiResponse ────────────────────────────────────────────
@@ -232,6 +244,17 @@ describe("parseResponsesApiResponse", () => {
     const r = parseResponsesApiResponse({ output: [], usage: {} });
     expect(r.text).toBe("");
     expect(r.finishReason).toBe("stop");
+  });
+
+  it("records cached input tokens and the actual processing tier", () => {
+    const r = parseResponsesApiResponse({
+      model: "gpt-5.6-sol-2026-07-01",
+      service_tier: "flex",
+      output: [{ type: "message", content: [{ type: "output_text", text: "{}" }] }],
+      usage: { input_tokens: 2048, output_tokens: 20, input_tokens_details: { cached_tokens: 1024 } },
+    });
+    expect(r.cachedTokens).toBe(1024);
+    expect(r.serviceTier).toBe("flex");
   });
 });
 
@@ -327,6 +350,25 @@ describe("callOpenAI routing", () => {
     expect(result).toBe('{"score":8,"accept":true,"reason":"ok"}');
     expect(chatCompletionsCreate).toHaveBeenCalledTimes(1);
     expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it("nightly review sends Sol Flex reasoning and stable prompt-cache controls", async () => {
+    delete process.env.OPENAI_USE_RESPONSES_API_NIGHTLY_REVIEW;
+    chatCompletionsCreate.mockResolvedValue({
+      model: "gpt-5.6-sol-2026-07-01",
+      service_tier: "flex",
+      choices: [{ message: { content: "{}" }, finish_reason: "stop" }],
+      usage: { prompt_tokens: 1400, completion_tokens: 20, prompt_tokens_details: { cached_tokens: 1024 } },
+    });
+    await callOpenAI("nightly_review", [{ role: "user", content: "fresh nightly evidence" }]);
+    const body = chatCompletionsCreate.mock.calls[0][0];
+    expect(body.model).toBe("gpt-5.6-sol");
+    expect(body.service_tier).toBe("flex");
+    expect(body.reasoning_effort).toBe("medium");
+    expect(body.prompt_cache_key).toBe("trading-forge:nightly-review:v1");
+    expect(body.prompt_cache_retention).toBe("24h");
+    expect(body.messages[0].role).toBe("system");
+    expect(body.messages.at(-1).content).toBe("fresh nightly evidence");
   });
 
   it("flag ON → calls Responses API path (fetch), SDK chat.completions never called", async () => {
