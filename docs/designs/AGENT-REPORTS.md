@@ -4,6 +4,58 @@
 
 ---
 
+## AR-360 · 2026-07-28 · **ITEM 3 SUB-ITEM 1 CLOSED AS RE-SCOPED (R-394) — PR #27, one test file, ZERO production code.** ★★ **RED-PROOF RUN NOT ASSERTED: dropping the `strategy_id` predicate fails 3 of 7, and the two that STAY GREEN under the mutation are what make it a discrimination result rather than a uniform red**
+
+**RULING ID:** R-394 · **TASK ID:** item 3 sub-item 1 — pin the joint-keying property · **BRANCH:** `hardening/hmac-pair-binding-test-20260728` · **COMMIT:** `e6d33021` · **PR:** #27 · **RECOMMENDATION:** APPROVAL_REQUESTED.
+
+**Objective.** Make true: *"a forged or swapped `strategy_id` cannot authenticate"* — as a test that BITES, not a redesign.
+
+**Root cause / which layer.** No defect. `lookupHmacSecret` (`tradingview-marker-service.ts`) keys on both columns, so the field is attacker-CHOSEN but not attacker-USEFUL. **The failing layer was the QUEUE ENTRY'S NAME**, per your minted law — a task named after its proposed mechanism smuggled a premise past review.
+
+**Implementation.** One file, `src/server/services/__tests__/hmac-secret-pair-binding.test.ts`, 162 lines, 7 cases. ★ **It calls the REAL `lookupHmacSecret` against PGlite and asserts on returned secrets — it does NOT re-implement the `WHERE` clause and check the copy agrees.** That distinction is the whole design: a test that rewrites the query passes forever after the query breaks (the instrument-grading-a-copy-of-itself class). DB injected via the established `vi.mock("../../db/index.js")` + `createTestDb()` pattern; `account_strategy_assignments` created in-test because it is absent from the helper's CORE_DDL — which is *why* the service reaches it by raw SQL.
+
+★ **The fixture is what makes the mutation observable, and it was deliberate:** **two strategies on the SAME account with DIFFERENT secrets.** With one row per account, an account-only `WHERE ... LIMIT 1` returns the right answer *by accident* and the test proves nothing.
+
+**★★ RED-PROOF — MUTATION RUN, WITH THE EXHIBIT.** Removed `AND strategy_id = ${strategyId}::uuid` from the plaintext branch (the branch the tower runs, `HMAC_ENCRYPTION_KEY` unset). I verified the edit actually changed the file before believing the result (`git diff --stat` → `1 file changed, 1 deletion`); **a mutation that does not alter the file proves nothing.**
+
+```
+✓ CONTROL: correct (account, strategy) pair                          ← green under mutation
+× ★ same account, DIFFERENT strategy
+    → expected 'a1a1…' to be 'a2a2…'        (returns the WRONG PAIR'S secret)
+✓ ★ same strategy, DIFFERENT account                                 ← green under mutation
+× ★★ forged strategy_id, no assignment
+    → expected 'a1a1…' to be null           (returns a REAL SECRET for an unassigned strategy)
+× ★★ swapped strategy_id, other account's
+    → expected 'b1b1…' to be null           (returns a REAL SECRET)
+✓ unknown account                                                    ← green under mutation
+✓ NULL-secret row                                                    ← green under mutation
+Tests: 3 failed | 4 passed (7)
+```
+
+★★★ **The two forgery failures are the exhibit this item was really about: with the predicate gone, an attacker-supplied `strategy_id` that has NO assignment resolves a genuine signing secret.** ★★ **And the four that STAY GREEN are the load-bearing half of the proof — the suite discriminates, so "3 failed" means *caught the break*, not *always red*.** I predicted two failures and got three; the swapped-account case covers the forgery direction twice, which I did not design for and am recording rather than claiming.
+
+**Verify-the-tree-you-ship.** Service reverted via `git checkout --` → `git status --porcelain` clean AND `diff -q` against a pre-mutation copy → **IDENTICAL**. Re-run on the restored tree: **7/7 green**. `git status --porcelain` → exactly one untracked file; the commit contains exactly that one file.
+
+**Commands.**
+```
+npx vitest run src/server/services/__tests__/hmac-secret-pair-binding.test.ts   → 7 passed
+<mutation applied>                                                              → 3 failed | 4 passed
+git checkout -- src/server/services/tradingview-marker-service.ts
+npx vitest run …                                                                → 7 passed
+```
+
+**Architecture boundaries NOT touched.** No auth path modified (your STOP CONDITION: the test bites **without** touching it) · no production code · no migration · no `routeOrder()` · nothing live.
+
+★ **Worktree hygiene, given today:** created `wt-hmac-pairbind-20260728` off the deploy branch and junctioned its `node_modules` to `trading-forge\trading-forge\node_modules` — **the campaign checkout, and I asserted `target -like "*runtime-production*"` is False before creating it.** Nothing this session aims at the tower again.
+
+**Remaining uncertainty.** The encrypted branch of the F-3 fork is **not** separately exercised — it is unreachable with `HMAC_ENCRYPTION_KEY` unset, which is the tower's measured state. **It keys on the same two columns, so the mutation would bite there identically, but I did not run it and am not claiming it.**
+
+**Risk.** None to production — additive test only. If it ever fails, the pair binding has been broken and the forgery cases say so by name.
+
+**Next smallest task (ONE):** item 3's next sub-item — the **string-literal precondition sweep** — unless PR #27 needs revision first.
+
+---
+
 ## AR-359 · 2026-07-28 · ★★★ **THE OPERATOR'S ACTIVE VAULT WORKTREE JUNCTIONS INTO THE PRODUCTION TOWER'S `node_modules`. One `npm ci` or `rm -rf node_modules` in that tree DELETES THE RUNNING TOWER'S DEPENDENCIES — the exact incident class that killed all three heavy rail jobs on 2026-07-18** · ★★ **And it was the `npm ci`-at-boot queue item that led here: the answer to that item is NO, for a reason nobody had written down**
 
 **RULING ID:** R-391/R-393 (item 3, sub-item 2) · **TASK ID:** `npm ci` at boot · **RECOMMENDATION:** **APPROVAL_REQUESTED to remediate — this is a live loaded gun, not a design opinion.** I have changed nothing; every command below is read-only.
