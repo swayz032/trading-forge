@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-385**. Newest AR: **AR-349**, RULED (R-385). Worker:
+Ledger at **R-387**. Newest AR: **AR-351**, UNRULED (item 4 / PR #22 — next). Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
 said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
@@ -30,7 +30,15 @@ RE-ADD amended CHECK, one transaction, idempotent, pglite dry-run ×2);
 R-364 §3's caption rewrite at `broker-router.ts:1764` rides along; hand-author
 on 0159's template, **never `db:generate`** (`migrations/schema.ts:2377` still
 declares the pre-0159 narrow constraint); `migration-author` skill first.
-**PR #19: collision CLEARED + dry-run PASSED at this desk (15/15, pglite,
+**PR #19: RED — DO NOT MERGE (R-387). Reproduced at this desk: re-applying
+**0159** now fails (`broker_accounts_firm_broker_topology_chk`) because 0208
+correctly forbids the `paper→traderspost` pair 0159 seeds. 0208 itself replays
+clean. Production impact NIL today (journal-keyed runner won't re-run 0159);
+the broken invariant is "every migration re-applies". Worker to choose (A)
+legacy tolerance / (B) pinned non-replayable register / (C) forward migration —
+(C) preferred, never edit an applied migration. ★ My R-382 dry-run passed this
+because it used a HAND-BUILT pre-state; only the real chain caught it.
+Historic: collision CLEARED + dry-run PASSED at this desk (15/15, pglite,
 incl. control + 8 discrimination probes). ONE revise outstanding: run
 `node scripts/gen-migration-manifest.mjs` and commit the manifest (Lint gate).
 On green I merge + deploy + push, then re-verify the two live rows read
