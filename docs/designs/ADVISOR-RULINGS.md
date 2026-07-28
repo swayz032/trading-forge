@@ -12,6 +12,32 @@
 
 ---
 
+## R-392 · 2026-07-28 · **OPERATOR: "make sure your mistakes don't happen again."** ★★★ **I CLASSIFIED TODAY'S DESK ERRORS INSTEAD OF APOLOGISING FOR THEM, AND HALF ARE ONE SHAPE: A MECHANISM ASSERTED IN A RULING'S CALM VOICE WITHOUT READING OR RUNNING THE THING THAT WOULD PROVE IT.** Now a harness gate, RED-PROOFED ON MY OWN REAL SENTENCES — R-390's and R-371's actual text both BLOCK; R-391's corrected text passes
+
+**RULING ID:** R-392 · **TASK ID:** operator directive — systemic prevention · **DECISION:** **BUILT, RED-PROOFED, LIVE.**
+
+**CLAIMS VERIFIED (and how).** I enumerated this session's desk errors rather than treating them as a mood: (1) R-370 "the next seat implements it" — a stall in new grammar; (2) ADVISOR-STATE "worker ACTIVE" — a state I WROTE, not measured; (3) skill invoked once then 23 rulings from memory — field compliance 4.0/10 to 0.1/10; (4) R-383's fix placed INSIDE the unread instrument; (5) R-381 citation — I verified the FILE, not the LINE; (6) R-371 "your initiative covered my error" — an unverified causal narrative; (7) R-389 a COUNT-shaped gate carrying a number I adopted without re-deriving; (8) R-390 "excluded by construction" — a mechanism I never opened the file to check. ★★★ **(5),(6),(7),(8) are ONE CLASS: an unmeasured claim about HOW something works, delivered in the register of a verdict. Four of eight, and the most dangerous four, because a wrong number is corrected by the next measurement while a wrong mechanism is OBEYED.**
+
+**EVIDENCE INDEPENDENTLY CHECKED / TESTS RERUN (command + result).** New `ruling-mechanism-guard.ps1`, PreToolUse on the money-path ledger: blocks a sentence asserting a mechanism (`by construction`, `cannot happen`, `is excluded`, `guaranteed`, `impossible`) when that SAME sentence carries no evidence marker (backtick, `file:line`, an output arrow, or an explicit grade MEASURED/HYPOTHESIS/UNPROVEN/ASSUMED). ★★ **RED-PROOFED ON MY OWN HISTORY, not on invented fixtures: R-390's false note, verbatim, exit 2 BLOCK. R-371's causal claim, verbatim, exit 2 BLOCK. R-391's corrected sentence (cites the loop in backticks) exit 0. A labelled HYPOTHESIS exit 0. A `file:line`-backed claim exit 0. Ordinary approval prose exit 0. Malformed JSON exit 0 (FAIL-OPEN). Path scoping re-tested with five real distinct paths: STATE, AGENT-REPORTS, the -OPS ledger and source files all exit 0; only the money-path ledger gates.** All four prior hooks confirmed still registered.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in the trading system. The guard cannot gag a report, a state file, the worker, or another campaign's ledger; it fails open; it is PreToolUse, never a Stop hook.
+
+**FAILED OR UNPROVEN CONDITIONS — and both are mine, from building this in the last ten minutes.** ★★★ **(i) MY FIRST VERSION OF THIS GUARD WAS DEAD ON ARRIVAL AND EVERY TEST "PASSED" ITS WAY PAST ME: literal `...` and arrow characters corrupted when PowerShell read the file as ANSI, breaking string terminators, so the script exited 1 on all nine cases — including the fail-open case, which is the tell I should have caught first. I parse-checked BEFORE re-reading results the second time, and that is now the order.** ★★★ **(ii) THEN MY TEST HARNESS LIED: my helper hardcoded the ledger path, so the "different file" case never tested a different file and reported a false positive. I only caught it because a `ADVISOR-STATE.md` write appearing BLOCKED is impossible — the surprising result indicted the instrument. THAT IS THE THIRD TIME TODAY A MEASUREMENT LIED WHILE THE ARTIFACT WAS FINE (`| head` masking an exit code; a shell collapsing `\b`; now an ANSI-mangled script and a hardcoded fixture).** ★ **[UNPROVEN]** whether the claim vocabulary is complete — it covers the phrases I actually got wrong; a mechanism asserted in different words still slips through. **This narrows the class; it does not close it.**
+
+**REQUIRED CORRECTIONS.** None outstanding. Standing, and it is the honest generalisation of all three instrument failures: **PARSE/SANITY-CHECK THE INSTRUMENT BEFORE BELIEVING ANY RESULT IT PRODUCES, AND TREAT A SURPRISING RESULT AS AN ACCUSATION AGAINST THE INSTRUMENT FIRST.** Written into the skill.
+
+**FILES / SCOPE ALLOWED.** `.claude/hooks/ruling-mechanism-guard.ps1` (new) · `.claude/settings.json` (merged, all four guards intact). No trading-system files.
+
+**ACCEPTANCE COMMANDS.** The 9-case matrix + the 5-path scoping matrix above; and this ruling passing the live gate.
+
+**STOP CONDITION.** If it blocks a legitimate ruling, remove its entry from `.claude/settings.json` — recovery is printed in the block message. **Do not route around it by rewording a claim you have not verified; that is the failure it exists to catch.**
+
+**LESSON TO PERSIST.** ★★★ **"BE AT THE TOP OF YOUR GAME" IS NOT A COMMITMENT I CAN KEEP BY INTENDING TO — the errors I made today were all made while intending not to. What changes outcomes is the mechanism that fires when intention lapses: three of today's fixes are now harness-executed (skill-invocation gate, worker standard gate, mechanism-claim gate), and each one was red-proofed against the actual mistake it exists to prevent rather than a hypothetical.** ★★ **The measure of whether this worked will not be my confidence; it will be the next time one of these guards blocks me and I am annoyed by it.**
+
+**AUTHORIZED NEXT ACTION.** Worker: unchanged — watch PR #19 to green, report the MEMBERSHIP result (R-390 form, not a count). Desk: deploy PR #22 with #19 when it lands, or alone within the hour.
+
+---
+
 ## R-391 · 2026-07-28 · ★★★ **R-390's MECHANISM IS WITHDRAWN — I INVENTED AN EXCLUSION THAT DOES NOT EXIST. The PASS 2 loop is `for (const entry of journal.entries)` and filters NOTHING; `0128` failed only because MY pglite had no `pgcrypto`.** ★★★ **The note I wrote would have taught a future reader to wave off a LIVE ALARM — a false caption is worse than a wrong number, because the number is corrected once and the caption misleads forever.** ★★ **PR #22 GREEN 19/19 — MERGED**
 
 **RULING ID:** R-391 · **TASK ID:** AR-355 correction + PR #22 disposition · **DECISION:** **CORRECTION** (mine, withdrawn and rewritten) · **APPROVE + MERGE PR #22.**
