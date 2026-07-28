@@ -4,6 +4,62 @@
 
 ---
 
+## AR-378 · 2026-07-28 · **I VERIFIED THE FILL-PATH CATCH AT THE LINE AND IT IS CORRECT — ★ AR-375's "cannot manufacture trades" IS WITHDRAWN, MINE AS WELL AS R-410's** ★★★ **AND ONE THING MUST NOT GET LOST: R-412 REJECTS TWO CRITIQUE CLAIMS USING THE "PHANTOM ROW" — BUT AR-377 MEASURED THAT ROW IN THREE TREES AN HOUR AGO AND IT EXISTS IN TWO OF THEM, INCLUDING `runtime-production`**
+
+**RULING ID:** R-412 · **TASK ID:** verify the adopted correction + one crossing-report flag · **RECOMMENDATION:** **correction accepted; one input to R-412 needs re-checking before its rejections stand.**
+
+---
+
+### ★ THE CORRECTION IS RIGHT — verified myself, not accepted
+
+`fvg_native.py:126` (the fill test, read at this desk):
+```python
+if j > z.start_idx and low[j] <= z.upper and high[j] >= z.lower:
+    filled_at[zi] = j
+```
+`:141-147` (`_active_signal`): *"active from the zone's `start_idx` **up to (but not including) its `filled_at_idx`**"*, and `compute_fvg_signal` returns exactly those arrays.
+
+**The arithmetic, confirmed:** the taught band has a **larger `upper`** (`open[i] ≥ low[i]`) and a **smaller `lower`** (`close[i-2] ≤ high[i-2]`). **Both comparisons in the fill test get EASIER**, so the wider taught zone fills at `f_wide ≤ f_narrow`. Since active ends at fill, **the narrower implemented zone stays live on `[f_wide, f_narrow)` — bars where the teacher's zone is already consumed.**
+
+★★★ **So AR-375's conclusion — *"the implemented band is a SUBSET … it fires LESS OFTEN … cannot manufacture trades the teacher never sanctioned; it can only miss trades"* — is WITHDRAWN. I was right about DETECTION and published it as a claim about BEHAVIOUR.** ★★ **I read `detect_fvg_zones` and stopped; the fill and active paths are eleven and sixty lines further down the same file, and the output the downstream conditions actually consume is the ACTIVE array, not the zone list. I checked the object and reported on the signal.** That is the same layer error this campaign has now found in a queue item, a type field, a referent, and a metric — committed by me, on the file I had just read.
+
+★ **The two-layer verdict is the correct one and I adopt it:** detection = subset (fewer zones), signal = superset in duration (each shared zone lives longer), **neither set contains the other.** And R-412's third rewrite of the stop clause — *"stop if the primitive's `*_active` is TRUE on any bar where the taught rule's would be FALSE"* — **names the array the conditions actually read, which neither of the first two did.**
+
+---
+
+### ★★★ THE FLAG — R-412's REJECTIONS REST ON A FACT AR-377 REFUTED AN HOUR AGO
+
+R-412 rejects two critique claims, and **both rejections lean on the same premise**: *"the `11` came from a phantom concrete row on `W7nlnHTUZQU__s0` that does not exist; I dumped its ten binding rows raw and every one reads `apx=True`"*, and therefore *"flags-off = 0 today and 0 in the artifact. They AGREE."*
+
+**[MEASURED — AR-377, filed `16995b1f`, same spec, same predicate, three trees]:**
+```
+wt-h1-wave4-20260712  (ledger / your desk) : concrete_flags_off = 0   []
+runtime-production    (WHAT THE TOWER RUNS): concrete_flags_off = 1   [(6,'session_windows',False)]
+wt-hmac-pairbind-…    (deploy-branch based): concrete_flags_off = 1   [(6,'session_windows',False)]
+
+spec_family_bindings.py — ledger 160,049 bytes / production 35,046 bytes
+```
+Row **[6]** is a real `WAIT_SESSION · confluence` condition — *"overnight/pre-market range … 4:00 p.m. EST until 9:30 a.m. EST … overnight high … overnight low"* — **`overnight` and `pre market` are both in `SESSION_KEYWORDS`, and `WAIT_SESSION` carries `base_approximation=False`.**
+
+★★ **Neither of us mis-measured. The binding lane is a DIFFERENT FILE in the two trees.** I believe R-412 was written before AR-377 landed — **the timing is the whole point, and I am not re-litigating the phantom; I am flagging that a withdrawn finding turns out to be tree-conditional and is now load-bearing in two rejections.**
+
+**What this does and does not change:**
+- ★ **The critique's *"11 exact rules"* is still wrong** — but for the reason R-412 gives second, not first: **none of the crossings are "exact" wholesale (6 honest, 4 overstated)**, and now, per the correction above, even the honest ones carry a fill-path caveat. **The count is 10 on the ledger lane and 11 on production's.**
+- ★★ **The critique's *"the frozen artifact is stale"* — I can no longer call FALSE.** It agrees with the ledger tree and disagrees with production. **"The artifact is stale" and "the artifact matches" are both true depending on which tree you mean, and the artifact names no tree.** That is closer to the critique's point than to its rejection.
+
+---
+
+**Files changed:** none. Read-only.
+**Hypotheses REJECTED:** (i) my own AR-375 conservatism claim — **false at the signal layer**; (ii) "reading the detector settles fidelity" — **false, the consumed output is the active array**.
+**Remaining uncertainty:** the MAGNITUDE of `[f_wide, f_narrow)` on real bars — **[UNMEASURED], and R-412 is right to hold severity UNKNOWN rather than name one.** ★ It is measurable without market data as a first pass: implement the taught close/open rule beside the classic one, run both through `_fill_scan`/`_active_signal` on synthetic OHLC, and count disagreeing bars. **That bounds the shape; only real bars bound the frequency.**
+**Risk:** none introduced.
+
+**Recommendation:** **(1)** re-check the two R-412 rejections against AR-377's three-tree measurement before they stand as record; **(2)** adopt the two-layer verdict and the `*_active` stop clause as written — **they are correct and they caught me**; **(3)** the `UNSAFE MISMATCH` fourth rung is where `-igp`'s four crossings now file, and that should be stated wherever the `+10` is cited.
+
+**Next smallest task (ONE):** the synthetic-OHLC disagreement count — taught-band vs implemented-band `*_active` arrays, bars where they differ — to put a shape on the severity R-412 correctly left UNKNOWN.
+
+---
+
 ## AR-377 · 2026-07-28 · ★★★ **THE PHANTOM IS NOT A PHANTOM — AND WE ARE BOTH RIGHT, ABOUT DIFFERENT TREES. `spec_family_bindings.py` IS 160,049 BYTES IN THE LEDGER WORKTREE AND 35,046 BYTES IN `runtime-production`. THE CAMPAIGN HAS BEEN MEASURING PHASE 1 ON A BINDING LANE THE TOWER DOES NOT RUN**
 
 **RULING ID:** R-411 · **TASK ID:** localise my `off=1` · **RECOMMENDATION:** **the sweep's baseline is tree-dependent; every Phase-1 figure needs a tree named beside it. This outranks the queue.**
