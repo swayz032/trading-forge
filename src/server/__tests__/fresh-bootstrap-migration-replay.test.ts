@@ -63,9 +63,16 @@
  * `toApply` on the ACTUAL prod DB, where the objects it creates already exist. This is the ONLY
  * way to exercise class 2 (a single fresh pass can never observe a missing IF NOT EXISTS) and is
  * the precondition that was verified BEFORE regenerating migrations-hash-manifest.json for the
- * 23 files this pass edited. The failures pinned in PASS2_KNOWN_NONIDEMPOTENT are the pre-0066
- * carry-forward boundary (documented above) — an assertion (not a skip) so a NEW non-idempotent
- * regression anywhere in the 201-file journal fails this test loudly.
+ * 23 files this pass edited. The failures pinned in PASS2_KNOWN_NONIDEMPOTENT are TWO classes —
+ * the pre-0066 carry-forward boundary AND "superseded by design" (see the register's own note at
+ * its declaration; do not re-derive the reason from this line) — an assertion (not a skip) so a
+ * NEW non-idempotent regression anywhere in the journal fails this test loudly.
+ *
+ * ★ NO ENTRY COUNT IS QUOTED IN THIS FILE ON PURPOSE. The journal grows; PASS 1 binds the total
+ * dynamically via `expect(plan.toApply.length).toBe(journal.entries.length)`. A hardcoded total in
+ * prose only goes stale and then misinforms — this header and the PASS 1 title both said "201"
+ * while the journal already held 211. Same rule for the register below: gate on MEMBERSHIP, never
+ * on cardinality (a count passes if one member is added while another is quietly fixed).
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
@@ -108,11 +115,45 @@ function splitStatements(sqlText: string): string[] {
     .filter((s) => s.length > 0);
 }
 
-// Pre-0066 bare CREATE TABLE/INDEX carry-forward boundary (documented, NOT fixed this pass —
-// see class-2 note above). Pinned as an allowlist: Pass 2 must fail on EXACTLY this set and
-// nothing else. A new tag appearing here is a real regression; a pinned tag disappearing means
-// it was fixed and should be removed from this list in the same commit as the fix.
+// Pinned as an allowlist: Pass 2 must fail on EXACTLY this set and nothing else. A new tag
+// appearing here is a real regression; a pinned tag disappearing means it was fixed and should
+// be removed from this list in the same commit as the fix.
+//
+// ★ THIS REGISTER NOW HOLDS TWO DISTINCT CLASSES. It previously meant only class (1); class (2)
+// was added 2026-07-28. Recorded explicitly because a register whose caption states one reason
+// while its contents carry two is a false caption, and the next reader would infer the wrong
+// thing about every entry in it.
+//
+//   (1) PRE-0066 BARE CREATE TABLE/INDEX — carry-forward boundary, documented in the class-2
+//       note above, NOT fixed in that pass. These COULD be made idempotent; nobody has.
+//
+//   (2) SUPERSEDED BY DESIGN — a LATER migration deliberately outlawed the shape this one
+//       seeds, so re-applying it is CORRECTLY rejected. Not a defect to fix: the rejection IS
+//       the newer constraint doing its job.
+//
+//       0159_broker_accounts_ab_paper_routing seeds ('paper','traderspost','slumdawg-baseline')
+//       and ('…-rl-challenger'). Migration 0208 retypes those rows to the no-egress 'paper_sim'
+//       and adds a topology CHECK forbidding paper→traderspost — which is the entire point of
+//       item 2, since that pair is what let paper accounts look like live TradersPost accounts
+//       to routeOrder().
+//
+//       A FRESH BOOTSTRAP IS UNAFFECTED: in journal order 0159 seeds before 0208 exists, and
+//       0208 then conforms the rows. Only a REPLAY against an already-migrated DB fails, and the
+//       boot runner is journal-keyed so it never re-runs 0159 on the tower.
+//
+//       ★ `ON CONFLICT DO NOTHING` does NOT save it. Conflict arbitration resolves UNIQUE
+//       violations; a CHECK is evaluated on the proposed row first, so the statement RAISES
+//       rather than skipping. "ON CONFLICT makes a seed idempotent" is true for uniqueness and
+//       FALSE for checks — carry that into every future seed.
+//
+//       REJECTED ALTERNATIVES: (a) loosening 0208's CHECK to tolerate paper→traderspost re-opens
+//       exactly the hole item 2 closes; (b) a BEFORE INSERT trigger normalising traderspost→
+//       paper_sim for firm_id='paper' WOULD make both migrations replayable, but it silently
+//       REWRITES a caller's requested value on the money path and would mask a genuine mis-seed
+//       as success — trading an honest, documented exception for hidden magic. Editing 0159 in
+//       place is not an option: it is applied and hash-pinned (file-drift-after-apply class).
 const PASS2_KNOWN_NONIDEMPOTENT = new Set([
+  // class (1) — pre-0066 bare creates
   "0000_previous_nuke",
   "0001_flashy_hercules",
   "0002_equal_nova",
@@ -122,6 +163,8 @@ const PASS2_KNOWN_NONIDEMPOTENT = new Set([
   "0009_strategy_evolution",
   "0016_sanity_cross_validation",
   "0017_add_indexes",
+  // class (2) — superseded by design (see note above)
+  "0159_broker_accounts_ab_paper_routing",
 ]);
 
 describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
@@ -140,7 +183,7 @@ describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
   });
 
   it(
-    "PASS 1 — full journal (201 entries) applies cleanly against an empty DB, zero backfilled",
+    "PASS 1 — full journal applies cleanly against an empty DB, zero backfilled",
     async () => {
       const plan = computeMigrationPlan(journal.entries, new Set(), new Set(), hashOf);
 
@@ -193,8 +236,24 @@ describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
   });
 
   it(
-    "PASS 2 — re-applying every journal entry's raw SQL against the now-populated DB fails ONLY on the pinned pre-0066 carry-forward set",
+    "PASS 2 — re-applying every journal entry's raw SQL against the now-populated DB fails ONLY on the pinned register",
     async () => {
+      // ★ THIS LOOP EXCLUDES NOTHING. Every journal entry with a file on disk is re-executed and
+      // any error is recorded, whether or not that migration succeeded in PASS 1. There is no
+      // "it failed pass 1 so it is skipped here" carve-out, by construction or otherwise.
+      //
+      // Recorded because that carve-out was believed to exist (R-390) and would be a dangerous
+      // thing to believe: if a migration ever fails BOTH passes, it lands in `unexpected` below
+      // and correctly fails this gate. Anyone told to wave that off would be disabling a working
+      // alarm. Note PASS 1 above THROWS on its first failure, so a green PASS 1 already proves the
+      // pass-1 failure set is empty in this harness.
+      //
+      // The belief came from a replay run on a bare `new PGlite()`. This harness constructs it as
+      // `new PGlite({ extensions: { pgcrypto } })` (see beforeAll), because 0104 calls digest()
+      // and 0128 CREATE EXTENSIONs pgcrypto. Without that extension 0128 fails both passes — an
+      // artifact of the missing capability, not a property of the migration, which is idempotent
+      // (IF NOT EXISTS throughout + a GUC-guarded no-op backfill) and applies fine on real
+      // Postgres. A fixture that lacks a capability production has will indict innocent SQL.
       const failures: Array<{ tag: string; idx: number; error: string }> = [];
       for (const entry of journal.entries) {
         const sqlPath = path.join(MIGRATIONS_DIR, `${entry.tag}.sql`);
@@ -215,15 +274,21 @@ describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
 
       expect(
         unexpected,
-        `UNEXPECTED non-idempotent migration(s) — a file outside the documented pre-0066 carry-forward ` +
-          `boundary is NOT safe to re-apply. This means editing it (even to fix an unrelated bug) would ` +
-          `crash-loop prod once its hash changes. Details: ${JSON.stringify(unexpected, null, 2)}`,
+        `UNEXPECTED non-idempotent migration(s) — a file outside the pinned register is NOT safe to ` +
+          `re-apply. This means editing it (even to fix an unrelated bug) would crash-loop prod once its ` +
+          `hash changes. Before adding it to PASS2_KNOWN_NONIDEMPOTENT, read that register's note and ` +
+          `state WHICH class it belongs to: (1) pre-0066 bare-create carry-forward, or (2) superseded ` +
+          `by design. If it is neither, it is a REGRESSION and the migration is what needs fixing, not ` +
+          `the list. Details: ${JSON.stringify(unexpected, null, 2)}`,
       ).toEqual([]);
       expect(
         missingExpected,
-        `Pinned pre-0066 carry-forward migration(s) unexpectedly became idempotent-safe — great news, ` +
-          `but remove them from PASS2_KNOWN_NONIDEMPOTENT (and consider regenerating ` +
-          `migrations-hash-manifest.json if you intentionally fixed them): ${missingExpected.join(", ")}`,
+        `Pinned migration(s) unexpectedly became idempotent-safe — remove them from ` +
+          `PASS2_KNOWN_NONIDEMPOTENT (and consider regenerating migrations-hash-manifest.json if you ` +
+          `intentionally fixed them). NOTE THE TWO CLASSES: for a class-(1) pre-0066 entry this is good ` +
+          `news. For a class-(2) "superseded by design" entry it is NOT — it means the LATER constraint ` +
+          `that was supposed to reject this migration has stopped rejecting it, so check that constraint ` +
+          `still exists before deleting the line: ${missingExpected.join(", ")}`,
       ).toEqual([]);
     },
     120_000,
