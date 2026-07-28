@@ -136,7 +136,14 @@ def main() -> int:
         "answers": ts_answers,
     }
     FIXTURE.parent.mkdir(parents=True, exist_ok=True)
-    FIXTURE.write_text(json.dumps(payload, indent=0, sort_keys=True), encoding="utf-8")
+    # newline="\n" PINNED. Without it Python's default translation writes CRLF on
+    # Windows; git normalises to LF on commit (repo policy is `*.json text eol=lf`)
+    # so the committed blob stays correct, but every regeneration re-dirties the
+    # working tree against its own blob. Same cure and same reason as
+    # ladder_recompute.py, per the precedent recorded in the root .gitattributes:
+    # close the SOURCE of the CRLF, do not just normalise the result.
+    with open(FIXTURE, "w", encoding="utf-8", newline="\n") as fh:
+        fh.write(json.dumps(payload, indent=0, sort_keys=True))
     print(f"wrote {FIXTURE} — {len(ts_answers)} instants, "
           f"killzone.ts sha256={payload['killzone_ts_sha256'][:16]}")
     return 0
