@@ -4,6 +4,65 @@
 
 ---
 
+## AR-372 · 2026-07-28 · **REFERENT CENSUS SPEC 2 of 3 — `CLDEIsNpVRc__s0` SURVIVES (i)+(ii) AND IS THE STRONGEST TARGET YET: 0 unmatched, it DEFINES "draw on liquidity" itself, and it carries a hard clock anchor ("after 9:30")** ★★★ **ITS TWO `WAIT_SESSION` CONDITIONS *ARE* GENUINELY SESSION-RELATED — SO MY `-igp` FINDING DOES NOT GENERALISE. But they need session-derived LEVELS, not session TIME WINDOWS, so SESSION_CLOCK STILL DOES NOT BIND THEM** ★★ **And it is a SECOND FVG strategy — 6 of 10 conditions name fair value gaps**
+
+**RULING ID:** R-406 · **TASK ID:** census (1) of the authorized order · **RECOMMENDATION:** informational; **`CLDE` displaces `-igp` as the strongest fourth-target candidate, and the FVG flag now governs two specs, not one.**
+
+**Per-spec:** `transcript_chars: 0`, `n_unmatched: 0`, `n_confident: 4 · n_approximate: 6`, `binding_approximation_rate: 1`, `bias_direction: OPTIMISTIC_LOOSER_THAN_TAUGHT`. `framework_overlay` = exits only (*"house-default (trader taught none)"*). One `and_group` of all 10, `or_branches: []` — **same-bar flattening again, in the frozen input.** ★ It DOES carry an invalidation: *"put your stop above the high (short); below the low / below the bodies (long)."*
+
+---
+
+### ★★★ THE TWO `WAIT_SESSION` CONDITIONS, VERBATIM AND FIRST (as ordered)
+
+**[0] `WAIT_SESSION` · spine · approximate**
+> *"the very first step is identify your **draw on liquidity**. Now, this could be um **Asia high or low** … It could be **London high or low**. It could be also **previous day high** and uh **previous day low**. … you're going to identify **equal highs** right and **equal lows**. So this is the most important liquidity that you want to identify as a draw on liquidity. … or a higher time frame like 1 hour or 4 hours … **significant swing low or swing high**"*
+
+**[1] `WAIT_SESSION` · spine · approximate**
+> *"if we have **taken out the Asia high** … the draw on liquidity is going to be the **Asia low**. … if you have taken out the **previous day high**, the draw is going to be the **previous day low**. … if you have taken out the **London high**, the draw is going to be the **London low**. And let's say these were like **equal highs**, the next draw is going to be **equal lows**"*
+
+★★★ **CORRECTION TO MY OWN AR-371 GENERALISATION — these ARE session-related.** In `-igp` the two `WAIT_SESSION` conditions were mis-typed candle geometry with no session concept at all. **Here they genuinely name Asia / London / previous-day session extremes.** ★★ **My finding was true of `-igp` and does NOT transfer; two specs, two different reasons the same type field is unbound. I am flagging that before the desk generalises it into a queue decision, because I nearly did.**
+
+★★★ **BUT SESSION_CLOCK STILL DOES NOT BIND THEM, for a sharper reason:** these ask for **session-derived PRICE LEVELS** (*Asia **high/low***, *London **high/low***, *PDH/PDL*, *equal highs/lows*) — **not "is it the London session right now?"** `WAIT_SESSION` routes to `session_windows` with `requires_session_keyword=True`, which answers a **time-window** question. **A session RANGE EXTREME is a different object from a session TIME WINDOW.** ★ The right home already exists elsewhere in the system — `liquidity_levels` carries `Asian`, `London`, `PDH/PDL`, `EQH/EQL` level types — **so this is a ROUTING gap, not a missing capability.**
+
+---
+
+### THE CENSUS TABLE — (i) rule? · (ii) referent in-spec? · (iii) primitive same event class?
+
+| # | type · conf | taught text (abridged) | (i) | (ii) | (iii) |
+|---|---|---|---|---|---|
+| 0 | **WAIT_SESSION** · apx | draw on liquidity = Asia/London/PD high-low, EQH/EQL, HTF swing | ✅ | ✅ **self-defining** | ❌ time-window binder for a level concept |
+| 1 | **WAIT_SESSION** · apx | took out Asia high ⇒ draw = Asia low (and mirrors) | ✅ **directional rule** | ✅ | ❌ same |
+| 2 | WAIT_STRUCTURE · apx | *"**after 9:30**, wait for price to create a **5-minute fair value gap** towards your draw"* | ✅ ★ hard clock | ✅ | ⚠️ FVG keyword → `fvg_native` **iff flag on** |
+| 3 | **WAIT_BIAS** · apx | *"wait for price to **tap into** the higher-timeframe IRL which is your 5-minute fair value gap"* | ✅ | ✅ | ❌❌ **MIS-TYPED** — a tap/retest routed to `bias_engine` |
+| 4 | WAIT_CONFIRMATION · conf | *"drop down to one-minute … our lower-timeframe confirmation / entry model"* | ⚠️ timeframe + frame-setter | ✅ | ⚠️ |
+| 5 | WAIT_RETEST · apx | *"on the one minute price has **swept some liquidity** before tapping into the 5-minute FVG"* | ✅ | ✅ | ❌ EMA(20) proximity ≠ sweep |
+| 6 | WAIT_STRUCTURE · conf | *"on this manipulation leg … identify **all the fair value gaps**"* | ✅ | ✅ | ⚠️ FVG keyword |
+| 7 | WAIT_CONFIRMATION · apx | *"wait for price to **close below this one-minute fair value gap** … that is your **inversion**"* | ✅ **mechanical** | ✅ | ❌ wick-rejection ≠ close-beyond-boundary |
+| 8 | WAIT_STRUCTURE · conf **(trigger)** | *"say there are **two** fair value gaps in this manipulation leg …"* | ✅ | ✅ | ⚠️ FVG keyword |
+| 9 | WAIT_STRUCTURE · conf | *"we should see **displacement**. It shouldn't be **choppy** price action"* | ✅ | ✅ | ⚠️ **BOUNDARY** — unquantified adjective |
+
+**(i) 9 of 10 carry rules** ([4] is part frame-setter). **(ii) ALL referents resolve** — the spec defines its own *draw on liquidity* explicitly, and every later reference points back to it. ★★ **Under your pinned decision rule `CLDE` SURVIVES**, and on a stronger footing than `-igp`: **0 unmatched, self-defining central object, a hard time anchor (9:30), a taught invalidation, and a fully specified 4-step sequence** (draw → 5m FVG → 1m sweep → 1m FVG inversion).
+
+★ **[7] is the same mis-binding class I found in E9Mz** — *"close below the FVG"* is a **close beyond a boundary**, and `candle_confirmation_check` fires on the candle's own wick geometry. **Third occurrence; this is a pattern in the WAIT_CONFIRMATION lane, not a one-off.**
+
+★ **[3] is a fourth mis-type** — *"tap into … your 5-minute fair value gap"* is a retest, typed `WAIT_BIAS`, routed to `classify_institutional_regime`.
+
+### ★★ THE FVG FLAG NOW GOVERNS TWO SPECS
+
+**6 of `CLDE`'s 10 conditions name fair value gaps** ([2],[3],[5],[6],[7],[8]); 4 of `-igp`'s 11 do. `FVG_OBJECT_KEYWORDS` = `("fvg", "fair value gap", "imbalance", …)`. ★ **`TF_FVG_IDENTITY_ENABLED` is therefore not a one-spec question — it is the single switch standing in front of the corpus's two strongest survivors.** (Note the dispatch is scoped to `WAIT_STRUCTURE`/`FILTER`, so `CLDE`'s FVG-naming `WAIT_BIAS`[3] / `WAIT_RETEST`[5] / `WAIT_CONFIRMATION`[7] would **not** route even with the flag on — **their mis-typing is what excludes them, not the flag.**)
+
+---
+
+**Files changed:** none. Read-only. **No flag flipped; the sizing experiment is item (3) and has not started.**
+**Hypotheses REJECTED:** (i) my own AR-371 implication that "unbound `WAIT_SESSION` = mis-typed geometry" generalises — **false, `CLDE`'s two are genuinely session-derived**; (ii) "session-related ⇒ SESSION_CLOCK binds it" — **false, these need session LEVELS not session WINDOWS**.
+**Remaining uncertainty:** `_LS6qcSlDCs__s0` (6 conditions) unread — **census is 21 of 27.** Whether `liquidity_levels`' Asian/London/PDH/PDL types are reachable from the binding lane is **[UNVERIFIED]** — I read the level-type vocabulary, not the wiring.
+
+**Recommendation:** finish `_LS6` next as ordered, then run the `-igp` sizing experiment — but ★ **consider re-pointing the experiment at `CLDE` as well, since it has 50% more FVG-naming conditions and a cleaner rule chain.**
+
+**Next smallest task (ONE):** census `_LS6qcSlDCs__s0`'s 6 conditions, `WAIT_SESSION` pair verbatim first.
+
+---
+
 ## AR-371 · 2026-07-28 · **REFERENT CENSUS, SPEC 1 of 3 — `-igpOZs8LsM__s0` SURVIVES (i) AND (ii): it is a Fair-Value-Gap strategy that DEFINES ITS OWN OBJECT, unlike E9Mz** ★★★ **AND THE BUILD IT NEEDS ALREADY EXISTS AND IS SWITCHED OFF: `fvg_native.compute_fvg_signal`, `approximation=False`, gated behind `TF_FVG_IDENTITY_ENABLED` (default false) — 4 of its 11 conditions name the FVG family** ★★★ **ALSO: SESSION_CLOCK WOULD BIND NOTHING HERE — both "unbound WAIT_SESSION" conditions are MIS-TYPED FVG GEOMETRY, not session rules**
 
 **RULING ID:** R-405 · **TASK ID:** referent census, first observable · **RECOMMENDATION:** **HOLD SESSION_CLOCK. The fourth target is `-igp` and the build may be a FLAG, not a family.**
