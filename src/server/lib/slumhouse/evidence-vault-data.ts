@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { getEvidenceVaultWorkers, type EvidenceVaultWorker } from "./worker-directory.js";
+import { resolvePremiumName, type NamedStrategyRow } from "./premium-names.js";
 
 export interface EvidenceVideoCard {
   id: string;
@@ -59,6 +60,22 @@ function toCard(row: any): EvidenceVideoCard {
   };
 }
 
+function strategyPresentation(row: any): { name: string; symbol: string } {
+  const symbols = Array.isArray(row.symbols)
+    ? row.symbols.map(String)
+    : row.symbol == null ? [] : [String(row.symbol)];
+  const named: NamedStrategyRow = {
+    name: String(row.name ?? ""),
+    symbols,
+    timeframe: String(row.timeframe ?? ""),
+    config: row.config && typeof row.config === "object" ? row.config : null,
+  };
+  return {
+    name: resolvePremiumName(named).displayName,
+    symbol: symbols[0] ?? String(row.symbol ?? ""),
+  };
+}
+
 export async function assembleEvidenceVault(args: { videoId?: string; search?: string; includeOperator?: boolean }): Promise<EvidenceVaultPayload> {
   const search = args.search?.trim().slice(0, 120) ?? "";
   const rows = (await db.execute(sql`
@@ -84,7 +101,7 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
   `)) as any[];
 
   const strategyRows = args.includeOperator ? (await db.execute(sql`
-    SELECT s.id::text, s.name, s.symbol, s.timeframe, s.lifecycle_state,
+    SELECT s.id::text, s.name, s.symbol, s.symbols, s.timeframe, s.config, s.lifecycle_state,
            evidence.video_id AS source_video_id,
            evidence.title AS source_title,
            evidence.discovered_at AS source_discovered_at,
@@ -131,7 +148,7 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
 
     if (detail) {
       const strategyRows = (await db.execute(sql`
-        SELECT DISTINCT s.id::text, s.name, s.symbol, s.lifecycle_state
+        SELECT DISTINCT s.id::text, s.name, s.symbol, s.symbols, s.timeframe, s.config, s.lifecycle_state
         FROM strategies s
         LEFT JOIN strategy_pending_buckets b ON b.graduated_strategy_id = s.id
         LEFT JOIN strategy_pending_mentions m ON m.bucket_id = b.id
@@ -144,12 +161,15 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
         ...toCard(detail),
         transcript: detail.transcript_text == null ? null : String(detail.transcript_text),
         transcriptSha256: detail.transcript_sha256 == null ? null : String(detail.transcript_sha256),
-        strategies: strategyRows.map((strategy) => ({
-          id: String(strategy.id),
-          name: String(strategy.name),
-          symbol: String(strategy.symbol),
-          lifecycleState: String(strategy.lifecycle_state),
-        })),
+        strategies: strategyRows.map((strategy) => {
+          const presentation = strategyPresentation(strategy);
+          return {
+            id: String(strategy.id),
+            name: presentation.name,
+            symbol: presentation.symbol,
+            lifecycleState: String(strategy.lifecycle_state),
+          };
+        }),
       };
     }
   }
@@ -165,20 +185,23 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
       workers: workers.length,
     },
     videos: rows.map(toCard),
-    strategies: strategyRows.map((strategy) => ({
-      id: String(strategy.id),
-      name: String(strategy.name),
-      symbol: String(strategy.symbol),
-      timeframe: String(strategy.timeframe),
-      lifecycleState: String(strategy.lifecycle_state),
-      sourceVideoId: strategy.source_video_id == null ? null : String(strategy.source_video_id),
-      sourceTitle: strategy.source_title == null ? null : String(strategy.source_title),
-      sourceDiscoveredAt: strategy.source_discovered_at == null
-        ? null
-        : new Date(strategy.source_discovered_at).toISOString(),
-      sourceIsToday: Boolean(strategy.source_is_today),
-      transcriptStatus: strategy.transcript_status == null ? null : String(strategy.transcript_status),
-    })),
+    strategies: strategyRows.map((strategy) => {
+      const presentation = strategyPresentation(strategy);
+      return {
+        id: String(strategy.id),
+        name: presentation.name,
+        symbol: presentation.symbol,
+        timeframe: String(strategy.timeframe),
+        lifecycleState: String(strategy.lifecycle_state),
+        sourceVideoId: strategy.source_video_id == null ? null : String(strategy.source_video_id),
+        sourceTitle: strategy.source_title == null ? null : String(strategy.source_title),
+        sourceDiscoveredAt: strategy.source_discovered_at == null
+          ? null
+          : new Date(strategy.source_discovered_at).toISOString(),
+        sourceIsToday: Boolean(strategy.source_is_today),
+        transcriptStatus: strategy.transcript_status == null ? null : String(strategy.transcript_status),
+      };
+    }),
     workers,
     selected,
   };

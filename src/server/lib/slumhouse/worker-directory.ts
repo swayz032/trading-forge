@@ -1,58 +1,60 @@
-import { MODEL_CONFIGS, type ModelRole } from "../../services/model-router.js";
-
 export interface EvidenceVaultWorker {
-  id: ModelRole;
+  id: string;
   name: string;
-  provider: "openai" | "ollama";
+  provider: "anthropic" | "openai" | "ollama";
   model: string;
-  fallbackProvider: "openai" | "ollama" | null;
-  fallbackModel: string | null;
+  status: "active" | "evaluation" | "successor-certification";
   job: string;
-  lane: "research" | "extraction" | "validation" | "review" | "utility";
-}
-
-const JOBS: Record<ModelRole, { job: string; lane: EvidenceVaultWorker["lane"] }> = {
-  critic_evaluator: { job: "Challenges strategy quality and returns a structured verdict.", lane: "validation" },
-  strategy_proposer: { job: "Turns durable research evidence into testable strategy proposals.", lane: "research" },
-  nightly_review: { job: "Reviews the day's system evidence and identifies hardening work.", lane: "review" },
-  scout_auditor: { job: "Rejects weak or unsupported ideas before they enter the candidate queue.", lane: "validation" },
-  dsl_quality_critic: { job: "Checks compiled strategy logic for incomplete or unsafe DSL.", lane: "validation" },
-  transcript_extractor: { job: "Reads full source transcripts and extracts structured trading logic.", lane: "extraction" },
-  tournament_prosecutor: { job: "Builds the adversarial case against a proposed strategy.", lane: "validation" },
-  tournament_promoter: { job: "Applies the promotion matrix after the adversarial review.", lane: "validation" },
-  bias_engine_evaluator: { job: "Judges whether the shadow bias engine should graduate, wait, or stop.", lane: "validation" },
-  cross_source_validator: { job: "Tests whether independent sources truly describe the same edge.", lane: "validation" },
-  strategy_name_discoverer: { job: "Finds named strategy concepts for the research intake queue.", lane: "research" },
-  fast_critique: { job: "Runs high-volume local first-pass critique.", lane: "review" },
-  dsl_writer: { job: "Drafts machine-readable strategy logic from approved evidence.", lane: "extraction" },
-  quick_classifier: { job: "Handles fast binary and categorical routing decisions.", lane: "utility" },
-  trade_critique: { job: "Performs the institutional post-trade autopsy.", lane: "review" },
-  pattern_aggregator: { job: "Rolls repeated trade findings into durable improvement patterns.", lane: "review" },
-  embedder: { job: "Produces local semantic representations for retrieval and matching.", lane: "utility" },
-};
-
-function titleCase(role: string): string {
-  return role.split("_").map((word) => word === "dsl"
-    ? "DSL"
-    : word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+  lane: "extraction" | "validation" | "utility";
+  source: string;
 }
 
 /**
- * Read-only projection of the model router's canonical role registry. This is
- * deliberately derived from MODEL_CONFIGS so the Office never invents workers,
- * models, or fallbacks that the running application has not configured.
+ * The Vault explains the extraction crew, not every role in the application
+ * model router. These entries mirror the extraction campaign's governed
+ * instruments and deliberately exclude legacy router fallbacks.
  */
 export function getEvidenceVaultWorkers(): EvidenceVaultWorker[] {
-  return (Object.entries(MODEL_CONFIGS) as Array<[ModelRole, (typeof MODEL_CONFIGS)[ModelRole]]>)
-    .map(([id, config]) => ({
-      id,
-      name: titleCase(id),
-      provider: config.provider,
-      model: config.model,
-      fallbackProvider: config.fallback?.provider ?? null,
-      fallbackModel: config.fallback?.model ?? null,
-      job: JOBS[id].job,
-      lane: JOBS[id].lane,
-    }))
-    .sort((a, b) => a.lane.localeCompare(b.lane) || a.name.localeCompare(b.name));
+  return [
+    {
+      id: "headless-transcript-reader",
+      name: "Claude Code Headless",
+      provider: "anthropic",
+      model: "claude-opus-5",
+      status: "successor-certification",
+      job: "Reads complete transcripts as the Opus 5.0 successor reader. Its output cannot enter a certified count until the successor ladder clears.",
+      lane: "extraction",
+      source: "Extraction campaign rulings R-292 and R-294",
+    },
+    {
+      id: "frontier-mini-reader",
+      name: "GPT-5.4 Mini",
+      provider: "openai",
+      model: "gpt-5.4-mini",
+      status: "evaluation",
+      job: "Runs the low-cost frontier extraction and vocabulary evaluation lane; it is not presented as the certified transcript reader.",
+      lane: "extraction",
+      source: "Frontier birth-gate and mini Phase-B records",
+    },
+    {
+      id: "certification-panel",
+      name: "GPT-5.4 Panel",
+      provider: "openai",
+      model: "gpt-5.4",
+      status: "active",
+      job: "Acts as the fail-closed extraction certification panel and challenges completeness, conflation, and enumeration consistency.",
+      lane: "validation",
+      source: "Certified-reader params and panel records",
+    },
+    {
+      id: "local-atomizer",
+      name: "Gemma Local Atomizer",
+      provider: "ollama",
+      model: process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat",
+      status: "active",
+      job: "Runs local transcript decision-atom classification and intake support on the tower without claiming frontier-reader authority.",
+      lane: "utility",
+      source: "atomize-transcript and tower model configuration",
+    },
+  ];
 }
