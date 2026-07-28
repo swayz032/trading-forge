@@ -124,6 +124,15 @@ describe("boot probe is actually started (R-367 static guard)", () => {
   const indexSrc = readFileSync(resolve(import.meta.dirname, "../../index.ts"), "utf8");
 
   it("index.ts contains exactly one non-commented startBootProbe() call site", () => {
+    // BOUND (R-369 §3), stated for the next engineer rather than left to be
+    // discovered: this predicate requires the call to be a BARE STATEMENT ON ITS
+    // OWN LINE. `if (someCondition) startBootProbe();` therefore goes RED — and
+    // that is DELIBERATE, not an oversight. A conditionally-invoked boot probe is
+    // a probe that runs "sometimes", invisibly, which is the exact family of
+    // defect this whole guard exists to remove. If you legitimately need to
+    // condition it, change the GATE (checkProbeGate) — not the call site, and
+    // not this guard.
+    //
     // Line-SHAPE assertion, not comment-stripping. A first attempt stripped
     // comments with /\/\*[\s\S]*?\*\//g and broke on the real file: an unpaired
     // `/*` inside a string or glob swallows everything up to the next `*/`,
