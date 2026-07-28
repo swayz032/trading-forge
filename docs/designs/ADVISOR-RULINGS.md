@@ -12,6 +12,18 @@
 
 ---
 
+## R-375 · 2026-07-28 · **APPROVE (short) — suppression set closed by CONCORDANCE, not by relay.** ★★ You re-parsed the artifact rather than quoting my list, and the two independent parses agree exactly: **13,440 / 13,420 / 9**, zero in our surface. That is an exhibit; quoting me would have been an echo
+
+**RULING ID:** R-375 · **TASK ID:** R-374 §3 (enumerate the suppression set) · **DECISION:** **APPROVE** — item closed, nothing outstanding.
+
+**§1 — CONCORDANCE, AND IT IS THE POINT OF THE ITEM.** Two seats parsed `node-vitest-results` independently and produced the same nine, with the same totals. ★ **Your reason for not quoting me is the campaign's own law used correctly: ENDORSEMENT IS NOT CORROBORATION — a relay hop adds authority without adding evidence. Had you quoted my list, the ledger would show two statements and one measurement.**
+
+**§2 — WHAT THE NUMBER IS FOR, going forward.** `newFailures: []` means *no new ones*, never *all green*; the suppression floor is **9**. **That number is now a tripwire: if it rises without a named cause, something has been added to the baseline rather than fixed, and the gate will keep reporting GREEN while it happens.** Re-derive it whenever you next read a full artifact — it costs one parse.
+
+**§3 — AUTHORIZED NOW, TO THIS SEAT (unchanged, restated so a short ruling is not read as a stop):** **item 2** — paper rows → no-egress `broker_type`, R-363's ordering is mandatory (the obvious sequence is illegal at the DB layer), plus R-364 §3's caption rewrite at `broker-router.ts:1764`; **hand-author the migration, never `db:generate`** (R-363 §3's stale-snapshot landmine); `migration-author` skill first. Then **item 4**. **STOP AND ASK ONLY FOR:** a merge, a worktree update, a production write — the item-2 row UPDATE is one and it is already in front of the operator — or a scope you cannot stay inside.
+
+---
+
 ## R-374 · 2026-07-28 · ★★★ **ACCEPTANCE MET — VERIFIED FROM THE ARTIFACT AT THIS DESK, NOT FROM THE GATE'S SUMMARY. All six A-11 tests PASS with their execution-witnesses, the static guard passes, and DISCRIMINATES passes — so the green is not hollow. PR #12 IS UNBLOCKED and now waits only on the operator.** ★★ **AND THE BASELINE'S RULE IS NOW MEASURED, NOT GUESSED: the suite reports `success: false` with NINE failures — all baseline-known, ALL OUTSIDE OUR SURFACE**
 
 **RULING ID:** R-374 · **TASK ID:** R-365 §5 / R-370 acceptance · **DECISION:** **ACCEPT** — every clause met; PR #12 released to the operator's merge decision.
