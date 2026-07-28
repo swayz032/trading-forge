@@ -67,6 +67,18 @@ vi.mock("../production/kill-switch.js", () => ({
 // module reads SERVER_MEDIATED_EXECUTION_ENABLED/BROKER_FILL_HMAC_SECRET from
 // env, which are (correctly) unset. Mocking it keeps those live-execution env
 // vars untouched by the test process.
+//
+// DELIBERATE PARTIAL MOCK (R-362) — do not "complete" it. The real module exports
+// four symbols; this factory returns ONE. Omitted on purpose: EXECUTION_MODE_PARAM,
+// getExecutionMode, setExecutionMode. Nothing in this file's graph imports them
+// (broker-router.ts, the A-11 subject, imports only isLiveExecutionConfigured), so
+// their absence is unreachable rather than latent breakage.
+// The textbook completion — `async (importOriginal) => ({ ...(await importOriginal()), … })`
+// — is a REGRESSION here, not an improvement: importOriginal() loads the real
+// execution-mode.ts, whose getExecutionMode() reads system_parameters and drags the
+// real db import chain into a file that mocks ../db/schema.js precisely to keep it
+// out. That is this repo's pinned collection-crash class (the whole file collects
+// zero tests and still reads as "passing" unless someone checks the file count).
 vi.mock("../lib/execution-mode.js", () => ({
   isLiveExecutionConfigured: vi.fn().mockReturnValue(true),
 }));
