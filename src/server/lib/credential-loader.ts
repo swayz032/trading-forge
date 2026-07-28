@@ -529,7 +529,25 @@ export async function loadBrokerCredentials(
 
   // apiKeyVaultRef holds the env var name (env mode) or Bitwarden field name
   // (vault mode — already hydrated into process.env by loadCredentials() at startup).
-  const envKey = row.apiKeyVaultRef ?? `${row.firmId.toUpperCase()}_API_KEY`;
+  //
+  // 2026-07-28 (R-362 queue item 3): the derived `${firmId}_API_KEY` fallback is
+  // REMOVED. It meant the system INVENTED credential variable names — for any
+  // firm_id there existed a plausibly-named env var that, if set by anyone for any
+  // reason, silently armed every account carrying that firm. Nobody ever wrote those
+  // names down as credential slots; the resolver manufactured them. The seeded A/B
+  // rows carry firm_id='paper', so the name it manufactured was PAPER_API_KEY —
+  // which reads like the safe practice key and is not. Reaching a broker must
+  // require someone to have deliberately POINTED an account at a credential, never
+  // merely to have named a variable the resolver happens to match.
+  // A null ref now means: this account has no credential. Full stop.
+  const envKey = row.apiKeyVaultRef;
+  if (!envKey) {
+    throw new Error(
+      `Broker credentials not configured for account ${accountId} (firm: ${row.firmId}): ` +
+        `api_key_vault_ref is null. Set an explicit vault ref — the derived ` +
+        `<FIRM>_API_KEY fallback was removed 2026-07-28. Vault mode: ${getActiveVaultMode()}.`,
+    );
+  }
   if (envKey.startsWith("dbvault:")) {
     const credentialId = envKey.slice("dbvault:".length);
     const vaultRows = await _hoistedDb.select({
