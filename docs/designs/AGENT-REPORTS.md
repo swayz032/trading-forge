@@ -4,6 +4,73 @@
 
 ---
 
+## AR-367 · 2026-07-28 · **START-RECEIPT + BLOCKING FINDING BEFORE THE FIRST LINE: ★★★ R-303 §5's SMC target `hcHuDfxdywI__s0` IS NOT IN corpus_A — it is in the frozen SEALED-READ set. Completing it moves the pinned `0/16` by ZERO.** ★★ **BUT I CHECKED THE OPPOSITE CASE TOO AND SMC IS STILL THE RIGHT FAMILY — the defect is the TARGET, not the choice. And no spec completes on SMC alone**
+
+**RULING ID:** R-401 · **TASK ID:** SMC build · **RECOMMENDATION:** **BLOCKED for one ruling — ~15 minutes of checking, and it changes what "done" means.** Nothing written; no build started.
+
+**START-RECEIPT:** task = SMC family build · first observable = the SMC family's RED test · **held, because the acceptance metric cannot move as scoped.**
+
+---
+
+### ★★★ THE JOIN, CHECKED AT THE KEY (R-400's law, applied to my own instruction)
+
+R-303 §5: *"(1) **SMC** — best single build, **completes `hcHuDfxdywI__s0`**…"*
+R-401 pins the before-figure over **corpus_A**. **[MEASURED]** corpus_A's sixteen are `-igp… 0xyg… 4cT8… CLDE… DLwVqc__s0 DLwVqc__s1 E9Mz__s0 E9Mz__s1 IyFio… PVMg… R5L8… W7nl… WEhm… _LS6… dV7c… kFyD…`
+
+> ★ **`hcHuDfxdywI__s0` is NOT among them, and no `hcHuDfxdywI__sN` is.** On disk it appears only under `docs/replay-results/h1-sealed-read-frozen/SEALED-READ/attempts/` — **the frozen sealed set, a different corpus.**
+
+**R-303 ranked its build order on a specs-completed metric over ITS OWN population (53 conditions / 11 specs). R-401 measures Phase 1 over corpus_A (155 / 16). Two true tables, welded by a build order, key never checked** — the exact shape R-400 named this afternoon, now sitting in the build authorization itself.
+
+**Consequence:** completing `hcHuDfxdywI__s0` moves **`0/16` → `0/16`.** R-397's own acceptance: *"A build that adds a detector but moves neither is not progress."*
+
+### ★★ AND THE OPPOSITE CASE — which I went looking for, and which SURVIVES
+
+I did not stop at the finding that suited the objection. **[MEASURED] corpus_A's composition:**
+- **all 6** `bound_and_concrete` are **WAIT_STRUCTURE**, flipped by kinds `named_sr_level` (4) and `order_block_edge` (2) — ★ **`order_block_edge` IS the SMC precedent R-303 named, and it is already earning.**
+- **WAIT_STRUCTURE is the largest approximated family by far: 78 → 72 (delta −6).** WAIT_CONFIRMATION 23, WAIT_RETEST 20, WAIT_BIAS 4, FILTER 3 — **all delta 0.**
+- **all 27 unbound conditions are `WAIT_SESSION`** (100%), `unbound_reason: no_recognized_session_keyword`.
+
+★★ **So SMC is the CORRECT family for corpus_A — the biggest bucket, and the one kind already proven to flip. My first hypothesis ("SMC cannot move corpus_A") is REJECTED by this evidence. The defect is R-303's named TARGET SPEC, not its choice of family.**
+
+### ★★★ THE SHARPER PROBLEM: NO SPEC COMPLETES ON SMC ALONE
+
+The closest spec, `IyFioFkRgWo__s0` (1 of 6 bound) — **[MEASURED] its actual six conditions:**
+
+| # | type | role |
+|---|---|---|
+| 0,1,2 | **WAIT_STRUCTURE** | spine |
+| 3, 5 | **WAIT_STRUCTURE** | confluence |
+| 4 | **WAIT_CONFIRMATION** | confluence |
+
+*(0 invalidations, 0 WAIT_SESSION.)*
+
+★★★ **Five of six are WAIT_STRUCTURE — SMC's own family — so SMC work takes this spec from 1/6 to at best 5/6. The sixth is WAIT_CONFIRMATION (`spec_condition_compiler.candle_confirmation_check`, `base_approximation=True`, delta 0), and WAIT_CONFIRMATION appears NOWHERE in R-303 §5's build order (SMC → ORB+RANGE_EVENT → BAR_TIMING → SESSION_CLOCK).**
+
+**So under the acceptance as written, a perfect SMC build reports `0/16` → `0/16` and reads as zero progress, while having done most of the work on the leading spec.** ★ **That is a metric that would punish the correct build** — and R-401 explicitly forbids me stopping for a merge but says nothing about a metric that cannot register success.
+
+---
+
+### WHAT I RECOMMEND (yours; all three are cheap)
+
+**(A) ★ Re-target SMC at corpus_A and pair it with WAIT_CONFIRMATION for `IyFioFkRgWo__s0`** — five WAIT_STRUCTURE + one WAIT_CONFIRMATION is the **complete and minimal** path to the campaign's first fully-bound spec, i.e. **Phase 1's exit condition**, on the measured population. **This is the smallest true "≥1 spec" build that exists.**
+**(B)** Keep SMC scoped as R-303 wrote it and **restate the acceptance** to `bound_and_concrete` condition count (which SMC would move, 6 → up to 11), acknowledging `specs fully bound` stays 0.
+**(C)** Build SMC for the sealed corpus as R-303 intended and accept it does not touch Phase 1.
+
+★ **I recommend (A).** It is the only option where the build and the phase gate measure the same thing. **It also needs no new detector** — WAIT_STRUCTURE kinds already flip, and WAIT_CONFIRMATION already has a primitive; both are de-approximation, which R-303 §2 says is the true unit anyway.
+
+**STOP-CONDITION CHECK (R-401):** not triggered — **no frozen instrument and no spec change is implied by any option.**
+
+---
+
+**Files changed:** none. **Read-only throughout.**
+**Hypotheses REJECTED by measurement:** (i) mine — "SMC cannot move corpus_A" → **false**, it is the right family; (ii) "R-303 §5's target is a corpus_A spec" → **false**; (iii) "SMC alone completes the leading spec" → **false**, WAIT_CONFIRMATION blocks it.
+**Remaining uncertainty:** whether the other 15 specs are similarly one-family-plus-one from completion — **I opened ONE spec. [UNVERIFIED] for the rest, and I am not generalising from n=1.**
+**Risk of building as authorized:** a correct, well-tested SMC family that reports zero movement against the campaign's headline metric.
+
+**Next smallest task (ONE):** on your ruling — if (A), open `IyFioFkRgWo__s0`'s five WAIT_STRUCTURE conditions and report which kinds they need, before writing the RED test.
+
+---
+
 ## AR-366 · 2026-07-28 · ★★★ **THE PRODUCER RUNS BUT ITS OWN GUARD REFUSES TO PUBLISH — `REVIVAL_FAMILY`, exit 2, two misdirected probes named. THE PHASE-1 READING CANNOT BE REFRESHED TODAY.** ★★ **And it would OVERWRITE the evidence of record: `OUT_PATH` is HARDCODED to `…-2026-07-21.json`, so today's numbers would land under a seven-day-old date**
 
 **RULING ID:** R-399 item (1) · **TASK ID:** producer re-runnability · **RECOMMENDATION:** **0/16 from the 2026-07-21 artifact stands as the only citable Phase-1 figure.** Two hazards for your ruling before any publish.
