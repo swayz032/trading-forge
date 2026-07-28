@@ -12,6 +12,38 @@
 
 ---
 
+## R-402 · 2026-07-28 · **AR-367 — THE WORKER APPLIED R-400's JOIN LAW TO MY OWN INSTRUCTION AND CAUGHT IT BEFORE A LINE WAS WRITTEN** ★★★ **R-303 §5's SMC target `hcHuDfxdywI__s0` IS NOT IN corpus_A. STRUCK as a build target.** ★★★ **THE EXIT GATE DOES NOT MOVE — I refuse to redefine "≥1 spec fully bound" to make a build look successful. But the campaign now has its FIRST CONCRETE PATH TO PHASE 1 EXIT: `IyFioFkRgWo__s0` = 5 WAIT_STRUCTURE + 1 WAIT_CONFIRMATION**
+
+**RULING ID:** R-402 · **TASK ID:** SMC build, re-scoped · **DECISION:** **APPROVE the finding. REVISE the target. UNBLOCK — build now.**
+
+**CLAIMS VERIFIED (and how) — I checked the load-bearing one at my own desk, from a different file than the worker used.** ★★★ **[MEASURED HERE]** parsing `IyFioFkRgWo__s0.spec.json` **directly**: condition types tally **`{WAIT_STRUCTURE: 5, WAIT_CONFIRMATION: 1}`, total 6, `WAIT_SESSION: 0`.** ★★ **[MEASURED HERE]** the remeasure artifact's row agrees from the other side — `n_taught 6 · n_bindable 6 · n_unbound 0 · n_binding_approximation 5 · n_bound_and_concrete 1`, its single bound condition typed `WAIT_STRUCTURE`. **Two files, two derivations, same six. The worker's table is exact.**
+
+**EVIDENCE INDEPENDENTLY CHECKED — the join it caught was MINE.** ★★★ R-303 §5 ranked its build order over its OWN population (53 conditions / 11 specs) and named `hcHuDfxdywI__s0`; R-401 pinned Phase 1 over corpus_A (155 / 16). **I carried R-303's target across that seam without checking whether the target was in the population.** ★★ **[MEASURED HERE] `hcHuDfxdywI` does not appear in `corpus_A.rows[].spec` at all — I listed all 16 and it is absent**; [RELAYED, consistent with that] on disk it lives only under `h1-sealed-read-frozen/SEALED-READ/attempts/`. ★★★ **Seventh instance of the R-400 shape, and the FIRST CAUGHT BEFORE THE WORK — by the worker, applying a law minted ninety minutes earlier to the instruction it had just been handed.**
+
+**★★ IT DID NOT STOP AT THE FINDING THAT SUITED ITS OBJECTION.** It hunted the opposite case and **rejected its own first hypothesis**: [RELAYED — its grouping, which I did not re-run] all 6 `bound_and_concrete` are WAIT_STRUCTURE, flipped by `named_sr_level` (4) and `order_block_edge` (2) — **`order_block_edge` is the SMC precedent R-303 named** — and WAIT_STRUCTURE is the only family with a nonzero delta (78 → 72); WAIT_CONFIRMATION 23, WAIT_RETEST 20, WAIT_BIAS 4, FILTER 3 all delta 0. **The target was wrong; the FAMILY was right.**
+
+**TESTS RERUN (command + result).** `node` over the spec file, and over `corpus_A.rows` — both above, both at this desk, both unpiped.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None yet. When the build starts, **invariant 3 binds hardest: ordered concepts compile to STATE MACHINES, not one-bar AND conditions.** Five WAIT_STRUCTURE conditions in one spec is precisely where "A THEN B THEN C" gets flattened into a single bar. Do not flatten it.
+
+**FAILED OR UNPROVEN CONDITIONS — and the decision I am refusing to make.** ★★★ **THE PHASE-1 EXIT CONDITION STAYS EXACTLY AS RATIFIED. The worker is right that a perfect SMC build reports `0/16 → 0/16` and reads as zero progress. That is an argument for a better INSTRUMENT, never for an easier finish line.** This campaign's most-convicted error is optimising the measured quantity while destroying what it measures; **moving a gate because a build would not clear it is that error in its purest form, and I will not do it.** ★★ I add instead a **second, continuous meter reported ALONGSIDE the unchanged gate**: `bound_and_concrete / taught`, plus the leading spec's own ratio. **A gate answers *are we done*; a meter answers *are we moving*. Adding the meter does not move the gate, and the gate remains the only thing that ends Phase 1.** ★ **[UNPROVEN]** that five WAIT_STRUCTURE bindings are individually achievable — 2 of 6 precedents came from `order_block_edge`, and whether the other three conditions fall to the same kind is exactly what the build will discover.
+
+**★★★ THE PRIZE — THE FIRST CONCRETE PATH TO PHASE 1 EXIT THIS CAMPAIGN HAS HAD.** `IyFioFkRgWo__s0` sits at **1 of 6**. Five remaining are WAIT_STRUCTURE — SMC's own family, the one family already proven to flip. The sixth is a single WAIT_CONFIRMATION. ★★ **[MEASURED HERE] this spec has ZERO WAIT_SESSION conditions, and [MEASURED HERE] all 27 unbound conditions in the entire corpus are WAIT_SESSION (100%, `no_recognized_session_keyword`). It leads precisely BECAUSE it sidesteps the whole unbound class.** Build the five and the one and it goes 6/6 — **Phase 1 exits at 1/16.** No longer a hope; a two-part build order with named conditions.
+
+**REQUIRED CORRECTIONS.** **R-303 §5's build target `hcHuDfxdywI__s0` is STRUCK** — completing it moves the pinned figure `0/16 → 0/16`. **R-303 §5's ORDER (SMC first) is ratified and unchanged**; only its named target is replaced.
+
+**FILES / SCOPE ALLOWED.** The SMC/WAIT_STRUCTURE binding lane, the `candle_confirmation` binding, and their tests. **Forbidden:** the four frozen instruments, the sealed-read set, the spec files themselves, `dual_denominator_remeasure.py`.
+
+**ACCEPTANCE COMMANDS.** Red-proofed at birth — RED without, GREEN with. **Report BOTH numbers every time: the gate (`N/16 specs fully bound`) and the meter (`IyFioFkRgWo__s0: X/6`).** ★ The declared primitive must actually **EXECUTE** (R-153). ★★ **Never report a condition as bound because it was APPROXIMATED — `n_binding_approximation` and `n_bound_and_concrete` are different fields and this artifact keeps them apart deliberately; collapsing them would fake the exit.**
+
+**STOP CONDITION.** Stop if completing the five requires touching a frozen instrument or a spec file. **Do NOT stop for the sixth condition** — the WAIT_CONFIRMATION binding is authorized in the same breath, because deferring it is what would leave this spec at 5/6 forever.
+
+**LESSON TO PERSIST.** ★★★ **A BUILD ORDER RANKED OVER ONE POPULATION DOES NOT TRANSFER TO ANOTHER — and the desk moved that target across the seam itself, one ruling after minting the law against exactly this. The law worked anyway, because it was in the WORKER'S hands and not only mine. A rule only its author can apply is not a control; a rule the instructed party can turn back on the instruction is.** ★★ **And: when a metric says a good build is worthless, audit the metric — but never by loosening the thing it measures.**
+
+**AUTHORIZED NEXT ACTION — build now, to THIS seat.** **(1)** the five WAIT_STRUCTURE bindings for `IyFioFkRgWo__s0`; **(2)** the one WAIT_CONFIRMATION binding; **(3)** report gate + meter. Then the queued `OUT_PATH` date-stamp and the revival-probe diagnosis. **First observable: the RED test, ~30 min.**
+
+---
+
 ## R-401 · 2026-07-28 · **AR-365 + AR-366 — PHASE 1'S EXIT CONDITION IS MEASURED AT LAST, AND IT IS NOT MET** ★★★ **APPROVED, WITH A DESK-FOUND CORRECTION THAT MAKES THE ANSWER WORSE: the `6` AR-365 grouped is the artifact's `AFTER_flags_on_HYPOTHETICAL` figure. TODAY'S FLAGS-OFF FIGURE IS `n_bound_and_concrete: 0` — zero of 155. The 0/16 verdict stands and is STRENGTHENED** ★★★ **SMC BUILD AUTHORIZED against a pinned, honestly-dated before-figure**
 
 **RULING ID:** R-401 · **TASK ID:** R-399 items (1) and (2) · **DECISION:** **APPROVE BOTH REPORTS. PIN THE CORRECTED FIGURE. PROCEED TO SMC.**
