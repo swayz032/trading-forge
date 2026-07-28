@@ -83,24 +83,38 @@ whose referents were never captured (R-405). **A target chosen at layer N is
 only as real as every layer beneath it. The corpus self-declares
 `OPTIMISTIC_LOOSER_THAN_TAUGHT` on every spec — believe it.**
 
-1. **THE REFERENT CENSUS (R-405, read-only, running now).** For all 27
-   conditions of `-igpOZs8LsM__s0` (11) · `CLDEIsNpVRc__s0` (10) ·
-   `_LS6qcSlDCs__s0` (6): quote the text; answer (i) real rule? (ii) every
-   referenced structure has an antecedent IN the spec? (iii) bound primitive =
-   same event class? Plus `transcript_chars` per spec. **Decision rule pinned
-   BEFORE data: survive = all load-bearing conditions pass (i)+(ii); (iii)
-   failures = build items, not disqualifiers. If NOTHING survives → "Phase 1 not
-   exitable on corpus_A as extracted" → extraction-side respin (corpus_B) —
-   named in advance so it cannot arrive as improvisation.** First observable:
-   `-igp`'s table, ~20 min.
-2. **SESSION_CLOCK — CONDITIONAL on a census survivor** (demoted from "next
-   build", R-405). All 27 corpus unbound are WAIT_SESSION, but a session lane
-   built for specs that fail deeper layers is a third build that moves nothing.
-3. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
+★★★ **CENSUS 1/3 (AR-371 → R-406): `-igp` SURVIVES — the FVG spec DEFINES its
+own object (candle-1-close → candle-3-open). And the concrete lane ALREADY
+EXISTS: `TF_FVG_IDENTITY_ENABLED` (default OFF) routes WAIT_STRUCTURE/FILTER
+conditions naming fvg/imbalance to `fvg_native.compute_fvg_signal`
+(approximation=False). [MEASURED at the desk] the artifact's flags-on
+hypothetical modeled ONLY the two LEVELZONE flags — the FVG flag appears
+NOWHERE in the producer, so the FVG prize is real and UNMEASURED BY ANYTHING.**
+★★★ **THE CAP: `-igp` ≤ 9/11 on corpus_A.** Its two "WAIT_SESSION" conditions
+are FVG geometry MIS-TYPED ([MEASURED] verbatim: "the gap … is what is called an
+imbalance") — the flag can't reach them (wrong type) and no honest session lane
+can bind them (no session concept). **Gate reachability on corpus_A now rests
+ENTIRELY on CLDE + _LS6 — specifically whether their four unbound WAIT_SESSION
+conditions are REAL session rules (SESSION_CLOCK-bindable) or mis-types
+(extraction-side only).**
+
+1. **Census `CLDEIsNpVRc__s0`** (10 cond; quote its 2 WAIT_SESSION verbatim
+   FIRST) — first observable: its table, ~15 min. Same three questions:
+   (i) real rule? (ii) referent has antecedent IN spec? (iii) primitive = same
+   event class? + `transcript_chars` (0 for 2-of-2 so far).
+2. **Census `_LS6qcSlDCs__s0`** (6 cond), same form.
+3. **FVG SIZING EXPERIMENT (R-406, behind the census):** in-process binding-plan
+   diff for `-igp`'s 11 — which binder each routes to, `TF_FVG_IDENTITY_ENABLED`
+   false vs true, and which would count CONCRETE by the artifact's own
+   definition. **Process-local env only; no file writes; no `.env`; no publish;
+   producer untouched. Reading `compute_fvg_signal` in scope** (is the 3-candle
+   geometry faithful?). A route that binds approximate is REPORTED approximate.
+4. **SESSION_CLOCK — HELD pending the census's mis-type:real-session split.**
+5. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
    MIGRATIONS, so `schema.ts` drift becomes detectable instead of propagatable.
-4. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
+6. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
    the 2026-07-21 filename; a publish would overwrite pinned evidence misdated.
-5. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
+7. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
    ENTRY_WITHDRAWN`, `..._PAIR_DRIFTED` → `NO_ASSERT_FIRED`). **Diagnosis only;
    repair after I rule.**
 
