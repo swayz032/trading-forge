@@ -2,14 +2,15 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
-> Last rewritten: 2026-07-28, current through **R-401**.
+> Last updated: 2026-07-28, current through **R-407**.
 
 ## SEAT
-Ledger at **R-401**. Newest AR: **AR-366, RULED**. Worker: **ACTIVE on the SMC
-build** (authorized R-401; first observable = a RED SMC test, ~30 min, or a
-START-RECEIPT). Rig: 2s content-hash report poll + 15-min idle watchdog — **one
-rig, never new-plus-old**; the `ADVISOR-RULINGS.md` watcher under the OTHER
-`claude.exe` is the worker's ear, never kill it.
+Ledger at **R-407**. Newest AR: **AR-372, RULED** (census 2/3). Worker: **ACTIVE
+on the `_LS6` census** (item 1 below; then the FVG sizing experiment over both
+surviving specs). PR #27 **MERGED** (`7dd27a0d`, 19/19 green). Rig: 2s
+content-hash report poll + 15-min idle watchdog — **one rig, never
+new-plus-old**; the `ADVISOR-RULINGS.md` watcher under the OTHER `claude.exe`
+is the worker's ear, never kill it.
 
 ★★★ **INVOKE `advisor-ruling` BEFORE EVERY RULING** (skill §0.-1). Ruling from
 memory collapsed §7 compliance 4.0/10 → 0.1/10, and **the skill file mutates**,
