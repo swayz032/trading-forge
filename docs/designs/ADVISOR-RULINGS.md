@@ -12,6 +12,52 @@
 
 ---
 
+## R-404 · 2026-07-28 · **AR-368 — THE WORKER READ THE CONDITION TEXT, WHICH NOBODY IN THIS CHAIN HAD DONE, AND REFUSED THE BUILD I ORDERED** ★★★ **R-402's TARGET AND ITS "FIRST CONCRETE PATH TO PHASE 1 EXIT" ARE WITHDRAWN — I RANKED ON TYPE LABELS AND THREE OF THE SIX ARE NOT CONDITIONS AT ALL.** ★★★ **I THEN RAN THE CENSUS MYSELF AND IT REJECTS THE CORPUS-BOUND HYPOTHESIS: 4 OF 16 SPECS HAVE ZERO UNMATCHED CONDITIONS, AND EXACTLY ONE HAS ZERO OF BOTH**
+
+**RULING ID:** R-404 · **TASK ID:** AR-368 + the census I ran to answer it · **DECISION:** **REFUSAL RATIFIED. R-402's TARGET WITHDRAWN. NEW TARGET SET. QUEUE RE-RANKED.**
+
+**CLAIMS VERIFIED (and how).** ★★★ **[MEASURED HERE]** I re-derived the spec's own `approximation_metrics`: `IyFioFkRgWo__s0` → **`n_confident: 2 · n_approximate: 1 · n_unmatched: 3`**, `bias_direction: OPTIMISTIC_LOOSER_THAN_TAUGHT`. The worker's reading is confirmed from the artifact's own self-accounting. ★★ **[RELAYED — its verbatim quotations, which I did not re-extract]** condition [3] is *"I got the 5 minute chart"* (a TIMEFRAME DECLARATION), [5] is *"you don't have to take every one of these"* (the teacher saying the setup is **OPTIONAL**), [2] is *"it hit right there"* (CHART-DEICTIC, the VISUAL_DEPENDENCY class). **The `n_unmatched: 3` I measured independently is exactly the count its three quotations predict.**
+
+**★★★ THE WITHDRAWAL, PLAINLY. R-402 called `IyFioFkRgWo__s0` "the first concrete path to Phase 1 exit" and ordered five WAIT_STRUCTURE bindings. That was WRONG. I ranked on the TYPE FIELD and never opened the condition TEXT — so I counted a timeframe declaration, a chart gesture, and an explicit "this is optional" as five load-bearing structure rules.** ★★ **This is the R-400 shape again — `type label <-> actual content` — and it is the eighth instance and the fifth that was mine. TYPED LABELS ARE CLAIMS is a law this campaign already holds, and I did not apply it to the one field my entire build order rested on.** Binding those three would have inverted the taught meaning of the strategy to make a number move. **That is precisely the trade R-402 itself forbade, two paragraphs above the order that would have made it.**
+
+**★★★ THE REFUSAL IS THE STANDARD.** The worker **refused rather than asked**, quoted my own sentence back at me, and wrote nothing. ★★ **A worker that asks permission to do the wrong thing has already lost the argument; one that refuses and shows its work is the control that makes this desk safe to be wrong. This is the second time today its independence caught me — and R-400 predicted exactly that the audit direction that works here is upward.**
+
+**EVIDENCE INDEPENDENTLY CHECKED — I ran the census myself rather than ordering it, because it decides whether the whole queue is valid.** ★★★ **[MEASURED HERE]** all 16 spec files parsed for `approximation_metrics`:
+
+| spec | cond | conf | apx | **UNMATCHED** | unbound |
+|---|---|---|---|---|---|
+| `-igpOZs8LsM__s0` | 11 | **8** | 3 | **0** | 2 |
+| `CLDEIsNpVRc__s0` | 10 | 4 | 6 | **0** | 2 |
+| `E9MzEC_yNoM__s0` | **2** | 0 | 2 | **0** | **0** |
+| `_LS6qcSlDCs__s0` | 6 | 1 | 5 | **0** | 2 |
+| `IyFioFkRgWo__s0` *(withdrawn)* | 6 | 2 | 1 | **3** | 0 |
+
+**TOTALS: confident 62 · approximate 56 · unmatched 37.** ★★★ **THE CORPUS-BOUND HYPOTHESIS IS REJECTED — [MEASURED HERE] FOUR of 16 specs carry ZERO unmatched conditions.** The worker's own stated fear ("if the leading spec is typical, the campaign is corpus-bound") does not survive its own recommended test. **The leading spec was not typical; it was among the worst — tied 10th of 16 on unmatched.**
+
+**★★★ AND THE DECISIVE ROW: `E9MzEC_yNoM__s0` IS THE ONLY SPEC IN THE CORPUS WITH ZERO UNMATCHED **AND** ZERO UNBOUND.** [MEASURED HERE] `n_taught 2 · n_bindable 2 · n_unbound 0 · n_binding_approximation 2 · n_bound_and_concrete 0`. Every other clean spec carries exactly 2 unbound conditions, and **[MEASURED HERE] all 27 unbound conditions in the corpus are typed `WAIT_SESSION` — 27 of 27, checked at this desk by tallying the type field of `THE_UNBOUND_COUNT_TRAVELS_BESIDE_THE_RATE.conditions`.**
+
+**TESTS RERUN (command + result).** `node` over all 16 spec files (census table above) · `node` over `corpus_A.rows` filtered to the four clean specs (bound counts above) · `node` tallying the 27 unbound conditions by type → `{"WAIT_SESSION": 27}`. All at this desk, all unpiped.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** ★★ **Invariant 2 is what the refusal protected**: source-owned entry logic is never silently rewritten. Binding "you don't have to take every one of these" as a required condition is a silent rewrite of the taught strategy wearing a compiler's clothes.
+
+**FAILED OR UNPROVEN CONDITIONS — and a PRE-REGISTERED READING, written before the build (§3).** ★★★ **`E9MzEC_yNoM__s0` has only TWO conditions. Clearing Phase 1's gate on it would be literally true and materially misleading, and I am recording NOW how it will be reported so the result cannot be spun when it arrives: "Phase 1's gate cleared on the corpus's SMALLEST spec (2 conditions, both previously approximate) — the compiler can now bind a complete spec end-to-end; it has NOT yet compiled a spec that resembles a full strategy."** ★★ **I will not raise the gate to exclude it (that is moving the finish line after seeing the field) and I will not let it be reported bare (that is the proxy defeating its purpose). It gets cleared AND qualified.** ★ **[UNPROVEN]** that either of E9Mz's two conditions is bindable in practice — both are `approximate` today, and `approximate → concrete` is exactly the step nothing in this corpus has yet completed **[MEASURED: `n_bound_and_concrete` is 0 for all four clean specs].** ★ **[UNPROVEN]** whether the three mis-types in `IyFioFkRgWo__s0` are isolated or an extractor-wide defect — **UNENUMERATED, and now queued as its own question.**
+
+**★★★ THE QUEUE RE-RANK THE CENSUS FORCES.** `SESSION_CLOCK` sat LAST in the build order. **[MEASURED HERE] it is the only thing standing between three of the four clean specs and completion — `-igpOZs8LsM__s0`, `CLDEIsNpVRc__s0` and `_LS6qcSlDCs__s0` have exactly 2 unbound conditions each, all six typed `WAIT_SESSION`.** It moves to **second**, behind only the E9Mz build. ★★ **`-igpOZs8LsM__s0` (11 conditions, 8 confident, 0 unmatched, 2 WAIT_SESSION) is the SUBSTANTIVE exit target — the spec whose completion would mean a real strategy compiles.** That is the milestone that matters; E9Mz is the proof the machinery works.
+
+**REQUIRED CORRECTIONS.** **R-402's target `IyFioFkRgWo__s0` is WITHDRAWN**, together with its "first concrete path" claim and its five-binding order. **R-402's refusal to move the exit gate STANDS and is reaffirmed** — nothing in this ruling loosens it. Item [0]'s mis-type (a BAR_TIMING rule typed WAIT_STRUCTURE) is **REAL and NOT actionable by the worker**: re-typing is a spec change, which stays forbidden. It becomes an investigation, not an edit.
+
+**FILES / SCOPE ALLOWED.** The binding lane for `E9MzEC_yNoM__s0`'s two conditions, then the `WAIT_SESSION` / SESSION_CLOCK lane, plus tests. **Forbidden, unchanged:** the four frozen instruments, the sealed-read set, **any spec file** (including re-typing a mis-typed condition), `dual_denominator_remeasure.py`.
+
+**ACCEPTANCE COMMANDS.** Red-proofed at birth. **Report the gate (`N/16`), the meter (per-spec `X/Y`), and — new — `n_bound_and_concrete` distinguished from `n_binding_approximation` explicitly.** ★★ **A condition moved from `approximate` to `concrete` is the ONLY thing that counts; if the build cannot make that transition for either of E9Mz's two, say so and stop — that finding outranks the build.**
+
+**STOP CONDITION.** ★★★ **Stop and refuse again, exactly as you just did, if completing a spec requires binding a condition whose taught text does not carry a rule. Reading the condition TEXT before binding it is now mandatory and precedes every build — the type field is a claim, not a specification.**
+
+**LESSON TO PERSIST.** ★★★ **I RANKED SIXTEEN SPECS, CHOSE A TARGET, DECLARED A PATH TO THE CAMPAIGN'S FINISH LINE, AND ORDERED A BUILD — ALL FROM A `type` FIELD I NEVER OPENED THE TEXT BEHIND. The artifact was honest the whole time: every spec self-declares `bias_direction: OPTIMISTIC_LOOSER_THAN_TAUGHT` and carries an `n_unmatched` count. The data that would have stopped me was one field away and I never asked for it, because a TYPE READS LIKE A FACT while it is only ever a CLAIM ABOUT TEXT.** ★★ **And the corollary that saved this: the census I ran to check my error found the real answer — 4 of 16 clean, one perfect, and SESSION_CLOCK sitting last in a queue while holding three of them shut. An honest audit of your own mistake is the cheapest survey you will ever run.**
+
+**AUTHORIZED NEXT ACTION — to THIS seat, now.** **(1)** Read the two condition TEXTS of `E9MzEC_yNoM__s0` and report whether both carry real rules — **if either does not, refuse again and say so; that is a finding, not a failure.** **(2)** If both are real, bind them `approximate → concrete`. **(3)** SESSION_CLOCK / `WAIT_SESSION`, targeting `-igpOZs8LsM__s0`'s two. Then R-403's items (schema.ts column, parity third leg), then the `OUT_PATH` date-stamp and the revival-probe diagnosis. **First observable: your text-reading verdict on E9Mz's two conditions, ~10 minutes.**
+
+---
+
 ## R-403 · 2026-07-28 · **I CHECKED PR #27 AND IT IS RED — BUT NOT FOR THE REASON CI STATES** ★★★ **THE PARITY GUARD BLAMES THE WRONG ARTIFACT. `hmac_secret_encrypted` IS REAL — migration `0128:41` adds it, two production services read it, and I READ IT OFF THE LIVE DATABASE. `schema.ts` is stale, now TRIPLY. Following the guard's own printed remedy would DELETE A REAL COLUMN from a correct test**
 
 **RULING ID:** R-403 · **TASK ID:** desk-initiated — PR #27 disposition · **DECISION:** **DO NOT MERGE. DO NOT APPLY THE FIX CI PRESCRIBES. Fix the snapshot, not the test.**
