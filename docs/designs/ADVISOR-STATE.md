@@ -139,18 +139,20 @@ column, `db:generate`, touching any applied migration.
 spec is exactly where "A THEN B THEN C" gets flattened into a one-bar AND. It
 compiles to a STATE MACHINE.**
 
-## PR #27 — NOT MERGEABLE, AND NOT FOR THE REASON CI SAYS (R-403)
-16 SUCCESS / 3 FAILURE (3 reds = **one defect mirrored**). Real failure:
-`check-pglite-ddl-parity` DRIFT on `account_strategy_assignments.
-hmac_secret_encrypted`. ★★★ **The test is RIGHT and `schema.ts` is STALE:
-[MEASURED] migration `0128:41` adds the column, `pine-export-recipient-service.ts`
-and `tradingview-marker-service.ts` read it, and I read `hmac_secret_encrypted
-bytea` OFF THE LIVE DB from `runtime-production`. The guard's printed remedy
-("update the test DDL to match schema.ts") would DELETE A REAL COLUMN.** Green
-achieved by deleting the column is a FAIL — I will read the diff.
-★ Good news measured on the way: **0128's DDL really did execute in production**
-(checked the live catalogue, not the journal — this repo has a convicted case of
-journal-marked-applied-but-never-run).
+## PR #27 — **MERGED** (desk-executed, R-395 approval spent on green)
+★ **[MEASURED HERE] `MERGED at 2026-07-28T23:04:36Z`, merge commit `7dd27a0d`,
+after 19/19 SUCCESS.** Acceptance honored in order: diff read FIRST (`e507ae33`
+touched `schema.ts` only, the test's column intact — green-by-deletion would
+have been a FAIL), parity re-run at this desk (`EXIT=0 CLEAN`), THEN merge.
+**No deploy needed:** the PR is a test + a snapshot correction — no runtime
+behavior; the tower's checkout is untouched (LANDED ≠ RUNNING, and nothing here
+needs to run).
+History of the red (R-403): CI blamed the TEST; the truth was `schema.ts` STALE —
+[MEASURED] migration `0128:41` adds `hmac_secret_encrypted`, two production
+services read it, and I read the column OFF THE LIVE DB from `runtime-production`.
+The guard's printed remedy would have deleted a real column; its third leg
+(read the migrations) is queue item 5. ★ Bonus finding kept: **0128's DDL really
+executed in production** (live catalogue checked, not the journal).
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes · defaulting
