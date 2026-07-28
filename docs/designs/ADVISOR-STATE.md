@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-381**. Newest AR: **AR-345**, RULED (R-381). Worker:
+Ledger at **R-382**. Newest AR: **AR-346**, RULED (R-382). Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
 said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
@@ -26,7 +26,11 @@ RE-ADD amended CHECK, one transaction, idempotent, pglite dry-run ×2);
 R-364 §3's caption rewrite at `broker-router.ts:1764` rides along; hand-author
 on 0159's template, **never `db:generate`** (`migrations/schema.ts:2377` still
 declares the pre-0159 narrow constraint); `migration-author` skill first.
-**PR #19 is BLOCKED (R-381): three-way migration collision** — the operator
+**PR #19: collision CLEARED + dry-run PASSED at this desk (15/15, pglite,
+incl. control + 8 discrimination probes). ONE revise outstanding: run
+`node scripts/gen-migration-manifest.mjs` and commit the manifest (Lint gate).
+On green I merge + deploy + push, then re-verify the two live rows read
+`paper_sim` on the REAL DB. Historic (R-381): three-way migration collision** — the operator
 shipped `0207_youtube_evidence_archive` (idx 210, applied) while we worked.
 Rebase onto **`b2af6c1a`** (pushed), rename to **0208**, journal **idx 211**,
 `when` **> 1785268800000**, touch nothing of the operator's entry. Substance
