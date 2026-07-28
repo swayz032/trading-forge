@@ -65,35 +65,49 @@ BINDING THOSE WOULD INVERT THE TAUGHT STRATEGY. The worker refused. Correctly.**
 CLAIM ABOUT TEXT, not a specification — this is now mandatory and precedes every
 build. Every spec self-declares `bias_direction: OPTIMISTIC_LOOSER_THAN_TAUGHT`.**
 
-1. **Read the two condition TEXTS of `E9MzEC_yNoM__s0` and report the verdict.**
-   ★★★ **[MEASURED] it is the ONLY spec in the corpus with ZERO unmatched AND
-   ZERO unbound** (`n_taught 2 · n_bindable 2 · n_unbound 0 · approx 2 ·
-   bound 0`). **If either text carries no real rule, REFUSE AGAIN — that is a
-   finding, not a failure.** First observable ~10 min.
-2. **If both are real, bind them `approximate → concrete`.** ★★ Only that
-   transition counts: `n_binding_approximation` ≠ `n_bound_and_concrete`, and
-   [MEASURED] `n_bound_and_concrete` is **0** for all four clean specs.
-3. **SESSION_CLOCK / `WAIT_SESSION`** — ★★★ **re-ranked from LAST to SECOND
-   (R-404): [MEASURED] all 27 unbound conditions in the corpus are typed
-   `WAIT_SESSION`, and it is the ONLY thing holding shut three of the four clean
-   specs (2 each).** Target `-igpOZs8LsM__s0` — **11 conditions, 8 confident,
-   0 unmatched — the SUBSTANTIVE exit target, the spec whose completion means a
-   real strategy compiles.**
-4. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
-   MIGRATIONS, so `schema.ts` drift becomes detectable instead of propagatable.
-5. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
-   `dual-denominator-remeasure-2026-07-21.json`; a future publish would overwrite
-   the pinned evidence of record under a false date.
-6. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
-   ENTRY_WITHDRAWN`, `..._PAIR_DRIFTED`, both declared `ws_session_resolvable <=
-   graded_teachings`, both observed `NO_ASSERT_FIRED`). **Report the diagnosis;
-   repair only after I rule on it.**
+★★★ **E9Mz DIED TOO (AR-370 → R-405). Both its texts carry real rules, but their
+REFERENTS have no antecedent in the spec: "the level" (×4) and "the range" are
+defined NOWHERE in the file (no overlay; `transcript_chars: 0`, spans 0..0).
+[MEASURED at the desk] the generic lane binds "the level" to an EMA(20)
+(`spec_condition_compiler.py:143`,`:914`), and `candle_confirmation_check`
+(`:261-286`) takes NO range input — the taught "close beyond the range" is not
+expressible by its signature; it fires on wick geometry, which can trigger
+INSIDE the range = the early entry the teacher forbade. The artifact itself
+counts both conditions approximation-not-concrete in BOTH flag-worlds.**
+**Pinned (R-405): `concrete` requires the teacher's named referent resolved from
+the teacher's material — a framework default (EMA proxy) never qualifies.**
 
-★★ **PRE-REGISTERED (R-404), written before the build so it cannot be spun:**
-`E9MzEC_yNoM__s0` has only TWO conditions. Clearing the gate on it will be
-reported as *"gate cleared on the corpus's SMALLEST spec — the compiler can bind
-a complete spec end-to-end; it has NOT yet compiled a spec resembling a full
-strategy."* **The gate is not raised to exclude it and not reported bare.**
+★★★ **THREE TARGETS, THREE LAYERS, ONE DAY:** `hcHuDfxdywI` — not in the
+population (R-402) · `IyFio` — types not matching text (R-404) · `E9Mz` — text
+whose referents were never captured (R-405). **A target chosen at layer N is
+only as real as every layer beneath it. The corpus self-declares
+`OPTIMISTIC_LOOSER_THAN_TAUGHT` on every spec — believe it.**
+
+1. **THE REFERENT CENSUS (R-405, read-only, running now).** For all 27
+   conditions of `-igpOZs8LsM__s0` (11) · `CLDEIsNpVRc__s0` (10) ·
+   `_LS6qcSlDCs__s0` (6): quote the text; answer (i) real rule? (ii) every
+   referenced structure has an antecedent IN the spec? (iii) bound primitive =
+   same event class? Plus `transcript_chars` per spec. **Decision rule pinned
+   BEFORE data: survive = all load-bearing conditions pass (i)+(ii); (iii)
+   failures = build items, not disqualifiers. If NOTHING survives → "Phase 1 not
+   exitable on corpus_A as extracted" → extraction-side respin (corpus_B) —
+   named in advance so it cannot arrive as improvisation.** First observable:
+   `-igp`'s table, ~20 min.
+2. **SESSION_CLOCK — CONDITIONAL on a census survivor** (demoted from "next
+   build", R-405). All 27 corpus unbound are WAIT_SESSION, but a session lane
+   built for specs that fail deeper layers is a third build that moves nothing.
+3. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
+   MIGRATIONS, so `schema.ts` drift becomes detectable instead of propagatable.
+4. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
+   the 2026-07-21 filename; a publish would overwrite pinned evidence misdated.
+5. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
+   ENTRY_WITHDRAWN`, `..._PAIR_DRIFTED` → `NO_ASSERT_FIRED`). **Diagnosis only;
+   repair after I rule.**
+
+★ Spec-side defects recorded, NOT actionable by the worker (spec edits stay
+forbidden): E9Mz's `and_groups` flattens "confirmation AFTER retest" into a
+same-bar AND (invariant-3 shape, in the FROZEN INPUT); cond0's three-way
+disjunction (retest/breakout/sweep) binds to proximity-touch only.
 
 ## DONE THIS HOUR (verified at this desk, not relayed)
 ★ **R-403 item (4) LANDED — `e507ae33`.** `hmacSecretEncrypted: bytea(...)` added
