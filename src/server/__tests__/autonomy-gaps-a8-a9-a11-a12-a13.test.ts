@@ -101,9 +101,35 @@ vi.mock("../lib/circuit-breaker.js", () => ({
 vi.mock("../lib/metrics-registry.js", () => ({
   traderspostRejectsTotal: { inc: vi.fn() },
 }));
+// item 4: the probe's HTTP moved into this module (the single broker-egress
+// chokepoint), so the factory — which replaces the WHOLE module — must provide
+// probeCredentialTransport or the A-11 probe path hits `undefined is not a function`.
+//
+// ★ THIN REAL-SHAPED WRAPPER over global.fetch, deliberately NOT a bare vi.fn():
+// every A-11 case below mocks `global.fetch` (401/403/400/network-error) and asserts
+// on it, including the R-370 execution witnesses. Stubbing the transport out would
+// silently delete that coverage and leave the tests proving only that the probe calls
+// a mock — the exact vacuity this suite was rewritten to escape.
 vi.mock("../integrations/traderspost/client.js", () => ({
   submitWebhookOrder: vi.fn().mockResolvedValue({ success: true, statusCode: 200 }),
   buildDeterministicIdempotencyKey: vi.fn().mockReturnValue("test-key"),
+  probeCredentialTransport: async (apiKey: string, timeoutMs: number) => {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch("https://traderspost.io/trading/webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+        signal: controller.signal,
+      });
+      clearTimeout(t);
+      return { ok: true as const, status: (resp as Response).status };
+    } catch (err: unknown) {
+      clearTimeout(t);
+      return { ok: false as const, isAbort: err instanceof Error && err.name === "AbortError" };
+    }
+  },
 }));
 vi.mock("../integrations/traderspost/webhook-builder.js", () => ({
   buildWebhookPayload: vi.fn().mockReturnValue({ apiKey: "fake", action: "buy" }),

@@ -57,9 +57,34 @@ vi.mock("../../production/kill-switch.js", () => ({
 }));
 vi.mock("../../lib/execution-mode.js", () => ({ isLiveExecutionConfigured: mockIsLiveConfigured }));
 vi.mock("../../lib/credential-loader.js", () => ({ loadBrokerCredentials: mockLoadCreds }));
+// item 4: the probe's HTTP now lives in this module (the single broker-egress
+// chokepoint). The factory replaces the WHOLE module, so it must provide
+// probeCredentialTransport or the probe path hits `undefined is not a function`.
+//
+// ★ It is implemented as a THIN REAL-SHAPED WRAPPER over global.fetch rather than a
+// bare vi.fn(): these are behaviour tests that mock `global.fetch` and assert on it,
+// so stubbing the transport out entirely would delete the coverage instead of moving
+// it — the tests would then prove only that the probe calls a mock.
 vi.mock("../../integrations/traderspost/client.js", () => ({
   submitWebhookOrder: vi.fn(),
   buildDeterministicIdempotencyKey: vi.fn(() => "k"),
+  probeCredentialTransport: async (apiKey: string, timeoutMs: number) => {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const resp = await fetch("https://traderspost.io/trading/webhook", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey }),
+        signal: controller.signal,
+      });
+      clearTimeout(t);
+      return { ok: true as const, status: (resp as Response).status };
+    } catch (err: unknown) {
+      clearTimeout(t);
+      return { ok: false as const, isAbort: err instanceof Error && err.name === "AbortError" };
+    }
+  },
 }));
 vi.mock("../../integrations/traderspost/webhook-builder.js", () => ({ buildWebhookPayload: vi.fn() }));
 vi.mock("../../services/notification-service.js", () => ({
