@@ -4,6 +4,56 @@
 
 ---
 
+## AR-379 · 2026-07-28 · ★★★ **STOP CONDITION MET — (a) FINDS A REACHED CALLER IN `runtime-production`. `backtester.py:8492` → `from_compiled_spec()` → `SpecConditionStrategy.__init__` → `compile_binding_plan()`. The production binding lane is WIRED INTO THE BACKTESTER, not dead code** ★★ **BUT IT IS REACHABLE-NOT-YET-EXERCISED: the branch requires `config["compiled_spec"]`, and this campaign's standing measured fact is ZERO backtests ever run**
+
+**RULING ID:** R-413 · **TASK ID:** (a) severity grep · **TREE: `runtime-production` (every line below).** · **RECOMMENDATION:** **latent, wired, one config key away from live. Reporting immediately per your stop condition rather than continuing to (b).**
+
+---
+
+### THE CALLER CHAIN — all four links, `runtime-production`
+
+```
+src/engine/backtester.py:8492      strategy = from_compiled_spec(config["compiled_spec"], …)
+src/engine/spec_condition_compiler.py:849   def from_compiled_spec(…)
+src/engine/spec_condition_compiler.py:869       return SpecConditionStrategy(…)
+src/engine/spec_condition_compiler.py:226       self.binding_plan = binding_plan or compile_binding_plan(…)
+```
+
+**YES — there is a reached, non-test caller.**
+
+★ **Every other non-test hit was noise and I checked rather than counted:** `spec_condition_compiler.py:4, 174, 205, 211, 867` and `spec_family_bindings.py:550` are **docstrings/comments**; `:55` is the **import**; `role_demotion_audit.py:99` is a **comment**. **Exactly one line invokes it (`:226`), and exactly one non-test line reaches that class (`backtester.py:8492`).** The 20-odd remaining hits are all under `src/engine/tests/`.
+
+### THE GATE — what stands between reachable and live
+
+`backtester.py:8471`:
+```python
+elif isinstance(config, dict) and config.get("compiled_spec"):
+    # ─── Band C: compiled-spec condition-family dispatch ──────────────
+```
+The branch fires **only** when a backtest config carries `compiled_spec` **and** no `strategy_class`. Its own comment: *"ZERO effect on any pre-existing strategy_class or DSL-expression backtest … additive, byte-identical for everything else."*
+
+★★ **So the severity is precisely: WIRED AND REACHABLE, NOT YET EXERCISED.** [ARTIFACT-SOURCED, ADVISOR-STATE] the campaign's standing measured fact is **0 backtests ever run** and 120 strategies at rung one — **so this path has almost certainly never executed.** ★ **I am not calling it dormant.** It is not behind a flag, not behind an env var, and not behind a review — **it is behind a dictionary key that the spec-onboarding path is designed to produce.** `spec-onboarding-service.ts:338` names this dispatch explicitly (*"strategy to SpecConditionStrategy in the Python engine"*), so **the producer of that key already exists in the server.**
+
+★★★ **Why this matters for the reporting defect you named:** the numbers this campaign publishes are computed in the **campaign** tree (160,049 B). The tree that will actually execute a compiled spec is **production** (35,046 B). **They disagree on at least one binding — `W7nl[6]`, `session_windows`, `approximation=False` — which is exactly the class of row a Phase-1 figure counts.** The moment the first Band-C backtest runs, **the lane that produced our measurements is not the lane that produced the trades.**
+
+### SECOND HALF OF (a) — the overnight/pre-market phrase
+
+★ **[MEASURED, tree: campaign checkout]** the phrase that triggers the divergent binding is `W7nlnHTUZQU__s0`'s condition [6] — *"overnight/pre-market range … 4:00 p.m. EST … 9:30 a.m. EST"* — and `overnight` / `pre market` are both in `SESSION_KEYWORDS`.
+★ **[NOT ESTABLISHED]** whether that spec, or any corpus_A spec, is reachable as a `compiled_spec` in production. **The 16 shakedown specs live under `docs/replay-results/…/shakedown_specs/`, not in a production table** — I have **not** traced whether spec-onboarding writes any of them into a backtest config, and **I am not asserting either way.** That trace is the natural follow-on and it converts "one config key away" into a yes/no.
+
+---
+
+**Files changed:** none. Read-only, in the executing tree. **No write to `runtime-production`.**
+**Hypotheses REJECTED:** (i) "the production binding lane has no non-test caller" — **false, `backtester.py:8492`**; (ii) "the many non-test grep hits are call sites" — **false, all but one are comments or the import.**
+**Remaining uncertainty:** whether any onboarded spec currently carries `compiled_spec` in a production backtest config — **[UNTRACED]**; whether `-igp`/`CLDE`/`W7nl` are among them — **[UNTRACED]**.
+**Risk:** **latent.** Nothing is executing today. **The defect becomes live on the first Band-C backtest**, and this campaign's entire purpose is to produce exactly that.
+
+**Recommendation:** **(1)** ★ before ANY Band-C backtest is run, decide which tree's binding lane is authoritative — **that is now a prerequisite of the first backtest, not a cleanup item**; **(2)** trace whether `spec-onboarding-service.ts` writes `compiled_spec` into a backtest config today (converts latent→live or confirms latent); **(3)** then (b), the structural inventory.
+
+**Next smallest task (ONE):** trace `compiled_spec` from `spec-onboarding-service.ts:338` to `/api/backtests` and report whether a production backtest config can carry it today.
+
+---
+
 ## AR-378 · 2026-07-28 · **I VERIFIED THE FILL-PATH CATCH AT THE LINE AND IT IS CORRECT — ★ AR-375's "cannot manufacture trades" IS WITHDRAWN, MINE AS WELL AS R-410's** ★★★ **AND ONE THING MUST NOT GET LOST: R-412 REJECTS TWO CRITIQUE CLAIMS USING THE "PHANTOM ROW" — BUT AR-377 MEASURED THAT ROW IN THREE TREES AN HOUR AGO AND IT EXISTS IN TWO OF THEM, INCLUDING `runtime-production`**
 
 **RULING ID:** R-412 · **TASK ID:** verify the adopted correction + one crossing-report flag · **RECOMMENDATION:** **correction accepted; one input to R-412 needs re-checking before its rejections stand.**
