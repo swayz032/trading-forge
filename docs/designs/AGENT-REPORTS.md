@@ -4,6 +4,63 @@
 
 ---
 
+## AR-359 · 2026-07-28 · ★★★ **THE OPERATOR'S ACTIVE VAULT WORKTREE JUNCTIONS INTO THE PRODUCTION TOWER'S `node_modules`. One `npm ci` or `rm -rf node_modules` in that tree DELETES THE RUNNING TOWER'S DEPENDENCIES — the exact incident class that killed all three heavy rail jobs on 2026-07-18** · ★★ **And it was the `npm ci`-at-boot queue item that led here: the answer to that item is NO, for a reason nobody had written down**
+
+**RULING ID:** R-391/R-393 (item 3, sub-item 2) · **TASK ID:** `npm ci` at boot · **RECOMMENDATION:** **APPROVAL_REQUESTED to remediate — this is a live loaded gun, not a design opinion.** I have changed nothing; every command below is read-only.
+
+---
+
+### ★★★ THE FINDING, MEASURED
+
+```
+wt-codex-transcript-vault\node_modules   junction=True
+   target : C:\Users\tonio\Projects\trading-forge\runtime-production\node_modules
+   prod pkg count 321  |  via-vault pkg count 321   (same underlying directory)
+```
+
+**That worktree is not dormant.** `git -C wt-codex-transcript-vault rev-parse --abbrev-ref HEAD` → `hardening/slumhouse-transcript-vault-20260728`; last commit **`3843818f`, dated 2026-07-28** — *today* — `feat(slumhouse): filter vault strategies by instrument`. **This is the operator's evidence-vault work that R-377 and R-393 both went out of their way to preserve.**
+
+**And `runtime-production` is what NSSM actually executes** — measured, not assumed:
+```
+AppDirectory  : C:\Users\tonio\Projects\trading-forge\runtime-production
+AppParameters : ...\runtime-production\scripts\tower-boot.mjs
+```
+
+★★★ **So the chain is complete and live: a routine, blameless command in a tree the operator is actively committing to — `npm ci`, `rm -rf node_modules`, a "clean reinstall" — resolves through the junction and deletes the RUNNING TOWER'S dependencies.** This desk's own pinned facts describe both halves: *rm -rf on a Windows junction wipes the TARGET*, and *2026-07-18 node_modules erosion killed all three heavy rail jobs*. **The mechanism is documented; what was not documented is that a junction is currently aimed at production.**
+
+★ I nearly reported the wrong tree. My first check ran against `C:\Users\tonio\Projects\runtime-production` — **which does not exist**; the real path is nested at `trading-forge\runtime-production`. Had I stopped at "no junctions found" I would have filed a clean bill of health for a path that isn't the tower. **A negative result from the wrong target is not a negative result.**
+
+---
+
+### ★★ THIS ANSWERS THE QUEUE ITEM — AND THE ANSWER IS NO
+
+`scripts/tower-boot.mjs` self-heals with `npm install` (line 50), not `npm ci`. **That is CORRECT here, and the reason is the finding above:** `npm ci` **deletes `node_modules` before installing**. Running it at boot would destroy the directory that `wt-codex-transcript-vault` currently depends on, and running it *from* the vault tree would destroy production's. **`npm install` is non-destructive and is the right primitive for a shared-junction topology.** ★ **Swapping to `npm ci` "for determinism" would have converted a self-heal into the outage it exists to prevent.** Two sub-items into item 3, two inverted premises — I recommend the desk treat the queue's phrasings as hypotheses rather than findings.
+
+**[REAL WEAKNESS, and it is the detector, not the installer]** `missingDeps()` (line 35) checks **directory existence for 7 packages** — `tsx, dotenv, drizzle-orm, postgres, express, pino, zod` — out of **321** present. **A partial erosion that removes any of the other 314, or that leaves a package directory present but gutted, passes the check and the tower boots into a broken state with `all 7 critical deps present` in the log.** ★ That is precisely the 2026-07-18 shape: the API stayed up while heavy rail jobs died. **The self-heal is guarding the door it was built for and is blind to the one that actually failed.**
+
+---
+
+### REMEDIATION OPTIONS (yours to choose — I have implemented none)
+
+**(A) Break the aim — highest value, lowest risk.** Give `wt-codex-transcript-vault` its own real `node_modules` (or repoint its junction at `trading-forge\trading-forge\node_modules`, where **24 other worktrees already point** and which is NOT the tower). **This removes the loaded gun without touching production or the boot path.** ★ Recommended.
+**(B) Harden the detector.** Verify against the lockfile rather than 7 hardcoded names — e.g. require each `node_modules/<pkg>/package.json` to exist and parse for the direct dependencies of `package.json`. Catches gutted-but-present dirs. Additive, flag-free, no behaviour change when healthy.
+**(C) Leave `npm install`.** Affirmatively correct — worth recording as a decision with its reason, so a future reader doesn't "fix" it to `npm ci`. ★ The comment at line 13 explains *what* it does but not *why not `ci`*, which is exactly how this gets changed by someone helpful.
+
+**Also surfaced (lower priority, not part of this ask):** `tf-quantum-rl-bridge` and `wt-pine-export-fix` junction to `tf-verify-fix\node_modules`, which **does not exist** — two dangling junctions. Harmless today; noted so the census is complete.
+
+---
+
+**Files changed:** none. **Commands:** all read-only (`Get-Item -Force` attribute reads, `nssm get`, `git rev-parse`/`log`).
+**Architecture boundaries NOT touched:** no boot script edited · no junction created/removed/repointed · no production write · no service restart.
+**Remaining uncertainty:** whether the vault junction was deliberate (a fast way to get deps) or incidental — **that changes the fix, not the risk.** I did not create it and cannot tell from the filesystem.
+**Risk of inaction:** one ordinary npm command in an actively-committed tree takes the tower's dependencies out from under it. **Nothing in the system currently prevents or detects this before the fact.**
+
+**Recommendation:** **(A) now, (C) as a one-line comment alongside it, (B) as a follow-up.** All three are mine to implement on your word; (A) touches only a worktree the operator owns, so it may be theirs to approve rather than yours.
+
+**Next smallest task (ONE):** on your ruling — repoint or materialise `wt-codex-transcript-vault`'s `node_modules` so nothing aims at the running tower.
+
+---
+
 ## AR-358 · 2026-07-28 · **ITEM 3 / server-derived `strategy_id` — THE QUEUE ITEM'S PREMISE IS WRONG AND I AM SAYING SO BEFORE BUILDING ANYTHING: the payload-supplied `strategy_id` IS cryptographically bound to the pair, so "derive it server-side" would fix nothing.** ★★★ **The real property is adjacent and bigger: BOTH proofs on these paths are STATIC BEARER CREDENTIALS that authenticate IDENTITY BUT NEVER CONTENT — and the compiler's own contract says the live-order one IS the raw `hmac_secret`, embedded at compile time**
 
 **RULING ID:** R-391 (item 3) · **TASK ID:** item 3, sub-item 1 · **RECOMMENDATION:** **BLOCKED — one question decides whether this is a finding or a non-issue, and I will not guess it.**
