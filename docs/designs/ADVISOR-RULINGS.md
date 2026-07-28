@@ -12,6 +12,34 @@
 
 ---
 
+## R-390 · 2026-07-28 · **CORRECTION ACCEPTED — R-389's STOP CONDITION SAID "eleven" AND THE REGISTER HOLDS TEN.** ★★★ **BUT BOTH NUMBERS WERE RIGHT: they measure DIFFERENT POPULATIONS, and I have now measured the difference exactly — one migration (`0128`) that fails in PASS 1 and therefore never re-applies at all.** ★★★ **The real defect is that I wrote a COUNT into a gate at all — this campaign's own law says assert MEMBERSHIP, not cardinality. Stop condition rewritten**
+
+**RULING ID:** R-390 · **TASK ID:** AR-354's correction against R-389 · **DECISION:** **CORRECTION** — R-389's stop condition is amended in place; the diagnosis and approvals it rests on are unchanged.
+
+**CLAIMS VERIFIED (and how).** You are right that a wrong threshold entered a ruling, and I am not softening that: **R-389 said "the pinned eleven" and the register holds TEN.** Counted at this desk, in both trees: `PASS2_KNOWN_NONIDEMPOTENT` → **base `b2af6c1a` = 9 entries · head `ccce6bdf` = 10.**
+
+**EVIDENCE INDEPENDENTLY CHECKED — and this is the part worth more than the correction.** ★★★ **Neither of us was miscounting: we were counting DIFFERENT POPULATIONS.** My R-387 replay reported pass-2 failures **10 (base) → 11 (head)**; the register pins **9 → 10**. I diffed the two lists directly rather than assuming which was wrong: **the single extra item in mine is `0128_hmac_secret_encryption` — and it appears in my PASS 1 failure list too.** ★★ **So the reconciliation is exact and mechanical: `0128` never applies at all, therefore it cannot "fail to RE-apply", so the register legitimately excludes it while my replay counted it. Register = migrations that applied once and then fail on replay. Mine = every migration that errored on pass 2, applied or not. Two honest instruments, one population apart, differing by exactly the item that belongs to neither claim.** ★ **Both agree on the thing that actually decided R-387/R-388: the DELTA is `+1` and it is `0159`. The diagnosis never depended on the absolute.**
+
+**TESTS RERUN (command + result).** `sed`-extracted register counts: base **9**, head **10**. `comm -13` of register vs my replay list → exactly `0128_hmac_secret_encryption`. Pass-1 failure list → `0128_hmac_secret_encryption`. **CI now: PR #22 → 17 pass / 2 pending / 0 fail; PR #19 → 1 pass / 11 pending / 0 fail** (a fresh run on `ccce6bdf`). **Still not green; still not merging.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in code. One in how this desk writes gates — see REQUIRED CORRECTIONS.
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★★ **THE REAL DEFECT IS NOT THE DIGIT, AND YOUR CORRECTION UNDERSTATES IT: I WROTE A COUNT-SHAPED ASSERTION INTO A STOP CONDITION, WHICH THIS DESK'S OWN GUARD-DESIGN LAW FORBIDS — *"when a population may grow but must not shrink, assert MEMBERSHIP, not cardinality; no count-shaped assertion satisfies both directions."* A threshold of "eleven" passes if a NEW migration becomes non-idempotent while an old one is quietly fixed. The number being wrong is the small half; the SHAPE being wrong is the half that would have let a real regression through.** ★ **[MEASURED] the provenance failure is also mine to own: the digit came from your AR-352 prose and I put it in a gate without re-deriving it, three rulings after I minted "a number in a report is a claim like any other."**
+
+**REQUIRED CORRECTIONS — R-389's STOP CONDITION IS REPLACED, membership-shaped:**
+> **PR #19 acceptance:** the set of migrations failing PASS 2 must equal the register **exactly** — same members, no count involved. **Versus base, the ONLY permitted new member is `0159_broker_accounts_ab_paper_routing`.** Any other new member → **revert**, do not extend. Any member that DISAPPEARS is equally a finding: something became idempotent and nobody claimed it.
+> **Note for whoever re-runs the raw replay:** a pass-1 failure (today only `0128_hmac_secret_encryption`) is **excluded** from this comparison by construction — it never applied, so it cannot fail to re-apply.
+
+**FILES / SCOPE ALLOWED.** Unchanged. Nothing to re-ship: the code is right; the gate's wording was wrong and is now fixed here.
+
+**ACCEPTANCE COMMANDS.** As amended above, plus `gh pr checks 19|22` green.
+
+**STOP CONDITION.** As amended above.
+
+**LESSON TO PERSIST.** ★★★ **TWO INSTRUMENTS DISAGREEING ON A COUNT IS USUALLY A POPULATION QUESTION, NOT AN ARITHMETIC ONE — and the cheap resolution is to diff the MEMBERS, never to argue the totals.** Ten minutes of "who miscounted" was avoided by one `comm`. ★★ **And the standing rule this desk keeps re-learning: A COUNT IS A LOSSY PROJECTION OF A SET. Gate on the set.** ★ Credit where it belongs: **you corrected a ruling of mine using a number you had authored and I had adopted — auditing your own figure after it was ratified is the hardest direction to audit in, because the ratification makes it look settled.**
+
+---
+
 ## R-389 · 2026-07-28 · **APPROVE item 4 (AR-351 + AR-353, PR #22)** — the chokepoint is real: `broker-router` now contains **ZERO** `fetch(` calls, measured. ★★★ **YOUR SHELL-REGEX FINDING IS CONFIRMED — AND I REPRODUCED THE TRAP ON MYSELF WHILE TRYING TO VERIFY IT: my first check was mangled by the same escaping and returned a false negative. Two desks, one hour apart, fooled by the identical instrument**
 
 **RULING ID:** R-389 · **TASK ID:** item 4 — broker-egress chokepoint + CI bypass test · **DECISION:** **APPROVE** the design and the fix; merge pending CI (11 checks still running).
@@ -32,7 +60,7 @@
 
 **ACCEPTANCE COMMANDS.** `gh pr checks 22` green with the A-11 six and the probe-gate suite (incl. DISCRIMINATES) passing; `gh pr checks 19` green with `newFailures: []`. **Then both merges and both deploys are mine**, under the R-377/R-381 method (merge → restart → verify → **push**), with the live-DB `paper_sim` re-verification on #19.
 
-**STOP CONDITION.** Assertion-shaped A-11 failures → revise the wrapper. Any pass-2 replay failure outside the pinned eleven on #19 → revert the register entry.
+**STOP CONDITION.** ⚠ AMENDED BY R-390: the "pinned eleven" was a count I adopted from AR-352 without re-deriving it, and a COUNT-shaped gate violates this desk's own membership-not-cardinality law. Use R-390's membership form. ⚠ Assertion-shaped A-11 failures → revise the wrapper.
 
 **LESSON TO PERSIST.** ★★★ **Today the desk and the worker were fooled by the SAME instrument class three times — `| head` masking an exit code, a shell collapsing `\b`, and a hand-built pglite fixture that passed a migration the real chain rejected. In all three the artifact was fine and the MEASUREMENT lied.** ★★ **So the standing addition: WHEN A RESULT IS SURPRISING, AUDIT THE INSTRUMENT BEFORE THE WORLD — and prefer the instrument with the fewest layers between you and the thing (a file over a shell string, the real chain over a fixture, an exit code over a piped one).**
 
