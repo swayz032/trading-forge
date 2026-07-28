@@ -2,11 +2,11 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
-> Last rewritten: 2026-07-28, current through **R-410** (fidelity ruled).
+> Last rewritten: 2026-07-28, current through **R-415** (tree divergence).
 
 ## SEAT
-Ledger at **R-410**. Newest AR: **AR-375, RULED** (FVG fidelity: PARTIAL).
-Worker: **ACTIVE on the flag-yield sweep** (item 1 below). PR #27 **MERGED** (`7dd27a0d`, 19/19 green).
+Ledger at **R-415**. Newest AR: **AR-379, RULED** (stop condition FIRED).
+Worker: **ACTIVE on the `compiled_spec` trace** (item 1 below). PR #27 **MERGED** (`7dd27a0d`, 19/19 green).
 Rig: 2s content-hash report poll + 15-min idle watchdog — **one rig, never
 new-plus-old**; the `ADVISOR-RULINGS.md` watcher under the OTHER `claude.exe`
 is the worker's ear, never kill it.
@@ -95,47 +95,74 @@ binding architecture works end-to-end on real specs, which is what makes
 corpus_B worth respinning. ★ **Sizing measures VALUE, it does NOT graduate the
 flag** — graduation runs the SDS harness review per the flag's own docstring.
 
-## AUTHORIZED NOW (worker, in order)
-1. **FLAG-YIELD SWEEP across all 16 specs** — same in-process harness,
-   read-only, process-local env. Per-spec concrete-delta **PLUS the new
-   FIDELITY-BASIS column (R-410): did this spec's teacher DEFINE the FVG
-   boundaries, and if so do they match the primitive?**
-   ★★ **STOP and report if any spec's teacher defined boundaries LOOSER than
-   the primitive** — that flips the divergence into the dangerous direction and
-   outranks the rest of the sweep. First observable: the 16-row table, ~25 min.
-2. **corpus_B charter DRAFT** (design note, no extraction run) — **lead with
-   the SEVERED-DEFINITION class** (below), then mis-types, uncaptured
-   referents, unquantified adjectives, `transcript_chars: 0`.
-3. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
-   MIGRATIONS (R-403: its "schema.ts is the source of truth" remedy nearly
-   deleted a real column from a correct test).
-4. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
-   the 2026-07-21 filename; a publish would overwrite pinned evidence misdated.
-5. **Revival-probe diagnosis** (`SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN` /
-   `_PAIR_DRIFTED` -> `NO_ASSERT_FIRED`). Diagnosis only; repair after I rule.
+## ★★★ THE TREE DIVERGENCE (R-413/R-415) — THE DAY'S LARGEST FINDING
+**`spec_family_bindings.py` is TWO DIFFERENT FILES:**
+`wt-h1-wave4-20260712` (campaign) **160,049 B** `sha 6980a2a7…`
+`runtime-production` (THE TOWER RUNS THIS) **35,046 B** `sha 6ca65f7f…` — **4.6x**
 
-## THE FIDELITY RULING (R-410) — verdict PARTIAL, and it reshapes the count
-★★★ **[MEASURED at the desk, `fvg_native.py:83-93`] the primitive detects on
-`low[i] > high[i-2]` (HIGH/LOW boundaries). `-igp`'s teacher said the gap runs
-from the CLOSE of candle 1 to the OPEN of candle 3.** Divergent — but the
-implemented band is a SUBSET of the taught band, so it fires LESS and marks
-SMALLER: **STRICTER than taught, the opposite of every fidelity defect this
-campaign has convicted.** Window / displacement / direction / no-look-ahead all
-FAITHFUL. **STOP condition correctly NOT triggered** (PARTIAL, not DIVERGENT).
-★★★ **FIDELITY IS PER-SPEC, NOT PER-PRIMITIVE — never report a bare "+7":**
-- `CLDE` **+3 HONEST** — its teacher says "a 5-minute fair value gap" and never
-  defines boundaries, so canonical ICT is a defensible reading.
-- `-igp` **+4 OVERSTATED** — its teacher DID define them, differently.
-★ **R-409's "-igp first, it's the bigger number" preference: REVERSED.** The
-larger number is the less honest one.
-★★★ **THE SEVERED DEFINITION — the day's sharpest artifact.** `-igp`'s teacher
-gave the build rule for his own object mechanically, TWICE, in conditions [1]
-and [3] — **and [MEASURED, my own dispatcher run] those are exactly the two
-rows returning UNBOUND `no_recognized_session_keyword`, flag on or off.** A
-wrong type label throws away a definition sitting ten lines from the thing that
-needed it, while a downstream lane guesses at that very rule. **Before
-respinning for MORE extraction, fix the routing that DISCARDS what was already
-extracted.**
+★★★ **The campaign measured a compiler; it measured the wrong COPY of it.**
+`LANDED != RUNNING` now has a second form: **`MEASURED != MEASURED-WHERE-IT-RUNS`.**
+- **[MEASURED, both trees] the FVG deltas are TREE-INVARIANT** (4/3/2/1 = 10), so
+  R-409/R-410/R-412's fidelity work stands. **The BASELINES are not invariant:**
+  campaign `0 -> 10`, production `1 -> 11`.
+- **[MEASURED] production still lists `"overnight": (…,"pre market","premarket")`
+  INSIDE `SESSION_KEYWORDS:275-283` and has NO `REFUSED_SESSION_KEYWORDS` (grep
+  count 0). So production BINDS an overnight/pre-market range and reports it
+  `approximation=False` — A FALSE CONCRETE — for a zone the newer code
+  deliberately refuses as having no honest runtime primitive. THE CAMPAIGN TREE
+  IS THE CORRECT ONE.**
+- ★★★ **REACHED CALLER CONFIRMED at the desk in the executing tree:**
+  `backtester.py:8471` (Band-C branch) -> `:8492 from_compiled_spec(...)` ->
+  `spec_condition_compiler.py:849` -> `:866 SpecConditionStrategy(...)` ->
+  `:226 compile_binding_plan(...)`.
+- ★★ **SEVERITY: LATENT — wired, never exercised. [MEASURED on the live DB
+  2026-07-28] `BACKTESTS total: 0`, `completed: 0`, `PAPER sessions: 0`,
+  120 strategies (117 CANDIDATE / 3 NEEDS_ARCHETYPE).** Safe by STARVATION, not
+  by design — one populated `compiled_spec` config away.
+- ★★★ **IT ACTIVATES ON THE FIRST BAND-C BACKTEST — which is what this campaign
+  exists to produce.**
+
+## ★★★ NEW PHASE-2 PREREQUISITE (R-415) — assignee: THIS SEAT
+**"Before the first Band-C backtest runs, the desk rules which binding lane is
+authoritative and the executing tree carries it."** Settled on COMPILER
+CORRECTNESS (which lane binds the teacher's rule honestly), **never** on which
+lane produces better backtest numbers (inv. 1).
+★ **NOT AUTHORIZED tonight: deploying the campaign binding lane to production.**
+A 4.6x replacement of the module deciding how every taught rule compiles gets
+its own contract, red-proofs and ruling.
+
+## STANDING: EVERY FIGURE NAMES ITS TREE (R-413)
+An evidence grade certifies that I ran something; it certifies nothing about
+WHERE. The pinned Phase-1 before-figure is **computed in the CAMPAIGN lane —
+which is not the lane that will run the backtest.**
+
+## WITHDRAWN TODAY (desk claims, corrected in place)
+`hcHu`/`IyFio`/`E9Mz` targets · "CLDE 10/10" · "Phase 1 exitable on corpus_A" ·
+"the primitive cannot manufacture trades" (fill path, `fvg_native.py:126`/`:146`)
+· "the W7nln phantom does not exist" (real in production) · "the artifact is
+stale = FALSE" (it is UNSCOPED — right conclusion, wrong reason).
+
+## AUTHORIZED NOW (worker, in order)
+1. **Trace `compiled_spec`** from `spec-onboarding-service.ts` to
+   `/api/backtests`: can a production backtest config carry it TODAY?
+   Read-only, name the tree on every line. **STOP and report if YES — that
+   moves this LATENT -> ARMED.** First observable: call path + yes/no, ~15 min.
+2. **Structural inventory** of the campaign<->production binding-lane
+   divergence — categories present in one lane and absent in the other, with
+   byte-anchored evidence. Not a line dump.
+3. **corpus_B charter DRAFT** — lead with the `term_definition` schema +
+   precedence chain (explicit trader definition -> trader glossary -> family ->
+   canonical -> unresolved), then the SEVERED-DEFINITION class, then the
+   four-rung fidelity ladder.
+4. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
+   MIGRATIONS (R-403).
+5. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103`.
+6. **Revival-probe diagnosis** — diagnosis only; repair after I rule.
+
+★★ **STANDING WORKER DUTY (R-414): audit the desk's CONSISTENCY, not just its
+instructions.** The worker found R-412 carrying a rejection built on a premise
+R-413 had already overturned, and filed it as a finding instead of assuming the
+desk had reconciled them.
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes · flag
