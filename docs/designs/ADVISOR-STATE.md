@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-382**. Newest AR: **AR-346**, RULED (R-382). Worker:
+Ledger at **R-383**. Newest AR: **AR-347**, RULED (R-383). Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
 said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
@@ -18,6 +18,10 @@ stop-and-asks route to THIS DESK, answered in the same ruling. Also standing
 (operator-ordered): **never answer from ignorance when WebSearch exists** —
 research, then answer with sources. Rig: 2s content-hash report poll + 15-min
 idle watchdog (hash-based; excludes my own ledger commits).
+★★★ **INVOKE `advisor-ruling` BEFORE EVERY RULING** (skill §0.-1) — not once per
+session. Measured 2026-07-28: invoking once and ruling from memory collapsed
+§7 field compliance from 4.0/10 to 0.1/10, and the skill FILE MUTATES (edited
+4x that day), so a remembered copy is a stale copy.
 
 ## AUTHORIZED NOW
 **Item 2** — paper rows → no-egress `broker_type`. R-363's ordering is
