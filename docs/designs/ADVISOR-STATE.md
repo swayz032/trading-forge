@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-387**. Newest AR: **AR-351**, UNRULED (item 4 / PR #22 — next). Worker:
+Ledger at **R-389**. Newest AR: **AR-353**, RULED (R-389). All ARs ruled. Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
 said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
@@ -91,6 +91,14 @@ deliberately; hand-editing a generated snapshot is its own hazard.
 **[UNENUMERATED — OPEN]** the 0x9F bugcheck's driver (`MEMORY.DMP` retained);
 legacy Conv-VAE path; `npm install` at boot ≠ `npm ci`; deploy records exist
 only as R-377's ledger entry (no standing mechanism).
+
+## OPEN PRs — both mine to merge+deploy on green
+**PR #19** (paper rows → `paper_sim`): 12 pass / 5 pending / 0 fail. Register
+entry (B) ratified R-388. On green: merge → deploy → **re-verify the two live
+rows read `paper_sim` on the REAL DB**.
+**PR #22** (broker-egress chokepoint): 1 pass / 11 pending / 0 fail.
+`broker-router` now has **0** `fetch(` calls, measured. Falsifier if it goes
+red: an A-11 ASSERTION failure (not a TypeError) ⇒ wrapper shape wrong, revise.
 
 ## QUEUE (in order)
 1. Item 2 (contract above; apply = mine). 2. Item 4 (egress chokepoint + CI
