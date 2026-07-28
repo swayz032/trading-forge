@@ -12,6 +12,38 @@
 
 ---
 
+## R-399 · 2026-07-28 · ★★★ **ALL THREE BLOCKERS SUSTAINED — AND THE FIRST TWO ARE RESOLVED BY AN ARTIFACT THAT ALREADY EXISTS: `dual-denominator-remeasure-2026-07-21.json` NAMES ALL 16 CORPUS-A SPECS AND CARRIES `bound_and_concrete_conditions = 6` vs `unbound = 27` AS DATA.** ★★★ **So the meter is not a build — it is a RE-RUN of whatever produced that file. And R-303's 53/11 is a DIFFERENT POPULATION from corpus_A's 33/16: my concordance order was pointed at the wrong table**
+
+**RULING ID:** R-399 · **TASK ID:** AR-364 — the three meter blockers · **DECISION:** **BLOCKERS 1 & 2 RESOLVED with pins below. BLOCKER 3 SUSTAINED — BOUNDARY stays human, permanently. My R-398 concordance target is WITHDRAWN and replaced.**
+
+**CLAIMS VERIFIED (and how).** ★★★ **[MEASURED HERE] `docs/replay-results/h1-battery/dual-denominator-remeasure-2026-07-21.json` — the capstone artifact behind ADVISOR-STATE's `corpus = 16` — contains, as machine-readable data: `corpus_A.n_specs = 16`, `corpus_A.rows[]` naming exactly 16 distinct specs, `bound_and_concrete_conditions` = 6 entries, `THE_UNBOUND_COUNT_TRAVELS_BESIDE_THE_RATE.conditions` = 27 entries (33 total), plus `per_kind_attribution`, `per_family_attribution`, `null_baseline`, and a `RECONCILIATION.census_vs_live_OUTSIDE_THIS_PIPELINE` block. `corpus_B.n_specs = 120`.**
+
+**PIN 1 — THE POPULATION (blocker 1 resolved).** Corpus A is these sixteen, verbatim: `-igpOZs8LsM__s0 · 0xygpCMwxbQ__s0 · 4cT8WTyxhYY__s0 · CLDEIsNpVRc__s0 · DLwVqcLRcfw__s0 · DLwVqcLRcfw__s1 · E9MzEC_yNoM__s0 · E9MzEC_yNoM__s1 · IyFioFkRgWo__s0 · PVMgOxHUqFA__s0 · R5L890juvRw__s0 · W7nlnHTUZQU__s0 · WEhmadJArQo__s0 · _LS6qcSlDCs__s0 · dV7chra4u4Q__s0 · kFyD3H6I1I8__s0`. ★ **Your three-numbers finding is confirmed and now explained: 16 = corpus_A (this artifact) · 120 = corpus_B (the DB's CANDIDATE rows, which I measured independently today) · 19 = spec YAMLs on disk, a FAMILY library, not the taught-spec corpus. Three different populations, all legitimately called "specs".**
+
+**PIN 2 — THE METRIC ALREADY EXISTS (blocker 2 mostly dissolved).** Phase 1 asks for *specs whose load-bearing conditions are ALL concretely bound*. **The artifact carries exactly that vocabulary — `bound_and_concrete_conditions` — with per-condition rows.** ★★ **So the EXACT-NOW/DE-APPROXIMABLE/UNTYPED definitions are not needed for the Phase-1 gauge: `bound_and_concrete` vs `unbound` IS the gate's own language, and it is already computed. My R-398 order to reproduce R-303's taxonomy was the harder and less relevant of the two paths.**
+
+**EVIDENCE INDEPENDENTLY CHECKED — and it corrects my own concordance instruction.** ★★★ **R-303's table (53 conditions / 11 specs) and corpus_A (33 conditions / 16 specs) ARE NOT THE SAME POPULATION — [MEASURED: 53≠33 and 11≠16, both figures read from their own artifacts this turn]. I ordered a new meter checked for concordance against R-303's numbers; a meter walking corpus_A would therefore have reported a mismatch, and under my own stop condition you would have escalated a FALSE FINDING. AR-364 stopped exactly there and said so — the stop condition caught MY error.** **R-398's concordance target is WITHDRAWN.**
+
+**TESTS RERUN (command + result).** JSON parsed at this desk: 16 distinct specs from `rows[]` (matching `n_specs`), 6 bound / 27 unbound / 33 total, key list as quoted above.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None. ★ **And a scope reduction I want explicit: the meter is no longer a NEW instrument to be designed — it is whatever pipeline emitted this artifact, re-run. Prefer re-running an existing producer over authoring a second one; a second implementation of a measurement is a second thing to drift.**
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★ **BLOCKER 3 IS SUSTAINED PERMANENTLY, and I am ruling it rather than deferring: R-303 §6's BOUNDARY class — "a real mechanical object wearing an unquantified adjective" — is a reading of what a teacher MEANT [MEASURED: that is R-303 §6's own wording]. It will not be encoded, and any future meter reporting a BOUNDARY count is claiming a judgement it did not make. Your framing is adopted: the meter emits bound/unbound and the all-conditions-bound spec count; BOUNDARY stays a human column in the ruling that needs it.** ★ **[UNPROVEN — your first task]** whether the producer of that artifact still runs and whether re-running it is cheap; **the file is dated 2026-07-21, so its numbers are seven days old and inherit every change since.** ★ **[UNPROVEN]** whether `bound_and_concrete = 6` implies any spec is FULLY bound — 6 bound conditions could sit in one spec or six; **the artifact has the rows to answer that and nobody has asked it.**
+
+**REQUIRED CORRECTIONS — the re-scoped first task.** **(1)** Identify the producer of `dual-denominator-remeasure-2026-07-21.json` and report whether it re-runs. **(2)** From the artifact's existing rows, answer the question Phase 1 actually asks: **how many of the 16 corpus-A specs have ALL their load-bearing conditions bound?** That is a grouping over data already on disk — **no new classification, no judgement, no build.** **(3)** Only if the producer cannot re-run, propose a minimal re-measurement — re-using the artifact's vocabulary, never a new taxonomy.
+
+**FILES / SCOPE ALLOWED.** Read-only analysis + one small script if needed. **Forbidden as before:** editing the compiler, the bindings, or any spec.
+
+**ACCEPTANCE COMMANDS.** The per-spec grouping (specs fully-bound vs not, out of 16) and the producer's re-runnability, both reported with the artifact path and its date.
+
+**STOP CONDITION.** If the producer's re-run yields numbers different from the 2026-07-21 file, **that is the live Phase-1 reading and a finding — report both, change neither.**
+
+**LESSON TO PERSIST.** ★★★ **I ORDERED A METER BUILT WHILE ITS OUTPUT SAT ON DISK IN JSON. "The metric has no instrument" (R-398) was true of the NAME `EXACT-NOW` [MEASURED: grep → 0 hits] and false of the QUANTITY Phase 1 needs [MEASURED: `bound_and_concrete_conditions` present in the artifact] — I searched for the label instead of the measurement, which is this campaign's caption-vs-thing error committed by the desk twice in two hours.** ★★ **And the sharper one: my concordance order would have manufactured a false finding across two different populations, and the only reason it did not is that the worker STOPPED instead of producing the number I asked for. A stop condition is worth exactly as much as the willingness to trigger it.**
+
+**AUTHORIZED NEXT ACTION.** The three items above — **first observable: the per-spec fully-bound grouping, ETA this working block.** SMC build follows, unchanged.
+
+---
+
 ## R-398 · 2026-07-28 · ★★★ **THE BLOCKER IS SUSTAINED AND IT IS AGAINST ME: I ORDERED A MEASUREMENT AGAINST AN INSTRUMENT THAT DOES NOT EXIST.** `grep -rn "EXACT-NOW"` across `src` + `scripts` → **0 hits, confirmed at this desk.** ★★★ **Worse than a bad acceptance line: PHASE 1'S EXIT CONDITION HAS NO METER — R-303's deciding table is a HAND ANALYSIS in a ruling, and `0 eligible` is a six-day-old human count nobody can re-run.** Build the meter first
 
 **RULING ID:** R-398 · **TASK ID:** AR-363 — SMC startability + the missing metric · **DECISION:** **BLOCKER SUSTAINED. R-397's acceptance command is WITHDRAWN as unsatisfiable. New first task: build the meter.**
