@@ -26,6 +26,8 @@ import { anamGreetingRouter } from "./api/anam-greeting.js";
 import { carterSessionRouter } from "./api/carter-session.js";
 import { carterInboxRouter } from "./api/carter-inbox.js";
 import { memberOfficeRouter } from "./api/member-office.js";
+import { sseRoutes } from "../sse.js";
+import { requireSlumhouseUserOrAdmin } from "../../lib/slumhouse/require-session.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
 import { readSlumhouseCookie } from "../../lib/slumhouse/cookie.js";
 import { db } from "../../db/index.js";
@@ -151,6 +153,10 @@ slumhouseRouter.use(kitchenApiRouter);
 slumhouseRouter.use(menuApiRouter);
 slumhouseRouter.use(recipeApiRouter);
 slumhouseRouter.use(reportsApiRouter);
+// Browser EventSource cannot attach the bearer token required by /api/sse/events.
+// Expose the same read-only stream through the authenticated Slumhouse session so
+// Office clients can reconnect with their existing Discord/admin HttpOnly cookie.
+slumhouseRouter.use("/slumhouse/api/sse", requireSlumhouseUserOrAdmin, sseRoutes);
 slumhouseRouter.use(anamSessionRouter);
 slumhouseRouter.use(anamGreetingRouter);
 slumhouseRouter.use(carterSessionRouter);

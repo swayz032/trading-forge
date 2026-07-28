@@ -15,11 +15,22 @@ describe("groupIntoFamilies", () => {
     expect(fams[0].premiumName).toBe("Opening Heist");
     expect(fams[0].variants.length).toBe(3);
     expect(fams[0].champion.id).toBe("c");
+    expect(new Set(fams[0].variants.map((v) => v.displayName)).size).toBe(3);
   });
   it("keeps distinct archetypes in separate families", () => {
     const rows = [ mk({ id: "a", name: "orb_15m", lifecycleState: "TESTING", config: { entry_indicator: "archetype:orb" } }),
                    mk({ id: "b", name: "silver_bullet", lifecycleState: "TESTING", config: { entry_indicator: "archetype:silver_bullet" } }) ];
     expect(groupIntoFamilies(rows).length).toBe(2);
+  });
+  it("collapses true duplicate variants instead of showing numbered suffixes", () => {
+    const rows = [
+      mk({ id: "a", name: "orb_a", timeframe: "15m", lifecycleState: "TESTING" }),
+      mk({ id: "b", name: "orb_b", timeframe: "15m", lifecycleState: "PAPER" }),
+    ];
+    const family = groupIntoFamilies(rows)[0];
+    expect(family.variants).toHaveLength(1);
+    expect(family.variants[0].id).toBe("b");
+    expect(family.variants[0].displayName).not.toMatch(/\s(?:II|2)$/);
   });
 });
 

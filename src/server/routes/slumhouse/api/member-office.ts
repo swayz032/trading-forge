@@ -8,14 +8,11 @@
  * (verify, mint ticket) -> GET /member/scope. Establishment refuses if a PIN already exists;
  * reset is Discord re-auth with operator notification, deliberately a harder path.
  *
- * Still TEST-MODE / pre-Phase-5: the broker-connect card validates designated test keys only
- * and never contacts a live broker.
- *
  * Per-member Slumhouse office routes (Tier-2 item 6).
  *
  *   POST /slumhouse/api/member/pin           — clear the PIN, mint a purpose-tagged ticket
  *   GET  /slumhouse/api/member/scope         — what THIS member may see
- *   POST /slumhouse/api/member/connect-test  — TEST-MODE broker connect
+ *   GET  /slumhouse/api/member/broker-health — real mapped-account readiness (read-only)
  *
  * This is the integration point: Discord session -> PIN ticket -> scope authority -> allowlist
  * validator -> slumhouse_connect_test. Each layer is separately tested; these routes are where
@@ -30,9 +27,9 @@
  *   * Key material never reaches a log, an audit row, or a response body.
  */
 import { Router, type Response } from "express";
-import { and, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { db } from "../../../db/index.js";
-import { slumhouseMemberPins, slumhouseConnectTest } from "../../../db/schema.js";
+import { brokerAccounts, brokerCredentialVault, slumhouseMemberPins, slumhouseUsers } from "../../../db/schema.js";
 import { requireSlumhouseUser, checkSlumhouseOrigin, type SlumhouseRequest } from "../../../lib/slumhouse/require-session.js";
 import {
   evaluateOfficeScope,
@@ -42,7 +39,8 @@ import {
   type OfficeSurface,
 } from "../../../lib/member-office-scope.js";
 import { hashPin, verifyPin, evaluateAttempt, nextAttemptState, PIN_POLICY, PinPolicyError } from "../../../lib/member-pin.js";
-import { validateTestKey, assertStorable, redactKey } from "../../../lib/connect-wizard-mock.js";
+import { CircuitBreakerRegistry } from "../../../lib/circuit-breaker.js";
+import { brokerCredentialVaultReady, encryptBrokerCredential } from "../../../lib/broker-credential-vault.js";
 import {
   PIN_COOKIE_NAME,
   PIN_TTL_SEC,
@@ -234,16 +232,14 @@ memberOfficeRouter.get(
   },
 );
 
-// ── POST /slumhouse/api/member/connect-test ──────────────────────────────────────────────────
-memberOfficeRouter.post(
-  "/slumhouse/api/member/connect-test",
+// ── GET /slumhouse/api/member/broker-health ──────────────────────────────────────────────────
+// Read-only and identity-scoped. It reports only safe readiness facts; vault references,
+// credentials and raw external account identifiers never leave the server.
+memberOfficeRouter.get(
+  "/slumhouse/api/member/broker-health",
   requireSlumhouseUser,
   async (req: SlumhouseRequest, res: Response) => {
-    if (!checkSlumhouseOrigin(req, res)) return;   // CSRF defense-in-depth — see /pin/establish
-
     const viewerId = req.slumhouseUser!.discordUserId;
-
-    // Scope authority decides — this route does not re-implement the rules.
     const decision = evaluateOfficeScope({
       role: roleOf(req),
       viewerId,
@@ -252,48 +248,124 @@ memberOfficeRouter.post(
       pinSatisfied: pinSatisfied(req, viewerId, Date.now()),
     });
     if (!decision.allowed) { res.status(403).json({ error: decision.reason }); return; }
-
-    const { brokerKind, key } = (req.body ?? {}) as { brokerKind?: string; key?: unknown };
-    const result = validateTestKey(String(brokerKind ?? ""), key);
-
-    if (result.status !== "validated") {
-      // Rejected input is NEVER persisted, and the key never reaches the audit row.
-      void insertAuditRowSafe({
-        action: "member_office.connect_test_rejected",
-        status: "info",
-        entityType: "slumhouse_user",
-        entityId: viewerId,
-        result: { brokerKind, reason: result.reason, key: redactKey(key) },
+    try {
+      const accountId = req.slumhouseUser!.brokerAccountId;
+      if (!accountId) {
+        res.json({ status: "setup_required", mapped: false, executionLocked: true });
+        return;
+      }
+      const rows = await db.select({
+        firmId: brokerAccounts.firmId,
+        brokerType: brokerAccounts.brokerType,
+        apiKeyVaultRef: brokerAccounts.apiKeyVaultRef,
+        accountIdExternal: brokerAccounts.accountIdExternal,
+        enabled: brokerAccounts.enabled,
+        enabledSymbols: brokerAccounts.enabledSymbols,
+      }).from(brokerAccounts).where(eq(brokerAccounts.accountId, accountId)).limit(1);
+      const account = rows[0];
+      if (!account) {
+        res.json({ status: "mapping_invalid", mapped: false, executionLocked: true });
+        return;
+      }
+      let credentialReady = false;
+      if (account.apiKeyVaultRef?.startsWith("dbvault:")) {
+        const id = account.apiKeyVaultRef.slice("dbvault:".length);
+        const stored = await db.select({ id: brokerCredentialVault.credentialId })
+          .from(brokerCredentialVault).where(eq(brokerCredentialVault.credentialId, id)).limit(1);
+        credentialReady = stored.length === 1 && brokerCredentialVaultReady();
+      } else {
+        credentialReady = Boolean(account.apiKeyVaultRef && process.env[account.apiKeyVaultRef]);
+      }
+      const breaker = CircuitBreakerRegistry.statusAll().find((item) => item.endpoint === "traderspost-webhook");
+      const adapterReady = account.brokerType === "traderspost"
+        ? (!breaker || breaker.state === "CLOSED")
+        : false; // Direct TopstepX remains fail-closed until its real adapter is installed.
+      const external = account.accountIdExternal ?? "";
+      const maskedAccount = external.length > 4 ? `••••${external.slice(-4)}` : (external ? "••••" : null);
+      const ready = account.enabled && credentialReady && adapterReady;
+      res.json({
+        status: ready ? "ready" : "attention_required",
+        mapped: true,
+        firm: account.firmId,
+        broker: account.brokerType,
+        maskedAccount,
+        credentialReady,
+        adapterReady,
+        accountEnabled: account.enabled,
+        enabledSymbols: account.enabledSymbols,
+        executionLocked: true,
       });
-      res.status(400).json({ status: result.status, reason: result.reason });
+    } catch {
+      res.status(503).json({ error: "broker_health_unavailable", executionLocked: true });
+    }
+  },
+);
+
+// Real credential enrollment. The secret is encrypted before the DB write and is never logged,
+// audited, echoed, or retained by the browser. New/updated accounts stay disabled.
+memberOfficeRouter.post(
+  "/slumhouse/api/member/broker-enroll",
+  requireSlumhouseUser,
+  async (req: SlumhouseRequest, res: Response) => {
+    if (!checkSlumhouseOrigin(req, res)) return;
+    const viewerId = req.slumhouseUser!.discordUserId;
+    const decision = evaluateOfficeScope({
+      role: roleOf(req), viewerId, surface: "connect_card",
+      targetMemberId: viewerId, pinSatisfied: pinSatisfied(req, viewerId, Date.now()),
+    });
+    if (!decision.allowed) { res.status(403).json({ error: decision.reason }); return; }
+    if (!brokerCredentialVaultReady()) {
+      res.status(503).json({ error: "secure_vault_unavailable" });
       return;
     }
-
+    const body = req.body as Record<string, unknown> | undefined;
+    const brokerType = body?.brokerType;
+    const accountIdExternal = typeof body?.accountId === "string" ? body.accountId.trim() : "";
+    const credential = typeof body?.credential === "string" ? body.credential.trim() : "";
+    const firmInput = typeof body?.firm === "string" ? body.firm.trim().toLowerCase() : "";
+    if (brokerType !== "topstepx" && brokerType !== "traderspost") {
+      res.status(400).json({ error: "unsupported_broker" }); return;
+    }
+    if (!/^[A-Za-z0-9._-]{2,80}$/.test(accountIdExternal)) {
+      res.status(400).json({ error: "invalid_account_id" }); return;
+    }
+    if (credential.length < 16 || credential.length > 4096) {
+      res.status(400).json({ error: "invalid_credential" }); return;
+    }
+    const firmId = brokerType === "topstepx" ? "topstep" : firmInput;
+    if (brokerType === "traderspost" && (!/^[a-z0-9_-]{2,32}$/.test(firmId) || firmId === "topstep")) {
+      res.status(400).json({ error: "invalid_prop_firm" }); return;
+    }
     try {
-      // assertStorable throws rather than let anything key-shaped reach the DB.
-      const ref = assertStorable(result.storableRef);
-      const existing = await db.select().from(slumhouseConnectTest)
-        .where(and(
-          eq(slumhouseConnectTest.discordUserId, viewerId),
-          eq(slumhouseConnectTest.brokerKind, String(brokerKind)),
-        )).limit(1);
-
-      if (existing[0]) {
-        await db.update(slumhouseConnectTest)
-          .set({ testKeyRef: ref, status: "validated", validatedAt: new Date(), updatedAt: new Date() })
-          .where(eq(slumhouseConnectTest.id, existing[0].id));
-      } else {
-        await db.insert(slumhouseConnectTest).values({
-          discordUserId: viewerId,
-          brokerKind: String(brokerKind),
-          testKeyRef: ref,
-          status: "validated",
-          validatedAt: new Date(),
-        });
-      }
-      res.json({ status: "validated", display: result.display });
+      const encrypted = encryptBrokerCredential(credential);
+      const accountId = await db.transaction(async (tx) => {
+        const [vault] = await tx.insert(brokerCredentialVault).values(encrypted)
+          .returning({ id: brokerCredentialVault.credentialId });
+        const vaultRef = `dbvault:${vault.id}`;
+        const currentId = req.slumhouseUser!.brokerAccountId;
+        if (currentId) {
+          await tx.update(brokerAccounts).set({
+            firmId, brokerType, apiKeyVaultRef: vaultRef,
+            accountIdExternal, enabled: false,
+          }).where(eq(brokerAccounts.accountId, currentId));
+          return currentId;
+        }
+        const [account] = await tx.insert(brokerAccounts).values({
+          firmId, brokerType, apiKeyVaultRef: vaultRef,
+          accountIdExternal, enabled: false,
+        }).returning({ id: brokerAccounts.accountId });
+        await tx.update(slumhouseUsers).set({ brokerAccountId: account.id })
+          .where(eq(slumhouseUsers.discordUserId, viewerId));
+        return account.id;
+      });
+      void insertAuditRowSafe({
+        action: "member_office.broker_credential_enrolled", status: "success",
+        entityType: "broker_account", entityId: accountId,
+        result: { brokerType, firmId, executionLocked: true },
+      });
+      res.status(201).json({ ok: true, mapped: true, executionLocked: true });
     } catch {
-      res.status(500).json({ status: "rejected", reason: "persist_failed" });
+      res.status(500).json({ error: "broker_enrollment_failed" });
     }
   },
 );

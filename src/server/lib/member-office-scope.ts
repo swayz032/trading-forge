@@ -25,7 +25,7 @@ export function officePathForRole(role: OfficeRole): string {
 /** Every addressable Office surface. Adding one here forces an explicit access decision. */
 export const OFFICE_SURFACES = [
   "my_room",          // the member's own office
-  "connect_card",     // floating broker-connect card (TEST MODE ONLY)
+  "connect_card",     // floating, read-only real broker-health card
   "ready_checklist",
   "agent_heartbeat",
   "payout_tracker",

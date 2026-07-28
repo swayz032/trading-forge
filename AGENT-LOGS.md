@@ -15739,6 +15739,27 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** Live TopstepX/TradersPost credential onboarding remains a money-path Phase 5 task requiring an encrypted vault and explicit execution authorization. The visible cards remain fail-closed test-mode validation until then.
 
+### Session Log — 2026-07-23 Slumhouse production hardening
+
+**Mission:** Restore the shared immersive Office, secure real broker enrollment, finish full-page Reporting Room visuals, and harden personalized Slumhouse presentation without touching trading decisions or prop-firm rules.
+
+**Work completed:**
+- Restored member Office parity with operator-only surfaces excluded by server scope and added compact real TopstepX/TradersPost enrollment.
+- Added AES-256-GCM server-side broker credential storage, identity scoping, CSRF checks, disabled-by-default accounts, migration 0206, and removed the active fake connect-test path.
+- Added full-page realistic Quantum RL and Paper Fight Night standby/live arenas plus generated wrapped-car and prop-account assets.
+- Restored honest homepage 3D standby waves, improved Discord ages/layout, enlarged live-library Pot cards, and added deterministic premium Slumhouse main names plus non-technical variant codenames for extracted strategies.
+- Replaced the Kitchen chalkboard surface with a generated 3D Slumdawg street-menu board while keeping all tabs/rows/recipes as live HTML controls.
+- Fixed the Paper Floor's permanent reconnect loop by mounting the shared SSE feed behind the existing Slumhouse user/admin session (native EventSource cannot send the bearer token required by `/api/sse/events`), added bounded stuck-stream recycling, hid immersive scrollbars, and widened the Paper Fight Night desktop layout.
+
+**Verification:**
+- TypeScript build passed; full Vitest passed with exit 0.
+- Full Python: 7,597 passed, 34 skipped, 0 failed.
+- Production isolation, 2026 compliance, system-map coverage/drift, focused security/UI suites, browser layout checks, and `git diff --check` passed.
+
+**Known-facts updates:** Strategy street names are presentation aliases only; canonical names/config/fingerprints remain unchanged. Direct TopstepX execution remains locked until its real production adapter exists.
+
+**Carry-forward:** Require green GitHub Actions, merge, and verify the restarted public Railway relay serves the authenticated Slumhouse SSE bridge.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)

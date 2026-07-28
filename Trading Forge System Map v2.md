@@ -3,7 +3,7 @@
 <!-- BEGIN GENERATED: topology -->
 ## Current Enforced Pre-Production State
 
-Updated automatically from the repo on `2026-07-23T06:12:11.121Z`.
+Updated automatically from the repo on `2026-07-24T02:53:52.040Z`.
 
 - Platform lifecycle stage: `pre-production`
 - Runtime-proven means `proven in pre-production`, not production released.
@@ -17,7 +17,7 @@ Updated automatically from the repo on `2026-07-23T06:12:11.121Z`.
 - Canonical workflows tracked: `20`
 - Duplicate workflow variants collapsed: `0`
 - Engine subsystems tracked: `29`
-- Database tables tracked: `114`
+- Database tables tracked: `115`
 
 ### Subsystem Runtime States
 - `active`: `68`
@@ -57,7 +57,7 @@ Updated automatically from the repo on `2026-07-23T06:12:11.121Z`.
 - Route coverage: `80/80`
 - Scheduler coverage: `112/112`
 - Engine coverage: `29/29`
-- Database coverage: `114/114`
+- Database coverage: `115/115`
 - Autonomous subsystems with audit coverage: `57/57`
 - Autonomous subsystems with audit actions: `57/57`
 - Autonomous subsystems with telemetry evidence: `57/57`
@@ -497,6 +497,7 @@ Updated automatically from the repo on `2026-07-23T06:12:11.121Z`.
 - `bias_decisions`
 - `bias_state`
 - `broker_accounts`
+- `broker_credential_vault`
 - `carter_issues`
 - `carter_memory`
 - `cloud_qmc_runs`

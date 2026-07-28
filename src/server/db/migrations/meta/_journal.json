@@ -1458,6 +1458,13 @@
       "when": 1783392620100,
       "tag": "0205_slumhouse_member_office",
       "breakpoints": true
+    },
+    {
+      "idx": 209,
+      "version": "7",
+      "when": 1784865600000,
+      "tag": "0206_broker_credential_vault",
+      "breakpoints": true
     }
   ]
 }

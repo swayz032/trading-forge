@@ -38,38 +38,23 @@ describe("member Office contains no operator-only reporting surfaces", () => {
 
 describe("member Office renders account-scoped bot truth", () => {
   it("loads the same authenticated crib data that powers homepage performance", () => {
-    expect(liveMarkup).toContain('fetch("/slumhouse/api/crib"');
+    expect(liveMarkup).toMatch(/fetch\(['"]\/slumhouse\/api\/crib['"]/);
     expect(liveMarkup).toContain("data.accountUnmapped");
-    expect(liveMarkup).toContain("data.accountDisclosure");
   });
 });
 
-describe("F-4: the key input is cleared on EVERY path", () => {
-  it("the clear runs in a finally block, not only after a successful fetch", () => {
-    // Previously the clear sat after the fetch, so a network throw left the key in the DOM.
-    //
-    // ★ 2026-07-21: this originally matched the FIRST `finally` in the file, which silently
-    // assumed there would only ever be one. Adding the PIN form (whose own finally clears the
-    // PIN) put a different block first and turned this RED — a guard failing for a reason that
-    // had nothing to do with the property it protects. Now it selects the block that actually
-    // concerns `keyEl`, so it tests the connect-card regardless of what else gains a finally.
-    // The property itself was verified unchanged from disk before this guard was touched.
-    const blocks = [...html.matchAll(/\}\s*finally\s*\{([\s\S]*?)\n\s{4}\}/g)].map(m => m[1]);
-    expect(blocks.length, "no finally block found at all").toBeGreaterThan(0);
-    const keyBlock = blocks.find(b => /keyEl\.value/.test(b));
-    expect(keyBlock, "the connect handler's key clear is not inside a finally").toBeDefined();
-    expect(keyBlock!).toMatch(/keyEl\.value\s*=\s*""/);
+describe("real broker enrollment protects browser secrets", () => {
+  it("uses a password field, clears it in finally, and contains no mock validator", () => {
+    expect(liveMarkup).toMatch(/id="broker-secret"[^>]*type="password"[^>]*autocomplete="off"/);
+    expect(liveMarkup).toMatch(/finally\s*\{secret\.value=''/);
+    expect(liveMarkup).not.toMatch(/TESTKEY|connect-test/i);
+    expect(liveMarkup).toContain("/slumhouse/api/member/broker-health");
+    expect(liveMarkup).toContain("/slumhouse/api/member/broker-enroll");
   });
 
-  it("the key field is a password input and never autocompleted", () => {
-    expect(html).toMatch(/id="key"[^>]*type="password"/);
-    expect(html).toMatch(/id="key"[^>]*autocomplete="off"/);
-  });
-
-  it("the key is never written into the DOM anywhere", () => {
-    // No path may echo the key back — not into status text, not into a data attribute.
-    expect(liveMarkup).not.toMatch(/textContent\s*=\s*[^;]*keyEl\.value/);
-    expect(liveMarkup).not.toMatch(/innerHTML\s*=\s*[^;]*keyEl\.value/);
+  it("states that secrets stay server-side and execution stays locked", () => {
+    expect(liveMarkup).toContain("Credentials go to encrypted server storage");
+    expect(liveMarkup).toMatch(/Live execution stays locked/i);
   });
 });
 

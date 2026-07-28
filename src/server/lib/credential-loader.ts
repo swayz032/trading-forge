@@ -40,8 +40,9 @@ import { logger as rootLogger } from "./logger.js";
 // and db does not import credential-loader. Hoisting removes per-call dynamic
 // import overhead and makes the import graph statically analyzable.
 import { db as _hoistedDb } from "../db/index.js";
-import { brokerAccounts as _hoistedBrokerAccounts } from "../db/schema.js";
+import { brokerAccounts as _hoistedBrokerAccounts, brokerCredentialVault as _brokerCredentialVault } from "../db/schema.js";
 import { eq as _hoistedEq } from "drizzle-orm";
+import { decryptBrokerCredential } from "./broker-credential-vault.js";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -529,6 +530,19 @@ export async function loadBrokerCredentials(
   // apiKeyVaultRef holds the env var name (env mode) or Bitwarden field name
   // (vault mode — already hydrated into process.env by loadCredentials() at startup).
   const envKey = row.apiKeyVaultRef ?? `${row.firmId.toUpperCase()}_API_KEY`;
+  if (envKey.startsWith("dbvault:")) {
+    const credentialId = envKey.slice("dbvault:".length);
+    const vaultRows = await _hoistedDb.select({
+      ciphertext: _brokerCredentialVault.ciphertext,
+      iv: _brokerCredentialVault.iv,
+      authTag: _brokerCredentialVault.authTag,
+      keyVersion: _brokerCredentialVault.keyVersion,
+    }).from(_brokerCredentialVault)
+      .where(_hoistedEq(_brokerCredentialVault.credentialId, credentialId))
+      .limit(1);
+    if (!vaultRows[0]) throw new Error(`Broker credential vault record missing for account ${accountId}`);
+    return { apiKey: decryptBrokerCredential(vaultRows[0]) };
+  }
   const apiKey = process.env[envKey];
 
   if (!apiKey) {

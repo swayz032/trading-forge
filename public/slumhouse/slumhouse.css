@@ -291,6 +291,68 @@ a { color: inherit; text-decoration: none; }
 }
 .sh-stat-spark svg { width: 100%; height: 100%; display: block; }
 
+/* Data-empty state: an ambient 3D ribbon, explicitly not a performance plot. */
+.sh-standby-wave {
+  --wave-rgb: 163, 255, 18;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 72% 82%, rgba(var(--wave-rgb), 0.13), transparent 48%),
+    linear-gradient(180deg, transparent 10%, rgba(var(--wave-rgb), 0.025));
+}
+.sh-standby-wave.red { --wave-rgb: 255, 99, 99; }
+.sh-standby-ribbon {
+  position: absolute;
+  left: -12%;
+  width: 124%;
+  height: 70%;
+  border-radius: 46% 54% 0 0 / 70% 76% 0 0;
+  transform-origin: 50% 100%;
+  pointer-events: none;
+}
+.sh-standby-ribbon.back {
+  bottom: -47%;
+  transform: rotate(-3deg) skewX(-10deg) scaleY(0.88);
+  background: linear-gradient(160deg, rgba(var(--wave-rgb), 0.04), rgba(var(--wave-rgb), 0.22));
+  box-shadow: 0 -1px 24px rgba(var(--wave-rgb), 0.16);
+  animation: sh-standby-drift 7s ease-in-out infinite alternate;
+}
+.sh-standby-ribbon.middle {
+  bottom: -53%;
+  transform: rotate(2deg) skewX(8deg);
+  background: linear-gradient(165deg, rgba(var(--wave-rgb), 0.05), rgba(var(--wave-rgb), 0.28));
+  border-top: 1px solid rgba(var(--wave-rgb), 0.32);
+  box-shadow: 0 -8px 28px rgba(var(--wave-rgb), 0.12), inset 0 12px 22px rgba(255,255,255,0.025);
+  animation: sh-standby-drift 6s ease-in-out -2s infinite alternate-reverse;
+}
+.sh-standby-ribbon.front {
+  bottom: -62%;
+  transform: rotate(-1deg) skewX(-5deg) scaleX(1.04);
+  background: linear-gradient(155deg, rgba(var(--wave-rgb), 0.09), rgba(var(--wave-rgb), 0.38));
+  border-top: 1px solid rgba(var(--wave-rgb), 0.52);
+  box-shadow: 0 -2px 16px rgba(var(--wave-rgb), 0.24), inset 0 9px 14px rgba(255,255,255,0.04);
+  animation: sh-standby-drift 5s ease-in-out -1s infinite alternate;
+}
+.sh-standby-copy {
+  position: absolute;
+  right: 14px;
+  bottom: 11px;
+  z-index: 3;
+  color: rgba(var(--wave-rgb), 0.72);
+  font: 700 8px/1 var(--mono);
+  letter-spacing: 0.18em;
+  text-shadow: 0 0 12px rgba(var(--wave-rgb), 0.28);
+}
+@keyframes sh-standby-drift {
+  from { translate: -1.5% 1px; }
+  to { translate: 1.5% -2px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sh-standby-ribbon { animation: none !important; }
+}
+
 /* Kill switch live dot pulse */
 .sh-kill-dot {
   display: inline-block; width: 10px; height: 10px; border-radius: 50%;
@@ -327,6 +389,11 @@ a { color: inherit; text-decoration: none; }
    has breathing room when paired with the tall Anam stage). */
 .sh-rail-card { display: flex; flex-direction: column; min-width: 0; }
 .sh-rail-card > div:last-child { flex: 1; min-height: 0; overflow-y: auto; }
+#sh-discord-feed {
+  display: grid;
+  grid-auto-rows: minmax(86px, 1fr);
+  align-content: stretch;
+}
 
 .sh-stage {
   min-height: 420px; position: relative;
@@ -448,9 +515,9 @@ a { color: inherit; text-decoration: none; }
 
 /* ─── DISCORD FEED — premium intake row treatment ──────────────────── */
 .sh-feed-item {
-  display: grid; grid-template-columns: 38px 1fr auto;
-  gap: 10px; align-items: center;
-  padding: 11px 4px;
+  display: grid; grid-template-columns: 46px minmax(0, 1fr) auto;
+  gap: 12px; align-items: center;
+  padding: 14px 5px;
   border-bottom: 1px solid var(--line);
   font-size: 12px;
   transition: background 0.18s, transform 0.18s;
@@ -463,7 +530,7 @@ a { color: inherit; text-decoration: none; }
 }
 /* Source-coded thumbnail tile with glow rim */
 .sh-feed-thumb {
-  width: 36px; height: 36px; border-radius: 8px;
+  width: 44px; height: 44px; border-radius: 10px;
   background: #0d0d0d;
   flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
@@ -488,8 +555,12 @@ a { color: inherit; text-decoration: none; }
   color: var(--lime);
 }
 
-.sh-feed-name { color: var(--ink); font-weight: 500; font-size: 13px; }
-.sh-feed-meta { color: var(--mute); font-size: 10px; margin-top: 2px; letter-spacing: 0.02em; font-family: var(--num-font); }
+.sh-feed-name {
+  color: var(--ink); font-weight: 600; font-size: 13px; line-height: 1.3;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.sh-feed-meta { color: var(--mute); font-size: 10px; margin-top: 5px; letter-spacing: 0.02em; font-family: var(--num-font); }
 
 /* Status pill — right side of row */
 .sh-feed-status {
@@ -508,14 +579,20 @@ a { color: inherit; text-decoration: none; }
 
 /* ─── POT (horizontal scroll) ──────────────────────────────────────── */
 /* Pot card min-height grows row 2 — Crew card on the right auto-stretches. */
-.sh-main > .sh-card:nth-child(3) { min-height: 200px; }
-.sh-horiz { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
+.sh-main > .sh-card:nth-child(3) {
+  min-height: 230px;
+  display: flex;
+  flex-direction: column;
+}
+.sh-horiz { display: flex; flex: 1; gap: 10px; overflow-x: auto; padding-bottom: 6px; }
 .sh-horiz::-webkit-scrollbar { height: 6px; }
 .sh-horiz::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
 
 /* ─── POT CHIP — premium card with floating steam sparkles ────────── */
 .sh-chip {
-  flex-shrink: 0; width: 200px; min-height: 128px;
+  flex: 1 0 min(220px, calc((100% - 30px) / 4));
+  min-width: 198px;
+  min-height: 174px;
   background: #000;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -592,10 +669,13 @@ a { color: inherit; text-decoration: none; }
 .sh-chip-name {
   font-weight: 600; color: var(--ink);
   font-size: 14px;
-  padding: 2px 14px 0;
+  padding: 10px 14px 0;
   position: relative; z-index: 1;
   letter-spacing: -0.01em;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  line-height: 1.25;
+  text-align: center;
+  min-height: 45px;
+  display: flex; align-items: center; justify-content: center;
 }
 .sh-chip-foot {
   padding: 8px 14px 12px;

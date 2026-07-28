@@ -1,376 +1,71 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Your Office · Slumhouse</title>
-<link rel="stylesheet" href="/slumhouse/slumhouse.css" />
-<!--
-  Per-member Slumhouse office (Tier-2 item 6; operator directive OR-003 §1 / OR-013 §2).
-
-  ONE shared page, DIFFERENT offices: every member loads THIS file and sees only their own
-  world. Scoping is decided SERVER-SIDE by src/server/lib/member-office-scope.ts — this page
-  renders what it is handed and nothing more. There is deliberately no client-side role check
-  anywhere in here, because a UI check is not a security boundary.
-
-  CARTER IS ABSENT BY ROUTE, NOT BY CSS. There is no Carter markup, container or script on this
-  page at all — a member cannot reach Carter by opening devtools because there is nothing here
-  to unhide (OR-003 §1-addendum). Verified by a check that strips HTML comments and asserts zero
-  Carter references remain in live markup.
-
-  (For precision: the connect card IS hidden with display:none when the server does not
-  authorise it. That is a cosmetic tidy on top of a server decision, never the enforcement —
-  the route refuses regardless of what the DOM says. Carter is a different, stronger case: not
-  hidden, simply not present.)
-
-  TEST MODE: the broker-connect card accepts DESIGNATED TEST KEYS ONLY and never contacts a
-  live broker. src/server/lib/connect-wizard-mock.ts enforces that with an allowlist; this page
-  states it in the UI so the member is never misled about what they just connected.
-
-  PALETTE NOTE (flagged to the advisor, not silently resolved): the operator's own office.html
-  uses lime #a3ff12; the operator's directive for the MEMBER office specifies emerald #10B981.
-  Built to the directive. If the two surfaces are meant to match, this is the file to change.
--->
-<style>
-  :root {
-    --emerald: #10B981;
-    --emerald-dim: rgba(16, 185, 129, 0.18);
-    --emerald-glow: rgba(16, 185, 129, 0.35);
-    --member-ink: #050706;
-    --glass: rgba(8, 10, 9, 0.55);
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; min-height: 100vh; background: var(--member-ink); color: #fff;
-    font: 15px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-    background-image: radial-gradient(1200px 600px at 50% -10%, rgba(16,185,129,0.10), transparent 60%);
-  }
-  .wrap { max-width: 980px; margin: 0 auto; padding: 64px 22px 90px; }
-  .eyebrow { text-align: center; color: var(--emerald); font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.2em; text-shadow: 0 0 14px var(--emerald-glow); }
-  h1 { text-align: center; font-size: 30px; font-weight: 800; margin: 8px 0 4px; letter-spacing: -0.01em; }
-  .sub { text-align: center; font-size: 13px; color: rgba(255,255,255,0.66); margin-bottom: 34px; }
-
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
-  .card {
-    background: var(--glass); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-    border: 1px solid var(--emerald-dim); border-radius: 18px; padding: 20px 20px 18px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.55);
-  }
-  .card h2 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.12em;
-    color: var(--emerald); font-weight: 700; }
-  .card .val { font-size: 22px; font-weight: 700; }
-  .card .note { font-size: 12px; color: rgba(255,255,255,0.58); margin-top: 6px; }
-
-  /* Floating broker-connect card — the operator's "floating card" directive. */
-  .float {
-    position: fixed; right: 22px; bottom: 22px; width: min(360px, calc(100vw - 44px)); z-index: 40;
-    background: var(--glass); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    border: 1px solid rgba(16,185,129,0.30); border-radius: 18px; padding: 18px;
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), 0 28px 70px rgba(0,0,0,0.65), 0 0 34px rgba(16,185,129,0.10);
-  }
-  .float h2 { margin: 0 0 2px; font-size: 12px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--emerald); }
-  .testpill { display: inline-block; margin: 6px 0 10px; padding: 3px 9px; border-radius: 999px;
-    font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
-    color: #ffce5c; background: rgba(255,206,92,0.10); border: 1px solid rgba(255,206,92,0.35); }
-  label { display: block; font-size: 11px; color: rgba(255,255,255,0.62); margin: 10px 0 4px; }
-  select, input {
-    width: 100%; padding: 9px 11px; border-radius: 10px; color: #fff; font-size: 13px;
-    background: rgba(0,0,0,0.45); border: 1px solid rgba(255,255,255,0.12);
-  }
-  input:focus, select:focus { outline: none; border-color: var(--emerald); box-shadow: 0 0 0 3px rgba(16,185,129,0.16); }
-  button {
-    width: 100%; margin-top: 12px; padding: 10px; border-radius: 10px; cursor: pointer;
-    font-size: 13px; font-weight: 700; color: var(--member-ink); background: var(--emerald); border: 0;
-  }
-  button:hover { filter: brightness(1.08); }
-  .status { margin-top: 10px; font-size: 12px; min-height: 17px; }
-  .ok { color: var(--emerald); } .bad { color: #ff8a8a; }
-  .fineprint { margin-top: 10px; font-size: 10.5px; color: rgba(255,255,255,0.42); line-height: 1.5; }
-</style>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Your Office · Slumhouse</title>
+  <style>
+    :root{--lime:#a3ff12;--glass:rgba(5,9,7,.68);--line:rgba(163,255,18,.22)}
+    *{box-sizing:border-box}html,body{min-height:100%;margin:0;color:#fff;font-family:Inter,system-ui,sans-serif}
+    body{background:linear-gradient(180deg,rgba(0,0,0,.22),rgba(0,0,0,.7)),url('/slumhouse/images/office-bg.png?v=2') center/cover no-repeat fixed;overflow-x:hidden}
+    header{height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 max(22px,5vw);background:rgba(0,0,0,.54);border-bottom:1px solid var(--line);backdrop-filter:blur(18px)}
+    .brand{font-weight:950;letter-spacing:.08em}.brand small{display:block;color:var(--lime);font-size:9px}.nav a{color:#ddd;text-decoration:none;margin-left:22px;font-size:12px}
+    main{min-height:calc(100vh - 72px);display:grid;place-items:center;padding:38px 20px}
+    .hide{display:none!important}.glass{background:var(--glass);border:1px solid var(--line);box-shadow:0 30px 90px #000, inset 0 1px rgba(255,255,255,.08);backdrop-filter:blur(24px)}
+    .lock{width:min(440px,94vw);padding:38px;border-radius:28px;text-align:center}.lock-badge{width:58px;height:58px;display:grid;place-items:center;margin:auto;border-radius:50%;color:var(--lime);border:1px solid var(--line);font-size:24px}
+    h1{font-size:34px;margin:18px 0 5px}.sub{color:#aeb4ae;font-size:13px;line-height:1.55}.field{margin-top:18px;text-align:left}.field label{display:block;color:#cbd2ca;font-size:11px;margin-bottom:7px}
+    input{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.55);color:white;font-size:16px;text-align:center;letter-spacing:.15em}
+    button{font:inherit}.primary{width:100%;margin-top:14px;padding:13px;border:0;border-radius:12px;background:var(--lime);color:#071000;font-weight:900;cursor:pointer}.status{min-height:20px;margin-top:12px;color:#ffcf66;font-size:12px}
+    .office{width:min(1180px,96vw)}.hello{text-align:center}.hello p{color:var(--lime);font-size:10px;letter-spacing:.22em;text-transform:uppercase}.hello h1{margin:5px 0 2px}
+    .carousel{height:510px;position:relative;display:flex;align-items:center;justify-content:center;perspective:1200px}.track{position:relative;width:100%;height:420px;transform-style:preserve-3d}
+    .card{position:absolute;left:50%;top:45px;width:310px;height:350px;margin-left:-155px;padding:26px;border-radius:24px;background:linear-gradient(145deg,rgba(20,26,20,.88),rgba(2,4,3,.91));border:1px solid var(--line);box-shadow:0 30px 65px rgba(0,0,0,.75);transition:transform .45s,opacity .45s;overflow:hidden}
+    .card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 20% 10%,rgba(163,255,18,.13),transparent 44%);pointer-events:none}.card>*{position:relative}.eyebrow{color:var(--lime);font-size:10px;font-weight:900;letter-spacing:.18em;text-transform:uppercase}.card h2{font-size:29px;margin:14px 0}.value{margin-top:56px;font-size:20px;font-weight:850}.note{margin-top:12px;color:#a8aea8;font-size:12px;line-height:1.6}.open{position:absolute;left:26px;right:26px;bottom:24px;padding:11px;border-radius:12px;border:1px solid var(--line);background:rgba(163,255,18,.08);color:var(--lime);font-weight:850;cursor:pointer}
+    .card[data-surface="connect_card"]{background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.88)),url('/slumhouse/images/prop-firm-account-cover.png?v=1') center/cover}.card[data-surface="connect_card"] .value,.card[data-surface="connect_card"] .note{display:none}
+    .arrow{position:absolute;z-index:20;width:45px;height:45px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.55);color:white;font-size:28px;cursor:pointer}.prev{left:2%}.next{right:2%}.dots{text-align:center}.dot{width:7px;height:7px;border:0;border-radius:50%;background:#697069;margin:5px}.dot.on{background:var(--lime);box-shadow:0 0 12px var(--lime)}
+    dialog{width:min(480px,92vw);border:1px solid var(--line);border-radius:24px;padding:0;color:white;background:rgba(5,9,7,.96);box-shadow:0 35px 120px #000}dialog::backdrop{background:rgba(0,0,0,.76);backdrop-filter:blur(7px)}.modal{padding:28px}.modal-head{display:flex;justify-content:space-between}.close{border:0;background:none;color:white;font-size:24px;cursor:pointer}.health{display:grid;gap:10px;margin-top:20px}.row{display:flex;justify-content:space-between;padding:12px;border-radius:10px;background:rgba(255,255,255,.04);font-size:12px}.good{color:var(--lime)}.warn{color:#ffca52}.lockline{padding:12px;margin-top:14px;border:1px solid rgba(255,202,82,.25);border-radius:10px;color:#ffca52;font-size:11px}
+    .setup{margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}.setup select,.setup input{margin-top:8px;text-align:left;letter-spacing:0}.setup label{display:block;margin-top:11px;color:#cbd2ca;font-size:11px}.setup select{width:100%;padding:12px;border-radius:10px;background:#080b09;color:#fff;border:1px solid rgba(255,255,255,.15)}.tp-link{display:block;margin-top:12px;color:var(--lime);font-size:12px}
+    @media(max-width:650px){header{padding:0 16px}.nav a{margin-left:10px}.carousel{height:460px}.card{width:270px;height:330px;margin-left:-135px}}
+  </style>
 </head>
 <body>
-  <header class="sh-header">
-    <a class="sh-logo" href="/slumhouse/crib.html" aria-label="Slumhouse">
-      <div class="sh-logo-text"><span class="sh-logo-name">SLUMHOUSE</span><span class="sh-logo-sub">/ YOUR OFFICE</span></div>
-    </a>
-    <nav class="sh-nav">
-      <a class="sh-pill" href="/slumhouse/crib.html">The Crib</a>
-      <a class="sh-pill" href="/slumhouse/kitchen.html">The Kitchen</a>
-      <a class="sh-pill" href="/slumhouse/recipe.html">The Recipe</a>
-      <a class="sh-pill active" href="/slumhouse/member-office.html">Your Office</a>
-    </nav>
-    <div class="sh-header-spacer"><a class="sh-signout" href="/slumhouse/auth/logout">Sign out</a></div>
-  </header>
-  <div class="wrap">
-    <div class="eyebrow">Slumhouse</div>
-    <h1 id="greeting">Your office</h1>
-    <p class="sub" id="subtitle">Everything here is yours alone.</p>
-
-    <!-- Rendered from the server's scope decision. No surface appears here that the server
-         did not authorise; there is no client-side filtering to bypass. -->
-    <div class="grid" id="surfaces"></div>
-  </div>
-
-  <!-- PIN entry — the second factor behind the Discord session, and the ACTUAL cure for the
-       permanently-"Locked" room (F-1, OR-163). member-office-scope.ts denies every surface unless
-       pinSatisfied === true, which only /member/pin/establish and /member/pin can set; before this
-       form existed nothing called either, so the office could never open.
-
-       FIRST-RUN vs RETURN IS DECIDED BY THE SERVER, NOT GUESSED HERE. We submit, and the route
-       answers: 409 `no_pin_set` -> this member has no PIN, switch to establish; 409
-       `pin_already_set` -> one exists, switch to verify. The page never probes for whether a PIN
-       exists and never infers it — that would be a client-side access decision, which this page
-       does not make (see the boot() comment).
-
-       The code itself never leaves the input: both fields are cleared in a `finally`, so a
-       network throw cannot strand it in the DOM, and the status line is written with
-       textContent — never innerHTML, and never the code. -->
-  <section class="float" id="pin-card" aria-label="Enter your code" style="display:none">
-    <h2 id="pin-title">Enter your code</h2>
-    <p class="fineprint" id="pin-lede">Your office stays locked until you enter your code.</p>
-    <label for="pin">Code</label>
-    <input id="pin" type="password" autocomplete="off" inputmode="numeric" spellcheck="false"
-           maxlength="12" placeholder="••••••" />
-    <div id="pin-confirm-wrap" style="display:none">
-      <label for="pin-confirm">Confirm code</label>
-      <input id="pin-confirm" type="password" autocomplete="off" inputmode="numeric"
-             spellcheck="false" maxlength="12" placeholder="••••••" />
-    </div>
-    <button id="pin-submit" type="button">Unlock</button>
-    <div class="status" id="pin-status" role="status" aria-live="polite"></div>
-    <p class="fineprint">
-      This code is yours and only yours — the operator cannot see it and cannot read it back.
-      If you forget it, you sign in with Discord again to reset it.
-    </p>
+<!-- CARTER IS ABSENT BY ROUTE. Member markup contains only server-authorized surfaces. -->
+<header><div class="brand">SLUMHOUSE<small>/ YOUR OFFICE</small></div><nav class="nav"><a href="/slumhouse/crib.html">The Crib</a><a href="/slumhouse/auth/logout">Sign out</a></nav></header>
+<main>
+  <section id="lock" class="lock glass">
+    <div class="lock-badge">⌾</div><h1 id="pin-title">Enter your code</h1><p id="pin-lede" class="sub">Your office stays locked until you enter your code.</p>
+    <div class="field"><label for="pin">Office code</label><input id="pin" type="password" minlength="6" maxlength="12" autocomplete="off" inputmode="numeric"></div>
+    <div id="pin-confirm-wrap" class="field hide"><label for="pin-confirm">Confirm code</label><input id="pin-confirm" type="password" minlength="6" maxlength="12" autocomplete="off" inputmode="numeric"></div>
+    <button id="pin-submit" class="primary" type="button">Unlock</button><div id="pin-status" class="status" role="status"></div>
   </section>
-
-  <!-- Floating broker-connect card. TEST MODE ONLY until the money path's Phase 5. -->
-  <section class="float" id="connect-card" aria-label="Connect your broker" style="display:none">
-    <h2>Connect your broker</h2>
-    <div class="testpill">Test mode · no live orders</div>
-    <label for="broker">Broker</label>
-    <select id="broker">
-      <option value="topstepx">TopstepX</option>
-      <option value="traderspost">MFFU / TradersPost</option>
-    </select>
-    <label for="key">Test key</label>
-    <input id="key" type="password" autocomplete="off" spellcheck="false" placeholder="TESTKEY-…" />
-    <button id="connect" type="button">Validate</button>
-    <div class="status" id="status" role="status" aria-live="polite"></div>
-    <p class="fineprint">
-      This is a practice connection. It accepts designated test keys only, never reaches a real
-      broker, and cannot place an order. Your real account is connected later, once the system is
-      cleared to trade — and that step needs both you and the operator.
-    </p>
+  <section id="office" class="office hide">
+    <div class="hello"><p>Private member office</p><h1 id="greeting">Your Office</h1><div class="sub">Your bot. Your account. Your performance.</div></div>
+    <div class="carousel"><button id="prev" class="arrow prev" type="button" aria-label="Previous">‹</button><div id="track" class="track"></div><button id="next" class="arrow next" type="button" aria-label="Next">›</button></div><div id="dots" class="dots"></div>
   </section>
-
-<script src="/slumhouse/slumhouse.js"></script>
+</main>
+<dialog id="broker-modal"><div class="modal"><div class="modal-head"><div><div class="eyebrow">Real account wiring</div><h2>Connect Your Prop Firm</h2></div><button id="broker-close" class="close" type="button" aria-label="Close">×</button></div><p class="sub">TopstepX connects directly. Other prop firms connect through your real TradersPost account. Credentials go to encrypted server storage and are cleared from this form after submission.</p><div id="broker-health" class="health"></div><div class="setup"><label for="broker-type">Connection route</label><select id="broker-type"><option value="topstepx">TopstepX direct</option><option value="traderspost">Other prop firm via TradersPost</option></select><div id="firm-wrap" class="hide"><label for="broker-firm">Prop firm ID (example: mffu)</label><input id="broker-firm" maxlength="32" autocomplete="off"></div><label for="broker-account">Prop-firm account ID</label><input id="broker-account" maxlength="80" autocomplete="off"><label for="broker-secret"><span id="secret-label">TopstepX API key</span></label><input id="broker-secret" type="password" maxlength="4096" autocomplete="off" spellcheck="false"><a id="traderspost-link" class="tp-link hide" href="https://app.traderspost.io/" target="_blank" rel="noopener noreferrer">Open TradersPost and connect your broker →</a><button id="broker-enroll" class="primary" type="button">Save Secure Connection</button><div id="enroll-status" class="status" role="status"></div></div><div class="lockline">Live execution stays locked after enrollment until the production adapter, account mapping, and trading gates are cleared.</div></div></dialog>
 <script>
-  // The page renders what the SERVER authorised. It performs no access decisions of its own —
-  // member-office-scope.ts is the single authority, so this file cannot drift from it.
-  const SURFACE_LABELS = {
-    my_room:         ["Your room",        "Signed in and scoped to you"],
-    ready_checklist: ["Ready checklist",  "What's left before you can go live"],
-    agent_heartbeat: ["Agent heartbeat",  "Is your bot awake?"],
-    payout_tracker:  ["Payout tracker",   "Progress toward your next payout"],
+(() => {
+  'use strict';
+  const byId = (id) => document.getElementById(id);
+  const defs = {
+    my_room:{eyebrow:'Your room',title:'My Bot'},
+    ready_checklist:{eyebrow:'Production gates',title:'Ready Checklist'},
+    agent_heartbeat:{eyebrow:'Live service',title:'Agent Heartbeat'},
+    payout_tracker:{eyebrow:'Funded account',title:'Payout Tracker'},
+    connect_card:{eyebrow:'Real account wiring',title:'Broker Health',action:true}
   };
-
-  function surfaceCopy(surface, data, displayName) {
-    const bag = data && data.banner;
-    if (surface === "my_room") {
-      return bag
-        ? [displayName + "'s bot", bag.todayBag + " today · " + bag.tradesToday.count + " trades"]
-        : [displayName + "'s bot", "Bot performance is unavailable right now"];
-    }
-    if (surface === "ready_checklist") {
-      if (!data) return ["Status unavailable", "Cannot reach the bot right now"];
-      return data.accountUnmapped
-        ? ["Account connection needed", data.accountDisclosure || "Your prop-firm account is not mapped yet"]
-        : ["Account linked", data.executionModeLabel + " performance is scoped to your account"];
-    }
-    if (surface === "agent_heartbeat") {
-      if (!bag) return ["Unknown", "Cannot reach the bot right now"];
-      return bag.killSwitch === "green"
-        ? ["Bot ready", data.executionModeLabel + " · safety checks reporting green"]
-        : ["Safety stop", "The bot is not cleared to open new trades"];
-    }
-    if (surface === "payout_tracker") {
-      return ["Waiting for funded data", "No member payout figure is available yet"];
-    }
-    return ["Unavailable", "No data"];
-  }
-
-  function renderSurfaceCards(grid, shown, data, displayName) {
-    grid.replaceChildren();
-    shown.forEach((surface) => {
-      const labels = SURFACE_LABELS[surface];
-      const copy = surfaceCopy(surface, data, displayName);
-      grid.appendChild(SH.el("div", { class: "card", "data-surface": surface },
-        SH.el("h2", {}, labels[0]),
-        SH.el("div", { class: "val" }, copy[0]),
-        SH.el("div", { class: "note" }, copy[1]),
-      ));
-    });
-  }
-
-  async function boot() {
-    let scope = { surfaces: [], displayName: null };
-    try {
-      const r = await fetch("/slumhouse/api/member/scope", { credentials: "same-origin" });
-      if (r.ok) scope = await r.json();
-    } catch { /* offline shell: render nothing rather than inventing state */ }
-
-    if (scope.displayName) {
-      document.getElementById("greeting").textContent = `${scope.displayName}'s office`;
-    }
-
-    const grid = document.getElementById("surfaces");
-    const shown = (scope.surfaces || []).filter((s) => SURFACE_LABELS[s]);
-    if (shown.length === 0) {
-      // FAIL-CLOSED: no authorised surface, so nothing but the lock renders. This branch is also
-      // reached when /scope errors or the network drops — an unreachable server must never open
-      // the office, only leave it shut.
-      grid.innerHTML = '<div class="card"><h2>Locked</h2><div class="val">Enter your code</div>'
-        + '<div class="note">Your office opens once you enter the code you set up.</div></div>';
-      document.getElementById("connect-card").style.display = "none";
-      document.getElementById("pin-card").style.display = "";
-      return;
-    }
-    // Authorised: the lock is satisfied, so the PIN form goes away.
-    document.getElementById("pin-card").style.display = "none";
-    let botData = null;
-    try {
-      const r = await fetch("/slumhouse/api/crib", { credentials: "same-origin" });
-      if (r.ok) botData = await r.json();
-    } catch { /* visible unavailable copy is rendered below */ }
-    renderSurfaceCards(grid, shown, botData, scope.displayName || "Your");
-
-    // The connect card only exists if the server said this member may see it.
-    if (!(scope.surfaces || []).includes("connect_card")) {
-      document.getElementById("connect-card").style.display = "none";
-    } else {
-      document.getElementById("connect-card").style.display = "";
-    }
-  }
-
-  // ── PIN entry ────────────────────────────────────────────────────────────────────────────
-  // "verify" = a PIN exists, prove it. "establish" = first run, choose one. The MODE IS ONLY
-  // EVER SET BY A SERVER RESPONSE (409 no_pin_set / 409 pin_already_set) — never inferred here.
-  let pinMode = "verify";
-
-  function setPinMode(mode) {
-    pinMode = mode;
-    const establishing = mode === "establish";
-    document.getElementById("pin-title").textContent = establishing ? "Choose your code" : "Enter your code";
-    document.getElementById("pin-lede").textContent = establishing
-      ? "First time here. Pick a code between 6 and 12 characters — you will use it every time."
-      : "Your office stays locked until you enter your code.";
-    document.getElementById("pin-confirm-wrap").style.display = establishing ? "" : "none";
-    document.getElementById("pin-submit").textContent = establishing ? "Set my code" : "Unlock";
-  }
-
-  function pinSay(msg) {
-    // textContent, never innerHTML — and never the code itself. Server strings are inert here.
-    document.getElementById("pin-status").textContent = msg;
-  }
-
-  async function submitPin() {
-    const pinEl = document.getElementById("pin");
-    const confirmEl = document.getElementById("pin-confirm");
-    const btn = document.getElementById("pin-submit");
-    const establishing = pinMode === "establish";
-    const code = pinEl.value;
-
-    try {
-      if (!code) { pinSay("Enter your code."); return; }
-      // UX only — the server enforces the real policy and its answer always wins.
-      if (establishing && code !== confirmEl.value) { pinSay("Those two codes do not match."); return; }
-
-      btn.disabled = true;
-      pinSay("Checking…");
-
-      const url = establishing
-        ? "/slumhouse/api/member/pin/establish"
-        : "/slumhouse/api/member/pin";
-      const r = await fetch(url, {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ pin: code }),
-      });
-      const j = await r.json().catch(() => ({}));
-
-      if (r.ok) {
-        pinSay("");
-        await boot();               // re-ask the server what this member may see; never assume
-        return;
-      }
-
-      // The server decides which flow this member is actually in.
-      if (j.error === "no_pin_set")      { setPinMode("establish"); pinSay("First time here — choose a code."); return; }
-      if (j.error === "pin_already_set") { setPinMode("verify");    pinSay("You already have a code — enter it."); return; }
-
-      if (r.status === 429) {
-        const mins = Math.max(1, Math.ceil((Number(j.retryAfterMs) || 0) / 60000));
-        // Says WHEN they may retry, never how many tries remain or how close they were.
-        pinSay("Too many tries. Try again in about " + mins + " minute" + (mins === 1 ? "" : "s") + ".");
-        return;
-      }
-      if (j.error === "pin_incorrect") { pinSay("That code did not work."); return; }
-      if (j.error === "pin_policy")    { pinSay(typeof j.reason === "string" ? j.reason : "That code is not allowed."); return; }
-      if (j.error === "pin_required")  { pinSay("Enter your code."); return; }
-
-      // Anything else (503 pin_unavailable, 500, unknown): stay locked, say nothing revealing.
-      pinSay("Cannot check your code right now. Try again in a moment.");
-    } catch {
-      pinSay("Cannot reach the server. Try again in a moment.");
-    } finally {
-      // ★ In `finally`, not after a successful fetch: a network throw or an early return must
-      // still leave nothing behind in the DOM. Same rule the connect-card key follows.
-      pinEl.value = "";
-      confirmEl.value = "";
-      btn.disabled = false;
-    }
-  }
-
-  document.getElementById("pin-submit").addEventListener("click", submitPin);
-  document.getElementById("pin").addEventListener("keydown", (e) => { if (e.key === "Enter") submitPin(); });
-  document.getElementById("pin-confirm").addEventListener("keydown", (e) => { if (e.key === "Enter") submitPin(); });
-
-  document.getElementById("connect").addEventListener("click", async () => {
-    const status = document.getElementById("status");
-    const keyEl = document.getElementById("key");
-    status.className = "status";
-    status.textContent = "Checking…";
-    try {
-      const r = await fetch("/slumhouse/api/member/connect-test", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brokerKind: document.getElementById("broker").value, key: keyEl.value }),
-      });
-      const j = await r.json().catch(() => ({}));
-      if (j.status === "validated") {
-        status.className = "status ok";
-        status.textContent = j.display || "Connected (test mode)";
-      } else {
-        status.className = "status bad";
-        status.textContent = j.status === "rejected" && j.reason === "not_a_designated_test_key"
-          ? "That isn't a test key. Test mode only accepts keys that start with TESTKEY-."
-          : "That didn't work. Nothing was saved.";
-      }
-    } catch {
-      status.className = "status bad";
-      status.textContent = "Couldn't reach the office. Nothing was saved.";
-    } finally {
-      // F-4: the clear was previously AFTER the fetch, so a network throw left the key sitting
-      // in the DOM. It belongs in finally — the one branch that runs on every path.
-      keyEl.value = "";
-    }
-  });
-
-  boot();
+  let pinMode='verify', cards=[], current=0;
+  function pinSay(v){byId('pin-status').textContent=v}
+  function setPinMode(mode){pinMode=mode;const first=mode==='establish';byId('pin-title').textContent=first?'Choose your code':'Enter your code';byId('pin-lede').textContent=first?'First time here. Pick a private code between 6 and 12 characters.':'Your office stays locked until you enter your code.';byId('pin-confirm-wrap').classList.toggle('hide',!first);byId('pin-submit').textContent=first?'Set my code':'Unlock'}
+  function make(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el}
+  function safeCopy(surface,data,name){const bag=data&&data.memberBag;if(surface==='my_room')return bag?[name+"'s bot",bag.todayBag+' today · '+bag.tradesToday.count+' trades']:[name+"'s bot",'Performance appears here from your mapped account.'];if(surface==='ready_checklist')return data&&data.accountUnmapped?['Account connection needed','Your prop-firm account is not mapped yet.']:['Account linked','Production gates remain authoritative.'];if(surface==='agent_heartbeat')return bag&&bag.killSwitch==='green'?['Bot ready','Safety checks are reporting green.']:['Waiting for heartbeat','No trading state is being invented.'];if(surface==='payout_tracker')return['Waiting for funded data','Real payout figures appear after funded activity.'];return['Read real status','Open the health panel for mapped-account readiness.']}
+  function layout(){cards.forEach((card,i)=>{let d=i-current;if(d>cards.length/2)d-=cards.length;if(d<-cards.length/2)d+=cards.length;const ad=Math.abs(d);card.style.transform='translateX('+(d*245)+'px) translateZ('+(-ad*165)+'px) rotateY('+(-d*26)+'deg) scale('+(1-ad*.11)+')';card.style.opacity=ad>2?'0':String(1-ad*.22);card.style.zIndex=String(20-ad)});Array.from(byId('dots').children).forEach((d,i)=>d.classList.toggle('on',i===current))}
+  function render(surfaces,data,name){const track=byId('track'),dots=byId('dots');track.replaceChildren();dots.replaceChildren();cards=[];surfaces.filter(s=>defs[s]).forEach((surface,i)=>{const def=defs[surface],copy=safeCopy(surface,data,name);const card=make('article','card');card.dataset.surface=surface;card.append(make('div','eyebrow',def.eyebrow),make('h2','',def.title),make('div','value',copy[0]),make('div','note',copy[1]));if(def.action){const b=make('button','open','Open health');b.type='button';b.addEventListener('click',openHealth);card.append(b)}track.append(card);cards.push(card);const dot=make('button','dot'+(i===0?' on':''));dot.type='button';dot.addEventListener('click',()=>{current=i;layout()});dots.append(dot)});current=0;layout()}
+  async function openHealth(){const box=byId('broker-health');box.replaceChildren(make('div','row','Checking real account mapping…'));if(!byId('broker-modal').open)byId('broker-modal').showModal();try{const r=await fetch('/slumhouse/api/member/broker-health',{credentials:'same-origin'});const h=await r.json();box.replaceChildren();const add=(a,b,c)=>{const row=make('div','row');row.append(make('span','',a),make('strong',c,b));box.append(row)};add('Account mapping',h.mapped?'Mapped':'Setup required',h.mapped?'good':'warn');if(h.mapped){add('Firm',h.firm||'Unknown','');add('Route',h.broker||'Unknown','');add('Credential vault',h.credentialReady?'Ready':'Not loaded',h.credentialReady?'good':'warn');add('Production adapter',h.adapterReady?'Healthy':'Not ready',h.adapterReady?'good':'warn');add('Account',h.maskedAccount||'Not assigned','')}add('Live execution','LOCKED','warn')}catch{box.replaceChildren(make('div','row warn','Health service unavailable. Execution remains locked.'))}}
+  function brokerMode(){const tp=byId('broker-type').value==='traderspost';byId('firm-wrap').classList.toggle('hide',!tp);byId('traderspost-link').classList.toggle('hide',!tp);byId('secret-label').textContent=tp?'TradersPost webhook key':'TopstepX API key'}
+  async function enrollBroker(){const secret=byId('broker-secret'),status=byId('enroll-status'),btn=byId('broker-enroll');try{btn.disabled=true;status.textContent='Encrypting and mapping…';const r=await fetch('/slumhouse/api/member/broker-enroll',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({brokerType:byId('broker-type').value,firm:byId('broker-firm').value,accountId:byId('broker-account').value,credential:secret.value})});const j=await r.json().catch(()=>({}));if(r.ok){status.textContent='Saved securely. Account mapped; live execution remains locked.';await openHealth()}else if(j.error==='secure_vault_unavailable'){status.textContent='Secure credential vault is not configured on this deployment yet.'}else{status.textContent='Connection was not saved. Check the fields and try again.'}}catch{status.textContent='Connection service unavailable. Nothing was saved.'}finally{secret.value='';btn.disabled=false}}
+  async function boot(){let scope={surfaces:[],displayName:null};try{const r=await fetch('/slumhouse/api/member/scope',{credentials:'same-origin'});if(r.ok)scope=await r.json()}catch{}if(!scope.surfaces.length){byId('office').classList.add('hide');byId('lock').classList.remove('hide');return}let data=null;try{const r=await fetch('/slumhouse/api/crib',{credentials:'same-origin'});if(r.ok)data=await r.json()}catch{}const name=scope.displayName||'Your';byId('greeting').textContent=name+"'s Office";render(scope.surfaces,data,name);byId('lock').classList.add('hide');byId('office').classList.remove('hide')}
+  async function submitPin(){const p=byId('pin'),c=byId('pin-confirm'),btn=byId('pin-submit'),code=p.value,first=pinMode==='establish';try{if(!code){pinSay('Enter your code.');return}if(first&&code!==c.value){pinSay('Those two codes do not match.');return}btn.disabled=true;pinSay('Checking…');const r=await fetch(first?'/slumhouse/api/member/pin/establish':'/slumhouse/api/member/pin',{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json'},body:JSON.stringify({pin:code})});const j=await r.json().catch(()=>({}));if(r.ok){pinSay('');await boot();return}if(j.error==='no_pin_set'){setPinMode('establish');pinSay('First time here — choose a code.');return}if(j.error==='pin_already_set'){setPinMode('verify');pinSay('You already have a code — enter it.');return}if(r.status===429){pinSay('Too many tries. Try again later.');return}pinSay(j.error==='pin_incorrect'?'That code did not work.':(j.error==='pin_policy'&&typeof j.reason==='string'?j.reason:'Cannot check your code right now.'))}catch{pinSay('Cannot reach the server. Try again in a moment.')}finally{p.value='';c.value='';btn.disabled=false}}
+  byId('pin-submit').addEventListener('click',submitPin);byId('pin').addEventListener('keydown',e=>{if(e.key==='Enter')submitPin()});byId('pin-confirm').addEventListener('keydown',e=>{if(e.key==='Enter')submitPin()});byId('prev').addEventListener('click',()=>{if(cards.length){current=(current-1+cards.length)%cards.length;layout()}});byId('next').addEventListener('click',()=>{if(cards.length){current=(current+1)%cards.length;layout()}});byId('broker-type').addEventListener('change',brokerMode);byId('broker-enroll').addEventListener('click',enrollBroker);byId('broker-close').addEventListener('click',()=>byId('broker-modal').close());brokerMode();boot();
+})();
 </script>
-</body>
-</html>
+</body></html>

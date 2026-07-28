@@ -78,6 +78,14 @@ describe("every Slumhouse API router is actually mounted in the production barre
   }
 });
 
+describe("Slumhouse SSE bridge is session-authenticated and mounted", () => {
+  it("mounts the shared SSE router behind the user-or-admin session guard", () => {
+    expect(liveBarrel).toMatch(
+      /slumhouseRouter\.use\(\s*"\/slumhouse\/api\/sse"\s*,\s*requireSlumhouseUserOrAdmin\s*,\s*sseRoutes\s*\)/,
+    );
+  });
+});
+
 describe("every state-mutating member-Office POST checks the request origin (CSRF)", () => {
   // Grader follow-up (OR-169 §19). SameSite=Lax already blocks the cross-site POST, so this is a
   // SECOND independent layer — but the routes only became reachable when the PIN UI shipped, so
@@ -116,7 +124,7 @@ describe("the member-Office routes the live page depends on are reachable", () =
   const pageSrc = fs.readFileSync(PAGE, "utf-8");
   const routeSrc = fs.readFileSync(path.join(API_DIR, "member-office.ts"), "utf-8");
 
-  const called = [...pageSrc.matchAll(/"(\/slumhouse\/api\/member\/[a-z/-]*)"/g)].map(m => m[1]);
+  const called = [...pageSrc.matchAll(/["'](\/slumhouse\/api\/member\/[a-z/-]*)["']/g)].map(m => m[1]);
 
   it("the page calls at least the scope endpoint", () => {
     expect(called).toContain("/slumhouse/api/member/scope");

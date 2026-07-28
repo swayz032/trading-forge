@@ -108,8 +108,10 @@ describe("reporting-room per-scope empty states are honest and distinct", () => 
 const rrRlEmpty = (() => {
   const tile = sliceBalanced(officeSrc, "function rrTile(");
   const src = sliceBalanced(officeSrc, "function rrRlSrc(");
+  const esc = sliceBalanced(officeSrc, "function rrEsc(");
+  const arena = sliceBalanced(officeSrc, "function rrRlRaceArena(");
   const empty = sliceBalanced(officeSrc, "function rrRlEmpty(");
-  return vm.runInNewContext(`${tile}\n${src}\n${empty}\n;rrRlEmpty`, {}) as (
+  return vm.runInNewContext(`${tile}\n${src}\n${esc}\n${arena}\n${empty}\n;rrRlEmpty`, {}) as (
     host: { innerHTML: string },
     degraded: boolean,
   ) => void;
@@ -126,14 +128,14 @@ describe("immersive Quantum-RL empty state — honest dashes, no fabrication", (
     expect(host.innerHTML).not.toMatch(/[+-]\d+\.\d+/); // no fabricated Sharpe/delta
   });
 
-  it("ships the full premium telemetry arena while labeling its geometry as decorative", () => {
+  it("ships the wrapped-car race arena while labeling it as decorative", () => {
     const host = { innerHTML: "" };
     rrRlEmpty(host, false);
-    expect(host.innerHTML).toContain('class="premium-scene"');
-    expect(host.innerHTML).toContain('class="premium-svg"');
-    expect(host.innerHTML).toContain("QUANTUM RL CHALLENGER");
-    expect(host.innerHTML).toMatch(/decorative system (architecture|map)/i);
-    expect(host.innerHTML).toMatch(/not simulated performance|no line, node or orbit is a performance reading/i);
+    expect(host.innerHTML).toContain('class="rl-race-arena"');
+    expect(host.innerHTML).toContain("/slumhouse/images/quantum-race-arena.png");
+    expect(host.innerHTML).toContain("Quantum RL");
+    expect(host.innerHTML).toContain("Classical Baseline");
+    expect(host.innerHTML).toMatch(/standby scene|no result is simulated/i);
   });
 
   it("degraded (feed unreadable) is distinct and blames the read, not the bot", () => {
@@ -144,6 +146,19 @@ describe("immersive Quantum-RL empty state — honest dashes, no fabrication", (
     expect(degraded.innerHTML).not.toBe(empty.innerHTML);
     expect(degraded.innerHTML).toMatch(/not readable|read problem/i);
     expect(degraded.innerHTML).toContain("—");
+  });
+});
+
+describe("Quantum and Paper own the full Reporting Room viewport", () => {
+  it("toggles immersive mode and hides the Reporting Room movie", () => {
+    expect(officeSrc).toContain("room.classList.toggle('rr-imm-mode', !ball)");
+    expect(officeSrc).toMatch(/\.rr-room\.rr-imm-mode \.rr-bg[^}]*display:\s*none/);
+    expect(officeSrc).toMatch(/\.rr-room\.rr-imm-mode \.rr-immersive\s*\{\s*inset:\s*0/);
+  });
+
+  it("keeps the racing arena when real A/B data arrives", () => {
+    const render = sliceBalanced(officeSrc, "function rrRenderRL(");
+    expect(render).toContain("rrRlRaceArena(s1, s2, delta, true, false)");
   });
 });
 
@@ -275,12 +290,16 @@ describe("Paper Fight Night — real all-strategy comparison renderer", () => {
 });
 
 describe("Paper Fight Night SSE reconnect display", () => {
-  it("gives EventSource five seconds to auto-reconnect before showing a dropped feed", () => {
+  it("uses the session-authenticated stream and recycles a stuck EventSource", () => {
     const connect = stripComments(sliceBalanced(officeSrc, "function rrSSEConnect("));
+    expect(connect).toContain("/slumhouse/api/sse/events");
     expect(connect).toContain("rrPaperConn = 'connecting'");
     expect(connect).toMatch(/setTimeout\(function \(\) \{[\s\S]*rrPaperConn = 'error'/);
     expect(connect).toContain("rrES.readyState === 1");
     expect(connect).toContain("}, 5000)");
+    expect(connect).toContain("rrSseRecoverTimer");
+    expect(connect).toContain("rrES.close()");
+    expect(connect).toContain("}, 8000)");
   });
 });
 
