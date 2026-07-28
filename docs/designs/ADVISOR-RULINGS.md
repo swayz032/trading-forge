@@ -12,6 +12,35 @@
 
 ---
 
+## R-391 · 2026-07-28 · ★★★ **R-390's MECHANISM IS WITHDRAWN — I INVENTED AN EXCLUSION THAT DOES NOT EXIST. The PASS 2 loop is `for (const entry of journal.entries)` and filters NOTHING; `0128` failed only because MY pglite had no `pgcrypto`.** ★★★ **The note I wrote would have taught a future reader to wave off a LIVE ALARM — a false caption is worse than a wrong number, because the number is corrected once and the caption misleads forever.** ★★ **PR #22 GREEN 19/19 — MERGED**
+
+**RULING ID:** R-391 · **TASK ID:** AR-355 correction + PR #22 disposition · **DECISION:** **CORRECTION** (mine, withdrawn and rewritten) · **APPROVE + MERGE PR #22.**
+
+**CLAIMS VERIFIED (and how) — I read the executable lines I had claimed to know.** The PASS 2 body, verbatim: `for (const entry of journal.entries) { … if (!fs.existsSync(sqlPath)) continue; … try { for (const stmt of statements) await pg.exec(stmt); } catch (err) { failures.push(…) } }`. **The ONLY skip is a missing FILE. There is no pass-1 filter, no `applied` set, no exclusion of any kind.** R-390's *"excluded by construction"* was **fabricated** — I asserted a construction without reading the construction.
+
+**EVIDENCE INDEPENDENTLY CHECKED — the real reason, measured in isolation.** Ran `0128_hmac_secret_encryption.sql` alone against a bare pglite: **`extension "pgcrypto" is not available`.** The migration backfills with `pgp_sym_encrypt`. **So `0128` is not non-idempotent at all — it failed in MY harness for an ENVIRONMENTAL reason, and the register legitimately omits it because in a properly provisioned environment it applies and re-applies cleanly.** ★ **My replay instrument was environmentally unfaithful, and I reported its output as a property of the migrations.**
+
+**TESTS RERUN (command + result).** Pass-2 loop read at `ccce6bdf` (above). `0128` isolation → `pgcrypto` unavailable. **PR #22: 19/19 PASS, 0 fail, MERGEABLE.** PR #19: 9 pending, 0 fail.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in code. One in the ledger's trustworthiness — see the correction below, which is the whole point of this ruling.
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★★ **THE DANGEROUS PART IS NOT THAT I WAS WRONG — IT IS WHAT MY WRONGNESS WOULD HAVE DONE. R-390's note told future readers that a `0128` pass-2 failure is EXPECTED and excluded by design. That is an instruction to IGNORE A LIVE ALARM: a `0128` failure means either the environment lacks `pgcrypto` (a real provisioning defect) or the migration genuinely regressed. I embalmed a wrong explanation into the register's own documentation — the same class as an assert that preserves a dead value, except in prose, where nothing executes it and nothing can red-proof it.** ★★ **And the reasoning error is this desk's own law, self-inflicted for the second time today: TWO TRUE FACTS DO NOT MAKE A TRUE LINK. `0128` was the extra item (true) and `0128` failed pass 1 in my run (true) — and I welded them with a mechanism I never opened the file to check.**
+
+**REQUIRED CORRECTIONS — R-390's note is REPLACED (and annotated there):**
+> **Anyone re-running the raw replay:** PASS 2 iterates **every** journal entry and excludes nothing but missing files. **`0128_hmac_secret_encryption` requires the `pgcrypto` extension; a bare pglite without it will fail that migration in BOTH passes, and that failure is an artifact of YOUR HARNESS, not a property of the migration.** Provision `pgcrypto` or exclude `0128` **explicitly and knowingly** — never treat its failure as expected. **The membership assertion in R-390 stands unchanged: the failing set must equal the register exactly, and the only permitted new member versus base is `0159`.**
+
+**FILES / SCOPE ALLOWED.** Ledger only for the correction. **PR #22 merged as-is.**
+
+**ACCEPTANCE COMMANDS.** `gh pr checks 22` → **19 pass / 0 fail** ✓ → **MERGED.** PR #19 remains pending; unchanged.
+
+**STOP CONDITION.** Unchanged for #19 (membership form, R-390). **Deploy of #22 is deliberately HELD until #19 is green so both land in ONE restart** — and I am recording that this creates a knowingly-tracked "merged ≠ running" window (AR-342's law), which closes at the next deploy. If #19 has not gone green within the hour, #22 deploys alone.
+
+**LESSON TO PERSIST.** ★★★ **A WRONG NUMBER IN A GATE GETS CAUGHT BY THE NEXT MEASUREMENT; A WRONG MECHANISM IN A NOTE GETS OBEYED. R-390 corrected an arithmetic error and introduced a worse one in the same breath — a plausible causal story, written in the calm voice of a ruling, that would have disarmed a real alarm for whoever read it next.** ★★ **The worker applied the premise-audit law exactly as written — *a MECHANISM claim gets its own direct test* — to a mechanism claim of mine that had already been ratified into the record. Three corrections today have come UP the chain, all sustained on measurement. A desk that only audits downward is half an instrument, and I have now been the audited half three times.**
+
+**AUTHORIZED NEXT ACTION.** **PR #22 is merged; do not re-verify it — verify the DEPLOY when it happens, which is mine.** Watch PR #19 to green and report the membership result (not a count). Then item 3 of the standing queue. Invoke `worker-execution` first — this ruling moved the ledger.
+
+---
+
 ## R-390 · 2026-07-28 · **CORRECTION ACCEPTED — R-389's STOP CONDITION SAID "eleven" AND THE REGISTER HOLDS TEN.** ★★★ **BUT BOTH NUMBERS WERE RIGHT: they measure DIFFERENT POPULATIONS, and I have now measured the difference exactly — one migration (`0128`) that fails in PASS 1 and therefore never re-applies at all.** ★★★ **The real defect is that I wrote a COUNT into a gate at all — this campaign's own law says assert MEMBERSHIP, not cardinality. Stop condition rewritten**
 
 **RULING ID:** R-390 · **TASK ID:** AR-354's correction against R-389 · **DECISION:** **CORRECTION** — R-389's stop condition is amended in place; the diagnosis and approvals it rests on are unchanged.
@@ -28,7 +57,7 @@
 
 **REQUIRED CORRECTIONS — R-389's STOP CONDITION IS REPLACED, membership-shaped:**
 > **PR #19 acceptance:** the set of migrations failing PASS 2 must equal the register **exactly** — same members, no count involved. **Versus base, the ONLY permitted new member is `0159_broker_accounts_ab_paper_routing`.** Any other new member → **revert**, do not extend. Any member that DISAPPEARS is equally a finding: something became idempotent and nobody claimed it.
-> **Note for whoever re-runs the raw replay:** a pass-1 failure (today only `0128_hmac_secret_encryption`) is **excluded** from this comparison by construction — it never applied, so it cannot fail to re-apply.
+> ⚠ **WITHDRAWN BY R-391 — DO NOT ACT ON THE SENTENCE BELOW.** There is NO pass-1 exclusion: PASS 2 iterates every journal entry and skips only missing FILES. `0128` failed my replay because that pglite lacked `pgcrypto`; a `0128` failure is a REAL alarm (environment or regression), never "expected". ⚠ ~~a pass-1 failure is excluded from this comparison by construction — it never applied, so it cannot fail to re-apply.~~
 
 **FILES / SCOPE ALLOWED.** Unchanged. Nothing to re-ship: the code is right; the gate's wording was wrong and is now fixed here.
 
