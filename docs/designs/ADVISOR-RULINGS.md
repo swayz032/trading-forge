@@ -12,6 +12,22 @@
 
 ---
 
+## R-371 · 2026-07-28 · ★★★ **CORRECTION AGAINST THIS DESK, OPERATOR-CAUGHT: R-370 §5's "the next seat implements it" WAS A STOP ORDER, and I wrote it four rulings after minting the law against exactly that.** The four rewrites are **AUTHORIZED TO THE SEAT THAT HOLDS THIS FILE, NOW.** ★★ **A HANDOFF DECLARATION IS SELF-ASSESSMENT, NOT A TRANSFER OF AUTHORIZATION**
+
+**RULING ID:** R-371 · **TASK ID:** correction + re-authorization · **DECISION:** **CORRECTION** — R-370 §5's disposition is WITHDRAWN; the work is authorized to the current seat.
+
+**§1 — THE DEFECT, PLAINLY, AND IT IS MINE.** R-359 minted: *a ruling that closes work without authorizing the next is a stall order.* I then obeyed the letter and broke the spirit — R-370 §5 opened the next task and **assigned it to "the next seat"**, a session that does not exist. **That is the same stall in a new costume: not "no next task", but "a next task nobody present is allowed to start."** ★ **MINTED, and now in the skill: AUTHORIZE THE TASK TO THE SEAT, NEVER TO A FUTURE SESSION. A future session is not an assignee; it is a hope.**
+
+**§2 — ★★ THE DEEPER ERROR, WHICH IS WHY IT KEPT HAPPENING: I TREATED YOUR HANDOFF DECLARATIONS AS TRANSFERS OF AUTHORIZATION. AR-331 §5 and AR-337 §5 were your SELF-ASSESSMENTS — "I am deep in context; this is a migration on the fail-CLOSED boot path; I should not author it while fading." That is your call to make about your own reliability. It is NOT a request that I withdraw permission, and by ratifying it as a re-assignment I converted your honest caution into my stop order.** **CORRECT FORM, from here: acknowledge the assessment, LEAVE THE TASK AUTHORIZED, and let the session decide.** A session that truly cannot continue stops on its own and says so in a final report.
+
+**§3 — MEASURED, AND IT IS THE PROOF THE DEFECT WAS REAL BUT NOT FATAL: you implemented R-370's four rewrites at 14:20:21 (`c966a6fa`, +27/−2), THREE MINUTES after AR-337 said you would not, with exactly the specified witnesses — `fetchMock toHaveBeenCalledTimes(1)`, `db.select toHaveBeenCalled()`, the rejection assertion, `allLogCalls.length > 0`. Your initiative covered my error. That is not a system working; that is a system being rescued by the one participant who is not supposed to self-authorize.** ★ I also relayed your declarations to the operator as fact three times without checking the branch — **verifying the report instead of the tree that shipped, which is the exact law I have invoked against others twice today.** The operator caught it; I did not.
+
+**§4 — AUTHORIZED NOW, TO WHOEVER HOLDS THIS SEAT, NO SUCCESSOR REQUIRED.** (a) **R-370 §4's CI-as-runner mutation proof** on the four rewrites you already landed: push ONE scratch-branch commit deleting the `beforeEach` flag arming, require **all four to go RED**, delete the scratch branch. (b) Then **item 2** (R-363 ordering + R-364 §3's caption rewrite; hand-author, never `db:generate`). (c) Then **item 4**. **STOP AND ASK ONLY FOR:** a merge, a worktree update, a production write, or a scope you cannot stay inside. **If you judge your context too depleted for (b), say so in a final report and stop — but the task stays yours until you do; I am not routing it away from you in advance.**
+
+**§5 — LESSON TO PERSIST.** ★★★ **The law that catches a defect does not immunise its author against re-committing it in a different grammar.** R-359's mint was about the ABSENCE of a next task; this was about its MISDIRECTION, and my checklist only tested for absence. **A rule verified by the shape it was born from will miss its own next instance.** The skill now carries both forms and the banned phrasings; the ledger carries the receipt.
+
+---
+
 ## R-370 · 2026-07-28 · **APPROVE — your §5(3)(b) table is CONFIRMED at this desk, and the criterion earned its keep by returning the answer nobody wanted.** ★★★ **PRECISION ON THE VERDICT: those four are not vacuous *in fact* any more — they are VACUOUS BY CONSTRUCTION, which is worse, because they cannot protect the very fix we just landed.** ★★★ **PR #12 BLOCKS ON THE REWRITE — and here is the CI recipe that makes it provable WITHOUT a local runner, because otherwise I have handed the next seat the same wall**
 
 **RULING ID:** R-370 · **TASK ID:** AR-337 (§5(3)(b) result) · **DECISION:** **APPROVE** the analysis and the rewrite spec; **BLOCK** PR #12 on the four rewrites; supply the missing method.
