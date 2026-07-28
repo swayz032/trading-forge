@@ -2,7 +2,7 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
-> Last rewritten: 2026-07-28, current through **R-415** (tree divergence).
+> Last rewritten: 2026-07-28, current through **R-418** (LOADED; port authorized).
 
 ## SEAT
 Ledger at **R-415**. Newest AR: **AR-379, RULED** (stop condition FIRED).
@@ -122,28 +122,40 @@ flag** — graduation runs the SDS harness review per the flag's own docstring.
 - ★★★ **IT ACTIVATES ON THE FIRST BAND-C BACKTEST — which is what this campaign
   exists to produce.**
 
-## ★★★ ARMED — AWAITING RULING (AR-381, desk-verified; NOT YET RULED)
-**LATENT -> ARMED.** [MEASURED HERE, TREE `runtime-production`] a production
-backtest config **can** carry `compiled_spec` today, unconditionally:
-`spec-onboarding-service.ts:647-650` builds `finalConfig` with a `compiled_spec`
-key (no flag, no env var, no operator step) -> `:756` persists it to
-`strategies.config` -> `backtester.py:8471` Band-C branch fires on the key's
-presence -> `:8492 from_compiled_spec(...)` -> `spec_condition_compiler.py:226
-compile_binding_plan(...)` **in the 35,046 B production lane** — the one that
-emits the false concrete.
-★★ **[MEASURED, `:656-659` verbatim] the design DELIBERATELY stores only a
-summary and recomputes the real plan in the engine at backtest time** — sound
-design, and it means the divergent lane is the one that decides the answer.
-★ **[NOT CHECKED] whether any strategy row carries a `compiled_spec` right now**
-— a live-DB read, and live reads are the desk's.
-★★★ **NOTHING IS AT RISK TODAY: [MEASURED on the live DB] 0 backtests ever,
-0 paper sessions, 0 broker credentials. ARMED means the next Band-C backtest
-would use the wrong lane — not that anything is running.**
+## ★★★ LOADED — PRE-BACKTEST RELEASE BLOCKER (R-418, desk-measured)
+**Escalated LATENT -> ARMED -> LOADED.** [MEASURED HERE, LIVE production DB,
+read-only, unpiped]:
+```
+strategies total                          : 120
+strategies whose config has compiled_spec : 120   <- LOADED, every single one
+records carrying an orphan-zone term      :  27   (pre market / asia session /
+                                                   globex / overnight / lunch)
+backtests total                           :   0   <- NOT FIRED
+```
+The 27: `long_entry_or_short_entry_*`, `jump_in_downtrend_*`, `ema_period_*`,
+`mean_reversion_*`, `trading_session_time_*`, `manipulation_trade_*`,
+`overall_trend_*`, `vwap_cross_*`, `new_high_acceptance_*` — all CANDIDATE.
 
-**RULING HELD** — operator directive 2026-07-28: *"wait for gpt6 opinion from
-now on before you do a ruling."* This finding is verified and parked, not
-forgotten. **The gate stands: no Band-C backtest before the refusal-port lands
-(R-417's 5 steps + pre-backtest invariant).**
+★★★ **THE EXPOSURE IS THE OPERATOR'S REAL STRATEGY LIBRARY, not the 16-spec
+campaign corpus.** The corpus was the SAMPLE; the library is the POPULATION.
+The path became loaded through onboarding working exactly as designed, 120 times.
+★★ **[MEASURED] `spec-onboarding-service.ts:647-650` writes `compiled_spec`
+unconditionally, `:756` persists it, and `:656-659` says the engine deliberately
+RECOMPUTES the plan at backtest time — in the 35,046 B lane that stamps
+`approximation=False` on a session it has no clock for.**
+★★★ **NOT AN INCIDENT: nothing has executed, nothing is live, 0 broker
+credentials. The honest sentence is "the next Band-C backtest would compute its
+rules in the wrong lane, and 27 strategies contain the term that makes that
+visibly wrong."**
+
+## SECOND FINDING (R-418) — REPRODUCIBILITY
+Summary-only storage + recompute means **a strategy can be onboarded under one
+compiler and backtested under different code with no visible record change** —
+and [MEASURED] the two lanes already disagree. Every `compiled_spec` must
+persist: compiler commit/version · resolver version · resolution status · exact
+executable session boundaries · timezone + trading-calendar basis · refusal
+reasons. Recompilation stays, but must be explicit and bump a visible version.
+**Designed, NOT yet authorized — its own contract, after the port.**
 
 ## ★★★ NEW PHASE-2 PREREQUISITE (R-415) — assignee: THIS SEAT
 **"Before the first Band-C backtest runs, the desk rules which binding lane is
