@@ -12,6 +12,41 @@
 
 ---
 
+## R-393 · 2026-07-28 · ★★★ **ITEM 2 IS LIVE ON THE TOWER — AND VERIFIED ON THE REAL DATABASE, NOT IN pglite: both paper rows read `paper_sim`, and ZERO rows of any firm remain typed `traderspost`.** PRs #19 + #22 merged, deployed, published. ★★ The box had moved under me again — measured before touching it, which is the only reason the deploy was correct
+
+**RULING ID:** R-393 · **TASK ID:** items 2 + 4 — merge, deploy, production verification · **DECISION:** **CLOSED — PASS.**
+
+**CLAIMS VERIFIED (and how).** PR #19 membership acceptance (R-390 form) **re-derived at this desk, not read from AR-356**: replayed the journal twice from the PR head and diffed the SETS against base — **NEW = exactly `0159_broker_accounts_ab_paper_routing`; GONE = none.** That is the acceptance verbatim. **I waited out the last two pending checks rather than merging on 15/17** (`fail=0 pending=2` → `pending=0`), because pending is not green — final gate **19 pass / 0 fail**.
+
+**EVIDENCE INDEPENDENTLY CHECKED — including a stale assumption of mine, caught by measuring first.** ★★ **I believed the box was at `b2af6c1a` (where I left it). It was at `3efbd914` — the operator moved it again, and PR #22's merge (`3b92792a`) was ALREADY on it. Had I acted on my belief I would have mis-stated the deploy's contents.** Measured instead: box `behind 6` (PR #19's commits only), FF possible, tree clean. **The operator is a third writer on `runtime-production` and that is now twice in one session.**
+
+**TESTS RERUN (command + result).** Merge: FF to `f5b5b10d`; disk sentinels post-merge — `0208` present, journal tail = `0208_paper_accounts_no_egress_broker_type`, `broker-router.ts` `fetch(` count **0**. Restart: HMAC self-restart (corr `af543dd5`), **API back in 6s**, `database ok 112ms`, node+python deps `ok`. ★★★ **PRODUCTION VERIFICATION, read-only by construction AND by belt (`SET default_transaction_read_only = on`, SELECT only, no credential column named):**
+```
+slumdawg-baseline        firm=paper  type=paper_sim  enabled=true
+slumdawg-rl-challenger   firm=paper  type=paper_sim  enabled=true
+paper rows: 2 | still typed traderspost: 0
+rows of ANY firm still typed traderspost: 0
+```
+**Publish: `git push` → already up to date (the branch of record equals the box).**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** Migration 0159's written compliance contract — *"'paper' rows are NEVER routed to funded brokers"* — **is enforced in the schema for the first time since it was written.** `'paper'` can no longer validate as a live TradersPost account, and those rows now fall to `broker-router`'s default-deny arm. **The single broker-egress chokepoint is live in the same deploy: one module may reach a broker host, and CI fails the build if another ever does.**
+
+**FAILED OR UNPROVEN CONDITIONS.** ★ **[UNPROVEN — named]** I did not exercise a live `routeOrder()` against a `paper_sim` account on the tower; the refusal path is proven by the dispatch tail's code and by CI, **not by a production call**. Given zero credentials and zero live-state strategies, generating one would be manufacturing the exact risk we removed. **The honest claim is: the DATA is verified in production; the REFUSAL is verified in code and CI.** ★ **[UNPROVEN]** `0159`'s replay behaviour is now permanently non-idempotent by design (register class 2, R-388) — a fresh-bootstrap-twice rebuild will fail there, which is documented where a rebuilder will find it.
+
+**REQUIRED CORRECTIONS.** None. **The deploy record (before/after SHA, actor, method, restart gap, verification, publish) is in TESTS RERUN above — this is the second such record and they now exist because R-381 §4 made publish part of deploy.**
+
+**FILES / SCOPE ALLOWED.** Deploy only; no code authored by this desk.
+
+**ACCEPTANCE COMMANDS.** All met and shown above.
+
+**STOP CONDITION.** Not triggered. Had the live read returned anything but two `paper_sim` rows, the box rolls back to `3efbd914`.
+
+**LESSON TO PERSIST.** ★★★ **EVERY LAYER OF THIS CHANGE PASSED A DIFFERENT INSTRUMENT AND ONLY THE LAST ONE WAS PRODUCTION TRUTH: my hand-built pglite fixture passed it (and missed a real cross-migration break); the real-chain replay caught that; CI proved the suite; and only a read-only query against the live database proved the ROWS. Four instruments, four different questions — and the day's near-misses all came from mistaking one for another.** ★★ **Second, cheaper, and the reason this deploy was correct: I measured the box before touching it and found my own belief about its state was two hours stale. A deploy is the one action where an assumption becomes irreversible.**
+
+**AUTHORIZED NEXT ACTION.** Worker: **item 3** as you have already started (server-derived `strategy_id`) — start-receipt filed, scope yours, same standing stops. Desk: nothing open; both PRs closed, both live, both published.
+
+---
+
 ## R-392 · 2026-07-28 · **OPERATOR: "make sure your mistakes don't happen again."** ★★★ **I CLASSIFIED TODAY'S DESK ERRORS INSTEAD OF APOLOGISING FOR THEM, AND HALF ARE ONE SHAPE: A MECHANISM ASSERTED IN A RULING'S CALM VOICE WITHOUT READING OR RUNNING THE THING THAT WOULD PROVE IT.** Now a harness gate, RED-PROOFED ON MY OWN REAL SENTENCES — R-390's and R-371's actual text both BLOCK; R-391's corrected text passes
 
 **RULING ID:** R-392 · **TASK ID:** operator directive — systemic prevention · **DECISION:** **BUILT, RED-PROOFED, LIVE.**
