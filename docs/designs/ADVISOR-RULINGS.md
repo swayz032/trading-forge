@@ -12,6 +12,32 @@
 
 ---
 
+## R-384 · 2026-07-28 · **THE §0.-1 RULE IS NOW A GATE, NOT A CAPTION — operator-prompted.** ★★★ R-383 "fixed" *I stopped reading the skill* by writing a paragraph INTO that skill — a fix delivered through the exact channel proven unread. A hook is executed by the harness and does not depend on my recall. ★★ Guard matrix 8/8 incl. fail-open; sentinel CONSUMED per ruling ⇒ once-per-RULING, not once-per-session; **both halves proven live by this write**
+
+**RULING ID:** R-384 · **TASK ID:** enforce advisor-ruling invocation (operator question: "should we use a hook or no?") · **DECISION:** **BUILT, TESTED, LIVE.**
+
+**CLAIMS VERIFIED (and how).** The operator's question contained the finding. **R-383's remedy was self-referential: it diagnosed "I rule from a remembered copy of the skill" and prescribed a new paragraph inside that same skill.** A caption cannot enforce its own reading. A `PreToolUse` hook runs in the harness, before my tool call, and cannot be skipped by forgetting.
+
+**EVIDENCE INDEPENDENTLY CHECKED.** Read `.claude/settings.json` BEFORE writing (skill §Constructing a Hook, step 1): it already carried a `PreToolUse` / `Write|Edit|MultiEdit` entry running **`grading-guard.ps1`** — the same guard shape, for the grading-integrity skill, fail-open, `exit 2` to block. **I mirrored that proven local pattern instead of inventing a second mechanism, and added ALONGSIDE it.** Post-merge assertion: `grading-guard preserved: true`, `advisor-ruling-guard added: true`, `receipt added: true`, JSON parses. Backup at `.claude/settings.json.bak`.
+
+**TESTS RERUN (command + result).** Pipe-tested both scripts against synthesized hook stdin — **8/8**: ledger write, no sentinel → **exit 2 BLOCK** · `ADVISOR-RULINGS-OPS.md` → allow (scope bounded — the OPS seat is not mine to gate) · unrelated source file → allow · `ADVISOR-STATE.md` → allow · **malformed JSON → allow (FAIL-OPEN)** · sentinel present → allow · receipt consumes on ledger write → **consumed** · next ledger write → **exit 2 BLOCK again.** ★ **The last pair is the design: consumption makes it per-RULING. A freshness-window-only guard would have permitted exactly the drift R-383 measured.** ★ One correction to my own first attempt: test 1's exit code was masked by a `| head` pipeline (`$?` reported `head`'s status) — **I caught that and re-ran capturing exit codes directly rather than publishing an unverified 8/8.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in the trading system — this is `.claude/` tooling. Deliberately **NOT a Stop hook**: this repo has a documented Stop-hook wedge (operator-blocked hold). A `PreToolUse` block is recoverable — I keep every other tool and the remedy is printed in the block message.
+
+**FAILED OR UNPROVEN CONDITIONS — and this is the part I could not have claimed an hour ago.** ★★★ **BOTH halves are now [MEASURED HERE] END-TO-END, by this very write: my first attempt at this ruling was BLOCKED by the live hook (harness error, verbatim), I then invoked the skill, and the sentinel appeared 6 seconds later written by the `PostToolUse`-on-`Skill` hook — a wiring I had explicitly flagged as unverified, because pipe-testing a script proves the script and never the wiring.** ★ **[UNPROVEN — named]** multi-Edit rulings: each ledger write consumes the sentinel, so an amendment re-blocks. **Deliberate** — amending the record is exactly when re-reading is right. If it proves noisy I will relax it to a freshness window and say so. ★ **[COSMETIC, not fixed]** the registered command contains a doubled path separator (`.claude\\hooks\\`) from JSON escaping; it resolves and the hook fires, so I am not touching a working guard to improve its looks (invariant 9).
+
+**REQUIRED CORRECTIONS.** None outstanding. §0.-1 already stands in the skill, the `advisor-onboarding` seat header, and ADVISOR-STATE; this ruling supplies the enforcement beneath them.
+
+**FILES / SCOPE ALLOWED.** `.claude/hooks/advisor-ruling-guard.ps1` (new) · `.claude/hooks/advisor-ruling-receipt.ps1` (new) · `.claude/settings.json` (merged; `.bak` kept). No worker-facing or trading-system files touched.
+
+**ACCEPTANCE COMMANDS.** The 8/8 matrix above, plus the live block→invoke→allow sequence that produced this entry.
+
+**STOP CONDITION.** If the guard blocks a legitimate write, delete its entry from `.claude/settings.json` — the recovery path is printed in the block message itself.
+
+**LESSON TO PERSIST.** ★★★ **THE GATE MUST LIVE OUTSIDE THE THING IT GATES.** A rule hosted by the artifact it governs inherits every way that artifact goes unread — which is why R-383's paragraph was necessary but could never be sufficient. ★★ **And the operator has now caught the same shape four times in one day, each time one level deeper: a stall in my grammar · a state line I wrote instead of measured · an instrument I stopped reading · and now a fix I placed inside the unread instrument.** The pattern is not carelessness; it is that **self-applied process has no independent grader by construction** — so the enforcement has to be mechanical, or it decays exactly as measured.
+
+---
+
 ## R-383 · 2026-07-28 · ★★★ **SELF-AUDIT, OPERATOR-CAUGHT: I STOPPED INVOKING THE PRE-RULING SKILL AND MY RULINGS DECAYED — MEASURED 4.0/10 → 0.1/10 ON ITS OWN MANDATED FIELDS.** ★★★ **The killer was not laziness, it was STALENESS: I edited that skill FOUR TIMES today and never re-read it, so I ruled from a superseded copy of my own rules — and broke §8 forty minutes after writing it.** + AR-347 manifest CLOSED
 
 **RULING ID:** R-383 · **TASK ID:** operator challenge ("why don't I see you use advisor skills any more?") + AR-347 · **DECISION:** **REVISE (against this desk)** — structural gate added to the skill; AR-347 **APPROVED**; PR #19 proceeds to merge on CI green.
