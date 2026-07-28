@@ -15822,7 +15822,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Known-facts updates:** Opening the Media Evidence Vault is not evidence selection. A source may appear on stage only after an explicit video/strategy action or an exact evidence deep link.
 
-**Same-session follow-up:** Hardened rapid library selection with abortable, sequence-checked requests so a slower prior response cannot overwrite the most recently selected strategy. The stage now identifies the exact selected strategy and explicitly distinguishes strategy identity from a shared teaching source. Desktop presentation remains one continuous stage card, with theater-dark spotlight depth, reachable vertical content, and a visible slim evidence scrollbar instead of clipped lower content.
+**Same-session follow-up:** Hardened rapid library selection with abortable, sequence-checked requests so a slower prior response cannot overwrite the most recently selected strategy. The stage now identifies the exact selected strategy and explicitly distinguishes strategy identity from a shared teaching source. Desktop presentation is one continuous theater-dark floating stage: the document is locked to one viewport, nested card borders were removed, and only the long stage/rail content scrolls internally with invisible scrollbars.
 
 **Carry-forward:** None for the transcript backfill. New n8n/scout/operator intake already writes through the same durable archive and remains fail-closed on evidence persistence failure.
 
