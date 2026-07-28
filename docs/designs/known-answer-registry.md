@@ -20,7 +20,7 @@ and harder to fool.
 | 3 | `playbook_router.py` `ALL_STRATS` | **174** (wave-4 worktree) / **181** (`runtime-production`) | Python import vs TS scrape, both diffs empty, on both checkouts | 2026-07-28 |
 | 4 | `h1-sealed-read-frozen` MANIFEST | **275/275 match** | sha256 over the **committed blobs** (`git show HEAD:<path>`), not the working files; `* -text` proven in force via `git check-attr` | 2026-07-28 |
 | 5 | Population-A de-approximated kinds | `named_sr_level`, `order_block_edge` | the existence proof that refuted the "approximate by nature" framing challenge | 2026-07-20 |
-| 6 | Style C TS ↔ Python exit parity | enforced via **14 shared fixtures** | `style-c-exit-evaluator-parity.test.ts` and `tests/test_style_c_parity_2026_06_29.py` run the SAME fixture file through both engines | 2026-07-28 |
+| 6 | Style C TS ↔ Python exit parity | enforced via **14 shared fixtures**; oracle is **SPEC-CONSISTENT, NOT PROVEN INDEPENDENT** | Both engines run the SAME fixture file. 11/13 expected decisions re-derived BY HAND from the arithmetic in the fixture's own comment, neither engine imported. BUT `style_c_handler.py` predates the fixture by 6 weeks, so capture-from-Python was possible, and a capture from a *correct* engine is observationally identical. The discriminating evidence (a fixture where an engine is wrong) is ABSENT, not favourable. | 2026-07-28 |
 
 ## How to use an entry as a control
 
