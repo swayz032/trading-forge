@@ -4,6 +4,75 @@
 
 ---
 
+## AR-356 · 2026-07-28 · **PR #19 MEMBERSHIP RESULT (R-390 form — the SET, no count as the verdict): failing set == register EXACTLY; the only new member versus base is `0159`; nothing disappeared. STOP CONDITION SATISFIED** · ★★★ **AND I BUILT R-392's EXACT FAILURE MODE MINUTES AFTER READING IT: my PR-19 watcher depended on `jq`, which is not installed here — it was DEAD from the moment I armed it and its silence was indistinguishable from "still running"**
+
+**RULING ID:** R-391 · **TASK ID:** PR #19 membership report · **RECOMMENDATION:** **APPROVAL_REQUESTED** — 15/17 SUCCESS, 0 fail; the two outstanding are duplicate `Python Tests + Coverage` jobs still running.
+
+---
+
+### THE MEMBERSHIP RESULT — stated as a set, per R-390
+
+**Register at PR base (`hardening/slumhouse-shared-office-parity-20260723` @ `b2af6c1a`), 9 members:**
+`0000_previous_nuke` · `0001_flashy_hercules` · `0002_equal_nova` · `0006_deep_analysis_pipeline` · `0007_matrix_correlations` · `0008_decay_analysis_column` · `0009_strategy_evolution` · `0016_sanity_cross_validation` · `0017_add_indexes`
+
+**Register at head `63829829`:** the same nine **plus `0159_broker_accounts_ab_paper_routing`**.
+
+```
+ADDED   vs base : 0159_broker_accounts_ab_paper_routing
+REMOVED vs base : (none)
+R-390 STOP CONDITION (only permitted new member is 0159; no member may disappear): SATISFIED
+```
+
+★ **The other half — "the failing set must EQUAL the register" — is the CI assertion itself, and it is two-sided** (`unexpected` must be `[]` *and* `missingExpected` must be `[]`). On run **`30397528587`**, head **`63829829`**:
+
+```
+PASSED  PASS 1 — full journal applies cleanly against an empty DB, zero backfilled
+PASSED  PASS 1 proof — the 10 formerly-backfilled migrations' schema now actually exists
+PASSED  PASS 2 — re-applying every journal entry's raw SQL against the now-populated DB
+```
+
+**So the failing set equals the register exactly — not merely "the right size".** ★ PASS 1 green also re-confirms AR-355's finding independently: **PASS 1 throws on its first failure, so a green PASS 1 proves the pass-1 failure set is EMPTY in this harness — `0128` applies cleanly here, as it does on real Postgres.**
+
+**Machine verdict, run `30397523742` (job `90404147925`), verbatim:**
+```
+"verdict": "GREEN",
+"newFailures": [],
+```
+**Suite: 13452 passed / 9 failed** — the nine known baseline suppressions, unchanged and byte-identical to the set on `ccce6bdf` and on PR #22. Zero in our surface.
+
+**Checks:** 15 SUCCESS · 0 fail · 2 IN_PROGRESS (`Python Tests + Coverage`, duplicated across the two mirrored CI runs). **I am not calling it green until those land.**
+
+★ **A base-selection trap I nearly walked into:** I first computed the delta against `origin/main`. **PR #19 does not target main** — it targets the deploy branch. `merge-base(HEAD, origin/main)` = `618a74b0`; `merge-base(HEAD, origin/hardening/slumhouse-shared-office-parity-20260723)` = `b2af6c1a`. Both happen to carry the identical 9-member register, **so the wrong base produced the right answer** — the most dangerous kind of correct. Re-derived from `gh pr view 19 --json baseRefName` and re-run; the numbers above are against the real base.
+
+---
+
+### ★★★ I REPRODUCED R-392's THESIS ON MYSELF, WITHIN MINUTES OF READING IT
+
+R-392 landed while I was watching this PR, and its standing rule is *"parse/sanity-check the instrument before believing any result it produces, and treat a surprising result as an accusation against the instrument first."*
+
+**My watcher had been dead since I armed it.** Its predicate was built on `jq`; **`jq` is not installed in this environment** (`jq: command not found`). Every `jq` call failed silently under `2>/dev/null || true`, so it emitted nothing and could never reach its exit condition. **It would have watched forever.**
+
+★★ **The tell was there and it is exactly the shape you named twice today: SILENCE IS NOT A READING.** A monitor that has produced no output is indistinguishable from a monitor watching a job that has not progressed — and I had no positive witness that the thing had ever run. **The same law as "a negative assertion needs a positive witness that the path RAN", applied to an instrument instead of a test.**
+
+★ **Worse, my first sanity-check LIED TOO, in the same way yours did:** I ran the settled-predicate by hand and it printed *"NOT settled (monitor silence is CORRECT)"* — reassuring, and produced **entirely by the `jq` failure falling through to the `||` branch**. I only caught it because the raw `jq` error printed one line above the reassurance. **An instrument checking a broken instrument, agreeing with it for the same reason it was broken.**
+
+**Fix + red-proof (not "it looks right now"):** rebuilt on `gh`'s built-in `-q` (no external `jq`), then **proved it produces real numbers before trusting it** — `IN_PROGRESS=2  QUEUED=7  SUCCESS=4`, `running=9 total=13`, predicate correctly reporting NOT-settled while `running>0`. It has since emitted seven check completions, so it is witnessed live, not merely inspected.
+
+★ **A third instrument bit me in this same report and I am recording it because the pattern is the point:** grepping the verdict out of the job log, my pattern `\bRED\b`-less alternation matched *"requi**red**"*, *"c**red**entials"*, *"resto**red**"*, and the job-name prefix *"Machine-enforced push **verdict**"* on every single line — a filter that matches everything is as useless as one that matches nothing, and it briefly looked like the verdict was absent. Anchored the pattern; the verdict was there all along.
+
+★★★ **Tally for the day, mine included: `| head` masking an exit code · a shell collapsing `\b` · an ANSI-mangled guard script · a hardcoded test fixture · a `npx tsc` troll stub in a worktree with no `node_modules` · a `jq`-less monitor · a substring-matching grep. Seven measurements lied; zero artifacts were at fault. The system under test has been more honest than every tool we pointed at it.**
+
+---
+
+**Files changed since AR-355:** none (this report is measurement only).
+**Architecture boundaries NOT touched:** register membership unchanged from R-388's ratified (B); no migration edited; no assertion logic.
+**Remaining uncertainty:** the two in-flight `Python Tests + Coverage` jobs. Nothing else.
+**Merge + deploy remain yours** — R-391 holds #22's deploy to land with #19 in one restart; on #19's merge the live-DB re-verification that the two rows read `paper_sim` is yours per R-377/R-381.
+
+**Next smallest task (ONE):** confirm the two Python jobs land green, then begin item 3 — first sub-item **server-derived `strategy_id`**. Scoping already done read-only: `tradingview-webhook.ts` takes `strategy_id` from the payload (`z.string().uuid()`), but binds it via the per-`(account_id, strategy_id)` secret from `account_strategy_assignments`, with the signature covering `{strategy_id}|{account_id}|…`. **So the real question is not "is the field client-supplied" but "does the assignment lookup prove the caller owns that pair" — I will open it there.**
+
+---
+
 ## AR-355 · 2026-07-28 · ★★★ **R-390's ARITHMETIC IS RIGHT AND ITS MECHANISM IS WRONG: THERE IS NO PASS-1 EXCLUSION "BY CONSTRUCTION" — THE PASS 2 LOOP EXCLUDES NOTHING.** ★★★ **`0128` IS FULLY IDEMPOTENT AND APPLIES FINE; IT FAILED YOUR REPLAY BECAUSE THAT PGlite HAD NO `pgcrypto`. The note R-390 wrote for future readers would tell them to wave off a live alarm** · **PR #22 IS GREEN (19/19)**
 
 **RULING ID:** R-390 · **TASK ID:** items 2+4 · **RECOMMENDATION:** **APPROVAL_REQUESTED on #22 (green)** · **REVISION_REQUIRED on R-390's "Note for whoever re-runs the raw replay"**
