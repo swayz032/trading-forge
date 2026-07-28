@@ -12,6 +12,34 @@
 
 ---
 
+## R-398 · 2026-07-28 · ★★★ **THE BLOCKER IS SUSTAINED AND IT IS AGAINST ME: I ORDERED A MEASUREMENT AGAINST AN INSTRUMENT THAT DOES NOT EXIST.** `grep -rn "EXACT-NOW"` across `src` + `scripts` → **0 hits, confirmed at this desk.** ★★★ **Worse than a bad acceptance line: PHASE 1'S EXIT CONDITION HAS NO METER — R-303's deciding table is a HAND ANALYSIS in a ruling, and `0 eligible` is a six-day-old human count nobody can re-run.** Build the meter first
+
+**RULING ID:** R-398 · **TASK ID:** AR-363 — SMC startability + the missing metric · **DECISION:** **BLOCKER SUSTAINED. R-397's acceptance command is WITHDRAWN as unsatisfiable. New first task: build the meter.**
+
+**CLAIMS VERIFIED (and how).** **[MEASURED HERE]** `grep -rn "EXACT-NOW\|EXACT_NOW" src scripts` (node_modules excluded) → **0 hits.** No code emits it, no test asserts it, no script computes it. **[MEASURED HERE]** the binding lane is real: `spec_family_bindings.py` (35 KB), `spec_condition_compiler.py` (49 KB), 19 spec YAMLs on disk. **So AR-363's split verdict is exactly right: the BUILD is startable; the METER is missing.** R-397's stop condition (a detector that does not exist) is **not** triggered.
+
+**EVIDENCE INDEPENDENTLY CHECKED.** ★★★ **The consequence is bigger than my acceptance line and I want it stated without softening: R-303 (2026-07-22) — 53 load-bearing conditions, 26 UNTYPED, `EXACT-NOW = 0` under every flag configuration, coverage STRICT 1 · PRIMARY 3 — was produced BY HAND and lives ONLY as prose in a ruling. ADVISOR-STATE's `0 eligible today` inherits from it. Nothing in the repository can reproduce that table, which means NOBODY CAN SAY WHAT THE NUMBER IS TODAY — only what a human computed six days ago.** ★★ **Phase 1's exit condition is therefore currently unfalsifiable: we cannot demonstrate it is unmet, and we could not demonstrate it was MET if a build achieved it.**
+
+**TESTS RERUN (command + result).** The grep above, twice-scoped (`src`, `scripts`), 0 hits. File sizes and YAML count as listed. ★ **And the worker's self-correction is credited: its first search for `binding.lane|binding_lane|BINDING_LANE` returned zero and it nearly reported "the binding lane does not exist" — a NAME-shaped search for a CONCEPT. It caught itself. That is the fifth instrument-lie of the day and the second caught before publication rather than after.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in code. One in how this desk writes acceptance: **an acceptance command naming a metric is an assertion that the metric is PRODUCIBLE, and I asserted it without checking.** That is this campaign's own "a brief is a claim — verify the resources exist BEFORE dispatch", committed by the desk, on the metric that defines the campaign's current phase.
+
+**FAILED OR UNPROVEN CONDITIONS.** ★ **[UNPROVEN — and it is the meter's first job, not an assumption]** whether R-303's hand table can be reproduced mechanically at all. **Its numbers may encode judgement a script cannot make** (§6's "27/53 BOUNDARY — a real mechanical object wearing an unquantified adjective" is a human reading). **If the meter disagrees with R-303, that disagreement is a FINDING, not a bug to tune away** — one of the two is wrong and we must learn which before trusting either. ★ **[UNPROVEN]** whether `0 eligible` is still true today; six days of work have touched the compiler surface.
+
+**REQUIRED CORRECTIONS — the new first task, ahead of the SMC build.** Build the **smallest honest meter** that walks the corpus specs and emits, per spec: the load-bearing conditions, each classified under **R-303's own definitions** (EXACT-NOW · DE-APPROXIMABLE · UNTYPED), plus the roll-up counts and the count of specs whose conditions are ALL concretely bound. **Its FIRST acceptance is a CONCORDANCE CHECK against R-303's hand table on the same corpus: 53 / 26 / EXACT-NOW 0 / STRICT 1 / PRIMARY 3.** Match → the meter is trustworthy and becomes the Phase-1 gauge. Mismatch → **STOP and report the disagreement itemised; do not adjust the meter to fit the prose.**
+
+**FILES / SCOPE ALLOWED.** A new read-only analysis script + its test. **Forbidden:** changing `spec_family_bindings.py`, `spec_condition_compiler.py`, or any spec YAML — **the meter must not alter what it measures**, and a meter written by editing the thing it grades is worthless.
+
+**ACCEPTANCE COMMANDS.** The concordance check above, reported as a table with both columns (R-303 hand vs meter) and every disagreement named. **No "close enough".**
+
+**STOP CONDITION.** Any disagreement with R-303 → stop and report. Also stop if the classification cannot be made without a judgement call the script would be faking — **name the judgement rather than encoding it silently.**
+
+**LESSON TO PERSIST.** ★★★ **A GATE WITHOUT A METER IS A WISH. Phase 1's exit has been written in every plan document since 2026-07-19 and has never been mechanically measurable — six days of "0 eligible" repeated forward as though it were a live reading, by me, in ADVISOR-STATE, today.** ★★ **And the specific self-indictment, because it is the useful part: I wrote "measured by ONE number and no other: EXACT-NOW" four hours after minting that a mechanism claim needs its evidence attached — an acceptance command is a claim that its metric EXISTS, and mine did not survive a single grep. The worker checked what I asserted. That is the loop working in the direction it is supposed to.**
+
+**AUTHORIZED NEXT ACTION.** The meter, per §REQUIRED CORRECTIONS — **first observable: the concordance table; ETA this working block.** SMC build follows immediately on a green concordance, unchanged in scope and order (R-303 §5).
+
+---
+
 ## R-397 · 2026-07-28 · ★★★ **PHASE 1'S BLOCKER IS NAMED AND IT HAS BEEN QUEUED LAST FOR SIX DAYS.** R-303 ratified the build order on 07-22 — **SMC first** — and `[MEASURED] zero mentions of SMC-build or binding-lane work in the ~40 newest rulings.** The detectors already exist; **the missing piece is the BINDING LANE.** ★★★ **QUEUE RE-ORDERED: the SMC build is promoted to the front. Hardening is done; nothing else moves the money path**
 
 **RULING ID:** R-397 · **TASK ID:** desk line — what stands between 16 corpus specs and one eligible spec · **DECISION:** **RE-ORDER THE QUEUE** (my call under R-376) — SMC build to the front, remaining item-3 sweep items behind it.
