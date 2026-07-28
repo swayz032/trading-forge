@@ -4,6 +4,61 @@
 
 ---
 
+## AR-381 · 2026-07-28 · ★★★ **STOP CONDITION TRIPPED — YES. A PRODUCTION BACKTEST CONFIG CAN CARRY `compiled_spec` TODAY. LATENT → ARMED.** ★★ **The producer is not flag-gated, it persists to `strategies.config`, and its own comment states the design intent: the Python engine RECOMPUTES the binding plan at backtest time via `compile_binding_plan` — the exact function whose two trees disagree**
+
+**RULING ID:** R-416 item (1) · **TASK ID:** `compiled_spec` trace · **TREE: `runtime-production` on every line.** · **RECOMMENDATION:** **stopping here as instructed. This is yours to rule before anything proceeds.**
+
+---
+
+### THE FULL CHAIN — producer to consumer, four links, all in the executing tree
+
+```
+1. src/server/services/spec-onboarding-service.ts:647   const finalConfig = { ...overlayed.config,
+                                                :650       compiled_spec: { video, spec_hash,
+                                                             graph_canonical_hash, ledger_d, spec, … }
+2. src/server/services/spec-onboarding-service.ts:756       config: finalConfig        ← PERSISTED to strategies.config
+3. src/server/routes/backtests.ts                            resolves the strategy row + its config
+4. src/engine/backtester.py:8471   elif isinstance(config, dict) and config.get("compiled_spec"):
+                          :8492       strategy = from_compiled_spec(config["compiled_spec"], …)
+                                        → SpecConditionStrategy.__init__
+                                        → spec_condition_compiler.py:226 compile_binding_plan(...)
+```
+
+**Answer to the question as posed: YES — nothing prevents it.** The write at `:650` is **not behind a flag, not behind an env var, not behind an operator step.** It is the ordinary output of spec onboarding.
+
+### ★★★ THE DESIGN INTENT IS EXPLICIT — and it names the divergent function
+
+`spec-onboarding-service.ts:656-659`, verbatim:
+> *"Band C: audit-visible summary of the binding-plan decision (**the Python engine recomputes the full plan itself at backtest time via `spec_family_bindings.compile_binding_plan`** — this summary is for fast operator/audit inspection without a recompute)."*
+
+★★★ **So the architecture deliberately stores only a SUMMARY and re-derives the real plan in the engine at backtest time. That is a sound design — and it means the binding lane that decides a real backtest is whichever `spec_family_bindings.py` the engine imports. In `runtime-production` that is the 35,046-byte file: the one that binds `overnight` to a clock that does not exist and stamps it `approximation=False` (AR-380).**
+
+★★ **The summary written at onboarding time and the plan recomputed at backtest time can therefore DISAGREE** — the TS summary comes from the server's own binding-plan computation, the Python recompute comes from the engine's. **[UNVERIFIED] whether the TS-side summary is computed from the same rules as either Python lane** — I did not trace the TS binding-plan implementation, and I am not asserting they differ, only that nothing I have seen guarantees they agree.
+
+---
+
+### WHAT IS AND IS NOT ESTABLISHED
+
+- ✅ **CAN a production backtest config carry `compiled_spec`?** **YES, by code path, unconditionally.**
+- ❓ **DOES any strategy row carry one right now?** **[NOT CHECKED — deliberately.]** That is a live-DB read, and every live read today has been yours (R-393, R-403). **It is the difference between ARMED and LOADED and it is one read-only query:** `SELECT count(*) FROM strategies WHERE config ? 'compiled_spec'`.
+- ✅ **Would such a backtest use the divergent lane?** **YES** — `backtester.py:8471` is the only gate and it is satisfied by the key's presence.
+- ✅ **Has it run?** [ARTIFACT-SOURCED, ADVISOR-STATE] **0 backtests ever.** So armed, not fired.
+
+★ **The honest severity sentence:** *"a spec-onboarded strategy's first backtest will execute against a binding lane that over-claims exactness on session phrases it cannot compute, and nothing between onboarding and execution asks which lane that is."*
+
+---
+
+**Files changed:** none. Read-only, in the executing tree. **No DB read. No write anywhere.**
+**Hypotheses REJECTED:** (i) "`compiled_spec` is gated behind a flag or an operator action" — **false, ordinary onboarding output**; (ii) "the engine uses the summary the server computed" — **false, its own comment says it recomputes.**
+**Remaining uncertainty:** whether any row carries the key today **[ONE QUERY, yours]** · whether the TS-side summary agrees with either Python lane **[UNTRACED]**.
+**Risk:** **ARMED.** Not firing today only because no backtest has ever run — **and producing the first backtest is this campaign's entire objective.**
+
+**Recommendation:** **(1)** run the one-line count to convert ARMED → LOADED-or-not; **(2)** make the binding-lane migration (AR-380's orphan-zone refusal into production) a **hard prerequisite of the first Band-C backtest**, not a queued item — ★ the fix is already written and sitting in the wrong checkout, which is the cheapest kind of prerequisite there is; **(3)** then corpus_B.
+
+**Next smallest task (ONE):** on your ruling — either the DB count, or begin the corpus_B charter while you decide the migration.
+
+---
+
 ## AR-380 · 2026-07-28 · **(b) STRUCTURAL INVENTORY — and it INVERTS the divergence's meaning.** ★★★ **PRODUCTION'S EXTRA `1` IS A FALSE CONCRETE. `overnight` is an ORPHAN ZONE — a recognized `SESSION_KEYWORDS` phrase with NO evaluable killzone window — and production binds it to `session_windows` and stamps `approximation=False`. The campaign tree DELIBERATELY REFUSES it, in the DEFAULT path, with a named reason** ★★ **So the campaign lane is not "ahead with experimental flags": production carries a defect the campaign already diagnosed and fixed unconditionally**
 
 **RULING ID:** R-413 item (2) · **TASK ID:** structural inventory · **RECOMMENDATION:** **the campaign lane is CORRECT and production is WRONG on this binding — which reverses who must migrate toward whom.**
