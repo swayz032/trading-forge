@@ -61,6 +61,27 @@ vi.mock("../services/pipeline-control-service.js", () => ({
 vi.mock("../production/kill-switch.js", () => ({
   killSwitch: { isHaltedForProduction: vi.fn().mockReturnValue(false) },
 }));
+// 2026-07-28 (R-360): the boot probe is now gated (R-359). checkProbeGate()
+// requires live execution to be CONFIGURED as well as the opt-in flag, so the
+// A-11 behaviour tests below cannot reach the probe without this mock — the real
+// module reads SERVER_MEDIATED_EXECUTION_ENABLED/BROKER_FILL_HMAC_SECRET from
+// env, which are (correctly) unset. Mocking it keeps those live-execution env
+// vars untouched by the test process.
+//
+// DELIBERATE PARTIAL MOCK (R-362) — do not "complete" it. The real module exports
+// four symbols; this factory returns ONE. Omitted on purpose: EXECUTION_MODE_PARAM,
+// getExecutionMode, setExecutionMode. Nothing in this file's graph imports them
+// (broker-router.ts, the A-11 subject, imports only isLiveExecutionConfigured), so
+// their absence is unreachable rather than latent breakage.
+// The textbook completion — `async (importOriginal) => ({ ...(await importOriginal()), … })`
+// — is a REGRESSION here, not an improvement: importOriginal() loads the real
+// execution-mode.ts, whose getExecutionMode() reads system_parameters and drags the
+// real db import chain into a file that mocks ../db/schema.js precisely to keep it
+// out. That is this repo's pinned collection-crash class (the whole file collects
+// zero tests and still reads as "passing" unless someone checks the file count).
+vi.mock("../lib/execution-mode.js", () => ({
+  isLiveExecutionConfigured: vi.fn().mockReturnValue(true),
+}));
 vi.mock("../services/strategy-assignment-service.js", () => ({
   getEnabledFirms: vi.fn().mockResolvedValue(["topstep", "mffu"]),
 }));
@@ -444,9 +465,22 @@ describe("A-13 prop-firm-cookie-refresh runtime-file persistence", () => {
 // loads broker-router.js with a schema that has both auditLog AND brokerAccounts.
 
 describe("A-11 broker-router TradersPost key probe", () => {
+  // 2026-07-28 (R-360): these are BEHAVIOUR tests of the probe, and R-359 gave the
+  // probe a precondition (BROKER_KEY_PROBE_ENABLED, default OFF). Arm the flag so
+  // they test the probe rather than the gate; the gate has its own suite
+  // (broker-router-probe-gate.test.ts). Saved/restored so no value leaks to other
+  // suites — the flag is never exported into the CI environment.
+  const savedProbeFlag = process.env.BROKER_KEY_PROBE_ENABLED;
+
+  afterEach(() => {
+    if (savedProbeFlag === undefined) delete process.env.BROKER_KEY_PROBE_ENABLED;
+    else process.env.BROKER_KEY_PROBE_ENABLED = savedProbeFlag;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    process.env.BROKER_KEY_PROBE_ENABLED = "true";
     // Restore complete schema mock — A-13 contaminated this to { auditLog: {} } only.
     // Without brokerAccounts, broker-router.ts line 249 throws TypeError (silently caught).
     vi.mock("../db/schema.js", () => ({
@@ -516,11 +550,17 @@ describe("A-11 broker-router TradersPost key probe", () => {
       values: vi.fn().mockResolvedValue(undefined),
     });
 
-    global.fetch = vi.fn().mockResolvedValue({ status: 400, ok: false }) as unknown as typeof fetch;
+    const fetchMock = vi.fn().mockResolvedValue({ status: 400, ok: false });
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const { probeTradersPostApiKeys } = await import("../services/broker-router.js");
     await probeTradersPostApiKeys();
 
+    // R-370: WITNESS FIRST, then the absence. `not.toHaveBeenCalled()` alone is
+    // satisfied by a probe that never ran, so it could not detect a regression of
+    // the very gate/inertness fix this suite guards. Proving fetch fired makes
+    // this "ran and correctly stayed silent" instead of "silent for any reason".
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(notifyMod.notifyWarning).not.toHaveBeenCalled();
   });
 
@@ -530,10 +570,17 @@ describe("A-11 broker-router TradersPost key probe", () => {
 
     const { fromMock } = makeSelectChainNoLimit([]); // no accounts
     (db.select as ReturnType<typeof vi.fn>).mockReturnValue({ from: fromMock });
+    const fetchMock = vi.fn();
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const { probeTradersPostApiKeys } = await import("../services/broker-router.js");
     await probeTradersPostApiKeys();
 
+    // R-370: prove this is an EMPTY-ACCOUNT no-op, not a DISABLED-PROBE no-op.
+    // db.select firing witnesses the probe reached its account query; fetch not
+    // firing is then a real result rather than a consequence of never starting.
+    expect(db.select).toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
     expect(notifyMod.notifyWarning).not.toHaveBeenCalled();
   });
 
@@ -548,10 +595,17 @@ describe("A-11 broker-router TradersPost key probe", () => {
       values: vi.fn().mockResolvedValue(undefined),
     });
 
-    global.fetch = vi.fn().mockRejectedValue(new Error("ECONNREFUSED")) as unknown as typeof fetch;
+    const fetchMock = vi.fn().mockRejectedValue(new Error("ECONNREFUSED"));
+    global.fetch = fetchMock as unknown as typeof fetch;
 
     const { probeTradersPostApiKeys } = await import("../services/broker-router.js");
     await expect(probeTradersPostApiKeys()).resolves.not.toThrow();
+
+    // R-370: fail-softness is only meaningful if a failure actually occurred.
+    // A probe that never ran also "does not throw" — so assert the network call
+    // was attempted (and rejected) before crediting the graceful outcome.
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    await expect(fetchMock.mock.results[0]?.value).rejects.toThrow("ECONNREFUSED");
   });
 
   it("probeTradersPostApiKeys does NOT expose apiKey in log output on failure", async () => {
@@ -577,6 +631,11 @@ describe("A-11 broker-router TradersPost key probe", () => {
       ...(logger.info as ReturnType<typeof vi.fn>).mock.calls,
     ];
     const logStr = JSON.stringify(allLogCalls);
+    // R-370: "the logs do not contain the key" is trivially true of a probe that
+    // logged nothing — i.e. of a probe that never ran. Witness that logging
+    // actually happened first, so this asserts "we logged, and the secret was not
+    // in it" rather than "we logged nothing."
+    expect(allLogCalls.length).toBeGreaterThan(0);
     expect(logStr).not.toContain("fake-api-key");
   });
 });
