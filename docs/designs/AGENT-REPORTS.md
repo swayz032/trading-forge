@@ -4,6 +4,68 @@
 
 ---
 
+## AR-371 · 2026-07-28 · **REFERENT CENSUS, SPEC 1 of 3 — `-igpOZs8LsM__s0` SURVIVES (i) AND (ii): it is a Fair-Value-Gap strategy that DEFINES ITS OWN OBJECT, unlike E9Mz** ★★★ **AND THE BUILD IT NEEDS ALREADY EXISTS AND IS SWITCHED OFF: `fvg_native.compute_fvg_signal`, `approximation=False`, gated behind `TF_FVG_IDENTITY_ENABLED` (default false) — 4 of its 11 conditions name the FVG family** ★★★ **ALSO: SESSION_CLOCK WOULD BIND NOTHING HERE — both "unbound WAIT_SESSION" conditions are MIS-TYPED FVG GEOMETRY, not session rules**
+
+**RULING ID:** R-405 · **TASK ID:** referent census, first observable · **RECOMMENDATION:** **HOLD SESSION_CLOCK. The fourth target is `-igp` and the build may be a FLAG, not a family.**
+
+**HONEST-PARTIAL, declared up front (your clause):** **spec 1 of 3 covered fully (11 of 27 conditions).** `CLDEIsNpVRc__s0` and `_LS6qcSlDCs__s0` **NOT yet read** — absence from this report is not a pass.
+
+**Per-spec:** `transcript_chars: 0`, **every `span` is `0..0`** — same as E9Mz. **[UNENUMERATED still]** whether this afflicts all 16; it is now 2 for 2.
+**`framework_overlay` IS present here** (E9Mz had none): `{"exit": "house-default (trader taught none)", "exit_source": "framework_overlay_style_c"}` — exits only. **It defines no level, range or zone**, so it does not rescue any referent.
+
+---
+
+### THE CENSUS TABLE — (i) rule? · (ii) referent resolvable IN spec? · (iii) primitive same event class?
+
+| # | type / conf | taught text (abridged) | (i) | (ii) | (iii) |
+|---|---|---|---|---|---|
+| 0 | WAIT_STRUCTURE · confident | *"the gap … is created between three candlesticks"* | ✅ | ✅ **defines the object** | ❌ → `structure_engine` (BOS/CHoCH), not gap detection |
+| 1 | **WAIT_SESSION** · approximate | *"the gap from the closing point of the first candle to the opening point of the third candle … is what is called an imbalance"* | ✅ **precise geometry** | ✅ self-contained | ❌❌ **MIS-TYPED** → `session_windows` |
+| 2 | WAIT_STRUCTURE · confident | *"this is a bullish imbalance"* | ⚠️ deictic label | ⚠️ "this" | — |
+| 3 | **WAIT_SESSION** · approximate | *"…bearish imbalance … make sure structure is present … map it out from the closing points when it's a sell"* | ✅ | ✅ mirrors [1] | ❌❌ **MIS-TYPED** → `session_windows` |
+| 4 | WAIT_RETEST · confident | *"patiently wait for price to get there tap in"* | ✅ | ✅ "there" = the FVG | ❌ EMA(20) proximity |
+| 5 | WAIT_RETEST · confident **(entry_trigger)** | *"wait for price to tap in and then push to your direction"* | ✅ | ✅ | ❌ EMA(20); also a taught **THEN** |
+| 6 | WAIT_BIAS · confident | *"probability … higher when you are sticking to the trend"* | ✅ | ⚠️ framework-supplied regime | ✅~ `bias_engine` |
+| 7 | WAIT_STRUCTURE · confident | *"the imbalance must create a break of structure"* | ✅ | ✅ both nouns defined | ✅ **BOS is exactly what `structure_engine` computes** |
+| 8 | WAIT_STRUCTURE · confident | *"map out the FVG that cost the break of structure"* | ✅ | ✅ | ⚠️ needs FVG↔BOS linkage |
+| 9 | WAIT_RETEST · approximate | *"there should also be liquidity price will clear before … tapping into the imbalance"* | ✅ | ⚠️ liquidity framework-supplied | ❌ proximity ≠ sweep |
+| 10 | WAIT_STRUCTURE · confident | *"map out the FVG that is very close to the order block"* | ✅ | ⚠️ order block framework-supplied | ⚠️ partial |
+
+**(i) 10 of 11 carry rules** (only [2] is a deictic label). **(ii) THE SPEC DEFINES ITS OWN CENTRAL OBJECT** in [0]/[1]/[3] — close-of-candle-1 → open-of-candle-3. ★★ **That is a mechanical, unambiguous definition, and it is the exact thing E9Mz lacked.** Under your pinned decision rule, **`-igp` SURVIVES as a Phase-1 target**; the (iii) failures become enumerated build items, not disqualifiers.
+
+---
+
+### ★★★ FINDING 1 — THE BUILD EXISTS ALREADY AND IS SWITCHED OFF
+
+`spec_family_bindings.py:49-77`:
+> *"a WAIT_STRUCTURE/FILTER condition whose object names the FVG family binds to the fresh, isolated **`fvg_native.compute_fvg_signal` primitive (approximation=False)** instead of the generic structure_engine/confluence-presence primitive… **Default OFF** … Set `TF_FVG_IDENTITY_ENABLED=true` to activate."*
+
+`FVG_OBJECT_KEYWORDS = ("fvg", "fair value gap", "imbalance", "put limit order right fvg")`.
+
+★★★ **`approximation=False` is the campaign's own word for CONCRETE — the transition nothing in this corpus has completed. And FOUR of `-igp`'s WAIT_STRUCTURE conditions match the keywords: [2] and [7] on "imbalance", [8] and [10] on "FVG".**
+
+★ **[UNRESOLVED — the one thing I could not settle, and it decides the size of the prize]** the artifact records `-igp` at `n_bound_and_concrete: 0` **even in `AFTER_flags_on_HYPOTHETICAL`**. Either that hypothetical does not include `TF_FVG_IDENTITY_ENABLED`, or the dispatch requires more than a keyword match. **I did not run it and I am not guessing** — a controlled harness already exists (`scripts/fvg-experiment-controlled-run.py`, BEFORE/AFTER manifests) and would answer it directly.
+
+### ★★★ FINDING 2 — SESSION_CLOCK WOULD BIND NOTHING ON THIS SPEC
+
+R-404 promoted SESSION_CLOCK to second because *"-igp, CLDE and _LS6 have exactly 2 unbound conditions each, all six typed `WAIT_SESSION`."* **[MEASURED] `-igp`'s two `WAIT_SESSION` conditions are [1] and [3] — and neither is about a session.** They are the FVG's candle-geometry definition (*"closing point of the first candle to the opening point of the third candle"*), typed `WAIT_SESSION`, therefore routed at `session_windows` with `requires_session_keyword=True`, therefore unbound with `no_recognized_session_keyword` — **which is literally true and completely beside the point.**
+
+★★ **A SESSION_CLOCK build would add session vocabulary these conditions will never match, because they contain no session concept to match. It would be the fourth build to move the gate by zero — and this time we would have known in advance.** **[UNVERIFIED for `CLDE`/`_LS6`]** — that is exactly what the rest of the census must check, and it is now the highest-value question in the queue.
+
+★ **The same-bar flattening is here too:** `and_groups` is ONE group of all 11, while [5] teaches *"tap in **and then** push"*. **In the frozen spec, not the compiler** — unfixable without a spec change.
+
+---
+
+**Files changed:** none. Read-only. **No binding written; no flag flipped.**
+**Hypotheses REJECTED:** (i) "-igp will fail on referents like E9Mz" — **false, it defines its object**; (ii) "the corpus needs a new FVG detector built" — **false, `fvg_native.compute_fvg_signal` exists at `approximation=False`**; (iii) "SESSION_CLOCK unblocks -igp's two unbound" — **false, they are mis-typed geometry**.
+**Remaining uncertainty:** the flags-ON discrepancy above · `CLDE` + `_LS6` unread · whether `transcript_chars: 0` is corpus-wide.
+
+**Recommendation:** **(A)** finish the census on `CLDE` + `_LS6` — **specifically whether their `WAIT_SESSION` unbound conditions are real session rules or mis-types like `-igp`'s; that single answer decides SESSION_CLOCK's entire value**; **(B)** then settle the FVG-flag question with the existing controlled harness before any new family is built. ★ **If the flag is the answer, Phase 1's first concrete bindings cost an env var and a review, not a build.**
+
+**Next smallest task (ONE):** census `CLDEIsNpVRc__s0`'s 10 conditions, same three questions, reporting its two `WAIT_SESSION` conditions verbatim first.
+
+---
+
 ## AR-370 · 2026-07-28 · **TEXT-READING VERDICT ON `E9MzEC_yNoM__s0`: ★ BOTH CONDITIONS CARRY REAL RULES — this is NOT another IyFio.** ★★★ **BUT NEITHER CAN GO `approximate → concrete`, AND THE REASON OUTRANKS THE BUILD: both taught rules reference "THE LEVEL" / "THE RANGE", AND THIS SPEC — ALL TWO CONDITIONS OF IT — NEVER DEFINES EITHER.** ★★★ **Worse: [1]'s primitive implements a DIFFERENT RULE than the text, not a looser one**
 
 **RULING ID:** R-404 · **TASK ID:** item (1), the mandatory text-read before any binding · **RECOMMENDATION:** **BLOCKED — reporting the finding you pre-authorized as outranking the build.**
