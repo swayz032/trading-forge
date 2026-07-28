@@ -22,6 +22,7 @@ import { menuApiRouter } from "./api/menu.js";
 import { recipeApiRouter } from "./api/recipe.js";
 import { reportsApiRouter } from "./api/reports.js";
 import { evidenceVaultApiRouter } from "./api/evidence-vault.js";
+import { nightDeskApiRouter } from "./api/night-desk.js";
 import { anamSessionRouter } from "./api/anam-session.js";
 import { anamGreetingRouter } from "./api/anam-greeting.js";
 import { carterSessionRouter } from "./api/carter-session.js";
@@ -58,7 +59,7 @@ export function handleSlumhouseFallback(req: Request, res: Response, next: NextF
     next();
     return;
   }
-  if (pathName === "/slumhouse/login.html" || pathName === "/slumhouse/launch" || pathName === "/slumhouse/crib.html" || pathName === "/slumhouse/kitchen.html" || pathName === "/slumhouse/recipe.html" || pathName === "/slumhouse/evidence-vault.html" || pathName === "/slumhouse/" || pathName === "/slumhouse/office.html" || pathName === "/slumhouse/member-office.html") {
+  if (pathName === "/slumhouse/login.html" || pathName === "/slumhouse/launch" || pathName === "/slumhouse/crib.html" || pathName === "/slumhouse/kitchen.html" || pathName === "/slumhouse/recipe.html" || pathName === "/slumhouse/evidence-vault.html" || pathName === "/slumhouse/night-desk.html" || pathName === "/slumhouse/" || pathName === "/slumhouse/office.html" || pathName === "/slumhouse/member-office.html") {
     // office.html is the operator-only Office — gated by its OWN passcode
     // (slumhouse_admin_sid), NOT the friend Discord session. Allow the HTML to
     // load so its passcode lock screen can render; sensitive admin endpoints
@@ -116,6 +117,10 @@ export function gateEvidenceVaultHtml(req: Request, res: Response, next: NextFun
 }
 
 slumhouseRouter.get("/slumhouse/evidence-vault.html", gateEvidenceVaultHtml);
+slumhouseRouter.get("/slumhouse/night-desk.html", (req, res, next) => {
+  if (adminSessionFromCookie(req.headers.cookie)) { next(); return; }
+  res.redirect(302, "/slumhouse/office.html");
+});
 
 // Pre-static auth gate — protect the authenticated HTML shells from rendering
 // unauthenticated. Without this, iOS PWA tapping /slumhouse/crib.html (the
@@ -182,6 +187,7 @@ slumhouseRouter.use(menuApiRouter);
 slumhouseRouter.use(recipeApiRouter);
 slumhouseRouter.use(reportsApiRouter);
 slumhouseRouter.use(evidenceVaultApiRouter);
+slumhouseRouter.use(nightDeskApiRouter);
 // Browser EventSource cannot attach the bearer token required by /api/sse/events.
 // Expose the same read-only stream through the authenticated Slumhouse session so
 // Office clients can reconnect with their existing Discord/admin HttpOnly cookie.

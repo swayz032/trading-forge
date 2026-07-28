@@ -426,6 +426,14 @@ export interface ModelConfig {
   maxTokens: number;
   systemPromptPath?: string;
   responseFormat?: "json" | "text";
+  /** OpenAI processing tier requested for this role. Nightly work uses Flex. */
+  serviceTier?: "auto" | "default" | "flex" | "priority";
+  /** Reasoning effort for GPT-5 family roles that benefit from deliberate analysis. */
+  reasoningEffort?: "none" | "low" | "medium" | "high" | "xhigh" | "max";
+  /** Stable routing key for OpenAI prompt-prefix caching. Never include nightly data here. */
+  promptCacheKey?: string;
+  /** Keep the reusable instruction prefix warm across the overnight job window. */
+  promptCacheRetention?: "in-memory" | "24h";
   /**
    * Pass 9 Branch A — Responses API migration.
    *
@@ -593,11 +601,15 @@ const MODEL_CONFIGS: Record<ModelRole, ModelConfig> = {
   },
   nightly_review: {
     provider: "openai",
-    model: "gpt-5-mini",
+    model: "gpt-5.6-sol",
     temperature: 0.4,
     maxTokens: 4096,
     systemPromptPath: "src/agents/nightly-self-critique.md",
     responseFormat: "json",
+    serviceTier: "flex",
+    reasoningEffort: "medium",
+    promptCacheKey: "trading-forge:nightly-review:v1",
+    promptCacheRetention: "24h",
     responsesApiVersion: "v1",
     fallback: { provider: "ollama", model: "gemma4:e4b-it-qat" },
   },
@@ -1211,10 +1223,15 @@ export interface ParsedLLMResponse {
   outputTokens: number;
   /** Responses-API only — GPT-5 reasoning tokens. */
   reasoningTokens?: number;
+  /** Input tokens OpenAI served from its prompt-prefix cache. */
+  cachedTokens?: number;
   /** "stop" | "length" | "refusal" | "content_filter" | etc. */
   finishReason: string;
   apiPath: "chat_completions" | "responses";
   usedStrictSchema: boolean;
+  /** Actual model and processing tier returned by OpenAI. */
+  model?: string;
+  serviceTier?: string;
 }
 
 /**
@@ -1241,9 +1258,12 @@ export function parseChatCompletionsResponse(raw: any): ParsedLLMResponse {
     text: typeof content === "string" ? content : "",
     inputTokens: Number(usage.prompt_tokens ?? 0),
     outputTokens: Number(usage.completion_tokens ?? 0),
+    cachedTokens: Number(usage?.prompt_tokens_details?.cached_tokens ?? 0),
     finishReason: typeof choice?.finish_reason === "string" ? choice.finish_reason : "stop",
     apiPath: "chat_completions",
     usedStrictSchema: false,
+    model: typeof raw?.model === "string" ? raw.model : undefined,
+    serviceTier: typeof raw?.service_tier === "string" ? raw.service_tier : undefined,
   };
 }
 
@@ -1285,6 +1305,7 @@ export function parseResponsesApiResponse(raw: any): ParsedLLMResponse {
 
   const usage = raw?.usage ?? {};
   const reasoningTokens = Number(usage?.output_tokens_details?.reasoning_tokens ?? 0);
+  const cachedTokens = Number(usage?.input_tokens_details?.cached_tokens ?? 0);
 
   let finishReason = "stop";
   if (refusal) finishReason = "refusal";
@@ -1296,9 +1317,12 @@ export function parseResponsesApiResponse(raw: any): ParsedLLMResponse {
     inputTokens: Number(usage.input_tokens ?? 0),
     outputTokens: Number(usage.output_tokens ?? 0),
     reasoningTokens: reasoningTokens > 0 ? reasoningTokens : undefined,
+    cachedTokens: cachedTokens > 0 ? cachedTokens : 0,
     finishReason,
     apiPath: "responses",
     usedStrictSchema: false, // overwritten by caller when applicable
+    model: typeof raw?.model === "string" ? raw.model : undefined,
+    serviceTier: typeof raw?.service_tier === "string" ? raw.service_tier : undefined,
   };
 }
 
@@ -1702,7 +1726,11 @@ async function callChatCompletions(
       ? { max_completion_tokens: config.maxTokens }
       : { max_tokens: config.maxTokens, temperature: config.temperature }),
     ...(responseFormat ? { response_format: responseFormat as never } : {}),
-  });
+    ...(config.serviceTier ? { service_tier: config.serviceTier } : {}),
+    ...(config.reasoningEffort ? { reasoning_effort: config.reasoningEffort } : {}),
+    ...(config.promptCacheKey ? { prompt_cache_key: config.promptCacheKey } : {}),
+    ...(config.promptCacheRetention ? { prompt_cache_retention: config.promptCacheRetention } : {}),
+  } as any);
 
   return parseChatCompletionsResponse(response);
 }
@@ -1739,6 +1767,10 @@ async function callResponsesApi(
     ...(isGpt5
       ? { max_output_tokens: config.maxTokens }
       : { max_output_tokens: config.maxTokens, temperature: config.temperature }),
+    ...(config.serviceTier ? { service_tier: config.serviceTier } : {}),
+    ...(config.reasoningEffort ? { reasoning: { effort: config.reasoningEffort } } : {}),
+    ...(config.promptCacheKey ? { prompt_cache_key: config.promptCacheKey } : {}),
+    ...(config.promptCacheRetention ? { prompt_cache_retention: config.promptCacheRetention } : {}),
   };
 
   if (usedStrictSchema) {
@@ -1872,6 +1904,7 @@ export async function callOpenAI(
     inputTokens: parsed.inputTokens,
     outputTokens: parsed.outputTokens,
     reasoningTokens: parsed.reasoningTokens,
+    cachedTokens: parsed.cachedTokens,
     usedStrictSchema: parsed.usedStrictSchema,
     durationMs,
     status: "success",
@@ -1971,6 +2004,7 @@ async function recordCallTelemetry(
     inputTokens: number;
     outputTokens: number;
     reasoningTokens?: number;
+    cachedTokens?: number;
     usedStrictSchema: boolean;
     durationMs: number;
     status: "success" | "error";
@@ -2010,8 +2044,11 @@ async function writeLlmAuditLog(
           inputTokens: parsed.inputTokens,
           outputTokens: parsed.outputTokens,
           reasoningTokens: parsed.reasoningTokens ?? null,
+          cachedTokens: parsed.cachedTokens ?? 0,
           finishReason: parsed.finishReason,
           refusal: parsed.refusal ?? null,
+          model: parsed.model ?? null,
+          serviceTier: parsed.serviceTier ?? null,
         } as Record<string, unknown>,
       });
   } catch (err) {

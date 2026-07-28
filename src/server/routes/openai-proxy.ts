@@ -22,7 +22,7 @@ import { logger } from "../lib/logger.js";
 export const openaiProxyRoutes = Router();
 
 // ─── Daily token budget ───────────────────────────────────────────────────────
-// User has 2.5M GPT-5-mini free tokens/day at the OpenAI org level, SHARED with
+// This budget is shared by every OpenAI model routed through Trading Forge.
 // the Aspire project. Trading Forge gets a hard daily cap so it can't starve
 // Aspire. When budget hits, callers receive 429 → model-router falls back to
 // local Ollama (gemma4:e4b-it-qat, the one local model) automatically.
@@ -88,7 +88,7 @@ async function postBudgetAlert(threshold: number, used: number): Promise<void> {
   const port = Number(process.env.DISCORD_ALERT_PORT) || 4100;
   const payload = {
     source: "openai-proxy",
-    summary: `GPT-5 mini token budget at ${Math.round(threshold * 100)}% (${used.toLocaleString()} / ${DAILY_BUDGET.toLocaleString()} tokens used today)`,
+    summary: `OpenAI token budget at ${Math.round(threshold * 100)}% (${used.toLocaleString()} / ${DAILY_BUDGET.toLocaleString()} tokens used today)`,
     impact:
       threshold >= 1
         ? "Hard cap reached. Trading Forge calls now return 429; model-router will fall back to local Ollama (gemma4:e4b-it-qat). No outage but lower model quality until midnight UTC reset."
@@ -174,6 +174,10 @@ const ChatRequest = z
     stream: z.boolean().optional(),
     tools: z.array(z.any()).optional(),
     tool_choice: z.any().optional(),
+    service_tier: z.enum(["auto", "default", "flex", "priority"]).optional(),
+    reasoning_effort: z.enum(["none", "low", "medium", "high", "xhigh", "max"]).optional(),
+    prompt_cache_key: z.string().min(1).max(128).optional(),
+    prompt_cache_retention: z.enum(["in-memory", "24h"]).optional(),
   })
   .passthrough();
 
@@ -218,7 +222,7 @@ openaiProxyRoutes.post("/v1/chat/completions", async (req, res) => {
     res.setHeader("Retry-After", Math.min(secsToUtcMidnight, 3600));
     res.status(429).json({
       error: {
-        message: `Trading Forge daily GPT-5 mini budget exhausted (${dailyUsage.tokensUsed.toLocaleString()} / ${DAILY_BUDGET.toLocaleString()} tokens). Resets at midnight UTC. Falling back to Ollama recommended.`,
+        message: `Trading Forge daily OpenAI budget exhausted (${dailyUsage.tokensUsed.toLocaleString()} / ${DAILY_BUDGET.toLocaleString()} tokens). Resets at midnight UTC. Falling back to Ollama recommended.`,
         type: "daily_budget_exceeded",
       },
     });
@@ -233,7 +237,7 @@ openaiProxyRoutes.post("/v1/chat/completions", async (req, res) => {
     return;
   }
 
-  const { model, messages, max_tokens, max_completion_tokens, temperature, top_p, response_format, tools, tool_choice } = parsed.data;
+  const { model, messages, max_tokens, max_completion_tokens, temperature, top_p, response_format, tools, tool_choice, service_tier, reasoning_effort, prompt_cache_key, prompt_cache_retention } = parsed.data;
   const isGpt5 = model.startsWith("gpt-5");
   const startedAt = Date.now();
 
@@ -261,6 +265,10 @@ openaiProxyRoutes.post("/v1/chat/completions", async (req, res) => {
         ...(response_format !== undefined ? { response_format } : {}),
         ...(tools !== undefined ? { tools } : {}),
         ...(tool_choice !== undefined ? { tool_choice } : {}),
+        ...(service_tier !== undefined ? { service_tier } : {}),
+        ...(reasoning_effort !== undefined ? { reasoning_effort } : {}),
+        ...(prompt_cache_key !== undefined ? { prompt_cache_key } : {}),
+        ...(prompt_cache_retention !== undefined ? { prompt_cache_retention } : {}),
       };
 
       return client.chat.completions.create(upstreamPayload as any);
@@ -289,6 +297,10 @@ openaiProxyRoutes.post("/v1/chat/completions", async (req, res) => {
         totalTokens,
         budgetUsedPercent: Math.round((dailyUsage.tokensUsed / DAILY_BUDGET) * 100),
         gpt5Translated: isGpt5,
+        requestedServiceTier: service_tier ?? "auto",
+        actualServiceTier: (result as any).service_tier ?? null,
+        promptCacheKey: prompt_cache_key ?? null,
+        promptCacheRetention: prompt_cache_retention ?? null,
       },
       "openai-proxy: completion served",
     );

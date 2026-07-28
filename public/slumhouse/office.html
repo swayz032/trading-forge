@@ -297,8 +297,8 @@
     .rr-immersive.rr-imm-on { display: block; }
     .imm-screen { width: min(1540px, 100%); min-height: calc(100vh - 62px); margin: 0 auto; padding: 26px 28px 72px; display: none; }
     .imm-screen.on { display: block; }
-    .imm-screen.vault-screen { max-width:none; padding:0!important; height:calc(100vh - 62px); overflow:hidden; }
-    .vault-frame { display:block; width:100%; height:100%; border:0; background:#050505; }
+    .imm-screen.vault-screen, .imm-screen.night-screen { max-width:none; padding:0!important; height:calc(100vh - 62px); overflow:hidden; }
+    .vault-frame, .night-frame { display:block; width:100%; height:100%; border:0; background:#050505; }
     /* Quantum/Paper are true full-page rooms. Keep the report-type chrome, but remove the
        Reporting Room movie and let the immersive surface own every pixel behind it. */
     .rr-room.rr-imm-mode { overflow: hidden; background: #000; }
@@ -1245,6 +1245,7 @@
     <div class="rr-immersive" id="rr-immersive">
       <div class="imm-screen" id="imm-rl"></div>
       <div class="imm-screen" id="imm-paper"></div>
+      <div class="imm-screen night-screen" id="imm-night"><iframe class="night-frame" title="Night Agent Desk" data-src="/slumhouse/night-desk.html?embed=1"></iframe></div>
       <div class="imm-screen vault-screen" id="imm-vault"><iframe class="vault-frame" title="Media Evidence Vault" data-src="/slumhouse/evidence-vault.html?embed=1"></iframe></div>
     </div>
   </section>
@@ -1339,18 +1340,6 @@
       function rrEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
       var RR_ATTR = ['regime', 'structure', 'narrative', 'confluence', 'decay', 'liquidity', 'fill', 'exit_plan'];
       var RR_ATTR_C = { regime: '#b4ff2e', structure: '#8ae017', narrative: '#5fbf3a', confluence: '#a3ff12', decay: '#6b8f2a', liquidity: '#3f8fb0', fill: '#c99a3a', exit_plan: '#7fae2a' };
-      var RR_EXAMPLE = {
-        strategy: 'Silver Bullet', symbol: 'MNQ', grade: 'A', realizedR: 2.3,
-        oneLiner: 'Clean NY-AM liquidity sweep — took the A+ setup and let the runner breathe.',
-        whatWentRight: 'Waited for the sweep + fair-value-gap tap before entering. Textbook patience, and the exit trailed the runner properly.',
-        whatToWatch: 'Fill was ~2 ticks early vs the ideal price — small slippage that shaved a sliver off the R.',
-        actionNeeded: 'Nothing to fix — this is the shape you want. Keep the exit discipline exactly like this.',
-        attribution: { regime: 0.15, structure: 0.22, narrative: 0.10, confluence: 0.20, decay: 0.05, liquidity: 0.13, fill: 0.05, exit_plan: 0.10 },
-        parameterHint: { field: 'Entry timing', current: 'market on the sweep', suggested: 'wait one candle', confidence: 0.61 },
-        confluenceMissed: ['SMT confirmation'],
-        regimeMismatch: false,
-        entryQuality: 0.82, model: 'GPT-5.4', critiquedAt: '3:04 AM'
-      };
       function rrGradeClass(g) { var c = String(g || '').charAt(0).toUpperCase(); return c === 'A' ? 'g-a' : c === 'B' ? 'g-b' : c === 'C' ? 'g-c' : 'g-d'; }
       var RR_STATE = { type: 'night', idx: 0, n: 0, timer: null, reports: [], accounts: [], account: 'all', reportIdx: 0, stats: null, degraded: false, unreachable: false, soak: [], soakIdx: 0, ab: null };
       var RR_PREMIUM = [[/silver\s*bullet/i,'Silver Bullet'],[/opening\s*range|\borb\b|open(ing)?\s*(range\s*)?break|session\s*open/i,'Opening Heist'],[/mean\s*revers|rubber|revert/i,'The Rubber Band'],[/support|\bbounce\b|demand\s*zone|off\s*(a\s*)?level|level\s*bounce/i,'The Bounce'],[/resist|supply\s*zone|rejection|reject/i,'The Rejection'],[/break\s*out|breakout|range\s*break/i,'The Breakout'],[/squeeze|bollinger|keltner|coil|nr7/i,'Squeeze Play'],[/manipulat|\btrap\b|stop\s*hunt|sweep|liquidity\s*grab/i,'The Trap'],[/reversal|reverse|\bflip\b/i,'The Flip'],[/vwap|\bfade\b/i,'The Fade'],[/gap\s*(and|&)?\s*go|gap\s*fill|\bgap\b/i,'Gap & Go'],[/fvg|order\s*block|\bict\b|\bsmt\b|imbalance/i,'The Sweep'],[/trend|continuation|momentum|pullback|rider/i,'Trend Rider'],[/scalp/i,'Quick Bite'],[/\brsi\b|oversold|overbought|connors/i,'The Dip Snatch'],[/\bema\b|moving\s*average|\bsma\b|golden\s*cross|crossover/i,'The Crossover']];
@@ -1458,7 +1447,8 @@
         if (isEx) { body.innerHTML = rrIdleHTML(RR_STATE); return; }
         var filtered = rrFiltered();
         if (RR_STATE.reportIdx >= filtered.length) RR_STATE.reportIdx = 0;
-        var cur = isEx ? RR_EXAMPLE : (filtered[RR_STATE.reportIdx] || RR_EXAMPLE);
+        var cur = filtered[RR_STATE.reportIdx];
+        if (!cur) { body.innerHTML = rrIdleHTML({ scope: 'night', degraded: true }); return; }
         var disp = { grade: cur.grade, strategy: rrPremiumTitle(cur.strategy), symbol: cur.symbol, realizedR: cur.realizedR,
           oneLiner: cur.oneLiner, whatWentRight: cur.whatWentRight, whatToWatch: cur.whatToWatch, actionNeeded: cur.actionNeeded,
           attribution: cur.attribution, entryQuality: cur.entryQuality, parameterHint: cur.parameterHint, confluenceMissed: cur.confluenceMissed,
@@ -1490,7 +1480,7 @@
       // renderReports() honours RR_STATE.type. Night/Soak/Weekly-A/B fetch the per-scope
       // discriminated payload and paint the crystal ball; Quantum-RL/Paper take over the
       // immersive surface. Every path is READ-ONLY — display, subscribe, never POST.
-      var RR_BALL_TYPES = { night: 1, soak: 1, ab: 1 };
+      var RR_BALL_TYPES = { soak: 1, ab: 1 };
       var RR_HEADERS = {
         night: ['GPT-5 Analyst · runs every night', 'The Reporting Room', 'What the GPT-5 analyst wrote about the bot\'s trades while you slept.'],
         soak:  ['Reliability desk · unattended endurance', 'The Soak Report', 'Proof the system can run for days on its own without a human touching it.'],
@@ -1530,12 +1520,14 @@
         if (imm) imm.classList.toggle('rr-imm-on', !ball);
         var rlScreen = document.getElementById('imm-rl'); if (rlScreen) rlScreen.classList.toggle('on', type === 'rl');
         var paperScreen = document.getElementById('imm-paper'); if (paperScreen) paperScreen.classList.toggle('on', type === 'paper');
+        var nightScreen = document.getElementById('imm-night'); if (nightScreen) nightScreen.classList.toggle('on', type === 'night');
         var vaultScreen = document.getElementById('imm-vault'); if (vaultScreen) vaultScreen.classList.toggle('on', type === 'vault');
         rrStopPlay();
         if (type === 'rl') { rrRenderRL(); return; }
         if (type === 'paper') { rrRenderPaper(); return; }
-        if (type === 'vault') {
-          var frame = vaultScreen && vaultScreen.querySelector('iframe');
+        if (type === 'vault' || type === 'night') {
+          var activeScreen = type === 'night' ? nightScreen : vaultScreen;
+          var frame = activeScreen && activeScreen.querySelector('iframe');
           if (frame && !frame.getAttribute('src')) frame.setAttribute('src', frame.getAttribute('data-src'));
           return;
         }
