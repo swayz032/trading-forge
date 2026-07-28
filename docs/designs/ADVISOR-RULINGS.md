@@ -12,6 +12,34 @@
 
 ---
 
+## R-400 · 2026-07-28 · **OPERATOR: "how do you keep making mistakes — can you fix that?"** ★★★ **I CLASSIFIED THEM INSTEAD OF APOLOGISING AND THEY ARE ONE SHAPE: SIX JOIN ERRORS — two things each true, asserted to correspond, without checking the key.** ★★★ **The shape is STRUCTURAL to this seat: the desk's work IS joins, so its errors are join errors. Guard extended, red-proofed on my own six**
+
+**RULING ID:** R-400 · **TASK ID:** operator directive — stop the recurrence · **DECISION:** **PATTERN NAMED, MECHANISM SHIPPED, LIMIT STATED HONESTLY.**
+
+**CLAIMS VERIFIED (and how).** Enumerated from this ledger, not from memory: **R-381** verified the FILE not the LINE (`file <-> line`) · **R-371** "your initiative covered my error" (`my ruling <-> its behaviour`) · **R-389** "the pinned eleven" (`number <-> population`) · **R-390** "excluded by construction" (`claim <-> code`) · **R-397** ordered a measurement of `EXACT-NOW` (`metric name <-> instrument`) · **R-399** ordered a concordance across R-303's 53/11 and corpus_A's 33/16 (`table <-> table`). ★★★ **Every one is the same move: two artifacts, each independently TRUE, welded by a correspondence I never checked — this campaign's founding law, TWO TRUE FACTS DO NOT MAKE A TRUE LINK, committed by the desk six times in one day.**
+
+**EVIDENCE INDEPENDENTLY CHECKED — why it is THIS seat.** **The worker's work is local: it touches one file and measures it, so its errors are local and it catches most itself. The desk's work is SYNTHESIS — a ruling exists to connect a report to an artifact to a prior ruling to a metric. My output is made of joins, so my defects are join defects.** ★★ **[ASSUMED, stated as such]** that this is role-structural rather than personal is my reading of the six, not a measured claim — **but it is the reading that makes "be more careful" useless and a mechanism useful.**
+
+**TESTS RERUN (command + result).** Extended `ruling-mechanism-guard.ps1` with join vocabulary (`concordance`, `reproduces the`, `matches the table/count/census/register`, `same population`, `corresponds to`, `checked against`). **Parse-checked BEFORE trusting any output** — the lesson from its own broken first build → no parse errors. **Red-proofed on my OWN sentences, verbatim: R-398's concordance order → BLOCK · a bare "same population" claim → BLOCK · R-399's corrected form carrying `[MEASURED: 53 vs 33 read from their own artifacts]` → ALLOW · a join citing `file:73` → ALLOW · ordinary approval prose → ALLOW · malformed JSON → ALLOW (fail-open) · R-390's original false note → still BLOCK. 7/7.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in the trading system. Guard #4 extended rather than a fifth added — **guard fatigue is real, and a pile of gates nobody can hold in mind is its own failure mode.**
+
+**FAILED OR UNPROVEN CONDITIONS — the honest answer to "can you fix that".** ★★★ **NO — not in the sense of not making them. Every error today was made while intending not to, including two made minutes after minting the law against them. What is fixable is the COST: whether a mistake reaches an artifact, the operator, or the money.** ★★ **[MEASURED, from this ledger's own timestamps and commits] of the six join errors, ZERO reached the running system: R-390's false note stood ~1 hour before being struck in R-391 · R-397's acceptance was withdrawn in R-398 before any code was written · R-399's concordance was withdrawn before it produced a finding · R-381's misattribution was corrected in R-388. The one that reached the operator — "16 specs, zero eligible" — was a stale hand-count I repeated forward, and it cost a wrong ANSWER, not a wrong ACTION.** ★ **[UNPROVEN]** whether the extended vocabulary covers phrasings I have not yet used — **it covers the six I made; a join asserted in different words still passes.** Narrows the class; does not close it.
+
+**REQUIRED CORRECTIONS.** Standing, now in the skill: **NAME THE JOIN KEY** — before asserting two artifacts correspond, state the key and that you checked it. ★★ **And the second-order rule today's evidence actually supports: the loop caught five of my six — four by the worker, two by my own guards, the rest by the operator. THE AUDIT DIRECTION THAT WORKS HERE IS UPWARD, and it works because the worker is instructed to test my premises rather than execute them. Any change that made the worker more obedient would RAISE my error rate, not lower it.**
+
+**FILES / SCOPE ALLOWED.** `.claude/hooks/ruling-mechanism-guard.ps1` (extended) · `.claude/skills/advisor-ruling/SKILL.md` (join law) · this ledger.
+
+**ACCEPTANCE COMMANDS.** The 7/7 matrix. **The real acceptance is prospective: the next join I assert without a key should be refused before it reaches the file.**
+
+**STOP CONDITION.** If the guard blocks legitimate rulings faster than it catches real joins, it is noise and I retire it — **a guard that trains its subject to route around it is worse than none.** ★ Two blocks so far, both on true sentences whose evidence sat in a neighbouring paragraph; both fixed by attaching the grade, neither by rewording. That is the intended cost.
+
+**LESSON TO PERSIST.** ★★★ **"CAN YOU FIX THAT" HAS TWO ANSWERS AND ONLY ONE IS HONEST. I cannot stop generating errors of the shape my job is made of. I can make them expensive to keep and cheap to catch — which is why three of today's fixes are harness-executed, each red-proofed against the actual mistake, and why the worker is instructed to challenge me rather than obey.** ★★ **The measure is not my error count. It is the DISTANCE an error travels before something stops it — and today [MEASURED] that distance was: the ledger, about an hour, zero code, zero dollars.**
+
+**AUTHORIZED NEXT ACTION.** Unchanged — R-399's items, then SMC. Nothing here changes the worker's queue.
+
+---
+
 ## R-399 · 2026-07-28 · ★★★ **ALL THREE BLOCKERS SUSTAINED — AND THE FIRST TWO ARE RESOLVED BY AN ARTIFACT THAT ALREADY EXISTS: `dual-denominator-remeasure-2026-07-21.json` NAMES ALL 16 CORPUS-A SPECS AND CARRIES `bound_and_concrete_conditions = 6` vs `unbound = 27` AS DATA.** ★★★ **So the meter is not a build — it is a RE-RUN of whatever produced that file. And R-303's 53/11 is a DIFFERENT POPULATION from corpus_A's 33/16: my concordance order was pointed at the wrong table**
 
 **RULING ID:** R-399 · **TASK ID:** AR-364 — the three meter blockers · **DECISION:** **BLOCKERS 1 & 2 RESOLVED with pins below. BLOCKER 3 SUSTAINED — BOUNDARY stays human, permanently. My R-398 concordance target is WITHDRAWN and replaced.**
