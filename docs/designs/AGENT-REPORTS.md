@@ -4,6 +4,211 @@
 
 ---
 
+## AR-354 · 2026-07-28 · **BOTH CI VERDICTS, VERBATIM (R-389 authorized next action)** — and ★★★ **THE "PINNED ELEVEN" DOES NOT EXIST: THE REGISTER HOLDS TEN. I MISCOUNTED IN AR-352, YOU ADOPTED MY NUMBER INTO R-389's STOP CONDITION, AND A WRONG THRESHOLD IS NOW IN A RULING**
+
+**RULING ID:** R-389 · **TASK ID:** items 2+4 CI settle · **RECOMMENDATION:** APPROVAL_REQUESTED (both) — **but read the correction first; it changes a gate you wrote.**
+
+---
+
+### ★★★ CORRECTION FIRST — the number in your STOP CONDITION is wrong, and it is my fault
+
+R-389 STOP CONDITION: *"Any pass-2 replay failure outside the pinned **eleven** on #19 → revert the register entry."* That number came from AR-352, where I wrote it. **It is wrong. Computed, not remembered:**
+
+```
+git show $(git merge-base HEAD origin/main):…/fresh-bootstrap-migration-replay.test.ts  → BASE count =  9
+HEAD                                                                                    →      count = 10
+```
+
+Members at HEAD: `0000_previous_nuke`, `0001_flashy_hercules`, `0002_equal_nova`, `0006_deep_analysis_pipeline`, `0007_matrix_correlations`, `0008_decay_analysis_column`, `0009_strategy_evolution`, `0016_sanity_cross_validation`, `0017_add_indexes`, `0159_broker_accounts_ab_paper_routing`. **Nine pre-existing + my one = TEN.**
+
+★ **Why this one is comparatively cheap, and why I am still raising it loudly.** The code never held the number. Lines 249-250 compare the SET in both directions:
+
+```ts
+const unexpected      = failures.filter((f) => !PASS2_KNOWN_NONIDEMPOTENT.has(f.tag));
+const missingExpected = [...PASS2_KNOWN_NONIDEMPOTENT].filter((t) => !failedTags.has(t));
+expect(unexpected).toEqual([]);
+expect(missingExpected).toEqual([]);
+```
+
+So **the test IS the exact-set check** — a tag that moved in EITHER direction fails it. It passed on CI, which is a strictly stronger result than the count I promised to go fetch: it proves not just "ten" but "these ten and no others". **The count was never load-bearing in code; it was load-bearing only in our prose — and prose is where it propagated.** This is the desk's own *every-number-COMPUTED-or-ABSENT* law failing at my hands, and *endorsement-is-not-corroboration* failing at yours: you carried my eleven into a ruling without recomputing it, and the hop added zero evidence while adding authority.
+
+★ **Please reissue the stop condition against the SET, not a count.** A count drifts the moment a pre-0066 file gets fixed — and then the gate is wrong in the *other* direction, silently, with a ruling's authority behind it.
+
+---
+
+### VERDICT 1 — PR #19 (item 2, `paper_sim`). Run `30395571183`, head `ccce6bdf`, conclusion `success`
+
+```
+"verdict": "GREEN",
+"newFailures": [],
+```
+
+`gh pr view 19` → `state=OPEN mergeable=MERGEABLE status=CLEAN`. Suite totals **13465 tests · 13445 passed · 9 failed** — all nine are the known baseline suppressions (`audit-log-append-only`, 3× `b14-survival-integration`, `wave9-zombie-archive`, 2× `lifecycle-transitions`, `startup-config-check-pass1`, `spec-onboarding-service.bandc`).
+
+★ Per the *baseline-relative* law I am NOT reading `newFailures: []` as "all green". It means **net-new = 0 against a 9-failure floor**, and I state the floor rather than the badge.
+
+**Pass-2 replay — the R-387(B) fix under test:** `PASS 2 — re-applying every journal entry's raw SQL against the now-populated DB` → **PASSED**. So did `PASS 1` (201 entries against an empty DB) and the 10-migration backfill proof.
+
+### VERDICT 2 — PR #22 (item 4, egress chokepoint). Run `30396141091`, `Node Tests + Coverage` **pass** (8m33s)
+
+★★ **Your pre-registered falsifier, resolved: the A-11 six pass on ASSERTIONS, not on TypeErrors — the wrapper's shape is right, so the fix stands as-is and is not extended.**
+
+```
+autonomy-gaps-a8-a9-a11-a12-a13.test.ts → passed
+  PASSED  probeTradersPostApiKeys emits notifyWarning on HTTP 401 (key revoked)
+  PASSED  probeTradersPostApiKeys emits notifyWarning on HTTP 403 (forbidden / revoked)
+  PASSED  probeTradersPostApiKeys does NOT notify on HTTP 400 (key valid, payload bad)
+  PASSED  probeTradersPostApiKeys is a no-op when no enabled accounts exist
+  PASSED  probeTradersPostApiKeys is fail-soft on network error (does not throw)
+  PASSED  probeTradersPostApiKeys does NOT expose apiKey in log output on failure
+```
+
+★ **The R-370 execution witnesses survived the convenience fix** — these still bite at `global.fetch`, which is the entire reason the thin real-shaped wrapper was chosen over `vi.fn()`.
+
+```
+broker-egress-chokepoint.test.ts → passed
+  PASSED  no module outside the two allowlists reaches a trading-broker host
+  PASSED  DISCRIMINATES: the credential-egress module is still detected
+  PASSED  does not flag SEARCH brokers that merely have 'broker' in the filename
+  PASSED  does not flag a module that names a broker but fetches something else
+  PASSED  broker-router no longer performs its own broker egress (item 4 regression)
+
+broker-router-probe-gate.test.ts → passed (11/11)
+  PASSED  index.ts contains exactly one non-commented startBootProbe() call site
+  PASSED  index.ts imports startBootProbe from broker-router
+  PASSED  DISCRIMINATES: with every gate open the probe DOES contact the broker
+  PASSED  flag unset (production default) → no broker contact, and no DB read at all
+  PASSED  flag set to a non-'true' value → no broker contact (exact-string convention)
+  PASSED  kill switch halted → no broker contact
+  PASSED  kill-switch check throws → fail-CLOSED, no broker contact
+  PASSED  pipeline paused → no broker contact
+  PASSED  pipeline check throws → fail-CLOSED, no broker contact
+  PASSED  live execution not configured → no broker contact
+  PASSED  INVARIANCE: with zero credentials (the tower's measured state) behaviour is unchanged
+```
+
+★ **Both DISCRIMINATES controls pass**, so the six no-broker-contact assertions are not the always-red degenerate case — the suite can tell "catches breakage" from "always fails". **The failure set on #22 is byte-identical to #19's nine**: the chokepoint guard added zero collateral.
+
+`gh pr checks 22` at report time: **15 pass, 2 pending, 0 fail** (`Python Tests + Coverage`, `Machine-enforced push verdict`). **I am not calling #22 green until those land** — pending is not pass, per your own line.
+
+---
+
+### ★ ONE DEFECT FOUND WHILE VERIFYING, ON MY OWN SURFACE — fixed and pushed (`20bb7748`)
+
+Reading the assertion bodies to confirm the set-comparison shape, I found **the same false-caption defect I had just fixed one comment block above it**, three times over in the same file. The register's declaration note now says "TWO classes"; the file header (line 66) and **both** `expect()` failure messages still said *"the pre-0066 carry-forward boundary"* — false for the class-(2) entry I added. **Caption-is-a-claim: repairing the register's note while leaving the messages a reader actually SEES when the gate fires is a half-fix.**
+
+★★ **The second half is more than a caption repair, and it is the part I want graded.** The `missingExpected` message read as unconditional good news — *"unexpectedly became idempotent-safe — great news, but remove them from PASS2_KNOWN_NONIDEMPOTENT"*. For a class-(1) pre-0066 entry that is correct. **For the class-(2) entry it is exactly backwards: 0159 replaying clean means 0208's topology CHECK has STOPPED REJECTING `paper`→`traderspost` — i.e. the constraint that closes item 2's hole is gone.** The old message would have told that reader to delete the line, **erasing the alarm that had just fired.**
+
+★ It now names both classes and instructs the reader to verify the constraint still exists before deleting anything. **A guard whose failure message tells you to disable it is one of the five ways a guard silently stops guarding, and I shipped one.** The `unexpected` message likewise now forces the reader to state WHICH class a new tag belongs to before adding it — and says that if it is neither, the migration is what needs fixing, not the list.
+
+No assertion logic changed; the set comparison is untouched. #19 is therefore back to pending CI on head `20bb7748` — a cost I took deliberately rather than ask you to merge a known-false caption. **The merge is yours and I have not touched it.**
+
+---
+
+**Files changed:** `src/server/__tests__/fresh-bootstrap-migration-replay.test.ts` (comments + two assert messages only).
+**Architecture boundaries NOT touched:** no `routeOrder()` gate-stack refactor; no migration file edited; no assertion logic.
+**Risk:** none to logic; #19 re-runs CI (~9 min).
+**Remaining uncertainty:** #22's two pending checks; #19's re-run on the new head.
+**Both merges and both deploys remain yours** under R-377/R-381, including the live-DB `paper_sim` re-verification on #19.
+
+**Recommendation:** APPROVAL_REQUESTED on both, conditional on the pending checks — and **REVISION_REQUIRED on R-389's stop condition**, which should cite the set, not "eleven".
+
+**Next smallest task (ONE):** report #19's re-run verdict and #22's final two checks when they land. Nothing else starts.
+
+---
+
+## AR-353 · 2026-07-28 · **PR #22 RED FIXED (`7d233c8a`) — cause found by INSPECTION before the CI logs were even readable. ★★★ AND A FALSE MEASUREMENT NEARLY MADE ME "FIX" A GUARD THAT WAS NEVER BROKEN: testing my regex through `node -e` collapsed `\\b` into a literal BACKSPACE character, so the predicate appeared to detect NOTHING — including its own allowlisted module.**
+
+**WORKER REPORT — Task: PR #22 CI red · Branch `hardening/broker-egress-chokepoint-20260728` · Commit `7d233c8a`**
+
+**Root cause, and which layer.** Not the guard and not the runtime: the **test-harness boundary**. Moving the probe's `fetch` into `integrations/traderspost/client.ts` changed that module's EXPORT SURFACE, and a `vi.mock` factory replaces the WHOLE module. **Proven by inspection, not by waiting: 15 test files mock that client; a `grep -c probeCredentialTransport` across all 15 returned 0 for every one.** So the symbol was `undefined` anywhere the probe path ran. Narrowed to the files that actually reach it — `probeTradersPostApiKeys|startBootProbe` appears in exactly **2 of the 15** (probe-gate suite, A-11 block); the other 13 mock the module but never touch the transport, so `undefined` is never called there.
+
+**★★ THE DESIGN CHOICE, and it is the part that mattered. The lazy fix is `probeCredentialTransport: vi.fn()`. I did not take it: both suites mock `global.fetch` (401/403/400/network-error) and ASSERT ON IT — including the R-370 execution witnesses I added three hours ago. Stubbing the transport out would have moved the mock boundary ABOVE the thing those tests were rewritten to prove, silently deleting the coverage and leaving them proving only that the probe calls a mock. That is precisely the vacuity class this suite just escaped, re-introduced by a "harmless" test fix.** So each factory implements the transport as a **thin real-shaped wrapper over `global.fetch`** — the boundary moves, the assertions keep biting.
+
+**★★★ THE FALSE MEASUREMENT, reported because the near-miss is the finding.** Mid-fix, a check appeared to show the predicate detecting **zero** egress modules — not even `client.ts`, which would mean my DISCRIMINATES case fails and the guard policed nothing. **I was one step from "repairing" a correct guard.** Isolating it: `new RegExp("\\b" + name + "\\b")` evaluated **false** against the identical string, while `new RegExp(name)` evaluated true. Cause: passing the expression through a **shell** (`node -e '…'`) collapsed `\\b` to `\b`, which JS reads as **U+0008 BACKSPACE**, not a word boundary. Re-run from a FILE — no shell in the path — the predicate is correct: EGRESS `{client.ts, exchange-status-service.ts}`, 0 outside the allowlist, **DISCRIMINATES true**. ★ **MINT OFFERED: A REGEX TESTED THROUGH A SHELL IS NOT THE REGEX YOU WROTE. Same family as `| head` masking an exit code — and the tell was that the instrument reported an impossible result (a detector failing to detect its own known-true case). VERIFY THE INSTRUMENT BEFORE BELIEVING A SURPRISING ZERO.**
+
+**Red-proof re-run after the change (file-based, no shell):** control **GREEN** → rogue `fetch("https://traderspost.io/…")` added → **RED**, names the file → restored → **GREEN**. Scratch harness deleted again; the vitest file is the artifact and a second copy of the predicate is drift-bait.
+
+**Files changed.** `services/__tests__/broker-router-probe-gate.test.ts` · `__tests__/autonomy-gaps-a8-a9-a11-a12-a13.test.ts`. **No production code touched in this commit.**
+
+**Remaining uncertainty.** CI is the verification — I still cannot run vitest here. Expectation: PR #22 Node Tests green with the A-11 six and the probe-gate suite (incl. DISCRIMINATES) passing. **If any A-11 case now fails on an ASSERTION rather than a TypeError, my wrapper's shape is wrong and the fix needs revising, not extending.**
+
+**Risk.** Test-only. The wrapper duplicates a small amount of transport shape in two factories — accepted deliberately over deleting real coverage, and noted so the next reader knows it is a considered trade rather than an oversight.
+
+**Recommendation: APPROVAL_REQUESTED.** **Next smallest task (ONE):** confirm on CI that PR #22's Node Tests are green and that the A-11 six still pass *with* their execution witnesses intact.
+
+**Holds:** as R-388, plus **[MEASURED, file-based] guard control GREEN / mutation RED / restored GREEN; DISCRIMINATES true; 2 of 15 client-mocking files needed the export.**
+
+## AR-352 · 2026-07-28 · **R-387 ANSWERED — I CHOSE (B), AND I AM DISAGREEING WITH YOUR STATED PRIOR OF (C) ON A MECHANISM ARGUMENT, NOT A PREFERENCE. ★★★ (C) is reachable by exactly one mechanism — a trigger that silently REWRITES a caller's write on the money path — and that is worse than declaring the truth. Committed `ccce6bdf`.**
+
+**WORKER REPORT — Task: PR #19 CI red · Ruling: R-387 · Branch `hardening/paper-no-egress-brokertype-20260728` · Commit `ccce6bdf`**
+
+**Objective.** Restore `newFailures: []` without weakening the constraint item 2 exists to add.
+
+**Root cause (yours, confirmed by reading rather than re-measuring — you reproduced it in pglite and I have no runner here).** 0159 seeds `('paper','traderspost',…)`; 0208 forbids that pair. Both correct; jointly irreplayable.
+
+**★★★ HYPOTHESES, WRITTEN BEFORE THE EDIT (worker-execution §3).** The decisive question was: **is (C) actually reachable?** 0159's INSERT text is IMMUTABLE — applied on the live DB and hash-pinned in the manifest, so editing it is the file-drift-after-apply class. Therefore, for that INSERT to succeed on replay, at the moment it runs either **(i)** the constraint must permit `paper→traderspost` — that IS (A), which re-opens the hole; or **(ii)** something must alter the row before the CHECK evaluates — i.e. a `BEFORE INSERT` trigger; or **(iii)** the constraint must not exist — which contradicts 0208's purpose. **There is no fourth branch.** So (C) collapses to the trigger.
+
+**★★ WHY I REJECTED THE TRIGGER, which is the part I want ruled on.** It works, and I nearly took it. Against it: it **silently rewrites a caller's requested value on the money path**, so a genuine future mis-seed of `paper→traderspost` — exactly the mistake this campaign spent the day proving is easy to make — would be recorded as a SUCCESS with different data than was asked for. ★ **That is the sentinel problem one layer down: `'paper'` was already a value whose meaning nobody enforced; answering it with a value nobody's write is allowed to keep replaces an unenforced label with an invisible correction.** The repo's one trigger precedent (`audit_log` append-only) REJECTS writes; it does not rewrite them. Rejecting is honest, rewriting is not.
+
+**Implementation (B), and the second half is the part that makes it honest.** Added `0159_broker_accounts_ab_paper_routing` to `PASS2_KNOWN_NONIDEMPOTENT` — **and rewrote the register's own documentation**, because it previously described exactly ONE class ("pre-0066 bare CREATE TABLE/INDEX") while now carrying two. **A register whose caption states one reason while its contents carry two is a false caption, and the next reader would infer the wrong thing about all nine pre-existing entries.** Class (2) "SUPERSEDED BY DESIGN" is defined inline with 0159's full reasoning, the fresh-bootstrap-unaffected proof, the rejected alternatives, and why editing 0159 is not an option.
+
+**★ The generalisable finding, recorded in the note because it will outlive this PR: `ON CONFLICT DO NOTHING` does NOT make a seed idempotent against a CHECK.** Conflict arbitration resolves UNIQUE violations; a CHECK is evaluated on the proposed row *first*, so the statement RAISES rather than skipping. **True for uniqueness, false for checks** — and every seed migration in this repo is written as though it were true for both.
+
+**Files changed.** `src/server/__tests__/fresh-bootstrap-migration-replay.test.ts` only. **No SQL touched; 0208 unchanged; 0159 untouched.**
+
+**Remaining uncertainty, stated.** I did not re-run the replay suite — no `node_modules` in this worktree, so **CI is the verification** and the expectation is `newFailures: []` with the pass-2 set going 10 → 11 by exactly the pinned tag. If pass 2 now fails on anything OTHER than the eleven, my class-(2) reasoning is wrong and this should be reverted rather than extended. ★ **And the honest limit of (B): it makes a true statement about the world; it does not make 0159 replayable. Anyone rebuilding a database by replaying migrations twice must know 0159 is expected to fail the second time — which is now written where they will find it.**
+
+**Risk.** Low and bounded to test scope. The register is an assertion, not a skip, so a NEW non-idempotent migration still fails loudly; I widened the allowlist by exactly one documented entry.
+
+**Recommendation: APPROVAL_REQUESTED — with an explicit flag that I chose against your stated prior.** If you still prefer (C) after the mechanism argument, the trigger is ~10 lines and I will write it; I would want that as an explicit ruling rather than a default, because it changes what a write to `broker_accounts` MEANS. **Next smallest task (ONE):** confirm on CI that pass-2 failures are exactly eleven and no other tag moved.
+
+**Holds:** as R-387, plus **[REASONED, NOT MEASURED] (C) reduces to a write-rewriting trigger; (A) re-opens item 2's hole; (B) is the only option that keeps the constraint strict and the record honest.**
+
+## AR-351 · 2026-07-28 · **ITEM 4 DONE — PR #22 (`ef3cc793`). ★★★ THE GUARD CAUGHT FOUR MODULES MY HAND ENUMERATION MISSED, AND THEN CAUGHT A DEFECT IN ITSELF: my first predicate flagged `alert-service.ts`, which fetches localhost and merely NAMES a broker — co-occurrence, not connection. ★★ And your new `worker-execution` hook BLOCKED my write mid-task, correctly, because a ruling had landed since I loaded it.**
+
+**WORKER REPORT — Task: item 4 · Ruling: R-349 §2 / R-385 · Branch `hardening/broker-egress-chokepoint-20260728` · Commit `ef3cc793` · PR #22**
+
+**Objective.** Exactly one production module may reach a trading-broker host; a CI guard fails if any other does.
+
+**Initial failure.** Egress was scattered with per-caller gate sets, and the only enumeration was AR-320's hand count — a snapshot with no mechanism to stay true.
+
+**Root cause, and which layer.** Not a bug in a function: an ARCHITECTURAL one at the transport layer. `broker-router.ts` held its own `fetch` plus a DUPLICATE copy of the TradersPost base-URL constant, so it resolved its own URL with its own timeout and shared no contract with the order path. Proven by the guard listing both modules, then by `grep -c "fetch("` on broker-router returning **0** after the change.
+
+**Hypotheses rejected (and how).** (i) *"files named `*-broker.ts` are the population"* — REJECTED: `exa-broker`, `brave-search-broker`, `parallel-broker` are SEARCH brokers; a name-based guard flags three innocents and misses a trading call in any other filename. (ii) *"mentions a broker host + contains a fetch"* — REJECTED by measurement: it flagged `alert-service.ts`, which fetches `localhost:<discordPort>` and names a broker only in alert text. **Two true facts in one file do not make a true link.** (iii) *"force everything through the order client"* — REJECTED as over-application: a credential-less HEAD liveness probe does not belong behind the order gates.
+
+**Implementation.** `probeCredentialTransport()` added to `integrations/traderspost/client.ts` (transport ONLY — it deliberately does not decide whether the probe may run; `checkProbeGate()` keeps that, or the gate scatters exactly like the fetch did). `broker-router.ts` calls it and retains the interpretation (401/403 = revoked, other 4xx = key valid, else inconclusive). **Only the socket moved.**
+
+**Files changed.** `services/__tests__/broker-egress-chokepoint.test.ts` (new) · `integrations/traderspost/client.ts` · `services/broker-router.ts`.
+
+**Semantic preservation.** The probe's meaning is unchanged — same payload (`{apiKey}` only), same timeout value, same status→verdict mapping, same cache write, same revoked-path audit + Discord warn. A behaviour test would not be able to tell the two versions apart; only the guard can.
+
+**Architecture boundaries NOT touched.** `routeOrder()`'s gate stack was **not** consolidated into the egress function — that is six call sites collapsing into one, i.e. six chances to move a gate wrong (R-351 §4(i)), and it needs its own unit and red-proofs. Also untouched: `checkProbeGate`, the order path, and the Tier-2 reachability probe.
+
+**Tests added.** (1) allowlist assertion with a failure message that tells the next engineer what to do; (2) **DISCRIMINATES** — the allowlisted module must still be detected, so a predicate that silently stopped matching cannot pass forever while policing nothing; (3) negative — search brokers not flagged; (4) negative — `alert-service.ts` not flagged (the co-occurrence false positive, pinned as a test); (5) regression — `broker-router.ts` contains no `fetch`.
+
+**Commands + results (red-proof by mutation; the predicate is pure source-text so no runner is needed):** control on the unmutated tree → **GREEN**, 0 outside allowlist, discrimination true · rogue `fetch("https://traderspost.io/…")` added in a scratch module → **RED**, names the file · scratch removed → **GREEN**. ★ **I deleted the scratch harness rather than committing it — a second copy of the predicate is drift-bait, which is the class this repo keeps hitting.**
+
+**Remaining uncertainty, stated not buried.** The guard is STATIC: a module fetching a URL from a PARAMETER or CONFIG is invisible to it. **`network-failover.ts` and `prop-firm-health-service.ts` are exactly that shape and DO reach broker hosts at runtime — they are NOT policed.** Documented in the test header. Also: the vitest file itself was never executed here (no `node_modules`); the mutation proof exercised a faithful re-implementation of its predicate, not the file.
+
+**Risk.** Low. The probe's transport moved; a mistake shows up as the probe failing, not as an order misrouting. The guard can only fail a build, never change runtime behaviour.
+
+**★ YOUR HOOK CAUGHT ME.** Mid-task the `worker-execution` PreToolUse guard **blocked my write** because R-386 had landed after I loaded the standard. I re-invoked and the write went through. **That is the first time today a rule enforced itself on me without a human noticing first** — every earlier correction needed you or the operator to spot it.
+
+**Recommendation: APPROVAL_REQUESTED.** **Next smallest task (ONE):** decide whether the two config/parameter-URL modules (`network-failover`, `prop-firm-health-service`) should be brought under the guard by making their broker URLs module-level constants — a small, testable change that converts the documented coverage bound into coverage.
+
+**Holds:** as R-386, plus **[MEASURED] broker-router `fetch` count 0; guard control GREEN / mutation RED / restored GREEN.**
+
+## AR-350 · 2026-07-28 · **START-RECEIPT — item 4 (broker-egress chokepoint + CI bypass test) STARTING NOW. Test-first: the guard should go RED on today's tree, because there are currently TWO modules that fetch a broker host, and that red IS the finding it exists to prevent recurring.**
+
+**§1 — RECEIPT (R-379 §3 form).** **Task:** item 4. **Branch:** off the current executing tip. **First observable:** the bypass-guard test, committed in a state where it **FAILS** against `HEAD`, followed by the chokepoint change that makes it pass. **ETA to first observable: this working block.** Read-only until the branch exists; no production write, no worktree update, no deploy.
+
+**§2 — WHY TEST-FIRST HERE RATHER THAN REFACTOR-FIRST, and it is your own R-351 §4 reasoning applied to my sequencing: a refactor of the most sensitive path in the system should not be the FIRST thing that touches it. The guard is a pure source-text predicate, so (a) I can red-proof it without a runner using the technique R-372 ratified, and (b) it is independently valuable even if the refactor lands later — it converts "we enumerated the egress points by hand today" into "CI enumerates them on every push."** ★ **Today's expected RED is the exhibit: `integrations/traderspost/client.ts::submitWebhookOrder` is the intended egress, and `broker-router.ts::probeSingleTradersPostKey` performs its OWN `fetch` to the same host. Two modules, one of which is the probe this campaign has spent all day gating. The guard failing on arrival is what proves it is not vacuous.**
+
+**§3 — SCOPE I WILL HOLD.** The guard + the minimum change to route the probe's egress through the single client module. **I will NOT bulk-refactor `routeOrder()`'s gate stack into the egress function in this unit** — that is the "consolidates six call sites into one, which is six opportunities to move a gate wrong" hazard you named in R-351 §4(i), and it deserves its own unit with its own red-proofs. If the chokepoint cannot be reached without touching that stack, I stop and report rather than widening.
+
+**Recommending: (a) receipt filed, item 4 starting, first observable named with an ETA; (b) test-first because the guard is a pure predicate and its arrival-RED is the exhibit; (c) scope bounded away from the gate-stack refactor — that is a separate unit and I will stop rather than widen into it.** **Holds:** as R-385.
+
 ## AR-349 · 2026-07-28 · **SHORT: your R-384 named a hazard class I had just built into — I shipped a STOP hook today for my own routing problem. Checked mine against the pinned wedge rather than assuming it was fine: `action: warn`, so it advises and ALLOWS the stop. Not the blocking shape that wedged this repo before.**
 
 **§1 — THE SELF-CHECK.** Earlier today the operator told me a fourth time to route reports to you rather than to them, and I fixed it with a hook (`.claude/hookify.route-reports-to-advisor.local.md`) because remembering had already failed three times. **Your §"Deliberately NOT a Stop hook — this repo has a documented Stop-hook wedge" applies to exactly what I built.** Verified: `event: stop`, **`action: warn`**, `enabled: true` — it injects a routing reminder and permits the turn to end. **The pinned 2026-07-10 incident was a Stop hook BLOCKING completion against a literal "production ready" string that no single session could satisfy — ~20 consecutive firings with zero new information. Mine has no completion predicate and no block path, so it cannot reproduce that.**
