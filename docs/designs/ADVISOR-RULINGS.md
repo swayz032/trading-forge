@@ -12,6 +12,34 @@
 
 ---
 
+## R-388 · 2026-07-28 · ★★★ **MY PRIOR OF (C) IS WITHDRAWN — THE WORKER TALKED ME OUT OF IT WITH A MECHANISM ARGUMENT AND IT IS RIGHT. (C) reduces to a trigger that SILENTLY REWRITES a caller's value on the money path, and this repo's only trigger precedent REJECTS writes — verified: zero `NEW.x :=` rewrites exist anywhere in the schema.** ★★ (B) RATIFIED, and the half that earns it is the register's CAPTION being rewritten, not just its contents
+
+**RULING ID:** R-388 · **TASK ID:** AR-352 — R-387's (A)/(B)/(C) choice · **DECISION:** **APPROVE (B).** My stated prior was wrong on reachability, not on taste, and it is withdrawn on the evidence rather than split-the-difference.
+
+**CLAIMS VERIFIED (and how).** The exhaustiveness argument is the load-bearing claim, so I tested it rather than accepting it. For 0159's immutable `INSERT ('paper','traderspost',…)` to succeed on replay, at the moment it runs: **(i)** the CHECK permits the pair — that IS (A), which re-opens the hole item 2 closes; **(ii)** something mutates the tuple before the CHECK evaluates — a `BEFORE INSERT` trigger; **(iii)** the constraint is absent — contradicts 0208. ★ **I went looking for a fourth branch and could not find one: a CHECK is not DEFERRABLE in Postgres, so deferral is out; a trigger returning NULL to skip the row is a variant of (ii) and is silent in the same way; deleting or re-seeding rows in a later migration does not change what 0159 itself inserts on replay. The enumeration holds.**
+
+**EVIDENCE INDEPENDENTLY CHECKED.** ★★ **The cited precedent is real and I verified it at the file rather than from memory:** `0058_audit_log_append_only.sql` — `RETURNS TRIGGER … RAISE EXCEPTION 'audit_log is append-only' … BEFORE UPDATE OR DELETE`. **It REJECTS.** And I widened the check past the one instance to the class: a schema-wide grep for `NEW.<col> :=` returns **nothing** — **there is no rewriting-trigger precedent in this codebase at all. Rejection is the house pattern, and (C) would have introduced the first silent-rewrite trigger on the broker table.** ★ Its argument stands on its own merits too: **a genuine future mis-seed of `paper→traderspost` would be recorded as a SUCCESS with different data than was asked for — an unenforced label answered by an invisible correction, which is `'paper'`-is-a-mode one layer deeper.**
+
+**TESTS RERUN (command + result).** `git show ccce6bdf --stat` → **one file, test-only, +40/−4; no SQL touched, 0208 unchanged, 0159 untouched.** Register contents as shipped confirm the two-class split with 0159's reasoning, the fresh-bootstrap-unaffected proof, and the journal-keyed-runner note inline. **CI at ruling time: 2 pass, 13 pending, 0 fail** — the `newFailures: []` expectation is NOT yet observed and I am not treating pending as green.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None in SQL. ★★★ **The one that decided this ruling: "never take a real risk to remove an appearance." (C) would have bought a green replay test — an APPEARANCE of full idempotency — by installing a mechanism that silently alters money-path writes. (B) buys nothing cosmetic and states the truth: 0159 is not replayable, here is exactly why, here is who is unaffected.** ★ **A register entry that says "this cannot re-apply, by design, because X" is stronger engineering than a trigger that makes the failure disappear.**
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★ **The worker's own honest limit, which I am promoting rather than softening: (B) makes a TRUE STATEMENT about the world; it does not make 0159 replayable. Anyone rebuilding a database by replaying migrations twice must know 0159 fails the second time — and that is now written where they will find it.** ★ **[UNPROVEN — CI is the instrument]** `newFailures: []` and pass-2 = 11 by exactly the pinned tag. **Its pre-registered falsifier is the right one and I adopt it verbatim: if pass 2 fails on anything OTHER than those eleven, the class-(2) reasoning is wrong and this is REVERTED, not extended.** ★ **[MEASURED, generalisable]** `ON CONFLICT DO NOTHING` does not make a seed idempotent against a CHECK — conflict arbitration resolves UNIQUE violations, while a CHECK is evaluated on the proposed row first. **I measured this in pglite in R-387 before it was written up; every seed migration in this repo is authored as though it were true for both.**
+
+**REQUIRED CORRECTIONS.** None. ★ **One thing I want on the record as exemplary rather than corrected: the register's CAPTION was rewritten, not just its list.** It previously described exactly one class while about to hold two — **a false caption that would have taught the next reader something untrue about all nine pre-existing entries.** Fixing the label alongside the data is caption-is-a-claim applied without being told.
+
+**FILES / SCOPE ALLOWED.** As shipped — test file only. Nothing further authorized on PR #19 pending CI.
+
+**ACCEPTANCE COMMANDS.** `gh pr checks 19` all green with `newFailures: []`; then **I merge and deploy under the R-377/R-381 method (merge → restart → verify → push) and re-verify on the REAL database that both rows read `paper_sim`.**
+
+**STOP CONDITION.** Any pass-2 failure outside the eleven → revert, do not extend the register.
+
+**LESSON TO PERSIST.** ★★★ **THE DESK'S PRIOR WAS THE WEAKEST EVIDENCE IN THE ROOM AND IT WAS MINE. I wrote "(C) preferred" while explicitly refusing to prescribe the mechanism — and the refusal is what saved it, because the worker then tested REACHABILITY and found my preference required a mechanism I would have rejected on sight had I derived it myself.** ★★ **Generalised: A PREFERENCE STATED WITHOUT ITS MECHANISM IS AN UNTESTED CLAIM WEARING A RECOMMENDATION'S CLOTHES — the desk should either derive the mechanism and own it, or state the property and let the seat with the artifact find the shape. Today, twice, the second path was correct.**
+
+**AUTHORIZED NEXT ACTION.** Watch CI on PR #19; report the verdict verbatim. **Item 4 / PR #22 (AR-351) is unruled and next at this desk — I have not forgotten it; it is not blocked on you.** Invoke `worker-execution` before your next code write: this ruling has moved the ledger and your gate has re-armed.
+
+---
+
 ## R-387 · 2026-07-28 · ★★★ **PR #19's RED DIAGNOSED BY REPRODUCTION, AND THE CULPRIT IS NOT 0208 — IT IS 0159.** Re-applying the EARLIER seed migration now fails, because 0208 correctly forbids the shape 0159 seeds. ★★★ **A NEW MIGRATION CAN BREAK THE RE-APPLICABILITY OF AN OLDER ONE — the guard caught a real ordering hazard, and `ON CONFLICT DO NOTHING` does not protect a row whose CONSTRAINT fails**
 
 **RULING ID:** R-387 · **TASK ID:** PR #19 CI red (my R-385 stop condition) · **DECISION:** **REVISE — do not merge.** Cause isolated and reproduced at this desk; the fix is a design question I am handing you with the discriminator, not a prescription.
