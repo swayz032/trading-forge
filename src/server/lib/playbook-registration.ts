@@ -200,19 +200,32 @@ export function parseRegistry(source: string): RegistryRead {
 }
 
 /**
- * FAIL CLOSED (R-313 §5a, widened). The ordered fix was "throw when
- * `matched < PLAYBOOK_CATEGORIES.length`" — necessary but NOT sufficient:
- * a nested bracket still MATCHES all four headers and merely truncates the
- * body, so a count-only check reports 4/4 on a short read. Exactness, not
- * mere presence, is the property that makes the union trustworthy:
+ * FAIL CLOSED on an EXACT-PARSE property (R-313 §5a as widened; R-314 §2).
  *
- *   missing   — header regex did not match  (the ordered count check)
- *   truncated — body held "[", so `[^\]]*` stopped at a nested bracket
- *   malformed — a token was not a bare quoted literal (inline comment, splat)
+ * THE PROPERTY, not a mechanism: THE PARSE IS EXACT. A count of matched headers
+ * is not it — a nested bracket MATCHES all four headers and merely truncates the
+ * body, so a count-only check reports 4/4 on a short read.
  *
- * All three are SILENT and all three SHORTEN the union, and a short union is
- * exactly what lets `registerStrategiesInPlaybook` re-insert an
- * already-registered name into a second category.
+ * THE MISS-CLASS SET IS DERIVED FROM THE GRAMMAR (R-314 §3), not collected from
+ * examples. The parse is exactly two steps, so it has exactly three failure
+ * families — one per thing the grammar can get wrong:
+ *
+ *   step 1: `^CAT\s*=\s*\[` … `\]`      step 2: BODY.split(",") -> strip quotes
+ *
+ *   (1) MISSING   — anything that HIDES THE HEADER, so step 1 does not match:
+ *       rename; a type annotation (`CAT: list[str] = [`); indentation (the `^`
+ *       anchor); any assignment form other than a bare `=` (augmented, tuple
+ *       target); definition inside a function or conditional.
+ *   (2) TRUNCATED — anything that puts a "]" INSIDE the body, so `[^\]]*` stops
+ *       early: a nested list/tuple/dict, a subscript, or a "]" inside a string.
+ *   (3) MALFORMED — anything that makes a TOKEN other than a bare quoted
+ *       literal: an inline comment, a splat/star-expr, a bare variable
+ *       reference, an f-string, a concatenation, or a comma inside a string.
+ *
+ * All three are SILENT and all three SHORTEN THE UNION — and a short union is
+ * the single route by which an already-registered name is re-inserted into a
+ * second category. That shared consequence is why they are one property and not
+ * three checks.
  */
 export function assertExactRead(read: RegistryRead): void {
   if (read.missing.length > 0) throw new PlaybookRegistryReadError("registry_read_incomplete", read);
@@ -357,11 +370,33 @@ export function registerStrategiesInPlaybook(
     return { ok: false, category, added: [], alreadyPresent, reason: `write_failed: ${String(err)}` };
   }
 
-  // (b-ii) POST-WRITE RE-READ (R-313 §5b) — re-read from DISK and assert each
-  // added name appears in EXACTLY ONE category. This is the half that closes
-  // effect 3 (a name spliced into a nested sub-list creates NO duplicate, so
-  // the exhaustive CI duplicate-guard is structurally blind to it) and it is
-  // the only check that sees what actually landed rather than what we computed.
+  // (b-ii) POST-WRITE RE-READ — DECLARED BACKSTOP, NOT A SECOND CATCH (R-314 §6).
+  //
+  // HONEST STATUS: effect 3 and every other short-read class is closed by the
+  // EXACT-PARSE refusal above, which runs BEFORE the write. This check is a
+  // backstop, and presenting it as an independent catch would be the
+  // two-checks-without-a-measured-disagreement error.
+  //
+  // RED-PROOF: by MODULE MUTATION, not by input — the pre-fix module
+  // (`git show aea2a92d~1:src/server/lib/playbook-registration.ts`) run against
+  // the effect-3 fixture returns ok:true and writes the splice, where this
+  // version refuses. Input-based red-proof is impossible while the read is exact.
+  //
+  // THE SEARCH behind that claimed absence (a claimed absence owes its search):
+  // attempted and REFUSED EARLIER, so unable to reach here — header-hiding
+  // (rename / annotation / indent); body truncation (nested bracket); malformed
+  // token (inline comment); a name already present in another category (no write
+  // occurs); a `$&` capture-injection name (prevented by the function
+  // replacement, and caught by the pre-commit verify before any write).
+  // ★ ONE CLASS DOES REACH HERE, so "unreachable" is too strong: CONCURRENT
+  // EXTERNAL MODIFICATION between `writeFileSync` and this re-read — another
+  // process, a format-on-save, or a second agent in a shared tree. Nothing else
+  // sees that, because every other check reads state this function computed.
+  //
+  // REVIVAL CONDITION: if the exact-read refusal is ever relaxed or removed,
+  // this stops being a backstop and becomes the PRIMARY catch — at which point
+  // it must be re-proved on natural input before that relaxation ships.
+  //
   // On violation the original source is RESTORED: returning ok:false while
   // leaving the defect on disk would still hand every downstream consumer a
   // widened allow-list.
