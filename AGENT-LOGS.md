@@ -15808,6 +15808,20 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Known-facts updates:** CORRECTION to the earlier 2026-07-28 Vault note: the old production database did not retain full transcripts, but the 40 historical library transcripts were recoverable from Claude's hidden `extraction-100/tmp/generalization` cache. They are now durably archived in production.
 
+### Session Log — 2026-07-28 Evidence Vault presentation hardening
+
+**Mission:** Make archived evidence deliberate, source-accurate, and readable after the historical transcript backfill, without modifying transcript content or the money path.
+
+**Work completed:**
+- Removed implicit newest-video selection from the Evidence Vault read model. The stage now opens empty unless an operator selects an item or follows an explicit `?video=` evidence link.
+- Upgraded source artwork to each video's maximum-resolution YouTube thumbnail with deterministic SD/HQ fallbacks; no generated or mismatched imagery is substituted for evidence.
+- Replaced the unstructured transcript wall with a constrained reading measure, evidence summary chips, and deterministic paragraph rendering while preserving the exact stored transcript and SHA-256 seal.
+- Added regression coverage for deliberate stage selection, premium thumbnail behavior, and readable transcript rendering.
+
+**Verification:** Evidence Vault focused suites 12/12 passed; TypeScript, changed-file lint, and `git diff --check` passed.
+
+**Known-facts updates:** Opening the Media Evidence Vault is not evidence selection. A source may appear on stage only after an explicit video/strategy action or an exact evidence deep link.
+
 **Carry-forward:** None for the transcript backfill. New n8n/scout/operator intake already writes through the same durable archive and remains fail-closed on evidence persistence failure.
 
 ## Known-Facts Pin — Stop Misdiagnosing These

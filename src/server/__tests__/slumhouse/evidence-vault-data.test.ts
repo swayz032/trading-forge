@@ -71,6 +71,34 @@ describe("evidence vault read model", () => {
     expect(mocks.execute).toHaveBeenCalledTimes(2);
   });
 
+  it("does not auto-select archive evidence when the room opens", async () => {
+    const video = {
+      id: "22222222-2222-4222-8222-222222222222",
+      video_id: "dQw4w9WgXcQ",
+      youtube_url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+      title: "Real source",
+      channel: "Trader",
+      transcript_status: "available",
+      transcript_chars: 1200,
+      source_provider: "n8n",
+      source_query: "orb",
+      discovered_at: new Date("2026-07-28T14:00:00Z"),
+      last_seen_at: new Date("2026-07-28T14:00:00Z"),
+      is_today: true,
+    };
+    mocks.execute
+      .mockResolvedValueOnce([video])
+      .mockResolvedValueOnce([{ today: 1, available: 1, total: 1 }])
+      .mockResolvedValueOnce([]);
+    mocks.workers.mockReturnValue([]);
+
+    const result = await assembleEvidenceVault({ includeOperator: true });
+
+    expect(result.videos).toHaveLength(1);
+    expect(result.selected).toBeNull();
+    expect(mocks.execute).toHaveBeenCalledTimes(3);
+  });
+
   it("uses Slumhouse names for a video's linked strategy receipts too", async () => {
     const video = {
       id: "22222222-2222-4222-8222-222222222222",
