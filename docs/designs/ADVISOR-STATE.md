@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-393**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
+Ledger at **R-394**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
 (server-derived `strategy_id`), start-receipt filed. Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
@@ -119,6 +119,15 @@ snapshotted by the desk for durability ONLY (431 insertions / 0 deletions —
 single-writer intact; committing ≠ authoring).** **[STILL UNBACKED]** 24
 untracked `docs/designs/` files incl. the -OPS ledgers and GRADE-* charters —
 another campaign's artifacts, named not adopted; operator/OPS-seat call.
+
+## HAZARD REMOVED (R-394) — do not recreate
+`wt-codex-transcript-vault
+ode_modules` was a **junction into the RUNNING
+tower's `node_modules`** (322 pkgs). One `npm ci` / `rm -rf` there would have
+taken the live API down (the 07-18 rails class). **Cut** non-recursively; target
+verified intact; 0 junctions now point at `runtime-production`. That tree needs
+its own `npm install` to run tests. ~25 other junctions point at the CAMPAIGN
+checkout — same shape, lower stakes, not adopted.
 
 ## KNOWN-BENIGN (do not investigate)
 `M src/engine/tests/fixtures/session_windows_parity.json` — phantom, verified
