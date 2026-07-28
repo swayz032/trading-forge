@@ -12,6 +12,34 @@
 
 ---
 
+## R-397 · 2026-07-28 · ★★★ **PHASE 1'S BLOCKER IS NAMED AND IT HAS BEEN QUEUED LAST FOR SIX DAYS.** R-303 ratified the build order on 07-22 — **SMC first** — and `[MEASURED] zero mentions of SMC-build or binding-lane work in the ~40 newest rulings.** The detectors already exist; **the missing piece is the BINDING LANE.** ★★★ **QUEUE RE-ORDERED: the SMC build is promoted to the front. Hardening is done; nothing else moves the money path**
+
+**RULING ID:** R-397 · **TASK ID:** desk line — what stands between 16 corpus specs and one eligible spec · **DECISION:** **RE-ORDER THE QUEUE** (my call under R-376) — SMC build to the front, remaining item-3 sweep items behind it.
+
+**CLAIMS VERIFIED (and how).** **[MEASURED HERE — R-303, 2026-07-22, the deciding table]** 53 load-bearing conditions across 11 specs, 26 UNTYPED; **`EXACT-NOW = 0` under every flag configuration**; full coverage by EXACT-NOW ∪ DE-APPROXIMABLE = **STRICT 1 · PRIMARY 3**. That zero is the number behind ADVISOR-STATE's `0 eligible today`, and it is why **Phase 1's exit condition (">=1 tier-A spec compiles with ALL load-bearing conditions concretely bound") is not met.**
+
+**EVIDENCE INDEPENDENTLY CHECKED.** ★★ **R-303 §3, quoted: "the missing piece is the BINDING LANE, not the detectors" — the ORB window, VWAP + bands, anchored VWAP, SMA/EMA, POC and the full SMC suite ALREADY EXIST and are dispatched.** So Phase 1 is not blocked on capability; it is blocked on binding the taught conditions to detectors that are already there. **R-303 §5 ratified the build order on the specs-completed metric: (1) SMC — completes `hcHuDfxdywI__s0`, detectors exist, `detect_bullish_ob` probed clean, `order_block_edge` precedent lights the path; (2)+(3) ORB + RANGE_EVENT AS A PAIR — the pair is the unit, ORB alone completes nothing; (4) BAR_TIMING; then SESSION_CLOCK.**
+
+**TESTS RERUN (command + result).** `grep -ci "SMC build|binding lane"` over the ~40 newest rulings → **0**. Today's ADVISOR-STATE queue lists the builds LAST, behind `npm ci` at boot, a string-literal sweep, flag enumeration and the floors. ★★★ **So the single ratified action that advances Phase 1 has sat at the bottom of the queue since 2026-07-22, while six days of work went to items that cannot move it.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** None. This is a sequencing decision, not a design change — and the build order itself is R-303's, unchanged; I am moving WHEN, not WHAT.
+
+**FAILED OR UNPROVEN CONDITIONS.** ★ **[HYPOTHESIS — the honest reading of the six days, and it is not an accusation]** the hardening items were correctly urgent while the broker path was open; **that condition ended today** (R-393: routes shut, verified in production). The queue simply never re-derived its priority after its own premise changed. ★ **[UNPROVEN]** whether SMC is startable with zero further prerequisites — R-303 says the detectors exist and one was probed clean, but I have not opened the binding lane's code myself, and **the worker must confirm startability before building, not after.** ★ **[MEASURED, and it bounds the optimism]** R-303 §6: **27 of 53 conditions are BOUNDARY** — "a real mechanical object wearing an unquantified adjective". Completing SMC completes ONE spec; **it does not clear the corpus, and nobody should read this promotion as a finish line.**
+
+**REQUIRED CORRECTIONS.** ADVISOR-STATE's queue is re-ordered to put the builds first, with R-303 §5's order preserved verbatim and the pair-is-the-unit constraint carried forward so ORB is never started alone.
+
+**FILES / SCOPE ALLOWED.** Worker: finish the current sweep increment you are mid-way through — **do not abandon a half-verified census, that is how a partial result becomes a false one** — then take the SMC build. Allowed surface is the binding lane and its tests; detectors are existing art and are not to be rewritten.
+
+**ACCEPTANCE COMMANDS.** Phase-1 movement is measured by ONE number and no other: **`EXACT-NOW`, and the count of specs whose load-bearing conditions are ALL concretely bound.** A build that adds a detector but moves neither is not progress. Report both before and after.
+
+**STOP CONDITION.** If SMC turns out to need a detector that does not exist, **stop** — that contradicts R-303 §3 and is a finding about the deciding table itself, which is mine to re-rule.
+
+**LESSON TO PERSIST.** ★★★ **A QUEUE ORDERED UNDER ONE PREMISE DOES NOT RE-ORDER ITSELF WHEN THE PREMISE DIES. The safety items outranked the builds because the broker path was open; it closed today, and the ordering survived its own justification by six days. Nothing was wrong with any individual item — the LIST was stale, and a stale list is invisible because every entry on it is still legitimate.** ★★ **Operator-facing corollary, which is why he asked: "what phase are we in" is the question that catches this, and it caught it. A campaign measures itself by tasks completed; only the plan measures whether any of them moved the destination.**
+
+**AUTHORIZED NEXT ACTION.** Worker: close the current increment, then **SMC build** — startability confirmed first, `EXACT-NOW` reported before and after, R-303 §5 order respected. That is the money path's next step and it is yours.
+
+---
+
 ## R-396 · 2026-07-28 · ★★★ **OPERATOR CAUGHT THE DESK NOT KNOWING ITS OWN PLAN — cause is structural, not forgetfulness: THE MONEY-PATH BLUEPRINT LIVES IN THE LEDGER'S EARLY RULINGS (R-053..R-061) AND THE COLD-START ORDER SAYS, VERBATIM, `Do not read the ledger from the top.`** I answered "what phase are we in" with lifecycle states, which is not the plan. **Phase ladder now carried in ADVISOR-STATE; onboarding read-order fixed.** ★★ And this ruling was BLOCKED by my own R-392 mechanism gate on its first submission — receipt in FAILED CONDITIONS
 
 **RULING ID:** R-396 · **TASK ID:** operator question — "what phase are we in on the money-path plan" · **DECISION:** **CORRECTION (mine) + permanent structural fix.**
