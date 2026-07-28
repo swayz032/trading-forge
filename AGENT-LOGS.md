@@ -15771,6 +15771,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Added the Reporting Room `Evidence Vault` toggle and recipe-page `Transcript & evidence` deep link. Embedded report rooms remain full-page and member/admin authorization stays server-side.
 - Corrected the shared HTML-shell gate after a live probe caught that the API accepted Office admin sessions while the page shell still accepted only Discord members; the page and API now enforce the same dual-session contract.
 - Added a generated premium screening-archive visual asset and desktop/mobile browser validation.
+- Refined the Vault into one uncluttered transparent-black main stage plus a narrow right intake rail, with thinner glass borders and reduced overlays so the generated archive environment remains visible behind live content.
 - Registered the new table in the subsystem topology and synchronized generated system-map evidence.
 
 **Verification:**
