@@ -2,11 +2,11 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
-> Last rewritten: 2026-07-28, current through **R-409** (sizing ruled).
+> Last rewritten: 2026-07-28, current through **R-410** (fidelity ruled).
 
 ## SEAT
-Ledger at **R-409**. Newest AR: **AR-374, RULED** (FVG sizing, reproduced at
-the desk). Worker: **ACTIVE on the FVG fidelity check** (item 1 below). PR #27 **MERGED** (`7dd27a0d`, 19/19 green).
+Ledger at **R-410**. Newest AR: **AR-375, RULED** (FVG fidelity: PARTIAL).
+Worker: **ACTIVE on the flag-yield sweep** (item 1 below). PR #27 **MERGED** (`7dd27a0d`, 19/19 green).
 Rig: 2s content-hash report poll + 15-min idle watchdog — **one rig, never
 new-plus-old**; the `ADVISOR-RULINGS.md` watcher under the OTHER `claude.exe`
 is the worker's ear, never kill it.
@@ -96,26 +96,46 @@ corpus_B worth respinning. ★ **Sizing measures VALUE, it does NOT graduate the
 flag** — graduation runs the SDS harness review per the flag's own docstring.
 
 ## AUTHORIZED NOW (worker, in order)
-1. ★★★ **FVG FIDELITY CHECK — GATES EVERYTHING.** Read
-   `fvg_native.compute_fvg_signal`; compare to the taught geometry
-   (candle-1 close → candle-3 open). Verdict **FAITHFUL / DIVERGENT / PARTIAL**
-   with the divergence named. **[UNPROVEN today] the experiment measured a
-   ROUTING property (`approximation=False`), NOT correctness — a concrete
-   binding to a WRONG detector is worse than an honest approximation.**
-   **STOP and report if DIVERGENT: that turns the 7 crossings into a
-   liability and outranks every other item.** First observable ~20 min.
-2. **Flag-yield sweep across all 16 specs** — same in-process harness,
-   read-only, process-local env. Per-spec concrete-delta table + totals.
-3. **corpus_B charter DRAFT** (design note, no extraction run): per surviving
-   defect class — mis-types, uncaptured referents, unquantified adjectives,
-   `transcript_chars: 0` — what the respin must capture differently.
-4. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
+1. **FLAG-YIELD SWEEP across all 16 specs** — same in-process harness,
+   read-only, process-local env. Per-spec concrete-delta **PLUS the new
+   FIDELITY-BASIS column (R-410): did this spec's teacher DEFINE the FVG
+   boundaries, and if so do they match the primitive?**
+   ★★ **STOP and report if any spec's teacher defined boundaries LOOSER than
+   the primitive** — that flips the divergence into the dangerous direction and
+   outranks the rest of the sweep. First observable: the 16-row table, ~25 min.
+2. **corpus_B charter DRAFT** (design note, no extraction run) — **lead with
+   the SEVERED-DEFINITION class** (below), then mis-types, uncaptured
+   referents, unquantified adjectives, `transcript_chars: 0`.
+3. **Parity check's third leg** — make `check-pglite-ddl-parity` read the
    MIGRATIONS (R-403: its "schema.ts is the source of truth" remedy nearly
    deleted a real column from a correct test).
-5. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
+4. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
    the 2026-07-21 filename; a publish would overwrite pinned evidence misdated.
-6. **Revival-probe diagnosis** (`SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN` /
-   `_PAIR_DRIFTED` → `NO_ASSERT_FIRED`). Diagnosis only; repair after I rule.
+5. **Revival-probe diagnosis** (`SESSION_ACKNOWLEDGMENT_ENTRY_WITHDRAWN` /
+   `_PAIR_DRIFTED` -> `NO_ASSERT_FIRED`). Diagnosis only; repair after I rule.
+
+## THE FIDELITY RULING (R-410) — verdict PARTIAL, and it reshapes the count
+★★★ **[MEASURED at the desk, `fvg_native.py:83-93`] the primitive detects on
+`low[i] > high[i-2]` (HIGH/LOW boundaries). `-igp`'s teacher said the gap runs
+from the CLOSE of candle 1 to the OPEN of candle 3.** Divergent — but the
+implemented band is a SUBSET of the taught band, so it fires LESS and marks
+SMALLER: **STRICTER than taught, the opposite of every fidelity defect this
+campaign has convicted.** Window / displacement / direction / no-look-ahead all
+FAITHFUL. **STOP condition correctly NOT triggered** (PARTIAL, not DIVERGENT).
+★★★ **FIDELITY IS PER-SPEC, NOT PER-PRIMITIVE — never report a bare "+7":**
+- `CLDE` **+3 HONEST** — its teacher says "a 5-minute fair value gap" and never
+  defines boundaries, so canonical ICT is a defensible reading.
+- `-igp` **+4 OVERSTATED** — its teacher DID define them, differently.
+★ **R-409's "-igp first, it's the bigger number" preference: REVERSED.** The
+larger number is the less honest one.
+★★★ **THE SEVERED DEFINITION — the day's sharpest artifact.** `-igp`'s teacher
+gave the build rule for his own object mechanically, TWICE, in conditions [1]
+and [3] — **and [MEASURED, my own dispatcher run] those are exactly the two
+rows returning UNBOUND `no_recognized_session_keyword`, flag on or off.** A
+wrong type label throws away a definition sitting ten lines from the thing that
+needed it, while a downstream lane guesses at that very rule. **Before
+respinning for MORE extraction, fix the routing that DISCARDS what was already
+extracted.**
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes · flag
