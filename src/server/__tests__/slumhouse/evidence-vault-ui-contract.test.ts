@@ -17,8 +17,10 @@ describe("Media Evidence Vault production contract", () => {
 
   it("shows daily intake, full transcript, source seals, and linked strategy receipts", () => {
     expect(page).toContain("Today's intake");
-    expect(page).toContain('class="panel main-stage"');
+    expect(page).toContain('class="panel main-stage is-empty"');
     expect(page).toContain('class="panel right-rail"');
+    expect(page).toContain(".main-stage{display:block");
+    expect(page).not.toContain("grid-template-columns:minmax(285px,38%)");
     expect(page).toContain("Full transcript");
     expect(page).toContain("SHA-256 evidence seal");
     expect(page).toContain("/slumhouse/recipe.html?id=");
