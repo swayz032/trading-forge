@@ -15793,6 +15793,23 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** Apply migration 0207 with the production deployment, verify the authenticated room/API, and allow the next n8n/scout ingestion to seed real evidence. Do not label the wider platform institutional-grade while the deep-scan runtime/evidence blockers remain unresolved.
 
+### Session Log — 2026-07-28 Historical transcript archive backfill
+
+**Mission:** Recover Claude's locally cached full transcripts for the 40 production-library YouTube videos and make the existing Media Evidence Vault durably serve them without changing strategy or money-path behavior.
+
+**Work completed:**
+- Located all 40/40 canonical transcript files in the retired extraction worktree cache and matched them to the 40 distinct source URLs behind all 120 production strategies.
+- Added a dry-run-default, explicit-apply backfill that preflights complete coverage, extraction-spec character counts, duplicate-cache agreement, minimum transcript length, and live YouTube title/channel metadata before the first write.
+- Preserved each video's historical discovery date from its earliest strategy instead of falsely marking the backfill as today's intake; added SHA-256/character-count post-write verification and an append-only completion audit.
+- Fixed two first-use defects in the archive upsert exposed by the real backfill: PostgreSQL could not infer the type of a transcript null-check parameter, and postgres.js could not serialize a Date embedded in a raw SQL conflict expression. The conflict path now uses an inferred boolean and an explicit timestamptz cast.
+- Backfilled production twice to prove idempotency. The live authenticated Railway API now serves 40 available videos, 865,630 transcript characters, real titles/channels, and all 120 strategy links.
+
+**Verification:** Focused Vitest/PGlite 13/13 passed; TypeScript, changed-file ESLint, production isolation, 2026 compliance, system-map drift, and diff checks passed. Production integrity query: 40/40 stored and available, 0 bad hashes, 0 length mismatches, 0 placeholder titles, 120/120 strategies linked. Live Railway API returned HTTP 200 with the same counts and complete selected transcript text. Full local Python reached 7,540 passes but remained red on unrelated optional-environment gaps (`hmmlearn` absent and snapshot fixture plugin absent) plus pre-existing HMM/quantum/regime failures; final-head GitHub CI remains the release authority.
+
+**Known-facts updates:** CORRECTION to the earlier 2026-07-28 Vault note: the old production database did not retain full transcripts, but the 40 historical library transcripts were recoverable from Claude's hidden `extraction-100/tmp/generalization` cache. They are now durably archived in production.
+
+**Carry-forward:** None for the transcript backfill. New n8n/scout/operator intake already writes through the same durable archive and remains fail-closed on evidence persistence failure.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)
