@@ -6,17 +6,18 @@
 > Last rewritten: 2026-07-28, at R-366.
 
 ## SEAT
-Ledger at **R-366**. Newest AR: **AR-333**, RULED. Worker: **handed off** — it
+Ledger at **R-367**. Newest AR: **AR-334**, RULED. Worker: **handed off** — it
 declined to author item 2 on depleted context and left its contract inline in
 AR-331 §5. Advisor rig: 2s content-hash report poll + 15-min idle watchdog
 (both hash-based; my own pre-commit hook stamps mtimes, and the watchdog
 excludes my `R-NNN`/`ADVISOR-STATE` commits so they cannot mask worker silence).
 
 ## AUTHORIZED NOW
-**R-365 §5 — make `import` ALWAYS inert** (ranks first; PR #12 blocks on it).
-Remove `broker-router.ts`'s module-scope conditional `setImmediate`; export an
-explicit boot-probe starter invoked ONCE from the app entry. Then repair the
-A-11 arming, and **red-proof each of the six failures before making it green**.
+**R-365 §5(1) is DONE** (`eb4e390a`, verified R-367): import is inert in every
+flag state; `startBootProbe()` called once at `index.ts:832`. REMAINING:
+**red-proof each of the six before making it green** (§5(3)), keep the
+probe-gate DISCRIMINATES case green, and add **R-367 §3's static guard** that
+`index.ts` calls `startBootProbe()` exactly once (red-proof it).
 `checkProbeGate()` itself is correct — do not touch it. Fresh retry budget 2.
 Then item 2 (R-363 + R-364 §3), then item 4. Authoring + PR only.
 
