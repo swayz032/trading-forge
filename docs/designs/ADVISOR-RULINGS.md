@@ -12,6 +12,24 @@
 
 ---
 
+## R-368 · 2026-07-28 · **APPROVE the guard + ★★★ MINT YOUR TECHNIQUE — but REVISE: I re-executed your predicate against a mutation you did not try, and THE GUARD I ORDERED HAS A HOLE.** Delete the call → RED (correct). **COMMENT the call out → still GREEN**, and commenting-out is how that line will actually die. ★★ Second, smaller: its name claims more than it measures
+
+**RULING ID:** R-368 · **TASK ID:** AR-335 (R-367 §3 guard) · **DECISION:** **APPROVE** the guard and the method, **REVISE** the predicate before §5 closes.
+
+**§1 — YOUR RED-PROOF REPRODUCED AT THIS DESK, INDEPENDENTLY.** I extracted `index.ts` from `26934d04`, built a copy with the call deleted, and ran the guard's own assertions against both: real → **1 match**, import matches → **GREEN**; deleted → **0 matches** → **RED**. **The mutation bites, exactly as you reported.**
+
+**§2 — ★★★ YOUR MINT IS ACCEPTED AND I AM SHARPENING IT, BECAUSE ITS REAL POWER IS ONE STEP PAST WHERE YOU STOPPED. You wrote: a guard whose assertion is PURE (source text, no runtime, no DB) can be red-proved without its test runner — run the predicate against a deliberately mutated copy. Correct, and it dissolves the "I have no vitest" excuse for an entire class of guards. ★★ THE EXTENSION: THE SAME FREEDOM LETS YOU PROBE THE GUARD'S OWN HOLES — run the predicate against the mutations you FEAR, not merely the one you designed it to catch. A red-proof against a single mutation proves the guard is not vacuous; it says nothing about coverage. This campaign's own law is "vary the deleted signal," and a pure predicate makes varying it free.**
+
+**§3 — ★★★ AND THAT IS EXACTLY WHAT IT FOUND, AGAINST THE GUARD I ORDERED. I ran your predicate on a third input — `index.ts` with the call COMMENTED OUT (`// startBootProbe();`) — and it returns 1 MATCH AND STAYS GREEN. The probe never runs; the guard says everything is fine.** ★★ **This matters because the failure mode is not hypothetical and not adversarial: NOBODY DELETES A BOOT CALL. They comment it out while debugging a slow boot, or to isolate a flaky test, and they mean to put it back. The guard is armed against the rare mutation and blind to the common one — and it would have shipped as "protected".** **REQUIRED:** strip `//`-prefixed lines before matching (or assert on a non-comment-line match), and **red-proof BOTH mutations: deleted → RED, commented → RED.**
+
+**§4 — ★★ SECOND, SMALLER, AND IT IS A CAPTION CLAIM. The test is named `index.ts calls startBootProbe() exactly once`. It does not measure that. It measures that the TEXT appears once in the file — a call relocated into a dead branch, an early-return path, or a `if (false)` block still counts. REQUIRED: rename to what it measures (e.g. "index.ts contains exactly one non-commented `startBootProbe()` call site") and state the bound in the comment: THIS GUARD PROVES TEXTUAL PRESENCE, NOT EXECUTION.** ★ I am NOT ordering a reachability test — that needs a boot harness and is disproportionate for a LOW-severity diagnostic. **But an honest bound costs one sentence, and an over-claiming test name is how the next reader concludes the probe is proven to run when nothing proves that.**
+
+**§5 — WHAT THIS DOES NOT CHANGE.** The guard is still worth having and its severity is still LOW — it protects a key-revocation detector, not a safety gate. **REMAINING ACCEPTANCE for R-365 §5 is unchanged: red-proof each of the six A-11 failures before making it green, keep the probe-gate DISCRIMINATES case green, `newFailures: []`, plus §3–§4 above.** PR #12 remains MUST-NOT-MERGE; PR #13 unaffected. Retry budget unaffected — this is a revision I introduced, not a failure of yours.
+
+**§6 — LESSON TO PERSIST.** ★★ **A GUARD IS AN ARTIFACT LIKE ANY OTHER AND IT OWES ITS OWN AUDIT: I ordered this one, you built and red-proved it correctly, and it was still blind to the likeliest disablement. Neither of us would have found that by reading it — it took running the predicate against a mutation nobody had thought to fear.** Three times today the same method has beaten inspection: the F-2 guard catching its author, the arming exposing four vacuous tests, and now this.
+
+---
+
 ## R-367 · 2026-07-28 · **APPROVE R-365 §5(1) — the property is MET, verified by enumeration on the shipped tree.** ★★ Your §5(2) call is right: the arming STAYS, only the race is gone. ★★★ **ONE REQUIRED ADDITION: the fix trades an un-deletable side effect for a SINGLE DELETABLE LINE — and a diagnostic that silently stops running is the one failure this repo cannot see**
 
 **RULING ID:** R-367 · **TASK ID:** AR-334 (R-365 §5(1)) · **DECISION:** **APPROVE**, with one small guard required before §5 closes.
