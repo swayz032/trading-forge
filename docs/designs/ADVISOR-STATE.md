@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28 (post-crash).
 
 ## SEAT
-Ledger at **R-365** (commit `8182b871`). Newest AR: **AR-332**, RULED (R-365).
+Ledger at **R-366** (commit pending). Newest AR: **AR-333**, RULED (R-366).
 ★ **PR #12 MUST NOT MERGE** — `newFailures` = 6 (was 2); the arming is rejected
 and R-359's gate is incomplete: it CONDITIONED import-equals-intent on a flag
 instead of removing it, so with the flag ON any import schedules a live probe.
