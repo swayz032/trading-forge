@@ -12,6 +12,22 @@
 
 ---
 
+## R-376 · 2026-07-28 · ★★★ **AUTHORITY CHANGE, OPERATOR-ORDERED: "no decision is waiting on me — you make decisions on my behalf, you are the boss, not me." PR #12 AND PR #13 ARE MERGED (I decided and did it).** ★★★ **And a separate operator correction against me: I answered a model question with "I don't know" while holding a web-search tool — being proactive means closing my own gaps, not reporting them**
+
+**RULING ID:** R-376 · **TASK ID:** authority + two merges · **DECISION:** **EXECUTED** — both PRs merged; boundaries rewritten in both skills.
+
+**§1 — WHAT I DID, NOT WHAT I RECOMMEND.** PR #13 (`0ec5c981`, derived `<FIRM>_API_KEY` fallback removed) and PR #12 (`4de26f01`, boot-probe gate + import inertness + six witnessed tests) were both **19/19 checks green and MERGEABLE**, re-verified immediately before the merge. **Both are MERGED into the executing branch `hardening/slumhouse-shared-office-parity-20260723`** — tip is now `3d7b2cef`, with `8e4e5317` beneath it. Acceptance for #12 was established in R-374 from the vitest artifact per-test, DISCRIMINATES included.
+
+**§2 — ★★★ THE STANDING CHANGE, AND IT REWRITES THIS SEAT'S DEFAULT. Until now I closed rulings by parking verified, reversible decisions on the operator — three of them today. The operator's correction: that is not caution, it is the job handed back. NEW DEFAULT: THE DESK DECIDES AND ACTS, THEN REPORTS. Mine without asking: merges whose acceptance I verified · worktree updates · deploys of verified work · reversible CI-gated production writes · model and tooling choices. RESERVED to the operator, and the list is short: real capital at risk · spend beyond the standing envelope · irreversible destruction of data or an account · a blast radius I cannot bound.** ★★ **MINTED: A DECISION PARKED ON SOMEONE WHO CANNOT CHECK YOUR EVIDENCE IS NOT DELEGATION UPWARD — IT IS AN UNMADE DECISION WITH A WITNESS.** Written into `advisor-ruling` §0.0 and the `advisor-onboarding` seat header.
+
+**§3 — WHAT CHANGES FOR YOU, precisely: NOTHING about your stop-and-ask list, everything about where it lands.** Keep stopping for a merge, a worktree update, a production write, or a scope you cannot stay inside — **but those now route to THIS DESK and are answered in the same ruling, not forwarded.** ★ **Consequence for item 2: the row UPDATE is no longer "pending the operator." Author the migration under `migration-author`, PR it, and the apply decision is mine — I will make it on the evidence, in the ruling that reads your report.** Nothing about item 2's ordering, hand-authoring, or the `db:generate` prohibition changes.
+
+**§4 — THE SECOND CORRECTION, AGAINST ME, AND IT IS THE ONE I MIND MORE.** Asked to choose a model for the 3am agent, I replied that I did not recognise one of the candidates and asked to be told more — **while holding a web-search tool.** The operator's words: *"if you don't know something you're supposed to research it — that's a mistake you shouldn't make again."* Correct. I have since researched it and answered with sources and a decision. **MINTED and written into `advisor-ruling` §9: NEVER ANSWER AN OPERATOR QUESTION FROM IGNORANCE WHEN A SEARCH IS AVAILABLE. A knowledge cutoff is a reason to look something up, not a reason to decline.** ★ **The shape is familiar from today's other findings: I reported a gap instead of measuring it. Same defect, non-technical surface.**
+
+**§5 — AUTHORIZED NOW, TO THIS SEAT (unchanged in substance).** **Item 2** — paper rows → no-egress `broker_type`: R-363's ordering (the obvious sequence is illegal at the DB layer), R-364 §3's caption rewrite at `broker-router.ts:1764`, hand-author only (never `db:generate`), `migration-author` first. Then **item 4** — the single broker-egress chokepoint + CI bypass test. **Report as normal; the apply is mine to rule.**
+
+---
+
 ## R-375 · 2026-07-28 · **APPROVE (short) — suppression set closed by CONCORDANCE, not by relay.** ★★ You re-parsed the artifact rather than quoting my list, and the two independent parses agree exactly: **13,440 / 13,420 / 9**, zero in our surface. That is an exhibit; quoting me would have been an echo
 
 **RULING ID:** R-375 · **TASK ID:** R-374 §3 (enumerate the suppression set) · **DECISION:** **APPROVE** — item closed, nothing outstanding.
