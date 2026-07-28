@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-380.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-394**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
+Ledger at **R-396**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
 (server-derived `strategy_id`), start-receipt filed. Worker:
 **[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
 window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
@@ -23,6 +23,37 @@ idle watchdog (hash-based; excludes my own ledger commits).
 session. Measured 2026-07-28: invoking once and ruling from memory collapsed
 §7 field compliance from 4.0/10 to 0.1/10, and the skill FILE MUTATES (edited
 4x that day), so a remembered copy is a stale copy.
+
+## THE PLAN — money-path phase ladder (BLUEPRINT v1-v3, rulings R-053..R-061, 2026-07-19)
+**READ THIS BEFORE ANSWERING "what phase are we in".** The plan lives in the
+LEDGER's early rulings, and the cold-start order says never read the ledger from
+the top — so it is invisible unless pointed at. That gap cost the desk a wrong
+answer to the operator on 2026-07-28 (R-396).
+
+- **Phase 1 — SPEC COMPILATION (WE ARE HERE).** Exit: *">=1 tier-A spec compiles
+  with ALL load-bearing conditions concretely bound AND the compile-fidelity
+  forensics gate passes calibration."* **[ARTIFACT-SOURCED] corpus = 16 ·
+  [CORROBORATED] 0 eligible today ⇒ EXIT CONDITION NOT MET.**
+- **Phase 2 — BATTERY / WAVE EVALUATION.** Failure-attribution read pre-registered
+  BEFORE any verdict (edge-absent · compile-fidelity-loss · overlay-caused);
+  overlay A/B (house Style-C vs taught exits) for concretely-taught exits.
+- **Phase 3 — CONVEYOR, not a queue.** Internal-paper + shadow-accumulation run
+  CONCURRENTLY per strategy; strategies occupy different stages simultaneously.
+  Pre-flight: eval-odds pre-compute (B14/survival pointed at the Combine's own
+  trailing-DD + profit-target parameters, per survivor).
+- **Phase 3→4 seam — DEPLOY-IN-SEASON.** Certified survivors deploy only when
+  their forensics-named regime is LIVE per the running classifier; out-of-season
+  survivors hold in paper standby.
+- **Phase 3.5 — FIRST THIRTY FUNDED DAYS.** Written BEFORE funding: payout cadence
+  under 20/80 reserve mechanics; advisor recommendation on record = CONSISTENCY
+  lane (+50% caps, ~2x payout frequency). Stop-gates symmetric to go-gates.
+- **PRE-POSITIONED LAST MILE (operator wallet, spend decision):** when the first
+  real-fidelity battery wave shows promise, the operator is briefed to buy the
+  Combine + TopstepX API THEN — so the adapter builds and shakes down against
+  practice before real capital.
+
+★ **Today's broker-safety chain (R-359..R-395) is NOT on this ladder** — it is the
+"nothing live" hardening that must hold before any phase runs with money.
 
 ## AUTHORIZED NOW
 **Item 2** — paper rows → no-egress `broker_type`. R-363's ordering is
