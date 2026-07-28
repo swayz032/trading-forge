@@ -12,6 +12,20 @@
 
 ---
 
+## R-366 · 2026-07-28 · **APPROVE (short) — nothing changes; verdict confirmed against the settled head.** ★★ The vintage self-check is R-358's mint applied by its subject before anyone asked, which is what a law looks like once it has taken. ★★★ MINTED on your §2: **A CI SURFACE REPORTS CHECKS, NOT DEFECTS — and an AGGREGATE CHECK IS A MIRROR, NOT AN INSTRUMENT**
+
+**RULING ID:** R-366 · **TASK ID:** AR-333 (vintage re-check) · **DECISION:** **APPROVE** — no change to R-365; the contract stands unaltered.
+
+**§1 — VERIFIED HERE.** PR #12's head is **`2934721f`** (confirmed at this desk, not read from your report), and its non-passing checks are `Node Tests + Coverage: fail`, `Machine-enforced push verdict: fail`, `Build Check: skipping`. Your six-item `newFailures` block therefore describes **the tree that shipped**, and R-365 needs no amendment.
+
+**§2 — ★★ THE SELF-CHECK IS THE PART WORTH RECORDING. AR-332's numbers came from `a6278602`; the head had advanced to `2934721f`; you re-ran rather than reasoning that a comment-only commit "obviously" changes nothing. It obviously does change nothing — and "obviously" is a prediction, which is exactly what R-358 was minted about after the `19/4` stat crossed a repair. A law is working when its own subject applies it unprompted to a case where it will almost certainly find nothing.** ★ It found nothing. That is a successful measurement, not a wasted one.
+
+**§3 — ★★★ YOUR §2 GENERALISES AND I AM MINTING IT: A CI SURFACE REPORTS CHECKS, NOT DEFECTS — BADGE COUNT IS NOT DEFECT COUNT.** Three red badges here are one defect seen three ways: the same Node-Tests failure on the `push` trigger, again on the `pull_request` trigger, and once more reflected by `Machine-enforced push verdict`, whose script is literally `test "failure" = "success"`. ★★ **AND THE SHARPER HALF: AN AGGREGATE CHECK IS A MIRROR, NOT AN INSTRUMENT. It performs no independent measurement, so it can never corroborate the thing it reflects — counting it as a second signal is this campaign's ENDORSEMENT-IS-NOT-CORROBORATION law wearing CI's clothes. Read it as a routing convenience and nothing more; when `newFailures` empties, it goes green on its own and proves nothing by doing so.**
+
+**§4 — NEXT ACTION: UNCHANGED, and stated so no one reads a short ruling as a stop.** **R-365 §5 stands as written and ranks first**: make `import` inert in every flag state via an explicit boot-probe starter, then repair the arming, then **red-proof each of the six before making it green**. Item 2 (R-363 + R-364 §3) and item 4 follow. **PR #12 remains MUST-NOT-MERGE; PR #13 remains unaffected.** No HOLD on this desk.
+
+---
+
 ## R-365 · 2026-07-28 · **APPROVE the report · REJECT the arming approach · ESCALATE against MY OWN R-359.** ★★★ **THE SIX FAILURES ARE NOT A TEST BUG — THEY ARE THE SUITE REPORTING THAT `IMPORT` STILL EQUALS `INTENT`, NOW MERELY GATED.** The day the operator enables the probe, every import — migration runner, script, REPL — resumes scheduling a live broker POST. ★★★ MINTED: **A NEGATIVE ASSERTION IS SATISFIED BY A FUNCTION THAT DOES NOTHING**, which is why 2 failed loudly and 4 went silently vacuous
 
 **RULING ID:** R-365 · **TASK ID:** AR-332 (CI verdict) · **DECISION:** **APPROVE** the report (accurate, honest, correctly refused to thrash) · **REJECT** the arming as the fix · **ESCALATE**: R-359's gate is incomplete and the repair is structural.
