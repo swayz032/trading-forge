@@ -29,6 +29,7 @@ import { carterInboxRouter } from "./api/carter-inbox.js";
 import { memberOfficeRouter } from "./api/member-office.js";
 import { sseRoutes } from "../sse.js";
 import { requireSlumhouseUserOrAdmin } from "../../lib/slumhouse/require-session.js";
+import { adminSessionFromCookie } from "../../lib/slumhouse/admin-session.js";
 import { verifySession } from "../../lib/slumhouse/session.js";
 import { readSlumhouseCookie } from "../../lib/slumhouse/cookie.js";
 import { db } from "../../db/index.js";
@@ -90,6 +91,32 @@ slumhouseRouter.get("/slumhouse/launch", handleLaunch);
 // Auth namespace
 slumhouseRouter.use("/slumhouse/auth", authRouter);
 
+export function gateEvidenceVaultHtml(req: Request, res: Response, next: NextFunction): void {
+  // This shared room opens from member receipts and inside the passcode-gated
+  // operator Office. Its HTML gate must match the API's dual-session contract.
+  if (adminSessionFromCookie(req.headers.cookie)) {
+    next();
+    return;
+  }
+  const token = readSlumhouseCookie(req.headers.cookie, "slumhouse_sid");
+  if (!token) {
+    res.redirect(302, "/slumhouse/login.html");
+    return;
+  }
+  try {
+    const verified = verifySession(token);
+    if (verified?.ok && verified.discordUserId) {
+      next();
+      return;
+    }
+  } catch {
+    // Fall through to the same fail-closed login redirect.
+  }
+  res.redirect(302, "/slumhouse/login.html");
+}
+
+slumhouseRouter.get("/slumhouse/evidence-vault.html", gateEvidenceVaultHtml);
+
 // Pre-static auth gate — protect the authenticated HTML shells from rendering
 // unauthenticated. Without this, iOS PWA tapping /slumhouse/crib.html (the
 // pre-fix cached start_url) shows the shell briefly before the API 401 flips
@@ -98,7 +125,6 @@ slumhouseRouter.get([
   "/slumhouse/crib.html",
   "/slumhouse/kitchen.html",
   "/slumhouse/recipe.html",
-  "/slumhouse/evidence-vault.html",
   "/slumhouse/member-office.html",
   "/slumhouse/",
 ], (req, res, next) => {

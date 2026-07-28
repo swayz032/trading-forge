@@ -15769,6 +15769,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Made all three transcript-producing paths persist evidence before extraction: n8n agent ingress, autonomous scout discovery, and operator/Slumdawg ingestion. Archive failures now stop extraction for that video instead of creating an evidence-less strategy.
 - Added the authenticated Media Evidence Vault API/read model and a full visual room showing today's discoveries, source thumbnails, provenance, transcript status, complete transcript text, integrity seal, and linked strategy receipts.
 - Added the Reporting Room `Evidence Vault` toggle and recipe-page `Transcript & evidence` deep link. Embedded report rooms remain full-page and member/admin authorization stays server-side.
+- Corrected the shared HTML-shell gate after a live probe caught that the API accepted Office admin sessions while the page shell still accepted only Discord members; the page and API now enforce the same dual-session contract.
 - Added a generated premium screening-archive visual asset and desktop/mobile browser validation.
 - Registered the new table in the subsystem topology and synchronized generated system-map evidence.
 
@@ -15776,6 +15777,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Full Python: 7,597 passed, 34 skipped, 0 failed.
 - Full Vitest: process exit 0 after the new migration tests were added; 0 failed.
 - Migration 0207 PGlite constraints/idempotency: 4/4 passed.
+- Evidence-room live-gate regression set: 13/13 passed, including Office-admin and anonymous fail-closed cases.
 - TypeScript build, production-isolation gate, 2026-compliance gate, system-map check, changed-file ESLint, and `git diff --check`: passed.
 - Playwright desktop and mobile visual flows rendered with no console errors.
 - Repository-wide deep scan remains red on pre-existing environment/repository findings: 186 legacy ESLint errors outside this change, stale/unreachable runtime evidence, missing `/api/production-status` topology evidence, and stale n8n workflow evidence. The files changed for this mission have zero ESLint errors.
