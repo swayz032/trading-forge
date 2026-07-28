@@ -4,6 +4,73 @@
 
 ---
 
+## AR-365 · 2026-07-28 · ★★★ **PHASE 1'S ANSWER, COMPUTED FROM DATA ALREADY ON DISK: ZERO of 16 specs have all taught conditions bound. Totals reconcile exactly to the artifact's own — 155 taught, 6 bound.** ★★★ **AND THE GROUPING YOU ORDERED, DONE NAIVELY, RETURNS 2/16 — A FALSE POSITIVE I ALMOST FILED: the enumerated condition lists cover 33 of 155, so "0 unbound" means UNLISTED, not CLEAN**
+
+**RULING ID:** R-399 · **TASK ID:** meter items (1)(2) · **RECOMMENDATION:** APPROVAL_REQUESTED — **no build was needed; the number existed and nobody had grouped it.**
+
+---
+
+### (1) PRODUCER — EXISTS AND DECLARES ITS OWN RE-RUN
+
+```
+generator : docs/replay-results/h1-battery/dual_denominator_remeasure.py   [EXISTS, 436,075 bytes]
+reproduce : python docs/replay-results/h1-battery/dual_denominator_remeasure.py
+input     : docs/replay-results/h1-scripts/claude-rung-v32/shakedown_specs/*.spec.json
+```
+★ **[MEASURED] the input corpus is intact: 16 `.spec.json` files present, matching `n_specs = 16`.** ★ **[NOT DONE — deliberately]** I did **not** execute it. Per your stop condition a differing result *is* the live Phase-1 reading and a finding; **running a 436 KB generator that writes into `docs/replay-results/` is a state change I want ruled first**, and item (2) turned out to need no re-run at all.
+
+### ★★★ (2) THE PHASE-1 QUESTION, ANSWERED — **0 / 16**
+
+Phase 1 exit: *"≥1 tier-A spec compiles with ALL load-bearing conditions concretely bound."* `corpus_A.rows[]` already carries per-spec totals, so this is a grouping, not a measurement:
+
+| spec | taught | **bound** | unbound | bindable | coverage |
+|---|---|---|---|---|---|
+| `IyFioFkRgWo__s0` | 6 | **1** | 0 | 6 | **0.1667** ← closest |
+| `PVMgOxHUqFA__s0` | 8 | 1 | 0 | 8 | 0.1250 |
+| `4cT8WTyxhYY__s0` | 9 | 1 | 1 | 8 | 0.1111 |
+| `kFyD3H6I1I8__s0` | 19 | 2 | 7 | 12 | 0.1053 |
+| `W7nlnHTUZQU__s0` | 10 | 1 | 1 | 9 | 0.1000 |
+| `WEhmadJArQo__s0` | 22 | 0 | 0 | 22 | 0 |
+| *(10 further specs)* | | **0** | | | **0** |
+
+**TOTALS: taught 155 · bound_and_concrete 6** — ★ **which reconciles EXACTLY to the artifact's own `n_taught_conditions: 155` and to the primary headline's numerator (`6/161`, coverage 0.0373). The grouping is arithmetically consistent with the file that produced it.**
+
+> ### ★ **SPECS WITH ALL TAUGHT CONDITIONS BOUND: 0 / 16. The best spec has 1 of 6 bound.**
+
+**Phase 1's exit condition is NOT met, and now that is a computed statement rather than a six-day-old recollection.**
+
+★★ **The category structure, which corrects a natural misreading:** `n_taught = n_bindable + n_unbound` holds for **16/16 rows** — so `bound_and_concrete` is a **subset of bindable**, not its complement. Of **155** taught: **27 unbound · 128 bindable · of which only 6 bind CONCRETELY.** **The gap is not mostly "no detector" — it is "binds, but approximately",** which is precisely R-303 §2's honest-family finding, now visible per spec.
+
+---
+
+### ★★★ THE FALSE POSITIVE I ALMOST FILED — and it is the reason to read this report
+
+My first pass did exactly what R-399 said: grouped the enumerated `bound_and_concrete_conditions` (6 rows) and `THE_UNBOUND_COUNT_TRAVELS_BESIDE_THE_RATE.conditions` (27 rows) by their `spec` field. It returned:
+
+```
+IyFioFkRgWo__s0   bound=1 unbound=0   <== ALL BOUND
+PVMgOxHUqFA__s0   bound=1 unbound=0   <== ALL BOUND
+★ SPECS WITH ALL CONDITIONS BOUND: 2 / 16
+```
+
+**That answer is FALSE.** Those two lists total **33 rows against 155 taught conditions — 122 conditions appear in NEITHER.** So `unbound = 0` for a spec means *"none of its unbound conditions were enumerated in that list"*, **not** *"it has no unbound conditions"*. `IyFioFkRgWo__s0`'s own row says **1 bound of 6 taught.**
+
+★★★ **"2 of 16 specs are fully bound" would have been reported as Phase-1 eligibility — the campaign's finish-line condition — and it is wrong by the whole distance between 2 and 0. It is this morning's law exactly: ABSENCE FROM A LIST IS NOT A PASS; learn the list's membership rule before reading a blank as success.** ★ The tell was arithmetic and cheap: **33 ≠ 155.** I checked the denominator before believing the grouping, for the same reason the count/set confusion bit at 09:00 and `0128` bit at 14:00.
+
+---
+
+**Files changed:** none — read-only analysis of an existing artifact.
+**Forbidden surfaces untouched:** no compiler, no bindings, no spec YAML, and **the generator was not executed.**
+**Instrument:** a scratchpad grouping script, not committed (drift-bait); fully reproducible from `corpus_A.rows[]` and the four field names quoted above.
+**Hypotheses REJECTED by measurement:** (i) "a new meter must be built" — **false**, the quantity was on disk; (ii) "the enumerated condition lists answer the question" — **false**, they cover 33/155; (iii) "2/16 specs are fully bound" — **false, 0/16.**
+**Remaining uncertainty — labelled:** the artifact is dated **2026-07-21, seven days old**; these numbers are as-of then. **Whether today's tree still yields 155/6 is exactly what re-running the producer would settle, and that is your call.** ★ **[UNPROVEN]** whether `n_taught` is the same population as R-303's "load-bearing" — R-303 counted **53 across 11 specs**; this is **155 across 16**. **I am answering Phase 1 in corpus_A's vocabulary, which is the vocabulary the exit condition and ADVISOR-STATE both use.**
+
+**Recommendation:** adopt **0/16 with `IyFioFkRgWo__s0` at 1/6** as the live Phase-1 reading, superseding `0 eligible today` with a figure that names its artifact, its date and its denominator — then rule on re-running the producer to refresh it.
+
+**Next smallest task (ONE):** on your ruling — re-run `dual_denominator_remeasure.py` and report any drift from 155/6, **or** proceed to the SMC build with 0/16 as the pinned "before".
+
+---
+
 ## AR-364 · 2026-07-28 · ★★★ **THE METER CANNOT BE BUILT YET AND I AM STOPPING ON YOUR OWN STOP CONDITION — three blockers, and the third would have MANUFACTURED A FALSE FINDING: the concordance check you ordered compares against a table over ELEVEN specs, but there are NINETEEN spec YAMLs on disk and ADVISOR-STATE says the corpus is SIXTEEN. A mismatch was guaranteed for POPULATION reasons and would have read as a meter defect**
 
 **RULING ID:** R-398 · **TASK ID:** build the Phase-1 meter · **RECOMMENDATION:** **BLOCKED — two pins needed before a line of the meter is written. Neither is large; both are yours.**
