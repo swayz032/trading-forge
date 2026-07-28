@@ -4,6 +4,83 @@
 
 ---
 
+## AR-370 · 2026-07-28 · **TEXT-READING VERDICT ON `E9MzEC_yNoM__s0`: ★ BOTH CONDITIONS CARRY REAL RULES — this is NOT another IyFio.** ★★★ **BUT NEITHER CAN GO `approximate → concrete`, AND THE REASON OUTRANKS THE BUILD: both taught rules reference "THE LEVEL" / "THE RANGE", AND THIS SPEC — ALL TWO CONDITIONS OF IT — NEVER DEFINES EITHER.** ★★★ **Worse: [1]'s primitive implements a DIFFERENT RULE than the text, not a looser one**
+
+**RULING ID:** R-404 · **TASK ID:** item (1), the mandatory text-read before any binding · **RECOMMENDATION:** **BLOCKED — reporting the finding you pre-authorized as outranking the build.**
+
+---
+
+### THE TWO CONDITIONS, VERBATIM
+
+**[0] `WAIT_RETEST`, role=spine, `type_confidence: approximate`** — *entry_trigger_id points here*
+> *"as always, we enter on the confirmation after the retest of the level, after the breakout of the level, or after the liquidity sweep of the level."*
+
+**[1] `WAIT_CONFIRMATION`, role=confluence, `type_confidence: approximate`**
+> *"what's really important is you need to wait for the break. You do not want to take early entries. You want to look for a solid candle close above or below the range."*
+
+★ **Both are genuine trading instructions.** Neither is a timeframe declaration, a chart gesture, or an "it's optional" aside. **Your STOP CONDITION — "refuse if a condition's taught text does not carry a rule" — is NOT triggered.** I am not refusing on that ground.
+
+---
+
+### ★★★ WHY NEITHER REACHES `concrete` — THE REFERENT IS MISSING FROM THE SPEC ITSELF
+
+`E9MzEC_yNoM__s0` has **exactly 2 entry_conditions, 0 invalidations**, `and_groups: [[cond0, cond1]]`, `or_branches: []`. **[MEASURED — that is the entire spec.]**
+
+- [0] says *"the level"* — **four times.** Nothing in this spec defines which level.
+- [1] says *"the range"* — **nothing in this spec defines a range.**
+
+★★ **The primitive confirms the gap rather than filling it.** `retest_touch_check(close, high, low, **level**, atr, …)` takes `level` as a **required input array — it resolves nothing itself.** Its own docstring: *"generalized to an arbitrary `level` series"*, *"**APPROXIMATION**: does not check rejection-candle shape."* **So `approximate` here means "we supplied a level the teacher never named."** Concretizing = choosing that level = **inventing the rule's object.**
+
+### ★★★ AND THE PART I DID NOT EXPECT — [1] IS MIS-BOUND, NOT MERELY APPROXIMATE
+
+`candle_confirmation_check` implements a **wick-rejection** pattern:
+```python
+lower_wick >= CANDLE_WICK_RATIO_THRESHOLD * rng and c >= (lo + rng * 0.5)   # bullish
+upper_wick >= CANDLE_WICK_RATIO_THRESHOLD * rng and c <= (h - rng * 0.5)    # bearish
+```
+Its docstring is honest that it is a stand-in: *"a single generic pattern stands in for whatever specific candle behavior the spec's natural-language object described."*
+
+★★★ **But the taught rule is "a solid candle CLOSE ABOVE OR BELOW THE RANGE" — a close beyond a boundary. That is not a wick rejection. A wick-rejection candle can form entirely INSIDE the range and satisfy this primitive while failing the taught rule outright.** The teacher even says *"you do not want to take early entries"* — and a wick rejection inside the range **is exactly the early entry being warned against.**
+
+★★ **So this is not "bound loosely." It is bound to a different event, in the direction the taught text explicitly forbids** — consistent with the spec's own self-declared `bias_direction: OPTIMISTIC_LOOSER_THAN_TAUGHT`, but sharper than that label suggests.
+
+### ★ A THIRD DEFECT, RECORDED BECAUSE IT WOULD BITE THE BUILD
+
+[0] is a **three-way disjunction** — *retest* OR *breakout* OR *liquidity sweep*. `retest_touch_check` implements **only the retest arm** (ATR-proximity touch). Breakout and sweep are silently dropped — **1 of 3 taught paths.**
+
+★★ And the ordering: [0] says *"we enter on the confirmation AFTER the retest"* — a **sequence**, level-event **THEN** confirmation. **The spec's own `and_groups` puts both in ONE group — a same-bar AND.** That is `worker-execution` §4's named violation (*ordered concepts compile to STATE MACHINES, not one-bar boolean templates*) **already baked into the spec**, upstream of any binding I would write.
+
+---
+
+### WHAT I AM NOT DOING, AND WHY
+
+I could make both `concrete` today by picking a level (say, prior-session high/low or a rolling range) and re-implementing [1] as close-beyond-that-range. **Phase 1's gate would then read `1/16` and the campaign would record its first fully-bound spec.** ★★★ **It would also be the first spec whose "concrete" bindings were authored by me rather than taught by the source — on a 2-condition spec whose entire content is two references to objects it never defines.** That is R-402's forbidden trade with extra steps, and the honest `n_bound_and_concrete` would be **0**, not 2.
+
+**Per your acceptance — *"if the build cannot make that transition for either of E9Mz's two, say so and stop — that finding outranks the build"* — I am saying so and stopping.**
+
+---
+
+### ★ WHAT THIS CHANGES ABOUT THE CENSUS — a question your table cannot answer
+
+Your census ranked on `n_unmatched` (does the TYPE match the text?). **`E9MzEC_yNoM__s0` scores perfectly there — 0 unmatched, 0 unbound — and is still unbindable, because both its conditions reference undefined objects.** `n_unmatched` measures **type-vs-text agreement**; it does not measure **referential completeness** — whether a rule's nouns are defined anywhere in the spec.
+
+★★ **[HYPOTHESIS — explicitly labelled, n=1, and I was wrong the last time I generalised from one spec, so treat it as a question, not a finding]:** the corpus may contain a class of conditions that are correctly typed, genuinely rule-bearing, and still unbindable for want of a referent. **It is cheaply testable** — scan condition objects for bare definite references (*"the level"*, *"the range"*, *"that zone"*) with no defining sibling condition. **I recommend measuring it before the SESSION_CLOCK build, because if it is widespread it re-ranks the queue again.**
+
+★ Related, and NOT actionable by me: `-igpOZs8LsM__s0` (your substantive target, 11 conditions / 8 confident / 0 unmatched / 2 `WAIT_SESSION` unbound) is the spec whose completion would mean something. **Its 2 unbound are `WAIT_SESSION`, whose `unbound_reason` is `no_recognized_session_keyword` — a keyword-table gap, which is a materially more tractable problem than a missing referent.**
+
+---
+
+**Files changed:** none. **No binding written.** Read-only throughout.
+**Architecture boundaries NOT touched:** no spec file (including the mis-type and the same-bar `and_groups`, both forbidden to me), no frozen instrument, no binding lane.
+**Hypotheses REJECTED:** (i) "this is another IyFio non-condition case" — **false**, both are real rules; (ii) "the primitive resolves the level itself" — **false**, `level` is a required input.
+**Remaining uncertainty:** whether a level/range referent exists in `framework_overlay` or is supplied generically by the caller at `spec_condition_compiler.py:560`. **I read the primitive and the spec; I did NOT trace the full call path that supplies `level`.** If a defensible level IS supplied there, [0]'s status could change — **[1]'s mis-binding would not.**
+
+**Recommendation:** **(A)** rule on whether a caller-supplied level counts as `concrete` (I say no — it is the campaign's own approximation, not the teacher's rule); **(B)** let me trace `spec_condition_compiler.py:560`'s level source to close my one stated uncertainty (~15 min, read-only); **(C)** run the referent-completeness scan before SESSION_CLOCK.
+
+**Next smallest task (ONE):** (B) — trace what `level` is bound to at the WAIT_RETEST call site, so the [0] verdict rests on the whole path rather than the primitive alone.
+
+---
+
 ## AR-369 · 2026-07-28 · **R-403 item (4) DONE — `hmac_secret_encrypted` added to `schema.ts` by hand (`e507ae33`), PR #27 unblocked.** ★★ **Red-proofed in BOTH directions with the test's column intact throughout — green-by-deletion would have been the failure and I measured that it wasn't**
 
 **RULING ID:** R-403 · **TASK ID:** item (4) schema snapshot column · **BRANCH:** `hardening/hmac-pair-binding-test-20260728` · **COMMIT:** `e507ae33` · **RECOMMENDATION:** APPROVAL_REQUESTED.
