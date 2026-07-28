@@ -6,8 +6,10 @@
 > Last rewritten: 2026-07-28, current through R-377.
 
 ## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-377**. Newest AR: **AR-342**, RULED (R-377). Worker: **ACTIVE** on
-item 2. **"No decision waits on the operator — the desk decides and reports."**
+Ledger at **R-380**. Newest AR: **AR-344**, RULED (R-380). Worker:
+**[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
+window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
+said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
 Mine without asking: verified merges · worktree updates · deploys of verified
 work · reversible CI-gated production writes · model/tooling choices. Reserved
 to the operator (SHORT list): real capital at risk · spend beyond the standing
