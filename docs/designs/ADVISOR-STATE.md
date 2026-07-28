@@ -2,7 +2,7 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
-> Last rewritten: 2026-07-28, current through **R-418** (LOADED; port authorized).
+> Last rewritten: 2026-07-28, current through **R-419** (port scope pre-registered).
 
 ## SEAT
 Ledger at **R-415**. Newest AR: **AR-379, RULED** (stop condition FIRED).
@@ -177,6 +177,36 @@ which is not the lane that will run the backtest.**
 · "the W7nln phantom does not exist" (real in production) · "the artifact is
 stale = FALSE" (it is UNSCOPED — right conclusion, wrong reason).
 
+## ★★★ PRE-REGISTERED — THE TRACE'S ANSWER ALREADY SELECTS THE PORT'S SCOPE (R-419)
+Written BEFORE AR-383's finding landed, so it cannot be argued either way:
+- **preflight ALREADY refuses mandatory unbindable rules** -> the 5 resolver
+  edits are SUFFICIENT; ship one file.
+- **consumer IGNORES them** -> EXPAND to a two-location fix: resolver correction
+  **+ a fail-closed backtest preflight.** ★ **This is an EXPECTED OUTCOME, not a
+  scope failure and NOT a stop.**
+- **cannot determine** -> **treat as IGNORES and build the preflight. Fail
+  closed; an unknown consumer is not a safe consumer.**
+
+★★★ **TWO RESPONSIBILITIES, NEVER MERGED:** the **resolver reports TRUTH**
+(`bindable=False`, `primitive=None`, `approximation=True`); the **execution
+boundary enforces EXECUTABILITY** (refuses the backtest). A resolver that halts
+backtests is a producer smuggling consumer authority — same law as
+"advisory-only is a property of the CONSUMER, not the producer."
+
+★★★ **ROLE-BASED REFUSAL POLICY (fail-closed):** mandatory entry/session/
+direction/invalidation -> **REFUSE the backtest** · optional annotation -> may
+stay unresolved but **must be visibly reported** · **UNKNOWN ROLE -> REFUSE BY
+DEFAULT.** For `overnight` refusal is mandatory: removing it changes WHEN TRADES
+ARE PERMITTED.
+
+★★★ **THE INVARIANT:** **the system must never convert "cannot implement this
+rule" into "run without this rule."** Every silent-drop defect found today is
+that sentence violated somewhere else.
+
+★ **R-418's old stop condition ("stop if it needs a second location") is STRUCK.**
+A stop condition fires on evidence of DANGER, never on evidence that the desk's
+scope guess was wrong.
+
 ## AUTHORIZED NOW — port is BUILD-READY, NOT BUILT (AR-382, desk-verified)
 ★ **Worker handed off on context. Nothing half-written: no branch, no worktree,
 no code.** The task stays FILED and authorized to the seat, not withdrawn.
@@ -207,7 +237,9 @@ comes back.**
 | `overnight` defined 16:00-09:30 | bind, cross-midnight interval |
 | ★ **configured session (RTH / `ny_am`)** | **bind normally — THE DISCRIMINATOR** |
 | recognized session, no tz/calendar basis | refuse / unresolved |
-| unresolved session | cannot enter backtesting — **gated by the open question** |
+| unresolved session | cannot enter backtesting — scope set by the pre-registration above |
+| ★ **unbindable MANDATORY rule silently omitted** | ★★★ **THE TEST MUST FAIL** — the red-proof for the silent-drop mode |
+| optional unresolved annotation | proceeds **with a visible warning** |
 ★★ **Without the discriminator row the suite cannot tell "the port works" from
 "the port refuses everything" — and a refusal-shaped fix is exactly the kind that
 passes by over-refusing.**
