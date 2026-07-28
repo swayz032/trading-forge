@@ -6,9 +6,12 @@
 > Last rewritten: 2026-07-28 (post-crash).
 
 ## SEAT
-Ledger at **R-361** (commit `aaa9aeb0`). Newest AR: **AR-328**, RULED (R-361).
-Worker: **ACTIVE** again after the 13:35:49 reboot; executing **R-360 §6** (arm
-the two A-11 probe tests + answer the vacuity question). Nothing waits on me.
+Ledger at **R-362** (commit `6a5507a6`). Newest AR: **AR-329**, RULED (R-362).
+Worker: **ACTIVE**. R-360 §6 already executed and pushed (`a6278602`, +22/−0,
+arming scoped to the A-11 block, verified here); awaiting CI on that SHA plus
+the explicit HTTP-400 vacuity verdict. One documentary correction outstanding
+(R-362 §5: name the three exports the `execution-mode` mock deliberately omits).
+Nothing waits on me.
 Advisor rig: 2s **content-hash** report poll + 15-min idle watchdog (both were
 mtime-based and were tripped by my own pre-commit hook; hashing is immune, and
 the watchdog now excludes my own `R-NNN` / `ADVISOR-STATE` commits so they
