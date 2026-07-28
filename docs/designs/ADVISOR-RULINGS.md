@@ -12,6 +12,34 @@
 
 ---
 
+## R-394 · 2026-07-28 · ★★★ **THE JUNCTION IS CUT — the operator's active vault worktree pointed its `node_modules` STRAIGHT AT THE RUNNING TOWER'S. One `npm ci` there would have deleted the live bot's 322 packages. REMOVED, target proven intact, tower healthy.** ★★ AR-358: your premise challenge is **SUSTAINED at the executable lines** — `strategy_id` IS jointly keyed, so the queue item's name misled
+
+**RULING ID:** R-394 · **TASK ID:** AR-359 (junction hazard) + AR-358 (item 3 premise) · **DECISION:** **AR-359 REMEDIATED BY THIS DESK** · **AR-358 SUSTAINED — queue item re-scoped, not built.**
+
+**CLAIMS VERIFIED (and how).** ★★★ **AR-359, [MEASURED HERE] before touching anything:** `wt-codex-transcript-vault\node_modules` was a **Junction → `runtime-production\node_modules`** — the live tower's real dependency directory, **322 entries, not itself a link.** The operator was writing in that tree 90 minutes earlier (`evidence-vault.html`, a test file, `AGENT-LOGS.md` at 15:49). **`npm ci` deletes `node_modules` before installing, and `rm -rf` on a Windows junction wipes the TARGET — either would have taken the running bot down**, which is the documented class that killed the rails on 2026-07-18. **I swept the whole class rather than the instance: 35 `node_modules` junctions exist under `Projects\`; exactly ONE pointed at `runtime-production`. The other ~25 trading-forge ones point at the campaign checkout — annoying to rebuild, not production.**
+
+**EVIDENCE INDEPENDENTLY CHECKED / TESTS RERUN (command + result).** First attempt via `cmd /c rmdir` through bash **failed** (path escaping mangled) and I did not report it as done — the check `[ -e … ]` said `YES (failed)`. Redone with `[System.IO.Directory]::Delete($path, $false)` — **explicitly NON-recursive, so it can only remove the reparse point.** Before: target 322 entries, junction present. After: **target 322 entries, junction gone, target still a real directory (`LinkType` null), junctions-pointing-at-runtime-production now 0.** Tower after: `status ok`, `uptime 420s` (undisturbed — no restart), **`nodeDependencies.missing: []`**. Operator's work: vault worktree still on its branch at `3843818f`, `evidence-vault.html` intact.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** ★ **The operator's tree lost only its borrowed tooling — no file of theirs was touched.** They now need their own `npm install` there to run tests; **that is the correct cost, because the alternative was a shared mutable dependency directory under a live service.** ★★ **I acted unilaterally after telling them, on their explicit "you're the boss, we keep working" — and the blast radius WAS boundable, which is the test: a non-recursive junction delete has exactly one possible effect and I proved the target's entry count across it.**
+
+**FAILED OR UNPROVEN CONDITIONS.** ★ **[UNPROVEN — named]** whether any tooling in that vault worktree was mid-run at removal; nothing was executing against it at the time by observation, but I could not enumerate the operator's processes definitively. **The failure mode if so is a broken command in THEIR shell, not a damaged tower** — recoverable, and the reverse of the hazard removed. ★ **[UNENUMERATED — for later]** the ~25 campaign-tree junctions are the same shape at lower stakes; a rebuild there costs an `npm install`, not an outage. Not adopted into this unit.
+
+**AR-358 — YOUR PREMISE CHALLENGE IS SUSTAINED, and you were right to stop before building.** **[MEASURED HERE]** `lookupHmacSecret` (`tradingview-marker-service.ts`) resolves the secret with `WHERE account_id = $accountId AND strategy_id = $strategyId` — **jointly keyed, so a forged `strategy_id` resolves NO secret and the signature cannot verify.** The queue item's NAME ("server-derived `strategy_id`") implies a trust defect that the code does not have. ★★ **This is the fourth time today a name misled a population: `*-broker.ts` filenames were search brokers, "the pinned eleven" was a different set, a register's caption described one class while holding two — and now a queue item named after a fix rather than a property. MINTED: A TASK NAMED AFTER ITS PROPOSED MECHANISM SMUGGLES ITS PREMISE PAST REVIEW; name the PROPERTY you want true and the mechanism stays falsifiable.**
+
+**REQUIRED CORRECTIONS.** Item 3 sub-item 1 is **re-scoped, not built**: the property worth wanting is *"a forged or swapped `strategy_id` cannot authenticate"* — and that is **already true by joint keying**, so the correct output is a REGRESSION TEST pinning it, not a redesign. ★ **You asked one blocking question; answer it yourself with the same instrument you used to find this — if the answer is "already bound", write the guard that proves it and move on.**
+
+**FILES / SCOPE ALLOWED.** Desk: the junction removal (done). Worker: a test pinning the joint-keying property; no production change unless the test fails.
+
+**ACCEPTANCE COMMANDS.** Junction: the before/after matrix above. Item 3: a red-proofed test that fails when `strategy_id` is decoupled from the secret lookup.
+
+**STOP CONDITION.** If that test cannot be made to bite without touching the auth path, stop — that is an auth-surface change and it is mine to rule.
+
+**LESSON TO PERSIST.** ★★★ **THE MOST DANGEROUS THING ON THIS BOX TODAY WAS NOT IN THE CODE — IT WAS A FILESYSTEM LINK NOBODY HAD LOOKED AT, aimed at the one directory a live service cannot survive losing, inside the tree its owner was actively editing.** ★★ **And the reason it was found: a worker enumerating a queue item's PREREQUISITES rather than its ticket. "npm ci at boot" was a housekeeping line; pulling the thread found a loaded gun. Enumerate by consequence, not by annotation — again.**
+
+**AUTHORIZED NEXT ACTION.** Item 3 as re-scoped above (the pinning test), then item 3's remaining sub-items. Nothing waits on me.
+
+---
+
 ## R-393 · 2026-07-28 · ★★★ **ITEM 2 IS LIVE ON THE TOWER — AND VERIFIED ON THE REAL DATABASE, NOT IN pglite: both paper rows read `paper_sim`, and ZERO rows of any firm remain typed `traderspost`.** PRs #19 + #22 merged, deployed, published. ★★ The box had moved under me again — measured before touching it, which is the only reason the deploy was correct
 
 **RULING ID:** R-393 · **TASK ID:** items 2 + 4 — merge, deploy, production verification · **DECISION:** **CLOSED — PASS.**
