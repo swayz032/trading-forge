@@ -60,8 +60,15 @@ describe("Wave B architect: registry ↔ scheduler completeness (reverse directi
   const schedulerJobs = extractSchedulerJobs(schedulerSrc);
   const registryOwnedJobs = extractRegistryJobsWithOwners();
 
-  it("scheduler.ts has at least 50 active withRetry jobs (sanity)", () => {
-    expect(schedulerJobs.size).toBeGreaterThanOrEqual(50);
+  it("scheduler.ts declares the same job set as the registry (no floor, no slack)", () => {
+    // WAS `expect(schedulerJobs.size).toBeGreaterThanOrEqual(50)` — a floor
+    // carrying 58 jobs of slack against a true count of 108, so more than half
+    // the scheduler could vanish silently and this still passed. Replaced with
+    // an exhaustive comparison whose expected value is DERIVED BY COMPUTATION
+    // from the other artifact, never a hand-copied count. Same defect and same
+    // correction as the sibling wave-a-architect-registry-completeness.test.ts.
+    const registryJobNames = [...new Set(registryOwnedJobs.map((o) => o.job))].sort();
+    expect([...schedulerJobs].sort()).toEqual(registryJobNames);
   });
 
   it("every registry scheduler_job exists in scheduler.ts (no deprecated entries)", () => {

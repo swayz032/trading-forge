@@ -1,13 +1,30 @@
 /**
  * wave-a-architect-registry-completeness.test.ts
  *
- * Architect Wave A invariant: every scheduler.ts withRetry(<job>) call MUST
- * be registered in at least one subsystem's scheduler_jobs array in
- * docs/system-subsystem-registry.json. The opposite direction (registered
- * jobs that don't exist in scheduler.ts) is informational only — the
- * registry may list 14 historical / deprecated jobs that have since been
- * removed from scheduler.ts. The CI gate is one-way: NO scheduler job may
- * exist in code without a registry owner.
+ * Architect Wave A invariant: scheduler.ts's withRetry(<job>) set and the
+ * scheduler_jobs union in docs/system-subsystem-registry.json must be EQUAL.
+ *
+ * WAS ONE-WAY, NOW BIDIRECTIONAL (R-311 §4 sweep, 2026-07-28). The original
+ * header justified the one-way gate: "the registry may list 14 historical /
+ * deprecated jobs that have since been removed from scheduler.ts." MEASURED
+ * TODAY: that number is ZERO — scheduler 108, registry 108, both diffs empty.
+ * The justification had expired while the weakness it excused remained, so the
+ * reverse direction now costs nothing to enforce and is enforced.
+ *
+ * WHY THE REVERSE DIRECTION IS THE ONE THAT MATTERS: an orphan (in code, not in
+ * registry) is a bookkeeping gap. A VANISHED job (in registry, not in code) is a
+ * RAIL THAT STOPPED FIRING — the scheduler silently does less than the system
+ * believes it does, which is the failure mode that does not announce itself.
+ *
+ * The old `>= 50` floor is gone. With a true count of 108 it carried 58 jobs of
+ * slack: more than half the scheduler could vanish and it still passed. Both
+ * assertions below are exhaustive set comparisons DERIVED BY COMPUTATION from
+ * the two artifacts — never a hand-copied count, which would only trade a
+ * non-biting threshold for an embalmed constant.
+ *
+ * The identical `>= 50` floor in the sibling
+ * wave-b-architect-registry-no-deprecated-jobs.test.ts is corrected in the same
+ * change — one defect class, both instances, same wave.
  *
  * This test is mock-free, read-only, and runs against the canonical files.
  */
@@ -52,8 +69,37 @@ describe("Wave A architect: scheduler ↔ registry completeness", () => {
   const schedulerJobs = extractSchedulerJobs(schedulerSrc);
   const registryJobs = extractRegistryJobs();
 
-  it("scheduler.ts has at least 50 active withRetry jobs (sanity)", () => {
-    expect(schedulerJobs.size).toBeGreaterThanOrEqual(50);
+  it("scheduler.ts and the registry declare the SAME job set (no floor, no slack)", () => {
+    // Exhaustive both ways. Derived by computation from the two artifacts — the
+    // expected value is the other artifact, never a number typed in here.
+    expect([...schedulerJobs].sort()).toEqual([...registryJobs].sort());
+  });
+
+  it("REVERSE DIRECTION: no registry-declared job has vanished from scheduler.ts", () => {
+    // A vanished job is a rail that stopped firing.
+    // CORRECTION TO AN EARLIER DRAFT OF THIS COMMENT: this direction was NOT
+    // previously unguarded — wave-b-architect-registry-no-deprecated-jobs.test.ts
+    // already asserts it. I claimed the absence without searching for a sibling
+    // guard. What WAS unguarded is shrinkage below the floor: both files carried
+    // the same `>= 50` sanity assertion against a true count of 108.
+    const vanished = [...registryJobs].filter((j) => !schedulerJobs.has(j)).sort();
+    expect(vanished).toEqual([]);
+  });
+
+  // RED-PROOF of both assertions' logic on synthetic sets, so the guards are
+  // shown to BITE without mutating the canonical files this suite reads.
+  it("RED-PROOF: the comparison fires on a vanished job and on an orphan", () => {
+    const code = new Set(["a", "b"]);
+    const reg = new Set(["a", "b"]);
+    expect([...code].sort()).toEqual([...reg].sort()); // control: agreement passes
+
+    const codeMissing = new Set(["a"]); // "b" deleted from scheduler.ts
+    expect([...reg].filter((j) => !codeMissing.has(j))).toEqual(["b"]);
+    expect(() => expect([...codeMissing].sort()).toEqual([...reg].sort())).toThrow();
+
+    const codeExtra = new Set(["a", "b", "c"]); // "c" added without a registry owner
+    expect([...codeExtra].filter((j) => !reg.has(j))).toEqual(["c"]);
+    expect(() => expect([...codeExtra].sort()).toEqual([...reg].sort())).toThrow();
   });
 
   it("every active scheduler job is mapped to at least one subsystem", () => {
