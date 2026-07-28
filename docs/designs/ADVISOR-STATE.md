@@ -1,190 +1,124 @@
 # ADVISOR-STATE — money-path / H1 seat
 
-> **Rewritten in place, never appended.** Cold-start read for a fresh advisor:
-> this file, then the last 3–5 rulings, then the newest 1–2 ARs. Do not read the
-> ledger from the top. Invoke `advisor-ruling` before any ruling.
-> Last rewritten: 2026-07-28, current through R-380.
+> **Rewritten in place, never appended.** Cold-start read: this file, then the
+> last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
+> Last rewritten: 2026-07-28, current through **R-401**.
 
-## SEAT — AND THE AUTHORITY MODEL CHANGED TODAY (R-376, operator-ordered)
-Ledger at **R-398**. Newest AR: **AR-357**, RULED-THROUGH. Worker on item 3
-(server-derived `strategy_id`), start-receipt filed. Worker:
-**[MEASURED — START-RECEIPT 15:30] ACTIVE on item 2** after a 14:30–15:30
-window in which item 2 was DECLINED (AR-338 §4) and this desk's state wrongly
-said ACTIVE — see R-380. Declines now carry receipts and re-label the task. **"No decision waits on the operator — the desk decides and reports."**
-Mine without asking: verified merges · worktree updates · deploys of verified
-work · reversible CI-gated production writes · model/tooling choices. Reserved
-to the operator (SHORT list): real capital at risk · spend beyond the standing
-envelope · irreversible destruction · unboundable blast radius. Worker
-stop-and-asks route to THIS DESK, answered in the same ruling. Also standing
-(operator-ordered): **never answer from ignorance when WebSearch exists** —
-research, then answer with sources. Rig: 2s content-hash report poll + 15-min
-idle watchdog (hash-based; excludes my own ledger commits).
-★★★ **INVOKE `advisor-ruling` BEFORE EVERY RULING** (skill §0.-1) — not once per
-session. Measured 2026-07-28: invoking once and ruling from memory collapsed
-§7 field compliance from 4.0/10 to 0.1/10, and the skill FILE MUTATES (edited
-4x that day), so a remembered copy is a stale copy.
+## SEAT
+Ledger at **R-401**. Newest AR: **AR-366, RULED**. Worker: **ACTIVE on the SMC
+build** (authorized R-401; first observable = a RED SMC test, ~30 min, or a
+START-RECEIPT). Rig: 2s content-hash report poll + 15-min idle watchdog — **one
+rig, never new-plus-old**; the `ADVISOR-RULINGS.md` watcher under the OTHER
+`claude.exe` is the worker's ear, never kill it.
 
-## THE PLAN — money-path phase ladder (BLUEPRINT v1-v3, rulings R-053..R-061, 2026-07-19)
-**READ THIS BEFORE ANSWERING "what phase are we in".** The plan lives in the
-LEDGER's early rulings, and the cold-start order says never read the ledger from
-the top — so it is invisible unless pointed at. That gap cost the desk a wrong
-answer to the operator on 2026-07-28 (R-396).
+★★★ **INVOKE `advisor-ruling` BEFORE EVERY RULING** (skill §0.-1). Ruling from
+memory collapsed §7 compliance 4.0/10 → 0.1/10, and **the skill file mutates**,
+so a remembered copy is a stale copy. Enforced by hook.
+★★ **YOU DECIDE** (operator-ordered): merges · worktree updates · deploys of
+verified work · reversible CI-gated production writes · model/tooling choices.
+Reserved to the operator, SHORT: real capital · spend beyond envelope ·
+irreversible destruction · unboundable blast radius. Worker stop-and-asks route
+to THIS DESK. Never answer from ignorance when `WebSearch` exists.
+★★ **NAME THE JOIN KEY** (R-400): six desk errors in one day were two true things
+welded by an unchecked correspondence. State the key, or grade the claim.
 
-- **Phase 1 — SPEC COMPILATION (WE ARE HERE).** Exit: *">=1 tier-A spec compiles
-  with ALL load-bearing conditions concretely bound AND the compile-fidelity
-  forensics gate passes calibration."* **⚠ THIS GATE HAS NO METER (R-398): `EXACT-NOW` exists in NO code — grep over
-  `src`+`scripts` returns 0. R-303's deciding table (53 conditions / 26 UNTYPED /
-  EXACT-NOW 0 / STRICT 1 / PRIMARY 3) is a HAND ANALYSIS in a ruling, so
-  `0 eligible` is a 2026-07-22 human count nobody can re-run. Phase 1's exit is
-  currently UNFALSIFIABLE. Building the meter is the first task; its first
-  acceptance is CONCORDANCE with that hand table.**
-- **Phase 2 — BATTERY / WAVE EVALUATION.** Failure-attribution read pre-registered
-  BEFORE any verdict (edge-absent · compile-fidelity-loss · overlay-caused);
-  overlay A/B (house Style-C vs taught exits) for concretely-taught exits.
+## THE PLAN — money-path phase ladder (BLUEPRINT, R-053..R-061)
+**READ THIS BEFORE ANSWERING "what phase are we in."** It lives in the ledger's
+EARLY rulings, which the cold-start order tells you never to read — so it is
+invisible unless carried here. That gap cost a wrong operator answer (R-396).
+
+- **Phase 1 — SPEC COMPILATION (WE ARE HERE). EXIT NOT MET, AND NOW MEASURED.**
+  Exit: *"≥1 tier-A spec compiles with ALL load-bearing conditions concretely
+  bound."* ★★★ **PINNED BEFORE-FIGURE — cite in this exact form (R-401):
+  `0 / 16 specs fully bound. Flags-off: 0 of 155 conditions bound_and_concrete.
+  Flags-on hypothetical: 6 of 155. Best spec 1/6 (hypothetical). Source:
+  dual-denominator-remeasure-2026-07-21.json, frozen 2026-07-21, refresh BLOCKED
+  by REVIVAL_FAMILY.`** Verified at this desk by re-derivation: totals
+  155/6/27/128, algebra `n_taught == n_bindable + n_unbound` holds 16/16, specs
+  with `bound == taught` = **0**. **Supersedes R-398's "this gate has no meter"**
+  — the meter was never needed; the quantity was already on disk, ungrouped.
+- **Phase 2 — BATTERY / WAVE.** Failure-attribution pre-registered BEFORE any
+  verdict (edge-absent · compile-fidelity-loss · overlay-caused); overlay A/B.
 - **Phase 3 — CONVEYOR, not a queue.** Internal-paper + shadow-accumulation run
-  CONCURRENTLY per strategy; strategies occupy different stages simultaneously.
-  Pre-flight: eval-odds pre-compute (B14/survival pointed at the Combine's own
-  trailing-DD + profit-target parameters, per survivor).
-- **Phase 3→4 seam — DEPLOY-IN-SEASON.** Certified survivors deploy only when
-  their forensics-named regime is LIVE per the running classifier; out-of-season
-  survivors hold in paper standby.
-- **Phase 3.5 — FIRST THIRTY FUNDED DAYS.** Written BEFORE funding: payout cadence
-  under 20/80 reserve mechanics; advisor recommendation on record = CONSISTENCY
-  lane (+50% caps, ~2x payout frequency). Stop-gates symmetric to go-gates.
-- **PRE-POSITIONED LAST MILE (operator wallet, spend decision):** when the first
-  real-fidelity battery wave shows promise, the operator is briefed to buy the
-  Combine + TopstepX API THEN — so the adapter builds and shakes down against
-  practice before real capital.
+  CONCURRENTLY per strategy. Pre-flight: eval-odds against the Combine's own
+  trailing-DD + profit-target parameters.
+- **Phase 3→4 — DEPLOY-IN-SEASON.** Survivors deploy only when their
+  forensics-named regime is LIVE; out-of-season survivors hold in paper standby.
+- **Phase 3.5 — FIRST THIRTY FUNDED DAYS**, written BEFORE funding. Advisor
+  recommendation on record: CONSISTENCY lane. Stop-gates symmetric to go-gates.
+- **PRE-POSITIONED LAST MILE (operator spend):** when the first real-fidelity
+  battery wave shows promise, brief the operator to buy the Combine + TopstepX
+  API THEN — adapter shakes down against practice before real capital.
 
-★ **Today's broker-safety chain (R-359..R-395) is NOT on this ladder** — it is the
-"nothing live" hardening that must hold before any phase runs with money.
+★ The broker-safety chain (R-359..R-401) is **not on this ladder** — it is the
+"nothing live" hardening that must hold before any phase runs with money. **It
+closed and deployed today.**
 
-## AUTHORIZED NOW
-**Item 2** — paper rows → no-egress `broker_type`. R-363's ordering is
-mandatory (DROP topology CHECK → widen broker_type IN-list → UPDATE 2 rows →
-RE-ADD amended CHECK, one transaction, idempotent, pglite dry-run ×2);
-R-364 §3's caption rewrite at `broker-router.ts:1764` rides along; hand-author
-on 0159's template, **never `db:generate`** (`migrations/schema.ts:2377` still
-declares the pre-0159 narrow constraint); `migration-author` skill first.
-**PR #19: RED — DO NOT MERGE (R-387). Reproduced at this desk: re-applying
-**0159** now fails (`broker_accounts_firm_broker_topology_chk`) because 0208
-correctly forbids the `paper→traderspost` pair 0159 seeds. 0208 itself replays
-clean. Production impact NIL today (journal-keyed runner won't re-run 0159);
-the broken invariant is "every migration re-applies". Worker to choose (A)
-legacy tolerance / (B) pinned non-replayable register / (C) forward migration —
-(C) preferred, never edit an applied migration. ★ My R-382 dry-run passed this
-because it used a HAND-BUILT pre-state; only the real chain caught it.
-Historic: collision CLEARED + dry-run PASSED at this desk (15/15, pglite,
-incl. control + 8 discrimination probes). ONE revise outstanding: run
-`node scripts/gen-migration-manifest.mjs` and commit the manifest (Lint gate).
-On green I merge + deploy + push, then re-verify the two live rows read
-`paper_sim` on the REAL DB. Historic (R-381): three-way migration collision** — the operator
-shipped `0207_youtube_evidence_archive` (idx 210, applied) while we worked.
-Rebase onto **`b2af6c1a`** (pushed), rename to **0208**, journal **idx 211**,
-`when` **> 1785268800000**, touch nothing of the operator's entry. Substance
-RATIFIED (NOT VALID, ordering, 3-arm default-deny CHECK, CORE_DDL mirror,
-caption). **The apply is MINE** — PR → my verify → **my pglite dry-run ×2** →
-my merge → my deploy → **my push** (R-381 §4: publish is part of deploy).
-Then **item 4** — single broker-egress chokepoint + CI bypass test.
+## AUTHORIZED NOW (worker, in order — no round-trip needed)
+1. **SMC BUILD** (R-303 §5, R-401). Allowed: the SMC family implementation + its
+   tests. Red-proofed at birth. ★ **The declared primitive must actually
+   EXECUTE** (R-153) — a family whose declared primitive is not the one it runs
+   is the POINTER LIE, convicted 3× here. Forbidden: the four frozen
+   instruments, the specs, `dual_denominator_remeasure.py`.
+2. **Date-stamp `OUT_PATH`** — `dual_denominator_remeasure.py:103` hardcodes
+   `dual-denominator-remeasure-2026-07-21.json`; a future publish would overwrite
+   the pinned evidence of record under a false date.
+3. **Diagnose the two misdirected revival probes** (`SESSION_ACKNOWLEDGMENT_
+   ENTRY_WITHDRAWN`, `..._PAIR_DRIFTED`, both declared `ws_session_resolvable <=
+   graded_teachings`, both observed `NO_ASSERT_FIRED`). **Report the diagnosis;
+   repair only after I rule on it.**
 
 ## NOT AUTHORIZED (worker)
-Real-capital actions · spend · credential decryption · `.env` writes ·
-defaulting `BROKER_KEY_PROBE_ENABLED` ON · weakening/regex-dodging the F-2 or
-call-site guards · deleting/skipping A-11 cases · disarming the probe flag in
-tests (re-creates the vacuity).
+Real-capital actions · spend · credential decryption · `.env` writes · defaulting
+`BROKER_KEY_PROBE_ENABLED` ON · weakening the F-2 or call-site guards · running
+the producer **without `--draft`** · editing frozen instruments or specs.
 
 ## STATE, WITH EVIDENCE GRADES
-**[MEASURED HERE — R-377 DEPLOY RECORD]** Tower runs `f6684035` since 15:18:28
-(before: `618a74b0`; HMAC restart corr `bc405867…`; API back ≤60s, uptime 11s,
-db ok 103ms, deps missing:[]). Running-tree greps: `startBootProbe` present
-(import + 1 call), `BROKER_KEY_PROBE_ENABLED` in code + ABSENT from env (probe
-inert at import AND dormant by flag), derived `<FIRM>_API_KEY` fallback GONE.
-**Cautions DOWNGRADED: `PAPER_API_KEY` arms nothing on this box now; an Office
-enrollment creates a credential but no boot-time egress exists to grab it.**
-**[MEASURED HERE]** PRs #12 + #13 MERGED (branch tip `3d7b2cef`); acceptance
-was per-test from the vitest artifact incl. DISCRIMINATES. Suite baseline:
-13,440 tests / **9 known failures — a tripwire: if it rises unexplained,
-something got baselined instead of fixed.** Zero of the 9 in our surface.
-**[MEASURED HERE]** The box carried 5 operator commits (evidence vault,
-14:04–15:09, preserved on `origin/hardening/slumhouse-transcript-vault-20260728`,
-zero broker files, zero overlap with our 13) — **the operator is a THIRD WRITER
-on runtime-production: read `status -sb`, never a one-directional rev-list.**
-Their migration 0207 verified idempotent, no-BOM, journal 0 dup-when, applied.
-**[MEASURED HERE]** Migration 0159's "paper never routed to funded" contract
-remains UNENFORCED until item 2 lands; `broker-router.ts:1764` default arm is
-default-deny, and its "should not occur" caption INVERTS when item 2 lands
-(rewrite required). 3am-agent model decision (researched, sourced, R-376 era):
-**GPT-5.6 Sol on flex** ($2.50/$15 = GPT-5.4's list price; learning loop is ON
-so quality compounds; REQUIRES retry + fallback tier for flex capacity misses;
-first nights observe-only).
-**[ARTIFACT-SOURCED]** corpus = 16. **[CORROBORATED]** 0 eligible today.
-**[MEASURED HERE]** origin `hardening/slumhouse-shared-office-parity-20260723`
-= **`b2af6c1a`** = the running box (FF-pushed R-381; before this, my deploy
-merge and the operator's 15:33 work existed on ZERO remote refs).
-**`migrations/schema.ts:2377-2378` is DOUBLY STALE** (pre-0159 `firm_id` +
-pre-0208 `broker_type`) — **never `db:generate`** until someone regenerates it
-deliberately; hand-editing a generated snapshot is its own hazard.
-**[UNENUMERATED — OPEN]** the 0x9F bugcheck's driver (`MEMORY.DMP` retained);
-legacy Conv-VAE path; `npm install` at boot ≠ `npm ci`; deploy records exist
-only as R-377's ledger entry (no standing mechanism).
-
-## SHIPPED TODAY (verified in PRODUCTION, R-393)
-Tower runs **`f5b5b10d`** (deploy record in R-393). **Both paper rows read
-`paper_sim` on the LIVE DB; zero rows of any firm remain `traderspost`** —
-migration 0159's written contract is enforced in the schema for the first time.
-**Broker-egress chokepoint live**: `broker-router` has 0 `fetch(` calls and CI
-fails the build if any other module reaches a broker host. Boot probe inert on
-import in every flag state; derived `<FIRM>_API_KEY` fallback gone.
-★ `0159` is permanently non-idempotent BY DESIGN (register class 2) — a
-fresh-bootstrap-twice rebuild fails there; documented in the register.
-
-## QUEUE (in order) — RE-ORDERED BY R-397: the builds now lead
-0. **THE METER** (R-398) — smallest honest script that reproduces R-303's table;
-   concordance check first; may NOT edit the compiler/bindings/specs it measures.
-1. **SMC build** — the ratified action that moves Phase 1 (R-303 §5), startability
-   CONFIRMED (binding lane + 19 spec YAMLs exist, AR-363).
-   Confirm startability first; report `EXACT-NOW` before and after. Detectors
-   already exist — the missing piece is the BINDING LANE, not detection.
-2. **ORB + RANGE_EVENT as a PAIR** — the pair is the unit; ORB alone completes
-   nothing. Then **BAR_TIMING**, then **SESSION_CLOCK**.
-3. Remaining item-3 sweep items (string-literal precondition sweep,
-   consequence-ranked flag enumeration, the floors, 3-ii/3-iii) — legitimate,
-   but they cannot move Phase 1.
-★ Why the change: the hardening items outranked the builds while the broker path
-was open. It closed today (R-393, verified in production). The list outlived its
-premise by six days — R-303 ratified SMC-first on 07-22 and `[MEASURED]` there
-are zero SMC-build mentions in the ~40 newest rulings.
-
-
-## DURABILITY (R-385 — was a live single-copy exposure)
-Ledger branch `h1-wave4-sealed12-driver` is now **ON ORIGIN** (`f9576819`,
-verified by reading the ledger/report tips back FROM the remote object).
-Before this it existed on no remote at all — 747 commits, every ruling
-R-359→R-384 — on the box that bugchecked today. **AGENT-REPORTS.md is
-snapshotted by the desk for durability ONLY (431 insertions / 0 deletions —
-single-writer intact; committing ≠ authoring).** **[STILL UNBACKED]** 24
-untracked `docs/designs/` files incl. the -OPS ledgers and GRADE-* charters —
-another campaign's artifacts, named not adopted; operator/OPS-seat call.
+**[MEASURED HERE]** Tower runs **`f5b5b10d`**. Both paper rows read `paper_sim`
+on the LIVE DB; **zero rows of any firm remain `traderspost`** — migration 0159's
+written contract is enforced in schema for the first time. Broker-egress
+chokepoint live: `broker-router` has 0 `fetch(` calls, CI fails the build if any
+other module reaches a broker host. Boot probe inert on import in every flag
+state; derived `<FIRM>_API_KEY` fallback gone.
+**[MEASURED HERE]** Phase-1 figures re-derived from the artifact (see THE PLAN).
+**[MEASURED HERE]** Ledger branch `h1-wave4-sealed12-driver` is **on origin** —
+before R-385 it existed on no remote at all (747 commits, on the box that
+bugchecked that day).
+**[RELAYED — worker, not re-run here]** The producer **runs but refuses to
+publish**: `GUARD REFUSED: REVIVAL_FAMILY`, exit 2. ★ **That is a PASS** — its
+red-proof machinery caught two probes that fired nothing, and it declined to
+certify. **Stale by refusal, not by neglect.**
+**[MEASURED — worker]** Draft mode honest: target artifact byte-identical across
+3 draft runs; `publish_artifact()` refuses via `SystemExit`, not `assert` (so
+`python -O` cannot strip the gate).
+**[ARTIFACT-SOURCED, 7 days old]** the whole Phase-1 reading.
+**[UNPROVEN]** whether the two probes are misdirected by legitimate renames or
+by a real regression — item 3 above.
+**[MEASURED HERE]** Suite baseline 13,440 tests / **9 known failures — a
+tripwire: if it rises unexplained, something got baselined instead of fixed.**
+**[MEASURED HERE]** `migrations/schema.ts:2377-2378` is **doubly stale** —
+**never `db:generate`**. `0159` is permanently non-idempotent BY DESIGN.
+**[MEASURED HERE]** The operator is a **THIRD WRITER** on runtime-production —
+read `status -sb`, never a one-directional rev-list.
+**[UNENUMERATED — OPEN]** the 0x9F bugcheck driver (`MEMORY.DMP` retained);
+`npm install` at boot ≠ `npm ci`; deploy records exist only as ledger entries,
+no standing mechanism; 24 untracked `docs/designs/` files (another campaign's).
 
 ## HAZARD REMOVED (R-394) — do not recreate
-`wt-codex-transcript-vault
-ode_modules` was a **junction into the RUNNING
-tower's `node_modules`** (322 pkgs). One `npm ci` / `rm -rf` there would have
-taken the live API down (the 07-18 rails class). **Cut** non-recursively; target
-verified intact; 0 junctions now point at `runtime-production`. That tree needs
-its own `npm install` to run tests. ~25 other junctions point at the CAMPAIGN
-checkout — same shape, lower stakes, not adopted.
+`wt-codex-transcript-vault/node_modules` was a **junction into the RUNNING
+tower's `node_modules`** (322 pkgs). One `npm ci` there would have taken the live
+API down (the 07-18 rails class). Cut non-recursively; target verified intact;
+**0 junctions now point at `runtime-production`.** ~25 others point at the
+campaign checkout — same shape, lower stakes.
 
 ## KNOWN-BENIGN (do not investigate)
 `M src/engine/tests/fixtures/session_windows_parity.json` — phantom, verified
-twice; do not touch the index. · A monitor event naming an OLD AR number =
-torn mid-write read (watcher settles now). · Three red CI badges on one PR =
-one defect mirrored (an aggregate check is a mirror, not an instrument). ·
-`.playwright-cli/` untracked in runtime-production = operator tooling, leave it.
+twice. · A monitor event naming an OLD AR number = torn mid-write read. · Three
+red CI badges on one PR = one defect mirrored. · `.playwright-cli/` untracked in
+runtime-production = operator tooling. · **`| tail` / `| head` MASK EXIT CODES**
+— re-run unpiped before believing any exit status.
 
 ## OPERATOR-FACING
-Nothing waits on you. Deployed today: the boot probe can no longer fire from an
-import in any flag state, and the system no longer invents credential names —
-both verified on the running box. Your evidence-vault work was preserved
-untouched through the deploy (merge, never rebase). `.claude/skills/` is still
-disk-only, no backup.
+Nothing waits on you. 3am-agent decision on record: **GPT-5.6 Sol on flex**
+(needs a retry + fallback tier for flex capacity misses; first nights
+observe-only). `.claude/skills/` is still disk-only, no backup.
