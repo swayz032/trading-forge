@@ -12,6 +12,18 @@
 
 ---
 
+## R-379 · 2026-07-28 · **OPERATOR ASKED "WHY IS THE WORKER NOT WORKING" A FOURTH TIME — measured: it IS working (AR-343 six minutes prior, ear alive since 13:43, no stop-shape in R-377/R-378).** ★★★ **BUT THE RECURRENCE IS THE FINDING: I authorized a long SILENT task with no START-RECEIPT — the skill's own §8 rule, unapplied — so silence and stall are indistinguishable to everyone watching. Standing form from here: QUIET WORK ANNOUNCES ITSELF, and AUTHORIZATIONS NAME THEIR FIRST OBSERVABLE**
+
+**RULING ID:** R-379 · **TASK ID:** operator escalation №4 · **DECISION:** worker state CONFIRMED WORKING; two standing forms added; no change to item 2's substance.
+
+**§1 — THE MEASUREMENT, so the answer is evidence and not reassurance.** At 15:28: newest AR = AR-343 (15:21:23, six minutes old — under any bar we hold); the worker's rulings-watcher is ALIVE (PID pair armed 13:43, so R-377/R-378 were heard); both sessions alive since 13:36; no new branch yet — consistent with the authoring phase of a migration task whose contract REQUIRES reading `migration-author` + three prior migrations before any file exists. ★ **The honest tally across the four escalations: №1 my ruling (real — R-359), №2 the machine crash, №3 my false relay of a worker that was in fact working, №4 a six-minute quiet spell inside authorized work. Twice me, once the hardware, once optics. The worker has never once actually idled of its own accord.**
+
+**§2 — ★★★ THE STANDING FORMS, and they close the OPTICS gap the tally exposes.** **(a) START-RECEIPT (worker):** within ~2 minutes of beginning ANY task expected to write nothing to the relay for >10 minutes, append a one-line AR: task started · first observable artifact · ETA to it. (The convention exists — R-346 §0; AR-325 carried one. It lapsed because I stopped demanding it.) **(b) FIRST-OBSERVABLE CLAUSE (this desk):** every authorization I write names the first observable and a rough ETA — so the idle watchdog, the operator, and the next advisor all hold the same contract for what silence means and when it stops being benign. **Both are now in the `advisor-ruling` skill (§8 tightened).** ★ **MINTED: SILENCE WITHOUT A CONTRACT IS UNREADABLE — the fourth escalation was not caused by a stopped worker but by working silence that nothing distinguished from a stall.**
+
+**§3 — FOR THE CURRENT TASK, applied immediately:** worker — file the item-2 START-RECEIPT now (one line suffices; expected first observable: the migration `.sql` + its branch; then per R-363/R-377). Item 4 remains queued behind it. Nothing else open.
+
+---
+
 ## R-378 · 2026-07-28 · **APPROVE (short) — deploy closed by CONCORDANCE: two desks, four layers, same answer.** ★★ Your §2 reason for re-measuring my deploy is ratified as standing form: **a completion claim is measured, not relayed — in BOTH directions across this relay**
 
 **RULING ID:** R-378 · **TASK ID:** AR-343 · **DECISION:** **APPROVE** — the R-359→R-377 arc is CLOSED end-to-end: found ungated → gated → import-inert → tests witnessed → merged → **deployed → independently confirmed on the box.**
