@@ -3,85 +3,163 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Media Evidence Vault · Slumhouse</title>
+  <title>Media Evidence Vault - Slumhouse</title>
   <style>
-    :root{--ink:#f6f1e7;--muted:#aaa69d;--lime:#a3ff12;--brass:#c5a15f;--line:rgba(218,190,135,.18);--glass:rgba(6,7,6,.82)}
-    *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:#050505;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}body{min-height:100vh;overflow:hidden}
-    body:before{content:"";position:fixed;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.88),rgba(0,0,0,.38) 31%,rgba(0,0,0,.42) 67%,rgba(0,0,0,.9)),linear-gradient(0deg,rgba(0,0,0,.78),rgba(0,0,0,.06) 58%,rgba(0,0,0,.72)),url('/slumhouse/assets/media-evidence-vault.png') center/cover no-repeat;filter:saturate(.78);transform:scale(1.015)}
-    .shell{position:relative;z-index:1;height:100vh;padding:22px 26px 26px;display:grid;grid-template-rows:auto auto minmax(0,1fr);gap:16px}
-    header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px}.back{color:var(--ink);text-decoration:none;border:1px solid var(--line);background:rgba(5,5,5,.65);padding:10px 14px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:.04em}.eyebrow{color:var(--lime);font-size:10px;font-weight:900;letter-spacing:.22em;text-transform:uppercase}.title{margin:4px 0 0;font-family:Georgia,serif;font-size:clamp(28px,3vw,48px);font-weight:500;letter-spacing:-.04em}.sub{color:var(--muted);font-size:12px;max-width:620px;line-height:1.5}.seal{display:flex;align-items:center;gap:8px;color:#d7c293;text-transform:uppercase;letter-spacing:.17em;font:800 9px/1 ui-monospace,monospace}.seal:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 14px var(--lime)}
-    .stats{display:grid;grid-template-columns:repeat(3,minmax(110px,190px)) 1fr;gap:10px}.stat,.search{border:1px solid var(--line);background:linear-gradient(145deg,rgba(19,17,13,.83),rgba(5,6,5,.86));backdrop-filter:blur(20px);border-radius:13px;padding:12px 14px}.stat b{display:block;font-family:Georgia,serif;font-size:23px;font-weight:500}.stat span{display:block;margin-top:3px;color:#a89d88;text-transform:uppercase;letter-spacing:.13em;font-size:8px}.search{display:flex;align-items:center;gap:10px;padding:8px 12px}.search input{width:100%;border:0;outline:0;background:transparent;color:white;font-size:13px}.search button{border:0;border-radius:9px;background:var(--lime);color:#0a0c08;padding:9px 14px;font-weight:900;cursor:pointer}
-    .vault{min-height:0;display:grid;grid-template-columns:minmax(260px,330px) minmax(280px,420px) minmax(360px,1fr);gap:12px}.panel{min-height:0;border:1px solid var(--line);border-radius:18px;background:linear-gradient(155deg,rgba(17,15,12,.9),rgba(3,4,3,.89));backdrop-filter:blur(24px);box-shadow:0 28px 90px rgba(0,0,0,.38);overflow:hidden}.panel-head{height:58px;padding:0 17px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.panel-head strong{font:900 9px/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase;color:#d4bb89}.today-only{border:1px solid rgba(163,255,18,.25);border-radius:999px;padding:6px 9px;background:transparent;color:#a8b09d;font-size:9px;font-weight:800;cursor:pointer}.today-only.on{color:#111;background:var(--lime)}
-    .video-list{height:calc(100% - 58px);overflow:auto;padding:9px;scrollbar-width:none}.video-list::-webkit-scrollbar,.transcript::-webkit-scrollbar{display:none}.video-card{width:100%;display:grid;grid-template-columns:88px minmax(0,1fr);gap:11px;border:1px solid transparent;background:transparent;color:inherit;text-align:left;border-radius:13px;padding:8px;cursor:pointer}.video-card:hover{background:rgba(255,255,255,.035)}.video-card.on{border-color:rgba(197,161,95,.38);background:linear-gradient(135deg,rgba(197,161,95,.12),rgba(163,255,18,.035))}.thumb{width:88px;aspect-ratio:16/9;object-fit:cover;border-radius:8px;background:#111;filter:saturate(.82)}.v-day{color:var(--lime);font:800 8px/1 ui-monospace,monospace;letter-spacing:.11em;text-transform:uppercase}.v-title{margin-top:5px;font-size:11px;font-weight:760;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.v-meta{margin-top:5px;color:#85827b;font-size:9px}.empty{height:100%;display:grid;place-items:center;padding:30px;text-align:center;color:#969087;font-size:12px;line-height:1.6}.empty b{display:block;color:#eee7dc;font-family:Georgia,serif;font-size:22px;font-weight:500;margin-bottom:8px}
-    .screening{display:flex;flex-direction:column}.hero{position:relative;aspect-ratio:16/9;background:#090909;overflow:hidden}.hero img{width:100%;height:100%;object-fit:cover;filter:saturate(.82) contrast(1.04)}.hero:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent 55%)}.watch{position:absolute;z-index:2;left:16px;bottom:15px;border:1px solid rgba(255,255,255,.25);background:rgba(5,5,5,.82);color:#fff;text-decoration:none;border-radius:999px;padding:9px 13px;font-size:10px;font-weight:900}.detail{padding:18px;overflow:auto;scrollbar-width:none}.detail h2{font-family:Georgia,serif;font-size:24px;font-weight:500;letter-spacing:-.025em;margin:0 0 8px}.detail-meta{color:#98928a;font-size:10px;line-height:1.7}.provenance{margin-top:16px;padding:13px;border:1px solid var(--line);border-radius:12px;background:rgba(0,0,0,.25)}.provenance span{display:block;color:#9a8b70;text-transform:uppercase;letter-spacing:.12em;font:800 8px/1.5 ui-monospace,monospace}.provenance code{display:block;margin-top:6px;color:#d7d1c6;font-size:9px;word-break:break-all}.strategies{margin-top:16px}.strategies h3{font:900 9px/1 ui-monospace,monospace;letter-spacing:.16em;color:var(--lime);text-transform:uppercase}.strategy-link{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:10px;color:#eee;text-decoration:none;font-size:10px}.strategy-link em{color:#89877f;font-style:normal;font-size:8px}
-    .reader{display:grid;grid-template-rows:58px minmax(0,1fr)}.transcript{overflow:auto;padding:25px 30px 60px;scrollbar-width:none;font-family:Georgia,serif;font-size:16px;line-height:1.9;color:#ded8cd;white-space:pre-wrap}.transcript.unavailable{font-family:inherit;font-size:12px;color:#9b978f;display:grid;place-items:center;text-align:center}.wordmark{color:#777268;font:700 8px/1 ui-monospace,monospace;letter-spacing:.13em;text-transform:uppercase}
-    body.embed .shell{padding-top:76px}body.embed header .back{display:none}body.embed .title{font-size:34px}
-    @media(max-width:1100px){body{overflow:auto}.shell{height:auto;min-height:100vh}.vault{grid-template-columns:300px 1fr}.reader{grid-column:1/-1;height:65vh}.stats{grid-template-columns:repeat(3,1fr)}.search{grid-column:1/-1}.screening{min-height:600px}}
-    @media(max-width:700px){.shell{padding:16px}.vault{display:block}.panel{margin-bottom:12px}.video-list{height:430px}.screening{min-height:0}.reader{height:70vh}.stats{grid-template-columns:repeat(3,1fr)}.stat{padding:10px}.stat b{font-size:18px}.sub,.seal{display:none}}
-    /* Premium archive layout: one main stage + one quiet right rail. */
-    body:before{background:linear-gradient(90deg,rgba(0,0,0,.48),rgba(0,0,0,.12) 52%,rgba(0,0,0,.58)),linear-gradient(0deg,rgba(0,0,0,.58),rgba(0,0,0,.02) 62%,rgba(0,0,0,.48)),url('/slumhouse/assets/media-evidence-vault.png') center/cover no-repeat;filter:saturate(.9) contrast(1.04)}
-    .shell{padding:20px 24px 24px;grid-template-rows:auto minmax(0,1fr);gap:14px}
-    header{align-items:center;padding:0 2px}.title{font-size:clamp(27px,2.5vw,42px)}.sub{max-width:560px;color:rgba(236,230,218,.68)}
-    .vault{display:grid;grid-template-columns:minmax(0,1fr) minmax(292px,342px);gap:14px}
-    .panel{border:1px solid rgba(236,224,198,.14);border-radius:16px;background:linear-gradient(145deg,rgba(3,4,3,.6),rgba(2,3,2,.42));backdrop-filter:blur(14px) saturate(1.1);box-shadow:0 18px 55px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035)}
-    .main-stage{display:block;min-height:0;overflow:auto;scrollbar-width:none;background:linear-gradient(145deg,rgba(3,4,3,.4),rgba(2,3,2,.22))}.main-stage::-webkit-scrollbar{display:none}
-    .main-stage.is-empty{display:grid;place-items:center;overflow:hidden}.main-stage.is-empty .screening{width:100%;height:100%}.main-stage .reader[hidden]{display:none}
-    .screening{min-width:0;border:0;background:transparent}
+    :root{--ink:#f6f1e7;--muted:#aaa69d;--lime:#a3ff12;--brass:#c5a15f;--line:rgba(218,190,135,.15)}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:#050505;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    body{min-height:100vh;overflow:hidden}
+    body:before{content:"";position:fixed;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.5),rgba(0,0,0,.1) 52%,rgba(0,0,0,.6)),linear-gradient(0deg,rgba(0,0,0,.6),rgba(0,0,0,.02) 62%,rgba(0,0,0,.5)),url('/slumhouse/assets/media-evidence-vault.png') center/cover no-repeat;filter:saturate(.9) contrast(1.04);transform:scale(1.015)}
+    .shell{position:relative;z-index:1;width:min(100%,1700px);height:100vh;margin:0 auto;padding:20px 24px 24px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:14px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:0 2px}
+    .back{display:inline-block;margin-bottom:8px;color:var(--ink);text-decoration:none;border:1px solid var(--line);background:rgba(5,5,5,.65);padding:8px 12px;border-radius:999px;font-size:11px;font-weight:800}
+    .eyebrow{color:var(--lime);font-size:9px;font-weight:900;letter-spacing:.22em;text-transform:uppercase}
+    .title{margin:4px 0 1px;font:500 clamp(27px,2.5vw,42px)/1 Georgia,serif;letter-spacing:-.04em}
+    .sub{max-width:560px;color:rgba(236,230,218,.68);font-size:11px;line-height:1.45}
+    .seal{display:flex;align-items:center;gap:8px;color:#d7c293;text-transform:uppercase;letter-spacing:.17em;font:800 9px/1 ui-monospace,monospace}
+    .seal:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--lime);box-shadow:0 0 14px var(--lime)}
+    .vault{min-height:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(332px,360px);gap:14px}
+    .panel{min-height:0;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,rgba(3,4,3,.59),rgba(2,3,2,.4));backdrop-filter:blur(14px) saturate(1.1);box-shadow:0 18px 55px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.035);overflow:hidden}
+
+    /* One continuous stage. Video, provenance, receipts, and transcript all flow here. */
+    .main-stage{display:block;min-height:0;overflow:auto;scrollbar-width:none;background:linear-gradient(145deg,rgba(3,4,3,.38),rgba(2,3,2,.2))}
+    .main-stage::-webkit-scrollbar,.remote-list::-webkit-scrollbar{display:none}
+    .main-stage.is-empty{display:grid;place-items:center;overflow:hidden}
+    .main-stage.is-empty .screening{width:100%;height:100%}
+    .main-stage .reader[hidden]{display:none}
+    .screening{min-width:0;background:transparent}
     .screening>.empty{min-height:100%;background:radial-gradient(circle at 50% 38%,rgba(197,161,95,.08),transparent 44%)}
+    .empty{height:100%;display:grid;place-items:center;padding:30px;text-align:center;color:#969087;font-size:11px;line-height:1.6}
+    .empty b{display:block;color:#eee7dc;font:500 22px/1.1 Georgia,serif;margin-bottom:8px}
+    .hero{position:relative;height:min(36vh,360px);background:#090909;overflow:hidden}
+    .hero img{width:100%;height:100%;object-fit:cover;filter:saturate(.82) contrast(1.04)}
+    .hero:after{content:"";position:absolute;inset:0;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent 55%)}
+    .watch{position:absolute;z-index:2;left:20px;bottom:18px;border:1px solid rgba(255,255,255,.25);background:rgba(5,5,5,.82);color:#fff;text-decoration:none;border-radius:999px;padding:9px 13px;font-size:9px;font-weight:900}
+    .detail{max-width:920px;padding:23px 26px 12px}
+    .detail h2{margin:0 0 8px;font:500 28px/1.08 Georgia,serif;letter-spacing:-.025em}
+    .detail-meta{color:#98928a;font-size:9px;line-height:1.7}
+    .provenance{margin-top:15px;padding:13px;border:1px solid rgba(236,224,198,.11);border-radius:12px;background:rgba(0,0,0,.18)}
+    .provenance span{display:block;color:#9a8b70;text-transform:uppercase;letter-spacing:.12em;font:800 8px/1.5 ui-monospace,monospace}
+    .provenance code{display:block;margin-top:6px;color:#d7d1c6;font-size:9px;word-break:break-all}
+    .strategies{margin-top:15px}.strategies h3{font:900 9px/1 ui-monospace,monospace;letter-spacing:.16em;color:var(--lime);text-transform:uppercase}
+    .strategy-link{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:7px;padding:10px;border:1px solid rgba(255,255,255,.07);border-radius:10px;color:#eee;text-decoration:none;font-size:10px}
+    .strategy-link em{color:#89877f;font-style:normal;font-size:8px}
     .reader{min-width:0;display:block;background:transparent}
-    .panel-head{height:52px;padding:0 15px;background:rgba(0,0,0,.16);border-bottom-color:rgba(236,224,198,.11)}
-    .reader .panel-head{margin:8px 26px 0;padding:0;border-top:1px solid rgba(236,224,198,.11);border-bottom:0;background:transparent}.transcript{min-height:38vh;padding:18px 26px 64px;font-size:16px;line-height:1.92;color:rgba(245,239,227,.88)}
-    .hero{aspect-ratio:auto;height:min(38vh,390px)}.detail{max-width:980px;padding:24px 26px 12px}.detail h2{font-size:28px}.provenance{border-color:rgba(236,224,198,.11);background:rgba(0,0,0,.18)}
-    .right-rail{min-height:0;display:grid;grid-template-rows:auto auto auto minmax(0,1fr);overflow:hidden;background:linear-gradient(160deg,rgba(4,5,4,.7),rgba(2,3,2,.5))}
-    .rail-title{padding:16px 16px 12px;border-bottom:1px solid rgba(236,224,198,.11)}.rail-title strong{display:block;color:#dcc796;font:900 9px/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase}.rail-title span{display:block;margin-top:7px;color:rgba(225,218,205,.55);font-size:10px;line-height:1.45}
-    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-bottom:1px solid rgba(236,224,198,.11)}
-    .stat{min-width:0;border:0;border-right:1px solid rgba(236,224,198,.1);border-radius:0;background:transparent;backdrop-filter:none;padding:13px 11px}.stat:last-child{border-right:0}.stat b{font-size:21px}.stat span{font-size:7px;line-height:1.35}
-    .search{margin:10px;border:1px solid rgba(236,224,198,.12);border-radius:11px;background:rgba(0,0,0,.28);backdrop-filter:none;padding:6px 7px}.search input{font-size:11px}.search button{padding:8px 10px;border-radius:8px;font-size:9px}
-    .intake{min-height:0;display:grid;grid-template-rows:46px minmax(0,1fr);border-top:1px solid rgba(236,224,198,.08)}.intake .panel-head{height:46px}.video-list{height:auto;padding:7px}
-    .video-card{grid-template-columns:76px minmax(0,1fr);gap:9px;padding:7px;border-bottom:1px solid rgba(255,255,255,.035);border-radius:10px}.thumb{width:76px;border-radius:7px}.v-title{font-size:10px}.v-meta{font-size:8px}.video-card.on{border-color:rgba(197,161,95,.28);background:rgba(197,161,95,.075)}
-    body.embed .shell{padding-top:70px}
-    @media(max-width:1100px){body{overflow:auto}.shell{height:auto;min-height:100vh}.vault{grid-template-columns:1fr}.main-stage{min-height:720px}.right-rail{height:620px}.reader{height:auto}.stats{grid-template-columns:repeat(3,1fr)}.search{grid-column:auto}.screening{min-height:0}}
-    @media(max-width:700px){.shell{padding:14px}.main-stage{min-height:0}.hero{height:270px}.reader{height:auto}.right-rail{height:600px}.transcript{padding:16px 20px 48px}.reader .panel-head{margin:8px 20px 0}.panel{margin-bottom:0}.video-list{height:auto}.sub,.seal{display:none}}
+    .panel-head{height:44px;padding:0 14px;display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.13);border-bottom:1px solid rgba(236,224,198,.1)}
+    .panel-head strong{font:900 8px/1 ui-monospace,monospace;letter-spacing:.17em;text-transform:uppercase;color:#d4bb89}
+    .reader .panel-head{margin:8px 26px 0;padding:0;border-top:1px solid rgba(236,224,198,.11);border-bottom:0;background:transparent}
+    .wordmark{color:#777268;font:700 8px/1 ui-monospace,monospace;letter-spacing:.13em;text-transform:uppercase}
+    .transcript{min-height:36vh;padding:17px 26px 64px;font:16px/1.92 Georgia,serif;color:rgba(245,239,227,.88);white-space:pre-wrap}
+    .transcript.unavailable{font-family:inherit;font-size:11px;color:#9b978f;text-align:center}
+
+    /* The right rail is the only remote/control surface. */
+    .right-rail{min-height:0;display:grid;grid-template-rows:auto auto auto minmax(0,1fr);background:linear-gradient(160deg,rgba(4,5,4,.7),rgba(2,3,2,.5))}
+    .rail-title{padding:15px 15px 12px;border-bottom:1px solid rgba(236,224,198,.11)}
+    .rail-title>strong{display:block;color:#dcc796;font:900 9px/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase}
+    .rail-title>span{display:block;margin-top:6px;color:rgba(225,218,205,.55);font-size:9px;line-height:1.4}
+    .remote-modes{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-top:12px;padding:4px;border:1px solid rgba(236,224,198,.1);border-radius:12px;background:rgba(0,0,0,.3)}
+    .remote-mode{min-width:0;border:0;border-radius:9px;padding:9px 5px;background:transparent;color:#8f8b82;font:850 9px/1 ui-monospace,monospace;letter-spacing:.07em;text-transform:uppercase;cursor:pointer}.remote-mode[hidden]{display:none}
+    .remote-mode.on{background:linear-gradient(135deg,rgba(163,255,18,.95),rgba(190,255,82,.86));color:#10130c;box-shadow:0 5px 18px rgba(163,255,18,.12)}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid rgba(236,224,198,.11)}
+    .stat{min-width:0;border-right:1px solid rgba(236,224,198,.1);padding:12px 10px}.stat:last-child{border-right:0}
+    .stat b{display:block;font:500 20px/1 Georgia,serif}.stat span{display:block;margin-top:4px;color:#a89d88;text-transform:uppercase;letter-spacing:.13em;font-size:7px}
+    .search{display:flex;align-items:center;gap:7px;margin:9px;border:1px solid rgba(236,224,198,.12);border-radius:11px;background:rgba(0,0,0,.28);padding:6px 7px}
+    .search[hidden]{display:none}.search input{width:100%;border:0;outline:0;background:transparent;color:white;font-size:10px}.search button{border:0;border-radius:8px;background:var(--lime);color:#0a0c08;padding:8px 10px;font-size:8px;font-weight:900;cursor:pointer}
+    .remote-body{min-height:0;display:grid;grid-template-rows:42px minmax(0,1fr);border-top:1px solid rgba(236,224,198,.08)}
+    .remote-list{min-height:0;overflow:auto;padding:7px;scrollbar-width:none}
+    .remote-group{padding:10px 8px 5px;color:#a58e61;font:850 8px/1 ui-monospace,monospace;letter-spacing:.17em;text-transform:uppercase}
+    .video-card{width:100%;display:grid;grid-template-columns:72px minmax(0,1fr);gap:9px;border:1px solid transparent;border-bottom-color:rgba(255,255,255,.04);background:transparent;color:inherit;text-align:left;border-radius:10px;padding:7px;cursor:pointer}
+    .video-card:hover,.video-card.on,.remote-card:hover,.remote-card.on{border-color:rgba(197,161,95,.25);background:rgba(197,161,95,.07)}
+    .thumb{width:72px;aspect-ratio:16/9;object-fit:cover;border-radius:7px;background:#111;filter:saturate(.82)}
+    .v-day{color:var(--lime);font:800 7px/1 ui-monospace,monospace;letter-spacing:.1em;text-transform:uppercase}.v-title{display:block;margin-top:5px;font-size:10px;font-weight:760;line-height:1.25}.v-meta{display:block;margin-top:5px;color:#85827b;font-size:8px}
+    .remote-card{width:100%;display:block;border:1px solid transparent;border-bottom-color:rgba(255,255,255,.045);border-radius:10px;padding:10px;background:transparent;color:inherit;text-align:left;cursor:pointer}
+    .remote-card b{display:block;font-size:10px;line-height:1.3}.remote-card span{display:block;margin-top:5px;color:#85827b;font-size:8px;line-height:1.4}.remote-card i{color:var(--lime);font-style:normal}
+    .provider-summary{padding:12px 10px;border-bottom:1px solid rgba(255,255,255,.04)}.provider-summary b{font:500 20px/1 Georgia,serif}.provider-summary span{display:block;margin-top:5px;color:#8e8a82;font-size:9px;line-height:1.4}
+
+    .worker-stage{padding:30px}.stage-kicker{color:var(--lime);font:900 9px/1 ui-monospace,monospace;letter-spacing:.18em;text-transform:uppercase}
+    .worker-stage h2,.strategy-focus h2{margin:9px 0 7px;font:500 clamp(27px,2.4vw,38px)/1.05 Georgia,serif}.stage-copy{max-width:720px;color:#aaa49a;font-size:11px;line-height:1.6}
+    .worker-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:24px}
+    .worker-tile{min-width:0;min-height:165px;padding:16px;border:1px solid rgba(236,224,198,.12);border-radius:14px;background:linear-gradient(145deg,rgba(9,10,8,.64),rgba(1,2,1,.26));box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+    .worker-lane{color:#b59d70;font:850 8px/1 ui-monospace,monospace;letter-spacing:.15em;text-transform:uppercase}.worker-tile h3{margin:10px 0 5px;font:500 19px/1.1 Georgia,serif}.worker-model{color:var(--lime);font:800 9px/1.35 ui-monospace,monospace;overflow-wrap:anywhere}.worker-job{margin-top:12px;color:#aaa59c;font-size:10px;line-height:1.55}.worker-fallback{margin-top:11px;padding-top:9px;border-top:1px solid rgba(255,255,255,.06);color:#74716a;font-size:8px}
+    .strategy-focus{padding:34px;max-width:900px}.strategy-focus .provenance{max-width:680px}.stage-actions{display:flex;gap:8px;margin-top:18px}.stage-action{display:inline-flex;padding:10px 13px;border:1px solid rgba(163,255,18,.24);border-radius:999px;color:var(--lime);text-decoration:none;font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.08em}
+
+    body.embed .shell{padding-top:70px}body.embed header .back{display:none}body.embed .title{font-size:34px}
+    @media(max-width:1100px){body{overflow:auto}.shell{height:auto;min-height:100vh}.vault{grid-template-columns:1fr}.main-stage{min-height:720px}.right-rail{height:620px}.worker-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:700px){.shell{padding:14px}.hero{height:270px}.right-rail{height:600px}.transcript{padding:16px 20px 48px}.reader .panel-head{margin:8px 20px 0}.sub,.seal{display:none}.worker-stage{padding:22px}.worker-grid{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
   <main class="shell">
     <header>
-      <div><a class="back" href="/slumhouse/crib.html">← The Crib</a><div class="eyebrow">Slumhouse · Source intelligence</div><h1 class="title">The Media Evidence Vault</h1><div class="sub">Daily YouTube discoveries, complete source transcripts, and every strategy receipt tied back to the video that taught it.</div></div>
+      <div><a class="back" href="/slumhouse/crib.html">&larr; The Crib</a><div class="eyebrow">Slumhouse - Source intelligence</div><h1 class="title">The Media Evidence Vault</h1><div class="sub">Daily discoveries, complete transcripts, linked strategy receipts, and the real model crew behind the system.</div></div>
       <div class="seal">Read-only evidence archive</div>
     </header>
     <section class="vault">
-      <section class="panel main-stage is-empty" aria-label="Selected video evidence">
-        <div class="screening" id="screening"><div class="empty"><div><b>The stage is ready</b>Select a real discovery from the right rail.</div></div></div>
+      <section class="panel main-stage is-empty" aria-label="Vault stage">
+        <div class="screening" id="screening"><div class="empty"><div><b>The stage is ready</b>Use the right-rail remote to choose a real view.</div></div></div>
         <div class="reader" hidden><div class="panel-head"><strong>Full transcript</strong><span class="wordmark" id="wordmark">Evidence text</span></div><div class="transcript unavailable" id="transcript">Select a video to read its archived transcript.</div></div>
       </section>
-      <aside class="panel right-rail" aria-label="Daily media intake">
-        <div class="rail-title"><strong>Today's intake</strong><span>New source evidence arrives here as the extraction agents find it.</span></div>
-        <section class="stats" aria-label="Archive totals"><div class="stat"><b id="stat-today">—</b><span>Today</span></div><div class="stat"><b id="stat-ready">—</b><span>Ready</span></div><div class="stat"><b id="stat-total">—</b><span>Archive</span></div></section>
-        <form class="search" id="search"><input id="query" type="search" autocomplete="off" placeholder="Search the archive"><button type="submit">Search</button></form>
-        <div class="intake"><div class="panel-head"><strong>Daily discoveries</strong><button class="today-only" id="today-only" type="button">Today only</button></div><div class="video-list" id="video-list"><div class="empty">Opening the archive…</div></div></div>
+      <aside class="panel right-rail" aria-label="Evidence Vault remote">
+        <div class="rail-title"><strong>The remote</strong><span>Control the stage without leaving the room.</span><div class="remote-modes" role="tablist" aria-label="Vault views"><button class="remote-mode on" data-mode="today" role="tab" aria-selected="true">Today</button><button class="remote-mode" data-mode="library" data-operator-view role="tab" aria-selected="false">Library</button><button class="remote-mode" data-mode="workers" data-operator-view role="tab" aria-selected="false">Workers</button></div></div>
+        <section class="stats" aria-label="Current view totals"><div class="stat"><b id="stat-a">-</b><span id="label-a">Today</span></div><div class="stat"><b id="stat-b">-</b><span id="label-b">Ready</span></div><div class="stat"><b id="stat-c">-</b><span id="label-c">Archive</span></div></section>
+        <form class="search" id="search"><input id="query" type="search" autocomplete="off" placeholder="Search today's intake"><button type="submit">Find</button></form>
+        <div class="remote-body"><div class="panel-head"><strong id="list-title">Today's strategies &amp; sources</strong><span class="wordmark" id="list-count">-</span></div><div class="remote-list" id="remote-list"><div class="empty">Opening the archive...</div></div></div>
       </aside>
     </section>
   </main>
   <script>
     (function(){
-      var params=new URLSearchParams(location.search), selectedId=params.get('video')||'', todayOnly=false, payload=null;
+      var params=new URLSearchParams(location.search),selectedId=params.get('video')||'',selectedStrategyId='',mode='today',payload=null;
       if(params.get('embed')==='1')document.body.classList.add('embed');
       function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
       function when(v){try{return new Date(v).toLocaleString([],{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})}catch(e){return ''}}
       function thumb(id){return 'https://i.ytimg.com/vi/'+encodeURIComponent(id)+'/hqdefault.jpg'}
-      function visibleVideos(){return !payload?[]:payload.videos.filter(function(v){return !todayOnly||v.isToday})}
-      function paintList(){var box=document.getElementById('video-list'), rows=visibleVideos();if(!rows.length){box.innerHTML='<div class="empty"><div><b>No videos in this view</b>'+(todayOnly?'Nothing has been discovered today yet. The archive is still watching.':'No durable YouTube evidence has landed yet.')+'</div></div>';return}box.innerHTML=rows.map(function(v){return '<button class="video-card '+(v.videoId===selectedId?'on':'')+'" data-video="'+esc(v.videoId)+'"><img class="thumb" src="'+thumb(v.videoId)+'" alt="" loading="lazy"><span><span class="v-day">'+(v.isToday?'Today · ':'')+esc(v.transcriptStatus.replace('_',' '))+'</span><span class="v-title">'+esc(v.title)+'</span><span class="v-meta">'+esc(v.channel||'Channel unavailable')+' · '+when(v.discoveredAt)+'</span></span></button>'}).join('');box.querySelectorAll('[data-video]').forEach(function(b){b.addEventListener('click',function(){selectedId=b.getAttribute('data-video')||'';load()})})}
-      function paintSelected(s){
-        var stage=document.querySelector('.main-stage'),screen=document.getElementById('screening'),reader=document.querySelector('.reader'),transcript=document.getElementById('transcript'),mark=document.getElementById('wordmark');
-        if(!s){stage.classList.add('is-empty');reader.hidden=true;screen.innerHTML='<div class="empty"><div><b>No evidence selected</b>Choose a real video from the right-rail remote.</div></div>';transcript.className='transcript unavailable';transcript.textContent='Select a video to read its archived transcript.';mark.textContent='Evidence text';return}
-        stage.classList.remove('is-empty');reader.hidden=false;
-        var strategyHtml=s.strategies.length?s.strategies.map(function(x){return '<a class="strategy-link" href="/slumhouse/recipe.html?id='+encodeURIComponent(x.id)+'"><span>'+esc(x.name)+'</span><em>'+esc(x.symbol)+' · '+esc(x.lifecycleState)+'</em></a>'}).join(''):'<div class="detail-meta">No strategy receipt is linked to this video yet.</div>';
-        screen.innerHTML='<div class="hero"><img src="'+thumb(s.videoId)+'" alt=""><a class="watch" target="_blank" rel="noopener" href="'+esc(s.youtubeUrl)+'">▶ Watch source</a></div><div class="detail"><h2>'+esc(s.title)+'</h2><div class="detail-meta">'+esc(s.channel||'Channel unavailable')+'<br>Discovered '+when(s.discoveredAt)+' · '+Number(s.transcriptChars).toLocaleString()+' transcript characters</div><div class="provenance"><span>Discovery source</span><code>'+esc(s.sourceProvider)+(s.sourceQuery?' · '+esc(s.sourceQuery):'')+'</code><span style="margin-top:10px">SHA-256 evidence seal</span><code>'+esc(s.transcriptSha256||'No transcript seal available')+'</code></div><div class="strategies"><h3>Strategies pulled from this source</h3>'+strategyHtml+'</div></div>';
-        if(s.transcript){transcript.className='transcript';transcript.textContent=s.transcript;mark.textContent=Number(s.transcriptChars).toLocaleString()+' characters · sealed source'}else{transcript.className='transcript unavailable';transcript.textContent='The video was discovered, but a full transcript is not available yet. This state is shown honestly and will upgrade when a retry succeeds.';mark.textContent=esc(s.transcriptStatus)}
+      function query(){return document.getElementById('query').value.trim().toLowerCase()}
+      function matches(values){var q=query();return !q||values.join(' ').toLowerCase().indexOf(q)>=0}
+      function videoCard(v){return '<button class="video-card '+(v.videoId===selectedId?'on':'')+'" data-video="'+esc(v.videoId)+'"><img class="thumb" src="'+thumb(v.videoId)+'" alt="" loading="lazy"><span><span class="v-day">'+(v.isToday?'Today - ':'')+esc(v.transcriptStatus.replace('_',' '))+'</span><span class="v-title">'+esc(v.title)+'</span><span class="v-meta">'+esc(v.channel||'Channel unavailable')+' - '+when(v.discoveredAt)+'</span></span></button>'}
+      function strategyCard(s){var evidence=s.sourceVideoId?'<i>'+esc(s.transcriptStatus||'evidence')+'</i> - '+esc(s.sourceTitle||'source linked'):'Evidence pending';return '<button class="remote-card '+(s.id===selectedStrategyId?'on':'')+'" data-strategy="'+esc(s.id)+'"><b>'+esc(s.name)+'</b><span>'+esc(s.symbol)+' - '+esc(s.timeframe)+' - '+esc(s.lifecycleState)+'<br>'+evidence+'</span></button>'}
+      function wireRemote(){
+        document.querySelectorAll('[data-video]').forEach(function(button){button.addEventListener('click',function(){selectedId=button.getAttribute('data-video')||'';selectedStrategyId='';load()})});
+        document.querySelectorAll('[data-strategy]').forEach(function(button){button.addEventListener('click',function(){selectedStrategyId=button.getAttribute('data-strategy')||'';var strategy=payload.strategies.find(function(item){return item.id===selectedStrategyId});if(strategy&&strategy.sourceVideoId){selectedId=strategy.sourceVideoId;load()}else if(strategy){paintStrategy(strategy);paintRemote()}})});
       }
-      function load(){var q=document.getElementById('query').value.trim(), u='/slumhouse/api/evidence-vault?'+new URLSearchParams(Object.assign({},selectedId?{video:selectedId}:{},q?{q:q}:{}));fetch(u,{credentials:'same-origin'}).then(function(r){if(r.status===401){location.href='/slumhouse/login.html';throw new Error('auth')}if(!r.ok)throw new Error('unavailable');return r.json()}).then(function(d){payload=d;selectedId=d.selected?d.selected.videoId:selectedId;document.getElementById('stat-today').textContent=d.stats.today;document.getElementById('stat-ready').textContent=d.stats.available;document.getElementById('stat-total').textContent=d.stats.total;paintList();paintSelected(d.selected);if(selectedId){var next=new URL(location.href);next.searchParams.set('video',selectedId);history.replaceState(null,'',next)}}).catch(function(e){if(e.message==='auth')return;document.getElementById('video-list').innerHTML='<div class="empty"><div><b>Archive connection interrupted</b>The evidence service is unavailable. No empty-state claim is being made.</div></div>';paintSelected(null)})}
-      document.getElementById('search').addEventListener('submit',function(e){e.preventDefault();selectedId='';load()});document.getElementById('today-only').addEventListener('click',function(){todayOnly=!todayOnly;this.classList.toggle('on',todayOnly);paintList()});load();
+      function paintStats(){
+        var a=document.getElementById('stat-a'),b=document.getElementById('stat-b'),c=document.getElementById('stat-c'),la=document.getElementById('label-a'),lb=document.getElementById('label-b'),lc=document.getElementById('label-c');
+        if(mode==='today'){a.textContent=payload.stats.today;b.textContent=payload.stats.available;c.textContent=payload.stats.total;la.textContent='Today';lb.textContent='Ready';lc.textContent='Archive'}
+        else if(mode==='library'){var linked=payload.strategies.filter(function(s){return !!s.sourceVideoId}).length,today=payload.strategies.filter(function(s){return s.sourceIsToday}).length;a.textContent=payload.stats.strategies;b.textContent=linked;c.textContent=today;la.textContent='Strategies';lb.textContent='Linked';lc.textContent='Today'}
+        else{var cloud=payload.workers.filter(function(w){return w.provider==='openai'}).length,local=payload.workers.filter(function(w){return w.provider==='ollama'}).length;a.textContent=payload.stats.workers;b.textContent=cloud;c.textContent=local;la.textContent='Workers';lb.textContent='Cloud';lc.textContent='Local'}
+      }
+      function paintRemote(){
+        if(!payload)return;var box=document.getElementById('remote-list'),title=document.getElementById('list-title'),count=document.getElementById('list-count'),search=document.getElementById('search'),html='',n=0;
+        if(mode==='today'){
+          var strategies=payload.strategies.filter(function(s){return s.sourceIsToday&&matches([s.name,s.symbol,s.timeframe,s.lifecycleState,s.sourceTitle||''])}),videos=payload.videos.filter(function(v){return v.isToday&&matches([v.title,v.channel||'',v.sourceQuery||''])});
+          n=strategies.length+videos.length;title.textContent="Today's strategies & sources";search.hidden=false;
+          if(strategies.length)html+='<div class="remote-group">Strategies extracted today</div>'+strategies.map(strategyCard).join('');
+          if(videos.length)html+='<div class="remote-group">Videos discovered today</div>'+videos.map(videoCard).join('');
+          if(!html)html='<div class="empty"><div><b>Nothing landed today yet</b>The intake stays ready without inventing activity.</div></div>';
+        }else if(mode==='library'){
+          var library=payload.strategies.filter(function(s){return matches([s.name,s.symbol,s.timeframe,s.lifecycleState,s.sourceTitle||''])});n=library.length;title.textContent='Full strategy library';search.hidden=false;html=library.length?library.map(strategyCard).join(''):'<div class="empty"><div><b>No matching strategies</b>Try a different library search.</div></div>';
+        }else{
+          var cloudWorkers=payload.workers.filter(function(w){return w.provider==='openai'}),localWorkers=payload.workers.filter(function(w){return w.provider==='ollama'});n=payload.workers.length;title.textContent='Configured worker roster';search.hidden=true;html='<div class="provider-summary"><b>'+cloudWorkers.length+'</b><span>Cloud-model roles in the canonical router</span></div><div class="provider-summary"><b>'+localWorkers.length+'</b><span>Local-model roles on the tower</span></div><div class="provider-summary"><b>'+payload.workers.length+'</b><span>Total real model jobs shown on stage</span></div>';
+        }
+        count.textContent=String(n);box.innerHTML=html;wireRemote();paintStats();
+      }
+      function stageParts(){return {stage:document.querySelector('.main-stage'),screen:document.getElementById('screening'),reader:document.querySelector('.reader'),transcript:document.getElementById('transcript'),mark:document.getElementById('wordmark')}}
+      function paintSelected(selected){
+        var p=stageParts();p.stage.classList.remove('worker-mode');
+        if(!selected){p.stage.classList.add('is-empty');p.reader.hidden=true;p.screen.innerHTML='<div class="empty"><div><b>No evidence selected</b>Choose a real item from the right-rail remote.</div></div>';p.transcript.className='transcript unavailable';p.transcript.textContent='Select a video to read its archived transcript.';p.mark.textContent='Evidence text';return}
+        p.stage.classList.remove('is-empty');p.reader.hidden=false;
+        var strategyHtml=selected.strategies.length?selected.strategies.map(function(item){return '<a class="strategy-link" href="/slumhouse/recipe.html?id='+encodeURIComponent(item.id)+'"><span>'+esc(item.name)+'</span><em>'+esc(item.symbol)+' - '+esc(item.lifecycleState)+'</em></a>'}).join(''):'<div class="detail-meta">No strategy receipt is linked to this video yet.</div>';
+        p.screen.innerHTML='<div class="hero"><img src="'+thumb(selected.videoId)+'" alt=""><a class="watch" target="_blank" rel="noopener" href="'+esc(selected.youtubeUrl)+'">Watch source</a></div><div class="detail"><h2>'+esc(selected.title)+'</h2><div class="detail-meta">'+esc(selected.channel||'Channel unavailable')+'<br>Discovered '+when(selected.discoveredAt)+' - '+Number(selected.transcriptChars).toLocaleString()+' transcript characters</div><div class="provenance"><span>Discovery source</span><code>'+esc(selected.sourceProvider)+(selected.sourceQuery?' - '+esc(selected.sourceQuery):'')+'</code><span style="margin-top:10px">SHA-256 evidence seal</span><code>'+esc(selected.transcriptSha256||'No transcript seal available')+'</code></div><div class="strategies"><h3>Strategies pulled from this source</h3>'+strategyHtml+'</div></div>';
+        if(selected.transcript){p.transcript.className='transcript';p.transcript.textContent=selected.transcript;p.mark.textContent=Number(selected.transcriptChars).toLocaleString()+' characters - sealed source'}else{p.transcript.className='transcript unavailable';p.transcript.textContent='The video was discovered, but a full transcript is not available yet. This state is shown honestly and will upgrade when a retry succeeds.';p.mark.textContent=selected.transcriptStatus}
+      }
+      function paintStrategy(strategy){var p=stageParts();p.stage.classList.remove('is-empty','worker-mode');p.reader.hidden=true;p.screen.innerHTML='<div class="strategy-focus"><div class="stage-kicker">Strategy library</div><h2>'+esc(strategy.name)+'</h2><div class="stage-copy">'+esc(strategy.symbol)+' - '+esc(strategy.timeframe)+' - '+esc(strategy.lifecycleState)+'</div><div class="provenance"><span>Source evidence</span><code>No durable transcript is linked to this strategy yet. The Vault will expose it here when a real source relationship lands.</code></div><div class="stage-actions"><a class="stage-action" href="/slumhouse/recipe.html?id='+encodeURIComponent(strategy.id)+'">Open strategy receipt</a></div></div>'}
+      function paintWorkers(){var p=stageParts();p.stage.classList.remove('is-empty');p.stage.classList.add('worker-mode');p.reader.hidden=true;var tiles=payload.workers.map(function(worker){var fallback=worker.fallbackModel?'<div class="worker-fallback">Fallback - '+esc(worker.fallbackProvider)+' / '+esc(worker.fallbackModel)+'</div>':'';return '<article class="worker-tile"><div class="worker-lane">'+esc(worker.lane)+' lane</div><h3>'+esc(worker.name)+'</h3><div class="worker-model">'+esc(worker.provider)+' / '+esc(worker.model)+'</div><div class="worker-job">'+esc(worker.job)+'</div>'+fallback+'</article>'}).join('');p.screen.innerHTML='<div class="worker-stage"><div class="stage-kicker">The model crew</div><h2>Every configured worker, one floor</h2><div class="stage-copy">These tiles come directly from the canonical model router. No fictional worker, model, or job is displayed.</div><div class="worker-grid">'+tiles+'</div></div>'}
+      function setMode(next){mode=next;document.querySelectorAll('[data-mode]').forEach(function(button){var on=button.getAttribute('data-mode')===mode;button.classList.toggle('on',on);button.setAttribute('aria-selected',on?'true':'false')});var input=document.getElementById('query');input.value='';input.placeholder=mode==='library'?'Search strategy library':"Search today's intake";paintRemote();if(mode==='workers')paintWorkers();else paintSelected(payload.selected)}
+      function load(){var url='/slumhouse/api/evidence-vault?'+new URLSearchParams(selectedId?{video:selectedId}:{});fetch(url,{credentials:'same-origin'}).then(function(response){if(response.status===401){location.href='/slumhouse/login.html';throw new Error('auth')}if(!response.ok)throw new Error('unavailable');return response.json()}).then(function(data){payload=data;document.querySelectorAll('[data-operator-view]').forEach(function(button){button.hidden=!data.capabilities.operatorViews});selectedId=data.selected?data.selected.videoId:selectedId;paintRemote();if(mode==='workers')paintWorkers();else paintSelected(data.selected);if(selectedId){var next=new URL(location.href);next.searchParams.set('video',selectedId);history.replaceState(null,'',next)}}).catch(function(error){if(error.message==='auth')return;document.getElementById('remote-list').innerHTML='<div class="empty"><div><b>Vault connection interrupted</b>The service is unavailable. No empty-state claim is being made.</div></div>';paintSelected(null)})}
+      document.getElementById('search').addEventListener('submit',function(event){event.preventDefault();paintRemote()});
+      document.getElementById('query').addEventListener('input',paintRemote);
+      document.querySelectorAll('[data-mode]').forEach(function(button){button.addEventListener('click',function(){setMode(button.getAttribute('data-mode')||'today')})});
+      load();
     })();
   </script>
 </body>

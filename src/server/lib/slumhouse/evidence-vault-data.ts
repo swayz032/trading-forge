@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { db } from "../../db/index.js";
+import { getEvidenceVaultWorkers, type EvidenceVaultWorker } from "./worker-directory.js";
 
 export interface EvidenceVideoCard {
   id: string;
@@ -18,8 +19,22 @@ export interface EvidenceVideoCard {
 
 export interface EvidenceVaultPayload {
   generatedAt: string;
-  stats: { today: number; available: number; total: number };
+  capabilities: { operatorViews: boolean };
+  stats: { today: number; available: number; total: number; strategies: number; workers: number };
   videos: EvidenceVideoCard[];
+  strategies: Array<{
+    id: string;
+    name: string;
+    symbol: string;
+    timeframe: string;
+    lifecycleState: string;
+    sourceVideoId: string | null;
+    sourceTitle: string | null;
+    sourceDiscoveredAt: string | null;
+    sourceIsToday: boolean;
+    transcriptStatus: string | null;
+  }>;
+  workers: EvidenceVaultWorker[];
   selected: (EvidenceVideoCard & {
     transcript: string | null;
     transcriptSha256: string | null;
@@ -44,7 +59,7 @@ function toCard(row: any): EvidenceVideoCard {
   };
 }
 
-export async function assembleEvidenceVault(args: { videoId?: string; search?: string }): Promise<EvidenceVaultPayload> {
+export async function assembleEvidenceVault(args: { videoId?: string; search?: string; includeOperator?: boolean }): Promise<EvidenceVaultPayload> {
   const search = args.search?.trim().slice(0, 120) ?? "";
   const rows = (await db.execute(sql`
     SELECT id::text, video_id, youtube_url, title, channel, transcript_status,
@@ -67,6 +82,38 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
       COUNT(*)::int AS total
     FROM youtube_evidence_archive
   `)) as any[];
+
+  const strategyRows = args.includeOperator ? (await db.execute(sql`
+    SELECT s.id::text, s.name, s.symbol, s.timeframe, s.lifecycle_state,
+           evidence.video_id AS source_video_id,
+           evidence.title AS source_title,
+           evidence.discovered_at AS source_discovered_at,
+           evidence.transcript_status,
+           CASE WHEN evidence.discovered_at IS NULL THEN false ELSE
+             ((evidence.discovered_at AT TIME ZONE 'America/New_York')::date =
+              (now() AT TIME ZONE 'America/New_York')::date)
+           END AS source_is_today
+    FROM strategies s
+    LEFT JOIN LATERAL (
+      SELECT e.video_id, e.title, e.discovered_at, e.transcript_status
+      FROM youtube_evidence_archive e
+      WHERE COALESCE(s.config->'metadata'->>'source_url', '') ILIKE ('%' || e.video_id || '%')
+         OR COALESCE(s.config->'compiled_spec'->>'video', '') ILIKE ('%' || e.video_id || '%')
+         OR EXISTS (
+           SELECT 1
+           FROM strategy_pending_buckets b
+           JOIN strategy_pending_mentions m ON m.bucket_id = b.id
+           WHERE b.graduated_strategy_id = s.id
+             AND COALESCE(m.source_url, '') ILIKE ('%' || e.video_id || '%')
+         )
+      ORDER BY e.discovered_at DESC
+      LIMIT 1
+    ) evidence ON true
+    ORDER BY s.created_at DESC, s.name ASC
+    LIMIT 300
+  `)) as any[] : [];
+
+  const workers = args.includeOperator ? getEvidenceVaultWorkers() : [];
 
   const requestedVideoId = args.videoId?.trim() || rows[0]?.video_id || null;
   let selected: EvidenceVaultPayload["selected"] = null;
@@ -109,12 +156,30 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
 
   return {
     generatedAt: new Date().toISOString(),
+    capabilities: { operatorViews: Boolean(args.includeOperator) },
     stats: {
       today: Number(counts?.today ?? 0),
       available: Number(counts?.available ?? 0),
       total: Number(counts?.total ?? 0),
+      strategies: strategyRows.length,
+      workers: workers.length,
     },
     videos: rows.map(toCard),
+    strategies: strategyRows.map((strategy) => ({
+      id: String(strategy.id),
+      name: String(strategy.name),
+      symbol: String(strategy.symbol),
+      timeframe: String(strategy.timeframe),
+      lifecycleState: String(strategy.lifecycle_state),
+      sourceVideoId: strategy.source_video_id == null ? null : String(strategy.source_video_id),
+      sourceTitle: strategy.source_title == null ? null : String(strategy.source_title),
+      sourceDiscoveredAt: strategy.source_discovered_at == null
+        ? null
+        : new Date(strategy.source_discovered_at).toISOString(),
+      sourceIsToday: Boolean(strategy.source_is_today),
+      transcriptStatus: strategy.transcript_status == null ? null : String(strategy.transcript_status),
+    })),
+    workers,
     selected,
   };
 }
