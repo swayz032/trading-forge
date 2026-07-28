@@ -132,7 +132,9 @@ export async function assembleEvidenceVault(args: { videoId?: string; search?: s
 
   const workers = args.includeOperator ? getEvidenceVaultWorkers() : [];
 
-  const requestedVideoId = args.videoId?.trim() || rows[0]?.video_id || null;
+  // The stage is operator-controlled. Merely opening the room must not imply
+  // that the newest archive item was deliberately selected.
+  const requestedVideoId = args.videoId?.trim() || null;
   let selected: EvidenceVaultPayload["selected"] = null;
   if (requestedVideoId) {
     const [detail] = (await db.execute(sql`

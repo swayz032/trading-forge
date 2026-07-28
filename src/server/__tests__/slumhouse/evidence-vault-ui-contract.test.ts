@@ -34,6 +34,9 @@ describe("Media Evidence Vault production contract", () => {
     expect(page).not.toContain('id="today-only"');
     expect(page).toContain("Full transcript");
     expect(page).toContain("SHA-256 evidence seal");
+    expect(page).toContain("maxresdefault.jpg");
+    expect(page).toContain("readableTranscript(selected.transcript)");
+    expect(page).toContain("Readable evidence copy");
     expect(page).toContain("/slumhouse/recipe.html?id=");
     expect(page).toContain("v.isToday");
   });
