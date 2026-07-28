@@ -142,7 +142,8 @@ CircuitBreakerRegistry.setOnStateChange((name, _from, to) => {
 //   • HTTP 5xx / timeout / network error → probe_failed (don't emit warning)
 //
 // No new scheduler cron is added — probe fires:
-//   (a) Once at boot (via setImmediate after module load) — primary signal.
+//   (a) Once at boot via startBootProbe(), called explicitly from index.ts —
+//       NOT at module load (R-365: import must never schedule broker contact).
 //   (b) Lazily inside routeOrder() for the traderspost path — when the per-account
 //       probe result is >4h old, a non-blocking async re-probe is fired. The
 //       in-flight probe doesn't delay the current order; the NEXT order sees
@@ -345,12 +346,24 @@ export async function probeTradersPostApiKeys(): Promise<void> {
   }
 }
 
-// Boot-time probe — OPT-IN, default OFF (2026-07-28, R-359).
-// The flag is checked at MODULE SCOPE, not just inside the probe: the defect was
-// that `setImmediate` at import time made IMPORT equal INTENT, so a unit test, a
-// script, a migration runner or a REPL that merely imported this module scheduled
-// an outbound POST to the live broker. With the flag unset nothing is scheduled.
-if (isKeyProbeEnabled()) {
+/**
+ * Start the boot-time credential probe. Call ONCE from the application entry
+ * point — never at module scope.
+ *
+ * 2026-07-28 (R-365): module scope schedules NOTHING, in any flag state. The
+ * original defect was that `setImmediate` at import time made IMPORT equal
+ * INTENT — a unit test, a script, a migration runner or a REPL that merely
+ * imported this module scheduled an outbound POST to the live broker. R-359
+ * put that scheduling behind a flag, which only made the property CONDITIONAL:
+ * with the flag on — the exact state the operator is in the day they want a
+ * probe — import meant intent again for every importer in the system. Safe by
+ * DEFAULT is not safe by DESIGN. An importer now gets an inert module and an
+ * unexported side effect; only an explicit call schedules anything.
+ *
+ * The gate itself is unchanged: checkProbeGate() still decides whether the
+ * probe may contact a broker (flag, live-config, kill switch, pipeline).
+ */
+export function startBootProbe(): void {
   setImmediate(() => {
     void probeTradersPostApiKeys().catch((e: unknown) => {
       logger.warn({ err: e }, "broker-router: A-11: boot-time key probe failed silently (non-blocking)");

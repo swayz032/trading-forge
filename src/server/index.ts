@@ -97,6 +97,7 @@ import { OTEL_AVAILABLE } from "./lib/tracing.js";
 import { CircuitBreakerRegistry } from "./lib/circuit-breaker.js";
 import { AlertFactory } from "./services/alert-service.js";
 import { initAgentCoordination } from "./services/agent-coordinator-service.js";
+import { startBootProbe } from "./services/broker-router.js";
 import { auditorRoutes } from "./routes/auditor.js";
 import { shadowRerunRoutes } from "./routes/shadow-rerun.js";
 import { scoutHealthRoutes } from "./routes/scout-health.js";
@@ -819,6 +820,16 @@ process.on("uncaughtException", (err) => {
 
 export const server = app.listen(port, () => {
   logger.info(`Trading Forge running on http://localhost:${port}`);
+
+  // 2026-07-28 (R-365): the TradersPost credential probe is scheduled HERE and
+  // nowhere else. It used to self-schedule at broker-router module scope, which
+  // made IMPORT equal INTENT — any test, script, migration runner or REPL that
+  // imported that module scheduled an outbound POST to the live broker. Putting
+  // it behind a flag only made that conditional; this makes the module inert on
+  // import in every flag state. The probe's own gate (flag + live-config + kill
+  // switch + pipeline, all fail-CLOSED) still decides whether it may contact a
+  // broker — this call only decides WHEN it is considered at all.
+  startBootProbe();
 
   // deepscan7 D2 (2026-07-02): bootCorrelationId is now the SINGLE module-level id
   // minted before migrations (top of this file) — the local re-mint that used to
