@@ -15772,6 +15772,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Corrected the shared HTML-shell gate after a live probe caught that the API accepted Office admin sessions while the page shell still accepted only Discord members; the page and API now enforce the same dual-session contract.
 - Added a generated premium screening-archive visual asset and desktop/mobile browser validation.
 - Refined the Vault into one uncluttered transparent-black main stage plus a narrow right intake rail, with thinner glass borders and reduced overlays so the generated archive environment remains visible behind live content.
+- Removed the erroneous attached transcript pane: selected video, provenance, linked strategy receipts, and transcript now flow through one continuous main stage; the right rail alone owns search, counters, filters, and discovery selection as the room remote.
 - Registered the new table in the subsystem topology and synchronized generated system-map evidence.
 
 **Verification:**
@@ -15781,6 +15782,7 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 - Evidence-room live-gate regression set: 13/13 passed, including Office-admin and anonymous fail-closed cases.
 - TypeScript build, production-isolation gate, 2026-compliance gate, system-map check, changed-file ESLint, and `git diff --check`: passed.
 - Playwright desktop and mobile visual flows rendered with no console errors.
+- Playwright revalidated both empty and populated 1920x1080 states after the single-stage correction; neither state renders a second attached screen.
 - Repository-wide deep scan remains red on pre-existing environment/repository findings: 186 legacy ESLint errors outside this change, stale/unreachable runtime evidence, missing `/api/production-status` topology evidence, and stale n8n workflow evidence. The files changed for this mission have zero ESLint errors.
 
 **Known-facts updates:** Production previously retained transcript fetch outcomes and short quote snippets, not durable full transcripts. Full transcripts become durable only after migration 0207 is deployed and new intake passes through one of the wired producers; historical full transcripts cannot be reconstructed from the prior database records alone.
