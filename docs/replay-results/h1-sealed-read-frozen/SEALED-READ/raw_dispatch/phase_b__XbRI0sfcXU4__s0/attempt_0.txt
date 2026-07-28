@@ -1,0 +1,60 @@
+{
+  "strategies": [
+    {
+      "name": "ema25_channel_break_short",
+      "direction": "short",
+      "entry_sequence": [
+        {
+          "action": "the bulls tried to push that from 50 moving average line and there is a rejection there with the weak close like that"
+        },
+        {
+          "action": "see in this channel forming then i'm expecting a channel break here and another move down"
+        },
+        {
+          "action": "i'm waiting that bar close under the that blue 25 exponential moving average line order and right after see this confirmation on that bar then i wanted to enter right on this part here"
+        },
+        {
+          "action": "i added the second contract on that pullback"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "i don't want to see the price close above that 25 exponential moving average and possibly breaking this channel and go up"
+        },
+        {
+          "description": "i'm getting ready to kill this trade if i see a close"
+        }
+      ],
+      "stop": {
+        "description": "i wanted to move that stop loss above it but the price just caught me; right there i decided to put my stop loss there break even so if it's gonna take me out then it will"
+      },
+      "targets": [
+        {
+          "description": "the first move is like this much so you can expect the same size around right there"
+        },
+        {
+          "description": "i bring my stop loss and i decided the exit on this bottom level here target filled"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument": "NQ",
+    "asset_class": "index_futures",
+    "notes": "nq price action afternoon time"
+  },
+  "coaching_notes": [
+    "i gave enough time i don't want to wait too long because sometimes if you don't see that move in time then usually price goes back up",
+    "this price needs to break down soon otherwise it's gonna go either sideway or go back up"
+  ],
+  "coverage_notes": [
+    "ENTRY under 25 EMA: PRESENT (entry_sequence step 3, verbatim).",
+    "PRECONDITION 50 MA rejection with weak close: PRESENT (entry_sequence step 1).",
+    "PRECONDITION down channel forming / channel break down: PRESENT (entry_sequence step 2).",
+    "SCALE-IN second contract on pullback: PRESENT (entry_sequence step 4).",
+    "INVALIDATION close above 25 EMA / kill the trade: PRESENT (confluences).",
+    "STOP above entry then moved to break-even: PRESENT (stop).",
+    "TARGET prior bottom level + measured-move same-size second leg: PRESENT (targets). Note: the ~$1900 on two contracts is that day's example P&L, not a rule â€” not extracted as a target level."
+  ],
+  "rejected_strategies": []
+}

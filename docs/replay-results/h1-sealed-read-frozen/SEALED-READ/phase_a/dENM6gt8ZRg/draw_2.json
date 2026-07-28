@@ -1,0 +1,61 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "One taught strategy: ORB-with-retest, entry and exit fully specified. The video's 'change the parameters' segment (e.g. the profitable Gold case) is the SAME entry/exit skeleton with unspecified parameter changes â€” a configuration variation, not a distinct strategy, and too vague (no concrete alternate parameter values given) to enumerate as a variant.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "Don't trust gurus. Don't trust me. Test it yourself, on your own data, with your own broker.",
+        "Test conditions must be as close to real trading as possible (include real commissions, spread, slippage); otherwise you're testing an illusion.",
+        "One lucky month is not a strategy; it's a coincidence dressed up as a system.",
+        "Avoid overfitting (changing parameters until the past looks perfect), look-ahead bias, and improper data separation.",
+        "A beautiful equity curve is not proof; the base version doesn't work on default settings â€” find your own combination through honest testing."
+      ],
+      "element_inventory": [
+        "Opening Range defined as the high and low of the first 5-minute candle from 09:30 to 09:35 New York time",
+        "Midpoint computed exactly halfway between the range high and low",
+        "Breakout valid ONLY when a candle body closes completely outside the range (a wick or touch does not count)",
+        "Retest valid ONLY when the candle opens outside the range, the wick dips inside, and the close is back outside",
+        "Retest invalid if the candle closes inside the range -> discard and wait for the next candle",
+        "Entry on the open of the next candle after the valid retest",
+        "Stop loss placed at the range midpoint",
+        "Take profit at a 2:1 (take-profit-to-stop-loss) ratio",
+        "All decisions made on closed candles only (look-ahead eliminated)",
+        "Risk per trade = 1% of deposit (configurable as percent-of-deposit or fixed lot)",
+        "Market open time gate at 09:30 NY (configurable parameter)"
+      ],
+      "entry_summary": "Opening Range = high/low of the first 5-minute candle (09:30-09:35 NY). Wait for a breakout where a candle body closes completely outside the range (full close, not a wick/touch). Then wait for a valid retest: a candle that opens outside the range, wicks inside, and closes back outside. Enter on the open of the next candle after the valid retest. If a retest candle closes inside the range the signal is invalid and you wait for the next.",
+      "exit_summary": "Stop loss at the range midpoint; take profit at a 2:1 reward-to-risk ratio.",
+      "name": "orb_retest_breakout",
+      "strategy_id": 0,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "dENM6gt8ZRg__s0"
+  ]
+}

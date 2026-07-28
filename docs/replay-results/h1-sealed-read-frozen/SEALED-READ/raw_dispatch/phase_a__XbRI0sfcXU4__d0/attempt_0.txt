@@ -1,0 +1,27 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "ema25_channel_break_short",
+      "entry_summary": "In a down channel after price rejects the 50-period MA with a weak close, wait for a bar to close under the blue 25 EMA; enter short on that confirmation (channel-break continuation down). Add a second contract on a pullback.",
+      "exit_summary": "Stop initially above the entry/channel, moved to break-even once given enough time; target the prior bottom level (roughly a measured move equal to the first leg down). Speaker reports ~$1900 on two contracts.",
+      "variants": [],
+      "element_inventory": [
+        "ENTRY (short): enter when a bar closes under the blue 25 EMA",
+        "PRECONDITION: price rejects the 50 MA with a weak close before entry",
+        "PRECONDITION: a down channel is forming / entry is the channel break to the downside",
+        "SCALE-IN: add a second contract on a pullback",
+        "INVALIDATION: do not want to see price close above the 25 EMA (would break channel upward) â€” kill the trade on such a close",
+        "STOP: initially placed above entry, then moved to break-even",
+        "TARGET: exit at the prior bottom level; expect a second leg roughly the same size as the first move down (measured move)"
+      ],
+      "coaching_notes": [
+        "\"i gave enough time i don't want to wait too long\"",
+        "\"sometimes if you don't see that move in time then usually price goes back up\"",
+        "\"this price needs to break down soon otherwise it's gonna go either sideway or go back up\"",
+        "\"i'm getting ready to kill this trade if i see a close\""
+      ]
+    }
+  ],
+  "enumeration_note": "Single taught short setup (25 EMA close-under channel-break continuation after 50 MA rejection), narrated via one live trade. Entry mechanics are runnable; exit target is somewhat gestural (\"bottom level\"/measured move) but the setup is clearly taught."
+}

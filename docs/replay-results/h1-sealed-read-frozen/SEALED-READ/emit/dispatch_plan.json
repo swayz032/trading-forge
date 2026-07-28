@@ -1,0 +1,1113 @@
+{
+  "artifact": "h1-staged-plan-dispatch-emit",
+  "dispatch_model": "no-tools embedded-content claude -p (R-030 §2/§3)",
+  "dispatch_record_template": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "<what actually ran — the CLI dispatch loop fills; must equal requested>"
+  },
+  "later_seam_instruction_shapes": {
+    "panel": {
+      "dispatch_command_template": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch panel --cid <cid>",
+      "emitted_by_stage": "certify (emit/panel_requests.json, one per cid)",
+      "expected_schema": {
+        "completeness": "bool (content_clean)",
+        "conflation": "PASS|REJECT",
+        "enumeration_consistency": "PASS|FAIL|NOT_EVALUATED"
+      },
+      "note": "gpt-5.4 cross-vendor panel (NOT claude -p). R-034: ONE named command per cid runs the 3 calibrated graders byte-unchanged, fed the threaded consensus inventory + sealed extraction + transcript.",
+      "output_path_template": "panels/<cid>.json",
+      "seam": "panel"
+    },
+    "phase_b": {
+      "dispatch_command_template": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_b --video-id <video_id> --strategy-index <idx>",
+      "emitted_by_stage": "certify (one dispatch per consensus strategy)",
+      "expected_raw_schema": {
+        "coaching_notes": "list (optional)",
+        "instrument_classification": "object|null",
+        "rejected_strategies": "list (optional)",
+        "strategies": "list[one strategy object]"
+      },
+      "expected_schema": {
+        "dispatch_record": "object — embedded by the wrap (per dispatch)",
+        "instrument_classification": "object|null (raw, carried through)",
+        "reader_identity": "object — ADDED by the wrap (frozen record)",
+        "strategies": "list[one strategy object] (raw, carried through the wrap)"
+      },
+      "output_path_template": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_b/<video_id>__s<idx>.json",
+      "seam": "phase_b_strategy"
+    },
+    "rater": {
+      "dispatch_command_templates": {
+        "stage1": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch rater --rater-id <rater_id> --rater-stage stage1",
+        "stage2": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch rater --rater-id <rater_id> --rater-stage stage2"
+      },
+      "dispatch_order": "per rater: run stage1 (ingest roles) THEN stage2 (ingest support)",
+      "emitted_by_stage": "certify (emit/rater_packets.json; two blind raters)",
+      "expected_schema": {
+        "stage1": {
+          "<item_id>": "gate-strength|context|cannot-determine"
+        },
+        "stage2": {
+          "<item_id>": {
+            "support": "confirmed|partial|denied",
+            "support_justification": "str"
+          }
+        }
+      },
+      "output_path_template": "raters/<rater_id>.json",
+      "raters": [
+        "A",
+        "B"
+      ],
+      "seam": "rater"
+    }
+  },
+  "phase_a_dispatches": [
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id 0RBexa9JpIg --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/0RBexa9JpIg/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "0RBexa9JpIg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id 0RBexa9JpIg --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/0RBexa9JpIg/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "0RBexa9JpIg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id 0RBexa9JpIg --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/0RBexa9JpIg/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "0RBexa9JpIg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id 0RBexa9JpIg --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/0RBexa9JpIg/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "0RBexa9JpIg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id 0RBexa9JpIg --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/0RBexa9JpIg/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "0RBexa9JpIg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id ExB66jcyKxg --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/ExB66jcyKxg/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "ExB66jcyKxg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id ExB66jcyKxg --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/ExB66jcyKxg/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "ExB66jcyKxg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id ExB66jcyKxg --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/ExB66jcyKxg/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "ExB66jcyKxg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id ExB66jcyKxg --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/ExB66jcyKxg/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "ExB66jcyKxg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id ExB66jcyKxg --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/ExB66jcyKxg/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "ExB66jcyKxg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id LD1FEbwXU4o --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/LD1FEbwXU4o/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "LD1FEbwXU4o"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id LD1FEbwXU4o --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/LD1FEbwXU4o/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "LD1FEbwXU4o"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id LD1FEbwXU4o --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/LD1FEbwXU4o/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "LD1FEbwXU4o"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id LD1FEbwXU4o --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/LD1FEbwXU4o/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "LD1FEbwXU4o"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id LD1FEbwXU4o --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/LD1FEbwXU4o/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "LD1FEbwXU4o"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id SeqVUNanFeY --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/SeqVUNanFeY/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "SeqVUNanFeY"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id SeqVUNanFeY --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/SeqVUNanFeY/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "SeqVUNanFeY"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id SeqVUNanFeY --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/SeqVUNanFeY/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "SeqVUNanFeY"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id SeqVUNanFeY --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/SeqVUNanFeY/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "SeqVUNanFeY"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id SeqVUNanFeY --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/SeqVUNanFeY/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "SeqVUNanFeY"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id XbRI0sfcXU4 --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/XbRI0sfcXU4/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "XbRI0sfcXU4"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id XbRI0sfcXU4 --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/XbRI0sfcXU4/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "XbRI0sfcXU4"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id XbRI0sfcXU4 --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/XbRI0sfcXU4/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "XbRI0sfcXU4"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id XbRI0sfcXU4 --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/XbRI0sfcXU4/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "XbRI0sfcXU4"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id XbRI0sfcXU4 --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/XbRI0sfcXU4/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "XbRI0sfcXU4"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YGdFksLavKE --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YGdFksLavKE/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "YGdFksLavKE"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YGdFksLavKE --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YGdFksLavKE/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "YGdFksLavKE"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YGdFksLavKE --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YGdFksLavKE/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "YGdFksLavKE"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YGdFksLavKE --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YGdFksLavKE/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "YGdFksLavKE"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YGdFksLavKE --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YGdFksLavKE/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "YGdFksLavKE"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YqY0OkL5LMI --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YqY0OkL5LMI/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "YqY0OkL5LMI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YqY0OkL5LMI --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YqY0OkL5LMI/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "YqY0OkL5LMI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YqY0OkL5LMI --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YqY0OkL5LMI/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "YqY0OkL5LMI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YqY0OkL5LMI --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YqY0OkL5LMI/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "YqY0OkL5LMI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id YqY0OkL5LMI --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/YqY0OkL5LMI/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "YqY0OkL5LMI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id dENM6gt8ZRg --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/dENM6gt8ZRg/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "dENM6gt8ZRg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id dENM6gt8ZRg --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/dENM6gt8ZRg/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "dENM6gt8ZRg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id dENM6gt8ZRg --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/dENM6gt8ZRg/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "dENM6gt8ZRg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id dENM6gt8ZRg --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/dENM6gt8ZRg/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "dENM6gt8ZRg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id dENM6gt8ZRg --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/dENM6gt8ZRg/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "dENM6gt8ZRg"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id hcHuDfxdywI --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/hcHuDfxdywI/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "hcHuDfxdywI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id hcHuDfxdywI --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/hcHuDfxdywI/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "hcHuDfxdywI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id hcHuDfxdywI --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/hcHuDfxdywI/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "hcHuDfxdywI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id hcHuDfxdywI --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/hcHuDfxdywI/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "hcHuDfxdywI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id hcHuDfxdywI --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/hcHuDfxdywI/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "hcHuDfxdywI"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id iyKk9fpMSY8 --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/iyKk9fpMSY8/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "iyKk9fpMSY8"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id iyKk9fpMSY8 --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/iyKk9fpMSY8/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "iyKk9fpMSY8"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id iyKk9fpMSY8 --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/iyKk9fpMSY8/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "iyKk9fpMSY8"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id iyKk9fpMSY8 --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/iyKk9fpMSY8/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "iyKk9fpMSY8"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id iyKk9fpMSY8 --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/iyKk9fpMSY8/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "iyKk9fpMSY8"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id pKzXxB9Blts --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/pKzXxB9Blts/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "pKzXxB9Blts"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id pKzXxB9Blts --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/pKzXxB9Blts/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "pKzXxB9Blts"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id pKzXxB9Blts --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/pKzXxB9Blts/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "pKzXxB9Blts"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id pKzXxB9Blts --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/pKzXxB9Blts/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "pKzXxB9Blts"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id pKzXxB9Blts --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/pKzXxB9Blts/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "pKzXxB9Blts"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id st5e-YJRfKc --draw-index 0",
+      "draw_index": 0,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/st5e-YJRfKc/draw_0.json",
+      "seam": "phase_a_draw",
+      "video_id": "st5e-YJRfKc"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id st5e-YJRfKc --draw-index 1",
+      "draw_index": 1,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/st5e-YJRfKc/draw_1.json",
+      "seam": "phase_a_draw",
+      "video_id": "st5e-YJRfKc"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id st5e-YJRfKc --draw-index 2",
+      "draw_index": 2,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/st5e-YJRfKc/draw_2.json",
+      "seam": "phase_a_draw",
+      "video_id": "st5e-YJRfKc"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id st5e-YJRfKc --draw-index 3",
+      "draw_index": 3,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/st5e-YJRfKc/draw_3.json",
+      "seam": "phase_a_draw",
+      "video_id": "st5e-YJRfKc"
+    },
+    {
+      "dispatch_command": "python C:/Users/tonio/Projects/wt-h1-wave4-20260712/scripts/h1_seal_conductor_cli.py --mode sealed --work-dir C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ --dispatch phase_a --video-id st5e-YJRfKc --draw-index 4",
+      "draw_index": 4,
+      "expected_raw_schema": {
+        "enumeration_note": "str|null — one-sentence ambiguity flag (per the enumerator prompt)",
+        "strategies": "list[strategy objects] — the model's blind enumeration (per the enumerator prompt)"
+      },
+      "expected_schema": {
+        "count": "int — SYNTHESIZED by the wrap as len(strategies)",
+        "dispatch_record": "object {requested_model, resolved_model, channel_class, dispatch_mode} — the conductor's dispatch_record, embedded by the wrap",
+        "reader_identity": "object — ADDED by the wrap from certified_reader_identity() (frozen record; NOT model self-report)",
+        "strategy_refs": "list[str] — SYNTHESIZED by the wrap (one deterministic ref per enumerated strategy)"
+      },
+      "output_path": "C:/Users/tonio/AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/phase_a/st5e-YJRfKc/draw_4.json",
+      "seam": "phase_a_draw",
+      "video_id": "st5e-YJRfKc"
+    }
+  ],
+  "readable_n": 12,
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "sealed_total": 12,
+  "source_attrition_emit": "../../AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/emit/source_attrition.json",
+  "stage": "plan",
+  "wrapper_version": "r030-dispatch-wrapper-v1"
+}

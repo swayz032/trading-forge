@@ -1,0 +1,102 @@
+{
+  "coaching_notes": [
+    "with these market conditions with stocks not holding their gains very well at the open after they have these Gap UPS it's very important to manage your risk on these trades so you don't end up holding through these big pullbacks in these big sell-offs like we saw with nuwe and like we saw with Lucy as well",
+    "it's also important to learn what to look for in the stocks that have a better setup for a gap and go so that way you're in a better position to to catch the stocks like vcig that actually continue to carry their momentum into the market hours",
+    "one thing that I really have an issue with is getting in and out of Trades locking in profits and then taking those stocks off of my radar so I end up missing out on these second runs and these second spikes",
+    "one thing that I really need to work on is keeping track of these stocks even after I exit them and even after I sell my shares waiting for a second opportunity to buy into them"
+  ],
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "instrument_classification": {
+    "asset_class": "equities",
+    "instruments": [
+      "VCIG",
+      "LAES",
+      "Lucy (LUCY)",
+      "NUWE"
+    ],
+    "notes": "Small-cap momentum stocks traded on the cash equities open (shares, pre-market gappers); not futures."
+  },
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "rejected_strategies": [],
+  "strategies": [
+    {
+      "confluences": [
+        {
+          "description": "as always opening range breakout levels for the stocks with the biggest potential for a gap and go are posted every single morning in the market Master group"
+        },
+        {
+          "description": "one of those things that is often a Telltale sign that this has potential to be a bigger Gap and go is that it's able to actually break above the V web"
+        },
+        {
+          "description": "with nuwe over here it rejects V web immediately at the market open it rejects for you up again into this second bounce same thing happens with Lucy opens under the V web and at no point in time during the market hours was it able to actually break back above"
+        },
+        {
+          "description": "this one actually never got above its opening range breakout level there was just no follow-through whatsoever at the open"
+        },
+        {
+          "description": "we can see very quickly it breaks only seven cents above that opening range breakout level and then come straight back down"
+        }
+      ],
+      "coverage_notes": [
+        "PRECONDITION (gap up spikes then consolidates into open) â†’ APPEARS verbatim as entry_sequence step 1.",
+        "ENTRY LEVEL (ORB = high of first 5-min candle, VCIG 3.94) â†’ APPEARS verbatim as entry_sequence step 2.",
+        "ENTRY EXECUTION (starter position on break above ORB) â†’ APPEARS verbatim as entry_sequence step 3.",
+        "FILTER (break above VWAP is telltale sign; reject-VWAP stocks lack follow-through) â†’ APPEARS verbatim as confluences (VWAP telltale + NUWE/Lucy reject-VWAP). The 'manage your risk' portion is Tier-B coaching, captured in coaching_notes.",
+        "SELECTION (NUWE never got above ORB; Lucy poked 7 cents then came straight back) â†’ APPEARS verbatim as confluences.",
+        "EXIT (scale profits into initial spike, 420s) â†’ APPEARS verbatim as targets. Level/stop null: gestural exit, no stated price or R rule; 420s/440s are that day's example numbers.",
+        "EXIT SIGNAL (take profits when consolidation above VWAP forms lower highs) â†’ APPEARS verbatim as targets."
+      ],
+      "entry_sequence": [
+        {
+          "action": "if we focus on the pre-market session here in the open we can see it spikes up trade sideways consolidates into the open and we get ourselves an opening range breakout level"
+        },
+        {
+          "action": "an opening range breakout level which is the high of this first five minute candle of 3.94 cents"
+        },
+        {
+          "action": "a few minutes later it starts to break out above that 394 level that's when I took a starter position in this trade"
+        }
+      ],
+      "gestural_exit": true,
+      "name": "gap_and_go_opening_range_breakout",
+      "stop": null,
+      "targets": [
+        {
+          "description": "I take some profits initially up in the 420s on this initial Spike"
+        },
+        {
+          "description": "then I took some profits as it's trading sideways and consolidating here above the V web"
+        },
+        {
+          "description": "I saw it consolidating started to form some lower highs all of those were bearish signals for me I took profits on the trade"
+        },
+        {
+          "description": "a lot of times when we get this breakout in the morning and then that consolidation period That's often what ends up being the top of this move and from there we'll see stocks many times fall back under v-wap fade back to their low a day and end up making lows"
+        }
+      ]
+    }
+  ]
+}

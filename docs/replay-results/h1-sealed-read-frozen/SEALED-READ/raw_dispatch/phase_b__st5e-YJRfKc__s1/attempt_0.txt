@@ -1,0 +1,50 @@
+{
+  "strategies": [
+    {
+      "name": "opening_range_pullback",
+      "direction": "long",
+      "instrument": "stocks",
+      "timeframe": "5m/15m/30m opening range",
+      "entry_sequence": [
+        {
+          "action": "the initial breakout took place"
+        },
+        {
+          "action": "in this case price pulled back"
+        },
+        {
+          "action": "then we're looking for an entry back towards the long mark"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level"
+        },
+        {
+          "description": "The half range represents exactly how it sounds, half of that opening range"
+        }
+      ],
+      "stop": "there would be something called a half range stop. And that's a stop below this halfrange mark",
+      "targets": [
+        {
+          "description": "Half range target is using that value, the same value, and projecting it to the upside"
+        },
+        {
+          "description": "Same thing for the full range except now we're using the full dollar three and we're projecting that on the flip side"
+        }
+      ],
+      "coverage_notes": [
+        "element 'Pullback level = OR high âˆ’ half range': APPEARS verbatim as confluence â€” 'whatever this opening range high is, subtract the 52 cents for the half range, and that would give us the pullback level'",
+        "element 'ENTRY: after breakout, wait for pullback to pullback level, then enter back toward long/breakout mark': APPEARS as entry_sequence â€” 'the initial breakout took place and in this case price pulled back and then we're looking for an entry back towards the long mark'",
+        "element 'Reuses breakout half-range/full-range targets and half-range stop': APPEARS â€” half-range target + full-range target extracted as targets, half-range stop extracted as stop, all in speaker's words"
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "example_symbol": "S&P 500",
+    "note": "speaker references 'thousands of stocks' and uses an S&P 500 example; opening-range breakout/pullback on cash-session equities"
+  },
+  "rejected_strategies": [],
+  "coaching_notes": []
+}

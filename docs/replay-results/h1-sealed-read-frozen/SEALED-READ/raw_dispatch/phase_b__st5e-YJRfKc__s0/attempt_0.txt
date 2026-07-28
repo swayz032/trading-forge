@@ -1,0 +1,87 @@
+{
+  "strategies": [
+    {
+      "name": "opening_range_breakout",
+      "entry_sequence": [
+        {
+          "action": "once you take the price that's established in the first 5, 15, and the 30 minute ranges, you have what we call the 5,5 and the 30 minute OB"
+        },
+        {
+          "action": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern. The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45. And the 30 minute is from 9:30 to 10 a.m. Eastern."
+        },
+        {
+          "action": "We take the opening range high and the opening range low in between these time periods. And that's what forms the opening range."
+        },
+        {
+          "action": "So now we take a look at these levels projected going out after this 30 minute range is over. So from 7 a.m. onwards in this case off of the Pacific Standard chart and we look for a breakout. Do we see a breakout above or below? Whichever direction we see that breakout that represents the initial directional conviction."
+        },
+        {
+          "action": "When price breaks above the range high, for example, so a bullish breakout, which is what we saw an example of, that's where buyers have overcome that initial resistance."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "this was the highest level that buyers were able to take price up to before sellers defended price"
+        },
+        {
+          "description": "this is the opening range low 616.61 in which the buyers won. Sellers were not able to break a penny below this level."
+        },
+        {
+          "description": "the difference between the high and the low is what gives us our opening range breakout range. We call this the range value. In this case, the difference was a dollar3."
+        },
+        {
+          "description": "The half range represents exactly how it sounds, half of that opening range."
+        },
+        {
+          "description": "This opening range acts as a decision point for the rest of the day. It's based on the day. So it becomes relative for every single trading day."
+        }
+      ],
+      "stop": {
+        "description": "So, you'll see there would be something called a half range stop. And that's a stop below this halfrange mark.",
+        "level": null
+      },
+      "targets": [
+        {
+          "description": "Half range target is using that value, the same value, and projecting it to the upside. So in this case, that would be a$13 divided by two, which would be about 52 cents. And that's what you would see inside of the scanner is both the half range target and the halfrange stop. It would be 52 cents plus whatever this opening range high is.",
+          "level": null
+        },
+        {
+          "description": "Same thing for the full range except now we're using the full dollar three and we're projecting that on the flip side.",
+          "level": null
+        }
+      ],
+      "variants": [
+        {
+          "variant_label": "5-minute opening range",
+          "description": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern."
+        },
+        {
+          "variant_label": "15-minute opening range",
+          "description": "The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45."
+        },
+        {
+          "variant_label": "30-minute opening range",
+          "description": "And the 30 minute is from 9:30 to 10 a.m. Eastern."
+        }
+      ]
+    }
+  ],
+  "coaching_notes": [],
+  "coverage_notes": [
+    "PRECONDITION (first 5/15/30 min after 9:30 ET, recomputed each day): PRESENT â€” entry_sequence step 1 + confluence 'relative for every single trading day'.",
+    "VARIANT SUB-MECHANIC (5m/15m/30m windows): PRESENT â€” entry_sequence step 2 + variants[].",
+    "OR high/low definitions: PRESENT â€” confluences 1 and 2.",
+    "ENTRY breakout above/below: PRESENT â€” entry_sequence steps 4 and 5.",
+    "Range value = OR high âˆ’ OR low: PRESENT â€” confluence 3.",
+    "Half range = range Ã· 2: PRESENT â€” confluence 4.",
+    "Half-range target: PRESENT â€” targets[0].",
+    "Full-range target: PRESENT â€” targets[1].",
+    "Half-range stop below the half-range mark: PRESENT â€” stop."
+  ],
+  "instrument_classification": {
+    "asset_class": "equities",
+    "instruments_mentioned": ["stocks", "S&P 500"],
+    "rationale": "Speaker references combing through 'thousands of stocks' on Thinkorswim/TradingView and uses the S&P 500 (price levels ~616-617) as the worked example."
+  },
+  "rejected_strategies": []
+}

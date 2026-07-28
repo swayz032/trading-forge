@@ -1,0 +1,68 @@
+{
+  "strategies": [
+    {
+      "name": "sma14_strong_close_crossover",
+      "timeframe": "15 mins time frame",
+      "indicator": "Simple moving average indicator ... and the time length of the indicator needs to be set at 14",
+      "direction": "both",
+      "entry_sequence": [
+        {
+          "action": "whenever the candle crosses the moving average line and closes with a strong candle, you take the trade"
+        },
+        {
+          "action": "If it closes above the line, you buy and take a trade"
+        },
+        {
+          "action": "when it closes below the line, you take a short trade"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "you will need to select Simple moving average indicator ... and the time length of the indicator needs to be set at 14"
+        },
+        {
+          "description": "We will be trading in 15 mins time frame"
+        },
+        {
+          "description": "we need the candle to close strong below the line, not on the line"
+        },
+        {
+          "description": "I always have a rule to never take any intraday trades within 1 hour of closing"
+        },
+        {
+          "description": "with a risk to reward of 3:1"
+        }
+      ],
+      "stop": {
+        "description": "stop loss should always be set at 1/3rd of your profit",
+        "value": null,
+        "example": "exactly 20 points as my stop loss"
+      },
+      "targets": [
+        {
+          "description": "it's best to keep a fixed target as the exit",
+          "value": null,
+          "example": "for nifty, I always used to use 60 points as my target"
+        },
+        {
+          "description": "after it reaches the target, we can trail the profits",
+          "value": null
+        }
+      ],
+      "coverage_notes": []
+    }
+  ],
+  "instrument_classification": {
+    "instrument": "nifty",
+    "asset_class": "index",
+    "note": "So for nifty, I always used to use 60 points as my target"
+  },
+  "coaching_notes": [
+    "Just so you know 3 of these losses is equal to one of our profit so happily accept the losses and move on.",
+    "This is why I live using small target with small stop loss ... even though our targets are small, we can keep trailing our profits .. but when it hits our stop loss, we loose very little",
+    "Which means with using this risk to reward ratio, in order to actually loose money your win rates needs to be below 25%",
+    "forget the win rate, The reason an extremely simple strategy like this works wonderfully is cause, it's so simple, there's no confusion and that allows you to focus on more important aspects like risk to reward and your trading psychology.",
+    "This strategy is best suited for those struggling with a strategy with too many complicated variables or price action where it's always hiting your stop loss ... forget about all those, often at times the simple strategies are what works the best"
+  ],
+  "rejected_strategies": []
+}

@@ -1,0 +1,66 @@
+{
+  "strategies": [
+    {
+      "name": "fibonacci_pullback_continuation",
+      "entry_sequence": [
+        {
+          "action": "you need to identify the direction of the trend and can do this by simply using a 4 hour time frame and a trend line"
+        },
+        {
+          "action": "you can only place buy trade when the market is in uptrend. Now draw the fibonacci from swing low to the recent swing high and wait for the price to touch the 50 or 61.8% line. And place your buy trade anywhere between these two levels."
+        },
+        {
+          "action": "you can only place sell trade when the market is in downtrend. Now draw the fibonacci from swing high to the recent swing low and wait for the price to touch the 50 or 61.8% line. And place your sell trade anywhere between these two levels."
+        }
+      ],
+      "confluences": [
+        {
+          "description": "We will use a 1 hour time frame for this strategy."
+        },
+        {
+          "description": "We will use a fibonacci retracement indicator because it helps us to identify the perfect price action levels."
+        },
+        {
+          "description": "You can't trade in a non trending market."
+        },
+        {
+          "description": "You can apply this strategy on every currency pair."
+        }
+      ],
+      "stop": {
+        "description": "For buy: Place your stop loss below the swing low. For sell: Place your stop loss above the swing high"
+      },
+      "targets": [
+        {
+          "description": "For buy: Place your take profit above the previous swing high."
+        },
+        {
+          "description": "For sell: Place your take profit below the previous swing low."
+        }
+      ],
+      "coverage_notes": [
+        "PRECONDITION 4h trend direction + trend line: APPEARS as entry_sequence step 1.",
+        "PRECONDITION only trade a trending market: APPEARS as confluence 'You can't trade in a non trending market.'",
+        "Execution timeframe 1-hour: APPEARS as confluence.",
+        "Indicator Fibonacci retracement: APPEARS as confluence.",
+        "Long entry (uptrend, fib swing low to swing high, 50/61.8%): APPEARS as entry_sequence step 2.",
+        "Long take profit above previous swing high: APPEARS as target.",
+        "Long stop loss below swing low: APPEARS in stop.",
+        "Short entry (downtrend, fib swing high to swing low, 50/61.8%): APPEARS as entry_sequence step 3.",
+        "Short take profit below previous swing low: APPEARS as target.",
+        "Short stop loss above swing high: APPEARS in stop.",
+        "Applicable to every currency pair: APPEARS as confluence."
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_class": "forex",
+    "evidence": "You can apply this strategy on every currency pair.",
+    "confidence": "high"
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "You always need to enter the market in early stages of its trend otherwise you'll end up losing your trade",
+    "But if you'll follow each step carefully then the chances of loss are minimal."
+  ]
+}

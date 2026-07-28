@@ -1,0 +1,49 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "fib_pullback_trend_continuation",
+      "entry_summary": "Trade in the direction of the established trend. In an uptrend, draw a Fibonacci retracement from swing low to the recent swing high and enter a buy when price touches (anywhere between) the 50% and 61.8% levels. In a downtrend, draw Fibonacci from swing high to recent swing low and enter a sell when price touches the 50% or 61.8% level. Executed on the 1-hour timeframe with trend direction pre-identified on the 4-hour timeframe using a trend line.",
+      "exit_summary": "For buys: take profit above the previous swing high; stop loss below the swing low. For sells: take profit below the previous swing low; stop loss above the swing high.",
+      "variants": [
+        {
+          "variant_label": "Long / buy pullback in uptrend",
+          "timeframe_note": "1H execution, 4H for trend direction",
+          "confirmation_mechanic_note": "Fibonacci drawn swing low â†’ recent swing high; enter buy when price touches between the 50% and 61.8% retracement lines",
+          "target_note": "TP above previous swing high; SL below swing low",
+          "transcript_quote": "draw the fibonacci from swing low to the recent swing high and wait for the price to touch the 50 or 61.8% line. And place your buy trade anywhere between these two levels."
+        },
+        {
+          "variant_label": "Short / sell pullback in downtrend",
+          "timeframe_note": "1H execution, 4H for trend direction",
+          "confirmation_mechanic_note": "Fibonacci drawn swing high â†’ recent swing low; enter sell when price touches between the 50% and 61.8% retracement lines",
+          "target_note": "TP below previous swing low; SL above swing high",
+          "transcript_quote": "draw the fibonacci from swing high to the recent swing low and wait for the price to touch the 50 or 61.8% line. And place your sell trade anywhere between these two levels."
+        }
+      ],
+      "element_inventory": [
+        "PRECONDITION: identify trend direction using the 4-hour timeframe and a trend line before trading",
+        "PRECONDITION: only place buy trades when the market is in an uptrend; only place sell trades when in a downtrend",
+        "PRECONDITION: only trade in a trending market (do not trade a non-trending market)",
+        "PRECONDITION: enter in the early stages of the trend",
+        "TIMEFRAME: execute on the 1-hour timeframe",
+        "APPLICABILITY: usable on every currency pair",
+        "ENTRY (buy): draw Fibonacci retracement from swing low to recent swing high; enter when price touches the 50% or 61.8% line, anywhere between those two levels",
+        "ENTRY (sell): draw Fibonacci retracement from swing high to recent swing low; enter when price touches the 50% or 61.8% line, anywhere between those two levels",
+        "TAKE PROFIT (buy): above the previous swing high",
+        "STOP LOSS (buy): below the swing low",
+        "TAKE PROFIT (sell): below the previous swing low",
+        "STOP LOSS (sell): above the swing high"
+      ],
+      "coaching_notes": [
+        "You always need to enter the market in early stages of its trend otherwise you'll end up losing your trade",
+        "You can't trade in a non trending market",
+        "if you'll follow each step carefully then the chances of loss are minimal",
+        "There is a good risk to reward ratio in this method",
+        "If you have identified the trend on its early stages then you can end up making huge profits from a single trend, because you just need to repeat the same process again and again",
+        "You don't need to wait longer for a trading signal in a trending market"
+      ]
+    }
+  ],
+  "enumeration_note": "Buy and sell are mirror directional applications of one Fibonacci-pullback skeleton (same entry trigger at 50/61.8% retracement in trend direction, same exit structure beyond swings) â€” compatible variation, not opposition â€” enumerated as one strategy with two directional variants."
+}

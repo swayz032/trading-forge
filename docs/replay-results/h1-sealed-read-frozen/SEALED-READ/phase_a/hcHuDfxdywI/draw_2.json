@@ -1,0 +1,83 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "One order-block entry skeleton (valid OB = liquidity sweep + imbalance + unmitigated â†’ buy limit + stop below lower wick). The three entry models differ only in limit placement (wick/body/midpoint) and R:R â€” compatible variation grouped as variants per Rule 3. Take-profit is gestural ('aggressive impulsive move up'), so no exit level fields are populated; the taught stop is preserved. Bearish OB is mentioned symmetrically but taught only as the mirror of the bullish setup, not as a separate contradictory strategy.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "Choosing the right entry model depends on market conditions, the quality of the order block, and your personal risk tolerance.",
+        "The stronger and cleaner the order block, the more aggressive the entry model you can justify. In weaker or more volatile environments, conservative entries offer greater protection and consistency.",
+        "Order blocks are not random candles or magical zones â€” they are the footprint of institutional activity and only work when they align with structure, liquidity, imbalance, and mitigation logic.",
+        "Most traders who believe they understand order blocks are actually losing money using them because they don't know how to correctly identify a true institutional order block."
+      ],
+      "element_inventory": [
+        "PRECONDITION: bullish trend confirmed by price breaking above previous major high forming a valid break of structure before the setup applies",
+        "Order block definition: the last bearish candle before a strong displacement move that breaks structure (bullish OB); mirror = last bullish candle before strong down-move (bearish OB)",
+        "Validation rule 1 (liquidity sweep): final bearish candle breaks the low of the previous candle and immediately reverses upward, taking out prior low to trigger stops",
+        "Validation rule 2 (imbalance/FVG): price must reverse aggressively creating a fair value gap where candles do not overlap above the OB",
+        "Extension rule: if no imbalance forms above the sweep candle, extend the order block boundaries to include the next candle, which must then show imbalance above it",
+        "Validation rule 3 (unmitigated): price must not have returned to retest or trade through the zone; mitigated OB is weak and must not be used",
+        "Invalidation rule: if the wick of the sweep-forming candle drops into the OB zone during formation (mitigated during formation), classify OB as invalid and do not trade it",
+        "Entry trigger: change of character breaking an internal low during the retracement into the OB acts as the entry trigger (not a reversal signal)",
+        "Entry model 1 (aggressive): buy limit at upper wick of OB candle, stop below lower wick + spread",
+        "Entry model 2 (conservative): buy limit at upper body of OB candle, stop below lower wick + spread",
+        "Entry model 3 (optimal): buy limit at midpoint of OB zone, stop below lower wick + spread",
+        "Stop loss: just below the lower wick of the order block candle, adjusted by the spread (all models)"
+      ],
+      "entry_summary": "In a bullish structure (confirmed break of structure), identify a valid bullish order block â€” the last bearish candle before a displacement move that (1) performs a liquidity sweep taking out the prior candle's low then reverses up, (2) has imbalance/fair value gap above it (extend the OB to the next candle if the sweep candle itself shows no imbalance), and (3) remains unmitigated. Place a buy limit order in that order block zone (at the upper wick, upper body, or midpoint depending on entry model) when price retraces back into it; a change of character breaking an internal low during the retrace acts as the entry trigger.",
+      "exit_summary": "Stop loss placed just below the lower wick of the order block candle, adjusted by the spread. Take-profit is not given concrete levels â€” the speaker describes only an aggressive impulsive move to the upside after mitigation ('price reacts aggressively to the upside, producing a strong impulsive move').",
+      "name": "institutional_order_block_entry",
+      "strategy_id": 0,
+      "variants": [
+        {
+          "confirmation_mechanic_note": "buy limit at the level of the upper wick of the order block candle; earliest entry, best R:R, higher chance of premature stopout",
+          "target_note": "best potential risk-to-reward ratio (no numeric target given)",
+          "timeframe_note": null,
+          "transcript_quote": "a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries. The stop loss is placed just below the lower wick of the same candle adjusted by the spread.",
+          "variant_label": "Aggressive â€” buy limit at upper wick"
+        },
+        {
+          "confirmation_mechanic_note": "buy limit at the upper level of the candle body rather than the wick; reduces premature stopouts",
+          "target_note": "favorable risk-to-reward ratio (no numeric target given)",
+          "timeframe_note": null,
+          "transcript_quote": "the buy limit order is placed at the upper level of the candle body that defines the order block rather than the wick. The stop loss is placed in the same way as before, just below the lower wick adjusted by the spread.",
+          "variant_label": "Conservative â€” buy limit at upper body"
+        },
+        {
+          "confirmation_mechanic_note": "buy limit at the midpoint of the order block zone; highest probability of execution and stability, slightly lower R:R",
+          "target_note": "highest probability of execution, slightly reduced R:R (no numeric target given)",
+          "timeframe_note": null,
+          "transcript_quote": "the buy limit order is placed at the midpoint of the order block zone. The stop loss again remains just below the lower wick of the order block candle adjusted by the spread.",
+          "variant_label": "Optimal â€” buy limit at midpoint of order block"
+        }
+      ]
+    }
+  ],
+  "strategy_refs": [
+    "hcHuDfxdywI__s0"
+  ]
+}

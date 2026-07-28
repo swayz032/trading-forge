@@ -1,0 +1,20 @@
+{
+  "cids": [
+    "0RBexa9JpIg__s0",
+    "ExB66jcyKxg__s0",
+    "LD1FEbwXU4o__s0",
+    "SeqVUNanFeY__s0",
+    "XbRI0sfcXU4__s0",
+    "YGdFksLavKE__s0",
+    "YqY0OkL5LMI__s0",
+    "YqY0OkL5LMI__s1",
+    "dENM6gt8ZRg__s0",
+    "hcHuDfxdywI__s0",
+    "pKzXxB9Blts__s0",
+    "st5e-YJRfKc__s0",
+    "st5e-YJRfKc__s1"
+  ],
+  "phase_a_draws_hash": "05d0092c509b928bf17539ab1e8017d1ed3b69aedbbebe3bedb9d5abf5ba7edc",
+  "phase_b_hash": "dbc087fe79533e6930d78f24740a379cdee658fd0950fe3d4126c7bd1cdf2c05",
+  "stage": "certify"
+}

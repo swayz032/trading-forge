@@ -1,0 +1,27 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "channel_break_25ema_short",
+      "entry_summary": "In a down channel where bulls fail to push up off the 50 moving average and print a weak/rejection close, wait for a bar to close under the blue 25 exponential moving average with confirmation on that bar, then enter short anticipating a channel break to the downside. A second contract is added on a pullback.",
+      "exit_summary": "Move stop to break even after giving the trade enough time to move away from entry; if price closes back above the 25 EMA, kill the trade. Target a measured move roughly equal to the size of the first down-leg, exiting at the bottom level.",
+      "element_inventory": [
+        "PRECONDITION: down channel forming with expectation of a channel break and continued move down",
+        "PRECONDITION: bulls reject from the 50 moving average line with a weak close",
+        "ENTRY: short when a bar closes under the blue 25 exponential moving average line",
+        "ENTRY CONFIRMATION: wait for confirmation on that bar closing under the 25 EMA before entering",
+        "SCALING: add a second contract on a pullback",
+        "STOP: move stop to break even once price has had time to move away from entry",
+        "INVALIDATION: kill the trade if price closes above the 25 EMA (channel would break up)",
+        "TARGET: measured move â€” expect the second down-leg to be about the same size as the first move; exit at the bottom level",
+        "TIME GATE: price must break down soon after entry, otherwise it tends to go sideways or back up"
+      ],
+      "coaching_notes": [
+        "i gave enough time i don't want to wait too long",
+        "sometimes if you don't see that move in time then usually price goes back up"
+      ],
+      "variants": []
+    }
+  ],
+  "enumeration_note": "Single trade narrated live but with a runnable taught entry (rejection off 50 MA, bar close under 25 EMA with confirmation, short into channel break) plus BE-stop and measured-move exit; one strategy, no compatible variants."
+}

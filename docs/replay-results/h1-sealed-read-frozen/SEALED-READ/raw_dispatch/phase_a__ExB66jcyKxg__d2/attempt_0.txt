@@ -1,0 +1,30 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "sma14_strong_close_crossover",
+      "entry_summary": "On the 15-minute timeframe with a 14-period Simple Moving Average, when a candle crosses the SMA line and closes strongly beyond it (not on the line), take the trade in the direction of the close: a strong close above the SMA is a long (buy), a strong close below the SMA is a short.",
+      "exit_summary": "Fixed target of 60 points (nifty example) with a stop loss of 20 points (1/3 of the target); after the target is reached, trail the profits. Do not take any new intraday trade within 1 hour of market close.",
+      "variants": [],
+      "element_inventory": [
+        "Indicator: Simple Moving Average, length 14",
+        "Timeframe: 15-minute",
+        "Long entry: candle crosses the SMA and closes strong ABOVE the line -> buy",
+        "Short entry: candle crosses the SMA and closes strong BELOW the line -> short",
+        "Entry filter: close must be strong and beyond the line, NOT on the line (a candle closing on the line is not a valid signal)",
+        "Fixed target: 60 points (nifty)",
+        "Stop loss: 20 points (defined as 1/3 of profit/target)",
+        "Runner management: after target is hit, trail the profits",
+        "Precondition/time filter: never take an intraday trade within 1 hour of market close"
+      ],
+      "coaching_notes": [
+        "\"3 of these losses is equal to one of our profit so happily accept the losses and move on\"",
+        "\"forget the win rate, The reason an extremely simple strategy like this works wonderfully is cause, it's so simple, there's no confusion and that allows you to focus on more important aspects like risk to reward and your trading psychology\"",
+        "\"This strategy is best suited for those struggling with a strategy with too many complicated variables or price action where it's always hiting your stop loss\"",
+        "\"often at times the simple strategies are what works the best\"",
+        "\"your profits can be much more depending on how efficently you are able to trail your stop loss\""
+      ]
+    }
+  ],
+  "enumeration_note": "One strategy taught. Long and short are symmetric mirror entries on the same SMA-strong-close-crossover skeleton (compatible directional breakout, not contradictory opposition), so they stay one object with a bidirectional entry, not two strategies."
+}

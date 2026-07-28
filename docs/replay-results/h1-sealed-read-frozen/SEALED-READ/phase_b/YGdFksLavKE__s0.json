@@ -1,0 +1,115 @@
+{
+  "coaching_notes": [],
+  "coverage_notes": [
+    "Indicator VWAP with upper/lower bands: PRESENT (added to chart, 'The V-wap indicator is actually just the line in the middle. The other two lines are the V-wap bands.').",
+    "LONG entry basic (break above upper band): PRESENT (basic variant entry_sequence).",
+    "SHORT entry basic (break below lower band): PRESENT (basic variant entry_sequence).",
+    "LONG entry filtered (green candle AND break above upper band AND POC within bands): PRESENT (filtered long entry_sequence).",
+    "SHORT entry filtered (red candle AND close below band AND POC within bands): PRESENT (filtered short entry_sequence).",
+    "Stop loss LONG (recent swing low, or slightly below VWAP if near): PRESENT (stop field).",
+    "Stop loss SHORT (recent swing high, or just above VWAP if near): PRESENT (stop field).",
+    "Take profit 2:1 (basic variant): PRESENT (targets).",
+    "Take profit 1.5:1 (filtered variant): PRESENT (targets).",
+    "Volume Profile Fixed Range (row size 36, bars 300) to locate POC: PRESENT (confluences).",
+    "POC-within-VWAP-bands confluence gate: PRESENT (confluences + filtered entry steps).",
+    "CM EMA Trend Bars with EMA 200, candle color trend: PRESENT (confluences)."
+  ],
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "instrument_classification": {
+    "asset_classes_mentioned": [
+      "Forex",
+      "Indices",
+      "Commodities",
+      "Stocks",
+      "Cryptocurrencies"
+    ],
+    "instrument": null,
+    "note": "Strategy demonstrated on TradingView with no specific symbol or timeframe stated; the broker promo lists Forex, Indices, Commodities, Stocks, and Cryptocurrencies but the strategy itself is instrument-agnostic."
+  },
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "rejected_strategies": [],
+  "strategies": [
+    {
+      "confluences": [
+        {
+          "description": "We will be using this indicator to determine what the larger trend of the market is... To know the trend direction we will just need to look at the candle stick colors. Whenever we are in an uptrend the bars will be green and whenever we are in a downtrend the bars will be red. (CM EMA Trend Bars, EMA changed from 34 to 200)"
+        },
+        {
+          "description": "the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. This indicates that the price isn't trading at the price point where there is the most amount of volume."
+        },
+        {
+          "description": "search for the volume profile fixed range indicator... We will be changing the row size from 24 to 36. Make sure you also change the number of bars from 150 to 300... This is the Point of control, the point of control is the price level for the time period with the highest traded volume."
+        }
+      ],
+      "entry_sequence": [
+        {
+          "action": "We will enter into a buy position whenever the price breaks out above the upper V-wap band.",
+          "variant": "Basic VWAP band breakout (no filters), long"
+        },
+        {
+          "action": "For a sell position we will need for the price to break below the lower V-wap band.",
+          "variant": "Basic VWAP band breakout (no filters), short"
+        },
+        {
+          "action": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend.",
+          "variant": "Filtered long"
+        },
+        {
+          "action": "Secondly, the price must break above the upper V-wap band. This shows us that the price might break out which would cause an even bigger increase in price.",
+          "variant": "Filtered long"
+        },
+        {
+          "action": "Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position.",
+          "variant": "Filtered long"
+        },
+        {
+          "action": "firstly the candlesticks will need to be red, which indicates that the trend of the market is currently bearish.",
+          "variant": "Filtered short"
+        },
+        {
+          "action": "Secondly, the candlestick must close below the V-wap band. This shows us that the price might be making a bearish breakout which would cause for the price to fall further.",
+          "variant": "Filtered short"
+        },
+        {
+          "action": "Lastly, we will need to make sure that the point of control line is within the V-wap bands. As you can see all of the conditions have been met so let's enter into the position.",
+          "variant": "Filtered short"
+        }
+      ],
+      "name": "vwap_band_breakout",
+      "stop": "We will be placing the stop loss at the recent swing low. This can sometimes also be close to the V-wap line. If this is the case place the stop loss slightly below the V-wap. (For shorts: We will be putting the stop loss at the recent swing high or just above the V-wap line if it is nearby.)",
+      "targets": [
+        {
+          "description": "for the take profit we will target a 2 times risk-to-reward ratio",
+          "variant": "Basic VWAP band breakout, no filters"
+        },
+        {
+          "description": "For the take profit, we will be targeting a 1.5 times risk-to-reward ratio",
+          "variant": "Filtered VWAP band breakout with EMA-200 trend + POC-within-bands"
+        }
+      ]
+    }
+  ]
+}

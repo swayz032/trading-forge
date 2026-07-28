@@ -1,0 +1,66 @@
+{
+  "strategies": [
+    {
+      "name": "anchored_vwap_pullback_from_volume_rotation",
+      "entry_sequence": [
+        {
+          "action": "you want to see heavy volumes traded within a rotation like this"
+        },
+        {
+          "action": "this needs to be followed by a trend activity, a strong trend activity like this one"
+        },
+        {
+          "action": "you want to anchor the view up to that candle, to the last candle of the rotation, which is the first candle of the sell-off, usually"
+        },
+        {
+          "action": "You simply need to see the price go away from the VWAP and then enter a pullback"
+        },
+        {
+          "action": "you trade pullbacks to that. Because view up represents a fair price since this important place"
+        },
+        {
+          "action": "that means short from here short from here"
+        },
+        {
+          "action": "the resistance which is represented by the VWAP, turns into a support, right? Because the price is moving above it. So, that's why you want to wait for the pullbacks to that support and enter longs from there"
+        },
+        {
+          "action": "there's a second test right here, and that means another short from this place"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "Volume profile shows where the big volumes were traded on the chart. That means that it sort of reveals where the big trading institutions were active because big trading institutions trade with heavy volumes"
+        },
+        {
+          "description": "as there's this rotation, you don't really want to do anything because when the market is rotating, VWAP setups don't really work"
+        }
+      ],
+      "stop": null,
+      "targets": [],
+      "exit_prose": "I don't really have problems holding trades, even, you know, for a couple of hours like this. I learned to be patient. I wait, and that's what's been working for me.",
+      "gestural_exit": true,
+      "coverage_notes": [
+        "PRECONDITION heavy-volume rotation via volume profile: PRESENT (entry_sequence step 1 + confluence 1).",
+        "PRECONDITION rotation followed by strong trend: PRESENT (entry_sequence step 2).",
+        "Anchor VWAP to last rotation candle / first candle of trend: PRESENT (entry_sequence step 3).",
+        "Wait for price to move away from anchored VWAP: PRESENT (entry_sequence step 4).",
+        "Entry on pullback back to anchored VWAP: PRESENT (entry_sequence step 5).",
+        "Direction rule short-below / long-above: PRESENT (entry_sequence steps 6 + 7).",
+        "Occurrence-selection re-enter on each subsequent test: PRESENT (entry_sequence step 8).",
+        "FILTER do not trade while market is rotating: PRESENT (confluence 2).",
+        "Both variants (short pullback, long pullback) covered within entry_sequence.",
+        "Stop and targets ABSENT-WITH-REASON: speaker taught no stop or target level; exit given only gesturally (comfortable holding for hours, patience) â€” recorded in exit_prose."
+      ]
+    }
+  ],
+  "coaching_notes": [
+    "I don't really have problems holding trades, even, you know, for a couple of hours like this.",
+    "I learned to be patient. I wait, and that's what's been working for me."
+  ],
+  "instrument_classification": {
+    "instrument": null,
+    "note": "The speaker does not name a specific instrument; only mentions the Asian session as a low-liquidity, low-volatility period."
+  },
+  "rejected_strategies": []
+}

@@ -1,0 +1,115 @@
+{
+  "coaching_notes": [
+    "A mitigated order block no longer represents unfilled institutional interest. It becomes significantly weaker and should not be relied on for future entries.",
+    "Choosing the right entry model depends on market conditions, the quality of the order block, and your personal risk tolerance.",
+    "The stronger and cleaner the order block, the more aggressive the entry model you can justify. In weaker or more volatile environments, conservative entries offer greater protection and consistency."
+  ],
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "instrument_classification": {
+    "asset_class": "forex",
+    "instrument": "US dollar against the Japanese yen (USDJPY)",
+    "source_basis": "Here we are looking at the 15-minute chart of the US dollar against the Japanese yen",
+    "timeframe": "15-minute chart"
+  },
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "rejected_strategies": [],
+  "strategies": [
+    {
+      "confluences": [
+        {
+          "description": "The first and most powerful confirmation of a valid order block is the liquidity sweep, also known as the takeout... The final bearish candle breaks the low of the previous candle and immediately reverses upward. This move, taking out the prior low, is the liquidity sweep"
+        },
+        {
+          "description": "The second key confirmation of a valid order block is the presence of imbalance, also known as inefficiency. Immediately after the liquidity sweep, price should reverse aggressively and move upward with clear impulsive strength... On the chart, this imbalance appears as a fair value gap, an area where one or more candles do not overlap each other"
+        },
+        {
+          "description": "if no imbalance forms above this candle... we do not define the order block based on the liquidity sweep candle. Instead, we extend the order block boundaries to include the next candle. When we analyze that next candle, we can clearly see imbalance forming above it"
+        },
+        {
+          "description": "The third and final confirmation of a valid order block is that it must remain unmitigated. This means that after the order block is formed, price has not yet returned to this zone to retest it or trade through it"
+        }
+      ],
+      "coverage_notes": [
+        "PRECONDITION bullish BOS: APPEARS â€” entry_sequence step 1 (verbatim).",
+        "PRECONDITION OB definition: APPEARS â€” entry_sequence step 2 (verbatim).",
+        "VALIDATION 1 liquidity sweep: APPEARS â€” confluence 1 (verbatim).",
+        "VALIDATION 2 imbalance/FVG: APPEARS â€” confluence 2 (verbatim).",
+        "VALIDATION 2 exception (extend boundary to next candle): APPEARS â€” confluence 3 (verbatim).",
+        "VALIDATION 3 unmitigated: APPEARS â€” confluence 4 (verbatim).",
+        "ENTRY TRIGGER change-of-character/internal-low break: APPEARS â€” entry_sequence steps 4-5 (verbatim).",
+        "ENTRY MODEL A upper wick: APPEARS â€” variant Aggressive (verbatim).",
+        "ENTRY MODEL B upper body: APPEARS â€” variant Conservative (verbatim).",
+        "ENTRY MODEL C midpoint: APPEARS â€” variant Optimal (verbatim).",
+        "STOP LOSS below lower wick adjusted by spread: APPEARS â€” stop field (verbatim).",
+        "TIMEFRAME 15-minute USDJPY: APPEARS â€” timeframe + instrument_context fields (verbatim).",
+        "TARGETS: null â€” no concrete profit target stated; speaker discusses take-profit only as an R:R tradeoff, captured verbatim in each variant's target note."
+      ],
+      "direction": "long",
+      "entry_sequence": [
+        {
+          "action": "a bullish trend confirmed by price breaking above the previous major high and forming a valid break of structure"
+        },
+        {
+          "action": "a bullish order block is typically the last bearish candle before a powerful upward move that breaks structure"
+        },
+        {
+          "action": "After the first break of structure, price performs a healthy pullback and then forms another break of structure, further confirming bullish continuation and strengthening the external structure"
+        },
+        {
+          "action": "price retraces downward and forms a change of character by breaking an internal low. This change of character does not signal a trend reversal, but rather a temporary internal shift. During this retracement, price returns into the bullish order block and fills the buy orders resting inside the zone"
+        },
+        {
+          "action": "the change of character acted as an entry trigger rather than a reversal signal"
+        },
+        {
+          "action": "In a bullish order block, a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries"
+        }
+      ],
+      "instrument_context": "the 15-minute chart of the US dollar against the Japanese yen",
+      "name": "institutional_order_block_reversal_entry",
+      "stop": "The stop loss is placed just below the lower wick of the same candle adjusted by the spread",
+      "targets": null,
+      "timeframe": "15-minute chart",
+      "variants": [
+        {
+          "action": "In a bullish order block, a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries. The stop loss is placed just below the lower wick of the same candle adjusted by the spread",
+          "target": "This model offers the earliest possible entry and the best potential risk-to-reward ratio, but it also comes with a higher chance of being stopped out if price slightly overshoots the zone. It is best suited for strong clean order blocks with clear institutional confirmation",
+          "variant_label": "Aggressive â€” buy limit at upper wick"
+        },
+        {
+          "action": "the buy limit order is placed at the upper level of the candle body that defines the order block rather than the wick. The stop loss is placed in the same way as before, just below the lower wick adjusted by the spread",
+          "target": "This approach reduces the likelihood of premature stopouts while still maintaining a favorable risk-to-reward ratio. It balances early participation with improved confirmation",
+          "variant_label": "Conservative â€” buy limit at upper body"
+        },
+        {
+          "action": "the buy limit order is placed at the midpoint of the order block zone. The stop loss again remains just below the lower wick of the order block candle adjusted by the spread",
+          "target": "This model provides the highest probability of execution and stability, although it slightly reduces the riskto-reward ratio compared to more aggressive entries. It is particularly effective in volatile conditions where deeper retracements are common",
+          "variant_label": "Optimal â€” buy limit at midpoint of order block zone"
+        }
+      ]
+    }
+  ]
+}

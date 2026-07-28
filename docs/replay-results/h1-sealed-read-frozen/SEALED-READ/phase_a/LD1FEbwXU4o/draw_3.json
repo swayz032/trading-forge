@@ -1,0 +1,76 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "The video teaches one runnable skeleton â€” fading liquidity-sweep rejections at untapped HTF support/resistance on the 5m/1m for a 1:2 scalp. The 'trap' fade is the confirmation mechanic of that same setup, and the twice-rejection double bottom is a compatible variant (same entry/exit skeleton, same 1:2 target); enumerated as one strategy with two variants.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "Find where the obvious trades are sitting, and do the opposite.",
+        "Look for clean price action that's just a little too clean â€” equal highs, trend lines, perfect zones â€” that's the bait.",
+        "Avoid entering before the price taps the liquidity zone. Wait for confirmation.",
+        "Do not chase the breakouts. Wait for price to trap traders and fade the move.",
+        "Anticipate where price is going, not react to it."
+      ],
+      "element_inventory": [
+        "PRECONDITION: mark higher-time-frame (daily/4H) swing highs/lows and clean support/resistance levels first, using the horizontal line tool",
+        "SELECTION: only target untapped HTF levels (liquidity lives where price hasn't tapped yet)",
+        "ENTRY GATE: wait for price to actually tap the marked liquidity zone before entering (do not enter pre-tap)",
+        "ENTRY TRIGGER: rapid price approach to the level + volume spike + quick tap + rejection wick",
+        "ENTRY CONFIRMATION: exhaustion candle / long wick / bullish or bearish engulfing / volume divergence",
+        "TRAP CONFIRMATION: wick above resistance then dump, or wick below support then reverse â€” fade the fake break",
+        "DIRECTION: long on swept support rejection, short on swept resistance rejection",
+        "STOP: below the sweep low (e.g. below current London low) / beyond the marked S/R level; for double bottom the bar must not close below the level",
+        "TARGET: fixed 1:2 risk-to-reward",
+        "VARIANT SUB-MECHANIC: double bottom = second rejection of the same area with no close below the level â†’ full reversal trade at 1:2",
+        "SESSION FILTER: trade around London or New York open (when the most stop hunts occur)"
+      ],
+      "entry_summary": "Mark untapped higher-time-frame (daily/4H) support/resistance liquidity zones, then drop to the 5-minute (or 1-minute) chart and wait for price to rapidly approach and tap a marked level with a volume spike. Enter the reversal (fade the sweep) on a rejection wick confirmed by an exhaustion candle, long wick, bullish/bearish engulfing, or volume divergence. Long at swept support, short at swept resistance.",
+      "exit_summary": "Stop loss below the sweep low (e.g. below the current London low) / beyond the marked S/R level; target a fixed 1:2 risk-to-reward.",
+      "name": "ltf_liquidity_sweep_rejection_scalp",
+      "strategy_id": 0,
+      "variants": [
+        {
+          "confirmation_mechanic_note": "single tap of the level + rejection wick + volume spike + engulfing/exhaustion candle",
+          "target_note": "1:2 risk-to-reward, stop below London low / below the level",
+          "timeframe_note": "5-minute (or 1-minute if riskier) entry off daily/4H marked levels",
+          "transcript_quote": "you are simply waiting for one of these levels to be hit and then you're looking for that rejection wick... you can get into your scalping trade and get a 1 to2 risk-to-reward setup",
+          "variant_label": "Single-tap rejection scalp (5m, 1:2)"
+        },
+        {
+          "confirmation_mechanic_note": "price rejects the same area twice with the bar not closing below the S/R level (double bottom full reversal)",
+          "target_note": "1:2 risk-to-reward",
+          "timeframe_note": "same 5m/1m execution off HTF levels",
+          "transcript_quote": "if price rejects the same area twice, it could be a full reversal double bottom with the bar not closing below the area of support and resistance that you marked up and getting another trade 1:2 risk-to-reward ratio",
+          "variant_label": "Double-bottom twice-rejection full reversal (1:2)"
+        }
+      ]
+    }
+  ],
+  "strategy_refs": [
+    "LD1FEbwXU4o__s0"
+  ]
+}

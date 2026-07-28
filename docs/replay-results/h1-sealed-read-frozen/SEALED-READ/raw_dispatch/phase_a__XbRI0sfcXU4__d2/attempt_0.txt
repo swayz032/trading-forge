@@ -1,0 +1,26 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "ema25_channel_break_short",
+      "entry_summary": "After price is rejected from the 50 MA with a weak close, wait for a bar to close under the 25 EMA; enter short on that confirmation bar (anticipating a channel break and continuation move down). Add a second contract on a pullback.",
+      "exit_summary": "Move stop to break-even once price moves away from entry; kill the trade if a bar closes back above the 25 EMA. Target the bottom of the channel / a projected move roughly equal to the prior down-leg.",
+      "variants": [],
+      "element_inventory": [
+        "PRECONDITION: price rejected from the 50 MA with a weak close",
+        "ENTRY: enter short on a bar that closes under the 25 EMA (confirmation bar)",
+        "SCALE-IN: add a second contract on a pullback after initial entry",
+        "STOP: move stop to break-even once price moves away from the entry point",
+        "INVALIDATION: kill the trade if price closes back above the 25 EMA",
+        "TARGET: exit at the bottom channel level; projected down-move roughly equal in size to the first down-leg",
+        "OCCURRENCE-SELECTION: exit if the expected down-move does not happen in time (time-based invalidation)"
+      ],
+      "coaching_notes": [
+        "\"i gave enough time i don't want to wait too long because sometimes if you don't see that move in time then usually price goes back up\"",
+        "\"this price needs to break down soon otherwise it's gonna go either sideway or go back up\"",
+        "\"i'm getting ready to kill this trade if i see a close\""
+      ]
+    }
+  ],
+  "enumeration_note": "Single taught short setup (50 MA rejection â†’ bar close under 25 EMA â†’ short the channel break) narrated through one trade; exit is given loosely (\"exit on this bottom level\") so exit levels stay gestural but the entry is runnable, so it is kept as one strategy object."
+}

@@ -1,0 +1,133 @@
+{
+  "artifact": "h1-staged-source-attrition-emit",
+  "fetch_evidence": {
+    "0RBexa9JpIg": {
+      "anomaly_side": null,
+      "char_count": 3345,
+      "content_hash": "ed709bc848f6aa56c34dab41d9a3cbc7b9ac883dcfbd56227b4acc4fdfec5922",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "ExB66jcyKxg": {
+      "anomaly_side": null,
+      "char_count": 4827,
+      "content_hash": "4a7572d2e6ed36f58ddc719e4ea7094a7373a40de3ed417802ad5a612deb2f3c",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "LD1FEbwXU4o": {
+      "anomaly_side": null,
+      "char_count": 5051,
+      "content_hash": "4ef2078f4f11ebf98bc3413d26ce85a1037014cea6f1f7e86739e9f67dfae3a9",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "SeqVUNanFeY": {
+      "anomaly_side": null,
+      "char_count": 7592,
+      "content_hash": "9697824343f63de67b3cb61fd947a92fab4bddecf1b7fc2e4c86c5fd7e04c72a",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "XbRI0sfcXU4": {
+      "anomaly_side": null,
+      "char_count": 2076,
+      "content_hash": "5d591fb953cd96e90154f33de0d45b1c46d7c734805f6b0ff9c583ed58279f33",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "YGdFksLavKE": {
+      "anomaly_side": null,
+      "char_count": 8171,
+      "content_hash": "ad59232f9120692eb3824bdf62b30526dbd6f8d26592bb709b8d99e901ee57a5",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "YqY0OkL5LMI": {
+      "anomaly_side": null,
+      "char_count": 7685,
+      "content_hash": "f9b32a6dc4c457d59d52c76e21646ad14d80e1b8b24db3429a0c6dce3252962e",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "dENM6gt8ZRg": {
+      "anomaly_side": null,
+      "char_count": 7120,
+      "content_hash": "23c2641eda979d68689e3f00998e98ed623aed67f576f6bb442c1e697e5e65f9",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "hcHuDfxdywI": {
+      "anomaly_side": null,
+      "char_count": 9161,
+      "content_hash": "214a975d279dde9c1e3e783825af40c39b3a6a06c1826ff839344d30fcd6394f",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "iyKk9fpMSY8": {
+      "anomaly_side": null,
+      "char_count": 4040,
+      "content_hash": "bfe002a8fae7fab0afaa760f393daba17162798c6caa551e6560baf79716dbb7",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "pKzXxB9Blts": {
+      "anomaly_side": null,
+      "char_count": 4657,
+      "content_hash": "3f7443644836e6bfa20f557443b058dba8018688e481865fb25b1e8dff03b072",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    },
+    "st5e-YJRfKc": {
+      "anomaly_side": null,
+      "char_count": 9386,
+      "content_hash": "eaf5425387556414ffae88c9446d3e80f244e2414ee129098bc892125190d5c4",
+      "error": null,
+      "fetched": true,
+      "final_outcome": "reused_on_disk",
+      "sealed_content_hash": null
+    }
+  },
+  "floor": 9,
+  "local_halt": [],
+  "meets_floor": true,
+  "readable": [
+    "0RBexa9JpIg",
+    "ExB66jcyKxg",
+    "LD1FEbwXU4o",
+    "SeqVUNanFeY",
+    "XbRI0sfcXU4",
+    "YGdFksLavKE",
+    "YqY0OkL5LMI",
+    "dENM6gt8ZRg",
+    "hcHuDfxdywI",
+    "iyKk9fpMSY8",
+    "pKzXxB9Blts",
+    "st5e-YJRfKc"
+  ],
+  "readable_n": 12,
+  "sealed_total": 12,
+  "unreadable_at_source": []
+}

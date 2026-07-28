@@ -1,0 +1,46 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "fibonacci_pullback_continuation",
+      "entry_summary": "Trade with the trend: first identify trend direction on the 4H chart using a trend line, then on the 1H chart draw a Fibonacci retracement (swing low\u2192recent swing high in an uptrend / swing high\u2192recent swing low in a downtrend) and enter in the trend direction when price touches the 50%\u201361.8% zone (buy in uptrend, sell in downtrend).",
+      "exit_summary": "Buy: take profit above the previous swing high, stop loss below the swing low. Sell: take profit below the previous swing low, stop loss above the swing high.",
+      "variants": [
+        {
+          "variant_label": "Long (uptrend)",
+          "timeframe_note": "1H execution, 4H for trend direction",
+          "confirmation_mechanic_note": "Fibonacci drawn swing low to recent swing high; enter buy anywhere in the 50%\u201361.8% retracement zone; only when market is in uptrend",
+          "target_note": "TP above previous swing high; SL below swing low",
+          "transcript_quote": "draw the fibonacci from swing low to the recent swing high and wait for the price to touch the 50 or 61.8% line. And place your buy trade anywhere between these two levels."
+        },
+        {
+          "variant_label": "Short (downtrend)",
+          "timeframe_note": "1H execution, 4H for trend direction",
+          "confirmation_mechanic_note": "Fibonacci drawn swing high to recent swing low; enter sell anywhere in the 50%\u201361.8% retracement zone; only when market is in downtrend",
+          "target_note": "TP below previous swing low; SL above swing high",
+          "transcript_quote": "draw the fibonacci from swing high to the recent swing low and wait for the price to touch the 50 or 61.8% line. And place your sell trade anywhere between these two levels."
+        }
+      ],
+      "element_inventory": [
+        "PRECONDITION: identify trend direction on the 4H timeframe using a trend line before trading",
+        "PRECONDITION: only trade in a trending market (do not trade a non-trending market)",
+        "Execute on the 1-hour timeframe",
+        "Use Fibonacci retracement indicator to define price-action levels",
+        "Buy only when the market is in an uptrend; sell only when in a downtrend",
+        "Draw Fibonacci from swing low to recent swing high (buy) / swing high to recent swing low (sell)",
+        "Entry trigger: price touches the 50% or 61.8% Fibonacci level; enter anywhere between the 50% and 61.8% levels",
+        "Buy TP: above the previous swing high; Buy SL: below the swing low",
+        "Sell TP: below the previous swing low; Sell SL: above the swing high",
+        "Applicable to every currency pair"
+      ],
+      "coaching_notes": [
+        "You always need to enter the market in early stages of its trend otherwise you'll end up losing your trade",
+        "If you have identified the trend on its early stages then you can end up making huge profits from a single trend, because you just need to repeat the same process again and again",
+        "You don't need to wait longer for a trading signal in a trending market",
+        "There is a good risk to reward ratio in this method",
+        "But if you'll follow each step carefully then the chances of loss are minimal"
+      ]
+    }
+  ],
+  "enumeration_note": "One bidirectional Fibonacci-pullback continuation strategy; the buy and sell sides are directional mirrors of the same skeleton (trade with the trend into the 50\u201361.8% retracement), not opposing plays \u2014 enumerated as one strategy with long/short variants."
+}

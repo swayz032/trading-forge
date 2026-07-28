@@ -1,0 +1,63 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "One taught strategy: ORB-with-retest (bidirectional, same skeleton for close-above and close-below breakouts). The video also shows a parameter-tuned Gold case (+94%) but never specifies which parameter changed, so it is an unpromoted mention of the same skeleton with unspecified config â€” not a distinct strategy or a runnable variant.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "Don't trust gurus. Don't trust me. Test it yourself, on your own data, with your own broker.",
+        "Test conditions must be as close to real trading as possible. Otherwise you're not testing a strategy â€” you're testing an illusion.",
+        "Include all your broker's commissions, real spread, and slippage; enable random delay and slippage emulation and every-tick real-tick modelling.",
+        "Beware overfitting â€” changing parameters until the past looks perfect discovers the shape of the historical data, not an edge.",
+        "Beware look-ahead bias and improper data separation.",
+        "One lucky month is not a strategy; a beautiful equity curve is not proof.",
+        "Working combinations exist but require an honest test â€” the tuned result is a specific case, not a recipe or guarantee."
+      ],
+      "element_inventory": [
+        "PRECONDITION: only at/after 09:30 AM New York time (American market open)",
+        "Opening Range = first 5-minute candle 09:30â€“09:35; extract high, low, and midpoint (exact halfway between high and low)",
+        "Breakout valid ONLY when a candle body closes completely outside the range (full close, not a wick, not a touch)",
+        "Retest valid when the candle opened outside the range AND the wick dipped inside AND the close is back outside the range",
+        "Retest invalidation: if the candle closes inside the range the signal is invalid â€” wait for the next candle",
+        "Entry on the open of the next candle after the valid retest",
+        "Stop loss at the range midpoint",
+        "Take profit at 2:1 reward-to-risk",
+        "Risk per trade = 1% of deposit (configurable: percentage of deposit or fixed lot)",
+        "Every decision made on closed candles only (look-ahead eliminated)",
+        "Configurable parameters gating the result: timeframe, market open time, breakout/retest conditions, risk size, take-profit-to-stop-loss ratio"
+      ],
+      "entry_summary": "At the 09:30 NY market open, the first 5-minute candle (09:30â€“09:35) defines the Opening Range (high, low, and midpoint). Wait for a valid breakout â€” a candle whose body closes completely outside the range (a full close, not a wick/touch). Then wait for a valid retest â€” a candle that opens outside the range, wicks back inside, and closes back outside; if a candle closes inside the range the signal is invalid and you wait for the next one. Enter on the open of the next candle after the valid retest. All decisions made on closed candles only.",
+      "exit_summary": "Stop loss at the range midpoint; take profit at a 2:1 (2R) reward-to-risk ratio.",
+      "name": "orb_retest_breakout",
+      "strategy_id": 0,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "dENM6gt8ZRg__s0"
+  ]
+}

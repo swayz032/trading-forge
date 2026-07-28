@@ -1,0 +1,28 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "sma14_strong_close_cross",
+      "entry_summary": "On the 15-minute chart with a 14-period Simple Moving Average, enter when a candle crosses the SMA and closes strong beyond it (not on the line). A strong close above the line = buy/long; a strong close below the line = short.",
+      "exit_summary": "Fixed target exit (60 points on Nifty), then trail profits after the target is reached. Stop loss set at 1/3 of the target (20 points on Nifty). Do not take any intraday trade within 1 hour of market close.",
+      "variants": [],
+      "element_inventory": [
+        "Indicator: Simple Moving Average, length 14",
+        "Timeframe: 15-minute",
+        "Entry long: candle crosses the SMA and closes strong ABOVE the line",
+        "Entry short: candle crosses the SMA and closes strong BELOW the line",
+        "Entry filter: candle must close strong BEYOND the line, NOT on the line",
+        "Fixed target: 60 points (Nifty example)",
+        "Stop loss: 20 points = 1/3 of the target/profit",
+        "Trail profits after the fixed target is reached",
+        "Precondition: never take an intraday trade within 1 hour of market close"
+      ],
+      "coaching_notes": [
+        "Just so you know 3 of these losses is equal to one of our profit so happily accept the losses and move on.",
+        "forget the win rate, The reason an extremely simple strategy like this works wonderfully is cause, it's so simple, there's no confusion and that allows you to focus on more important aspects like risk to reward and your trading psychology.",
+        "This strategy is best suited for those struggling with a strategy with too many complicated variables or price action where it's always hiting your stop loss ... forget about all those, often at times the simple strategies are what works the best"
+      ]
+    }
+  ],
+  "enumeration_note": "One SMA(14) strong-close cross skeleton taught bidirectionally (buy on strong close above, short on strong close below) â€” the two directions are mirror images of the same entry/exit logic, not contradictory opposition, so enumerated as a single strategy. Long and short share the identical target/stop/trail exit."
+}

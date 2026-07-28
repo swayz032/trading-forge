@@ -1,0 +1,27 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "ema25_channel_break_short",
+      "entry_summary": "After price rejects off the 50 moving average with a weak close inside a descending channel, wait for a bar to close under the 25 exponential moving average; enter short on that confirmation. Add a second contract on a pullback.",
+      "exit_summary": "Move stop to break-even once price moves away from entry; if a bar closes above the 25 EMA (channel break up) kill the trade. Target a projected move roughly equal to the prior down-leg, exiting at the channel bottom level.",
+      "variants": [],
+      "element_inventory": [
+        "PRECONDITION: descending channel forming on NQ (expecting a channel break to the downside)",
+        "PRECONDITION: bulls attempt push off the 50 MA that gets rejected with a weak bar close",
+        "ENTRY: wait for a bar to close under the blue 25 EMA, then enter short on that confirmation bar",
+        "SCALING: add a second contract on a pullback after initial entry",
+        "STOP: move stop to break-even once price moves away from the entry point",
+        "INVALIDATION/EXIT: kill the trade if a bar closes above the 25 EMA (channel breaks up)",
+        "TARGET: project a move roughly equal to the size of the prior down-leg; exit at the channel bottom level"
+      ],
+      "coaching_notes": [
+        "i want to see the price moves away from my entry point here and right there i decided to put my stop loss there break even",
+        "i gave enough time i don't want to wait too long because sometimes if you don't see that move in time then usually price goes back up",
+        "this price needs to break down soon otherwise it's gonna go either sideway or go back up",
+        "i'm getting ready to kill this trade if i see a close"
+      ]
+    }
+  ],
+  "enumeration_note": "One taught short setup: 50 MA rejection + weak close inside a descending channel, enter on a bar closing under the 25 EMA, scale on pullback, BE stop, target the channel bottom (projected leg size). Only one runnable entry/exit skeleton is taught; earlier trades are mentioned in passing with no mechanics."
+}

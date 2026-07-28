@@ -1,0 +1,14 @@
+{
+  "registration_pre_check": {
+    "ok": true,
+    "n_registered": 12,
+    "evidence": "seal-gate verified manifest 4d7b3c29 at runtime; source_attrition 12/12 readable"
+  },
+  "engagement_pre_check": {
+    "ok": true,
+    "evidence": "independent doer!=grader post-hoc audit (R-035): ENGAGEMENT EVIDENCED all 8 items"
+  },
+  "frozen_scan_commit": "405af2d9",
+  "driver_commit": "405af2d9",
+  "epoch": "2026-07-17T20:19:00-04:00"
+}

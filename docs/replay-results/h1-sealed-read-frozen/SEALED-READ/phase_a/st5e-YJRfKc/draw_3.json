@@ -1,0 +1,97 @@
+{
+  "count": 2,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "Two setups share the opening-range-breakout skeleton but teach genuinely different entry triggers: a breakout entry (enter on the break of the range, no retest) and a pullback entry (wait for the break, then enter on the retracement to the pullback level). Per the under-split guidance these are separate strategy objects, not variants. The 5/15/30-minute ranges are timeframe variants within the breakout strategy. This is an overview video (part 1 of 6); pullback exit levels are given only by reference to the shared ORB framework.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "Understanding the psychology of these breakouts really can help you transform your trading.",
+        "The range high is where sellers stepped in with conviction; range low where buyers defended with strength.",
+        "This one setup gives plenty of opportunities throughout the entire trading day, not just the first 30 minutes."
+      ],
+      "element_inventory": [
+        "PRECONDITION: opening range formed from the 9:30 a.m. ET open (first 5, 15, or 30 minutes)",
+        "Compute opening range high (where sellers defended) and opening range low (where buyers defended)",
+        "Compute range value = opening range high - opening range low",
+        "Compute half range = range value / 2",
+        "Long entry: price breaks a penny above the opening range high after the range period ends",
+        "Short entry: price breaks a penny below the opening range low after the range period ends",
+        "Half-range stop: placed half the range value beyond the entry level",
+        "Half-range target: opening range level +/- half the range value",
+        "Full-range target: opening range level +/- the full range value",
+        "Pullback level defined: opening range high - half range (used as reference level)"
+      ],
+      "entry_summary": "After the opening range forms in the first 5, 15, or 30 minutes from the 9:30 a.m. ET open, take the opening range high and low. Enter on a breakout: go long when price breaks a penny above the opening range high, go short when price breaks a penny below the opening range low. The breakout direction represents the initial directional conviction.",
+      "exit_summary": "Stop at the half-range stop (half the range value beyond the entry level). Targets are the half-range target (opening range high/low +/- half the range value) and the full-range target (+/- the full range value). Example shown moved from breakout to the full-range target.",
+      "name": "opening_range_breakout",
+      "strategy_id": 0,
+      "variants": [
+        {
+          "confirmation_mechanic_note": "breakout beyond 5-min opening range high/low",
+          "target_note": "half-range and full-range targets from the 5-min range value",
+          "timeframe_note": "5-min OB: 9:30-9:35 a.m. ET",
+          "transcript_quote": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern.",
+          "variant_label": "5-minute opening range"
+        },
+        {
+          "confirmation_mechanic_note": "breakout beyond 15-min opening range high/low",
+          "target_note": "half-range and full-range targets from the 15-min range value",
+          "timeframe_note": "15-min OB: 9:30-9:45 a.m. ET",
+          "transcript_quote": "The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45.",
+          "variant_label": "15-minute opening range"
+        },
+        {
+          "confirmation_mechanic_note": "breakout beyond 30-min opening range high/low",
+          "target_note": "half-range and full-range targets from the 30-min range value (example: $1.03 range, ~$0.52 half-range target)",
+          "timeframe_note": "30-min OB: 9:30-10:00 a.m. ET",
+          "transcript_quote": "And the 30 minute is from 9:30 to 10 a.m. Eastern.",
+          "variant_label": "30-minute opening range"
+        }
+      ]
+    },
+    {
+      "coaching_notes": [
+        "The pullback level plays a key part because we look for setups often that are what we call pullback setups."
+      ],
+      "element_inventory": [
+        "PRECONDITION: an initial opening range breakout has already occurred",
+        "Pullback level = opening range high - half range (the half-range mark as an actual level)",
+        "Entry: after the breakout, price pulls back to the pullback level, then enter back toward the long mark (breakout direction)",
+        "Uses the same opening range half-range/full-range framework for stops and targets"
+      ],
+      "entry_summary": "After the initial opening range breakout takes place, wait for price to pull back to the pullback level (opening range high minus the half range). Then enter back toward the long mark in the breakout direction. Described as a full strategy built into the platform.",
+      "exit_summary": "Exit given only by reference to the same opening range framework (half-range stop, half-range and full-range targets); the exit was not taught with distinct pullback-specific levels beyond the shared ORB targets/stops.",
+      "name": "opening_range_pullback",
+      "strategy_id": 1,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "st5e-YJRfKc__s0",
+    "st5e-YJRfKc__s1"
+  ]
+}

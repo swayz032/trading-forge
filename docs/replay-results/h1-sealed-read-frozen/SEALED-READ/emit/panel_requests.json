@@ -1,0 +1,83 @@
+{
+  "requests": [
+    {
+      "cid": "0RBexa9JpIg__s0",
+      "strategy_index": 0,
+      "strategy_name": "fibonacci_pullback_continuation",
+      "video_id": "0RBexa9JpIg"
+    },
+    {
+      "cid": "ExB66jcyKxg__s0",
+      "strategy_index": 0,
+      "strategy_name": "sma14_strong_close_crossover",
+      "video_id": "ExB66jcyKxg"
+    },
+    {
+      "cid": "LD1FEbwXU4o__s0",
+      "strategy_index": 0,
+      "strategy_name": "ltf_liquidity_zone_rejection_scalp",
+      "video_id": "LD1FEbwXU4o"
+    },
+    {
+      "cid": "SeqVUNanFeY__s0",
+      "strategy_index": 0,
+      "strategy_name": "vwap_confluence_sr_retest",
+      "video_id": "SeqVUNanFeY"
+    },
+    {
+      "cid": "XbRI0sfcXU4__s0",
+      "strategy_index": 0,
+      "strategy_name": "ema25_channel_break_short",
+      "video_id": "XbRI0sfcXU4"
+    },
+    {
+      "cid": "YGdFksLavKE__s0",
+      "strategy_index": 0,
+      "strategy_name": "vwap_band_breakout",
+      "video_id": "YGdFksLavKE"
+    },
+    {
+      "cid": "YqY0OkL5LMI__s0",
+      "strategy_index": 0,
+      "strategy_name": "double_inside_bar_daily_breakout",
+      "video_id": "YqY0OkL5LMI"
+    },
+    {
+      "cid": "YqY0OkL5LMI__s1",
+      "strategy_index": 1,
+      "strategy_name": "gap_and_go_opening_range_breakout",
+      "video_id": "YqY0OkL5LMI"
+    },
+    {
+      "cid": "dENM6gt8ZRg__s0",
+      "strategy_index": 0,
+      "strategy_name": "orb_5m_retest",
+      "video_id": "dENM6gt8ZRg"
+    },
+    {
+      "cid": "hcHuDfxdywI__s0",
+      "strategy_index": 0,
+      "strategy_name": "institutional_order_block_reversal_entry",
+      "video_id": "hcHuDfxdywI"
+    },
+    {
+      "cid": "pKzXxB9Blts__s0",
+      "strategy_index": 0,
+      "strategy_name": "anchored_vwap_pullback_from_volume_rotation",
+      "video_id": "pKzXxB9Blts"
+    },
+    {
+      "cid": "st5e-YJRfKc__s0",
+      "strategy_index": 0,
+      "strategy_name": "opening_range_breakout",
+      "video_id": "st5e-YJRfKc"
+    },
+    {
+      "cid": "st5e-YJRfKc__s1",
+      "strategy_index": 1,
+      "strategy_name": "opening_range_pullback",
+      "video_id": "st5e-YJRfKc"
+    }
+  ],
+  "stage": "certify"
+}

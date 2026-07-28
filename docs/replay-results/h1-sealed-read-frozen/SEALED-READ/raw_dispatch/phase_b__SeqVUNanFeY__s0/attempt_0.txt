@@ -1,0 +1,82 @@
+{
+  "strategies": [
+    {
+      "name": "vwap_confluence_sr_retest",
+      "entry_sequence": [
+        {
+          "action": "when price is above the vwap line the market is considered bullish and if it's trading below the vop the market is considered bearish"
+        },
+        {
+          "action": "identify a level of support this old level of resistance has been broken and when price returns to it we can expect it to act as support"
+        },
+        {
+          "action": "the vop also lines up with our key level adding Confluence to a trade taken here so we may look to set a buy order"
+        },
+        {
+          "action": "here it begins painting a bullish Hammer you can look to enter here or after the next bullish candle close"
+        },
+        {
+          "action": "identify our levels of resistance then look for more Confluence like a fib level here we have three levels of Confluence at our resistance level the 0.5 fib the vwap and our horizontal"
+        },
+        {
+          "action": "you could look to immediately get in by setting a cell order at this area or you could wait for a Candlestick pattern to form for additional Confluence"
+        },
+        {
+          "action": "the market swept through these highs with a long Wick here we can enter at the candle close"
+        },
+        {
+          "action": "the momentum is currently bullish so you want to wait for it to change course first instead of immediately entering at the retest as price is consolidating we finally have a proper lower low being created this is our signal that bearish momentum is back so you can look to enter now at the retest of the swing low and fair value Gap"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "it's also a very consistent level of support or resistance depending on what direction price is trending"
+        },
+        {
+          "description": "we're only using the vop as an additional tool for Confluence it should not be used just by itself"
+        },
+        {
+          "description": "here we have three levels of Confluence at our resistance level the 0.5 fib the vwap and our horizontal"
+        },
+        {
+          "description": "as price is retracing we see it react multiple times creating a series of equal highs then finally the market swept through these highs with a long Wick"
+        },
+        {
+          "description": "higher time frame levels are more significant and the same thing applies to our vwap"
+        },
+        {
+          "description": "you can combine multiple levels of vwap by adding in another one in the indicators Tab and changing to different anchor periods make sure to also change the size or color to be able to tell which one is which"
+        }
+      ],
+      "stop": "set a buy order with our stop set below the vwap; for shorts setting our stops just above these highs / above the high",
+      "targets": [
+        {
+          "description": "just Target resistance levels above"
+        },
+        {
+          "description": "targeting our support levels lower"
+        }
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "asset_class": "generic",
+    "instrument": "stock or asset",
+    "timeframe": "typically this is used on intraday charts as it resets itself with every new trading session",
+    "rationale": "The speaker teaches the VWAP as a generic support/resistance and trend tool applicable to any chart ('this is why the vwap can act as a strong level on any chart') and references 'a stock or asset' with intraday session-resetting VWAP; no specific instrument is named."
+  },
+  "rejected_strategies": [],
+  "coaching_notes": [
+    "if you want to win more trades you're going to have to learn when and how to use it",
+    "remember you should treat this level as an area not a literal number",
+    "more often than not price goes through the vop line faking you out or making you think that it won't hold but time and time again it actually ends up respecting it",
+    "we're only using the vop as an additional tool for Confluence it should not be used just by itself",
+    "I highly suggest everyone gives this a go for themselves",
+    "I have just one more example for you so you can really digest this information and put it to practice in your trading"
+  ],
+  "coverage_notes": [
+    "Element 'Indicator config: disable the upper and lower VWAP bands, use only the middle VWAP line' is a chart-setup instruction, present verbatim in transcript ('I recommend to disable the upper and lower bands because they really just add noise all we're looking for is the vwap here') â€” captured here as accounted-for; it is a setup/config step, not an executable trade condition.",
+    "All other element_inventory items appear in entry_sequence, confluences, stop, or targets in the speaker's words.",
+    "Anchor-period selection (session/weekly/monthly) and multi-VWAP overlay appear as confluences ('higher time frame levels are more significant and the same thing applies to our vwap'; multi-VWAP overlay quote)."
+  ]
+}

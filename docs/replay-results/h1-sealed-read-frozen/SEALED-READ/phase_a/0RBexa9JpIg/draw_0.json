@@ -1,0 +1,59 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "One bidirectional Fibonacci pullback continuation strategy; the buy (uptrend) and sell (downtrend) sides are directional mirrors of the same skeleton, not opposing logic â€” enumerated as one strategy.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "You always need to enter the market in early stages of its trend otherwise you'll end up losing your trade",
+        "If you have identified the trend on its early stages then you can end up making huge profits from a single trend, because you just need to repeat the same process again and again",
+        "But if you'll follow each step carefully then the chances of loss are minimal"
+      ],
+      "element_inventory": [
+        "PRECONDITION: identify trend direction using a 4-hour timeframe + trend line before taking any trade",
+        "PRECONDITION: only trade in a trending market (no trades in a non-trending market)",
+        "Execution timeframe: 1-hour chart",
+        "Indicator: Fibonacci retracement tool",
+        "Long entry (uptrend only): draw fib from swing low to recent swing high; enter buy when price touches the 50% or 61.8% level (anywhere between the two)",
+        "Long take profit: above the previous swing high",
+        "Long stop loss: below the swing low",
+        "Short entry (downtrend only): draw fib from swing high to recent swing low; enter sell when price touches the 50% or 61.8% level (anywhere between the two)",
+        "Short take profit: below the previous swing low",
+        "Short stop loss: above the swing high",
+        "Applicable to every currency pair"
+      ],
+      "entry_summary": "Trend-continuation pullback using Fibonacci retracement on the 1-hour timeframe. First establish trend direction (4-hour timeframe + trend line). In an uptrend, draw the fib from swing low to recent swing high and enter a buy when price pulls back to touch the 50% or 61.8% level (enter anywhere between the two). In a downtrend, draw the fib from swing high to recent swing low and enter a sell when price pulls back to touch the 50% or 61.8% level. Only trade in a trending market.",
+      "exit_summary": "For buys: take profit above the previous swing high, stop loss below the swing low. For sells: take profit below the previous swing low, stop loss above the swing high.",
+      "name": "fibonacci_pullback_continuation",
+      "strategy_id": 0,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "0RBexa9JpIg__s0"
+  ]
+}

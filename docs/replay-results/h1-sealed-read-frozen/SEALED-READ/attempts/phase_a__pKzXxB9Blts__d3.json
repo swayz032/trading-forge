@@ -1,0 +1,15 @@
+{
+  "attempts": [
+    {
+      "attempt": 0,
+      "outcome": "ok",
+      "raw": "../../AppData/Local/Temp/claude/C--Users-tonio-Projects-trading-forge/d96dba1d-d874-4c26-8026-7ec19a8674ae/scratchpad/SEALED-READ/raw_dispatch/phase_a__pKzXxB9Blts__d3/attempt_0.txt"
+    }
+  ],
+  "dispatch_key": "phase_a__pKzXxB9Blts__d3",
+  "format_retry_cap": 2,
+  "resolved": true,
+  "retry_count": 0,
+  "seam": "phase_a",
+  "wrapper_version": "r030-dispatch-wrapper-v1"
+}

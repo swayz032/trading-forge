@@ -1,0 +1,55 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "lower_tf_liquidity_fade",
+      "entry_summary": "First mark untapped higher-time-frame (daily/4h) swing highs/lows and clean support/resistance levels. Drop to the 5-minute (or 1-minute) chart, wait for price to rapidly approach and tap one of those marked levels (ideally with a volume spike), then enter a counter-trend fade off the level on a rejection wick / bullish or bearish engulfing candle / exhaustion candle / volume divergence. Do not enter before price taps the zone; prefer the London or New York open sessions.",
+      "exit_summary": "Stop below the session (London) low / just beyond the marked level; target a 1:2 risk-to-reward ratio.",
+      "variants": [
+        {
+          "variant_label": "Single rejection tap-and-fade",
+          "timeframe_note": "5-minute (or 1-minute if risky)",
+          "confirmation_mechanic_note": "one tap of the level + rejection wick / engulfing candle (real-trade example used an engulfing candle with wicks then rejection up)",
+          "target_note": "1:2 risk-to-reward, stop below current London low",
+          "transcript_quote": "we had rapid price movement to that zone, an engulfing candle, which both of these candles were with wicks and then we had that rejection up. That's when I was able to enter my trade at 61408 on Australian dollar. I kept my stop loss below the current London low and all I had to do was shoot for a 1:2 risk-to-reward ratio"
+        },
+        {
+          "variant_label": "Double bottom (twice-rejected level)",
+          "timeframe_note": "5-minute (or 1-minute)",
+          "confirmation_mechanic_note": "price rejects the same area twice with the bar not closing below the marked support level (full reversal)",
+          "target_note": "1:2 risk-to-reward",
+          "transcript_quote": "if price rejects the same area twice, it could be a full reversal double bottom with the bar not closing below the area of support and resistance that you marked up and getting another trade 1:2 risk-to-reward ratio"
+        },
+        {
+          "variant_label": "Trap / failed-breakout fade",
+          "timeframe_note": "5-minute (or 1-minute)",
+          "confirmation_mechanic_note": "price wicks above resistance then dumps (short) or wicks below support then reverses (long) â€” the stop-hunt wick beyond the level is the confirmation",
+          "target_note": "1:2 risk-to-reward (fade the move)",
+          "transcript_quote": "Price will often wick above resistance, pause, then dump or wick below support and reverse. That is your confirmation."
+        }
+      ],
+      "element_inventory": [
+        "PRECONDITION: first mark higher-time-frame (daily/4h) most-recent swing highs/lows and clean support/resistance levels that haven't been tapped yet",
+        "PRECONDITION: identify untapped HTF levels where liquidity should be living before dropping down",
+        "Drop to the 5-minute (or 1-minute) chart to time the entry",
+        "Wait for price to rapidly approach/tap a marked HTF level, ideally with a volume spike",
+        "Entry: fade the level (counter-trend) on rejection wick / bullish or bearish engulfing / exhaustion candle / long wick / volume divergence",
+        "Entry gate: do NOT enter before price taps the liquidity zone â€” wait for confirmation of the tap+rejection",
+        "Filter: do not chase breakouts â€” wait for price to trap traders and fade the move",
+        "Stop: below the session (London) low / just beyond the marked level",
+        "Target: 1:2 risk-to-reward",
+        "VARIANT SUB-MECHANIC: double bottom = two rejections of the same area with the bar not closing below the level",
+        "VARIANT SUB-MECHANIC: trap = wick above resistance then dump (short) / wick below support then reverse (long)",
+        "SESSION SELECTION: use London or New York open sessions â€” that is when the most stop hunts happen"
+      ],
+      "coaching_notes": [
+        "Most traders use liquidity wrong; find where the obvious/too-clean trades are sitting and do the opposite",
+        "Market makers push price into liquidity to fill large orders, so anticipate where price is going rather than react to it",
+        "The key is to look for clean price action that's just a little too clean â€” equal highs, trend lines, perfect-looking zones â€” that's the bait",
+        "Reversals happen fast and fake outs are fatal on the lower time frame",
+        "Always keep an eye out for the traps"
+      ]
+    }
+  ],
+  "enumeration_note": "One HTF-liquidity fade skeleton (mark untapped HTF level, drop to 5m/1m, tap + rejection confirmation, stop beyond level, 1:2 RR) taught with three compatible confirmation variants (single rejection, double bottom, failed-breakout trap). All fade the same direction at the level â€” no opposition â€” so grouped as one strategy with three variants."
+}

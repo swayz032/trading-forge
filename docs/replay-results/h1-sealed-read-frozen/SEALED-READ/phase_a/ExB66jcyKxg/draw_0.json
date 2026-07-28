@@ -1,0 +1,59 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "Single SMA(14) strong-close crossover strategy taught on the 15m timeframe. Long-above / short-below are symmetric directions of ONE crossover skeleton (not contradictory opposition), so they stay one object. Trailing exit is gestural (deferred to another video) but the fixed target + 1/3 stop is concretely taught.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "3 of these losses is equal to one of our profit so happily accept the losses and move on",
+        "forget the win rate, The reason an extremely simple strategy like this works wonderfully is cause, it's so simple, there's no confusion and that allows you to focus on more important aspects like risk to reward and your trading psychology",
+        "This strategy is best suited for those struggling with a strategy with too many complicated variables or price action where it's always hitting your stop loss",
+        "often at times the simple strategies are what works the best"
+      ],
+      "element_inventory": [
+        "Indicator: Simple Moving Average with length 14",
+        "Timeframe: 15-minute chart",
+        "Entry long: candle crosses SMA(14) and closes strong ABOVE the line â†’ buy",
+        "Entry short: candle crosses SMA(14) and closes strong BELOW the line â†’ short",
+        "Entry filter: requires a STRONG close, not a candle that closes ON the line",
+        "Exit target: fixed target (60 points on Nifty)",
+        "Stop loss: set at 1/3 of the target (20 points on Nifty)",
+        "Trail profits after the fixed target is reached (method deferred)",
+        "Time filter: never take an intraday trade within 1 hour of market close",
+        "Risk-to-reward: 3:1 (target 3x the stop)"
+      ],
+      "entry_summary": "On the 15-minute timeframe using a Simple Moving Average of length 14, enter when a candle crosses the SMA line and closes strong: close strongly ABOVE the line â†’ buy (long); close strongly BELOW the line â†’ short. The close must be a strong close and NOT a candle that closes on the line.",
+      "exit_summary": "Fixed target exit (60 points on Nifty), with stop loss set at 1/3 of the target (20 points on Nifty). After the fixed target is reached, trail the profits (trailing method deferred to a future video). Do not take any intraday trade within 1 hour of market close.",
+      "name": "sma14_strong_close_crossover",
+      "strategy_id": 0,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "ExB66jcyKxg__s0"
+  ]
+}

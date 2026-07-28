@@ -1,0 +1,54 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "vwap_confluence_sr_retest",
+      "entry_summary": "Use price vs the (middle-line) VWAP to set trend bias â€” above VWAP = only take longs, below VWAP = only take shorts. Identify a horizontal support/resistance level that the VWAP-as-S/R zone aligns with (optionally add a fib 0.5), requiring VWAP to be one factor of confluence, never used alone. When price retraces back into that confluence zone (treated as an area, not an exact number), either enter immediately with a limit order at the area OR wait for a candlestick confirmation (bullish hammer for longs; a swept series of equal highs with a long wick, or a fresh lower low / retest of the swing + fair value gap for shorts) and enter at the candle close.",
+      "exit_summary": "Longs: stop below the VWAP; target resistance levels above. Shorts: stop just above the swing highs; target support levels lower. Aim for favorable risk-to-reward against the opposite S/R levels.",
+      "variants": [
+        {
+          "variant_label": "Long â€” VWAP-as-support with bullish-candle confirmation",
+          "timeframe_note": "session VWAP (default), intraday",
+          "confirmation_mechanic_note": "price above VWAP; retest of broken-resistance-turned-support aligned with VWAP; enter immediately at the area or after a bullish hammer / next bullish candle close",
+          "target_note": "resistance levels above; stop below the VWAP",
+          "transcript_quote": "the vop also lines up with our key level adding Confluence to a trade taken here so we may look to set a buy order with our stop set below the vwap and just Target resistance levels above"
+        },
+        {
+          "variant_label": "Short â€” VWAP-as-resistance with sweep/lower-low confirmation",
+          "timeframe_note": "session VWAP (default), intraday",
+          "confirmation_mechanic_note": "price below VWAP; resistance confluence (0.5 fib + VWAP + horizontal); enter immediately with a sell order at the area, or wait for equal highs swept by a long wick / a fresh lower low, then enter at the candle close",
+          "target_note": "support levels lower; stop just above the swept highs",
+          "transcript_quote": "the market swept through these highs with a long Wick here we can enter at the candle close setting our stops just above and targeting our support levels lower"
+        },
+        {
+          "variant_label": "Higher-timeframe anchor VWAP (weekly/monthly) + multi-VWAP confluence",
+          "timeframe_note": "anchor period changed from session to weekly or monthly; can plot multiple VWAPs (session + monthly) together",
+          "confirmation_mechanic_note": "same S/R-retest entry, but reaction off the higher-TF anchored VWAP (e.g. price reverses at the monthly VWAP) treated as more significant; wait for candlestick pattern at the tap",
+          "target_note": "resistance/support levels beyond the confluence; stop beyond the anchored VWAP/swing",
+          "transcript_quote": "here we are using the session vwap along with the monthly vwap ... once it reached the monthly vwap it started to change course and moved higher"
+        }
+      ],
+      "element_inventory": [
+        "PRECONDITION (trend gate): price above VWAP = market bullish, take longs only; price below VWAP = market bearish, take shorts only",
+        "Use only the middle VWAP line; disable the upper and lower bands (they add noise)",
+        "PRECONDITION (confluence required): VWAP must line up with at least one other level (horizontal S/R, or a fib 0.5) â€” do NOT trade VWAP by itself",
+        "Treat the VWAP level as an AREA/zone, not a literal exact price (price often fakes through it before respecting it)",
+        "Entry option A: set an immediate limit order (buy/sell) at the confluence area",
+        "Entry option B: wait for a candlestick confirmation (bullish hammer for longs; long-wick sweep of equal highs or a fresh lower-low for shorts) and enter at the candle close",
+        "Long stop placement: below the VWAP",
+        "Short stop placement: just above the swing highs / swept highs",
+        "Targets: opposite S/R levels â€” resistance above for longs, support below for shorts, for favorable risk-to-reward",
+        "SELECTION: for shorts in strong bullish momentum, wait for a proper lower low to form before entering rather than entering the first retest",
+        "Anchor-period configuration: session (default), weekly, or monthly VWAP",
+        "Higher-timeframe anchored VWAP levels are more significant; can combine multiple VWAP anchors (e.g. session + monthly) for added confluence",
+        "Watching the VWAP get repeatedly tested and weakened until it breaks gives confidence it will hold as S/R on the subsequent retest"
+      ],
+      "coaching_notes": [
+        "\"I highly suggest everyone gives this a go for themselves\" (experiment with anchor periods)",
+        "\"if you're feeling Savvy you can combine multiple levels of vwap ... make sure to also change the size or color to be able to tell which one is which\"",
+        "\"I have just one more example for you so you can really digest this information and put it to practice in your trading\""
+      ]
+    }
+  ],
+  "enumeration_note": "One VWAP-confluence S/R-retest skeleton taught throughout; long and short are directional applications of the same trend-aligned logic (not opposition), and immediate-limit vs candlestick-confirmation entry plus session/weekly/monthly anchor periods are compatible configuration variants."
+}

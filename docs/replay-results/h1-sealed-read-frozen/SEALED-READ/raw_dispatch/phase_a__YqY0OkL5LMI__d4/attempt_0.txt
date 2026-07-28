@@ -1,0 +1,43 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "double_inside_bar_daily_breakout",
+      "entry_summary": "Daily-chart double inside bar setup; enter (starter position on the opening pullback) as price breaks out above the previous day's / Friday's high of day (18.74), targeting a continuation push into the 20s.",
+      "exit_summary": "Target a push up into the 20s; cut for a small loss when the breakout shows no follow-through and cannot hold above the key level (~19). Exit given colloquially ('jumped out and took a very small loss').",
+      "variants": [],
+      "element_inventory": [
+        "PRECONDITION: double inside bar setup on the daily chart",
+        "PRECONDITION/ENTRY GATE: price breaks out above the previous day's (Friday) high of day = 18.74",
+        "ENTRY: take a starter position into the opening pullback (filled 261 shares avg ~18.43)",
+        "CONTEXT: stock gapped up and opened near the prior high of day",
+        "TARGET: continuation push into the 20s",
+        "EXIT/INVALIDATION: cut for a small loss when there is no follow-through above ~19 (breakout fails to hold above previous day's close/19)"
+      ],
+      "coaching_notes": [
+        "\"I do still think there is potential for this but I ended up jumping out and taking a very small loss\" â€” discretionary willingness to exit on lack of follow-through"
+      ]
+    },
+    {
+      "strategy_id": 1,
+      "name": "opening_range_breakout_gap_and_go",
+      "entry_summary": "On a gap-up stock (pre-market spike then sideways consolidation into the open), enter a starter position as price breaks out above the opening range breakout level = the high of the first 5-minute candle (3.94). Ability to break above VWAP is the confirmation filter for a bigger gap-and-go.",
+      "exit_summary": "Scale out into the initial spike (took profits in the 420s), then take further profits as it consolidates above VWAP and starts forming lower highs (bearish signals that the consolidation is often the top of the move, after which stocks fade back under VWAP to lows).",
+      "variants": [],
+      "element_inventory": [
+        "PRECONDITION: stock is gapping up with the biggest potential for a gap-and-go; pre-market spike, trades sideways/consolidates into the open",
+        "ENTRY LEVEL: opening range breakout level = high of the first 5-minute candle (3.94)",
+        "ENTRY: take a starter position as price breaks out above the ORB level",
+        "CONFIRMATION FILTER: stock is able to break above VWAP (telltale sign of a bigger gap-and-go); rejection of VWAP at the open = weak, avoid",
+        "EXIT: scale out into the initial spike (took profits in the 420s)",
+        "EXIT: take further profits as it consolidates above VWAP and forms lower highs",
+        "EXIT SIGNAL: post-breakout consolidation + lower highs = likely top of move (stock then fades back under VWAP toward low of day)"
+      ],
+      "coaching_notes": [
+        "\"it's very important to manage your risk on these trades so you don't end up holding through these big pullbacks in these big sell-offs\"",
+        "\"one thing that I really need to work on is keeping track of these stocks even after I exit them... waiting for a second opportunity to buy into them\" â€” discipline/mindset self-improvement"
+      ]
+    }
+  ],
+  "enumeration_note": "Two distinct taught setups with different entry logic: a daily double-inside-bar breakout above prior-day high (LAES) and an intraday 5-minute opening-range-breakout gap-and-go (VCIG). The 'second run' re-entry after the VWAP-breakdown-trap (buying back in as volume returns toward HOD) is discussed only retrospectively as a missed opportunity the speaker 'needs to work on' with no runnable entry mechanics taught â€” treated as an unpromoted mention, not a strategy object."
+}

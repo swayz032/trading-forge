@@ -1,0 +1,654 @@
+{
+  "artifact": "h1-staged-phase-a-consensus-emit",
+  "k": 5,
+  "per_video": {
+    "0RBexa9JpIg": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "You always need to enter the market in early stages of its trend otherwise you'll end up losing your trade",
+            "If you have identified the trend on its early stages then you can end up making huge profits from a single trend, because you just need to repeat the same process again and again",
+            "But if you'll follow each step carefully then the chances of loss are minimal"
+          ],
+          "element_inventory": [
+            "PRECONDITION: identify trend direction using a 4-hour timeframe + trend line before taking any trade",
+            "PRECONDITION: only trade in a trending market (no trades in a non-trending market)",
+            "Execution timeframe: 1-hour chart",
+            "Indicator: Fibonacci retracement tool",
+            "Long entry (uptrend only): draw fib from swing low to recent swing high; enter buy when price touches the 50% or 61.8% level (anywhere between the two)",
+            "Long take profit: above the previous swing high",
+            "Long stop loss: below the swing low",
+            "Short entry (downtrend only): draw fib from swing high to recent swing low; enter sell when price touches the 50% or 61.8% level (anywhere between the two)",
+            "Short take profit: below the previous swing low",
+            "Short stop loss: above the swing high",
+            "Applicable to every currency pair"
+          ],
+          "entry_summary": "Trend-continuation pullback using Fibonacci retracement on the 1-hour timeframe. First establish trend direction (4-hour timeframe + trend line). In an uptrend, draw the fib from swing low to recent swing high and enter a buy when price pulls back to touch the 50% or 61.8% level (enter anywhere between the two). In a downtrend, draw the fib from swing high to recent swing low and enter a sell when price pulls back to touch the 50% or 61.8% level. Only trade in a trending market.",
+          "exit_summary": "For buys: take profit above the previous swing high, stop loss below the swing low. For sells: take profit below the previous swing low, stop loss above the swing high.",
+          "name": "fibonacci_pullback_continuation",
+          "variants": []
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "0RBexa9JpIg__s0"
+      ]
+    },
+    "ExB66jcyKxg": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "3 of these losses is equal to one of our profit so happily accept the losses and move on",
+            "forget the win rate, The reason an extremely simple strategy like this works wonderfully is cause, it's so simple, there's no confusion and that allows you to focus on more important aspects like risk to reward and your trading psychology",
+            "This strategy is best suited for those struggling with a strategy with too many complicated variables or price action where it's always hitting your stop loss",
+            "often at times the simple strategies are what works the best"
+          ],
+          "element_inventory": [
+            "Indicator: Simple Moving Average with length 14",
+            "Timeframe: 15-minute chart",
+            "Entry long: candle crosses SMA(14) and closes strong ABOVE the line â†’ buy",
+            "Entry short: candle crosses SMA(14) and closes strong BELOW the line â†’ short",
+            "Entry filter: requires a STRONG close, not a candle that closes ON the line",
+            "Exit target: fixed target (60 points on Nifty)",
+            "Stop loss: set at 1/3 of the target (20 points on Nifty)",
+            "Trail profits after the fixed target is reached (method deferred)",
+            "Time filter: never take an intraday trade within 1 hour of market close",
+            "Risk-to-reward: 3:1 (target 3x the stop)"
+          ],
+          "entry_summary": "On the 15-minute timeframe using a Simple Moving Average of length 14, enter when a candle crosses the SMA line and closes strong: close strongly ABOVE the line â†’ buy (long); close strongly BELOW the line â†’ short. The close must be a strong close and NOT a candle that closes on the line.",
+          "exit_summary": "Fixed target exit (60 points on Nifty), with stop loss set at 1/3 of the target (20 points on Nifty). After the fixed target is reached, trail the profits (trailing method deferred to a future video). Do not take any intraday trade within 1 hour of market close.",
+          "name": "sma14_strong_close_crossover",
+          "variants": []
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "ExB66jcyKxg__s0"
+      ]
+    },
+    "LD1FEbwXU4o": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "avoid entering before the price taps the liquidity zone. Wait for confirmation",
+            "do not chase the breakouts. Wait for price to trap traders and fade the move",
+            "find where the obvious trades are sitting, and do the opposite",
+            "the key is to look for clean price action that's just a little too clean... That's the bait",
+            "anticipate where the price is going, not react to it"
+          ],
+          "element_inventory": [
+            "PRECONDITION: mark higher-timeframe (daily/4H) liquidity zones first â€” recent swing highs/lows and clean levels that haven't been tapped yet",
+            "PRECONDITION: identify untapped HTF levels where liquidity should be living before dropping to LTF",
+            "ENTRY GATE: only enter after price taps the liquidity zone (do not enter before the tap)",
+            "ENTRY TRIGGER: rejection wick at the zone",
+            "ENTRY TRIGGER: bullish/bearish engulfing candle at the zone",
+            "ENTRY TRIGGER: exhaustion candle / long wicks",
+            "ENTRY TRIGGER: volume spike on the tap, or volume divergence",
+            "TRAP CONFIRMATION: wick above resistance then dump (short) / wick below support then reverse (long)",
+            "VARIANT SUB-MECHANIC: double bottom = second rejection of same area, bar not closing below the level",
+            "STOP: below the current London low / just beyond the marked level",
+            "TARGET: fixed 1:2 risk-to-reward ratio",
+            "TIMEFRAME VARIANT: 5-minute (default) or 1-minute (higher risk)",
+            "SESSION FILTER: trade around London or New York open (when most stop hunts happen)",
+            "FILTER: fade the move / do not chase breakouts â€” trade against the obvious retail positioning"
+          ],
+          "entry_summary": "Mark higher-timeframe (daily/4H) support/resistance liquidity zones that haven't been tapped yet, then drop to the 5-minute (or 1-minute) chart and wait for price to rapidly approach and tap a zone; enter on the rejection, confirmed by a rejection wick, bullish/bearish engulfing candle, exhaustion candle, long wicks, volume spike, or volume divergence. The trap pattern (price wicks beyond the level then reverses) is the confirmation to fade the move rather than chase the break.",
+          "exit_summary": "Stop loss below the current London low / just beyond the marked support/resistance level; target a fixed 1:2 risk-to-reward ratio.",
+          "name": "ltf_liquidity_zone_rejection_scalp",
+          "variants": [
+            {
+              "confirmation_mechanic_note": "single tap of the HTF zone plus rejection wick / engulfing / exhaustion candle / volume spike",
+              "target_note": "1:2 risk-to-reward",
+              "timeframe_note": "5-minute chart (drop to 1-minute if feeling risky)",
+              "transcript_quote": "you are simply waiting for one of these levels to be hit and then you're looking for that rejection wick... you can get into your scalping trade and get a 1 to2 risk-to-reward setup",
+              "variant_label": "5m single rejection scalp"
+            },
+            {
+              "confirmation_mechanic_note": "price rejects the same area twice with the bar not closing below the support/resistance level (double bottom = full reversal)",
+              "target_note": "1:2 risk-to-reward",
+              "timeframe_note": "5-minute chart",
+              "transcript_quote": "if price rejects the same area twice, it could be a full reversal double bottom with the bar not closing below the area of support and resistance that you marked up and getting another trade 1:2 risk-to-reward ratio",
+              "variant_label": "double-bottom second-rejection reversal"
+            }
+          ]
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "LD1FEbwXU4o__s0"
+      ]
+    },
+    "SeqVUNanFeY": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "treat this level as an area not a literal number",
+            "we're only using the vwap as an additional tool for Confluence it should not be used just by itself",
+            "more often than not price goes through the vwap line faking you out or making you think that it won't hold but time and time again it actually ends up respecting it",
+            "the momentum is currently bullish so you want to wait for it to change course first instead of immediately entering at the retest",
+            "higher time frame levels are more significant and the same thing applies to our vwap",
+            "I highly suggest everyone gives this a go for themselves",
+            "put it to practice in your trading"
+          ],
+          "element_inventory": [
+            "PRECONDITION: trend/bias must be established by price position vs VWAP â€” price above VWAP = bullish (long-only), price below VWAP = bearish (short-only)",
+            "VWAP acts as support when price is above it, resistance when price is below it",
+            "PRECONDITION: VWAP must line up with a horizontal support/resistance level â€” VWAP is only used as confluence, never standalone",
+            "Entry trigger: price retests the confluence level (VWAP + horizontal S/R, optionally + fib 0.5 + equal highs/lows)",
+            "Long entry: buy at the support+VWAP confluence area; stop below VWAP; target resistance levels above",
+            "Short entry (immediate): sell limit at the resistance+VWAP+fib confluence area",
+            "Short entry (confirmed): wait for equal-highs sweep with a long wick, enter at candle close, stop just above",
+            "Candlestick-confirmation option: enter at/after the close of a bullish hammer (long) instead of at the raw level",
+            "Momentum-shift filter for shorts into strong bullish momentum: wait for a lower-low to form before entering the retest instead of entering immediately",
+            "Stop placement: just beyond the swing/level (below VWAP or swing low for longs; above swing high for shorts)",
+            "Target: next opposite support/resistance levels in the trade direction",
+            "Anchor-period selection: session (default), weekly, or monthly â€” higher anchor period is more significant",
+            "Multi-VWAP overlay: combine session VWAP with monthly VWAP (different color/size) as layered confluence",
+            "Indicator config: disable the upper and lower VWAP bands, use only the middle VWAP line"
+          ],
+          "entry_summary": "Trade in the direction of the trend defined by VWAP: when price is above the VWAP the market is bullish (VWAP acts as support) so look only for longs; when price is below the VWAP the market is bearish (VWAP acts as resistance) so look only for shorts. Identify a horizontal support/resistance level that lines up with the VWAP (extra confluence from fib 0.5, equal highs/lows). Wait for price to retest that confluence area, then either enter immediately with a limit order at the area, or wait for a candlestick confirmation (bullish hammer for longs; a sweep of equal highs with a long wick, or a lower-low break confirming momentum shift, for shorts) and enter at the candle close.",
+          "exit_summary": "Place the stop just beyond the level: below the VWAP / swing low for longs, above the swing high for shorts. Target the next support/resistance levels in the trade direction (resistance above for longs, support below for shorts).",
+          "name": "vwap_confluence_sr_retest",
+          "variants": [
+            {
+              "confirmation_mechanic_note": "set a limit order directly at the confluence area (VWAP + horizontal + fib) without waiting for a candle",
+              "target_note": "target opposite S/R levels; stop just beyond the level",
+              "timeframe_note": "session VWAP (intraday, resets each session)",
+              "transcript_quote": "you could look to immediately get in by setting a cell order at this area",
+              "variant_label": "Immediate entry at confluence level"
+            },
+            {
+              "confirmation_mechanic_note": "wait for a candlestick pattern (bullish hammer for longs; equal-highs sweep with long wick for shorts) and enter at the candle close",
+              "target_note": "target support/resistance levels; stop just above/below the confirming candle's extreme",
+              "timeframe_note": "session VWAP",
+              "transcript_quote": "the market swept through these highs with a long Wick here we can enter at the candle close setting our stops just above",
+              "variant_label": "Candlestick-confirmation entry"
+            },
+            {
+              "confirmation_mechanic_note": "use the higher-anchor VWAP as a more significant S/R level; require momentum shift (e.g. new higher-high or lower-low) confirming the anchor VWAP is being respected before entering the retest",
+              "target_note": "target S/R levels in trade direction; stop beyond the anchor VWAP / swing",
+              "timeframe_note": "change anchor period from session to weekly or monthly; can overlay session + monthly VWAP together",
+              "transcript_quote": "you can combine multiple levels of vwap by adding in another one in the indicators Tab and changing to different anchor periods",
+              "variant_label": "Higher anchor-period VWAP (weekly/monthly) + multi-VWAP confluence"
+            }
+          ]
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "SeqVUNanFeY__s0"
+      ]
+    },
+    "XbRI0sfcXU4": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "\"i gave enough time i don't want to wait too long\"",
+            "\"sometimes if you don't see that move in time then usually price goes back up\"",
+            "\"this price needs to break down soon otherwise it's gonna go either sideway or go back up\"",
+            "\"i'm getting ready to kill this trade if i see a close\""
+          ],
+          "element_inventory": [
+            "ENTRY (short): enter when a bar closes under the blue 25 EMA",
+            "PRECONDITION: price rejects the 50 MA with a weak close before entry",
+            "PRECONDITION: a down channel is forming / entry is the channel break to the downside",
+            "SCALE-IN: add a second contract on a pullback",
+            "INVALIDATION: do not want to see price close above the 25 EMA (would break channel upward) â€” kill the trade on such a close",
+            "STOP: initially placed above entry, then moved to break-even",
+            "TARGET: exit at the prior bottom level; expect a second leg roughly the same size as the first move down (measured move)"
+          ],
+          "entry_summary": "In a down channel after price rejects the 50-period MA with a weak close, wait for a bar to close under the blue 25 EMA; enter short on that confirmation (channel-break continuation down). Add a second contract on a pullback.",
+          "exit_summary": "Stop initially above the entry/channel, moved to break-even once given enough time; target the prior bottom level (roughly a measured move equal to the first leg down). Speaker reports ~$1900 on two contracts.",
+          "name": "ema25_channel_break_short",
+          "variants": []
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "XbRI0sfcXU4__s0"
+      ]
+    },
+    "YGdFksLavKE": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "Traders usually try to avoid consolidating markets; when the market is sideways/consolidating the price moves between the VWAP bands.",
+            "Even though the VWAP indicator is powerful, the band-only version still produces a lot of false signals â€” add the filters to avoid entering on a fakeout instead of a breakout."
+          ],
+          "element_inventory": [
+            "Indicator: VWAP (Volume Weighted Average Price) with upper and lower bands added to chart",
+            "LONG entry (basic): price breaks out above the upper VWAP band",
+            "SHORT entry (basic): price breaks below the lower VWAP band",
+            "LONG entry (filtered): CM EMA Trend Bars candle is green (uptrend) AND price breaks above upper VWAP band AND POC is within the VWAP bands",
+            "SHORT entry (filtered): candle is red (downtrend) AND candle closes below the VWAP band AND POC is within the VWAP bands",
+            "Stop loss LONG: recent swing low (or slightly below VWAP if swing low is near the VWAP line)",
+            "Stop loss SHORT: recent swing high (or just above VWAP if swing high is near the VWAP line)",
+            "Take profit: 2:1 RR (basic variant)",
+            "Take profit: 1.5:1 RR (filtered variant)",
+            "Filter indicator: Volume Profile Fixed Range (row size 36, number of bars 300) to locate the Point of Control",
+            "POC confluence gate: Point of Control (highest-traded-volume price level) must fall within the VWAP bands at breakout",
+            "Trend filter indicator: CM EMA Trend Bars with EMA set to 200; candle color defines trend (green uptrend / red downtrend)"
+          ],
+          "entry_summary": "Enter on a VWAP-band breakout in the direction of the break: LONG when price breaks above the upper VWAP band, SHORT when price breaks below/closes below the lower VWAP band. The filtered variant additionally requires the CM EMA Trend Bars candle color to confirm the larger trend (green = uptrend for longs, red = downtrend for shorts, EMA set to 200) and the Volume Profile Point of Control (POC) to sit within the VWAP bands at the moment of breakout.",
+          "exit_summary": "Stop loss at the recent swing low (long) or recent swing high (short); if that level is very close to the VWAP line, place the stop slightly below/above the VWAP instead. Take profit at a fixed risk-to-reward multiple (2:1 in the basic band-only variant, 1.5:1 in the filtered variant).",
+          "name": "vwap_band_breakout",
+          "variants": [
+            {
+              "confirmation_mechanic_note": "Break of VWAP band only (no EMA trend or POC filter); acknowledged by the speaker to produce many false signals",
+              "target_note": "2 times risk-to-reward ratio",
+              "timeframe_note": null,
+              "transcript_quote": "We will enter into a buy position whenever the price breaks out above the upper V-wap band. We will be placing the stoploss at the recent swing low and for the take profit we will target a 2 times risk-to-reward ratio.",
+              "variant_label": "Basic VWAP band breakout, 2:1 target, no filters"
+            },
+            {
+              "confirmation_mechanic_note": "Adds CM EMA Trend Bars (EMA 200) candle-color trend filter AND requires Volume Profile POC to be within the VWAP bands at breakout",
+              "target_note": "1.5 times risk-to-reward ratio",
+              "timeframe_note": null,
+              "transcript_quote": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend. Secondly, the price must break above the upper V-wap band... Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position.",
+              "variant_label": "Filtered VWAP band breakout with EMA-200 trend + POC-within-bands, 1.5:1 target"
+            }
+          ]
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "YGdFksLavKE__s0"
+      ]
+    },
+    "YqY0OkL5LMI": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "manage your risk on these trades so you don't end up holding through big pullbacks and sell-offs",
+            "I do still think there is potential for this (holding a directional bias after exiting)"
+          ],
+          "element_inventory": [
+            "PRECONDITION: double inside bar setup on the daily chart",
+            "PRECONDITION: gap up near the prior high of day at the open",
+            "ENTRY: break above the previous (Friday) high of day = 18.74 / above previous day's closing price",
+            "ENTRY EXECUTION: take a starter position into the opening pullback (filled 261 shares @ ~18.43)",
+            "CONFIRMATION: needs volume to pick up and hold above 19 for continuation",
+            "TARGET: push back up into the 20s",
+            "EXIT (invalidation): jump out for a small loss when no follow-through over 19 / thin volume"
+          ],
+          "entry_summary": "Daily-chart double inside bar setup; enter a starter position on the opening pullback anticipating a breakout above the prior (Friday) high of day / previous day's close, targeting a push back into the 20s.",
+          "exit_summary": "Exit for a small loss when there is no follow-through above the breakout level (briefly poked above 19 and prior close but volume was too thin); gestural exit, no fixed level taught.",
+          "name": "double_inside_bar_daily_breakout",
+          "variants": []
+        },
+        {
+          "coaching_notes": [
+            "keep track of these stocks even after you exit / sell shares â€” wait for a second opportunity to buy back in (second runs are often a better trade than the first)",
+            "manage your risk on these trades so you don't hold through big pullbacks/sell-offs",
+            "learn what to look for in stocks that have a better setup for a gap and go"
+          ],
+          "element_inventory": [
+            "PRECONDITION: pre-market gap up that spikes, then trades sideways/consolidates into the open (biggest potential for a gap-and-go)",
+            "ENTRY LEVEL: opening range breakout level = high of the first 5-minute candle (VCIG = 3.94)",
+            "ENTRY EXECUTION: take a starter position as it breaks out above the ORB level",
+            "FILTER: ability to break ABOVE VWAP is the telltale sign of a bigger gap-and-go; stocks that reject VWAP at the open (NUWE, Lucy) lack follow-through â€” avoid/manage risk",
+            "SELECTION: NUWE never got above its ORB level; Lucy poked only 7 cents above then came straight back â€” no-follow-through breakouts fail",
+            "EXIT: scale profits into the initial spike (420s)",
+            "EXIT SIGNAL: take profits when consolidating above VWAP forms lower highs (bearish â€” consolidation is often the top of the move)"
+          ],
+          "entry_summary": "Gap-and-go opening range breakout: on a pre-market gapper that spikes then consolidates sideways into the open, take a starter position on the break above the opening range breakout level (high of the first 5-minute candle, e.g. 3.94).",
+          "exit_summary": "Scale out profits into the initial spike (420s/440s), then take remaining profits as price consolidates above VWAP and starts forming lower highs (bearish signal that the consolidation is often the top before a fade back under VWAP toward low of day).",
+          "name": "gap_and_go_opening_range_breakout",
+          "variants": []
+        }
+      ],
+      "counts": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "mode": 2,
+      "mode_n": 5,
+      "n_strategies": 2,
+      "stable": true,
+      "strategy_refs": [
+        "YqY0OkL5LMI__s0",
+        "YqY0OkL5LMI__s1"
+      ]
+    },
+    "dENM6gt8ZRg": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "Test conditions must be as close to real trading as possible â€” include real spread, commissions, slippage, and broker-specific CFD conditions.",
+            "Enable random delay and slippage emulation and model every tick based on real ticks.",
+            "Test on your own assets, periods, and broker â€” find your own combination.",
+            "Avoid overfitting â€” don't keep changing parameters until the past looks perfect.",
+            "Avoid look-ahead bias and use proper data separation.",
+            "One lucky month is not a strategy â€” a beautiful equity curve is not proof.",
+            "Don't trust gurus, don't trust me â€” test it yourself on your own data."
+          ],
+          "element_inventory": [
+            "Opening Range definition: first 5-minute candle 09:30-09:35 NY time; capture high, low, and midpoint",
+            "Breakout condition: candle body closes completely outside the range (full close, not a wick or touch)",
+            "Retest condition: candle opens outside range, wick dips inside range, close back outside range",
+            "Retest invalidation/occurrence-selection: if the candle closes inside the range the signal is invalid â€” wait for the next candle",
+            "Entry timing: enter on the open of the next candle after the valid retest",
+            "Stop loss placed at the range midpoint",
+            "Take profit at 2:1 reward-to-risk ratio",
+            "Risk per trade: 1% of deposit (fixed position-sizing rule; percentage-of-deposit or fixed lot configurable)",
+            "Execution constraint: all decisions made on closed candles only (no intra-candle / look-ahead reads)"
+          ],
+          "entry_summary": "Opening Range = the first 5-minute candle from 09:30 to 09:35 New York time; mark its high, low, and midpoint. Wait for a valid breakout: a candle whose body closes completely outside the range (a full close, not a wick or touch). Then wait for a valid retest: a candle that opens outside the range, wicks back inside, and closes outside again (if it closes inside the range the signal is invalid and you wait for the next candle). Enter on the open of the next candle after the retest. All decisions are made on closed candles only.",
+          "exit_summary": "Stop loss at the range midpoint; take profit at a 2:1 reward-to-risk ratio.",
+          "name": "orb_5m_retest",
+          "variants": []
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "dENM6gt8ZRg__s0"
+      ]
+    },
+    "hcHuDfxdywI": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "Choosing the right entry model depends on market conditions, the quality of the order block, and your personal risk tolerance.",
+            "The stronger and cleaner the order block, the more aggressive the entry model you can justify.",
+            "In weaker or more volatile environments, conservative entries offer greater protection and consistency.",
+            "Most traders who believe they understand order blocks are actually losing money using them because they don't correctly identify a true institutional order block.",
+            "A mitigated order block no longer represents unfilled institutional interest; it becomes significantly weaker and should not be relied on for future entries."
+          ],
+          "element_inventory": [
+            "PRECONDITION: bullish market context confirmed by a break of structure (price breaks above the previous major high)",
+            "PRECONDITION (OB definition): order block is the last bearish candle before a strong upward displacement that breaks structure",
+            "VALIDATION 1 (liquidity sweep): final bearish candle breaks the low of the previous candle and immediately reverses upward",
+            "VALIDATION 2 (imbalance/FVG): impulsive reversal creates a fair value gap above the order block; non-overlapping candles",
+            "VALIDATION 2 exception: if no imbalance forms above the sweep candle, extend the order block boundary to include the next candle and require imbalance above that candle",
+            "VALIDATION 3 (unmitigated): price must not have returned into the zone; a wick dropping into the zone during formation mitigates and invalidates it",
+            "ENTRY TRIGGER: price retraces into the order block and a change-of-character (break of an internal low) acts as the entry trigger (not a reversal signal)",
+            "ENTRY MODEL A: buy limit at upper wick of OB candle",
+            "ENTRY MODEL B: buy limit at upper body of OB candle",
+            "ENTRY MODEL C: buy limit at midpoint of OB zone",
+            "STOP LOSS: just below the lower wick of the order-block candle, adjusted by the spread",
+            "TIMEFRAME: 15-minute execution chart (USDJPY worked example)"
+          ],
+          "entry_summary": "In a bullish structure (price breaks the previous major high = break of structure), identify a valid institutional order block: the last bearish candle before a strong upward displacement that (1) performs a liquidity sweep (final bearish candle breaks the previous candle's low then immediately reverses up), (2) has imbalance/fair value gap forming above it (extend the OB boundary to the next candle if the sweep candle itself shows no imbalance), and (3) remains unmitigated (price has not yet returned into the zone). When price retraces back into the order block (a change-of-character / internal-low break acts as the entry trigger), place a buy limit order to fill inside the zone. Entry price within the zone depends on the chosen entry model (upper wick / upper body / midpoint).",
+          "exit_summary": "Stop loss placed just below the lower wick of the order-block candle, adjusted by the spread. Take profit is discussed only as a risk-to-reward tradeoff (aggressive entries give better R:R, conservative entries lower R:R) with no concrete profit target given.",
+          "name": "institutional_order_block_reversal_entry",
+          "variants": [
+            {
+              "confirmation_mechanic_note": "buy limit at the level of the upper wick of the order-block candle; earliest entry, best R:R, higher stop-out risk; best for strong clean order blocks",
+              "target_note": "best potential risk-to-reward ratio (no concrete level given)",
+              "timeframe_note": "demonstrated on 15-minute chart (USDJPY)",
+              "transcript_quote": "a buy limit order is placed at the level of the upper wick of the candle that defines the order block boundaries. The stop loss is placed just below the lower wick of the same candle adjusted by the spread",
+              "variant_label": "Aggressive â€” buy limit at upper wick"
+            },
+            {
+              "confirmation_mechanic_note": "buy limit at the upper level of the candle body (not the wick); reduces premature stop-outs while maintaining favorable R:R",
+              "target_note": "favorable risk-to-reward ratio (no concrete level given)",
+              "timeframe_note": "15-minute chart",
+              "transcript_quote": "the buy limit order is placed at the upper level of the candle body that defines the order block rather than the wick. The stop loss is placed in the same way as before",
+              "variant_label": "Conservative â€” buy limit at upper body"
+            },
+            {
+              "confirmation_mechanic_note": "buy limit at the midpoint of the order block zone; highest probability of execution and stability, slightly reduced R:R; effective in volatile conditions with deeper retracements",
+              "target_note": "slightly reduced risk-to-reward vs aggressive entries (no concrete level given)",
+              "timeframe_note": "15-minute chart",
+              "transcript_quote": "the buy limit order is placed at the midpoint of the order block zone. The stop loss again remains just below the lower wick of the order block candle adjusted by the spread",
+              "variant_label": "Optimal â€” buy limit at midpoint of order block zone"
+            }
+          ]
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "hcHuDfxdywI__s0"
+      ]
+    },
+    "iyKk9fpMSY8": {
+      "adjudication_needed": false,
+      "consensus_scopes": [],
+      "counts": [
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "mode": 0,
+      "mode_n": 5,
+      "n_strategies": 0,
+      "stable": true,
+      "strategy_refs": []
+    },
+    "pKzXxB9Blts": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "\"I learned to be patient. I wait, and that's what's been working for me.\" (comfortable holding trades for a couple of hours)",
+            "\"if you anchor the VWAP, for example, to this candle instead of this candle the VWAP wouldn't really change too much... you won't mess this setup up if you choose a different candle\" (anchor-candle choice is forgiving)",
+            "During the Asian session liquidity and volatility are low, so the reaction to the VWAP is slower / less swift (contextual education, not a rule)"
+          ],
+          "element_inventory": [
+            "PRECONDITION: identify a rotation where heavy volume was traded, using volume profile (institutional accumulation zone)",
+            "PRECONDITION: the heavy-volume rotation must be followed by strong trend activity",
+            "Anchor VWAP to the last candle of the rotation / first candle of the trend (where the sell-off or trend started)",
+            "Wait for price to move away from the anchored VWAP before looking for entry",
+            "Entry: enter on a pullback back to the anchored VWAP (fair price)",
+            "Direction rule: short when price is below the VWAP in a downtrend; long when price has moved above the VWAP (resistance becomes support)",
+            "Occurrence-selection: re-enter on each subsequent test/pullback of the VWAP (e.g. second test = another entry)",
+            "FILTER: do not trade while the market is rotating (VWAP pullback setups don't work in rotation)"
+          ],
+          "entry_summary": "Use volume profile to find a rotation where heavy volume was traded (institutional accumulation), which must then be followed by a strong trend move. Anchor VWAP to the last candle of that rotation / first candle of the trend (e.g. the big red candle where the sell-off started). Wait for price to move away from the anchored VWAP, then enter on a pullback back to the VWAP (treated as fair price): short when price is below the VWAP in a downtrend, long when price has moved above the VWAP so the former resistance becomes support. Re-enter on each subsequent test/pullback of the VWAP. Do not trade while the market is rotating.",
+          "exit_summary": "No concrete exit rules, stop, or target are taught. The speaker only says he is comfortable holding trades for hours and emphasizes patience.",
+          "name": "anchored_vwap_pullback_from_volume_rotation",
+          "variants": [
+            {
+              "confirmation_mechanic_note": "Anchor VWAP to the last rotation candle / first candle of the sell-off; short each pullback back up to the VWAP",
+              "target_note": null,
+              "timeframe_note": null,
+              "transcript_quote": "you anchor the VWAP there to this candle and then you trade pullbacks. You simply need to see the price go away from the VWAP and then enter a pullback. Here, that's short from this place.",
+              "variant_label": "Short pullback (downtrend, price below anchored VWAP)"
+            },
+            {
+              "confirmation_mechanic_note": "Once price moves above the anchored VWAP, the VWAP acts as support; wait for pullbacks to it and enter longs",
+              "target_note": null,
+              "timeframe_note": null,
+              "transcript_quote": "the resistance which is represented by the VWAP, turns into a support... you want to wait for the pullbacks to that support and enter longs from there",
+              "variant_label": "Long pullback (VWAP resistance flips to support, price above VWAP)"
+            }
+          ]
+        }
+      ],
+      "counts": [
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "mode": 1,
+      "mode_n": 5,
+      "n_strategies": 1,
+      "stable": true,
+      "strategy_refs": [
+        "pKzXxB9Blts__s0"
+      ]
+    },
+    "st5e-YJRfKc": {
+      "adjudication_needed": false,
+      "consensus_scopes": [
+        {
+          "coaching_notes": [
+            "Understanding the psychology of these breakouts really can help you transform your trading.",
+            "This one setup ... actually gives you plenty of opportunities ... throughout the entire trading day."
+          ],
+          "element_inventory": [
+            "PRECONDITION: opening range is formed only from the first 5/15/30 minutes after the 9:30 ET open; it is recomputed relative to each trading day",
+            "VARIANT SUB-MECHANIC: 5m OB = 9:30â€“9:35 ET, 15m OB = 9:30â€“9:45 ET, 30m OB = 9:30â€“10:00 ET",
+            "Opening range high = highest level buyers reached before sellers defended; opening range low = lowest level before buyers defended",
+            "ENTRY: breakout above OR high (long) or below OR low (short) after the range period ends",
+            "Range value = OR high âˆ’ OR low (e.g. $1.03)",
+            "Half range = range value Ã· 2 (e.g. $0.52)",
+            "TARGET: half-range target = OR high + half range (e.g. OR high + $0.52)",
+            "TARGET: full-range target = OR high + full range value",
+            "STOP: half-range stop placed below the half-range mark"
+          ],
+          "entry_summary": "Let the opening range form over the first 5, 15, or 30 minutes after the 9:30 ET open (range high = level sellers defended, range low = level buyers defended). Enter on the breakout: long when price breaks above the opening range high, short when price breaks below the opening range low â€” the breakout direction is the initial directional conviction.",
+          "exit_summary": "Targets projected off the range value (range = OR high âˆ’ OR low): half-range target = OR high + range/2 (e.g. +$0.52), full-range target = OR high + full range. Stop = half-range stop placed below the half-range mark.",
+          "name": "opening_range_breakout",
+          "variants": [
+            {
+              "confirmation_mechanic_note": "breakout above/below the 5-min opening range",
+              "target_note": "half-range and full-range targets off the 5-min range value",
+              "timeframe_note": "5m OB, 9:30â€“9:35 ET",
+              "transcript_quote": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern.",
+              "variant_label": "5-minute opening range"
+            },
+            {
+              "confirmation_mechanic_note": "breakout above/below the 15-min opening range",
+              "target_note": "half-range and full-range targets off the 15-min range value",
+              "timeframe_note": "15m OB, 9:30â€“9:45 ET",
+              "transcript_quote": "The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45.",
+              "variant_label": "15-minute opening range"
+            },
+            {
+              "confirmation_mechanic_note": "breakout above/below the 30-min opening range",
+              "target_note": "half-range and full-range targets off the 30-min range value",
+              "timeframe_note": "30m OB, 9:30â€“10:00 ET",
+              "transcript_quote": "And the 30 minute is from 9:30 to 10 a.m. Eastern.",
+              "variant_label": "30-minute opening range"
+            }
+          ]
+        },
+        {
+          "coaching_notes": [],
+          "element_inventory": [
+            "Pullback level = OR high âˆ’ half range (OR high minus range Ã· 2)",
+            "ENTRY: after the initial breakout, wait for price to pull back to the pullback level, then enter back toward the long/breakout mark",
+            "Reuses the breakout setup's half-range/full-range targets and half-range stop"
+          ],
+          "entry_summary": "After the initial opening-range breakout takes place, wait for price to pull back to the pullback level (OR high âˆ’ half range, i.e. OR high minus range/2), then enter back toward the breakout/long mark. Described as its own 'full strategy' (the pullback setup) distinct from taking the breakout directly.",
+          "exit_summary": "Gestural in this video â€” 'entry back towards the long mark'; uses the same half-range / full-range target and half-range stop framework as the breakout setup.",
+          "name": "opening_range_pullback",
+          "variants": [
+            {
+              "confirmation_mechanic_note": "wait for price to retrace to the pullback level (OR high âˆ’ half range) after the breakout, then enter",
+              "target_note": "same half-range / full-range projection as the breakout setup",
+              "timeframe_note": "same 5m/15m/30m opening-range periods as the breakout setup",
+              "transcript_quote": "the initial breakout took place and in this case price pulled back and then we're looking for an entry back towards the long mark",
+              "variant_label": "pullback on 5/15/30-min opening range"
+            }
+          ]
+        }
+      ],
+      "counts": [
+        2,
+        2,
+        2,
+        2,
+        2
+      ],
+      "mode": 2,
+      "mode_n": 5,
+      "n_strategies": 2,
+      "stable": true,
+      "strategy_refs": [
+        "st5e-YJRfKc__s0",
+        "st5e-YJRfKc__s1"
+      ]
+    }
+  },
+  "phase_a_draws_hash": "05d0092c509b928bf17539ab1e8017d1ed3b69aedbbebe3bedb9d5abf5ba7edc",
+  "stability_min": 4,
+  "stage": "phase_a"
+}

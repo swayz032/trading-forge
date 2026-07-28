@@ -1,0 +1,38 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "sma14_strong_cross_scalp",
+      "entry_summary": "On the 15-minute timeframe using a Simple Moving Average with length 14, enter when a candle crosses the MA line and closes strong beyond it (not on it): a strong close above the line = long/buy; a strong close below the line = short.",
+      "exit_summary": "Fixed target (60 points on Nifty) with stop loss set at 1/3 of the target (20 points on Nifty); after price reaches the target, trail the profit to capture more.",
+      "variants": [
+        {
+          "variant_label": "SMA(14) 15m, 60pt target / 20pt stop (Nifty example)",
+          "timeframe_note": "15-minute chart",
+          "confirmation_mechanic_note": "candle must cross the SMA(14) line AND close strong beyond it â€” close below the line, not on the line",
+          "target_note": "fixed 60-point target on Nifty, then trail profits; stop loss 20 points (1/3 of target, 3:1 R:R)",
+          "transcript_quote": "whenever the candle crosses the moving average line and closes with a strong candle, you take the trade ... If it closes above the line, you buy and take a trade and when it closes below the line, you take a short trade"
+        }
+      ],
+      "element_inventory": [
+        "Indicator: Simple Moving Average, length 14",
+        "Timeframe: 15-minute",
+        "Entry long: candle crosses SMA(14) and closes strong ABOVE the line",
+        "Entry short: candle crosses SMA(14) and closes strong BELOW the line",
+        "Entry filter: close must be strong beyond the line, not ON the line ('this candle closes on the line, we need the candle to close strong below the line, not on the line')",
+        "Exit target: fixed target (60 points on Nifty)",
+        "Stop loss: 1/3 of profit/target (20 points on Nifty)",
+        "Runner management: trail profits after the fixed target is reached",
+        "Time-of-day filter: never take any intraday trade within 1 hour of market close"
+      ],
+      "coaching_notes": [
+        "3 of these losses is equal to one of our profit so happily accept the losses and move on",
+        "forget the win rate, ... it's so simple, there's no confusion and that allows you to focus on more important aspects like risk to reward and your trading psychology",
+        "This is why I like using small target with small stop loss ... even though our targets are small, we can keep trailing our profits .. but when it hits our stop loss, we loose very little",
+        "This strategy is best suited for those struggling with a strategy with too many complicated variables ... often at times the simple strategies are what works the best",
+        "I have personally used this strategy for 6 months in the past and I had good consistent results"
+      ]
+    }
+  ],
+  "enumeration_note": "One bidirectional SMA(14) strong-cross strategy: long on strong close above the line, short on strong close below â€” same crossover skeleton mirrored by direction (not opposition), one fixed-target/trailing exit. Source claims 72% win rate, 3:1 R:R over a 14-trade / 10-day backtest (metadata, not distinct strategies)."
+}

@@ -1,0 +1,73 @@
+{
+  "count": 2,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "Two distinct taught setups: an intraday opening-range-breakout gap-and-go keyed off the first 5-min candle high + VWAP filter (VCIG), and a daily double-inside-bar breakout above prior-day-high (LAES) â€” different entry triggers, so separate objects. A retrospective VWAP-reclaim 'second run' re-entry (buy back after a trap breakdown under VWAP reclaims with volume toward HOD) is described only in hindsight as a personal discipline lesson with no rule-based taught entry â€” recorded as an unpromoted mention, not a strategy object.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "\"it's very important to manage your risk on these trades so you don't end up holding through these big pullbacks in these big sell-offs like we saw with nuwe and like we saw with Lucy\"",
+        "\"one thing that I really need to work on is keeping track of these stocks even after I exit them and even after I sell my shares waiting for a second opportunity to buy into them\" (personal discipline gap on missing second runs)",
+        "\"it's also important to learn what to look for in the stocks that have a better setup for a gap and go\""
+      ],
+      "element_inventory": [
+        "PRECONDITION: gap-up stock that spikes in pre-market, then consolidates/trades sideways into the open",
+        "ORB level = high of the first 5-minute candle (e.g. VCIG 3.94)",
+        "ENTRY: buy a starter position on breakout above the ORB level",
+        "VWAP FILTER: stock must break/hold above VWAP for bigger gap-and-go potential; immediate VWAP rejection at open (NUWE, Lucy) = failed setup / avoid",
+        "SELECTION: stock must actually get above its ORB level with follow-through (NUWE never cleared its ORB level; Lucy popped only ~7c above then reversed â€” no trade)",
+        "EXIT: scale out into the initial spike (partial profits on the pop)",
+        "EXIT: take further profits when consolidation above VWAP forms lower highs (bearish top signal)"
+      ],
+      "entry_summary": "On a gap-up stock that spikes in pre-market then consolidates sideways into the open, mark the high of the first 5-minute candle as the opening range breakout (ORB) level (e.g. VCIG 3.94). Enter a starter position as price breaks out above that ORB level. A key qualifier: the stock should be able to break and hold above VWAP â€” that is the Telltale sign of a stock with real gap-and-go potential.",
+      "exit_summary": "Scale out into the initial spike (took profits in the 420s on the pop). Take further profits as it trades sideways/consolidates above VWAP and starts forming lower highs â€” that consolidation with lower highs is the bearish top-of-move signal before stocks typically fall back under VWAP and fade to lows. Manage risk so you don't hold through the big pullback/sell-off.",
+      "name": "orb_gap_and_go",
+      "strategy_id": 0,
+      "variants": []
+    },
+    {
+      "coaching_notes": [
+        "took only a \"starter position\" (partial sizing on the initial entry)"
+      ],
+      "element_inventory": [
+        "PRECONDITION: double inside bar setup on the daily chart",
+        "BREAKOUT TRIGGER: break out above the prior day's high of day (Friday HOD 18.74)",
+        "TARGET: push back into the 20s",
+        "ENTRY: starter position taken into the opening pullback",
+        "INVALIDATION/EXIT: no follow-through above 19 + thin volume â†’ cut for a small loss in the low 18s"
+      ],
+      "entry_summary": "On a stock showing a double inside bar setup on the daily chart, look for a breakout above the prior day's high of day (Friday HOD 18.74 for LAES) as the trigger for a pushback into the 20s. Take a starter position into the opening pullback (261 shares filled ~18.43).",
+      "exit_summary": "Gestural / risk-cut: jumped out for a small loss (~$86) in the low 18s once there was no follow-through above 19 per share and volume was too thin to push it back into the 20s.",
+      "name": "double_inside_bar_daily_breakout",
+      "strategy_id": 1,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "YqY0OkL5LMI__s0",
+    "YqY0OkL5LMI__s1"
+  ]
+}

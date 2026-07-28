@@ -1,0 +1,91 @@
+{
+  "count": 2,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "Intro/overview video (part 1 of 6) teaching one ORB skeleton but two genuinely different entry triggers: a straight breakout entry (own stop = half-range, own targets = half/full range) and a pullback entry (re-entry to the pullback level after the break, exit gestural) â€” enumerated as two strategies per the under-split rule. The 5/15/30-minute ranges are timeframe variants of the breakout skeleton, grouped as variants.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "Use the first 5/15/30-minute ranges to study who is controlling â€” bulls or bears â€” and what direction the market is trending.",
+        "Understanding the psychology of these breakouts (range high = where sellers defended, range low = where buyers defended) can help transform your trading.",
+        "Watch for accelerating momentum after a breakout â€” some moves start to accelerate."
+      ],
+      "element_inventory": [
+        "PRECONDITION: opening range is measured in the first 5 / 15 / 30 minutes after the 9:30 ET open",
+        "ENTRY: breakout above the opening-range high (long) or below the opening-range low (short) â€” a penny beyond the level counts as the break",
+        "STOP: half-range stop placed below the half-range mark",
+        "TARGET: half-range target = opening-range high + half the range value (e.g. OR high + ~$0.52)",
+        "TARGET: full-range target = opening-range high + full range value (e.g. OR high + $1.03)",
+        "VARIANT SUB-MECHANIC: 5-minute OR (9:30-9:35), 15-minute OR (9:30-9:45), 30-minute OR (9:30-10:00) â€” three separate ranges to read intraday control",
+        "SELECTION: setups are sought throughout the entire trading day off these ranges, not only the first 30 minutes"
+      ],
+      "entry_summary": "After the opening range forms (first 5, 15, or 30 minutes from the 9:30 ET open), enter on a breakout: go long when price breaks a penny above the opening-range high (buyers overcome the sellers who defended the high), or short when price breaks below the opening-range low. The break direction is the initial directional conviction.",
+      "exit_summary": "Stop is the 'half-range stop' placed below the half-range mark; profit targets are the 'half-range target' (opening-range high + half the range value) and the 'full-range target' (opening-range high + the full range value). Levels are day-relative, computed from that day's opening range.",
+      "name": "opening_range_breakout",
+      "strategy_id": 0,
+      "variants": [
+        {
+          "confirmation_mechanic_note": "breakout above/below the 5-minute range",
+          "target_note": "half-range and full-range targets off the 5m range value",
+          "timeframe_note": "5m OR = 9:30-9:35 ET",
+          "transcript_quote": "The 5m minute OB takes place from 9:30 a.m. Eastern to 9:35 a.m. Eastern.",
+          "variant_label": "5-minute opening range"
+        },
+        {
+          "confirmation_mechanic_note": "breakout above/below the 15-minute range",
+          "target_note": "half-range and full-range targets off the 15m range value",
+          "timeframe_note": "15m OR = 9:30-9:45 ET",
+          "transcript_quote": "The 15-minute is the first 15 minutes of the market. So, from 9:30 to now 9:45.",
+          "variant_label": "15-minute opening range"
+        },
+        {
+          "confirmation_mechanic_note": "breakout above/below the 30-minute range (worked example: OR high 617.64, OR low 616.61, range $1.03)",
+          "target_note": "half-range target = OR high + ~$0.52; full-range target = OR high + $1.03",
+          "timeframe_note": "30m OR = 9:30-10:00 ET",
+          "transcript_quote": "the difference between the high and the low is what gives us our opening range breakout range... In this case, the difference was a dollar 3.",
+          "variant_label": "30-minute opening range"
+        }
+      ]
+    },
+    {
+      "coaching_notes": [],
+      "element_inventory": [
+        "PRECONDITION: the initial breakout must have already taken place before a pullback entry is valid",
+        "ENTRY: price pulls back to the pullback level (opening-range high âˆ’ half range) and re-enters toward the long mark",
+        "LEVEL: pullback level = opening-range high minus the half-range value (the half-range mark as an actual price)"
+      ],
+      "entry_summary": "After the initial opening-range breakout occurs, wait for price to pull back to the 'pullback level' (opening-range high minus the half range, e.g. OR high âˆ’ $0.52), then enter back toward the long mark in the breakout direction. Described as a full, separate 'pullback setup' distinct from the straight breakout.",
+      "exit_summary": "Gestural in this intro video â€” the pullback level anchors the entry, but explicit stop/target levels for the pullback variant are not stated (the platform's half-range/full-range framework is the stated exit machinery).",
+      "name": "opening_range_pullback",
+      "strategy_id": 1,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "st5e-YJRfKc__s0",
+    "st5e-YJRfKc__s1"
+  ]
+}

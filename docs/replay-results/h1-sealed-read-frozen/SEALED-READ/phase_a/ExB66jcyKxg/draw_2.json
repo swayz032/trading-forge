@@ -1,0 +1,59 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "One strategy taught. Long and short are symmetric mirror entries on the same SMA-strong-close-crossover skeleton (compatible directional breakout, not contradictory opposition), so they stay one object with a bidirectional entry, not two strategies.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "\"3 of these losses is equal to one of our profit so happily accept the losses and move on\"",
+        "\"forget the win rate, The reason an extremely simple strategy like this works wonderfully is cause, it's so simple, there's no confusion and that allows you to focus on more important aspects like risk to reward and your trading psychology\"",
+        "\"This strategy is best suited for those struggling with a strategy with too many complicated variables or price action where it's always hiting your stop loss\"",
+        "\"often at times the simple strategies are what works the best\"",
+        "\"your profits can be much more depending on how efficently you are able to trail your stop loss\""
+      ],
+      "element_inventory": [
+        "Indicator: Simple Moving Average, length 14",
+        "Timeframe: 15-minute",
+        "Long entry: candle crosses the SMA and closes strong ABOVE the line -> buy",
+        "Short entry: candle crosses the SMA and closes strong BELOW the line -> short",
+        "Entry filter: close must be strong and beyond the line, NOT on the line (a candle closing on the line is not a valid signal)",
+        "Fixed target: 60 points (nifty)",
+        "Stop loss: 20 points (defined as 1/3 of profit/target)",
+        "Runner management: after target is hit, trail the profits",
+        "Precondition/time filter: never take an intraday trade within 1 hour of market close"
+      ],
+      "entry_summary": "On the 15-minute timeframe with a 14-period Simple Moving Average, when a candle crosses the SMA line and closes strongly beyond it (not on the line), take the trade in the direction of the close: a strong close above the SMA is a long (buy), a strong close below the SMA is a short.",
+      "exit_summary": "Fixed target of 60 points (nifty example) with a stop loss of 20 points (1/3 of the target); after the target is reached, trail the profits. Do not take any new intraday trade within 1 hour of market close.",
+      "name": "sma14_strong_close_crossover",
+      "strategy_id": 0,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "ExB66jcyKxg__s0"
+  ]
+}

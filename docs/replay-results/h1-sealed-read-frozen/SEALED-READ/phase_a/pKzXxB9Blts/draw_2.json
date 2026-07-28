@@ -1,0 +1,70 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "One anchored-VWAP-to-heavy-volume-rotation pullback skeleton taught bidirectionally (short to VWAP resistance / long to VWAP support are the same fair-price pullback logic in different contexts, not opposition). Exit is only gestural (patience/holding), so the taught setup is kept with null exit levels per Rule 1.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "I learned to be patient. I wait, and that's what's been working for me.",
+        "I don't really have problems holding trades, even, you know, for a couple of hours like this."
+      ],
+      "element_inventory": [
+        "PRECONDITION: identify a rotation zone where heavy volume was traded using Volume Profile",
+        "PRECONDITION: the heavy-volume rotation must be followed by strong trend activity (a strong sell-off / trend leg)",
+        "Anchor the VWAP to the last candle of the rotation (= the first candle of the sell-off/trend, e.g. the huge red candle)",
+        "Entry trigger: wait for price to move away from the anchored VWAP, then enter on a pullback back to the VWAP (fair price)",
+        "Directional rule: short pullbacks to VWAP when it is resistance in a downtrend; long pullbacks when price is above VWAP and it acts as support",
+        "FILTER: do not trade while the market is rotating ('when the market is rotating, VWAP setups don't really work')",
+        "OCCURRENCE-SELECTION: take repeated pullback entries on subsequent tests of the VWAP (2nd/3rd test = another entry)",
+        "Anchor-candle tolerance: anchoring to an adjacent candle instead of the exact one barely changes the VWAP (setup not sensitive to exact anchor choice)"
+      ],
+      "entry_summary": "Use Volume Profile to find a rotation zone where heavy volume was traded, that must be followed by a strong trend (sell-off or trend leg). Anchor VWAP to the last candle of the rotation (= first candle of the trend). Wait for price to move away from the anchored VWAP, then enter on a pullback back to the VWAP as 'fair price' â€” short when VWAP acts as resistance in a downtrend, long when price is above VWAP and it acts as support. Re-enter on subsequent (2nd/3rd) tests of the VWAP.",
+      "exit_summary": "No concrete exit/stop/target taught; speaker only notes he holds trades patiently, sometimes for a couple of hours.",
+      "name": "anchored_vwap_volume_profile_pullback",
+      "strategy_id": 0,
+      "variants": [
+        {
+          "confirmation_mechanic_note": "price moves away from VWAP then pulls back up to it while VWAP is resistance in a downtrend",
+          "target_note": null,
+          "timeframe_note": null,
+          "transcript_quote": "you anchor the VWAP there to this candle and then you trade pullbacks. You simply need to see the price go away from the VWAP and then enter a pullback. Here, that's short from this place.",
+          "variant_label": "Short pullback to anchored VWAP resistance (downtrend)"
+        },
+        {
+          "confirmation_mechanic_note": "resistance VWAP turns into support once price moves above it; wait for pullback to that support",
+          "target_note": null,
+          "timeframe_note": null,
+          "transcript_quote": "this resistance, the resistance which is represented by the VWAP, turns into a support... So, that's why you want to wait for the pullbacks to that support and enter longs from there",
+          "variant_label": "Long pullback to anchored VWAP support (price above VWAP)"
+        }
+      ]
+    }
+  ],
+  "strategy_refs": [
+    "pKzXxB9Blts__s0"
+  ]
+}

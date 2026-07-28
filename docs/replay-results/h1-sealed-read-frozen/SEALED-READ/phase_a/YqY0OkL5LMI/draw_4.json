@@ -1,0 +1,73 @@
+{
+  "count": 2,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "Two distinct taught setups with different entry logic: a daily double-inside-bar breakout above prior-day high (LAES) and an intraday 5-minute opening-range-breakout gap-and-go (VCIG). The 'second run' re-entry after the VWAP-breakdown-trap (buying back in as volume returns toward HOD) is discussed only retrospectively as a missed opportunity the speaker 'needs to work on' with no runnable entry mechanics taught â€” treated as an unpromoted mention, not a strategy object.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "\"I do still think there is potential for this but I ended up jumping out and taking a very small loss\" â€” discretionary willingness to exit on lack of follow-through"
+      ],
+      "element_inventory": [
+        "PRECONDITION: double inside bar setup on the daily chart",
+        "PRECONDITION/ENTRY GATE: price breaks out above the previous day's (Friday) high of day = 18.74",
+        "ENTRY: take a starter position into the opening pullback (filled 261 shares avg ~18.43)",
+        "CONTEXT: stock gapped up and opened near the prior high of day",
+        "TARGET: continuation push into the 20s",
+        "EXIT/INVALIDATION: cut for a small loss when there is no follow-through above ~19 (breakout fails to hold above previous day's close/19)"
+      ],
+      "entry_summary": "Daily-chart double inside bar setup; enter (starter position on the opening pullback) as price breaks out above the previous day's / Friday's high of day (18.74), targeting a continuation push into the 20s.",
+      "exit_summary": "Target a push up into the 20s; cut for a small loss when the breakout shows no follow-through and cannot hold above the key level (~19). Exit given colloquially ('jumped out and took a very small loss').",
+      "name": "double_inside_bar_daily_breakout",
+      "strategy_id": 0,
+      "variants": []
+    },
+    {
+      "coaching_notes": [
+        "\"it's very important to manage your risk on these trades so you don't end up holding through these big pullbacks in these big sell-offs\"",
+        "\"one thing that I really need to work on is keeping track of these stocks even after I exit them... waiting for a second opportunity to buy into them\" â€” discipline/mindset self-improvement"
+      ],
+      "element_inventory": [
+        "PRECONDITION: stock is gapping up with the biggest potential for a gap-and-go; pre-market spike, trades sideways/consolidates into the open",
+        "ENTRY LEVEL: opening range breakout level = high of the first 5-minute candle (3.94)",
+        "ENTRY: take a starter position as price breaks out above the ORB level",
+        "CONFIRMATION FILTER: stock is able to break above VWAP (telltale sign of a bigger gap-and-go); rejection of VWAP at the open = weak, avoid",
+        "EXIT: scale out into the initial spike (took profits in the 420s)",
+        "EXIT: take further profits as it consolidates above VWAP and forms lower highs",
+        "EXIT SIGNAL: post-breakout consolidation + lower highs = likely top of move (stock then fades back under VWAP toward low of day)"
+      ],
+      "entry_summary": "On a gap-up stock (pre-market spike then sideways consolidation into the open), enter a starter position as price breaks out above the opening range breakout level = the high of the first 5-minute candle (3.94). Ability to break above VWAP is the confirmation filter for a bigger gap-and-go.",
+      "exit_summary": "Scale out into the initial spike (took profits in the 420s), then take further profits as it consolidates above VWAP and starts forming lower highs (bearish signals that the consolidation is often the top of the move, after which stocks fade back under VWAP to lows).",
+      "name": "opening_range_breakout_gap_and_go",
+      "strategy_id": 1,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "YqY0OkL5LMI__s0",
+    "YqY0OkL5LMI__s1"
+  ]
+}

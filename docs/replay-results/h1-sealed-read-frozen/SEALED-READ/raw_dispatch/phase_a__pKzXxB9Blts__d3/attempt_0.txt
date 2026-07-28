@@ -1,0 +1,25 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "anchored_vwap_pullback_volume_profile",
+      "entry_summary": "Use Volume Profile to locate a rotation zone where heavy volume was traded (institutional accumulation/distribution) that is immediately followed by a strong trend move (e.g. a sell-off). Anchor a VWAP to the last candle of that rotation / first candle of the trend. Wait for price to move away from the anchored VWAP, then enter on a pullback back to the VWAP ('fair price'): short when price trades below the VWAP (VWAP as resistance), long when price trades above it (VWAP as support after the flip). Do not enter while the market is still rotating.",
+      "exit_summary": "Not taught with concrete levels; the speaker only notes he holds trades patiently, sometimes for a couple of hours. No stop or target rules are given.",
+      "variants": [],
+      "element_inventory": [
+        "PRECONDITION: use Volume Profile to identify a rotation zone where the heaviest volumes were traded",
+        "PRECONDITION: the heavy-volume rotation must be followed by a strong trend/sell-off before the setup applies",
+        "Anchor the VWAP to the last candle of the rotation (the first candle of the sell-off / trend, e.g. the huge red candle)",
+        "Entry trigger: wait for price to move away from the anchored VWAP, then enter on the pullback back to the VWAP",
+        "Direction rule: short when price is below the VWAP (VWAP = resistance); long when price is above the VWAP (VWAP flipped to support)",
+        "Occurrence selection: take repeated pullback entries to the same anchored VWAP (multiple shorts, plus a 'second test' re-entry)",
+        "FILTER: do not trade pullbacks while the market is rotating (VWAP setups do not work in rotation)"
+      ],
+      "coaching_notes": [
+        "\"I learned to be patient. I wait, and that's what's been working for me.\" (willing to hold trades for a couple of hours, e.g. in the low-liquidity Asian session)",
+        "\"you won't mess this setup up if you choose a different candle\" â€” anchoring to a nearby candle barely changes the VWAP, so don't worry about picking the exact one"
+      ]
+    }
+  ],
+  "enumeration_note": "The long and short pullbacks are the same anchored-VWAP 'pullback to fair price' skeleton applied symmetrically by side (short below VWAP, long above the flip), not contradictory logic â€” enumerated as one strategy. Entry is precisely taught; exits are absent beyond a patience/hold coaching remark."
+}

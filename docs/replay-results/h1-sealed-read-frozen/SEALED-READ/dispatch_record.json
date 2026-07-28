@@ -1,0 +1,6 @@
+{
+  "channel_class": "subscription",
+  "dispatch_mode": "headless",
+  "requested_model": "claude-opus-4-8[1m]",
+  "resolved_model": "claude-opus-4-8[1m]"
+}

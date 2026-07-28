@@ -1,0 +1,56 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "One taught setup: short on a bar closing under the 25 EMA after a 50 MA rejection inside a descending channel, targeting a measured-move channel break down. The speaker's reference to 'some more trades earlier' has no taught mechanics and is an unpromoted mention.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "\"i gave enough time i don't want to wait too long because sometimes if you don't see that move in time then usually price goes back up\"",
+        "\"this price needs to break down soon otherwise it's gonna go either sideway or go back up\""
+      ],
+      "element_inventory": [
+        "PRECONDITION: a descending channel is forming with downward price action",
+        "PRECONDITION: bulls fail to push up off the 50 moving average and reject with a weak close",
+        "ENTRY: wait for a bar to CLOSE under the blue 25 exponential moving average",
+        "ENTRY: enter short on the confirmation of that bar closing under the 25 EMA",
+        "SCALE-IN: add a second contract on a pullback",
+        "STOP MANAGEMENT: move stop to break-even if price does not move away from the entry point",
+        "INVALIDATION/KILL: exit if price closes above the 25 EMA / breaks the channel back up",
+        "TARGET: measured move â€” project the first down-leg's size as the expected next move",
+        "EXIT: take profit at the bottom level of the projected move"
+      ],
+      "entry_summary": "In a descending channel (NQ afternoon), after bulls fail to push up off the 50 moving average and reject with a weak close, wait for a bar to close under the blue 25 EMA. Enter short on that confirmation candle, anticipating a channel break to the downside and another leg down.",
+      "exit_summary": "Add a second contract on a pullback; move stop to break-even if price does not move away from the entry within a reasonable time; kill the trade if a bar closes back above the 25 EMA / breaks the channel up. Target a measured move (roughly the same size as the first down-leg) and exit at the bottom level.",
+      "name": "channel_break_25ema_close_short",
+      "strategy_id": 0,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "XbRI0sfcXU4__s0"
+  ]
+}

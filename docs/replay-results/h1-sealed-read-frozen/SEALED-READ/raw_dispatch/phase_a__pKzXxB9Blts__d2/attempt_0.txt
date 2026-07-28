@@ -1,0 +1,41 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "anchored_vwap_volume_profile_pullback",
+      "entry_summary": "Use Volume Profile to find a rotation zone where heavy volume was traded, that must be followed by a strong trend (sell-off or trend leg). Anchor VWAP to the last candle of the rotation (= first candle of the trend). Wait for price to move away from the anchored VWAP, then enter on a pullback back to the VWAP as 'fair price' â€” short when VWAP acts as resistance in a downtrend, long when price is above VWAP and it acts as support. Re-enter on subsequent (2nd/3rd) tests of the VWAP.",
+      "exit_summary": "No concrete exit/stop/target taught; speaker only notes he holds trades patiently, sometimes for a couple of hours.",
+      "variants": [
+        {
+          "variant_label": "Short pullback to anchored VWAP resistance (downtrend)",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "price moves away from VWAP then pulls back up to it while VWAP is resistance in a downtrend",
+          "target_note": null,
+          "transcript_quote": "you anchor the VWAP there to this candle and then you trade pullbacks. You simply need to see the price go away from the VWAP and then enter a pullback. Here, that's short from this place."
+        },
+        {
+          "variant_label": "Long pullback to anchored VWAP support (price above VWAP)",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "resistance VWAP turns into support once price moves above it; wait for pullback to that support",
+          "target_note": null,
+          "transcript_quote": "this resistance, the resistance which is represented by the VWAP, turns into a support... So, that's why you want to wait for the pullbacks to that support and enter longs from there"
+        }
+      ],
+      "element_inventory": [
+        "PRECONDITION: identify a rotation zone where heavy volume was traded using Volume Profile",
+        "PRECONDITION: the heavy-volume rotation must be followed by strong trend activity (a strong sell-off / trend leg)",
+        "Anchor the VWAP to the last candle of the rotation (= the first candle of the sell-off/trend, e.g. the huge red candle)",
+        "Entry trigger: wait for price to move away from the anchored VWAP, then enter on a pullback back to the VWAP (fair price)",
+        "Directional rule: short pullbacks to VWAP when it is resistance in a downtrend; long pullbacks when price is above VWAP and it acts as support",
+        "FILTER: do not trade while the market is rotating ('when the market is rotating, VWAP setups don't really work')",
+        "OCCURRENCE-SELECTION: take repeated pullback entries on subsequent tests of the VWAP (2nd/3rd test = another entry)",
+        "Anchor-candle tolerance: anchoring to an adjacent candle instead of the exact one barely changes the VWAP (setup not sensitive to exact anchor choice)"
+      ],
+      "coaching_notes": [
+        "I learned to be patient. I wait, and that's what's been working for me.",
+        "I don't really have problems holding trades, even, you know, for a couple of hours like this."
+      ]
+    }
+  ],
+  "enumeration_note": "One anchored-VWAP-to-heavy-volume-rotation pullback skeleton taught bidirectionally (short to VWAP resistance / long to VWAP support are the same fair-price pullback logic in different contexts, not opposition). Exit is only gestural (patience/holding), so the taught setup is kept with null exit levels per Rule 1."
+}

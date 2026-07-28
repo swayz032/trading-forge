@@ -1,0 +1,32 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "orb_5m_retest",
+      "entry_summary": "Opening Range = the first 5-minute candle from 09:30 to 09:35 New York time; mark its high, low, and midpoint. Wait for a valid breakout: a candle whose body closes completely outside the range (a full close, not a wick or touch). Then wait for a valid retest: a candle that opens outside the range, wicks back inside, and closes outside again (if it closes inside the range the signal is invalid and you wait for the next candle). Enter on the open of the next candle after the retest. All decisions are made on closed candles only.",
+      "exit_summary": "Stop loss at the range midpoint; take profit at a 2:1 reward-to-risk ratio.",
+      "variants": [],
+      "element_inventory": [
+        "Opening Range definition: first 5-minute candle 09:30-09:35 NY time; capture high, low, and midpoint",
+        "Breakout condition: candle body closes completely outside the range (full close, not a wick or touch)",
+        "Retest condition: candle opens outside range, wick dips inside range, close back outside range",
+        "Retest invalidation/occurrence-selection: if the candle closes inside the range the signal is invalid â€” wait for the next candle",
+        "Entry timing: enter on the open of the next candle after the valid retest",
+        "Stop loss placed at the range midpoint",
+        "Take profit at 2:1 reward-to-risk ratio",
+        "Risk per trade: 1% of deposit (fixed position-sizing rule; percentage-of-deposit or fixed lot configurable)",
+        "Execution constraint: all decisions made on closed candles only (no intra-candle / look-ahead reads)"
+      ],
+      "coaching_notes": [
+        "Test conditions must be as close to real trading as possible â€” include real spread, commissions, slippage, and broker-specific CFD conditions.",
+        "Enable random delay and slippage emulation and model every tick based on real ticks.",
+        "Test on your own assets, periods, and broker â€” find your own combination.",
+        "Avoid overfitting â€” don't keep changing parameters until the past looks perfect.",
+        "Avoid look-ahead bias and use proper data separation.",
+        "One lucky month is not a strategy â€” a beautiful equity curve is not proof.",
+        "Don't trust gurus, don't trust me â€” test it yourself on your own data."
+      ]
+    }
+  ],
+  "enumeration_note": "Video teaches ONE runnable strategy: the 5-minute ORB-with-retest. The 'many variations' and the parameter-change demo (e.g. the Gold case yielding +94%) are references to config differences on the same entry/exit skeleton, not separately taught setups, so no additional strategy objects or variants are promoted."
+}

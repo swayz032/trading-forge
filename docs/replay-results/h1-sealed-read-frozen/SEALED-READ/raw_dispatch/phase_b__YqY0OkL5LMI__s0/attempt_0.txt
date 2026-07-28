@@ -1,0 +1,57 @@
+{
+  "strategies": [
+    {
+      "name": "double_inside_bar_daily_breakout",
+      "symbol": "LAES",
+      "entry_sequence": [
+        {
+          "action": "this had a double inside bar set up on the daily chart"
+        },
+        {
+          "action": "it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday"
+        },
+        {
+          "action": "it was a really solid setup for a pushback into the 20s if it was able to start breaking out above that Friday high of day which was 18.74"
+        },
+        {
+          "action": "I decided to take a starter position into the opening pullback"
+        }
+      ],
+      "confluences": [
+        {
+          "description": "from there I was hoping to see volume really start to pick up and push this back up into the 20s"
+        },
+        {
+          "description": "it briefly broke above 19 and briefly broke out above that previous day's closing price"
+        }
+      ],
+      "stop": {
+        "level": null,
+        "description": "I ended up jumping out and taking a very small loss on this in the low 18s once there was no follow through up over 19 per share",
+        "gestural_exit": true
+      },
+      "targets": [
+        {
+          "price": null,
+          "description": "a really solid setup for a pushback into the 20s"
+        }
+      ],
+      "coverage_notes": [
+        "PRECONDITION double inside bar on daily: PRESENT â€” 'this had a double inside bar set up on the daily chart'.",
+        "PRECONDITION gap up near prior high of day: PRESENT â€” 'it gapped up a bit from the previous days closed it actually opened up near that Hive day from Friday'.",
+        "ENTRY break above Friday high of day 18.74 / prior close: PRESENT â€” 'breaking out above that Friday high of day which was 18.74'.",
+        "ENTRY EXECUTION starter position into opening pullback (261 shares @ ~18.43): PRESENT as entry step 'take a starter position into the opening pullback'; the 261 shares @ ~18.43 are that day's live-example fill numbers, not a rule, so not encoded as a level.",
+        "CONFIRMATION volume pick up / hold above 19: PRESENT as confluence 'hoping to see volume really start to pick up' + 'briefly broke above 19 and briefly broke out above that previous day's closing price'.",
+        "TARGET push into the 20s: PRESENT as target 'a really solid setup for a pushback into the 20s' (loosely stated, price null).",
+        "EXIT invalidation small loss on no follow-through / thin volume: PRESENT in stop prose (gestural exit â€” 'jumping out and taking a very small loss on this in the low 18s once there was no follow through up over 19 per share'); no fixed stop level taught, level null."
+      ]
+    }
+  ],
+  "instrument_classification": {
+    "instrument_type": "us_equity",
+    "asset_class": "stocks",
+    "notes": "Small-cap momentum day-trading stock (LAES); double inside bar daily breakout setup taught on individual equity shares."
+  },
+  "coaching_notes": [],
+  "rejected_strategies": []
+}

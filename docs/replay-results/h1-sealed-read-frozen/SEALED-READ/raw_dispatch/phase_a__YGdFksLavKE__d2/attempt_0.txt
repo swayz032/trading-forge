@@ -1,0 +1,44 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "vwap_band_breakout_trend_aligned",
+      "entry_summary": "Enter on a VWAP band breakout: long when price breaks above the upper VWAP band, short when price breaks/closes below the lower VWAP band. The refined variant additionally requires trend alignment (CM EMA Trend Bars green for longs / red for shorts) and the Volume Profile Point of Control sitting within the VWAP bands at the moment of breakout.",
+      "exit_summary": "Stop at the recent swing low (long) or recent swing high (short) â€” or slightly beyond the VWAP line when the swing is near it. Target a fixed risk-to-reward ratio (2:1 in the basic variant, 1.5:1 in the refined filtered variant).",
+      "variants": [
+        {
+          "variant_label": "Basic VWAP band breakout, 2:1 target",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "No filter â€” enter purely on price breaking above the upper VWAP band (long) or below the lower VWAP band (short)",
+          "target_note": "2 times risk-to-reward ratio",
+          "transcript_quote": "We will enter into a buy position whenever the price breaks out above the upper V-wap band. We will be placing the stoploss at the recent swing low and for the take profit we will target a 2 times risk-to-reward ratio."
+        },
+        {
+          "variant_label": "Filtered VWAP band breakout with EMA trend + Point of Control, 1.5:1 target",
+          "timeframe_note": null,
+          "confirmation_mechanic_note": "Requires trend-aligned candle color (CM EMA Trend Bars EMA 200: green=uptrend for long / red=downtrend for short) AND Point of Control within the VWAP bands at breakout",
+          "target_note": "1.5 times risk-to-reward ratio",
+          "transcript_quote": "Firstly the candlestick will need to be green. This shows us that we are currently in an uptrend. Secondly, the price must break above the upper V-wap band. ... Thirdly, the Point of control must be within the V-wap bands when the price breaks out above the upper V-wap band. When all of these conditions have been met we will enter into a buy position."
+        }
+      ],
+      "element_inventory": [
+        "Long entry: price breaks out above the upper VWAP band",
+        "Short entry: price breaks/closes below the lower VWAP band",
+        "Long precondition (refined): CM EMA Trend Bars candle is green (uptrend, EMA up trend set to 200)",
+        "Short precondition (refined): CM EMA Trend Bars candle is red (downtrend)",
+        "Confirmation filter (refined): Point of Control line must be within the VWAP bands at the breakout",
+        "Long stop: recent swing low (place slightly below VWAP if swing low is close to the VWAP line)",
+        "Short stop: recent swing high (place just above VWAP if swing high is nearby)",
+        "Target (basic variant): 2:1 risk-to-reward ratio",
+        "Target (refined variant): 1.5:1 risk-to-reward ratio",
+        "Indicator config: Volume Profile Fixed Range row size 36, number of bars 300",
+        "Indicator config: CM EMA Trend Bars EMA up trend value 200"
+      ],
+      "coaching_notes": [
+        "Traders usually try to avoid consolidating markets; whenever the market is moving sideways or in a consolidation phase the price moves between the VWAP bands.",
+        "Even though the VWAP indicator is very useful and powerful there are a lot of false signals with this strategy â€” the added indicators are to filter out fakeouts versus real breakouts."
+      ]
+    }
+  ],
+  "enumeration_note": "One VWAP-band-breakout skeleton (trend-aligned, bidirectional). The video first teaches a bare band-breakout entry (2:1, swing stop) then a filtered refinement adding EMA-trend candle color + Point-of-Control-within-bands confirmation (1.5:1). These differ only in confirmation mechanic and target-R â€” compatible variation, enumerated as one strategy with two variants."
+}

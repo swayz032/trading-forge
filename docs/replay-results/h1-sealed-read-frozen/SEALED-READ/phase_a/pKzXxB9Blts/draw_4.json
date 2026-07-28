@@ -1,0 +1,57 @@
+{
+  "count": 1,
+  "dispatch_record": {
+    "channel_class": "subscription",
+    "dispatch_mode": "headless",
+    "requested_model": "claude-opus-4-8[1m]",
+    "resolved_model": "claude-opus-4-8[1m]"
+  },
+  "enumeration_note": "Long and short share one anchored-VWAP-pullback-to-fair-price skeleton off a volume-profile-identified institutional zone (directional symmetry based on which side of the VWAP price sits), not contradictory logic â€” enumerated as one strategy. Entry mechanics are runnable; exit is taught only gesturally (patience/holding), so exit levels are null.",
+  "reader_identity": {
+    "channel_class": "subscription",
+    "enumerator_sha": "fe257088017d494eb06361ec59ff6dbb326bebbe8a2060c24f811f3d0cd4f790",
+    "k": 5,
+    "model_id": "claude-opus-4-8[1m]",
+    "params": {
+      "designator": "pinned params",
+      "enumerated_values": null
+    },
+    "prompt_sha": "4d61b4b0bb536c1fd47e7337a6dc3fd5e36da00fa5f587ca26b0370253e50f43",
+    "source_refs": {
+      "certified_reader_tag": "efa377d6",
+      "channel_class": "docs/designs/h1-certified-reader-effective-params-2026-07-16.md",
+      "enumerator_sha": "src/agents/strategy-enumerator.md",
+      "model_id_and_k": "docs/designs/h1-claude-rung-preregistration-2026-07-13.md",
+      "params_designator": "docs/designs/h1-sealed12-driver-ratify-packet-2026-07-16.md",
+      "prompt_sha": "src/agents/transcript-extractor-frontier-v32.md"
+    }
+  },
+  "strategies": [
+    {
+      "coaching_notes": [
+        "I learned to be patient. I wait, and that's what's been working for me.",
+        "I don't really have problems holding trades, even for a couple of hours like this.",
+        "if you anchor the VWAP to a different candle instead, the VWAP wouldn't really change too much, so you won't mess this setup up if you choose a different candle",
+        "low liquidity/low volatility sessions (e.g. Asian session) produce slower, less swift reactions"
+      ],
+      "element_inventory": [
+        "PRECONDITION: identify a rotation with heavy traded volume via volume profile (institutional accumulation zone)",
+        "PRECONDITION: the heavy-volume rotation must be followed by a strong trend/sell-off (no trend follow-through = not a setup)",
+        "Anchor VWAP to the last candle of the rotation, which is the first candle of the sell-off/trend",
+        "Entry trigger: after price moves away from the anchored VWAP, enter on a pullback to the anchored VWAP",
+        "Short sub-mechanic: when price is below the VWAP (VWAP acts as resistance), short the pullback to VWAP",
+        "Long sub-mechanic: when the VWAP flips from resistance to support (price above it), long the pullback to VWAP",
+        "Occurrence selection: each successive test/pullback to the anchored VWAP is a separate valid entry (e.g. second test = another short)",
+        "Skip filter: do not trade during rotation ('when the market is rotating, VWAP setups don't work')"
+      ],
+      "entry_summary": "Use volume profile to locate a rotation where heavy volume was traded (institutional accumulation), confirmed by a strong trend/sell-off immediately following it. Anchor VWAP to the last candle of that rotation (the first candle of the trend/sell-off). Wait for price to move away from the anchored VWAP, then enter on a pullback back to the VWAP (the 'fair price'): short when price sits below the VWAP and it acts as resistance; long when the VWAP flips to support (price above it). Each successive test of the VWAP is a valid entry.",
+      "exit_summary": "No concrete exit taught. The speaker only notes he holds trades patiently, sometimes for hours ('I learned to be patient. I wait'). No stop or profit target is given.",
+      "name": "anchored_vwap_pullback_from_volume_profile_zone",
+      "strategy_id": 0,
+      "variants": []
+    }
+  ],
+  "strategy_refs": [
+    "pKzXxB9Blts__s0"
+  ]
+}

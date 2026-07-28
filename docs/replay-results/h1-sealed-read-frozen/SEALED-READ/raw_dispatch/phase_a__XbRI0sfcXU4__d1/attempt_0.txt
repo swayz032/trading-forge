@@ -1,0 +1,27 @@
+{
+  "strategies": [
+    {
+      "strategy_id": 0,
+      "name": "channel_break_25ema_close_short",
+      "entry_summary": "In a descending channel (NQ afternoon), after bulls fail to push up off the 50 moving average and reject with a weak close, wait for a bar to close under the blue 25 EMA. Enter short on that confirmation candle, anticipating a channel break to the downside and another leg down.",
+      "exit_summary": "Add a second contract on a pullback; move stop to break-even if price does not move away from the entry within a reasonable time; kill the trade if a bar closes back above the 25 EMA / breaks the channel up. Target a measured move (roughly the same size as the first down-leg) and exit at the bottom level.",
+      "variants": [],
+      "element_inventory": [
+        "PRECONDITION: a descending channel is forming with downward price action",
+        "PRECONDITION: bulls fail to push up off the 50 moving average and reject with a weak close",
+        "ENTRY: wait for a bar to CLOSE under the blue 25 exponential moving average",
+        "ENTRY: enter short on the confirmation of that bar closing under the 25 EMA",
+        "SCALE-IN: add a second contract on a pullback",
+        "STOP MANAGEMENT: move stop to break-even if price does not move away from the entry point",
+        "INVALIDATION/KILL: exit if price closes above the 25 EMA / breaks the channel back up",
+        "TARGET: measured move â€” project the first down-leg's size as the expected next move",
+        "EXIT: take profit at the bottom level of the projected move"
+      ],
+      "coaching_notes": [
+        "\"i gave enough time i don't want to wait too long because sometimes if you don't see that move in time then usually price goes back up\"",
+        "\"this price needs to break down soon otherwise it's gonna go either sideway or go back up\""
+      ]
+    }
+  ],
+  "enumeration_note": "One taught setup: short on a bar closing under the 25 EMA after a 50 MA rejection inside a descending channel, targeting a measured-move channel break down. The speaker's reference to 'some more trades earlier' has no taught mechanics and is an unpromoted mention."
+}
