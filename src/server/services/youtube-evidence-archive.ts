@@ -15,6 +15,7 @@ export interface ArchiveYoutubeEvidenceInput {
   sourceQuery?: string | null;
   sourcePass?: string | null;
   status?: TranscriptArchiveStatus;
+  discoveredAt?: Date;
 }
 
 export function youtubeVideoId(value: string): string | null {
@@ -46,10 +47,13 @@ export async function archiveYoutubeEvidence(input: ArchiveYoutubeEvidenceInput)
   const transcriptSha256 = transcript
     ? createHash("sha256").update(transcript, "utf8").digest("hex")
     : null;
+  const hasTranscript = transcript !== null;
   const status: TranscriptArchiveStatus = transcript ? "available" : (input.status ?? "pending");
   const canonicalUrl = `https://www.youtube.com/watch?v=${videoId}`;
   const title = input.title?.trim() || `YouTube video ${videoId}`;
   const now = new Date();
+  const nowIso = now.toISOString();
+  const discoveredAt = input.discoveredAt ?? now;
 
   const [row] = await db.insert(youtubeEvidenceArchive).values({
     videoId,
@@ -64,6 +68,7 @@ export async function archiveYoutubeEvidence(input: ArchiveYoutubeEvidenceInput)
     sourcePass: input.sourcePass?.trim() || null,
     transcriptStatus: status,
     transcriptFetchedAt: transcript ? now : null,
+    discoveredAt,
     lastSeenAt: now,
   }).onConflictDoUpdate({
     target: youtubeEvidenceArchive.videoId,
@@ -73,12 +78,12 @@ export async function archiveYoutubeEvidence(input: ArchiveYoutubeEvidenceInput)
       channel: sql`COALESCE(${input.channel?.trim() || null}, ${youtubeEvidenceArchive.channel})`,
       transcriptText: sql`COALESCE(${transcript}, ${youtubeEvidenceArchive.transcriptText})`,
       transcriptSha256: sql`COALESCE(${transcriptSha256}, ${youtubeEvidenceArchive.transcriptSha256})`,
-      transcriptChars: sql`CASE WHEN ${transcript} IS NOT NULL THEN ${transcript?.length ?? 0} ELSE ${youtubeEvidenceArchive.transcriptChars} END`,
+      transcriptChars: sql`CASE WHEN ${hasTranscript} THEN ${transcript?.length ?? 0} ELSE ${youtubeEvidenceArchive.transcriptChars} END`,
       sourceProvider: input.sourceProvider,
       sourceQuery: sql`COALESCE(${input.sourceQuery?.trim() || null}, ${youtubeEvidenceArchive.sourceQuery})`,
       sourcePass: sql`COALESCE(${input.sourcePass?.trim() || null}, ${youtubeEvidenceArchive.sourcePass})`,
-      transcriptStatus: sql`CASE WHEN ${transcript} IS NOT NULL THEN 'available' WHEN ${youtubeEvidenceArchive.transcriptStatus} = 'available' THEN 'available' ELSE ${status} END`,
-      transcriptFetchedAt: sql`CASE WHEN ${transcript} IS NOT NULL THEN ${now} ELSE ${youtubeEvidenceArchive.transcriptFetchedAt} END`,
+      transcriptStatus: sql`CASE WHEN ${hasTranscript} THEN 'available' WHEN ${youtubeEvidenceArchive.transcriptStatus} = 'available' THEN 'available' ELSE ${status} END`,
+      transcriptFetchedAt: sql`CASE WHEN ${hasTranscript} THEN ${nowIso}::timestamptz ELSE ${youtubeEvidenceArchive.transcriptFetchedAt} END`,
       lastSeenAt: now,
     },
   }).returning({ id: youtubeEvidenceArchive.id });
