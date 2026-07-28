@@ -66,7 +66,13 @@
  * 23 files this pass edited. The failures pinned in PASS2_KNOWN_NONIDEMPOTENT are TWO classes —
  * the pre-0066 carry-forward boundary AND "superseded by design" (see the register's own note at
  * its declaration; do not re-derive the reason from this line) — an assertion (not a skip) so a
- * NEW non-idempotent regression anywhere in the 201-file journal fails this test loudly.
+ * NEW non-idempotent regression anywhere in the journal fails this test loudly.
+ *
+ * ★ NO ENTRY COUNT IS QUOTED IN THIS FILE ON PURPOSE. The journal grows; PASS 1 binds the total
+ * dynamically via `expect(plan.toApply.length).toBe(journal.entries.length)`. A hardcoded total in
+ * prose only goes stale and then misinforms — this header and the PASS 1 title both said "201"
+ * while the journal already held 211. Same rule for the register below: gate on MEMBERSHIP, never
+ * on cardinality (a count passes if one member is added while another is quietly fixed).
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
@@ -177,7 +183,7 @@ describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
   });
 
   it(
-    "PASS 1 — full journal (201 entries) applies cleanly against an empty DB, zero backfilled",
+    "PASS 1 — full journal applies cleanly against an empty DB, zero backfilled",
     async () => {
       const plan = computeMigrationPlan(journal.entries, new Set(), new Set(), hashOf);
 
@@ -230,8 +236,24 @@ describe("fresh-bootstrap migration replay (deep-scan land 2026-07-10)", () => {
   });
 
   it(
-    "PASS 2 — re-applying every journal entry's raw SQL against the now-populated DB fails ONLY on the pinned pre-0066 carry-forward set",
+    "PASS 2 — re-applying every journal entry's raw SQL against the now-populated DB fails ONLY on the pinned register",
     async () => {
+      // ★ THIS LOOP EXCLUDES NOTHING. Every journal entry with a file on disk is re-executed and
+      // any error is recorded, whether or not that migration succeeded in PASS 1. There is no
+      // "it failed pass 1 so it is skipped here" carve-out, by construction or otherwise.
+      //
+      // Recorded because that carve-out was believed to exist (R-390) and would be a dangerous
+      // thing to believe: if a migration ever fails BOTH passes, it lands in `unexpected` below
+      // and correctly fails this gate. Anyone told to wave that off would be disabling a working
+      // alarm. Note PASS 1 above THROWS on its first failure, so a green PASS 1 already proves the
+      // pass-1 failure set is empty in this harness.
+      //
+      // The belief came from a replay run on a bare `new PGlite()`. This harness constructs it as
+      // `new PGlite({ extensions: { pgcrypto } })` (see beforeAll), because 0104 calls digest()
+      // and 0128 CREATE EXTENSIONs pgcrypto. Without that extension 0128 fails both passes — an
+      // artifact of the missing capability, not a property of the migration, which is idempotent
+      // (IF NOT EXISTS throughout + a GUC-guarded no-op backfill) and applies fine on real
+      // Postgres. A fixture that lacks a capability production has will indict innocent SQL.
       const failures: Array<{ tag: string; idx: number; error: string }> = [];
       for (const entry of journal.entries) {
         const sqlPath = path.join(MIGRATIONS_DIR, `${entry.tag}.sql`);
