@@ -61,6 +61,15 @@ vi.mock("../services/pipeline-control-service.js", () => ({
 vi.mock("../production/kill-switch.js", () => ({
   killSwitch: { isHaltedForProduction: vi.fn().mockReturnValue(false) },
 }));
+// 2026-07-28 (R-360): the boot probe is now gated (R-359). checkProbeGate()
+// requires live execution to be CONFIGURED as well as the opt-in flag, so the
+// A-11 behaviour tests below cannot reach the probe without this mock — the real
+// module reads SERVER_MEDIATED_EXECUTION_ENABLED/BROKER_FILL_HMAC_SECRET from
+// env, which are (correctly) unset. Mocking it keeps those live-execution env
+// vars untouched by the test process.
+vi.mock("../lib/execution-mode.js", () => ({
+  isLiveExecutionConfigured: vi.fn().mockReturnValue(true),
+}));
 vi.mock("../services/strategy-assignment-service.js", () => ({
   getEnabledFirms: vi.fn().mockResolvedValue(["topstep", "mffu"]),
 }));
@@ -444,9 +453,22 @@ describe("A-13 prop-firm-cookie-refresh runtime-file persistence", () => {
 // loads broker-router.js with a schema that has both auditLog AND brokerAccounts.
 
 describe("A-11 broker-router TradersPost key probe", () => {
+  // 2026-07-28 (R-360): these are BEHAVIOUR tests of the probe, and R-359 gave the
+  // probe a precondition (BROKER_KEY_PROBE_ENABLED, default OFF). Arm the flag so
+  // they test the probe rather than the gate; the gate has its own suite
+  // (broker-router-probe-gate.test.ts). Saved/restored so no value leaks to other
+  // suites — the flag is never exported into the CI environment.
+  const savedProbeFlag = process.env.BROKER_KEY_PROBE_ENABLED;
+
+  afterEach(() => {
+    if (savedProbeFlag === undefined) delete process.env.BROKER_KEY_PROBE_ENABLED;
+    else process.env.BROKER_KEY_PROBE_ENABLED = savedProbeFlag;
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
     vi.resetModules();
+    process.env.BROKER_KEY_PROBE_ENABLED = "true";
     // Restore complete schema mock — A-13 contaminated this to { auditLog: {} } only.
     // Without brokerAccounts, broker-router.ts line 249 throws TypeError (silently caught).
     vi.mock("../db/schema.js", () => ({
