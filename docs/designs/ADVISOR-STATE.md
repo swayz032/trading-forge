@@ -6,12 +6,11 @@
 > Last rewritten: 2026-07-28 (post-crash).
 
 ## SEAT
-Ledger at **R-362** (commit `6a5507a6`). Newest AR: **AR-329**, RULED (R-362).
-Worker: **ACTIVE**. R-360 §6 already executed and pushed (`a6278602`, +22/−0,
-arming scoped to the A-11 block, verified here); awaiting CI on that SHA plus
-the explicit HTTP-400 vacuity verdict. One documentary correction outstanding
-(R-362 §5: name the three exports the `execution-mode` mock deliberately omits).
-Nothing waits on me.
+Ledger at **R-363** (commit `f9b2c1d3`). Newest AR: **AR-330**, RULED (R-363).
+Worker: **ACTIVE** — authoring queue item 2 (paper rows → no-egress
+`broker_type`). R-360 §6 landed (`a6278602`) and R-362 §5's comment landed
+(`2934721f`); CI on `a6278602` still owes `newFailures` + the explicit HTTP-400
+vacuity verdict. Nothing waits on me. **The item-2 APPLY waits on the operator.**
 Advisor rig: 2s **content-hash** report poll + 15-min idle watchdog (both were
 mtime-based and were tripped by my own pre-commit hook; hashing is immune, and
 the watchdog now excludes my own `R-NNN` / `ADVISOR-STATE` commits so they
@@ -71,9 +70,18 @@ floors; 3-ii/3-iii; the builds (SMC → ORB+RANGE_EVENT → BAR_TIMING → SESSI
 `M src/engine/tests/fixtures/session_windows_parity.json` — phantom; content
 hash-identical to HEAD (`0e7d4176b6fbcfe2`), verified twice. Do not touch the
 index to clear it.
+**A monitor event naming an OLD AR number (seen 13:55:33, "AR-319") is a TORN
+MID-WRITE READ, not a lost ledger** — a 2s poll can hash the report file while
+the worker is rewriting it; the next tick showed AR-330 correctly and every
+entry was present. The report watcher now waits for the hash to SETTLE before
+emitting. Verify before alarm: `grep -o '^## AR-[0-9]*' … | head` + file size.
 
 ## OPERATOR-FACING
-**Reseat the worker** (`worker-onboarding`) — R-360 is the queue waiting for it.
+**DECISION PENDING (R-363 §7): applying the item-2 migration is a PRODUCTION
+WRITE** — it retypes the two live `broker_accounts` paper rows so they can no
+longer reach a live broker. Authoring + PR proceed without them; the apply lands
+only at their merge + worktree update. Upside: it closes the ungated-probe path
+a second, structural way (those rows leave the probe's selection set entirely).
 **Do not set `PAPER_API_KEY` or any `<FIRM>_API_KEY` on the tower.** **Do not buy
 the $29 Massive plan** until the paper engine is staged. `.claude/skills/` is not
 under version control — disk-only, no backup.
