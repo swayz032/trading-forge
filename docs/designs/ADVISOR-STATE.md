@@ -6,7 +6,7 @@
 > Last rewritten: 2026-07-28, current through R-367.
 
 ## SEAT
-Ledger at **R-369**. Newest AR: **AR-336**, RULED. Worker: **handed off** — it
+Ledger at **R-370**. Newest AR: **AR-337**, RULED. Worker: **handed off** — it
 declined to author item 2 on depleted context and left its contract inline in
 AR-331 §5. Advisor rig: 2s content-hash report poll + 15-min idle watchdog
 (both hash-based; my own pre-commit hook stamps mtimes, and the watchdog
@@ -17,10 +17,12 @@ excludes my `R-NNN`/`ADVISOR-STATE` commits so they cannot mask worker silence).
 flag state; `startBootProbe()` called once at `index.ts:832`. REMAINING:
 **red-proof each of the six before making it green** (§5(3)), keep the
 probe-gate DISCRIMINATES case green, The call-site guard is DONE and verified across 6 inputs (R-369 §1).
-**§5(3) is RESTATED (R-369 §4)**: the six must be shown RED→GREEN across the
-fix, AND each must name the observable its assertion depends on (the spy/mock
-the probe must touch) — an assertion satisfiable by a function that does
-nothing is still vacuous. Plus R-369 §3's one-line bound in the guard comment.
+**§5(3)(b) EXECUTED — 4 of the 6 are VACUOUS BY CONSTRUCTION** (only negative
+assertions; they cannot detect a regression of this very fix). **PR #12 now
+BLOCKS on rewriting those four** per R-370 §3's spec (prove the path ran, then
+prove the absence), with R-370 §4's CI-as-runner mutation proof: land the
+rewrites, push ONE scratch-branch commit removing the flag arming, require all
+four to go RED, delete the scratch branch. Tests 1-2 already have real bite.
 `checkProbeGate()` itself is correct — do not touch it. Fresh retry budget 2.
 Then item 2 (R-363 + R-364 §3), then item 4. Authoring + PR only.
 
