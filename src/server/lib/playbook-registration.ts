@@ -123,6 +123,103 @@ export interface RegisterResult {
  * transaction) decide whether a failed registration should roll back the
  * DB insert.
  */
+function categoryPattern(cat: PlaybookCategory): RegExp {
+  return new RegExp(`^${cat}\\s*=\\s*\\[([^\\]]*)\\]`, "m");
+}
+
+/** A token is a name only if it is a fully-quoted, quote-free string literal. */
+const STRING_LITERAL = /^(["'])([^"']*)\1$/;
+
+export type RegistryReadCode = "registry_read_incomplete" | "registry_read_truncated" | "registry_read_malformed";
+
+export interface RegistryRead {
+  byCategory: Map<PlaybookCategory, Set<string>>;
+  /** Header regex did not match at all — the category contributes ZERO names. */
+  missing: PlaybookCategory[];
+  /** Body contains "[", so `[^\]]*` stopped at a NESTED bracket: a SHORT read. */
+  truncated: PlaybookCategory[];
+  /** Body contains a token that is not a bare quoted literal (comment, splat, annotation). */
+  malformed: PlaybookCategory[];
+}
+
+/**
+ * Thrown by `readAllRegisteredNames` when the parse is not EXACT. Carries the
+ * per-category diagnostics so a caller can say which category failed and how,
+ * rather than only that something did.
+ */
+export class PlaybookRegistryReadError extends Error {
+  readonly code: RegistryReadCode;
+  readonly read: RegistryRead;
+  constructor(code: RegistryReadCode, read: RegistryRead) {
+    super(
+      `${code}: missing=[${read.missing.join(",")}] truncated=[${read.truncated.join(",")}] ` +
+        `malformed=[${read.malformed.join(",")}]`,
+    );
+    this.name = "PlaybookRegistryReadError";
+    this.code = code;
+    this.read = read;
+  }
+}
+
+/**
+ * Raw, non-throwing parse of the 4 category list literals. Returns names PLUS
+ * the three ways this file's shape can defeat the regex. Callers that need a
+ * trustworthy answer must run `assertExactRead` (or use
+ * `readAllRegisteredNames`, which does).
+ */
+export function parseRegistry(source: string): RegistryRead {
+  const byCategory = new Map<PlaybookCategory, Set<string>>();
+  const missing: PlaybookCategory[] = [];
+  const truncated: PlaybookCategory[] = [];
+  const malformed: PlaybookCategory[] = [];
+
+  for (const cat of PLAYBOOK_CATEGORIES) {
+    const names = new Set<string>();
+    byCategory.set(cat, names);
+    const m = source.match(categoryPattern(cat));
+    if (!m) {
+      missing.push(cat);
+      continue;
+    }
+    const body = m[1];
+    if (body.includes("[")) truncated.push(cat);
+    let bad = false;
+    for (const tok of body.split(",")) {
+      const trimmed = tok.trim();
+      if (!trimmed) continue; // trailing comma / empty list
+      const lit = STRING_LITERAL.exec(trimmed);
+      if (!lit) {
+        bad = true;
+        continue;
+      }
+      if (lit[2]) names.add(lit[2]);
+    }
+    if (bad) malformed.push(cat);
+  }
+  return { byCategory, missing, truncated, malformed };
+}
+
+/**
+ * FAIL CLOSED (R-313 §5a, widened). The ordered fix was "throw when
+ * `matched < PLAYBOOK_CATEGORIES.length`" — necessary but NOT sufficient:
+ * a nested bracket still MATCHES all four headers and merely truncates the
+ * body, so a count-only check reports 4/4 on a short read. Exactness, not
+ * mere presence, is the property that makes the union trustworthy:
+ *
+ *   missing   — header regex did not match  (the ordered count check)
+ *   truncated — body held "[", so `[^\]]*` stopped at a nested bracket
+ *   malformed — a token was not a bare quoted literal (inline comment, splat)
+ *
+ * All three are SILENT and all three SHORTEN the union, and a short union is
+ * exactly what lets `registerStrategiesInPlaybook` re-insert an
+ * already-registered name into a second category.
+ */
+export function assertExactRead(read: RegistryRead): void {
+  if (read.missing.length > 0) throw new PlaybookRegistryReadError("registry_read_incomplete", read);
+  if (read.truncated.length > 0) throw new PlaybookRegistryReadError("registry_read_truncated", read);
+  if (read.malformed.length > 0) throw new PlaybookRegistryReadError("registry_read_malformed", read);
+}
+
 /**
  * Parses all 4 category list literals out of `filePath` and returns the union
  * of every name currently registered (across all categories). Read-only —
@@ -130,21 +227,48 @@ export interface RegisterResult {
  * backfill instrument) without any risk of mutating the file. Shared by
  * `registerStrategiesInPlaybook` below so there is exactly one parser for
  * this file's shape, not a second copy per caller.
+ *
+ * THROWS `PlaybookRegistryReadError` when the parse is not exact. A short read
+ * here is not a degraded answer, it is a WRONG one, and the caller cannot tell
+ * the difference from a correct short list — so it must not be handed one.
  */
 export function readAllRegisteredNames(filePath: string): Set<string> {
-  const source = readFileSync(filePath, "utf-8");
+  const read = parseRegistry(readFileSync(filePath, "utf-8"));
+  assertExactRead(read);
   const allNamesPresent = new Set<string>();
-  for (const cat of PLAYBOOK_CATEGORIES) {
-    const re = new RegExp(`^${cat}\\s*=\\s*\\[([^\\]]*)\\]`, "m");
-    const m = source.match(re);
-    if (m) {
-      for (const tok of m[1].split(",")) {
-        const cleaned = tok.trim().replace(/^["']|["']$/g, "");
-        if (cleaned) allNamesPresent.add(cleaned);
-      }
-    }
+  for (const names of read.byCategory.values()) {
+    for (const n of names) allNamesPresent.add(n);
   }
   return allNamesPresent;
+}
+
+/**
+ * Verifies a candidate source: the parse is exact AND each just-inserted name
+ * appears in EXACTLY ONE category, which must be the target. Returns a reason
+ * string on violation, or null when clean.
+ */
+function verifyInsertion(
+  candidate: string,
+  names: string[],
+  category: PlaybookCategory,
+  stage: "precommit" | "postwrite",
+): string | null {
+  const read = parseRegistry(candidate);
+  try {
+    assertExactRead(read);
+  } catch (err) {
+    return `${stage}_verify_failed: ${String(err instanceof Error ? err.message : err)}`;
+  }
+  for (const name of names) {
+    const inCats = PLAYBOOK_CATEGORIES.filter((c) => read.byCategory.get(c)?.has(name));
+    if (inCats.length !== 1 || inCats[0] !== category) {
+      return (
+        `${stage}_verify_failed: ${JSON.stringify(name)} must appear in exactly one category ` +
+        `(${category}); found in [${inCats.join(",")}]`
+      );
+    }
+  }
+  return null;
 }
 
 export function registerStrategiesInPlaybook(
@@ -163,9 +287,7 @@ export function registerStrategiesInPlaybook(
     return { ok: false, category, added: [], alreadyPresent: [], reason: `read_failed: ${String(err)}` };
   }
 
-  const allNamesPresent = readAllRegisteredNames(filePath);
-
-  const targetMatch = source.match(new RegExp(`^${category}\\s*=\\s*\\[([^\\]]*)\\]`, "m"));
+  const targetMatch = source.match(categoryPattern(category));
   if (!targetMatch) {
     return {
       ok: false,
@@ -173,6 +295,24 @@ export function registerStrategiesInPlaybook(
       added: [],
       alreadyPresent: [],
       reason: `category_list_not_found: ${category} pattern did not match in ${filePath}`,
+    };
+  }
+
+  // (a) FAIL CLOSED. A short read of the OTHER categories is what produces a
+  // cross-category duplicate: a name already registered elsewhere goes unseen
+  // and is re-inserted here. Refuse to write on anything less than an exact
+  // read rather than write on a guess.
+  let allNamesPresent: Set<string>;
+  try {
+    allNamesPresent = readAllRegisteredNames(filePath);
+  } catch (err) {
+    const code = err instanceof PlaybookRegistryReadError ? err.code : "registry_read_failed";
+    return {
+      ok: false,
+      category,
+      added: [],
+      alreadyPresent: [],
+      reason: `${code}: ${String(err instanceof Error ? err.message : err)}`,
     };
   }
 
@@ -198,12 +338,47 @@ export function registerStrategiesInPlaybook(
   const newBody = trimmedBody.length > 0 ? `${trimmedBody}, ${newEntries}` : newEntries;
   const newListLiteral = `${category} = [${newBody}]`;
 
-  const newSource = source.replace(new RegExp(`^${category}\\s*=\\s*\\[([^\\]]*)\\]`, "m"), newListLiteral);
+  // A FUNCTION replacement, not a string: a string replacement interprets `$&`
+  // / `$1` / `$'` inside a strategy name as capture-group syntax and splices the
+  // matched text into the file.
+  const newSource = source.replace(categoryPattern(category), () => newListLiteral);
+
+  // (b-i) PRE-COMMIT VERIFY — check what we are about to write BEFORE writing
+  // it. Prevention beats detection: a bad state that never reaches disk needs
+  // no rollback.
+  const precommitReason = verifyInsertion(newSource, toInsert, category, "precommit");
+  if (precommitReason) {
+    return { ok: false, category, added: [], alreadyPresent, reason: precommitReason };
+  }
 
   try {
     writeFileSync(filePath, newSource, "utf-8");
   } catch (err) {
     return { ok: false, category, added: [], alreadyPresent, reason: `write_failed: ${String(err)}` };
+  }
+
+  // (b-ii) POST-WRITE RE-READ (R-313 §5b) — re-read from DISK and assert each
+  // added name appears in EXACTLY ONE category. This is the half that closes
+  // effect 3 (a name spliced into a nested sub-list creates NO duplicate, so
+  // the exhaustive CI duplicate-guard is structurally blind to it) and it is
+  // the only check that sees what actually landed rather than what we computed.
+  // On violation the original source is RESTORED: returning ok:false while
+  // leaving the defect on disk would still hand every downstream consumer a
+  // widened allow-list.
+  let postwriteReason: string | null;
+  try {
+    postwriteReason = verifyInsertion(readFileSync(filePath, "utf-8"), toInsert, category, "postwrite");
+  } catch (err) {
+    postwriteReason = `postwrite_verify_failed: reread_failed: ${String(err)}`;
+  }
+  if (postwriteReason) {
+    let rollback = "rolled_back";
+    try {
+      writeFileSync(filePath, source, "utf-8");
+    } catch (err) {
+      rollback = `ROLLBACK_FAILED: ${String(err)}`;
+    }
+    return { ok: false, category, added: [], alreadyPresent, reason: `${postwriteReason} [${rollback}]` };
   }
 
   return { ok: true, category, added, alreadyPresent };
