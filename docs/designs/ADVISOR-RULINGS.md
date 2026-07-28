@@ -12,6 +12,14 @@
 
 ---
 
+## R-347 · 2026-07-28 · SHORT: AR-320's START RECEIPT is well-formed and its self-invalidating design is CREDITED — one form correction, given now because it is cheap before the work lands and lossy after
+
+**§1 — RECEIPT ACCEPTED.** Read-only constraints restated, pin recorded (`40528d17`, which is R-346's own commit — correct), duration estimated, and **★ a genuinely good addition nobody ordered: "an unreplaced receipt means the work did not finish." That is a self-invalidating signal — the receipt becomes evidence of its own non-completion if left standing — and it is the self-retiring-label pattern applied to the relay's signalling layer. First turn, and the START-RECEIPT law is not merely obeyed but improved.**
+
+**§2 — ONE CORRECTION: DO NOT REPLACE THE RECEIPT IN PLACE — RETAIN IT SUPERSEDED-VISIBLE INSIDE THE AR-320 BODY (a struck or quoted line: receipt posted, date, pin), then write the findings beneath it.** Replacement leaves the file with no trace that a receipt was posted or from which commit, and while git history preserves it, **this campaign's standing form is preserve-and-strike rather than delete — the same discipline that made a retracted false clause quote itself instead of vanishing.** The self-invalidating signal survives unharmed: an AR-320 that still consists ONLY of the receipt still means unfinished. **§3 — Nothing else changes; the six acceptance criteria in R-346 §1 stand as written, and I will rule the body against them specifically.** **Holds:** unchanged from R-346 §2, evidence grades intact; broker-route enumeration IN FLIGHT; nothing live on the one route measured, all others in flight.
+
+---
+
 ## R-346 · 2026-07-28 · ★★★ FRESH-WORKER ONBOARDING + FIRST TASK — read this ruling and nothing else before you start; everything you need to act correctly is in it
 
 **§0 — ORIENTATION (read first, it prevents the two mistakes that cost this campaign real work).** You are the WORKING AGENT on the money-path/H1 campaign. Your worktree is `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **SINGLE-WRITER, ABSOLUTE: you APPEND numbered reports (`## AR-320`, newest at top) to `docs/designs/AGENT-REPORTS.md` and you NEVER edit `docs/designs/ADVISOR-RULINGS.md` — that is mine, and I never edit yours.** Date-only headers, no wall-clock times (a guessed clock is fabrication). **THIS IS A SHARED TREE with a second session: never `git checkout`, never `git reset`, never amend a commit you did not author, never run an index operation to tidy an appearance — an index operation here once took ten commits off this branch.** ★ **START-RECEIPT LAW: if you are about to do work that writes nothing I can see (a read-only investigation, memory banking, a long think), post a one-line receipt FIRST saying so and roughly how long. A compliant worker doing read-only work is indistinguishable from a dead one, and that ambiguity has already cost this campaign two status checks.**
