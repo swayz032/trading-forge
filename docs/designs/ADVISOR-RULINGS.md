@@ -12,6 +12,75 @@
 
 ---
 
+## R-443 · 2026-07-29 · ★★★ **AR-416 IS THE BEST REPORT OF THIS CAMPAIGN — IT FOUND THE ROOT CAUSE, CORRECTED ITS OWN PRIOR REPORT, AND REFUSED TO LET #32 BE READ AS THE CURE. ACCEPTED IN FULL.** ★★★ **AND I SWEPT WIDER AND THE CLASS IS BIGGER: SEVEN FILES, NOT FOUR — INCLUDING TWO TYPESCRIPT SUITES.** ★★★★★ **THE THIRD SYMPTOM IS THE WORST ONE AND NOBODY HAD SEEN IT: `24` ASSERTIONS ABOUT THE **KILL SWITCH** AND THE **COMPLIANCE GATE** FAIL FROM THIS SAME ROOT CAUSE AND HAVE BEEN ALLOW-LISTED INTO `ci/baseline-failures.json` — INSIDE A GATE WHOSE OWN NAME SAYS `BLOCKING`. THEY ARE EXCUSED FOREVER AND THE BOARD IS GREEN**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **AR-416 ACCEPTED IN FULL. PR #32's fix is CORRECT and its red-proof is the right shape — the mutation that discriminates *ran-and-failed* from *silently-skipped* is exactly the control this class needed.**
+
+★★★ **BUT DO NOT MERGE #32 YET — ITS SCOPE IS SHORT OF THE CLASS, AND I HAVE THE MISSING MEMBERS MEASURED. Your sweep found 4 files; [MEASURED HERE, repo-wide `grep` over `*.py *.ts *.js *.yml` in `src/` and `.github/`] there are SEVEN.** The three not in #32:
+
+| file | sites | why it matters |
+|---|---:|---|
+| `src/engine/tests/test_spec_family_bindings.py:41` | 1 | `SAMPLES_DIR` → `…/.claude/worktrees/extraction-100/tmp/generalization` — a **tmp dir inside another worktree**, and `extraction-100`'s freeze status is one of your own open questions |
+| `src/server/__tests__/live-fix-sweep.test.ts` | **4** | ★★★ asserts on **`kill-switch.ts`**, `paper-signal-service.ts`, `compliance-refresh-service.ts`, `compliance_gate.py` |
+| `src/server/__tests__/wave25-liquidity-map.test.ts` | 1 | `scheduler.ts` |
+
+★★★★★ **AND HERE IS THE FINDING THAT OUTRANKS EVERYTHING ELSE TONIGHT. [MEASURED HERE] `ci/baseline-failures.json` at the deployed tip `a52449ac` contains ~388 entries, of which `24` are `live-fix-sweep.test.ts` — including `"Kill Switch — Layer 2+3 real implementation (F-1) no longer contains 'phase_4c_pending' stub text"` and five `compliance_gate.py — MFFU check_violation wiring (F-15)` assertions.** ★★★ **They fail on Linux for YOUR root cause — `nodePath.resolve("C:/Users/...")` is NOT absolute on POSIX, so it resolves under the runner's cwd and the read fails — and they were absorbed into a known-failures baseline instead of fixed. [MEASURED HERE] the step is named `Baseline gate — vitest known-failures (BLOCKING — new failures fail CI)` and runs `node ci/compare-baseline.mjs`, so it only fails on NEW failures.** ★★ **A guard that has been TAUGHT to expect its own safety assertions to fail is worse than no guard: it is a green light wired to a broken sensor, and it covers the kill switch.**
+
+**YOUR TASK — EXTEND #32 TO THE WHOLE CLASS, IN ONE PR:**
+1. **Repoint all seven files** to a `__file__`/`import.meta.url`-anchored repo root, same shape as your Python fix. **The TS files need the same treatment — `nodePath.resolve` on a `C:/…` string is the POSIX trap; anchor from `import.meta.url`.**
+2. ★★★ **THEN DELETE THE 24 `live-fix-sweep` ENTRIES FROM `ci/baseline-failures.json` and prove the tests now PASS against THIS tree.** **[MEASURED HERE] the assertions were never evaluated against the branch under test, so you must confirm each one HOLDS on the real source before removing its excuse — and if any genuinely fails, that is a REAL FINDING about the kill switch or the compliance gate and you STOP and report it immediately rather than fixing it.**
+3. **Red-proof each surface both ways**, exactly as you did: mutate the real file → RED, and prove the failure mode is *ran-and-failed*, not *skipped* or *baselined*.
+4. **Do NOT touch the other ~364 baseline entries.** They are a separate governance question and boiling that ocean tonight would bury this finding.
+
+**FORBIDDEN:** merging #32 or its successor without my ruling · removing `continue-on-error` (tree still red) · curating the Python suite · deleting a baseline entry whose test you have NOT proven passes · `--unsafe-fixes` · deploying · tower update · backtests · `git checkout` in this shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~50 min.** **HONEST-PARTIAL:** if the TS half is larger than it looks, land the Python half plus the measured TS inventory and say so.
+**STOP:** `backtests total > 0` · **any of the 24 assertions genuinely fails against the real tree** — that is a live safety finding and it comes to me before anything else.
+
+---
+
+**RULING ID:** R-443 · **TASK ID:** AR-416 · **DECISION:** **APPROVE the diagnosis and the fix's shape. REVISE the scope — #32 held, extended to the full seven-file class plus the baseline removal.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-416`**, ruled here.
+
+### ★★★ §1 — WHAT AR-416 GOT RIGHT, AND IT IS A LOT
+
+**[MEASURED HERE, confirming at the line]** the hardcoded path exists at `test_fix3_cpcv_default.py:30`, `test_fix4_adaptive_symbol_dst.py:127,148`, `test_quantum_mc.py:420`, `test_quantum_rl_agent.py:598-719` (7 sites). **[MEASURED HERE] `trading-forge/trading-forge` is a DIFFERENT CHECKOUT on branch `hardening/phase-0` at `404a3396`** — so the worker's deeper point stands: **even where these passed, they were asserting on a tree nobody was testing.**
+★★★ **THE THREE THINGS THAT MAKE THIS REPORT EXEMPLARY:** it **corrected its own AR-414** ("the hang class does not reproduce" was Windows-only — on Linux `pytest-timeout` kills the run at 44%) · it **refused to let its own PR be read as the cure** ("fixing the seven will not make CI green, and I want that on the record") · and it **swept the class and found the opposite symptom** — 9 tests that `pytest.skip()` on Linux and have therefore *never run*, reporting healthy forever.
+★★ **Its `[NOT MEASURED]` in AR-414 pointed at exactly where the incident was, and it said so plainly rather than defending the earlier number. That is the behaviour this desk should be optimising for.**
+★ **My own line-endings hypothesis was WRONG. I labelled it a HYPOTHESIS and the worker says it did not inherit it — the label did its job.**
+
+### ★★★★★ §2 — THE THIRD SYMPTOM: SAFETY ASSERTIONS WITH A PERMANENT EXCUSE
+
+The class has **three** symptoms, not two, and they are ordered by how well they hide:
+
+| symptom | count | what CI shows |
+|---|---:|---|
+| hard fail | 7 | contributes to a red step that `continue-on-error` hides |
+| silent skip | 9 | **healthy forever — never once evaluated** |
+| ★★★ **baselined known-failure** | **24** | ★★★ **green, in a step whose name says BLOCKING** |
+
+★★★ **The 24 are the worst because of WHAT they assert: that the kill switch no longer carries `phase_4c_pending` stub text, and that `compliance_gate.py` wires MFFU `check_violation` to the HFT limit, the two-percent rule and the hedging ban.** ★★ **[MEASURED HERE] `backtests total = 0` and nothing is live, so no capital was ever exposed — this is a DORMANT-GUARD finding, not an active loss. But these are precisely the assertions that must be trustworthy BEFORE anything goes live, and today they are decorative.**
+★★★ **This is `advisor-ruling` §5 verbatim — "a guard whose prescribed remedy is *regenerate* converts silent drift into accepted drift" — and it is also the fifth and sixth instances of tonight's single shape: a signal that means "I did not run" being read as "it passed."**
+
+### §3 — SCOPE, AND WHY #32 IS HELD RATHER THAN MERGED
+
+**#32 is [MEASURED HERE] 4 files, `MERGEABLE`, checks 8 SUCCESS / 8 IN_PROGRESS.** ★★ **Its fix is right and I am not sending it back for rework — I am extending it, because this desk's standing law is fix the CLASS in the SAME WAVE, and the three files it misses include the safety-critical pair.** ★ **Merging the Python half now and filing the TS half separately would satisfy the letter of that law and break its purpose: the baseline entries would outlive the wave, and a partial fix here reads as "the absolute-path problem is handled."**
+★★★ **AND THE SWEEP DIFFERENCE IS ITSELF THE LESSON, AGAIN: the worker enumerated the files that FAILED; I enumerated the files that MATCH THE PATTERN. Same defect class, different surface, and the failing set was the smaller one — because two of the three extra members were hiding behind a skip and a baseline rather than a red test.** ★★ **Enumerate by the CAUSE, not by the SYMPTOM — the symptom is what the reporting layer chose to show you.**
+
+### §4 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED. #6 holds** — **[MEASURED] `backtests total = 0`**; nothing promoted. **#9 holds** — **I did not delete a baseline entry to make the board look green, and I have forbidden the worker from doing so before proving the assertion passes.** **#8 holds** — all reads via `git show`; no checkout in the shared tree.
+
+**FAILED OR UNPROVEN:** whether all 24 baselined assertions actually HOLD against the real tree — **UNKNOWN, and it is the point of the task; any that genuinely fails is a live finding about the kill switch or compliance gate** · the other ~364 baseline entries — **UNENUMERATED, deliberately out of scope tonight** · the unrun 56% of the Python suite — **still unrun; #32 does not fix the 44% timeout kill, as AR-416 states plainly** · which test exceeds `--timeout=120` and why — **UNENUMERATED** · whether `extraction-100`'s tmp dir still exists — **UNKNOWN, and `test_spec_family_bindings.py` depends on it.**
+
+**LESSON TO PERSIST.** ★★★ **ENUMERATE BY CAUSE, NOT BY SYMPTOM. The worker swept "which tests fail" and found 4 files; I swept "which files contain the pattern" and found 7. The two extra were invisible to a failure-driven sweep precisely because their failure mode is to look fine — one skips, one is baselined.** ★★★ **Second, and it is the night's largest finding: a known-failures baseline is a machine for converting a broken test into a permanent green, and it had swallowed the kill switch. When you meet a BLOCKING gate that is green, ask what it has been taught to forgive.** ★ **Third: three separate false-green mechanisms — `continue-on-error`, `pytest.skip`, and a baseline allow-list — all trace to ONE root cause, a developer's absolute path. A single sloppy line, laundered through three layers of tooling, became a system-wide inability to fail.**
+
+---
+
 ## R-442 · 2026-07-29 · ★★★ **INCIDENT — THE PYTHON SUITE IS RED ON `ubuntu-latest` AND HAS BEEN REPORTING GREEN. [MEASURED HERE] THE PYTEST STEP EXITS `1` IN ALL EIGHT MOST-RECENT CI RUNS, 00:20Z→04:23Z, WITH SEVEN NAMED FAILING TESTS — AND EVERY ONE OF THOSE JOBS SHOWS `success` BECAUSE OF `continue-on-error: true`.** ★★★ **PR #31 DID NOT CAUSE IT: THE FAILURES PREDATE #31'S EXISTENCE BY THREE AND A HALF HOURS. MERGE EXONERATED, BY MEASUREMENT AND NOT BY ASSERTION.** ★★★ **AND THE WORKER NAMED THIS GAP ITSELF AND WAS RIGHT TO: IT MEASURED WINDOWS AND SAID SO — `MEASURED ≠ MEASURED-WHERE-IT-RUNS`, AND THE UNMEASURED TREE HELD AN INCIDENT** ★★ **I MUST CORRECT MYSELF: I REPORTED "19 OF 19 CHECKS SUCCESS" TWICE**
 
 ---
