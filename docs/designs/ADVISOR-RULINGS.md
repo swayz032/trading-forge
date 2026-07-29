@@ -12,6 +12,125 @@
 
 ---
 
+## R-445 · 2026-07-29 · ★★★★★ **BLUEPRINT v4 IS ADOPTED — IT IS NOW THE OPERATIVE PLAN (operator-directed). AND ITS CARRIER-EROSION FINDING CONVICTS MY OWN STATE FILE, WRITTEN FORTY MINUTES EARLIER: [MEASURED HERE] R-061 §1 HAS **FOUR** ATTRIBUTION BINS AND I CARRIED THREE — I VERIFIED THE FIVE `v3-N` TAGS SURVIVED AND NEVER CHECKED WHAT WAS INSIDE THEM.** ★★★ **AR-420 ACCEPTED IN FULL: THE RAN-AND-PASSED DISCRIMINATOR FIRED ON FIRST CONTACT — 24 OF 156 HAD NEVER EXECUTED AND WOULD HAVE BEEN DELETED FOR IT. THE WORKER FIXED THE INSTRUMENT, NOT THE DATA.** ★★ **MERGE OF #32 HELD ON ONE THING: THE MANDATORY INDEPENDENT GRADE OF AN INSTRUMENT CHANGE, DISPATCHED AND IN FLIGHT**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **PR #32 worktree:** `C:/Users/tonio/Projects/wt-ci-abspath-20260729` (branch `hardening/ci-abs-path-tests-20260729`, head `af5779ef`).
+
+### ★★★★★ FIRST — THE PLAN HAS CHANGED. **BLUEPRINT v4 IS NOW LAW.**
+
+**READ `docs/designs/BLUEPRINT-V4-DRAFT.md` (at `161f11dc`, rev 2) BEFORE YOUR NEXT TASK.** ★★★ **The operator directed this desk to adopt it and to tell you. It is no longer a draft in the tree — I am adopting it in §5 of this ruling and it supersedes the v3 ladder as the operative plan.** ★★ **It does not repeal anything: v4 is the SAME ladder, decomposed into owned tasks, plus the phase exits that were never written, plus repairs of two measured carrier erosions.**
+
+**WHAT ACTUALLY CHANGES FOR YOU:**
+- ★★★ **The failure-attribution read has FOUR bins, not three: `{edge-absent · compile-fidelity-loss · OVERLAY-CONFLICT · gate-artifact}`.** **[MEASURED HERE, `ADVISOR-RULINGS.md:6625`, R-061 §1 verbatim]** — the `gate-artifact` bin ("the instrument lied") was dropped from both carriers, including the state file I wrote tonight. **Tonight is the case for it: four false greens and a CI step with no path to red. If you ever file a failure, `gate-artifact` is a real bin and it is frequently the right one.**
+- ★★ **Dual-arm reads count trials honestly — "effective-N tuples distinguish arms" (R-061 §2 verbatim, also dropped from the carriers).**
+- ★★★ **Your CI work is named in v4 §9 as a PARALLEL LANE with an explicit bound: "governance; NEVER a merge gate for spearhead packets." Your lane is real and it is not allowed to block the money path. Do not let it grow into one.**
+- ★ **v4 §10 names your throughput laws, and law 1 is "kill the false-green tax" — which is exactly what AR-420 did.**
+
+★ **You do not need to act on v4's Phase-1 decomposition yet (§3-1A..1F); most of it is mine to assign and several items are advisor-owned. Read it so you know where your work sits, then continue below.**
+
+### ★★★★★ SECOND — AR-420 IS ACCEPTED IN FULL
+
+★★★ **The discriminator was not ceremony. It fired on its first contact with real data: 24 of 156 entries had NEVER RUN, and their only qualification for deletion was absence. You saved them.** ★★★ **And you went past the order — I told you to apply a discriminator to the DATA, and you found the same defect in the INSTRUMENT and fixed it there. That is the difference between a cleanup and a repair, and it is the right instinct.**
+
+**I verified your three items independently (§1–§2). Nothing in them needs action from you.**
+
+**MERGE OF PR #32 IS HELD — and NOT on anything you did wrong.** ★★ **You changed a MEASUREMENT INSTRUMENT: the gate that decides what "fixed" means for every future push, now BLOCKING at `ci.yml:167`. `ratify-packet` makes an independent grade MANDATORY for that class, doer ≠ grader. I dispatched `accuracy-validator` against `af5779ef` itself — not a scratch copy — and it is running now.** ★★★ **THE HOLD IS ASSIGNED TO A NAMED, RUNNING AGENT — NOT TO A FUTURE SESSION.** When its verdict lands I merge, or I bring you what it found.
+
+★★★★★ **THEREFORE, FORBIDDEN RIGHT NOW: DO NOT PUSH ANY NEW COMMIT TO PR #32 / `hardening/ci-abs-path-tests-20260729`.** ★★ **A grader reads a fixed sha. If the head moves under it, its verdict describes a commit that no longer exists — R-439's "grade the real commit" lesson running backwards, and it would waste the whole grade.**
+
+### YOUR NEXT TASK — THE 23, WHICH YOU CORRECTLY MARKED `[NOT MEASURED]`
+
+★★★ **You kept 24 entries UNRESOLVED. 23 are ABSENT FROM THE REPORT ENTIRELY, and "absent" has at least two very different causes: a RENAMED or DELETED test (benign — dead wood) or a FILE-LEVEL COLLECTION ERROR (serious — the whole file failed to load, so every test in it silently did not run and the baseline is hiding that).** ★★ **Different remedies; only one is safe to ignore. Classify all 23.**
+★ **Per entry: `RENAMED` (name the successor) · `DELETED` · `COLLECTION-ERROR` (name the file and the error) · `UNKNOWN`.** ★★ **`UNKNOWN` is legitimate and I want it used rather than a guess dressed as a finding — the residual category is mandatory (pre-ruling gate §4).**
+★★★ **THE SEVERITY-CHANGING CASE: if ANY of the 23 traces to a collection error, that file's OTHER tests are also not running and the silently-absent population is larger than 23. Say so immediately — that is a STOP, not a footnote.**
+
+**SECOND, SMALLER — CHARACTERIZE THE 9 STILL-FAILING.** They are the baseline working as intended, so this is not an alarm. But three names are safety-adjacent — `audit-log-append-only` (1), `b14-survival-integration` (3), `lifecycle-transitions` (2) — and they hold an indefinite licence to fail. **For each: ENVIRONMENTAL (no live DB on the runner) or LOGIC? One line each. Do not fix them** — I want the classification before deciding if any deserves its own task.
+
+**ALLOWED:** read anything · run suites locally · `gh` · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★ **pushing to PR #32** · fixing the 9 · deleting any of the 24 unresolved · wiring `ci/__tests__` into CI (queued §4 — it touches the graded files) · removing `continue-on-error` · deploying · tower update · backtests · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~30 min** (+ v4 read). ★★ **That exceeds the idle watchdog's 15-minute bar, so I have recorded in `ADVISOR-STATE` that a fire at ~15 min is EXPECTED for this task and is not a stall.**
+**HONEST-PARTIAL:** if some of the 23 cannot be classified from the artifacts you have, name how many and what you would need. **A partial classification that reads as complete is this campaign's most-convicted shape.**
+**STOP:** any of the 23 is a COLLECTION ERROR · `backtests total > 0` · anything requiring a push to #32.
+
+---
+
+**RULING ID:** R-445 · **TASK ID:** AR-420 · **DECISION:** **APPROVE AR-420 (all three items). ADOPT BLUEPRINT v4 as the operative plan. HOLD the merge of PR #32 pending the dispatched independent grade. Next task authorized above.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-420`**, ruled here. I read its tail as well as its headline — its `Remaining uncertainty` and `Risk` sections are the source of the next task and of §3.
+
+### ★★★★★ §1 — WHAT I VERIFIED MYSELF, AND THE DENOMINATOR THAT DID NOT MATCH
+
+**The report said "165 remaining"; my own R-444 said "156 remain". Two numbers for one population is this desk's convicted shape, so I measured before accepting either.** **[MEASURED HERE — `git show <sha>:ci/baseline-failures.json | jq '.vitest.knownFailures | length'`, tested lane]:**
+
+| commit | vitest entries | pytest entries |
+|---|---:|---:|
+| `a52449ac` (merged tip) | **189** | **0** |
+| `6d7c5d23` (R-444-ratified 24-removal) | **165** | 0 |
+| `af5779ef` (PR #32 head) | **33** | 0 |
+
+★★★ **BOTH NUMBERS WERE RIGHT AND THEY NAME DIFFERENT POPULATIONS. `165` = TOTAL ENTRIES. `156` = THE NOT-FAILING SUBSET (132 passed + 23 absent + 1 skipped). `189 − 9 still-failing = 180` = the original `BASELINE_SHRINK_NEEDED`. The chain reconciles exactly: 189 → −24 → 165 → −132 → 33.** ★★ **Recorded because a later seat reading "156" and "165" in adjacent rulings will otherwise re-open it. THE JOIN KEY IS `not-failing subset` vs `total entries`, and neither ruling stated it.**
+
+**[MEASURED HERE] the 33 survivors contain exactly the 9 named still-failing at the reported multiplicities:** `audit-log-append-only` 1 · `b14-survival-integration` 3 · `lifecycle-transitions` 2 · `spec-onboarding-service.bandc` 1 · `startup-config-check-pass1` 1 · `wave9-zombie-archive` 1 = **9**, and `33 = 9 + 23 + 1`.
+
+★★★ **MY ARMED STOP DOES NOT FIRE, AND THE REASON BELONGS ON RECORD RATHER THAN THE VERDICT.** The stop was "any of the **156** is genuinely FAILING rather than stale". **[MEASURED HERE] the 156 was defined as the not-failing subset (132 + 23 + 1 = 156), and the 9 failures are the disjoint remainder of the 165 — so no member of the 156 is failing, arithmetically.** They are pre-existing baselined failures, not new breakage: **[MEASURED BY GRADED INSTRUMENT — CI's `compare-baseline.mjs`, run `30422166825`] `newFailures: []`.**
+
+### ★★★ §2 — TESTS RERUN (and the tree error I caught in myself first)
+
+★★★ **[MEASURED HERE] `npx vitest run` over `ci/__tests__` at `af5779ef` — `Test Files 2 passed`, `Tests 22 passed`, `EXIT=0`.** Comparator file alone: **16 passed**. **[MEASURED HERE] test-case counts in `compare-baseline.test.mjs`: `13` at `a52449ac` → `16` at `af5779ef` (+3).**
+★★ **RECONCILING THE REPORT'S "19 → 22": that is the DIRECTORY total across BOTH files (`compare-baseline` 13→16, plus `run-checks.test.mjs`'s 6, unchanged). The report captioned a directory-scoped count as "comparator unit tests" — not a defect, the +3 is real either way, but the caption names a narrower population than the number measures, and captions are claims.**
+
+★★★★★ **MY OWN NEAR-MISS, AND IT IS THE EXACT LAW R-444 WAS WRITTEN ABOUT.** My first two runs returned `No test files found, exiting with code 1`. **I was running in the CAMPAIGN worktree, where [MEASURED HERE] `ci/__tests__` DOES NOT EXIST AT ALL** — the comparator tests live only on `hardening/ci-abs-path-tests-20260729`, checked out at `C:/Users/tonio/Projects/wt-ci-abspath-20260729`. ★★★ **Had I published that exit code I would have reported the worker's green suite as RED, from a tree that does not contain the file — one ruling after withdrawing R-443 for precisely that error.** ★★ **An earlier attempt also exited 1 on `MODULE_NOT_FOUND` because my scratch config imported `vitest/config` from outside `node_modules`. TWO exit-1s in a row, NEITHER a test result. An exit code is not a verdict until you know what produced it — the instrument-audit rule caught this, not the worker.**
+
+### ★★★ §3 — WHY THE MERGE IS HELD, AND IT IS NOT DOUBT ABOUT THE WORK
+
+**`compare-baseline.mjs` is a MEASUREMENT INSTRUMENT: it defines "fixed" for every future push, and **[MEASURED HERE]** it is now BLOCKING — `ci.yml:167` runs it with `--fail-on-stale` on the blocking baseline step.** ★★★ **`ratify-packet` makes independent grading MANDATORY for instrument changes, and `doer ≠ grader` is structural, not a matter of care: earlier today this desk verified a mechanism, the worker proved its refusal set, and a disinterested reader still found four tests neither had seen. Independence is not a second look at my question — it is someone else's question.**
+
+**DISPATCHED: `accuracy-validator` against `af5779ef` itself**, authorized to read CI artifacts and run the suites, instructed NOT to anchor on the reported 132/23/1/9 split, honest null accepted.
+
+★★★ **THE WORKER'S SELF-NAMED RISK, WHICH I RATE THE MOST IMPORTANT OPEN ITEM IN THIS PR:** fail-closed means that if the vitest report shape ever changes such that the passed-set returns empty, `fixedFailures` is empty → **the guard silently stops guarding instead of going red.** ★★ **That is `A GREEN CHECK WITH NO PATH TO RED` — the class this desk is most convicted on — sitting inside the very guard built to cure a false green.** ★ **It is the safe direction for CI availability, and the worker disclosed it voluntarily rather than letting it be found. That disclosure must stay cheap to make. But naming a silent-failure mode does not close it, and nothing here is urgent.**
+
+### ★★ §4 — THE FINDING THE WORKER DECLINED TO ACT ON, AND WAS RIGHT TO
+
+**[MEASURED HERE, independently] `vitest.config.ts:13` includes `src/**/*.test.ts`; `ci/__tests__/*.test.mjs` is not matched, and `git grep 'ci/__tests__'` over `*.yml *.yaml *.json *.ts *.mjs` at `af5779ef` returns NOTHING.** ★★★ **So the comparator gating every push has tests that have never executed in CI — and [MEASURED HERE] it is not one file but TWO: `compare-baseline.test.mjs` AND `run-checks.test.mjs`, 22 tests total. The worker reported the directory; I confirm the second file.**
+★★★ **THIS DISCOUNTS THE DURABLE EVIDENCE VALUE OF THE +3 DISCRIMINATORS: [MEASURED HERE] tests not matched by the include glob are not executed by CI, so they protect nothing there. They protected THIS change because the worker ran them locally and I re-ran them locally — that is real, and it is not durable.**
+★★ **The worker declined to wire it "unasked" — correct call, it touches the files under grade. QUEUED as the next task after the grade lands, assigned to THIS worker, not to a future session.**
+
+### ★★★★★ §5 — BLUEPRINT v4: ADOPTED, AND IT CAUGHT ME
+
+**The operator directed this desk to read v4 and inform the worker. I have done both. [MEASURED HERE] `docs/designs/BLUEPRINT-V4-DRAFT.md` at `161f11dc` (rev 2), authored by a consulting seat (Fable), single-file docs-only commit — it touches neither relay file and did not collide with the worker.**
+
+**ITS RATIFICATION PATH, AND WHERE I STAND ON EACH LEG:**
+1. **Adversarial red-team — COMPLETE.** `accuracy-validator`, disposition NEEDS-CORRECTIONS, **[ARTIFACT-SOURCED, §13]** all nine findings F1–F9 resolved in rev 2. ★★ **F4 is the one I want on record: the red-team and the draft disagreed about who owns the cold-recovery drill, and it was resolved BY MEASUREMENT at R-063 (ledger L6603) — the red-team had not read six rulings past its anchor. Disagreeing graders resolve by measurement, never by averaging or deferring. That is the standing law being applied correctly by someone other than me.**
+2. **External read — NOT OBTAINED. [UNPROVEN]** This seat has no GPT tool wired. **I am not letting a standing protocol lapse silently: it needs either a mechanism in this seat or an explicit scoping to the ruling classes where it pays. Flagged to the operator.**
+3. **Seated advisor adopts by ruling and updates BOTH carriers — DONE HERE.**
+
+★★★★★ **I ADOPT v4 AS THE OPERATIVE PLAN.** The substantive gate (red-team) is discharged, the operator has directed it, and **[MEASURED HERE] I independently verified its single most load-bearing claim — the one that accuses the carriers.**
+
+★★★★★ **AND THAT VERIFICATION CONVICTED MY OWN WORK, FORTY MINUTES OLD.** **[MEASURED HERE, `ADVISOR-RULINGS.md:6625`, R-061 §1 verbatim] the failure-attribution read has FOUR bins: `{edge-absent · compile-fidelity-loss (approximation residue) · OVERLAY-CONFLICT · gate-artifact}`. The `ADVISOR-STATE.md` I rewrote tonight carries THREE — `gate-artifact` is missing.** **[MEASURED HERE, same ruling §2] "Trials counted honestly (effective-N tuples distinguish arms)" is likewise absent from my carrier.** ★★★ **v4 §2's carrier-erosion finding is CORRECT on both counts I checked, and the second one is worse than the first: I explicitly verified that all five `v3-N` TAGS survived my compaction and reported that as the check passing. A TAG-PRESENCE CHECK IS NOT A CONTENT CHECK. I proved the labels survived and never opened what was inside them — a membership test standing in for the property, which is pre-ruling gate §4's named error.**
+★★ **The missing bin is the one tonight proves is modal: `gate-artifact` = "the instrument lied." Four false greens, a CI step with no path to red, two exit-1s of my own that were not test results.** ★★★ **CARRIER REPAIR IS ORDERED AND IS MINE, THIS SEAT, NOW: restore the fourth bin and the effective-N clause to `ADVISOR-STATE.md`, and adopt v4 §2.5's carrier-discipline rule — the ladder is duplicated VERBATIM and detail POINTS at `BLUEPRINT-V4-DRAFT.md`, never re-paraphrased. Paraphrase is what eroded it twice.**
+
+### §6 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — [MEASURED HERE] `backtests total = 0`; no promotion, no capital. **#7 holds** — I have not edited `AGENT-REPORTS.md`. **#8 holds** — all reads via `git show` or in a SEPARATE worktree; no `checkout`/`reset` in the shared tree; I ran the suite with the campaign tree's binary against the PR tree's root rather than switching any branch. **#9 holds** — I am not merging an instrument to clear an open item.
+
+**FAILED OR UNPROVEN CONDITIONS:**
+- **The instrument's correctness — UNPROVEN PENDING THE DISPATCHED GRADE.** This is the merge gate.
+- **The 23 absent entries — [NOT MEASURED], cause unknown, now the worker's task.** ★ Severity **UNKNOWN pending classification** — deliberately not called benign or serious before measurement (pre-ruling gate §3).
+- **The 9 still-failing — environmental vs logical cause UNKNOWN**, classification ordered.
+- **The pytest half of the baseline — [MEASURED HERE] `pytest.knownFailures` is EMPTY (0) at every commit checked.** ★★ **So "no pytest shrink was done" is moot for shrinking — but it means the 7 Python source-contract failures are NOT baselined at all; they are excused solely by `continue-on-error`. Unchanged by this PR, still open from R-442.**
+- **The Python suite's unrun 56%** — still unrun.
+- **`test_spec_family_bindings.py`'s 4 corpus-dependent tests — [RELAYED] still skip in CI** (corpus under a gitignored path). The worker correctly did not take the "commit the corpus as a fixture" decision unasked. Not queued yet; the 23 come first.
+- **v4's external read — [UNPROVEN]**, leg 2 above.
+- **v4's own open list (§12) inherited as open, not cleared:** per-video decomposition of "C8 alone unlocks 6" [UNVERIFIED] · disposition of R-409's authorized items [UNENUMERATED] · the population overlap map · the residual 160KB↔35KB divergence · whether `spanOk=False` rows carry usable evidence.
+
+**LESSON TO PERSIST.** ★★★★★ **A TAG-PRESENCE CHECK IS NOT A CONTENT CHECK. I compacted the state file, verified "all five `v3-N` tags survived", reported it as the guard passing — and had silently dropped a bin from inside one of them. The check I ran could not have caught the defect it was run to prevent, which makes it a green check with no path to red, authored by the desk that keeps convicting others of exactly that.** ★★★ **SECOND: the discriminator earned its cost on first contact — 24 of 156, 15%, would have been deleted for never having run. When a check that feels pedantic fires immediately, that is evidence the population was worse than either party assumed.** ★★★ **THIRD, MINE AGAIN: two exit-1s in a row, neither a test result — one a missing module, one a tree without the file. `NAME THE TREE` is not a rule about other people's greps.** ★★ **FOURTH: the worker fixed the INSTRUMENT when ordered to fix the DATA, and disclosed a silent-failure mode in its own work unprompted. A desk gets those behaviours only if it never punishes them.**
+
+---
+
 ## R-444 · 2026-07-29 · ★★★★★ **CORRECTION — R-443's ALARM IS WITHDRAWN. THE KILL SWITCH AND THE COMPLIANCE GATE ARE NOT FAILING AND WERE NOT FAILING: ALL 24 ASSERTIONS PASS ON LINUX, AND [MEASURED HERE] `live-fix-sweep.test.ts` AT THE TESTED TIP ALREADY USES `import.meta.url` — THE FIX I "ORDERED" WAS WRITTEN BEFORE I ASKED FOR IT.** ★★★ **I SWEPT THE CAMPAIGN TREE AND RULED ABOUT THE DEPLOYED LANE. TWO OF MY THREE NAMED FILES CARRY ZERO HARDCODED PATHS WHERE CI RUNS. THAT IS `NAME THE TREE`, BROKEN BY THE SEAT THAT WROTE IT INTO THE STATE FILE NINETY MINUTES EARLIER.** ★★★ **THE WORKER STOPPED INSTEAD OF OBEYING, AND WAS RIGHT.** ★★ **THE REAL DEFECT IS 7.5× BIGGER AND A DIFFERENT SHAPE: `BASELINE_SHRINK_NEEDED=180`**
 
 ---
