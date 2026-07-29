@@ -12,6 +12,64 @@
 
 ---
 
+## R-452 · 2026-07-29 · ★★★★★ **AMENDMENT TO MY OWN R-451 TASK (b), AND IT IS A `GREEN CHECK WITH NO PATH TO RED` THAT I AUTHORED: I ORDERED A DETERMINISM TEST ACROSS ≥12 HASH SEEDS AND NEVER REQUIRED IT TO EXERCISE A **TIED CASE**. ON UNTIED INPUT EVERY SEED AGREES TRIVIALLY — THE TEST WOULD HAVE PASSED VACUOUSLY AND CERTIFIED NOTHING, AGAINST A DEFECT WHOSE ENTIRE MECHANISM IS A TIE.** ★★★★★ **AND A PATTERN-CLASS SWEEP IS AUTHORIZED: `gen_ledger.py` IS ONE INSTANCE OF A SPECIES — ORDER-DEPENDENT SELECTION — AND THIS DESK'S STANDING LAW IS TO FIX THE CLASS, NOT THE INSTANCE.** ★★ **BOUNDED DELIBERATELY: AN INSTRUMENT AUDIT, **NOT** A LICENCE TO REOPEN VERIFIED RESULTS**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ R-451's TASKS (a) AND (b) STAND. THIS AMENDS (b) BEFORE YOU BUILD IT — [MEASURED HERE] no start-receipt for R-451 is on disk yet, so this should reach you in time. If you have already built it, retro-fit the tied case rather than starting over.**
+
+### ★★★★★ 1 — TASK (b) AMENDED: THE TEST MUST CONTAIN A REAL TIE, OR IT PROVES NOTHING
+
+★★★ **My R-451 order was: byte-identical ranking across ≥12 `PYTHONHASHSEED` values. THAT IS INSUFFICIENT AND THE GAP IS MINE.** ★★★★★ **On input with NO TIE, every seed agrees trivially — the loop's order does not matter when there is a strict maximum at every step. So the test would go GREEN on a ranker just as broken as `gen_ledger.py`, against a defect whose ENTIRE MECHANISM IS A TIE. [MEASURED, your AR-427 §2] a guard with no path to red on the thing it guards certifies nothing.**
+**REQUIRED, and this is the acceptance condition:**
+- ★★★ **The regression fixture MUST include a REAL TIED CASE.** You already have the perfect one **[MEASURED, your AR-427 §2]: at step 4, `C5` and `C7` each clean exactly 13 videos, and the tie is consequential — `{C8,C3,C2,C7}` → 19 at step 5, `{C8,C3,C2,C5}` → 17.** Use that, or a fixture reproducing its shape.
+- ★★ **Then ≥12 `PYTHONHASHSEED` values over that TIED input → BYTE-IDENTICAL ranking AND identical selected set.**
+- ★★★★★ **PROVE IT DISCRIMINATES: show the fixture goes RED against the OLD `gen_ledger.py` tie-break. A determinism test that does not convict the known-broken instrument has not been shown to bite.**
+- ★★ **TIE-BREAKING MUST BE EXPLICIT AND STABLE — and may NOT rest on set iteration, dict insertion accidents, filesystem order, process hash seeds, or any runtime-specific ordering. Name the secondary key you chose and why it is a property of the DATA, not of the run.**
+
+### ★★★★★ 2 — NEXT TASK: THE PATTERN-CLASS SWEEP (after (a) and (b))
+
+★★★ **`gen_ledger.py` is one INSTANCE. The species is ORDER-DEPENDENT SELECTION, and this desk's standing law is to sweep and fix the whole class in the same wave.** **Audit the campaign's OTHER decision-making instruments for:**
+**unordered `set`/`dict` iteration used in ranking or selection · ties resolved without an explicit secondary key · filesystem/glob order treated as meaningful · randomized sampling with no RECORDED seed · aggregation whose result changes with input order · "first encountered candidate wins" selection.**
+★★★★★ **BOUNDED, AND THE BOUND IS THE POINT — THIS IS AN INSTRUMENT AUDIT, NOT A LICENCE TO REOPEN VERIFIED RESULTS. A result is re-derived ONLY IF its generating path actually contains the unstable pattern OR lacks deterministic proof. Finding the pattern in a script that produced no campaign decision is a note, not a re-run.**
+★★ **DELIVER: instrument · file:line of the unstable construct · whether any PUBLISHED campaign number came out of it · and only then a re-derive recommendation.** ★ **Report the census/denominator instruments first — they feed the most downstream claims.**
+★★★ **HONEST-PARTIAL: if the instrument population cannot be enumerated cleanly, say what surface you covered and what you excluded. A CENSUS IS BOUNDED BY ITS SURFACE — publish the surface beside the count.**
+
+**ALLOWED:** read anything · read-only harnesses · commit the manifest, the tests, derived instruments · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** any C8 implementation or re-extraction (1A's seven prerequisites still open) · **RE-DERIVING a published result merely because its generator is suspect — bring me the finding first** · spec edits · `.env` · DB writes · flag graduation · deploy · tower update · backtests · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~35 min for (a)+(b), then ~40 for the sweep** — both exceed the 15-min watchdog bar, recorded in `ADVISOR-STATE` as EXPECTED.
+**STOP:** `backtests total > 0` · your ranker proves non-deterministic (a finding — report it, do not patch it quietly) · the sweep finds an unstable pattern in a path that produced a **published Phase-1 figure** — that comes to me before any re-derivation.
+
+---
+
+**RULING ID:** R-452 · **TASK ID:** R-451 follow-through · **DECISION:** **AMEND task (b) to require a tied-case fixture and a discrimination proof. AUTHORIZE the bounded pattern-class instrument audit. R-451's substance otherwise unchanged.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-427`**, ruled in full at R-451. **[MEASURED HERE] no newer AR exists on disk; no start-receipt for R-451 has landed.** Nothing here rests on an unread report.
+
+### ★★★★★ §1 — THE DEFECT IN MY OWN ORDER
+
+★★★ **R-451 task (b) said: "same frozen census + same class mapping + same counterfactual → BYTE-IDENTICAL ranking on every run, exercised across ≥12 `PYTHONHASHSEED` values, RED if it ever differs."** ★★★★★ **What it never said: THE INPUT MUST CONTAIN A TIE. [MEASURED, AR-427 §2] `gen_ledger.py`'s failure is not "iteration order varies" — iteration order varies harmlessly in most runs. It is "iteration order varies AND there is a genuine tie AND the tie is consequential." Strip the tie and the same broken code passes twelve seeds cleanly.**
+★★ **This desk minted the law that a STOP CONDITION OWES A DISCRIMINATES FIXTURE, and then ordered a guard with no path to red four hours later. [MEASURED, R-451 §2] I had the tied case IN MY HAND — I quoted `C5`/`C7` at 13 videos each in the very ruling that ordered the test — and still did not require the fixture to use it.** ★★★ **A LAW YOU CAN RECITE IS NOT A LAW YOU ARE APPLYING. That is the same sentence R-444 wrote about `NAME THE TREE`, in a new domain, by the same desk, eight rulings later.**
+
+### ★★★ §2 — THE PATTERN-CLASS SWEEP, AND WHY IT IS BOUNDED
+
+★★★ **`FIX THE PATTERN CLASS, NOT THE INSTANCE` is standing law here, and an order-dependent selection defect that reached the campaign's top priority is exactly its trigger.** ★★ **But the bound matters as much as the sweep: an unstable construct in a script that produced no campaign decision is a NOTE, not a re-run. Re-derivation is warranted only where the generating path contains the pattern OR lacks deterministic proof — otherwise this becomes a boil-the-ocean audit that costs the money path weeks and finds mostly nothing.**
+★★★★★ **AND THE ASYMMETRY WORTH STATING: `gen_ledger.py` printed the RIGHT answer. [MEASURED, AR-427 §2] the defect was invisible to every check that did not re-run it under a varied environment — not to sloppy checks, to ALL of them. So the sweep's yield is unknowable in advance, and a null result is a real result: "these instruments are deterministic and here is the proof" is worth having.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — [MEASURED, frozen census header + this desk] `backtests_total = 0`; **no backtest, deployment, live execution or capital connection is authorized by this or by R-451.** **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. **#9 holds** — I published a defect in my own freshly-issued order rather than letting a vacuous test ship and call itself proof.
+
+**READINESS LANGUAGE — RESTATED, UNCHANGED, AND NOT TO BE SOFTENED:** `UNLOCKED` = the measured refusal barrier is removed. `TRADE-READY` = **NOT ESTABLISHED**. ★★★ **[MEASURED, AR-427 §6] no currently-concrete component is a detector proven to implement a teacher-taught rule; `447` of `943` have NO primitive at all; no strategy is Phase-1 complete; none is approved for a performance backtest; no profitability inference is permitted.** ★★★★★ **THE TWO DISTANCE-ZERO VIDEOS MUST NEVER BE DESCRIBED AS "TWO WORKING STRATEGIES", "TWO READY STRATEGIES", OR "TWO STRATEGIES LIKELY TO MAKE MONEY". They become NO LONGER REJECTED. That is the whole claim.**
+
+**FAILED OR UNPROVEN CONDITIONS:** task (a) manifest and task (b) test — **NOT STARTED** · the pattern-class sweep — **AUTHORIZED, NOT STARTED** · whether a C8 re-extraction actually clears the refusals it predicts — **[UNMEASURED], 1A's ablation to prove** · the frozen census vs today's live table — **[NOT MEASURED], a 2026-07-28 21:12 snapshot** · the remediation-class assignments — **JUDGMENT, not re-graded** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415 gate)** · the external-opinion standing order — **with the operator.**
+
+**LESSON TO PERSIST.** ★★★★★ **A TEST FOR A TIE-BREAK DEFECT THAT DOES NOT CONTAIN A TIE IS A GREEN CHECK WITH NO PATH TO RED — and I ordered one four hours after this desk re-minted that law, while holding the tied case in the same document. The general form: WHEN YOU SPECIFY A GUARD, NAME THE INPUT ON WHICH IT MUST GO RED, IN THE SAME SENTENCE AS THE GUARD. "Assert X is stable" is a wish; "assert X is stable ON THIS INPUT, WHICH BREAKS THE OLD ONE" is a test.** ★★★ **SECOND: the defect reached the campaign's highest-priority number and was invisible to every check that did not vary the environment. Correctness under one execution is not correctness — for any instrument whose output ORDERS work, determinism is part of the result, not a code-quality footnote.**
+
+---
+
 ## R-451 · 2026-07-29 · ★★★★★ **AR-427 APPROVED — THE GATE PASSES AND THE RANKING IS AUTHORITATIVE. THE 3 NO-C8 VIDEOS ARE EXCLUDED **BY NAME**: `N7uP9V0Iktc` · `ktkqq7QsN9Q` · `1HFoStW_wsc`. THE C8 WAVE IS **37 VIDEOS**, MANIFEST BY ID, NEVER BY COUNT.** ★★★★★ **THE REAL FINDING IS §2 AND IT IS A `gate-artifact` OF THE PUREST KIND: THE LEDGER'S OWN `gen_ledger.py` REPRODUCES THE LEDGER'S OWN PUBLISHED CHAIN IN ONLY `4 OF 12` RUNS. THE PUBLISHED NUMBER IS THE OPTIMUM **BY LUCK** — a consequential tie at step 4 resolved by Python's per-process `str` hash randomisation. THE INSTRUMENT IS RETIRED; THE DETERMINISTIC RANKER IS AUTHORITATIVE.** ★★★ **AND THE WORKER REFUSED TO ROUND SMC INTO THE TOP BUCKET WHEN THE PLAN PREDICTED IT WOULD BE THERE — THAT REFUSAL IS THE EVIDENCE THE RANKER MEASURES RATHER THAN CONFIRMS.** ★★ **`UNLOCKED ≠ TRADE-READY`, AND §6 PROVES IT WITH A NUMBER: `447` OF `943` CONCRETE BINDINGS HAVE **NO PRIMITIVE AT ALL**, AND NOT ONE OF THE 496 THAT DO IS A TAUGHT DETECTOR**
 
 ---
