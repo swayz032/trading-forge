@@ -4,6 +4,63 @@
 
 ---
 
+## AR-414 · 2026-07-29 · **R-439 ITEM (1) DELIVERED — THE >90-MIN HANG DOES NOT REPRODUCE: WHOLE-TREE COLLECTION `3.74s`, FULL RUN `216s`, `7294 passed / 0 failed`, EXIT `0`.** ★★★ **BUT DO NOT FLIP THE FLAG YET, AND THE REASON IS THE OPPOSITE OF WHAT WE EXPECTED: A *CURATED SUBSET* IS MORE DANGEROUS THAN THE FULL TREE. `test_three_fixes.py` FAILS IN ISOLATION (2/2, DETERMINISTIC) AND PASSES IN THE FULL RUN.** ★★★ **AND YOUR EXIT-4 TRAP FIRED ON ME — ON `pytest-cov`, NOT `pytest-timeout`: `exit 4`, `3s`, ZERO `FAILED` LINES. MY UNPIPED EXIT CODE CAUGHT IT; A `| tail` WOULD HAVE READ IT AS A CLEAN FULL-TREE PASS**
+
+**RULING ID:** R-439 item (1) · **TASK ID:** AR-412 · **TREE:** disposable worktree pinned to `a6f92822` (deployed-lane tip), removed by explicit path, **no `prune` run** · **RECOMMENDATION:** **APPROVAL_REQUESTED on the measurement. PROPOSAL ONLY — no `ci.yml` edit made, as ordered.**
+
+### ★★★ §1 — DOES THE HANG CLASS STILL REPRODUCE? **NO.**
+
+| measurement (deployed tip `a6f92822`) | result |
+|---|---|
+| whole-tree **COLLECTION** — `pytest src/engine/ --collect-only` | **exit 0 · 3.74s · 7325 tests** |
+| whole-tree **EXECUTION** — one invocation | **exit 0 · 216s (3m36s) · 7294 passed · 34 skipped · 0 failed** |
+| **317 suites, one process each**, 90s hard cap | **313 exit-0 · 1 exit-1 · 3 exit-5 · ZERO exit-124** |
+
+★★★ **Zero timeouts at a 90s per-suite cap and a 216s whole-tree run against a documented >90-MINUTE hang (run 29179583669). The collection-phase hang — the specific class the advisory posture was built for — completed in 3.74 seconds.** ★★ **The 3 `exit-5` are module-level SKIPS (`1 skipped`), not failures — exit 5 is "no tests ran", and reading it as red would be its own false signal.**
+
+★ **PER-SUITE IS SLOWER THAN THE WHOLE TREE: 317 separate processes = 1475s (24.6 min) vs 216s combined — per-process import overhead (mean 4.7s/suite) dominates. Any "curated per-file job" costs MORE wall-clock than running everything.**
+
+### ★★★ §2 — THE FINDING THAT CHANGES THE RECOMMENDATION
+
+**`test_three_fixes.py::TestWFIntraMaxDD::test_equity_bars_key_present_in_backtest_result`**
+- **[MEASURED] in isolation: `1 failed, 10 passed`, exit 1 — reproduced 2/2, deterministic.**
+- **[MEASURED] inside the whole-tree run: PASSES. `0 failed` overall.**
+
+★★★ **So the same test, same commit, same tree, gives opposite verdicts depending only on what ran before it.**
+
+**THE DISCRIMINATING OBSERVATION [MEASURED]:** the isolated run emits `HTF cache build failed (… missing AWS_ACCESS_KEY_ID …) → passthrough mode`; that string appears **0 times** in the whole-tree output. **AWS credentials are absent in BOTH runs** (same env, verified) — so the difference is not credentials.
+**The assertion then fails by ~4e-12:** `assert 210.65999999999622 >= 210.67000000000004 - 0.01`.
+
+★★ **HYPOTHESIS, LABELLED AS ONE — NOT MEASURED: earlier tests warm a cache so the degraded passthrough path is never taken, and the passthrough path's arithmetic lands a hair the wrong side of a 0.01 tolerance. I did NOT identify which test warms it, so I am not stating a mechanism.** ★ **What IS measured: the degradation occurs in isolation, does not occur in the full run, and the margin is 4e-12 on a knife-edge float comparison — brittle independent of ordering.**
+
+### ★★★ §3 — YOUR EXIT-4 TRAP, FIRED LIVE, ON A DIFFERENT PLUGIN
+
+**[MEASURED] my first whole-tree attempt used CI's own flags — `--cov=src/engine --cov-report=xml`. Result: `exit 4`, `duration 3s`, `unrecognized arguments`, and ZERO `FAILED` lines in the output.**
+★★★ **`pytest-cov` is not installed here either — [MEASURED] `pip list` shows only `pytest`, `pytest-asyncio`, `pytest-snapshot`.** ★★★ **A 3-second run with no failures printed is exactly what a healthy fast pass looks like. My rig captured `$?` unpiped, so it read 4 and I re-ran; piped to `tail` it would have entered this report as "full tree green in 3 seconds."** ★★ **Fourth instance of the session's shape: a completion signal is not a result.**
+
+★★★ **AND THE CONSEQUENCE FOR CI, WHICH IS A LIVE FALSE-GREEN TODAY: because the pytest step is `continue-on-error: true`, an exit-4 usage error in CI — a plugin that failed to install, a flag renamed — reports the job GREEN having run ZERO tests. The step cannot distinguish "7294 passed" from "I never started."**
+
+**HONEST LIMIT:** ★ **I could NOT run CI's literal command**, because both plugins it depends on are absent locally. I measured the tree's behaviour, not that invocation. **My numbers are therefore a lower bound on runtime — CI additionally pays for coverage instrumentation.**
+
+### §4 — WHAT A BLOCKING PYTHON JOB WOULD HAVE TO CONTAIN
+
+★★★ **RECOMMENDATION: make the FULL-TREE run blocking. Do NOT curate a subset.** The instinct is backwards here — **[MEASURED §2] a curated subset would go RED on a test the full tree reports GREEN, and it would cost more wall-clock (§1).** Curation buys nothing and adds a failure mode.
+
+**PRECONDITIONS, in order — each is a blocker, not a nicety:**
+1. ★★★ **Fix or quarantine `test_three_fixes.py`'s order dependence FIRST.** Until then, any subset job is unsound and the full-tree green is masking a test that cannot stand alone. **A green that depends on execution order is not a green.**
+2. ★★ **Assert the plugins are present before the run** (`python -c "import pytest_cov, pytest_timeout"` as its own step) — otherwise §3's exit-4 becomes a *blocking* false-green's mirror image, and the gate's own dependency is unverified.
+3. ★ **Keep `timeout-minutes` as the hard backstop.** It is the only thing covering a collection hang; `--timeout` does not. Present headroom is large: **216s against a 25-min cap**, but that is measured on ONE machine at ONE commit.
+4. ★ **Re-measure on the CI runner before flipping.** Everything above is Windows/local. The hang was observed on `ubuntu-latest`, and **I have not reproduced the environment, only the tree.**
+
+★★ **I did NOT edit `ci.yml`, as ordered. This is a proposal.**
+
+**Remaining uncertainty:** ★ **[NOT MEASURED]** whether the hang reproduces on `ubuntu-latest` — the population that actually matters. ★ **[NOT MEASURED]** which test warms the cache (§2 hypothesis). ★ **[NOT MEASURED]** runtime with coverage instrumentation. ★ Concurrency caveat: the AR-413 census (a <1s JSON read) ran during the per-suite sweep; it cannot move a 90s cap or a pass/fail, but the per-suite *timings* carry that noise.
+**Risk:** none — read-only measurement in a disposable worktree; no repo file changed by this item.
+
+**Next smallest task (ONE):** ★ **the `compile_lints.py:129` comment fix you already queued** — I am starting it now.
+
+---
+
 ## AR-413 · 2026-07-29 · **R-440 ITEM (2) DELIVERED — AND IT ANSWERS YOUR QUESTION IN THE DIRECTION YOU FEARED: `contextual` = 7 rows / ★★★ 5 VIDEOS · `alternative` = 8 rows / ★★★ 6 VIDEOS. BOTH UNDERPOWERED, REPORTED AS SUCH, NEITHER COMBINED NOR PADDED.** ★★★ **AND THE FINDING YOU DID NOT ASK FOR, WHICH IS THE STRONGER ONE: ALL 15 `alternative`+`contextual` DECISIONS CAME VIA `RESOLVED_POINTER_TEXT` — `SEMANTIC_SOURCE_TEXT` IS `0 of 15`. THOSE TWO CLASSES REST ENTIRELY ON THE POINTER PATH.** ★★ **YOUR `trigger` CORRECTION IS CONFIRMED AT MY DESK AND MY PREMISE IS WITHDRAWN: I COMPARED AGAINST A COMMENT ON AN `Optional[str]`**
 
 **RULING ID:** R-440 · **TASK ID:** AR-412 · **ARTIFACT:** frozen `shadow_rows.json`, sha256 `edaa0c14…a643ca51` · **RECOMMENDATION:** **APPROVAL_REQUESTED on item (2). Item (1) still running — reported separately.**
