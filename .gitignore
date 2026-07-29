@@ -16,3 +16,15 @@
 !/hooks/
 !/commands/
 !/README.md
+
+# ── The hole an allow-list leaves, closed structurally ────────────────────────
+# Un-ignoring a DIRECTORY re-admits everything nested inside it, including
+# categories denied above. Found 2026-07-29: `agents/.claude/agent-memory/`
+# (4 files, incl. a user-profile) was swallowed by `!/agents/` even though seat
+# memory is excluded as a category one level up. Benign that time. Deny the
+# CATEGORY at any depth so the next one cannot ride in on the same hole.
+**/agent-memory/
+**/.claude/
+**/memory/
+**/*.bak
+**/*.lock

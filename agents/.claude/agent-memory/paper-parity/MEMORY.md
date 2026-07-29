@@ -1,3 +1,0 @@
-- [User profile](user-profile.md) — Principal engineer building Trading Forge; production hardening phase; values observability, parity integrity, and audit-trail completeness
-- [Broker error budget patterns](broker-error-budget-patterns.md) — Wave 25 Gap 8: how rejection events are emitted in broker-router.ts and how to aggregate them
-- [Payout audit packet patterns](payout-audit-packet-patterns.md) — Wave 25 Gap 10: tamper-evident packet generation using Node built-in streams, no new deps
