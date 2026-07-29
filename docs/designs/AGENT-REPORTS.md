@@ -4,6 +4,23 @@
 
 ---
 
+## AR-455 · 2026-07-29 · ★★★ **SUPERSEDES AR-454's TASK ID — IT IS ALREADY STALE. `b5g1ym3dx` IS **DEAD**; THE LIVE RIG IS `bihnh0n95`, WATERMARK `R-464`, 15s POLL.** ★★★★★ **AR-454 IS NOT DELETED — IT IS STRUCK ON THIS ONE FIELD AND RETAINED, BECAUSE THE RECORD SHOULD SHOW WHAT WAS TRUE WHEN IT WAS WRITTEN.**
+
+**RULING ID:** none — state disclosure, superseding one field of AR-455's predecessor · **TASK ID:** AR-455 · **STATUS:** DISCLOSURE ONLY. **No work performed and none taken; R-464 withholds work from this seat and I am still not taking any.**
+
+★★★★★ **~~AR-454: "the rulings ear is ALREADY RE-ARMED — task `b5g1ym3dx`"~~ — STRUCK. That rig stopped minutes after I filed the report naming it.** Harness summary: *"No completion record … may have been stopped (UI, Monitor timeout, or agent teardown) … or running when the previous process exited."* ★★ **That is the `MONITORS DIE WITH SESSION ROLL` species, not the fork-exhaustion that killed the one before it — two different causes, two deaths, one channel, inside an hour.**
+
+**RE-ARMED ON THE OPERATOR'S WORD, with the same discipline as before and I state it so it is checkable:**
+★★★ **[MEASURED at arm time] GAP EMPTY — newest heading `## R-464`, which this seat has read and answered (AR-454). Nothing landed unseen during the outage.** ★★ **[MEASURED] `TaskList` EMPTY before arming — so `bihnh0n95` is the ONLY rig, and the `ONE RIG PER CHANNEL` law holds.**
+★ **Poll tightened `30s → 15s` and the ceiling raised, because the operator says a ruling is imminent. Unreadable-file alerting retained — silence must not read as a quiet desk.**
+
+★★★★★ **THE INSTRUCTION TO THE INCOMING SEAT, RESTATED WITH THE LIVE ID: R-464 tells a fresh seat to *"arm your rulings ear FIRST (the previous one is dead)."* DO NOT OBEY THAT LITERALLY. CONFIRM `bihnh0n95` FIRST. If it is dead, re-verify the gap against the newest `## R-` heading, THEN arm exactly one.**
+★★★ **AND THE DURABLE LESSON, WHICH IS WHY THIS SECOND REPORT EXISTS AT ALL: A TASK ID IN A LEDGER IS A PERISHABLE FACT. AR-454 was accurate when written and became misleading within minutes — and a stale ID is worse than no ID, because it invites a confident check that comes back "dead" and licenses a second rig. Name the CHANNEL and the VERIFICATION STEP, not just the handle.**
+
+★★ **UNCHANGED: AR-452's handoff stands · nothing half-done · nothing in flight · no sub-agent owed. Next real task remains R-464 §1 (additive sibling erratum on `MANIFEST.txt:3`) then R-463 §5 under a `ratify-packet` with an independent grade. Off-machine backup still OPEN, operator's.**
+
+---
+
 ## AR-454 · 2026-07-29 · ★★★★★ **STATE-CHANGE DISCLOSURE, AND IT DEFUSES A TRAP R-464 WOULD OTHERWISE SPRING: THE RULINGS EAR IS **ALREADY RE-ARMED** — task `b5g1ym3dx`, watermark `R-463`. R-464 TELLS A FRESH SEAT TO *"arm your rulings ear FIRST (the previous one is dead)"*. ★★★ **IF THE INCOMING SEAT OBEYS THAT LITERALLY IT CREATES A SECOND RIG BESIDE A LIVE ONE — the exact `ONE RIG PER CHANNEL` failure. DO NOT ARM A SECOND. VERIFY `b5g1ym3dx` FIRST.**
 
 **RULING ID:** none — unsolicited state disclosure · **TASK ID:** AR-454 · **PRIOR:** AR-453 · **STATUS:** DISCLOSURE ONLY. **No work performed and none taken.**
