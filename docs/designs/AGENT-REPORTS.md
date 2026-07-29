@@ -4,6 +4,22 @@
 
 ---
 
+## AR-411 · 2026-07-29 · **START-RECEIPT — R-439 items (1) CI-GATE MEASUREMENT (proposal only, no `ci.yml` edit) and (2) HOLDOUT-26 CLASS-BALANCE CENSUS, in that order.**
+
+**RULING ID:** R-439 · **TASK ID:** AR-411 · **STATUS:** STARTING. AR-410 accepted; #31 ratified on the build and **I am not touching it** — no merge, no push to that branch.
+
+**(1) CI GATE — MEASUREMENT, ~40 min.** Disposable worktree pinned to the deployed lane's tip (`git worktree add --detach`, removed by explicit path, **no `prune`** while other seats hold worktrees). Per-suite timing + exit code across `src/engine/tests/`, each suite in its own process with a hard cap so a hang is RECORDED rather than inherited. Deliverable: **a measured proposal — fast/green set · hang-or-fail set · what a BLOCKING curated job could safely contain · whether the >90-min collection-hang class still reproduces at all.** ★ **No `ci.yml` edit, as ordered.**
+
+**(2) HOLDOUT-26 CLASS BALANCE — ~20 min.** LEGACY role-label counts only, **per-video AND per-row** (40×3 markets means raw rows triple-count; R-438 §2 made both mandatory).
+★★★ **I am counting class FREQUENCIES, not inspecting classifier decisions — that is what keeps HOLDOUT-26 unspent. If the counts tempt a rule change I STOP and report, per your standing clause.**
+
+**FIRST OBSERVABLE:** this receipt. **STOP CONDITIONS ARMED:** `backtests total > 0` · the grader reports a refusal-identity or execution-eligibility difference on #31 (then both items pause and #31 reopens).
+**I WILL NOT:** edit `ci.yml` · merge or push to #31 · deploy · expand classifier rule coverage · flip flags · write to the DB, `runtime-production`, or the tower · run backtests · `git checkout` in this shared tree.
+
+★ **CARRY-FORWARD, UNCHANGED AND STILL NOT MINE:** the `426` / `1347→921` / `18→444` counts remain UNVERIFIED and belong to the dispatched census. Nothing below re-derives them.
+
+---
+
 ## AR-410 · 2026-07-29 · **PR #31 OPEN, NOT MERGED. BOTH MUTATIONS BITE: REVERTING THE EDIT GOES RED ON ALL FOUR NAMED TESTS *PLUS* THE NEW ONE; A REAL RELAXATION IS CAUGHT BY THE SET COMPARISON, WHICH NAMES THE EXACT ROW THAT STOPPED REFUSING.** ★★★ **AND THE FINDING YOU SHOULD READ FIRST, BECAUSE IT INVALIDATES THE GATE YOUR OWN STOP CONDITION RESTS ON: `CI GREEN` DOES NOT MEAN THE PYTHON TESTS PASSED — `ci.yml:236` IS `continue-on-error: true`.** ★★ **R-438 §2 HAD THREE SURFACES, NOT ONE. I FIXED TWO AND DELIBERATELY LEFT THE THIRD**
 
 **RULING ID:** R-437 as amended by R-438 · **TASK ID:** AR-410 · **BRANCH:** `hardening/provenance-rule-class-20260729` · **COMMIT:** `0b0d6617` · **BASE:** `a6f92822` (tip of `hardening/slumhouse-shared-office-parity-20260723`, the base of both #29 and #30 — **[MEASURED]** `gh pr view 29/30 --json baseRefName`) · **PR:** #31 · **RECOMMENDATION:** **APPROVAL_REQUESTED on the build. MERGE NOT REQUESTED — R-438 holds it for the census and I am not asking you to lift that.**
