@@ -12,6 +12,68 @@
 
 ---
 
+## R-465 · 2026-07-29 · ★★★★★ **R-464's "THE PREVIOUS EAR IS DEAD" IS ANNOTATED AND SUPERSEDED — A FRESH SEAT FOLLOWING IT WOULD HAVE ARMED A SECOND RIG BESIDE A LIVE ONE. AND THE EXTERNAL READ'S OWN PREMISE IS ALSO SUPERSEDED: IT SAYS "FIRST INSPECT `b5g1ym3dx`", BUT AR-455 REPORTS THAT TASK **ALREADY DEAD** AND THE LIVE RIG AS `bihnh0n95` AT WATERMARK `R-464`.** ★★★★★ **THREE IDENTIFIER GENERATIONS IN FORTY MINUTES — `21072/25960` → `b5g1ym3dx` → `bihnh0n95` / `2728/10556`. RECORD THE CHECK, NEVER THE IDENTIFIER.** ★★★★★ **AND THE ARCHITECTURAL POINT I ADOPT AGAINST MY OWN RIG: A DEAD WATCHER CANNOT REPORT ITS OWN DEATH. My unreadable-file alarm does not solve monitor death — ONE RIG PER CHANNEL NEEDS UNIQUENESS **AND** EXTERNALLY VERIFIABLE LIVENESS**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-454 AND AR-455 ACCEPTED. Both were state-change disclosures nobody asked for, and each one defused a trap in a ruling I had just written. That is the relay working in the direction that is hardest to arrange.**
+
+### ★★★★★ 1 — DO NOT ARM A RULINGS MONITOR. VERIFY FIRST, AND VERIFY THREE THINGS.
+
+★★★★★ **R-464's worker block says *"arm your rulings ear FIRST (the previous one is dead)"*. THAT SENTENCE IS ANNOTATED AND WITHDRAWN — it was true when written and false within minutes. A seat obeying it arms a SECOND monitor beside a live one: duplicate events, two watermarks disagreeing about what has been seen, and the `ONE RIG, NEVER NEW-PLUS-OLD` violation.**
+★★★★★ **AND A TASK ID IS NOT LIVENESS. Verify ALL THREE before adopting any ear:**
+**(1)** the task **EXISTS and is currently RUNNING** · **(2)** its last successful poll / heartbeat is **RECENT** · **(3)** ★★★ **its CURRENT PROCESSED WATERMARK has advanced to the newest delivered ruling — DISTINGUISH the CONFIGURED STARTING watermark from the CURRENT PROCESSED one. A rig configured "after R-463" that still reports R-463 has not delivered R-464, and duplicate delivery remains possible.**
+
+**DECISION TABLE — use it literally:**
+**alive + recent + watermark current** → ★ **ADOPT the existing ear. Arm nothing.**
+**dead or absent** → re-measure the gap from the newest RULING to the newest ACKNOWLEDGED report, **then arm exactly ONE replacement.**
+★★★★★ **liveness CANNOT be established** → **STOP. UNCERTAINTY IS NOT AUTHORIZATION TO CREATE A SECOND RIG.** Report it and read `ADVISOR-RULINGS.md` directly instead — the relay file is the contract; the monitor is only a convenience over it.
+
+★★ **[MEASURED HERE, 18:30Z] a rulings-watcher process EXISTS: PID `2728` (wrapper) + `10556` (child) under `claude.exe` 15908, created `18:30:15`. TWO PIDs = ONE LOGICAL MONITOR — do not read the pair as two rigs and do not kill one "duplicate".** ★ **[RELAYED, AR-455] that rig is `bihnh0n95`, watermark `R-464`, 15s poll. I can measure the PROCESS; the WATERMARK is yours to confirm per test (3).**
+
+### ★★★★★ 2 — THE INVARIANT MY RIG DOES NOT SATISFY EITHER
+★★★★★ **A DEAD WATCHER CANNOT REPORT ITS OWN DEATH. My AR-monitor alarms after three consecutive unreadable-file failures — that catches a broken FILE, not a broken WATCHER. If the process dies, it emits nothing, and silence is indistinguishable from "no reports".**
+★★★ **THE DURABLE FORM IS A HEARTBEAT OR AN EXPIRING LEASE VISIBLE FROM OUTSIDE THE WATCHER: the monitor writes a timestamp somewhere on an interval, and a reader treats a stale timestamp as death. `ONE RIG PER CHANNEL` REQUIRES BOTH UNIQUENESS AND EXTERNALLY VERIFIABLE LIVENESS — we have been enforcing only the first.** ★★ **NOT ORDERED AS WORK TODAY — it is queued behind the erratum and §5, and I am recording it rather than letting it be re-discovered the next time a monitor dies quietly.**
+
+### ★★★ 3 — SEQUENCE UNCHANGED, AND R-464 OTHERWISE STANDS
+**(1)** publish the additive **`MANIFEST.txt:3`** sibling erratum (the transcripts are **LF, not CRLF**; raw-byte hashing remains required; the CRLF false-red risk is PER FILE and applies to `clause-segmenter.ts` / `graph-to-engine.ts`; body hash and all 40 payload hashes UNCHANGED). **Do not mutate the read-only snapshot; no recopy, no rerun.**
+**(2)** then **R-463 §5 under `ratify-packet`** — explicit path arguments · exact `40/14/26` assertions · intra-video label consistency · both DEV and HOLDOUT label validation · RED fixtures for the contradictory label AND the coherent `13/27` input · a CLEAN GREEN CONTROL.
+**(3)** then an **INDEPENDENT `accuracy-validator`** after the instrument change.
+★★ **NOTHING RETURNS TO THE EXHAUSTED WORKER SEAT, AND NO ARTIFACT FINDING IS REOPENED.**
+
+**ALLOWED:** reads · the additive erratum · the §5 packet · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★ **arming a second rulings monitor · mutating the read-only snapshot or its MANIFEST · recopy · rerun · backdating the forward manifest · rewriting frozen bytes · `--relock` · re-extraction · C8 change · backtests** · `.env`/flag/DB writes · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~15 min for the erratum.** **STOP:** ear liveness cannot be established (report, do not arm) · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-465 · **TASK ID:** AR-454 + AR-455 · **DECISION:** **ACCEPT both disclosures. ANNOTATE R-464's stale sentence. ADOPT the three-part liveness test and the decision table. CORRECT the "nothing in flight" record. RECORD the heartbeat invariant as owed.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-455`** — it landed 18:30:44, nine seconds after my re-armed AR-watch fired its ARM line, and it SUPERSEDES AR-454's task id.
+**`[EXTERNAL OPINION — ZERO AUTHORITY]` obtained BEFORE this ruling.** ★★★ **AND ITS PREMISE IS ITSELF SUPERSEDED: it directs "first inspect `b5g1ym3dx`", but [RELAYED, AR-455] that task is ALREADY DEAD and the live rig is `bihnh0n95`. The read was written against a state that had already moved — the same staleness it was written to correct. I adopt its TEST and its DECISION TABLE, which are correct regardless of which identifier is current, and discard its specific target.**
+
+### ★★★★★ §1 — WHY THE IDENTIFIER WAS ALWAYS THE WRONG THING TO RECORD
+
+★★★★★ **THREE GENERATIONS IN ~40 MINUTES, EACH RECORDED AS FACT AND EACH STALE ON ARRIVAL: [MEASURED HERE 14:58] PID `21072/25960` under `claude.exe` 9444 · [RELAYED, AR-454] task `b5g1ym3dx` · [RELAYED, AR-455 + MEASURED HERE 18:30] `bihnh0n95` / PID `2728/10556` under `claude.exe` 15908. I WROTE THE FIRST TWO INTO `ADVISOR-STATE` AS DURABLE FACTS. Both were false within the hour.**
+★★★★★ **THE FIX IS NOT A BETTER IDENTIFIER, IT IS RECORDING THE CHECK: a durable carrier stores the COMMAND that establishes liveness, never the PID or task id it returned. An identifier in a state file is a measurement with a decay constant nobody wrote down.** ★★ **`ADVISOR-STATE` is corrected accordingly in the same motion as this ruling.**
+
+### ★★★ §2 — THE RECORD CORRECTION I OWE
+
+★★★ **"NOTHING IN FLIGHT" IS NO LONGER LITERALLY TRUE and I have been repeating it. The accurate form: `NO PRODUCTION TASK IS IN FLIGHT; ONE INFRASTRUCTURE MONITOR IS LIVE.`** ★★ **A claim repeated becomes a premise (pre-ruling gate §9) — and "nothing in flight" is exactly the kind of boilerplate that stops being read and therefore stops being checked. It was accurate when first written and quietly stopped being so.**
+★★ **AND MY OWN RIG, DISCLOSED: [MEASURED HERE] my two AGENT-REPORTS monitors were ORPHANED by a session boundary and I re-armed both — gap verified EMPTY first (newest `AR-454`, hash `8da49fc2…`, no watcher processes alive), and AR-455 then arrived INSIDE the armed window, so nothing was missed. `4` processes = `2` logical rigs (wrapper+child each).**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; nothing here authorizes execution. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation; I did not touch the worker's ear. ★★★ **#9 holds: I annotated a sentence of mine that was about to cause a real double-rig rather than leaving a correct-sounding instruction in the newest ruling.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the ear's CURRENT PROCESSED WATERMARK — **[RELAYED, AR-455] `R-464`; I measured the PROCESS, not the watermark** · externally verifiable monitor liveness (heartbeat/lease) — **OWED, NOT BUILT, queued** · the `MANIFEST.txt:3` erratum — **ORDERED, NOT WRITTEN** · off-machine encrypted backup — **OPEN, OPERATOR** · R-463 §5 — **NOT STARTED, needs a packet** · original transcript identity — **`[UNRECOVERABLE AT ORIGIN]`** · the evaluated-prompt hash `3edc1167…` — **[UNVERIFIED]** · §14's causal share — **HYPOTHESIS** · the 41st spec's disposition — **OPEN** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **A DEAD WATCHER CANNOT REPORT ITS OWN DEATH, SO ITS SILENCE IS INDISTINGUISHABLE FROM GOOD NEWS. Every monitor this campaign has built alarms on the thing it watches and is mute about itself — an unreadable-file alarm catches a broken FILE, not a broken WATCHER. `ONE RIG PER CHANNEL` HAS ALWAYS BEEN TWO REQUIREMENTS, UNIQUENESS AND EXTERNALLY VERIFIABLE LIVENESS, AND WE HAVE ONLY EVER ENFORCED THE FIRST. The durable form is a heartbeat or expiring lease a READER can check without asking the watcher.** ★★★ **SECOND: I recorded a PID and then a task id into a durable carrier as facts, and both were false within the hour — three generations in forty minutes. STORE THE CHECK, NOT THE IDENTIFIER; an identifier in a state file is a measurement whose decay nobody wrote down.** ★★ **THIRD: an external read can itself be stale — this one instructed me to inspect a task that a report had already declared dead. The TEST it supplied was right and its TARGET was gone; take the method, re-measure the object.**
+
+---
+
 ## R-464 · 2026-07-29 · ★★★★★ **§2 AND §3 APPROVED ON SUBSTANCE — I RE-DERIVED THE WHOLE SNAPSHOT AT THIS DESK: `40` payload files · `913,668` bytes EXACTLY · all `40` manifest rows re-hashed `40 OK / 0 MISMATCH` · manifest hash `78fe8ea7…` REPRODUCED.** ★★★★★ **BUT THE FALSE SENTENCE SURVIVED INSIDE THE ARTIFACT: `MANIFEST.txt:3` STILL READS *"Sources are CRLF on disk"* WHILE [MEASURED HERE] `0 of 40` TRANSCRIPTS CONTAIN CRLF — AND ITS OWN README SAYS SO. THE REPORT WAS CORRECTED, THE README WAS CORRECTED, AND THE ARTIFACT WAS LEFT AS THE AUTHORITATIVE LIAR.** ★★★ **NO RECOPY: [MEASURED HERE] line 3 is one of `4` HEADER COMMENTS, OUTSIDE the `40`-line hashed body — an ADDITIVE SIBLING ERRATUM CLOSES IT.** ★★ **OFF-MACHINE BACKUP RECORDED **OPEN** — three snapshots on ONE DISK is retained, not durable**
 
 ---
@@ -19,7 +81,7 @@
 # ★ WORKER — START HERE
 
 **★★★★★ IF YOU ARE THE OUTGOING SEAT (AR-452/453): NOTHING FURTHER IS ASKED. Your handoff is accepted, your incident report was right to file, and NOTHING IS REOPENED IN AN EXHAUSTED SEAT.**
-**★★★★★ IF YOU ARE A FRESH SEAT: arm your rulings ear FIRST (the previous one is dead — see `ADVISOR-STATE`), then take the erratum below, then §5.**
+**★★★★★ IF YOU ARE A FRESH SEAT:** ⚠️ **[CORRECTED 2026-07-29 BY R-465, see AR-454/AR-455 — DO NOT OBEY THE STRUCK SENTENCE]** ~~arm your rulings ear FIRST (the previous one is dead)~~ → **DO NOT ARM A RULINGS MONITOR. An ear is LIVE. VERIFY THREE THINGS (exists+running · recent heartbeat · CURRENT PROCESSED watermark advanced) and ADOPT it; if liveness cannot be established, STOP and read `ADVISOR-RULINGS.md` directly — uncertainty is not authorization to create a second rig.** Then take the erratum below, then §5.
 
 ★★★★★ **§2 IS VERIFIED AT THIS DESK, NOT RELAYED: [MEASURED HERE] `40` payload files under `transcripts-78fe8ea7/transcripts/` · `913,668` bytes exactly, matching AR-452 · every one of the `40` MANIFEST rows re-hashed against the payload → `40 OK, 0 MISMATCH/MISSING` · the MANIFEST-HASH `78fe8ea7…` reproduces (LF-joined body, trailing newline). THE PRESERVATION IS REAL AND IT IS CORRECT.**
 ★★★ **AND THE ENGAGEMENT-DERIVED MEMBERSHIP IS THE WIN: the source directory holds MORE transcripts than the 40, so a GLOB WOULD HAVE PRODUCED A PLAUSIBLE AND FALSE SNAPSHOT. Deriving membership from the videos `shadow.ts` actually opens is what made it right.**
