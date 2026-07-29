@@ -10,28 +10,35 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-445**. Newest AR **AR-420 — RULED (accepted in full)**.
-**TASK (R-445):** classify the **23 baseline entries ABSENT from the report** —
-`RENAMED` / `DELETED` / `COLLECTION-ERROR` / `UNKNOWN` — plus a one-line
-ENVIRONMENTAL-vs-LOGIC call on each of the **9 still-failing**. ETA ~30 min.
-★★★ **ARMED STOP: any of the 23 that traces to a COLLECTION ERROR means that
-file's other tests are also silently not running — the absent population is then
-bigger than 23. Comes to the desk immediately.**
-★★★★★ **MERGE OF PR #32 IS HELD ON ONE THING: the MANDATORY independent grade of
-an INSTRUMENT change (`compare-baseline.mjs`, now BLOCKING at `ci.yml:167`).
-`accuracy-validator` dispatched against `af5779ef` itself. HOLD IS ASSIGNED TO A
-NAMED RUNNING AGENT, not a future session.** ★★★ **WORKER MUST NOT PUSH TO #32
-while the grade is in flight — a moving head voids the grade.**
-★★ **PR #32 worktree: `C:/Users/tonio/Projects/wt-ci-abspath-20260729` (branch
-`hardening/ci-abs-path-tests-20260729`, head `af5779ef`). The campaign tree does
-NOT contain `ci/__tests__` at all — running its suite here reports a false RED.**
-★★★ **AR-420 RESULT: the ran-and-passed discriminator fired on first contact —
-of 156, only **132** had actually run and passed; **23 absent + 1 skipped** would
-have been deleted for never having executed. Worker fixed the INSTRUMENT, not
-just the data. Baseline `189 → 165 → 33`.**
-★★ **[MEASURED HERE] `ci/__tests__` (22 tests, TWO files) is not matched by
-`vitest.config.ts:13`'s `src/**/*.test.ts` and nothing references it — the gate
-that guards every push has tests that never run in CI. QUEUED after the grade.**
+Ledger **R-446**. Newest AR **AR-422 — RULED (accepted)**. **PR #32 MERGED
+(`75065635`) on an independent `SOUND-WITH-GAPS` grade.**
+**TASK (R-446):** (1) build the **`parseVitestJson` sanity assertion** — throw
+LOUDLY when `passed.length + failures.length` is implausibly small vs
+`collected`, red-proofed BOTH ways · (2) **bounded read-only diagnostic on the
+`lifecycle-transitions` schema mismatch**: (a) migration never ran / (b) later
+migration altered it / (c) CI DB built by a non-migration path. ETA ~40 min.
+★★★ **ARMED STOP: if the schema answer is (a) MIGRATION NEVER RAN, that means the
+journal disagrees with the database — a far larger finding than two failing
+tests. Comes to the desk immediately.** ★ Prior convicted instance: migration 0134.
+★★★★★ **CORRECTED IN R-446 — DO NOT INHERIT THE OLD CLAIM: `ci/__tests__` **DOES**
+RUN IN CI AND IS **BLOCKING**. [MEASURED HERE] `ci/vitest.config.mjs:19` includes
+`ci/**/*.test.mjs`; `fast.yml:125` runs that config in the blocking `fast` job
+with no `continue-on-error`. My R-445 §4 "nothing references it" was FALSE — I
+grepped for the TEST PATH; the wiring names the CONFIG FILE. The "wire it in"
+task is CANCELLED.**
+★★★ **AR-420/422 RESULT, RE-DERIVED AT THIS DESK from CI's own artifact: of the
+165, `132 passed · 23 absent · 1 skipped · 9 failed`. Baseline `189 → 165 → 33`.
+All 19 files holding the 23 absences RAN — 0 missing, no collection errors, so
+the hidden-population hazard does not exist. The absent 23 are dead wood: 11
+SUPERSEDED (4 polarity flips), 4 RENAMED, 6 UNKNOWN, 2 DELETED.**
+★★★ **THE 9 STILL-FAILING: 7 ENVIRONMENTAL (missing numpy, placeholder secrets,
+unseeded CI DB) · 2 `lifecycle-transitions` = SCHEMA MISMATCH, under diagnostic.
+`audit-log-append-only` is NOT an append-only gap — the UPDATE **was** rejected;
+only the assertion's message-matching fails.**
+★★ **`main` IS NOT THIS CAMPAIGN'S INTEGRATION BRANCH. #32 merged to
+`hardening/slumhouse-shared-office-parity-20260723` (the lane CI tests and
+`runtime-production` tracks); `origin/main` still reads 189 entries and is an
+older line. `a52449ac` was that lane's tip, NOT a main tip.**
 ★★★★★ **DO NOT INHERIT R-443's KILL-SWITCH ALARM — WITHDRAWN by R-444. The kill
 switch and compliance gate are NOT failing: all 24 assertions in `fixedFailures`,
 `verdict GREEN` (CI's own `compare-baseline.mjs`, run `30422166825`). The 24 were
@@ -106,9 +113,11 @@ UNREAD, UNRATIFIED, NOT the plan. Read it, red-team it, rule on it explicitly.**
 ## QUEUE — re-ranked by v4's critical path (R-445)
 ★★★ **v4 §1: the fastest honest path to Phase 2 is a FINITE, CURRENTLY-UNOWNED
 list. Speed comes from aiming, owning and shipping — NEVER from loosening.**
-1. **Rule the `accuracy-validator` grade → merge PR #32** (in flight).
-2. **Wire `ci/__tests__` into CI** (worker, after the grade — one-line include;
-   it touches the graded files, hence the ordering).
+1. ~~Rule the grade → merge PR #32~~ **DONE (R-446, `75065635`).**
+2. ~~Wire `ci/__tests__` into CI~~ ★★★ **CANCELLED — the premise was FALSE; those
+   tests already run and already block (R-446).** In flight instead: the
+   `parseVitestJson` sanity assertion + the `lifecycle-transitions` schema
+   diagnostic. ★★★ **THE CI LANE CLOSES ON THOSE TWO — then the money path.**
 3. ★★★★★ **v4 §3-1A — THE SEVEN C8 PREREQUISITES, ALL SEVEN OPEN WITH NO OWNER.
    A prerequisite assigned to nobody is a stall order. #2 (two-arm ablation
    pre-registration, incl. the pre-registered trap "conditions-per-strategy WILL
@@ -181,10 +190,19 @@ disagreements · non-flag-gated stranded capability · C2 resolver yield · DB
 provenance preservation · timezone/calendar basis · Python's unrun 56%.
 
 ## KNOWN-BENIGN (do not investigate)
-★★★ **THE 15-MIN WATCHDOG BAR IS SHORTER THAN AR-421's AUTHORIZED ~30-MIN ETA
-(started 01:31 EDT, + a BLUEPRINT v4 read), SO IT WILL FIRE ON A HEALTHY RUN.
-Expect a fire ~01:46 EDT and possibly ~02:01. Do NOT widen the bar** (that blinds
-it to real stalls) — read the event, then apply the discriminator. ★ **DISCRIMINATOR: process ALIVE + conversation `.jsonl` STILL
+★★★ **THE 15-MIN WATCHDOG BAR IS SHORTER THAN THE R-446 TASK'S AUTHORIZED ~40-MIN
+ETA, SO IT WILL FIRE ON A HEALTHY RUN. Do NOT widen the bar** (that blinds it to
+real stalls) — read the event, then apply the discriminator.
+★★★★★ **FOUR INSTRUMENT LIES IN ONE SESSION, ALL THE DESK'S OWN, NONE A DEFECT IN
+THE WORK UNDER REVIEW: `| tail` masked a `gh` exit code · a scratch vitest config
+resolved `vitest/config` from outside `node_modules` (exit 1 = MODULE_NOT_FOUND,
+not a red suite) · a suite run in a tree that does not contain the file (`No test
+files found`, exit 1 — would have reported a green suite as RED) · `comm -23`
+under a locale mismatch reported 19-of-19 files missing when the true answer is
+ZERO — that one would have escalated a non-incident.** ★★★ **AN EXIT CODE IS NOT
+A VERDICT UNTIL YOU KNOW WHAT PRODUCED IT. A surprising result is an accusation
+against your tooling FIRST; "too total to be plausible" is what caught the last
+one, and implausibility is a weak guard.** ★ **DISCRIMINATOR: process ALIVE + conversation `.jsonl` STILL
 GROWING ⇒ silent work · ALIVE + conversation STOPPED ⇒ external account limit
 (seen 2026-07-29, an hour of silence was a usage limit) · not alive ⇒ dead.**
 `M session_windows_parity.json` phantom · a monitor event naming an OLD AR = torn
