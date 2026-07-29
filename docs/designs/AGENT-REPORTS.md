@@ -4,6 +4,52 @@
 
 ---
 
+## AR-386 · 2026-07-28 · ★★★ **YOUR STOP CONDITION FIRED — THE 41 IS NOT THE CAMPAIGN CORPUS. IT IS DISJOINT FROM IT: overlap = ZERO.** ★★★ **AND THE REAL NUMBER, POST-PORT OVER corpus_A: `11 of 16`, NOT `41 of 41` — FIVE SPECS STILL PASS. MY §5 ESCALATION ("no Band-C backtest can run") IS WITHDRAWN; IT WAS TRUE OF A POPULATION NOBODY IS SHIPPING.** ★★★ **AND THE STING: THE ORPHAN-ZONE PORT ADDS ZERO REFUSED SPECS. The 9→11 delta is ENTIRELY my fail-closed confluence policy — decomposed and measured, not attributed**
+
+**RULING ID:** R-421 item (1) · **TASK ID:** name the 41 · **TREE: ported build worktree (`hardening/session-refusal-safety-20260728`, `c8dae8a8`), specs read from disk** · **RECOMMENDATION:** **STOPPING AS INSTRUCTED — the stop condition names this as yours to rule.**
+
+### ★★★ §1 — THE POPULATION, NAMED. AND IT IS THE WRONG ONE.
+
+**POP-41 — `C:\Users\tonio\Projects\trading-forge\trading-forge\.claude\worktrees\extraction-100\tmp\generalization`, glob `*.spec.json`, count 41.** Bare video ids: `1HFoStW_wsc · 75DJN5UVQnw · 7ieYBa7Z-Hg · E8Wg6tFPYjo · FAKWJ-1NlLE · FqxEKDxemtI · HfZTCZTDfWk · KXWRtV2LOVc · LOcaRWcc1xI · N7SM8a7Dc9s · N7uP9V0Iktc · NMUd0oX_7Pg · Qxlu8v_6G3Y · UBvfsImdI2U · VTEQ2fhGLqE · WV1fyudd7fw · aHLIE_TXjpo · bQp37aD1JLE · c8VLqF0XDR4 · dE4lPhAWke8 · dHmOosYof48 · deymRD3kSD0 · e5HQXYBUW-Q · gddYspvW0_w · h6TnE7QClJg · iU8ww5MC2FQ · jlShztsY3oA · ktkqq7QsN9Q · l-2iKbcm5UI · lRMFcsqhYBU · m-G1ag77aVc · mNcoaNdAyIE · nV9gknhy2Ew · oDLt9zh33LE · psH--oXkD8M · qLtq73bTPBA · sVkmZklJDHI · snNkQSyWX4k · x1ydP8bC7OE · xTTDH5iRhJc · z3Qn3fBoe2I`.
+
+**POP-16 — `wt-h1-wave4-20260712\docs\replay-results\h1-scripts\claude-rung-v32\shakedown_specs`, 16 files**, `__s0`/`__s1` spec-ids including `W7nlnHTUZQU__s0`.
+
+★★★ **[MEASURED] `overlap = 0`. `POP-16 ⊄ POP-41`.** They are **disjoint corpora in different ID namespaces** — POP-41 is the extraction-100 *generalization* set, POP-16 is corpus_A, the set every Phase-1 figure in this ledger refers to. ★★ **I labelled POP-41 "campaign specs" in AR-385 §5. That label was false, and it is the day's convicted shape — a claim true of one set asserted about another — committed by the seat that had just written that sentence about the desk.** You caught it before it reached a merge.
+
+### ★★★ §2 — THE DECISIVE NUMBER, OVER corpus_A, POST-PORT
+
+| measurement, POP-16, ported code | result |
+|---|---|
+| **(A) refused as shipped** (confluence fail-closed) | ★★★ **11 of 16** |
+| **(B) refused, confluence granted optional** | **9 of 16** |
+| **(C) refused ignoring the orphan-zone reason, confluence optional** | ★★ **9 of 16 — reproduces your pre-port `9 of 16` EXACTLY** |
+| specs with ZERO executable spine predicates | ★★ **0 — reproduces your `0` empty-spine** |
+| refusal reasons | `no_recognized_session_keyword` **26** · orphan-zone **1** |
+| refusal roles | spine **20** · confluence **7** |
+
+★★★ **DECOMPOSED, so the cause is measured rather than inferred: the orphan-zone port adds `11−9 = 0` refused specs**, because its single refusal lands on `W7nlnHTUZQU__s0`, already refused for unrecognized vocabulary. ★★★ **The entire 9→11 delta is MY fail-closed confluence policy — +2 specs.** That is a POLICY arm you ordered (R-420: confluence optional only on positive evidence), not a consequence of the defect fix, and it is the one dial in this release that changes the refusal set.
+
+★★ **[MEASURED] FIVE SPECS PASS as shipped:** `DLwVqcLRcfw__s1 · E9MzEC_yNoM__s0 · IyFioFkRgWo__s0 · PVMgOxHUqFA__s0 · WEhmadJArQo__s0`.
+
+### ★★★ §3 — WHAT I WITHDRAW
+
+**AR-385 §5's escalation — *"merging means NO Band-C backtest can run until binding coverage rises"* — is WITHDRAWN.** It was measured over POP-41 and is false of corpus_A, where **5 of 16 remain executable**. ★★ **The merge does NOT gate Phase 2 shut.** ★ **What survives from §5:** the refusal is still driven by the generic `no_recognized_session_keyword` class (26 of 27 refusals), **not** by the orphan zone (1) — so the "do not narrow the refusal to orphan zones" conclusion you adopted as point (2) still stands on corpus_A, on its own numbers.
+
+★★ **ONE DISTINCTION THAT MUST NOT COLLAPSE:** *preflight-pass ≠ Phase-1 exit.* The preflight asks **"is every mandatory rule BINDABLE?"**; Phase 1 asks **"is every load-bearing condition CONCRETELY bound?"** The 5 passers clear the first, not the second — **`0/16 fully bound` is untouched by this release** and these five are not Phase-1 exits.
+
+### §4 — STATE OF #29 AND WHAT I DID NOT DO
+
+★ **PR #29 unchanged** (`c8dae8a8`, 5 files, +894/−17, base `hardening/slumhouse-shared-office-parity-20260723`). **CI at last check: `Lint` pass, `Frankenstein (A4)` pass, Python/Node/parity/snapshot pending** — **I make no green claim.**
+★ **Required correction (2) — `UNKNOWN_REQUIREDNESS` as a distinct recorded state — is NOT yet built.** It is a preflight change, and so is the empty-spine refusal (item 3). ★★ **I recommend they land in ONE PR, not two: both open `spec_execution_preflight.py`, and re-opening a published file twice is two chances to break it.** Awaiting your word rather than assuming.
+★ **Not measured:** the live 27/120 role split (DB read, yours). ★ **Not re-run:** POP-41 under the corrected framing — **it is not a population this campaign ships, so re-measuring it would only re-publish a number with no consumer.**
+
+**Remaining uncertainty:** ★ whether corpus_A is the population the merge should rest on, or whether the live 120-strategy library is (they are different again — the library is what LOADED, corpus_A is what the campaign measures). **I have named all three sets rather than picking one.**
+**Risk:** unchanged and low — `backtests total: 0`, preflight fail-closed, nothing executed regresses.
+
+**Next smallest task (ONE):** your ruling — merge #29 on the corrected `11 of 16`, then one combined PR for `UNKNOWN_REQUIREDNESS` + empty-spine refusal.
+
+---
+
 ## AR-385 · 2026-07-28 · ★★★ **SAFETY RELEASE BUILT AND PR'd — #29, 5 files, +894/-17, matrix RED 14/GREEN 26.** ★★★ **AND I MUST CORRECT MY OWN AR-384, WHICH R-420 RATIFIED AND QUOTED: `:616-620` IS UNREACHABLE. Every unbindable binding also carries `executed=False`, and the `executed` guard PRECEDES the `bindable` check — so a mandatory rule was SILENTLY DROPPED, never converted to `np.ones`. Same consequence, wrong mechanism — and edit (C) as specified would have guarded DEAD CODE.** ★★★ **BLAST RADIUS, MEASURED AND IT IS THE HEADLINE: 41 of 41 campaign specs REFUSE — and 40 of 41 still refuse even if EVERY confluence rule is granted optional. The preflight does not cause that; it REVEALS it**
 
 **RULING ID:** R-420 · **TASK ID:** the safety release (A)+(B)+(C) · **BRANCH:** `hardening/session-refusal-safety-20260728` · **COMMIT:** `c8dae8a8` · **PR:** **#29** (base retargeted to the deploy branch, see §7) · **TREE: `runtime-production` lane, worktree pinned to `a674f1ed`** · **RECOMMENDATION:** **APPROVAL_REQUESTED — with ONE escalation in §5 that is yours to rule before merge.**
