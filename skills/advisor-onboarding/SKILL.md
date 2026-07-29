@@ -84,10 +84,24 @@ erodes; the ladder is therefore duplicated here, where nothing compacts it.
 - **Phase 1 — SPEC COMPILATION.** Exit: *"≥1 tier-A spec compiles with ALL
   load-bearing conditions concretely bound AND the compile-fidelity forensics
   gate passes calibration."*
-- **Phase 2 — BATTERY / WAVE.** ★ **v3-1 FAILURE-ATTRIBUTION READ**, pre-registered
-  BEFORE any wave verdict is interpreted: {edge-absent · compile-fidelity-loss ·
-  overlay-caused}. ★ **v3-2 OVERLAY A/B**, taught-exit strategies ONLY:
-  pre-registered dual-arm, house Style-C exits vs taught exits.
+- **Phase 2 — BATTERY / WAVE.** ★★★★★ **v3-1 FAILURE-ATTRIBUTION READ — FOUR
+  BINS**, pre-registered BEFORE any wave verdict is interpreted:
+  **{edge-absent · compile-fidelity-loss (approximation residue) ·
+  OVERLAY-CONFLICT (house exits vs taught-exit edge) · `gate-artifact`}**
+  — **[MEASURED, `ADVISOR-RULINGS.md:6625`, R-061 §1 verbatim].**
+  ★★★ **`gate-artifact` = "THE INSTRUMENT LIED". BOTH carriers — including this
+  one, the copy that exists because nothing compacts it — had silently dropped it
+  to a three-bin paraphrase. Caught by BLUEPRINT v4's red-team, restored R-445
+  (2026-07-29). It is the MODAL real-world failure: four false greens in one
+  session, a CI step with no path to red.** ★ **v3-2 OVERLAY A/B**, taught-exit
+  strategies ONLY: pre-registered dual-arm, house Style-C exits vs taught exits.
+  ★★ **Trials counted honestly — "effective-N tuples distinguish arms" (R-061 §2
+  verbatim), the anti-double-count law for EVERY dual-arm read. Also dropped from
+  both carriers; restored R-445.**
+  ★★ **Phase-2 ENTRY carries a checklist (v4 §4), incl. BATTERY-RIG
+  NULL-CALIBRATION — the wave rig has never fired (`backtests = 0`), so it must be
+  shown to go RED on a planted defect before the first real wave. A rig that has
+  never gone red is not an instrument.**
 - **Phase 3 — CONVEYOR, not a queue.** Internal-paper + shadow-accumulation run
   CONCURRENTLY per strategy. ★ **v3-3 EVAL-ODDS PRE-COMPUTE** at pre-flight: aim
   the B14/survival machinery at the EVAL's own parameters (Combine trailing DD,
@@ -105,8 +119,28 @@ erodes; the ladder is therefore duplicated here, where nothing compacts it.
   API THEN, so the adapter shakes down against practice before real capital.
   (R-060: the purchase happens WHEN OPERATOR FUNDS ALLOW.)
 
-★★ **All five v3 upgrades are tagged `v3-N`. If `ADVISOR-STATE.md`'s copy is
-missing any of them, the state file has regressed — restore it from here.**
+★★★★★ **BLUEPRINT v4 IS NOW THE OPERATIVE PLAN (adopted R-445, 2026-07-29,
+operator-directed). CANONICAL TEXT: `docs/designs/BLUEPRINT-V4-DRAFT.md` in the
+campaign tree (rev 2, `161f11dc`) — red-teamed by `accuracy-validator`, findings
+F1–F9 resolved. The ladder above is v4's, kept VERBATIM. Read the blueprint for
+the Phase-1 decomposition (§3-1A..1F), the per-phase EXIT criteria that v3 never
+had, and the parallel-lane register.**
+
+★★★★★ **DO NOT "RESTORE FROM HERE" BY CHECKING THE TAGS. THAT CHECK IS THE ONE
+THAT FAILED.** On 2026-07-29 the desk compacted `ADVISOR-STATE.md`, verified that
+all five `v3-N` tags survived, reported the guard as passing — and had silently
+dropped `gate-artifact` from INSIDE v3-1 and the effective-N clause from inside
+v3-2. **This file carried the same three-bin paraphrase, so the duplicate did not
+save it either.** ★★★ **A TAG-PRESENCE CHECK IS NOT A CONTENT CHECK: verify the
+PAYLOAD of each upgrade against the ledger line, not the presence of its label.
+`v3-1` must read FOUR bins; `v3-2` must carry effective-N.**
+★★★ **CARRIER-DISCIPLINE (v4 §2.5, binding): duplicate the ladder VERBATIM and
+POINT at the blueprint for detail — NEVER re-paraphrase. Paraphrase eroded this
+ladder twice: three of five upgrades lost 2026-07-28, the fourth attribution bin
+lost 2026-07-29.**
+★ **v4 §2.4: the `v3-N` tags exist only in these carriers, never in the ledger
+(R-061 numbers them 1..5). A ledger grep for `v3-` returning zero is EXPECTED,
+not a vanished blueprint.**
 ★ Deeper detail (the DLL option, scaling doctrine, compliance working values)
 stays in R-053..R-061; this block is the ladder, not the whole blueprint.
 
