@@ -4,6 +4,24 @@
 
 ---
 
+## AR-406 · 2026-07-29 · **START-RECEIPT — R-434: FREEZE the protocol, then RUN the two-arm shadow evaluation.** ★★ **AND ONE SCOPE PROBLEM I AM NAMING BEFORE I START, NOT AT DELIVERY: HALF YOUR STEP-4 METRIC LIST NEEDS GROUND TRUTH, AND I AM THE DOER**
+
+**RULING ID:** R-434 · **ARTIFACTS:** a FREEZE artifact (hashes, the 14/26 partition, the no-tuning-on-HOLDOUT covenant) + the two-arm run's per-condition table and rates. **ETA ~45–60 min.**
+
+### ★★★ THE SCOPE PROBLEM, STATED FIRST
+
+Step 4 asks for **accuracy by role · confusion matrix · false-mandatory rate · false-optional rate · annotation-classified-executable · entry-trigger-missed · invalidation-missed.** ★★★ **Every one of those requires GROUND TRUTH — a per-condition judgment of what the teacher's words actually make that condition. That is a GRADING act, and this desk's law is doer ≠ grader. If I produce both the classifications and the truth they are scored against, the accuracy figure is my own instrument agreeing with itself, which is exactly the shape R-434 exists to prevent.**
+
+**SO I WILL DELIVER, COMPLETE AND HONESTLY LABELLED:**
+· **the FREEZE** (Step 1) · **both ARMS** (Step 2) · **a decision path on EVERY condition** (Step 3) · and the Step-4 metrics that are **MECHANICAL**: condition/video counts · source-resolution success · semantic-path rate · legacy-fallback rate · unavailable/error rate · A-vs-B disagreement · disagreement with legacy labels · per-video distributions · refusal-count impact **as a diagnostic only**.
+**I WILL NOT PRODUCE:** accuracy, the confusion matrix, or the five safety-critical error rates — **they need an independent grader against the resolved transcript, and I will hand that grader a frozen, complete input rather than a number it cannot check.** ★ **[HONEST PARTIAL, DECLARED IN ADVANCE] that is a real gap in the deliverable and I am naming it now so you can assign the grader in parallel rather than discover the hole in my report.**
+
+### CARRIED VERBATIM
+★★★ **HOLDOUT-26 RESULTS MAY NOT BE USED TO MODIFY THE LABELLER IN THIS CYCLE. The moment they are inspected for tuning, those 26 become development evidence and a fresh untouched population is required for the next unbiased claim.** This goes INTO the freeze artifact so a later seat cannot forget it. ★★★ **VOID CONDITIONS carried exactly, including the one most likely to be rationalized: high agreement + high fallback is a FAILED run, not a robust one.** ★★ **The VIDEO is the independent unit for any headline — 2351 conditions are not 2351 independent observations.**
+**FORBIDDEN, ACKNOWLEDGED:** no flag flip in any environment (the classifier is called as a FUNCTION) · no artifact or role mutation · no re-extraction · no `.env`/`runtime-production` write · no tower update · **no backtests. [MEASURED] `backtests total = 0`.**
+
+---
+
 ## AR-405 · 2026-07-29 · ★★★ **(A) VERDICT: CONTAMINATED — AND IN THE STRONGEST FORM. THE CLASSIFIER'S RULES-DESIGN CORPUS IS 14 VIDEOS AND ALL 14 ARE IN THE LIVE LIBRARY.** ★★★ **WORSE THAN A HEADLINE OVERLAP: THE SPLIT IS PER-CONDITION, SO 13 OF THOSE 14 VIDEOS HAVE CONDITIONS ON BOTH SIDES — VIDEO-LEVEL SEPARATION DOES NOT EXIST.** ★★★ **AND THE CONSTRUCTIVE HALF: 26 OF THE 40 LIVE VIDEOS WERE NEVER SEEN BY THE DESIGN SPLIT — A GENUINE HELD-OUT CORPUS ALREADY EXISTS INSIDE THE POPULATION WE CARE ABOUT, AT ZERO EXTRACTION COST**
 
 **RULING ID:** R-433 (A)+(B) · **ARTIFACT:** amendment appended to `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED. Document only — nothing run, no flag flipped, no artifact touched. [MEASURED] `backtests total = 0`.**
