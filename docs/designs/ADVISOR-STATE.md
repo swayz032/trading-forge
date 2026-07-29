@@ -2,13 +2,130 @@
 
 > **Rewritten in place, never appended.** Cold read: this file → last 3–5 rulings
 > → newest 1–2 ARs. **Never read the ledger from the top.**
-> Compacted **450→313 lines** (measured after the write, not estimated during it —
-> the first draft of this line said "~150" and was wrong), 2026-07-29 02:50,
-> current through **R-453 / AR-428**.
+>
+> ★★★★★ **THIS HEADER WAS FALSE UNTIL R-467 AND ITS FALSENESS WAS THE NAVIGATION
+> HAZARD. It claimed "Compacted 450→313 lines … current through R-453 / AR-428".
+> [MEASURED HERE, R-467 §9b] the file is `997` LINES / `74,684` BYTES and carries
+> content through R-467 / AR-460. A SELF-DESCRIPTION NOBODY RE-MEASURED — and a
+> cold seat that trusts it under-reads the file by two thirds. This seat paged out
+> at line 604 of 997 on a single Read.**
+>
+> ★★★★★ **WHERE THE CONTRACTS ACTUALLY ARE — READ THESE FIRST, THEY ARE AT THE
+> BOTTOM, NOT THE TOP:** `THE PLAN` money-path ladder **:730** · `QUEUE` **:768** ·
+> `FIDELITY LEDGER` **:785** · `POPULATIONS` **:809** · `NOT AUTHORIZED` **:820** ·
+> `STATE, WITH EVIDENCE GRADES` **:831** · `KNOWN-BENIGN` **:862** · `THE SEAT'S OWN
+> CONVICTED ERROR` **:908** · `SEAT MECHANICS` **:933** · `OPERATOR-FACING` **:985**.
+> ★★★ **Everything ABOVE :730 is accumulated narrative — superseded headings,
+> `[FACT, UNRULED]` blocks, superseded seat notes. The file grew by PREPENDING
+> narrative above a canonical structure that never moved. COMPACTION IS OWED AND IS
+> THE ADVISOR'S: cut the narrative above :730, keep every contract below it.**
+> ★★ **These line numbers decay on every edit — they are a courtesy, not a
+> citation. Re-derive with `grep -n "^## " ADVISOR-STATE.md`.**
+>
+> ★★★★★ **AND THE CITATION LAW THIS FILE VIOLATED: it cited
+> `ADVISOR-RULINGS.md:6625` as the authority for the four attribution bins.
+> [MEASURED, R-467 §9a] R-061 IS AT LINE `8169`; `:6625` NOW HOLDS R-213. THE
+> LEDGER IS APPEND-AT-TOP, SO EVERY RULING PUSHES R-061 DOWN — a line number into
+> that file is R-465's `AN IDENTIFIER WHOSE DECAY NOBODY WROTE DOWN`. CITE BY
+> `grep -n "^## R-061"`, NEVER BY LINE.** ★★★★★ **THE PAYLOAD ITSELF IS INTACT,
+> VERIFIED VERBATIM AND NOT BY TAG PRESENCE: R-061 §1 carries all FOUR bins
+> (`edge-absent · compile-fidelity-loss (approximation residue) · OVERLAY-CONFLICT ·
+> gate-artifact`); §2 carries `effective-N tuples distinguish arms`. Both are
+> present at `:743-748`. THE CARRIER CHECK PASSES ON CONTENT, FAILED ON CITATION.**
 > ★★ Resolved history (the CI-honesty lane, the R-409 reconciliation, the
 > kill-switch withdrawal) was CUT — it lives in R-444…R-447. **Cut narrative,
 > never contracts.** ★★★ Verify the PAYLOAD of each v3 upgrade, not its tag: a
 > tag-presence check is what missed the dropped fourth attribution bin.
+
+## ★★★★★ SEAT — CURRENT AS OF R-467 (supersedes every SEAT block below)
+**Ledger at `R-467`** (commit `9fd4fd28`). **Newest AR: `AR-460` — UNRULED.**
+**Worker: ACTIVE** — AR-459's seat, Gate A, under R-467's revised contract.
+★★★★★ **WHY AR-460 IS UNRULED, AND IT IS NOT A STALL: the operator's standing
+order is that their EXTERNAL (GPT) READ ARRIVES BEFORE THE RULING. Restated
+directly to this seat on 2026-07-29. `THE PASTE IS THE GATE.` Nothing is blocked
+— the worker named its next observable and is inside R-467's contract, and its own
+key discipline is STRICTER than what I wrote. MEASURE AND RELAY FREELY; JUDGE
+NOTHING.** ★★★ **A state-file write and a ledger write are different files, not
+different acts: if a sentence would change what the next seat DOES, it is a ruling
+wherever you write it.**
+
+## ★★★★★ [FACT, UNRULED — AR-460] EVERY CLAIM REPRODUCED AT THIS DESK, AND ONE OF THEM CONVICTS R-467 §2
+★★★★★ **INSTRUMENT AUDIT PASSES. [MEASURED HERE, independently of AR-460]
+reference artifact `pop120_classified.json` sha256 `eed65514a1…`, `175,347` B, in
+`trading-forge\backups\h1-census\unknown-dbtime-ad4335f0\` — `git rev-parse
+--show-toplevel` → `fatal: not a git repository`, so OUTSIDE every git tree, as
+claimed. Census lane `wt-preflight-blockers-20260729` @ `83efd34e`.**
+★★★★★ **THE TRIPLE AND THE FRAME, ALL RE-DERIVED HERE: `456` classified rows ·
+`233` C8 · `37` C8 distinct videos · `1368` raw refusals across 120 strategies
+(`456 × 3`) · `40` distinct videos · `120` distinct `strategy_id` ·
+`backtests_total = 0` (STOP DOES NOT FIRE) · `transcript_chars` null `120/120`.**
+★★★★★ **R-467 §2 IS CORRECT UPSTREAM AND WRONG DOWNSTREAM — I LICENSED AN UNSAFE
+KEY. I wrote *"use `(video, condition_id)` ONLY where it is real — at and after
+condition creation."* [MEASURED HERE, both artifacts]:**
+```
+CENSUS     (video,cond)    456 distinct, max mult 3, hist {3: 456}   <-- DEGENERATE
+CENSUS     (strategy,cond) 1368 distinct, max mult 1                 <-- UNIQUE
+CLASSIFIED (video,cond)    456 distinct, max mult 1
+CLASSIFIED (strategy,cond) 456 distinct, max mult 1
+```
+★★★★★ **THE CENSUS PAYLOAD IS AT/AFTER CONDITION CREATION AND THE KEY IS 3-WAY
+DEGENERATE THERE — every key exactly 3×, fusing the `_mcl_`/`_mes_`/`_mnq_`
+triple. `1368 → 456` IS THE NUMBER THE DESK EXPECTS, SO THE COVERAGE TABLE WOULD
+BALANCE WHILE THREE MARKET COPIES WERE SILENTLY MERGED.** ★★★ **My §2 fixed the
+upstream half and then handed the unsafe key back downstream; the worker measured
+the half I asserted. BINDING: `(strategy_id, condition_id)` at and after condition
+creation; `(video, condition_id)` is a DISPLAY LABEL ONLY, never a join key.**
+★★★★★ **[MEASURED HERE] THE TRANSCRIPT HOP CANNOT BE JOINED FROM THE FROZEN
+PAYLOAD: `refusals[]` rows carry exactly 7 fields — `condition_id · reason · role ·
+rule_class · rule_text · semantic_type · strategy_id` — and NEITHER `span` NOR
+`evidence` occurs in ANY row (tested across all 1368). The manifest's pointer at
+"in-row `evidence`/`span`" is FALSE for this artifact. AR-460 pre-committed to
+reporting this rather than substituting a text match — that is the correct branch.**
+★★ **`semantic_type` DOES exist on the refusal rows, so R-467 §5's frozen-label
+requirement is satisfiable at the condition layer.**
+★★★★★ **PRODUCTION DRIFT CONFIRMED, AND `MEASURED ≠ MEASURED-WHERE-IT-RUNS` IS NOW
+FALSE FOR THE CENSUS MANIFEST: [MEASURED HERE] `runtime-production` HEAD is
+`9af37b8f` (manifest recorded `a6f92822`) and 2 of 3 refusal-deciding files MOVED —
+`spec_condition_compiler.py` `3fda1963…`/`53,042` B · `spec_execution_preflight.py`
+`e68404a9…`/`17,013` B · `spec_family_bindings.py` UNCHANGED `b849a371…`/`40,583` B.
+Cause named as one commit `0b0d6617` (UNKNOWN_REQUIREDNESS). ★★★ Whether it moves
+the C8 count is `[UNMEASURED]` — it touches REQUIREDNESS, the census's own
+`C6_unknown_requiredness` class, so "it leaves C8 alone" would be exactly the
+unmeasured mechanism claim this desk convicts.**
+★★★★★ **THE CAMPAIGN TREE IS NOT A VALID LANE FOR THIS TRACE — [MEASURED HERE]
+`wt-h1-wave4-20260712` has `spec_family_bindings.py` at `160,049` B vs
+`40,583` in `runtime-production` (3.9×), and has **NO `spec_execution_preflight.py`
+AT ALL**. Reading the campaign tree's copy of a refusal path measures a THIRD
+object that runs nowhere. R-415 / v4 §3-1E divergence, re-measured.**
+★★ **NAME COLLISION AVOIDED BY THE WORKER: the frozen taxonomy already has a
+`C9_RESIDUAL_none_of_these` class (`3` rows). Its per-boundary unresolved-join
+bucket is labelled `JOIN_RESIDUAL` so the two are never summed.**
+★★★ **HISTOGRAM SUMS TO `456` EXACTLY:** C8 `233`/37 · C2 `94`/28 · C3 `41`/24 ·
+C7 `30`/15 · C1 `19`/11 · C4 `18`/11 · C5 `12`/10 · C6 `6`/6 · C9_RESIDUAL `3`/3.
+★★★★★ **NOTHING HERE IS RULED. No disposition, no severity, no endorsement of the
+lane-pin scope decision — that is a ruling and it waits on the operator's read.**
+
+## ★★★★★ GATE A — BOUND TO AR-459's SEAT (R-467 §1). NOT "assignee NONE".
+★★★★★ **`AUTHORIZATION MAY OUTLIVE A SESSION; OWNERSHIP MAY NOT.` R-467 §1 law:
+whenever a task is authorized with assignee `NONE`, the ADVISOR owns seating it,
+in the same ruling. If no seat exists the ruling says `HOLD — advisor to seat,
+immediately`, NEVER `AUTHORIZED`/`ACTIVE` with nobody doing it. "AUTHORIZED,
+assignee NONE" is honest for MINUTES and a stall order for HOURS — and the
+cleanliness of that label is exactly what let it survive review for ~15 rulings.**
+★★★ **CONTRACT (R-467 §2-§6): bridge keys written per boundary · FORWARD
+(transcript→atom→spec→DB) and REVERSE (DB→spec→transcript) must CONVERGE
+RECORD-FOR-RECORD, divergence published never reconciled · per-boundary semantic
+state + executable y/n + the EXACT FIRST BOUNDARY where context becomes executable
+· every semantic cell `[ARTIFACT-SOURCED]` to the FROZEN classifier, worker
+publishes NO label of its own · absent/ambiguous → `JOIN_RESIDUAL`, never dropped ·
+per-boundary totals MUST SUM TO THE POPULATION.**
+★★★ **DESK OBLIGATION, TRIGGERED BY THE BUNDLE LANDING — NOT BEFORE: dispatch a
+fresh `accuracy-validator` to reconstruct the population independently and FALSIFY
+(a) join completeness (hunt the 3× fusion) and (b) the claimed first-corruption
+boundary. NO RULING MAY SAY THE GRADE WAS OBTAINED WITHOUT NAMING THE AGENT ID.**
+★★★★★ **GATE B: `BLOCKED` until that grade lands. And a CARRIED OBLIGATION from
+AR-460: any Gate-B treatment must be re-verified against `runtime-production` at
+its then-current commit, because lane equivalence NO LONGER HOLDS.**
 
 ## ★★★★★ OBLIGATION DISCHARGED (was: LIVE) — grader dispatched 14:12
 ★★★★★ **DONE, NOT REMEMBERED: the harness re-run landed (AR-448, FULL
