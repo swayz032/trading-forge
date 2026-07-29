@@ -4,6 +4,43 @@
 
 ---
 
+## AR-435 · 2026-07-29 · ★★★ **HANDOFF — A FRESH WORKER SESSION IS NEEDED. NOT BLOCKED, NOT STALLED, NOT OUT OF CONTEXT: THE GOVERNANCE LANE IS CLOSED ON MY SIDE AND NOTHING IS IN FLIGHT, WHICH IS THE CHEAPEST MOMENT TO SWAP**
+
+**RULING ID:** R-455 · **TASK ID:** AR-435 · **STATUS:** **HANDOFF (self-assessment).** · **RECOMMENDATION:** **seat a fresh worker; give it a MONEY-PATH task, not a governance one.**
+
+### §1 — POSITION, SO A FRESH SEAT RE-DERIVES NOTHING
+
+**Tree** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, **my last commit `84095d74`.** ★ **All work committed; nothing lives only in a working tree.**
+
+**Seated across AR-426 → AR-434** (v4 §3-1B ranking · the census manifest · the determinism/tied-case suite · the order-dependence sweep · retention). **[MEASURED] final state, re-run from the committed tree just now:**
+
+```
+test_unlock_ranker_determinism.py     13/13 ok, 0 failed  (12 PYTHONHASHSEED values)
+order_dependence_sweep.py --self-test SELF-TEST PASSED -- the sweep discriminates
+unlock_rank_render.py --verify        REPORT-INTEGRITY OK
+sha256sum -c HASHES.txt  (retention)  pop120_census.json: OK   pop120_classified.json: OK
+```
+
+★★★ **NO SUB-AGENT IS OWED. I dispatched none in this entire session — I verified the gap is empty rather than assuming it.** ★★ **NOTHING IS HALF-DONE.** Every R-448/449/451/452/453/454/455 item is delivered, or declined in writing, or recorded as OPEN-AND-YOURS below.
+
+### §2 — WHAT IS OPEN, AND WHOSE IT IS
+
+★★★ **AWAITING YOUR RULING:** AR-433 (four R-455 items) and **AR-434, which corrects AR-433 before you rule on it** — read AR-434 first; it is short and it changes which artifact AR-433's §2 points at.
+★★ **OPERATOR'S, FLAGGED NOT ATTEMPTED:** an off-machine encrypted backup of the retention directory. It is one disk.
+★★ **NAMED LIMITATION, closes only at the source:** per-copy `remediation_class` equality is unverifiable in this artifact; the fix is "classify EVERY copy", recorded in manifest §8 as a forward requirement on the next census.
+★ **UNSWEPT BY DESIGN AND CLOSED:** `src/**`, `scripts/**`, the 20 uncited generators, all non-Python instruments. ★★★ **I am NOT proposing to extend the sweep — that was your §2 and I agree with it.**
+★ **Unchanged and not mine:** the 160 KB ↔ 35 KB lane divergence (R-415 / v4 §3-1E) · the 6 `UNKNOWN` baseline absences · the 2 stale `lifecycle-transitions` assertions.
+
+### §3 — THE NEXT TASK, AS I READ THE RULINGS
+
+★★★★★ **THE MONEY PATH, NOT THIS LANE.** v4 §3-1B is delivered and its ranking is frozen and approved; **§3-1A's seven C8 prerequisites are still open and five are unowned**, and the ranking is worth nothing until they discharge. **v4 §3-1E (the lane divergence) is the other pulled-forward item.** ★★ **The 37-video re-extraction manifest is UNBLOCKED but must NOT be executed — C8 implementation and re-extraction remain forbidden until 1A clears.**
+
+★★★ **WHY A FRESH SEAT: I have carried R-448 through R-455 — eight rulings, nine reports — in one context, and I have now been the author of four self-caught defects tonight (the hand-normalized table, the blind sweep, the per-copy join error, the stray artifact). Three of those I found; the desk found one. That rate is fine while the work is instrument-shaped and I am checking my own output constantly. It is the wrong condition in which to start a NEW domain.** ★ **A partial result that reads as complete is this campaign's most-convicted shape, and the cheapest moment to swap is now, not after the next task is half-built.**
+
+★★ **`backtests_total = 0`. Invariant #6 holds. No deployment, no live execution, no capital connection was authorized or performed by anything in this session.**
+
+---
+
 ## AR-434 · 2026-07-29 · ★★★ **SELF-DISCLOSURE AGAINST AR-433, WHICH YOU HAVE NOT YET RULED ON: I DROPPED A STRAY ARTIFACT AT THE SHARED REPO ROOT, AND — WORSE — THE BOUNDED SWEEP RESULT AR-433 CITES WAS NEVER IN THE COMMIT. THE COMMITTED ARTIFACT WAS STILL THE OLD 53-FILE RUN.** ★★ **BOTH FIXED, THE EMITTER FIXED SO IT CANNOT RECUR, AND NO CONCLUSION IN AR-433 CHANGES**
 
 **RULING ID:** R-455 · **TASK ID:** AR-434 · **STATUS:** correction to AR-433, filed before you rule on it.
