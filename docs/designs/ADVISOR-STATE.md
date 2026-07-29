@@ -11,7 +11,44 @@
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
-Ledger **R-458**. ★★★★★ **SIX REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434 ·
+Ledger **R-458**. ★★★★★ **WORKER SEAT ACTIVE AGAIN (AR-443, 13:30) on R-458's
+40-vs-41 task, taken as an unassigned-but-live authorization exactly as R-448/458
+intended. IDLE WATCHDOG RE-ARMED (`b2zgr2faf`) — the obligation I bound to the AR
+watcher's next start-receipt, discharged in the same turn it fired. Its first
+diagnostic question is now "IS THE NEWEST AR UNRULED?", the state that cost 90
+minutes when the bar could not name it.**
+★★★★★ **BLUEPRINT v4 HAS BEEN UPDATED BY THE CONSULTING SEAT (Fable) — NEW `§14
+REPOINTING`, WHICH ABSORBS THE R-456→R-458 MEASUREMENT CHAIN. [FACT, NOT
+RATIFIED] this desk has READ it and has NOT adopted it; adoption is a RULING and
+waits on the operator's external read. Do not act on §14 as law.**
+★★★ **WHAT §14 PROPOSES, relayed so a later seat need not re-read it:**
+**(a)** §1.4's C8 attribution is struck and redirected — the corpus's producer is
+the THIRD pipeline, and the old target is UNSUPPORTED, NOT REFUTED. **(b) NEW
+MEASURED CANDIDATE LOCUS: `tf-deep-scan/scripts/atomize-transcript.ts:60`** — a
+worked example ORDERING chart/instrument context to be emitted as decision atoms
+(*"we trade this on crude oil" / "we're sitting on the 30-minute chart today" →
+YES (WAIT_SESSION)*), **near-verbatim R-426's own C8 definition.** ★★★ **GRADE
+DISCIPLINE HELD BY THE AUTHOR: the LINE is MEASURED; its CAUSAL SHARE of C8 is a
+PRE-REGISTERED HYPOTHESIS, not a finding.** ★★ **NAME THE TREE: `tf-deep-scan`
+lives in the PRIMARY tree, NOT the campaign worktree.**
+**(c) NEW PREREQUISITE #0 — THREE-POINT PROVENANCE TRACE** (condition row → spec
+atom `evidence_span` → transcript sentence), joins published BEFORE conclusions,
+★★★ **with RIVAL MECHANISMS checked in the same trace: the 2-pass UNION rule (a
+structural inclusion mechanism needing no prompt quota) and the onboarding
+transform. WHICHEVER HOP INTRODUCES CONDITION-NESS IS THE FIX TARGET.** `unknown`
+acceptable. **(d)** prerequisite #1 RE-KEYED to the actual pipeline; the ≥3-quota
+enumeration DEMOTES to latent-hazard hygiene — real, but not causal for this
+corpus as far as measured. **(e)** #2–#7 transfer unchanged (target-agnostic).
+**(f)** candidate fix class NOT authorized: route execution-context clauses to a
+non-atom classification with market/timeframe as spec METADATA — extending the
+boundary the prompt already draws for stops/targets (`framework_owned`).
+★★★ **(g) SEQUENCING §14 ITSELF INSISTS ON, AND THE ACTIVE WORKER IS ALREADY
+OBEYING: the 40-vs-41 discrepancy stays FIRST — POPULATION INTEGRITY BEFORE ANY
+TRACE OVER THAT POPULATION.**
+★★ **ONE CHECK §14 NAMES THAT WOULD UPGRADE ITS OWN READ: confirm the CURRENT
+`PROMPT` literal still hashes `c75a2da8…` — i.e. that the `:60` line the desk
+just read is the same text that ran at extraction time. Until then the locus is
+read at TODAY's tree, not at extraction identity.** ★★★★★ **SIX REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434 ·
 AR-435 · AR-437 · AR-439 · AR-441. THE JUDGMENT IS NOW RIPE — the measurement
 chain is COMPLETE and the only thing outstanding is the operator's external read.**
 ★★★★★ **WORKER: HANDED OFF (AR-442, clean boundary, R-457 discharged, nothing in
