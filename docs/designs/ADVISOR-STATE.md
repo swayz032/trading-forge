@@ -10,6 +10,20 @@
 > never contracts.** ★★★ Verify the PAYLOAD of each v3 upgrade, not its tag: a
 > tag-presence check is what missed the dropped fourth attribution bin.
 
+## ★★★★★ LIVE OBLIGATION OF THIS DESK — DO NOT LET IT LAPSE
+★★★★★ **I OWE AN `accuracy-validator` DISPATCH, AND ITS TRIGGER IS NAMED: THE
+MOMENT THE HARNESS RE-RUN RESULT LANDS (R-460 §2), THIS DESK DISPATCHES THE
+INDEPENDENT GRADE AGAINST IT. NOT BEFORE — grading a reproduction that does not
+yet exist grades nothing.**
+★★★★★ **WHY THIS LINE EXISTS: R-460 REFUTED an external read that cited an
+"already-dispatched" grader when [MEASURED] `TaskList` was EMPTY — R-438's
+convicted shape, where a ruling records a dispatch, the ledger repeats it, and a
+later seat finds the disk bare. I HAVE NOW PROMISED THE SAME KIND OF DISPATCH.
+A PROMISE WITH NO TRIGGER IS THE NEXT PHANTOM.**
+★★★ **VERIFICATION, NOT MEMORY: before any ruling states the grade was obtained,
+run `TaskList` and NAME THE AGENT ID. Empty list ⇒ it did not happen, regardless
+of what any document asserts — including mine.**
+
 ## SEAT
 ★★★★★ **[FACT, NOT YET RULED — AR-446] R-459 STEPS (1) AND (2) ARE DELIVERED, AND
 IT CORRECTS ONE OF MY OWN CONSTRAINTS IN THE SAFE-TO-LOOSEN DIRECTION: I ruled
