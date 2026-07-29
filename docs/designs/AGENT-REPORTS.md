@@ -4,6 +4,20 @@
 
 ---
 
+## AR-409 · 2026-07-29 · **START-RECEIPT — R-437 + R-438: IMPLEMENT THE ONE-WORD EDIT, FIX THE FOUR NAMED TESTS, OPEN THE PR. NO MERGE.**
+
+**RULING ID:** R-437, as amended by R-438 · **TASK ID:** AR-409 · **STATUS:** STARTING. Fresh worker seat; read order complete (R-438 → R-437 → R-436 → AR-408 → `## THE PLAN`).
+
+**WHAT I AM DOING:** branch off the DEPLOYED lane's base `hardening/slumhouse-shared-office-parity-20260723` (**[MEASURED]** the base of both #29 and #30, via `gh pr view`) in a NEW worktree — **not** this shared campaign tree · remove `"spine"` from `_MANDATORY_ROLES` (`spec_execution_preflight.py:94`) · update the four tests R-438 names to assert `UNKNOWN_REQUIREDNESS` **AND** `blocks_execution(...) is True` (**updated, never deleted** — the discriminator is the check) · add the committed SET-comparison refusal-identity regression test · update every docstring claiming `spine → MANDATORY` · answer the `error_message()` `"mandatory rule(s)"` question **independently of the grader's answer**, as R-438 §(2) requires.
+
+**FIRST OBSERVABLE:** this receipt. **ETA:** ~30 min to PR open.
+**I WILL NOT:** merge · deploy · touch `confluence` / `_OPTIONAL_CANDIDATE_ROLES` · flip flags · expand classifier rule coverage · write to the DB, `runtime-production`, or the tower · run backtests · `git checkout` in this shared tree.
+**STOP CONDITIONS ARMED:** `backtests total > 0` · CI red · **any condition changing pass/fail in the committed test** — R-437's premise is that it cannot, and if it does I stop and report rather than adjust the test.
+
+★ **CARRIED FORWARD, NOT MINE TO CLOSE:** the `426` / `1347→921` / `18→444` counts remain **UNVERIFIED** per R-438 §2 and are the re-dispatched grader's item. **I will not restate them as measured in the PR body** — they go in as *claimed, pending independent census*.
+
+---
+
 ## AR-408 · 2026-07-29 · **THE ONE-LINE PROVENANCE-FIX PACKET — STAGED, NOT IMPLEMENTED.** ★★★ **RED-PROOF COMPUTED, NOT ASSERTED: SYMMETRIC DIFFERENCE `0`. 1368 REFUSALS BEFORE, 1368 AFTER, IDENTICAL SETS, IDENTICAL 120-STRATEGY REFUSAL SET — YOUR STOP CONDITION DOES NOT FIRE.** ★★★ **AND THE POINT OF THE CHANGE, MEASURED: `426` CONDITIONS STOP CLAIMING THE SOURCE REQUIRED THEM. `MANDATORY` 1347→921 · `UNKNOWN_REQUIREDNESS` 18→444**
 
 **RULING ID:** R-436 · **ARTIFACT:** `docs/designs/PROVENANCE-FIX-PACKET-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED. Nothing implemented. [MEASURED] `backtests total = 0`.** ★ No START-RECEIPT was owed — the work ran under the 10-minute observable-free bar, as with AR-397.
