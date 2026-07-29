@@ -12,6 +12,98 @@
 
 ---
 
+## R-446 · 2026-07-29 · ★★★★★ **PR #32 IS MERGED (`75065635`) — THE GRADE CAME BACK `SOUND-WITH-GAPS` AND THE GAPS DO NOT BLOCK.** ★★★★★ **AND THE GRADER REFUTED *ME*, NOT THE WORKER: MY R-445 §4 CLAIM THAT `ci/__tests__` NEVER RUNS IN CI IS **FALSE AND IS WITHDRAWN**. THERE IS A SECOND CONFIG — `ci/vitest.config.mjs`, WIRED AT `fast.yml:125` WITH NO `continue-on-error`. THOSE 22 TESTS ARE **LIVE BLOCKING GATES**. I SEARCHED FOR THE TEST PATH; THE WIRING NAMES THE CONFIG FILE.** ★★★ **AR-422 ACCEPTED: STOP DOES NOT FIRE — I RE-DERIVED THE 132/23/1/9 SPLIT MYSELF FROM CI'S ARTIFACT AND IT MATCHES EXACTLY, AND 0 OF 19 FILES ARE MISSING.** ★★ **I ALSO OVERRULE THE GRADER ON ONE POINT, BY MEASUREMENT: THE WORKER DID NOT MISCOUNT ITS TESTS**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`.
+
+★★★★★ **PR #32 IS MERGED — `75065635`, 05:38:08Z. Your work is in.** ★★ **[MEASURED HERE] it merged to `hardening/slumhouse-shared-office-parity-20260723` (the lane CI tests and `runtime-production` tracks), NOT to `main` — `origin/main` still reads 189 entries and is a different, older line. [MEASURED HERE] the merged diff touches ONLY `.github/workflows/ci.yml`, `ci/*`, and five `src/engine/tests/*.py` files — ZERO runtime source — so no tower update is implied by it.**
+
+★★★★★ **FIRST, A CORRECTION YOU ARE OWED, AND IT IS MINE.** In R-445 §4 I told you — and recorded as `[MEASURED HERE]` — that `ci/__tests__` never executes in CI, and I queued you a task to "wire it in". **THAT WAS WRONG AND THE TASK IS CANCELLED.** ★★★ **[MEASURED HERE] `ci/vitest.config.mjs:19` includes `"ci/**/*.test.mjs"`, and `.github/workflows/fast.yml:125` runs `node node_modules/vitest/vitest.mjs run --config ci/vitest.config.mjs` in the blocking `fast` job with no `continue-on-error`. [MEASURED BY GRADED INSTRUMENT] the live Fast-Lane log for `af5779ef` shows `✓ ci/__tests__/compare-baseline.test.mjs (16 tests)`, `FAST_LANE_GREEN`.**
+★★★ **WHY I GOT IT WRONG, AND IT IS THE JOIN KEY AGAIN: I ran `git grep 'ci/__tests__' -- '*.yml'` and got zero hits, then published "nothing references it". [MEASURED HERE] `git grep 'ci/vitest.config.mjs' -- '*.yml'` returns 2 hits in `fast.yml`. THE WIRING NEVER NAMES THE TEST DIRECTORY — IT NAMES THE CONFIG. A search's EXCLUSIONS are part of its result, and I searched for the wrong string.**
+★★ **YOUR AR-420 §5(a) made the same error, and I am not marking that against you — you declined to act on it, which is the only reason no one "fixed" a thing that was never broken. The good news is strictly better than the finding: your three discriminators are enforced on every push, today.**
+
+### YOUR NEXT TASK — CLOSE THE ONE REAL GAP THE GRADER FOUND
+
+★★★ **The grader confirmed your self-named blind spot is REACHABLE, and found a sharper trigger than either of us named. [MEASURED BY GRADED INSTRUMENT] with `results.passed = []` (present-but-empty, distinct from absent) the output is identical to the absent case: `fixedFailures=[]`, `staleBaseline=false` — `--fail-on-stale` goes SILENTLY INERT.** ★★ **The reassuring half, and it bounds the severity: [MEASURED BY GRADED INSTRUMENT] the core `verdict`/`newFailures` gate reads only `failures`, so it is unaffected — this defeats the self-cleaning feature, NOT the regression-catching gate.**
+★★★★★ **THE TRIGGER IS NOT HYPOTHETICAL: [MEASURED BY GRADED INSTRUMENT] `package.json:80` pins vitest as `"^3.1.0"` — a floating range — and the committed lockfile at `af5779ef` already resolves to `3.2.7`. Every vitest-shape unit test uses a hand-built synthetic report, never a real vitest-produced one. So a future 3.x that renames the `status` enum ships undetected and the guard quietly stops guarding.**
+
+**BUILD THE SANITY ASSERTION (the grader's proposal, and I adopt it):** in `parseVitestJson`, assert that `passed.length + failures.length` is not implausibly small relative to `collected`, and **THROW LOUDLY rather than returning a quiet empty set.** ★★★ **RED-PROOF IT BOTH WAYS, and this is the acceptance condition: it must go RED on a report whose `passed` is empty-but-collected-is-large, and GREEN on the real artifact from run `30422166825`.** ★★ **Pick the threshold and DEFEND it in the AR — a tolerance added to a guard owes a fresh demonstration that it still bites.**
+★★★ **AND ONE THING THE GRADER COULD NOT TEST: it never exercised `parsePytestJunit` against a REAL pytest artifact, because [MEASURED HERE] `pytest.knownFailures` is 0 at every commit — that path is structurally untested by production data. If your assertion is parser-generic, say so; if it is vitest-only, say that too and name what pytest would need.**
+
+**SECOND — THE SCHEMA FINDING YOU REFUSED TO WAVE OFF.** ★★★★★ **You were right not to call `lifecycle-transitions` environmental on a name-based hunch, and I am not going to let it sit as a footnote. `expected 'timestamp with time zone' to be 'timestamp without time zone'` and a nullability `YES`/`NO` flip are "the schema is not what we think it is", and this repo has a CONVICTED instance of exactly that class — a migration journalled as applied whose DDL never ran (migration 0134).**
+**BOUNDED DIAGNOSTIC — read-only, do NOT fix:** for the two failing columns, compare **what the migration DDL declares** against **what the CI database actually has**, and state which of three it is: **(a) the migration never ran** · **(b) it ran and a later migration altered the column** · **(c) the CI DB is constructed by a different path than migrations (e.g. a schema dump or `db:push`), so the drift is a CI-construction artifact and not a production risk.** ★★ **(c) is a perfectly good answer and I expect it is the most likely — but "most likely" is not a measurement.** ★★★ **IF THE ANSWER IS (a), STOP AND COME TO ME: that would mean the journal disagrees with the database, and that is a different and much larger finding than two failing tests.**
+
+**ALLOWED:** read anything · run suites locally · `gh` · edit `ci/compare-baseline.mjs` + its tests for the sanity assertion · a NEW PR off the deployed lane · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** fixing the 9 · fixing the schema (diagnose only) · deleting any of the 24 unresolved entries · touching `main` · removing `continue-on-error` · deploying · tower update · backtests · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~40 min for both.** ★★ **Exceeds the 15-min watchdog bar; recorded in `ADVISOR-STATE` as EXPECTED, not a stall.**
+**HONEST-PARTIAL:** if the CI-DB construction path is not discoverable from the repo, say so and name what you would need — do not infer it from the migration files alone.
+**STOP:** the schema answer is **(a) migration never ran** · `backtests total > 0`.
+
+★★★ **AND THEN THE LANE CLOSES. After these two items the CI-honesty lane is DONE and we move to the money path — v4 §3-1B (unlock-distance ranking) is your next dispatch. v4 §9 bounds this lane explicitly: "governance; NEVER a merge gate for spearhead packets." It has paid for itself; it does not get to keep growing.**
+
+---
+
+**RULING ID:** R-446 · **TASK ID:** AR-422 + the dispatched grade · **DECISION:** **APPROVE AR-422. MERGE PR #32 — EXECUTED. WITHDRAW AND CORRECT R-445 §4. Next tasks authorized above.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-422`**, ruled here.
+
+### ★★★★★ §1 — THE STOP CONDITION, RE-DERIVED AT THIS DESK
+
+**I did not accept the split on relay. [MEASURED HERE] `gh run download 30422166825 -n node-vitest-results`, then an independent join of the 165 baseline `id`s against 13,485 real assertions keyed on `basename(file) + " > " + fullName`:**
+
+| status | n |
+|---|---:|
+| `passed` | **132** |
+| `ABSENT` | **23** |
+| `skipped` | **1** |
+| `failed` | **9** |
+
+★★★ **Exactly AR-420's and AR-422's figures, derived by a different route. And the STOP question itself: [MEASURED HERE] all 19 files holding the 23 absences appear in the report's 923 files — TRULY MISSING = 0. No absence traces to a file-level collection error; the hidden-population hazard I named does not exist here.**
+
+★★★★★ **BUT MY FIRST ANSWER WAS THE OPPOSITE, AND THE INSTRUMENT WAS THE LIAR — FOR THE THIRD TIME TONIGHT.** My first pass used `comm -23` and reported **19 of 19 files MISSING**, which would have fired the STOP and escalated a non-incident. **[MEASURED HERE] a direct `grep -x -F` membership test returns 1 for each of those same files: `comm` requires both inputs in the same collation and mine were not.** ★★★ **What saved it was not care — it was the rule that a surprising result is an accusation against your tooling first. "19 of 19 missing" was too total to be real. A partial wrong answer would have looked plausible and I would have shipped it.** ★★ **Tonight's instrument lies, in order: `| tail` masking a `gh` exit code · a scratch vitest config resolving `vitest/config` from outside `node_modules` · a suite run in a tree that does not contain the file · and now `comm` under a locale mismatch. FOUR, all mine, none a real defect in the work under review.**
+
+### ★★★★★ §2 — THE GRADE, AND THE PART OF IT THAT REFUTES ME
+
+**`accuracy-validator` returned `SOUND-WITH-GAPS` on `af5779ef` via two non-overlapping paths** (the real Linux artifact re-run through the shipped parsers, and a fresh production CI run for the same commit). **[MEASURED BY GRADED INSTRUMENT]:**
+- **Item 1 — no counterexample found.** Empty/absent `passed`, retry double-emission, spurious `<failure>`/`<skipped>` substrings: in each case a not-passed test does not reach `fixedFailures` — **the `failed` check runs first and is exclusive (`compare-baseline.mjs:118-149`, `:161-184`).**
+- **Item 2 — fail-closed confirmed at `:88-90`.** Join-key collision risk is **latent and pre-existing** (zero duplicate test-file basenames in the repo today), **not introduced by this PR**.
+- **Item 4 — the discriminators BITE, proven by mutation and not by inspection: 6 of 16 tests go RED under the old logic**, including both tests named `DISCRIMINATOR:` and the fail-closed test.
+- **Item 5 — nothing weakened: exactly one line removed in the whole test file, and it was an INPUT, never an `expect(...)`.**
+
+★★★★★ **ITEM 6 IS THE ONE THAT MATTERS AND IT CONVICTS MY OWN RULING.** R-445 §4 asserted, at grade `[MEASURED HERE]`, that the comparator's tests never execute in CI, and I built a queued task on it. **It is false.** ★★★ **[MEASURED HERE, verifying the grader rather than relaying it] `ci/vitest.config.mjs:19` includes `"ci/**/*.test.mjs"`; `fast.yml:125` invokes exactly that config inside the blocking `fast` job with no `continue-on-error`; and `git grep 'ci/vitest.config.mjs' -- '*.yml'` = 2 hits where `git grep 'ci/__tests__' -- '*.yml'` = 0.** ★★★ **THE CONSEQUENCE INVERTS MY §4: those 22 tests are live blocking gates, so Items 4 and 5 carry FULL trust, not the discounted trust I assigned them.**
+★★ **This is precisely what `doer ≠ grader` is for, and note the shape: the worker and I made the SAME error independently, because we scoped the question identically — "what references the test directory?" Two agents verifying the same framing is not independence. The grader asked a different question.**
+
+### ★★ §3 — WHERE I OVERRULE THE GRADER, BY MEASUREMENT
+
+**The grade reports a "discrepancy": that the worker's "comparator unit tests 19 → 22" is wrong and the true figure is 13 → 16, and it cites a remembered pattern of authors miscounting tests.** ★★★ **BOTH NUMBERS ARE RIGHT AND THEY NAME DIFFERENT POPULATIONS. [MEASURED HERE] `compare-baseline.test.mjs` = 13 → 16; `run-checks.test.mjs` = 6 at BOTH commits; the `ci/__tests__` DIRECTORY = 13+6 = **19** → 16+6 = **22**, and my own run of the directory returned `Test Files 2 passed, Tests 22 passed`.** ★★★ **The grader compared a FILE-scoped count against a DIRECTORY-scoped caption and called the author unreliable. THE WORKER DID NOT MISCOUNT.**
+★★ **Recorded deliberately: a grader's finding is evidence, not a verdict, and a prior-pattern memory is the most seductive way to reach a wrong conclusion — it supplies the confidence before the measurement. Disagreeing graders resolve by MEASUREMENT (standing law), and here the measurement favours the worker.** ★ **The caption remains imprecise — "comparator unit tests" for a directory total — which is the nit I already logged in R-445 §2. It is a nit, not a miscount.**
+
+### §4 — MERGE, EXECUTED
+
+**[MEASURED HERE] `gh pr merge 32 --squash` → state `MERGED`, `mergedAt 2026-07-29T05:38:08Z`, merge commit `75065635`.** ★★ **I verified the ARTIFACT and not the exit code, and it caught a real ambiguity: `origin/main` still reads 189 entries, because [MEASURED HERE] #32's base was `hardening/slumhouse-shared-office-parity-20260723`, not `main`. `git show 75065635:ci/baseline-failures.json` = 33. The change is in, on the lane CI tests.**
+★★★ **SO A LABEL IN R-445 §1 IS CORRECTED: I captioned `a52449ac` "merged tip / merged main tip". [MEASURED HERE] it is the tip of `origin/hardening/slumhouse-shared-office-parity-20260723`. The SHA was right everywhere it was used — including in the grader's brief — so no measurement is affected; the WORD was wrong. `main` is not this campaign's integration branch and a later seat should not assume it is.**
+**[MEASURED HERE] no tower update is implied: the merged diff is `.github/workflows/ci.yml` + `ci/*` + five `src/engine/tests/*.py`, and contains no runtime source file.**
+
+### §5 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests total = 0`; no promotion, no capital. **#7 holds** — I have not edited `AGENT-REPORTS.md`. **#8 holds** — no `checkout`/`reset` in the shared tree; the merge was performed through `gh` against the remote. **#9 holds** — I withdrew my own §4 rather than leaving a convenient false finding standing, and the withdrawal makes the codebase look BETTER than my ruling did, which is the easy direction to be honest in and still worth doing explicitly.
+
+**FAILED OR UNPROVEN CONDITIONS:**
+- **The `passed: []` silent-inertness — CONFIRMED REACHABLE, NOT YET CLOSED.** Assigned above. ★ Bounded: it defeats the self-cleaning feature only; the regression gate is unaffected.
+- **`parsePytestJunit` against a real pytest artifact — [NOT MEASURED], structurally untestable today** (`pytest.knownFailures` = 0 at every commit).
+- **`lifecycle-transitions` schema mismatch — cause UNKNOWN**, three-way diagnostic assigned. ★ Severity **UNKNOWN pending it**; I am not calling it benign before measurement, and not calling it an incident either.
+- **The 6 `UNKNOWN` absences — [NOT MEASURED] and DELIBERATELY NOT PURSUED.** They are dead wood inside healthy files; six git-history searches to classify entries nobody will delete is optimising the metric instead of the mission. **Left as UNRESOLVED on purpose, which is the honest state.**
+- **The 4 polarity flips the worker surfaced** (a default flipped, a staleness gate's sense flipped, a silent disable became a mandatory warning) — **real product decisions recorded ONLY as vanished baseline entries.** ★★ **The worker filed these as `gate-artifact` in v4's four-bin sense, correctly, within minutes of the bin being restored — which is the first evidence the R-445 carrier repair was worth making.** Not actioned; noted.
+- **v4's external-GPT read — [UNPROVEN]**, still unwired, still flagged to the operator.
+
+**LESSON TO PERSIST.** ★★★★★ **I PUBLISHED A `[MEASURED HERE]` NEGATIVE FROM A GREP AND IT WAS FALSE, BECAUSE THE THING I SEARCHED FOR IS NOT THE THING THAT DOES THE WIRING. A grep for X proves something about X, never about the RELATIONSHIP X participates in — the workflow reaches those tests through a config file whose name shares no substring with them. When the claim is "nothing calls this", the join key is the CALLER'S VOCABULARY, not the callee's.** ★★★ **SECOND: an absence-claim deserves more evidence than a presence-claim, and I gave it less. "I found no reference" is one search away from "there is no reference" only if you enumerated the ways a reference can be spelled.** ★★★ **THIRD: four instrument lies in one session, all mine, none a defect in the work under review — and the one that nearly escalated a non-incident (`comm`) was caught only because its answer was too total to be plausible. Implausibility is a weak guard; prefer the form with fewest layers between you and the thing.** ★★ **FOURTH: a grader that is right about the big thing can be wrong about a small one, and its prior-pattern memory is where the wrongness will live. Take the finding, re-measure the number.**
+
+---
+
 ## R-445 · 2026-07-29 · ★★★★★ **BLUEPRINT v4 IS ADOPTED — IT IS NOW THE OPERATIVE PLAN (operator-directed). AND ITS CARRIER-EROSION FINDING CONVICTS MY OWN STATE FILE, WRITTEN FORTY MINUTES EARLIER: [MEASURED HERE] R-061 §1 HAS **FOUR** ATTRIBUTION BINS AND I CARRIED THREE — I VERIFIED THE FIVE `v3-N` TAGS SURVIVED AND NEVER CHECKED WHAT WAS INSIDE THEM.** ★★★ **AR-420 ACCEPTED IN FULL: THE RAN-AND-PASSED DISCRIMINATOR FIRED ON FIRST CONTACT — 24 OF 156 HAD NEVER EXECUTED AND WOULD HAVE BEEN DELETED FOR IT. THE WORKER FIXED THE INSTRUMENT, NOT THE DATA.** ★★ **MERGE OF #32 HELD ON ONE THING: THE MANDATORY INDEPENDENT GRADE OF AN INSTRUMENT CHANGE, DISPATCHED AND IN FLIGHT**
 
 ---
