@@ -10,8 +10,45 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-449**. Newest AR **AR-426 — start-receipt, IN FLIGHT** (AR-425's
-decline-receipt ACCEPTED at R-448).
+Ledger **R-451**. Newest AR **AR-427 — RULED, APPROVED IN FULL**.
+★★★★★ **v4 §3-1B IS DELIVERED. THE C8 RE-EXTRACTION SLICE IS MEASURED AND NAMED:**
+**37 videos in the wave · 3 EXCLUDED BY NAME** (`N7uP9V0Iktc` · `ktkqq7QsN9Q` ·
+`1HFoStW_wsc` — they carry NO C8 refusal, so the fix moves nothing for them;
+retained in the library for separate remediation, re-entry ONLY via a new
+measured ranking). **Distance histogram `{0:2, 1:8, 2:8, 3:9, 4:8, 5:5}` = 40.**
+**Distance-0 = `75DJN5UVQnw` (5 C8, 0 residual) · `jlShztsY3oA` (1 C8, 0 residual
+— the cheapest object in the library).**
+★★★★★ **`gen_ledger.py` IS RETIRED FROM DECISION USE: [MEASURED] it reproduces
+its OWN published chain in `4 of 12` runs — a consequential tie at step 4
+resolved by Python's per-process `str` hash randomisation. THE PUBLISHED NUMBER
+IS THE OPTIMUM BY LUCK. The historical result is numerically correct AND
+independently re-derived as the exhaustive optimum at all nine k; the deterministic
+ranker is authoritative for all future ranking.**
+★★★★★ **FIFTH DIAGNOSTIC, ADOPTED FROM THE WORKER — add to the reproduction-
+failure list: `AN ARBITRARY TIE-BREAK INSIDE THE PUBLISHED INSTRUMENT — a number
+that is not a pure function of the census alone.` It is invisible to every check
+that does not RE-RUN under a varied environment.**
+★★★★★ **`UNLOCKED ≠ TRADE-READY`, AND IT IS MEASURED, NOT hedged: [MEASURED,
+AR-427 §6] of `2351` bindings, `943` are `approximation=False`; their primitives
+are `496` ALL FRAMEWORK-OWNED (`spine_completion_trigger` 245 · `structural_stops`
+224 · `provenance_only` 27) plus `447` WITH NO PRIMITIVE AT ALL. NOT ONE IS A
+TAUGHT DETECTOR. `75DJN5UVQnw` has `executable_spine_count = 0`. `distance 0`
+means PREFLIGHT-CLEAN — never source-exact, bound, Phase-1-complete, profitable,
+backtest-qualified, paper-ready or live-ready. THE RANKING AUTHORIZES NO BACKTEST.**
+★★★ **SMC PREDICTION WITHDRAWN ON MEASUREMENT: v4 §3-1B predicted the SMC spec
+would be distance-0; `bos_and_fvg_or_fvg` (`E8Wg6tFPYjo`) measures distance `1`
+(needs +C5). DO NOT ROUND IT UP — that refusal is the evidence the ranker
+MEASURES rather than CONFIRMS the plan.**
+**TASK (R-451):** (a) commit a **CENSUS REPRODUCIBILITY MANIFEST** (command ·
+population def · DB read timestamp · row + distinct-video counts · artifact
+sha256s · classifier/taxonomy hashes · schema version · ranker commit · snapshot
+location + retention) · (b) a **DETERMINISM TEST FOR THE NEW RANKER ITSELF** —
+byte-identical output across ≥12 `PYTHONHASHSEED` values. ETA ~35 min.
+★★★ **ARMED STOP: if the new ranker is ALSO non-deterministic, that is a finding
+— report it, do not patch it quietly.**
+★★ **STANDING (R-451): committing a DERIVED, operator-data-free INSTRUMENT is
+inside the worker's authority and needs no ruling. An instrument that exists only
+in `%TEMP%` is not an instrument, it is a rumour.**
 **PR #32 (`75065635`) and PR #33 (`dcb5eca8`) BOTH MERGED.** ★★★ **THE CI-HONESTY
 LANE IS CLOSED (v4 §9 bound: "governance; NEVER a merge gate for spearhead
 packets").**
