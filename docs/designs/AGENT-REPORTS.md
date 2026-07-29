@@ -4,6 +4,25 @@
 
 ---
 
+## AR-453 · 2026-07-29 · ★★★ **INCIDENT, POST-HANDOFF: THE RULINGS MONITOR IS DEAD (exit 254). ★★★★★ I VERIFIED THE GAP IS **EMPTY** BEFORE SAYING ANYTHING ELSE — NEWEST RULING IS `R-463`, WHICH I ALREADY READ AND DISCHARGED IN AR-452. NOTHING LANDED UNSEEN. AND I DID **NOT** RESTART IT.**
+
+**RULING ID:** none — unsolicited incident report · **TASK ID:** AR-453 · **PRIOR:** AR-452 (handoff, unchanged) · **STATUS:** DISCLOSURE ONLY, no work performed.
+
+★★★★★ **WHY THIS IS WORTH A REPORT RATHER THAN A SHRUG: a dead ruling-monitor is INVISIBLE. It reads exactly like a quiet desk. The next seat — and this one, five minutes ago — would assume rulings are being watched. THEY ARE NOT.**
+
+**[MEASURED] GAP CHECK FIRST, per the standing rule that a monitor is never restarted before the gap is proven empty:** newest `## R-` heading in `ADVISOR-RULINGS.md` is **`R-463`** · file mtime `14:43` · **R-463 is the ruling AR-452 answered.** ★★★ **No ruling landed during the outage. The monitor died AFTER delivering its last event, not before.**
+
+**[MEASURED] CAUSE — reported as far as the evidence carries and no further:** the failure is **`bash: fork: Cannot allocate memory`**, preceded by repeated `dofork: child -1 … died unexpectedly` / `Resource temporarily unavailable` (`0xC000012D`, `0xC0000142`). ★★ **That is the Git-Bash fork-under-load failure mode on Windows, not a logic fault in the monitor script.**
+★★★ **AND THE CONTROL THAT STOPS ME OVER-DIAGNOSING IT: the box is NOT under memory pressure now — `12.38 GB free of 31.11 GB (39.8%)`, largest process `1.1 GB`. So the exhaustion was TRANSIENT, most plausibly a fork burst while the grader agent, my `tsx` re-run and the monitor were all live.** ★★ **[NOT MEASURED] I did not capture the memory state at the moment of failure, so "transient burst" is a HYPOTHESIS consistent with the evidence — not a diagnosis. I am not dressing it as one.**
+
+★★★★★ **I DID NOT RESTART IT, DELIBERATELY, FOR TWO REASONS:** ★★★ **(1) ONE RIG PER CHANNEL — a restart I cannot supervise past my own handoff risks a second monitor running beside a first that is only presumed dead. (2) It is a durable side-effect that would outlive this seat, and the incoming session's read-order gets it the same rulings directly.**
+
+★★ **RECOMMENDATION (not an action): whoever seats next either restarts ONE monitor after re-confirming this one is gone, or reads `ADVISOR-RULINGS.md` directly per the onboarding read-order and does not rely on being pinged.**
+
+★★★ **AR-452's HANDOFF IS UNCHANGED AND STILL STANDS: nothing half-done, nothing in flight, no sub-agent owed, and R-463 §5 (the generator hardening, under a ratify packet with an independent grade) remains the next task for a FRESH worker session. This report adds no work — it adds a fact that would otherwise have been lost.**
+
+---
+
 ## AR-452 · 2026-07-29 · ★★★★★ **§2 DONE — 40 TRANSCRIPTS PRESERVED AS **BYTES**, `913,668` OF THEM, ENGAGEMENT-DERIVED AND VERIFIED `40/40` FROM THE MANIFEST ON DISK. §3's THREE ERRATA PUBLISHED ADDITIVELY.** ★★★★★ **AND I DID NOT RELAY YOUR CRLF CLAIM — I MEASURED IT, AND IT IS FALSE OF THE SET I WAS PRESERVING: `0 of 40` TRANSCRIPTS CONTAIN CRLF. THE FALSE-RED RISK IS REAL BUT IT LIVES ON `clause-segmenter.ts` AND `graph-to-engine.ts`, NOT HERE — AND A CONVENTION STATED AS UNIVERSAL WHEN IT IS PER-FILE IS HOW A VERIFIER LEARNS TO IGNORE THE WARNING.** ★★★ **(b) AND (c) BOTH CONFIRMED AT THE LINE — AND (b) HAD A TRAP IN IT: `grep graph-to-engine` HITS TWICE IN `gate-strength.ts`, BOTH INSIDE A COMMENT BLOCK.**
 
 **RULING ID:** R-463 §2 + §3 · **TASK ID:** AR-451 · **PRIOR:** AR-450 · **COMMIT AT WRITE `b27153b5`** · **RECOMMENDATION:** **APPROVAL_REQUESTED on §2 and §3. ★★★ §5 NOT STARTED — handing off, see §5 below.**
