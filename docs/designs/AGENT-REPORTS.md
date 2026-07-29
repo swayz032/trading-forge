@@ -4,6 +4,25 @@
 
 ---
 
+## AR-417 · 2026-07-29 · **START-RECEIPT — R-443: EXTEND #32 TO ALL SEVEN FILES, THEN UN-EXCUSE THE 24 KILL-SWITCH / COMPLIANCE-GATE ASSERTIONS.**
+
+**RULING ID:** R-443 · **TASK ID:** AR-417 · **BRANCH:** `hardening/ci-abs-path-tests-20260729` (extending #32 in place, not a new PR) · **STATUS:** STARTING.
+
+★★★ **YOUR §finding OUTRANKS MY REPORT AND I ACCEPT THE SCOPE CORRECTION WITHOUT RESERVATION. My sweep found 4 of 7 because I grepped for `C:/Users/` filtered to paths matching `test|spec` — a filter that silently dropped the TypeScript suites whose names did not match my pattern.** ★★ **That is my own convicted shape — I published what the filter INCLUDED and never asked what it EXCLUDED — and it cost the three highest-value members of the class.**
+
+**ORDER OF WORK:**
+1. Repoint all **7** files to a `__file__` / `import.meta.url`-anchored repo root. ★ **[NOTED, and I will verify at the line] `nodePath.resolve("C:/…")` is NOT absolute on POSIX, so it silently resolves under the runner cwd — a different mechanism from the Python `read_text` raise, and it needs its own proof.**
+2. ★★★ **Verify EACH of the 24 `live-fix-sweep` assertions HOLDS against THIS tree's real source BEFORE removing its baseline entry.** An entry deleted on faith is the same defect one layer up.
+3. Red-proof every surface both ways — mutate the real file → RED — and prove the mode is **ran-and-failed**, never *skipped* or *baselined*.
+4. **Touch none of the other ~364 baseline entries.**
+
+★★★ **STOP CONDITION I AM TREATING AS THE PRIMARY ONE: if any of the 24 genuinely fails against the real source — particularly the `kill-switch.ts` `phase_4c_pending` stub assertion or the five `compliance_gate.py` MFFU wiring assertions — I STOP AND REPORT IMMEDIATELY and do not fix it.** ★★ **A safety assertion that has been failing behind an allow-list for an unknown period is a live finding, and the worst possible response is to quietly make it green.**
+
+**FIRST OBSERVABLE:** this receipt. **ETA ~50 min.** ★ **HONEST-PARTIAL ARMED: if the TS half is larger than it looks I land the Python half plus the measured TS inventory and say so rather than half-finishing both.**
+**I WILL NOT:** merge #32 · remove `continue-on-error` · delete a baseline entry whose test I have not proven passes · use `--unsafe-fixes` · touch the other baseline entries · `git checkout` in this shared tree.
+
+---
+
 ## AR-416 · 2026-07-29 · **ROOT CAUSE FOUND, AND IT IS NOT LINE ENDINGS: FOUR TEST FILES HARDCODE AN ABSOLUTE PATH INTO ONE DEVELOPER'S CHECKOUT. PR #32 OPEN.** ★★★ **BUT THE SEVEN ARE NOT THE STORY. THE CI RUN IS KILLED BY `pytest-timeout` AT `44%` — SO ~56% OF THE PYTHON SUITE HAS NOT EXECUTED IN CI FOR HOURS, AND THE JOB REPORTED GREEN.** ★★★ **AND NINE MORE TESTS WITH THE SAME ROOT CAUSE **SILENTLY SKIP** ON LINUX — THEY HAVE NEVER RUN, EVER.** ★★ **CORRECTION TO MY OWN AR-414: THE HANG CLASS *IS* ALIVE ON LINUX. MY "DOES NOT REPRODUCE" WAS WINDOWS-ONLY AND THE LIMIT I FLAGGED IS WHERE THE INCIDENT WAS HIDING**
 
 **RULING ID:** R-442 · **TASK ID:** AR-415 · **PR:** #32 · **COMMIT:** `d43197a5` · **BASE:** `a52449ac` (post-#31 deployed tip) · **RECOMMENDATION:** **APPROVAL_REQUESTED. Root cause + fix delivered; the truncation is NOT fixed and is not mine to fix yet.**
