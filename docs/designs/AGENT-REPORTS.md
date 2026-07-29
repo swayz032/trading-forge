@@ -4,6 +4,98 @@
 
 ---
 
+## AR-385 · 2026-07-28 · ★★★ **SAFETY RELEASE BUILT AND PR'd — #29, 5 files, +894/-17, matrix RED 14/GREEN 26.** ★★★ **AND I MUST CORRECT MY OWN AR-384, WHICH R-420 RATIFIED AND QUOTED: `:616-620` IS UNREACHABLE. Every unbindable binding also carries `executed=False`, and the `executed` guard PRECEDES the `bindable` check — so a mandatory rule was SILENTLY DROPPED, never converted to `np.ones`. Same consequence, wrong mechanism — and edit (C) as specified would have guarded DEAD CODE.** ★★★ **BLAST RADIUS, MEASURED AND IT IS THE HEADLINE: 41 of 41 campaign specs REFUSE — and 40 of 41 still refuse even if EVERY confluence rule is granted optional. The preflight does not cause that; it REVEALS it**
+
+**RULING ID:** R-420 · **TASK ID:** the safety release (A)+(B)+(C) · **BRANCH:** `hardening/session-refusal-safety-20260728` · **COMMIT:** `c8dae8a8` · **PR:** **#29** (base retargeted to the deploy branch, see §7) · **TREE: `runtime-production` lane, worktree pinned to `a674f1ed`** · **RECOMMENDATION:** **APPROVAL_REQUESTED — with ONE escalation in §5 that is yours to rule before merge.**
+
+---
+
+### ★★★ §1 — CORRECTION TO AR-384, AND IT IS LOAD-BEARING BECAUSE R-420 BUILT ON IT
+
+R-420's CLAIMS VERIFIED line reproduced my reading of `spec_condition_compiler.py:616-620` verbatim and called it the live conversion. **The line says what we both read. It never executes.**
+
+**[MEASURED HERE, TREE `runtime-production`]** every unbindable family returns `bindable=False` **AND `executed=False`**:
+
+| condition | bindable | executed | reason |
+|---|---|---|---|
+| WAIT_SESSION, unrecognized | False | **False** | `no_recognized_session_keyword` |
+| WAIT_SESSION, orphan zone (post-A) | False | **False** | `session_zone_refused_uncomputable_window:overnight` |
+| RESET / EXCEPTION | False | **False** | `control_flow_*_unsupported` |
+| unknown condition type | False | **False** | `unknown_condition_type` |
+| EXIT_HINT | **True** | False | — (provenance-only, legitimately not executed) |
+
+And the loop tested `if not b.executed: continue` **before** `if not b.bindable:`. ★★★ **So every unbindable row exited at the `executed` guard and its constraint was dropped from the AND entirely. The `np.ones` line was unreachable for any real binding.**
+
+★★ **The consequence I reported is unchanged and still severe** — the rule is not enforced, so the strategy trades where the source forbade. **The mechanism is silent OMISSION (R-417 mode #5), not always-true substitution (mode #1).** Always-true is still reachable, but by a different door: `:700`'s `else: spine_satisfied = np.ones(n)` when `per_condition_bool` ends up empty.
+
+★★★ **This is my own convicted law firing on me: EXISTENCE IS NOT WIRING. I cited a line's text as behaviour without proving the path executes — and the desk's independent check reproduced my reading rather than testing reachability, which is the "a grade that reproduces its instrument is not a second path" shape.** ★★ **Had I implemented (C) exactly as ordered, the guard would have sat on dead code and the suite would have gone green while protecting nothing.** The guard is therefore placed **before** the `executed` skip. `EXIT_HINT` is unaffected (`bindable=True`), so R-420's stop condition — no behaviour change for already-BOUND rules — holds.
+
+★ **Also withdrawn from AR-384 §3:** my "today it binds a restrictive (wrong) window" table. **[MEASURED HERE] `is_in_killzone` returns False for `overnight` and `lunch_blackout` on 0 of 1440 minutes** (`ny_am`/`london` = 180 of 1440, control) — because `session_windows._ZONE_CHECKS:118-124` has no entry for either. **Today's real behaviour is not a wrong window; it is NEVER TRADE, reported as `approximation=False`.** R-420's own framing is what the measurement supports exactly: production sits on FALSE, the naive fix moves it to TRUE, and only the third state preserves the source.
+
+### §2 — WHAT SHIPPED (three edits, one PR)
+
+**(A) RESOLVER** `spec_family_bindings.py` — orphan zones moved to `REFUSED_SESSION_KEYWORDS`; refusal returns the trio `bindable=False · primitive=None · approximation=True` with `session_refusal_reason()`, distinguishable from `no_recognized_session_keyword`. ★ **Scoped INSIDE the `requires_session_keyword` branch**, not the generic dispatch — the false concrete was only ever produced by the session resolver, so refusing there is exactly as wide as the defect. A generic placement would have rejected any FILTER merely mentioning "lunch"; the discriminator tests exist to catch that.
+**(B) PREFLIGHT** `spec_execution_preflight.py` (new, stdlib-only, zero I/O) — refuses the backtest on any MANDATORY unbindable rule, emitting **strategy id · rule text · semantic type · role · reason**. Wired at `backtester.py` **after `from_compiled_spec`, before the mode split** — ★ **[MEASURED] both the walkforward and single-backtest paths share that one construction site, so there is no second door.** That closes AR-384's own `[UNTRACED]` flag.
+**(C) ASSERTION** `spec_condition_compiler.py` — `UnresolvedMandatoryRuleError` at the point of use, placed per §1.
+
+★★ **ROLE POLICY, fail-closed:** `spine`/`invalidation` → MANDATORY; `confluence` → **OPTIONAL_CANDIDATE**, which resolves to MANDATORY **unless** the caller supplies positive evidence for that specific condition id; anything else or absent → MANDATORY. ★ **I implemented both halves of R-420 rather than choosing between them:** the ruling's mapping line says confluence → OPTIONAL-CANDIDATE and its matrix row says an optional unresolved rule proceeds with `OPTIONAL_NOT_APPLIED`. Those reconcile only if "optional" is a CLASSIFICATION requiring evidence, not the raw label. Default is the empty evidence set — **nothing is droppable unless something says so.**
+
+### ★★★ §3 — THE CLASS GUARD (the part that outlives this fix)
+
+`SESSION_KEYWORDS` keys must equal `_ZONE_CHECKS` keys, asserted in both directions. **That is the MEMBERSHIP invariant whose absence made the bug possible** — a phrase could enter the bind table with no clock to bind to, and the neighbouring 50% ratio is a CARDINALITY test that structurally cannot express it. `MIN_SPINE_BOUND_RATIO`'s docstring now records its demotion to a diagnostic. ★ Red-proofed: the guard is **RED against unported production**, GREEN here.
+
+### §4 — EVIDENCE (reproducible; the desk re-executes)
+
+★★ **RED-PROOF METHOD, stated because it is the part worth auditing:** a second worktree pinned to `a674f1ed` (`wt-session-refusal-RED-20260728`), into which I copied **only the two purely-additive files** (the suite + the new preflight module) so the tests fail on **assertions rather than ImportError**. **[VERIFIED] `grep -c` for every new symbol across the three behaviour files there = `0`** — genuinely unported.
+
+| run | result |
+|---|---|
+| matrix vs **unported** `a674f1ed` | ★★★ **14 failed / 12 passed** |
+| matrix vs **this branch** | **26 passed** |
+| regression: session · binding · compiler · fvg · bundle · dst | **151 passed** |
+| regression: backtester + e2e | **17 passed** |
+
+★★★ **The 12 that pass BOTH ways are the discriminators and they are the point:** all four configured sessions still bind, a fully-bound plan still passes preflight, a bound rule still computes. **Without them a refusal-shaped fix passes by refusing everything** — and this release refuses a great deal (§5).
+★ The RED output is itself the defect exhibit: `bindable=True, primitive='session_windows', approximation=False, session_zone='overnight'`.
+
+### ★★★ §5 — THE ESCALATION. BLAST RADIUS, MEASURED — AND IT IS NOT WHAT R-420 ANTICIPATED
+
+R-420 held the refusal count as `[UNMEASURED]` and expected it to turn on orphan-zone role placement. **[MEASURED HERE, 41 on-disk campaign specs, ported code]**
+
+| | |
+|---|---|
+| specs refused, as shipped | ★★★ **41 of 41** |
+| specs refused **if EVERY confluence rule were granted optional** | ★★★ **40 of 41** |
+| orphan-zone refusals (the defect that started this) | **8 conditions across 7 specs — 7 confluence, SPINE exactly ONCE** |
+| refusals by reason | `no_recognized_session_keyword` **447** · orphan-zone **8** · control-flow **12** |
+| refusals by role | confluence 297 · spine 144 · invalidation 12 · trigger 6 |
+
+★★★ **The fail-closed confluence policy is NOT the driver — loosening it buys exactly one spec.** The driver is the pre-existing generic unbindable class, **55× larger than the defect we set out to fix.**
+
+★★★ **THE HONEST SENTENCE: the preflight does not cause this: it reveals it.** Binding coverage is ~0%, which is **exactly what the campaign's own pinned Phase-1 figure already says** (`0/16 specs fully bound`). **Before this PR, a Band-C backtest of any corpus spec would have produced a P&L number while silently not enforcing ~11 rules per spec.** That is R-417's "silently wrong trade count that still looks like a valid result", and it was one backtest away from happening.
+
+★★ **SO THIS IS YOURS TO RULE BEFORE MERGE: shipping this means NO Band-C backtest can run until binding coverage rises.** With `backtests total: 0`, **nothing that has ever executed regresses** — but it converts Phase 1's measurement into a hard gate on Phase 2. ★ **I did NOT soften the fix to make specs pass.** Loosening the refusal to only the orphan-zone class would have made the corpus "executable" again while leaving 447 unenforced rules — optimizing the proxy and destroying the purpose. **If a narrower scope is wanted, that is a ruling, not a worker's judgment call.**
+
+### §6 — WHAT I DID NOT DO, NAMED
+
+★ **[MEASURED] `session_windows.SESSION_KEYWORDS:165-173` keeps its own copy of both orphan zones** — left in place because **`resolve_session_keyword` there has ZERO non-test callers** (dormant, not wrong-in-flight); the TS mirror is likewise untouched. ★★ **But its caption was about to become a lie:** `spec_family_bindings`' table said *"Kept identical to session_windows.SESSION_KEYWORDS"*, which my edit falsified — **rewritten to state the divergence, why it is the fix, and "do not resync".**
+★★★ **THE MATRIX ROW I COULD NOT SATISFY, AND WHY IT IS A REFUSAL NOT A MISS:** *"explicit 16:00–09:30 → bind, cross-midnight interval."* Binding an explicit interval requires a **timezone/calendar basis, which R-417 itself records as `[UNENUMERATED]`** (exchange vs chart vs educator-local, plus DST). **Implementing it would mean inventing the clock basis — the exact silent semantic rewrite this release exists to stop.** A **tripwire test asserts both halves of the known-broken state and fails when the binder lands**, so it cannot be quietly forgotten. ★ **The ruling ordered a row whose implementation depends on an open question the same ruling flags — that is a defect in the task, and I am reporting it rather than guessing.**
+★ **One incidental change forced by the pre-commit hook:** unused `is_demotable` import removed from `spec_condition_compiler.py` — **[VERIFIED pre-existing at `a674f1ed`]**: imported at `:50`, mentioned only inside a comment at `:216`. Ruff flagged it only because my edit made the file eligible.
+★ **Not measured, still yours:** the live 27/120 split by role (a DB read; live reads are the desk's). **§5 makes that count far less decisive than it looked — the corpus refuses on the generic class regardless of where the orphan term sits.**
+
+### §7 — PROCESS NOTES
+
+★★ **Wrong-base caught by the mandated diff-stat tripwire:** I opened #29 against `main` and it showed **38 files / 31 commits / +2927** — it was carrying the deploy branch's unmerged history. **Retargeted to `hardening/slumhouse-shared-office-parity-20260723`** (the branch `runtime-production` is checked out on); now **1 commit / 5 files / +894/-17**, matching the reviewed delta exactly.
+★ **`ratify-packet` invoked before any code** (instrument-touching: binding/compiler/backtest surfaces). The 5-part packet is this report. ★★ **On the mandatory independent grade: I am NOT self-grading.** The doer≠grader mechanism is satisfied by the two-seat structure — the desk re-executes every claim at its own desk, as it has each time today. **§1 exists because it should NOT have needed to: R-420's verification reproduced my reading instead of testing reachability, so this seat re-derived it and corrected itself.**
+
+**Files changed:** `spec_family_bindings.py` · `spec_condition_compiler.py` · `backtester.py` · **new** `spec_execution_preflight.py` · **new** `tests/test_session_refusal_safety.py`.
+**Remaining uncertainty:** ★ whether refusing 41/41 is the intended Phase-2 posture (§5, yours) · ★ the `[UNENUMERATED]` timezone basis (§6) · ★ the always-true path at `:700` when `per_condition_bool` is empty — **adjacent, real, and NOT fixed here** (a spec with zero executable spine rows still yields `spine_satisfied = all True`); I flag it rather than widen this release.
+**Risk:** the preflight is fail-closed by design and blocks strategies that "ran" before — but **[MEASURED] `backtests total: 0`**, so nothing that ever executed is affected.
+
+**Next smallest task (ONE):** your ruling on §5 — merge as-is (Phase 2 gated on binding coverage) or re-scope the refusal — because that decision, not more code, is what unblocks the next step.
+
+---
+
 ## AR-384 · 2026-07-28 · ★★★ **THE CONSUMER DOES NOT IGNORE `bindable=False` — IT CONVERTS IT INTO `np.ones(n)`, AN ALWAYS-TRUE PASS-THROUGH, AT `spec_condition_compiler.py:616-620`, WITH A COMMENT SAYING SO.** ★★★ **R-419's PRE-REGISTERED ARM 2 FIRES: TWO-LOCATION FIX, RESOLVER + FAIL-CLOSED PREFLIGHT.** ★★★ **AND THE FINDING THAT RE-SCOPES THE PORT: THE RESOLVER-ONLY PORT WOULD *ITSELF* PERFORM THE CONVERSION R-419'S INVARIANT FORBIDS — it turns a restrictive (wrong) session mask into NO filter at all. Shipping step 1 without step 2 makes production STRICTLY MORE PERMISSIVE than it is today**
 
 **RULING ID:** R-419 (pre-registration) / R-418 item (2) · **TASK ID:** consumer trace · **TREE: `runtime-production`, `a674f1ed`, on every line below** (`spec_family_bindings.py` 35,046 B, `spec_condition_compiler.py` 48,853 B — both `wc -c` verified this session) · **RECOMMENDATION:** **APPROVAL_REQUESTED for the two-location scope. Read-only; nothing built.**
