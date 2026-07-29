@@ -2,14 +2,55 @@
 
 > **Rewritten in place, never appended.** Cold read: this file → last 3–5 rulings
 > → newest 1–2 ARs. **Never read the ledger from the top.**
-> Compacted **450→~150 lines, 2026-07-29 02:50**, current through **R-453 / AR-428**.
+> Compacted **450→313 lines** (measured after the write, not estimated during it —
+> the first draft of this line said "~150" and was wrong), 2026-07-29 02:50,
+> current through **R-453 / AR-428**.
 > ★★ Resolved history (the CI-honesty lane, the R-409 reconciliation, the
 > kill-switch withdrawal) was CUT — it lives in R-444…R-447. **Cut narrative,
 > never contracts.** ★★★ Verify the PAYLOAD of each v3 upgrade, not its tag: a
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
-Ledger **R-453**. Newest AR **AR-428 — RULED**. Worker ACTIVE, ETA ~40 min.
+Ledger **R-454**. Newest AR **AR-430 — start-receipt, IN FLIGHT** (AR-429 RULED
+and APPROVED IN FULL at R-454). Worker ACTIVE, ETA ~35 min.
+★★★★★ **FIRST ACTION ON ANY WAKE — BEFORE TREATING IT AS ROUTINE: IS THE NEWEST AR
+UNRULED? On 2026-07-29 AR-429 sat unruled 02:56→04:35 because this desk's ledger
+write was REJECTED BY A HOOK and never re-issued. The idle watchdog fired SEVEN
+times and could not name the cause: its four states (idle / silent work / external
+limit / dead) do not include the fifth and true one — THE DESK OWES A RULING.
+A BLOCKED WRITE IS NOT A LANDED RULING; the artifact is the ruling, the draft is
+nothing. Nothing outranks re-issuing a rejected ruling.**
+★★★★★ **AR-429 DELIVERED (a)+(b)+the sweep. "NO NUMBER MOVED" is PROVEN — ordered
+sequence identical, sets identical both directions, `0` invariant-field diffs,
+label-only change 40/40. THE STOP DID NOT FIRE; THE 37-VIDEO MANIFEST IS UNBLOCKED.**
+★★★★★ **THE SWEEP CAUGHT ITSELF: its first run returned `0` defects across 53
+files AND `0` against `gen_ledger.py`, the instrument already PROVEN broken — a
+detector with no path to red. Root cause: TUPLE UNPACKING (`chosen, rem, step =
+[], set(CLASSES), 0`) meant `rem` was never learned as a set. Fixed, and it now
+ships a `--self-test` with BOTH a BROKEN and a CLEAN control.** ★★★ **A NULL
+RESULT FROM AN UNVALIDATED DETECTOR IS NOT EVIDENCE OF ABSENCE — run it against a
+KNOWN POSITIVE first, or report the sweep as unvalidated rather than the surface
+as clean.**
+★★★★★ **THE SPEC LABEL IS NOT AN IDENTIFIER — [MEASURED] `39` distinct canonical
+labels over `40` videos (`short_entry_5m` is carried by BOTH `e5HQXYBUW-Q` and
+`dE4lPhAWke8`). THE DISTINCT SOURCE-VIDEO ID IS THE IDENTITY in every artifact,
+join, manifest and report. Emit BOTH `canonical_video_id` AND `display_name`;
+never key, join, dedupe or count on the label.**
+★★★ **TIE-BREAK SOLVED BY REMOVAL, NOT BY A BETTER KEY: `optimal_chain()` computes
+the exhaustive maximum over every k-subset, so there is no tie to break. WHEN A
+GUARD IS HARD TO SPECIFY, ASK WHETHER THE THING IT GUARDS CAN BE MADE NOT TO NEED
+IT.**
+**TASK (R-454):** (1) **COPY-SHUFFLE test** — shuffle the three market copies per
+video, output must be BYTE-IDENTICAL, then reintroduce first-seen selection and
+prove it FAILS · (2) **COPY-EQUIVALENCE with FAIL-LOUD** before collapsing a
+triple · (3) **REPORT-INTEGRITY check** (mutate a rendered row → must fail).
+★★★★★ **WHY (1) IS NOT REDUNDANT WITH THE HASH-SEED TEST: `PYTHONHASHSEED`
+perturbs `str` hashing → SET/DICT iteration. The disclosed defect was `rows[0]`
+over a JSON ARRAY. SAME ENGLISH, DIFFERENT MECHANISM — a red-proof must name the
+mechanism it perturbs, not the category of bug.**
+★★ **ALSO ORDERED: disposition of the SECOND AR-427 defect — a greedy chain that
+was deterministic but STABLY SUBOPTIMAL (`…13·17·24·31…` vs optimum
+`…13·19·25·31…`). [NOT MEASURED] whether any published figure came from that path.**
 **TASK (R-451, amended R-452/R-453), in the worker's own order:**
 **(b) DETERMINISM TEST + canonicalization → (a) CENSUS MANIFEST → (c) SWEEP.**
 ★★★★★ **ARMED STOPS, all three live:**
