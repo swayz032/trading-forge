@@ -4,6 +4,66 @@
 
 ---
 
+## AR-422 · 2026-07-29 · ★★★ **YOUR STOP CONDITION DOES NOT FIRE: ZERO OF THE 23 IS A COLLECTION ERROR. ALL 19 FILES LOADED AND RAN — the silently-absent population is NOT larger than 23.** ★★★ **AND I AM CORRECTING MY OWN FIRST PASS: MY FUZZY MATCHER NOMINATED `15 RENAMED`, AND JUDGMENT SPLITS THAT INTO `4` TRUE RENAMES AND `11` SUPERSEDED-BY-A-DIFFERENT-ASSERTION — FOUR OF WHICH ARE POLARITY FLIPS (`omits→includes`, `blocks→allows`, `no audit rows→must emit a WARNING`).** ★★ **THE 9 ARE CHARACTERIZED FROM THEIR ACTUAL FAILURE MESSAGES: 7 ENVIRONMENTAL, 2 I WILL NOT CALL ENVIRONMENTAL**
+
+**RULING ID:** R-445 · **TASK ID:** AR-421 · **RECOMMENDATION:** **APPROVAL_REQUESTED. Read-only; no code changed, nothing deleted, and NO push to #32 — `af5779ef` is untouched and still the head.**
+
+### ★★★ §1 — THE SEVERITY QUESTION, ANSWERED FIRST
+
+**[MEASURED, CI's `node-vitest-results` artifact, run `30422166825`] all 23 absent entries live in 19 files, and ALL 19 FILES ARE PRESENT in the report** (923 files reported). ★★★ **So every one of those files loaded, collected and ran. Not one absence traces to a file-level collection error, and the hidden-population hazard you named — "that file's OTHER tests are also not running" — does NOT exist here.** ★★ **The 23 are test-level absences inside healthy files: dead wood, not a hiding place.**
+
+### ★★★ §2 — MY OWN NOMINATION LAYER, CORRECTED BEFORE PUBLICATION
+
+★★★ **A string-similarity match is a NOMINATION, not a classification, and I nearly published one as a finding.** My matcher reported `15 RENAMED` on a 0.75 similarity cutoff. Reading the pairs, **11 of those 15 are not renames at all — the test was rewritten to assert something DIFFERENT, and the names are similar only because the surrounding prose is:**
+
+| old assertion | new assertion | why it is not a rename |
+|---|---|---|
+| `omits --b15-battery ... default false` | `includes --b15-battery ... default true` | ★ **polarity flip** |
+| `blocks promotion when backtest is 31 days old` | `allows promotion when backtest is 29 days old` | ★ **polarity flip** |
+| `respects ...=7 → blocks 8-day-old` | `respects ...=7 → allows 6-day-old` | ★ **polarity flip** |
+| `status=disabled, no audit rows` | `status=disabled, emits ONE disabled_by_env WARNING (not silent)` | ★ **polarity flip** |
+| `MFFU 50K commissionPerSide is 0.62` | `... is 0.95` | value changed |
+| `MFFU payout cycle is exactly 14 days` | `... exactly 2 days (Builder plan)` | value changed |
+| `38 registry entries, 38 keyword entries` | `39 registry entries, 39` | count changed |
+| `operator set has exactly 8 queries` | `... the 13 manually curated production queries` | count changed |
+| `cron '23 21,22 * * *'` | `cron '23 22,23 * * *'` | value changed |
+| `topstep=5%` | `topstep uses trailing-DD, not a fixed %` | semantics changed |
+| `max_drawdown_limit for all 8 firms` | `... + canonical contract_limits for all configured firms` | scope changed |
+
+**FINAL CLASSIFICATION OF THE 23 — by judgment, not by cutoff:**
+
+| class | n | meaning |
+|---|---:|---|
+| **SUPERSEDED** | **11** | the test was rewritten to assert a different value/polarity; the old entry is dead wood |
+| **RENAMED** | **4** | same assertion, clearer wording — `exchange-firm-classifier` ×2 · `wave26-pass-l` (`cron`→`UTC schedule`) · `w3-3-ollama` (example model updated) |
+| **UNKNOWN** | **6** | a weak match exists but I cannot show it is the successor |
+| **DELETED** | **2** | `pass5-lifecycle-wiring` (TESTING→PAPER stream stop) · `production-convergence` (5H reddit scout contract) — no test in the file resembles them |
+
+★★ **`UNKNOWN` is used as you required rather than rounded into `RENAMED`. Those 6 need a human to read the file's git history; a similarity score cannot settle them and I will not dress one up as an answer.**
+★★★ **NONE of the 23 is a hidden failure. All are safe to remove eventually — but I removed none, per your instruction.**
+
+★ **THE ONE SIGNAL WORTH KEEPING FROM THIS:** four polarity flips mean the PRODUCT's behaviour was deliberately reversed (a default flipped, a staleness gate's sense flipped, a silent disable became a mandatory warning). Those are real decisions recorded only as vanished baseline entries — **`gate-artifact` in v4's four-bin sense: the instrument's memory outlived the behaviour it described.**
+
+### §3 — THE 9 STILL-FAILING, FROM THEIR ACTUAL MESSAGES (not their names)
+
+| test | verdict | evidence |
+|---|---|---|
+| `spec-onboarding-service.bandc` | **ENVIRONMENTAL** | `ModuleNotFoundError: No module named 'numpy'` — the Node job spawns a Python driver and does not install Python deps |
+| `startup-config-check-pass1` | **ENVIRONMENTAL** | expects 0 warnings, got 1 — CI runs on placeholder secrets (`API_KEY: ci-placeholder-api-key`) |
+| `b14-survival-integration` ×3 | **ENVIRONMENTAL (empty data)** | `expected 1 to be less than 1`, `expected 0 to be >= 0.1`, `expected 0 to be >= 0.005` — priors read back as defaults, i.e. the CI DB has no seeded prior rows |
+| `wave9-zombie-archive` | **ENVIRONMENTAL** | `Failed query: INSERT INTO strategies ...` — the fixture insert itself fails on the CI DB |
+| `audit-log-append-only` | **ENVIRONMENTAL (message shape)** | `expected 'Failed query: update "audit_log" set ?' to match /audit_log is append-only/i` ★★ **and note the reassuring half: the UPDATE WAS REJECTED. The protection appears ACTIVE; what fails is the assertion reading the driver's wrapper text instead of the underlying reason. I am NOT reporting this as an append-only gap.** |
+| `lifecycle-transitions` ×2 | ★★★ **I WILL NOT CALL THESE ENVIRONMENTAL** | `expected 'timestamp with time zone' to be 'timestamp without time zone'` and `expected 'YES' to be 'NO'` (nullability). **These are SCHEMA MISMATCHES between what migrations built on the CI DB and what the test expects.** ★★ **That is the shape of `journal-applied-migration-ddl-never-ran` — a migration recorded as applied whose DDL did not land. It may be benign CI-DB drift, but "the schema is not what we think it is" is not something I will file as environment noise on a name-based hunch.** |
+
+★ **Classification only — I fixed none of them, per your instruction.**
+
+**Remaining uncertainty:** ★ **[NOT MEASURED]** the 6 `UNKNOWN` — resolving them needs `git log -S` per test name across the file's history, which I did not run. **What I would need: nothing but time; it is ~6 history searches.** ★ **[NOT MEASURED]** whether `lifecycle-transitions` reflects real migration drift or CI-DB construction — that needs the migration DDL compared against the live CI schema, which is its own task.
+**Risk:** none — read-only. No file in either repo was modified by this task.
+
+**Next smallest task (ONE):** ★★ **the two `lifecycle-transitions` schema mismatches** — they are the only item here that could be a real defect rather than dead wood, and the `timestamptz`/nullability pair is exactly the shape that has bitten this project before.
+
+---
+
 ## AR-421 · 2026-07-29 · **START-RECEIPT — R-445: CLASSIFY THE 23 ABSENT ENTRIES, THEN CHARACTERIZE THE 9 STILL-FAILING. BLUEPRINT v4 READ FIRST. NO PUSH TO #32.**
 
 **RULING ID:** R-445 · **TASK ID:** AR-421 · **STATUS:** STARTING.
