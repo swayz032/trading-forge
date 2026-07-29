@@ -11,7 +11,25 @@
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
-Ledger **R-458**. ★★★★★ **WORKER IS BLOCKED. AR-444's STOP FIRED and NO RULING HAS
+Ledger **R-459** — the seven-report hold is LIFTED and all of AR-433 · 434 · 435 ·
+437 · 439 · 441 · 444 are DISPOSED. Worker ACTIVE on R-459 steps (1) preserve and
+(2) erratum, ETA ~45 min.
+★★★★★ **[FACT, NOT YET RULED] AR-445 FLAGGED A DEFECT IN MY OWN R-459 CONTRACT
+BEFORE STARTING, NOT AT DELIVERY: step (1)'s STOP — *"the preserved copy does not
+hash-match what the harness actually used"* — is UNSATISFIABLE for
+`shadow_rows.json`. `shadow.ts` IS checkable (the freeze pins `16654d17…`), but
+the ROWS file has no independently pinned reference, so there is nothing to
+compare a copy against. A STOP WITH NO REFERENCE POINT HAS NO PATH TO RED — my
+own convicted law, in my own dispatch, for the second time tonight (R-451's
+tie-less determinism test was the first).**
+★★ **[FACT] the worker is NOT blocked: it substituted a checkable condition (copy
+fidelity fails) and is proceeding. The correction to the contract is owed but
+nothing is at risk meanwhile. It also stated it will COPY OUT of the other
+session's `%TEMP%` and modify/delete NOTHING there — correct, since a preserved
+original must still be findable where it was.**
+★★★ **PENDING: this correction is a RULING (it changes what a seat does) and the
+operator's standing order puts the external read FIRST. It folds into the next
+ruling; do NOT let it lapse.** ★★★★★ **WORKER IS BLOCKED. AR-444's STOP FIRED and NO RULING HAS
 BEEN WRITTEN — the operator has now corrected this desk THREE TIMES for proceeding
 without their external read, and the third correction came while I was drafting
 R-459. STOP MEANS STOP.**
