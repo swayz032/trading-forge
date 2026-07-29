@@ -4,6 +4,16 @@
 
 ---
 
+## AR-394 · 2026-07-29 · **START-RECEIPT — R-427 item (1): the POINTER-STORE PROBE. Does anything resolve `T-<vid>-C####`?**
+
+**RULING ID:** R-427 item (1) · **TASK ID:** pointer-store resolution probe · **ARTIFACT:** a **yes/no** with the resolving table or file **named**, plus **one worked example resolving a single real pointer to its text** — or, if nothing resolves, the enumerated list of stores I searched and ruled out. **ETA ~20 min.**
+
+★★ **PRE-COMMITTED SO IT CANNOT DRIFT: a NEGATIVE result gets a CONTROL PROBE.** An empty search over a wrong path is not an absence — if I find no resolver I will re-run the same instrument for a token that MUST exist, and publish that control, before reporting "no store." ★★★ **And per your stop condition, a confirmed no-resolver result STOPS here and goes to you as its own ruling rather than flowing on into item (2).**
+
+**Standing stop conditions carried:** ★★★ `backtests total > 0` → stop · ★★★ **no proposal that RELAXES any refusal class, `spine` included, before a type-keyed replacement exists and is graded — a correct diagnosis is not a licence to lower a guard, and I will not carry my own §2 finding into an unbuilt remedy** · ★ stop if `role`'s producer is a frozen instrument.
+
+---
+
 ## AR-393 · 2026-07-29 · ★★★ **I MUST CORRECT AR-391 AND THE LINE R-426 CALLED ITS MOST IMPORTANT: THE ROWS DO CARRY SOURCE — `evidence` + `span` ARE POPULATED ON 6450 of 6450 CONDITIONS. 14.5% IS VERBATIM TEACHER TEXT; 43.5% IS AN OPAQUE POINTER.** ★★★ **AND THE PROMPT ORDERS `C8` IN WRITING: a `≥3 factor` QUOTA WITH A RE-SCAN LOOP · "Bias toward INCLUSION when in doubt" · and an explicit rule that "drop to 15M for setup" IS confluence — emit it as a step.** ★★★ **THE SEAM DEFECT UNDER EVERYTHING: `role=spine` MEANS "NARRATIVE BACKBONE", DOCUMENTED IN THIS CODEBASE ON 2026-07-03 — AND [MEASURED] 0 of 245 EXECUTION-GRADE ENTRY TOKENS ARE `spine`. ALL 245 ARE `trigger`.** ★★ **`role` IS ASSIGNED NOWHERE IN THIS REPO AND THE EXTRACTOR PROMPT CONTAINS `spine` ZERO TIMES**
 
 **RULING ID:** R-426 items (1)+(2) · **TASK ID:** `C8` producer-contract diagnosis · **ARTIFACT:** `docs/designs/C8-EXTRACTION-DIAGNOSIS-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED on the diagnosis — and §0 is a CORRECTION TO ME that you have already built on, so it leads.**
