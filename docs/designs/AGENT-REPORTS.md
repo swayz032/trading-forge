@@ -4,6 +4,74 @@
 
 ---
 
+## AR-401 · 2026-07-29 · ★★★ **FOUND IT, AT THE EXECUTABLE LINE. `role` IS A ONE-LINE TOPOLOGY HEURISTIC: `inAndGroup.has(a.id) ? "confluence" : "spine"`.** ★★★ **IT IS DETERMINISTICALLY MAPPED FROM GRAPH SHAPE — NOT MODEL-GENERATED, NOT MIGRATED, NOT SEEDED. `spine` MEANS "THIS ATOM IS NOT IN AN AND-GROUP" AND ENCODES NOTHING ABOUT WHAT THE SOURCE REQUIRED.** ★★★ **AND THE JOIN YOU DEMANDED IS NOW PROVEN, NOT CORRELATED: ONE STATEMENT WRITES `role: "trigger"` AND SETS `entry_trigger_id` ON THE SAME ATOM.** ★★★ **THE SEMANTIC REPLACEMENT ALREADY EXISTS AND IS SWITCHED OFF — `TF_SEMANTIC_ROLE_CLASSIFIER`, DEFAULT OFF, ABSENT FROM THE RUNTIME `.env`. THAT IS YOUR FIFTH STRANDED CAPABILITY**
+
+**RULING ID:** R-430/R-431 · **TASK ID:** the `role`-producer investigation · **RECOMMENDATION:** **APPROVAL_REQUESTED. All five deliverables below. NO GUARD WEAKENED, and §5 is a DESIGN ONLY.**
+
+### ★★ §0 — WHY THE LAST SEARCH CAME BACK CLEAN, AND IT IS MY THIRD FILTER ERROR TODAY
+
+**The producer is `src/server/lib/graph-to-engine.ts` — a file that DOES NOT EXIST in the primary checkout. It lives in the `extraction-100` worktree** (`trading-forge/.claude/worktrees/extraction-100`, branch `extraction/100pct-evidence`). ★★★ **My AR-393 search excluded `.claude/worktrees` by an explicit filter, as noise. The answer was inside the thing I filtered out.** ★★ **Third time today the FILTER was the join key: an anchored `^…$` regex undercounted provenance 1458→936 · a length heuristic mis-binned four encodings · and an exclusion glob hid the producer. Same species, three faces — a search's EXCLUSIONS are part of its claim and must be published with the result.** ★ So "the producer is outside this repo" was right in effect and wrong in wording: it is on another BRANCH, not outside the repository.
+
+### ★★★ §1 — DELIVERABLE 1: THE EXACT PRODUCER
+
+**`graph-to-engine.ts` → `resolveConditionRole()` and `compileToEngineSpec()`**, driven by `scripts/atomize-transcript.ts` → `compileGraph()` (`graph-compiler.ts`). **[MEASURED] `extraction_provenance` on all 41 on-disk specs names the pipeline: `extraction_pipeline_version: "compiler-v3-union-1.0"` · `pipeline_commit: "dc8a150"` · `model: "gemma4:e4b-it-qat"` · `atomization: "2-pass-union"` · `certified_gate: "6-video-46of46-2026-07-02"`.** ★ `git log -1 dc8a150` = *"psH autopsy fixes VERIFIED ON DISK… UNION now feeds compression/spec path"*, touching `scripts/atomize-transcript.ts` + `src/server/lib/graph-fidelity.ts`.
+
+### ★★★ §2 — DELIVERABLE 2: **DETERMINISTICALLY MAPPED.** Not model-generated.
+
+**`graph-to-engine.ts:93` and `:100`, verbatim:**
+```ts
+if (!semanticRoleClassifierEnabled()) return inAndGroup.has(a.id) ? "confluence" : "spine";
+...
+return inAndGroup.has(a.id) ? "confluence" : "spine";
+```
+★★★ **The model (`gemma4`) extracts ATOMS. It does not assign `role`. `role` is computed afterwards by a pure topology test on the DERIVED dependency graph** — and `graph-compiler.ts` says so in its own console output: *"edges DERIVED from order + grammar, not extracted."*
+
+### ★★★ §3 — DELIVERABLE 3: THE ACTUAL CONTRACT PER ROLE, READ AT THE LINE
+
+| role | assigned by | what it actually means |
+|---|---|---|
+| `trigger` | **`:142-143`** — by ATOM TYPE, on `ENTER` / `ENABLE_ENTRY` terminals | **the entry event.** Same statement sets `entry_trigger_id` |
+| `invalidation` | **`:145`** — by ATOM TYPE | the invalidation arm |
+| `confluence` | **`:93`** — `inAndGroup.has(a.id) === true` | **"this atom participates in an AND-group"** |
+| `spine` | **`:93`** — the `else` arm | ★★★ **"this atom is NOT in an AND-group." That is the ENTIRE definition.** |
+
+★★★ **`spine` is the residual branch of a topology test. It carries NO claim about what the source required — it cannot, because nothing in that expression reads the source.** ★★ **`graph-compiler.ts:102` uses the same word for the dependency closure (`prerequisite`+`and` edges) — the "narrative backbone" meaning `spec-timeframe-recovery.ts` documented on 2026-07-03 is the ORIGINAL and CORRECT one.**
+
+★★★ **THEREFORE, PROVEN RATHER THAN INFERRED: the preflight's `MANDATORY` class records *"the source marked this rule required"* about a field that measures AND-group membership in a derived graph. That is a fabricated provenance claim — the exact defect class `UNKNOWN_REQUIREDNESS` was minted to prevent — and it is now established at the producer's executable line, not argued from output.**
+
+### ★★★ §4 — DELIVERABLE 4: THE JOIN, AND IT IS A JOIN, NOT A CORRELATION
+
+You required *"proof joining the producer's entry-trigger requirement to the stored `role=trigger`."* **[MEASURED, `graph-to-engine.ts:142-143`] ONE STATEMENT does both:**
+```ts
+if (entry_trigger_id === null && graph.reachable.has(a.id)) entry_trigger_id = a.id;
+entry_conditions.push({ id: a.id, type: a.type, object: a.object_canonical, role: "trigger", ... });
+```
+★★★ **The producer's designated entry trigger and the stored `role=trigger` are written by the same code path over the same atom set, keyed on atom TYPE (`ENTER`/`ENABLE_ENTRY`). That is why [MEASURED, AR-393] all 245 execution-grade tokens carry `role=trigger` and ZERO carry `spine` — not a tendency, a CONSTRUCTION.** ★★ **R-423 promotion condition #2 — *"producer code showing it represents the entry event required for execution"* — is MET, and I am handing you the line rather than the verdict: the promotion is yours to rule, and `:155-157` adds that when no reachable terminal exists the id falls back to the first `role=trigger` condition, which is a detail a promotion ruling should weigh.**
+
+### ★★★ §5 — DELIVERABLE 5: THE REPLACEMENT IS ALREADY BUILT AND SWITCHED OFF
+
+**`gate-strength.ts:7-8`, its own docstring:** *"Replaces graph-to-engine.ts's topology-only role heuristic (`inAndGroup.has(a.id) ? "confluence" : "spine"`) with a **semantic gate-strength judgment of EACH entry condition's actual discourse role**."* Its mapper `:301-304`: `mandatory → spine · optional → confluence`.
+
+**[MEASURED] the flag is `TF_SEMANTIC_ROLE_CLASSIFIER`, `graph-to-engine.ts:75`, `=== "true"`, DEFAULT OFF, documented "Byte-identical-when-OFF".** **[MEASURED] it is ABSENT from `runtime-production/.env` (grep count 0).** **[MEASURED] all 41 on-disk provenance blocks carry NO `semantic_role_classifier` key and all are `compiler-v3-union-1.0`.**
+★★★ **So the operator's entire live library had its roles assigned by the topology heuristic, with the semantic classifier off. This is your FIFTH stranded env-gated capability — and unlike the other four, it sits directly on the seam blocking both stuck questions.**
+
+**REPLACEMENT DESIGN — DESIGN ONLY, AND I PROPOSE NO RELAXATION.** ★★★ **Your stop condition is right and I am obeying it even though I now hold the proof: finding the defect authorizes a replacement design, NEVER an interim relaxation. I propose NOTHING that weakens `spine`, `MANDATORY`, or any refusal.**
+**(D1)** Re-key the preflight's requiredness judgment on **atom TYPE**, which is what the producer actually assigns semantically (`ENTER`/`ENABLE_ENTRY` = entry event; `INVALIDATE` = safety), and demote `spine`/`confluence` to what they are — **topology diagnostics, never execution authority.** ★ Same shape as the 2026-07-03 fix `spec-timeframe-recovery.ts` already applied for exec-vs-bias: **that file solved this exact problem by switching from role to type, and its solution is eight weeks old.**
+**(D2)** Graduate `TF_SEMANTIC_ROLE_CLASSIFIER` through **its own review protocol**, never as a side effect of this finding — a flag with a graduation gate is not graduated by being convenient.
+**(D3)** Until either lands, **everything stays fail-closed exactly as today.** ★★ **[MEASURED] the current posture costs nothing operationally: `backtests total = 0`, and over-refusal is the safe direction of this error.**
+
+### §6 — STOP CONDITIONS
+
+★★★ **[MEASURED] `backtests total = 0`** — unchanged. ★★ **The producer is NOT an external service** — it is our own TypeScript on branch `extraction/100pct-evidence`. ★ **[NOT MEASURED] whether that branch/worktree is a FROZEN instrument** — I did not verify freeze status, and per your stop condition that check belongs before anyone edits it. ★★★ **No guard was weakened and nothing was implemented.**
+
+**Files changed:** this report only. **Read-only throughout.**
+**Remaining uncertainty:** ★ **[NOT MEASURED]** freeze status of the `extraction-100` worktree. ★ **[NOT MEASURED]** whether the DB onboarding path re-derives `role` or stores the artifact's value verbatim — **[MEASURED] the DB envelope DROPS `extraction_provenance` and `transcript_chars`, both of which the on-disk artifact carries** (a provenance-loss finding in its own right, and the reason `transcript_chars` looked absent). ★ **[NOT MEASURED]** how many of the 923 `spine` conditions would change class under the semantic classifier — **that is the sizing question for D1/D2 and it needs a run, not an estimate.**
+**Risk:** none taken.
+
+**Next smallest task (ONE):** run the existing `classifyGateStrengthDeterministic` over the live library's conditions **read-only, no flag flip in any live path** — it sizes D1/D2 by measurement instead of estimate, and it is the same shape as your own item (3).
+
+---
+
 ## AR-400 · 2026-07-29 · **START-RECEIPT — R-430: the `role`-PRODUCER INVESTIGATION.** ★★ **AND ONE DISCLOSURE FIRST: NO SEAT SWAP OCCURRED. I am the SAME session that filed AR-396/397/398/399 — not a fresh seat.**
 
 **RULING ID:** R-430 · **TASK ID:** find and prove what writes `role` · **ETA to first cut ~45 min.**
