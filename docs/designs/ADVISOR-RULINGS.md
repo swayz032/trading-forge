@@ -12,6 +12,75 @@
 
 ---
 
+## R-441 · 2026-07-29 · ★★★ **PR #31 IS MERGED — `a52449ac`, 04:23:56Z. CENSUS SOUND ON EVERY BLOCKING ITEM (`A−B = B−A = ∅` AS LITERAL SETS OVER THE REAL 120-ROW LIBRARY), AND `2404 passed / 0 failed` ACROSS THE **TRANSITIVE** 145-SUITE SURFACE.** ★★★ **I HELD THE MERGE I HAD ALREADY DRAFTED, BECAUSE MY OWN "7 SUITES" WAS THE *DIRECT* IMPORT SURFACE AND THE REAL ONE IS 145 — I HAD MEASURED THE NEIGHBOURING OBJECT AGAIN AND WAS ONE COMMIT FROM SHIPPING IT.** ★★ **HEADLINE COUNT CORRECTED ON THE PR ITSELF: `MANDATORY 1350→924`, NOT `1347→921`.** ★★★ **AND FOUR FALSE GREENS IN ONE SESSION, ALL THE SAME SHAPE: A COMPLETION SIGNAL IS NOT A RESULT**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **AR-413 ACCEPTED IN FULL. PR #31 IS MERGED (`a52449ac`).** ★ **[MEASURED HERE] merging did NOT deploy — `LANDED ≠ RUNNING`, the tower executes from its canonical checkout and no tower update is authorized or performed.**
+
+**ITEM (1), THE CI-GATE MEASUREMENT, REMAINS YOURS AND IS THE ONLY THING IN FLIGHT. Finish and file it.** ★★ **One input you should have, measured here while gating the merge: [MEASURED HERE, disposable worktree at `0b0d6617`] I ran 145 suites in ONE pytest invocation — `2404 passed, 17 skipped, 0 failed, exit 0, 165.59s`. The documented >90-min hang did NOT reproduce, under combined execution, at the PR head.** ★ **That is one data point in your favour and NOT your conclusion — you are measuring 317 suites at the deployed-lane tip, which is a different population and a different tree. Report yours; do not reconcile toward mine.**
+★★★ **AND A TRAP I HIT TWICE TONIGHT THAT WILL BITE YOUR MEASUREMENT: `pytest-timeout` IS NOT INSTALLED in these worktrees — `--timeout/--timeout-method` makes pytest exit `4` on a usage error, and if you pipe to `tail` the failure reads as success. Use the shell's `timeout` as the backstop and capture the REAL exit code (`$?` unpiped, or `${PIPESTATUS[0]}`).**
+
+**NEXT AFTER ITEM (1) — ONE ITEM:** ★★ **the `compile_lints.py:129` comment that cost you a false premise.** Correct or delete it — **documentation-only, zero runtime change, no stored value touched.** It reads `# "spine" | "confluence" | None` on an `Optional[str]`, and it caused a competent reader to form a false contract belief. **[MEASURED HERE] the enforced declarations are `spec-onboarding-service.ts:170` and `test_spec_producer.py:31`, both of which include `trigger`.** **ETA ~10 min. FIRST OBSERVABLE:** the diff.
+
+**FORBIDDEN (unchanged):** deploying · tower update · promoting or remapping `trigger` · expanding classifier rule coverage · flag flips · DB writes · re-extraction · `runtime-production` writes · backtests · `git checkout` in this shared tree.
+**STOP:** `backtests total > 0`.
+
+---
+
+**RULING ID:** R-441 · **TASK ID:** AR-413 + the `accuracy-validator` census · **DECISION:** **APPROVE AR-413. MERGE EXECUTED by this desk under the standing authority. Record corrected on the PR in the same motion.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-413`** — read in full; it is item (2)'s deliverable and it is ratified in §4 below. ★★ **It landed WHILE I was drafting an earlier version of this ruling, and `ruling-stale-premise-guard` blocked that write for not naming it. The guard was right, and the delay is what created the room to find the surface error in §2 — a gate I have twice called ceremony paid for itself tonight.**
+
+### ★★★ §1 — THE CENSUS: SOUND ON EVERY BLOCKING ITEM
+
+**[MEASURED BY GRADED INSTRUMENT — `accuracy-validator`, two non-overlapping paths, DB access restored]** 120 rows both sides · **`A−B = {}`, `B−A = {}` published as literal 1368-member sets, not counts** · symmetric difference `∅` · total `1368 → 1368` · **`Δ426` independently derived and explicitly not anchored** · every reclassified condition still fails `blocks_execution` → `False` on neither side · **`backtests total = 0` across FOUR tables.** ★★ **It ran the REAL `compile_binding_plan` + `preflight_binding_plan` over a frozen snapshot of all 120 live `compiled_spec` rows on BOTH commits — not a monkeypatch, not a scratch copy, not the PR's 7-case synthetic corpus.** ★ **It independently re-derived the population trap (120 rows = 40 hashes × 3 markets, verified in the refusal OUTPUT) and caught a naming quirk I would have missed: two extraction batches both emit `short_entry_*`, so display-name grouping undercounts to 39 while `compiled_spec` hash gives the correct 40.**
+**Presentation-only claim, hunted adversarially: [GRADER-MEASURED] ZERO consumers of `rule_class` in `**/*.ts|tsx|js`, no DB column of that name, no stored JSONB carrying that key, `refused_reason` untouched at `backtester.py:8519`.**
+
+### ★★★ §2 — I HELD MY OWN MERGE, AND THIS IS THE PART THAT MATTERS
+
+**R-439 §2 published "the 7 suites importing either changed module — list derived by my own grep."** ★★★ **[MEASURED HERE] that was the DIRECT textual-import surface. The TRANSITIVE surface — suites that reach the changed modules through any chain of engine imports — is 145 at `0b0d6617`. I had run 7 of 145 and described it as the dependent set.**
+★★★ **A CENSUS IS BOUNDED BY ITS SURFACE AS WELL AS ITS PATTERN — this desk's own law, in the skill I re-read three times tonight, and I broke it while quoting it.** ★★ **I was one command from merging on that basis.**
+
+**MEASURED BEFORE MERGING, [MEASURED HERE, disposable worktree at PR head `0b0d6617`]:**
+```
+python -m pytest @transitive_suites.txt -q     →  2404 passed, 17 skipped, 0 failed
+                                                  exit 0, 165.59s, 145 suites
+```
+★★ **Zero failures across the full transitive surface. No hang. THAT is the evidence the merge rests on — not the 7-suite run, and not any CI badge.**
+★ **Note the tree-dependence, which is itself the lesson: the same enumeration returns 114 in the shared campaign tree and 145 at the PR head, because the trees hold different files. A surface count without a tree is not a measurement of anything in particular.**
+
+### ★★★ §3 — FOUR FALSE GREENS IN ONE SESSION, ONE SHAPE
+
+1. **`ci.yml` pytest step is `continue-on-error: true`** — [MEASURED HERE] a red suite still reports green. Caught by the WORKER, in my ruling.
+2. **R-438 recorded a grader re-dispatch that never ran** — [MEASURED HERE] one transcript on disk, `TaskList` empty. Caught by me, one ruling late.
+3. **My first 145-suite run never executed** — `pytest-timeout` absent → exit `4` on a usage error, `| tail` swallowed it, and **the harness reported "completed (exit code 0)"**. Caught only by opening the output file.
+4. **The PR-body correction reported "PR BODY UPDATED" without correcting anything** — Python resolved `/tmp` to `C:\tmp` and died, the next line ran anyway and re-uploaded the UNMODIFIED file. Caught only because I grepped the live PR for the new figure and got nothing.
+★★★ **In every case the signal said success and the artifact said otherwise. `| head`/`| tail` masking exit codes was already on the KNOWN-BENIGN list and it still bit me twice in twenty minutes.** ★★★ **STANDING RULE, EFFECTIVE NOW: A COMPLETION SIGNAL IS NOT A RESULT. Do not report an action as done from an exit code, a task notification, or a tool's own success message — verify the ARTIFACT changed. Every mutation gets a hard post-condition check against the live object, and every mutation script asserts its own edit TOOK.** ★ **`assert s != old` is what saved the body correction; the run that lacked such an assertion is the one that silently did nothing.**
+
+### §4 — AR-413 RATIFIED: BOTH CLASSES UNDERPOWERED, AND THE PATH FINDING IS THE BIGGER ONE
+
+**[RELAYED, and the instrument was validated before use]** `contextual` **7 rows / 5 videos**; `alternative` **8 rows / 6 videos**; `optional` marginal (11 / 6, with 7 from two videos); `mandatory` the only supported class (46 / 19). ★★ **The worker reproduced SIX frozen published figures — 1776 / 26 / 1704-58-14 / 72 / the class distribution / ARM B `0` — BEFORE computing anything new. That is the instrument-audit rule applied correctly and unprompted, and it is why I accept a number computed from an uncommitted scratchpad artifact.**
+★★★ **THE STRONGER FINDING, WHICH I DID NOT ASK FOR: all 15 `alternative`+`contextual` decisions came via `RESOLVED_POINTER_TEXT` and `0 of 15` via `SEMANTIC_SOURCE_TEXT`. So those two classes are not merely thin — their entire sample is drawn from ONE decision route, and a perfect score on them would validate the pointer path only.** ★★ **DISPOSITION: do NOT spend the grader on `contextual` or `alternative` this cycle. The 15 stay as diagnostic fixtures and regression cases; they may NOT become a headline accuracy metric.**
+★★★ **AND IT ACTIVELY REFUTED THE MAPPING I FORBADE RATHER THAN MERELY FAILING TO FIND IT: every semantic class draws from three or four legacy roles, and `confluence` appears more often under `mandatory` (13) than under `contextual` (4). `confluence ≈ contextual` is contradicted, not just unvalidated.**
+**STANDING: no future semantic-class result may be published without its per-class DISTINCT-VIDEO count and its decision-path split. A class is not validated because its raw condition count looks adequate.**
+
+### §5 — DISPOSITION
+
+**MERGED: `a52449ac7ea99560a04fecf3893b5c352d523e08`, 2026-07-29T04:23:56Z, merge-commit convention matching #27/#29/#30.** **PR body corrected first and verified against the live object.** ★ **Under the operator's standing order this was mine to decide and execute; the acceptance criteria were pre-registered, independently measured, and met.**
+
+**ARCHITECTURE INVARIANTS TOUCHED. #1 holds** — **[MEASURED BY GRADED INSTRUMENT]** set identity over the live population; nothing that refused before passes now. **#6 holds** — `backtests total = 0`, four tables. **#8 holds** — every check in a disposable worktree removed by explicit path; no checkout, reset, amend or prune in the shared tree. **`doer ≠ grader`** — designed here, built by the worker, graded by neither.
+
+**FAILED OR UNPROVEN:** the grader's docstring attribution — **[MEASURED HERE] UNLOCATED**; `trigger` appears ZERO times in `spec_execution_preflight.py` at `0b0d6617` and the quoted note is nowhere in the repo, so its finding was sound and its citation was not · whether the Railway Postgres the grader queried is the same tier as `runtime-production` — **it named this gap itself; UNRESOLVED, and it does not reach the merge because refusal-set identity is a property of the CODE, proven on both commits over one snapshot** · the TypeScript suite — **not executed** (a zero-hit grep is not a run) · item (1), in flight.
+
+**QUEUED, NOT AUTHORIZED:** the `trigger` provenance question. ★★ **It is the mirror image of the `spine` defect just fixed: `spine` was topology recorded as source-mandatory, while `trigger` is the one role with a PROVEN semantic join (`graph-to-engine.ts:141-142` sets `entry_trigger_id` and `role:"trigger"` in one block) and is recorded as "we cannot tell." [MEASURED HERE] `"trigger"` is absent from `_MANDATORY_ROLES` at BOTH `a6f92822` (`{"spine","invalidation"}`) and `0b0d6617` (`{"invalidation"}`), so it has never been MANDATORY in this codebase and safety is unaffected either way.** ★★★ **That asymmetry deserves a packet, not an improvised fix.**
+
+**LESSON TO PERSIST.** ★★★ **A COMPLETION SIGNAL IS NOT A RESULT — four times tonight, and twice from tooling I had already written a warning about.** ★★★ **Second, and mine: I published a verification surface I had not measured. "The 7 suites importing either module" was a grep, not an import graph, and the true surface was 145. Before quoting coverage, COMPUTE the closure — and state the tree, because the same closure is 114 in one checkout and 145 in another.** ★★ **Third: the stale-premise guard blocked a ruling I was confident in, and the pause is the only reason the surface error was caught before the merge rather than after. A gate that annoys you on the night it fires is the one paying for itself.**
+
+---
+
 ## R-440 · 2026-07-29 · ★★★ **MID-FLIGHT CORRECTION: R-439 ITEM (2) IS MIS-KEYED AND IT IS MY ERROR. I ASKED WHETHER `contextual`/`alternative` HAVE ENOUGH EXAMPLES, THEN ORDERED A COUNT OF `spine`/`confluence`/`trigger`/`invalidation` — TWO DIFFERENT VOCABULARIES, TWO DIFFERENT FIELDS. THE COUNT CANNOT ANSWER THE QUESTION.** ★★★ **THE JOIN KEY IS THE CLAIM, AND I MEASURED THE NEIGHBOURING OBJECT AGAIN.** ★★ **AND A PREMISE IN THE EXTERNAL REVIEW IS REFUTED AT THE LINE: `trigger` IS DECLARED — `spec-onboarding-service.ts:170` AND `test_spec_producer.py:31`. THE 229 ARE NOT A CONTRACT DEFECT**
 
 ---
