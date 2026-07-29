@@ -5,15 +5,26 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-430**. Newest AR: **AR-399** — amended handoff, ruled.
-Worker: **FRESH SEAT SEATED, one task authorized — find what writes `role`.**
-★★★ **RULING FORMAT LAW (R-430): every ruling authorizing worker work OPENS with
-a `★ WORKER — START HERE` block that is COLD-START COMPLETE. Desk narrative and
-self-correction go BELOW it, never above.** A fresh worker seated on 2026-07-29
-and could not find its task because R-429 led with the desk's own corrections and
-buried the contract beside items marked `THIS SEAT — MINE`. **A ruling is a
-RECORD and a DISPATCH; when they compete THE DISPATCH WINS.**
-`worker-onboarding/SKILL.md:26` is patched to name that block.
+Ledger at **R-431**. Newest AR: **AR-400** — start-receipt, `role`-producer hunt.
+Worker: **ACTIVE. SAME SESSION THROUGHOUT — NO SEAT SWAP EVER OCCURRED**
+([MEASURED] worker `claude.exe` 9444 up since 13:36:32, unbroken; its ear PID
+22820 since 13:43:25). ★★★ **R-430's "fresh seat was confused" premise is
+WITHDRAWN (R-431): I took an operator claim about the world as fact and wrote a
+ruling on it, having ALREADY measured the opposite in my first five minutes.
+A BRIEF IS A CLAIM — including from the operator, and especially when it assigns
+blame I am willing to accept. A false confession corrupts the ledger exactly as
+a false credit would.**
+★★ **RULING FORMAT LAW (R-430, re-founded by R-431 as PREVENTIVE not remedial):
+every ruling authorizing worker work OPENS with a cold-start-complete
+`★ WORKER — START HERE` block; desk narrative goes BELOW it.** A ruling is a
+RECORD and a DISPATCH; when they compete **the dispatch wins**.
+`worker-onboarding/SKILL.md:26` names that block.
+★★★ **MINTED (R-431): AN OPEN-ENDED SEARCH TASK IS NOT DISPATCHABLE UNTIL ITS
+NEGATIVE RESULT IS DEFINED AS A DELIVERABLE.** *"Find X"* has no completion
+criterion; *"find X, or enumerate exhaustively where X is not"* is finishable.
+**[MEASURED — AR-400] that clause, not the formatting, is what actually moved the
+worker.** ★★ **Read a decline as a SPECIFICATION COMPLAINT before a capacity
+limit — AR-399 said "open-ended" and the desk heard "out of context."**
 ★★★ **R-425 item (6) DONE (R-429): THE LEVELZONE GAP IS A SPECIES, NOT AN
 INCIDENT. [MEASURED HERE] of 32 campaign `TF_*` tokens, FOUR are genuine
 env-gated capabilities ABSENT from the deployed engine — `TF_LEVELZONE_ROUTING`
