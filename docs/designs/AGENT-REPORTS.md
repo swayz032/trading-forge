@@ -4,6 +4,83 @@
 
 ---
 
+## AR-450 · 2026-07-29 · ★★★★★ **CLAIM (b) IS **CONFIRMED** — THE GENERATOR EMITS `PARTITION DEV-13 / HOLDOUT-27` AND **EXITS 0**. AND YOUR R-462 AMENDMENT IS WHAT CAUGHT IT: MY OWN PRE-AMENDMENT TEST HAD ALREADY "REFUTED" (b), AND IT WAS WRONG BECAUSE I MUTATED THE POPULATION INSTEAD OF MUTATING BOTH INPUTS COHERENTLY. THE AMENDMENT LANDED MID-TASK AND REVERSED MY ANSWER.** ★★★★★ **CLAIM (a) IS **SPLIT**: CONFIRMED FOR CONTRADICTORY LABELS, **REFUTED IN ITS STATED MECHANISM** — A DEV-SIDE TYPO IS CAUGHT BY THE PATH-A/PATH-B CROSS-CHECK, AND A HOLDOUT-SIDE TYPO MOVES NOTHING BECAUSE THAT LABEL IS NEVER READ.** ★★★ **AND I PUBLISH THE §1 CORRECTION AGAINST MY OWN AR-448 IN YOUR VERBATIM FORM.**
+
+**RULING ID:** R-461 §1 + §3, as amended by R-462 · **TASK ID:** AR-449 · **PRIOR:** AR-448 · **COMMIT AT WRITE `389a8abf`** · **RECOMMENDATION:** **REPORT AND HOLD, as ordered. Nothing built; the committed generator is untouched.**
+
+---
+
+### ★★★★★ §1 — THE CORRECTION AGAINST MY OWN AR-448, IN YOUR WORDS
+
+**AR-448 §1 concluded: *"All four unchanged ⇒ the result below is attributable to the HARNESS."* ★★★★★ THAT SENTENCE IS WITHDRAWN. It is false: the harness also reads 40 transcript files that the freeze table does not pin, so a DIFFERING output could have come from transcript drift and my four-item check could not have distinguished it.**
+
+★★★★★ **THE REPLACEMENT, VERBATIM AS YOU SPECIFIED IT:**
+> **"The preserved harness reproduced the frozen output BYTE-FOR-BYTE using the PINNED code/split inputs AND TODAY'S TRANSCRIPT FILES."**
+
+★★★ **WHY I AM NOT DEFENDING THE ORIGINAL: it was never exercised. No difference occurred, so the attribution was never tested — and an unexercised claim that reads as proven is the shape this campaign convicts. The result stands; the sentence did not deserve to.**
+★★ **AND YOUR §2 STANDS UNSOFTENED: I preserved the INPUTS meticulously and let the PROOF evaporate to `<scratch>`. One turn after rescuing a harness from `%TEMP%`. `<scratch>` is not a path, and the standing rule is right.**
+
+---
+
+### ★★★★★ §2 — THE THREE-STAGE CONTROL, AND WHY IT CHANGED AN ANSWER I HAD ALREADY REACHED
+
+★★★★★ **BEFORE R-462 LANDED I HAD ALREADY TESTED (b) — BY REMOVING A DEV VIDEO FROM THE POPULATION. It was REJECTED (census-population check) and I was about to report (b) REFUTED. THAT TEST WAS TESTING THE WRONG THING: it moved the POPULATION, which a different guard catches, instead of moving BOTH inputs COHERENTLY so no cross-check fires. YOUR AMENDMENT ARRIVED MID-TASK AND MY ANSWER REVERSED.** ★★★ **A control must reproduce the shape of the real failure — the same law that convicted my `.md`-vs-`.ts` sweep, now caught in advance instead of afterwards.**
+
+**STAGE 1 — baseline, original pinned fixture: ★★ GREEN**, emits `DEV-14 / HOLDOUT-26`. **The rig is not always-red; every result below is interpretable.**
+
+| mutation | **STAGE 2** (original pin) | ★★★★★ **STAGE 3** (re-pinned — semantic guard alone) |
+|---|---|---|
+| (a) invalid label, **HOLDOUT** side | RED — hash guard | ★★★ **GREEN** — and it emits the **CORRECT** `DEV-14 / HOLDOUT-26` |
+| (a) invalid label, **DEV** side | RED — hash guard | ★★★★★ **RED — SEMANTIC:** *"the run's labels and the stated derivation DISAGREE"* |
+| (a) **CONTRADICTORY** label, one video labelled both ways | RED — hash guard | ★★★★★ **GREEN** — undetected |
+| (b) **coherent** DEV-13 / HOLDOUT-27 | RED — hash guard | ★★★★★ **GREEN — AND IT PRINTS `PARTITION DEV-13 / HOLDOUT-27`** |
+
+★★★ **YOUR STOP DOES NOT FIRE: stage 2 went RED on all four, so the hash gate bites. But per your own amendment that proves ONLY that the hash gate works — every verdict below rests on stage 3.**
+
+---
+
+### ★★★★★ §3 — THE VERDICTS, EACH NARROWER THAN THE CLAIM I WAS HANDED
+
+**(b) — CONFIRMED, AND IT IS THE SERIOUS ONE.** ★★★★★ **With `rules_design_keys` and the run labels moved together, the generator emits a **THIRTEEN/TWENTY-SEVEN** partition and **exits 0**. The exact `40 / 14 / 26` cardinalities are NOT asserted anywhere. A generator that will happily produce a partition of the wrong size has no contract at all — your words, and they are now measured.** ★★ **Today it is unreachable in practice because all three inputs are sha256-pinned. THE MOMENT R-460 §4 CONVERTS THOSE PATHS TO ARGUMENTS, THE PINS TRAVEL WITH THE INPUTS AND THIS BECOMES THE ONLY BACKSTOP LEFT. The fixture must land in the SAME change as the refactor, not after it.**
+
+**(a) — SPLIT VERDICT. The claim as relayed was: *"an invalid `HOLDOUT` label silently falls into the complement — so a typo does not error, it silently MOVES A VIDEO BETWEEN POPULATIONS."***
+- ★★★ **THE CONSEQUENCE IS REFUTED. [MEASURED, stage 3] a HOLDOUT-side typo on EVERY holdout row still emits the CORRECT `DEV-14 / HOLDOUT-26` — because `HOLDOUT` is computed as the COMPLEMENT and that label is NEVER READ. Nothing moves.**
+- ★★★★★ **AND THE DANGEROUS DIRECTION IS ALREADY CAUGHT: a DEV-side typo is REJECTED by the PATH-A/PATH-B cross-check — the second derivation I added for a different reason turns out to be the label guard.**
+- ★★★★★ **WHAT SURVIVES, AND IT IS REAL: CONTRADICTORY LABELS WITHIN ONE VIDEO ARE UNDETECTED (stage 3 GREEN). `dev_a` is a SET comprehension, so one `DEV14` row anywhere in a video is enough — the remaining rows can say anything. That is the half of your (a) that measurement supports, and you named it yourself: *"reject inconsistent labels within a single video."***
+★★ **So (a) should be built as an INTRA-VIDEO CONSISTENCY assertion plus a label-domain check, and NOT justified by the "silently moves between populations" rationale — that rationale is false and a fixture written to it would assert something that cannot happen.**
+
+---
+
+### §4 — DISPOSITION, AND I AM HOLDING
+
+★★ **ALLOWED-LIST:** reads · scratchpad-only fixtures · one `SELECT`-only DB session under `SET default_transaction_read_only = on` · this append. ★★★ **THE COMMITTED GENERATOR IS UNMODIFIED — every mutation lived in a scratch copy; `git status` shows `docs/replay-results/h1-scripts/regen_shadow_partition.py` untouched.** **I did NOT re-run the harness, did NOT touch agent `aa8162301b1670de2`'s paths or output, and did NOT begin the prompt oracle.**
+★★★ **[MEASURED, live, THIS task] `backtests total = 0`.**
+★★★ **HOLDING AS ORDERED.** Nothing is in flight from this seat; **no sub-agent is owed — I have dispatched none this entire session, verified rather than assumed.**
+
+**Remaining uncertainty:** ★ **[NOT MEASURED]** whether other `pop`-label domains or a rows file with a video absent from `rules_design_keys` entirely produce further stage-3 greens — I tested the two mutations you named, not the space. ★ The transcripts remain unpinned (§1). ★ The original DEV-14 list-drift mechanism is still `[NOT DETERMINED]`.
+**Risk:** none taken — nothing outside the scratchpad changed.
+
+**Next smallest task (ONE):** ★★★ **agent `aa8162301b1670de2`'s grade landing — yours, not mine.** Then R-460 §4 + R-461 §3's fixtures, built to the CORRECTED rationale in §3 above.
+
+---
+
+## AR-449 · 2026-07-29 · **START-RECEIPT — R-461: PUBLISH THE §1 ATTRIBUTION CORRECTION, THEN HOLD FOR THE GRADE. ★★★ AND I AM ALSO DOING THE ONE THING YOUR §3 EXPLICITLY ASSIGNED TO ME — *"VERIFY (a) AND (b) YOURSELF BEFORE BUILDING TO THEM"* — BY MEASURING THEM AGAINST THE COMMITTED SCRIPT. VERIFYING IS NOT BUILDING, AND IT IS CHEAPEST NOW.**
+
+**RULING ID:** R-461 · **TASK ID:** AR-449 · **STATUS:** START-RECEIPT · **PRIOR:** AR-448 · **COMMIT AT START `389a8abf`.**
+
+**TAKING:** **(1)** the §1 correction against my own AR-448, in your verbatim form · **(2)** a MEASURED verdict on the two relayed `[EXTERNAL OPINION, UNVERIFIED]` claims (a) and (b), by mutating fixtures and observing what the committed script actually does. **THEN HOLD.**
+
+★★★★★ **I ACCEPT §1 WITHOUT ARGUMENT AND IT IS THE RIGHT CATCH: my sentence *"all four unchanged ⇒ attributable to the harness"* IS false — the harness also reads 40 unpinned transcripts, so a DIFFERENCE could have come from transcript drift and my four-item check could not have told me which. ★★★ My result survives only because no difference occurred, which means the sentence was never exercised — and an unexercised claim that reads as proven is exactly this campaign's convicted shape. I wrote it; I am narrowing it.**
+
+★★★★★ **AND YOUR §2 IS A DIRECT HIT I WILL NOT SOFTEN: I preserved the INPUTS meticulously and let the PROOF evaporate to `<scratch>`. One turn after rescuing a harness from `%TEMP%` I did the same species of thing from the other direction. `<scratch>` is not a path.**
+
+★★★ **NOT RACING THE GRADER: `accuracy-validator` `aa8162301b1670de2` is running its own fresh run to a retained path. I will not re-run the harness, will not write to any path it may use, and will not pre-empt its verdict. My (2) touches a DIFFERENT object — `regen_shadow_partition.py` — and no artifact the grader reads.**
+
+**ALLOWED-LIST:** reads · SELECT-only DB under read-only transaction · scratchpad-only fixtures for (2) · append to `AGENT-REPORTS.md`.
+**FIRST OBSERVABLE:** this receipt. **ETA ~20 min.** **STOP:** `backtests total > 0` · any need to write outside the scratchpad · the committed script would have to change (that is BUILDING, and it is queued behind the grade).
+
+---
+
 ## AR-448 · 2026-07-29 · ★★★★★ **FULL REPRODUCTION — THE STRONGEST OF YOUR THREE PRE-DECLARED OUTCOMES. THE PRESERVED HARNESS RE-EXECUTED AGAINST THE PRESERVED INPUT PRODUCES A **BYTE-IDENTICAL** OUTPUT: SAME sha256 `edaa0c14…`, SAME 808,919 BYTES, IDENTICAL CANONICAL MULTISET, AND IDENTICAL AS AN ORDERED LIST — A STRONGER EQUALITY THAN YOU ASKED FOR.** ★★★★★ **AND I PROVED THE COMPARATOR CAN GO RED BEFORE BELIEVING IT: ONE PERTURBED ROW FLIPS BOTH CHECKS TO FALSE WHILE THE UNMUTATED CONTROL STAYS TRUE. A COMPARISON THAT ONLY EVER RETURNS "IDENTICAL" IS NOT EVIDENCE — THAT IS THE `GREEN CHECK WITH NO PATH TO RED` I SHIPPED IN AR-439 AND I AM NOT SHIPPING IT AGAIN.** ★★★ **NOTHING IS GRADED. NO `accuracy-validator` EXISTS AND I DO NOT IMPLY ONE.**
 
 **RULING ID:** R-460 §2 · **TASK ID:** AR-447 · **PRIOR:** AR-446 · **COMMIT AT WRITE `2dd6ecd9`** · **RECOMMENDATION:** **APPROVAL_REQUESTED on the reproduction. ★★★ I do NOT call the run clean — per your §3 that awaits a grader this desk owns and has not dispatched.**
