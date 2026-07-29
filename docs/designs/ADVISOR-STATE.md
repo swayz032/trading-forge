@@ -2,7 +2,9 @@
 
 > **Rewritten in place, never appended.** Cold read: this file → last 3–5 rulings
 > → newest 1–2 ARs. **Never read the ledger from the top.**
-> Last rewritten 2026-07-29 01:20 EDT, current through **R-444 / AR-419**.
+> Last rewritten 2026-07-29 01:20 EDT; SEAT block current through **R-452 / AR-427**.
+> ★★ Superseded v4 §3-1B task block deleted 02:30 — it read as in-flight after the
+> work had LANDED. Re-compaction is owed: 434 lines and re-accumulating.
 > Compacted **386→185 lines** (measured, not estimated). **All five `v3-N` tags
 > verified present by grep after the rewrite.** ★ Still over the ~40-line target:
 > what resists cutting is the ARMED STOP, the population doctrine, the v3 ladder
@@ -66,28 +68,6 @@ in `%TEMP%` is not an instrument, it is a rumour.**
 **PR #32 (`75065635`) and PR #33 (`dcb5eca8`) BOTH MERGED.** ★★★ **THE CI-HONESTY
 LANE IS CLOSED (v4 §9 bound: "governance; NEVER a merge gate for spearhead
 packets").**
-★★★★★ **WORKER: FRESH SEAT ACTIVE — AR-426 started v4 §3-1B at 01:58 with NO
-round-trip, exactly as R-448 was designed to allow. The handoff cost nothing.**
-**TASK — MONEY PATH, v4 §3-1B UNLOCK-DISTANCE RANKING. ETA ~40 min.**
-**Contract (R-448, output shape AMENDED by R-449):** from the FROZEN census
-artifacts, per spearhead spec, blocking conditions by class under a `{C8-fixed}`
-counterfactual → `spec · distinct VIDEOS · residual non-C8 CLASSES · residual
-blocker COUNT · expected UNLOCK DISTANCE · named VIDEOS to re-extract`.
-★★★★★ **`unlock distance` IS DEFINED IN R-449 — it arrived as a bare metric name
-and this desk defined it rather than letting the worker invent one:
-`the number of ADDITIONAL blocker CLASSES beyond C8 that must be corrected before
-that spec has ZERO blocking conditions`. Distance `0` ⇒ the C8 fix ALONE fully
-binds it. NEVER collapse distance / residual conditions / distinct videos into a
-single score.**
-★★★★★ **ACCEPTANCE GATE: reproduce R-426's chain (`C8→6 · +C3→15 · +C2→27 · … ·
-+C9→120`) FIRST. If it cannot, STOP and name WHICH of four it is: POPULATION ·
-CLASS MAPPING · DENOMINATOR · ARTIFACT mismatch.** ★★ **Result is an INDEPENDENT
-MEASUREMENT, never a confirmation — the historical per-video decomposition is
-`[UNVERIFIED]`. Unit = distinct SOURCE VIDEO, never the 3 market copies.**
-★★★★★ **ARMED STOP / ACCEPTANCE: the ranker MUST first REPRODUCE R-426's
-published chain (`C8→6 · +C3→15 · +C2→27 · … · +C9→120`). If it cannot, STOP —
-ranker and census disagree and the RANKER is the suspect.** ★★ **Per-VIDEO, never
-raw rows (120 = 40 videos × 3, triples byte-identical; raw counts inflate 3×).**
 ★★★ **SCHEMA QUESTION CLOSED (AR-424): answer is `(b)` — `0125` drops the NOT
 NULL, `0126` converts to TIMESTAMPTZ, both journalled, observed schema = their
 cumulative effect. NOT the migration-0134 class. And NOT `(c)`: `ci.yml:121` runs
