@@ -2,15 +2,18 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. **Never read the ledger from the top.**
-> Last rewritten: 2026-07-29, current through **R-438**.
+> Last rewritten: 2026-07-29, current through **R-444**.
 
 ## SEAT
-Ledger at **R-444**. Newest AR: **AR-419** (start-receipt; worker on the 156-entry baseline shrink + the self-cleaning guard).
-from 01:00 local). **Worker: extending PR #32 to all seven files, then removing
-the 24 baseline excuses.** ★★★ **ARMED STOP CONDITION YOU MUST HONOUR: if ANY of
-the 24 kill-switch / compliance-gate assertions genuinely FAILS against the real
-tree, that is a LIVE SAFETY FINDING — it comes to the desk before anything else,
-and it is NOT to be fixed by the worker on its own initiative.**
+Ledger at **R-444**. Newest AR: **AR-419** (start-receipt, in flight).
+**Worker: shrinking the remaining 156 baseline entries under the RAN-AND-PASSED
+discriminator, then adding the `BASELINE_SHRINK_NEEDED > 0` self-cleaning guard;
+plus the one real hardcoded-path member, `test_spec_family_bindings.py`.**
+★★★ **ARMED STOP CONDITION: if any of the 156 turns out to be GENUINELY FAILING
+rather than stale, that is a real regression and it comes to the desk before
+anything else — it is NOT the worker's to fix on its own initiative.**
+★ **PR #32 (`6d7c5d23`) carries the 4-file Python path fix + the 24-entry
+removal, RATIFIED R-444 on measured justification. Not yet merged.**
 
 ★★★★★ **R-443's KILL-SWITCH ALARM IS WITHDRAWN (R-444). DO NOT INHERIT IT.
 THE KILL SWITCH AND COMPLIANCE GATE ARE **NOT** FAILING AND WERE NOT FAILING:
