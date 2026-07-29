@@ -81,13 +81,16 @@ The measured chain that decides everything:
    videos ×3 — the per-video decomposition of the first 6 is **[UNVERIFIED]**).
    Fixing the entire session gap alone unlocks **zero** (37/40 videos also carry
    a C8 refusal).
-4. **[MEASURED HERE, this session]** the C8 cause is the extraction brief itself:
-   `transcript-extractor.md:169` (≥3-factor quota, "re-scan before accepting a
-   1-or-2-factor extraction") · `:171` ("Bias toward INCLUSION when in doubt") ·
-   `:616` (each step of a sequential workflow emitted as a confluence factor —
-   which also flattens "A then B then C" toward one-bar AND semantics, the
-   meaning-change the desk forbids downstream). R-427: a SPECIFICATION defect —
-   fixing the parser would change none of those instructions.
+4. ~~the C8 cause is `transcript-extractor.md:169/:171/:616`~~ — **SUPERSEDED,
+   see §14. [ARTIFACT-SOURCED, R-456→R-458 chain] the census corpus was NOT
+   produced by that prompt: its ≥3 quota is flag-gated (`TRANSCRIPT_EXTRACTOR_
+   USE_LEGACY`, unset in both trees) with TWO carriers (`:169` +
+   `kb/indicator-catalog.md:693`), and the corpus's actual producer is a THIRD
+   pipeline — `atomize-transcript.ts` / `compiler-v3-union-1.0`, prompt
+   `c75a2da8…` proven authoritative by a red-controlled hash test. The original
+   attribution is UNSUPPORTED (not refuted) for this corpus. The C8 fix remains
+   a SPECIFICATION-side fix; its target moves — §14 carries the measured
+   candidate locus.
 5. **[ARTIFACT-SOURCED, R-429 L942]** the C8 fix is **HELD on seven prerequisites
    — and as of this draft ALL SEVEN ARE OPEN with NO OWNER ASSIGNED.**
 6. **[ARTIFACT-SOURCED, R-397]** "the missing piece is the BINDING LANE, not the
@@ -438,3 +441,79 @@ zero-boundary ORB spec found none — R-303 §5 had already tried and rejected i
 explicit relaxation anywhere. **Not covered by it:** R-278/R-294/R-344 read
 directly · AR bodies · R-430/431 · `dual_denominator_remeasure.py` internals —
 a later reader inherits those as open, not as cleared.
+
+---
+
+## §14 — REPOINTING (2026-07-29, after the seated desk's R-456→R-458 measurement chain)
+
+**What the desk measured, executing this plan's own 1A step:** the worker took
+prerequisite #1, stopped on a premise defect instead of publishing, and the
+chain that followed proved: **the census corpus was produced by a THIRD
+pipeline** (`atomize-transcript.ts` / `compiler-v3-union-1.0` / gemma, 2-pass
+union, prompt `c75a2da8…` — an inline template literal, provenance
+AUTHORITATIVE via a hash test with a red control at `eb6eea7c`). The
+`transcript-extractor.md` quota this plan blamed is flag-gated OFF in both
+trees. **§1.4's attribution is UNSUPPORTED for this corpus — not refuted
+(whether any earlier extractor stage preceded the atomizer is [NOT MEASURED];
+a pipeline is not one prompt).** This is the plan working as designed: verify
+the premise before spending the ablation and the respin on it.
+
+**What survives unchanged:** C8's size and unlock geometry (51.1%, only class
+unlocking anything alone, 37/40 videos) are CORPUS-side measurements,
+independent of which prompt wrote the conditions. The critical-path SHAPE
+(clear C8 → targeted respin → bind → lane ruling → forensics → exit) stands.
+The fix stays extraction-side — the atomizer IS the extractor, so R-426's stop
+("no C8 remedy at binder/preflight") is honored with the new target.
+
+**NEW MEASUREMENT, this seat, this session [MEASURED HERE — working tree
+`trading-forge/tf-deep-scan/scripts/atomize-transcript.ts:52-78`; NOTE:
+tf-deep-scan lives in the PRIMARY tree, not the campaign worktree]:** the
+atomizer prompt contains, at `:60`, a worked example ORDERING chart/instrument
+context emitted as decision atoms:
+`"we trade this on crude oil" / "we're sitting on the 30-minute chart today"
+→ YES (WAIT_SESSION — execution context: removing it changes what the engine
+runs on)`. **That instruction's example pair is, near-verbatim, R-426's C8
+definition ("chart resolution / instrument names emitted as entry
+conditions").** The same prompt's strict-bias line (`:77`) and ownership
+boundary (`:67`, stops/targets/size → `framework_owned`, never atoms) coexist
+with it — strict about discussion clauses, explicitly inclusive about
+chart/instrument context. AR-441 read this prompt for the ≥3-quota question
+and correctly reported the quota absent; it was not looking for this. **Grade
+discipline: the LINE is measured; its causal SHARE of C8 is a pre-registered
+HYPOTHESIS, not a finding. One check upgrades my read to extraction-time
+identity: confirm the current `PROMPT` literal still hashes `c75a2da8…`.**
+
+**PREREQUISITE #0 (new; precedes #2's ablation design): THREE-POINT PROVENANCE
+TRACE.** For a sample of census C8-classified conditions: condition row → its
+spec-file atom (`evidence_span`) → the transcript sentence. Publish
+`|source ∩ census|` joins before any conclusion. Pre-registered hypothesis:
+C8 conditions descend disproportionately from atoms admitted under the `:60`
+instruction; rival mechanisms to check in the same trace: the 2-pass UNION rule
+(a union is a structural inclusion mechanism needing no prompt quota) and the
+onboarding transform (atoms → conditions). Whichever hop INTRODUCES
+condition-ness is the fix target. Pure reads; no re-extraction; `unknown` is an
+acceptable answer per R-456.
+
+**Prerequisite #1 re-keyed:** enumerate consumers/mechanisms of the ACTUAL
+pipeline (the `:60` instruction, the union rule, the onboarding transform).
+The ≥3-quota consumer enumeration DEMOTES to a latent-hazard hygiene item
+(both carriers annotated whenever the flag-gated legacy prompt is next
+touched) — it is real, just not causal for this corpus as far as measured.
+Prerequisites #2–#7 (ablation pre-reg, independent grader, control/treatment
+arms, annotation storage, immutability) transfer to the new target unchanged —
+the machinery was always target-agnostic.
+
+**Candidate fix class (extractor-side, for the packet — NOT authorized here):**
+amend the atomizer prompt so execution-context clauses (chart resolution,
+instrument) route to a non-atom classification with the market/timeframe
+captured as spec METADATA rather than entry conditions — the prompt already has
+exactly this pattern for stops/targets (`framework_owned`); this extends the
+boundary it already draws. Red-proof: re-atomize a fixture video; C8-class
+atoms drop; genuine market-state conditions (the `:61` price-level class)
+unmoved.
+
+**Sequencing note for the seated desk:** the 40-vs-41 spec-count discrepancy
+(R-458's authorized task, assignee NONE) stays FIRST — population integrity
+before any trace over that population. And per AR-442: prerequisites #2/#3
+remain advisor-owned and unowned; a fresh worker seat needs its allowed-list
+stated or it re-derives the wall.
