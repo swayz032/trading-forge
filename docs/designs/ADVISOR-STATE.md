@@ -10,7 +10,18 @@
 > never contracts.** ★★★ Verify the PAYLOAD of each v3 upgrade, not its tag: a
 > tag-presence check is what missed the dropped fourth attribution bin.
 
-## ★★★★★ LIVE OBLIGATION OF THIS DESK — DO NOT LET IT LAPSE
+## ★★★★★ OBLIGATION DISCHARGED (was: LIVE) — grader dispatched 14:12
+★★★★★ **DONE, NOT REMEMBERED: the harness re-run landed (AR-448, FULL
+REPRODUCTION) and this desk DISPATCHED the `accuracy-validator` in the same turn
+the trigger fired. VERIFIED BY ACTION, and the agent id is recorded in the ruling
+that consumes its verdict — never "a grade was obtained" without one.**
+★★★ **The brief's hardest question is CIRCULARITY: can `shadow.ts` read, import or
+cache its OWN prior output instead of recomputing from `evidence2.json`? If it
+can, byte-identity is trivially guaranteed and proves nothing. Also asked: hidden
+non-determinism that happened to agree, and whether the four-item pin table is
+COMPLETE against the real import closure.**
+
+## ★★★★★ SUPERSEDED OBLIGATION TEXT (kept — the rule still governs the next one)
 ★★★★★ **I OWE AN `accuracy-validator` DISPATCH, AND ITS TRIGGER IS NAMED: THE
 MOMENT THE HARNESS RE-RUN RESULT LANDS (R-460 §2), THIS DESK DISPATCHES THE
 INDEPENDENT GRADE AGAINST IT. NOT BEFORE — grading a reproduction that does not
