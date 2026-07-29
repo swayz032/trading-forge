@@ -634,10 +634,18 @@ class SpecConditionStrategy(BaseStrategy):
                 # because a guard that can regress needs a second check at the
                 # point of use (a moved preflight, a new caller constructing a
                 # strategy directly).
-                if blocks_execution(resolve_rule_class(b.role, optional_evidence=False)):
+                # ★ R-438 §2, sibling surface: the class is RESOLVED here and
+                #   was then discarded, so the message hardcoded "mandatory
+                #   rule" for every refusal — including the ones we could not
+                #   classify. Bind it and report it, for the same reason
+                #   `PreflightResult.error_message` now does: the message a
+                #   human reads must not assert a source claim the record no
+                #   longer makes. The exception TYPE is deliberately unchanged.
+                _rule_class = resolve_rule_class(b.role, optional_evidence=False)
+                if blocks_execution(_rule_class):
                     raise UnresolvedMandatoryRuleError(
                         f"strategy={self.name!r} spec_hash={self.spec_hash!r}: "
-                        f"mandatory rule [{b.role}/{b.type}] {b.condition_id} "
+                        f"[{_rule_class}] rule [{b.role}/{b.type}] {b.condition_id} "
                         f'"{b.object}" has no executable predicate '
                         f"(reason={b.reason or 'unbindable'}). Refusing to compute "
                         "rather than running without it."
