@@ -4,6 +4,26 @@
 
 ---
 
+## AR-421 · 2026-07-29 · **START-RECEIPT — R-445: CLASSIFY THE 23 ABSENT ENTRIES, THEN CHARACTERIZE THE 9 STILL-FAILING. BLUEPRINT v4 READ FIRST. NO PUSH TO #32.**
+
+**RULING ID:** R-445 · **TASK ID:** AR-421 · **STATUS:** STARTING.
+
+★★★ **ACKNOWLEDGED AND HELD AS A HARD FENCE: I will NOT push any commit to `hardening/ci-abs-path-tests-20260729`. The `accuracy-validator` is reading `af5779ef`; if the head moves, its verdict describes a commit that no longer exists and the grade is wasted.** ★ **All work below is read-only or lands in `AGENT-REPORTS.md` only.**
+
+**BLUEPRINT v4:** reading `docs/designs/BLUEPRINT-V4-DRAFT.md` before the classification, per your order. ★★ **Noted already and carried into how I will file any future failure: the attribution read has FOUR bins and `gate-artifact` — "the instrument lied" — is the one that was dropped. Tonight produced four false greens and a CI step with no path to red, so I will not treat that bin as exotic.** ★ **Also noted: my CI lane is governance and is explicitly NEVER a merge gate for spearhead packets. I will not let it grow into one.**
+
+**METHOD FOR THE 23 — the discriminator is FILE-level presence, not test-level:**
+★★★ **If a test's FILE appears in the vitest report but the test name does not → RENAMED or DELETED (benign dead wood). If the FILE is absent from the report entirely → that is the serious case: a collection error would mean every test in that file silently did not run, and the absent population is larger than 23.** ★★ **I will separate those two before saying anything about severity, and I will not infer a rename without naming the successor.**
+★ **`UNKNOWN` will be used where the artifacts cannot decide it — a residual category stated plainly beats a guess dressed as a finding.**
+
+**THEN:** the 9 still-failing, one line each, **ENVIRONMENTAL vs LOGIC**. Classification only — **I will not fix them.**
+
+**FIRST OBSERVABLE:** this receipt. **ETA ~30 min + the v4 read.** ★ **Noted that you have recorded a ~15-minute watchdog fire as EXPECTED for this task.**
+**STOP ARMED:** ★★★ **ANY of the 23 tracing to a COLLECTION ERROR — that is an immediate report, not a footnote, because it means the silent-absence population is bigger than the baseline shows.** · `backtests total > 0` · anything that would require a push to #32.
+**HONEST-PARTIAL ARMED:** if some of the 23 cannot be decided from the artifacts I hold, I will name **how many** and **what I would need**, rather than letting a partial classification read as complete.
+
+---
+
 ## AR-420 · 2026-07-29 · ★★★★★ **YOUR DISCRIMINATOR WAS NOT THEORETICAL — IT FIRED. OF THE 156 "FIXED" ENTRIES, ONLY `132` HAD ACTUALLY RUN AND PASSED. `23` WERE ABSENT FROM THE REPORT ENTIRELY AND `1` WAS SKIPPED — 24 SAFETY NETS I WOULD HAVE DELETED ON THE STRENGTH OF NEVER HAVING EXECUTED.** ★★★ **SO I FIXED THE INSTRUMENT, NOT JUST THE DATA: `compare-baseline.mjs` COULD NOT TELL "FIXED" FROM "NEVER RAN", AND NOW IT CAN.** ★★ **BASELINE `165 → 33`. GUARD LANDED AND RED-PROOFED BOTH WAYS. ALL THREE ITEMS DONE**
 
 **RULING ID:** R-444 · **TASK ID:** AR-419 · **PR:** #32 (`cb940f85`, `af5779ef`) · **RECOMMENDATION:** **APPROVAL_REQUESTED.**
