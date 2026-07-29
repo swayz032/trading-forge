@@ -4,6 +4,93 @@
 
 ---
 
+## AR-452 · 2026-07-29 · ★★★★★ **§2 DONE — 40 TRANSCRIPTS PRESERVED AS **BYTES**, `913,668` OF THEM, ENGAGEMENT-DERIVED AND VERIFIED `40/40` FROM THE MANIFEST ON DISK. §3's THREE ERRATA PUBLISHED ADDITIVELY.** ★★★★★ **AND I DID NOT RELAY YOUR CRLF CLAIM — I MEASURED IT, AND IT IS FALSE OF THE SET I WAS PRESERVING: `0 of 40` TRANSCRIPTS CONTAIN CRLF. THE FALSE-RED RISK IS REAL BUT IT LIVES ON `clause-segmenter.ts` AND `graph-to-engine.ts`, NOT HERE — AND A CONVENTION STATED AS UNIVERSAL WHEN IT IS PER-FILE IS HOW A VERIFIER LEARNS TO IGNORE THE WARNING.** ★★★ **(b) AND (c) BOTH CONFIRMED AT THE LINE — AND (b) HAD A TRAP IN IT: `grep graph-to-engine` HITS TWICE IN `gate-strength.ts`, BOTH INSIDE A COMMENT BLOCK.**
+
+**RULING ID:** R-463 §2 + §3 · **TASK ID:** AR-451 · **PRIOR:** AR-450 · **COMMIT AT WRITE `b27153b5`** · **RECOMMENDATION:** **APPROVAL_REQUESTED on §2 and §3. ★★★ §5 NOT STARTED — handing off, see §5 below.**
+
+---
+
+### ★★★★★ §1 — §2: THE BYTES, NOT THE FINGERPRINTS
+
+**`backups/h1-shadow-eval/transcripts-78fe8ea7/`** — content-addressed, read-only, outside git.
+**MANIFEST HASH over the whole set:** `78fe8ea72a82cc9e4c7cc456cf8b7dbcd5a74338d409bc10948871fde54c844b` · **40 files · 913,668 bytes** · per-file **RAW-BYTE** sha256 + **BYTE COUNTS** in `MANIFEST.txt`.
+
+★★★★★ **POPULATION DERIVED FROM ENGAGEMENT, NOT FROM A LIST — and this was not a formality: the source directory holds MORE `.transcript.txt` files than these 40, so a directory glob would have preserved the WRONG SET.** I took the keys of the preserved `evidence2.json` — exactly what `shadow.ts:19-20` iterates and opens. **Not the census, not a maintained list, not a glob.**
+★★★ **VERIFIED, not assumed: hashed at SOURCE, copied, re-hashed at DESTINATION, required equal → `40/40`, `913,668 → 913,668`. Then re-verified INDEPENDENTLY by reading `MANIFEST.txt` back off disk and re-hashing every file → `40/40`, and the manifest hash recomputes to the same value.**
+★★ **The `2026-07-29 FORWARD SNAPSHOT` label and the `[UNRECOVERABLE AT ORIGIN]` limit are written INTO the README, not merely into this report — and the README states in its own words that it may never be backdated into evidence for the original run, and that the pre-dating mtimes CORROBORATE AND DO NOT PROVE.**
+
+---
+
+### ★★★★★ §2 — YOUR CRLF CONVENTION, MEASURED — AND IT IS PER-FILE, NOT UNIVERSAL
+
+**R-463 §2 relayed: *"the sources are CRLF on disk — LF-normalising yields different, unpublished hashes."* ★★★★★ [MEASURED HERE, per file class] THAT IS FALSE OF THE 40 TRANSCRIPTS:**
+
+| pinned file | CRLF on disk? |
+|---|---|
+| **the 40 transcripts** | ★★★ **NO — `0 of 40`, they are already LF** |
+| `gate-strength.ts` | NO |
+| `corpus-v3-heldout-split-2026-07-05.json` | NO |
+| `clause-segmenter.ts` | ★ **YES** |
+| `graph-to-engine.ts` | ★ **YES** |
+
+★★★ **SO A VERIFIER RUNNING `dos2unix | sha256sum` OVER THIS SNAPSHOT WOULD **NOT** GET A FALSE RED. The trap is real and it is on the two `.ts` files.** ★★★★★ **I still published "raw bytes, do not normalise" as the manifest convention — because it is the right rule — but I published it WITH the measurement, since a warning that does not apply where it is written is a warning the next reader learns to skip.**
+
+---
+
+### ★★★★★ §3 — THE THREE ERRATA, ALL ADDITIVE, NO FROZEN BYTE TOUCHED
+
+**(a) `shadow-eval-edaa0c14/README-ERRATUM-2026-07-29.md`** — ★★★★★ **and the false sentence is MINE: *"the other four instruments … are git-tracked in working trees and already durable — only the `%TEMP%` residents needed rescuing."* The 40 transcripts were gitignored, unpinned, unhashed, unretained — NEITHER TRACKED NOR RESCUED, the exact two things I claimed.** ★★ **The four LISTED items really are tracked; the sentence failed because it generalised FROM A LIST to "the other inputs". `README.md` itself is unmodified and still read-only — verified after writing.**
+
+**(b) + (c) `docs/designs/SHADOW-EVAL-PINS-AND-MEDIANS-ERRATUM-2026-07-29.md`** (campaign tree, committed with this report).
+
+★★★★★ **(b) CONFIRMED, TRACED AT THE LINE RATHER THAN RELAYED:** `shadow.ts`'s runtime imports are `node:fs` · `clause-segmenter.ts` · `gate-strength.ts` — **and the string `graph-to-engine` does not occur in `shadow.ts` at all.** `gate-strength.ts` has **exactly one** import, `import type { AtomType }` — **TYPE-ONLY, erased**. `clause-segmenter.ts` has **none**. **The pin is over-inclusive: a file that is never loaded is pinned, while 40 files that ARE read are not.**
+★★★★★ **AND THE TRAP I WALKED UP TO: `grep -n graph-to-engine gate-strength.ts` returns TWO HITS, `:7` and `:45` — BOTH INSIDE A `/* */` COMMENT describing what the classifier replaces. A grep-only check would have concluded the opposite. `A GREP MATCHING ONLY COMMENTS IS NOT A VERIFICATION` — the import list is the executable claim.**
+
+★★★ **(c) CONFIRMED: `10.6%` (`10.6203…`) and `3.6%` (`3.6229…`), not `10.7%`/`3.8%` — TWO independent paths (`statistics.median`, and a hand-computed median off the sorted list with no library) agreeing to 12 decimal places, both over the RETAINED rows.** ★★ **Corrected even though nothing depends on them: they are descriptive, the seven totals are untouched, and the `2.75×` signature rests on the POOLED `11.3%`/`4.1%` which re-derive correctly. Corrected anyway, because a number that is quietly wrong teaches the next reader that quiet wrongness is tolerated.**
+
+---
+
+### §4 — DISPOSITION
+
+★★ **ALLOWED-LIST:** reads · byte-copies into retention · additive errata · one `SELECT`-only DB session under `SET default_transaction_read_only = on` · this append. **NO frozen byte rewritten · NO backdating of the forward manifest · no `--relock` · no re-extraction · no C8 · no backtest · no `.env`/flag/DB write · no `git checkout`/`reset`.**
+★★★ **NOTHING EXISTING WAS MUTATED, and I verified rather than asserted it: `sha256sum -c` on the `shadow-eval-edaa0c14` snapshot → `3 of 3 OK` AFTER all of today's work; its `README.md` still read-only and unmodified.**
+★★★ **[MEASURED, live, THIS task] `backtests total = 0`.**
+★ **Off-machine encrypted backup of the new transcript retention: NOT ARRANGED — flagged for the operator, as with the two prior snapshots. Three snapshots now sit on one disk.**
+
+---
+
+### ★★★ §5 — HANDING OFF BEFORE §5, AND SAYING SO PLAINLY
+
+★★★★★ **R-463 §5 — the generator hardening — IS AN INSTRUMENT CHANGE. It rides `ratify-packet`, must carry the `40/14/26` cardinality assertion plus intra-video label consistency (built to AR-450 §3's CORRECTED rationale, NOT the relayed one), the R-460 §4 fixture set and the path-to-argument refactor, and it takes an INDEPENDENT `accuracy-validator` afterward. That is a full task with its own packet and its own grade.**
+★★★ **THIS SEAT HAS RUN AR-443 → AR-452 — ten reports — and four of them corrected prior work, two of them my own. A seat this deep into auditing itself is the wrong seat to open an instrument change that defines the population governing tuning.** ★★ **The cheapest moment to swap is now, with nothing open.**
+
+**POSITION:** commit `b27153b5` + this commit · branch `h1-wave4-sealed12-driver` · tree `wt-h1-wave4-20260712`.
+★★★ **NOTHING IS HALF-DONE. NOTHING IS IN FLIGHT. NO SUB-AGENT IS OWED — I dispatched none this entire session and verified that rather than assuming it.**
+★★★★★ **A FRESH WORKER SESSION IS NEEDED.** Its task, already defined so it need not re-derive: **R-463 §5 hardening under a ratify packet** → then R-459 step (3), the shared evaluated-prompt oracle → then §14's three-point trace.
+
+**Remaining uncertainty:** ★ **[UNRECOVERABLE AT ORIGIN]** original transcript identity — permanent, labelled, not repairable by me. ★ **[NOT MEASURED]** whether the OTHER pinned instruments have unlisted runtime inputs of their own; I traced `shadow.ts`'s closure only. ★ The original `DEV-14` drift mechanism remains `[NOT DETERMINED]`.
+**Risk:** low — the only new bytes are two retention directories and two errata; nothing existing changed.
+
+---
+
+## AR-451 · 2026-07-29 · **START-RECEIPT — R-463 §2 (PRESERVE THE 40 TRANSCRIPT BYTES) THEN §3 (THREE ADDITIVE ERRATA). ★★★ I AM NOT TAKING §5 — IT IS AN INSTRUMENT CHANGE NEEDING A RATIFY PACKET AND AN INDEPENDENT GRADE, AND I WILL HAND OFF BEFORE IT RATHER THAN OPEN WHAT I CANNOT FINISH.**
+
+**RULING ID:** R-463 §2+§3 · **TASK ID:** AR-451 · **STATUS:** START-RECEIPT · **PRIOR:** AR-450 · **COMMIT AT START `b27153b5`.**
+
+★★★★★ **I ACCEPT THE GRADE'S DOWNGRADE AND IT LANDS ON MY OWN AR-446: that report's retention README says the other instruments *"are git-tracked in working trees and already durable — only the `%TEMP%` residents needed rescuing."* **THAT SENTENCE IS FALSE AND I WROTE IT.** The 40 transcripts are gitignored, were never pinned or hashed, and were neither tracked nor rescued. I asserted durability about a set I never checked the tracking status of.**
+
+★★★★★ **THE FORBIDDEN SENTENCE, ACKNOWLEDGED BEFORE I START SO I CANNOT DRIFT INTO IT: what I am building today is a **FORWARD BASELINE**. It says NOTHING about 2026-07-28. `[UNRECOVERABLE AT ORIGIN]` is the honest label for whether today's transcript bytes equal the original run's, and the mtimes CORROBORATE ONLY — an mtime is a fact about a last write, not about the bytes at an earlier read. The label goes in the README itself, not merely in this report.**
+
+**§2 — I WILL PRESERVE THE BYTES, NOT THE FINGERPRINTS**, content-addressed and read-only, carrying: population identity · per-file BYTE COUNTS · **RAW-BYTE** sha256 · a manifest hash over the whole set · the `2026-07-29 FORWARD SNAPSHOT` label · and the **CRLF convention stated explicitly**, because LF-normalising yields unpublished hashes and would hand the next verifier a FALSE RED.
+★★★ **The 40 will be derived ENGAGEMENT-STYLE from the preserved `evidence2.json` keys — what the harness actually iterates — NOT from a maintained list and NOT from the census, so the manifest describes what was READ rather than what I believe was read.**
+
+**§3 — THREE ADDITIVE ERRATA, no frozen byte rewritten:** (a) the retention README · (b) the pin table, **over- AND under-inclusive at once** — and I will verify the `graph-to-engine.ts` non-load AT THE LINE myself rather than relay it · (c) the medians, **recomputed by two independent paths** before I publish any replacement number.
+
+**ALLOWED-LIST:** reads · byte-copies into retention · additive errata · SELECT-only DB under read-only transaction · this append.
+**FIRST OBSERVABLE:** this receipt. **ETA ~30 min.** **STOP:** any transcript missing from the engaged set · `backtests total > 0` · a correction that would require rewriting frozen bytes.
+
+---
+
 ## AR-450 · 2026-07-29 · ★★★★★ **CLAIM (b) IS **CONFIRMED** — THE GENERATOR EMITS `PARTITION DEV-13 / HOLDOUT-27` AND **EXITS 0**. AND YOUR R-462 AMENDMENT IS WHAT CAUGHT IT: MY OWN PRE-AMENDMENT TEST HAD ALREADY "REFUTED" (b), AND IT WAS WRONG BECAUSE I MUTATED THE POPULATION INSTEAD OF MUTATING BOTH INPUTS COHERENTLY. THE AMENDMENT LANDED MID-TASK AND REVERSED MY ANSWER.** ★★★★★ **CLAIM (a) IS **SPLIT**: CONFIRMED FOR CONTRADICTORY LABELS, **REFUTED IN ITS STATED MECHANISM** — A DEV-SIDE TYPO IS CAUGHT BY THE PATH-A/PATH-B CROSS-CHECK, AND A HOLDOUT-SIDE TYPO MOVES NOTHING BECAUSE THAT LABEL IS NEVER READ.** ★★★ **AND I PUBLISH THE §1 CORRECTION AGAINST MY OWN AR-448 IN YOUR VERBATIM FORM.**
 
 **RULING ID:** R-461 §1 + §3, as amended by R-462 · **TASK ID:** AR-449 · **PRIOR:** AR-448 · **COMMIT AT WRITE `389a8abf`** · **RECOMMENDATION:** **REPORT AND HOLD, as ordered. Nothing built; the committed generator is untouched.**
