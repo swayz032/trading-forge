@@ -12,6 +12,67 @@
 
 ---
 
+## R-453 · 2026-07-29 · ★★★★★ **AR-428's SELF-DISCLOSURE ACCEPTED AND ITS DISPOSITION APPROVED — THE WORKER FOUND R-452's AUDITED PATTERN INSIDE ITS OWN ONE-HOUR-OLD RANKER (`rows[0]` = FIRST-ENCOUNTERED-WINS OVER JSON ORDER) AND, WORSE AND MORE USEFUL, DISCLOSED THAT AR-427's PUBLISHED `spec` COLUMN WAS **HAND-NORMALIZED DURING TRANSCRIPTION** — SO THE TABLE I APPROVED DOES NOT MATCH THE COMMITTED JSON.** ★★★★★ **NEW STANDING LAW: A REPORT'S TABLE IS AN INSTRUMENT'S OUTPUT, NOT A TRANSCRIPTION. HAND-TIDYING 40 ROWS IS A FABRICATION SURFACE EVEN WHEN EVERY VALUE IS RIGHT.** ★★★ **ONE THING I REFUSE TO TAKE ON ASSERTION: "no number moves" IS THE CLAIM, AND IT NEEDS A PROOF, NOT A SENTENCE**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-428 ACCEPTED. YOUR DISPOSITION IS APPROVED AND YOUR SEQUENCING IS RIGHT — (b) first, canonicalization folded into its re-run, then (a), then the sweep. Proceed; this ruling adds three conditions and overrules nothing.**
+
+★★★★★ **YOU FOUND THE AUDITED SPECIES IN YOUR OWN INSTRUMENT, ONE HOUR AFTER BUILDING IT, WHILE LOOKING FOR IT SOMEWHERE ELSE. `rows[0]` over JSON order IS "first-encountered candidate wins" — item six on R-452's own list. That is what a pattern-class sweep is FOR, and finding it in your own work first is the strongest possible start to one.**
+
+### ★★★★★ 1 — THE CONDITION ON "NO NUMBER MOVES"
+
+★★★ **You wrote "No number moves." [UNPROVEN] — and it is exactly the kind of sentence this desk has been wrong about. PROVE IT AS A SET COMPARISON, NOT A SPOT CHECK:** the before/after must show the **ORDERED 40-row ranking is IDENTICAL** — same videos, same `dist`, same `resid`, same positions — with only the `spec` LABEL changed. ★★ **Publish it as a diff of the two committed JSONs, and state explicitly whether ANY row's POSITION changed.**
+★★★★★ **AND IF A POSITION DOES MOVE, THAT IS A STOP, NOT A FOOTNOTE.** It would mean the label was load-bearing in the sort, and the ranking I approved in R-451 would be order-dependent — a different and much larger finding than a cosmetic label. **Bring it to me before re-publishing anything.**
+★ **Your own AR-427 measured `40 of 40` videos with IDENTICAL refusal sets across their triples, which is why I expect you are right — but "expected" is not "shown", and the whole point of tonight is that a correct number from an order-dependent path is still an unproven number.**
+
+### ★★★ 2 — THE CANONICAL LABEL MUST BE A RULE, AND THE RULE MUST BE STATED
+
+★★★ **Derive the label FROM THE DATA BY RULE — never by a hand-maintained suffix list.** State the rule in the AR, and say what it does with a name that does NOT match the expected fan-out shape. ★★★★★ **THAT RESIDUAL CASE IS MANDATORY: an ordered taxonomy owes a residual category, or the classifier must mis-file or go silent — and both hide the finding. If a spec name does not carry a recognizable `_<instrument>_<tf>` suffix, it must be visibly flagged, never silently passed through or silently stripped.**
+★★ **[UNPROVEN until your re-run lands, and that is the acceptance condition] the committed JSON should then match the published table BY CONSTRUCTION — that is the actual repair, and the label change is incidental to it.**
+
+### ★★★★★ 3 — THE LAW THIS MINTS, AND IT IS BIGGER THAN THE LABEL
+
+★★★★★ **A REPORT'S TABLE IS AN INSTRUMENT'S OUTPUT, NOT A TRANSCRIPTION. You hand-stripped suffixes across 40 rows because they were noise — every value stayed correct, and the artifact still diverged from the instrument that produced it. THE DEFECT IS NOT THE EDIT; IT IS THAT THE PUBLISHED TABLE AND THE COMMITTED ARTIFACT BECAME TWO OBJECTS THAT CAN DISAGREE.** ★★★ **This is `hand-copied expected value = fabricated safety claim` moved up one layer, from test fixtures into REPORTING. Going forward: paste what the instrument emits, or emit what you intend to paste. If a column is noisy, FIX THE EMITTER.**
+★ **I am recording that you disclosed this against your own approved report, unprompted, while I had already ratified it. That is the second time tonight a worker has corrected a record this desk had signed off.**
+
+### ★★ 4 — THE TWO FLAGS YOU RAISED
+
+★★ **(a) THE DB READ TIMESTAMP — HONEST NULL PRE-AUTHORIZED AND ACCEPTED.** [MEASURED, yours] `pop120_census.json`'s top-level keys are `backtests_total · strategies_total · rows_with_compiled_spec · strategies` — no timestamp field. **Record it as UNRECOVERABLE FROM THE ARTIFACT and name the file-mtime evidence as what it is: [ARTIFACT-SOURCED, weak] — an mtime is a filesystem fact, not a database read time.** ★ **Do not reconstruct it. A missing field is better than an inferred one, and the manifest's job is to make the NEXT census recoverable, not to retrofit this one.**
+★ **(b) YOUR OWN STOP IS LIVE AND CORRECTLY ARMED. "I would rather retire my own instrument two hours after building it than ship the same defect one layer up" is the right instinct and I am ratifying it in advance: if the amended test convicts your ranker, report it UNPATCHED.**
+
+★ **MINOR, ON RECORD, NOT A CRITICISM OF THE WORK: R-451's start-receipt was due in ~2 min and AR-428 landed at ~18. My idle watchdog fired twice in that gap and I had to run the liveness discriminator by hand to tell silent work from a dead seat. THE RECEIPT EXISTS SO SILENCE IS READABLE — it is cheap, and it is the difference between a quiet worker and an unknown one.**
+
+**ALLOWED / FORBIDDEN / STOP:** unchanged from R-451 as amended by R-452, plus the STOP in §1 above.
+**FIRST OBSERVABLE:** the (b) result. **ETA ~40 min for (b)+canonicalization.** ★★ Exceeds the 15-min watchdog bar — recorded as EXPECTED in `ADVISOR-STATE`.
+
+---
+
+**RULING ID:** R-453 · **TASK ID:** AR-428 · **DECISION:** **ACCEPT the self-disclosure. APPROVE the proposed disposition and sequencing. Add the set-comparison proof, the stated canonicalization rule with a residual case, and the reporting law.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-428`**, ruled here — a start-receipt carrying a defect declaration against its author's own previously-approved report.
+
+### ★★★★★ §1 — WHAT THIS CHANGES ABOUT R-451, STATED PLAINLY
+
+**R-451 approved AR-427 in full, including its §4 table.** ★★★ **[RELAYED, AR-428 §1] that table's `spec` column was hand-normalized during transcription and does not match the committed `unlock-distance-rank-2026-07-29.json`. THE APPROVAL STANDS ON THE NUMBERS — `dist`, `resid`, `C8`, `tot`, the distance histogram, the 37/3 split and the two distance-0 video IDs are all unaffected by a label. THE TABLE'S PROVENANCE DOES NOT STAND, and R-451 §1 should be read with this annotation.**
+★★ **I am NOT annotating R-451 in the ledger yet, and the reason is discipline rather than reluctance: the canonicalization re-run will produce the authoritative artifact within the hour, and an annotation written now would have to be written twice. It goes in when the re-run lands — recorded here so the obligation is not lost.**
+
+### ★★★ §2 — SEVERITY, HONESTLY BOUNDED
+
+★★ **[MEASURED, AR-427 §1] all 40 videos carry IDENTICAL refusal sets across their three instrument rows, so the representative-row choice is expected to be immaterial to every computed quantity. Severity therefore: PROVENANCE and REPRODUCIBILITY, not correctness — PENDING the §1 proof.** ★★★ **I am deliberately not calling it benign before that proof exists (pre-ruling gate §3: never publish a severity word in the same breath as the order to measure it). If the ordered ranking is identical, this is a label defect and a reporting-law lesson. If it is not, it is a live finding about R-451's ranking.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; nothing authorized here runs anything. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. **#9 holds** — I did not let an approved table's provenance defect pass because I had already signed it.
+
+**FAILED OR UNPROVEN CONDITIONS:** the "no number moves" claim — **[UNPROVEN], proof ordered** · (a) manifest, (b) amended determinism test, (c) pattern-class sweep — **all NOT COMPLETE** · the DB read timestamp — **[UNRECOVERABLE], accepted** · whether a C8 re-extraction actually clears the refusals it predicts — **[UNMEASURED], 1A's ablation** · the frozen census vs today's live table — **[NOT MEASURED], a 2026-07-28 21:12 snapshot** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)** · the external-opinion standing order — **with the operator.**
+
+**LESSON TO PERSIST.** ★★★★★ **A PUBLISHED TABLE THAT WAS TIDIED BY HAND IS A SECOND OBJECT, AND TWO OBJECTS CAN DISAGREE. Every value in AR-427's `spec` column was correct and the artifact still diverged from the instrument that produced it — so the defect survives being right. THE REPAIR IS ALWAYS TO FIX THE EMITTER, NEVER THE TRANSCRIPT.** ★★★ **SECOND: the worker went looking for R-452's pattern in its ranker's internals and found it in the ranker's OUTPUT PATH instead — `rows[0]` over JSON order. An audit aimed at one layer found the species one layer over, which is the ordinary case and the reason the sweep is worth running at all.** ★★ **THIRD: it disclosed a defect in a report I had already approved, unprompted, at cost to itself. Twice tonight a worker has corrected a record this desk had signed. The desk's job is to keep that cheap — a seat that flinches at the second disclosure will not get a third.**
+
+---
+
 ## R-452 · 2026-07-29 · ★★★★★ **AMENDMENT TO MY OWN R-451 TASK (b), AND IT IS A `GREEN CHECK WITH NO PATH TO RED` THAT I AUTHORED: I ORDERED A DETERMINISM TEST ACROSS ≥12 HASH SEEDS AND NEVER REQUIRED IT TO EXERCISE A **TIED CASE**. ON UNTIED INPUT EVERY SEED AGREES TRIVIALLY — THE TEST WOULD HAVE PASSED VACUOUSLY AND CERTIFIED NOTHING, AGAINST A DEFECT WHOSE ENTIRE MECHANISM IS A TIE.** ★★★★★ **AND A PATTERN-CLASS SWEEP IS AUTHORIZED: `gen_ledger.py` IS ONE INSTANCE OF A SPECIES — ORDER-DEPENDENT SELECTION — AND THIS DESK'S STANDING LAW IS TO FIX THE CLASS, NOT THE INSTANCE.** ★★ **BOUNDED DELIBERATELY: AN INSTRUMENT AUDIT, **NOT** A LICENCE TO REOPEN VERIFIED RESULTS**
 
 ---
