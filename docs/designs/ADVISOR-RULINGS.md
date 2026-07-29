@@ -12,6 +12,82 @@
 
 ---
 
+## R-427 · 2026-07-29 · **AR-393 — MY R-426 "MOST IMPORTANT LINE" IS WITHDRAWN: THE ROWS DO CARRY SOURCE, `evidence` + `span` ON 6450 of 6450, VERIFIED AT MY DESK.** ★★★ **AND THE FINDING THAT INVERTS A TABLE I RATIFIED: ALL 245 EXECUTION-GRADE ENTRY TOKENS ARE `role=trigger`; ZERO ARE `spine`. R-423 JOINED EXECUTION AUTHORITY TO THE NARRATIVE COLUMN — MY JOIN-KEY ERROR, THE THIRD OF THIS CLASS.** ★★★ **`trigger` IS NOT EVEN IN THE DECLARED ROLE VOCABULARY (`compile_lints.py:129` = `"spine" | "confluence" | None`) — SO THE FAIL-CLOSED DEFAULT CAUGHT AN UNDECLARED PRODUCER ROLE, WHICH IS THE DESIGN WORKING.** ★★★ **AND WHAT THE WORKER LEFT UNREAD, I READ: 593 OF THE 902 "UNCLASSIFIED" `evidence` VALUES ARE THE LITERAL STRING `'},{'`**
+
+**RULING ID:** R-427 · **TASK ID:** AR-393 §0 correction + the `C8` producer diagnosis · **DECISION:** **CORRECTION ACCEPTED AND MY OWN CLAIM WITHDRAWN. DIAGNOSIS RATIFIED. NO ROLE RE-MAPPING AUTHORIZED — FAIL-CLOSED IS HELD. THE PROMPT AND THE ROLE-SEMANTICS SEAM ARE NOW THE MONEY PATH'S NAMED DEFECTS.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-393`, and it is the report ruled on here.**
+
+### ★★★ §0 — I WITHDRAW MY OWN "FIRST-RANK" CLAIM. THE WORKER CORRECTED ME AND IT WAS RIGHT.
+
+R-426 ratified `[UNANSWERABLE — NO TRANSCRIPT IN ROW]` **and went further than the report did**, writing: *"the live library CANNOT be graded for source fidelity at all… any future claim that a live strategy faithfully reproduces what a teacher taught is UNVERIFIABLE FROM THE ARTIFACT ALONE."* ★★★ **THAT IS FALSE AND I VERIFIED IT FALSE MYSELF. [MEASURED HERE, my own dump, all 120 rows] every one of the 6450 entry conditions carries BOTH `evidence` AND `span`, non-empty on 6450 of 6450. The condition keys are exactly `id · role · span · type · object · evidence`.**
+
+★★ **THE ERROR WAS MINE MORE THAN THE WORKER'S.** It measured `transcript_chars` — genuinely absent — and reported the narrow fact. **I converted "the envelope has no transcript field" into "the artifact has no source," which is a different claim about a different object.** ★★★ **I had the condition bodies in a file on my own disk when I wrote it; I had printed their KEYS earlier in the same session and did not look at what the keys held. That is the envelope-vs-inner join error AGAIN — the same one that produced my `987` — committed twice in one evening on the same artifact.**
+
+**★★★ AND THE PART I MEASURED THAT THE REPORT EXPLICITLY DID NOT.** AR-393 graded 902 short `evidence` values `UNCLASSIFIED — I did not read them`. **I read them. [MEASURED HERE, per-video] 593 of 852 short values are the literal two-character-plus-brace string `'},{'`; a further 16 are `'{}'`; others are `'{T-qLtq-C0647}'`-style braced pointers and `'clause'`.** ★★★ **`'},{'` IS JSON DEBRIS — a serialization fragment leaked into a provenance field. It is not a pointer, not a quote, and resolves to nothing.**
+
+**THE CORRECTED PICTURE, per-video (2150 conditions), and it is neither of the two previous statements:**
+
+| `evidence` content | count | share | usable for fidelity grading? |
+|---|---:|---:|---|
+| opaque chunk pointer `T-<vid>-C####` | 936 | 43.5% | **only if a store resolving it exists — ★ [NOT MEASURED]** |
+| verbatim teacher text | ~312–362 | ~15% | **YES, today** |
+| ★★★ `'},{'` / `'{}'` JSON debris | ~609 | ~28% | **NO — carries nothing** |
+| other short strings / braced ids | remainder | — | unclassified |
+
+★★★ **SO THE HONEST SENTENCE IS THE THIRD ONE NOBODY HAD WRITTEN: provenance is 100% POPULATED, roughly 15% USABLE TODAY, ~28% STRUCTURALLY EMPTY, and 43.5% CONDITIONAL ON A STORE NOBODY HAS LOOKED FOR.** ★★ **A field that is 100% populated and largely unresolvable is this campaign's most-convicted shape wearing a new coat — it READS as complete provenance. My "no source at all" was wrong; "complete source" would be far more wrong; and a `NOT NULL` check on this column would pass at 100% while grading nothing.** ★ **The pointer-store probe is authorized below and is the cheapest high-value item on the board.**
+
+### ★★★ §1 — THE ROLE INVERSION: R-423's TABLE IS KEYED ON THE WRONG COLUMN, AND THAT IS MY ERROR
+
+**[MEASURED HERE, per-video, 2150 conditions over 40 videos] roles are `spine 923 · confluence 898 · trigger 329`. And the partition that matters: of the 245 `ENABLE_ENTRY`+`ENTER` tokens — the execution-grade entry instructions — `trigger` = 245, `spine` = 0, `confluence` = 0.** ★★★ **Not "mostly". ALL 245, and NOT ONE `spine`, across 40 videos. Reproduces AR-393 exactly, and my `spine` type-breakdown matches its list unit for unit (`WAIT_STRUCTURE 249 · WAIT_BIAS 159 · WAIT_SESSION 142 · WAIT_CONFIRMATION 137 · FILTER 130 · EXIT_HINT 26`, plus `WAIT_RETEST 67 · CONFIRM_DIRECTION 8 · VERIFY_STRUCTURE 5` its list truncated).**
+
+**AND THIS CODEBASE ALREADY SAID SO, ON 2026-07-03.** `spec-timeframe-recovery.ts:171-174`: *"The compiler's `role="spine"` means "narrative backbone", NOT "execution layer" … Classification must therefore be by **type**."*
+
+★★★ **R-423 RATIFIED `spine → MANDATORY` AND `trigger → UNKNOWN_REQUIREDNESS`. Measured, that hands MANDATORY-EXECUTION status to the narrative backbone and files 100% of the actual entry instructions under "we cannot tell." THE ROLE COLUMN CARRIES NARRATIVE STRUCTURE; THE TYPE COLUMN CARRIES EXECUTION SEMANTICS. I joined execution authority to the narrative column — the third join-key error of this class from this desk, after `file↔line` and `envelope↔inner`.**
+
+★★ **THE CONSEQUENCE IS OVER-REFUSAL AND FALSE PROVENANCE — NOT AN UNSAFE EXECUTION PATH, AND I SAY SO RATHER THAN LET A CORRECTION READ AS AN INCIDENT.** [MEASURED, R-423] `blocks_execution` returns True for MANDATORY **and** UNKNOWN_REQUIREDNESS, so every affected condition still blocks. **The fail-closed design absorbed my mis-keyed table.** ★★★ **That is the strongest argument yet for fail-closed defaults: the desk got the semantics of the field wrong, and the system's worst outcome was refusing too much rather than trading on a rule it had misread.**
+
+**★★★ AND THE FACT THAT EXPLAINS WHY THE DEFAULT FIRED AT ALL: `trigger` IS UNDECLARED.** **[MEASURED HERE] `src/engine/extraction/compile_lints.py:129` declares the vocabulary verbatim as `# "spine" | "confluence" | None (spec_family_bindings.py role vocabulary)`. `trigger` IS NOT IN IT — yet it is 329 of 2150 live conditions and holds all 245 execution tokens.** ★★ **So the producer emits a role the consumer's own documented vocabulary does not contain. R-423's `anything else or absent → UNKNOWN_REQUIREDNESS` was written for exactly this and caught exactly this, without knowing it existed.**
+
+### ★★★ §2 — THE PROMPT ORDERS `C8` IN WRITING. VERIFIED VERBATIM.
+
+**[MEASURED HERE, `src/agents/transcript-extractor.md`, 71,412 B, lines read directly]:**
+- **`:169`** — *"The 2026 institutional standard is **≥3 factors per strategy**. Videos that describe fewer than 3 are usually mis-extractions of richer setups — re-scan before accepting a 1-or-2-factor extraction."*
+- **`:171`** — *"**Bias toward INCLUSION when in doubt.** The operator can prune later via re-extract."*
+- **`:616`** — *"The chain "wait for 4H FVG → drop to 15M for setup → enter on 1M IFVG close" IS confluence: **emit each step as a confirming indicator**."*
+
+★★★ **`:616` INSTRUCTS THE EXTRACTOR TO EMIT CHART NAVIGATION AS A CONDITION. That is not a bug in the extractor; it is the extractor obeying its brief — and it is why `'timeframe'` is the most common "entry condition" in the operator's library.** ★★★ **`:169` is a NUMERIC FLOOR ON A COUNT THE EXTRACTOR ITSELF CONTROLS, with a re-scan loop until the floor is met, and `:171` breaks the tie toward inclusion. That is `optimizing-the-proxy-destroys-the-purpose` — this desk's own named law — currently written into the prompt AS POLICY.** ★★ **[MEASURED] the prompt contains the token `spine` ZERO times, so the role vocabulary the preflight adjudicates is not specified in the brief that generates it.**
+
+★ **The `C8` root cause is therefore NOT a parsing defect to be patched. It is a SPECIFICATION defect: the brief asks for ≥3 confluence factors, biases toward inclusion, and names a chart-navigation step as a confluence factor. Fixing the parser would not change a single one of those instructions.**
+
+### THE RULING
+
+**(1) NO ROLE RE-MAPPING IS AUTHORIZED, AND FAIL-CLOSED IS HELD.** ★★★ **The temptation this finding creates is precise and must be named: "spine isn't really mandatory" would relax 923 conditions' worth of refusals and make the library look dramatically healthier overnight. THAT IS THE SOFTENING R-421's INVARIANT EXISTS TO FORBID, and it is more dangerous here because it now comes wearing a CORRECT premise.** A true finding is not a licence to relax a guard before the replacement is proven. ★★ **The correct end state is type-keyed execution classification, as this codebase concluded on 2026-07-03 — but that is an INSTRUMENT CHANGE to the field that decides what may execute, it goes through `ratify-packet` with an independent grader, and it is NOT authorized by this ruling.**
+
+**(2) `trigger` STAYS `UNKNOWN_REQUIREDNESS` — and I state plainly what has changed.** ★★ **My pinned promotion condition #2 (*producer code showing it represents the entry event required for execution*) is now MUCH closer to met: a measured 245/245 partition plus an in-repo statement of `spine`'s narrative meaning. It is still not met, because [MEASURED] `role` is assigned NOWHERE in this repo and the prompt never names it — so the PRODUCER OF THIS FIELD IS STILL UNIDENTIFIED, and a contract you cannot find is not a contract you have read.** ★★★ **This is not stalling on a technicality: promotion changes only the RECORD (both classes block identically), so there is zero safety cost to waiting and a real provenance cost to guessing.** ★ **What settles it is unchanged and now has an address: find what writes `role`.**
+
+**(3) THE 3× AND THE POPULATION DISCIPLINE HOLD.** All figures in this ruling are **per-video over 40 videos**, not per-row over 120.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** ★★ **Invariant 2 is the one this whole finding is about — *"context / setup / trigger / confirmation / invalidation stay distinct"* — and [MEASURED] the producer collapses them into a narrative role while the consumer adjudicates execution off that role. The invariant is violated at the SEAM between two subsystems, which is why neither side's tests caught it.** **#1 holds — nothing relaxed. #6 holds — `backtests total: 0`.**
+
+**FAILED OR UNPROVEN CONDITIONS.** ★★ **[NOT MEASURED — the top open item] whether any store resolves `T-<vid>-C####` pointers. 43.5% of all provenance depends on it and nobody has looked.** ★ **[UNENUMERATED]** what writes `role` · whether `'},{'` debris also appears in `invalidations` · the timezone/calendar basis · other campaign-only capabilities (R-425 item 6, mine, still open).
+
+### AUTHORIZED NOW
+
+**(1) WORKER — SMALLEST AND HIGHEST VALUE FIRST: THE POINTER-STORE PROBE.** Does anything resolve `T-<vid>-C####`? **A yes/no with the resolving table/file named, and a single worked example resolving one pointer to text.** ★★★ **This one answer moves 43.5% of the library's provenance between "gradeable" and "decorative", and it is probably minutes of work.** **First observable:** START-RECEIPT ~2 min; **ETA ~20 min.**
+
+**(2) WORKER — THEN: FIND WHAT WRITES `role`.** Not this repo per your own grep — so name the actual producer (model output field, external service, migration, seed). **This closes the `trigger` promotion question and the type-vs-role remap both.**
+
+**(3) WORKER — THEN: the `C8` PROPOSAL against the PROMPT, not the parser.** Target `:169` (drop or re-found the ≥3 quota — a floor on a self-controlled count cannot stand), `:171` (inclusion bias), `:616` (chart navigation as confluence). **Proposal only; the prompt is an instrument and goes through `ratify-packet`.** ★ Fold in the `invalidations` check from R-426 item (2) if not already done.
+
+**(4) THIS SEAT — MINE, still open and now queued behind nothing:** the sweep for other campaign-only capabilities (R-425 item 6).
+
+**STOP CONDITION.** ★★★ **Stop immediately if `backtests total > 0`.** ★★★ **Stop and report — do NOT proceed — if any proposal would RELAX a refusal class (including `spine`) before a type-keyed replacement is built and graded. A correct diagnosis is not a licence to lower a guard.** ★★ **Stop if the pointer-store probe finds no resolver: that converts 43.5% of provenance into a corpus_B blocker and deserves its own ruling before more ledger work.** ★ **Stop if `role`'s producer turns out to be a frozen instrument.**
+
+**LESSON TO PERSIST.** ★★★ **I MADE THE SAME JOIN-KEY ERROR TWICE IN ONE EVENING ON THE SAME ARTIFACT — `987` (envelope vs inner) and "no source at all" (envelope vs condition body) — and the second time I had the file open on my own disk and had already printed its keys.** ★★ **Printing a structure's KEYS is not reading its CONTENTS, and "I looked at that artifact" is not "I looked at that field."** ★★★ **Second, and the one to carry furthest: A TRUE FINDING IS THE MOST DANGEROUS MOMENT FOR A GUARD. "spine isn't really mandatory" is correct, and acting on it immediately would relax 923 conditions on a semantics nobody has yet traced to a producer. Correct premise, unbuilt replacement, enormous convenience — that is the exact configuration in which good desks ship regressions.** ★ **Third: the fail-closed default absorbed my mis-keyed table and turned a semantic error into over-refusal instead of unauthorized trading. Defaults are what protect you from the mistakes you have not noticed yet.**
+
+---
+
 ## R-426 · 2026-07-29 · **AR-391 — THE BUCKET WAS READ AND IT WAS NOT WHAT ITS NAME SAID.** ★★★ **RATIFIED AT MY DESK BY AN INDEPENDENT PATH: `POP-120-LIVE` IS 40 VIDEOS × 3, ALL 40 TRIPLES BYTE-IDENTICAL — SO EVERY COUNT I PUBLISHED, INCLUDING R-424'S `1305` AND `120 of 120`, IS INFLATED 3×.** ★★★ **AND `'timeframe'` IS THE SINGLE MOST COMMON ENTRY CONDITION IN THE OPERATOR'S LIBRARY (30/2150 per-video, + `'time frame'` 15 + `'timeframe selection'` 10) — A CHART PARAMETER EMITTED AS A TRADING RULE.** ★★★ **R-424's PRIORITY IS REVERSED BY ITS OWN EVIDENCE: FIXING THE ENTIRE SESSION-VOCABULARY GAP UNLOCKS ZERO STRATEGIES. THE BOTTLENECK IS THE EXTRACTOR, NOT THE ENGINE.** ★★ **AND I OWN A DEFECTIVE STOP CONDITION: MINE WAS UNSATISFIABLE BY CONSTRUCTION, AND THE WORKER WAS RIGHT NOT TO OBEY IT LITERALLY**
 
 **RULING ID:** R-426 · **TASK ID:** AR-391, R-424 items (1)+(2)+(3) · **DECISION:** **CHARTER + LEDGER ACCEPTED. THE 3× DENOMINATOR CORRECTION IS RATIFIED AND APPLIED RETROACTIVELY TO MY OWN RULINGS. REMEDIATION PRIORITY REVERSED: `C8` (EXTRACTION-SIDE) FIRST. MY STOP CONDITION IS STRUCK AND REPLACED. A TENTH TAXONOMY CLASS IS APPROVED.**
@@ -44,7 +120,8 @@ R-425 ordered: *"Stop if the vocabulary ledger cannot cite the SOURCE text for a
 
 **THE WORKER'S READING IS RATIFIED AND WAS CORRECT:** the condition tests **corpus_B's REQUIREMENT**, not this ledger's competence. ★★★ **It did the honest thing available: cite the deepest text the artifact holds — the extractor's already-normalized phrase — and grade that column `[UNANSWERABLE — NO TRANSCRIPT IN ROW]` rather than pass a normalized phrase off as the teacher's words. That is exactly right: a normalized phrase presented as source text would have been a fabricated provenance claim, the same species as `approximation=False` on a session with no clock.** ★ **It also did not route around me silently — it flagged the defect and asked. That is the conduct this desk wants; a worker that quietly reinterprets a bad order teaches the desk nothing.**
 
-**REPLACEMENT STOP CONDITION (satisfiable, and it keeps the real protection):** *"Stop and report if the ledger presents any normalized or inferred text AS the teacher's source words. Absence of transcript is to be RECORDED as `[UNANSWERABLE — NO TRANSCRIPT IN ROW]`, never silently filled."* ★★★ **AND THE FINDING MY BAD ORDER ACCIDENTALLY SURFACED, WHICH IS THE MOST IMPORTANT LINE IN THIS RULING: the live library CANNOT be graded for source fidelity at all, because the rows do not carry the source. `transcript_chars: 0` was a corpus_A observation; [MEASURED] it is a property of the PRODUCTION envelope. Any future claim that a live strategy faithfully reproduces what a teacher taught is UNVERIFIABLE FROM THE ARTIFACT ALONE — and that is a corpus_B charter requirement of the first rank, not a footnote.**
+**REPLACEMENT STOP CONDITION (satisfiable, and it keeps the real protection):** *"Stop and report if the ledger presents any normalized or inferred text AS the teacher's source words. Absence of transcript is to be RECORDED as `[UNANSWERABLE — NO TRANSCRIPT IN ROW]`, never silently filled."* ★★★ **[STRUCK BY R-427, 2026-07-29 — THIS PARAGRAPH IS WRONG. DO NOT CITE IT.]** ~~AND THE FINDING MY BAD ORDER ACCIDENTALLY SURFACED, WHICH IS THE MOST IMPORTANT LINE IN THIS RULING: the live library CANNOT be graded for source fidelity at all, because the rows do not carry the source. `transcript_chars: 0` was a corpus_A observation; [MEASURED] it is a property of the PRODUCTION envelope. Any future claim that a live strategy faithfully reproduces what a teacher taught is UNVERIFIABLE FROM THE ARTIFACT ALONE — and that is a corpus_B charter requirement of the first rank, not a footnote.~~
+> ★★★ **CORRECTION (R-427): THE ROWS DO CARRY SOURCE.** [MEASURED HERE] every one of the 6450 entry conditions carries **`evidence` AND `span`, non-empty on 6450 of 6450**. I converted the worker's narrow, TRUE finding ("the envelope has no `transcript_chars` field") into a claim about a different object ("the artifact has no source") — **the envelope-vs-inner join error, committed for the second time in one evening on the same artifact, with the file open on my own disk.** The corrected picture is neither "no source" nor "complete source": per-video, provenance is **100% populated · ~15% verbatim and gradeable today · ~28% the literal JSON-debris string `'},{'` · 43.5% an opaque `T-<vid>-C####` pointer whose resolver [NOT MEASURED] nobody has looked for.** See R-427 §0.
 
 ### ★★★ PRIORITY REVERSED — R-424 SET THE WRONG FIRST TASK AND ITS OWN ORDER PROVED IT
 

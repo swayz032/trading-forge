@@ -5,8 +5,18 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-426**. Newest AR: **AR-391, RULED** (corpus_B charter + vocabulary
-ledger). Worker: **authorized on the `C8` extraction-side contract** (R-426 item 1).
+Ledger at **R-427**. Newest AR: **AR-394** — a START-RECEIPT for the pointer-store
+probe. Worker: **ACTIVE on R-427 item (1)**.
+★★★ **ROLE INVERSION (R-427, [MEASURED HERE]): ALL 245 execution-grade entry
+tokens (`ENABLE_ENTRY`+`ENTER`) are `role=trigger`; ZERO are `spine`.** `role`
+carries NARRATIVE structure, `type` carries EXECUTION semantics — this codebase
+said so on 2026-07-03 (`spec-timeframe-recovery.ts:171-174`). **R-423's table
+joined execution authority to the narrative column: MY join-key error.**
+★★ **Consequence is OVER-REFUSAL and false provenance, NOT unsafe execution** —
+both classes block, so fail-closed absorbed it. ★★★ **`trigger` is not even in
+the declared vocabulary (`compile_lints.py:129` = `"spine"|"confluence"|None`),
+so the `anything else → UNKNOWN` default caught an UNDECLARED producer role.**
+★★★ **DO NOT RE-MAP ROLES YET — see NOT AUTHORIZED.**
 ★★★ **CORRECTED IN R-426 — `POP-120-LIVE` IS 3× REPLICATED.** [MEASURED HERE]
 120 rows = **40 distinct videos × 3 instruments**, all 40 triples byte-identical.
 **Every earlier count is inflated 3×: `1305`→**435** · `120 of 120`→**40 of 40** ·
@@ -77,11 +87,20 @@ bottleneck. [MEASURED] `C8` (non-conditions mis-typed as conditions) is 51.1% of
 all blockage and the ONLY class that unlocks any strategy alone; fixing the
 ENTIRE session gap unlocks ZERO, because 37 of 40 videos also carry a `C8`.
 `'timeframe'` is the most common "entry condition" in the whole live library.**
-**(1) WORKER — PRIMARY:** the **`C8` EXTRACTION-SIDE CONTRACT** — why the
-extractor emits chart resolutions, instrument names and platform narration as
-`entry_conditions`/`role`. **DIAGNOSIS + PROPOSAL only; the extractor is an
-instrument — any change goes through `ratify-packet` with an independent
-grader.** Fold in the **`trigger` producer-contract** question (same file).
+★★★ **`C8`'s ROOT CAUSE IS THE PROMPT, NOT THE PARSER (R-427, verbatim at
+`src/agents/transcript-extractor.md`): `:169` a **≥3-factor quota with a re-scan
+loop** on a count the extractor itself controls · `:171` *"Bias toward INCLUSION
+when in doubt"* · `:616` *"drop to 15M for setup … emit each step as a confirming
+indicator"* — chart navigation ORDERED as a condition. The prompt says `spine`
+ZERO times.**
+**(1) WORKER — IN FLIGHT: the POINTER-STORE PROBE.** Does anything resolve
+`T-<vid>-C####`? Yes/no + the resolving table/file named + ONE worked example.
+**Moves 43.5% of provenance between gradeable and decorative.**
+**(1b) WORKER — THEN: FIND WHAT WRITES `role`** (not this repo, per grep). Closes
+both the `trigger` promotion question and the type-vs-role remap.
+**(1c) WORKER — THEN: the `C8` PROPOSAL AGAINST THE PROMPT** (`:169`/`:171`/`:616`),
+**proposal only — the prompt is an instrument → `ratify-packet` + independent
+grader.**
 ★★★ **A `C8` remedy at the BINDER or PREFLIGHT is FORBIDDEN — suppressing an
 annotation downstream is indistinguishable, in the record, from dropping a
 taught rule, which is the exact defect this safety chain exists to end.**
@@ -102,6 +121,13 @@ CONSEQUENCE, not by annotation** — a capability with no flag is invisible to a
 flag sweep and no less absent.
 
 ## NOT AUTHORIZED
+★★★ **RE-MAPPING ROLES / RELAXING ANY REFUSAL CLASS — INCLUDING `spine` — before
+a type-keyed replacement is built and independently graded.** The R-427 finding is
+TRUE and that is exactly what makes it dangerous: *"spine isn't really mandatory"*
+would relax 923 conditions overnight and make the library look healthy. **A
+correct premise plus an unbuilt replacement plus enormous convenience is the
+configuration in which good desks ship regressions.** The end state (type-keyed
+classification) is an INSTRUMENT change → `ratify-packet` + independent grader.
 Deploying/updating the tower worktree · any write to `runtime-production` · real
 capital · spend · credential decryption · `.env` writes · flag flips outside the
 experiment process · spec file edits (incl. re-typing) · softening any refusal ·
@@ -180,12 +206,14 @@ later results destroys the ability to detect drift. Preserve both, lane-labelled
 ★★ **`120 of 120` stays ATTRIBUTED TO AR-389** until reproduced in the deployed
 lane. **`18` is the authoritative `UNKNOWN_REQUIREDNESS` count** — the advisor's
 `987` was an envelope-vs-inner join error and is NOT carried forward.
-★★★ **NO TRANSCRIPT EXISTS ON ANY LIVE ROW (R-426, [MEASURED HERE]).** The
-envelope is `binding_plan_summary · graph_canonical_hash · ledger_d · spec ·
-spec_hash · video` — **so no live strategy can be graded for SOURCE FIDELITY from
-its artifact at all.** Absence is recorded `[UNANSWERABLE — NO TRANSCRIPT IN
-ROW]`; **presenting a normalized phrase AS the teacher's words is forbidden.**
-This is a first-rank corpus_B charter requirement, not a footnote.
+★★★ **PROVENANCE — CORRECTED IN R-427; R-426's "no source at all" IS STRUCK.**
+[MEASURED HERE] **every one of the 6450 conditions carries `evidence` + `span`,
+non-empty 6450/6450.** Per-video the content splits: **~15% verbatim teacher text
+(gradeable TODAY) · ~28% the literal JSON-debris string `'},{'` (carries nothing)
+· 43.5% opaque `T-<vid>-C####` pointer — ★ [NOT MEASURED] no one has looked for a
+resolver, and that probe is the top open item.** ★★ **100% populated, ~15%
+usable: a `NOT NULL` check passes here while grading nothing.**
+**Presenting a normalized phrase AS the teacher's words remains forbidden.**
 ★★ **A ceiling no refusal count can see:** [CORROBORATED — corpus_A MEASURED
 HERE at 128 bindable / 128 approximation / **0** concrete; POP-120 RELAYED at
 1400/1400] **every taught condition that binds, binds APPROXIMATELY.** So
