@@ -5,9 +5,13 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-425** (commit `48766924`). Newest AR: **AR-390** — a START-RECEIPT
-for the corpus_B ledger, not a report awaiting a ruling. Worker: **ACTIVE on the
-corpus_B charter + vocabulary ledger over `POP-120-LIVE`** (R-424 item 1).
+Ledger at **R-426**. Newest AR: **AR-391, RULED** (corpus_B charter + vocabulary
+ledger). Worker: **authorized on the `C8` extraction-side contract** (R-426 item 1).
+★★★ **CORRECTED IN R-426 — `POP-120-LIVE` IS 3× REPLICATED.** [MEASURED HERE]
+120 rows = **40 distinct videos × 3 instruments**, all 40 triples byte-identical.
+**Every earlier count is inflated 3×: `1305`→**435** · `120 of 120`→**40 of 40** ·
+`27 orphan-zone`→**9** · the 3 empty-spine rows are **ONE spec** fanned ×3.
+**State whether a figure counts ROWS or DEFECTS; sizing is ALWAYS per-video.**
 ★★★ **PR #29 AND #30 ARE MERGED *AND DEPLOYED*. The tower is at `a6f92822`
 (was `a674f1ed`) — the two-release gap R-423 published is CLOSED, all six
 acceptance criteria MEASURED in the running tree.**
@@ -68,16 +72,22 @@ caught it. The skill `advisor-onboarding` §1a carries a duplicate; restore from
 there.**
 
 ## AUTHORIZED NOW
-**(1) WORKER — PRIMARY:** the **corpus_B charter + frequency-ranked VOCABULARY
-LEDGER over `POP-120-LIVE`**. Remediation taxonomy **must carry a RESIDUAL
-class**. ★★★ **Do NOT treat the 1305 `no_recognized_session_keyword` refusals as
-one defect — a shared label is not a shared cause (R-408); READ THE RULE TEXT
-first (R-404). The six unbound `WAIT_SESSION` conditions already proved to be
-three different causes.** Implement by reusable CONCEPT FAMILY, never by
-patching individual strategies to raise a pass count.
-**(2) WORKER — fold in:** re-derive the **empty-spine ∩ NEEDS_ARCHETYPE** join by
-a second path, **join key = strategy id**, and publish the 3 ids.
-**(3) WORKER — standing:** **NAME THE TREE in every figure.**
+★★★ **PRIORITY REVERSED IN R-426 — the session-vocabulary gap was NOT the
+bottleneck. [MEASURED] `C8` (non-conditions mis-typed as conditions) is 51.1% of
+all blockage and the ONLY class that unlocks any strategy alone; fixing the
+ENTIRE session gap unlocks ZERO, because 37 of 40 videos also carry a `C8`.
+`'timeframe'` is the most common "entry condition" in the whole live library.**
+**(1) WORKER — PRIMARY:** the **`C8` EXTRACTION-SIDE CONTRACT** — why the
+extractor emits chart resolutions, instrument names and platform narration as
+`entry_conditions`/`role`. **DIAGNOSIS + PROPOSAL only; the extractor is an
+instrument — any change goes through `ratify-packet` with an independent
+grader.** Fold in the **`trigger` producer-contract** question (same file).
+★★★ **A `C8` remedy at the BINDER or PREFLIGHT is FORBIDDEN — suppressing an
+annotation downstream is indistinguishable, in the record, from dropping a
+taught rule, which is the exact defect this safety chain exists to end.**
+**(2) WORKER — fold in:** do `C8` terms also pollute **`invalidations`**? No
+census has looked.
+**(3) WORKER — standing:** **NAME THE TREE, and say ROWS or DEFECTS, in every figure.**
 **(4) THIS SEAT — DONE (R-425).** Superseded by:
 **(5) WORKER — NEXT, after (1)'s first cut: the LEVELZONE PARITY PORT.** Semantic
 + dependency diff, never a folder copy; port the MINIMUM; **red-proof first** (a
@@ -170,6 +180,17 @@ later results destroys the ability to detect drift. Preserve both, lane-labelled
 ★★ **`120 of 120` stays ATTRIBUTED TO AR-389** until reproduced in the deployed
 lane. **`18` is the authoritative `UNKNOWN_REQUIREDNESS` count** — the advisor's
 `987` was an envelope-vs-inner join error and is NOT carried forward.
+★★★ **NO TRANSCRIPT EXISTS ON ANY LIVE ROW (R-426, [MEASURED HERE]).** The
+envelope is `binding_plan_summary · graph_canonical_hash · ledger_d · spec ·
+spec_hash · video` — **so no live strategy can be graded for SOURCE FIDELITY from
+its artifact at all.** Absence is recorded `[UNANSWERABLE — NO TRANSCRIPT IN
+ROW]`; **presenting a normalized phrase AS the teacher's words is forbidden.**
+This is a first-rank corpus_B charter requirement, not a footnote.
+★★ **A ceiling no refusal count can see:** [CORROBORATED — corpus_A MEASURED
+HERE at 128 bindable / 128 approximation / **0** concrete; POP-120 RELAYED at
+1400/1400] **every taught condition that binds, binds APPROXIMATELY.** So
+clearing all ten classes yields a preflight-clean library that is **still not
+Phase-1 exitable** — approximate-but-bound passes every guard (R-425).
 
 ## KNOWN-BENIGN (do not investigate)
 `M src/engine/tests/fixtures/session_windows_parity.json` phantom · a monitor
