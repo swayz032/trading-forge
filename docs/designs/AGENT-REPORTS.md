@@ -4,6 +4,54 @@
 
 ---
 
+## AR-424 · 2026-07-29 · ★★★ **THE SCHEMA ANSWER IS `(b)` AND YOUR STOP DOES NOT FIRE — THE JOURNAL AND THE DATABASE AGREE. `0125` DROPS THE NOT NULL AND `0126` CONVERTS TO TIMESTAMPTZ, BOTH IN THE JOURNAL, AND THE OBSERVED CI SCHEMA IS EXACTLY THEIR CUMULATIVE EFFECT. THE MIGRATIONS ARE RIGHT AND THE TEST IS STALE.** ★★★ **AND THE SANITY ASSERTION IS BUILT AND RED-PROOFED THREE WAYS — PR #33. I CHOSE EXACT ACCOUNTING OVER THE PROPOSED RATIO AND I DEFEND THAT BELOW**
+
+**RULING ID:** R-446 · **TASK ID:** AR-423 · **PR:** #33 (`f81d219b`) · **RECOMMENDATION:** **APPROVAL_REQUESTED on item (1). Item (2) is a diagnosis; nothing fixed, as ordered.**
+
+### ★★★ §1 — ITEM (2), THE SCHEMA DIAGNOSTIC: **(b)**, WITH THE DDL QUOTED
+
+| what the test expects | what the DB has | why |
+|---|---|---|
+| `created_at` = `timestamp without time zone` | `timestamp with time zone` | **`0126_critical_path_timestamptz.sql`** — `ALTER COLUMN created_at TYPE TIMESTAMPTZ USING (created_at AT TIME ZONE 'UTC')` |
+| `strategy_id` `is_nullable = NO` | `YES` | **`0125_schema_invariants_fk_unique_indexes.sql`** — `ALTER TABLE lifecycle_transitions ALTER COLUMN strategy_id DROP NOT NULL` |
+
+**[MEASURED] `0064` created the table with `strategy_id uuid NOT NULL` and `created_at timestamp`. `0125` and `0126` then deliberately changed both.** ★★★ **[MEASURED] all three tags are present in `meta/_journal.json` (211 entries), and the observed CI schema is EXACTLY the cumulative effect of the three. The journal does not disagree with the database.**
+
+★★★ **THEREFORE NOT `(a)` — your STOP condition does not fire, and I checked it rather than assuming: this is not the migration-0134 class.** ★★ **And NOT `(c)` either, which is worth saying because `(c)` was the comfortable answer and you predicted it: [MEASURED] `ci.yml:121` runs `npm run db:migrate` = `drizzle-kit migrate` (`package.json:12`), so the CI DB IS built by migrations — and its state matches them. The drift is not a CI-construction artifact.**
+
+★ **`0126`'s ALTERs are conditional (`IF ... = 'timestamp without time zone' THEN`) — idempotent by design, which is correct practice and also why re-running proves nothing; the journal plus the matching end-state is the evidence.**
+
+★★★ **SO THE TWO FAILING TESTS ARE STALE, NOT A DEFECT: they assert the pre-`0125`/`0126` shape. Same species as the 11 SUPERSEDED entries in AR-422 — the test's memory outlived the schema it described.** ★★ **I did NOT fix them, per your instruction. Their correct disposition is to be updated to the post-`0126` schema, which converts 2 of the 9 permanent baseline residents into ordinary passing tests.**
+
+### ★★★ §2 — ITEM (1): THE SANITY ASSERTION, AND WHY I DID NOT USE A RATIO
+
+**You adopted the grader's proposal — "assert `passed+failures` is not implausibly small relative to `collected`". I built something stronger and I owe you the reason.**
+
+★★★ **Every assertion carries exactly ONE status, so `recognized === collected` is an INVARIANT, not a tolerance. A ratio needs an arbitrary constant that is wrong in BOTH directions: it false-fires on a legitimately mostly-skipped run, and it still PASSES if a rename leaves a large-enough minority recognized. Exact accounting has no constant to tune, and it names the offending value in the error.** ★ **That also answers your "defend the threshold" instruction by removing the threshold.**
+
+**RED-PROOFED THREE WAYS, and the third is the one that matters:**
+
+| case | expected | **measured** |
+|---|---|---|
+| REAL artifact, run `30422166825` | no throw | **13465 passed · 9 failed · 13485 collected** |
+| status enum renamed to `success` | throw, named | **threw `success=200`; CLI exit 1** |
+| ★★ **CONTROL — a legitimately all-skipped run** | **no throw** | **no throw** |
+
+★★★ **The control is load-bearing: without it the assertion would be a blunt "passed must be non-empty" rule that false-fires on any filtered run — and a guard that cries wolf gets disabled by whoever it annoys first. The distinction it pins is that SKIPPING IS LEGAL and an UNRECOGNIZED STATUS IS NOT.**
+
+★★ **DELIBERATE TRADE-OFF, STATED: a NEW but legitimate vitest status will also throw. I chose that direction — a loud false red is recoverable in one commit; a silently inert guard is not detectable at all. If you disagree, this is the line to reverse.**
+
+**SCOPE — VITEST-ONLY, and I will not imply otherwise.** ★★★ **`parsePytestJunit` derives `passed` by EXCLUSION (no `failure`/`error` and no `<skipped>`), so it has no status vocabulary that can drift and this assertion does not apply to it. To get equivalent protection it would need a POSITIVE status attribute rather than an inference.** ★ **And per your note: `pytest.knownFailures` is 0 at every commit, so that path has no production data behind it — I have NOT exercised it against a real pytest artifact and I am not claiming I have.**
+
+**[MEASURED] tests 33 → 35 in the REAL CI lane** — `node node_modules/vitest/vitest.mjs run --config ci/vitest.config.mjs`, the exact `fast.yml:125` command, **4 files / 35 passed.**
+
+**Remaining uncertainty:** ★ **[NOT MEASURED]** whether any OTHER consumer of `parseVitestJson` depends on it never throwing — I grepped the repo and found only `runCli`, but a throw is a contract change and that is the surface I would want a second pair of eyes on. ★ **[NOT MEASURED]** the pytest parser against real data (see above).
+**Risk:** ★★ **PR #33 makes a BLOCKING gate throw on an input it previously tolerated. If a future vitest adds a benign status, the `fast` lane goes red until `KNOWN_STATUSES` is updated. That is intended, it is a one-line fix, and the error message says exactly what to do — but it IS a new way for CI to stop.**
+
+**Next smallest task (ONE):** ★★ **update the two `lifecycle-transitions` assertions to the post-`0126` schema** — it is the smallest change that removes two permanent residents from the baseline, and §1 has already established it is safe because the DB is correct and the test is not.
+
+---
+
 ## AR-423 · 2026-07-29 · **START-RECEIPT — R-446: (1) THE `passed=[]` SANITY ASSERTION, (2) THE `lifecycle-transitions` SCHEMA DIAGNOSTIC.** ★★★ **AND I CONFIRM YOUR CORRECTION AGAINST MY OWN AR-420 §5(a) — I VERIFIED IT MYSELF AND MY CLAIM WAS FALSE**
 
 **RULING ID:** R-446 · **TASK ID:** AR-423 · **STATUS:** STARTING. **PR #32 merged at `75065635` — acknowledged.**
