@@ -4,6 +4,53 @@
 
 ---
 
+## AR-441 · 2026-07-29 · ★★★★★ **OUTCOME 1: THE BACKFILL HASHED A PROMPT THAT ACTUALLY RAN — `prompt_sha256` IS AUTHORITATIVE, AND I PROVED IT WITH A TEST THAT CAN GO RED.** ★★★★★ **AND I WITHDRAW MY OWN AR-439 HEADLINE: "THE PROMPT IS NOT IN THIS REPOSITORY" IS **WRONG**. IT IS AT `tf-deep-scan/scripts/atomize-transcript.ts:52` — AN EMBEDDED TEMPLATE LITERAL. MY 14,330-BLOB SWEEP HASHED WHOLE FILES AND CAN NEVER MATCH A SUBSTRING; MY CONTROL PROBE PASSED WITHOUT EXERCISING THAT FAILURE MODE. A GREEN CHECK WITH NO PATH TO RED — MINE, IN THE REPORT YOU ACCEPTED.**
+
+**RULING ID:** R-457 · **TASK ID:** AR-441 · **PRIOR:** AR-440 · **COMMIT AT WRITE** `301576a5` · **RECOMMENDATION:** `APPROVAL_REQUESTED` on the measurement. **I make no statement about C8 attribution — that remains yours and I have not touched it.**
+
+### ★★★★★ §0 — THE CORRECTION, FIRST, BECAUSE IT DEMOTES MY OWN DRAMATIC CLAIM
+
+★★★★★ **AR-439 §2 said: "THAT PROMPT HASH MATCHES NOTHING IN THIS REPOSITORY — not one of `14,330` blobs." Literally true, and it MISLED — including me.** ★★★ **The prompt is not a `.md` FILE. It is a `const PROMPT = \`…\`` TEMPLATE LITERAL, 2,538 chars, inside a TypeScript file. A sweep that sha256s whole BLOBS is structurally incapable of matching an embedded SUBSTRING, no matter how many blobs it walks.**
+★★★★★ **AND MY CONTROL PROBE DID NOT SAVE ME: it hashed a whole prompt FILE (`847f2e7e…`) and found it. That proves the sweep can find a FILE — it never exercised the case the sweep actually faced. `A GREEN CHECK WITH NO PATH TO RED`, and I shipped it as the evidence that made the negative safe.** ★★ **The right control would have been: seed a known substring inside a known file and require the sweep to MISS it. It would have failed instantly and I would have changed method.**
+★★★ **WHAT SURVIVES AR-439, AND IT IS THE PART THAT MATTERED: the census was produced by NEITHER `transcript-extractor.md` NOR `-minimal.md`. That stands and is now stronger — it was a THIRD pipeline, `atomize-transcript.ts` / `compiler-v3-union-1.0`, with its own prompt.** ★ **What is WITHDRAWN is only "not in the repository". It is in the repository, and I have read it.**
+
+### ★★★★★ §1 — THE ANSWER: OUTCOME 1 OF YOUR THREE
+
+**HOW THE BACKFILL DERIVED IT** — `895ce11e`, 2026-07-03 09:38, its own message stating the method plainly: *"all 40 specs backfilled with pipeline/prompt/model stamps … Backfilled artifacts marked provenance_backfilled=true (**identical locked pipeline for all 40 — honest**) … Future extractions stamp provenance_backfilled=false with runtime commit."*
+★★ **The live emitter at `atomize-transcript.ts:240` computes `prompt_sha256: createHash("sha256").update(PROMPT)` and sets `provenance_backfilled: false` (`:245`). The 40 carry `true`, so they were stamped retrospectively from the certification lock — `certification-lock.json`'s `"<gate-prompt>"` is `c75a2da8…`, the same value.**
+
+★★★★★ **SO THE LOAD-BEARING QUESTION IS: WAS THE PROMPT THE SAME AT EXTRACTION AS AT BACKFILL? [MEASURED] YES — and the test discriminates:**
+
+| commit | when | PROMPT hash == `c75a2da8…`? |
+|---|---|---|
+| `eb6eea7c` | 2026-07-02 04:22 gate-prompt fix | ★★★ **NO — the test CAN go red** |
+| `7afc7946` | 2026-07-02 05:49 gate prompt v3 + 2-pass union | **MATCH** |
+| `dc8a150b` | 2026-07-02 09:03 — **the `pipeline_commit` the specs record** | **MATCH** |
+| `9776b387` | 2026-07-03 06:49 — **"CORPUS COMPLETE: 40/40 videos re-extracted", the specs' creation commit** | **MATCH** |
+| `895ce11e` | 2026-07-03 09:38 — **the backfill** | **MATCH** |
+
+★★★★★ **The prompt was UNCHANGED from `7afc7946` through the backfill, and the 40 specs were CREATED at `9776b387` inside that unchanged span. No commit touched `atomize-transcript.ts` between `dc8a150b` and `895ce11e`. THEREFORE THE BACKFILL HASHED THE PROMPT THAT ACTUALLY RAN.** ★★★ **`prompt_sha256` is a genuine record, not a reconstruction artifact — and the `eb6eea7c` non-match is the red control proving the hash is version-sensitive rather than a value that never changes.**
+★★ **YOUR §1 EXTRA PROBE, RUN: `c75a2da8…` appears on `40 of 40` on-disk specs and on **NO** row outside the census — there are exactly 40 spec files and their video set equals the census's 40 exactly. The backfill did not spray a hash onto rows it could not have known.**
+
+### ★★★★★ §2 — WHAT THE PROMPT ACTUALLY SAYS — MEASURED, AND THE INFERENCE DECLINED
+
+★★★ **I READ it in full rather than grepping it (the `minimal.md` lesson).** It is a **clause-classification / decision-atom gate**, a different KIND of instrument from the transcript-extractor prompts. **[MEASURED] it contains NO confluence-factor vocabulary, NO numeric floor, NO "at least N", NO re-scan instruction, and NO inclusion bias.** ★★★★★ **Its stated bias runs the other way, verbatim: *"Be STRICT: when unsure whether a clause introduces a rule or merely discusses one, it is NOT a decision."*** ★★ It also carries an **OWNERSHIP BOUNDARY** marking stop/target/size/R:R `framework_owned` — never decision atoms.
+
+★★★★★ **I STOP THERE. R-457 forbids me any statement about whether C8 is misattributed, and I am not making one — not by implication, not by arrangement of facts.** ★★★ **AND A LIMIT THAT CUTS AGAINST THE EASY READING, which I am stating BECAUSE it cuts that way: this prompt is the ATOMIZER. Whether these 40 videos ALSO passed through a `transcript-extractor` prompt at an earlier stage is `[NOT MEASURED]` — the specs' provenance names only the atomizer pipeline, and a chain it does not mention is not a chain I have shown absent.**
+
+### §3 — WHAT I DID NOT MEASURE
+
+★★ **Whether `tf-deep-scan/corpus/specs/` is the only on-disk copy of these specs** — touches the open R-415 lane divergence; I counted 40 here while `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md:41` says 41 on-disk specs. **That one-spec discrepancy is unexplained and I did not chase it.**
+★ Whether the certification lock's other 6 pinned surfaces were also unchanged across the extraction span (I verified the gate prompt only) · whether any earlier extractor stage preceded the atomizer (§2) · how `provenance_backfilled` behaves for post-`895ce11e` runs in practice.
+
+### §4 — DISPOSITION
+
+★★ **ALLOWED-LIST COMPLIANCE:** reads and git history only. **No `.env` write, no flag change, no DB write, NO BACKFILL RE-RUN, no re-extraction, no C8 implementation, no spec edits.** This task needed no DB access and I opened none.
+★★ **`backtests_total = 0`** (carried from AR-439's re-read; **not re-measured this task** — flagged rather than restated as fresh). Retention directory untouched.
+★★★ **NEXT SMALLEST TASK (one): the 40-vs-41 spec-count discrepancy — one of us is counting a population the other is not, and that is the shape this desk has been burned by six times.**
+
+---
+
 ## AR-440 · 2026-07-29 · **START-RECEIPT — R-457: HOW DID THE BACKFILL DERIVE `prompt_sha256 = c75a2da8…`? ★★★ I AM AUDITING MY OWN ANSWER'S EVIDENCE, AND I HOLD NO PREFERENCE AMONG THE THREE OUTCOMES.**
 
 **RULING ID:** R-457 · **TASK ID:** AR-440 · **STATUS:** START-RECEIPT · **COMMIT AT START** `10be91a3`.
