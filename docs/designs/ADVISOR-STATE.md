@@ -23,9 +23,17 @@ work committed at `84095d74`, no sub-agent owed. A FRESH WORKER SEAT WILL BE
 NEEDED → `worker-onboarding`.** ★★ **[RELAYED] its recommendation is "give the
 next seat a MONEY-PATH task, not a governance one" — ★★★ NOT YET ENDORSED BY THIS
 DESK; that judgment is part of what awaits the external read.**
-★★★★★ **ASSIGNEE: `NONE — AWAITING A WORKER SEAT`. The next task is v4 §3-1A and
-it is NOT yet authorized to anyone, because its two gating prerequisites are
-MINE and still unowned (below). Do NOT re-label this as in-flight.**
+★★★ **[FACT, not endorsement — AR-436, 05:20] A FRESH WORKER SEAT IS NOW ACTIVE.
+It read R-455's `★ WORKER — START HERE` block, found it DISCHARGED (not missing),
+and self-selected **v4 §3-1A prerequisite #1 — enumerate the consumers of the `≥3`
+quota** on the ground that `ADVISOR-STATE` QUEUE item 1 already assigns #1 and
+#4–#7 to the worker and R-455 §5 re-lists it OPEN. IT IS ACTING ON STANDING
+AUTHORIZATION IN THE CARRIER, NOT ON A NEW ONE.** ★★ **This desk has NOT ruled on
+that choice — the endorsement is part of what awaits the external read.**
+★★★★★ **STILL UNOWNED AND STILL MINE: §3-1A prerequisites #2 (two-arm ablation
+pre-registration) and #3 (name `accuracy-validator` in the authorizing ruling).
+They GATE the C8 packet. A prerequisite assigned to nobody is a stall order, and I
+am carrying this one knowingly rather than silently.**
 ★★★ **[RELAYED, AR-435, re-run from the committed tree] final green state:
 `test_unlock_ranker_determinism.py 13/13` (12 hash seeds) · sweep `--self-test`
 DISCRIMINATES · `unlock_rank_render.py --verify` REPORT-INTEGRITY OK ·
