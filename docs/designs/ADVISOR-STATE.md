@@ -3,6 +3,16 @@
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. **Never read the ledger from the top.**
 > Last rewritten: 2026-07-29, current through **R-444**.
+>
+> ★★★ **PRECEDENCE — READ THIS FIRST. This file has been appended under time
+> pressure and now carries STALE DUPLICATES below the `## SEAT` block (e.g. an
+> older "worker: item (1) CI-gate measurement in flight" line, and R-443's
+> kill-switch framing). THE `## SEAT` BLOCK IS AUTHORITATIVE; anything below it
+> that conflicts is SUPERSEDED. `## THE PLAN` is also authoritative — it is the
+> only carrier of the v3 ladder.**
+> ★★ **INCOMING SEAT'S FIRST JOB: rewrite this file in place to ~40 lines, and
+> when you do, CHECK ALL FIVE `v3-N` TAGS SURVIVE — a previous compaction
+> silently dropped three of them. Do it while you are fresh, not at handoff.**
 
 ## SEAT
 Ledger at **R-444**. Newest AR: **AR-419** (start-receipt, in flight).
