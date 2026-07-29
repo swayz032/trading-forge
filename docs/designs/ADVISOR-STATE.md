@@ -60,6 +60,51 @@ this campaign's convicted shape.**
 ★★ **NOTHING HERE IS RULED. Awaiting the operator's external read and agent
 `aa8162301b1670de2`.**
 
+## ★★★★★ [FACT, UNRULED] INDEPENDENT GRADE LANDED — `SOUND-WITH-GAPS`, agent `aa8162301b1670de2`
+★★★★★ **CIRCULARITY REFUTED AT THE LINE: `shadow.ts` has three `readFileSync`
+(`:8` input · `:9` split · `:20` per-video transcript) and ONE `writeFileSync`
+(`:51`) whose target is NEVER READ BACK; `gate-strength.ts` and
+`clause-segmenter.ts` have ZERO file I/O. And it did not stop at static analysis —
+it ran the harness into directories THAT HAD NEVER EXISTED, so no stale output was
+available to leak even in principle.**
+★★★★★ **NON-DETERMINISM REFUTED EMPIRICALLY: it executed the preserved harness
+TWICE itself → both `808,919` bytes, sha256 `edaa0c14…`, `cmp` byte-identical to
+each other AND to the preserved output. ★★ It MUTATION-TESTED ITS OWN COMPARATOR
+before trusting it.**
+★★★★★ **THE REAL GAP, AND IT CONVICTS A RETENTION CLAIM: `shadow.ts:20` reads 40
+per-video transcripts from a `tmp/` path that is GITIGNORED (`git check-ignore`
+confirmed) — NOT git-tracked, NOT in the 4-item pin table, NOT hashed by anything
+before this audit, NOT copied into retention. THE RETENTION README SAYS "the other
+four instruments are git-tracked… only the `%TEMP%` residents needed rescuing" —
+**THAT IS FALSE AS WRITTEN.** The grader BUILT the forward-provenance manifest that
+did not exist. Their mtimes (Jun 24–Jul 2) predate the run and have not moved —
+CORROBORATING, NOT PROVING. Byte-identity to what the ORIGINAL run consumed remains
+**[UNVERIFIED AT ORIGIN]** and no hash existed before today to make it verifiable.**
+★★★ **A PINNED FILE IS NOT EVEN USED: `graph-to-engine.ts` is in the freeze pin
+table but is NOT in `shadow.ts`'s runtime closure — not direct, not transitive
+(`gate-strength.ts`'s only import is TYPE-ONLY and erased at compile time). The pin
+table contains an INERT entry while omitting the 40 live inputs. A pin list can be
+simultaneously over-inclusive and under-inclusive; count is not coverage.**
+★★★ **CRLF: all four sources are CRLF on disk and the PUBLISHED pins are RAW-BYTE.
+LF-normalising gives different, unpublished hashes. No trap fired — but anyone
+re-verifying with `dos2unix | sha256sum` WILL get a false RED.**
+★★ **TOTALS: population 40 · DEV-14 = 14 videos / 575 rows · HOLDOUT-26 = 26 / 1776
+· disjoint, union = 40 · all seven headline totals EXACT. Derived by its own Node
+script, NOT `regen_shadow_partition.py` (ungraded, deliberately not executed).**
+★★★ **THIRD INDEPENDENT CONFIRMATION THAT THE ERRATUM IS RIGHT and the original
+frozen roster wrong in 4 places — reached by its own execution, not by re-reading
+AR-444/446.**
+★★ **NEW, LOW-SEVERITY, PREVIOUSLY UNFLAGGED: the freeze doc's per-video fired-rate
+MEDIANS are off ~0.1–0.2pp (published `10.7%`/`3.8%` vs exact `10.6%`/`3.6%`).
+Descriptive statistic, not one of the seven totals; the 2.75× contamination
+signature holds either way. A real number mismatch nobody had named.**
+★★★ **IT ALSO CONFIRMS R-461's NARROWING was correct: AR-448 named the 40
+transcripts as a risk one paragraph before silently dropping them from what it
+verified.**
+★★ **Retained evidence for re-check: `…/scratchpad/av-shadow-repro/` (`run1/rows.json`,
+`run2/rows.json`, `transcript-hashes.txt`, `PROVENANCE-MANIFEST.txt`).**
+★★★★★ **UNRULED. Awaiting the operator's external read.**
+
 ## SEAT
 ★★★★★ **[FACT, NOT YET RULED — AR-446] R-459 STEPS (1) AND (2) ARE DELIVERED, AND
 IT CORRECTS ONE OF MY OWN CONSTRAINTS IN THE SAFE-TO-LOOSEN DIRECTION: I ruled
