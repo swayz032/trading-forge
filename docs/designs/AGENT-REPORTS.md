@@ -4,6 +4,26 @@
 
 ---
 
+## AR-398 · 2026-07-29 · **R-428 item (3) — THE `C8` PROMPT PACKET, STAGED AND HELD.** ★★★ **AND THE THING I DELIBERATELY DID NOT PUT IN IT: the `role`/`spine` remap. My own AR-393 §2 finding is a CORRECT PREMISE WITH AN UNBUILT REPLACEMENT, and acting on it would relax 923 conditions on semantics nobody has traced to a producer**
+
+**RULING ID:** R-428 item (3) · **TASK ID:** `C8` prompt proposal · **ARTIFACT:** `docs/designs/C8-PROMPT-PACKET-2026-07-29.md` — the **full 5-part `ratify-packet` receipt**, staged, **NOT implemented** · **RECOMMENDATION:** **APPROVAL_REQUESTED on the packet; implementation HELD pending your word and the two prerequisites below.**
+
+**CLASSIFICATION, stated so you can check it:** **[MEASURED] `backtests total = 0`**, nothing live-trading, and this edit changes **future** extractions only — existing artifacts are immutable and carry `spec_hash`, so **no frozen ref is re-baselined.** ★★ **Under the 2026-07-11 amendment that is the AUTONOMOUS class and I could have implemented it under independent grading. I did not, because R-427/R-428 scoped me to "proposal only" — the narrower instruction governs, and I am not treating a standing amendment as cover for exceeding a specific ruling.**
+
+**THE PACKET, in one line each.** **(1) WHY NOW:** `C8` = 233 of 456 refusals (51.1%), 37 of 40 videos, the only class that unlocks anything alone — and **the prompt orders it in writing** at `transcript-extractor.md:169` (a ≥3 quota with a re-scan loop), `:171` (*"Bias toward INCLUSION when in doubt"*), `:616` (chart navigation emitted as confluence). **(2) BLAST RADIUS:** future extractions only; **★★ any old-vs-new comparison becomes cross-version and a drop in conditions-per-strategy will LOOK like extraction getting worse — that trap is named in the packet**; ★ **[UNENUMERATED] consumers keyed on the "≥3 factor" count, and enumerating them is a REQUIRED pre-implementation step, not optional.** **(3) SCOPE-LOCK:** three prompt edits + a non-executable `annotations[]` so suppressed material is **emitted, never dropped.** **(4) VERIFICATION:** a two-arm ablation, ★★★ **red-proofed at birth (the classifier must FIRE at ~51% on the control arm) and carrying the DISCRIMINATOR — genuine market-state conditions must NOT fall — because without it the suite cannot tell "stopped emitting junk" from "stopped emitting"**; every emitted condition resolved to its transcript clause, **which is only possible because AR-397 proved the pointer chain 100% resolvable.** **(5) ROLLBACK:** one tracked file, `git revert`; arms separable by `spec_hash` after the fact.
+
+### ★★★ WHAT I KEPT OUT, AND WHY IT IS THE MOST IMPORTANT LINE HERE
+
+**AR-393 §2 established — and R-427 accepted — that `role=spine` means "narrative backbone", with [MEASURED] 0 of 245 execution-grade entry tokens carrying it.** ★★★ **The obvious next move is to stop treating `spine` as MANDATORY. I did not propose it, and I will not, because your stop condition is exactly right: a correct premise with an unbuilt replacement and enormous convenience is the configuration in which good desks ship regressions.** ★★ **Relaxing `spine` today would unblock 923 conditions on semantics whose PRODUCER nobody has found — R-427 item (2) is still open precisely because I could not find what writes `role`.** ★ **A type-keyed replacement must be built and graded first; until then the fail-closed default is doing real work, and it absorbed this exact semantic error already.**
+
+**Files changed:** `docs/designs/C8-PROMPT-PACKET-2026-07-29.md` (new) · this report. **No prompt edited, no code touched, no extraction run. [MEASURED] `backtests total = 0`.**
+**Remaining uncertainty:** ★ **[UNENUMERATED]** consumers of the `≥3` count — named as a blocker inside the packet rather than left implicit. ★ **[NOT MEASURED]** the ablation itself; **an extraction run is not authorized and the packet REQUESTS it.** ★ **[NOT PROVEN]** that the quota is CAUSALLY responsible for the `C8` volume — the prompt instructs it and the corpus exhibits it, and only the ablation closes that gap.
+**Risk:** none taken — a staged proposal, nothing implemented.
+
+**Next smallest task (ONE):** R-427/R-428 item (2) — **find what writes `role`.** It is the last open blocker on both the `trigger` promotion question and any future `spine` remap, and it is the one item I searched and could not close from inside this repository.
+
+---
+
 ## AR-397 · 2026-07-29 · ★★★ **THE SWEEP: `1458 of 1458` POINTER IDS RESOLVE — `100.0%`, ZERO UNRESOLVED. YOUR "STOP IF MATERIALLY BELOW 100%" CONDITION DID NOT FIRE.** ★★★ **AND AN INDEPENDENT SECOND KEY ON 1238 OF THEM: the recorded `span` is BYTE-EXACT against the resolved clause on `1218` — `98.4%`.** ★★ **PLUS A CORRECTION TO MY OWN AR-393 SPLIT: pointer-bearing values are `1347 of 2351` (57.3%), not the 936 I reported — my earlier regex was ANCHORED and binned four other encodings as "short strings"**
 
 **RULING ID:** R-428 item (1) · **TASK ID:** pointer-resolution sweep · **RECOMMENDATION:** **APPROVAL_REQUESTED.**
