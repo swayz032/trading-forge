@@ -4,6 +4,27 @@
 
 ---
 
+## AR-399 · 2026-07-29 · **HANDOFF, AMENDED — AR-396's open-item list is SUPERSEDED (struck, not deleted). Two of its three items are now closed.**
+
+**POSITION:** `h1-wave4-sealed12-driver` @ **`1c23ac39`**. Everything committed; nothing lives only in a working tree.
+
+**AR-396 SAID THREE ITEMS WERE OPEN. PRESERVE-AND-STRIKE:**
+· ~~(c) sweep all 936 pointers~~ → **CLOSED by AR-397** — and the figure itself was wrong: **1458 pointer IDs, not 936; 100.0% resolve.**
+· ~~(b) the `C8` prompt proposal~~ → **CLOSED by AR-398** — staged as a full 5-part packet, HELD not implemented.
+· **(a) FIND WHAT WRITES `role` — STILL OPEN. It is now the ONLY open worker item, and it is the blocker on two separate questions:** R-423's `trigger` promotion (stuck at "strong inference, unverified join") **and** any future `spine` remap (which R-427's stop condition correctly bars until a type-keyed replacement exists).
+
+**DONE THIS SEAT — six ruling items:** R-424 (1)(2)(3) → AR-391 · R-426 (1)(2) → AR-393 · R-427 (1) → AR-395 · R-428 (1) → AR-397 · R-428 (3) → AR-398. **Five artifacts: charter · ledger · C8 diagnosis · C8 packet · (plus the census instruments, uncommitted by design — they read live operator data).**
+
+**HALF-DONE: nothing. IN FLIGHT: nothing. SUB-AGENTS: none dispatched, none owed — verified, not assumed.**
+
+**WHERE THE NEXT SEAT SHOULD LOOK FOR (a), so it does not repeat my search:** **[MEASURED by me] no non-test assignment of `"spine"/"confluence"/"trigger"` exists anywhere in the primary checkout** — only the type declaration `spec-onboarding-service.ts:170` and consumers. **[MEASURED] the extractor prompt contains `spine` ZERO times.** ★★ **So the producer is OUTSIDE this repo: the model's output schema, an external service, a migration, a seed, or the onboarding payload as received. `scripts/atomize-transcript.ts` is the nearest known producer-side tool and it emits ATOMS with `type`, not `role` — that is a lead, not an answer.**
+
+**CARRY THESE:** ★★★ **name the tree** (measure in `wt-preflight-blockers-20260729`, never the campaign tree) · ★★★ **per-video, not per-row** (40 videos × 3 instruments; raw counts inflate 3×) · ★★ **read the field, not the key list** (my worst error today) · ★★ **an anchored regex is a join key** (my second-worst: `^…$` undercounted pointers 1458 → 936) · ★ **[MEASURED] `backtests total = 0` at every check.**
+
+**A FRESH WORKER SESSION IS NEEDED FOR (a).** This seat is standing down deliberately — not blocked, not exhausted, and at a boundary where the only remaining item is an open-ended hunt that deserves a full context budget rather than my remainder.
+
+---
+
 ## AR-398 · 2026-07-29 · **R-428 item (3) — THE `C8` PROMPT PACKET, STAGED AND HELD.** ★★★ **AND THE THING I DELIBERATELY DID NOT PUT IN IT: the `role`/`spine` remap. My own AR-393 §2 finding is a CORRECT PREMISE WITH AN UNBUILT REPLACEMENT, and acting on it would relax 923 conditions on semantics nobody has traced to a producer**
 
 **RULING ID:** R-428 item (3) · **TASK ID:** `C8` prompt proposal · **ARTIFACT:** `docs/designs/C8-PROMPT-PACKET-2026-07-29.md` — the **full 5-part `ratify-packet` receipt**, staged, **NOT implemented** · **RECOMMENDATION:** **APPROVAL_REQUESTED on the packet; implementation HELD pending your word and the two prerequisites below.**
