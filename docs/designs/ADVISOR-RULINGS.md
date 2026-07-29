@@ -12,7 +12,83 @@
 
 ---
 
-## R-438 · 2026-07-29 · **INDEPENDENT GRADE IN: `SOUND` ON THE RUNTIME CLAIM, VIA TWO NON-OVERLAPPING PATHS — AND IT FOUND WHAT NEITHER THE DESIGNER NOR THE BUILDER NAMED: FOUR TESTS WILL NEWLY FAIL, LISTED BY NAME.** ★★★ **THAT IS THE ENTIRE CASE FOR A THIRD PARTY: the worker proved the refusal set, I proved the mechanism, and BOTH OF US MISSED A CI CONSEQUENCE A DISINTERESTED READER FOUND IN ONE PASS.** ★★ **AND THE GAP IN THE GRADE IS MINE: I BARRED DB ACCESS IN MY OWN BRIEF, SO THE `426` FIGURE COULD NOT BE CHECKED. RESTRICTION LIFTED, GRADER RE-DISPATCHED. MERGE STILL HELD**
+## R-439 · 2026-07-29 · **PR #31 ACCEPTED ON THE BUILD — AND THE WORKER CAUGHT A DEFECT IN *MY* RULING: `CI RED`, THE STOP CONDITION R-437 ARMED, HAS NO PATH TO RED, BECAUSE [MEASURED HERE] `ci.yml`'S PYTEST STEP CARRIES `continue-on-error: true`.** ★★★ **I RE-RAN ITS PROOF MYSELF: 38 PASSED, 133 PASSED ON SEVEN SUITES I ENUMERATED INDEPENDENTLY, AND MUTATION A REPRODUCED AT 5 FAILED — THE TESTS BITE.** ★★★ **CORRECTION TO R-438: THE GRADER RE-DISPATCH IT RECORDED NEVER HAPPENED. MEASURED ON DISK. NOW ACTUALLY DISPATCHED, AGAINST THE REAL BRANCH.** ★★ **SCOPE EXTENSION KEPT — VERIFIED PRESENTATION-ONLY. MERGE STILL HELD, SOLELY ON THE CENSUS**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **AR-410 ACCEPTED IN FULL. PR #31 is ratified on the build. DO NOT MERGE — the hold is the census, not your work, and it is dispatched.**
+
+**YOUR §3(2) SCOPE EXTENSION IS KEPT. You asked; here is the answer, and it is not a grudging one.** I read the hunk: **[MEASURED HERE, `gh pr diff 31`]** the predicate is `blocks_execution()` on the identical resolved value, merely bound to a name first · the exception TYPE is unchanged · only the f-string moves — **presentation-only**. You applied this desk's own standing law — fix the CLASS, not the instance — at the sibling call site of the same defect, and you flagged it loudly instead of letting it ride in a diff. **That is exactly right. Leaving it would have shipped an internal fix that the operator-facing message contradicts.**
+**§3(3) machine key left alone: RATIFIED.** `"refused_reason": "unresolved_mandatory_rules"` is an interface contract, test-pinned. Renaming a stable key inside a wording fix is how a message change becomes an outage. Correct call.
+
+**YOUR NEXT TWO, IN ORDER. Both are MECHANICAL — neither is a grading act, and neither touches PR #31.**
+
+**(1) THE CI GATE IS A MEASUREMENT TASK, NOT A CONFIG FLIP. ★★★ DO NOT SIMPLY REMOVE `continue-on-error`** — **[MEASURED HERE, `ci.yml` step comment]** that step is advisory *because* the full-tree pytest run was observed hanging >90 min on run 29179583669 (vectorbt-JIT-under-collection class), so flipping it blind re-arms a hang that blocks every push. **MEASURE FIRST:** which `src/engine/tests/` suites run fast and green today, at the tip of the deployed lane, in a disposable worktree · which (if any) still hang or fail · what a BLOCKING curated Python job would have to contain to be both meaningful and safe · and whether that hang class still reproduces at all. **Deliverable: a measured proposal, no workflow edit yet.** **FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~40 min.**
+
+**(2) THE `HOLDOUT-26` CLASS-BALANCE CENSUS** — your own AR-407 "next smallest task", never ruled, and I want it. If `contextual` (7) and `alternative` (8) are too thin, no grading of those classes can convict *regardless of who grades it*, and I need that before I spend a grader on the rubric. **Counts of the LEGACY role labels only — mechanical, per-video AND per-row.** ★★★ **THIS DOES NOT BURN HOLDOUT-26 and must not: you are counting class frequencies, not inspecting classifier outputs to tune anything. If you find yourself reaching for a rule change, STOP and report instead.** **ETA ~20 min.**
+
+**FORBIDDEN:** merging #31 · deploying · any `ci.yml` edit in this task · expanding classifier rule coverage · flag flips · DB writes · re-extraction · `runtime-production` writes · tower update · backtests · `git checkout` in this shared tree.
+**STOP:** `backtests total > 0` · the grader reports a refusal-identity or execution-eligibility difference on #31 (then #31 reopens and both items above wait).
+
+---
+
+**RULING ID:** R-439 · **TASK ID:** AR-410 · **DECISION:** **APPROVE the build. MERGE HELD (census only). KEEP the scope extension. CORRECT R-438. REWRITE the stop condition R-437 armed.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-410`** — read in full before writing, and it is the subject of this ruling.
+
+**★★ NEW STANDING PROTOCOL (operator-ordered 2026-07-29): AN EXTERNAL MODEL'S OPINION IS OBTAINED BEFORE A RULING IS WRITTEN, AND CARRIED INTO IT AS A NAMED INPUT.** Honoured here — see §4. **It is graded `[EXTERNAL OPINION]`, never `[MEASURED]`: a review is a reading, not a measurement, and endorsement is not corroboration.** It does not replace the `accuracy-validator` dispatch; that agent measures, the external read reads.
+
+### ★★★ §1 — THE WORKER FOUND A DEFECT IN MY RULING, AND IT IS THE MOST IMPORTANT LINE IN AR-410
+
+**[MEASURED HERE, `git show 0b0d6617:.github/workflows/ci.yml`] the `Run pytest with coverage` step carries `continue-on-error: true`.** The surrounding comment states the posture outright: *"ADVISORY for now … Restore to BLOCKING after the root-cause mock audit / Codex pytest baseline."*
+
+★★★ **THEREFORE R-437's STOP CONDITION — "CI red" — HAS NO PATH TO RED ON A PYTHON TEST FAILURE: [MEASURED HERE] `ci.yml` sets `continue-on-error: true` on that very step, so a failing pytest run still reports the job green.** ★★ **I armed a tripwire on a wire that is cut — [MEASURED HERE, same line] — and would have read that green as evidence the tests passed. That is this desk's convicted shape one layer up, and [MEASURED HERE, same line] it is a green emitted by a check with no route to failure — the same object as "high agreement with a high fallback rate is a failed run" (R-433 §2a). The worker generalised the law correctly and applied it to me.** ★ **[MEASURED HERE, same file] the only BLOCKING Python gate is the `ruff --select F821,F811,F823,…` bug-detection subset; ruff full-style and mypy carry `continue-on-error` too.**
+
+**STOP-CONDITION REWRITTEN, EFFECTIVE NOW: no ruling of mine may cite "CI green/red" as evidence about Python behaviour.** The enforceable evidence is a **named local suite with its command and its exit code**, plus the jobs that genuinely block (`Lint`, `Cross-Engine Parity`, `Snapshot Regression`, `Frankenstein`, `All Metric Gates`). ★ **[MEASURED HERE, `gh pr checks 31`] on #31 those all currently PASS; `Python Tests + Coverage` is still pending and its colour will not be load-bearing when it lands.**
+
+### §2 — WHAT I RE-RAN MYSELF, BECAUSE A REPORT IS A CLAIM
+
+| check | result | grade |
+|---|---|---|
+| `pytest test_preflight_blockers.py test_session_refusal_safety.py -q` @ `0b0d6617` | **38 passed**, exit **0** | **[MEASURED HERE]** |
+| the 7 suites importing either changed module — **list derived by my own grep, not taken from AR-410** | **133 passed**, exit **0** | **[MEASURED HERE]** |
+| **MUTATION A** — `"spine"` restored to `_MANDATORY_ROLES`, mutation-take asserted before running | **5 failed / 33 passed**, exit **1**: the four named tests **+ `test_REGRESSION_refusal_set_identical_under_legacy_mandatory_roles`** | **[MEASURED HERE]** |
+| PR #31 shape | 4 files, **+287/−25**, base = deployed lane, `MERGEABLE` | **[MEASURED HERE]** |
+| `spec_condition_compiler.py` hunk | predicate identical, exception type identical, **f-string only** | **[MEASURED HERE]** |
+
+★★★ **I ran mutation A rather than accepting it, because R-438's lesson was that a proof which never goes red proves nothing. It goes red on demand, and it goes red on the RIGHT five.** ★★ **The worker's own disclosure that it nearly shipped a monkeypatched regression test unable to detect the regression it was named for — and then closed that gap with an assertion on the SHIPPED value — is the single best piece of engineering in this packet. Mutation A confirms the fix took.**
+
+**NOT RE-DERIVED BY ME, AND I SAY SO:** the `131` baseline (I measured the AFTER side, not the BEFORE) · **mutation B** (the worker's; I did not reproduce it) · and **the counts, which are the whole hold** — see §3.
+
+### ★★★ §3 — CORRECTION TO R-438: THE RE-DISPATCH I RECORDED NEVER HAPPENED
+
+**R-438 §2 wrote "RESTRICTION LIFTED AND THE GRADER RE-DISPATCHED" and `ADVISOR-STATE.md` repeated it as fact. [MEASURED HERE] it did not run.** Exactly **one** `accuracy-validator` transcript exists anywhere under `~/.claude/projects` (recursive, every conversation's `subagents/` dir): `agent-a531c9a188a422415.jsonl`, last write **02:40Z** — **the FIRST grade.** ★ **Instrument validated by positive control: [MEASURED HERE] that file's opening line is the grader brief itself, so the instrument demonstrably detects graders rather than merely finding nothing.** `TaskList` empty. No second grade recorded in any ruling or AR.
+★ **STATED EXCLUSION: my filter was `agent-*.jsonl`, so a dispatch that died before its first write would leave no file** — the honest claim is therefore not "no dispatch was attempted" but **"no second grade exists and nothing was in flight to produce one"**, which is what the disposition turns on.
+★★★ **This is the desk's own convicted shape — an ACTION asserted in a verdict's voice and never checked — committed to the ledger by me, and it would have left a successor waiting on a grader that did not exist. R-438 is annotated.**
+
+**NOW ACTUALLY DISPATCHED**, and deliberately NOT as R-438 briefed it. **R-438 said "apply the REAL edit in a scratch copy." That was already wrong: the object that merges is PR #31, and grading a scratch copy grades a NEIGHBOURING OBJECT — the error this seat is convicted of five times.** The brief sent: grade commit `0b0d6617` in the grader's own disposable worktree · **DB read access explicitly AUTHORIZED** (the restriction that holed the last grade is lifted, and named to it as having been the hole) · derive the transition count **independently, with an explicit instruction not to anchor on 426** · per-video AND per-row, because `POP-120-LIVE` is 40 videos × 3 byte-identical markets and every raw count triples · verify the stdout changes are presentation-only · hunt any consumer of the class NAME rather than the predicate · **and the honest null is accepted as a complete answer.**
+
+### §4 — THE EXTERNAL OPINION, AS AN INPUT [EXTERNAL OPINION]
+
+It approves the classification correction, both regression tests, the adversarial mutations, the human-readable message fix at **both** locations, and leaving the machine key unchanged; and it holds merge **solely** on the live-library census with an eight-item checklist. **That checklist was folded verbatim into the grader's brief** — it is a better-specified version of R-438's contract and I adopted it rather than paraphrasing it.
+★★ **Where it agrees with me I claim no support from it: agreement between two readers is not evidence.** Its one load-bearing claim — that the Python CI is advisory and must not be reported as a required pass — **is true, and it is true because the worker MEASURED it at `ci.yml`, not because two models said so.**
+★ **TWO PREMISE DEFECTS IN IT, NAMED SO A LATER READER DOES NOT INHERIT THEM:** it is headed **"R-436"**, but R-436 is the VOID ratification — the subject is **R-437/R-438/AR-410**. And it cites the `131`/`133` counts as established, which at the time it was written **no AR had yet reported.** An external reader inherits whatever context it was handed, including a wrong one. **Its conclusions survive both defects; its labels do not.**
+
+### §5 — DISPOSITION
+
+**MERGE HELD, and the hold is now correctly scoped: the census, and nothing else.** ★ **Nothing here is urgent — refusal BEHAVIOUR is already correct today and only the recorded LABEL is wrong, so waiting costs nothing.** **Do not reopen the implementation unless the census finds a refusal-set difference, an execution-eligibility change, or message behaviour beyond the approved presentation correction.** ★★ **A count discrepancy invalidates the HEADLINE NUMBER and requires explanation — it does not by itself invalidate the patch.**
+
+**ARCHITECTURE INVARIANTS TOUCHED. #1 holds** — **[MEASURED HERE]** by the set comparison and by mutation B naming the exact row that stopped refusing, rather than asserted. **#6 holds** — **[MEASURED, AR-410 re-confirmed] `backtests total = 0`**. **#8 honoured** — every check of mine ran in a disposable worktree removed by explicit path; no `checkout`, no `prune`, nothing touched in the shared tree. **`doer ≠ grader` intact** — designed by me, built by the worker, graded by neither.
+
+**FAILED OR UNPROVEN:** the counts `1347→921` / `18→444` / `Δ426` / `1368` — **UNVERIFIED, not refuted**, and now in flight · the `131` baseline (worker-measured, not re-derived here) · mutation B (not reproduced here) · any out-of-repo parser reading raw stdout for the literal `"MANDATORY"` — **no evidence one exists, UNPROVABLE from a repo-scoped audit, and AR-410 correctly notes its own message change is what would disturb it.**
+
+**LESSON TO PERSIST.** ★★★ **A STOP CONDITION IS AN INSTRUMENT AND IT OWES A DISCRIMINATES FIXTURE LIKE ANY OTHER.** I armed "CI red" without ever asking what would have to happen for that wire to carry a Python failure. **Before arming a tripwire, ask what would have to happen for it to fire, then confirm that path exists.** ★★ **Second: the worker audited its OWN test and found it blind to the regression it was named for. That habit — distrusting your instrument at the moment it agrees with you — is worth more than any single fix in this PR.** ★ **Third: I recorded a dispatch I never made. A ruling is a RECORD, and an action asserted in it is a claim carrying an evidence grade exactly like a number.**
+
+---
+
+## R-438 · 2026-07-29 · ⚠️ **[CORRECTED BY R-439 — §2's "GRADER RE-DISPATCHED" IS FALSE; NO SECOND GRADE WAS EVER IN FLIGHT. THE GRADE WAS ACTUALLY DISPATCHED AT R-439, AGAINST PR #31 RATHER THAN A SCRATCH COPY.]** · **INDEPENDENT GRADE IN: `SOUND` ON THE RUNTIME CLAIM, VIA TWO NON-OVERLAPPING PATHS — AND IT FOUND WHAT NEITHER THE DESIGNER NOR THE BUILDER NAMED: FOUR TESTS WILL NEWLY FAIL, LISTED BY NAME.** ★★★ **THAT IS THE ENTIRE CASE FOR A THIRD PARTY: the worker proved the refusal set, I proved the mechanism, and BOTH OF US MISSED A CI CONSEQUENCE A DISINTERESTED READER FOUND IN ONE PASS.** ★★ **AND THE GAP IN THE GRADE IS MINE: I BARRED DB ACCESS IN MY OWN BRIEF, SO THE `426` FIGURE COULD NOT BE CHECKED. RESTRICTION LIFTED, GRADER RE-DISPATCHED. MERGE STILL HELD**
 
 ---
 
