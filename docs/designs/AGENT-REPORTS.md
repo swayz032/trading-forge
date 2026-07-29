@@ -4,6 +4,58 @@
 
 ---
 
+## AR-393 · 2026-07-29 · ★★★ **I MUST CORRECT AR-391 AND THE LINE R-426 CALLED ITS MOST IMPORTANT: THE ROWS DO CARRY SOURCE — `evidence` + `span` ARE POPULATED ON 6450 of 6450 CONDITIONS. 14.5% IS VERBATIM TEACHER TEXT; 43.5% IS AN OPAQUE POINTER.** ★★★ **AND THE PROMPT ORDERS `C8` IN WRITING: a `≥3 factor` QUOTA WITH A RE-SCAN LOOP · "Bias toward INCLUSION when in doubt" · and an explicit rule that "drop to 15M for setup" IS confluence — emit it as a step.** ★★★ **THE SEAM DEFECT UNDER EVERYTHING: `role=spine` MEANS "NARRATIVE BACKBONE", DOCUMENTED IN THIS CODEBASE ON 2026-07-03 — AND [MEASURED] 0 of 245 EXECUTION-GRADE ENTRY TOKENS ARE `spine`. ALL 245 ARE `trigger`.** ★★ **`role` IS ASSIGNED NOWHERE IN THIS REPO AND THE EXTRACTOR PROMPT CONTAINS `spine` ZERO TIMES**
+
+**RULING ID:** R-426 items (1)+(2) · **TASK ID:** `C8` producer-contract diagnosis · **ARTIFACT:** `docs/designs/C8-EXTRACTION-DIAGNOSIS-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED on the diagnosis — and §0 is a CORRECTION TO ME that you have already built on, so it leads.**
+
+### ★★★ §0 — THE CORRECTION, FILED FIRST
+
+**AR-391 graded provenance `[UNANSWERABLE — NO TRANSCRIPT IN ROW]`. You ratified it and went further: *"the live library CANNOT be graded for source fidelity at all."* ★★★ THAT IS TOO STRONG AND THE ERROR IS MINE.** I measured `transcript_chars` — genuinely absent — and concluded the row carries no source. **I never opened the condition objects.**
+
+**[MEASURED, all 120 rows, 6450 entry conditions] every condition carries `evidence` AND `span`; `evidence` is non-empty on 6450 of 6450.** The contract declares them at `spec-onboarding-service.ts:166-173`. **[MEASURED, per-video, 2150 conditions] its content splits: opaque chunk POINTER (`T-<vid>-C####`) 936 (43.5%) · VERBATIM source text 312 (14.5%) · short ≤25-char strings 902 (42.0%, UNCLASSIFIED — I did not read them).**
+
+★★ **The honest statement is narrower than either of ours: fidelity grading is possible TODAY on at least the 14.5%, and on the 43.5% only if a store resolving those pointers exists — ★ [NOT MEASURED] I did not look for that store.** ★★★ **A provenance field 100% populated and 43.5% opaque is this campaign's convicted shape: it READS as complete provenance and may point at nothing. That probe is now the cheapest high-value thing on the board.**
+
+★ **Second correction, mine:** AR-391 §7's AM/PM hypothesis blamed a normalizer. **`AGENT-LOGS.md` (F-2, 2026-07-03) already documents it as ASR-dropped `"a."` in the speech transcript, with a guard in `spec-timeframe-recovery.ts`.** Right effect, wrong stage. The corpus_B requirement stands.
+
+### ★★★ §1 — THE PROMPT ORDERS `C8` IN WRITING (verbatim, `src/agents/transcript-extractor.md`)
+
+**(1) A QUOTA WITH A RE-SCAN LOOP — `:169`:** *"The 2026 institutional standard is **≥3 factors per strategy**. Videos that describe fewer than 3 are usually mis-extractions of richer setups — **re-scan before accepting a 1-or-2-factor extraction**."*
+**(2) AN EXPLICIT OVER-INCLUSION POLICY — `:171`:** *"**Bias toward INCLUSION when in doubt.** The operator can prune later via re-extract."*
+**(3) THE GENERATOR OF THE LIBRARY'S #1 CONDITION — `:616`:** *"The chain **"wait for 4H FVG → drop to 15M for setup → enter on 1M IFVG close" IS confluence: emit each step as a confirming indicator**."*
+
+★★★ **"Drop to 15M" is chart navigation, and the prompt classifies it as confluence and orders it emitted. That is why `'timeframe'` is the most common entry condition in the operator's library.** ★★ **A numeric floor on a count the extractor controls, with a re-scan until it is met, is optimizing the proxy and destroying the purpose — this desk's own law, currently written into the prompt as policy.**
+
+**THE EXHIBITS — `C8` in the teacher's own words, pulled from `evidence`:** `'time frame'` ← *"So, let's go to the 4our and let's zoom in."* · `'1 hour chart'` ← *"now that we are on the 1 hour chart, what I like to start doing is marking out KPLs"* · **`'time frame'` `role=spine`** ← `{"description": "Switch to 15-minute time frame"}` · **`'intraday time frames'` `role=spine`** ← *"gap down and from there we go to the intraday time frames to find a potential setup."* ★ **Two of these are `role=spine` — the class the preflight treats as MANDATORY EXECUTION.** ★ That third row also shows a JSON blob leaked into `evidence`: the field carries **four incompatible encodings**.
+
+### ★★★ §2 — THE SEAM DEFECT: `spine` MEANS TWO INCOMPATIBLE THINGS
+
+`spec-timeframe-recovery.ts:171-174`, verbatim, dated **2026-07-03**: *"The compiler's `role="spine"` means **"narrative backbone", NOT "execution layer"** — a `WAIT_BIAS:daily` step is frequently tagged spine… the real intraday exec (tagged `role=confluence`) was excluded. Classification must therefore be by **type**."*
+
+**I tested it rather than inheriting it. [MEASURED, per-video, 2150 conditions]:** `spine` = 923 (WAIT_STRUCTURE 249 · WAIT_BIAS 159 · WAIT_SESSION 142 · WAIT_CONFIRMATION 137 · FILTER 130 · EXIT_HINT 26) · `confluence` = 898 · `trigger` = 329. ★★★ **ALL 245 `ENABLE_ENTRY`+`ENTER` tokens are `role=trigger`. ZERO are `role=spine`. Not one, in 40 videos.**
+
+★★★ **So `_MANDATORY_ROLES = {"spine","invalidation"}` reads `spine` as *the source marked this structurally required for execution*, while the producer means *this is the backbone of the explanation*. One word, two contracts, across the producer/consumer seam — and the consumer was built on the wrong one EIGHT WEEKS after the other side of this codebase documented the right one.** ★ **The preflight's grounding was honest — it measured POP-16's role vocabulary. The evidence it needed was a semantic contract living in a TypeScript comment, and no corpus census can reach that.**
+
+### §3 — YOUR `trigger` QUESTION, ANSWERED AS FAR AS THE EVIDENCE GOES — AND NOT ONE STEP FURTHER
+
+**[MEASURED]** 245/245 execution-grade tokens are `trigger`; the artifact carries `entry_trigger_id` as a first-class field; **[PRODUCER TEXT] `:130`** the output is *"rejected ONLY for missing source-owned entry logic — an empty `entry_sequence`, or **a missing entry trigger** / direction"*, and **`:481`** *"Steps MUST be in execution order (first check → **last trigger**)."* ★★ **So the producer treats the entry trigger as MANDATORY — a rejection condition.** ★★★ **I still do NOT declare your condition #2 met, and I name the gap: the prompt never says `spine`, and I could not find the code that maps `entry_sequence` steps onto `role` values. "The producer's rejection-worthy trigger" and "the `role=trigger` field" are joined by a strong inference, not a verified join.** ★ **That mapper is the one read that settles it and it is NOT IN THIS REPOSITORY.**
+
+### §4 — ITEM (2): `C8` IN `invalidations` — SMALLER, WORSE-SHAPED
+
+**[MEASURED, per-video] 2 of 201 invalidation bindings carry `C8` terms** — `'timeframe'` (`69b64551…`/`m-G1ag77aVc`) and `'timeframe selection constraint'` (`1489bf44…`/`UBvfsImdI2U`), both `CANDIDATE`. ★★★ **Both are `bindable=True · executed=True · approximation=False`, bound to `structural_stops.compute_structural_stop`. On the ENTRY side a `C8` term refuses and is visible; on the INVALIDATION side it EXECUTES as the framework's stop and is stamped "exact" — and the preflight cannot see it, because a BOUND rule passes.** ★ Small blast radius, exact false-exactness species.
+
+### §5 — PROPOSAL (producer-side only, per your no-consumer-suppression order)
+
+**P1** retire the `≥3` quota + inclusion bias — a 1-factor strategy is a valid extraction. **P2** split navigation from condition: chart navigation / instrument / platform narration go to a non-executable `annotations[]` — **emitted, never dropped**, so nothing is silently discarded. **P3** ★★ **YOURS, NOT MINE:** either the producer DEFINES the role vocabulary and is held to it, or `spine` is downgraded at the consumer to `UNKNOWN_REQUIREDNESS` — because today the preflight records *"the source marked this required"* about a field the source never defined. **P4** one `evidence` encoding, with resolvable locators.
+
+**Files changed:** `docs/designs/C8-EXTRACTION-DIAGNOSIS-2026-07-29.md` (new) · this report. **No code touched, no extractor edited, no spec edited, no refusal softened, `runtime-production` untouched. [MEASURED] `backtests total = 0`.**
+**Remaining uncertainty:** ★★★ **[NOT FOUND]** the `role` assigner — searched all non-test `*.ts`/`*.py` in the primary checkout for any assignment of the three literals; only the type declaration and consumers exist. **It is outside this repo or model-emitted.** ★ **[NOT MEASURED]** whether `T-<vid>-C####` resolves anywhere. ★ **[NOT READ]** the 902 short `evidence` strings. ★ **[NOT MEASURED]** causality of the quota — **an ablation (re-extract one video with the quota removed) would prove it, and no extraction run is authorized.**
+**Risk:** none taken — read-only throughout.
+
+**Next smallest task (ONE):** the pointer-resolution probe from §0 — does `T-<video>-C####` resolve against any transcript store? It decides whether the library has provenance or a pointer-lie, and it is cheap.
+
+---
+
 ## AR-392 · 2026-07-29 · **START-RECEIPT — R-426 items (1)+(2): the `C8` EXTRACTION-SIDE CONTRACT (diagnosis + proposal, NO code change).**
 
 **RULING ID:** R-426 items (1), (2) · **TASK ID:** `C8` producer-contract diagnosis · **ARTIFACT:** a diagnosis document naming (a) the exact producer site that emits `entry_conditions` and `role`, (b) WHY a chart resolution / instrument name / platform narration becomes a condition there, (c) a producer-side proposal, and (d) the folded-in `trigger` producer-contract answer — *is `trigger` emitted as a structurally-required entry event, or not*. **ETA to diagnosis ~45 min.**
