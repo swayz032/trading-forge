@@ -139,6 +139,42 @@ still read-only and unmodified.**
 change needing a ratify packet + independent validator. Worker handing off.**
 ★★★★★ **UNRULED — awaiting the operator's external read.**
 
+## ★★★★★ `TaskList` DOES NOT TRACK MONITORS — DEMONSTRATED, AND THE DESK ACTED ON IT TWICE
+★★★★★ **[MEASURED HERE, decisive] the desk ran `TaskList` while TWO of its own
+monitors were live and provably delivering — one of them had just delivered the
+very notification being read. `TaskList` RETURNED "No tasks found". Background
+monitors are NOT task-list items. ABSENCE FROM `TaskList` IS TRUE OF EVERY
+MONITOR, RUNNING OR DEAD, SO IT DISCRIMINATES NOTHING.**
+★★★★★ **WHERE THIS DESK USED IT AS EVIDENCE, both now downgraded:**
+**(1) SESSION START — the costly one.** The desk found two inherited watchers
+ALIVE, ran `TaskList`, got empty, and concluded *"alive but not delivering to this
+conversation ⇒ retire and re-arm."* ★★★ **THAT INFERENCE WAS INVALID. Whether
+those watchers were delivering is `[UNKNOWABLE FROM THAT EVIDENCE]` — the desk
+retired two running processes on a test that cannot fail.** ★★ **What DID hold:
+the gap was verified EMPTY before retiring (newest AR unchanged, byte-identical
+hash), so nothing was missed. The action was survivable; the reasoning was worthless.**
+**(2) R-460 — conclusion right, evidence unsound.** The desk refuted an external
+read's "already-dispatched `accuracy-validator`" citing `[MEASURED] TaskList IS
+EMPTY`. ★★ **The CONCLUSION was independently confirmed — dispatching produced a
+genuinely fresh grade (`aa8162301b1670de2`), so none had been running. But
+`[UNVERIFIED]` whether `TaskList` tracks AGENTS either; that specific claim rested
+on an instrument the desk had not validated for the question.**
+★★★★★ **THE CORRECT INSTRUMENT, and it is the same one as for identifiers: THE
+PROCESS TABLE, KEYED BY WHICH RELAY FILE EACH COMMAND LINE WATCHES.** A monitor is
+identified by WHAT IT WATCHES, never by a task registry:
+```
+Get-CimInstance Win32_Process -Filter "Name='bash.exe'" |
+  Where-Object { $_.CommandLine -match 'ADVISOR-RULINGS|AGENT-REPORTS' }
+```
+★★★ **[MEASURED 18:35Z, and the worker's independent table AGREES row-for-row]
+`2728/10556` @15908 → `ADVISOR-RULINGS` (one rig, the worker's ear) ·
+`13424/20076` @17812 → `AGENT-REPORTS` · `20016/8972` @17812 → `AGENT-REPORTS`
+(the desk's two). ONE LOGICAL RIG PER CHANNEL — now measured, not asserted.**
+★★★★★ **THE SHAPE, FOR THE RECORD: an instrument that returns the SAME ANSWER in
+both states cannot distinguish them — and it never contradicted anyone, which is
+exactly why it survived three uses across two seats. `I MEASURED THE NEIGHBOURING
+OBJECT`, in the reports whose entire subject was rig uniqueness.**
+
 ## ★★★★★ INFRASTRUCTURE — STORE THE CHECK, NEVER THE IDENTIFIER (R-465)
 ★★★★★ **DO NOT ARM A RULINGS MONITOR WITHOUT VERIFYING FIRST. R-464's "the
 previous one is dead" is ANNOTATED AND WITHDRAWN — obeying it arms a SECOND rig
