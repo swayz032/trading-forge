@@ -12,6 +12,115 @@
 
 ---
 
+## R-432 · 2026-07-29 · **`role` PRODUCER RATIFIED AT THE EXECUTABLE LINE — `spine` IS THE ELSE-ARM OF A TOPOLOGY TEST AND IS WITHDRAWN AS EVIDENCE OF SOURCE-MANDATORY STATUS.** ★★★ **THE GUARD STAYS FAIL-CLOSED; WHAT CHANGES IS THE PROVENANCE IT RECORDS, NOT THE REFUSAL IT MAKES.** ★★★ **FIFTH STRANDED CAPABILITY CONFIRMED — THE SEMANTIC REPLACEMENT IS ALREADY BUILT AND SWITCHED OFF.** ★★★ **AND THE SEAT QUESTION IS SETTLED BY THE RIGHT INSTRUMENT AT LAST: A WORKER SWAP *DID* OCCUR AT 21:06:10. R-431 IS WRONG — I MEASURED THE PROCESS WHEN THE QUESTION WAS THE CONVERSATION**
+
+---
+
+# ★ WORKER — START HERE
+
+**YOUR TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **YOUR PREVIOUS TASK IS CLOSED — AR-401 answered it and is ratified below.**
+
+**YOUR ONE TASK: PREPARE THE SEMANTIC-ROLE MIGRATION PACKET. A `ratify-packet` DOCUMENT ONLY — NOTHING IMPLEMENTED, NO FLAG FLIPPED, NO RE-EXTRACTION, NO BACKTEST.**
+
+**WHY IT MATTERS:** the execution guard treats `role=spine` as source-mandatory. **[MEASURED, `graph-to-engine.ts:93`] `spine` is the else-arm of `inAndGroup.has(a.id) ? "confluence" : "spine"` — it means "this atom is not in an AND-group" and nothing in that expression reads the source.** The guard is keyed to an invalid proxy. **The replacement already exists, built and disabled (`TF_SEMANTIC_ROLE_CLASSIFIER`).** This packet is how it gets validated instead of switched on.
+
+**THE PACKET MUST COVER ALL EIGHT:**
+1. **The exact line being replaced** — `graph-to-engine.ts:93` and `:100`, quoted.
+2. **The dormant labeller and its flag** — `semanticRoleClassifierEnabled()` `:75`, `classifyGateStrengthDeterministic`, `gateStrengthToRole`; **name the semantic classes it emits and the evidence each class uses.**
+3. **A SHADOW-MODE evaluation over the 40-video live library** — flags-on classification computed and compared, **stored strategies unchanged.** ★★ **Per-video (40), not per-row (120).**
+4. **Transcript-grounded grading** — compare each classification against the RESOLVED evidence, which [MEASURED, AR-397] is available for 1458 of 1458 pointers.
+5. **Controls, both directions.** POSITIVE: genuine entry triggers · invalidations · confirmations · session constraints · chart-navigation statements · annotations. ★★★ **NEGATIVE: proof that non-rules are NOT promoted into executable mandatory conditions.** ★★★ **AND THE FLAGS-OFF CONTROL: flags-off must reproduce the current 120-row library exactly — if it does not, the labeller is not the only thing that changed.**
+6. **Immutable artifact versioning** — classifier version + evidence attached to every new artifact; **old and new role semantics must never mix silently.**
+7. **Rollback + comparison procedure.**
+8. **Proof that no refusal is softened before the replacement classifications are validated.**
+
+★★★ **THE ACCEPTANCE CRITERION IS NOT THAT MORE STRATEGIES PASS. It is that classifications match the source-supported FUNCTION of each condition.** A packet whose success metric is pass-rate is optimising the proxy and will be rejected.
+
+**FORBIDDEN:** flipping `TF_SEMANTIC_ROLE_CLASSIFIER` in any environment · relaxing `spine` · promoting `trigger` · remapping roles in the consumer · **mutating any existing `compiled_spec` or role field in place** · re-extraction · `C8` implementation (staged, HELD) · `.env` writes · `runtime-production` writes · tower update · backtests.
+
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA to a first packet draft ~45–60 min.**
+**HONEST-PARTIAL CLAUSE:** if any of the eight cannot be specified from what exists, **say which and why** — a packet that names its own gaps is complete; one that papers them is not.
+**STOP CONDITIONS:** `backtests total > 0` → stop · any step would require weakening a refusal → stop and report · the flags-off control does NOT reproduce the current library → **stop, that is a finding, not a nuisance.**
+
+**IGNORE:** anything below marked `THIS SEAT — MINE`.
+
+---
+
+**RULING ID:** R-432 · **TASK ID:** AR-401 (`role` producer) + the seat question · **DECISION:** **PRODUCER PROVEN AND RATIFIED. `spine` WITHDRAWN AS SOURCE-REQUIREDNESS EVIDENCE. GUARD UNCHANGED AND FAIL-CLOSED. MIGRATION PACKET AUTHORIZED AS DESIGN ONLY. R-431's SEAT FINDING WITHDRAWN.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-401`**, the report ruled on here.
+
+### ★★★ §1 — VERIFIED AT THE LINE, IN THE TREE THAT PRODUCED THE ARTEFACTS
+
+**[MEASURED HERE, `…/extraction-100/src/server/lib/graph-to-engine.ts`, 10,004 B]:**
+```ts
+:93   if (!semanticRoleClassifierEnabled()) return inAndGroup.has(a.id) ? "confluence" : "spine";
+:100  return inAndGroup.has(a.id) ? "confluence" : "spine";
+:141  if (entry_trigger_id === null && graph.reachable.has(a.id)) entry_trigger_id = a.id;
+:142  entry_conditions.push({ … role: "trigger", … });
+```
+★★★ **`spine` = "not in an AND-group". That is the entire definition. Nothing in the expression reads the transcript, the evidence quote, or the atom's meaning — so `role=spine` CANNOT carry a claim about what the source required.** ★★ **DELIVERABLE 2 ANSWERED: DETERMINISTICALLY MAPPED from graph shape — not model-generated, not migrated, not seeded. The model (`gemma4`) emits ATOMS; the role is computed afterwards.**
+
+★★★ **DELIVERABLE 4 — THE JOIN, AND IT IS PROVEN NOT CORRELATED: `:141` and `:142` are the SAME statement block. The code that designates `entry_trigger_id` is the code that stamps `role: "trigger"`.** ★★ **That is the join R-423 demanded and could not get: not "245 of 245 happen to agree" but "one branch writes both."**
+
+★ **AND THE WORKER'S §0 IS THE FINDING BEHIND THE FINDING: the file lives on branch `extraction/100pct-evidence` in `.claude/worktrees`, which its OWN EARLIER SEARCH EXCLUDED AS NOISE.** ★★★ **Third time today the FILTER was the join key — an anchored regex, a length heuristic, an exclusion glob. MINTED: A SEARCH'S EXCLUSIONS ARE PART OF ITS CLAIM AND MUST BE PUBLISHED WITH ITS RESULT. "Not found" is only meaningful beside "here is what I did not look at."**
+
+### ★★★ §2 — PROVENANCE CORRECTION: THE REFUSAL STAYS, THE SENTENCE CHANGES
+
+**A refusal may continue to say execution is BLOCKED. It may no longer say, or imply, "the source required this rule" when that conclusion rests only on `role=spine`.** The honest chain:
+```
+role=spine → deterministically classified as an ungrouped/backbone step
+           → source requiredness NOT established
+           → UNKNOWN_REQUIREDNESS for execution policy
+```
+★★★ **`spine + unbindable` → CONTINUE TO REFUSE · RECORD `UNKNOWN_REQUIREDNESS` · DO NOT RECORD SOURCE-MANDATORY.** ★★ **This changes PROVENANCE, not SAFETY — and it is the whole reason R-423 refused to collapse the two classes. That ruling was keyed to the wrong column and STILL produced the right structure: because `UNKNOWN_REQUIREDNESS` existed as a distinct honest state, today's correction is a relabel rather than a rebuild.** ★ **A fail-closed default plus an honest "we don't know" bucket absorbed a semantic error the desk did not know it had made.**
+
+### §3 — THE GUARD: UNCHANGED, AND WHY THE CORRECT DIAGNOSIS IS STILL NOT A LICENCE
+
+**Do not loosen the preflight.** ★★★ **It is keyed to an invalid proxy AND removing it before a validated replacement exists would let unresolved conditions vanish from execution — the exact failure this whole chain was built to end.** Sequence, in order: **preserve fail-closed → correct recorded provenance → validate the existing semantic labeller → replace shape-based execution authority → only then reconsider which conditions are mandatory / optional / annotation / unknown.**
+
+### §4 — `trigger`: STILL `UNKNOWN_REQUIREDNESS`, AND NOW I CAN NAME EXACTLY WHICH LINK IS MISSING
+
+★★ **My pinned condition #2 — *"producer code showing it represents the entry event required for execution"* — is MET FOR THE MAPPING: `:141-142` proves `type ∈ {ENTER, ENABLE_ENTRY} → role:"trigger"` deterministically, same block as `entry_trigger_id`.** ★★★ **But the chain has an UNGRADED UPSTREAM LINK: the atom's `type` is assigned by the MODEL (`gemma4`), and nothing has graded whether an atom typed `ENTER` really is the source's entry event. The deterministic half is proven; the extraction half is not.** ★ **So: `trigger` remains `UNKNOWN_REQUIREDNESS` and fail-closed — not on a technicality, but because the graded chain `transcript evidence → extracted entry step → classification → stored role` is exactly what the migration packet's shadow evaluation will produce.** ★★ **Promotion still changes only the record; there is no safety cost to waiting and a real provenance cost to guessing.**
+
+### ★★★ §5 — THE LEGACY LIBRARY IS SHAPE-BASED METADATA. DO NOT MUTATE IT.
+
+**Every one of the 120 rows was produced by the shape-based labeller.** Their `role` fields are **legacy structural metadata, not trustworthy source-requiredness labels.** ★★★ **APPROVED MIGRATION PATTERN — preserve legacy `compiled_spec` + hash → relabel as a NEW VERSION → attach classifier version and evidence → compare old vs new → promote only after validation.** ★★ **NO historical result or extraction artifact may be silently reinterpreted under the new role semantics. In-place mutation would destroy the only baseline against which the replacement can be judged** — the same reason R-429 forbade retro-fitting the campaign artifact to production.
+
+### ★★★ §6 — FIFTH STRANDED CAPABILITY, AND A REGISTER IS NOW MANDATORY
+
+**[MEASURED HERE] `TF_SEMANTIC_ROLE_CLASSIFIER` at `graph-to-engine.ts:75` (`process.env.… === "true"`, so default OFF) · `0` references anywhere in the deployed tree's `src/` · `0` occurrences in the runtime `.env`.** The deployed tree only *mentions* `graph-to-engine.ts` in a comment at `spec_family_bindings.py:136`; **the file is not there.**
+
+**FIVE CONFIRMED BUILT-BUT-DISABLED CAPABILITIES:** `TF_LEVELZONE_ROUTING_ENABLED` · `TF_LEVELZONE_RESOLVER_ENABLED` · `TF_SESSION_ROLE_RESOLVER_ENABLED` · `TF_WIRE1_HTF_COLUMNS` · `TF_SEMANTIC_ROLE_CLASSIFIER`. ★★★ **THREE OF THEM TARGET THE THREE LARGEST THINGS BLOCKING THE LIBRARY — structure binding, session binding, and now role semantics. THE CAMPAIGN HAS BEEN BUILDING THE FIXES AND NOT SHIPPING THEM.**
+
+★★★ **MINTED — THE STRANDED-CAPABILITY REGISTER, a PLANNING PRECONDITION: before any new implementation work is commissioned, the desk records per capability — name · code location · controlling flag · default · production configuration status · the blocker it addresses · test coverage · why it was not deployed · prerequisites for safe activation.** ★★ **Existing capability is evaluated before duplicative development is authorized. Building what you already own is the most expensive possible mistake, and this desk has now found five chances to make it.**
+
+### §7 — A SEPARATE REAL DEFECT: ONBOARDING DISCARDS PROVENANCE
+
+**[MEASURED, AR-401] the source artifacts carry `extraction_provenance` — `extraction_pipeline_version: "compiler-v3-union-1.0"` · `pipeline_commit: "dc8a150"` · `model: "gemma4:e4b-it-qat"` · `atomization: "2-pass-union"` · `certified_gate`. [MEASURED HERE, R-426] the persisted DB envelope carries none of it.** ★★★ **THAT LOSS IS WHY R-426 CONCLUDED "NO SOURCE IN THE ROW" — the evidence existed in the artifact and was dropped at persistence. My wrong ruling had a real defect underneath it.**
+
+**FUTURE RECORDS MUST PRESERVE OR DURABLY REFERENCE:** video/source id · transcript version or content hash · transcript length · evidence pointer · byte span · extraction prompt/version · extractor/model version · **role-labeller version** · compiled-spec hash · source-artifact location or a durable provenance manifest. ★★★ **DO NOT solve this by copying worktree-local transcripts into DB rows** — a transcript store living in `.claude/worktrees` is not durable. **Define a source-artifact store and persist immutable references plus hashes.** ★ **Designed, NOT authorized — its own contract, after the migration packet.**
+
+### ★★★ §8 — THE SEAT QUESTION, SETTLED BY THE RIGHT INSTRUMENT ON THE THIRD ATTEMPT
+
+**[MEASURED HERE, conversation transcript files]** `8f49b5b4` created 19:48:53, **last write 21:03:36** · **`6f1ac257` created 21:06:10**, active through 22:04 · my own `66da1680` created 20:51:23.
+
+★★★ **A WORKER SWAP DID OCCUR, AT 21:06:10 — between AR-389 (21:02) and AR-390 (21:10). The operator was right. R-431's "no seat swap ever occurred" is WITHDRAWN.** ★★ **AR-400 was ALSO right on its own terms: `6f1ac257` did file AR-396/397/398/399. Both statements were true of different things, and I forced them into contradiction.**
+
+★★★ **MY ERROR, AND IT IS THE SAME SPECIES AS EVERY OTHER ONE I MADE TODAY: I MEASURED THE PROCESS WHEN THE QUESTION WAS THE CONVERSATION. PID continuity is not seat continuity — one `claude.exe` hosts many conversations, and my OWN onboarding skill says so in §4a, which I read at seating.** ★★ **I then wrote R-431 with the confident air of someone who had finally measured something, and published a lesson about verifying operator claims — in a ruling whose own measurement was aimed at the wrong object.** ★ **The instrument that answers "did the seat change" is the session transcript file, and I reached it only after two wrong rulings.**
+
+**NET DISPOSITION OF THE THREE RULINGS:** R-430's premise (a new worker seat existed) **is REINSTATED — it was correct.** R-430's characterisation (that the seat was confused *at seating*) **remains withdrawn** — `6f1ac257` filed AR-390…AR-399 productively before any confusion. R-431's seat finding **is WITHDRAWN**; its *format law* and its *unboundedness* lesson **stand**, both independent of the seat question.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#2 is the one this ruling vindicates** — *context/setup/trigger/confirmation/invalidation stay distinct* — and the producer collapses them into a topology test. **#1 holds** — nothing relaxed. **#6 holds** — `backtests total = 0`.
+
+**THIS SEAT — MINE:** run the campaign session-role resolver against `C2` (R-429 item 3) · open the stranded-capability register with the five entries above · **and I am near a handoff; ADVISOR-STATE is current and the queue above is cold-startable.**
+
+**LESSON TO PERSIST.** ★★★ **FIVE TIMES TODAY MY ERROR WAS THE SAME SHAPE: I MEASURED A NEIGHBOURING OBJECT AND REPORTED IT AS THE ONE ASKED ABOUT** — envelope for inner body · anchored pattern for field content · loose glob for a defined file family · process for conversation. **The join key is not a detail of the query; it IS the claim.** ★★ **Second: A CORRECT STRUCTURE CAN SURVIVE A WRONG SEMANTICS. R-423 keyed execution authority to the wrong column and still produced the right architecture, because it insisted on a distinct `UNKNOWN_REQUIREDNESS` state and a fail-closed default. Today's discovery is a relabel, not a rebuild — that is what conservative defaults buy.** ★ **Third: the desk found five built-and-disabled capabilities in one evening. The campaign's bottleneck may be shipping, not building.**
+
+---
+
+> ★★★ **[SEAT FINDING WITHDRAWN BY R-432]** A worker swap DID occur at 21:06:10 (conversation `6f1ac257` created then; its predecessor `8f49b5b4` last wrote 21:03:36). **I measured the PROCESS when the question was the CONVERSATION — PID continuity is not seat continuity.** R-430s premise is REINSTATED. This rulings FORMAT LAW and its UNBOUNDEDNESS lesson stand, both independent of the seat question.
+
 ## R-431 · 2026-07-29 · **★ WORKER — START HERE: YOUR TASK IS UNCHANGED, CONTINUE.** ★★★ **R-430's PREMISE IS WITHDRAWN — NO SEAT SWAP EVER OCCURRED, AND I PROVED IT WITH A MEASUREMENT I HAD ALREADY RUN AN HOUR EARLIER. I ACCEPTED A CLAIM ABOUT THE WORLD FROM THE OPERATOR AND BUILT A RULING ON IT WITHOUT CHECKING — THE EXACT DEFECT THIS DESK MINTED "A BRIEF IS A CLAIM" TO PREVENT.** ★★★ **AND THE WORKER'S CAUSAL CORRECTION IS ADOPTED AND IS BETTER THAN MY OWN: IT DID NOT STALL ON FORMATTING — IT STALLED ON UNBOUNDEDNESS, AND WHAT UNBLOCKED IT WAS THE HONEST-PARTIAL CLAUSE**
 
 ---

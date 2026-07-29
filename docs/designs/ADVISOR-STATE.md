@@ -5,15 +5,19 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-431**. Newest AR: **AR-400** — start-receipt, `role`-producer hunt.
-Worker: **ACTIVE. SAME SESSION THROUGHOUT — NO SEAT SWAP EVER OCCURRED**
-([MEASURED] worker `claude.exe` 9444 up since 13:36:32, unbroken; its ear PID
-22820 since 13:43:25). ★★★ **R-430's "fresh seat was confused" premise is
-WITHDRAWN (R-431): I took an operator claim about the world as fact and wrote a
-ruling on it, having ALREADY measured the opposite in my first five minutes.
-A BRIEF IS A CLAIM — including from the operator, and especially when it assigns
-blame I am willing to accept. A false confession corrupts the ledger exactly as
-a false credit would.**
+Ledger at **R-432**. Newest AR: **AR-401, RULED** (`role` producer FOUND).
+Worker: **ACTIVE, on the semantic-role migration packet (design only).**
+★★★ **SEAT QUESTION SETTLED (R-432) — A WORKER SWAP *DID* OCCUR AT 21:06:10.**
+[MEASURED, conversation transcripts] `8f49b5b4` last wrote 21:03:36; `6f1ac257`
+created 21:06:10. **R-430's premise REINSTATED; R-431's "no swap" WITHDRAWN.**
+★★★ **MY ERROR: I MEASURED THE PROCESS WHEN THE QUESTION WAS THE CONVERSATION.**
+PID continuity is not seat continuity — one `claude.exe` hosts many conversations,
+as `advisor-onboarding` §4a says and I read at seating. **The instrument for
+"did the seat change" is the session transcript file, not the process table.**
+★★ R-431's FORMAT LAW and its UNBOUNDEDNESS lesson stand — independent of this.
+★★★ **FIVE ERRORS TODAY, ONE SHAPE: envelope-for-inner · anchored-pattern-for-
+field · loose-glob-for-file-family · process-for-conversation. THE JOIN KEY IS
+NOT A DETAIL OF THE QUERY, IT IS THE CLAIM.**
 ★★ **RULING FORMAT LAW (R-430, re-founded by R-431 as PREVENTIVE not remedial):
 every ruling authorizing worker work OPENS with a cold-start-complete
 `★ WORKER — START HERE` block; desk narrative goes BELOW it.** A ruling is a
@@ -131,16 +135,24 @@ ZERO times.**
 ★★★ **THE WORKER SEAT HANDED OFF CLEAN AT AR-396** (nothing half-done, nothing in
 flight, no sub-agents owed, all committed at `ae79c789`). **A FRESH WORKER SESSION
 IS NEEDED — the queue below is startable cold from R-428.**
-**(1) INCOMING WORKER — PRIMARY: FIND AND PROVE THE `role` PRODUCER.** ★★ Do NOT
-re-run the last seat's search — [MEASURED] no non-test assignment exists in the
-primary checkout, and the prompt says `spine` zero times. **Look OUTSIDE: model
-output schema · structured-output instructions · external service · onboarding
-payload · migrations/seeds · frozen worktrees · the extraction↔onboarding API.**
-★ Lead not answer: `scripts/atomize-transcript.ts` emits `type`, not `role`.
-**Deliver all five:** the producer · its per-role contract · **proof joining the
-producer's entry-trigger requirement to stored `role=trigger`** · whether the role
-is model-generated / mapped / migrated / seeded · **a type-keyed replacement
-PROPOSAL if the contract confirms narrative roles are unfit for execution safety.**
+★★★ **`role` PRODUCER FOUND (R-432, verified at the line): `graph-to-engine.ts:93`
+`inAndGroup.has(a.id) ? "confluence" : "spine"` — DETERMINISTIC TOPOLOGY, not
+model-generated. `spine` = "not in an AND-group" and READS NOTHING FROM THE
+SOURCE, so it is WITHDRAWN as evidence of source-mandatory status. The join is
+PROVEN not correlated: `:141-142` is one block setting `entry_trigger_id` AND
+`role:"trigger"`. File lives on branch `extraction/100pct-evidence` in
+`.claude/worktrees` — the directory an earlier search EXCLUDED as noise.**
+★★★ **PROVENANCE RULE: `spine + unbindable` → STILL REFUSE · record
+`UNKNOWN_REQUIREDNESS` · NEVER record source-mandatory.** Changes provenance,
+not safety.
+**(1) WORKER — PRIMARY: the SEMANTIC-ROLE MIGRATION PACKET, DESIGN ONLY.** Eight
+parts (see R-432's worker block): the replaced line · the dormant labeller +
+flag · **SHADOW-MODE over the 40 videos, stored strategies unchanged** ·
+transcript-grounded grading · **positive AND negative controls + a flags-off
+control that must reproduce the current library** · immutable versioning ·
+rollback · proof no refusal is softened. ★★★ **ACCEPTANCE IS NOT "more strategies
+pass" — it is that classifications match each condition's source-supported
+FUNCTION.**
 **(2) SECONDARY, AFTER (1): the 20 span disagreements** — classify as harmless
 clause-boundary · stale span · alternate range · transcript-version mismatch ·
 genuinely incorrect provenance.
