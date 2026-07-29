@@ -4,6 +4,34 @@
 
 ---
 
+## AR-430 · 2026-07-29 · **START-RECEIPT — R-454 (1) COPY-SHUFFLE · (2) COPY-EQUIVALENCE FAIL-LOUD · (3) REPORT-INTEGRITY.** ★★★★★ **AND YOUR §4(1) CATCH IS CORRECT AND I CONCEDE IT WITHOUT QUALIFICATION: MY 12 SEEDS PROBED THE WRONG MECHANISM. `PYTHONHASHSEED` PERTURBS SET/DICT ITERATION AND DOES **NOT** PERMUTE A JSON ARRAY — SO MY DETERMINISM TEST NEVER TOUCHED THE `rows[0]` DEFECT I MYSELF DISCLOSED**
+
+**RULING ID:** R-454 · **TASK ID:** AR-430 · **STATUS:** STARTING · **TREE:** `wt-h1-wave4-20260712`, my last commit `4ed73f11` (AR-429).
+
+**FIRST OBSERVABLE:** this receipt, sent promptly per your note — ★ **you fired the liveness discriminator by hand twice; that is a cost I can remove for free.** **ETA ~35 min.**
+
+### ★★★★★ §1 — YOUR CATCH IS RIGHT, AND IT IS THE SAME SHAPE I HAVE BEEN FINDING ALL NIGHT
+
+★★★★★ **I disclosed the `rows[0]` first-encountered-wins defect in AR-428 §1, then built a 12-seed determinism test, and let the two stand next to each other as if one covered the other. THEY DO NOT INTERSECT. `PYTHONHASHSEED` randomises `str` hashing → set and dict iteration order. My representative row was chosen by `rows[0]` from a JSON **ARRAY**, whose order is fixed by the file. Twelve seeds could never have moved it.**
+★★★ **So `test_shipped_ranker_is_deterministic_on_a_tied_input` is GREEN and, against the array-order defect, VACUOUS — a guard with no path to red on the specific thing its own report said it was guarding. That is the third instance tonight of the same species, and this one is mine, inside the file I built to end the species.** ★★ **I am not softening it: the test is not wrong, it is NARROWER THAN IT READS, and a test that reads wider than it is remains the most dangerous artifact this campaign produces.**
+
+### §2 — WHAT I WILL BUILD, IN ORDER
+
+1. **(2) COPY-EQUIVALENCE FIRST, not (1)** — ★★★ **because it is the SAFETY property and (1) is the determinism property, and if the copies are not equivalent then collapsing them is wrong no matter how deterministically it is done.** Verify all three copies agree on every ranking-relevant field; **FAIL LOUD on divergence**, never pick a winner. ★ **Your framing is the one I am building to: `40 of 40` agreeing is a fact about THIS SNAPSHOT, not an invariant.**
+2. **(1) THE COPY-SHUFFLE TEST** — permute the three market copies for every video, assert the complete 40-row output is BYTE-IDENTICAL, **then reintroduce `rows[0]` first-seen selection and prove the test goes RED.** ★★ **No discrimination proof, no test — that is now settled doctrine here and I will not ship the assertion without the conviction.**
+3. **(3) REPORT-INTEGRITY** — regenerate-and-diff, proven by mutating a rendered row and requiring FAILURE. Folded into the manifest with the structured artifact, its hash, the generation command, the ranker commit and the verification.
+4. **The AR-427 §2 disposition question**, answered by search rather than by memory.
+
+### §3 — TWO NOTES BEFORE I START
+
+★★ **(a) YOUR STANDING RULE FROM §3 IS ALREADY PARTLY IN THE ARTIFACT AND I WILL FINISH IT:** every ranking row already carries `video` as its key. **I will add `market_or_copy_id` and `rank` explicitly and keep `spec` as a DISPLAY field, so no consumer can key on the label even by accident.**
+★ **(b) THE NINETY MINUTES — I am recording it as your ledger already does and drawing no conclusion from it.** I held rather than inventing authorization, which is what I would do again; **the one thing I will change is that I will keep sending receipts into a quiet channel rather than assuming silence is shared.**
+
+**FORBIDDEN, unchanged and acknowledged:** no C8 implementation or re-extraction (1A's seven prerequisites open) · no spec edits · no `.env` · no DB writes · no re-running the census · no flag graduation · no deploy · no tower · no backtests · no `git checkout`/`reset` · no CI-lane work.
+**STOP conditions armed:** copy-shuffle output not byte-identical (**reopens the ranking**) · any triple fails equivalence · `backtests total > 0`.
+
+---
+
 ## AR-429 · 2026-07-29 · ★★★★★ **ALL THREE DELIVERED — AND THE SWEEP CAUGHT ITSELF: MY FIRST RUN RETURNED `0` ORDER-DEPENDENCE DEFECTS ACROSS 53 FILES, AND WHEN I RAN IT AGAINST `gen_ledger.py` — THE ONE INSTRUMENT ALREADY PROVEN BROKEN — IT NOMINATED **NOTHING**. THE NULL RESULT WAS A GREEN CHECK WITH NO PATH TO RED, FOUR HOURS AFTER YOU MINTED THE LAW.** ★★★★★ **ROOT CAUSE FOUND, DETECTOR FIXED, CONTROL NOW CONVICTS AT `gen_ledger.py:139` UNDER BOTH PATTERNS, AND THE SWEEP CARRIES ITS OWN RED/GREEN CONTROL PAIR SO IT CANNOT REGRESS.** ★★★ **`NO NUMBER MOVED` IS PROVEN, NOT ASSERTED: ORDERED SEQUENCE IDENTICAL, `0` INVARIANT-FIELD DIFFERENCES ACROSS 40 ROWS, `40 of 40` LABELS CHANGED.** ★★ **AND MY OWN TEST CONVICTED MY OWN LABEL RULE BEFORE IT SHIPPED**
 
 **RULING ID:** R-451 as amended by R-452, with R-453's three conditions · **TASK ID:** AR-428 · **BRANCH:** `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **APPROVAL_REQUESTED on (a) and (b). On the sweep: APPROVAL_REQUESTED with one item I am bringing to you rather than acting on, per your STOP.**
