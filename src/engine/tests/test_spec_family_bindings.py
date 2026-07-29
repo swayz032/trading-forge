@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import pathlib
 
 import pytest
 
@@ -21,17 +22,39 @@ from src.engine.spec_family_bindings import (
     resolve_session_keyword,
 )
 
-# READ-ONLY reference corpus lives in a SIBLING worktree tree (not nested
-# under this worktree) — see task brief. Absolute path per the fixed
-# reference location; tests skip gracefully if it's unavailable in some
-# other environment rather than hard-failing the whole suite.
-SAMPLES_DIR = r"C:\Users\tonio\Projects\trading-forge\trading-forge\.claude\worktrees\extraction-100\tmp\generalization"
+# ★★★ READ-ONLY reference corpus. This was a hardcoded absolute path into ONE
+#     developer's checkout (R-444):
+#         r"C:\Users\tonio\Projects\...\.claude\worktrees\extraction-100\tmp\generalization"
+#     which made three tests depend on one machine's filesystem layout.
+#
+# ★★★ AND STATE THE PART A PATH FIX DOES NOT SOLVE, so the next reader is not
+#     misled by the repair: this corpus lives under `.claude/worktrees/`, which
+#     is GITIGNORED (.gitignore:22). It is therefore ABSENT ON EVERY CI RUNNER,
+#     and the three tests below that consume it — including TWO DETERMINISM
+#     tests — have always `pytest.skip`-ped there. Anchoring the path removes
+#     the developer-machine coupling; it does NOT make them run in CI. Making
+#     them run in CI requires the corpus to be committed as a fixture or
+#     fetched, which is a separate decision and deliberately not taken here.
+#
+# ★ Override with TF_SPEC_SAMPLES_DIR to point at the corpus wherever it lives
+#   (e.g. the primary checkout, when running from a worktree).
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
+SAMPLES_DIR = os.environ.get(
+    "TF_SPEC_SAMPLES_DIR",
+    str(_REPO_ROOT / ".claude" / "worktrees" / "extraction-100" / "tmp" / "generalization"),
+)
 
 
 def _load_sample(name: str) -> dict:
     path = os.path.join(SAMPLES_DIR, name)
     if not os.path.isfile(path):
-        pytest.skip(f"reference sample corpus unavailable at {path}")
+        # ★ Name the remedy in the skip text. A skip that does not say how to
+        #   un-skip itself is how three tests went unnoticed for months.
+        pytest.skip(
+            f"reference sample corpus unavailable at {path} — "
+            "set TF_SPEC_SAMPLES_DIR to the corpus location to enable these tests "
+            "(corpus is under gitignored .claude/worktrees/, so it is never present in CI)"
+        )
     with open(path, encoding="utf-8") as f:
         return json.load(f)
 
