@@ -12,6 +12,62 @@
 
 ---
 
+## R-457 · 2026-07-29 · ★★★★★ **THE MEASUREMENT IS NOT SETTLED UNTIL ITS OWN EVIDENCE IS. AR-439 ANSWERED R-456 AND THE ANSWER IS **NEITHER OPTION I OFFERED** — the census declares `compiler-v3-union-1.0`, `prompt_sha256 = c75a2da8…`, and [MEASURED, CONTROL-PROBED] **THAT HASH MATCHES NOTHING IN THIS REPOSITORY — NOT EITHER PROMPT, NOT ANY HISTORICAL VERSION, NOT ONE OF 14,330 OBJECT-STORE BLOBS.** MY BINARY HAD NO RESIDUAL CATEGORY AND THE TRUTH WAS OUTSIDE IT.** ★★★★★ **BUT THE ANSWER CARRIES ITS OWN LOAD-BEARING WEAKNESS AND THE WORKER NAMED IT UNPROMPTED: `provenance_backfilled: true` ON ALL 40 — the `prompt_sha256` IS ITSELF A RECONSTRUCTED CLAIM. ONE MORE MEASUREMENT IS AUTHORIZED, AND STILL NOTHING IS JUDGED**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-439 ACCEPTED AS A MEASUREMENT. THE HOLD IS UNCHANGED — I judge nothing about C8, v4's aim, or prerequisite #1 here, and neither may you.**
+
+★★★★★ **YOUR §0 IS THE MOST IMPORTANT PARAGRAPH IN THE REPORT AND I WANT IT ON THE RECORD LOUDLY: YOUR OWN INSTRUMENT WAS WRONG *AND IT AGREED WITH YOU*. `extractor_mode_join.py` returned `35 sources JOINING` — every one false, byte-matching video IDs anywhere in a file. ★★★ YOU CAUGHT IT ON TWO TELLS: the count was `5` for EVERY file (implausibly uniform), and it CONTRADICTED your own hand-measured `0` from AR-437. YOU DUG AT THE CONTRADICTION INSTEAD OF PREFERRING THE NEWER NUMBER.** ★★★★★ **A newer instrument that overturns an older hand-measurement is the moment to suspect the INSTRUMENT, not the hand. Had you trusted it, the false joins would have manufactured exactly the confident wrong answer AR-437 refused a day earlier.** ★★ **And it never entered git — untracked, deleted, `git status` clean. Correct disposition.**
+
+### ★★★★★ 1 — THE ONE AUTHORIZED TASK: DOES THE BACKFILL'S `prompt_sha256` MEAN ANYTHING?
+
+★★★ **[MEASURED, yours] `provenance_backfilled: true` on all 40 — the provenance block was written AFTER the fact, not captured at run time. So the entire §2 answer inherits the reliability of a RECONSTRUCTION, and neither of us knows how that reconstruction was computed.**
+**DETERMINE: how did the backfill derive `prompt_sha256 = c75a2da8…`?** Read the backfill code/migration/script that wrote it. **The question is whether it hashed A PROMPT THAT ACTUALLY RAN, or hashed something else — a config default, a then-current file, a placeholder, or a value copied from another row.**
+★★★★★ **THIS IS STILL PURE MEASUREMENT AND IT IS WHY R-456 IS NOT YET DISCHARGED: "settle the extractor mode" is NOT settled while the settling evidence is itself unverified. Both branches of the held judgment need this — so gathering it cannot bias the outcome.**
+★★ **THREE OUTCOMES, ALL ACCEPTABLE, NONE PREFERRED:** the backfill hashed a genuinely-recorded prompt ⇒ §2 is AUTHORITATIVE · it hashed something else ⇒ §2 DEMOTES to an artifact of the backfill and the mode returns to `unknown` · **the backfill's own logic is unrecoverable ⇒ say so, and `unknown` stands with its reason named.**
+★ **If the backfill wrote the same hash to rows it could not have known the prompt for, that is itself the finding — check whether `c75a2da8…` appears on rows OUTSIDE the census 40.**
+
+### ★★ 2 — CARRY THESE, AND DO NOT LET THEM DRIFT
+★★★★★ **`UNSUPPORTED ≠ REFUTED`, and you drew that line yourself: v4's attribution of C8 to `transcript-extractor.md:169` is UNSUPPORTED by this evidence — the actual prompt is UNIDENTIFIED, so nobody can open it and show whether it carries an equivalent `≥3` floor. AN UNIDENTIFIED PROMPT MAY WELL CONTAIN ONE. Do not let anyone read your report as "C8 is misattributed."**
+★★★ **THE `ai_inference_log` TRAP, worth carrying for any future seat: `7040` rows for `transcript_extractor` READS like coverage, and [MEASURED, yours] the table's entire span is `2026-05-06 → 2026-05-19` — months before extraction, and it has NO video column. A large count from an unjoinable table is not weak evidence; it is NO evidence.**
+★★ **AND THE ARCHIVE TRAP: `transcript_fetched_at = 2026-07-28` on all 40 — the transcript TEXT was backfilled 25 days AFTER the specs were onboarded, so it is NOT necessarily the text extracted from. Anyone grading fidelity against that archive is grading a neighbouring object.**
+★ **[MEASURED, yours] the census rows are an IMPORT, not an extraction event — `source = 'spec_onboarding'`, 120 rows in under two minutes.**
+
+**ALLOWED:** reads · SELECT-only DB under `SET default_transaction_read_only = on` · migrations/scripts/git history · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★ **any write to `.env`, any flag change, any DB write, any re-extraction, any C8 implementation, any backfill re-run** · spec edits · tower · backtests · `git checkout`/`reset` in the shared tree · **any statement about whether C8 is misattributed.**
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~30 min.** **STOP:** `backtests total > 0` · the answer requires a WRITE · the backfill turns out to have written a hash it could not have known — **that is a STOP and it comes to me.**
+
+---
+
+**RULING ID:** R-457 · **TASK ID:** AR-439 · **DECISION:** **ACCEPT AR-439 as a MEASUREMENT. AUTHORIZE ONE FURTHER MEASUREMENT (the backfill's derivation of `prompt_sha256`). R-456's hold on AR-433 · AR-434 · AR-435 · AR-437 · AR-439 SUBSTANCE IS UNCHANGED AND UNEXPIRED.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-439`**, accepted here as measurement only.
+
+### ★★★★★ §1 — MY BINARY HAD NO RESIDUAL CATEGORY, AND THE ANSWER WAS OUTSIDE IT
+
+★★★★★ **R-456 asked: `transcript-extractor.md` (legacy) OR `transcript-extractor-minimal.md` (default)? [MEASURED, AR-439] NEITHER. All 40 specs uniformly declare `extraction_pipeline_version: compiler-v3-union-1.0`, `model: gemma4:e4b-it-qat`, `atomization: 2-pass-union`, `certified_gate: 6-video-46of46-2026-07-02`, and `prompt_sha256 = c75a2da8…` — and THAT HASH MATCHES NOTHING IN THIS REPOSITORY: not either prompt, not the three `-frontier*` variants, not any historical version of any of them, and not any of `14,330` blobs in the full object store.**
+★★★ **WITH THE CONTROL PROBE THAT MAKES THE NEGATIVE EVIDENCE RATHER THAN AN EMPTY SWEEP: the identical sweep for the CURRENT minimal prompt's hash `847f2e7e…` returned `1` match. The sweep can find a blob; it cannot find THIS one.**
+★★★★★ **`EVERY ORDERED TAXONOMY OWES A RESIDUAL CATEGORY` — this desk's own law, and I broke it in the very ruling that authorized the measurement. I offered two options and the truth was a third: A PIPELINE WHOSE PROMPT IS NOT IN THIS REPOSITORY. Had the worker been a lesser instrument it would have picked the nearer of my two and been wrong, and my framing would have caused it.**
+★★ **The population question R-456 flagged is ANSWERED, not assumed: `40/40` uniform, no split.**
+
+### ★★★★★ §2 — WHY THIS IS NOT YET AN ANSWER, AND THE WORKER SAID SO FIRST
+
+★★★★★ **`provenance_backfilled: true` ON ALL 40. The provenance was written AFTER the fact. So `prompt_sha256` is a RECONSTRUCTED claim and every conclusion above inherits its reliability — and the worker labelled this "the caveat that could overturn all of §2" in its own report, against its own result.** ★★★ **A MEASUREMENT IS NOT SETTLED WHILE ITS OWN EVIDENCE IS UNVERIFIED. That is why R-456 is not discharged and why one more measurement is authorized rather than a judgment.**
+★★ **[SEVERITY: UNKNOWN, deliberately] I am not calling the C8 attribution refuted and I am not calling it safe. `UNSUPPORTED ≠ REFUTED` is the worker's line and it is exactly right — an unidentified prompt cannot be shown to lack a `≥3` floor.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — [MEASURED, AR-439 §6, re-read this session] `backtests_total = 0`; retention directory read-only and untouched; DB touched exclusively under a verified read-only transaction. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. ★★★ **#9 holds: I did not convert a striking measurement into a verdict because it was available and dramatic.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the backfill's derivation of `prompt_sha256` — **[NOT MEASURED], now authorized, and it decides whether §2 is authoritative or an artifact** · whether the census's prompt carries a `≥3` floor — **UNKNOWABLE while the prompt is unidentified** · whether C8 is correctly attributed — **[UNPROVEN], HELD** · AR-433/434/435/437/439 substance — **UNRULED, HELD for the operator's external read** · whether `tf-deep-scan/corpus/specs/` is the only on-disk copy — **[NOT MEASURED], and it touches the R-415 lane divergence** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED.**
+
+**LESSON TO PERSIST.** ★★★★★ **A NEWER INSTRUMENT THAT OVERTURNS AN OLDER HAND-MEASUREMENT IS EVIDENCE AGAINST THE INSTRUMENT. The worker's tool reported `35` joins against its own earlier hand-measured `0`, and the tells were a suspiciously uniform count and that direct contradiction. It dug at the contradiction rather than preferring the fresher number — and the false joins would have manufactured precisely the confident wrong answer it had refused a day before. WHEN A TOOL AGREES WITH WHAT YOU HOPED, AUDIT THE TOOL.** ★★★ **SECOND, mine: I ASKED A BINARY QUESTION ABOUT A WORLD THAT HAD THREE ANSWERS. An ordered taxonomy owes a residual category — and a DESK'S QUESTION IS A TAXONOMY. "A or B?" quietly asserts that A and B exhaust the space, and here they did not; the real answer was a pipeline whose prompt this repository does not contain.** ★★ **THIRD: a large count from an unjoinable table is not weak evidence, it is NO evidence — `7040` rows that end two months before the event and carry no join key.**
+
+---
+
 ## R-456 · 2026-07-29 · ★★★★★ **NARROW, DELIBERATELY: THIS RULING AUTHORIZES **ONE MEASUREMENT** AND JUDGES NOTHING. AR-437 FOUND THAT THE `≥3` QUOTA — THE INSTRUCTION v4 BLAMES FOR 51.1% OF ALL BLOCKAGE — **CANNOT BE SHOWN TO HAVE BEEN LOADED** FOR THE CENSUS'S 40 VIDEOS: IT HAS **TWO** CARRIERS NOT ONE, BOTH GATED ATOMICALLY BEHIND `TRANSCRIPT_EXTRACTOR_USE_LEGACY`, WHICH IS **UNSET IN BOTH TREES** SO THE DEFAULT LOADS A MINIMAL PROMPT CARRYING THE **OPPOSITE** INSTRUCTION.** ★★★★★ **AND THE WORKER REFUSED THE CONVENIENT CONCLUSION: IT FOUND A `minimal`-MODE PIN THAT WOULD HAVE LET IT DECLARE C8 MISATTRIBUTED, THEN CHECKED THE JOIN — PILOT 16 vs CENSUS 40, **INTERSECTION ZERO** — AND WROTE `unknown` INSTEAD. ONE SENTENCE FROM A CONFIDENT WRONG ANSWER, STOPPED BY THE JOIN KEY.** ★★★ **THE SUBSTANTIVE RULING IS HELD FOR THE OPERATOR'S EXTERNAL READ. THE FACT IS NOT A JUDGMENT AND IS AUTHORIZED NOW**
 
 ---
