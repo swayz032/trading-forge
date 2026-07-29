@@ -4,6 +4,46 @@
 
 ---
 
+## AR-442 · 2026-07-29 · ★★★ **HANDOFF — A FRESH WORKER IS NEEDED. R-457 IS DISCHARGED, NOTHING IS IN FLIGHT, NOTHING IS HALF-DONE. I AM SWAPPING AT A CLEAN TASK BOUNDARY RATHER THAN STARTING THE NEXT ITEM I CANNOT FINISH.**
+
+**RULING ID:** R-457 (discharged) · **TASK ID:** AR-442 · **STATUS:** HANDOFF (self-assessment) · **POSITION: `af1b821c`**, branch `h1-wave4-sealed12-driver`, tree `wt-h1-wave4-20260712`.
+
+### §1 — WHAT THIS SEAT DID (AR-436 → AR-441)
+
+★★ Seated cold; found R-455's worker block **already discharged**, took v4 §3-1A #1 by elimination, and stopped on a premise defect instead of publishing a boundary (AR-437). Then settled R-456's mode question (AR-439) and audited my own evidence for it under R-457 (AR-441).
+
+**[MEASURED, and each survives into the record]**
+- the `≥3` quota has **TWO** carriers (`transcript-extractor.md:169` + `kb/indicator-catalog.md:693`), gated **atomically** behind one flag that is **unset in both trees**;
+- the census was produced by **neither** extractor prompt — it came from `atomize-transcript.ts` / `compiler-v3-union-1.0`;
+- that prompt's provenance is **AUTHORITATIVE**, proved with a version-sensitive hash test carrying a **red control** (`eb6eea7c` does not match);
+- ★★★ **and I withdrew my own AR-439 headline when it turned out to be a green check with no path to red.**
+
+### §2 — WHAT IS OPEN, AND WHOSE IT IS
+
+★★★ **AWAITING YOUR RULING — now six: `AR-433` · `AR-434` · `AR-435` · `AR-437` · `AR-439` (accepted as measurement only) · `AR-441`.** Their **substance** is held for the operator's external read per R-456/R-457, so this is a KNOWN hold, not an aged debt — I name it only so the count is visible in one place.
+★★ **NOT MINE, UNCHANGED:** §3-1A prerequisites **#2 and #3 are the seated advisor's and remain unowned** — they gate #4 and #5, so the C8 lane cannot advance on worker effort alone.
+★★ **STILL CORRECTLY BLOCKED:** prerequisite #1's consumer closure. **No consumer table was published** — R-456/R-457 forbid it until the desk rules, and I did not smuggle one in.
+★ **OPERATOR'S, FLAGGED NOT ATTEMPTED (carried from AR-435):** an off-machine encrypted backup of the retention directory.
+
+### §3 — IN FLIGHT: NOTHING, AND I VERIFIED RATHER THAN ASSUMED
+
+★★★ **NO SUB-AGENT IS OWED — I dispatched none this entire session.** ★★ One backgrounded shell search ran and **completed**; its output was superseded by a narrower search and **no number from it entered any report.**
+★★ **NOTHING HALF-DONE.** ★★★ **NOTHING OF MINE IS UNCOMMITTED** — `git status` on `docs/designs/` and `docs/replay-results/h1-battery/` shows only the ~24 pre-existing untracked OPS/GRADE/HANDOFF files that were already there when I seated. **My defective join instrument and its output were untracked and are DELETED — nothing defective ever entered git.**
+★ **Retention directory verified still `-r--r--r--`, read-only, untouched.**
+
+### §4 — THE NEXT TASK, AS THE RULINGS DEFINE IT
+
+★★★ **R-457's named next step (mine, unstarted): the `40`-vs-`41` on-disk spec-count discrepancy.** I count **40** spec files in `tf-deep-scan/corpus/specs/`, all 40 in the census; `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md:41` says **41**. ★★ **One of those two is counting a population the other is not — the exact shape this desk has been burned by six times — and it also touches the open R-415 lane divergence (is that directory the ONLY on-disk copy?).**
+★★ **The money path is otherwise gated on the DESK, not the worker:** #2/#3 unowned ⇒ #4–#7 unstartable ⇒ prerequisite #1's form undecidable. **A fresh worker should be told which of those it may act on, or it will re-derive this same wall.**
+
+### §5 — WHY SWAP NOW
+
+★★★ **I have carried R-455 → R-457 across seven reports in one context, and the last two tasks were audits of my own prior output.** ★★ **A seat auditing itself is the wrong seat to hand a new domain**, and §0 of AR-441 is a live demonstration: I shipped a control probe that could not fail, and it took a fresh look at the same evidence to catch it. ★ **A partial result that reads as complete is this campaign's most-convicted shape; the cheapest moment to swap is now, with nothing open.**
+
+★★ **`backtests_total = 0` (last read AR-439, not re-measured since — flagged, not restated as fresh). Invariant #6 holds. No deployment, no live execution, no capital connection was authorized or performed by anything in this session.**
+
+---
+
 ## AR-441 · 2026-07-29 · ★★★★★ **OUTCOME 1: THE BACKFILL HASHED A PROMPT THAT ACTUALLY RAN — `prompt_sha256` IS AUTHORITATIVE, AND I PROVED IT WITH A TEST THAT CAN GO RED.** ★★★★★ **AND I WITHDRAW MY OWN AR-439 HEADLINE: "THE PROMPT IS NOT IN THIS REPOSITORY" IS **WRONG**. IT IS AT `tf-deep-scan/scripts/atomize-transcript.ts:52` — AN EMBEDDED TEMPLATE LITERAL. MY 14,330-BLOB SWEEP HASHED WHOLE FILES AND CAN NEVER MATCH A SUBSTRING; MY CONTROL PROBE PASSED WITHOUT EXERCISING THAT FAILURE MODE. A GREEN CHECK WITH NO PATH TO RED — MINE, IN THE REPORT YOU ACCEPTED.**
 
 **RULING ID:** R-457 · **TASK ID:** AR-441 · **PRIOR:** AR-440 · **COMMIT AT WRITE** `301576a5` · **RECOMMENDATION:** `APPROVAL_REQUESTED` on the measurement. **I make no statement about C8 attribution — that remains yours and I have not touched it.**
