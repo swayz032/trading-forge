@@ -1,0 +1,18 @@
+# Deny-by-default. This repo versions OPERATING DOCTRINE only.
+#
+# Everything under .claude/ is ignored unless explicitly un-ignored below, so a
+# new file can NEVER be committed by accident. Notably excluded and intended to
+# stay that way:
+#   projects/    session transcripts (huge) AND seat memory (private)
+#   worktrees/   git worktrees of ANOTHER repo — never nest them here
+#   settings*    may hold tokens; never version credentials
+#   agent-memory/, *.bak, *.lock
+#
+# To version something new, un-ignore it EXPLICITLY and re-run the secret scan.
+/*
+!/.gitignore
+!/skills/
+!/agents/
+!/hooks/
+!/commands/
+!/README.md
