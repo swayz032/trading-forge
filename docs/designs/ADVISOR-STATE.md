@@ -135,10 +135,38 @@ list. Speed comes from aiming, owning and shipping — NEVER from loosening.**
 two-arm shadow, R-434/R-435) is a VALIDITY LANE, **OFF** the Phase-1 critical
 path and NEVER a Phase-2 gate. It is no longer queue-position 2. The frozen
 rubric stays advisor-owned and unspent; the populations below stay permanent.**
-★★ **Also advisor-owned, parallel and cheap (v4 §9): the `C2` session-role
-resolver yield — RUN IT, it is a post-C8 multiplier · maintain
-`STRANDED-CAPABILITY-REGISTER.md` · reconcile R-409's authorized items (v4 §12,
-[UNENUMERATED]) BEFORE any corpus_B dispatch.**
+★★★★★ **v4 §12's R-409 RECONCILIATION IS DONE (R-446 seat, 2026-07-29) — ALL
+THREE ITEMS DISCHARGED. v4 can stop carrying it as [UNENUMERATED]:**
+- **(1) FVG fidelity check — DONE (AR-375 / R-410). Verdict PARTIAL, and the
+  divergence runs the SAFE way: [MEASURED, `fvg_native.py:83-84`] the primitive
+  uses `low[i] > high[i-2]` (HIGH/LOW) where `-igp`'s teacher taught CLOSE→OPEN —
+  a SUBSET of the taught band, so it fires LESS. NOT a stop.** ★★★ **THE SEVEN
+  CROSSINGS ARE NOT A LIABILITY, BUT FOUR ARE AN OVERSTATEMENT. Report the flag's
+  Phase-1 accounting PER SPEC WITH ITS FIDELITY BASIS, never as a bare "+N
+  concrete": `CLDE +3 honest` (teacher left it undefined) · `-igp +4 OVERSTATED`
+  (teacher defined close→open) · `WEhm +2 GENUINELY FAITHFUL` (teacher defined
+  wick-to-wick = what the primitive implements).** ★★ **FIDELITY IS A PROPERTY OF
+  THE PAIR (primitive, spec), not of the primitive — the codebase stores
+  `approximation=False` as a property of the binding alone. One flag, two truths.**
+- **(2) Flag-yield sweep — DONE (AR-376 / R-411). ★★★ THE CITABLE FIGURE IS
+  `0 → 10` (+10, four specs: `-igp` 4 · `CLDE` 3 · `WEhm` 2 · `kFyD` 1), NOT the
+  `1 → 11` the AR reported — R-411 re-ran all 16 and the baseline `1` was a
+  PHANTOM row. Flags-off = 0 in both today's tree and the frozen artifact.**
+  ★★ **The phantom was load-bearing: it had been used to explain away a
+  discrepancy that never existed. An explanation offered for a discrepancy is
+  itself a claim.** Stop condition rewritten as a property; NOT a stop.
+- **(3) corpus_B charter — EXISTS and is COMMITTED:
+  `docs/designs/CORPUS-B-CHARTER-2026-07-29.md` (`276b2c00`, AR-391; later scoped
+  as R-424 item (1)). Status line: "CHARTER ONLY. No extraction run is authorized
+  by this document." ★★ It names its tree and re-derived three sha256s itself —
+  measured in `wt-preflight-blockers-20260729`, sha-identical to
+  `runtime-production`, explicitly NOT the campaign tree.**
+  ★ **[NOT MEASURED] whether any ruling RATIFIED it: a filename grep of the ledger
+  returns 0, but that is a weak instrument (a ruling may name it as "the charter"),
+  and this desk was burned by exactly that grep-shape today. Treat as UNRATIFIED
+  until read, not as unratified by proof.**
+★★ **Still advisor-owned and open (v4 §9): the `C2` session-role resolver yield —
+RUN IT, a post-C8 multiplier · maintain `STRANDED-CAPABILITY-REGISTER.md`.**
 ★ **v4 §9 bound on the CI lane, which is where the worker is now: "governance;
 NEVER a merge gate for spearhead packets." Do not let it grow into one.**
 
