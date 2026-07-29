@@ -11,6 +11,32 @@
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
+★★★★★ **[FACT, NOT YET RULED — AR-446] R-459 STEPS (1) AND (2) ARE DELIVERED, AND
+IT CORRECTS ONE OF MY OWN CONSTRAINTS IN THE SAFE-TO-LOOSEN DIRECTION: I ruled
+"the published DEV/HOLDOUT covenant must not govern tuning". [MEASURED, worker]
+THE DEFECT IS ONLY IN THE `DEV` HALF — `DEV` is the CONTAMINATED set, so listing a
+video there marks it UNPROTECTED, the opposite of what AR-444 §4 implied. The
+`HOLDOUT-26` list in `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md` is VERIFIED
+SOUND and CAN govern tuning today. My suspension was OVER-BROAD — over-restrictive,
+so nothing was at risk, but it was wrong and the correction is owed.**
+★★★★★ **[FACT] PRESERVED AT
+`trading-forge\backups\h1-shadow-eval\shadow-eval-edaa0c14\` — outside every git
+tree, `-r--r--r--`, `HASHES.txt` + `README.md`, CONTENT-ADDRESSED name with no
+date (the run emits no timestamp; naming it by date would have invented one).
+`shadow.ts` = `16654d17…` **EQUALS THE FREEZE DOCUMENT'S OWN PIN** — the rescued
+harness IS the frozen harness, not a lookalike matched by filename.**
+★★★ **[FACT] METHOD WORTH COPYING: hashed at SOURCE **before** the copy, re-hashed
+at DESTINATION **after**, required equal, then `sha256sum -c` re-run from INSIDE
+the retention directory (`3 of 3 OK`). The ARTIFACT was verified, not an exit code.**
+★★★★★ **[FACT] AND THE DISCRIMINATOR THAT SETTLED WHICH INPUT: the scratchpad held
+TWO candidates — `evidence.json` and `evidence2.json` — BOTH with 40 videos and
+BOTH with 2351 items. **A COUNT CHECK WOULD HAVE BEEN SATISFIED BY EITHER.** It
+used a test that could go red instead. `evidence2.json` = `c112ade7…`.**
+★★ **[FACT] steps (3) oracle and (4) §14 trace NOT STARTED.**
+★★★ **PENDING RULING (behind the operator's read): narrow the DEV/HOLDOUT
+suspension to the DEV half only · fix R-459 step-(1)'s unsatisfiable STOP (AR-445)
+· dispose AR-446.**
+
 Ledger **R-459** — the seven-report hold is LIFTED and all of AR-433 · 434 · 435 ·
 437 · 439 · 441 · 444 are DISPOSED. Worker ACTIVE on R-459 steps (1) preserve and
 (2) erratum, ETA ~45 min.
