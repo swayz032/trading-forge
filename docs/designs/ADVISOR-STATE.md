@@ -673,15 +673,6 @@ census vs today's live table (**a 2026-07-28 21:12 snapshot**) · the
 remediation-class assignments themselves (**JUDGMENT, never re-graded**).
 
 ## KNOWN-BENIGN (do not investigate)
-★★★★★ **WATCHDOG FIRES ARE EXPECTED RIGHT NOW AND THE CAUSE IS DELIBERATE: the
-worker was ORDERED to "report and HOLD" (R-462), and the ruling on AR-449/450 is
-HELD on the operator's standing external-read order. So the bar's first question —
-"is the newest AR UNRULED?" — correctly answers YES, and that is a CHOSEN state,
-not a stall.** ★★★ **THE DISTINCTION THE BAR STILL CANNOT MAKE: "the desk owes a
-ruling and has not written it" vs "the desk owes a ruling and is deliberately
-waiting on a named input." Only this line separates them — do not diagnose a fault
-from these fires while it stands.** ★★ **REMOVE THIS LINE the moment the read
-lands and the ruling is written; leaving it would blind the bar to a real stall.**
 ★★★★★ **THE IDLE WATCHDOG IS **STOPPED**, DELIBERATELY, AND RE-ARMING IT IS AN
 OBLIGATION — NOT A CHOICE. [MEASURED 06:23Z] the AR-442 seat closed itself at
 handoff and no seat replaced it, so the watchdog was firing every 15 min at an
