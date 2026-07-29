@@ -195,6 +195,19 @@ with itself and call it validation. Prove the new thing RAN, per item.**
 ★★ **A true finding is the most dangerous moment for a guard** — correct premise +
 unbuilt replacement + enormous convenience is how good desks ship regressions.
 
+## DOCTRINE IS NOW VERSIONED (2026-07-29)
+★★★ **`.claude/` is its own git repo, pushed to `origin ops/claude-doctrine`.**
+It versions `skills/ · agents/ · hooks/ · commands/` — **the directory IS the
+canonical copy, NOT a backup.** Deliberate: a second copy drifts, and a drifted
+rulebook is worse than an unversioned one because it still looks authoritative.
+**Edit in place; never `git init` a second copy elsewhere.**
+★★ Deny-by-default `.gitignore`; `projects/` (transcripts + seat memory),
+`settings*.json` (tokens), `worktrees/` (another repo's checkouts) excluded.
+Secret-scanned clean; **restore-tested by a fresh clone**, not assumed.
+★ **Allow-listing a DIRECTORY re-admits nested categories you denied above** —
+`agents/.claude/agent-memory/` rode in on `!/agents/` and is now denied at any
+depth. Re-run the secret scan before allow-listing anything new.
+
 ## OPERATOR-FACING
 Nothing waits on you. Safety chain deployed; nothing has ever run a backtest.
 ★★ **The strategic finding: FIVE built-but-disabled capabilities exist, three of
