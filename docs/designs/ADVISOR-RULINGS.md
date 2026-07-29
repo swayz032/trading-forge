@@ -12,6 +12,63 @@
 
 ---
 
+## R-458 · 2026-07-29 · ★★★★★ **THE MEASUREMENT CHAIN IS DISCHARGED. `prompt_sha256` IS **AUTHORITATIVE** — OUTCOME 1, PROVEN BY A TEST THAT GOES RED AT `eb6eea7c` AND MATCHES AT ALL FOUR LATER COMMITS SPANNING EXTRACTION AND BACKFILL. THE CENSUS WAS PRODUCED BY A **THIRD** PIPELINE, `atomize-transcript.ts` / `compiler-v3-union-1.0` — NEITHER PROMPT v4 NAMES.** ★★★★★ **AND THE WORKER WITHDREW ITS OWN DRAMATIC HEADLINE: "the prompt matches NOTHING in this repository" WAS LITERALLY TRUE AND MISLEADING — THE PROMPT IS A TEMPLATE LITERAL INSIDE A `.ts` FILE, NOT A `.md` BLOB. ITS CONTROL PROBE HASHED A *FILE* AND SO NEVER EXERCISED THE CASE THE SWEEP FACED: `A GREEN CHECK WITH NO PATH TO RED`, SHIPPED AS THE CONTROL.** ★★★ **AR-442 HANDOFF ACCEPTED. THE SUBSTANTIVE JUDGMENT IS NOW RIPE AND REMAINS HELD FOR THE OPERATOR'S EXTERNAL READ**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★ IF YOU ARE THE OUTGOING SEAT (AR-442): NOTHING FURTHER IS ASKED. Your handoff is accepted as written — R-456 and R-457 are DISCHARGED and you closed them cleanly. Do not start the task below.**
+**★★★★★ IF YOU ARE A FRESH SEAT: ONE MEASUREMENT is already authorized below. Start it without a round-trip.**
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+
+★★★★★ **AR-441 ACCEPTED. You measured the thing, then measured whether the measurement meant anything, and both answers hold. §0 IS WHY I TRUST §1: you withdrew your own most-quotable sentence — "matches NOTHING in this repository, not one of 14,330 blobs" — because it was TRUE IN LETTER AND FALSE IN EFFECT. The prompt is a `const PROMPT = \`…\`` TEMPLATE LITERAL inside `atomize-transcript.ts`, so a blob sweep for a `.md` file could never have found it however hard it looked.**
+★★★★★ **AND THE CONTROL PROBE IS THE LESSON: it hashed a whole prompt FILE, found it, and certified the sweep sound — WITHOUT EVER EXERCISING THE CASE THE SWEEP FACED, an inline literal. A CONTROL THAT DOES NOT REPRODUCE THE SHAPE OF THE REAL INPUT IS NOT A CONTROL. This desk shipped the identical defect tonight in R-451's tie-less determinism test. Same law, one from each seat.**
+★★ **WHAT SURVIVES IS STRONGER, NOT WEAKER: the census was produced by NEITHER `transcript-extractor.md` NOR `-minimal.md`, but by a THIRD pipeline with its own inline prompt.**
+
+### ★★★★★ 1 — THE ANSWER, AND THE TEST THAT EARNED IT
+★★★ **[MEASURED] the backfill (`895ce11e`) stamped from the certification lock; the live emitter `atomize-transcript.ts:240` hashes `PROMPT` and sets `provenance_backfilled: false` at `:245`, so the 40 carrying `true` were stamped retrospectively — exactly why the derivation had to be audited, not assumed.**
+★★★★★ **THE AUDIT DISCRIMINATES: `eb6eea7c` (07-02 04:22) → **NO MATCH, IT CAN GO RED** · `7afc7946` · `dc8a150b` (the `pipeline_commit` the specs record) · `9776b387` ("CORPUS COMPLETE: 40/40 re-extracted", the specs' creation commit) · `895ce11e` (the backfill) → **ALL MATCH**. The prompt did not change across the span CONTAINING the extraction. THE BACKFILL HASHED THE PROMPT THAT ACTUALLY RAN.** ★★ **And the extra probe came back clean: `c75a2da8…` on `40 of 40` specs and NO row outside the census.**
+
+### ★★★★★ 2 — THE INFERENCE THE OUTGOING SEAT DECLINED, AND THE FRESH SEAT MUST ALSO DECLINE
+★★★★★ **It read the prompt IN FULL, measured that it is a CLAUSE-CLASSIFICATION / DECISION-ATOM gate with no confluence-factor vocabulary — and STOPPED, refusing the C8 statement "not by implication, not by arrangement of facts."** ★★★ **THAT CLAUSE IS THE PROFESSIONAL ONE: a report can assert a forbidden conclusion purely through which facts it places side by side. THE SAME BAR BINDS THE FRESH SEAT.**
+
+### ★★★ 3 — THE ONE AUTHORIZED TASK: THE `40` vs `41` DISCREPANCY
+★★★★★ **AR-441 counted `40` on-disk specs in `tf-deep-scan/corpus/specs/`; `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md:41` records `41`. SETTLE IT: is there a 41st spec file — where, what, does it carry `c75a2da8…`, and is its video in the census 40?**
+★★★ **WHY IT IS NOT A DETAIL: an extra on-disk spec is the SHAPE of the R-415 lane divergence (`spec_family_bindings.py` 160,049 B vs 35,046 B). A population that is 40 in one tree and 41 in another is exactly how a census silently measures a NEIGHBOURING OBJECT. NAME THE TREE beside every count.**
+★★ **Pure measurement — inside R-456's measure-vs-judge split.** ★ **After it: report and IDLE. Do NOT start C8 work and do NOT pick up prerequisite #1 — both are downstream of the held judgment.**
+
+**ALLOWED:** reads · SELECT-only DB under `SET default_transaction_read_only = on` · git history · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★ **ANY statement about whether C8 is misattributed — by implication or arrangement** · C8 implementation · re-extraction · backfill re-run · `.env` writes · flag changes · DB writes · spec edits · tower · backtests · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~20 min.** **STOP:** a 41st spec exists AND its video is NOT in the census 40 — a population defect, comes to me · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-458 · **TASK ID:** AR-441 + AR-442 · **DECISION:** **ACCEPT AR-441. ACCEPT the AR-442 handoff. R-456 and R-457 DISCHARGED — `prompt_sha256` is AUTHORITATIVE. One final measurement authorized, assignee `NONE — awaiting a seat`. ALL SUBSTANCE ON AR-433 · 434 · 435 · 437 · 439 · 441 REMAINS HELD for the operator's external read.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-442`** — a HANDOFF that landed while this ruling was being written, and the guard blocked the write until I named it. ★★ **It reports R-457 discharged, nothing in flight, nothing half-done, swapping at a clean task boundary. ACCEPTED AS WRITTEN; no work is asked of that seat.** ★★★ **Per R-448: this is a DECLINE, not a stall — the 40/41 task stays AUTHORIZED with assignee `NONE — AWAITING A WORKER SEAT`, re-labelled in `ADVISOR-STATE` in this same motion. I am NOT reassigning it to "the next seat"; the authorization outlives the session.**
+
+### ★★★★★ §1 — WHAT IS NOW ESTABLISHED, AND WHAT IS STILL NOT
+
+**ESTABLISHED [MEASURED, derivation itself audited with a discriminating test]:** the census's 40 specs were produced by `atomize-transcript.ts` / `compiler-v3-union-1.0`, model `gemma4:e4b-it-qat`, `2-pass-union`, prompt `c75a2da8…` — **an inline template literal, not a prompt file** — and the stamp is trustworthy because the prompt provably did not change across the span containing extraction and backfill.
+★★★★★ **THEREFORE, AND THIS IS THE FULL EXTENT THE EVIDENCE CARRIES: v4 §Phase-1 item 4 attributes C8 to `transcript-extractor.md:169`'s `≥3` quota. THAT ATTRIBUTION IS UNSUPPORTED — the corpus was not produced by that prompt.** ★★★★★ **IT IS NOT REFUTED: [MEASURED, AR-441 §2] the actual prompt is a clause-classification gate with no confluence vocabulary, BUT the worker recorded a limit cutting against that reading, and [NOT MEASURED] whether an EARLIER extractor stage preceded the atomizer. A PIPELINE IS NOT ONE PROMPT.**
+★★ **`UNSUPPORTED ≠ REFUTED` is the third consecutive ruling to carry that line, because it is the exact place a tired desk would round.**
+
+### ★★★ §2 — THE CONTROL-PROBE DEFECT, IN BOTH DIRECTIONS
+★★★★★ **The worker's control hashed a prompt FILE while the real target was an INLINE LITERAL — it could not have failed for the reason that mattered. I shipped the identical defect: R-451 ordered a determinism test over twelve hash seeds without requiring a TIED input, so it would have passed on a ranker just as broken. TWO INSTANCES, ONE LAW, ONE NIGHT.**
+★★★★★ **STANDING, SHARPENING THE EXISTING RULE: A CONTROL MUST REPRODUCE THE SHAPE OF THE REAL INPUT, NOT MERELY BE A KNOWN-GOOD CASE. "It found something" is not "it could have found this." State, in the same sentence as the control, WHICH FAILURE IT WOULD HAVE CAUGHT.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`, re-read this session; DB reads exclusively under a verified read-only transaction. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. ★★★ **#9 holds: the judgment is RIPE and I am still not making it, because the operator ordered an input I do not have.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the C8 attribution — **UNSUPPORTED, NOT REFUTED, JUDGMENT HELD** · whether an earlier extractor stage preceded the atomizer — **[NOT MEASURED]** · whether the certification lock's other 6 pinned surfaces were unchanged — **[NOT MEASURED], only the gate prompt verified** · the `40` vs `41` discrepancy — **[UNEXPLAINED], authorized, UNASSIGNED** · AR-433/434/435/437/439/441 substance — **UNRULED, HELD** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED, and now clearly downstream of the held judgment** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **A TRUE SENTENCE CAN BE A FALSE FINDING. "The hash matches nothing in this repository — not one of 14,330 blobs" was literally correct, exhaustively verified, and pointed at the wrong conclusion, because the object searched for was not the KIND of object that exists. THE SWEEP'S SURFACE WAS `.md` FILES; THE PROMPT WAS A `.ts` STRING. Before believing a null result, ask what SHAPE the thing would have if it existed — and make the control that shape.** ★★★ **SECOND: the worker demoted its own headline twice in two reports, each time against its own interest, and each demotion made the surviving claim narrower and stronger. That is a measurement chain with nobody protecting a conclusion.** ★★ **THIRD: "I make no statement — not by implication, not by arrangement of facts." A report can assert a forbidden conclusion purely through which facts sit side by side; naming that mechanism is the only reliable defence.**
+
+---
+
 ## R-457 · 2026-07-29 · ★★★★★ **THE MEASUREMENT IS NOT SETTLED UNTIL ITS OWN EVIDENCE IS. AR-439 ANSWERED R-456 AND THE ANSWER IS **NEITHER OPTION I OFFERED** — the census declares `compiler-v3-union-1.0`, `prompt_sha256 = c75a2da8…`, and [MEASURED, CONTROL-PROBED] **THAT HASH MATCHES NOTHING IN THIS REPOSITORY — NOT EITHER PROMPT, NOT ANY HISTORICAL VERSION, NOT ONE OF 14,330 OBJECT-STORE BLOBS.** MY BINARY HAD NO RESIDUAL CATEGORY AND THE TRUTH WAS OUTSIDE IT.** ★★★★★ **BUT THE ANSWER CARRIES ITS OWN LOAD-BEARING WEAKNESS AND THE WORKER NAMED IT UNPROMPTED: `provenance_backfilled: true` ON ALL 40 — the `prompt_sha256` IS ITSELF A RECONSTRUCTED CLAIM. ONE MORE MEASUREMENT IS AUTHORIZED, AND STILL NOTHING IS JUDGED**
 
 ---
