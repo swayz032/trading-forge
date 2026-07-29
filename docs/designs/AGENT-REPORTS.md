@@ -4,6 +4,118 @@
 
 ---
 
+## AR-446 · 2026-07-29 · ★★★★★ **(1) PRESERVED — AND `shadow.ts` HASH-MATCHES THE FREEZE'S OWN PIN EXACTLY, SO THE RESCUED HARNESS **IS** THE FROZEN HARNESS, NOT A LOOKALIKE FOUND BY FILENAME. (2) ERRATUM LANDED, ADDITIVE, FROZEN BYTES UNTOUCHED.** ★★★★★ **AND I MUST CORRECT MY OWN AR-444 §4 BEFORE ANYTHING ELSE, BECAUSE YOU ACTED ON IT AND IT POINTED THE WRONG WAY: I SAID THE PUBLISHED COVENANT WOULD LEAVE `ktkqq7QsN9Q`/`sVkmZklJDHI` "UNPROTECTED". ★★★★★ [MEASURED] THE `HOLDOUT-26` COVENANT LIST IS **CORRECT — 26 OF 26, ZERO DIFFERENCE** FROM THE MECHANICALLY-EMITTED COMPLEMENT. THE COVENANT PROTECTS EXACTLY THE RIGHT VIDEOS AND YOUR SUSPENSION OF IT CAN BE LIFTED.** ★★★ **AND THE DEFECT WAS PROVABLE FROM THE TWO PUBLISHED DOCUMENTS ALONE, WITHOUT ANY MEASUREMENT OF MINE: `x1ydP8bC7OE` IS IN **BOTH** HALVES OF THE PARTITION AND `ktkqq7QsN9Q`/`sVkmZklJDHI` ARE IN **NEITHER**.**
+
+**RULING ID:** R-459 steps (1)+(2) · **TASK ID:** AR-445 · **PRIOR:** AR-444 · **COMMIT AT WRITE `1b4820aa`** · **RECOMMENDATION:** **APPROVAL_REQUESTED on (1) and (2). (3) the oracle and (4) the §14 trace are NOT STARTED — see §6, and I am handing off rather than opening an instrument change I cannot finish.**
+
+---
+
+### ★★★★★ §0 — THE CORRECTION, FIRST, BECAUSE IT REVERSES A CONSEQUENCE YOU RULED ON
+
+**AR-444 §4 said the published list would *"protect `psH--oXkD8M` … and `x1ydP8bC7OE` while leaving `ktkqq7QsN9Q` and `sVkmZklJDHI` … unprotected."* ★★★★★ THAT IS BACKWARDS, and it is backwards in the direction that matters: `DEV` is the CONTAMINATED half, so membership in `DEV` REMOVES protection rather than granting it.**
+★★★★★ **AND THE PART I NEVER CHECKED AT ALL — I flagged it in AR-444 §6 as "did not open" — IS THE PART THAT DISSOLVES THE WHOLE WORRY: [MEASURED HERE] the `HOLDOUT-26` list published in `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md` (the AR-405 amendment) is **IDENTICAL to the emitted complement, 26 of 26, zero difference in either direction.** THE COVENANT LIST WAS NEVER WRONG.**
+★★★ **THEREFORE YOUR R-459 LINE — *"UNTIL THAT LANDS: THE PUBLISHED DEV/HOLDOUT COVENANT MUST NOT GOVERN TUNING"* — RESTS ON A DEFECT THAT IS NOT IN THE COVENANT HALF. The `HOLDOUT-26` half is verified sound and can govern tuning today. Only the `DEV-14` half was wrong.** ★★ **I am not asking you to lift it — that is yours. I am telling you the evidence no longer supports keeping it.**
+
+---
+
+### ★★★★★ §1 — STEP (1): PRESERVED, AND THE STOP CONDITION DID NOT FIRE
+
+**RETENTION:** `C:\Users\tonio\Projects\trading-forge\backups\h1-shadow-eval\shadow-eval-edaa0c14\` — **outside every git tree, files `-r--r--r--`, `HASHES.txt` + `README.md`, content-addressed name, no date in the name** (the run emits no timestamp; a scratchpad mtime is a filesystem write time and I will not launder one into provenance).
+
+| file | sha256 | |
+|---|---|---|
+| `shadow.ts` | `16654d173baf14b11caa25c6318ecbee3fcb6417cc68fe4fada153ba8fa77635` | ★★★★★ **EQUALS THE FREEZE DOCUMENT'S OWN PIN** |
+| `evidence2.json` (the input) | `c112ade7a288f9dbe4fb9742fa99e6999a76b93287027d376dc4c4041d21a06e` | |
+| `shadow_rows.json` (the output) | `edaa0c1473b7d28173ddcfc43b6495ed51155b09881975f60e085fb5a643ca51` | |
+
+★★★ **METHOD: hashed at the SOURCE **before** the copy, re-hashed at the DESTINATION **after** it, required equal — and then `sha256sum -c HASHES.txt` re-run from inside the directory: `3 of 3 OK`. I verified the ARTIFACT, not the exit code of `cp`.** ★★ **PRESERVE FIRST, RERUN SECOND — I have re-run NOTHING.**
+
+★★★★★ **WHICH INPUT, SETTLED BY A TEST THAT COULD GO RED: the scratchpad held TWO candidates, `evidence.json` and `evidence2.json`, BOTH with 40 videos and BOTH with 2351 items — a count check would have been satisfied by either. I reduced each to the multiset of `(video, id, type, object, arm)` tuples and compared against the output: `evidence2.json` → **0 mismatches**; `evidence.json` → **4702 mismatches**. THE WRONG CANDIDATE WENT RED.**
+
+★★★★★ **THE STOP CONDITION I FLAGGED IN MY RECEIPT, NOW RESOLVED HONESTLY:** you required *"the preserved copy hash-matches what the harness actually used."* **For `shadow.ts` that is a real check and it PASSES against your pin. For `shadow_rows.json` nothing pins it — it is the OUTPUT — so I did NOT manufacture a check I cannot make.** ★★★ **In its place, the provenance evidence is a RE-DERIVATION run against the retention copy: `575 / 1776 / 510 / 1704 / 65 / 72 / 2351` — every published figure, to the digit. That limit is written INTO the retention `README.md` rather than left for a later seat to discover.**
+★ **The `%TEMP%` original was READ, never modified or deleted — it belongs to another session and is still where it was.**
+
+---
+
+### ★★★★★ §2 — STEP (2): THE ERRATUM, AND IT DOES NOT TOUCH ONE FROZEN BYTE
+
+**`docs/designs/SHADOW-EVAL-PARTITION-ERRATUM-2026-07-29.md`** — additive, dated, points AT `SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md` lines 26–28. ★★★ **The frozen file is unmodified: `git status` shows it untouched. A frozen artifact whose bytes can be edited was never frozen.**
+
+★★★★★ **THE DEFECT PROVED FROM THE PUBLISHED RECORD ALONE — no instrument of mine required:**
+
+| | |
+|---|---|
+| in **BOTH** published `DEV-14` and published `HOLDOUT-26` | ★★★ **`x1ydP8bC7OE`** — it cannot be in both halves of a partition |
+| in **NEITHER**, though both are drawn from the same 40 | ★★★ **`ktkqq7QsN9Q` · `sVkmZklJDHI`** |
+| in published `DEV-14`, **not in the population at all** | ★★★★★ **`psH--oXkD8M`** |
+
+★★ **A partition whose halves overlap on one member and jointly omit two others is an internal contradiction, not a judgement call. Any reader holding those two documents could have caught it.**
+
+---
+
+### ★★★★★ §3 — THE LISTS ARE EMITTED, NOT TYPED — AND I VERIFIED YOUR FOUR NAMES RATHER THAN ADOPTING THEM
+
+**INSTRUMENT: `docs/replay-results/h1-scripts/regen_shadow_partition.py`** (committed with this report). **The erratum's list block is its VERBATIM stdout.**
+
+★★★ **IT DERIVES `DEV` TWICE AND REFUSES TO EMIT UNLESS THEY AGREE:** **PATH A** = the run's own `pop` labels · **PATH B** = the *stated* derivation re-applied — the harness's line-11 regex **ported verbatim, not reimplemented** — over `rules_design_keys`, intersected with the run population. **[MEASURED] they agree.** ★★ **`HOLDOUT` is emitted as the COMPLEMENT and never as a second maintained list, because two hand-maintained complementary lists is exactly how these drifted apart.**
+★★★ **GUARD DESIGN: every input is pinned by sha256 and a mismatch RAISES; a missing input RAISES; a design key with no video id RAISES; population ≠ census RAISES. Nothing is defaulted and nothing is skipped.**
+
+**YOUR FOUR NAMES — *"VERIFY the four names against the census yourself; I have not."* Done, each against the census, not against your claim:**
+
+| video | ruling | emitted | in census | |
+|---|---|---|---|---|
+| `psH--oXkD8M` | OUT | **OUT** | ★★★ **NO** | AGREE |
+| `x1ydP8bC7OE` | OUT | **OUT** | yes | AGREE |
+| `ktkqq7QsN9Q` | IN | **IN** | yes | AGREE |
+| `sVkmZklJDHI` | IN | **IN** | yes | AGREE |
+
+★★★ **ALL FOUR AGREE — so your stop condition ("the regeneration disagrees with the four named videos") does NOT fire.** ★★ **AND ONE PRECISION YOUR RULING DID NOT CARRY: `x1ydP8bC7OE` IS in the census — it is a genuine `HOLDOUT` member. Only `psH--oXkD8M` is outside the population. The two are "OUT of `DEV`" for entirely different reasons and collapsing them would mis-state the defect.**
+
+---
+
+### §4 — WHAT I DID NOT DETERMINE, AND ONE HYPOTHESIS I KILLED
+
+★★★ **[NOT DETERMINED] how the four substitutions arose.** Ruled out: the harness could not have emitted it (`DEV ⊆ designVideos` structurally, and I ported line 11 and ran it) · two of the names appear **0** times in the split file (control probe: `ktkqq7QsN9Q` 30, `sVkmZklJDHI` 10, positive control `75DJN5UVQnw` 1) · **and the index-shift hypothesis I formed is FALSIFIED — mapping correct-`DEV` indices from `sorted(corpus40)` into `sorted(gen41)` yields `qLtq73bTPBA`, in neither list.** ★★ **I killed it because it was wrong, not kept it because it was tidy.**
+
+---
+
+### §5 — DISPOSITION
+
+★★ **ALLOWED-LIST:** reads · durable-retention COPIES · an additive erratum · one new instrument file · **one `SELECT`-only DB session under `SET default_transaction_read_only = on`** · this append. **NO frozen-artifact byte rewritten · no re-extraction · no C8 · no backtest · no `--relock` · no `.env` write · no flag change · no DB write · no tower · no `git checkout`/`reset` · no duplicate verifier built.**
+★★★ **[MEASURED, live, THIS task — re-taken, not carried from AR-444] `backtests total = 0`.**
+★ **Off-machine encrypted backup of the new retention directory: NOT ARRANGED, flagged for the operator exactly as the census snapshot is.**
+
+---
+
+### ★★★ §6 — WHAT I AM **NOT** STARTING, AND WHY — I AM HANDING OFF
+
+★★★★★ **(3) THE SHARED PROMPT-HASH ORACLE AND (4) THE §14 TRACE ARE UNSTARTED. I am declining to open them in this seat, and this is a DECLINE-RECEIPT, not a silent omission.**
+★★★ **REASON, and it is your own rule: (3) is an INSTRUMENT CHANGE. It rides `ratify-packet`, it needs eight named fixtures each shown to go RED for its own reason, and it takes an INDEPENDENT `accuracy-validator` grade — which YOU dispatch, not me. That is a full task, and this seat has now carried AR-443 → AR-446 across four reports including two corrections of prior work (mine in §0, and AR-441's scoped sentence in AR-444 §2).**
+★★ **A seat that has spent its context auditing its own output is the wrong seat to hand a fresh instrument build.** ★★★ **Nothing is half-done: (1) and (2) are complete, verified, and committed. Nothing is in flight. NO SUB-AGENT IS OWED — I dispatched none this session, and I verified that rather than assuming it.**
+
+**Remaining uncertainty:** §4's mechanism · whether the other frozen artifacts carry comparable transcription drift (**I checked the `DEV-14` and `HOLDOUT-26` lists only**) · the R-415 lane-divergence question is untouched.
+**Risk:** low — the only mutations are one new instrument, one new erratum, and a new read-only retention directory. **Nothing existing was altered.**
+
+**Next smallest task (ONE):** ★★★ **R-459 step (3), the single shared evaluated-prompt hashing oracle — fixing `tf-deep-scan/scripts/check-extraction-cert.ts`, NOT building a second tool. A fresh worker seat is needed for it.**
+
+---
+
+## AR-445 · 2026-07-29 · **START-RECEIPT — R-459 STEPS (1) PRESERVE AND (2) ERRATUM, IN THAT ORDER. ★★★ AND I FLAG ONE THING BEFORE I START RATHER THAN AT DELIVERY: STEP (1)'s STOP CONDITION IS UNSATISFIABLE AS WRITTEN FOR ONE OF THE TWO FILES, AND I SAY SO NOW BECAUSE IT COSTS NOTHING NOW.**
+
+**RULING ID:** R-459 · **TASK ID:** AR-445 · **STATUS:** START-RECEIPT · **PRIOR:** AR-444 · **COMMIT AT START `1b4820aa`** · **TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+
+**TAKING, IN YOUR SEQUENCE:** **(1)** preserve the hash-matched `shadow.ts` + `shadow_rows.json` out of `%TEMP%` into durable retention — **before** anything is re-run · **(2)** an ADDITIVE, DATED erratum document pointing at the frozen artifact, with `DEV-14`/`HOLDOUT-26` **regenerated by an instrument and never typed**. **NOT STARTING (3) or (4) in this motion.**
+
+★★★★★ **THE DEFECT IN THE CONTRACT, NAMED BEFORE I START:** your step-(1) STOP reads *"the preserved copy does not hash-match what the harness actually used."* **For `shadow.ts` that is checkable — the freeze pins `16654d17…` and I already located the file BY that hash. For `shadow_rows.json` NOTHING PINS IT: it is the harness's OUTPUT and no prior artifact records its hash, so "what the harness actually used" has no recorded value to match against.** ★★★ **I will therefore not pretend to a check I cannot make. I will (a) hash both files AT the source, (b) hash both AFTER the copy and require equality — which proves FIDELITY OF THE COPY, not provenance of the original — and (c) prove the original independently by RE-DERIVING the published aggregates from `shadow_rows.json` (575/1776/510/1704/65/72/2351, all of which I already reproduced to the digit in AR-444 §4). ★★ That last one is the real provenance evidence and I am naming it as a SUBSTITUTE for the check you specified, not as the check you specified.**
+
+★★ **A SECOND LIMIT I AM STATING UP FRONT: `%TEMP%` is a scratchpad belonging to ANOTHER session. I am COPYING out of it and will not modify or delete anything there — if the original is needed again it must still be found where it was.**
+
+**ALLOWED-LIST I AM WORKING INSIDE:** reads · durable-retention COPIES · an additive erratum document · append to `AGENT-REPORTS.md`. **NOT TOUCHING:** frozen artifact bytes · re-extraction · C8 · backtests · `--relock` · `.env` · flags · DB writes · tower · `git checkout`/`reset`.
+**FIRST OBSERVABLE:** this receipt. **ETA ~45 min for (1)+(2).**
+**STOP CONDITIONS I AM HOLDING:** copy fidelity fails · `backtests total > 0` · ★★★ **the mechanical DEV/HOLDOUT regeneration disagrees with your four named videos — I report and adopt NEITHER list.**
+
+---
+
 ## AR-444 · 2026-07-29 · ★★★★★ **YOUR STOP CONDITION FIRED. THE 41ST SPEC IS `psH--oXkD8M.spec.json` AND ITS VIDEO IS **NOT** IN THE CENSUS 40 — CONFIRMED ON TWO INDEPENDENT PATHS (frozen census artifact AND a live read-only `SELECT`: `0` rows).** ★★★★★ **BUT THE POPULATION DEFECT IS NOT WHERE YOU EXPECTED IT: THE `40` AND THE `41` ARE **BOTH CORRECT** AND NAME DIFFERENT TREES. THE REAL DEFECT IS THAT `psH--oXkD8M` **LEAKED INTO A PUBLISHED FROZEN ARTIFACT'S POPULATION LIST** — `SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md`'s `DEV-14` IS WRONG IN FOUR PLACES AND CARRIES THE WORDS "derived mechanically from the split file, not hand-listed".** ★★★★★ **AND THE PART THAT SAVES THE RUN: I FOUND THE FROZEN HARNESS BY ITS PINNED sha256, READ ITS ACTUAL OUTPUT, AND **THE RUN ITSELF IS CLEAN** — ITS POPULATION IS THE CENSUS 40 EXACTLY, ITS `DEV-14` IS THE SPLIT FILE'S 14 EXACTLY, AND EVERY PUBLISHED NUMBER REPRODUCES TO THE DIGIT. THE INSTRUMENT WAS RIGHT; THE DOCUMENT DRIFTED FROM IT.**
 
 **RULING ID:** R-458 · **TASK ID:** AR-443 · **PRIOR:** AR-442 · **COMMIT AT WRITE `d73e35d3`** · **TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **BLOCKED — STOPPING AS INSTRUCTED. Your stop condition names this as yours to rule.**
