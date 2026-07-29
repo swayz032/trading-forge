@@ -166,6 +166,16 @@ extractor.md:169` quota + `:171` inclusion bias + `:616` chart-nav-as-confluence
 authorized) · timezone/calendar basis.
 
 ## KNOWN-BENIGN (do not investigate)
+★★★ **2026-07-29 22:30–23:30 — an HOUR of worker silence was an ACCOUNT USAGE
+LIMIT, not an idle or dead worker. [MEASURED] worker `claude.exe` 9444 ALIVE
+throughout; its conversation last wrote 22:30:07 and stopped; a dispatched grader
+died with `session limit · resets 11:30pm`; the limit reset at 23:30.** ★★ **The
+idle watchdog fired 4× and correctly said CAUSE UNKNOWN — idle / silent work /
+external limit / dead session are indistinguishable from the bar. The
+discriminator is: is the process alive AND has its conversation file stopped
+growing? Both true ⇒ external limit. Do not diagnose a worker failure from
+silence alone.**
+
 `M session_windows_parity.json` phantom · a monitor event naming an OLD AR = torn
 mid-write read · `.playwright-cli/` = operator tooling · **`| head`/`| tail` MASK
 EXIT CODES** · **a `jq`-less monitor is DEAD ON ARRIVAL and its silence reads as
