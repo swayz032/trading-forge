@@ -1,5 +1,25 @@
 # BLUEPRINT v4 — DRAFT (money-path acceleration plan)
 
+> ★★★★★ **STATUS: ADOPTED AND OPERATIVE — R-445, 2026-07-29, operator-directed.
+> THIS SUPERSEDES THE "DRAFT — NOT LAW" STATUS BELOW, WHICH THIS FILE CARRIED FOR
+> SEVERAL HOURS AFTER ITS OWN ADOPTION. The desk adopted the document without
+> updating the document; caught by an external read (R-455 §4 #1) and corrected
+> here. AMENDED BY R-455 — see that ruling for six adopted amendments, one
+> reframed and one REFUTED.**
+>
+> ★★★ **RATIFICATION PATH, RECORDED HONESTLY AND NOT BACKDATED: leg (1) red-team —
+> COMPLETE before adoption. Leg (2) external read — ★ **OBTAINED 2026-07-29 AFTER
+> ADOPTION, NOT BEFORE.** It is carried as `[EXTERNAL OPINION]` in R-455 and it did
+> NOT satisfy a pre-adoption review; this file will not claim that it did. Leg (3)
+> advisor adoption — R-445. **The sequence was (1)→(3)→(2), and that is what the
+> record says.**
+>
+> ★★★ **R-455 REFUTED the external amendment that would have moved §8's horizontal
+> multi-account scaling out of the operative mission: [MEASURED] `CLAUDE.md:15`
+> makes horizontal growth PRIMARY, `:412` "Multi-account within one user: ALLOWED",
+> `:498` an explicit Topstep exception. §8 STANDS UNCHANGED.**
+>
+> **SUPERSEDED STATUS LINE (kept for the audit trail, no longer true):**
 > **STATUS: DRAFT — NOT LAW.** Authored 2026-07-29 at the operator's request by a
 > consulting seat (Fable), for the seated advisor to execute. **Ratification path
 > (in order): (1) adversarial red-team pass (R-062 standing rule) — ★ COMPLETE
