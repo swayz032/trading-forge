@@ -4,6 +4,36 @@
 
 ---
 
+## AR-403 · 2026-07-29 · **THE SEMANTIC-ROLE MIGRATION PACKET — all eight sections, document only.** ★★★ **AND THE BLOCKER THE PACKET EXISTS TO SURFACE: THE DORMANT CLASSIFIER READS `evidenceQuote`, AND IN STORED ARTIFACTS THAT FIELD IS A POINTER 57.3% OF THE TIME — SO A NAIVE SHADOW RUN WOULD SILENTLY FALL BACK TO THE VERY TOPOLOGY HEURISTIC IT REPLACES AND REPORT HIGH AGREEMENT AS SUCCESS.** ★★ **PLUS: THE NEW MAPPER EMITS TWO ROLES THE CONSUMER DOES NOT KNOW (`or_branch`, `context`) — BOTH LAND IN `UNKNOWN_REQUIREDNESS` AND BLOCK, SO THE PASS COUNT CAN FALL**
+
+**RULING ID:** R-432 · **ARTIFACT:** `docs/designs/SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED. Nothing implemented, no flag flipped in any environment, no artifact mutated, no re-extraction, no backtest. [MEASURED] `backtests total = 0`.**
+
+**§1 THE LINE:** `graph-to-engine.ts:93` and **`:100`** — quoted. ★★ **`:100` is the same topology expression again, reached when the new classifier declines to decide; it is the fallback that makes §5-C necessary.**
+
+**§2 THE LABELLER, READ RATHER THAN DESCRIBED FROM ITS MAPPER** (as my receipt promised): flag `:75` `TF_SEMANTIC_ROLE_CLASSIFIER === "true"`, default OFF, *"byte-identical-when-OFF"* · classes `mandatory | optional | alternative | contextual` (`:53`) · mapper `:300-307` → `spine | confluence | or_branch | context` · **rules 1–5b at `:185-208`, each keyed on the EVIDENCE QUOTE TEXT plus atom TYPE** (`CONTEXT_LANG` → contextual · `WAIT_CONFIRMATION`+`MANDATORY_LANG` → mandatory · `ALT_LANG` → alternative · `OPTIONAL_LANG` → optional · `{WAIT_STRUCTURE, WAIT_BIAS, WAIT_RETEST, CONFIRM_DIRECTION, ENABLE_ENTRY, ENTER}`+`MANDATORY_LANG` → mandatory · `TRIGGER_LANG` → mandatory) · **rule 6 = gemma adjudication, the module's only network I/O.** ★★ **That is a real semantic contract — it reads what the speaker said, which is exactly what `:93` does not.**
+
+### ★★★ §2a — THE FALSE-GREEN THIS PACKET IS BUILT TO DEFEAT
+
+**The classifier consumes `evidenceQuote`. [MEASURED, AR-397] stored `evidence` is a pointer (`T-<vid>-C####`) on 1347 of 2351 values — 57.3%. A pointer contains no language, so every regex fails, rules 1–5 return `null`, and `:100` falls back to the topology heuristic.** ★★★ **A shadow run that does not resolve pointers first would come back ~57% "in agreement" BY CONSTRUCTION — and that would mean the new labeller mostly DID NOT RUN, not that it agrees.** ★★ **So the packet requires publishing the fired-vs-fallback split, and states the acceptance rule plainly: HIGH AGREEMENT WITH A HIGH FALLBACK RATE IS A FAILED RUN, NOT A REASSURING ONE.** ★ Plus a resolved-vs-unresolved A/B so that split has a reference.
+
+### ★★ §2b — A ROLE-DOMAIN MISMATCH NOBODY HAS NAMED
+
+**The new mapper emits `or_branch` and `context`. [MEASURED, `spec_execution_preflight.py:114-140`] the consumer knows neither — both fall to `UNKNOWN_REQUIREDNESS`, which BLOCKS.** ★★★ **So reclassification can move conditions from a passing class into a refusing one and the pass count can FALL. That is fail-closed and correct; I state it so a drop is not misread as a regression — and it is a second, independent reason your acceptance criterion (not pass-rate) is the right one.**
+
+**§3–§7 in brief:** shadow evaluation **per-video (40), never per-row (120)**, classifier called as a FUNCTION with no env var set in any live path · transcript-grounded grading against resolved clauses, **with the 20 span-disagreement conditions excluded or adjudicated first — a condition whose two provenance claims disagree cannot ground a fidelity judgment** · controls both directions, the negative one being **the AR-393 exhibits (`'timeframe'`, `'1 hour chart'`, …, two of which are `role=spine` TODAY): if any classifies `mandatory`, the migration FAILS** · flags-off must reproduce the current library **per condition, not in aggregate** · forward-only versioning, **no in-place mutation of any stored `compiled_spec`** · rollback is unsetting a flag, since no artifact is ever altered.
+
+**§8:** ★★★ **no refusal softened, and I say what the finding does NOT license: proving `spine` is an invalid proxy does not authorize relaxing it. Directionally this migration can only ADD refusals. The topology label stays wired to a fail-closed guard until validated classifications exist.**
+
+**★★ PREREQUISITE I did not expect to find, and it blocks §6:** **[MEASURED] the DB envelope DROPS `extraction_provenance` entirely** — the on-disk artifacts carry it, the stored rows do not. **So the classifier-version stamping this migration depends on is UNENFORCEABLE until onboarding preserves that field.** That is a prerequisite, not a follow-up.
+
+**Files changed:** the packet (new) · this report. **No code, no flag, no artifact, no DB write.**
+**Remaining uncertainty:** ★ **[NOT MEASURED]** how many of the 923 `spine` conditions change class — the sizing question, and it needs the run. ★ **[NOT MEASURED]** the rule-6 ambiguous-margin rate — **the number most likely to decide whether gemma adjudication is on the critical path.** ★ **[NOT MEASURED]** freeze status of the `extraction-100` worktree. ★★ **[NOT MEASURED, AND IT COULD INVALIDATE A GRADE]** whether the classifier's regex families were TUNED on a set that includes these 40 videos — **if so, a shadow evaluation over the same corpus is not an independent test, and that must be checked before any grade is believed.**
+**Risk:** none taken — a document.
+
+**Next smallest task (ONE):** answer that last uncertainty — was `gate-strength.ts` tuned on this corpus? Its docstring cites a *"143 rules-design set"* and *"6 motivating gold-JUSTIFIED_MANDATORY WAIT_RETEST conditions"*; **if that set overlaps the 40 live videos, the shadow evaluation needs a held-out split before it can grade anything.**
+
+---
+
 ## AR-402 · 2026-07-29 · **START-RECEIPT — R-432: the SEMANTIC-ROLE MIGRATION PACKET (document only).**
 
 **RULING ID:** R-432 · **TASK ID:** semantic-role migration packet · **ARTIFACT:** `docs/designs/SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md`, covering all eight sections you named. **ETA ~45–60 min.**
