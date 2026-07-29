@@ -4,6 +4,28 @@
 
 ---
 
+## AR-396 · 2026-07-29 · **HANDOFF — this worker seat is standing down at a CLEAN BOUNDARY. Nothing is half-done and no dispatched work is owed.**
+
+**POSITION:** branch `h1-wave4-sealed12-driver`, last commit **`ae79c789`** (AR-395). Every report and artifact below is COMMITTED — nothing of mine exists only in a working tree.
+
+**DONE THIS SEAT — four ruling items, each with its report:**
+· **R-424 (1)(2)(3)** → **AR-391** + `CORPUS-B-CHARTER-2026-07-29.md` + `VOCABULARY-LEDGER-POP120-2026-07-29.md` (ruled: R-426)
+· **R-426 (1)(2)** → **AR-393** + `C8-EXTRACTION-DIAGNOSIS-2026-07-29.md` (ruled: R-427)
+· **R-427 (1)** → **AR-395** — pointer-store probe, ANSWERED YES.
+
+**HALF-DONE: nothing.** **IN FLIGHT: nothing.** ★★ **SUB-AGENTS: none dispatched this seat — I verified the gap rather than assuming it. Nothing is owed to or by another agent.**
+
+**OPEN, AS THE RULINGS DEFINE THEM — the next seat starts here without re-deriving:**
+**(a) R-427 item (2) — FIND WHAT WRITES `role`.** ★★ **Do not re-run my search: [MEASURED] no assignment of `"spine"/"confluence"/"trigger"` exists in any non-test `*.ts`/`*.py` in the primary checkout — only the type declaration `spec-onboarding-service.ts:170` and consumers. The next place to look is OUTSIDE this repo: model output, an external service, a migration or a seed.** ★★★ **This closes R-423's `trigger` promotion question, which is otherwise stuck at "strong inference, unverified join."**
+**(b) R-427 item (3) — the `C8` PROMPT PROPOSAL.** ★ **A draft already exists at AR-393 §5 (P1–P4) targeting `transcript-extractor.md:169` (the ≥3 quota), `:171` (inclusion bias), `:616` (chart navigation as confluence).** Proposal only; the prompt is an instrument and goes through `ratify-packet`.
+**(c) MY OWN NEXT-SMALLEST, unclaimed:** sweep all 936 pointer-shaped `evidence` values for resolution — converts AR-395's honest **3-of-3** into a rate, using the same instrument I already ran.
+
+**CARRY THESE OR REPEAT MY MISTAKES:** ★★★ **NAME THE TREE — measure in `wt-preflight-blockers-20260729` (sha256-identical to `runtime-production`), NEVER in the campaign tree, which lacks `spec_execution_preflight.py` entirely.** ★★★ **PER-VIDEO, NOT PER-ROW — the library is 40 videos × 3 instruments and every raw count is inflated 3×.** ★★ **READ THE FIELD, NOT THE KEY LIST — I printed the envelope's keys and concluded "no source in the row"; the source was in `evidence` on 6450 of 6450 conditions, and the desk built a ruling on my error before I caught it.** ★ **`backtests total = 0` at every check this seat made.**
+
+**A FRESH WORKER SESSION IS NEEDED.** This seat is not blocked and not exhausted — it is at the cheapest possible swap point, with the queue named above.
+
+---
+
 ## AR-395 · 2026-07-29 · ★★★ **YES — THE POINTERS RESOLVE. STORE NAMED, RESOLVER NAMED, THREE POINTERS RESOLVED TO TEXT — AND THE `span` FIELD INDEPENDENTLY CONFIRMS EVERY ONE BYTE-FOR-BYTE.** ★★★ **43.5% OF THE LIBRARY'S PROVENANCE MOVES FROM "DECORATIVE" TO **GRADEABLE**.** ★★★ **AND THE POPULATION FINDING NOBODY HAS TAKEN: `POP-41` ⊇ `POP-120-LIVE` — ALL 40 LIVE VIDEOS ARE IN IT. THE `41 of 41 REFUSE` ESCALATION THIS DESK WITHDREW AS "A POPULATION WE DO NOT SHIP" WAS A STATEMENT ABOUT THE OPERATOR'S REAL LIBRARY**
 
 **RULING ID:** R-427 item (1) · **TASK ID:** pointer-store probe · **RECOMMENDATION:** **APPROVAL_REQUESTED. Your stop condition ("stop if no resolver") did NOT fire — the opposite result landed.**
