@@ -4,6 +4,121 @@
 
 ---
 
+## AR-448 · 2026-07-29 · ★★★★★ **FULL REPRODUCTION — THE STRONGEST OF YOUR THREE PRE-DECLARED OUTCOMES. THE PRESERVED HARNESS RE-EXECUTED AGAINST THE PRESERVED INPUT PRODUCES A **BYTE-IDENTICAL** OUTPUT: SAME sha256 `edaa0c14…`, SAME 808,919 BYTES, IDENTICAL CANONICAL MULTISET, AND IDENTICAL AS AN ORDERED LIST — A STRONGER EQUALITY THAN YOU ASKED FOR.** ★★★★★ **AND I PROVED THE COMPARATOR CAN GO RED BEFORE BELIEVING IT: ONE PERTURBED ROW FLIPS BOTH CHECKS TO FALSE WHILE THE UNMUTATED CONTROL STAYS TRUE. A COMPARISON THAT ONLY EVER RETURNS "IDENTICAL" IS NOT EVIDENCE — THAT IS THE `GREEN CHECK WITH NO PATH TO RED` I SHIPPED IN AR-439 AND I AM NOT SHIPPING IT AGAIN.** ★★★ **NOTHING IS GRADED. NO `accuracy-validator` EXISTS AND I DO NOT IMPLY ONE.**
+
+**RULING ID:** R-460 §2 · **TASK ID:** AR-447 · **PRIOR:** AR-446 · **COMMIT AT WRITE `2dd6ecd9`** · **RECOMMENDATION:** **APPROVAL_REQUESTED on the reproduction. ★★★ I do NOT call the run clean — per your §3 that awaits a grader this desk owns and has not dispatched.**
+
+---
+
+### ★★★★★ §0 — I ACCEPT YOUR CORRECTION, AND IT WAS THE RIGHT CATCH
+
+**R-460: *"recomputing published totals from the preserved `shadow_rows.json` tests ARITHMETIC over a stored output; it does not test that the harness still PRODUCES that output."* ★★★★★ THAT IS CORRECT AND MY AR-446 CLOSURE WAS WRONG. I even wrote *"I have re-run NOTHING"* in the same report — the sentence that disproved my own closure was sitting inside it, and you found it there.** ★★ **Two different claims; only the second closes the step. Recorded against myself.**
+
+---
+
+### ★★★★★ §1 — STEP 0, WHICH I ADDED, AND WHY IT WAS NOT OPTIONAL
+
+★★★★★ **Your (c) maps a byte/row difference onto FULL REPRODUCTION / FORMATTING-ONLY / STOP — but EVERY one of those readings silently assumes the harness's dependencies did not move. `shadow.ts` imports two library files from LIVE worktrees and reads the split file and 40 transcripts. HAD ANY DRIFTED, A ROW DIFFERENCE WOULD HAVE MEANT "A DEPENDENCY MOVED", NOT "THE HARNESS IS NON-DETERMINISTIC" — AND YOUR STOP WOULD HAVE FIRED ON A FALSE ALARM I HANDED YOU.**
+
+**[MEASURED, before anything was executed, against the freeze document's own pin table]**
+
+| pinned instrument | |
+|---|---|
+| `gate-strength.ts` (labeller) | **MATCH** `c62a2566…` |
+| `graph-to-engine.ts` (flag/topology) | **MATCH** `314e376f…` |
+| `clause-segmenter.ts` (resolver) | **MATCH** `52bcf1da…` |
+| `corpus-v3-heldout-split-2026-07-05.json` | **MATCH** `9981660b…` |
+
+★★★ **All four unchanged ⇒ the result below is attributable to the HARNESS. Without this the reproduction is uninterpretable in either direction.**
+
+---
+
+### ★★★★★ §2 — (a)–(c): THE RUN AND THE VERDICT
+
+**Ran the PRESERVED `shadow.ts` against the PRESERVED `evidence2.json`, `ROWS_OUT` to a NEW path OUTSIDE retention.** ★★ **The preserved output is the only copy of the thing being checked; an overwrite makes a difference indistinguishable from a loss.**
+
+**Harness stdout — and it reproduces the freeze document's own CONTROL and PARTITION lines verbatim:**
+```
+CONTROL: segmentTranscript= function | classifyGateStrengthDeterministic= function | gateStrengthToRole= function
+PARTITION: DEV-14 / HOLDOUT-26 (total 40)
+rows: 2351
+```
+
+| (b) check | result |
+|---|---|
+| **raw sha256** | ★★★★★ **IDENTICAL** — `edaa0c14…` both · **808,919 bytes** both |
+| **canonical row multiset** | **IDENTICAL** |
+| **ordered list equality** — stronger than you asked | **IDENTICAL** |
+
+★★★★★ **(c) AGAINST YOUR PRE-DECLARATION, UNREVISED: identical hash ⇒ `FULL REPRODUCTION`. Not "formatting-only", not a stop.**
+
+---
+
+### ★★★★★ §3 — THE MUTATION CONTROL, BECAUSE A GREEN COMPARISON PROVES NOTHING ALONE
+
+★★★★★ **This is the lesson from my own AR-439 defect, applied to my own work before you had to apply it to me.** One row of the re-run output was perturbed in memory and both comparisons re-run:
+
+| | result | required |
+|---|---|---|
+| one row perturbed → multisets identical | **False** | must be False |
+| one row perturbed → raw hash identical | **False** | must be False |
+| ★★ **unmutated control** → multisets identical | **True** | must be True |
+
+★★★ **The mutation BITES, and the unmutated control proves the comparator is not simply always-red. A mutation suite without its control cannot tell "catches breakage" from "always fails".**
+
+---
+
+### §4 — (d): RECONFIRMED FROM THE **RE-RUN** OUTPUT, NOT THE PRESERVED ONE
+
+★★ **Deliberately computed from the new file — reconfirming from the preserved copy would have repeated the exact mistake you corrected in §0.**
+
+population **40 == census**, verified · `DEV-14`/`HOLDOUT-26` **disjoint and complete** · `DEV` **== the erratum's emitted list, exactly** · and the seven totals: `575 / 14 / 510 / 65` · `1776 / 26 / 1704 / 72` · `2351` — ★★★ **every one MATCH.**
+
+**INTEGRITY AFTER THE RUN:** `sha256sum -c HASHES.txt` from inside the snapshot directory → **`3 of 3 OK`**, mtimes still `2026-07-28 22:22`. ★★ **The run did not write through the preserved files.**
+
+★★★ **NO SECOND SNAPSHOT DIRECTORY WAS CREATED, and that is a decision not an omission: the output is byte-identical, so a content-addressed directory would carry the SAME name and the SAME bytes. THE PRESERVED `shadow_rows.json` IS THE REPRODUCTION'S OUTPUT.** **The record lives in a new `backups/h1-shadow-eval/REPRODUCTION-LOG.md` — a LOG beside the snapshot, never inside it, because the snapshot's own README forbids reconciling a re-run into it.**
+
+---
+
+### ★★★ §5 — WHAT I AM NOT CLAIMING
+
+★★★★★ **THIS IS A DETERMINISM AND INTEGRITY RESULT. IT IS NOT A GRADE.** Per your §3 the `accuracy-validator` is real, required and **UNDISPATCHED**; the dispatch is this desk's and lands AGAINST this result. **I am not waiting on a phantom, and I am not calling the run clean.**
+★★ **A byte-identical re-run proves the harness is DETERMINISTIC over these inputs on this machine today. It does NOT prove the harness is CORRECT** — a stable wrong answer reproduces perfectly. **That is exactly the question the grade exists to answer and I am not pre-empting it.**
+★ **[NOT MEASURED] the 40 transcript files the harness reads are not pinned by the freeze; they were unchanged in effect (identical output) but I did not hash them against a prior record because none exists.** Recorded as a forward gap.
+
+---
+
+### §6 — DISPOSITION AND YOUR §4
+
+★★ **ALLOWED-LIST:** reads · **execution of the preserved harness to a NEW path** · a durable-retention log · one `SELECT`-only DB session under `SET default_transaction_read_only = on` · this append. **No preserved artifact overwritten · no frozen bytes rewritten · no re-extraction · no C8 · no backtest · no `.env`/flag/DB write · no tower.**
+★★★ **[MEASURED, live, THIS task] `backtests total = 0`.**
+★★★ **YOUR §4 ACCEPTED WITHOUT ARGUMENT: `regen_shadow_partition.py` hard-codes absolute paths and ships no discrimination fixtures. It is a one-shot, not an oracle, and I should have said so when I committed it.** ★★ **I have NOT promoted it to anything and it remains queued behind this work, as you sequenced it.**
+
+**Remaining uncertainty:** §5's correctness-vs-determinism gap · unpinned transcripts · the §4 mechanism of the original list drift, still `[NOT DETERMINED]`.
+**Risk:** low — the only new bytes are one log file outside git; nothing existing changed.
+
+**Next smallest task (ONE):** ★★★ **your `accuracy-validator` dispatch against this reproduction — it is yours, not mine.** After it lands: R-460 §4 (fixtures + path arguments for the partition generator), then R-459 step (3), the shared evaluated-prompt oracle.
+
+---
+
+## AR-447 · 2026-07-29 · **START-RECEIPT — R-460 §2: EXECUTE THE REPRODUCTION (a)–(d). ★★★ I ACCEPT YOUR CORRECTION WITHOUT QUALIFICATION: RECOMPUTING TOTALS FROM A STORED OUTPUT TESTS ARITHMETIC, NOT THE HARNESS. YOU ARE RIGHT AND STEP (1) IS NOT CLOSED.** ★★★★★ **AND I AM ADDING ONE CHECK YOUR SEQUENCE DOES NOT NAME, BECAUSE WITHOUT IT (c) CANNOT BE READ: THE THREE PINNED DEPENDENCIES MUST BE RE-HASHED FIRST.**
+
+**RULING ID:** R-460 §2 · **TASK ID:** AR-447 · **STATUS:** START-RECEIPT · **PRIOR:** AR-446 · **COMMIT AT START `2dd6ecd9`.**
+
+★★★ **I AM NOT HANDING OFF ON THIS ONE. My AR-446 §6 decline was scoped to R-459 step (3) — an instrument build needing its own fixtures and an independent grade. The reproduction is bounded, it is authorized to THIS seat (R-460 §5), and idling on it would be the stall-with-extra-steps R-448 names.**
+
+**THE DEFECT I AM NAMING BEFORE I START, NOT AT DELIVERY:** ★★★★★ **your (c) pre-declaration maps a byte/row difference onto FULL REPRODUCTION / FORMATTING-ONLY / STOP — but every one of those readings assumes the harness's THREE PINNED DEPENDENCIES are unchanged. `shadow.ts` imports `clause-segmenter.ts` and `gate-strength.ts` from live worktrees and reads the split file and 40 transcripts from `extraction-100`. If any of those drifted since the freeze, a row difference would mean "a dependency moved", NOT "the harness is non-deterministic" — and I would have STOPPED you with a false alarm.**
+★★★ **SO, ADDED AS STEP (0) AND PRE-DECLARED LIKE THE REST: re-hash `gate-strength.ts`, `graph-to-engine.ts`, `clause-segmenter.ts` and the split file against the freeze document's own pinned table BEFORE running anything. ALL FOUR MATCH ⇒ a row difference is genuinely the harness's. ANY MISMATCH ⇒ I STOP AND REPORT WITHOUT RUNNING, because a reproduction over drifted inputs cannot be interpreted either way.**
+
+**PRE-DECLARED OUTCOMES, CARRIED VERBATIM FROM YOUR (c) AND NOT TO BE REVISED AFTER I LOOK:** identical hash ⇒ **FULL REPRODUCTION** · different bytes, identical canonical row multiset ⇒ **FORMATTING-ONLY** · **ANY row or metric difference ⇒ STOP, comes to you.**
+
+★★★★★ **THE PRESERVED OUTPUT WILL NOT BE TOUCHED. `ROWS_OUT` goes to a NEW path outside the retention directory; the retention files are `-r--r--r--` and I will re-verify `sha256sum -c` AFTER the run to prove the run did not write through them.**
+★★ **NO GRADER IS DISPATCHED AND I WILL NOT IMPLY ONE.** Per your §3 the `accuracy-validator` dispatch is the desk's and lands AGAINST my result. **I will not call the run clean.**
+
+**FIRST OBSERVABLE:** this receipt. **ETA ~25 min.** **STOP:** any pinned dependency mismatch (step 0) · any row/metric difference · `backtests total > 0` · the run would write to a preserved path.
+
+---
+
 ## AR-446 · 2026-07-29 · ★★★★★ **(1) PRESERVED — AND `shadow.ts` HASH-MATCHES THE FREEZE'S OWN PIN EXACTLY, SO THE RESCUED HARNESS **IS** THE FROZEN HARNESS, NOT A LOOKALIKE FOUND BY FILENAME. (2) ERRATUM LANDED, ADDITIVE, FROZEN BYTES UNTOUCHED.** ★★★★★ **AND I MUST CORRECT MY OWN AR-444 §4 BEFORE ANYTHING ELSE, BECAUSE YOU ACTED ON IT AND IT POINTED THE WRONG WAY: I SAID THE PUBLISHED COVENANT WOULD LEAVE `ktkqq7QsN9Q`/`sVkmZklJDHI` "UNPROTECTED". ★★★★★ [MEASURED] THE `HOLDOUT-26` COVENANT LIST IS **CORRECT — 26 OF 26, ZERO DIFFERENCE** FROM THE MECHANICALLY-EMITTED COMPLEMENT. THE COVENANT PROTECTS EXACTLY THE RIGHT VIDEOS AND YOUR SUSPENSION OF IT CAN BE LIFTED.** ★★★ **AND THE DEFECT WAS PROVABLE FROM THE TWO PUBLISHED DOCUMENTS ALONE, WITHOUT ANY MEASUREMENT OF MINE: `x1ydP8bC7OE` IS IN **BOTH** HALVES OF THE PARTITION AND `ktkqq7QsN9Q`/`sVkmZklJDHI` ARE IN **NEITHER**.**
 
 **RULING ID:** R-459 steps (1)+(2) · **TASK ID:** AR-445 · **PRIOR:** AR-444 · **COMMIT AT WRITE `1b4820aa`** · **RECOMMENDATION:** **APPROVAL_REQUESTED on (1) and (2). (3) the oracle and (4) the §14 trace are NOT STARTED — see §6, and I am handing off rather than opening an instrument change I cannot finish.**
