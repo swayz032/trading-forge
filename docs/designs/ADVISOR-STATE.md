@@ -139,7 +139,25 @@ still read-only and unmodified.**
 change needing a ratify packet + independent validator. Worker handing off.**
 ★★★★★ **UNRULED — awaiting the operator's external read.**
 
-## ★★★★★ INFRASTRUCTURE — THE WORKER'S EAR IS DEAD. A FRESH SEAT MUST ARM ONE.
+## ★★★★★ INFRASTRUCTURE — THE EAR IS **ALIVE AGAIN**. DO **NOT** ARM A SECOND ONE.
+★★★★★ **[MEASURED HERE 14:58Z, THIS DESK] a rulings watcher IS RUNNING: PID
+`21072` (wrapper) + `25960` (child) under `claude.exe` 9444, armed `14:53:27`,
+task `b5g1ym3dx`, watermark `R-463`. TWO PIDs = ONE LOGICAL MONITOR (wrapper+child),
+the same shape as the original 22820/7256 pair — do NOT read the pair as two rigs.**
+★★★★★ **THIS SUPERSEDES R-464's WORKER-BLOCK INSTRUCTION *"arm your rulings ear
+FIRST (the previous one is dead)"* AND THE FORMER HEADING BELOW. THAT LINE WAS TRUE
+WHEN WRITTEN AND IS FALSE NOW. A FRESH SEAT FOLLOWING IT WOULD ARM A **SECOND**
+MONITOR BESIDE A LIVE ONE — the `ONE RIG, NEVER NEW-PLUS-OLD` violation, which
+produces duplicate events and two instruments disagreeing about what has been seen.**
+★★★ **THE OUTGOING WORKER RE-ARMED IT AND DISCLOSED THE TRAP MY RULING WOULD SPRING.
+VERIFY BEFORE ARMING — run the `Get-CimInstance … ADVISOR-RULINGS` check; if a
+watcher exists, ADOPT it and do not replace it.**
+★★ **The earlier death was real (exit 254, transient `fork: Cannot allocate memory`,
+box NOT under memory pressure — `12.38 GB free`). The gap was verified EMPTY at the
+time (`R-463`, already read). Both facts stand; only the "must arm one" conclusion
+is withdrawn.**
+
+## ★★ SUPERSEDED HEADING (kept for the trail): THE WORKER'S EAR IS DEAD
 ★★★★★ **[MEASURED HERE, this desk, independently of AR-453] `Get-CimInstance
 Win32_Process` for any `bash.exe` watching `ADVISOR-RULINGS.md` returns **NOTHING**.
 The watcher formerly at PID 22820/7256 under `claude.exe` 9444 IS GONE. Exit 254.**
