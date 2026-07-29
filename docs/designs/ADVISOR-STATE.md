@@ -10,18 +10,28 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-444**. Newest AR **AR-419** (start-receipt, in flight since 01:08 EDT,
-**authorized ETA ~45 min**). Worker: **ACTIVE** (`claude.exe` 9444 alive, 6 python).
-**TASK (R-444):** prove each of the remaining **156** baseline entries
-**RAN-AND-PASSED** before removal — `fixedFailures` means *did not fail*, and a
-test that never RAN also did not fail. Unprovable ⇒ stays, reported UNRESOLVED.
-Then add the **`BASELINE_SHRINK_NEEDED > 0` CI guard, sequenced AFTER the shrink**
-or it fires red on arrival. Plus the one real hardcoded path,
-`test_spec_family_bindings.py`.
-★★★ **ARMED STOP: if any of the 156 is GENUINELY FAILING rather than stale, that
-is a real regression and it comes to the desk — NOT the worker's to fix.**
-★ **PR #32 (`6d7c5d23`) = 4-file path fix + 24-entry removal. RATIFIED R-444 on
-the worker's measured justification. NOT merged.**
+Ledger **R-445**. Newest AR **AR-420 — RULED (accepted in full)**.
+**TASK (R-445):** classify the **23 baseline entries ABSENT from the report** —
+`RENAMED` / `DELETED` / `COLLECTION-ERROR` / `UNKNOWN` — plus a one-line
+ENVIRONMENTAL-vs-LOGIC call on each of the **9 still-failing**. ETA ~30 min.
+★★★ **ARMED STOP: any of the 23 that traces to a COLLECTION ERROR means that
+file's other tests are also silently not running — the absent population is then
+bigger than 23. Comes to the desk immediately.**
+★★★★★ **MERGE OF PR #32 IS HELD ON ONE THING: the MANDATORY independent grade of
+an INSTRUMENT change (`compare-baseline.mjs`, now BLOCKING at `ci.yml:167`).
+`accuracy-validator` dispatched against `af5779ef` itself. HOLD IS ASSIGNED TO A
+NAMED RUNNING AGENT, not a future session.** ★★★ **WORKER MUST NOT PUSH TO #32
+while the grade is in flight — a moving head voids the grade.**
+★★ **PR #32 worktree: `C:/Users/tonio/Projects/wt-ci-abspath-20260729` (branch
+`hardening/ci-abs-path-tests-20260729`, head `af5779ef`). The campaign tree does
+NOT contain `ci/__tests__` at all — running its suite here reports a false RED.**
+★★★ **AR-420 RESULT: the ran-and-passed discriminator fired on first contact —
+of 156, only **132** had actually run and passed; **23 absent + 1 skipped** would
+have been deleted for never having executed. Worker fixed the INSTRUMENT, not
+just the data. Baseline `189 → 165 → 33`.**
+★★ **[MEASURED HERE] `ci/__tests__` (22 tests, TWO files) is not matched by
+`vitest.config.ts:13`'s `src/**/*.test.ts` and nothing references it — the gate
+that guards every push has tests that never run in CI. QUEUED after the grade.**
 ★★★★★ **DO NOT INHERIT R-443's KILL-SWITCH ALARM — WITHDRAWN by R-444. The kill
 switch and compliance gate are NOT failing: all 24 assertions in `fixedFailures`,
 `verdict GREEN` (CI's own `compare-baseline.mjs`, run `30422166825`). The 24 were
@@ -38,7 +48,20 @@ gate over a red tree blocks every push.** Blocking target = the FULL TREE.
 a named suite, its command, and its EXIT CODE.** Severity: governance, not
 trading-safety (`backtests = 0`, nothing live).
 
-## THE PLAN — money-path ladder (BLUEPRINT v3, R-053..R-061)
+## THE PLAN — money-path ladder (**BLUEPRINT v4, ADOPTED R-445**)
+★★★★★ **v4 IS THE OPERATIVE PLAN (operator-directed, adopted R-445). CANONICAL
+TEXT: `docs/designs/BLUEPRINT-V4-DRAFT.md` (rev 2, `161f11dc`) — RED-TEAMED by
+`accuracy-validator`, all nine findings F1–F9 resolved. Its external-GPT read
+(leg 2) is [UNPROVEN] — no tool in this seat.**
+★★★★★ **CARRIER-DISCIPLINE RULE (v4 §2.5, now binding): duplicate the LADDER
+VERBATIM and POINT at the blueprint for detail. NEVER re-paraphrase — paraphrase
+is what eroded this block TWICE (3 of 5 upgrades lost 2026-07-28; the fourth
+attribution bin lost by 2026-07-29 and caught only by v4).**
+★★★★★ **A TAG-PRESENCE CHECK IS NOT A CONTENT CHECK — R-445's lesson, earned
+here: this desk verified "all five `v3-N` tags survived" the compaction and had
+silently dropped a bin from INSIDE one of them. Verify the payload, not the label.**
+★ **v4 §2.4: the `v3-N` tags exist only in the carriers, never in the ledger
+(R-061 numbers them 1..5). A ledger grep for `v3-` returning zero is EXPECTED.**
 **READ BEFORE ANSWERING "what phase are we in."**
 - **Phase 1 — SPEC COMPILATION (WE ARE HERE).** Exit: ≥1 tier-A spec compiles with
   ALL load-bearing conditions concretely bound AND the compile-fidelity forensics
@@ -46,10 +69,23 @@ trading-safety (`backtests = 0`, nothing live).
   fully bound. Flags-off: 0 of 155 bound_and_concrete. Flags-on hypothetical: 6 of
   155. Source: dual-denominator-remeasure-2026-07-21.json, frozen, refresh BLOCKED
   by REVIVAL_FAMILY.` ★★★ **R-409: NOT exitable on corpus_A; dies at BINDING.**
-- **Phase 2 — BATTERY / WAVE.** ★ **v3-1 FAILURE-ATTRIBUTION READ**, pre-registered
-  before any verdict is interpreted: {edge-absent · compile-fidelity-loss ·
-  overlay-caused}. ★ **v3-2 OVERLAY A/B**, taught-exit strategies ONLY: dual-arm,
-  house Style-C exits vs taught exits.
+- **Phase 2 — BATTERY / WAVE.** ★★★★★ **v3-1 FAILURE-ATTRIBUTION READ — FOUR
+  BINS, NOT THREE**, pre-registered before any verdict is interpreted:
+  **{edge-absent · compile-fidelity-loss (approximation residue) ·
+  OVERLAY-CONFLICT (house exits vs taught-exit edge) · `gate-artifact`}**
+  — **[MEASURED HERE, `ADVISOR-RULINGS.md:6625`, R-061 §1 verbatim].**
+  ★★★ **`gate-artifact` = "the instrument lied", and it was DROPPED from both
+  carriers until v4 caught it. It is the MODAL real-world failure: four false
+  greens in one session, a CI step with no path to red, two advisor exit-1s that
+  were not test results. RESTORED R-445 — do not lose it again.**
+  ★ **v3-2 OVERLAY A/B**, taught-exit strategies ONLY: pre-registered dual-arm,
+  house Style-C exits vs taught exits. ★★ **Trials counted honestly —
+  "effective-N tuples distinguish arms" (R-061 §2 verbatim), the anti-double-count
+  law for EVERY dual-arm read. Also dropped from the carriers; RESTORED R-445.**
+  ★★ **Phase-2 ENTRY now carries a checklist (v4 §4), incl. BATTERY-RIG
+  NULL-CALIBRATION: the wave rig has never fired (`backtests = 0`), so before the
+  first real wave it must go RED on a planted compile-infidelity and a planted rig
+  defect. A rig that has never gone red is not an instrument.**
 - **Phase 3 — CONVEYOR, not a queue.** Internal-paper + shadow-accumulation run
   CONCURRENTLY per strategy. ★ **v3-3 EVAL-ODDS PRE-COMPUTE** at pre-flight: aim
   B14/survival at the EVAL's own parameters (Combine trailing DD, profit target)
@@ -67,17 +103,35 @@ trading-safety (`backtests = 0`, nothing live).
 ★★★ **A `BLUEPRINT v4 DRAFT` sits at commit `9116d757` from a consulting seat —
 UNREAD, UNRATIFIED, NOT the plan. Read it, red-team it, rule on it explicitly.**
 
-## QUEUE (next 4, in order)
-1. Rule AR-419's result (the 156 shrink + guard).
-2. **HOLDOUT-26 two-arm read-only shadow** (R-434/R-435): FREEZE protocol first,
-   then ARM A source-resolved vs ARM B source-withheld. **A ≈ B ⇒ the semantic
-   path never ran: a VOID run.** Log a decision path per condition
-   (`SEMANTIC_SOURCE_TEXT`/`RESOLVED_POINTER_TEXT`/`LEGACY_FALLBACK`/
-   `UNCLASSIFIED`/`ERROR`). Worker delivers **mechanical rates only**.
-3. **THIS SEAT (doer ≠ grader):** write the accuracy/confusion/5-safety-error
-   rubric **FROZEN BEFORE seeing any classification** · run the C2 session-role
-   resolver and measure its yield · maintain `STRANDED-CAPABILITY-REGISTER.md`.
-4. Read + red-team + rule on BLUEPRINT v4 (`9116d757`).
+## QUEUE — re-ranked by v4's critical path (R-445)
+★★★ **v4 §1: the fastest honest path to Phase 2 is a FINITE, CURRENTLY-UNOWNED
+list. Speed comes from aiming, owning and shipping — NEVER from loosening.**
+1. **Rule the `accuracy-validator` grade → merge PR #32** (in flight).
+2. **Wire `ci/__tests__` into CI** (worker, after the grade — one-line include;
+   it touches the graded files, hence the ordering).
+3. ★★★★★ **v4 §3-1A — THE SEVEN C8 PREREQUISITES, ALL SEVEN OPEN WITH NO OWNER.
+   A prerequisite assigned to nobody is a stall order. #2 (two-arm ablation
+   pre-registration, incl. the pre-registered trap "conditions-per-strategy WILL
+   DROP and that is the fix working") and #3 (name `accuracy-validator` in the
+   authorizing ruling) are THIS SEAT'S and are the ratification milestone; #1,
+   #4–#7 are the worker's.** ★★ **#1 = the ≥3-quota consumer census: compute the
+   TRANSITIVE CLOSURE, not the grep, and publish surfaces + exclusions.**
+4. ★★ **v4 §3-1B — UNLOCK-DISTANCE RANKING (cheap, do it FIRST of the build
+   work): per spearhead spec, blocking conditions by class under a {C8-fixed}
+   counterfactual → ranked list. Instrument-audit: the ranker must REPRODUCE
+   R-426's published chain (C8→6 · +C3→15 · … · +C9→120) before its output is
+   believed. This converts "re-extract and hope" into "re-extract these named
+   videos, expected to fully bind spec X."**
+★★★ **RE-RANKED BY v4 §9: the semantic-role-classifier migration (HOLDOUT-26
+two-arm shadow, R-434/R-435) is a VALIDITY LANE, **OFF** the Phase-1 critical
+path and NEVER a Phase-2 gate. It is no longer queue-position 2. The frozen
+rubric stays advisor-owned and unspent; the populations below stay permanent.**
+★★ **Also advisor-owned, parallel and cheap (v4 §9): the `C2` session-role
+resolver yield — RUN IT, it is a post-C8 multiplier · maintain
+`STRANDED-CAPABILITY-REGISTER.md` · reconcile R-409's authorized items (v4 §12,
+[UNENUMERATED]) BEFORE any corpus_B dispatch.**
+★ **v4 §9 bound on the CI lane, which is where the worker is now: "governance;
+NEVER a merge gate for spearhead packets." Do not let it grow into one.**
 
 ## POPULATIONS — PERMANENT
 **`DEV-14`** — contaminated (13 of 14 straddle its own row-hashed "held-out"
@@ -127,10 +181,10 @@ disagreements · non-flag-gated stranded capability · C2 resolver yield · DB
 provenance preservation · timezone/calendar basis · Python's unrun 56%.
 
 ## KNOWN-BENIGN (do not investigate)
-★★★ **THE 15-MIN WATCHDOG BAR IS SHORTER THAN AR-419's AUTHORIZED ~45-MIN ETA, SO
-IT WILL FIRE ON A HEALTHY RUN. Expect fires ~01:23, ~01:38 EDT. Do NOT widen the
-bar** (that blinds it to real stalls) — read the event, then apply the
-discriminator. ★ **DISCRIMINATOR: process ALIVE + conversation `.jsonl` STILL
+★★★ **THE 15-MIN WATCHDOG BAR IS SHORTER THAN AR-421's AUTHORIZED ~30-MIN ETA
+(started 01:31 EDT, + a BLUEPRINT v4 read), SO IT WILL FIRE ON A HEALTHY RUN.
+Expect a fire ~01:46 EDT and possibly ~02:01. Do NOT widen the bar** (that blinds
+it to real stalls) — read the event, then apply the discriminator. ★ **DISCRIMINATOR: process ALIVE + conversation `.jsonl` STILL
 GROWING ⇒ silent work · ALIVE + conversation STOPPED ⇒ external account limit
 (seen 2026-07-29, an hour of silence was a usage limit) · not alive ⇒ dead.**
 `M session_windows_parity.json` phantom · a monitor event naming an OLD AR = torn
