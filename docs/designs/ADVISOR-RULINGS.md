@@ -12,6 +12,78 @@
 
 ---
 
+## R-463 · 2026-07-29 · ★★★★★ **GRADE ACCEPTED `SOUND-WITH-GAPS` (agent `aa8162301b1670de2`). CIRCULARITY, STALE-OUTPUT LEAKAGE, COMPARATOR VALIDITY AND CURRENT-STATE DETERMINISM ARE **CLOSED** — refuted at the line AND by two executions into directories that had never existed.** ★★★★★ **BUT ONE PROVENANCE CLAIM IS DOWNGRADED, NOT REOPENED: FROM "HISTORICALLY SEALED" TO **"CURRENTLY REPRODUCED; ORIGINAL TRANSCRIPT IDENTITY UNPROVABLE."** THE 40 TRANSCRIPTS WERE GITIGNORED, UNPINNED, UNHASHED AND UNRETAINED, SO WHETHER TODAY'S BYTES EQUAL THE ORIGINAL RUN'S IS `[UNRECOVERABLE AT ORIGIN]`.** ★★★★★ **AND THE NEW MANIFEST IS A **FORWARD BASELINE ONLY** — IT MAY NEVER BE BACKDATED INTO EVIDENCE FOR A RUN THAT PREDATES IT.** ★★★ **AR-450 IS RIPE: THE `13/27` EXIT-0 IS A CONFIRMED CONTRACT FAILURE**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ THE HOLD IS LIFTED. AR-449 and AR-450 are RULED. The grade landed `SOUND-WITH-GAPS` and CLOSES the four things that could have collapsed the shadow result. What remains is one honest, permanent gap and a confirmed instrument defect.**
+
+★★★★★ **CLOSED, DO NOT RE-LITIGATE: circularity (`shadow.ts` writes `:51` and never reads it back; the two imported modules have ZERO file I/O) · stale-output leakage (two runs into directories that had never existed) · comparator validity (the grader mutation-tested its OWN comparator first) · current-state determinism (two runs, `808,919` bytes, `cmp` byte-identical). The seven headline totals, the `2.75×` contamination signature, the VOID finding and the corrected `HOLDOUT-26` covenant ALL STAND.**
+
+### ★★★★★ 1 — THE GAP THAT IS PERMANENT, AND THE SENTENCE THAT MAY NEVER BE WRITTEN
+
+★★★★★ **[MEASURED, grader] `shadow.ts:20` reads 40 per-video transcripts from a GITIGNORED `tmp/` path — not tracked, not pinned, not hashed before today, not in retention. THEREFORE: whether today's transcript bytes equal the bytes the ORIGINAL run consumed is `[UNRECOVERABLE AT ORIGIN]`, unless a contemporaneous copy or hash is later FOUND.**
+★★★ **Their mtimes (Jun 24 – Jul 2) predate the run and have not moved. THAT CORROBORATES; IT DOES NOT PROVE. An mtime is a filesystem fact about a file's last write, not a statement about its bytes at some earlier read.**
+★★★★★ **THE FORBIDDEN SENTENCE, AND I AM NAMING IT SO NOBODY WRITES IT BY ACCIDENT: the manifest you build today is a **FORWARD BASELINE**. IT MUST NEVER BE BACKDATED INTO EVIDENCE FOR THE ORIGINAL RUN. "The transcripts hash to X" is true from 2026-07-29 onward and says NOTHING about 2026-07-28. A hash taken after the fact cannot testify about before.**
+
+### ★★★★★ 2 — YOUR TASK: PRESERVE THE BYTES, NOT THE HASHES
+
+★★★★★ **COPY THE 40 TRANSCRIPT FILES THEMSELVES into content-addressed, read-only retention — NOT merely their fingerprints.** ★★★ **A hash lets you detect that something changed; ONLY THE BYTES let you see WHAT changed. We have already lost one artifact to `%TEMP%` and one proof to `<scratch>`; do not make the third loss the inputs.**
+**THE RETENTION RECORD CARRIES:** population identity (which 40 videos) · per-file BYTE COUNTS · raw-byte SHA-256 · a MANIFEST HASH over the whole set · and the label **`2026-07-29 FORWARD SNAPSHOT`** stated in the README itself, not only in a ruling.
+★★ **Raw-byte hashing, and SAY SO: [MEASURED, grader] the published pins are RAW-BYTE and the sources are CRLF on disk — LF-normalising yields different, unpublished hashes. Anyone re-verifying with `dos2unix | sha256sum` gets a FALSE RED. State the convention in the manifest.**
+
+### ★★★ 3 — THREE ADDITIVE ERRATA. NEVER REWRITE FROZEN BYTES.
+★★★★★ **(a) THE RETENTION README IS FALSE AS WRITTEN.** It says the other instruments "are git-tracked in working trees and already durable — only the `%TEMP%` residents needed rescuing." [MEASURED, grader] the 40 transcripts are NEITHER tracked NOR rescued. Correct it additively.
+★★★★★ **(b) THE PIN TABLE IS OVER- AND UNDER-INCLUSIVE AT ONCE: it OMITS 40 engaged runtime inputs and INCLUDES `graph-to-engine.ts`, which [MEASURED, grader] the harness never loads — not directly, not transitively (`gate-strength.ts`'s only import is TYPE-ONLY, erased at compile time).** ★★★ **PIN COUNT IS NOT DEPENDENCY COVERAGE.**
+★★ **(c) THE MEDIANS: published `10.7%` / `3.8%`; recomputed `10.6%` / `3.6%` by TWO independent paths. Descriptive statistics, not among the seven totals, and the `2.75×` signature holds either way — correct them additively anyway, because a number that is quietly wrong teaches the next reader that quiet wrongness is tolerated.**
+
+### ★★★★★ 4 — STANDING LAW FOR EVERY FUTURE RUN OFFERED AS EVIDENCE
+**(i) Produce an ENGAGEMENT-DERIVED manifest of every file ACTUALLY READ — not the import closure, not a maintained list. What the process opened.**
+**(ii) Hash inputs BEFORE and AFTER execution.** ★★ **The "after" is what proves the run did not mutate its own inputs — and it is the half everyone skips.**
+**(iii) BIND THE MANIFEST HASH INTO THE RUN RECORD**, so an output and the exact input-set that produced it travel together.
+**(iv) State RAW-BYTES / CRLF convention explicitly.**
+★★★ **[HYPOTHESIS, and a cheap one] this is what would have closed today's gap, at a cost of one manifest per run.**
+
+### ★★★★★ 5 — AR-450: CONFIRMED CONTRACT FAILURE, AND WHAT THE FIX MUST CARRY
+★★★★★ **The coherent `DEV-13 / HOLDOUT-27` mutation EXITING `0` is a CONFIRMED CONTRACT FAILURE — not a hypothesis, not a smell. The generator that defines the anti-overfitting covenant will emit a wrong-sized partition and report success.**
+**THE HARDENING MUST ADD:** exact **`40 / 14 / 26`** cardinality assertions · validation of **BOTH** DEV and HOLDOUT labels (today only the DEV side is caught) · explicit PATH ARGUMENTS replacing the hard-coded `:32/:36/:40` · **RED FIXTURES for the contradictory label AND the coherent `13/27` input** · **plus a CLEAN GREEN CONTROL** so the suite is not always-red.
+★★★★★ **THIS IS AN INSTRUMENT CHANGE: `ratify-packet` FIRST, and an INDEPENDENT `accuracy-validator` AFTERWARD. Doer ≠ grader — and this instrument defines the population that governs tuning, so it is exactly the class that rule exists for.**
+★★ **SEQUENCE: §2 preservation → §3 errata → §5 hardening (with its packet) → R-459 step (3) the shared evaluated-prompt oracle → §14's three-point trace.**
+
+**ALLOWED:** reads · byte-copies into retention · additive errata documents · the hardening under a ratify packet · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★★★ **BACKDATING THE FORWARD MANIFEST INTO ORIGINAL-RUN EVIDENCE · rewriting ANY frozen bytes · `--relock` · re-extraction · C8 change · backtests** · `.env`/flag/DB writes · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~40 min for §2+§3.** **STOP:** a transcript's current hash CANNOT be computed (missing/unreadable file — that is a live gap, not a historical one) · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-463 · **TASK ID:** AR-449 + AR-450 + the dispatched grade · **DECISION:** **ACCEPT the grade `SOUND-WITH-GAPS`. CLOSE four theories. DOWNGRADE one provenance claim to `[UNRECOVERABLE AT ORIGIN]`. ORDER byte-preservation, three additive errata, and the generator hardening under a packet.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-450`**, ruled here together with AR-449.
+**`[EXTERNAL OPINION — ZERO AUTHORITY]` obtained BEFORE this ruling. Its median recomputation (`10.6` / `3.6`) AGREES with the grader's, reached independently — corroboration, and I record it as corroboration rather than as a second proof.**
+★★★★★ **THE DISPATCH IS REAL AND VERIFIED: agent `aa8162301b1670de2`, launched 14:12, completed, verdict on record. [MEASURED] `TaskList` was EMPTY beforehand and this desk owned the dispatch — the obligation R-460 created was discharged BY ACTION and its id is named here, which is precisely what R-438's phantom lacked.**
+
+### ★★★★★ §1 — THE DOWNGRADE, STATED SO IT CANNOT DRIFT EITHER WAY
+
+★★★★★ **THIS DOES NOT REOPEN THE SHADOW RESULT. It changes ONE claim: from "historically sealed" to "CURRENTLY REPRODUCED; ORIGINAL TRANSCRIPT IDENTITY UNPROVABLE."** ★★★ **Everything the grader closed stays closed. The totals, the `2.75×` signature, the VOID finding and the `HOLDOUT-26` covenant are untouched — and a desk that lets an honest provenance gap escalate into "the result is doubtful" has traded one false certainty for another.**
+★★★★★ **AND IT MAY NOT DRIFT THE OTHER WAY EITHER: the gap is PERMANENT unless a contemporaneous copy or hash is FOUND. Time does not convert an unprovable claim into a proven one, and neither does repetition. `[UNRECOVERABLE AT ORIGIN]` is the grade and it stays until an artifact changes it.**
+
+### ★★★ §2 — WHY THE PIN TABLE FAILED IN BOTH DIRECTIONS AT ONCE
+
+★★★★★ **[MEASURED, grader] the table PINS `graph-to-engine.ts`, which the harness never loads, and OMITS the 40 transcripts, which it reads on every video. So it was simultaneously too big and too small — and its SIZE told nobody anything.** ★★★ **[MEASURED, grader — the pinned file is absent from the runtime closure while 40 read files are absent from the table] this table was assembled by NARRATIVE RELEVANCE — `graph-to-engine.ts` is discussed in the findings prose — rather than derived from what the process opens. THAT IS WHY §4(i) DEMANDS AN ENGAGEMENT-DERIVED MANIFEST: what a program READS is a fact about execution, not about what the author considered important.**
+★★ **This is the same shape as my own R-459 error and AR-448's attribution sentence: an enumeration complete over the axis someone thought of, silent about the axis they did not.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; no re-extraction, C8 change, relock, backtest or frozen-byte rewrite authorized. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. ★★★ **#9 holds: I did not let a permanent, honest gap be softened into "corroborated therefore fine", nor inflated into doubt about a result the grader independently reproduced twice.**
+
+**FAILED OR UNPROVEN CONDITIONS:** original transcript identity — **`[UNRECOVERABLE AT ORIGIN]`, permanent absent a found artifact** · `graph-to-engine.ts`'s dirty working-tree state for OTHER consumers — **[NOT MEASURED], grader flagged** · population-40-equals-census cross-check — **[NOT MEASURED], outside the grader's authorized scope** · `regen_shadow_partition.py` — **UNGRADED, deliberately not executed by the grader; hardening ordered §5** · the evaluated-prompt hash `3edc1167…` — **[UNVERIFIED]** · §14's causal share — **HYPOTHESIS** · the 41st spec's disposition — **OPEN** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **A HASH TAKEN AFTER THE FACT CANNOT TESTIFY ABOUT BEFORE. We built the transcript manifest today and it is worth building — but it establishes a FORWARD baseline and nothing about the run it was built to explain. The temptation to cite it as provenance for 2026-07-28 will be strong precisely because it is the only artifact that exists; NAMING THE FORBIDDEN SENTENCE IN ADVANCE is the only reliable guard against a future seat writing it in good faith.** ★★★ **SECOND: PIN COUNT IS NOT DEPENDENCY COVERAGE. A four-entry table that includes a file the program never loads and omits forty it reads every run is not a small error in a good instrument — it is an instrument assembled from NARRATIVE RELEVANCE instead of from execution. Derive the manifest from what the process OPENS.** ★★ **THIRD: preserve BYTES, not hashes. A hash tells you something changed; only the bytes tell you what — and this campaign has now lost an artifact to `%TEMP%` and a proof to `<scratch>` inside twenty-four hours.**
+
+---
+
 ## R-462 · 2026-07-29 · ★★★★★ **METHOD AMENDMENT, LANDED FAST BECAUSE AR-449 IS MID-VERIFICATION: A MUTATION THAT TRIPS THE HASH GUARD PROVES ONLY THAT THE HASH GUARD WORKS. IT SAYS NOTHING ABOUT WHETHER A SEMANTIC CHECK EXISTS AT ALL — AND THE TWO CLAIMS YOU ARE VERIFYING ARE BOTH CLAIMS ABOUT SEMANTIC CHECKS.** ★★★★★ **USE A THREE-STAGE CONTROL, AND STAGE 3 IS THE DECISIVE ONE: RE-PIN THE MUTATION SO IT PASSES THE HASH GATE, THEN SEE WHETHER ANYTHING ELSE CATCHES IT.** ★★★ **THEN REPORT AND HOLD. No substantive ruling is ripe until AR-449's measured result AND agent `aa8162301b1670de2` both land**
 
 ---
