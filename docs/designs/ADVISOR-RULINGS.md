@@ -12,6 +12,83 @@
 
 ---
 
+## R-459 · 2026-07-29 · ★★★★★ **I PUBLISHED A FALSE `[MEASURED HERE]` AND THE EXTERNAL READ CAUGHT IT: COMMIT `0d998c1f` SAYS THE PROMPT-HASH VERIFIER "WAS NEVER COMMITTED". IT HAS BEEN TRACKED SINCE `895ce11e`. [MEASURED HERE] `tf-deep-scan` IS **ITS OWN GIT REPOSITORY** AND I RAN `git grep` IN THE CAMPAIGN WORKTREE — A GREP IN REPO A CANNOT SEE REPO B. **`NAME THE TREE`, BY THIS DESK, IN A COMMIT WHOSE MESSAGE INVOKED A DIFFERENT LAW TO CONVICT OTHERS.**** ★★★★★ **AND R-458 IS REVISED AT ITS LOAD-BEARING WORD: `prompt_sha256` IS **NOT** AN AUTHORITATIVE RUNTIME FINGERPRINT. [MEASURED HERE, `check-extraction-cert.ts:36-37`] IT HASHES THE **TEMPLATE SOURCE** — regex-captured, interpolation `${ATOM_TYPES.join(", ")}` UN-EVALUATED (`atomize-transcript.ts:72`) — WHILE THE EMITTER HASHES THE **EVALUATED** PROMPT. IT IS CANONICAL SOURCE CONTINUITY, NOT RUNTIME IDENTITY.** ★★★ **WHAT SURVIVES AND STILL CARRIES §14: THE `:60` INSTRUCTION DEMONSTRABLY EXISTED ACROSS THE ENTIRE EXTRACTION SPAN**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-444's STOP IS ACCEPTED — you were right to fire it and right to stop. AR-433 · 434 · 435 · 437 · 439 · 441 · 444 ARE ALL NOW RULED (§4). The external read the desk was waiting on has arrived; the hold is LIFTED.**
+
+★★★★★ **BEFORE YOUR TASK — A CORRECTION AGAINST THIS DESK YOU MUST CARRY, BECAUSE IT CHANGES WHAT YOU BUILD: I told this campaign, in commit `0d998c1f`, that no prompt-hash verifier existed and that one must be written. THAT WAS FALSE. [MEASURED HERE] `scripts/check-extraction-cert.ts` and `certification-lock.json` have been TRACKED IN THE `tf-deep-scan` REPOSITORY SINCE `895ce11e` — the very backfill commit AR-441 analysed.** ★★★ **DO NOT BUILD A DUPLICATE. FIX THE ONE THAT EXISTS.**
+
+### ★★★★★ 1 — WHAT IS WRONG WITH THE EXISTING VERIFIER, MEASURED AT THE LINE
+
+★★★ **(a) CRLF ASYMMETRY → false RED on Windows. [MEASURED HERE] `check-extraction-cert.ts:34` normalizes full-file surfaces (`.replace(/\r\n/g,"\n")`); `:35` reads `atomize-transcript.ts` and `:36-37` hashes the extracted PROMPT **WITHOUT** that normalization. Raw worktree hash `3a4b9420…` vs LF/Git-source `c75a2da8…`.**
+★★★★★ **(b) THE ONE THAT MATTERS: SOURCE ≠ EVALUATED. [MEASURED HERE] `:36` captures `const PROMPT = \`([\s\S]*?)\`;` and `:37` hashes `m[1]` — RAW SOURCE TEXT still containing the literal `${ATOM_TYPES.join(", ")}` (`atomize-transcript.ts:72`). The live emitter hashes the EVALUATED `PROMPT`. On LF input: source body `c75a2da8…`, evaluated prompt `3edc1167…`. THEY ARE DIFFERENT OBJECTS AND THE LOCK PINS THE WRONG ONE.**
+★★ **[EXTERNAL OPINION, and I have verified (a) and (b) at the line but NOT re-derived `3edc1167…` myself — treat that specific value as UNVERIFIED-BY-THIS-DESK until your oracle emits it.]**
+
+### ★★★★★ 2 — YOUR INSTRUMENT TASK: ONE SHARED ORACLE, NOT A SECOND TOOL
+
+**Build a SINGLE canonical evaluated-prompt hashing oracle and have BOTH the checker AND the emitter call it.** ★★★ **[MEASURED HERE — the two hashes above came from two separate code paths] two independent implementations of "the prompt hash" is HOW these diverged; a shared oracle removes the second path instead of merely detecting its drift.**
+**REQUIRED FIXTURES — and each must be shown to go RED for its own reason:**
+`eb6eea7c` → **RED** · `7afc7946` · `dc8a150b` · `9776b387` · `895ce11e` · current HEAD → **GREEN** · **LF/CRLF equivalence** (same logical content, both line endings, same hash) · **TEMPLATE-INTERPOLATION PARITY** (source-with-`${…}` vs evaluated must be distinguished, and the oracle must hash the EVALUATED form) · **FAIL-LOUD PROMPT EXTRACTION** (if the regex misses, THROW — never emit `PROMPT_NOT_FOUND` as if it were a hash).
+★★★★★ **THAT LAST ONE IS LIVE TODAY: [MEASURED HERE] `:37` writes the STRING `"PROMPT_NOT_FOUND"` into the hash slot on a regex miss. A sentinel string sitting where a hash belongs compares unequal and reads as a content change — a false RED that hides a real extraction failure.**
+★★★ **THIS IS AN INSTRUMENT CHANGE: it rides `ratify-packet` and takes an INDEPENDENT `accuracy-validator` grade. Doer ≠ grader.**
+
+### ★★★ 3 — SEQUENCE, AND NOTHING JUMPS IT
+**(1)** ★★★★★ **PRESERVE FIRST, RERUN SECOND: the shadow harness and its 2,351-row output were recovered from `%TEMP%`. Copy the exact hash-matched `shadow.ts` and `shadow_rows.json` into durable retention BEFORE re-running anything, then re-run from the PINNED inputs and obtain an independent `accuracy-validator` result.** ★★ **Preserve, then reproduce — a re-run that overwrites its own only copy destroys the thing it was checking.**
+**(2)** **Publish an ADDITIVE, DATED ERRATUM on the frozen artifact. ★★★ DO NOT rewrite the frozen bytes.** The correction is a new document that points at the old one.
+**(3)** Harden the prompt-hash oracle (§2).
+**(4)** Resume §14's three-point provenance trace.
+★★★★★ **THE DEV-14 / HOLDOUT CORRECTION: [EXTERNAL OPINION] the published DEV-14 list is wrong — `psH--oXkD8M` and `x1ydP8bC7OE` OUT, `ktkqq7QsN9Q` and `sVkmZklJDHI` IN.** ★★★ **`psH--oXkD8M` is [MEASURED, AR-444] the 41st spec, whose video is in NEITHER the frozen census NOR the live library — so the published DEV list contained a video outside the population entirely.** ★★★★★ **REGENERATE BOTH LISTS MECHANICALLY — HOLDOUT as the COMPLEMENT, emitted by an instrument, NEVER hand-edited (R-453: a report's table is an output, not a transcription). And VERIFY the four names against the census yourself; I have not.**
+★★★★★ **UNTIL THAT LANDS: THE PUBLISHED DEV/HOLDOUT COVENANT MUST NOT GOVERN TUNING. Aggregate results remain supported; the population split does not. HOLDOUT-26 is the anti-overfitting covenant, and a covenant with a wrong membership list protects nothing.**
+
+**ALLOWED:** reads · SELECT-only DB under `SET default_transaction_read_only = on` · durable-retention COPIES · fix `check-extraction-cert.ts` + the emitter's shared oracle · fixtures · an additive erratum document · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★★★ **NO RE-EXTRACTION · NO C8 FIX · NO BACKTEST · NO `--relock` · NO REWRITE OF ANY FROZEN ARTIFACT'S BYTES** · no duplicate verifier · no `.env` writes · no flag changes · no DB writes · no tower · no `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~45 min for (1)+(2).**
+**STOP:** the preserved copy does not hash-match what the harness actually used · `backtests total > 0` · the DEV/HOLDOUT regeneration disagrees with the four named videos — **report, do not adopt either list.**
+
+---
+
+**RULING ID:** R-459 · **TASK ID:** AR-444 (+ the six held reports) · **DECISION:** **ACCEPT AR-444's STOP. REVISE R-458. CORRECT MY OWN COMMIT `0d998c1f`. DISPOSE ALL SEVEN HELD REPORTS (§4). ORDER preserve → erratum → oracle → trace.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-444`**, ruled here.
+**`[EXTERNAL OPINION — GPT, ZERO AUTHORITY]` obtained BEFORE this ruling, per the operator's standing order — the first time this session that sequence was honoured without a correction. Premises audited below; two verified at the line, one adopted unverified and labelled.**
+
+### ★★★★★ §1 — MY FALSE MEASUREMENT, AND IT IS THE CAMPAIGN'S OWN CONVICTED LAW
+
+★★★★★ **[MEASURED HERE] `tf-deep-scan` IS A SEPARATE GIT REPOSITORY (`git rev-parse --show-toplevel` → `C:/Users/tonio/Projects/trading-forge/tf-deep-scan`). `git ls-files` there lists BOTH `scripts/check-extraction-cert.ts` AND `certification-lock.json`, first committed at `895ce11e` — the exact commit the external read named, and the exact backfill commit AR-441 analysed.**
+★★★★★ **MY COMMIT `0d998c1f` PUBLISHED THE OPPOSITE AS `[MEASURED HERE]`. I ran `git grep -l 'c75a2da8'` inside `wt-h1-wave4-20260712` and reported "4 files, all prose — no committed verifier exists." A GREP IN ONE REPOSITORY CANNOT SEE ANOTHER. The instrument was tracked the whole time.**
+★★★★★ **AND THE AGGRAVATING PART IS THE REASONING I SHOWED WHILE DOING IT: I explicitly widened my surface, saying "publishing a negative from a too-narrow surface is the exact error I've catalogued all night" — then widened along the PATH axis (one directory → repo-wide) and NEVER QUESTIONED THE REPOSITORY AXIS. `A CENSUS IS BOUNDED BY ITS SURFACE` — AND A SURFACE HAS MORE THAN ONE DIMENSION. Widening the dimension you already suspect is not widening.**
+★★★ **I then used that false negative to convict the campaign of a second `instrument-as-rumour` instance and to propose building a duplicate tool. Correction is VISIBLE per ledger protocol rule 4; `0d998c1f` is annotated in `ADVISOR-STATE`. THE `%TEMP%` INSTANCES THAT ARE REAL — the census payload, and the shadow harness in §3 — STAND. This one was mine and it was false.**
+
+### ★★★★★ §2 — R-458 REVISED AT ITS LOAD-BEARING WORD
+
+**R-458 declared `prompt_sha256` AUTHORITATIVE and discharged the chain on it. THAT WORD IS NOW WRONG AND I AM REPLACING IT, NOT DEFENDING IT.**
+★★★★★ **[MEASURED HERE] `check-extraction-cert.ts:36` captures `const PROMPT = \`([\s\S]*?)\`;` and `:37` hashes `m[1]` — the RAW SOURCE, still containing the un-evaluated interpolation `${ATOM_TYPES.join(", ")}` at `atomize-transcript.ts:72`. The live emitter (`:240`) hashes the EVALUATED `PROMPT`. THE LOCK AND THE EMITTER HASH TWO DIFFERENT OBJECTS.** ★★★ **[MEASURED HERE] the CRLF handling is asymmetric in the same function: `:34` normalizes, `:35` does not.**
+★★★★★ **CORRECTED CLAIM, AND IT IS NARROWER: `c75a2da8…` ESTABLISHES CANONICAL TEMPLATE-SOURCE CONTINUITY, NOT RUNTIME-PROMPT IDENTITY.**
+★★★★★ **WHAT SURVIVES, AND IT IS ENOUGH TO CARRY §14: the red/green result still discriminates — `eb6eea7c` DIFFERS while `7afc7946`, `dc8a150b`, `9776b387`, `895ce11e` and HEAD share one template source. THEREFORE THE `:60` INSTRUCTION DEMONSTRABLY EXISTED, UNCHANGED, ACROSS THE ENTIRE EXTRACTION SPAN. §14's repointing and its three-point trace remain justified. Its CAUSAL SHARE remains a HYPOTHESIS, unchanged.**
+★★ **WHAT DOES NOT SURVIVE: any claim that we know the exact bytes the model received at runtime. We know the SOURCE did not drift. That is a real fact and a smaller one.**
+
+### ★★★ §3 — THE `%TEMP%` INSTANCE THAT IS REAL
+
+★★★★★ **[EXTERNAL OPINION] the shadow harness and its 2,351-row output were recovered from `%TEMP%`. THAT IS the instrument-as-rumour class, genuinely — and it governs a stronger constraint than mine did: PRESERVE THE EXACT HASH-MATCHED COPIES BEFORE RE-RUNNING.** ★★★ **A re-run is not a preservation. If the only copy is in a temp directory and you re-run to "confirm" it, a differing result cannot be distinguished from a lost original.** ★★ **Then rerun from PINNED inputs and take an INDEPENDENT `accuracy-validator` grade — doer ≠ grader, and this is exactly the surface that rule exists for.**
+
+### ★★★ §4 — DISPOSITION OF THE SEVEN HELD REPORTS
+
+**AR-433** — **REVISE (narrow).** Findings stand; retain the sweep CLI fail-open correction. **AR-434** — **REVISE (narrow), same.** ★★ Its self-disclosure (report ≠ committed artifact) stands and was correct. **AR-435** — **ACCEPT** the handoff. **AR-437** — **ACCEPT** its measured stop and premise correction; it is the report that started this chain and it was right. **AR-439** — **SUPERSEDED where it says the prompt was absent from the repository** (it was in another repo, and its own §0 had already begun withdrawing the framing); **its scoped provenance measurements are RETAINED.** **AR-441** — **REVISE:** "authoritative runtime hash" → **"canonical template-source continuity."** ★★ Its audit, its red control and its refusal to infer all stand; only the strength of the word changes. **AR-444** — **ACCEPT the stop and the document defect. HOLD final clean-run adoption** until the recovered temporary instrument is retained and independently re-run.
+
+### §5 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; nothing here authorizes execution, and `--relock`, re-extraction and frozen-byte rewrites are explicitly forbidden. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree; `tf-deep-scan` was READ only. ★★★ **#9 holds: I annotated my own false `[MEASURED HERE]` at the top of this ruling rather than letting a correct-sounding commit stand in the record.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the evaluated-prompt hash `3edc1167…` — **[UNVERIFIED BY THIS DESK]**, adopted from the read and labelled · the DEV-14 four-name correction — **[UNVERIFIED BY THIS DESK]**, regeneration ordered mechanically · whether an earlier extractor stage preceded the atomizer — **[NOT MEASURED]** · §14's causal share — **HYPOTHESIS** · the 41st spec's disposition (why it exists, whether more sit outside the surveyed surfaces) — **OPEN** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **A SURFACE HAS MORE THAN ONE DIMENSION, AND WIDENING THE ONE YOU ALREADY SUSPECT IS NOT WIDENING. I caught myself about to publish a directory-scoped negative, deliberately widened to "repo-wide", and shipped a false `[MEASURED HERE]` — because the object lived in A DIFFERENT REPOSITORY, an axis I never considered. `NAME THE TREE` now has a sibling: **NAME THE REPO.** Before publishing "it does not exist", enumerate the SPACES searched, not just the paths.** ★★★ **SECOND: the external read earned its standing order tonight. It refuted a claim I had committed twenty minutes earlier and demoted a word — "authoritative" — that my own ruling had rested a chain on. Both were verifiable at the line in under two minutes, and neither would have been questioned by me, because I had already checked and believed myself.** ★★ **THIRD: a verifier that writes `"PROMPT_NOT_FOUND"` into a hash slot converts an extraction failure into a content-drift false RED. A SENTINEL STRING IN A VALUE SLOT IS A SILENT TYPE ERROR WEARING A RESULT'S CLOTHES.**
+
+---
+
 ## R-458 · 2026-07-29 · ★★★★★ **THE MEASUREMENT CHAIN IS DISCHARGED. `prompt_sha256` IS **AUTHORITATIVE** — OUTCOME 1, PROVEN BY A TEST THAT GOES RED AT `eb6eea7c` AND MATCHES AT ALL FOUR LATER COMMITS SPANNING EXTRACTION AND BACKFILL. THE CENSUS WAS PRODUCED BY A **THIRD** PIPELINE, `atomize-transcript.ts` / `compiler-v3-union-1.0` — NEITHER PROMPT v4 NAMES.** ★★★★★ **AND THE WORKER WITHDREW ITS OWN DRAMATIC HEADLINE: "the prompt matches NOTHING in this repository" WAS LITERALLY TRUE AND MISLEADING — THE PROMPT IS A TEMPLATE LITERAL INSIDE A `.ts` FILE, NOT A `.md` BLOB. ITS CONTROL PROBE HASHED A *FILE* AND SO NEVER EXERCISED THE CASE THE SWEEP FACED: `A GREEN CHECK WITH NO PATH TO RED`, SHIPPED AS THE CONTROL.** ★★★ **AR-442 HANDOFF ACCEPTED. THE SUBSTANTIVE JUDGMENT IS NOW RIPE AND REMAINS HELD FOR THE OPERATOR'S EXTERNAL READ**
 
 ---
