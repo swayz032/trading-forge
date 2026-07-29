@@ -12,6 +12,65 @@
 
 ---
 
+## R-449 · 2026-07-29 · ★★★★★ **AMENDMENT IN FLIGHT — AR-426, READ THIS BEFORE YOU BUILD THE RANKER'S OUTPUT. THE CONTRACT GAINS THREE FIELDS, AND ONE OF THEM ARRIVED AS AN UNDEFINED METRIC NAME WHICH I AM DEFINING HERE RATHER THAN LETTING YOU INVENT.** ★★★ **`[EXTERNAL OPINION]` RECEIVED AND CARRIED AS THAT GRADE, NEVER AS MEASURED — and the protocol I flagged as unwired demonstrated its own mechanism by arriving: THE OPERATOR IS THE CONDUIT.** ★★★★★ **EXTERNAL-REVIEW PROTOCOL RULED: `SCOPED OUT` as a universal pre-ruling requirement, because a rule that silently does not happen is worse than either state — and a universal one CANNOT be satisfied by a desk ordered to keep nothing waiting on the operator**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-426 — YOU ARE MID-TASK AND CORRECTLY SO. R-448's contract STANDS; this AMENDS its output shape only. Nothing you have built is wasted; the acceptance gate is unchanged.**
+
+**THE OUTPUT CONTRACT GAINS THREE FIELDS.** Per spec, now report:
+`spec` · `distinct affected VIDEOS` · `residual non-C8 blocker CLASSES` · **`residual blocker COUNT`** · **`expected UNLOCK DISTANCE`** · **`named VIDEOS recommended for re-extraction`**
+
+★★★★★ **AND I AM DEFINING `unlock distance` RATHER THAN PASSING YOU A BARE NOUN. It arrived undefined, and an undefined metric name is this desk's convicted `metric-name ↔ instrument` error — R-400 once ordered a measurement of `EXACT-NOW`, a metric that exists in no code, and the worker had to invent one. Not again:**
+
+> **`expected unlock distance` (spec) := the number of ADDITIONAL blocker CLASSES beyond C8 that must be corrected before that spec has ZERO blocking conditions.**
+> **Distance `0` ⇒ the C8 fix ALONE fully binds that spec — those are the targets.**
+
+★★★ **DO NOT COLLAPSE THE THREE NUMBERS INTO ONE. Report distance, residual CONDITION count, and distinct VIDEO count SIDE BY SIDE — R-447 made "never collapse the aggregate" standing law, and a single "distance" score would hide exactly the structure this ranking exists to expose.** ★★ **RANK on distance ascending; tie-break on fewest residual conditions, then fewest distinct videos. If you judge a different rank key is truer to "expected progress toward a fully bindable strategy", USE IT AND DEFEND IT IN THE AR — you are closer to the artifacts than I am.**
+★ **If the frozen artifacts cannot support one of these fields, say which and what would — do NOT synthesize it. An honest missing column beats an inferred one.**
+
+**THE FAILURE SPEC IS SHARPENED — this replaces R-448's bare "STOP and report":** if the ranker cannot reproduce `C8→6 · +C3→15 · +C2→27 · … · +C9→120`, **STOP, publish the discrepancy, and NAME WHICH OF THE FOUR IT IS: the POPULATION · the CLASS MAPPING · the DENOMINATOR · or an ARTIFACT mismatch.** ★★★ **That list is better than mine and it is the actual diagnostic — three of this campaign's worst errors were exactly a denominator or a population swap wearing a correct-looking number.**
+
+★★★ **UNCHANGED AND STILL BINDING: label the result an INDEPENDENT MEASUREMENT, never a confirmation — the historical per-video decomposition is `[UNVERIFIED]`. The unit is the distinct SOURCE VIDEO, never the three market copies.**
+
+★★★★★ **AND A SHARPENING ON THE CI GUARD YOU INHERITED — this CORRECTS my R-448 wording. I wrote that a new vitest status is "a one-line fix". That was too glib.** ★★★ **ADD A NEW STATUS TO `KNOWN_STATUSES` ONLY AFTER CONFIRMING ITS SEMANTICS — a status like `retried` or `flaky` is not obviously `passed`, and mapping it wrong would silently corrupt the passed-set that the whole baseline gate depends on. The guard is fail-loud BY DESIGN: do not weaken or bypass it to make a lane green.**
+
+---
+
+**RULING ID:** R-449 · **TASK ID:** operator-relayed external review · **DECISION:** **ADOPT the three added output fields and the sharpened failure spec. DEFINE `unlock distance`. RULE the external-review protocol `SCOPED OUT`. No re-authorization needed — AR-426 continues.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-426`** — a start-receipt on v4 §3-1B, seated and running. This ruling amends its contract mid-flight and does not interrupt it.
+
+### ★★★ §1 — THE EXTERNAL READ: WHAT IT RATIFIED, AND WHY THAT IS NOT WHY IT IS TRUE
+
+**`[EXTERNAL OPINION]`** — carried at that grade, never `[MEASURED]`. **It ratifies R-447 §2's tree-keyed disposition in the operator's own framing: `10 items present in the executing lane` + `1 additional real campaign-lane item absent from the executing lane`; production count 10; campaign may read 11; the difference stays tree-keyed; no report may use the campaign row to inflate production capability; no cleanup may erase it while the lane-divergence investigation is open.**
+★★★★★ **THAT AGREEMENT IS NOT EVIDENCE AND I WILL NOT RECORD IT AS ANY. Two readers concurring is concurrence. What makes the tree-keyed record true is AR-377's MEASUREMENT — the row dumped raw in one lane and absent in the other, against `spec_family_bindings.py` at 160,049 B vs 35,046 B. Standing law: agreement between readers is not evidence; DISAGREEMENT resolves by measurement. Had this read disagreed, the answer would still have been the measurement.**
+★★ **Its premises audited and found sound where checkable: the R-448 handoff facts, the task state (`AUTHORIZED` / assignee `NONE`), the fidelity classes, and the zero-backtests / no-connected-capital operational state all match this ledger. ★ It arrived numbered `R-449` and [MEASURED HERE] `R-449` was genuinely free — the ledger stood at `R-448`. Unlike the previous relay, no collision.**
+
+### ★★★★★ §2 — THE EXTERNAL-REVIEW PROTOCOL, RULED: `SCOPED OUT`
+
+**The directive is right that an unwired rule which silently fails is the worst of the three states, and it demanded one explicit choice. I choose `SCOPED OUT`, and the reasoning is not convenience:**
+★★★ **A UNIVERSAL PRE-RULING EXTERNAL READ IS STRUCTURALLY INCOMPATIBLE WITH THE OPERATOR'S OWN STANDING ORDER. This desk was told "no decision is waiting on me — you make decisions on my behalf." A requirement that every ruling first obtain an operator-relayed external opinion makes every ruling synchronous on operator availability, which either blocks the campaign or gets skipped — and skipping is precisely the silent failure being outlawed.** ★★ **[MEASURED HERE] it was skipped for R-445, R-446, R-447 and R-448, and I flagged its absence each time rather than claiming it occurred.**
+
+**THE PROTOCOL, AS IT NOW STANDS:**
+- **The universal pre-ruling requirement is WITHDRAWN.** No ruling is blocked awaiting an external read.
+- **External review is OPERATOR-INVOKED**, by relay, exactly as demonstrated here. **The operator is the mechanism; there is no tool in this seat and I will not pretend otherwise.**
+- **Every relayed read is carried as `[EXTERNAL OPINION]`, named as an input, and its premises AUDITED** — never `[MEASURED]`, never adopted wholesale. **Two have now arrived mislabelled or imprecise (an "R-436" that cited counts no AR had reported; an "R-440" that collided with a live ruling; and this one's `unlock distance`, an undefined metric).**
+- ★★★ **STANDING BAN, RESTATED: no advisor report may state or imply that an external review occurred when it did not.** That was already true and remains the operative safeguard.
+- ★ **The desk MAY flag, in a ruling, that a decision would have benefited from one — as a NAMED GAP, never as a block.**
+
+### ★★ §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — [MEASURED HERE] `backtests total = 0`; no live trading, no connected capital, and this ruling authorizes no execution. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. **#9 holds** — I did not adopt an external read's undefined metric to avoid the friction of defining it.
+
+**FAILED OR UNPROVEN CONDITIONS:** v4 §3-1B — **IN FLIGHT (AR-426)**, unblocked, contract amended here · the cumulative-chain reproduction — **[UNPROVEN, and it is the acceptance gate]** · R-426's per-video decomposition — **[UNVERIFIED]**, which is why the new result is an independent measurement · the 160 KB ↔ 35 KB lane divergence — **OPEN**, R-415 gate, pulled earlier by v4 §3-1E · the magnitude of `-igp`'s mismatch **[UNMEASURED]** · charter ratification by name **[NOT MEASURED]** · the 6 `UNKNOWN` absences and the 2 stale `lifecycle-transitions` assertions — **OPEN, UNASSIGNED, deliberately.**
+
+**LESSON TO PERSIST.** ★★★★★ **A METRIC NAME IS NOT A METRIC. `expected unlock distance` arrived as a required output field with no definition, and a worker asked for it would have had to invent an instrument and then defend a number nobody had specified. THE DESK THAT ORDERS A MEASUREMENT OWES ITS DEFINITION IN THE SAME SENTENCE — and if the desk cannot define it, that is the finding.** ★★★ **SECOND: an external read is an INPUT, not an authority. This one was right about the tree-keyed record, better than me on the failure spec, better than me on the `KNOWN_STATUSES` semantics — and still shipped an undefined metric and a ruling number that had to be checked. Take the sharpenings, audit the premises, define what it left bare.** ★★ **THIRD: the honest resolution of an unwired standing rule is to CHANGE ITS STATE, not to keep flagging it. Four rulings flagged the same gap; one ruling closed it.**
+
+---
+
 ## R-448 · 2026-07-29 · ★★★★★ **DECLINE-RECEIPT ACCEPTED — AND I AM NOT CONVERTING IT INTO A STOP ORDER. v4 §3-1B REMAINS AUTHORIZED AND READY; ITS ASSIGNEE IS RE-LABELLED `NONE — AWAITING A WORKER SEAT`, IN THIS SAME MOTION, WHICH IS THE STEP THAT WAS MISSED ON 2026-07-28 AND COST AN HOUR.** ★★★ **AR-425 IS THE CLEANEST HANDOFF THIS CAMPAIGN HAS RECEIVED: nothing half-done, no sub-agent owed (VERIFIED, not assumed), both worktrees swept, and the junction trap handled correctly — `node_modules` verified intact at 329 entries.** ★★ **AND IT SHIPPED A RISK IT DID NOT HAVE TO NAME**
 
 ---
