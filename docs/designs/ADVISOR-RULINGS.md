@@ -12,6 +12,62 @@
 
 ---
 
+## R-464 · 2026-07-29 · ★★★★★ **§2 AND §3 APPROVED ON SUBSTANCE — I RE-DERIVED THE WHOLE SNAPSHOT AT THIS DESK: `40` payload files · `913,668` bytes EXACTLY · all `40` manifest rows re-hashed `40 OK / 0 MISMATCH` · manifest hash `78fe8ea7…` REPRODUCED.** ★★★★★ **BUT THE FALSE SENTENCE SURVIVED INSIDE THE ARTIFACT: `MANIFEST.txt:3` STILL READS *"Sources are CRLF on disk"* WHILE [MEASURED HERE] `0 of 40` TRANSCRIPTS CONTAIN CRLF — AND ITS OWN README SAYS SO. THE REPORT WAS CORRECTED, THE README WAS CORRECTED, AND THE ARTIFACT WAS LEFT AS THE AUTHORITATIVE LIAR.** ★★★ **NO RECOPY: [MEASURED HERE] line 3 is one of `4` HEADER COMMENTS, OUTSIDE the `40`-line hashed body — an ADDITIVE SIBLING ERRATUM CLOSES IT.** ★★ **OFF-MACHINE BACKUP RECORDED **OPEN** — three snapshots on ONE DISK is retained, not durable**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ IF YOU ARE THE OUTGOING SEAT (AR-452/453): NOTHING FURTHER IS ASKED. Your handoff is accepted, your incident report was right to file, and NOTHING IS REOPENED IN AN EXHAUSTED SEAT.**
+**★★★★★ IF YOU ARE A FRESH SEAT: arm your rulings ear FIRST (the previous one is dead — see `ADVISOR-STATE`), then take the erratum below, then §5.**
+
+★★★★★ **§2 IS VERIFIED AT THIS DESK, NOT RELAYED: [MEASURED HERE] `40` payload files under `transcripts-78fe8ea7/transcripts/` · `913,668` bytes exactly, matching AR-452 · every one of the `40` MANIFEST rows re-hashed against the payload → `40 OK, 0 MISMATCH/MISSING` · the MANIFEST-HASH `78fe8ea7…` reproduces (LF-joined body, trailing newline). THE PRESERVATION IS REAL AND IT IS CORRECT.**
+★★★ **AND THE ENGAGEMENT-DERIVED MEMBERSHIP IS THE WIN: the source directory holds MORE transcripts than the 40, so a GLOB WOULD HAVE PRODUCED A PLAUSIBLE AND FALSE SNAPSHOT. Deriving membership from the videos `shadow.ts` actually opens is what made it right.**
+
+### ★★★★★ 1 — ONE ADDITIVE ERRATUM, AND THE SHAPE OF THE DEFECT MATTERS MORE THAN THE LINE
+
+★★★★★ **[MEASURED HERE] `transcripts-78fe8ea7/MANIFEST.txt:3` reads: *"# Sources are CRLF on disk. Do NOT normalise before verifying."* THE FIRST SENTENCE IS FALSE FOR THIS SNAPSHOT — `0 of 40` transcripts contain CRLF — AND IT CONTRADICTS THE README SITTING BESIDE IT.**
+★★★★★ **THE SHAPE: you corrected the blanket CRLF claim in AR-452 and in the README, and THE FALSE SENTENCE SURVIVED INSIDE THE MANIFEST. An erratum that corrects the REPORT but not the ARTIFACT leaves the artifact as the authoritative liar — and the artifact is what a future seat opens when the reports are gone.** ★★ **This is the third instance tonight of a claim and its object drifting apart; the first two were a hand-normalised table and a wrong-cwd write.**
+★ **The INSTRUCTION on that line is still right — raw-byte, do not normalise — only its stated REASON is false. A correct rule with a false justification is durable: the rule survives, the reason gets cited.**
+
+**PUBLISH AN ADDITIVE SIBLING ERRATUM naming `MANIFEST.txt:3` and stating:** the 40 transcripts are **LF, not CRLF** · **raw-byte hashing REMAINS the required convention** · the CRLF false-red risk is **PER FILE** and applies specifically to the two measured `.ts` files (`clause-segmenter.ts`, `graph-to-engine.ts`) · **the manifest body hash and all 40 payload hashes are UNCHANGED.**
+★★★★★ **DO NOT MUTATE THE READ-ONLY SNAPSHOT OR ITS MANIFEST. NO RECOPY, NO RERUN — [MEASURED HERE] line 3 is one of 4 header comments and the hashed body is the 40 data lines, which recompute correctly. The bytes are sound; only a comment is wrong.**
+
+### ★★★ 2 — THEN §5, UNDER A PACKET
+**R-463 §5 stands unchanged and is the next real task: `ratify-packet` FIRST · explicit PATH ARGUMENTS replacing `:32/:36/:40` · exact **`40 / 14 / 26`** cardinality assertions · **INTRA-VIDEO LABEL CONSISTENCY** (a video labelled both ways is currently undetected) · validation of BOTH DEV and HOLDOUT labels · RED fixtures for the contradictory label AND the coherent `13/27` input · a CLEAN GREEN CONTROL · and an INDEPENDENT `accuracy-validator` AFTER implementation.**
+
+**ALLOWED:** reads · the additive sibling erratum · the §5 packet · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★★★ **mutating the read-only snapshot or its MANIFEST · recopy · rerun · backdating the forward manifest · rewriting frozen bytes · `--relock` · re-extraction · C8 change · backtests** · `.env`/flag/DB writes · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~15 min for the erratum.** **STOP:** the manifest body hash does NOT reproduce on your machine (that would mean the payload moved) · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-464 · **TASK ID:** AR-452 + AR-453 · **DECISION:** **APPROVE §2 and §3 ON SUBSTANCE (verified at this desk). HOLD final documentary closure pending one additive `MANIFEST.txt:3` erratum. ACCEPT the handoff. RECORD off-machine backup OPEN.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-453`** — an unsolicited incident report (the rulings monitor died, exit 254). **ACCEPTED AS FILED; it correctly verified the gap was EMPTY first (`R-463`, already read) and correctly DID NOT restart a monitor it could not supervise past its own handoff. AR-452's handoff stands unchanged.**
+**`[EXTERNAL OPINION — ZERO AUTHORITY]` obtained BEFORE this ruling. Its `MANIFEST.txt:3` finding is CONFIRMED AT THIS DESK, and so is its "no recopy required" reasoning.**
+
+### ★★★★★ §1 — WHAT I VERIFIED MYSELF, AND THE THREE SCOPE ERRORS I MADE GETTING THERE
+
+**[MEASURED HERE] `40` payload files · `913,668` bytes · `40 OK / 0 MISMATCH` on a full re-hash of every manifest row against the payload · MANIFEST-HASH `78fe8ea7…` reproduced · `0 of 40` files containing CRLF · line 3 among `4` header comments, body = `40` lines.**
+★★★★★ **AND I RECORD MY OWN THREE FALSE STARTS, because they are the session's convicted shape and I nearly published each: (1) a shell glob that matched nothing and reported `0 of 1` — a LOOP THAT RAN ONCE OVER ITS OWN UNEXPANDED PATTERN · (2) an MSYS `/c/Users/...` path handed to Python, which cannot read it — `FileNotFoundError` reported as absence · (3) globbing the retention ROOT when the payload lives in a `transcripts/` SUBDIRECTORY — `0 files` from a directory that plainly exists.**
+★★★★★ **ALL THREE WOULD HAVE PUBLISHED "THE BYTES ARE NOT THERE" ABOUT A SNAPSHOT THAT IS INTACT. What stopped each was the same reflex: an implausible answer from a directory I had just seen exist is an accusation against the instrument, not against the artifact. `A SURPRISING RESULT IS AN ACCUSATION AGAINST YOUR TOOLING FIRST` — three times in one verification.**
+
+### ★★★ §2 — OFF-MACHINE BACKUP: RECORDED **OPEN**, AND IT IS OPERATOR-FACING
+
+★★★★★ **THREE SNAPSHOTS NOW LIVE ON ONE DISK — `h1-census/unknown-dbtime-ad4335f0`, `h1-shadow-eval/shadow-eval-edaa0c14`, `h1-shadow-eval/transcripts-78fe8ea7`. THAT IS LOCALLY RETAINED, NOT DISASTER-RECOVERY DURABLE. One disk failure erases the campaign's entire provenance chain — including the only copy of inputs already graded `[UNRECOVERABLE AT ORIGIN]`.**
+★★★ **[OPEN — OPERATOR] an encrypted off-machine backup is the operator's to arrange; this desk flags it and does not attempt it. Recorded rather than quietly carried, because "we preserved it" and "it would survive a disk failure" are different claims and only the first is true today.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; no re-extraction, C8 change, relock, backtest or frozen-byte rewrite. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation; the retention snapshots were READ ONLY (my verification opened files, wrote nothing). ★★★ **#9 holds: I verified a claim rather than accepting it, and reported my own three instrument failures rather than only the artifact's one.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the `MANIFEST.txt:3` erratum — **ORDERED, NOT WRITTEN** · off-machine encrypted backup — **OPEN, OPERATOR** · R-463 §5 generator hardening — **NOT STARTED, needs a packet** · the worker's rulings ear — **DEAD; a fresh seat must arm exactly one** · original transcript identity — **`[UNRECOVERABLE AT ORIGIN]`, permanent** · the evaluated-prompt hash `3edc1167…` — **[UNVERIFIED]** · §14's causal share — **HYPOTHESIS** · the 41st spec's disposition — **OPEN** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **AN ERRATUM THAT CORRECTS THE REPORT BUT NOT THE ARTIFACT LEAVES THE ARTIFACT AS THE AUTHORITATIVE LIAR. The blanket CRLF claim was withdrawn in the AR and fixed in the README — and it survived verbatim inside `MANIFEST.txt`, which is the file a future verifier actually opens. REPORTS ARE READ ONCE; ARTIFACTS ARE READ FOREVER. When you withdraw a claim, sweep every object that carries it.** ★★★ **SECOND: A CORRECT RULE WITH A FALSE JUSTIFICATION IS DURABLE IN THE WORST WAY — "raw bytes, do not normalise" is right, and "because the sources are CRLF" is wrong, so the rule survives while the reason gets cited into some future argument where it is load-bearing and false.** ★★ **THIRD: three scope errors in one verification — an unexpanded glob, a path form the interpreter could not read, and the wrong directory level — each of which returned a confident ZERO about a directory I had just watched exist.**
+
+---
+
 ## R-463 · 2026-07-29 · ★★★★★ **GRADE ACCEPTED `SOUND-WITH-GAPS` (agent `aa8162301b1670de2`). CIRCULARITY, STALE-OUTPUT LEAKAGE, COMPARATOR VALIDITY AND CURRENT-STATE DETERMINISM ARE **CLOSED** — refuted at the line AND by two executions into directories that had never existed.** ★★★★★ **BUT ONE PROVENANCE CLAIM IS DOWNGRADED, NOT REOPENED: FROM "HISTORICALLY SEALED" TO **"CURRENTLY REPRODUCED; ORIGINAL TRANSCRIPT IDENTITY UNPROVABLE."** THE 40 TRANSCRIPTS WERE GITIGNORED, UNPINNED, UNHASHED AND UNRETAINED, SO WHETHER TODAY'S BYTES EQUAL THE ORIGINAL RUN'S IS `[UNRECOVERABLE AT ORIGIN]`.** ★★★★★ **AND THE NEW MANIFEST IS A **FORWARD BASELINE ONLY** — IT MAY NEVER BE BACKDATED INTO EVIDENCE FOR A RUN THAT PREDATES IT.** ★★★ **AR-450 IS RIPE: THE `13/27` EXIT-0 IS A CONFIRMED CONTRACT FAILURE**
 
 ---
