@@ -10,7 +10,7 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-451**. Newest AR **AR-427 — RULED, APPROVED IN FULL**.
+Ledger **R-452**. Newest AR **AR-427 — RULED, APPROVED IN FULL**.
 ★★★★★ **v4 §3-1B IS DELIVERED. THE C8 RE-EXTRACTION SLICE IS MEASURED AND NAMED:**
 **37 videos in the wave · 3 EXCLUDED BY NAME** (`N7uP9V0Iktc` · `ktkqq7QsN9Q` ·
 `1HFoStW_wsc` — they carry NO C8 refusal, so the fix moves nothing for them;
@@ -39,13 +39,27 @@ backtest-qualified, paper-ready or live-ready. THE RANKING AUTHORIZES NO BACKTES
 would be distance-0; `bos_and_fvg_or_fvg` (`E8Wg6tFPYjo`) measures distance `1`
 (needs +C5). DO NOT ROUND IT UP — that refusal is the evidence the ranker
 MEASURES rather than CONFIRMS the plan.**
-**TASK (R-451):** (a) commit a **CENSUS REPRODUCIBILITY MANIFEST** (command ·
-population def · DB read timestamp · row + distinct-video counts · artifact
-sha256s · classifier/taxonomy hashes · schema version · ranker commit · snapshot
-location + retention) · (b) a **DETERMINISM TEST FOR THE NEW RANKER ITSELF** —
-byte-identical output across ≥12 `PYTHONHASHSEED` values. ETA ~35 min.
-★★★ **ARMED STOP: if the new ranker is ALSO non-deterministic, that is a finding
-— report it, do not patch it quietly.**
+**TASK (R-451, amended R-452):** (a) commit a **CENSUS REPRODUCIBILITY MANIFEST**
+(command · population def · DB read timestamp · row + distinct-video counts ·
+artifact sha256s · classifier/taxonomy hashes · schema version · ranker commit ·
+snapshot location + retention) · (b) a **DETERMINISM TEST FOR THE NEW RANKER
+ITSELF**. ETA ~35 min. **Then (c) the BOUNDED PATTERN-CLASS SWEEP.**
+★★★★★ **R-452 AMENDMENT — MY OWN GREEN-CHECK-WITH-NO-PATH-TO-RED: the (b) test
+MUST EXERCISE A REAL TIED CASE (`C5`/`C7` both clean exactly 13 videos at step 4,
+consequentially) AND be shown to go RED against the old `gen_ledger.py`
+tie-break. ON UNTIED INPUT ALL TWELVE SEEDS AGREE TRIVIALLY — the test would have
+certified a ranker just as broken. I ordered it while quoting the tied case in
+the same ruling. A LAW YOU CAN RECITE IS NOT A LAW YOU ARE APPLYING.**
+★★★ **(c) PATTERN-CLASS SWEEP — order-dependent selection as a SPECIES: unordered
+set/dict iteration in ranking · ties with no explicit secondary key · filesystem
+order treated as meaningful · unseeded sampling · order-sensitive aggregation ·
+first-encountered-wins. ★★★★★ BOUNDED: an INSTRUMENT AUDIT, NOT a licence to
+reopen verified results — re-derive ONLY where the generating path contains the
+pattern or lacks deterministic proof. Deliver instrument · file:line · whether a
+PUBLISHED number came from it. A null result is a real result.**
+★★★ **ARMED STOP: the new ranker is ALSO non-deterministic (a finding — report,
+do not patch quietly) · the sweep finds the pattern in a path that produced a
+PUBLISHED Phase-1 figure — comes to the desk BEFORE any re-derivation.**
 ★★ **STANDING (R-451): committing a DERIVED, operator-data-free INSTRUMENT is
 inside the worker's authority and needs no ruling. An instrument that exists only
 in `%TEMP%` is not an instrument, it is a rumour.**
