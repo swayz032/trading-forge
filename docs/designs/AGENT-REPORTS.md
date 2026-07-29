@@ -4,6 +4,32 @@
 
 ---
 
+## AR-423 · 2026-07-29 · **START-RECEIPT — R-446: (1) THE `passed=[]` SANITY ASSERTION, (2) THE `lifecycle-transitions` SCHEMA DIAGNOSTIC.** ★★★ **AND I CONFIRM YOUR CORRECTION AGAINST MY OWN AR-420 §5(a) — I VERIFIED IT MYSELF AND MY CLAIM WAS FALSE**
+
+**RULING ID:** R-446 · **TASK ID:** AR-423 · **STATUS:** STARTING. **PR #32 merged at `75065635` — acknowledged.**
+
+### ★★★ THE CORRECTION IS MINE TOO, AND I RE-MEASURED IT RATHER THAN ACCEPTING IT
+
+**[MEASURED HERE, at the merged tip] `ci/vitest.config.mjs:19` includes `"ci/**/*.test.mjs"`, and `.github/workflows/fast.yml:125` runs `node node_modules/vitest/vitest.mjs run --config ci/vitest.config.mjs` with NO `continue-on-error`.** ★★★ **So my AR-420 §5(a) — "`ci/__tests__` is not run by any CI job" — is FALSE and I withdraw it. The three discriminators I added are enforced on every push, which is strictly better news than the finding I filed.**
+
+★★★ **AND THE CAUSE IS MINE TO OWN, NOT INHERITED: I searched the workflows for the TEST PATH and for the DEFAULT config's `include`, found nothing, and published an absence. The wiring never names the test directory — it names the CONFIG. That is my convicted failure mode a third time tonight in a new costume: I published what my filter INCLUDED without asking what it EXCLUDED.** ★★ **A negative result needed a control probe — grepping for a string I KNEW was wired — and I did not run one. I am adding that to how I file absences from here.**
+
+### ITEM (1) — THE SANITY ASSERTION
+
+**The gap, as the grader sharpened it:** `results.passed = []` (present-but-empty) is indistinguishable from absent, so `--fail-on-stale` goes **silently inert**. ★★ **Severity bounded and I agree with the bound: the core `verdict`/`newFailures` regression gate reads only `failures`, so this defeats the SELF-CLEANING feature, not the regression catcher.** ★★★ **And the trigger is live, not theoretical — `package.json:80` pins vitest `^3.1.0` (floating) while the lockfile already resolves `3.2.7`, and every shape test uses a hand-built synthetic report. A future 3.x renaming the `status` enum ships undetected.**
+
+**I will:** make `parseVitestJson` **THROW LOUDLY** when the observed `passed+failures` is implausibly small against `collected`, rather than returning a quiet empty set · **red-proof BOTH ways — RED on empty-passed-with-large-collected, GREEN on the real artifact from run `30422166825`** · **defend the threshold in the report**, since a tolerance added to a guard owes a fresh demonstration that it still bites · and **state explicitly whether the assertion is parser-generic or vitest-only**, naming what pytest would need. ★ **[NOTED] `pytest.knownFailures` is 0 at every commit, so that path has no production data behind it — I will not imply I tested it if I have not.**
+
+### ITEM (2) — THE SCHEMA DIAGNOSTIC, READ-ONLY
+
+For the two failing columns: compare **migration DDL** against **the CI database's actual schema**, and return **(a) migration never ran · (b) ran then altered later · (c) the CI DB is built by a path other than migrations**.
+★★★ **STOP ARMED ON (a): if the journal disagrees with the database I come to you immediately and touch nothing — that is the migration-0134 class and it is much larger than two failing tests.** ★★ **I will not report (c) because it is likely; I will report it only if I can show it.**
+
+**FIRST OBSERVABLE:** this receipt. **ETA ~45 min.** **HONEST-PARTIAL ARMED:** if the CI DB's construction path cannot be established from the artifacts I can reach, I will say so and name what I would need rather than picking the comfortable answer.
+**I WILL NOT:** fix the 9 · fix the schema · delete any of the 24 unresolved · touch `main` · remove `continue-on-error` · deploy · update the tower · run backtests.
+
+---
+
 ## AR-422 · 2026-07-29 · ★★★ **YOUR STOP CONDITION DOES NOT FIRE: ZERO OF THE 23 IS A COLLECTION ERROR. ALL 19 FILES LOADED AND RAN — the silently-absent population is NOT larger than 23.** ★★★ **AND I AM CORRECTING MY OWN FIRST PASS: MY FUZZY MATCHER NOMINATED `15 RENAMED`, AND JUDGMENT SPLITS THAT INTO `4` TRUE RENAMES AND `11` SUPERSEDED-BY-A-DIFFERENT-ASSERTION — FOUR OF WHICH ARE POLARITY FLIPS (`omits→includes`, `blocks→allows`, `no audit rows→must emit a WARNING`).** ★★ **THE 9 ARE CHARACTERIZED FROM THEIR ACTUAL FAILURE MESSAGES: 7 ENVIRONMENTAL, 2 I WILL NOT CALL ENVIRONMENTAL**
 
 **RULING ID:** R-445 · **TASK ID:** AR-421 · **RECOMMENDATION:** **APPROVAL_REQUESTED. Read-only; no code changed, nothing deleted, and NO push to #32 — `af5779ef` is untouched and still the head.**
