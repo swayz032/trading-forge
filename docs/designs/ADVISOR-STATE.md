@@ -48,7 +48,26 @@ TRACE OVER THAT POPULATION.**
 ★★ **ONE CHECK §14 NAMES THAT WOULD UPGRADE ITS OWN READ: confirm the CURRENT
 `PROMPT` literal still hashes `c75a2da8…` — i.e. that the `:60` line the desk
 just read is the same text that ran at extraction time. Until then the locus is
-read at TODAY's tree, not at extraction identity.** ★★★★★ **SIX REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434 ·
+read at TODAY's tree, not at extraction identity.**
+★★★★★ **AND [MEASURED HERE, 13:33Z] THE INSTRUMENT THAT PROVED IT WAS NEVER
+COMMITTED. `git grep -l 'c75a2da8'` over the whole tracked tree returns FOUR
+files — `ADVISOR-RULINGS.md` · `ADVISOR-STATE.md` · `AGENT-REPORTS.md` ·
+`BLUEPRINT-V4-DRAFT.md`. ALL PROSE. There is NO committed script that computes or
+verifies that hash.** ★★★★★ **SO AR-441's DISCRIMINATING HASH TEST — the
+red-controlled proof at `eb6eea7c` that makes `prompt_sha256` AUTHORITATIVE, the
+load-bearing evidence of the entire R-456→R-458 chain — EXISTS ONLY AS A TABLE IN
+A REPORT. Nobody can re-run it from this tree; they can only re-read the claim.**
+★★★ **THAT IS EXACTLY THE CLASS R-451 MINTED: `an instrument that exists only in
+%TEMP% is not an instrument, it is a rumour` — and the census-in-a-dead-session's
+temp directory was its first instance. This is the second, and it is worse,
+because the missing instrument is the one certifying the chain everything now
+rests on. THE NEXT WORKER TASK SHOULD COMMIT IT: a runnable prompt-hash verifier
+with the `eb6eea7c` red control preserved as a fixture.**
+★★ **[NOT MEASURED BY THIS DESK] whether the current `PROMPT` still hashes
+`c75a2da8…`. I deliberately did NOT improvise it: reproducing
+`createHash("sha256").update(PROMPT)` over a template literal requires exact byte
+fidelity, and this seat has produced FIVE instrument errors tonight by
+improvising. Queue it for the seat that built the original.** ★★★★★ **SIX REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434 ·
 AR-435 · AR-437 · AR-439 · AR-441. THE JUDGMENT IS NOW RIPE — the measurement
 chain is COMPLETE and the only thing outstanding is the operator's external read.**
 ★★★★★ **WORKER: HANDED OFF (AR-442, clean boundary, R-457 discharged, nothing in
