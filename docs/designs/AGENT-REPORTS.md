@@ -4,6 +4,48 @@
 
 ---
 
+## AR-425 · 2026-07-29 · ★★★ **HANDOFF — I AM NOT STARTING v4 §3-1B. A FRESH WORKER SESSION IS NEEDED, AND THIS IS A DECLINE-RECEIPT, NOT A STALL.** ★★ **THE CI LANE IS CLOSED CLEAN: #32 AND #33 BOTH MERGED, NOTHING HALF-DONE, NO SUB-AGENT OWED, BOTH WORKTREES SWEPT**
+
+**RULING ID:** R-447 · **TASK ID:** AR-425 · **STATUS:** **DECLINE + HANDOFF.** · **RECOMMENDATION:** **seat a fresh worker on v4 §3-1B.**
+
+### ★★★ §1 — WHY I AM DECLINING, AND IT IS SELF-ASSESSMENT
+
+★★★ **I have been continuously seated since AR-409 and have carried R-437 through R-447 — eleven rulings, two merged PRs, and roughly a dozen measurements — in one context. §3-1B is a NEW domain (frozen census artifacts, a ranker, R-426's cumulative chain) with a ~40-minute ETA and an instrument-audit acceptance gate.**
+★★ **The worker standard is explicit that swapping at a task boundary is both cheaper and more correct, and that "a partial result that reads as complete is this campaign's most-convicted shape."** ★★★ **This session has spent the night finding exactly that shape in other people's work — four false greens, a guard that could not fail, a census that compared code against itself. It would be a poor ending to produce one.** ★ **The CI lane closing and #33 merging is the cleanest boundary I will get; running further to prove endurance would be the wrong instinct.**
+
+### §2 — POSITION, SO A FRESH SEAT NEEDS NO RE-DERIVATION
+
+**Relay tree** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, my last commit **`399edb6e`** (AR-424). **All my work is committed; nothing lives only in a working tree.**
+
+| PR | state | contents |
+|---|---|---|
+| **#32** | **MERGED `75065635`** | 5 hardcoded-dev-path test files · baseline `189 → 33` · `fixedFailures` split · `--fail-on-stale` |
+| **#33** | **MERGED `dcb5eca8`** | `parseVitestJson` throws on an unrecognized status enum |
+
+**WORKTREES — both now CLEAN and safe to remove by explicit path (I did not remove them, in case the desk wants the history):**
+`wt-ci-abspath-20260729` (branch merged) · `wt-parser-sanity-20260729` (branch merged). ★ **Both had a `node_modules` JUNCTION for vitest; I removed both reparse-safely and verified the REAL `node_modules` is intact at 329 entries — `Remove-Item -Recurse` on a junction deletes the TARGET, and that trap is live in this repo.**
+
+★★★ **NO SUB-AGENT IS OWED. I dispatched none all session — the two `accuracy-validator` grades were dispatched by the advisor seat. I verified the gap is empty rather than assuming it.**
+★★ **NOTHING IS HALF-DONE.** Every item I was given is either merged, filed, or explicitly declined here.
+
+### §3 — THE NEXT TASK, AS R-447 DEFINES IT (copied so the incoming seat need not re-read)
+
+**v4 §3-1B — UNLOCK-DISTANCE RANKING.** From the FROZEN census artifacts, per spearhead spec: blocking conditions by class under a `{C8-fixed}` counterfactual → ranked `spec · distinct VIDEOS · residual non-C8 blockers`.
+★★★ **ACCEPTANCE GATE FIRST: the ranker must REPRODUCE R-426's published chain — `C8→6 · +C3→15 · +C2→27 · … · +C9→120`. If it cannot, STOP and report; the ranker is the suspect, not the census.**
+★★ **PER-VIDEO, NEVER RAW ROWS — `POP-120-LIVE` is 40 videos × 3 byte-identical markets, so raw counts inflate 3×.** ★ **R-426's figure is `[RELAYED]` and its per-video decomposition is `[UNVERIFIED]` — report the result as a NEW measurement, not a confirmation.**
+**FORBIDDEN there:** any C8 implementation · re-extraction · spec edits · flag graduation · `.env` · DB writes · deploy · tower · backtests · further CI-lane work.
+
+### §4 — OPEN AND UNASSIGNED, recorded so they are not lost
+
+★ **(a)** the **6 `UNKNOWN`** baseline absences — dead wood; R-447 rules that classifying them optimises the metric, not the mission.
+★ **(b)** the **2 stale `lifecycle-transitions` assertions** — correct disposition is to update them to the post-`0126` shape (AR-424 §1 proves the DB is right and the tests are not); would remove 2 of the 9 permanent baseline residents.
+★ **(c)** **[NOT MEASURED]** `parsePytestJunit` against a real pytest artifact — `pytest.knownFailures` is 0 at every commit, so that path has no production data behind it.
+★★ **(d) A RISK I SHIPPED AND WANT VISIBLE:** PR #33 makes a BLOCKING gate throw on input it previously tolerated. A future vitest adding a benign status turns the `fast` lane red until `KNOWN_STATUSES` is updated. **Intended, one-line fix, and the error message says exactly what to do — but it is a new way for CI to stop, and the next seat should know it exists before it fires.**
+
+★★★ **A FRESH WORKER SESSION IS NEEDED. I am not blocked, not stalled, and not out of context — I am at the right boundary to swap, which is the cheapest moment there is.**
+
+---
+
 ## AR-424 · 2026-07-29 · ★★★ **THE SCHEMA ANSWER IS `(b)` AND YOUR STOP DOES NOT FIRE — THE JOURNAL AND THE DATABASE AGREE. `0125` DROPS THE NOT NULL AND `0126` CONVERTS TO TIMESTAMPTZ, BOTH IN THE JOURNAL, AND THE OBSERVED CI SCHEMA IS EXACTLY THEIR CUMULATIVE EFFECT. THE MIGRATIONS ARE RIGHT AND THE TEST IS STALE.** ★★★ **AND THE SANITY ASSERTION IS BUILT AND RED-PROOFED THREE WAYS — PR #33. I CHOSE EXACT ACCOUNTING OVER THE PROPOSED RATIO AND I DEFEND THAT BELOW**
 
 **RULING ID:** R-446 · **TASK ID:** AR-423 · **PR:** #33 (`f81d219b`) · **RECOMMENDATION:** **APPROVAL_REQUESTED on item (1). Item (2) is a diagnosis; nothing fixed, as ordered.**
