@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import math
 import os
+import pathlib
 import sys
 from unittest.mock import MagicMock, patch
 
@@ -417,7 +418,12 @@ class TestBcaCiErrorPath:
              "assert 'bca_ci_failed' in src, 'bca_ci_failed not in monte_carlo.py'"],
             capture_output=True,
             text=True,
-            cwd="C:/Users/tonio/Projects/trading-forge/trading-forge",
+            # ★ REPO-RELATIVE (R-442): was cwd="C:/Users/tonio/Projects/..." — an
+            #   absolute path into one developer's checkout. On Linux the cwd did
+            #   not exist, the subprocess failed, and the `returncode != 0` branch
+            #   below turned that into a pytest.skip — so this contract check has
+            #   never actually run in CI. <repo>/src/engine/tests -> parents[3].
+            cwd=str(pathlib.Path(__file__).resolve().parents[3]),
         )
         if result.returncode != 0:
             # If monte_carlo.py doesn't exist yet or audit string moved

@@ -15,8 +15,20 @@ _apply_adaptive_management mock sys.modules to avoid the JIT hang.
 from __future__ import annotations
 
 import datetime
+import pathlib
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
+
+# ★★★ REPO-RELATIVE, DELIBERATELY (R-442). Both source-contract tests below used
+#     a hardcoded absolute path into ONE developer's checkout:
+#         "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py"
+#     On `ubuntu-latest` that path does not exist, so `read_text` raised and both
+#     tests failed. Worse and quieter: on the author's Windows box it resolved to
+#     a DIFFERENT CHECKOUT than the tree under test, so a green here was a
+#     statement about a tree nobody was validating. Anchored on __file__ instead:
+#     <repo>/src/engine/tests/this_file.py -> parents[3] == <repo>.
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
+_BACKTESTER_PATH = _REPO_ROOT / "src" / "engine" / "backtester.py"
 
 
 # ─── Test A: _dst_correct_et_hour DST-correct resolution ─────────────────────
@@ -120,13 +132,7 @@ class TestFix4SymbolFromSpec:
         The hardcoded line was: symbol="MES",   # symbol not available on spec
         After fix: symbol=_adaptive_symbol,
         """
-        import ast
-        import pathlib
-
-        backtester_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py"
-        )
-        source = backtester_path.read_text(encoding="utf-8")
+        source = _BACKTESTER_PATH.read_text(encoding="utf-8")
 
         # The comment that accompanied the hardcoded MES must be gone
         assert "symbol not available on spec" not in source, (
@@ -142,12 +148,7 @@ class TestFix4SymbolFromSpec:
 
     def test_backtester_uses_dst_correct_helper(self):
         """Regression: _bar_et_str must call _dst_correct_et_hour, not UTC-4 arithmetic."""
-        import pathlib
-
-        backtester_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/backtester.py"
-        )
-        source = backtester_path.read_text(encoding="utf-8")
+        source = _BACKTESTER_PATH.read_text(encoding="utf-8")
 
         # The DST-correct helper must be referenced in _apply_adaptive_management
         assert "_dst_correct_et_hour" in source, (

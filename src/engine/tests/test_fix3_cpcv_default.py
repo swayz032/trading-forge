@@ -25,10 +25,20 @@ from __future__ import annotations
 import os
 import pathlib
 
-
-_WALK_FORWARD_PATH = pathlib.Path(
-    "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/walk_forward.py"
-)
+# ★★★ REPO-RELATIVE, DELIBERATELY (R-442). This was a hardcoded absolute path
+#     into ONE developer's checkout:
+#         "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/walk_forward.py"
+#     It failed TWO ways at once, and the second is the dangerous one:
+#       1. On `ubuntu-latest` the path does not exist, so `read_text` raised and
+#          every source-contract test below failed. That was visible.
+#       2. On the author's Windows box it resolved to a DIFFERENT CHECKOUT than
+#          the tree under test — a fixed clone on another branch. So these tests
+#          passed or failed according to a tree nobody was testing, and green
+#          here said nothing about the branch being validated. That was invisible.
+#     Anchor on __file__ so the assertions bind to the tree that is actually
+#     running them: <repo>/src/engine/tests/this_file.py -> parents[3] == <repo>.
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
+_WALK_FORWARD_PATH = _REPO_ROOT / "src" / "engine" / "walk_forward.py"
 
 
 # ─── Test A: env-level default contract ──────────────────────────────────────

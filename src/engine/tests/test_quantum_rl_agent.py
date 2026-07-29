@@ -27,6 +27,21 @@ import sys
 import pathlib
 from unittest.mock import MagicMock, patch
 
+# ★★★ REPO-RELATIVE, DELIBERATELY (R-442). Eight source-contract tests below
+#     hardcoded an absolute path into ONE developer's checkout:
+#         "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
+#     Each is guarded by `if not source_path.exists(): pytest.skip(...)`, so on
+#     `ubuntu-latest` the path was simply absent and all eight SILENTLY SKIPPED —
+#     they have never once been evaluated in CI. That is the quiet twin of the
+#     hard failures in test_fix3/test_fix4: same root cause, and worse, because a
+#     skip reads as healthy forever. Anchored on __file__ so they bind to the
+#     tree running them: <repo>/src/engine/tests/this_file.py -> parents[3].
+#     ★ The `.exists()` guards are left in place deliberately — narrowing this
+#       change to the path. They can no longer fire for a path reason, and
+#       converting skip->fail is a separate, named follow-up.
+_REPO_ROOT = pathlib.Path(__file__).resolve().parents[3]
+_QUANTUM_RL_PATH = _REPO_ROOT / "src" / "engine" / "quantum_rl_agent.py"
+
 import numpy as np
 import pytest
 
@@ -594,9 +609,7 @@ class TestDsrFloorBlock:
         governance_labels.dsr_passed stamped per regime; AUDIT_LOG_JSON sentinel emitted
         to stderr for both dsr_floor_block (below floor) and dsr_passed (above floor).
         """
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
@@ -614,9 +627,7 @@ class TestNoStrategiesTableMutation:
 
     def test_no_insert_into_strategies(self):
         """Source must contain zero 'INSERT INTO strategies' statements."""
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
@@ -631,9 +642,7 @@ class TestNoStrategiesTableMutation:
 
     def test_no_update_strategies(self):
         """Source must contain zero 'UPDATE strategies' statements."""
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
@@ -646,9 +655,7 @@ class TestNoStrategiesTableMutation:
 
     def test_no_delete_from_strategies(self):
         """Source must contain zero 'DELETE FROM strategies' statements."""
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
@@ -661,9 +668,7 @@ class TestNoStrategiesTableMutation:
 
     def test_writes_only_to_quantum_rl_runs(self):
         """quantum_rl_runs is the ONLY table written to by the RL agent."""
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
@@ -688,9 +693,7 @@ class TestCloudPathFallbackAudit:
 
     def test_cloud_path_fallback_action_in_source(self):
         """'quantum_rl.cloud_path_fallback' must appear in quantum_rl_agent.py."""
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
@@ -701,9 +704,7 @@ class TestCloudPathFallbackAudit:
 
     def test_ibm_quantum_channel_env_documented_in_source(self):
         """IBM_QUANTUM_CHANNEL must be listed as a read env var in the source."""
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
@@ -715,9 +716,7 @@ class TestCloudPathFallbackAudit:
 
     def test_ibm_cloud_channel_default_in_docstring(self):
         """_build_vqc_policy_ibm docstring must mention 'ibm_cloud' as default channel."""
-        source_path = pathlib.Path(
-            "C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/quantum_rl_agent.py"
-        )
+        source_path = _QUANTUM_RL_PATH
         if not source_path.exists():
             pytest.skip("quantum_rl_agent.py not found")
         content = source_path.read_text(encoding="utf-8")
