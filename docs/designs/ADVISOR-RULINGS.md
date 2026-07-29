@@ -12,6 +12,124 @@
 
 ---
 
+## R-467 · 2026-07-29 · ★★★★★ **AR-458 §0 APPROVED AND THE HOUSEKEEPING LANE IS CLOSED PERMANENTLY — THREE NON-OVERLAPPING PATHS NOW AGREE ON THE SNAPSHOT.** ★★★★★ **GATE A's CONTRACT IS REVISED AT ITS JOIN KEY, WHICH WAS MINE AND WHICH WAS WRONG: [MEASURED HERE, R-466 §1's OWN LINE] IT KEYS EVERY ROW ON `(video, condition_id)` AND THEN ORDERS TWO HOPS THAT PRECEDE CONDITION CREATION. `condition_id` DOES NOT EXIST AT THE TRANSCRIPT OR ATOM LAYER — SO THE BRIDGE KEY FOR THE UPSTREAM HALF WAS NEVER NAMED. `THE JOIN KEY IS THE CLAIM`, INSIDE THE RULING WHOSE OWN §1 INVOKES IT.** ★★★★★ **GATE A IS BOUND TO AR-459's SEAT — AND THE OWNERSHIP STALL WAS DISCHARGED BY EVENT AT 18:58:05, NOT BY THIS RULING: THE EXTERNAL READ ORDERED "SEAT A REAL FRESH WORKER NOW" WHILE ONE WAS ALREADY 26 MINUTES INTO BEING SEATED, BECAUSE IT WAS WRITTEN AGAINST AR-458 AND COULD NOT SEE AR-459.** ★★★ **ADOPTED: THE BIDIRECTIONAL SEMANTIC-CONSERVATION LEDGER, WITH FORWARD AND REVERSE PATHS THAT MUST CONVERGE RECORD-FOR-RECORD**
+
+**RULING ID:** R-467 · **TASK ID:** AR-458 (ruled) + AR-459 (contract revised in flight) · **DECISION:** **APPROVE AR-458 §0 — CLOSE PERMANENTLY. REVISE the Gate-A contract (join keys, path opposition, per-boundary conservation). BIND Gate A to AR-459's seat. HOLD Gate B.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-459`** — read in full before this ruling was written, and it CHANGES this ruling: it is a fresh seat's START-RECEIPT for Gate A, and it raises a defect against R-466 §1 that I uphold in §5 below. Had I ruled from AR-458 alone I would have re-authorized an unowned task and missed a correct finding against my own contract.
+
+### ★★★★★ §0 — AR-458 §0: APPROVED, AND THE LANE IS CLOSED PERMANENTLY
+
+**[MEASURED HERE, `trading-forge/backups/h1-shadow-eval/transcripts-78fe8ea7/`, PRIMARY tree, outside every git repo]** — re-derived at this desk, independently of AR-458's report and of the operator's read:
+
+| Claim | Result |
+|---|---|
+| `MANIFEST.txt` full-file sha256 | `84064171b5c36842b4192919b61dcc45a122d926a7ae0a494911d332105d94aa` — **MATCHES** |
+| Structure | `4` header comments + `40` data rows — **MATCHES** |
+| Body hash (data rows only) | `78fe8ea72a82cc9e4c7cc456cf8b7dbcd5a74338d409bc10948871fde54c844b` — **REPRODUCES** |
+| All 40 payload hashes | `sha256sum -c` → **`40 OK / 0 FAILED`** |
+| Bytes, TWO paths | on-disk `cat * \| wc -c` = **`913,668`** AND manifest-declared `sum($2)` = **`913,668`** — agree |
+| CRLF | **`0 of 40`** |
+| `MANIFEST.txt` immutability | still `-r--r--r--`, mtime still `14:44` |
+
+★★★★★ **THREE NON-OVERLAPPING PATHS NOW AGREE: AR-458's own measurement · the operator's independent verification · this desk's re-derivation. `[MEASURED HERE]` + `[CORROBORATED ×2]`. THE ITEM IS CLOSED PERMANENTLY AND THE LANE MAY NOT BE REOPENED.**
+★★★★★ **AND I RECORD TWO INSTRUMENT ERRORS OF MY OWN FROM THAT VERIFICATION, BECAUSE THEY WERE BOTH SURPRISING RESULTS THAT ACCUSED THE ARTIFACT AND THE ARTIFACT WAS INNOCENT BOTH TIMES:** (a) I globbed `*.transcript.txt` at the snapshot ROOT and got **`0` files / `0` bytes** — the payloads live in a `transcripts/` SUBDIRECTORY. (b) The manifest is `hash  bytes  name`, and I fed `awk '{print $1"  "$2}'` to `sha256sum -c`, handing it the BYTE COUNT as a filename (`28975: No such file or directory`) — and summed `$3`, the FILENAME column, for a byte total of `83`. ★★★ **A "0 files, 913,668 → 83 bytes" reading is a catastrophic artifact failure if believed for one sentence. `AUDIT THE INSTRUMENT BEFORE BELIEVING IT` paid for itself twice inside one command.**
+★★ **THE MONITOR CORRECTION IS ACCEPTED AND ALSO NOW THREE-WAY CONFIRMED: [MEASURED HERE, this seat] `13424/20076` and `20016/8972` are a 2s change detector plus a 15m idle watchdog — TWO ROLES on one file, the rig `advisor-onboarding` §4a REQUIRES. AR-456's `NEW-PLUS-OLD` finding stays WITHDRAWN. That lane is closed; do not reopen it.**
+
+### ★★★★★ §1 — THE OWNERSHIP STALL WAS DISCHARGED BY EVENT, AND THE EXTERNAL READ'S PREMISE IS SUPERSEDED — NOT WRONG IN PRINCIPLE
+
+**The external read orders: *"SEAT A REAL FRESH WORKER NOW … If no worker is actually seated, record an explicit HOLD."*** ★★★★★ **[MEASURED HERE, delivered to this seat by my adopted `AGENT-REPORTS` change detector at `18:58:05`] A FRESH WORKER SEAT IS ALREADY ACTIVE: `AR-459`, START-RECEIPT, taking Gate A **in full**, commit at start `857c6dd1`, branch `h1-wave4-sealed12-driver`, tree `wt-h1-wave4-20260712`, ETA ~60 min. The operator confirms it in their own words: *"we have a fresh worker now."*** ★★★ **The external read was written against `AR-458` and could not see `AR-459`; its conditional branch does not fire. THE STALL RAN FROM AR-458's HANDOFF TO AR-459's RECEIPT — roughly 26 minutes, not fifteen rulings.**
+★★★★★ **BUT ITS PRINCIPLE IS ADOPTED AS LAW, BECAUSE IT IS RIGHT AND IT IS THE ONE MY PREDECESSOR'S LABEL EVADED: `AUTHORIZATION MAY OUTLIVE A SESSION; OWNERSHIP MAY NOT.` "AUTHORIZED, assignee NONE" is a legitimate label for MINUTES and a stall order for HOURS — it is the fifteen-ruling ownership stall with a cleaner label, and the cleanliness of the label is what makes it dangerous.** ★★★ **STANDING, EFFECTIVE NOW: whenever a task is authorized with assignee `NONE`, the ADVISOR owns seating it, the obligation is written in the same ruling, and if no seat exists the ruling says `HOLD — advisor to seat, immediately` instead of `AUTHORIZED`. Never `ACTIVE`/`AUTHORIZED` with nobody doing it.**
+★★ **GATE A's ASSIGNEE IS NOW `AR-459's SEAT` — bound here, in the ruling, not in a state file.**
+
+### ★★★★★ §2 — THE JOIN-KEY DEFECT IS REAL, IT IS MINE, AND I VERIFIED IT AT THE LEDGER LINE RATHER THAN ACCEPTING THE RELAY'S CHARACTERISATION
+
+**[MEASURED HERE, `ADVISOR-RULINGS.md`, R-466 §1 verbatim]** the contract reads:
+> *"`(video, condition_id)` in the frozen classified census → the matching condition in the emitted spec → `(span, evidence)` in the transcript → the code path that carries it into the DB row."*
+
+★★★★★ **THE DEFECT, STATED PRECISELY: the row is keyed on `(video, condition_id)` for a chain whose FIRST TWO HOPS PRECEDE CONDITION CREATION. A `condition_id` does not exist at the transcript-clause or atom layer, so the key cannot join the upstream half — and R-466 §1 names `(span, evidence)` as the transcript-side COORDINATE without ever naming the BRIDGE KEY from spec-condition to that span. The trace as written would have joined its upstream hops on nothing, or on normalised text.**
+★★★★★ **`NORMALISED TEXT ALONE IS UNSAFE AND THAT IS THE SUBTLE HALF: repeated clauses collide.** A teacher who says "we're on the 30-minute chart" three times in one video yields three identical normalised strings; a text join silently merges them and the coverage table still balances.**
+★★★ **THIS IS `THE JOIN KEY IS THE CLAIM` — this campaign's most-convicted failure, six errors in one session on 2026-07-28 — committed inside a ruling whose own §1 invokes that very law against a worker. I inherited the contract; I own it now, and the correction is published here rather than absorbed silently.**
+
+**ADOPTED, and it is a genuine upgrade over what I would have written:**
+- **Use `(video, condition_id)` ONLY where it is real** — at and after condition creation.
+- **For every earlier layer: exact source-span COORDINATES, or raw-span HASH + OCCURRENCE ORDINAL.** The ordinal is what defeats the collision.
+- **EVERY BRIDGE KEY RECORDED EXPLICITLY, per boundary, in the ledger row.** A bridge key that is not written down is not auditable by the grader.
+
+### ★★★★★ §3 — "TWO INDEPENDENT PATHS" IS REVISED TO "TWO OPPOSING PATHS THAT MUST CONVERGE"
+
+**R-466 §1 ordered *"TWO INDEPENDENT SOURCE-RESOLUTION PATHS"* and never specified their DIRECTION.** ★★★★★ **TWO PATHS IN THE SAME DIRECTION CAN DRIFT TOGETHER — my own guard-design law (`prefer a shared ORACLE over an A-vs-B comparison: A-vs-B passes when both drift together`). Same-direction independence is the weakest form of independence there is.**
+**REVISED — both paths required, and they must CONVERGE RECORD-FOR-RECORD:**
+1. **FORWARD:** transcript span → atom → graph/spec → DB row.
+2. **REVERSE:** DB refusal → spec provenance → exact transcript span.
+
+★★★ **WHERE THEY DISAGREE, PUBLISH THE DISAGREEMENT. Reconciling a divergence silently is the failure this replaces — the divergence IS the finding, and it localises the corrupting boundary better than either path alone.** ★★ **Any unresolved join stays `RESIDUAL` and is NEVER dropped to make coverage appear complete. The four totals (matched-1:1 · duplicate · miss · residual) MUST SUM TO THE POPULATION, per boundary — a coverage table that does not sum is not evidence.**
+
+### ★★★★★ §4 — ORDER THE PROPERTY, NOT THE MECHANISM: PER-BOUNDARY SEMANTIC CONSERVATION
+
+**R-466 §1 asked for *"whether the condition already exists BEFORE onboarding"* plus *"the FIRST PERSISTED point"* — a TWO-POINT check, which is a MECHANISM and inherits every gap in my model of where corruption enters.** ★★★★★ **THE PROPERTY IS SEMANTIC CONSERVATION, AND IT IS ADOPTED: at EVERY boundary — source transcript clause → extracted atom → decision graph / emitted spec → persisted DB row — record:**
+- **population and TREE** (a number without a tree is not a measurement of anything in particular)
+- **incoming identity and outgoing identity** (the bridge keys of §2)
+- **semantic state: `context` | `genuine market-session condition` | `decision` | `unresolved`**
+- **`executable` yes/no**
+- **matched-1:1 / duplicate / miss / residual totals**
+
+★★★★★ **AND THE ONE FIELD THE WHOLE GATE EXISTS TO PRODUCE: THE EXACT FIRST BOUNDARY AT WHICH `context` BECOMES `executable`.** ★★★ **That converts "find the fix target" from a judgment into a COMPUTED TRANSITION POINT — which is why this design replaces prompt blame with a conserved first-transition proof, and why R-459's whole prompt-attribution chain is no longer load-bearing for choosing the fix.**
+
+**DECISION RULE — UNCHANGED, and it now reads off a computed column instead of an argument:**
+- context already promoted **at atomization** → **`ATOM-ADMISSION`** fix
+- atom clean, **graph/spec** promotes it → **`GRAPH-TO-SPEC`** fix
+- spec clean, **DB** pollutes it → **`ONBOARDING`** fix
+- **multiple boundaries, or incomplete joins → `STOP AND SPLIT`. NO GLOBAL REMEDY.**
+
+### ★★★★★ §5 — AR-459's DEFECT FLAG IS UPHELD, AND THE ADOPTED DESIGN MAKES IT FOUR TIMES SHARPER, NOT MOOT
+
+**AR-459 flagged, BEFORE starting, that deciding whether a clause is genuinely chart/instrument/platform CONTEXT versus a genuine market SESSION/TIME window is a ground-truth classification — that R-466 §2's CO-PRIMARY outcome is scored on exactly that field — and that authoring it AND the trace that selects a fix boundary from it is the doer grading the doer.** ★★★★★ **UPHELD. IT IS A DEFECT IN MY CONTRACT, CAUGHT AT THE ONLY MOMENT IT WAS FREE, AND IT IS THE `doer-out-of-scope-is-grader-trigger` shape working as designed.**
+★★★★★ **AND HERE IS WHY IT MATTERS MORE UNDER THE NEW DESIGN, WHICH THE EXTERNAL READ DID NOT ADDRESS: §4's per-boundary semantic column MULTIPLIES that judgment from ONE field to FOUR. Adopting the conservation ledger without AR-459's resolution would have QUADRUPLED the doer-grades-doer surface while appearing to strengthen the method.**
+**THEREFORE AR-459's RESOLUTION GOVERNS, AND IS NOW BINDING CONTRACT:**
+- **Every semantic-state cell keys to the FROZEN C8 classifier's EXISTING label — `[ARTIFACT-SOURCED]`, with the artifact and tree named on the row.**
+- **The worker publishes NO semantic label of its own. Not one.**
+- **Any boundary where the frozen label is absent, ambiguous, or fails to join → `unresolved` → `RESIDUAL`. NEVER the worker's judgment.** ★★★ **[HYPOTHESIS, NOT MEASURED BY THIS DESK] the atom layer likely carries no C8 label at all, so I EXPECT a substantial `RESIDUAL` column at that boundary. THAT IS A CORRECT RESULT, NOT A FAILED TRACE — and I pre-register it here so a large residual cannot later be argued into a defect of the worker's method.**
+
+### ★★★★★ §6 — MY STOP CONDITIONS GET REFERENCE POINTS, BECAUSE ONE OF THEM DID NOT HAVE ONE
+
+**R-466 §1's STOP reads *"the instrument audit fails to reproduce `456 / 233 / 37`"* — and NAMES NO SOURCE ARTIFACT FOR THOSE THREE NUMBERS.** ★★★★★ **A STOP WITH NO REFERENCE POINT HAS NO PATH TO RED. That is R-459 step (1)'s convicted defect, and it is the second time this desk has shipped it. REQUIRED: the worker NAMES THE ARTIFACT AND THE TREE each of the three numbers is reproduced FROM, and posts all three whether they reproduce or not.** ★★ **AR-459 already committed to exactly this on its own initiative (*"I name the artifact and the tree each number came out of"*). IT IS NOW A REQUIREMENT RATHER THAN AN INITIATIVE — a contract that relies on the worker being better than it is, is not a contract.**
+
+### ★★★★★ §7 — THE GRADER: TRIGGER UNCHANGED, BRIEF SHARPENED, AND IT MAY NOT FIRE EARLY
+
+**R-466 §3 trigger 1 stands: THE MOMENT THE GATE-A BUNDLE LANDS, THIS DESK DISPATCHES A FRESH `accuracy-validator`. NOT BEFORE — grading evidence that does not yet exist grades nothing, and R-438's convicted shape is a ruling that records a dispatch a later seat cannot find on disk.**
+**BRIEF, ADVERSARIAL — its job is to DISPROVE:** (1) **reconstruct the population INDEPENDENTLY** — not from the worker's ledger; (2) **attempt to FALSIFY join completeness** — hunt the collision case §2 names, repeated clauses merged by a text join; (3) **attempt to FALSIFY the claimed FIRST-CORRUPTION BOUNDARY** — is an earlier boundary merely unlabelled rather than clean? (4) **audit whether `RESIDUAL` was used to hide a miss, or a miss filed as residual.** ★★ **The honest null is a complete answer: *"no refutation found, here is what I covered and what I could not."*** ★★★ **NO RULING OF MINE WILL SAY THE GRADE WAS OBTAINED WITHOUT NAMING THE AGENT ID.**
+★★★★★ **GATE B REMAINS `BLOCKED` UNTIL THAT GRADE LANDS. Not "discouraged" — blocked.**
+
+### ★★★ §8 — THE FIVE RATIFY FACTS, SUPPLIED HERE RATHER THAN DEMANDED IN A SECOND RECEIPT
+
+**The external read asks the worker's receipt to carry five ratify facts. AR-459's receipt already carries what/why, exact scope, verification method and STOP. The two it does not state explicitly, I supply — because demanding a re-receipt would cost ~20 minutes of a 60-minute task to obtain facts I can write myself, and the external read is explicit that this is NOT another approval cycle:**
+- **BLAST RADIUS:** one new committed trace document plus its fixture. **No runtime code, no frozen bytes, no DB writes, no re-extraction, no `--relock`, no backtest.**
+- **ROLLBACK:** a trace-only commit revert. **Frozen inputs and runtime code are never touched, so rollback cannot regress anything that executes.**
+
+### §9 — TWO FINDINGS OF MY OWN, LOGGED, NEITHER PRE-EMPTING GATE A
+
+★★★ **(a) A CITATION IN `ADVISOR-STATE.md` HAS DECAYED, AND ITS CLASS IS ALREADY CONVICTED. [MEASURED HERE] the state file cites `ADVISOR-RULINGS.md:6625` as the authority for the four attribution bins. R-061 is at line **`8169`**; line `6625` now holds R-213's *"Holds absolute"* line. THIS LEDGER IS APPEND-AT-TOP, SO EVERY RULING PUSHES R-061 FURTHER DOWN — a line number into this file is exactly R-465's `AN IDENTIFIER IN A STATE FILE IS A MEASUREMENT WHOSE DECAY NOBODY WROTE DOWN`, and the decayed pointer aims at the one payload this campaign has lost twice.** ★★★★★ **THE PAYLOAD ITSELF IS INTACT — VERIFIED VERBATIM, NOT BY TAG PRESENCE: R-061 §1 carries all FOUR bins (`edge-absent · compile-fidelity-loss (approximation residue) · OVERLAY-CONFLICT · gate-artifact`) and §2 carries `effective-N tuples distinguish arms`. `ADVISOR-STATE.md:743-748` carries both. THE CARRIER CHECK PASSES ON CONTENT AND FAILS ON CITATION. Fix: cite by `grep -n "^## R-061"`, never by line.**
+★★ **(b) `ADVISOR-STATE.md` IS `997` LINES / `74,684` BYTES against `advisor-onboarding`'s ~40-line target, and its OWN HEADER IS FALSE: it claims *"Compacted 450→313 lines … current through R-453 / AR-428"* while carrying content through R-466/AR-458. A cold seat cannot read it in one pass — this seat paged out at 604 of 997 lines. THE HEADER IS A SELF-DESCRIPTION NOBODY RE-MEASURED. Compaction is MINE, it happens while the worker runs, and it will verify each v3 PAYLOAD against the ledger line — not each TAG.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — no profitability claim justifies altering extracted logic; Gate A produces a trace, not a fix. **#2 REINFORCED** — the whole gate exists to keep `context` distinct from `condition`, and §4 makes that distinction a recorded per-boundary field rather than an inference. **#6 holds** — `[MEASURED, AR-458 §1, live] backtests total = 0`; no promotion, no live capital, no re-extraction. **#7 holds** — I have not edited `AGENT-REPORTS.md`. **#8 holds** — no `checkout`, no `reset`, no index operation; this ruling commits one file with `-o`. **#9 holds** — read-only trace, `SET default_transaction_read_only = on`.
+
+**FAILED OR UNPROVEN CONDITIONS.** Gate A — **IN FLIGHT, nothing delivered yet** · the `456 / 233 / 37` triple — **[UNVERIFIED BY THIS DESK], and its source artifact is [UNNAMED] until the worker names it (§6)** · the atom-layer semantic label — **[HYPOTHESIS] expected absent, large `RESIDUAL` pre-registered as CORRECT (§5)** · population OVERLAP MAP (corpus_A ↔ POP-120 ↔ tier-A) — **[UNENUMERATED], unchanged, and still the thing that makes any cross-population sentence a claim** · the 7/4 approximate bindings on the distance-0 pair — **[UNVERIFIED BY THIS DESK]** · original transcript identity — **[UNRECOVERABLE AT ORIGIN], permanent** · the `DEV-14` drift mechanism — **[NOT DETERMINED]** · monitor heartbeat/expiring-lease — **PARKED, and a dead watcher still cannot report its own death.**
+
+**FILES / SCOPE ALLOWED (AR-459's seat).** Reads anywhere · `SELECT`-only DB under `SET default_transaction_read_only = on` · the Gate-A trace, its broken-join fixture, and the committed `C8-PROVENANCE-LEDGER` · `AGENT-REPORTS.md` appends. **FORBIDDEN:** any Gate-B implementation · re-extraction · `--relock` · frozen-byte rewrite · touching the three monitor rigs · every PARKED item (partition-generator hardening · heartbeat/lease · off-machine backup · wider sweeps). **NOTHING MAY PRE-EMPT GATE A.**
+
+**ACCEPTANCE COMMANDS.** The instrument-audit triple reproduced WITH artifact+tree named beside each number · the broken-join fixture **DISCRIMINATES** — deliberately broken `(video, condition_id)` goes **RED** and the unmutated control stays **GREEN**, both stated · forward and reverse paths **converge record-for-record**, divergences published not reconciled · per-boundary totals **SUM TO THE POPULATION** · every bridge key written down · every semantic cell `[ARTIFACT-SOURCED]` to the frozen classifier.
+
+**STOP CONDITION.** `456 / 233 / 37` fails to reproduce (report the discrepancy; do not build on a failed instrument) · joins incomplete or mixed-path → **STOP AND SPLIT, no global remedy** · forward and reverse do not converge and the divergence cannot be localised → report it as the finding · `backtests total > 0` · the fixture does not bite.
+
+**OBSERVABLES.** Start-receipt — **DELIVERED (`AR-459`, 18:58:05)**. Next: the instrument-audit triple with artifact+tree provenance, posted pass or fail, **~20 min**. Then: trace skeleton + biting broken-join fixture. Target: complete committed `C8-PROVENANCE-LEDGER`, **~60 min from `AR-459`**. **My 15-minute idle watchdog is live and adopted; silence past these marks is readable.**
+
+**AUTHORIZED NEXT ACTION.** **AR-459's seat CONTINUES Gate A under this revised contract — no restart, no re-receipt, no round-trip.** ★★★ **If the seat has already begun the trace on the OLD single-direction contract, it does NOT discard that work: §2's bridge keys and §3's reverse path are ADDITIVE to it.** **THEN, owned by THIS DESK and triggered by the bundle landing: dispatch `accuracy-validator` per §7. GATE B: `BLOCKED` until that grade lands.**
+
+**LESSON TO PERSIST.** ★★★★★ **`AUTHORIZATION MAY OUTLIVE A SESSION; OWNERSHIP MAY NOT.` A task labelled AUTHORIZED-assignee-NONE is honest for minutes and a stall order for hours, and the honesty of the label is precisely what lets it survive review.** ★★★★★ **AND THE DEEPER ONE, WHICH COST NOTHING TODAY ONLY BECAUSE A WORKER READ ITS CONTRACT BEFORE OBEYING IT: `A KEY THAT EXISTS AT ONE END OF A CHAIN IS NOT A KEY FOR THE CHAIN.` I ordered a four-hop trace keyed on an identifier that only exists after hop three, in a ruling that invoked `THE JOIN KEY IS THE CLAIM` against someone else. Before ordering a join, walk the chain and ask AT WHICH HOP THE KEY IS BORN.** ★★★ **AND: `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — twice inside one verification command tonight, where a wrong glob and a wrong column would have reported a 913,668-byte artifact as 0 files and 83 bytes.**
+
+---
+
 ## R-466 · 2026-07-29 · ★★★★★ **PIVOT. THE HOUSEKEEPING QUEUE IS SUPERSEDED BY A C8 CRITICAL-PATH STRIKE, AND THE OPERATOR HAD TO SAY "REMEMBER BACK TO THE PLAN" TO GET IT.** ★★★★★ **AND A POPULATION CONFLATION THAT IS MINE: [MEASURED HERE, v4 §0] `0/16 FULLY BOUND` IS **corpus_A** (16 specs, R-401). C8's `51.1%` AND THE 40-VIDEO RANKING ARE **POP-120-LIVE**. §0 SAYS "NEVER MERGE THEM" AND I NARRATED THEM AS ONE STORY — TO THIS LEDGER AND TO THE OPERATOR.** ★★★★★ **THE HONEST CLAIM IS NARROWER: *"C8 IS THE ONLY SINGLE REMEDIATION CLASS THAT MAKES ANY POP-120 VIDEOS REFUSAL-CLEAN"* — **NOT** *"C8 ALONE PRODUCES A PHASE-1-EXITABLE STRATEGY."*** ★★★ **PREREQUISITES #2 AND #3 STOP BEING "STILL MINE" IN THIS RULING — #2 IS WRITTEN BELOW, #3 IS ASSIGNED WITH A DISPATCH TRIGGER**
 
 ---
