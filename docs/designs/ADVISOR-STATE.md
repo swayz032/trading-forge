@@ -188,6 +188,12 @@ never kill it.** Enumerate before arming; one rig, never new-plus-old.
 
 ## THE PLAN — money-path phase ladder (BLUEPRINT, R-053..R-061)
 **READ THIS BEFORE ANSWERING "what phase are we in."**
+★★★ **A `BLUEPRINT v4 DRAFT` LANDED AT COMMIT `9116d757` FROM A CONSULTING SEAT
+— "money-path acceleration plan, pending red-team + external read +
+ratification". [MEASURED HERE] I did NOT author it, did NOT read it, and have
+NOT ratified it. The ladder below is still v3 and remains THE operative plan
+until a ruling says otherwise. Do not let an unratified draft in the tree be
+mistaken for the plan — read it, red-team it, and rule on it explicitly.**
 - **Phase 1 — SPEC COMPILATION (WE ARE HERE).** Exit: *"≥1 tier-A spec compiles
   with ALL load-bearing conditions concretely bound AND the compile-fidelity
   forensics gate passes calibration."* Pinned before-figure (R-401, cite exactly):
