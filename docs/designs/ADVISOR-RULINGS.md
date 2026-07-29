@@ -12,6 +12,107 @@
 
 ---
 
+## R-447 · 2026-07-29 · ★★★★★ **OPERATOR DIRECTIVE EXECUTED — THREE HISTORICAL JOBS CLOSED WITH RECEIPTS, THE COUNT CORRECTED 11→10, AND THE TEN RE-REPORTED UNDER THE OPERATOR'S FOUR FIDELITY CLASSES.** ★★★★★ **BUT ONE PREMISE IS CORRECTED AND IT MATTERS: THE ELEVENTH ITEM IS *NOT* A PHANTOM CLASSIFICATION. [MEASURED, AR-377] IT IS A **REAL ROW** IN THE CAMPAIGN LANE AND **ABSENT** IN THE EXECUTING LANE — `spec_family_bindings.py` IS 160,049 B vs 35,046 B. DELETING IT WOULD ERASE THE ANCHOR OF THE R-415 LANE-DIVERGENCE GATE. IT IS SUPERSEDED AND TREE-KEYED, NOT REMOVED.** ★★★ **AR-424 ACCEPTED — SCHEMA IS `(b)`, STOP DOES NOT FIRE, AND THE WORKER REFUSED MY COMFORTABLE ANSWER `(c)` AND MEASURED IT.** ★★ **PR #33 MERGED (`dcb5eca8`) — I RED-PROOFED THE GUARD MYSELF**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`.
+
+★★★★★ **PR #33 IS MERGED — `dcb5eca8`. AND YOU WERE RIGHT TO OVERRULE THE PROPOSAL I ADOPTED.** I passed you the grader's "assert `passed+failures` is not implausibly small relative to `collected`" — a RATIO. **You built `recognized === collected` instead, and your reason is correct and is now doctrine: every assertion carries exactly one status, so this is an INVARIANT, not a tolerance.** ★★★ **A ratio needs an arbitrary constant that is wrong in BOTH directions — it false-fires on a legitimately mostly-skipped run AND still passes if a rename leaves a large-enough minority recognized. You removed the tolerance rather than tuning it.** ★★ **`A TOLERANCE ADDED TO A GUARD OWES A FRESH DEMONSTRATION THAT IT STILL BITES` (pre-ruling gate §5) — the stronger move is to need no tolerance at all.**
+★★★ **I RE-PROVED IT MYSELF RATHER THAN RELAYING YOUR TABLE. [MEASURED HERE] `npx vitest run` over `ci/__tests__` at `f81d219b` = `2 files, 24 passed, exit 0`; and my own adversarial inputs against the shipped `parseVitestJson`: a report with `status:"success"` THREW `vitest_report_malformed: unrecognized assertion status (success=1) across 2 collected test(s)` — it NAMES the offender — while a legitimately all-skipped report did NOT throw. IT BITES AND IT DOES NOT FALSE-FIRE.**
+
+★★★★★ **AR-424 ACCEPTED. THE SCHEMA STOP DOES NOT FIRE — and the part I want on record is that you refused MY prediction.** I wrote that `(c)` "is the most likely and I expect it". **[MEASURED, yours] `ci.yml:121` runs `npm run db:migrate`, so the CI DB IS built by migrations — `(c)` is false, and you checked it instead of accepting the desk's guess.** ★★★ **`(b)` confirmed with the DDL quoted: `0125` drops the NOT NULL, `0126` converts to `TIMESTAMPTZ`, both in a 211-entry journal, and the observed schema is exactly their cumulative effect. THE MIGRATIONS ARE RIGHT AND THE TESTS ARE STALE — the same species as the 11 SUPERSEDED baseline entries: the test's memory outlived the schema it described.** ★★ **AN ORDER FROM THIS DESK IS A CLAIM, INCLUDING WHEN IT PREDICTS YOUR ANSWER. That is twice tonight.**
+
+### ★★★★★ THE CI LANE IS NOW CLOSED. NEXT DISPATCH IS THE MONEY PATH.
+
+**v4 §9 bounds this lane — "governance; NEVER a merge gate for spearhead packets" — and it has paid for itself in full. Do not mine it further.** ★ **Two items stay OPEN and UNASSIGNED on purpose, recorded so they are not lost: the 6 `UNKNOWN` absences (dead wood; classifying them optimises the metric, not the mission) and the 2 stale `lifecycle-transitions` assertions (correct disposition = update them to the post-`0126` shape, but not now).**
+
+**YOUR NEXT TASK — v4 §3-1B, THE UNLOCK-DISTANCE RANKING.** ★★★ **This is the "aim before firing" step and it is deliberately cheap: from the FROZEN census artifacts, per spearhead spec, compute the blocking conditions by class under a `{C8-fixed}` counterfactual → a ranked list of `spec · distinct VIDEOS · residual non-C8 blockers`.**
+★★★★★ **INSTRUMENT AUDIT FIRST, AND IT IS THE ACCEPTANCE CONDITION: your ranker must REPRODUCE R-426's published cumulative chain — `C8→6 · +C3→15 · +C2→27 · … · +C9→120` — before any new output it produces is believed. If it cannot reproduce the published chain, STOP and report that: it means the ranker and the census disagree, and the ranker is the suspect.**
+★★ **PER-VIDEO, NEVER RAW ROWS. [MEASURED, standing] `POP-120-LIVE` = 40 videos × 3 markets, triples byte-identical — every raw count inflates 3×. The VIDEO is the unit.** ★ **R-426's own figure carries grade `[RELAYED]` and its per-video decomposition of "C8 alone unlocks 6" is `[UNVERIFIED]` (v4 §12) — computing it is part of this task, so report it as a NEW measurement, not as a confirmation.**
+**WHY IT MATTERS:** ★★★ **it converts "re-extract and hope" into "re-extract these named videos, expected to fully bind spec X." C8 is 51.1% of all blockage and the only class that unlocks anything alone.**
+
+**ALLOWED:** read anything · the frozen census artifacts · run read-only in-process harnesses · `gh` · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★ **any C8 IMPLEMENTATION (HELD on seven prerequisites, five still open)** · re-extraction · spec edits · flag graduation · `.env` · DB writes · deploying · tower update · backtests · `git checkout`/`reset` in the shared tree · further CI-lane work.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~40 min.** ★★ Exceeds the 15-min watchdog bar; recorded in `ADVISOR-STATE` as EXPECTED.
+**HONEST-PARTIAL:** if the frozen artifacts do not carry per-video identity, say so and name what would — **do not reconstruct video identity by inference from row counts.**
+**STOP:** the ranker cannot reproduce R-426's chain · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-447 · **TASK ID:** operator directive + AR-424 · **DECISION:** **DIRECTIVE EXECUTED with one premise corrected. APPROVE AR-424. PR #33 MERGED. Next task authorized above.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-424`**, ruled here.
+
+★★★ **NUMBERING: the directive arrived labelled `R-440`. [MEASURED HERE] `R-440` already exists (2026-07-29, the mis-keyed-item-2 correction) and the ledger's newest was `R-446`. I have NOT overwritten it — this lands as `R-447`. The standing protocol warns that an incoming external ruling can arrive mislabelled (the first one came as "R-436"), and the directive's own instruction — preserve the record, mark superseded, never silently rewrite — requires exactly this.**
+
+### ★★★★★ §1 — THE THREE HISTORICAL JOBS: CLOSED, WITH THE FIVE REQUIRED FIELDS
+
+| # | Job identifier | Final artifact / report | Completion commit | Measured result | Closure date |
+|---|---|---|---|---|---|
+| 1 | **R-409 item (a) — FVG fidelity check** | `AR-375`, ruled `R-410` | **`83a4b20f`** (2026-07-28) | **PARTIAL.** [MEASURED, `fvg_native.py:83-84`] primitive uses `low[i] > high[i-2]` (HIGH/LOW); `-igp`'s teacher taught CLOSE→OPEN. Implemented band is a **SUBSET** of taught ⇒ fires **LESS**, marks **SMALLER** — **stricter than taught**. Not a stop. | 2026-07-29 |
+| 2 | **R-409 item (b) — flag-yield sweep, all 16** | `AR-376`, ruled `R-411` | **`a32ab7bb`** (2026-07-28) | **Δ +10, four specs** (`-igp` 4 · `CLDE` 3 · `WEhm` 2 · `kFyD` 1); all 16 re-run at the desk. **Authoritative pair `0 → 10` in the executing lane** (see §2). | 2026-07-29 |
+| 3 | **R-409 item (c) — corpus_B charter** | `docs/designs/CORPUS-B-CHARTER-2026-07-29.md` (`AR-391`; later scoped R-424 item 1) | **`276b2c00`** (2026-07-28) | **Charter delivered. Status line: "CHARTER ONLY. No extraction run is authorized by this document."** Measured in `wt-preflight-blockers-20260729`, three sha256s re-derived, sha-identical to `runtime-production`; **explicitly NOT the campaign tree.** | 2026-07-29 |
+
+★★ **CLOSED. Per the directive: not to be reopened unless new evidence identifies a specific defect in the completed work.** ★ **One residue recorded rather than reopened: [NOT MEASURED] whether any ruling ratified the charter BY NAME — a filename grep returns 0, and that is a weak instrument (this desk published a false negative from exactly that grep-shape today, R-446 §2). Treat the charter as unratified-until-read, not as unratified-by-proof.**
+
+### ★★★★★ §2 — THE COUNT CORRECTION, AND THE PREMISE I MUST CORRECT
+
+**EXECUTED: the authoritative headline is `10 newly bindable`, `0 additional unexplained`. The `1 → 11` pair is WITHDRAWN as a corpus-wide figure. Every explanation that leaned on a baseline of `1` is withdrawn with it.**
+
+★★★★★ **BUT THE MECHANISM IN THE DIRECTIVE IS WRONG, AND THE DIFFERENCE IS LOAD-BEARING. The directive says "the eleventh item was a phantom classification and must not remain in any aggregate."** ★★★ **[MEASURED, AR-377] IT IS NOT A MISCLASSIFICATION. IT IS A REAL ROW: `W7nlnHTUZQU__s0` `[6] prim=session_windows apx=False`. It EXISTS in the campaign worktree's binding lane and is ABSENT in `runtime-production`'s — `spec_family_bindings.py` is 160,049 B in one and 35,046 B in the other. Two trees, one filename, two different answers.**
+★★★ **R-411 dumped the rows and found none, and was right — ABOUT ITS TREE. AR-377 re-ran the same predicate and found the row, and was right — ABOUT ITS TREE. "We are both right, about different trees" is the correct reading, and it is `MEASURED ≠ MEASURED-WHERE-IT-RUNS`.**
+★★★★★ **THEREFORE I EXECUTE THE DIRECTIVE'S INTENT AND DECLINE ITS LITERAL FORM, ON ITS OWN STATED PRINCIPLE.** Deleting that row from every aggregate would erase the single measured artifact anchoring the **R-415 lane-divergence gate** — a registered, still-open item (v4 §12: *"the remaining 160KB↔35KB divergence beyond one measured row"*). ★★ **The directive also says: preserve the original statement and mark it SUPERSEDED rather than silently rewriting the audit trail. Those two instructions point in opposite directions here, and the audit-trail one wins, because the row is load-bearing evidence for a different open finding.**
+
+**THE RECORD, AS IT NOW STANDS — TREE-KEYED, WHICH IS THE ONLY HONEST FORM:**
+
+| lane | flags-off | flags-on | Δ | status |
+|---|---:|---:|---:|---|
+| **`runtime-production` (the lane the tower executes)** | **0** | **10** | **+10** | ★ **AUTHORITATIVE — cite this pair** |
+| campaign worktree (160 KB lane, not executed) | 1 | 11 | +10 | **SUPERSEDED as a corpus-wide figure; retained ONLY as R-415 divergence evidence** |
+
+★★★ **NOTE WHAT NEVER MOVED: Δ = +10 IN BOTH LANES. The divergence inflated both endpoints by one and changed no unlock count. So "10 legitimate unlocks, 0 additional unexplained" is exactly right, and it was right for a reason the directive did not have.**
+★★ **AND THE SHARPEST BIT, WHICH THE DIRECTIVE IS RIGHT TO KILL: the `off=1` had been used to EXPLAIN AWAY a discrepancy against the 2026-07-21 producer artifact. With the executing lane's `0`, today's tree and the artifact AGREE exactly — there was never a discrepancy to explain. AN EXPLANATION OFFERED FOR A DISCREPANCY IS ITSELF A CLAIM, and this one manufactured the thing it explained.**
+
+### ★★★★★ §3 — THE FIDELITY LEDGER (the directive's four classes, applied per strategy)
+
+**"Unlocked" and "exact" are different measurements — adopted as standing law.** An unlocked condition means the compiler can emit an executable representation; it does not prove that representation matches the teacher's definition.
+
+| spec | n | **fidelity class** | evidence |
+|---|---:|---|---|
+| `WEhmadJArQo__s0` | **2** | ★ **SOURCE-DEFINED EXACT** | [MEASURED, AR-376] teacher defined the gap **wick-to-wick**; the primitive implements exactly that |
+| `-igpOZs8LsM__s0` | **4** | ★★★ **SOURCE-DEFINED MISMATCH** | [MEASURED, R-410] teacher defined **close→open** (conditions [1] and [3], verbatim); primitive is **high/low**. Divergence direction measured: **primitive STRICTER** |
+| `CLDE…__s0` | **3** | **CANONICAL DEFAULT** | [MEASURED, AR-376] teacher used "fair value gap" and never defined it; primitive applies the documented classic-ICT reading |
+| `kFyD3H6I1I8__s0` | **1** | **CANONICAL DEFAULT** | [MEASURED, AR-376 row] `UNDEFINED → canonical defensible` |
+| **UNVERIFIED** | **0** | — | every one of the ten has an evidenced basis |
+| **TOTAL** | **10** | | **2 exact · 4 mismatch · 4 canonical-default · 0 unverified** |
+
+★★★★★ **THE SAFETY PROPERTY, AND IT IS THE MOST IMPORTANT LINE IN THIS RULING: [MEASURED, AR-376] NO SPEC IN THE CORPUS SITS IN THE DANGEROUS DIRECTION. The dangerous case is *primitive LOOSER than teacher* — it manufactures trades the teacher never sanctioned. `WEhm` matches exactly · `-igp` is primitive-stricter (misses trades, never invents them) · `CLDE` and `kFyD` left the term undefined. Every deviation in the ten runs conservative.**
+★★★ **AND THE STRUCTURAL LESSON THE CLASSES ENCODE: FIDELITY IS A PROPERTY OF THE PAIR `(primitive, spec)`, NOT OF THE PRIMITIVE. The identical `compute_fvg_signal` is EXACT for `WEhm`, a MISMATCH for `-igp`, and a CANONICAL DEFAULT for `CLDE` — one flag, three truths. This codebase stores `approximation=False` as a property of the binding ALONE, which is why a bare "+N concrete" was able to look uniform.**
+
+### ★★ §4 — METRIC CORRECTION, ADOPTED AS STANDING REPORTING LAW
+
+**Every future report of this class separates, and never collapses:**
+`newly bindable` · `source-defined exact` · `canonical-default` · `conservatively mismatched` · `unsafe or unresolved`.
+★★★ **The headline MAY say "10 newly bindable". It MAY NOT say "10 exact" unless all ten independently meet the source-defined-exact standard — [MEASURED] today exactly 2 do.** ★★ **A canonical interpretation may be reasonable and executable and still must not be labelled source-exact when the source never defined the term.** ★ **The per-strategy ledger in §3 is the authoritative record; the aggregate is a convenience and is subordinate to it.**
+
+### §5 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests total = 0`; no promotion, no capital. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no `checkout`/`reset` in the shared tree; PR #33 verified in its own worktree and merged through `gh`. **#9 holds** — I did not delete a real measured row to make an aggregate tidy.
+
+**FAILED OR UNPROVEN CONDITIONS:**
+- **The 160 KB ↔ 35 KB lane divergence — OPEN**, and §2 is now its anchor. R-415's gate stands: **this desk rules which lane is authoritative on COMPILER CORRECTNESS — never on which lane produces better numbers — before the first Band-C backtest.** v4 §3-1E pulls it EARLIER, before the corpus_B binding measurement.
+- **The MAGNITUDE of `-igp`'s mismatch — [UNMEASURED]:** how many zones close→open finds that high/low misses. Needs price data. Not a prerequisite for §3's classification.
+- **Charter ratification by name — [NOT MEASURED]** (§1).
+- **The 6 `UNKNOWN` absences and the 2 stale `lifecycle-transitions` assertions — OPEN, UNASSIGNED, deliberately.**
+- **v4's external-GPT read — [UNPROVEN]**, still unwired.
+
+**LESSON TO PERSIST.** ★★★★★ **A CORRECTION CAN BE RIGHT IN ITS CONCLUSION AND WRONG IN ITS MECHANISM, AND EXECUTING THE MECHANISM WOULD HAVE DESTROYED EVIDENCE. "Report 10, not 11" was correct. "It was a phantom classification, remove it" was not — it is a real row in a lane we do not run, and it is the anchor of an open architectural finding. THE FIX FOR A NUMBER MEASURED IN THE WRONG TREE IS TO KEY IT TO ITS TREE, NEVER TO DELETE IT.** ★★★ **SECOND: `A COUNT IS NOT A GRADE.` Ten unlocks decomposed into 2 exact / 4 mismatch / 4 canonical-default — the aggregate was never wrong arithmetically, it was wrong EPISTEMICALLY, and no amount of re-counting would have surfaced that. Only asking "what does each one mean?" did.** ★★ **THIRD: the worker overruled a proposal this desk had adopted from a grader, with a better instrument — an invariant instead of a tolerance — and separately refused a prediction this desk volunteered. Both times it was right. The desk's job is to make that cheap, not brave.**
+
+---
+
 ## R-446 · 2026-07-29 · ★★★★★ **PR #32 IS MERGED (`75065635`) — THE GRADE CAME BACK `SOUND-WITH-GAPS` AND THE GAPS DO NOT BLOCK.** ★★★★★ **AND THE GRADER REFUTED *ME*, NOT THE WORKER: MY R-445 §4 CLAIM THAT `ci/__tests__` NEVER RUNS IN CI IS **FALSE AND IS WITHDRAWN**. THERE IS A SECOND CONFIG — `ci/vitest.config.mjs`, WIRED AT `fast.yml:125` WITH NO `continue-on-error`. THOSE 22 TESTS ARE **LIVE BLOCKING GATES**. I SEARCHED FOR THE TEST PATH; THE WIRING NAMES THE CONFIG FILE.** ★★★ **AR-422 ACCEPTED: STOP DOES NOT FIRE — I RE-DERIVED THE 132/23/1/9 SPLIT MYSELF FROM CI'S ARTIFACT AND IT MATCHES EXACTLY, AND 0 OF 19 FILES ARE MISSING.** ★★ **I ALSO OVERRULE THE GRADER ON ONE POINT, BY MEASUREMENT: THE WORKER DID NOT MISCOUNT ITS TESTS**
 
 ---
