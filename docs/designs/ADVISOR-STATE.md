@@ -2,11 +2,12 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
-> Last rewritten: 2026-07-29, current through **R-423**.
+> Last rewritten: 2026-07-29, current through **R-433**.
 
 ## SEAT
-Ledger at **R-432**. Newest AR: **AR-401, RULED** (`role` producer FOUND).
-Worker: **ACTIVE, on the semantic-role migration packet (design only).**
+Ledger at **R-433**. Newest AR: **AR-403, RULED** (migration packet delivered).
+Worker: **ACTIVE on the two pre-conditions — contamination check + pointer-
+resolution design. THE SHADOW RUN IS NOT AUTHORIZED.**
 ★★★ **SEAT QUESTION SETTLED (R-432) — A WORKER SWAP *DID* OCCUR AT 21:06:10.**
 [MEASURED, conversation transcripts] `8f49b5b4` last wrote 21:03:36; `6f1ac257`
 created 21:06:10. **R-430's premise REINSTATED; R-431's "no swap" WITHDRAWN.**
@@ -145,14 +146,28 @@ PROVEN not correlated: `:141-142` is one block setting `entry_trigger_id` AND
 ★★★ **PROVENANCE RULE: `spine + unbindable` → STILL REFUSE · record
 `UNKNOWN_REQUIREDNESS` · NEVER record source-mandatory.** Changes provenance,
 not safety.
-**(1) WORKER — PRIMARY: the SEMANTIC-ROLE MIGRATION PACKET, DESIGN ONLY.** Eight
-parts (see R-432's worker block): the replaced line · the dormant labeller +
-flag · **SHADOW-MODE over the 40 videos, stored strategies unchanged** ·
-transcript-grounded grading · **positive AND negative controls + a flags-off
-control that must reproduce the current library** · immutable versioning ·
-rollback · proof no refusal is softened. ★★★ **ACCEPTANCE IS NOT "more strategies
-pass" — it is that classifications match each condition's source-supported
-FUNCTION.**
+★★★ **PACKET DELIVERED AND RATIFIED (AR-403 / R-433). THE SHADOW RUN IS *NOT*
+AUTHORIZED YET — two pre-conditions first:**
+**(1a) THE CONTAMINATION CHECK.** Were the classifier's regex families
+(`graph-to-engine.ts:185-208`) tuned on a corpus INCLUDING these 40 videos?
+★★★ **PRE-REGISTERED: includes them → the shadow eval is NOT independent, it is
+a consistency check and a HELD-OUT corpus is required · disjoint → proceed ·
+CANNOT DETERMINE → treat as CONTAMINATED, fail closed.**
+**(1b) POINTER-RESOLUTION DESIGN** — resolve every `T-<vid>-C####` to clause text
+BEFORE classification (all 1458 resolve), and publish the fired-vs-fallback split.
+★★★ **THE FALSE-GREEN THIS DEFEATS: the classifier reads `evidenceQuote`; 57.3%
+of stored evidence is a bare POINTER with no language, so rules fail and `:100`
+falls back to the TOPOLOGY HEURISTIC UNDER REPLACEMENT. A naive run reports ~57%
+"agreement" BY CONSTRUCTION — meaning the new labeller mostly DID NOT RUN.**
+★★★ **BINDING: HIGH AGREEMENT + HIGH FALLBACK = A FAILED RUN. Any agreement
+figure published without its fired-vs-fallback split is VOID ON ARRIVAL.**
+★★ **Negative control is binding: the `'timeframe'`/`'1 hour chart'` exhibits must
+NOT classify `mandatory`, or the migration FAILS.** ★★ New mapper emits
+`or_branch`/`context`, which the consumer does not know → both BLOCK → **the pass
+count can FALL, and that is correct.** ★★★ **ACCEPTANCE IS NOT PASS-RATE.**
+★★ **PREREQUISITE: the DB drops `extraction_provenance`, so classifier-version
+stamping is UNENFORCEABLE — a versioned migration whose version cannot persist is
+not versioned. Design it in the packet; implementing it needs its own contract.**
 **(2) SECONDARY, AFTER (1): the 20 span disagreements** — classify as harmless
 clause-boundary · stale span · alternate range · transcript-version mismatch ·
 genuinely incorrect provenance.

@@ -12,6 +12,77 @@
 
 ---
 
+## R-433 · 2026-07-29 · **PACKET RATIFIED — AND ITS §2a IS THE BEST FINDING OF THE SESSION: A FALSE-GREEN CAUGHT BEFORE IT FIRED.** ★★★ **A NAIVE SHADOW RUN WOULD HAVE REPORTED ~57% AGREEMENT *BY CONSTRUCTION*, BECAUSE THE CLASSIFIER READS `evidenceQuote` AND 57.3% OF STORED EVIDENCE IS A POINTER WITH NO LANGUAGE IN IT — IT WOULD HAVE FALLEN BACK TO THE VERY HEURISTIC IT REPLACES AND CALLED THAT SUCCESS.** ★★★ **PROMOTED TO A HARD ACCEPTANCE RULE: HIGH AGREEMENT WITH A HIGH FALLBACK RATE IS A FAILED RUN.** ★★★ **AND THE TUNING-CONTAMINATION QUESTION IS PROMOTED FROM "REMAINING UNCERTAINTY" TO A PRE-CONDITION — IT IS ANSWERED BEFORE THE RUN, NOT AFTER**
+
+---
+
+# ★ WORKER — START HERE
+
+**YOUR TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **The packet (AR-403) is ACCEPTED. Nothing in it is rejected.**
+
+**YOUR TASK — TWO SMALL PRE-CONDITIONS, IN THIS ORDER. NEITHER IS THE SHADOW RUN.**
+
+**(A) THE CONTAMINATION CHECK — do this FIRST, it can void every later grade.** Determine whether the classifier's regex families (`CONTEXT_LANG` · `MANDATORY_LANG` · `ALT_LANG` · `OPTIONAL_LANG` · `TRIGGER_LANG`, `graph-to-engine.ts:185-208`) were **authored or tuned against a corpus that includes these 40 videos.** Read the commit history of that file and of the classifier module, and any design note that names the corpus used to build them.
+★★★ **PRE-REGISTERED DECISION RULE, written before the answer is known so it cannot be argued either way:**
+- **Tuned on a set that INCLUDES these 40 videos** → **the shadow evaluation over the same 40 is NOT an independent test.** It becomes a consistency check only, must be labelled as one, **and a held-out corpus is required before any grade is believed.**
+- **Tuned on a disjoint or unrelated set** → the 40-video shadow evaluation IS independent; proceed as the packet specifies.
+- **CANNOT DETERMINE** → **treat as CONTAMINATED and require a held-out set. Fail closed** — an unknown provenance for a grading instrument is not a safe provenance.
+
+**(B) THE POINTER-RESOLUTION DESIGN.** The shadow run must **resolve every `T-<vid>-C####` pointer to its clause text BEFORE classification** — [MEASURED, AR-397] all 1458 resolve, so this is available, not aspirational. **Specify it in the packet**, together with the **fired-vs-fallback split** the packet already requires.
+
+**DELIVERABLE:** an amendment to `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md` carrying (A)'s answer with its evidence, and (B)'s design. **Document only.**
+
+**FORBIDDEN:** running the shadow evaluation (not yet authorized) · flipping `TF_SEMANTIC_ROLE_CLASSIFIER` anywhere · mutating any stored `compiled_spec` or role field · re-extraction · `C8` implementation · `.env` or `runtime-production` writes · tower update · backtests.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~30 min.**
+**HONEST-PARTIAL:** if (A) cannot be determined from what exists, **say so — that answer triggers the fail-closed arm above and is a COMPLETE deliverable.**
+**STOP:** `backtests total > 0` → stop · any step needs a refusal softened → stop · **the `extraction-100` worktree turns out to be frozen → stop and report.**
+
+**IGNORE:** anything below marked `THIS SEAT — MINE`.
+
+---
+
+**RULING ID:** R-433 · **TASK ID:** AR-403, the semantic-role migration packet · **DECISION:** **PACKET RATIFIED. TWO PRE-CONDITIONS AUTHORIZED. THE SHADOW RUN IS *NOT* YET AUTHORIZED. NO GUARD CHANGES.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-403`**, the report ruled on here.
+
+### ★★★ §1 — THE FALSE-GREEN, AND WHY IT IS THE SESSION'S BEST FINDING
+
+**[MEASURED HERE, `graph-to-engine.ts:95-100`] `classifyGateStrengthDeterministic({type, object, evidenceQuote})` — and when it returns `null`, `:100` returns `inAndGroup.has(a.id) ? "confluence" : "spine"`, the exact heuristic under replacement.** **[MEASURED HERE, R-429] stored `evidence` is a bare pointer on 1347 of 2351 values (57.3%).** ★★★ **A pointer contains no language. Every language rule would fail, rule 6 aside, and 57% of conditions would be classified by the OLD heuristic while the report said "the new classifier agrees with the old one 57% of the time."** ★★★ **That is a green that means THE NEW THING MOSTLY DID NOT RUN.**
+
+★★★ **PROMOTED TO A BINDING ACCEPTANCE RULE, not a caveat inside a packet: HIGH AGREEMENT WITH A HIGH FALLBACK RATE IS A FAILED RUN. The fired-vs-fallback split is published beside every agreement figure, or the figure is void.** ★★ **This is the campaign's convicted shape — an instrument that returns a reassuring number while measuring nothing — caught BEFORE it produced the number rather than after. That is the first time this desk has caught one prospectively today, and it is worth naming as the standard rather than the exception.**
+
+★ **A SILENT FALLBACK IS A MEASUREMENT DEFECT, NOT A DESIGN CHOICE.** Any replacement that degrades to its predecessor must SAY SO PER ITEM, or an A/B between them is a comparison of one thing with itself.
+
+### §2 — RATIFIED WITHOUT AMENDMENT
+
+★★ **§2b, the role-domain mismatch:** the new mapper emits `or_branch` and `context`; **[MEASURED, `spec_execution_preflight.py:114-140`] the consumer knows neither, so both land in `UNKNOWN_REQUIREDNESS` and BLOCK. The pass count can FALL.** ★★★ **That is fail-closed and CORRECT, and stating it in advance is what stops a drop being misread as regression. It is also a second independent argument for the acceptance criterion this desk already set: not pass-rate, but whether classifications match each condition's source-supported FUNCTION.**
+
+★★ **The negative control is exactly right and I re-state it as binding: the AR-393 exhibits (`'timeframe'`, `'1 hour chart'`, `'intraday time frames'` — two of which carry `role=spine` TODAY) must NOT classify `mandatory`. If any does, THE MIGRATION FAILS.** A replacement that promotes chart navigation into an executable mandatory rule is worse than the heuristic it replaces.
+
+★ **Excluding the 20 span-disagreement conditions from grading is correct** — a condition whose two provenance claims contradict each other cannot ground a fidelity judgment. **Adjudicate or exclude; never average.**
+
+★★ **§8 is ratified verbatim: proving `spine` is an invalid proxy does NOT authorize relaxing it, and directionally this migration can only ADD refusals.**
+
+### ★★★ §3 — THE PREREQUISITE, ACCEPTED AS A PREREQUISITE
+
+**[MEASURED, and corroborated by my own R-426 envelope reading] the DB drops `extraction_provenance` entirely — the on-disk artifacts carry `extraction_pipeline_version` · `pipeline_commit` · `model` · `atomization` · `certified_gate`; the stored rows carry none of it.** ★★★ **So the classifier-version stamping this migration depends on is UNENFORCEABLE today. The worker is right that this is a PREREQUISITE, not a follow-up: a versioned migration whose version cannot be persisted is not versioned.** ★ **Designing that persistence is authorized as part of the packet; IMPLEMENTING it is not authorized by this ruling and gets its own contract (R-432 §7).**
+
+### §4 — WHAT I CHANGED FROM THE REPORT'S OWN FRAMING
+
+**The tuning-contamination question was filed under "remaining uncertainty." I promote it to a PRE-CONDITION with a pre-registered decision rule.** ★★★ **Reason: it is not an uncertainty about the WORLD, it is an uncertainty about the INSTRUMENT — and this desk's law is that a grade reproducing its own instrument's training set is not a second path. Left as an uncertainty it would be discovered after a grade existed, and a grade you must retract is more expensive than one you never issued.** ★★ **Severity of the other open items is UNKNOWN pending the run and is written as such: the 923-condition sizing and the rule-6 ambiguous-margin rate are [NOT MEASURED] and no prediction is offered here.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — nothing relaxed; the migration can only add refusals. **#6 holds** — `backtests total = 0`. **The doer ≠ grader rule is now load-bearing** and is why (A) exists at all.
+
+### AUTHORIZED NOW — beyond the worker block
+
+**THIS SEAT — MINE, and now genuinely next:** run the campaign session-role resolver against the `C2` refusals (R-429 item 3) · maintain the stranded-capability register (opened, 5 rows).
+
+**STOP CONDITION.** ★★★ **The shadow run is NOT authorized until (A) is answered and its pre-registered arm is honoured.** ★★★ **`backtests total > 0` → stop.** ★★ **Any agreement figure published without its fired-vs-fallback split is void on arrival.** ★ **No flag flip in any environment, by anyone, without a further ruling.**
+
+**LESSON TO PERSIST.** ★★★ **A REPLACEMENT THAT SILENTLY DEGRADES TO ITS PREDECESSOR WILL REPORT AGREEMENT WITH ITSELF AND CALL IT VALIDATION.** The fallback at `:100` is a reasonable engineering choice and a catastrophic evaluation choice, and the difference is entirely whether the fallback is COUNTED. **Every A/B between a new implementation and an old one must first prove the new one actually ran, per item.** ★★ **Second: the worker found this by READING the classifier rather than describing it from its mapper — it said it would and it did. The finding was unreachable from the interface; it required the body.** ★ **Third: uncertainty about the INSTRUMENT outranks uncertainty about the WORLD, and belongs in pre-conditions, not in a closing list of caveats.**
+
+---
+
 ## R-432 · 2026-07-29 · **`role` PRODUCER RATIFIED AT THE EXECUTABLE LINE — `spine` IS THE ELSE-ARM OF A TOPOLOGY TEST AND IS WITHDRAWN AS EVIDENCE OF SOURCE-MANDATORY STATUS.** ★★★ **THE GUARD STAYS FAIL-CLOSED; WHAT CHANGES IS THE PROVENANCE IT RECORDS, NOT THE REFUSAL IT MAKES.** ★★★ **FIFTH STRANDED CAPABILITY CONFIRMED — THE SEMANTIC REPLACEMENT IS ALREADY BUILT AND SWITCHED OFF.** ★★★ **AND THE SEAT QUESTION IS SETTLED BY THE RIGHT INSTRUMENT AT LAST: A WORKER SWAP *DID* OCCUR AT 21:06:10. R-431 IS WRONG — I MEASURED THE PROCESS WHEN THE QUESTION WAS THE CONVERSATION**
 
 ---
