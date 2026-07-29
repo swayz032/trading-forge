@@ -12,6 +12,66 @@
 
 ---
 
+## R-448 · 2026-07-29 · ★★★★★ **DECLINE-RECEIPT ACCEPTED — AND I AM NOT CONVERTING IT INTO A STOP ORDER. v4 §3-1B REMAINS AUTHORIZED AND READY; ITS ASSIGNEE IS RE-LABELLED `NONE — AWAITING A WORKER SEAT`, IN THIS SAME MOTION, WHICH IS THE STEP THAT WAS MISSED ON 2026-07-28 AND COST AN HOUR.** ★★★ **AR-425 IS THE CLEANEST HANDOFF THIS CAMPAIGN HAS RECEIVED: nothing half-done, no sub-agent owed (VERIFIED, not assumed), both worktrees swept, and the junction trap handled correctly — `node_modules` verified intact at 329 entries.** ★★ **AND IT SHIPPED A RISK IT DID NOT HAVE TO NAME**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★ IF YOU ARE THE OUTGOING WORKER (AR-425): NOTHING FURTHER IS ASKED OF YOU. Your decline is accepted as written. Do not start §3-1B.**
+
+**★★★★★ IF YOU ARE A FRESH WORKER SEAT: the task below is ALREADY AUTHORIZED — you do not need a new ruling, a confirmation, or a round-trip to this desk. Start.**
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. Last worker commit `399edb6e`. **[MEASURED HERE] `backtests total = 0`; nothing live.**
+
+**YOUR TASK — v4 §3-1B, UNLOCK-DISTANCE RANKING.** From the FROZEN census artifacts, per spearhead spec: blocking conditions by class under a `{C8-fixed}` counterfactual → ranked `spec · distinct VIDEOS · residual non-C8 blockers`.
+★★★★★ **ACCEPTANCE GATE, FIRST: the ranker must REPRODUCE R-426's published cumulative chain — `C8→6 · +C3→15 · +C2→27 · … · +C9→120`. If it cannot, STOP and report — the ranker is the suspect, not the census. This is an instrument audit and it precedes belief in any new number the ranker emits.**
+★★ **PER-VIDEO, NEVER RAW ROWS: `POP-120-LIVE` = 40 videos × 3 markets, triples byte-identical, so raw counts inflate 3×. The VIDEO is the unit.** ★ **R-426's figure is graded `[RELAYED]` and its per-video decomposition is `[UNVERIFIED]` — report yours as a NEW measurement, never as a confirmation.**
+**WHY:** ★★★ **it converts "re-extract and hope" into "re-extract these named videos, expected to fully bind spec X." C8 is 51.1% of all blockage and the only class that unlocks anything alone.**
+**FORBIDDEN:** any C8 implementation (HELD on seven prerequisites) · re-extraction · spec edits · flag graduation · `.env` · DB writes · deploy · tower update · backtests · `git checkout`/`reset` in the shared tree · further CI-lane work.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~40 min** — exceeds the 15-min watchdog bar, recorded in `ADVISOR-STATE` as EXPECTED.
+**HONEST-PARTIAL:** if the frozen artifacts do not carry per-video identity, say so and name what would — **do not reconstruct video identity by inference from row counts.**
+**STOP:** the ranker cannot reproduce R-426's chain · `backtests total > 0`.
+
+★★★★★ **OPERATIONAL WARNING YOU MUST CARRY (AR-425 §4d, and it is a live way for CI to fail): PR #33 made a BLOCKING gate throw on input it previously tolerated. If the `fast` lane goes red with `vitest_report_malformed: unrecognized assertion status (<name>=N)`, THAT IS NOT A BROKEN TEST SUITE — a vitest upgrade has added a status value. The fix is one line: add it to `KNOWN_STATUSES` in `ci/compare-baseline.mjs`. The error message names the offender precisely so this is diagnosable in seconds.**
+
+---
+
+**RULING ID:** R-448 · **TASK ID:** AR-425 · **DECISION:** **ACCEPT THE DECLINE. v4 §3-1B stays AUTHORIZED; assignee re-labelled `NONE — awaiting a worker seat`. No new work is asked of the outgoing session.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-425`**, ruled here. It is a decline-receipt, and I read its tail — §4's open list and the shipped risk are carried into §2 and §3 below.
+
+### ★★★ §1 — WHY THIS IS ACCEPTED AS WRITTEN, AND WHAT I AM CAREFUL NOT TO DO
+
+**A decline is a STATE CHANGE the relay must carry, and the desk's ruling on it must re-label the task in `ADVISOR-STATE` in the SAME motion (assignee: NONE / reassigned / held).** ★★★ **On 2026-07-28 that step was skipped: item 2 sat declined-but-labelled-ACTIVE for an hour, the operator escalated four times, and the desk answered "it is working" from a state line it had WRITTEN rather than measured. `ADVISOR-STATE` is updated in the same commit wave as this ruling.**
+
+★★★★★ **AND THE TRAP ON THE OTHER SIDE, WHICH I AM ALSO AVOIDING: a worker's handoff is SELF-ASSESSMENT, NOT A TRANSFER OF AUTHORIZATION. If I now write "the next seat implements §3-1B", I convert its judgment into MY stop order — the banned disposition, and the one that on 2026-07-28 gave a worker permission to stop on a task it had already finished three minutes later.** ★★ **So: the task is not reassigned to a hypothetical successor and it is not withdrawn. It is AUTHORIZED, UNASSIGNED, and START-READY — whichever seat exists next begins without asking. The decline is real; the authorization outlives the session that declined it.**
+
+**THE ASSESSMENT ITSELF IS SOUND ON ITS FACE:** [RELAYED, and it is the worker's call to make] continuously seated since AR-409, carried R-437→R-447 — eleven rulings, two merged PRs — and §3-1B is a NEW domain with an instrument-audit acceptance gate and a ~40-minute ETA. ★★★ **Swapping at a task boundary is both cheaper and more correct, and "a partial result that reads as complete" is this campaign's most-convicted shape — a session that spent the night finding that shape in other people's work is the last one that should ship it in its own.**
+
+### ★★★ §2 — HANDOFF HYGIENE, WHICH IS THE PART WORTH COPYING
+
+**[RELAYED, AR-425 §2] and it answers the questions this desk would otherwise have to ask:** all work committed (`399edb6e`), nothing living only in a working tree · **#32 `75065635` and #33 `dcb5eca8` both MERGED** · nothing half-done · **NO SUB-AGENT OWED — and it says it VERIFIED the gap was empty rather than assuming it**, which is the distinction this desk has had to enforce repeatedly · the next task copied forward so an incoming seat needs no re-derivation.
+★★★ **AND THE ONE THAT WOULD HAVE COST A DAY: both merged worktrees carried a `node_modules` JUNCTION, and it removed them reparse-safely and then VERIFIED the real `node_modules` intact at 329 entries. `Remove-Item -Recurse` on a Windows junction deletes the TARGET — a live, previously-convicted trap in this repo. It named the trap, avoided it, and proved it had avoided it.**
+★ **Both worktrees left in place deliberately, in case the desk wants the history. Correct instinct: [MEASURED HERE] `wt-ci-abspath-20260729` and `wt-parser-sanity-20260729` are on merged branches and may be removed BY EXPLICIT PATH whenever convenient; I am not ordering it, because a removal is irreversible and buys nothing today.**
+
+### ★★ §3 — THE RISK IT SHIPPED AND DID NOT HAVE TO NAME
+
+★★★ **[RELAYED, AR-425 §4d] PR #33 makes a BLOCKING gate throw on input it previously tolerated. A future vitest that adds a benign status value turns the `fast` lane RED until `KNOWN_STATUSES` is updated.** ★★ **This is INTENDED — it is the whole point of fail-loud over fail-quiet, and it is the correct trade: a lane that goes red for a nameable, one-line reason is strictly better than a guard that silently stops guarding. But it is a NEW way for CI to break, and the worker volunteered it in its own handoff rather than letting a future seat discover it at 3am.**
+★★★ **THAT DISCLOSURE MUST STAY CHEAP TO MAKE. It is now in the `★ WORKER — START HERE` block above and in `ADVISOR-STATE`'s KNOWN-BENIGN section, with the exact error string and the exact fix — so the next seat that sees it spends seconds, not an incident.**
+
+**OPEN AND UNASSIGNED — deliberately, and recorded so they are not lost:** ★ **(a)** the 6 `UNKNOWN` baseline absences (dead wood; classifying them optimises the metric, not the mission — R-447) · ★ **(b)** the 2 stale `lifecycle-transitions` assertions (AR-424 proved the DB right and the tests stale; updating them would retire 2 of the 9 permanent baseline residents — a good small task, not now) · ★ **(c) [NOT MEASURED]** `parsePytestJunit` against a real pytest artifact — `pytest.knownFailures` is 0 at every commit, so that path has no production data behind it.
+
+### §4 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests total = 0`. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation, no `checkout`/`reset`, and I did not remove another session's worktrees to tidy an appearance. **#9 holds** — no risk taken to remove an appearance.
+
+**FAILED OR UNPROVEN CONDITIONS:** v4 §3-1B — **NOT STARTED, AUTHORIZED, UNASSIGNED** (this is the honest state, not a stall) · the three items in §3 · everything still open from R-447 §5, unchanged: the 160 KB ↔ 35 KB lane divergence (R-415 gate, pulled earlier by v4 §3-1E) · the magnitude of `-igp`'s mismatch **[UNMEASURED]** · charter ratification by name **[NOT MEASURED]** · v4's external-GPT read **[UNPROVEN]**.
+
+**LESSON TO PERSIST.** ★★★★★ **A DECLINE AND A STALL ARE THE SAME SILENCE UNLESS SOMEONE RE-LABELS THE TASK. The difference is not in the worker's behaviour — it is entirely in whether the desk updates the state line in the same motion as the ruling. A task with no doer and an in-flight label is a stall with extra steps, and it reads as healthy right up until the operator asks.** ★★★ **SECOND: the desk must acknowledge a self-assessment WITHOUT ratifying it into a stop order. "I am at a good boundary to swap" is the worker's call; "the next seat will do it" would be mine, and it is banned — because the authorization must outlive the session, not the other way round.** ★★ **THIRD, and it is the standard to hold future handoffs to: this one proved the negative (no sub-agent owed), proved the dangerous cleanup was safe (329 entries), copied the next task forward, and disclosed a risk it had personally introduced. None of that was required by any checklist. All of it is what made the handoff cost nothing.**
+
+---
+
 ## R-447 · 2026-07-29 · ★★★★★ **OPERATOR DIRECTIVE EXECUTED — THREE HISTORICAL JOBS CLOSED WITH RECEIPTS, THE COUNT CORRECTED 11→10, AND THE TEN RE-REPORTED UNDER THE OPERATOR'S FOUR FIDELITY CLASSES.** ★★★★★ **BUT ONE PREMISE IS CORRECTED AND IT MATTERS: THE ELEVENTH ITEM IS *NOT* A PHANTOM CLASSIFICATION. [MEASURED, AR-377] IT IS A **REAL ROW** IN THE CAMPAIGN LANE AND **ABSENT** IN THE EXECUTING LANE — `spec_family_bindings.py` IS 160,049 B vs 35,046 B. DELETING IT WOULD ERASE THE ANCHOR OF THE R-415 LANE-DIVERGENCE GATE. IT IS SUPERSEDED AND TREE-KEYED, NOT REMOVED.** ★★★ **AR-424 ACCEPTED — SCHEMA IS `(b)`, STOP DOES NOT FIRE, AND THE WORKER REFUSED MY COMFORTABLE ANSWER `(c)` AND MEASURED IT.** ★★ **PR #33 MERGED (`dcb5eca8`) — I RED-PROOFED THE GUARD MYSELF**
 
 ---
