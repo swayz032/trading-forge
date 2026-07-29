@@ -4,6 +4,90 @@
 
 ---
 
+## AR-413 · 2026-07-29 · **R-440 ITEM (2) DELIVERED — AND IT ANSWERS YOUR QUESTION IN THE DIRECTION YOU FEARED: `contextual` = 7 rows / ★★★ 5 VIDEOS · `alternative` = 8 rows / ★★★ 6 VIDEOS. BOTH UNDERPOWERED, REPORTED AS SUCH, NEITHER COMBINED NOR PADDED.** ★★★ **AND THE FINDING YOU DID NOT ASK FOR, WHICH IS THE STRONGER ONE: ALL 15 `alternative`+`contextual` DECISIONS CAME VIA `RESOLVED_POINTER_TEXT` — `SEMANTIC_SOURCE_TEXT` IS `0 of 15`. THOSE TWO CLASSES REST ENTIRELY ON THE POINTER PATH.** ★★ **YOUR `trigger` CORRECTION IS CONFIRMED AT MY DESK AND MY PREMISE IS WITHDRAWN: I COMPARED AGAINST A COMMENT ON AN `Optional[str]`**
+
+**RULING ID:** R-440 · **TASK ID:** AR-412 · **ARTIFACT:** frozen `shadow_rows.json`, sha256 `edaa0c14…a643ca51` · **RECOMMENDATION:** **APPROVAL_REQUESTED on item (2). Item (1) still running — reported separately.**
+
+### ★★★ §0 — THE VALIDATION GATE I RAN BEFORE TRUSTING THE ARTIFACT
+
+**The frozen artifact is NOT committed** (it embeds live operator data) and lived in a DEAD session's scratchpad. I located it and **validated it against your own published figures before computing anything new** — an instrument is checked against a known quantity before its disagreement is believed:
+
+| frozen published figure | reproduced here | |
+|---|---|---|
+| HOLDOUT-26 rows | **1776** | ✓ |
+| distinct videos | **26** | ✓ |
+| `LEGACY_FALLBACK` / `RESOLVED_POINTER_TEXT` / `SEMANTIC_SOURCE_TEXT` | **1704 / 58 / 14** | ✓ |
+| ARM A fired | **72** | ✓ |
+| ARM A class dist | **mandatory 46 · optional 11 · alternative 8 · contextual 7** | ✓ |
+| ARM B fired | **0** | ✓ |
+
+★★ **Six of six reproduce exactly. Only then did I compute the columns below.** ★ **Its 16 fields carry every column you asked for — no honest-partial needed, nothing synthesised.**
+
+### ★★★ §1 — THE 72 FIRED DECISIONS BY EMITTED SEMANTIC CLASS
+
+| class | rows | ★★★ **DISTINCT VIDEOS** | `SEMANTIC_SOURCE_TEXT` | `RESOLVED_POINTER_TEXT` | `spanOk` | resolved text present |
+|---|---:|---:|---:|---:|---:|---:|
+| `mandatory` | 46 | **19** | 12 | 34 | 29/46 | 46/46 |
+| `optional` | 11 | **6** | 2 | 9 | 6/11 | 11/11 |
+| `alternative` | 8 | **6** | ★ **0** | 8 | 8/8 | 8/8 |
+| `contextual` | 7 | **5** | ★ **0** | 7 | 6/7 | 7/7 |
+
+**Rows-per-video** (twelve near-identical conditions from one video are ONE observation, as you said):
+`mandatory` 19 videos `[6,5,4,4,4,3,3,2,2,2,2,2,1,1,1,1,1,1,1]` · `optional` 6 `[4,3,1,1,1,1]` · `alternative` 6 `[2,2,1,1,1,1]` · `contextual` 5 `[2,2,1,1,1]`.
+★ The 72 span **24 of 26 videos**; two videos fired nothing at all.
+
+### ★★★ §2 — THE VERDICT YOU ASKED FOR
+
+**`contextual` — UNDERPOWERED. 7 conditions across 5 videos**, max 2 from any one video.
+**`alternative` — UNDERPOWERED. 8 conditions across 6 videos**, max 2 from any one video.
+**`optional` — MARGINAL. 11 across 6 videos**, and 7 of the 11 come from just 2 videos.
+**`mandatory` — the only adequately-supported class. 46 across 19 videos.**
+
+★★★ **I did NOT combine the thin classes and did NOT borrow role counts to pad them, per your instruction. An underpowered class is the finding.**
+
+★★★ **AND THE PART THAT MATTERS MORE THAN THE COUNTS: `alternative` and `contextual` fired `0 of 15` via `SEMANTIC_SOURCE_TEXT` — every single one came through `RESOLVED_POINTER_TEXT`.** ★★ **So a grade of those two classes would not be grading "can the labeller read the teacher's words"; it would be grading the POINTER-RESOLUTION path exclusively. Their sample is not merely small — it is drawn from one decision route, so even a perfect score on them would not generalise to the path that carries `mandatory`'s 12 source-text decisions.** ★ **Spending a grader on these two classes buys almost nothing, and I would not spend it.**
+
+### §3 — LEGACY `role` CO-OCCURRENCE — **OBSERVATION, EXPLICITLY NOT A MAPPING**
+
+| class | `spine` | `confluence` | `trigger` | `invalidation` |
+|---|---:|---:|---:|---:|
+| `mandatory` | 22 | 13 | 10 | 1 |
+| `optional` | 5 | 4 | 2 | 0 |
+| `alternative` | 1 | 4 | 3 | 0 |
+| `contextual` | 2 | 4 | 0 | 1 |
+
+★★★ **The data actively REFUTES any mapping rather than merely failing to establish one: every semantic class draws from three or four legacy roles, and `mandatory` — the largest — spans all four.** ★★ **So `confluence ≈ contextual` is not just unvalidated, it is contradicted: `confluence` appears more often under `mandatory` (13) than under `contextual` (4). I record this only to close the inference you pre-emptively forbade.**
+
+### ★★ §4 — YOUR `trigger` CORRECTION: CONFIRMED, AND MY PREMISE IS WITHDRAWN
+
+**I NAME THE DECLARATION SOURCE I COMPARED AGAINST, AS YOU REQUIRED: `src/engine/extraction/compile_lints.py:129`** — and [MEASURED HERE] it reads:
+
+```python
+role: Optional[str] = None  # "spine" | "confluence" | None (spec_family_bindings.py role vocabulary)
+```
+
+★★★ **The TYPE is `Optional[str]`, which admits ANY string. The vocabulary is a trailing COMMENT that enforces nothing, and that file contains no role-value validation at all.** Against the ENFORCED declarations — **[MEASURED HERE] `spec-onboarding-service.ts:170` `role: "spine" | "confluence" | "trigger" | "invalidation"` and `test_spec_producer.py:31` `_VALID_ROLES = {...4 values...}`, asserted at `:127`** — `trigger` is declared AND validated.
+
+★★★ **So the `229` are EXPECTED, not a producer/schema contract defect, and I withdraw that framing.** ★★ **My error is a named face of this desk's own taxonomy — I read a CAPTION as a CONTRACT — and it is the same shape as the defect PR #31 exists to fix, one level up: a comment that outlived its code became the next reader's false premise, and I was the next reader.** ★ **The defect is the stale comment. One-line follow-up, not an investigation. `trigger` keeps fail-closed treatment; nothing here promotes or remaps it, and no stored `role` was touched.**
+
+### §5 — THE ROLE COUNTS FROM THE SUPERSEDED KEY — FILED, LABELLED **NOT AN ANSWER**
+
+Per your instruction to keep them. **HOLDOUT-26 legacy `role`, per-row:** `confluence` 703 (39.6%) · `spine` 702 (39.5%) · `trigger` 229 (12.9%) · `invalidation` 142 (8.0%) = 1776.
+**Per-video:** `spine`, `confluence`, `trigger` in **26/26** videos; `invalidation` in **24/26**. Rows-per-video min 18 / median 62 / max 144.
+**By arm:** `entry_conditions` = spine 702 · confluence 703 · trigger 229; `invalidations` = invalidation 142 — ★ **`invalidation` occurs in the invalidations arm and nowhere else, which corroborates R-436 §3's finding that it is TYPE-assigned rather than topology-residue.**
+★★ **These do not answer the gradeability question and are not offered as if they did.**
+
+### §6 — HOLDOUT-26 COVENANT
+
+★★★ **NOT BURNED. I counted the DISTRIBUTION of emitted labels. No ground truth was applied, no condition was adjudicated, no rule was read for tuning, and the labeller was not touched.** ★ **I did not reach for a rule change at any point; had the thin classes tempted one, the instruction was to stop, and there was nothing to stop.**
+
+**Remaining uncertainty:** ★ **[NOT MEASURED]** whether `spanOk=False` rows (17 of 72) carry usable evidence — I report the flag, not a judgment of the evidence behind it; judging it is a grading act. ★ **[NOT MEASURED, and still not mine]** the `426`/`1347→921`/`18→444` counts.
+**Risk:** none — read-only over a frozen artifact. No file in the repo was modified by this item.
+
+**Next smallest task (ONE):** ★ **rule on whether the rubric grade is worth spending at all**, given `alternative`/`contextual` are underpowered AND single-path. My recommendation: **not on those two classes.**
+
+---
+
 ## AR-412 · 2026-07-29 · **START-RECEIPT — R-440: ITEM (2) RE-KEYED TO THE SEMANTIC-CLASS VOCABULARY. ITEM (1) STILL RUNNING, UNCHANGED.**
 
 **RULING ID:** R-440 · **TASK ID:** AR-412 · **STATUS:** STARTING the re-keyed item (2); item (1) measurement is IN FLIGHT (see below).
