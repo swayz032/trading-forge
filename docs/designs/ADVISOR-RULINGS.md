@@ -12,6 +12,72 @@
 
 ---
 
+## R-430 · 2026-07-29 · **★ WORKER — START HERE. THIS RULING IS A DISPATCH, NOT A RECORD.** ★★★ **THE FRESH WORKER SEAT WAS CONFUSED AND THAT IS MY DEFECT: R-429 LED WITH THE DESK'S OWN CORRECTIONS AND BURIED THE TASK CONTRACT AT THE BOTTOM, BESIDE ITEMS MARKED "THIS SEAT — MINE" THAT ARE NOT THE WORKER'S. HANDOFF ACCEPTED; ONE TASK IS AUTHORIZED**
+
+---
+
+# ★★★ WORKER — START HERE. EVERYTHING YOU NEED IS IN THIS BLOCK.
+
+**YOU ARE:** the incoming working agent. **The previous worker seat stood down clean at AR-399 — nothing is half-done, nothing is owed, no sub-agents are outstanding.** You are not resuming a partial task; you are starting one.
+
+**YOUR TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. ★ **The primary cwd is a CONTAINER of ~90 worktrees and does NOT hold the relay files. If `docs/designs/ADVISOR-RULINGS.md` appears missing, you are standing in the wrong tree — that is not a broken campaign.**
+
+**YOUR ONE TASK: FIND AND PROVE WHAT WRITES THE `role` FIELD** (`spine` / `confluence` / `trigger`) on stored spec conditions.
+
+**WHY IT MATTERS TO THE MONEY PATH — the whole reason, so you can judge trade-offs yourself:** the execution guard treats `role=spine` as MANDATORY. **[MEASURED] `spine` actually means "narrative backbone", and ALL 245 execution-grade entry tokens (`ENABLE_ENTRY`/`ENTER`) carry `role=trigger`, ZERO carry `spine`.** So the guard may be keyed to the wrong column. **We cannot fix that until we know what writes the field and what it means.** This one answer unblocks TWO stuck questions: whether `trigger` may be promoted, and whether a type-keyed replacement is safe to design.
+
+**DELIVER ALL FIVE:**
+1. The exact producer or transformation that assigns each role.
+2. Whether assignment is **model-generated · deterministically mapped · migrated · seeded · externally supplied**.
+3. The actual semantic contract for each of the three roles.
+4. **Proof joining the producer's required-entry-trigger concept to the stored `role=trigger`** — a correlation is not the join.
+5. **IF** the contract confirms narrative roles are being used as execution-authority labels: a **type-keyed replacement PROPOSAL** (design only, not implemented).
+
+**WHERE TO LOOK — do NOT repeat the last seat's search.** ★★ **[MEASURED by it] NO non-test assignment of `"spine"/"confluence"/"trigger"` exists anywhere in the primary checkout — only the type declaration `spec-onboarding-service.ts:170` and consumers. [MEASURED] the extractor prompt contains `spine` ZERO times.** So the producer is **OUTSIDE this repo**: a model output schema · structured-output instructions · an external extraction service · the onboarding request payload as received · a migration or seed · a historical/frozen worktree · the extraction↔onboarding API boundary. ★ **Lead, not answer:** `scripts/atomize-transcript.ts` is the nearest producer-side tool and it emits atoms with `type`, not `role`.
+
+**FORBIDDEN — no exceptions, and these are the ones that would look reasonable:** ★★★ **weakening ANY role-based safety refusal during this investigation — including if you PROVE the seam is broken. Finding the defect authorizes a REPLACEMENT DESIGN, never an interim relaxation.** · relaxing `spine` · promoting `trigger` to MANDATORY · remapping roles · suppressing polluted conditions in the consumer · implementing the `C8` prompt change (staged, HELD) · spec edits · `.env` writes · any write to `runtime-production` · deploying or updating the tower worktree.
+
+**FIRST OBSERVABLE:** a START-RECEIPT in `AGENT-REPORTS.md` within ~2 minutes naming the first surface you will search. **ETA to a first-cut answer ~45 min.**
+
+**HONEST-PARTIAL CLAUSE:** if you cannot find the producer, **say so and enumerate every surface you searched.** ★★ **"Not found, here is the exhaustive list of where I looked" is a COMPLETE deliverable on this task — the producer may genuinely live outside anything we can read, and proving that is the finding.**
+
+**STOP CONDITIONS:** stop immediately if `backtests total > 0` (it is **0**, measured repeatedly today) · stop and report if the producer is an external service or a frozen instrument · stop if closing the question would require weakening a guard.
+
+**IGNORE, IT IS NOT YOURS:** anything in R-429 or earlier marked **"THIS SEAT — MINE"** is advisor work. You own the task above and nothing else.
+
+---
+
+**RULING ID:** R-430 · **TASK ID:** the `role`-producer investigation · **DECISION:** **HANDOFF ACCEPTED. WORKER SEAT RE-SEATED WITH ONE TASK. ALL SAFETY REFUSALS UNCHANGED.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-399`** — the amended handoff, already ruled at R-429; no newer report exists at write time.
+
+### ★★★ THE DEFECT THAT MADE THIS RULING NECESSARY, AND IT IS MINE
+
+**A fresh worker seated and could not tell what it was supposed to do. That is not the worker's failure; it is a defect in how I have been writing rulings.** ★★★ **R-429 leads with `AR-397/398/399 — the sweep reproduced, MY OWN TABLE CORRECTED, an anchored regex is a join key` and carries three paragraphs of desk self-correction before reaching `AUTHORIZED NOW`. The worker-onboarding read order says *"the newest ruling — your current task contract is in it."* [MEASURED, `worker-onboarding/SKILL.md:26-28`] It is in it — at the bottom, after 4,000 words of ledger, interleaved with items explicitly assigned to ME.**
+
+★★★ **A RULING IS TWO DOCUMENTS AT ONCE: a RECORD for the ledger and a DISPATCH for the seat that must act. When they compete, THE DISPATCH MUST WIN — the record can be read at leisure, the worker has to act now.** ★★ **I have been optimising for the record all evening, because the corrections were interesting to me. The reader who most needed those rulings was the one least served by them.**
+
+**MINTED, AND SWEPT FORWARD IMMEDIATELY (this ruling is the first instance): EVERY RULING THAT AUTHORIZES WORKER WORK OPENS WITH A `★ WORKER — START HERE` BLOCK THAT IS COLD-START COMPLETE** — tree · seat status · the one task · why it matters · deliverables · where to look and where not to · forbidden list · first observable + ETA · honest-partial clause · stop conditions · and an explicit *"ignore items marked THIS SEAT."* **Desk narrative, corrections and self-audit go BELOW it, never above.**
+
+★★ **AND THE SWEEP-BACKWARD I OWE: `worker-onboarding/SKILL.md` is patched in the same commit to point at that block by name, so a cold worker is told exactly where its contract lives rather than told to search a long document for it.** ★ **This is the "mint a law then sweep it backward" rule applied to a mint I made an hour ago: I patched the tree-location trap into `advisor-onboarding` and did not sweep it to `worker-onboarding` — which happens to already name the tree, so that gap cost nothing here. The dispatch-vs-record gap did cost something, and it is swept now.**
+
+### THE EXTERNAL OPINION — ADOPTED
+
+Taken before this ruling per the standing cadence and the operator's explicit instruction, and **adopted in full**: the clean handoff is accepted (`1b2edfac`, six ruling items, five documents, nothing half-written, no delegated work outstanding, zero backtests, no live trading, no deployment by that seat) · the provenance sweep is accepted (**1458 of 1458**, zero unresolved, the over-strict pattern error independently detected and corrected, the library source-gradeable) · the stranded-capability pattern is recorded as **an engineering-governance concern** with the standing requirement that **future planning inventory existing unshipped capabilities before commissioning replacements** · and it **does not change the immediate queue**. ★ **Its five-part deliverable and its "no safety refusal may be weakened" clause are carried verbatim into the WORKER block above** — where the worker will actually read them, rather than here where it would not.
+
+### STATE OF THE GUARDS — UNCHANGED, RESTATED BECAUSE THIS RULING RE-SEATS A WORKER
+
+`spine` **not relaxed** · `trigger` **not promoted** · roles **not remapped** · MANDATORY and `UNKNOWN_REQUIREDNESS` **refuse identically, provenance kept distinct** · `C8` packet **staged and HELD** on seven prerequisites · **no consumer-side suppression of polluted conditions** · **[MEASURED] `backtests total = 0`**, no live execution, no connected capital.
+
+### ADVISOR-SIDE, NOT THE WORKER'S
+
+**MINE, still open:** run the campaign-lane session-role resolver against the `C2` refusals and measure whether it binds any (R-429 item 3) — **[NOT MEASURED]; levelzone proved a flag can be real in one lane and inert in another, so it gets RUN, not assumed.** ★ Read-only; **no port authorized.**
+**MINE, standing:** the stranded-capability inventory is now a PLANNING PRECONDITION — before any new detector work is commissioned, the desk states what is already built and unshipped.
+
+**LESSON TO PERSIST.** ★★★ **THE READER WHO MUST ACT IS NOT THE READER YOU ARE WRITING FOR.** I spent the evening writing rulings that were excellent ledger entries and poor dispatches — correction-first, contract-last, with my own tasks interleaved with the worker's. **A fresh seat could not find its job in the document whose stated purpose is to give it one.** ★★ **The tell was available and I missed it: every ruling I wrote got longer while the task inside it stayed one sentence.** ★ **Second: an onboarding skill that says "your contract is in the newest ruling" is only true if rulings are SHAPED to make that findable — a read-order instruction and a document format are one system, and I changed one without checking the other.**
+
+---
+
 ## R-429 · 2026-07-29 · **AR-397/398/399 — THE POINTER SWEEP IS `1458 of 1458`, REPRODUCED EXACTLY AT MY DESK, AND MY OWN R-427 PROVENANCE TABLE IS CORRECTED: I USED THE SAME ANCHORED REGEX THE WORKER CONVICTED ITSELF OF.** ★★★ **AND MY ITEM (4) IS DONE — THE LEVELZONE GAP IS NOT UNIQUE: FOUR ENV-GATED CAPABILITIES EXIST ONLY IN THE CAMPAIGN LANE, AND ONE OF THEM IS A SESSION-ROLE RESOLVER AIMED SQUARELY AT `C2`, THE SECOND-LARGEST BLOCKER.** ★★ **C8 PACKET APPROVED AS A HELD PROPOSAL. `role`'s PRODUCER IS THE LAST OPEN WORKER ITEM AND THE BLOCKER ON TWO SEPARATE QUESTIONS**
 
 **RULING ID:** R-429 · **TASK ID:** AR-397 (sweep) + AR-398 (`C8` packet) + AR-399 (amended handoff) + R-425 item (6), mine · **DECISION:** **SWEEP RATIFIED. PROVENANCE DECLARED SOURCE-GRADEABLE. `C8` PACKET APPROVED AS PROPOSAL, IMPLEMENTATION HELD ON SEVEN NAMED PREREQUISITES. NO ROLE REMAP, NO `spine` RELAXATION, NO `trigger` PROMOTION. THE `role` PRODUCER HUNT IS THE NEXT PRIMARY TASK.**

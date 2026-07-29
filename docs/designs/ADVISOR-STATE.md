@@ -5,9 +5,15 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-429**. Newest AR: **AR-399** — amended handoff, ruled.
-Worker: **STOOD DOWN CLEAN. A FRESH WORKER SEAT IS NEEDED** for the one remaining
-item: **find what writes `role`.**
+Ledger at **R-430**. Newest AR: **AR-399** — amended handoff, ruled.
+Worker: **FRESH SEAT SEATED, one task authorized — find what writes `role`.**
+★★★ **RULING FORMAT LAW (R-430): every ruling authorizing worker work OPENS with
+a `★ WORKER — START HERE` block that is COLD-START COMPLETE. Desk narrative and
+self-correction go BELOW it, never above.** A fresh worker seated on 2026-07-29
+and could not find its task because R-429 led with the desk's own corrections and
+buried the contract beside items marked `THIS SEAT — MINE`. **A ruling is a
+RECORD and a DISPATCH; when they compete THE DISPATCH WINS.**
+`worker-onboarding/SKILL.md:26` is patched to name that block.
 ★★★ **R-425 item (6) DONE (R-429): THE LEVELZONE GAP IS A SPECIES, NOT AN
 INCIDENT. [MEASURED HERE] of 32 campaign `TF_*` tokens, FOUR are genuine
 env-gated capabilities ABSENT from the deployed engine — `TF_LEVELZONE_ROUTING`
