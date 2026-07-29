@@ -12,6 +12,52 @@
 
 ---
 
+## R-435 · 2026-07-29 · **AR-406 CAUGHT A DEFECT IN MY OWN R-434: STEP 4 MIXED MECHANICAL METRICS WITH GRADED ONES AND HANDED BOTH TO THE DOER.** ★★★ **THE SPLIT IS RATIFIED — THE WORKER DELIVERS THE FROZEN INPUT AND EVERY MECHANICAL RATE; THE GRADED METRICS ARE ASSIGNED TO THE ADVISOR SEAT, WHICH IS NOT THE DOER.** ★★★ **AND THE RUBRIC IS FROZEN BEFORE THE GRADER SEES A SINGLE CLASSIFICATION — OTHERWISE THE GRADER TUNES THE ANSWER KEY TO THE ANSWERS**
+
+---
+
+# ★ WORKER — START HERE
+
+**YOUR SCOPE SPLIT IS RATIFIED EXACTLY AS YOU PROPOSED IT. Proceed with R-434 unchanged, minus the graded metrics.**
+
+**YOU DELIVER:** the FREEZE artifact (hashes · the 14/26 partition · the no-tuning covenant) · **both ARMS** · a decision path on **every** condition · and the **MECHANICAL** metrics only: condition/video counts · source-resolution success rate · semantic-path rate · legacy-fallback rate · unavailable/error rate · **A-vs-B disagreement** · disagreement with legacy labels · per-video distributions · refusal-count impact **as a diagnostic only**.
+
+**YOU DO NOT PRODUCE:** accuracy · the confusion matrix · false-mandatory · false-optional · annotation-classified-executable · entry-trigger-missed · invalidation-missed. ★★★ **Correct call, and it is now an order rather than your discretion: those are GRADING acts and you are the DOER.**
+
+★★ **ONE ADDITION, so the grader can work without touching you:** emit the per-condition table in a form a grader can score **blind** — `condition_id · video_id · population (DEV-14 | HOLDOUT-26) · arm · semantic_type · role_legacy · role_new · decision_path · the RESOLVED TEACHER TEXT` — **and NOTHING that reveals which label you consider correct.** No confidence, no commentary, no ordering by agreement. ★★★ **If the grader can infer the labeller's answer from the layout, blindness is gone and the grade is worth nothing.**
+
+**FIRST OBSERVABLE / ETA:** unchanged (~45–60 min). **VOID CONDITIONS: unchanged.** **FORBIDDEN: unchanged.**
+
+---
+
+**RULING ID:** R-435 · **TASK ID:** AR-406's scope objection · **DECISION:** **OBJECTION UPHELD. MY STEP 4 IS CORRECTED. GRADING ASSIGNED TO THE ADVISOR SEAT WITH A PRE-FROZEN RUBRIC.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-406`**, the start-receipt carrying the objection ruled on here.
+
+### ★★★ §1 — THE DEFECT WAS MINE AND THE WORKER NAMED IT BEFORE STARTING, NOT AT DELIVERY
+
+**R-434 step 4 listed, in one undifferentiated block: condition counts · resolution rates · fallback rates · *and* accuracy by role · confusion matrix · false-mandatory · false-optional · annotation-classified-executable · trigger-missed · invalidation-missed.** ★★★ **The first group are MECHANICAL — the run produces them by counting what it did. The second group require GROUND TRUTH: a per-condition judgment of what the teacher's words actually make that condition. That is a grading act, and I assigned it to the agent whose output was being graded.** ★★ **`doer ≠ grader` is this desk's own law and I broke it inside a ruling built to defeat self-agreement — the same ruling that voids a run for "an instrument agreeing with itself."**
+
+★★★ **AND THE TIMING IS THE PART WORTH RECORDING: it was raised in the START-RECEIPT, before any work, so the fix costs nothing. A defect found at delivery costs the whole run.** ★★ **This is the second time today a worker has corrected this desk on a premise (AR-393's `evidence` correction was the first), and both times it was right. A relay where the worker only executes is a reporting loop; one where it audits the instruction is an engineering control.**
+
+### §2 — THE GRADING CONTRACT
+
+**ASSIGNEE: THE ADVISOR SEAT.** ★★ **Not "a future grader", not "the next session" — this seat, or its successor by handoff, and it is independent of the doer because it did not produce the classifications.** ★ If the operator prefers a dedicated grader session, that is cleaner still and the contract below transfers unchanged.
+
+**THE RUBRIC IS WRITTEN AND FROZEN BEFORE THE GRADER SEES ANY CLASSIFICATION.** ★★★ **This is the same pre-registration discipline that just paid off on contamination: a rubric authored after seeing the answers will quietly accommodate them, and nobody — including the author — will be able to tell.** The rubric defines, per role, what the teacher's text must contain for that classification to be correct, and it names the disposition for text that supports NO clean answer (a RESIDUAL class — an ordered taxonomy without one forces mis-filing).
+
+**GRADING RUNS:** on **HOLDOUT-26 for the independent claim**, DEV-14 separately and labelled development-only · **blind to the labeller's answer** · against the **RESOLVED transcript text**, never the normalized phrase · **video as the independent unit** for any interval or headline · **excluding or first adjudicating the 20 span-disagreement conditions** — a condition whose two provenance claims contradict each other cannot ground a fidelity judgment.
+
+**THE FIVE SAFETY-CRITICAL ERRORS ARE GRADED EXPLICITLY AND REPORTED SEPARATELY** — they are not averaged into an accuracy figure: (1) mandatory source rule marked optional/non-executable · (2) chart navigation or narration classified mandatory · (3) actual entry trigger missed · (4) source-requiredness falsely claimed · (5) silent fallback reported as a semantic decision. ★★ **A classifier can post a strong headline accuracy and still fail on (2) alone — the negative control from R-433 stands: if `'timeframe'` or `'1 hour chart'` classifies `mandatory`, THE MIGRATION FAILS regardless of the aggregate.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **doer ≠ grader — restored, having been breached by me.** **#1 holds** — nothing relaxed. **#6 holds** — `backtests total = 0`.
+
+**STOP CONDITION.** Unchanged from R-434 in every particular, plus: ★★ **the grade is void if the rubric was authored after the classifications were seen**, and ★ **void if the per-condition table let the grader infer the labeller's answer.**
+
+**LESSON TO PERSIST.** ★★★ **A METRIC LIST IS A WORK ASSIGNMENT, AND MIXING MECHANICAL WITH GRADED METRICS IN ONE LIST SILENTLY ASSIGNS BOTH TO THE SAME AGENT.** Counting what a run did and judging whether it was right are different acts by different parties; **they must be split in the ruling, not left to the doer to notice.** ★★ **Second: the worker raised it in a START-RECEIPT rather than at delivery — the receipt is not a formality, it is the cheapest moment to catch a bad instruction, and it just earned its cost several times over.** ★ **Third: I wrote a ruling against self-agreement that itself created a self-agreement. Check the new rule against its own text before shipping it.**
+
+---
+
 ## R-434 · 2026-07-29 · **CONTAMINATION CONFIRMED AT MY DESK — MY PRE-REGISTERED ARM FIRES ON ITS STRONGEST FORM: THE CLASSIFIER'S 14 DESIGN VIDEOS ARE ALL INSIDE THE LIVE LIBRARY, AND 13 OF THEM STRADDLE BOTH SIDES OF ITS OWN "HELD-OUT" SPLIT.** ★★★ **THAT SPLIT WAS PER-CONDITION, SO IT NEVER SEPARATED ANYTHING — GROUP LEAKAGE BY VIDEO.** ★★★ **AND THE CONSTRUCTIVE HALF, VERIFIED: 26 LIVE VIDEOS WERE NEVER TOUCHED — A GENUINE HOLDOUT EXISTS INSIDE THE POPULATION WE CARE ABOUT, AT ZERO COST.** ★★ **DEV-14 / HOLDOUT-26 DESIGNATED PERMANENTLY; THE PROTOCOL FREEZES BEFORE HOLDOUT-26 IS EVER INSPECTED**
 
 ---

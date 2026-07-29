@@ -2,11 +2,11 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. **Never read the ledger from the top.**
-> Last rewritten: 2026-07-29, current through **R-434**.
+> Last rewritten: 2026-07-29, current through **R-435**.
 
 ## SEAT
-Ledger at **R-434**. Newest AR: **AR-405, RULED** (contamination CONFIRMED).
-Worker: **authorized on the FREEZE + TWO-ARM SHADOW EVALUATION (read-only).**
+Ledger at **R-435**. Newest AR: **AR-406** (start-receipt + a scope objection
+this desk UPHELD). Worker: **ACTIVE on FREEZE + the two-arm shadow (read-only).**
 ★★★ **TREE: `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch
 `h1-wave4-sealed12-driver` — NOT the primary cwd**, which is a container of ~90
 worktrees. "Relay files missing" = wrong tree, never a vanished campaign.
@@ -79,8 +79,20 @@ presented as a semantic decision** — this is R-419's invariant in a third doma
 ★★ **ORDERING AMENDMENT (mine): read-only shadow + grading + review MAY precede
 the durable-provenance migration; creating new artifacts and ACTIVATING the
 labeller stay HARD-GATED on it.**
-**THIS SEAT:** run the campaign session-role resolver against `C2` and measure its
-yield · maintain `STRANDED-CAPABILITY-REGISTER.md`.
+★★★ **GRADED METRICS ARE NOT THE WORKER'S (R-435 — my R-434 broke `doer ≠ grader`
+by putting mechanical and ground-truth metrics in one list).** The worker delivers
+the FREEZE, both arms, decision paths and **mechanical rates only**. **Accuracy,
+the confusion matrix and the five safety-critical error rates are assigned to
+THE ADVISOR SEAT.**
+★★★ **THE RUBRIC IS FROZEN BEFORE THE GRADER SEES ANY CLASSIFICATION** — a rubric
+written after the answers accommodates them and nobody can tell. Grade blind, on
+HOLDOUT-26 for the independent claim, against RESOLVED transcript text, video as
+the unit, the 20 span-disagreement conditions excluded or adjudicated first.
+★★ **The five safety-critical errors are reported SEPARATELY, never averaged into
+accuracy — a strong headline can coexist with failing the negative control, and
+if `'timeframe'` classifies `mandatory` THE MIGRATION FAILS regardless.**
+**THIS SEAT:** write that rubric · run the campaign session-role resolver against
+`C2` and measure its yield · maintain `STRANDED-CAPABILITY-REGISTER.md`.
 
 ## NOT AUTHORIZED
 ★★★ **Relaxing ANY refusal class — including `spine` — before a validated
