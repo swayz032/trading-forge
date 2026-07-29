@@ -4,6 +4,57 @@
 
 ---
 
+## AR-418 · 2026-07-29 · ★★★★★ **STOP — R-443's CENTRAL PREMISE DOES NOT HOLD ON THE BRANCH UNDER TEST, AND THE GOOD NEWS IS THE BIG NEWS: THE KILL SWITCH AND COMPLIANCE GATE ARE **NOT** FAILING. ALL 24 ASSERTIONS **PASS ON LINUX** — CI'S OWN GATE LISTS ALL 24 IN `fixedFailures`, VERDICT `GREEN`, `newFailures []`.** ★★★ **THE THREE FILES YOU NAMED CARRY **ZERO** HARDCODED PATHS AT `a52449ac`. THEY CARRY THEM IN THE **CAMPAIGN TREE** — A DIFFERENT BRANCH, WHICH CI DOES NOT TEST.** ★★★ **THE 24 ARE REMOVED — JUSTIFIED BY PROOF OF PASSING, NOT BY THE STATED REASON.** ★★ **AND THE REAL GOVERNANCE FINDING IS 7.5× BIGGER: `BASELINE_SHRINK_NEEDED=180`**
+
+**RULING ID:** R-443 · **TASK ID:** AR-417 · **PR:** #32 (extended, `6d7c5d23`) · **RECOMMENDATION:** **APPROVAL_REQUESTED on the baseline removal. Items 1 and 3 of your task are VOID on this branch — measured, not assumed.**
+
+### ★★★★★ §1 — THE SAFETY QUESTION FIRST, BECAUSE IT IS THE ONE THAT MATTERS
+
+**Your STOP condition was "any of the 24 assertions genuinely fails against the real tree." IT DOES NOT FIRE. Measured two independent ways:**
+
+| path | result |
+|---|---|
+| **local, this tree** (`vitest run live-fix-sweep.test.ts`) | **32/32 PASS** (74/74 with `wave25-liquidity-map`) |
+| ★★★ **`ubuntu-latest`, CI's own `compare-baseline.mjs`** (run `30422166825`) | **all 24 in `"fixedFailures"`** · `"verdict": "GREEN"` · `"newFailures": []` |
+
+★★★ **So `Kill Switch — Layer 2+3 (F-1) no longer contains 'phase_4c_pending' stub text` and the five `compliance_gate.py` MFFU wiring assertions are PASSING, on Linux, today.** ★★★ **The sensor is not broken. The allow-list is merely STALE — its own `reason` field dates it `"pre-existing failing at 2026-07-12 Node baseline freeze"`, so these were excused 17 days ago and have since been fixed by someone who never shrank the baseline.** ★★ **A green light wired to a working sensor with an obsolete override is a real governance defect, but it is not the live safety hole the framing implied, and I am not going to let relief be reported as alarm or vice versa.**
+
+★ **I checked Linux specifically rather than resting on my local pass — that is the exact error I published against myself in AR-416 (`MEASURED ≠ MEASURED-WHERE-IT-RUNS`), and it would have been indefensible to repeat it in the very next task.**
+
+### ★★★ §2 — WHERE THE PREMISE CAME FROM: THE WRONG TREE
+
+**[MEASURED, `grep` for BOTH `C:/Users` and `C:\Users` forms]**
+
+| file | deployed lane `a52449ac` (**what CI tests, what #32 targets**) | campaign tree `h1-wave4-sealed12-driver` |
+|---|---:|---:|
+| `test_spec_family_bindings.py` | **0** | **1** (`SAMPLES_DIR`, backslash raw-string form) |
+| `live-fix-sweep.test.ts` | **0** — already uses `import.meta.url` at `:23,85,260,307` | **4** |
+| `wave25-liquidity-map.test.ts` | **0** | **1** |
+
+★★★ **The sweep that produced R-443's table was run against the campaign tree, not the deployed lane. The `nodePath.resolve("C:/…")`-is-not-absolute-on-POSIX mechanism is real as a mechanism, but it is not present in the code CI runs.** ★★ **This is the desk's signature defect once more — the neighbouring object — and it is the second time tonight a brief's resource claim did not survive checking. I did not "fix" the three files: on this branch there is nothing to fix, and editing them would have been a cosmetic no-op dressed as a remediation.**
+
+★ **THE BACKSLASH IS WHY MY OWN AR-416 SWEEP AND YOURS DISAGREED IN THE OTHER DIRECTION TOO:** the campaign-tree `SAMPLES_DIR` is `r"C:\Users\..."`, so a forward-slash-only grep misses it. **My AR-416 repo-wide sweep did cover both forms and was correct FOR ITS TREE; the divergence is entirely tree, not pattern.**
+
+### §3 — WHAT I DID DO, AND THE PRECONDITION I HELD
+
+★★★ **Your rule was "confirm each one HOLDS on the real source before removing its excuse." Confirmed — and on the platform that matters, not just mine. So the removal is authorized on evidence, even though the reason you gave for it is withdrawn.**
+
+**[MEASURED] `vitest.knownFailures` 189 → 165. Exactly 24 removed. 96 deletions / 1 addition — 24 entries × 4 lines — and NO reformat of the 165 survivors** (I wrote the file back with matching indent and newline convention and verified the diff contains no unrelated line). **The other 165 are untouched, per your instruction.**
+
+### ★★★ §4 — THE FINDING THAT OUTGROWS THE TASK
+
+**[MEASURED, CI run `30422166825`] the gate's own final line is `BASELINE_SHRINK_NEEDED=180`.**
+
+★★★ **180 baselined entries no longer fail. I removed 24 of them. 156 remain — each one an active licence for a test to fail silently should it ever regress, because `compare-baseline.mjs` only fails on NEW failures.** ★★ **That is the governance defect in its true size, and it is not "the kill switch is broken" — it is "the allow-list has been accumulating since 2026-07-12 and nothing shrinks it."** ★ **A baseline that only ever grows converts every future regression in those 156 into a silent pass. I am NOT touching them (you forbade the ocean, correctly) — I am sizing the problem so the decision is yours with the real number in front of you.**
+
+**Files changed in this commit:** `ci/baseline-failures.json` only.
+**Remaining uncertainty:** ★ **[NOT MEASURED]** whether the campaign tree's own 6 hardcoded sites matter — that branch is not CI-tested, and whether it should be fixed is your call, not a CI blocker. ★ **[NOT MEASURED]** the other 156 stale entries individually.
+**Risk:** low. The 24 are proven passing on both platforms; if any regresses it will now fail loudly, which is the intent.
+
+**Next smallest task (ONE):** ★ **rule on the 156** — shrink-in-full, shrink-by-owner, or leave with a dated policy. ★★ **My recommendation: a CI step that FAILS when `BASELINE_SHRINK_NEEDED > 0` is the durable fix, because it makes the baseline self-cleaning instead of depending on someone noticing.**
+
+---
+
 ## AR-417 · 2026-07-29 · **START-RECEIPT — R-443: EXTEND #32 TO ALL SEVEN FILES, THEN UN-EXCUSE THE 24 KILL-SWITCH / COMPLIANCE-GATE ASSERTIONS.**
 
 **RULING ID:** R-443 · **TASK ID:** AR-417 · **BRANCH:** `hardening/ci-abs-path-tests-20260729` (extending #32 in place, not a new PR) · **STATUS:** STARTING.
