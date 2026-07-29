@@ -4,6 +4,22 @@
 
 ---
 
+## AR-432 · 2026-07-29 · **START-RECEIPT — R-455: (1) PIN THE PER-COPY LIMITATION · (2) BOUNDED SWEEP THEN CLOSE IT · (3) CENSUS RETENTION BY COPY · (4) THE RENAME/ORDER-OF-EVENTS QUESTION.**
+
+**RULING ID:** R-455 · **TASK ID:** AR-432 · **STATUS:** STARTING · **TREE:** `wt-h1-wave4-20260712`, my last commit `613a8f0e` (AR-431). **ETA ~30 min.**
+
+★★★ **YOUR §4 IS A STOP CONDITION SO I AM ANSWERING IT FIRST, FROM `git show` RATHER THAN FROM RECALL, and reporting it before anything else in the final AR.**
+
+★★★ **§2 ACKNOWLEDGED AS THE BINDING CONSTRAINT, NOT A SIZING HINT: "a governance audit that keeps finding governance work will recursively replace the money path."** I will define the registered set by a **mechanical membership rule** — an instrument whose OUTPUT ARTIFACT is cited as a decision input in the campaign documents — publish surfaces AND exclusions, and **CLOSE the sweep in the same AR.** ★ **I will not propose extending it.**
+
+★★ **§3: COPY, never re-run — the census is hash-verified and re-running it is forbidden and would produce a different object.** The `unknown-dbtime-` prefix is carried verbatim; **I will not invent a timestamp.** ★ Off-machine encrypted backup: **flagged, not attempted.**
+
+★ **§1: the per-copy `remediation_class` hole goes into the manifest as a NAMED LIMITATION, never as a passing check, with "classify EVERY copy" added to the forward requirements.**
+
+**FORBIDDEN, unchanged:** no C8 implementation · no re-extraction · **no census re-run** · no spec edits · no `.env` · no DB writes · no flag graduation · no deploy · no tower · no backtests · no `git checkout`/`reset` · no CI-lane work.
+
+---
+
 ## AR-431 · 2026-07-29 · ★★★★★ **ALL THREE BUILT — AND YOUR STOP FIRED ON THE REAL CENSUS, SO I STOPPED AND INVESTIGATED BEFORE TOUCHING ANYTHING. IT WAS **MY OWN CHECK** THAT WAS WRONG: I JOINED `remediation_class` PER-COPY, AND THE CLASSIFICATION COVERS ONLY **ONE** COPY PER VIDEO. THE JOIN KEY WAS THE CLAIM, AGAIN.** ★★★★★ **CONTENT-ONLY, `0 of 40` VIDEOS DIVERGE — AR-427'S FINDING STANDS. COPY-SHUFFLE ON THE REAL CENSUS: **BYTE-IDENTICAL**. YOUR RANKING DOES NOT REOPEN.** ★★★ **AND THE DISCRIMINATION IS STRONGER THAN I EXPECTED: THE RETIRED `rows[0]` SELECTION DOES NOT MERELY DIFFER UNDER A SHUFFLE — IT **CRASHES**, 2 OF 3 ROTATIONS.** ★★ **13/13 TESTS. AND MY PROOF TOOL MANUFACTURED 80 FALSE "MOVED NUMBERS" AND I FIXED THE TOOL RATHER THAN EXPLAINING THE FAILURE AWAY**
 
 **RULING ID:** R-454 · **TASK ID:** AR-430 · **BRANCH:** `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **APPROVAL_REQUESTED. All three STOP conditions checked against the real census and none fires — but §2 is a correction to an instrument I shipped two hours ago and you should read it before the rest.**
