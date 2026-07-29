@@ -12,6 +12,80 @@
 
 ---
 
+## R-442 · 2026-07-29 · ★★★ **INCIDENT — THE PYTHON SUITE IS RED ON `ubuntu-latest` AND HAS BEEN REPORTING GREEN. [MEASURED HERE] THE PYTEST STEP EXITS `1` IN ALL EIGHT MOST-RECENT CI RUNS, 00:20Z→04:23Z, WITH SEVEN NAMED FAILING TESTS — AND EVERY ONE OF THOSE JOBS SHOWS `success` BECAUSE OF `continue-on-error: true`.** ★★★ **PR #31 DID NOT CAUSE IT: THE FAILURES PREDATE #31'S EXISTENCE BY THREE AND A HALF HOURS. MERGE EXONERATED, BY MEASUREMENT AND NOT BY ASSERTION.** ★★★ **AND THE WORKER NAMED THIS GAP ITSELF AND WAS RIGHT TO: IT MEASURED WINDOWS AND SAID SO — `MEASURED ≠ MEASURED-WHERE-IT-RUNS`, AND THE UNMEASURED TREE HELD AN INCIDENT** ★★ **I MUST CORRECT MYSELF: I REPORTED "19 OF 19 CHECKS SUCCESS" TWICE**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **AR-414 ACCEPTED IN FULL — it is the best-reasoned report of this campaign, and its honest limit is what found the incident below.**
+
+★★★ **STOP THE QUEUE ORDER I GAVE YOU. The `compile_lints.py:129` comment fix drops to LAST. Here is why: [MEASURED HERE] the Python suite is FAILING on `ubuntu-latest` right now and has been for at least four hours, and no blocking gate can be switched on over a red tree. Your precondition 1 was right and there is a precondition 0 above it.**
+
+**THE EVIDENCE, so you do not re-derive it:** **[MEASURED HERE, `gh run view --job <id> --log`]** the `Run pytest with coverage` step ends `##[error]Process completed with exit code 1` in **all 8** most-recent `ci.yml` runs (`30410830104` 00:20Z → `30422166825` 04:23Z). **Seven distinct failing tests, in two files:**
+- `test_fix3_cpcv_default.py::TestFix3SourceContract::` — `test_fix3_comment_present` · `test_default_env_is_cpcv_in_source` · `test_min_cpcv_fold_bars_env_knob_present` · `test_plain_fallback_message_present` · `test_cpcv_insufficient_data_fallback_audit_in_source`
+- `test_fix4_adaptive_symbol_dst.py::TestFix4SymbolFromSpec::` — `test_backtester_source_does_not_contain_hardcoded_mes` · `test_backtester_uses_dst_correct_helper`
+
+★★★ **YOUR TASK (ONE): FIND OUT WHY THESE SEVEN PASS ON WINDOWS AND FAIL ON LINUX.** They are **source-contract tests** — they read `backtester.py`'s TEXT and assert on it. **[MEASURED HERE] `backtester.py` is not touched by PR #31**, so this is not merge fallout. ★★ **HYPOTHESIS, LABELLED AND NOT MEASURED: a text-matching difference between checkouts — line endings under `.gitattributes` normalisation, encoding, or a path/case assumption. I did NOT open the assertion text, so do not treat that list as the answer — go read the failure output and let it tell you.** ★ **Pull it from CI directly (`gh run view --job <id> --log`), because you [MEASURED] it does not reproduce locally, and a local repro attempt is the one thing already known to fail.**
+**DELIVER:** the actual assertion diff · the root cause · whether it is the tests or the source that is wrong · the fix, or an explicit reasoned quarantine if the fix is not small. **FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~45 min.** **HONEST-PARTIAL:** if you can only get to root-cause and not to fix, say so and file the cause.
+
+**THEN, IN ORDER — and I am NOT authorizing 2 or 3 until 1 lands:**
+**(2)** the order-dependent `test_three_fixes.py::TestWFIntraMaxDD::test_equity_bars_key_present_in_backtest_result`. ★★ **[MEASURED HERE, disposable worktree at the MERGED tip `a52449ac`] I reproduced your finding: `1 failed, 10 passed`, exit 1, in isolation.** Do NOT fix it by pinning execution order — find the state that leaks in, and make it pass **both alone and in the full tree.** ★ Its assertion misses by `4e-12` against a `0.01` tolerance, so the arithmetic is knife-edge regardless of ordering; say whether the tolerance itself is wrong.
+**(3)** the CI-hardening change — full tree, one invocation, **no curated subset** (your §4 is ratified; §2 proves curation would go red where the tree goes green, and §1 proves it costs 24.6 min against 3.6). **It must FAIL on: test failures · zero tests collected · collection errors · missing plugins · timeout · abnormal exit.** ★★★ **A plugin-presence assertion is its own step — you were bitten by `pytest-cov` exactly as I was by `pytest-timeout`, and in CI that same exit-4 reports GREEN having run nothing.** ★ Publish collected/passed counts; assert a NONZERO count and an order-of-magnitude floor — **do NOT hardcode 7294/7327, they move legitimately.**
+**(4)** the `compile_lints.py:129` comment fix — documentation-only, unchanged contract, last.
+
+**FORBIDDEN:** removing `continue-on-error` before (1) and (2) land — **a blocking gate over a red tree blocks every push** · curating the suite to make the gate easier to turn red · deploying · tower update · promoting/remapping `trigger` · flag flips · DB writes · re-extraction · `runtime-production` writes · backtests · `git checkout` in this shared tree.
+**STOP:** `backtests total > 0` · you find the seven failures ARE caused by a merged commit (then tell me immediately — that changes the disposition of #31).
+
+---
+
+**RULING ID:** R-442 · **TASK ID:** AR-414 · **DECISION:** **APPROVE AR-414. INCIDENT OPENED on the Python CI gate. Worker queue re-ordered; hardening HELD behind a green tree.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-414`**, ruled here.
+
+### ★★★ §1 — THE INCIDENT, AND ITS SEVERITY STATED PRECISELY
+
+**[MEASURED HERE] 8 of 8 most-recent `ci.yml` runs: pytest step exit `1`; job conclusion `success`.** ★★★ **The green is not merely uninformative — it is concretely masking a red tree, today, on the branch this desk merges into.**
+
+**SEVERITY, and I am naming what it is NOT:** this is a **GOVERNANCE / OBSERVABILITY incident, not a trading-safety one.** ★★ **[MEASURED] `backtests total = 0`; nothing is live; no capital is connected; the seven failures are source-text assertions, not execution-path defects.** ★ **The harm is that this desk has been reading a signal that cannot say no — and did read it, twice, in operator summaries.**
+
+**PR #31 IS EXONERATED BY MEASUREMENT.** ★★★ **[MEASURED HERE] the failures appear in runs `30410830104` (00:20Z), `30411691900` (00:37Z), `30412164646` / `30412185842` (00:47Z) and `30412995540` (01:03Z) — all BEFORE PR #31 was created at 03:51Z.** ★★ **The join key is the run timestamp against the PR creation time, and I checked it rather than reasoning from "the diff looks unrelated."** ★ Corroborating and independent: **[MEASURED HERE] `backtester.py` is not in #31's four-file diff**, and the seven failures all assert on `backtester.py`'s text.
+
+### ★★★ §2 — MY OWN CORRECTION, PLAINLY
+
+**I twice reported "19 of 19 checks SUCCESS" — in R-440 §2 as `[MEASURED HERE]`, and to the operator.** ★★★ **The statement was true of the check STATUSES and false about what a reader would take it to mean: one of those nineteen was a pytest step that had exited `1`.** ★★ **I had already ruled at R-439 that CI green is not evidence about Python, and I still repeated the count as though it carried information — which is exactly the "a claim repeated becomes a premise" failure the pre-ruling gate warns about.** ★ **The merge itself does not move: it rested on the census plus my own 145-suite local run, both named at R-441 §1–2, neither of which is a CI badge. But the reporting was wrong and it is corrected here rather than left to be discovered.**
+
+### §3 — AR-414 RATIFIED, AND WHY ITS HONEST LIMIT IS THE POINT
+
+**ACCEPTED [RELAYED, and I closed its named gap]:** whole-tree collection `3.74s` · full run `216s` · `7294 passed / 0 failed` · 317 suites with zero `exit-124` · per-suite `1475s` vs combined `216s` · the 3 `exit-5` correctly read as module-level skips rather than failures.
+★★★ **ITS §4 RECOMMENDATION IS RATIFIED AND IT INVERTS THE OBVIOUS ANSWER: make the FULL TREE blocking, do NOT curate. [worker-MEASURED §2] a curated subset would report RED on a test the full tree reports GREEN, and [worker-MEASURED §1] curation costs 24.6 min against 3.6.** ★★ **"Smaller gate = safer gate" is wrong here, and it is wrong for a reason nobody would have guessed without measuring: the isolation itself changes the verdict.**
+★★★ **AND THE DECISIVE VIRTUE OF THE REPORT IS ITS LIMIT: it wrote `[NOT MEASURED] whether the hang reproduces on ubuntu-latest — the population that actually matters`, and refused to generalise from Windows. That refusal is what sent me to the CI logs, where the incident was. A report that had claimed "CI is fine" from a local green would have buried it.** ★ **`MEASURED ≠ MEASURED-WHERE-IT-RUNS`, earning its keep for the second time this campaign.**
+★★ **Its §3 is the session's fourth false-green and it caught it the right way: CI's own flags gave `exit 4` in `3s` with ZERO `FAILED` lines — indistinguishable from a fast clean pass — and only an UNPIPED exit code told the truth.**
+
+### §4 — THE EXTERNAL OPINION [EXTERNAL OPINION, audited]
+
+**UPHELD and adopted into the contract above:** no curated subset · the blocking job must distinguish {collected+passed · collected+failed · zero collected · collection/plugin failure · timeout} and treat a clean process exit as insufficient · verify plugins explicitly · publish counts · **do not hardcode `7294` as an immutable contract** (a legitimately moving number pinned as a gate is the embalmed-value defect) · the order-dependent test is a real isolation defect and must not be hidden by forcing an order.
+★★★ **MOOT ON ITS CENTRAL DISPOSITION, and the timing is the reason: it rules "PR #31 may proceed if its merge conditions are satisfied" — [MEASURED HERE] #31 merged at 04:23:56Z as `a52449ac`, before that text existed.** ★ **FOURTH CONSECUTIVE MISLABEL: headed "R-439"; the live ledger was R-441. Its reasoning has been consistently strong and its situational labels consistently wrong — read it for argument, never for state.**
+★★ **AND IT DID NOT AND COULD NOT KNOW THE TREE IS RED ON LINUX** — it reasoned, as the worker did, from the local measurement. **That is not a fault; it is a demonstration that three parties reasoning from the same measured surface inherit the same blind spot, which is why the surface itself has to be widened rather than the reasoning double-checked.**
+
+### §5 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED. #6 holds** — **[MEASURED] `backtests total = 0`**. **#8 holds** — checks ran in a disposable worktree at `a52449ac`; no checkout, reset or prune in the shared tree. **#9 holds** — **no `ci.yml` edit made; I did not remove `continue-on-error` to make the board look green while the tree is red.**
+
+★★★ **AND THE DISCRIMINATOR IS NOW CLEAN — SAME COMMIT, DIFFERENT OS, DIFFERENT VERDICT. [MEASURED HERE, disposable worktree at the MERGED tip `a52449ac`, Windows]:**
+```
+python -m pytest src/engine/ --collect-only -q  →  7327 collected, 9.91s, exit 0
+python -m pytest src/engine/ -q                 →  7296 passed, 34 skipped,
+                                                   0 failed, exit 0, 217.87s
+```
+★★ **`7296 = 7294 + 2`, exactly the two tests PR #31 added to the worker's pre-merge baseline — the arithmetic closes, a second check that the merge added what it claimed and nothing else.** ★★★ **So all seven Linux failures PASS here, and the order-dependent test PASSES in company here. The variable is the OS, not the commit and not the merge — that is the fact the root-cause hunt starts from, and it is why item (1) must be pulled from the CI log rather than chased locally.** ★ **No hang at the merged tip either: 217.87s against a 25-min cap.**
+
+**FAILED OR UNPROVEN:** the cause of the seven Linux-only failures — **UNKNOWN, assigned to the worker as item (1); my line-endings guess is a HYPOTHESIS I did not test** · whether the >90-min hang reproduces on `ubuntu-latest` — ★★ **PARTIALLY CLOSED: [MEASURED HERE] the Python job completes in ~12 min wall-clock across 6 consecutive ubuntu runs against a 25-min cap, so the hang is not occurring today; that is duration evidence, NOT a proof the hang class is dead** · runtime under coverage instrumentation — the worker could not measure it, plugins absent locally.
+
+**LESSON TO PERSIST.** ★★★ **AN HONEST `[NOT MEASURED]` IS AN INSTRUCTION, NOT A DISCLAIMER.** AR-414 named the unmeasured population precisely — `ubuntu-latest`, "the population that actually matters" — and the incident was sitting in it. **When a report names the surface it could not reach, GO THERE; that is the highest-yield next measurement available, and it cost me four `gh` calls.** ★★ **Second: a signal that cannot say no will eventually be quoted as though it said yes. I ruled that CI green was uninformative and then published "19 of 19" twice — retire the number from your vocabulary, not just from your reasoning.** ★ **Third: three independent readers — worker, external model, and me — all reasoned correctly from one measured surface and all missed the same thing, because the gap was in the SURFACE and not in the reasoning. Independence of readers does not substitute for coverage of populations.**
+
+---
+
 ## R-441 · 2026-07-29 · ★★★ **PR #31 IS MERGED — `a52449ac`, 04:23:56Z. CENSUS SOUND ON EVERY BLOCKING ITEM (`A−B = B−A = ∅` AS LITERAL SETS OVER THE REAL 120-ROW LIBRARY), AND `2404 passed / 0 failed` ACROSS THE **TRANSITIVE** 145-SUITE SURFACE.** ★★★ **I HELD THE MERGE I HAD ALREADY DRAFTED, BECAUSE MY OWN "7 SUITES" WAS THE *DIRECT* IMPORT SURFACE AND THE REAL ONE IS 145 — I HAD MEASURED THE NEIGHBOURING OBJECT AGAIN AND WAS ONE COMMIT FROM SHIPPING IT.** ★★ **HEADLINE COUNT CORRECTED ON THE PR ITSELF: `MANDATORY 1350→924`, NOT `1347→921`.** ★★★ **AND FOUR FALSE GREENS IN ONE SESSION, ALL THE SAME SHAPE: A COMPLETION SIGNAL IS NOT A RESULT**
 
 ---
