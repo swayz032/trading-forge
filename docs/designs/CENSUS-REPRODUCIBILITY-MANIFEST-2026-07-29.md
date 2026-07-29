@@ -115,13 +115,15 @@ b20d285e66cdc2017fa8c85665ccab0388f9f54625387e708a14019c9d67a5ef  spec_condition
 
 | artifact | sha256 |
 |---|---|
-| `docs/replay-results/h1-battery/unlock_ranker_core.py` | `aa18c70322d0aace12f0102318a7a6fac8b37dfc41a77dfb7ab3942a7825910a` |
+| `docs/replay-results/h1-battery/unlock_ranker_core.py` | `0e417cc809fa748c52e762a41cc0f4efc63ba16c31947accecaf4d4c5276de95` |
 | `docs/replay-results/h1-battery/unlock_distance_ranker.py` | `e6f5a6b228ad7153ada6b89c7ac871e5d4e9e915a3e1cffacef83b33d60fdb9b` |
-| `docs/replay-results/h1-battery/test_unlock_ranker_determinism.py` | `c67bd8418dad8b9dbc89b9ed2a5c22d686fc7754093fcc86f4a43f3fb4eb332b` |
+| `docs/replay-results/h1-battery/test_unlock_ranker_determinism.py` | `4e5948d9fa56bbe2d08236e0491084edeb70e36ed7e27e982d181b0a7d01545b` |
 | `docs/replay-results/h1-battery/unlock_chain_gate_audit.py` | `dd5e3986aa1c2dc84f578987006ca4cf13dc297f514d1ad6bc925f544ed73518` |
 | `docs/replay-results/h1-battery/unlock_chain_determinism_probe.py` | `7f34a0d6de101e222fbe8c1bb2fd53256bc99f4dfda801c94961e842facb60e1` |
-| `docs/replay-results/h1-battery/unlock_rank_before_after_proof.py` | `735160650f05dfd6a81b7bfb955a91532edc0553381603c2d961c28170bf416b` |
-| `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.json` | `ecae2593ec04df4615a4e3dd7f7c755ef55861aa53afe2038e7cb30f59581246` |
+| `docs/replay-results/h1-battery/unlock_rank_before_after_proof.py` | `689fc46f74bf330a4bb71053bb6d6cd226439bd1246a7040b31e784f14f1699b` |
+| `docs/replay-results/h1-battery/unlock_rank_render.py` | `5bed137f6d33a31e05673235ba600a0be183a39415368b309543977843533cbd` |
+| `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.json` | `fe2338f21748b1482f47a9661d13bf4d10310eace2510b1b0b6299d476d05164` |
+| `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.md` (rendered) | `6364727d151c9f5acc73ae6047507b054ed8c4da53be545e6e89ee648f88b03f` |
 | `docs/replay-results/h1-battery/order_dependence_sweep.py` | `beaf112e6b8717a4bd690dec75dd536871673a78b75aa6c72021e85c76cda0cb` |
 | `docs/replay-results/h1-battery/order-dependence-sweep-2026-07-29.json` | `ce1226f065f6a0216e345ab30fdb4c23a57032a0d450663608a4fd5b123d010d` |
 
@@ -148,6 +150,34 @@ executable_spine_count`
 ★ **`transcript_chars` is absent/None on `120 of 120` rows.** Source fidelity is **not** gradeable from the envelope; the in-row `evidence`/`span` fields are the deeper source (R-427 §0). **No manifest field should be read as a provenance guarantee about the teacher's words.**
 
 ★ **No `schema_version` field exists in the payload.** [HONEST NULL] The schema is pinned here by enumeration instead. **A future census MUST emit an explicit `schema_version`.**
+
+## 5.5 — REPORT INTEGRITY (R-454 §4(3))
+
+★★★★★ **A REPORT'S TABLE IS AN INSTRUMENT'S OUTPUT, NOT A TRANSCRIPTION (R-453 §3).** *"Generated from the output"* is a claim about the past; a check that **regenerates and diffs** is a property of the artifact.
+
+| link in the chain | value |
+|---|---|
+| **structured artifact** | `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.json` |
+| **its sha256** | `fe2338f21748b1482f47a9661d13bf4d10310eace2510b1b0b6299d476d05164` |
+| **generation command** | `POP120_CENSUS=… POP120_CLASSIFIED=… python unlock_distance_ranker.py` |
+| **ranker commit** | the commit carrying this manifest; core hash `0e417cc8…` |
+| **rendered table** | `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.md` (`6364727d…`) |
+| **verification** | `python unlock_rank_render.py unlock-distance-rank-2026-07-29.json --verify unlock-distance-rank-2026-07-29.md` → **`REPORT-INTEGRITY OK`** |
+
+★★★ **AND THE CHECK IS PROVEN TO BITE, not merely to exist:** `test_report_integrity_check_fails_on_a_hand_edited_row` renders a table, verifies it clean **(the control)**, then hand-edits one row exactly as AR-427's transcription did, and requires the verify to **FAIL**. ★ The rendered file carries a `DO NOT EDIT BY HAND` header naming the verify command.
+
+## 5.6 — COPY EQUIVALENCE AND COPY-ORDER INDEPENDENCE (R-454 §4(1)(2))
+
+★★★★★ **The `÷3` collapse is now GUARDED, not assumed.** `load_frozen` compares all three market copies of every video on their ranking-relevant content **before** collapsing the triple, and raises `CopyDivergenceError` — naming the video and the split — rather than publishing whichever copy sorted first.
+
+| check | result |
+|---|---|
+| **copy equivalence, real census** | **`40 of 40` videos, 3 copies each, all agree.** No divergence. |
+| **copy-shuffle, real census** | 3 rotations → **`1` distinct output — BYTE-IDENTICAL.** |
+| **discrimination (retired `rows[0]` selection, same rotations)** | **`3` distinct outcomes** — 1 completes, 2 raise `KeyError`. **It convicts.** |
+
+★★ **The copy signature deliberately EXCLUDES `remediation_class`.** [MEASURED] the classification artifact covers exactly **one** copy per video (`40` distinct `strategy_id` over `40` videos), so joining it per-copy compares a classified row against two unclassified ones and manufactures a divergence. ★★★ **The class is a pure function of the fields the signature DOES compare, so content equality entails class equality — but that entailment CANNOT be checked per-copy on this artifact, and that limit is stated here rather than papered over.**
+★ **A future census SHOULD classify every copy**, which would let the equivalence check cover the class directly.
 
 ## 6 — LOCATION AND RETENTION
 

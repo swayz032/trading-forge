@@ -164,10 +164,17 @@
  },
  "ranking": [
   {
+   "canonical_video_id": "75DJN5UVQnw",
    "carries_fixed_class": true,
    "distance": 0,
    "distinct_videos": 1,
    "fixed_class_conditions": 5,
+   "market_or_copy_id": [
+    "6c755822-713d-48f9-867e-cf399722e69a",
+    "97fabc41-f55b-4a20-a020-c28d6b7ffb54",
+    "9f38ab7a-9a3d-4771-bdfb-13c1cd067536"
+   ],
+   "rank": 1,
    "residual_classes": [],
    "residual_classes_full": [],
    "residual_conditions": 0,
@@ -181,10 +188,17 @@
    "video": "75DJN5UVQnw"
   },
   {
+   "canonical_video_id": "jlShztsY3oA",
    "carries_fixed_class": true,
    "distance": 0,
    "distinct_videos": 1,
    "fixed_class_conditions": 1,
+   "market_or_copy_id": [
+    "0e2af137-890f-4202-962f-99ba4a3cf813",
+    "7af16961-6df4-4038-b906-24e51cae1ede",
+    "e596fbaf-a0c7-482c-8257-e581391a8e40"
+   ],
+   "rank": 2,
    "residual_classes": [],
    "residual_classes_full": [],
    "residual_conditions": 0,
@@ -198,10 +212,17 @@
    "video": "jlShztsY3oA"
   },
   {
+   "canonical_video_id": "E8Wg6tFPYjo",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 10,
+   "market_or_copy_id": [
+    "3af883fa-9c50-45de-9076-214136f44b8a",
+    "4be0db1d-b6fe-46c4-8251-fd721b1b0992",
+    "913f40c4-6d3d-4c71-81da-109631f38873"
+   ],
+   "rank": 3,
    "residual_classes": [
     "C5"
    ],
@@ -219,10 +240,17 @@
    "video": "E8Wg6tFPYjo"
   },
   {
+   "canonical_video_id": "c8VLqF0XDR4",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 2,
+   "market_or_copy_id": [
+    "5b9fefce-ea5a-490c-a80e-8136272ddcf7",
+    "ae7a2560-3569-4f29-b297-a4f3a60d1ca3",
+    "b2deddcb-57d4-4bc9-b750-39be0f8fe12a"
+   ],
+   "rank": 4,
    "residual_classes": [
     "C1"
    ],
@@ -240,10 +268,17 @@
    "video": "c8VLqF0XDR4"
   },
   {
+   "canonical_video_id": "h6TnE7QClJg",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 1,
+   "market_or_copy_id": [
+    "05b069a6-a8e4-49bb-a933-846d6b4b6f02",
+    "8936bb44-8a0a-4a62-87fa-e8461215066e",
+    "a2644bb7-943e-4247-8cc7-6ee385c53595"
+   ],
+   "rank": 5,
    "residual_classes": [
     "C3"
    ],
@@ -261,10 +296,17 @@
    "video": "h6TnE7QClJg"
   },
   {
+   "canonical_video_id": "l-2iKbcm5UI",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 3,
+   "market_or_copy_id": [
+    "335f7418-0417-4356-bf1c-701f53e51510",
+    "389d5007-430a-4919-84c4-8cd8467afa6b",
+    "f8691d73-d03e-46b7-b3fd-1948be7fd8e7"
+   ],
+   "rank": 6,
    "residual_classes": [
     "C3"
    ],
@@ -282,10 +324,17 @@
    "video": "l-2iKbcm5UI"
   },
   {
+   "canonical_video_id": "e5HQXYBUW-Q",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 3,
+   "market_or_copy_id": [
+    "2b35aa65-9201-42a0-b9c9-ffeda2cd1e90",
+    "594186e5-3249-40d7-8791-b46ea2c01b20",
+    "b18952c0-ae56-411c-ae06-017051083658"
+   ],
+   "rank": 7,
    "residual_classes": [
     "C2"
    ],
@@ -303,10 +352,17 @@
    "video": "e5HQXYBUW-Q"
   },
   {
+   "canonical_video_id": "mNcoaNdAyIE",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 6,
+   "market_or_copy_id": [
+    "2c64c7c5-5d5d-4ba3-9995-cc5ab2fcfa1f",
+    "91bfb9e4-bb54-4a80-842e-3522bb1b0527",
+    "b238477c-71a4-4fa0-bb50-5f67c1b2c865"
+   ],
+   "rank": 8,
    "residual_classes": [
     "C5"
    ],
@@ -324,10 +380,17 @@
    "video": "mNcoaNdAyIE"
   },
   {
+   "canonical_video_id": "Qxlu8v_6G3Y",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 3,
+   "market_or_copy_id": [
+    "326fe955-50cc-4246-bdab-8976438b7c06",
+    "d916b245-1562-4e82-9530-d7a79bc2c04c",
+    "e28f6ea8-fbd1-4926-a68b-e2d7de48ba46"
+   ],
+   "rank": 9,
    "residual_classes": [
     "C2"
    ],
@@ -345,10 +408,17 @@
    "video": "Qxlu8v_6G3Y"
   },
   {
+   "canonical_video_id": "lRMFcsqhYBU",
    "carries_fixed_class": true,
    "distance": 1,
    "distinct_videos": 1,
    "fixed_class_conditions": 7,
+   "market_or_copy_id": [
+    "0f3a1418-992a-427e-818a-6d427fe11173",
+    "162e6fdd-e4c9-4335-b6da-bb8c3f8cb59d",
+    "534ca8ea-32d8-4c94-8f09-d851a78d795f"
+   ],
+   "rank": 10,
    "residual_classes": [
     "C3"
    ],
@@ -366,10 +436,17 @@
    "video": "lRMFcsqhYBU"
   },
   {
+   "canonical_video_id": "N7uP9V0Iktc",
    "carries_fixed_class": false,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 0,
+   "market_or_copy_id": [
+    "9d133b69-55ea-4eab-969f-c385eacbba21",
+    "a1d641ff-e35c-48f8-899f-9401e0c2c839",
+    "cce3d9f0-e23e-473d-b841-8af2db3eab1a"
+   ],
+   "rank": 11,
    "residual_classes": [
     "C2",
     "C7"
@@ -389,10 +466,17 @@
    "video": "N7uP9V0Iktc"
   },
   {
+   "canonical_video_id": "dE4lPhAWke8",
    "carries_fixed_class": true,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 2,
+   "market_or_copy_id": [
+    "1771442d-0138-4c22-8993-8acfe4c79fd3",
+    "d36f9a97-ebbc-423b-b7a8-a1f06271f689",
+    "ebc8fff7-5459-427f-a4ad-a68a6366f6e0"
+   ],
+   "rank": 12,
    "residual_classes": [
     "C2",
     "C3"
@@ -412,10 +496,17 @@
    "video": "dE4lPhAWke8"
   },
   {
+   "canonical_video_id": "m-G1ag77aVc",
    "carries_fixed_class": true,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 12,
+   "market_or_copy_id": [
+    "69b64551-05ad-41f6-b736-aeaab16d6bfb",
+    "979ba21b-66ca-4071-8e5e-ca96911a4cbd",
+    "9b871b65-3a50-456d-accc-5269d59a3992"
+   ],
+   "rank": 13,
    "residual_classes": [
     "C4",
     "C6"
@@ -435,10 +526,17 @@
    "video": "m-G1ag77aVc"
   },
   {
+   "canonical_video_id": "snNkQSyWX4k",
    "carries_fixed_class": true,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 3,
+   "market_or_copy_id": [
+    "52f9921d-619c-4cab-b845-bef642c7585f",
+    "8ec7f48d-59e8-4888-8ac7-9cdd875a78e2",
+    "aae789b5-2d29-4558-a58b-7950ce5b9c0a"
+   ],
+   "rank": 14,
    "residual_classes": [
     "C2",
     "C3"
@@ -458,10 +556,17 @@
    "video": "snNkQSyWX4k"
   },
   {
+   "canonical_video_id": "FqxEKDxemtI",
    "carries_fixed_class": true,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 1,
+   "market_or_copy_id": [
+    "b5871142-d5e4-4d8b-a7da-3033719d762f",
+    "e27546e4-fd8d-49d1-a359-5a0ed9a9411b",
+    "ef2c1384-b711-474a-9aa7-fe2ea4c29cfa"
+   ],
+   "rank": 15,
    "residual_classes": [
     "C4",
     "C7"
@@ -481,10 +586,17 @@
    "video": "FqxEKDxemtI"
   },
   {
+   "canonical_video_id": "sVkmZklJDHI",
    "carries_fixed_class": true,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 7,
+   "market_or_copy_id": [
+    "4c61be86-5940-4bec-a8a0-87328b2cafe8",
+    "589ec512-eecf-4d49-879f-7ec0e8d2b8f2",
+    "ca5564d8-f6a2-46f5-9f2f-e678572ccf48"
+   ],
+   "rank": 16,
    "residual_classes": [
     "C2",
     "C7"
@@ -504,10 +616,17 @@
    "video": "sVkmZklJDHI"
   },
   {
+   "canonical_video_id": "gddYspvW0_w",
    "carries_fixed_class": true,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 8,
+   "market_or_copy_id": [
+    "58de00c3-308d-4f7a-9223-be161168e9ec",
+    "8908c9a0-9708-4a1b-b793-ace88b57e3c1",
+    "c4a17093-6f9e-42a8-9bb0-f84f7d82b4b3"
+   ],
+   "rank": 17,
    "residual_classes": [
     "C3",
     "C7"
@@ -527,10 +646,17 @@
    "video": "gddYspvW0_w"
   },
   {
+   "canonical_video_id": "ktkqq7QsN9Q",
    "carries_fixed_class": false,
    "distance": 2,
    "distinct_videos": 1,
    "fixed_class_conditions": 0,
+   "market_or_copy_id": [
+    "338f7e39-4932-48b3-a993-10afa1ed9b3e",
+    "aaaad0f7-2ecb-48af-a4f5-c9ce4b6f7411",
+    "f43088ac-49dc-4503-947f-6badf004a9e6"
+   ],
+   "rank": 18,
    "residual_classes": [
     "C2",
     "C4"
@@ -550,10 +676,17 @@
    "video": "ktkqq7QsN9Q"
   },
   {
+   "canonical_video_id": "HfZTCZTDfWk",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 4,
+   "market_or_copy_id": [
+    "331fe15a-8560-4b46-88bb-4b01119b725a",
+    "4be1fb85-0c34-4f2e-b326-9053440bdc64",
+    "5e5803d1-e255-4ee9-943f-02328deb5f14"
+   ],
+   "rank": 19,
    "residual_classes": [
     "C2",
     "C7",
@@ -575,10 +708,17 @@
    "video": "HfZTCZTDfWk"
   },
   {
+   "canonical_video_id": "deymRD3kSD0",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 1,
+   "market_or_copy_id": [
+    "47b1c45a-de30-498b-b630-0ab957395204",
+    "5591c0ba-a4ac-44eb-81c1-f26011774013",
+    "971826d6-defb-4882-a634-5deeecad712f"
+   ],
+   "rank": 20,
    "residual_classes": [
     "C1",
     "C2",
@@ -600,10 +740,17 @@
    "video": "deymRD3kSD0"
   },
   {
+   "canonical_video_id": "1HFoStW_wsc",
    "carries_fixed_class": false,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 0,
+   "market_or_copy_id": [
+    "81663564-e5bc-42b6-8a51-548ba0bc55c3",
+    "ad9811b7-10db-482e-afb8-d1158d5054ce",
+    "edbe2372-05b6-4388-afce-b99e754b7e04"
+   ],
+   "rank": 21,
    "residual_classes": [
     "C2",
     "C3",
@@ -625,10 +772,17 @@
    "video": "1HFoStW_wsc"
   },
   {
+   "canonical_video_id": "VTEQ2fhGLqE",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 12,
+   "market_or_copy_id": [
+    "6491538e-aff0-4ed8-b0c6-67a36e6cf84f",
+    "85776068-64f5-4877-b99b-026de2c49201",
+    "ff718865-0876-4cdb-a84a-cc88eaf32cd7"
+   ],
+   "rank": 22,
    "residual_classes": [
     "C2",
     "C3",
@@ -650,10 +804,17 @@
    "video": "VTEQ2fhGLqE"
   },
   {
+   "canonical_video_id": "N7SM8a7Dc9s",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 8,
+   "market_or_copy_id": [
+    "06ea64d3-155a-45a4-a233-53cac8a3584d",
+    "67c762e4-d2e0-4b57-ae72-6b8755007d36",
+    "a20ecb89-a119-4c4c-958a-6558abb08a17"
+   ],
+   "rank": 23,
    "residual_classes": [
     "C2",
     "C3",
@@ -675,10 +836,17 @@
    "video": "N7SM8a7Dc9s"
   },
   {
+   "canonical_video_id": "FAKWJ-1NlLE",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 9,
+   "market_or_copy_id": [
+    "43d73bbc-2710-4d8f-89d0-bac8e60688c4",
+    "63d50af3-5629-437d-9271-0b242b212458",
+    "8a047fd8-148c-46b0-a268-717f826ff4d4"
+   ],
+   "rank": 24,
    "residual_classes": [
     "C1",
     "C2",
@@ -700,10 +868,17 @@
    "video": "FAKWJ-1NlLE"
   },
   {
+   "canonical_video_id": "z3Qn3fBoe2I",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 1,
+   "market_or_copy_id": [
+    "30024153-c7ea-43bb-a430-7a900ddde667",
+    "84928232-2e58-4e6c-92d3-5e8631eb2138",
+    "f6ff3004-361f-4c00-9235-fa233a57bac5"
+   ],
+   "rank": 25,
    "residual_classes": [
     "C2",
     "C3",
@@ -725,10 +900,17 @@
    "video": "z3Qn3fBoe2I"
   },
   {
+   "canonical_video_id": "WV1fyudd7fw",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 6,
+   "market_or_copy_id": [
+    "93534762-1b88-41c8-b5bf-32ba8584bc0e",
+    "a18406a7-4f63-4d10-948b-228b9473ad5f",
+    "ac4fe99d-1c97-42ee-8ce2-dafd6f18e0ea"
+   ],
+   "rank": 26,
    "residual_classes": [
     "C2",
     "C3",
@@ -750,10 +932,17 @@
    "video": "WV1fyudd7fw"
   },
   {
+   "canonical_video_id": "x1ydP8bC7OE",
    "carries_fixed_class": true,
    "distance": 3,
    "distinct_videos": 1,
    "fixed_class_conditions": 5,
+   "market_or_copy_id": [
+    "229770b3-860c-49c3-820e-0d3ff1348704",
+    "29a5a070-24e6-4fc4-ac0b-284d314039b6",
+    "88626172-8b82-4607-938c-fab7c8b9b3a9"
+   ],
+   "rank": 27,
    "residual_classes": [
     "C1",
     "C2",
@@ -775,10 +964,17 @@
    "video": "x1ydP8bC7OE"
   },
   {
+   "canonical_video_id": "bQp37aD1JLE",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 4,
+   "market_or_copy_id": [
+    "321ef3d8-b0db-47ee-a365-7e9090fbfcee",
+    "3c6d439a-d49c-4124-a215-ff2577361480",
+    "6a03c714-45c5-4efe-81e2-5a6af5e554c0"
+   ],
+   "rank": 28,
    "residual_classes": [
     "C1",
     "C2",
@@ -802,10 +998,17 @@
    "video": "bQp37aD1JLE"
   },
   {
+   "canonical_video_id": "NMUd0oX_7Pg",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 5,
+   "market_or_copy_id": [
+    "710a9ed3-a3d0-4eb3-baa1-69085bf87dd1",
+    "c1217b13-f0a5-4fa9-afaa-35da4ce3998f",
+    "e135491b-dedf-4c30-8614-9c74acc6055f"
+   ],
+   "rank": 29,
    "residual_classes": [
     "C2",
     "C3",
@@ -829,10 +1032,17 @@
    "video": "NMUd0oX_7Pg"
   },
   {
+   "canonical_video_id": "qLtq73bTPBA",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 23,
+   "market_or_copy_id": [
+    "2c7e78e7-0663-44f6-af18-0a5c68ad2f1d",
+    "562decbf-034d-412b-9210-4f87b7f86179",
+    "f8795a5d-2341-433a-bf77-6dc8dae4e32c"
+   ],
+   "rank": 30,
    "residual_classes": [
     "C3",
     "C5",
@@ -856,10 +1066,17 @@
    "video": "qLtq73bTPBA"
   },
   {
+   "canonical_video_id": "xTTDH5iRhJc",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 11,
+   "market_or_copy_id": [
+    "3e91ffe4-bd68-41bb-a364-d35968c0778f",
+    "3f63d906-ce8e-4a9f-9e97-c3b6b075642d",
+    "a71fb739-41de-45f3-af8f-1bec87338107"
+   ],
+   "rank": 31,
    "residual_classes": [
     "C1",
     "C2",
@@ -883,10 +1100,17 @@
    "video": "xTTDH5iRhJc"
   },
   {
+   "canonical_video_id": "LOcaRWcc1xI",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 8,
+   "market_or_copy_id": [
+    "1b256347-a65c-4ec0-a73b-77c2c01cc29e",
+    "67d67ba0-c0b4-4dab-ba00-a25c331ae4d5",
+    "f3babbdd-2e2e-4adb-b449-dc1590f569e2"
+   ],
+   "rank": 32,
    "residual_classes": [
     "C1",
     "C2",
@@ -910,10 +1134,17 @@
    "video": "LOcaRWcc1xI"
   },
   {
+   "canonical_video_id": "UBvfsImdI2U",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 6,
+   "market_or_copy_id": [
+    "1489bf44-a7de-4a68-b6c9-d4d4fe9ff390",
+    "7ea22e05-b1b2-4be5-bd35-5f5f1bba5805",
+    "8148f3b5-8bc7-4d36-a1d4-0ed5e2802185"
+   ],
+   "rank": 33,
    "residual_classes": [
     "C1",
     "C2",
@@ -937,10 +1168,17 @@
    "video": "UBvfsImdI2U"
   },
   {
+   "canonical_video_id": "dHmOosYof48",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 15,
+   "market_or_copy_id": [
+    "0dfd11ee-d227-4ff0-a839-c1c78356d5e5",
+    "39eba5ec-6939-434a-a1cc-bcb19bee4606",
+    "fb2e92ab-feda-4327-a524-4a557e859da7"
+   ],
+   "rank": 34,
    "residual_classes": [
     "C1",
     "C2",
@@ -964,10 +1202,17 @@
    "video": "dHmOosYof48"
   },
   {
+   "canonical_video_id": "7ieYBa7Z-Hg",
    "carries_fixed_class": true,
    "distance": 4,
    "distinct_videos": 1,
    "fixed_class_conditions": 8,
+   "market_or_copy_id": [
+    "81002a32-98fc-4a49-9079-14742224122a",
+    "c029e162-ecf9-4709-9820-baf60c6b7af0",
+    "c45b4718-07b1-4bea-baa3-1ee0a8e209b4"
+   ],
+   "rank": 35,
    "residual_classes": [
     "C2",
     "C3",
@@ -991,10 +1236,17 @@
    "video": "7ieYBa7Z-Hg"
   },
   {
+   "canonical_video_id": "nV9gknhy2Ew",
    "carries_fixed_class": true,
    "distance": 5,
    "distinct_videos": 1,
    "fixed_class_conditions": 5,
+   "market_or_copy_id": [
+    "232d9540-cbda-478e-93c4-9a35f6cf8a86",
+    "942f83cc-0a84-41d7-b11d-b3f3b88a6f2b",
+    "d8fe9ad2-da9a-463f-bcea-2b742601b028"
+   ],
+   "rank": 36,
    "residual_classes": [
     "C2",
     "C3",
@@ -1020,10 +1272,17 @@
    "video": "nV9gknhy2Ew"
   },
   {
+   "canonical_video_id": "oDLt9zh33LE",
    "carries_fixed_class": true,
    "distance": 5,
    "distinct_videos": 1,
    "fixed_class_conditions": 5,
+   "market_or_copy_id": [
+    "1dd66daa-5066-4755-ba3a-4ca76017e57a",
+    "9955f721-7644-4e31-8d01-f34a109289b6",
+    "fc4bf082-41d0-4030-b5a7-5494889139c0"
+   ],
+   "rank": 37,
    "residual_classes": [
     "C2",
     "C4",
@@ -1049,10 +1308,17 @@
    "video": "oDLt9zh33LE"
   },
   {
+   "canonical_video_id": "iU8ww5MC2FQ",
    "carries_fixed_class": true,
    "distance": 5,
    "distinct_videos": 1,
    "fixed_class_conditions": 6,
+   "market_or_copy_id": [
+    "543874f8-21ad-4bc8-b298-4f8c62a35f87",
+    "b2f4630d-3540-4a33-94c9-ebbafdd9346f",
+    "d3d2d55f-30b1-4587-915e-af87e2dc2953"
+   ],
+   "rank": 38,
    "residual_classes": [
     "C1",
     "C2",
@@ -1078,10 +1344,17 @@
    "video": "iU8ww5MC2FQ"
   },
   {
+   "canonical_video_id": "KXWRtV2LOVc",
    "carries_fixed_class": true,
    "distance": 5,
    "distinct_videos": 1,
    "fixed_class_conditions": 5,
+   "market_or_copy_id": [
+    "6304525a-81a6-41ea-9bdc-d768ee5e9ee1",
+    "93fe89cf-7491-4cfd-a645-e7291db36523",
+    "c98d373d-fa40-4f87-b6ef-e6cb2d595d8d"
+   ],
+   "rank": 39,
    "residual_classes": [
     "C2",
     "C3",
@@ -1107,10 +1380,17 @@
    "video": "KXWRtV2LOVc"
   },
   {
+   "canonical_video_id": "aHLIE_TXjpo",
    "carries_fixed_class": true,
    "distance": 5,
    "distinct_videos": 1,
    "fixed_class_conditions": 12,
+   "market_or_copy_id": [
+    "5cd1ac73-8e89-4adc-83cc-63a700dc0196",
+    "89ac9dea-ddb5-4779-b7ac-21d19feeee81",
+    "d2e71c2d-d8e9-4348-b7c4-1f53c2e9c67c"
+   ],
+   "rank": 40,
    "residual_classes": [
     "C1",
     "C2",

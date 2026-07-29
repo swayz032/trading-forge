@@ -107,8 +107,42 @@ def canonicalization_report(groups):
     return out
 
 
+# -------------------------------------------------- copy equivalence (safety)
+class CopyDivergenceError(RuntimeError):
+    """The market copies of one video disagree on a ranking-relevant field.
+
+    Collapsing them would publish whichever copy happened to sort first. That is
+    a WRONG ANSWER, not a cosmetic one, so this is raised rather than resolved.
+    """
+
+
+def copy_signature(row):
+    """The ranking-relevant OWN CONTENT of one market copy.
+
+    EXCLUDES `strategy_id` and `name`: those differ across the fan-out BY DESIGN
+    — they are what makes it a fan-out.
+
+    ★★ EXCLUDES `remediation_class`, and the reason is a correction to this
+    function's first version (AR-430 §2). The classification artifact covers
+    exactly ONE copy per video ([MEASURED] 40 distinct `strategy_id` over 40
+    videos), so joining it per-copy compares a classified row against two
+    unclassified ones and reports a divergence that is an artifact of the JOIN,
+    not of the data. That fired on the real census and was wrong.
+
+    The class is a pure function of the fields below — `classify(rule_text,
+    rule_class, reason, semantic_type)` — so equality of this signature ENTAILS
+    equality of the class. ★ The entailment cannot be checked per-copy on this
+    artifact, because only one copy carries a class at all; that limit is stated
+    in the manifest rather than papered over.
+    """
+    return tuple(sorted(
+        (r["condition_id"], r["rule_text"], r["reason"], r["rule_class"],
+         r["semantic_type"], str(r["role"]))
+        for r in row["refusals"])) + (bool(row.get("refused")),)
+
+
 # ---------------------------------------------------------------- frozen load
-def load_frozen(census_path, classified_path):
+def load_frozen(census_path, classified_path, first_seen_representative=False):
     """Frozen census + frozen class mapping -> per-VIDEO blocking picture.
 
     The join key is (strategy_id, condition_id) and it is validated, not assumed:
@@ -135,9 +169,34 @@ def load_frozen(census_path, classified_path):
     videos = {}
     label_status = {}
     for video in sorted(by_video):
-        rows = sorted(by_video[video], key=lambda r: r["strategy_id"])
+        group = by_video[video]
+
+        # ---- COPY EQUIVALENCE, CHECKED BEFORE THE TRIPLE IS COLLAPSED --------
+        # R-454 §4(2): `40 of 40` triples agreeing is a fact about THIS SNAPSHOT,
+        # not an invariant. Without this check, the day a copy diverges the ranker
+        # silently publishes whichever one sorted first and nothing goes red.
+        sigs = {}
+        for r in group:
+            sigs.setdefault(copy_signature(r), []).append(r["strategy_id"])
+        if len(sigs) > 1:
+            detail = " | ".join(
+                f"group{i}={sorted(ids)}" for i, ids in enumerate(sigs.values()))
+            raise CopyDivergenceError(
+                f"video {video}: {len(group)} market copies split into {len(sigs)} "
+                f"distinct ranking-relevant signatures -- {detail}. "
+                "Refusing to collapse; a representative here would be an arbitrary choice.")
+
+        # ---- representative selection ---------------------------------------
+        # Sorted by strategy_id: a property of the DATA. `first_seen_representative`
+        # reproduces the retired `rows[0]`-over-JSON-array defect and exists ONLY so
+        # the copy-shuffle test can prove it convicts it (AR-428 §1, R-454 §4(1)).
+        rows = list(group) if first_seen_representative else sorted(
+            group, key=lambda r: r["strategy_id"])
         rep = rows[0]
-        label, status = canonical_spec_label([r["name"] for r in rows])
+        if first_seen_representative:
+            label, status = rep["name"], "LEGACY_first_seen_name"
+        else:
+            label, status = canonical_spec_label([r["name"] for r in group])
         label_status[video] = status
         refusals = []
         for r in sorted(rep["refusals"], key=lambda x: x["condition_id"]):
@@ -151,7 +210,9 @@ def load_frozen(census_path, classified_path):
             "video": video,
             "spec": label,
             "spec_label_status": status,
-            "row_names": sorted(r["name"] for r in rows),
+            "market_or_copy_id": sorted(r["strategy_id"] for r in group),
+            "copy_count": len(group),
+            "row_names": sorted(r["name"] for r in group),
             "classes": frozenset(x["remediation_class"] for x in refusals),
             "refusals": refusals,
         }
@@ -226,7 +287,14 @@ def rank_specs(videos, fixed_class=C8):
         residual = [r for r in v["refusals"] if r["remediation_class"] != fixed_class]
         fixed = [r for r in v["refusals"] if r["remediation_class"] == fixed_class]
         rows.append({
+            # R-454 §3, STANDING: the distinct source-video ID is the IDENTITY in
+            # every artifact, join, manifest and report. `spec` is a DISPLAY field
+            # and is NOT unique -- [MEASURED] 39 distinct labels over 40 videos.
+            # Emit both, never one: a manifest keyed on the label would silently
+            # merge two real videos.
+            "canonical_video_id": video,
             "video": video,
+            "market_or_copy_id": v["market_or_copy_id"],
             "spec": v["spec"],
             "distance": len(residual_classes),
             "residual_conditions": len(residual),
@@ -240,6 +308,8 @@ def rank_specs(videos, fixed_class=C8):
         })
     rows.sort(key=lambda r: (r["distance"], r["residual_conditions"],
                              r["distinct_videos"], r["video"]))
+    for i, r in enumerate(rows, 1):
+        r["rank"] = i
     return rows
 
 

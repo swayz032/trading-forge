@@ -4,6 +4,86 @@
 
 ---
 
+## AR-431 · 2026-07-29 · ★★★★★ **ALL THREE BUILT — AND YOUR STOP FIRED ON THE REAL CENSUS, SO I STOPPED AND INVESTIGATED BEFORE TOUCHING ANYTHING. IT WAS **MY OWN CHECK** THAT WAS WRONG: I JOINED `remediation_class` PER-COPY, AND THE CLASSIFICATION COVERS ONLY **ONE** COPY PER VIDEO. THE JOIN KEY WAS THE CLAIM, AGAIN.** ★★★★★ **CONTENT-ONLY, `0 of 40` VIDEOS DIVERGE — AR-427'S FINDING STANDS. COPY-SHUFFLE ON THE REAL CENSUS: **BYTE-IDENTICAL**. YOUR RANKING DOES NOT REOPEN.** ★★★ **AND THE DISCRIMINATION IS STRONGER THAN I EXPECTED: THE RETIRED `rows[0]` SELECTION DOES NOT MERELY DIFFER UNDER A SHUFFLE — IT **CRASHES**, 2 OF 3 ROTATIONS.** ★★ **13/13 TESTS. AND MY PROOF TOOL MANUFACTURED 80 FALSE "MOVED NUMBERS" AND I FIXED THE TOOL RATHER THAN EXPLAINING THE FAILURE AWAY**
+
+**RULING ID:** R-454 · **TASK ID:** AR-430 · **BRANCH:** `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **APPROVAL_REQUESTED. All three STOP conditions checked against the real census and none fires — but §2 is a correction to an instrument I shipped two hours ago and you should read it before the rest.**
+
+### ★★★★★ §1 — YOUR §4(1) CATCH WAS RIGHT, AND THE GAP IS NOW CLOSED WITH A CONVICTION
+
+**Conceded without qualification in my receipt and restated here:** `PYTHONHASHSEED` perturbs `str` hashing → **set and dict** iteration. It does **not** permute a JSON **array**. My representative was chosen by `rows[0]` **from an array**. ★★★ **Twelve seeds could never have moved it. My determinism test was green and, against the defect I had myself disclosed, VACUOUS.**
+
+**BUILT — `_shuffled_census()` rotates the three market copies inside every video group: same content, different array order, the exact perturbation hash seeds cannot produce.**
+
+| | fixture | **REAL CENSUS** |
+|---|---|---|
+| **copy-shuffle → distinct outputs** | `1` | ★★★★★ **`1` — BYTE-IDENTICAL across 3 rotations** |
+| **retired `rows[0]` selection, same rotations** | `3` distinct → **convicts** | ★★★★★ **`3` distinct outcomes → convicts** |
+
+★★★★★ **AND THE REAL-CENSUS DISCRIMINATION IS A HARDER FACT THAN THE FIXTURE'S. Under a shuffle the retired selection does not merely produce a different label — `2 of 3` rotations raise `KeyError: refusal with no remediation_class`. Because the classification artifact covers only the `strategy_id`-ordered copy, the old `rows[0]`-over-array selection would have picked an UNCLASSIFIED row and died.** ★★★ **So `rows[0]` was never merely cosmetic on this data: it was load-bearing on the join, and it worked only because the census SQL's `ORDER BY id` happened to align array order with `strategy_id` order. A silent coupling between a SQL clause and a selection rule, two artifacts apart.**
+
+**YOUR STOP — "copy-shuffle output not byte-identical (reopens the ranking)" — DOES NOT FIRE.**
+
+### ★★★★★ §2 — YOUR OTHER STOP DID FIRE, AND THE CULPRIT WAS MY OWN CHECK
+
+★★★★★ **First real-census run of the copy-equivalence check:**
+
+```
+*** STOP CONDITION FIRED *** video 1HFoStW_wsc: 3 market copies split into 2 distinct
+ranking-relevant signatures -- group0=['81663564-…'] | group1=['ad9811b7-…','edbe2372-…']
+```
+
+★★★ **I did not disable it, tune it, or write around it. I stopped and diagnosed it, and it was MINE.** My first `copy_signature` included `remediation_class`, looked up per-copy by `(strategy_id, condition_id)`. **[MEASURED HERE] `pop120_classified.json` contains `456` rows over `40` DISTINCT `strategy_id` — exactly ONE copy per video.** So the signature compared **one classified row against two `<UNCLASSIFIED>` ones** and reported a divergence that was an artifact of the join.
+
+★★★★★ **THAT IS `I MEASURED THE NEIGHBOURING OBJECT` — this desk's most-convicted shape — committed by me, inside the safety check I was building to end a different instance of exactly that family.** ★★ **It fired on `1HFoStW_wsc` only because it is alphabetically first and the check raises on first failure; every one of the 40 would have failed.**
+
+**[MEASURED, content-only signature] `0 of 40` videos have copies that differ. AR-427's `40 of 40 identical` stands, re-derived by a second instrument.**
+
+**THE REPAIRED SIGNATURE and why it is not a weakening:** it compares each copy's OWN content — `condition_id · rule_text · reason · rule_class · semantic_type · role · refused` — and excludes `strategy_id`/`name` (which differ **by design** — they are what makes it a fan-out) and `remediation_class`. ★★★ **The class is a pure function of the fields it DOES compare (`classify(rule_text, rule_class, reason, semantic_type)`), so content equality ENTAILS class equality. ★ But that entailment cannot be checked per-copy on this artifact, because only one copy carries a class at all — stated in the manifest as a limit, with "a future census should classify every copy" recorded as the fix.**
+
+★★★ **THE CHECK IS NOW THE SAFETY PROPERTY YOU ASKED FOR: `load_frozen` raises `CopyDivergenceError` naming the video and the split, rather than collapsing. `40 of 40` agreeing TODAY is a fact about this snapshot; the day one diverges, the ranker stops instead of publishing whichever copy sorted first.** ★★ **Red-proofed: a test deletes one refusal from one copy and requires the raise — with the unmodified fixture loading cleanly first as the control, so "raises on divergence" is distinguishable from "always raises".**
+
+### ★★★ §3 — REPORT INTEGRITY, AND MY PROOF TOOL MANUFACTURING 80 FALSE FINDINGS
+
+**BUILT — `unlock_rank_render.py`:** renders the ranking table from the JSON, and `--verify` **regenerates and diffs**. The rendered file carries a `DO NOT EDIT BY HAND` header naming its own verify command and the source hash. **[MEASURED] `REPORT-INTEGRITY OK` on the committed pair.**
+★★ **Red-proofed exactly as you specified: the test renders, verifies clean (control), then hand-edits one row the way AR-427's transcription did, and REQUIRES failure.**
+
+★★★★★ **AND A THIRD SELF-INFLICTED FINDING, WHICH I REPORT BECAUSE IT IS THE SAME LESSON A THIRD TIME: re-running `unlock_rank_before_after_proof.py` against the AR-429 ranking reported `80 invariant-field differences` — `c8_conditions -> fixed_class_conditions: None -> 0`, on every row.** **No number had moved. My tool hard-coded old-name-on-the-left / new-name-on-the-right, so comparing two POST-rename artifacts read every row as a change.** ★★★ **A comparison tool that only works in one direction MANUFACTURES findings — the mirror image of a guard that cannot fire. I fixed the tool to resolve each field by trying both names on both sides, and I re-ran BOTH directions with a control:**
+
+| comparison | invariant diffs | label changes | verdict |
+|---|--:|--:|---|
+| vs the **AR-429** ranking you approved | **`0`** | `0` | **nothing moved at all** |
+| **CONTROL** — vs the original **AR-427** ranking | **`0`** | **`40 of 40`** | still detects the label repair |
+
+★★ **The control is the half that matters: without it, "0 differences" could mean the tool had gone blind in the other direction too.**
+
+### §4 — THE AR-427 §2 DISPOSITION QUESTION, ANSWERED BY SEARCH NOT BY MEMORY
+
+★★★ **You asked whether any published campaign figure came from the stably-suboptimal greedy path (`…13·17·24·31…`) rather than from `optimal_chain()`. [MEASURED HERE] I searched `AGENT-REPORTS.md`, `ADVISOR-RULINGS.md` and `ADVISOR-STATE.md` for `51`/`72`/`17·24`. Every occurrence is inside AR-427 §2's diagnosis or AR-429 §2's seed table — i.e. the DEFECT under examination, explicitly labelled as the disagreeing output.**
+★★★★★ **NO CAMPAIGN FIGURE WAS EVER CITED FROM THE GREEDY PATH. Every published chain — R-426's, AR-427's, AR-429's, yours — is `6·15·27·39·57·75·93·111·120`, which `optimal_chain()` reproduces exactly and which is the exhaustive optimum at all nine k. THIS CLOSES.**
+★ **One residue, named: the `[6,15,27,39,51,72,…]` line in AR-427 §2 and the seed table in AR-429 §2 remain in the record as diagnostic evidence. They are correctly captioned as the broken instrument's output and I am NOT proposing to edit them — the record of what was believed is the point.**
+
+### ★★ §5 — YOUR §3 STANDING RULE, IMPLEMENTED IN THE ARTIFACT
+
+★★★ **`canonical_video_id` is now emitted on every ranking row ALONGSIDE `video`, `market_or_copy_id` (all three `strategy_id`s), `rank`, `unlock_distance`, `residual_blocker_classes` and `residual_condition_count`.** `spec` is labelled a **DISPLAY** field in the JSON, in the rendered table's header, and in the manifest. ★★ **A consumer that keys on the label now has to ignore a column literally named `canonical_video_id` to do it — [MEASURED] `39` distinct labels over `40` videos, so that mistake would silently merge `e5HQXYBUW-Q` and `dE4lPhAWke8`.**
+
+### §6 — DISPOSITION
+
+**Commands executed:** `python test_unlock_ranker_determinism.py` → **`13/13`, 0 failed** (and `13/13` again with `POP120_CENSUS`/`POP120_CLASSIFIED` attached, where the four real-census arms run instead of skipping) · `python order_dependence_sweep.py --self-test` → still green · `python unlock_distance_ranker.py` · `python unlock_rank_render.py … --verify` → `REPORT-INTEGRITY OK` · `python unlock_rank_before_after_proof.py` in both directions · `sha256sum`.
+**Files:** `unlock_rank_render.py` (new) · `unlock-distance-rank-2026-07-29.md` (new, generated) · `unlock_ranker_core.py` (copy equivalence, `canonical_video_id`/`market_or_copy_id`/`rank`, legacy first-seen mode for the conviction) · `test_unlock_ranker_determinism.py` (+7 tests) · `unlock_rank_before_after_proof.py` (alias fix) · `unlock-distance-rank-2026-07-29.json` (regenerated) · `CENSUS-REPRODUCIBILITY-MANIFEST-2026-07-29.md` (§5.5, §5.6, hashes re-taken) · this AR.
+**Architecture invariants:** **#6 holds** — `backtests_total = 0`. **#7 holds** — `ADVISOR-RULINGS.md` untouched. **#8 holds** — `git add` on my own paths, `git commit -o`; no `checkout`, no `reset`.
+**FORBIDDEN, all observed:** no C8 implementation or re-extraction · no spec edits · no `.env` · no DB writes · no census re-run · no flag graduation · no deploy · no tower · no backtests · no CI-lane work.
+
+**Remaining uncertainty:**
+★★ **[UNCHECKABLE ON THIS ARTIFACT]** per-copy equality of `remediation_class` — only one copy is classified. **A future census should classify every copy.**
+★★ **[UNSWEPT]** `src/**`, `scripts/**` and all non-Python instruments, unchanged from AR-429.
+★ **[UNMEASURED]** whether the frozen census still matches today's live table.
+★ **[OPEN, yours]** the retention location for the census payload.
+
+**RECOMMENDATION: APPROVAL_REQUESTED.**
+**Next smallest task (ONE):** ★ **rule whether the sweep extends to `ci/*.mjs` + `scripts/**`, or is closed at the current surface.** It is the same open item AR-429 left; nothing else is half-done.
+
+---
+
 ## AR-430 · 2026-07-29 · **START-RECEIPT — R-454 (1) COPY-SHUFFLE · (2) COPY-EQUIVALENCE FAIL-LOUD · (3) REPORT-INTEGRITY.** ★★★★★ **AND YOUR §4(1) CATCH IS CORRECT AND I CONCEDE IT WITHOUT QUALIFICATION: MY 12 SEEDS PROBED THE WRONG MECHANISM. `PYTHONHASHSEED` PERTURBS SET/DICT ITERATION AND DOES **NOT** PERMUTE A JSON ARRAY — SO MY DETERMINISM TEST NEVER TOUCHED THE `rows[0]` DEFECT I MYSELF DISCLOSED**
 
 **RULING ID:** R-454 · **TASK ID:** AR-430 · **STATUS:** STARTING · **TREE:** `wt-h1-wave4-20260712`, my last commit `4ed73f11` (AR-429).

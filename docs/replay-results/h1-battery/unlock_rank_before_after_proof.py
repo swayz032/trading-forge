@@ -17,8 +17,21 @@ import sys
 # fields that carry a NUMBER or an IDENTITY -- these must be bit-identical
 INVARIANT = ["video", "distance", "residual_conditions", "total_conditions",
              "residual_classes"]
-RENAMED = {"c8_conditions": "fixed_class_conditions",   # renamed, value must not move
-           "carries_c8": "carries_fixed_class"}
+# Fields renamed across schema versions: (current name, historical alias).
+# ★ Resolved by TRYING BOTH NAMES ON BOTH SIDES. The first version of this tool
+#   hard-coded old-name-on-the-left / new-name-on-the-right, so comparing two
+#   POST-rename artifacts read every row as `None -> 0` and reported 80 moved
+#   numbers that had not moved (AR-430 §3). A comparison tool that only works in
+#   one direction is a tool that manufactures findings.
+ALIASES = [("fixed_class_conditions", "c8_conditions"),
+           ("carries_fixed_class", "carries_c8")]
+
+
+def resolve(row, *names):
+    for n in names:
+        if n in row:
+            return row[n]
+    return None
 
 
 def load(path):
@@ -59,9 +72,10 @@ def main():
         for f in INVARIANT:
             if b.get(f) != a.get(f):
                 diffs.append((v, f, b.get(f), a.get(f)))
-        for old, new in RENAMED.items():
-            if b.get(old) != a.get(new):
-                diffs.append((v, f"{old}->{new}", b.get(old), a.get(new)))
+        for new, old in ALIASES:
+            bv, av = resolve(b, new, old), resolve(a, new, old)
+            if bv != av:
+                diffs.append((v, f"{new}(<-{old})", bv, av))
     print(f"\n2. invariant-field differences across all {len(bi)} rows : {len(diffs)}")
     for v, f, x, y in diffs:
         ok = False

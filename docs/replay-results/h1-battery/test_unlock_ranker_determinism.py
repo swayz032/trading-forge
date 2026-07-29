@@ -196,8 +196,189 @@ def test_label_rule_FLAGS_the_residual_cases_instead_of_stripping_silently():
     assert core.canonical_spec_label(["a_mcl_5m", "a_mes_5m", "a_mnq_5m"])[1] == "OK"
 
 
+# ---------------------------------------------------------------------------
+# R-454 §4(1)(2)(3). THE GAP THESE CLOSE, STATED PLAINLY:
+#   PYTHONHASHSEED perturbs str hashing -> SET and DICT iteration. It does NOT
+#   permute a JSON ARRAY. The representative row was chosen by rows[0] FROM AN
+#   ARRAY, so the 12-seed tests above never touched that defect. These do.
+# ---------------------------------------------------------------------------
+
+def _shuffled_census(census_path, rotation):
+    """Rotate the market copies within every video group. Same content, different
+    array order -- the exact perturbation PYTHONHASHSEED cannot produce."""
+    with open(census_path, encoding="utf-8") as fh:
+        doc = json.load(fh)
+    groups = {}
+    for row in doc["strategies"]:
+        groups.setdefault(row["video"], []).append(row)
+    out = []
+    for video in sorted(groups):
+        g = groups[video]
+        k = rotation % len(g) if g else 0
+        out.extend(g[k:] + g[:k])
+    doc["strategies"] = out
+    return doc
+
+
+def _emit_payload(census_path, classified_path, first_seen=False):
+    videos, _ = core.load_frozen(census_path, classified_path,
+                                 first_seen_representative=first_seen)
+    return core.serialize({"chain": core.optimal_chain(videos),
+                           "ranking": core.rank_specs(videos)})
+
+
+def test_copy_shuffle_leaves_the_output_byte_identical():
+    """R-454 §4(1): shuffle the three market copies for every video -> the complete
+    output must be BYTE-IDENTICAL."""
+    with tempfile.TemporaryDirectory() as td:
+        cp, lp = write_fixture(td)
+        outs = []
+        for rot in range(len(INSTRUMENTS)):
+            p = os.path.join(td, f"shuffled_{rot}.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(_shuffled_census(cp, rot), fh, indent=1)
+            outs.append(_emit_payload(p, lp))
+        assert len(set(outs)) == 1, (
+            f"COPY ORDER REACHES THE OUTPUT: {len(set(outs))} distinct results across "
+            f"{len(INSTRUMENTS)} rotations. This REOPENS THE RANKING -- report it, do not patch it.")
+
+
+def test_copy_shuffle_test_CONVICTS_the_retired_first_seen_selection():
+    """R-454 §4(1): 'Then reintroduce first-seen selection and prove the test FAILS.'
+    Without this the test above could be passing for the wrong reason."""
+    with tempfile.TemporaryDirectory() as td:
+        cp, lp = write_fixture(td)
+        outs = []
+        for rot in range(len(INSTRUMENTS)):
+            p = os.path.join(td, f"shuffled_{rot}.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(_shuffled_census(cp, rot), fh, indent=1)
+            outs.append(_emit_payload(p, lp, first_seen=True))
+        assert len(set(outs)) > 1, (
+            "NO POWER: the retired rows[0] first-seen selection produced identical output "
+            "under every rotation, so the shuffle is not exercising the defect and the "
+            "test above certifies nothing.")
+
+
+def test_copy_equivalence_FAILS_LOUD_when_a_copy_diverges():
+    """R-454 §4(2): the equivalence check is the SAFETY property. 40-of-40 agreeing
+    today is a fact about this snapshot, not an invariant."""
+    with tempfile.TemporaryDirectory() as td:
+        cp, lp = write_fixture(td)
+        # control: unmodified fixture must LOAD CLEANLY, or the test below proves nothing
+        core.load_frozen(cp, lp)
+
+        with open(cp, encoding="utf-8") as fh:
+            doc = json.load(fh)
+        victim = next(r for r in doc["strategies"] if r["refusals"])
+        victim["refusals"] = victim["refusals"][:-1] or [dict(victim["refusals"][0],
+                                                              condition_id="EXTRA#9")]
+        bad = os.path.join(td, "diverged.json")
+        with open(bad, "w", encoding="utf-8") as fh:
+            json.dump(doc, fh, indent=1)
+        try:
+            core.load_frozen(bad, lp)
+        except core.CopyDivergenceError as exc:
+            assert victim["video"] in str(exc), "the error must NAME the diverging video"
+            return
+        raise AssertionError(
+            "SILENT COLLAPSE: a diverging market copy did not raise. The ranker would "
+            "publish whichever copy sorted first and nothing would go red.")
+
+
+def test_report_integrity_check_fails_on_a_hand_edited_row():
+    """R-454 §4(3): mutate a rendered row -> the check must FAIL."""
+    import subprocess as sp
+    with tempfile.TemporaryDirectory() as td:
+        cp, lp = write_fixture(td)
+        videos, _ = core.load_frozen(cp, lp)
+        rank_path = os.path.join(td, "rank.json")
+        with open(rank_path, "w", encoding="utf-8") as fh:
+            fh.write(core.serialize({"population": {"videos": len(videos), "rows": len(videos) * 3,
+                                                    "replication_factor": 3, "backtests_total": 0},
+                                     "ranking": core.rank_specs(videos)}))
+        renderer = os.path.join(HERE, "unlock_rank_render.py")
+        table = os.path.join(td, "table.md")
+        assert sp.run([sys.executable, renderer, rank_path, "--out", table],
+                      capture_output=True).returncode == 0
+
+        # control: the pristine table must VERIFY, else "fails on edit" is meaningless
+        clean = sp.run([sys.executable, renderer, rank_path, "--verify", table],
+                       capture_output=True, text=True)
+        assert clean.returncode == 0, f"pristine table failed to verify:\n{clean.stdout}"
+
+        # now hand-edit one row, exactly as AR-427's transcription did
+        with open(table, encoding="utf-8") as fh:
+            text = fh.read()
+        lines = text.splitlines()
+        row = next(i for i, ln in enumerate(lines) if ln.startswith("| 1 |"))
+        lines[row] = lines[row].replace("`fixture_spec", "`tidied_spec")
+        with open(table, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write("\n".join(lines) + "\n")
+
+        dirty = sp.run([sys.executable, renderer, rank_path, "--verify", table],
+                       capture_output=True, text=True)
+        assert dirty.returncode != 0, (
+            "REPORT-INTEGRITY CHECK IS BLIND: a hand-edited table row still verified.")
+        assert "REPORT-INTEGRITY FAILED" in dirty.stdout
+
+
 REAL_CENSUS = os.environ.get("POP120_CENSUS")
 REAL_CLASSIFIED = os.environ.get("POP120_CLASSIFIED")
+
+
+def _real_available():
+    return bool(REAL_CENSUS and REAL_CLASSIFIED
+                and os.path.exists(REAL_CENSUS) and os.path.exists(REAL_CLASSIFIED))
+
+
+def test_real_census_copy_equivalence():
+    """R-454 STOP: 'a triple fails equivalence'. Runs against the real 40 videos."""
+    if not _real_available():
+        print("SKIPPED: set POP120_CENSUS / POP120_CLASSIFIED")
+        return "skipped"
+    videos, _ = core.load_frozen(REAL_CENSUS, REAL_CLASSIFIED)   # raises on divergence
+    assert len(videos) == 40, f"expected 40 videos, got {len(videos)}"
+    assert all(v["copy_count"] == 3 for v in videos.values())
+
+
+def test_real_census_copy_shuffle_is_byte_identical():
+    """R-454 STOP: 'the copy-shuffle test shows the output is NOT byte-identical
+    (that reopens the ranking)'."""
+    if not _real_available():
+        print("SKIPPED: set POP120_CENSUS / POP120_CLASSIFIED")
+        return "skipped"
+    outs = []
+    with tempfile.TemporaryDirectory() as td:
+        for rot in range(len(INSTRUMENTS)):
+            p = os.path.join(td, f"real_shuffled_{rot}.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(_shuffled_census(REAL_CENSUS, rot), fh, indent=1)
+            outs.append(_emit_payload(p, REAL_CLASSIFIED))
+    assert len(set(outs)) == 1, (
+        f"COPY ORDER REACHES THE REAL OUTPUT: {len(set(outs))} distinct results. "
+        "THIS REOPENS THE RANKING -- report unpatched.")
+
+
+def test_real_census_shuffle_CONVICTS_first_seen_selection():
+    """The discrimination half on the real census. The retired rows[0] selection must
+    NOT survive a shuffle -- here it does not even complete, because the classification
+    artifact covers only the strategy_id-ordered copy."""
+    if not _real_available():
+        print("SKIPPED: set POP120_CENSUS / POP120_CLASSIFIED")
+        return "skipped"
+    outcomes = set()
+    with tempfile.TemporaryDirectory() as td:
+        for rot in range(len(INSTRUMENTS)):
+            p = os.path.join(td, f"real_shuffled_{rot}.json")
+            with open(p, "w", encoding="utf-8") as fh:
+                json.dump(_shuffled_census(REAL_CENSUS, rot), fh, indent=1)
+            try:
+                outcomes.add(("ok", _emit_payload(p, REAL_CLASSIFIED, first_seen=True)))
+            except Exception as exc:                       # noqa: BLE001 - the outcome IS the datum
+                outcomes.add(("raised", type(exc).__name__))
+    assert len(outcomes) > 1, (
+        "NO POWER on the real census: first-seen selection survived every rotation.")
 
 
 def test_real_census_determinism():
@@ -216,6 +397,13 @@ TESTS = [test_shipped_ranker_is_deterministic_on_a_tied_input,
          test_exhaustive_chain_beats_the_naive_greedy_on_the_fixture,
          test_canonical_spec_label_is_group_derived_not_first_row,
          test_label_rule_FLAGS_the_residual_cases_instead_of_stripping_silently,
+         test_copy_shuffle_leaves_the_output_byte_identical,
+         test_copy_shuffle_test_CONVICTS_the_retired_first_seen_selection,
+         test_copy_equivalence_FAILS_LOUD_when_a_copy_diverges,
+         test_report_integrity_check_fails_on_a_hand_edited_row,
+         test_real_census_copy_equivalence,
+         test_real_census_copy_shuffle_is_byte_identical,
+         test_real_census_shuffle_CONVICTS_first_seen_selection,
          test_real_census_determinism]
 
 
