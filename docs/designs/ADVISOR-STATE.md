@@ -2,7 +2,7 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. Never read the ledger from the top.
-> Last rewritten: 2026-07-28, current through **R-419** (port scope pre-registered).
+> Last rewritten: 2026-07-28, current through **R-420** (safety release authorized).
 
 ## SEAT
 Ledger at **R-415**. Newest AR: **AR-379, RULED** (stop condition FIRED).
@@ -239,59 +239,56 @@ that sentence violated somewhere else.
 A stop condition fires on evidence of DANGER, never on evidence that the desk's
 scope guess was wrong.
 
-## AUTHORIZED NOW — port is BUILD-READY, NOT BUILT (AR-382, desk-verified)
-★ **Worker handed off on context. Nothing half-written: no branch, no worktree,
-no code.** The task stays FILED and authorized to the seat, not withdrawn.
+## AUTHORIZED NOW — THE SAFETY RELEASE (R-420). ONE PR, THREE EDITS.
+★★★ **THE CORE: an uncompilable MANDATORY rule is `!= true`, `!= false`,
+`= UNRESOLVED EXECUTION ERROR`. True widens the strategy; false disables it.
+A boolean is the wrong TYPE — no choice of default fixes it.**
+Shape: `BuildResult { status: BOUND | UNBINDABLE | NON_EXECUTABLE · predicate? ·
+reason? · rule_role: MANDATORY | OPTIONAL | ANNOTATION }`.
 
-★★ **THE PORT IS SMALLER THAN IT LOOKED — dependency surface proven clean.**
-[MEASURED HERE, TREE `runtime-production`] `spec_family_bindings.py:402-406`
-already contains the identical matcher idiom (`norm = f" {text.strip().lower()} "`
-+ the same three-way `in / startswith / endswith` test), **so no helper needs
-porting.** [MEASURED HERE, TREE campaign] the four symbols exist at `:492`
-(`REFUSED_SESSION_KEYWORDS`), `:498` (`session_refusal_reason`), `:781`
-(`_session_phrase_hit`), `:803` (`refused_session_zone`).
+**(A) RESOLVER** `spec_family_bindings.py` — the five AR-382 edits: recognized
+session with no clock -> `bindable=False`, `primitive=None`,
+`approximation=True`, reason `session_zone_refused_uncomputable_window:{zone}`.
+**(B) BACKTEST PREFLIGHT** — ANY mandatory unbindable rule -> **refuse before
+loading data or simulating**, emitting **strategy id · rule text · semantic
+type · reason**.
+**(C) DEFENSIVE ASSERTION** at `spec_condition_compiler.py:616-620` — even if
+(B) regresses later, the consumer refuses: *mandatory AND status != BOUND ->
+raise*. The `np.ones` path survives ONLY for `OPTIONAL_NOT_APPLIED`.
+★★ **(C) is the belt: a guard that can regress needs a second check at the point
+of use.**
 
-**THE EXACT DIFF — `runtime-production/src/engine/spec_family_bindings.py`:**
-1. **REMOVE** `lunch_blackout` + `overnight` entries from `SESSION_KEYWORDS:275-283`.
-2. **ADD** `REFUSED_SESSION_KEYWORDS` with those two (campaign `:492-495`).
-3. **ADD** `session_refusal_reason()` -> `session_zone_refused_uncomputable_window:{zone}`.
-4. **ADD** `refused_session_zone()` using production's existing inline matcher.
-5. **ADD** the unflagged refusal block in `_bind_condition_dispatch`, **before**
-   the `resolve_session_keyword` path (campaign `:2549-2560`).
-★★★ **`bindable=False` + `primitive=None` + `approximation=True` is the trio that
-keeps the row OUT of the concrete count. Change any one and the false concrete
-comes back.**
+**ROLE MAPPING — decide explicitly, fail closed. [MEASURED, all 16 specs] the
+vocabulary is exactly `spine` 102 · `confluence` 53 · `invalidation` 6, no nulls:**
+`spine` -> MANDATORY · `invalidation` -> MANDATORY · `confluence` -> optional
+**ONLY with positive source evidence** · **anything else or absent -> MANDATORY
+(refuse).** ★★ **[MEASURED `:160-165`] `confluence` is NOT safely optional by
+default — role is mutable in-flight, so the label is not proof of optionality.**
 
-**RED MATRIX — write FIRST, prove RED against unported production:**
+**RATIO DEMOTED.** `MIN_SPINE_BOUND_RATIO=0.5` may remain a corpus-health
+diagnostic; **it may no longer authorize execution.** Two questions, only the
+second may use a ratio: **safe/executable (categorical)** vs **complete enough
+to be useful (ratio).**
+
+**ACCEPTANCE — red-proofed, PRODUCTION tree, every line names its tree:**
 | case | expected |
 |---|---|
-| `overnight`, no configured interval | `session_zone_refused_uncomputable_window:overnight` |
-| `overnight` defined 16:00-09:30 | bind, cross-midnight interval |
-| ★ **configured session (RTH / `ny_am`)** | **bind normally — THE DISCRIMINATOR** |
-| recognized session, no tz/calendar basis | refuse / unresolved |
-| unresolved session | cannot enter backtesting — scope set by the pre-registration above |
-| ★ **unbindable MANDATORY rule silently omitted** | ★★★ **THE TEST MUST FAIL** — the red-proof for the silent-drop mode |
-| optional unresolved annotation | proceeds **with a visible warning** |
-★★ **Without the discriminator row the suite cannot tell "the port works" from
-"the port refuses everything" — and a refusal-shaped fix is exactly the kind that
-passes by over-refusing.**
+| recognized session, no clock | unbindable · no primitive · not exact · **backtest REFUSED** |
+| ★★★ mandatory unbindable silently omitted | **THE TEST MUST FAIL** — red-proof for the silent-pass mode |
+| `overnight` defined 16:00-09:30 | bindable, executable, allowed |
+| ★ configured session (RTH / `ny_am`) | **binds normally — THE DISCRIMINATOR, green both ways** |
+| optional unresolved annotation | proceeds with a **visible** warning, `OPTIONAL_NOT_APPLIED` |
+| unknown/absent role | **REFUSED** |
 
-★★★ **OPEN QUESTION THAT MAY RE-SCOPE THE PORT BEFORE IT IS WRITTEN —
-DO THIS FIRST (R-418 item 2):** [UNTRACED] what does the consumer do with
-`bindable=False` / a refused row? R-418's own stop condition says **stop if the
-port cannot make a refused binding fatal without touching the onboarding
-writer.** Row 5 may not be satisfiable inside this PR's scope. **Trace it, then
-build.**
+**THEN:** (2) report which of the 27 loaded strategies would be refused (spine vs
+confluence placement) · (3) corpus_B charter · parity third leg · `OUT_PATH`
+date-stamp · revival probes.
 
-**THEN, in order:** the port (above) · corpus_B charter · parity third leg ·
-`OUT_PATH` date-stamp · revival probes.
-
-★★★ **STOP AND REPORT IMMEDIATELY if `backtests total > 0` before the port lands
-— LOADED -> FIRED, outranks everything.**
+★★★ **STOP IMMEDIATELY if `backtests total > 0` before this lands.** Also stop if
+(C) cannot be added without changing behaviour for already-BOUND rules.
 ★★ **STANDING (R-414): audit the desk's CONSISTENCY, not just its instructions.**
-★ **RULING CADENCE (operator, 2026-07-28): the desk takes an external second
-opinion BEFORE writing a ruling.** Findings are verified and parked meanwhile —
-**never wait on a held ruling; continue down this queue.**
+★ **RULING CADENCE: the desk takes an external second opinion BEFORE ruling.
+Never wait on a held ruling — continue down this queue.**
 
 ## NOT AUTHORIZED (worker)
 Real-capital actions · spend · credential decryption · `.env` writes · flag
