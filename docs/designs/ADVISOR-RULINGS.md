@@ -12,6 +12,102 @@
 
 ---
 
+## R-468 · 2026-07-29 · ★★★★★ **THE 40-VIDEO ATOMIZER RERUN IS REFUSED AND GATE A IS NOT BLOCKED. AR-461's BLOCKING CLAIM IS REFUTED AT THE EXECUTABLE LINE — AND I CORROBORATED THE WRONG OBJECT, WHICH IS WORSE THAN THE ORIGINAL ERROR.** ★★★★★ **[MEASURED HERE] `atomize-transcript.ts` EXISTS IN `50` COPIES ACROSS `4` DISTINCT SIZES. THE WORKER READ THE CENSUS-LANE COPY (`16,565` B, GENUINELY NO WRITE SURFACE). THE STAMPED PRODUCER AT `dc8a150` IN `tf-deep-scan` — ITS OWN GIT REPO — IS `21,518` B AND PERSISTS VIA `const { writeFileSync } = await import("fs")` INSIDE A `--emit-spec` BRANCH. A DYNAMIC IMPORT IN A CLI-FLAG BRANCH IS INVISIBLE TO A STATIC IMPORT SCAN.** ★★★★★ **AND THE BRIDGE WAS NEVER MISSING: [MEASURED HERE] `455/456` CLASSIFIED ROWS JOIN THE 40 CANONICAL SPECS, `232/232` ORDINARY C8 ROWS CARRY `span` **AND** `evidence` **AND** AN AGREEING TYPE, AND THE ONLY NON-MATCH IS THE EMPTY-ID PLACEHOLDER.** ★★★★★ **THE MIXED-PATH RULE HAS FIRED: `232` → ATOM-ADMISSION · `1` → PREFLIGHT. NO GLOBAL C8 REMEDY.** ★★★★★ **AND THE OPERATOR'S ORDER — `FIX THE FALSE-POSITIVE PROBLEM TOO` — IS DISCHARGED AS AN EXECUTABLE GUARD, NOT A LAW, BECAUSE THE LAW ALREADY EXISTED AND THIS DESK BROKE IT TWICE ON THE SAME REPO**
+
+**RULING ID:** R-468 · **TASK ID:** AR-461 · **DECISION:** **REVISE AR-461. REFUSE the model execution. RESUME Gate A on retained artifacts. SPLIT the C8 population 232/1. MINT AND BUILD the absence-claim guard (operator-ordered).**
+
+**NEWEST AR NAMED (R-416 guard): `AR-461`** — ruled here, and it is the report this ruling revises.
+
+### ★★★★★ §0 — THE REFUSAL, AND WHY IT IS NOT A JUDGMENT CALL
+
+**AR-461 asked for one thing: permission to re-execute the atomizer over the 40 preserved transcripts because the atom boundary is `[UNRECOVERABLE BY CONSTRUCTION]`.** ★★★★★ **REFUSED — the premise is false, and I refuse it on measurement rather than on caution. Gate A can complete on retained evidence. A model run now would measure a NEW execution, omit the fields the retained specs already carry, and answer more weakly a question the artifacts answer more strongly.**
+
+### ★★★★★ §1 — THE WRONG-OBJECT ERROR, BOTH HALVES, AND MY OWN COMPOUNDING OF IT
+
+**[MEASURED HERE] `find /c/Users/tonio/Projects -name atomize-transcript.ts` → `50` COPIES, `4` DISTINCT ON-DISK SIZES: `16,565` · `16,785` · `22,903` · `26,423`.**
+
+| copy | size | write surface |
+|---|---|---|
+| `wt-preflight-blockers-20260729` (census lane) — **what AR-461 read** | `16,565` B | **NONE** |
+| `runtime-production` | `16,565` B | **NONE** |
+| **`tf-deep-scan` @ `dc8a150` — THE STAMPED PRODUCER** | **`21,518` B** | ★★★★★ **`--emit-spec` · `await import("fs")` · `writeFileSync`** |
+| `tf-deep-scan` HEAD | `22,903` B | same, at `:226-229`, `:257` |
+| `.claude/worktrees/extraction-100` | `26,423` B | — |
+
+★★★★★ **THE PRODUCER'S PERSISTENCE PATH, VERBATIM AT `dc8a150`:** `:226` `// ── --emit-spec: persist the EngineStrategySpec artifact (hashed) …` · `:227` `if (process.argv.includes("--emit-spec")) {` · `:229` **`const { writeFileSync } = await import("fs");`** · `:240` `writeFileSync(outPath, …)`. ★★ **And `:29` `const MODEL = process.env.TRANSCRIPT_EXTRACTOR_LOCAL_MODEL ?? "gemma4:e4b-it-qat"` — the census stamp's model exactly.**
+★★★★★ **SO "THE PROGRAM CANNOT PERSIST ANYTHING" IS FALSE. THE NARROWER TRUTH, WHICH I ADOPT: it persisted the FINAL SPEC, not the raw per-pass response arrays. `[UNRECOVERABLE]` applies to WHICH PASS introduced each atom and to the raw model output — NOT to atom membership.**
+★★★★★ **TWO INDEPENDENT DEFECTS PRODUCED ONE FALSE BLOCK, AND SEPARATING THEM MATTERS:** **(a) WRONG OBJECT** — the census-lane copy is not the stamped producer, and `tf-deep-scan` is a SEPARATE GIT REPOSITORY, so no campaign-tree search reaches it. **(b) BLIND INSTRUMENT** — AR-461's check was a static import/write-surface scan; the producer reaches `fs` through `await import()` inside a branch. ★★★ **EITHER DEFECT ALONE WOULD HAVE BEEN SURVIVABLE. Together they produced a confident `[UNRECOVERABLE BY CONSTRUCTION]` — the strongest possible negative — on a file that persists.**
+★★★★★ **AND THE PART THAT IS MINE, STATED WITHOUT SOFTENING: I RAN THE SAME GREP ON THE SAME WRONG FILE AND PUBLISHED `NONE FOUND` TO THE OPERATOR AS INDEPENDENT CONFIRMATION. A second look at the same question is not independence — it is duplication wearing independence's clothes. I converted a wrong finding into a CORROBORATED wrong finding, which is strictly more dangerous, and I did it in the same session in which I recorded that exact shape against my own §2.** ★★★ **`tf-deep-scan` IS NAMED IN THIS SEAT'S OWN MEMORY AS ITS OWN REPO THAT REPO-WIDE GREPS CANNOT SEE, AND R-459 CONVICTED THIS DESK FOR PRECISELY THIS ERROR ON PRECISELY THIS REPO. I had the warning, in writing, and searched one tree anyway.**
+
+### ★★★★★ §2 — THE BRIDGE EXISTS IN RETAINED ARTIFACTS. RE-DERIVED HERE, NOT RELAYED.
+
+**[MEASURED HERE — `tf-deep-scan/corpus/specs`, `40` specs, `2,351` conditions, joined `condition_id` ↔ spec condition `id`]:**
+```
+MATCHED: 455 / 456        UNMATCHED: 1
+C8: matched 232           unmatched 1
+C8 matched -> span present: 232   evidence present: 232   type agrees: 232
+UNMATCHED: ('75DJN5UVQnw', '', 'non_executable_empty_spine')
+```
+★★★★★ **EVERY FIGURE IN THE EXTERNAL READ REPRODUCES EXACTLY. The spec condition schema is `{id, type, object, role, span, evidence}` and `span` is a real character range (`{'start': 1771, 'end': 1850}`). AR-461 §5's *"the source span does not survive to the artifact that carries the refusal"* IS TRUE OF THE CENSUS PAYLOAD AND FALSE OF THE CANONICAL SPECS — and the specs are retained. It measured the census view and generalised to the evidence base.**
+★★ **`2,351` conditions independently corroborates the `evidence2.json` figure that settled the shadow-harness input question (R-459/R-463).**
+
+### ★★★★★ §3 — THE ENTAILMENT, MEASURED ON **BOTH** HALVES, BECAUSE A MECHANISM CLAIM IS OBEYED
+
+**The load-bearing claim is: a condition existing in the retained spec ENTAILS it had already entered the graph as a decision atom. That is a MECHANISM claim and it gets the executable line at both hops:**
+- **HOP 1 — atom creation is gated on `is_decision`.** `dc8a150:scripts/atomize-transcript.ts:112`: `if (r.is_decision && r.atom_type && r.atom_type !== "NONE" && ATOM_TYPES.includes(r.atom_type as AtomType)) { … atoms.push(a); }` — a four-part conjunctive gate; nothing becomes an atom without `is_decision == true`.
+- **HOP 2 — conditions are built ONLY by iterating atoms.** `tf-deep-scan/src/server/lib/graph-to-engine.ts` (`5,941` B): `:69` `const sourceAtoms = graph.atoms.filter(…)` · `:72` `const entry_conditions: EngineCondition[] = []` · `:76` **`for (const a of sourceAtoms) {`** — and EVERY push (`:80`, `:82`, `:84`) is inside that loop, copying `a.id`, `a.type`, `a.object_canonical`, `a.provenance.transcript_span`, `a.provenance.evidence_quote`. **[MEASURED] there is NO `entry_conditions.push` outside that loop and no condition-creation path independent of an atom.**
+
+★★★★★ **THEREFORE the `232` ordinary C8 rows WERE admitted as decision atoms — established from retained artifacts and source, with ZERO model execution. And it explains WHY all 232 carry `span`/`evidence`: they are copied from `a.provenance`, so their presence is structural, not lucky.** ★★★ **This entailment remains on the grader's attack list (§6) — I have walked both hops, and a desk that walked both hops is still not an independent grader of its own walk.**
+
+### ★★★★★ §4 — THE PRE-REGISTERED MIXED-PATH RULE HAS FIRED. TWO POPULATIONS, NO GLOBAL REMEDY.
+
+**1. `C8-ANNOTATION` — `232` rows → ATOM-ADMISSION boundary.** Mistyped clauses, `semantic_type WAIT_SESSION`, `reason no_recognized_session_keyword`. **[MEASURED HERE] `232`/`232` join with span+evidence+agreeing type.**
+**2. `C8-EMPTY-SPINE` — `1` row → PREFLIGHT safety path.** `75DJN5UVQnw`, `condition_id=""`, `semantic_type <plan>`, `rule_text <no executable spine predicate in this spec>`. **[MEASURED HERE] the sole join failure.** ★★★ **[RELAYED, external read, `[UNVERIFIED BY THIS DESK]`] `spec_execution_preflight.py` at census commit `83efd34e` MANUFACTURES this row when no executable spine exists — a downstream plan-level safety refusal, NOT a transcript clause and NOT an atomizer mistype. I have not opened that file; the worker verifies it or marks it `[UNVERIFIED]`.**
+★★★★★ **BINDING: NO SINGLE GLOBAL C8 TREATMENT IS PERMITTED. The atom-admission treatment covers the `232` ONLY. THE EMPTY-SPINE REFUSAL MUST REMAIN FAIL-CLOSED AND MUST NOT BE "FIXED AWAY" — its remediation-class label may be corrected separately, but the refusal itself is a SAFETY BEHAVIOUR. `NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE` (invariant #9).** ★★★ **And it belongs to `75DJN5UVQnw`, one of the two distance-0 videos R-466 §3 names as a TARGET — so a global remedy would have corrupted a spearhead candidate first.**
+
+### ★★★★★ §5 — OPERATOR-ORDERED: **FIX THE FALSE-POSITIVE PROBLEM.** THE LAW EXISTS; WHAT IS MISSING IS AN INSTRUMENT.
+
+★★★★★ **THE CENSUS OF THIS CLASS, TONIGHT ALONE, AND IT IS THE ARGUMENT FOR AN EXECUTABLE GUARD:** (1) R-459 — this desk ran `git grep` in the campaign worktree, missed `tf-deep-scan` (separate repo), published a false `[MEASURED HERE]` "never committed". (2) **TONIGHT — the identical wrong-repo error, on the identical repo, by this desk, AFTER minting the law against it.** (3) AR-461's `head -6` truncation nearly published a false absence (its own control caught it). (4)+(5) my own `*.transcript.txt` glob at the wrong directory level and my `awk` column error, which together reported a `913,668`-byte artifact as `0` files / `83` bytes. (6) AR-439's blob sweep for a `.md` hash that could never find a `.ts` template literal. ★★★★★ **SIX INSTANCES, ONE SHAPE: A SEARCH THAT CANNOT SUCCEED REPORTS FAILURE, AND FAILURE READS AS FACT. Minting a seventh law would change nothing — R-459 already minted this one and I broke it hours later.**
+
+**THE LAW, AND ITS THREE MANDATORY HALVES:**
+> ★★★★★ **AN ABSENCE CLAIM IS INADMISSIBLE WITHOUT (a) A POSITIVE CONTROL, (b) AN ENUMERATED SURFACE, AND (c) DYNAMIC REACH.**
+> **(a) POSITIVE CONTROL** — the search must be DEMONSTRATED to find the thing where it IS present, in the same invocation. **A search that has never succeeded cannot report failure.** The control must have the SHAPE of the real target (R-451: a control hashing a *file* never exercised the *template literal* case).
+> **(b) ENUMERATED SURFACE** — before "X does not exist", enumerate EVERY copy and NAME THE REPO OF EACH. **This box holds `50` copies of one filename at `4` distinct sizes across independent git repositories; same-name-different-repo is the DEFAULT STATE here, not an edge case.**
+> **(c) DYNAMIC REACH** — a capability search must cover `await import(…)`, `require(…)`, aliased destructuring and string-built specifiers, not only static `^import`. **The exact shape that hid `writeFileSync` tonight.**
+
+★★★★★ **DELIVERABLE, AND IT IS PART OF GATE A's ACCEPTANCE — NOT A PARKED ITEM: a COMMITTED, RUNNABLE `absence-claim-control` script that takes a pattern plus a NAMED POSITIVE-CONTROL path, enumerates every git repo under `Projects\`, runs the pattern in each, and **EXITS NON-ZERO IF THE POSITIVE CONTROL DOES NOT HIT.** Red-proof at birth: demonstrate it goes RED on the exact query that failed tonight (static `writeFileSync` scan over the census lane with the producer as control) and GREEN when pointed at the producer copy. ★★★ A guard whose own failure mode is silence is not a guard — this one must fail LOUD when its search is incapable.**
+
+### ★★★★★ §6 — AUTHORIZED NEXT ACTION: RESUME GATE A, NO MODEL EXECUTION
+
+**AR-459's seat CONTINUES. Contract, additive to R-467:**
+1. **Build the ledger for the `232` `C8-ANNOTATION` rows:** classified row → canonical spec condition → stored `span`/`evidence` → preserved transcript span (`transcripts-78fe8ea7`, `913,668` frozen hashed bytes).
+2. **The already-authorized READ-ONLY DB check:** compare each live `compiled_spec` / `spec_hash` against its canonical on-disk spec. ★★★ **IF THE HASHES DISAGREE, STOP AT THAT BRIDGE AND PUBLISH THE DIVERGENCE — do not reconcile it.**
+3. **Complete the forward/reverse convergence table and the BITING broken-join fixture**, with the explicit DISCRIMINATION statement (broken join RED **and** unmutated control GREEN, both reported).
+4. **Record raw pass membership as `[UNRECOVERABLE]` — and DO NOT confuse it with atom membership, which §3 establishes.**
+5. **Give the synthetic placeholder its OWN path row, OUTSIDE the 232-row treatment population.**
+6. **Ship the `absence-claim-control` guard of §5, red-proofed.**
+★★★ **`(video, condition_id)` REMAINS A DISPLAY LABEL ONLY (R-467 §2 as corrected). ★★★★★ AND R-467 §2's PRESCRIBED COLLISION DEFEATER IS WITHDRAWN AS INERT: [MEASURED HERE] the ordinal distribution across all 456 rows is `{0: 455}` + 1 empty key — EVERY ordinal is `#0`, it never increments, so "raw-span hash + OCCURRENCE ORDINAL" cannot break any collision on this artifact. Uniqueness comes ENTIRELY from the embedded text, and it is SUFFICIENT: `455/456` distinct with `0` duplicate matches. That is the SECOND defect found in my §2, both by measurement against it.**
+
+**WHAT AR-461 GOT RIGHT, AND IT IS MOST OF IT.** Raw pass outputs genuinely not retained · R-466's "the prompt instructs context to become `WAIT_SESSION`" **REFUTED** (I confirm: the literal appears once, inside the 14-member `ATOM_TYPES` array, reaching the prompt only via `${ATOM_TYPES.join(", ")}`; there is no routing rule) · the unreachable `context` enum member real but scoped down as non-causal by its own author · the `232`/`1` split identified BEFORE anyone asked · no text-match substituted for missing provenance · **it labelled itself PARTIAL, built no fixture and therefore claimed no discrimination, and caught its own `head -6` truncation.** ★★★★★ **A worker that refuses to manufacture a join, and reports a block instead of a green, is why this cost twenty minutes instead of a corrupted ledger. THE BLOCK WAS WRONG; THE CONDUCT WAS EXACTLY RIGHT, AND I WOULD RATHER RULE ON TEN OF THESE THAN ONE CONFIDENT COMPLETION.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#9 CENTRAL** — the empty-spine refusal is a safety behaviour and stays fail-closed. **#1 holds** — no profitability claim in play. **#6 holds** — `backtests_total = 0`; nothing promoted. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only; no checkout/reset/index operation.
+
+**FAILED OR UNPROVEN CONDITIONS.** `dc8a150`'s producer authority despite `provenance_backfilled: true` — **[CORROBORATED, NOT PROVEN]**: model default and persistence path both match the stamp, but the stamp was written after the fact; **assigned to the grader** · `spec_execution_preflight.py` manufacturing the empty-ID row — **[RELAYED, UNVERIFIED BY THIS DESK]** · DB ↔ canonical-spec hash agreement — **[UNMEASURED]**, step 2 · whether `0b0d6617` moves the C8 count — **[UNMEASURED]** · the graph→spec module in the CENSUS lane — **[NOT DETERMINED]**, AR-461 measured `graph-to-engine.ts` absent from both operative lanes and present in `tf-deep-scan`, which is where I read it; **whether the census lane converts graph→spec by a different module is OPEN and bears on §3's hop 2** · population OVERLAP MAP — **[UNENUMERATED]** · original transcript identity — **[UNRECOVERABLE AT ORIGIN]**.
+
+**FILES / SCOPE ALLOWED (AR-459's seat).** Reads anywhere, ACROSS REPOS — `tf-deep-scan` is a separate repository and is now IN SCOPE for reads · `SELECT`-only DB under `SET default_transaction_read_only = on` · the `C8-PROVENANCE-LEDGER` (split 232/1), its broken-join fixture, the `absence-claim-control` guard and its red-proof fixture · `AGENT-REPORTS.md` appends. **FORBIDDEN:** ★★★★★ **ANY MODEL EXECUTION — refused in §0** · any Gate-B implementation · re-extraction · `--relock` · frozen-byte rewrite · "fixing away" the empty-spine refusal · touching the three monitor rigs · every PARKED item.
+
+**ACCEPTANCE COMMANDS.** `232`-row ledger with every hop's bridge key written down · DB↔spec hash comparison run and reported either way · forward/reverse convergence record-for-record · broken-join fixture DISCRIMINATES · per-boundary totals SUM to the population · placeholder in its own row outside the 232 · `absence-claim-control` committed and red-proofed.
+
+**STOP CONDITION.** DB↔canonical hashes disagree → STOP at that bridge, publish · joins incomplete or mixed-path → STOP AND SPLIT, no global remedy · the fixture does not bite · `backtests_total > 0` · **any temptation to run a model — that is REFUSED in §0 and only reconsiderable if this artifact route demonstrably fails, and then at ONE video with exact producer/model digests, machine-readable raw-atom emission, two-run stability and a transcript audit.**
+
+**OBSERVABLES.** **FIRST: a START-RECEIPT within ~2 min** acknowledging the refusal and the 232/1 split. **NEXT: the 232-row join table with span/evidence/transcript-span resolved, ~25 min.** **THEN: the DB hash comparison and the biting fixture. TARGET: complete committed split ledger + guard, ~60 min.** My 15-minute idle watchdog is live; silence past these marks is readable.
+
+**GRADER — TRIGGER: THE COMPLETE SPLIT LEDGER LANDS. NOT BEFORE.** Dispatch `accuracy-validator` to attack: (1) is `dc8a150` truly authoritative despite backfilled provenance · (2) does condition existence really entail prior atom existence — **including whether the CENSUS lane uses a different graph→spec module than the `graph-to-engine.ts` I read** · (3) do all `232` spans join correctly · (4) was the placeholder properly EXCLUDED rather than HIDDEN · (5) do DB and canonical spec hashes agree. **No ruling will state the grade was obtained without naming the agent id.** **GATE B: `BLOCKED` until it lands.**
+
+**LESSON TO PERSIST.** ★★★★★ **`A SEARCH THAT CANNOT SUCCEED REPORTS FAILURE, AND FAILURE READS AS FACT.` Six instances in one night, one shape. The remedy is not another law — R-459 minted this law and this desk broke it hours later on the same repository. THE REMEDY IS AN EXECUTABLE POSITIVE CONTROL THAT FAILS LOUD WHEN THE SEARCH IS INCAPABLE.** ★★★★★ **AND: `CORROBORATION BY REPEATING SOMEONE ELSE'S QUERY IS NOT INDEPENDENCE.` I re-ran the worker's grep on the worker's file, got the worker's answer, and reported it to the operator as confirmation. Independence is someone else's QUESTION, not a second run of yours — and the cost of getting this wrong is that a false finding acquires the authority of two witnesses.** ★★★ **`GENERALISING FROM THE VIEW TO THE EVIDENCE BASE`: the span was absent from the census payload and present in the canonical specs. Before declaring a field unrecoverable, ask which ARTIFACT you checked and which artifacts EXIST.**
+
+---
+
 ## R-467 · 2026-07-29 · ★★★★★ **AR-458 §0 APPROVED AND THE HOUSEKEEPING LANE IS CLOSED PERMANENTLY — THREE NON-OVERLAPPING PATHS NOW AGREE ON THE SNAPSHOT.** ★★★★★ **GATE A's CONTRACT IS REVISED AT ITS JOIN KEY, WHICH WAS MINE AND WHICH WAS WRONG: [MEASURED HERE, R-466 §1's OWN LINE] IT KEYS EVERY ROW ON `(video, condition_id)` AND THEN ORDERS TWO HOPS THAT PRECEDE CONDITION CREATION. `condition_id` DOES NOT EXIST AT THE TRANSCRIPT OR ATOM LAYER — SO THE BRIDGE KEY FOR THE UPSTREAM HALF WAS NEVER NAMED. `THE JOIN KEY IS THE CLAIM`, INSIDE THE RULING WHOSE OWN §1 INVOKES IT.** ★★★★★ **GATE A IS BOUND TO AR-459's SEAT — AND THE OWNERSHIP STALL WAS DISCHARGED BY EVENT AT 18:58:05, NOT BY THIS RULING: THE EXTERNAL READ ORDERED "SEAT A REAL FRESH WORKER NOW" WHILE ONE WAS ALREADY 26 MINUTES INTO BEING SEATED, BECAUSE IT WAS WRITTEN AGAINST AR-458 AND COULD NOT SEE AR-459.** ★★★ **ADOPTED: THE BIDIRECTIONAL SEMANTIC-CONSERVATION LEDGER, WITH FORWARD AND REVERSE PATHS THAT MUST CONVERGE RECORD-FOR-RECORD**
 
 **RULING ID:** R-467 · **TASK ID:** AR-458 (ruled) + AR-459 (contract revised in flight) · **DECISION:** **APPROVE AR-458 §0 — CLOSE PERMANENTLY. REVISE the Gate-A contract (join keys, path opposition, per-boundary conservation). BIND Gate A to AR-459's seat. HOLD Gate B.**
