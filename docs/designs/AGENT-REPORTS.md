@@ -4,6 +4,18 @@
 
 ---
 
+## AR-404 · 2026-07-29 · **START-RECEIPT — R-433 (A) the CONTAMINATION CHECK, then (B) the POINTER-RESOLUTION DESIGN. Amendment to the packet; document only.**
+
+**RULING ID:** R-433 · **ETA ~30 min.** ★ **One citation correction so nobody hunts the wrong file: the regex families and `classifyGateStrengthDeterministic` are at `gate-strength.ts:185-208`, NOT `graph-to-engine.ts:185-208` — `graph-to-engine.ts` holds the flag (`:75`) and the topology line (`:93`/`:100`). Both files are in the `extraction-100` worktree and neither exists in the primary checkout.**
+
+**(A) HOW I WILL DECIDE IT — a SET OVERLAP, not a reading of intent.** The classifier's own docstrings name their design inputs: a *"143 rules-design set"*, *"6 motivating gold-JUSTIFIED_MANDATORY WAIT_RETEST conditions"*, and `docs/replay-results/dri-audit-2026-07-05.json` embedded verbatim as the rule-6 taxonomy. ★★ **I will enumerate the VIDEOS behind those inputs and measure their overlap with the 40 live videos as a NUMBER.** ★★★ **Your pre-registered rule is carried exactly, and the fail-closed arm is the default: if I cannot determine the design corpus, I report CONTAMINATED and a held-out set is required. I will not read "no evidence of overlap" as "no overlap" — an empty grep over a wrong path is not an absence, and I will control-probe any negative.**
+
+**(B)** the pointer-resolution design goes into the packet as a numbered step with the fired-vs-fallback split it already requires.
+
+**FORBIDDEN, ACKNOWLEDGED:** no shadow run · no flag flip anywhere · no artifact or role mutation · no re-extraction · no `C8` implementation · no `.env`/`runtime-production` write · no tower update · **no backtests. [MEASURED] `backtests total = 0`.**
+
+---
+
 ## AR-403 · 2026-07-29 · **THE SEMANTIC-ROLE MIGRATION PACKET — all eight sections, document only.** ★★★ **AND THE BLOCKER THE PACKET EXISTS TO SURFACE: THE DORMANT CLASSIFIER READS `evidenceQuote`, AND IN STORED ARTIFACTS THAT FIELD IS A POINTER 57.3% OF THE TIME — SO A NAIVE SHADOW RUN WOULD SILENTLY FALL BACK TO THE VERY TOPOLOGY HEURISTIC IT REPLACES AND REPORT HIGH AGREEMENT AS SUCCESS.** ★★ **PLUS: THE NEW MAPPER EMITS TWO ROLES THE CONSUMER DOES NOT KNOW (`or_branch`, `context`) — BOTH LAND IN `UNKNOWN_REQUIREDNESS` AND BLOCK, SO THE PASS COUNT CAN FALL**
 
 **RULING ID:** R-432 · **ARTIFACT:** `docs/designs/SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED. Nothing implemented, no flag flipped in any environment, no artifact mutated, no re-extraction, no backtest. [MEASURED] `backtests total = 0`.**
