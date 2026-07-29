@@ -8478,6 +8478,7 @@ def main(config_input: str, backtest_id: str | None, mode: str, strategy_class: 
         # triggers when config["compiled_spec"] is present and strategy_class
         # is not — additive, byte-identical for everything else).
         from src.engine.spec_condition_compiler import from_compiled_spec
+        from src.engine.spec_execution_preflight import preflight_binding_plan
 
         _spec_trace_enabled = os.environ.get("TF_SPEC_TRACE", "").strip().lower() in ("1", "true", "yes")
         _strategy_cfg_for_spec = config.get("strategy", {}) if isinstance(config.get("strategy"), dict) else {}
@@ -8496,6 +8497,34 @@ def main(config_input: str, backtest_id: str | None, mode: str, strategy_class: 
             trace=_spec_trace_enabled,
             strategy_name=_strategy_cfg_for_spec.get("name"),
         )
+
+        # ─── EXECUTION-BOUNDARY PREFLIGHT (R-420 edit B) ────────────────────
+        # Refuse BEFORE loading any data or simulating anything: if a MANDATORY
+        # rule has no executable predicate, running it would silently trade
+        # without that rule. The resolver's job is to report truth; enforcing
+        # executability is this boundary's job.
+        #
+        # Placed here, after from_compiled_spec and before the mode split, so it
+        # covers BOTH the walkforward and single-backtest paths — they share
+        # this one construction site, so there is no second door.
+        _preflight = preflight_binding_plan(
+            strategy.binding_plan,
+            strategy_id=str(_strategy_cfg_for_spec.get("name") or strategy.spec_hash or "unknown"),
+        )
+        if _preflight.refused:
+            print(
+                json.dumps(
+                    {
+                        "error": _preflight.error_message(),
+                        "refused_reason": "unresolved_mandatory_rules",
+                        **_preflight.to_dict(),
+                    }
+                )
+            )
+            sys.exit(1)
+        for _warning in _preflight.warnings:
+            print(f"WARNING: {json.dumps(_warning)}", file=sys.stderr)
+
         if mode == "walkforward":
             from src.engine.walk_forward import run_walk_forward_class
 

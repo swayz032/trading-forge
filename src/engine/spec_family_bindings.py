@@ -268,16 +268,45 @@ def resolve_bundle_primitive(cond_type: str, object_text: str) -> str | None:
     return None
 
 
-# ─── Session keyword table (duplicated verbatim in the TS mirror — see module
-# docstring). Kept identical to session_windows.SESSION_KEYWORDS so a spec's
-# WAIT_SESSION binding decision doesn't depend on session_windows.py's own
-# import surface (keeps this module trivially portable / pure). ────────────
+# ─── Session keyword table. Held locally so a spec's WAIT_SESSION binding
+# decision doesn't depend on session_windows.py's own import surface (keeps
+# this module trivially portable / pure).
+#
+# ★★★ THIS TABLE DELIBERATELY NO LONGER MATCHES session_windows.SESSION_KEYWORDS
+# (R-420). That file still lists `lunch_blackout` and `overnight`; this one has
+# moved them to REFUSED_SESSION_KEYWORDS below, because neither has an entry in
+# session_windows._ZONE_CHECKS and so neither can be evaluated on any minute of
+# the day. The divergence is the FIX, not drift — do not "resync" the tables.
+#
+# [MEASURED 2026-07-28] session_windows.resolve_session_keyword has ZERO
+# non-test callers, so its copy of the orphan zones is dormant rather than
+# wrong-in-flight; it (and the TS mirror) are reported as adjacent work rather
+# than changed here, to keep this release to one concept. ──────────────────
 SESSION_KEYWORDS: dict[str, tuple[str, ...]] = {
     "london": ("london session", "london open", "london killzone"),
     "ny_am": ("ny am", "new york am", "new york morning", "ny morning", "ny open", "am session"),
     "ny_pm": ("ny pm", "new york pm", "new york afternoon", "ny afternoon", "pm session"),
     "silver_bullet": ("silver bullet",),
     "macro_window": ("macro window", "macro release"),
+}
+
+# ─── Orphan zones: RECOGNIZED vocabulary with NO evaluable window ───────────
+#
+# These two zones were in SESSION_KEYWORDS above until the orphan-zone closure.
+# They are recognized English, but `session_windows._ZONE_CHECKS` has no entry
+# for either, so `is_in_killzone()` returns False for EVERY minute of the day
+# (measured: 0 of 1440, against 180 of 1440 for `ny_am`). Binding them produced
+# a rule that said "only trade during X" and executed as "never trade" — while
+# reporting `approximation=False`, an exactness claim.
+#
+# They are REFUSED, not silently dropped: the reason names the zone, so this is
+# distinguishable from "we never recognized it at all" in every downstream
+# ledger. That distinction IS the finding — see session_refusal_reason.
+#
+# ★ The refusal is UNCONDITIONAL — no flag may promote one of these to a bind.
+#   A phrase naming a zone this engine has no evaluable window for has no
+#   honest binding in any flag state.
+REFUSED_SESSION_KEYWORDS: dict[str, tuple[str, ...]] = {
     "lunch_blackout": ("lunch", "midday", "noon session"),
     "overnight": ("overnight", "globex", "asia session", "pre market", "premarket"),
 }
@@ -287,7 +316,16 @@ MIN_SPINE_BOUND_RATIO: float = 0.5
 (or resolve to an honest unsupported-but-non-blocking state) before a spec is
 considered condition-compiled rather than queued. Conservative default —
 tunable, but changing it is a behavior change requiring re-measurement of the
-25-sample mapped/queued split (see docs/spec-execution-semantics.md)."""
+25-sample mapped/queued split (see docs/spec-execution-semantics.md).
+
+★★★ DEMOTED TO A DIAGNOSTIC (R-420). This ratio answers "is the spec COMPLETE
+enough to be useful?" — it may NOT answer "is the spec SAFE to execute?", and it
+is no longer the authority that permits execution. It is a CARDINALITY test:
+9 of 10 spine conditions binding gives 0.9 and passes, while the 10th — a
+mandatory session restriction — silently goes unenforced. Ten confluence rules
+do not compensate for one missing session rule, and a ratio has no way to say
+so. Safety is a MEMBERSHIP question and is decided at the execution boundary by
+`spec_execution_preflight.preflight_binding_plan`."""
 
 
 @dataclass(frozen=True)
@@ -393,17 +431,55 @@ class ConditionBinding:
         }
 
 
+def _session_phrase_hit(object_text: str, keywords: tuple[str, ...]) -> bool:
+    """The one phrase matcher for BOTH the bind table and the refusal table.
+
+    Extracted (behaviour-identical to the expression it replaces) so the two
+    lookups cannot drift apart: a refusal table that matched differently from
+    the bind table would leave phrases that are neither bound nor refused —
+    which is the silent gap this whole release exists to close."""
+    norm = f" {object_text.strip().lower()} "
+    return any(
+        f" {kw} " in norm or norm.strip().startswith(kw) or norm.strip().endswith(kw)
+        for kw in keywords
+    )
+
+
 def resolve_session_keyword(object_text: str) -> str | None:
     """Pure re-implementation of session_windows.resolve_session_keyword — kept
     local so this module has zero import surface beyond stdlib (portability
-    for the TS mirror comparison in tests)."""
+    for the TS mirror comparison in tests).
+
+    Only ever returns a zone `session_windows._ZONE_CHECKS` can evaluate."""
     if not object_text:
         return None
-    norm = f" {object_text.strip().lower()} "
     for zone, keywords in SESSION_KEYWORDS.items():
-        for kw in keywords:
-            if f" {kw} " in norm or norm.strip().startswith(kw) or norm.strip().endswith(kw):
-                return zone
+        if _session_phrase_hit(object_text, keywords):
+            return zone
+    return None
+
+
+def session_refusal_reason(refused_zone: str) -> str:
+    """The `unbound_reason` a refused session phrase carries.
+
+    Distinct from `no_recognized_session_keyword` (we did not recognize it at
+    all) — this one says "recognized, and DELIBERATELY not bound, because the
+    zone it names has no window `is_in_killzone` can evaluate."
+
+    ★ Carry this distinction verbatim: it is what lets a downstream ledger tell
+      a VOCABULARY gap ("teach the extractor this phrase") from an ENGINE gap
+      ("build a clock for this zone"). Collapsing them loses the finding."""
+    return f"session_zone_refused_uncomputable_window:{refused_zone}"
+
+
+def refused_session_zone(object_text: str) -> str | None:
+    """Names the zone a phrase WOULD have bound before the orphan-zone closure.
+    Never returns a binding — the return value is only ever a refusal label."""
+    if not object_text:
+        return None
+    for zone, keywords in REFUSED_SESSION_KEYWORDS.items():
+        if _session_phrase_hit(object_text, keywords):
+            return zone
     return None
 
 
@@ -494,6 +570,36 @@ def _bind_condition_dispatch(condition: dict, restore: bool, role: str) -> Condi
         )
 
     if meta.requires_session_keyword:
+        # ─── Orphan-zone refusal (R-420 edit A) ─────────────────────────────
+        # Checked BEFORE resolve_session_keyword so a phrase naming a zone with
+        # no evaluable window can never reach a bind. Scoped INSIDE the
+        # session-family branch on purpose: the false concrete was only ever
+        # produced by the session resolver, so refusing here is exactly as wide
+        # as the defect. A refusal placed in the generic dispatch would also
+        # reject e.g. a FILTER whose object merely mentions "lunch" — an
+        # over-refusal the discriminator tests are there to catch.
+        #
+        # ★ approximation=True, never False. An exactness claim is precisely
+        #   what the defect wore. The trio bindable=False + primitive=None +
+        #   approximation=True is what keeps the row OUT of the concrete count;
+        #   change any one of the three and the false concrete returns.
+        #   It is inert for aggregates: `approximation_used` filters on
+        #   `bindable and executed`, and this row is neither.
+        refused = refused_session_zone(obj)
+        if refused is not None:
+            return ConditionBinding(
+                condition_id=cond_id,
+                type=cond_type,
+                role=role,
+                object=obj,
+                bindable=False,
+                primitive=None,
+                approximation=True,
+                executed=False,
+                reason=session_refusal_reason(refused),
+                session_zone=None,
+            )
+
         zone = resolve_session_keyword(obj)
         if zone is None:
             return ConditionBinding(
