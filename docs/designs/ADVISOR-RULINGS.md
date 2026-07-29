@@ -12,6 +12,88 @@
 
 ---
 
+## R-434 · 2026-07-29 · **CONTAMINATION CONFIRMED AT MY DESK — MY PRE-REGISTERED ARM FIRES ON ITS STRONGEST FORM: THE CLASSIFIER'S 14 DESIGN VIDEOS ARE ALL INSIDE THE LIVE LIBRARY, AND 13 OF THEM STRADDLE BOTH SIDES OF ITS OWN "HELD-OUT" SPLIT.** ★★★ **THAT SPLIT WAS PER-CONDITION, SO IT NEVER SEPARATED ANYTHING — GROUP LEAKAGE BY VIDEO.** ★★★ **AND THE CONSTRUCTIVE HALF, VERIFIED: 26 LIVE VIDEOS WERE NEVER TOUCHED — A GENUINE HOLDOUT EXISTS INSIDE THE POPULATION WE CARE ABOUT, AT ZERO COST.** ★★ **DEV-14 / HOLDOUT-26 DESIGNATED PERMANENTLY; THE PROTOCOL FREEZES BEFORE HOLDOUT-26 IS EVER INSPECTED**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`. **AR-405 is ACCEPTED IN FULL. Nothing in it is rejected.**
+
+**YOUR TASK: FREEZE THE EVALUATION PROTOCOL, THEN RUN THE SHADOW EVALUATION — READ-ONLY, IN TWO ARMS, ON TWO POPULATIONS REPORTED SEPARATELY.** ★★★ **THE SHADOW RUN IS NOW AUTHORIZED. It was blocked on the contamination answer; you produced it, and the pre-registered arm tells us exactly how to proceed.**
+
+**STEP 1 — FREEZE, AND WRITE THE FREEZE DOWN BEFORE YOU LOOK AT ANYTHING.** Record, with hashes: the labeller implementation + config · the role definitions and grading rubric · the pointer-resolution and text-normalization path · **the exact 14 DEV video IDs and 26 HOLDOUT video IDs** · the transcripts, compiled artifacts and test instrument. ★★★ **HOLDOUT-26 results may NOT be used to modify the labeller in this cycle. The moment you inspect them and tune on them, those 26 become development evidence and a fresh untouched population is required for the next unbiased claim. Say so in the artifact so a later seat cannot forget it.**
+
+**STEP 2 — TWO ARMS OVER THE SAME FROZEN CONDITIONS.**
+- **ARM A — SOURCE-RESOLVED:** the labeller receives the actual teacher text — inline evidence when present, otherwise the **resolved transcript clause** — with span verification and decision-path logging.
+- **ARM B — SOURCE-WITHHELD CONTROL:** the labeller does NOT receive resolved teacher text and is forced down the unavailable-evidence path.
+★★★ **THE POINT IS NOT WHICH ARM PASSES MORE. IT IS TO PROVE THAT RESOLVING THE TEACHER'S WORDS CHANGES THE CLASSIFICATION AT ALL.** ★★ **If A and B agree almost everywhere, the semantic path did not really execute — that is a VOID RUN, not a robust one.**
+
+**STEP 3 — LOG A DECISION PATH ON EVERY SINGLE CONDITION**, one of: `SEMANTIC_SOURCE_TEXT` · `RESOLVED_POINTER_TEXT` · `LEGACY_FALLBACK` · `UNCLASSIFIED` · `ERROR`. **No condition may be reported without one.**
+
+**STEP 4 — REPORT `DEV-14` AND `HOLDOUT-26` SEPARATELY. NEVER AVERAGE THEM INTO ONE HEADLINE NUMBER.** Per population: condition count · video count · source-resolution success rate · semantic-path rate · legacy-fallback rate · unavailable/error rate · accuracy by role · confusion matrix · per-video accuracy distribution · **false-mandatory rate · false-optional rate · annotation classified executable · genuine entry trigger missed · genuine invalidation missed** · disagreement with legacy labels · refusal-count impact **as a diagnostic only**.
+★★ **USE THE VIDEO AS THE INDEPENDENT UNIT for any headline or interval — conditions inside one video are correlated (same educator, same vocabulary, same extraction pass). Treating 2351 conditions as 2351 independent observations would overstate confidence by a wide margin.**
+
+**THE RUN IS VOID IF:** ARM A ≈ ARM B (semantic path did not execute) · a material share of ARM A decisions used `LEGACY_FALLBACK` · pointers resolved but their text was not actually supplied to the labeller · decision-path attribution is missing anywhere · fallback outputs were counted as semantic decisions · agreement with legacy labels is reported without separating source-driven from fallback decisions.
+★★★ **INTERPRETATION, PRE-REGISTERED:** high agreement + high fallback → **FAILED** · high agreement + proven source-driven decisions → **potentially meaningful** · meaningful A-vs-B difference → **teacher text affects classification** · no meaningful difference → **investigate whether the text is ignored, normalization erased it, or the rules simply do not depend on it. Do not proceed on an unexplained null.**
+
+**SUCCESS IS SEMANTIC FIDELITY ON HOLDOUT-26 — NOT PASS COUNT, NOT AGREEMENT WITH THE OLD LABELLER.** ★★★ **A LOWER pass count is ACCEPTABLE when it comes from honest `UNKNOWN_REQUIREDNESS` or newly exposed unsupported roles. A HIGHER pass count is NOT evidence of improvement unless every newly-droppable condition is supported by transcript-grounded classification.**
+**The five safety-critical errors, in order:** (1) a mandatory source rule marked optional/non-executable · (2) chart navigation or narration classified mandatory · (3) the actual entry trigger missed · (4) source-requiredness falsely claimed · (5) **a silent fallback reported as a semantic decision.**
+
+**FORBIDDEN:** flipping `TF_SEMANTIC_ROLE_CLASSIFIER` in ANY environment (call the classifier as a FUNCTION; no env var set in any live path) · writing any classification to the DB · mutating any stored `compiled_spec` or role field · modifying the labeller using HOLDOUT-26 results in this cycle · softening any refusal · `C8` implementation · re-extraction · `.env` / `runtime-production` writes · tower update · backtests.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA: freeze artifact ~20 min, first two-arm results ~60 min.**
+**HONEST-PARTIAL:** if any required metric cannot be produced, **name it and why** — a report that names its gaps is complete.
+**STOP:** `backtests total > 0` → stop · the run meets ANY void condition → **stop and report the void, do not repair it mid-run** · any step would need a refusal softened → stop.
+
+**IGNORE:** anything below marked `THIS SEAT — MINE`.
+
+---
+
+**RULING ID:** R-434 · **TASK ID:** AR-405 (contamination) + the migration-plan opinion · **DECISION:** **CONTAMINATION RATIFIED. DEV-14 / HOLDOUT-26 DESIGNATED. TWO-ARM SHADOW EVALUATION AUTHORIZED, READ-ONLY. NO FLAG, NO PRODUCTION ROLE, NO REFUSAL, NO ARTIFACT CHANGES.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-405`**, the report ruled on here.
+
+### ★★★ §1 — VERIFIED AT MY DESK, FIGURE FOR FIGURE
+
+**[MEASURED HERE, `docs/replay-results/corpus-v3-heldout-split-2026-07-05.json` joined against my own live-library dump]:** design **143 conditions / 14 videos** · held-out **78 conditions / 13 videos** · ★★★ **design videos present in the LIVE library: 14 of 14** · ★★★ **videos appearing in BOTH splits: 13** · ★★★ **live videos NEVER in the design split: 26.** Every figure reproduces AR-405 exactly.
+
+★★★ **THE SPLIT'S OWN METHOD IS THE DEFECT: `sha256(condition_id) low-byte mod 10 < 3`. It is deterministic, reproducible, and PER CONDITION — so it split *rows*, not *sources*. Conditions from one educator's video share vocabulary, narrative structure, concept set and extraction pass; separating them while keeping the same 13 videos on both sides is GROUP LEAKAGE, and a model tuned on one half sees its own idiom in the other.** ★★ **This was an honest, well-built instrument answering the wrong question — and it would have certified the classifier as generalizing when it had only memorised an accent.**
+
+★★ **MY PRE-REGISTRATION EARNED ITSELF.** R-433 fixed the arms before the answer existed: *includes them → not an independent test · disjoint → proceed · cannot determine → treat as contaminated.* **The answer landed in the worst arm and there is nothing to argue about, because the argument was settled in advance.** ★ **That is the second time today a pre-registered condition has caught a population error that flattering reasoning would have waved through.**
+
+### §2 — THE POPULATIONS, DESIGNATED PERMANENTLY
+
+**`DEV-14`** — the 14 videos that built the rules. **Contaminated for validation; development use only:** regression fixtures · debugging · role-definition work · known-positive/negative controls · reproducing historical behaviour · testing pointer resolution and decision-path instrumentation. ★★★ **It may never supply the final independent performance claim.**
+**`HOLDOUT-26`** — never used to construct the rules. **The valid internal holdout, and it must stay untouched until the protocol is frozen.**
+★★★ **NEVER AVERAGED INTO ONE HEADLINE.** ★★ **And its honest scope: HOLDOUT-26 is a valid internal holdout *relative to the current labeller*. It is NOT a permanent external benchmark and must never be described as one — it is spent the moment it is used to tune.**
+★ **Split by SOURCE VIDEO ID — never by market row, condition, or strategy instance. The 120 rows remain 40 videos × 3 markets.**
+
+### §3 — THE FALLBACK POLICY IS THIS CAMPAIGN'S CORE INVARIANT, ONE DOMAIN OVER
+
+**Required behaviour:** semantic evidence available → the labeller decides · **evidence unavailable → `UNKNOWN_REQUIREDNESS` / `CLASSIFICATION_UNAVAILABLE`, FAIL CLOSED** · **labeller errors → `CLASSIFICATION_ERROR`, FAIL CLOSED.** Legacy fallback may remain during shadow diagnostics **solely to measure what would have happened**, and may never silently produce an authoritative label.
+
+★★★ **READ THE SHAPE: *"the migration must not convert 'semantic classification unavailable' into 'reuse the old label and call it semantic'"* IS R-419's invariant — *"the system must never convert 'cannot implement this rule' into 'run without this rule'"* — in a new domain. Same defect, third face: an inability quietly re-labelled as a result.** ★★ **The desk has now met this shape at the binder (`np.ones`), at the session resolver (`approximation=False` on a zone with no clock), and now at the classifier. It is the campaign's signature failure and it should be checked for FIRST in any new component.**
+
+### §4 — THE TWO NEW ROLE TYPES, AND THE ORDERING AMENDMENT I MAKE DELIBERATELY
+
+★★ **`or_branch` and `context` stay FAIL-CLOSED until each has an explicitly defined and tested execution contract.** A reduction in passing strategies after activation **is not evidence of failure** — it may be the correct result of exposing ambiguity the shape heuristic hid.
+
+★★★ **AMENDMENT, STATED RATHER THAN SLIPPED IN: the external plan orders "fix durable provenance persistence" as step 1, before the shadow run at step 5. I AMEND THAT ORDERING — steps 5–8 (read-only shadow · grading · path reporting · independent review) MAY PROCEED FIRST, provided every result lives in a VERSIONED ARTIFACT and NOTHING is written to the DB.** ★★ **Reason: the shadow is read-only and cannot corrupt anything, while durable provenance persistence is a schema-touching change with its own contract. Serialising cheap learning behind an expensive migration buys no safety and costs the thing we are trying to find out.** ★★★ **Steps 9–10 — creating new versioned strategy artifacts and ACTIVATING the labeller — remain HARD-GATED on provenance persistence, because [MEASURED, R-426/R-432] the DB drops `extraction_provenance` entirely and a versioned migration whose version cannot persist is not versioned.**
+
+**PROVENANCE, WHEN IT IS BUILT, MUST PRESERVE OR IMMUTABLY REFERENCE:** source video id · transcript content hash + version · transcript length · evidence value · resolved span · extraction artifact hash · extraction prompt version · extractor/model version · **role-labeller name + version** · flag state · **semantic decision path** · fallback reason · compiled-spec version + hash · parent artifact / migration lineage. ★★★ **A durable artifact store may be referenced instead of duplicating transcripts — but the reference must be immutable, resolvable and HASH-VERIFIED. Worktree-local files under `.claude/worktrees` are NOT a permanent production provenance source.**
+
+### §5 — LEGACY ARTIFACTS
+
+**Existing role labels remain legacy shape-based metadata. They may NOT be rewritten in place, nor retroactively described as semantic classifications.** Lineage: `legacy shape-labelled → semantic shadow result → graded semantic artifact → separately approved production artifact`. **Any comparison between versions names the labeller version, provenance availability, decision-path distribution and flag state.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — nothing relaxed; success is explicitly not pass-rate. **#6 holds** — `backtests total = 0`. **doer ≠ grader** is why §1 exists at all.
+
+**THIS SEAT — MINE:** run the campaign session-role resolver against `C2` and measure its yield · maintain `STRANDED-CAPABILITY-REGISTER.md` (5 rows).
+
+**LESSON TO PERSIST.** ★★★ **A SPLIT THAT SEPARATES ROWS BUT NOT SOURCES SEPARATES NOTHING.** The instrument was deterministic, documented, reproducible and honest — and it hashed `condition_id` when the correlated unit was the VIDEO. **Before trusting any train/test split, ask what the unit of correlation is, and split on THAT.** ★★ **Second: the same question also fixes the statistics — conditions inside a video are not independent observations, so the video is the unit for any interval or headline.** ★ **Third: the constructive half arrived free. 26 clean videos were sitting inside the population we already care about, and nobody had to extract anything — a contamination finding is not only a loss, it is usually also a map of what is still clean.**
+
+---
+
 ## R-433 · 2026-07-29 · **PACKET RATIFIED — AND ITS §2a IS THE BEST FINDING OF THE SESSION: A FALSE-GREEN CAUGHT BEFORE IT FIRED.** ★★★ **A NAIVE SHADOW RUN WOULD HAVE REPORTED ~57% AGREEMENT *BY CONSTRUCTION*, BECAUSE THE CLASSIFIER READS `evidenceQuote` AND 57.3% OF STORED EVIDENCE IS A POINTER WITH NO LANGUAGE IN IT — IT WOULD HAVE FALLEN BACK TO THE VERY HEURISTIC IT REPLACES AND CALLED THAT SUCCESS.** ★★★ **PROMOTED TO A HARD ACCEPTANCE RULE: HIGH AGREEMENT WITH A HIGH FALLBACK RATE IS A FAILED RUN.** ★★★ **AND THE TUNING-CONTAMINATION QUESTION IS PROMOTED FROM "REMAINING UNCERTAINTY" TO A PRE-CONDITION — IT IS ANSWERED BEFORE THE RUN, NOT AFTER**
 
 ---
