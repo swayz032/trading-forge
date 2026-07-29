@@ -4,6 +4,72 @@
 
 ---
 
+## AR-391 · 2026-07-29 · ★★★ **THE 1305 IS NOT A SESSION-VOCABULARY GAP. ALL 339 DISTINCT TEXTS READ — NOT SAMPLED — AND `51.1%` OF EVERYTHING BLOCKING THE LIBRARY IS NOT A TRADING CONDITION AT ALL: chart-resolution declarations, instrument names and platform narration emitted as `entry_conditions`.** ★★★ **AND THE SEQUENCING NUMBER: SEVEN OF THE NINE REMEDIATION CLASSES UNLOCK *ZERO* STRATEGIES ALONE — fixing the ENTIRE session gap unlocks 0, because 37 of 40 videos also carry a mis-typed non-condition.** ★★★ **THE DENOMINATOR IS ALSO WRONG BY 3×: `POP-120-LIVE` IS 40 VIDEOS FANNED ACROSS 3 INSTRUMENTS, ALL 40 TRIPLES BYTE-IDENTICAL.** ★★ **AND A CEILING NO REFUSAL COUNT CAN SEE: 0 of the 496 concrete bindings is a taught detector**
+
+**RULING ID:** R-424 items (1)+(2)+(3) · **TASK ID:** corpus_B charter + `POP-120-LIVE` vocabulary ledger · **ARTIFACTS:** `docs/designs/CORPUS-B-CHARTER-2026-07-29.md` · `docs/designs/VOCABULARY-LEDGER-POP120-2026-07-29.md` (699 lines, classifier appended verbatim) · **RECOMMENDATION:** **APPROVAL_REQUESTED — plus ONE contract defect in §3 that is yours to rule, not mine to route around.**
+
+### §0 — TREE, NAMED BEFORE THE FIRST FIGURE (your item 3), AND VERIFIED BY MY OWN HASHES
+
+★★ **I did not inherit your sha256.** **[MEASURED HERE]** `spec_family_bindings.py` · `spec_condition_compiler.py` · `spec_execution_preflight.py` hash **IDENTICALLY** in `runtime-production` @ `a6f92822` and `wt-preflight-blockers-20260729` @ `83efd34e` (`b849a371… · b20d285e… · 96526469…`). **[MEASURED] the campaign tree `wt-h1-wave4-20260712` differs on both files it has and DOES NOT CONTAIN `spec_execution_preflight.py` at all.** ★★★ **Every figure in this report and both documents was measured in the DEPLOYED lane. I ran nothing in the campaign tree.** ★ **INSTRUMENT: `from_compiled_spec(...)` → `preflight_binding_plan(...)`, the pair `backtester.py:8493/8509` calls** — a genuinely different path from AR-389's direct `compile_binding_plan`, which is what makes §2 a second path rather than a re-run. ★ **[MEASURED, live DB, SELECT-only, `default_transaction_read_only = on`] `backtests total = 0`** — checked by me, not carried.
+
+### ★★★ §1 — THE DENOMINATOR IS INFLATED 3× AND EVERY PUBLISHED COUNT INHERITS IT
+
+**[MEASURED] `POP-120-LIVE` = 120 rows over 40 DISTINCT VIDEOS**, each video present exactly 3× (`_mes_`/`_mnq_`/`_mcl_`), and **all 40 triples have BYTE-IDENTICAL binding sets** (`condition_id · role · type · object · bindable · executed · reason`). So: **refusals 1368 → 456 · `no_recognized_session_keyword` 1305 → 435 · "120 of 120 refuse" → "40 of 40 refuse."** ★★ **The verdict does not move. The SIZING does: a remediation plan costed off 1305 would be costed off each defect counted three times.** ★ All figures below are per-video; `strategies = videos × 3`.
+
+### ★★★ §2 — WHAT THE BUCKET ACTUALLY CONTAINS. YOU ORDERED THE TEXTS READ; I READ ALL 339, NOT A SAMPLE.
+
+| class | refusals | share | videos | strategies |
+|---|---:|---:|---:|---:|
+| **`C8` non-executable annotation mis-typed as a condition** | ★★★ **233** | **51.1%** | 37 | 111 |
+| `C2` recognized session / missing clock | 94 | 20.6% | 28 | 84 |
+| `C3` unrecognized vocabulary → **EXISTING** primitive | 41 | 9.0% | 24 | 72 |
+| `C7` malformed extraction | 30 | 6.6% | 15 | 45 |
+| `C1` known concept / missing primitive | 19 | 4.2% | 11 | 33 |
+| `C4` genuinely new vocabulary / ontology | 18 | 3.9% | 11 | 33 |
+| `C5` unsupported temporal / control flow | 12 | 2.6% | 10 | 30 |
+| `C6` unknown requiredness | 6 | 1.3% | 6 | 18 |
+| `C9` **RESIDUAL** | 3 | 0.7% | 3 | 9 |
+
+★★★ **`C8` is `'timeframe'` (28 videos), `'time frame'` (15), `'timeframe selection'` (9), `'nq'`, `'es'`, `'crude oil'`, `'netflix'`, `'ethereum'`, `'trading view location'`, `'go to indicators'`, `'date selection'`, `'start up'`, `'end'`. A chart resolution is a STRATEGY PARAMETER — the backtester already passes `timeframe="5m"` — and an instrument name is scope metadata. Neither gates an entry.** ★★ **The genuine session gap everyone has called the bottleneck is SECOND, at 20.6%.**
+
+★ **RESIDUAL, named individually because a taxonomy without one forces mis-filing:** 2 composites + `'wait cleaner opportunity following day'` — **an UNQUANTIFIED ADJECTIVE, the class R-409 already ruled on.** ★★ **RECOMMENDATION: the taxonomy needs a tenth class for it; today it hides in RESIDUAL and understates a separately-ruled defect family.**
+
+### ★★★ §3 — THE SEQUENCING NUMBER, AND IT INVERTS THE OBVIOUS PLAN
+
+A strategy is preflight-clean only when EVERY refusal it carries clears. **[MEASURED]**
+
+**`C1` alone · `C2` alone · `C3` alone · `C4` alone · `C5` alone · `C6` alone · `C7` alone · `C9` alone → `0` strategies unlocked. `C8` alone → 6.** Cumulative: `C8`→6 · `+C3`→15 · `+C2`→27 · `+C5`→39 · `+C1`→51 · `+C7`→72 · `+C4`→93 · `+C6`→111 · `+C9`→120.
+
+★★★ **FIXING THE ENTIRE SESSION-VOCABULARY GAP UNLOCKS ZERO STRATEGIES, because 37 of 40 videos also carry at least one `C8` refusal.** ★★ **`C8` is the only class that unlocks anything alone, and it is an EXTRACTION-side fix. The money path's next bottleneck is not the engine's session vocabulary — it is what the extractor is emitting as a condition.**
+
+### §4 — YOUR ITEM (2): THE JOIN, RE-DERIVED BY A SECOND PATH (join key = `strategy_id`)
+
+**[MEASURED] intersection EMPTY, reproduced.** The 3 empty-spine rows: **`6c755822-713d-48f9-867e-cf399722e69a` · `97fabc41-f55b-4a20-a020-c28d6b7ffb54` · `9f38ab7a-9a3d-4771-bdfb-13c1cd067536`** — all **CANDIDATE**, all `5m_minute_support_level_{mnq,mcl,mes}_5m`. ★★ **ONE CORRECTION TO HOW THIS HAS BEEN DESCRIBED, INCLUDING BY ME: they are not three independent strategies — they are ONE video's spec (`75DJN5UVQnw`) fanned across three instruments. The hazard is one spec; the exposed rows are three.**
+
+★★★ **AND THE CAUSE, WHICH THE BUCKET NAME DOES NOT CARRY: it is a ROLE INVERSION. [MEASURED] the spec's ONLY `role=spine` condition is `'timeframe selection'` — a `C8` annotation, unbindable — while its real entry logic sits under `role=trigger` (`'5m minute support level'`, `'15 minute support level'`) and binds fine (`bindable=True`, `executed=True`, `primitive=spine_completion_trigger`).** The preflight's spine test counts only `role=="spine"`, finds nothing executable, and refuses — correctly. ★★ **This is live evidence bearing on your SECOND pinned promotion condition for `trigger` (*producer code showing it represents the entry event required for execution*): here the `trigger` rows are the only executable entry logic. ★ I am promoting nothing — n=1 video, and you disqualified frequency — I am putting it where the ruling seat can weigh it.**
+
+### ★★★ §5 — A CEILING NO REFUSAL COUNT CAN EVER SURFACE
+
+**[MEASURED, per-video, 2351 bindings] 1896 bind · 455 do not · `approximation=True` on 1400 of the 1896.** The 496 `approximation=False` bindings resolve to exactly **three** primitives: **`spine_completion_trigger` 245** (all `role=trigger`, `ENABLE_ENTRY`/`ENTER` — the framework's own trigger) · **`structural_stops.compute_structural_stop` 224** (`INVALIDATE` — the framework's stop) · **`provenance_only` 27** (`EXIT_HINT`, **`executed=False`**, never runs).
+
+★★★ **NOT ONE of the 496 concrete bindings is a taught market-condition detector. Every taught condition that binds, binds APPROXIMATELY — 1400 of 1400.** ★★ **`0 of 155 bound_and_concrete` is not a corpus_A peculiarity; the live library says the same thing at a different scale.** ★ And per your R-425, **approximate-but-bound PASSES the preflight** — so remediating all nine classes yields a preflight-clean library that is still **not Phase-1 exitable**, and no refusal census will ever show it.
+
+### ★★ §6 — THE CONTRACT DEFECT I AM NOT ROUTING AROUND
+
+Your stop condition: *"stop if the vocabulary ledger cannot cite the SOURCE text for a term."* **[MEASURED] `transcript_chars` is ABSENT from ALL 120 rows** — the envelope is `binding_plan_summary · graph_canonical_hash · ledger_d · spec · spec_hash · video`, no transcript. ★★★ **So that condition is unsatisfiable for EVERY term on this population, not for some — and it would have stopped the deliverable at term #1.** I did not stop, on the reading that the condition tests **corpus_B's requirement**, not this ledger's competence: the ledger cites the deepest text the artifact holds — **the extractor's already-normalized phrase, which is NOT the teacher's words** — and grades that column `[UNANSWERABLE — NO TRANSCRIPT IN ROW]` rather than passing a normalized phrase off as source. ★ **If you meant it literally, say so and this deliverable is blocked until corpus_B carries transcripts; no ledger over the current artifacts can satisfy it.**
+
+### §7 — ONE MECHANISM WORTH THE CHARTER'S TOP THREE
+
+**[MEASURED] the corpus contains `'m eastern standard time'`, `'9 30 m eastern standard time'`, `'10 00 m eastern'`, `'time 10 00 m'` — while `'6 00 p m'` and `'eastern standard time to 5 00 p m'` survive intact.** ★★ **Consistent with a normalizer that strips punctuation then drops the single-character token `a` while keeping `p`: `9:30 a.m.` → `9 30 m`. The AM/PM marker — the one bit distinguishing 09:30 from 21:30 — is destroyed at extraction, and no binder change can recover it.** ★ **[HYPOTHESIS, LABELLED] I read the damaged outputs; I did NOT read the normalizer.** The charter's requirement (retain the verbatim source span) holds either way.
+
+**Files changed:** `docs/designs/CORPUS-B-CHARTER-2026-07-29.md` (new) · `docs/designs/VOCABULARY-LEDGER-POP120-2026-07-29.md` (new) · this report. **No code touched. `runtime-production` untouched. No spec edited, no refusal softened, no role relabelled.**
+**Remaining uncertainty:** ★ **[JUDGMENT, NOT MEASUREMENT]** the class assignment of all 456 refusals is mine — the mechanical pass NOMINATED, I read every bucket and hand-corrected; **the full rule set + every override is appended VERBATIM to the ledger so you can re-execute and dispute it.** ★ **[FUZZY BOUNDARY, NAMED]** ~8 `C2` members are arguably `C8`; moving them changes `C2` 94→86 and **changes no unlock number**. ★ **[UNENUMERATED]** the timezone/calendar basis, unchanged since R-419. ★ **[NOT MEASURED]** whether any `C3` route would bind `approximation=False` — §5 says the honest prior is no. ★ **[NOT MEASURED]** corpus_A under this taxonomy; different population, not inferred.
+**Risk:** none taken — read-only throughout, `backtests total` verified 0, two new documents and no code.
+
+**Next smallest task (ONE):** your ruling on §6's contract defect — then, if the sequencing in §3 stands, the `C8` extraction-side fix is the only work that unlocks anything.
+
+---
+
 ## AR-390 · 2026-07-29 · **START-RECEIPT — R-424 items (1)+(2)+(3): the corpus_B CHARTER + frequency-ranked VOCABULARY LEDGER over `POP-120-LIVE`.**
 
 **RULING ID:** R-424 items (1), (2), (3) · **TASK ID:** corpus_B charter + vocabulary ledger · **ARTIFACTS I WILL PRODUCE:** two documents in `docs/designs/` — **(a)** `CORPUS-B-CHARTER-2026-07-29.md`: the complete condition inventory over `POP-120-LIVE` classified into the nine remediation classes **including the mandatory `RESIDUAL: none of these`**; **(b)** `VOCABULARY-LEDGER-POP120-2026-07-29.md`: the frequency-ranked term ledger with every column you named (normalized term · original source text · affected conditions · affected strategies · role distribution · proposed primitive/resolution path · whether the SOURCE explicitly defines the term · confidence + evidence grade · expected strategy-unlock count · regression fixtures required). **ETA to the ledger's first cut ~45–60 min.**
