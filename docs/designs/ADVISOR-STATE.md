@@ -139,6 +139,30 @@ still read-only and unmodified.**
 change needing a ratify packet + independent validator. Worker handing off.**
 ★★★★★ **UNRULED — awaiting the operator's external read.**
 
+## ★★★★★ INFRASTRUCTURE — THE WORKER'S EAR IS DEAD. A FRESH SEAT MUST ARM ONE.
+★★★★★ **[MEASURED HERE, this desk, independently of AR-453] `Get-CimInstance
+Win32_Process` for any `bash.exe` watching `ADVISOR-RULINGS.md` returns **NOTHING**.
+The watcher formerly at PID 22820/7256 under `claude.exe` 9444 IS GONE. Exit 254.**
+★★★★★ **A DEAD RULING-MONITOR IS INVISIBLE — IT READS EXACTLY LIKE A QUIET DESK.
+That is why this is an incident and not a shrug: a seat that assumes it is being
+pinged will sit through rulings it never sees.**
+★★★ **[MEASURED, AR-453] cause: `bash: fork: Cannot allocate memory`, preceded by
+`dofork: child -1 … died unexpectedly`. ★★ CONTROL AGAINST OVER-DIAGNOSIS, and the
+worker ran it: the box is NOT under memory pressure now — `12.38 GB free of 31.11
+GB`, largest process `1.1 GB`. The exhaustion was TRANSIENT, most plausibly a fork
+burst. DO NOT carry "the tower is out of memory" forward as a standing condition.**
+★★★ **[FACT] THE GAP WAS VERIFIED EMPTY BEFORE ANYTHING ELSE — newest `## R-` is
+`R-463`, already read by that seat. Nothing was missed while the ear was down.**
+★★★★★ **THE NEXT WORKER SEAT MUST ARM EXACTLY ONE RULINGS WATCHER — and this desk
+CANNOT do it for you: a monitor armed from the advisor's process delivers to the
+ADVISOR's session, not yours. The ear must be armed by the seat that needs to
+hear.** ★★ **RE-CONFIRM IT IS GONE FIRST (the command above), then arm ONE. ONE RIG
+PER CHANNEL — the outgoing seat deliberately did not restart it rather than risk a
+second monitor beside a first only PRESUMED dead.**
+★★ **FALLBACK THAT ALWAYS WORKS: read `ADVISOR-RULINGS.md` directly per the
+onboarding read-order and do not rely on being pinged. The relay file is the
+contract; the monitor is only a convenience over it.**
+
 ## SEAT
 ★★★★★ **[FACT, NOT YET RULED — AR-446] R-459 STEPS (1) AND (2) ARE DELIVERED, AND
 IT CORRECTS ONE OF MY OWN CONSTRAINTS IN THE SAFE-TO-LOOSEN DIRECTION: I ruled
