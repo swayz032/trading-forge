@@ -41,7 +41,9 @@ from src.engine.spec_execution_preflight import (
     MANDATORY,
     OPTIONAL,
     OPTIONAL_CANDIDATE,
+    UNKNOWN_REQUIREDNESS,
     UnresolvedMandatoryRuleError,
+    blocks_execution,
     classify_rule_role,
     preflight_binding_plan,
     resolve_rule_class,
@@ -249,9 +251,17 @@ def test_role_classification_fails_closed():
     # ★★★ THE ARM THAT MATTERS — absent/unknown role refuses by default.
     #     `role` is read straight off the graph with an empty-string fallback
     #     (spec_family_bindings.py:562), so "absent" is reachable in practice.
-    assert classify_rule_role("") == MANDATORY
-    assert classify_rule_role("trigger") == MANDATORY
-    assert classify_rule_role("annotation-we-have-never-seen") == MANDATORY
+    #
+    # ★ UPDATED BY R-422 blocker (i): these used to return MANDATORY. They now
+    #   return UNKNOWN_REQUIREDNESS — which BLOCKS IDENTICALLY (asserted below,
+    #   so the safety property is still pinned here) but no longer records a
+    #   requiredness claim the source never made. The consequence is unchanged;
+    #   only the provenance is honest. See test_preflight_blockers.py.
+    assert classify_rule_role("") == UNKNOWN_REQUIREDNESS
+    assert classify_rule_role("trigger") == UNKNOWN_REQUIREDNESS
+    assert classify_rule_role("annotation-we-have-never-seen") == UNKNOWN_REQUIREDNESS
+    assert blocks_execution(classify_rule_role("")) is True
+    assert blocks_execution(classify_rule_role("trigger")) is True
 
 
 def test_optional_candidate_resolves_to_mandatory_without_positive_evidence():
@@ -261,7 +271,11 @@ def test_optional_candidate_resolves_to_mandatory_without_positive_evidence():
     assert resolve_rule_class("confluence", optional_evidence=True) == OPTIONAL
     # Evidence can never downgrade a mandatory role.
     assert resolve_rule_class("spine", optional_evidence=True) == MANDATORY
-    assert resolve_rule_class("", optional_evidence=True) == MANDATORY
+    # ★ UPDATED BY R-422 blocker (i): an absent role resolves to
+    #   UNKNOWN_REQUIREDNESS rather than MANDATORY. The safety property under
+    #   test — evidence cannot make it droppable — is asserted unchanged.
+    assert resolve_rule_class("", optional_evidence=True) == UNKNOWN_REQUIREDNESS
+    assert blocks_execution(resolve_rule_class("", optional_evidence=True)) is True
 
 
 def test_preflight_refuses_unbindable_confluence_absent_positive_evidence():
@@ -287,8 +301,16 @@ def test_preflight_refuses_mandatory_unbindable_rule_with_full_payload():
     result = preflight_binding_plan(plan, strategy_id="strat-123")
 
     assert result.refused is True
-    assert len(result.refusals) == 1
-    r = result.refusals[0]
+    # ★ UPDATED BY R-422 blocker (ii): this spec's only spine condition is the
+    #   refused one, so it ALSO trips NON_EXECUTABLE_EMPTY_SPINE. Two refusals
+    #   with two distinct reasons is the correct new behaviour — the assertion
+    #   is tightened onto the specific condition rather than relaxed to a count.
+    assert len(result.refusals) == 2
+    assert {x.reason for x in result.refusals} == {
+        session_refusal_reason("overnight"),
+        "non_executable_empty_spine",
+    }
+    r = next(x for x in result.refusals if x.condition_id == "s1")
     # R-420: strategy id · rule text · semantic type · reason.
     assert r.strategy_id == "strat-123"
     assert r.rule_text == "pre market vwap analysis routine"
