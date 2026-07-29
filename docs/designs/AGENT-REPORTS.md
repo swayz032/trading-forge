@@ -4,6 +4,71 @@
 
 ---
 
+## AR-410 · 2026-07-29 · **PR #31 OPEN, NOT MERGED. BOTH MUTATIONS BITE: REVERTING THE EDIT GOES RED ON ALL FOUR NAMED TESTS *PLUS* THE NEW ONE; A REAL RELAXATION IS CAUGHT BY THE SET COMPARISON, WHICH NAMES THE EXACT ROW THAT STOPPED REFUSING.** ★★★ **AND THE FINDING YOU SHOULD READ FIRST, BECAUSE IT INVALIDATES THE GATE YOUR OWN STOP CONDITION RESTS ON: `CI GREEN` DOES NOT MEAN THE PYTHON TESTS PASSED — `ci.yml:236` IS `continue-on-error: true`.** ★★ **R-438 §2 HAD THREE SURFACES, NOT ONE. I FIXED TWO AND DELIBERATELY LEFT THE THIRD**
+
+**RULING ID:** R-437 as amended by R-438 · **TASK ID:** AR-410 · **BRANCH:** `hardening/provenance-rule-class-20260729` · **COMMIT:** `0b0d6617` · **BASE:** `a6f92822` (tip of `hardening/slumhouse-shared-office-parity-20260723`, the base of both #29 and #30 — **[MEASURED]** `gh pr view 29/30 --json baseRefName`) · **PR:** #31 · **RECOMMENDATION:** **APPROVAL_REQUESTED on the build. MERGE NOT REQUESTED — R-438 holds it for the census and I am not asking you to lift that.**
+
+### ★★★ §1 — THE FINDING THAT IS MINE AND NOT IN YOUR RULING: YOUR STOP CONDITION IS UNENFORCEABLE AS WRITTEN
+
+**[MEASURED, `.github/workflows/ci.yml:236`] the `Run pytest with coverage` step is `continue-on-error: true`.** ★★★ **So "CI red" — the stop condition in R-437 — CANNOT FIRE ON A PYTHON TEST FAILURE. A green check mark on #31 is not evidence that one test in this PR passed.** The only BLOCKING Python gate is `ruff check src/engine --select F821,F811,F823,...` (bug-detection subset); ruff full-style and mypy are advisory too.
+
+★★ **I am flagging this rather than reporting "CI green" and letting you infer the rest, because "high agreement with a high fallback rate is a failed run" (R-433 §2a) generalises: a green produced by a check that cannot fail is the same false-green one layer up.** ★ **Current state: 11 pass · 6 pending · 0 fail. `Lint` (which carries the blocking gates) PASSED. `Python Tests + Coverage` still pending — and when it reports, its colour will not be load-bearing.**
+
+**THEREFORE THE TEST EVIDENCE IS MINE, LOCAL, AND REPRODUCIBLE — not CI's:**
+
+```
+python -m pytest src/engine/tests/test_preflight_blockers.py \
+                 src/engine/tests/test_session_refusal_safety.py -q   → 38 passed
+# all 7 suites importing either changed module                        → 133 passed
+```
+
+★★★ **AND THE BASELINE, MEASURED IN A DISPOSABLE WORKTREE PINNED TO `a6f92822`** — per the shared-tree law that a receipt-bound count is measured in isolation, since the campaign tree has ~8 files of another seat's uncommitted work live: **131 passed BEFORE → 133 passed AFTER. Δ = +2 = exactly my two new tests. Zero regressions, zero deletions.** Worktree removed by explicit path; no `prune` run.
+
+### ★★★ §2 — THE RED-PROOF, AND I MADE IT FAIL ON PURPOSE TWICE
+
+★★★ **R-438's lesson was that a proof which cannot fail proves nothing until you name what could make it fail. So I did not stop at green.**
+
+| mutation | expected | **measured** |
+|---|---|---|
+| **A** — restore `"spine"` to `_MANDATORY_ROLES` | red | **5 failed** — all 4 tests you named **+ the new regression test** |
+| **B** — `blocks_execution` stops admitting `UNKNOWN_REQUIREDNESS` (a genuine relaxation) | red | **1 failed**, naming the row: `('unbindable-spine','s1','no_recognized_session_keyword')` |
+| **control** — unmutated | green | **38 passed** |
+
+★★ **Mutation B is the one that matters: it proves the SET comparison catches a real refusal-set movement rather than merely reporting `∅` because nothing ever moves.** ★ **A control that cannot discriminate cannot tell "catches breakage" from "always green" — so the regression test ALSO asserts the class distribution CHANGED, and fails if the monkeypatch silently failed to take.**
+
+★★★ **A GAP I FOUND IN MY OWN TEST AND CLOSED:** both arms are monkeypatched, so the test proves a *property of two role sets* and **would have kept passing if someone reverted line 94.** I added an explicit assertion on the SHIPPED value. Mutation A confirms it now bites. **I am reporting this because I nearly shipped a regression test that could not detect the regression it was named for.**
+
+### §3 — R-438 §2: THREE SURFACES, NOT ONE. MY ANSWER, INDEPENDENT OF THE GRADER'S
+
+**(1) `error_message()` — FIXED.** Head carries a per-class breakdown; every line states its own basis.
+`REFUSED: 1 rule(s) ... (1 of unknown requiredness)` / `- [UNKNOWN_REQUIREDNESS] [spine/WAIT_SESSION] s1: ...`
+
+**(2) `spec_condition_compiler.py:640` — FIXED. ⚠️ THIS IS A SCOPE EXTENSION AND IT IS YOURS TO REVERSE.** The `UnresolvedMandatoryRuleError` message hardcoded `"mandatory rule"` — **the same defect at the sibling call site of the same correction, and it had already resolved the class and thrown it away.** Fixed under fix-the-class-not-the-instance. **R-437 locked scope to "the one edit + these tests + the docstrings", so I am naming this loudly rather than letting it ride in a diff.** Exception TYPE unchanged.
+
+**(3) `backtester.py:8519` `"refused_reason": "unresolved_mandatory_rules"` — DELIBERATELY NOT CHANGED.** It is a **machine key, not prose**, and it is **test-pinned** at `test_session_refusal_safety.py:443`. Changing it breaks a test you did not list and risks any external parser. ★ **A stable contract key renamed inside a provenance fix is how a wording change becomes an outage.**
+
+### §4 — THE FOUR NAMED TESTS: UPDATED, NONE DELETED, NONE RENAMED
+
+Each now asserts `UNKNOWN_REQUIREDNESS` **and** `blocks_execution(...) is True`. ★★ **`test_i_DISCRIMINATOR_...` is RE-AIMED, not deleted: its original premise is precisely what this change reverses, so keeping the old assertion would PIN THE DEFECT — but deleting it would remove the only check that the relabel STOPPED at `spine`. It now discriminates in BOTH directions (spine moved · `invalidation` did not), which is strictly more than it did before.**
+
+★ **NAMES LEFT UNCHANGED ON PURPOSE:** you named these four; a rename reads as a DELETION to anyone matching your ruling against the suite. `test_i_grounded_roles_stay_mandatory` is now an imprecise name — **flagged as a follow-up rename, not silently corrected.**
+
+### §5 — WHAT I DID *NOT* MEASURE, STATED PLAINLY
+
+★★★ **THE COUNTS ARE NOT MINE AND I DID NOT RE-DERIVE THEM.** `1347→921` · `18→444` · `Δ426` · `total 1368` are AR-408's, and per R-438 §2 they are **UNVERIFIED — not refuted.** **I did not restate them as measured in the PR body, and the code comment that mentions the figure marks it as a claim pending census.** ★★ **Arithmetic self-consistency in both directions is not measurement, and this desk has been caught by exactly that shape before.**
+
+**ALSO NOT MEASURED:** anything outside the repo parsing raw stdout for the literal `"MANDATORY"` — **and note my error_message change alters that stdout**, so if such a parser exists, item (1) above is what would disturb it. No evidence one exists; not provable from here. Recorded as residual risk, as R-438 recorded it.
+
+**OBSERVED, OUT OF SCOPE, LEFT ALONE:** the plan-level empty-spine refusal (`spec_execution_preflight.py:305`) passes `rule_class=MANDATORY` explicitly and is **not** role-classified — which is exactly why AR-408's Δ is **426 and not 429**. Whether a structural refusal should carry `MANDATORY` is a separate question I did not decide.
+
+**Files changed (4):** `spec_execution_preflight.py` · `spec_condition_compiler.py` · `test_preflight_blockers.py` · `test_session_refusal_safety.py`. **+287/−25**, diff-stat matched against the reviewed delta before push — no unexpected deletions.
+**Architecture invariants:** **#1 holds** (proven by set comparison + mutation B, not asserted) · **#6 holds** — **[MEASURED] `backtests total = 0`**. Flags untouched, no DB write, no `runtime-production` write, no tower update, no classifier rule coverage expanded.
+**Risk:** the wording change to stdout (see residual above). The frozenset change itself is rollback-by-one-member.
+
+**Next smallest task (ONE):** ★ **rule on the §3(2) scope extension — keep or revert.** It is the only thing in this PR you did not authorize, and it should not be discovered at merge time.
+
+---
+
 ## AR-409 · 2026-07-29 · **START-RECEIPT — R-437 + R-438: IMPLEMENT THE ONE-WORD EDIT, FIX THE FOUR NAMED TESTS, OPEN THE PR. NO MERGE.**
 
 **RULING ID:** R-437, as amended by R-438 · **TASK ID:** AR-409 · **STATUS:** STARTING. Fresh worker seat; read order complete (R-438 → R-437 → R-436 → AR-408 → `## THE PLAN`).
