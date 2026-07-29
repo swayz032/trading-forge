@@ -5,8 +5,20 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-428**. Newest AR: **AR-396** — the worker's HANDOFF, ruled.
-Worker: **STOOD DOWN CLEAN. A FRESH WORKER SEAT IS NEEDED.**
+Ledger at **R-429**. Newest AR: **AR-399** — amended handoff, ruled.
+Worker: **STOOD DOWN CLEAN. A FRESH WORKER SEAT IS NEEDED** for the one remaining
+item: **find what writes `role`.**
+★★★ **R-425 item (6) DONE (R-429): THE LEVELZONE GAP IS A SPECIES, NOT AN
+INCIDENT. [MEASURED HERE] of 32 campaign `TF_*` tokens, FOUR are genuine
+env-gated capabilities ABSENT from the deployed engine — `TF_LEVELZONE_ROUTING`
+· `TF_LEVELZONE_RESOLVER` · ★ NEW `TF_SESSION_ROLE_RESOLVER_ENABLED`
+(`spec_family_bindings.py:2312`; `classify_session_role` has ZERO non-test refs
+in the deployed tree) · ★ NEW `TF_WIRE1_HTF_COLUMNS`. THE SESSION-ROLE RESOLVER
+AIMS AT `C2` — the SECOND-LARGEST BLOCKER (20.6%). THE REMEDIATION MAY ALREADY
+EXIST, UNPORTED — find what you own before commissioning new work.**
+★ [NOT MEASURED] whether it actually binds any `C2` condition — levelzone proved
+a flag can be real in one lane and inert in another. **RUN it, don't assume.**
+★ Sweep bounded to ENV-GATED capabilities; non-flag-gated ones stay unenumerated.
 ★★★ **CARRY THESE OR REPEAT THE LAST SEAT'S MISTAKES (its words, adopted):
 NAME THE TREE — measure in `wt-preflight-blockers-20260729` (sha256-identical to
 `runtime-production`), NEVER the campaign tree · PER-VIDEO, NOT PER-ROW — every
@@ -102,15 +114,26 @@ ZERO times.**
 ★★★ **THE WORKER SEAT HANDED OFF CLEAN AT AR-396** (nothing half-done, nothing in
 flight, no sub-agents owed, all committed at `ae79c789`). **A FRESH WORKER SESSION
 IS NEEDED — the queue below is startable cold from R-428.**
-**(1) POINTER-RESOLUTION SWEEP** — run the SAME `segmentTranscript` over all 936
-per-video pointer values; report resolved/unresolved + reasons. **Converts 3-of-3
-into a RATE.** ★ Publish a CONTROL line proving the real function ran.
-**(2) FIND WHAT WRITES `role`.** ★★ Do NOT re-run the last seat's search —
-[MEASURED] no non-test assignment exists in the primary checkout. **Look OUTSIDE:
-model output schema · external service · migration · seed · onboarding payload.**
-Closes the `trigger` promotion question.
-**(3) THE `C8` PROMPT PROPOSAL** — draft exists at AR-393 §5 (P1–P4) targeting
-`transcript-extractor.md:169/:171/:616`. **Proposal only → `ratify-packet`.**
+**(1) INCOMING WORKER — PRIMARY: FIND AND PROVE THE `role` PRODUCER.** ★★ Do NOT
+re-run the last seat's search — [MEASURED] no non-test assignment exists in the
+primary checkout, and the prompt says `spine` zero times. **Look OUTSIDE: model
+output schema · structured-output instructions · external service · onboarding
+payload · migrations/seeds · frozen worktrees · the extraction↔onboarding API.**
+★ Lead not answer: `scripts/atomize-transcript.ts` emits `type`, not `role`.
+**Deliver all five:** the producer · its per-role contract · **proof joining the
+producer's entry-trigger requirement to stored `role=trigger`** · whether the role
+is model-generated / mapped / migrated / seeded · **a type-keyed replacement
+PROPOSAL if the contract confirms narrative roles are unfit for execution safety.**
+**(2) SECONDARY, AFTER (1): the 20 span disagreements** — classify as harmless
+clause-boundary · stale span · alternate range · transcript-version mismatch ·
+genuinely incorrect provenance.
+**(3) THIS SEAT — MINE: RUN the campaign session-role resolver against the `C2`
+refusals** and measure whether it binds any. Read-only; **no port authorized.**
+★★ **`C8` PACKET: APPROVED AS A PROPOSAL, IMPLEMENTATION HELD** on all seven
+prerequisites (quota-consumers enumerated · ablation defined+authorized ·
+independent grader · control arm FIRES ~51% · treatment arm PRESERVES genuine
+conditions · annotations stored not discarded · artifacts immutable by
+`spec_hash`). **No role remap inside it.**
 ★★★ **A `C8` remedy at the BINDER or PREFLIGHT is FORBIDDEN — suppressing an
 annotation downstream is indistinguishable, in the record, from dropping a
 taught rule, which is the exact defect this safety chain exists to end.**
@@ -228,13 +251,21 @@ lane. **`18` is the authoritative `UNKNOWN_REQUIREDNESS` count** — the advisor
 [MEASURED HERE] **every one of the 6450 conditions carries `evidence` + `span`,
 non-empty 6450/6450.** Per-video the content splits: **~15% verbatim teacher text
 (gradeable TODAY) · ~28% the literal JSON-debris string `'},{'` (carries nothing)
-· 43.5% opaque `T-<vid>-C####` pointer — ★★★ **RESOLVABLE (R-428): the store is
-`…/extraction-100/tmp/generalization/<video>.transcript.txt` (67 files, and
-[MEASURED] ALL 40 live videos have one); the resolver is `clause-segmenter.ts:60
-segmentTranscript`. 3 of 3 pointers resolved AND the `span` offsets — a second,
-independent key — confirm each byte-for-byte. ★ Still 3-of-3, NOT a rate; the
-sweep is authorized.** ★★ **The `'},{'` debris is UNAFFECTED and still resolves
-to nothing — good news on one class is not good news on another.**
+★★★ **FINAL, R-429 — [MEASURED HERE, per-video, 2351 conditions = 2150 entry +
+201 invalidations]: pointer-bearing `1347` (57.3%) → `1458` IDs → **1458 RESOLVE,
+100.0%, ZERO unresolved** · `'},{'`/`'{}'` debris `669` (28.5%) → resolves to
+NOTHING · remainder ~335 (~14.2%) largely verbatim text.** **≈71.5% of the library
+is SOURCE-GRADEABLE TODAY; 28.5% is structurally blind.**
+★★ Store `…/extraction-100/tmp/generalization/<video>.transcript.txt` (all 40 live
+videos have one); resolver `clause-segmenter.ts:60 segmentTranscript`. `span` is
+a SECOND independent key: byte-exact on **1218 of 1238 (98.4%)**; ★ **the 20 that
+disagree carry TWO CONTRADICTING provenance claims — own probe, SECONDARY.**
+★★★ **BOTH my earlier figures were WRONG IN THE SAME DIRECTION: R-426 "no source
+at all" and R-427 "~15% usable" — both from an ANCHORED `^T-…-C\d+$` regex that
+undercounted by 36%. AN ANCHORED REGEX IS A JOIN KEY.**
+★★★ **A WORKING CHAIN IS NOT A FAITHFUL EXTRACTION: `'timeframe'` resolves
+perfectly to a real sentence about which chart to open. Fidelity grading —
+emitted object vs resolved teacher text — is a SEPARATE, UNBUILT instrument.**
 **Presenting a normalized phrase AS the teacher's words remains forbidden.**
 ★★ **A ceiling no refusal count can see:** [CORROBORATED — corpus_A MEASURED
 HERE at 128 bindable / 128 approximation / **0** concrete; POP-120 RELAYED at

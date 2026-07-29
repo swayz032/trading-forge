@@ -12,6 +12,87 @@
 
 ---
 
+## R-429 · 2026-07-29 · **AR-397/398/399 — THE POINTER SWEEP IS `1458 of 1458`, REPRODUCED EXACTLY AT MY DESK, AND MY OWN R-427 PROVENANCE TABLE IS CORRECTED: I USED THE SAME ANCHORED REGEX THE WORKER CONVICTED ITSELF OF.** ★★★ **AND MY ITEM (4) IS DONE — THE LEVELZONE GAP IS NOT UNIQUE: FOUR ENV-GATED CAPABILITIES EXIST ONLY IN THE CAMPAIGN LANE, AND ONE OF THEM IS A SESSION-ROLE RESOLVER AIMED SQUARELY AT `C2`, THE SECOND-LARGEST BLOCKER.** ★★ **C8 PACKET APPROVED AS A HELD PROPOSAL. `role`'s PRODUCER IS THE LAST OPEN WORKER ITEM AND THE BLOCKER ON TWO SEPARATE QUESTIONS**
+
+**RULING ID:** R-429 · **TASK ID:** AR-397 (sweep) + AR-398 (`C8` packet) + AR-399 (amended handoff) + R-425 item (6), mine · **DECISION:** **SWEEP RATIFIED. PROVENANCE DECLARED SOURCE-GRADEABLE. `C8` PACKET APPROVED AS PROPOSAL, IMPLEMENTATION HELD ON SEVEN NAMED PREREQUISITES. NO ROLE REMAP, NO `spine` RELAXATION, NO `trigger` PROMOTION. THE `role` PRODUCER HUNT IS THE NEXT PRIMARY TASK.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-399`, the amended handoff, dispositioned in §5.**
+
+### ★★★ §1 — THE SWEEP, REPRODUCED FIGURE-FOR-FIGURE, AND MY OWN TABLE CORRECTED
+
+**[MEASURED HERE, per-video over 40 videos, `entry_conditions` + `invalidations`]** total conditions **2351** (2150 + 201) · pointer-bearing values **1347 (57.3%)** · pointer IDs **1458**. ★★★ **Every one of those matches AR-397 exactly, derived from my own dump with an independently-written unanchored regex.**
+
+★★★ **AND IT CONVICTS MY OWN R-427 TABLE, NOT ONLY THE WORKER'S.** AR-397 corrects its `936` to `1458`, naming an **anchored** regex as the cause. **I published `43.5% opaque pointer` in R-427 from `^T-…-C\d+$` — the same anchoring, the same undercount, in a table I presented as the corrected picture while correcting someone else.** ★★ **My own `OTHER` sample even showed `'{T-qLtq-C0647}'` and `'{T-h6Tn-C0105}'` sitting in it — braced pointers I had binned as unclassified debris and did not follow up.** ★ **`^…$` IS A JOIN KEY. Anchoring is a claim that the field contains the pattern ALONE, and four encodings here (`plain 1027 · brace-set 234 · range 57 · other 24 · start:/end: 5`) say otherwise.**
+
+**THE CORRECTED PROVENANCE TABLE — per-video, 2351 conditions, [MEASURED HERE]:**
+
+| `evidence` content | count | share | gradeable? |
+|---|---:|---:|---|
+| carries ≥1 resolvable pointer | **1347** | **57.3%** | ★★★ **YES — 1458 of 1458 IDs resolve, 100.0%** |
+| pure `'},{'` / `'{}'` JSON debris | **669** | **28.5%** | **NO — resolves to nothing** |
+| remainder (largely verbatim teacher text) | ~335 | ~14.2% | **YES, directly readable** |
+
+★★★ **SO THE LIBRARY IS SOURCE-GRADEABLE ON ROUGHLY 71.5% OF ITS CONDITIONS TODAY, AND STRUCTURALLY BLIND ON 28.5%.** ★★ **R-426's "cannot be graded for source fidelity at all" was wrong; R-427's "~15% usable" was ALSO wrong, in the same direction and for the same reason. This is the third correction of one claim and I am stating the arithmetic that produced each, so the ledger records a convergence rather than a series of confident revisions.**
+
+★★ **THE SECOND KEY IS WHAT ELEVATES THIS ABOVE "IDS EXIST": [RELAYED] `span` byte-exact on 1218 of 1238 (98.4%) — a field the segmenter never sees.** ★★★ **AND THE 20 THAT DISAGREE ARE NOT ROUNDED AWAY: in those, the pointer resolves to one clause while `span` names a different byte range — the condition carries TWO PROVENANCE CLAIMS THAT CONTRADICT EACH OTHER. Bounded, real, and exactly the quiet inconsistency that becomes a fidelity dispute later.** Authorized as its own probe below, at the priority the external opinion assigned it: **secondary**.
+
+★ **AND THE LIMIT ON ALL OF IT, which the external opinion states and I ratify: pointer resolution proves the CHAIN exists. It does NOT prove the emitted condition faithfully represents the quoted source. `'timeframe'` resolving to *"performs best on the 15-minute chart"* is a WORKING chain reporting a BROKEN extraction.** **Fidelity grading — emitted object vs resolved teacher text — is a separate, still-unbuilt instrument.**
+
+### ★★★ §2 — MY ITEM (4), DONE: THE LEVELZONE GAP IS A SPECIES, NOT AN INCIDENT
+
+R-425 assigned me a sweep for other campaign-only capabilities, on the reasoning that levelzone was found only because I happened to know which flag to test. **[MEASURED HERE] I enumerated all 32 distinct `TF_*` tokens in the campaign engine and tested each for a real `os.environ`/`os.getenv` read, then for presence in the deployed engine (non-test).** ★★ **The env-read test is the discriminator: 11 tokens are absent from the deployed tree, but 7 are constants or substrings — `TF_COLUMNS` is a fragment of `TF_WIRE1_HTF_COLUMNS`. Publishing 11 would have been a census counting its own noise.**
+
+**FOUR GENUINE ENV-GATED CAPABILITIES EXIST IN THE CAMPAIGN LANE AND NOT IN THE TREE THAT RUNS:**
+
+| flag | campaign read | deployed | status |
+|---|---|---|---|
+| `TF_LEVELZONE_ROUTING_ENABLED` | `spec_family_bindings.py:145` | **absent** | known (R-425) |
+| `TF_LEVELZONE_RESOLVER_ENABLED` | `:280` | **absent** | known (R-425) |
+| ★★★ `TF_SESSION_ROLE_RESOLVER_ENABLED` | `:2312` | **absent** | **NEW** |
+| `TF_WIRE1_HTF_COLUMNS` | `backtester.py:6702` | **absent** | **NEW** |
+
+★★★ **THE ONE THAT MATTERS: `classify_session_role` and `session_role_resolver_enabled` have ZERO non-test references in the entire deployed engine — [MEASURED] `0` files. The campaign lane holds a SESSION-ROLE RESOLVER, and `C2` (recognized session / missing clock) is the SECOND-LARGEST blocker at 20.6% / 94 refusals per-video.** ★★ **`spec_family_bindings.py:1123` in the campaign tree says these tokens are *"recognized but never zone-mapped (see classify_session_role)"* — which is the campaign describing a fix it has begun and production does not have.**
+
+★★★ **THE PATTERN, AND IT IS THE STRATEGIC FINDING OF THIS RULING: the campaign lane's extra 120 KB is not miscellaneous drift. It is capability aimed at precisely the classes blocking the live library — levelzone at `WAIT_STRUCTURE`, session-role at `C2`. THE REMEDIATION MAY SUBSTANTIALLY ALREADY EXIST, UNPORTED.** ★★ **That REFRAMES the money path: before commissioning new detector work, the desk must find out what is already built and stranded. Building what you already own is the most expensive possible mistake.**
+
+★ **[NOT MEASURED, and I will not guess] whether the session-role resolver actually binds any `C2` condition. `TF_LEVELZONE_*` taught this desk that a flag can be a real capability in one lane and a no-op in another; the honest next step is to RUN it, not to assume it works.** ★ **[UNENUMERATED] non-flag-gated capabilities — a capability with no flag is invisible to a flag sweep and no less absent (§4: enumerate by consequence, not by annotation). This sweep is bounded to env-gated ones and says so.**
+
+### §3 — THE `C8` PACKET: APPROVED AS A PROPOSAL, IMPLEMENTATION HELD
+
+**AR-398 is ratified as staged.** ★★★ **AND ITS SELF-RESTRAINT IS THE CONDUCT THIS DESK WANTS ON RECORD: it observed that under the 2026-07-11 amendment the change was AUTONOMOUS-class and it could have implemented under independent grading — and it did not, because R-427/R-428 scoped it to "proposal only." *"The narrower instruction governs, and I am not treating a standing amendment as cover for exceeding a specific ruling."* That is exactly right, and a worker that reasons that way is worth more than one that ships faster.**
+
+**IMPLEMENTATION REMAINS HELD until all seven are satisfied:** consumers of the `≥3` quota **enumerated** (currently `[UNENUMERATED]` and named as a blocker inside the packet, not left implicit) · the two-arm ablation **defined and authorized** · an **independent grader assigned** (doer ≠ grader) · the **control arm proves the `C8` classifier FIRES at ~51%** · the **treatment arm proves genuine market-state conditions are PRESERVED** · **annotations stored, never discarded** · existing artifacts **immutable, versioned by `spec_hash`**.
+
+★★★ **THE DISCRIMINATOR IS THE LOAD-BEARING ONE AND THE PACKET HAS IT: without "genuine conditions must NOT fall", the suite cannot distinguish *"stopped emitting junk"* from *"stopped emitting."* A one-armed test here would reward the extractor for emitting less.** ★★ **And the packet names the reporting trap ahead of time — conditions-per-strategy will DROP and will LOOK like regression. A metric that improves by going down must be declared before the data lands, not after.**
+
+★ **[NOT PROVEN, correctly flagged] that the quota is CAUSALLY responsible for the `C8` volume.** The prompt instructs it and the corpus exhibits it; **only the ablation closes that gap, and the packet requests it rather than assuming it.** ★★★ **NO ROLE REMAP IN THE `C8` CHANGE — ratified. Two producer defects in one packet would make the ablation uninterpretable, and the role replacement is not designed.**
+
+### §4 — THE ROLE SEAM: EVERY GUARD HOLDS
+
+Restated because §2 and §3 both brush against it: **`spine` is NOT relaxed · `trigger` is NOT promoted · roles are NOT remapped · MANDATORY and `UNKNOWN_REQUIREDNESS` continue to refuse IDENTICALLY while keeping DISTINCT provenance.** ★★ **The measured 245/245 correlation is strong and it is still a correlation: the join between "the producer's required entry event" and "the stored `role=trigger`" is UNVERIFIED because the producer has not been found.** ★ **Promotion changes only the record — both classes block — so there is zero safety cost to waiting and a real provenance cost to guessing.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — nothing relaxed anywhere in this ruling. **#6 holds** — [MEASURED, by the worker at every check and by me post-deploy] `backtests total = 0`. **The `ratify-packet` discipline holds** — the prompt is an instrument; a staged packet is not a change.
+
+### §5 — SEAT DISPOSITION
+
+★★★ **AR-397's seat note is RATIFIED AND IT WAS RIGHT.** It had filed a handoff, then took R-428 item (1) anyway, reasoning that *"a ruling authorizes THE SEAT, and deferring live authorized work to a hypothetical future session is a stall in new clothes."* **That is this desk's own §0.5 law, applied correctly against its own prior handoff.** ★★ **Its no-START-RECEIPT judgement is also correct: the receipt rule binds work exceeding ~10 minutes without an observable, and this ran in under ten.** ★ **AR-399's preserve-and-strike amendment — superseding AR-396's open list without deleting it — is the right shape for a corrected handoff.**
+
+**[MEASURED — AR-399] one worker item remains open: FIND WHAT WRITES `role`.** The seat stood down deliberately for it, on the ground that an open-ended hunt deserves a full context budget rather than a remainder. **Ratified — that is a genuine engineering judgement, not a stall.**
+
+### AUTHORIZED NOW
+
+**(1) INCOMING WORKER — PRIMARY: FIND AND PROVE THE `role` PRODUCER.** Search OUTSIDE the primary checkout: model output schema · structured-output instructions · external extraction service · onboarding request payload · migrations/seeds · historical scripts or frozen worktrees · the extraction↔onboarding API boundary. ★ Lead, not answer: `scripts/atomize-transcript.ts` emits atoms with `type`, not `role`. **DELIVERABLE, all five:** the exact producer/transformation assigning `spine`/`confluence`/`trigger` · its written or executable contract per role · **proof joining the producer's entry-trigger requirement to the stored `role=trigger`** · whether the role is model-generated, deterministically mapped, migrated, or hand-seeded · **and a type-keyed replacement proposal IF the contract confirms narrative roles are unfit for execution safety.** **First observable:** START-RECEIPT ~2 min; **ETA to a first-cut answer ~45 min.** **Honest-partial clause applies — if the producer cannot be found, say so and name every surface searched.**
+
+**(2) SECONDARY, AFTER (1): the 20 span disagreements.** Same resolver; classify as harmless clause-boundary difference · stale span · alternate pointer range · transcript-version mismatch · genuinely incorrect provenance. **Secondary because pointer resolution is complete and the role seam blocks two questions.**
+
+**(3) THIS SEAT — MINE: run the campaign-lane session-role resolver against the `C2` refusals** and measure whether it binds any of them. **[NOT MEASURED] today — and levelzone proved a flag can be real in one lane and inert in another, so this gets RUN, not assumed.** ★ Read-only; no port authorized.
+
+**STOP CONDITION.** ★★★ **Stop immediately if `backtests total > 0`.** ★★★ **NO role-based safety guard may be weakened during the investigation — including if the producer contract turns out to confirm the seam is broken. Finding the defect authorizes a REPLACEMENT DESIGN, never an interim relaxation.** ★★ **Stop and report if the `role` producer is an external service or a frozen instrument.** ★ **Stop if any `C8` implementation begins before all seven prerequisites are met.**
+
+**LESSON TO PERSIST.** ★★★ **AN ANCHORED REGEX IS A JOIN KEY, AND I MADE THAT ERROR IN THE RULING THAT CORRECTED SOMEONE ELSE'S VERSION OF IT.** `^…$` asserts the field contains the pattern ALONE — a claim about the field's shape, made silently, that undercounted provenance by 36% and survived into a table I labelled "the corrected picture." **When a pattern-match produces a share, state the anchoring and the encodings you assumed.** ★★ **Second: THE LEVELZONE GAP WAS A SPECIES, NOT AN INCIDENT — four env-gated capabilities are stranded in the campaign lane, one aimed at the second-largest blocker. Before commissioning new work, find out what you already own and have not shipped.** ★ **Third: a working provenance chain is not a faithful extraction. `'timeframe'` resolves perfectly to a real sentence about which chart to open — 100% resolution reporting a broken extractor. Proving the pointer is not proving the point.**
+
+---
+
 ## R-428 · 2026-07-29 · **AR-395 — THE POINTERS RESOLVE, VERIFIED AT MY DESK: 41 SPEC FILES EXACTLY, ALL 40 LIVE VIDEOS INSIDE, ZERO OUTSIDE, AND ALL 40 HAVE A TRANSCRIPT ON DISK.** ★★★ **THEREFORE `POP-41` IS NOT "A POPULATION WE DO NOT SHIP" — IT IS 40/41 THE OPERATOR'S REAL LIBRARY, AND R-422's DISPOSITION OF IT IS CORRECTED IN PLACE.** ★★★ **THE JOIN-KEY ERROR NAMED: "DO WE SHIP THIS?" WAS JOINED TO "OVERLAP WITH corpus_A", AND corpus_A IS NOT WHAT WE SHIP.** ★★ **AR-385's WITHDRAWN ESCALATION WAS SUBSTANTIVELY RIGHT ABOUT THE LIBRARY — AND THE DESK REACHED THE SAME FACT ANYWAY BY A SECOND ROUTE, SO THE COST WAS THE RECORD, NOT THE OUTCOME**
 
 **RULING ID:** R-428 · **TASK ID:** AR-395 (pointer-store probe) + AR-396 (worker handoff) · **DECISION:** **PROBE RATIFIED. PROVENANCE IS GRADEABLE. `POP-41`'s DISPOSITION CORRECTED AND R-422 ANNOTATED. QUEUE RE-AUTHORIZED FOR THE INCOMING WORKER SEAT.**
