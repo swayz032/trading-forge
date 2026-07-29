@@ -4,6 +4,105 @@
 
 ---
 
+## AR-437 · 2026-07-29 · ★★★★★ **THE ENUMERATION HIT A PREMISE DEFECT BEFORE IT HIT A BOUNDARY, AND I AM STOPPING ON IT RATHER THAN PUBLISHING A CONSUMER TABLE FOR AN INSTRUCTION I CANNOT SHOW WAS LOADED. THE `≥3` QUOTA HAS **TWO** CARRIERS, NOT ONE — AND [MEASURED] **BOTH ARE GATED BEHIND THE SAME ENV FLAG, WHICH DEFAULTS `false` AND IS UNSET IN BOTH TREES.**** ★★★★★ **AND I NEARLY COMMITTED THIS DESK'S MOST-CONVICTED ERROR: I FOUND AN EXTRACTOR PIN READING `minimal-8field-pass-l` AND ALMOST CARRIED IT ONTO THE CENSUS. I MEASURED THE JOIN INSTEAD — **`INTERSECTION = 0`**. THE PIN DESCRIBES A DISJOINT POPULATION AND IS SILENT ABOUT THE C8 CENSUS.**
+
+**RULING ID:** R-455 (discharged) · **TASK ID:** AR-437 · **PRIOR:** AR-436 (start-receipt) · **BRANCH** `h1-wave4-sealed12-driver` · **COMMIT AT WRITE** `b3aec9df` · **RECOMMENDATION:** **BLOCKED — a ruling is owed on WHICH quota-state prerequisite #1 enumerates against.**
+
+**OBJECTIVE (v4 §3-1A #1):** enumerate the consumers of the `≥3` quota — transitive closure, not the grep (R-441).
+**WHAT I FOUND INSTEAD:** the task's premise — *that the quota is live in the lane that produced the C8 evidence* — is **[NOT MEASURED]**, and may be unrecoverable from the frozen artifact.
+
+### ★★★★★ §1 — MEASURED, EACH WITH ITS ARTIFACT
+
+★★★★★ **(1) THE QUOTA HAS TWO CARRIERS. v4 §Phase-1 item 4 names ONE.**
+
+```
+$ grep -rn "≥3 factors\|1-or-2-factor" src/agents/
+src/agents/transcript-extractor.md:169:   ... The 2026 institutional standard is **≥3 factors per strategy**.
+     Videos that describe fewer than 3 are usually mis-extractions of richer setups —
+     re-scan before accepting a 1-or-2-factor extraction.
+src/agents/kb/indicator-catalog.md:693:  ... Gemma was extracting 0-1 real confluence factors per video.
+     The 2026 institutional standard is **≥3 factors per strategy**.
+```
+
+★★★ **The KB card repeats the standard VERBATIM. `transcript-extractor.md:169` is the line R-429/v4 targets for "drop or re-found"; `kb/indicator-catalog.md:693` is not named anywhere in v4, R-427 or R-429.** ★★★★★ **A remedy applied to `:169` alone is `FIX THE INSTANCE, NOT THE CLASS` — this desk's standing law — and it would leave the treatment arm still instructed to hit the floor, which makes the ablation UNINTERPRETABLE rather than merely weaker.**
+
+★★★★★ **(2) BOTH CARRIERS ARE GATED BEHIND ONE FLAG, AND THE PAIRING IS DELIBERATE.** [MEASURED, executable lines — not comments]
+
+| surface | file:line | resolves to |
+|---|---|---|
+| KB card manifest for `transcript_extractor` | `src/server/services/model-router.ts:511` | `LEGACY==="true" ? [schema-snapshot, kb/indicator-catalog.md] : []` |
+| prompt selector (TS) | `model-router.ts:2317`, `:2336` | `?? "false"` |
+| prompt selector (Python) | `src/engine/extraction/pilot_conveyor.py:550` | `os.environ.get(..., "false")` → `transcript-extractor.md` **iff** legacy, else `transcript-extractor-minimal.md` |
+
+★★ **`model-router.ts:502-509` states the intent in the desk's own preferred form — *"legacy flag flips BOTH prompt AND KB cards atomically."*** ★ So the two carriers are not independent: **either both load, or neither does.**
+
+★★★★★ **(3) THE FLAG IS UNSET IN BOTH TREES → BOTH CARRIERS RESOLVE OFF.**
+
+```
+$ ls -la .env                                          -> 23374 B  (exists)
+$ ls -la <executing-tree>/trading-forge/.env           -> 23239 B  (exists)
+$ grep -n TRANSCRIPT_EXTRACTOR_USE_LEGACY <each>       -> no match in EITHER
+```
+★★★ **CONTROL PROBE, because an empty grep over a wrong path is not an absence: both `.env` files were `ls`-confirmed non-empty before the grep, and the same token DOES match in `.env.example:79`.** ★★ Default therefore governs: **`false` → minimal prompt, ZERO KB cards.**
+
+★★★★★ **(4) THE PRODUCTION-DEFAULT PROMPT CARRIES NO FLOOR — IT CARRIES THE OPPOSITE.** [READ, not grepped — `transcript-extractor-minimal.md:233-260`, §8 `confluences[]`]
+> *"List EVERY condition the speaker says must be TRUE… **If the speaker has NO explicit conditions, return `[]` (empty is honest** — a kb_inferred safety net will fire downstream)."*
+
+★★ **No numeric floor, no re-scan instruction, no inclusion bias.** ★ Corroborated independently at `AGENT-LOGS.md:379` (*"production default; v10 `transcript-extractor.md` only under …=true"*).
+
+★★ **(5) `backtests_total = 0`** — read from the retained census itself, not carried. **Invariant #6 holds.**
+
+### ★★★★★ §2 — THE JOIN I REFUSED TO MAKE, AND IT IS THE WHOLE REPORT
+
+★★★★★ **I found a real extractor pin and it was the convenient answer:**
+```
+docs/replay-results/h1-scripts/pilot-run/phase1_summary.json
+  -> gemma4:e4b-it-qat:minimal-8field-pass-l:content-c37f24c1c01f3ad4
+```
+★★★ **`minimal` mode — which would have let me write "the quota was not loaded; the C8 attribution is misattributed." I did not write it, because the pin belongs to the PILOT population and the C8 finding belongs to the CENSUS population, and I had not shown they are the same set.**
+
+```
+census videos (pop120_census.json)      : 40
+pilot-run videos (preps/*.pkl)          : 16
+INTERSECTION                            : 0
+```
+★★★★★ **ZERO. THE TWO POPULATIONS ARE DISJOINT. The pin says NOTHING about how the census's 40 videos were extracted.** ★★★ **`THE JOIN KEY IS THE CLAIM` — the shape convicted six times at this desk, and it was one sentence away from being seven.**
+
+★★★ **AND THE CENSUS CANNOT SELF-REPORT.** Its row schema is `[strategy_id, name, lifecycle_state, envelope_keys, spec_is_dict, error, video, transcript_chars, direction, refused, refusals, warnings, bindings, executable_spine_count]` — **no extractor pin, no prompt hash, no mode.** ★★ The retention manifest says so itself at `CENSUS-REPRODUCIBILITY-MANIFEST-2026-07-29.md:150`: *"`transcript_chars` is absent/None on `120 of 120` rows… **No manifest field should be read as a provenance guarantee**."*
+
+★★★★★ **SO THE ANSWER IS `unknown`, IN EXACTLY THE SENSE R-455 §3 PROTECTED WITH `unknown-dbtime`: the census's extractor mode is NOT RECOVERABLE FROM THE ARTIFACT. It is settleable only from OUTSIDE it — extraction run logs or the DB. I did not invent one, and I will not.**
+
+### ★★★★★ §3 — WHAT THIS DOES TO PREREQUISITE #1, AND WHY IT IS A RULING
+
+★★★ **"Enumerate the consumers of the `≥3` quota" has TWO different correct answers, and which is correct depends on the fact above:**
+
+| if the census was produced… | then the quota is… | and #1 enumerates… |
+|---|---|---|
+| **LEGACY mode** | live in that evidence, via **both** carriers | consumers of a LIVE instruction — the full closure, and the remedy must cover `:693` too |
+| **MINIMAL mode (the default)** | **not loaded at all** when the evidence was made | consumers of a **DORMANT** instruction — and v4's C8 cause attribution needs re-derivation before #2's ablation is designed |
+
+★★★★★ **THIS IS NOT MINE TO PICK. Choosing the convenient branch is the exact failure worker-execution §3 forbids — "if a test cannot distinguish two explanations, say so and escalate rather than picking the convenient one."** ★★★ **It also lands on a live desk law: `A WRONG MECHANISM GETS OBEYED` — an unmeasured MECHANISM claim ("the C8 cause is the extraction brief") is 4 of 8 recorded desk errors, and it owes its own test.**
+
+★★★ **THE ONE MEASUREMENT THAT SETTLES IT, named so it can be ordered rather than debated:** recover the extractor mode for the census's 40 video IDs from a source OUTSIDE the census — extraction run logs, or the strategies table's own provenance columns. **If it is unrecoverable, that is itself the finding, and #2's ablation must be designed to establish the quota's causal role rather than assume it.**
+
+### ★★ §4 — SECONDARY, AND IT IS A `CAPTION-IS-A-CLAIM` DEFECT
+
+★★★ **`src/server/routes/agent.ts:601` asserts, as justification for re-using the `transcript_extractor` role:** *"KB cards (strategy-schema-snapshot + indicator-catalog) already attached."*
+★★★★★ **[MEASURED] UNDER PRODUCTION DEFAULTS THAT COMMENT IS FALSE — `KB_MANIFEST.transcript_extractor` resolves to `[]`.** ★★ **It is a COMMENT, not an executable path, so it injects nothing** (a grep matching only comments is not a verification — I checked the executable line). ★ **But it is a false statement a reader will act on, sitting directly above the route that re-uses this role for web-markdown extraction. Cheap to correct; I have NOT corrected it — it is outside my task and the desk owns whether it is touched.**
+
+### §5 — WHAT I DID **NOT** MEASURE
+
+★★★ **NO CONSUMER CLOSURE WAS COMPUTED OR PUBLISHED. The deliverable of #1 is NOT delivered, and nothing in this report should be read as a partial version of it.** ★★ I did not build the closure instrument, did not enumerate the TS/Python consumer set, and did not name covered/excluded surfaces — because the boundary depends on §3's ruling.
+★ Also unmeasured: whether any consumer applies a numeric `>= 3` test (I saw `min_factors_satisfied` thresholds and an `extraction-quality-gate` emitting `no_real_confluence_factors`, but I did **not** verify any of them against the value `3`) · whether the executing tree's copies of these files match the campaign tree's (the R-415 lane divergence is open and I did not re-open it) · whether `.env` is even the file the tower's process loads.
+
+### §6 — DISPOSITION
+
+**RECOMMENDATION: `BLOCKED`** — not on effort, on a premise. **Prerequisite #1 as written presumes a quota-state that has not been established.**
+★★★ **NEXT SMALLEST TASK (one, not a roadmap): rule which branch of §3's table #1 enumerates against — or authorize me to spend one bounded probe recovering the census's extractor mode from the extraction run logs / DB provenance columns.** ★★ I can start that probe immediately on your word; it is read-only and does not touch the census.
+★★ **I did NOT modify `src/**`, did not re-run or regenerate the census, did not re-extract, and did not implement C8.** Retention directory read, never written — still `-r--r--r--`. **`backtests_total = 0`.**
+
+---
+
 ## AR-436 · 2026-07-29 · **START-RECEIPT — FRESH WORKER SEATED. ★★★ AND I OPEN WITH A DEFECT IN MY OWN DISPATCH, NOT IN THE WORK: THE NEWEST RULING'S `★ WORKER — START HERE` BLOCK IS **DISCHARGED, NOT MISSING** — R-455's four items were delivered by AR-433/434 before the swap. I HAVE NO OPEN DISPATCH, SO I AM TAKING THE QUEUE'S TOP WORKER-OWNED ITEM RATHER THAN IDLING ON A DESK.**
 
 **RULING ID:** R-455 (discharged) · **TASK ID:** AR-436 · **STATUS:** START-RECEIPT · **SEAT:** fresh worker, cold-started this session.
