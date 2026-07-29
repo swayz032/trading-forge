@@ -4,6 +4,49 @@
 
 ---
 
+## AR-407 · 2026-07-29 · ★★★ **THE RUN IS VOID BY YOUR OWN PRE-REGISTERED CRITERION — AND THE VOID IS THE ANSWER. ON HOLDOUT-26 THE DETERMINISTIC RULES DECIDE `4.1%` OF CONDITIONS AND FALL BACK ON `95.9%`.** ★★★ **SO FLIPPING THE FLAG TODAY WOULD CHANGE ~4% OF LABELS, LEAVE ~96% TOPOLOGY-ASSIGNED, AND STAMP A SEMANTIC-CLASSIFIER PROVENANCE ON ALL OF THEM.** ★★★ **THE CONTAMINATION IS VISIBLE IN THE NUMBERS: 11.3% FIRED ON THE 14 DESIGN VIDEOS vs 4.1% ON THE 26 CLEAN ONES — A 2.75× GAP A POOLED NUMBER WOULD HAVE HIDDEN.** ★★ **AND THE ONE CLEAN POSITIVE: ARM B FIRES ON `0 of 2351` — WITHHOLDING THE TEACHER'S WORDS DROPS THE CLASSIFIER TO ZERO, SO EVERY DECISION IT MAKES IS SOURCE-DRIVEN**
+
+**RULING ID:** R-434 / R-435 · **ARTIFACT:** `docs/designs/SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md` (freeze + mechanical results) · **RECOMMENDATION:** **APPROVAL_REQUESTED — and the migration as scoped does NOT survive this result; see the recommendation at the end.**
+
+**FREEZE:** five sha256 hashes (labeller · flag/topology file · resolver · split file · harness) · the DEV-14 / HOLDOUT-26 partition **derived mechanically from the split file, not hand-listed** · the CONTROL line the run published · **and the no-tuning-on-HOLDOUT covenant written INTO the artifact.** Read-only throughout; **[MEASURED] `backtests total = 0`** at dump time.
+
+### ★★★ THE NUMBERS
+
+| | DEV-14 | HOLDOUT-26 |
+|---|---:|---:|
+| conditions / videos | 575 / 14 | 1776 / 26 |
+| **ARM A rules fired** | **65 (11.3%)** | ★★★ **72 (4.1%)** |
+| ★★★ **`LEGACY_FALLBACK`** | **510 (88.7%)** | ★★★ **1704 (95.9%)** |
+| ARM B rules fired | **0** | **0** |
+| `UNCLASSIFIED` / `ERROR` | 0 | 0 |
+| per-video fired-rate (min/median/max) | 0.0 / 10.7 / 25.8% | 0.0 / 3.8 / 13.8% |
+
+**(1) VOID, on your own criterion — *"a material share of ARM A decisions used `LEGACY_FALLBACK`."* 95.9% is not material, it is nearly all of it.** ★★★ **The deterministic rules cannot replace the topology heuristic alone: every decline falls through `graph-to-engine.ts:100` to the exact expression the migration exists to delete. Rule 6 — gemma adjudication, async, network I/O — carries ~96% of real conditions and is therefore ON the critical path, not a refinement.**
+
+**(2) THE CONTAMINATION IS MEASURABLE: 11.3% vs 4.1%, a 2.75× gap**, and the per-video medians (10.7% vs 3.8%) say it is not one outlier carrying an aggregate. ★★★ **That is the signature of rules tuned to their own design text. The pooled 40-video figure is 5.8% and would have concealed it entirely — which is exactly why you forbade pooling, and it earned its keep on the first run.**
+
+**(3) THE CLEAN POSITIVE, and it is the one thing that went right: ARM B fires on `0 of 2351`.** Withholding the source drops the classifier from 4.1% to **0.0%**, so **100% of ARM A's decisions are source-driven and the `A≠B` set is exactly the fired set.** ★★ **The by-shape check passes its own discriminator too — fired-rate varies by evidence shape (`range` 19.3% · `brace-set` 9.8% · `plain` 7.1% · `verbatim/short` 3.0%) and `A≠B` equals `fired` in every shape. The pointer resolution demonstrably changed what the labeller saw; §2a's false-green did not fire.**
+
+### ★★ A SCOPE CORRECTION I OWE ON MY OWN HARNESS
+
+Where rules fired (137), the old roles include **31 `trigger` + 5 `invalidation`**. ★★★ **Those are OUT OF THE PRODUCTION PATH: `resolveConditionRole` is called only for non-terminal, non-invalidation atoms — `trigger`/`invalidation` are TYPE-assigned at `:142-145` and never reach the classifier. My harness classified everything, so the applicable fired population is 101, not 137.** ★ I report the harness's actual behaviour and name the gap rather than silently filtering to make the number look cleaner.
+
+### NOT IN THIS DELIVERABLE — per R-435, yours
+
+★★★ **No accuracy, no confusion matrix, none of the five safety-critical error rates.** They need ground truth per condition; doer ≠ grader. **The frozen complete input is `shadow_rows.json` (2351 rows, every field the grader needs, decision path on every row).** It sits in the session scratchpad and is **NOT committed — it embeds live operator data.** ★ Say the word and I attach it, or it regenerates deterministically from the five frozen hashes.
+
+**Files changed:** the freeze/results artifact (new) · this report. **No code, no flag, no artifact mutation, no DB write.**
+**Remaining uncertainty:** ★ **[NOT MEASURED]** the gemma rule-6 margin — **now the critical path.** ★ **[NOT MEASURED]** class balance on HOLDOUT-26 (`mandatory` 46 vs `contextual` 7 — the rare classes look too thin to convict). ★ **[NOT MEASURED]** whether normalizing the resolved clause would raise the fired rate. ★ **[NOT MEASURED]** freeze status of the `extraction-100` worktree.
+**Risk:** none — read-only.
+
+### ★★★ MY RECOMMENDATION, WHICH IS NOT THE ONE THE PACKET WAS BUILT TOWARD
+
+**The semantic-role migration as scoped — "graduate the deterministic classifier" — does not survive this run.** At 4.1% coverage it is not a replacement; it is a 4% patch that would relabel the provenance of the other 96%. ★★★ **The honest options are: (a) put rule-6 gemma adjudication ON the critical path and evaluate THAT, accepting network I/O and non-determinism in a labelling instrument, or (b) re-key the consumer on atom TYPE — which the producer already assigns semantically and which `spec-timeframe-recovery.ts` solved this exact way on 2026-07-03 — and treat `spine`/`confluence` as diagnostics.** ★★ **I recommend (b) is costed before (a) is attempted, and I am not proposing either be implemented: no refusal has been softened and nothing has been switched on.**
+
+**Next smallest task (ONE):** the class-balance check on HOLDOUT-26 — if `contextual` (7) and `alternative` (8) are too thin, no grading of those classes can convict regardless of who grades it, and that is worth knowing before a grader is spent.
+
+---
+
 ## AR-406 · 2026-07-29 · **START-RECEIPT — R-434: FREEZE the protocol, then RUN the two-arm shadow evaluation.** ★★ **AND ONE SCOPE PROBLEM I AM NAMING BEFORE I START, NOT AT DELIVERY: HALF YOUR STEP-4 METRIC LIST NEEDS GROUND TRUTH, AND I AM THE DOER**
 
 **RULING ID:** R-434 · **ARTIFACTS:** a FREEZE artifact (hashes, the 14/26 partition, the no-tuning-on-HOLDOUT covenant) + the two-arm run's per-condition table and rates. **ETA ~45–60 min.**
