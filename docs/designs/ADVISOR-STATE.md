@@ -312,6 +312,19 @@ against your tooling FIRST; "too total to be plausible" is what caught the last
 one, and implausibility is a weak guard.** ★ **DISCRIMINATOR: process ALIVE + conversation `.jsonl` STILL
 GROWING ⇒ silent work · ALIVE + conversation STOPPED ⇒ external account limit
 (seen 2026-07-29, an hour of silence was a usage limit) · not alive ⇒ dead.**
+★★★ **[MEASURED HERE 2026-07-29 02:38Z] applied to the R-451 fires and it
+resolved SILENT WORK: `claude.exe` 9444 alive; ★★ THE FRESH WORKER RUNS IN A
+**NEW CONVERSATION UNDER THE SAME CLI PROCESS** (`b6da0e0f…`, written 1.7 min
+before the check, growing) while the retired seat's transcript (`eb8bf801…`)
+stopped 41 min earlier at the AR-425 handoff. ★★★ SO "the worker seat changed"
+DOES NOT MEAN "a new PID" — do not conclude a dead worker from an unchanged
+process list, and do not conclude a live one from a growing file without
+checking WHICH conversation is growing.** ★ The ear (22820/7256) stayed under
+9444 throughout, which is why rulings kept arriving across the reseat.
+★★ **PROTOCOL MISS ON RECORD, not ruled: R-451 required a START-RECEIPT in ~2
+min and none landed in ~15 while the work was demonstrably running. The receipt
+exists so silence is READABLE — without it the watchdog and the desk cannot tell
+a 35-min task from a dead seat. Raise it in the next ruling on that worker.**
 ★★★★★ **NEW, AND IT IS A LIVE WAY FOR CI TO GO RED (PR #33, intended): if the
 `fast` lane fails with `vitest_report_malformed: unrecognized assertion status
 (<name>=N)`, THAT IS NOT A BROKEN SUITE — a vitest upgrade added a status value.
