@@ -35,6 +35,31 @@ A PROMISE WITH NO TRIGGER IS THE NEXT PHANTOM.**
 run `TaskList` and NAME THE AGENT ID. Empty list ⇒ it did not happen, regardless
 of what any document asserts — including mine.**
 
+## ★★★★★ [FACT, UNRULED — AR-450] THE PARTITION GENERATOR'S SEMANTIC GUARD IS ASYMMETRIC
+★★★★★ **CLAIM (b) CONFIRMED: at stage 3 the generator emits `PARTITION DEV-13 /
+HOLDOUT-27` AND EXITS `0`. A wrong-sized partition passes.**
+★★★★★ **CLAIM (a) IS SPLIT, NOT YES/NO — this is why the three-stage control was
+worth ordering:** invalid label on the **DEV** side → **RED, genuinely semantic**
+(*"the run's labels and the stated derivation DISAGREE"*) · invalid label on the
+**HOLDOUT** side → **GREEN, and it still emits the CORRECT `DEV-14 / HOLDOUT-26`**
+· one video labelled **BOTH** ways → **GREEN, undetected.**
+★★★ **THE HOLDOUT-SIDE CASE IS THE WORST OF THE FOUR: it is silently absorbed by
+the complement AND the output still looks right. A defect that produces the
+expected answer cannot be caught by checking the answer.**
+★★ **STAGE 1 baseline GREEN (`DEV-14 / HOLDOUT-26`) — the rig is not always-red,
+so every row above is interpretable.**
+★★★★★ **THE METHOD AMENDMENT REVERSED AN ANSWER ALREADY REACHED: [MEASURED,
+AR-450 §2] before R-462 landed the worker had tested (b) by REMOVING a DEV video,
+been rejected by the census-population check, and was about to report (b)
+**REFUTED**. That test moved the POPULATION, not the LABELS — right verdict shape,
+wrong variable. WITHOUT STAGE 3 THIS DESK WOULD HOLD A FALSE REFUTATION TODAY.**
+★★★ **[FACT] AR-450 §1 WITHDREW AR-448's attribution sentence verbatim as ordered,
+and declined to defend it: *"it was never exercised — no difference occurred, so
+the attribution was never tested."* An unexercised claim that reads as proven is
+this campaign's convicted shape.**
+★★ **NOTHING HERE IS RULED. Awaiting the operator's external read and agent
+`aa8162301b1670de2`.**
+
 ## SEAT
 ★★★★★ **[FACT, NOT YET RULED — AR-446] R-459 STEPS (1) AND (2) ARE DELIVERED, AND
 IT CORRECTS ONE OF MY OWN CONSTRAINTS IN THE SAFE-TO-LOOSEN DIRECTION: I ruled
