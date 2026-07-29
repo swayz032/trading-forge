@@ -47,8 +47,13 @@ from src.engine.indicators.fvg_native import compute_fvg_signal
 from src.engine.indicators.market_structure import detect_swings
 from src.engine.indicators.mss_native import compute_mss_signal
 from src.engine.indicators.sweep_native import compute_sweep_signal
-from src.engine.role_demotion_audit import get_classifications_for_video, is_demotable
+from src.engine.role_demotion_audit import get_classifications_for_video
 from src.engine.session_windows import is_in_killzone
+from src.engine.spec_execution_preflight import (
+    MANDATORY,
+    UnresolvedMandatoryRuleError,
+    resolve_rule_class,
+)
 from src.engine.spec_family_bindings import (
     BindingPlan,
     ConditionBinding,
@@ -606,17 +611,48 @@ class SpecConditionStrategy(BaseStrategy):
         per_condition_bool: dict[str, np.ndarray] = {}
 
         for b in spine_bindings:
+            # ★★★ ORDER IS LOAD-BEARING (R-420 edit C, corrected at build time).
+            # The unbindable check MUST come before the `executed` skip. Every
+            # unbindable binding also carries executed=False (measured: session-
+            # unrecognized, orphan-zone-refused, control-flow RESET/EXCEPTION and
+            # unknown-type all return bindable=False + executed=False), so with
+            # the old ordering an unbindable MANDATORY rule exited at the
+            # `executed` guard and was silently dropped from the AND entirely —
+            # and the `np.ones` pass-through below was never reached at all.
+            # Dropping the rule and substituting True differ in mechanism but
+            # not in consequence: the strategy trades where the source forbade.
+            #
+            # EXIT_HINT is the case this ordering must NOT catch: it is
+            # bindable=True + executed=False (provenance-only), so it still
+            # falls through to the `executed` skip below, unchanged.
+            if not b.bindable:
+                # ─── The belt to the preflight's braces ─────────────────────
+                # An uncompilable MANDATORY rule is neither true nor false; it
+                # is an unresolved execution error. The backtest preflight
+                # should already have refused this run — we refuse again here
+                # because a guard that can regress needs a second check at the
+                # point of use (a moved preflight, a new caller constructing a
+                # strategy directly).
+                if resolve_rule_class(b.role, optional_evidence=False) == MANDATORY:
+                    raise UnresolvedMandatoryRuleError(
+                        f"strategy={self.name!r} spec_hash={self.spec_hash!r}: "
+                        f"mandatory rule [{b.role}/{b.type}] {b.condition_id} "
+                        f'"{b.object}" has no executable predicate '
+                        f"(reason={b.reason or 'unbindable'}). Refusing to compute "
+                        "rather than running without it."
+                    )
+                # Reached only for a rule positively classified OPTIONAL, whose
+                # omission is a DECISION rather than a fallthrough. Recorded by
+                # the preflight as OPTIONAL_NOT_APPLIED — never as "an
+                # unbindable rule converted to true".
+                per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
+                continue
+
             if not b.executed:
                 # EXIT_HINT (and any other non-executed family): provenance
                 # only, per the module docstring's hard boundary — MUST NOT
                 # enter the gating loop or the trace's "conditions" list at
                 # all, not even as a harmless always-True pass-through.
-                continue
-
-            if not b.bindable:
-                # Permitted-through unbound spine condition (ratio allowed it) —
-                # pass-through, never gates. Honest default per module docstring.
-                per_condition_bool[b.condition_id] = np.ones(n, dtype=bool)
                 continue
 
             if b.primitive == FVG_PRIMITIVE_NAME:
