@@ -147,8 +147,24 @@ jobs:
       # BLOCKING (2026-07-12): baseline frozen from CI run 29182590738 (189 known-failing / 12207 collected).
       # Fails CI on ANY new vitest failure or a collectionFloor breach (<12000). Paydown = shrink
       # ci/baseline-failures.json over time. RED-proof verified locally (new-failure→RED, floor→RED, 189→GREEN).
+      # SELF-CLEANING (2026-07-29, R-444): --fail-on-stale makes CI RED when a
+      # baselined entry provably PASSES again, so the allow-list shrinks by force
+      # instead of by someone remembering. It had grown to 189 entries of which
+      # 180 no longer failed.
+      #
+      # ★ It fails ONLY on entries measured to have RAN AND PASSED. Entries that
+      #   merely "did not fail" — skipped, or absent from the report — are
+      #   reported as BASELINE_UNRESOLVED and do NOT fail this gate, because a
+      #   test that never ran has not been proven fixed. That distinction is the
+      #   whole point: without it this flag would demand the deletion of safety
+      #   nets for tests that never executed (measured: 24 of 156 were exactly
+      #   that).
+      #
+      # Sequenced AFTER the 132-entry shrink in this same PR, so it cannot fire
+      # red on arrival: verified against the real Linux artifact from run
+      # 30422166825 — fixedFailures 0, unresolvedEntries 24, exit 0.
       - name: Baseline gate — vitest known-failures (BLOCKING — new failures fail CI)
-        run: node ci/compare-baseline.mjs --suite vitest --results ci/vitest-results.json
+        run: node ci/compare-baseline.mjs --suite vitest --results ci/vitest-results.json --fail-on-stale
 
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4

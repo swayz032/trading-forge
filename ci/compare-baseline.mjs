@@ -69,13 +69,45 @@ export function compareBaseline({ results, baseline }) {
   const known = new Set(stableStrings(knownFailureIds(baseline.knownFailures)));
   const actual = new Set(stableStrings(results.failures));
   const newFailures = [...actual].filter((failure) => !known.has(failure)).sort();
-  const fixedFailures = [...known].filter((failure) => !actual.has(failure)).sort();
+
+  // ★★★ "DID NOT FAIL" IS NOT "PASSED" (R-444).
+  // A test that never ran also did not fail. The previous implementation
+  // classified every known entry outside `actual` as `fixedFailures`, so a
+  // silently-skipped or entirely-absent test presented as "fixed" and was a
+  // candidate for deletion from the baseline — which would have removed its
+  // safety net on the strength of it never having executed. Measured: of 156
+  // such entries, 24 had NOT run (23 absent from the report, 1 skipped).
+  //
+  // So a baselined entry is only FIXED when it is positively observed to have
+  // PASSED. Everything else that is not currently failing is UNRESOLVED, and
+  // unresolved entries are reported but never proposed for removal.
+  //
+  // ★ FAIL-CLOSED: if the parser could not supply a passed-set (`results.passed`
+  //   absent — an older report shape), nothing can be proven to have run, so
+  //   NOTHING is called fixed and everything not-failing is unresolved.
+  const passed = Array.isArray(results.passed)
+    ? new Set(stableStrings(results.passed))
+    : null;
+  const notFailing = [...known].filter((id) => !actual.has(id));
+  const fixedFailures = passed === null
+    ? []
+    : notFailing.filter((id) => passed.has(id)).sort();
+  const unresolvedEntries = passed === null
+    ? notFailing.sort()
+    : notFailing.filter((id) => !passed.has(id)).sort();
+
   const floorBreached = results.collected < baseline.collectionFloor;
+  // `staleBaseline` is the self-cleaning signal: entries that provably no longer
+  // fail. It deliberately EXCLUDES unresolved ones, so the guard can be blocking
+  // without going red over tests whose status we cannot establish.
+  const staleBaseline = fixedFailures.length > 0;
 
   return {
     verdict: newFailures.length > 0 || floorBreached ? "RED" : "GREEN",
     newFailures,
     fixedFailures,
+    unresolvedEntries,
+    staleBaseline,
     collected: results.collected,
     floorBreached,
     resultsMalformed: false,
@@ -89,6 +121,7 @@ export function parseVitestJson(report) {
   }
 
   const failures = [];
+  const passed = [];
   let collected = 0;
   for (const file of report.testResults) {
     if (!Array.isArray(file?.assertionResults)) {
@@ -97,16 +130,22 @@ export function parseVitestJson(report) {
     const fileName = basename(String(file.name ?? file.testFilePath ?? "unknown-test-file"));
     for (const assertion of file.assertionResults) {
       collected += 1;
+      const fullName = assertion?.fullName
+        ?? [...(assertion?.ancestorTitles ?? []), assertion?.title].filter(Boolean).join(" > ")
+        ?? "unknown test";
+      const id = `${fileName} > ${fullName}`;
       if (assertion?.status === "failed") {
-        const fullName = assertion.fullName
-          ?? [...(assertion.ancestorTitles ?? []), assertion.title].filter(Boolean).join(" > ")
-          ?? "unknown test";
-        failures.push(`${fileName} > ${fullName}`);
+        failures.push(id);
+      } else if (assertion?.status === "passed") {
+        // ★ ONLY an explicit "passed" counts as having run successfully.
+        //   "skipped"/"todo"/"pending" are deliberately excluded — see the
+        //   fixed-vs-unresolved split in compareBaseline().
+        passed.push(id);
       }
     }
   }
 
-  return { failures: stableStrings(failures), collected };
+  return { failures: stableStrings(failures), passed: stableStrings(passed), collected };
 }
 
 function xmlAttribute(record, name) {
@@ -129,12 +168,19 @@ export function parsePytestJunit(xml) {
   }
 
   const failures = [];
+  const passed = [];
   for (const record of records) {
+    const id = `${xmlAttribute(record, "classname")}::${xmlAttribute(record, "name")}`;
     if (/<(?:failure|error)\b/.test(record)) {
-      failures.push(`${xmlAttribute(record, "classname")}::${xmlAttribute(record, "name")}`);
+      failures.push(id);
+    } else if (!/<skipped\b/.test(record)) {
+      // ★ A JUnit <testcase> with neither failure/error NOR <skipped> ran and
+      //   passed. Skipped ones are excluded for the same reason as vitest's:
+      //   they did not fail because they did not run.
+      passed.push(id);
     }
   }
-  return { failures: stableStrings(failures), collected: records.length };
+  return { failures: stableStrings(failures), passed: stableStrings(passed), collected: records.length };
 }
 
 function cliArg(name, fallback) {
@@ -165,6 +211,32 @@ function runCli() {
   console.log(JSON.stringify(verdict, null, 2));
   if (verdict.fixedFailures.length > 0) {
     console.log(`BASELINE_SHRINK_NEEDED=${verdict.fixedFailures.length}`);
+  }
+  if (verdict.unresolvedEntries.length > 0) {
+    // Reported, never blocking: these did not run, so their status is unknown
+    // rather than good. Removing them would be deletion-on-absence.
+    console.log(`BASELINE_UNRESOLVED=${verdict.unresolvedEntries.length}`);
+  }
+
+  // ★★★ SELF-CLEANING GUARD (R-444), opt-in via --fail-on-stale.
+  //   A baseline that can only GROW turns every future regression in its
+  //   entries into a silent pass. This makes a provably-stale entry fail CI, so
+  //   the allow-list shrinks by force instead of by someone remembering.
+  //   Opt-in rather than default so it lands AFTER a shrink and cannot fire red
+  //   on arrival, and so existing callers keep their current contract.
+  const failOnStale = process.argv.includes("--fail-on-stale");
+  if (failOnStale && verdict.staleBaseline) {
+    const n = verdict.fixedFailures.length;
+    console.error(
+      `BASELINE_STALE_RED: ${n} baseline ${n === 1 ? "entry" : "entries"} `
+      + `${n === 1 ? "now passes" : "now pass"} and must be removed from `
+      + "ci/baseline-failures.json. Each listed test RAN and PASSED on this run "
+      + "(entries that merely did not run are reported as BASELINE_UNRESOLVED and "
+      + "do NOT fail this gate):",
+    );
+    for (const id of verdict.fixedFailures) console.error(`  - ${id}`);
+    process.exitCode = 1;
+    return;
   }
   process.exitCode = verdict.verdict === "GREEN" ? 0 : 1;
 }

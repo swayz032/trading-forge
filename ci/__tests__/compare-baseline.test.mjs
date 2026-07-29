@@ -37,13 +37,49 @@ describe("compareBaseline", () => {
   });
 
   it("stays green but reports fixed baseline failures", () => {
+    // ★★★ UPDATED BY R-444. This previously passed `{failures: [], collected: 5}`
+    //     with no passed-set and expected the entry to be reported FIXED — which
+    //     encoded the exact defect: "did not fail" was treated as "passed". A
+    //     never-run test also does not fail. The entry is now only FIXED when it
+    //     is positively observed to have PASSED.
     const result = compareBaseline({
-      results: { failures: [], collected: 5 },
+      results: { failures: [], passed: ["a.test.ts > old bug"], collected: 5 },
       baseline,
     });
 
     expect(result.verdict).toBe("GREEN");
     expect(result.fixedFailures).toEqual(["a.test.ts > old bug"]);
+    expect(result.unresolvedEntries).toEqual([]);
+    expect(result.staleBaseline).toBe(true);
+  });
+
+  it("DISCRIMINATOR: a baselined test that did NOT run is UNRESOLVED, never fixed", () => {
+    // ★★★ The control that gives the test above its meaning. Same inputs except
+    //     the entry is absent from the passed-set (skipped, or never collected).
+    //     If this ever reports `fixedFailures`, the guard would propose deleting
+    //     the safety net for a test that never executed.
+    const result = compareBaseline({
+      results: { failures: [], passed: ["b.test.ts > unrelated"], collected: 5 },
+      baseline,
+    });
+
+    expect(result.verdict).toBe("GREEN");
+    expect(result.fixedFailures).toEqual([]);
+    expect(result.unresolvedEntries).toEqual(["a.test.ts > old bug"]);
+    expect(result.staleBaseline).toBe(false);
+  });
+
+  it("FAILS CLOSED when the parser supplies no passed-set at all", () => {
+    // An older/unknown report shape proves nothing ran, so nothing may be
+    // called fixed — everything not-failing becomes unresolved.
+    const result = compareBaseline({
+      results: { failures: [], collected: 5 },
+      baseline,
+    });
+
+    expect(result.fixedFailures).toEqual([]);
+    expect(result.unresolvedEntries).toEqual(["a.test.ts > old bug"]);
+    expect(result.staleBaseline).toBe(false);
   });
 
   it("is red when collection falls below the frozen floor", () => {
@@ -79,7 +115,10 @@ describe("compareBaseline", () => {
       ],
     };
 
+    // ★ R-444: the parser now also returns the PASSED set, so "did not fail"
+    //   can be distinguished from "ran and passed" downstream.
     expect(parseVitestJson(report)).toEqual({
+      passed: ["a.test.ts > a ok"],
       failures: ["a.test.ts > a bad"],
       collected: 2,
     });
@@ -96,10 +135,26 @@ describe("compareBaseline", () => {
       <testcase classname="t_b" name="boom"><error>x</error></testcase>
     </testsuite>`;
 
+    // ★ R-444: `passed` excludes failures/errors AND <skipped> testcases.
     expect(parsePytestJunit(xml)).toEqual({
       failures: ["t_a::bad", "t_b::boom"],
+      passed: ["t_a::ok"],
       collected: 3,
     });
+  });
+
+  it("DISCRIMINATOR: a pytest <skipped> testcase is not counted as passed", () => {
+    // Skipped is the pytest twin of the vitest case above: it did not fail
+    // because it did not run, so it must not license a baseline removal.
+    const xml = `<testsuite tests="2">
+      <testcase classname="t_a" name="ran"/>
+      <testcase classname="t_a" name="never"><skipped/></testcase>
+    </testsuite>`;
+
+    const parsed = parsePytestJunit(xml);
+    expect(parsed.passed).toEqual(["t_a::ran"]);
+    expect(parsed.passed).not.toContain("t_a::never");
+    expect(parsed.failures).toEqual([]);
   });
 
   it("fails closed when pytest output has no testcase records", () => {
