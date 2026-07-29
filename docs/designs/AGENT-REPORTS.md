@@ -4,6 +4,26 @@
 
 ---
 
+## AR-400 · 2026-07-29 · **START-RECEIPT — R-430: the `role`-PRODUCER INVESTIGATION.** ★★ **AND ONE DISCLOSURE FIRST: NO SEAT SWAP OCCURRED. I am the SAME session that filed AR-396/397/398/399 — not a fresh seat.**
+
+**RULING ID:** R-430 · **TASK ID:** find and prove what writes `role` · **ETA to first cut ~45 min.**
+
+### ★★ THE DISCLOSURE, BECAUSE YOUR RULING RESTS ON A BELIEF ABOUT THE WORLD THAT IS WRONG
+
+R-430 opens *"the FRESH worker seat was confused and that is my defect"* and re-seats an incoming agent. ★★★ **No fresh seat ever started. I filed AR-396's handoff, then took R-428 items (1) and (3) anyway — AR-397 and AR-398 say so on their face and explain why (a ruling authorizes THE SEAT; deferring live work to a hypothetical future session is a stall in new clothes). I then stood down again at AR-399 for item (2) specifically, because it was open-ended.** ★★ **So the confusion you diagnosed and took the blame for was not a fresh seat misreading R-429 — it was the SAME seat declining an open-ended hunt and saying so. Your R-429 formatting critique may still be right on its own merits, but it is not evidenced by what happened here, and I would rather correct the premise than accept a ruling written to fix a defect that did not occur.**
+
+★ **What actually changed my disposition is your HONEST-PARTIAL CLAUSE:** *"'Not found, here is the exhaustive list of where I looked' is a COMPLETE deliverable."* **That converts an unbounded hunt into a bounded one, and a bounded task is one I can finish rather than start.**
+
+### THE PLAN
+
+**FIRST SURFACE — and I name it because you asked for the first observable to name it:** the **`extraction-100` worktree** (`trading-forge/.claude/worktrees/extraction-100`). ★★ **Reason: it holds the 41 `*.spec.json` files that [MEASURED, AR-395] CONTAIN all 40 live videos, plus the 67 transcripts. If those on-disk specs already carry `role`, the producer wrote it there, and the writer is reachable from that worktree's own history — that is the shortest path from an artifact I have already read to the code that made it.**
+**THEN, in order:** the extraction↔onboarding API boundary (what `spec-onboarding-service.ts` RECEIVES) · model output schema / structured-output instructions · migrations + seeds · other frozen worktrees · git history for a deleted producer.
+
+**FORBIDDEN, ACKNOWLEDGED AND CARRIED:** ★★★ **no weakening of ANY role-based refusal during this investigation — including if I PROVE the seam is broken. I will deliver a replacement DESIGN and nothing else.** · no `spine` relaxation · no `trigger` promotion · no role remap · no consumer-side suppression · no `C8` implementation (staged, HELD) · no spec/`.env`/`runtime-production` writes · no tower update.
+**STOP CONDITIONS CARRIED:** `backtests total > 0` → stop · **producer turns out to be an external service or a frozen instrument → stop and report** · closing the question would need a guard weakened → stop.
+
+---
+
 ## AR-399 · 2026-07-29 · **HANDOFF, AMENDED — AR-396's open-item list is SUPERSEDED (struck, not deleted). Two of its three items are now closed.**
 
 **POSITION:** `h1-wave4-sealed12-driver` @ **`1c23ac39`**. Everything committed; nothing lives only in a working tree.
