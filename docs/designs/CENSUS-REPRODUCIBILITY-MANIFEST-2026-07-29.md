@@ -176,20 +176,38 @@ executable_spine_count`
 | **copy-shuffle, real census** | 3 rotations → **`1` distinct output — BYTE-IDENTICAL.** |
 | **discrimination (retired `rows[0]` selection, same rotations)** | **`3` distinct outcomes** — 1 completes, 2 raise `KeyError`. **It convicts.** |
 
+### ★★★★★ NAMED LIMITATION — NOT A PASSING CHECK (R-455 §1)
+
+> **`0 of 40 differ` IS A STATEMENT ABOUT CONTENT FIELDS ONLY.**
+> **It must NEVER be cited as "the copies are identical in every respect."**
+>
+> ★★★ **PER-COPY `remediation_class` EQUALITY IS NOT VERIFIABLE IN THIS ARTIFACT.** The
+> classification is stored for ONE representative copy per video, so the check cannot see it at
+> all. This is a REAL HOLE left open by the correct repair — recorded here as a limitation, not
+> resolved by a check that would have to fabricate the comparison.
+>
+> ★★ **CLOSES AT THE SOURCE, NOT HERE: the next census must classify EVERY COPY.** See §8.
+
 ★★ **The copy signature deliberately EXCLUDES `remediation_class`.** [MEASURED] the classification artifact covers exactly **one** copy per video (`40` distinct `strategy_id` over `40` videos), so joining it per-copy compares a classified row against two unclassified ones and manufactures a divergence. ★★★ **The class is a pure function of the fields the signature DOES compare, so content equality entails class equality — but that entailment CANNOT be checked per-copy on this artifact, and that limit is stated here rather than papered over.**
 ★ **A future census SHOULD classify every copy**, which would let the equivalence check cover the class directly.
 
 ## 6 — LOCATION AND RETENTION
 
+★★★★★ **RETENTION IS NO LONGER `NONE`. Ordered by R-455 §3 and executed by AR-432 — by COPY, never by re-running the census.**
+
 | | |
 |---|---|
-| **current location** | producing session's scratchpad, `%TEMP%\claude\C--Users-tonio-Projects-trading-forge\6f1ac257-3b6e-4ceb-8bb1-7411f6a28957\scratchpad\` |
-| **working copy** | AR-427's session scratchpad, `.../b6da0e0f-.../scratchpad/frozen/` (hash-verified identical) |
-| **retention** | ★★★★★ **NONE. Both locations are OS-temp and may be swept without warning.** |
-| **committed?** | **No** — live operator data |
-| **recoverable?** | **Yes, by RE-RUNNING the census** (§2) against the live DB from `runtime-production` @ `a6f92822`. ★★ **A re-run will NOT be byte-identical if the `strategies` table has changed since the snapshot; that is a different census and must be given its own manifest, never reconciled into this one.** |
+| **RETAINED AT** | `C:\Users\tonio\Projects\trading-forge\backups\h1-census\unknown-dbtime-ad4335f0\` |
+| **contents** | `pop120_census.json` · `pop120_classified.json` · `HASHES.txt` · `README.md` (sanitized generation instructions) · a copy of this manifest |
+| **integrity** | ★★ **[MEASURED] both sha256 matched the manifest values AFTER the copy** — the artifact was verified, not `cp`'s exit code. `sha256sum -c HASHES.txt` → `OK`, `OK`. |
+| **permissions** | **READ-ONLY**, and ★★ **RED-PROOFED: an append to `HASHES.txt` was attempted and correctly REFUSED (`UnauthorizedAccessException`), with the census hash unchanged afterwards.** A flag that has not been shown to block a write is not a protection. |
+| **in git?** | **No.** ★★★ **[VERIFIED, not assumed] this path lies outside every git working tree under `Projects\` — the canonical checkout is the NESTED `trading-forge\trading-forge`. The payload cannot be committed by accident.** Only this manifest and derived outputs are in git. |
+| **off-machine backup** | ★★ **NOT ARRANGED — this is one disk.** Flagged for the operator per R-455 §3; deliberately not attempted by the worker. |
+| **origin copies** | producing session's scratchpad `%TEMP%\claude\...\6f1ac257-...\scratchpad\` and AR-427's `...\b6da0e0f-...\scratchpad\frozen\`. ★ **Both remain OS-temp and may be swept; they are no longer the only copies.** |
 
-★★★ **RETENTION POLICY, PROPOSED (needs a ruling — it implies a storage location for operator data and that is not mine to choose):** a census that any ruling depends on should be copied to a **non-temp, backed-up, access-controlled** path at creation, and its manifest committed in the same motion. **Until such a location is named, every census this campaign relies on is one `%TEMP%` sweep from unrecoverable.**
+★★★★★ **THE DIRECTORY NAME CARRIES A NULL ON PURPOSE.** `unknown-dbtime` records that the DB read time is unrecoverable; `ad4335f0` is the census's own content hash. **DO NOT RENAME IT TO A DATE. An unknown labelled `unknown` is a fact; an inferred timestamp is a fabrication that a future reader will cite as provenance.**
+
+★★★ **RE-RUNNING IS NOT RESTORING.** A re-run against today's database yields a **different object** — a new snapshot owed its own manifest and its own directory, **never reconciled into this one.**
 
 ## 7 — KNOWN LIMITS OF THIS MANIFEST
 
@@ -197,4 +215,17 @@ executable_spine_count`
 - ★★ **`[UNMEASURED]`** whether the frozen census still matches today's live `strategies` table.
 - ★ **`[UNRECOVERABLE]`** the DB read timestamp (§2).
 - ★ **`[HONEST NULL]`** no `schema_version` in the payload (§5).
+- ★★★★★ **PER-COPY `remediation_class` EQUALITY IS UNVERIFIABLE HERE** — see §5.6's named limitation. The copy-equivalence result covers CONTENT fields only.
+
+## 8 — FORWARD REQUIREMENTS ON THE NEXT CENSUS
+
+★★★ **Each of these exists because its absence cost something in this one. They belong in the next snapshot's OWN PAYLOAD, so it never inherits these holes:**
+
+1. **UTC read timestamp** — the field whose absence named the retention directory `unknown-dbtime`.
+2. **`schema_version`** — this payload has none; §5 pins the schema by enumeration instead.
+3. **executing-tree commit** — carried in-payload, not only in a manifest written afterwards.
+4. **content hashes** and **a unique snapshot ID**.
+5. ★★★★★ **CLASSIFY EVERY MARKET COPY, not one representative per video.** Today `456` classified rows span `40` distinct `strategy_id` over `40` videos — one copy each — which is exactly why §5.6's limitation exists. **Classifying every copy closes it at the source.**
+6. ★ **Write the snapshot to its retention location AT CREATION**, with its manifest committed in the same motion — not rediscovered in a dead session's `%TEMP%` a day later (AR-427 §0).
+
 - ★★ **The `spec` label is NOT an identifier.** [MEASURED] the canonical labels are `39` distinct over `40` videos — `short_entry_5m` is carried by both `e5HQXYBUW-Q` and `dE4lPhAWke8`. **Join on `video`; never on the spec label.**

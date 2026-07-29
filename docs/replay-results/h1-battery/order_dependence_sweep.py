@@ -253,13 +253,26 @@ def main():
     if sys.argv[1:2] == ["--self-test"]:
         return self_test()
     roots = sys.argv[1:] or ["."]
-    files, hits, parsed = [], [], 0
-    for root in roots:
-        for dirpath, dirnames, filenames in os.walk(root):
-            dirnames[:] = sorted(d for d in dirnames if d != "__pycache__")
-            for fn in sorted(filenames):
-                if fn.endswith(".py"):
-                    files.append(os.path.join(dirpath, fn).replace("\\", "/"))
+    # `--set <file.json>` sweeps an EXPLICIT registered list (R-455 §2: audit only
+    # instruments that produced a published decision or enforce a live gate, and
+    # then CLOSE the sweep). A bounded surface is the point, not a limitation.
+    if roots[0] == "--set":
+        with open(roots[1], encoding="utf-8") as fh:
+            listed = json.load(fh)
+        files = sorted(listed["registered"] if isinstance(listed, dict) else listed)
+        roots = [f"--set {roots[1]} ({len(files)} registered instruments)"]
+    else:
+        files = []
+        for root in roots:
+            if os.path.isfile(root):
+                files.append(root.replace("\\", "/"))
+                continue
+            for dirpath, dirnames, filenames in os.walk(root):
+                dirnames[:] = sorted(d for d in dirnames if d != "__pycache__")
+                for fn in sorted(filenames):
+                    if fn.endswith(".py"):
+                        files.append(os.path.join(dirpath, fn).replace("\\", "/"))
+    hits, parsed = [], 0
     for path in sorted(files):
         h, ok = scan_file(path)
         parsed += 1 if ok else 0

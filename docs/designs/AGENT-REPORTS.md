@@ -4,6 +4,105 @@
 
 ---
 
+## AR-433 · 2026-07-29 · ★★★★★ **ALL FOUR DONE. YOUR §4 STOP DOES **NOT** FIRE AND I ANSWERED IT FROM `git show`, NOT RECALL: AR-429's PROOF WAS COMPUTED WITH THE **CORRECT DIRECTIONAL MAPPING** FOR THAT PAIR, AND I RE-RAN IT WITH THE REPAIRED TOOL — SAME VERDICT, `0` DIFFERENCES.** ★★★★★ **THE SWEEP IS BOUNDED TO `34` REGISTERED INSTRUMENTS BY A MECHANICAL MEMBERSHIP RULE, RUN, PUBLISHED — AND **CLOSED**. I AM NOT PROPOSING TO EXTEND IT.** ★★★ **CENSUS RETAINED BY COPY, HASHES VERIFIED *AFTER* THE COPY, READ-ONLY **RED-PROOFED** BY AN ACTUAL REFUSED WRITE.** ★★ **AND THE ORDERED PATH IS OUTSIDE GIT — VERIFIED, BECAUSE THE CANONICAL CHECKOUT IS A NESTED `trading-forge\trading-forge`**
+
+**RULING ID:** R-455 · **TASK ID:** AR-432 · **BRANCH:** `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **APPROVAL_REQUESTED. The governance lane is closed on my side.**
+
+### ★★★★★ §1 — YOUR §4 STOP CONDITION: DOES NOT FIRE, AND HERE IS THE EVIDENCE
+
+**You asked whether AR-429's `0 differences` verdict was computed BEFORE or AFTER the `c8_conditions → fixed_class_conditions` rename. [MEASURED HERE, `git show 4ed73f11:…unlock_rank_before_after_proof.py`]:**
+
+```python
+RENAMED = {"c8_conditions": "fixed_class_conditions",   # renamed, value must not move
+           "carries_c8": "carries_fixed_class"}
+...
+if b.get(old) != a.get(new):        # OLD name on the BEFORE side, NEW name on the AFTER side
+```
+
+★★★★★ **AR-429 compared the AR-427-era artifact (which genuinely carried `c8_conditions`) against the regenerated one (which genuinely carried `fixed_class_conditions`). THE DIRECTIONAL MAPPING WAS EXACTLY RIGHT FOR THAT PAIR. The verdict was valid when it was made.**
+★★★ **The 80 false findings appeared only in AR-431, when I pointed the same one-directional tool at TWO POST-RENAME artifacts. The bug was always latent; AR-429's comparison was the one orientation in which it could not bite.**
+
+★★★★★ **AND I DID NOT REST ON THAT REASONING — I RE-EXECUTED AR-429's COMPARISON WITH THE REPAIRED, BI-DIRECTIONAL TOOL:**
+
+```
+python unlock_rank_before_after_proof.py <AR-427 original> unlock-distance-rank-2026-07-29.json
+  1. ORDERED video sequence identical : True
+     video SETS identical (A-B = B-A = empty): True  |A-B|=0 |B-A|=0
+  2. invariant-field differences across all 40 rows : 0
+  3. `spec` LABEL changes (the only permitted change) : 40 of 40
+  VERDICT: NO NUMBER MOVED -- label-only change PROVEN
+```
+
+★★ **Same verdict, different instrument, and the `40 of 40` label changes confirm the tool has not gone blind in the other direction. AR-429's proof does not need re-running — and I re-ran it anyway, because "the mapping was correct" is an argument and this is a measurement.**
+★ **Your framing is right and I am adopting it: a comparator that silently treats a RENAMED field as a CHANGED value is an order-of-events trap. The repaired tool resolves each field by trying both names on BOTH sides, so it is orientation-free.**
+
+### ★★★★★ §2 — THE SWEEP: BOUNDED, RUN, PUBLISHED, **CLOSED**
+
+★★★ **I did not choose the surface by judgment. THE MEMBERSHIP RULE IS MECHANICAL AND STATED: an instrument is REGISTERED if its own filename or its output-artifact stem is CITED in the campaign's decision documents** — `ADVISOR-RULINGS.md` · `ADVISOR-STATE.md` · `AGENT-REPORTS.md` · `BLUEPRINT-V4-DRAFT.md` (3,944,330 chars of citation corpus). **That operationalises your "produced a published decision" without me deciding case by case.**
+
+| | |
+|---|--:|
+| candidate instruments under `docs/replay-results/**/*.py` | `54` |
+| **REGISTERED (cited)** | **`34`** |
+| **EXCLUDED — not cited anywhere** | **`20`** |
+| parsed / parse failures | `34` / `0` |
+| nominations | `22` |
+
+**EXCLUDED AND NAMED, so the boundary is auditable rather than implied:** `src/**` (engine — not a campaign decision instrument) · `scripts/**` (54 files, operational) · the `20` uncited generators (`assert_gate_census` · `cadence_isolation_harness` · `lane_parity_probe` · `newline_writer_census` · `pin_axis_collision_census` · `run_dod_remeasure` · `run_packet2_inventory` · `gen_h1_*` ×5 · `run_enum_consistency_22` · `microreh_*` ×5 · `mode-ab-G4-scripts` ×2) · **all non-Python instruments**, which my AST nominator cannot read at all.
+
+**RESULT — JUDGMENT ON THE 22 NOMINATIONS:**
+
+| pattern | n | disposition |
+|---|--:|---|
+| `P1` / `P2` selection patterns | `4` + `2` | ★★★ **ZERO LIVE INSTANCES.** Four are my own two DELIBERATELY QUARANTINED copies of the retired defect (`unlock_ranker_core.py:339` `legacy_greedy_chain_RETIRED`, `unlock_chain_determinism_probe.py:31`), each reached only by a test that convicts it. Two are `.items()` over a **dict literal** and a **code-built dict** whose insertion order is fixed in source — **deterministic in Python 3.7+**. |
+| `P3` filesystem order | `14` | 11 already inside `sorted()`; `dual_denominator_remeasure.py:3126` accumulates into a **set** consumed by a subset assertion (order cannot reach output — **and this is the pinned Phase-1 figure's instrument**); `family_meta_reachability_sweep.py:214` affects **printed listing order only, no published count**; 1 is my own `os.walk` whose results I sort two lines later. |
+| `P4` unseeded randomness | `2` | **both FALSE POSITIVES** — one file mentions "random walk" only in prose describing what it moved away from; the other is this sweep's own module-name literal. |
+
+★★★★★ **AND THE NULL IS ONLY WORTH ANYTHING BECAUSE THE INSTRUMENT IS PROVEN TO BITE: `--self-test` still passes — RED on the known-broken `gen_ledger.py` shape, GREEN on a clean instrument of the same shape. A clean sweep and a blind sweep produce identical output, and this one has been shown not to be blind.**
+
+★★★★★ **THE SWEEP IS CLOSED. `gen_ledger.py` earned this audit; it does not entitle it to unbounded scope. I am NOT proposing an extension to `ci/*.mjs`, `src/**` or `scripts/**` — I withdraw the "next smallest task" I offered in AR-429 and AR-431, because your §2 is right that a governance audit which keeps finding governance work would recursively replace the money path.** ★★ **If a future instrument enters the registered set, `--set <registered.json>` re-runs this in seconds; the surface file is committed.**
+
+### ★★★ §3 — CENSUS RETENTION, EXECUTED BY COPY
+
+**`C:\Users\tonio\Projects\trading-forge\backups\h1-census\unknown-dbtime-ad4335f0\`** — `pop120_census.json` · `pop120_classified.json` · `HASHES.txt` · `README.md` (sanitized) · the manifest.
+
+★★★ **THE CENSUS WAS COPIED, NEVER RE-RUN — and I verified the ARTIFACT after the copy rather than `cp`'s exit code:**
+```
+ad4335f0cdf8b3b9e2b9987b4497ea60cebf07cac6fa2aae0a4b6adfc30a413c  pop120_census.json      [matches manifest]
+eed65514a126adb136b5430939223965a12909b6e21cda4fba87d547326051d1  pop120_classified.json  [matches manifest]
+sha256sum -c HASHES.txt  ->  OK, OK
+```
+
+★★★★★ **READ-ONLY IS RED-PROOFED, NOT ASSERTED.** I set the flags, then **attempted an append to `HASHES.txt`** — it was **REFUSED (`UnauthorizedAccessException`)** and the census hash was unchanged afterwards. ★★ **A permission flag that has not been shown to block a write is a claim, not a protection.**
+
+★★★ **AND ONE THING I VERIFIED RATHER THAN ASSUMED, BECAUSE IT IS THE WHOLE POINT OF KEEPING THE PAYLOAD OUT OF GIT: the ordered path is OUTSIDE every git working tree. [MEASURED] the canonical checkout is the NESTED `C:\Users\tonio\Projects\trading-forge\trading-forge` — the outer directory is a plain folder holding `backups\`, `runtime-production\` and the checkout. So the payload CANNOT be committed by accident; that is now a structural property, not a discipline.**
+★ **Incidental, recorded so a future seat does not lose ten minutes to it: `git` commands run from `C:\Users\tonio\Projects\trading-forge` fail with `not a git repository` — there is a stray `.git\` there containing only `info\`. It is NOT damage: worktrees resolve correctly to the nested checkout and every commit tonight landed. I did not touch it.**
+
+**HONEST NULLS PRESERVED:** ★★★ **the directory is named `unknown-dbtime-` and the README states in bold that it must NOT be renamed to a date. I did not invent a timestamp.** ★ **Off-machine encrypted backup: FLAGGED, NOT ATTEMPTED — it is one disk and that is the operator's arrangement to make.**
+
+### ★★ §4 — THE PER-COPY LIMITATION, PINNED AS A LIMITATION
+
+★★★ **Manifest §5.6 now carries it as a blockquoted NAMED LIMITATION, not a passing check:** *"`0 of 40 differ` is a statement about CONTENT fields only. It must NEVER be cited as 'the copies are identical in every respect.' Per-copy `remediation_class` equality is NOT VERIFIABLE IN THIS ARTIFACT."*
+★★ **And a new manifest §8 — FORWARD REQUIREMENTS — carries the six things the next census must emit in its own payload, including `classify EVERY market copy`, which closes this hole at the source rather than here.** ★ **The README in the retention directory repeats them, so a reader who finds the payload without the repo still gets them.**
+
+### §5 — DISPOSITION
+
+**Commands executed:** `git show 4ed73f11:…proof.py` · `unlock_rank_before_after_proof.py` (AR-427 original → current) · `order_dependence_sweep.py --self-test` · `order_dependence_sweep.py --set registered-instrument-set-2026-07-29.json` · the registered-set derivation over 4 campaign docs · `cp` + `sha256sum` + `sha256sum -c` · read-only marking + refused-write red-proof.
+**Files:** `CENSUS-REPRODUCIBILITY-MANIFEST-2026-07-29.md` (§5.6 limitation, §6 retention, new §8) · `order_dependence_sweep.py` (`--set` mode) · `registered-instrument-set-2026-07-29.json` (new) · `order-dependence-sweep-2026-07-29.json` (re-emitted) · this AR. **Outside git, by order:** the five files in the retention directory.
+**Architecture invariants:** **#6 holds** — `backtests_total = 0`. **#7 holds** — `ADVISOR-RULINGS.md` untouched. **#8 holds** — `git add` on my own paths only; no `checkout`, no `reset`, and I did not touch the stray `.git\` I found.
+**FORBIDDEN, all observed:** no C8 implementation · no re-extraction · **no census re-run** · no spec edits · no `.env` · no DB writes · no flag graduation · no deploy · no tower · no backtests · no CI-lane work.
+
+**Remaining uncertainty:**
+★★ **[UNVERIFIABLE IN THIS ARTIFACT]** per-copy `remediation_class` equality — pinned, with the source-side fix recorded.
+★★ **[UNSWEPT BY DESIGN, AND NOW CLOSED]** `src/**`, `scripts/**`, the 20 uncited generators, all non-Python instruments. **Named, not silently omitted.**
+★ **[UNMEASURED]** whether the frozen census still matches today's live table.
+★ **[NOT ARRANGED]** off-machine encrypted backup — operator's.
+
+**RECOMMENDATION: APPROVAL_REQUESTED.**
+**Next smallest task (ONE):** ★★★ **NONE FROM ME — and that is deliberate.** The governance lane is closed on my side per your §2. **The next task should come from the money path (v4 §3-1C/1D/1E), not from this lane.**
+
+---
+
 ## AR-432 · 2026-07-29 · **START-RECEIPT — R-455: (1) PIN THE PER-COPY LIMITATION · (2) BOUNDED SWEEP THEN CLOSE IT · (3) CENSUS RETENTION BY COPY · (4) THE RENAME/ORDER-OF-EVENTS QUESTION.**
 
 **RULING ID:** R-455 · **TASK ID:** AR-432 · **STATUS:** STARTING · **TREE:** `wt-h1-wave4-20260712`, my last commit `613a8f0e` (AR-431). **ETA ~30 min.**
