@@ -4,6 +4,153 @@
 
 ---
 
+## AR-429 · 2026-07-29 · ★★★★★ **ALL THREE DELIVERED — AND THE SWEEP CAUGHT ITSELF: MY FIRST RUN RETURNED `0` ORDER-DEPENDENCE DEFECTS ACROSS 53 FILES, AND WHEN I RAN IT AGAINST `gen_ledger.py` — THE ONE INSTRUMENT ALREADY PROVEN BROKEN — IT NOMINATED **NOTHING**. THE NULL RESULT WAS A GREEN CHECK WITH NO PATH TO RED, FOUR HOURS AFTER YOU MINTED THE LAW.** ★★★★★ **ROOT CAUSE FOUND, DETECTOR FIXED, CONTROL NOW CONVICTS AT `gen_ledger.py:139` UNDER BOTH PATTERNS, AND THE SWEEP CARRIES ITS OWN RED/GREEN CONTROL PAIR SO IT CANNOT REGRESS.** ★★★ **`NO NUMBER MOVED` IS PROVEN, NOT ASSERTED: ORDERED SEQUENCE IDENTICAL, `0` INVARIANT-FIELD DIFFERENCES ACROSS 40 ROWS, `40 of 40` LABELS CHANGED.** ★★ **AND MY OWN TEST CONVICTED MY OWN LABEL RULE BEFORE IT SHIPPED**
+
+**RULING ID:** R-451 as amended by R-452, with R-453's three conditions · **TASK ID:** AR-428 · **BRANCH:** `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **APPROVAL_REQUESTED on (a) and (b). On the sweep: APPROVAL_REQUESTED with one item I am bringing to you rather than acting on, per your STOP.**
+
+### ★★★★★ §1 — (b) THE DETERMINISM TEST, BUILT TO THE AMENDED SPEC
+
+**COMMITTED AND RUNNABLE:** `docs/replay-results/h1-battery/test_unlock_ranker_determinism.py`. **`6/6` passing, `12` `PYTHONHASHSEED` values per determinism check.**
+
+★★★ **IT GUARDS THE SHIPPED CODE, NOT A COPY OF IT.** I refactored the computation into `unlock_ranker_core.py` and the test imports and drives those exact functions. **A test that re-implements the logic it guards is the `hand-copied expected value` shape one layer up, and it would have passed forever while the real ranker rotted.**
+
+**THE TIED FIXTURE, and it is the shape you named:**
+
+```
+v1 {C7}    v2 {C5}    v3 {C7,C9}    v4 {C7,C9}    v5 {C5,C9}
+k=1: C5 alone cleans 1, C7 alone cleans 1        <-- GENUINE TIE
+k=2: {C7,C9} cleans 3  but  {C5,C9} cleans 2     <-- CONSEQUENTIAL
+```
+
+★★★★★ **AND I LAID THE TRAP ONE NOTCH HARDER THAN ASKED. The alphabetically FIRST tied class (`C5`) is the WRONG one. So the fixture has power against BOTH failure modes: an unstable tie-break AND a stable tie-break that is stably suboptimal.** ★★ **A `sorted(tied)[0]` greedy is perfectly deterministic and would pass a naive determinism test while silently emitting the worse chain — which, as §2 shows, is exactly what my own AR-427 script did.**
+
+**THE DISCRIMINATION PROOF (R-452's acceptance condition) — [MEASURED HERE], the same fixture through the retired tie-break:**
+
+| | distinct outputs across 12 seeds | chains produced |
+|---|--:|---|
+| **retired `gen_ledger` tie-break** | **`3`** | `[1,2,5]` on seeds 1,9,11 · `[1,2,5]` on 2,6,7 · `[1,3,5]` on 0,3,4,5,8,10 |
+| **shipped ranker** | **`1`** | `[1,3,5]` — the optimum, every seed |
+
+★★★ **`6 of 12` seeds drive the retired instrument to the SUBOPTIMAL chain on this fixture. The test convicts it. It bites.**
+
+**THE TIE-BREAK, NAMED AND DEFENDED (R-452):** ★★★★★ **I did not choose a better secondary key — I REMOVED THE NEED FOR ONE.** The chain is no longer greedy; `optimal_chain()` computes the **exhaustive** maximum over every k-subset (`2^9 = 512`, trivial at this size). **The VALUE at each k is a pure function of the census and admits no tie at all — the ambiguity that broke `gen_ledger.py` cannot arise.** ★★ Only the reported WITNESS subset can tie, and that is broken by **lexicographic class ID — a property of the frozen taxonomy committed inside the ledger**, stable across machines, runtimes and processes. **Not set iteration, not dict insertion, not filesystem order, not a hash seed.**
+
+★★★ **REAL-CENSUS ARM: `test_real_census_determinism` PASSES with the census attached — `12` seeds, byte-identical.** ★ **It is SKIPPED (and reported as SKIPPED, never as passed) when the uncommitted payload is absent, which is the honest state for any seat without it.**
+
+### ★★★★★ §2 — MY OWN TEST CONVICTED MY OWN RULE, AND A SECOND DEFECT IN THE AR-427 SCRIPT
+
+★★★ **`test_canonical_spec_label_...` FAILED on its first run and it was right.** My first label rule was longest-common-prefix; on `..._mcl_5m` / `..._mes_5m` / `..._mnq_5m` the LCP runs INTO the instrument token (`m` is shared by all three) and yields `5m_minute_support_level_m`. **A rule I would have shipped, caught by a test I wrote ten minutes earlier.**
+
+**THE RULE AS SHIPPED, stated so it can be disputed (R-453 §2):** the fan-out rows are the same spec deployed to different markets, so their names must be token-identical except at exactly ONE position. **The rule DISCOVERS the varying token position from the data and removes it.** No hand-maintained suffix list; nothing removed because a human thought it looked like noise.
+
+★★★★★ **AND WHAT IT DELIBERATELY DOES NOT DO: it does not remove the TIMEFRAME token.** The timeframe does not vary within a group, so removing it would not be data-derived — it would be domain knowledge asserted as measurement. ★★★ **MY AR-427 HAND-EDIT REMOVED IT ANYWAY. So the repaired labels do NOT match my published table either: the rule yields `5m_minute_support_level_5m`, my hand-edit said `5m_minute_support_level`. I am NOT reverse-engineering a rule that reproduces my hand-edit — that would be fitting the instrument to the fabrication. The instrument's output is now authoritative and §3 re-publishes the table from it.**
+
+**THE MANDATORY RESIDUAL CATEGORY (R-453 §2):** `canonical_spec_label` returns `(label, status)`. `status` is `OK` **only** when there was exactly one varying token position AND its values are all known instrument codes. Every other outcome returns the **full unmodified name** with a status naming the fault: `RESIDUAL_token_count_differs_across_group` · `RESIDUAL_N_varying_token_positions` · `RESIDUAL_varying_token_not_an_instrument_code:<values>` · `SINGLETON_no_fanout_group`. ★★ **A dedicated test asserts each residual fires AND that a clean group still returns `OK` — without that control the test could not tell "flags the right things" from "flags everything".**
+**[MEASURED] on the real census: `{'OK': 40}` — `40 of 40`, zero residual cases.**
+
+★★★ **A SECOND DEFECT IN THE AR-427 SCRIPT, WHICH THE REFACTOR EXPOSED AND I DID NOT PREVIOUSLY REPORT: its greedy chain was deterministic but STABLY SUBOPTIMAL.** It emitted `2·5·9·13·**17**·**24**·31·37·40` where the optimum is `2·5·9·13·**19**·**25**·31·37·40`. **AR-427's acceptance gate passed on the separate exhaustive audit (`unlock_chain_gate_audit.py`), not on the ranker script — two instruments, and the weaker one was the one I shipped as the ranker.** ★★ **That split is closed: there is now ONE instrument, it computes the optimum, and [MEASURED] it emits `6·15·27·39·57·75·93·111·120` — R-426's published chain — directly.**
+
+### ★★★★★ §3 — "NO NUMBER MOVED": PROVEN AS A SET COMPARISON (R-453 §1)
+
+**Committed proof instrument: `unlock_rank_before_after_proof.py`. Output in full:**
+
+```
+rows: before=40  after=40
+1. ORDERED video sequence identical : True
+   video SETS identical (A-B = B-A = empty): True  |A-B|=0 |B-A|=0
+2. invariant-field differences across all 40 rows : 0
+3. `spec` LABEL changes (the only permitted change) : 40 of 40
+VERDICT: NO NUMBER MOVED -- label-only change PROVEN
+```
+
+★★★ **ANSWERING YOUR QUESTION DIRECTLY: NO ROW'S POSITION CHANGED. The ordered video sequence is identical position-for-position, and I checked it BOTH as an ordered list AND as sets in both directions, so a reorder and a substitution cannot look alike.** ★★ **Your STOP does not fire — the label was not load-bearing in the sort, and the ranking you approved in R-451 is not order-dependent.** ★ The comparison is keyed on `video` and covers `distance · residual_conditions · total_conditions · residual_classes` plus the two renamed fields (`c8_conditions → fixed_class_conditions`, `carries_c8 → carries_fixed_class`), whose VALUES are compared across the rename rather than skipped.
+
+★★★★★ **AND THE LABELS EXPOSE SOMETHING THE OLD ONES HID: [MEASURED] the canonical labels are `39` DISTINCT over `40` videos — `short_entry_5m` is carried by BOTH `e5HQXYBUW-Q` and `dE4lPhAWke8`. THE SPEC LABEL IS NOT AN IDENTIFIER. The instrument suffix was accidentally disambiguating them.** ★★ **Join on `video`, never on the spec label — recorded in the manifest §7 so no future seat groups two different teachers' strategies into one row.**
+
+**THE RE-PUBLISHED TOP OF THE RANKING** — emitted by the instrument, not transcribed (R-453 §3). Distances, residuals and positions are unchanged from the table you approved; only the labels differ:
+
+| # | video | dist | resid | C8 | tot | residual | spec (instrument output) |
+|--:|---|--:|--:|--:|--:|---|---|
+| 1 | `75DJN5UVQnw` | 0 | 0 | 5 | 5 | — | `5m_minute_support_level_5m` |
+| 2 | `jlShztsY3oA` | 0 | 0 | 1 | 1 | — | `price_break_above_below_high_low_5m` |
+| 3 | `E8Wg6tFPYjo` | 1 | 1 | 10 | 11 | C5 | `bos_and_fvg_or_fvg_15m` |
+| 4 | `c8VLqF0XDR4` | 1 | 1 | 2 | 3 | C1 | `long_entry_or_short_entry_15m` |
+| 5 | `h6TnE7QClJg` | 1 | 1 | 1 | 2 | C3 | `momentum_build_in_real_time_5m` |
+
+**Full 40 rows: `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.json`.**
+
+### ★★★★★ §4 — THE SWEEP, AND THE PART THAT MATTERS IS THAT IT CAUGHT ITSELF
+
+**Committed: `order_dependence_sweep.py` — an AST nominator, not a grep. It NOMINATES; the classification below is judgment.**
+
+**SURFACE, published beside the count (R-452 honest-partial):** `docs/replay-results/**/*.py` — **`53` files walked, `53` parsed, `0` parse failures.** ★★ **EXCLUDED AND NAMED: `src/**` (the engine — a far larger surface and not a "campaign decision instrument"), `scripts/*.py` (54 files, operational not measurement), and the UNCOMMITTED census instruments — which is where the only proven defect actually lives.**
+
+★★★★★ **THE FINDING I ALMOST SHIPPED. My first full run returned `71` nominations that collapsed to `0` real defects after I repaired two detector faults (`ast.walk` read as a filesystem call — 53 hits; `str.split(...)[0]` read as unordered selection — 14 hits). I was about to report "0 order-dependence defects across 53 files."** ★★★★★ **THEN I RAN THE CONTROL: the sweep over `gen_ledger.py` itself. `NOMINATIONS: 0`. THE SWEEP COULD NOT CONVICT THE ONE INSTRUMENT THIS ENTIRE RULING EXISTS BECAUSE OF.**
+
+**ROOT CAUSE, found and fixed, not worked around:** `gen_ledger.py` writes `chosen, rem, step = [], set(CLASSES), 0` — **TUPLE UNPACKING.** My visitor only registered set-valued locals from `ast.Name` targets, so `rem` was never learned as a set, and the `for c in rem:` selection loop was invisible. **[MEASURED, after the fix] the control now nominates `gen_ledger.py:139` under BOTH `P1_unordered_iteration_that_selects` and `P2_manual_max_first_wins`.**
+
+★★★ **AND THE SWEEP NOW CARRIES ITS OWN RED/GREEN CONTROL PAIR, `--self-test`, so this cannot regress silently:**
+
+```
+PASS  control BROKEN -> 2 selection nomination(s), expected >=1
+PASS  control CLEAN  -> 0 selection nomination(s), expected 0
+SELF-TEST PASSED -- the sweep discriminates
+```
+
+★★ **The CLEAN control is the half that is usually missing: without it, "it fires on the broken one" cannot be distinguished from "it fires on everything".**
+
+**RESULT AFTER THE REPAIR — re-taken, not carried across the fix: `29` nominations, `20 of 53` files.**
+
+| pattern | n | judgment |
+|---|--:|---|
+| `P1_unordered_iteration_that_selects` | 4 | **2 are my own quarantined copies of the retired defect** (`unlock_ranker_core.py:269` `legacy_greedy_chain_RETIRED`, `unlock_chain_determinism_probe.py:31`) — deliberate, documented, never called for a decision. **2 are `.items()` over dict LITERALS / code-built dicts** (`run_dress_rehearsal.py:163`, `run_wave1r.py:228`) — Python preserves insertion order and the insertion order is fixed in source, so **deterministic**. |
+| `P2_manual_max_first_wins` | 2 | **the same two quarantined copies.** Zero live instances. |
+| `P3_filesystem_order` | 21 | **17 are already inside `sorted()`.** 3 real unsorted reads, judged below. 1 is my own `os.walk` whose results I sort explicitly two lines later. |
+| `P4_unseeded_randomness` | 2 | **both FALSE POSITIVES** — `levelzone_real_corpus_fidelity.py` mentions "random walk" only in prose describing what it moved AWAY from; the other is this sweep's own `RANDOM_MODULES` literal. |
+
+**THE THREE UNSORTED FILESYSTEM READS, read by hand:**
+★ **`deferred_family_census.py:58`** — **FALSE POSITIVE.** The `os.listdir` is wrapped by a `sorted(...)` five lines above; my detector checks the same source line only. **Detector limit, disclosed.**
+★ **`dual_denominator_remeasure.py:3126`** — `for m in glob.glob(val)` accumulates into `found: set[Path]`, consumed by a SUBSET assertion. **Order cannot reach any output value. NOT a defect** — and this matters because this instrument produced the **pinned Phase-1 figure** (`0/16 specs fully bound`). ★★ **Your STOP asked me to bring you anything unstable in a path behind a published Phase-1 number. On my patterns, this path is clean — but see the limits below before reading that as a clearance.**
+★ **`family_meta_reachability_sweep.py:214`** — `glob.glob("src/**/*.py", recursive=True)`, unsorted, and each hit is PRINTED. **The COUNT is order-invariant; the printed LISTING ORDER is not.** No published number depends on it — **a NOTE, not a re-run**, exactly as you bounded it. ★ **Separate and worth naming: that glob is relative to the CWD, so the instrument silently measures a different surface if run from another directory. Different species (CWD-dependence), same family, and I am flagging it rather than fixing it — it is not in my contract.**
+
+★★★★★ **SO: ZERO live order-dependent selection defects on the committed campaign surface, and I am NOT asking you to believe that on the strength of the count. Believe it on the control pair — the sweep is proven to convict the real defect and proven not to convict a clean instrument of the same shape.**
+
+**LIMITS OF THE SWEEP, stated so the null is readable (R-452 honest-partial):**
+★★ `P1`/`P2` require a selection-variable NAME from a fixed list (`best`, `chosen`, `pick`, …). **An order-dependent selection using unusual names would be MISSED.**
+★★ `src/**` and `scripts/**` are **UNSWEPT**. The engine may contain the same species; I did not look, and "not found" over an unswept surface is not absence.
+★ Detector is line-local for the `sorted()` check (the `deferred_family_census` false positive).
+★ **`[NOT MEASURED]`** whether any NON-Python instrument (`.mjs`, `.ts`, SQL) carries the pattern. The `ci/*.mjs` gates are the obvious next surface.
+
+### §5 — (a) THE MANIFEST
+
+**Committed: `docs/designs/CENSUS-REPRODUCIBILITY-MANIFEST-2026-07-29.md`.** Every field you named: population definition + selection SQL · creation commands · row `120` / video `40` counts · sha256 of all five census artifacts + the committed ledger anchor + all eight downstream instruments · schema enumerated field-by-field with the join key and its validation · ranker commit · location + retention.
+
+★★★★★ **THE PROVENANCE ANCHOR, and it is why this manifest is worth more than its hash list: `classify.py` is BYTE-IDENTICAL to the classifier published verbatim in the COMMITTED ledger. The taxonomy and every hand override are already durable. If both scratchpad copies vanish tonight, the classification layer is fully reconstructible from git.**
+
+★★★ **RE-VERIFIED AT MY OWN DESK RATHER THAN COPIED FROM THE LEDGER HEADER: `wt-preflight-blockers-20260729` is still at `83efd34e`, `runtime-production` still at `a6f92822`, and all three engine files are sha256-IDENTICAL across both trees TODAY.** ★ **`MEASURED ≠ MEASURED-WHERE-IT-RUNS` is satisfied for this census. It does NOT clear the separate 160 KB ↔ 35 KB divergence (R-415 / v4 §3-1E), which is about the CAMPAIGN tree — a third lane this census never used.**
+
+**HONEST NULLS, recorded as nulls (R-453 §4a):** ★ **DB read timestamp `[UNRECOVERABLE FROM THE ARTIFACT]`** — no timestamp field exists; the original mtime `2026-07-28 21:12:43 -0400` is recorded as `[ARTIFACT-SOURCED, weak]` and explicitly labelled a **filesystem write time, not a database read time**. ★ **No `schema_version` field `[HONEST NULL]`** — schema pinned by enumeration instead. ★★ **Both are written as requirements on the NEXT census, which is the manifest's actual job.**
+
+★★★ **ONE THING I AM BRINGING TO YOU RATHER THAN DECIDING: RETENTION IS STILL `NONE`.** Both copies live in OS-temp and may be swept without warning. **A real retention policy implies a non-temp, backed-up, access-controlled location for live operator data — that is a storage decision about the operator's data and it is not mine to choose.** ★★ **Until such a path is named, every census this campaign relies on remains one `%TEMP%` sweep from unrecoverable, and the manifest only makes it RE-CREATABLE, not SAFE.**
+
+### §6 — DISPOSITION
+
+**Commands executed:** `python test_unlock_ranker_determinism.py` (`6/6`, and again with `POP120_CENSUS`/`POP120_CLASSIFIED` attached — `6/6`) · `python order_dependence_sweep.py --self-test` (`2/2`) · `python order_dependence_sweep.py ../../replay-results` · the control probe over `gen_ledger.py` before AND after the detector fix · `python unlock_distance_ranker.py` · `python unlock_rank_before_after_proof.py` · `sha256sum` over all instruments.
+**Files:** `CENSUS-REPRODUCIBILITY-MANIFEST-2026-07-29.md` (new) · `unlock_ranker_core.py` (new) · `test_unlock_ranker_determinism.py` (new) · `unlock_rank_before_after_proof.py` (new) · `order_dependence_sweep.py` (new) · `order-dependence-sweep-2026-07-29.json` (new) · `unlock_distance_ranker.py` (rewritten as a driver) · `unlock-distance-rank-2026-07-29.json` (regenerated) · this AR.
+**Architecture invariants:** **#6 holds** — `backtests_total = 0` in the frozen census, and the census instrument itself aborts before emitting if it is not. **#7 holds** — `ADVISOR-RULINGS.md` untouched. **#8 holds** — `git add` on my own new paths only, then `git commit -o`; no `checkout`, no `reset`, no index operation to tidy an appearance.
+**FORBIDDEN, all observed:** no C8 implementation or re-extraction · no spec edits · no `.env` · no DB writes · **no re-running the census** · no flag graduation · no deploy · no tower · no backtests · no CI-lane work — **the determinism test is deliberately NOT wired into CI.**
+
+**Remaining uncertainty:**
+★★ **[UNSWEPT]** `src/**`, `scripts/**`, and every non-Python instrument. **The sweep's null is scoped to `docs/replay-results/**/*.py` and to the six patterns.**
+★★ **[UNMEASURED]** whether the frozen census still matches today's live table.
+★ **[NOT RE-GRADED]** the remediation-class assignments — judgment, and re-grading them is not the doer's act.
+★ **[OPEN, yours]** the retention location.
+
+**RECOMMENDATION: APPROVAL_REQUESTED.**
+**Next smallest task (ONE):** ★ **extend the sweep to `ci/*.mjs` and `scripts/**`, or rule it out of scope.** The engine surface is large enough that it should be a scoped decision, not something I start on my own initiative.
+
+---
+
 ## AR-428 · 2026-07-29 · **START-RECEIPT — R-451 (a) MANIFEST + (b) DETERMINISM TEST AS AMENDED BY R-452, THEN THE PATTERN-CLASS SWEEP.** ★★★ **AND I AM OPENING WITH A DEFECT IN MY OWN AR-427 THAT YOUR AMENDMENT MADE ME GO LOOK FOR: THE `spec` COLUMN I PUBLISHED WAS HAND-NORMALIZED, AND THE INSTRUMENT DOES NOT EMIT WHAT THE REPORT SHOWS**
 
 **RULING ID:** R-451 as amended by R-452 · **TASK ID:** AR-428 · **STATUS:** STARTING · **TREE:** `wt-h1-wave4-20260712`, HEAD `e2bacd90` (my AR-427 commit) at receipt.

@@ -1,0 +1,215 @@
+{
+ "nominations": [
+  {
+   "file": "../../replay-results/h1-battery/assert_gate_census.py",
+   "line": 169,
+   "note": "rglob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(REPO_ROOT.rglob(\"*.py\")):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/deferred_family_census.py",
+   "line": 58,
+   "note": "os.listdir() not wrapped in sorted()",
+   "pattern": "P3_filesystem_order",
+   "src": "for f in os.listdir("
+  },
+  {
+   "file": "../../replay-results/h1-battery/dual_denominator_remeasure.py",
+   "line": 3126,
+   "note": "glob.glob() not wrapped in sorted()",
+   "pattern": "P3_filesystem_order",
+   "src": "for m in glob.glob(val):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/dual_denominator_remeasure.py",
+   "line": 4041,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(glob.glob(CORPUS_A_GLOB)):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/dual_denominator_remeasure.py",
+   "line": 4581,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(glob.glob(CORPUS_A_GLOB)):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/dual_denominator_remeasure.py",
+   "line": 6165,
+   "note": "iterdir() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "scope = [] if _DRAFT_MODE else sorted(p for p in H1.iterdir() if p.is_file() and p != OUT_PATH)"
+  },
+  {
+   "file": "../../replay-results/h1-battery/family_meta_reachability_sweep.py",
+   "line": 214,
+   "note": "glob.glob() not wrapped in sorted()",
+   "pattern": "P3_filesystem_order",
+   "src": "for f in glob.glob(\"src/**/*.py\", recursive=True):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/lane_parity_probe.py",
+   "line": 30,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(glob.glob(CORPUS_GLOB)):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/lane_parity_probe.py",
+   "line": 53,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "\"n_specs\": len(sorted(glob.glob(CORPUS_GLOB))),"
+  },
+  {
+   "file": "../../replay-results/h1-battery/levelzone_antecedent_probe.py",
+   "line": 57,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(glob.glob(os.path.join(SPECS, \"*.spec.json\"))):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/levelzone_real_corpus_fidelity.py",
+   "line": 0,
+   "note": "random used with no seed call in file",
+   "pattern": "P4_unseeded_randomness",
+   "src": ""
+  },
+  {
+   "file": "../../replay-results/h1-battery/newline_writer_census.py",
+   "line": 368,
+   "note": "rglob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(REPO_ROOT.rglob(\"*.py\")):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/order_dependence_sweep.py",
+   "line": 0,
+   "note": "random used with no seed call in file",
+   "pattern": "P4_unseeded_randomness",
+   "src": ""
+  },
+  {
+   "file": "../../replay-results/h1-battery/order_dependence_sweep.py",
+   "line": 258,
+   "note": "os.walk() not wrapped in sorted()",
+   "pattern": "P3_filesystem_order",
+   "src": "for dirpath, dirnames, filenames in os.walk(root):"
+  },
+  {
+   "file": "../../replay-results/h1-battery/unlock_chain_determinism_probe.py",
+   "line": 31,
+   "note": "iterates set-valued local `rem`; body assigns/compares a selection variable",
+   "pattern": "P1_unordered_iteration_that_selects",
+   "src": "for c in rem:                                   # <-- SET iteration order"
+  },
+  {
+   "file": "../../replay-results/h1-battery/unlock_chain_determinism_probe.py",
+   "line": 31,
+   "note": "manual max/min over unordered iteration -- first max wins",
+   "pattern": "P2_manual_max_first_wins",
+   "src": "for c in rem:                                   # <-- SET iteration order"
+  },
+  {
+   "file": "../../replay-results/h1-battery/unlock_chain_gate_audit.py",
+   "line": 75,
+   "note": "walk() not wrapped in sorted()",
+   "pattern": "P3_filesystem_order",
+   "src": "walk(cand + [c], chain + [u * 3], order + [c.split(\"_\")[0]])"
+  },
+  {
+   "file": "../../replay-results/h1-battery/unlock_chain_gate_audit.py",
+   "line": 76,
+   "note": "walk() not wrapped in sorted()",
+   "pattern": "P3_filesystem_order",
+   "src": "walk([], [], [])"
+  },
+  {
+   "file": "../../replay-results/h1-battery/unlock_ranker_core.py",
+   "line": 269,
+   "note": "iterates set-valued local `rem`; body assigns/compares a selection variable",
+   "pattern": "P1_unordered_iteration_that_selects",
+   "src": "for c in rem:                                    # <-- SET iteration: the defect"
+  },
+  {
+   "file": "../../replay-results/h1-battery/unlock_ranker_core.py",
+   "line": 269,
+   "note": "manual max/min over unordered iteration -- first max wins",
+   "pattern": "P2_manual_max_first_wins",
+   "src": "for c in rem:                                    # <-- SET iteration: the defect"
+  },
+  {
+   "file": "../../replay-results/h1-battery/wire1_structure_census.py",
+   "line": 84,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(glob.glob(g)):"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/claude-rung-v32/run_a_packet_22.py",
+   "line": 149,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "files = sorted(glob.glob(os.path.join(_STAGING, \"*.json\")))"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/claude-rung-v32/run_dod_remeasure.py",
+   "line": 70,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "files = sorted(glob.glob(os.path.join(SPECS, \"*.spec.json\")))"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/claude-rung-v32/run_dress_rehearsal.py",
+   "line": 163,
+   "note": "iterates .items() without sorted(); body assigns/compares a selection variable",
+   "pattern": "P1_unordered_iteration_that_selects",
+   "src": "for video_id, cids in _VIDEOS.items():"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/claude-rung-v32/run_packet2_inventory.py",
+   "line": 31,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for path in sorted(glob.glob(os.path.join(_STAGING, \"*.json\"))):"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/claude-rung-v32/run_shakedown_wave1.py",
+   "line": 94,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for path in sorted(glob.glob(os.path.join(SHAKEDOWN_SPECS, \"*.spec.json\"))):"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/claude-rung-v32/run_wave1r.py",
+   "line": 69,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "for p in sorted(glob.glob(os.path.join(SHAKEDOWN_SPECS, \"*.spec.json\"))):"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/claude-rung-v32/run_wave1r.py",
+   "line": 228,
+   "note": "iterates .items() without sorted(); body assigns/compares a selection variable",
+   "pattern": "P1_unordered_iteration_that_selects",
+   "src": "for gate, info in rows.items():"
+  },
+  {
+   "file": "../../replay-results/h1-scripts/run_enum_consistency_22.py",
+   "line": 40,
+   "note": "glob() inside sorted() -- likely OK",
+   "pattern": "P3_filesystem_order",
+   "src": "files = sorted(_STAGING.glob(\"*.json\"))"
+  }
+ ],
+ "surface": {
+  "files_walked": 53,
+  "parse_failures": 0,
+  "parsed": 53,
+  "roots": [
+   "../../replay-results"
+  ]
+ }
+}

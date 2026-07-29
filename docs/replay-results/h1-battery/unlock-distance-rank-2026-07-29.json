@@ -1,548 +1,1142 @@
-[
- {
-  "video": "75DJN5UVQnw",
-  "spec": "5m_minute_support_level_mnq_5m",
-  "distance": 0,
-  "residual_conditions": 0,
-  "c8_conditions": 5,
-  "total_conditions": 5,
-  "residual_classes": [],
-  "carries_c8": true
+{
+ "each_class_alone": [
+  {
+   "remediation_class": "C1_known_concept_missing_primitive",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  },
+  {
+   "remediation_class": "C2_recognized_session_missing_clock",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  },
+  {
+   "remediation_class": "C3_unrecognized_vocab_EXISTING_primitive",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  },
+  {
+   "remediation_class": "C4_new_vocab_ontology_work",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  },
+  {
+   "remediation_class": "C5_unsupported_temporal_or_control_flow",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  },
+  {
+   "remediation_class": "C6_unknown_requiredness",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  },
+  {
+   "remediation_class": "C7_malformed_extraction",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  },
+  {
+   "remediation_class": "C8_non_executable_annotation_mistyped",
+   "strategies_clean": 6,
+   "videos_clean": 2
+  },
+  {
+   "remediation_class": "C9_RESIDUAL_none_of_these",
+   "strategies_clean": 0,
+   "videos_clean": 0
+  }
+ ],
+ "optimal_chain": [
+  {
+   "k": 1,
+   "strategies_clean": 6,
+   "videos_clean": 2,
+   "witness": [
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 2,
+   "strategies_clean": 15,
+   "videos_clean": 5,
+   "witness": [
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 3,
+   "strategies_clean": 27,
+   "videos_clean": 9,
+   "witness": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 4,
+   "strategies_clean": 39,
+   "videos_clean": 13,
+   "witness": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C5_unsupported_temporal_or_control_flow",
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 5,
+   "strategies_clean": 57,
+   "videos_clean": 19,
+   "witness": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C7_malformed_extraction",
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 6,
+   "strategies_clean": 75,
+   "videos_clean": 25,
+   "witness": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work",
+    "C7_malformed_extraction",
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 7,
+   "strategies_clean": 93,
+   "videos_clean": 31,
+   "witness": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work",
+    "C5_unsupported_temporal_or_control_flow",
+    "C7_malformed_extraction",
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 8,
+   "strategies_clean": 111,
+   "videos_clean": 37,
+   "witness": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work",
+    "C5_unsupported_temporal_or_control_flow",
+    "C6_unknown_requiredness",
+    "C7_malformed_extraction",
+    "C8_non_executable_annotation_mistyped"
+   ]
+  },
+  {
+   "k": 9,
+   "strategies_clean": 120,
+   "videos_clean": 40,
+   "witness": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work",
+    "C5_unsupported_temporal_or_control_flow",
+    "C6_unknown_requiredness",
+    "C7_malformed_extraction",
+    "C8_non_executable_annotation_mistyped",
+    "C9_RESIDUAL_none_of_these"
+   ]
+  }
+ ],
+ "population": {
+  "backtests_total": 0,
+  "replication_factor": 3,
+  "rows": 120,
+  "videos": 40
  },
- {
-  "video": "jlShztsY3oA",
-  "spec": "price_break_above_below_high_low_mnq_5m",
-  "distance": 0,
-  "residual_conditions": 0,
-  "c8_conditions": 1,
-  "total_conditions": 1,
-  "residual_classes": [],
-  "carries_c8": true
- },
- {
-  "video": "E8Wg6tFPYjo",
-  "spec": "bos_and_fvg_or_fvg_mcl_15m",
-  "distance": 1,
-  "residual_conditions": 1,
-  "c8_conditions": 10,
-  "total_conditions": 11,
-  "residual_classes": [
-   "C5"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "c8VLqF0XDR4",
-  "spec": "long_entry_or_short_entry_mcl_15m",
-  "distance": 1,
-  "residual_conditions": 1,
-  "c8_conditions": 2,
-  "total_conditions": 3,
-  "residual_classes": [
-   "C1"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "h6TnE7QClJg",
-  "spec": "momentum_build_in_real_time_mnq_5m",
-  "distance": 1,
-  "residual_conditions": 1,
-  "c8_conditions": 1,
-  "total_conditions": 2,
-  "residual_classes": [
-   "C3"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "l-2iKbcm5UI",
-  "spec": "short_position_mes_5m",
-  "distance": 1,
-  "residual_conditions": 1,
-  "c8_conditions": 3,
-  "total_conditions": 4,
-  "residual_classes": [
-   "C3"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "e5HQXYBUW-Q",
-  "spec": "short_entry_mcl_5m",
-  "distance": 1,
-  "residual_conditions": 2,
-  "c8_conditions": 3,
-  "total_conditions": 5,
-  "residual_classes": [
-   "C2"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "mNcoaNdAyIE",
-  "spec": "buy_bias_mnq_5m",
-  "distance": 1,
-  "residual_conditions": 2,
-  "c8_conditions": 6,
-  "total_conditions": 8,
-  "residual_classes": [
-   "C5"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "Qxlu8v_6G3Y",
-  "spec": "put_limit_order_right_fvg_mcl_5m",
-  "distance": 1,
-  "residual_conditions": 3,
-  "c8_conditions": 3,
-  "total_conditions": 6,
-  "residual_classes": [
-   "C2"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "lRMFcsqhYBU",
-  "spec": "buy_trades_in_counter_trend_trading_environment_mnq_4h",
-  "distance": 1,
-  "residual_conditions": 3,
-  "c8_conditions": 7,
-  "total_conditions": 10,
-  "residual_classes": [
-   "C3"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "N7uP9V0Iktc",
-  "spec": "ema_period_mnq_5m",
-  "distance": 2,
-  "residual_conditions": 2,
-  "c8_conditions": 0,
-  "total_conditions": 2,
-  "residual_classes": [
-   "C2",
-   "C7"
-  ],
-  "carries_c8": false
- },
- {
-  "video": "dE4lPhAWke8",
-  "spec": "short_entry_mes_5m",
-  "distance": 2,
-  "residual_conditions": 2,
-  "c8_conditions": 2,
-  "total_conditions": 4,
-  "residual_classes": [
-   "C2",
-   "C3"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "m-G1ag77aVc",
-  "spec": "discount_price_to_buy_from_mcl_30m",
-  "distance": 2,
-  "residual_conditions": 2,
-  "c8_conditions": 12,
-  "total_conditions": 14,
-  "residual_classes": [
-   "C4",
-   "C6"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "snNkQSyWX4k",
-  "spec": "crossover_mcl_5m",
-  "distance": 2,
-  "residual_conditions": 2,
-  "c8_conditions": 3,
-  "total_conditions": 5,
-  "residual_classes": [
-   "C2",
-   "C3"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "FqxEKDxemtI",
-  "spec": "ballinger_bands_mnq_5m",
-  "distance": 2,
-  "residual_conditions": 3,
-  "c8_conditions": 1,
-  "total_conditions": 4,
-  "residual_classes": [
-   "C4",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "sVkmZklJDHI",
-  "spec": "avoiding_two_mistakes_mcl_1m",
-  "distance": 2,
-  "residual_conditions": 6,
-  "c8_conditions": 7,
-  "total_conditions": 13,
-  "residual_classes": [
-   "C2",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "gddYspvW0_w",
-  "spec": "retracement_opportunity_mnq_5m",
-  "distance": 2,
-  "residual_conditions": 8,
-  "c8_conditions": 8,
-  "total_conditions": 16,
-  "residual_classes": [
-   "C3",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "ktkqq7QsN9Q",
-  "spec": "vwap_cross_mes_15m",
-  "distance": 2,
-  "residual_conditions": 8,
-  "c8_conditions": 0,
-  "total_conditions": 8,
-  "residual_classes": [
-   "C2",
-   "C4"
-  ],
-  "carries_c8": false
- },
- {
-  "video": "HfZTCZTDfWk",
-  "spec": "long_opportunities_mnq_4h",
-  "distance": 3,
-  "residual_conditions": 3,
-  "c8_conditions": 4,
-  "total_conditions": 7,
-  "residual_classes": [
-   "C2",
-   "C7",
-   "C9"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "deymRD3kSD0",
-  "spec": "look_i_use_range_breakouts_confirmation_trend_direction_mnq_5m",
-  "distance": 3,
-  "residual_conditions": 3,
-  "c8_conditions": 1,
-  "total_conditions": 4,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "1HFoStW_wsc",
-  "spec": "mean_reversion_mes_5m",
-  "distance": 3,
-  "residual_conditions": 4,
-  "c8_conditions": 0,
-  "total_conditions": 4,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C4"
-  ],
-  "carries_c8": false
- },
- {
-  "video": "VTEQ2fhGLqE",
-  "spec": "breakout_capture_mcl_5m",
-  "distance": 3,
-  "residual_conditions": 4,
-  "c8_conditions": 12,
-  "total_conditions": 16,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C5"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "N7SM8a7Dc9s",
-  "spec": "trading_session_time_mnq_5m",
-  "distance": 3,
-  "residual_conditions": 6,
-  "c8_conditions": 8,
-  "total_conditions": 14,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C5"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "FAKWJ-1NlLE",
-  "spec": "expansion_higher_mnq_5m",
-  "distance": 3,
-  "residual_conditions": 8,
-  "c8_conditions": 9,
-  "total_conditions": 17,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "z3Qn3fBoe2I",
-  "spec": "new_high_acceptance_mcl_5m",
-  "distance": 3,
-  "residual_conditions": 9,
-  "c8_conditions": 1,
-  "total_conditions": 10,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C4"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "WV1fyudd7fw",
-  "spec": "long_entry_mnq_15m",
-  "distance": 3,
-  "residual_conditions": 13,
-  "c8_conditions": 6,
-  "total_conditions": 19,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "x1ydP8bC7OE",
-  "spec": "buying_opportunity_mcl_15m",
-  "distance": 3,
-  "residual_conditions": 13,
-  "c8_conditions": 5,
-  "total_conditions": 18,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "bQp37aD1JLE",
-  "spec": "overall_trend_mcl_5m",
-  "distance": 4,
-  "residual_conditions": 4,
-  "c8_conditions": 4,
-  "total_conditions": 8,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "NMUd0oX_7Pg",
-  "spec": "hammer_candle_long_side_mes_5m",
-  "distance": 4,
-  "residual_conditions": 5,
-  "c8_conditions": 5,
-  "total_conditions": 10,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C5",
-   "C9"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "qLtq73bTPBA",
-  "spec": "price_break_mes_5m",
-  "distance": 4,
-  "residual_conditions": 5,
-  "c8_conditions": 23,
-  "total_conditions": 28,
-  "residual_classes": [
-   "C3",
-   "C5",
-   "C6",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "xTTDH5iRhJc",
-  "spec": "entry_at_key_levels_mcl_5m",
-  "distance": 4,
-  "residual_conditions": 5,
-  "c8_conditions": 11,
-  "total_conditions": 16,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3",
-   "C9"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "LOcaRWcc1xI",
-  "spec": "bullish_candle_formation_mcl_1m",
-  "distance": 4,
-  "residual_conditions": 8,
-  "c8_conditions": 8,
-  "total_conditions": 16,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "UBvfsImdI2U",
-  "spec": "entry_condition_mcl_1h",
-  "distance": 4,
-  "residual_conditions": 8,
-  "c8_conditions": 6,
-  "total_conditions": 14,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3",
-   "C4"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "dHmOosYof48",
-  "spec": "jump_in_downtrend_mnq_1h",
-  "distance": 4,
-  "residual_conditions": 10,
-  "c8_conditions": 15,
-  "total_conditions": 25,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3",
-   "C5"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "7ieYBa7Z-Hg",
-  "spec": "manipulation_trade_mes_1m",
-  "distance": 4,
-  "residual_conditions": 15,
-  "c8_conditions": 8,
-  "total_conditions": 23,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C4",
-   "C5"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "nV9gknhy2Ew",
-  "spec": "downside_delivery_mnq_5m",
-  "distance": 5,
-  "residual_conditions": 7,
-  "c8_conditions": 5,
-  "total_conditions": 12,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C5",
-   "C6",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "oDLt9zh33LE",
-  "spec": "opening_range_breakout_orb_mcl_5m",
-  "distance": 5,
-  "residual_conditions": 8,
-  "c8_conditions": 5,
-  "total_conditions": 13,
-  "residual_classes": [
-   "C2",
-   "C4",
-   "C5",
-   "C6",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "iU8ww5MC2FQ",
-  "spec": "trade_era_scale_in_mes_4h",
-  "distance": 5,
-  "residual_conditions": 10,
-  "c8_conditions": 6,
-  "total_conditions": 16,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C3",
-   "C4",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "KXWRtV2LOVc",
-  "spec": "order_block_entry_trigger_mes_5m",
-  "distance": 5,
-  "residual_conditions": 11,
-  "c8_conditions": 5,
-  "total_conditions": 16,
-  "residual_classes": [
-   "C2",
-   "C3",
-   "C4",
-   "C6",
-   "C7"
-  ],
-  "carries_c8": true
- },
- {
-  "video": "aHLIE_TXjpo",
-  "spec": "entry_chart_timeframe_mes_5m",
-  "distance": 5,
-  "residual_conditions": 17,
-  "c8_conditions": 12,
-  "total_conditions": 29,
-  "residual_classes": [
-   "C1",
-   "C2",
-   "C4",
-   "C6",
-   "C7"
-  ],
-  "carries_c8": true
+ "ranking": [
+  {
+   "carries_fixed_class": true,
+   "distance": 0,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 5,
+   "residual_classes": [],
+   "residual_classes_full": [],
+   "residual_conditions": 0,
+   "row_names": [
+    "5m_minute_support_level_mcl_5m",
+    "5m_minute_support_level_mes_5m",
+    "5m_minute_support_level_mnq_5m"
+   ],
+   "spec": "5m_minute_support_level_5m",
+   "total_conditions": 5,
+   "video": "75DJN5UVQnw"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 0,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 1,
+   "residual_classes": [],
+   "residual_classes_full": [],
+   "residual_conditions": 0,
+   "row_names": [
+    "price_break_above_below_high_low_mcl_5m",
+    "price_break_above_below_high_low_mes_5m",
+    "price_break_above_below_high_low_mnq_5m"
+   ],
+   "spec": "price_break_above_below_high_low_5m",
+   "total_conditions": 1,
+   "video": "jlShztsY3oA"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 10,
+   "residual_classes": [
+    "C5"
+   ],
+   "residual_classes_full": [
+    "C5_unsupported_temporal_or_control_flow"
+   ],
+   "residual_conditions": 1,
+   "row_names": [
+    "bos_and_fvg_or_fvg_mcl_15m",
+    "bos_and_fvg_or_fvg_mes_15m",
+    "bos_and_fvg_or_fvg_mnq_15m"
+   ],
+   "spec": "bos_and_fvg_or_fvg_15m",
+   "total_conditions": 11,
+   "video": "E8Wg6tFPYjo"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 2,
+   "residual_classes": [
+    "C1"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive"
+   ],
+   "residual_conditions": 1,
+   "row_names": [
+    "long_entry_or_short_entry_mcl_15m",
+    "long_entry_or_short_entry_mes_15m",
+    "long_entry_or_short_entry_mnq_15m"
+   ],
+   "spec": "long_entry_or_short_entry_15m",
+   "total_conditions": 3,
+   "video": "c8VLqF0XDR4"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 1,
+   "residual_classes": [
+    "C3"
+   ],
+   "residual_classes_full": [
+    "C3_unrecognized_vocab_EXISTING_primitive"
+   ],
+   "residual_conditions": 1,
+   "row_names": [
+    "momentum_build_in_real_time_mcl_5m",
+    "momentum_build_in_real_time_mes_5m",
+    "momentum_build_in_real_time_mnq_5m"
+   ],
+   "spec": "momentum_build_in_real_time_5m",
+   "total_conditions": 2,
+   "video": "h6TnE7QClJg"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 3,
+   "residual_classes": [
+    "C3"
+   ],
+   "residual_classes_full": [
+    "C3_unrecognized_vocab_EXISTING_primitive"
+   ],
+   "residual_conditions": 1,
+   "row_names": [
+    "short_position_mcl_5m",
+    "short_position_mes_5m",
+    "short_position_mnq_5m"
+   ],
+   "spec": "short_position_5m",
+   "total_conditions": 4,
+   "video": "l-2iKbcm5UI"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 3,
+   "residual_classes": [
+    "C2"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock"
+   ],
+   "residual_conditions": 2,
+   "row_names": [
+    "short_entry_mcl_5m",
+    "short_entry_mes_5m",
+    "short_entry_mnq_5m"
+   ],
+   "spec": "short_entry_5m",
+   "total_conditions": 5,
+   "video": "e5HQXYBUW-Q"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 6,
+   "residual_classes": [
+    "C5"
+   ],
+   "residual_classes_full": [
+    "C5_unsupported_temporal_or_control_flow"
+   ],
+   "residual_conditions": 2,
+   "row_names": [
+    "buy_bias_mcl_5m",
+    "buy_bias_mes_5m",
+    "buy_bias_mnq_5m"
+   ],
+   "spec": "buy_bias_5m",
+   "total_conditions": 8,
+   "video": "mNcoaNdAyIE"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 3,
+   "residual_classes": [
+    "C2"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock"
+   ],
+   "residual_conditions": 3,
+   "row_names": [
+    "put_limit_order_right_fvg_mcl_5m",
+    "put_limit_order_right_fvg_mes_5m",
+    "put_limit_order_right_fvg_mnq_5m"
+   ],
+   "spec": "put_limit_order_right_fvg_5m",
+   "total_conditions": 6,
+   "video": "Qxlu8v_6G3Y"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 1,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 7,
+   "residual_classes": [
+    "C3"
+   ],
+   "residual_classes_full": [
+    "C3_unrecognized_vocab_EXISTING_primitive"
+   ],
+   "residual_conditions": 3,
+   "row_names": [
+    "buy_trades_in_counter_trend_trading_environment_mcl_4h",
+    "buy_trades_in_counter_trend_trading_environment_mes_4h",
+    "buy_trades_in_counter_trend_trading_environment_mnq_4h"
+   ],
+   "spec": "buy_trades_in_counter_trend_trading_environment_4h",
+   "total_conditions": 10,
+   "video": "lRMFcsqhYBU"
+  },
+  {
+   "carries_fixed_class": false,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 0,
+   "residual_classes": [
+    "C2",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 2,
+   "row_names": [
+    "ema_period_mcl_5m",
+    "ema_period_mes_5m",
+    "ema_period_mnq_5m"
+   ],
+   "spec": "ema_period_5m",
+   "total_conditions": 2,
+   "video": "N7uP9V0Iktc"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 2,
+   "residual_classes": [
+    "C2",
+    "C3"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive"
+   ],
+   "residual_conditions": 2,
+   "row_names": [
+    "short_entry_mcl_5m",
+    "short_entry_mes_5m",
+    "short_entry_mnq_5m"
+   ],
+   "spec": "short_entry_5m",
+   "total_conditions": 4,
+   "video": "dE4lPhAWke8"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 12,
+   "residual_classes": [
+    "C4",
+    "C6"
+   ],
+   "residual_classes_full": [
+    "C4_new_vocab_ontology_work",
+    "C6_unknown_requiredness"
+   ],
+   "residual_conditions": 2,
+   "row_names": [
+    "discount_price_to_buy_from_mcl_30m",
+    "discount_price_to_buy_from_mes_30m",
+    "discount_price_to_buy_from_mnq_30m"
+   ],
+   "spec": "discount_price_to_buy_from_30m",
+   "total_conditions": 14,
+   "video": "m-G1ag77aVc"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 3,
+   "residual_classes": [
+    "C2",
+    "C3"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive"
+   ],
+   "residual_conditions": 2,
+   "row_names": [
+    "crossover_mcl_5m",
+    "crossover_mes_5m",
+    "crossover_mnq_5m"
+   ],
+   "spec": "crossover_5m",
+   "total_conditions": 5,
+   "video": "snNkQSyWX4k"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 1,
+   "residual_classes": [
+    "C4",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C4_new_vocab_ontology_work",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 3,
+   "row_names": [
+    "ballinger_bands_mcl_5m",
+    "ballinger_bands_mes_5m",
+    "ballinger_bands_mnq_5m"
+   ],
+   "spec": "ballinger_bands_5m",
+   "total_conditions": 4,
+   "video": "FqxEKDxemtI"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 7,
+   "residual_classes": [
+    "C2",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 6,
+   "row_names": [
+    "avoiding_two_mistakes_mcl_1m",
+    "avoiding_two_mistakes_mes_1m",
+    "avoiding_two_mistakes_mnq_1m"
+   ],
+   "spec": "avoiding_two_mistakes_1m",
+   "total_conditions": 13,
+   "video": "sVkmZklJDHI"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 8,
+   "residual_classes": [
+    "C3",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 8,
+   "row_names": [
+    "retracement_opportunity_mcl_5m",
+    "retracement_opportunity_mes_5m",
+    "retracement_opportunity_mnq_5m"
+   ],
+   "spec": "retracement_opportunity_5m",
+   "total_conditions": 16,
+   "video": "gddYspvW0_w"
+  },
+  {
+   "carries_fixed_class": false,
+   "distance": 2,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 0,
+   "residual_classes": [
+    "C2",
+    "C4"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C4_new_vocab_ontology_work"
+   ],
+   "residual_conditions": 8,
+   "row_names": [
+    "vwap_cross_mcl_15m",
+    "vwap_cross_mes_15m",
+    "vwap_cross_mnq_15m"
+   ],
+   "spec": "vwap_cross_15m",
+   "total_conditions": 8,
+   "video": "ktkqq7QsN9Q"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 4,
+   "residual_classes": [
+    "C2",
+    "C7",
+    "C9"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C7_malformed_extraction",
+    "C9_RESIDUAL_none_of_these"
+   ],
+   "residual_conditions": 3,
+   "row_names": [
+    "long_opportunities_mcl_4h",
+    "long_opportunities_mes_4h",
+    "long_opportunities_mnq_4h"
+   ],
+   "spec": "long_opportunities_4h",
+   "total_conditions": 7,
+   "video": "HfZTCZTDfWk"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 1,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive"
+   ],
+   "residual_conditions": 3,
+   "row_names": [
+    "look_i_use_range_breakouts_confirmation_trend_direction_mcl_5m",
+    "look_i_use_range_breakouts_confirmation_trend_direction_mes_5m",
+    "look_i_use_range_breakouts_confirmation_trend_direction_mnq_5m"
+   ],
+   "spec": "look_i_use_range_breakouts_confirmation_trend_direction_5m",
+   "total_conditions": 4,
+   "video": "deymRD3kSD0"
+  },
+  {
+   "carries_fixed_class": false,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 0,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C4"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work"
+   ],
+   "residual_conditions": 4,
+   "row_names": [
+    "mean_reversion_mcl_5m",
+    "mean_reversion_mes_5m",
+    "mean_reversion_mnq_5m"
+   ],
+   "spec": "mean_reversion_5m",
+   "total_conditions": 4,
+   "video": "1HFoStW_wsc"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 12,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C5"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C5_unsupported_temporal_or_control_flow"
+   ],
+   "residual_conditions": 4,
+   "row_names": [
+    "breakout_capture_mcl_5m",
+    "breakout_capture_mes_5m",
+    "breakout_capture_mnq_5m"
+   ],
+   "spec": "breakout_capture_5m",
+   "total_conditions": 16,
+   "video": "VTEQ2fhGLqE"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 8,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C5"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C5_unsupported_temporal_or_control_flow"
+   ],
+   "residual_conditions": 6,
+   "row_names": [
+    "trading_session_time_mcl_5m",
+    "trading_session_time_mes_5m",
+    "trading_session_time_mnq_5m"
+   ],
+   "spec": "trading_session_time_5m",
+   "total_conditions": 14,
+   "video": "N7SM8a7Dc9s"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 9,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive"
+   ],
+   "residual_conditions": 8,
+   "row_names": [
+    "expansion_higher_mcl_5m",
+    "expansion_higher_mes_5m",
+    "expansion_higher_mnq_5m"
+   ],
+   "spec": "expansion_higher_5m",
+   "total_conditions": 17,
+   "video": "FAKWJ-1NlLE"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 1,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C4"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work"
+   ],
+   "residual_conditions": 9,
+   "row_names": [
+    "new_high_acceptance_mcl_5m",
+    "new_high_acceptance_mes_5m",
+    "new_high_acceptance_mnq_5m"
+   ],
+   "spec": "new_high_acceptance_5m",
+   "total_conditions": 10,
+   "video": "z3Qn3fBoe2I"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 6,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 13,
+   "row_names": [
+    "long_entry_mcl_15m",
+    "long_entry_mes_15m",
+    "long_entry_mnq_15m"
+   ],
+   "spec": "long_entry_15m",
+   "total_conditions": 19,
+   "video": "WV1fyudd7fw"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 3,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 5,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 13,
+   "row_names": [
+    "buying_opportunity_mcl_15m",
+    "buying_opportunity_mes_15m",
+    "buying_opportunity_mnq_15m"
+   ],
+   "spec": "buying_opportunity_15m",
+   "total_conditions": 18,
+   "video": "x1ydP8bC7OE"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 4,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 4,
+   "row_names": [
+    "overall_trend_mcl_5m",
+    "overall_trend_mes_5m",
+    "overall_trend_mnq_5m"
+   ],
+   "spec": "overall_trend_5m",
+   "total_conditions": 8,
+   "video": "bQp37aD1JLE"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 5,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C5",
+    "C9"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C5_unsupported_temporal_or_control_flow",
+    "C9_RESIDUAL_none_of_these"
+   ],
+   "residual_conditions": 5,
+   "row_names": [
+    "hammer_candle_long_side_mcl_5m",
+    "hammer_candle_long_side_mes_5m",
+    "hammer_candle_long_side_mnq_5m"
+   ],
+   "spec": "hammer_candle_long_side_5m",
+   "total_conditions": 10,
+   "video": "NMUd0oX_7Pg"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 23,
+   "residual_classes": [
+    "C3",
+    "C5",
+    "C6",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C5_unsupported_temporal_or_control_flow",
+    "C6_unknown_requiredness",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 5,
+   "row_names": [
+    "price_break_mcl_5m",
+    "price_break_mes_5m",
+    "price_break_mnq_5m"
+   ],
+   "spec": "price_break_5m",
+   "total_conditions": 28,
+   "video": "qLtq73bTPBA"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 11,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3",
+    "C9"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C9_RESIDUAL_none_of_these"
+   ],
+   "residual_conditions": 5,
+   "row_names": [
+    "entry_at_key_levels_mcl_5m",
+    "entry_at_key_levels_mes_5m",
+    "entry_at_key_levels_mnq_5m"
+   ],
+   "spec": "entry_at_key_levels_5m",
+   "total_conditions": 16,
+   "video": "xTTDH5iRhJc"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 8,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 8,
+   "row_names": [
+    "bullish_candle_formation_mcl_1m",
+    "bullish_candle_formation_mes_1m",
+    "bullish_candle_formation_mnq_1m"
+   ],
+   "spec": "bullish_candle_formation_1m",
+   "total_conditions": 16,
+   "video": "LOcaRWcc1xI"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 6,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3",
+    "C4"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work"
+   ],
+   "residual_conditions": 8,
+   "row_names": [
+    "entry_condition_mcl_1h",
+    "entry_condition_mes_1h",
+    "entry_condition_mnq_1h"
+   ],
+   "spec": "entry_condition_1h",
+   "total_conditions": 14,
+   "video": "UBvfsImdI2U"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 15,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3",
+    "C5"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C5_unsupported_temporal_or_control_flow"
+   ],
+   "residual_conditions": 10,
+   "row_names": [
+    "jump_in_downtrend_mcl_1h",
+    "jump_in_downtrend_mes_1h",
+    "jump_in_downtrend_mnq_1h"
+   ],
+   "spec": "jump_in_downtrend_1h",
+   "total_conditions": 25,
+   "video": "dHmOosYof48"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 4,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 8,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C4",
+    "C5"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work",
+    "C5_unsupported_temporal_or_control_flow"
+   ],
+   "residual_conditions": 15,
+   "row_names": [
+    "manipulation_trade_mcl_1m",
+    "manipulation_trade_mes_1m",
+    "manipulation_trade_mnq_1m"
+   ],
+   "spec": "manipulation_trade_1m",
+   "total_conditions": 23,
+   "video": "7ieYBa7Z-Hg"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 5,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 5,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C5",
+    "C6",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C5_unsupported_temporal_or_control_flow",
+    "C6_unknown_requiredness",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 7,
+   "row_names": [
+    "downside_delivery_mcl_5m",
+    "downside_delivery_mes_5m",
+    "downside_delivery_mnq_5m"
+   ],
+   "spec": "downside_delivery_5m",
+   "total_conditions": 12,
+   "video": "nV9gknhy2Ew"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 5,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 5,
+   "residual_classes": [
+    "C2",
+    "C4",
+    "C5",
+    "C6",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C4_new_vocab_ontology_work",
+    "C5_unsupported_temporal_or_control_flow",
+    "C6_unknown_requiredness",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 8,
+   "row_names": [
+    "opening_range_breakout_orb_mcl_5m",
+    "opening_range_breakout_orb_mes_5m",
+    "opening_range_breakout_orb_mnq_5m"
+   ],
+   "spec": "opening_range_breakout_orb_5m",
+   "total_conditions": 13,
+   "video": "oDLt9zh33LE"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 5,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 6,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C3",
+    "C4",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 10,
+   "row_names": [
+    "trade_era_scale_in_mcl_4h",
+    "trade_era_scale_in_mes_4h",
+    "trade_era_scale_in_mnq_4h"
+   ],
+   "spec": "trade_era_scale_in_4h",
+   "total_conditions": 16,
+   "video": "iU8ww5MC2FQ"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 5,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 5,
+   "residual_classes": [
+    "C2",
+    "C3",
+    "C4",
+    "C6",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C2_recognized_session_missing_clock",
+    "C3_unrecognized_vocab_EXISTING_primitive",
+    "C4_new_vocab_ontology_work",
+    "C6_unknown_requiredness",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 11,
+   "row_names": [
+    "order_block_entry_trigger_mcl_5m",
+    "order_block_entry_trigger_mes_5m",
+    "order_block_entry_trigger_mnq_5m"
+   ],
+   "spec": "order_block_entry_trigger_5m",
+   "total_conditions": 16,
+   "video": "KXWRtV2LOVc"
+  },
+  {
+   "carries_fixed_class": true,
+   "distance": 5,
+   "distinct_videos": 1,
+   "fixed_class_conditions": 12,
+   "residual_classes": [
+    "C1",
+    "C2",
+    "C4",
+    "C6",
+    "C7"
+   ],
+   "residual_classes_full": [
+    "C1_known_concept_missing_primitive",
+    "C2_recognized_session_missing_clock",
+    "C4_new_vocab_ontology_work",
+    "C6_unknown_requiredness",
+    "C7_malformed_extraction"
+   ],
+   "residual_conditions": 17,
+   "row_names": [
+    "entry_chart_timeframe_mcl_5m",
+    "entry_chart_timeframe_mes_5m",
+    "entry_chart_timeframe_mnq_5m"
+   ],
+   "spec": "entry_chart_timeframe_5m",
+   "total_conditions": 29,
+   "video": "aHLIE_TXjpo"
+  }
+ ],
+ "spec_label_status_counts": {
+  "OK": 40
  }
-]
+}
