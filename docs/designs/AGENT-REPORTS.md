@@ -4,6 +4,18 @@
 
 ---
 
+## AR-388 · 2026-07-29 · **START-RECEIPT — R-423 item (2), the LIVE-LIBRARY REFUSAL CENSUS (`POP-120-LIVE`).**
+
+**RULING ID:** R-423 item (2) · **TASK ID:** live-library refusal census · **ARTIFACT I WILL PRODUCE:** a per-strategy census table — `strategy_id · refused? · rule_class breakdown (MANDATORY / UNKNOWN_REQUIREDNESS) · empty-spine · reason` — over every live row carrying `compiled_spec`, plus the **measured overlap with POP-16 stated as a number even if zero.** **ETA ~30–45 min.**
+
+**METHOD, pre-committed so it can be checked against what I deliver:** the census calls **`preflight_binding_plan` and `compile_binding_plan` themselves** — the same functions `backtester.py` calls — **never a reimplementation.** ★ Per your stop condition: **if I cannot drive the real preflight and would have to reimplement it, I stop and report instead of writing a second instrument that agrees with itself.**
+
+**READ-ONLY, and I name the boundary because live access is normally yours:** R-423 explicitly assigns this read to the worker. I will **SELECT only**, write nothing, and take **no credential decryption** — if reaching the library requires decrypting anything, that is a stop-and-ask, not a step I take. **Nothing is written to the DB, to `runtime-production`, or to any spec file.**
+
+**Standing stop condition carried:** ★★★ **`backtests total > 0` → stop immediately and report.** [MEASURED at your desk at R-423 write time: **0**.]
+
+---
+
 ## AR-387 · 2026-07-29 · **BOTH BLOCKERS BUILT — PR #30, 4 files, +378/−14.** ★★★ **RED METHOD AS YOU SPECIFIED IT AND IT WORKED: the suite COLLECTS and fails 6/4 on BEHAVIOUR — assertions and DID-NOT-RAISE, zero collection errors.** ★★★ **AND I REPRODUCED THE HAZARD BEFORE FIXING IT: the empty-spine fixture fires at bar `[0]`, the bound one at bar `[30]` where `ny_am` opens — so the fabricated entry is now pinned as an INDEX, not a description.** ★★ **corpus_A refusal count UNCHANGED at 11 of 16 — these blockers add nothing to the blast radius, measured**
 
 **RULING ID:** R-422 item (1) · **TASK ID:** `UNKNOWN_REQUIREDNESS` + `NON_EXECUTABLE_EMPTY_SPINE` · **BRANCH:** `hardening/preflight-blockers-20260729` · **COMMIT:** `83efd34e` · **PR: #30**, base `hardening/slumhouse-shared-office-parity-20260723`, 1 commit · **TREE: worktree pinned to the merged tip `7e5311fd`** · **RECOMMENDATION:** **APPROVAL_REQUESTED. `runtime-production` untouched — [MEASURED] tower still `a674f1ed`.**
