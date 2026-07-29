@@ -5,9 +5,9 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-424** (commit `952c4e57`). Newest AR: **AR-389, RULED**
-(`POP-120-LIVE` census). Worker: **authorized on the corpus_B charter +
-vocabulary ledger over `POP-120-LIVE`** (R-424 item 1).
+Ledger at **R-425** (commit `48766924`). Newest AR: **AR-390** — a START-RECEIPT
+for the corpus_B ledger, not a report awaiting a ruling. Worker: **ACTIVE on the
+corpus_B charter + vocabulary ledger over `POP-120-LIVE`** (R-424 item 1).
 ★★★ **PR #29 AND #30 ARE MERGED *AND DEPLOYED*. The tower is at `a6f92822`
 (was `a674f1ed`) — the two-release gap R-423 published is CLOSED, all six
 acceptance criteria MEASURED in the running tree.**
@@ -78,9 +78,18 @@ patching individual strategies to raise a pass count.
 **(2) WORKER — fold in:** re-derive the **empty-spine ∩ NEEDS_ARCHETYPE** join by
 a second path, **join key = strategy id**, and publish the 3 ids.
 **(3) WORKER — standing:** **NAME THE TREE in every figure.**
-**(4) THIS SEAT — mine, not delegated:** re-derive the pinned Phase-1 figures
-(`0/16 fully bound`, the 7 FVG crossings) **in the DEPLOYED lane**. Until then
-**no Phase-1 exit claim may rest on campaign-tree numbers.**
+**(4) THIS SEAT — DONE (R-425).** Superseded by:
+**(5) WORKER — NEXT, after (1)'s first cut: the LEVELZONE PARITY PORT.** Semantic
++ dependency diff, never a folder copy; port the MINIMUM; **red-proof first** (a
+test pinning deployed at `0 of 155` flags-ON that goes green only after the
+port); **acceptance is the SIX IDENTITIES pinned in R-425, never the count** — a
+port landing "6" via six *different* conditions passes a count check and is a
+fidelity regression. Flags-off behaviour must be unchanged. **The six may NOT be
+credited to any production metric until the deployed tests pass.**
+**(6) THIS SEAT — mine:** sweep for OTHER campaign-only capabilities. Levelzone
+was found only by testing the two flags I already knew about; **enumerate by
+CONSEQUENCE, not by annotation** — a capability with no flag is invisible to a
+flag sweep and no less absent.
 
 ## NOT AUTHORIZED
 Deploying/updating the tower worktree · any write to `runtime-production` · real
@@ -94,11 +103,20 @@ DEPLOYED AND VERIFIED IN THE RUNNING TREE (R-424).** `spec_execution_preflight.p
 present 14,248 B · `36 passed` run there · point-of-use raises at `:638`/`:750` ·
 **ONE construction site (`backtester.py:8493`) with enforcement between it and
 the mode split — no second door** · `backtests total: 0` re-checked post-deploy.
-**[MEASURED] ★★★ THE DIVERGENCE DID NOT CLOSE — IT MOVED.** `spec_family_bindings.py`
-is **byte-identical** (`sha256`, 40,583 B) between `runtime-production` and
-`wt-preflight-blockers-20260729`, but **`wt-h1-wave4-20260712` is 160,049 B — a
-3.9× outlier, and EVERY pinned Phase-1 figure was computed in it.** Re-derivation
-in the deployed lane is **AUTHORIZED item (4), this seat.**
+**[MEASURED HERE, R-425 — item (4) DONE] ★★ THE LANE QUESTION IS ANSWERED PER
+FIGURE, and R-424's blanket alarm is WITHDRAWN as over-broad.** Flags-off:
+**tree-invariant, 0 per-condition diffs across all 155** (`bindable` ·
+`approximation` · `primitive`) → the pinned `0 of 155` **HOLDS in the deployed
+lane**. FVG arm: **tree-invariant, 10 both lanes** (reproduces R-413).
+**★★★ LEVELZONE DOES NOT TRANSFER: campaign `6 of 155` · deployed `0 of 155`.**
+Mechanism [MEASURED]: **zero non-test references to `TF_LEVELZONE_*` in the whole
+deployed engine**; campaign carries binder `:210/:2448`, dispatch `:119/:1169`,
+handler `_h_levelzone_resolver:581`. **★★★ AND THE COUNT HIDES THE POINT: the six
+still BIND in production — approximately, via `structure_engine`, `approximation
+=True` — and ALL SIX ARE `role=spine` (MANDATORY). The preflight CANNOT catch it:
+approximate-but-bound passes. Executability is enforced; FIDELITY is a separate,
+still-unguarded axis.** Re-runnable instrument:
+`docs/replay-results/h1-battery/lane_parity_probe.py`.
 **[MEASURED HERE, live production DB, read-only, unpiped]** `backtests total: 0`
 · `strategies total: 120` · 120/120 carry `compiled_spec` · 27 carry an
 orphan-zone term. **Safe by STARVATION, not by design.**
@@ -140,6 +158,18 @@ to raise a pass count (inconvenience is not evidence).
 `POP-120-LIVE` (production exposure) · `POP-41` (historical only, overlap with
 corpus_A = ZERO). No result from one may be presented as applying to another
 without a measured overlap.
+★★★ **METRIC GOVERNANCE (R-425), binding:** every figure names **population ·
+code lane · commit · flag state · metric formula · status in {campaign-proven ·
+merged · deployed · runtime-verified}**. `campaign-proven ≠ deployed ≠
+production-available` — three states, and R-425 exists because two were written
+as one. **No campaign-workspace aggregate may be called live-tower capability
+without a deployed-lane reproduction.**
+★★ **DO NOT edit the historical campaign artifact to match production** — the
+pinned `6 of 155` stays TRUE of the campaign lane; retro-fitting artifacts to
+later results destroys the ability to detect drift. Preserve both, lane-labelled.
+★★ **`120 of 120` stays ATTRIBUTED TO AR-389** until reproduced in the deployed
+lane. **`18` is the authoritative `UNKNOWN_REQUIREDNESS` count** — the advisor's
+`987` was an envelope-vs-inner join error and is NOT carried forward.
 
 ## KNOWN-BENIGN (do not investigate)
 `M src/engine/tests/fixtures/session_windows_parity.json` phantom · a monitor
