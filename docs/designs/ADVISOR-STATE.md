@@ -5,10 +5,40 @@
 > Last rewritten: 2026-07-29, current through **R-438**.
 
 ## SEAT
-Ledger at **R-439**. Newest AR: **AR-410, RULED** — **PR #31 IS OPEN AND RATIFIED
-ON THE BUILD; MERGE HELD SOLELY ON THE CENSUS, WHICH IS NOW ACTUALLY IN FLIGHT.**
-Worker: **authorized on two mechanical items (R-439): the CI-gate MEASUREMENT
-(not a config flip) and the HOLDOUT-26 class-balance census.**
+Ledger at **R-441**. Newest AR: **AR-413, RULED.** ★★★ **PR #31 IS MERGED —
+`a52449ac`, 2026-07-29T04:23:56Z. The provenance defect is CLOSED: 426 conditions
+stop claiming the source required them, refusal set unmoved.** ★ **[MEASURED
+HERE] merging did NOT deploy — `LANDED ≠ RUNNING`, no tower update performed.**
+Worker: **item (1) CI-gate MEASUREMENT in flight (the only open task); then the
+`compile_lints.py:129` comment fix, documentation-only.**
+★★★ **THE MERGE EVIDENCE, so no later seat re-derives it: census `A−B = B−A = ∅`
+as literal 1368-member sets over the real 120-row library on both commits, `Δ426`
+independently derived, `backtests = 0` across FOUR tables · PLUS `2404 passed /
+17 skipped / 0 failed, exit 0` across the **145-suite TRANSITIVE** surface at
+`0b0d6617`.**
+★★★ **I HELD MY OWN DRAFTED MERGE TO GET THAT SECOND NUMBER: R-439 §2 published
+"the 7 suites importing either changed module" — that was the DIRECT textual
+grep, and the transitive closure is 145. A CENSUS IS BOUNDED BY ITS SURFACE. The
+same closure is 114 in the campaign tree and 145 at the PR head — state the tree.**
+★★ **HEADLINE COUNT WAS WRONG AND IS CORRECTED ON THE PR ITSELF: `MANDATORY
+1350→924`, not `1347→921` (+3 both sides = three plan-level
+`NON_EXECUTABLE_EMPTY_SPINE` refusals that hardcode `rule_class=MANDATORY`
+independent of `_MANDATORY_ROLES`). `UNKNOWN_REQUIREDNESS 18→444`, `Δ426`,
+`total 1368` were all exactly right.**
+★★★ **A COMPLETION SIGNAL IS NOT A RESULT — FOUR false greens in one session:
+`ci.yml` pytest `continue-on-error:true` · R-438's recorded-but-never-run grader ·
+a 145-suite run that exited `4` on a missing `pytest-timeout` while the harness
+said "exit code 0" · a PR-body edit that printed "UPDATED" having changed nothing
+(Python resolved `/tmp`→`C:\tmp`, next line re-uploaded the original). **VERIFY
+THE ARTIFACT, NOT THE SIGNAL. Every mutation asserts its own edit TOOK.**
+★★ **`pytest-timeout` IS NOT INSTALLED in these worktrees — `--timeout` makes
+pytest exit `4`; use the shell's `timeout` and capture `$?` unpiped.**
+★★★ **`contextual` 7 rows/5 videos · `alternative` 8 rows/6 videos — BOTH
+UNDERPOWERED, and all 15 came via `RESOLVED_POINTER_TEXT`, `0 of 15` via
+`SEMANTIC_SOURCE_TEXT`. DO NOT spend a grader on them; diagnostic fixtures only.
+No semantic-class result may be published without distinct-VIDEO count + path
+split. The role↔class mapping is REFUTED, not merely unvalidated: `confluence`
+is commoner under `mandatory` (13) than under `contextual` (4).**
 ★★★ **[MEASURED HERE] THE `CI RED` STOP CONDITION R-437 ARMED HAS NO PATH TO RED:
 `ci.yml`'s pytest step is `continue-on-error: true`, so a failing Python suite
 still reports green. THE WORKER CAUGHT THIS IN MY OWN RULING.** ★★★ **STANDING,
