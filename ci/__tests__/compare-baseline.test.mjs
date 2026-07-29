@@ -143,6 +143,46 @@ describe("compareBaseline", () => {
     });
   });
 
+  it("THROWS LOUDLY when the vitest status enum is unrecognized (R-446)", () => {
+    // ★★★ The failure this guards: a future vitest renames `status`, so `passed`
+    //     comes back EMPTY-BUT-PRESENT — indistinguishable from absent — and
+    //     --fail-on-stale goes silently inert while CI stays green. vitest is
+    //     pinned `^3.1.0` (floating), so this is a live trigger, not a theory.
+    const renamed = {
+      testResults: [{
+        name: "/x/a.test.ts",
+        assertionResults: [
+          { status: "success", fullName: "a one" },
+          { status: "success", fullName: "a two" },
+        ],
+      }],
+    };
+
+    expect(() => parseVitestJson(renamed)).toThrow(/unrecognized assertion status/);
+    expect(() => parseVitestJson(renamed)).toThrow(/success=2/);
+  });
+
+  it("CONTROL: a legitimately all-skipped run does NOT throw", () => {
+    // ★ The control that stops the assertion above from being a blunt
+    //   "passed must be non-empty" rule. Skipping everything is legal; an
+    //   UNRECOGNIZED status is not. Without this, the guard would false-fire on
+    //   a filtered run and get disabled by whoever it annoyed first.
+    const allSkipped = {
+      testResults: [{
+        name: "/x/b.test.ts",
+        assertionResults: [
+          { status: "skipped", fullName: "b one" },
+          { status: "todo", fullName: "b two" },
+        ],
+      }],
+    };
+
+    const parsed = parseVitestJson(allSkipped);
+    expect(parsed.passed).toEqual([]);
+    expect(parsed.failures).toEqual([]);
+    expect(parsed.collected).toBe(2);
+  });
+
   it("DISCRIMINATOR: a pytest <skipped> testcase is not counted as passed", () => {
     // Skipped is the pytest twin of the vitest case above: it did not fail
     // because it did not run, so it must not license a baseline removal.

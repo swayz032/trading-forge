@@ -120,8 +120,16 @@ export function parseVitestJson(report) {
     throw new Error("vitest_report_malformed: testResults array missing");
   }
 
+  // ★★★ THE STATUS VOCABULARY THIS PARSER UNDERSTANDS (R-446).
+  //     Every assertionResult carries exactly one status, so recognized statuses
+  //     MUST account for every collected test. If vitest renames or adds a
+  //     status value, the shortfall is exact and detectable — see the assertion
+  //     at the end of this function.
+  const KNOWN_STATUSES = new Set(["passed", "failed", "skipped", "todo", "pending"]);
   const failures = [];
   const passed = [];
+  const unknownStatuses = new Map();
+  let recognized = 0;
   let collected = 0;
   for (const file of report.testResults) {
     if (!Array.isArray(file?.assertionResults)) {
@@ -134,15 +142,64 @@ export function parseVitestJson(report) {
         ?? [...(assertion?.ancestorTitles ?? []), assertion?.title].filter(Boolean).join(" > ")
         ?? "unknown test";
       const id = `${fileName} > ${fullName}`;
-      if (assertion?.status === "failed") {
+      const st = assertion?.status;
+      if (KNOWN_STATUSES.has(st)) {
+        recognized += 1;
+      } else {
+        unknownStatuses.set(String(st), (unknownStatuses.get(String(st)) ?? 0) + 1);
+      }
+      if (st === "failed") {
         failures.push(id);
-      } else if (assertion?.status === "passed") {
+      } else if (st === "passed") {
         // ★ ONLY an explicit "passed" counts as having run successfully.
         //   "skipped"/"todo"/"pending" are deliberately excluded — see the
         //   fixed-vs-unresolved split in compareBaseline().
         passed.push(id);
       }
     }
+  }
+
+  // ★★★★★ SANITY ASSERTION (R-446). THROW LOUDLY, NEVER RETURN A QUIET EMPTY SET.
+  //
+  // THE FAILURE THIS EXISTS TO CATCH: if a future vitest renames the `status`
+  // enum, `passed` comes back EMPTY-BUT-PRESENT. That is indistinguishable from
+  // "absent" downstream, so `--fail-on-stale` goes SILENTLY INERT — the guard
+  // stops guarding and CI stays green. The trigger is live, not hypothetical:
+  // `package.json` pins vitest `^3.1.0` (a floating range) and the lockfile
+  // already resolves 3.2.7, while every shape test here uses a hand-built
+  // synthetic report rather than a real vitest artifact.
+  //
+  // ★★★ WHY EXACT ACCOUNTING RATHER THAN A RATIO THRESHOLD:
+  // every assertion has exactly one status, so `recognized === collected` is an
+  // INVARIANT, not a tolerance. A ratio ("passed+failed must exceed N% of
+  // collected") would need an arbitrary constant that is wrong in both
+  // directions — it false-fires on a legitimately mostly-skipped run, and it
+  // still passes if a rename leaves a large-enough minority recognized. Exact
+  // accounting has no constant to tune and names the offending value.
+  //
+  // ★ DELIBERATE TRADE-OFF: a NEW but legitimate vitest status would also throw.
+  //   That is the intended direction — a loud false red is recoverable in one
+  //   commit, whereas a silently inert guard is not detectable at all.
+  if (unknownStatuses.size > 0) {
+    const detail = [...unknownStatuses.entries()]
+      .map(([status, n]) => `${status}=${n}`)
+      .sort()
+      .join(", ");
+    throw new Error(
+      "vitest_report_malformed: unrecognized assertion status "
+      + `(${detail}) across ${collected} collected test(s). `
+      + `Recognized statuses are: ${[...KNOWN_STATUSES].join(", ")}. `
+      + "The reporter's status vocabulary has changed, so passed/failed sets "
+      + "cannot be trusted and --fail-on-stale would go silently inert. "
+      + "Update KNOWN_STATUSES in ci/compare-baseline.mjs after checking which "
+      + "of the new values mean ran-and-passed.",
+    );
+  }
+  if (collected > 0 && recognized !== collected) {
+    throw new Error(
+      `vitest_report_malformed: only ${recognized} of ${collected} collected `
+      + "tests carried a recognized status.",
+    );
   }
 
   return { failures: stableStrings(failures), passed: stableStrings(passed), collected };
