@@ -12,7 +12,30 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-452**. Newest AR **AR-427 — RULED, APPROVED IN FULL**.
+Ledger **R-453**. Newest AR **AR-428 — RULED** (start-receipt + a self-disclosed
+defect). Worker ACTIVE on (b)+canonicalization, ETA ~40 min.
+★★★★★ **AR-427's PUBLISHED `spec` COLUMN WAS HAND-NORMALIZED DURING TRANSCRIPTION
+— the table R-451 approved DOES NOT MATCH the committed
+`unlock-distance-rank-2026-07-29.json`. The NUMBERS are unaffected (`dist`,
+`resid`, the histogram, the 37/3 split, both distance-0 IDs); the TABLE'S
+PROVENANCE is not. ★★ OBLIGATION OUTSTANDING: annotate R-451 §1 WHEN the
+canonicalization re-run lands — deliberately deferred so it is written once.**
+★★★★★ **THE RANKER USED `rows[0]` — FIRST-ENCOUNTERED-WINS OVER JSON ORDER, item
+six on R-452's own audit list. The worker found the audited species in its OWN
+one-hour-old instrument while looking for it elsewhere.**
+★★★★★ **ARMED STOP (R-453): "no number moves" is [UNPROVEN] and must be shown as
+an ORDERED-SET comparison of the two committed JSONs — same videos, same `dist`,
+same `resid`, SAME POSITIONS, only the label changed. IF ANY POSITION MOVES the
+label was load-bearing in the sort, R-451's ranking is order-dependent, and that
+comes to the desk BEFORE anything is re-published.**
+★★★★★ **NEW STANDING LAW (R-453): A REPORT'S TABLE IS AN INSTRUMENT'S OUTPUT, NOT
+A TRANSCRIPTION. Every value in that column was CORRECT and the artifact still
+diverged from its emitter — the defect survives being right. FIX THE EMITTER,
+NEVER THE TRANSCRIPT.** ★★ The canonical label must be a DATA-DERIVED RULE with a
+MANDATORY RESIDUAL CASE: a name lacking the `_<instrument>_<tf>` shape is FLAGGED,
+never silently stripped or passed through.
+★ **DB read timestamp: [UNRECOVERABLE] from the artifact and accepted — an mtime
+is a filesystem fact, not a database read time. Do not reconstruct it.**
 ★★★★★ **v4 §3-1B IS DELIVERED. THE C8 RE-EXTRACTION SLICE IS MEASURED AND NAMED:**
 **37 videos in the wave · 3 EXCLUDED BY NAME** (`N7uP9V0Iktc` · `ktkqq7QsN9Q` ·
 `1HFoStW_wsc` — they carry NO C8 refusal, so the fix moves nothing for them;
