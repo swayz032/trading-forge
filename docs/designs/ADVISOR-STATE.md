@@ -5,8 +5,14 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-427**. Newest AR: **AR-394** — a START-RECEIPT for the pointer-store
-probe. Worker: **ACTIVE on R-427 item (1)**.
+Ledger at **R-428**. Newest AR: **AR-396** — the worker's HANDOFF, ruled.
+Worker: **STOOD DOWN CLEAN. A FRESH WORKER SEAT IS NEEDED.**
+★★★ **CARRY THESE OR REPEAT THE LAST SEAT'S MISTAKES (its words, adopted):
+NAME THE TREE — measure in `wt-preflight-blockers-20260729` (sha256-identical to
+`runtime-production`), NEVER the campaign tree · PER-VIDEO, NOT PER-ROW — every
+raw count is inflated 3× · READ THE FIELD, NOT THE KEY LIST — printing an
+envelope's keys is not reading its contents, and this desk built a ruling on that
+error before catching it.**
 ★★★ **ROLE INVERSION (R-427, [MEASURED HERE]): ALL 245 execution-grade entry
 tokens (`ENABLE_ENTRY`+`ENTER`) are `role=trigger`; ZERO are `spine`.** `role`
 carries NARRATIVE structure, `type` carries EXECUTION semantics — this codebase
@@ -93,14 +99,18 @@ loop** on a count the extractor itself controls · `:171` *"Bias toward INCLUSIO
 when in doubt"* · `:616` *"drop to 15M for setup … emit each step as a confirming
 indicator"* — chart navigation ORDERED as a condition. The prompt says `spine`
 ZERO times.**
-**(1) WORKER — IN FLIGHT: the POINTER-STORE PROBE.** Does anything resolve
-`T-<vid>-C####`? Yes/no + the resolving table/file named + ONE worked example.
-**Moves 43.5% of provenance between gradeable and decorative.**
-**(1b) WORKER — THEN: FIND WHAT WRITES `role`** (not this repo, per grep). Closes
-both the `trigger` promotion question and the type-vs-role remap.
-**(1c) WORKER — THEN: the `C8` PROPOSAL AGAINST THE PROMPT** (`:169`/`:171`/`:616`),
-**proposal only — the prompt is an instrument → `ratify-packet` + independent
-grader.**
+★★★ **THE WORKER SEAT HANDED OFF CLEAN AT AR-396** (nothing half-done, nothing in
+flight, no sub-agents owed, all committed at `ae79c789`). **A FRESH WORKER SESSION
+IS NEEDED — the queue below is startable cold from R-428.**
+**(1) POINTER-RESOLUTION SWEEP** — run the SAME `segmentTranscript` over all 936
+per-video pointer values; report resolved/unresolved + reasons. **Converts 3-of-3
+into a RATE.** ★ Publish a CONTROL line proving the real function ran.
+**(2) FIND WHAT WRITES `role`.** ★★ Do NOT re-run the last seat's search —
+[MEASURED] no non-test assignment exists in the primary checkout. **Look OUTSIDE:
+model output schema · external service · migration · seed · onboarding payload.**
+Closes the `trigger` promotion question.
+**(3) THE `C8` PROMPT PROPOSAL** — draft exists at AR-393 §5 (P1–P4) targeting
+`transcript-extractor.md:169/:171/:616`. **Proposal only → `ratify-packet`.**
 ★★★ **A `C8` remedy at the BINDER or PREFLIGHT is FORBIDDEN — suppressing an
 annotation downstream is indistinguishable, in the record, from dropping a
 taught rule, which is the exact defect this safety chain exists to end.**
@@ -190,10 +200,18 @@ behaviour-changing fixture — **frequency in POP-41 is explicitly disqualified.
 collapsed** — they route to different repairs and collapsing them fabricates
 provenance. **Confluence stays FAIL-CLOSED**; the refusal set may not be softened
 to raise a pass count (inconvenience is not evidence).
-**Population naming is mandatory everywhere:** `POP-16 / corpus_A` (Phase-1) ·
-`POP-120-LIVE` (production exposure) · `POP-41` (historical only, overlap with
-corpus_A = ZERO). No result from one may be presented as applying to another
-without a measured overlap.
+**Population naming is mandatory everywhere:** `POP-16 / corpus_A` (Phase-1, a
+16-spec SHAKEDOWN SET — **not the product**) · `POP-120-LIVE` = **40 videos × 3**
+(production exposure) · ★★★ **`POP-41` IS NOT "HISTORICAL ONLY" — CORRECTED IN
+R-428. [MEASURED HERE] 41 spec files / 41 videos, `live ∩ POP-41 = 40`,
+`live − POP-41 = ∅` — a STRICT SUPERSET of the operator's whole library by one
+video. Prior POP-41 findings are RE-OPENED as library-relevant.** R-422 measured
+its corpus_A overlap correctly (ZERO) and drew the wrong inference: *"do we ship
+this?"* was joined to the wrong reference set. **AR-385's withdrawn escalation is
+REINSTATED as accurate about the library.**
+No result from one population may be presented as applying to another without a
+measured overlap — **and compute overlap against the LIVE ARTEFACT, not against
+the corpus you know best.**
 ★★★ **METRIC GOVERNANCE (R-425), binding:** every figure names **population ·
 code lane · commit · flag state · metric formula · status in {campaign-proven ·
 merged · deployed · runtime-verified}**. `campaign-proven ≠ deployed ≠
@@ -210,9 +228,13 @@ lane. **`18` is the authoritative `UNKNOWN_REQUIREDNESS` count** — the advisor
 [MEASURED HERE] **every one of the 6450 conditions carries `evidence` + `span`,
 non-empty 6450/6450.** Per-video the content splits: **~15% verbatim teacher text
 (gradeable TODAY) · ~28% the literal JSON-debris string `'},{'` (carries nothing)
-· 43.5% opaque `T-<vid>-C####` pointer — ★ [NOT MEASURED] no one has looked for a
-resolver, and that probe is the top open item.** ★★ **100% populated, ~15%
-usable: a `NOT NULL` check passes here while grading nothing.**
+· 43.5% opaque `T-<vid>-C####` pointer — ★★★ **RESOLVABLE (R-428): the store is
+`…/extraction-100/tmp/generalization/<video>.transcript.txt` (67 files, and
+[MEASURED] ALL 40 live videos have one); the resolver is `clause-segmenter.ts:60
+segmentTranscript`. 3 of 3 pointers resolved AND the `span` offsets — a second,
+independent key — confirm each byte-for-byte. ★ Still 3-of-3, NOT a rate; the
+sweep is authorized.** ★★ **The `'},{'` debris is UNAFFECTED and still resolves
+to nothing — good news on one class is not good news on another.**
 **Presenting a normalized phrase AS the teacher's words remains forbidden.**
 ★★ **A ceiling no refusal count can see:** [CORROBORATED — corpus_A MEASURED
 HERE at 128 bindable / 128 approximation / **0** concrete; POP-120 RELAYED at
@@ -233,6 +255,9 @@ give every predicate a DISCRIMINATES fixture before believing a negative.**
 `node_modules`: CUT, target intact, 0 junctions point at `runtime-production`.
 
 ## OPERATOR-FACING
+★★ **ONE THING TO DO: start a fresh WORKER session** (`worker-onboarding`). The
+previous one stood down clean; the queue above is startable cold from R-428.
+Nothing else waits on you.
 Nothing waits on you. Both safety releases are merged AND deployed; the tower now
 refuses to run a strategy whose rules it cannot actually enforce. The number worth
 knowing: **[RELAYED] ~0% of the 120-strategy library is currently executable** —
