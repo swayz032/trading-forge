@@ -139,23 +139,46 @@ still read-only and unmodified.**
 change needing a ratify packet + independent validator. Worker handing off.**
 ★★★★★ **UNRULED — awaiting the operator's external read.**
 
-## ★★★★★ INFRASTRUCTURE — THE EAR IS **ALIVE AGAIN**. DO **NOT** ARM A SECOND ONE.
-★★★★★ **[MEASURED HERE 14:58Z, THIS DESK] a rulings watcher IS RUNNING: PID
-`21072` (wrapper) + `25960` (child) under `claude.exe` 9444, armed `14:53:27`,
-task `b5g1ym3dx`, watermark `R-463`. TWO PIDs = ONE LOGICAL MONITOR (wrapper+child),
-the same shape as the original 22820/7256 pair — do NOT read the pair as two rigs.**
-★★★★★ **THIS SUPERSEDES R-464's WORKER-BLOCK INSTRUCTION *"arm your rulings ear
-FIRST (the previous one is dead)"* AND THE FORMER HEADING BELOW. THAT LINE WAS TRUE
-WHEN WRITTEN AND IS FALSE NOW. A FRESH SEAT FOLLOWING IT WOULD ARM A **SECOND**
-MONITOR BESIDE A LIVE ONE — the `ONE RIG, NEVER NEW-PLUS-OLD` violation, which
-produces duplicate events and two instruments disagreeing about what has been seen.**
-★★★ **THE OUTGOING WORKER RE-ARMED IT AND DISCLOSED THE TRAP MY RULING WOULD SPRING.
-VERIFY BEFORE ARMING — run the `Get-CimInstance … ADVISOR-RULINGS` check; if a
-watcher exists, ADOPT it and do not replace it.**
-★★ **The earlier death was real (exit 254, transient `fork: Cannot allocate memory`,
-box NOT under memory pressure — `12.38 GB free`). The gap was verified EMPTY at the
-time (`R-463`, already read). Both facts stand; only the "must arm one" conclusion
-is withdrawn.**
+## ★★★★★ INFRASTRUCTURE — STORE THE CHECK, NEVER THE IDENTIFIER (R-465)
+★★★★★ **DO NOT ARM A RULINGS MONITOR WITHOUT VERIFYING FIRST. R-464's "the
+previous one is dead" is ANNOTATED AND WITHDRAWN — obeying it arms a SECOND rig
+beside a live one.**
+★★★★★ **THE THREE-PART LIVENESS TEST (a task id is NOT liveness): (1) the task
+EXISTS and is RUNNING · (2) its last poll/heartbeat is RECENT · (3) its **CURRENT
+PROCESSED** watermark has advanced to the newest delivered ruling — DISTINGUISH
+that from its CONFIGURED STARTING watermark. A rig configured "after R-463" still
+reporting R-463 has not delivered R-464 and may duplicate.**
+★★★★★ **DECISION TABLE: alive+recent+current ⇒ ADOPT, arm nothing · dead/absent ⇒
+re-measure the gap (newest RULING → newest ACKNOWLEDGED report) then arm exactly
+ONE · **LIVENESS UNESTABLISHABLE ⇒ STOP.** Uncertainty is not authorization to
+create a second rig; read `ADVISOR-RULINGS.md` directly instead.**
+★★★★★ **THE CHECK, WHICH IS WHAT THIS FILE STORES — NOT PIDs, NOT TASK IDs:**
+```
+Get-CimInstance Win32_Process -Filter "Name='bash.exe'" |
+  Where-Object { $_.CommandLine -match 'ADVISOR-RULINGS' } |
+  Select-Object ProcessId,ParentProcessId,CreationDate
+```
+★★★ **TWO PIDs = ONE LOGICAL MONITOR (wrapper + child). Never read the pair as two
+rigs; never kill one as a "duplicate".** Same for `AGENT-REPORTS` (the desk's own
+two rigs show as FOUR processes).
+★★★★★ **WHY NO IDENTIFIER IS RECORDED HERE: three generations in ~40 minutes —
+`21072/25960` → `b5g1ym3dx` → `bihnh0n95` / `2728/10556` under a DIFFERENT
+`claude.exe`. This desk wrote the first two into this file as durable facts and
+both were false within the hour. AN IDENTIFIER IN A STATE FILE IS A MEASUREMENT
+WHOSE DECAY NOBODY WROTE DOWN.**
+★★★★★ **OWED, NOT BUILT: A DEAD WATCHER CANNOT REPORT ITS OWN DEATH. The desk's
+unreadable-file alarm catches a broken FILE, not a broken WATCHER — if the process
+dies it emits nothing, and silence reads as "no reports". THE DURABLE FORM IS A
+HEARTBEAT OR EXPIRING LEASE A READER CAN CHECK WITHOUT ASKING THE WATCHER.
+`ONE RIG PER CHANNEL` HAS ALWAYS BEEN TWO REQUIREMENTS — UNIQUENESS **AND**
+EXTERNALLY VERIFIABLE LIVENESS — AND ONLY THE FIRST HAS EVER BEEN ENFORCED.**
+★★ **RECORD CORRECTION (R-465): "nothing in flight" is no longer literally true and
+was being repeated as boilerplate. THE ACCURATE FORM: `NO PRODUCTION TASK IS IN
+FLIGHT; ONE INFRASTRUCTURE MONITOR IS LIVE.`**
+★★ **[MEASURED 18:30Z] the desk's own two AGENT-REPORTS rigs were ORPHANED by a
+session boundary and re-armed — gap verified EMPTY first (newest `AR-454`, hash
+`8da49fc2…`, no watcher processes alive); `AR-455` then landed INSIDE the armed
+window, so nothing was missed.**
 
 ## ★★ SUPERSEDED HEADING (kept for the trail): THE WORKER'S EAR IS DEAD
 ★★★★★ **[MEASURED HERE, this desk, independently of AR-453] `Get-CimInstance
