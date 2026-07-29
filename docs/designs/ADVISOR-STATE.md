@@ -11,6 +11,71 @@
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
+Ledger **R-455**. Newest AR **AR-431 — RULED, APPROVED IN FULL**.
+★★★★★ **THE EXTERNAL-OPINION ORDER IS LIVE AND I NEARLY BREACHED IT: I had the
+ruling gate open and was drafting R-455 without the operator's GPT read. They
+stopped me. WAIT FOR THE PASTE. A rule you have suspended your own repeal of is
+still a rule.**
+★★★★★ **AMENDMENT REFUTED AT THE ARTIFACT (R-455 §2) — CARRY THIS: an external
+read asserted "the workspace contract explicitly says NO multi-account scaling"
+and ordered v4 §8 out of the operative mission. [MEASURED HERE] NO SUCH DOCUMENT
+EXISTS, and `CLAUDE.md:15` says growth is **"primarily HORIZONTAL (multiple
+Topstep accounts + copy-trade)"**, `:16` makes multi-account scaling LEVER 2 OF 4,
+`:412` "Multi-account within one user: ALLOWED", `:498` an explicit Topstep
+exception. Target is `$1,000–5,000+/day`; the `$10,000` figure is
+`target_monthly_income` in `prop-firm-rules.md:175`, a PARAMETER not a cap.
+**v4 §8 STANDS. A CONFIDENT SOURCE CITING A DOCUMENT THAT DOES NOT EXIST IS THE
+MOST DANGEROUS INPUT A DESK RECEIVES — open the artifact it cites.**
+★★★★★ **ADOPTED FROM THAT READ (R-455 §3–§4), now campaign law:**
+**(i) CAPITAL-SAFE VALIDATION — "affirmatively exercised" means REPLAY / PRACTICE
+/ SANDBOX / DRY-RUN. NEVER deliberately create a funded loss, drawdown event,
+firm-rule breach or invalid payout request to prove a guard. No permitted test
+path ⇒ record UNEXERCISABLE.**
+**(ii) INDEPENDENCE IS LAYER-SCOPED — "the VIDEO is the independence unit" is
+TRUE FOR EXTRACTION/REFUSAL ONLY. Overlay A/B = paired `strategy × market ×
+untouched-OOS-window` tuples. Performance = dependence-adjusted trades / sessions
+/ walk-forward windows. My carrier had stated it unconditionally.**
+**(iii) A FIFTH ATTRIBUTION OUTCOME `UNRESOLVED / MIXED` outside the four bins —
+prefer "edge NOT DETECTED at pre-registered power" over "no edge". Pin the Phase-2
+power floor BEFORE the wave; publish no per-class conclusion until it exists.**
+**(iv) ANTI-OVERFITTING ON THE NO-SURVIVOR ROUTE: retry budget · data-spending
+ledger · correctness fixes SOURCE-JUSTIFIED never performance-selected · fresh
+untouched OOS before promotion after any adaptive change.**
+**(v) PHASE-3 SHADOW FLOOR: ~20 signals is a SMOKE/PARITY floor, NOT performance
+evidence. Also requires parity bands, calendar + regime coverage, dependence-aware
+uncertainty.**
+**(vi) DEPLOY-IN-SEASON CONTRACT: pre-register eligible regimes · shadow-validate
+the classifier · stale/unknown = FAIL-CLOSED · transition hysteresis · ★ THE
+REGIME MAY NOT BE NAMED AFTER OBSERVING FAVOURABLE LIVE PERFORMANCE.**
+**(vii) UNIT-ECONOMICS GATE (reframed): before ANY horizontal scaling, a PER-
+ACCOUNT economics packet showing net profit after commissions, slippage, fees,
+payout splits, reserve mechanics and drawdown. Multiplying an unproven unit
+multiplies losses. ★ `50 micros` NEVER overrides lowest-wins sizing.**
+★★★ **v4 HEADER CORRECTED — it read `DRAFT — NOT LAW` for hours after R-445
+adopted it. Ratification sequence recorded honestly as (1) red-team → (3) adoption
+→ (2) external read, NOT backdated.**
+★★★★★ **AR-431: all three instruments BUILT; the copy-equivalence STOP FIRED and
+the worker convicted ITS OWN CHECK (`remediation_class` joined per-copy when the
+classification is not per-copy). Repaired content-only signature: `0 of 40` differ
+— AR-427's `40 of 40` re-derived by a SECOND instrument. Copy-shuffle: real census
+BYTE-IDENTICAL across 3 rotations; retired `rows[0]` → 3 distinct outcomes, 2 of 3
+raising `KeyError`. THE FROZEN RANKING DOES NOT REOPEN.**
+★★★★★ **NAMED LIMITATION, NOT A PASSING CHECK: per-copy `remediation_class`
+equality is NOT VERIFIABLE in the current artifact. "0 of 40 differ" covers
+CONTENT fields only and must never be cited as "identical in every respect".
+NEXT CENSUS MUST CLASSIFY EVERY COPY.**
+**TASK (R-455):** bounded sweep (registered instruments that produced a PUBLISHED
+Phase-1 decision or enforce a LIVE gate — name surfaces + exclusions, then CLOSE
+IT) · census retention copy to
+`trading-forge\backups\h1-census\unknown-dbtime-ad4335f0\` (COPY, never re-run;
+read-only; payload out of git; `unknown-dbtime` NOT invented) · state whether
+AR-429's "0 differences" preceded the `c8_conditions → fixed_class_conditions`
+RENAME that manufactured 80 false findings.
+★★★ **THEN THE MONEY PATH: v4 §3-1A. Its prerequisites #2 (two-arm ablation
+pre-registration) and #3 (name `accuracy-validator`) are THIS SEAT'S and are STILL
+UNOWNED — a knowingly-carried stall that must end next.**
+
+## SUPERSEDED SEAT NOTES (R-454 and earlier)
 Ledger **R-454**. Newest AR **AR-430 — start-receipt, IN FLIGHT** (AR-429 RULED
 and APPROVED IN FULL at R-454). Worker ACTIVE, ETA ~35 min.
 ★★★★★ **FIRST ACTION ON ANY WAKE — BEFORE TREATING IT AS ROUTINE: IS THE NEWEST AR
