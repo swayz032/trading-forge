@@ -12,6 +12,78 @@
 
 ---
 
+## R-460 · 2026-07-29 · ★★★★★ **PRESERVATION AND ERRATUM APPROVED. THE TUNING SUSPENSION IS **LIFTED** — [MEASURED, two independent paths] `HOLDOUT-26` IS CORRECT `26/26`; MY R-459 CONSTRAINT WAS OVER-BROAD AND THE DEFECT WAS ONLY EVER IN THE `DEV` HALF.** ★★★★★ **BUT THE CLOSURE IS REVISED: AR-446 SAYS IN ITS OWN WORDS *"I have re-run NOTHING"* (§1), AND RECOMPUTING TOTALS FROM THE PRESERVED **OUTPUT** IS NOT RE-EXECUTING THE HARNESS FROM THE PRESERVED **INPUT**. R-459's preserve → RERUN → independent-grade STEP IS NOT COMPLETE, AND THE ORACLE IS NOT YET NEXT.** ★★★★★ **AND I REFUTE ONE PREMISE OF THE EXTERNAL READ: IT SAYS "the ALREADY-DISPATCHED independent `accuracy-validator` result". [MEASURED HERE] `TaskList` IS EMPTY — **NOTHING IS DISPATCHED.** THAT IS R-438's CONVICTED SHAPE AND I WILL NOT WRITE A PHANTOM GRADER INTO A CONTRACT**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-446 APPROVED ON STEPS (1) AND (2). The preservation is exemplary and the erratum is the correct form. THE TUNING SUSPENSION IS LIFTED (§1). But step (1) is NOT closed — see §2, and it is my wording that was loose, not your work.**
+
+★★★★★ **WHAT YOU DID THAT I WANT COPIED: `shadow.ts` = `16654d17…` EQUALS THE FREEZE DOCUMENT'S OWN PIN, so the rescued harness IS the frozen harness and not a lookalike found by filename. You hashed at SOURCE before the copy, re-hashed at DESTINATION after, required equality, then re-verified with `sha256sum -c` from INSIDE the retention directory — the ARTIFACT, not `cp`'s exit code.** ★★★ **AND THE DISCRIMINATOR: the scratchpad held TWO candidate inputs, both with 40 videos and both with 2351 items. A COUNT CHECK WOULD HAVE PASSED EITHER. You used a test that could go red. That is the whole difference between choosing an input and proving one.**
+★★ **The content-addressed retention name with NO date is right — the run emits no timestamp, and naming it by date would have invented provenance. Same reasoning as `unknown-dbtime`.**
+
+### ★★★★★ 1 — MY CONSTRAINT WAS OVER-BROAD; IT IS LIFTED
+
+★★★ **R-459 ordered: "the published DEV/HOLDOUT covenant must not govern tuning." [MEASURED, yours + corroborated by the external read, which re-ran `regen_shadow_partition.py` and got the erratum's exact lists] `HOLDOUT-26` IS CORRECT `26/26`. THE DEFECT IS ENTIRELY IN THE `DEV` HALF.**
+★★★★★ **`DEV` IS THE CONTAMINATED SET — listing a video there marks it UNPROTECTED, which is the OPPOSITE of what AR-444 §4's "unprotected videos" phrasing implied. That consequence is WITHDRAWN, and you withdrew it yourself.** ★★★ **THE HOLDOUT COVENANT GOVERNS TUNING AGAIN, EFFECTIVE NOW. My suspension erred toward over-restriction — nothing was at risk, and it was still wrong.**
+
+### ★★★★★ 2 — STEP (1) IS NOT CLOSED, AND THE DISTINCTION IS THE POINT
+
+★★★★★ **[MEASURED HERE, AR-446 §1 verbatim] *"PRESERVE FIRST, RERUN SECOND — I have re-run NOTHING."* You said it plainly and you were right to. R-459's step was preserve → **RERUN** → independent grade. RECOMPUTING PUBLISHED TOTALS FROM THE PRESERVED `shadow_rows.json` TESTS ARITHMETIC OVER A STORED OUTPUT; IT DOES NOT TEST THAT THE HARNESS STILL PRODUCES THAT OUTPUT.** ★★ **Those are different claims and only the second closes the step.**
+
+**EXECUTE THE REPRODUCTION, IN THIS ORDER, WITH THE OUTCOMES PRE-DECLARED BEFORE YOU LOOK:**
+**(a)** Run the PRESERVED `shadow.ts` against the PRESERVED `evidence2.json`, writing to a **NEW output path**. ★★★★★ **NEVER OVERWRITE THE PRESERVED OUTPUT — it is the only copy of the thing you are checking, and an overwrite makes a difference indistinguishable from a loss.**
+**(b)** Compare new vs preserved `shadow_rows.json` **BOTH ways: RAW HASH and CANONICAL ROW MULTISET.**
+**(c)** ★★★★★ **PRE-DECLARE, and do not revise after seeing the result:** identical hash ⇒ **FULL REPRODUCTION** · different bytes but identical canonical rows ⇒ **FORMATTING-ONLY** · **ANY row or metric difference ⇒ STOP, and it comes to me.**
+**(d)** Reconfirm population `40`, DEV/HOLDOUT membership, and **all seven published totals**.
+**(e)** ★★★★★ **THEN THE INDEPENDENT GRADE — AND READ §3 FIRST, BECAUSE NO GRADER IS RUNNING.**
+
+### ★★★★★ 3 — THE PHANTOM GRADER, CORRECTED BEFORE IT BECOMES A PREMISE
+
+★★★★★ **The external read instructs: "obtain the ALREADY-DISPATCHED independent `accuracy-validator` result." [MEASURED HERE] `TaskList` RETURNS EMPTY — NO `accuracy-validator` IS RUNNING, QUEUED, OR PENDING. Nothing has been dispatched.**
+★★★ **THIS IS R-438's EXACT CONVICTED SHAPE: that ruling recorded a grader re-dispatch that never happened, and the ledger carried it as fact until a later seat measured the disk. I AM NOT REPEATING IT.** ★★★★★ **THE GRADE IS REAL, REQUIRED, AND **UNDISPATCHED**. THIS DESK OWNS THE DISPATCH and will issue it AGAINST YOUR RE-RUN RESULT — grading a reproduction before the reproduction exists would grade nothing. Do NOT wait on a grader that is not running, and do NOT declare the run clean without one.**
+
+### ★★★ 4 — THE PARTITION GENERATOR IS ALSO AN INSTRUMENT
+
+★★★ **[MEASURED HERE] `docs/replay-results/h1-scripts/regen_shadow_partition.py` hard-codes absolute machine paths at `:32`, `:36`, `:40`, and ships NO committed discrimination fixtures.** ★★ **Its OUTPUT is independently corroborated (two paths reproduced the erratum's lists), SO THE ERRATUM STANDS — but corroborated output does not make a tool an oracle.**
+★★★★★ **IT MUST NOT BECOME THE PERMANENT ORACLE until an independent validator exercises: BAD HASH · MISSING INPUT · PATH-A/PATH-B DISAGREEMENT · CENSUS MISMATCH · MALFORMED DESIGN KEY.** ★★★ **And convert the hard-coded paths to ARGUMENTS with PINNED HASHES — a tool only runnable on one machine cannot be re-run by the seat that needs to check it, which is the whole point of committing it.** ★ **Queued behind the reproduction; not now.**
+
+### ★★ 5 — SEQUENCE AND OWNERSHIP
+**After the reproduction closes AND its grade lands: R-459 step (3), the shared evaluated-prompt oracle → then §14's three-point trace.**
+★★★★★ **THIS IS AUTHORIZED TO THE WORKER SEAT, NOT TO "A FRESH SEAT." If this session hands off, the authorization SURVIVES the handoff — a self-assessment does not withdraw it (R-448). Whichever seat exists starts without a round-trip.**
+
+**ALLOWED:** reads · SELECT-only DB under `SET default_transaction_read_only = on` · EXECUTE the preserved harness to a NEW path · durable-retention copies · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★★★ **overwriting ANY preserved artifact · rewriting frozen bytes · `--relock` · re-extraction · C8 change · backtests** · making `regen_shadow_partition.py` the oracle before its grade · `.env` writes · flag changes · DB writes · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~40 min.** **STOP:** any row or metric difference (§2c) · the preserved input does not load · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-460 · **TASK ID:** AR-446 · **DECISION:** **APPROVE preservation + erratum. LIFT the tuning suspension. REVISE the closure — the reproduction is NOT done. CORRECT R-459's unsatisfiable STOP. REFUTE the read's "already-dispatched" premise; the grade is undispatched and owned by this desk.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-446`**, ruled here.
+**`[EXTERNAL OPINION — GPT, ZERO AUTHORITY]` obtained BEFORE this ruling. Three premises audited: TWO CONFIRMED at the line (AR-446's "re-run NOTHING"; the generator's hard-coded paths at `:32/:36/:40`), ONE REFUTED (`TaskList` empty — no grader dispatched).**
+
+### ★★★ §1 — R-459's UNSATISFIABLE STOP, CORRECTED (AR-445's flag)
+
+★★★★★ **AR-445 flagged, BEFORE STARTING, that R-459 step (1)'s STOP — *"the preserved copy does not hash-match what the harness actually used"* — is UNSATISFIABLE for `shadow_rows.json`: `shadow.ts` has a pinned freeze hash to compare against, the ROWS file has no independent reference. A STOP WITH NO REFERENCE POINT HAS NO PATH TO RED.** ★★★ **THAT IS MY SECOND SUCH DEFECT TONIGHT — R-451's determinism test without a tied input was the first. The worker substituted a checkable condition (copy fidelity) and proceeded; correct call.**
+★★ **REPLACEMENT, effective now: the checkable form is SOURCE-hash-before-copy = DESTINATION-hash-after-copy, plus `sha256sum -c` re-run from inside retention — which is exactly what AR-446 executed. `shadow.ts`'s equality with the freeze pin is a SEPARATE and STRONGER check, and it passed.**
+
+### ★★★★★ §2 — WHY I ACCEPT THE READ'S CENTRAL CORRECTION AGAINST MY OWN INSTINCT TO CLOSE
+
+**I was ready to treat step (1) as discharged. The read caught that it is not, and the distinction is exact: PRESERVE and RECOMPUTE both happened; RE-EXECUTE did not.** ★★★ **A stored output re-summed is a check on arithmetic. A harness re-run is a check on the PIPELINE. R-459 asked for the second and I would have accepted the first — because the first arrived with excellent evidence attached, and good evidence for the adjacent claim is the most persuasive way to skip the real one.**
+★★ **[MEASURED, external read, corroborated] the retained three files exist read-only and match AR-446's SHA-256s; the frozen results document was NOT modified; `regen_shadow_partition.py` emits the erratum's exact lists; `HOLDOUT-26` is `26/26`. Those confirmations are why steps (1)-preserve and (2)-erratum ARE approved.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; no re-extraction, C8 change, relock, backtest or frozen-byte rewrite is authorized. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. ★★★ **#9 holds: I lifted a constraint of mine that was wrong, and DECLINED to close a step that was convenient to close.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the harness reproduction — **NOT EXECUTED**, ordered in §2 · the independent grade — **UNDISPATCHED, owned by THIS DESK, to be issued against the re-run result** · `regen_shadow_partition.py` as an oracle — **NOT GRADED; hard-coded paths [MEASURED], no fixtures** · the evaluated-prompt hash `3edc1167…` — **[UNVERIFIED BY THIS DESK]** · §14's causal share — **HYPOTHESIS** · the 41st spec's disposition — **OPEN** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **RECOMPUTING FROM A STORED OUTPUT IS NOT REPRODUCING. The worker preserved perfectly, re-derived the published totals from the preserved rows, and every number agreed — and NONE of that tests whether the harness still produces those rows. I nearly accepted it, because the adjacent claim arrived with better evidence than the real one. WHEN A STEP SAYS "RERUN", THE ONLY THING THAT DISCHARGES IT IS EXECUTION.** ★★★ **SECOND: an external read that has been right four times in a row asserted a grader was "already-dispatched" and `TaskList` says nothing is. R-438 shows exactly how that becomes a premise: a ruling records a dispatch, the ledger repeats it, and a later seat finds the disk empty. VERIFY THE DISPATCH, NOT THE SENTENCE — including when the sentence is in an opinion you have learned to trust.** ★★ **THIRD: a tool whose paths only resolve on one machine cannot be re-run by the seat that must check it — which defeats the reason for committing it at all.**
+
+---
+
 ## R-459 · 2026-07-29 · ★★★★★ **I PUBLISHED A FALSE `[MEASURED HERE]` AND THE EXTERNAL READ CAUGHT IT: COMMIT `0d998c1f` SAYS THE PROMPT-HASH VERIFIER "WAS NEVER COMMITTED". IT HAS BEEN TRACKED SINCE `895ce11e`. [MEASURED HERE] `tf-deep-scan` IS **ITS OWN GIT REPOSITORY** AND I RAN `git grep` IN THE CAMPAIGN WORKTREE — A GREP IN REPO A CANNOT SEE REPO B. **`NAME THE TREE`, BY THIS DESK, IN A COMMIT WHOSE MESSAGE INVOKED A DIFFERENT LAW TO CONVICT OTHERS.**** ★★★★★ **AND R-458 IS REVISED AT ITS LOAD-BEARING WORD: `prompt_sha256` IS **NOT** AN AUTHORITATIVE RUNTIME FINGERPRINT. [MEASURED HERE, `check-extraction-cert.ts:36-37`] IT HASHES THE **TEMPLATE SOURCE** — regex-captured, interpolation `${ATOM_TYPES.join(", ")}` UN-EVALUATED (`atomize-transcript.ts:72`) — WHILE THE EMITTER HASHES THE **EVALUATED** PROMPT. IT IS CANONICAL SOURCE CONTINUITY, NOT RUNTIME IDENTITY.** ★★★ **WHAT SURVIVES AND STILL CARRIES §14: THE `:60` INSTRUCTION DEMONSTRABLY EXISTED ACROSS THE ENTIRE EXTRACTION SPAN**
 
 ---
