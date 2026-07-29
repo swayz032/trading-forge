@@ -240,6 +240,58 @@ second monitor beside a first only PRESUMED dead.**
 onboarding read-order and do not rely on being pinged. The relay file is the
 contract; the monitor is only a convenience over it.**
 
+## ★★★★★ THE PLAN — WHERE WE ACTUALLY ARE (R-466 PIVOT). READ THIS BEFORE ANY GOVERNANCE ITEM.
+★★★★★ **PHASE 1, SPEC COMPILATION. THE HOUSEKEEPING LANE IS CLOSED AND PARKED.**
+★★★★★ **POPULATIONS — v4 §0 SAYS *NEVER MERGE THEM*, AND THIS DESK DID: `0/16 FULLY
+BOUND` IS **corpus_A** (16 specs, R-401). C8's `51.1%` AND THE 40-VIDEO RANKING ARE
+**POP-120-LIVE** (120 rows = 40 videos × 3). tier-A/spearhead is a THIRD population
+(11 specs, 53 load-bearing conditions). ★★★ THE OVERLAP MAP IS FORMALLY
+`[UNENUMERATED]` — any sentence joining a corpus_A figure to a POP-120 figure is a
+CLAIM ABOUT AN OVERLAP NOBODY HAS MEASURED.**
+★★★★★ **THE HONEST C8 CLAIM: *"C8 is the only single remediation class that makes any
+POP-120 videos refusal-clean."* **NOT** *"C8 alone produces a Phase-1-exitable
+strategy."* [EXTERNAL, UNVERIFIED HERE] the two distance-0 videos still carry
+executed APPROXIMATE bindings — `75DJN5UVQnw` 7, `jlShztsY3oA` 4. REFUSAL-CLEAN IS
+NOT BOUND-AND-CONCRETE, and the refusal-only rank MUST NOT be the target selector.**
+★★★★★ **SUCCESS DEFINITION, AND NOTHING ELSE COUNTS: ONE newly extracted TIER-A spec,
+IN THE AUTHORITATIVE EXECUTION LANE, EVERY load-bearing condition CONCRETE, FORENSICS
+GATE CALIBRATED. A lower C8 count is NOT success.**
+
+## ★★★★★ ADVISOR PREREQUISITES — DISCHARGED IN R-466 (they had been carried unowned ~15 rulings)
+★★★ **#2 TWO-ARM ABLATION PRE-REGISTRATION — WRITTEN IN FULL at R-466 §2, branch-complete
+so Gate A SELECTS a branch mechanically rather than triggering a second design session.**
+★★★★★ **ITS PRE-REGISTERED TRAP: `conditions-per-strategy WILL DROP` under treatment and
+THAT IS THE FIX WORKING. A HIGHER count is a FAILURE signal. ★★★ CO-PRIMARY OUTRANKS
+PRIMARY: every pre-registered GENUINE market-state condition must SURVIVE — a treatment
+that lowers C8 while losing one genuine condition FAILS. FIDELITY OUTRANKS COUNT.**
+★★★ **#3 GRADER — `accuracy-validator`, ASSIGNED with TWO dispatch triggers owned by this
+desk: (1) Gate-A evidence bundle lands → dispatch · (2) Gate-B implementation lands →
+dispatch a SEPARATE grade. ASSIGNMENT IS NOT DISPATCH. Before any ruling says a grade was
+obtained: name the AGENT ID. `TaskList` is NOT that check — it does not track monitors and
+its agent coverage is `[UNVERIFIED]`.**
+
+## ★★★★★ GATE A — AUTHORIZED, ASSIGNEE **NONE**, START-READY (AR-457 declined on capacity)
+★★★ **[FACT, AR-457] the seat took ONLY the `MANIFEST.txt:3` erratum and DECLINED Gate A
+UP FRONT, naming the reason (a ~60-min ratified trace with an instrument audit, two
+source-resolution paths and a red fixture) rather than at the 60-minute mark. CORRECT
+BEHAVIOUR — the decline is accepted and Gate A is NOT withdrawn.**
+★★★★★ **GATE A IS AUTHORIZED IN R-466 §1 AND START-READY: a fresh seat begins WITHOUT a
+round-trip. Do NOT re-authorize it; do NOT reassign it to "a future session" — the
+authorization outlives the seat that declined it.**
+★★ **ITS SHAPE: trace every canonical C8 refusal — `(video, condition_id)` → spec condition
+→ transcript `(span, evidence)` → the code path into the DB row. Deliver a committed
+`C8-PROVENANCE-LEDGER`. INSTRUMENT AUDIT FIRST: reproduce `456` per-video refusals, `233`
+C8, `37` videos before any new output is believed. Pre-registered decision rule with a
+RESIDUAL branch (mixed/incomplete ⇒ STOP, split by path, NO global remedy).**
+
+## ★★ PARKED — MAY NOT PRE-EMPT THE MONEY PATH UNLESS IT INVALIDATES C8 EVIDENCE
+partition-generator hardening (R-463 §5) · heartbeat/expiring-lease engineering (R-465) ·
+off-machine encrypted backup (**OPERATOR**) · wider bug-pattern sweeps.
+★★★ **AND THE LESSON THAT PUT THEM HERE: a governance audit that keeps finding governance
+work RECURSIVELY REPLACES THE MONEY PATH, and it does not feel like drift — every item was
+real. The operator had to say "remember back to the plan." v4 §9's bound existed; this desk
+did not apply it to itself.**
+
 ## SEAT
 ★★★★★ **[FACT, NOT YET RULED — AR-446] R-459 STEPS (1) AND (2) ARE DELIVERED, AND
 IT CORRECTS ONE OF MY OWN CONSTRAINTS IN THE SAFE-TO-LOOSEN DIRECTION: I ruled
