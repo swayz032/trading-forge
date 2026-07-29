@@ -11,8 +11,43 @@
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
-Ledger **R-456**. ★★★★★ **FOUR REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434
-· AR-435 · AR-437.** ★★★★★ **R-456 AUTHORIZED **ONE MEASUREMENT ONLY** and judged
+Ledger **R-457**. ★★★★★ **FIVE REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434
+· AR-435 · AR-437 · AR-439.** Worker in flight on AR-440, ETA ~30 min.
+★★★★★ **THE EXTRACTOR-MODE ANSWER IS `NEITHER OPTION` — AND MY QUESTION WAS THE
+DEFECT. [MEASURED, AR-439] all 40 specs uniformly declare
+`extraction_pipeline_version: compiler-v3-union-1.0` · `model: gemma4:e4b-it-qat`
+· `atomization: 2-pass-union` · `prompt_sha256 = c75a2da8…` — AND THAT HASH
+MATCHES NOTHING IN THIS REPOSITORY: not `transcript-extractor.md`, not `-minimal`,
+not the three `-frontier*` variants, not any historical version, not one of
+`14,330` object-store blobs. ★★★ CONTROL PROBE: the same sweep for the current
+minimal prompt's hash returned `1` — the sweep finds blobs, just not this one.
+THE CENSUS WAS PRODUCED BY A PIPELINE WHOSE PROMPT IS NOT IN THIS REPO.**
+★★★★★ **`EVERY ORDERED TAXONOMY OWES A RESIDUAL CATEGORY` — AND A DESK'S QUESTION
+IS A TAXONOMY. R-456 asked "legacy OR minimal?" and thereby asserted those two
+exhausted the space. They did not. A weaker worker would have picked the nearer
+option and MY FRAMING would have caused the error.**
+★★★★★ **`UNSUPPORTED ≠ REFUTED` — HOLD THIS LINE: v4's attribution of C8 to
+`transcript-extractor.md:169` is UNSUPPORTED by this evidence. It is NOT refuted:
+the real prompt is UNIDENTIFIED, so nobody can open it and show whether it carries
+an equivalent `≥3` floor. DO NOT let any report read as "C8 is misattributed."**
+★★★★★ **AND THE ANSWER'S OWN WEAKNESS, NAMED BY THE WORKER AGAINST ITS OWN RESULT:
+`provenance_backfilled: true` on all 40 — the provenance was written AFTER the
+fact, so `prompt_sha256` is a RECONSTRUCTED claim. R-457 authorized ONE more
+measurement (how the backfill derived it). A MEASUREMENT IS NOT SETTLED WHILE ITS
+OWN EVIDENCE IS UNVERIFIED — three outcomes, none preferred: authoritative ·
+demoted to a backfill artifact · unrecoverable (⇒ `unknown` stands, reason named).**
+★★★ **TWO TRAPS FOR ANY LATER SEAT: (a) `ai_inference_log` shows `7040`
+`transcript_extractor` rows, which READS like coverage — its entire span is
+`2026-05-06 → 2026-05-19`, months before extraction, with NO video column. A large
+count from an UNJOINABLE table is not weak evidence, it is NO evidence. (b)
+`transcript_fetched_at = 2026-07-28` on all 40 — the transcript TEXT was backfilled
+25 days AFTER the specs were onboarded, so it is NOT necessarily the text extracted
+from. Grading fidelity against that archive grades a NEIGHBOURING OBJECT.**
+★★★ **WHEN A TOOL AGREES WITH WHAT YOU HOPED, AUDIT THE TOOL: [AR-439 §0] the
+worker's own new joiner reported `35` sources joining — all FALSE (byte-matching
+IDs anywhere in a file). Tells: the count was `5` for EVERY file, and it
+CONTRADICTED its own earlier hand-measured `0`. It dug at the contradiction rather
+than preferring the newer number. Tool was untracked, deleted, never in git.** ★★★★★ **R-456 AUTHORIZED **ONE MEASUREMENT ONLY** and judged
 nothing: settle which prompt produced the census's 40 videos. [FACT, AR-438] the
 worker acknowledged the hold in its own receipt — "I am measuring which prompt
 ran, and nothing else" — and is in flight, ETA ~40 min.**
