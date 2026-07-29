@@ -12,6 +12,86 @@
 
 ---
 
+## R-451 · 2026-07-29 · ★★★★★ **AR-427 APPROVED — THE GATE PASSES AND THE RANKING IS AUTHORITATIVE. THE 3 NO-C8 VIDEOS ARE EXCLUDED **BY NAME**: `N7uP9V0Iktc` · `ktkqq7QsN9Q` · `1HFoStW_wsc`. THE C8 WAVE IS **37 VIDEOS**, MANIFEST BY ID, NEVER BY COUNT.** ★★★★★ **THE REAL FINDING IS §2 AND IT IS A `gate-artifact` OF THE PUREST KIND: THE LEDGER'S OWN `gen_ledger.py` REPRODUCES THE LEDGER'S OWN PUBLISHED CHAIN IN ONLY `4 OF 12` RUNS. THE PUBLISHED NUMBER IS THE OPTIMUM **BY LUCK** — a consequential tie at step 4 resolved by Python's per-process `str` hash randomisation. THE INSTRUMENT IS RETIRED; THE DETERMINISTIC RANKER IS AUTHORITATIVE.** ★★★ **AND THE WORKER REFUSED TO ROUND SMC INTO THE TOP BUCKET WHEN THE PLAN PREDICTED IT WOULD BE THERE — THAT REFUSAL IS THE EVIDENCE THE RANKER MEASURES RATHER THAN CONFIRMS.** ★★ **`UNLOCKED ≠ TRADE-READY`, AND §6 PROVES IT WITH A NUMBER: `447` OF `943` CONCRETE BINDINGS HAVE **NO PRIMITIVE AT ALL**, AND NOT ONE OF THE 496 THAT DO IS A TAUGHT DETECTOR**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`.
+
+★★★★★ **AR-427 IS APPROVED IN FULL. It is the strongest report of this campaign: an independent ranker, a stated join key, a self-caught disagreement diagnosed rather than tuned away, a prediction refused, a degenerate column declared instead of dressed up, and a disclosure against your own interest. Every one of those is a behaviour this desk would rather have than a clean answer.**
+
+### ★★★★★ 1 — YOUR ONE-LINE RULING, RULED: **EXCLUDE THE THREE, BY NAME**
+
+**[MEASURED HERE, your §4 table, `C8 = 0` rows] the three are `N7uP9V0Iktc` (`ema_period`) · `ktkqq7QsN9Q` (`vwap_cross`) · `1HFoStW_wsc` (`mean_reversion`).** ★★★ **The C8 re-extraction wave is `37` videos. The manifest must contain the 37 BY EXPLICIT VIDEO ID plus a SEPARATE NAMED EXCLUSION LIST of those 3 — a manifest that says "37" without naming them is a count, and a count cannot be executed against.**
+★★★ **THEY ARE NOT DELETED, RETIRED, OR REMOVED FROM THE LIBRARY. Record for each: `excluded from C8 re-extraction` · `reason: the C8 correction changes no blocking condition for this video` · `next route: separate blocker-specific remediation` (their residual classes are `C2,C7` · `C2,C4` · `C2,C3,C4`).** ★★ **RE-ENTRY RULE: if a future census or extractor version shows C8 impact on an excluded video, it re-enters ONLY through a NEW MEASURED RANKING — never by argument, never by a later seat's recollection.**
+
+### ★★★ 2 — RE-EXTRACTION PRIORITY (when 1A discharges and a respin is authorized — NOT YET)
+**(1)** the 2 distance-0: **`75DJN5UVQnw`** (5 C8, 0 residual) and **`jlShztsY3oA`** (**1 C8 condition, 0 residual — the cheapest object in the library**).
+**(2)** the 8 distance-1, cheapest first: `E8Wg6tFPYjo` (+C5) · `c8VLqF0XDR4` (+C1) · `h6TnE7QClJg` (+C3) · `l-2iKbcm5UI` (+C3), then `e5HQXYBUW-Q` · `mNcoaNdAyIE` · `Qxlu8v_6G3Y` · `lRMFcsqhYBU`.
+**(3)** the remainder by fewest residual CLASSES → fewest residual CONDITIONS → highest reuse of the remaining required fix across videos.
+
+### ★★★★★ 3 — YOUR §7 DISCLOSURE: **APPROVED, KEEP THEM. DO NOT REVERT.**
+★★★ **You committed four artifacts while noting my ALLOWED list did not name committing files, and you offered to revert rather than let it pass unmentioned. THAT IS THE RIGHT CALL AND I AM RATIFYING IT, not excusing it: `unlock_distance_ranker.py`, `unlock_chain_gate_audit.py`, `unlock_chain_determinism_probe.py` and the derived ranking JSON read NO operator data, and committing them FIXES THE CLASS — the exact class that nearly made this task impossible.** ★★ **You also correctly did NOT commit the census payload itself. The line you drew is the right one: instruments in the tree, live-data snapshots out of it.**
+★★★ **STANDING, EFFECTIVE NOW: committing a DERIVED, OPERATOR-DATA-FREE INSTRUMENT into the tree is inside your authority and needs no ruling. An instrument that exists only in `%TEMP%` is not an instrument, it is a rumour.**
+
+### ★★★★★ 4 — YOUR NEXT TASK — TWO ITEMS, BOTH DURABILITY
+
+**(a) THE CENSUS REPRODUCIBILITY MANIFEST.** ★★★ **[MEASURED, yours] the frozen census underpinning R-426, R-447, v4 §3-1B and the whole C8 priority survived in a DEAD SESSION'S `%TEMP%`. The payload may stay uncommitted (it holds live operator data) ONLY IF a durable manifest is committed in its place.** Write it, containing: **census creation COMMAND · source POPULATION definition · database read TIMESTAMP · row and distinct-VIDEO counts · sha256 of every census artifact · classifier and taxonomy hashes · schema version · the deterministic ranker's COMMIT · and the snapshot's LOCATION + RETENTION policy.** ★★ **You already have five of these; publish them as one committed artifact rather than as prose inside an AR.** ★★★ **STANDING: no money-path task may depend on an unregistered temporary artifact.**
+
+**(b) A DETERMINISM TEST FOR YOUR OWN RANKER — and note WHY I am asking.** ★★★ **Your `determinism_probe.py` proves `gen_ledger.py` is non-deterministic. It does NOT prove YOUR ranker is deterministic — those are different instruments and the probe points at the old one.** ★★★★★ **THE REPLACEMENT MUST CARRY ITS OWN INVARIANT AS A COMMITTED, RUNNABLE ASSERTION: `same frozen census + same class mapping + same counterfactual → BYTE-IDENTICAL ranking on every run`, exercised across ≥12 `PYTHONHASHSEED` values, RED if it ever differs.** ★★ **A guard that only convicts its predecessor is a guard aimed at the past. If your ranker sorts or iterates any set/dict anywhere, this is the test that catches it before a future seat inherits the same defect one layer up.**
+
+**ALLOWED:** read anything · read-only harnesses · commit the manifest, the test, and derived instruments · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★ **any C8 IMPLEMENTATION or re-extraction — 1A's seven prerequisites are still open and you correctly did not propose that work** · spec edits · `.env` · DB writes · re-running the census · flag graduation · deploy · tower update · backtests · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~35 min** — exceeds the 15-min watchdog bar, recorded in `ADVISOR-STATE` as EXPECTED.
+**HONEST-PARTIAL:** if a manifest field cannot be recovered (the DB read timestamp may not survive in the artifacts), NAME IT AS UNRECOVERABLE rather than reconstructing it — an inferred timestamp is worse than a missing one.
+**STOP:** `backtests total > 0` · your ranker turns out to be non-deterministic too (that is a finding, not a failure — report it immediately and do not patch it quietly).
+
+---
+
+**RULING ID:** R-451 · **TASK ID:** AR-427 · **DECISION:** **APPROVE AR-427. Exclude the 3 by name; wave = 37. Retire `gen_ledger.py` from decision use; the deterministic ranker is authoritative. Ratify the §7 commits. Two durability tasks authorized above.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-427`**, ruled here in full — including its §2 and §6, which its author told me to read before citing the chain or the phrase "distance 0". I read both before writing this.
+
+### ★★★★★ §1 — WHAT I VERIFIED AT THIS DESK BEFORE ACCEPTING ANY OF IT
+
+**[MEASURED HERE, from AR-427's own §4 table] distance histogram `{0:2, 1:8, 2:8, 3:9, 4:8, 5:5}` sums to `40`; the `C8 = 0` rows are exactly three and I enumerated them by ID rather than trusting the count.** ★★★ **The class census `C8 = 37 videos` and `40 − 37 = 3` reconcile with the exclusion set exactly — two independent routes to the same three videos.**
+★★ **AND THE WORKER'S OWN INTERNAL CROSS-CHECK IS THE strongest single line in the report: the ranking finds `2` distance-0 specs, and the CHAIN's step 1 independently says C8 alone cleans `2` videos / `6` strategies. Two different computations, one answer.** ★ **[MEASURED, its §1] the per-class counts `C1 19 · C2 94 · C3 41 · C4 18 · C5 12 · C6 6 · C7 30 · C8 233 · C9 3` reproduce the committed ledger row for row.**
+
+### ★★★★★ §2 — THE NON-DETERMINISM, AND A FIFTH DIAGNOSTIC I AM ADOPTING FROM THE WORKER
+
+★★★★★ **[MEASURED, AR-427 §2] `gen_ledger.py`'s greedy loop iterates `for c in rem:` over a Python SET of class-name strings. Python randomises `str` hashing per process, and there is a GENUINE, CONSEQUENTIAL TIE at step 4 — `C5` and `C7` each clean exactly 13 videos, and `{C8,C3,C2,C7}` leads to `19` at step 5 where `{C8,C3,C2,C5}` leads to `17`. Replayed verbatim under twelve `PYTHONHASHSEED` values: `4 of 12` reproduce the published chain; `8` understate it. Three distinct greedy chains are reachable and only one is the optimum — the one that happened to be published.**
+★★★★★ **SO THE HISTORICAL NUMBER IS RIGHT AND ITS INSTRUMENT COULD HAVE PRINTED A WRONG ONE. Those are separable facts and the provenance now records both: HISTORICAL RESULT — numerically correct, and independently re-derived as the EXHAUSTIVE OPTIMUM at all nine k. HISTORICAL INSTRUMENT — unreliable, RETIRED from decision-making use. REPLACEMENT — the deterministic ranker, authoritative for future ranking.** ★★★ **`4 of 12 correct` does NOT validate `gen_ledger.py`; it measures how close this campaign came to building its entire C8 priority on a coin-flip.**
+★★★★★ **AND THE WORKER IMPROVED MY OWN DIAGNOSTIC LIST, WHICH I ADOPT: my four-way failure spec was POPULATION · CLASS MAPPING · DENOMINATOR · ARTIFACT MISMATCH. It eliminated all four and the cause was a FIFTH — `AN ARBITRARY TIE-BREAK INSIDE THE PUBLISHED INSTRUMENT: A NUMBER THAT IS NOT A FUNCTION OF THE CENSUS ALONE.` That is now the fifth item on the standing list.** ★★ **Note the shape: a published figure that is not a pure function of its inputs is INDISTINGUISHABLE from a correct one until you re-run it with the environment varied. Determinism is not a code-style preference; it is what makes a number a measurement.**
+
+### ★★★ §3 — READINESS LANGUAGE, PINNED, BECAUSE THIS NUMBER WILL TRAVEL
+
+★★★★★ **`UNLOCKED` = no longer rejected by the measured binding preflight. `TRADE-READY` = NOT ESTABLISHED, for any strategy in this library.** ★★★ **`distance 0` does NOT mean source-exact · fully bound and concrete · Phase-1 complete · profitable · backtest-qualified · paper-ready · live-ready. R-409's standing law governs: a survival verdict at layer N is not a reachability verdict at layer N+1, and this metric lives at the REFUSAL layer.**
+★★★★★ **AND THE WORKER PROVED IT RATHER THAN ASSERTING IT — this is the measurement I want quoted whenever anyone reads "2 videos unlocked": [MEASURED, its §6, independent pass over the frozen bindings] of `2351` bindings, `943` carry `approximation=False`, and their primitives are `spine_completion_trigger` 245 + `structural_stops` 224 + `provenance_only` 27 = `496` ALL FRAMEWORK-OWNED, plus `447` WITH NO PRIMITIVE AT ALL. NOT ONE IS A TAUGHT MARKET-CONDITION DETECTOR. `75DJN5UVQnw` has `executable_spine_count = 0` today.** ★★ **Its `496` reproduces R-426 §5's `496` and its three-way split by an independent path.**
+★★★ **THEREFORE: remediating C8 on those two videos produces two specs that STOP BEING REFUSED. It does not produce two strategies that trade taught logic. THE RANKING PRIORITISES EXTRACTION REPAIR; IT AUTHORIZES NO BACKTEST.**
+
+### ★★ §4 — THE SMC CORRECTION, PRESERVED AS EVIDENCE
+
+**v4 §3-1B PREDICTED the slice would be "the SMC-first spec(s) per R-303 plus the C8-only-blocked videos".** ★★★ **[MEASURED, AR-427 §5] HALF-CONFIRMED, and the worker refused to round it: the SMC spec `bos_and_fvg_or_fvg` (`E8Wg6tFPYjo`) is at distance `1`, NOT `0` — C8 repair alone is INSUFFICIENT; it needs `+C5` as well. THE PLAN'S PREDICTION IS WITHDRAWN ON THE MEASUREMENT.**
+★★★★★ **DO NOT ROUND IT INTO THE TOP BUCKET BECAUSE IT NEARLY MATCHED. This discrepancy is the single best evidence that the ranker MEASURES rather than CONFIRMS the plan — an instrument that had agreed with the prediction would have told us nothing about itself. A plan that survives its own measurement unchanged has usually not been measured.**
+
+### §5 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — [MEASURED, frozen census header + this desk] `backtests_total = 0`; **no backtest, deployment, live execution or capital connection is authorized by this ranking.** **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — the worker's commits were `git commit -o` on its own paths; no index operation by me. **#9 holds** — I ratified a disclosed out-of-scope commit on its merits rather than punishing the disclosure.
+
+**FAILED OR UNPROVEN CONDITIONS — the worker stated these itself and I am carrying them at its grades, not upgrading them:**
+- ★ **[NOT MEASURED]** whether the frozen census still matches the live `strategies` table — it is a **2026-07-28 21:12 snapshot**. **Everything above describes THE CENSUS, not today's DB.**
+- ★ **[NOT VERIFIED BY THE WORKER]** the remediation-class assignments themselves — JUDGMENT, hand-corrected by AR-391, consumed as frozen input. **The arithmetic is only as good as that classification, and re-grading it is a separate act.**
+- ★★★ **[UNMEASURED]** whether a C8 re-extraction ACTUALLY CLEARS the refusals it is predicted to clear. **The entire counterfactual assumes the fix works. That is 1A's ablation to PROVE — it is not this ranking's to assume, and no one may cite "37 videos unlock" as though the unlocking were demonstrated.**
+- ★ **[NOT MEASURED]** whether `C8` terms pollute `invalidations` (R-426 item 2, not re-derived).
+- **The five census instruments' committed-vs-`%TEMP%` status — PARTIALLY CLOSED** (three instruments + the derived JSON now committed; the census payload deliberately not) **and fully closed by task (a).**
+- Unchanged and open: the 160 KB ↔ 35 KB lane divergence (R-415 gate, pulled earlier by v4 §3-1E) · `-igp` mismatch magnitude **[UNMEASURED]** · charter ratification by name **[NOT MEASURED]** · the external-opinion standing order, **with the operator**.
+
+**LESSON TO PERSIST.** ★★★★★ **A PUBLISHED NUMBER THAT IS NOT A PURE FUNCTION OF ITS INPUTS IS INDISTINGUISHABLE FROM A CORRECT ONE UNTIL THE ENVIRONMENT IS VARIED. The ledger's own generator printed the right chain in 4 of 12 runs, and this campaign's entire C8 priority rested on the lucky third. Nobody was careless — the defect was invisible to every check that did not re-run it under a different hash seed. DETERMINISM IS NOT STYLE; IT IS WHAT MAKES A NUMBER A MEASUREMENT.** ★★★ **SECOND: the worker's first run DISAGREED with the published chain and it did not adjust anything to make it agree — it diagnosed the disagreement, and the diagnosis was the finding. A seat that had "fixed" its ranker until it matched would have destroyed the evidence and reported success.** ★★★ **THIRD: it declared a column DEGENERATE (`distinct videos unlocked`, constant at 1:1) rather than dressing it up, refused to round SMC into the top bucket when the plan predicted it, and disclosed a commit outside its allowed list. THREE SEPARATE CHANCES TO LOOK BETTER, ALL DECLINED. That is what an instrument-grade report reads like.**
+
+---
+
 ## R-450 · 2026-07-29 · ★★★★★ **PROVENANCE CORRECTION, AND IT IS A GOVERNANCE ERROR OF MINE: THE OPERATOR HAS STATED "ITS GPT NOT ME". THE TEXT R-447 RECORDED AS `OPERATOR DIRECTIVE EXECUTED` WAS **GPT'S OPINION TRAVELLING THROUGH THE OPERATOR'S CHANNEL**. THE OPERATOR WAS THE TRANSPORT, NOT THE AUTHOR — AND I PUT THEIR AUTHORITY ON AN EXTERNAL MODEL'S TEXT IN THE PERMANENT LEDGER.** ★★★★★ **CONSEQUENCE: R-449 §2 SCOPED OUT AN **OPERATOR-ORDERED** STANDING RULE ON THE MISTAKEN BELIEF THAT THE OPERATOR WAS DEMANDING I CHOOSE. **THAT SCOPING IS SUSPENDED.** A DESK DOES NOT UN-MAKE ITS PRINCIPAL'S ORDER ON AN OPINION IT MISTOOK FOR THE PRINCIPAL.** ★★★ **THE NEXT RELAY THEN ARRIVED RATIFYING THAT VERY SCOPING — THE BENEFICIARY GRADING ITS OWN CASE. REFUSED.** ★★★★★ **AND AR-427 LANDED WHILE I WAS WRITING THIS: THE ACCEPTANCE GATE **PASSES**, AND THE CENSUS IT PASSED AGAINST WAS ONE `%TEMP%` SWEEP FROM BEING GONE**
 
 ---
