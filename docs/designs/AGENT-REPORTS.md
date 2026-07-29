@@ -4,6 +4,54 @@
 
 ---
 
+## AR-387 · 2026-07-29 · **BOTH BLOCKERS BUILT — PR #30, 4 files, +378/−14.** ★★★ **RED METHOD AS YOU SPECIFIED IT AND IT WORKED: the suite COLLECTS and fails 6/4 on BEHAVIOUR — assertions and DID-NOT-RAISE, zero collection errors.** ★★★ **AND I REPRODUCED THE HAZARD BEFORE FIXING IT: the empty-spine fixture fires at bar `[0]`, the bound one at bar `[30]` where `ny_am` opens — so the fabricated entry is now pinned as an INDEX, not a description.** ★★ **corpus_A refusal count UNCHANGED at 11 of 16 — these blockers add nothing to the blast radius, measured**
+
+**RULING ID:** R-422 item (1) · **TASK ID:** `UNKNOWN_REQUIREDNESS` + `NON_EXECUTABLE_EMPTY_SPINE` · **BRANCH:** `hardening/preflight-blockers-20260729` · **COMMIT:** `83efd34e` · **PR: #30**, base `hardening/slumhouse-shared-office-parity-20260723`, 1 commit · **TREE: worktree pinned to the merged tip `7e5311fd`** · **RECOMMENDATION:** **APPROVAL_REQUESTED. `runtime-production` untouched — [MEASURED] tower still `a674f1ed`.**
+
+### ★★★ §1 — A DECISION I MADE AND GROUNDED RATHER THAN ASSUMED: `trigger` IS NOT MANDATORY
+
+The obvious reading of "spine → MANDATORY, anything else → UNKNOWN" is that `trigger` is a known, structurally-required role and should be MANDATORY. **I measured instead of reasoning about it.** ★★★ **[MEASURED HERE, POP-16 / corpus_A, `shakedown_specs`, 16 files] the role vocabulary is exactly `{spine 102 · confluence 53 · invalidation 6}` — reproducing your R-420 census exactly — and ALL 16 entry-trigger conditions carry `role="spine"`. The literal role `"trigger"` DOES NOT OCCUR in corpus_A at all.** ★★ Where I had seen it — the hand-written test fixture, and 332 times in **POP-41, the disjoint corpus** — is precisely the evidence a population ruling says I may not carry across.
+
+★ **So `spine`/`invalidation` are the only roles this campaign has evidence for, and `trigger` is honestly UNKNOWN.** It blocks either way (`blocks_execution` covers both classes); **only the recorded provenance differs, which is the entire point of the blocker.** ★ **If you want `trigger` promoted to MANDATORY, that is a ruling with evidence I do not have — I am not asserting it from plausibility.**
+
+### §2 — WHAT SHIPPED
+
+**(i) `UNKNOWN_REQUIREDNESS`** — a third rule class. **It BLOCKS IDENTICALLY to MANDATORY and the tests pin that**, so honest labelling cannot quietly cost safety; what changes is the RECORD. `PreflightRefusal` gains `rule_class`, so a refusal now says *whether the source required the rule* separately from *why it could not be bound*. ★ Optional evidence **cannot** launder an unknown role into droppable — evidence attaches to a condition whose role we could read.
+**(ii) `NON_EXECUTABLE_EMPTY_SPINE`** — refused **plan-level in the preflight** (its own reason string) and again **in `compute()`** (its own exception type, `NonExecutableEmptySpineError`), replacing the `np.ones(n)` fallback. ★★ **Kept separate from (i) on purpose, and the fixture proves why: nothing in it is unbindable — a spine of `EXIT_HINT` rows is perfectly BINDABLE and still yields no predicate. (i) would never have caught it.**
+
+### ★★★ §3 — THE HAZARD, REPRODUCED BEFORE IT WAS FIXED
+
+**[MEASURED HERE, pre-blocker build]** empty-spine fixture → `entry_long` fires at bars **`[0]`**, count 1. Bound fixture → fires at bars **`[30]`**, count 1 — bar 30 is where `ny_am` opens for that fixture. ★★★ **Both counts are 1, so a count-based test would NOT have discriminated. The INDEX does: bar 0 is the AND-identity fallback, bar 30 is a session-driven entry.** The discriminator now pins `fires == [30]`. ★ I had first written `== 3` from assumption; measuring it is what caught that.
+
+### §4 — EVIDENCE
+
+★★ **RED method exactly as ordered — additive symbols only into the pre-blocker tree so the suite COLLECTS, behavioural change withheld** (`grep -c` of the blocker symbols in that tree's `spec_condition_compiler.py` = **0**).
+
+| run | result |
+|---|---|
+| pre-blocker tree (`7e5311fd` + additive shims) | ★★★ **6 failed / 4 passed — every failure an assertion or `DID NOT RAISE`, ZERO collection errors** |
+| this branch | **36 passed** (blockers + prior safety matrix) |
+| regression: binding · compiler · session · dispatch · dst | **162 passed** |
+| regression: backtester + e2e | **17 passed** |
+
+★★ **The 4 green BOTH ways are the discriminators**, including the one you required — *a normally-bound spec still enters exactly as before* — plus *a genuine spine refusal still records MANDATORY*, which is the control proving (i) did not relabel real spine rules.
+
+### §5 — BLAST RADIUS: NIL, AND MEASURED RATHER THAN ASSERTED
+
+**[MEASURED HERE, POP-16 / corpus_A, blockers active] refused: `11 of 16` — UNCHANGED from AR-386's post-port count.** All **27** refusals classify `MANDATORY`; **0** carry `UNKNOWN_REQUIREDNESS`; **0** are empty-spine. ★★ **The zeros corroborate two independent things: corpus_A contains no unrecognized roles (consistent with §1's vocabulary census) and reproduces your own `0 of 16 empty-spine` finding by a second path.**
+
+### §6 — DISCLOSED: THREE PRIOR ASSERTIONS CHANGED
+
+★★ **I changed passing tests, so I name them rather than let a green suite imply nothing moved.** `classify_rule_role("")` and `("trigger")` now expect `UNKNOWN_REQUIREDNESS` instead of `MANDATORY`; and the orphan-zone payload test now expects **2** refusals, because that spec's only spine condition is the refused one, so it also trips empty-spine. ★★★ **Neither is a weakening: each updated test now ALSO asserts `blocks_execution(...) is True`, so the safety property is pinned where the label moved — and the payload assertion was TIGHTENED onto the specific condition (`next(x for x in refusals if x.condition_id == "s1")`) rather than relaxed to a count.**
+
+**Files changed:** `spec_execution_preflight.py` · `spec_condition_compiler.py` · `tests/test_session_refusal_safety.py` · **new** `tests/test_preflight_blockers.py`.
+**Remaining uncertainty:** ★ whether `trigger` should be MANDATORY (§1 — yours, and I decline to assume it) · ★ **[UNENUMERATED]** the live 120-library refusal count, a different population again · ★ **[UNENUMERATED]** the timezone/calendar basis. ★ **CI on #30 not yet checked at filing time — I make no green claim.**
+**Risk:** low and bounded — `backtests total: 0`, both blockers fail closed, corpus_A refusal count did not move, and the deploy is a separate act you have not authorized.
+
+**Next smallest task (ONE):** your merge decision on #30 — then the corpus_B charter, which is the first item on the queue that is not this defect.
+
+---
+
 ## AR-386 · 2026-07-28 · ★★★ **YOUR STOP CONDITION FIRED — THE 41 IS NOT THE CAMPAIGN CORPUS. IT IS DISJOINT FROM IT: overlap = ZERO.** ★★★ **AND THE REAL NUMBER, POST-PORT OVER corpus_A: `11 of 16`, NOT `41 of 41` — FIVE SPECS STILL PASS. MY §5 ESCALATION ("no Band-C backtest can run") IS WITHDRAWN; IT WAS TRUE OF A POPULATION NOBODY IS SHIPPING.** ★★★ **AND THE STING: THE ORPHAN-ZONE PORT ADDS ZERO REFUSED SPECS. The 9→11 delta is ENTIRELY my fail-closed confluence policy — decomposed and measured, not attributed**
 
 **RULING ID:** R-421 item (1) · **TASK ID:** name the 41 · **TREE: ported build worktree (`hardening/session-refusal-safety-20260728`, `c8dae8a8`), specs read from disk** · **RECOMMENDATION:** **STOPPING AS INSTRUCTED — the stop condition names this as yours to rule.**
