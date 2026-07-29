@@ -10,13 +10,23 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-447**. Newest AR **AR-424 — RULED (accepted)**. **PR #32 (`75065635`)
-and PR #33 (`dcb5eca8`) BOTH MERGED.** ★★★ **THE CI-HONESTY LANE IS CLOSED
-(v4 §9 bound: "governance; NEVER a merge gate for spearhead packets").**
-**TASK (R-447) — MONEY PATH, v4 §3-1B UNLOCK-DISTANCE RANKING:** from the FROZEN
-census artifacts, per spearhead spec, blocking conditions by class under a
-`{C8-fixed}` counterfactual → ranked `spec · distinct VIDEOS · residual non-C8
-blockers`. ETA ~40 min.
+Ledger **R-448**. Newest AR **AR-425 — RULED (decline-receipt ACCEPTED)**.
+**PR #32 (`75065635`) and PR #33 (`dcb5eca8`) BOTH MERGED.** ★★★ **THE CI-HONESTY
+LANE IS CLOSED (v4 §9 bound: "governance; NEVER a merge gate for spearhead
+packets").**
+★★★★★ **WORKER: HANDED OFF. THE AR-409→AR-425 SESSION DECLINED AT A CLEAN TASK
+BOUNDARY — all work committed (`399edb6e`), nothing half-done, NO SUB-AGENT OWED
+(verified), both merged worktrees swept. THIS IS A DECLINE, NOT A STALL.**
+★★★★★ **A FRESH WORKER SEAT IS NEEDED. → `worker-onboarding`.**
+**TASK — MONEY PATH, v4 §3-1B UNLOCK-DISTANCE RANKING.**
+★★★★★ **ASSIGNEE: `NONE — AWAITING A WORKER SEAT`. STATUS: AUTHORIZED, UNASSIGNED,
+START-READY.** ★★★ **IT IS NOT REASSIGNED TO "a future session" AND IT IS NOT
+WITHDRAWN — the authorization outlives the session that declined it, so whichever
+seat exists next STARTS WITHOUT A ROUND-TRIP to this desk. Do not re-authorize it;
+it is already authorized in R-448's `★ WORKER — START HERE` block.**
+**Contract:** from the FROZEN census artifacts, per spearhead spec, blocking
+conditions by class under a `{C8-fixed}` counterfactual → ranked `spec · distinct
+VIDEOS · residual non-C8 blockers`. ETA ~40 min.
 ★★★★★ **ARMED STOP / ACCEPTANCE: the ranker MUST first REPRODUCE R-426's
 published chain (`C8→6 · +C3→15 · +C2→27 · … · +C9→120`). If it cannot, STOP —
 ranker and census disagree and the RANKER is the suspect.** ★★ **Per-VIDEO, never
@@ -265,6 +275,18 @@ against your tooling FIRST; "too total to be plausible" is what caught the last
 one, and implausibility is a weak guard.** ★ **DISCRIMINATOR: process ALIVE + conversation `.jsonl` STILL
 GROWING ⇒ silent work · ALIVE + conversation STOPPED ⇒ external account limit
 (seen 2026-07-29, an hour of silence was a usage limit) · not alive ⇒ dead.**
+★★★★★ **NEW, AND IT IS A LIVE WAY FOR CI TO GO RED (PR #33, intended): if the
+`fast` lane fails with `vitest_report_malformed: unrecognized assertion status
+(<name>=N)`, THAT IS NOT A BROKEN SUITE — a vitest upgrade added a status value.
+FIX: add it to `KNOWN_STATUSES` in `ci/compare-baseline.mjs`. One line. The error
+names the offender.** ★★ **This is fail-loud replacing fail-quiet and it is the
+correct trade — but it is a NEW failure mode, disclosed by the worker who shipped
+it rather than discovered by a later seat at 3am.**
+★★ **Merged worktrees `wt-ci-abspath-20260729` and `wt-parser-sanity-20260729`
+may be removed BY EXPLICIT PATH whenever convenient — branches merged, left in
+place deliberately. ★★★ `Remove-Item -Recurse` on a Windows JUNCTION deletes the
+TARGET; the outgoing worker removed both junctions reparse-safely and VERIFIED
+the real `node_modules` intact at 329 entries.**
 `M session_windows_parity.json` phantom · a monitor event naming an OLD AR = torn
 mid-write read · `.playwright-cli/` = operator tooling · **`| head`/`| tail` MASK
 EXIT CODES** · `pytest-timeout` NOT installed here (`--timeout` ⇒ exit `4`).
@@ -312,7 +334,15 @@ from a prior conversation can be ALIVE yet absent from `TaskList` — alive ≠
 delivering. Empty `TaskList` ⇒ retire and re-arm, then verify the gap is empty.**
 
 ## OPERATOR-FACING
-Nothing waits on you. Nothing has ever run a backtest; no capital is connected.
+★★★★★ **ONE THING WAITS ON YOU: SEAT A FRESH WORKER SESSION. The previous worker
+handed off cleanly at a task boundary (AR-425, accepted R-448). Its task is
+already authorized and start-ready — the new seat runs `worker-onboarding` and
+begins v4 §3-1B without needing anything further from this desk.**
+★★ **STANDING PROTOCOL UNWIRED: the operator's "get an external (GPT) read before
+a ruling" order has NO MECHANISM in this seat. It has not run for R-445..R-448.
+Either wire a tool or scope the rule to the ruling classes where it pays — it is
+currently a rule that quietly does not happen, which is worse than either.**
+Nothing has ever run a backtest; no capital is connected.
 ★★ **A correction was owed and is delivered: the earlier "your kill switch has a
 hole" alarm was WRONG — the kill switch and compliance gate pass. The real issue
 is 156 stale entries on a CI allow-list that could hide FUTURE breakage.**
