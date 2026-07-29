@@ -4,6 +4,20 @@
 
 ---
 
+## AR-440 · 2026-07-29 · **START-RECEIPT — R-457: HOW DID THE BACKFILL DERIVE `prompt_sha256 = c75a2da8…`? ★★★ I AM AUDITING MY OWN ANSWER'S EVIDENCE, AND I HOLD NO PREFERENCE AMONG THE THREE OUTCOMES.**
+
+**RULING ID:** R-457 · **TASK ID:** AR-440 · **STATUS:** START-RECEIPT · **COMMIT AT START** `10be91a3`.
+
+★★★ **THE STRUCTURAL RISK I AM UNDER, NAMED BEFORE I START: I am auditing the evidence for a result I produced four hours ago and reported as striking. `Demote` is the outcome that costs me the finding, so it is the one I must not resist.** ★★ **R-457 lists three outcomes as equally acceptable and I am adopting that literally — I will not treat `AUTHORITATIVE` as the success case.**
+
+**PLAN:** **(1)** locate the code/migration/script that wrote `extraction_provenance` + `provenance_backfilled: true` · **(2)** read HOW it derived `prompt_sha256` — did it hash a prompt that actually RAN, or a then-current file / config default / placeholder / a value copied across rows · **(3)** R-457 §1's own probe: does `c75a2da8…` appear on rows OUTSIDE the census 40 — a hash written where the prompt could not have been known is itself the finding · **(4)** if the backfill's logic is unrecoverable, say so with the reason named.
+
+**FIRST OBSERVABLE:** the backfill's location and its derivation line, quoted. **ETA ~30 min.**
+**FORBIDDEN, ACKNOWLEDGED:** no `.env` write, no flag change, no DB write, **no backfill re-run**, no re-extraction, no C8 implementation, no spec edits — **and no statement from me about whether C8 is misattributed.** `UNSUPPORTED ≠ REFUTED` stands.
+**STOP:** `backtests_total > 0` · a write is required · ★★★ **the backfill wrote a hash it could not have known — that STOPS and comes to you, it does not get reasoned around.**
+
+---
+
 ## AR-439 · 2026-07-29 · ★★★★★ **SETTLED, AND THE ANSWER IS NEITHER OF THE TWO OPTIONS YOU GAVE ME. THE CENSUS'S 40 SPECS DECLARE A `compiler-v3-union-1.0` PIPELINE WITH `prompt_sha256 = c75a2da8…` — AND [MEASURED, CONTROL-PROBED] **THAT PROMPT MATCHES NO BLOB IN THIS REPOSITORY'S ENTIRE HISTORY (14,330 SWEPT).** THE PROMPT v4 BLAMES FOR 51.1% OF ALL BLOCKAGE IS NOT THE PROMPT THAT PRODUCED THE CORPUS — AND THE ONE THAT DID IS NOT IN THE REPO.** ★★★★★ **JOIN VERIFIED THE HARD WAY: DB `extraction_provenance` == the on-disk spec's OWN `spec_hash`, `40 of 40`, ZERO MISMATCHES. UNIFORM — NO POPULATION SPLIT.** ★★★ **AND I MUST DISCLOSE A DEFECT IN MY OWN INSTRUMENT BEFORE ANYTHING ELSE: MY FIRST JOIN TOOL MANUFACTURED `35` FALSE JOINS.**
 
 **RULING ID:** R-456 · **TASK ID:** AR-439 · **PRIOR:** AR-438 · **COMMIT AT WRITE** `824f742e` · **RECOMMENDATION:** `APPROVAL_REQUESTED` on the measurement; **the judgment stays yours and I have not made it.**
