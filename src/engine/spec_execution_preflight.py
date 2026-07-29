@@ -91,7 +91,7 @@ compile it so we treated it as true". Keeping COMPILER FAILURE and VALID
 OPTIONAL OMISSION in separate words is the point — one branch expressing both
 is exactly what `spec_condition_compiler.py` used to encode."""
 
-_MANDATORY_ROLES: frozenset[str] = frozenset({"spine", "invalidation"})
+_MANDATORY_ROLES: frozenset[str] = frozenset({"invalidation"})
 _OPTIONAL_CANDIDATE_ROLES: frozenset[str] = frozenset({"confluence"})
 
 
@@ -114,18 +114,39 @@ class UnresolvedMandatoryRuleError(RuntimeError):
 def classify_rule_role(role: str) -> str:
     """Map a graph `role` to a rule class. FAILS CLOSED.
 
-    `spine` / `invalidation` -> MANDATORY.
+    `invalidation`           -> MANDATORY.
     `confluence`             -> OPTIONAL_CANDIDATE (see resolve_rule_class).
     anything else OR absent  -> UNKNOWN_REQUIREDNESS (blocks, but is not
                                 recorded as a source claim).
+                                ★ `spine` IS IN THIS ARM — see below.
 
-    ★ GROUNDING — why exactly two roles are MANDATORY and nothing else.
-      [MEASURED over POP-16 / corpus_A, `shakedown_specs`, 16 files] the role
-      vocabulary is exactly {spine: 102, confluence: 53, invalidation: 6}, and
-      all 16 entry-trigger conditions carry role "spine" — the literal role
-      "trigger" does not occur. So `spine` and `invalidation` are the only
-      values this campaign has evidence for. Everything else, "trigger"
-      included, is honestly unknown.
+    ★★★ WHY `spine` IS NOT MANDATORY (R-432 / R-436 / R-438) — the correction
+      that this docstring exists to carry, because the previous version of it
+      asserted the opposite and a comment that outlives its code is the next
+      reader's false premise.
+
+      `spine` was read as "the source marked this rule required." It is not.
+      [MEASURED at the producer, R-432] `spine` is the ELSE-ARM of a TOPOLOGY
+      test in `graph-to-engine.ts` — a condition becomes `spine` by failing to
+      look like anything else, not by the educator saying it was required. It
+      is therefore withdrawn as evidence of source-mandatory status.
+
+      ★★ THIS CHANGES THE RECORD, NOT THE REFUSAL. `spine` now lands in
+      UNKNOWN_REQUIREDNESS, and `blocks_execution` returns True for that class
+      exactly as it does for MANDATORY, so the refusal SET does not move by one
+      condition — pinned in CI by
+      `test_REGRESSION_refusal_set_identical_under_legacy_mandatory_roles`.
+      What stops is conditions claiming a requiredness the source never
+      established. (The corpus-scale figure for how many — ~426 of 1365 — is a
+      CLAIM PENDING an independent census per R-438 §2, deliberately not stated
+      here as measured. A comment asserting an unverified count is the same
+      defect this change exists to remove.)
+
+      ★ `invalidation` REMAINS MANDATORY and is the discriminator: it is
+      assigned BY TYPE from the atom's own semantics (`graph-to-engine.ts`
+      :142-145), not by topology residue, so it IS source evidence. If a later
+      cleanup collapses these two classes again, the discriminator tests are
+      what should catch it — do not delete them.
 
     ★ The last arm is the load-bearing one. `role` is read straight off the
       graph with an empty-string fallback (`spec_family_bindings.bind_condition`),
@@ -218,12 +239,40 @@ class PreflightResult:
         }
 
     def error_message(self) -> str:
+        """The human-readable refusal.
+
+        ★★★ R-438 §2: this string is the USER-VISIBLE surface of the whole
+        provenance correction. It used to say "N mandatory rule(s)" for EVERY
+        refusal regardless of each one's actual class — so a run could stop
+        recording a fabricated source-requiredness claim in `rule_class` while
+        the sentence a human actually reads went on making exactly that claim.
+        Fixing the field and leaving the message is fixing the record and not
+        the report; the caption is a claim too.
+
+        So the head carries a per-class BREAKDOWN and every line states its own
+        basis. `n_other` cannot occur while `blocks_execution` admits exactly
+        two classes — it is counted rather than assumed so that adding a third
+        blocking class can never silently misreport it as mandatory.
+        """
+        n_mandatory = sum(1 for r in self.refusals if r.rule_class == MANDATORY)
+        n_unknown = sum(1 for r in self.refusals if r.rule_class == UNKNOWN_REQUIREDNESS)
+        n_other = len(self.refusals) - n_mandatory - n_unknown
+
+        parts = []
+        if n_mandatory:
+            parts.append(f"{n_mandatory} the source marked required")
+        if n_unknown:
+            parts.append(f"{n_unknown} of unknown requiredness")
+        if n_other:
+            parts.append(f"{n_other} of unrecorded class")
+        breakdown = f" ({'; '.join(parts)})" if parts else ""
+
         head = (
-            f"REFUSED: {len(self.refusals)} mandatory rule(s) have no executable "
-            f"predicate. Running would silently trade without them."
+            f"REFUSED: {len(self.refusals)} rule(s) have no executable "
+            f"predicate{breakdown}. Running would silently trade without them."
         )
         lines = [
-            f"  - [{r.role}/{r.semantic_type}] {r.condition_id}: "
+            f"  - [{r.rule_class}] [{r.role}/{r.semantic_type}] {r.condition_id}: "
             f'"{r.rule_text}" -> {r.reason}'
             for r in self.refusals
         ]

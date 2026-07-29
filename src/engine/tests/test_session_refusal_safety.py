@@ -242,7 +242,18 @@ def test_DISCRIMINATOR_configured_sessions_still_bind_normally(object_text: str,
 # ═══════════════════════════════════════════════════════════════════════════
 
 def test_role_classification_fails_closed():
-    assert classify_rule_role("spine") == MANDATORY
+    # ★★★ UPDATED BY R-436/R-438: `spine` used to be MANDATORY here. [MEASURED
+    #   at the producer, R-432] it is the ELSE-ARM of a topology test in
+    #   `graph-to-engine.ts` — a condition becomes `spine` by failing to look
+    #   like anything else — so it was never evidence that the SOURCE required
+    #   the rule. It now classifies as UNKNOWN_REQUIREDNESS and BLOCKS
+    #   IDENTICALLY; the refusal set does not move, only the recorded claim.
+    #   The safety half is asserted immediately below, never dropped.
+    assert classify_rule_role("spine") == UNKNOWN_REQUIREDNESS
+    assert blocks_execution(classify_rule_role("spine")) is True
+    # ★ `invalidation` is assigned BY TYPE from the atom's own semantics, so it
+    #   IS source evidence and stays MANDATORY. This is the discriminator: it
+    #   proves the relabel was targeted rather than a blanket collapse.
     assert classify_rule_role("invalidation") == MANDATORY
     # R-420: `confluence` is a CANDIDATE, not a licence — role is mutable
     # in-flight (spec_family_bindings.py:160-165 documents a demotion path), so
@@ -270,7 +281,14 @@ def test_optional_candidate_resolves_to_mandatory_without_positive_evidence():
     assert resolve_rule_class("confluence", optional_evidence=False) == MANDATORY
     assert resolve_rule_class("confluence", optional_evidence=True) == OPTIONAL
     # Evidence can never downgrade a mandatory role.
-    assert resolve_rule_class("spine", optional_evidence=True) == MANDATORY
+    assert resolve_rule_class("invalidation", optional_evidence=True) == MANDATORY
+    # ★★★ UPDATED BY R-436/R-438: `spine` resolves to UNKNOWN_REQUIREDNESS now
+    #   (see test_role_classification_fails_closed for why). The property this
+    #   line actually guards — OPTIONAL EVIDENCE CANNOT LAUNDER A BLOCKING ROLE
+    #   INTO A DROPPABLE ONE — is unchanged and is re-asserted, not weakened:
+    #   evidence=True still does not make it droppable, and it still blocks.
+    assert resolve_rule_class("spine", optional_evidence=True) == UNKNOWN_REQUIREDNESS
+    assert blocks_execution(resolve_rule_class("spine", optional_evidence=True)) is True
     # ★ UPDATED BY R-422 blocker (i): an absent role resolves to
     #   UNKNOWN_REQUIREDNESS rather than MANDATORY. The safety property under
     #   test — evidence cannot make it droppable — is asserted unchanged.
