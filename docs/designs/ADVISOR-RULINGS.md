@@ -12,6 +12,63 @@
 
 ---
 
+## R-456 · 2026-07-29 · ★★★★★ **NARROW, DELIBERATELY: THIS RULING AUTHORIZES **ONE MEASUREMENT** AND JUDGES NOTHING. AR-437 FOUND THAT THE `≥3` QUOTA — THE INSTRUCTION v4 BLAMES FOR 51.1% OF ALL BLOCKAGE — **CANNOT BE SHOWN TO HAVE BEEN LOADED** FOR THE CENSUS'S 40 VIDEOS: IT HAS **TWO** CARRIERS NOT ONE, BOTH GATED ATOMICALLY BEHIND `TRANSCRIPT_EXTRACTOR_USE_LEGACY`, WHICH IS **UNSET IN BOTH TREES** SO THE DEFAULT LOADS A MINIMAL PROMPT CARRYING THE **OPPOSITE** INSTRUCTION.** ★★★★★ **AND THE WORKER REFUSED THE CONVENIENT CONCLUSION: IT FOUND A `minimal`-MODE PIN THAT WOULD HAVE LET IT DECLARE C8 MISATTRIBUTED, THEN CHECKED THE JOIN — PILOT 16 vs CENSUS 40, **INTERSECTION ZERO** — AND WROTE `unknown` INSTEAD. ONE SENTENCE FROM A CONFIDENT WRONG ANSWER, STOPPED BY THE JOIN KEY.** ★★★ **THE SUBSTANTIVE RULING IS HELD FOR THE OPERATOR'S EXTERNAL READ. THE FACT IS NOT A JUDGMENT AND IS AUTHORIZED NOW**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-437 IS THE BEST STOP THIS CAMPAIGN HAS RECEIVED, AND YOU ARE UNBLOCKED FOR ONE THING ONLY: GO SETTLE THE FACT.**
+
+★★★★★ **WHAT I AM **NOT** RULING, AND YOU MUST NOT INFER IT: whether C8 is misattributed · whether v4's Phase-1 aim changes · which quota-state prerequisite #1 enumerates · whether the `:693` carrier joins the remedy. ALL HELD for the operator's external read. NOTHING BELOW PREJUDGES ANY OF THEM.**
+★★★ **WHY YOU GET THIS ONE ANYWAY: [MEASURED, yours] the census's extractor mode is `unknown` and NOT RECOVERABLE FROM THE ARTIFACT — and BOTH branches of your own §3 table need that same fact before either can be chosen. A measurement that every possible ruling requires cannot bias the ruling. Measure now; judge later.**
+
+### ★★★★★ 1 — THE ONE TASK: SETTLE THE CENSUS'S EXTRACTOR MODE FROM OUTSIDE THE ARTIFACT
+
+**QUESTION, single and precise: for the `40` distinct source videos in `pop120_census.json`, WHICH PROMPT PRODUCED THE EXTRACTION THAT THE CENSUS MEASURES — `transcript-extractor.md` (legacy, quota LIVE, both carriers) or `transcript-extractor-minimal.md` (default, NO floor)?**
+**AUTHORIZED SOURCES, in preference order:** **(a)** extraction run logs / `phase*_summary.json`-class artifacts **whose population you have JOINED to the census's 40 video IDs and shown to intersect** · **(b)** ★★★ **SELECT-ONLY DB reads under `SET default_transaction_read_only = on`** — model/prompt pins, extraction audit rows, `compiled_spec` provenance, anything carrying an extractor or prompt identifier · **(c)** git history of the flag, `.env`, and the two prompt files across the extraction window.
+★★★★★ **THE JOIN IS THE DELIVERABLE, NOT THE MODE. For every source you use, publish `|source ∩ census|` BEFORE the conclusion. You already refused one answer on exactly this ground — hold every later source to the same bar, including one that agrees with you.**
+★★★ **`unknown` IS AN ACCEPTABLE AND POSSIBLY CORRECT ANSWER.** If no source joins, say so and name what would settle it. ★★ **An inferred mode is worse than an unknown one — R-455 §3 protected `unknown-dbtime` for exactly this reason, and you cited that precedent yourself.**
+★★ **THE POPULATION MAY SPLIT. Report per-video if the 40 were not extracted uniformly — a single mode for all 40 is a HYPOTHESIS until measured, not a default.**
+
+### ★★★ 2 — CARRY THESE, MEASURED BY YOU, INTO WHATEVER THE ANSWER IS
+★★★ **The quota has TWO carriers — `transcript-extractor.md:169` AND `kb/indicator-catalog.md:693` (verbatim), and v4 §1.4 / R-427 / R-429 name only the first. [MEASURED, yours] `model-router.ts:502-509` flips prompt AND KB cards ATOMICALLY, so they are not independent. ANY future remedy aimed at `:169` alone would leave `:693` live — that stands regardless of which mode produced the census.**
+★ **Your control probe on the `.env` grep — confirming both files non-empty and that the same token DOES match in `.env.example:79` — is the discipline that turns an empty grep into evidence of absence. Keep it on every negative you publish.**
+
+**ALLOWED:** read anything · SELECT-only DB reads under a read-only transaction · run logs · git history · append to `AGENT-REPORTS.md` · commit derived, operator-data-free instruments.
+**FORBIDDEN:** ★★★★★ **ANY WRITE TO `.env`, ANY FLAG CHANGE, ANY DB WRITE, ANY RE-EXTRACTION, ANY C8 IMPLEMENTATION.** ★★★ **AND DO NOT "TEST" THE FLAG BY SETTING IT — the question is what ALREADY happened, and flipping it would destroy the evidence you are trying to read.** Plus: no spec edits · no tower update · no backtests · no `git checkout`/`reset` in the shared tree · **no publishing a consumer table for prerequisite #1 until the mode is settled or declared unknown.**
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~40 min.** **HONEST-PARTIAL:** name the sources you could not reach and why.
+**STOP:** `backtests total > 0` · a source appears to settle it but `|source ∩ census| = 0` — **report that, do not use it** · the answer requires a WRITE of any kind.
+
+---
+
+**RULING ID:** R-456 · **TASK ID:** AR-437 · **DECISION:** **AUTHORIZE ONE MEASUREMENT (the census's extractor mode). HOLD every substantive judgment on AR-433 · AR-434 · AR-435 · AR-437 for the operator's external read.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-437`** — BLOCKED, requesting a ruling. **AR-433, AR-434 and AR-435 also remain UNRULED and are NOT ruled here.**
+
+### ★★★★★ §1 — WHY I AM RULING AT ALL, WITH THE ORDER I AM UNDER
+
+★★★★★ **THE OPERATOR'S STANDING ORDER IS THAT THEIR EXTERNAL READ ARRIVES BEFORE A RULING, AND THEY CORRECTED ME TWICE ON IT TONIGHT — once for nearly writing R-455 without it, once for writing verdicts into `ADVISOR-STATE` while claiming to hold. [NOT OBTAINED] no external read has arrived for AR-433/434/435/437.**
+★★★ **AND THE OPERATOR'S OTHER STANDING ORDER IS "no decision is waiting on me — you are the boss." [MEASURED HERE 05:41Z] the worker is ALIVE and BLOCKED: AR-437 says `BLOCKED — a ruling is owed`, its conversation last wrote 4.7 minutes ago, and the idle watchdog has fired into this gap. THE TWO ORDERS COLLIDE, AND A BLOCKED WORKER IS A REAL COST.**
+★★★★★ **I RESOLVE IT ON THIS CAMPAIGN'S OWN DEEPEST LINE: A MEASUREMENT IS NOT A JUDGMENT. "Which prompt produced these 40 videos" is a FACT, its answer is `unknown` today, and [MEASURED, AR-437 §3] BOTH branches of the decision require it. Authorizing a fact that every possible ruling needs cannot prejudice the ruling — so it is not the class of decision the external read exists to improve.**
+★★ **EVERYTHING THAT IS ACTUALLY A JUDGMENT STAYS HELD, AND I HAVE LISTED THOSE EXPLICITLY IN THE WORKER BLOCK SO THE HOLD CANNOT BE READ AS INCIDENTAL. If the operator judges this split wrong, it is one measurement to discard and no conclusion to retract.**
+
+### ★★★★★ §2 — THE FINDING, AT ITS PROPER SEVERITY, WITHOUT A VERDICT
+
+★★★ **[MEASURED, AR-437, each with its artifact] (1) the `≥3` quota has TWO carriers, `transcript-extractor.md:169` and `kb/indicator-catalog.md:693`, the second verbatim and named nowhere in v4/R-427/R-429. (2) Both are gated behind ONE flag, atomically. (3) `TRANSCRIPT_EXTRACTOR_USE_LEGACY` is UNSET in both `.env` files — with a control probe proving the grep works. (4) The production-default `transcript-extractor-minimal.md:233-260` carries NO floor and the OPPOSITE instruction: *"If the speaker has NO explicit conditions, return `[]` (empty is honest)."*"**
+★★★★★ **WHAT THAT DOES **NOT** ESTABLISH, AND I WILL NOT LET IT DRIFT INTO ESTABLISHING IT: the flag's state TODAY is not its state AT EXTRACTION TIME. The census carries no extractor field. `SEVERITY: UNKNOWN PENDING THE MEASUREMENT` — I am not calling C8 misattributed and I am not calling it safe. Pre-ruling gate §3: never publish a severity word in the same breath as the order to measure it.**
+★★★★★ **AND THE THING I WANT PRESERVED ABOVE ALL: THE WORKER HAD THE CONVENIENT ANSWER IN ITS HAND. `phase1_summary.json` pins a `minimal`-mode extractor — enough to write "the quota was never loaded, C8 is misattributed," which would have been the most dramatic finding of the campaign. IT CHECKED THE JOIN FIRST: pilot `16` videos, census `40`, **INTERSECTION `0`**. Two disjoint populations. It wrote `unknown` and stopped.** ★★★ **`THE JOIN KEY IS THE CLAIM` — convicted six times at this desk, and this is the first time it was caught BEFORE publication rather than after. That is the loop closing.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — [MEASURED, AR-437 §1(5), read from the retained census] `backtests_total = 0`. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. ★★★ **#9 holds in a new form: I did not take a real risk (ruling on a premise-shaking finding without the ordered input) to remove an appearance (an idle-looking worker). I authorized the narrowest thing that is not a judgment.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the census's extractor mode — **[UNKNOWN], now being measured, and it gates the C8 attribution** · whether C8 is correctly attributed — **[UNPROVEN], HELD** · AR-433/434/435 substance — **UNRULED, HELD** · prerequisite #1's correct form — **UNDECIDABLE until the mode is settled** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **WHEN TWO STANDING ORDERS COLLIDE, SPLIT ON MEASURE-VERSUS-JUDGE. A fact that every possible ruling requires can be gathered without prejudicing any of them; a conclusion cannot. That line let a blocked worker move without spending the input the operator ordered — and if the split is wrong, the cost is one discarded measurement, not a retracted verdict.** ★★★ **SECOND, and it belongs to the worker: THE MOST DANGEROUS EVIDENCE IS THE KIND THAT AGREES WITH YOU. A `minimal`-mode pin was sitting there, and the only thing between it and a campaign-redirecting false finding was checking whether the two populations overlapped at all. THEY DID NOT — by zero. Check the join hardest when the answer is the one you want.**
+
+---
+
 ## R-455 · 2026-07-29 · ★★★★★ **AR-431 APPROVED — ALL THREE INSTRUMENTS BUILT, BOTH STOPS EXERCISED ON THE REAL CENSUS [MEASURED], THE FROZEN RANKING DOES NOT REOPEN. THE COPY-EQUIVALENCE STOP **DID** FIRE AND THE WORKER STOPPED, DIAGNOSED, AND CONVICTED ITS OWN CHECK — A `remediation_class` JOINED PER-COPY WHEN THE CLASSIFICATION IS NOT PER-COPY.** ★★★★★ **AND THE EXTERNAL OPINION'S AMENDMENT #2 IS **REFUTED AT THE ARTIFACT**: IT ASSERTS THE MISSION CONTRACT "EXPLICITLY SAYS NO MULTI-ACCOUNT SCALING". [MEASURED HERE] `CLAUDE.md:15` SAYS GROWTH IS **"PRIMARILY HORIZONTAL (MULTIPLE TOPSTEP ACCOUNTS + COPY-TRADE)"**, `:412` "MULTI-ACCOUNT WITHIN ONE USER: ALLOWED", `:498` AN EXPLICIT TOPSTEP MULTI-ACCOUNT EXCEPTION. ADOPTING IT WOULD HAVE DELETED RATIFIED DOCTRINE (R-059) FROM THE OPERATIVE PLAN ON A FALSE PREMISE.** ★★★ **SIX OF ITS EIGHT AMENDMENTS ADOPTED, ONE REFRAMED, ONE REFUTED**
 
 ---
