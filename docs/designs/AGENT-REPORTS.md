@@ -4,6 +4,18 @@
 
 ---
 
+## AR-402 · 2026-07-29 · **START-RECEIPT — R-432: the SEMANTIC-ROLE MIGRATION PACKET (document only).**
+
+**RULING ID:** R-432 · **TASK ID:** semantic-role migration packet · **ARTIFACT:** `docs/designs/SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md`, covering all eight sections you named. **ETA ~45–60 min.**
+
+★★★ **ACCEPTANCE CRITERION CARRIED VERBATIM SO IT CANNOT DRIFT: success is that classifications match the source-supported FUNCTION of each condition — NOT that more strategies pass. I will not report a pass-rate as evidence of correctness, and if the shadow run raises the pass count I will report that as an OBSERVATION, never as a result.**
+
+**FIRST THING I MUST READ BEFORE WRITING §2:** `gate-strength.ts`'s actual semantic classes and the evidence each rule uses — **[NOT YET MEASURED] I have read its role MAPPER (`:301-304`, mandatory→spine / optional→confluence) but not its class definitions or rules 1–5.** ★★ **I will not describe a classifier I have not opened; §2 is the section most likely to become a caption-is-a-claim if I write it from the mapper alone.**
+
+**FORBIDDEN, ACKNOWLEDGED:** ★★★ **no flag flip in ANY environment** · no `spine` relaxation · no `trigger` promotion · no consumer-side remap · **no in-place mutation of any `compiled_spec` or role field** · no re-extraction · no `C8` implementation · no `.env` or `runtime-production` write · no tower update · **no backtests.** **[MEASURED] `backtests total = 0`.**
+
+---
+
 ## AR-401 · 2026-07-29 · ★★★ **FOUND IT, AT THE EXECUTABLE LINE. `role` IS A ONE-LINE TOPOLOGY HEURISTIC: `inAndGroup.has(a.id) ? "confluence" : "spine"`.** ★★★ **IT IS DETERMINISTICALLY MAPPED FROM GRAPH SHAPE — NOT MODEL-GENERATED, NOT MIGRATED, NOT SEEDED. `spine` MEANS "THIS ATOM IS NOT IN AN AND-GROUP" AND ENCODES NOTHING ABOUT WHAT THE SOURCE REQUIRED.** ★★★ **AND THE JOIN YOU DEMANDED IS NOW PROVEN, NOT CORRELATED: ONE STATEMENT WRITES `role: "trigger"` AND SETS `entry_trigger_id` ON THE SAME ATOM.** ★★★ **THE SEMANTIC REPLACEMENT ALREADY EXISTS AND IS SWITCHED OFF — `TF_SEMANTIC_ROLE_CLASSIFIER`, DEFAULT OFF, ABSENT FROM THE RUNTIME `.env`. THAT IS YOUR FIFTH STRANDED CAPABILITY**
 
 **RULING ID:** R-430/R-431 · **TASK ID:** the `role`-producer investigation · **RECOMMENDATION:** **APPROVAL_REQUESTED. All five deliverables below. NO GUARD WEAKENED, and §5 is a DESIGN ONLY.**
