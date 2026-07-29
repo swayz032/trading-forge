@@ -12,6 +12,88 @@
 
 ---
 
+## R-466 · 2026-07-29 · ★★★★★ **PIVOT. THE HOUSEKEEPING QUEUE IS SUPERSEDED BY A C8 CRITICAL-PATH STRIKE, AND THE OPERATOR HAD TO SAY "REMEMBER BACK TO THE PLAN" TO GET IT.** ★★★★★ **AND A POPULATION CONFLATION THAT IS MINE: [MEASURED HERE, v4 §0] `0/16 FULLY BOUND` IS **corpus_A** (16 specs, R-401). C8's `51.1%` AND THE 40-VIDEO RANKING ARE **POP-120-LIVE**. §0 SAYS "NEVER MERGE THEM" AND I NARRATED THEM AS ONE STORY — TO THIS LEDGER AND TO THE OPERATOR.** ★★★★★ **THE HONEST CLAIM IS NARROWER: *"C8 IS THE ONLY SINGLE REMEDIATION CLASS THAT MAKES ANY POP-120 VIDEOS REFUSAL-CLEAN"* — **NOT** *"C8 ALONE PRODUCES A PHASE-1-EXITABLE STRATEGY."*** ★★★ **PREREQUISITES #2 AND #3 STOP BEING "STILL MINE" IN THIS RULING — #2 IS WRITTEN BELOW, #3 IS ASSIGNED WITH A DISPATCH TRIGGER**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-456 ACCEPTED — you convicted your own evidence and it convicted mine too (§1). THE HOUSEKEEPING LANE IS CLOSED. Everything below is the money path.**
+
+### ★★★★★ 0 — FIFTEEN MINUTES OF HOUSEKEEPING, THEN NOTHING MORE
+**ONE item only: publish the additive `MANIFEST.txt:3` erratum** (transcripts are **LF, not CRLF**; raw-byte hashing stays required; CRLF false-red risk is PER FILE and applies to `clause-segmenter.ts` / `graph-to-engine.ts`; body hash and all 40 payload hashes UNCHANGED; do not mutate the read-only snapshot).
+★★★★★ **PARKED, NOT DELETED, AND NONE MAY PRE-EMPT THE MONEY PATH AGAIN UNLESS IT INVALIDATES C8 EVIDENCE: partition-generator hardening (R-463 §5) · heartbeat/lease engineering (R-465) · off-machine backup (operator) · wider bug-pattern sweeps.**
+★★★ **AND I REFUSE ONE INSTRUCTION I WAS GIVEN: "retire the duplicate `AGENT-REPORTS` monitor." [MEASURED HERE] there is NO duplicate — PID `13424/20076` is the 2-SECOND CHANGE DETECTOR and `20016/8972` is the 15-MINUTE IDLE WATCHDOG, two ROLES on one file, which is the REQUIRED rig (`advisor-onboarding` §4a: "two monitors, no more"). Retiring either blinds a channel. DO NOT TOUCH THEM.**
+
+### ★★★★★ 1 — GATE A: LOCATE THE FIRST SEMANTIC CORRUPTION (discharges #0 AND re-keyed #1 together)
+
+**ONE bounded, READ-ONLY, ratified trace. Trace every canonical C8 refusal mechanically:**
+`(video, condition_id)` in the frozen classified census → the matching condition in the emitted spec → `(span, evidence)` in the transcript → the code path that carries it into the DB row.
+
+**DELIVER A COMMITTED `C8-PROVENANCE-LEDGER` CARRYING:**
+★★★ **POPULATION AND TREE beside EVERY count** (this ruling exists partly because that was not done) · ★★★★★ **INSTRUMENT AUDIT FIRST: reproduce `456` total per-video refusals, `233` C8, `37` videos BEFORE any new output is believed** · exact JOIN COVERAGE, MISSES, DUPLICATES, and a **RESIDUAL category** · the transcript clause · the spec condition · role/type/object · the source span · **whether the condition already exists BEFORE onboarding** · **the FIRST PERSISTED POINT at which context becomes executable** · historical pass membership marked **`[UNRECOVERABLE]`** if the raw two-pass outputs were never retained.
+★★★★★ **TWO INDEPENDENT SOURCE-RESOLUTION PATHS, AND A RED FIXTURE WITH A DELIBERATELY BROKEN `(video, condition_id)` JOIN. A GREEN-ONLY TRACE IS NOT EVIDENCE — that is this session's most-repeated lesson and it applies to your own tool.**
+
+**PRE-REGISTERED DECISION RULE — fixed BEFORE you read the result:**
+context is ALREADY a `DecisionAtom`/spec condition ⇒ **ATOM-ADMISSION fix** · atom clean but GRAPH conversion creates conditionness ⇒ **GRAPH-TO-SPEC fix** · spec clean but DB row polluted ⇒ **ONBOARDING fix** · ★★★★★ **mixed paths or incomplete joins ⇒ STOP, SPLIT BY PATH, NO GLOBAL REMEDY.**
+★★ **LEADING HYPOTHESIS, NOT A FINDING: the ATOM-ADMISSION BOUNDARY. `atomize-transcript.ts` instructs chart/instrument context to become `WAIT_SESSION`; `extractAtoms` turns `is_decision=true` into a `DecisionAtom`; the two-pass UNION cannot CREATE conditionness but CAN PRESERVE a false positive from either pass; `graph-to-engine.ts` converts every surviving source atom into an engine condition; onboarding CONSUMES the emitted spec rather than inventing the condition.** ★★★ **THE EXACT HISTORICAL PROMPT LINE'S CAUSAL SHARE REMAINS UNPROVED AND IS NOT NEEDED TO LOCATE THE BOUNDARY.**
+
+### ★★★★★ 2 — GATE B: ONE RATIFIED C8 TREATMENT (only after Gate A + its grade)
+★★★★★ **IF GATE A SELECTS ATOM ADMISSION, DO NOT SHIP A PROMPT-WORDING CHANGE ALONE — the two-pass UNION preserves one-pass false positives, so a wording fix leaves the leak open.**
+**THE TREATMENT PROPERTY:** *a clause that only selects INSTRUMENT, CHART TIMEFRAME or PLATFORM VIEW may never enter `DecisionGraph.atoms`; it is retained as structured EXECUTION METADATA. A clause that predicates trading on an actual market SESSION/TIME WINDOW remains EXECUTABLE.*
+**EXPLICIT THREE-WAY CONTRACT:** `decision_condition` · `execution_context` · `annotation`, with `context_kind = instrument | chart_timeframe | platform | market_session`.
+★★★★★ **ANY PASS DISAGREEMENT about decision-vs-context becomes `UNRESOLVED_CONTEXT_CONFLICT` — RETAINED and FAIL-CLOSED. Never silently promoted by the union, never discarded.**
+**RED/GREEN FIXTURES, ALL REQUIRED:** "we trade this on crude oil" → instrument metadata, NO condition · "we're on the 30-minute chart" → timeframe metadata, NO condition · "trade only 09:30–11:00 ET" → genuine `WAIT_SESSION` PRESERVED · mixed timeframe + market-state clause → SPLIT, market condition preserved · pass A says context / pass B says decision → **NO UNION LEAK** · every removed C8 clause APPEARS IN ANNOTATIONS · **NO NEW C8** · all pre-registered genuine market-state source spans REMAIN · ★★★ **CONTROL reproduces the frozen C8 classifier result BEFORE the treatment is trusted.**
+★★★★★ **PREREQUISITE #7 IS CORRECTED: `spec_hash` hashes only the EXECUTABLE spec, so it CANNOT authenticate annotations stored beside it. KEEP `spec_hash` for runtime identity and ADD an `artifact_hash` over canonical `{spec, annotations, extraction_provenance}`. FOLD the shared evaluated-prompt oracle (R-459 §2) INTO that provenance contract rather than leaving it a detached task.**
+
+### ★★★★★ 3 — AIM AT PHASE-1 EXIT, NOT REFUSAL CLEANLINESS
+**After Gate B's independent grade, produce ONE end-to-end `PHASE1_EXIT_DISTANCE` table per candidate:** remaining extraction/refusal classes · **UNBOUND load-bearing conditions** · **APPROXIMATE load-bearing conditions** · missing primitives · lane-authority dependency · forensics readiness · **a valid non-empty `trigger`**.
+★★★★★ **DO NOT USE THE CURRENT REFUSAL-ONLY RANK AS THE TARGET SELECTOR. [EXTERNAL OPINION, UNVERIFIED BY THIS DESK] the two distance-0 videos still carry executed APPROXIMATE bindings — `75DJN5UVQnw` 7, `jlShztsY3oA` 4. Refusal-clean is not bound-and-concrete.**
+★★★ **THEN RE-EXTRACT **ONE** HIGHEST-REACHABILITY VIDEO — NOT ALL 37.** Run `transcript-audit`, binding, the authoritative-lane check and forensics calibration on that one. **Expand to the next video ONLY if the first honestly fails.**
+★★★★★ **SUCCESS IS NOT A LOWER C8 COUNT. SUCCESS IS: one newly extracted TIER-A spec, IN THE AUTHORITATIVE EXECUTION LANE, with EVERY load-bearing condition CONCRETE and the FORENSICS GATE CALIBRATED. That is the first measurement that moves Phase 1.**
+
+**ALLOWED:** reads · SELECT-only DB under `SET default_transaction_read_only = on` · the erratum · the Gate-A trace + its committed ledger · append to `AGENT-REPORTS.md`.
+**FORBIDDEN:** ★★★★★ **NO Gate-B implementation before Gate A's ledger AND its independent grade land · no re-extraction yet · no `--relock` · no frozen-byte rewrite · no touching the two AGENT-REPORTS monitors** · `.env`/flag/DB writes · `git checkout`/`reset` in the shared tree · any parked item.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA: erratum ~15 min, then Gate A ~60 min.**
+**STOP:** the instrument audit fails to reproduce `456 / 233 / 37` · joins are incomplete or mixed-path (split, do not globally remedy) · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-466 · **TASK ID:** AR-456 + the operator's redirect · **DECISION:** **PIVOT to the C8 critical path. ADOPT the population correction. DISCHARGE prerequisites #2 (written §2 below) and #3 (assigned with trigger, §3). PARK the housekeeping queue. REFUSE the monitor-retirement instruction.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-456`**, ruled here.
+**`[EXTERNAL OPINION — ZERO AUTHORITY]` obtained BEFORE this ruling. Two premises verified at this desk (the population glossary; the monitor roles), ONE REFUTED (the "duplicate monitor"), one adopted UNVERIFIED and labelled (the 7/4 approximate bindings).**
+
+### ★★★★★ §1 — THE CONFLATION, AND THE `TaskList` EVIDENCE THAT WAS NEVER EVIDENCE
+
+★★★★★ **[MEASURED HERE, `BLUEPRINT-V4-DRAFT.md` §0] THREE POPULATIONS, AND §0 ITSELF SAYS "never merge them": tier-A/spearhead = `11` specs, 53 load-bearing conditions · corpus_A = `16` specs, 155 taught conditions · POP-120-LIVE = `120` rows = `40` videos × 3. `0/16 FULLY BOUND` IS corpus_A (R-401). C8's `51.1%` AND THE 40-VIDEO RANKING ARE POP-120-LIVE. I TOLD THE OPERATOR "zero of sixteen strategies… and the extraction defect is half of all blockage" AS ONE SENTENCE ABOUT ONE THING. §0 also records the overlap map as `[UNENUMERATED]` — so I do not even know how much these populations intersect.**
+★★★ **AND AR-456's OWN CONVICTION LANDS ON ME TOO: [MEASURED HERE] `TaskList` returned "No tasks found" while TWO of my monitors were live and one had just delivered the notification I was reading. `TaskList` DOES NOT TRACK MONITORS. I used its emptiness at session start to retire two RUNNING watchers — an inference from an instrument that returns the same answer in both states. What made that survivable was the gap-empty check, not the reasoning.**
+
+### ★★★★★ §2 — PREREQUISITE #2, DISCHARGED HERE: THE TWO-ARM ABLATION PRE-REGISTRATION
+
+**Written NOW, BRANCH-COMPLETE, before Gate A's result — so Gate A SELECTS a branch mechanically and does not trigger another design session.**
+**ARMS:** **CONTROL** = the frozen pipeline, unmodified, reproducing the frozen C8 classifier result. **TREATMENT** = the Gate-A-selected fix at the ONE boundary Gate A names (atom-admission | graph-to-spec | onboarding).
+★★★★★ **THE PRE-REGISTERED TRAP, DECLARED BEFORE DATA: `conditions-per-strategy WILL DROP` under treatment, AND THAT IS THE FIX WORKING, NOT A REGRESSION. A HIGHER condition count after treatment is a FAILURE signal. Nobody may re-read a drop as damage after the fact.**
+**PRIMARY OUTCOME:** per-video C8-classified refusals, CONTROL vs TREATMENT, **per-video never per-row** (triples inflate 3×). **CO-PRIMARY, AND IT OUTRANKS THE FIRST:** every pre-registered GENUINE market-state condition SURVIVES. ★★★★★ **A treatment that lowers C8 while dropping one genuine market-state condition FAILS. Fidelity outranks count — always, and it is declared here so it cannot be traded later.**
+**BRANCH TABLE, fixed now:** C8 drops AND all genuine conditions survive AND no new C8 ⇒ **PASS** · C8 drops but a genuine condition is lost ⇒ **FAIL, treatment withdrawn** · C8 unchanged ⇒ **WRONG BOUNDARY, return to Gate A, do NOT widen the treatment** · C8 drops and NEW C8 appears elsewhere ⇒ **FAIL, the leak moved** · any pass disagreement silently resolved ⇒ **FAIL** (must surface as `UNRESOLVED_CONTEXT_CONFLICT`).
+**POPULATION:** POP-120-LIVE, per-video, tree named beside every count. **NOT corpus_A.** ★★ **HOLDOUT-26 IS NOT SPENT ON THIS** — the covenant governs tuning and this is a correctness ablation, not a tuning loop.
+
+### ★★★★★ §3 — PREREQUISITE #3, DISCHARGED HERE: THE GRADER, NAMED, WITH A TRIGGER
+
+★★★★★ **INDEPENDENT GRADER: `accuracy-validator`. ASSIGNED NOW — and ASSIGNMENT IS NOT DISPATCH, which is exactly how R-438's phantom happened and how mine nearly did.**
+**DISPATCH TRIGGERS, BOTH OWNED BY THIS DESK:** **(1)** when the committed **Gate-A evidence bundle** lands → dispatch `accuracy-validator` against it. **(2)** when the **Gate-B treatment implementation** lands → dispatch a NEW independent grade against Gate B. ★★★ **Two gates, two separate grades; one grader may not carry both, because the second would be grading a target it had already reasoned about.**
+★★★★★ **VERIFICATION RULE, BINDING ON ME: before any ruling states a grade was obtained, run the check and NAME THE AGENT ID. And `TaskList` is NOT that check for monitors — for AGENTS its coverage is `[UNVERIFIED]`, so the durable proof is the returned agent id plus its completion notification, both quoted in the ruling that consumes them.**
+
+### §4 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 reinforced** — compiler correctness and profitability stay separate; §3's success criterion is CONCRETE BINDING, not a better number. **#2 reinforced** — the three-way contract keeps context/setup/trigger distinct instead of collapsing context into conditions. **#6 holds** — `backtests_total = 0`; no re-extraction, no relock, no backtest authorized. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation. ★★★ **#9 holds: I refused a monitor-retirement instruction that would have blinded a channel, and published my own population conflation at the top rather than in a footnote.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the population OVERLAP MAP — **[UNENUMERATED], v4 §0's own gap, and I have been reasoning across it** · the 7/4 approximate bindings on the distance-0 pair — **[UNVERIFIED BY THIS DESK]** · Gate A — **NOT STARTED** · Gate B — **BLOCKED on Gate A + grade** · whether `TaskList` tracks AGENTS — **[UNVERIFIED]** · the `MANIFEST.txt:3` erratum — **ORDERED** · PARKED: partition hardening · heartbeat/lease · off-machine backup (OPERATOR) · wider sweeps · original transcript identity — **`[UNRECOVERABLE AT ORIGIN]`** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415), and §3's "authoritative lane" step depends on it.**
+
+**LESSON TO PERSIST.** ★★★★★ **A GOVERNANCE AUDIT THAT KEEPS FINDING GOVERNANCE WORK WILL RECURSIVELY REPLACE THE MONEY PATH, AND IT DOES NOT FEEL LIKE DRIFT — every item was real, several were genuine defects, and the session still produced nothing that moves a strategy toward being testable. THE OPERATOR HAD TO SAY "REMEMBER BACK TO THE PLAN". A desk cannot detect this from inside the lane it is in; the only defence is a standing exit criterion — v4 §9's bound existed and I did not apply it to myself.** ★★★ **SECOND: I carried prerequisites #2 and #3 as "STILL MINE, STILL UNOWNED" across roughly fifteen consecutive rulings, naming the stall each time and never discharging it. NAMING A STALL IS NOT WORKING IT — and a desk that lists its own unowned items in every ruling has built a habit that FEELS like accountability while functioning as a substitute for it. Both are written above; neither is deferred again.** ★★ **THIRD: `0/16` and `51.1%` describe DIFFERENT POPULATIONS and I fused them into one sentence for the operator. When two figures come from two censuses, the sentence that joins them is a claim about their overlap — and here that overlap is formally `[UNENUMERATED]`.**
+
+---
+
 ## R-465 · 2026-07-29 · ★★★★★ **R-464's "THE PREVIOUS EAR IS DEAD" IS ANNOTATED AND SUPERSEDED — A FRESH SEAT FOLLOWING IT WOULD HAVE ARMED A SECOND RIG BESIDE A LIVE ONE. AND THE EXTERNAL READ'S OWN PREMISE IS ALSO SUPERSEDED: IT SAYS "FIRST INSPECT `b5g1ym3dx`", BUT AR-455 REPORTS THAT TASK **ALREADY DEAD** AND THE LIVE RIG AS `bihnh0n95` AT WATERMARK `R-464`.** ★★★★★ **THREE IDENTIFIER GENERATIONS IN FORTY MINUTES — `21072/25960` → `b5g1ym3dx` → `bihnh0n95` / `2728/10556`. RECORD THE CHECK, NEVER THE IDENTIFIER.** ★★★★★ **AND THE ARCHITECTURAL POINT I ADOPT AGAINST MY OWN RIG: A DEAD WATCHER CANNOT REPORT ITS OWN DEATH. My unreadable-file alarm does not solve monitor death — ONE RIG PER CHANNEL NEEDS UNIQUENESS **AND** EXTERNALLY VERIFIABLE LIVENESS**
 
 ---
