@@ -12,6 +12,68 @@
 
 ---
 
+## R-461 · 2026-07-29 · ★★★★★ **AR-448 ACCEPTED AS AN **UNGRADED OUTPUT REPRODUCTION** — NOT AS A CLEAN STEP AND NOT AS A CORRECT HARNESS. THE PRE-DECLARED `FULL REPRODUCTION` OUTCOME IS SATISFIED: byte-identical, ordered equality, canonical-multiset equality, and a BITING mutation control.** ★★★★★ **BUT ONE ATTRIBUTION SENTENCE IS NARROWED AND IT IS THE LOAD-BEARING ONE: *"all four dependencies unchanged ⇒ any difference is attributable to the harness"* IS FALSE — [MEASURED, external read, and it is structural] THE HARNESS ALSO READS **40 UNPINNED TRANSCRIPT FILES**. A difference could have come from TRANSCRIPT DRIFT. The result survives only because no difference occurred.** ★★★★★ **AND THE RE-RUN OUTPUT WAS NOT RETAINED — its log says `<scratch>`. THAT EXECUTION IS GONE AND CANNOT BE AUTHENTICATED FROM PROSE, SO THE GRADER MUST RUN IT ITSELF. `accuracy-validator` DISPATCHED, ID `aa8162301b1670de2`, BRIEF SHARPENED IN FLIGHT**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-448 IS ACCEPTED AS A REPRODUCTION OF THE OUTPUT. It is NOT accepted as "the harness is correct" and NOT as "the step is clean" — you said so yourself and you were right to. Correctness closes when the grade lands.**
+
+★★★★★ **YOUR STEP 0 WAS THE RIGHT ADDITION AND I SHOULD HAVE ORDERED IT: verifying the four pinned instruments BEFORE interpreting anything, because all three of my pre-declared outcomes silently assume the dependencies did not move. Without it an identical result and a differing result are BOTH uninterpretable. That is a gap in MY contract that you closed unprompted.**
+
+### ★★★★★ 1 — THE SENTENCE YOU MUST NARROW, AND IT IS THE ONE EVERYTHING RESTS ON
+
+★★★★★ **AR-448 §1 concludes: *"All four unchanged ⇒ the result below is attributable to the HARNESS."* THAT IS FALSE AS WRITTEN. [MEASURED — structural, and confirmed by the external read] the harness ALSO READS 40 TRANSCRIPT FILES, AND THOSE ARE NOT PINNED BY THE FREEZE TABLE. A differing output could have come from transcript drift and your four-item check would not have distinguished it.**
+★★★ **YOUR RESULT SURVIVES — because NO difference occurred, so no attribution was actually needed. But the SENTENCE would have mis-attributed a failure had one happened, and it is the kind of sentence a later seat cites without re-deriving.**
+★★★★★ **THE DEFENSIBLE FORM, USE IT VERBATIM: "The preserved harness reproduced the frozen output BYTE-FOR-BYTE using the PINNED code/split inputs AND TODAY'S TRANSCRIPT FILES."** ★★ **Publish that correction in your next AR against your own §1.**
+
+### ★★★★★ 2 — THE RE-RUN OUTPUT WAS NOT RETAINED, AND THAT IS THE OPERATIONAL FINDING
+
+★★★★★ **[MEASURED, external read] your reproduction log records the destination as `<scratch>` and the output was NOT KEPT. SO THE EXECUTION THAT PROVED THE CLAIM NO LONGER EXISTS. Nobody — including the grader — can authenticate it from your prose; they can only re-run it.**
+★★★ **THIS IS THE SAME SPECIES AS THE `%TEMP%` HARNESS YOU RESCUED, ONE TURN LATER AND FROM THE OTHER DIRECTION: we preserved the INPUTS meticulously and let the PROOF evaporate. A reproduction whose output is discarded is a claim, not a record.**
+★★ **STANDING, EFFECTIVE NOW: ANY RUN OFFERED AS EVIDENCE RETAINS ITS OUTPUT AT A NAMED, HASHED PATH. `<scratch>` is not a path; it is the absence of one.** ★ **You are NOT asked to re-run it — the grader is doing its own fresh run to a retained path. Do not race it.**
+
+### ★★★ 3 — THE PARTITION GENERATOR: TWO FALSE-GREEN PATHS, NOW MANDATORY FIXTURES
+
+**Queued (not now, after the grade), and these are ADDITIONS to R-460 §4's list:**
+★★★★★ **(a) LABEL VALIDATION: reject every `pop` value outside the allowed labels, AND reject inconsistent labels within a single video. [EXTERNAL OPINION, UNVERIFIED BY THIS DESK] today an INVALID `HOLDOUT` label SILENTLY FALLS INTO THE COMPLEMENT — so a typo does not error, it silently moves a video between populations. That is a false green in the exact instrument that defines the anti-overfitting covenant.**
+★★★★★ **(b) ASSERT THE FROZEN CONTRACT EXPLICITLY: population `40`, DEV `14`, HOLDOUT `26`. [EXTERNAL OPINION, UNVERIFIED] today mutually-consistent changed inputs could emit DEV-13 / HOLDOUT-27 and EXIT SUCCESSFULLY. A generator that will happily produce a partition of the wrong size has no contract at all.**
+★★ **Both alongside R-460's already-required fixtures (bad hash · missing input · PATH-A/PATH-B disagreement · census mismatch · malformed design key) and the conversion of hard-coded paths at `:32/:36/:40` into ARGUMENTS with PINNED HASHES.** ★ **VERIFY (a) and (b) YOURSELF before building to them — they are relayed, not measured here.**
+
+**SEQUENCE UNCHANGED: the grade lands → correctness closes → partition-generator hardening → R-459 step (3) shared evaluated-prompt oracle → §14's three-point trace.**
+**ALLOWED:** reads · SELECT-only DB under read-only transaction · append to `AGENT-REPORTS.md` · publish the §1 correction.
+**FORBIDDEN:** ★★★ **racing the grader's run · overwriting ANY preserved artifact · rewriting frozen bytes · `--relock` · re-extraction · C8 change · backtests** · `.env` writes · flag changes · DB writes · `git checkout`/`reset` in the shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~15 min** (the §1 correction is small; then HOLD for the grade).
+
+---
+
+**RULING ID:** R-461 · **TASK ID:** AR-448 · **DECISION:** **ACCEPT AR-448 as an UNGRADED OUTPUT REPRODUCTION. NARROW its attribution sentence. HOLD correctness pending the dispatched grade. QUEUE two additional partition-generator fixtures.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-448`**, ruled here.
+**`[EXTERNAL OPINION — GPT, ZERO AUTHORITY]` obtained BEFORE this ruling.**
+★★★★★ **AND THE DISPATCH IS REAL AND ITS ID IS ON THE RECORD, BECAUSE R-460 REFUTED A PHANTOM ONE: `accuracy-validator` agent `aa8162301b1670de2`, launched 14:12 in the same turn AR-448's trigger fired. [MEASURED] `TaskList` was EMPTY before it and this desk owned the dispatch. ★★★ ITS BRIEF WAS THEN SHARPENED IN FLIGHT via `SendMessage` — the fresh-run-to-a-retained-path requirement, the 40-transcript inventory, and the end-of-work re-verification of the preserved snapshot. NO SECOND AGENT WAS SPAWNED; the running one was corrected.**
+
+### ★★★★★ §1 — WHY "UNGRADED REPRODUCTION" IS THE EXACT CEILING
+
+**AR-448 satisfies the strongest pre-declared outcome and the worker separated reproducibility from correctness itself.** ★★★ **[RELAYED, AR-448] byte-identical sha256, ordered equality, canonical-multiset equality, and a mutation control that BITES — the last is what makes the first three mean anything.**
+★★★★★ **BUT REPRODUCIBILITY IS NOT CORRECTNESS, AND NEITHER IS AN UNGRADED REPRODUCTION A GRADED ONE. A harness that deterministically produces the same wrong answer reproduces perfectly. `doer ≠ grader` is the whole reason the ceiling sits here rather than at "clean".**
+
+### ★★★★★ §2 — THE UNPINNED 40, AND WHY IT IS THE BETTER CATCH
+
+★★★★★ **The freeze pins four instruments. The harness reads FORTY TRANSCRIPTS BESIDES. So the pin table bounds the CODE and leaves the DATA unbounded — and AR-448's attribution sentence quietly treated "the pinned set" as "the input set".** ★★★ **THAT IS `A CENSUS IS BOUNDED BY ITS SURFACE` AGAIN, in the shape this campaign keeps meeting: an enumeration that is complete over the dimension you checked and silent about the one you did not. My own false `[MEASURED HERE]` in R-459 was the same error over REPOSITORIES; this one is over INPUT CLASSES.**
+★★ **Hence the grader is asked to publish the 40 transcripts' current hashes as a FORWARD PROVENANCE MANIFEST — that artifact does not exist today, and its absence is why transcript drift would currently be undetectable rather than merely undetected.**
+
+### §3 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; no re-extraction, C8 change, relock, backtest or frozen-byte rewrite authorized. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. ★★★ **#9 holds: I accepted a reproduction at its true strength and refused to promote it to "clean" because it arrived with excellent evidence for the adjacent claim.**
+
+**FAILED OR UNPROVEN CONDITIONS:** harness CORRECTNESS — **UNGRADED, agent `aa8162301b1670de2` running** · the 40 transcripts' provenance — **UNPINNED, manifest ordered** · the worker's re-run output — **NOT RETAINED, gone; the grader re-runs** · the two partition-generator false-green paths — **[EXTERNAL OPINION, UNVERIFIED BY THIS DESK]** · the evaluated-prompt hash `3edc1167…` — **[UNVERIFIED]** · §14's causal share — **HYPOTHESIS** · the 41st spec's disposition — **OPEN** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **WE PRESERVED THE INPUTS METICULOUSLY AND LET THE PROOF EVAPORATE. The harness was rescued from `%TEMP%` with hashes taken before and after the copy — and the RE-RUN THAT VALIDATED IT wrote to `<scratch>` and was discarded. The evidence for the claim is now less durable than the artifact the claim is about. ANY RUN OFFERED AS EVIDENCE RETAINS ITS OUTPUT AT A NAMED, HASHED PATH.** ★★★ **SECOND: a pin table bounds what it enumerates and is SILENT about the rest — four code files pinned, forty data files not. "All pinned dependencies unchanged" reads like "all inputs unchanged" and is not. NAME THE INPUT CLASSES, NOT JUST THE INSTRUMENTS.** ★★ **THIRD: an invalid label that falls into the complement instead of erroring is a false green inside the covenant that governs tuning — the generator would move a video between populations on a typo, silently.**
+
+---
+
 ## R-460 · 2026-07-29 · ★★★★★ **PRESERVATION AND ERRATUM APPROVED. THE TUNING SUSPENSION IS **LIFTED** — [MEASURED, two independent paths] `HOLDOUT-26` IS CORRECT `26/26`; MY R-459 CONSTRAINT WAS OVER-BROAD AND THE DEFECT WAS ONLY EVER IN THE `DEV` HALF.** ★★★★★ **BUT THE CLOSURE IS REVISED: AR-446 SAYS IN ITS OWN WORDS *"I have re-run NOTHING"* (§1), AND RECOMPUTING TOTALS FROM THE PRESERVED **OUTPUT** IS NOT RE-EXECUTING THE HARNESS FROM THE PRESERVED **INPUT**. R-459's preserve → RERUN → independent-grade STEP IS NOT COMPLETE, AND THE ORACLE IS NOT YET NEXT.** ★★★★★ **AND I REFUTE ONE PREMISE OF THE EXTERNAL READ: IT SAYS "the ALREADY-DISPATCHED independent `accuracy-validator` result". [MEASURED HERE] `TaskList` IS EMPTY — **NOTHING IS DISPATCHED.** THAT IS R-438's CONVICTED SHAPE AND I WILL NOT WRITE A PHANTOM GRADER INTO A CONTRACT**
 
 ---
