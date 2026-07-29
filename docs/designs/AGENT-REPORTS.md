@@ -4,6 +4,41 @@
 
 ---
 
+## AR-428 · 2026-07-29 · **START-RECEIPT — R-451 (a) MANIFEST + (b) DETERMINISM TEST AS AMENDED BY R-452, THEN THE PATTERN-CLASS SWEEP.** ★★★ **AND I AM OPENING WITH A DEFECT IN MY OWN AR-427 THAT YOUR AMENDMENT MADE ME GO LOOK FOR: THE `spec` COLUMN I PUBLISHED WAS HAND-NORMALIZED, AND THE INSTRUMENT DOES NOT EMIT WHAT THE REPORT SHOWS**
+
+**RULING ID:** R-451 as amended by R-452 · **TASK ID:** AR-428 · **STATUS:** STARTING · **TREE:** `wt-h1-wave4-20260712`, HEAD `e2bacd90` (my AR-427 commit) at receipt.
+
+**R-452 REACHED ME IN TIME.** [MEASURED] no start-receipt for R-451 had landed; I had not built the test. **Nothing to retro-fit — (b) is built to the amended spec from the start.**
+
+### ★★★★★ §1 — A DEFECT IN AR-427 I AM DECLARING BEFORE YOU FIND IT
+
+★★★ **Your (b) asks whether MY ranker iterates any set or dict. Looking for that, I found something adjacent and worse, and it is in the report you just approved.**
+
+**[MEASURED HERE] `POP-120-LIVE` rows carry INSTRUMENT-SPECIFIC names — the same spec is `5m_minute_support_level_mnq_5m`, `..._mes_5m`, `..._mcl_5m` across its triple. My ranker picks the representative row as `rows[0]` — FIRST-ENCOUNTERED-WINS over JSON order — so the `spec` column inherits whichever instrument happened to be first.** ★★ **That is precisely the species your sweep names, sitting inside the instrument I built to replace an instance of it.**
+
+★★★★★ **AND THE HALF I LIKE LESS: THE AR-427 §4 TABLE DOES NOT SHOW WHAT THE INSTRUMENT EMITTED. I stripped the `_mnq_5m` / `_mcl_15m` suffixes BY HAND while transcribing 40 rows into the report, because they were noise. The published table and the committed `unlock-distance-rank-2026-07-29.json` therefore DISAGREE on all 40 spec labels.** ★★★ **The ranking, distances, residual counts, video IDs and every conclusion are UNAFFECTED — the suffix is cosmetic and the join was always on `video`. But a hand-transformed value in a published table is a fabricated-provenance shape however benign the transform, and "I tidied it in transcription" is exactly the sentence this desk should never accept from me.**
+
+**DISPOSITION I PROPOSE (yours to overrule):** the ranker emits a **canonical, data-derived** spec label — the fan-out suffix removed by rule, not by hand — I re-run, and the committed JSON then matches the published table by construction. ★ **No number moves. I will publish the before/after of all 40 labels so the change is auditable rather than asserted.**
+
+### §2 — WHAT I WILL DO, IN ORDER
+
+1. **(b) FIRST, not (a)** — your amendment makes it the load-bearing item, and it audits the instrument everything else now rests on. Tied-case fixture (`C5`/`C7` at 13 videos each) · ≥12 `PYTHONHASHSEED` values · byte-identical output · **plus the discrimination proof: the same fixture must convict `gen_ledger.py`'s tie-break.** ★ **A tie-break secondary key that is a property of the DATA, named and defended.**
+2. **The §1 canonicalization**, folded into (b)'s re-run so there is one re-derivation, not two.
+3. **(a) THE MANIFEST**, committed as an artifact.
+4. **THE PATTERN-CLASS SWEEP**, census/denominator instruments first, surface published beside the count.
+
+### §3 — TWO THINGS I FLAG NOW BECAUSE THEY COST NOTHING HERE
+
+★★ **(a) THE DB READ TIMESTAMP IS LIKELY UNRECOVERABLE, AND YOU PRE-AUTHORIZED THAT ANSWER.** [MEASURED] `pop120_census.json`'s top-level keys are exactly `backtests_total · strategies_total · rows_with_compiled_spec · strategies` — **no timestamp field.** The only time evidence is the ORIGINAL file's mtime in the dead session's scratchpad, which is a FILE-WRITE time, not a DB-READ time, and is mutable. **I will record the mtime as evidence, labelled as what it is, and mark the DB read timestamp `[UNRECOVERABLE]` rather than presenting a write time as a read time.**
+
+★ **(b) MY OWN STOP CONDITION IS LIVE.** If the amended test shows my ranker is non-deterministic, that is a finding and it goes to you unpatched. **I would rather retire my own instrument two hours after building it than ship the same defect one layer up.**
+
+**FORBIDDEN ACKNOWLEDGED:** no C8 implementation or re-extraction · no spec edits · no `.env` · no DB writes · **no re-running the census** · no flag graduation · no deploy · no tower · no backtests · no `git checkout`/`reset` · **and per R-452, NO re-derivation of a published result merely because its generator is suspect — findings come to you first.**
+
+**FIRST OBSERVABLE:** this receipt. **ETA ~35 min for (a)+(b), ~40 more for the sweep.**
+
+---
+
 ## AR-427 · 2026-07-29 · ★★★★★ **THE ACCEPTANCE GATE PASSES — `6·15·27·39·57·75·93·111·120` REPRODUCED EXACTLY FROM THE FROZEN CENSUS, AND IT IS BETTER THAN GREEDY: IT IS THE EXHAUSTIVE OPTIMUM AT ALL NINE k. R-426's CHAIN IS CORRECT.** ★★★★★ **BUT ITS GENERATOR IS NON-DETERMINISTIC AND I MEASURED IT: THE LEDGER'S OWN CODE REPRODUCES ITS OWN PUBLISHED CHAIN IN ONLY `4 OF 12` RUNS — THE OTHER 8 UNDERSTATE STEP 5 AS `51` INSTEAD OF `57`. THE NUMBER IS RIGHT AND THE INSTRUMENT THAT PRODUCED IT COULD HAVE PRINTED A WRONG ONE.** ★★★ **RANKING DELIVERED, ALL 40 SPECS. DISTANCE-0 = `2` SPECS, NAMED.**
 
 **RULING ID:** R-448 as amended by R-449 · **TASK ID:** AR-426 · **BRANCH:** `h1-wave4-sealed12-driver` · **COMMIT:** this one · **RECOMMENDATION:** **APPROVAL_REQUESTED. The gate PASSES, so the ranking below is believable — but read §2 before citing the chain anywhere, and read §6 before reading "distance 0" as "a strategy that trades."**
