@@ -12,6 +12,53 @@
 
 ---
 
+## R-462 · 2026-07-29 · ★★★★★ **METHOD AMENDMENT, LANDED FAST BECAUSE AR-449 IS MID-VERIFICATION: A MUTATION THAT TRIPS THE HASH GUARD PROVES ONLY THAT THE HASH GUARD WORKS. IT SAYS NOTHING ABOUT WHETHER A SEMANTIC CHECK EXISTS AT ALL — AND THE TWO CLAIMS YOU ARE VERIFYING ARE BOTH CLAIMS ABOUT SEMANTIC CHECKS.** ★★★★★ **USE A THREE-STAGE CONTROL, AND STAGE 3 IS THE DECISIVE ONE: RE-PIN THE MUTATION SO IT PASSES THE HASH GATE, THEN SEE WHETHER ANYTHING ELSE CATCHES IT.** ★★★ **THEN REPORT AND HOLD. No substantive ruling is ripe until AR-449's measured result AND agent `aa8162301b1670de2` both land**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-449 — READ THIS BEFORE YOU FINISH THE §3 VERIFICATION. It changes the METHOD, not the target, and it lands now because you are mid-task and a hash-guard-only result would look like a pass.**
+
+★★★★★ **THE TRAP: you are testing two claims about SEMANTIC validation — that an invalid `pop` label silently falls into the complement, and that DEV-13/HOLDOUT-27 can be emitted successfully. If you mutate a fixture and the run goes RED, THE HASH GUARD MAY BE ALL THAT FIRED. You would record "the guard works" having never reached the code you were sent to test.**
+
+**THE THREE-STAGE CONTROL — run all three per claim, and report each stage's outcome separately:**
+**(1)** original pinned fixture → **GREEN** (baseline: the instrument accepts what it should).
+**(2)** mutated payload, **ORIGINAL pin** → **RED AT THE HASH GUARD** (proves the hash gate bites — and ONLY that).
+**(3)** ★★★★★ **same mutation, with the expected pin UPDATED IN YOUR SCRATCH COPY so the hash gate PASSES → now the SEMANTIC guard is the only thing left standing. WHAT HAPPENS?** ★★★ **THIS IS THE DECISIVE STAGE. It separates "the hash caught changed bytes" from "the instrument rejects semantically invalid but COHERENTLY RE-PINNED inputs." Only stage 3 can show the semantic check is absent.**
+
+**THE TWO MUTATIONS, EACH THROUGH ALL THREE STAGES:**
+★★★ **(a) INVALID / CONTRADICTORY `pop` LABEL** — at stage 3, does the complement SILENTLY ABSORB it, or does the instrument reject it? **(b) COHERENT DEV-13 / HOLDOUT-27 INPUTS** — at stage 3, are the exact `40 / 14 / 26` cardinalities ENFORCED, or does it exit successfully with a wrong-sized partition?
+★★ **A stage-3 GREEN is a FINDING, not a failure of your test — it means the semantic guard does not exist and the covenant rests on the hash gate alone.**
+
+**THEN REPORT AND HOLD.**
+**FORBIDDEN, EXPLICITLY:** ★★★★★ **do NOT modify the committed generator · do NOT re-run the harness · do NOT touch the validator's paths or its retained output (agent `aa8162301b1670de2` is live) · do NOT begin the prompt oracle.** Plus standing: no re-extraction · no C8 change · no backtests · no `--relock` · no frozen-byte rewrite · no `.env`/flag/DB writes · no `git checkout`/`reset` in the shared tree.
+★★ **Scratch copies only — the mutations live in your scratchpad, never in the tree.**
+**FIRST OBSERVABLE:** your stage-by-stage table. **ETA ~20 min.** **STOP:** stage 2 does NOT go red (the hash gate itself is broken — that is bigger than either claim and comes to me immediately) · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-462 · **TASK ID:** AR-449 (in flight) · **DECISION:** **AMEND THE §3 VERIFICATION METHOD to a three-stage control. No substantive disposition — none is ripe.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-449`** — a start-receipt, in flight; this amends its method mid-task and does not interrupt it. **AR-448 remains ruled at R-461; nothing here revisits it.**
+**`[EXTERNAL OPINION — GPT, ZERO AUTHORITY]` obtained BEFORE this ruling. It is a METHOD contribution and I adopt it on merit; I have not independently exercised the generator, and I say so rather than implying I checked.**
+
+### ★★★★★ §1 — WHY STAGE 3 IS THE WHOLE POINT
+
+★★★★★ **A guard chain tests in ORDER, and an early gate MASKS every later one. Mutate a payload and the hash comparison fails first — so the run goes red, the tester writes "rejected as expected", and THE SEMANTIC VALIDATION IS NEVER REACHED. The instrument could contain no semantic check whatsoever and every mutation test would still pass.**
+★★★ **THIS IS `A GREEN CHECK WITH NO PATH TO RED` INVERTED: not a guard that cannot fail, but a TEST that cannot reach the guard it is aimed at. Same family — the test's outcome is decoupled from the property it claims to measure.** ★★ **To test a later gate you must SATISFY the earlier one, which is why stage 3 re-pins the mutation rather than abandoning it.**
+★★★★★ **AND THE STAKES ARE SPECIFIC: these two claims are about the instrument that DEFINES THE DEV/HOLDOUT PARTITION — the anti-overfitting covenant this desk restored to force in R-460. If a typo can silently move a video between populations, or a wrong-sized partition can exit zero, the covenant is enforced by a hash of a file rather than by any rule about what a partition IS.**
+
+### §2 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; nothing here executes anything against market data. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation; mutations are scratch-only by order. ★★★ **#9 holds: I landed a method correction into a task already running rather than letting a hash-guard-only result be recorded as a semantic pass.**
+
+**FAILED OR UNPROVEN CONDITIONS:** the two false-green paths — **[EXTERNAL OPINION, UNVERIFIED], stage-3 verification now ordered** · harness CORRECTNESS — **UNGRADED, agent `aa8162301b1670de2` running** · the 40 transcripts' provenance manifest — **ORDERED, not delivered** · the worker's discarded re-run output — **GONE; the grader re-runs to a retained path** · the evaluated-prompt hash `3edc1167…` — **[UNVERIFIED]** · §14's causal share — **HYPOTHESIS** · the 41st spec's disposition — **OPEN** · §3-1A prerequisites #2 and #3 — **STILL MINE, STILL UNOWNED** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)**.
+
+**LESSON TO PERSIST.** ★★★★★ **AN EARLY GATE MASKS EVERY LATER ONE, SO A MUTATION TEST MEASURES THE FIRST GUARD IT TRIPS — NOT THE GUARD YOU AIMED AT. To test guard N you must satisfy guards 1…N−1, which usually means RE-PINNING the mutation so it looks legitimate to everything upstream. WITHOUT THAT STEP, AN INSTRUMENT WITH NO SEMANTIC VALIDATION PASSES EVERY SEMANTIC TEST YOU CAN WRITE.** ★★★ **SECOND: a stage-3 GREEN is a finding, not a broken test — and a tester who does not pre-declare that will read it as their own error and go looking for a mistake that is not theirs.**
+
+---
+
 ## R-461 · 2026-07-29 · ★★★★★ **AR-448 ACCEPTED AS AN **UNGRADED OUTPUT REPRODUCTION** — NOT AS A CLEAN STEP AND NOT AS A CORRECT HARNESS. THE PRE-DECLARED `FULL REPRODUCTION` OUTCOME IS SATISFIED: byte-identical, ordered equality, canonical-multiset equality, and a BITING mutation control.** ★★★★★ **BUT ONE ATTRIBUTION SENTENCE IS NARROWED AND IT IS THE LOAD-BEARING ONE: *"all four dependencies unchanged ⇒ any difference is attributable to the harness"* IS FALSE — [MEASURED, external read, and it is structural] THE HARNESS ALSO READS **40 UNPINNED TRANSCRIPT FILES**. A difference could have come from TRANSCRIPT DRIFT. The result survives only because no difference occurred.** ★★★★★ **AND THE RE-RUN OUTPUT WAS NOT RETAINED — its log says `<scratch>`. THAT EXECUTION IS GONE AND CANNOT BE AUTHENTICATED FROM PROSE, SO THE GRADER MUST RUN IT ITSELF. `accuracy-validator` DISPATCHED, ID `aa8162301b1670de2`, BRIEF SHARPENED IN FLIGHT**
 
 ---
