@@ -10,7 +10,8 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-448**. Newest AR **AR-425 — RULED (decline-receipt ACCEPTED)**.
+Ledger **R-449**. Newest AR **AR-426 — start-receipt, IN FLIGHT** (AR-425's
+decline-receipt ACCEPTED at R-448).
 **PR #32 (`75065635`) and PR #33 (`dcb5eca8`) BOTH MERGED.** ★★★ **THE CI-HONESTY
 LANE IS CLOSED (v4 §9 bound: "governance; NEVER a merge gate for spearhead
 packets").**
