@@ -12,6 +12,68 @@
 
 ---
 
+## R-440 · 2026-07-29 · ★★★ **MID-FLIGHT CORRECTION: R-439 ITEM (2) IS MIS-KEYED AND IT IS MY ERROR. I ASKED WHETHER `contextual`/`alternative` HAVE ENOUGH EXAMPLES, THEN ORDERED A COUNT OF `spine`/`confluence`/`trigger`/`invalidation` — TWO DIFFERENT VOCABULARIES, TWO DIFFERENT FIELDS. THE COUNT CANNOT ANSWER THE QUESTION.** ★★★ **THE JOIN KEY IS THE CLAIM, AND I MEASURED THE NEIGHBOURING OBJECT AGAIN.** ★★ **AND A PREMISE IN THE EXTERNAL REVIEW IS REFUTED AT THE LINE: `trigger` IS DECLARED — `spec-onboarding-service.ts:170` AND `test_spec_producer.py:31`. THE 229 ARE NOT A CONTRACT DEFECT**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **Item (1), the CI-gate measurement, is UNCHANGED — keep going. This ruling replaces item (2) only.**
+
+★★★ **STOP ITEM (2) AS I WROTE IT. My order was "counts of the LEGACY role labels only" — and the question I attached to it was whether `contextual` (7) and `alternative` (8) are too thin to grade. [MEASURED HERE] those are DIFFERENT VOCABULARIES:**
+- **CLASSIFICATION** — `role_demotion_audit.py:45`: `DEMOTABLE_CLASSES = frozenset({"OPTIONAL", "ALTERNATIVE", "CONTEXTUAL"})`, plus `MANDATORY`. **This is the vocabulary my question is about.**
+- **ROLE** — `spec-onboarding-service.ts:170`: `role: "spine" | "confluence" | "trigger" | "invalidation"`. **This is the vocabulary I ordered you to count.**
+
+★★★ **A count of the ROLE field cannot establish the sample size of CLASSIFICATION classes, and [MEASURED HERE] no validated mapping between the two exists in the tree. Do NOT infer `confluence ≈ contextual` or `spine ≈ alternative` or anything of that shape. If you have already produced role counts, KEEP them and file them — they are not wasted, they are simply not an answer to this question.**
+
+**ITEM (2), RE-ISSUED WITH THE RIGHT KEY.** From the FROZEN `HOLDOUT-26` shadow-evaluation artifact, report **the 72 fired semantic decisions broken out by EMITTED SEMANTIC CLASS**, and for each class:
+- conditions (raw) **and DISTINCT VIDEOS** — ★★★ **video-level support is the gradeability test; twelve near-identical conditions from one video are ONE observation, not twelve**
+- decision path split (`SEMANTIC_SOURCE_TEXT` vs `RESOLVED_POINTER_TEXT`)
+- agreement / disagreement with the legacy `role` — **as an observation, NOT as a mapping**
+- whether gradeable transcript evidence is actually available
+
+★★ **If `contextual` or `alternative` lacks video-level support, report it UNDERPOWERED. Do NOT combine it with another class and do NOT borrow legacy-role counts to pad it** — an underpowered class is a finding I need, not a gap to be filled.
+★★★ **THIS DOES NOT BURN `HOLDOUT-26`: you are counting the DISTRIBUTION of emitted labels with no ground truth and no tuning — the same category as the mechanical rates AR-407 already published. The covenant breaks the moment a result is used to CHANGE the labeller. If you find yourself reaching for a rule change, STOP AND REPORT.**
+★ **HONEST-PARTIAL CLAUSE: if the frozen artifact cannot support one of these fields, say so and name what you could compute — do not synthesise the missing column.**
+
+**AND ONE PREMISE TO NOT INHERIT — I checked it and it does not hold.** If your role census flagged `229 of 1776` conditions as `role=trigger` against a *declared* vocabulary of only `spine`/`confluence`, **[MEASURED HERE] that declaration is a STALE COMMENT rather than a schema:** `compile_lints.py:129` is a comment on an `Optional[str]` reading `"spine" | "confluence" | None`, while **`trigger` IS declared and IS validated** — `spec-onboarding-service.ts:170` and `test_spec_producer.py:31` `_VALID_ROLES = {"spine", "confluence", "trigger", "invalidation"}`. ★★ **So the 229 are EXPECTED rather than a producer/schema contract defect — the campaign already proved `graph-to-engine.ts:141-142` sets `entry_trigger_id` and `role:"trigger"` in one block. Read the executable line, not the comment.** ★ **In your report: NAME the declaration source you compared against.** If it was that comment, the defect is the comment and it is a one-line follow-up, not an investigation.
+**`trigger` keeps its fail-closed treatment regardless — nothing here promotes or remaps it.**
+
+**FORBIDDEN (unchanged):** merging #31 · deploying · any `ci.yml` edit · expanding classifier rule coverage · flag flips · DB writes · re-extraction · `runtime-production` writes · tower update · backtests · `git checkout` in this shared tree · **deleting or coercing any stored `role` value.**
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~25 min for the re-keyed item (2).**
+**STOP:** `backtests total > 0` · you cannot produce the semantic-class breakdown without touching the labeller.
+
+---
+
+**RULING ID:** R-440 · **TASK ID:** AR-411 (in flight) · **DECISION:** **REVISE — item (2) re-issued with the correct key; item (1) untouched; merge gate UNCHANGED.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-411`** — a START-RECEIPT, re-checked on disk immediately before this write; **no report is filed yet.** ★★★ **I am therefore ruling on an order of MINE, not on the worker's results, and I say so plainly: the figures in the external review (`1776`/`26`/`1704`/`72`/`0`, and the `229`) reached me OUTSIDE the relay and are `[RELAYED — UNVERIFIED]`. I have not seen them in an AR and I do not ratify them here.**
+
+### ★★★ §1 — THE ERROR IS MINE AND IT IS THE CONVICTED SHAPE
+
+**R-439 item (2) asked the `contextual`/`alternative` question and ordered a `role` count.** ★★★ **[MEASURED HERE] `role_demotion_audit.py:45` defines the classification classes; `spec-onboarding-service.ts:170` defines the role classes; they are different fields with different value sets.** ★★ **This is the seat's own convicted failure again: I measured a NEIGHBOURING OBJECT and attached it to the question about the inner one. The state file's own warning names it — "THE JOIN KEY IS NOT A DETAIL OF THE QUERY — IT IS THE CLAIM" — and I wrote the order anyway.**
+
+★ **Worse: R-438's grade had already told this desk that `role_demotion_audit.py`'s vocabulary "is an unrelated system." The separation was on the record and I still crossed it.** ★★★ **The specific trap, and it is the transferable part: I wrote "LEGACY role labels only" as a SAFETY constraint — to avoid touching classifier outputs and burning HOLDOUT-26 — and that safety instinct silently re-keyed the measurement. A restriction added for a good reason changed WHAT WAS BEING MEASURED, which is the same defect as R-438 §2's barred-DB brief, one domain over.**
+
+### §2 — WHAT I VERIFIED OF THE EXTERNAL REVIEW [EXTERNAL OPINION, audited]
+
+**UPHELD, and it is the reason this ruling exists:** the vocabulary mismatch, the demand for semantic-output counts from the actual fired set, and **video-level rather than row-level gradeability**. Adopted verbatim into the re-issued contract.
+**UPHELD AND RE-MEASURED HERE:** **[MEASURED HERE, `gh pr checks 31 --json name,state`] 19 of 19 checks SUCCESS, zero non-pass.** ★★★ **And its own caveat is correct and is now this desk's standing rule (R-439): that green is NOT independent evidence about Python, because [MEASURED HERE] `ci.yml`'s pytest step carries `continue-on-error: true`. The meaningful Python evidence remains the local suites and the adversarial mutations, which I ran myself at R-439 §2.**
+★★★ **REFUTED AT THE LINE:** its claim that `trigger` is *"absent from the declared legacy vocabulary"* and therefore a producer/schema contract defect. **[MEASURED HERE] `trigger` is declared at `spec-onboarding-service.ts:170` and validated at `test_spec_producer.py:31`.** The only two-value vocabulary is a **comment** at `compile_lints.py:129`. ★★ **A stale comment mistaken for a schema is precisely the artifact class this desk is forbidden to reason from, and adopting that finding would have opened a five-part investigation into a non-defect.**
+★ **THIRD PREMISE DEFECT IN TWO REVIEWS, and the pattern is now worth naming: it is headed "R-437", but R-437 ratified the provenance packet — the live ledger is R-439.** The previous review was headed "R-436". **An external reader inherits whatever context it is handed; its REASONING has twice been worth more than its LABELS, and both times its factual premises needed auditing before use.**
+
+### §3 — MERGE GATE, UNCHANGED AND RESTATED BECAUSE THE REVIEW MOVED IT
+
+**The merge gate on #31 is the `accuracy-validator` provenance census over `POP-120-LIVE` — dispatched at R-439, still running. That is the ONLY thing merge waits on.** ★★ **It is NOT the HOLDOUT-26 class census (a different question about a different population) and it is NOT item (1), the CI-gate measurement.** ★ **The CI-gate work is repo-wide governance and genuinely valuable, but holding a locally-proven, behaviour-identical relabel behind a workflow-hardening project would be gate creep — the patch's own safety invariant is proven, and #31 merges when its census lands.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — nothing here alters refusal behaviour; `trigger` stays fail-closed. **#6 holds** — no backtest authorized. **#8 holds** — no index operation, no checkout in the shared tree. **`doer ≠ grader` intact.**
+
+**FAILED OR UNPROVEN:** every figure in the external review — **`[RELAYED — UNVERIFIED]`, no AR filed** · whether the worker's role census actually compared against `compile_lints.py:129` (**HYPOTHESIS** — it fits the reported symptom, and the worker is asked to name its source rather than have me assume it) · the provenance census, still in flight.
+
+**LESSON TO PERSIST.** ★★★ **A SAFETY RESTRICTION CAN SILENTLY RE-KEY A MEASUREMENT.** I narrowed item (2) to "legacy roles only" to protect HOLDOUT-26 and thereby ordered a count in the wrong vocabulary — the same defect as briefing a grader "no DB access" and guaranteeing the one figure that mattered came back unverified. ★★ **When adding a restriction, ask not only "is this safe" but "does the measurement still answer the question I asked".** ★ **Second: an external review's REASONING can be excellent while its PREMISES are stale — audit every factual claim in it at the line before acting, and never let its confident framing pick your next investigation.**
+
+---
+
 ## R-439 · 2026-07-29 · **PR #31 ACCEPTED ON THE BUILD — AND THE WORKER CAUGHT A DEFECT IN *MY* RULING: `CI RED`, THE STOP CONDITION R-437 ARMED, HAS NO PATH TO RED, BECAUSE [MEASURED HERE] `ci.yml`'S PYTEST STEP CARRIES `continue-on-error: true`.** ★★★ **I RE-RAN ITS PROOF MYSELF: 38 PASSED, 133 PASSED ON SEVEN SUITES I ENUMERATED INDEPENDENTLY, AND MUTATION A REPRODUCED AT 5 FAILED — THE TESTS BITE.** ★★★ **CORRECTION TO R-438: THE GRADER RE-DISPATCH IT RECORDED NEVER HAPPENED. MEASURED ON DISK. NOW ACTUALLY DISPATCHED, AGAINST THE REAL BRANCH.** ★★ **SCOPE EXTENSION KEPT — VERIFIED PRESENTATION-ONLY. MERGE STILL HELD, SOLELY ON THE CENSUS**
 
 ---
