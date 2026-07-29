@@ -4,6 +4,21 @@
 
 ---
 
+## AR-415 · 2026-07-29 · **START-RECEIPT — R-442 INCIDENT ITEM (1): WHY DO THE SEVEN SOURCE-CONTRACT TESTS PASS ON WINDOWS AND FAIL ON `ubuntu-latest`?**
+
+**RULING ID:** R-442 · **TASK ID:** AR-415 · **STATUS:** STARTING. Queue re-ordered as you set it: **incident first**, `compile_lints.py:129` drops to last.
+
+**METHOD:** pull the failure output from CI directly (`gh run view --job <id> --log`) rather than attempting a local repro — **[MEASURED, AR-414] the tree is green locally, so a local repro is the one approach already known to fail.** I read the assertion text and let the diff name the cause.
+★★ **I am NOT inheriting the line-endings hypothesis. You labelled it unmeasured and it also points the WRONG WAY on its face — CRLF-vs-LF text matching would normally break on WINDOWS and pass on Linux, and the observed direction is the reverse. That asymmetry is itself a clue and I will report what the log says, not what the hypothesis predicts.**
+
+**DELIVERABLE:** the actual assertion diff · root cause · **whether the TESTS or the SOURCE is wrong** · fix, or an explicitly reasoned quarantine if the fix is not small.
+**FIRST OBSERVABLE:** this receipt. **ETA ~45 min.** ★ **HONEST-PARTIAL ARMED: if I reach root cause but not a safe fix, I file the cause and say so rather than shipping a guess.**
+
+**STOP CONDITIONS ARMED:** `backtests total > 0` · ★★★ **the seven failures turn out to be caused by a merged commit — I tell you IMMEDIATELY, because that changes #31's disposition.** ★ **[RELAYED, yours] they predate #31 by ~3.5h, so I expect exoneration to hold — but I will confirm it against the failing runs rather than carry it.**
+**I WILL NOT:** remove `continue-on-error` (items 2 and 3 are not authorized yet) · curate the suite to make the gate easier to turn red · touch `backtester.py` source without naming which side is wrong first.
+
+---
+
 ## AR-414 · 2026-07-29 · **R-439 ITEM (1) DELIVERED — THE >90-MIN HANG DOES NOT REPRODUCE: WHOLE-TREE COLLECTION `3.74s`, FULL RUN `216s`, `7294 passed / 0 failed`, EXIT `0`.** ★★★ **BUT DO NOT FLIP THE FLAG YET, AND THE REASON IS THE OPPOSITE OF WHAT WE EXPECTED: A *CURATED SUBSET* IS MORE DANGEROUS THAN THE FULL TREE. `test_three_fixes.py` FAILS IN ISOLATION (2/2, DETERMINISTIC) AND PASSES IN THE FULL RUN.** ★★★ **AND YOUR EXIT-4 TRAP FIRED ON ME — ON `pytest-cov`, NOT `pytest-timeout`: `exit 4`, `3s`, ZERO `FAILED` LINES. MY UNPIPED EXIT CODE CAUGHT IT; A `| tail` WOULD HAVE READ IT AS A CLEAN FULL-TREE PASS**
 
 **RULING ID:** R-439 item (1) · **TASK ID:** AR-412 · **TREE:** disposable worktree pinned to `a6f92822` (deployed-lane tip), removed by explicit path, **no `prune` run** · **RECOMMENDATION:** **APPROVAL_REQUESTED on the measurement. PROPOSAL ONLY — no `ci.yml` edit made, as ordered.**
