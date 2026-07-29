@@ -5,10 +5,12 @@
 > Last rewritten: 2026-07-29, current through **R-423**.
 
 ## SEAT
-Ledger at **R-423** (commit `da6d3d14`). Newest AR: **AR-388** — a START-RECEIPT
-for R-423 item (2), not a report awaiting a ruling. Worker: **ACTIVE on the
-`POP-120-LIVE` refusal census** [MEASURED — it filed the receipt within a minute
-of R-423 landing].
+Ledger at **R-424** (commit `952c4e57`). Newest AR: **AR-389, RULED**
+(`POP-120-LIVE` census). Worker: **authorized on the corpus_B charter +
+vocabulary ledger over `POP-120-LIVE`** (R-424 item 1).
+★★★ **PR #29 AND #30 ARE MERGED *AND DEPLOYED*. The tower is at `a6f92822`
+(was `a674f1ed`) — the two-release gap R-423 published is CLOSED, all six
+acceptance criteria MEASURED in the running tree.**
 ★★★ **THE CAMPAIGN TREE IS `C:/Users/tonio/Projects/wt-h1-wave4-20260712`
 (branch `h1-wave4-sealed12-driver`) — NOT the primary cwd.** A cold seat that
 reads `trading-forge/docs/designs/` finds nothing and must not conclude the
@@ -66,15 +68,19 @@ caught it. The skill `advisor-onboarding` §1a carries a duplicate; restore from
 there.**
 
 ## AUTHORIZED NOW
-**(1) THIS SEAT:** merge PR #30 the moment all required checks are green
-(CI watcher armed). **[MEASURED at R-423 write time] 15 pass / 2 pending
-(`Python Tests + Coverage` ×2), `MERGEABLE / UNSTABLE` — NO GREEN CLAIM.**
-**(2) WORKER, IN FLIGHT:** the `POP-120-LIVE` refusal census — run the REAL
-`preflight_binding_plan` (never a reimplementation) over every live
-`compiled_spec`; report the MANDATORY / UNKNOWN_REQUIREDNESS / empty-spine split
-and the MEASURED overlap with POP-16 even if zero. Honest-partial clause applies.
-**(3) WORKER, NEXT:** the corpus_B charter (R-409 scope) — charter only, no
-extraction run authorized.
+**(1) WORKER — PRIMARY:** the **corpus_B charter + frequency-ranked VOCABULARY
+LEDGER over `POP-120-LIVE`**. Remediation taxonomy **must carry a RESIDUAL
+class**. ★★★ **Do NOT treat the 1305 `no_recognized_session_keyword` refusals as
+one defect — a shared label is not a shared cause (R-408); READ THE RULE TEXT
+first (R-404). The six unbound `WAIT_SESSION` conditions already proved to be
+three different causes.** Implement by reusable CONCEPT FAMILY, never by
+patching individual strategies to raise a pass count.
+**(2) WORKER — fold in:** re-derive the **empty-spine ∩ NEEDS_ARCHETYPE** join by
+a second path, **join key = strategy id**, and publish the 3 ids.
+**(3) WORKER — standing:** **NAME THE TREE in every figure.**
+**(4) THIS SEAT — mine, not delegated:** re-derive the pinned Phase-1 figures
+(`0/16 fully bound`, the 7 FVG crossings) **in the DEPLOYED lane**. Until then
+**no Phase-1 exit claim may rest on campaign-tree numbers.**
 
 ## NOT AUTHORIZED
 Deploying/updating the tower worktree · any write to `runtime-production` · real
@@ -83,12 +89,16 @@ experiment process · spec file edits (incl. re-typing) · softening any refusal
 frozen instruments · sealed-read set · `db:generate` · editing applied migrations.
 
 ## STATE, WITH EVIDENCE GRADES
-**[MEASURED HERE, TREE `runtime-production` @ `a674f1ed`] ★★★ THE SAFETY CHAIN IS
-NOT IN THE RUNNING TREE.** `spec_execution_preflight.py` **does not exist** there
-and `grep -c UNKNOWN_REQUIREDNESS` = **0**, while its own branch tip is
-`7e5311fd`. **BOTH releases (#29 merged, #30 pending) are landed-but-not-running
-— a two-release gap. `MERGED ≠ DEPLOYED` is not a caveat; it is the current
-state, and it is the largest thing between this work and a first honest backtest.**
+**[MEASURED HERE, TREE `runtime-production` @ `a6f92822`] ★★★ THE SAFETY CHAIN IS
+DEPLOYED AND VERIFIED IN THE RUNNING TREE (R-424).** `spec_execution_preflight.py`
+present 14,248 B · `36 passed` run there · point-of-use raises at `:638`/`:750` ·
+**ONE construction site (`backtester.py:8493`) with enforcement between it and
+the mode split — no second door** · `backtests total: 0` re-checked post-deploy.
+**[MEASURED] ★★★ THE DIVERGENCE DID NOT CLOSE — IT MOVED.** `spec_family_bindings.py`
+is **byte-identical** (`sha256`, 40,583 B) between `runtime-production` and
+`wt-preflight-blockers-20260729`, but **`wt-h1-wave4-20260712` is 160,049 B — a
+3.9× outlier, and EVERY pinned Phase-1 figure was computed in it.** Re-derivation
+in the deployed lane is **AUTHORIZED item (4), this seat.**
 **[MEASURED HERE, live production DB, read-only, unpiped]** `backtests total: 0`
 · `strategies total: 120` · 120/120 carry `compiled_spec` · 27 carry an
 orphan-zone term. **Safe by STARVATION, not by design.**
@@ -144,8 +154,9 @@ give every predicate a DISCRIMINATES fixture before believing a negative.**
 `node_modules`: CUT, target intact, 0 junctions point at `runtime-production`.
 
 ## OPERATOR-FACING
-Nothing waits on you. The two safety blockers are approved and their merge is
-pre-authorized on green — this desk executes it, the operator is not asked.
-The one thing worth knowing: **the tower is running code that predates both
-safety releases**, and a deploy decision will need to be made deliberately
-before the first backtest — not discovered at the moment it is needed.
+Nothing waits on you. Both safety releases are merged AND deployed; the tower now
+refuses to run a strategy whose rules it cannot actually enforce. The number worth
+knowing: **[RELAYED] ~0% of the 120-strategy library is currently executable** —
+the guard did not break it, it made a pre-existing gap visible. **Nothing has ever
+run a backtest (0), nothing is live, no capital connected.** The next real work is
+vocabulary coverage, not backtesting.
