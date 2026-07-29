@@ -5,43 +5,51 @@
 > Last rewritten: 2026-07-29, current through **R-438**.
 
 ## SEAT
-Ledger at **R-443**. Newest AR: **AR-417** (start-receipt, in flight, ETA ~50 min
+Ledger at **R-444**. Newest AR: **AR-419** (start-receipt; worker on the 156-entry baseline shrink + the self-cleaning guard).
 from 01:00 local). **Worker: extending PR #32 to all seven files, then removing
 the 24 baseline excuses.** ★★★ **ARMED STOP CONDITION YOU MUST HONOUR: if ANY of
 the 24 kill-switch / compliance-gate assertions genuinely FAILS against the real
 tree, that is a LIVE SAFETY FINDING — it comes to the desk before anything else,
 and it is NOT to be fixed by the worker on its own initiative.**
 
-★★★★★ **THE NIGHT'S LARGEST FINDING — `ci/baseline-failures.json` HAS BEEN
-EXCUSING THE KILL SWITCH. [MEASURED HERE, deployed tip `a52449ac`] that file holds
-~388 entries; `24` are `live-fix-sweep.test.ts`, including "Kill Switch — Layer
-2+3 … no longer contains `phase_4c_pending` stub text" and five
-`compliance_gate.py — MFFU check_violation wiring (F-15)` assertions (HFT limit,
-2% rule, hedging ban). The step is literally named `Baseline gate — vitest
-known-failures (BLOCKING — new failures fail CI)` and runs
-`node ci/compare-baseline.mjs` — so it fails only on NEW failures. These fail
-from the root cause below and were ALLOW-LISTED instead of fixed.**
-★★ **DORMANT-GUARD finding, NOT an active loss: `backtests = 0`, nothing live, no
-capital ever exposed. But these are the assertions that must be honest BEFORE
-go-live, and today they are decorative.**
-★★★ **ROOT CAUSE, ONE LINE, THREE LAUNDERING LAYERS: four→SEVEN test files
-hardcode `C:/Users/tonio/Projects/trading-forge/trading-forge/...` — a DIFFERENT
-CHECKOUT, [MEASURED HERE] on branch `hardening/phase-0` at `404a3396`. On Linux
-`nodePath.resolve("C:/...")` is NOT absolute, so it resolves under the runner cwd
-and the read fails. THREE SYMPTOMS: hard-fail (7, hidden by `continue-on-error`) ·
-`pytest.skip` (9 — NEVER ONCE RAN) · baselined (24 — green in a BLOCKING gate).**
-★★★ **THE SWEEP LESSON, AND IT IS WHY THE CLASS GREW: the worker enumerated tests
-that FAIL and found 4 files; I enumerated files MATCHING THE PATTERN and found 7.
-The two extra hid by skipping and by being excused. ENUMERATE BY CAUSE, NOT BY
-SYMPTOM — the symptom is whatever the reporting layer chose to show you.**
-The 3 files #32 misses: `test_spec_family_bindings.py:41` (points into
-`extraction-100`'s tmp dir) · `live-fix-sweep.test.ts` (4 sites) ·
-`wave25-liquidity-map.test.ts` (1 site).
-★★ **The other ~364 baseline entries are DELIBERATELY out of scope — a separate
-governance question; do not boil it while this finding is live.**
-★★ **PR #32 is HELD, not rejected — its fix shape is correct and its red-proof
-discriminates ran-and-failed from silently-skipped, which is the control this
-class needs. It is being EXTENDED, not reworked.**
+★★★★★ **R-443's KILL-SWITCH ALARM IS WITHDRAWN (R-444). DO NOT INHERIT IT.
+THE KILL SWITCH AND COMPLIANCE GATE ARE **NOT** FAILING AND WERE NOT FAILING:
+[MEASURED BY GRADED INSTRUMENT — CI's own `compare-baseline.mjs`, run
+`30422166825`] all 24 assertions are in `fixedFailures`, `verdict GREEN`,
+`newFailures []`. [MEASURED HERE] `git show a52449ac:…/live-fix-sweep.test.ts`
+already uses `fileURLToPath(new URL(…, import.meta.url))` at `:23,85,260,307` —
+the portable form. There was nothing there to break.**
+★★★ **HOW I GOT IT WRONG, AND IT IS THE LAW I HAD JUST RE-COPIED INTO THIS FILE:
+I ran `grep -rn` inside the CAMPAIGN WORKTREE and published the result as a claim
+about the DEPLOYED LANE. `NAME THE TREE`. Counts at `a52449ac` vs campaign:
+`live-fix-sweep.test.ts` **0** vs 4 · `wave25-liquidity-map.test.ts` **0** vs 1 ·
+`test_spec_family_bindings.py` **1 vs 1 — the one real member, survives.**
+★★ **WHEN THE CLAIM IS ABOUT CI, SWEEP WITH `git show <tested-sha>:<path>` — NOT
+in whatever checkout your shell is sitting in.**
+★★ **WHAT SURVIVES: the 24 WERE allow-listed at `a52449ac` (right tree), and
+`compare-baseline.mjs` fails only on NEW failures — but their `reason` field dates
+them to the `2026-07-12 Node baseline freeze`. STALE OVERRIDES ON A WORKING
+SENSOR, not live cover for a broken one. Governance defect, NOT a safety hole.**
+★★★ **THE REAL FINDING, AND IT IS BIGGER: [MEASURED BY GRADED INSTRUMENT, same
+run] `BASELINE_SHRINK_NEEDED=180`. 180 baselined entries no longer fail; 24 are
+removed (ratified R-444); **156 REMAIN**, each a standing licence for a test to
+fail silently if it regresses. The list has grown since 2026-07-12 and nothing
+shrinks it. Durable fix (worker's recommendation, ADOPTED): a CI step that FAILS
+when `BASELINE_SHRINK_NEEDED > 0` — land it AFTER the shrink or it fires on
+arrival.**
+★★★★★ **THE DISCRIMINATOR THAT GOVERNS THE 156: `fixedFailures` means DID NOT
+FAIL, and a test that never RAN also did not fail. Not hypothetical here — the
+Python suite truncates at 44% and 9 quantum tests `pytest.skip` on Linux. Every
+entry must be proven RAN-AND-PASSED before removal; unprovable ⇒ stays, reported
+UNRESOLVED.**
+★★ **STILL TRUE from R-442/R-443 and NOT withdrawn: the Python suite's 7
+source-contract failures and 9 silent skips ARE real and DO trace to hardcoded
+dev paths (PR #32, 4 files). The Python tree still truncates at 44% — >56% has
+not run in CI. `continue-on-error` stays until that is green.**
+★★★ **THE WORKER STOPPED INSTEAD OF OBEYING A WRONG ORDER AND WAS RIGHT. An
+order from this desk is a CLAIM, not evidence. AR-419 then self-convicted on its
+own AR-418 cell (`test_spec_family_bindings.py = 0`, actually `1`) — both
+directions of the loop are working; do not damp either.**
 ★★★ **OPEN INCIDENT — THE PYTHON SUITE IS RED ON `ubuntu-latest` AND REPORTS
 GREEN. [MEASURED HERE] the `Run pytest with coverage` step ends `##[error]Process
 completed with exit code 1` in ALL 8 most-recent `ci.yml` runs (`30410830104`
