@@ -4,6 +4,51 @@
 
 ---
 
+## AR-389 · 2026-07-29 · ★★★ **`POP-120-LIVE` CENSUS: 120 of 120 REFUSED. ZERO PASS.** ★★★ **AND THE TWO BLOCKERS YOU ORDERED — BOTH OF WHICH HAD *ZERO* BLAST RADIUS ON corpus_A — HAVE REAL INSTANCES HERE: `trigger` occurs 18 times (0 in corpus_A) and EMPTY-SPINE catches 3 strategies (0 in corpus_A).** ★★★ **THE 3 EMPTY-SPINE ROWS ARE NOT THE 3 `NEEDS_ARCHETYPE` ONES — intersection MEASURED EMPTY — so all three are live `CANDIDATE` rows that would have fired a FABRICATED BAR-0 ENTRY on their first backtest.** ★★ **AND A THIRD DISJOINT POPULATION: overlap with POP-16 = ZERO, measured**
+
+**RULING ID:** R-423 item (2) · **TASK ID:** live-library refusal census · **POPULATION: `POP-120-LIVE`** — every row in the live `strategies` table carrying `config->'compiled_spec'` · **RECOMMENDATION:** **STOPPING AND REPORTING per your second stop condition — 120/120 is exactly the "refusal rate that would require softening a refusal to proceed", and I have softened nothing.**
+
+**★★★ STOP CONDITION, CHECKED FIRST AND BY ME, NOT INHERITED: [MEASURED HERE, live DB, `SET default_transaction_read_only = on`, SELECT-only] `backtests total = 0`.** Re-checked on both query runs. **[MEASURED] `strategies total = 120` · `carrying compiled_spec = 120`** — reproduces R-418's 120/120 by my own path.
+
+### §1 — METHOD (the thing that could have invalidated this)
+
+★★ **The census drives `compile_binding_plan` and `preflight_binding_plan` THEMSELVES — the same functions `backtester.py:8509` calls — over the real DB rows. No reimplementation, so this is not a second instrument agreeing with itself.** Extraction was a read-only `SELECT id, name, lifecycle_state, config->'compiled_spec'` via the repo's own `postgres` client; **[MEASURED] 0 rows lacked a spec dict**, so no row was silently skipped. **Nothing written to the DB, to `runtime-production`, or to any spec file. No credential decrypted** — the connection string was read from the existing `.env` as the app itself reads it.
+
+### ★★★ §2 — THE CENSUS
+
+| | |
+|---|---|
+| **refused, as shipped** | ★★★ **120 of 120** |
+| **refused, if EVERY confluence rule were granted optional** | **117 of 120** — only **3** would pass |
+| rule_class split | **MANDATORY 1350 · UNKNOWN_REQUIREDNESS 18** |
+| reasons | `no_recognized_session_keyword` **1305** · orphan-zone **24** · `control_flow_reset` **21** · `control_flow_exception` **15** · **empty-spine 3** |
+| roles | confluence **885** · spine **429** · invalidation **36** · ★ **trigger 18** |
+| lifecycle | CANDIDATE **117** · NEEDS_ARCHETYPE **3** |
+| ★ **overlap with POP-16 (video ids)** | ★★★ **0** — POP-120-LIVE spans **40** distinct videos, POP-16 spans **14**, **none shared** |
+
+### ★★★ §3 — THE FINDING THAT JUSTIFIES BOTH BLOCKERS ON MEASURED PRODUCTION EVIDENCE
+
+On corpus_A both blockers looked like zero-impact bookkeeping: **[MEASURED, AR-387] corpus_A refusal count was UNCHANGED at 11/16, with 0 `UNKNOWN_REQUIREDNESS` and 0 empty-spine.** ★★★ **On the population that actually feeds the first Band-C backtest, both fire:**
+
+- ★★★ **`trigger` OCCURS 18 TIMES IN THE LIVE LIBRARY AND ZERO TIMES IN corpus_A.** Your R-423 ruling — keep `UNKNOWN_REQUIREDNESS` distinct, do not collapse it into MANDATORY, do not promote `trigger` on plausibility — **now has 18 production instances behind it. [MEASURED] 18 strategies carry ≥1 `UNKNOWN_REQUIREDNESS` refusal; only 3 of those are already `NEEDS_ARCHETYPE`, so 15 are live `CANDIDATE` rows.** ★★ Had the two classes been collapsed, those 18 refusals would have recorded *"the source marked this required"* about a role this campaign has never grounded.
+- ★★★ **EMPTY-SPINE CATCHES 3 STRATEGIES — and [MEASURED] the intersection with the 3 `NEEDS_ARCHETYPE` rows is EMPTY.** They are **`CANDIDATE`**, i.e. considered viable. **Without blocker (ii) each would have produced the fabricated bar-0 entry on its first backtest and reported it as a result.** ★ This is the hazard you measured at `:696-705` occurring in the operator's real library, not in a fixture.
+
+★★ **The honest form of the earlier "zero blast radius" line: it was zero ON corpus_A, and corpus_A is not the population at risk. That is the day's population law applying to my own reassurance.**
+
+### §4 — WHAT THIS DOES AND DOES NOT MEAN
+
+★★★ **It does NOT mean the guard is wrong. [MEASURED] 1305 of 1368 refusals are `no_recognized_session_keyword` — the pre-existing vocabulary gap, 54× the orphan-zone class. The library is not "blocked by the safety release"; the safety release is REPORTING that ~0% of the library is executable, which is the same fact the pinned `0/16 fully bound` states about corpus_A.** Before these releases, a Band-C backtest of any of these 120 would have produced a P&L number while silently not enforcing ~11 rules per strategy.
+★ **I have not softened anything, and per your invariant I will not: inconvenience is not evidence.** ★★ **The decision this hands you is not "relax the preflight" but "the money path's next bottleneck is binding coverage, on POP-120-LIVE, and it is now a measured number rather than an intuition."**
+★ **`preflight-pass ≠ Phase-1 exit` still holds** — nothing here speaks to concreteness, only to bindability.
+
+**Files changed:** none — read-only throughout. Census artifact in session scratchpad (`pop120.json`); **not committed**, since it is a snapshot of live operator data.
+**Remaining uncertainty:** ★ **[UNMEASURED]** the per-strategy refusal detail is computed but not published here — say the word and I will attach the full 120-row table rather than the aggregates. ★ **[UNENUMERATED]** timezone/calendar basis. ★ **[UNMEASURED]** whether the 15 CANDIDATE `UNKNOWN_REQUIREDNESS` strategies would reclassify if `trigger` were promoted — **that is your pinned-conditions question and I did not pre-empt it.**
+**Risk:** none taken — read-only, stop condition verified 0 twice, no write anywhere.
+
+**Next smallest task (ONE):** R-423 item (3), the corpus_B charter — unless you want the full 120-row table first.
+
+---
+
 ## AR-388 · 2026-07-29 · **START-RECEIPT — R-423 item (2), the LIVE-LIBRARY REFUSAL CENSUS (`POP-120-LIVE`).**
 
 **RULING ID:** R-423 item (2) · **TASK ID:** live-library refusal census · **ARTIFACT I WILL PRODUCE:** a per-strategy census table — `strategy_id · refused? · rule_class breakdown (MANDATORY / UNKNOWN_REQUIREDNESS) · empty-spine · reason` — over every live row carrying `compiled_spec`, plus the **measured overlap with POP-16 stated as a number even if zero.** **ETA ~30–45 min.**
