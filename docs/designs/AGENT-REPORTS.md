@@ -4,6 +4,35 @@
 
 ---
 
+## AR-419 · 2026-07-29 · **START-RECEIPT — R-444.** ★★★ **AND I OPEN BY CONVICTING MYSELF: MY AR-418 TABLE CELL `test_spec_family_bindings.py = 0` IS WRONG. IT IS `1` AT THE DEPLOYED TIP. YOU WERE RIGHT AND MY GREP WAS THE LIAR**
+
+**RULING ID:** R-444 · **TASK ID:** AR-419 · **STATUS:** STARTING.
+
+### ★★★ THE CORRECTION TO MY OWN REPORT, FIRST
+
+**[MEASURED, fixed-string `grep -F`, at `a52449ac`] `src/engine/tests/test_spec_family_bindings.py:28`:**
+```python
+SAMPLES_DIR = r"C:\Users\tonio\Projects\trading-forge\trading-forge\.claude\worktrees\extraction-100\tmp\generalization"
+```
+★★★ **AR-418 §2 published `0` for this file on the deployed lane. That was a FALSE NEGATIVE produced by my own regex escaping — I ran `grep "C:/Users\|C:\\\\Users"` through a shell double-quote layer and it did not match the raw-string backslash form. I then published the zero as a measurement.** ★★ **This is my named failure mode exactly — an anchored/escaped pattern standing in for the field, and publishing what the filter INCLUDED without asking what it EXCLUDED. I caught R-443's wrong-tree error with one method and committed a wrong-pattern error with another, in the same report.**
+
+★ **RE-SWEPT THE WHOLE REPO WITH `grep -rlF` (fixed-string, no escaping layer): exactly ONE file carries the backslash form at `a52449ac`. So the class is now closed at 5 members total (4 fixed in #32 + this one), and the other two you withdrew are confirmed `0` by the same fixed-string method — that half of my table stands.**
+
+### THE THREE ITEMS
+
+**(1) FIX `test_spec_family_bindings.py:28`** — repo-relative anchor, same shape as #32. ★ **It points into `.claude/worktrees/extraction-100/tmp/`, a tmp dir in another worktree, so I will also report what the tests DO when the corpus is absent — skip or fail — because that decides whether this file has been silently not-testing too.**
+
+**(2) THE 156 — WITH YOUR DISCRIMINATOR, WHICH IS THE RIGHT ONE.** ★★★ **`fixedFailures` means "did not fail this run", and a test that never ran also did not fail. I measured exactly that hazard twice today (Python truncating at 44%; 9 quantum tests `pytest.skip`-ing on Linux), so I will not remove an entry on a not-failing signal.** **Per entry I will establish RAN-AND-PASSED using vitest's distinct `passed`/`skipped`/`todo` states and report the split.** ★★ **Anything I cannot show RAN stays in the baseline and is reported UNRESOLVED, never removed.**
+★ **HONEST-PARTIAL ARMED: if the reporter cannot recover ran-vs-skipped per test, I will say so and name what I CAN prove rather than inferring it.**
+
+**(3) THE SELF-CLEANING GUARD** — CI step failing when `BASELINE_SHRINK_NEEDED > 0`, **sequenced AFTER the shrink** so it does not fire red on arrival, as you specified.
+
+**FIRST OBSERVABLE:** this receipt. **ETA ~45 min.**
+**STOP ARMED:** `backtests total > 0` · ★★★ **any of the 156 is GENUINELY FAILING rather than stale — that is a live regression and it comes to you before I touch anything else.**
+**I WILL NOT:** remove an entry I cannot prove ran and passed · touch the 156 wholesale · remove `continue-on-error` (Python still truncates at 44%) · edit the campaign tree to tidy anyone's error, per your instruction.
+
+---
+
 ## AR-418 · 2026-07-29 · ★★★★★ **STOP — R-443's CENTRAL PREMISE DOES NOT HOLD ON THE BRANCH UNDER TEST, AND THE GOOD NEWS IS THE BIG NEWS: THE KILL SWITCH AND COMPLIANCE GATE ARE **NOT** FAILING. ALL 24 ASSERTIONS **PASS ON LINUX** — CI'S OWN GATE LISTS ALL 24 IN `fixedFailures`, VERDICT `GREEN`, `newFailures []`.** ★★★ **THE THREE FILES YOU NAMED CARRY **ZERO** HARDCODED PATHS AT `a52449ac`. THEY CARRY THEM IN THE **CAMPAIGN TREE** — A DIFFERENT BRANCH, WHICH CI DOES NOT TEST.** ★★★ **THE 24 ARE REMOVED — JUSTIFIED BY PROOF OF PASSING, NOT BY THE STATED REASON.** ★★ **AND THE REAL GOVERNANCE FINDING IS 7.5× BIGGER: `BASELINE_SHRINK_NEEDED=180`**
 
 **RULING ID:** R-443 · **TASK ID:** AR-417 · **PR:** #32 (extended, `6d7c5d23`) · **RECOMMENDATION:** **APPROVAL_REQUESTED on the baseline removal. Items 1 and 3 of your task are VOID on this branch — measured, not assumed.**
