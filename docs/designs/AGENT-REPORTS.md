@@ -4,6 +4,71 @@
 
 ---
 
+## AR-439 · 2026-07-29 · ★★★★★ **SETTLED, AND THE ANSWER IS NEITHER OF THE TWO OPTIONS YOU GAVE ME. THE CENSUS'S 40 SPECS DECLARE A `compiler-v3-union-1.0` PIPELINE WITH `prompt_sha256 = c75a2da8…` — AND [MEASURED, CONTROL-PROBED] **THAT PROMPT MATCHES NO BLOB IN THIS REPOSITORY'S ENTIRE HISTORY (14,330 SWEPT).** THE PROMPT v4 BLAMES FOR 51.1% OF ALL BLOCKAGE IS NOT THE PROMPT THAT PRODUCED THE CORPUS — AND THE ONE THAT DID IS NOT IN THE REPO.** ★★★★★ **JOIN VERIFIED THE HARD WAY: DB `extraction_provenance` == the on-disk spec's OWN `spec_hash`, `40 of 40`, ZERO MISMATCHES. UNIFORM — NO POPULATION SPLIT.** ★★★ **AND I MUST DISCLOSE A DEFECT IN MY OWN INSTRUMENT BEFORE ANYTHING ELSE: MY FIRST JOIN TOOL MANUFACTURED `35` FALSE JOINS.**
+
+**RULING ID:** R-456 · **TASK ID:** AR-439 · **PRIOR:** AR-438 · **COMMIT AT WRITE** `824f742e` · **RECOMMENDATION:** `APPROVAL_REQUESTED` on the measurement; **the judgment stays yours and I have not made it.**
+
+### ★★★★★ §0 — MY OWN INSTRUMENT WAS WRONG FIRST, AND IT AGREED WITH ME
+
+★★★★★ **I built `extractor_mode_join.py` to scan `docs/` for mode pins and report `|source ∩ census40|`. It returned `35 sources JOINING`. That was FALSE — every one of them.** ★★★ **It matched census video IDs anywhere in a file's BYTES. The pilot artifacts embed an adjudication worksheet whose `concept_id` values are census video IDs — so a file whose SUBJECT is `-igpOZs8LsM` "joined" the census because a rater table inside it MENTIONS 5 census videos.** ★★★★★ **MENTION IS NOT SUBJECT. That is the join-key error again, committed by the tool I built to prevent it — the same shape AR-431 committed inside its own equivalence check.**
+★★ **HOW IT WAS CAUGHT: the count was `5` for every single file — implausibly uniform — and it CONTRADICTED the hand-measured `0` I published in AR-437. I dug at the contradiction instead of preferring the newer number.** ★★★ **Had I trusted it, I would have reported that pilot-run pins DO join the census and concluded `minimal` — the exact false finding R-456 §3 warned me about, reached through my own tooling.**
+★ **DISPOSITION: the tool and its output were `??` UNTRACKED and are DELETED — nothing defective entered git. `git status` on `docs/replay-results/h1-battery/` is clean. I did not use one number from it. A corrected subject-joining version is named as the next task rather than rushed now.**
+
+### ★★★★★ §1 — THE JOIN TABLE, PUBLISHED BEFORE THE CONCLUSION (R-456 §1)
+
+| source | `|source ∩ census40|` | names a prompt/mode? | used? |
+|---|---|---|---|
+| pilot-run `videos/*.json`, per-video `extractor_version` | **0 / 40** (by SUBJECT) | YES — `minimal-8field-pass-l` | ★★★ **DISQUALIFIED — reported, NOT used** |
+| all 31 subject-bearing JSONs under `docs/` | **0 / 40** | some | disqualified |
+| `strategies` (DB), the census's 120 rows | **120 / 120** | only via spec hash | used |
+| `youtube_evidence_archive` (DB) | **40 / 40** | **no prompt column at all** | window only |
+| `docs/designs/source-videos-2026-07-02.json` | **40 / 40** | no | no prompt info |
+| ★★★★★ **`tf-deep-scan/corpus/specs/*.spec.json`** | ★★★★★ **40 / 40, and `spec_hash` == the DB's `extraction_provenance` hash on 40 of 40, ZERO mismatches** | ★★★★★ **YES — `prompt_sha256` + `model`** | ★★★★★ **THIS IS THE SOURCE** |
+| `ai_inference_log` (DB) | ★★★ **NO JOIN KEY — no video column; AND the table ends `2026-05-19`, months before extraction** | model/role | ★★★ **UNJOINABLE — reported, NOT used** |
+| git history of `.env` | ★★ **`.env` is UNTRACKED** | — | **cannot testify** |
+| dated `.env` snapshots in the window | **none survive** (only `.env.example`) | — | none |
+
+★★★ **THE `ai_inference_log` ROW IS THE ONE I WANT ON RECORD: I asked it "how many `transcript_extractor` rows before 2026-07-04" and got `7040`, which READS like coverage. It is not — the table's entire span is `2026-05-06 → 2026-05-19`, so ALL of them are before that date trivially. A window filter over a table that ends before the window is a vacuous true.** ★★ **`two true facts, no true link`** — I discarded it rather than correlating by time without a key.
+
+### ★★★★★ §2 — THE ANSWER
+
+★★★★★ **[MEASURED] all 40 specs, uniform, no split — the population question R-456 §1 flagged is answered by measurement, not assumed:**
+```
+extraction_pipeline_version : compiler-v3-union-1.0        (40/40)
+model                       : gemma4:e4b-it-qat            (40/40)
+prompt_sha256               : c75a2da8f5c473e8c1204788db7b9dcb5a972d9e141cf0c10544745618a47c0a   (40/40)
+atomization                 : 2-pass-union
+certified_gate              : 6-video-46of46-2026-07-02
+provenance_backfilled       : true                          (40/40)
+```
+★★★★★ **THAT PROMPT HASH MATCHES NOTHING.** Not the current `transcript-extractor.md`, not `-minimal`, not the three `-frontier*` variants, **not any historical version of any of them, and not any of the `14,330` blobs in this repository's full object database.**
+★★★ **CONTROL PROBE ON THAT NEGATIVE (mandatory — an empty sweep is not an absence): the identical sweep run for the CURRENT minimal prompt's hash `847f2e7e…` returned `1` match. The sweep can find a blob; it simply cannot find this one.** ★★ A second control confirmed the git-blob hashing path reproduces the working-tree hash exactly.
+
+★★★★★ **SO THE MODE IS NEITHER `legacy` NOR `minimal`. The census was produced by a pipeline whose prompt is not in this repo.** ★★★ **CONSEQUENCE, stated as narrowly as the evidence allows: v4 §Phase-1 item 4 attributes C8 to `transcript-extractor.md:169`, and [MEASURED] no tracked version of that file produced these 40 specs. THAT ATTRIBUTION IS `UNSUPPORTED BY THE PROVENANCE CHAIN`.**
+★★★★★ **IT IS NOT REFUTED, AND I WILL NOT LET IT READ AS REFUTED: the actual prompt is UNIDENTIFIED, so I cannot open it and show whether it carries an equivalent `≥3` floor. An unidentified prompt may well contain one.** ★★ **`UNSUPPORTED` ≠ `FALSE`, and the difference is the whole of my confidence.**
+
+### ★★★★★ §3 — THE CAVEAT THAT COULD OVERTURN ALL OF §2
+
+★★★★★ **`provenance_backfilled: true` ON ALL 40.** The provenance block was **written after the fact**, not recorded at run time. ★★★ **So `prompt_sha256` is itself a RECONSTRUCTED claim, and my whole answer inherits its reliability.** ★★ **If the backfill inferred the prompt rather than reading it from a run record, then "matches no blob" may be evidence about the BACKFILL, not about the extraction.** ★ **I did not measure how the backfill was computed, and that is now the sharpest open question in this lane.**
+
+### §4 — SUPPORTING PROVENANCE, MEASURED IN PASSING
+
+★★ **The census rows are an IMPORT, not an extraction event:** `strategies.source = 'spec_onboarding'` (120/120) · `created_at` spans `2026-07-03 21:47:43 → 21:49:38 UTC` — **120 rows in under two minutes**, which is an onboarding batch, not 120 model calls. ★★★ **`youtube_evidence_archive.source_provider = 'historical_extraction_cache'`, `source_pass = 'corpus-v2-2026-07-04'` (40/40) — the evidence was loaded FROM A CACHE.** ★ **That is WHY no joining table names a prompt: the extraction happened upstream of every table that joins.**
+★★ **A trap for whoever reads that archive next: `transcript_fetched_at` on all 40 is `2026-07-28` — the transcript TEXT was backfilled 25 days AFTER the specs were onboarded. It is NOT necessarily the text that was extracted from.**
+★ **Corroboration I did not rely on:** `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md:41` independently records all on-disk specs carrying `compiler-v3-union-1.0`.
+
+### §5 — WHAT I DID NOT MEASURE
+
+★★★ **How the backfill derived `prompt_sha256` (§3) — the answer's load-bearing weakness.** · Whether `tf-deep-scan/corpus/specs/` is the ONLY on-disk copy of these specs, or whether a differing copy exists in another tree (the R-415 lane divergence is open and I did not re-open it) · whether the unidentified prompt contains a `≥3`-equivalent floor — **unknowable until the prompt is found** · the `≥3` consumer closure itself, **still not built, still correctly blocked by R-456**.
+
+### §6 — DISPOSITION
+
+★★ **ALLOWED-LIST COMPLIANCE:** reads only · DB touched **exclusively** under `SET default_transaction_read_only = on` (verified `read_only = on` at session start, in the transcript) · **no write to `.env`, no flag change, no DB write, no re-extraction, no C8 implementation, and I did NOT set the flag to test it.** ★ **No consumer table published for prerequisite #1.**
+★★ **`backtests_total = 0`** — re-read from the retained census this session, not carried. **Invariant #6 holds.** Retention directory read-only and untouched.
+★★★ **NEXT SMALLEST TASK (one): determine how `provenance_backfilled` computed `prompt_sha256` — that single fact either promotes §2 to authoritative or demotes it to an artifact of the backfill.** ★ Secondary, on your word only: rebuild the join instrument to key on SUBJECT and `spec_hash`, with a mention-vs-subject discrimination case in its self-test, so §0's defect cannot recur.
+
+---
+
 ## AR-438 · 2026-07-29 · **START-RECEIPT — R-456: SETTLE THE CENSUS'S EXTRACTOR MODE FROM OUTSIDE THE ARTIFACT. ★★★ I HAVE READ THE HOLD AND I AM NOT INFERRING PAST IT: I AM MEASURING WHICH PROMPT RAN, AND NOTHING ABOUT WHETHER C8 IS MISATTRIBUTED.**
 
 **RULING ID:** R-456 · **TASK ID:** AR-438 · **STATUS:** START-RECEIPT · **COMMIT AT START** `d66f99e1`.
