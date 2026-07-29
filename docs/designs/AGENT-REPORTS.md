@@ -4,6 +4,81 @@
 
 ---
 
+## AR-460 · 2026-07-29 · ★★★★★ **INSTRUMENT AUDIT PASSES — `456 / 233 / 37` ALL THREE REPRODUCE, ARTIFACT AND TREE NAMED, AND THE FULL HISTOGRAM SUMS TO `456` WITH NOTHING HIDDEN.** ★★★★★ **AND R-467 §2's COLLISION WARNING IS NOW A MEASURED FACT RATHER THAN A HYPOTHESIS: `(video, condition_id)` IS UNIQUE ON THE CLASSIFIED ARTIFACT BUT **3-WAY DEGENERATE** ON THE CENSUS PAYLOAD — histogram `{3: 456}`, EVERY KEY EXACTLY 3×. IT COLLAPSES `1368 → 456`, WHICH IS THE NUMBER THE DESK EXPECTS, SO A COVERAGE TABLE BUILT ON IT WOULD BALANCE WHILE SILENTLY MERGING THREE MARKET COPIES.** ★★★ **ONE DECAYED PROVENANCE CLAIM FOUND: THE EXECUTING LANE HAS MOVED SINCE THE MANIFEST, AND THE TREE I AM SITTING IN IS NOT A VALID LANE FOR THIS TRACE.**
+
+**RULING ID:** R-467 §6 (instrument audit) · **TASK ID:** AR-459 · **STATUS:** interim observable, Gate A continues · **COMMIT AT WRITE `9fd4fd28`** · **CONTRACT:** R-467 revised (bridge keys · opposing paths · per-boundary conservation).
+
+### ★★★★★ §1 — THE TRIPLE, REPRODUCED, WITH ARTIFACT + TREE BESIDE EVERY NUMBER
+
+**REFERENCE ARTIFACT** (R-467 §6 required me to name it; R-466 named none): `pop120_classified.json` · sha256 **`eed65514a126adb136b5430939223965a12909b6e21cda4fba87d547326051d1`** · `175,347` bytes · re-hashed **inside the same process that read it**, not in a separate step.
+**LOCATION / TREE:** `trading-forge\backups\h1-census\unknown-dbtime-ad4335f0\` — ★★★ **[MEASURED HERE] this path is OUTSIDE every git working tree (`git rev-parse --show-toplevel` → `fatal: not a git repository`). That is the manifest §6 claim RE-MEASURED, not inherited.**
+**CENSUS LANE:** `wt-preflight-blockers-20260729` @ **`83efd34e`** — still at the recorded commit, and all three engine files still byte-match the manifest.
+
+| number | value | source |
+|---|---|---|
+| per-video refusals | **`456`** | `len(pop120_classified.json)` |
+| distinct `(strategy_id, condition_id)` | **`456`**, `0` conflicting duplicates | same |
+| C8 rows | **`233`** | `remediation_class == C8_non_executable_annotation_mistyped` |
+| C8 distinct videos | **`37`** | same |
+| raw refusals, all 120 rows | **`1368`** = `456 × 3` | `pop120_census.json` — the `÷3` denominator confirmed, not assumed |
+| `backtests_total` | **`0`** | stop condition **DOES NOT FIRE** |
+
+★★★ **FULL histogram, published because a partial one is the convicted shape — it sums to `456` EXACTLY:** C8 `233`/37 vids · C2 `94`/28 · C3 `41`/24 · C7 `30`/15 · C1 `19`/11 · C4 `18`/11 · C5 `12`/10 · C6 `6`/6 · **C9_RESIDUAL_none_of_these `3`/3**.
+★★★★★ **NOTE THE NAME COLLISION I WILL NOT CREATE: the frozen taxonomy ALREADY has a `C9_RESIDUAL` class (3 rows). My per-boundary `RESIDUAL` (R-467 §3, unresolved joins) is a DIFFERENT object. I will label mine `JOIN_RESIDUAL` throughout the ledger so the two are never summed.**
+**POPULATION FRAME:** `40` distinct videos, `40` distinct `strategy_id` — **one representative copy per video** (manifest §5.6's named limitation, not a defect I found).
+
+### ★★★★★ §2 — THE BRIDGE KEY, MEASURED PER ARTIFACT — AND R-466's KEY IS UNSAFE ON ONE OF THEM
+
+R-467 §2 corrected the UPSTREAM half of the key. **The DOWNSTREAM half needs one correction too, and it is measurable rather than arguable:**
+
+| artifact | `(video, condition_id)` | `(strategy_id, condition_id)` |
+|---|---|---|
+| `pop120_classified.json` (456 rows) | **UNIQUE** — max multiplicity `1`; video↔strategy_id is 1:1, `0` videos with >1 sid | unique (`456`) |
+| `pop120_census.json` (120 rows) | ★★★★★ **DEGENERATE — `456` distinct keys, max multiplicity `3`, histogram `{3: 456}`** | **UNIQUE — `1368`, multiplicity `1`** |
+
+★★★★★ **SO: `(video, condition_id)` is safe on the classified artifact ONLY BY ACCIDENT — because the classifier kept one copy per video. On the census payload the SAME key merges the `_mcl_`/`_mes_`/`_mnq_` triple, turning `1368` into `456`. That is R-467 §2's repeated-clause collision, and the trap is that `1368/3 = 456` is exactly the figure the desk is expecting, so the coverage table would BALANCE while three copies were silently fused.** ★★★ **BINDING ON MY LEDGER: `(strategy_id, condition_id)` at and after condition creation, per R-467 §2, and the bridge key written into every row per boundary. I will not use `(video, condition_id)` as a join key anywhere — only as a display label.**
+
+### ★★★★★ §3 — FINDING: A DECAYED PROVENANCE CLAIM, AND MY LANE SCOPE FOR THE TRACE
+
+**Manifest §3 records `runtime-production` @ `a6f92822` with all three refusal-deciding engine files sha256-IDENTICAL to the census lane, and concludes *"`MEASURED ≠ MEASURED-WHERE-IT-RUNS` is satisfied for this census."***
+★★★★★ **[MEASURED HERE] `runtime-production` IS NOW `9af37b8f`, AND 2 OF THE 3 FILES HAVE MOVED:** `spec_condition_compiler.py` `b20d285e…` → **`3fda1963…`** (52,451 → 53,042 B) · `spec_execution_preflight.py` `96526469…` → **`e68404a9…`** (14,248 → 17,013 B) · `spec_family_bindings.py` **unchanged** `b849a371…`.
+**CAUSE, exactly one commit:** `0b0d6617` *"fix(engine): spine is not source-mandatory — record UNKNOWN_REQUIREDNESS (R-436/R-437/R-438)"*, `+72/−15` across the two files.
+★★★ **THE MANIFEST IS NOT WRONG — ITS CLAIM WAS TREE-AND-TIME-KEYED AND THE TREE MOVED. It was TRUE at manifest-write time and is FALSE NOW.** ★★★★★ **AND I WILL NOT PAPER THE GAP: whether `0b0d6617` moves the **C8** count specifically is `[UNMEASURED]` BY ME. It demonstrably touches REQUIREDNESS — the census's own `C6_unknown_requiredness` class — so asserting "it leaves C8 alone" would be exactly the unmeasured mechanism claim this desk convicts.**
+**MY SCOPE DECISION, stated so the grader can attack it:** I pin the Gate-A trace to the **CENSUS-CONSISTENT lane, `wt-preflight-blockers-20260729` @ `83efd34e`**, because Gate A's question is *"what produced these 233 frozen refusals"* — and that lane still byte-matches the artifact that carries them. ★★★ **CARRIED OBLIGATION, not a silent assumption: any Gate-B treatment must be re-verified against `runtime-production` at its then-current commit, because lane equivalence no longer holds.**
+★★★★★ **AND THE ONE THAT WOULD HAVE BITTEN ME: THE TREE I AM SITTING IN IS NOT A VALID LANE FOR THIS TRACE.** `wt-h1-wave4-20260712` carries `spec_family_bindings.py` at **160,049 B vs 40,583 B** and **has NO `spec_execution_preflight.py` AT ALL**. That is the R-415 / v4 §3-1E divergence. **Reading the campaign tree's copy of a refusal path would have measured a third object that runs nowhere — I name it here so no later seat, or I, does it by reflex.**
+
+### §4 — NEXT OBSERVABLE
+
+**The forward/reverse trace skeleton and the deliberately-broken-join fixture, with an explicit DISCRIMINATION statement (broken join RED **and** unmutated control GREEN, both reported).** ★★ **Then the per-boundary conservation ledger. No Gate-B work, no re-extraction, nothing from the parked list.**
+**Remaining uncertainty:** ★ whether the atom layer carries any C8 label (R-467 §5 pre-registers a large `JOIN_RESIDUAL` there as CORRECT) · ★ whether the census payload carries transcript `span`/`evidence` at all — manifest §5 says `transcript_chars` is null on `120/120` and points at in-row `evidence`/`span`, which are **not** in the enumerated `refusals[]` schema. **If the spans are absent from the frozen payload, the transcript hop cannot be joined from it and I will report that as the finding rather than substituting a text match.**
+**Risk:** none to anything executing — read-only throughout; the only writes are this append and (next) one trace document plus its fixture.
+
+---
+
+## AR-459 · 2026-07-29 · **START-RECEIPT — R-466 §1, GATE A: THE `C8-PROVENANCE-LEDGER`. FRESH WORKER SEAT, TAKING THE ITEM AR-458 DECLINED. ★★★★★ AND I RAISE ONE RULING DEFECT BEFORE I START, WHICH IS THE ONLY MOMENT IT IS FREE: THE DELIVERABLE LIST MIXES MECHANICAL COUNTS WITH A GRADED JUDGMENT, AND THE GRADED ONE IS THE LOAD-BEARING ONE.**
+
+**RULING ID:** R-466 §1 · **TASK ID:** AR-459 · **STATUS:** START-RECEIPT · **PRIOR:** AR-458 · **COMMIT AT START `857c6dd1`** · **BRANCH** `h1-wave4-sealed12-driver` · **TREE** `wt-h1-wave4-20260712`.
+
+**TAKING:** Gate A in full — the bounded, READ-ONLY, join-keyed trace `(video, condition_id)` → spec condition → `(span, evidence)` → carrying code path, delivered as a COMMITTED `C8-PROVENANCE-LEDGER` with population and tree named beside every count.
+
+**ORDER OF WORK, INSTRUMENT FIRST:** I reproduce `456` total per-video refusals · `233` C8 · `37` videos **BEFORE any new output of mine is believed**, and I name the artifact and the tree each number came out of. ★★★ **If those three do not reproduce I STOP and report the discrepancy — I do not proceed onto a trace built on an instrument that failed its own audit.**
+
+### ★★★★★ DEFECT RAISED BEFORE START — WHERE GATE A ASKS ME TO GRADE MY OWN WORK
+
+**Most of the deliverable is MECHANICAL and mine to produce: the join coverage / misses / duplicates / residual · the transcript clause · the spec condition · the source span · whether the condition exists in the emitted spec BEFORE onboarding · the first artifact in which it appears · historical pass membership.**
+★★★★★ **BUT ONE FIELD IS NOT MECHANICAL: deciding whether a clause is GENUINELY chart/instrument/platform CONTEXT or a GENUINE market SESSION/TIME window is a ground-truth classification, and R-466 §2's co-primary outcome ("every pre-registered genuine market-state condition survives") makes it the field the whole ablation is scored on. I am the doer. If I author that label AND then the trace that selects a fix boundary from it, the doer has graded the doer.**
+★★★ **HOW I AM RESOLVING IT RATHER THAN BLOCKING ON IT: I key every ledger row to the FROZEN C8 classifier's EXISTING label — `[ARTIFACT-SOURCED]`, with the artifact and tree named — and I publish NO label of my own. The pre-registered decision rule then selects a branch MECHANICALLY from the frozen label plus the first-persisted-point column. Any row where the frozen label is absent, ambiguous or fails to join goes to **`RESIDUAL`**, never to my judgment.** ★★ **The `accuracy-validator` grade (R-466 §3 trigger 1) therefore scores a bundle whose classification input it can audit independently of me. Ruling as written would have had me supply both halves; flagging it costs nothing now and the whole run at delivery.**
+
+### MY OWN TOOL GETS THE SAME TREATMENT
+
+★★★★★ **The RED fixture with a deliberately broken `(video, condition_id)` join is null-calibration for MY trace, not decoration. I build it and see it BITE before I believe one green row — and I will state explicitly whether the control DISCRIMINATES (broken join RED, unmutated control GREEN) rather than only that the mutation went red.** ★★ **Two independent source-resolution paths, and I will name where they disagree rather than reconciling them silently.**
+
+**ALLOWED-LIST:** reads · SELECT-only DB under `SET default_transaction_read_only = on` · the Gate-A trace + its committed ledger · this append. **NOT taking:** any Gate-B implementation · re-extraction · `--relock` · frozen-byte rewrite · the two `AGENT-REPORTS` monitors · any parked item.
+**FIRST OBSERVABLE:** this receipt. **NEXT OBSERVABLE:** the instrument-audit triple with its artifact+tree provenance, posted whether it reproduces or not. **ETA ~60 min.**
+**STOP:** `456 / 233 / 37` fails to reproduce · joins incomplete or mixed-path (split, do not globally remedy) · `backtests total > 0`.
+
+---
+
 ## AR-458 · 2026-07-29 · ★★★★★ **§0 DONE — THE `MANIFEST.txt:3` ERRATUM IS PUBLISHED ADDITIVELY, `MANIFEST.txt` PROVABLY UNTOUCHED (mtime `14:44`, still `-r--r--r--`, full-file sha256 recorded so a later edit is detectable).** ★★★★★ **AND I RETRACT A FINDING I MADE AGAINST YOUR RIG: AR-456 CALLED THE TWO `AGENT-REPORTS` PROCESSES A `NEW-PLUS-OLD` VIOLATION. THEY ARE NOT — YOU MEASURED THEM AS A 2s CHANGE DETECTOR PLUS A 15m IDLE WATCHDOG, TWO **ROLES** ON ONE FILE, WHICH IS THE REQUIRED RIG. I COUNTED CORRECTLY AND ASSERTED THE WRONG MEANING.** ★★★ **GATE A DECLINED AND HANDED OFF — A FRESH WORKER SEAT IS NEEDED.**
 
 **RULING ID:** R-466 §0 · **TASK ID:** AR-457 · **PRIOR:** AR-456 · **COMMIT AT WRITE `85ec2cba`** · **RECOMMENDATION:** **APPROVAL_REQUESTED on §0. GATE A NOT STARTED — handoff, §3.**
