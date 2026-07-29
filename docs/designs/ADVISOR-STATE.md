@@ -11,8 +11,39 @@
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
-Ledger **R-457**. ★★★★★ **FIVE REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434
-· AR-435 · AR-437 · AR-439.** Worker in flight on AR-440, ETA ~30 min.
+Ledger **R-458**. ★★★★★ **SIX REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434 ·
+AR-435 · AR-437 · AR-439 · AR-441. THE JUDGMENT IS NOW RIPE — the measurement
+chain is COMPLETE and the only thing outstanding is the operator's external read.**
+★★★★★ **WORKER: HANDED OFF (AR-442, clean boundary, R-457 discharged, nothing in
+flight). A FRESH SEAT IS NEEDED → `worker-onboarding`. ONE MEASUREMENT is
+AUTHORIZED and START-READY in R-458's `★ WORKER — START HERE`: the `40` vs `41`
+on-disk spec discrepancy. ASSIGNEE: `NONE — AWAITING A WORKER SEAT`. NOT
+reassigned to "the next seat"; the authorization outlives the session.**
+★★★★★ **SETTLED AND VERIFIED (R-456+R-457 DISCHARGED): the census's 40 specs were
+produced by `atomize-transcript.ts` / `compiler-v3-union-1.0`, `gemma4:e4b-it-qat`,
+`2-pass-union`, prompt `c75a2da8…` — **AN INLINE TEMPLATE LITERAL, NOT A PROMPT
+FILE**. The stamp is AUTHORITATIVE: [MEASURED] the audit goes RED at `eb6eea7c`
+and MATCHES at `7afc7946` · `dc8a150b` (the recorded `pipeline_commit`) ·
+`9776b387` (the specs' creation commit, "CORPUS COMPLETE 40/40") · `895ce11e` (the
+backfill) — the prompt did not change across the span CONTAINING extraction. And
+`c75a2da8…` appears on `40 of 40` specs and NO row outside the census.**
+★★★★★ **THEREFORE — AND THIS IS THE FULL EXTENT THE EVIDENCE CARRIES: v4 §Phase-1
+item 4 attributes C8 to `transcript-extractor.md:169`'s `≥3` quota. THAT
+ATTRIBUTION IS **UNSUPPORTED** — the corpus was not produced by that prompt.**
+★★★★★ **IT IS **NOT REFUTED**. [MEASURED] the real prompt is a clause-classification
+gate with no confluence vocabulary, BUT a limit cuts against that reading and
+[NOT MEASURED] whether an EARLIER extractor stage preceded the atomizer. **A
+PIPELINE IS NOT ONE PROMPT.** Third consecutive ruling to carry this line, because
+it is exactly where a tired desk rounds.**
+★★★★★ **AR-439's HEADLINE IS WITHDRAWN BY ITS OWN AUTHOR: "the hash matches NOTHING
+in this repository, not one of `14,330` blobs" was TRUE IN LETTER AND FALSE IN
+EFFECT — a blob sweep for a `.md` file could never find a `.ts` template literal.
+★★★ AND ITS CONTROL PROBE HASHED A *FILE*, SO IT NEVER EXERCISED THE SHAPE THE
+SWEEP ACTUALLY FACED. `A CONTROL MUST REPRODUCE THE SHAPE OF THE REAL INPUT, NOT
+MERELY BE A KNOWN-GOOD CASE` — and this desk shipped the identical defect in
+R-451's tie-less determinism test. ONE LAW, ONE NIGHT, ONE FROM EACH SEAT.**
+★★★ **A TRUE SENTENCE CAN BE A FALSE FINDING. Before believing a null result, ask
+what SHAPE the thing would have IF IT EXISTED — and make the control that shape.**
 ★★★★★ **THE EXTRACTOR-MODE ANSWER IS `NEITHER OPTION` — AND MY QUESTION WAS THE
 DEFECT. [MEASURED, AR-439] all 40 specs uniformly declare
 `extraction_pipeline_version: compiler-v3-union-1.0` · `model: gemma4:e4b-it-qat`
