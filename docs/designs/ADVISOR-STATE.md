@@ -448,15 +448,21 @@ census vs today's live table (**a 2026-07-28 21:12 snapshot**) · the
 remediation-class assignments themselves (**JUDGMENT, never re-graded**).
 
 ## KNOWN-BENIGN (do not investigate)
-★★★★★ **RIGHT NOW THERE IS NO WORKER SEAT, SO THE IDLE WATCHDOG WILL FIRE EVERY 15
-MINUTES AND EVERY FIRE IS EXPECTED. [MEASURED 06:23Z] the AR-442 seat closed itself
-at handoff — its conversation stopped 11 min before the check and no seat has
-replaced it. ★★★ THE WATCHDOG'S FOUR STATES (idle · silent work · external limit ·
-dead) DO NOT INCLUDE "NO SEAT EXISTS", so it cannot name this one. Do NOT widen the
-bar and do NOT diagnose a fault: read this line, confirm the assignee is `NONE`,
-and wait for the operator to seat a worker.** ★★ **Silence means different things
-at different times, and the ruling / the watchdog / the next seat must share ONE
-contract for it — this is that contract while the chair is empty.**
+★★★★★ **THE IDLE WATCHDOG IS **STOPPED**, DELIBERATELY, AND RE-ARMING IT IS AN
+OBLIGATION — NOT A CHOICE. [MEASURED 06:23Z] the AR-442 seat closed itself at
+handoff and no seat replaced it, so the watchdog was firing every 15 min at an
+EMPTY CHAIR. Its four states (idle · silent work · external limit · dead) cannot
+express "NO SEAT EXISTS", so every fire was a false alarm it was structurally
+unable to label — and NOISE TRAINS THE READER TO SKIM THE ALERTS THAT MATTER.**
+★★★★★ **RE-ARM IT THE MOMENT A WORKER IS SEATED. The AR content-hash monitor
+(`b8fonkiwn`) IS STILL ARMED and is the correct sensor for that: a fresh seat's
+START-RECEIPT fires it. WHEN THAT EVENT ARRIVES, RE-ARM THE IDLE WATCHDOG IN THE
+SAME TURN — a stopped monitor that nobody re-arms is worse than a noisy one,
+because its silence is indistinguishable from all-clear.**
+★★ **Do NOT widen the bar as an alternative — that blinds it to real stalls. The
+rig is: ONE watcher while unseated, TWO while seated.** ★ **Silence means different
+things at different times; the ruling, the watchdog and the next seat must share
+ONE contract for it, and this is that contract.**
 ★★★ **THE 15-MIN WATCHDOG BAR IS SHORTER THAN THE AUTHORIZED ETA, SO IT FIRES ON
 HEALTHY RUNS. Do NOT widen it** — read the event, apply the discriminator.
 ★ **DISCRIMINATOR: process ALIVE + its conversation `.jsonl` STILL GROWING ⇒
