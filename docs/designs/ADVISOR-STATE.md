@@ -10,16 +10,22 @@
 > narrative, never contracts.
 
 ## SEAT
-Ledger **R-446**. Newest AR **AR-422 — RULED (accepted)**. **PR #32 MERGED
-(`75065635`) on an independent `SOUND-WITH-GAPS` grade.**
-**TASK (R-446):** (1) build the **`parseVitestJson` sanity assertion** — throw
-LOUDLY when `passed.length + failures.length` is implausibly small vs
-`collected`, red-proofed BOTH ways · (2) **bounded read-only diagnostic on the
-`lifecycle-transitions` schema mismatch**: (a) migration never ran / (b) later
-migration altered it / (c) CI DB built by a non-migration path. ETA ~40 min.
-★★★ **ARMED STOP: if the schema answer is (a) MIGRATION NEVER RAN, that means the
-journal disagrees with the database — a far larger finding than two failing
-tests. Comes to the desk immediately.** ★ Prior convicted instance: migration 0134.
+Ledger **R-447**. Newest AR **AR-424 — RULED (accepted)**. **PR #32 (`75065635`)
+and PR #33 (`dcb5eca8`) BOTH MERGED.** ★★★ **THE CI-HONESTY LANE IS CLOSED
+(v4 §9 bound: "governance; NEVER a merge gate for spearhead packets").**
+**TASK (R-447) — MONEY PATH, v4 §3-1B UNLOCK-DISTANCE RANKING:** from the FROZEN
+census artifacts, per spearhead spec, blocking conditions by class under a
+`{C8-fixed}` counterfactual → ranked `spec · distinct VIDEOS · residual non-C8
+blockers`. ETA ~40 min.
+★★★★★ **ARMED STOP / ACCEPTANCE: the ranker MUST first REPRODUCE R-426's
+published chain (`C8→6 · +C3→15 · +C2→27 · … · +C9→120`). If it cannot, STOP —
+ranker and census disagree and the RANKER is the suspect.** ★★ **Per-VIDEO, never
+raw rows (120 = 40 videos × 3, triples byte-identical; raw counts inflate 3×).**
+★★★ **SCHEMA QUESTION CLOSED (AR-424): answer is `(b)` — `0125` drops the NOT
+NULL, `0126` converts to TIMESTAMPTZ, both journalled, observed schema = their
+cumulative effect. NOT the migration-0134 class. And NOT `(c)`: `ci.yml:121` runs
+`npm run db:migrate`, so the CI DB IS migration-built — the worker refused the
+desk's predicted comfortable answer and measured it. The 2 tests are STALE.**
 ★★★★★ **CORRECTED IN R-446 — DO NOT INHERIT THE OLD CLAIM: `ci/__tests__` **DOES**
 RUN IN CI AND IS **BLOCKING**. [MEASURED HERE] `ci/vitest.config.mjs:19` includes
 `ci/**/*.test.mjs`; `fast.yml:125` runs that config in the blocking `fast` job
@@ -148,13 +154,39 @@ THREE ITEMS DISCHARGED. v4 can stop carrying it as [UNENUMERATED]:**
   wick-to-wick = what the primitive implements).** ★★ **FIDELITY IS A PROPERTY OF
   THE PAIR (primitive, spec), not of the primitive — the codebase stores
   `approximation=False` as a property of the binding alone. One flag, two truths.**
-- **(2) Flag-yield sweep — DONE (AR-376 / R-411). ★★★ THE CITABLE FIGURE IS
-  `0 → 10` (+10, four specs: `-igp` 4 · `CLDE` 3 · `WEhm` 2 · `kFyD` 1), NOT the
-  `1 → 11` the AR reported — R-411 re-ran all 16 and the baseline `1` was a
-  PHANTOM row. Flags-off = 0 in both today's tree and the frozen artifact.**
-  ★★ **The phantom was load-bearing: it had been used to explain away a
-  discrepancy that never existed. An explanation offered for a discrepancy is
-  itself a claim.** Stop condition rewritten as a property; NOT a stop.
+- **(2) Flag-yield sweep — DONE (AR-376 / R-411). ★★★★★ THE CITABLE FIGURE IS
+  `0 → 10` IN `runtime-production` (the executing lane) — cite that pair.
+  The campaign lane reads `1 → 11`. Δ = +10 IN BOTH; the divergence inflated both
+  endpoints by one and changed no unlock count.**
+  ★★★★★ **THE `1` IS NOT A PHANTOM CLASSIFICATION — CORRECTED R-447. [MEASURED,
+  AR-377] it is a REAL row (`W7nlnHTUZQU__s0 [6] prim=session_windows apx=False`)
+  present in the campaign lane and ABSENT in the executing lane —
+  `spec_family_bindings.py` 160,049 B vs 35,046 B. R-411 and AR-377 were BOTH
+  RIGHT, ABOUT DIFFERENT TREES. It is SUPERSEDED and TREE-KEYED, **NOT DELETED**:
+  it is the anchor of the R-415 lane-divergence gate (v4 §3-1E). THE FIX FOR A
+  NUMBER MEASURED IN THE WRONG TREE IS TO KEY IT TO ITS TREE, NEVER DELETE IT.**
+  ★★ **What IS withdrawn: the `off=1` had been used to explain away a discrepancy
+  against the 2026-07-21 artifact. In the executing lane there was never a
+  discrepancy. An explanation offered for a discrepancy is itself a claim.**
+
+★★★★★ **THE FIDELITY LEDGER IS THE AUTHORITATIVE RECORD — THE AGGREGATE IS
+SUBORDINATE TO IT (operator directive, R-447). "UNLOCKED" ≠ "EXACT".**
+| spec | n | class |
+|---|---:|---|
+| `WEhm…__s0` | 2 | **SOURCE-DEFINED EXACT** (teacher defined wick-to-wick = the primitive) |
+| `-igp…__s0` | 4 | **SOURCE-DEFINED MISMATCH** (teacher close→open; primitive high/low; **STRICTER**) |
+| `CLDE…__s0` | 3 | **CANONICAL DEFAULT** (teacher never defined the term) |
+| `kFyD…__s0` | 1 | **CANONICAL DEFAULT** |
+| — | 0 | **UNVERIFIED** |
+★★★★★ **NO SPEC IS IN THE DANGEROUS DIRECTION (primitive LOOSER than teacher —
+which manufactures trades the teacher never sanctioned). Every deviation in the
+ten runs CONSERVATIVE.** ★★★ **FIDELITY IS A PROPERTY OF THE PAIR (primitive,
+spec), NOT OF THE PRIMITIVE — one `compute_fvg_signal`, three truths. The DB
+stores `approximation=False` on the binding ALONE, which is why a bare "+N
+concrete" looked uniform.**
+★★★ **REPORTING LAW (R-447): always separate `newly bindable` · `source-defined
+exact` · `canonical-default` · `conservatively mismatched` · `unsafe/unresolved`.
+The headline MAY say "10 newly bindable"; it MAY NOT say "10 exact" — only 2 are.**
 - **(3) corpus_B charter — EXISTS and is COMMITTED:
   `docs/designs/CORPUS-B-CHARTER-2026-07-29.md` (`276b2c00`, AR-391; later scoped
   as R-424 item (1)). Status line: "CHARTER ONLY. No extraction run is authorized
