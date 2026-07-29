@@ -14,19 +14,24 @@ Ledger **R-448**. Newest AR **AR-425 — RULED (decline-receipt ACCEPTED)**.
 **PR #32 (`75065635`) and PR #33 (`dcb5eca8`) BOTH MERGED.** ★★★ **THE CI-HONESTY
 LANE IS CLOSED (v4 §9 bound: "governance; NEVER a merge gate for spearhead
 packets").**
-★★★★★ **WORKER: HANDED OFF. THE AR-409→AR-425 SESSION DECLINED AT A CLEAN TASK
-BOUNDARY — all work committed (`399edb6e`), nothing half-done, NO SUB-AGENT OWED
-(verified), both merged worktrees swept. THIS IS A DECLINE, NOT A STALL.**
-★★★★★ **A FRESH WORKER SEAT IS NEEDED. → `worker-onboarding`.**
-**TASK — MONEY PATH, v4 §3-1B UNLOCK-DISTANCE RANKING.**
-★★★★★ **ASSIGNEE: `NONE — AWAITING A WORKER SEAT`. STATUS: AUTHORIZED, UNASSIGNED,
-START-READY.** ★★★ **IT IS NOT REASSIGNED TO "a future session" AND IT IS NOT
-WITHDRAWN — the authorization outlives the session that declined it, so whichever
-seat exists next STARTS WITHOUT A ROUND-TRIP to this desk. Do not re-authorize it;
-it is already authorized in R-448's `★ WORKER — START HERE` block.**
-**Contract:** from the FROZEN census artifacts, per spearhead spec, blocking
-conditions by class under a `{C8-fixed}` counterfactual → ranked `spec · distinct
-VIDEOS · residual non-C8 blockers`. ETA ~40 min.
+★★★★★ **WORKER: FRESH SEAT ACTIVE — AR-426 started v4 §3-1B at 01:58 with NO
+round-trip, exactly as R-448 was designed to allow. The handoff cost nothing.**
+**TASK — MONEY PATH, v4 §3-1B UNLOCK-DISTANCE RANKING. ETA ~40 min.**
+**Contract (R-448, output shape AMENDED by R-449):** from the FROZEN census
+artifacts, per spearhead spec, blocking conditions by class under a `{C8-fixed}`
+counterfactual → `spec · distinct VIDEOS · residual non-C8 CLASSES · residual
+blocker COUNT · expected UNLOCK DISTANCE · named VIDEOS to re-extract`.
+★★★★★ **`unlock distance` IS DEFINED IN R-449 — it arrived as a bare metric name
+and this desk defined it rather than letting the worker invent one:
+`the number of ADDITIONAL blocker CLASSES beyond C8 that must be corrected before
+that spec has ZERO blocking conditions`. Distance `0` ⇒ the C8 fix ALONE fully
+binds it. NEVER collapse distance / residual conditions / distinct videos into a
+single score.**
+★★★★★ **ACCEPTANCE GATE: reproduce R-426's chain (`C8→6 · +C3→15 · +C2→27 · … ·
++C9→120`) FIRST. If it cannot, STOP and name WHICH of four it is: POPULATION ·
+CLASS MAPPING · DENOMINATOR · ARTIFACT mismatch.** ★★ **Result is an INDEPENDENT
+MEASUREMENT, never a confirmation — the historical per-video decomposition is
+`[UNVERIFIED]`. Unit = distinct SOURCE VIDEO, never the 3 market copies.**
 ★★★★★ **ARMED STOP / ACCEPTANCE: the ranker MUST first REPRODUCE R-426's
 published chain (`C8→6 · +C3→15 · +C2→27 · … · +C9→120`). If it cannot, STOP —
 ranker and census disagree and the RANKER is the suspect.** ★★ **Per-VIDEO, never
@@ -317,9 +322,19 @@ authorizing work opens with a cold-start-complete `★ WORKER — START HERE` bl
 (R-430); when RECORD and DISPATCH compete, the DISPATCH wins.**
 ★★★ **INDEPENDENT GRADES GO TO THE `accuracy-validator` AGENT** — never parked on
 "the advisor seat" or "a fresh session". Route EARLY, not as a final formality.
-★★ **STANDING (operator): get an EXTERNAL (GPT) opinion BEFORE writing a ruling,
-carried as `[EXTERNAL OPINION]`, never `[MEASURED]`. Agreement is not evidence;
-disagreement resolves by MEASUREMENT. Audit its premises.**
+★★★★★ **EXTERNAL REVIEW — RULED `SCOPED OUT` (R-449). The universal pre-ruling
+requirement is WITHDRAWN: no ruling blocks awaiting one, because a universal rule
+is structurally incompatible with the operator's "nothing waits on me" order and
+would either stall the campaign or be silently skipped (it WAS, for R-445..448).
+It is now OPERATOR-INVOKED BY RELAY — the operator is the mechanism; there is no
+tool in this seat.** ★★★ **Every relayed read is carried as `[EXTERNAL OPINION]`,
+named as an input, premises AUDITED — never `[MEASURED]`, never adopted wholesale.
+Three have now arrived flawed: an "R-436" citing counts no AR had reported · an
+"R-440" colliding with a live ruling · an undefined metric `unlock distance`.**
+★★★★★ **STANDING BAN: no advisor report may state or imply an external review
+occurred when it did not.** ★★ **Agreement between two readers is NOT evidence;
+disagreement resolves by MEASUREMENT. The desk MAY flag that a decision would
+have benefited from a read — as a named gap, never as a block.**
 ★★ **YOU DECIDE:** merges · worktree updates · deploys of verified work ·
 reversible CI-gated production writes · tooling. **Reserved to operator:** real
 capital · spend · irreversible destruction · unboundable blast radius.
@@ -334,14 +349,10 @@ from a prior conversation can be ALIVE yet absent from `TaskList` — alive ≠
 delivering. Empty `TaskList` ⇒ retire and re-arm, then verify the gap is empty.**
 
 ## OPERATOR-FACING
-★★★★★ **ONE THING WAITS ON YOU: SEAT A FRESH WORKER SESSION. The previous worker
-handed off cleanly at a task boundary (AR-425, accepted R-448). Its task is
-already authorized and start-ready — the new seat runs `worker-onboarding` and
-begins v4 §3-1B without needing anything further from this desk.**
-★★ **STANDING PROTOCOL UNWIRED: the operator's "get an external (GPT) read before
-a ruling" order has NO MECHANISM in this seat. It has not run for R-445..R-448.
-Either wire a tool or scope the rule to the ruling classes where it pays — it is
-currently a rule that quietly does not happen, which is worse than either.**
+**Nothing waits on you.** The fresh worker is seated and running (AR-426).
+★★ **CLOSED: the external-review gap is no longer an open ask — R-449 ruled it
+`SCOPED OUT` / operator-invoked. You invoke it when you want it; the desk never
+claims one happened when it did not.**
 Nothing has ever run a backtest; no capital is connected.
 ★★ **A correction was owed and is delivered: the earlier "your kill switch has a
 hole" alarm was WRONG — the kill switch and compliance gate pass. The real issue
