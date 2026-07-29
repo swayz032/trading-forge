@@ -12,6 +12,81 @@
 
 ---
 
+## R-425 · 2026-07-29 · **ITEM (4) EXECUTED BY THIS SEAT — THE PINNED PHASE-1 FIGURES RE-DERIVED IN THE DEPLOYED LANE.** ★★★ **FLAGS-OFF AND FVG ARE TREE-INVARIANT (0 PER-CONDITION DIFFS ACROSS ALL 155) — MY R-424 ALARM IS WITHDRAWN AS OVER-BROAD.** ★★★ **BUT ONE FIGURE DOES NOT TRANSFER: `LEVELZONE FLAGS ON` = 6 of 155 IN THE CAMPAIGN LANE AND 0 of 155 IN THE TREE THE TOWER RUNS — MECHANISM VERIFIED, ZERO NON-TEST REFERENCES IN THE DEPLOYED ENGINE.** ★★★ **AND THE CONSEQUENCE THE FLAG-COUNT HIDES: THE SIX DO NOT GO UNBOUND IN PRODUCTION — THEY BIND *APPROXIMATELY*, ALL SIX ARE `role=spine` (MANDATORY), AND THE PREFLIGHT CANNOT CATCH IT BECAUSE APPROXIMATE-BUT-BOUND PASSES**
+
+**RULING ID:** R-425 · **TASK ID:** R-424 item (4), self-assigned · **DECISION:** **GENERAL LANE-DIVERGENCE CONCERN WITHDRAWN. LEVELZONE RECORDED AS A CONFIRMED CAMPAIGN→PRODUCTION IMPLEMENTATION GAP. corpus_B REMAINS PRIMARY; THE LEVELZONE PARITY PORT IS AUTHORIZED AS A NARROW SECONDARY TASK WITH THE SIX CONDITION IDENTITIES AS ITS ACCEPTANCE CONTRACT.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-390`, a START-RECEIPT for the corpus_B ledger. It does not bear on this ruling** — this ruling closes an item I assigned to myself, and nothing in AR-390's receipt touches it.
+
+### ★★★ THE INSTRUMENT WAS VALIDATED BEFORE ITS DISAGREEMENT WAS BELIEVED
+
+**A probe that disagrees with a pinned figure is an accusation against the probe first (§1).** So I proved mine reproduces the canonical numbers before I trusted it anywhere. **[MEASURED HERE]** my probe replicates `measure_corpus_a`'s loop verbatim — same 16 `*.spec.json` files, same `bind_condition(c)` primitive, same formula `bound_and_concrete = bindable − approximation` (read off `dual_denominator_remeasure.py:4085-4101`, not invented) — and in the campaign lane it returns **`155 taught · 128 bindable · 128 approximation · 0 bound_and_concrete`** flags-off and **`6`** with levelzone flags on. ★★★ **Both are the pinned R-401 figures exactly: *"Flags-off: 0 of 155 · Flags-on hypothetical: 6 of 155."* The instrument reproduces the artifact it is auditing, so a difference it reports afterwards is about the LANE, not about me.**
+
+### THE RESULT — three findings, each scoped to its layer
+
+**(1) ★★ FLAGS-OFF IS TREE-INVARIANT, AND NOT MERELY IN AGGREGATE.** **[MEASURED HERE, POP-16 / corpus_A, flags at production default]** campaign `0 of 155` · deployed `0 of 155`. ★★★ **And the aggregate is not the evidence — I diffed all 155 conditions PER CONDITION on `bindable`, `approximation` AND `primitive`: `0` differences, `0` keys present in one lane only.** ★★ **An aggregate match can hide offsetting errors in both directions; a per-condition match cannot. This is the shared-oracle form (§5) rather than an A-vs-B comparison that passes when both drift together.**
+
+**(2) ★★ THE FVG FLAG IS TREE-INVARIANT.** **[MEASURED HERE]** flag on → `10 bound_and_concrete` in BOTH lanes. ★ **This independently reproduces R-413's *"the FVG deltas are TREE-INVARIANT"* by a second instrument, and it is the discriminator that proves finding (3) is a real property of levelzone rather than a defect in my harness — the same probe, the same trees, a different flag, and the lanes agree.**
+
+**(3) ★★★ THE LEVELZONE ARM DOES NOT TRANSFER.** **[MEASURED HERE, `TF_LEVELZONE_ROUTING_ENABLED=true TF_LEVELZONE_RESOLVER_ENABLED=true`]** campaign lane **`6 of 155`** · deployed lane **`0 of 155`**.
+
+**MECHANISM — verified at the executable line, not inferred from the number.** **[MEASURED HERE]** `grep -c` for `TF_LEVELZONE_ROUTING_ENABLED` / `TF_LEVELZONE_RESOLVER_ENABLED` across the **entire deployed `src/engine/` tree, non-test: `0` files.** The campaign lane carries the whole chain — binder constant `spec_family_bindings.py:210`, assignment `:2448`, compiler dispatch `spec_condition_compiler.py:119` + `:1169`, and the handler **`_h_levelzone_resolver` at `:581`** doing real work (`classify_population_a_kind`, a level cache, `compute_atr`). **[MEASURED] the deployed lane has `0` non-test references to that handler.** ★★★ **Setting the levelzone flags in production is a NO-OP — the capability is not disabled there, it is absent.**
+
+★★ **AND I CHECKED THE MORE ALARMING HYPOTHESIS BEFORE PUBLISHING THE MILDER ONE.** `levelzone_routing.population_a_resolver` is a module-style STRING with **no `levelzone_routing` module in EITHER tree** — the exact shape of this project's convicted *pointer-lie* species (a declared primitive nothing executes), which would have meant the campaign's own `6 of 155` was itself a false-concrete. **[MEASURED] it is NOT that: the name is a label dispatched to an inline handler that exists and computes. The campaign's 6 are real. I name the hypothesis I tested and discarded, because "I checked and it was fine" is evidence and silence is not.**
+
+### ★★★ THE CONSEQUENCE THE COUNT HIDES — AND IT IS THE PART THAT MATTERS
+
+**A "6 → 0" headline reads as *production is missing six bindings*. [MEASURED HERE] IT IS NOT. In the deployed lane all six conditions still bind — `bindable=True` — but via `structure_engine.compute_structure_state` with `approximation=True`, where the campaign lane routes them to `levelzone_routing.population_a_resolver` with `approximation=False`.**
+
+★★★ **ALL SIX CARRY `role=spine`, which R-423's ratified table makes MANDATORY. So in the tree the tower runs, six MANDATORY taught conditions would EXECUTE — on a generic structural approximation rather than the specific resolver the campaign proved.**
+
+★★★ **THEREFORE THE SAFETY RELEASE DOES NOT PROTECT AGAINST THIS CLASS, AND THAT IS A LIMIT ON MY OWN R-423/R-424 APPROVALS THAT NOBODY ASKED ME FOR.** The preflight refuses on **`bindable=False`**; an approximation is **bound**, so it sails through every guard we shipped today. **The guard answers *"is this rule EXECUTABLE?"* — it was never designed to answer *"is this rule executed FAITHFULLY?"*** ★★ **Executability is categorical and now enforced; FIDELITY is a separate axis and is still unguarded. Six mandatory conditions are the measured proof that the two questions come apart.** ★ **Severity: LATENT — [MEASURED] `backtests total: 0`.** It is a fidelity finding, not an incident, and it is exactly the layer-scoped-proof law (R-412) applied to today's own safety work: *"refuses unexecutable rules"* is a fact; *"the tower now runs taught rules correctly"* would be a guess.
+
+### ★★★ THE ACCEPTANCE CONTRACT — THE SIX IDENTITIES, PINNED NOW SO THE PORT CANNOT BE GRADED ON A COUNT
+
+**This desk's own law: when a population may grow but must not shrink, assert MEMBERSHIP, not cardinality (§5).** A port that lands "6" by binding six *different* conditions — two false positives plus four real ones — would pass a count check and be a fidelity regression. **[MEASURED HERE, campaign lane, levelzone ON] the six are, verbatim:**
+
+```
+4cT8WTyxhYY__s0|WAIT_STRUCTURE:a-liquidity-grab-is-simply-when-price-br#0
+IyFioFkRgWo__s0|WAIT_STRUCTURE:time-your-entries-once-you-have-allowed#0
+PVMgOxHUqFA__s0|WAIT_STRUCTURE:while-price-is-still-making-lower-highs#1
+W7nlnHTUZQU__s0|WAIT_STRUCTURE:we-want-to-take-our-support-and-resistan#0
+kFyD3H6I1I8__s0|WAIT_STRUCTURE:a-level-of-demand-is-just-when-you-have#9
+kFyD3H6I1I8__s0|WAIT_STRUCTURE:this-created-a-level-of-supply-i-was-loo#10
+```
+★★ **5 distinct specs, 6 conditions, ALL `type=WAIT_STRUCTURE`, ALL `role=spine`, all campaign-primitive `levelzone_routing.population_a_resolver`, all deployed-primitive `structure_engine.compute_structure_state` with `approximation=True`.** ★ **That homogeneity is itself a finding: the levelzone capability serves exactly one semantic family, so the port's blast radius is bounded to `WAIT_STRUCTURE` — and any port that changes a NON-`WAIT_STRUCTURE` binding has overreached and must be rejected.**
+
+### THE EXTERNAL SECOND OPINION — ADOPTED, WITH ITS CENTRAL DEMAND STRENGTHENED
+
+Taken before this ruling and **adopted**. Its ordering, its refusal to relax preflight, its metric-governance requirement and its nine-step port sequence are ratified as written. ★★ **Its most important clause is the one I would have had to invent otherwise — *"the exact condition identities are the acceptance contract; matching only the total could conceal offsetting false positives and missed bindings"* — which is this desk's membership-over-cardinality law arriving from outside. I have made it executable by pinning the six identities above rather than leaving it as an instruction.** ★ **Where I go beyond it: the approximate-but-bound consequence, and the resulting limit on the safety release, are mine and are not in its read** — it treated the divergence as missing coverage; measured, it is *silently degraded fidelity on mandatory rules*, which is worse and less visible.
+
+**RATIFIED FROM IT, VERBATIM IN EFFECT:** **(a)** `120 of 120` stays **attributed to AR-389** and is NOT upgraded to advisor evidence until reproduced in the deployed lane — matching R-424's grade. **(b)** My `987` miscount is **not carried forward; `18` is authoritative** for `UNKNOWN_REQUIREDNESS` unless a new same-population measurement supersedes it. **(c)** ★★★ **DO NOT EDIT THE HISTORICAL CAMPAIGN ARTIFACT TO MATCH PRODUCTION.** Preserve both measurements with explicit lane labels — **retro-fitting an artifact to a later result is how a campaign loses the ability to detect its own drift**, and the pinned `6 of 155` remains TRUE of the campaign lane.
+
+**METRIC GOVERNANCE — BINDING FROM NOW ON.** Every progress figure names: **population · code lane · commit · flag state · metric formula · and its status in {campaign-proven · merged · deployed · runtime-verified}.** The canonical form:
+```
+POP-16 / campaign lane (160,049 B) / levelzone ON  -> 6 of 155 bound_and_concrete
+POP-16 / deployed lane (40,583 B)  / levelzone ON  -> 0 of 155 bound_and_concrete
+```
+★★★ **No campaign-workspace aggregate may be described as live-tower capability without a deployed-lane reproduction. `campaign-proven ≠ deployed ≠ production-available` — three states, and this ruling exists because two of them were being written as one.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — nothing was relaxed and no artifact rewritten to improve a number. **#6 holds** — `backtests total: 0`. **#8 holds** — read-only throughout; the probe imported each tree without writing to either, and no lane was modified.
+
+**FAILED OR UNPROVEN CONDITIONS — the scope of what I measured, stated so it cannot be over-read.** ★ **[MEASURED] only at the `bind_condition` layer, `entry_conditions` only, corpus_A only, on three fields (`bindable` · `approximation` · `primitive`).** ★ **[UNMEASURED] invalidations · plan-assembly-level outputs (`role`/`executed`/OR-branch topology) · `POP-120-LIVE` across the two lanes · whether any OTHER campaign-only capability is similarly absent from production.** ★★ **That last one is the real open question this ruling raises: I found levelzone by testing the two flags I already knew about. NOTHING here proves those were the only two.**
+
+### AUTHORIZED NOW
+
+**(1) WORKER — PRIMARY, UNCHANGED: continue the corpus_B vocabulary ledger over `POP-120-LIVE`** (R-424 item 1). This ruling does not interrupt it.
+
+**(2) WORKER — NEXT, AFTER (1)'s FIRST CUT: the LEVELZONE PARITY PORT**, narrow scope, in this order: identify the complete campaign implementation behind `TF_LEVELZONE_*` (start at `spec_family_bindings.py:210/:2448` and `spec_condition_compiler.py:119/:581/:1169`) · judge whether it is production-ready or campaign-experimental **and say which** · produce a **semantic and dependency diff, never a folder copy** · port the MINIMUM · **red-proof first: a test showing the deployed lane is at `0 of 155` with flags ON, which must go GREEN only after the port** · **require the exact six identities above, not the count** · confirm flags-OFF behaviour unchanged · re-run the cross-lane per-condition parity. ★★★ **The six may NOT be credited to any production metric until the deployed tests pass.** ★ **I queue this rather than dispatch it in parallel because there is ONE worker seat — an "in parallel" assignment to a session that does not exist is a stall with extra steps.**
+
+**(3) THIS SEAT — MINE: sweep for OTHER campaign-only capabilities.** Levelzone was found by testing the two flags I happened to know. **Enumerate every `TF_*` flag and every declared primitive in the campaign binder/compiler, and diff their presence against the deployed engine.** ★★ **Enumerate by CONSEQUENCE, not by annotation (§4) — a capability with no flag and no comment is invisible to a flag sweep and no less absent.**
+
+**STOP CONDITION.** ★★★ **Stop immediately if `backtests total > 0`** — [MEASURED at write time: **0**]. ★★ **Stop if the levelzone port requires touching a NON-`WAIT_STRUCTURE` binding** — measured, the capability serves exactly one family, so wider reach means the port has overreached. ★ **Stop and report if the port cannot reproduce the six IDENTITIES even though it reproduces the count** — that is the concealment case the contract exists to catch, and it is a finding, not a rounding error.
+
+**LESSON TO PERSIST.** ★★★ **A GUARD THAT ANSWERS "IS THIS EXECUTABLE?" DOES NOT ANSWER "IS THIS FAITHFUL?" — AND AN APPROXIMATION PASSES BOTH.** Today's release makes an unexecutable mandatory rule impossible to run; **it does nothing about a mandatory rule that runs on a generic approximation of what the teacher taught, because that rule is `bindable=True`.** Executability is categorical and now enforced; fidelity is a separate axis, still unguarded, and the six spine conditions are its first measured instances. ★★ **Second lesson: I found this by re-deriving a number I had every reason to believe — my own campaign's pinned figure, reproduced from its own artifact. The re-derivation was worth doing precisely because nobody suspected it.** ★ **Third, and the one that cost me a wrong sentence in R-424: `MEASURED ≠ MEASURED-WHERE-IT-RUNS` is a question to be ANSWERED PER FIGURE, not a blanket doubt to be broadcast over all of them. I raised the alarm across every pinned figure; measured, two of three transfer perfectly and exactly one does not.**
+
+---
+
 ## R-424 · 2026-07-29 · **AR-389 — `POP-120-LIVE` 120/120 RATIFIED (with the grades stated honestly, including what I did NOT reproduce).** ★★★ **THE TWO-RELEASE DEPLOY GAP IS CLOSED — I EXECUTED IT, AND ALL SIX ACCEPTANCE CRITERIA ARE MEASURED IN THE RUNNING TREE.** ★★★ **AND THE TREE QUESTION AR-389 NEVER ASKED, NOW ANSWERED BY MEASUREMENT AND IN ITS FAVOUR: `runtime-production` AND THE CENSUS TREE ARE BYTE-IDENTICAL ON ALL THREE ENGINE FILES — SO THE DIVERGENCE DID NOT CLOSE, IT MOVED. THE CAMPAIGN TREE IS NOW THE 3.9× OUTLIER, AND EVERY PINNED PHASE-1 FIGURE LIVES IN IT**
 
 **RULING ID:** R-424 · **TASK ID:** AR-389 (`POP-120-LIVE` census) + the next-move decision + deploy disposition · **DECISION:** **CENSUS RATIFIED. DEPLOY EXECUTED AND VERIFIED. OPTION (c) ADOPTED: BINDING COVERAGE IS THE PRIMARY MONEY-PATH TASK; NON-FIDELITY MODE IS A BOUNDED SECONDARY TOOL, NEVER THE FIRST RESPONSE TO 120/120.**
