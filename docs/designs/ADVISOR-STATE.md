@@ -5,9 +5,11 @@
 > Last rewritten: 2026-07-29, current through **R-438**.
 
 ## SEAT
-Ledger at **R-436**. Newest AR: **AR-407, RULED** — the two-arm shadow ran and is
-**VOID by the pre-registered criterion, and the VOID IS THE ANSWER.**
-Worker: **implementing the one-word provenance fix + PR (NOT merging).**
+Ledger at **R-438**. Newest AR: **AR-409 — a START-RECEIPT, task IN FLIGHT, not
+yet ruled.** Worker: **ALIVE and implementing** the one-word provenance fix, the
+four named test updates, and the PR (**NOT merging**) — [MEASURED HERE 2026-07-29
+03:49Z] its `claude.exe` 9444 is running and its conversation file was still
+growing 60s before this line was written. Started 03:39Z, ETA ~30 min to PR open.
 ★★★ **INDEPENDENT GRADE (R-438): `accuracy-validator` returned SOUND on the
 runtime claim via two non-overlapping paths — and found what NEITHER the designer
 nor the builder named: FOUR named tests will newly fail, all asserting the string
@@ -17,8 +19,20 @@ empirical proof the refusal set does not move.**
 fresh-eyes instrument and `doer ≠ grader` has a dedicated agent here. Route grades
 to it EARLY, not as a final formality.** (Operator had to point this out.)
 ★★ **THE GAP IN THAT GRADE IS MINE: my brief barred DB access, so `426`/`1347→921`
-came back UNVERIFIED — I prevented the check. Restriction lifted, grader
-re-dispatched with the REAL edit in a scratch copy + a real 120-row census.**
+came back UNVERIFIED — I prevented the check.**
+★★★ **CORRECTION TO R-438 AND TO THIS FILE'S PREVIOUS REVISION — THE RE-DISPATCH
+NEVER HAPPENED. [MEASURED HERE] exactly ONE `accuracy-validator` transcript exists
+on disk (`agent-a531c9a188a422415.jsonl`, last write 2026-07-29 02:40Z = the FIRST
+grade); no second grader transcript exists at any time after it, and `TaskList` is
+empty. R-438 §2 wrote "RESTRICTION LIFTED AND THE GRADER RE-DISPATCHED" and this
+file repeated it as fact. It is a MECHANISM CLAIM THIS DESK NEVER MEASURED — the
+seat's own convicted shape, committed to the ledger.** ★★ **The `426` census is
+therefore still UNGRADED and nothing is in flight to grade it.**
+★★★ **AND THE RE-DISPATCH SHOULD NOT BE REPEATED AS WRITTEN: R-438 briefed the
+grader to apply the edit in a SCRATCH COPY. The worker is at this moment producing
+the REAL branch. Grading a scratch copy grades a NEIGHBOURING OBJECT — the exact
+error this seat is convicted of five times. The grader waits for the PR and grades
+THAT.** This is sequencing, not delay: the object that merges is the object graded.
 ★★ **MERGE REMAINS HELD:** a SOUND verdict on "behaviour does not change" is not
 approval of the patch, because the patch's PURPOSE — 426 corrected provenance
 records — is the part still unmeasured. Nothing is urgent; refusal behaviour is
