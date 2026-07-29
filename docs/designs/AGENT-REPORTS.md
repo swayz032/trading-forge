@@ -4,6 +4,18 @@
 
 ---
 
+## AR-392 · 2026-07-29 · **START-RECEIPT — R-426 items (1)+(2): the `C8` EXTRACTION-SIDE CONTRACT (diagnosis + proposal, NO code change).**
+
+**RULING ID:** R-426 items (1), (2) · **TASK ID:** `C8` producer-contract diagnosis · **ARTIFACT:** a diagnosis document naming (a) the exact producer site that emits `entry_conditions` and `role`, (b) WHY a chart resolution / instrument name / platform narration becomes a condition there, (c) a producer-side proposal, and (d) the folded-in `trigger` producer-contract answer — *is `trigger` emitted as a structurally-required entry event, or not*. **ETA to diagnosis ~45 min.**
+
+**SCOPE, HELD TIGHT:** ★★★ **DIAGNOSIS AND PROPOSAL ONLY. I write no extractor code.** Per your ruling the extractor is an instrument and its change goes through `ratify-packet` with an independent grader. ★★ **And I will not propose a consumer-side suppression of `C8` terms — you named that as fabricating optionality, and I agree: an annotation dropped by the engine is indistinguishable in the record from a taught rule dropped by the engine.**
+
+**ITEM (2), folded in and cheap:** whether `C8` terms also pollute `invalidations`. **[MEASURED already, from the census in hand] the per-video population contains 2351 bindings of which the invalidation side is a separate arm** — I will report the invalidation-side `C8` count as a number, since no census has examined it.
+
+**Standing stop conditions carried:** ★★★ **`backtests total > 0` → stop immediately** · ★★ **stop and report if any remedy would need a softened refusal, a relabelled role, or a spec edit** · ★★★ **your REPLACEMENT stop condition, adopted: I will never present normalized or inferred text AS the teacher's source words; absence stays `[UNANSWERABLE — NO TRANSCRIPT IN ROW]`.**
+
+---
+
 ## AR-391 · 2026-07-29 · ★★★ **THE 1305 IS NOT A SESSION-VOCABULARY GAP. ALL 339 DISTINCT TEXTS READ — NOT SAMPLED — AND `51.1%` OF EVERYTHING BLOCKING THE LIBRARY IS NOT A TRADING CONDITION AT ALL: chart-resolution declarations, instrument names and platform narration emitted as `entry_conditions`.** ★★★ **AND THE SEQUENCING NUMBER: SEVEN OF THE NINE REMEDIATION CLASSES UNLOCK *ZERO* STRATEGIES ALONE — fixing the ENTIRE session gap unlocks 0, because 37 of 40 videos also carry a mis-typed non-condition.** ★★★ **THE DENOMINATOR IS ALSO WRONG BY 3×: `POP-120-LIVE` IS 40 VIDEOS FANNED ACROSS 3 INSTRUMENTS, ALL 40 TRIPLES BYTE-IDENTICAL.** ★★ **AND A CEILING NO REFUSAL COUNT CAN SEE: 0 of the 496 concrete bindings is a taught detector**
 
 **RULING ID:** R-424 items (1)+(2)+(3) · **TASK ID:** corpus_B charter + `POP-120-LIVE` vocabulary ledger · **ARTIFACTS:** `docs/designs/CORPUS-B-CHARTER-2026-07-29.md` · `docs/designs/VOCABULARY-LEDGER-POP120-2026-07-29.md` (699 lines, classifier appended verbatim) · **RECOMMENDATION:** **APPROVAL_REQUESTED — plus ONE contract defect in §3 that is yours to rule, not mine to route around.**
