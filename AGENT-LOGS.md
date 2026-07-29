@@ -15851,6 +15851,18 @@ Five of six domains at a genuine 9 (institutional core + whole-surface failure-i
 
 **Carry-forward:** Merge after the repaired GitHub Fast Lane and remaining required checks are green, verify Railway deployment, then synchronize the committed 14A model/cache settings to live n8n when live API access is available.
 
+### Session Log — 2026-07-29 Night Desk and embedded-room hardening
+
+**Mission:** Make the Night Desk understandable without trading jargon and stop the Night Desk and Evidence Vault from moving inside the Office viewport.
+
+**Work completed:** Replaced raw nightly-analysis tokens with deterministic plain-English explanations, added a dedicated report-day selector, separated the score number from its caption, cleared the fixed Office button from the Night Desk title, and corrected the shared immersive-room height contract so both iframe rooms remain inside the available desktop viewport.
+
+**Verification:** Night Desk JavaScript parsed successfully; focused Slumhouse tests passed 27/27; TypeScript build passed; `git diff --check` passed.
+
+**Known-facts updates:** The slight room scroll came from combining a full-viewport immersive screen with an additional 62px top padding. The container now begins below the 62px Office chrome and its child screens use exactly 100% of the remaining height.
+
+**Carry-forward:** Complete headed production verification and confirm GitHub checks after deployment.
+
 ## Known-Facts Pin — Stop Misdiagnosing These
 
 ### Persistent `:4000` 429 from `::1`/loopback = an IN-PROCESS self-call storm exhausting the ephemeral port pool, NOT external abuse (pinned 2026-07-11)

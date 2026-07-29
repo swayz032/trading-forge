@@ -44,6 +44,33 @@ describe("Night Desk production contract", () => {
     expect(service).toContain('reason: "learning_loop_off"');
   });
 
+  it("keeps the desktop stage focused on one baby-mode selection at a time", () => {
+    const page = read("public/slumhouse/night-desk.html");
+    expect(page).toContain("Pick one thing");
+    expect(page).toContain("Pick one trade");
+    expect(page).toContain("Pick one change");
+    expect(page).toContain("Quick score");
+    expect(page).toContain("What went wrong");
+    expect(page).toContain("How it ran");
+    expect(page).toContain('id="day-strip"');
+    expect(page).toContain("The bot tried to trade when price broke above or below the first part of the day.");
+    expect(page).toContain("The bot kept making the same trade idea again and again.");
+    expect(page).toContain("body{overflow:hidden");
+    expect(page).toContain("height:100dvh");
+    expect(page).not.toContain('<div class="score">');
+    expect(page).not.toContain("Pattern radar");
+    expect(page).not.toContain("first-gate pass rate");
+  });
+
+  it("locks both embedded premium rooms to the Office viewport", () => {
+    const office = read("public/slumhouse/office.html");
+    const night = read("public/slumhouse/night-desk.html");
+    expect(office).toMatch(/\.rr-room\.rr-imm-mode \.rr-immersive \{ inset: 62px 0 0;[^}]*overflow: hidden/);
+    expect(office).toMatch(/\.imm-screen\.vault-screen,[\s\S]*\.imm-screen\.night-screen \{ height: 100%; min-height: 0;/);
+    expect(night).toContain(".shell.embed header>div:first-child{padding-left:112px}");
+    expect(night).toContain(".hero-number b,.hero-number span{display:block}");
+  });
+
   it("keeps the committed 3 AM workflow aligned with the same model contract", () => {
     const workflow = read("workflows/n8n/14A-master-nightly-intelligence_Nk4pmHP6c0VOEOaT.json");
     expect(workflow).toContain("gpt-5.6-sol");

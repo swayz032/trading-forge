@@ -153,7 +153,7 @@ describe("Quantum and Paper own the full Reporting Room viewport", () => {
   it("toggles immersive mode and hides the Reporting Room movie", () => {
     expect(officeSrc).toContain("room.classList.toggle('rr-imm-mode', !ball)");
     expect(officeSrc).toMatch(/\.rr-room\.rr-imm-mode \.rr-bg[^}]*display:\s*none/);
-    expect(officeSrc).toMatch(/\.rr-room\.rr-imm-mode \.rr-immersive\s*\{\s*inset:\s*0/);
+    expect(officeSrc).toMatch(/\.rr-room\.rr-imm-mode \.rr-immersive\s*\{\s*inset:\s*62px 0 0/);
   });
 
   it("keeps the racing arena when real A/B data arrives", () => {
