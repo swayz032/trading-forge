@@ -5,7 +5,43 @@
 > Last rewritten: 2026-07-29, current through **R-438**.
 
 ## SEAT
-Ledger at **R-442**. Newest AR: **AR-415** (start-receipt, incident item in flight).
+Ledger at **R-443**. Newest AR: **AR-417** (start-receipt, in flight, ETA ~50 min
+from 01:00 local). **Worker: extending PR #32 to all seven files, then removing
+the 24 baseline excuses.** ★★★ **ARMED STOP CONDITION YOU MUST HONOUR: if ANY of
+the 24 kill-switch / compliance-gate assertions genuinely FAILS against the real
+tree, that is a LIVE SAFETY FINDING — it comes to the desk before anything else,
+and it is NOT to be fixed by the worker on its own initiative.**
+
+★★★★★ **THE NIGHT'S LARGEST FINDING — `ci/baseline-failures.json` HAS BEEN
+EXCUSING THE KILL SWITCH. [MEASURED HERE, deployed tip `a52449ac`] that file holds
+~388 entries; `24` are `live-fix-sweep.test.ts`, including "Kill Switch — Layer
+2+3 … no longer contains `phase_4c_pending` stub text" and five
+`compliance_gate.py — MFFU check_violation wiring (F-15)` assertions (HFT limit,
+2% rule, hedging ban). The step is literally named `Baseline gate — vitest
+known-failures (BLOCKING — new failures fail CI)` and runs
+`node ci/compare-baseline.mjs` — so it fails only on NEW failures. These fail
+from the root cause below and were ALLOW-LISTED instead of fixed.**
+★★ **DORMANT-GUARD finding, NOT an active loss: `backtests = 0`, nothing live, no
+capital ever exposed. But these are the assertions that must be honest BEFORE
+go-live, and today they are decorative.**
+★★★ **ROOT CAUSE, ONE LINE, THREE LAUNDERING LAYERS: four→SEVEN test files
+hardcode `C:/Users/tonio/Projects/trading-forge/trading-forge/...` — a DIFFERENT
+CHECKOUT, [MEASURED HERE] on branch `hardening/phase-0` at `404a3396`. On Linux
+`nodePath.resolve("C:/...")` is NOT absolute, so it resolves under the runner cwd
+and the read fails. THREE SYMPTOMS: hard-fail (7, hidden by `continue-on-error`) ·
+`pytest.skip` (9 — NEVER ONCE RAN) · baselined (24 — green in a BLOCKING gate).**
+★★★ **THE SWEEP LESSON, AND IT IS WHY THE CLASS GREW: the worker enumerated tests
+that FAIL and found 4 files; I enumerated files MATCHING THE PATTERN and found 7.
+The two extra hid by skipping and by being excused. ENUMERATE BY CAUSE, NOT BY
+SYMPTOM — the symptom is whatever the reporting layer chose to show you.**
+The 3 files #32 misses: `test_spec_family_bindings.py:41` (points into
+`extraction-100`'s tmp dir) · `live-fix-sweep.test.ts` (4 sites) ·
+`wave25-liquidity-map.test.ts` (1 site).
+★★ **The other ~364 baseline entries are DELIBERATELY out of scope — a separate
+governance question; do not boil it while this finding is live.**
+★★ **PR #32 is HELD, not rejected — its fix shape is correct and its red-proof
+discriminates ran-and-failed from silently-skipped, which is the control this
+class needs. It is being EXTENDED, not reworked.**
 ★★★ **OPEN INCIDENT — THE PYTHON SUITE IS RED ON `ubuntu-latest` AND REPORTS
 GREEN. [MEASURED HERE] the `Run pytest with coverage` step ends `##[error]Process
 completed with exit code 1` in ALL 8 most-recent `ci.yml` runs (`30410830104`
