@@ -4,6 +4,79 @@
 
 ---
 
+## AR-416 · 2026-07-29 · **ROOT CAUSE FOUND, AND IT IS NOT LINE ENDINGS: FOUR TEST FILES HARDCODE AN ABSOLUTE PATH INTO ONE DEVELOPER'S CHECKOUT. PR #32 OPEN.** ★★★ **BUT THE SEVEN ARE NOT THE STORY. THE CI RUN IS KILLED BY `pytest-timeout` AT `44%` — SO ~56% OF THE PYTHON SUITE HAS NOT EXECUTED IN CI FOR HOURS, AND THE JOB REPORTED GREEN.** ★★★ **AND NINE MORE TESTS WITH THE SAME ROOT CAUSE **SILENTLY SKIP** ON LINUX — THEY HAVE NEVER RUN, EVER.** ★★ **CORRECTION TO MY OWN AR-414: THE HANG CLASS *IS* ALIVE ON LINUX. MY "DOES NOT REPRODUCE" WAS WINDOWS-ONLY AND THE LIMIT I FLAGGED IS WHERE THE INCIDENT WAS HIDING**
+
+**RULING ID:** R-442 · **TASK ID:** AR-415 · **PR:** #32 · **COMMIT:** `d43197a5` · **BASE:** `a52449ac` (post-#31 deployed tip) · **RECOMMENDATION:** **APPROVAL_REQUESTED. Root cause + fix delivered; the truncation is NOT fixed and is not mine to fix yet.**
+
+### ★★★ §1 — THE ROOT CAUSE, AT THE LINE
+
+**[MEASURED] `test_fix3_cpcv_default.py:29` and `test_fix4_adaptive_symbol_dst.py:126,147`:**
+```python
+pathlib.Path("C:/Users/tonio/Projects/trading-forge/trading-forge/src/engine/walk_forward.py")
+```
+On `ubuntu-latest` the path does not exist → `read_text()` raises → **all 7 fail.** ★ **Your line-endings hypothesis is not the cause, and I did not inherit it — I said in AR-415 it pointed the wrong way, and the log agreed.**
+
+★★★ **THE DEFECT UNDER THE DEFECT: that path is a DIFFERENT CHECKOUT than the tree under test. [MEASURED] `trading-forge/trading-forge` is a fixed clone sitting on `hardening/phase-0` at `404a3396`.** ★★ **So even on Windows, where these went green, they were asserting on a tree nobody was testing. A green from these tests has NEVER been a statement about the branch under validation — including in my own AR-414 sweep, where they passed for a reason that had nothing to do with the tree I was measuring.**
+
+### ★★★ §2 — THE SEVEN ARE NOT THE STORY: CI DIES AT 44%
+
+**[MEASURED, `gh run view --job 90481150288 --log`] the pytest step does NOT end in a test summary. It ends:**
+```
+src/engine/tests/test_null_gate_calibration.py::TestSmokePath::test_multiple_smoke_nulls_complete
++++++++++++++++++++++++++++++++++++ Timeout ++++++++++++++++++++++++++++++++++++
+##[error]Process completed with exit code 1.
+```
+★★★ **`pytest-timeout` (`--timeout=120`) KILLED the run at `44%`. That is why there is no `FAILURES` block anywhere in a 55,565-line log — the process was terminated before pytest could print one. The `exit 1` is the KILL, not a tally of the seven.**
+
+★★★ **CONSEQUENCE: MORE THAN HALF THE PYTHON SUITE HAS NOT RUN IN CI FOR AT LEAST FOUR HOURS — and `continue-on-error: true` reported that as `success`.** ★★ **[MEASURED] `test_quantum_rl_agent` appears `0` times in the CI log. It sorts after `test_null_*` alphabetically and was never reached.**
+
+★★★ **THEREFORE FIXING THE SEVEN WILL NOT MAKE CI GREEN, AND I WANT THAT ON THE RECORD BEFORE ANYONE READS #32 AS THE CURE. There are unknown further failures in the unrun 56%; I have measured two of them (§3) and cannot enumerate the rest until the tree completes.**
+
+★★ **CORRECTION TO MY OWN AR-414 §1: I reported "the hang class does not reproduce." On Linux it DOES — now capped by `pytest-timeout` at 120s/test instead of hanging 90 minutes, but with the same effect: the suite never finishes. My measurement was Windows-only, I named that limit explicitly, and the limit is exactly where the incident was living.** ★ **`MEASURED ≠ MEASURED-WHERE-IT-RUNS`, demonstrated on my own report.**
+
+### ★★★ §3 — THE QUIET HALF: NINE TESTS THAT HAVE NEVER RUN
+
+Sweeping the class rather than the instance found the same root cause with the **opposite symptom**:
+
+| file | tests | behaviour on Linux |
+|---|---:|---|
+| `test_quantum_rl_agent.py` | **8** | `if not path.exists(): pytest.skip(...)` → **SILENT SKIP** |
+| `test_quantum_mc.py` | **1** | subprocess `cwd=` absent → `returncode != 0` → **SILENT SKIP** |
+
+★★★ **These report HEALTHY forever. A hard failure at least announces itself; a skip is indistinguishable from a passing suite, and nine source-contract assertions have never once been evaluated in CI.** ★★ **This is the session's shape a fifth time: a signal that means "I did not run" being read as a result.**
+
+### §4 — THE FIX, RED-PROOFED IN BOTH DIRECTIONS
+
+Anchored on `__file__` — `<repo>/src/engine/tests/x.py → parents[3]`.
+
+| mutation | expected | **measured** |
+|---|---|---|
+| rename `WF_MODE` default in **this** tree's `walk_forward.py` | red | **FAILED** `test_default_env_is_cpcv_in_source` |
+| rename `dsr_floor_block` in **this** tree's `quantum_rl_agent.py` | red **and not SKIPPED** | **FAILED** `test_dsr_floor_audit_action_in_source` |
+| control | green | **92 passed, 5 skipped** |
+
+★★★ **Under the old hardcoded path NEITHER mutation was detectable — the tests were reading a different file on disk. The second one specifically discriminates *ran-and-failed* from *silently skipped*, which is the only way to prove the quiet half is actually fixed.**
+★★ **AND I CHECKED THIS REPOINTS RATHER THAN MASKS: all 16 assertions were verified to hold against the real tree BEFORE I wrote the fix**, so nothing here converts a genuine failure into a pass. **The tests were wrong, not the source** — that is your "which side is wrong" question, answered.
+
+**LINT:** CI blocking selection clean; pre-commit selection clean. Hook findings **4 → 0** — two vanished with the fix (dead `ast`/`patch` imports), two pre-existing (`I001`/`F401`) auto-fixed with **safe** fixes scoped `--select=I001,F401` because the hook blocks the commit otherwise. ★ **No `--unsafe-fixes`, no reformatting — I know what that does to a file. Zero new findings; verified against base.**
+
+### §5 — #31 EXONERATION, CONFIRMED RATHER THAN CARRIED
+
+★ **You relayed it; I checked it. [MEASURED] #31 changed `spec_execution_preflight.py`, `spec_condition_compiler.py` and two of their tests — `backtester.py` and `walk_forward.py` are untouched, and the hardcoded paths predate it. Your STOP condition does not fire.**
+
+### §6 — NOT FIXED, NAMED
+
+★★★ **(a) THE TRUNCATION — the actual blocker. Not authorized to me and not in #32.** Note it is not simply "raise the timeout": the sibling smoke tests take ~58s each in CI, so `test_multiple_smoke_nulls_complete` running several is inherently over a 120s per-test budget.
+★ **(b)** `dashboard-snapshot-stale-cookie.test.ts:66` hardcodes a **dead session's scratchpad** as `FIRM_SNAPSHOT_DIR`. Different runner, a write target not a source read, Node CI green — reported, deliberately not bundled.
+★ **(c)** the `.exists()` skip guards remain; converting `skip`→`fail` is a named follow-up, not smuggled in here.
+
+**Remaining uncertainty:** ★ **[NOT MEASURED]** what else fails in the unrun 56% — unknowable until the tree completes. ★ **[NOT MEASURED]** whether #32 alone turns the Linux run green (it does not, per §2).
+**Risk:** the 9 previously-skipped tests now EXECUTE on Linux for the first time. I verified their assertions hold on this tree, but they have no CI history — ★ **if any goes red on #32, that is a genuine finding surfacing, not a regression I introduced.**
+
+**Next smallest task (ONE):** ★ **your item (2)** — the order-dependent `test_three_fixes.py`. ★★ **I flag a sequencing view for your call: (a) the truncation is what keeps ~56% of the suite unmeasured, and every other estimate stays provisional until it lifts.**
+
+---
+
 ## AR-415 · 2026-07-29 · **START-RECEIPT — R-442 INCIDENT ITEM (1): WHY DO THE SEVEN SOURCE-CONTRACT TESTS PASS ON WINDOWS AND FAIL ON `ubuntu-latest`?**
 
 **RULING ID:** R-442 · **TASK ID:** AR-415 · **STATUS:** STARTING. Queue re-ordered as you set it: **incident first**, `compile_lints.py:129` drops to last.
