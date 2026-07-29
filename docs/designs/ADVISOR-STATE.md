@@ -31,12 +31,32 @@ destruction · unboundable blast radius. Never answer from ignorance when
   REVIVAL_FAMILY.` ★★★ **R-409: PHASE 1 IS *NOT* EXITABLE ON corpus_A AS
   EXTRACTED — R-408's claim WITHDRAWN; the pre-registered corpus_B clause
   FIRED. The gate dies at the BINDING layer, below the referent census.**
-- **Phase 2 — BATTERY/WAVE** (failure-attribution pre-registered before any
-  verdict). **Phase 3 — CONVEYOR** (paper + shadow concurrent per strategy).
-  **3→4 DEPLOY-IN-SEASON** (regime must be live). **Phase 3.5 — FIRST THIRTY
-  FUNDED DAYS** (written before funding; CONSISTENCY lane on record).
-  **LAST MILE (operator spend):** buy Combine + TopstepX API when the first
-  real-fidelity wave shows promise.
+- **Phase 2 — BATTERY / WAVE EVALUATION.** ★ **v3-1 FAILURE-ATTRIBUTION READ,
+  pre-registered BEFORE any wave verdict is interpreted:** battery-fail
+  classifies into {edge-absent · compile-fidelity-loss · overlay-caused}.
+  ★ **v3-2 OVERLAY A/B (taught-exit strategies ONLY):** pre-registered dual-arm
+  — house Style-C exits vs the taught exits — for specs whose exits were
+  CONCRETELY taught.
+- **Phase 3 — CONVEYOR, not a queue.** Internal-paper + shadow-accumulation run
+  CONCURRENTLY per strategy; strategies occupy different stages at once.
+  ★ **v3-3 EVAL-ODDS PRE-COMPUTE (Phase-3 pre-flight):** point the B14/survival
+  machinery at the EVAL's own parameter set (Combine trailing DD, profit
+  target) per survivor → per-attempt pass probability BEFORE spending an eval.
+- **Phase 3→4 seam — ★ v3-4 DEPLOY-IN-SEASON.** Certified survivors deploy only
+  when their forensics-named regime is LIVE per the running classifier;
+  out-of-season survivors hold in paper standby.
+- **Phase 3.5 — FIRST THIRTY FUNDED DAYS**, written BEFORE funding. Payout
+  cadence under 20/80 reserve mechanics; advisor recommendation on record =
+  CONSISTENCY lane. ★★ **v3-5 STOP-GATES SYMMETRIC TO GO-GATES:** eval failed
+  2× → attribution loop, NEVER a blind retry · funded loss-streak → a
+  pre-written post-mortem before any redeploy.
+- **PRE-POSITIONED LAST MILE (operator spend):** when the first real-fidelity
+  battery wave shows promise, brief the operator to buy the Combine + TopstepX
+  API THEN — so the adapter shakes down against practice before real capital.
+  (R-060: the purchase happens WHEN OPERATOR FUNDS ALLOW.)
+★★★ **ALL FIVE v3 UPGRADES ARE LISTED ABOVE AND TAGGED `v3-N`. If a future
+compaction drops one, it is a REGRESSION — 3 of 5 were silently lost to two
+rewrites on 2026-07-28 and only found because the operator asked.**
 - Broker-safety chain (R-359..R-401): closed and DEPLOYED today; not on the
   ladder.
 
