@@ -50,8 +50,9 @@ from src.engine.indicators.sweep_native import compute_sweep_signal
 from src.engine.role_demotion_audit import get_classifications_for_video
 from src.engine.session_windows import is_in_killzone
 from src.engine.spec_execution_preflight import (
-    MANDATORY,
+    NonExecutableEmptySpineError,
     UnresolvedMandatoryRuleError,
+    blocks_execution,
     resolve_rule_class,
 )
 from src.engine.spec_family_bindings import (
@@ -633,7 +634,7 @@ class SpecConditionStrategy(BaseStrategy):
                 # because a guard that can regress needs a second check at the
                 # point of use (a moved preflight, a new caller constructing a
                 # strategy directly).
-                if resolve_rule_class(b.role, optional_evidence=False) == MANDATORY:
+                if blocks_execution(resolve_rule_class(b.role, optional_evidence=False)):
                     raise UnresolvedMandatoryRuleError(
                         f"strategy={self.name!r} spec_hash={self.spec_hash!r}: "
                         f"mandatory rule [{b.role}/{b.type}] {b.condition_id} "
@@ -733,7 +734,25 @@ class SpecConditionStrategy(BaseStrategy):
                 for arr in per_condition_bool.values():
                     spine_satisfied &= arr
         else:
-            spine_satisfied = np.ones(n, dtype=bool)
+            # ─── R-422 blocker (ii): the belt for NON_EXECUTABLE_EMPTY_SPINE ──
+            # This used to fall back to np.ones(n) — the AND identity — when no
+            # spine predicate survived. The rising-edge logic immediately below
+            # then fired exactly ONE entry at bar 0 that no source rule
+            # authorized. That is worse than a runaway: a single fabricated
+            # entry at the start of every backtest window is easy to miss and
+            # just as wrong.
+            #
+            # The preflight should already have refused this spec; we refuse
+            # again here for the same reason the mandatory-rule guard exists —
+            # a check that can be bypassed needs a second one at the point of
+            # use. A spec with no executable spine has nothing to gate on, so
+            # there is no honest signal to emit.
+            raise NonExecutableEmptySpineError(
+                f"strategy={self.name!r} spec_hash={self.spec_hash!r}: no executable "
+                "spine predicate (every spine condition is absent, unbindable, or "
+                "provenance-only). Refusing to compute rather than emitting an "
+                "unauthorized entry at bar 0."
+            )
 
         # Trigger single-fire semantics: rising edge into satisfied state.
         entry_signal = np.zeros(n, dtype=bool)

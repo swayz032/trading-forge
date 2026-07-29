@@ -54,6 +54,35 @@ OPTIONAL_CANDIDATE: str = "OPTIONAL_CANDIDATE"
 """Looks optional by role, but not yet licensed to be dropped. Resolves to
 MANDATORY unless positive source evidence of optionality is supplied."""
 
+UNKNOWN_REQUIREDNESS: str = "UNKNOWN_REQUIREDNESS"
+"""We do not know whether the source treated this rule as required.
+
+★★★ THIS BLOCKS EXECUTION EXACTLY LIKE MANDATORY — honest labelling must not
+cost safety. What it changes is the RECORD, not the outcome.
+
+The first cut of this module folded "unknown" into MANDATORY. That fails closed,
+which is correct, but it stores a claim the source never made: it says *the
+educator marked this rule required* when the truth is *we could not tell*.
+Recording "we don't know" as "the source said so" fabricates provenance inside
+the very artifact built to stop fabrication — the same defect as stamping
+`approximation=False` on a rule with no clock, one field over.
+
+★ Consequence worth stating for a later reader: a fidelity-grade backtest should
+refuse UNKNOWN_REQUIREDNESS even when the predicate is technically bindable,
+because "we don't know if this rule matters" is not a basis for a performance
+claim about someone's strategy. This module only decides the unbindable case;
+the broader gate is not ours to assert here."""
+
+NON_EXECUTABLE_EMPTY_SPINE: str = "non_executable_empty_spine"
+"""Refusal reason: the spec has NO executable spine predicate at all.
+
+Distinct from a per-condition refusal, and deliberately its own reason string:
+nothing here is necessarily *unbindable*: a spine made only of EXIT_HINT rows is
+entirely bindable and still produces no predicate. Without this rule such a spec
+reaches `compute()` with an empty `per_condition_bool`, `spine_satisfied` falls
+back to the AND identity `np.ones(n)`, and rising-edge semantics fire exactly
+ONE entry at bar 0 that no source rule authorized."""
+
 OPTIONAL_NOT_APPLIED: str = "OPTIONAL_NOT_APPLIED"
 """The status recorded for an optional rule that was not applied. Deliberately
 distinct vocabulary from a compiler failure: `OPTIONAL_NOT_APPLIED` says "the
@@ -64,6 +93,15 @@ is exactly what `spec_condition_compiler.py` used to encode."""
 
 _MANDATORY_ROLES: frozenset[str] = frozenset({"spine", "invalidation"})
 _OPTIONAL_CANDIDATE_ROLES: frozenset[str] = frozenset({"confluence"})
+
+
+class NonExecutableEmptySpineError(RuntimeError):
+    """Raised when a spec reaches execution with no executable spine predicate.
+
+    Kept as its own exception type, separate from UnresolvedMandatoryRuleError:
+    the two blockers have different causes and must stay distinguishable in any
+    log or ledger. "Every rule was bindable but none of them produce a
+    predicate" is a different fault from "a required rule could not be bound"."""
 
 
 class UnresolvedMandatoryRuleError(RuntimeError):
@@ -78,20 +116,37 @@ def classify_rule_role(role: str) -> str:
 
     `spine` / `invalidation` -> MANDATORY.
     `confluence`             -> OPTIONAL_CANDIDATE (see resolve_rule_class).
-    anything else OR absent  -> MANDATORY.
+    anything else OR absent  -> UNKNOWN_REQUIREDNESS (blocks, but is not
+                                recorded as a source claim).
+
+    ★ GROUNDING — why exactly two roles are MANDATORY and nothing else.
+      [MEASURED over POP-16 / corpus_A, `shakedown_specs`, 16 files] the role
+      vocabulary is exactly {spine: 102, confluence: 53, invalidation: 6}, and
+      all 16 entry-trigger conditions carry role "spine" — the literal role
+      "trigger" does not occur. So `spine` and `invalidation` are the only
+      values this campaign has evidence for. Everything else, "trigger"
+      included, is honestly unknown.
 
     ★ The last arm is the load-bearing one. `role` is read straight off the
       graph with an empty-string fallback (`spec_family_bindings.bind_condition`),
       so an ABSENT role is reachable in practice — and an absent constraint must
-      widen scope, never narrow it. If role data is missing or untrusted, every
-      unbindable rule refuses. That is the INTENDED failure direction; do not
+      widen scope, never narrow it. UNKNOWN_REQUIREDNESS still refuses; do not
       "fix" it by defaulting unknown roles to optional.
     """
     if role in _OPTIONAL_CANDIDATE_ROLES:
         return OPTIONAL_CANDIDATE
     if role in _MANDATORY_ROLES:
         return MANDATORY
-    return MANDATORY
+    return UNKNOWN_REQUIREDNESS
+
+
+def blocks_execution(rule_class: str) -> bool:
+    """Does this rule class stop a backtest when its predicate is missing?
+
+    MANDATORY and UNKNOWN_REQUIREDNESS both block. They are separate CLASSES
+    with the same CONSEQUENCE — the distinction is what gets recorded, never
+    whether the run proceeds."""
+    return rule_class in (MANDATORY, UNKNOWN_REQUIREDNESS)
 
 
 def resolve_rule_class(role: str, optional_evidence: bool) -> str:
@@ -109,6 +164,10 @@ def resolve_rule_class(role: str, optional_evidence: bool) -> str:
     rule_class = classify_rule_role(role)
     if rule_class == OPTIONAL_CANDIDATE:
         return OPTIONAL if optional_evidence else MANDATORY
+    # ★ UNKNOWN_REQUIREDNESS is returned UNCHANGED even when the caller offers
+    #   optional evidence. Evidence attaches to a condition whose role we can
+    #   read; it cannot launder a role we could not classify into a droppable
+    #   one. Same closed direction as the mandatory arm.
     return rule_class
 
 
@@ -124,6 +183,10 @@ class PreflightRefusal:
     semantic_type: str
     role: str
     reason: str
+    rule_class: str = MANDATORY
+    """WHY this rule blocked: MANDATORY (the source marked it required) or
+    UNKNOWN_REQUIREDNESS (we could not tell). Never collapse the two — the
+    second is not a claim about the source."""
 
     def to_dict(self) -> dict:
         return {
@@ -133,6 +196,7 @@ class PreflightRefusal:
             "semantic_type": self.semantic_type,
             "role": self.role,
             "reason": self.reason,
+            "rule_class": self.rule_class,
         }
 
 
@@ -196,7 +260,7 @@ def preflight_binding_plan(
         if b.bindable:
             continue
         rule_class = resolve_rule_class(b.role, optional_evidence=b.condition_id in evidence)
-        if rule_class == MANDATORY:
+        if blocks_execution(rule_class):
             refusals.append(
                 PreflightRefusal(
                     strategy_id=strategy_id,
@@ -205,6 +269,7 @@ def preflight_binding_plan(
                     semantic_type=b.type,
                     role=b.role,
                     reason=b.reason or "unbindable",
+                    rule_class=rule_class,
                 )
             )
         else:
@@ -219,6 +284,27 @@ def preflight_binding_plan(
                     "reason": b.reason or "unbindable",
                 }
             )
+
+    # ─── BLOCKER (ii): NO EXECUTABLE SPINE PREDICATE ───────────────────────
+    # Checked at the PLAN level, not per condition, because nothing here need be
+    # unbindable: a spine of EXIT_HINT rows is perfectly bindable and still
+    # yields no predicate. Left unchecked, compute() falls back to the AND
+    # identity and fires one unauthorized entry at bar 0.
+    executable_spine = [
+        b for b in plan.bindings if b.role == "spine" and b.bindable and b.executed
+    ]
+    if not executable_spine:
+        refusals.append(
+            PreflightRefusal(
+                strategy_id=strategy_id,
+                condition_id="",
+                rule_text="<no executable spine predicate in this spec>",
+                semantic_type="<plan>",
+                role="spine",
+                reason=NON_EXECUTABLE_EMPTY_SPINE,
+                rule_class=MANDATORY,
+            )
+        )
 
     return PreflightResult(
         refused=bool(refusals),
