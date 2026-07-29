@@ -5,7 +5,40 @@
 > Last rewritten: 2026-07-29, current through **R-438**.
 
 ## SEAT
-Ledger at **R-441**. Newest AR: **AR-413, RULED.** ★★★ **PR #31 IS MERGED —
+Ledger at **R-442**. Newest AR: **AR-415** (start-receipt, incident item in flight).
+★★★ **OPEN INCIDENT — THE PYTHON SUITE IS RED ON `ubuntu-latest` AND REPORTS
+GREEN. [MEASURED HERE] the `Run pytest with coverage` step ends `##[error]Process
+completed with exit code 1` in ALL 8 most-recent `ci.yml` runs (`30410830104`
+00:20Z → `30422166825` 04:23Z); every job shows `success` because of
+`continue-on-error: true`. SEVEN failing tests, two files —
+`test_fix3_cpcv_default.py::TestFix3SourceContract` (5) and
+`test_fix4_adaptive_symbol_dst.py::TestFix4SymbolFromSpec` (2), both
+source-contract tests reading `backtester.py`'s TEXT.**
+★★★ **PR #31 DID NOT CAUSE IT — the failures predate #31's creation (03:51Z) by
+3.5h. Join key = run timestamp vs PR creation time, checked. `backtester.py` is
+not in #31's 4-file diff.**
+★★★ **SAME COMMIT, DIFFERENT OS, DIFFERENT VERDICT. [MEASURED HERE, Windows,
+merged tip `a52449ac`] whole tree = `7296 passed / 34 skipped / 0 failed`, exit 0,
+217.87s; collection 7327 in 9.91s. `7296 = 7294 + 2` (the two tests #31 added).
+The variable is the OS. Item (1) must be pulled from the CI LOG — local repro is
+already known to fail.**
+★★ **SEVERITY: governance/observability, NOT trading-safety. `backtests = 0`,
+nothing live, and the seven are source-text assertions, not execution defects.**
+★★★ **DO NOT REMOVE `continue-on-error` UNTIL THE TREE IS GREEN ON LINUX — a
+blocking gate over a red tree blocks every push.** Worker order is now: **(1)
+root-cause the seven · (2) the order-dependent `test_three_fixes.py` test
+([MEASURED HERE] reproduced at `a52449ac`: `1 failed, 10 passed` in isolation,
+passes in company) · (3) CI hardening, FULL TREE, no curated subset · (4) the
+`compile_lints.py:129` comment.**
+★★ **MY OWN CORRECTION ON RECORD: I reported "19 of 19 checks SUCCESS" twice.
+True of the statuses, false in meaning — one was a pytest step that exited 1.
+Retire that number from the vocabulary, not just from the reasoning.**
+★★★ **CURATION IS THE WRONG FIX AND IT IS MEASURED: a curated subset goes RED
+where the full tree goes GREEN (the order-dependent test), and costs 24.6 min
+against 3.6. Blocking target = the FULL TREE, failing on: test failures · zero
+collected · collection errors · missing plugins · timeout · abnormal exit.**
+Newest ruled AR before this: **AR-414 (ratified, R-442) · AR-413 (ratified,
+R-441).** ★★★ **PR #31 IS MERGED —
 `a52449ac`, 2026-07-29T04:23:56Z. The provenance defect is CLOSED: 426 conditions
 stop claiming the source required them, refusal set unmoved.** ★ **[MEASURED
 HERE] merging did NOT deploy — `LANDED ≠ RUNNING`, no tower update performed.**
