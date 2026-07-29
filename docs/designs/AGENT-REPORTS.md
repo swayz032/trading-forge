@@ -4,6 +4,64 @@
 
 ---
 
+## AR-420 · 2026-07-29 · ★★★★★ **YOUR DISCRIMINATOR WAS NOT THEORETICAL — IT FIRED. OF THE 156 "FIXED" ENTRIES, ONLY `132` HAD ACTUALLY RUN AND PASSED. `23` WERE ABSENT FROM THE REPORT ENTIRELY AND `1` WAS SKIPPED — 24 SAFETY NETS I WOULD HAVE DELETED ON THE STRENGTH OF NEVER HAVING EXECUTED.** ★★★ **SO I FIXED THE INSTRUMENT, NOT JUST THE DATA: `compare-baseline.mjs` COULD NOT TELL "FIXED" FROM "NEVER RAN", AND NOW IT CAN.** ★★ **BASELINE `165 → 33`. GUARD LANDED AND RED-PROOFED BOTH WAYS. ALL THREE ITEMS DONE**
+
+**RULING ID:** R-444 · **TASK ID:** AR-419 · **PR:** #32 (`cb940f85`, `af5779ef`) · **RECOMMENDATION:** **APPROVAL_REQUESTED.**
+
+### ★★★★★ §1 — THE DISCRIMINATOR, MEASURED
+
+**[MEASURED, CI's own `node-vitest-results` artifact from run `30422166825` — Linux truth, not my box] the 165 remaining baseline entries by ACTUAL status:**
+
+| status | n | disposition |
+|---|---:|---|
+| **`passed`** — ran and passed | **132** | ★ **REMOVED** |
+| **`ABSENT` from the report** | **23** | ★★★ **KEPT — UNRESOLVED** |
+| **`skipped`** | **1** | ★★★ **KEPT — UNRESOLVED** |
+| **`failed`** — still genuinely failing | **9** | **KEPT** (the baseline working as intended) |
+
+★★★ **You were right and it was not a hypothetical: 24 of 156 had NOT run. Had I trusted `fixedFailures`, I would have deleted 24 entries whose only qualification was absence.** ★★ **Your STOP condition does not fire — the 9 failures are known-and-still-failing, not new regressions (`newFailures: []`), so nothing here is a fresh break.**
+
+**The 9 still-failing, named:** `audit-log-append-only` (1) · `b14-survival-integration` (3) · `lifecycle-transitions` (2) · `spec-onboarding-service.bandc` (1) · `startup-config-check-pass1` (1) · `wave9-zombie-archive` (1). ★ Mostly live-DB integration tests.
+**The 24 unresolved** span 19 files; largest are `exchange-firm-classifier`, `mffu-2026-compliance`, `production-convergence`, `test_backtest_staleness` (2 each).
+
+### ★★★ §2 — I FIXED THE INSTRUMENT, BECAUSE THE DEFECT WAS IN THE GATE
+
+**[MEASURED at the line, `compare-baseline.mjs:72`]** it computed `fixedFailures = known − currentlyFailing`, and `currentlyFailing` is built only from `status === "failed"` (`:100`). ★★★ **So "did not fail" WAS the definition of "fixed", and a skipped or absent test satisfied it. The tool that guards CI could not distinguish a fixed test from one that never ran — which is the same false-green shape as the `continue-on-error` step and the exit-4 usage error, now for the third time tonight, in the gate itself.**
+
+**CHANGED:** both parsers now return a **PASSED set** (`pytest` excludes `<skipped>`; vitest counts only `status === "passed"`) · `compareBaseline` splits not-failing into **`fixedFailures`** (proven ran+passed) and **`unresolvedEntries`** · ★★ **FAIL-CLOSED: if a parser supplies no passed-set, NOTHING is called fixed** — absent information must never license a deletion.
+
+### §3 — THE SELF-CLEANING GUARD, SEQUENCED AND RED-PROOFED
+
+`--fail-on-stale`, wired into `ci.yml`'s existing baseline step. **It fails ONLY on provably-passing entries; unresolved ones print `BASELINE_UNRESOLVED=n` and do NOT block** — otherwise it would demand exactly the 24 deletions this ruling exists to prevent.
+
+| proof | expected | **measured** |
+|---|---|---|
+| real Linux artifact + **shrunk** baseline + flag | exit 0 — **cannot fire red on arrival** | **exit 0** |
+| same, with ONE provably-passing entry re-added | exit 1, names it | **exit 1**, `BASELINE_SHRINK_NEEDED=1` |
+| same mutant, **without** the flag | exit 0 (opt-in preserved) | **exit 0** |
+| comparator unit tests | green | **19 → 22** |
+
+★★★ **The 3 added tests are DISCRIMINATORS, not coverage: one asserts a skipped/absent entry is UNRESOLVED and never fixed; one asserts the fail-closed path; one asserts a pytest `<skipped>` is not counted as passed. Without them the split is unproven.** ★★ **And I did NOT weaken the 3 existing tests that my change broke — I updated them to assert the new contract. One of them (`stays green but reports fixed baseline failures`) had the OLD defect pinned as its expectation: it passed `{failures: [], collected: 5}` with no passed-set and demanded the entry be called fixed. Deleting it would have removed the record; leaving it would have pinned the bug.**
+
+### §4 — ITEM (1): THE LAST CLASS MEMBER
+
+`test_spec_family_bindings.py:28` — repo-relative + `TF_SPEC_SAMPLES_DIR` override. **[MEASURED] no-env: 17 passed / 4 skipped · with env: 21 passed.**
+★★★ **AND THE PART THE PATH FIX DOES NOT SOLVE, stated in the code: the corpus lives under `.claude/worktrees/`, which is GITIGNORED (`.gitignore:22`). It is absent on every runner, so those 4 — INCLUDING TWO DETERMINISM TESTS — have always skipped in CI and still will. Making them run needs the corpus committed as a fixture; that is a separate decision I did not take.**
+★ **LOCAL COVERAGE CHANGE, NOT HIDDEN:** in a worktree those 4 previously ran via the absolute path and now skip unless the env var is set. The skip message names the variable.
+
+### §5 — TWO THINGS I FOUND AND DID NOT FIX
+
+★★ **(a) `ci/__tests__/compare-baseline.test.mjs` IS NOT RUN BY ANY CI JOB.** [MEASURED] the vitest `include` is `src/**/*.test.ts`, and no workflow or npm script targets `ci/__tests__`. **The comparator that gates every push has 22 tests that never execute** — I ran them via a temporary config, which I deleted. Same species as tonight's others; wiring it is a one-line include and it is not mine to add unasked.
+★ **(b)** the campaign tree's own 6 hardcoded sites remain, per your instruction not to edit that branch.
+
+**Files changed:** `test_spec_family_bindings.py` · `compare-baseline.mjs` · `compare-baseline.test.mjs` · `baseline-failures.json` · `ci.yml`.
+**Remaining uncertainty:** ★ **[NOT MEASURED]** why the 23 are absent from the report — could be file-level collection errors or renamed tests; each needs its own look. ★ **[NOT MEASURED]** the pytest half of the baseline (I changed its parser and unit-tested it, but no pytest baseline shrink was ordered or done).
+**Risk:** ★★ **`--fail-on-stale` is now BLOCKING. If the vitest report shape ever changes such that `passed` comes back empty, fail-closed means `fixedFailures` is empty → the guard silently stops guarding rather than going red. That is the safe direction for CI availability but it is a blind spot, and I would rather name it than let it be discovered.**
+
+**Next smallest task (ONE):** ★ **triage the 23 absent entries** — they are the only remaining unknown in the vitest baseline, and "absent from the report" is exactly the signal that hid tonight's incident.
+
+---
+
 ## AR-419 · 2026-07-29 · **START-RECEIPT — R-444.** ★★★ **AND I OPEN BY CONVICTING MYSELF: MY AR-418 TABLE CELL `test_spec_family_bindings.py = 0` IS WRONG. IT IS `1` AT THE DEPLOYED TIP. YOU WERE RIGHT AND MY GREP WAS THE LIAR**
 
 **RULING ID:** R-444 · **TASK ID:** AR-419 · **STATUS:** STARTING.
