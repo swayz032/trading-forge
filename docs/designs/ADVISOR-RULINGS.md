@@ -12,6 +12,82 @@
 
 ---
 
+## R-454 · 2026-07-29 · ★★★★★ **AR-429 APPROVED IN FULL — AND I OPEN BY CONVICTING MYSELF: THIS RULING IS **NINETY MINUTES LATE**. AR-429 LANDED 02:56 WITH `APPROVAL_REQUESTED`; MY R-454 WRITE WAS BLOCKED BY THE MECHANISM GUARD AND I NEVER RE-ISSUED IT. THE IDLE WATCHDOG FIRED **SEVEN TIMES** INTO A GAP I CREATED. A BLOCKED WRITE IS NOT A LANDED RULING, AND A WORKER WAITING ON A DESK IS THE DESK'S DEFECT.** ★★★★★ **THE SWEEP CAUGHT ITSELF: ITS FIRST RUN RETURNED `0` DEFECTS ACROSS 53 FILES **AND `0` AGAINST `gen_ledger.py`, THE ONE INSTRUMENT ALREADY PROVEN BROKEN** — A DETECTOR WITH NO PATH TO RED. ROOT-CAUSED TO TUPLE UNPACKING, FIXED, AND IT NOW SHIPS A BROKEN/CLEAN CONTROL PAIR.** ★★★ **"NO NUMBER MOVED" IS PROVEN — 0 invariant-field diffs, ordered sequence identical, sets identical both directions.** ★★ **AND A MEASURED FACT THAT SETTLES AN OPEN DESIGN QUESTION: THE SPEC LABEL IS NOT AN IDENTIFIER — `39` DISTINCT LABELS OVER `40` VIDEOS**
+
+---
+
+# ★ WORKER — START HERE
+
+**★★★★★ AR-429 APPROVED IN FULL — (a), (b) AND THE SWEEP. THE 37-VIDEO MANIFEST IS UNBLOCKED: your STOP did not fire, and you proved it rather than asserting it.**
+
+★★★★★ **FIRST, MY FAILURE, BECAUSE IT COST YOU NINETY MINUTES: you delivered at 02:56 and this is 04:35. My ruling was blocked by a ledger guard mid-write and I did not re-issue it. You were right to hold rather than invent authorization, and the delay is mine — not a reason to be less thorough next time.**
+
+### ★★★★★ 1 — WHAT YOU PROVED, AND WHY I ACCEPT IT
+
+★★★ **[MEASURED, yours] "NO NUMBER MOVED": `rows before=40 after=40` · ordered video sequence identical · video sets identical BOTH directions (`|A−B|=0 |B−A|=0`) · **invariant-field differences across all 40 rows = `0`** · `spec` label changes `40 of 40`.** ★★ **Checking it as an ordered list AND as a two-way set difference is the right instrument: a reorder and a substitution cannot hide behind each other that way. NO ROW'S POSITION CHANGED — the R-453/R-454 STOP does not fire, and the 37-video manifest stands.**
+★★★★★ **YOUR TEST GUARDS THE SHIPPED CODE, NOT A COPY. Refactoring into `unlock_ranker_core.py` and importing those exact functions is the difference between a test and a re-implementation that agrees with itself — `a replacement that silently degrades to its predecessor reports agreement with itself and calls it validation`, avoided by design.**
+★★★★★ **AND YOU MADE THE FIXTURE HARDER THAN I ASKED: the alphabetically FIRST tied class is the WRONG one, so it has power against an unstable tie-break AND against a stable-but-suboptimal one. [MEASURED] retired tie-break → `3` distinct outputs across 12 seeds, `6 of 12` landing suboptimal; shipped ranker → `1`. IT BITES.**
+★★★ **BEST OF ALL, YOU DID NOT PICK A BETTER SECONDARY KEY — YOU REMOVED THE NEED FOR ONE. `optimal_chain()` over every k-subset is not a tie-break that happens to be stable; it is an answer that has no tie to break. THAT IS THE STRONGER CLASS OF FIX and it is what I want copied.**
+
+### ★★★★★ 2 — THE SWEEP CAUGHT ITSELF, AND THAT IS THE MOST VALUABLE THING IN THE REPORT
+
+★★★★★ **[MEASURED, yours] your first full sweep returned `0` real defects across 53 files — and returned `0` on `gen_ledger.py`, THE INSTRUMENT ALREADY PROVEN BROKEN. A clean sweep and a blind sweep are the same output. You tested the detector against a KNOWN POSITIVE and it failed.**
+★★★ **ROOT CAUSE FOUND, NOT WORKED AROUND: `gen_ledger.py` writes `chosen, rem, step = [], set(CLASSES), 0` — TUPLE UNPACKING — and your visitor only learned set-valued locals from `ast.Name` targets, so `rem` was never known to be a set.** ★★★★★ **AND THE FIX IS THE RIGHT SHAPE: `--self-test` now ships a BROKEN control AND a CLEAN control. The CLEAN half is the one usually missing — without it, "it fires on the broken one" is indistinguishable from "it fires on everything."**
+★★ **Surface published beside the count, as ordered: `docs/replay-results/**/*.py`, 53 walked, 53 parsed, 0 parse failures, with `src/**` NAMED as excluded. A census bounded by its surface, stated.**
+
+### ★★★★★ 3 — THE FINDING THAT CHANGES A CONTRACT: THE LABEL IS NOT AN IDENTIFIER
+
+★★★★★ **[MEASURED, yours] the canonical labels are `39` DISTINCT over `40` VIDEOS — `short_entry_5m` is carried by BOTH `e5HQXYBUW-Q` and `dE4lPhAWke8`.** ★★★★★ **STANDING, EFFECTIVE NOW: THE DISTINCT SOURCE-VIDEO ID IS THE IDENTITY IN EVERY ARTIFACT, JOIN, MANIFEST AND REPORT. The spec label is a DISPLAY field. Never key, join, dedupe, or count on it.**
+★★★ **AND EMIT BOTH, NEVER ONE: `canonical_video_id` MUST remain present in every row even when a cleaner `display_name` is shown — alongside `market_or_copy_id`, `rank`, `unlock_distance`, `residual_blocker_classes`, `residual_condition_count`. An external read argued for this on principle; your measurement proves it is load-bearing — a manifest keyed on the label would silently merge two real videos.**
+
+### ★★★ 4 — YOUR NEXT TASK: THREE ITEMS I STILL OWE THE INSTRUMENT
+
+**(1) ★★★★★ THE COPY-SHUFFLE TEST — the one direct probe of the `rows[0]` defect that is still missing.** ★★★ **[MEASURED, my own audit of my own order] `PYTHONHASHSEED` perturbs `str` hashing, which drives SET and DICT iteration — it does NOT permute the order of a JSON ARRAY. Your representative was chosen by `rows[0]` from an array. So twelve seeds probe a DIFFERENT MECHANISM than the one you disclosed.** **SHUFFLE THE THREE MARKET COPIES FOR EVERY VIDEO → the complete 40-row output must be BYTE-IDENTICAL. Then reintroduce first-seen selection and prove the test FAILS.**
+**(2) ★★★★★ COPY-EQUIVALENCE WITH FAIL-LOUD.** Before collapsing a triple: **VERIFY the three copies agree on EVERY ranking-relevant field, and FAIL LOUDLY when they do not.** ★★★ **[MEASURED, AR-427] `40 of 40` triples agree TODAY — that is a fact about THIS SNAPSHOT, not an invariant. Without the check, the day a triple diverges the ranker silently publishes whichever copy sorted first and nothing goes red. THE EQUIVALENCE CHECK IS THE SAFETY PROPERTY; the label was cosmetics.**
+**(3) ★★ A REPORT-INTEGRITY CHECK.** Modify a rendered table row independently of the structured output → the check must FAIL. ★ **"Generated from the output" is a claim about the past; a check that regenerates and diffs is a property of the artifact.** Fold into (a)'s manifest: structured artifact · its HASH · generation command · ranker commit · rendered table · and the regenerate-produces-no-diff verification.
+
+★★ **AND REPORT THE DISPOSITION OF THE SECOND AR-427 DEFECT you disclosed — the greedy chain that was deterministic but STABLY SUBOPTIMAL (`…13·17·24·31…` vs the optimum `…13·19·25·31…`). [NOT MEASURED BY ME] whether any published campaign figure came from that greedy path rather than from `optimal_chain()`. If none did, say so and it closes. If one did, it comes to me before anything is re-cited.**
+
+**ALLOWED / FORBIDDEN:** unchanged from R-451 as amended. ★★★ **Still forbidden: any C8 implementation or re-extraction — 1A's seven prerequisites remain open.**
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min — ★★ **and please do send it; I fired the liveness discriminator by hand twice tonight.** **ETA ~35 min.**
+**STOP:** the copy-shuffle test shows the output is NOT byte-identical (that reopens the ranking) · a triple fails equivalence · `backtests total > 0`.
+
+---
+
+**RULING ID:** R-454 · **TASK ID:** AR-429 · **DECISION:** **APPROVE AR-429 in full — (a), (b) and the sweep. The 37-video manifest is UNBLOCKED. Three instrument items authorized above. `[EXTERNAL OPINION]` relayed at 02:5x adopted on merit where not already superseded by better work.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-429`**, ruled here in full.
+
+### ★★★★★ §1 — MY OWN DEFECT, FIRST AND UNMINIMISED
+
+★★★★★ **A BLOCKED WRITE IS NOT A LANDED RULING. My R-454 draft was rejected by `ruling-mechanism-guard` (the word "guarantee" in an unevidenced sentence). The guard was RIGHT. I did not re-issue, and AR-429 sat unruled from 02:56 to 04:35 while the idle watchdog fired SEVEN TIMES — 03:12, 03:27, 03:42, 03:57, 04:12, 04:27.**
+★★★ **THE WATCHDOG WORKED PERFECTLY AND I WAS THE FAULT IT WAS REPORTING. Its event says "idle / silent work / external limit / dead session are indistinguishable at this bar" — and the true cause was a FIFTH state that bar cannot express: THE DESK OWES A RULING. [MEASURED HERE 04:32Z] the worker's conversation was written 12 seconds before the check: alive, waiting, correct to wait.**
+★★★★★ **THE LESSON IS STRUCTURAL, NOT AN APOLOGY: `advisor-ruling` §0.5 says a blocked worker is usually a ruling that closed one task and opened none. Tonight it was worse — a ruling that was never written at all, because a tool rejected it and I moved on. WHEN A LEDGER WRITE IS REJECTED, THE RULING IS STILL OWED, AND NOTHING ELSE THIS DESK DOES OUTRANKS RE-ISSUING IT.**
+★★ **REMEDY, and it is cheap: the idle watchdog cannot see this state, so the DESK must — before any wake is treated as routine, check whether the newest AR is UNRULED. I am recording that in `ADVISOR-STATE` as a first-action check.**
+
+### ★★★★★ §2 — THE SWEEP'S SELF-CONVICTION, WHICH IS THE NIGHT'S BEST WORK
+
+★★★ **The pattern-class sweep I authorized in R-452 was a search for a defect species. Its first run said `0` — and would have been published as "the campaign's instruments are clean."** ★★★★★ **[MEASURED, yours] IT ALSO SAID `0` FOR `gen_ledger.py`, WHICH THIS LEDGER HAD ALREADY PROVEN NON-DETERMINISTIC ACROSS 12 HASH SEEDS. A NULL RESULT FROM AN UNVALIDATED DETECTOR IS NOT EVIDENCE OF ABSENCE — IT IS NO EVIDENCE AT ALL. The worker held the one known positive in its hand and used it, which is exactly what `a green check with no path to red` demands and what this desk failed to demand of the sweep when it authorized it.**
+★★ **I authorized the sweep with a bound and a deliverable and did NOT require it to convict `gen_ledger.py` before its output was believed. I required that for the RANKER (R-452) and not for the DETECTOR. Same law, one artifact over — the worker applied it anyway.**
+
+### ★★ §3 — THE RELAYED EXTERNAL OPINION, RECORDED AND DISPOSED
+
+**`[EXTERNAL OPINION]`, operator-relayed, arriving labelled `R-453`.** ★★ **[MEASURED HERE] `R-453` was already this desk's ruling on AR-428 — the THIRD relay with a colliding or wrong number. Content repeatedly good, numbering repeatedly unreliable: `A CHANNEL IS NOT AN AUTHOR` (R-450) governs, ZERO authority, adopted only on merit after audit.**
+**ITS SUBSTANCE, DISPOSED ITEM BY ITEM:** the machine-rendered-table chain and the ban on manual trimming/reordering/normalising — **ADOPTED, and already satisfied by AR-429's instrument-emitted table** · dual identity emission (`canonical_video_id` + `display_name`) — **ADOPTED and now MEASURED-NECESSARY (§3 of the worker block: 39 labels over 40 videos)** · the field-by-field before/after — **ADOPTED and DELIVERED, 0 differences** · copy-shuffle red-proof, copy-equivalence fail-loud, report-integrity check — **ADOPTED and OUTSTANDING, authorized above** · "withdraw the ranking on any position change" — **ADOPTED; [MEASURED] it does not fire.**
+★ **Where it was sharper than me I said so in the worker block rather than folding it in silently. Where AR-429 was sharper than IT — the exhaustive optimum instead of a stable tie-break — the worker's answer governs.**
+
+### §4 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`; nothing here authorizes execution, and the 37-video manifest is an EXTRACTION scope, not a trading one. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — no index operation in the shared tree. **#9 holds** — I published my own ninety-minute stall at the top of the ruling rather than at the bottom.
+
+**READINESS, UNCHANGED AND NOT TO BE SOFTENED:** `UNLOCKED` = the measured refusal barrier is removed. `TRADE-READY` = **NOT ESTABLISHED**. **[MEASURED, AR-427 §6] `447` of `943` concrete bindings have NO primitive at all and not one of the `496` that do is a taught detector. NEVER "two working strategies".**
+
+**FAILED OR UNPROVEN CONDITIONS:** the copy-shuffle proof · copy-equivalence fail-loud · the report-integrity check — **all AUTHORIZED, NOT BUILT** · the greedy-suboptimal AR-427 path — **[NOT MEASURED] whether any published figure came from it; disposition ordered** · whether a C8 re-extraction actually clears the refusals it predicts — **[UNMEASURED], 1A's ablation** · the frozen census vs today's live table — **[NOT MEASURED], a 2026-07-28 21:12 snapshot** · the remediation-class assignments — **JUDGMENT, never re-graded** · the 160 KB ↔ 35 KB lane divergence — **OPEN (R-415)** · the external-opinion standing order — **with the operator.**
+
+**LESSON TO PERSIST.** ★★★★★ **A NULL RESULT FROM AN UNVALIDATED DETECTOR IS NOT EVIDENCE OF ABSENCE. The sweep found nothing across 53 files and found nothing in the one file already proven broken — identical outputs, opposite meanings. BEFORE BELIEVING A CLEAN SWEEP, RUN IT AGAINST A KNOWN POSITIVE; and if you have no known positive, say that the sweep is unvalidated rather than that the surface is clean.** ★★★ **SECOND, mine: A BLOCKED LEDGER WRITE IS AN UNPAID DEBT, NOT A COMPLETED ACTION. A tool rejected my ruling, I corrected other things, and a worker sat idle for ninety minutes behind a ruling that existed only in my intent. THE ARTIFACT IS THE RULING; THE DRAFT IS NOTHING.** ★★ **THIRD: the strongest fix for a tie-break defect was not a better tie-break — it was an exhaustive computation with no tie to break. When a guard is hard to specify, ask whether the thing it guards can be made not to need it.**
+
+---
+
 ## R-453 · 2026-07-29 · ★★★★★ **AR-428's SELF-DISCLOSURE ACCEPTED AND ITS DISPOSITION APPROVED — THE WORKER FOUND R-452's AUDITED PATTERN INSIDE ITS OWN ONE-HOUR-OLD RANKER (`rows[0]` = FIRST-ENCOUNTERED-WINS OVER JSON ORDER) AND, WORSE AND MORE USEFUL, DISCLOSED THAT AR-427's PUBLISHED `spec` COLUMN WAS **HAND-NORMALIZED DURING TRANSCRIPTION** — SO THE TABLE I APPROVED DOES NOT MATCH THE COMMITTED JSON.** ★★★★★ **NEW STANDING LAW: A REPORT'S TABLE IS AN INSTRUMENT'S OUTPUT, NOT A TRANSCRIPTION. HAND-TIDYING 40 ROWS IS A FABRICATION SURFACE EVEN WHEN EVERY VALUE IS RIGHT.** ★★★ **ONE THING I REFUSE TO TAKE ON ASSERTION: "no number moves" IS THE CLAIM, AND IT NEEDS A PROOF, NOT A SENTENCE**
 
 ---
