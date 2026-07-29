@@ -2,12 +2,27 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. **Never read the ledger from the top.**
-> Last rewritten: 2026-07-29, current through **R-436**.
+> Last rewritten: 2026-07-29, current through **R-438**.
 
 ## SEAT
 Ledger at **R-436**. Newest AR: **AR-407, RULED** — the two-arm shadow ran and is
 **VOID by the pre-registered criterion, and the VOID IS THE ANSWER.**
-Worker: **authorized to stage the one-line provenance fix (document only).**
+Worker: **implementing the one-word provenance fix + PR (NOT merging).**
+★★★ **INDEPENDENT GRADE (R-438): `accuracy-validator` returned SOUND on the
+runtime claim via two non-overlapping paths — and found what NEITHER the designer
+nor the builder named: FOUR named tests will newly fail, all asserting the string
+`MANDATORY` for a `spine` role. The other 32 stay green, and that green set is the
+empirical proof the refusal set does not move.**
+★★★ **USE `accuracy-validator` FOR INDEPENDENT GRADES — it is this project's
+fresh-eyes instrument and `doer ≠ grader` has a dedicated agent here. Route grades
+to it EARLY, not as a final formality.** (Operator had to point this out.)
+★★ **THE GAP IN THAT GRADE IS MINE: my brief barred DB access, so `426`/`1347→921`
+came back UNVERIFIED — I prevented the check. Restriction lifted, grader
+re-dispatched with the REAL edit in a scratch copy + a real 120-row census.**
+★★ **MERGE REMAINS HELD:** a SOUND verdict on "behaviour does not change" is not
+approval of the patch, because the patch's PURPOSE — 426 corrected provenance
+records — is the part still unmeasured. Nothing is urgent; refusal behaviour is
+already correct and only the label is wrong.
 ★★★ **[RELAYED] HOLDOUT-26: rules fire on 4.1%, LEGACY_FALLBACK 95.9%. Flipping
 the flag today would change ~4% of labels and stamp SEMANTIC provenance on the
 96% the TOPOLOGY heuristic still decided — the signature defect a FOURTH time.**

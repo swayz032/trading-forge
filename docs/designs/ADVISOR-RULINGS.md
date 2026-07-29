@@ -12,6 +12,113 @@
 
 ---
 
+## R-438 · 2026-07-29 · **INDEPENDENT GRADE IN: `SOUND` ON THE RUNTIME CLAIM, VIA TWO NON-OVERLAPPING PATHS — AND IT FOUND WHAT NEITHER THE DESIGNER NOR THE BUILDER NAMED: FOUR TESTS WILL NEWLY FAIL, LISTED BY NAME.** ★★★ **THAT IS THE ENTIRE CASE FOR A THIRD PARTY: the worker proved the refusal set, I proved the mechanism, and BOTH OF US MISSED A CI CONSEQUENCE A DISINTERESTED READER FOUND IN ONE PASS.** ★★ **AND THE GAP IN THE GRADE IS MINE: I BARRED DB ACCESS IN MY OWN BRIEF, SO THE `426` FIGURE COULD NOT BE CHECKED. RESTRICTION LIFTED, GRADER RE-DISPATCHED. MERGE STILL HELD**
+
+---
+
+# ★ WORKER — START HERE (AMENDMENT TO R-437, NOT A NEW TASK)
+
+**Your task is unchanged — implement the one-word edit and open the PR. Two additions:**
+
+**(1) FOUR TESTS WILL FAIL AND YOU MUST FIX THEM IN THE SAME PR. They are named — do not go hunting:**
+- `tests/test_preflight_blockers.py:117` `test_i_grounded_roles_stay_mandatory`
+- `tests/test_preflight_blockers.py:164` `test_i_DISCRIMINATOR_genuine_spine_refusal_still_records_mandatory`
+- `tests/test_session_refusal_safety.py:245` `test_role_classification_fails_closed`
+- `tests/test_session_refusal_safety.py:273` `test_optional_candidate_resolves_to_mandatory_without_positive_evidence`
+
+★★★ **ALL FOUR ASSERT THE STRING LABEL `MANDATORY` FOR A `spine` ROLE. NONE asserts refusal membership, refusal count, or exception behaviour — [MEASURED by the grader] the other 32 tests, including every `result.refused`, both `*Error` raises, and both `test_WIRING_*` end-to-end tests, stay GREEN. That green set IS the empirical confirmation that the refusal set does not move.**
+★★ **UPDATE them so each now asserts `UNKNOWN_REQUIREDNESS` **AND** `blocks_execution(...) is True` — the safety property must be re-pinned wherever the label moves, exactly as AR-387 did when it last changed passing assertions. ★★★ DO NOT DELETE ANY OF THEM: `test_i_DISCRIMINATOR_...` is a discriminator, and deleting a test because its premise changed removes the very check that would catch the change being wrong.**
+
+**(2) `error_message()` prints the static string `"mandatory rule(s)"` regardless of each refusal's actual class.** ★★★ **That is the USER-VISIBLE surface of this entire correction: 426 refusals would stop claiming source-requiredness in the `rule_class` field while the message a human reads still says "mandatory".** ★ **Include a wording fix in the PR, or state why not — the grader is being asked the same question and I want your answer independent of its answer.**
+
+**Everything else in R-437 stands: no merge, no deploy, scope locked to the one edit + these tests + the docstrings.**
+
+---
+
+**RULING ID:** R-438 · **TASK ID:** the `accuracy-validator` grade of AR-408 · **DECISION:** **GRADE RECORDED: `SOUND` on runtime behaviour, `UNVERIFIED` on the counts. MERGE REMAINS HELD. GRADER RE-DISPATCHED WITH THE RESTRICTION THAT CAUSED THE GAP LIFTED.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-408`. No newer report exists at write time; the grade came from a dispatched agent, not the relay.**
+
+### ★★★ §1 — WHAT THE GRADE ESTABLISHED, AND WHY IT WAS WORTH DISPATCHING
+
+**PATH A — whole-repo static enumeration, Python AND TypeScript, not just `src/engine`.** Non-test consumers of the class: **exactly 2** (`backtester.py:8510`, `spec_condition_compiler.py:637`), both gating on `blocks_execution`. **[GRADER-MEASURED] `rule_class` has ZERO hits in `schema.ts`** — it is never persisted. It ruled out three superficially-similar surfaces by inspection rather than by assumption: `spec-family-bindings.ts` filters `role === "spine"` for a coverage RATIO and never imports the preflight · the CI parity gate diffs `compile_binding_plan` output and never touches `rule_class` · `role_demotion_audit.py`'s `JUSTIFIED_MANDATORY` vocabulary is an unrelated system. ★★ **No dict-key access, no dynamic `getattr`, no DB column, no dashboard, no log-parsed alert.**
+
+**PATH B — empirical, against the real code.** Monkeypatched `_MANDATORY_ROLES` in memory only, ran the real suites twice, diffed. **36/36 → 32 pass / 4 fail, and the 4 are exactly the label assertions.**
+
+★★★ **THE FINDING IS THE FOUR TESTS. I wrote R-437 telling the worker to update a DOCSTRING and never asked what would go red. The worker computed a set difference of 0 and never asked either. A reader with no stake in the answer ran the suite under the mutation and had the list in one pass.** ★★★ **Both of us had verified our own claim correctly and both of us had scoped the question too narrowly — which is precisely the failure independence is for, and precisely why "I checked it carefully" is not a substitute for it.**
+
+★ **AND THE OPERATOR HAD TO POINT THE INSTRUMENT OUT TO ME.** `accuracy-validator` exists in this project for exactly this, and I spent the evening routing independent grades to "the advisor seat" or "a future session" instead of to the agent whose entire mandate is false-positive hunting across non-overlapping paths. **Standing correction: `doer ≠ grader` has a dedicated instrument here — use it, and use it EARLY, not as a final formality.**
+
+### §2 — WHAT THE GRADE DID *NOT* ESTABLISH, AND WHOSE FAULT THAT IS
+
+★★★ **The counts `1347→921` / `18→444` / `Δ426` / `total 1368` are UNVERIFIED — NOT refuted.** The grader could not check them because **no corpus of that scale exists in either tree, and my brief explicitly barred DB access.** ★★ **My constraint created the gap, and the honest form of that is not "the grader could not verify" but "I prevented the grader from verifying."** ★ It flagged the limitation plainly rather than passing arithmetic self-consistency off as confirmation — **`Δ426` in both directions is consistent with a pure relabel, and consistency is not measurement.**
+
+**ALSO UNVERIFIABLE FROM A REPO-SCOPED AUDIT, and correctly named:** anything outside the repo that greps raw stdout for the literal `"MANDATORY"` — an alert parser, an external dashboard. **No evidence any exists; not provable from here.** ★ Recorded as a residual risk, not waved away.
+
+**RESTRICTION LIFTED AND THE GRADER RE-DISPATCHED** with read-only DB access, the working connection recipe, and the stronger contract: **apply the REAL edit in a scratch copy — not a monkeypatch — and run the REAL `compile_binding_plan` + `preflight_binding_plan` over all 120 rows before and after**, proving symmetric difference `0`, total `1368`, exactly `426` reclassified, `trigger`/`invalidation` still MANDATORY, `UNKNOWN_REQUIREDNESS` still blocking every route, messages no longer claiming source-requiredness, no flag drift, `backtests = 0`. ★★ **Per-video AND per-row counts required — 40 videos × 3 markets, and raw row counts triple-count every defect.**
+
+### §3 — DISPOSITION
+
+**MERGE REMAINS HELD.** ★★ **A `SOUND` verdict on the runtime claim is not approval of the patch: the claim graded was "behaviour does not change", and the patch's PURPOSE — 426 corrected provenance records — is precisely the part still unmeasured.** ★ **Nothing is urgent: the refusal behaviour is already correct today and only the recorded label is wrong, so waiting for a real census costs nothing.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — the grade confirms nothing that refused before passes after. **#6 holds** — `backtests total = 0`, re-checked by the grader. **`doer ≠ grader` now genuinely satisfied** — designed by this desk, built by the worker, graded by neither.
+
+**LESSON TO PERSIST.** ★★★ **A GRADER'S BRIEF IS PART OF THE INSTRUMENT, AND A RESTRICTION IN IT IS A HOLE IN THE RESULT.** I wrote "do NOT touch the database" for safety and thereby guaranteed the one figure the patch exists to produce would come back UNVERIFIED. **Before dispatching a check, ask which claim each restriction makes uncheckable — and if that claim is the point of the work, the restriction is wrong.** ★★ **Second: two agents can each verify their own claim correctly and still both miss the same consequence, because they scoped the question the same way. Independence is not a second look at your question; it is someone else's question.** ★ **Third: the 32 tests that stayed GREEN were better evidence for the refusal-set claim than the set arithmetic was — an existing suite is a pre-registered check nobody could have tuned to this change.**
+
+---
+
+## R-437 · 2026-07-29 · **PROVENANCE-FIX PACKET RATIFIED — SYMMETRIC DIFFERENCE `0`, AND I VERIFIED THE ONE THING THAT COULD HAVE MADE IT WRONG.** ★★★ **426 CONDITIONS STOP CLAIMING THE SOURCE REQUIRED THEM (`MANDATORY` 1347→921, `UNKNOWN_REQUIREDNESS` 18→444) WHILE THE REFUSAL SET DOES NOT MOVE BY ONE.** ★★ **IMPLEMENTATION + PR AUTHORIZED; THE GRADE GOES TO THE `accuracy-validator` AGENT — DISPATCHED NOW — BECAUSE I DESIGNED THIS CHANGE AND THE WORKER BUILT IT, SO NEITHER OF US CAN GRADE IT**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **AR-408 ACCEPTED. The packet is approved.**
+
+**YOUR TASK: IMPLEMENT THE ONE-LINE CHANGE AND OPEN A PR. DO NOT MERGE.**
+Remove `"spine"` from `_MANDATORY_ROLES` (`spec_execution_preflight.py:94`), branched off the DEPLOYED lane's branch, as with #29/#30.
+
+**THE PR MUST CARRY:** the one-line diff · **a committed regression test asserting the refusal-set identity as a SET comparison** (so the property is pinned in CI, not just in a report) · a test pinning that `spine + unbindable` records `UNKNOWN_REQUIREDNESS` **and still refuses** · the `rule_class` distribution before/after in the PR body (`1347→921` / `18→444`) · **and the docstring at `:117-119` updated**, since it still describes `spine` as MANDATORY and a stale docstring is the next reader's false premise.
+★ **Update the module docstring's `spine → MANDATORY` claim wherever it appears — a comment that outlives its code is how this desk got here.**
+
+**FORBIDDEN:** merging · deploying · touching `confluence` or `_OPTIONAL_CANDIDATE_ROLES` · expanding classifier rule coverage (burns HOLDOUT-26) · flag flips · DB writes · re-extraction · `runtime-production` writes · tower update · backtests.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~30 min to PR open.**
+**STOP:** `backtests total > 0` · **CI red** · any condition changes pass/fail in the committed test.
+
+**AFTER THE PR IS GREEN, STOP AND REPORT.** ★★★ **The merge waits on an INDEPENDENT GRADE from the `accuracy-validator` agent — dispatched by this desk in parallel with your build, so it is not queued behind you. Neither of us grades this: you built it, I designed it.**
+
+---
+
+**RULING ID:** R-437 · **TASK ID:** AR-408 · **DECISION:** **PACKET RATIFIED. IMPLEMENTATION + PR AUTHORIZED. MERGE HELD PENDING AN `accuracy-validator` GRADE, DISPATCHED IN PARALLEL.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-408`**, ruled here.
+
+### §1 — WHAT I VERIFIED, AND WHY IT IS THE ONLY CHECK THAT MATTERED
+
+**[MEASURED HERE, deployed tree] the ONLY line comparing a rule class by name is `:149`, inside `blocks_execution` itself. Every other occurrence of `MANDATORY`/`UNKNOWN_REQUIREDNESS` in non-test code is a comment or docstring, and both consumers — `spec_execution_preflight.py:263` and `spec_condition_compiler.py:637` — gate on the FUNCTION.**
+
+★★★ **That was the single failure mode capable of falsifying the red-proof: a consumer branching on the class NAME rather than the predicate would have changed behaviour when `spine` moved class, and no amount of set-comparison arithmetic would have predicted it.** ★★ **So the red-proof's `symmetric difference = 0` is ENTAILED by the mechanism, not merely observed alongside it — and the worker's own reading (`both call sites gate on blocks_execution rather than the class name`) identified the same discriminator independently.** ★ **A proof that cannot fail is weak evidence on its own; a proof that cannot fail BECAUSE a named alternative was checked and excluded is strong.**
+
+**[RELAYED, and the key is right] `POP-120-LIVE`, per-condition, key `(strategy_id, condition_id, arm)` with plan-level empty-spine refusals carrying their own key: 1368 refusals before, 1368 after, `A−B` = `B−A` = `0`, strategy set 120/120 identical.** ★★ **The key includes the plan-level refusals — a set comparison that silently dropped them would have compared the easy part.**
+
+**THE POINT OF THE CHANGE, MEASURED: `MANDATORY` 1347→921 · `UNKNOWN_REQUIREDNESS` 18→444. 426 conditions stop asserting that the source required them.** ★★★ **That is the entire defect R-432 identified, closed, with a refusal set that does not move by a single condition.**
+
+### ★★★ §2 — WHY NEITHER OF US GRADES THIS
+
+**I proposed this change in R-436.** The worker implemented it and proved it. ★★★ **If I also approve the merge, the design, the build and the grade all trace back to one desk, and `doer ≠ grader` becomes a formality satisfied on paper — the exact shape I upheld AR-406's objection over three rulings ago.** ★★ **My verification in §1 is real and independent of the worker's arithmetic; it is NOT independent of my own proposal, because I checked the thing I already believed.**
+
+**SO: the PR is authorized, CI must be green, and the GRADE GOES TO THE `accuracy-validator` AGENT — dispatched now, in parallel with the build.** ★★★ **That agent's entire mandate is false-positive hunting via at least two NON-OVERLAPPING data paths, which is precisely the right instrument for a claim of the form "this change moves nothing": the failure mode is a green that means "I did not look", and it exists to catch exactly that.** ★★ **It is structurally independent of BOTH of us — it did not design the change and did not build it — which is the property neither I nor the worker can supply however carefully we check.** ★ **If it finds the claim unsound, the correct outcome is that the change does not land; nothing here is urgent, because the refusal BEHAVIOUR is already correct and only the recorded LABEL is wrong.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — proven, not asserted: nothing that refused before passes after. **#6 holds** — `backtests total = 0`. **`ratify-packet` honoured** — staged, red-proofed, independently graded before it lands.
+
+**THIS SEAT — MINE:** dispatch the `accuracy-validator` grade (done at ruling time) · then handed off: the grading rubric (R-435) · the `C2` session-role resolver yield · the stranded-capability register.
+
+★★ **STANDING CORRECTION TO MY OWN PRACTICE (operator-flagged): the `accuracy-validator` agent IS this campaign's fresh-eyes grader and I should have been routing independent grades to it all evening instead of parking them on the advisor seat or a future session. `doer ≠ grader` has a dedicated instrument here; use it.**
+
+**LESSON TO PERSIST.** ★★★ **A RED-PROOF THAT CANNOT FAIL PROVES NOTHING UNTIL YOU NAME WHAT COULD HAVE MADE IT FAIL AND CHECK THAT.** Here the set-identity was entailed by the mechanism, so the arithmetic was a formality — **the load-bearing check was "does any consumer branch on the class NAME?", and it took one grep.** Ask what would have to be true for the proof to break, then test THAT. ★★ **Second: I proposed this fix, so I am the worst available grader for it, however carefully I check. Independence is structural, not a matter of how honestly you look.**
+
+---
+
 ## R-436 · 2026-07-29 · **VOID RATIFIED — AND THE VOID IS THE ANSWER: THE DETERMINISTIC RULES DECIDE `4.1%` OF HOLDOUT-26 AND FALL BACK ON `95.9%`.** ★★★ **FLIPPING THE FLAG TODAY WOULD CHANGE ~4% OF LABELS AND STAMP SEMANTIC-CLASSIFIER PROVENANCE ON THE 96% THE TOPOLOGY HEURISTIC STILL DECIDED — THE SIGNATURE DEFECT A FOURTH TIME.** ★★★ **AND THE FIX FOR THE PROVENANCE DEFECT NEEDS NO CLASSIFIER AT ALL: DROP `spine` FROM `_MANDATORY_ROLES` AND IT FALLS TO `UNKNOWN_REQUIREDNESS`, WHICH BLOCKS IDENTICALLY — VERIFIED AT THE LINE, BEHAVIOUR-IDENTICAL, HONEST LABEL** ★★ **THE NO-POOLING RULE EARNED ITSELF ON ITS FIRST RUN: 11.3% vs 4.1%, POOLED 5.8% WOULD HAVE HIDDEN IT**
 
 ---
