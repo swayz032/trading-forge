@@ -5,11 +5,24 @@
 > Last rewritten: 2026-07-29, current through **R-438**.
 
 ## SEAT
-Ledger at **R-438**. Newest AR: **AR-409 — a START-RECEIPT, task IN FLIGHT, not
-yet ruled.** Worker: **ALIVE and implementing** the one-word provenance fix, the
-four named test updates, and the PR (**NOT merging**) — [MEASURED HERE 2026-07-29
-03:49Z] its `claude.exe` 9444 is running and its conversation file was still
-growing 60s before this line was written. Started 03:39Z, ETA ~30 min to PR open.
+Ledger at **R-439**. Newest AR: **AR-410, RULED** — **PR #31 IS OPEN AND RATIFIED
+ON THE BUILD; MERGE HELD SOLELY ON THE CENSUS, WHICH IS NOW ACTUALLY IN FLIGHT.**
+Worker: **authorized on two mechanical items (R-439): the CI-gate MEASUREMENT
+(not a config flip) and the HOLDOUT-26 class-balance census.**
+★★★ **[MEASURED HERE] THE `CI RED` STOP CONDITION R-437 ARMED HAS NO PATH TO RED:
+`ci.yml`'s pytest step is `continue-on-error: true`, so a failing Python suite
+still reports green. THE WORKER CAUGHT THIS IN MY OWN RULING.** ★★★ **STANDING,
+EFFECTIVE NOW: no ruling may cite "CI green/red" as evidence about Python
+behaviour — cite a named local suite, its command, and its EXIT CODE. Blocking
+jobs are only `Lint` (ruff bug-subset), Parity, Snapshot, Frankenstein, Metric
+Gates; ruff-style, mypy and pytest are all advisory.**
+★★★ **I RE-RAN THE PROOF MYSELF at `0b0d6617`: 38 passed · 133 passed on seven
+suites I enumerated by my own grep · MUTATION A reproduced at 5 failed/33 passed
+(the four named tests + the new regression test). THE TESTS BITE.**
+★★ **PR #31 SCOPE EXTENSION (`spec_condition_compiler.py:640`) KEPT — [MEASURED
+HERE] presentation-only: same predicate on the same resolved value, same
+exception type, f-string only. The machine key `unresolved_mandatory_rules` was
+correctly left alone (interface contract, test-pinned).**
 ★★★ **INDEPENDENT GRADE (R-438): `accuracy-validator` returned SOUND on the
 runtime claim via two non-overlapping paths — and found what NEITHER the designer
 nor the builder named: FOUR named tests will newly fail, all asserting the string
@@ -20,19 +33,24 @@ fresh-eyes instrument and `doer ≠ grader` has a dedicated agent here. Route gr
 to it EARLY, not as a final formality.** (Operator had to point this out.)
 ★★ **THE GAP IN THAT GRADE IS MINE: my brief barred DB access, so `426`/`1347→921`
 came back UNVERIFIED — I prevented the check.**
-★★★ **CORRECTION TO R-438 AND TO THIS FILE'S PREVIOUS REVISION — THE RE-DISPATCH
-NEVER HAPPENED. [MEASURED HERE] exactly ONE `accuracy-validator` transcript exists
-on disk (`agent-a531c9a188a422415.jsonl`, last write 2026-07-29 02:40Z = the FIRST
-grade); no second grader transcript exists at any time after it, and `TaskList` is
-empty. R-438 §2 wrote "RESTRICTION LIFTED AND THE GRADER RE-DISPATCHED" and this
-file repeated it as fact. It is a MECHANISM CLAIM THIS DESK NEVER MEASURED — the
-seat's own convicted shape, committed to the ledger.** ★★ **The `426` census is
-therefore still UNGRADED and nothing is in flight to grade it.**
-★★★ **AND THE RE-DISPATCH SHOULD NOT BE REPEATED AS WRITTEN: R-438 briefed the
-grader to apply the edit in a SCRATCH COPY. The worker is at this moment producing
-the REAL branch. Grading a scratch copy grades a NEIGHBOURING OBJECT — the exact
-error this seat is convicted of five times. The grader waits for the PR and grades
-THAT.** This is sequencing, not delay: the object that merges is the object graded.
+★★★ **CORRECTED IN R-439 — R-438's "GRADER RE-DISPATCHED" NEVER HAPPENED, and
+this file had repeated it as fact. [MEASURED HERE] exactly ONE `accuracy-validator`
+transcript exists (`agent-a531c9a188a422415.jsonl`, 02:40Z = the FIRST grade);
+none after it; `TaskList` empty. An ACTION asserted in a verdict's voice and never
+checked — the seat's own convicted shape, committed to the ledger.**
+★★★ **NOW GENUINELY DISPATCHED (R-439) and NOT as R-438 briefed it: against PR
+#31's real commit `0b0d6617`, not a scratch copy — grading a scratch copy grades a
+NEIGHBOURING OBJECT. DB read access EXPLICITLY AUTHORIZED (the barred-DB
+restriction WAS the hole in grade #1), transition count to be derived
+independently with an explicit instruction NOT to anchor on 426, per-video AND
+per-row, honest null accepted. AWAITING ITS VERDICT — that verdict is the ONLY
+thing merge waits on.**
+★★★ **STANDING PROTOCOL (operator, 2026-07-29): GET AN EXTERNAL (GPT) OPINION
+BEFORE WRITING A RULING, and carry it in as a named input graded `[EXTERNAL
+OPINION]` — never `[MEASURED]`. Agreement between two readers is NOT evidence;
+disagreement resolves by MEASUREMENT. It does not replace `accuracy-validator`:
+that agent measures, the external read reads. ★ Audit its premises — the first
+one arrived mislabelled "R-436" and cited test counts no AR had yet reported.**
 ★★ **MERGE REMAINS HELD:** a SOUND verdict on "behaviour does not change" is not
 approval of the patch, because the patch's PURPOSE — 426 corrected provenance
 records — is the part still unmeasured. Nothing is urgent; refusal behaviour is
