@@ -12,6 +12,72 @@
 
 ---
 
+## R-436 · 2026-07-29 · **VOID RATIFIED — AND THE VOID IS THE ANSWER: THE DETERMINISTIC RULES DECIDE `4.1%` OF HOLDOUT-26 AND FALL BACK ON `95.9%`.** ★★★ **FLIPPING THE FLAG TODAY WOULD CHANGE ~4% OF LABELS AND STAMP SEMANTIC-CLASSIFIER PROVENANCE ON THE 96% THE TOPOLOGY HEURISTIC STILL DECIDED — THE SIGNATURE DEFECT A FOURTH TIME.** ★★★ **AND THE FIX FOR THE PROVENANCE DEFECT NEEDS NO CLASSIFIER AT ALL: DROP `spine` FROM `_MANDATORY_ROLES` AND IT FALLS TO `UNKNOWN_REQUIREDNESS`, WHICH BLOCKS IDENTICALLY — VERIFIED AT THE LINE, BEHAVIOUR-IDENTICAL, HONEST LABEL** ★★ **THE NO-POOLING RULE EARNED ITSELF ON ITS FIRST RUN: 11.3% vs 4.1%, POOLED 5.8% WOULD HAVE HIDDEN IT**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. **AR-407 is ACCEPTED IN FULL. The run is VOID and that is a RESULT, not a failure — you executed the protocol correctly and it returned a verdict.** ★★ **Nothing is re-run.**
+
+**YOUR ONE TASK: STAGE A `ratify-packet` FOR THE ONE-LINE PROVENANCE FIX. DOCUMENT ONLY.**
+
+**THE CHANGE:** remove `"spine"` from `_MANDATORY_ROLES` in `spec_execution_preflight.py:94`. `spine` then falls to the else-arm → `UNKNOWN_REQUIREDNESS`.
+**WHY IT IS SAFE — verify this yourself, do not take it from me:** `blocks_execution` (`:149`) returns True for **both** `MANDATORY` and `UNKNOWN_REQUIREDNESS`, and **both** call sites gate on it (`spec_condition_compiler.py:637`, `spec_execution_preflight.py:262`). ★★★ **So the refusal SET does not move by one condition. Only the recorded `rule_class` changes — from a fabricated "the source required this" to an honest "we cannot tell."**
+★★★ **THIS IS NOT A RELAXATION AND THE STANDING PROHIBITION IS NOT VIOLATED. Nothing that refused before passes after. If your red-proof shows even ONE condition changing pass/fail, STOP — the premise is wrong and I want to know immediately.**
+
+**THE PACKET MUST CARRY:** the exact diff · **a RED-PROOF that the refusal set is IDENTICAL before and after, computed not asserted** — same population, same tree, per-condition set comparison, published as a set difference of `∅` · the `rule_class` distribution before/after (this is the point of the change) · a test pinning that `spine + unbindable` records `UNKNOWN_REQUIREDNESS` and still refuses · **doer ≠ grader: name who grades it, and it is not you** · rollback (one frozenset member).
+
+**FORBIDDEN:** implementing it · touching `_OPTIONAL_CANDIDATE_ROLES` or `confluence` · flipping `TF_SEMANTIC_ROLE_CLASSIFIER` · **expanding the classifier's rule coverage** (see §4 — that would burn HOLDOUT-26) · DB writes · re-extraction · `runtime-production` writes · tower update · backtests.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~30 min.** **HONEST-PARTIAL:** if the red-proof cannot be computed on the live population, say so and name what you could compute.
+**STOP:** `backtests total > 0` · **any condition changes pass/fail** · the red-proof cannot be made to compare sets rather than counts.
+
+**IGNORE:** anything below marked `THIS SEAT — MINE`.
+
+---
+
+**RULING ID:** R-436 · **TASK ID:** AR-407, the two-arm shadow · **DECISION:** **VOID RATIFIED. THE SEMANTIC LABELLER IS NOT THE PROVENANCE FIX AND IS DEMOTED TO A SEPARATE CAPABILITY QUESTION. A ONE-LINE, BEHAVIOUR-IDENTICAL PROVENANCE FIX IS STAGED INSTEAD. HOLDOUT-26 IS INTACT BUT NOW FRAGILE.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-407`**, the report ruled on here.
+
+### ★★★ §1 — WHAT THE VOID ACTUALLY ESTABLISHED
+
+**[RELAYED, mechanical, and the harness published its CONTROL line] HOLDOUT-26: 1776 conditions / 26 videos · ARM A rules fired `72` (4.1%) · `LEGACY_FALLBACK` `1704` (95.9%) · `UNCLASSIFIED`/`ERROR` `0`.** My pre-registered void condition — *"a material share of ARM A decisions used LEGACY_FALLBACK"* — is met several times over. ★★ **95.9% is not a material share, it is nearly the whole population.**
+
+★★★ **THE CONSEQUENCE THAT MATTERS MORE THAN THE VOID: flipping the flag today would change ~4% of labels, leave ~96% decided by `graph-to-engine.ts:100` — the exact topology expression the migration exists to delete — AND STAMP A SEMANTIC-CLASSIFIER PROVENANCE ON ALL OF THEM.** ★★★ **That is this campaign's signature defect a FOURTH time: an inability re-labelled as a result. `np.ones` for an unbindable rule · `approximation=False` on a zone with no clock · "reuse the old label and call it semantic" — and now, concretely, 1704 topology decisions wearing a semantic badge.** ★ **The flag is not a small step toward the fix; switching it on today would make the provenance WORSE than it is now, because at least today nobody claims the label means anything.**
+
+★★ **AND THE ARCHITECTURE CHANGES SHAPE: rule 6 — gemma adjudication, async, network I/O — carries ~96% of real conditions. It is ON the critical path, not a refinement.** That converts "enable a deterministic classifier" into "put a network LLM call in the labelling path", with its own nondeterminism, cost, latency and failure modes. **That is a different proposal and it does not inherit this one's approval.**
+
+### ★★★ §2 — THE TWO THINGS THAT WENT RIGHT, AND THEY ARE NOT CONSOLATION PRIZES
+
+**(1) ARM B fired on `0 of 2351`.** ★★★ **Withholding the teacher's words drops the classifier from 4.1% to exactly zero, so 100% of ARM A's decisions are source-driven and `A≠B` equals the fired set precisely. The discriminator I made mandatory did its job: R-433 §2a's false-green — high agreement produced by silent fallback — DID NOT FIRE, and we know that by measurement rather than by hope.** ★★ **The by-shape check corroborates it independently: fired-rate varies with evidence shape (`range` 19.3% · `brace-set` 9.8% · `plain` 7.1% · `verbatim` 3.0%) and `A≠B` = `fired` in every shape. Pointer resolution demonstrably changed what the labeller saw.**
+
+**(2) THE NO-POOLING RULE EARNED ITSELF ON ITS FIRST RUN.** **[RELAYED] DEV-14 fires at 11.3%, HOLDOUT-26 at 4.1% — a 2.75× gap, with per-video medians 10.7% vs 3.8%, so it is not one outlier dragging an aggregate.** ★★★ **The pooled 40-video figure is 5.8% and would have concealed the contamination completely. R-434 forbade pooling before any data existed; one run later that prohibition is the only reason the contamination is visible as a number rather than as a suspicion.**
+
+### §3 — SCOPE CORRECTION RATIFIED, AND IT CONTAINS THE ANSWER
+
+★★ **AR-407 discloses that its harness classified everything, so of 137 fired conditions, 31 `trigger` + 5 `invalidation` are OUT of the production path — `resolveConditionRole` is called only for non-terminal, non-invalidation atoms; those roles are TYPE-assigned at `graph-to-engine.ts:142-145`. Applicable fired population is 101, not 137. Reported rather than silently filtered — correct conduct.**
+
+★★★ **AND THAT DISCLOSURE IS THE ARCHITECTURAL FINDING: the producer ALREADY does the right thing where it matters. `trigger` and `invalidation` are assigned BY TYPE, deterministically, from the atom's own semantics — and those are exactly the two roles that carry real execution meaning. The topology heuristic only decides the RESIDUAL. The system does not need a semantic classifier to know what an entry trigger is; it already knows. What it needs is for the residual to STOP CLAIMING REQUIREDNESS IT NEVER ESTABLISHED.**
+
+### ★★★ §4 — THEREFORE: THE PROVENANCE FIX IS ONE LINE AND NEEDS NO CLASSIFIER
+
+**[MEASURED HERE] `_MANDATORY_ROLES = frozenset({"spine", "invalidation"})` (`:94`) · `blocks_execution` returns True for `MANDATORY` **and** `UNKNOWN_REQUIREDNESS` (`:149`) · both call sites gate on `blocks_execution`.** ★★★ **Remove `"spine"` and it falls to the else-arm → `UNKNOWN_REQUIREDNESS` → still blocks. The refusal set cannot move. The recorded class changes from a fabricated source-requiredness claim to an honest "we cannot tell."**
+
+★★ **This is the whole provenance defect, fixed, today, with a change whose blast radius is provably nil — and it is NOT the relaxation the standing prohibition bars, because nothing that refused before passes after.** ★ **It must still be red-proofed as a SET comparison, not a count: R-421's law is that when a population may grow but must not shrink, assert membership. Here it must do neither, so the proof is `set_before Δ set_after = ∅`.**
+
+★★★ **AND THE SEMANTIC LABELLER IS DEMOTED, NOT KILLED: it becomes a CAPABILITY question — "can we classify condition requiredness from source text at scale, and is an LLM on the critical path acceptable?" — unhurried, separable, and no longer blocking the provenance correction it was assumed to be the vehicle for.** ★★ **That assumption was mine as much as anyone's: I authorized a migration packet on the premise that the dormant classifier was the replacement. Measured, it decides 4% and the honest fix was one frozenset member away.**
+
+**HOLDOUT-26 STATUS — RULED PRECISELY.** ★★★ **INTACT. We inspected MECHANICAL RATES, not per-condition labels, and we have not tuned anything.** ★★★ **IT BURNS THE MOMENT ANYONE EXPANDS THE CLASSIFIER'S RULE COVERAGE IN RESPONSE TO THE 4.1% FIGURE — that is tuning informed by the holdout, however indirect, and it is why rule expansion is FORBIDDEN in the worker block above.** ★ **If rule expansion is later wanted, the next untouched population must be named FIRST: POP-41 holds one video that is not live, and anything newly extracted is clean. A holdout is spent by looking, not only by fitting.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#1 holds** — nothing relaxed; the proposed change cannot move a single pass/fail. **#6 holds** — `backtests total = 0`. **doer ≠ grader** is carried into the packet.
+
+**THIS SEAT — MINE:** write the grading rubric (R-435) **before** any classification is inspected — ★ **note the void reduces its urgency: with 101 applicable fired decisions there is little to grade until coverage exists** · run the campaign session-role resolver against `C2` · maintain the register.
+
+**LESSON TO PERSIST.** ★★★ **A VOID RUN IS A RESULT. This one cost under an hour and it killed a migration premise the desk had already written three rulings around — including mine. The protocol that produced it (pre-registered void conditions, a withheld-source control arm, and a ban on pooling populations) returned more information in one execution than the "successful" run it was designed to police would have.** ★★ **Second: THE FIX WAS UPSTREAM OF THE FIX. We reached for a semantic classifier to correct a provenance lie, when the lie was one frozenset member and the honest label already existed in the codebase. Ask what the DEFECT actually is before adopting the most impressive available remedy.** ★ **Third: the two things that went right were both controls — ARM B and the DEV/HOLDOUT separation. Controls are what turn a run into evidence, and both were added because a ruling insisted on them over the convenience of a simpler design.**
+
+---
+
 ## R-435 · 2026-07-29 · **AR-406 CAUGHT A DEFECT IN MY OWN R-434: STEP 4 MIXED MECHANICAL METRICS WITH GRADED ONES AND HANDED BOTH TO THE DOER.** ★★★ **THE SPLIT IS RATIFIED — THE WORKER DELIVERS THE FROZEN INPUT AND EVERY MECHANICAL RATE; THE GRADED METRICS ARE ASSIGNED TO THE ADVISOR SEAT, WHICH IS NOT THE DOER.** ★★★ **AND THE RUBRIC IS FROZEN BEFORE THE GRADER SEES A SINGLE CLASSIFICATION — OTHERWISE THE GRADER TUNES THE ANSWER KEY TO THE ANSWERS**
 
 ---

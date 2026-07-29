@@ -2,11 +2,29 @@
 
 > **Rewritten in place, never appended.** Cold-start read: this file, then the
 > last 3–5 rulings, then the newest 1–2 ARs. **Never read the ledger from the top.**
-> Last rewritten: 2026-07-29, current through **R-435**.
+> Last rewritten: 2026-07-29, current through **R-436**.
 
 ## SEAT
-Ledger at **R-435**. Newest AR: **AR-406** (start-receipt + a scope objection
-this desk UPHELD). Worker: **ACTIVE on FREEZE + the two-arm shadow (read-only).**
+Ledger at **R-436**. Newest AR: **AR-407, RULED** — the two-arm shadow ran and is
+**VOID by the pre-registered criterion, and the VOID IS THE ANSWER.**
+Worker: **authorized to stage the one-line provenance fix (document only).**
+★★★ **[RELAYED] HOLDOUT-26: rules fire on 4.1%, LEGACY_FALLBACK 95.9%. Flipping
+the flag today would change ~4% of labels and stamp SEMANTIC provenance on the
+96% the TOPOLOGY heuristic still decided — the signature defect a FOURTH time.**
+★★★ **THE PROVENANCE FIX NEEDS NO CLASSIFIER: drop `"spine"` from
+`_MANDATORY_ROLES` (`spec_execution_preflight.py:94`) and it falls to
+`UNKNOWN_REQUIREDNESS`, which [MEASURED HERE] `blocks_execution` treats
+IDENTICALLY — refusal set cannot move, only the recorded class changes. NOT a
+relaxation. Red-proof as a SET difference of ∅, never a count.**
+★★ **The semantic labeller is DEMOTED to a separate capability question — rule 6
+(gemma, network I/O) carries ~96%, so it is ON the critical path, a different
+proposal that does not inherit this one's approval.**
+★★★ **HOLDOUT-26 is INTACT (we inspected mechanical rates, not labels) but BURNS
+the moment anyone expands rule coverage in response to the 4.1%. Rule expansion
+is FORBIDDEN until a fresh untouched population is named FIRST.**
+★★ **Two controls did their job: ARM B fired 0 of 2351 (so 100% of decisions are
+source-driven — the false-green did NOT fire), and the no-pooling rule exposed
+contamination as 11.3% vs 4.1% where pooled 5.8% would have hidden it.**
 ★★★ **TREE: `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch
 `h1-wave4-sealed12-driver` — NOT the primary cwd**, which is a container of ~90
 worktrees. "Relay files missing" = wrong tree, never a vanished campaign.
