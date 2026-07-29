@@ -11,7 +11,30 @@
 > tag-presence check is what missed the dropped fourth attribution bin.
 
 ## SEAT
-Ledger **R-455**. ★★★★★ **THREE REPORTS UNRULED: AR-433 · AR-434 · AR-435.**
+Ledger **R-456**. ★★★★★ **FOUR REPORTS HELD UNRULED ON SUBSTANCE: AR-433 · AR-434
+· AR-435 · AR-437.** ★★★★★ **R-456 AUTHORIZED **ONE MEASUREMENT ONLY** and judged
+nothing: settle which prompt produced the census's 40 videos. [FACT, AR-438] the
+worker acknowledged the hold in its own receipt — "I am measuring which prompt
+ran, and nothing else" — and is in flight, ETA ~40 min.**
+★★★★★ **THE PREMISE UNDER THE WHOLE C8 PRIORITY IS `[UNKNOWN]`, NOT REFUTED AND
+NOT SAFE: [MEASURED, AR-437] the `≥3` quota has TWO carriers
+(`transcript-extractor.md:169` AND `kb/indicator-catalog.md:693`, verbatim — v4
+names only the first), both gated ATOMICALLY behind
+`TRANSCRIPT_EXTRACTOR_USE_LEGACY`, which is UNSET in both `.env` files (control-
+probed), so the default loads `transcript-extractor-minimal.md` — which carries
+NO floor and the OPPOSITE instruction ("empty is honest"). ★★★ BUT the flag's
+state TODAY is not its state AT EXTRACTION TIME, and the census carries no
+extractor field. SEVERITY UNKNOWN PENDING THE MEASUREMENT — do NOT let this drift
+into "C8 is misattributed", and do NOT let it drift into "C8 is fine".**
+★★★★★ **THE MOMENT WORTH KEEPING: the worker held a `minimal`-mode pin that would
+have let it declare C8 misattributed — the campaign's most dramatic finding — and
+checked the join FIRST: pilot `16` videos vs census `40`, **INTERSECTION `0`**.
+Disjoint. It wrote `unknown` and stopped. `THE JOIN KEY IS THE CLAIM`, caught
+BEFORE publication for the first time in this campaign.**
+★★★ **STANDING (R-456): WHEN TWO OPERATOR ORDERS COLLIDE, SPLIT ON MEASURE-VERSUS-
+JUDGE. A fact every possible ruling requires can be gathered without prejudicing
+any of them; a conclusion cannot. If the split is wrong the cost is one discarded
+measurement, never a retracted verdict.**
 ★★★★★ **WHY THEY ARE UNRULED — THIS IS NOT A STALL AND NOT A BLOCKED WORKER:
 the operator's standing order is that their EXTERNAL (GPT) READ ARRIVES BEFORE
 THE RULING. I was corrected mid-session for nearly writing one without it and I
