@@ -12,7 +12,72 @@
 
 ---
 
-## R-443 · 2026-07-29 · ★★★ **AR-416 IS THE BEST REPORT OF THIS CAMPAIGN — IT FOUND THE ROOT CAUSE, CORRECTED ITS OWN PRIOR REPORT, AND REFUSED TO LET #32 BE READ AS THE CURE. ACCEPTED IN FULL.** ★★★ **AND I SWEPT WIDER AND THE CLASS IS BIGGER: SEVEN FILES, NOT FOUR — INCLUDING TWO TYPESCRIPT SUITES.** ★★★★★ **THE THIRD SYMPTOM IS THE WORST ONE AND NOBODY HAD SEEN IT: `24` ASSERTIONS ABOUT THE **KILL SWITCH** AND THE **COMPLIANCE GATE** FAIL FROM THIS SAME ROOT CAUSE AND HAVE BEEN ALLOW-LISTED INTO `ci/baseline-failures.json` — INSIDE A GATE WHOSE OWN NAME SAYS `BLOCKING`. THEY ARE EXCUSED FOREVER AND THE BOARD IS GREEN**
+## R-444 · 2026-07-29 · ★★★★★ **CORRECTION — R-443's ALARM IS WITHDRAWN. THE KILL SWITCH AND THE COMPLIANCE GATE ARE NOT FAILING AND WERE NOT FAILING: ALL 24 ASSERTIONS PASS ON LINUX, AND [MEASURED HERE] `live-fix-sweep.test.ts` AT THE TESTED TIP ALREADY USES `import.meta.url` — THE FIX I "ORDERED" WAS WRITTEN BEFORE I ASKED FOR IT.** ★★★ **I SWEPT THE CAMPAIGN TREE AND RULED ABOUT THE DEPLOYED LANE. TWO OF MY THREE NAMED FILES CARRY ZERO HARDCODED PATHS WHERE CI RUNS. THAT IS `NAME THE TREE`, BROKEN BY THE SEAT THAT WROTE IT INTO THE STATE FILE NINETY MINUTES EARLIER.** ★★★ **THE WORKER STOPPED INSTEAD OF OBEYING, AND WAS RIGHT.** ★★ **THE REAL DEFECT IS 7.5× BIGGER AND A DIFFERENT SHAPE: `BASELINE_SHRINK_NEEDED=180`**
+
+---
+
+# ★ WORKER — START HERE
+
+**TREE:** `C:\Users\tonio\Projects\wt-h1-wave4-20260712`. ★★★ **AR-418 ACCEPTED IN FULL, AND YOU WERE RIGHT TO STOP. My premise was wrong; you measured it, refused the cosmetic edit, and said so. That is the behaviour this desk exists to reward — an order from me is not evidence, and you treated it as a claim.**
+
+**THE 24-ENTRY REMOVAL IS RATIFIED — on YOUR justification, not mine.** You proved the assertions PASS on `ubuntu-latest` via CI's own `compare-baseline.mjs` (`fixedFailures`, `verdict GREEN`, `newFailures []`) and locally 32/32. **The removal was always correct; my stated reason for it was not.**
+
+**YOUR NEXT TASK — THE 180, AND ONE DISCRIMINATOR THAT DECIDES IT:**
+★★★ **`fixedFailures` MEANS "DID NOT FAIL THIS RUN". A TEST THAT NEVER RAN ALSO DID NOT FAIL.** ★★★ **This is not hypothetical here — you MEASURED the Python suite truncating at 44%, and you MEASURED 9 quantum tests that `pytest.skip` on Linux. Any of those, if baselined, would present as "fixed" while having been silently absent.**
+**SO: before removing any of the remaining 156, prove each is RAN-AND-PASSED, not merely not-failing.** ★★ **Vitest reports passed/skipped/todo distinctly — use that, and report the split. If an entry cannot be shown to have RUN, it stays in the baseline and is reported as UNRESOLVED rather than removed.** ★ **You built exactly this discriminator for the Python half in AR-416 §4; apply it here.**
+**THEN, and I am adopting your recommendation:** **add a CI step that FAILS when `BASELINE_SHRINK_NEEDED > 0`.** ★★★ **That is the durable fix and it is better than any one-time cleanup: it makes the allow-list SELF-CLEANING instead of depending on a human noticing. A baseline that can only grow converts every future regression into a silent pass.**
+★ **Sequence it so the guard lands only AFTER the shrink, or it fires red on arrival.**
+
+**ALSO, THE ONE REAL MEMBER OF MY CLASS THAT SURVIVED:** **[MEASURED HERE] `test_spec_family_bindings.py` carries a hardcoded `r"C:\Users\..."` at BOTH trees** — deployed lane included, and it points into `.claude/worktrees/extraction-100/tmp/`. **Fix that one.** ★ **The other two are withdrawn: [MEASURED HERE] `live-fix-sweep.test.ts` = 0 and `wave25-liquidity-map.test.ts` = 0 at `a52449ac`.**
+★★ **The campaign tree's own 6 sites: NOT a CI blocker (that branch is not tested) but they are why I misread the repo. Leave them; I will not have you edit a branch to make my error tidier.**
+
+**FORBIDDEN:** removing a baseline entry you cannot prove RAN and PASSED · touching the 156 wholesale without the per-entry discriminator · removing `continue-on-error` (Python tree still truncates at 44%) · deploying · tower update · backtests · `git checkout` in this shared tree.
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min. **ETA ~45 min.** **HONEST-PARTIAL:** if the ran-vs-skipped split is not recoverable from the vitest reporter, say so and name what you CAN prove — do not infer it.
+**STOP:** `backtests total > 0` · any of the 156 turns out to be genuinely FAILING (as opposed to stale) — that is a real regression and it comes to me.
+
+---
+
+**RULING ID:** R-444 · **TASK ID:** AR-418 · **DECISION:** **APPROVE AR-418. R-443 §1's file table and §2's safety framing are WITHDRAWN AND CORRECTED. The 24-entry removal is RATIFIED on the measured justification.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-418`**, ruled here.
+
+### ★★★★★ §1 — THE CORRECTION, LOUDEST FIRST
+
+**WITHDRAWN: "24 assertions about the kill switch and compliance gate fail from this root cause."** ★★★ **They do not fail. [MEASURED BY GRADED INSTRUMENT — CI's own `compare-baseline.mjs`, run `30422166825`] all 24 appear in `fixedFailures`, `verdict: GREEN`, `newFailures: []`; [RELAYED, worker] 32/32 locally.** ★★★ **[MEASURED HERE] and the mechanism I asserted is absent from the tested code: `git show a52449ac:src/server/__tests__/live-fix-sweep.test.ts` uses `fileURLToPath(new URL(…, import.meta.url))` at lines 23, 85, 260 and 307 — the portable form. There is no `nodePath.resolve("C:/…")` there to break.**
+
+**WITHDRAWN: the three-file table.** **[MEASURED HERE, both slash forms, `git show` at `a52449ac` vs the campaign working tree]:**
+
+| file | deployed lane `a52449ac` (CI tests this) | campaign tree (I swept this) |
+|---|---:|---:|
+| `live-fix-sweep.test.ts` | **0** | 4 |
+| `wave25-liquidity-map.test.ts` | **0** | 1 |
+| `test_spec_family_bindings.py` | **1 — REAL, survives** | 1 |
+
+★★★ **I ran `grep -rn … src/` inside the campaign worktree and published the result as a statement about the branch CI runs. That is `NAME THE TREE` — the law this desk minted after the 160KB/35KB divergence, which I had personally re-copied into `ADVISOR-STATE.md` ninety minutes before breaking it.** ★★ **A grade certifies that I ran something; it certifies nothing about WHERE. My `[MEASURED HERE]` was true and irrelevant.**
+
+**WHAT SURVIVES, precisely:** **[MEASURED HERE] the 24 WERE in `ci/baseline-failures.json` at `a52449ac`** — right tree, right file, and that part stands. **[MEASURED HERE] `compare-baseline.mjs` fails only on NEW failures**, so a baselined entry is excused indefinitely. ★★ **But the entries' own `reason` field dates them to the `2026-07-12 Node baseline freeze`: they were STALE OVERRIDES over a WORKING sensor, not live cover for a broken one.** ★★★ **"An obsolete override on a working sensor" and "the kill switch is unguarded" are different findings with different urgencies, and I published the second when the evidence supported the first.**
+
+### ★★★ §2 — SEVERITY, RE-STATED HONESTLY
+
+**R-443 called this the night's largest finding and framed it as safety. That was wrong twice over: wrong tree, and wrong severity.** ★★ **Correct severity: a GOVERNANCE defect in the CI allow-list — real, worth fixing, and NOT a live safety hole. [MEASURED] `backtests total = 0`, nothing live, no capital connected, and the kill-switch assertions are passing.**
+★★★ **AND I TOLD THE OPERATOR THE WRONG VERSION.** I said their safety net had a hole and that the kill switch was on an expected-to-fail list. **The first half is not true and the second is true only in the stale-override sense.** ★★ **The pre-ruling gate says verification duty scales with the recipient's inability to check — they cannot check, so this correction goes to them in plain words in the same turn as this ruling, not buried in a ledger they do not read.** ★ **A false finding shipped beside a true one discounts the true one, and there IS a true one: the 180.**
+
+### ★★★ §3 — THE REAL FINDING, AND IT IS BIGGER THAN THE ONE I INVENTED
+
+**[MEASURED BY GRADED INSTRUMENT, CI run `30422166825` final line] `BASELINE_SHRINK_NEEDED=180`.** ★★★ **180 baselined entries no longer fail; 24 are now removed; 156 remain — each an active licence for a test to fail silently if it ever regresses.** ★★ **The allow-list has grown since 2026-07-12 and nothing has ever shrunk it. That is a `guard whose remedy is regenerate` (pre-ruling gate §5) operating at repo scale, and it is a better finding than the one I thought I had, because it is systemic rather than a single stale entry.**
+★★★ **THE TRAP I AM PUTTING IN THE CONTRACT: `fixedFailures` means DID NOT FAIL, and a test that did not RUN also did not fail. The worker has already measured two populations in this repo that would present exactly that way — the Python suite truncated at 44%, and 9 quantum tests that skip on Linux. Shrinking a baseline on "not failing" would silently discard checks that never executed.** ★ **Hence the ran-and-passed discriminator, mandatory per entry.**
+
+### §4 — DISPOSITION
+
+**ARCHITECTURE INVARIANTS TOUCHED. #6 holds** — `backtests total = 0`. **#8 holds** — reads via `git show`; no checkout in the shared tree. **#9 holds** — **I did not let a wrong alarm stand to avoid the embarrassment of withdrawing it, and I did not order cosmetic edits to three files to make my table retroactively true.**
+
+**FAILED OR UNPROVEN:** the 156 remaining entries — **UNENUMERATED individually; that is the next task** · whether any of the 156 is genuinely failing rather than stale — **UNKNOWN, and it is the armed STOP** · the campaign tree's 6 hardcoded sites — **[MEASURED HERE] real on that branch, NOT CI-tested, disposition deferred** · the Python suite's unrun 56% — **still unrun; unchanged by any of tonight's work.**
+
+**LESSON TO PERSIST.** ★★★ **I BROKE `NAME THE TREE` IN THE SAME SESSION I RE-COPIED IT INTO THE STATE FILE — a law you can recite is not a law you are applying. Before publishing ANY sweep, state the tree in the same sentence as the count, and if the claim is about CI, run the sweep with `git show <tested-sha>:<path>` rather than in whatever checkout your shell happens to be in.** ★★★ **Second: MY ORDER IS NOT EVIDENCE. The worker's stop condition existed because I armed it, and it fired against my own premise — the correct response to "the desk told me to fix three files" was to measure whether they were broken, and it did. A desk that punishes that has no instruments left.** ★★ **Third: alarm is a claim with an evidence grade. "The kill switch is unguarded" and "an obsolete override sits over a working kill-switch check" differ by one measurement, and I skipped it because the first story was more urgent — which is precisely when to slow down.**
+
+---
+
+## R-443 · 2026-07-29 · ⚠️ **[CORRECTED BY R-444 — §1's THREE-FILE TABLE WAS SWEPT IN THE CAMPAIGN TREE AND IS FALSE FOR THE DEPLOYED LANE (2 of 3 are ZERO); §2's SAFETY FRAMING IS WITHDRAWN — THE 24 ASSERTIONS PASS ON LINUX. The 24-entry removal remains correct, on measured justification.]** · ★★★ **AR-416 IS THE BEST REPORT OF THIS CAMPAIGN — IT FOUND THE ROOT CAUSE, CORRECTED ITS OWN PRIOR REPORT, AND REFUSED TO LET #32 BE READ AS THE CURE. ACCEPTED IN FULL.** ★★★ **AND I SWEPT WIDER AND THE CLASS IS BIGGER: SEVEN FILES, NOT FOUR — INCLUDING TWO TYPESCRIPT SUITES.** ★★★★★ **THE THIRD SYMPTOM IS THE WORST ONE AND NOBODY HAD SEEN IT: `24` ASSERTIONS ABOUT THE **KILL SWITCH** AND THE **COMPLIANCE GATE** FAIL FROM THIS SAME ROOT CAUSE AND HAVE BEEN ALLOW-LISTED INTO `ci/baseline-failures.json` — INSIDE A GATE WHOSE OWN NAME SAYS `BLOCKING`. THEY ARE EXCUSED FOREVER AND THE BOARD IS GREEN**
 
 ---
 
