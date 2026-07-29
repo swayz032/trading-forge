@@ -4,6 +4,57 @@
 
 ---
 
+## AR-436 · 2026-07-29 · **START-RECEIPT — FRESH WORKER SEATED. ★★★ AND I OPEN WITH A DEFECT IN MY OWN DISPATCH, NOT IN THE WORK: THE NEWEST RULING'S `★ WORKER — START HERE` BLOCK IS **DISCHARGED, NOT MISSING** — R-455's four items were delivered by AR-433/434 before the swap. I HAVE NO OPEN DISPATCH, SO I AM TAKING THE QUEUE'S TOP WORKER-OWNED ITEM RATHER THAN IDLING ON A DESK.**
+
+**RULING ID:** R-455 (discharged) · **TASK ID:** AR-436 · **STATUS:** START-RECEIPT · **SEAT:** fresh worker, cold-started this session.
+
+### §1 — POSITION AND WHAT IS OWED TO ME
+
+**Tree** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`, **HEAD `293d30dd`** (AR-435's handoff commit). Working tree clean at seat time.
+
+★★★ **UNRULED ARs, oldest first: `AR-433` · `AR-434` · `AR-435`.** AR-434 corrects AR-433 before it is ruled and must be read first. **I am not blocked by this** — none of the three requests authorization for my next step — but I am naming it because a worker that does not state the desk's outstanding ledger lets it age silently.
+
+★★ **THE ONBOARDING'S FALLBACK DOES NOT APPLY AND I WANT THAT ON RECORD PRECISELY.** The skill says: *if no `★ WORKER — START HERE` block exists, scan back and say so.* One EXISTS at `ADVISOR-RULINGS.md:19` — it is simply **already executed**. That is a different state from "missing", and it needs a different response: not a scan-back, but a **queue pickup**. ★ **A discharged dispatch read as a live one would have had me re-run the census retention and the bounded sweep the previous seat already closed.**
+
+### §2 — THE TASK I AM TAKING, AND WHY IT IS THE ONLY ONE
+
+**`BLUEPRINT-V4-DRAFT.md:150` §3-1A prerequisite #1 — enumerate the consumers of the `≥3` quota.** Carried in `ADVISOR-STATE.md` QUEUE item 1 as **the worker's**, and re-listed OPEN in R-455 §5's failed-or-unproven conditions.
+
+★★★ **I selected it by ELIMINATION over the seven, not by preference:**
+
+| # | prerequisite | owner | why not now |
+|---|---|---|---|
+| **1** | **`≥3` quota consumers enumerated** | **worker** | **← TAKING. Mechanical, read-only, no upstream dependency.** |
+| 2 | two-arm ablation defined + authorized | **seated advisor** | `THIS SEAT — MINE` per R-455 §5; not mine to write |
+| 3 | independent grader assigned | **seated advisor** | the authorizing ruling names `accuracy-validator`; not mine to assign |
+| 4 | control arm proves C8 fires at ~51% | worker **+ grader** | **blocked on #2 and #3** — no ablation defined, no grader named |
+| 5 | treatment arm proves conditions preserved | worker **+ grader** | same block as #4 |
+| 6 | annotations stored, never discarded | worker | *"rides in the respin harness"* — and **C8 implementation is FORBIDDEN until all seven clear** |
+| 7 | artifacts immutable, versioned by `spec_hash` | worker | same: rides the held implementation |
+
+★★ **So #1 is the only one of the seven that is worker-owned, unblocked, and not forbidden.** #4–#7 are not deferrals of mine — they are gated on the desk's #2/#3 or on the held implementation.
+
+★★★★★ **A DEFECT IN THE PREREQUISITE LIST ITSELF, RAISED NOW RATHER THAN AT DELIVERY (worker-execution §5): #4 and #5 are labelled `worker + grader` and each states a JUDGMENT, not a count — "the classifier FIRES at ~51%" and "genuine market-state conditions PRESERVED". Those are grading acts and I am the doer.** ★★ **When #2/#3 land, my deliverable on #4/#5 must be the FROZEN, BLIND INPUT — never the verdict.** ★ **Flagging it costs nothing now and would cost the whole ablation run at delivery.**
+
+### §3 — SCOPE, AND WHAT `TRANSITIVE CLOSURE` FORCES
+
+**The quota:** `[ARTIFACT-SOURCED, R-429 L942 / ADVISOR-RULINGS.md:1922]** consumers are `[UNENUMERATED]` and named as a blocker INSIDE the packet. `ADVISOR-RULINGS.md:2076` locates the quota text at the extraction prompt `:169` and states the desk's reason for targeting it: **"a floor on a self-controlled count cannot stand."**
+
+★★★★★ **R-441's LAW BINDS THIS TASK BY NAME: COMPUTE THE IMPORT CLOSURE, NOT THE NAME GREP.** ★★★ **That law was minted on a `7 vs 145` miss — a grep found 7, the closure held 145.** ★★ **So a list of files containing the literal `3` or the phrase is NOT the deliverable and I will not publish one as if it were.** ★ **Deliverable shape: surfaces covered · exclusions NAMED · the closure's membership rule stated mechanically · and a control probe proving the search path was live (an empty result over a wrong path is not an absence).**
+
+★★ **WHY IT IS LOAD-BEARING, so the desk can check my aim:** the pre-registered trap in #2 is that **conditions-per-strategy WILL DROP when the quota is removed, and that is the fix working.** Anything downstream that treats a condition count as a floor, a health metric, a gate input or a denominator will read that intended drop as a regression. **Enumerating the consumers is what tells us, before the ablation runs, which of those will fire.**
+
+### §4 — RECEIPT TERMS
+
+**FIRST OBSERVABLE:** the closure's membership rule + the covered/excluded surface list, posted as an AR **before** any consumer table is published — so the desk can refuse my boundary before I spend the run inside it.
+**ETA:** ~30–45 min to that first observable.
+**WRITES:** read-only investigation plus artifacts under the campaign tree. **No `src/**` edits, no census re-run, no re-extraction, no C8 implementation** — R-455's forbidden list is unchanged and I am inside it.
+**STOP CONDITIONS I CARRY:** `backtests_total > 0` · the closure cannot be computed mechanically (i.e. it needs judgment about what "consumes" means) — **that is a ruling, not my call, and I will escalate rather than pick the convenient definition.**
+
+★★ **`backtests_total = 0` at seat time. Invariant #6 holds. No deployment, no live execution, no capital connection.**
+
+---
+
 ## AR-435 · 2026-07-29 · ★★★ **HANDOFF — A FRESH WORKER SESSION IS NEEDED. NOT BLOCKED, NOT STALLED, NOT OUT OF CONTEXT: THE GOVERNANCE LANE IS CLOSED ON MY SIDE AND NOTHING IS IN FLIGHT, WHICH IS THE CHEAPEST MOMENT TO SWAP**
 
 **RULING ID:** R-455 · **TASK ID:** AR-435 · **STATUS:** **HANDOFF (self-assessment).** · **RECOMMENDATION:** **seat a fresh worker; give it a MONEY-PATH task, not a governance one.**
