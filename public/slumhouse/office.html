@@ -303,9 +303,11 @@
        Reporting Room movie and let the immersive surface own every pixel behind it. */
     .rr-room.rr-imm-mode { overflow: hidden; background: #000; }
     .rr-room.rr-imm-mode .rr-bg, .rr-room.rr-imm-mode .rr-veil, .rr-room.rr-imm-mode .rr-content { display: none; }
-    .rr-room.rr-imm-mode .rr-immersive { inset: 0; padding-top: 62px; border-top: 0; scrollbar-width: none; -ms-overflow-style: none; }
+    .rr-room.rr-imm-mode .rr-immersive { inset: 62px 0 0; padding-top: 0; border-top: 0; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
     .rr-room.rr-imm-mode .rr-immersive::-webkit-scrollbar { width: 0; height: 0; display: none; }
-    .rr-room.rr-imm-mode .imm-screen { width: 100%; min-height: 100vh; padding-top: 24px; }
+    .rr-room.rr-imm-mode .imm-screen { width: 100%; height: 100%; min-height: 0; padding-top: 24px; }
+    .rr-room.rr-imm-mode .imm-screen.vault-screen,
+    .rr-room.rr-imm-mode .imm-screen.night-screen { height: 100%; min-height: 0; padding: 0 !important; overflow: hidden; }
     .imm-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 18px; border-bottom: 1px solid #161616; }
     .imm-eyebrow { font-size: 10.5px; font-weight: 700; letter-spacing: 0.22em; text-transform: uppercase; color: var(--lime); text-shadow: 0 0 12px rgba(163,255,18,0.35); }
     .imm-title { font-size: 27px; font-weight: 800; letter-spacing: -0.02em; color: #fff; margin: 6px 0 0; }
