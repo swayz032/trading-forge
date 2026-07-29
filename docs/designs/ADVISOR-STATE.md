@@ -105,6 +105,40 @@ verified.**
 `run2/rows.json`, `transcript-hashes.txt`, `PROVENANCE-MANIFEST.txt`).**
 ★★★★★ **UNRULED. Awaiting the operator's external read.**
 
+## ★★★★★ [FACT, UNRULED — AR-452] §2 + §3 DELIVERED
+★★★★★ **40 TRANSCRIPTS PRESERVED AS BYTES: `backups/h1-shadow-eval/transcripts-78fe8ea7/`
+— content-addressed, read-only, outside git. Manifest hash `78fe8ea7…`, `40` files,
+`913,668` bytes, per-file RAW-BYTE sha256 + byte counts. Hashed at source → copied →
+re-hashed at destination → equal; then re-verified INDEPENDENTLY by reading
+`MANIFEST.txt` back off disk. The `2026-07-29 FORWARD SNAPSHOT` label and the
+`[UNRECOVERABLE AT ORIGIN]` limit are written INTO the README in its own words.**
+★★★★★ **ENGAGEMENT-DERIVATION WAS NOT A FORMALITY: [MEASURED] the source directory
+holds MORE `.transcript.txt` files than the 40 the harness reads. A DIRECTORY GLOB
+WOULD HAVE PRESERVED THE WRONG SET — and looked correct doing it.**
+★★★★★ **MY CRLF RELAY WAS OVER-GENERAL AND IS CORRECTED: R-463 §2 said "the sources
+are CRLF on disk." [MEASURED per file] the 40 transcripts are `0 of 40` CRLF (already
+LF), as are `gate-strength.ts` and the split JSON; ONLY `clause-segmenter.ts` and
+`graph-to-engine.ts` are CRLF. CRLF IS A PER-FILE PROPERTY AND I STATED IT AS A
+PROPERTY OF "THE SOURCES". A `dos2unix` verifier would NOT false-red on this
+snapshot. "Raw bytes, do not normalise" published anyway — safe both ways.**
+★★★★★ **A GREP WOULD HAVE CONFIRMED THE WRONG ANSWER: `grep -n graph-to-engine
+gate-strength.ts` returns TWO hits (`:7`, `:45`) — **BOTH INSIDE A `/* */` COMMENT**
+describing what the classifier replaced. Reading the imports shows `shadow.ts`'s
+runtime closure is `node:fs` · `clause-segmenter.ts` · `gate-strength.ts` and that
+the string `graph-to-engine` does not occur in `shadow.ts` at all. `READ THE
+EXECUTABLE LINE, NOT THE COMMENT` — caught live, on the exact claim it governs.**
+★★★ **THREE ERRATA PUBLISHED ADDITIVELY, no frozen byte touched: (a)
+`README-ERRATUM-2026-07-29.md` in the snapshot dir · (b)+(c)
+`docs/designs/SHADOW-EVAL-PINS-AND-MEDIANS-ERRATUM-2026-07-29.md`. Medians confirmed
+`10.6203…`→`10.6%` and `3.6229…`→`3.6%` by TWO independent paths (library median and
+a hand-computed median off the sorted list) agreeing to 12 decimals.**
+★★ **[MEASURED, not asserted] nothing existing was mutated: `sha256sum -c` on the
+`shadow-eval-edaa0c14` snapshot → `3 of 3 OK` AFTER all of today's work; its README
+still read-only and unmodified.**
+★★ **§5 (generator hardening) NOT STARTED — correctly declined as an instrument
+change needing a ratify packet + independent validator. Worker handing off.**
+★★★★★ **UNRULED — awaiting the operator's external read.**
+
 ## SEAT
 ★★★★★ **[FACT, NOT YET RULED — AR-446] R-459 STEPS (1) AND (2) ARE DELIVERED, AND
 IT CORRECTS ONE OF MY OWN CONSTRAINTS IN THE SAFE-TO-LOOSEN DIRECTION: I ruled
