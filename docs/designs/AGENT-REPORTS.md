@@ -4,6 +4,45 @@
 
 ---
 
+## AR-405 · 2026-07-29 · ★★★ **(A) VERDICT: CONTAMINATED — AND IN THE STRONGEST FORM. THE CLASSIFIER'S RULES-DESIGN CORPUS IS 14 VIDEOS AND ALL 14 ARE IN THE LIVE LIBRARY.** ★★★ **WORSE THAN A HEADLINE OVERLAP: THE SPLIT IS PER-CONDITION, SO 13 OF THOSE 14 VIDEOS HAVE CONDITIONS ON BOTH SIDES — VIDEO-LEVEL SEPARATION DOES NOT EXIST.** ★★★ **AND THE CONSTRUCTIVE HALF: 26 OF THE 40 LIVE VIDEOS WERE NEVER SEEN BY THE DESIGN SPLIT — A GENUINE HELD-OUT CORPUS ALREADY EXISTS INSIDE THE POPULATION WE CARE ABOUT, AT ZERO EXTRACTION COST**
+
+**RULING ID:** R-433 (A)+(B) · **ARTIFACT:** amendment appended to `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED. Document only — nothing run, no flag flipped, no artifact touched. [MEASURED] `backtests total = 0`.**
+
+### ★★★ (A) MEASURED, NOT INFERRED — the classifier documents its own split and I opened it
+
+`gate-strength.ts:41` cites `docs/replay-results/corpus-v3-heldout-split-2026-07-05.json`; commit **`1521b467`** (2026-07-05) is *"corpus-v3(steps2-4): **held-out split** + gate-strength classifier + Gate 1 (FAIL, honest)"*; **`15abe2d5`** (2026-07-06) is iteration pass 2.
+
+**[MEASURED, that split file] `method`: `sha256(condition_id) low-byte mod 10 < 3 -> held-out` — deterministic, PER CONDITION · `source_file`: `dri-audit-2026-07-05.json` · total 221 → design 143 / held-out 78 (35.3%) · sample design key `75DJN5UVQnw||WAIT_SESSION:timeframe selection#0`.**
+
+| | |
+|---|---:|
+| distinct videos in the **rules-design** split | **14** |
+| ★★★ of those, videos in the LIVE library | ★★★ **14 — all of them** |
+| videos in the held-out split | 13 |
+| ★★ videos appearing in **BOTH** splits | ★★ **13** |
+| ★★★ live videos NEVER seen by the design split | ★★★ **26** |
+
+★★★ **YOUR PRE-REGISTERED ARM FIRES, and on the strongest form of the condition — the design corpus is a SUBSET of the live library, not merely overlapping it. The 40-video shadow evaluation is NOT an independent test; it is a consistency check and must be labelled one.**
+
+★★ **AND THE PART THE HEADLINE HIDES, which I think matters more: the split is per-CONDITION, so 13 of the 14 videos have conditions on BOTH sides. The rules were authored against text from the very videos whose other conditions were meant to grade them. Video-level separation never existed inside the design corpus — a held-out split at the wrong granularity is a held-out split in name.** ★ The 2026-07-06 iteration explicitly disclaims tuning on the held-out set or the `snNkQSyWX4k`/`jlShztsY3oA` pairs — **good discipline that does not undo leakage one level up.**
+
+### ★★★ THE CONSTRUCTIVE RESULT — you do not need a new corpus
+
+**26 of the 40 live videos are untouched by the design split**, listed in full in the amendment. **REQUIRED PARTITION from here: ARM-CLEAN (26) is the only arm whose grade may be called independent · ARM-CONTAMINATED (14) is run and reported but every figure from it is labelled a CONSISTENCY CHECK. ★★ The two arms may never be pooled into one accuracy number.**
+★ **SCOPE OF THE CLEAN CLAIM, so it is not over-read: the 26 are clean w.r.t. the corpus-v3 rules-design split — the tuning input the classifier documents. [NOT MEASURED] every other possible tuning input in that module's history; I am not claiming more than the documented split supports.**
+
+### (B) THE POINTER-RESOLUTION DESIGN — nine numbered steps in the amendment
+
+Resolve **before** classify, using the real `segmentTranscript` with a published CONTROL line · shape-classify all five encodings · concatenate multi-pointer forms in document order · **flag the 902 short non-pointer values `low-information`, because a regex family cannot fairly judge a 12-character string** · **a 100% resolution-coverage gate, and STOP if it is not met** · record `rule_fired` per condition · ★★★ **publish the fired-vs-fallback split BROKEN DOWN BY EVIDENCE SHAPE — if pointer-shaped and verbatim evidence show the same fallback rate, the resolver changed nothing the classifier saw and the run is VOID** · exclude the 20 span disagreements · grade ARM-CLEAN only.
+
+**Files changed:** the packet (amended) · this report. **No code, no flag, no artifact, no DB write.**
+**Remaining uncertainty:** ★ **[NOT MEASURED]** whether ARM-CLEAN's 26 videos are large enough to grade each of the four classes — **a class-balance check on the 26 should precede the run, or a clean arm could still be too thin to convict.** ★ **[NOT MEASURED]** other tuning inputs beyond the documented split. ★ **[NOT MEASURED]** the rule-6 margin rate. ★ **[NOT MEASURED]** freeze status of the `extraction-100` worktree.
+**Risk:** none — a document.
+
+**Next smallest task (ONE):** the class-balance check on ARM-CLEAN's 26 videos — read-only, no classification, just how many conditions per atom-type and per current role — because a held-out arm too thin in a class cannot validate that class, and finding that out AFTER the run wastes the run.
+
+---
+
 ## AR-404 · 2026-07-29 · **START-RECEIPT — R-433 (A) the CONTAMINATION CHECK, then (B) the POINTER-RESOLUTION DESIGN. Amendment to the packet; document only.**
 
 **RULING ID:** R-433 · **ETA ~30 min.** ★ **One citation correction so nobody hunts the wrong file: the regex families and `classifyGateStrengthDeterministic` are at `gate-strength.ts:185-208`, NOT `graph-to-engine.ts:185-208` — `graph-to-engine.ts` holds the flag (`:75`) and the topology line (`:93`/`:100`). Both files are in the `extraction-100` worktree and neither exists in the primary checkout.**

@@ -209,3 +209,96 @@ critical path.**
 ★ **[NOT MEASURED]** whether `classifyGateStrengthDeterministic`'s regex families were tuned on a set
 that includes these 40 videos — **if they were, a shadow evaluation over the same corpus is not an
 independent test, and that must be checked before any grade is believed.**
+
+---
+
+# AMENDMENT — R-433 (A) CONTAMINATION CHECK · (B) POINTER-RESOLUTION DESIGN
+
+**2026-07-29 · document only · nothing run, no flag flipped.**
+
+★ **Citation correction:** the regex families and `classifyGateStrengthDeterministic` live at
+**`gate-strength.ts:185-208`**, not `graph-to-engine.ts:185-208`. `graph-to-engine.ts` holds the flag
+(`:75`) and the topology line (`:93`/`:100`). Both files are in the `extraction-100` worktree.
+
+## (A) ★★★ VERDICT: **CONTAMINATED.** The design corpus is 14 videos and ALL 14 ARE LIVE.
+
+**The classifier documents its own split, so this was measured, not inferred.**
+`gate-strength.ts:41` cites `docs/replay-results/corpus-v3-heldout-split-2026-07-05.json`; commit
+`1521b467` (2026-07-05) is *"corpus-v3(steps2-4): **held-out split** + gate-strength classifier +
+Gate 1 (FAIL, honest)"*; `15abe2d5` (2026-07-06) is iteration pass 2.
+
+**[MEASURED, that split file]**
+- `method`: `sha256(condition_id) low-byte mod 10 < 3 -> held-out` — deterministic, **per CONDITION**.
+- `source_file`: `docs/replay-results/dri-audit-2026-07-05.json` · `total` **221** →
+  `rules_design_count` **143** / `held_out_count` **78** (35.3%).
+- sample design key: `75DJN5UVQnw||WAIT_SESSION:timeframe selection#0`.
+
+**[MEASURED, overlap against the 40 live videos]**
+
+| | |
+|---|---:|
+| distinct videos in the **rules-design** split | **14** |
+| ★★★ of those, videos that are in the LIVE library | ★★★ **14 — all of them** |
+| videos in the held-out split | 13 |
+| ★★ videos in **BOTH** splits | ★★ **13** |
+| ★★★ **live videos NEVER seen by the design split** | ★★★ **26** |
+
+★★★ **THE PRE-REGISTERED ARM THAT FIRES: "tuned on a set that INCLUDES these 40 videos → the shadow
+evaluation over the same 40 is NOT an independent test; it is a consistency check only and must be
+labelled as one; a held-out corpus is required before any grade is believed."** It fires on the
+strongest possible form of the condition — the design corpus is a *subset* of the live library.
+
+★★ **AND THE SHARPER PROBLEM THE HEADLINE HIDES: the split is per-CONDITION, so 13 of the 14 videos
+have conditions on BOTH sides. Video-level separation does not exist inside the design corpus — the
+rule author saw text from the same videos whose held-out conditions would later grade the rules.**
+★ The 2026-07-06 iteration explicitly disclaims tuning on the held-out set or on the
+`snNkQSyWX4k`/`jlShztsY3oA` behavioural pairs, which is good discipline — **but it does not undo the
+video-level leakage, because the design conditions themselves come from those same videos.**
+
+### ★★★ THE CONSTRUCTIVE RESULT: A CLEAN HELD-OUT CORPUS ALREADY EXISTS
+
+**26 of the 40 live videos were never seen by the design split** — a genuine held-out set, inside the
+population we actually care about, at no extraction cost:
+
+`1HFoStW_wsc · 7ieYBa7Z-Hg · E8Wg6tFPYjo · FAKWJ-1NlLE · LOcaRWcc1xI · N7SM8a7Dc9s · Qxlu8v_6G3Y ·
+VTEQ2fhGLqE · WV1fyudd7fw · aHLIE_TXjpo · bQp37aD1JLE · dE4lPhAWke8 · dHmOosYof48 · deymRD3kSD0 ·
+e5HQXYBUW-Q · gddYspvW0_w · h6TnE7QClJg · iU8ww5MC2FQ · l-2iKbcm5UI · lRMFcsqhYBU · mNcoaNdAyIE ·
+nV9gknhy2Ew · qLtq73bTPBA · x1ydP8bC7OE · xTTDH5iRhJc · z3Qn3fBoe2I`
+
+**REQUIRED PARTITIONING for the shadow run, from here on:**
+**ARM-CLEAN (26 videos)** — the only arm whose grade may be called independent.
+**ARM-CONTAMINATED (14 videos)** — run it, report it, and **label every figure from it a CONSISTENCY
+CHECK, never a validation.** ★★ **The two arms must never be pooled into one accuracy number.**
+★ **[SCOPE OF THE CLEAN CLAIM, stated so it is not over-read] the 26 are clean with respect to the
+corpus-v3 rules-design split, which is the tuning input the classifier documents. I did not audit
+every possible tuning input in the module's history — that is [NOT MEASURED], and a stronger claim
+than "clean w.r.t. the documented design split" is not supported.**
+
+## (B) POINTER-RESOLUTION DESIGN — resolve BEFORE classify
+
+**Ordered steps, to be executed only when the shadow run is authorized:**
+1. Per video, load `<video>.transcript.txt` and call the REAL
+   `clause-segmenter.ts:60 segmentTranscript(t, "T-" + video.slice(0,4))`; build `id → {text, start,
+   end}`. ★★ **Publish a CONTROL line proving the real function loaded** — a silently-stubbed runner
+   is a known trap here.
+2. Classify each `evidence` value's SHAPE: `plain (T-x-C####)` · `brace-set {a, b}` ·
+   `range "A to B"` · `start:/end:` · `verbatim text` · `short non-pointer`.
+3. **Resolve:** plain → that clause's text; brace-set / range / start-end → the referenced clauses'
+   text concatenated in document order; verbatim → itself; **short non-pointer → itself, but FLAGGED
+   `low-information` — [MEASURED] 1004 of 2351 values are non-pointer and 902 are ≤25 chars, and a
+   regex family cannot fairly judge a 12-character string.**
+4. **Resolution coverage gate:** pointer-shaped values must resolve at **100%** — [MEASURED, AR-397]
+   1458 of 1458 do. ★★★ **If coverage is below 100% on the run, STOP and report; do not classify a
+   partially-resolved corpus.**
+5. Feed the RESOLVED text as `evidenceQuote` to `classifyGateStrengthDeterministic`.
+6. **Record per condition:** `evidence_shape · resolution_status · resolved_char_len · rule_fired
+   (rule_1…rule_5b | null) · gate_strength | null · mapped_role · old_role`.
+7. **Publish the fired-vs-fallback split OVERALL and BROKEN DOWN BY `evidence_shape`.**
+   ★★★ **The by-shape breakdown is the proof the resolution did work: if fallback rates are the same
+   for pointer-shaped and verbatim evidence, the resolver did not change what the classifier saw, and
+   the run is void.** This is the operational form of §5-C3.
+8. **Exclude the 20 span-disagreement conditions** (AR-397) or adjudicate each first.
+9. Grade **ARM-CLEAN only**; report ARM-CONTAMINATED separately and labelled.
+
+★★ **Nothing in this design sets an environment variable in any live path — the classifier is called
+directly as a function, over data read read-only.**
