@@ -1,231 +1,55 @@
 # ADVISOR-STATE — money-path / H1 seat
 
-> **Rewritten in place, never appended.** Cold-start read: this file, then the
-> last 3–5 rulings, then the newest 1–2 ARs. **Never read the ledger from the top.**
-> Last rewritten: 2026-07-29, current through **R-444**.
->
-> ★★★ **PRECEDENCE — READ THIS FIRST. This file has been appended under time
-> pressure and now carries STALE DUPLICATES below the `## SEAT` block (e.g. an
-> older "worker: item (1) CI-gate measurement in flight" line, and R-443's
-> kill-switch framing). THE `## SEAT` BLOCK IS AUTHORITATIVE; anything below it
-> that conflicts is SUPERSEDED. `## THE PLAN` is also authoritative — it is the
-> only carrier of the v3 ladder.**
-> ★★ **INCOMING SEAT'S FIRST JOB: rewrite this file in place to ~40 lines, and
-> when you do, CHECK ALL FIVE `v3-N` TAGS SURVIVE — a previous compaction
-> silently dropped three of them. Do it while you are fresh, not at handoff.**
+> **Rewritten in place, never appended.** Cold read: this file → last 3–5 rulings
+> → newest 1–2 ARs. **Never read the ledger from the top.**
+> Last rewritten 2026-07-29 01:20 EDT, current through **R-444 / AR-419**.
+> Compacted **386→185 lines** (measured, not estimated). **All five `v3-N` tags
+> verified present by grep after the rewrite.** ★ Still over the ~40-line target:
+> what resists cutting is the ARMED STOP, the population doctrine, the v3 ladder
+> and the NOT-AUTHORIZED list — cut those and the next seat acts blind. Cut
+> narrative, never contracts.
 
 ## SEAT
-Ledger at **R-444**. Newest AR: **AR-419** (start-receipt, in flight).
-**Worker: shrinking the remaining 156 baseline entries under the RAN-AND-PASSED
-discriminator, then adding the `BASELINE_SHRINK_NEEDED > 0` self-cleaning guard;
-plus the one real hardcoded-path member, `test_spec_family_bindings.py`.**
-★★★ **ARMED STOP CONDITION: if any of the 156 turns out to be GENUINELY FAILING
-rather than stale, that is a real regression and it comes to the desk before
-anything else — it is NOT the worker's to fix on its own initiative.**
-★ **PR #32 (`6d7c5d23`) carries the 4-file Python path fix + the 24-entry
-removal, RATIFIED R-444 on measured justification. Not yet merged.**
+Ledger **R-444**. Newest AR **AR-419** (start-receipt, in flight since 01:08 EDT,
+**authorized ETA ~45 min**). Worker: **ACTIVE** (`claude.exe` 9444 alive, 6 python).
+**TASK (R-444):** prove each of the remaining **156** baseline entries
+**RAN-AND-PASSED** before removal — `fixedFailures` means *did not fail*, and a
+test that never RAN also did not fail. Unprovable ⇒ stays, reported UNRESOLVED.
+Then add the **`BASELINE_SHRINK_NEEDED > 0` CI guard, sequenced AFTER the shrink**
+or it fires red on arrival. Plus the one real hardcoded path,
+`test_spec_family_bindings.py`.
+★★★ **ARMED STOP: if any of the 156 is GENUINELY FAILING rather than stale, that
+is a real regression and it comes to the desk — NOT the worker's to fix.**
+★ **PR #32 (`6d7c5d23`) = 4-file path fix + 24-entry removal. RATIFIED R-444 on
+the worker's measured justification. NOT merged.**
+★★★★★ **DO NOT INHERIT R-443's KILL-SWITCH ALARM — WITHDRAWN by R-444. The kill
+switch and compliance gate are NOT failing: all 24 assertions in `fixedFailures`,
+`verdict GREEN` (CI's own `compare-baseline.mjs`, run `30422166825`). The 24 were
+STALE OVERRIDES on a WORKING sensor — governance defect, not a safety hole.**
 
-★★★★★ **R-443's KILL-SWITCH ALARM IS WITHDRAWN (R-444). DO NOT INHERIT IT.
-THE KILL SWITCH AND COMPLIANCE GATE ARE **NOT** FAILING AND WERE NOT FAILING:
-[MEASURED BY GRADED INSTRUMENT — CI's own `compare-baseline.mjs`, run
-`30422166825`] all 24 assertions are in `fixedFailures`, `verdict GREEN`,
-`newFailures []`. [MEASURED HERE] `git show a52449ac:…/live-fix-sweep.test.ts`
-already uses `fileURLToPath(new URL(…, import.meta.url))` at `:23,85,260,307` —
-the portable form. There was nothing there to break.**
-★★★ **HOW I GOT IT WRONG, AND IT IS THE LAW I HAD JUST RE-COPIED INTO THIS FILE:
-I ran `grep -rn` inside the CAMPAIGN WORKTREE and published the result as a claim
-about the DEPLOYED LANE. `NAME THE TREE`. Counts at `a52449ac` vs campaign:
-`live-fix-sweep.test.ts` **0** vs 4 · `wave25-liquidity-map.test.ts` **0** vs 1 ·
-`test_spec_family_bindings.py` **1 vs 1 — the one real member, survives.**
-★★ **WHEN THE CLAIM IS ABOUT CI, SWEEP WITH `git show <tested-sha>:<path>` — NOT
-in whatever checkout your shell is sitting in.**
-★★ **WHAT SURVIVES: the 24 WERE allow-listed at `a52449ac` (right tree), and
-`compare-baseline.mjs` fails only on NEW failures — but their `reason` field dates
-them to the `2026-07-12 Node baseline freeze`. STALE OVERRIDES ON A WORKING
-SENSOR, not live cover for a broken one. Governance defect, NOT a safety hole.**
-★★★ **THE REAL FINDING, AND IT IS BIGGER: [MEASURED BY GRADED INSTRUMENT, same
-run] `BASELINE_SHRINK_NEEDED=180`. 180 baselined entries no longer fail; 24 are
-removed (ratified R-444); **156 REMAIN**, each a standing licence for a test to
-fail silently if it regresses. The list has grown since 2026-07-12 and nothing
-shrinks it. Durable fix (worker's recommendation, ADOPTED): a CI step that FAILS
-when `BASELINE_SHRINK_NEEDED > 0` — land it AFTER the shrink or it fires on
-arrival.**
-★★★★★ **THE DISCRIMINATOR THAT GOVERNS THE 156: `fixedFailures` means DID NOT
-FAIL, and a test that never RAN also did not fail. Not hypothetical here — the
-Python suite truncates at 44% and 9 quantum tests `pytest.skip` on Linux. Every
-entry must be proven RAN-AND-PASSED before removal; unprovable ⇒ stays, reported
-UNRESOLVED.**
-★★ **STILL TRUE from R-442/R-443 and NOT withdrawn: the Python suite's 7
-source-contract failures and 9 silent skips ARE real and DO trace to hardcoded
-dev paths (PR #32, 4 files). The Python tree still truncates at 44% — >56% has
-not run in CI. `continue-on-error` stays until that is green.**
-★★★ **THE WORKER STOPPED INSTEAD OF OBEYING A WRONG ORDER AND WAS RIGHT. An
-order from this desk is a CLAIM, not evidence. AR-419 then self-convicted on its
-own AR-418 cell (`test_spec_family_bindings.py = 0`, actually `1`) — both
-directions of the loop are working; do not damp either.**
-★★★ **OPEN INCIDENT — THE PYTHON SUITE IS RED ON `ubuntu-latest` AND REPORTS
-GREEN. [MEASURED HERE] the `Run pytest with coverage` step ends `##[error]Process
-completed with exit code 1` in ALL 8 most-recent `ci.yml` runs (`30410830104`
-00:20Z → `30422166825` 04:23Z); every job shows `success` because of
-`continue-on-error: true`. SEVEN failing tests, two files —
-`test_fix3_cpcv_default.py::TestFix3SourceContract` (5) and
-`test_fix4_adaptive_symbol_dst.py::TestFix4SymbolFromSpec` (2), both
-source-contract tests reading `backtester.py`'s TEXT.**
-★★★ **PR #31 DID NOT CAUSE IT — the failures predate #31's creation (03:51Z) by
-3.5h. Join key = run timestamp vs PR creation time, checked. `backtester.py` is
-not in #31's 4-file diff.**
-★★★ **SAME COMMIT, DIFFERENT OS, DIFFERENT VERDICT. [MEASURED HERE, Windows,
-merged tip `a52449ac`] whole tree = `7296 passed / 34 skipped / 0 failed`, exit 0,
-217.87s; collection 7327 in 9.91s. `7296 = 7294 + 2` (the two tests #31 added).
-The variable is the OS. Item (1) must be pulled from the CI LOG — local repro is
-already known to fail.**
-★★ **SEVERITY: governance/observability, NOT trading-safety. `backtests = 0`,
-nothing live, and the seven are source-text assertions, not execution defects.**
-★★★ **DO NOT REMOVE `continue-on-error` UNTIL THE TREE IS GREEN ON LINUX — a
-blocking gate over a red tree blocks every push.** Worker order is now: **(1)
-root-cause the seven · (2) the order-dependent `test_three_fixes.py` test
-([MEASURED HERE] reproduced at `a52449ac`: `1 failed, 10 passed` in isolation,
-passes in company) · (3) CI hardening, FULL TREE, no curated subset · (4) the
-`compile_lints.py:129` comment.**
-★★ **MY OWN CORRECTION ON RECORD: I reported "19 of 19 checks SUCCESS" twice.
-True of the statuses, false in meaning — one was a pytest step that exited 1.
-Retire that number from the vocabulary, not just from the reasoning.**
-★★★ **CURATION IS THE WRONG FIX AND IT IS MEASURED: a curated subset goes RED
-where the full tree goes GREEN (the order-dependent test), and costs 24.6 min
-against 3.6. Blocking target = the FULL TREE, failing on: test failures · zero
-collected · collection errors · missing plugins · timeout · abnormal exit.**
-Newest ruled AR before this: **AR-414 (ratified, R-442) · AR-413 (ratified,
-R-441).** ★★★ **PR #31 IS MERGED —
-`a52449ac`, 2026-07-29T04:23:56Z. The provenance defect is CLOSED: 426 conditions
-stop claiming the source required them, refusal set unmoved.** ★ **[MEASURED
-HERE] merging did NOT deploy — `LANDED ≠ RUNNING`, no tower update performed.**
-Worker: **item (1) CI-gate MEASUREMENT in flight (the only open task); then the
-`compile_lints.py:129` comment fix, documentation-only.**
-★★★ **THE MERGE EVIDENCE, so no later seat re-derives it: census `A−B = B−A = ∅`
-as literal 1368-member sets over the real 120-row library on both commits, `Δ426`
-independently derived, `backtests = 0` across FOUR tables · PLUS `2404 passed /
-17 skipped / 0 failed, exit 0` across the **145-suite TRANSITIVE** surface at
-`0b0d6617`.**
-★★★ **I HELD MY OWN DRAFTED MERGE TO GET THAT SECOND NUMBER: R-439 §2 published
-"the 7 suites importing either changed module" — that was the DIRECT textual
-grep, and the transitive closure is 145. A CENSUS IS BOUNDED BY ITS SURFACE. The
-same closure is 114 in the campaign tree and 145 at the PR head — state the tree.**
-★★ **HEADLINE COUNT WAS WRONG AND IS CORRECTED ON THE PR ITSELF: `MANDATORY
-1350→924`, not `1347→921` (+3 both sides = three plan-level
-`NON_EXECUTABLE_EMPTY_SPINE` refusals that hardcode `rule_class=MANDATORY`
-independent of `_MANDATORY_ROLES`). `UNKNOWN_REQUIREDNESS 18→444`, `Δ426`,
-`total 1368` were all exactly right.**
-★★★ **A COMPLETION SIGNAL IS NOT A RESULT — FOUR false greens in one session:
-`ci.yml` pytest `continue-on-error:true` · R-438's recorded-but-never-run grader ·
-a 145-suite run that exited `4` on a missing `pytest-timeout` while the harness
-said "exit code 0" · a PR-body edit that printed "UPDATED" having changed nothing
-(Python resolved `/tmp`→`C:\tmp`, next line re-uploaded the original). **VERIFY
-THE ARTIFACT, NOT THE SIGNAL. Every mutation asserts its own edit TOOK.**
-★★ **`pytest-timeout` IS NOT INSTALLED in these worktrees — `--timeout` makes
-pytest exit `4`; use the shell's `timeout` and capture `$?` unpiped.**
-★★★ **`contextual` 7 rows/5 videos · `alternative` 8 rows/6 videos — BOTH
-UNDERPOWERED, and all 15 came via `RESOLVED_POINTER_TEXT`, `0 of 15` via
-`SEMANTIC_SOURCE_TEXT`. DO NOT spend a grader on them; diagnostic fixtures only.
-No semantic-class result may be published without distinct-VIDEO count + path
-split. The role↔class mapping is REFUTED, not merely unvalidated: `confluence`
-is commoner under `mandatory` (13) than under `contextual` (4).**
-★★★ **[MEASURED HERE] THE `CI RED` STOP CONDITION R-437 ARMED HAS NO PATH TO RED:
-`ci.yml`'s pytest step is `continue-on-error: true`, so a failing Python suite
-still reports green. THE WORKER CAUGHT THIS IN MY OWN RULING.** ★★★ **STANDING,
-EFFECTIVE NOW: no ruling may cite "CI green/red" as evidence about Python
-behaviour — cite a named local suite, its command, and its EXIT CODE. Blocking
-jobs are only `Lint` (ruff bug-subset), Parity, Snapshot, Frankenstein, Metric
-Gates; ruff-style, mypy and pytest are all advisory.**
-★★★ **I RE-RAN THE PROOF MYSELF at `0b0d6617`: 38 passed · 133 passed on seven
-suites I enumerated by my own grep · MUTATION A reproduced at 5 failed/33 passed
-(the four named tests + the new regression test). THE TESTS BITE.**
-★★ **PR #31 SCOPE EXTENSION (`spec_condition_compiler.py:640`) KEPT — [MEASURED
-HERE] presentation-only: same predicate on the same resolved value, same
-exception type, f-string only. The machine key `unresolved_mandatory_rules` was
-correctly left alone (interface contract, test-pinned).**
-★★★ **INDEPENDENT GRADE (R-438): `accuracy-validator` returned SOUND on the
-runtime claim via two non-overlapping paths — and found what NEITHER the designer
-nor the builder named: FOUR named tests will newly fail, all asserting the string
-`MANDATORY` for a `spine` role. The other 32 stay green, and that green set is the
-empirical proof the refusal set does not move.**
-★★★ **USE `accuracy-validator` FOR INDEPENDENT GRADES — it is this project's
-fresh-eyes instrument and `doer ≠ grader` has a dedicated agent here. Route grades
-to it EARLY, not as a final formality.** (Operator had to point this out.)
-★★ **THE GAP IN THAT GRADE IS MINE: my brief barred DB access, so `426`/`1347→921`
-came back UNVERIFIED — I prevented the check.**
-★★★ **CORRECTED IN R-439 — R-438's "GRADER RE-DISPATCHED" NEVER HAPPENED, and
-this file had repeated it as fact. [MEASURED HERE] exactly ONE `accuracy-validator`
-transcript exists (`agent-a531c9a188a422415.jsonl`, 02:40Z = the FIRST grade);
-none after it; `TaskList` empty. An ACTION asserted in a verdict's voice and never
-checked — the seat's own convicted shape, committed to the ledger.**
-★★★ **NOW GENUINELY DISPATCHED (R-439) and NOT as R-438 briefed it: against PR
-#31's real commit `0b0d6617`, not a scratch copy — grading a scratch copy grades a
-NEIGHBOURING OBJECT. DB read access EXPLICITLY AUTHORIZED (the barred-DB
-restriction WAS the hole in grade #1), transition count to be derived
-independently with an explicit instruction NOT to anchor on 426, per-video AND
-per-row, honest null accepted. AWAITING ITS VERDICT — that verdict is the ONLY
-thing merge waits on.**
-★★★ **STANDING PROTOCOL (operator, 2026-07-29): GET AN EXTERNAL (GPT) OPINION
-BEFORE WRITING A RULING, and carry it in as a named input graded `[EXTERNAL
-OPINION]` — never `[MEASURED]`. Agreement between two readers is NOT evidence;
-disagreement resolves by MEASUREMENT. It does not replace `accuracy-validator`:
-that agent measures, the external read reads. ★ Audit its premises — the first
-one arrived mislabelled "R-436" and cited test counts no AR had yet reported.**
-★★ **MERGE REMAINS HELD:** a SOUND verdict on "behaviour does not change" is not
-approval of the patch, because the patch's PURPOSE — 426 corrected provenance
-records — is the part still unmeasured. Nothing is urgent; refusal behaviour is
-already correct and only the label is wrong.
-★★★ **[RELAYED] HOLDOUT-26: rules fire on 4.1%, LEGACY_FALLBACK 95.9%. Flipping
-the flag today would change ~4% of labels and stamp SEMANTIC provenance on the
-96% the TOPOLOGY heuristic still decided — the signature defect a FOURTH time.**
-★★★ **THE PROVENANCE FIX NEEDS NO CLASSIFIER: drop `"spine"` from
-`_MANDATORY_ROLES` (`spec_execution_preflight.py:94`) and it falls to
-`UNKNOWN_REQUIREDNESS`, which [MEASURED HERE] `blocks_execution` treats
-IDENTICALLY — refusal set cannot move, only the recorded class changes. NOT a
-relaxation. Red-proof as a SET difference of ∅, never a count.**
-★★ **The semantic labeller is DEMOTED to a separate capability question — rule 6
-(gemma, network I/O) carries ~96%, so it is ON the critical path, a different
-proposal that does not inherit this one's approval.**
-★★★ **HOLDOUT-26 is INTACT (we inspected mechanical rates, not labels) but BURNS
-the moment anyone expands rule coverage in response to the 4.1%. Rule expansion
-is FORBIDDEN until a fresh untouched population is named FIRST.**
-★★ **Two controls did their job: ARM B fired 0 of 2351 (so 100% of decisions are
-source-driven — the false-green did NOT fire), and the no-pooling rule exposed
-contamination as 11.3% vs 4.1% where pooled 5.8% would have hidden it.**
-★★★ **TREE: `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch
-`h1-wave4-sealed12-driver` — NOT the primary cwd**, which is a container of ~90
-worktrees. "Relay files missing" = wrong tree, never a vanished campaign.
-★★★ **INVOKE `advisor-ruling` BEFORE EVERY RULING** (hook-enforced; it mutates).
-★★ **YOU DECIDE** (operator-ordered): merges · worktree updates · deploys of
-verified work · reversible CI-gated production writes · tooling. **Reserved to
-operator:** real capital · spend · irreversible destruction · unboundable blast
-radius. Never answer from ignorance when `WebSearch` exists.
-★★★ **EVERY RULING AUTHORIZING WORKER WORK OPENS WITH A COLD-START-COMPLETE
-`★ WORKER — START HERE` BLOCK** (R-430); desk narrative goes BELOW it. A ruling
-is a RECORD and a DISPATCH — **when they compete, the dispatch wins.**
-**Rig:** 2s AR content-hash poll + 15-min idle watchdog (mine). The
-`ADVISOR-RULINGS.md` watcher under the OTHER `claude.exe` is **the worker's ear —
-never kill it.** Enumerate before arming; one rig, never new-plus-old.
+## OPEN INCIDENT — Python suite RED on Linux, REPORTS GREEN
+**[MEASURED]** pytest step exits `1` in all 8 recent `ci.yml` runs; jobs show
+`success` only because of `continue-on-error: true`. 7 source-contract failures
+(`test_fix3_cpcv_default.py` ×5, `test_fix4_adaptive_symbol_dst.py` ×2). Tree
+truncates at **44%** — >56% has never run in CI; 9 quantum tests skip on Linux.
+★★★ **`continue-on-error` STAYS until the tree is green on Linux — a blocking
+gate over a red tree blocks every push.** Blocking target = the FULL TREE.
+★★★ **STANDING: no ruling may cite "CI green/red" as evidence about Python — cite
+a named suite, its command, and its EXIT CODE.** Severity: governance, not
+trading-safety (`backtests = 0`, nothing live).
 
-## THE PLAN — money-path phase ladder (BLUEPRINT, R-053..R-061)
-**READ THIS BEFORE ANSWERING "what phase are we in."**
-★★★ **A `BLUEPRINT v4 DRAFT` LANDED AT COMMIT `9116d757` FROM A CONSULTING SEAT
-— "money-path acceleration plan, pending red-team + external read +
-ratification". [MEASURED HERE] I did NOT author it, did NOT read it, and have
-NOT ratified it. The ladder below is still v3 and remains THE operative plan
-until a ruling says otherwise. Do not let an unratified draft in the tree be
-mistaken for the plan — read it, red-team it, and rule on it explicitly.**
-- **Phase 1 — SPEC COMPILATION (WE ARE HERE).** Exit: *"≥1 tier-A spec compiles
-  with ALL load-bearing conditions concretely bound AND the compile-fidelity
-  forensics gate passes calibration."* Pinned before-figure (R-401, cite exactly):
-  `0/16 specs fully bound. Flags-off: 0 of 155 bound_and_concrete. Flags-on
-  hypothetical: 6 of 155. Source: dual-denominator-remeasure-2026-07-21.json,
-  frozen, refresh BLOCKED by REVIVAL_FAMILY.` ★★★ **R-409: NOT exitable on
-  corpus_A as extracted; the corpus_B clause FIRED. Dies at the BINDING layer.**
+## THE PLAN — money-path ladder (BLUEPRINT v3, R-053..R-061)
+**READ BEFORE ANSWERING "what phase are we in."**
+- **Phase 1 — SPEC COMPILATION (WE ARE HERE).** Exit: ≥1 tier-A spec compiles with
+  ALL load-bearing conditions concretely bound AND the compile-fidelity forensics
+  gate passes calibration. Pinned before-figure (R-401, cite exactly): `0/16 specs
+  fully bound. Flags-off: 0 of 155 bound_and_concrete. Flags-on hypothetical: 6 of
+  155. Source: dual-denominator-remeasure-2026-07-21.json, frozen, refresh BLOCKED
+  by REVIVAL_FAMILY.` ★★★ **R-409: NOT exitable on corpus_A; dies at BINDING.**
 - **Phase 2 — BATTERY / WAVE.** ★ **v3-1 FAILURE-ATTRIBUTION READ**, pre-registered
   before any verdict is interpreted: {edge-absent · compile-fidelity-loss ·
-  overlay-caused}. ★ **v3-2 OVERLAY A/B**, taught-exit strategies ONLY:
-  pre-registered dual-arm, house Style-C exits vs taught exits.
+  overlay-caused}. ★ **v3-2 OVERLAY A/B**, taught-exit strategies ONLY: dual-arm,
+  house Style-C exits vs taught exits.
 - **Phase 3 — CONVEYOR, not a queue.** Internal-paper + shadow-accumulation run
   CONCURRENTLY per strategy. ★ **v3-3 EVAL-ODDS PRE-COMPUTE** at pre-flight: aim
   B14/survival at the EVAL's own parameters (Combine trailing DD, profit target)
@@ -233,153 +57,133 @@ mistaken for the plan — read it, red-team it, and rule on it explicitly.**
 - **Phase 3→4 — ★ v3-4 DEPLOY-IN-SEASON.** Survivors deploy only when their
   forensics-named regime is LIVE; out-of-season survivors hold in paper standby.
 - **Phase 3.5 — FIRST THIRTY FUNDED DAYS**, written BEFORE funding. Payout cadence
-  under 20/80 reserve mechanics; advisor recommendation on record = CONSISTENCY
-  lane. ★★ **v3-5 STOP-GATES SYMMETRIC TO GO-GATES:** eval failed 2× →
-  attribution loop, NEVER a blind retry · funded loss-streak → a pre-written
-  post-mortem before any redeploy.
+  under 20/80 reserve; advisor recommendation on record = CONSISTENCY lane.
+  ★★ **v3-5 STOP-GATES SYMMETRIC TO GO-GATES:** eval failed 2× → attribution loop,
+  NEVER a blind retry · funded loss-streak → pre-written post-mortem before redeploy.
 - **PRE-POSITIONED LAST MILE (operator spend):** when the first real-fidelity wave
-  shows promise, brief the operator to buy the Combine + TopstepX API THEN, so the
-  adapter shakes down against practice before real capital (R-060: when funds allow).
-★★★ **All five v3 upgrades are tagged `v3-N`. If a rewrite drops one it is a
-REGRESSION — 3 of 5 were silently lost on 2026-07-28. Duplicate lives in
-`advisor-onboarding` §1a; restore from there.**
+  shows promise, brief the operator to buy Combine + TopstepX API THEN (R-060).
+★★★ **Five `v3-N` tags. A rewrite dropping one is a REGRESSION (3 of 5 were lost
+2026-07-28). Duplicate lives in `advisor-onboarding` §1a; restore from there.**
+★★★ **A `BLUEPRINT v4 DRAFT` sits at commit `9116d757` from a consulting seat —
+UNREAD, UNRATIFIED, NOT the plan. Read it, red-team it, rule on it explicitly.**
 
-## AUTHORIZED NOW
-★★★ **CONTAMINATION VERDICT (R-434, [MEASURED HERE]): the classifier's 14 design
-videos are ALL in the live library; 13 straddle both sides of its own "held-out"
-split, which hashed `condition_id` — it split ROWS, not SOURCES. GROUP LEAKAGE.
-My pre-registered arm fired on its strongest form.** ★★★ **BUT 26 LIVE VIDEOS
-WERE NEVER TOUCHED — a clean holdout, free.**
-**POPULATIONS, PERMANENT:** **`DEV-14`** — contaminated; fixtures/debug/controls
-only, **never the independent claim**. **`HOLDOUT-26`** — the valid internal
-holdout, **spent the moment it is used to tune**, and NOT a permanent benchmark.
-★★★ **NEVER AVERAGED INTO ONE HEADLINE. Split by SOURCE VIDEO ID, never by row.**
-**WORKER (R-434):** **FREEZE** the protocol (hashes + both video lists) BEFORE
-looking at HOLDOUT-26 · then the **TWO-ARM read-only shadow: ARM A source-resolved
-vs ARM B source-withheld.** ★★★ **The point is to prove the teacher's words CHANGE
-the classification — A ≈ B means the semantic path never ran: a VOID run.**
-Log a decision path on EVERY condition (`SEMANTIC_SOURCE_TEXT` ·
-`RESOLVED_POINTER_TEXT` · `LEGACY_FALLBACK` · `UNCLASSIFIED` · `ERROR`).
-★★ **The VIDEO is the independent unit for any interval — conditions inside one
-video are correlated.** ★★★ **Success = semantic fidelity on HOLDOUT-26, NEVER
-pass-count. A LOWER pass count is acceptable; a HIGHER one proves nothing unless
-every newly-droppable condition is transcript-grounded.**
-★★ **Fail-closed policy: evidence unavailable → `CLASSIFICATION_UNAVAILABLE` ·
-labeller error → `CLASSIFICATION_ERROR`. Legacy fallback may be MEASURED, never
-presented as a semantic decision** — this is R-419's invariant in a third domain.
-★★ **ORDERING AMENDMENT (mine): read-only shadow + grading + review MAY precede
-the durable-provenance migration; creating new artifacts and ACTIVATING the
-labeller stay HARD-GATED on it.**
-★★★ **GRADED METRICS ARE NOT THE WORKER'S (R-435 — my R-434 broke `doer ≠ grader`
-by putting mechanical and ground-truth metrics in one list).** The worker delivers
-the FREEZE, both arms, decision paths and **mechanical rates only**. **Accuracy,
-the confusion matrix and the five safety-critical error rates are assigned to
-THE ADVISOR SEAT.**
-★★★ **THE RUBRIC IS FROZEN BEFORE THE GRADER SEES ANY CLASSIFICATION** — a rubric
-written after the answers accommodates them and nobody can tell. Grade blind, on
-HOLDOUT-26 for the independent claim, against RESOLVED transcript text, video as
-the unit, the 20 span-disagreement conditions excluded or adjudicated first.
-★★ **The five safety-critical errors are reported SEPARATELY, never averaged into
-accuracy — a strong headline can coexist with failing the negative control, and
-if `'timeframe'` classifies `mandatory` THE MIGRATION FAILS regardless.**
-**THIS SEAT:** write that rubric · run the campaign session-role resolver against
-`C2` and measure its yield · maintain `STRANDED-CAPABILITY-REGISTER.md`.
+## QUEUE (next 4, in order)
+1. Rule AR-419's result (the 156 shrink + guard).
+2. **HOLDOUT-26 two-arm read-only shadow** (R-434/R-435): FREEZE protocol first,
+   then ARM A source-resolved vs ARM B source-withheld. **A ≈ B ⇒ the semantic
+   path never ran: a VOID run.** Log a decision path per condition
+   (`SEMANTIC_SOURCE_TEXT`/`RESOLVED_POINTER_TEXT`/`LEGACY_FALLBACK`/
+   `UNCLASSIFIED`/`ERROR`). Worker delivers **mechanical rates only**.
+3. **THIS SEAT (doer ≠ grader):** write the accuracy/confusion/5-safety-error
+   rubric **FROZEN BEFORE seeing any classification** · run the C2 session-role
+   resolver and measure its yield · maintain `STRANDED-CAPABILITY-REGISTER.md`.
+4. Read + red-team + rule on BLUEPRINT v4 (`9116d757`).
+
+## POPULATIONS — PERMANENT
+**`DEV-14`** — contaminated (13 of 14 straddle its own row-hashed "held-out"
+split: GROUP LEAKAGE). Fixtures/debug/controls only, **never the independent
+claim**. **`HOLDOUT-26`** — the valid internal holdout, **spent the moment it is
+used to tune**, not a permanent benchmark. ★★★ **NEVER averaged into one
+headline. Split by SOURCE VIDEO ID, never by row — the VIDEO is the independent
+unit.** Success = semantic fidelity, **NEVER pass-count**; a LOWER count is
+acceptable, a HIGHER one proves nothing unless every newly-droppable condition is
+transcript-grounded. ★★ Fail-closed: no evidence → `CLASSIFICATION_UNAVAILABLE`;
+labeller error → `CLASSIFICATION_ERROR`. **Legacy fallback may be MEASURED, never
+presented as a semantic decision.**
 
 ## NOT AUTHORIZED
 ★★★ **Relaxing ANY refusal class — including `spine` — before a validated
-type-keyed replacement exists. Proving `spine` is an invalid proxy does NOT
-license loosening it; directionally this migration can only ADD refusals.**
-Writing any classification to the DB · tuning the labeller on HOLDOUT-26 results
-in this cycle · flipping
-`TF_SEMANTIC_ROLE_CLASSIFIER` anywhere · promoting `trigger` · remapping roles ·
-**mutating any stored `compiled_spec` or role field in place** · `C8`
-implementation (staged, HELD on 7 prerequisites) · re-extraction · spec edits ·
-`.env` writes · `runtime-production` writes · tower update · `db:generate` ·
-editing applied migrations · deploying the 160KB campaign binding lane (R-415).
+type-keyed replacement exists. This migration can only ADD refusals.**
+Writing classifications to the DB · tuning the labeller on HOLDOUT-26 this cycle ·
+flipping `TF_SEMANTIC_ROLE_CLASSIFIER` · promoting `trigger` · remapping roles ·
+mutating any stored `compiled_spec` or role field in place · `C8` implementation
+(HELD on 7 prerequisites) · re-extraction · spec edits · `.env` writes ·
+`runtime-production` writes · tower update · `db:generate` · editing applied
+migrations · deploying the 160KB campaign binding lane (R-415) · removing
+`continue-on-error` · `git checkout`/`reset` in this shared tree.
 
 ## STATE, WITH EVIDENCE GRADES
 **[MEASURED HERE]** `backtests total = 0` · `strategies = 120` · **no live
-execution, no connected capital.** Tower at `a6f92822`; **both safety releases
-DEPLOYED and verified in the running tree** (preflight present, 36 passed there,
-one construction site `backtester.py:8493`, no second door).
-**[MEASURED HERE]** ★★★ **`role` IS TOPOLOGY, NOT SEMANTICS:**
-`graph-to-engine.ts:93` `inAndGroup.has(a.id) ? "confluence" : "spine"` — reads
-nothing from the source. **`spine` is WITHDRAWN as evidence of source-mandatory
-status.** The join IS proven for trigger: `:141-142`, one block sets
-`entry_trigger_id` AND `role:"trigger"`. **PROVENANCE RULE: `spine + unbindable`
-→ still REFUSE, record `UNKNOWN_REQUIREDNESS`, NEVER "the source required this."**
-**[MEASURED HERE]** `POP-120-LIVE` = **40 videos × 3**, triples byte-identical —
-**every raw count inflates 3×; sizing is ALWAYS per-video.** `POP-41` ⊇ the live
-library (40 of 40) — **not "historical only."** corpus_A is a shakedown set, not
-the product.
-**[MEASURED HERE]** provenance: **1458 of 1458 pointers resolve (100%)**;
-`'},{'` debris 28.5% resolves to nothing; **≈71.5% source-gradeable today.**
-★★ **A working chain is NOT a faithful extraction** — `'timeframe'` resolves
-perfectly to a real sentence about which chart to open.
-**[RELAYED]** `C8` = 51.1% of blockage and the only class unlocking anything
-alone; 7 of 9 classes unlock ZERO; **the prompt ORDERS it** (`transcript-
-extractor.md:169` quota + `:171` inclusion bias + `:616` chart-nav-as-confluence).
-**[UNENUMERATED]** the 20 span disagreements · non-flag-gated stranded capability
-· the `C2` resolver's actual yield · DB provenance preservation (designed, not
-authorized) · timezone/calendar basis.
+execution, no connected capital.** Tower `a6f92822`; both safety releases DEPLOYED
+and verified in the running tree. **LANDED ≠ RUNNING** — merging PR #31 did not deploy.
+**[MEASURED HERE]** ★★★ **`role` IS TOPOLOGY, NOT SEMANTICS:** `graph-to-engine.ts:93`
+`inAndGroup.has(a.id) ? "confluence" : "spine"` — reads nothing from source.
+**`spine` WITHDRAWN as evidence of source-mandatory status.** The join IS proven
+for `trigger` (`:141-142`). **PROVENANCE RULE: `spine + unbindable` → still REFUSE,
+record `UNKNOWN_REQUIREDNESS`, NEVER "the source required this."**
+**[MEASURED HERE]** `POP-120-LIVE` = **40 videos × 3, triples byte-identical** —
+every raw count inflates 3×; **sizing is ALWAYS per-video.**
+**[MEASURED HERE]** 1458/1458 pointers resolve (100%); `'},{'` debris 28.5%
+resolves to nothing; ≈71.5% source-gradeable. ★★ **A working chain is NOT a
+faithful extraction** — `'timeframe'` resolves perfectly to a real sentence.
+**[RELAYED]** HOLDOUT-26: rules fire on **4.1%**, `LEGACY_FALLBACK` **95.9%**.
+Flipping the flag today would stamp SEMANTIC provenance on the 96% a TOPOLOGY
+heuristic decided. ★★★ **Rule expansion is FORBIDDEN until a fresh untouched
+population is named FIRST — HOLDOUT-26 burns the moment anyone tunes on the 4.1%.**
+**[RELAYED]** `C8` = 51.1% of blockage, the only class unlocking anything alone;
+the prompt ORDERS it (`transcript-extractor.md:169`/`:171`/`:616`).
+**[UNENUMERATED — OPEN]** the 156 entries individually · the 20 span
+disagreements · non-flag-gated stranded capability · C2 resolver yield · DB
+provenance preservation · timezone/calendar basis · Python's unrun 56%.
 
 ## KNOWN-BENIGN (do not investigate)
-★★★ **THE IDLE WATCHDOG'S 15-MIN BAR IS SHORTER THAN SOME TASKS' AUTHORIZED ETA,
-SO IT FIRES ON HEALTHY LONG RUNS.** Item (1)'s ETA is ~40 min; the watchdog fired
-at 15. **[MEASURED HERE 2026-07-29 04:31Z] discriminator applied and it is SILENT
-WORK: worker `claude.exe` 9444 ALIVE, its conversation file written 6 seconds
-before the check, 4 `python.exe` running.** ★★ **`advisor-ruling` §8 says the
-ruling, the watchdog and the next seat must share ONE contract for what silence
-means — they do not while a 40-min ETA is watched by a 15-min bar. Do NOT widen
-the bar (that blinds it to real stalls); when authorizing a task whose ETA
-exceeds 15 min, SAY SO HERE so the next seat reads the event as expected.**
-★ **The discriminator, restated: process ALIVE + conversation file STILL GROWING
-⇒ silent work. ALIVE + conversation STOPPED ⇒ external limit. Not alive ⇒ dead.**
-★★★ **2026-07-29 22:30–23:30 — an HOUR of worker silence was an ACCOUNT USAGE
-LIMIT, not an idle or dead worker. [MEASURED] worker `claude.exe` 9444 ALIVE
-throughout; its conversation last wrote 22:30:07 and stopped; a dispatched grader
-died with `session limit · resets 11:30pm`; the limit reset at 23:30.** ★★ **The
-idle watchdog fired 4× and correctly said CAUSE UNKNOWN — idle / silent work /
-external limit / dead session are indistinguishable from the bar. The
-discriminator is: is the process alive AND has its conversation file stopped
-growing? Both true ⇒ external limit. Do not diagnose a worker failure from
-silence alone.**
-
+★★★ **THE 15-MIN WATCHDOG BAR IS SHORTER THAN AR-419's AUTHORIZED ~45-MIN ETA, SO
+IT WILL FIRE ON A HEALTHY RUN. Expect fires ~01:23, ~01:38 EDT. Do NOT widen the
+bar** (that blinds it to real stalls) — read the event, then apply the
+discriminator. ★ **DISCRIMINATOR: process ALIVE + conversation `.jsonl` STILL
+GROWING ⇒ silent work · ALIVE + conversation STOPPED ⇒ external account limit
+(seen 2026-07-29, an hour of silence was a usage limit) · not alive ⇒ dead.**
 `M session_windows_parity.json` phantom · a monitor event naming an OLD AR = torn
 mid-write read · `.playwright-cli/` = operator tooling · **`| head`/`| tail` MASK
-EXIT CODES** · **a `jq`-less monitor is DEAD ON ARRIVAL and its silence reads as
-"still running" — give every predicate a DISCRIMINATES fixture.**
+EXIT CODES** · `pytest-timeout` NOT installed here (`--timeout` ⇒ exit `4`).
 
 ## ★★★ THE SEAT'S OWN CONVICTED ERROR — READ BEFORE MEASURING ANYTHING
-**FIVE errors in one session, ONE shape: I measured a NEIGHBOURING object and
-reported it as the one asked about.** envelope-for-inner (`987` vs `18`; "no
-source in the row") · anchored-regex-for-field-content (`936` vs `1458`) ·
-loose-glob-for-a-defined-file-family (70 vs 41) · process-for-conversation
-("no seat swap"). ★★★ **THE JOIN KEY IS NOT A DETAIL OF THE QUERY — IT IS THE
+**ONE SHAPE, now six times: I measured a NEIGHBOURING OBJECT and reported it as
+the one asked about.** ★★★ **THE JOIN KEY IS NOT A DETAIL OF THE QUERY — IT IS THE
 CLAIM. State the key, and state what your filter EXCLUDED.**
-★★ **A search's EXCLUSIONS are part of its result** — the `role` producer lived in
-a directory an earlier search had excluded as noise.
-★★ **A replacement that silently degrades to its predecessor will report agreement
-with itself and call it validation. Prove the new thing RAN, per item.**
+★★★ **`NAME THE TREE` — R-444 broke it 90 min after re-copying it here: a
+`grep -rn` in the CAMPAIGN tree published as a claim about the DEPLOYED lane.
+WHEN THE CLAIM IS ABOUT CI, SWEEP WITH `git show <tested-sha>:<path>`, never in
+whatever checkout your shell is sitting in.**
+★★★ **A COMPLETION SIGNAL IS NOT A RESULT** (four false greens in one session).
+**VERIFY THE ARTIFACT. Every mutation asserts its own edit TOOK.**
+★★★ **MY ORDER IS NOT EVIDENCE. The worker stopped instead of obeying a wrong
+order and was right. Do not damp that loop in either direction.**
+★★ **A replacement that silently degrades to its predecessor reports agreement
+with itself and calls it validation. Prove the new thing RAN, per item.**
 ★★ **A true finding is the most dangerous moment for a guard** — correct premise +
 unbuilt replacement + enormous convenience is how good desks ship regressions.
 
-## DOCTRINE IS NOW VERSIONED (2026-07-29)
-★★★ **`.claude/` is its own git repo, pushed to `origin ops/claude-doctrine`.**
-It versions `skills/ · agents/ · hooks/ · commands/` — **the directory IS the
-canonical copy, NOT a backup.** Deliberate: a second copy drifts, and a drifted
-rulebook is worse than an unversioned one because it still looks authoritative.
-**Edit in place; never `git init` a second copy elsewhere.**
-★★ Deny-by-default `.gitignore`; `projects/` (transcripts + seat memory),
-`settings*.json` (tokens), `worktrees/` (another repo's checkouts) excluded.
-Secret-scanned clean; **restore-tested by a fresh clone**, not assumed.
-★ **Allow-listing a DIRECTORY re-admits nested categories you denied above** —
-`agents/.claude/agent-memory/` rode in on `!/agents/` and is now denied at any
-depth. Re-run the secret scan before allow-listing anything new.
+## SEAT MECHANICS
+★★★ **TREE: `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch
+`h1-wave4-sealed12-driver`** — NOT the primary cwd (a container of ~90 worktrees).
+"Relay files missing" = wrong tree, never a vanished campaign.
+★★★ **INVOKE `advisor-ruling` BEFORE EVERY RULING** (it mutates). **Every ruling
+authorizing work opens with a cold-start-complete `★ WORKER — START HERE` block
+(R-430); when RECORD and DISPATCH compete, the DISPATCH wins.**
+★★★ **INDEPENDENT GRADES GO TO THE `accuracy-validator` AGENT** — never parked on
+"the advisor seat" or "a fresh session". Route EARLY, not as a final formality.
+★★ **STANDING (operator): get an EXTERNAL (GPT) opinion BEFORE writing a ruling,
+carried as `[EXTERNAL OPINION]`, never `[MEASURED]`. Agreement is not evidence;
+disagreement resolves by MEASUREMENT. Audit its premises.**
+★★ **YOU DECIDE:** merges · worktree updates · deploys of verified work ·
+reversible CI-gated production writes · tooling. **Reserved to operator:** real
+capital · spend · irreversible destruction · unboundable blast radius.
+★★ **DOCTRINE IS VERSIONED:** `.claude/` is its own git repo on
+`origin ops/claude-doctrine`; the directory IS canonical, not a backup. Edit in
+place; never `git init` a second copy.
+**RIG (2026-07-29 01:16, one rig):** AR content-hash 2s poll (task `b8fonkiwn`) +
+15-min idle watchdog (task `b8vrsg6e2`), both mine, both delivery-proven in this
+conversation. ★★★ **The `ADVISOR-RULINGS.md` watcher PID 22820/7256 under
+`claude.exe` 9444 is THE WORKER'S EAR — never kill it.** ★★ **Watchers inherited
+from a prior conversation can be ALIVE yet absent from `TaskList` — alive ≠
+delivering. Empty `TaskList` ⇒ retire and re-arm, then verify the gap is empty.**
 
 ## OPERATOR-FACING
-Nothing waits on you. Safety chain deployed; nothing has ever run a backtest.
-★★ **The strategic finding: FIVE built-but-disabled capabilities exist, three of
-them aimed at the three largest blockers. The bottleneck may be SHIPPING, not
-building** — see `STRANDED-CAPABILITY-REGISTER.md`, and consult it before
-commissioning any new detector work.
+Nothing waits on you. Nothing has ever run a backtest; no capital is connected.
+★★ **A correction was owed and is delivered: the earlier "your kill switch has a
+hole" alarm was WRONG — the kill switch and compliance gate pass. The real issue
+is 156 stale entries on a CI allow-list that could hide FUTURE breakage.**
+★★ **Strategic: FIVE built-but-disabled capabilities exist, three aimed at the
+three largest blockers. The bottleneck may be SHIPPING, not building** — see
+`STRANDED-CAPABILITY-REGISTER.md` before commissioning any new detector work.
