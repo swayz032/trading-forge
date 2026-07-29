@@ -4,6 +4,163 @@
 
 ---
 
+## AR-444 · 2026-07-29 · ★★★★★ **YOUR STOP CONDITION FIRED. THE 41ST SPEC IS `psH--oXkD8M.spec.json` AND ITS VIDEO IS **NOT** IN THE CENSUS 40 — CONFIRMED ON TWO INDEPENDENT PATHS (frozen census artifact AND a live read-only `SELECT`: `0` rows).** ★★★★★ **BUT THE POPULATION DEFECT IS NOT WHERE YOU EXPECTED IT: THE `40` AND THE `41` ARE **BOTH CORRECT** AND NAME DIFFERENT TREES. THE REAL DEFECT IS THAT `psH--oXkD8M` **LEAKED INTO A PUBLISHED FROZEN ARTIFACT'S POPULATION LIST** — `SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md`'s `DEV-14` IS WRONG IN FOUR PLACES AND CARRIES THE WORDS "derived mechanically from the split file, not hand-listed".** ★★★★★ **AND THE PART THAT SAVES THE RUN: I FOUND THE FROZEN HARNESS BY ITS PINNED sha256, READ ITS ACTUAL OUTPUT, AND **THE RUN ITSELF IS CLEAN** — ITS POPULATION IS THE CENSUS 40 EXACTLY, ITS `DEV-14` IS THE SPLIT FILE'S 14 EXACTLY, AND EVERY PUBLISHED NUMBER REPRODUCES TO THE DIGIT. THE INSTRUMENT WAS RIGHT; THE DOCUMENT DRIFTED FROM IT.**
+
+**RULING ID:** R-458 · **TASK ID:** AR-443 · **PRIOR:** AR-442 · **COMMIT AT WRITE `d73e35d3`** · **TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **BLOCKED — STOPPING AS INSTRUCTED. Your stop condition names this as yours to rule.**
+
+★★★ **I MAKE NO STATEMENT ABOUT WHETHER C8 IS MISATTRIBUTED — not by implication, not by arrangement of facts. Nothing below is arranged to support or undermine that reading, and I did not open the C8 lane, prerequisite #1, or any consumer closure.**
+
+---
+
+### ★★★★★ §1 — THE ANSWER: WHERE, WHAT, AND WHOSE
+
+**THE 41ST SPEC:** `C:\Users\tonio\Projects\trading-forge\trading-forge\.claude\worktrees\extraction-100\tmp\generalization\psH--oXkD8M.spec.json` — **6,372 B, mtime `2026-07-03 09:37`.**
+
+**[MEASURED] IT CARRIES THE CENSUS STAMP, byte-for-byte the same block as the 40:**
+
+```
+extraction_pipeline_version : compiler-v3-union-1.0
+pipeline_commit             : dc8a150
+prompt_sha256               : c75a2da8f5c473e8c1204788db7b9dcb5a972d9e141cf0c10544745618a47c0a
+model                       : gemma4:e4b-it-qat   model_digest: ee665637121887cf3befff38
+atomization                 : 2-pass-union
+certified_gate              : 6-video-46of46-2026-07-02
+provenance_backfilled       : true
+```
+
+**IS ITS VIDEO IN THE CENSUS 40? ★★★★★ NO — AND I PROVED IT TWICE, BY TWO NON-OVERLAPPING PATHS:**
+
+| path | measurement | result |
+|---|---|---|
+| **(A) frozen census artifact** `backups/h1-census/unknown-dbtime-ad4335f0/pop120_census.json` | distinct `video` over 120 rows | **40**, and the set **equals the on-disk `tf-deep-scan/corpus/specs` 40 exactly** — 0 in, 0 out |
+| **(B) ★★★ LIVE DB, `SET default_transaction_read_only = on`** | `count(DISTINCT config->'compiled_spec'->>'video') WHERE config ? 'compiled_spec'` | **40** |
+| **(B) same session** | `count(*) … WHERE video = 'psH--oXkD8M'` | ★★★★★ **`0`** |
+
+★★★ **PATH (B) IS THE ONE THAT MATTERS: I did not inherit AR-441's join or the artifact's population — I asked the live library directly and it has no row for this video.** ★★ **AND THE INVARIANT, RE-MEASURED IN THAT SAME READ-ONLY TRANSACTION RATHER THAN CARRIED: `backtests total = 0`.** Invariant #6 holds, freshly.
+
+**★★★★★ SO YOUR STOP CONDITION IS SATISFIED AND I AM STOPPING.**
+
+---
+
+### ★★★★★ §2 — BUT NEITHER NUMBER IS WRONG. THEY NAME DIFFERENT TREES, AND I CAN REPRODUCE BOTH EXACTLY
+
+★★★ **You told me to NAME THE TREE BESIDE EVERY COUNT. Doing that dissolves the contradiction entirely:**
+
+| number | tree | population definition | count |
+|---|---|---|---|
+| AR-441's `40` | **`tf-deep-scan`** worktree | `corpus/specs/*.spec.json` | **40** |
+| the packet's `41` | ★★★ **`extraction-100`** worktree (`trading-forge/.claude/worktrees/extraction-100`) | **distinct video IDs over EVERY `*.spec.json` in that worktree** | ★★★ **41 — reproduced exactly** |
+
+★★ **The packet's own header declares its producer tree** — *"Producer code read in the `extraction-100` worktree … these files do not exist in the primary checkout"* — so it counted honestly, in the tree it named. **AR-441 counted honestly too, in a different tree, at a narrower scope. Both sentences are true; they were never about the same object.**
+
+★★★ **AND THE `41` IS NOT A NEW OBJECT: `AR-386` (2026-07-28) already named it `POP-41`, gave this exact directory, and enumerated all 41 ids including `psH--oXkD8M` — and measured `overlap = 0` against `POP-16`/corpus_A.** ★ **The discrepancy was on the record a day before the packet quoted it.**
+
+**[MEASURED] the whole-machine sweep, so no fourth copy is hiding:**
+
+| directory | spec files | carrying `c75a2da8…` |
+|---|---:|---:|
+| `tf-deep-scan/corpus/specs` | 40 | 40 |
+| `extraction-100/corpus/specs` | 40 | 40 |
+| `extraction-100/tmp/generalization` | ★ **41** | ★ **41** |
+| **TOTAL** | **121** | **121 — spanning 41 distinct videos** |
+
+★★★ **THEREFORE I MUST DEMOTE A SENTENCE OF MY PREDECESSOR'S THAT YOU ACCEPTED IN R-458 §1, BECAUSE YOU ARE RELYING ON IT: AR-441's extra probe read *"`c75a2da8…` appears on `40 of 40` on-disk specs and on NO row outside the census — there are exactly 40 spec files."* ★★★ SCOPED TO `tf-deep-scan/corpus/specs` IT IS TRUE. AS A STATEMENT ABOUT "on-disk specs" IT IS NOT: there are `121` on-disk spec files carrying that hash across three directories in two trees, spanning `41` distinct videos, **one of which is outside the census.**** ★★ **What SURVIVES, and it is the load-bearing half: no DB ROW carries that hash outside the census, and `provenance_backfilled` did not spray it onto rows it could not have known. The DB claim stands. The `on-disk` claim was scoped to one directory and read as a claim about the machine.** ★ **The same shape as the `.md`-vs-`.ts` sweep: a true sentence whose SURFACE was narrower than the sentence sounded.**
+
+---
+
+### ★★★★★ §3 — THE ACTUAL DEFECT, AND IT IS IN A FROZEN PUBLISHED ARTIFACT
+
+**While answering "is its video in the census 40" I grepped for `psH--oXkD8M` across `docs/designs/`. It appears in exactly two places: `AGENT-REPORTS.md` (AR-386's POP-41 enumeration — correct) and — ★★★★★ `SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md:26-28`, INSIDE THE PUBLISHED `DEV-14` PARTITION LIST.**
+
+**[MEASURED] the split file's `rules_design_keys` yields these 14 design videos** (sha256 of the file = `9981660ba5e95d2ef3137c0c9db9a11018c96719011cb3ad2a7854cf1ac3d4e5`, **matching the freeze's own pin** — I verified I read the frozen object, not a lookalike):
+
+| | set difference |
+|---|---|
+| in the **published doc's** `DEV-14`, **absent from the split file entirely** | ★★★★★ **`psH--oXkD8M` · `x1ydP8bC7OE`** |
+| in the split file's design bucket, **absent from the published `DEV-14`** | ★★★★★ **`ktkqq7QsN9Q` · `sVkmZklJDHI`** |
+
+★★★ **CONTROL PROBE, because a null on a wrong path is not an absence — raw `grep -o` counts over the split file:** `psH--oXkD8M` = **0** · `x1ydP8bC7OE` = **0** · `ktkqq7QsN9Q` = **30** · `sVkmZklJDHI` = **10** · **positive control `75DJN5UVQnw` = 1.** ★★ **The probe finds ids in that file; it cannot find those two, because they are not in it.**
+
+★★★★★ **AND THE DOCUMENT SAYS, VERBATIM: *"PARTITION — derived mechanically from the split file, not hand-listed."* ★★★ THAT CLAIM IS FALSE OF THE LIST AS PUBLISHED. Four of fourteen entries cannot survive the stated derivation.**
+
+---
+
+### ★★★★★ §4 — WHAT SURVIVES: I FOUND THE FROZEN HARNESS AND THE RUN IS CLEAN
+
+★★★ **I did not stop at the document. The freeze pins the harness sha256 `16654d173baf14b11caa25c6318ecbee3fcb6417cc68fe4fada153ba8fa77635`; it is not on disk under any name resembling `shadow.ts` in the repo, so I scanned `2,495` script files across three roots BY CONTENT HASH and found it** at `…/Temp/claude/…/6f1ac257-…/scratchpad/shadow.ts`, **with its output `shadow_rows.json` beside it.**
+
+**THE HARNESS'S OWN LOGIC (lines 11–15), read rather than described:**
+```ts
+const V11 = /[A-Za-z0-9_-]{11}/;
+const designVideos = new Set(split.rules_design_keys.map(k => (V11.exec(k)||[""])[0]).filter(Boolean));
+const all = Object.keys(data);
+const DEV  = all.filter(v =>  designVideos.has(v));
+const HOLD = all.filter(v => !designVideos.has(v));
+```
+★★ **I ported line 11 exactly and ran it: `designVideos` = the 14 prefix videos, `ktkqq7QsN9Q` and `sVkmZklJDHI` INCLUDED, `psH--oXkD8M` and `x1ydP8bC7OE` ABSENT. `DEV ⊆ designVideos` structurally — so the harness COULD NOT have emitted the doc's list.**
+
+**[MEASURED, from `shadow_rows.json`, the run's own 2,351-row output]:**
+
+| | measured from the run | doc |
+|---|---|---|
+| run population | ★★★★★ **40 videos, `== census 40` exactly** (0 in, 0 out) | 40 |
+| actual `DEV` | ★★★★★ **the split file's 14, exactly** | ★ **wrong in 4 places** |
+| DEV conditions / videos | **575 / 14** | 575 / 14 ✓ |
+| HOLDOUT conditions / videos | **1776 / 26** | 1776 / 26 ✓ |
+| DEV `LEGACY_FALLBACK` | **510 (88.7%)**, fired **65 (11.3%)** | identical ✓ |
+| HOLDOUT `LEGACY_FALLBACK` | **1704 (95.9%)**, fired **72 (4.1%)** | identical ✓ |
+| total rows | **2351** | 2351 ✓ |
+
+★★★★★ **SO: `psH--oXkD8M` NEVER ENTERED THE SHADOW EVALUATION. THE VOID VERDICT, THE `4.1%` vs `11.3%` CONTAMINATION GAP, AND THE ARM-B `0 of 2351` ALL STAND ON THE CORRECT POPULATION AND REPRODUCE TO THE DIGIT.** ★★★ **THE EMITTER WAS RIGHT. THE HAND-CARRIED TABLE IN THE DOCUMENT DRIFTED FROM IT — and it drifted in the one field a reader would use to check independence.**
+
+★★ **WHY THIS IS STILL SERIOUS DESPITE THE NUMBERS SURVIVING: the `DEV-14` / `HOLDOUT-26` list is the artifact's *covenant object*. The freeze says HOLDOUT-26 may never be used for tuning. A later seat honouring that covenant from the PUBLISHED list would protect `psH--oXkD8M` (not in the library at all) and `x1ydP8bC7OE` while leaving `ktkqq7QsN9Q` and `sVkmZklJDHI` — 30 real design conditions between them — unprotected. **The results are fine; the guard the document hands forward is not.**
+
+---
+
+### §5 — MECHANISM: HONESTLY UNDETERMINED, AND I KILLED MY OWN BEST GUESS
+
+★★★ **HYPOTHESIS I FORMED AND THEN FALSIFIED:** an index shift — the doc's author reading positions of the correct 14 out of a **41**-long sorted list instead of the **40**-long one. **[MEASURED] mapping each correct-DEV index from `sorted(corpus40)` into `sorted(gen41)` yields `qLtq73bTPBA`, which appears in neither list. THE HYPOTHESIS IS DEAD AND I AM NOT KEEPING IT BECAUSE IT WAS CONVENIENT.**
+★★ **[NOT DETERMINED] how the four substitutions arose.** The harness could not produce them; the split file does not contain two of them; no positional derivation I tested reproduces them. **I am naming this unknown rather than inventing a story for it.**
+
+---
+
+### §6 — WHAT I DID NOT MEASURE
+
+★★ **Whether `psH--oXkD8M` was ever in the live library and was REMOVED, versus never onboarded.** I measured the present state (`0` live rows) and the on-disk artifact's `2026-07-03 09:37` mtime; **I did not reconstruct its history, and "absent now" is not "never present."**
+★★ **Whether the OTHER frozen artifacts carry the same list drift.** I checked the `DEV-14` list only; `HOLDOUT-26` is enumerated in "the AR-405 amendment" which I did not open, and **if the published `DEV-14` is wrong its complement is wrong too, mechanically.**
+★ Whether `extraction-100/corpus/specs` is byte-identical to `tf-deep-scan/corpus/specs` — **I verified the ID sets are identical and all 80 carry the same prompt hash; I did NOT diff their contents**, so the R-415 lane-divergence question is untouched for these two copies.
+★ The DB read timestamp of the frozen census artifact remains `[UNRECOVERABLE]` per its own manifest; **my path-(B) live read is fresh and is the one I lean on.**
+
+---
+
+### §7 — DISPOSITION
+
+★★ **ALLOWED-LIST COMPLIANCE:** reads · git history · **one `SELECT`-only DB session under `SET default_transaction_read_only = on`** · this append. **NO write to `.env`, no flag change, no DB write, no re-extraction, no backfill re-run, no spec edit, no C8 implementation, no `git checkout`/`reset`, no tower, no backtest.**
+★★★ **NOTHING WAS MUTATED. I created no instrument file in any tree** — every measurement ran as an inline heredoc; **nothing of mine can be left behind untracked.** `git status` on `docs/designs/` shows only the ~24 pre-existing untracked OPS/GRADE/HANDOFF files that were there when I seated, plus this report.
+★★ **[MEASURED, live, this session] `backtests total = 0`.**
+
+**Remaining uncertainty:** §6. **Risk:** none taken — read-only throughout.
+
+**Next smallest task (ONE):** ★★★ **a correction to `SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md`'s `DEV-14` / `HOLDOUT-26` lists, re-emitted FROM `shadow_rows.json` rather than re-typed** — but **that is a write to a frozen artifact and I have not touched it. It is yours to authorize, and the honest form is a dated correction beside the original, not a silent edit.**
+
+---
+
+## AR-443 · 2026-07-29 · **START-RECEIPT — FRESH WORKER SEATED. R-458's ONE AUTHORIZED TASK: THE `40` vs `41` ON-DISK SPEC DISCREPANCY. ★★★ I AM TAKING IT AS AN UNASSIGNED-BUT-LIVE AUTHORIZATION (R-448/R-458: the authorization outlives the session), NOT AS "the next seat" INHERITANCE.**
+
+**RULING ID:** R-458 · **TASK ID:** AR-443 · **STATUS:** START-RECEIPT · **SEAT:** fresh worker, cold-started this session · **TREE:** `wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver` · **COMMIT AT START `d73e35d3`** (★★ NOT `af1b821c` as AR-442 recorded — the desk has committed twice since, most recently `docs: BLUEPRINT v4 draft rev 3 — REPOINTED per R-456..R-458`. I name the commit I actually stand on rather than the one the handoff recorded).
+
+**THE CONTRACT AS I READ IT:** is there a 41st spec file — WHERE, WHAT, does it carry `prompt_sha256 = c75a2da8…`, and is its video inside the census 40? `SEMANTIC-ROLE-MIGRATION-PACKET-2026-07-29.md:41` says `41`; AR-441 counted `40` in `tf-deep-scan/corpus/specs/`.
+
+★★★ **AND I AM NAMING THE TRAP THE RULING ITSELF NAMED, BECAUSE IT IS THE ONE I AM MOST LIKELY TO WALK INTO: `NAME THE TREE BESIDE EVERY COUNT`. A `40` here and a `41` there is the shape of measuring a NEIGHBOURING OBJECT (R-415, the 160,049 B ↔ 35,046 B lane divergence). My first act is therefore to establish WHICH TREE each number was taken in — including whether the packet's `41` was even counting the same directory — before I conclude anything about a missing or extra file.**
+
+★★ **PURE MEASUREMENT, inside R-456's measure-vs-judge split. I make NO statement about whether C8 is misattributed — not by implication, not by arrangement of facts. I will not publish a consumer table, will not start C8 work, and will not pick up prerequisite #1.**
+
+**ALLOWED-LIST I AM WORKING INSIDE:** reads · SELECT-only DB under `SET default_transaction_read_only = on` (only if the video-set question needs it) · git history · this append.
+**FIRST OBSERVABLE:** this receipt. **ETA ~20 min to the report.**
+**STOP CONDITIONS I AM HOLDING:** a 41st spec exists AND its video is NOT in the census 40 → population defect, stops and comes to the desk · `backtests total > 0`.
+
+---
+
 ## AR-442 · 2026-07-29 · ★★★ **HANDOFF — A FRESH WORKER IS NEEDED. R-457 IS DISCHARGED, NOTHING IS IN FLIGHT, NOTHING IS HALF-DONE. I AM SWAPPING AT A CLEAN TASK BOUNDARY RATHER THAN STARTING THE NEXT ITEM I CANNOT FINISH.**
 
 **RULING ID:** R-457 (discharged) · **TASK ID:** AR-442 · **STATUS:** HANDOFF (self-assessment) · **POSITION: `af1b821c`**, branch `h1-wave4-sealed12-driver`, tree `wt-h1-wave4-20260712`.
