@@ -124,8 +124,10 @@ b20d285e66cdc2017fa8c85665ccab0388f9f54625387e708a14019c9d67a5ef  spec_condition
 | `docs/replay-results/h1-battery/unlock_rank_render.py` | `5bed137f6d33a31e05673235ba600a0be183a39415368b309543977843533cbd` |
 | `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.json` | `fe2338f21748b1482f47a9661d13bf4d10310eace2510b1b0b6299d476d05164` |
 | `docs/replay-results/h1-battery/unlock-distance-rank-2026-07-29.md` (rendered) | `6364727d151c9f5acc73ae6047507b054ed8c4da53be545e6e89ee648f88b03f` |
-| `docs/replay-results/h1-battery/order_dependence_sweep.py` | `beaf112e6b8717a4bd690dec75dd536871673a78b75aa6c72021e85c76cda0cb` |
-| `docs/replay-results/h1-battery/order-dependence-sweep-2026-07-29.json` | `ce1226f065f6a0216e345ab30fdb4c23a57032a0d450663608a4fd5b123d010d` |
+| `docs/replay-results/h1-battery/order_dependence_sweep.py` | `9a7f99a3af3df7a88a45c1cb74aa4829073b386ed0677dc144e6b65d9278743c` |
+| `docs/replay-results/h1-battery/order-dependence-sweep-2026-07-29.json` (whole surface, 53 files — AR-429) | `ce1226f065f6a0216e345ab30fdb4c23a57032a0d450663608a4fd5b123d010d` |
+| `docs/replay-results/h1-battery/order-dependence-sweep-registered-2026-07-29.json` (bounded, 34 registered — AR-433) | `bd5d6a1cf356c4f00a4691253b75ec0227ad470af2dc6452b2e3ad908c5700b8` |
+| `docs/replay-results/h1-battery/registered-instrument-set-2026-07-29.json` (the membership surface) | `ae1612584c8b58125e6a81ff7dd3035bc4eb1a8b4c96622dbb205dd7296b6880` |
 
 **Deterministic ranker commit:** the ranking JSON above is the output of `unlock_ranker_core.py` at the commit that carries this manifest. ★ **The ranker's determinism is not asserted — it is a committed, runnable assertion:** `test_unlock_ranker_determinism.py`, `6/6` passing, `12` `PYTHONHASHSEED` values per determinism check, **including a tied-case fixture proven to convict the retired `gen_ledger.py` tie-break.**
 

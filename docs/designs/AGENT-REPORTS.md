@@ -4,6 +4,38 @@
 
 ---
 
+## AR-434 · 2026-07-29 · ★★★ **SELF-DISCLOSURE AGAINST AR-433, WHICH YOU HAVE NOT YET RULED ON: I DROPPED A STRAY ARTIFACT AT THE SHARED REPO ROOT, AND — WORSE — THE BOUNDED SWEEP RESULT AR-433 CITES WAS NEVER IN THE COMMIT. THE COMMITTED ARTIFACT WAS STILL THE OLD 53-FILE RUN.** ★★ **BOTH FIXED, THE EMITTER FIXED SO IT CANNOT RECUR, AND NO CONCLUSION IN AR-433 CHANGES**
+
+**RULING ID:** R-455 · **TASK ID:** AR-434 · **STATUS:** correction to AR-433, filed before you rule on it.
+
+### ★★★ §1 — WHAT I DID WRONG
+
+★★ **(a) LITTER IN THE SHARED TREE.** `order_dependence_sweep.py` wrote its JSON to the **caller's cwd**. I invoked it from the repo root, so it dropped `order-dependence-sweep-2026-07-29.json` **at the top of the shared worktree.** ★ **Removed by explicit path; [MEASURED] `ls` at the root now returns nothing. Nothing else was touched.**
+
+★★★★★ **(b) THE ONE THAT ACTUALLY MATTERS: because the output went to the root, the file inside `h1-battery` NEVER UPDATED — so `363f8dd3` committed the OLD 53-file whole-surface run while AR-433's §2 describes the 34-file bounded run. [MEASURED] the committed artifact carried `files_walked: 53, nominations: 29`; AR-433 reports `34` and `22`. THE REPORT AND THE ARTIFACT DISAGREED — the exact defect R-453 §3 minted a law about, four rulings later, by me.**
+★ **The `4 files changed` line in my own commit output was the tell, against the 5 paths I passed. I did not read it.**
+
+### ★★ §2 — THE REPAIR, AND IT IS AT THE EMITTER
+
+★★★ **Both runs are now distinct committed artifacts rather than one overwriting the other:**
+
+| artifact | surface | nominations |
+|---|--:|--:|
+| `order-dependence-sweep-2026-07-29.json` | 53 files, whole `docs/replay-results` (AR-429) | 29 |
+| `order-dependence-sweep-registered-2026-07-29.json` | **34 registered instruments (AR-433, the bounded/closed run)** | **22** |
+
+★★★ **FIXED AT THE EMITTER, not by remembering to `cd`:** the sweep now writes **next to itself**, derives the filename from the mode (`--set` → `-registered-`), accepts `--out`, and **prints the path it wrote.** ★★ **"Fix the class, not the instance" — a tool whose output location depends on where you happened to stand will do this again to somebody else.**
+★ Manifest hash table updated for all four sweep artifacts; the membership surface `registered-instrument-set-2026-07-29.json` is now hashed too.
+
+### §3 — WHAT DOES **NOT** CHANGE
+
+★★★ **[RE-MEASURED, not carried] the bounded run reproduces AR-433's reported figures exactly — `34` walked, `34` parsed, `0` parse failures, `22` nominations, `P1 4 · P2 2 · P3 14 · P4 2`.** **Every judgment in AR-433 §2 stands, the ZERO-live-defects finding stands, and the sweep stays CLOSED.** ★★ **The self-test still passes — RED on the broken control, GREEN on the clean one.**
+★ **`backtests_total = 0`. Retention directory untouched and still read-only. Nothing in AR-433 §1, §3 or §4 is affected.**
+
+★★★★★ **I am filing this BEFORE you rule on AR-433 rather than letting an approval land on a report whose artifact did not match it. The finding was mine, the tell was in my own commit output, and I missed it once.**
+
+---
+
 ## AR-433 · 2026-07-29 · ★★★★★ **ALL FOUR DONE. YOUR §4 STOP DOES **NOT** FIRE AND I ANSWERED IT FROM `git show`, NOT RECALL: AR-429's PROOF WAS COMPUTED WITH THE **CORRECT DIRECTIONAL MAPPING** FOR THAT PAIR, AND I RE-RAN IT WITH THE REPAIRED TOOL — SAME VERDICT, `0` DIFFERENCES.** ★★★★★ **THE SWEEP IS BOUNDED TO `34` REGISTERED INSTRUMENTS BY A MECHANICAL MEMBERSHIP RULE, RUN, PUBLISHED — AND **CLOSED**. I AM NOT PROPOSING TO EXTEND IT.** ★★★ **CENSUS RETAINED BY COPY, HASHES VERIFIED *AFTER* THE COPY, READ-ONLY **RED-PROOFED** BY AN ACTUAL REFUSED WRITE.** ★★ **AND THE ORDERED PATH IS OUTSIDE GIT — VERIFIED, BECAUSE THE CANONICAL CHECKOUT IS A NESTED `trading-forge\trading-forge`**
 
 **RULING ID:** R-455 · **TASK ID:** AR-432 · **BRANCH:** `h1-wave4-sealed12-driver` · **RECOMMENDATION:** **APPROVAL_REQUESTED. The governance lane is closed on my side.**

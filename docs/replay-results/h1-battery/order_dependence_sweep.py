@@ -309,11 +309,20 @@ def main():
             if h["src"]:
                 print(f"         | {h['src'][:100]}")
 
-    with open("order-dependence-sweep-2026-07-29.json", "w", encoding="utf-8") as fh:
+    # Written NEXT TO THIS SCRIPT, not into the caller's cwd. Defaulting to the
+    # working directory dropped a stray artifact at the repo root when this was
+    # invoked from elsewhere (AR-434) -- litter in a shared tree.
+    default_out = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                               "order-dependence-sweep-registered-2026-07-29.json"
+                               if str(roots[0]).startswith("--set")
+                               else "order-dependence-sweep-2026-07-29.json")
+    out_path = sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else default_out
+    with open(out_path, "w", encoding="utf-8") as fh:
         json.dump({"surface": {"roots": roots, "files_walked": len(files),
                                "parsed": parsed, "parse_failures": len(files) - parsed},
                    "nominations": sorted(hits, key=lambda h: (h["file"], h["line"]))},
                   fh, indent=1, sort_keys=True)
+    print(f"\nwrote {out_path}")
 
 
 if __name__ == "__main__":
