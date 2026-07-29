@@ -2,8 +2,9 @@
 
 > **STATUS: DRAFT — NOT LAW.** Authored 2026-07-29 at the operator's request by a
 > consulting seat (Fable), for the seated advisor to execute. **Ratification path
-> (in order): (1) adversarial red-team pass (R-062 standing rule: no strategic
-> doc ships un-red-teamed) · (2) external GPT read, carried as `[EXTERNAL
+> (in order): (1) adversarial red-team pass (R-062 standing rule) — ★ COMPLETE
+> 2026-07-29, `accuracy-validator`, disposition NEEDS-CORRECTIONS, every finding
+> resolved in this revision (§13) · (2) external GPT read, carried as `[EXTERNAL
 > OPINION]` (operator standing order 2026-07-29) · (3) the seated advisor adopts
 > by ruling and updates BOTH carriers (`ADVISOR-STATE.md ## THE PLAN` +
 > `advisor-onboarding` §1a).** Until then, v3/v3.1 govern unchanged.
@@ -31,8 +32,9 @@
 | **corpus_A** | shakedown set under `docs/replay-results/` | **16 specs**, 155 taught conditions (128 bindable + 27 unbound) | R-401 L2128 |
 | **POP-120-LIVE** | the live library | **120 rows = 40 videos × 3 markets, triples byte-identical — size per-video, always** | state file [MEASURED HERE by prior desk] |
 
-R-259 banked: tier-A-eligible (11) and shakedown corpus (16) are different questions
-with the same 0 numerator. **[UNENUMERATED]** the exact overlap map between the
+R-259 banked the distinction as **11-vs-18**; the shakedown corpus is **16 by
+R-401's artifact** — cite the pair with its history, never today's number under
+the old ruling. **[UNENUMERATED]** the exact overlap map between the
 three populations — any task below that spans populations must state its own.
 
 ---
@@ -52,7 +54,8 @@ The measured chain that decides everything:
    **extraction-side (corpus_B respin with referent capture)** — charter: re-type
    the mis-types, capture the referents, quantify-or-drop the adjectives.
    corpus_B is **on the critical path** by ruling.
-3. **[ARTIFACT-SOURCED, R-426]** `C8` (extractor-manufactured conditions) is
+3. **[RELAYED — R-426's own grade on this figure, which it acted on anyway]**
+   `C8` (extractor-manufactured conditions) is
    **51.1% of all blockage and the only class that unlocks anything alone**:
    cumulative C8→6 · +C3→15 · +C2→27 · … · +C9→120 (row counts; 120 rows = 40
    videos ×3 — the per-video decomposition of the first 6 is **[UNVERIFIED]**).
@@ -69,7 +72,8 @@ The measured chain that decides everything:
    — and as of this draft ALL SEVEN ARE OPEN with NO OWNER ASSIGNED.**
 6. **[ARTIFACT-SOURCED, R-397]** "the missing piece is the BINDING LANE, not the
    detectors"; build order ratified (R-303): **SMC first**, then ORB+RANGE_EVENT,
-   then BAR_TIMING, then SESSION_CLOCK. Completing SMC completes ONE spec.
+   then BAR_TIMING — **SESSION_CLOCK later RETIRED as a standalone build (R-408);
+   do not rebuild it from the stale ladder.** Completing SMC completes ONE spec.
 7. **[ARTIFACT-SOURCED, R-415]** two binding lanes exist (campaign 160,049 B vs
    production 35,046 B; they already disagree on ≥1 binding; production emits a
    false `approximation=False`). Registered gate, assigned to the advisor seat:
@@ -77,7 +81,8 @@ The measured chain that decides everything:
    is authoritative and the executing tree carries it."*
 
 **Therefore the fastest honest path to Phase 2 is a finite, currently-unowned
-list:** discharge the seven C8 prerequisites → ratify the extractor-brief packet
+list:** discharge the seven C8 prerequisites (items 2–3 ARE the packet
+ratification — one milestone, not two; items 4–5 run against the candidate fix)
 → corpus_B respin on a TARGETED slice → complete the SMC binding lane on the
 target spec → rule lane authority → re-affirm the forensics leg → declare exit in
 the pinned citable form. Everything else is a parallel lane and must be labeled
@@ -192,7 +197,12 @@ REDESIGN/go-live step. For Phase-1 exit: **re-run the calibration application on
 the exiting spec's vintage** (cheap; definition already verified in code,
 R-344), and keep the wiring debts explicitly on the Phase-2 entry checklist
 (§4). Exit is then declared ONLY in the pinned citable form (R-401), both legs,
-tree named, per-video counts.
+tree named, per-video counts. **PROPOSED TIGHTENING (red-team F1; pin at
+ratification): the forensics leg counts only when re-affirmed in the lane ruled
+authoritative for Phase 2 (§3-1E) AND after the producer-consumer schema
+mismatch is fixed — a calibration that may not describe the data shape Phase 2
+will feed it is a layer-N proof offered at layer N+1, this campaign's
+twice-convicted shape.**
 
 ---
 
@@ -215,8 +225,9 @@ taught-exit specs only, effective-N tuples).
    both carriers; surfaced here.
 4. Attribution read + overlay A/B pre-registrations frozen (drafted during
    Phase 1, so Phase-2 entry is same-day, not a paperwork phase).
-5. Tooth-1 wiring debts from §3-1F receipted: certificate-independence verify +
-   schema-contract fix at the consumer.
+5. Tooth-1 wiring debts from §3-1F receipted: certificate-independence verify
+   (the schema-contract fix moves UP into Phase-1 exit under §3-1F's proposed
+   tightening).
 
 **EXIT CRITERION (PROPOSED — R-055 §5 promised per-phase exits; Phases 2/3/3.5/4
 were never written; these four fill that hole, to be pinned at ratification):**
@@ -225,7 +236,11 @@ completes with (a) the null-calibration receipt on record BEFORE the wave, (b)
 every failure carrying its four-bin attribution, and (c) EITHER ≥1 survivor
 passing pre-registered gates OR an attribution-complete no-survivor verdict
 whose named cause routes work back (extraction / binding / overlay / rig). Both
-(c) outcomes are valid exits. An unattributed failure is not an exit.* Verdicts
+(c) outcomes are valid exits. An unattributed failure is not an exit — and the
+attribution itself is INDEPENDENTLY GRADED (doer ≠ grader) with a receipted
+`gate-artifact` hunt before any `edge-absent` verdict is accepted: a seat under
+pressure defaults to the easiest bin, and this session proved the instrument is
+the modal liar.* Verdicts
 scoped corpus+battery+engine+snapshot; the VIDEO is the independence unit; a
 pre-registered power floor (value pinned at ratification) below which no
 per-class claim is published.
@@ -269,7 +284,8 @@ the post-deploy guard.
 
 ## §7 — PHASE 3.5 (FIRST THIRTY FUNDED DAYS) — preserved with its money-math
 
-Drafted BEFORE funding (R-055 §4). Contents pinned by R-056/057/058: the
+Drafted BEFORE funding (R-055 §4). Contents pinned by R-056/057/058 (the
+JOINT-optimization clause below is R-061 §5's): the
 **Consistency-lane election** (advisor recommendation on record: caps
 $6K/$8K/$12K vs Standard $4K/$6K/$10K, ~2× payout clock; operator decides at
 election with audit-verified terms) · **dilute-don't-taper** (window extension
@@ -285,8 +301,10 @@ pre-written post-mortem before any redeploy.
 
 **EXIT (PROPOSED):** *thirty funded days with zero firm-rule breaches, every
 auto-guard either observed firing live or affirmatively exercised, payout
-cadence executed per the elected lane, and no stop-gate tripped twice without
-attribution → Phase 4 scaling unlocked.*
+cadence either executed per the elected lane or — if no natural qualifying
+window occurred in the thirty days — affirmatively exercised with a test
+request so the request/receipt cycle is proven, and no stop-gate tripped twice
+without attribution → Phase 4 scaling unlocked.*
 
 ---
 
@@ -361,5 +379,42 @@ believable.** That is the breakthrough available by engineering.
   inventory closes it.
 - Whether `spanOk=False` rows carry usable evidence (AR-413 tail) — a grading
   act, advisor-owned.
-- This document itself: **UN-RED-TEAMED and externally UNREAD** until the §-top
-  ratification path completes.
+- This document itself: red-teamed (§13); **externally UNREAD** until
+  ratification steps 2–3 complete.
+
+---
+
+## §13 — RED-TEAM DISPOSITION (ratification step 1 receipt)
+
+Adversarial pass 2026-07-29 (`accuracy-validator`, full read access, brief =
+refute; the ledger moved during the audit — R-442/R-443 landed — so the seated
+desk is live and this file deliberately touches neither relay file).
+**Disposition returned: NEEDS-CORRECTIONS. Every finding resolved in this
+revision:**
+
+- **F1** forensics-leg gameability → §3-1F proposed tightening (authoritative
+  lane + schema fix before the leg counts).
+- **F2** attribution gameability → §4 exit requires independently graded
+  attribution + receipted gate-artifact hunt.
+- **F3** stale build order → SESSION_CLOCK retirement (R-408) annotated in §1.6.
+- **F4** cold-recovery-drill owner: red-team read R-062 ("working agent"), draft
+  said ops lane. **RESOLVED BY MEASUREMENT AT THIS DESK [MEASURED HERE]: R-063
+  (ledger L6603) transfers R-062 items #1 and #6 OUT to the ops pair — "Our
+  agent drops them from its carry list." The draft stood; the red-team had not
+  read six rulings past its anchor.** Disagreeing graders resolve by
+  measurement, never by averaging.
+- **F5** figure drift → §0 cites 11-vs-18 (R-259) beside 16-by-R-401.
+- **F6** vacuously-satisfiable payout clause → §7 exit gains the
+  affirmative-exercise fallback.
+- **F7** false discreteness → §1 chain annotated (prereqs 2–3 = the
+  ratification milestone).
+- **F8** grade fidelity → §1.3 re-tagged [RELAYED], matching R-426's own grade.
+- **F9** citation umbrella → §7 attribution split (R-056–058 + R-061 §5).
+
+**Confirmed sound by the same pass:** the Phase-1 exit criterion verbatim-exact
+against R-055 §5 · the critical path (an active shorter-route hunt via the
+zero-boundary ORB spec found none — R-303 §5 had already tried and rejected it)
+· all named artifacts, worktrees and code lines exist where claimed · no
+explicit relaxation anywhere. **Not covered by it:** R-278/R-294/R-344 read
+directly · AR bodies · R-430/431 · `dual_denominator_remeasure.py` internals —
+a later reader inherits those as open, not as cleared.
