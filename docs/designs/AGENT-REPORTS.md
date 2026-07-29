@@ -4,6 +4,43 @@
 
 ---
 
+## AR-408 · 2026-07-29 · **THE ONE-LINE PROVENANCE-FIX PACKET — STAGED, NOT IMPLEMENTED.** ★★★ **RED-PROOF COMPUTED, NOT ASSERTED: SYMMETRIC DIFFERENCE `0`. 1368 REFUSALS BEFORE, 1368 AFTER, IDENTICAL SETS, IDENTICAL 120-STRATEGY REFUSAL SET — YOUR STOP CONDITION DOES NOT FIRE.** ★★★ **AND THE POINT OF THE CHANGE, MEASURED: `426` CONDITIONS STOP CLAIMING THE SOURCE REQUIRED THEM. `MANDATORY` 1347→921 · `UNKNOWN_REQUIREDNESS` 18→444**
+
+**RULING ID:** R-436 · **ARTIFACT:** `docs/designs/PROVENANCE-FIX-PACKET-2026-07-29.md` · **RECOMMENDATION:** **APPROVAL_REQUESTED. Nothing implemented. [MEASURED] `backtests total = 0`.** ★ No START-RECEIPT was owed — the work ran under the 10-minute observable-free bar, as with AR-397.
+
+**SAFETY, VERIFIED HERE RATHER THAN TAKEN FROM YOU (you asked me to check it myself):** **[MEASURED, deployed lane]** `:149` returns True for **both** `MANDATORY` and `UNKNOWN_REQUIREDNESS`, and **both** non-test call sites gate on `blocks_execution` rather than on the class name — `spec_execution_preflight.py:262-263` and `spec_condition_compiler.py:637`. ★★ **So the refusal set cannot move by construction; the red-proof then confirms it by measurement rather than resting on the reading.**
+
+### ★★★ THE RED-PROOF
+
+Population `POP-120-LIVE`, all 120 rows, per-condition set comparison, key `(strategy_id, condition_id, arm)` with plan-level empty-spine refusals carrying their own key:
+
+| | |
+|---|---:|
+| refusals, current `{spine, invalidation}` | **1368** |
+| refusals, proposed `{invalidation}` | **1368** |
+| `A − B` · `B − A` · **symmetric difference** | 0 · 0 · ★★★ **0** |
+| strategies refusing, before / after | **120 / 120** — strategy-set identical |
+| `rule_class` **MANDATORY** | 1347 → **921** |
+| `rule_class` **UNKNOWN_REQUIREDNESS** | 18 → **444** |
+
+★★ **426 conditions move — and that is exactly the unbindable `spine` population (429 `spine` refusals minus the 3 plan-level empty-spine rows, which are not role-classified). The arithmetic closes, which is a second check that the simulation moved the intended rows and nothing else.**
+
+★ **METHOD LIMIT I AM NOT HIDING:** my red-proof drives the *membership decision* over the census's real binding rows; **it does not re-execute `preflight_binding_plan` under a patched frozenset**, because implementing the change is forbidden to me. ★★ **The grader's version must be the stronger one — patch the frozenset in a scratch copy and diff the real `PreflightResult` sets. I have named that gap rather than let a simulation stand in for the executable.**
+
+**ALSO IN THE PACKET:** the exact diff · a test pinning **both halves** (`spine`+unbindable → `UNKNOWN_REQUIREDNESS` **and** still refuses **and** appears in `refusals`) plus the discriminator (`invalidation`+unbindable still records `MANDATORY`) so a later cleanup cannot recollapse the classes · rollback = re-add one frozenset member · **[NOT MEASURED, named as a required pre-implementation step] a grep for downstream consumers of the `rule_class` field.**
+
+★★★ **DOER ≠ GRADER, AND I NAME IT AS YOU REQUIRED: I am the doer and I do not grade this. The grader must be a fresh-context agent that re-derives the red-proof by patching the frozenset against the real preflight, and independently re-reads `:149` and both call sites.**
+
+★★★ **WHAT THIS IS NOT: not a relaxation. Nothing that refused before passes after — measured, symmetric difference 0. `_OPTIONAL_CANDIDATE_ROLES` and the `confluence` fail-closed policy untouched, `TF_SEMANTIC_ROLE_CLASSIFIER` still off, no classifier rule coverage expanded (that would burn HOLDOUT-26). It is a truth-in-recording fix: the guard keeps doing exactly what it did and stops claiming a reason it never had.**
+
+**Files changed:** the packet (new) · this report. **No code, no flag, no DB write, no artifact mutation.**
+**Remaining uncertainty:** ★ **[NOT MEASURED]** downstream consumers of `rule_class`. ★ **[NOT MEASURED]** the executable-form red-proof (above). ★ Unchanged and still open: the gemma rule-6 margin · HOLDOUT-26 class balance · `extraction-100` freeze status.
+**Risk:** none — a document.
+
+**Next smallest task (ONE):** the `rule_class` consumer grep — it is the one unmeasured item standing between this packet and implementation, and it is minutes of work.
+
+---
+
 ## AR-407 · 2026-07-29 · ★★★ **THE RUN IS VOID BY YOUR OWN PRE-REGISTERED CRITERION — AND THE VOID IS THE ANSWER. ON HOLDOUT-26 THE DETERMINISTIC RULES DECIDE `4.1%` OF CONDITIONS AND FALL BACK ON `95.9%`.** ★★★ **SO FLIPPING THE FLAG TODAY WOULD CHANGE ~4% OF LABELS, LEAVE ~96% TOPOLOGY-ASSIGNED, AND STAMP A SEMANTIC-CLASSIFIER PROVENANCE ON ALL OF THEM.** ★★★ **THE CONTAMINATION IS VISIBLE IN THE NUMBERS: 11.3% FIRED ON THE 14 DESIGN VIDEOS vs 4.1% ON THE 26 CLEAN ONES — A 2.75× GAP A POOLED NUMBER WOULD HAVE HIDDEN.** ★★ **AND THE ONE CLEAN POSITIVE: ARM B FIRES ON `0 of 2351` — WITHHOLDING THE TEACHER'S WORDS DROPS THE CLASSIFIER TO ZERO, SO EVERY DECISION IT MAKES IS SOURCE-DRIVEN**
 
 **RULING ID:** R-434 / R-435 · **ARTIFACT:** `docs/designs/SHADOW-EVAL-FREEZE-AND-RESULTS-2026-07-29.md` (freeze + mechanical results) · **RECOMMENDATION:** **APPROVAL_REQUESTED — and the migration as scoped does NOT survive this result; see the recommendation at the end.**
