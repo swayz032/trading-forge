@@ -4,6 +4,27 @@
 
 ---
 
+## AR-412 · 2026-07-29 · **START-RECEIPT — R-440: ITEM (2) RE-KEYED TO THE SEMANTIC-CLASS VOCABULARY. ITEM (1) STILL RUNNING, UNCHANGED.**
+
+**RULING ID:** R-440 · **TASK ID:** AR-412 · **STATUS:** STARTING the re-keyed item (2); item (1) measurement is IN FLIGHT (see below).
+
+★★★ **YOUR §1 IS CORRECT AND I REACHED THE SAME CONCLUSION INDEPENDENTLY BEFORE R-440 LANDED — the role census cannot answer the class question, and I had already flagged it as measuring the neighbouring object.** ★★ **I am filing the role counts anyway, per your instruction, labelled as NOT AN ANSWER to the gradeability question.**
+
+★★★ **AND A CORRECTION TO ME THAT I ACCEPT AND AM RE-VERIFYING AT MY OWN DESK, NOT INHERITING:** my `229 = role=trigger` observation was compared against **`compile_lints.py:129`, which is a COMMENT on an `Optional[str]`, not a schema** — I took R-427's citation forward without opening the declaration site. **I am checking `spec-onboarding-service.ts:170` and `test_spec_producer.py:31` myself and will NAME the declaration source in the report, as you required.** ★ **If it holds, the 229 are expected and the defect is a stale comment — a one-line follow-up, not an investigation.**
+
+**★ PROCESS NOTE, SO THE RECORD IS STRAIGHT:** you correctly marked the `1776`/`26`/`1704`/`72`/`0`/`229` figures `[RELAYED — UNVERIFIED]` because no AR carried them. **They reached you via the operator's external-review lane, not the relay. That is my routing defect** — the numbers existed at my desk before they existed in `AGENT-REPORTS.md`. They will be in the AR with their validation gate attached.
+
+**RE-KEYED ITEM (2) — WHAT I WILL PRODUCE:** the 72 fired HOLDOUT-26 decisions by **emitted semantic class**, each with raw conditions **and DISTINCT VIDEOS** (video-level support as the gradeability test) · path split `SEMANTIC_SOURCE_TEXT` vs `RESOLVED_POINTER_TEXT` · legacy-`role` co-occurrence **reported as observation, explicitly NOT a mapping** · and whether gradeable evidence is present per class.
+★★ **I will report UNDERPOWERED where video support is thin, and will NOT combine classes or pad from role counts.**
+★ **HONEST-PARTIAL ARMED:** the frozen artifact has 16 fields; if it cannot support a column I will name what I could compute rather than synthesise it.
+
+**ITEM (1) STATUS:** running in a disposable worktree pinned to `a6f92822`, per-suite hard cap 90s. **[MEASURED so far] 35+/317 suites, zero non-zero exit codes, slowest `test_backtester.py` at 15.1s.** No `ci.yml` edit.
+
+**STOP CONDITIONS ARMED:** `backtests total > 0` · I cannot produce the class breakdown without touching the labeller (then I stop and report) · the #31 grader reports a refusal-identity difference.
+**I WILL NOT:** change the labeller · delete or coerce any stored `role` · infer a role→class mapping · edit `ci.yml` · touch #31.
+
+---
+
 ## AR-411 · 2026-07-29 · **START-RECEIPT — R-439 items (1) CI-GATE MEASUREMENT (proposal only, no `ci.yml` edit) and (2) HOLDOUT-26 CLASS-BALANCE CENSUS, in that order.**
 
 **RULING ID:** R-439 · **TASK ID:** AR-411 · **STATUS:** STARTING. AR-410 accepted; #31 ratified on the build and **I am not touching it** — no merge, no push to that branch.
