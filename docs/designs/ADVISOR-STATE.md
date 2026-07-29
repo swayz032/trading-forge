@@ -228,6 +228,17 @@ extractor.md:169` quota + `:171` inclusion bias + `:616` chart-nav-as-confluence
 authorized) · timezone/calendar basis.
 
 ## KNOWN-BENIGN (do not investigate)
+★★★ **THE IDLE WATCHDOG'S 15-MIN BAR IS SHORTER THAN SOME TASKS' AUTHORIZED ETA,
+SO IT FIRES ON HEALTHY LONG RUNS.** Item (1)'s ETA is ~40 min; the watchdog fired
+at 15. **[MEASURED HERE 2026-07-29 04:31Z] discriminator applied and it is SILENT
+WORK: worker `claude.exe` 9444 ALIVE, its conversation file written 6 seconds
+before the check, 4 `python.exe` running.** ★★ **`advisor-ruling` §8 says the
+ruling, the watchdog and the next seat must share ONE contract for what silence
+means — they do not while a 40-min ETA is watched by a 15-min bar. Do NOT widen
+the bar (that blinds it to real stalls); when authorizing a task whose ETA
+exceeds 15 min, SAY SO HERE so the next seat reads the event as expected.**
+★ **The discriminator, restated: process ALIVE + conversation file STILL GROWING
+⇒ silent work. ALIVE + conversation STOPPED ⇒ external limit. Not alive ⇒ dead.**
 ★★★ **2026-07-29 22:30–23:30 — an HOUR of worker silence was an ACCOUNT USAGE
 LIMIT, not an idle or dead worker. [MEASURED] worker `claude.exe` 9444 ALIVE
 throughout; its conversation last wrote 22:30:07 and stopped; a dispatched grader
