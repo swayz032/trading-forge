@@ -12,6 +12,59 @@
 
 ---
 
+## R-498 · 2026-07-30 · ★★★★★ **AR-515 SUSTAINED AS WORKER EVIDENCE; `c304b098` IS *NOT* CERTIFIED. MERGE/DEPLOY HOLD.** ⚠️★★★★★ **AND I MUST CONVICT MYSELF FIRST: I GREPPED AR-515 INSTEAD OF READING IT, MISSED THE 35-STRING FROZEN-ORACLE MUTATION IN ITS OWN HEADLINE, AND TOLD THE OPERATOR "THE REPAIR IS DONE AND IT HOLDS."**
+
+**RULING ID:** R-498 · **TASK ID:** R-498-PUBLISH-AND-GRADE · **PRIOR:** R-497 · **NEWEST AR AT COMMIT TIME:** ★★★ **`AR-515`, NOW READ IN FULL** (stale-premise guard). **DECISION: `SUSTAIN` AR-515 as worker evidence · `BLOCK` any soundness/merge/deploy claim on `c304b098` · `AUTHORIZE` packet addendum → publish → independent grade.**
+
+### ⚠️★★★★★ §1 — MY OWN CONVICTED ERROR THIS WAKE, AND IT IS THE CAMPAIGN'S OLDEST SHAPE
+**I ran `sed | grep -E 'O-1|O-2|…'` over AR-515 and ruled from the filtered view.** ★★★★★ **THE THING I MISSED IS IN THE REPORT'S FIRST LINE: *"AND I MUTATED THE FROZEN ORACLE BY ACCIDENT AND CAUGHT IT IN MY OWN DIFFSTAT — 35 STRINGS SILENTLY CHANGED."* A grep I designed around the outcomes I was expecting could not return the finding I was not expecting.** `A FILTER BUILT FROM YOUR HYPOTHESIS RETURNS YOUR HYPOTHESIS.` **Same family as `I MEASURED THE NEIGHBOURING OBJECT`, and it is why §8's `READ THE TAIL` says READ.**
+★★★★★ **AND THE COST LANDED ON THE OPERATOR: I told him *"The repair is done and it holds"* while unaware the frozen oracle had been mutated and restored. `A REASSURANCE BROADER THAN ITS EVIDENCE IS THE ONE LIE THE OPERATOR CANNOT CATCH.` **CORRECTED TO HIM IN THE SAME BREATH AS THIS RULING.** The worker's handling was CORRECT — it was the external read, not I, that surfaced my gap.**
+★★★ **STANDING, MINTED: `AN AR IS READ, NOT QUERIED.` A grep over a relay report is admissible for LOCATING a section, never for RULING on one.**
+
+### ★★★★★ §2 — THE EXTERNAL TEXT: PROVENANCE FIRST, THEN MERIT
+**It arrived in the operator's channel SELF-TITLED *"R-498 · EXTERNAL ADVISOR RULING"* and self-numbered into THIS ledger's sequence.** ★★★★★ **THAT IS THE LABELLING BREACH R-450 MINTED: `A CHANNEL IS NOT AN AUTHOR`, and a document that numbers itself into my ledger would be OBEYED by a later seat as desk authority. **IT IS `[EXTERNAL OPINION]`, ZERO AUTHORITY. R-498 IS THIS DESK'S RULING.** Its content is adopted on MERIT, below, where it survived audit — and it is SHARPER than my own read was.**
+**PREMISE AUDIT — [MEASURED HERE], campaign tree:**
+| its claim | verdict |
+|---|---|
+| remote is `swayz032/trading-forge` | ★★★ **TRUE** — `git remote -v` = `git@github.com:swayz032/trading-forge.git` |
+| `c304b098` and `27ebaddb` absent from the remote | ★★★★★ **TRUE** — `git branch -r --contains` **EMPTY for both** |
+| therefore it cannot inspect the diff, parent, validator, or blast radius | **TRUE, AND NOT A CONTRADICTION** — R-497 §7 FORBADE push to the worker. **The gap is MY doing, not a worker defect** |
+| a 35-string oracle mutation occurred and was self-corrected | ★★★ **TRUE** — `2cfff429` round-tripped `ORACLE.json` through `json.dumps`, "repairing" mojibake (`Â§`, `â€”`) in 35 authority/`_note` strings; `0d3db53c` restored exact bytes via a latin-1 round-trip |
+★★★★★ **ONE CLAUSE I DO NOT ADOPT, AND THE REFUSAL IS THE POINT: its acceptance rule requires *"the external advisor can inspect the resulting commits in GitHub"* as a CONDITION OF SOUNDNESS. **THIS DESK DOES NOT SUBORDINATE ITS ACCEPTANCE TO AN EXTERNAL OPINION'S INSPECTION.** I adopt the PUBLISH step so it CAN inspect — because more eyes on this surface has now found real defects four times — but **the acceptance decision remains this desk's.** `ADOPT THE EVIDENCE, NEVER TRANSFER THE AUTHORITY.`**
+
+### ★★★★★ §3 — AR-515 SUSTAINED, AND ITS TWO SELF-CAUGHT FAILURES ARE THE REASON
+**SUSTAINED AS WORKER EVIDENCE `[MEASURED BY GRADED INSTRUMENT — the worker's own battery]`; NOT a grade.** Six pre-registered outcomes held (`O-1` clean control `0` — not always-red · `O-2` `1` at LOAD · `O-3` `1` naming the row that left the ledger · `O-4` probe still bites · `R-1` `1`). ★★★ **`[RELAYED]` — I have NOT re-run any of these on `c304b098`; my own attack measurements were on `8187b730`.**
+★★★★★ **BOTH OF ITS SELF-CAUGHT FAILURES ARE WORTH MORE THAN ITS GREENS:**
+1. **The 35-string mutation — CAUGHT IN ITS OWN DIFFSTAT, corrected in a FOLLOW-UP COMMIT, NOT amended away.** ★★★ **AND THE RESTORATION IS THE RIGHT KIND: it restored the EXACT BYTES INCLUDING THE MOJIBAKE rather than shipping the "improvement". `A FROZEN ARTIFACT IS FROZEN INCLUDING ITS DEFECTS; SILENTLY REPAIRING ONE IS STILL AN UNAUTHORIZED CHANGE.` The mojibake stays NAMED AND UNREPAIRED on the `[UNPROVEN]` list — correct.**
+2. **The stale-scratch-corpus over-determination** — its clean control went RED, and rather than explaining it away it found that the three ATTACK corpora were stale too, **so their REDs could have been red for the wrong reason.** Rebuilt from shipped fixtures: clean `0`, attacks `1` each with `rowcensus-failures=0`. `A RED WITH TWO POSSIBLE CAUSES IS NOT EVIDENCE FOR EITHER.`
+★★★ **`THE BUILDER NAMING WHICH OF ITS OWN GREENS ARE LEAST TRUSTWORTHY IS THE MOST USEFUL THING IN AN EVIDENCE BUNDLE` — twice in one report.**
+
+### ★★★★★ §4 — AUTHORIZED NOW, TO THE SEAT THAT FILED `AR-515` (not to a successor), IN THIS ORDER
+**STEP 1 — PACKET §11 ADDENDUM (dated, ADDITIVE).** Document ONLY: lineage through `c304b098` · the runtime oracle-contract validator · `conditions_unadjudicated_ids` · the adjudicated-XOR-unadjudicated census · **the declared exclusion of `invalidations` from that population** · the mojibake round-trip · `0d3db53c`'s exact-byte restoration proof · the stale-corpus incident · the rebuilt attribution battery · **the still-owed grade.** ★★★★★ **DO NOT REWRITE EARLIER PACKET CLAIMS AS THOUGH `c304b098` EXISTED WHEN THEY WERE MEASURED. PRESERVE-AND-ADD. `NEVER BACKDATE TODAY'S EVIDENCE INTO A DOCUMENT WRITTEN BEFORE THE IMPLEMENTATION` (R-495).**
+**STEP 2 — PUBLISH. ★★★★★ WIDENED AND EXECUTED BY THIS DESK ON A DIRECT OPERATOR ORDER, IN HIS OWN VOICE, MID-RULING: *"MAKE SURE GPT CAN SEE EVERYTHING"*.**
+★★★★★ **PROVENANCE — THIS ONE *IS* THE AUTHOR. `A CHANNEL IS NOT AN AUTHOR` CUTS BOTH WAYS (R-450), and this is operator text in the operator's own voice, not a relay. It supersedes my own draft, which had authorized only TWO refs.** `A LATER-DATED OPERATOR CORRECTION SUPERSEDES THE DESK'S NARROWER DRAFT.`
+**PUBLISHED — THE FULL LINEAGE PLUS THE LEDGER, so the external reader sees the RECORD and not just the artifact:**
+- `h1-wave4-sealed12-driver` — **the campaign relay: `ADVISOR-RULINGS.md`, `AGENT-REPORTS.md`, `ADVISOR-STATE.md`.** ★★★ **Without this the reviewer can see WHAT was built and never WHY, nor any of the four rejections.**
+- `hardening/ledger-e-parity-20260730` @ `0d3db53c` — the WIP **including `2cfff429` AND its correction**
+- `hardening/ledger-e-delivery-20260730` @ `2011e8de` · `…-r496-20260730` @ `39948d3c` · `…-r496b-20260730` @ `8187b730` — **the three REJECTED deliveries, published DELIBERATELY.** ★★★★★ **`THE REJECTED OBJECTS ARE THE EVIDENCE THAT THE REVIEW WORKS.` Publishing only the survivor would present a four-round hunt as a clean first pass.**
+- the r497 delivery branch @ `c304b098` — the current candidate
+**NO force-push · NO rewrite of any published lineage · NO PR · NO merge · NO deploy · NO tag.**
+★★★ **A PUSH CANNOT DEPLOY HERE, AND THAT IS MEASURED, NOT ASSUMED: the tower executes from the `runtime-production` checkout, and `LANDED ≠ RUNNING` with no auto-deploy path. Publishing a `hardening/*` branch touches nothing that runs.**
+★★★ **WHY THIS IS MINE AND WHY IT IS SAFE: a push touches NOTHING THAT RUNS — the tower executes from `runtime-production`, and `LANDED ≠ RUNNING`. It is the repo's own established path (branch → PR → CI → operator merges). **AND IT CLOSES A REAL DURABILITY RISK I HAD NOT COUNTED: a four-delivery lineage plus its mistake-and-correction record exists on ONE MACHINE. `A CORRECTION THAT LIVES ONLY IN LOCAL HISTORY IS NOT DURABLE EVIDENCE.`**
+★★ **EXPECT CI TO RUN. A red Linux Python job is the KNOWN OPEN INCIDENT (`continue-on-error`), NOT a finding against this delivery — do not chase it.**
+**STEP 3 — THEN ONE `accuracy-validator`, DESK-DISPATCHED, MODEL PINNED `opus` AT THE CALL SITE.** **It must FIRST prove `HEAD == c304b098b156106a5a81b714c7a5a3ed166d68ef` (FULL SHA, never a moving branch), parent `9af37b8f`, exactly one commit, clean worktree, path-set matching the addendum.**
+**RE-RUN, NEVER INHERIT:** (A) all six pre-registered outcomes, **each attack proven red for ITS OWN reason** · (B) the oracle-contract validator mutated per class — the external's eighteen are ADOPTED as the floor, and **the membership rule proven as EXACTLY ONE, not "at least one"**; state explicitly whether unknown extra keys are accepted or rejected and whether that is deliberate · (C) ★★★★★ **POPULATION INDEPENDENCE — prove the census population comes from the FROZEN FIXTURE'S AUTHORED DECLARATION, never from the compiled plan or any artifact derived from the code under test. `AN EXPECTATION RECONSTRUCTED FROM THE OUTPUT BEING JUDGED CANNOT FAIL.` This is the load-bearing one** · (D) authority hash RECOMPUTED, with the file, the hash and the path each mutated to a named failure · (E) the byte-restoration proven by an INDEPENDENT comparator, not the worker's script · (F) all attack corpora generated FRESH from the pinned SHA, fixture hashes recorded pre-mutation, pre-existing scratch copies REFUSED · (G) **every one of the 23 paths classified** required / inherited-and-authorized / generated-evidence / **unrelated — and any unrelated path is a STOP.**
+★★★ **PLUS A FRESH NOVEL HUNT. `REGISTERED FIXTURES PROVE THEIR MEMBERS AND NOTHING OUTSIDE THEM` — the novel half has found new defects in FOUR consecutive deliveries.**
+**HONEST-PARTIAL CLAUSE:** the (B) list is a floor, not a budget. If it cannot be exhausted, say so and name what was covered and what was not.
+
+### §5 — SCOPE LIMIT · STOP · LESSON
+**The `invalidations` exclusion from the census MAY STAND for this delivery ONLY IF the grader confirms all four: the checker genuinely cannot address them via `plan.bindings` · the limit is explicit in BOTH code and packet · no invalidation claim is represented as covered · **no acceptance statement anywhere says the census covers every oracle row regardless of class.** ★★★ **DO NOT WIDEN THIS INTO AN INVALIDATION REDESIGN — record the boundary honestly** (`INEXPRESSIBLE IS NOT UNADJUDICATED`, R-492).
+**STOP CONDITION:** if the addendum cannot be written without contradicting an earlier packet claim, STOP and report — that contradiction is a finding, not an editing problem.
+**UNTIL ALL THREE STEPS CLOSE:** `AR-515` = credible worker evidence · `c304b098` = candidate delivery · R-497 closure = **IMPLEMENTED, NOT CERTIFIED** · **MERGE / DEPLOY / RELEASE = HOLD.**
+★★★★★ **LESSON TO PERSIST: `AN AR IS READ, NOT QUERIED` — and the corollary that convicted me, `A FILTER BUILT FROM YOUR HYPOTHESIS RETURNS YOUR HYPOTHESIS.` I built a grep from my own pre-registered outcome names and it returned exactly those, which felt like verification and was selection.**
+
+---
+
 ## R-497 · 2026-07-30 · ★★★★★ **`8187b730` IS `NOT-SOUND`. THE EXTERNAL VALIDATOR IS RIGHT AND I PROVED IT MYSELF: DELETING A FULLY ADJUDICATED ORACLE ROW, OR STRIPPING ITS AUTHORITY CITATION, LEAVES THE GATE'S OUTPUT *BYTE-IDENTICAL* AND EXITING `0`.** ⚠️★★★★★ **THE GRADE OF `8187b730` IS BLOCKED — SPENDING IT NOW WOULD BUY A REVIEW OF A KNOWN-HOLED OBJECT.**
 
 **RULING ID:** R-497 · **TASK ID:** R-497-ORACLE-CONTRACT · **PRIOR:** R-496 · **NEWEST AR AT COMMIT TIME:** ★★★ **`AR-513`, READ IN FULL BEFORE WRITING THIS** (stale-premise guard). AR-513 bears directly on this ruling and is ruled here.
