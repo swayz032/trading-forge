@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2396` at THIS commit, 2026-07-30 06:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2409` at THIS commit, 2026-07-30 06:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -143,6 +143,19 @@ failures, which raises its credibility but is not my measurement.**
 FIXTURE IT HAD AND WAS UNSOUND. `REGISTERED FIXTURES PROVE THEIR MEMBERS AND NOTHING OUTSIDE THEM`,
 and only another INDEPENDENT NOVEL HUNT moves this claim. The novel half is what caught both defects.**
 **NO INDEPENDENT GRADE OF `39948d3c` EXISTS. GATE B STAYS BLOCKED. NO INTEGRATION.**
+
+### ★★★ [FACT, MEASURED HERE — **NOT RULED**] BLUEPRINT `67d650a8` AUDITED AND **CLEAN**. CHERRY-PICK DEFERRED TO R-497 ON PURPOSE.
+**`docs: record P0 grade false-greens`, authored `06:07:41`, parent `bde1d9ad`, `+40/−11`, doc-only.**
+| check | result |
+|---|---|
+| ancestry (R-489's defect class) | **`afaf7664` IS an ancestor** — a clean forward step, NOT a fork |
+| stale authority pin | ★★★★★ **NOT A DEFECT — I READ THE CONTEXT.** `09e016fd`/`9b708e24` both sit on ONE line (`:707`) in a sentence calling them *"the earlier"*. Correct preserve-and-strike. **`A GREP HIT IS NOT A PIN`** |
+| ladder payload (CONTENT, not tag) | **all four bins** — `gate-artifact` `5` · `edge-absent` `2` · `compile-fidelity-loss` `1` · `OVERLAY-CONFLICT` `1` — and **`effective-N` `2`** |
+| records the rejection | `2011e8de` `10` · `NOT-SOUND` `3` · `rejected` `6` ✓ |
+| names `39948d3c` | **`0` — EXPECTED, NOT AN ERROR.** It predates the replacement by ~29 min. **`A DOCUMENT CANNOT CITE A COMMIT THAT POSTDATES IT`** — accurate history, stale w.r.t. the repair |
+★★★ **DEFERRED DELIBERATELY, NOT FORGOTTEN: this desk's own rule (R-492 §2) is that an adoption and
+its ledger record ship IN THE SAME MOTION. R-497 is held, so the cherry-pick waits for it. **The audit
+is done — R-497 needs only to cherry-pick and re-verify the ladder, not to re-derive this.****
 
 ### ⚠️★★★★★ THE FOLLOW-UP GRADE IS AN **UNOWNED PREREQUISITE** — ONLY THE OPERATOR CAN ROUTE IT
 ★★★★★ **[MEASURED HERE] TWO independent blockers: (1) this session's harness forbids launching
