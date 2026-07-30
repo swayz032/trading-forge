@@ -5,8 +5,14 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; now `~750` after a night of genuine new content through R-476.
-> If you are reading a stale figure here, `grep -c ""` it and fix this line —
+> `561` lines; **`950` at THIS commit, 2026-07-29 23:22 [MEASURED HERE, `wc -l`].**
+> ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
+> wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
+> ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
+> re-measured this very line and wrote `~750`; two content writes later
+> (`f58df774`, `cac61d3c`) it was `901`. A SELF-DESCRIPTION IS STALE THE INSTANT
+> THE NEXT WRITE LANDS — re-measure it in the SAME COMMIT as the write, or do not
+> state it.** If you are reading a stale figure here, `wc -l` it and fix this line —
 > the previous header claimed `313` while the file was `997`.** [MEASURED HERE]
 > the pre-compaction file was `1,186` lines / `102,513` bytes while its own header
 > claimed "compacted 450→313, current through R-453" — a self-description nobody
@@ -27,7 +33,22 @@
 
 ---
 
-## SEAT — CURRENT AS OF R-472 / AR-471
+## SEAT — CURRENT AS OF R-477 / AR-479
+*(this header read `R-472 / AR-471` while the body below it read `R-477 / AR-479` —
+a heading is a claim too; corrected 23:20)*
+
+★★★★★ **OPERATOR ORDER, RECEIVED DIRECTLY 2026-07-29 ~23:16, IN THE OPERATOR'S OWN
+WORDS (not a relay, not `[EXTERNAL OPINION]`): *"WAIT ON GPT OPINON FOR NEXT
+RULING."* **R-478 IS HELD. NO RULING MAY BE WRITTEN UNTIL THE EXTERNAL READ ON
+AR-479 ARRIVES.** This re-affirms the standing order recorded in `## OPERATOR-FACING`
+— `THE PASTE IS THE GATE` — so that section's open question is now ANSWERED FOR THIS
+ROUND: the order stands.**
+★★★ **AND THE HOLD COSTS NOTHING, WHICH IS THE FACT THAT MADE IT SAFE TO OBEY
+WITHOUT ESCALATING [MEASURED HERE, AR-479 §5]: the worker is NOT waiting on R-478. It
+declares *"NEXT: R-474 §5 Item 2 / R-477 §4 … This seat continues; no fresh worker
+needed yet."* **A HELD RULING IS ONLY A STALL WHEN THE WORKER HAS NOTHING
+AUTHORIZED; here R-477 §4 already carries Item 2's full contract.** Check this before
+concluding a hold is harmless — do not assume it.**
 
 **Ledger `R-477`** (commit `22f07905`). **Newest AR `AR-479` — UNRULED (awaiting the
 external read), R-477 §3 delivered at worker commit `5a403bed` and VERIFIED AT THIS
@@ -36,6 +57,29 @@ instrument NOT RATIFIED.**
 ★★★★★ **THE ONE ACTION THE NEXT SEAT OWES IMMEDIATELY: when the external read on
 AR-479 lands clean, DISPATCH ONE `accuracy-validator` AGAINST `5a403bed` and name its
 id. It is deliberately un-dispatched — see the AR-479 block below for why.**
+★★★ **THE GRADE IS HELD TOO, AND FOR THE PRIOR SEAT'S REASON, NOT A NEW ONE. I
+re-examined whether to dispatch it anyway — `A PRE-REGISTERED TRIGGER FIRES ON ITS
+CONDITION` argues for sending — and did not, because the read has found a material
+hole in TWO CONSECUTIVE ROUNDS and the wait is minutes. **RECORDED SO IT IS NOT
+RE-LITIGATED A THIRD TIME.**
+
+### SEAT IDENTITY AND RIG — RE-DERIVED AT THIS SEATING, NOT INHERITED
+**[MEASURED HERE by walking UP from this shell's own `$PID`, the only test that
+answers it]:** `powershell 21944` → **`claude.exe 23988` = THE ADVISOR = ME.** The
+worker remains **`claude.exe 15908`** (up since `18:26:44`). **R-476's correction
+holds; the seats are NOT inverted.**
+**[MEASURED HERE] THE RIG IS EXACTLY THE REQUIRED ONE — 6 processes, 3 logical
+monitors, ADOPTED, NOTHING ARMED:**
+- `2728`/`10556` under **`15908`** — watches `ADVISOR-RULINGS.md`. **THE WORKER'S EAR.
+  NEVER TOUCH.**
+- `23352`/`12428` under **`23988`** (mine) — `AGENT-REPORTS.md` idle watchdog, bar 15
+  min, and its emitted text already carries the "is the newest AR UNRULED?" check.
+- `20632`/`20868` under **`23988`** (mine) — `AGENT-REPORTS.md` change detector,
+  2 s poll, ★ **content-hash gated (`$h` vs `$ph`), not mtime alone** — the
+  phantom-report fix from 22:40 is present in the running rig, verified in its
+  command line, not assumed from the note that ordered it.
+★★ **Armed by a PRIOR CONVERSATION of MY OWN `claude.exe`, so per the decision table:
+ADOPT, ARM NOTHING. A monitor is not an orphan because your conversation is new.**
 ★★★★★ **AND THE CAMPAIGN-LEVEL FINDING OF THIS SESSION, ALREADY MEASURED AND
 COMMITTED: THE FROZEN C8 CONTROL DOES NOT SURVIVE `0b0d6617` — `233 → 158`, `−75`.
 R-477 §5's pre-registered STOP has fired. NO ABLATION MAY START until the baseline is
@@ -886,11 +930,16 @@ measurement that reads as complete.**
 
 ## OPERATOR-FACING
 
-★★★★★ **ONE DECISION IS YOURS: your standing order was "get an external (GPT)
-opinion before writing a ruling." This desk SCOPED IT OUT in R-449 on the mistaken
-belief that YOU were demanding a choice — it was GPT's text in your channel. R-450
-SUSPENDED that. KEEP THE ORDER, OR SCOPE IT OUT? Until you say, the order stands and
-the desk names its absence in each ruling. Nothing is blocked either way.**
+★★★★★ **ANSWERED 2026-07-29 ~23:16 — DO NOT RE-ASK IT.** The open question was:
+"your standing order was *get an external (GPT) opinion before writing a ruling*;
+this desk SCOPED IT OUT in R-449 on the mistaken belief that YOU were demanding a
+choice (it was GPT's text in your channel), R-450 SUSPENDED that — KEEP THE ORDER, OR
+SCOPE IT OUT?" ★★★★★ **THE OPERATOR ANSWERED IN HIS OWN WORDS, DIRECTLY: *"WAIT ON
+GPT OPINON FOR NEXT RULING."* **THE ORDER STANDS. `THE PASTE IS THE GATE.` R-478 IS
+HELD PENDING THE READ ON AR-479.** ★★★ **AND NOTE THE PROVENANCE, BECAUSE THIS IS THE
+EXACT DISTINCTION R-450 MINTED: this is OPERATOR TEXT IN THE OPERATOR'S OWN VOICE
+ordering the gate — NOT a relayed GPT paste. `A CHANNEL IS NOT AN AUTHOR` cuts both
+ways, and this one IS the author.**
 ★★ **The relays labelled "R-440"/"R-449"/"R-450"/"R-451"/"R-452" were GPT, not you.
 Every relayed text is treated as an OPINION with zero authority — audited, often
 adopted on merit, never obeyed as your order.**
