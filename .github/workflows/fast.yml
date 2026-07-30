@@ -144,6 +144,14 @@ jobs:
       - name: Cold-recovery runsheet matches its typed source
         run: npm run runsheet:check
 
+      # Ledger-E binding-plan parity + frozen oracle. Wired here AND in ci.yml on
+      # purpose: CI-only was the shape that let this rot unnoticed for its whole
+      # life. NOT continue-on-error — this is a hard gate. A drifted lane or a
+      # deleted corpus member must stop the run, and a green here states its own
+      # unadjudicated cells rather than implying full coverage.
+      - name: Gate — TS/Python binding-plan parity + frozen oracle
+        run: npm run check:spec-binding-plan-parity
+
       - name: False-success lint (ops surface, non-blocking)
         continue-on-error: true
         run: npm run lint:false-success

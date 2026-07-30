@@ -47,9 +47,19 @@ import { compileBindingPlan } from "../src/server/lib/spec-family-bindings.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// ★★★ DEFAULT CORPUS CHANGED (R-485 item 1): was `spec-binding-parity`, a
+//     ONE-fixture directory with no oracle. That corpus IS the false-green this
+//     packet exists to close — `A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN
+//     CERTIFIES ITS FIXTURES, NOT ITS DOMAIN.` Wiring the gate into CI while it
+//     still defaulted there would have shipped a green that proves one fixture.
+//
+// ★ NOTHING IS LOST: `spec-binding-parity-expanded/00-control-shipped.spec.json`
+//   is a byte copy of the old corpus's single fixture and is a REQUIRED member of
+//   the manifest — so the shipped case still runs, and it can no longer be
+//   silently dropped. The legacy directory is left in place, untouched.
 const SAMPLES_DIR = process.env.TF_SPEC_BINDING_SAMPLES_DIR
   ? join(process.env.TF_SPEC_BINDING_SAMPLES_DIR)
-  : join(__dirname, "..", "ci", "fixtures", "spec-binding-parity");
+  : join(__dirname, "..", "ci", "fixtures", "spec-binding-parity-expanded");
 
 const PY_DRIVER = `
 import json, sys
