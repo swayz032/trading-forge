@@ -245,7 +245,7 @@ WORTH THE WORK.` Waiting costs minutes; dispatching early has already cost a gra
 once. **NEXT SEAT: when the read lands clean, dispatch ONE `accuracy-validator`
 against `5a403bed` and NAME ITS ID in the ruling that consumes it.**
 
-## ★★★★★ [FACT, MEASURED HERE] `0b0d6617` RESOLVED AT THE CLASSIFICATION LAYER — **THE FROZEN C8 CONTROL DOES NOT SURVIVE IT. −75 OF 233.**
+## ★★★★★ [FACT, MEASURED HERE] `0b0d6617` RESOLVED AT THE CLASSIFICATION LAYER — **THE FROZEN C8 CONTROL DOES NOT SURVIVE IT. `233 → 159`, A MOVEMENT OF `−74` (corrected by R-478; this heading read `−75 OF 233`).**
 
 ★★★★★ **R-477 §5's PRE-REGISTERED BRANCH 2 FIRES: *ANY transition ⇒ STOP, re-establish
 the control baseline before any ablation.* This is the APPLICATION of a rule already
