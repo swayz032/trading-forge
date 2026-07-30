@@ -1,0 +1,26 @@
+{
+  "video": "ci-hermetic-all-families",
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "london", "type": "WAIT_SESSION", "object": "London open", "role": "spine" },
+      { "id": "unknown-session", "type": "WAIT_SESSION", "object": "regional window", "role": "spine" },
+      { "id": "structure", "type": "WAIT_STRUCTURE", "object": "market structure", "role": "spine" },
+      { "id": "verify", "type": "VERIFY_STRUCTURE", "object": "swing confirmation", "role": "spine" },
+      { "id": "bias", "type": "WAIT_BIAS", "object": "higher timeframe bias", "role": "confluence" },
+      { "id": "direction", "type": "CONFIRM_DIRECTION", "object": "direction", "role": "confluence" },
+      { "id": "retest", "type": "WAIT_RETEST", "object": "level retest", "role": "spine" },
+      { "id": "filter", "type": "FILTER", "object": "volume", "role": "confluence" },
+      { "id": "confirmation", "type": "WAIT_CONFIRMATION", "object": "rejection candle", "role": "spine" },
+      { "id": "enable", "type": "ENABLE_ENTRY", "object": "setup complete", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" },
+      { "id": "hint", "type": "EXIT_HINT", "object": "prior high", "role": "confluence" },
+      { "id": "reset", "type": "RESET", "object": "new session", "role": "confluence" },
+      { "id": "exception", "type": "EXCEPTION", "object": "news", "role": "confluence" },
+      { "id": "unknown", "type": "NOT_A_REAL_FAMILY", "object": "none", "role": "confluence" }
+    ],
+    "invalidations": [
+      { "id": "invalidate", "type": "INVALIDATE", "object": "structure break", "role": "invalidation" }
+    ]
+  }
+}
