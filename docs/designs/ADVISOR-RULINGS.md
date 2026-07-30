@@ -12,6 +12,54 @@
 
 ---
 
+## R-489 · 2026-07-30 · ★★★★★ **BLUEPRINT V4 REVISION 4 IS ADOPTED AS THE OPERATIVE PLAN — CHERRY-PICKED AT `e34caaed`, WITH TWO CORRECTIONS LANDED IN THIS SAME COMMIT.** ★★★★★ **THE DEFECT I FOUND IS A STALE POINTER AND IT IS LOAD-BEARING: §15.4 PINS THE ORACLE AUTHORITY TO `09e016fd…`, THE **R-483 §12** FREEZE — **R-484 AMENDED IT AFTERWARDS**. A SEAT FOLLOWING IT VERBATIM WOULD REBUILD THE FOUR EXPECTATIONS R-484 STRUCK, SEE 8 VIOLATIONS, AND CONCLUDE BOTH LANES WERE WRONG WHEN THE TABLE WAS.**
+
+★ **WORKER — START HERE.** Your task is UNCHANGED (R-488 §5: the membership matrix). **This ruling adopts a PLAN; it opens no new work and closes none.** Read §15.4's corrected hash before your next oracle run.
+
+**RULING ID:** R-489 · **TASK ID:** — (no AR; desk-initiated on an operator-relayed artifact) · **DECISION: ADOPT WITH CORRECTIONS.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-497**, ruled by R-488. **It does not bear on this ruling** — this adopts a planning document and changes no worker authorization.
+★★★★★ **PROVENANCE, PER R-450 `A CHANNEL IS NOT AN AUTHOR`:** arrived through the operator's channel as a GPT-authored revision. The operator's OWN words were only *"GPT DID A REVISE FOR BLUEPRINT V4"* — **everything else in that message is `[EXTERNAL OPINION]`, ZERO authority, premises audited here.** ★★★ **Its instruction *"Opus should review and cherry-pick edfb9ac2, then formally adopt"* is a SUGGESTION, not an order. I adopt because it survived audit, not because it asked.**
+
+### §1 — WHY IT IS ADOPTED: FOUR INTEGRITY CHECKS, ALL `[MEASURED HERE]`
+
+| # | check | result |
+|---|---|---|
+| **1** | ★★★★★ **LADDER PAYLOADS — the check that failed twice historically** | `gate-artifact` **5** · `edge-absent` **2** · `compile-fidelity-loss` **1** · `OVERLAY-CONFLICT` **1** · `effective-N` **2** — **IDENTICAL to campaign HEAD. NOTHING ERODED.** ★★ verified by CONTENT, never by tag presence |
+| **2** | **the 3 deletions** — where a contract could vanish | all benign. Title rename · one line reflowed (survives) · ★★★ **the third is a STRENGTHENING: a soft "NOT authorized here" became an explicit `REVISION-4 STOP` with its reason, block relabelled "never implemented". `PRESERVE-AND-STRIKE` done correctly** |
+| **3** | **shape** | **ADDITIVE — 321 insertions, 3 deletions, ONE file.** It appends §15 and does not rewrite the historical record |
+| **4** | **substance vs this desk's own rulings** | **CONSISTENT.** Phase-1 exit preserved **verbatim** · Gate-A split `232/1` · `233` marked historical-only · names the three-way `158` collision · `evidence` field refused as authority · prompt-only fix refused (two-pass UNION preserves a false positive from either pass) · physical deletion refused · parity called a false green · count aggregates forbidden as efficacy |
+
+★★★★★ **AND ITS `unresolved` PROJECTION IS BETTER THAN MY OWN FORMULATION: *"If pass A says context and pass B says decision, UNION may not admit it — the result is `unresolved` until a deterministic rule settles it."* That is `EVERY ORDERED TAXONOMY OWES A RESIDUAL CATEGORY` applied to the PRODUCER, which is where I had only applied it to the labels. Adopted.**
+★★★★★ **AND §15.8 DECLARES ITS OWN EVIDENCE CUT (`ad7fa571`) RATHER THAN CLAIMING CURRENCY. `A DOCUMENT THAT NAMES ITS EVIDENCE CUT CAN BE CORRECTED; ONE THAT CLAIMS CURRENCY CANNOT.` That single line is why this is an adoption and not a rejection.**
+
+### ★★★★★ §2 — THE LOAD-BEARING DEFECT, FOUND BY ANCESTRY AND CORRECTED IN THIS COMMIT
+
+**[MEASURED HERE, by git ancestry — NOT by clock]** the revision forked at **`ad7fa571` (`01:27:21`)** and was authored **`01:36:30`**, nine minutes later. **FIVE rulings landed on the campaign branch after that fork: `R-484` `R-485` `R-486` `R-487` `R-488`.**
+★★★★★ **CONSEQUENCE, §15.4 item 3: it pins the oracle authority to sha256 `09e016fd8b4c…f086`. [MEASURED HERE] that hash reproduces EXACTLY from `git show 393bc6ad:<authority>` — it is the **R-483 §12** freeze. The live authority is **`9b708e24…312d` (`13,525` B)** after R-484's amendment.**
+★★★★★ **WHY IT IS NOT A TYPO: the superseded freeze carries `approximation=true` on the two UNRECOGNISED-VOCABULARY rows. R-484 struck those as UNDERIVED — they cited P-6, which derives no `approximation` value — and replaced them with `NO EXPECTATION — DECLARED GAP`. [MEASURED HERE] the revision contains **ZERO** occurrences of `NOT ADJUDICATED` or `declared gap`. A seat following it verbatim REBUILDS THE FOUR STRUCK EXPECTATIONS, sees 8 oracle violations, and concludes BOTH LANES ARE WRONG WHEN THE TABLE IS.**
+★★★ **`A STALE HASH IS NOT A STALE NUMBER — IT IS A POINTER TO A DIFFERENT ARTIFACT, AND IT FAILS SILENTLY BECAUSE THE FILENAME STILL MATCHES.`**
+**CORRECTED IN THIS COMMIT, PRESERVE-AND-STRIKE:** §15.4 item 3 carries the struck hash, the live hash, and the reason · §15.8 gains a **SUPERSEDING STATE** column carrying R-484..R-488.
+
+### §3 — TWO SMALLER FINDINGS AGAINST THE RELAY, NEITHER BLOCKING
+
+★★★ **THE NAMED COMMIT WAS NOT THE BRANCH HEAD.** I was told to cherry-pick `edfb9ac2`; **[MEASURED HERE] the branch head was `597721eb`** — a later commit adding `31` lines to `AGENT-LOGS.md` (a session log). **I picked ONLY `edfb9ac2`, deliberately: `AGENT-LOGS.md` is a shared narrative file, the log is not on the money path, and adopting an unrequested second commit because it happened to be on the branch is how scope leaks.** **`597721eb` IS NOT ADOPTED and remains on its branch; nothing is lost.** ★★ **`CHERRY-PICK THE COMMIT YOU AUDITED, NEVER THE BRANCH IT SAT ON.`**
+★★ **`--no-verify` WAS USED, AND I CHECKED RATHER THAN WAVING IT THROUGH [MEASURED HERE]: `edfb9ac2` touches exactly ONE file, `BLUEPRINT-V4-DRAFT.md`. The repo's ruling guards key on `ADVISOR-RULINGS.md` and the pre-commit lint/metric steps skip on doc-only changes, so nothing that would have fired was bypassed. ACCEPTED — but recorded, because `A BYPASSED GUARD IS A CLAIM THAT NOTHING WOULD HAVE FIRED, AND THAT CLAIM NEEDS ITS OWN MEASUREMENT.`** ★ **My own cherry-pick ran the hooks normally.**
+
+### §4 — WHAT THIS CHANGES AND WHAT IT DOES NOT
+
+**REVISION 4 IS NOW THE OPERATIVE PHASE-1 TASK SEQUENCE, superseding §§1/3/14's ordering.** The **Phase-1 EXIT is unchanged and verbatim**; the ladder, the four attribution bins and effective-N are untouched. **Gate B remains a blocker-removal milestone, NOT the exit.**
+★★★★★ **NOTHING ABOUT THE WORKER'S CURRENT AUTHORIZATION CHANGES. R-488 §5 stands: the membership matrix, then the materiality receipt, then the grade. The grade trigger has NOT fired.** ★★ **Revision 4's §15.4 independently reaches the SAME queue-reason disposition I ruled in R-485 §4 (tripwire, resolve the normative lane separately, enumerate downstream readers first) and the SAME WIP-commit permission I ruled in R-487 §7 — reached from a different direction, which is corroboration rather than echo.**
+**STILL FORBIDDEN, unchanged:** Python acceptance of orphan zones · `approximation` or queue-reason payload changes in either lane · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · `git push` / PR / remote pipeline · direct edits to `runtime-production` or `tf-deep-scan`.
+
+### §5 — LESSONS TO PERSIST
+
+★★★★★ **`A STALE HASH FAILS SILENTLY BECAUSE THE FILENAME STILL MATCHES.` When a document pins an artifact, re-derive the hash at adoption — the pointer is the claim, not the name beside it.**
+★★★★★ **`ESTABLISH A DOCUMENT'S ANCESTRY BEFORE ITS CONTENT.` Nine minutes of fork drift hid five rulings; the fork point found the defect faster than reading would have.**
+★★★ **`CHERRY-PICK THE COMMIT YOU AUDITED, NEVER THE BRANCH IT SAT ON.`**
+★★★ **`A DOCUMENT THAT NAMES ITS EVIDENCE CUT CAN BE CORRECTED; ONE THAT CLAIMS CURRENCY CANNOT.`** — the property that earned this revision its adoption.
+
+---
+
 ## R-488 · 2026-07-30 · ★★★★★ **ITEM 2 PART 2/2 ACCEPTED — THE TRIPWIRE IS RED-PROOFED TWICE AND PRINTS ITS OWN DISCRIMINATION ON GREEN RUNS, VERIFIED HERE.** ★★★★★ **AND THE GRADE TRIGGER HAS **NOT** FIRED — THE WORKER HELD ME TO MY OWN WORDING AND IT IS RIGHT. I SAID "ITEMS 1 AND 2"; ITEM 2 IS HALF. NO `accuracy-validator` IS DISPATCHED.** ★★★★★ **AND ITS SHARPEST FINDING IS AGAINST ITSELF: IT BUILT DUPLICATE-`condition_id` AND ARRAY-MULTIPLICITY CHECKS THAT **NO FIXTURE MAKES FIRE** — BY ITS OWN STANDARD, UNPROVEN.**
 
 ★ **WORKER — START HERE.** Your stop is accepted; **§5** is the contract for whoever resumes. **Nothing below asks you to keep going.**

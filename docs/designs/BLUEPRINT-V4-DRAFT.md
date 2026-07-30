@@ -691,11 +691,28 @@ Before any Gate-B result is admissible, the isolated worktree pinned to
 3. An expected-results oracle independent of both implementations. For the
    orphan zones its authority is frozen in
    `ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md`, sha256
-   `09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086`:
+   ~~`09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086`~~
+   → ★★★★★ **`9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d`
+   (`13,525` B) — CORRECTED ON ADOPTION, R-489**:
    zone membership comes from an all-`1,440`-minute occupancy probe that reads
    none of the tables under repair; emitted behavior comes from the frozen
    semantic propositions. No row may cite `FAMILY_META`, either emitted plan,
    or packet prose copied from them.
+   > ⚠️★★★★★ **STALE-POINTER CORRECTION (R-489, adoption of this revision).** The
+   > struck hash is the **R-483 §12** freeze (`393bc6ad`). **R-484 AMENDED THAT
+   > AUTHORITY AFTER THIS REVISION WAS AUTHORED** — this section's evidence cut is
+   > `ad7fa571` (§15.8) and R-484..R-488 landed after it. **[MEASURED HERE] the
+   > struck hash reproduces exactly from `git show 393bc6ad:<authority>`; the live
+   > file is `9b708e24…`.**
+   > ★★★★★ **WHY IT IS LOAD-BEARING AND NOT A TYPO: the superseded freeze carries
+   > `approximation=true` on the two UNRECOGNISED-VOCABULARY rows. R-484 struck
+   > those as **UNDERIVED** — they cited P-6, which derives no `approximation`
+   > value — and replaced them with `NO EXPECTATION — DECLARED GAP`. A seat
+   > verifying against `09e016fd…` would REBUILD THE FOUR STRUCK EXPECTATIONS, see
+   > 8 oracle violations, and conclude both lanes were wrong when the TABLE was.**
+   > ★★★ **SO ADD, PER R-484: four cells carry NO EXPECTATION and must render as
+   > `[NOT ADJUDICATED]` — never as passes, never as `false`. `ASSERTING THE
+   > IMPLEMENTATION'S VALUE AND ASSERTING NOTHING ARE DIFFERENT ACTS.`**
 4. Exhaustive membership manifests and deletion-RED fixtures. Counts alone do
    not protect membership.
 5. CI and fast-lane wiring, plus a per-spec materiality receipt. Existence is
@@ -813,12 +830,19 @@ from that spec's measured residual, not from a library-wide housekeeping list.
 
 ### 15.8 — STATUS AT THIS REVISION'S EVIDENCE CUT
 
-| item | state at campaign commit `ad7fa571` | next admission event |
-|---|---|---|
-| Gate-A causal split | **complete** at the historical-artifact layer | preserve as causal evidence; do not reuse as current control |
-| P0 parity packet | staged and corrected | complete the one atomic implementation |
-| P0 semantic oracle authority | **frozen by R-483 §12** | derive oracle rows from the frozen authority; never from either lane |
-| P0 implementation | **in progress in the named isolated seat/worktree** | complete delivery commit, then one independent grade |
+> ★★★★★ **THE EVIDENCE CUT IS HONESTLY DECLARED AND IT IS FIVE RULINGS STALE — SUPERSEDING
+> COLUMN ADDED ON ADOPTION (R-489).** This revision was authored `01:36`, nine minutes after
+> forking at `ad7fa571` (`01:27`); **R-484 · R-485 · R-486 · R-487 · R-488 landed on the
+> campaign branch afterwards [MEASURED HERE by ancestry, not by clock].** ★★★ **Declaring
+> its own cut is why this table is CORRECTABLE rather than misleading — `A DOCUMENT THAT
+> NAMES ITS EVIDENCE CUT CAN BE UPDATED; ONE THAT CLAIMS CURRENCY CANNOT.`**
+
+| item | state at cut `ad7fa571` | ★ SUPERSEDING STATE (campaign HEAD, R-489) | next admission event |
+|---|---|---|---|
+| Gate-A causal split | **complete** at the historical-artifact layer | unchanged | preserve as causal evidence; do not reuse as current control |
+| P0 parity packet | staged and corrected | unchanged | complete the one atomic implementation |
+| P0 semantic oracle authority | **frozen by R-483 §12** | ★★★★★ **AMENDED BY R-484 → `9b708e24…`. Four cells are `NO EXPECTATION — DECLARED GAP`; the `09e016fd…` freeze is SUPERSEDED** | derive oracle rows from the AMENDED authority; never from either lane |
+| P0 implementation | **in progress in the named isolated seat/worktree** | ★★★★★ **SUBSTANTIALLY LANDED, NOT COMPLETE: gate GREEN `exit 0` and INDEPENDENTLY RED-PROVED at the desk (oracle mutated, BOTH lanes untouched → `exit 1`, `AGREEMENT: PASS` beside `CORRECTNESS: 4 violations`) · CI **and** fast-lane WIRED, F-A closed (R-487) · queue-reason tripwire shipped with two discriminates proofs (R-488). **STILL OPEN: the exhaustive membership matrix (3 of 5 evaluable zones have NO fixture; 12 families unexercised), the materiality receipt, and TWO comparator checks ruled `[UNPROVEN]` — duplicate-`condition_id` and array-multiplicity, which NO fixture makes fire (R-488 §3)** | finish the matrix, then ONE `accuracy-validator` — **the grade trigger has NOT fired** |
 | P1 additive current baseline | **not frozen** | re-authored-producer equivalence control, then current-code artifact |
 | P2 truth rule | **defined**; complete labelled membership not frozen | freeze all members and hash before treatment |
 | P3 runtime graph→spec handoff | **unenumerated** | rule the two-stage transfer path before runtime integration |
