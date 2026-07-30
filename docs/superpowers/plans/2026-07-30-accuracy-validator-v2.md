@@ -225,7 +225,7 @@ const PROJECTS_ROOT = 'C:\\Users\\tonio\\Projects';
 const MASTER_DIR = join(PROJECTS_ROOT, 'trading-forge', 'trading-forge', '.claude', 'agents');
 const CONTAINER_DIR = join(PROJECTS_ROOT, 'trading-forge', '.claude', 'agents');
 const SKIP = new Set(['node_modules', '.git', '.parity-selftest', '.pytest_cache', '.ruff_cache']);
-const MAX_DEPTH = 4; // Projects/<a>/<b>/<c>/.claude/agents reaches container-nested trees
+const MAX_DEPTH = 6; // .claude/worktrees/<wt>/.claude/agents nests six dirs below PROJECTS_ROOT (F-1)
 
 const norm = (buf) => buf.toString('utf8').replace(/\r\n/g, '\n');
 const hash = (p) => createHash('sha256').update(norm(readFileSync(p))).digest('hex').slice(0, 16);
@@ -241,9 +241,33 @@ function findAgentDirs(dir, depth, out, allowSelfTest) {
     if (e.name === '.claude') {
       const agents = join(p, 'agents');
       if (existsSync(agents)) out.push(agents);
-      continue; // do not descend into .claude further
+      // F-1 fix: DESCEND into .claude too — registered worktrees under
+      // .claude/worktrees/<wt>/ carry their own nested .claude/agents.
+      findAgentDirs(p, depth + 1, out, allowSelfTest);
+      continue;
     }
     findAgentDirs(p, depth + 1, out, allowSelfTest);
+  }
+  return out;
+}
+
+// F-1 independence fix: a checker that shares its sweeper's enumerator cannot
+// see that enumerator's blind spots. This census is a second, structurally
+// different path: exhaustive bounded FILE walk, no .claude special-case, its
+// own depth bound. RED if it finds a copy the scan's walker did not.
+const CENSUS_MAX_DEPTH = 9;
+function censusFiles(dir, depth, names, out) {
+  if (depth > CENSUS_MAX_DEPTH) return out;
+  let entries;
+  try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return out; }
+  for (const e of entries) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) {
+      if (SKIP.has(e.name)) continue;
+      censusFiles(p, depth + 1, names, out);
+    } else if (names.has(e.name)) {
+      out.push(p);
+    }
   }
   return out;
 }
@@ -269,6 +293,17 @@ function scan(allowSelfTest = false) {
       if (h !== mh) { divergent++; red.push(`DRIFT ${name}: ${p} = ${h}, master = ${mh}`); }
     }
     rows.push(`${name}: master ${mh}, ${copies} copies, ${divergent} divergent`);
+  }
+  // F-1 independence: cross-check the walker's population against the census.
+  const seen = new Set();
+  for (const d of dirs) for (const name of masters.keys()) {
+    const p = join(d, name);
+    if (existsSync(p)) seen.add(p);
+  }
+  for (const name of masters.keys()) seen.add(join(MASTER_DIR, name));
+  const censused = censusFiles(PROJECTS_ROOT, 0, new Set(masters.keys()), []);
+  for (const p of censused) {
+    if (!seen.has(p)) red.push(`CENSUS MISS: ${p} exists but the scan walker never reached it`);
   }
   return { red, rows };
 }
@@ -580,7 +615,7 @@ import { join } from 'node:path';
 const PROJECTS_ROOT = 'C:\\Users\\tonio\\Projects';
 const MASTER = join(PROJECTS_ROOT, 'trading-forge', 'trading-forge', '.claude', 'agents', 'accuracy-validator.md');
 const SKIP = new Set(['node_modules', '.git', '.parity-selftest', '.pytest_cache', '.ruff_cache']);
-const MAX_DEPTH = 4;
+const MAX_DEPTH = 6; // .claude/worktrees/<wt>/.claude/agents nests six dirs below PROJECTS_ROOT (F-1)
 const APPLY = process.argv.includes('--apply');
 
 function findAgentDirs(dir, depth, out) {
@@ -593,6 +628,9 @@ function findAgentDirs(dir, depth, out) {
     if (e.name === '.claude') {
       const agents = join(p, 'agents');
       if (existsSync(agents)) out.push(agents);
+      // F-1 fix: DESCEND into .claude too — registered worktrees under
+      // .claude/worktrees/<wt>/ carry their own nested .claude/agents.
+      findAgentDirs(p, depth + 1, out);
       continue;
     }
     findAgentDirs(p, depth + 1, out);

@@ -127,7 +127,9 @@ grade" lives in the plan's Task 8 protocol, where the dispatcher is.
    worktree (worktree-session discipline; never edit the shared checkout directly).
 2. Byte-sweep the identical file into: the container copy + every existing live tree's
    `.claude/agents/` (~45 measured today; re-enumerate at execution time — the tree
-   population moves daily) + `runtime-production` + `tf-deep-scan`.
+   population moves daily) + `runtime-production` + `tf-deep-scan` + the nested
+   registered worktrees under the repo's own `.claude/worktrees/` (added post-grade:
+   the independent grade found 16 stale copies there that the original sweep missed).
 3. EOL: the June split was CRLF-vs-LF at checkout (7,362 vs 7,260 B, same content). The
    parity check therefore compares EOL-NORMALIZED hashes; whether to add a
    `.gitattributes eol` pin is decided at plan time (it re-touches checkouts — blast
@@ -146,6 +148,16 @@ grade" lives in the plan's Task 8 protocol, where the dispatcher is.
   dir fails loud. (Strengthened 2026-07-30 after the Task-3 review found the original
   bypassed the walker, so a walker regression could not fail the self-test.) A
   self-test that cannot fail is rejected in review.
+- **Independent census (F-1 fix, post-grade 2026-07-30):** the independent grade
+  falsified "swept everywhere" — 16 stale copies sat in registered worktrees under
+  the repo's own `.claude/worktrees/`, invisible to sweeper AND checker because both
+  shared one hand-copied walker that never descended into `.claude` (and MAX_DEPTH 4
+  cut the nesting). Fix: both walkers descend into `.claude` with MAX_DEPTH 6, and
+  the checker additionally runs a structurally different second enumerator (plain
+  bounded file census, no `.claude` special-case, own depth bound) and goes RED with
+  `CENSUS MISS` on any copy the scan walker failed to reach. A checker may never
+  share its sweeper's enumerator — that is the audit-population law applied to our
+  own tooling.
 - Covers ALL agent definitions (cheap class-level drift coverage) even though only
   accuracy-validator's CONTENT is rebuilt in this wave.
 - Wiring into the nightly rail job list is decided at plan time; manual invocation is
