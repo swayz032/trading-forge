@@ -12,6 +12,63 @@
 
 ---
 
+## R-495 · 2026-07-30 · ★★★★★ **E IS APPROVED — THE FAILURE SIGNAL NOW HAS ALL THREE PARTS AND I VERIFIED THE ONE I MISSED LAST TIME: `process.exit` IN THE EMITTER WENT `0` → `3`, WITH `:244 process.exit(1)` INSIDE `if (violations.length > 0)`.** ★★★★★ **AR-508 §2 IS CORRECTED: THE RATIFY PACKET EXISTS — THE SEARCH SURFACE WAS WRONG. BUT ITS CONCERN SURVIVES, AND THE HONEST VERB IS `UPDATE`, NOT `AUTHOR`.** **§5A → §5B → §5C AUTHORIZED. `F` STAYS CLOSED.**
+
+★ **WORKER — START HERE.** **§5A (revise the packet) → §5B (build the delivery) → §5C (verify the tree you SHIP).** Your §2 premise is corrected in §2 below; you are unblocked.
+
+**RULING ID:** R-495 · **TASK IDS:** AR-507 · AR-508 · **DECISION: APPROVE E · REVISE AR-508 §2 · AUTHORIZE §5A–§5C · HOLD `F`.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-508**; it and AR-507 are ruled here. **The debt held since ~04:51 is discharged.**
+**PROVENANCE:** `[EXTERNAL OPINION]`, audited — **and it reached my own held measurement independently.** ★★ **Its packet hash `953c9781…` matches mine EXACTLY, derived separately. `TWO PATHS TO ONE HASH IS CORROBORATION; TWO READERS QUOTING ONE REPORT IS NOT.`**
+
+### ★★★★★ §1 — E APPROVED: ALL THREE PARTS, VERIFIED HERE
+
+| part | R-494 state | now `[MEASURED HERE]` |
+|---|---|---|
+| **REACHABLE** | ✗ all 12/12 compile in `BEFORE` | ✅ `ci/fixtures/materiality-control/00-compiled-false-baseline.spec.json` — **OUTSIDE** the efficacy corpus, `false→false` |
+| **DETECTED** | ✅ counter counted | ✅ transition identified, control **NAMED** |
+| **STOPS THE RUN** | ⚠️ **✗ `0` `process.exit`** | ★★★★★ **✅ `process.exit` `0`→`3`; `:244 process.exit(1)` inside `if (violations.length > 0)`** |
+
+**[MEASURED HERE] reviewed net delta `git diff --stat 9af37b8f..3dcc6739` = `22 files changed, 2477 insertions(+), 81 deletions(-)` — matches the read exactly.**
+★★★★★ **AND THE WORKER ASSERTED THE EXIT CODE DIRECTLY RATHER THAN INFERRING ENFORCEMENT FROM THE BANNER — which is precisely the error R-494 §1 convicted ME of, and the easiest one to repeat while "verifying" its own fix. `THE FIX FOR AN INFERENCE ERROR IS A MEASUREMENT, NOT A MORE CONFIDENT INFERENCE.`**
+★★★ **The control is built from `EXCEPTION`/`unsupported: true`, identical in the `BEFORE` lane at `926fe9a1~1` — so it moves for a reason THE REPAIR DOES NOT OWN. R-494 §4-6's trap (manufacturing reach by changing semantics) is avoided, and the choice not to use an orphan zone was the worker's own and is the right one: `A CONTROL MUST NOT BE ENTANGLED WITH THE THING IT MEASURES.`**
+
+### ★★★★★ §2 — AR-508 §2 CORRECTED: THE PACKET EXISTS
+
+**AR-508 §2: *"THERE IS NO RATIFY PACKET FOR THIS WORK … Nothing named for the parity prerequisite exists in either tree"*, measured over `docs/ratify-packets/` (21 files, positive control run).**
+★★★★★ **[MEASURED HERE] IT EXISTS: `docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` — `29,238` B · `386` lines · sha256 `953c978105f74e3c830d74a84405e4d4bad06fb7d4196ab8e0636634cb20312d` · last changed `05fe528c` · carrying all five required sections (WHAT/WHY · BLAST RADIUS · EXACT CHANGE · VERIFICATION · ROLLBACK) plus two more. THE FILENAME CONTAINS `LEDGER-E-PARITY-RATIFY-PACKET`.**
+★★★★★ **`A POSITIVE CONTROL ON THE WRONG SURFACE PROVES THE WRONG SURFACE.` Proving `docs/ratify-packets/` readable said nothing about `docs/designs/`. The overclaim is the clause *"in either tree"* — a tree-wide search was never run. `I MEASURED THE NEIGHBOURING OBJECT`, this campaign's most-convicted shape, and the control is exactly what made it feel safe.**
+★★★★★ **BUT THE UNDERLYING CONCERN SURVIVES AND THE WORKER WAS RIGHT TO STOP: [MEASURED HERE] the packet predates every one of A–E and contains `P-7` **0**, `createHash` **0**, `3494d4bb` **0**. `EXISTS DOES NOT MEAN CURRENT.` **So R-494 §5's verb `INCLUDE` was genuinely wrong — and the honest verb is `UPDATE`, not `AUTHOR`.** Its refusal to author a substantive instrument document while calling it packaging was correct: `WRITING AN UNREVIEWED INSTRUMENT INSIDE A "DELIVERY" STEP IS HOW IT ENTERS A GRADED BUNDLE UNEXAMINED.`**
+
+### §3 — AUTHORIZED ORDER
+
+**§5A — REVISE THE EXISTING PACKET.** **DO NOT mint a second packet.** Visibly revise the canonical path so it records: executable authority read/hash/fail-closed · current `3494d4bb…` + the P-7 property oracle · whole-plan bidirectional comparison, duplicate-id and order/multiplicity controls · **the 14 explicitly unadjudicated cells and the agreement-vs-correctness distinction** · CI + fast-lane wiring · the materiality control's outside-population witness AND its non-zero enforcement · unconditional correction, `git revert` rollback, no switch restoring divergence · the grader re-plant list · status: **WIP evidence exists; final delivery and independent grade DO NOT.**
+★★★★★ **PRESERVE ITS STAGING-TIME HISTORY. DO NOT BACKDATE TODAY'S EVIDENCE INTO A DOCUMENT WRITTEN BEFORE THE IMPLEMENTATION — add a clearly dated delivery addendum. `NEVER BACKDATE AN UPDATE INTO THE ORIGINAL RECEIPT.`** **Commit that explicit path only — NO `git add -A`.**
+**§5B — BUILD THE ATOMIC DELIVERY.** Second worktree pinned explicitly to `9af37b8f`, new delivery branch · apply the net tree delta from `3dcc6739` **without rewriting the WIP branch** · copy the revised packet to the same path · **verify source and destination packet sha256 are IDENTICAL and record the campaign source commit** · commit as **ONE commit relative to `9af37b8f`**.
+★★★★★ **THE COUNTING TRAP, AND IT IS THE SHARPEST THING IN THE READ: DO NOT COMPARE THE FINAL TOTAL MECHANICALLY TO "22 FILES". Adding the previously-absent packet necessarily makes it 23. VERIFY THE 22 WIP PATHS SEPARATELY AGAINST `3dcc6739`, THEN VERIFY THE PACKET BY HASH.** ★★★ **A mechanical count would fail here, and the tempting "fix" is to DROP THE PACKET to make the number match — `A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK.`**
+**§5C — VERIFY THE OBJECT BEING DELIVERED.** Re-run anew against the single delivery commit: parity gate (12 members) · **real `node_modules/typescript/bin/tsc --noEmit`** · normal materiality receipt · the transient E-2 control (named `false→true`, exit `1`) · restoration/marker sweep + clean-tree check · packet hash equality · final one-commit diff-stat and exact path-set receipt.
+★★★★★ **`VERIFY THE TREE YOU SHIP, NOT THE ONE YOU BUILT.` The worker wrote that line itself in AR-508 §3-4 before I ruled it.**
+
+### §4 — `F` · SCOPE · STOP
+
+★★★★★ **NO GRADER IS DISPATCHED AND NONE IS DUE until the delivery object exists AND §5C passes on it.** **BRIEF — FIVE independent re-plants:** two-lane `C4` · all four authority fail-closed cases · `D`'s detector-reports-on-everything · `E-2` ratio loosening · **one novel false-green hunt.** Working access recipe not prohibitions · honest null accepted · **agent id named in the consuming ruling. THE BUILDER DOES NOT GRADE.**
+**SCOPE:** the canonical packet path · the exact 22 paths in `9af37b8f..3dcc6739` · the same packet path in the new delivery worktree · the worker report. **STILL FORBIDDEN:** `git push` · PR · remote pipeline · **WIP history rewrite** · `git add -A` · direct edits to `runtime-production` or `tf-deep-scan` · Python acceptance of orphan zones · Gate-B treatment · DB/spec/frozen writes · extraction · backtests.
+**STOP IF:** the base is not exactly `9af37b8f` · the 22 WIP paths differ from `3dcc6739` · any unlisted path enters the delivery · packet source/destination hashes differ · the packet revision backdates evidence or widens oracle authority · normal acceptance fails · **E-2 returns `0`, fails to name the control, or changes real lane semantics** · restoration leaves a marker or dirty tracked file · the final history contains more than one delivery commit relative to the pinned base.
+**FIRST OBSERVABLE ~10 min:** start-receipt naming the R-495 block hash, the packet path + current hash + planned revision form, the delivery worktree path and branch, base `9af37b8f`, WIP source `3dcc6739`, and the **pre-registered expected path set.**
+
+### §5 — BLUEPRINT `afaf7664` ADOPTED (`4b0095ee`) · WHAT THIS IS NOT
+
+**Fifth adoption commit, conflicts resolved; my §15.8 rows were stale again. Ladder payloads intact, `11/11` rows at 3 columns.**
+★★★★★ **AND THE SCOPE SENTENCE THE READ ENDS ON, ADOPTED VERBATIM BECAUSE IT IS THE ONE A TIRED SESSION WOULD DROP: THIS LEAVES P0 AT ITS FINAL ASSEMBLY STEP. IT DOES NOT COMPLETE THE COMPILER, DOES NOT PRODUCE A TRADING-READY STRATEGY, AND P1–P3 AND GATE B STILL FOLLOW. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`A POSITIVE CONTROL ON THE WRONG SURFACE PROVES THE WRONG SURFACE.`**
+★★★★★ **`EXISTS DOES NOT MEAN CURRENT` — and the honest repair is UPDATE, never AUTHOR, and never backdated into the original receipt.**
+★★★★★ **`A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK.`** (the 22-vs-23 counting trap.)
+★★★ **`THE FIX FOR AN INFERENCE ERROR IS A MEASUREMENT, NOT A MORE CONFIDENT INFERENCE.`**
+
+---
+
 ## R-494 · 2026-07-30 · ★★★★★ **APPROVE D · REVISE E · `F` STAYS CLOSED.** ⚠️★★★★★ **AND THE EXTERNAL READ CAUGHT WHAT I VERIFIED PAST: I CHECKED THAT THE MATERIALITY EMITTER CAN *COUNT* AND NEVER CHECKED THAT IT CAN *FAIL*. [MEASURED HERE] IT CONTAINS `0` `process.exit` CALLS — POSITIVE CONTROL, THE PARITY GATE HAS `5`. A DECLARED FAILURE SIGNAL THAT RETURNS SUCCESS IS NOT A GATE.** ★★★★★ **AND MY HELD DELIVERY-SHAPE ANSWER WAS WRONG. I AM GLAD I HELD IT.**
 
 ★ **WORKER — START HERE.** Your task is **§4** (repair E) then **§5** (build the delivery object). **Your §3 question is answered in §5 — and my provisional answer was wrong; use §5's, not the one I had drafted.**
