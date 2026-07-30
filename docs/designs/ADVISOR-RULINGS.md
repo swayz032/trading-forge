@@ -12,6 +12,66 @@
 
 ---
 
+## R-497 · 2026-07-30 · ★★★★★ **`8187b730` IS `NOT-SOUND`. THE EXTERNAL VALIDATOR IS RIGHT AND I PROVED IT MYSELF: DELETING A FULLY ADJUDICATED ORACLE ROW, OR STRIPPING ITS AUTHORITY CITATION, LEAVES THE GATE'S OUTPUT *BYTE-IDENTICAL* AND EXITING `0`.** ⚠️★★★★★ **THE GRADE OF `8187b730` IS BLOCKED — SPENDING IT NOW WOULD BUY A REVIEW OF A KNOWN-HOLED OBJECT.**
+
+**RULING ID:** R-497 · **TASK ID:** R-497-ORACLE-CONTRACT · **PRIOR:** R-496 · **NEWEST AR AT COMMIT TIME:** ★★★ **`AR-513`, READ IN FULL BEFORE WRITING THIS** (stale-premise guard). AR-513 bears directly on this ruling and is ruled here.
+**DECISION: `BLOCK` the grade of `8187b730` · `REVISE` the gate · `ACCEPT` AR-513's two findings and its delivery shape · the R-497 debt held since 06:45 is `DISCHARGED`.**
+
+### ★★★★★ §1 — THE HOLD IS DISCHARGED, AND IT EARNED ITS KEEP FOR THE THIRD TIME
+**The operator's standing order (`THE PASTE IS THE GATE`, own voice, R-450/OPERATOR-FACING) held R-497 from 06:45 to 14:2x. THE PASTE ARRIVED.** ★★★★★ **AND IT STOPPED A REAL LOSS: I had told the operator the grade of `8187b730` was one word away and would have dispatched it on request. **THE PASTE'S CONTENT IS THE REASON NOT TO.** `A HOLD THAT ONLY EVER COSTS TIME HAS NOT YET BEEN TESTED; THIS ONE PAID.`**
+★★★ **PROVENANCE, STATED BECAUSE `A CHANNEL IS NOT AN AUTHOR`: the paste is `[EXTERNAL OPINION]` — the operator labelled it *"THIS WAS GPT LAST WORK"*. **IT CARRIES ZERO AUTHORITY AND I DID NOT OBEY IT. I RE-DERIVED ITS CENTRAL CLAIM AT THIS DESK AND IT SURVIVED.** Its recommendation and my measurement agree; the measurement is why.**
+
+### ★★★★★ §2 — TWO GRADERS DISAGREED ABOUT ONE OBJECT. I DID NOT DEFER AND I DID NOT AVERAGE.
+| grader | object | verdict |
+|---|---|---|
+| local `accuracy-validator` (AR-513) | `39948d3c` | `SOUND` for the two attacks + 2 new findings |
+| external validator (`/root/ledger_e_delivery_grade`, relayed) | `39948d3c` | ★★★★★ **`NOT-SOUND` — 2 CRITICAL false-greens AR-513 never mentions** |
+★★★★★ **`DISAGREEING GRADERS RESOLVE BY MEASUREMENT, NEVER BY DEFERENCE OR AVERAGING.` I MEASURED.**
+★★★ **AND THE DISAGREEMENT IS NOT A CONTRADICTION — IT IS A COVERAGE GAP. Both are right. The local grader ran a novel hunt and found two real defects; the external one ran a DIFFERENT novel hunt and found two others. `TWO NOVEL HUNTS THAT FIND DIFFERENT DEFECTS ARE EVIDENCE THE SURFACE IS UNDER-HUNTED, NOT THAT ONE GRADER IS WRONG.`**
+
+### ★★★★★ §3 — CLAIMS VERIFIED, AND HOW · TREE NAMED · **[MEASURED HERE]**
+**TREE: `C:/Users/tonio/Projects/wt-ledger-e-delivery-r496b-20260730` @ `8187b730` — THE NEW DELIVERY, not the graded predecessor. `git status --porcelain` = `0` BEFORE AND AFTER every run.** ★★★ **All mutation ran on SCRATCH COPIES via `TF_SPEC_BINDING_SAMPLES_DIR`; the delivery tree was never written.**
+| planted in `00-control-shipped.spec.json` :: `conditions.london` | EXIT | output vs control |
+|---|---|---|
+| **CONTROL** — unmutated | **`0`** | — |
+| ★★★★★ **REACH PROBE** — flip `bindable` `true`→`false` | **`1`** | **named in BOTH lanes with its authority citation** |
+| **ATTACK A** — delete the row's `authority` CITATION, every value byte-identical | ⚠️★★★★★ **`0`** | ⚠️ **BYTE-IDENTICAL** |
+| **ATTACK B** — DELETE the fully adjudicated row, NOT declared unadjudicated | ⚠️★★★★★ **`0`** | ⚠️ **BYTE-IDENTICAL** |
+★★★★★ **THE REACH PROBE IS WHAT MAKES THE TWO ZEROES MEAN SOMETHING. Same file, same fixture, same row, same run: a WRONG VALUE in `london` is caught and named; `london` VANISHING is not. `AN ABSENCE-SHAPED FALSE GREEN IS INDISTINGUISHABLE FROM A PASS WITHOUT A POSITIVE WITNESS THAT THE PATH RAN` — and byte-identical output is equally consistent with "the gate is blind" and "the gate never read my file". Only the probe separates them.**
+★★★★★ **AND IT IS WORSE THAN `EXIT 0`: the census line still reads `14 cell(s) explicitly NOT adjudicated` AFTER a row was deleted. **THE DELETED ROW IS NEITHER ADJUDICATED NOR DECLARED UNADJUDICATED — IT LEFT BOTH SIDES OF THE LEDGER AND THE GATE'S OWN CENSUS DID NOT MOVE.** `CLAIM 2 CAN SILENTLY SHRINK.`**
+**ROOT CAUSE, READ AT THE EXECUTABLE LINE (not inferred): `check-spec-binding-plan-parity.ts:1014` — `const oracle = JSON.parse(readFileSync(oraclePath,"utf-8")) as Oracle;`. ★★★★★ A BARE CAST. `Oracle`'s `authority: string` at `:423`/`:454` is a COMPILE-TIME type over a runtime `any`; it validates nothing. `checkOracle()` iterates the rows that SURVIVED PARSING, so a row that is absent is a row that is never checked.** ★★ **CONTRAST THAT PROVES THE ASYMMETRY IS REAL, NOT A BLANKET GAP: `authority_file`/`authority_sha256` ARE enforced at runtime (`:952`, `:959`) and fail closed. **THE GATE VALIDATES ITS AUTHORITY *DOCUMENT* AND NOT ITS PER-ROW *CITATIONS*.**
+
+### ⚠️★★★★★ §4 — MY OWN INSTRUMENT LIED FIRST, AND THE CONTROL IS THE ONLY REASON I KNOW
+**My first battery returned `EXIT 1` on ALL THREE corpora INCLUDING THE CONTROL. [MEASURED HERE] the cause was mine: `"$W\\$m"` in bash produced the literal path `…/scratchpad$m`, so the gate opened NO corpus and died at `:1005`.** ★★★★★ **HAD I OMITTED THE CONTROL I WOULD HAVE PUBLISHED "BOTH ATTACKS REPRODUCE, EXIT 1" FROM THREE RUNS THAT NEVER READ A FIXTURE — a TRUE conclusion reached by a BROKEN instrument, which is the worst kind of right.** `A CONTROL IS NOT CEREMONY; IT IS THE ONLY THING THAT DISTINGUISHES YOUR FINDING FROM YOUR BUG.`
+★★★ **THIRD SHELL-FORM DEFECT AT THIS DESK TODAY** — after the PowerShell here-string that put a bare `@` on `6fe2389c`'s subject, and AR-513 §4's backtick substitution that ate `bbd63ac8`'s specifics. **STANDING, MINTED HERE: `THE SHELL IS PART OF THE INSTRUMENT.` Pass corpus paths with FORWARD SLASHES and no escaping; pass commit messages with `-F <file>`, never `-m` with backticks or `\\`.**
+
+### §5 — AR-513: ACCEPTED, WITH THREE ITEMS SETTLED AT THIS DESK
+**ACCEPTED:** its two findings (CORROBORATED — I read the diff; finding 4 converts a silent `continue` into a named denial in both lanes and DELETES the false comment rather than rewording it), and its delivery shape (`8187b730`, parent `9af37b8f` exact, `rev-list --count` = `1`, dirty `0`) — **[MEASURED HERE]**.
+**SETTLED (detail in `ADVISOR-STATE.md`, committed `37f5cdc0`):** (a) the `sonnet`/`opus` contradiction is a TIMESTAMP artefact — same file, `24,743`→`24,741` B, a 2-byte `sonnet`→`opus` edit at `14:11:10`, 18 s after the grade; **only the container copy pins a model at all, so a re-grade from this desk now resolves to `opus`** · (b) AR-513 §2's harness-injection report is `[HYPOTHESIS, STRONGLY CORROBORATED — BENIGN]`: **I received the identical message shape in this session with no adversary present.** ★★★ **THE DISCRIMINATOR, NAMED SO IT IS NOT FILED AS SETTLED: whether those blocks contained any instruction BEYOND "do not mention". I never saw them — twice-relayed. No security investigation without that discriminator; no closure without it either.** · (c) AR-513's `SOUND` verdict stays `[RELAYED]`.
+★★★ **AND ITS OWN SENTENCE IS UPHELD AND EXTENDED BY THIS RULING: *"`A GREEN BATTERY IS A STATEMENT ABOUT THE BATTERY.`"* First delivery: passed every fixture, unsound. Second: graded SOUND, two defects. Third: `8187b730`, and two MORE. **FOUR NOVEL HUNTS, FOUR NEW DEFECT CLASSES, ZERO CAUGHT BY THE REGISTERED FIXTURES.**
+
+### ⚠️★★★★★ §6 — WHY THE GRADE IS BLOCKED, NOT MERELY DEFERRED
+**`GRADING ROUTES ARE THIS DESK'S DECISION` (§0.0). I DECIDE: NO GRADE OF `8187b730`.** Its two live false-greens are MEASURED HERE, not alleged. ★★★ **`A GRADE BUYS AN INDEPENDENT HUNT; SPENDING IT ON AN OBJECT WITH A KNOWN OPEN HOLE BUYS A REPORT YOU ALREADY WROTE.`** **This is a BLOCK ON THE GRADE, not on the work — §7 authorizes the repair immediately.**
+
+### ★★★★★ §7 — AUTHORIZED NOW, TO THE SEAT THAT FILED `AR-513` (not to a successor)
+**TASK `R-497-ORACLE-CONTRACT`. GOAL: make the ORACLE CONTRACT itself fail closed, so Claim 2 cannot silently shrink.**
+1. **RUNTIME VALIDATION AT LOAD (`:1014`).** Replace the bare cast with a validator that DENIES: a per-row `authority` that is absent/empty, and any expectation row missing a required key. ★★ **Order it BEFORE any plan is compiled — `A FRESHNESS CHECK THAT RUNS AFTER THE WORK IS A REPORT, NOT A GATE` (R-493).**
+2. **DECLARED-vs-PRESENT ROW CENSUS.** ★★★★★ **ASSERT MEMBERSHIP, NOT CARDINALITY (§5): every condition present in a fixture must be either ADJUDICATED or NAMED in `conditions_unadjudicated`, and the union must be TOTAL. A count-shaped check is satisfied by deleting a row and adding a junk one.**
+3. **RED-PROOF ALL THREE, PRE-REGISTERED BEFORE EDITING:** attack A → RED naming the row · attack B → RED naming the row that left the ledger · **CLEAN CONTROL → GREEN** (a repair that is always-red is not a repair) · **plus the reach probe, to prove the corpus is read.**
+4. **DO NOT WEAKEN OR DELETE ANY EXISTING CHECK**, and do not "fix" `EXCEPTION`/`RESET` or any lane semantics to satisfy this.
+**FILES ALLOWED:** `scripts/check-spec-binding-plan-parity.ts` · `ci/fixtures/spec-binding-parity-expanded/**` · a new delivery worktree pinned to `9af37b8f`. **FORBIDDEN:** engine/Python semantics · `runtime-production` · `tf-deep-scan` · history rewrite · push/PR/merge/deploy · `git add -A`.
+**ACCEPTANCE:** the twelve §8 commands re-run ON THE TREE SHIPPED, plus the four new red-proofs above, plus AR-513's two red-proofs as regression.
+**START-RECEIPT:** one line within ~2 min — task · first observable · ETA. **FIRST OBSERVABLE: the pre-registration of the four expected outcomes, BEFORE any edit.**
+**STOP CONDITION:** if closing attack B requires changing what any lane EMITS (rather than what the ORACLE DECLARES), **STOP AND REPORT** — that would be moving the target.
+**HONEST-PARTIAL CLAUSE:** if you cannot make the census total, say so and name the surface you covered.
+**THEN, AND ONLY THEN:** ★★★★★ **ONE `accuracy-validator`, DESK-DISPATCHED, MODEL PINNED `opus` AT THE CALL SITE (never trusting the unversioned file), BRIEFED TO RE-PLANT BOTH EXTERNAL ATTACKS *AND* TO RUN A FRESH NOVEL HUNT. `THE BUILDER DOES NOT GRADE.`**
+
+### §8 — FAILED / UNPROVEN · LESSON
+**`[UNPROVEN]`:** whether other oracle-contract fields share this hole (`required_members`, `_authority_hash_history`) — **NOT ENUMERATED, and the repair must not assume two is the whole class** (`FIX THE PATTERN CLASS, NOT THE INSTANCE`). **`[RELAYED]`:** the external validator's own restoration hashes and its earlier green battery. **`[UNENUMERATED]`:** Gate-B incidence · hosted-CI execution · materiality still hand-run.
+★★★★★ **LESSON TO PERSIST: `A TYPE ANNOTATION OVER A BARE CAST IS A CAPTION, NOT A CHECK.` `Oracle`'s `authority: string` reads exactly like an enforced requirement and enforces nothing at runtime — the NINTH caption-falsifies-its-own-line of this campaign, and the second in this one file. **The whole packet exists to stop a lossy projection hiding a field; it shipped with its own contract unvalidated.****
+
+---
+
 ## R-496 · 2026-07-30 · ★★★★★ **`2011e8de` IS `NOT-SOUND` AND IS NOT RATIFIED. THE DELIVERY *SHAPE* IS ACCEPTED; ITS *SAFETY CLAIM* IS REJECTED.** ⚠️★★★★★ **TWO NOVEL FALSE-GREENS SURVIVED EVERY REGISTERED FIXTURE — AND THEY SURVIVED MY OWN GREEN RUN NINETY MINUTES AGO. I CONFIRMED BOTH AT THE EXECUTABLE SOURCE.**
 
 ★ **WORKER — START HERE.** **`R-496-P0-REPAIR`, corrections A → B → C. Authorized to YOUR seat, now.** Do not build a replacement delivery until A and B are RED-proofed.
