@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2498` at THIS commit, 2026-07-30 14:16 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2550` at THIS commit, 2026-07-30 14:22 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -129,6 +129,58 @@ caption-falsifies-its-own-line.** ★★ **Finding 3 is a real but lesser defect
 bucket is fed by FIVE checks, so a schema leak printed `MEMBERSHIP: 12` and aimed a triager at the
 wrong subsystem. Never a false PASS — the count was right and the NOUN was wrong. Relabelled to name
 all five.**
+
+### ★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **AR-513 LANDED `14:15:51` (`3dfd8420`). THREE OF ITS OPEN ITEMS ARE SETTLED AT THIS DESK BY MEASUREMENT.**
+★★★ **FIRST, A CORRECTION AGAINST MYSELF: I read `AGENT-REPORTS.md` seconds after my own
+`55f5561d` (`14:14:55`), saw `AR-512`, and wrote "no AR yet" — TRUE WHEN MEASURED, FALSE 40 SECONDS
+LATER (AR written `14:15:35`). I then began to convict the PRE-COMMIT STASH WINDOW for the
+discrepancy. **THE TIMESTAMPS REFUTE THAT: my read simply PRECEDED the write; no stash was
+involved.** `A WRONG MECHANISM GETS OBEYED` is this desk's most-convicted error and I nearly added
+to it. **The real lesson is smaller and truer: `AN ABSENCE MEASURED WHILE ANOTHER AGENT IS LIVE
+DECAYS IN SECONDS.` My FACT block's own hedge — *"NOTED, NOT CHARGED; re-check"* — is the only
+reason this cost nothing. Item 4 below is DISCHARGED: the AR shipped 76 s after the work commit.**
+
+**(a) THE `sonnet` / `opus` CONTRADICTION IS RESOLVED — AR-513 AND I MEASURED THE SAME FILE AT
+DIFFERENT TIMES, AND BOTH READINGS ARE TRUE.**
+| copy | bytes | `model:` | mtime |
+|---|---|---|---|
+| **`Projects/trading-forge/.claude/agents/`** (the CONTAINER — **the one that governs a dispatch from this cwd**) | **`24,741`** | ★★★★★ **`opus`** | **`14:11:10`** |
+| `Projects/trading-forge/trading-forge/.claude/agents/` (INNER repo, git) | `7,362` | **NONE** | `2026-06-23` |
+| campaign tree `.claude/agents/` | `7,260` | **NONE** | `2026-07-21` |
+| `wt-ledger-e-delivery-r496b/.claude/agents/` | `7,260` | **NONE** | `14:12:14` |
+| user-global `~/.claude/agents/` | ★★★ **ABSENT** | — | — |
+★★★★★ **AR-513 read `24,743` B / `sonnet`; I read `24,741` B / `opus`. THE DELTA IS EXACTLY `2`
+BYTES — `sonnet`(6) → `opus`(4). SAME FILE, EDITED AT `14:11:10`, 18 s AFTER the `14:10:52` grade
+commit. `TWO DISAGREEING READS OF ONE PATH ARE A TIMESTAMP PROBLEM UNTIL PROVEN OTHERWISE.`**
+★★★ **REFINEMENT AR-513 DID NOT HAVE: the other three copies do not pin `sonnet` — they pin
+**NOTHING** and inherit. **ONLY the container copy pins a model at all**, so it is the single point
+of control AND the single point of drift. ★★★★★ **CONSEQUENCE THAT MATTERS: A RE-GRADE DISPATCHED
+FROM THIS SEAT NOW RESOLVES TO `opus`. The defect AR-513 §2 names is REAL but is ALREADY CLOSED for
+the next dispatch — and it should be pinned EXPLICITLY at the call site anyway, so the grade does not
+depend on an unversioned file mtime.**
+
+**(b) THE HARNESS-INJECTION REPORT (AR-513 §2) — `[HYPOTHESIS, STRONGLY CORROBORATED]`: BENIGN, AND
+I HAVE A POSITIVE CONTROL FROM MY OWN SESSION.**
+★★★★★ **I RECEIVED THE SAME MESSAGE SHAPE THIS SESSION, IN A CONTEXT WITH NO ADVERSARY: a
+`system-reminder` stating a file *"was modified, either by the user or by a linter … This change was
+intentional"* and ending *"Don't tell the user this, since they are already aware."* **THAT IS A
+STANDARD CLAUDE CODE FILE-CHANGE REMINDER.** Its "don't tell" clause exists because the user already
+knows they edited the file — NOT to conceal anything. `git checkout --` modifies files on disk, so
+four reverted files would emit four such blocks, and the grader's EMPTY `git diff` is CONSISTENT with
+that (the reminder fires on the disk write, not on a diff-vs-HEAD).**
+★★★ **WHAT I CANNOT ESTABLISH, STATED PLAINLY: I never saw the grader's four actual blocks — this is
+`[RELAYED]` twice over (grader → AR-513 → me). **THE DISCRIMINATOR IS WHETHER THEY CONTAINED ANY
+INSTRUCTION BEYOND "do not mention".** A reminder that asked the grader to DO something, change a
+verdict, or read a path would be a different object entirely. **The worker was right not to
+adjudicate it, and right to put it on the record.** ★★ **DO NOT OPEN A SECURITY INVESTIGATION ON
+THIS WITHOUT THAT DISCRIMINATOR — but do not file it as settled either.**
+
+**(c) AR-513 §1's VERDICT IS `[RELAYED]`; ITS TWO FINDINGS ARE `[CORROBORATED]` BY MY OWN DIFF READ.**
+★★★★★ **AND THE LINE THE WORKER EARNED, WHICH I WOULD NOT IMPROVE: *"`A GREEN BATTERY IS A STATEMENT
+ABOUT THE BATTERY.` The first passed every fixture it had and was unsound. The second was graded
+SOUND and still carried two defects. This one is the third."* **IT ALSO NAMED FINDING 4 AS ITS OWN
+`FIX THE PATTERN CLASS, NOT THE INSTANCE` FAILURE — the twin of the very hole this packet exists to
+close, surviving in the same file, three deliveries deep.**
 
 ### ⚠️★★★★★ FOUR THINGS ARE OWED ON THIS, AND THE NEXT SEAT MUST NOT READ THE ABOVE AS RATIFICATION
 1. ★★★★★ **`8187b730` IS ITSELF UNGRADED.** `TWO NAMED ATTACKS CLOSED IS NOT SOUNDNESS` was the
