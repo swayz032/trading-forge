@@ -1,0 +1,56 @@
+{
+  "video": "50-family-axis-invalidations",
+  "_why": [
+    "AXIS 1 (R-490 section3-2): 15 outcomes x 2 POSITIONS. The corpus already exercised 14 of the 15",
+    "outcomes in entry_conditions (00-control-shipped) and exactly ONE row in invalidations",
+    "(INVALIDATE / 'structure break'). So 15 of the 30 cells were covered and the WHOLE",
+    "invalidations POSITION was represented by a single family.",
+    "",
+    "THIS FIXTURE CLOSES THE OTHER HALF: all 15 outcomes appear in invalidations, and INVALIDATE --",
+    "the one family that had never appeared in entry_conditions -- appears there.",
+    "",
+    "WHY THIS POSITION IS THE ONE WORTH EXERCISING, from the gate's own docstring (:24-28): the OLD",
+    "comparator's TS shape function 'never EMITTED invalidation_bindings or queue_reasons at all,",
+    "while Python's to_dict() emits both. Those two keys were not under-compared, they were",
+    "STRUCTURALLY ABSENT from one side.' invalidation_bindings is therefore the exact array whose",
+    "absence made the original false green possible, and until now one row of one family was the",
+    "most it ever carried. Fifteen rows compared ELEMENTWISE AT INDEX is what makes that key load-",
+    "bearing rather than merely present.",
+    "",
+    "ROLE DISCIPLINE: spine is exactly sess + enter, so spine_total/spine_bound/compiled stay",
+    "derivable from an authority-adjudicated session row + P-5 (2/2 = 1.000 >= 0.5). The INVALIDATE",
+    "row sits in confluence so it cannot move an adjudicated scalar. Invalidations do not enter the",
+    "spine/confluence tallies at all -- they are collected into their own array.",
+    "",
+    "ORACLE SCOPE: authority section6 puts invalidations bindings OUT of scope, so every row in the",
+    "invalidations array carries NO correctness expectation. AGREEMENT between the lanes is fully",
+    "enforced on all 15, which is the claim this fixture exists to make checkable."
+  ],
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "sess", "type": "WAIT_SESSION", "object": "ny am", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" },
+      { "id": "inv_in_entry", "type": "INVALIDATE", "object": "structure break", "role": "confluence" }
+    ],
+    "invalidations": [
+      { "id": "i_session_eval", "type": "WAIT_SESSION", "object": "london open", "role": "invalidation" },
+      { "id": "i_session_refused", "type": "WAIT_SESSION", "object": "during lunch", "role": "invalidation" },
+      { "id": "i_session_unrecognised", "type": "WAIT_SESSION", "object": "regional window", "role": "invalidation" },
+      { "id": "i_structure", "type": "WAIT_STRUCTURE", "object": "market structure", "role": "invalidation" },
+      { "id": "i_verify", "type": "VERIFY_STRUCTURE", "object": "swing confirmation", "role": "invalidation" },
+      { "id": "i_bias", "type": "WAIT_BIAS", "object": "higher timeframe bias", "role": "invalidation" },
+      { "id": "i_direction", "type": "CONFIRM_DIRECTION", "object": "direction", "role": "invalidation" },
+      { "id": "i_retest", "type": "WAIT_RETEST", "object": "level retest", "role": "invalidation" },
+      { "id": "i_filter", "type": "FILTER", "object": "volume", "role": "invalidation" },
+      { "id": "i_confirmation", "type": "WAIT_CONFIRMATION", "object": "rejection candle", "role": "invalidation" },
+      { "id": "i_invalidate", "type": "INVALIDATE", "object": "structure break", "role": "invalidation" },
+      { "id": "i_enable", "type": "ENABLE_ENTRY", "object": "setup complete", "role": "invalidation" },
+      { "id": "i_enter", "type": "ENTER", "object": "market", "role": "invalidation" },
+      { "id": "i_hint", "type": "EXIT_HINT", "object": "prior high", "role": "invalidation" },
+      { "id": "i_reset", "type": "RESET", "object": "new session", "role": "invalidation" },
+      { "id": "i_exception", "type": "EXCEPTION", "object": "news", "role": "invalidation" },
+      { "id": "i_unknown", "type": "NOT_A_REAL_FAMILY", "object": "none", "role": "invalidation" }
+    ]
+  }
+}

@@ -36,7 +36,8 @@
     "24-macrowindow-evaluable.spec.json",
     "30-compiled-flip.spec.json",
     "31-flip-neg-control.spec.json",
-    "40-overrefusal-boundary.spec.json"
+    "40-overrefusal-boundary.spec.json",
+    "50-family-axis-invalidations.spec.json"
   ],
 
   "fixtures": {
@@ -374,6 +375,39 @@
           "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
           "unadjudicated": {
             "bindable": "NO EXPECTATION. WAIT_RETEST carrying `midday` — a DIFFERENT lunch_blackout phrase from the sess row's `during lunch`, so a phrase-specific leak cannot hide behind the one keyword. Same §6 limit."
+          }
+        }
+      }
+    },
+
+    "50-family-axis-invalidations.spec.json": {
+      "authority": "authority section 2 (ny_am = 180/1440, evaluable) + P-1, P-5; counts by section 4b; compiled by section 4c (2/2 = 1.000 >= 0.5)",
+      "_note": "AXIS 1 (R-490 §3-2): 15 outcomes x 2 POSITIONS. The corpus covered 14 outcomes in entry_conditions and exactly ONE row in invalidations; this fixture puts all 15 outcomes in the invalidations array (17 rows — WAIT_SESSION appears 3x for its evaluable / refused / unrecognised-vocabulary classes) and puts INVALIDATE, the only family that had never appeared in entry_conditions, there. Per the gate's own docstring :24-28, invalidation_bindings is the array the OLD comparator's TS shape function omitted ENTIRELY while Python emitted it — the structural absence that made the original false green possible. Elementwise-at-index comparison over 17 rows is what makes that key load-bearing instead of merely present. ★ STRUCTURAL LIMIT, REPORTED NOT WORKED AROUND: checkOracle() indexes plan.bindings ONLY (:387), so the oracle schema has NO WAY to express an expectation about ANY invalidation row — this is not merely out of authority scope (§6), it is INEXPRESSIBLE in this oracle's shape. Every invalidations row therefore gets CLAIM 1 (agreement) only. Naming that is a desk item; inventing a schema for it is not a builder decision.",
+      "spine_total": 2,
+      "spine_bound": 2,
+      "compiled": true,
+      "conditions_unadjudicated": "The entire 17-row invalidations array, plus inv_in_entry (INVALIDATE in entry_conditions). Authority §6 places invalidations bindings OUT of oracle scope, AND checkOracle() can only index plan.bindings, so no invalidation row is even addressable here. AGREEMENT between the lanes is fully enforced on all 17 rows elementwise at index; CORRECTNESS is not claimed for any of them.",
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (ny_am = 180/1440, evaluable) + P-1 — binds, exactly",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": "ny_am",
+          "approximation": false,
+          "reason_null": true
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        },
+        "inv_in_entry": {
+          "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
+          "unadjudicated": {
+            "bindable": "NO EXPECTATION. INVALIDATE placed in entry_conditions — the one family the corpus had never exercised in that position. Non-session family, so authority §6 leaves it unadjudicated. AGREEMENT is enforced."
           }
         }
       }
