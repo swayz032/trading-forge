@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1592` at THIS commit, 2026-07-30 01:10 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1635` at THIS commit, 2026-07-30 01:12 [MEASURED HERE, `wc -l`].**
 > ⚠️★★★ **THIS FILE IS NOW `1495` LINES AND THAT IS A REAL TAX: a cold seat hit a 25k-token
 > read cap on its FIRST page tonight and needed four reads to see it all. COMPACTION IS
 > OWED — `CUT NARRATIVE, NEVER CONTRACTS`, and read the WHOLE file first (you cannot
@@ -175,7 +175,50 @@ have no evaluable window, so a bind yields "only trade during X" executing as "n
 trade" while reporting `approximation=False`. TS MUST REFUSE THEM EQUIVALENTLY.
 PARITY IS SEMANTIC OUTPUT PARITY, NEVER TABLE-TEXT EQUALITY.**
 
-## ★★★★★ LESSON MINTED 01:10 — **A LIVE WATCHER PROCESS IS NOT A DELIVERING WATCHER, AND THE PROCESS TABLE CANNOT TELL THE DIFFERENCE**
+## ⚠️★★★★★ RETRACTED 01:12 — THE "LIVE-BUT-MUTE WATCHER" LESSON BELOW IS **FALSE**. THE EAR DELIVERED. **AND CORRECTION 3 IS NOW UNASSIGNED (AR-490 DECLINE-RECEIPT, HONOURED HERE)**
+
+★★★★★ **[MEASURED — AR-490 §0, THE WORKER'S OWN WORDS] *"THE LATEST RULING COMMIT WAS
+`bc551098` (`01:08:25`), NOT THE `1dcd704f` I HAD SEEN MINUTES EARLIER."* **THE WORKER HAD
+SEEN R-482. THE EAR WAS ALIVE AND IT DELIVERED. THE PROCESS TABLE WAS RIGHT.** The block
+below asserts the opposite and is retracted in full; it is kept only as the audit trail.**
+★★★★★ **WHAT ACTUALLY FAILED: THE START-RECEIPT CONTRACT. R-482 landed `01:01:34`; the
+receipt came `01:09:43` — **~8 min against a contracted ~2 min.** During that gap silence
+was genuinely unreadable, **which is the exact reason the receipt contract exists.** A
+missing receipt is not a delivery failure, and I collapsed the two.**
+★★★★★ **MY ERROR, AND IT IS THE ONE THIS DESK KEEPS MAKING: I TOOK AN OBSERVER'S SYMPTOM
+AS A MEASUREMENT OF A MECHANISM.** The operator could see *"no activity in the worker's
+window"* — a true observation. They could NOT see *"the ruling was not received"*, which is
+a MECHANISM. **I converted the first into the second, then MINTED A LAW ON IT and wrote it
+into seat memory.** ★★★ **`AN OBSERVER'S SYMPTOM IS NOT A MECHANISM` — the sibling of
+`A CHANNEL IS NOT AN AUTHOR`. A report from someone with a better view of the SYMPTOM is
+still not evidence about the CAUSE, and being the principal does not make it so.**
+★★★ **WHAT SURVIVES, NARROWLY: a process-table check cannot by itself PROVE delivery, so
+an end-to-end delivery probe would still be strictly better. But `THE PROCESS TABLE GAVE A
+FALSE GREEN` IS WITHDRAWN — it gave a TRUE green and I disbelieved it on inference.**
+★★★★★ **AND THE UNBLOCK I RECOMMENDED WAS STILL CORRECT FOR THE WRONG REASON: "read the
+ledger directly" is right because it depends on no process — not because the ear was
+broken. `A CORRECT ACTION JUSTIFIED BY A FALSE MECHANISM WILL BE MISAPPLIED NEXT TIME.`**
+
+### ★★★★★ CORRECTION 3 — **UNASSIGNED**, per my own R-482 §94 pre-authorization
+**AR-490 filed a DECLINE-RECEIPT on correction 3 and took corrections 1–2 (ETA ~10 min,
+one commit). R-482 §94 promised I relabel in the SAME MOTION, and this is it:**
+★★★★★ **CORRECTION 3 (the atomic parity implementation — TS refusal · whole-plan
+bidirectional comparator · membership manifest + deletion-RED fixture · **semantic oracle
+independent of BOTH lanes** · CI + fast-lane · per-spec materiality receipt) IS
+`ASSIGNEE: NONE`. IT IS NOT IN FLIGHT. NO SEAT IS WORKING IT.** **A declined-but-ACTIVE
+label is a stall with extra steps — this line exists so nobody reads it as in progress.**
+★★★ **THE DECLINE IS ACCEPTED ON ITS MERITS, NOT MERELY PERMITTED: the worker cited my own
+§75 (*"do not land a semantic fix that merely turns seven fixtures green while the
+comparator remains incomplete"*) and named the partial it would have produced —
+`A PARTIAL RESULT THAT READS AS COMPLETE`, because seven green fixtures LOOK like a closed
+repair. **AND its sharpest point is one I did not make: the independent oracle is the only
+artifact that turns "the two lanes AGREE" into "the two lanes are RIGHT", and hand-copying
+either lane into it would be `HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM`.**
+★★ **REQUIRES A FRESH WORKER SEAT — the operator's act. Contract is fully written (parity
+packet §3 + R-482 §75); nothing to re-derive.**
+
+### ⚠️ THE RETRACTED BLOCK FOLLOWS — AUDIT TRAIL ONLY, DO NOT ACT ON IT
+## ★★★★★ ~~LESSON MINTED 01:10 — A LIVE WATCHER PROCESS IS NOT A DELIVERING WATCHER, AND THE PROCESS TABLE CANNOT TELL THE DIFFERENCE~~
 
 ★★★★★ **[MEASURED HERE, then REFUTED BY THE OPERATOR] R-482 landed `01:01:34`. At
 `01:04` and again at `01:05` I enumerated the process table exactly as `SEAT MECHANICS`
