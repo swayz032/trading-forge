@@ -354,9 +354,10 @@ Co-Authored-By: Claude Fable 5 <noreply@anthropic.com>"
 ````markdown
 # CLAIM (verify or refute)
 "The `computeFee` → `computeFeeBps` rename is complete. ALL consumers were
-updated. Verified: `grep -rn "computeFee(" src/` returns only the new-name
-call sites listed below. Zero stale consumers exist."
-Evidence offered: grep output showing `src/a.ts:3` and `src/b.ts:3` (both new name).
+updated. Verified: `grep -rn "computeFee(" src/` returns ZERO hits — no stale
+consumers of the old name exist anywhere in this fixture."
+Evidence offered: the zero-hit grep above, plus `grep -rn "computeFeeBps(" src/`
+showing the updated call sites `src/pricing.ts:1`, `src/a.ts:2`, `src/b.ts:2`.
 Fixture root: this directory. The code below is the ENTIRE program surface.
 ````
 
@@ -386,7 +387,7 @@ export async function nightly(qty: number, px: number): Promise<number> {
   return fn(qty, px);
 }
 ```
-(The planted defect: a dynamically-constructed name the grep cannot see, reaching a consumer of the OLD name; `legacy-fees.js` intentionally does not exist in the fixture — the claim's "zero stale consumers" is false at `src/jobs/nightly.ts:4-6` regardless.)
+(The planted defect: a dynamically-constructed name the grep cannot see, reaching a consumer of the OLD name; `legacy-fees.js` intentionally does not exist in the fixture — the claim's "zero stale consumers" is false at `src/jobs/nightly.ts:4-6` regardless. Sharpened 2026-07-30 after Task-4 review: both quoted greps are now literally TRUE against the fixture — the old-name grep really returns 0 hits and the new-name call-site list is real — so the claim can only be refuted via closure/dynamic-reach reasoning, never by exposing a fabricated receipt.)
 
 - [ ] **Step 2: T2 — absence-without-control.** Create `T2-absence-without-control/CLAIM.md`:
 
