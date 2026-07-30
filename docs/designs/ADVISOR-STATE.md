@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1272` at THIS commit, 2026-07-30 00:20 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1318` at THIS commit, 2026-07-30 00:26 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -270,6 +270,52 @@ the four `entry_conditions` consumers (`spec-timeframe-recovery.ts`,
 survived its packet. `BEFORE REMOVING A FIELD, ASK WHO READS IT — AND OPEN THAT
 FILE, DO NOT NAME IT.`**
 ★★★★★ **GATE B REMAINS BLOCKED. Nothing here opens it.**
+
+## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-486's THREE LOAD-BEARING FINDINGS CONFIRMED AT THIS DESK — AND AR-484 §1's "ENFORCED IN CI" IS **REFUTED**
+
+**VERIFIED IN `runtime-production` @ `9af37b8f`, AT THE EXECUTABLE LINE, NOT ACCEPTED
+FROM THE REPORT. NO DISPOSITION — the four rulings AR-486 §7 requests are GATED ON THE
+OPERATOR'S PASTE, and the worker is IDLE on them (the hold now COSTS; re-checked, the
+answer changed).**
+★★★ **A CONCERN I RAISED AND THEN CLOSED HONESTLY: AR-486 delivered steps 1b–3 in ~10
+min against its own ~35–45 min estimate for step 1b ALONE — the shape of `A PARTIAL
+RESULT THAT READS AS COMPLETE`. I CHECKED INSTEAD OF ASSUMING: every line citation I
+tested was EXACT. `A FAST REPORT IS A REASON TO VERIFY, NEVER A REASON TO DISBELIEVE.`**
+- **F-C CONFIRMED** [`src/server/services/spec-onboarding-service.ts`]: `:437`
+  `matchArchetype` UNCONDITIONAL · `:452` `let bindingPlan: BindingPlan | null = null`
+  · `:454` `if (!archetypeMatch.matched) {` · `:455` `compileBindingPlan({…})` · `:460`
+  `conditionCompiled = bindingPlan.compiled`. **An archetype flip therefore leaves
+  `spineBound`/`spine.length`/`spineRatio`/`compiled` NULL, not changed — and a
+  record-for-record tripwire reads that blank as "left the queue".**
+- ★★★★★ **F-A CONFIRMED, AND IT REFUTES BANKED WORK [MEASURED HERE]:**
+  `package.json:28` defines `check:spec-binding-plan-parity`; `.github/workflows/` holds
+  `ci.yml` · `fast.yml` · `metric-snapshot.yml`, and a grep for
+  `spec-binding-plan-parity` across all three returns **exit `1`, ZERO matches**.
+  **POSITIVE CONTROLS: `check:ts-python-exit-parity` → `1` workflow (`ci.yml:343`, read
+  at the line) · `check:2026-compliance` · `check:production-isolation` ·
+  `system-map:check` → `2` each. The method FINDS wired scripts, so this is a MEASURED
+  ABSENCE, not a failed search.**
+  ★★★★★ **AR-484 §1 called this gate *"REAL and enforced in CI, not a docstring
+  aspiration"*. IT IS REAL AND IT IS NOT ENFORCED. `EXISTENCE IS NOT WIRING.`**
+  ★★★★★ **AND THE PROCEDURAL LESSON AGAINST THIS FILE: I banked step 1a as *"DO NOT
+  RE-DO IT"*. That was meant to protect an ENUMERATION and it silently sheltered an
+  ADJUDICATION riding in the same table cell. `BANKING AN ENUMERATION DOES NOT BANK THE
+  VERDICTS WRITTEN BESIDE IT` — bank the columns you measured, never the whole row.**
+- **F-B CONFIRMED, INCLUDING THE FALSE CAPTION** [`src/server/lib/spec-family-bindings.ts`
+  — ★★ **NOT `src/server/services/`; my own first path guess was wrong and returned
+  `No such file or directory`, which reads exactly like a missing artifact. `LOCATE, DO
+  NOT ASSUME, THE DIRECTORY.`**]: `:64` *"mirror
+  `src/engine/spec_family_bindings.py::SESSION_KEYWORDS` EXACTLY"* sits directly above a
+  **SEVEN**-zone table carrying `lunch_blackout` and `overnight` · `REFUSED_SESSION_KEYWORDS`
+  **grep exit `1` = ABSENT from TS** · PY `:285-291` carries **FIVE** zones, `:309-312`
+  the refusal table, under its own caption *"DELIBERATELY NO LONGER MATCHES … do not
+  resync"* plus the declared carry-forward *"it (and the TS mirror) are reported as
+  adjacent work"*. **A FALSE CAPTION AT THE LINE, ON THE EXACT SURFACE GATE B MODIFIES.**
+  `MIN_SPINE_BOUND_RATIO = 0.5` present in BOTH; TS `spineRatio = spineBound /
+  spine.length` re-read here, confirming R-480's numerator/denominator citation.
+★★★ **CONSEQUENCE CARRIED, NOT RULED: R-480 §5-3's tripwire MUST NAME ITS LANE — the
+divergent fields (`bindable`, `session_zone`, `compiled`) are EXACTLY the ones the
+UNWIRED parity gate would have compared.**
 
 ## ★★★★★ [FACT, MEASURED HERE, NOT RULED] THE TRANSCRIPT ARCHIVE **IS** THE EXTRACTION-TIME TEXT — AND R-474 §4's PRESCRIBED TRUTH-SET KEY COVERS `11%` OF CONDITIONS AND **ZERO** OF THE SPEARHEAD
 
