@@ -5,8 +5,9 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1635` at THIS commit, 2026-07-30 01:12 [MEASURED HERE, `wc -l`].**
-> ⚠️★★★ **THIS FILE IS NOW `1495` LINES AND THAT IS A REAL TAX: a cold seat hit a 25k-token
+> `561` lines; **`1665` at THIS commit, 2026-07-30 01:31 [MEASURED HERE, `wc -l`, re-run AFTER my
+> edit and asserted equal before commit. `1635` and the `1495` below were BOTH stale, and I first
+> wrote `~1,690` in the seat block as a GUESS — measured, then corrected.]** THE TAX IS REAL: a cold seat hit a 25k-token
 > read cap on its FIRST page tonight and needed four reads to see it all. COMPACTION IS
 > OWED — `CUT NARRATIVE, NEVER CONTRACTS`, and read the WHOLE file first (you cannot
 > classify what you have not read). Target ~40–120 lines per `advisor-onboarding` §5.**
@@ -37,7 +38,37 @@
 
 ---
 
-## SEAT — CURRENT AS OF R-480 / AR-485
+## ★★★★★ SEAT — CURRENT AS OF **R-483 / AR-492** (2026-07-30 01:30, FRESH ADVISOR SEAT)
+
+★★★★★ **READ THIS BLOCK FIRST. EVERYTHING BELOW IT IS OLDER THAN IT AND SOME OF IT IS
+SUPERSEDED — THE LEDGER OUTRANKS THIS FILE ON EVERY CONFLICT.**
+**Ledger `R-483`** (commits `a5c9ee8a` + `393bc6ad`). **Newest AR `AR-492` (`01:24`) — UNRULED,
+and it is a DELIVERY receipt for R-483 §8-2, not an escalation.**
+**Worker: ACTIVE.** A fresh seat (a NEW CONVERSATION inside `claude.exe 15908`, NOT a new PID)
+took R-482 correction 3 at **AR-491 `01:17`** — the item that was `ASSIGNEE: NONE` for ~6 min.
+★★ **[MEASURED HERE] THE RELAY IS PROVEN AGAIN THIS ROUND: R-483 committed `01:19`, worker
+delivery `AR-492` at `01:24` — under 6 minutes.**
+
+**WHAT R-483 DID:** AR-490 corrections 1–2 **ACCEPTED** (the flag is gone; rollback is whole-commit
+revert) · AR-491's seat **AUTHORIZED BY NAME** for correction 3 · **the oracle as specified was
+CIRCULAR and is now fixed** · **§9 DISCHARGED at `393bc6ad`.**
+★★★★★ **THE FROZEN ORACLE AUTHORITY IS `docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md`
+(`10,600` B, sha256 `09e016fd…f086`). NO ORACLE ROW MAY CITE `FAMILY_META`, `session_windows.py`
+OR EITHER EMITTED PLAN — R-483 §5 measured all of them onto the parity surface.**
+★★★ **ITS Q1 AUTHORITY IS AN OCCUPANCY PROBE, NOT A TABLE READ:** `is_in_killzone()` over 1440
+minutes — `lunch_blackout` **0**, `overnight` **0**, five other zones **74–180**. **It reads none
+of the three tables under repair, so the table under test cannot game its own oracle, and its
+positive control is inside the same run.**
+★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
+AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
+
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1,665` lines** against a
+`~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
+CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
+`574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
+
+### SUPERSEDED SEAT LINE (kept one generation for the trail)
+**R-480 / AR-485.**
 *(a heading is a claim too, and it has now gone stale TWICE: it read `R-472 / AR-471`
 over a `R-477 / AR-479` body (corrected 23:20), then `R-477 / AR-479` over a
 `R-480 / AR-485` body — corrected 2026-07-30 00:20 by the seat that inherited it.
