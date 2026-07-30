@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2338` at THIS commit, 2026-07-30 06:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2366` at THIS commit, 2026-07-30 06:20 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -82,28 +82,56 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-496 IS OWED AND HELD** · `AR-509` + `AR-510` UNRULED (2026-07-30 05:50, FRESH ADVISOR SEAT = `claude.exe 23988`)
+## ⚠️★★★★★ SEAT — **R-496 LANDED (`0d6f26f9`)** · `2011e8de` IS **`NOT-SOUND`, NOT RATIFIED** (2026-07-30 06:20, ADVISOR SEAT = `claude.exe 23988`)
 
-★★★★★ **OPERATOR ORDER, DIRECT AND VERBATIM THIS SESSION, NOT A RELAY: *"REMEMVER WAIT ON GPT
-REPSONE BEFORE RULING"*. `THE PASTE IS THE GATE.` NO R-496 UNTIL THE PASTE ARRIVES. The ruling is a
-DEBT, not a cancellation — `A BLOCKED LEDGER WRITE IS AN UNPAID DEBT`. FIRST ACT OF THE NEXT WAKE:
-`AR-510` is the newest AR and it is UNRULED.**
+★★★★★ **THE PASTE ARRIVED AND R-496 LANDED. `AR-509` + `AR-510` BOTH RULED — the debt held on the
+operator's direct `WAIT ON GPT` order (verbatim: *"REMEMVER WAIT ON GPT REPSONE BEFORE RULING"*) is
+DISCHARGED. `THE PASTE IS THE GATE` held and it EARNED ITS KEEP: the read caught two false greens I
+had run straight past.**
 
-### ⚠️★★★★★ THE HOLD **COSTS** THIS ROUND — CHECKED, NOT ASSUMED (`A HOLD'S COST IS NOT A CONSTANT`)
-**[MEASURED HERE] §5A, §5B AND §5C ARE ALL DONE. THE WORKER HAS NOTHING AUTHORIZED LEFT — `F` IS THE
-DESK'S ACT AND IT IS GATED ON ME. THE WORKER IS IDLE ON THIS DESK**, exactly the AR-506 shape.
-Contrast R-492/R-493, where the hold cost nothing because queued work existed. **Do not copy forward
-"the hold is harmless"; re-derive it every round.**
+### ⚠️★★★★★ TWO NOVEL FALSE-GREENS — BOTH CONFIRMED BY ME AT THE EXECUTABLE SOURCE
+**F-1 `tsBindingPlanAsPyShape()` `:223-250` is a HAND-WRITTEN WHITELIST (10 binding + 11 plan fields,
+literal). A TS-only field is DROPPED BEFORE `diffDeep()` SEES IT → both sides lack it → `EXIT 0 PASS`.
+Its comment `:218-221` claims it is *"deliberately TOTAL"* — FALSE BY CONSTRUCTION.**
+**F-2 NO uniqueness check on `required_members` (`:928-930`). Duplicate member + deleted fixture →
+`missing` EMPTY, `undeclared` EMPTY → `EXIT 0 PASS` while `11` fixtures answer `12` declared. Its
+comment `:926-927` claims a deleted fixture *"must never silently shrink the denominator"* — it does.**
+★★★★★ **SIXTH AND SEVENTH `CAPTION FALSIFIES ITS OWN LINE`. THE REMEDY INCLUDES DELETING BOTH FALSE
+COMMENTS — otherwise the next reader re-trusts the word "TOTAL" and rebuilds the hole.**
+★★★ **SCOPED, MEASURED: the DELIVERED corpus is CLEAN — array `12` · unique `12` · `fixtures` `12`.
+**A BLIND GATE, NOT A CORRUPT CORPUS.** And `duplicateConditionIds()` `:296` already exists — **THE
+RIGHT CHECK IN THE WRONG PLACE**; correction B reuses it rather than inventing an idiom.**
+★★★ **THE RUNTIME TS REPAIR IS NEITHER APPROVED NOR DISPROVED — its PROOF is inadmissible, which is
+WEAKER than "the repair is wrong". DO NOT "FIX" THE ENGINE IN RESPONSE TO THIS.**
 
-### ⚠️★★★★★ `F` CANNOT BE DISPATCHED BY THIS SEAT — A NEW CONSTRAINT, RECORDED BECAUSE EVERY PRIOR RULING ASSUMES OTHERWISE
-★★★★★ **[MEASURED HERE] This session's harness config forbids launching Agent-tool subagents unless
-the operator asks. R-495 §4 says "ONE `accuracy-validator`, DESK-DISPATCHED" — that instruction is
-NOT EXECUTABLE FROM THIS SEAT. `AN AUTHORIZATION THE HOLDER CANNOT EXECUTE IS AN UNOWNED
-PREREQUISITE` (§0.5: never leave one assigned to nobody). THE OPERATOR HAS BEEN TOLD IN PLAIN WORDS.
-Do not re-plan around it silently and do not route the grade back to this desk — `THE BUILDER DOES
-NOT GRADE`, and neither does the desk that verified it.**
+### ★★★★★ AUTHORIZED NOW — `R-496-P0-REPAIR`, CORRECTIONS **A → B → C**, TO THE CURRENT SEAT
+**A** exhaustive camelCase→snake_case bijection, compile-time exhaustive, raw-key comparison BEFORE
+projection, reject extra/missing/duplicate/unconsumed naming the exact path, **and fix the false
+comment** · **B** membership as a THREE-WAY BIJECTION (`required_members` ∧ filenames ∧
+`Object.keys(fixtures)`), duplicates rejected with multiplicity, **both** array and unique cardinality ·
+**C** preserve `2011e8de` unamended, DATED addendum to the packet, new worktree from `9af37b8f`, ONE
+replacement commit. **Each of A/B owes a clean unmutated neighbour proving it is not always-red.**
+**STOP IF** either novel attack still returns `0`, a previously-biting attack stops biting, or the
+repair would need engine/Python semantic changes.
 
-### ★★★★★ [FACT, MEASURED HERE — **NOT RULED**] THE DELIVERY OBJECT IS REAL, AND I VERIFIED IT WITHOUT TAKING THE REPORT
+### ⚠️★★★★★ THE FOLLOW-UP GRADE IS AN **UNOWNED PREREQUISITE** — ONLY THE OPERATOR CAN ROUTE IT
+★★★★★ **[MEASURED HERE] TWO independent blockers: (1) this session's harness forbids launching
+Agent-tool subagents unless the operator asks; (2) the named validator `/root/ledger_e_delivery_grade`
+is in an environment NOT REACHABLE FROM THIS MACHINE. `AN AUTHORIZATION THE HOLDER CANNOT EXECUTE IS
+AN UNOWNED PREREQUISITE` (§0.5). THE OPERATOR HAS BEEN TOLD IN PLAIN WORDS. Do not route the grade
+back to this desk or to the worker — `THE BUILDER DOES NOT GRADE`, and neither does the desk that
+verified the shape.** **Until it exists: `P0` REPAIR ACTIVE · `F` CONSUMED AS `NOT-SOUND` · GATE B
+BLOCKED · NO INTEGRATION.**
+
+### ⚠️★★★★★ MY OWN CONVICTED ERROR THIS WAKE — READ BEFORE TRUSTING THE GREEN TABLE BELOW
+★★★★★ **I told the operator the delivery was *"verified and ready."* I had verified its SHAPE ONLY. I
+never attacked the gate — I recorded that C-4..C-7 were `[RELAYED]` and then used the word "ready"
+anyway. `A REASSURANCE BROADER THAN ITS EVIDENCE IS THE ONE LIE THE OPERATOR CANNOT CATCH.`**
+★★★★★ **AND I CITED `Checked 12 sample specs against 12 declared members` AS EVIDENCE. F-2 PROVES IT
+PRINTS `11` AGAINST `12` AND STILL EXITS `0`. `A PRINTED COUNT IS NOT A COMPARED COUNT.` R-491 struck
+a previous seat for this exact shape against this exact file, and I repeated it.**
+
+### ⚠️ [MEASURED HERE] SHAPE-ONLY VERIFICATION — **THIS TABLE IS *NOT* A SAFETY CLAIM.** EVERY ROW BELOW WAS GREEN ON AN OBJECT NOW GRADED `NOT-SOUND`
 **Tree named: `C:/Users/tonio/Projects/wt-ledger-e-delivery-20260730` @ `2011e8de`, branch
 `hardening/ledger-e-delivery-20260730`, `git status --porcelain` = `0` before AND after my runs.**
 | check | `[MEASURED HERE]` |
