@@ -478,6 +478,96 @@ function checkOracle(
   }
 }
 
+/**
+ * ─── STEP D (R-492 §5-D / R-493 §5-D): AXIS-4 SELF-CONTROLS.
+ *
+ * ★★★★★ WHY THESE ARE TRANSIENT AND IN-RUN RATHER THAN CORPUS FIXTURES, which is
+ *   a correctness point and not a convenience: a fixture carrying a duplicate
+ *   `condition_id` would be a PERMANENTLY INVALID declared member — the gate
+ *   would exit 1 forever and the corpus would encode a defect as a requirement.
+ *   `duplicateConditionIds` and `diffDeep` are pure functions, so they can be
+ *   driven with planted input inside the run and nothing is written to disk.
+ *   There are no bytes to restore, which is the strongest form of "restore the
+ *   bytes afterwards".
+ *
+ * ★★★ R-488 §3 froze BOTH of these checks as `[UNPROVEN]` and UNCITABLE because
+ *   NO fixture made either of them FIRE. This is what makes them citable: each
+ *   planted defect must be detected AND NAMED, and each is paired with a
+ *   SAME-SHAPE CLEAN NEIGHBOUR that must stay silent. A detector that fires on
+ *   everything is as useless as one that fires on nothing —
+ *   `A CONTROL MUST DISCRIMINATE, NOT MERELY TRIGGER.`
+ */
+function checkAxis4SelfControls(out: string[], notes: string[]): void {
+  const row = (id: string, extra: Record<string, unknown> = {}) => ({
+    condition_id: id, type: "FILTER", role: "confluence", object: "volume", bindable: true,
+    primitive: "p", approximation: false, executed: true, reason: null, session_zone: null, ...extra,
+  });
+
+  // ─── D-1: DUPLICATE condition_id. Planted vs same-shape clean neighbour.
+  const planted: string[] = [];
+  duplicateConditionIds(
+    { bindings: [row("alpha"), row("PLANTED_DUP"), row("PLANTED_DUP")], invalidation_bindings: [] },
+    "selfcontrol", planted,
+  );
+  const clean: string[] = [];
+  duplicateConditionIds(
+    // SAME SHAPE, SAME LENGTH — differing only in that the ids are distinct.
+    { bindings: [row("alpha"), row("PLANTED_DUP"), row("PLANTED_DUP_2")], invalidation_bindings: [] },
+    "selfcontrol", clean,
+  );
+  if (planted.length !== 1 || !planted[0].includes("PLANTED_DUP") || !planted[0].includes("2x")) {
+    out.push(
+      `AXIS-4 SELF-CONTROL FAILED (duplicate id): planted one duplicated condition_id and the detector ` +
+        `returned ${JSON.stringify(planted)} — expected exactly one finding NAMING "PLANTED_DUP" and its ` +
+        `multiplicity. A detector that cannot name what it caught is half a green.`,
+    );
+  }
+  if (clean.length !== 0) {
+    out.push(
+      `AXIS-4 SELF-CONTROL FAILED (duplicate id, clean neighbour): a same-shape plan with DISTINCT ids ` +
+        `produced ${JSON.stringify(clean)} — the detector fires on innocent input, so its silence proves nothing.`,
+    );
+  }
+
+  // ─── D-2: ARRAY MULTIPLICITY and ORDER, through the CLAIM 1 comparator.
+  // `A REORDER IS NOT A NO-OP`: length equality alone was an old blind spot, so
+  // the reorder case matters as much as the duplication case.
+  const base = { bindings: [row("a"), row("b")] };
+  const cases: Array<[string, unknown, (m: string[]) => boolean]> = [
+    ["MULTIPLICITY (element duplicated)", { bindings: [row("a"), row("b"), row("b")] },
+      (m) => m.some((x) => x.includes("length") && x.includes("ts=2") && x.includes("py=3"))],
+    ["ORDER (same elements, swapped)", { bindings: [row("b"), row("a")] },
+      (m) => m.some((x) => x.includes("condition_id"))],
+  ];
+  for (const [label, mutated, accepts] of cases) {
+    const found: string[] = [];
+    diffDeep(base, mutated, "plan", found);
+    if (found.length === 0 || !accepts(found)) {
+      out.push(
+        `AXIS-4 SELF-CONTROL FAILED (${label}): the comparator returned ${JSON.stringify(found)} for a plan ` +
+          `that differs from its baseline in exactly that way. The check cannot see this defect class, so ` +
+          `every green it has ever produced about that class is vacuous.`,
+      );
+    }
+  }
+  // The clean neighbour for the comparator: identical input must stay silent.
+  const identical: string[] = [];
+  diffDeep(base, { bindings: [row("a"), row("b")] }, "plan", identical);
+  if (identical.length !== 0) {
+    out.push(
+      `AXIS-4 SELF-CONTROL FAILED (comparator, clean neighbour): two IDENTICAL plans produced ` +
+        `${JSON.stringify(identical)}. A comparator that reports drift on identical input makes every ` +
+        `drift it reports uninterpretable.`,
+    );
+  }
+
+  notes.push(
+    `axis-4 self-controls: duplicate-condition_id DETECTED and NAMED ("PLANTED_DUP", 2x) with a same-shape ` +
+      `distinct-id neighbour SILENT · array MULTIPLICITY and ORDER both detected, identical plans SILENT — ` +
+      `all planted in-run, no corpus member is permanently invalid (R-488 §3's two [UNPROVEN] checks now fire)`,
+  );
+}
+
 // ─── STEP C (R-492 §5-C / R-493 §5): THE P-7 OVER-REFUSAL PROPERTY CHECK.
 //
 // ★★★★★ THE CIRCULARITY SPLIT, WHICH IS THE WHOLE DESIGN CONSTRAINT:
@@ -871,6 +961,17 @@ function main() {
   // Counted into `oracleFailures` rather than `failures` on purpose: a P-7
   // violation is a CLAIM 2 CORRECTNESS defect, not a membership or plumbing one,
   // and the summary line's whole value is that it says WHICH claim failed.
+  // ─── Axis-4 self-controls run BEFORE the corpus, same rationale as the
+  // tripwire's own control: if the duplicate-id or multiplicity detectors cannot
+  // fire, every clean result they produce below is worthless.
+  const axis4Failures: string[] = [];
+  checkAxis4SelfControls(axis4Failures, tripwireNotes);
+  if (axis4Failures.length > 0) {
+    console.error(`AXIS-4 SELF-CONTROL FAILURE:`);
+    for (const m of axis4Failures) console.error(`  - ${m}`);
+    failures.push(...axis4Failures);
+  }
+
   const p7Failures: string[] = [];
   checkOverRefusalProperty(p7Failures, tripwireNotes);
   if (p7Failures.length > 0) {
