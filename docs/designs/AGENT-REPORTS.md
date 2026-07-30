@@ -4,6 +4,50 @@
 
 ---
 
+## AR-505 · 2026-07-30 · ★★★★★ **STEP C LANDED AT `30297a92` — 208 PROBE + 16 CONTROL ASSERTIONS OVER THE WHOLE NON-SESSION POPULATION, ALL FIVE PRE-REGISTERED MUTATIONS RED.** ⚠️★★★★★ **AND I MISSED MY OWN PRE-REGISTRATION: I PREDICTED THE CONTROL RUN WOULD BE GREEN AND IT WAS RED. MY EXPECTATION WAS WRONG, NOT THE ENGINE. REPORTING IT AS A MISS BECAUSE I SAID I WOULD.**
+
+**RULING ID:** R-493 §5-C · **TASK ID:** AR-505 · **PRIOR:** AR-504 (my pre-registration, `8d676394`) · **PARITY:** `wt-ledger-e-parity-20260730` @ **`30297a92`**, `git status --porcelain` **EMPTY**.
+**GUARD:** ★★★ **the `worker-execution` hook BLOCKED my first step-C write because R-493 had landed since I loaded the standard. It was RIGHT — fourth consecutive time. I re-loaded rather than routing around it.**
+
+### ⚠️★★★★★ §1 — THE MISS, FIRST, BECAUSE A QUIETLY-CORRECTED PREDICTION LAUNDERS A DESCRIPTION INTO EVIDENCE
+
+**AR-504 §3 pre-registered: `control → GREEN`. [MEASURED HERE] THE CONTROL RUN CAME BACK `EXIT 1`.**
+**THE CAUSE, DIAGNOSED RATHER THAN PATCHED:** I had encoded P-7 as the ABSOLUTE `bindable === true` for every non-session family. **[MEASURED HERE] `EXCEPTION` and `RESET` carry `unsupported: true` and emit `bindable=false` with `control_flow_exception_unsupported` / `control_flow_reset_unsupported` — for a reason that has NOTHING TO DO WITH SESSIONS.**
+★★★★★ **THE ENGINE WAS RIGHT AND MY EXPECTATION WAS WRONG.** The authority says bindability *"is INDEPENDENT of which zones are evaluable or refused"* — **it does not say every non-session family binds. I turned an INDEPENDENCE claim into an ABSOLUTE one, which is a stronger claim than the authority makes.**
+★★★★★ **AND THE TRAP IT SET IS THE ONE WORTH NAMING: had the control not caught this, the only two ways forward were to WEAKEN the test or to "fix" `EXCEPTION`/`RESET` into binding — inventing behaviour for two innocent families to satisfy my own bad expectation. `AN OVERSTATED EXPECTATION RECRUITS YOU INTO CHANGING CORRECT CODE.`**
+★★★ **THE REPAIR IS A DIFFERENT PROPERTY, NOT A LOOSER ONE:** each probe row must be **IDENTICAL in `bindable` and `reason` to a NEUTRAL-TWIN row of the same family** carrying no refused phrase (`"volume elevated"`, verified to name no zone). **The expectation is the INVARIANCE — which is exactly what the authority states — and it is not circular: neither side of the comparison is a value copied out of a lane.** ★★ **It is also STRICTLY BETTER on the unsupported families: if a session refusal ever changed `EXCEPTION`'s reason, the differential fires. The absolute could not have told that apart from `EXCEPTION`'s normal state.**
+
+### ★★★★★ §2 — THE FIVE MUTATIONS, ALL PRE-REGISTERED AT `8d676394` BEFORE THE CODE EXISTED
+
+| # | mutation | predicted | **measured** | verdict |
+|---|---|---|---|---|
+| control | none | GREEN | ⚠️ **RED** → after the §1 repair, **`EXIT 0`** | ★★★★★ **MISS — reported above** |
+| **C1** | family deleted from `FAMILY_META` | RED, names MISSING | **`EXIT 1`** · `MISSING (declared…): ["WAIT_STRUCTURE"]` | ✅ |
+| **C2** | family added | RED, names UNDECLARED | **`EXIT 1`** · `UNDECLARED…: ["SYNTHETIC_NEW_FAMILY"]` | ✅ |
+| **C3** | hoist, **ONE** lane | RED, property + CLAIM 1 drift | **`EXIT 1`** · `14 drift(s)` + `94` oracle, **88** P-7 | ✅ |
+| **C4** | hoist, **BOTH** lanes | ★★★★★ RED from the property **with CLAIM 1 still PASSING** | ★★★★★ **`FAIL: 188 — CLAIM 1 AGREEMENT: PASS (lanes emit identical plans) · CLAIM 2 ORACLE CORRECTNESS: 188 violation(s)`**, **176** P-7 | ✅ |
+| **C5** | `WAIT_SESSION` refusal disabled, both lanes | RED, control fires | **`EXIT 1`** · **16** `POSITIVE CONTROL FAILED` + **16** `CONTROL DISCRIMINATION FAILED` | ✅ |
+
+★★★★★ **C4 IS THE ONE I ASKED TO BE HELD TO AND IT HELD. Agreement passed — the lanes were identically wrong — and the property caught it anyway. Had it come back green the whole of step C would have been circular, and I said so before running it.**
+★★★ **C3's `88` (not 104) IS A PRECISION SIGNAL, NOT A SHORTFALL: `88 = 11 × 8`. `EXCEPTION` and `RESET` return from the unsupported branch BEFORE the hoisted refusal, so the mutation cannot reach them and the differential correctly does not fire. The check bites exactly the rows the defect touches.**
+★★ **C5 fired BOTH controls: with nothing refused, `WAIT_SESSION` emits the same row with and without the phrase — which is precisely what the discrimination control exists to catch. `A CONTROL THAT DOES NOT DISCRIMINATE CANNOT LICENCE THE TEST BESIDE IT.`**
+
+### §3 — WHAT THE CHECK IS, AND THE CIRCULARITY SPLIT R-493 §5 MADE BINDING
+
+**`13` frozen non-session families × `8` frozen refused phrases → `104` probes × 2 lanes = **208** assertions, plus **16** adjacent `WAIT_SESSION` controls. Printed on every green run.**
+★★★★★ **`FAMILY_META` SUPPLIES MEMBERSHIP ONLY; `P-7` SUPPLIES THE SEMANTICS.** Both lists are **frozen against AR-504**, so the grid cannot silently resize itself to whatever the code already does — **C1 and C2 prove addition AND deletion both deny.** ★★ **Two preconditions are asserted before the grid runs: every declared phrase must still name a refused zone, and the neutral twin must still name none — otherwise the differential degenerates into comparing two refused rows and passes vacuously.**
+★★★ **P-7 violations are counted into `oracleFailures`, not `failures`, so the summary line still says WHICH CLAIM failed. That separation is what made C4 legible.**
+
+### §4 — POSITION · GRADE · WHAT REMAINS
+
+**`30297a92`, tree clean. Both lanes reverted — `0` markers, `git diff` on the two lane files EMPTY with a positive control that the same command does report my real change. `tsc --noEmit` **EXIT 0** (it caught one real type error, which I fixed rather than shipped). ★★ **C1 and C4 RE-TAKEN after that fix rather than carried — the annotation is compile-time only, but a number quoted across a repair is stale by rule, not by judgement.**
+**No `git push` (branch has no upstream), no PR, no remote pipeline, no payload changes, no table edits, `runtime-production`/`tf-deep-scan` untouched. No sub-agent dispatched or owed — verified.**
+**STEP LEDGER:** ✅ **A** · ✅ **B** · ✅ **C** · ❌ **D** (axis-4 transient in-run controls) · ❌ **E** (per-spec materiality receipt) · ⛔ **F** desk-only.
+★★★★★ **GRADE NOT TRIGGERED. R-493 §6 conditions the single adversarial `accuracy-validator` on C–E landing TOGETHER in one atomic delivery commit; D and E are untouched. THE BUILDER DOES NOT GRADE.**
+★★★ **FOR THE F BRIEF, ADDING TO R-493 §2's RE-PLANT LIST: the five mutations above are `[MEASURED HERE]` by the builder and therefore `[RELAYED]` to any reader. The C4 result in particular should be re-planted independently — it is the single claim on which step C's value rests.**
+
+---
+
 ## AR-504 · 2026-07-30 · **PRE-REGISTRATION FOR STEP C — WRITTEN AND COMMITTED BEFORE THE GENERATOR EXISTS.** ★★★★★ **THE POPULATION IS READ FROM `FAMILY_META` (membership, legitimate); EVERY EXPECTED VALUE BELOW COMES FROM `P-7` (semantics). THAT SPLIT IS THE ONE R-493 §5 MADE BINDING, AND WRITING THE PREDICTIONS DOWN FIRST IS WHAT MAKES THEM EVIDENCE INSTEAD OF DESCRIPTION.**
 
 **RULING ID:** R-493 §5-C · **TASK ID:** AR-504 · **PRIOR:** AR-503 · **PARITY:** `wt-ledger-e-parity-20260730` @ **`48199995`**, clean. **NO CODE CHANGED IN THIS ENTRY — it is a prediction, filed so it can be held against the result.**
