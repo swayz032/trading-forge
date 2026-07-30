@@ -4,6 +4,77 @@
 
 ---
 
+## AR-486 · 2026-07-30 · ★★★★★ **R-480 §6 STEPS 1b–3 DONE. THE MATRIX IS BUILT AND THE PACKET IS REVISED — AND THE READ FOUND THAT THE FOUR CONSUMERS ARE NOT FOUR INDEPENDENT SURFACES: `spec-onboarding-service.ts:454` GATES `compileBindingPlan` BEHIND `if (!archetypeMatch.matched)`, SO AR-483's DENOMINATOR-FLIP AND ARCHETYPE-TIE-BREAK HAZARDS ARE MUTUALLY EXCLUSIVE BRANCHES OF ONE `if`. A SPEC THAT NEWLY MATCHES AN ARCHETYPE HAS **NO AFTER-VALUE** FOR `spineBound`/DENOMINATOR/`ratio`/`compiled` — AND A RECORD-FOR-RECORD TRIPWIRE READS THAT BLANK AS "LEFT THE QUEUE".** ★★★★★ **AND TWO LIVE DEFECTS ON THE EXACT SURFACE GATE B MODIFIES: THE TS AND PYTHON SESSION TABLES HAVE **ALREADY DIVERGED**, THE TS COMMENT SAYS THEY MIRROR "EXACTLY", AND THE CI GATE THAT WOULD CATCH IT **IS NOT WIRED INTO CI** — POSITIVE CONTROL RUN**
+
+**RULING ID:** R-480 §6 · **TASK ID:** AR-486 · **PRIOR:** AR-485 (receipt), AR-484 (step 1a) · **COMMIT AT WRITE:** `2c7ef316` + this commit · **STATUS:** steps **1b, 2, 3 COMPLETE**; step 4 = **STOPPED FOR RULING, no code, no worktree.** · **RECOMMENDATION: BLOCKED pending your ruling on §3 below — two of the three findings are PREREQUISITES to the ablation that I deliberately did not patch.**
+
+**DELIVERABLE:** `docs/designs/GATE-B-RATIFY-PACKET-2026-07-29.md` — **REV 2**, `261` → `~330` lines. New `§0` change-log, new **`§3.5` CONSUMER CONTRACT MATRIX** (6 rows × 5 columns + the convergence trace), `§3` rebuilt to the source-record/projection design, `§4` rebuilt with a fourth verdict code, `§6` lane reality, `§7` honest-partial, `§8` sufficiency.
+
+### §1 — WHAT I OPENED, AND IN WHICH TREE
+
+**All in `runtime-production` @ `9af37b8f` — the tree that EXECUTES.** `spec_family_bindings.py` · `playbook_router.py` · `spec-onboarding-service.ts` · `bandc-measure-mapped-queued-split.ts` · `check-spec-binding-plan-parity.ts` · plus `spec-family-bindings.ts` re-opened to compare tables. **Tree named beside every citation in the packet, per your step 1.**
+★★ **AR-483's four mechanism findings are carried, NOT re-derived** — but every figure I publish here I re-measured myself.
+★ **ONE CORRECTION TO AR-484 §1, small and worth making because the packet cites it:** its table gave `:43 matchArchetype · :44 compileBindingPlan · :50 playbook-registration · :54 recoverSpecTimeframe`. **Those are IMPORT lines.** The real call sites are `:437` · `:455` · `:765` · `:487`. The claim that the file is the single convergence point is **CORRECT and now confirmed at the call sites.**
+
+### ★★★★★ §2 — F-C: THE FINDING THAT CHANGES R-480 §5-3's TRIPWIRE DESIGN
+
+**[MEASURED HERE, read at the executable line, `runtime-production`]** `spec-onboarding-service.ts`:
+`:437 const archetypeMatch = matchArchetype(spec.entry_conditions);` — unconditional · `:452 let bindingPlan: BindingPlan | null = null;` · `:454 if (!archetypeMatch.matched) {` → `:455 bindingPlan = compileBindingPlan({...})` → `:460 conditionCompiled = bindingPlan.compiled;`
+★★★★★ **SO `compileBindingPlan` RUNS ONLY WHEN THE ARCHETYPE DOES NOT MATCH.** AR-483 §3 (denominator flip) and §4 (tie-break enabling a refused dispatch) are **not two independent hazards on two consumers — they are the two arms of ONE branch.** If removal flips `matched` `false → true`, the binding plan **never executes** and `spineBound`/`spineTotal`/`spineRatio`/`compiled` are **`null`**, not changed.
+★★★★★ **WHY THIS IS A TRIPWIRE DEFECT AND NOT A CURIOSITY: R-480 §5-3 requires those five fields "record-for-record". A populated BEFORE row beside an empty AFTER row is exactly what "the spec stopped being queued" looks like. THE ARTIFACT WEARS THE COSTUME OF THE SUCCESS.** I added a fourth verdict code — **`CONSUMER-SUPERSEDED`** — which **STOPS THE RUN**, so a null after-cell can never be scored as a blank or as a win (packet §4.4).
+★★★★ **F-D, same branch:** `:526-530` derives the playbook category on the SAME predicate — `matched ? deriveCategoryFromArchetype(key) : conditionCompiled ? deriveCategoryFromConditionSpec(spec) : deriveCategoryFromArchetype(null)`. **An archetype flip also switches WHICH FUNCTION decides the category.** One clause removal, two consumers re-routed, one `if`.
+
+### ★★★★★ §3 — TWO LIVE DEFECTS I FOUND AND DELIBERATELY DID **NOT** PATCH
+
+**F-A — THE LEDGER-E PARITY GATE IS NOT CI-ENFORCED. AR-484 §1's "enforced in CI" is REFUTED on `ENFORCED` and stands on `REAL`.**
+| probe | result |
+|---|---|
+| `grep -n check-spec-binding-plan-parity package.json` | **`:28` PRESENT** |
+| `grep -rl "check:spec-binding-plan-parity" .github/workflows/` | ★★★★★ **`0`** |
+| **POSITIVE CONTROL** `check:ts-python-exit-parity` | **`1` — `ci.yml:343`** |
+| **POSITIVE CONTROL** `check:2026-compliance` · `check:production-isolation` · `system-map:check` | **`2` workflows each** |
+| full-repo sweep, `node_modules` excluded | only its own source, its own `dist` stub, `package.json:28`, two docstrings |
+| default corpus `ci/fixtures/spec-binding-parity/` | ★★★ **ONE file, `1,690` B** — vs its docstring `:11-13` claiming *"the 25-sample generalization corpus"* |
+★★ **The workflow dir exists and holds 3 files, so this is a measured absence, not a wrong path.** **`EXISTENCE IS NOT WIRING`** — and AR-483 §3's *"a one-sided edit fails CI by design"* rests on it.
+★★★ **F-G — the gate also under-compares what it collects.** `:60-84` maps `reason`, `role`, `type`, `object`, `executed` into the compare shape; the loop at `:131` compares only `condition_id, bindable, primitive, approximation, session_zone`. **`reason` — the field carrying `no_recognized_session_keyword`, i.e. the key this packet's whole population is defined by — is collected and NEVER COMPARED.**
+
+**F-B — THE TS AND PYTHON SESSION TABLES HAVE ALREADY DIVERGED, AND THE TS CAPTION DENIES IT.**
+| | TS `spec-family-bindings.ts` | PY `spec_family_bindings.py` |
+|---|---|---|
+| `SESSION_KEYWORDS` | `:65-73` — **SEVEN** zones, incl. **`lunch_blackout`**, **`overnight`** | `:285-291` — **FIVE**; both orphan zones absent |
+| `REFUSED_SESSION_KEYWORDS` | ★★★★★ **DOES NOT EXIST** — grep: the only `lunch`/`overnight` hits in the whole file are the two table rows | `:309-312` |
+| bind path | `:159-160` resolves via the 7-zone table ⇒ **"during lunch" BINDS** | `:572-600` checks refusal **FIRST** ⇒ `bindable=False`, `executed=False`, `approximation=True`, `reason=session_zone_refused_uncomputable_window:<zone>` |
+| caption | ★★★★★ **`:64` *"mirror …py::SESSION_KEYWORDS EXACTLY"*. IT DOES NOT.** | `:274-279` *"DELIBERATELY NO LONGER MATCHES … do not resync"* |
+★★★★★ **THE DIVERGENT FIELDS ARE EXACTLY THE ONES THE UNWIRED GATE COMPARES — `bindable`, `session_zone`, `spine_bound`, `compiled`. So the two lanes can disagree on `compiled` for the same spec, and R-480 §5-3's tripwire MUST NAME ITS LANE or it is `I MEASURED THE NEIGHBOURING OBJECT` pre-armed.**
+★★★ **IT IS A DECLARED CARRY-FORWARD, NOT A DISCOVERY:** PY `:283-284` reads *"[MEASURED 2026-07-28] … it (and the TS mirror) are reported as adjacent work rather than changed here."* **The author knew; it is un-closed.**
+★★ **BOUND, HONESTLY:** all `232` C8-ANNOTATION rows carry `no_recognized_session_keyword`, which neither lane emits for an orphan-zone phrase `[MEASURED on the frozen label]`. **That this implies token-absence in all 232 is `[HYPOTHESIS, UNTESTED]`** — it holds only if the census producer ran one of these two paths, and that producer is GONE (R-480 §Desk). **I am not converting it to a measurement.**
+★★★★ **AND I AM NOT LETTING A NEW FINDING WEAKEN A SOUND ONE: AR-483 §3's denominator mechanism is UNAFFECTED. `"five-minute chart"` matches NEITHER the 5-zone nor the 7-zone table, so the chart-timeframe clause is unbindable in both lanes.**
+★★★ **WHY UNPATCHED:** R-480 §6 forbids consumer code changes and lists `FILES ALLOWED` as the packet + this file. They are pre-existing, they belong to another concept, and patching them would be routing around your boundary. **Packet §8-3 puts them on you as a ruling: close before the ablation, defer, or accept as a named risk.**
+
+### ★★★★★ §4 — F-E: AR-483 §4's `[NOT VERIFIED]` IS ANSWERED — AND INVERTED
+
+**[MEASURED HERE] `playbook_router.py` uses each category list INDIVIDUALLY as `allowed_strategies`:** CONTINUATION `:138 :145 :198 :211 :224` · REVERSAL `:152 :159 :240` · MEAN_REV `:166 :173 :240` · ORB `:180 :187 :211`. **`ALL_STRATS` (`:105`, the flat union) is used NOWHERE ELSE in the file.**
+★★★★★ **SO AR-483 WAS RIGHT THAT THE UNION MAKES THE ELIGIBILITY *BYPASS* CATEGORY-INSENSITIVE, AND THE ROUTING CONSEQUENCE IT HONESTLY LEFT OPEN IS REAL: THE CATEGORY SELECTS WHICH REGIME/PLAYBOOK BLOCKS MAY TRADE THE STRATEGY.** And `:79`'s comment — *"a wrong category routes to the wrong per-playbook allow-list"* — is **TRUE, not a docstring aspiration.** ★★ **`registerStrategiesInPlaybook` at `spec-onboarding-service.ts:765` PERSISTS the category into `playbook_router.py` SOURCE, so a re-bucket is a source mutation.** Added to packet §5 rollback, which rev 1 did not carry.
+★★★★ **F-F, and I am marking its tail as a hypothesis:** `:487`→`:514`→`:535` means the recovered timeframe becomes part of `deriveStrategyName(conceptName, symbol, timeframe)`. Recovery FAILURE is a hard spec-level quarantine (`:488-512`, `ok:false`) — **but AR-483 §2's partial-removal case returns `recovered:true` with a WRONG timeframe, which passes that quarantine and yields a different name string.** [MEASURED, `playbook_router.py:101`] names ARE timeframe-suffixed at several timeframes, so a wrong one looks plausible. ★★ **The downstream overlay-bypass consequence is `[HYPOTHESIS, UNTESTED]` — it needs a `playbook-registration.ts` read I did NOT do. Not asserting it.**
+
+### ★★★ §5 — THE TRAP IN THE MEASUREMENT INSTRUMENT ITSELF
+
+**[MEASURED HERE] `bandc-measure-mapped-queued-split.ts` — the mapped-vs-queued instrument AR-484 flagged — has BOTH success buckets movable by clause removal alone:** `:32 matchArchetype(...)` → `:34-38 ARCHETYPE_MAPPED` (movable by F-C/the tie-break) → else `:40-52 compileBindingPlan` → `CONDITION_COMPILED` (movable by the denominator). ★★★★★ **The one script anyone would reach for to "show Gate B worked" reports exactly the two artifacts R-480 §3-ii forbids as efficacy.** Packet §4.2 permits it as a DIAGNOSTIC and forbids calling its output success. ★★ Also `:17-18` `SAMPLES_DIR` is a **hardcoded absolute path** into `.claude/worktrees/extraction-100/tmp/generalization` — a fourth lane outside all three named trees; `[UNVERIFIED]` whether it still exists.
+
+### §6 — WHAT I DID NOT MEASURE
+
+★★★★★ **HONEST-PARTIAL, INVOKED DELIBERATELY. COVERED: the six files above, `runtime-production` copies, plus the two instruments end-to-end.**
+**NOT COVERED, named per file:** `playbook-registration.ts` **itself** — its `:92-106`/`:204` behaviour in packet §3.5 row 5 is **carried from AR-483, not re-measured by me** · `fade-the-losers-service.ts` (second runtime playbook consumer) · `playbook-registration-backfill.ts` · `backfill-corpus-timeframes.ts` (runs timeframe recovery **across the corpus**) · **the campaign-tree and primary-tree copies of all six** · **POPULATION INCIDENCE of every §3.5 transition** — every risk in the matrix is a MECHANISM proven at the executable line; **how many real specs exhibit any of them is `[UNMEASURED]`, and that is the number deciding theoretical vs live.**
+★★ **I ran no ablation, no extraction, no backtest, no DB write, created no worktree, and changed no producer or consumer code. Writes: this file + the packet.**
+
+### §7 — POSITION AND HANDOFF
+
+**POSITION:** `2c7ef316` + this commit · branch `h1-wave4-sealed12-driver` · tree `wt-h1-wave4-20260712`. **Both writes are `-o` path-scoped.** **Nothing half-done. Nothing in flight. NO sub-agent dispatched or owed by me — I dispatched none this seat.**
+**WHAT I BELIEVE IS OWED FROM YOU, and step 4 stops me here:** **(1)** the F-A/F-B/F-G prerequisite ruling (packet §8-3) — close, defer, or accept as named risk · **(2)** whether `CONSUMER-SUPERSEDED` is accepted as a run-stopping verdict or you want it adjudicated differently · **(3)** the two DESK-owned freezes (survivor truth set; additive baseline + re-authored-producer control) · **(4)** the `0b0d6617`→C8 measurement, without which the CONTROL arm is not the frozen control.
+★★★ **THIS SEAT HAS CONTEXT LEFT and is not requesting a swap.** If you want the population-incidence measurement for the §3.5 transitions, or `playbook-registration.ts` opened and re-measured, both are small and I can take either on your word.
+
+---
+
 ## AR-485 · 2026-07-30 · **START-RECEIPT — R-480 §6 STEPS 1b → 4, FRESH SEAT. ★★★★★ AND ONE MEASUREMENT TAKEN BEFORE THE READING BECAUSE IT BEARS DIRECTLY ON §5 ITEM 5's PINNED PRODUCER TREE: FOUR OF THE FIVE FILES STEP 1b NAMES ARE **ABSENT** FROM `4f3b5cd0…`, AND THE FIFTH IS PRESENT AT A DIFFERENT SIZE — `19,922` B vs `27,019` B**
 
 **RULING ID:** R-480 §6 · **TASK ID:** AR-485 · **PRIOR:** AR-484 (step 1a BANKED — the caller surface; I am not re-deriving it) · **COMMIT AT WRITE:** `51aec17a` · **STATUS:** STARTING.
