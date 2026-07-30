@@ -175,7 +175,74 @@ const main = async () => {
       `attributed reason. That is the shape the repair was authorised to produce: the TS lane previously ` +
       `bound orphan-zone conditions that the Python lane already refused.`,
   );
+  // ─── THE MATERIALITY CONTROL, AND THE ENFORCEMENT PATH THAT WAS MISSING.
+  //
+  // ⚠️★★★★★ R-494 §1: this emitter previously counted `compiledRose`, selected
+  //   between a pass line and a `STOP AND FILE IT` warning — and returned `0`
+  //   either way. `A DECLARED FAILURE SIGNAL THAT RETURNS SUCCESS IS NOT A GATE.`
+  //   The self-control I had added proved the COUNTER could count; it said nothing
+  //   about whether anything STOPPED. `AN EMITTER SELF-TEST PROVES THE EMITTER,
+  //   NOT THE ENFORCEMENT PATH.`
+  //
+  // ★★★ A failure signal has THREE parts and all three are now present:
+  //   REACHABLE — this control lives outside the efficacy population precisely so
+  //               a `false→true` transition is producible at all (the 12-spec
+  //               population cannot produce one; that stays declared, not fixed).
+  //   DETECTED  — the transition is identified and the control NAMED by file.
+  //   STOPS     — `process.exit(1)`. Printing the transition is insufficient.
+  const controlDir = join(REPO, "ci", "fixtures", "materiality-control");
+  const controlFiles = readdirSync(controlDir).filter((f) => f.endsWith(".spec.json")).sort();
+  if (controlFiles.length === 0) {
+    console.error(
+      `MATERIALITY CONTROL MISSING: ${controlDir} contains no .spec.json. The receipt's failure signal has ` +
+        `no reachable witness, so its PASS would be unfalsifiable. Refusing to report a clean run.`,
+    );
+    process.exit(1);
+  }
+  const violations: string[] = [];
+  const controlRows: string[] = [];
+  for (const f of controlFiles) {
+    const spec = JSON.parse(readFileSync(join(controlDir, f), "utf-8")).spec;
+    const bc = asRecord(before.compileBindingPlan(spec)).compiled;
+    const ac = asRecord(after.compileBindingPlan(spec)).compiled;
+    controlRows.push(`| \`${f}\` | ${JSON.stringify(bc)} | ${JSON.stringify(ac)} | ${bc === false && ac === true ? "⚠️ **FORBIDDEN TRANSITION**" : "ok"} |`);
+    // The control's OWN baseline is asserted too. A control that silently stopped
+    // being `false→false` would stop licensing anything, and would do it quietly.
+    if (bc !== false) {
+      violations.push(
+        `${f}: control BASELINE BROKEN — expected BEFORE compiled=false, got ${JSON.stringify(bc)}. ` +
+          `This control can no longer witness a false→true transition, so the signal it licenses is unfalsifiable again.`,
+      );
+    } else if (ac === true) {
+      violations.push(
+        `${f}: FORBIDDEN compiled TRANSITION false→true. The repair made a spec compile that did NOT compile ` +
+          `before it. Per the frozen criterion "A HIGHER compiled COUNT IS A FAILURE SIGNAL", something has been ` +
+          `LOOSENED — a spec now passes the spine-ratio floor that previously failed it.`,
+      );
+    }
+  }
+  out.push(``);
+  out.push(`## Materiality control (outside the efficacy population)`);
+  out.push(``);
+  out.push(`| control spec | BEFORE \`compiled\` | AFTER \`compiled\` | verdict |`);
+  out.push(`|---|---|---|---|`);
+  out.push(...controlRows);
+  out.push(``);
+  out.push(
+    violations.length === 0
+      ? `**${controlFiles.length} control(s) hold their \`false → false\` baseline.** ★★★ This is what makes the ` +
+        `efficacy verdict above falsifiable: a \`false→true\` transition IS producible here, and this run did not ` +
+        `produce one. The emitter exits NON-ZERO if it ever does.`
+      : `⚠️★★★★★ **CONTROL FAILED — the receipt exits NON-ZERO.**\n\n` +
+        violations.map((v) => `- ${v}`).join("\n"),
+  );
   console.log(out.join("\n"));
+
+  if (violations.length > 0) {
+    console.error(`\nMATERIALITY CONTROL FAILURE (${violations.length}):`);
+    for (const v of violations) console.error(`  - ${v}`);
+    process.exit(1);
+  }
 };
 
 await main();

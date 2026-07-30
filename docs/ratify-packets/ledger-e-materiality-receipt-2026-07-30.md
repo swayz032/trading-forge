@@ -37,3 +37,11 @@ The frozen criterion is *"A HIGHER `compiled` COUNT IS A FAILURE SIGNAL"* — a 
 **Specs with any movement: 4 of 12. Rows that gained a refusal reason: 4.**
 
 ★★★ The movement is in the REFUSAL direction only — rows losing bindability and gaining an attributed reason. That is the shape the repair was authorised to produce: the TS lane previously bound orphan-zone conditions that the Python lane already refused.
+
+## Materiality control (outside the efficacy population)
+
+| control spec | BEFORE `compiled` | AFTER `compiled` | verdict |
+|---|---|---|---|
+| `00-compiled-false-baseline.spec.json` | false | false | ok |
+
+**1 control(s) hold their `false → false` baseline.** ★★★ This is what makes the efficacy verdict above falsifiable: a `false→true` transition IS producible here, and this run did not produce one. The emitter exits NON-ZERO if it ever does.
