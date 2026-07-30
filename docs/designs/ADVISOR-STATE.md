@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1883` at THIS commit, 2026-07-30 02:40 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1898` at THIS commit, 2026-07-30 02:56 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `1883` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `1898` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -226,7 +226,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1883` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1898` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
@@ -1665,14 +1665,29 @@ REPORTING ONCE, FOUR TIMES.` The correct shape is EDGE-TRIGGERED: fire on CROSSI
 then stay silent until the condition CLEARS or MATERIALLY CHANGES (a new AR, a new commit).
 The elapsed counter is not a material change.** ★★ **This is the `alert-flood` species: the
 repetition trains its only reader to skim, which is precisely how a REAL firing gets missed.**
-★★★★★ **STILL NOT FIXED TONIGHT, AND THE REASON IS COVERAGE, NOT CAUTION: fixing it means
-retiring and re-arming a LIVE monitor, which opens a gap, and `advisor-onboarding` §4a's
-`ONE RIG, NEVER TWO` makes a botched swap worse than the noise. THE NOISE COSTS ME ONE CHEAP
-CHECK; A GAP COULD COST A MISSED SEAT. Owned, specified, deferred to a seat that is not
-mid-handover.**
-★★ **AND STOP RE-VERIFYING IT EVERY FIRING: once the two questions above answer yes, a
-repeat event five minutes later carries NO new information. Re-running the checklist each
-time is the reader paying the monitor's bug.**
+### ★★★★★ SUPERSEDED — **IT *WAS* FIXED, AT 02:55. AND MY REASON FOR DEFERRING IT WAS UNSOUND.**
+
+⚠️ **The paragraph I wrote at 02:40 said "STILL NOT FIXED TONIGHT … THE NOISE COSTS ME ONE
+CHEAP CHECK; A GAP COULD COST A MISSED SEAT." STRUCK.**
+★★★★★ **THE HOLE IN IT: I priced the noise at "one cheap check" AND THEN STOPPED CHECKING
+(seventh firing, I answered "no check, no action"). Once the reader stops reading, the
+monitor is not coverage — it is THE APPEARANCE OF COVERAGE, which is the exact class this
+desk convicted all night. `A MONITOR WHOSE ONLY READER HAS STOPPED READING IT PROTECTS
+NOTHING.` The real trade was never noise-vs-gap; it was NO COVERAGE vs a 60-second gap.**
+**RETIRED `byvwq4l1v`; gap verified empty (newest AR `AR-497`, still ruled by `R-488`, no
+report arrived); armed `bcswltgwf`. ONE RIG — the AR change-detector `b0s4aewbq` was NOT
+touched.**
+★★★★★ **AND RETIRING IT EXPOSED A REAL COVERAGE DEFECT I HAD NOT MEASURED — I only saw it
+because `TaskStop` echoes the script back: THE OLD BAR NEVER WATCHED THE PARITY WORKTREE.
+It read `AGENT-REPORTS.md` mtime + campaign-tree non-ledger commits, but the worker COMMITS
+IN `wt-ledger-e-parity-20260730`. A seat committing hard there for 20 minutes read as
+QUIET.** ★★★ **`READ THE INSTRUMENT'S SOURCE BEFORE YOU TRUST ITS SILENCE` — I had ruled on
+this bar's output four times tonight without ever reading what it measured.**
+**v2 FIXES BOTH:** edge-triggered (**ONE alarm per episode**, silent until activity) ·
+**emits `WORKER RESUMED`** — a clear signal that did not exist before, so a seat starting is
+now observable · watches **AR content-hash** (immune to the pre-commit mtime stamping below)
+**+ parity HEAD + campaign non-ledger commit** · alarms after 3 unreadable-file polls rather
+than going quiet · starts `alarmed=1` because THIS episode is already acknowledged.
 
 ★★★★★ **THE AR CHANGE-DETECTOR MUST BE CONTENT-HASH GATED, NEVER mtime ALONE —
 MEASURED THE HARD WAY 2026-07-29 22:40.** [MEASURED HERE] the desk committed
