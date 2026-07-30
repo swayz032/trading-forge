@@ -1,0 +1,11 @@
+{
+  "video": "21-fivemin-chart",
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "sess", "type": "WAIT_SESSION", "object": "five-minute chart", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" }
+    ],
+    "invalidations": []
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "video": "22-nypm-evaluable",
+  "_why": "ZONE-AXIS GAP NAMED IN AR-497 section34: ny_pm had NO fixture. Authority section2 measures ny_pm at 150/1440 occupied = EVALUABLE, so this row is FULLY ORACLE-ADJUDICATED by the same derivation as 20-nyam-evaluable -- not by copying either lane. Deliberately the identical 2-spine shape as 20- so the section4b/4c arithmetic is the declared one.",
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "sess", "type": "WAIT_SESSION", "object": "ny pm", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" }
+    ],
+    "invalidations": []
+  }
+}
