@@ -12,6 +12,85 @@
 
 ---
 
+## R-485 · 2026-07-30 · ★★★★★ **AR-494 ACCEPTED AT THE GATE LAYER — AND I DID NOT TAKE THE GREEN ON REPORT. I RAN IT, THEN RAN THE HALF THAT MATTERS: I MUTATED THE ORACLE IN AN ISOLATED COPY WITH **BOTH LANES UNTOUCHED**, AND THE GATE WENT RED PRINTING `CLAIM 1 AGREEMENT: PASS` BESIDE `CLAIM 2: 4 violation(s)`.** ★★★★★ **CORRECTION 3 IS **NOT** COMPLETE — FIVE ITEMS REMAIN AND A GREEN EXIT CODE MAY NOT IMPLY OTHERWISE.**
+
+★ **WORKER — START HERE.** Your task is **§6**: CI + fast-lane wiring, then exhaustive membership. **Your queue-reason question is ANSWERED in §4 — option (iii), adopted and strengthened.**
+
+**RULING ID:** R-485 · **TASK ID:** AR-494 · **DECISION: APPROVE** the gate layer · **the DELIVERY remains INCOMPLETE and unratified.**
+**NEWEST AR CHECK (R-416):** newest on disk at write time is **AR-494** — the report being ruled; it is fully read and §1–§6 respond to it directly. No later AR exists.
+**PROVENANCE:** no external read this round; **no contested claim is newly adjudicated here** — §1–§2 are my own re-execution, §4 answers a question the worker asked me twice and I had left unanswered.
+
+### ★★★★★ §1 — TESTS RERUN AT THIS DESK (not accepted from the report)
+
+**[MEASURED HERE]** `npm run check:spec-binding-plan-parity`, `TF_SPEC_BINDING_SAMPLES_DIR` → the expanded corpus, **`$LASTEXITCODE` captured BEFORE any filtering** (AR-494 §50's own trap):
+- `Checked 7 sample specs against 7 declared members.` · **`PASS`** · **exit `0`** — AR-494 §3 reproduces exactly.
+- ★★★ **[MEASURED HERE — the run printed it] THE GATE EMITS THE AUTHORITY HASH IT GRADED AGAINST:** `sha256=9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d` — **the amended freeze, not the superseded `09e016fd…`.** **[MEASURED HERE, same output line] a result therefore cannot be silently graded against a stale authority — the hash is in the stdout of every run. This was not asked for.**
+- **The four gaps render as `[NOT ADJUDICATED]` under a banner AND inside the PASS line** (*"4 cell(s) explicitly NOT adjudicated"*). ★★ **R-484 §63's constraint is met by the only signal that survives a lazy reader: the last line.**
+- **[MEASURED HERE]** `ORACLE.json` first bytes `123 10 32` — **no BOM.** AR-494 §50's species is not resident in the shipped artifact.
+
+### ★★★★★ §2 — THE DISCRIMINATING HALF, RUN BY ME, IN ISOLATION
+
+★★★ **METHOD, AND IT IS THE REUSABLE PART: I copied the corpus to scratch and mutated THERE, pointing the production gate at it via its own `TF_SPEC_BINDING_SAMPLES_DIR`. [MEASURED HERE] the worker's tree stayed `git status --porcelain` EMPTY throughout. `TO RED-PROOF SOMEONE ELSE'S GATE, FEED IT YOUR OWN CORPUS — NEVER MUTATE THEIR TREE.`**
+**MUTATION: one adjudicated oracle expectation (`session_zone` `ny_am` → `london`). NEITHER LANE TOUCHED.** Positive control asserted before writing (`before > 0`, else abort); written UTF-8 **no-BOM** via Python, never `Out-File`.
+
+| | result |
+|---|---|
+| exit | ★★★★★ **`1`** |
+| violation | `expected="london" observed="ny_am"` — **in `ts` AND in `py`**, citing *"authority section 2 (ny_am = 180/1440, evaluable)"* |
+| summary | ★★★★★ **`CLAIM 1 AGREEMENT: PASS (lanes emit identical plans) · CLAIM 2 ORACLE CORRECTNESS: 4 violation(s) · MEMBERSHIP: PASS`** |
+| gate's own note **[MEASURED HERE — verbatim stdout of that exit-`1` run]** | *"the lanes AGREE and are BOTH WRONG against the frozen oracle… DO NOT edit the oracle to match the output."* |
+
+★★★★★ **THIS SETTLES THE QUESTION THE PACKET WAS BUILT AROUND [MEASURED HERE]: my mutation moved NEITHER implementation — the worker's tree stayed clean and only my scratch oracle changed — and the gate still went RED, so the oracle is not a mirror of either lane.**
+★★★ **AND THE TWO CLAIMS SEPARATE UNDER LOAD [MEASURED HERE, the summary line above]: `AGREEMENT: PASS` printed beside `CORRECTNESS: 4 violations`. Under the old single-number summary that state was literally unsayable.** ★★ The error line carries the `180/1440` probe reasoning inline, so a reader lands on the authority rather than a bare expectation.
+
+### §3 — CLAIMS VERIFIED · INVARIANTS
+
+`aed0c58d` **WIP**, tree clean, nothing merged, `runtime-production` and `tf-deep-scan` untouched, **no Python changed** [MEASURED HERE]. Orphan rows still assert `approximation=true` / `bindable=false` / `primitive=null` / zone-naming reason. **`compiled` on fixture `30` is `false` in BOTH lanes — matching the authority §4c arithmetic, so the repair LOWERED the `compiled` count, the pre-registered success direction.** ★★ **AR-494 §14 retains the superseded hash as `_authority_hash_history` rather than discarding it — correct, and it is how a future reader tells which freeze a past result was graded against.**
+
+### ★★★★★ §4 — THE QUEUE-REASON QUESTION, ANSWERED: **OPTION (iii), ADOPTED AND STRENGTHENED**
+
+**Asked at AR-492 §36 and again at AR-494 §60; my rulings had not disposed of it. That is a desk defect and this closes it.**
+**[MEASURED HERE, `runtime-production` @ `9af37b8f`, at the line]** `spec-family-bindings.ts:238` `triggerBinding.reason ?? "unbindable"` · `spec_family_bindings.py:789` `trigger_binding.reason` ⇒ `None`. **The `?? "unbindable"` fallback exists in TS and not in Python.**
+★★★★★ **NEITHER LANE CHANGES. (i) and (ii) are REFUSED, and not from caution — the DIRECTION IS UNRULED.** R-483 §72 ruled Python correct **on orphan-zone refusal**; **that ruling does not reach this field**, and the worker was right to refuse to extend it. **A fix here also edits a queue-reason payload whose downstream readers NOBODY HAS ENUMERATED `[UNENUMERATED — OPEN]`** — `A WRONG MECHANISM GETS OBEYED`, and mid-repair is the worst moment to arm one.
+★★★ **(iii) ADOPTED — as a TRIPWIRE ON THE PRECONDITION, not a green over today's fixtures.** `[MEASURED by the worker, AR-492 §34, and consistent with the branch I read above]` the divergence is reachable only when a binding has `bindable=false` **AND** `reason=null`, which today requires a `FAMILY_META` entry with `unsupported: true` and **no** `unboundReason`. **ASSERT THAT PRECONDITION IS EMPTY OVER `FAMILY_META` IN BOTH LANES — not that seven fixtures pass.**
+★★★★★ **AND IT OWES A DISCRIMINATES FIXTURE: plant such an entry in a test-local copy and SHOW THE TRIPWIRE FIRE. `A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK` — a tripwire over an already-empty condition is the easiest place in this codebase to ship a permanent green.**
+★★ **RATIFIED IN ADVANCE SO IT IS NEVER MISREAD AS A REGRESSION (AR-492 §35's own request): when someone later arms this, the new comparator will go RED. That is the repair working, not breaking.**
+★ **SCOPE: the tripwire lands with item 2. It is NOT a second concept — it asserts a precondition and changes no behaviour.**
+
+### ★★★★★ §5 — THE BOM CATCH IS THE MOST IMPORTANT THING IN AR-494, ABOVE THE GREEN
+
+**M3 and M4 first returned `EXIT=1` — the answer the worker wanted — with no matching output line. It did not bank it.** `[MEASURED by the worker]` the mutant files began `239,187,191`, a UTF-8 BOM from `Out-File -Encoding utf8`; the gate died on `SyntaxError`, so **both mutations were RED because the file would not parse.**
+★★★★★ **`A RED FOR THE WRONG REASON IS NOT A RED-PROOF — IT IS A GREEN WEARING RED.` Adopted verbatim as campaign law.**
+★★★★★ **AND THE ASYMMETRY IT NAMES INDICTS THIS DESK'S STANDING HABIT: we audit SURPRISING results. These were UNSURPRISING — the expected red — which is why they nearly passed unexamined.** ★★★ **`AN EXPECTED RESULT IS THE LEAST-AUDITED RESULT. A RED-PROOF MUST NAME *WHICH ASSERTION* FAILED, NEVER JUST THAT THE EXIT CODE MOVED.`**
+★★ **The known encoding-corrupted-instrument species in a NEW medium — a hand-built JSON fixture rather than a script. STANDING: Windows PowerShell 5.1 `Out-File -Encoding utf8` emits a BOM and may never author a file a parser will read. Use `[System.IO.File]::WriteAllText` with `UTF8Encoding($false)`, or write it from Python.**
+★ **AR-494 §15's `A HASH WITHOUT ITS RANGE IS NOT A FINGERPRINT` is adopted; AR-493's self-struck `15–161`/`15–159` mislabel is its receipt, and it is the `I MEASURED THE NEIGHBOURING OBJECT` species again.**
+
+### ★★★★★ §6 — AUTHORIZED NEXT ACTION — THE TASK STAYS AUTHORIZED TO THE SEAT
+
+★★★ **AR-494 §63 declares a handoff. ACKNOWLEDGED AS SELF-ASSESSMENT — NOT A TRANSFER OF AUTHORIZATION, and I am not converting it into my stop order.** The work stays authorized to the seat that holds it; if it is genuinely exhausted it stops and says so, which is its call. **Seating a fresh worker is the OPERATOR'S act — the advisor cannot create a seat — and I have told them plainly.** ★★ **DO NOT RECORD THIS SEAT AS GONE: AR-475 declared handoff and then filed NINE more reports. THE DISCRIMINATOR IS A START-RECEIPT, NEVER A DECLARATION.**
+
+**IN ORDER, ALL ALREADY CONTRACTED (parity packet §3 + R-483 §10 + R-484 §8):**
+1. ★★★★★ **CI + fast-lane wiring — FIRST. `EXISTENCE IS NOT WIRING`, and F-A is a MEASURED live defect: `package.json:28` defines the script and a grep across all three workflows returns ZERO.** **The proof is an OBSERVED NON-ZERO EXIT IN THE PIPELINE on a deliberately drifted corpus, then green on the real one — a `grep` hit is necessary and NOT sufficient** (packet §4.2; F-A was exactly a name that existed in one file and executed in none).
+2. **Exhaustive family × evaluable-zone × refused-zone membership fixtures** + **the §4 tripwire with its DISCRIMINATES fixture.** ★★★ **Your own sentence is the standard and I am holding you to it: `A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN CERTIFIES ITS FIXTURES, NOT ITS DOMAIN.`**
+3. Per-spec materiality receipt · **`tsc` typecheck on the comparator rewrite** (AR-494 §62 names it as not run — do it before the delivery commit).
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min naming the workflow files opened · item 1 pipeline evidence ~25 min. **HONEST-PARTIAL CLAUSE APPLIES.**
+★★ **`[UNENUMERATED — OPEN]`, not yours to close silently: the two `FAMILY_META` VALUE sets.**
+
+### §7 — GRADE · SCOPE · STOP CONDITION
+
+★★★★★ **THE GRADE IS HELD AND THE TRIGGER IS NOW PRECISE RATHER THAN "WHEN COMPLETE": dispatch ONE `accuracy-validator` once items 1 AND 2 have landed** — those two change *what the gate certifies*; items 3+ do not. **This is the pre-registration honoured, not an indefinite hold: grading now would grade a corpus about to be replaced, and `A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION` cuts both ways.** **Dispatched BY THIS DESK, working access recipe not prohibitions, honest null accepted, agent id named in the consuming ruling. THE BUILDER DOES NOT GRADE. `aed0c58d` is WIP and is not that commit.**
+**SCOPE UNCHANGED** (R-483 §10 / R-484 §8). **STILL FORBIDDEN:** Python acceptance of orphan zones · **any `approximation` logic change in either lane** · **any queue-reason payload change in either lane (§4)** · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · direct edits to `runtime-production` or `tf-deep-scan`.
+**STOP IF:** CI wiring is claimed on a `grep` hit without an observed pipeline exit · the tripwire ships without a fixture that makes it fire · the corpus shrinks to fit · `compiled` counts rise · CLAIM 1 and CLAIM 2 collapse into one number · a declared gap starts rendering like a checked row.
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`A RED FOR THE WRONG REASON IS NOT A RED-PROOF — IT IS A GREEN WEARING RED.`** (AR-494 §51, verbatim.)
+★★★★★ **`AN EXPECTED RESULT IS THE LEAST-AUDITED RESULT.`** We audit surprises; what gets through is the failure that looks like the answer we wanted.
+★★★ **`TO RED-PROOF SOMEONE ELSE'S GATE, FEED IT YOUR OWN CORPUS — NEVER MUTATE THEIR TREE.`** (mine, §2.)
+★★★ **`A GATE THAT PRINTS THE HASH OF THE AUTHORITY IT GRADED AGAINST CANNOT BE SILENTLY GRADED AGAINST A STALE ONE` [MEASURED HERE, §1] — not asked for; now the standard for every graded instrument here.**
+
+---
+
 ## R-484 · 2026-07-30 · ★★★★★ **AR-493's FINDING IS UPHELD AND THE DEFECT IS MINE, IN THE FROZEN AUTHORITY ITSELF. `approximation=true` ON THE TWO UNRECOGNISED-VOCABULARY ROWS HAD **NO DERIVATION** — I CITED P-6, AND P-6 SPEAKS ONLY TO BINDABILITY AND REASON-DISTINCTNESS. THE VALUE INHERITED ITS AUTHORITY FROM THE ADJACENT ORPHAN ROWS BY TABLE-SHAPE.** ★★★★★ **AND THE ANSWER IS NEITHER OF THE TWO OPTIONS OFFERED: THE ORACLE MUST ASSERT **NOTHING** THERE, NOT ASSERT `false`. ASSERTING `false` WOULD BE COPYING THE LANES.**
 
 ★ **WORKER — START HERE.** Your task is **§6**. **The §2 block is LIFTED — you are unblocked and no code change is authorized or needed.** Your two questions are both answered (§6, §7).
