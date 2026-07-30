@@ -43,6 +43,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
 import { compileBindingPlan, FAMILY_META } from "../src/server/lib/spec-family-bindings.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -477,6 +478,106 @@ function checkOracle(
   }
 }
 
+/** What the authority check COMPUTED — never what ORACLE.json asserted. */
+interface AuthorityProvenance {
+  path: string;
+  bytes: number;
+  /** SHA-256 this process computed over the bytes it actually read. */
+  computedSha256: string;
+}
+
+/**
+ * ─── STEP A (R-492 §5-A): AUTHORITY FRESHNESS, EXECUTABLE RATHER THAN DECORATIVE.
+ *
+ * ★★★ WHY THIS EXISTS, stated as the defect it replaces rather than as a feature:
+ *     until this function, the gate printed `sha256=${oracle.authority_sha256}` —
+ *     a value ORACLE.json ASSERTS ABOUT ITSELF, for a file that was not even in
+ *     this branch. R-485 §1 then read that stdout line and concluded a
+ *     verification had happened, and R-485 §8 minted the conclusion as a standard
+ *     for every graded instrument here. R-491 struck both.
+ *
+ *     `A LINE RENDERED IN THE GRAMMAR OF A VERIFICATION IS NOT A VERIFICATION.`
+ *
+ * ★★★ AND WHY IT FAILS CLOSED INSTEAD OF LABELLING: R-491 §4 offered
+ *     "print it labelled ASSERTED-NOT-VERIFIED" as an acceptable alternative.
+ *     R-492 §2 withdrew that and the withdrawal is right — a label makes the
+ *     weakness legible, it does not make the gate FAIL on staleness. A P0
+ *     ratification gate must fail closed, not annotate.
+ *
+ * ★★ ON THE COMMITTED COPY: `DO NOT COMMIT A SECOND COPY` (the classify.py law)
+ *    does not reach this case, per R-492 §2's discriminator — that hazard was a
+ *    duplicate with NOTHING VERIFYING THE TWO COPIES AGREE. A copy whose raw
+ *    bytes are hashed against a pin on EVERY RUN cannot silently drift; the check
+ *    IS the anti-drift mechanism.
+ *
+ * ★★ WHAT THIS DOES NOT CLOSE, named so no reader over-reads it: the check is
+ *    hermetic ABOUT ITS OWN TREE. It proves the committed copy matches the pin;
+ *    it CANNOT see the campaign original drifting away from both. That residual
+ *    is closed by R-492 §2's binding desk rule (amend the copy and the pin in the
+ *    same motion), not by anything in this file.
+ *
+ * Exits NON-ZERO on missing / unreadable / mismatched, BEFORE any plan compiles.
+ */
+function verifyAuthorityFreshnessOrExit(oracle: Oracle): AuthorityProvenance {
+  const declaredPath = oracle.authority_file;
+  const pinned = oracle.authority_sha256;
+
+  // ★ A pin that is absent or malformed is a FAILURE, not a skip. An authority
+  //   check that quietly does nothing when its input is missing is the same
+  //   false green in a new costume.
+  if (typeof declaredPath !== "string" || declaredPath.length === 0) {
+    console.error(
+      `AUTHORITY FAILURE: ORACLE.json declares no 'authority_file'. ` +
+        `An oracle that cannot name its authority cannot be verified against one.`,
+    );
+    process.exit(1);
+  }
+  if (typeof pinned !== "string" || !/^[0-9a-f]{64}$/.test(pinned)) {
+    console.error(
+      `AUTHORITY FAILURE: ORACLE.json's 'authority_sha256' is absent or not a 64-hex SHA-256: ${JSON.stringify(pinned)}. ` +
+        `Refusing to treat an unpinned oracle as verified.`,
+    );
+    process.exit(1);
+  }
+
+  const authorityPath = join(__dirname, "..", declaredPath);
+  let bytes: Buffer;
+  try {
+    bytes = readFileSync(authorityPath);
+  } catch (err) {
+    // MISSING and UNREADABLE are reported as one class deliberately: both mean
+    // "this process did not read the authority", and both must deny the run.
+    console.error(
+      `AUTHORITY FAILURE: cannot read the frozen authority this oracle is transcribed from.\n` +
+        `  declared by ORACLE.json : ${declaredPath}\n` +
+        `  resolved to             : ${authorityPath}\n` +
+        `  error                   : ${(err as Error).message}\n` +
+        `  ★ The oracle's every expected value is transcribed from this file. Unread, the corpus is\n` +
+        `    unverifiable provenance — NOT a pass with a caveat. Commit the authority into this branch.`,
+    );
+    process.exit(1);
+  }
+
+  const computedSha256 = createHash("sha256").update(bytes).digest("hex");
+  if (computedSha256 !== pinned) {
+    console.error(
+      `AUTHORITY FAILURE: the frozen authority does NOT match the hash ORACLE.json pins.\n` +
+        `  authority file : ${declaredPath}\n` +
+        `  bytes read     : ${bytes.length}\n` +
+        `  COMPUTED       : ${computedSha256}\n` +
+        `  PINNED         : ${pinned}\n` +
+        `  ★ One of two things is true and the gate cannot tell which, which is why it refuses BOTH:\n` +
+        `    the authority was amended and this corpus was never re-pointed at it (a STALE ORACLE — every\n` +
+        `    expected value below may transcribe a superseded ruling), or the committed copy has drifted.\n` +
+        `    ★ DO NOT edit the pin to match the file. Re-derive the expectations from the amended authority,\n` +
+        `      THEN re-pin. Editing the pin to silence this is HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM.`,
+    );
+    process.exit(1);
+  }
+
+  return { path: declaredPath, bytes: bytes.length, computedSha256 };
+}
+
 function main() {
   if (!existsSync(SAMPLES_DIR)) {
     throw new Error(`Binding-plan parity corpus does not exist: ${SAMPLES_DIR}`);
@@ -489,6 +590,11 @@ function main() {
     );
   }
   const oracle = JSON.parse(readFileSync(oraclePath, "utf-8")) as Oracle;
+
+  // ★★★ FIRST, BEFORE A SINGLE PLAN IS COMPILED. Placed here on purpose: a
+  //     result graded against a stale authority is not a weaker result, it is an
+  //     UNINTERPRETABLE one, and producing it at all invites someone to read it.
+  const authority = verifyAuthorityFreshnessOrExit(oracle);
 
   const files = readdirSync(SAMPLES_DIR).filter((f) => f.endsWith(".spec.json"));
   if (files.length === 0) {
@@ -612,7 +718,16 @@ function main() {
   }
 
   console.log(`Checked ${checked} sample specs against ${oracle.required_members.length} declared members.`);
-  console.log(`Oracle authority: ${oracle.authority_file} sha256=${oracle.authority_sha256}`);
+  // ★★★ THIS LINE NOW REPORTS WHAT THIS PROCESS COMPUTED, NOT WHAT ORACLE.json
+  //     CLAIMED. The previous form printed `oracle.authority_sha256` — a field the
+  //     file asserts about itself — and a desk reading it concluded a verification
+  //     had occurred. The word VERIFIED is only legible here because
+  //     verifyAuthorityFreshnessOrExit() already exited non-zero on any mismatch;
+  //     if you ever weaken that function, delete this word in the same edit.
+  console.log(
+    `Oracle authority: ${authority.path} — ${authority.bytes} bytes read, ` +
+      `sha256=${authority.computedSha256} (COMPUTED here, VERIFIED equal to ORACLE.json's pin)`,
+  );
 
   // ─── NO SILENT CAPS. Every declared coverage gap is PRINTED on a passing run,
   // not only on failure — a green line that hides what it did not check is the

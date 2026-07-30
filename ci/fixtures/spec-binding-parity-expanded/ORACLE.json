@@ -19,10 +19,12 @@
     "does not freeze a literal string the desk never derived."
   ],
   "authority_file": "docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md",
-  "authority_sha256": "9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d",
+  "authority_sha256": "3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2",
   "_authority_hash_history": [
     "09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086 (10,600 B) — R-483 §12 original freeze. SUPERSEDED by R-484's preserve-and-strike amendment after AR-493's first oracle run went RED against BOTH lanes and exposed that the approximation=true cells on the two unrecognised-vocabulary rows had no derivation.",
-    "9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d (13,525 B) — CURRENT, commit 35bce585, verified from the committed tree (not a working-tree read)."
+    "9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d (13,525 B) — R-484 amendment. SUPERSEDED by R-491, which added P-7 and section 4d to close the two-lane over-refusal blindness AR-499 §2 measured. This pin was left STALE for roughly an hour while the gate printed it as if verified; AR-501 caught it by hand and R-492 ordered the executable check that now catches it by machine.",
+    "3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2 (16,314 B) — CURRENT, R-491 amendment. ★★★ THIS PIN IS NO LONGER MAINTAINED BY TRUST: check-spec-binding-plan-parity.ts opens the authority, computes SHA-256 over the bytes it read, and exits NON-ZERO before compiling any plan if it differs. `A PIN MAINTAINED BY HAND GOES STALE AT THE SPEED OF THE THING IT PINS` (R-492 §8) — this one is now maintained by a comparison. Three hand-corrections in one night is what bought that lesson.",
+    "★★ RESIDUAL, NAMED RATHER THAN IMPLIED (R-492 §2): the check is hermetic ABOUT THIS TREE. It proves the committed copy at authority_file matches this pin; it CANNOT see the campaign original drifting away from both. Binding on the desk: any future amendment re-encodes the parity copy AND this pin in the SAME motion, or declares the gate's green VOID until it does."
   ],
 
   "required_members": [
@@ -335,12 +337,11 @@
     },
 
     "40-overrefusal-boundary.spec.json": {
-      "authority": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4, P-5; counts by section 4b; compiled by section 4c (1/2 = 0.500 >= 0.5, the row-10 arithmetic)",
-      "_note": "AXIS 3 — THE OVER-REFUSAL BOUNDARY (R-490 §3-1, ordered FIRST; the caption at spec-family-bindings.ts:258-260 promised these fixtures and R-490 §2 measured that ZERO existed). THE THREE confluence ROWS ARE THE PROBE: refused-zone keywords on NON-session families, which must bind NORMALLY. THE sess ROW IS THE POSITIVE CONTROL, carrying the SAME 'during lunch' text on WAIT_SESSION and refused. Both live in ONE fixture so the discrimination is adjacent: 'refuses the right thing' vs 'refuses anything mentioning lunch'. ★ WHAT THIS FIXTURE CANNOT DO, STATED HERE SO NO READER OVERCLAIMS IT: authority §6 does not adjudicate non-session families, so the probe rows carry NO correctness expectation. It therefore catches an over-refusal that appears in ONE lane (via CLAIM 1 drift) but is BLIND to an over-refusal appearing IDENTICALLY IN BOTH — the two-identically-wrong-lanes case. Closing that needs a DESK adjudication of the boundary, which is a desk request and not a builder decision (R-490 §5).",
+      "authority": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4, P-5, and P-7 / section 4d for the three probe rows; counts by section 4b; compiled by section 4c (1/2 = 0.500 >= 0.5, the row-10 arithmetic)",
+      "_note": "AXIS 3 — THE OVER-REFUSAL BOUNDARY (R-490 §3-1, ordered FIRST; the caption at spec-family-bindings.ts:258-260 promised these fixtures and R-490 §2 measured that ZERO existed). THE THREE confluence ROWS ARE THE PROBE: refused-zone keywords on NON-session families, which must bind NORMALLY. THE sess ROW IS THE POSITIVE CONTROL, carrying the SAME 'during lunch' text on WAIT_SESSION and refused. Both live in ONE fixture so the discrimination is adjacent: 'refuses the right thing' vs 'refuses anything mentioning lunch'. ★★★★★ UPDATED BY R-491/R-492 — THE BLINDNESS THIS NOTE USED TO DECLARE IS CLOSED. This block previously read: 'authority §6 does not adjudicate non-session families, so the probe rows carry NO correctness expectation … BLIND to an over-refusal appearing IDENTICALLY IN BOTH'. That was true when AR-499 built the fixture and it is NO LONGER TRUE: R-491 added P-7 and section 4d, which adjudicate `bindable` and `reason` on exactly these rows, and section 4d says so in the authority's own words — 'an over-refusal that changes such a condition's bindable or reason IS A DEFECT EVEN IF BOTH LANES DO IT IDENTICALLY. Agreement is not a defence here.' The two-identically-wrong-lanes case on this boundary is now a CLAIM 2 failure, not an invisible one. ★★ STILL NOT CLAIMED, so the note does not over-correct: `primitive`, `session_zone` and `approximation` on the probe rows remain DECLARED GAPS per 4d, and the fixture still proves nothing about the other 10 non-session families — that is axis 3's remaining work (R-492 §5-C).",
       "spine_total": 2,
       "spine_bound": 1,
       "compiled": true,
-      "conditions_unadjudicated": "3 of 5 conditions — filter_lunch (FILTER), bias_overnight (WAIT_BIAS), retest_midday (WAIT_RETEST). Authority §6 adjudicates SESSION-family rows only, so their field values carry NO expectation. Their PRESENCE in the plan IS asserted (a missing row fails) and AGREEMENT between the lanes is fully enforced; CORRECTNESS is not claimed.",
       "conditions": {
         "sess": {
           "authority": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 — the refusal that MUST happen",
@@ -360,21 +361,33 @@
           "reason_null": true
         },
         "filter_lunch": {
-          "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
+          "authority": "authority section 4d + P-7 (added R-491) — OVER-REFUSAL BOUNDARY. FILTER does not require a session keyword, so it never consults the zone tables and its bindability is INDEPENDENT of which zones are evaluable — even though its object text contains `lunch`. Section 4d adjudicates `bindable` and `reason` ONLY.",
+          "bindable": true,
+          "reason_null": true,
           "unadjudicated": {
-            "bindable": "NO EXPECTATION. FILTER is a non-session family and authority §6 adjudicates session-family rows only. The over-refusal hazard this row probes is REAL (a generic-dispatch refusal would flip it to false) but asserting `true` here would be MY value, not the desk's — and asserting the implementation's value and asserting nothing are different acts. AGREEMENT is enforced; correctness is a DESK REQUEST (R-490 §5)."
+            "primitive": "NO EXPECTATION — section 4d, explicitly. The `primitive` string of a non-session family is a FAMILY_META value, i.e. implementation on the parity surface, so adjudicating it would read the expectation out of the code under test. `ADJUDICATE THE PROPERTY YOU CAN DERIVE, NOT THE ROW IT SITS IN.`",
+            "session_zone": "NO EXPECTATION — section 4d's `everything else` clause. P-7 derives bindability and reason from what a session predicate MEANS; it derives no session_zone value for a family that never consults one.",
+            "approximation": "NO EXPECTATION — section 4d's `everything else` clause. P-7 speaks to whether the refusal may REACH this row, not to how the plan later summarises it."
           }
         },
         "bias_overnight": {
-          "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
+          "authority": "authority section 4d + P-7 (added R-491) — OVER-REFUSAL BOUNDARY. WAIT_BIAS carrying the `overnight` refused-zone phrase; probes the SECOND refused zone rather than repeating the first.",
+          "bindable": true,
+          "reason_null": true,
           "unadjudicated": {
-            "bindable": "NO EXPECTATION. WAIT_BIAS carrying the `overnight` refused-zone phrase. Same §6 limit as filter_lunch — probes the second refused zone rather than repeating the first."
+            "primitive": "NO EXPECTATION — section 4d. FAMILY_META-sourced; see filter_lunch.",
+            "session_zone": "NO EXPECTATION — section 4d's `everything else` clause.",
+            "approximation": "NO EXPECTATION — section 4d's `everything else` clause."
           }
         },
         "retest_midday": {
-          "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
+          "authority": "authority section 4d + P-7 (added R-491) — OVER-REFUSAL BOUNDARY. WAIT_RETEST carrying `midday`, a DIFFERENT lunch_blackout phrase from the sess row's `during lunch`, so a phrase-specific leak cannot hide behind the one keyword.",
+          "bindable": true,
+          "reason_null": true,
           "unadjudicated": {
-            "bindable": "NO EXPECTATION. WAIT_RETEST carrying `midday` — a DIFFERENT lunch_blackout phrase from the sess row's `during lunch`, so a phrase-specific leak cannot hide behind the one keyword. Same §6 limit."
+            "primitive": "NO EXPECTATION — section 4d. FAMILY_META-sourced; see filter_lunch.",
+            "session_zone": "NO EXPECTATION — section 4d's `everything else` clause.",
+            "approximation": "NO EXPECTATION — section 4d's `everything else` clause."
           }
         }
       }
