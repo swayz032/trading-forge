@@ -37,10 +37,11 @@
 > never contracts.** ★★★ Verify the PAYLOAD of each v3 upgrade, not its tag: a
 > tag-presence check is what missed the dropped fourth attribution bin.
 
-## ★★★★★ SEAT — CURRENT AS OF R-470. **READ LINES 1–130 AND YOU CAN ACT. EVERYTHING BELOW :130 IS HISTORY + THE CANONICAL CONTRACT BLOCKS.**
-**Ledger `R-470`** (commit `be294625`). **Newest AR `AR-466` — a START-RECEIPT on R-470, nothing to rule.**
-**Worker: ACTIVE**, AR-465/466's seat, on R-470 §2 (7 guard fixtures) + §3 (bridge-key doc). Ownership NOT in question — it took the repair unprompted.
-★★★★★ **MY ONE OWED ACTION, AND ITS TRIGGER: DISPATCH THE SECOND `accuracy-validator` WHEN THE NARROW-REPAIR COMMIT LANDS — **NOT** against `4449764e`, which carries two known-open false-greens. The dispatch is MINE. Name the agent id in the ruling that consumes it. FIRST GRADE ALREADY DONE: agent `a5a70a93c66262a61`, `SOUND-WITH-GAPS`.**
+## ★★★★★ SEAT — CURRENT AS OF R-471. **READ LINES 1–130 AND YOU CAN ACT. EVERYTHING BELOW :130 IS HISTORY + THE CANONICAL CONTRACT BLOCKS.**
+**Ledger `R-471`** (commit `c1196648`). **Newest AR `AR-467` — RULED: APPROVAL DENIED on `d27e7a79`.**
+**Worker: ACTIVE**, AR-467's seat, on R-471 §4 (binding analysis + composed fixtures) and §3's instrument-header correction. Repair authorized IMMEDIATELY under the existing ratify packet — no operator wait. Ownership NOT in question; it has taken every repair unprompted.
+★★★★★ **MY ONE OWED ACTION: DISPATCH A FRESH `accuracy-validator` WHEN THE REPAIRED COMMIT LANDS. ★★★ EXACTLY ONE GRADE EXISTS — agent `a5a70a93c66262a61`, `SOUND-WITH-GAPS`, run against the **PRE-REPAIR** bundle. IT CERTIFIES NEITHER THE REBUILD NOR THE REPAIR. I DECLINED to dispatch against `4449764e` AND against `d27e7a79`, both times because the artifact was about to change.**
+★★★★★ **THREE PHANTOM-DISPATCH CLAIMS HAVE ENTERED THIS CHANNEL TODAY AND ALL THREE WERE CAUGHT BY CHECKING, NEVER BY REMEMBERING: R-460 refuted an external "already-dispatched" claim · R-470 §0 disclosed my own announced-but-unmade dispatch · R-471 §0 struck an external "the grade already dispatched against `d27e7a79`" — no such grade. **BEFORE ANY RULING SAYS A GRADE WAS OBTAINED, NAME THE AGENT ID. `TaskList` IS NOT THAT CHECK — it does not track monitors and its agent coverage is `[UNVERIFIED]`.**
 ★★★★★ **STANDING OPERATOR ORDER, RESTATED TO THIS SEAT 2026-07-29: THE EXTERNAL (GPT) READ ARRIVES BEFORE EVERY RULING. `THE PASTE IS THE GATE.` Measure and relay freely; JUDGE nothing. A state-file write that would change what the next seat DOES is a ruling wherever you write it.**
 ★★★ **`advisor-ruling` MUST BE INVOKED BEFORE **EVERY** RULING — the sentinel is consumed per write, not per session. It blocked me once tonight and it was right.**
 
@@ -61,13 +62,20 @@
 - **`(video, condition_id)` on the CENSUS payload: INADMISSIBLE** — [MEASURED] `{3: 456}`, fuses the `_mcl_/_mes_/_mnq_` triple, and `1368/3 = 456` is the expected number so the table BALANCES while merging three copies
 ★★★★★ **`A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY.` R-467 permitted `(video, condition_id)` universally (too loose); R-468/469 forbade it universally (too strict — it is the RIGHT key for classified→spec). Both wrong the same way. **NEVER NAME A JOIN KEY WITHOUT THE ARTIFACT IT IS ADMISSIBLE ON.**
 
-## ★★★★★ THE FALSE-POSITIVE LANE (operator-ordered: *"fix false positive problem too"*) — 1 OF 3 CLOSED
-**`docs/replay-results/h1-battery/absence_claim_control.py`** — **MAY NOT LICENSE ANY ABSENCE CLAIM YET.**
-- **(i) CLOSED** — any `await import`/`require` counted for any requested capability. Invented name → was `14/130 matched`, `CONTROL HIT`, exit `0`; now exits `2`.
-- **(ii) OPEN** — computed member access `fs[("write"+"File"+"Sync")]`: [MEASURED HERE vs the REPAIRED guard] control HIT, real capability MISSED, **exit 0**, "absence ADMISSIBLE".
-- **(iii) OPEN, AND IT IS THE ROOT** — `CAPABILITY_FORMS` still leads with `r"\b{name}\b"`, bare textual occurrence. [MEASURED HERE] the guard's OWN Python source as the control for `writeFileSync` — a file that cannot import a Node `fs` API in principle, mentioning the name only in a docstring and its own fixture list — returns `CONTROL HIT (4 matches)`, exit `0`. **THE POSITIVE-CONTROL MECHANISM IS SATISFIABLE BY A COMMENT.**
-★★★★★ **(i) AND (ii) PULL IN OPPOSITE DIRECTIONS: binding patterns to the requested literal name is the correct fix for (i) and is exactly what makes (ii) undetectable. A literal-text search CANNOT decide capability absence. This needs syntax-awareness or a narrowed CLAIM ("absence of the literal form over this surface"), not more regexes.**
-★★★ **`A GUARD INHERITS EVERY WEAKNESS OF THE METHOD IT AUTOMATES` — we automated the grep that caused the problem and made it authoritative. Before shipping a guard, ask what its POSITIVE CONTROL can be satisfied by.**
+## ★★★★★ THE FALSE-POSITIVE LANE (operator-ordered: *"fix false positive problem too"*) — R-471, APPROVAL DENIED, REPAIR IN FLIGHT
+**`docs/replay-results/h1-battery/absence_claim_control.py`** — ★★★★★ **MAY NOT LICENSE ANY ABSENCE CLAIM. Every claim currently citing it is `[UNSUPPORTED]`.**
+★★★★★ **THE ROOT, NAMED: IT PROVES BINDING **PRESENCE**, NOT **ENGAGEMENT**. `:151` matches imports against RAW text so a COMMENT supplies module provenance; `:184` finds an identifier in STRIPPED code and supplies "usage". It ANDs two facts computed over two different texts, which were never about the same binding. **ITS `syntax-aware` SELF-DESCRIPTION IS FALSE and must be withdrawn until earned.**
+| defect | status | evidence |
+|---|---|---|
+| any `await import`/`require` counted for any capability | **CLOSED** | invented name was `14/130 CONTROL HIT` exit `0`; now exits `2` |
+| **COMPOSED: comment-only import + unrelated LOCAL function** | ★★★★★ **OPEN** | **[MEASURED HERE] `1 ENGAGED` · *"destructured from 'fs' and referenced in code"* · ADMISSIBLE · exit `0`. THE VERDICT STRING IS FALSE — THERE IS NO IMPORT.** |
+| **UNUSED IMPORT, never referenced** | ★★★★★ **OPEN** | **[MEASURED HERE] `1 ENGAGED`, exit `0` — it sees the identifier INSIDE the import declaration** |
+| `(ns as any)[computed]` (idiomatic TS cast) | **OPEN** | [MEASURED HERE] `0 ENGAGED, 0 UNDECIDABLE` — invisible. Bare `fs[m]` IS caught (`1 UNDECIDABLE`), so the machinery works and the MATCHER is too narrow |
+| template-interpolated call `` `${fs.writeFileSync(…)}` `` | OPEN | [RELAYED, not re-derived] exit `2` NOT ENGAGED — the stripper deletes `${…}` with the template text |
+| `--module node:fs` vs `from "fs"` | OPEN | [RELAYED] exit `2`; `norm_module()` is display-only, not used for MATCHING |
+★★★★★ **THE LAW THIS MINTED (R-471): `ISOLATED FIXTURES DO NOT ESTABLISH CLOSURE UNDER COMPOSITION.` Nine fixtures each genuinely PASS, and pairing two of the negative cases (comment-only + local function) GREENS. A suite of singletons proves each singleton and nothing about their conjunction. **≥2 COMPOSED fixtures are now required for any guard that ANDs two signals.**
+★★★★★ **AND: `PROVING PRESENCE IS NOT PROVING USE` — any "is X used" check must EXCLUDE the site that DECLARES X.** ★★★ **AND: `A GUARD INHERITS EVERY WEAKNESS OF THE METHOD IT AUTOMATES` — we automated the grep that caused the problem and made it authoritative. Ask what its POSITIVE CONTROL can be satisfied by.**
+★★★ **ARTIFACT DRIFT STILL OPEN, AND IT IS ON MY ORDER NOT THE WORKER'S EXECUTION: [MEASURED HERE] `c8_provenance_ledger.py:9` documents `condition_id` ALONE as the refusal→spec key, and `:12` still carries my WITHDRAWN *"display label only"* rule. R-470 §5 named the LEDGER DOC; the INSTRUMENT HEADER is a THIRD carrier I failed to name. **WHEN A RULE IS WITHDRAWN, ENUMERATE EVERY CARRIER.**
 
 ## ★★★★★ THIS SEAT'S OWN ERROR CENSUS — SIX, PUBLISHED SO THE PATTERN IS COUNTABLE
 1. R-467 §2 licensed the 3-way-degenerate census key. 2. R-467 §2's occurrence-ordinal defeater INERT (`{0: 455}`, never increments). 3. **Corroborated AR-461's write-surface grep on AR-461's wrong file and told the operator it confirmed** — corroboration by re-running someone else's query is NOT independence; it gave a false finding two witnesses. 4. `evidence present: 232/232` was a NULL CHECK read as content (true count: byte-exact `0/232`). 5. **Grepped `WAIT_SESSION` on the census-lane copy and published a false refutation of the campaign's leading hypothesis — inside the ruling that convicted AR-461 for that same error, one paragraph after minting the law against it.** 6. Over-corrected #1 into a blanket prohibition that forbade the correct key.
