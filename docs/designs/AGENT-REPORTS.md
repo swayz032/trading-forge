@@ -4,6 +4,73 @@
 
 ---
 
+## AR-493 · 2026-07-30 · ★★★★★ **THE ORACLE EARNED ITS KEEP ON ITS FIRST RUN AND IT CONVICTS *BOTH* LANES. AGREEMENT IS FULLY GREEN — TS NOW EMITS PYTHON'S EXACT PLAN — AND CORRECTNESS IS RED ON 4 CONDITIONS × 2 LANES, IDENTICALLY. ★★★★★ YOUR §4a SAYS `approximation=true` FOR UNRECOGNIZED-VOCABULARY ROWS; BOTH IMPLEMENTATIONS EMIT `false`. I AM NOT TOUCHING EITHER — IT IS A FINDING AND IT IS YOURS TO ADJUDICATE.**
+
+**RULING ID:** R-483 (+ §12) · **TASK ID:** AR-493 · **PRIOR:** AR-492 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`926fe9a1`**, branch `hardening/ledger-e-parity-20260730`, base pin `9af37b8f` · **`926fe9a1` IS LABELLED `WIP — NOT A DELIVERY`. The gate is RED. Nothing is merged anywhere.**
+
+### §1 — THREE-POINT GUARD, WITH A RECONCILIATION (R-483 §3(d) fired for real)
+
+| point | result |
+|---|---|
+| (a) START, AR-492 | R-483 block lines `15–115` · `15,471` B · `e6522ae9…0505657` · commit `a5c9ee8a` |
+| ★★★★★ **(d) CHANGE DETECTED** | **the ruling MOVED under me: commit `393bc6ad` (`01:25:52`) appended §12.** Block is now lines `15–161` · **`19,076` B · `5f3e29794632ad7687301b032c1436a6a258970bbb633c99b0df2b24d1dd1e54`** |
+| **RECONCILED, not just re-hashed** | §12 **DISCHARGES §9 and LIFTS the §8-1 oracle hold.** I read §12 and the frozen authority in full **before** writing a single oracle row. **The change was material and it was in my favour; I did not treat a hash mismatch as noise.** |
+| (b) PRE-COMMIT / (c) POST-COMMIT | `5f3e2979…` — **both equal**, no uncommitted edit on the ruling path |
+★★★★★ **AND THE `worker-execution` PRE-WRITE HOOK CAUGHT THIS BEFORE MY GUARD DID.** It blocked my TS write with *"a NEW RULING has landed"* — **at the exact moment §12 landed, one write into the code.** ★★★ **I did not route around it: I audited it (was it a real ruling or a broken instrument?), found `393bc6ad`, read it, and only then re-loaded. Had I bypassed it I would have authored the oracle from `FAMILY_META` while the real authority sat unread on disk.** **That hook is load-bearing and it should stay.**
+
+### ★★★★★ §2 — THE FINDING. BOTH LANES DISAGREE WITH THE FROZEN AUTHORITY, IN THE SAME DIRECTION.
+
+**AUTHORITY, verified by me not relayed: `ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md` = `10,600` B, sha256 `09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086` — exact match to §12's claim.**
+**§4a, the two unrecognized-vocabulary rows, quoted from the file:**
+- `` | `21-fivemin-chart` | `five-minute chart` | **false** | **null** | **null** | **true** | ... | P-6 | ``
+- `` | `30` / `31` | `regional window` | **false** | **null** | **null** | **true** | ... | P-6 | ``
+★★★★★ **THE `approximation` COLUMN IS `true` IN BOTH. BOTH LANES EMIT `false`.** `[MEASURED HERE]` — 8 violations, `4` conditions × `2` lanes:
+| fixture · condition | object | oracle `approximation` | ts | py |
+|---|---|---|---|---|
+| `21-fivemin-chart` · `sess` | `five-minute chart` | **true** | `false` | `false` |
+| `30-compiled-flip` · `third` | `regional window` | **true** | `false` | `false` |
+| `31-flip-neg-control` · `third` | `regional window` | **true** | `false` | `false` |
+| `00-control-shipped` · `unknown-session` | `regional window` | **true** | `false` | `false` |
+**THE CODE PATH: the `no_recognized_session_keyword` branch — `spec_family_bindings.py:605-616` and `spec-family-bindings.ts`'s mirror — sets `approximation=False`. Only the ORPHAN branch sets `True`.**
+★★★★★ **AND THE AUTHORITY IS INTERNALLY CONSISTENT, WHICH IS WHY I AM NOT DISMISSING IT AS A TYPO. P-3 says `approximation` reports whether compiled behaviour departs from taught behaviour, and *a refused predicate IS a departure*. An unrecognized session phrase is ALSO not evaluated on any bar — so P-3 applied consistently gives `true` for BOTH refusal kinds, and the code gives `true` for only one.** ★★★ **Either P-3's scope is narrower than its wording, or both lanes under-report `approximation` on unrecognized vocabulary. I cannot tell which from the file, and guessing is what §5-3 forbids.**
+★★ **WHY IT IS PROBABLY LOW-RISK TO CHANGE, offered as analysis and NOT as permission:** `approximation_used` aggregates over `bindable && executed`, and these rows are neither — **so flipping them is inert for that aggregate**, the same argument Python's own `:586-587` comment makes for the orphan row. **But `approximation` is an EMITTED per-binding field and I have NOT enumerated its downstream readers, so "inert" is a claim about one aggregate, not about the system.**
+★★★★★ **I HAVE NOT EDITED THE AUTHORITY, NOT EDITED THE ORACLE, AND NOT TOUCHED EITHER LANE'S `approximation` LOGIC.** Per §5-3 and my own AR-491 §52 pre-commitment. **ASK: (i) narrow P-3 so unrecognized vocabulary stays `false` and amend §4a preserve-and-strike, or (ii) rule that both lanes under-report and authorize the change in both — which is a `spec_family_bindings.py` edit and therefore needs your explicit word per R-481 §100.** **This is the only thing blocking a green gate.**
+
+### ★★★ §3 — AND I NEARLY COMMITTED THE EXACT LEAK YOUR §5 EXISTS TO PREVENT
+
+**My first draft of `ORACLE.json` wrote `approximation: false` on all four rows.** ★★★★★ **NOT from the authority — from the CODE I had been reading for the previous twenty minutes. I had the authority open and still transcribed the implementation.** I caught it re-reading §4a column-by-column **before** the first run, corrected all four rows, then verified both cells with `sed -n '104p;106p'`.
+★★★★★ **THE MECHANISM, because it is subtler than "don't copy the code": I was not copying output — I was copying my own MENTAL MODEL of the code, which felt like knowledge rather than like a lane. `A THIRD MIRROR DOES NOT ARRIVE BY COPY-PASTE; IT ARRIVES AS THE THING YOU ALREADY BELIEVE.`** ★★ **Had I not caught it, all 7 fixtures would have gone GREEN, I would have reported the repair closed, and the oracle would have certified the code against itself while carrying your authority's hash in its header — a false green with a provenance receipt stapled to it.**
+
+### §4 — WHAT IS PROVEN (commands + results, all `[MEASURED HERE]`)
+
+**CLAIM 1 — AGREEMENT: PASS.** `Checked 7 sample specs against 7 declared members.` · **zero DRIFT lines** · the three previously-RED fixtures (`10`, `11`, `30`) now agree. **The TS repair works.**
+**CLAIM 2 — CORRECTNESS: 8 violations** (§2). **MEMBERSHIP: PASS.**
+**RED-PROOFS — every one went RED, and the control is separately accounted for:**
+| mutation | result |
+|---|---|
+| **`reason`-only, TS lane** (the **F-G proof**) | **RED — 6 drifts**, incl. `plan.queue_reasons[0].reason`. ★★★★★ **The OLD gate would have printed GREEN: it compared 5 of 10 fields and never emitted `queue_reasons` at all** |
+| field **ADDED** to one lane | **RED** — `plan.bindings[i].mutant_extra_field: PRESENT in ts, ABSENT in py` · **a new field is a new drift by default** |
+| field **DELETED** from one lane | **RED** — `session_zone: ABSENT in ts, PRESENT in py`, exit `1` |
+| **required member absent** | **RED** — `MEMBERSHIP: required corpus member ABSENT: 31-flip-neg-control.spec.json — the claim is DENIED, not re-scoped to the survivors` |
+| **undeclared member present** | **RED** — smuggled fixture named, **plus** `NO ORACLE ROW` in both lanes |
+| **oracle vs both lanes** | **RED — this is §2**, and it is the `two identically-wrong lanes` case demonstrated on live data rather than argued |
+★★ **RESIDUE CHECK after reverting every mutation: `0` hits for `MUTANT|mutant_extra_field`, with a POSITIVE CONTROL (`session_zone_refused_uncomputable_window` → `1`) proving the grep reached the file.** ★ **An empty grep over a wrong path is not an absence.**
+★★ **INSTRUMENT NOTE, so it is not read as a result: one run printed `EXIT=-1`. That is a PowerShell pipeline-truncation artifact from `Select-Object -First`, NOT the gate's exit code. I re-ran capturing `$LASTEXITCODE` before filtering. `A PIPED EXIT CODE HAS LIED TO THIS DESK BEFORE.`**
+
+### ★★★★★ §5 — TWO DEFECTS IN MY OWN GATE, FOUND BY RED-PROOFING IT RATHER THAN BY READING IT
+
+1. **MEMBERSHIP FAILURES WERE COUNTED BUT NEVER PRINTED.** Deleting a fixture produced `FAIL: 4` while naming only **3** causes — the membership failure was in the total and in no log line. ★★★ **A gate whose failure the reader cannot see is a gate that fails silently in the one direction that matters. `A COUNTED FAILURE THAT IS NOT NAMED IS HALF A GREEN.`** **FIXED and re-proven RED with the member named.**
+2. **THE CAPTION DID NOT MATCH THE COUNT.** The summary read `FAIL: N condition(s) failed` while `N` counted **fixtures-with-violations**. **`A CAPTION IS A CLAIM` — fourth instance of that shape in this campaign's last 24 hours, and this one was mine and in a NUMBER rather than in prose.** **FIXED:** the count is now per-violation and the summary **reports the two claims separately** — `CLAIM 1 AGREEMENT: PASS · CLAIM 2 ORACLE CORRECTNESS: 8 violation(s) · MEMBERSHIP: PASS` — because *"the lanes disagree"* and *"the lanes agree and are both wrong"* are different findings and one number cannot say which.
+★★ **AND A DELIBERATE ANTI-SILENT-CAP: declared oracle coverage gaps PRINT ON A PASSING RUN, not only on failure.** `00-control-shipped` shows *"plan-level NOT oracle-checked"* + *"13 of 15 conditions NOT oracle-checked"* with your §6 as the reason, and an omitted expectation **without** a declared reason is itself a FAILURE. ★★★ **Your §6 says the membership manifest is wider than the oracle and the packet must say so — I made the GATE say it too, on every run, so a green line can never imply coverage it does not have.**
+
+### §6 — POSITION · NOT DONE · THE ONE DECISION I NEED
+
+**`926fe9a1`, labelled WIP, gate RED, nothing merged.** ★★ **I committed rather than holding it in the working tree, for the reason in AR-492 §6 — and I flag again that if you read §93 as forbidding even a labelled WIP on an isolated branch, say so and I will stop doing it; it is cheap now and an un-rewindable history edit later.**
+**NOT DONE, explicitly, so this cannot read as complete:** CI + fast-lane wiring · **exhaustive family × zone membership fixtures** (corpus is still the 7 baseline members; the packet's (c) wants every family × every evaluable zone × every refused zone) · oracle-expectation mutation on an otherwise-GREEN fixture · per-spec materiality receipt · the AR-492 §4 latent queue-reason tripwire · **the two `FAMILY_META` VALUE sets remain `[UNENUMERATED]`** (your §66 — I did not close it and I am not claiming it).
+★★★★★ **BLOCKING ON YOU: the §2 adjudication. Everything else on my list I can do without you, and none of it can turn the gate green while §2 stands.** **No sub-agent is dispatched or owed. `accuracy-validator` is NOT called — the builder does not grade, and per your §106 no dispatch until a complete implementation commit exists, which `926fe9a1` is not.**
+
+---
+
 ## AR-492 · 2026-07-30 · **R-483 §8-2 DELIVERED: THE CIRCULAR `:173` WORDING IS STRUCK AND THE PER-ROW CITATION REQUIREMENT IS IN THE PACKET. ★★★★★ AND I WAS ONE FILE-WRITE FROM SHIPPING THE THIRD MIRROR — MY NEXT ACTION WHEN R-483 LANDED WAS TRANSCRIBING `FAMILY_META` INTO ORACLE ROWS. ★★★★★ AND ONE FINDING FROM READING BOTH LANES THAT NOBODY HAS REPORTED: A LATENT QUEUE-REASON DIVERGENCE, UNREACHABLE TODAY, ARMED BY ANY FUTURE `FAMILY_META` ENTRY.**
 
 **RULING ID:** R-483 (§8-2 = first observable; §8-1 oracle held; §8-3 guard) · **TASK ID:** AR-492 · **PRIOR:** AR-491 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ `03422cc9`, **still clean — no code committed, per §93 atomicity.**
