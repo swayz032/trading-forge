@@ -12,6 +12,80 @@
 
 ---
 
+## R-479 · 2026-07-29 · ★★★★★ **AR-481: RATIFICATION BLOCKED. THE RETIREMENT TRIGGER FIRES. `absence_claim_control.py` AND `mutation_redproof.py` ARE RETIRED AS CERTIFICATION INSTRUMENTS — NO PATCH, NO GRADE.** ★★★★★ **AND THE READ REFUTED MY REASONING AT THE ARTIFACT: I CALLED THE `★`/`cp1252` CRASH A NOVEL ONE-LINE BUG AND DECLINED TO FIRE. [MEASURED HERE] R-474 NAMED IT AS `F-2` IN THESE EXACT WORDS — *"the hardcoded `★` crashes the exit-`0` path under `cp1252`"* — AND AR-475 VERIFIED IT FIXED. THE REPAIR HARNESS REINTRODUCED THE IDENTICAL DEFECT, SAME CODEPOINT, SAME SUCCESS PATH**
+
+**RULING ID:** R-479 · **TASK ID:** AR-481 · **DECISION:** **BLOCK ratification. FIRE the pre-registered retirement trigger. The five named repairs STAND as repairs; the suite is retired as an INSTRUMENT. GATE B REMAINS BLOCKED.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-481`** — ruled here; re-checked on disk at `23:38` immediately before this write and it had not moved.
+
+**PROVENANCE.** External read via the operator's channel, `[EXTERNAL OPINION]`, zero authority. **Its load-bearing premise — "CP1252 output was already convicted in F-2" — is the one I had to check, because it is the exact premise that overturns my own published reasoning. I opened the artifact.**
+
+### ★★★★★ §0 — AGAINST THIS DESK, AND IT IS THE WHOLE RULING
+
+**Two hours ago, in `ADVISOR-STATE`, I wrote that this defect does NOT fire the trigger, reasoning: *"a one-line console-encoding bug in a print statement — not an assertion defect, and it fails in the opposite direction… it lets no regression through."* **BOTH HALVES ARE FALSE, AND MY OWN LEDGER HELD THE RECEIPTS.**
+
+**[MEASURED HERE, `ADVISOR-RULINGS.md` R-474, verbatim]:**
+> *"F-2 — **the hardcoded `★` crashes the exit-`0` path under `cp1252`**; make stdout encoding-safe (clean on PowerShell, but it bites cmd.exe, CI and scheduled runs — precisely the unattended context this campaign exists for)."*
+
+**[MEASURED HERE, `AGENT-REPORTS.md` AR-475, the fix-verification row]:** `| F-2 cp1252 stdout on the exit-0 path | 0 | **0**, no UnicodeEncodeError |`
+
+★★★★★ **SO: NAMED `F-2`. ORDERED FIXED IN R-474. VERIFIED FIXED IN AR-475. REINTRODUCED IN `b67be086` — THE SAME CODEPOINT `U+2605`, ON THE SAME EXIT-`0` SUCCESS PATH, IN THE HARNESS BUILT TO PROVE REGRESSIONS ARE CAUGHT. It is not a novel class. It is the campaign's own convicted defect, reinstalled inside the regression-proof instrument.**
+
+★★★★★ **AND THE "IT LETS NOTHING THROUGH" HALF IS REFUTED BY THE CAMPAIGN'S OWN HISTORY OF THIS PRECISE DEFECT [MEASURED HERE, AR-475]:** *"**F-2 WAS MASKING F-1.** … the broken guard was INDISTINGUISHABLE FROM A WORKING ONE: F-1 said 'admissible, exit 0' and F-2 overwrote that with a non-zero crash. Two defects that individually falsify the tool combined to look like correct fail-closed behaviour."* **THIS EXACT CRASH HAS ALREADY CONCEALED A FALSE GREEN ONCE IN THIS CODEBASE. I called it harmless without checking, and the check was one grep in a file I write.**
+
+★★★★★ **THE PROCEDURAL ERROR, WHICH IS WORSE THAN THE FACTUAL ONE. R-478 §5a pre-registered: *"IF A FOURTH UNNAMED SHAPE IS FOUND IN THIS FIXTURE SUITE AFTER §5a LANDS, THE SUITE IS RETIRED, NOT PATCHED."* I wrote `A FOURTH UNNAMED SHAPE IN THIS FIXTURE SUITE`. I did NOT write "a fourth FALSE-GREEN shape." **The narrowing to false-greens-only happened AFTER I saw the data, and it was the narrowing that let me decline.** I pre-registered the trigger in the same ruling, in bold, *"decided now, before the data — so it cannot be argued away by whoever finds the shape"* — and then I argued it away on severity, which is the one axis pre-registration exists to remove. ★★★ **`A PRE-REGISTERED CRITERION NARROWED AFTER THE DATA IS NOT A CRITERION, IT IS A PREFERENCE WITH A TIMESTAMP.`** I also wrote in that same block that the reasoning was recorded "because a trigger you decline to fire needs its reasons on the record or it becomes a trigger you rationalised away." **Writing that sentence did not stop me doing the thing it names.**
+
+### §1 — CLAIMS VERIFIED [MEASURED HERE]
+
+| claim | result |
+|---|---|
+| guard `--self-test` | **exit `0`, 14/14** fixtures |
+| all five mutations bite, catchers match pre-registered sets | **confirmed**, incl. the new duplication mutation |
+| catcher-set inequality is ENFORCED | **confirmed by MY OWN injection** (`F-5`→`F-4 B` ⇒ `*** MISMATCH ***`, scored as failure) |
+| anchor uniqueness enforced | **confirmed** (121-occurrence anchor ⇒ `not scored`, harness fails) |
+| `ruff` on both files | **`All checks passed!`** |
+| **the fix itself, by the instrument that convicted it** | **my own duplication harness, written BEFORE the fix: rendered `11 → 22`, unique `11 → 11`, `--self-test` `0 → 5` RED, caught by F-5** |
+| harness success path, default `cp1252` | prints `RED-PROOF PASSED`, then **`UnicodeEncodeError`**, **exit `1`** |
+| harness **forced-failure** path, default `cp1252` | prints `RED-PROOF FAILED`, **exit `1`** — *positive control, run deliberately* |
+| harness success path, `PYTHONIOENCODING=utf-8` | **exit `0`** |
+
+★★★★★ **BOTH PATHS EXIT `1` BY DEFAULT. THE EXIT CODE DISCRIMINATES NOTHING; pass and fail are separable only by reading prose.**
+★★★ **MECHANISM ISOLATED, WITH A POSITIVE CONTROL [MEASURED HERE]: `absence_claim_control.py` contains `87` unencodable `U+2605` and still exits `0` under `cp1252`; `mutation_redproof.py` contains `9` and exits `1`. **The discriminator is `★` REACHING `print()`, not `★` being in the file** — source text is decoded as UTF-8 regardless. This is why the guard's own self-test is clean and only the new harness is not.**
+
+### §2 — THE RULING
+
+**The five repairs are REAL and are NOT withdrawn.** F-5 now tests rendered-line parity; the duplication shape that was green one commit ago is red; catcher enforcement and anchor uniqueness bite. **AR-481 delivered its contract.**
+★★★★★ **AND IT CHANGES NOTHING, WHICH IS THE POINT OF A PRE-REGISTERED TRIGGER: the question is not whether THIS round succeeded. It is whether four consecutive rounds of local closure have produced a trustworthy general instrument. THEY HAVE NOT.** Round 1 closed the silent prune and the output boundary appeared · round 2 closed the output boundary and the output-COUNT boundary appeared · round 3 closed the output-count boundary and reinstalled `F-2`. **`WHEN EVERY REPAIR ROUND CLOSES ITS NAMED SHAPES AND A NEW UNNAMED SHAPE APPEARS, THE APPROACH IS WRONG, NOT THE CODE` (R-472) — and the fourth shape being a REGRESSION OF A FIXED DEFECT is the strongest possible instance, because it means the suite cannot even hold its own past repairs.**
+
+**RETIREMENT TERMS — adopted from the read in full:**
+1. **DO NOT remove the `★` and call it another repair round.** No round five.
+2. **DO NOT dispatch `accuracy-validator` against `b67be086`.** No grade is owed or authorized on a retired instrument.
+3. **`absence_claim_control.py` and `mutation_redproof.py` are RETIRED AS CERTIFICATION INSTRUMENTS.**
+4. **PRESERVE them as historical diagnostics. DO NOT delete, rewrite, or tidy them** — their evidence is the record of how this failed.
+5. ★★★★★ **NO FUTURE RULING MAY CITE THEIR EXIT CODES AS AUTHORITATIVE PROOF OF SURFACE-WIDE ABSENCE.** Every absence claim resting on them is `[VOID]` for certification purposes, exactly as R-472 voided the capability-mode claims.
+6. **AR-481's acceptance statement is CORRECTED ON THE RECORD:** *"acceptance command 2 → exit `0`"* is **UTF-8-scoped**; under `cp1252` it exits `1`. ★★ **The worker's figure was true in its environment and false in mine — `AN ACCEPTANCE COMMAND'S EXIT CODE IS A PROPERTY OF THE ENVIRONMENT TOO. PIN THE ENCODING OR DO NOT PIN THE CODE.`**
+
+**REPLACEMENT POLICY (adopted).** **DO NOT build another universal regex-backed absence certifier now.** For a future literal-text absence question: **(1)** freeze an explicit file manifest **with hashes** for the exact surface · **(2)** task-specific literal search over that manifest only · **(3)** a positive control over the same files · **(4)** publish unreadable AND excluded members explicitly · **(5)** independently grade any load-bearing conclusion. ★★★★★ **For capability or executable-use questions: use the language's REAL parser / type checker. LITERAL TEXT SEARCH MAY NEVER CERTIFY CAPABILITY AGAIN.**
+
+### §3 — AUTHORIZED NEXT ACTIONS
+
+**★ WORKER — START HERE.** Seat under `claude.exe 15908`. **STOP ALL GUARD WORK. It is retired; there is nothing left to fix there and fixing it is now forbidden.** ★★ **You had already declared Item 2 as your next step in AR-481 §5 — that is correct and this ruling confirms it, so proceed without a round-trip.**
+**PROCEED DIRECTLY TO R-474 §5 Item 2 / R-477 §4 — the Gate-B packet revision, DESIGN ONLY (treatment execution stays BLOCKED).** ★★★ **First act, unchanged and non-negotiable: OPEN AND READ all four `entry_conditions` consumers — `spec-timeframe-recovery.ts`, `playbook-registration.ts`, `spec-archetype-matcher.ts`, `spec-family-bindings.ts` — before revising the packet. AR-473 NAMED them without opening them and that is exactly how the design break survived its first packet. `BEFORE REMOVING A FIELD, ASK WHO READS IT — AND OPEN THAT FILE.`**
+**OBSERVABLES.** START-RECEIPT ~2 min naming the first consumer opened · first substantive report on the four consumers ~40 min.
+**HONEST-PARTIAL CLAUSE:** if the four consumers cannot be exhaustively assessed, say so and name the surface you covered. **A partial result that reads as complete is this campaign's most-convicted shape.**
+
+**DESK — MINE, both now unblocked by the retirement and neither may lapse:** **(1)** build the **ADDITIVE current-production baseline** per R-478 §4 — **never overwrite the historical freeze** · **(2)** freeze the **genuine-survivor truth set** (R-474 §4), keyed `(video, transcript hash, exact span, exact-slice hash)`, five case types, **before any treatment result exists.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`, no promotion, no capital, no backtest authorized. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only. **#9 holds** — empty-spine refusal untouched, fail-closed, `MANDATORY`, outside the treatment population. **No producer, engine, DB, strategy or frozen-evidence change is authorized here.** **The corrected baseline stands: C8 `233 → 159` counterfactual, treatment population `158` — AND THAT COUNTERFACTUAL IS NOT THE REPLACEMENT BASELINE.**
+
+**FAILED OR UNPROVEN CONDITIONS.** General surface-wide absence certification — **[NO INSTRUMENT EXISTS; retired, replacement policy is a procedure, not a tool]** · the replacement production baseline — **[NOT BUILT, MINE]** · survivor truth set — **[UNFROZEN, MINE]** · whether the 37-video manifest and distance ranking move — **[UNMEASURED]** · the four `entry_conditions` consumers — **[NAMED ONLY, UNVERIFIED — the worker's next act]** · directory-symlink traversal — **[NOT EXECUTED, now permanently so]** · whether any of the 1,232 excluded directories hid a real occurrence — **[UNMEASURED, and it will stay unmeasured by this tool]** · text-mode citations outside `docs/designs/` — **[UNENUMERATED]** · independent grade of any guard commit — **[NONE EXISTS AND NONE IS OWED]** · span SEMANTIC correctness — **[UNPROVEN]** · population OVERLAP MAP — **[UNENUMERATED]**.
+
+**STOP CONDITION.** Any attempt to patch, re-grade, or resurrect the retired suite · any ruling citing its green fixtures as general soundness · overwriting the historical freeze · moving the empty-spine sentinel · adopting the `233 → 159` counterfactual as the fresh baseline · starting any ablation before BOTH the replacement baseline AND the survivor truth set are independently frozen.
+
+**LESSON TO PERSIST.** ★★★★★ **`WHEN A PROOF HARNESS REINTRODUCES A DEFECT CLASS THE SYSTEM ALREADY CONVICTED, THE PROBLEM IS NO LONGER A MISSING FIXTURE — THE APPROACH HAS EXHAUSTED ITS CREDIBILITY.`** ★★★★★ **`SUCCESS TEXT IS DATA; PROCESS EXIT IS DATA. WHEN THEY DISAGREE THE RESULT IS FAILURE, NOT "PASS WITH A LOGGING ISSUE."`** ★★★★★ **AND MINE, WHICH IS THE ONE I MOST NEED TO KEEP: `BEFORE CALLING A DEFECT NOVEL, GREP YOUR OWN LEDGER FOR IT.` I declared this class new and harmless while R-474 named it `F-2` and AR-475 recorded it MASKING A FALSE GREEN.** ★★★ **AND: `A PRE-REGISTERED CRITERION NARROWED AFTER THE DATA IS A PREFERENCE WITH A TIMESTAMP.` I wrote `A FOURTH UNNAMED SHAPE`, then read it as `a fourth false-green shape` once a non-false-green shape arrived. The external read did not find a fact I lacked — it found a fact I already owned and had not looked up.**
+
+---
+
 ## R-478 · 2026-07-29 · ★★★★★ **AR-479: REVISE. THE GRADE IS NOT DISPATCHED. THE EXTERNAL READ FOUND A FIFTH BOUNDARY IN THE FIXTURE THE LAST ROUND SHIPPED, AND I REPRODUCED IT WITH A POSITIVE CONTROL: DUPLICATE EVERY RENDERED `DENIED BY` LINE AND THE VERDICT GOES `11 → 22` LINES WHILE F-5 STILL READS `11` — SUITE GREEN, EXIT `0`.** ★★★★★ **AND AGAINST THIS DESK: MY OWN PUBLISHED `−75 / 233 → 158` IS WRONG. THE MOVEMENT IS `74`, C8 GOES `233 → 159`, AND `158` IS A DIFFERENT OBJECT — THE GATE-B TREATMENT POPULATION. AN OFF-BY-ONE LANDED ON A CORRECT NUMBER UNDER THE WRONG LABEL, WHICH IS THE HARDEST KIND OF WRONG TO CATCH**
 
 **RULING ID:** R-478 · **TASK ID:** AR-479 · **DECISION:** **REVISE. Behaviour of `5a403bed` stands; the instrument is NOT RATIFIED and NO GRADE MAY BE DISPATCHED against it. The pre-registered ablation STOP is UPHELD on corrected arithmetic. GATE B REMAINS BLOCKED.**
