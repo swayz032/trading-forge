@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1918` at THIS commit, 2026-07-30 03:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1961` at THIS commit, 2026-07-30 03:40 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `1918` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `1961` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,7 +82,50 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-488 / AR-497** (2026-07-30 02:12, FRESH ADVISOR SEAT)
+## ★★★★★ SEAT — CURRENT AS OF **R-490 / AR-498** (2026-07-30 03:40, FRESH ADVISOR SEAT)
+
+★★★★★ **A FRESH WORKER SEAT IS ACTIVE** (operator seated it; AR-498 is its start-receipt for the
+membership matrix). **AR-498 IS RULED by R-490.**
+
+**R-489 (`c8dfeda4`) — BLUEPRINT V4 REVISION 4 IS THE OPERATIVE PLAN.** Cherry-picked `e34caaed`
+(GPT-authored, relayed by the operator — `[EXTERNAL OPINION]`, audited, adopted on merit).
+**Phase-1 exit unchanged and verbatim; ladder payloads verified INTACT BY CONTENT.**
+★★★★★ **THE DEFECT I CORRECTED ON ADOPTION — FOUND BY ANCESTRY, NOT BY READING: it forked at
+`ad7fa571` (`01:27`) and was authored `01:36`, so R-484..R-488 landed AFTER it. §15.4 pinned the
+oracle authority to `09e016fd…` — THE SUPERSEDED R-483 §12 FREEZE. A seat following it verbatim
+would REBUILD the four expectations R-484 struck, see 8 violations, and blame the LANES.
+Corrected preserve-and-strike to `9b708e24…`; §15.8 gained a SUPERSEDING-STATE column.**
+★★★ **`A STALE HASH FAILS SILENTLY BECAUSE THE FILENAME STILL MATCHES.` · `ESTABLISH A DOCUMENT'S
+ANCESTRY BEFORE ITS CONTENT.` · `CHERRY-PICK THE COMMIT YOU AUDITED, NEVER THE BRANCH IT SAT ON`
+(`597721eb`, an AGENT-LOGS session log, was NOT adopted and stays on its branch).**
+
+**R-490 (`391d7cfe`) — MY OWN MATRIX SPEC WAS DEFECTIVE AND AR-498 CAUGHT IT BEFORE BUILDING.**
+`every family × every zone` is DEGENERATE: **[MEASURED HERE] only `WAIT_SESSION` sets
+`requiresSessionKeyword`, so 98 cells would be 91 duplicates** — a grid proving 13 families once
+each while reading as if it proved them seven times. **`A PADDED MATRIX IS THE SAME FALSE GREEN
+WEARING MORE ROWS.`** **FOUR AXES ADOPTED, axis 3 (over-refusal control) FIRST.**
+★★★★★ **CONFIRMED HERE WITH A POSITIVE CONTROL: `spec-family-bindings.ts:258-260` says the
+over-refusal *"discriminator fixtures exist to catch"* it — **`0` fixtures put a refused keyword on
+a non-session family; control: `3` do on `WAIT_SESSION`.** FOURTH caption-falsifies-its-own-line,
+and this one is in code the worker JUST WROTE. **REMEDY IS THE FIXTURE, NEVER A SOFTER CAPTION.**
+★★ **AR-497 §34's *"invalidations carry ZERO bindings in every fixture"* is FALSE (00-control
+carries 1) and I had REPEATED it into R-488. `A NEAR-ABSOLUTE IS NOT AN ABSOLUTE.`**
+
+### ★★★★★ RIG — v4 IS THE SOLE IDLE WATCHDOG (`blvk1mzxw`), CHANGE-DETECTOR `b0s4aewbq` UNTOUCHED
+★★★★★ **THREE INSTRUMENT FAILURES IN TEN MINUTES, ALL MINE, ALL RECORDED:** (1) v2's RESUMED fired
+on **MY OWN cherry-pick** — it watched campaign commits, so `THE ADVISOR'S COMMITS MANUFACTURE
+WORKER-ACTIVITY SIGNALS` (same species as the phantom-report defect below). **v4 watches ONLY
+worker-owned signals — `AGENT-REPORTS.md` content hash (single-writer: I never write it) + parity
+worktree HEAD.** (2) v3 shipped with the RESUMED guard dropped — caught BEFORE it emitted.
+(3) ★★★ **A `TaskStop` RETURNED SUCCESS WHILE ITS PROCESS LIVED — `A COMPLETION SIGNAL IS NOT A
+RESULT`, on my own tooling. Resolved by clearing the field to ZERO (verified) and arming ONE.**
+★★★★★ **AND A WITHDRAWN CLAIM: I published *"the survivor is v3"* from a WMI `CommandLine` regex.
+**WMI ESCAPES QUOTES AS `\"`, so my pattern `= "1" ]; then` could never match — it returned False
+for EVERY generation and carried ZERO information.** My "positive control" tested the regex against
+a hand-typed string, NOT against a WMI CommandLine. `A CONTROL PROVES ONLY THE CASE IT CONTAINS.`
+**Identity is now settled by CONSTRUCTION (verified zero → armed one), which needs no regex.**
+
+### SUPERSEDED SEAT LINE — R-488 / AR-497
 
 ★★★★★ **R-488 (`f9ba9f93`) — ITEM 2 PART 2/2 ACCEPTED. WORKER HAS FILED A STOP RECEIPT.**
 ★★★★★ **THE GRADE TRIGGER DOES *NOT* FIRE. NO `accuracy-validator` IS DISPATCHED OR OWED.** I said
@@ -226,7 +269,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1918` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1961` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
