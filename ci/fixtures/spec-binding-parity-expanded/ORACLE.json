@@ -1,0 +1,242 @@
+{
+  "_README": [
+    "EXPECTED-RESULTS ORACLE. Every value below is transcribed from the DESK-FROZEN authority",
+    "docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md and cites the section it came from.",
+    "",
+    "NOTHING HERE IS COPIED FROM AN EMITTED PLAN. The authority derives its values from (Q1) a",
+    "1440-minute is_in_killzone() occupancy probe that reads NONE of the three tables under repair,",
+    "and (Q2) six semantic propositions P-1..P-6 that need no lane at all. That split is what makes",
+    "this an oracle rather than a third mirror: deleting a zone from REFUSED_SESSION_KEYWORDS does",
+    "not move a single number in the authority, so the table cannot game its own oracle.",
+    "",
+    "IF AN OBSERVED VALUE DISAGREES WITH A ROW HERE, THAT IS A FINDING — FILE IT, DO NOT EDIT THE",
+    "ROW. Editing an expected value to match an output is HARDCODED TEST COPY IS A FABRICATED",
+    "SAFETY CLAIM. Only the desk amends the authority, by dated ruling, preserve-and-strike.",
+    "",
+    "THREE ROWS ARE SHAPE-SPECIFIED, NOT STRING-SPECIFIED (authority section 5-5): the orphan",
+    "refusal reasons assert reason_names=<zone> (P-4 attribution), and the two unrecognized-",
+    "vocabulary reasons assert reason_excludes to stay DISTINCT from an orphan refusal. This repo",
+    "does not freeze a literal string the desk never derived."
+  ],
+  "authority_file": "docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md",
+  "authority_sha256": "09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086",
+
+  "required_members": [
+    "00-control-shipped.spec.json",
+    "10-lunch-orphan.spec.json",
+    "11-premarket-orphan.spec.json",
+    "20-nyam-evaluable.spec.json",
+    "21-fivemin-chart.spec.json",
+    "30-compiled-flip.spec.json",
+    "31-flip-neg-control.spec.json"
+  ],
+
+  "fixtures": {
+    "00-control-shipped.spec.json": {
+      "authority": "authority section 6 — EXPLICITLY OUT OF ORACLE SCOPE",
+      "scalars_unadjudicated": "Authority section 6 adjudicates SESSION-family rows only. This fixture spans all 14 families plus an unknown type and an invalidation, so its plan-level counts have no external authority. AGREEMENT between the lanes is still fully enforced here; CORRECTNESS is not claimed. The membership manifest is deliberately WIDER than the oracle.",
+      "conditions_unadjudicated": "13 of 15 conditions (all non-session families, the unknown type, and the INVALIDATE row) — authority section 6 leaves non-session families and invalidations unadjudicated.",
+      "conditions": {
+        "london": {
+          "authority": "authority section 2 (london = 180/1440, evaluable) + P-1",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": "london",
+          "approximation": false,
+          "reason_null": true
+        },
+        "unknown-session": {
+          "authority": "authority section 4a row 'regional window' (approximation=true) + P-3, P-6",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_excludes": "session_zone_refused_uncomputable_window"
+        }
+      }
+    },
+
+    "10-lunch-orphan.spec.json": {
+      "authority": "authority section 4a/4b/4c row '10-lunch-orphan'",
+      "spine_total": 2,
+      "spine_bound": 1,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_names": "lunch_blackout"
+        },
+        "enter": {
+          "authority": "authority P-5 — ENTER names the ACT of entering, satisfied by spine completion",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        }
+      },
+      "reasons_must_differ_from": [
+        {
+          "condition": "sess",
+          "fixture": "21-fivemin-chart.spec.json",
+          "other_condition": "sess"
+        }
+      ]
+    },
+
+    "11-premarket-orphan.spec.json": {
+      "authority": "authority section 4a/4b/4c row '11-premarket-orphan'",
+      "spine_total": 2,
+      "spine_bound": 1,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (overnight = 0/1440 ORPHAN) + P-1, P-3, P-4",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_names": "overnight"
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        }
+      }
+    },
+
+    "20-nyam-evaluable.spec.json": {
+      "authority": "authority section 4a/4b/4c row '20-nyam-evaluable'",
+      "spine_total": 2,
+      "spine_bound": 2,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (ny_am = 180/1440, evaluable) — binds, exactly",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": "ny_am",
+          "approximation": false,
+          "reason_null": true
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        }
+      }
+    },
+
+    "21-fivemin-chart.spec.json": {
+      "authority": "authority section 4a/4b/4c row '21-fivemin-chart'",
+      "_note": "THE SHARPEST ROW IN THE ORACLE. 'five-minute chart' is bindable=false exactly like the orphan zones, but for a DIFFERENT REASON: unrecognized vocabulary, not a missing window. If its reason string equals 10-lunch-orphan's, P-4 is violated and the repair is INCOMPLETE with every other field green — the two need opposite remedies (teach the extractor vs build a clock). Enforced by reasons_must_differ_from on fixture 10.",
+      "spine_total": 2,
+      "spine_bound": 1,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 4a row '21-fivemin-chart' (approximation=true) + P-3, P-6 — unrecognized vocabulary, NOT an orphan reason",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_excludes": "session_zone_refused_uncomputable_window"
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        }
+      }
+    },
+
+    "30-compiled-flip.spec.json": {
+      "authority": "authority section 4a/4b/4c row '30-compiled-flip'",
+      "_note": "compiled=FALSE is the load-bearing expectation. Authority section 4c derives 1/3 = 0.333 < 0.5 with no reference to either lane; R-481 measured TS true / PY false, so PYTHON WAS RIGHT AND TS WAS WRONG and this repair moves TS true -> false. THE FIX LOWERS THE compiled COUNT — a higher count here is a FAILURE SIGNAL, which is this table's arithmetic and not a slogan.",
+      "spine_total": 3,
+      "spine_bound": 1,
+      "compiled": false,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_names": "lunch_blackout"
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        },
+        "third": {
+          "authority": "authority section 4a row 'regional window' (approximation=true) + P-3, P-6 — names no identifiable session",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_excludes": "session_zone_refused_uncomputable_window"
+        }
+      }
+    },
+
+    "31-flip-neg-control.spec.json": {
+      "authority": "authority section 4a/4b/4c row '31-flip-neg-control'",
+      "_note": "THE DISCRIMINATOR. Identical 3-spine shape to fixture 30 with 'ny am' in place of 'during lunch'. compiled=TRUE here proves the flip in 30 is caused by the ORPHAN ZONE and not by the fixture shape. Without this row, 30's red would not identify its own cause.",
+      "spine_total": 3,
+      "spine_bound": 2,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (ny_am = 180/1440, evaluable)",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": "ny_am",
+          "approximation": false,
+          "reason_null": true
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        },
+        "third": {
+          "authority": "authority section 4a row 'regional window' (approximation=true) + P-3, P-6",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_excludes": "session_zone_refused_uncomputable_window"
+        }
+      }
+    }
+  }
+}
