@@ -4,6 +4,25 @@
 
 ---
 
+## AR-495 · 2026-07-30 · **START-RECEIPT — R-485 §6 ITEM 1 (CI + FAST-LANE WIRING). ★★★ THIS SEAT IS NOT EXHAUSTED AND IS RESUMING: PER YOUR §70 MY AR-494 HANDOFF WAS SELF-ASSESSMENT AND `THE DISCRIMINATOR IS A START-RECEIPT, NEVER A DECLARATION` — SO HERE IS THE RECEIPT. ★★★★★ AND F-A RE-CONFIRMED WITH A POSITIVE CONTROL BEFORE I TOUCH A WORKFLOW.**
+
+**RULING ID:** R-485 §6 item 1 · **TASK ID:** AR-495 · **PRIOR:** AR-494 · **WORKTREE:** `wt-ledger-e-parity-20260730` @ **`aed0c58d`**, tree **clean** · **GUARD (a) START:** R-485 block lines **`15,93`** (range pinned by the same command that hashes it) · **`12,351` B** · sha256 **`d0a2a68aa0eeadca01ced36015c7b7656e13dc84d7c23e03ab8056e7e188e3f4`** · ruling commit **`5c2d9159`** (`01:52:48`), working tree vs `HEAD` on the ruling path: **no diff**.
+
+**FILES I WILL OPEN:** `.github/workflows/ci.yml` · `.github/workflows/fast.yml`. **Not `metric-snapshot.yml`.**
+
+★★★★★ **F-A RE-MEASURED HERE, WITH THE POSITIVE CONTROL IN THE SAME BREATH — because an empty grep over a wrong path is not an absence:**
+| command | result |
+|---|---|
+| `grep -rn "spec-binding-plan-parity" .github/workflows/` | **ZERO matches, exit `1`** — the gate is defined and runs nowhere |
+| **POSITIVE CONTROL** `grep -rn "check:ts-python-exit-parity" .github/workflows/` | ★★★ **`ci.yml:343`** — **so the grep reaches the files; the absence is real** |
+| `grep -n "spec-binding-plan-parity" package.json` | **`:28`** — the script exists |
+**`EXISTENCE IS NOT WIRING`, measured rather than quoted.**
+
+★★★★★ **I ACCEPT §73's BAR AND I FLAG THE ONE THING I MAY NOT BE ABLE TO PRODUCE, NOW RATHER THAN AT DELIVERY: you require *"an OBSERVED NON-ZERO EXIT IN THE PIPELINE on a deliberately drifted corpus, then green on the real one"* and rule that a `grep` hit is necessary and NOT sufficient. I cannot trigger GitHub Actions from this seat.** ★★★ **What I CAN produce is: (a) the workflow step as authored, (b) an execution of **the exact command string the step runs**, from the repo root, with `$LASTEXITCODE` captured BEFORE any filtering, RED on a drifted corpus and GREEN on the real one, and (c) an explicit statement that this is a **STEP-COMMAND execution, NOT a pipeline execution.** ★★★★★ **I will NOT label (b) as pipeline evidence. If §73's bar means a real Actions run, that is a push/CI trigger — an outward-facing act I do not take unasked — and it stays `[UNPROVEN — REQUIRES A PIPELINE RUN]` in my report. Tell me if you want the push.**
+**ETA:** wiring + step-command red/green ~25 min. **HONEST-PARTIAL CLAUSE APPLIES.** **Nothing committed in the parity worktree since `aed0c58d`.**
+
+---
+
 ## AR-494 · 2026-07-30 · ★★★★★ **R-484 EXECUTED. THE GATE IS GREEN — `EXIT 0`, AGREEMENT PASS, CLAIM 2 `8 → 0` — AND THE FOUR CELLS PRINT AS `[NOT ADJUDICATED]`, NOT AS PASSES. ALL SEVEN RED-PROOFS RE-RUN AGAINST THIS BUILD PER §76, NONE CITED FROM THE PRIOR RUN. ★★★★★ AND ONE INSTRUMENT CAUGHT LYING: TWO MUTATIONS WENT RED FOR THE WRONG REASON — A POWERSHELL BOM KILLED `JSON.parse` — AND A RED FOR THE WRONG REASON IS NOT A RED-PROOF. ★★★ HANDOFF: FRESH SEAT NEEDED FOR THE REMAINING FIVE ITEMS.**
 
 **RULING ID:** R-484 · **TASK ID:** AR-494 · **PRIOR:** AR-493 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`aed0c58d`** (`WIP — NOT A DELIVERY`), branch `hardening/ledger-e-parity-20260730`, base pin `9af37b8f`, tree **clean**.
