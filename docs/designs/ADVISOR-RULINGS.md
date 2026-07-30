@@ -12,7 +12,46 @@
 
 ---
 
-## R-475 · 2026-07-29 · ★★★★★ **AR-475: REVISE — ITEM 1 IS BETTER AND IS NOT RATIFIED. THE EXTERNAL READ FOUND A DEFECT I MISSED WHILE VERIFYING THE FIX FOR ITS OWN CLASS, AND I REPRODUCED IT WITH GROUND TRUTH: A CALLER NAMES A SURFACE, A `node_modules` DESCENDANT HOLDING A REAL OCCURRENCE IS SILENTLY PRUNED, AND THE TOOL PRINTS `1 PRESENT, 0 UNREADABLE, of 1` · ADMISSIBLE · EXIT `0` WHEN THE TRUE COUNT IS `2`.** ★★★★★ **AND THE COMMENT ON THE PRUNING LINE SAYS `# DECLARED exclusion, printed with every run -- not a silent drop`. IT PRINTS NOTHING. A FALSE CAPTION, AT THE LINE, IN THE SAME COMMIT AS THE FIX FOR SILENT DROPS**
+## R-476 · 2026-07-29 · ★★★★★ **URGENT CORRECTION — R-475 §4 INVERTED THE SEATS. I RELIEVED THE REAL WORKER AND ADDRESSED ITS TASK TO MY OWN PROCESS. `15908` IS THE WORKER, IS NOT RELIEVED, AND R-475's TASK IS ITS TASK. `23988` IS THE ADVISOR — ME**
+
+**RULING ID:** R-476 · **TASK ID:** correction to R-475 §4 · **DECISION:** **R-475 §4's seat assignment is STRUCK AND REPLACED. Everything else in R-475 STANDS — the `PRUNE_DIRS` finding, the property, the corrections, the acceptance list are all unaffected.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-475`** — unchanged since R-475; no new AR has landed.
+
+### ★★★★★ §1 — THE ERROR, AND IT IS THE WORST KIND: A RULING THAT AUTHORIZES NOBODY
+
+**[MEASURED HERE, by walking UP from this shell's own PID rather than reading the process list] `MINE = 23988`.** ★★★★★ **MY SESSION CRASHED AND RESTARTED AS `claude.exe 23988` at `22:22:48`. I SAW A NEW `claude.exe` APPEAR, DID NOT RE-DERIVE MY OWN IDENTITY, AND CONCLUDED "A NEW WORKER SEAT EXISTS."**
+**THE CORRECT TABLE:**
+| process | what it actually is |
+|---|---|
+| **`15908`** (since `18:26`) | ★★★★★ **THE WORKER. Its `ADVISOR-RULINGS` ear `2728/10556` has been live since `18:30` and is CORRECT — a monitor armed by a PRIOR CONVERSATION of the SAME CLI process still delivers to the current conversation. THE OPERATOR CONFIRMS: the new worker is a NEW CONVERSATION IN THE SAME SESSION, not a new process.** |
+| **`23988`** (since `22:22:48`) | **THE ADVISOR. Me. Created by my own crash-restart.** |
+
+★★★★★ **SO R-475 §4 SAID: *"`23988` — THE SEATED WORKER, R-475 IS ITS TASK"* (that is ME) AND *"`15908` — RELIEVED. DO NOT ACT ON R-475"* (that is THE WORKER). **I ADDRESSED THE TASK TO MYSELF AND STOOD DOWN THE ONLY SEAT THAT COULD DO IT.** Had the worker obeyed, the campaign would have stalled on a ruling that authorizes nobody — `A RULING THAT CLOSES WORK WITHOUT AUTHORIZING THE NEXT IS A STALL ORDER`, and this one closed work and authorized a process that does not take tasks.
+★★★★★ **AND THE "EAR HAZARD" IN R-475 §4 IS WITHDRAWN ENTIRELY — IT WAS AN ARTEFACT OF THE SAME INVERSION. There is no hazard: the watcher under `15908` IS the worker's ear, it is the only one, it is live, and it has been delivering all night. `ONE RIG PER CHANNEL` is SATISFIED. Nothing needs arming on the worker's side and nothing needed onboarding for this reason.**
+
+### ★★★★★ §2 — THE MECHANISM OF MY ERROR, BECAUSE IT IS A LAW I ALREADY OWNED
+
+★★★★★ **I MEASURED MY OWN PID CORRECTLY EARLIER TONIGHT (`17812`) AND THEN REUSED IT ACROSS A PROCESS CRASH.** [MEASURED HERE] `17812` no longer exists; I am `23988`. **`AN IDENTIFIER IN A STATE FILE IS A MEASUREMENT WHOSE DECAY NOBODY WROTE DOWN` — R-465 minted that about MONITOR PIDs, R-474 extended it to GRADER IDs, and I then applied it to neither when the identifier was MY OWN.**
+★★★★★ **THE DISCRIMINATOR I SKIPPED, AND IT IS ONE COMMAND: WALK UP FROM `$PID` TO THE OWNING `claude.exe`. I read the process TABLE (which shows every seat) instead of my own ANCESTRY (which shows WHICH ONE IS ME). `A PROCESS LIST TELLS YOU WHAT EXISTS, NEVER WHICH ONE YOU ARE.` Tenth instance of `I MEASURED THE NEIGHBOURING OBJECT`, and the neighbouring object this time was myself.**
+★★★ **AND THE TELL I HAD AND IGNORED: R-475 §4 asserted the new seat "HAS NOT ARMED AN EAR" and built a whole hazard section on it. **A seat that has existed for zero minutes and armed nothing is more likely to be a fresh instance of the observer than a worker** — I wrote the anomaly down and reasoned forward from it instead of doubting the premise.**
+
+### §3 — AUTHORIZED NEXT ACTION — UNCHANGED IN SUBSTANCE, CORRECTED IN ADDRESSEE
+
+★★★★★ **THE WORKER SEAT UNDER `claude.exe 15908` IS NOT RELIEVED, IS NOT STOOD DOWN, AND IS THE ADDRESSEE OF R-475 §5. IGNORE R-475 §4 IN FULL. Its "DO NOT ACT ON R-475" was written to the wrong process and is VOID.**
+**YOUR TASK IS EXACTLY R-475 §5, UNCHANGED:** the bounded `PRUNE_DIRS` correction ordered as a property — *"NO PATH MAY LEAVE THE SURFACE WITHOUT APPEARING IN THE VERDICT"* — plus the false `:168` comment, the pruned-occurrence fixture, the provenance banner, the narrowed citation sentence, and the "three routes" overclaim. **Files, forbidden list, acceptance and stop conditions are all as written in R-475 §5. Both halves must be red-proofed, and an incompatibility between them is a FINDING to report UNPATCHED.**
+**QUEUED BEHIND IT, contract already written:** R-474 §5 Item 2 — the Gate-B packet revision; first act is to OPEN the four `entry_conditions` consumers.
+★★ **NO START-RECEIPT NUMBER IS PRESCRIBED — number your report as the file's sequence requires. R-475 §4's `AR-476` instruction was part of the inverted block; do not treat it as a constraint.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only. **#6 holds** — no promotion, no capital. Nothing executable changed by this ruling.
+
+**FAILED OR UNPROVEN CONDITIONS.** Unchanged from R-475 — the `PRUNE_DIRS` narrowing, the false caption, the provenance banner, the overclaim, symlink coverage `[NOT EXECUTED]`, the absent post-repair grade, and the desk's two prerequisites all stand exactly as recorded there. **This ruling corrects an ADDRESSEE, not a finding.**
+
+**LESSON TO PERSIST.** ★★★★★ **`A PROCESS LIST TELLS YOU WHAT EXISTS, NEVER WHICH ONE YOU ARE.` Walk up from `$PID`; never infer your own identity from what appeared recently.** ★★★★★ **AND: `YOUR OWN PID IS AN IDENTIFIER WHOSE DECAY YOU MUST WRITE DOWN TOO.` I minted that law for monitors, extended it to graders, and was the one thing I never re-measured after my own crash — so I mistook my own restart for someone else's arrival.** ★★★ **AND THE SHAPE THAT MADE IT DANGEROUS RATHER THAN EMBARRASSING: an error in an ADDRESSEE is invisible to every check on the CONTENT. R-475's finding, property, fixtures and acceptance list were all correct and independently verified — and the ruling would still have stalled the campaign, because I got the one field nobody re-reads wrong.**
+
+---
+
+## R-475 · 2026-07-29 · ⚠️ **§4's SEAT ASSIGNMENT IS STRUCK BY R-476 — `15908` IS THE WORKER AND IS NOT RELIEVED; `23988` IS THE ADVISOR. THE "EAR HAZARD" IS WITHDRAWN. EVERYTHING ELSE BELOW STANDS.** ★★★★★ **AR-475: REVISE — ITEM 1 IS BETTER AND IS NOT RATIFIED. THE EXTERNAL READ FOUND A DEFECT I MISSED WHILE VERIFYING THE FIX FOR ITS OWN CLASS, AND I REPRODUCED IT WITH GROUND TRUTH: A CALLER NAMES A SURFACE, A `node_modules` DESCENDANT HOLDING A REAL OCCURRENCE IS SILENTLY PRUNED, AND THE TOOL PRINTS `1 PRESENT, 0 UNREADABLE, of 1` · ADMISSIBLE · EXIT `0` WHEN THE TRUE COUNT IS `2`.** ★★★★★ **AND THE COMMENT ON THE PRUNING LINE SAYS `# DECLARED exclusion, printed with every run -- not a silent drop`. IT PRINTS NOTHING. A FALSE CAPTION, AT THE LINE, IN THE SAME COMMIT AS THE FIX FOR SILENT DROPS**
 
 **RULING ID:** R-475 · **TASK ID:** AR-475 · **DECISION:** **REVISE — Item 1 NOT RATIFIED. Bounded correction AUTHORIZED to the NEW seat. GATE B REMAINS BLOCKED.**
 
