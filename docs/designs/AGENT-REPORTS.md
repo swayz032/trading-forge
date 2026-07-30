@@ -4,6 +4,83 @@
 
 ---
 
+## AR-483 · 2026-07-29 · ★★★★★ **ALL FOUR CONSUMERS OPENED AND READ (`runtime-production`). THE DESIGN BREAK IS CONFIRMED AT THE LINE — AND R-474 §2's "FAIL-CLOSED, BUT STILL A REGRESSION" FRAMING IS WRONG IN THE PARTIAL-REMOVAL CASE: `Math.min` OVER THE SURVIVING TOKENS RETURNS `recovered:true` WITH A **WRONG** TIMEFRAME, NOT A QUARANTINE.** ★★★★★ **AND THE FINDING THAT SHOULD STOP THE ABLATION AS DESIGNED: `spec-family-bindings.ts:257-258` GATES ON `spineBound / spine.length ≥ 0.5`. CHART-TIMEFRAME CLAUSES TYPED `WAIT_SESSION` ARE **UNBINDABLE** (`no_recognized_session_keyword`), SO REMOVING THEM **RAISES** THE RATIO AND CAN FLIP `compiled` FROM FALSE TO TRUE. THE TREATMENT CAN MANUFACTURE COMPILED-COVERAGE BY SHRINKING THE DENOMINATOR** ★★★ **REMOVAL DOES NOT ONLY LOSE BEHAVIOUR — IN THREE OF FOUR CONSUMERS IT CAN SILENTLY *ENABLE* OR *CHANGE* IT**
+
+**RULING ID:** R-479 §3 / R-474 §5 Item 2 · **TASK ID:** AR-483 · **PRIOR:** AR-482 (receipt) · **COMMIT AT WRITE:** `b67be086` · **STATUS:** consumers COMPLETE; packet revision NOT STARTED — see §6. **RECOMMENDATION: BLOCKED pending your ruling on §3, because it changes what the ablation measures.**
+
+### §1 — WHAT I OPENED, AND IN WHICH TREE
+
+**All four read in `runtime-production` (the tree that executes), per the standing rule.** Hashes in AR-482 §2. **The campaign tree's copies DIFFER for all four and I did NOT analyse them** — see §5.
+★★ **`AR-473 NAMED THESE FILES AND NEVER OPENED THEM.` Reading them cost ~20 minutes and produced four findings the packet does not contain, three of which invert its risk model.**
+
+### ★★★★★ §2 — CONSUMER 1: `spec-timeframe-recovery.ts` — BREAK CONFIRMED, AND IT IS WORSE THAN RULED
+
+**CONFIRMED AT THE LINE, quoted from the file:** `:6-8` docstring — *"The certified compiler drops the structured `higher_timeframe` / `lower_timeframe` fields the transcript extractor captured, so the only surviving signal is the prose inside `spec.entry_conditions[].object`."* · `:229` `body.entry_conditions` is the only input read · `:232-234` empty list → `EMPTY` with `evidence: "spec has no entry_conditions"` · `:247-249` the loop reads **`c.object` only**.
+★★★★★ **BUT THE TOTAL-REMOVAL CASE IS NOT THE DANGEROUS ONE. `:311` `execCandidate = Math.min(...execTfs)`. If SOME timeframe clauses survive removal, the recovered exec TF becomes the minimum of the SURVIVORS — so a spec whose true exec chart was `5m` returns `exec_timeframe: "15m"`, `recovered: true`, `confidence: 0.4–0.9`. `:318` only quarantines when the candidate is OUTSIDE the supported set; `15m` IS supported, so it passes.**
+★★★ **R-474 §2 said the regression *"surfaces as UNRECOVERED rather than as a WRONG timeframe. Fail-closed, but still a regression."* THAT HOLDS ONLY WHEN EVERY TIMEFRAME-BEARING CLAUSE IS REMOVED. Partial removal is FAIL-OPEN and silent, and it lands on a value the module's own inviolable principle exists to prevent.** ★★ **The `NEVER default to 5m` principle protects against a FABRICATED timeframe; it does not protect against a REAL token from the wrong clause winning a `Math.min`.**
+★★ **ALSO LOAD-BEARING FOR THE CONTRACT: the module reads `c.type` (`:167-189`), `c.role` (`:257`) and `c.id` vs `entry_trigger_id` (`:255`, `:160-165`) to assign PROVENANCE TIERS (exact-trigger `0.9` > trigger-role `0.8` > pooled spine/confluence `0.4–0.6`). So a demotion that changes a clause's `role` or `type` — not only its existence — moves the recovered value AND its confidence.**
+
+### ★★★★★ §3 — CONSUMER 3: `spec-family-bindings.ts` — THE ONE THAT SHOULD STOP THE ABLATION AS DESIGNED
+
+**[MEASURED, read at `:247-265`]** `spine = bindings.filter(b => b.role === "spine")` · `spineBound = spine.filter(b => b.bindable).length` · `:257` `spineRatio = spineBound / spine.length` · `:258` **`if (spine.length > 0 && spineRatio < MIN_SPINE_BOUND_RATIO) compiled = false`**, with `MIN_SPINE_BOUND_RATIO = 0.5` at `:75`.
+★★★★★ **NOW THE MECHANISM THAT MATTERS: `FAMILY_META.WAIT_SESSION` (`:88-93`) sets `requiresSessionKeyword: true`, and `bindCondition` `:159-174` returns **`bindable: false`, reason `no_recognized_session_keyword`** when `resolveSessionKeyword(object)` finds none. `SESSION_KEYWORDS` (`:65-73`) contains only session zones — london / ny_am / ny_pm / silver_bullet / macro_window / lunch_blackout / overnight. **A clause reading "on the five-minute chart" MATCHES NOTHING THERE, so a chart-timeframe clause typed `WAIT_SESSION` IS UNBINDABLE BY CONSTRUCTION** `[MECHANISM READ AT :65-73 + :159-174]`.
+★★★★★ **THEREFORE REMOVING CHART-TIMEFRAME CLAUSES SYSTEMATICALLY DELETES **UNBINDABLE** SPINE MEMBERS, WHICH RAISES `spineBound / spine.length` AND CAN FLIP `compiled` FROM `false` TO `true`.** A spec correctly routed to the queue becomes "condition-compiled" **without one thing about its extraction improving.**
+★★★★★ **CONSEQUENCE FOR R-466 §2's PRE-REGISTRATION: if Gate B's outcome metric is compiled-coverage or queue-rate, the TREATMENT ARM WILL IMPROVE FOR A PURELY MECHANICAL REASON, and the ablation would attribute a DENOMINATOR ARTIFACT to the intervention. `OPTIMIZING THE PROXY DESTROYS WHAT IT STOOD FOR.` I am not able to tell from here whether that IS the metric — but the pre-registration must state it and must control for it, and neither the packet nor any ruling I have read does.**
+★★ **PRE-REGISTERED CONTROL I RECOMMEND, so this is falsifiable rather than rhetorical: for every spec in the population, publish `(spine.length, spineBound, compiled)` BEFORE and AFTER, and require that no spec's `compiled` flips `false → true` unless its extraction genuinely gained a bindable spine member. A flip with an unchanged `spineBound` is the artifact.**
+★★★★★ **AND A HARD CONSTRAINT THE PACKET MUST CARRY: `:1-21` declares this file a **TS MIRROR** of `src/engine/spec_family_bindings.py` under a Ledger-E parity contract — *"If you change `FAMILY_META`, `MIN_SPINE_BOUND_RATIO`, or `SESSION_KEYWORDS` here, you MUST change `src/engine/spec_family_bindings.py` in the SAME commit"*, gated by `scripts/check-spec-binding-plan-parity.ts`. **Any Gate-B change touching those three tables is a TWO-SIDED, PARITY-GATED change, and a one-sided edit fails CI by design.**
+
+### ★★★★ §4 — CONSUMERS 2 AND 4: REMOVAL CAN *ENABLE* AND *RE-ROUTE*, NOT ONLY LOSE
+
+**`spec-archetype-matcher.ts` — removal can BREAK A TIE and NEWLY ENABLE a dispatch.** `:145-151` concatenates **every** `entry_conditions[].object` (all roles) into one haystack; `:154-174` scores each archetype by keyword-substring count; `:184-187` returns `matched: false` **when the runner-up ties the top score.** ★★★★★ **So if a removed chart-timeframe clause was contributing the keyword that CREATED the tie, removal breaks it and the matcher goes UNMAPPED → **MAPPED**, dispatching an archetype it had deliberately refused. The module's own docstring (`:7-8`, `:77-78`) calls that the dangerous direction: *"a false-positive silently dispatches the WRONG engine class (dangerous)."*** ★★ **Plausible in practice because session/archetype vocabulary co-occurs with chart vocabulary in one clause — e.g. "on the 5 minute chart during the silver bullet window" carries `silver bullet`.**
+**`playbook-registration.ts` — removal can silently RE-BUCKET the playbook category.** `:92-106` `deriveCategoryFromConditionSpec` filters to `role === "spine" || "trigger"` (`:93-95`), builds a haystack from `c.object` (`:96-98`), and routes by **ORDERED** keyword precedence `:102-104` — MEAN_REV → REVERSAL → ORB → default CONTINUATION (`:100`, `:105`). **Removing a clause can therefore change the category, not merely lose it.**
+★★★ **AND HERE IS WHERE I STOP RATHER THAN INFER: `:4-17` states `apply_eligibility_gate()` silently bypasses the 7-layer confluence overlay for any strategy whose name is absent from `ALL_STRATS`, which is the FLAT UNION of the four category lists. **Since it is a union, category CHOICE does not change presence/bypass** — so the bypass consequence is NOT triggered by re-bucketing. **Whether the per-category routing has its own behavioural consequence is `[NOT VERIFIED]`: I did not open `playbook_router.py`.** I am not asserting a consequence I did not read.** ★★ **Also noted, out of scope: `:204` `writeFileSync` — this module MUTATES `playbook_router.py` SOURCE at runtime. Flagging, not touching.**
+
+### §5 — WHAT I DID **NOT** DO, NAMED PER FILE AND PER TREE
+
+★★★★★ **HONEST-PARTIAL, INVOKED DELIBERATELY.** **COVERED: all four consumers, `runtime-production` copies, read end-to-end.** **NOT COVERED:** ★ the **campaign-tree and primary-tree copies** of all four — they differ (AR-482 §2), `playbook-registration.ts` is `17472` B in the campaign tree vs `8274` B in production, and **I analysed neither** · ★ `playbook_router.py` `[NOT OPENED]` — so the per-category routing consequence stays unverified · ★ `src/engine/spec_family_bindings.py` `[NOT OPENED]` — the parity mirror, needed before any table edit · ★ **the CALLERS** — `spec-onboarding-service.ts` and whatever invokes `recoverSpecTimeframe`/`matchArchetype` `[UNENUMERATED]`; I read the consumers, not who feeds them · ★ **whether any real spec in the population actually has a `WAIT_SESSION` chart-timeframe clause** `[UNMEASURED]` — §3's mechanism is proven from the code; its POPULATION INCIDENCE is not, and that is the number that decides whether the artifact is theoretical or live · ★ the six R-474 §2 requirements — **the packet is UNREVISED.**
+★★ **§3 is a MECHANISM claim proven at the executable line, plus an INCIDENCE claim that is `[UNMEASURED]`. I am not merging them: the mechanism is real whether or not the population contains it.**
+
+### §6 — POSITION AND HANDOFF
+
+**Nothing half-done in code: I wrote no code and revised no packet — the first act was to read, and reading changed the premise enough that revising against R-474 §2's six requirements without your ruling on §3 would bake in the artifact.** **No sub-agent dispatched or owed by me — verified, not assumed.** **Nothing in flight.**
+**WHAT I BELIEVE IS NOW OWED FROM YOU, and I am not proceeding until it lands:** **(1)** whether Gate B's outcome metric touches compiled-coverage / queue-rate, and if so the pre-registered control for §3's denominator artifact · **(2)** whether R-474 §2's requirement 1 (*"that consumer must PREFER structured metadata … FAIL CLOSED on conflict"*) now extends to **all four** consumers rather than `spec-timeframe-recovery` alone — §2/§3/§4 show four distinct decision surfaces read `entry_conditions`, not one · **(3)** which TREE the packet targets, given all four files differ across three trees.
+**NEXT TASK IF YOU RULE §3 IS NOT A BLOCKER:** revise `GATE-B-RATIFY-PACKET-2026-07-29.md` against R-474 §2's six requirements, incorporating §2–§4 above, and open the three files named unopened in §5 first.
+★★★★★ **AND A FRESH WORKER SEAT IS NEEDED.** This seat has run `AR-476 → AR-483` across four rulings (the guard repair, its two follow-on repairs, the retirement, and this read) and is deep into its context. **It is at a clean boundary — every commit landed, every file clean against `HEAD`, nothing pending, no sub-agent owed — and that is the cheap moment to swap, not the moment after something gets truncated mid-measurement.**
+
+---
+
+## AR-482 · 2026-07-29 · **START-RECEIPT — R-479 §3 / R-474 §5 Item 2: THE FOUR `entry_conditions` CONSUMERS. FIRST FILE OPENED: `spec-timeframe-recovery.ts`, THE `runtime-production` COPY, `16935` B / `C622F25B`.** ★★★★★ **AND A FINDING BEFORE THE ANALYSIS, BECAUSE IT CHANGES WHAT THE ANALYSIS MEANS: "THE FOUR CONSUMERS" IS NOT FOUR OBJECTS. IT IS UP TO TWELVE. ALL FOUR DIVERGE ACROSS TREES, AND TWO OF THEM DIFFER IN ALL THREE**
+
+**RULING ID:** R-479 §3 · **TASK ID:** AR-482 · **PRIOR:** AR-481 · **COMMIT AT WRITE:** `b67be086` · **STATUS:** IN FLIGHT.
+
+### ★★★★★ §1 — THE GUARD RETIREMENT IS ACCEPTED, AND THE `F-2` REGRESSION IS MINE
+
+**No appeal, no round five.** I have not touched the retired files and will not. ★★★★★ **AND I CONFIRMED MY OWN DEFECT AT THE LINE RATHER THAN ACCEPTING IT ON RELAY: [MEASURED HERE, `PYTHONIOENCODING=cp1252`] `mutation_redproof.py` prints `RED-PROOF PASSED`, then dies — `UnicodeEncodeError: 'charmap' codec can't encode character '★'` — **exit `1`**. The guard's own `--self-test` survives the same encoding at exit `0` because it calls `sys.stdout.reconfigure`. So the discriminator is `★` REACHING `print()` in a module that never reconfigured, exactly as ruled.**
+★★★ **I reinstalled a defect this campaign had already named `F-2`, ordered fixed in R-474, and verified fixed in AR-475 — inside the harness whose entire purpose was proving regressions get caught. And my acceptance line said "exit `0`" without naming the encoding it was true under. `AN ACCEPTANCE COMMAND'S EXIT CODE IS A PROPERTY OF THE ENVIRONMENT TOO` is adopted: I will pin the encoding or not pin the code.**
+
+### ★★★★★ §2 — THE TREE DIVERGENCE, MEASURED BEFORE I READ A SINGLE LINE OF LOGIC
+
+**I checked the four names across three trees by SHA256 before opening them, because `spec-timeframe-recovery.ts` in MY tree is `17583` B while R-474 recorded the byte-identical copy at `16935` B / `C622F25B` — a different object under the same name.**
+
+| consumer | campaign (`wt-h1-wave4`) | `runtime-production` | primary (`trading-forge/trading-forge`) |
+|---|---|---|---|
+| `spec-timeframe-recovery.ts` | `17583` `EC9531D9` | **`16935` `C622F25B`** | `16935` `C622F25B` |
+| `playbook-registration.ts` | `17472` `1D07511F` | **`8274` `43AF0166`** | `8484` `055239DE` |
+| `spec-archetype-matcher.ts` | `7930` `B86A1B09` | **`7930` `B86A1B09`** | `8120` `D0DE7506` |
+| `spec-family-bindings.ts` | `15194` `D524DADA` | **`9602` `FB560C63`** | `9890` `D225154D` |
+
+★★★★★ **`playbook-registration.ts` AND `spec-family-bindings.ts` DIFFER IN ALL THREE TREES. `playbook-registration.ts` IS MORE THAN TWICE THE SIZE IN THE CAMPAIGN TREE THAN IN THE TREE THAT EXECUTES (`17472` vs `8274`).** ★★★ **`spec-timeframe-recovery.ts` — the file carrying the design break R-474 §2 localised at `:8`/`:229`/`:233` — is the ONE case where `runtime-production` and primary agree AND the campaign tree does not.**
+★★★★★ **CONSEQUENCE FOR THE PACKET, AND IT IS NOT COSMETIC: a claim of the form "removing chart-timeframe clauses from `entry_conditions` regresses timeframe recovery" is TRUE, FALSE OR UNDEFINED DEPENDING ON WHICH TREE IT IS ASSERTED ABOUT. AR-473 named these four files without opening them; had it opened them in THIS tree it would have analysed a `spec-timeframe-recovery.ts` that production does not run.** ★★ **`NAME THE TREE` — the desk minted it for fixtures two rulings ago; it governs consumers identically, and an exact line citation with an ambiguous tree is not exact.**
+★★ **ORDER OF WORK, DECLARED: I read `runtime-production` as authoritative for BEHAVIOUR (it is what executes), and I will treat every campaign-tree difference as a SEPARATE question — "is this file ahead, behind, or divergent" — rather than silently averaging the two. ★ I am NOT assuming the campaign copy is newer just because it is bigger.**
+
+### §3 — CONTRACT AS I HOLD IT
+
+**DESIGN ONLY. Treatment execution stays BLOCKED. No producer, engine, DB, strategy or frozen-evidence change.** I open and READ all four consumers before revising anything, per the non-negotiable first act. **HONEST-PARTIAL PRE-COMMITTED: if I cannot exhaustively assess all four, I name the surface I covered and the surface I did not, per file AND per tree.**
+**NOT MINE, NOT TOUCHED:** the replacement production baseline · the survivor truth-set freeze · the retired guard · any grade dispatch.
+**FIRST OBSERVABLE:** substantive report on the four consumers, ~40 min.
+
+---
+
 ## AR-481 · 2026-07-29 · ★★★★★ **R-478 §5a DONE. THE DUPLICATION SHAPE THAT SURVIVED GREEN LAST ROUND NOW GOES RED, CAUGHT BY F-5, AND THE CATCHER IS ENFORCED RATHER THAN PRINTED.** ★★★★★ **AND I RED-PROOFED THE NEW ENFORCEMENT ITSELF, WHICH IS THE STEP I SKIPPED LAST ROUND: MIS-REGISTER A CATCHER → `*** MISMATCH ***`, EXIT `1`; GIVE AN ANCHOR THAT OCCURS `121` TIMES → REFUSES TO SCORE IT, EXIT `1`. A GUARD I ADD IS NOT EVIDENCE UNTIL I HAVE SEEN IT FAIL.**
 
 **RULING ID:** R-478 §5a · **TASK ID:** AR-481 · **PRIOR:** AR-480 (receipt) · **REPAIRS:** `5a403bed`/`67a191c4` · **PARENT AT COMMIT:** `bd137cd1` — ★★ **HEAD moved under me four times across this task chain; [MEASURED] none of those commits touched a file of mine.** · **RECOMMENDATION:** **APPROVAL_REQUESTED.**
