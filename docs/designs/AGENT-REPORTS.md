@@ -4,6 +4,58 @@
 
 ---
 
+## AR-502 · 2026-07-30 · **START-RECEIPT — FRESH WORKER SEAT, TAKING R-492 §5 STEP A.** ★★★ **BASELINE CAPTURED BEFORE ANY EDIT: the gate is `EXIT 0 · PASS` while printing `sha256=9b708e24…312d`, an artifact the desk replaced two rulings ago. R-492 §1's measurement reproduces here exactly.** ★★ **ONE DESIGN DECISION DECLARED BEFORE I BUILD IT, so the desk can veto it cheaply rather than after the code exists.**
+
+**RULING ID:** R-492 §5-A · **TASK ID:** AR-502 · **PRIOR:** AR-501 (a different seat; it stopped at a clean boundary). **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`b23bae87`**, `git status --porcelain` **EMPTY**. **THIS ENTRY CHANGES NO CODE.**
+**SKILLS:** `worker-onboarding` + `worker-execution` both invoked this session, in that order. **R-492 landed WHILE I was reading `worker-execution`** — I re-read from the ledger rather than acting on the R-491 task list I had already loaded. `A REMEMBERED RULING IS A STALE RULING` is the same shape as the skill law.
+
+### §1 — THE BASELINE, MEASURED HERE BEFORE I TOUCH ANYTHING
+
+`cd wt-ledger-e-parity-20260730 && npx tsx scripts/check-spec-binding-plan-parity.ts` → **`EXIT=0`**, final line `PASS`, provenance line verbatim:
+`Oracle authority: docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md sha256=9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d`
+★★★ **I captured this BEFORE editing because step A is expected to turn it RED, and a "went red" claim is worthless without the green it replaced.** `Checked 12 sample specs against 12 declared members`, **8** cells `[NOT ADJUDICATED]`.
+
+**THE THREE NUMBERS, RE-DERIVED HERE RATHER THAN CARRIED FROM AR-501:**
+
+| | value |
+|---|---|
+| live authority, campaign **working copy** | `3494d4bb…14e2`, **16,314** B |
+| live authority, campaign **committed blob** (`git show HEAD:…`, second path) | `3494d4bb…14e2`, **16,314** B — **AGREE** |
+| what parity `ORACLE.json` pins | `9b708e24…312d` — ★★★★★ **STALE** |
+| authority file present in parity branch (`git ls-tree -r HEAD`) | **0** · POSITIVE CONTROL, the `ORACLE.json` it does ship: **1** |
+
+★★ **Two derivation paths for the live hash, not one — working copy and committed blob independently. AR-501 gave one. `A LOAD-BEARING VALUE GETS TWO PATHS.`**
+
+### ★★★ §2 — THE ONE DESIGN DECISION, DECLARED NOW: **WHERE THE COMMITTED AUTHORITY COPY GOES**
+
+R-492 §5-A orders the artifact committed "into the parity delivery surface" and does not name a path. Two candidates, and they are not equivalent:
+
+| | `docs/designs/ORACLE-AUTHORITY-…md` (the path `authority_file` ALREADY names) | `ci/fixtures/spec-binding-parity-expanded/` (beside `ORACLE.json`) |
+|---|---|---|
+| `authority_file` field | **unchanged and true** — no second pointer to maintain | must be re-pointed — **a new hand-maintained pointer**, which is the exact class R-492 §8 just convicted |
+| drift vs the CAMPAIGN original | ★★★ collides on the same path if parity is ever merged | never collides — **drift is silent forever** |
+
+**I AM CHOOSING THE FIRST**, and the deciding reason is the first row, not the second: `A PIN MAINTAINED BY HAND GOES STALE AT THE SPEED OF THE THING IT PINS` (R-492 §8) argues against minting a second pointer when a true one exists. **[MEASURED HERE] `docs/designs/` exists in the parity branch with 39 files, so the directory is real and the path resolves.**
+★★★ **THE SECOND ROW IS A `[HYPOTHESIS — UNPROVEN]` AND I AM LABELLING IT AS ONE:** the two branches **DIVERGED** — `merge-base` is `a9d7a71a`, and parity is **NOT** an ancestor of the campaign branch [MEASURED HERE]. Whether a same-path add/add actually CONFLICTS on merge is a claim about git I have not executed. **I will measure it with `git merge-tree` and report the result rather than assert it** — it is a bonus property, not the reason for the choice, so if it fails to reproduce the decision stands on row 1.
+★★ **IT DOES NOT DISCHARGE R-492 §2's RESIDUAL EITHER WAY.** That residual — parity copy drifting from the campaign original under a green gate — is closed by the desk's own binding rule (amend both in the same motion), **not by anything I can build in the gate.** I am not claiming to have closed it.
+
+### §3 — WHAT I WILL DELIVER, AND THE ORDER
+
+1. **Step A** — the gate opens the committed bytes, computes SHA-256 **itself**, compares to the pin, and `process.exit(1)` **before any plan is compiled**. Path · measured byte count · **COMPUTED** hash print every run.
+2. **Its RED-PROOF as a detector, four ways** — missing · unreadable · mutated byte (hash mismatch) · and the **unmutated control** that must stay green, because `A MUTATION SUITE WITHOUT ITS CONTROL CANNOT TELL "CATCHES BREAKAGE" FROM "ALWAYS RED"`.
+3. **The first observable: the RED run on the CURRENT stale pin** — with step A in and step B not yet done. ★★★ **That red is the point. It is the first true statement this gate will have made about its own provenance, and I will publish it BEFORE fixing the pin so the detector is witnessed catching the real defect and not only a planted one.** `FIX THE DETECTOR BEFORE THE DATA, SO THE DATA FIX IS VERIFIED BY THE DETECTOR` (R-492 §5-A).
+4. Then **B**, then **C/D/E** in ruling order.
+
+### §4 — NO DEFECT FOUND IN THE RULING'S METRIC LIST · SCOPE · STOP
+
+★★ **I checked for the `worker-execution` §5 defect class and did NOT find it: R-492 §5's A–F are all MECHANICAL (does the gate fail closed, does the planted defect die, does the control survive). None requires ground truth, so none is a grading act mislabelled as mine.** ★★★★★ **AND F IS EXPLICIT THAT THE GRADE IS THE DESK'S: `THE BUILDER DOES NOT GRADE.` I will not dispatch `accuracy-validator` and no report of mine will carry a score.**
+**FORBIDDEN LIST HELD:** no `git push` / PR / remote pipeline · no Python acceptance of orphan zones · no `approximation` or queue-reason payload change · no Gate-B treatment · no DB/spec/frozen write · no re-extraction · no backtest · `runtime-production` and `tf-deep-scan` untouched.
+**I WILL STOP AND ESCALATE IF:** the `P-7` encoding in step B needs anything beyond §4d's two cells · a planted defect survives · the gate can still print `PASS` from a copied hash.
+**FIRST OBSERVABLE:** step A's RED run, **~20 min** from this receipt. **HONEST-PARTIAL APPLIES.**
+★★★★★ **NO GRADE IS CLAIMED OR DUE. Steps A–E are not landed; F has not been reached.**
+
+---
+
 ## AR-501 · 2026-07-30 · ⚠️★★★★★ **STALE-POINTER ALERT, MEASURED, BEFORE ANY SEAT RUNS THE GATE AGAIN: R-491's NEW AUTHORITY IS `3494d4bb…14e2` (16,314 B). MY COMMITTED `ORACLE.json` STILL ASSERTS `9b708e24…312d` (13,525 B). AND THE GATE CANNOT NOTICE — ITS PROVENANCE LINE IS THE UNVERIFIED TRANSCRIPTION I REPORTED IN AR-499 §5, SO IT WILL PRINT THE STALE HASH AND EXIT `0`.**
 
 **RULING ID:** R-491 §3/§4/§5 · **TASK ID:** AR-501 · **PRIOR:** AR-500 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`b23bae87`**, clean. **NO CODE OR FIXTURE CHANGED IN THIS ENTRY — it is a measurement and a warning.**
