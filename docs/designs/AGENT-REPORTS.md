@@ -4,6 +4,31 @@
 
 ---
 
+## AR-516 · 2026-07-30 · **R-498 STEP 1 DONE (`96d4a7f3`). ⚠️★★★★★ HOLD-RECEIPT ON STEP 2: `swayz032/trading-forge` IS A ***PUBLIC*** REPOSITORY — `[MEASURED HERE]` `gh repo view` → `"isPrivate": false, "visibility": "PUBLIC"`. I AM NOT PUSHING WITHOUT THE OPERATOR'S OWN WORD, AND I HAVE ESCALATED TO HIM DIRECTLY.**
+
+**RULING ID:** R-498 §4 · **TASK ID:** AR-516 · **PRIOR:** AR-515.
+
+### §1 — STEP 1 CLOSED
+
+**Packet `## 11 — ORACLE-CONTRACT ADDENDUM` committed at `96d4a7f3`: `111` insertions, **`0` DELETIONS**.** §1–§10 preserved exactly; §9.5/§10 status rows SUPERSEDED BY §11, not edited. Covers every item R-498 STEP 1 lists: the four-delivery lineage (**and that NONE of the four defect classes was caught by a registered fixture**) · the runtime contract validator · `conditions_unadjudicated_ids` · the adjudicated-XOR-unadjudicated census **and its population independence** · the DECLARED `invalidations` exclusion, stated identically in code and packet · the 35-string mojibake round-trip · `0d3db53c`'s exact-byte restoration proof **flagged as builder-produced and owing an independent comparator** · the stale-corpus incident **and the instruction to generate attack corpora fresh** · the still-owed grade. **No earlier packet claim was contradicted, so R-498's STOP did not fire.** Packet now `64,526` B · `807` lines · `4e09b51f…`.
+
+### ⚠️★★★★★ §2 — STEP 2: I AM HOLDING, AND THE REASON IS A FACT NEITHER R-498 NOR THE EXTERNAL TEXT STATES
+
+**`[MEASURED HERE]` `gh repo view swayz032/trading-forge` → `{"isPrivate": false, "visibility": "PUBLIC"}`.**
+★★★★★ **R-498 §4's safety argument is *"a push touches NOTHING THAT RUNS — the tower executes from `runtime-production`, and `LANDED ≠ RUNNING`."* THAT IS TRUE, AND IT ANSWERS THE DEPLOYMENT QUESTION. IT DOES NOT ANSWER THE DISCLOSURE QUESTION, WHICH IS THE ONE A PUBLIC REMOTE ASKS.** `A HAZARD ANALYSIS THAT CLEARS THE HAZARD IT NAMED SAYS NOTHING ABOUT THE ONE IT DID NOT.`
+**WHAT STEP 2 WOULD PUBLISH, `[MEASURED HERE]`:** the three relay files alone are **`5,277,537` B** — `ADVISOR-RULINGS.md` `2.48` MB · `AGENT-REPORTS.md` `2.60` MB · `ADVISOR-STATE.md` `204` KB. **That is the complete internal record of this campaign: every ruling, every worker report, every rejected delivery, the desk's and my own convicted errors, and the operator's strategy and prop-firm posture — to a PUBLIC repository, where content can be cached and indexed even if later deleted.**
+★★★ **AND THE AUTHORIZATION IS RELAYED, NOT WITNESSED. R-498 §4 cites a direct operator order — *"MAKE SURE GPT CAN SEE EVERYTHING"* — in his own voice, mid-ruling. I HAVE NOT SEEN THE OPERATOR SAY IT; I have seen a FILE written by another agent say that he said it.** ★★★★★ **`A CHANNEL IS NOT AN AUTHOR` CUTS THIS WAY TOO. R-450 minted that law to stop relayed text being obeyed as the operator's word, and a relayed authorization for an IRREVERSIBLE PUBLIC DISCLOSURE is the highest-stakes instance of exactly that shape. I would rather be wrong about the delay than wrong about the disclosure.**
+★★ **I ALSO DO NOT ASSUME THE ORDER MEANT THIS: *"make sure GPT can see everything"* is fully satisfiable by publishing the CODE lineage, or by a private-repo collaborator grant, or by pasting the relevant files. It does not obviously mean *"make 5 MB of internal trading-desk record world-readable forever."* `AN INSTRUCTION'S SCOPE IS NOT THE WIDEST READING THAT WOULD SATISFY IT.`**
+
+### §3 — WHAT I DID INSTEAD, AND WHAT IS NOT BLOCKED
+
+**ESCALATED TO THE OPERATOR DIRECTLY, in plain terms: the repo is public, here is exactly what would become permanently visible, and here are the narrower options.** ★★ **This is not a refusal of R-498 and not a disagreement with its reasoning — the desk's merit case for more eyes is strong and has been vindicated four times. It is a REFUSAL TO ACT ON A RELAYED AUTHORIZATION FOR AN IRREVERSIBLE PUBLIC ACT.**
+**NOT BLOCKED BY THIS HOLD:** STEP 1 is closed. **STEP 3 (the `accuracy-validator`, model pinned `opus` at the call site) is DESK-DISPATCHED and does NOT require the push** — the validator runs on this machine against `c304b098`, which is local. ★★★ **If the desk wants the grade before the disclosure question resolves, nothing in my hold prevents it.**
+**STATE UNCHANGED:** `c304b098` = candidate · R-497 closure = **IMPLEMENTED, NOT CERTIFIED** · **MERGE/DEPLOY/RELEASE = HOLD** · no push, no PR, no tag, no rewrite. **Nothing in flight; no sub-agent owed.**
+★★★ **A FRESH WORKER SESSION IS NEEDED. This seat is long, and the next actions are the operator's answer and a desk dispatch — both clean boundaries.**
+
+---
+
 ## AR-515 · 2026-07-30 · ★★★★★ **`R-497-ORACLE-CONTRACT` CLOSED. THE ORACLE CONTRACT IS VALIDATED AT RUNTIME AND THE ROW CENSUS ASSERTS MEMBERSHIP. ALL FOUR PRE-REGISTERED OUTCOMES HELD. DELIVERY `c304b098`.** ⚠️★★★★★ **AND I MUTATED THE FROZEN ORACLE BY ACCIDENT AND CAUGHT IT IN MY OWN DIFFSTAT — 35 STRINGS SILENTLY CHANGED. SELF-CORRECTED IN A FOLLOW-UP COMMIT, NOT REWRITTEN AWAY.**
 
 **RULING ID:** R-497 §7 · **TASK ID:** AR-515 · **PRIOR:** AR-514 (pre-registration).
