@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1499` at THIS commit, 2026-07-30 00:49 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1562` at THIS commit, 2026-07-30 01:02 [MEASURED HERE, `wc -l`].**
 > ⚠️★★★ **THIS FILE IS NOW `1495` LINES AND THAT IS A REAL TAX: a cold seat hit a 25k-token
 > read cap on its FIRST page tonight and needed four reads to see it all. COMPACTION IS
 > OWED — `CUT NARRATIVE, NEVER CONTRACTS`, and read the WHOLE file first (you cannot
@@ -174,6 +174,69 @@ overnight TO TURN PARITY GREEN.` Python's refusal is the SAFE behaviour — thos
 have no evaluable window, so a bind yields "only trade during X" executing as "never
 trade" while reporting `approximation=False`. TS MUST REFUSE THEM EQUIVALENTLY.
 PARITY IS SEMANTIC OUTPUT PARITY, NEVER TABLE-TEXT EQUALITY.**
+
+## ★★★★★ AUTHORIZED NOW — **R-482** (`1dcd704f`, 2026-07-30 01:01), TO THE SEAT THAT RECEIVES IT
+
+★★★★★ **TWO PACKET CORRECTIONS BEFORE ANY CODE, THEN THE PARITY REPAIR IS AUTHORIZED.
+GATE-B ABLATION STILL BLOCKED.**
+1. ★★★★★ **REMOVE `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED` from the parity packet §5 — THE
+   DEFECT WAS MINE.** R-481 ordered *"rollback, flag-gated"*; I lifted that from
+   `ratify-packet`'s *"flag-gate any change that alters a live default"* and applied it
+   MECHANICALLY to a **CORRECTNESS REPAIR**. [MEASURED HERE, packet `:242-245`] default
+   ON, OFF documented as rollback ⇒ **OFF = TS binds `lunch`/`overnight` again while
+   Python refuses = the divergence restored, and CI running default-ON never sees it.**
+   ★★★★★ **`YOU DO NOT FLAG-GATE A CORRECTNESS REPAIR. THE OFF BRANCH IS THE DEFECT.
+   ROLLBACK IS REVERT.` An emergency switch, if kept, must HALT/QUARANTINE — never
+   restore divergent binding.** ★★ **Its caption `:242` says *"the flag gates the FEATURE,
+   NEVER THE FIX"* above a flag gating the fix — THIRD caption-falsifies-its-own-line this
+   session (`spec-family-bindings.ts:64`, `absence_claim_control.py:168`). DELETE it, do
+   not reword it.**
+2. **REPLACE THE STALE-RULING GUARD** with a WORKING-TREE re-read + hash of the exact
+   ruling block immediately before commit, plus the latest ruling commit id. **`git log`
+   catches a committed annotation and MISSES an uncommitted concurrent edit.**
+3. **THEN land the parity repair ATOMICALLY** (contract in parity packet §3 + R-482):
+   TS refusal emitting Python's exact tuple incl. `approximation=true` · whole-plan
+   comparator with **bidirectional key-set equality**, array multiplicity, invalidation
+   bindings, queue reasons, duplicate detection · exhaustive membership manifest +
+   deletion-RED fixture · **a semantic oracle independent of BOTH implementations** · CI
+   **and** fast-lane · per-spec materiality receipt. ★★★★★ **A HIGHER `compiled` COUNT IS
+   A FAILURE SIGNAL.**
+★★★★★ **DECLINE PATH IS LEGITIMATE AND PRE-AUTHORIZED: corrections 1–2 are small;
+correction 3 is large. Doing 1–2 and filing a DECLINE-RECEIPT on 3 is a useful outcome —
+and I relabel the task unassigned IN THE SAME MOTION. A declined-but-ACTIVE label is a
+stall with extra steps.** **FIRST OBSERVABLE: START-RECEIPT ~2 min naming the worktree
+SHA, the files and the first RED fixture · corrections 1–2 ~10 min · implementation
+~45–60 min.**
+
+## ★★★★★ TRUTH-SET DISPOSITION — **THE `R-482` DEBT IS PAID**
+
+**KEY, BINDING:** `(video, raw_transcript_sha256, span_start, span_end,
+exact_slice_sha256, condition_id)` — ★★★★★ **`condition_id` ALWAYS PRESENT, not added
+only for the `5` collisions. My "one extra discriminator" was a CONDITIONAL KEY, and
+`A CONDITIONAL KEY IS TWO KEYS` — which one applied would depend on the very data it
+identifies. Adopted the external read's form OVER MY OWN.** **`evidence` EXCLUDED from
+identity and adjudication.**
+★★★★★ **OFFSETS ARE JAVASCRIPT UTF-16 CODE-UNIT INDICES (the producer is TS). [MEASURED
+HERE] non-BMP `= 0` across all 40 transcripts (`865,630` chars, max codepoint `U+200B`),
+so Python codepoint indices agree `40/40` — **A PROPERTY OF THIS CORPUS, NOT OF THE
+FORMAT.** ONE EMOJI SILENTLY SHIFTS EVERY LATER OFFSET BETWEEN THE LANGUAGES. **ASSERT
+non-BMP == 0 AS A GUARD, NEVER AS AN ASSUMPTION.**
+★★ **AND `U+200B` (ZERO-WIDTH SPACE) IS PRESENT: an invisible character changes
+`exact_slice_sha256` while changing nothing a reviewer can see — a label and its hash can
+disagree with no visible cause.**
+**FIVE LABELS, DESK-ADJUDICATED from the exact slice + a fixed `±250`-char context window
+of the same frozen transcript:** `GENUINE_SESSION_PREDICATE` (must survive executable) ·
+`DESCRIPTIVE_SESSION_CONTEXT` (→ `execution_context.market_session`) ·
+`INSTRUMENT_CHART_PLATFORM_CONTEXT` (→ structured metadata) · `MIXED` (**separate
+projections; never delete, never one-label the clause**) · **`AMBIGUOUS`** (preserve
+unchanged, excluded from treatment AND efficacy credit, **counted as the explicit
+residual**).
+★★★★★ **FREEZE THE COMPLETE LABELLED MEMBERSHIP + ITS HASH BEFORE ANY TREATMENT RESULT
+EXISTS. DISAGREEMENT WITH AN INDEPENDENT AUDIT RESOLVES TO `AMBIGUOUS`, NEVER TO A
+CONVENIENT FORCED LABEL.** The worker may emit slices and check membership mechanically;
+**THE DESK owns the rule and the labels.**
+★★ **CORROBORATION OF THE `2351` [MEASURED HERE]: `2150` entry + `201` invalidation —
+the external read's split, reached by a DIFFERENT decomposition than my union count.**
 
 ## ★★★★★ POSITION AT 00:48 — R-481 STEPS 1–2 DONE AND VERIFIED; STEP 3 CODE NOT STARTED; **A FRESH WORKER SEAT IS THE OPERATOR'S ACT**
 
