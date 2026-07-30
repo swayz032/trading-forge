@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1668` at THIS commit, 2026-07-30 01:34 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1695` at THIS commit, 2026-07-30 01:47 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -40,7 +40,34 @@
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-483 / AR-492** (2026-07-30 01:30, FRESH ADVISOR SEAT)
+## ★★★★★ SEAT — CURRENT AS OF **R-484 / AR-493** (2026-07-30 01:45, FRESH ADVISOR SEAT)
+
+★★★★★ **R-484 (`35bce585`) — THE ORACLE FIRED ON ITS FIRST RUN AND CONVICTED *BOTH LANES AT ONCE*,
+WHICH IS THE CASE AN A-vs-B COMPARATOR STRUCTURALLY CANNOT SEE. AND THE DEFECT WAS MINE:**
+`approximation=true` on the two unrecognised-vocabulary rows of my frozen table **had NO
+derivation** — it cited P-6, which derives no approximation value, and inherited its authority from
+the adjacent orphan rows **by table-shape.** `THE WEAKEST BORROWS THE STRONGEST'S AUTHORITY BY
+ADJACENCY`, inside the very file written to be independent.
+★★★★★ **THE FIX IS `NO EXPECTATION`, NOT `false` — `false` is what BOTH LANES EMIT, so writing it
+would be hardcoded test copy wearing a desk adjudication's clothes. `ASSERTING THE IMPLEMENTATION'S
+VALUE AND ASSERTING NOTHING ARE DIFFERENT ACTS.` The ORPHAN rows are untouched and the repair's
+central claim is unaffected. NO LANE CHANGE WAS AUTHORIZED OR NEEDED.**
+★★★★★ **AUTHORITY IS NOW `13,525` B · sha256 `9b708e24…312d` — THE `10,600` B / `09e016fd…f086`
+VERSION IS SUPERSEDED. Ruling + artifact landed in ONE commit deliberately (the AR-489 race).**
+★★★ **OPEN, DESK-OWNED, NOT THE WORKER'S:** whether `approximation=false` on an unbound
+*unrecognised* condition is honest at all. **`[HYPOTHESIS — UNPROVEN]` possibly inert; but
+`spec_condition_compiler.py:863`/`:875` emit the field RAW into per-trade governance records, so
+"inert" is proven for the `approximation_used` AGGREGATE ONLY.** Settling measurement is named in
+R-484 §4 and in the authority's §6.
+★★ **WORKER LAW ADOPTED VERBATIM (AR-493 §42, sharper than anything I wrote):** `A THIRD MIRROR
+DOES NOT ARRIVE BY COPY-PASTE; IT ARRIVES AS THE THING YOU ALREADY BELIEVE.` It drafted the code's
+values into the oracle **from its own mental model, with the authority open**, caught it before the
+first run, and reported it — otherwise all 7 fixtures go GREEN and the oracle certifies the code
+against itself **carrying my hash in its header.**
+★★ **ANSWERED A QUESTION I HAD IGNORED TWICE:** a labelled WIP commit on the isolated branch is
+**CORRECT**. R-481 §93 forbids **LANDING**, never committing. `ATOMICITY IS ABOUT WHAT MERGES.`
+
+### SUPERSEDED SEAT LINE — R-483 / AR-492
 
 ★★★★★ **READ THIS BLOCK FIRST. EVERYTHING BELOW IT IS OLDER THAN IT AND SOME OF IT IS
 SUPERSEDED — THE LEDGER OUTRANKS THIS FILE ON EVERY CONFLICT.**
@@ -64,7 +91,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1,668` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1,695` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
