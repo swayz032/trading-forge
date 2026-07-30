@@ -4,6 +4,79 @@
 
 ---
 
+## AR-512 · 2026-07-30 · ★★★★★ **`R-496-P0-REPAIR` COMPLETE: A → B → C. REPLACEMENT DELIVERY `39948d3c`, PARENT `9af37b8f`, ONE COMMIT, 23 FILES — AND ALL TWELVE §8 ACCEPTANCE COMMANDS RUN ON THE TREE I SHIP.** ★★★★★ **BOTH NOVEL FALSE-GREENS NOW BITE, AND THE CLEAN CONTROL IS STILL GREEN — SO THE REPAIR DISCRIMINATES RATHER THAN JUST FAILING.** ⚠️★★★ **TWO OF MY OWN INSTRUMENTS LIED DURING THIS RUN AND I AM PUBLISHING BOTH.**
+
+**RULING ID:** R-496 §6 A→B→C · **TASK ID:** AR-512 · **PRIOR:** AR-511 (pre-registration) · **REJECTED OBJECT:** `2011e8de` — **PRESERVED. Not amended, not rewritten, not relabelled; `git log` on its branch is untouched.**
+
+### ★★★★★ §1 — THE THREE OBJECTS
+
+| | |
+|---|---|
+| **WIP (corrections)** | **`96ecc6e0`** on `hardening/ledger-e-parity-20260730` — **APPENDED**, the branch is NOT rewritten. `1 file changed, 235 insertions(+), 48 deletions(-)` — the gate script ONLY |
+| **PACKET (§6C)** | **`11d36275`** in the campaign tree — **`76` insertions, `0` DELETIONS.** §8 (the rejected receipt) is byte-for-byte intact; the new **§9 CORRECTION ADDENDUM** is dated and additive. **`52,636` B · `663` lines · sha256 `eef5ec84033386e1b7da528be1ea97c83a7df8449a9b10767ce07daf21d0d15e`** |
+| **REPLACEMENT DELIVERY** | ★★★★★ **`39948d3c31e2fb0840aa86f5e3b2c42c440df974`** on `hardening/ledger-e-delivery-r496-20260730`, worktree `C:/Users/tonio/Projects/wt-ledger-e-delivery-r496-20260730`. **`git rev-parse HEAD^` = `9af37b8f` — the base is the PARENT.** `rev-list --count` = **`1`**. `23 files changed, 3339 insertions(+), 93 deletions(-)` (`2676` + the packet's `663` lines = `3339`) |
+
+**PATH ACCOUNTING, TWO SEPARATE CHECKS AND NEVER A TOTAL:** the 22 paths diff **EMPTY** against the corrected WIP head `96ecc6e0` (**POSITIVE CONTROL** vs base = `3009` lines) · bidirectional `comm`: staged − 22 = **exactly the packet**, 22 − staged = **EMPTY** · the packet **BY HASH**, source blob and destination both `eef5ec84…` · **path-set sha256 `988ae8f1…`, identical to the rejected delivery's, because the path SET did not change — only content did.**
+
+### ★★★★★ §2 — THE PRE-REGISTERED RED-PROOF. **AR-511 PREDICTED EVERY CELL AND EVERY CELL HELD.**
+
+| attack | predicted BEFORE | **measured BEFORE** | **measured AFTER** |
+|---|---|---|---|
+| **A-1** TS-only TOP-LEVEL field | `0` | ★★★★★ **EXIT `0`** — false green reproduced BY ME | **EXIT `1`**, `tsc` still `0`, path named on **13** surfaces |
+| **A-2** TS-only BINDING field | `0` | ★★★★★ **EXIT `0`** | **EXIT `1`**, `tsc` still `0`, **8** indexed paths |
+| **B-1** duplicate member + deleted fixture | `0` | ★★★★★ **EXIT `0`**, `0` membership lines | **EXIT `1`** — duplicate named **with multiplicity**, BOTH cardinalities, **and 2 cross-surface mismatches** |
+| **clean** | `0` | `0` | ★★★★★ **`0` — THE DISCRIMINATING CONTROL. The repair is not always-red** |
+| **delete-only** | RED | `1` | **`1`** |
+| **add-only** | RED | `1` | **`1`** |
+
+★★★★★ **NO PREVIOUSLY-BITING ATTACK STOPPED BITING — an explicit R-496 §9 STOP, checked rather than assumed.**
+★★★ **THE BEFORE COLUMN IS THE PART THAT MATTERS: I reproduced both false greens on the object I had already reported as verified. A repair that cannot first be shown to be NEEDED is indistinguishable from one that changes nothing.**
+
+### ★★★★★ §3 — ALL TWELVE §8 ACCEPTANCE COMMANDS, RUN ON `39948d3c` ITSELF
+
+**Battery script (dumb by design — run a command, print its exit code and one witness): `…/scratchpad/battery.sh`, invoked as `bash battery.sh <worktree> <scratch> <win-scratch>`.**
+
+| # | check | result |
+|---|---|---|
+| 1 | real `node node_modules/typescript/bin/tsc --noEmit` | **`0`** · ★★ **known-bad CONTROL `2`** — the green is not a false-clean |
+| 2 | gate normal | **`0`** · authority `sha256=3494d4bb…` **(COMPUTED here, VERIFIED equal to the pin)** · census `entries=12 unique=12 · on disk=12 · adjudicated=12 · agreement=YES` |
+| 3 | A-1 top-level | `tsc` **`0`**, gate **`1`**, `13` named |
+| 4 | A-2 binding-level | `tsc` **`0`**, gate **`1`**, `8` indexed paths |
+| 4d | ★★ **DOOR 1**, declaring the field | **`tsc` EXIT `2`, `TS1360`** — the BUILD refuses it. A second, independent door |
+| 5 | duplicate + deleted fixture | **`1`**, duplicate + multiplicity + cross-surface, `unique=11 · on disk=11 · adjudicated=12` |
+| 6 | add-only / delete-only | **`1`** / **`1`** |
+| 7 | **C4 two-lane hoist** | **`1`** · `CLAIM 1 AGREEMENT: PASS` · **`176` P-7** — ★★★★★ **reproduces AR-505's `188`/`176` EXACTLY, so correction A did not weaken the property layer** |
+| 8 | four authority failures | **`1` · `1` · `1` · `1`**, each with **`0` plan-witness lines** — fail-closed ORDERING intact |
+| 9 | Axis-D always-red detector | **`1`**, caught by its **clean neighbour** |
+| 10 | materiality normal / E-2 / after restore | **`0`** / **`1`** naming `00-compiled-false-baseline.spec.json` `false→true` / **`0`** — ★★ **and parity re-run after restore `0`, so restoration is FUNCTIONAL, not textual** |
+| 11 | restoration | stray `0.0` marker **ABSENT** (**POSITIVE CONTROL**: `= 0.5` hits `1`) · `git status --porcelain` **`0`** |
+| 12 | delivery identity | parent `9af37b8f` · `1` commit · `23` paths · path-set `988ae8f1…` · packet `eef5ec84…` |
+
+**ENGINE UNTOUCHED IN THE COMMIT:** `spec-family-bindings.ts` and `spec_family_bindings.py` are byte-identical to base. Every injection above was transient and restored. **PYTHON WAS NOT LOOSENED TO MAKE PARITY GREEN.**
+
+### ⚠️★★★ §4 — TWO INSTRUMENTS OF MINE LIED. BOTH PUBLISHED, BECAUSE A SURPRISING RESULT ACCUSES THE TOOLING FIRST
+
+1. **A-1's first BEFORE run reported `EXIT=1` and I nearly filed it as a pre-registration MISS.** The cause was my own shell: `cmd && grep … && cmd2 ; echo $?` — the grep matched nothing, exited `1`, **the `&&` chain never ran the gate at all**, and `$?` reported the grep. Re-measured on its own line: **EXIT `0`**, as predicted. ★★★ **`A PIPED EXIT CODE IS NOT THE COMMAND'S EXIT CODE.`**
+2. **B-1's first corpus reported RED.** A Python heredoc mangled `"\\24-macrowindow…"` into a control character, so `os.remove` threw and **the fixture was never deleted** — a different attack than the one I meant to run. Rebuilt with `os.path.join`: **EXIT `0`**, as predicted.
+★★★★★ **BOTH would have been reported as findings about the CODE. They were findings about MY MEASUREMENT, and the only reason they were caught is that they contradicted a written prediction. `A PRE-REGISTRATION IS ALSO AN INSTRUMENT CHECK.`**
+
+### §5 — WHAT IS **NOT** PROVEN — UNCHANGED OR NEWLY STATED
+
+- ★★★★★ **NO INDEPENDENT GRADE OF `39948d3c` EXISTS.** R-496 §10 names it an **UNOWNED PREREQUISITE**: this harness does not dispatch Agent-tool subagents unasked, and `/root/ledger_e_delivery_grade` is unreachable from this machine. **ONLY THE OPERATOR CAN ROUTE IT. THE BUILDER DOES NOT GRADE, AND I HAVE NOT.**
+- **`[UNPROVEN — REQUIRES A PIPELINE RUN]`** no hosted workflow execution exists for this delivery. A grep hit is still not a pipeline run.
+- **Materiality remains a HAND-RUN receipt, not standing enforcement** (`materiality` = `0` in both workflows). Unchanged, and outside R-496 §7's allowed paths.
+- **`14` oracle cells stay explicitly UNADJUDICATED** — agreement enforced, correctness not claimed. **Gate-B population incidence `[UNMEASURED]`.**
+- ★★★★★ **AND THE ONE I WILL NOT LET THIS REPORT IMPLY: TWO NAMED ATTACKS ARE CLOSED. THAT IS NOT SOUNDNESS. `2011e8de` PASSED EVERY REGISTERED FIXTURE IT HAD AND WAS UNSOUND — `REGISTERED FIXTURES PROVE THEIR MEMBERS AND NOTHING OUTSIDE THEM`, and the only thing that moves this claim is another independent hunt.**
+
+### §6 — POSITION · FORBIDDEN · NEXT
+
+**No `git push`, no PR, no merge, no deploy, no remote pipeline, no WIP history rewrite, no `git add -A`, no unlisted path, no engine or Python semantic change, no `runtime-production` / `tf-deep-scan` edit, no DB/spec/frozen write, no extraction, no backtest, no model run.** All three worktrees clean; `2011e8de` intact on its own branch.
+**LEDGER:** ✅ A · ✅ B · ✅ C · ⛔ **INDEPENDENT GRADE OF THE REPLACEMENT — UNOWNED, OPERATOR-ROUTED.**
+**NEXT TASK: route the follow-up grade of `39948d3c` (five re-plants + a NOVEL hunt — the novel half is what caught both defects last time). It is not mine to dispatch and I have not.**
+**NOTHING IN FLIGHT: no sub-agent dispatched or owed — verified by checking.**
+
+---
+
 ## AR-511 · 2026-07-30 · **`R-496-P0-REPAIR` START-RECEIPT — PRE-REGISTERED BEFORE ANY EDIT, INCLUDING THE PREDICTION THAT BOTH ATTACKS CURRENTLY RETURN `0`.** ⚠️★★★★★ **R-496 IS ACCEPTED IN FULL. I BUILT THE OBJECT THAT CARRIED BOTH FALSE GREENS, AND I RE-CONFIRMED BOTH AT THE EXECUTABLE LINE MYSELF BEFORE ACCEPTING THE GRADE.**
 
 **RULING ID:** R-496 §6 A→B→C · **TASK ID:** AR-511 · **PRIOR:** AR-510 (the REJECTED delivery) · **GRADED OBJECT:** `2011e8de` — **PRESERVED, NOT AMENDED, NOT RELABELLED.**
