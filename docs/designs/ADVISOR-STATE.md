@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1402` at THIS commit, 2026-07-30 00:37 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1439` at THIS commit, 2026-07-30 00:41 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -401,10 +401,38 @@ tested was EXACT. `A FAST REPORT IS A REASON TO VERIFY, NEVER A REASON TO DISBEL
 divergent fields (`bindable`, `session_zone`, `compiled`) are EXACTLY the ones the
 UNWIRED parity gate would have compared.**
 
-## ★★★★★ [FACT, MEASURED HERE, NOT RULED] THE TRANSCRIPT ARCHIVE **IS** THE EXTRACTION-TIME TEXT — AND R-474 §4's PRESCRIBED TRUTH-SET KEY COVERS `11%` OF CONDITIONS AND **ZERO** OF THE SPEARHEAD
+## ★★★★★ [FACT, MEASURED HERE, NOT RULED] THE TRANSCRIPT ARCHIVE **IS** THE EXTRACTION-TIME TEXT — AND R-474 §4's KEY IS **REALIZABLE ON `100%`** OF CONDITIONS, WITH INDEPENDENT CORROBORATION ON `11.2%`
+
+⚠️★★★★★ **THIS HEADING AND THIS BLOCK WERE WRONG FOR ~20 MINUTES AND ARE CORRECTED HERE
+(00:40). THEY READ *"COVERS `11%` OF CONDITIONS AND **ZERO** OF THE SPEARHEAD"*, AND THAT
+CLAIM ALSO REACHED THE LEDGER (R-481 §DESK-OWNED, now carrying a rule-4 warning
+annotation, commit `e1cd57b7`). A HEADING IS A CLAIM, SO IT IS CORRECTED TOO, NOT LEFT
+TO AGREE WITH THE RETRACTED BODY.**
+★★★★★ **THE CORRECT MEASUREMENT [MEASURED HERE]: `2351 / 2351` conditions — `100.0%` —
+carry a USABLE SPAN ANCHOR (span present · integer offsets · in range · non-empty slice;
+length min `13`, median `54`, max `323` chars). **`75DJN5UVQnw`, the distance-0 spearhead
+I said carried ZERO, carries `13` of `13`. All `40` videos covered.**
+`(video, span_start, span_end)` → **`2346` distinct keys over `2351` anchors, `5` at
+multiplicity `2`, max `2`** ⇒ add ONE discriminator (`semantic_type` or the spec-local
+condition id) for those five. **THE RECIPE IS NOT DEAD.**
+★★★★★ **THE ERROR, NAMED: I measured *"does the `evidence` FIELD equal the transcript
+slice"* and published it as *"is the SPAN a usable anchor"* — two objects joined by
+nothing. `exact_slice_hash` = `sha256(transcript[start:end])`; it never needed `evidence`
+to hold the quote. **TENTH `I MEASURED THE NEIGHBOURING OBJECT`, first one committed to
+the ledger.** ★★★ **AND THE DIRECTION MATTERS: the conflation ran PESSIMISTIC — it would
+have retired a working method. `A CONSERVATIVE-SOUNDING ERROR IS STILL AN ERROR, AND
+"IT FAILED SAFE" IS NOT A DEFENCE WHEN THE COST IS ABANDONING A SOUND INSTRUMENT.`**
+★★ **THE PROPOSITION IS A SPLIT, AND BOTH HALVES MUST BE CARRIED TOGETHER: ANCHOR
+AVAILABILITY `100%` · INDEPENDENT CORROBORATION `11.2%` (`264 / 2351`). For the other
+`89%` the span is USABLE BUT UNCORROBORATED — one producer's word, no second field
+agreeing it points at the right text. `[UNCORROBORATED]` ≠ `[UNREALIZABLE]`.**
 
 **MEASUREMENT ONLY, ON THE DESK'S OWN OBLIGATION (R-474 §4). NO DISPOSITION — the
-survivor-set DESIGN is a ruling and the operator's paste gates it.**
+survivor-set DESIGN is a ruling and the operator's paste gates it. `R-482` IS OWED AND
+HELD FOR THAT PASTE.**
+**★ THE BODY BELOW IS THE ORIGINAL TEXT, KEPT FOR THE TRAIL. ITS `11%`/ZERO-SPEARHEAD
+SENTENCES ARE RETRACTED BY THE BLOCK ABOVE; ITS ARCHIVE-IDENTITY AND
+EVIDENCE-FIELD-POLLUTION FINDINGS STAND.**
 ★★★★★ **THE "TRANSCRIPTS BACKFILLED 25 DAYS LATER ⇒ GRADING A NEIGHBOURING OBJECT"
 WORRY IS RETIRED [MEASURED HERE]: `40/40` videos, archived transcript char-length ==
 the corpus spec's own `transcript_chars` recorded AT EXTRACTION · and **`264` recorded
@@ -417,11 +445,20 @@ is not over-read: whole-file byte identity. The original transcript hash stays
 QUOTE FIELD. Over all `2351` conditions in `tf-deep-scan/corpus/specs` (40 specs):
 `1027` carry an ATOM REF (`T-xxxx-Cnnnn`), `29`+ a placeholder (`{daily_vwap}`), plus
 brace-structs (`{start: T-…, end: T-…}`) and the already-known `'},{'` debris. **ONLY
-`264 / 2351` = `11.2%` CARRY A RESOLVABLE TRANSCRIPT QUOTE AT ALL.** So R-474 §4's
-`(video, transcript hash, exact span, exact-slice hash)` is REALIZABLE ON `11%` OF THE
-SURFACE — an `exact-slice hash` over the other `89%` would hash a slice its own
-`evidence` never claimed to be.**
-★★★★★ **THE THREE ZERO-RESOLVING VIDEOS, NAMED — A COUNT IS NOT A PIN: `75DJN5UVQnw`
+`264 / 2351` = `11.2%` CARRY A RESOLVABLE TRANSCRIPT QUOTE AT ALL.** ★ **THAT SENTENCE
+STANDS — it is about the EVIDENCE FIELD.** ⚠️ **THE NEXT SENTENCE DOES NOT:**
+> ~~So R-474 §4's `(video, transcript hash, exact span, exact-slice hash)` is REALIZABLE
+> ON `11%` OF THE SURFACE — an `exact-slice hash` over the other `89%` would hash a slice
+> its own `evidence` never claimed to be.~~
+⚠️★★★★★ **RETRACTED 00:40 — SEE THE CORRECTION AT THE TOP OF THIS BLOCK. THE KEY IS
+REALIZABLE ON `100%` (`2351/2351` usable anchors). `exact_slice_hash` hashes
+`transcript[start:end]`, NOT the `evidence` field, so a polluted `evidence` never
+constrained it. The strikethrough above is the audit trail; DO NOT ACT ON IT.**
+★★★★★ **THE THREE ZERO-*QUOTE* VIDEOS, NAMED — A COUNT IS NOT A PIN.** ⚠️ **READ THE
+SCOPE: "ZERO" HERE MEANS ZERO PROSE-QUOTE **EVIDENCE FIELDS**, NEVER ZERO SPAN ANCHORS —
+all three have anchors for every condition (`75DJN5UVQnw` `13/13`). This label read
+"ZERO-RESOLVING" until 00:40 and that phrasing is exactly how the neighbouring-object
+error propagated.** `75DJN5UVQnw`
 (**THE distance-0 spearhead**) · `E8Wg6tFPYjo` (SMC, distance 1) · `1HFoStW_wsc`
 (R-451-EXCLUDED). ★★★ AND THE BENIGN CAUSE, MEASURED BEFORE THE ALARMING ONE WAS
 PUBLISHED: all three carry **ZERO prose-quote evidence** — `75DJN5UVQnw` has `13`
