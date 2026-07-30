@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1123` at THIS commit, 2026-07-29 23:46 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1161` at THIS commit, 2026-07-29 23:52 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -269,6 +269,44 @@ hand-corrected via `OVERRIDE`.**
 authoritative carrier; a duplicate on disk would drift from it — `A REPORT IS A VIEW OF
 AN ARTIFACT`. CARRY THE RECIPE, NOT THE COPY: `sed -n '542,698p' <ledger>` ⇒ `8,831` B
 ⇒ sha256 `90aedc77cc79…`.**
+
+### ★★★★★ [FACT, MEASURED HERE, NOT RULED] AND THE OTHER HALF IS **UNRECOVERABLE**: `pop120_census.py` IS GONE WITH NO PUBLISHED COPY
+
+★★★★★ **THE CENSUS PRODUCER — `pop120_census.py`, sha256 `c24b1b9fadff…`, `5,099` B —
+IS NOT ON DISK, NOT IN GIT HISTORY, AND NOT PUBLISHED IN ANY COMMITTED DOC.** The
+manifest's provenance boast covers **only the classifier**; it never claimed the producer
+was recoverable, and nobody checked.
+**METHOD, per the R-479 replacement policy (enumerated surface + positive control, NOT a
+name grep):** `649` fenced blocks across `271` markdown files under
+`wt-h1-wave4-20260712/docs`, **each hashed** against three trailing-newline variants and
+compared to the manifest fingerprints. ★★★ **THE JOIN KEY IS THE HASH, NOT THE NAME — a
+name grep hits six docs that merely MENTION `preflight_binding_plan` and proves nothing
+about whether the SOURCE is published.**
+| fingerprint | result |
+|---|---|
+| `classify.py` — **POSITIVE CONTROL** | **FOUND**, `VOCABULARY-LEDGER-POP120-2026-07-29.md` |
+| `unlock_ranker_core.py` — second reference point | NOT FOUND *(expected: lives on disk, never published)* |
+| **`pop120_census.py` — TARGET** | **NOT FOUND** |
+★★ **The control PASSED, so the method can find a published file; the absence is a
+measurement, not a failed search.** Disk searches: `find` over `Projects` (depth 5),
+`backups/`, and `wt-preflight-blockers-20260729` — **nothing**; `git log --all` for the
+path — **nothing**.
+★★★ **AND AN INSTRUMENT-AUDIT AGAINST MYSELF, because the result looked wrong first: my
+scan reported the control at `8829` while the manifest says `8,831`, and two byte-lengths
+cannot share one hash. Cause: I printed `len(str)` (CHARACTERS) beside a
+byte-denominated manifest, and the block carries two multi-byte characters. **The
+comparison itself always used `.encode("utf-8")`, so every hash verdict was byte-correct
+— the MEASUREMENT was right and the UNIT LABEL was wrong.** `A SURPRISING RESULT ACCUSES
+YOUR TOOLING FIRST`, and this time the tooling was half-guilty.**
+★★★★★ **WHY IT MATTERS TO THE BASELINE REBUILD, AND IT IS NOT A BLOCKER BUT IT IS A
+CONSTRAINT: R-478 §4 ordered an ADDITIVE baseline "from the actual production path." The
+classifier can be re-run byte-exactly; **THE CENSUS PRODUCER CANNOT BE RE-RUN AT ALL —
+it must be RE-AUTHORED, and a re-authored producer is a DIFFERENT INSTRUMENT.** So
+old-vs-new baseline differences will NOT be attributable to the code change alone unless
+the new producer is itself validated against the frozen census as a control.**
+★★★ **[HYPOTHESIS, UNTESTED] the natural control is: re-authored producer + recovered
+`classify.py`, run against the SAME snapshot, must reproduce `eed65514a126…`. If it
+cannot, the new producer is not a substitute. NOT YET ATTEMPTED — and it is mine.**
 
 ## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-481 — R-478 §5a DELIVERED AT `b67be086`. **THE FIX IS REAL. THE HARNESS NOW LIES ABOUT ITS OWN EXIT CODE.**
 
