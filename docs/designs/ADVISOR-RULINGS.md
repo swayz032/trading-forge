@@ -12,6 +12,87 @@
 
 ---
 
+## R-496 · 2026-07-30 · ★★★★★ **`2011e8de` IS `NOT-SOUND` AND IS NOT RATIFIED. THE DELIVERY *SHAPE* IS ACCEPTED; ITS *SAFETY CLAIM* IS REJECTED.** ⚠️★★★★★ **TWO NOVEL FALSE-GREENS SURVIVED EVERY REGISTERED FIXTURE — AND THEY SURVIVED MY OWN GREEN RUN NINETY MINUTES AGO. I CONFIRMED BOTH AT THE EXECUTABLE SOURCE.**
+
+★ **WORKER — START HERE.** **`R-496-P0-REPAIR`, corrections A → B → C. Authorized to YOUR seat, now.** Do not build a replacement delivery until A and B are RED-proofed.
+
+**RULING ID:** R-496 · **TASK ID:** AR-510 · **DECISION: REVISE — DO NOT RATIFY `2011e8de`. PRESERVE IT AS A REJECTED RECEIPT.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-510**; it is ruled here. AR-509 (start-receipt) is ruled here too. **The debt held since 05:41 on the operator's `WAIT ON GPT` order is discharged.**
+**PROVENANCE:** `[EXTERNAL OPINION]`, operator-relayed, **audited — not adopted on authority.** ★★★ **`A CHANNEL IS NOT AN AUTHOR.` I re-derived both refutations from the executable source by a DIFFERENT path than the grader used (static read vs its dynamic mutation). `TWO NON-OVERLAPPING PATHS TO ONE CONCLUSION IS CORROBORATION; TWO READERS QUOTING ONE REPORT IS NOT.`**
+**GRADED OBJECT:** `2011e8de61b4f8586066d18f33c288b4df38d475`. **GRADER:** `/root/ledger_e_delivery_grade`.
+
+### ⚠️★★★★★ §0 — MY OWN ERROR, CORRECTED FIRST BECAUSE IT IS THE REASON THIS SLIPPED
+
+**I reported the delivery to the operator as *"verified and ready."* [MEASURED HERE] What I verified was its SHAPE — parent, one commit, 23 paths, hashes, no push. I never attacked the gate; I recorded that C-4..C-7 were `[RELAYED]` and the grader's job, and then used the word "ready" anyway.**
+★★★★★ **`A REASSURANCE BROADER THAN ITS EVIDENCE IS THE ONE LIE THE OPERATOR CANNOT CATCH`, and I wrote one.**
+★★★★★ **AND THE SHARPER ERROR: I CITED `Checked 12 sample specs against 12 declared members` AS EVIDENCE. F-2 SHOWS IT PRINTS `11` AGAINST `12` AND STILL EXITS `0`. IT IS A PRINTED NUMBER, NOT AN ASSERTION. `A LINE RENDERED IN THE GRAMMAR OF A VERIFICATION IS NOT A VERIFICATION` — R-491 struck a previous seat for exactly this, and I repeated it against the same file.**
+
+### ★★★★★ §1 — F-1 CONFIRMED, AND IT IS WORSE THAN THE GRADE STATES: THE CAPTION IS FALSE
+
+**[MEASURED HERE, executable source, delivery tree @ `2011e8de`] `tsBindingPlanAsPyShape()` `:223-250` is a HAND-WRITTEN WHITELIST — `10` binding fields and `11` plan fields, all literal. A TS field absent from that list is DROPPED BEFORE `diffDeep()` EVER SEES IT.**
+⚠️★★★★★ **ITS OWN DOC COMMENT `:218-221` READS: *"This function is deliberately **TOTAL** rather than selective — the bidirectional key-set check below turns any omission into a hard failure instead of a silent pass."* **THAT IS FALSE BY CONSTRUCTION.** The key-set check consumes the projection's OUTPUT, so it can only compare keys that SURVIVED the projection. A new TS-only field is dropped from the TS side, is absent from Python, the two agree, and the gate PASSES.**
+★★★★★ **SIXTH `CAPTION FALSIFIES ITS OWN LINE` OF THIS CAMPAIGN — and the grade did not name it. `THE REMEDY IS THE MECHANISM, NEVER A SOFTER CAPTION`: correction A must DELETE OR CORRECT THIS COMMENT, or the next reader re-trusts the word "TOTAL" and rebuilds the hole.**
+
+### ★★★★★ §2 — F-2 CONFIRMED, AND SCOPED SO NOBODY MISREADS IT
+
+**[MEASURED HERE, `:928-930`] `present = new Set(files)` · `missing = required_members.filter(m => !present.has(m))` · `undeclared = files.filter(f => !required_members.includes(f))`. **NO UNIQUENESS CHECK ON `required_members` EXISTS.** With member `24` replaced by a second copy of `23` and fixture `24` deleted: `missing` = EMPTY (both copies of `23` are present), `undeclared` = EMPTY, membership = EMPTY, **no failure**. `:944` would print `declared = 12, found = 11` — inside a `console.error` that only runs when `membership.length > 0`, i.e. never in this case.**
+⚠️★★★★★ **AND ITS COMMENT `:926-927` SAYS *"A deleted fixture must DENY the claim, never silently shrink the denominator."* IT SILENTLY SHRINKS THE DENOMINATOR. SEVENTH CAPTION-FALSIFIES-ITS-OWN-LINE.**
+★★★ **SCOPING, MEASURED, SO THIS IS NOT OVER-READ: the DELIVERED corpus is CLEAN — `required_members` array `12` · unique `12` · `Object.keys(fixtures)` `12`. **THIS IS A BLIND GATE, NOT A CORRUPT CORPUS.** No fixture in `2011e8de` is bad.**
+★★★★★ **THE PRECISE REMEDY POINTER, WHICH IS MINE AND NOT IN THE GRADE: the gate ALREADY HAS duplicate detection — `duplicateConditionIds()` `:296`, applied per-lane to `condition_id`s INSIDE a plan (`:508`, `:513`), with its own self-control and clean neighbour. **THE RIGHT CHECK EXISTS IN THE WRONG PLACE.** Correction B is not new machinery; it is the same discipline applied to corpus membership.**
+
+### §3 — EVIDENCE INDEPENDENTLY CHECKED · TESTS RERUN
+
+**[MEASURED HERE, delivery tree, `git status --porcelain` = `0` before AND after]:** parent = `9af37b8f` exact · `rev-list --count` = `1` · `git diff --name-status 3dcc6739..HEAD` = exactly ONE added path (the packet) · packet `5461086c…`, `44,231` B, `587` lines, identical in campaign and delivery · parity gate **EXIT `0`**, authority *"16314 bytes read, sha256=`3494d4bb…` (COMPUTED here, VERIFIED equal to ORACLE.json's pin)"* · `14` `[NOT ADJUDICATED]` cells · real `node node_modules/typescript/bin/tsc --noEmit` **EXIT `0`** with `--listFilesOnly` = `3146` files and all three changed TS files PRESENT, bogus-name negative control `0` · materiality receipt **EXIT `0`**, `12→11`, `false→true` = `0` · **no upstream, `git branch -r --contains HEAD` EMPTY** · parity gate wired at `ci.yml:370` + `fast.yml:153`, `materiality` = `0` in both.
+★★ **`[RELAYED]`, NOT re-run by me: every DYNAMIC result of the grader — the four authority failures, C4, Axis-D, E-2, and the two novel attacks' exit codes. Its environment `/root/ledger_e_delivery_grade` is NOT REACHABLE FROM THIS DESK. I confirmed the two SOURCE defects; I did not re-execute its mutations.**
+
+### §4 — ARCHITECTURE INVARIANTS TOUCHED
+
+**INSTRUMENT REPAIR ONLY.** Not authorized: session semantics · `FAMILY_META` · Python behaviour · refusal payloads · compiler output. **PYTHON IS NOT LOOSENED TO MAKE PARITY GREEN.**
+★★★★★ **THE RUNTIME TS CORRECTION IS NEITHER APPROVED NOR DISPROVED — ITS *PROOF* IS INADMISSIBLE, WHICH IS A DIFFERENT AND WEAKER STATEMENT THAN "THE REPAIR IS WRONG." Do not "fix" the engine in response to this ruling.** `2011e8de` is not production code and must not be integrated. Invariant 6 intact: no promotion to live capital.
+
+### §5 — FAILED OR UNPROVEN CONDITIONS
+
+Raw TS plan/binding schemas not exhaustively protected · `required_members` uniqueness and three-way membership equality UNENFORCED · **no hosted workflow execution for this delivery — the CI claim remains `[UNPROVEN — REQUIRES A PIPELINE RUN]`** · materiality is a hand-run receipt, NOT standing enforcement (AR-510 §5's declared gap, confirmed by me: `materiality` = `0` in both workflows) · `14` oracle cells unadjudicated · Gate-B population incidence UNMEASURED · no replacement delivery and no follow-up grade exist.
+
+### §6 — REQUIRED CORRECTIONS — **A → B → C**
+
+**A. EXHAUSTIVE NORMALIZATION BEFORE COMPARISON.** Explicit camelCase→snake_case bijection, compile-time exhaustive (`satisfies Record<keyof …, …>`); at RUNTIME compare the RAW object's own enumerable keys against the mapping keys **BEFORE projection**; reject extra raw key / missing mapped key / duplicate destination / unconsumed key, **naming the exact path**; only then may the object enter `diffDeep()`. ★★★★★ **AND CORRECT THE FALSE `TOTAL` COMMENT `:218-221` IN THE SAME EDIT.** RED-proofs: extra typed TOP-LEVEL field · extra typed BINDING field · **clean unmutated neighbour proving it is not always-red.** Each mutation must `tsc` **EXIT `0`**, be visible in raw TS output, be absent from Python, and drive the gate NON-ZERO naming the unmapped field.
+**B. MEMBERSHIP AS A THREE-WAY BIJECTION.** Before any `Set` is built: reject duplicate `required_members`, printing each duplicate WITH ITS MULTIPLICITY; assert exact unique-key equality across `required_members` ∧ actual `*.spec.json` filenames ∧ `Object.keys(oracle.fixtures)`; print additions / deletions / duplicate identities SEPARATELY; assert **both** array cardinality and unique cardinality — **neither substitutes for the other.** ★★ **Reuse the `duplicateConditionIds` pattern; do not invent a second idiom.** RED-proof: duplicate replacing a required identity + delete the displaced fixture → NON-ZERO naming BOTH the duplicate AND the cross-surface mismatch; retain clean / deletion-only / addition-only controls. ★★★ **AND FIX THE FALSE `:926-927` COMMENT.**
+**C. PRESERVE THE REJECTED RECEIPT, THEN REPLACE.** Do NOT amend, rewrite or relabel `2011e8de`. **DATED CORRECTION ADDENDUM** to the existing packet — never a rewrite of its historical sections, never backdated. WIP commits append on the isolated parity branch only. New delivery worktree from exact base `9af37b8f`; ONE atomic replacement commit. ★★★★★ **COMPARE PATH MEMBERSHIP AND CONTENT SEPARATELY — DO NOT FORCE THE TOTAL TO MATCH AN OLD NUMBER. `A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK.`**
+
+### §7 — FILES / SCOPE ALLOWED
+
+`scripts/check-spec-binding-plan-parity.ts` · `ci/fixtures/spec-binding-parity-expanded/**` only as these controls require · `docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` · `docs/designs/AGENT-REPORTS.md`. Transient fault injection may touch SCRATCH COPIES; every mutation restored and ABSENT from the delivered tree.
+**FORBIDDEN:** committed changes to `spec-family-bindings.ts` / `spec_family_bindings.py` / session tables / runtime semantics · `runtime-production` or `tf-deep-scan` edits · Python loosening · DB/spec/frozen writes · model runs, extraction, backtests · **push · PR · merge · deploy · production update** · rewriting the rejected delivery or WIP history · `git add -A`.
+
+### §8 — ACCEPTANCE COMMANDS
+
+`1` real `tsc --noEmit` EXIT `0` **with its known-bad positive control still EXIT `2`** · `2` normal gate EXIT `0`, authority hash COMPUTED from opened bytes · `3` top-level TS-only field → `tsc` `0`, gate NON-ZERO naming the field · `4` binding-level TS-only field → same · `5` duplicate-member + deleted-fixture → NON-ZERO, duplicate AND mismatch both named · `6` add-only and delete-only membership attacks still RED · `7` C4 → CLAIM 1 PASS / CLAIM 2 RED / exit `1` · `8` all four authority failures exit `1` BEFORE any plan witness · `9` Axis-D always-red caught by its clean neighbour · `10` E-2 named `false→true` exit `1`, restoration returns parity+materiality to `0` · `11` marker sweep + `git diff` prove complete restoration · `12` replacement: exact parent `9af37b8f`, one commit, clean tree, exact path-set reconciliation, updated packet identity.
+
+### §9 — STOP CONDITION
+
+**STOP AND REPORT WITHOUT ASSEMBLING A REPLACEMENT IF:** either novel attack still returns `0` · another exit-zero false-green appears · exhaustiveness still depends on a projection that can drop an unknown field · **a previously-biting attack stops biting** · the repair would need engine/Python semantic changes · the pinned base differs from `9af37b8f` · an unapproved path enters the delivery.
+
+### ⚠️★★★★★ §10 — THE FOLLOW-UP GRADE IS AN **UNOWNED PREREQUISITE**. I AM NAMING IT, NOT ASSIGNING IT TO NOBODY.
+
+**The relayed text orders the replacement returned to `/root/ledger_e_delivery_grade` for a bounded follow-up. [MEASURED HERE] THIS DESK CANNOT EXECUTE THAT: (1) this session's harness forbids launching Agent-tool subagents unless the operator asks; (2) that validator's environment is not reachable from this machine.**
+★★★★★ **`AN AUTHORIZATION THE HOLDER CANNOT EXECUTE IS AN UNOWNED PREREQUISITE` (§0.5). THE OPERATOR IS THE ONLY PARTY WHO CAN ROUTE THE FOLLOW-UP GRADE, AND THEY HAVE BEEN TOLD IN PLAIN WORDS. THE WORKER DOES NOT GRADE ITS OWN REPAIR, AND NEITHER DO I.** Until that grade exists: **P0 REPAIR ACTIVE · `F` CONSUMED AS `NOT-SOUND` · GATE B BLOCKED · NO INTEGRATION.**
+
+### §11 — LESSONS TO PERSIST
+
+★★★★★ **`A BIDIRECTIONAL COMPARATOR IS ONLY AS WIDE AS THE OBJECT THAT REACHES IT — A LOSSY PROJECTION MAKES A PERFECT DIFF PERFECTLY BLIND.`**
+★★★★★ **`A MEMBERSHIP ARRAY IS NOT A SET UNTIL DUPLICATES ARE REJECTED. "12 DECLARED" CAN MEAN 11 IDENTITIES.`**
+★★★★★ **`A PRINTED COUNT IS NOT A COMPARED COUNT.` I read `12 … against 12` as a check; it is a `console.log`.**
+★★★★★ **`REGISTERED FIXTURES PROVE THEIR MEMBERS AND NOTHING OUTSIDE THEM.` Every pre-registered attack bit, and the object was still unsound — **the NOVEL hunt was the load-bearing half of `F`.** A green suite is a statement about the suite.**
+★★★ **`A DOC COMMENT ASSERTING TOTALITY OVER A LITERAL FIELD LIST IS A FALSE CAPTION.` Two of them, in the file that carried both false greens.**
+
+### §12 — AUTHORIZED NEXT ACTION
+
+**`R-496-P0-REPAIR`: corrections A → B → C, AUTHORIZED TO THE CURRENT WORKER SEAT** — not to a successor. **FIRST OBSERVABLE ~2 min:** START-RECEIPT naming the isolated worktree, exact base, allowed files, and the PRE-REGISTERED expected outcomes for BOTH novel attacks. **INTERIM ~25 min:** first exhaustive-schema RED/GREEN proof. **ETA ~60–90 min:** corrected WIP + replacement atomic delivery + report.
+★★ **Blueprint rev-4 `67d650a8` (*"docs: record P0 grade false-greens"*, `06:07:41`) VERIFIED TO EXIST; adoption into the campaign tree is a SEPARATE audited cherry-pick and is NOT claimed here. `CHERRY-PICK THE COMMIT YOU AUDITED, NEVER THE BRANCH IT SAT ON.`**
+
+---
+
 ## R-495 · 2026-07-30 · ★★★★★ **E IS APPROVED — THE FAILURE SIGNAL NOW HAS ALL THREE PARTS AND I VERIFIED THE ONE I MISSED LAST TIME: `process.exit` IN THE EMITTER WENT `0` → `3`, WITH `:244 process.exit(1)` INSIDE `if (violations.length > 0)`.** ★★★★★ **AR-508 §2 IS CORRECTED: THE RATIFY PACKET EXISTS — THE SEARCH SURFACE WAS WRONG. BUT ITS CONCERN SURVIVES, AND THE HONEST VERB IS `UPDATE`, NOT `AUTHOR`.** **§5A → §5B → §5C AUTHORIZED. `F` STAYS CLOSED.**
 
 ★ **WORKER — START HERE.** **§5A (revise the packet) → §5B (build the delivery) → §5C (verify the tree you SHIP).** Your §2 premise is corrected in §2 below; you are unblocked.
