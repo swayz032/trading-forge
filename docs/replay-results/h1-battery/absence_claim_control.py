@@ -80,6 +80,17 @@ MAX_FILES = 20_000
 
 PRESENT, ABSENT, UNREADABLE = "PRESENT", "ABSENT", "UNREADABLE"
 
+# F-2 (graded NOT-SOUND): a hardcoded non-ASCII glyph in a printed line raised
+# UnicodeEncodeError on the exit-0 path under cp1252 -- clean on PowerShell, fatal
+# on cmd.exe, CI and scheduled runs, i.e. exactly the unattended context this
+# campaign exists for. ★ A CRASH IS NOT A FAIL-CLOSED DENIAL: it destroys the exit
+# code that carries the verdict, and while reproducing F-1 it masked run B's real
+# exit 0 behind an exit 1, which would have read as "the guard denied the claim".
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+except Exception:  # pragma: no cover - older interpreters / redirected non-tty
+    pass
+
 
 def enumerate_repos(root: pathlib.Path) -> dict[pathlib.Path, str]:
     repos: dict[pathlib.Path, str] = {}
@@ -106,18 +117,68 @@ def owning_repo(path: pathlib.Path, repos: dict[pathlib.Path, str]) -> str:
     return best
 
 
-def collect_files(surfaces: list[pathlib.Path], name_glob: str) -> list[pathlib.Path]:
+def collect_files(surfaces: list[pathlib.Path],
+                  name_glob: str) -> tuple[list[pathlib.Path], list[tuple[pathlib.Path, str]]]:
+    """★★★★★ THE INVARIANT (R-474 §5 Item 1), ordered as a PROPERTY not a list of shapes:
+
+        EVERY MEMBER OF THE INTENDED SURFACE IS EITHER READ, OR REPORTED
+        `UNREADABLE`. THERE IS NO THIRD OUTCOME.
+
+    F-1, graded NOT-SOUND: this function walked with a bare `os.walk()`, whose
+    default `onerror=None` SILENTLY SWALLOWS `PermissionError`, and a nonexistent
+    path yields zero entries with no exception at all. So a dropped surface member
+    never became `UNREADABLE` -- it never entered enumeration, and the fail-closed
+    `try/except` downstream in `scan_file` only fires on files we actually OPEN.
+    Typo one `--surface` name and a file containing a REAL occurrence vanished from
+    the output while the tool printed "0 UNREADABLE", "every member participates in
+    the verdict", ADMISSIBLE, exit 0.
+
+        `A SURFACE IS NOT FAIL-CLOSED UNTIL ITS ENUMERATION IS.`
+        `EVERY BOUNDARY THE CLAIM CROSSES MUST FAIL CLOSED, NOT ONLY THE LAST
+         ONE YOU FIXED.`
+
+    Returns (files, problems). ANY problem DENIES the claim -- see run_text_check.
+    """
     out: list[pathlib.Path] = []
+    problems: list[tuple[pathlib.Path, str]] = []
+
     for s in surfaces:
+        if not s.exists():
+            problems.append((s, "SURFACE DOES NOT EXIST -- a --surface argument that "
+                                "resolves to nothing contributed zero files silently"))
+            continue
         if s.is_file():
             out.append(s)
             continue
-        for dirpath, dirnames, filenames in os.walk(s):
-            dirnames[:] = [d for d in dirnames if d not in PRUNE_DIRS]
+        if not s.is_dir():
+            problems.append((s, "SURFACE IS NEITHER A FILE NOR A DIRECTORY"))
+            continue
+
+        def onerror(exc: OSError, _s: pathlib.Path = s) -> None:
+            # os.walk's default is to DISCARD this. Capturing it is the whole fix.
+            where = getattr(exc, "filename", None) or _s
+            problems.append((pathlib.Path(where),
+                             f"TRAVERSAL FAILED: {type(exc).__name__} -- directory could "
+                             f"not be listed, so its members were never enumerated"))
+
+        for dirpath, dirnames, filenames in os.walk(s, onerror=onerror):
+            keep: list[str] = []
+            for d in dirnames:
+                if d in PRUNE_DIRS:
+                    continue  # DECLARED exclusion, printed with every run -- not a silent drop
+                dp = pathlib.Path(dirpath) / d
+                if dp.is_symlink():
+                    # os.walk(followlinks=False) would skip this WITHOUT a word.
+                    # "Not traversed for ANY reason" must deny the claim.
+                    problems.append((dp, "DIRECTORY SYMLINK NOT TRAVERSED "
+                                         "(os.walk followlinks=False) -- contents never enumerated"))
+                    continue
+                keep.append(d)
+            dirnames[:] = keep
             for fn in filenames:
                 if name_glob == "*" or fnmatch.fnmatch(fn, name_glob):
                     out.append(pathlib.Path(dirpath) / fn)
-    return out
+    return out, problems
 
 
 def scan_file(p: pathlib.Path, pats: list[re.Pattern[str]]) -> tuple[str, int, str]:
@@ -136,8 +197,14 @@ def run_text_check(patterns: list[str], control: pathlib.Path, surfaces: list[pa
                    name_glob: str, root: pathlib.Path, *, verbose: bool = True,
                    max_files: int = MAX_FILES) -> int:
     t0 = time.monotonic()
-    pats = [re.compile(p, re.MULTILINE) for p in patterns]
-    files = collect_files(surfaces, name_glob)
+    try:
+        pats = [re.compile(p, re.MULTILINE) for p in patterns]
+    except re.error as exc:
+        # F-3a: this raised an unhandled re.error -> traceback, exit 1. A usage
+        # error must return the DOCUMENTED usage code, not a stack trace.
+        print(f"USAGE ERROR: invalid --pattern regex: {exc}", file=sys.stderr)
+        return 4
+    files, surface_problems = collect_files(surfaces, name_glob)
     if len(files) > max_files:
         if verbose:
             print("\n" + "!" * 74)
@@ -152,7 +219,10 @@ def run_text_check(patterns: list[str], control: pathlib.Path, surfaces: list[pa
     elapsed = time.monotonic() - t0
 
     n_present = sum(1 for v in results.values() if v[0] == PRESENT)
-    unreadable = [p for p, v in results.items() if v[0] == UNREADABLE]
+    # Files we OPENED and could not decode, PLUS members that never reached
+    # enumeration at all. Both deny the claim; only the first kind existed before.
+    unreadable = [(p, results[p][2] or "decode failed") for p, v in results.items()
+                  if v[0] == UNREADABLE] + surface_problems
 
     if verbose:
         print("=" * 74)
@@ -189,12 +259,15 @@ def run_text_check(patterns: list[str], control: pathlib.Path, surfaces: list[pa
     if unreadable:
         if verbose:
             print("\n" + "!" * 74)
-            print(f"VERDICT UNAVAILABLE -- exit 8 (FAIL CLOSED): {len(unreadable)} enumerated")
-            print("surface member(s) could not be read. SURFACE-WIDE ABSENCE REQUIRES")
-            print("SURFACE-WIDE DECIDABILITY -- an absence over a file that was never")
-            print("read is not an absence. This is the defect that diagnosed four rounds.")
-            for p in unreadable[:5]:
-                print(f"  unreadable: {p}")
+            print(f"VERDICT UNAVAILABLE -- exit 8 (FAIL CLOSED): {len(unreadable)} intended")
+            print("surface member(s) were NOT READ. Either the file could not be decoded,")
+            print("or it never entered enumeration at all -- a --surface that resolves to")
+            print("nothing, a directory that could not be listed, an untraversed symlink.")
+            print("SURFACE-WIDE ABSENCE REQUIRES SURFACE-WIDE DECIDABILITY, and a member")
+            print("that was never enumerated is the same hole as one that was never read.")
+            for pp, why in unreadable[:8]:
+                print(f"  DENIED BY: {pp}")
+                print(f"            {why}")
             print("!" * 74)
         return 8
 
@@ -238,6 +311,19 @@ FIXTURES = [
      "AR-461's wrong object"),
     ("text: surface exceeds the runtime bound", "text_bound", 4,
      "refused BEFORE reading, so a breach cannot become a truncated admissible answer"),
+    # ---- F-1 (graded NOT-SOUND). The PAIR is the fixture; neither half alone is.
+    ("F-1 A: honest two-surface run, real token in the 2nd surface", "f1_honest", 0,
+     "THE CONTROL HALF. A guard that refuses everything is not a repair, so this must "
+     "STAY green -- and it is what makes run B diagnostic rather than anecdotal"),
+    ("F-1 B: one --surface name typo'd, four characters apart", "f1_typo", 8,
+     "the graded defect: the typo'd surface silently contributed zero files, a file "
+     "holding a REAL occurrence vanished from the output, and the tool reported "
+     "0 UNREADABLE / every-member-participates / ADMISSIBLE / exit 0"),
+    ("F-1 C: a --surface that does not exist at all", "f1_missing", 8,
+     "the same hole reached by the simplest possible route"),
+    ("F-3a: invalid --pattern regex returns the usage code", "bad_regex", 4,
+     "it raised an unhandled re.error -> traceback exit 1; a usage error owes the "
+     "DOCUMENTED code, and exit 1 is indistinguishable from a crash mid-verdict"),
 ]
 
 
@@ -261,9 +347,25 @@ def self_test() -> int:
         elif kind == "text_offsurface":
             got = run_text_check([r"writeFileSync"], FIX / "genuine_static.ts",
                                  [FIX / "nonexistent"], "*.ts", DEFAULT_ROOT, verbose=False)
-        else:  # text_bound
+        elif kind == "text_bound":
             got = run_text_check([r"writeFileSync"], FIX / "genuine_static.ts", [FIX],
                                  "*.ts", DEFAULT_ROOT, verbose=False, max_files=1)
+        elif kind == "f1_honest":
+            got = run_text_check([r"writeFileSync"], FIX / "visible" / "control.ts",
+                                 [FIX / "visible", FIX / "hidden"], "*.ts",
+                                 DEFAULT_ROOT, verbose=False)
+        elif kind == "f1_typo":
+            # `hiddne` -- four transposed characters, the whole defect
+            got = run_text_check([r"writeFileSync"], FIX / "visible" / "control.ts",
+                                 [FIX / "visible", FIX / "hiddne"], "*.ts",
+                                 DEFAULT_ROOT, verbose=False)
+        elif kind == "f1_missing":
+            got = run_text_check([r"writeFileSync"], FIX / "visible" / "control.ts",
+                                 [FIX / "visible", FIX / "no_such_dir_9C41"], "*.ts",
+                                 DEFAULT_ROOT, verbose=False)
+        else:  # bad_regex
+            got = run_text_check([r"writeFileSync("], FIX / "visible" / "control.ts",
+                                 [FIX / "visible"], "*.ts", DEFAULT_ROOT, verbose=False)
         ok = got == want
         print(f"\n[{'PASS' if ok else 'FAIL'}] {label}")
         print(f"       PRE-REGISTERED {want}, got {got}")

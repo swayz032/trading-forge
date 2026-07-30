@@ -4,6 +4,82 @@
 
 ---
 
+## AR-475 · 2026-07-29 · ★★★★★ **ITEM 1 DONE. F-1 CLOSED AS A PROPERTY AND PROVEN ON THREE INDEPENDENT ROUTES — YOUR TYPO RUN, A MISSING `--surface`, AND A PERMISSION-DENIED DIRECTORY THE GRADER COULD NOT EXECUTE AND I COULD (`TRAVERSAL FAILED: PermissionError`, exit `8`). RUN A STAYS EXIT `0`.** ★★★★★ **F-2 FIXED, AND REPRODUCING IT TAUGHT ME SOMETHING THE GRADE DID NOT SAY: THE CRASH WAS **MASKING** F-1. My run B exited `1`, which reads as "the guard denied the claim" — IT DID NOT. A CRASH IS NOT A FAIL-CLOSED DENIAL, AND A BROKEN GUARD THAT CRASHES LOOKS EXACTLY LIKE A WORKING ONE.** ★★★ **F-3a → `4`. `10/10` AT PRE-REGISTERED CODES. DIRECTORY-SYMLINK CASE `[NOT EXECUTED]` — PRIVILEGE DENIED, AND I AM NOT CALLING IT COVERED.** ★★★★★ **HANDING OFF: ITEM 2 IS NOT MINE AND A FRESH SEAT IS NEEDED.**
+
+**RULING ID:** R-474 §5 Item 1 · **TASK ID:** AR-474 · **PRIOR:** AR-473 · **COMMIT AT WRITE `a16936cb` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED on Item 1. Item 2 DECLINED (AR-474) — a fresh worker seat is needed and its contract is already written in R-474 §2.**
+
+### ★★★★★ §1 — F-1, CLOSED AS THE PROPERTY YOU ORDERED
+
+**ONE invariant, not a shape list:** every member of the INTENDED surface is either READ or reported `UNREADABLE`; **there is no third outcome.** Implemented as a per-`--surface` existence/type check before traversal · `os.walk(..., onerror=…)` capturing every traversal error · untraversed directory symlinks RECORDED rather than skipped · and `PRUNE_DIRS` now PRINTED with every run as a **declared** exclusion, so the one legitimate omission is stated rather than silent.
+
+| route | pre-reg | got |
+|---|--:|--:|
+| **your run A** (honest, two surfaces, real token in the 2nd) | `0` | **`0`** — the control STAYS green |
+| **your run B** (`hidden`→`hiddne`, four characters) | `8` | **`8`** · `DENIED BY: absence-fixtures\hiddne` |
+| a `--surface` that does not exist at all | `8` | **`8`** |
+| ★★★★★ **permission-denied DIRECTORY — the grader's case, which the grader could NOT run** | `8` | **`8`** · `TRAVERSAL FAILED: PermissionError -- directory could not be listed, so its members were never enumerated` |
+| directory SYMLINK not traversed | `8` | ★★★ **`[NOT EXECUTED]` — `os.symlink` → `WinError 1314: A required privilege is not held`. The handler exists and is UNPROVEN. I pre-committed to reporting this rather than assuming it, and I am.** |
+| F-3a invalid `--pattern` regex | `4` | **`4`** (was an unhandled `re.error` → traceback exit `1`) |
+| F-2 `cp1252` stdout on the exit-`0` path | `0` | **`0`**, no `UnicodeEncodeError` |
+| the six pre-existing fixtures | `8·0·2·8·3·4` | **unchanged** |
+
+**`--self-test` = `10/10` at PRE-REGISTERED codes, exit `0`.** ★★ **F-3b (duplicate `--surface` display double-count) NOT FIXED — cosmetic, the verdict logic dedupes correctly, and it was not free. Declared rather than quietly dropped.**
+
+### ★★★★★ §2 — WHAT REPRODUCING IT TAUGHT ME, WHICH IS NOT IN THE GRADE
+
+★★★★★ **F-2 WAS MASKING F-1.** On my first reproduction BOTH runs exited `1`. That is not a denial — it is the `★` crashing on redirected stdout, killing the process before the verdict printed. ★★★ **So on any redirected/CI/scheduled run, the broken guard was INDISTINGUISHABLE FROM A WORKING ONE: F-1 said "admissible, exit 0" and F-2 overwrote that with a non-zero crash. Two defects that individually falsify the tool combined to look like correct fail-closed behaviour. `A CRASH IS NOT A FAIL-CLOSED DENIAL`, and I would not have seen it if I had reproduced on PowerShell as you did.**
+★★★ **AND A FIXTURE-SHAPE CORRECTION AGAINST MYSELF: my first F-1 fixture put the CONTROL inside the dropped surface, which returns exit `3` (control not in surface) for an entirely different reason and would have "passed" while proving nothing. The defect only bites when the control sits in the SURVIVING surface and a real occurrence sits in the dropped one. `A FIXTURE THAT PASSES FOR THE WRONG REASON IS NOT A FIXTURE.`**
+★★★★★ **AND AN INSTRUMENT FAILURE I CAUGHT BEFORE PUBLISHING IT AS A FINDING: my first permission test ran `icacls` through Git Bash, which mangled `/deny` into `C:/Program Files/Git/deny`; the ACL was NEVER APPLIED and the probe printed `errors captured = 0`. **THAT WOULD HAVE READ AS "the onerror handler does not fire".** Re-run in PowerShell, `onerror` FIRED with `PermissionError` immediately. `A SURPRISING NEGATIVE ACCUSES THE INSTRUMENT FIRST` — the tenth instance in this lane and the second I caught pre-publication.**
+
+### ★★★ §3 — THE MEASUREMENT YOU OWED THE FIX: TEXT-MODE ABSENCE CITATIONS
+
+**`[UNENUMERATED]` → NOW ENUMERATED, with the surface named.** Surface: all of `docs/designs/*.md`. Control probe passed — the token `absence_claim_control` appears in `4` files (`ADVISOR-RULINGS.md`, `ADVISOR-STATE.md`, `AGENT-REPORTS.md`, `GATE-B-RATIFY-PACKET-2026-07-29.md`), so the search was capable.
+★★★ **RESULT: every surviving mention is MECHANISM or REPAIR NARRATIVE — line-number citations inside rulings (`:109`, `:129`, `:151`, `:184`) and the repair reports. NO LIVE CLAIM RESTS ON A TEXT-MODE ABSENCE RUN, so there is NOTHING TO RE-RUN.** ★★ **Scope stated honestly: this covers `docs/designs/`. Claims living outside that directory are `[UNENUMERATED]` — and note the irony I am deliberately not committing, that this is itself an absence claim, so I give you its surface and its control rather than its confidence.**
+
+### ★★★★★ §4 — HANDOFF. A FRESH WORKER SESSION IS NEEDED.
+
+**POSITION:** `a16936cb` + this commit · branch `h1-wave4-sealed12-driver` · tree `wt-h1-wave4-20260712`. **Files touched: `absence_claim_control.py`, `absence-fixtures/` (added `visible/`, `hidden/`), `AGENT-REPORTS.md`. `c8_provenance_ledger.py` NOT touched — it is graded SOUND and you said leave it.**
+★★★ **NOTHING HALF-DONE. NOTHING IN FLIGHT. NO SUB-AGENT DISPATCHED OR OWED BY ME — none this entire session, verified rather than assumed. No grade claimed: `afc644b1bbcb0c742` has delivered `NOT-SOUND` on the PREVIOUS commit; the next grade fires on this one and is yours to dispatch and name.**
+★★★★★ **THE NEXT TASK, AS YOU DEFINED IT, SO THE INCOMING SEAT RE-DERIVES NOTHING: R-474 §5 ITEM 2 — revise `GATE-B-RATIFY-PACKET-2026-07-29.md` against §2's SIX requirements. Its full contract is in R-474 §2. ★★★ AND THE FIRST CONCRETE ACT IS SMALL AND UNAMBIGUOUS: **OPEN THE FOUR `entry_conditions` CONSUMERS** — `spec-timeframe-recovery.ts` (whose `:8` docstring and `:229`/`:233` EMPTY returns are the design break), `playbook-registration.ts`, `spec-archetype-matcher.ts`, `spec-family-bindings.ts`. **I listed them BY NAME and never opened them, and that is exactly how the design break survived my packet.** `BEFORE REMOVING A FIELD, ASK WHO READS IT — AND OPEN THAT FILE, DO NOT NAME IT.`**
+★★ **ALSO WAITING, AND BOTH ARE YOURS: the survivor truth set (R-474 §4, keyed to `(video, transcript hash, exact span, exact-slice hash)`, five case types, frozen BEFORE any treatment result) · and whether `0b0d6617` moves the C8 count, which decides whether the CONTROL arm is the frozen control.**
+**Remaining uncertainty:** ★ directory-symlink traversal `[NOT EXECUTED, privilege denied]` · ★ text-mode citations outside `docs/designs/` `[UNENUMERATED]` · ★ the four consumers `[NAMED ONLY, UNVERIFIED]` · ★ packet call-site scope-lock `[PARTIALLY UNENUMERATED]` · ★ span SEMANTIC correctness `[UNPROVEN]` · ★ population overlap map `[UNENUMERATED]` · ★ `dc8a150` authority `[CORROBORATED, NOT PROVEN]`.
+**Risk:** low — the only executable change is enumeration plumbing in a read-only diagnostic; no producer, engine, DB, frozen byte or empty-spine behaviour touched.
+★★★★★ **A FRESH WORKER SESSION IS NEEDED. This seat has run `AR-459 → AR-475` (17 reports, 9 rulings) and is handing off at a clean boundary: every fixture green at a pre-registered code, every file committed, nothing pending, and one fully-specified next task waiting.**
+
+---
+
+## AR-474 · 2026-07-29 · **START-RECEIPT — R-474 §5 ITEM 1 ONLY, THEN I HAND OFF. ★★★★★ AND I DECLARE THE SPLIT NOW RATHER THAN AT THE 60-MINUTE MARK: I TAKE THE BOUNDED F-1/F-2/F-3a REPAIR; I DO **NOT** TAKE ITEM 2. YOUR OWN §5 NOTE IS THE RIGHT READ AND I AM ACTING ON IT INSTEAD OF TESTING IT.**
+
+**RULING ID:** R-474 §5 Item 1 · **TASK ID:** AR-474 · **STATUS:** START-RECEIPT + DECLINE-RECEIPT on Item 2 · **PRIOR:** AR-473 · **COMMIT AT START `a16936cb`.**
+
+★★★★★ **F-1 IS ACCEPTED WITHOUT ARGUMENT AND IT IS WORSE THAN A MISSING FIXTURE — THE TOOL PRINTS THE LAW IT BREAKS. Your run B typo'd one surface name, `secret.ts` VANISHED from the output, and the tool reported `0 UNREADABLE` · "ALL 2 surface members were readable" · ADMISSIBLE · exit `0`, under a header reading *"ENUMERATED SURFACE (every member participates in the verdict)"*. I WROTE THAT HEADER IN THE SAME COMMIT AS THE BUG IT DESCRIBES.**
+★★★★★ **AND THE MECHANISM IS EXACTLY WHERE YOU READ IT: I put the fail-closed `try/except` in `scan_file` (`:129`) — the READ boundary — while `collect_files` (`:109`) walks with bare `os.walk()`, whose default `onerror=None` swallows `PermissionError`, and a nonexistent path yields zero entries with no exception at all. **A DROPPED MEMBER NEVER BECOMES `UNREADABLE` BECAUSE IT NEVER ENTERS ENUMERATION.** R-472 §0's law reappearing one layer upstream of the layer I had just fixed: `EVERY BOUNDARY THE CLAIM CROSSES MUST FAIL CLOSED, NOT ONLY THE LAST ONE YOU FIXED.`**
+★★★ **`9/9`, THEN `17/17`, THEN `6/6` — AND THE SUITE SHRANK WHILE THE LAW HELD. I will not cite a passing suite as closure again in this lane.**
+
+### PRE-REGISTERED EXIT CODES — WRITTEN BEFORE ANY RUN
+
+| # | fixture | PRE-REG |
+|---|---|--:|
+| 1 | ★★★★★ **your run A — honest `--surface visible --surface hidden`, real token in `hidden/secret.ts`** | **`0`** (the control MUST stay green — a guard that refuses everything is not a repair) |
+| 2 | ★★★★★ **your run B — `hidden` typo'd `hiddne`** | **non-zero (`8`)** |
+| 3 | permission-denied DIRECTORY (grader's case) | **`8`** — ★★ **and if I cannot create the condition without admin rights I will report it `[NOT EXECUTED]`, not assume it** |
+| 4 | directory SYMLINK not traversed | **`8`** — same honesty clause; `[NOT EXECUTED]` if symlink creation is denied |
+| 5 | F-3a invalid `--pattern` regex | **`4`** (documented usage code, not a traceback exit `1`) |
+| 6 | F-2 `cp1252` stdout on the exit-`0` path | **`0`**, no `UnicodeEncodeError` |
+| 7–12 | the existing six fixtures | **unchanged: `8 · 0 · 2 · 8 · 3 · 4`** |
+
+**HOW I AM FIXING IT — AS THE PROPERTY, NOT THE SHAPES (your §5 wording, and I take the point that shape-enumeration is what failed four times):** ONE invariant — **every member of the INTENDED surface is either READ or reported `UNREADABLE`; there is no third outcome.** Implemented as a per-`--surface` existence/type check BEFORE traversal · `os.walk(..., onerror=…)` capturing every traversal error as an `UNREADABLE` surface entry · and untraversed directory symlinks recorded rather than silently skipped. ★★★ **None of this is semantic analysis, so it is NOT the forbidden fifth round — it is `os.walk` plumbing plus an existence check, and it is the concrete validator counterexample that both R-473 and the read named as the only thing that reopens this file.**
+**ALSO IN ITEM 1:** F-2 encoding-safe stdout (it is clean on PowerShell and bites `cmd.exe`, CI and scheduled runs — the unattended context this campaign exists for) · F-3a → `4` · F-3b only if free.
+★★ **AND THE MEASUREMENT YOU OWED THE FIX, WHICH I WILL PRODUCE: enumerate whether any LIVE claim rests on a TEXT-mode absence run. Currently `[UNENUMERATED]`. F-1 was live for every text-mode run ever made, so any such claim must be RE-RUN after the repair.**
+
+### ★★★★★ DECLINE-RECEIPT — ITEM 2, AND THE REASON IS THE TASK, NOT MY MOOD
+
+**I AM NOT TAKING THE PACKET REVISION.** ★★★★★ **Item 2 requires OPENING FOUR CONSUMER FILES I have only ever named, then designing a versioned `execution_context[]` contract traced across five layers, a deterministic SPLITTER (not a classifier) with the `"trade MES on the five-minute chart only during New York session"` fixture, a fix/experiment separation with its own materiality receipt, and an envelope-level artifact hash. That is a DESIGN task on a surface this seat has never read — and this seat has just been shown, for the fifth time, that it certifies a class from the instances it happens to be holding.** ★★★ **`RETAINED METADATA MUST MEAN CONSUMED METADATA` was found by an outside reader OPENING the file I had listed by name. The next seat should open those four files with a fresh budget, not inherit my summary of them.**
+★★ **This is a DECLINE-RECEIPT, not a stall: Item 2's contract is written in R-474 §2 IN FULL, its authorization outlives this session, and per R-473 §0's law the DESK owns seating it — `AUTHORIZATION MAY OUTLIVE A SESSION; OWNERSHIP MAY NOT.`**
+**FIRST OBSERVABLE:** this receipt. **NEXT:** the twelve fixtures at their pre-registered codes, ~30 min, then my handoff AR. **STOP:** any fixture deviating from the table above · the surface property proving impossible without semantic analysis.
+
+---
+
 ## AR-473 · 2026-07-29 · ★★★★★ **GATE-B PACKET STAGED — `docs/designs/GATE-B-RATIFY-PACKET-2026-07-29.md`. NO CODE WRITTEN, NO GRADER-HELD FILE OPENED.** ★★★★★ **AND IT CARRIES A FINDING THE RULINGS DID NOT HAVE: THE SPAN/EVIDENCE INVARIANT FAILURE IS LOCALISED TO **ONE LINE**. `dc8a150:117` — `provenance: SPAN((r.evidence_span || c.text).trim(), c.start, c.end)` — STORES THE **MODEL'S** QUOTE AGAINST THE **CLAUSE'S** OFFSETS. TWO DIFFERENT OBJECTS IN ONE RECORD. THAT IS THE MECHANISM BEHIND BYTE-EXACT `0 / 232`, AND IT WAS `[NOT DETERMINED]` UNTIL NOW.** ★★★ **THE PACKET IS SUFFICIENT TO IMPLEMENT BEHIND A FLAG AND **NOT** SUFFICIENT TO RUN THE ABLATION — TWO PREREQUISITES ARE OWED BY THE DESK AND I NAME BOTH.**
 
 **RULING ID:** R-473 §4 · **TASK ID:** AR-472 · **PRIOR:** AR-471 (accepted for grading) · **COMMIT AT WRITE `138f26e9` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED on the staged packet. Gate B remains BLOCKED on `afc644b1bbcb0c742` — I am not asking for implementation authority.**
