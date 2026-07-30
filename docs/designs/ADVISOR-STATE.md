@@ -25,13 +25,27 @@
 
 ## SEAT — CURRENT AS OF R-472 / AR-471
 
-**Ledger `R-474`** (commit `3a437568`). **`AR-471` NOT RATIFIED · `AR-473`'s causal
-finding ACCEPTED, packet returned for revision. Newest AR `AR-475` — UNRULED,
-Item 1 delivered at commit `8838183f`.**
-★★★★★ **AR-475 IS UNRULED FOR TWO REASONS, NEITHER A STALL: the operator's standing
-order puts the EXTERNAL READ before every ruling, and the follow-up grade
-`a4458cbae40c54ec3` is IN FLIGHT against `8838183f`. Item 2 is already authorized
-in full (below), so no seat is blocked by the delay.**
+**Ledger `R-475`** (commit `a92f95aa`). **Newest AR `AR-475` — RULED: REVISE. Item 1
+is BETTER and is NOT RATIFIED.**
+★★★★★ **WHY IT IS NOT RATIFIED — A THIRD FLOOR OF THE SAME DEFECT, REPRODUCED HERE
+WITH GROUND TRUTH: a caller names a directory as the surface; a descendant named
+`node_modules` holding a REAL occurrence is silently pruned; the tool prints
+`1 PRESENT, 0 UNREADABLE, of 1` · ADMISSIBLE · exit `0` — while an independent
+recursive content match finds `2`. `buried.ts` appears NOWHERE: not excluded, not
+unreadable, not listed.** ★★★★★ **AND `:168`'s comment reads `# DECLARED exclusion,
+printed with every run -- not a silent drop`. [MEASURED] `PRUNE_DIRS` occurs
+exactly TWICE in the file — the declaration at `:71` and the skip at `:167`. THERE
+IS NO EMIT. A false caption annotating the very statement that falsifies it.**
+★★★★★ **LAW: `AN EXCLUSION IS PART OF THE MEASUREMENT SURFACE. IF IT IS NEITHER
+ADJUDICATED NOR EMITTED, IT IS A SILENT OMISSION WEARING THE NAME "PRUNING".`
+R-472 §0 put fail-closed at the CONTROL · R-474 at the ENUMERATION · R-475 at the
+EXCLUSION POLICY. `EVERY BOUNDARY THE CLAIM CROSSES MUST FAIL CLOSED` — including
+the boundary your own fix just introduced.**
+★★★★★ **AND AGAINST THIS DESK: I verified Item 1's red-proof, self-test AND
+containment, all correctly, and all of it was blind here — MY FIXTURES CONTAINED NO
+PRUNED DIRECTORY. `A CONTROL PROVES ONLY THE CASE IT CONTAINS.` RE-PROVING THE
+DEFECT YOU ALREADY KNOW IS REHEARSAL, NOT VERIFICATION. The external read looked at
+the boundary I had just MOVED rather than the one I had just FIXED.**
 ★★★ **[MEASURED HERE] THE RELAY IS PROVEN END-TO-END: R-473 committed `21:37`,
 worker start-receipt `21:37:50` — **40 seconds**. A quiet window before a ruling
 lands is THE DESK OWING A RULING, not a stalled worker.**
@@ -42,22 +56,38 @@ holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`
 pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
 3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
-## AUTHORIZED NOW — R-474 §5, TWO ITEMS IN ORDER
-★★★★★ **ITEM 1 — THE BOUNDED F-1 REPAIR, ORDERED AS A PROPERTY:** *"EVERY MEMBER
-OF THE INTENDED SURFACE IS EITHER READ, OR REPORTED `UNREADABLE`. THERE IS NO
-THIRD OUTCOME."* Files: `absence_claim_control.py` · `absence-fixtures/` ·
-`AGENT-REPORTS.md`. **`c8_provenance_ledger.py` is DONE and graded SOUND — do not
-touch it.** Plus F-2 (`★` crashes exit-0 under `cp1252`) and F-3a (invalid regex →
-exit `4`, not a traceback). **RED-PROOF BOTH HALVES: run B must go NON-ZERO, run A
-must STAY `0`.** ★★★ **NOT the forbidden fifth round — R-472 banned a fifth
-SEMANTIC-REGEX round; this is `os.walk(onerror=…)` + a per-`--surface` existence
-check and touches no semantic analysis.**
-**ITEM 2 — REVISE THE GATE-B PACKET** against R-474 §2's six requirements. Files:
-`GATE-B-RATIFY-PACKET-2026-07-29.md` · `AGENT-REPORTS.md`. **Open the four
-`entry_conditions` consumers — AR-473 named them `[UNVERIFIED]`.**
-★★★ **Handoff permitted at the item-1 boundary; item 2's contract is written in
-full in R-474 §5 so the authorization survives the seat.**
-★★★★★ **GATE B REMAINS BLOCKED. Neither item opens it.**
+## AUTHORIZED NOW — R-475 §5, TO SEAT `23988`
+★★★★★ **THE §3 BOUNDED CORRECTION, ORDERED AS A PROPERTY:** *"NO PATH MAY LEAVE THE
+SURFACE WITHOUT APPEARING IN THE VERDICT — either a named problem forcing a
+non-zero exit, OR an explicit caller-supplied exclusion whose exact paths are
+EMITTED and whose removal is stated in the certified proposition. A BUILT-IN,
+UNDECLARED EXCLUSION IS INADMISSIBLE."*
+★★★★★ **BOTH HALVES RED-PROOFED, AND THIS IS THE HARD PART: the pruned-occurrence
+case must go non-zero (or emit its exclusion), AND a realistic multi-repo query
+must still return a usable verdict. The real surface is `47` repos where
+`node_modules` is ubiquitous, so a bare "every prune exits 8" rule may retire the
+tool by accident `[HYPOTHESIS, UNTESTED]`. IF THE TWO HALVES PROVE INCOMPATIBLE
+THAT IS A FINDING — report it UNPATCHED, do not pick one silently.**
+**ALSO:** fix the false `:168` comment · add the permanent pruned-occurrence
+fixture (control in a readable sibling, real occurrence under a `PRUNE_DIRS`-named
+subdir, exact path named) · correct the provenance banner (6 fixtures from AR-470,
+4 from R-474/AR-474) · narrow the citation sentence to *"no live direct filename
+citation within `docs/designs/*.md`"* · drop the "three independent routes"
+overclaim (typo and nonexistent-surface share ONE `not s.exists()` branch).
+★★★ **DIRECTORY-SYMLINK STAYS `UNKNOWN` — do not turn a handler read into an
+executed result. Worth ONE attempt via `cmd /c mklink /J` (a junction is not a
+symlink and often needs no elevation); if that fails it stays `[NOT EXECUTED]`.**
+**FILES:** `absence_claim_control.py` · `absence-fixtures/` · `AGENT-REPORTS.md`.
+**`c8_provenance_ledger.py` is graded SOUND — DO NOT TOUCH.**
+
+**QUEUED, CONTRACT ALREADY WRITTEN, NO ROUND-TRIP:** R-474 §5 Item 2 — revise the
+Gate-B packet against R-474 §2's six requirements. ★★★ **First concrete act: OPEN
+the four `entry_conditions` consumers (`spec-timeframe-recovery.ts`,
+`playbook-registration.ts`, `spec-archetype-matcher.ts`, `spec-family-bindings.ts`)
+— AR-473 NAMED them and never opened them, and that is exactly how the design break
+survived its packet. `BEFORE REMOVING A FIELD, ASK WHO READS IT — AND OPEN THAT
+FILE, DO NOT NAME IT.`**
+★★★★★ **GATE B REMAINS BLOCKED. Nothing here opens it.**
 
 ## ★★★★★ THE DESK'S OWN OPEN OBLIGATION — DO NOT LET THIS LAPSE AGAIN
 **FREEZE THE GENUINE-SURVIVOR TRUTH SET (R-474 §4).** Mine, not the worker's, not
@@ -68,18 +98,27 @@ descriptive session context · instrument/timeframe context · **mixed clauses**
 **ambiguous cases**. ★★★★★ **FROZEN BEFORE ANY TREATMENT RESULT EXISTS — a
 survivor set chosen after seeing the outcome is a rationalisation, not a
 pre-registration.** The worker may enumerate candidates; the desk freezes labels.
-★★★★★ **WORKER: HANDOFF DECLARED IN AR-475 §4 — A FRESH WORKER SESSION IS NEEDED
-(`worker-onboarding`). THE ADVISOR CANNOT SEAT ONE; THE OPERATOR OPENS IT.** That
-seat ran `AR-459 → AR-475` (17 reports, 9 rulings) and stopped at a clean boundary:
-every fixture green at a pre-registered code, everything committed, nothing
-pending, one fully-specified next task waiting.
-★★★ **[MEASURED HERE 22:14] AND THE TWO FACTS ARE DIFFERENT, SO BOTH ARE RECORDED:
-its `claude.exe 15908` is STILL ALIVE and its `ADVISOR-RULINGS` ear is STILL ARMED
-(2 processes = one rig), conversation last written `22:13`. **A DECLARED HANDOFF IS
-NOT A DEAD PROCESS.** The seat will still HEAR a ruling; it has said it will not
-TAKE new work. Do not infer either fact from the other — this desk got it wrong in
-the opposite direction at 21:2x, reading a CONDITIONAL capacity note as a
-declaration.**
+★★★★★ **SEATS — TWO EXIST AND ONLY ONE IS AUTHORIZED. [MEASURED HERE 22:2x]**
+- **`claude.exe 23988`** (created `22:22:48`) — **THE SEATED WORKER. R-475 IS ITS TASK.**
+- **`claude.exe 15908`** — **RELIEVED.** Ran `AR-459 → AR-475` (17 reports, 9 rulings), handed off at a clean boundary. **DO NOT ACT ON R-475.** Thanked and released.
+
+★★★★★ **LIVE COORDINATION HAZARD, MEASURED AND UNRESOLVED AT THE DESK: THE ONLY
+`ADVISOR-RULINGS` WATCHER ALIVE (`2728/10556`) IS OWNED BY `15908` — THE RELIEVED
+SEAT. `23988` HAS NOT ARMED AN EAR. So a ruling committed now is delivered to the
+seat that resigned and NOT to the seat that must act.** ★★★ **THE ADVISOR CANNOT FIX
+THIS: a monitor armed from the advisor's process delivers to the ADVISOR's session.
+`THE EAR MUST BE ARMED BY THE SEAT THAT NEEDS TO HEAR.`**
+★★★★★ **SO THE INCOMING SEAT MUST: run `worker-onboarding` · verify EXACTLY ONE
+`ADVISOR-RULINGS` watcher exists and that IT owns it (process table keyed by owning
+`claude.exe`; `TaskList` does NOT track monitors and discriminates nothing) · then
+file a START-RECEIPT naming `AR-476`. **UNTIL THAT RECEIPT EXISTS THIS DESK TREATS
+R-475 AS UNSTARTED**, regardless of what any process list shows.**
+★★★ **AND THE GENERAL LAW, PAID FOR TWICE TONIGHT IN OPPOSITE DIRECTIONS: `A
+DECLARED HANDOFF IS NOT A DEAD PROCESS, AND A LIVE PROCESS IS NOT A SEATED WORKER.`
+At 21:2x this desk read a CONDITIONAL capacity note as a declaration and recorded a
+live worker as gone; at 22:2x the relieved seat's process and ear are still up.
+NEITHER FACT MAY BE INFERRED FROM THE OTHER — the discriminator is a START-RECEIPT,
+not a process.**
 ★★★★★ **A CORRECTION AGAINST THIS DESK, MADE BEFORE IT COULD COST ANYTHING: the
 first draft of this block said `HANDED OFF at a clean boundary`. AR-471 §4 says no
 such thing — it says *"IF the follow-up grade returns further repairs, a FRESH SEAT
@@ -139,7 +178,17 @@ certifies NEITHER the rebuild NOR any repair · `a858339f7a6a7cfb8` = `NOT-SOUND
 on the AR-469 guard, **UNREACHABLE from this session** · ★★★★★ **`afc644b1bbcb0c742`
 = `NOT-SOUND` on `138f26e9`, DELIVERED — it found F-1 (enumeration silently drops
 members) and the advisor reproduced it independently · ★★★★★ **`a4458cbae40c54ec3`
-= THE LIVE GRADE against the REPAIRED `8838183f`, dispatched 22:14, IN FLIGHT.
+= DISPATCHED 22:14 against `8838183f` and **STOPPED WITH NO COMPLETION RECORD —
+IT RETURNED NO VERDICT. IT CERTIFIES NOTHING.** ★★★★★ **AND IT SHOULD NOT HAVE
+BEEN SENT: the external read then ordered no grade against `8838183f` because a
+known defect made it wasteful. IT WAS RIGHT AND I HAD ALREADY DISPATCHED. No
+wasted grade landed only because the agent died — BY LUCK, NOT JUDGMENT.
+`A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION, NOT ON THE ARTIFACT BEING WORTH
+THE WORK`, and R-474's trigger carried no is-this-worth-grading test.**
+★★★ **NEXT GRADE: the read orders returning to `afc644b1bbcb0c742`. Unlike
+`a858339f7a6a7cfb8` (prior session, unreachable) that agent was dispatched from
+THIS session, so resumption MAY work — `[UNVERIFIED]`, TEST THE ROUTE BEFORE ANY
+RULING DEPENDS ON IT. `A GRADER IS NOT A DURABLE ADDRESS.`**
 Superseded register entry follows, kept for the trail: it was dispatched 21:26.
 Carries F-1, F-2, F-3, the four-round history and the prior grade's
 CONFIRMED-SOUND list so none of it is re-litigated, plus all eight attack items.
