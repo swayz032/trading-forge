@@ -16,6 +16,13 @@
 > > **For identical input, TypeScript and Python emit the same COMPLETE normalized binding plan, and no
 > > session token is bindable unless the runtime has an evaluable implementation.**
 
+⚠️★★★★★ **REVISED 2026-07-30 AT DELIVERY TIME (R-495 §5A) — SEE `## 8 — DELIVERY ADDENDUM` AT THE END OF
+THIS FILE. §1–§7 BELOW ARE THE STAGING-TIME RECORD AND ARE PRESERVED EXACTLY AS WRITTEN BEFORE ANY CODE
+EXISTED. NOTHING MEASURED AFTER STAGING HAS BEEN EDITED INTO THEM.** ★★★ **`NEVER BACKDATE AN UPDATE INTO
+THE ORIGINAL RECEIPT` — the pre-registrations in §4 are only worth reading if they still say what they
+said before the run. Where §4/§6/§7 have been OVERTAKEN by measurement, §8 says so explicitly rather than
+silently amending them.**
+
 ---
 
 ## 1 — WHAT & WHY NOW (receipts, not narrative)
@@ -384,3 +391,197 @@ equivalent. It proves the lanes agree ON THE CORPUS THEY WERE GIVEN. The members
 the grader's own fixtures (4.3) are what carry the claim past its fixtures — and `A PARITY GATE THAT
 PASSES ITS FIXTURE WHILE ITS DECLARED DOMAIN CONTAINS A COUNTEREXAMPLE IS A FIXTURE DEMO, NOT A PARITY
 GATE.`**
+
+---
+
+# ★★★★★ 8 — DELIVERY ADDENDUM · ADDED 2026-07-30 AT DELIVERY TIME (R-495 §5A)
+
+> ★★★★★ **THIS IS AN ADDENDUM, NOT A REWRITE.** §1–§7 are the pre-implementation record. Every value in
+> §8 was **re-derived by the builder in the parity worktree at `3dcc6739`** for this addendum — not
+> copied from a ruling, a report, or an earlier session's number. ★★★ **`A NUMBER CARRIED ACROSS A FIX IS
+> STALE EVEN WHEN THE WORDS AROUND IT ARE FRESH.`**
+>
+> ★★★★★ **THE BUILDER WROTE THIS AND THE BUILDER DOES NOT GRADE IT.** §8.9 states, without softening,
+> that the independent grade **does not exist**.
+
+**LANE:** `C:/Users/tonio/Projects/wt-ledger-e-parity-20260730`, branch `hardening/ledger-e-parity-20260730`.
+**BASE PIN:** `9af37b8f` — `[MEASURED HERE]` `git merge-base --is-ancestor 9af37b8f 3dcc6739` → **true**.
+**WIP HEAD:** `3dcc6739`. **REVIEWED NET DELTA:** `[MEASURED HERE]` `git diff --stat 9af37b8f..3dcc6739` =
+**`22 files changed, 2477 insertions(+), 81 deletions(-)`**; the sorted 22-path list hashes to
+`9057df03531ff94cbb5f55a5ab3c6a2dc9ee6a662c5bf9ab3c2c4439c8e530e6`.
+
+---
+
+### 8.1 — THE AUTHORITY IS READ AND HASHED AT RUN TIME, AND IT FAILS CLOSED
+
+★★★★★ **The oracle no longer asserts its own freshness. `scripts/check-spec-binding-plan-parity.ts`
+imports `createHash` (`:46`), reads the frozen authority declared by `ORACLE.json`, computes its SHA-256
+(`:873`) and compares it to the pinned value. `A VALUE A FILE ASSERTS ABOUT ITSELF IS NOT A CHECK` (`:806`).**
+
+| | `[MEASURED HERE]` |
+|---|---|
+| authority file | `docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md` |
+| its sha256, computed from bytes | **`3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2`** |
+| where pinned | `ci/fixtures/spec-binding-parity-expanded/ORACLE.json:21-22` (`authority_file` · `authority_sha256`) |
+| `ORACLE.json` sha256 | `4fee4e1d9eb1d7da1568e83b9a3c337a5e2fc67ee9676d4086109ee3d30c7300` |
+
+**FOUR FAIL-CLOSED CASES, each an explicit `AUTHORITY FAILURE` at the executable line — not a warning:**
+`:842` no `authority_file` declared · `:849` `authority_sha256` absent or not 64-hex · `:863` the
+declared authority cannot be read · `:876` computed hash ≠ pinned hash.
+★★★ **AND THE LINE THE RECEIPT PRINTS WAS CHANGED TO REPORT WHAT THIS PROCESS COMPUTED, NOT WHAT
+`ORACLE.json` CLAIMS (`:1056`, `:1064`).** A receipt that echoes the asserted value cannot distinguish a
+verified pin from a copied one.
+★★ **RESIDUAL, NAMED AND NOT IMPLIED (carried from `ORACLE.json:27`): the check is hermetic ABOUT THIS
+TREE.** It proves the committed authority copy matches the pin; it **cannot** see the campaign-tree
+original drifting away from both. **Binding on the desk: any future amendment re-encodes the parity copy
+AND this pin in the same motion, or this gate's green is VOID until it does.**
+
+### 8.2 — THE P-7 OVER-REFUSAL PROPERTY, ASSERTED OVER A POPULATION RATHER THAN A FIXTURE
+
+★★★★★ **P-7 is checked as a PROPERTY over the full non-session family × refused-phrase grid in BOTH
+lanes (`:571`, `:609`), not as a hand-picked row.** The property it actually asserts is **INDEPENDENCE**:
+a non-session family's evaluability must not move because a session zone was refused (`:717-744`,
+`[authority §4d / P-7]`).
+
+**Its own preconditions fail closed, which is what stops the property from passing vacuously:**
+`:633` the declared population changed → **MEMBERSHIP FAILURE** · `:651` a probe phrase no longer names a
+refused zone → **PRECONDITION FAILURE** · `:659` the NEUTRAL twin now names a refused zone →
+**PRECONDITION FAILURE** · `:708`/`:713` a generated probe or its neutral twin is missing from the plan.
+★★★ **POSITIVE CONTROL INSIDE THE PROPERTY (`:755`, `:761`, `:775`): a `WAIT_SESSION` row carrying the
+SAME text must still be refused, and must be DISCRIMINABLE from the non-session row.** Without it,
+"nothing over-refuses" is satisfiable by a check that reaches nothing.
+★★ **P-7 failures are counted into `oracleFailures`, reported SEPARATELY from agreement failures
+(`:960-978`, `:1107`) — see §8.4. `AGREEMENT IS NOT A DEFENCE` (`:617`).**
+
+### 8.3 — WHOLE-PLAN, BIDIRECTIONAL, WITH ITS OWN PLANTED SELF-CONTROLS
+
+**CLAIM 1 is a whole-plan structural comparison (`:252-288`), not a selected subset:**
+- **BIDIRECTIONAL key-set equality** (`:266-271`) — a field present in either lane and absent in the
+  other is itself drift. ★★ **`A NEW FIELD IS A NEW DRIFT BY DEFAULT.`**
+- **Arrays compare ELEMENTWISE AT INDEX** (`:277-283`) — length equality alone was the old gate's blind
+  spot, so a reorder is not a no-op.
+- **Duplicate `condition_id` is checked PER LANE, not as a diff** (`:290-305`). ★★★ **`TWO LANES
+  AGREEING ON A DUPLICATE IS STILL A DEFECT` — a diff-only check would call that green.**
+
+★★★★★ **AND THESE ARE RED-PROOFED IN-RUN BY PLANTED SELF-CONTROLS, EACH WITH ITS CLEAN NEIGHBOUR — so a
+detector that stopped detecting fails loudly instead of passing quietly (`:506-568`):**
+
+| axis-4 self-control | planted | clean neighbour |
+|---|---|---|
+| **D-1 duplicate id** | duplicated `condition_id` must be **DETECTED AND NAMED** (`"PLANTED_DUP", 2x`) — `:520` *"a detector that cannot name what it caught is half a green"* | same-shape plan with DISTINCT ids must be **SILENT** (`:527`) |
+| **D-2 MULTIPLICITY** | element duplicated → comparator must report `length ts=2 py=3` (`:537-538`) | — |
+| **D-2 ORDER** | same elements swapped → comparator must report a `condition_id` divergence (`:539-540`). ★★ **`A REORDER IS NOT A NO-OP`** | two IDENTICAL plans must produce **zero** output (`:553-562`) — *"a comparator that reports drift on identical input makes every drift it reports uninterpretable"* |
+
+★★★ **All planted IN-RUN on synthetic plans. NO CORPUS MEMBER IS LEFT PERMANENTLY INVALID (`:564-567`) —
+this closes R-488 §3's two `[UNPROVEN]` checks.**
+
+### 8.4 — THE 14 UNADJUDICATED CELLS, ENUMERATED — AND AGREEMENT ≠ CORRECTNESS
+
+★★★★★ **THE GATE REPORTS TWO CLAIMS SEPARATELY AND REFUSES TO LET ONE STAND IN FOR THE OTHER
+(`:1076`, `:1107`): `AGREEMENT ok / CORRECTNESS failed` is a REACHABLE STATE, printed as such.** Where no
+external authority adjudicates a value, the oracle must say so — a field may not be both expected and
+declared-unadjudicated (`:336`, enforced at `:433`), and an omission with no stated reason is itself a
+failure (`:397-401`). ★★ **A fixture with no oracle row cannot pass (`:385`, `:941`).**
+
+**`[MEASURED HERE]` — enumerated from `ORACLE.json`, 14 condition-level cells across 6 fixtures:**
+
+| fixture | condition · field(s) | n |
+|---|---|---|
+| `00-control-shipped.spec.json` | `unknown-session` · `approximation` | 1 |
+| `21-fivemin-chart.spec.json` | `sess` · `approximation` | 1 |
+| `30-compiled-flip.spec.json` | `third` · `approximation` | 1 |
+| `31-flip-neg-control.spec.json` | `third` · `approximation` | 1 |
+| `40-overrefusal-boundary.spec.json` | `filter_lunch` · `bias_overnight` · `retest_midday`, each `primitive` + `session_zone` + `approximation` | 9 |
+| `50-family-axis-invalidations.spec.json` | `inv_in_entry` · `bindable` | 1 |
+| **total** | | **14** |
+
+**Plus 1 `scalars_unadjudicated` and 2 `conditions_unadjudicated` plan-level declarations, printed at
+`:1072-1076` under `DECLARED ORACLE COVERAGE GAPS (agreement still enforced on these; CORRECTNESS is
+not)`.** ★★★ **`required_members` = 12 — and the membership manifest is DELIBERATELY WIDER than the
+oracle's adjudicated surface. The gap is DECLARED AND PRINTED ON EVERY RUN, not inferred from a blank.**
+
+### 8.5 — CI + FAST-LANE WIRING, AND THE F-A SHAPE IT CLOSES
+
+★★★★★ **THIS IS THE ONE WHERE "THE NAME EXISTS" WAS NEVER THE CLAIM.** `[MEASURED HERE]` at base
+`9af37b8f`: the npm script `check:spec-binding-plan-parity` **already existed** (`package.json:28`) and
+executed in **NEITHER** workflow — `ci.yml` **0** references, `fast.yml` **0**. ★★★ **POSITIVE CONTROL:
+the same grep finds `20` `npm run` lines in base `ci.yml`, so the search reaches and the absence is
+real.** **That is F-A exactly: a name that existed in one file and ran in none.**
+
+**NOW:** `.github/workflows/ci.yml:370` and `.github/workflows/fast.yml:153`, both `run: npm run
+check:spec-binding-plan-parity`.
+⚠️★★★ **DECLARED GAP, NOT PAPERED OVER: the materiality receipt emitter is NOT wired into either
+workflow** — `[MEASURED HERE]` `grep -c materiality` in `ci.yml` and `fast.yml` = **0** in both. It is a
+**generated delivery artifact run by hand**, not a standing CI gate. **Its non-zero exit (§8.6) protects
+the run that produces the receipt, and nothing else.** ★★ **A grep hit was never sufficient here and it
+is not sufficient now: the pipeline claim is only closed by an OBSERVED non-zero exit in the pipeline,
+which `[UNPROVEN]` this tree has not produced — no pipeline run exists (§8.9).**
+
+### 8.6 — THE MATERIALITY CONTROL: REACHABLE WITNESS **AND** ENFORCEMENT
+
+**The receipt's failure signal has three parts and `[MEASURED HERE]` all three are present in
+`scripts/materiality-receipt-ledger-e.ts`:**
+
+| part | evidence |
+|---|---|
+| **REACHABLE** | `ci/fixtures/materiality-control/00-compiled-false-baseline.spec.json` — **OUTSIDE** the 12-spec efficacy population, which cannot produce a `false→true` transition at all. The control's own `false→false` baseline is asserted (`:211-215`), so a control that quietly stopped licensing anything fails loudly. ★★★ **It is built from `EXCEPTION`/`unsupported: true` — a reason THE REPAIR DOES NOT OWN. `A CONTROL MUST NOT BE ENTANGLED WITH THE THING IT MEASURES.`** |
+| **DETECTED** | the transition is identified and the control **NAMED BY FILE** (`:216-222`, `FORBIDDEN compiled TRANSITION false→true`) |
+| **STOPS THE RUN** | ★★★★★ **`process.exit(1)` at `:244`, inside `if (violations.length > 0)` (`:241`)** — plus `:200`, which exits non-zero when the control directory is EMPTY, because a PASS with no reachable witness is unfalsifiable |
+
+⚠️★★ **PRECISION, BECAUSE THE COUNT ITSELF WAS ONCE THE DEFECT: the token `process.exit` appears `3`
+times in that file — `:192` is a COMMENT, `:200` and `:244` are EXECUTABLE. The enforcement claim rests
+on the two executable lines, read, not on the token count.** `A GREP MATCHING A COMMENT IS NOT A
+VERIFICATION.` **At R-494 the same file contained `0`; it printed `STOP AND FILE IT` and returned `0`.
+`A DECLARED FAILURE SIGNAL THAT RETURNS SUCCESS IS NOT A GATE.`**
+★★★★★ **AND THE CRITERION IS UNCHANGED IN DIRECTION: `A HIGHER compiled COUNT AFTER THIS CHANGE IS A
+FAILURE SIGNAL.` The main 12-spec receipt moved `12 → 11`.**
+
+### 8.7 — ROLLBACK, RESTATED AGAINST WHAT WAS ACTUALLY BUILT
+
+★★★★★ **§5's ruling holds and the delivered tree obeys it: THERE IS NO FLAG. `[MEASURED HERE]`
+`TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED` appears **0** times in the 22 delivered paths.**
+- **The correction ships UNCONDITIONALLY.** `YOU DO NOT FLAG-GATE A CORRECTNESS REPAIR — THE OFF BRANCH
+  IS THE DEFECT.`
+- **ROLLBACK = `git revert` of the single delivery commit.** No historical artifact, DB row, frozen spec
+  or emitted receipt is mutated by this change, so revert restores prior behaviour exactly. There is no
+  partial rollback and no runtime switch.
+- **NO SWITCH MAY RESTORE DIVERGENCE.** If an emergency switch is ever added, its OFF state must **HALT
+  OR QUARANTINE** onboarding — never resume divergent binding. **The comparator's completeness and the
+  CI wiring are likewise unswitchable: a gate you can silently disable is not a gate.**
+- **Nothing live is altered** — `backtests_total = 0`, no funded account trading.
+
+### 8.8 — THE GRADER'S RE-PLANT LIST (R-495 §4) — DISPATCHED BY THE DESK, NOT BY ME
+
+**FIVE independent re-plants, plus a novel hunt. Named here so the grader does not have to re-derive the
+attack surface, and so a short brief is visibly a short brief:**
+1. **two-lane `C4`** — re-plant it and confirm RED in BOTH lanes.
+2. **all four authority fail-closed cases** (§8.1: missing `authority_file` · malformed
+   `authority_sha256` · unreadable authority · hash mismatch).
+3. **`D`'s detector-reports-on-everything** — the duplicate-id / multiplicity / order self-controls with
+   their clean neighbours (§8.3).
+4. **`E-2` ratio loosening** — the materiality control's `false→true` transition, asserting the **exit
+   code**, not the banner (§8.6).
+5. **ONE NOVEL FALSE-GREEN HUNT** of the grader's own design.
+
+★★★★★ **THE BRIEF MUST CARRY A WORKING ACCESS RECIPE, NOT PROHIBITIONS. `A RESTRICTION IN THE GRADER'S
+BRIEF IS A HOLE IN THE RESULT` (§4.3 lists which claim dies for each withheld capability — Python
+execution, the `TF_SPEC_BINDING_SAMPLES_DIR` override, permission to author its OWN fixtures, repo-wide
+grep).** ★★★ **THE HONEST NULL IS A COMPLETE ANSWER. The agent is `accuracy-validator`, it is dispatched
+by the DESK, and its agent id is named in the consuming ruling.**
+
+### 8.9 — ★★★★★ STATUS, STATED SO A PARTIAL CANNOT READ AS COMPLETE
+
+| | state |
+|---|---|
+| **WIP evidence** | ✅ **EXISTS** — steps A–E, in the parity worktree at `3dcc6739` |
+| **FINAL DELIVERY OBJECT** | ❌ **DOES NOT EXIST** at the time this addendum is written (R-495 §5B is the next step) |
+| **§5C re-verification against the SHIPPED tree** | ❌ **NOT RUN** — `VERIFY THE TREE YOU SHIP, NOT THE ONE YOU BUILT` |
+| **INDEPENDENT GRADE** | ❌ **DOES NOT EXIST, AND NONE IS DUE** until the delivery object exists AND §5C passes on it |
+
+★★★★★ **STILL `[UNMEASURED]`, CARRIED FORWARD FROM §6 AND NOT QUIETLY RETIRED: POPULATION INCIDENCE —
+how many real specs in the source-keyed Gate-B population actually contain an orphan-zone `WAIT_SESSION`
+clause. Everything above is a MECHANISM proven at the executable line. THE INCIDENCE IS THE NUMBER THAT
+DECIDES THEORETICAL vs LIVE, and it has not been measured.**
+★★★★★ **AND THE SCOPE SENTENCE A TIRED SESSION WOULD DROP: this closes a PREREQUISITE. It leaves P0 at
+its final assembly step. It does not complete the compiler, does not produce a trading-ready strategy,
+and P1–P3 and Gate B still follow. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
