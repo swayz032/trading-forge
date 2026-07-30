@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1961` at THIS commit, 2026-07-30 03:40 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1998` at THIS commit, 2026-07-30 03:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `1961` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `1998` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,7 +82,44 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-490 / AR-498** (2026-07-30 03:40, FRESH ADVISOR SEAT)
+## ★★★★★ SEAT — CURRENT AS OF **R-491 / AR-499** (2026-07-30 03:55, FRESH ADVISOR SEAT)
+
+★★★★★ **AUTHORITY HASH CHANGED AGAIN — `3494d4bb…` (`16,314` B). `09e016fd…` AND `9b708e24…` ARE
+BOTH SUPERSEDED. RE-VERIFY BEFORE ANY ORACLE RUN.**
+
+⚠️★★★★★ **R-491 (`71303b2d`) STRIKES MY OWN R-485 §1/§8 (warning annotation on the original at
+`d56ce4df`, ledger rule 4).** I published that the gate *"emits the authority hash it graded
+against"* and minted it as a standard. **[MEASURED HERE] IT NEVER COMPUTES IT: `authority_sha256`
+appears twice — interface `:369`, `console.log` `:615` — there is NO `createHash`, the authority
+file is never opened, and it is ABSENT from the parity branch (`0` hits, positive control `1`).
+The line transcribes a value `ORACLE.json` ASSERTS ABOUT ITSELF.**
+★★★★★ **`A LINE RENDERED IN THE GRAMMAR OF A VERIFICATION IS NOT A VERIFICATION.` I read stdout
+and inferred a mechanism without opening the emitter. FIFTH caption-falsifies-its-own-line.**
+★★ **The printed value is CURRENTLY correct (AR-498 §19 verified it three ways); the defect is
+that nothing ENFORCES it. Everything else in R-485 stands.**
+
+★★★★★ **THE TWO-LANE OVER-REFUSAL BLINDNESS IS ADJUDICATED, NOT ACCEPTED.** AR-499 measured that
+with BOTH lanes over-refusing identically the gate prints `EXIT 0 · PASS` — **with a POSITIVE
+WITNESS taken during the green run (Python `bindable=False` on `3/3` probes, `confluence_bound`
+`3 → 0`), which is what separates "the gate is blind" from "my mutation never took".**
+**`P-7` + authority **§4d** close it: a session-scoped refusal may only affect a condition that
+CONSULTS a session window, so an over-refusal on a non-session family is a defect **EVEN IF BOTH
+LANES DO IT IDENTICALLY. AGREEMENT IS NOT A DEFENCE.** ★★★ **NARROW ON PURPOSE — §4d adjudicates
+`bindable` and `reason` ONLY; `primitive` is `FAMILY_META`-sourced and stays `[NOT ADJUDICATED]`.
+`ADJUDICATE THE PROPERTY YOU CAN DERIVE, NOT THE ROW IT SITS IN.`**
+
+**AXIS 2 COMPLETE 8/8** (rows authored from the occupancy probe BEFORE first run, prediction held).
+**AXIS 3 PARTIAL — 3 of 13 non-session families; the "shared call site" argument is correctly
+labelled `[HYPOTHESIS — UNPROVEN]` and 3-of-13 is NOT "adequately covered".**
+**BOTH DIRECTIONS OF FAIL-CLOSED MEMBERSHIP NOW PROVEN** — missing member DENIES (AR-494) and
+extra member DENIES (AR-499, from a real cause).
+**AUTHORIZED NEXT:** (1) provenance-line repair — compute the hash **or** label it
+`ASSERTED-NOT-VERIFIED`; an unlabelled hash is forbidden · (2) axis 3's remaining 10 · (3) axis 1 ·
+(4) axis 4 · (5) materiality receipt. ★★★★★ **GRADE STILL NOT TRIGGERED.**
+★★ **TRAP RECORDED: a stale `__pycache__/*.pyc` kept mutation markers after the source was
+reverted. `A .pyc IS A SECOND COPY OF THE CODE YOU THINK YOU REVERTED.`**
+
+### SUPERSEDED SEAT LINE — R-490 / AR-498
 
 ★★★★★ **A FRESH WORKER SEAT IS ACTIVE** (operator seated it; AR-498 is its start-receipt for the
 membership matrix). **AR-498 IS RULED by R-490.**
@@ -269,7 +306,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1961` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1998` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
