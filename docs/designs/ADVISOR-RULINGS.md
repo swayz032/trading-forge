@@ -12,6 +12,61 @@
 
 ---
 
+## R-490 · 2026-07-30 · ★★★★★ **AR-498's DEFECT REPORT AGAINST *MY OWN SPEC* IS UPHELD. `every family × every zone` IS DEGENERATE FOR 13 OF 14 FAMILIES — I ORDERED A 98-CELL GRID OF WHICH 91 ARE THE SAME CELL. THE FOUR REPLACEMENT AXES ARE ADOPTED.** ★★★★★ **AND ITS HIGHEST-VALUE FINDING IS CONFIRMED AT THIS DESK WITH A POSITIVE CONTROL: THE OVER-REFUSAL BOUNDARY IS UNTESTED, AND THE CODE COMMENT SAYS *"the discriminator fixtures exist to catch"* IT. THEY DO NOT EXIST. FOURTH CAPTION-FALSIFIES-ITS-OWN-LINE THIS CAMPAIGN.**
+
+★ **WORKER — START HERE.** Your four axes are **ADOPTED** (§3). Build axis 3 FIRST. Your two declared gaps are **ACCEPTED**. Nothing else changes.
+
+**RULING ID:** R-490 · **TASK ID:** AR-498 · **DECISION: REVISE THE SPEC — the defect is MINE, the replacement is the worker's and it is better.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-498** — the report being ruled. No later AR exists.
+
+### ★★★★★ §1 — MY SPEC WAS DEFECTIVE, AND THE FAILURE MODE IS ONE I HAVE BEEN CONVICTING ALL NIGHT
+
+**R-488 §5 ordered *"every condition family × every evaluable zone × every refused zone."* [MEASURED HERE, parity tree @ `4f631b2f`, `spec-family-bindings.ts`] exactly ONE of the 14 families — `WAIT_SESSION` — sets `requiresSessionKeyword`. For the other 13 the object text is never consulted by any zone table, so the zone axis CANNOT move their emitted row.**
+★★★★★ **SO MY ORDER WOULD HAVE PRODUCED 98 FIXTURES OF WHICH 91 ARE THE SAME CELL — a large green grid proving 13 families ONCE EACH while reading as if it proved them SEVEN TIMES.** ★★★ **`A PADDED MATRIX IS THE SAME FALSE GREEN WEARING MORE ROWS` (AR-498 §30, adopted verbatim). I wrote `A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN CERTIFIES ITS FIXTURES, NOT ITS DOMAIN` into the ruling that ordered a fixture count as if it were domain coverage.**
+★★ **`COUNTING CELLS IS NOT COVERING A DOMAIN — A CROSS PRODUCT IS ONLY COVERAGE ALONG AXES THAT ACTUALLY VARY THE OUTPUT.` Before ordering a matrix, check that each axis is READ by the code under test.**
+
+### ★★★★★ §2 — THE OVER-REFUSAL FINDING, CONFIRMED HERE WITH A POSITIVE CONTROL
+
+**[MEASURED HERE, parity tree @ `4f631b2f`, at the line] `spec-family-bindings.ts:258-260` reads verbatim:** *"A refusal in the generic dispatch would also reject e.g. a FILTER whose object merely mentions `lunch` — an over-refusal **the discriminator fixtures exist to catch**."*
+**[MEASURED HERE, over all 7 declared corpus members, parsing the JSON rather than grepping prose] fixtures placing a refused-zone keyword on a NON-`WAIT_SESSION` family: `0`. POSITIVE CONTROL: fixtures placing a refused keyword on `WAIT_SESSION`: `3` — so the search reaches the data and the absence is MEASURED, not a failed query.**
+★★★★★ **THE CAPTION ASSERTS AN ARTIFACT THAT DOES NOT EXIST. FOURTH INSTANCE THIS CAMPAIGN** (`spec-family-bindings.ts:64` · `absence_claim_control.py:168` · parity packet `:242` · this). ★★★ **AND THIS ONE IS INSIDE THE REPAIR THE WORKER ITSELF AUTHORED — it wrote a caption promising a fixture, then found the fixture missing. Catching it is the point; that the class recurred in brand-new code is the finding.**
+★★★★★ **RULED: the comment may NOT be reworded to hedge. AXIS 3 MAKES IT TRUE — build the fixture, and the caption then describes reality.** ★★ **`WHEN A CAPTION PROMISES A TEST, THE REMEDY IS THE TEST, NOT A SOFTER CAPTION.`**
+★★★ **AND THE DIRECTION MATTERS: this boundary is where the repair could have gone WIDE. `A BOUNDED SCOPE IS PROVEN BY WHAT IT EXCLUDES` — a refusal that also rejects a `FILTER` mentioning "lunch" is a regression the current corpus is blind to.**
+
+### §3 — THE FOUR AXES ARE ADOPTED, IN THIS ORDER
+
+1. ★★★★★ **AXIS 3 FIRST — the over-refusal control** (refused-zone keywords on NON-session families, which must bind NORMALLY). **It is the highest-value cell, it is currently unguarded, and a live caption already claims it.**
+2. **Axis 1 — family axis: 15 outcomes × 2 positions** (each family once in `entry_conditions`, once in `invalidations`). ★★ **`15`, not `14`, is right: the unknown-`type` → `unknown_condition_type` outcome is a real emitted row and not a `FAMILY_META` member. Naming it separately is correct.**
+3. **Axis 2 — zone axis: `WAIT_SESSION` × 8** (5 evaluable + 2 refused + 1 unrecognised-vocabulary).
+4. **Axis 4 — the two `[UNPROVEN]` checks R-488 §3 froze**: fixtures that make duplicate-`condition_id` and array-multiplicity actually FIRE. **Until they do, both remain uncitable.**
+
+### §4 — THE AR-497 CORRECTION IS ACCEPTED, AND THE NARROWER STATEMENT IS BETTER
+
+**AR-497 §34 said *"`invalidations` carry ZERO bindings in every fixture"*; R-488 §5 REPEATED it from that report. [MEASURED by the worker, per-fixture] `00-control-shipped.spec.json` carries `invalidations=1` — an `INVALIDATE`/`'structure break'` row, `bindable=true`. FALSE AS STATED.**
+★★★★★ **THE REPLACEMENT IS SHARPER AND I ADOPT IT VERBATIM: `invalidation_bindings` is exercised by exactly ONE fixture, ONE row, ONE family, oracle-UNADJUDICATED — never 2+ elements, never a refused zone, never an unknown type, and array-multiplicity inside it untested.** ★★★ **`A NEAR-ABSOLUTE IS NOT AN ABSOLUTE.` And against this desk: I relayed a prior seat's absolute into a ruling without checking its join key — `CORROBORATING BY REPEATING SOMEONE ELSE'S CLAIM IS NOT CORROBORATION.`**
+
+### §5 — DECLARED GAPS: BOTH ACCEPTED
+
+★★★★★ **ORACLE SCOPE — ACCEPTED AND IT IS THE RIGHT REFUSAL.** Authority §6 adjudicates SESSION-family rows only, so non-session fixtures may assert CLAIM 1 (agreement) and NOT CLAIM 2 (correctness); those rows ship as declared `[NOT ADJUDICATED]` gaps. **Inventing authority to make the grid look adjudicated would be the `09e016fd…` class of defect R-484 struck. DO NOT WIDEN THE ORACLE TO FILL THE GRID — if a non-session family needs adjudication, that is a DESK request, not a builder decision.**
+★★ **PHRASE-LEVEL COVERAGE — ACCEPTED AS A DECLARED GAP:** 7 zones not 25 phrases; `sessionPhraseHit`'s three match modes get one fixture each. **Named, not silently dropped, which is the whole standard.**
+★ **The self-reported wrong hash (hashing `15,74` from AR-497's line numbers after R-489 shifted every offset) is accepted as reported: `A LINE RANGE IS A POINTER, AND AN APPEND-ONLY FILE INVALIDATES IT SILENTLY.` Its range-pinned guard already carries the remedy.**
+
+### §6 — AUTHORIZED NEXT ACTION · SCOPE · STOP
+
+**CONTINUE ITEM 1 ON THE FOUR ADOPTED AXES, AXIS 3 FIRST.** Then item 2's materiality receipt. **SCOPE UNCHANGED** (R-485 §7 / R-486 §3 / R-487 §6). **STILL FORBIDDEN:** `git push` / PR / remote pipeline · Python acceptance of orphan zones · `approximation` or queue-reason payload changes · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · direct edits to `runtime-production` or `tf-deep-scan`.
+**FIRST OBSERVABLE:** axis-3 fixture + its run, ~20 min. **HONEST-PARTIAL APPLIES — batches naming covered and uncovered cells are COMPLIANT; silent truncation is the stop condition.**
+★★★★★ **GRADE: STILL NOT TRIGGERED. Items 1 AND 2 both landed is the condition; item 1 has just started. THE BUILDER DOES NOT GRADE.**
+**STOP IF:** the matrix is padded with degenerate cells to look larger · the oracle is widened to cover non-session families · a declared gap renders like a checked row · the `:258` caption is softened instead of made true.
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`A CROSS PRODUCT IS ONLY COVERAGE ALONG AXES THAT ACTUALLY VARY THE OUTPUT.` Check each axis is READ by the code under test before ordering the grid.**
+★★★★★ **`A PADDED MATRIX IS THE SAME FALSE GREEN WEARING MORE ROWS.`** (AR-498 §30, verbatim.)
+★★★ **`WHEN A CAPTION PROMISES A TEST, THE REMEDY IS THE TEST, NOT A SOFTER CAPTION.`**
+★★★ **`A NEAR-ABSOLUTE IS NOT AN ABSOLUTE` — and repeating another seat's absolute into a ruling is not corroboration.**
+
+---
+
 ## R-489 · 2026-07-30 · ★★★★★ **BLUEPRINT V4 REVISION 4 IS ADOPTED AS THE OPERATIVE PLAN — CHERRY-PICKED AT `e34caaed`, WITH TWO CORRECTIONS LANDED IN THIS SAME COMMIT.** ★★★★★ **THE DEFECT I FOUND IS A STALE POINTER AND IT IS LOAD-BEARING: §15.4 PINS THE ORACLE AUTHORITY TO `09e016fd…`, THE **R-483 §12** FREEZE — **R-484 AMENDED IT AFTERWARDS**. A SEAT FOLLOWING IT VERBATIM WOULD REBUILD THE FOUR EXPECTATIONS R-484 STRUCK, SEE 8 VIOLATIONS, AND CONCLUDE BOTH LANES WERE WRONG WHEN THE TABLE WAS.**
 
 ★ **WORKER — START HERE.** Your task is UNCHANGED (R-488 §5: the membership matrix). **This ruling adopts a PLAN; it opens no new work and closes none.** Read §15.4's corrected hash before your next oracle run.
