@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1082` at THIS commit, 2026-07-29 23:43 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1123` at THIS commit, 2026-07-29 23:46 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -228,6 +228,47 @@ survives only at `:105` as a HISTORICAL note. The `:168` comment that claimed
 ★★ **STILL OPEN AND NOT CLAIMED BY ANYONE: directory-symlink traversal
 `[NOT EXECUTED]` · text-mode citations outside `docs/designs/` `[UNENUMERATED]` ·
 no independent post-repair grade exists.**
+
+## ★★★★★ [FACT, MEASURED HERE, NOT RULED] THE CLASSIFIER IS REPRODUCIBLE — **R-477 §5 BRANCH 3 IS REFUTED, AND `classify.py` DOES NOT EXIST ON DISK**
+
+**MEASUREMENT ONLY. NO DISPOSITION, NO RULING — the operator's read gates that. This
+removes a NAMED PRE-REGISTERED BLOCKER; it does not by itself start anything.**
+
+★★★★★ **[MEASURED HERE] `classify.py` IS NOT ON DISK ANYWHERE** — `find` over
+`C:/Users/tonio/Projects` (depth 4, node_modules excluded) and over `backups/` returns
+**nothing**. **So the manifest's "recoverable even if the file is lost" line is no
+longer a contingency: THE FILE IS LOST AND THAT PATH IS THE ONLY ONE.** It had never
+been executed at this desk — it was `[RELAYED, manifest :108]`.
+★★★★★ **IT RECOVERS BYTE-EXACTLY [MEASURED HERE]:** `sed -n '542,698p'` over the
+committed `docs/designs/VOCABULARY-LEDGER-POP120-2026-07-29.md` (fences at `541`/`699`,
+so the manifest's cited range is exact) yields **`8,831` bytes, sha256
+`90aedc77cc79224124f2f312db32462e1c850291bc66a0ca7d36b2faa45a5339`** — **the manifest
+value, exactly.** ★★ Three near-miss variants were hashed as controls (CRLF; each
+without the trailing newline) and all three MISS — so the match is a real byte-identity,
+not a coincidence of a loose comparison.
+★★★★★ **AND IT REPRODUCES THE FROZEN ARTIFACT BYTE-FOR-BYTE [MEASURED HERE]:** run over
+the frozen `pop120_census.json` with `CLASS_OUT` pointed at **scratch**, the output is
+**sha256 `eed65514a126…` — IDENTICAL to the frozen `pop120_classified.json`.** Row-level
+check on `(video, strategy_id, condition_id)`: `456`/`456` rows, key unique, key sets
+identical, **`0` remediation_class disagreements**, C8 `233` both sides.
+★★★ **THE FROZEN ARTIFACT WAS NOT TOUCHED — hash re-verified `eed65514a126…` after the
+run; the file is mode `-r--r--r--` and `CLASS_OUT` went to the scratchpad.**
+★★★★★ **AND THE CONTROL THAT MAKES THIS STRONGER THAN A RERUN: it ran in a FRESH
+PROCESS, so `PYTHONHASHSEED` differed from the original. `gen_ledger.py` was RETIRED for
+exactly this defect — it reproduced its own published chain in only `4 of 12` runs
+because a tie resolved on per-process `str` hash randomisation. **This classifier is
+immune to that, demonstrated rather than assumed.**
+
+★★ **WHAT THIS DOES NOT PROVE, stated so it is not over-read: it proves the labels are
+DETERMINISTIC and RECOVERABLE from the frozen census. It does NOT prove the census is
+reproducible from the live DB, and it does NOT prove the class assignments are CORRECT —
+`the remediation-class assignments themselves: JUDGMENT, never re-graded` still stands,
+and the script's own header says the mechanical layer NOMINATED and every bucket was
+hand-corrected via `OVERRIDE`.**
+★★★ **DO NOT COMMIT A SECOND COPY OF `classify.py`. The committed ledger IS the
+authoritative carrier; a duplicate on disk would drift from it — `A REPORT IS A VIEW OF
+AN ARTIFACT`. CARRY THE RECIPE, NOT THE COPY: `sed -n '542,698p' <ledger>` ⇒ `8,831` B
+⇒ sha256 `90aedc77cc79…`.**
 
 ## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-481 — R-478 §5a DELIVERED AT `b67be086`. **THE FIX IS REAL. THE HARNESS NOW LIES ABOUT ITS OWN EXIT CODE.**
 
