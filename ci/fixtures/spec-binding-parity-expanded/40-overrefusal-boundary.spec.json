@@ -1,0 +1,38 @@
+{
+  "video": "40-overrefusal-boundary",
+  "_why": [
+    "AXIS 3 (R-490 section3-1, ordered FIRST). THE OVER-REFUSAL BOUNDARY -- the direction in which",
+    "the orphan-zone repair could have gone WIDE. spec-family-bindings.ts:258-260 says the refusal is",
+    "scoped INSIDE the session-family branch on purpose, because 'a refusal in the generic dispatch",
+    "would also reject e.g. a FILTER whose object merely mentions lunch -- an over-refusal THE",
+    "DISCRIMINATOR FIXTURES EXIST TO CATCH.' R-490 section2 measured that claim: ZERO such fixtures",
+    "existed. This is that fixture. The caption now describes reality instead of promising it.",
+    "",
+    "A BOUNDED SCOPE IS PROVEN BY WHAT IT EXCLUDES. The three confluence rows carry refused-zone",
+    "keywords ('during lunch', 'overnight', 'midday') on NON-session families and MUST BIND NORMALLY.",
+    "The sess row carries the SAME 'during lunch' text on WAIT_SESSION and MUST be refused. That",
+    "adjacency inside ONE fixture is the discrimination: it separates 'refuses the right thing' from",
+    "'refuses anything mentioning lunch'.",
+    "",
+    "WHY EVERY PROBE ROW IS role=confluence AND NOT role=spine: spine_total/spine_bound/compiled are",
+    "the only plan scalars the oracle adjudicates, and authority section6 does NOT adjudicate",
+    "non-session families. Putting the probes in confluence keeps all THREE adjudicated scalars",
+    "derivable from the session row + P-5 alone (the section4b/4c row-10 arithmetic), so this fixture",
+    "gets real CLAIM 2 coverage on its plan level instead of an unadjudicated shrug.",
+    "",
+    "KEYWORD SPREAD IS DELIBERATE: 'during lunch' and 'midday' are two DIFFERENT lunch_blackout",
+    "phrases and 'overnight' is an overnight phrase -- so both refused zones and three distinct",
+    "non-session families (FILTER, WAIT_BIAS, WAIT_RETEST) are probed, not one keyword three times."
+  ],
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "sess", "type": "WAIT_SESSION", "object": "during lunch", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" },
+      { "id": "filter_lunch", "type": "FILTER", "object": "volume during lunch", "role": "confluence" },
+      { "id": "bias_overnight", "type": "WAIT_BIAS", "object": "overnight range bias", "role": "confluence" },
+      { "id": "retest_midday", "type": "WAIT_RETEST", "object": "midday level retest", "role": "confluence" }
+    ],
+    "invalidations": []
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "video": "SYNTHETIC — no source video. This is an INSTRUMENT CONTROL, not an extraction artifact.",
+  "_why": [
+    "MATERIALITY-SIGNAL CONTROL (R-494 §4). Pre-registered in AR-507 §2 BEFORE this file existed.",
+    "",
+    "IT LIVES OUTSIDE ci/fixtures/spec-binding-parity-expanded ON PURPOSE. That directory is the",
+    "declared efficacy population the materiality receipt MEASURES; adding a member there would",
+    "both trip the parity gate's membership check and contaminate the population being measured.",
+    "A CONTROL MUST NOT JOIN THE POPULATION IT LICENCES.",
+    "",
+    "WHAT IT IS FOR: the materiality receipt's frozen failure criterion is 'A HIGHER compiled COUNT",
+    "IS A FAILURE SIGNAL'. AR-506 measured that all 12 efficacy specs already compile in BEFORE, so",
+    "a false->true transition is ARITHMETICALLY UNREACHABLE there and the signal could only ever",
+    "print PASS. R-494 §1 then found the deeper defect: the emitter exited 0 even when it printed",
+    "its own STOP banner. A DECLARED FAILURE SIGNAL THAT RETURNS SUCCESS IS NOT A GATE.",
+    "",
+    "THE ARITHMETIC, so the composition can be checked rather than trusted:",
+    "  spine = 3 rows. `enter` (ENTER) binds. `exc_a` and `exc_b` (EXCEPTION) do not.",
+    "  spineBound / spine.length = 1/3 = 0.3333.",
+    "  spec-family-bindings.ts:382 sets compiled=false iff spineRatio < MIN_SPINE_BOUND_RATIO.",
+    "  0.3333 < 0.5  -> compiled = FALSE  ................ the NORMAL state, in BOTH lanes",
+    "  0.3333 < 0.0  -> false, so compiled = TRUE ........ under the transient loosening",
+    "",
+    "WHY `EXCEPTION` AND NOT AN ORPHAN ZONE — this is the load-bearing design choice:",
+    "EXCEPTION carries unsupported:true with control_flow_exception_unsupported in the BEFORE lane",
+    "(git show 926fe9a1~1) AND in the current lane, IDENTICALLY. The control is therefore built",
+    "entirely from behaviour that PREDATES the repair, so it moves for a reason the repair does not",
+    "own. An orphan-zone spine row would entangle the control with the very change it exists to",
+    "police. NEITHER LANE'S SEMANTICS ARE ALTERED TO PRODUCE THIS — doing so would be inventing",
+    "behaviour to satisfy a test (R-494 §4-6).",
+    "",
+    "EXPECTED, pre-registered AR-507 §3:",
+    "  normal            BEFORE compiled=false -> AFTER compiled=false   receipt exit 0",
+    "  MIN 0.5 -> 0.0    BEFORE compiled=false -> AFTER compiled=TRUE    receipt NAMES this control",
+    "                                                                    and EXITS NON-ZERO"
+  ],
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" },
+      { "id": "exc_a", "type": "EXCEPTION", "object": "unless news is pending", "role": "spine" },
+      { "id": "exc_b", "type": "EXCEPTION", "object": "unless spread is wide", "role": "spine" }
+    ],
+    "invalidations": []
+  }
+}
