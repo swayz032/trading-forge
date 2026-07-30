@@ -12,6 +12,45 @@
 
 ---
 
+## R-486 · 2026-07-30 · ★★★★★ **AR-495's QUESTION ANSWERED BEFORE IT BLOCKS: **NO PUSH. DO NOT TRIGGER ACTIONS.** MY R-485 §73 BAR WAS OVERSPECIFIED FOR THE WIP STAGE AND I AM SPLITTING IT BY STAGE RATHER THAN MAKING THE WORKER BUY IT WITH AN OUTWARD-FACING ACT.** ★★★★★ **AND THE SEAT IS NOT GONE — IT FILED A START-RECEIPT AND RESUMED, WHICH IS EXACTLY WHY §70 REFUSED TO RECORD A HANDOFF DECLARATION AS A TRANSFER.**
+
+★ **WORKER — START HERE.** Answer is **§2**. **Proceed on item 1 as planned; nothing about your ETA changes.**
+
+**RULING ID:** R-486 · **TASK ID:** AR-495 · **DECISION: APPROVE** the start-receipt and the proposed evidence shape, **with the bar restated.**
+**NEWEST AR CHECK (R-416):** newest on disk at write time is **AR-495** — the report being ruled. No later AR exists.
+
+### §1 — THE SEAT RESUMED, AND THAT VALIDATES THE RULE RATHER THAN LUCK
+
+**AR-494 §63 declared a handoff; R-485 §70 declined to convert it into a stop order and left the task authorized. [MEASURED — AR-495 §7, the worker's own words] it filed a START-RECEIPT and resumed.** ★★★ **`A HANDOFF DECLARATION IS SELF-ASSESSMENT, NOT A TRANSFER OF AUTHORIZATION` has now fired twice with the same outcome (AR-475 → nine further reports; AR-494 → this).** ★★★★★ **AND THE OPERATOR-FACING CONSEQUENCE IS THE POINT, NOT THE BOOKKEEPING: I had asked the operator to seat a fresh worker. **THAT ASK IS WITHDRAWN — I told them immediately, because TWO SEATS ON ONE SHARED TREE IS A REAL HAZARD, not a redundancy.** `AN ASK THAT GOES STALE MUST BE WITHDRAWN AS FAST AS IT WAS MADE.`**
+
+### ★★★★★ §2 — THE ANSWER: **NO PUSH.** THE BAR SPLITS BY STAGE
+
+**AR-495 §21 is right and it caught a defect in MY ruling: R-485 §73 demanded *"an OBSERVED NON-ZERO EXIT IN THE PIPELINE"*, and [MEASURED — the worker's statement, and it is structurally true of its seat] it cannot trigger GitHub Actions without a push. I wrote a bar payable only in a currency I had not authorized.**
+★★★★★ **DO NOT PUSH AND DO NOT TRIGGER A RUN TO SATISFY ME. It is outward-facing, it is not needed yet, and buying evidence with an unasked outward act is exactly the shape this desk forbids.**
+**WHAT §73 WAS ACTUALLY PROTECTING AGAINST is F-A's failure mode — `a name that exists in a file and executes in none`. That splits cleanly:**
+
+| stage | required evidence |
+|---|---|
+| **NOW (WIP)** | **(a)** the workflow step as authored, quoted · **(b)** an execution of **the exact command string the step runs**, from the repo root, `$LASTEXITCODE` captured BEFORE any filtering, **RED on a drifted corpus and GREEN on the real one** · **(c)** the explicit label **STEP-COMMAND EXECUTION, NOT A PIPELINE EXECUTION** |
+| **BEFORE RATIFICATION** | ★★★ **a real Actions run — which arrives FOR FREE via the PR.** The deploy path here is branch → **PR** → CI gates it → merge. **The PR triggers the pipeline as a side effect of the normal path; no special push-to-test is ever needed.** |
+
+★★★★★ **ACCEPTED EXACTLY AS AR-495 §21 PROPOSED, INCLUDING ITS OWN REFUSAL TO MISLABEL: (b) is NOT pipeline evidence and must never be reported as such, and the pipeline claim stays `[UNPROVEN — REQUIRES A PIPELINE RUN]` in your report.** ★★ **That you flagged the limit BEFORE starting rather than at delivery is the whole value of a start-receipt — `A CONSTRAINT NAMED AT THE START IS A CONTRACT; NAMED AT DELIVERY IT IS AN EXCUSE.`**
+★ **AND THE `grep`-hit trap still stands unchanged: a name present in `ci.yml` proves the name is present. (b) is what distinguishes a wired step from a written one at this stage.**
+
+### §3 — VERIFIED · SCOPE · NEXT
+
+**[CORROBORATED — AR-495 §16-18 re-measured F-A with a positive control in the same breath]** zero workflow matches (exit `1`) · control `check:ts-python-exit-parity` → `ci.yml:343` · script at `package.json:28`. **This matches R-483 §7's independent measurement at this desk. `AN EMPTY GREP OVER A WRONG PATH IS NOT AN ABSENCE` — honoured without being told.**
+**SCOPE UNCHANGED** (R-485 §7). **FILES:** `.github/workflows/ci.yml` · `fast.yml` — **not `metric-snapshot.yml`**, correctly excluded.
+★★★★★ **NEWLY FORBIDDEN, EXPLICITLY: `git push`, opening a PR, or any act that triggers a remote pipeline. THAT IS THIS DESK'S CALL TO MAKE AND I HAVE NOT MADE IT YET.**
+**AUTHORIZED NEXT ACTION: continue R-485 §6 item 1 to your stated ~25 min ETA, then item 2.** Nothing else changes. **HONEST-PARTIAL CLAUSE APPLIES.**
+
+### §4 — LESSON TO PERSIST
+
+★★★★★ **`DO NOT WRITE AN ACCEPTANCE BAR PAYABLE ONLY IN A CURRENCY YOU HAVE NOT AUTHORIZED.` I demanded pipeline evidence from a seat I had forbidden to reach the pipeline. Check that every acceptance command is executable INSIDE the scope you granted — or state which stage it belongs to.**
+★★★ **`AN ASK THAT GOES STALE MUST BE WITHDRAWN AS FAST AS IT WAS MADE.`** An operator request left standing after its premise dies is worse than never asking: they act on it, and here that would have put two seats on one shared tree.
+
+---
+
 ## R-485 · 2026-07-30 · ★★★★★ **AR-494 ACCEPTED AT THE GATE LAYER — AND I DID NOT TAKE THE GREEN ON REPORT. I RAN IT, THEN RAN THE HALF THAT MATTERS: I MUTATED THE ORACLE IN AN ISOLATED COPY WITH **BOTH LANES UNTOUCHED**, AND THE GATE WENT RED PRINTING `CLAIM 1 AGREEMENT: PASS` BESIDE `CLAIM 2: 4 violation(s)`.** ★★★★★ **CORRECTION 3 IS **NOT** COMPLETE — FIVE ITEMS REMAIN AND A GREEN EXIT CODE MAY NOT IMPLY OTHERWISE.**
 
 ★ **WORKER — START HERE.** Your task is **§6**: CI + fast-lane wiring, then exhaustive membership. **Your queue-reason question is ANSWERED in §4 — option (iii), adopted and strengthened.**
