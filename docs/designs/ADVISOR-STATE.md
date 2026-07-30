@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2163` at THIS commit, 2026-07-30 04:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2194` at THIS commit, 2026-07-30 04:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2163` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2194` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,9 +82,40 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ **R-494 IS OWED AND HELD** — `AR-504` + `AR-505` UNRULED, WAITING ON THE PASTE (`THE PASTE IS THE GATE`)
+## ⚠️★★★★★ **R-494 IS OWED AND HELD — AND THE HOLD NOW *COSTS*.** `AR-504`·`AR-505`·`AR-506` UNRULED
 
-★★★ **[MEASURED] HOLD IS HARMLESS: R-493 §5 already authorizes D and E. FIRST WAKE CHECK: `AR-505` is UNRULED.**
+★★★★★ **RE-CHECKED, AND THE ANSWER CHANGED — `A HOLD'S COST IS NOT A CONSTANT`: at AR-505 the worker
+had D and E authorized. **AT AR-506 IT HAS NOTHING. A–E ARE ALL DONE; `F` IS THE DESK'S ACT.** The
+worker is IDLE ON ME. FIRST WAKE CHECK: `AR-506` is UNRULED and the worker is blocked.**
+★★★ **AND THE ONE OPEN QUESTION IS MINE TO ANSWER (AR-506 §3): A–E landed as FOUR commits; does
+"ONE ATOMIC DELIVERY COMMIT" mean the graded OBJECT (the tree at HEAD) or a SQUASHED DIFF? The worker
+correctly refused to rewrite shared-branch history unilaterally. **My answer, held for R-494: the
+TREE — grading a commit grades its tree, not its diff; the clause existed to stop a PARTIAL being
+graded, never to demand a history rewrite the shared-tree law forbids.**
+★★★★★ **NO `accuracy-validator` IS DISPATCHED. `F` IS GATED ON THE HELD RULING.**
+
+### ⚠️★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **MY FROZEN CRITERION CANNOT FIRE ON THIS CORPUS**
+
+**`A HIGHER compiled COUNT IS A FAILURE SIGNAL` — which I have cited as a guard since R-482 — is
+ARITHMETICALLY UNREACHABLE here, and the worker found it by RED-PROOFING ITS OWN RECEIPT.**
+**[MEASURED HERE, receipt artifact] `Aggregate compiled: BEFORE 12/12 → AFTER 11/12. false→true
+transitions: 0.` ALL TWELVE ALREADY COMPILE IN `BEFORE`, so `false→true` CANNOT HAPPEN. Loosening
+the AFTER lane (`MIN_SPINE_BOUND_RATIO 0.5→0.0`) FAILED TO MOVE THE NUMBER.**
+★★★★★ **IT WAS A GREEN WHOSE ONLY POSSIBLE VALUE WAS GREEN — `A GREEN CHECK WITH NO PATH TO RED IS
+NOT A CHECK`, and the check was MINE.**
+★★★ **THE HANDLING IS EXACTLY RIGHT AND I WOULD NOT IMPROVE IT: it did NOT delete or soften my
+frozen criterion. It added an EMITTER SELF-CONTROL (synthetic `[false,true]→[true,true]` reports
+`1`) proving the emitter CAN fire, beside an explicit `CORPUS REACH: ZERO`. `THE EMITTER WORKS; THE
+CORPUS CANNOT FEED IT.` **NAMED GAP: a corpus member that FAILS to compile pre-repair is required
+before this signal certifies anything.**
+★★ **AND MY AUTHORITY'S ARITHMETIC HELD ON LIVE DATA: §4c derived fixture `30` → `compiled=false`
+before any of this ran; the receipt reports `30-compiled-flip: compiled true→false`. The repair
+LOWERS the count, which is the pre-registered success direction.**
+★★ **Step D: both `[UNPROVEN]` checks now FIRE and are CITABLE — planted IN-RUN, never as permanent
+corpus members (`no bytes to restore is the strongest form of restoring them`), with the detector
+self-controls themselves red-proofed three ways incl. "reports on everything", which is what proves
+the clean neighbour is load-bearing rather than decorative.**
+**NO DISPOSITION. Acceptance of C/D/E and the `F` dispatch are R-494's work.**
 
 ### ⚠️★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **MY AUTHORITY §4d OVER-SPECIFIES `P-7`, AND THE WORKER'S CONTROL CAUGHT IT**
 
@@ -471,7 +502,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2163` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2194` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
