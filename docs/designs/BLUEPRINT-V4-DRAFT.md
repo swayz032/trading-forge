@@ -7,9 +7,9 @@
 > path in **§15**. Until adoption, the already-adopted V4 remains operative;
 > after adoption, **§15 governs wherever §§1, 3, 9, 10, 12 or 14 conflict
 > with it.**
-> Evidence cut: campaign tree through R-492 / AR-503; parity WIP
-> `48199995`. The executable authority check and P-7 oracle rows have landed;
-> the remaining P0 work is bounded in §15.8.
+> Evidence cut: campaign tree through R-493 / AR-506; parity WIP
+> `8c6893fc`. Steps A–D have landed; Step E has a declared but still-open
+> reachability gap, and the final atomic delivery object does not yet exist.
 
 > ★★★★★ **STATUS: ADOPTED AND OPERATIVE — R-445, 2026-07-29, operator-directed.
 > THIS SUPERSEDES THE "DRAFT — NOT LAW" STATUS BELOW, WHICH THIS FILE CARRIED FOR
@@ -731,7 +731,12 @@ Before any Gate-B result is admissible, the isolated worktree pinned to
 4. Exhaustive membership manifests and deletion-RED fixtures. Counts alone do
    not protect membership.
 5. CI and fast-lane wiring, plus a per-spec materiality receipt. Existence is
-   not wiring.
+   not wiring. The receipt's forbidden `compiled=false→true` direction must be
+   reachable through a real control spec: it is not enough to feed the counter
+   synthetic Boolean arrays. Under an intentionally loosened after-lane, that
+   control must flip, be named, and make the receipt command exit non-zero;
+   under the real repair it remains `false→false`. The main-corpus receipt stays
+   separately scoped and may still report that its natural reach is zero.
 6. One adversarial `accuracy-validator` grade against the complete delivery
    commit. Designer and builder are disqualified from grading it.
 
@@ -750,6 +755,13 @@ the isolated, non-integrated parity branch, labelled `WIP — NOT A DELIVERY` an
 never cited as green evidence. No stash. The reviewable delivery is produced as
 one atomic commit without rewriting shared history; before integration its
 diff-stat must match the reviewed delta.
+
+Concretely, create a second explicit-SHA worktree at the pinned runtime base,
+squash the net WIP branch diff into one new delivery commit, and leave the WIP
+history untouched. The delivery commit includes the current five-part parity
+ratify packet and generated materiality receipt. Run every acceptance command
+and the independent grade against that delivery commit, not against a WIP tip
+or a later history rewrite.
 
 ### 15.5 — PREREQUISITES P1–P3: BASELINE, TRUTH AND LANE
 
@@ -860,7 +872,7 @@ from that spec's measured residual, not from a library-wide housekeeping list.
 | Gate-A causal split | **complete** at the historical-artifact layer | preserve as causal evidence; do not reuse as current control |
 | P0 parity packet | staged and corrected | complete the one atomic implementation |
 | P0 semantic oracle authority | **current at `3494d4bb…`; WIP `48199995` commits the identical 16,314-byte authority, computes its hash before plan evaluation, and encodes only §4d's authorized P-7 cells** | preserve the four fail-closed authority controls and the agreement-vs-correctness split in the atomic delivery |
-| P0 implementation | **steps A/B complete at WIP `48199995`; family × position is 30/30 (AR-500); zone axis 8/8 (AR-499); generated P-7 property coverage, duplicate-id/multiplicity controls and the materiality receipt remain open.** ★★★ **The duplicate-`condition_id` and array-multiplicity checks remain `[UNPROVEN]` and UNCITABLE per R-488 §3 until a fixture makes each go RED — "open" understates them: they may not be cited as evidence of anything.** | finish C–E; produce one atomic delivery commit; then one independent grade |
+| P0 implementation | **A–D complete through WIP `8c6893fc`** — zone axis 8/8 (AR-499) · family × position 30/30 (AR-500) · P-7 property 208+16 across both lanes (AR-505) · duplicate-id and array-multiplicity now FIRE and are CITABLE (AR-506, lifting R-488 §3's `[UNPROVEN]`). **E emits a per-spec receipt but its forbidden `false→true` signal has ZERO real-corpus reach AND the command still exits `0` [MEASURED: `0` `process.exit` calls in the emitter vs `5` in the parity gate]. 11 WIP commits since base `9af37b8f`.** | add the real negative-direction control **and a fail-closed exit**; build a NEW-BASE single delivery commit **without rewriting WIP history**; then one independent grade |
 | P1 additive current baseline | **not frozen** | re-authored-producer equivalence control, then current-code artifact |
 | P2 truth rule | **defined**; complete labelled membership not frozen | freeze all members and hash before treatment |
 | P3 runtime graph→spec handoff | **unenumerated** | rule the two-stage transfer path before runtime integration |
