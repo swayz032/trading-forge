@@ -694,3 +694,114 @@ no real CI run, no fault-injection of the PYTHON lane's own serializer, no exhau
 P-7 probes, and no independent re-derivation of every `ORACLE.json` expectation from the authority prose.
 `A GREEN BATTERY IS A STATEMENT ABOUT THE BATTERY.` The fixes above are NOT themselves independently
 graded.**
+
+---
+
+# ★★★★★ 11 — ORACLE-CONTRACT ADDENDUM · `c304b098` · ADDED 2026-07-30 (R-498 STEP 1)
+
+> ★★★★★ **ADDITIVE. §1–§10 ARE PRESERVED EXACTLY.** Every earlier section was measured against the
+> delivery that existed when it was written, and none is rewritten as though `c304b098` had existed then.
+> **`NEVER BACKDATE TODAY'S EVIDENCE INTO A DOCUMENT WRITTEN BEFORE THE IMPLEMENTATION.`**
+> ★★★ **§9.5's and §10's status rows are SUPERSEDED BY THIS SECTION, not edited.**
+
+### 11.1 — LINEAGE. FOUR DELIVERIES, FOUR NOVEL HUNTS, FOUR NEW DEFECT CLASSES
+
+| delivery | fate | what the NEXT hunt found in it |
+|---|---|---|
+| `2011e8de` | ⛔ **REJECTED** | lossy whitelist projection; `required_members` uniqueness unchecked |
+| `39948d3c` | ⛔ **superseded** (graded `SOUND` for its own two claims) | unresolvable oracle reference silently skipped; a five-source bucket labelled `MEMBERSHIP` |
+| `8187b730` | ⛔ **NOT-SOUND** | ★★★★★ **deleting an adjudicated oracle row, or stripping its `authority` citation, left output BYTE-IDENTICAL and exit `0`** |
+| **`c304b098`** | **CANDIDATE — IMPLEMENTED, NOT CERTIFIED** | *(unknown — the hunt has not run)* |
+
+★★★★★ **NOT ONE OF THOSE FOUR DEFECT CLASSES WAS CAUGHT BY THE REGISTERED FIXTURES. Every one came from a NOVEL hunt. `REGISTERED FIXTURES PROVE THEIR MEMBERS AND NOTHING OUTSIDE THEM` — and the honest reading of this table is that the surface is UNDER-HUNTED, not that it is now clean.**
+**WIP lineage: `2cfff429` (the repair) → `0d3db53c` (its self-correction), APPENDED to `hardening/ledger-e-parity-20260730`; no history rewritten. Delivery `c304b098`, parent `9af37b8f` exact, ONE commit, 23 paths, path-set `988ae8f1…`.**
+
+### 11.2 — WHAT `c304b098` ADDS: THE ORACLE CONTRACT IS NOW CHECKED AT RUNTIME
+
+**The defect:** `:1014` was `JSON.parse(...) as Oracle` — **a bare cast.** `Oracle.authority: string` is a
+COMPILE-TIME type over a runtime `any`, and `checkOracle()` iterates the rows that SURVIVED PARSING, so
+**an absent row is a row that is never checked.** ★★★★★ **`A TYPE ANNOTATION OVER A BARE CAST IS A
+CAPTION, NOT A CHECK.` The gate enforced its authority DOCUMENT at runtime and left its per-row
+CITATIONS unvalidated — it validated the thing it was pointed at and not the thing it was made of.**
+
+- **`validateOracleContractOrExit()`** runs at LOAD, **before a single plan is compiled**, and denies with
+  the exact path: `authority_file` · `authority_sha256` · `required_members` and each element · every
+  fixture object · **every fixture-level AND per-row `authority` citation** · `unadjudicated` shapes ·
+  the prose gap-reason strings · every `reasons_must_differ_from` triple. ★★ **It validates the CONTRACT,
+  not only the two fields the reported attacks named — `FIX THE PATTERN CLASS, NOT THE INSTANCE.`**
+- **`conditions_unadjudicated_ids`** — a new ORACLE key. The existing prose says WHY a gap exists; this
+  says WHICH ROWS it covers. Added for `00-control-shipped.spec.json` only (its 13 already-declared
+  entry conditions); every other fixture is fully adjudicated, so the partition is total today.
+- **`checkOracleRowCensus()` — MEMBERSHIP, NOT CARDINALITY.** Every declared entry condition must be
+  adjudicated **XOR** named unadjudicated, total in BOTH directions, and never both. ★★★★★ **`A
+  COUNT-SHAPED CHECK IS SATISFIED BY DELETING A ROW AND ADDING A JUNK ONE` — the same shape as the
+  `required_members` duplicate hole two deliveries earlier.**
+- ★★★★★ **POPULATION INDEPENDENCE, STATED BECAUSE IT IS THE LOAD-BEARING PROPERTY: the census population
+  is the FIXTURE'S OWN `entry_conditions` — AUTHORED INPUT. It is NOT derived from the compiled plan or
+  from anything the code under test produces. `AN EXPECTATION RECONSTRUCTED FROM THE OUTPUT BEING JUDGED
+  CANNOT FAIL.`**
+
+### 11.3 — DECLARED SCOPE LIMIT: `invalidations` ARE OUTSIDE THE CENSUS POPULATION
+
+★★★★★ **STATED HERE AND IN THE CODE, IDENTICALLY, SO NEITHER CAN DRIFT FROM THE OTHER: the census covers
+ENTRY CONDITIONS ONLY. `checkOracle()` can address only `plan.bindings`, so no invalidation row is
+reachable by it at all.**
+★★★ **THIS PACKET MAKES NO CLAIM THAT THE CENSUS COVERS EVERY ORACLE ROW REGARDLESS OF CLASS. It does
+not. `INEXPRESSIBLE IS NOT UNADJUDICATED` — the 17-row invalidations array is a pre-existing, separately
+declared gap, and recording the boundary honestly is the whole of what is claimed here. Widening it into
+an invalidation redesign is explicitly NOT done.**
+
+### ⚠️★★★★★ 11.4 — I MUTATED THIS FROZEN ARTIFACT BY ACCIDENT. THE RECORD, NOT THE TIDY VERSION.
+
+**Commit `2cfff429` rewrote `ORACLE.json` through a `json.dumps` round-trip and silently changed **35**
+authority-citation and `_note` strings.** The committed bytes carried MOJIBAKE (`Â§`, `â€”`) from an
+earlier bad round-trip; reading as UTF-8 and re-serialising "repaired" them.
+★★★★★ **THE REPAIR MAY BE AN IMPROVEMENT AND THAT IS NOT THE POINT. It was UNINTENDED, UNDECLARED and
+UNAUTHORIZED, inside a correctness change, on the artifact this packet exists to protect. `NO UNRELATED
+CLEANUP.`**
+**CAUGHT BY:** `2 files changed, 616 insertions(+), 430 deletions(-)` for what should have been a one-key
+addition. ★★★ **THE DIFFSTAT WAS THE TELL — the change summary did not match the intent.**
+**CORRECTED BY `0d3db53c` — a FOLLOW-UP commit, NOT an amend (history rewrite is forbidden). PROOF, not
+summary:**
+- **removing the inserted block from the corrected file reproduces the ORIGINAL BYTES EXACTLY** (byte
+  comparison, not a diff summary)
+- **structural walk old-vs-new: `SEMANTIC DIFFS = 1`** — `conditions_unadjudicated_ids: ADDED`
+- `24,803` → `25,095` B, **delta `292` = the inserted block alone**
+- all pre-registered outcomes RE-TAKEN on the corrected file and unchanged
+★★★★★ **AND THE RESTORATION PUT THE MOJIBAKE BACK. `A FROZEN ARTIFACT IS FROZEN INCLUDING ITS DEFECTS;
+SILENTLY REPAIRING ONE IS STILL AN UNAUTHORIZED CHANGE.` The mojibake is NAMED and UNREPAIRED on the open
+list below — repairing it is its own change with its own justification.**
+★★ **`0d3db53c`'s restoration proof was produced by MY OWN script. It is `[MEASURED BY THE BUILDER]` and
+an independent comparator should re-derive it.**
+
+### ⚠️★★★ 11.5 — MY BATTERY'S CLEAN CONTROL WENT RED, AND THREE "PASSES" WERE OVER-DETERMINED
+
+**The re-run reported `membership [clean] EXIT=1`.** ★★★★★ **A PREVIOUSLY-GREEN CONTROL GOING RED IS A
+STOP, AND IT WAS TREATED AS ONE.**
+**CAUSE `[MEASURED]`:** those scratch corpora were copied BEFORE the oracle gained
+`conditions_unadjudicated_ids`, so the new census **correctly denied a stale artifact.** The census was
+working; the copy was old.
+★★★★★ **THE PART THAT MATTERED MORE: the three ATTACK corpora were stale too — so each attack's RED could
+have been red for the STALE reason instead of its own.** Rebuilt from the SHIPPED fixtures: `clean` **`0`**,
+`b1dup`/`b2del`/`b3add` **`1`** each with **`rowcensus-failures = 0`** — which is the attribution proof
+that each is red for ITS OWN cause. **`A RED WITH TWO POSSIBLE CAUSES IS NOT EVIDENCE FOR EITHER.`**
+★★ **Consequence for whoever grades this: GENERATE ALL ATTACK CORPORA FRESH FROM THE PINNED SHA. Refuse
+any pre-existing scratch copy, including mine.**
+
+### 11.6 — STATUS: IMPLEMENTED, **NOT CERTIFIED**
+
+| | state |
+|---|---|
+| oracle-contract validator + row census | ✅ implemented, RED-proofed against 4 pre-registered outcomes + 1 regression |
+| `c304b098` shape | ✅ parent `9af37b8f`, ONE commit, 23 paths, clean worktree |
+| **INDEPENDENT GRADE** | ❌ ★★★★★ **DOES NOT EXIST. `MERGE / DEPLOY / RELEASE = HOLD` (R-498).** |
+| CI pipeline execution | ❌ `[UNPROVEN — REQUIRES A PIPELINE RUN]` |
+| materiality as standing enforcement | ❌ still hand-run, not a CI job |
+| `ORACLE.json` mojibake | ⚠️ **NAMED, DELIBERATELY UNREPAIRED** |
+| `invalidations` in the census | ⚠️ **DECLARED OUT OF POPULATION** (11.3) |
+| Gate-B population incidence | ❌ `[UNMEASURED]` |
+
+★★★★★ **THE SENTENCE FOUR DELIVERIES HAVE EARNED, AND IT APPLIES TO THIS ONE TOO: `A GREEN BATTERY IS A
+STATEMENT ABOUT THE BATTERY.` The first passed every fixture it had and was unsound. The second was
+graded SOUND and still carried two defects. The third was NOT-SOUND. This is the fourth, and the only
+honest thing to say about it is that its novel hunt has not run yet.**
