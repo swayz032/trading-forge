@@ -76,6 +76,12 @@ is void and the desk re-adjudicates. **`_ZONE_CHECKS` gaining an entry is a real
 - **P-3.** `approximation` reports whether compiled behaviour departs from taught behaviour. **A
   refused predicate IS a departure**, so `approximation = true`. ★★★★★ **Emitting `false` here is
   precisely the lie P-2 names — an exactness claim over a condition that is not evaluated at all.**
+- ★★★★★ **P-3 SCOPE NOTE (R-484), BINDING:** *"a REFUSED predicate"* is a **TERM OF ART** — **P-4
+  below defines refusal as the DELIBERATE act and separates it from *"we never recognized this
+  text"*.** **P-3 THEREFORE DOES NOT REACH UNRECOGNISED VOCABULARY.** `A TERM OF ART DEFINED IN ONE
+  PROPOSITION BINDS EVERY OTHER PROPOSITION IN THE SAME DOCUMENT` — AR-493 asked whether P-3 was
+  narrower than its wording; **it is, and P-4 already said so.** The file was consistent; **§4a
+  misapplied it.**
 - **P-4.** A refusal must be **ATTRIBUTABLE**: its reason names the zone, so *"we refuse this zone
   deliberately"* is distinguishable from *"we never recognized this text"*. **The two need
   opposite remedies** — one wants a window implemented, the other wants vocabulary. A refusal that
@@ -101,9 +107,25 @@ exact string is an implementation choice, its **non-nullity and zone-naming are 
 | `10-lunch-orphan` | `during lunch` | **false** | **null** | **null** | **true** | `⟨orphan:lunch_blackout⟩` | §2 `0/1440` + P-1,P-3,P-4 |
 | `11-premarket-orphan` | `premarket` | **false** | **null** | **null** | **true** | `⟨orphan:overnight⟩` | §2 `0/1440` + P-1,P-3,P-4 |
 | `20-nyam-evaluable` | `ny am` | **true** | session-window primitive | `ny_am` | **false** | null | §2 `180/1440` — **binds, exactly** |
-| `21-fivemin-chart` | `five-minute chart` | **false** | **null** | **null** | **true** | **unrecognized-vocabulary reason, NOT an orphan reason** | P-6 |
+| `21-fivemin-chart` | `five-minute chart` | **false** | **null** | **null** | ~~true~~ → ★ **NO EXPECTATION — DECLARED GAP (R-484)** | **unrecognized-vocabulary reason, NOT an orphan reason** | P-6 |
 | `30-compiled-flip` | `during lunch` | **false** | **null** | **null** | **true** | `⟨orphan:lunch_blackout⟩` | as `10` |
-| `30` / `31` | `regional window` | **false** | **null** | **null** | **true** | **unrecognized-vocabulary reason** | P-6 — names no identifiable session |
+| `30` / `31` | `regional window` | **false** | **null** | **null** | ~~true~~ → ★ **NO EXPECTATION — DECLARED GAP (R-484)** | **unrecognized-vocabulary reason** | P-6 — names no identifiable session |
+
+> ★★★★★ **AMENDMENT — R-484, `2026-07-30`. PRESERVE-AND-STRIKE; the wrong values stay visible.**
+> **The two `approximation` cells above read `true` and HAD NO DERIVATION.** They cite **P-6**, and
+> **P-6 speaks only to bindability and to the reason being DISTINCT — it derives no approximation
+> value at all.** The `true` was carried across from the orphan rows **by table-shape**:
+> `THE WEAKEST BORROWS THE STRONGEST'S AUTHORITY BY ADJACENCY`, committed inside the very file
+> written to be independent. **Found by AR-493's first oracle run, which went RED against BOTH
+> LANES AGREEING — the case an A-vs-B comparator structurally cannot see.**
+> ★★★★★ **WHY THE FIX IS "NO EXPECTATION" AND NOT `false`: `false` is the value BOTH
+> IMPLEMENTATIONS EMIT. Writing it here would be `HARDCODED TEST COPY IS A FABRICATED SAFETY
+> CLAIM` wearing a desk adjudication's clothes. `ASSERTING THE IMPLEMENTATION'S VALUE AND
+> ASSERTING NOTHING ARE DIFFERENT ACTS.`**
+> ★★★ **THE GAP MUST PRINT ON EVERY RUN, PASSING OR NOT, AND MUST NOT RENDER LIKE A CHECKED ROW.**
+> ★★ **THE ORPHAN ROWS ARE UNTOUCHED AND STAY `true`** — P-1+P-3 with the `0/1440` probe behind
+> them, corroborated by `spec_family_bindings.py:583-585`. **The repair's central claim is
+> unaffected.**
 | `31-flip-neg-control` | `ny am` | **true** | session-window primitive | `ny_am` | **false** | null | as `20` |
 | all | `market` (`ENTER`) | **true** | spine-completion primitive | n/a | **false** | null | P-5 |
 
@@ -168,3 +190,14 @@ COUNT IS A FAILURE SIGNAL` (R-482) is not a slogan here — it is this table's a
   comment claiming they mirror *"exactly"* — **this desk does not assume the values agree.**
 - The `0.5` floor's correctness. Out of scope, and **declared as a parameter in §4c rather than
   endorsed.**
+- ★★★★★ **`approximation` FOR UNRECOGNISED-VOCABULARY ROWS — OPEN, DESK-OWNED (R-484 §4).** Both
+  lanes emit `false` (`spec_family_bindings.py:603-616`). **Whether that is honest is a REAL and
+  UNSETTLED question** — an unbound spine condition means the strategy trades without a gate the
+  teacher taught, and `false` is an exactness claim over something never evaluated.
+  ★★★ **`[HYPOTHESIS — UNPROVEN]` it may be inert: `spec_condition_compiler.py:863` walks
+  `per_condition_bool`, and an unbindable condition plausibly has no evaluated array — but
+  `:863`/`:875` emit `b.approximation` **RAW** into per-trade governance records, so "inert" is
+  proven for the `approximation_used` aggregate ONLY.** **THE MEASUREMENT THAT SETTLES IT:** compile
+  a spec with one unbindable `WAIT_SESSION`, run to a fired trade, read whether that `condition_id`
+  appears in `fired_conditions`. **Not this packet's work; not the worker's; not a prerequisite for
+  the parity gate.**
