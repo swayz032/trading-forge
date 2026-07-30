@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1228` at THIS commit, 2026-07-30 00:03 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1272` at THIS commit, 2026-07-30 00:20 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -33,9 +33,11 @@
 
 ---
 
-## SEAT — CURRENT AS OF R-477 / AR-479
-*(this header read `R-472 / AR-471` while the body below it read `R-477 / AR-479` —
-a heading is a claim too; corrected 23:20)*
+## SEAT — CURRENT AS OF R-480 / AR-485
+*(a heading is a claim too, and it has now gone stale TWICE: it read `R-472 / AR-471`
+over a `R-477 / AR-479` body (corrected 23:20), then `R-477 / AR-479` over a
+`R-480 / AR-485` body — corrected 2026-07-30 00:20 by the seat that inherited it.
+★★ **UPDATE THIS LINE IN THE SAME COMMIT AS THE BODY, OR IT WILL LIE AGAIN.**)*
 
 ★★★★★ **OPERATOR ORDER, RECEIVED DIRECTLY 2026-07-29 ~23:16, IN THE OPERATOR'S OWN
 WORDS (not a relay, not `[EXTERNAL OPINION]`): *"WAIT ON GPT OPINON FOR NEXT
@@ -268,6 +270,48 @@ the four `entry_conditions` consumers (`spec-timeframe-recovery.ts`,
 survived its packet. `BEFORE REMOVING A FIELD, ASK WHO READS IT — AND OPEN THAT
 FILE, DO NOT NAME IT.`**
 ★★★★★ **GATE B REMAINS BLOCKED. Nothing here opens it.**
+
+## ★★★★★ [FACT, MEASURED HERE, NOT RULED] THE TRANSCRIPT ARCHIVE **IS** THE EXTRACTION-TIME TEXT — AND R-474 §4's PRESCRIBED TRUTH-SET KEY COVERS `11%` OF CONDITIONS AND **ZERO** OF THE SPEARHEAD
+
+**MEASUREMENT ONLY, ON THE DESK'S OWN OBLIGATION (R-474 §4). NO DISPOSITION — the
+survivor-set DESIGN is a ruling and the operator's paste gates it.**
+★★★★★ **THE "TRANSCRIPTS BACKFILLED 25 DAYS LATER ⇒ GRADING A NEIGHBOURING OBJECT"
+WORRY IS RETIRED [MEASURED HERE]: `40/40` videos, archived transcript char-length ==
+the corpus spec's own `transcript_chars` recorded AT EXTRACTION · and **`264` recorded
+`(offset → quote)` pairs resolve EXACTLY across `37` of `40` videos** (`6` char-exact,
+`258` exact modulo surrounding whitespace). **264 exact multi-character matches at
+recorded offsets cannot land against a different text.** ★★ **NOT PROVEN, stated so it
+is not over-read: whole-file byte identity. The original transcript hash stays
+`[UNRECOVERABLE AT ORIGIN]`; this is agreement AT THE MEASURED OFFSETS, nothing wider.**
+★★★★★ **AND THE CONSTRAINT THAT ACTUALLY BINDS THE OBLIGATION: `evidence` IS NOT A
+QUOTE FIELD. Over all `2351` conditions in `tf-deep-scan/corpus/specs` (40 specs):
+`1027` carry an ATOM REF (`T-xxxx-Cnnnn`), `29`+ a placeholder (`{daily_vwap}`), plus
+brace-structs (`{start: T-…, end: T-…}`) and the already-known `'},{'` debris. **ONLY
+`264 / 2351` = `11.2%` CARRY A RESOLVABLE TRANSCRIPT QUOTE AT ALL.** So R-474 §4's
+`(video, transcript hash, exact span, exact-slice hash)` is REALIZABLE ON `11%` OF THE
+SURFACE — an `exact-slice hash` over the other `89%` would hash a slice its own
+`evidence` never claimed to be.**
+★★★★★ **THE THREE ZERO-RESOLVING VIDEOS, NAMED — A COUNT IS NOT A PIN: `75DJN5UVQnw`
+(**THE distance-0 spearhead**) · `E8Wg6tFPYjo` (SMC, distance 1) · `1HFoStW_wsc`
+(R-451-EXCLUDED). ★★★ AND THE BENIGN CAUSE, MEASURED BEFORE THE ALARMING ONE WAS
+PUBLISHED: all three carry **ZERO prose-quote evidence** — `75DJN5UVQnw` has `13`
+conditions: `9` atom refs, `2` debris, `2` brace-structs, **NOT ONE QUOTE**; and
+`E8Wg6tFPYjo`'s three "prose" values are the literal type-label `'clause'`. **THE
+ARCHIVE IS NOT IMPLICATED FOR ANY OF THE THREE — this is a property of the SPEC.**
+★★★★★ `"ZERO SPANS RESOLVE FOR THE #1 TARGET VIDEO"` WOULD HAVE BEEN A **TRUE SENTENCE
+AND A FALSE FINDING** — the tenth instance of this desk's convicted shape, caught this
+time because the benign cause was measured before the alarming one was written down.**
+★★★ **INSTRUMENT AUDIT AGAINST MYSELF, both caught pre-publication: (1) my first pass
+scored `2075` "evidence ABSENT from transcript" by testing atom refs and placeholders
+as if they were quotes — **I measured a field's KIND as if it had one kind**, and
+`EVERY ORDERED TAXONOMY OWES A RESIDUAL CATEGORY` applies to a FIELD's value-space too.
+(2) A `/c/...` MSYS path made Windows `python` raise `FileNotFoundError` on a file `ls`
+had just listed — **a PATH-FORM failure that reads exactly like a missing artifact.**
+★★ **OPEN, AND IT IS THE NEXT QUESTION FOR THE SURVIVOR SET, NOT A CLAIM: whether a
+DIFFERENT key can carry the five case types — the classified artifact's `9` fields
+(`video · strategy_id · condition_id · rule_text · semantic_type · role · reason ·
+rule_class · remediation_class`) carry **NO span and NO hash at all** [MEASURED HERE,
+`456` rows, all `9` present on every row]. `[UNMEASURED]`**
 
 ## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-477 — R-475 §3 VERIFIED AT THIS DESK ON THE COMMAND THAT CONVICTED IT
 
