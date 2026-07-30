@@ -520,10 +520,21 @@ def _boundary(checks: list[tuple[bool, str]]) -> tuple[bool, str]:
     return True, "output boundary verified: " + " · ".join(d for _o, d in checks)
 
 
-def _denied_identities(out: str) -> set[str]:
-    """The exact paths the RENDERED verdict blamed."""
-    return {ln.split("DENIED BY:", 1)[1].strip()
-            for ln in out.splitlines() if "DENIED BY:" in ln}
+def _denied_entries(out: str) -> list[str]:
+    """★★★★★ THE RENDERED DENIAL ENTRIES, AS A LIST — ONE PER PRINTED LINE.
+
+    R-478 §1: this used to be a SET comprehension, and F-5 asserted
+    `len(printed) == stated`. A set can only ever prove the identities were
+    DISTINCT, so duplicating every rendered line took the verdict from 11 lines to
+    22 while the assertion still read 11 and the suite stayed GREEN at exit 0.
+
+        `A UNIQUE-IDENTITY SET IS NOT AN OUTPUT COUNT.`
+
+    So the LIST is the primitive and nothing that COUNTS is handed a set. Callers
+    that need uniqueness take `set(...)` themselves, deliberately and visibly.
+    """
+    return [ln.split("DENIED BY:", 1)[1].strip()
+            for ln in out.splitlines() if "DENIED BY:" in ln]
 
 
 def self_test() -> int:
@@ -575,7 +586,7 @@ def self_test() -> int:
             # PATH 2 (R-477 §3-4): the collector, RETAINED not replaced.
             _f, probs, _e = collect_files([PRUNED_CASE], "*.ts", set())
             ok_b, extra = _boundary([
-                (str(PRUNED_DIR) in _denied_identities(out),
+                (str(PRUNED_DIR) in _denied_entries(out),
                  "verdict PRINTS the exact DENIED BY path"),
                 ("NEVER DECLARED IT" in out,
                  "verdict EXPLAINS that the exclusion was undeclared"),
@@ -609,16 +620,24 @@ def self_test() -> int:
             got, out = _render([r"writeFileSync"], PRUNED_CASE / "control.ts",
                                [PRUNED_CASE] + missing, "*.ts", DEFAULT_ROOT)
             expected = {str(PRUNED_DIR)} | {str(m) for m in missing}
-            printed = _denied_identities(out)
+            entries = _denied_entries(out)          # LIST: one per RENDERED line
+            unique = set(entries)                   # uniqueness taken visibly, not implied
             m = re.search(r"exit 8 \(FAIL CLOSED\): (\d+) intended", out)
             stated = int(m.group(1)) if m else -1
+            # ★★★★★ THREE INDEPENDENT ASSERTIONS (R-478 §5a-2). They fail in three
+            # different ways, and one combined assertion re-creates the exact collapse
+            # being repaired: a set handed to a counter cannot distinguish "eleven
+            # lines" from "twenty-two lines naming eleven paths".
             ok_b, extra = _boundary([
                 (stated == len(expected),
                  f"COUNT the verdict states ({stated}) == expected ({len(expected)})"),
-                (len(printed) == stated,
-                 f"IDENTITIES printed ({len(printed)}) == count stated ({stated})"),
-                (printed == expected,
-                 "every expected identity printed, and no extras -- SET equality"),
+                (len(entries) == stated,
+                 f"(a) RAW rendered DENIED BY lines ({len(entries)}) == count stated ({stated})"),
+                (len(entries) == len(unique),
+                 f"(b) identities are UNIQUE -- {len(entries)} lines, {len(unique)} distinct, "
+                 f"so no line is duplicated"),
+                (unique == expected,
+                 "(c) identity SET == expected SET, no missing and no extras"),
                 (len(expected) > 8, "the case EXCEEDS the old 8-item head-slice, so a "
                                     "returning slice cannot pass"),
             ])

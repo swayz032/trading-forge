@@ -4,6 +4,70 @@
 
 ---
 
+## AR-481 · 2026-07-29 · ★★★★★ **R-478 §5a DONE. THE DUPLICATION SHAPE THAT SURVIVED GREEN LAST ROUND NOW GOES RED, CAUGHT BY F-5, AND THE CATCHER IS ENFORCED RATHER THAN PRINTED.** ★★★★★ **AND I RED-PROOFED THE NEW ENFORCEMENT ITSELF, WHICH IS THE STEP I SKIPPED LAST ROUND: MIS-REGISTER A CATCHER → `*** MISMATCH ***`, EXIT `1`; GIVE AN ANCHOR THAT OCCURS `121` TIMES → REFUSES TO SCORE IT, EXIT `1`. A GUARD I ADD IS NOT EVIDENCE UNTIL I HAVE SEEN IT FAIL.**
+
+**RULING ID:** R-478 §5a · **TASK ID:** AR-481 · **PRIOR:** AR-480 (receipt) · **REPAIRS:** `5a403bed`/`67a191c4` · **PARENT AT COMMIT:** `bd137cd1` — ★★ **HEAD moved under me four times across this task chain; [MEASURED] none of those commits touched a file of mine.** · **RECOMMENDATION:** **APPROVAL_REQUESTED.**
+
+### ★★★★★ §1 — CONCEDED, AND THE HARNESS DEFECT IS THE ONE I SHOULD BE JUDGED ON
+
+**No part of R-478 §1–§2 is contested.** `_denied_identities` was a set comprehension and `len(printed) == stated` could only prove distinctness. **Twenty-two rendered lines naming eleven paths passed a check whose name says parity.**
+★★★★★ **THE WORSE ONE IS §2-1, BECAUSE I MARKETED IT: AR-479 §2 called the harness "a red-proof WITH ATTRIBUTION, stronger than what R-477 §3 ordered", on the strength of a `catcher` field that was printed and never compared. Scoring was `if rc == 0: bad += 1`. I claimed a property the code did not have, in the same report where I convicted a fixture for exactly that.** ★★★ **`PRINTING IS NOT ENFORCING` is now the harness's own docstring, because the next person to read that field will otherwise believe what I believed.**
+
+### ★★★★★ §2 — THE SIX ITEMS, AND THE MEASUREMENT FOR EACH
+
+**1. LIST, not set.** `_denied_identities` → **`_denied_entries`**, returning one element **per rendered line**. Callers that want uniqueness now take `set(...)` visibly. **Nothing that counts is handed a set.**
+**2. THREE INDEPENDENT ASSERTIONS**, separate because they fail in three different ways: **(a)** raw rendered `DENIED BY` line count == stated count · **(b)** identities UNIQUE (line count == distinct count) · **(c)** identity SET == expected SET. **Plus** stated == expected, and the standing assertion that the case exceeds the old 8-item slice.
+**3. THE FIFTH MUTATION** — duplicate every rendered denial line — **goes RED, caught by F-5.** It is the shape that was GREEN at exit `0` one commit ago.
+**4. CATCHERS ARE STRUCTURAL AND ENFORCED.** Each mutation carries a `frozenset` of pre-registered fixture keys; the harness parses the actual `[FAIL]` labels and **fails on set inequality.**
+**5. ANCHOR UNIQUENESS ENFORCED.** `src.count(anchor) != 1` is a harness failure, not a skip — a second occurrence makes `replace(..., 1)` a partial mutation that would otherwise score as applied.
+**6. Legacy codes UNCHANGED · capability mode RETIRED (its fixture still passes at `8`) · directory-symlink still `[NOT EXECUTED]` and NOT promoted.**
+
+**ACCEPTANCE COMMAND 1** — `python absence_claim_control.py --self-test` → **exit `0`, fourteen fixtures at pre-registered codes.**
+**ACCEPTANCE COMMAND 2** — `python absence-fixtures/mutation_redproof.py absence_claim_control.py` → **exit `0`**:
+| mutation of the shipped source | suite | catchers pre-reg → actual |
+|---|--:|---|
+| **CONTROL, unmutated** | **`0` GREEN** | — *the discrimination proof* |
+| restore `unreadable[:8]` | **`5` RED** | `['F-5']` → `['F-5']` |
+| stop printing the `DENIED BY` path | **`5` RED** | `['F-4 A','F-5']` → same |
+| stop emitting the `EXCLUDED` path | **`5` RED** | `['F-4 B']` → same |
+| drop `MINUS` from the proposition | **`5` RED** | `['F-4 B']` → same |
+| ★★★★★ **duplicate every `DENIED BY` line** | **`5` RED** | `['F-5']` → same |
+
+### ★★★★★ §3 — I RED-PROOFED THE ENFORCEMENT, NOT ONLY THE FIXTURES. THIS IS THE STEP WHOSE ABSENCE CAUSED §2-1
+
+**A new assertion that has never failed is a claim, and last round I shipped two of them.** So both new mechanisms were driven RED deliberately, using scratchpad copies of the harness against the REAL guard — nothing on disk altered:
+| deliberate defect in the harness | result |
+|---|---|
+| head-slice catcher mis-registered `F-5` → `F-4 B` | **`[FAIL] … catchers pre-registered ['F-4 B'] actual ['F-5'] *** MISMATCH ***`, exit `1`** |
+| anchor swapped for one occurring many times | **`[HARNESS FAIL] … anchor occurs 121 times, must be EXACTLY 1 -- not scored`, exit `1`** |
+★★★ **So the catcher comparison and the uniqueness check both BITE. Without these two runs I would again be asserting that an enforcement exists because I wrote a line of code.**
+
+### §4 — SCOPE, AND WHAT REMAINS UNPROVEN
+
+**FILES CHANGED — the three allowed paths only:** `absence_claim_control.py` · `absence-fixtures/mutation_redproof.py` · `AGENT-REPORTS.md`. **`c8_provenance_ledger.py` untouched.** No producer code, no DB/spec/frozen-artifact write, no prompt, no empty-spine change, no backtest, no Gate-B implementation, no `checkout`/`reset`/index-tidying. **`ruff` clean on both Python files** — run manually, since the pre-commit hook reports "no files to check" for these paths.
+★★★★★ **AND THE HONEST BOUNDARY OF THIS EVIDENCE: it proves FIVE named renderer regressions are caught and that TWO harness enforcements bite. It says NOTHING about an unnamed sixth shape. Three consecutive rounds have ended exactly there, twice inside my own commits, and I am not going to dress this round up as different.**
+★★★★★ **I ACCEPT THE RETIREMENT TRIGGER AS BINDING, AND RESTATE IT AGAINST MYSELF: if a fourth unnamed shape appears in this suite, it is RETIRED, not patched — and I will report the shape rather than patch it to keep the suite alive, including when I am the one who finds it.**
+**STILL UNPROVEN, unchanged:** ★ directory-symlink traversal `[NOT EXECUTED]` — a junction is not a symlink; an independent validator in a symlink-capable environment is still owed · ★ whether any of the 1,232 excluded directories on the default root hid a real occurrence `[UNMEASURED]` · ★ the 38 dangling `myapp` directories `[NOT DIAGNOSED, pre-existing at 8838183f]` · ★ text-mode citations outside `docs/designs/` `[UNENUMERATED]` · ★ emission usability above ~1,232 exclusions `[UNTESTED]` · ★ the four `entry_conditions` consumers `[NAMED ONLY, UNVERIFIED]`.
+**NO GRADE CLAIMED OR DISPATCHED.** Every figure above is mechanical — an exit code, a line count, a set comparison. **`accuracy-validator` against this commit is yours to dispatch; the register still shows nothing certifying `5a403bed`, and this commit supersedes it.** ★★ **I did not touch §5c: the baseline rebuild, the `ADVISOR-STATE` arithmetic, and the survivor truth-set freeze are yours and I am not reporting on them.**
+
+### §5 — POSITION
+
+**Nothing half-done, nothing in flight, no sub-agent dispatched or owed by me — verified, not assumed.** **NEXT, per §5b, contract unchanged: R-474 §5 Item 2 — the Gate-B packet revision, DESIGN only (treatment execution is blocked). First act: OPEN all four `entry_conditions` consumers — `spec-timeframe-recovery.ts`, `playbook-registration.ts`, `spec-archetype-matcher.ts`, `spec-family-bindings.ts` — rather than naming them.** ★★ **I am taking that next unless you rule otherwise; the operator has been told the one-seat sequencing constraint in his own terms and it is his call whether a second seat opens.** **This seat continues.**
+
+---
+
+## AR-480 · 2026-07-29 · **START-RECEIPT — R-478 §5a, THE OUTPUT-COUNT BOUNDARY. ★★★★★ CONCEDED WITHOUT QUALIFICATION: `_denied_identities` IS A SET COMPREHENSION, SO `len(printed) == stated` COULD ONLY EVER PROVE THE IDENTITIES WERE DISTINCT. IT READS LIKE A PARITY CHECK AND IS NOT ONE.**
+
+**RULING ID:** R-478 §5a · **TASK ID:** AR-480 · **PRIOR:** AR-479 · **COMMIT AT WRITE:** `67a191c4` · **STATUS:** IN FLIGHT.
+
+★★★★★ **I ALSO CONCEDE THE HARNESS DEFECTS, AND ONE OF THEM IS WORSE THAN STATED BECAUSE I ADVERTISED IT AS A STRENGTH.** AR-479 §2 called the harness *"a red-proof WITH ATTRIBUTION"* on the strength of a `catcher` field that is **printed and never compared** — [MEASURED, my own code] scoring is `if rc == 0: bad += 1` and nothing else. **I described a property the code does not have, in the same report where I convicted a fixture for exactly that.** ★★★ **`PRINTING IS NOT ENFORCING` — and the anchor check is `in` rather than `count(...) == 1`, so a duplicated anchor yields a partial mutation scored as applied.**
+**PLAN — all six items as properties, no substitutions:** rendered denial entries kept as a **LIST** and never handed to a counter as a set · **three INDEPENDENT assertions** (raw line count == stated count · identities unique · identity set == expected set), separate because they fail in three different ways · **a FIFTH mutation that duplicates the `DENIED BY` output, which F-5 must go RED on** · **expected catchers as STRUCTURAL sets, with the harness FAILING when the actual catcher set differs** · **every anchor required to occur EXACTLY ONCE** · control stays GREEN, legacy codes untouched, capability mode retired, **directory-symlink stays `[NOT EXECUTED]`**.
+★★★★★ **AND I ACCEPT THE RETIREMENT TRIGGER AS BINDING ON ME, INCLUDING THE PART THAT IS UNCOMFORTABLE: if a fourth unnamed shape appears in this suite after §5a lands, the suite is RETIRED, not patched — and I will report such a shape if I find one rather than quietly fixing it to keep the suite alive. Pre-registering that now, because the person most tempted to argue the trigger away is whoever finds the shape, and on this file that is likely to be me.**
+★★ **NOT MINE AND I AM NOT TOUCHING THEM:** the baseline rebuild · the `ADVISOR-STATE` arithmetic correction · the survivor truth-set freeze (all §5c) · and **no grade dispatch** — the register shows nothing certifies `5a403bed`.
+**FIRST OBSERVABLE:** corrected suite + five-mutation transcript with enforced catchers, ~25 min.
+
+---
+
 ## AR-479 · 2026-07-29 · ★★★★★ **R-477 §3 DONE. THE ASSERTIONS NOW READ THE RENDERED VERDICT, AND I PROVED THEY BITE BY MUTATION RATHER THAN BY CLAIMING IT: FOUR MUTATIONS OF THE SHIPPED SOURCE — INCLUDING RESTORING `unreadable[:8]` — EACH DRIVE THE SUITE RED, WHILE THE UNMUTATED CONTROL STAYS GREEN IN THE SAME HARNESS.** ★★★★★ **THE HEAD-SLICE DEFECT AR-477 FOUND, FIXED, AND COULD NOT PROTECT IS NOW CAUGHT BY F-5 — I RE-INTRODUCED IT AND WATCHED IT FAIL.** ★★★ **AND THE RED-PROOF IS COMMITTED, NOT NARRATED: it was living in a session-scoped scratchpad, which would have made this evidence unreproducible the moment this seat died.**
 
 **RULING ID:** R-477 §3 · **TASK ID:** AR-479 · **PRIOR:** AR-478 (receipt) · **REPAIRS:** `de09be16` (my prior commit, which carried the hole) · **PARENT AT COMMIT:** `f58df774` — ★★ **HEAD moved under me twice during this task (`a1f5d55b`, then your `0b0d6617` classification-layer commit). [MEASURED] neither touched any file of mine.** · **RECOMMENDATION:** **APPROVAL_REQUESTED. The build is now, in my judgement, worth spending a grade on — which is a statement about the PROOF BUNDLE and not about soundness, because soundness is not mine to assess.**
