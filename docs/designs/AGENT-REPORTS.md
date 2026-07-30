@@ -4,6 +4,55 @@
 
 ---
 
+## AR-504 · 2026-07-30 · **PRE-REGISTRATION FOR STEP C — WRITTEN AND COMMITTED BEFORE THE GENERATOR EXISTS.** ★★★★★ **THE POPULATION IS READ FROM `FAMILY_META` (membership, legitimate); EVERY EXPECTED VALUE BELOW COMES FROM `P-7` (semantics). THAT SPLIT IS THE ONE R-493 §5 MADE BINDING, AND WRITING THE PREDICTIONS DOWN FIRST IS WHAT MAKES THEM EVIDENCE INSTEAD OF DESCRIPTION.**
+
+**RULING ID:** R-493 §5-C · **TASK ID:** AR-504 · **PRIOR:** AR-503 · **PARITY:** `wt-ledger-e-parity-20260730` @ **`48199995`**, clean. **NO CODE CHANGED IN THIS ENTRY — it is a prediction, filed so it can be held against the result.**
+★★★ **R-493 §5 RULED MY HANDOFF A CAPACITY ASSESSMENT AND KEPT THE TASK WITH ME. I HAVE CONTEXT AND I AM CONTINUING RATHER THAN SPENDING A SEAT SWAP.**
+
+### §1 — THE POPULATION, ENUMERATED FROM `FAMILY_META` [MEASURED HERE]
+
+**14 families total · `1` session (`WAIT_SESSION`) · `13` NON-SESSION:**
+`CONFIRM_DIRECTION` · `ENABLE_ENTRY` · `ENTER` · `EXCEPTION` · `EXIT_HINT` · `FILTER` · `INVALIDATE` · `RESET` · `VERIFY_STRUCTURE` · `WAIT_BIAS` · `WAIT_CONFIRMATION` · `WAIT_RETEST` · `WAIT_STRUCTURE`
+**3 already probed by fixture 40** (`FILTER`, `WAIT_BIAS`, `WAIT_RETEST`) → **10 remaining**, which reconciles with R-491 §5's count.
+**8 refused-zone phrases, each verified to actually produce a refusal label rather than assumed to** [MEASURED HERE, `refusedSessionZone()`]: `lunch`·`midday`·`noon session` → `lunch_blackout` · `overnight`·`globex`·`asia session`·`pre market`·`premarket` → `overnight`.
+★★ **OBSERVED, NOT ACTED ON, AND OUT OF MY SCOPE: `pre market`/`premarket` resolve to the `overnight` zone, not to a premarket zone of their own — while the corpus carries a fixture named `11-premarket-orphan`. I am NOT touching the table (R-492 §7 forbids it) and I am NOT calling it a defect; I am recording it because a later reader may otherwise think my grid mislabelled a zone.**
+
+### ★★★★★ §2 — PRE-REGISTERED EXPECTATIONS — DERIVED FROM `P-7`, NOT FROM EITHER LANE
+
+**Grid: `13` non-session families × `8` refused phrases = `104` probe rows, plus `8` adjacent `WAIT_SESSION` positive controls = `112` rows in ONE generated spec.**
+
+| row class | pre-registered expectation | derived from |
+|---|---|---|
+| non-session family carrying ANY refused phrase | **`bindable === true`** and **`reason === null`** | **P-7 / authority §4d** — it never consults a session window |
+| `WAIT_SESSION` carrying the SAME phrase | **`bindable === false`** and reason **NAMES the zone** | P-1/P-3/P-4 — the refusal that MUST still happen |
+| `primitive` · `session_zone` · `approximation` on probe rows | ★★★ **NO EXPECTATION — asserted nowhere** | §4d's `everything else` clause; asserting them would read the expectation out of the code under test |
+
+★★★★★ **THE POSITIVE CONTROL IS WHAT STOPS THIS BEING VACUOUS: without the `WAIT_SESSION` rows, `bindable === true` everywhere satisfies all 104 probes — a check that would stay green if the refusal were deleted entirely. The authority says this in its own words at §4d.**
+★★ **DECLARED MEMBERSHIP, PRE-REGISTERED HERE SO ADDITION AND DELETION BOTH DENY:** the property check will carry the 13 names above as a FROZEN list and compare `FAMILY_META`'s non-session set against it. **A family added or removed without updating that list must go RED** — `A SURFACE IS NOT FAIL-CLOSED UNTIL ITS ENUMERATION IS`.
+
+### ★★★★★ §3 — PRE-REGISTERED MUTATION OUTCOMES — PREDICTED NOW, GRADED LATER
+
+| # | mutation | **PREDICTED** result |
+|---|---|---|
+| **control** | none | **GREEN**, and it must PRINT the row count it checked — a check reporting nothing is indistinguishable from one that did not run |
+| **C1** | delete one family from `FAMILY_META` | **RED**, naming the MISSING declared family |
+| **C2** | add a synthetic family to `FAMILY_META` | **RED**, naming the UNDECLARED family |
+| **C3** | over-refusal hoisted to generic dispatch, **ONE lane** | **RED** — and I expect BOTH the property check AND CLAIM 1 drift to fire |
+| **C4** | the SAME hoist in **BOTH lanes** | ★★★★★ **RED FROM THE PROPERTY CHECK ALONE, with CLAIM 1 AGREEMENT still PASSING.** This is the whole reason C is a property check and not a comparator |
+| **C5** | delete the `WAIT_SESSION` refusal (break the positive control) | **RED** — proving the control discriminates rather than decorates |
+
+★★★ **C4 IS THE PREDICTION I MOST WANT HELD AGAINST ME.** If it comes back green, the property check is reading its expectation from the implementation and the whole of step C is worthless — that is exactly the circularity R-493 §5 named, and this is the experiment that would expose it.
+★★ **I WILL REPORT ANY MISS AS A MISS.** A prediction quietly corrected after the run is worse than no prediction, because it launders a description into evidence.
+
+### §4 — SCOPE · STOP · GRADE
+
+**FORBIDDEN LIST HELD** (no push/PR/remote · no payload changes · no table edits · `runtime-production`/`tf-deep-scan` untouched). **Mutations C1–C5 are TRANSIENT in-run or reverted-with-marker-sweep; none ships.**
+**I STOP AND ESCALATE IF:** any expectation would have to be copied from a lane to make the grid pass · a family can change without the check going red · C4 comes back green.
+**FIRST OBSERVABLE:** the generator + control run with its printed row count, **~20 min. HONEST-PARTIAL APPLIES.**
+★★★★★ **NO GRADE. C, D, E are not landed; F is the desk's and its brief now requires re-planting all five of AR-503's mutations independently (R-493 §2/§6). THE BUILDER DOES NOT GRADE.**
+
+---
+
 ## AR-503 · 2026-07-30 · ★★★★★ **STEPS A AND B LANDED AT `48199995`. THE GATE NOW COMPUTES THE HASH IT PRINTS, AND ITS FIRST RED WAS AGAINST THE *REAL* STALE PIN, NOT A PLANTED ONE.** ★★★★★ **AND §4d BITES: THE TWO-LANE OVER-REFUSAL THAT PRINTED `EXIT 0 · PASS` FOR AR-499 NOW PRINTS `CLAIM 1 AGREEMENT: PASS · CLAIM 2 ORACLE CORRECTNESS: 12 violation(s)`. AGREEMENT PASSED AND THE ORACLE CAUGHT IT.** ★★★ **STEPS C, D, E NOT STARTED — HONEST PARTIAL. NO GRADE CLAIMED OR DUE.**
 
 **RULING ID:** R-492 §5-A, §5-B · **TASK ID:** AR-503 · **PRIOR:** AR-502 (my start-receipt) · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`48199995`**, `git status --porcelain` **EMPTY** [MEASURED HERE].
