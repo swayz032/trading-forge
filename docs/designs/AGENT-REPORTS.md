@@ -4,6 +4,81 @@
 
 ---
 
+## AR-510 · 2026-07-30 · ★★★★★ **§5A · §5B · §5C ALL CLOSED. THE DELIVERY OBJECT EXISTS: `2011e8de`, ONE COMMIT ON THE PINNED BASE `9af37b8f`, 23 FILES, AND EVERY §5C CHECK RE-TAKEN ON THE TREE I SHIP — NOT THE ONE I BUILT.** ★★★★★ **THE 22-vs-23 COUNTING TRAP WAS DISARMED THE WAY R-495 §3 SPECIFIED: TWO SEPARATE CHECKS, NEVER A TOTAL.** ⚠️★★★ **AND TWO NUMBERS IN THE PRIOR RECORD ARE CORRECTED BY MEASUREMENT — NEITHER CHANGES A DIRECTION.**
+
+**RULING ID:** R-495 §5A/§5B/§5C · **TASK ID:** AR-510 · **PRIOR:** AR-509 (start-receipt) · **SEAT:** fresh worker, seated cold on this ruling. **`F` NOT DISPATCHED — see §7.**
+
+### ★★★★★ §1 — §5A: THE PACKET REVISED BY DATED ADDENDUM · `7ddcccaa` · **201 INSERTIONS, `0` DELETIONS**
+
+**`[MEASURED HERE]` `git diff --stat` on the revision: `1 file changed, 201 insertions(+)`. Deletion lines: `0`.**
+★★★★★ **THAT ZERO IS THE WHOLE COMPLIANCE CLAIM FOR §5A. `NEVER BACKDATE AN UPDATE INTO THE ORIGINAL RECEIPT` — §1–§7 are byte-for-byte the pre-implementation text, and every post-staging measurement lives in a new `## 8 — DELIVERY ADDENDUM · ADDED 2026-07-30 AT DELIVERY TIME`.** A dated banner at the head points at it, so a reader cannot mistake §4's pre-registrations for results.
+**Revised packet: `44,231` B · `587` lines · sha256 `5461086c4856e72627dc6bc51d0b89bd7ef32d826055ba048da0fe606c9460ff`** (was `29,238` B · `386` lines · `953c9781…`).
+**Committed with `git commit -o <path>` — the explicit path ONLY. No `git add -A`.** ★★ **The shared campaign tree carried `92` dirty entries belonging to other sessions before my commit and `92` after — [MEASURED], not assumed. DISCLOSURE: the `pre-commit` hook stashed and restored those unstaged files around my commit (the known shared-tree stash window). It restored cleanly; I am reporting it because it is a window, not because it failed.**
+
+**§8 records all nine items R-495 §5A named, each re-derived by me at `3dcc6739` rather than copied from a ruling:** 8.1 executable authority (`createHash :46`, computed sha `:873`, **four** fail-closed cases `:842/:849/:863/:876`, hermetic-about-this-tree residual named) · 8.2 P-7 as a property over the whole non-session population with its preconditions failing closed and a positive control inside it · 8.3 whole-plan **bidirectional** key-set equality, **elementwise-at-index** arrays, **per-lane** duplicate-id, each with a planted self-control **and** a clean neighbour · 8.4 the 14 unadjudicated cells **enumerated** + agreement-vs-correctness reported separately · 8.5 CI + fast-lane wiring **and the gap I found doing it** · 8.6 the materiality control's outside-population witness **and** its non-zero exit · 8.7 unconditional correction, revert-only rollback, no switch may restore divergence · 8.8 the grader's five re-plants · 8.9 status.
+
+### ★★★★★ §2 — §5B: THE ATOMIC DELIVERY · `2011e8de` · AND THE COUNTING TRAP, DISARMED BY TWO CHECKS
+
+**Worktree `C:/Users/tonio/Projects/wt-ledger-e-delivery-20260730`, branch `hardening/ledger-e-delivery-20260730`, created with `git worktree add -b … 9af37b8f` — pinned to an EXPLICIT SHA, never a branch name.**
+**`[MEASURED HERE]` `git rev-parse HEAD^` = `9af37b8ff36a13c05fb0ec26752c42a97fc300d7`. `git rev-list --count 9af37b8f..HEAD` = `1`.** ★★ **The base is the PARENT, not merely an ancestor — that is the stronger check and it is the one that proves "one commit relative to the pinned base".**
+**The WIP branch was NOT rewritten, squashed, or touched. `3dcc6739` still stands where it did.**
+
+★★★★★ **THE TRAP, AND HOW I REFUSED TO LET A TOTAL ANSWER IT:**
+| check | `[MEASURED HERE]` |
+|---|---|
+| the 22 WIP paths, **content** | `git diff 3dcc6739 -- <22 paths>` = **`0` lines**. **POSITIVE CONTROL, same command shape against the base: `2809` lines** — so the comparison reaches and the emptiness is real |
+| the 22 WIP paths, **membership, BOTH directions** | `comm` staged-set − WIP-set = **exactly `docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`** · WIP-set − staged-set = **EMPTY**. No unlisted path entered |
+| the packet, **by hash** | campaign working file · the committed blob at `7ddcccaa` · the delivery destination — **all three `5461086c…`**, and the blob inside `2011e8de` is `5461086c…` too |
+| the total | **`23`, and `23 ≠ 22` IS THE CORRECT RESULT** — the packet was absent at BOTH `9af37b8f` and `3dcc6739` (`0`/`0`, positive control `1` for `spec-family-bindings.ts`) |
+
+★★★★★ **`A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK.` The tempting repair — dropping the packet to make the number read `22` — would have deleted the deliverable to satisfy the checker.**
+**FINAL:** `23 files changed, 3064 insertions(+), 81 deletions(-)`. ★★ **`2477 + 587 = 3064` — the reviewed net delta plus exactly the packet's line count, arithmetic that corroborates the path accounting from a second direction.** **Delivered path set (23), sorted, sha256 `988ae8f18c2fb10a9e9847ff72896a3306807d8ccace976c378bc795e08de7e7`.**
+
+### ★★★★★ §3 — §5C: RE-TAKEN ON THE SHIPPED TREE, WITH THE CONTROLS THAT MAKE EACH GREEN MEAN SOMETHING
+
+| # | check, run at `2011e8de` | result |
+|---|---|---|
+| C-1 | parity gate | **EXIT `0`** · `12` specs vs `12` declared members · authority **COMPUTED** `3494d4bb…`, verified equal to the pin · **the gate's own output enumerated the same `14` unadjudicated cells I had counted independently from `ORACLE.json`** |
+| C-2 | **real `node_modules/typescript/bin/tsc --noEmit`** (not `npx`), `--max-old-space-size=8192` | **EXIT `0`** |
+| C-2a | ★★★★★ **CONTROL FOR C-2, BECAUSE A ZERO-ERROR `tsc` IS EXACTLY THE SHAPE THAT FALSE-CLEANS** | **the same binary EXITS `2`** on a known-bad file · and `--listFilesOnly` proves all three changed TS files (`check-spec-binding-plan-parity.ts`, `materiality-receipt-ledger-e.ts`, `spec-family-bindings.ts`) **are IN the compilation** |
+| C-3 | materiality receipt, normal | **EXIT `0`** · `12 → 11` · `false→true` transitions `0` · control holds `false → false` |
+| C-4 | ★★★★★ **transient E-2** (`MIN_SPINE_BOUND_RATIO 0.5→0.0`, AFTER lane only) | **`false → true`, `FORBIDDEN compiled TRANSITION`, control NAMED by filename, EXIT `1`** |
+| C-5 | restoration + marker sweep | line restored to `0.5` · **`git status --porcelain` = `0`** · `git diff HEAD` = `0` · **stray marker `MIN_SPINE_BOUND_RATIO = 0.0` absent across all 23 paths, POSITIVE CONTROL `= 0.5` hits `1`** |
+| C-6 | ★★ **receipt re-run AFTER restoration** | **EXIT `0`**, control back to `false→false` — **restoration proven FUNCTIONAL, not merely textual** |
+| C-7 | parity gate re-run after restoration | **EXIT `0`** |
+
+★★★ **I asserted EXIT CODES throughout rather than reading verdict banners. `THE FIX FOR AN INFERENCE ERROR IS A MEASUREMENT, NOT A MORE CONFIDENT INFERENCE.`**
+
+### ⚠️★★★ §4 — TWO CORRECTIONS TO THE RECORD, BOTH MINE OR MY PREDECESSOR'S, NEITHER CHANGING A DIRECTION
+
+1. **AR-509 §2 gave the packet-staleness POSITIVE CONTROL as `parity` = `23`. `[MEASURED HERE]` it is `18` — `18` matching lines and `18` occurrences (`grep -c` vs `grep -o | wc -l` agree).** The control's PURPOSE is unaffected: it is non-zero, so the grep reaches and the five zero-counts are real absences. **I am reporting it because a control's value is a measurement like any other.**
+2. **R-495 §1 and AR-508 recorded the emitter's `process.exit` going `0 → 3`. `[MEASURED HERE]` the TOKEN appears `3` times; `:192` is a COMMENT and only `:200` and `:244` are EXECUTABLE.** The enforcement claim is **unchanged and stronger than the count** — I read `:244` sitting inside `if (violations.length > 0)` (`:241`) and `:200` firing when the control directory is empty. ★★ **`A GREP MATCHING A COMMENT IS NOT A VERIFICATION` — and citing a token count as the enforcement evidence is that error wearing a number.**
+
+### ⚠️★★★★★ §5 — A GAP I FOUND WHILE WRITING §8.5, DECLARED RATHER THAN PAPERED OVER
+
+**`[MEASURED HERE]` at base `9af37b8f`: the npm script `check:spec-binding-plan-parity` ALREADY EXISTED (`package.json:28`) and executed in **NEITHER** workflow — `ci.yml` `0`, `fast.yml` `0`. POSITIVE CONTROL: `20` `npm run` lines in that same base `ci.yml`.** ★★★ **That is the F-A shape exactly — a name in one file, running in none — and it is now closed at `ci.yml:370` and `fast.yml:153`.**
+⚠️★★★★★ **BUT THE MATERIALITY EMITTER IS NOT WIRED INTO EITHER WORKFLOW: `grep -c materiality` = `0` in both. It is a hand-run delivery artifact, not a standing CI gate. Its non-zero exit protects the run that produces the receipt AND NOTHING ELSE.** **This is written into the packet at §8.5 as a DECLARED GAP. I did not wire it, because R-495's scope names 23 paths and adding a CI job is not among them — flagging it instead of silently widening scope.**
+★★ **AND THE WIRING CLAIM IS STILL NOT FULLY CLOSED: `[UNPROVEN]` no pipeline run exists on this branch, so "observed non-zero exit IN THE PIPELINE" — the packet's own §4.2 standard — has NOT been satisfied. A grep hit was never sufficient and I am not treating it as sufficient now.**
+
+### §6 — WHAT IS NOT PROVEN, STATED SO A PARTIAL CANNOT READ AS COMPLETE
+
+- **`[UNMEASURED]` POPULATION INCIDENCE** — how many real Gate-B specs actually carry an orphan-zone `WAIT_SESSION` clause. **Everything delivered is a MECHANISM proven at the executable line. THE INCIDENCE IS THE NUMBER THAT DECIDES THEORETICAL vs LIVE.**
+- **`[UNPROVEN]` pipeline execution** (§5 above). **`[UNPROVEN]` no independent grade exists.**
+- **The 14 unadjudicated cells are AGREEMENT-ONLY.** A green gate proves the lanes agree **on the corpus they were given**.
+- **DISCLOSURE, environment not content:** the delivery worktree's `node_modules` is a symlink to `runtime-production/node_modules` (as the parity worktree's is). It is gitignored, is **not** in the commit, and the tree was `git status` clean at every checkpoint.
+
+### §7 — POSITION · FORBIDDEN · LEDGER
+
+**DELIVERY: `2011e8de` on `hardening/ledger-e-delivery-20260730`, parent `9af37b8f`, tree clean. CAMPAIGN: `7ddcccaa` on `h1-wave4-sealed12-driver`. WIP `3dcc6739` UNTOUCHED.**
+**No `git push`, no PR, no remote pipeline, no WIP history rewrite, no `git add -A`, no unlisted path, no lane-semantics change, no orphan-zone acceptance, no Gate-B treatment, no DB/spec/frozen write, no extraction, no backtest. `runtime-production` and `tf-deep-scan` NOT edited — the delivery worktree is a NEW worktree on a NEW branch.**
+**LEDGER:** ✅ A · ✅ B · ✅ C · ✅ D · ✅ E · ✅ **§5A** · ✅ **§5B** · ✅ **§5C** · ⛔ **`F`.**
+★★★★★ **`F` IS NOW DUE BY R-495 §4's OWN CONDITION — the delivery object exists AND §5C passes ON IT — AND I HAVE NOT DISPATCHED IT AND WILL NOT. THE BUILDER DOES NOT GRADE.** **The desk dispatches `accuracy-validator` with the FIVE re-plants (two-lane `C4` · all four authority fail-closed cases · `D`'s detector-reports-on-everything · `E-2` ratio loosening · one novel false-green hunt), a WORKING ACCESS RECIPE rather than prohibitions, the honest null accepted, and its agent id named in the consuming ruling. Packet §8.8 carries the list so the brief does not have to re-derive it.**
+★★★ **SCOPE, CARRIED FORWARD VERBATIM BECAUSE A TIRED SESSION WOULD DROP IT: this closes a PREREQUISITE and leaves P0 at its final assembly step. It does not complete the compiler, does not produce a trading-ready strategy, and P1–P3 and Gate B still follow. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
+**NOTHING IN FLIGHT: no sub-agent dispatched or owed — verified by checking, not assumed. Nothing half-built.**
+**NEXT TASK, AS THE RULING DEFINES IT: `F` — the desk-dispatched independent grade against `2011e8de`.**
+
+---
+
 ## AR-509 · 2026-07-30 · **R-495 §5 START-RECEIPT — EVERY PRE-REGISTERED VALUE MEASURED AND PINNED.** ⚠️★★★★★ **MY AR-508 §2 CLAIM WAS WRONG AND R-495 §2 IS ACCEPTED IN FULL: I RAN A DIRECTORY-SCOPED SEARCH AND REPORTED A TREE-WIDE ABSENCE. THE PACKET EXISTS.** ★★★ **AND I AM HOLDING THE CAPACITY STOP I DECLARED IN AR-508 §3 — THE PREMISE IS UNBLOCKED, MY CONTEXT IS NOT.**
 
 **RULING ID:** R-495 §5A/§5B/§5C · **TASK ID:** AR-509 · **PRIOR:** AR-508 · **R-495 BLOCK PIN:** `9,447` B · sha256 **`03ee3012c6bed09461e8d915794e1240e34921d3e9aff71ce0e581cb3cac557f`** (heading → next divider). **PARITY:** `3dcc6739`, clean. **NO CODE OR PACKET CHANGED IN THIS ENTRY.**
