@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1007` at THIS commit, 2026-07-29 23:29 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1053` at THIS commit, 2026-07-29 23:36 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -211,6 +211,52 @@ survives only at `:105` as a HISTORICAL note. The `:168` comment that claimed
 ★★ **STILL OPEN AND NOT CLAIMED BY ANYONE: directory-symlink traversal
 `[NOT EXECUTED]` · text-mode citations outside `docs/designs/` `[UNENUMERATED]` ·
 no independent post-repair grade exists.**
+
+## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-481 — R-478 §5a DELIVERED AT `b67be086`. **THE FIX IS REAL. THE HARNESS NOW LIES ABOUT ITS OWN EXIT CODE.**
+
+**UNRULED — AWAITING THE EXTERNAL READ (operator's standing order). NOT RATIFIED.**
+★★★★★ **THE DECISIVE CHECK, AND IT IS MINE: I re-ran MY OWN duplication harness — the
+one I wrote BEFORE the fix existed, which returned GREEN on `5a403bed` — against
+`b67be086`. [MEASURED HERE] rendered `DENIED BY` lines `11 → 22`, unique identities
+`11 → 11` (so the mutation provably took), and `--self-test` now **exit `5` RED, caught
+by F-5**. `A GUARD PROVEN BY THE INSTRUMENT THAT CONVICTED IT` — this is the strongest
+form available and it is not the worker's instrument.**
+**ALSO [MEASURED HERE]:** `--self-test` exit `0`, **14/14** fixtures · all **five**
+mutations bite with pre-registered catchers matching actual · catcher enforcement
+genuinely bites under **my own** injection (mis-register `F-5`→`F-4 B` ⇒
+`*** MISMATCH ***`, scored as failure) · containment is the three allowed paths only.
+
+★★★★★ **AND THE NEW DEFECT, INTRODUCED BY THIS VERY COMMIT [MEASURED HERE]:
+`mutation_redproof.py`'s SUCCESS epilogue prints `★` (U+2605). Default stdout encoding
+on this box is `cp1252`, so that line raises `UnicodeEncodeError` — AFTER
+`RED-PROOF PASSED` has already printed — and the process exits `1`.**
+| path | prose printed | **exit** |
+|---|---|--:|
+| success, default `cp1252` | `RED-PROOF PASSED` | **`1`** |
+| **forced failure**, default `cp1252` | `RED-PROOF FAILED` | **`1`** |
+| success, `PYTHONIOENCODING=utf-8` | `RED-PROOF PASSED` | `0` |
+★★★★★ **BOTH PATHS EXIT `1`. THE EXIT CODE DISCRIMINATES NOTHING IN THE DEFAULT
+ENVIRONMENT — pass and fail are separable only by READING THE PROSE. The forced-failure
+row is a POSITIVE CONTROL I ran deliberately; I did not infer it from the source.**
+★★★ **The `★` is NOT in the pre-`b67be086` epilogue — [MEASURED] the old tail was
+`print("ALL MUTATIONS BIT" if bad == 0 else …)`. THE REPAIR INTRODUCED IT.**
+★★★ **AR-481's "ACCEPTANCE COMMAND 2 → exit `0`" is TRUE IN ITS ENVIRONMENT AND FALSE
+IN MINE. New law: `AN ACCEPTANCE COMMAND'S EXIT CODE IS A PROPERTY OF THE ENVIRONMENT
+TOO — PIN THE ENCODING OR DO NOT PIN THE CODE.`**
+★★ **Direction matters: this is a FALSE RED, not a false green. It lets no regression
+through. But it is the same species this desk keeps convicting —
+`AN EXIT CODE IS NOT A VERDICT UNTIL YOU KNOW WHAT PRODUCED IT` — and any CI step or
+wrapper reading this command would report permanent failure.**
+
+★★★★★ **DOES THIS FIRE R-478's PRE-REGISTERED RETIREMENT TRIGGER? NO — AND THE
+REASONING IS RECORDED HERE BECAUSE A TRIGGER YOU DECLINE TO FIRE NEEDS ITS REASONS ON
+THE RECORD OR IT BECOMES A TRIGGER YOU RATIONALISED AWAY.** The trigger names a
+*fourth unnamed shape* in the class the three rounds shared: **the suite passing when it
+should fail** (silent prune → output boundary → output-count boundary), whose lesson was
+that the ASSERTION APPROACH may be unsound. **This is a one-line console-encoding bug in
+a print statement — it is not an assertion defect, and it fails in the opposite
+direction.** ★★ **It is still a real finding that owes a same-wave close under the
+zero-carry-forward rule; it is not evidence that the approach is wrong.**
 
 ## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-479 — R-477 §3 DELIVERED AND THE FIXTURES NOW BITE
 
