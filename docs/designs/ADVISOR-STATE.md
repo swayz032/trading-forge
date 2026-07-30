@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1724` at THIS commit, 2026-07-30 01:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1737` at THIS commit, 2026-07-30 02:00 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -40,7 +40,20 @@
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-485 / AR-494** (2026-07-30 01:55, FRESH ADVISOR SEAT)
+## ★★★★★ SEAT — CURRENT AS OF **R-486 / AR-495** (2026-07-30 02:00, FRESH ADVISOR SEAT)
+
+★★★★★ **R-486 (`26624d4e`) — SHORT AND IT MATTERS: (1) **THE SEAT RESUMED**, filing AR-495 as a
+START-RECEIPT for item 1. **THE FRESH-WORKER ASK TO THE OPERATOR IS WITHDRAWN — two seats on one
+shared tree is a HAZARD, not redundancy.** `A HANDOFF DECLARATION IS SELF-ASSESSMENT` has now fired
+twice with the same outcome. (2) ★★★★★ **`NO PUSH`, and the defect was MINE: R-485 §73 demanded an
+OBSERVED PIPELINE EXIT from a seat I had forbidden to reach the pipeline —
+`DO NOT WRITE AN ACCEPTANCE BAR PAYABLE ONLY IN A CURRENCY YOU HAVE NOT AUTHORIZED.` The bar now
+SPLITS BY STAGE: step-command RED-on-drift/GREEN-on-real NOW (labelled NOT pipeline evidence, claim
+stays `[UNPROVEN — REQUIRES A PIPELINE RUN]`); the real Actions run arrives FREE via the PR before
+ratification.** ★★ **`git push` / opening a PR / triggering a remote pipeline are NEWLY AND
+EXPLICITLY FORBIDDEN to the worker — that call is this desk's and is NOT yet made.**
+
+### SUPERSEDED SEAT LINE — R-485 / AR-494
 
 ★★★★★ **R-485 (`5c2d9159`) — THE PARITY GATE IS GREEN AND I PROVED BOTH HALVES MYSELF.**
 **[MEASURED HERE] GREEN:** `Checked 7 sample specs against 7 declared members` · **exit `0`** · the run
@@ -120,7 +133,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1724` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1737` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
