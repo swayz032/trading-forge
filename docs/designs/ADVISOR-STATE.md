@@ -33,15 +33,32 @@ START-RECEIPT on R-473 §4, nothing to rule.**
 the 15-minute quiet window before it was THE DESK OWING A RULING, not a stalled
 worker.**
 
-## AUTHORIZED NOW
-**AR-471's seat: STAGE — NOT IMPLEMENT — the Gate-B ratify packet** (R-473 §4).
-Files: a new `GATE-B-RATIFY-PACKET-2026-07-29.md` under `docs/designs/` +
-`AGENT-REPORTS.md`, **nothing else.** ★★★★★ **`absence_claim_control.py`,
-`c8_provenance_ledger.py` and the absence fixtures are OFF LIMITS — A GRADER IS
-READING THEM RIGHT NOW.** Observables: receipt ~2 min, packet ~30–40 min.
-★★★ **Queued behind it, no round-trip: on a SOUND verdict → Gate-B implementation
-under the staged packet (authorized in the ruling that consumes the grade).**
-★★★★★ **GATE B REMAINS BLOCKED. The packet is DESIGN; it does not open the gate.**
+## AUTHORIZED NOW — R-474 §5, TWO ITEMS IN ORDER
+★★★★★ **ITEM 1 — THE BOUNDED F-1 REPAIR, ORDERED AS A PROPERTY:** *"EVERY MEMBER
+OF THE INTENDED SURFACE IS EITHER READ, OR REPORTED `UNREADABLE`. THERE IS NO
+THIRD OUTCOME."* Files: `absence_claim_control.py` · `absence-fixtures/` ·
+`AGENT-REPORTS.md`. **`c8_provenance_ledger.py` is DONE and graded SOUND — do not
+touch it.** Plus F-2 (`★` crashes exit-0 under `cp1252`) and F-3a (invalid regex →
+exit `4`, not a traceback). **RED-PROOF BOTH HALVES: run B must go NON-ZERO, run A
+must STAY `0`.** ★★★ **NOT the forbidden fifth round — R-472 banned a fifth
+SEMANTIC-REGEX round; this is `os.walk(onerror=…)` + a per-`--surface` existence
+check and touches no semantic analysis.**
+**ITEM 2 — REVISE THE GATE-B PACKET** against R-474 §2's six requirements. Files:
+`GATE-B-RATIFY-PACKET-2026-07-29.md` · `AGENT-REPORTS.md`. **Open the four
+`entry_conditions` consumers — AR-473 named them `[UNVERIFIED]`.**
+★★★ **Handoff permitted at the item-1 boundary; item 2's contract is written in
+full in R-474 §5 so the authorization survives the seat.**
+★★★★★ **GATE B REMAINS BLOCKED. Neither item opens it.**
+
+## ★★★★★ THE DESK'S OWN OPEN OBLIGATION — DO NOT LET THIS LAPSE AGAIN
+**FREEZE THE GENUINE-SURVIVOR TRUTH SET (R-474 §4).** Mine, not the worker's, not
+"a fresh session". **Keyed to `(video, transcript hash, exact span, exact-slice
+hash)` — NEVER to mutable `condition_id`, which [MEASURED] collapses `455 → 359`
+and merges `96` rows.** Must span FIVE cases: genuine session predicates ·
+descriptive session context · instrument/timeframe context · **mixed clauses** ·
+**ambiguous cases**. ★★★★★ **FROZEN BEFORE ANY TREATMENT RESULT EXISTS — a
+survivor set chosen after seeing the outcome is a rationalisation, not a
+pre-registration.** The worker may enumerate candidates; the desk freezes labels.
 ★★★★★ **WORKER: SEATED, ALIVE, AND IDLE WAITING ON MY RULING — NOT handed off.
 [MEASURED HERE 21:30] its `claude.exe 15908` is alive (started 18:26), its
 `ADVISOR-RULINGS` ear `2728/10556` is armed, and its conversation `.jsonl`
@@ -442,7 +459,10 @@ byte-exact) · the population OVERLAP MAP · original transcript identity
 ## TREES AND ARTIFACTS — NAME THESE IN EVERY COMMAND
 
 - campaign relay tree: `C:/Users/tonio/Projects/wt-h1-wave4-20260712` (branch `h1-wave4-sealed12-driver`)
-- **`trading-forge/tf-deep-scan` IS ITS OWN GIT REPO** — holds `corpus/specs/` (40 specs, 2,351 conditions) and the producer at `dc8a150`. **`git grep` from the campaign tree CANNOT see it. This caused two false negatives.**
+- ★★★★★ **`trading-forge/tf-deep-scan` IS A LINKED WORKTREE OF `trading-forge/trading-forge` — *NOT* ITS OWN REPO. THIS LINE SAID THE OPPOSITE IN BOLD FOR A DAY AND WAS CORRECTED BY AN OUTSIDE READER (R-474 §0).** [MEASURED HERE] `git -C tf-deep-scan rev-parse --git-dir` → `…/trading-forge/trading-forge/.git/worktrees/tf-deep-scan`; `--git-common-dir` → `…/trading-forge/trading-forge/.git`. **They DIFFER and git-dir is under `.git/worktrees/` — that is the discriminator.** ★★★★★ **`rev-parse --show-toplevel` CANNOT TELL THE DIFFERENCE — it returns the worktree root for both. Do not use it for this question.**
+  - **THE SYMPTOM WAS RIGHT, THE MECHANISM WAS WRONG:** `git grep` from the campaign tree still cannot see it — because it is a different WORKING DIRECTORY, not a different object store. **THE COST OF THE WRONG MECHANISM: its objects ARE reachable from the main repo's store, so `git -C trading-forge/trading-forge log --all` / `cat-file` CAN read the producer's history. The desk denied itself that for a day.** `A WRONG MECHANISM GETS OBEYED.`
+  - It holds `corpus/specs/` (40 specs, 2,351 conditions) and the producer at `dc8a150`. ★★★ **IT MAY NOT BE EDITED (R-474 §3): it is the producer of record, and Gate-B implementation goes in a NEW worktree pinned to `4f3b5cd075a15dab33e08d1c57340dd6a011141b`** — [MEASURED] that commit's tree carries BOTH `scripts/atomize-transcript.ts` and `src/server/lib/graph-to-engine.ts`.
+  - ★★ **NAMING TRAP: the repo is `Projects/trading-forge/trading-forge` (INNER). `Projects/trading-forge` is the ~90-worktree CONTAINER and is not a repo — `git -C` against it returns `fatal: not a git repository`, which reads like a broken command rather than a category error.**
 - census artifacts, OUTSIDE every git tree: `trading-forge/backups/h1-census/unknown-dbtime-ad4335f0/` (`pop120_classified.json` sha256 `eed65514a1…`, `pop120_census.json`)
 - preserved transcripts: `trading-forge/backups/h1-shadow-eval/transcripts-78fe8ea7/transcripts/` — 40 files, `913,668` B
 - preserved harness: `trading-forge/backups/h1-shadow-eval/shadow-eval-edaa0c14/` (`shadow.ts` = `16654d17…`, EQUALS the freeze document's own pin)
