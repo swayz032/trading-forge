@@ -4,6 +4,55 @@
 
 ---
 
+## AR-491 · 2026-07-30 · **START-RECEIPT — FRESH SEAT TAKING R-482 CORRECTION 3, THE `ASSIGNEE: NONE` ITEM. ★★★★★ AND I REPRODUCED AR-490's RULING-BLOCK HASH BYTE-FOR-BYTE (`bad035213a81…`, `15,506` B, lines `15–108`) — SO THE R-482 TEXT I AM EXECUTING IS PROVABLY THE SAME TEXT THE DECLINING SEAT READ, NOT A LATER REVISION. ★★★ AND ONE RULING DEFECT TO REPORT: R-482 HAS NO `★ WORKER — START HERE` BLOCK.**
+
+**RULING ID:** R-482 (correction 3) · **TASK ID:** AR-491 · **PRIOR:** AR-490 (decline-receipt) · **AUTHORIZATION PATH:** R-482 §94 pre-authorized the decline + desk relabel; `ADVISOR-STATE.md` @ `b49e16fc` §"CORRECTION 3 — UNASSIGNED" states *"REQUIRES A FRESH WORKER SEAT — the operator's act"*. **The operator seated this session. I am taking it.**
+**WORKTREE:** `wt-ledger-e-parity-20260730` @ **`03422cc9`**, branch `hardening/ledger-e-parity-20260730`, tree **CLEAN** (`git status --porcelain` empty) · **FIRST RED FIXTURE:** `ci/fixtures/spec-binding-parity-expanded/10-lunch-orphan.spec.json` — **verified PRESENT in `03422cc9`**, not relayed from AR-490.
+
+### §1 — STALE-RULING GUARD RUN BEFORE ANY DERIVATION (correction 2's guard, on its second use)
+
+| step | result |
+|---|---|
+| (a) latest ruling commit identity | **`bc551098cf8e0ed3711eef72d2be1fbc46bac61d`**, `2026-07-30 01:08:25` — **same commit AR-490 saw; no ruling has landed since** |
+| (b) **WORKING-TREE** re-read + hash of the exact R-482 block | lines `15–108`, **`15,506` B, sha256 `bad035213a81ed1941df0c3c2d62e5dec3002214421ae5004f83a081110b3079`** |
+| (c) working tree vs `HEAD` on the ruling path | **no diff** — no uncommitted concurrent edit in flight |
+| (d) STATE path, same three checks | `b49e16fc` (`01:11:49`), **no diff** — the UNASSIGNED relabel is committed and is what I read |
+
+★★★★★ **(b) IS THE PART WORTH NAMING: my hash is BYTE-IDENTICAL to AR-490 §2's.** I did not take "the ruling is unchanged" on trust from a `git log` that shows no new commit — **I re-derived the block hash and matched the prior seat's independently.** ★★★ **That is the difference between *no commit landed* and *the text is the same text*: an annotation appended inside an existing commit's content would pass the first check and fail this one.** The guard's own author wrote it after being burned by exactly that; it now has a corroborating second run.
+
+### ★★★ §2 — RULING DEFECT: NO `★ WORKER — START HERE` BLOCK IN R-482
+
+**`worker-onboarding` rule 1 instructs a cold seat to find a block headed `★ WORKER — START HERE` and says: if it is absent, act off the most recent `AUTHORIZED NOW` and *"say in your first report that the block was missing, so the desk fixes it"*. **It is missing from R-482.** `grep -c "WORKER — START HERE"` over the ruling = `0`.
+★★ **COST TO THIS SEAT: LOW, and I want that recorded accurately rather than inflated.** R-482 §92-96 `AUTHORIZED NEXT ACTION` is well-formed and the STATE file's UNASSIGNED block carried tree · scope · contract · "fresh seat required". **What was genuinely missing was the pointer telling a cold seat that its task had MOVED from the ruling to the STATE file** — R-482 §94 addresses "the seat that receives this ruling", and I am not that seat; the ruling alone would have told me the task was someone else's. **I resolved it by reading the STATE relabel, which is the desk's own R-430 remedy working as designed.**
+★ **NO METRIC DEFECT TO REPORT** (`worker-execution` §5 check, run deliberately): R-482 §86's acceptance list is entirely MECHANICAL — exit codes, RED/GREEN transitions, enumerated movements — and it explicitly ends *"final independent `accuracy-validator` against the frozen implementation commit; THE BUILDER DOES NOT GRADE."* **The doer/grader line is drawn correctly in the ruling; I am not being asked to score my own repair.**
+
+### ★★★★★ §3 — THE ONE ACTIVE ASSUMPTION I AM FLAGGING BEFORE I START, NOT AT DELIVERY
+
+**R-482 §75 requires *"a semantic expected-results oracle independent of BOTH implementations"* and assigns it to me — the builder.** ★★★★★ **THERE IS A REAL TENSION IN THAT AND I WOULD RATHER NAME IT NOW THAN HAVE IT FOUND IN THE GRADE: an oracle authored by the doer is independent of both LANES only if I derive it from the SESSION-WINDOW SEMANTICS AND THE SPEC TEXT, and never by running either lane and writing down what it printed.** The latter is `HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM` wearing an oracle's clothes — the exact hazard AR-490 §33 refused to rush.
+★★ **MY WORKING RULE, stated so it can be checked against my commit:** each oracle row is derived from *"what must be true of a `lunch` window given the frozen session definition"*, written **BEFORE** I run the comparator on that fixture, and any row where the two lanes disagree with the oracle is a **finding**, not a row I adjust. ★★★ **IF I CATCH MYSELF EDITING AN ORACLE ROW TO MATCH AN OBSERVED OUTPUT, THAT IS THE FABRICATION AND I WILL REPORT IT RATHER THAN SILENTLY RECONCILE IT.** The `accuracy-validator` remains the grader; the oracle is INPUT it scores, never my own verdict.
+
+### §4 — SCOPE I AM STAYING INSIDE (R-482 §79-82, quoted not paraphrased)
+
+**ALLOWED — parity worktree:** `src/server/lib/spec-family-bindings.ts` · `scripts/check-spec-binding-plan-parity.ts` · parity fixture dirs + manifest · `ci.yml` · `fast.yml` · narrowly required test/wiring files. **Campaign tree:** `AGENT-REPORTS.md`.
+**FORBIDDEN, acknowledged item by item:** changing Python to accept orphan zones · Gate-B implementation · DB/spec/frozen-artifact writes · re-extraction · backtests · empty-spine changes · direct edits in `runtime-production` or `tf-deep-scan` · `git checkout`/`reset`/index ops in the shared tree.
+★★ **AND THE TWO MEASURED OPERATIONAL TRAPS, PRE-LOADED:** the parity worktree's `node_modules` **IS A JUNCTION** — `Remove-Item -Recurse` follows it and deletes `runtime-production`'s real dependencies; `[System.IO.Directory]::Delete($p,$false)` first. `TF_SPEC_BINDING_SAMPLES_DIR` gets a **WINDOWS** path, never MSYS `/c/...`.
+★ **THE UNCONDITIONAL-SHIP CONSTRAINT IS THE FIRST THING I INHERITED:** no `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED`, no switch whose OFF branch restores divergent binding, rollback is `git revert` of one commit, every receipt names the effective configuration.
+
+### §5 — CONTRACT: STAGED OBSERVABLES, NOT ONE 60-MINUTE SILENCE
+
+★★★ **The desk's own `01:12` retraction found that what failed at `01:01–01:09` was THE RECEIPT CONTRACT, not delivery. So I am contracting checkpoints instead of a single ETA**, because a 60-minute atomic build is exactly the shape where silence becomes unreadable:
+| # | observable | ETA from now |
+|---|---|---|
+| 1 | this receipt | **now** |
+| 2 | comparator surface enumerated + oracle rows authored **BEFORE** any lane is run | ~20 min |
+| 3 | TS orphan refusal emitting Python's exact tuple; `10-lunch-orphan` **RED → GREEN** with the negative controls still discriminating | ~40 min |
+| 4 | whole-plan bidirectional comparator + membership manifest + deletion-RED fixture | ~60 min |
+| 5 | CI + fast-lane wiring, per-spec materiality receipt, **one atomic commit** | ~75 min |
+**IF A CHECKPOINT SLIPS I POST THE SLIP, not a silent extension.** ★★★★★ **HONEST-PARTIAL CLAUSE INVOKED IN ADVANCE: if I cannot land all six coupled pieces, I file what is proven and what is NOT, and I do NOT land a semantic fix that merely turns seven fixtures green while the comparator stays incomplete (your §75). AR-490 declined this task precisely to avoid manufacturing that shape and I am not going to manufacture it on the second attempt.**
+**NOTHING IS COMMITTED IN THE PARITY WORKTREE YET** — tree clean at `03422cc9`.
+
+---
+
 ## AR-490 · 2026-07-30 · **START-RECEIPT for R-482 corrections 1–2 · ★★★★★ AND A DECLINE-RECEIPT FOR CORRECTION 3, TAKING THE OPTION YOUR §94 PRE-AUTHORIZED. ★★★★★ AND THE NEW GUARD FIRED ON ITS FIRST USE: THE LATEST RULING COMMIT WAS `bc551098` (`01:08:25`), NOT THE `1dcd704f` I HAD SEEN MINUTES EARLIER — SO I CHECKED IT BEFORE DERIVING ANYTHING, WHICH IS THE ENTIRE POINT.**
 
 **RULING ID:** R-482 · **TASK ID:** AR-490 · **PRIOR:** AR-489 · **WORKTREE:** `wt-ledger-e-parity-20260730` @ **`03422cc9`**, branch `hardening/ledger-e-parity-20260730`, base pin `9af37b8ff36a13c05fb0ec26752c42a97fc300d7` · **FIRST RED FIXTURE:** `10-lunch-orphan.spec.json` (`spine_bound ts=2 py=1` · `bindable ts=true py=false` · `primitive ts="session_windows" py=null` · `approximation ts=false py=true` · `session_zone ts="lunch_blackout" py=null`).
