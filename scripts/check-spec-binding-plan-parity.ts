@@ -43,7 +43,7 @@ import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
-import { compileBindingPlan } from "../src/server/lib/spec-family-bindings.js";
+import { compileBindingPlan, FAMILY_META } from "../src/server/lib/spec-family-bindings.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -68,6 +68,135 @@ spec = json.loads(sys.stdin.read())
 plan = compile_binding_plan(spec)
 print(json.dumps(plan.to_dict()))
 `;
+
+const PY_FAMILY_META_DRIVER = `
+import json
+from dataclasses import asdict
+from src.engine.spec_family_bindings import FAMILY_META
+print(json.dumps({k: asdict(v) for k, v in FAMILY_META.items()}))
+`;
+
+/**
+ * QUEUE-REASON DIVERGENCE TRIPWIRE (R-485 §4, option (iii)).
+ *
+ * THE LATENT DEFECT IT GUARDS — measured, not hypothesised:
+ *   spec-family-bindings.ts:  `triggerBinding.reason ?? "unbindable"`  => "unbindable"
+ *   spec_family_bindings.py:  `trigger_binding.reason`                 => None
+ * TS has a fallback Python does not, so the lanes emit DIFFERENT queue-reason
+ * payloads for the same plan — but only when a binding is `bindable=false` AND
+ * `reason=null` at the same time.
+ *
+ * ★★★ NEITHER LANE IS CHANGED HERE. R-485 §54 refused both directions: the parity
+ *     direction for this field is UNRULED (R-483 §72 ruled Python correct on
+ *     ORPHAN-ZONE refusal, which is not this field), and a fix would edit a
+ *     queue-reason payload whose downstream readers are [UNENUMERATED — OPEN].
+ *
+ * ★★★★★ SO THIS ASSERTS THE PRECONDITION IS EMPTY, NOT THAT SOME FIXTURES PASS.
+ *     Today no FAMILY_META entry can produce that state: every unbindable return
+ *     path sets a non-null reason, and the only way to reach `bindable=false` with
+ *     `reason=null` is an entry with `unsupported: true` and NO unbound reason. A
+ *     future entry like that ARMS the divergence silently — and once armed the
+ *     whole-plan comparator WILL go red. That is the repair working, not breaking
+ *     (ratified in advance, R-485 §57).
+ *
+ * ★★★★★ AND IT OWES A PATH TO RED, which is why the DISCRIMINATES control below
+ *     runs in this same function on every execution: `A GREEN CHECK WITH NO PATH
+ *     TO RED IS NOT A CHECK`, and a tripwire over an already-empty condition is
+ *     the easiest place in this repo to ship a permanent green.
+ */
+interface FamilyMetaLike {
+  unsupported?: boolean;
+  unboundReason?: string | null;
+  unbound_reason?: string | null;
+}
+
+/** Family names that ARM the divergence. Empty = the precondition holds. */
+export function armedQueueReasonFamilies(table: Record<string, FamilyMetaLike>): string[] {
+  return Object.entries(table)
+    .filter(([, m]) => {
+      const unsupported = m.unsupported === true;
+      // Accept either lane's key spelling; a missing key and an explicit null are
+      // the same hazard.
+      const reason = m.unboundReason !== undefined ? m.unboundReason : m.unbound_reason;
+      return unsupported && (reason === null || reason === undefined || reason === "");
+    })
+    .map(([name]) => name);
+}
+
+function pyFamilyMeta(): Record<string, FamilyMetaLike> {
+  const result = spawnSync("python", ["-c", PY_FAMILY_META_DRIVER], {
+    encoding: "utf-8",
+    cwd: join(__dirname, ".."),
+  });
+  if (result.status !== 0) throw new Error(`Python FAMILY_META driver failed: ${result.stderr}`);
+  return JSON.parse(result.stdout);
+}
+
+function checkQueueReasonTripwire(out: string[], notes: string[]): void {
+  // ─── DISCRIMINATES CONTROL, RUN FIRST, IN THE SAME EXECUTION.
+  // A planted entry that MUST be detected, beside a same-shape safe neighbour
+  // that must NOT be. If this comes back wrong the detector is broken and every
+  // "precondition holds" result below is worthless — so the control failing is
+  // itself a hard failure, never a warning.
+  const planted: Record<string, FamilyMetaLike> = {
+    SYNTHETIC_ARMED_FAMILY: { unsupported: true, unboundReason: null },
+    SYNTHETIC_SAFE_FAMILY: { unsupported: true, unboundReason: "control_flow_reset_unsupported" },
+  };
+  const detected = armedQueueReasonFamilies(planted);
+  if (detected.length !== 1 || detected[0] !== "SYNTHETIC_ARMED_FAMILY") {
+    out.push(
+      `TRIPWIRE SELF-CONTROL FAILED: planted an armed family and the detector returned ` +
+        `${JSON.stringify(detected)} instead of ["SYNTHETIC_ARMED_FAMILY"]. The tripwire cannot fire, ` +
+        `so its green means nothing. A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK.`,
+    );
+    return;
+  }
+  notes.push(
+    `tripwire DISCRIMINATES control: planted 1 armed + 1 same-shape safe family; detector returned ` +
+      `exactly ["SYNTHETIC_ARMED_FAMILY"] — it CAN fire, and does NOT fire on the safe neighbour`,
+  );
+
+  // ─── The real assertion, over BOTH lanes' live tables.
+  const tsArmed = armedQueueReasonFamilies(FAMILY_META as unknown as Record<string, FamilyMetaLike>);
+  const pyTable = pyFamilyMeta();
+  const pyArmed = armedQueueReasonFamilies(pyTable);
+  const tsKeys = Object.keys(FAMILY_META).sort();
+  const pyKeys = Object.keys(pyTable).sort();
+
+  // Assert non-empty BEFORE believing any comparison over these tables.
+  // A DIFF OF TWO EMPTY SETS IS ALWAYS GREEN.
+  if (tsKeys.length === 0 || pyKeys.length === 0) {
+    out.push(
+      `TRIPWIRE: a FAMILY_META table read as EMPTY (ts=${tsKeys.length}, py=${pyKeys.length}) — ` +
+        `that is an extractor defect, not a clean result.`,
+    );
+    return;
+  }
+  if (JSON.stringify(tsKeys) !== JSON.stringify(pyKeys)) {
+    out.push(
+      `TRIPWIRE: FAMILY_META KEY SETS DIVERGE — ts only: ` +
+        `${JSON.stringify(tsKeys.filter((k) => !pyKeys.includes(k)))} · py only: ` +
+        `${JSON.stringify(pyKeys.filter((k) => !tsKeys.includes(k)))}`,
+    );
+  }
+  for (const [lane, armed] of [
+    ["ts", tsArmed],
+    ["py", pyArmed],
+  ] as const) {
+    if (armed.length > 0) {
+      out.push(
+        `TRIPWIRE ARMED in ${lane}: FAMILY_META entr${armed.length === 1 ? "y" : "ies"} ${JSON.stringify(armed)} ` +
+          `set unsupported=true with NO unbound reason, which makes a binding bindable=false with reason=null ` +
+          `and activates the TS/Python queue-reason divergence (ts "unbindable" vs py null). The parity ` +
+          `direction for this field is UNRULED (R-485 §4) — escalate, do not pick a side.`,
+      );
+    }
+  }
+  notes.push(
+    `queue-reason precondition: EMPTY in both lanes across ${tsKeys.length} FAMILY_META families ` +
+      `(ts armed=${tsArmed.length}, py armed=${pyArmed.length}) — the divergence is UNREACHABLE, not fixed`,
+  );
+}
 
 function pyBindingPlan(spec: unknown): Record<string, unknown> {
   const result = spawnSync("python", ["-c", PY_DRIVER], {
@@ -399,6 +528,17 @@ function main() {
   }
   failures.push(...membership);
 
+  // ─── Queue-reason divergence tripwire, with its DISCRIMINATES control inside.
+  // Asserts a PRECONDITION over both lanes' FAMILY_META, not that fixtures pass.
+  const tripwireFailures: string[] = [];
+  const tripwireNotes: string[] = [];
+  checkQueueReasonTripwire(tripwireFailures, tripwireNotes);
+  if (tripwireFailures.length > 0) {
+    console.error(`QUEUE-REASON TRIPWIRE FAILURE:`);
+    for (const m of tripwireFailures) console.error(`  - ${m}`);
+    failures.push(...tripwireFailures);
+  }
+
   // Collected so cross-fixture reason-distinctness (oracle P-4/P-6) can be
   // asserted after every plan exists.
   const observedReasons = new Map<string, string | null>();
@@ -485,6 +625,14 @@ function main() {
   if (gaps.length > 0) {
     console.log(`DECLARED ORACLE COVERAGE GAPS (agreement still enforced on these; CORRECTNESS is not):`);
     for (const g of gaps) console.log(g);
+  }
+
+  // ─── Tripwire notes ALWAYS print, including its DISCRIMINATES control result.
+  // A tripwire that reports nothing on a passing run is indistinguishable from a
+  // tripwire that did not run.
+  if (tripwireNotes.length > 0) {
+    console.log(`QUEUE-REASON TRIPWIRE (asserts the PRECONDITION is empty, not that fixtures pass):`);
+    for (const n of tripwireNotes) console.log(`  ✓ ${n}`);
   }
 
   // ─── PER-FIELD gaps, rendered so they CANNOT be mistaken for checked rows.
