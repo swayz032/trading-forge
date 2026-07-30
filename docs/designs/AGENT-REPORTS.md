@@ -4,6 +4,62 @@
 
 ---
 
+## AR-515 · 2026-07-30 · ★★★★★ **`R-497-ORACLE-CONTRACT` CLOSED. THE ORACLE CONTRACT IS VALIDATED AT RUNTIME AND THE ROW CENSUS ASSERTS MEMBERSHIP. ALL FOUR PRE-REGISTERED OUTCOMES HELD. DELIVERY `c304b098`.** ⚠️★★★★★ **AND I MUTATED THE FROZEN ORACLE BY ACCIDENT AND CAUGHT IT IN MY OWN DIFFSTAT — 35 STRINGS SILENTLY CHANGED. SELF-CORRECTED IN A FOLLOW-UP COMMIT, NOT REWRITTEN AWAY.**
+
+**RULING ID:** R-497 §7 · **TASK ID:** AR-515 · **PRIOR:** AR-514 (pre-registration).
+**WIP:** `2cfff429` then self-correction `0d3db53c`, APPENDED to `hardening/ledger-e-parity-20260730`. **DELIVERY:** **`c304b098b156106a5a81b714c7a5a3ed166d68ef`**, parent **`9af37b8f`** (exact), `rev-list --count` **`1`**, **`23 files changed, 3603 insertions(+), 92 deletions(-)`**, path-set `988ae8f1…`. **ALL THREE EARLIER DELIVERIES PRESERVED.**
+
+### ★★★★★ §1 — THE FOUR PRE-REGISTERED OUTCOMES, ON THE TREE I SHIP
+
+| # | case | predicted (AR-514) | **measured on `c304b098`** |
+|---|---|---|---|
+| **O-1** | CONTROL, unmutated | `0` | ★★★ **EXIT `0`** — the repair is NOT always-red |
+| **O-2** | ATTACK A, `authority` citation stripped | `1`, named | **EXIT `1`** — `conditions["london"].authority is absent or empty`, at LOAD |
+| **O-3** | ATTACK B, adjudicated row deleted | `1`, named | **EXIT `1`** — `declares entry condition "london" which is NEITHER adjudicated … NOR named` |
+| **O-4** | REACH PROBE, `bindable` flipped | `1` | **EXIT `1`** — still bites |
+| **R-1** | AR-513's `TYPO_NONEXISTENT_ID_XYZ` | `1` | **EXIT `1`** |
+
+**BEFORE (measured on `8187b730` in AR-514): A and B both EXIT `0` with output BYTE-IDENTICAL to control, while the reach probe on the same row exited `1`.** ★★★★★ **THE PROBE IS WHY THOSE ZEROES WERE FINDINGS AND NOT AN UNOPENED CORPUS.**
+
+**WHAT CHANGED:** `:1014`'s bare cast `JSON.parse(...) as Oracle` → `validateOracleContractOrExit()` at LOAD, before any plan compiles, validating **the whole contract** — `authority_file`, `authority_sha256`, `required_members` and its elements, every fixture object, **every fixture-level AND per-row `authority` citation**, `unadjudicated` shapes, the prose gap-reasons, and every `reasons_must_differ_from` triple — denying with the exact path. Plus `checkOracleRowCensus()`: **every declared entry condition must be adjudicated XOR named in the new `conditions_unadjudicated_ids`, total in both directions.** ★★★ **POPULATION IS THE FIXTURE'S AUTHORED INPUT, NEVER THE COMPILED PLAN — deriving it from the plan would read the expectation out of the code under test.** ★★ **DECLARED SCOPE LIMIT, not silently widened: `invalidations` are outside this population because `checkOracle()` can only index `plan.bindings`.**
+★★★★★ **AND I DID NOT ASSUME TWO WAS THE WHOLE CLASS (R-497 §8): the validator covers the contract, not just the two fields the attacks named.**
+
+### ⚠️★★★★★ §2 — I SILENTLY MUTATED THE FROZEN ORACLE. THE DIFFSTAT WAS THE TELL.
+
+**Commit `2cfff429` rewrote `ORACLE.json` through a `json.dumps` round-trip. `[MEASURED HERE]` that changed **35** authority-citation and `_note` strings: the committed bytes carried MOJIBAKE (`Â§`, `â€”`) from an earlier bad round-trip, and reading as UTF-8 + re-serialising "repaired" them.**
+★★★★★ **THE REPAIR MAY BE AN IMPROVEMENT AND THAT IS NOT THE POINT: IT WAS UNINTENDED, UNDECLARED AND UNAUTHORIZED, INSIDE A CORRECTNESS CHANGE, ON THE ONE ARTIFACT THIS ENTIRE PACKET EXISTS TO PROTECT.** `NO UNRELATED CLEANUP.`
+**HOW I CAUGHT IT: `2 files changed, 616 insertions(+), 430 deletions(-)` for what should have been a one-key addition. I read my own diffstat and it did not match my intent.**
+**SELF-CORRECTION `0d3db53c` — restored the exact bytes of `bbd63ac8`'s `ORACLE.json` via a latin-1 round-trip and re-inserted ONLY the intended key. PROOF, not summary:**
+- **removing the inserted block from the new file reproduces the original BYTES EXACTLY** (byte comparison)
+- **structural walk old-vs-new: `SEMANTIC DIFFS = 1`**, and it is `conditions_unadjudicated_ids: ADDED`
+- `24803` → `25095` B, **delta `292` = the inserted block alone**
+- **all four outcomes re-taken on the corrected file, unchanged**
+★★★ **THE MOJIBAKE IS LEFT AS IT WAS AND IS NOW NAMED. Repairing it is its own change with its own justification, not a side effect of this one.** ★★ **NOT AMENDED — R-497 forbids history rewrite, and a corrected-in-public record outranks a tidy one I was not authorized to make.**
+
+### ⚠️★★★ §3 — MY BATTERY'S CLEAN CONTROL WENT RED, AND THAT IS THE FOURTH INSTRUMENT FAILURE TODAY
+
+**The re-run reported `5/6 membership [clean] EXIT=1`.** ★★★★★ **A PREVIOUSLY-GREEN CONTROL GOING RED IS A STOP, AND I TREATED IT AS ONE RATHER THAN EXPLAINING IT AWAY.**
+**`[MEASURED]` CAUSE: those corpora were copied BEFORE the oracle gained `conditions_unadjudicated_ids`, so the new census correctly DENIED a stale artifact — `ORACLE ROW CENSUS: … declares entry condition "structure" …`. The census was working; my scratch copy was old.**
+★★★★★ **AND THE PART THAT MATTERED MORE: the three ATTACK corpora were stale too, so their RED was OVER-DETERMINED — they could have been red for the stale-corpus reason instead of their own. Rebuilt from the SHIPPED fixtures: `clean` **`0`**, and `b1dup`/`b2del`/`b3add` **`1`** each with **`rowcensus-failures=0`**, which is the attribution proof that each is red for ITS OWN reason.** `A RED WITH TWO POSSIBLE CAUSES IS NOT EVIDENCE FOR EITHER.`
+**Running tally of instrument failures this campaign-day, mine: the `&&`-chain that swallowed a gate run · the heredoc escape that skipped a deletion · the backtick substitution that ate a commit message · this stale-corpus over-determination.** ★★★ **`THE SHELL IS PART OF THE INSTRUMENT`, and so is the scratch directory.**
+
+### ★★★★★ §4 — FULL ACCEPTANCE ON `c304b098`
+
+**All twelve §8 commands re-run on the shipped tree:** `tsc` `0` with known-bad control `2` · gate `0`, authority **COMPUTED** `3494d4bb…` · A-1 `1`/13 named · A-2 `1`/8 indexed · door-1 `TS1360` · **membership clean `0`, b1dup/b2del/b3add `1`** (rebuilt, attributed) · `C4` `1` with `CLAIM 1 PASS` + 176 P-7 · four authority cases `1`, **zero** plan-witness lines each · Axis-D always-red caught by its clean neighbour · materiality `0` → E-2 `1` named → restore `0`, parity `0` after restore · marker absent with positive control · **worktree dirty `0`** · parent = base, 1 commit, 23 paths, packet `a43d34b1…`.
+**PLUS R-497's four new red-proofs and AR-513's regression — §1.**
+
+### §5 — NOT PROVEN · SCOPE FLAG · NEXT
+
+- ★★★★★ **THE PACKET SHIPPED IN `c304b098` IS UNCHANGED AND IS STALE WITH RESPECT TO THIS DELIVERY.** Its §9.5/§10 still describe `8187b730`. **R-497 §7's FILES ALLOWED does not include the packet, so I did NOT edit it — flagged rather than silently widening scope. It needs a §11 addendum under a ruling that authorizes one.**
+- **`E` and `F` are NOT independently graded.** The grade of `8187b730` is BLOCKED by R-497 §6 and that release is the desk's call, not mine. **When released: `accuracy-validator`, DESK-DISPATCHED, model pinned AT THE CALL SITE, briefed to re-plant BOTH external attacks AND run a fresh novel hunt.**
+- **`[UNPROVEN]`** no CI pipeline run · materiality still hand-run · 14 cells unadjudicated · **invalidations outside the census population (declared)** · Gate-B incidence `[UNMEASURED]` · **the ORACLE mojibake, now named and unrepaired.**
+- ★★★★★ **FOUR DELIVERIES, FOUR NOVEL HUNTS, FOUR NEW DEFECT CLASSES, NONE CAUGHT BY THE REGISTERED FIXTURES. `A GREEN BATTERY IS A STATEMENT ABOUT THE BATTERY` — this one included.**
+
+**POSITION:** delivery `c304b098` clean; campaign tree at this AR. **No push, no PR, no merge, no deploy, no history rewrite, no `git add -A`, no engine/Python change, `runtime-production`/`tf-deep-scan` untouched. Nothing in flight; no sub-agent owed.**
+★★★ **A FRESH WORKER SESSION IS NEEDED — this seat is long and the next step (packet §11 + the released grade) starts cleanly.**
+
+---
+
 ## AR-514 · 2026-07-30 · **`R-497-ORACLE-CONTRACT` START-RECEIPT — BOTH EXTERNAL ATTACKS REPRODUCED BY ME BEFORE ANY EDIT, WITH THE REACH PROBE THAT MAKES THE TWO ZEROES MEAN SOMETHING.** ⚠️★★★★★ **R-497 ACCEPTED IN FULL. I SHIPPED `8187b730` AND ITS ORACLE CONTRACT WAS NEVER VALIDATED AT RUNTIME.**
 
 **RULING ID:** R-497 §7 · **TASK ID:** AR-514 · **PRIOR:** AR-513 · **TREE:** repair on `hardening/ledger-e-parity-20260730` (APPEND ONLY); replacement delivery from base `9af37b8f` in a NEW worktree. **`8187b730` and both earlier deliveries PRESERVED.**
