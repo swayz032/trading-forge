@@ -6,6 +6,30 @@
 
 ## AR-493 · 2026-07-30 · ★★★★★ **THE ORACLE EARNED ITS KEEP ON ITS FIRST RUN AND IT CONVICTS *BOTH* LANES. AGREEMENT IS FULLY GREEN — TS NOW EMITS PYTHON'S EXACT PLAN — AND CORRECTNESS IS RED ON 4 CONDITIONS × 2 LANES, IDENTICALLY. ★★★★★ YOUR §4a SAYS `approximation=true` FOR UNRECOGNIZED-VOCABULARY ROWS; BOTH IMPLEMENTATIONS EMIT `false`. I AM NOT TOUCHING EITHER — IT IS A FINDING AND IT IS YOURS TO ADJUDICATE.**
 
+> ⚠️★★★★★ **CORRECTION ANNOTATION ON THIS REPORT, BY THE SEAT THAT WROTE IT, MINUTES AFTER
+> FILING. WRONG TEXT LEFT IN PLACE.** ★★★★★ **STRUCK IN §1: the row labelled *"Block is now
+> lines `15–161` · `19,076` B · `5f3e2979…`"*. **THAT HASH IS OF LINES `15–159`, NOT `15–161`.**
+> My `awk` printed the boundary as `15..161` and the very next command in the same line hashed
+> `sed -n '15,159p'` — **I mislabelled the population of my own measurement.**
+> ★★★★★ **[MEASURED HERE, both ranges, same unchanged file] `15–159` → `5f3e2979…4d1dd1e54` ·
+> `15–161` → `bdfbfde78a4c…f5867af9`. `git diff HEAD` on the path: EMPTY. Lines `160–161` are
+> the `---` separator and a blank line — no ruling substance.** So **both hashes are honest
+> measurements of different ranges, and the ruling text never moved.**
+> ★★★ **WHAT THIS DOES AND DOES NOT INVALIDATE: the guard's PURPOSE — detect a change between
+> derivation and commit — WAS satisfied; (b) and (c) both equal `bdfbfde7…` and the file is
+> byte-identical to `HEAD`. Nothing in §2's finding, §4's red-proofs or the code depends on
+> this. What was wrong is a LABEL on an evidence row, and an evidence row with a wrong
+> population is the failure this campaign has convicted more than any other.**
+> ★★★★★ **AND THE PROCEDURAL DEFECT IS REAL AND WORTH FIXING, NOT JUST CONFESSING: a block
+> hash whose RANGE is not pinned by the same command that computes it is UNFALSIFIABLE — two
+> honest runs disagree with nothing having changed, and a mismatch cannot be read as
+> tampering. `A HASH WITHOUT ITS RANGE IS NOT A FINGERPRINT, IT IS A COINCIDENCE.`**
+> ★★★ **PROPOSED GUARD AMENDMENT (yours to accept): the three-point guard must record
+> `(commit_id, start_line, end_line, byte_count, sha256)` derived by ONE command, with the
+> range defined as *the ruling header through the line before the next ruling header,
+> separator excluded* — so a later re-run reproduces it exactly instead of approximately.
+> The canonical R-483 block under that rule is `15–159`, `19,076` B, `5f3e2979…`.**
+
 **RULING ID:** R-483 (+ §12) · **TASK ID:** AR-493 · **PRIOR:** AR-492 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`926fe9a1`**, branch `hardening/ledger-e-parity-20260730`, base pin `9af37b8f` · **`926fe9a1` IS LABELLED `WIP — NOT A DELIVERY`. The gate is RED. Nothing is merged anywhere.**
 
 ### §1 — THREE-POINT GUARD, WITH A RECONCILIATION (R-483 §3(d) fired for real)
