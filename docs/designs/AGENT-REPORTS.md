@@ -4,6 +4,46 @@
 
 ---
 
+## AR-485 · 2026-07-30 · **START-RECEIPT — R-480 §6 STEPS 1b → 4, FRESH SEAT. ★★★★★ AND ONE MEASUREMENT TAKEN BEFORE THE READING BECAUSE IT BEARS DIRECTLY ON §5 ITEM 5's PINNED PRODUCER TREE: FOUR OF THE FIVE FILES STEP 1b NAMES ARE **ABSENT** FROM `4f3b5cd0…`, AND THE FIFTH IS PRESENT AT A DIFFERENT SIZE — `19,922` B vs `27,019` B**
+
+**RULING ID:** R-480 §6 · **TASK ID:** AR-485 · **PRIOR:** AR-484 (step 1a BANKED — the caller surface; I am not re-deriving it) · **COMMIT AT WRITE:** `51aec17a` · **STATUS:** STARTING.
+
+**SEAT, STATED HONESTLY.** I am a **NEW session**, not the seat that filed AR-484. R-480 §6 addresses `claude.exe 15908`; **I have not bound my own PID and I am therefore NOT claiming to be `15908`.** `[NOT MEASURED]` — whether `15908` is still alive. I am taking the task on the strength of AR-484 §3's explicit handoff (*"THE NEXT SEAT'S TASK IS R-480 §6, STEPS 1b → 4, UNCHANGED"*), which the desk banked in `51aec17a` (*"task stays authorized to the seat"*). ★★ **If the desk intended the authorization to die with `15908`, say so and I stop.**
+
+### §1 — TREE ADDRESSES, MEASURED, BEFORE ANY CITATION IS WRITTEN
+
+`git worktree list` in `trading-forge/trading-forge`:
+| label used in this AR | path | HEAD |
+|---|---|---|
+| **`runtime-production`** (the executing tree) | `trading-forge/runtime-production` | **`9af37b8f`** |
+| **`tf-deep-scan`** (R-480 §5's pinned PRODUCER base) | `trading-forge/tf-deep-scan` | **`4f3b5cd0`** |
+| **primary** | `trading-forge/trading-forge` | **`404a3396`** |
+| **campaign** (this tree, docs only) | `wt-h1-wave4-20260712` | `51aec17a` |
+
+### ★★★★★ §2 — THE MEASUREMENT THAT IS ALREADY A DESIGN FINDING
+
+**Existence + byte size of the five step-1b files in all three trees, `wc -c`, per tree:**
+| file | `runtime-production` `9af37b8f` | `tf-deep-scan` `4f3b5cd0` | primary `404a3396` |
+|---|---|---|---|
+| `src/engine/spec_family_bindings.py` | `40,583` | ★★★ **ABSENT** | `35,790` |
+| `src/engine/context/playbook_router.py` | `27,019` | **`19,922`** | `27,512` |
+| `src/server/services/spec-onboarding-service.ts` | `37,412` | ★★★ **ABSENT** | `38,277` |
+| `scripts/bandc-measure-mapped-queued-split.ts` | `3,004` | ★★★ **ABSENT** | `3,081` |
+| `scripts/check-spec-binding-plan-parity.ts` | `5,617` | ★★★ **ABSENT** | `5,771` |
+
+★★★★★ **CONSEQUENCE FOR R-480 §5 ITEM 5, FLAGGED NOW RATHER THAN AT DELIVERY: the pinned PRODUCER-PROOF tree `4f3b5cd0…` holds the convergence point (`spec-onboarding-service.ts`), the CI parity gate (`check-spec-binding-plan-parity.ts`), the mapped-vs-queued measurement script and the Python binding mirror — NONE of them. So a "producer proof" staged in that tree cannot execute ONE consumer parity fixture, and cannot run the gate that AR-484 §1 measured as REAL and CI-enforced.** ★★ **This does not refute §5 item 5's two-stage design — it constrains what stage 1 is allowed to CLAIM. I will carry it into the matrix rather than route around it.** ★★ **`[HYPOTHESIS, UNTESTED]` — that the divergence is a plain ancestry gap rather than a deletion; R-480 §1 already measured neither tree is an ancestor of the other, so I am NOT assuming a direction.**
+
+### §3 — WHAT I AM DOING, AND WHEN THE NEXT OBSERVABLE LANDS
+
+**Step 1b — OPEN, in `runtime-production` (the tree that executes), with the tree named beside every citation:** the four files above plus the two AR-484 starred instruments. **~35–45 min.**
+**Step 2 — the CONSUMER CONTRACT MATRIX:** input projection · decision made · silent-transition risk · parity obligation · required fixture.
+**Step 3 — REVISE `GATE-B-RATIFY-PACKET-2026-07-29.md`** (read in full at `51aec17a`, `261` lines, `18,379` B) to R-480 §5's source-record/projection design plus the six prior R-474 requirements.
+**Step 4 — STOP FOR RULING.** No code. No worktree. Writes: this file + the packet ONLY.
+
+★★ **ONE RULING-DEFECT CHECK, RUN AS `worker-execution` §5 REQUIRES AND RETURNING CLEAN: step 2's five matrix columns are DESIGN OBLIGATIONS, not ground-truth scores. Nothing in R-480 §6 asks me to grade my own output. The packet's own graded cells (the genuine-market-state survivor set, the semantic truth of the `232` labels) are already assigned AWAY from me by packet §7 and R-467 §5, and I am not authoring them.**
+
+---
+
 ## AR-484 · 2026-07-29 · **RECEIPT + BOUNDED DELIVERABLE — R-480 §6 STEP 1a: THE CALLER SURFACE, ENUMERATED WITH ITS SEARCH SURFACE NAMED AND TWO CONTROLS RUN. ★★★★★ AND A DELIBERATE SCOPE DECISION I AM PUTTING ON THE RECORD RATHER THAN HIDING IN A PARTIAL: I DID **NOT** START THE CONTRACT MATRIX OR THE PACKET REVISION. THIS SEAT DOES NOT HAVE THE CONTEXT TO FINISH THEM, AND R-480's OWN STOP CONDITION INCLUDES A PACKET THAT "CANNOT EXPLAIN A CONSUMER TRANSITION RECORD-FOR-RECORD"**
 
 **RULING ID:** R-480 §6 · **TASK ID:** AR-484 · **PRIOR:** AR-483 · **COMMIT AT WRITE:** `94eb8a0d` · **STATUS:** step 1a COMPLETE; steps 1b/2/3 NOT STARTED and handed off.
