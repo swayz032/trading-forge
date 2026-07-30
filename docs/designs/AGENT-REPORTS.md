@@ -4,6 +4,52 @@
 
 ---
 
+## AR-497 · 2026-07-30 · ★★★★★ **ITEM 2 PART 2/2 DONE — THE QUEUE-REASON TRIPWIRE SHIPS WITH *TWO* DISCRIMINATES PROOFS: A SELF-CONTROL INSIDE EVERY RUN, AND A LIVE-PATH PLANT THAT TOOK THE GATE TO `EXIT 1` NAMING `RESET`. ★★★ HONEST PARTIAL, INVOKING YOUR §5's CLAUSE: **THE MEMBERSHIP MATRIX IS NOT STARTED.** ★★★★★ AND THE `worker-execution` GUARD BLOCKED ME FOUR TIMES; I MEASURED IT SUSPECTING A DEFECT AND IT WAS RIGHT EVERY TIME — YOU ARE RULING FASTER THAN I AM WRITING CODE.**
+
+**RULING ID:** R-487 §5 item 2 · **TASK ID:** AR-497 · **PRIOR:** AR-496 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`4f631b2f`** (`WIP — NOT A DELIVERY`), tree **clean**.
+**GUARD:** R-487 block lines **`15,74`** · sha256 **`30e22d499795ef42163c7dd4dd636bd1b07c755e49172f0bfb861dee4aba566d`** · **(a)=(b)=(c)**, no worktree diff on the ruling path.
+
+### ★★★★★ §1 — THE TRIPWIRE, BUILT TO YOUR §5-2 BAR
+
+**It asserts the PRECONDITION IS EMPTY over BOTH lanes' `FAMILY_META` — no entry with `unsupported: true` and no `unboundReason` — not that fixtures pass.** **NEITHER LANE CHANGED.** When it fires it **escalates rather than picking a side**, quoting that the direction is unruled: *"The parity direction for this field is UNRULED (R-485 §4) — escalate, do not pick a side."*
+**TWO DISCRIMINATES PROOFS, `[MEASURED HERE]`:**
+| # | proof | result |
+|---|---|---|
+| **1** | **SELF-CONTROL INSIDE EVERY RUN** — plants **1 armed + 1 same-shape SAFE** family and requires the detector to return **exactly** `["SYNTHETIC_ARMED_FAMILY"]` | ✓ **passes, and prints on green runs.** ★★★ **A wrong answer here is a HARD FAILURE, not a warning — a detector that cannot fire makes every "precondition holds" result worthless. And the SAFE neighbour is the part that matters: it proves DISCRIMINATION, not merely detection. A control that only plants a positive cannot tell "catches it" from "flags everything"** |
+| **2** | **LIVE-PATH PLANT** — removed `unboundReason` from **`RESET`** in the real TS `FAMILY_META` | ★★★★★ **gate `EXIT=1`**, `TRIPWIRE ARMED in ts: FAMILY_META entry ["RESET"] …` **Reverted: `git diff HEAD` on that file EMPTY, with a POSITIVE CONTROL showing the same diff command does report other changed files** |
+★★ **Proof 1 alone would have been the easy version and I do not think it is sufficient: it exercises the pure function, not the wiring. Proof 2 is what shows the LIVE table reaches the LIVE check.** `EXISTENCE IS NOT WIRING` applies to a detector's inputs too.
+★★★ **AND A GUARD ON THE GUARD, added because this desk has been burned by it: the tripwire asserts BOTH tables are NON-EMPTY (`14` families each) BEFORE believing any comparison over them.** `A DIFF OF TWO EMPTY SETS IS ALWAYS GREEN` — your own R-483 §68, where a regex returned `0` rows for both lanes and `diff` exited `0`.
+★★★★★ **SCOPE HONESTY ON WHAT THAT COMPARISON COVERS: it compares `FAMILY_META` **KEYS** and they match across both lanes (`14`/`14`). **IT DOES NOT COMPARE VALUES.** Your `[UNENUMERATED — OPEN]` stays OPEN — I am not closing it, and I am naming it here so a reader of a green run cannot mistake the key check for the value check.**
+**Tripwire notes print on PASSING runs.** ★★ **A tripwire that reports nothing when green is indistinguishable from one that did not run** — the same reasoning as the membership failure I had to fix in AR-493 §5.
+
+### §2 — RESULT
+
+`npm run check:spec-binding-plan-parity`, **no env override**, `$LASTEXITCODE` before filtering: **`EXIT=0`** · `CLAIM 1 AGREEMENT` PASS · `CLAIM 2` **0 violations** · `MEMBERSHIP` PASS · **4 cells `[NOT ADJUDICATED]`** · tripwire precondition **EMPTY in both lanes** · **`tsc --noEmit` `EXIT=0`.**
+★★ **STILL `[UNPROVEN — REQUIRES A PIPELINE RUN]`:** that these steps execute in Actions. No push, no PR, no remote trigger.
+
+### ★★★★★ §3 — HONEST PARTIAL: THE MEMBERSHIP MATRIX IS **NOT STARTED**, AND I AM NAMING THE CELLS
+
+**Invoking your §5 clause verbatim: *"if the matrix is larger than one seat can finish, say so and name the cells you covered."***
+**COVERED TODAY — `7` declared members:** `london` + `ny_am` evaluable · `lunch_blackout` + `overnight` refused · unrecognised vocabulary (`five-minute chart`, `regional window`) · the `compiled` flip **and its same-shape negative control** · the all-14-family shipped control.
+**NOT COVERED — and this is the gap, stated as a matrix rather than a vibe:** `ny_pm`, `silver_bullet`, `macro_window` (**3 of 5 evaluable zones have NO fixture**) · **the other 12 condition families are exercised only inside `00-control-shipped`, which is `[NOT ADJUDICATED]` at plan level** · **`invalidations` carry ZERO bindings in every fixture** (authority §6 names this too) · no fixture has a duplicate `condition_id`, so the duplicate detector I wrote is **UNEXERCISED BY THE CORPUS** — its only evidence is code review.
+★★★★★ **THAT LAST ONE IS THE ONE I WANT ON THE RECORD LOUDEST, AGAINST MY OWN WORK: I built duplicate-`condition_id` detection and array-multiplicity comparison, and NO FIXTURE MAKES EITHER FIRE. By my own standard — `A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK` — those two are UNPROVEN, and the tripwire I just red-proofed twice is a reminder that I applied the standard unevenly within one file.**
+★★ **I am NOT starting a 5-zone × 14-family matrix at this point in the session. Beginning it and stopping mid-way produces exactly `A PARTIAL RESULT THAT READS AS COMPLETE` on the surface Gate B depends on** — which is what AR-490 declined this task to avoid and what your §6 stop condition names (*"the membership matrix is silently truncated without naming what was dropped"*). **Naming it undropped is the compliant move; pretending to finish it is not.**
+
+### ★★★★★ §4 — THE `worker-execution` GUARD: I SUSPECTED IT WAS BROKEN AND IT WAS RIGHT FOUR TIMES
+
+**It blocked four code writes with *"a NEW RULING has landed"*. By the fourth I believed it was misfiring — one write per reload looked like a one-shot bug.** ★★★★★ **I MEASURED IT INSTEAD OF ASSUMING, AND INSTEAD OF DISABLING IT (its own text offers that escape). `[MEASURED HERE]` sentinel `05:59:48` vs ledger `06:00:23` — **the ledger was NEWER because R-487 landed while I was mid-write.** Every block was a real ruling. `THE GUARD WAS RIGHT AND MY MODEL OF IT WAS WRONG.`**
+★★★ **THE ACTUAL CONDITION IS NOT A BUG, IT IS A THROUGHPUT FACT: you are ruling faster than I am writing code, so the ledger's mtime advances between my reload and my next write. `A GUARD THAT FIRES REPEATEDLY IS REPORTING THE WORLD, NOT MALFUNCTIONING` — and on a shared tree with a live advisor it firing often is the SYSTEM WORKING.**
+★★★★★ **AND IT PAID FOR ITSELF ONCE ALREADY, which is why I am not proposing any change to it: the block at R-483 §12's landing stopped me one write before I authored the oracle from `FAMILY_META` while the real frozen authority sat unread on disk.** ★★ **`I DID NOT ROUTE AROUND IT` — I audited it, found the ruling, read the ruling, then reloaded. Recorded because the guard's own message names disabling as the recovery, and taking that route would have been the cheapest and worst option available to me.**
+
+### §5 — POSITION · NEXT
+
+**`4f631b2f` WIP, tree clean, nothing merged, no Python changed, no `approximation` or queue-reason payload changed, `runtime-production` and `tf-deep-scan` untouched.**
+**REMAINING, in order:** **item 2 part 1/2** — the exhaustive family × evaluable-zone × refused-zone membership matrix, **plus fixtures that make the duplicate-`condition_id` and array-multiplicity checks FIRE** (my §3 finding; they are currently unexercised) · **item 3** — per-spec materiality receipt.
+★★ **YOUR §6 GRADE TRIGGER HAS NOT FIRED: it is "items 1 AND 2 landed", and item 2 is HALF landed. Do not dispatch the `accuracy-validator` on this commit.** **THE BUILDER DOES NOT GRADE.**
+**No sub-agent dispatched or owed — verified, not assumed.** ★★★ **THIS SEAT IS AT ITS HONEST LIMIT AND IS STOPPING HERE RATHER THAN OPENING THE MATRIX. That is a receipt, not a declaration: I am not claiming the task is transferred, and per R-485 §70 it stays authorized to this seat until the operator seats another. But I am telling you plainly that the next useful work needs a fresh seat, and that seating one is the operator's act.**
+
+---
+
 ## AR-496 · 2026-07-30 · ★★★★★ **ITEM 1 DONE — F-A IS CLOSED AT THE WIRING LAYER. GATE IS IN `ci.yml` AND `fast.yml`, RED `EXIT 1` ON A DRIFTED CORPUS AND GREEN `EXIT 0` ON THE REAL ONE VIA THE STEP'S OWN COMMAND WITH NO ENV OVERRIDE. `tsc --noEmit` EXIT `0`. ★★★★★ AND I HAD TO RETIRE THE ONE-FIXTURE DEFAULT CORPUS TO WIRE IT AT ALL — WIRING IT AS-IS WOULD HAVE FAILED CI ON DAY ONE, AND A GREEN THERE WOULD HAVE PROVEN ONE FIXTURE.**
 
 **RULING ID:** R-485 §6 item 1 + R-486 §2 · **TASK ID:** AR-496 · **PRIOR:** AR-495 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`09814413`** (`WIP — NOT A DELIVERY`), tree **clean**.
