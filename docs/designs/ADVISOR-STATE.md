@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2227` at THIS commit, 2026-07-30 05:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2264` at THIS commit, 2026-07-30 05:15 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2227` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2264` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -81,6 +81,43 @@ grep `ADVISOR-RULINGS.md` for its finding; if the ledger carries it, the block i
 if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
+
+## ⚠️★★★★★ **R-495 OWED AND HELD** — `AR-507` + `AR-508` UNRULED, WAITING ON THE PASTE
+
+★★★ **[MEASURED] THE HOLD COSTS: the worker has STOPPED before §5 on a premise I can show is FALSE,
+and §5 is its only remaining task. FIRST WAKE CHECK: `AR-508` is UNRULED.**
+
+### ⚠️★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **THE RATIFY PACKET EXISTS. AR-508 §2 SEARCHED THE WRONG DIRECTORY.**
+
+**AR-508 §2 states *"THERE IS NO RATIFY PACKET FOR THIS WORK … Nothing named for the parity
+prerequisite exists in either tree"*, measured over `docs/ratify-packets/` (21 files, positive
+control run).**
+★★★★★ **[MEASURED HERE] IT EXISTS: `docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`,
+**`29,238` B**, tracked, last committed `05fe528c`. The filename literally contains
+`LEDGER-E-PARITY-RATIFY-PACKET`.** **THE SEARCH SURFACE WAS `docs/ratify-packets/`; THE ARTIFACT IS
+IN `docs/designs/`.**
+★★★ **`I MEASURED THE NEIGHBOURING OBJECT` — this campaign's most-convicted shape, and the positive
+control is exactly what made it feel safe: it proved `docs/ratify-packets/` IS READABLE, which says
+nothing about whether the packet lives elsewhere. `A POSITIVE CONTROL ON THE WRONG SURFACE PROVES
+THE WRONG SURFACE.` The claim "in either tree" is the overclaim — a tree-wide search was never run.**
+★★ **[MEASURED HERE] it carries the five ratify parts (`1` WHAT & WHY · `2` BLAST RADIUS · `3` EXACT
+CHANGE · `4` VERIFICATION PLAN · `5` ROLLBACK) plus `6` LANE/PIN/NOT-DONE and `7` ACCEPTANCE.**
+
+★★★★★ **AND THE WORKER'S INSTINCT IS STILL RIGHT, WHICH IS WHY THIS IS A CORRECTION AND NOT A
+DISMISSAL: [MEASURED HERE] the packet last changed `01:24:39` — **BEFORE EVERY ONE OF STEPS A–E** —
+and contains `P-7` **0** times, `createHash` **0** times, `3494d4bb` **0** times. **IT DESCRIBES THE
+DESIGN, NOT THE DELIVERY.** So R-494 §5's verb `INCLUDE` IS genuinely wrong — **but the honest verb
+is `UPDATE`, not `AUTHOR`.** Stopping to ask was correct; the premise underneath it was not.**
+★★★ **NO DISPOSITION. Whether the update ships inside the delivery commit or is a separate desk
+item is R-495's work, and it waits for the paste.**
+
+### ★★★★★ E IS CLOSED AND THE THREE-PART SIGNAL IS WHOLE (AR-508, `3dcc6739`)
+**REACHABLE** (control outside the efficacy population, `false→false`) · **DETECTED** (transition
+identified, control NAMED) · **STOPS THE RUN** (`process.exit(1)`). **Pre-registered E-1/E-2/E-3 all
+held with no drift.** ★★★ **It asserted the EXIT CODE directly rather than inferring enforcement
+from the banner — the exact error R-494 §1 convicted, and the easy one to repeat while "verifying"
+a fix.** ★★ **Reviewed net delta for §5: `git diff --stat 9af37b8f..3dcc6739` = `22 files, 2477 (+),
+81 (-)`; `12` commits now separate them, not 11 — dated one commit later, not a contradiction.**
 
 ## ★★★★★ SEAT — CURRENT AS OF **R-494 / AR-506** (2026-07-30 05:05). **DEBT PAID · WORKER UNBLOCKED.**
 
@@ -535,7 +572,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2227` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2264` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
