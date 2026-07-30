@@ -5,7 +5,11 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1439` at THIS commit, 2026-07-30 00:41 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1499` at THIS commit, 2026-07-30 00:49 [MEASURED HERE, `wc -l`].**
+> ⚠️★★★ **THIS FILE IS NOW `1495` LINES AND THAT IS A REAL TAX: a cold seat hit a 25k-token
+> read cap on its FIRST page tonight and needed four reads to see it all. COMPACTION IS
+> OWED — `CUT NARRATIVE, NEVER CONTRACTS`, and read the WHOLE file first (you cannot
+> classify what you have not read). Target ~40–120 lines per `advisor-onboarding` §5.**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -170,6 +174,62 @@ overnight TO TURN PARITY GREEN.` Python's refusal is the SAFE behaviour — thos
 have no evaluable window, so a bind yields "only trade during X" executing as "never
 trade" while reporting `approximation=False`. TS MUST REFUSE THEM EQUIVALENTLY.
 PARITY IS SEMANTIC OUTPUT PARITY, NEVER TABLE-TEXT EQUALITY.**
+
+## ★★★★★ POSITION AT 00:48 — R-481 STEPS 1–2 DONE AND VERIFIED; STEP 3 CODE NOT STARTED; **A FRESH WORKER SEAT IS THE OPERATOR'S ACT**
+
+**[MEASURED HERE]** Packet **REV 3** correct (`§0`/`§7`/`§8` carry the SPLIT; `grep` finds
+no surviving `KEY IS DEAD` / `0% spearhead` / `carries ZERO` claim; the DESK item reads
+*"ITS KEY IS REALIZABLE … `2351/2351` = `100%`, the spearhead carries `13 of 13`"*).
+**`LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` staged, `22,476` B, all five
+`ratify-packet` parts, pinned to `9af37b8ff36a13c05fb0ec26752c42a97fc300d7`.**
+**Parity worktree `wt-ledger-e-parity-20260730`** @ `03422cc9`, branch
+`hardening/ledger-e-parity-20260730`, expanded RED-baseline corpus committed.
+★★★ **THE WORKER REPRODUCED THE FALSE GREEN ON ITS OWN FIXTURES — same figures as mine,
+plus its own `31-flip-neg-control` (3-spine, `ny am` for `during lunch`) staying GREEN.
+`TWO NON-OVERLAPPING PATHS`, not a re-run of my query.**
+★★★★★ **STEP 3 CODE DELIBERATELY NOT STARTED, AND THE REASON IS SOUND — ADOPT IT, DO NOT
+OVERRIDE IT: shipping the TS refusal WITHOUT closing F-G yields a GREEN run with zero
+authority, because `reason` would still never be compared. `A GREEN I KNOW HAS NO
+AUTHORITY IS WORSE THAN NO GREEN — the next seat inherits it as evidence.` (a) and (b)
+land together or not at all.**
+**NEXT TASK, CONTRACT ALREADY WRITTEN (parity packet §3, nothing to re-derive):** (a) TS
+`REFUSED_SESSION_KEYWORDS` + refusal branch AHEAD of `resolveSessionKeyword`, emitting
+Python's exact tuple incl. `approximation=true`, remove the two orphan zones from the TS
+table, **fix the false `:64` caption** · (b) complete normalized-plan comparison with
+**key-set equality in BOTH directions** · (c) exhaustive membership fixtures + an
+assertion that goes RED on a deleted member · (d) CI **and** fast-lane wiring.
+**Red-proof table = packet §4.1 fixtures 1–10; fixture 7 (REASON-ONLY mutation) is the
+F-G red-proof and decides whether the central claim is proven.**
+★★ **THEN THIS DESK dispatches ONE `accuracy-validator` (working access recipe, NOT
+prohibitions — packet §4.3 lists which claim dies per withheld capability; name its id).**
+★★★★★ **OPERATIONAL TRAPS FOR THE NEXT SEAT, BOTH MEASURED BY THE WORKER: the parity
+worktree's `node_modules` IS A JUNCTION — `Remove-Item -Recurse` FOLLOWS IT AND DELETES
+`runtime-production`'s REAL DEPENDENCIES (use `[System.IO.Directory]::Delete($p,$false)`
+before `git worktree remove`) · pass `TF_SPEC_BINDING_SAMPLES_DIR` as a **WINDOWS** path,
+never MSYS `/c/...`.**
+★★★★★ **`R-482` IS OWED AND HELD: the ADJUDICATION rule over the `~89%`-uncorroborated
+surface. DESK-OWNED. Gated on the operator's external read (`THE PASTE IS THE GATE`).**
+
+## ★★★★★ LESSON MINTED 00:48 — **AN ANNOTATION APPENDED TO AN ALREADY-READ RULING IS INVISIBLE TO WHOEVER ALREADY READ IT**
+
+★★★★★ **[MEASURED HERE] THE RACE, EXACTLY: worker read R-481 at ~`00:33` · I appended the
+retraction annotation at `00:40:16` · worker committed rev 3 at `00:42:07` carrying the
+RETRACTED figure in THREE places of a document an independent grader was meant to rule
+on · worker caught it itself and fixed it at `00:47:04`, filing AR-489.** **MY ANNOTATION
+WAS CORRECT, TIMELY, AND STILL LOST THE RACE.**
+★★★★★ **THE LAW: `A CORRECTION THAT INVALIDATES IN-FLIGHT WORK MUST BE RE-ASSERTED
+AGAINST THE LANDED ARTIFACT — APPENDING IT TO THE RULING IS NECESSARY AND NOT
+SUFFICIENT.` The relay fires on FILE CHANGE; a worker mid-write does not re-read the
+ruling it already consumed. ★★★ **THE DISCRIMINATOR IS THE ARTIFACT, NEVER THE RELAY
+TIMESTAMP: "the annotation landed before the commit" is TRUE and PROVES NOTHING.**
+★★★ **AND AGAINST THIS DESK, TWICE IN ONE EPISODE: (1) I grepped the packet, saw `11.2%`
+and `spearhead` inside the CORRECTION text, and briefly published that my own earlier
+grep had "misled me" — it had not; **the FILE CHANGED BETWEEN MY TWO READS** (mtime
+`00:47:04` proved it). `WHEN TWO READS OF ONE FILE DISAGREE, CHECK THE mtime BEFORE
+BLAMING THE INSTRUMENT.` (2) I wrote `grep … | head; echo "exit=$?"` and read `0` as
+"grep found nothing" — **`| head` MASKS THE EXIT CODE**, which is in this file's own
+KNOWN-BENIGN list. The absence of printed matches was the real evidence; the exit code
+was noise I authored.**
 
 ## ★★★ CORRECTION AGAINST THIS DESK — R-481 CORRECTION 3's "AND IN THE AR-486 TAIL" CLAUSE IS **WITHDRAWN**
 
