@@ -7,9 +7,10 @@
 > path in **§15**. Until adoption, the already-adopted V4 remains operative;
 > after adoption, **§15 governs wherever §§1, 3, 9, 10, 12 or 14 conflict
 > with it.**
-> Evidence cut: campaign tree through R-493 / AR-506; parity WIP
-> `8c6893fc`. Steps A–D have landed; Step E has a declared but still-open
-> reachability gap, and the final atomic delivery object does not yet exist.
+> Evidence cut: campaign tree through R-494 / AR-508; parity WIP
+> `3dcc6739`. Steps A–E have landed. Step E now has a real outside-population
+> witness and a non-zero enforcement path; the final atomic delivery object
+> and its independent grade do not yet exist.
 
 > ★★★★★ **STATUS: ADOPTED AND OPERATIVE — R-445, 2026-07-29, operator-directed.
 > THIS SUPERSEDES THE "DRAFT — NOT LAW" STATUS BELOW, WHICH THIS FILE CARRIED FOR
@@ -763,6 +764,18 @@ ratify packet and generated materiality receipt. Run every acceptance command
 and the independent grade against that delivery commit, not against a WIP tip
 or a later history rewrite.
 
+**Packet identity and freshness:** the parity packet already exists at
+`docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`; searching only
+`docs/ratify-packets/` is the wrong surface. At this evidence cut the campaign
+copy is `29,238` bytes, sha256
+`953c978105f74e3c830d74a84405e4d4bad06fb7d4196ab8e0636634cb20312d`, last
+changed at `05fe528c`. It predates steps A–E and therefore describes the design,
+not the completed delivery. Revise that existing packet visibly—do not author a
+second packet—to record the executable authority check, P-7 property oracle,
+whole-plan controls, materiality witness/enforcement, CI wiring, current rollback
+and grader re-plant list. Then copy the revised bytes into the atomic delivery,
+assert source/destination sha256 equality and record the campaign source commit.
+
 ### 15.5 — PREREQUISITES P1–P3: BASELINE, TRUTH AND LANE
 
 **P1 — additive current baseline.** Rebuild the classification baseline on the
@@ -861,18 +874,18 @@ from that spec's measured residual, not from a library-wide housekeeping list.
 > MISLEADING — `A DOCUMENT THAT NAMES ITS EVIDENCE CUT CAN BE UPDATED; ONE THAT CLAIMS CURRENCY
 > CANNOT.`** The revision was authored `01:36`, nine minutes after forking at `ad7fa571` (`01:27`),
 > so **R-484..R-488 landed after it [MEASURED, by ancestry not clock]**. **THE ROWS BELOW ARE NOW
-> MAINTAINED THROUGH R-491 / AR-501 and no longer describe the `ad7fa571` cut.**
+> MAINTAINED THROUGH R-495 / AR-508.**
 > ⚠️ **R-489's four-column "SUPERSEDING STATE" table is REPLACED: [MEASURED HERE] its header
 > declared 4 columns while the `P1`…`fully bound` rows below it stayed at 3 — a MALFORMED TABLE I
 > introduced while correcting someone else's staleness. `A FIX THAT CHANGES A TABLE'S SHAPE MUST
 > CHANGE EVERY ROW OF IT.`**
 
-| item | state at R-493 / AR-503 | next admission event |
+| item | state at evidence cut R-495 / AR-508 | next admission event |
 |---|---|---|
 | Gate-A causal split | **complete** at the historical-artifact layer | preserve as causal evidence; do not reuse as current control |
-| P0 parity packet | staged and corrected | complete the one atomic implementation |
+| P0 parity packet | **exists under `docs/designs/`, but is stale relative to A–E** (`29,238` bytes; `953c9781…`; last changed `05fe528c`) | visibly revise the existing packet, copy it into the delivery, and verify source/destination hashes; do not mint a replacement packet |
 | P0 semantic oracle authority | **current at `3494d4bb…`; WIP `48199995` commits the identical 16,314-byte authority, computes its hash before plan evaluation, and encodes only §4d's authorized P-7 cells** | preserve the four fail-closed authority controls and the agreement-vs-correctness split in the atomic delivery |
-| P0 implementation | **A–D complete through WIP `8c6893fc`** — zone axis 8/8 (AR-499) · family × position 30/30 (AR-500) · P-7 property 208+16 across both lanes (AR-505) · duplicate-id and array-multiplicity now FIRE and are CITABLE (AR-506, lifting R-488 §3's `[UNPROVEN]`). **E emits a per-spec receipt but its forbidden `false→true` signal has ZERO real-corpus reach AND the command still exits `0` [MEASURED: `0` `process.exit` calls in the emitter vs `5` in the parity gate]. 11 WIP commits since base `9af37b8f`.** | add the real negative-direction control **and a fail-closed exit**; build a NEW-BASE single delivery commit **without rewriting WIP history**; then one independent grade |
+| P0 implementation | **A–E complete through WIP `3dcc6739`; 12 WIP commits since base `9af37b8f`** — zone axis 8/8 (AR-499) · family × position 30/30 (AR-500) · P-7 property 208+16 across both lanes (AR-505) · **duplicate-id and array-multiplicity now FIRE and are CITABLE (AR-506, lifting R-488 §3's `[UNPROVEN]`)**. **E now has all three parts: the outside-population control is `false→false` normally, a transient `MIN_SPINE_BOUND_RATIO 0.5→0.0` makes it `false→true`, NAMES it, and EXITS `1` [MEASURED: `process.exit` in the emitter `0` → `3`]. Normal parity and materiality commands exit `0`.** | revise the existing stale packet; create the new-base single delivery commit without rewriting WIP history; **re-run every acceptance command THERE, not in the WIP tree**; then one independent grade |
 | P1 additive current baseline | **not frozen** | re-authored-producer equivalence control, then current-code artifact |
 | P2 truth rule | **defined**; complete labelled membership not frozen | freeze all members and hash before treatment |
 | P3 runtime graph→spec handoff | **unenumerated** | rule the two-stage transfer path before runtime integration |
