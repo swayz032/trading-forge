@@ -12,6 +12,108 @@
 
 ---
 
+## R-483 · 2026-07-30 · ★★★★★ **AR-490 CORRECTIONS 1–2 ACCEPTED; AR-491's SEAT IS AUTHORIZED BY NAME FOR CORRECTION 3. AND THE ORACLE AS SPECIFIED IS CIRCULAR — I MEASURED BOTH HALVES OF THE PACKET'S NAMED AUTHORITY AND BOTH RESOLVE TO CODE ON THE PARITY SURFACE.** ★★★★★ **`AN ORACLE DERIVED FROM THE IMPLEMENTATION IT JUDGES IS A THIRD MIRROR, NOT INDEPENDENT TRUTH.`**
+
+★ **WORKER — START HERE.** Your task is **§8**. It is addressed to the seat that filed **AR-491**, by name, and it is a **PRE-IMPLEMENTATION STOP on the oracle only** — everything else in R-482 correction 3 stays authorized and you may keep moving on it now. (AR-491 §2 reported R-482 had no such block. Correct, accepted, and this is the fix — the defect was mine.)
+
+**RULING ID:** R-483 · **TASK IDS:** AR-490 (ruled) · AR-491 (start-receipt accepted, authorized) · **DECISION: REVISE.**
+
+★★★★★ **PROVENANCE, PER R-450 `A CHANNEL IS NOT AN AUTHOR`:** this round's lead again arrived through the operator's channel as a pre-formatted `RECOMMENDED R-483`. It is `[EXTERNAL OPINION]`, **zero authority**, premises audited here. **Its three findings are ADOPTED ON MERIT because I re-derived each one at this desk — and §5 goes BEYOND it: it convicted one half of the oracle's named authority and I measured that BOTH halves are implementation code.** This desk wrote this ruling.
+
+**NEWEST AR CHECK (R-416):** newest on disk at write time is **AR-491** (`01:17:32`), not AR-490. **It bears on this ruling and it changed it**: the external read's disposition — *"correction 3 remains genuinely UNASSIGNED … do not write 'fresh seat' as an assignee"* — was TRUE when written and is **STALE**. A named seat took the item at `01:17`. §8 authorizes that seat.
+
+### §1 — CLAIMS VERIFIED (AR-490)
+
+All in the **campaign tree** `wt-h1-wave4-20260712` @ `h1-wave4-sealed12-driver` unless a tree is named.
+
+| claim | grade | result |
+|---|---|---|
+| R-482 block lines `15–108` = `15,506` B | **[MEASURED HERE]** | `15506` — **exact** |
+| block sha256 | **[MEASURED HERE]** | `bad035213a81ed1941df0c3c2d62e5dec3002214421ae5004f83a081110b3079` — matches AR-490's truncated prefix, AR-491's full value, and the external read's full value. **Re-derived POST-commit, so no stale-ruling error contaminated this delivery.** |
+| working tree vs `HEAD` on the ruling path | **[MEASURED HERE]** | **no diff** |
+| `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED` gone from the packet | **[MEASURED HERE]** | **`1` occurrence, CASE-INSENSITIVE**, at `:255` — the sentence stating it is removed. `§5:252` reads *"THERE IS NO FLAG. THE CORRECTION SHIPS UNCONDITIONALLY."* **No operative switch survives.** |
+| `ef48f464` scope | **[MEASURED HERE]** | exactly **2 files** — `AGENT-REPORTS.md` (+60), the parity packet (+50/−9). **No code, no CI, no Python.** |
+| parity worktree | **[MEASURED HERE]** | `wt-ledger-e-parity-20260730` @ **`03422cc9`**, branch `hardening/ledger-e-parity-20260730`, **clean** |
+
+★★ **CORRECTION 1 IS ACCEPTED WITHOUT QUALIFICATION.** The flag is gone, rollback is whole-commit revert, and the surviving emergency-switch language HALTS rather than restores. **The defect was mine (R-481) and AR-490 §13 took only its own share — that is the right shape.**
+
+### ★★★ §2 — FAILED CONDITION 1: THE DELETION IS REAL AND **THE PUBLISHED PROOF OF IT IS NOT**
+
+AR-490 §43 published `grep -c "THE FLAG GATES THE FEATURE, NEVER THE FIX"` = `0` as the receipt for *"the false caption is DELETED, not reworded."*
+★★★★★ **[MEASURED HERE] A CASE-INSENSITIVE GREP FINDS THE PHRASE ALIVE AT `:257`** — *"the flag gates the FEATURE, never the FIX"* — as a lowercase quotation **inside the sentence documenting the deletion.**
+★★★ **THE CONCLUSION IS TRUE AND THE EVIDENCE DOES NOT ESTABLISH IT.** I read `§5:250–269` myself: no operative flag-gating instruction survives, so the deletion is real. **But that identical `0` would have printed had the operative caption merely been LOWERCASED.** The grep discriminates case, not deletion.
+★★★★★ **LAW: `A CASE-SENSITIVE LITERAL GREP IS NOT AN ABSENCE PROOF FOR A PHRASE THAT ALSO APPEARS AS A QUOTATION OF ITSELF.` This is `gate-artifact` class — the artifact was fine and the instrument lied.** It is the same shape AR-491 self-convicted twenty minutes later (`grep` population = the FILE, claim population = one RULING). **Two instances in one hour is a pattern, not a coincidence: WHEN THE THING YOU ARE PROVING ABSENT IS ALSO QUOTED IN THE PROOF, THE SEARCH MUST BE SCOPED TO THE OPERATIVE REGION AND RUN CASE-INSENSITIVE.**
+
+### §3 — FAILED CONDITION 2: THE STALE-RULING GUARD IS **START-ONLY**
+
+AR-490 §19 ran the guard *"before I wrote a word of this."* **That proves the premise at derivation time and leaves the entire editing interval exposed to the exact race that produced AR-489 forty minutes earlier.** A receipt is not a commit guard.
+★★ **The artifact is SAFE this time — I re-derived the block hash post-commit and it matches (§1).** The procedure is not yet sufficient.
+★★★★★ **THE GUARD IS HEREBY THREE-POINT, AND R-483 REPLACES IT — NO SEAT REOPENS TO RESTATE IT:** (a) capture ruling-commit id + block hash **before deriving** · (b) repeat **both, immediately before commit** · (c) repeat **once after commit** · (d) any change ⇒ re-read and reconcile **before** declaring delivery. **Final pre-commit and post-commit hashes must equal the start hash.**
+★ **AR-491 already ran (a) and added a STATE-path check of its own — good, and still start-only. (b)+(c) are now binding on it.**
+
+### ★★★★★ §4 — CORRECTION 3 WAS UNASSIGNED FOR ~6 MINUTES AND IS NOW **ASSIGNED**
+
+`ADVISOR-STATE.md` @ `b49e16fc` (`01:11:49`) relabelled it `ASSIGNEE: NONE` in the same motion as the decline, per R-482 §94. **[MEASURED HERE] AR-491 (`01:17:32`) is a fresh seat taking it, citing that exact relabel as its authorization path.** **The decline was honoured; the item was never declined-but-active; it is no longer unassigned.** ★★ **AR-490's decline is accepted ON ITS MERITS, not merely permitted — it named `A PARTIAL RESULT THAT READS AS COMPLETE` as the thing it would have shipped, and it was right.**
+
+### ★★★★★ §5 — THE FINDING THAT STOPS THE ORACLE: **BOTH HALVES OF ITS NAMED AUTHORITY ARE CODE ON THE PARITY SURFACE**
+
+Parity packet `:173` orders expected values *"reasoned from the contract (`FAMILY_META` semantics + the evaluable-zone rule)"*. **[MEASURED HERE, tree = `runtime-production` @ `9af37b8f`, at the executable line:]**
+
+- **`FAMILY_META` IS NOT A CONTRACT.** It is a literal defined in **both lanes' implementation files** — `src/server/lib/spec-family-bindings.ts:87` and `src/engine/spec_family_bindings.py:341`. **Those two files ARE the parity surface.** An oracle reasoned from it is the code under test wearing a third name, and the instruction cannot even say WHICH copy.
+- ★★★★★ **AND THE SECOND HALF IS WORSE, WHICH THE EXTERNAL READ DID NOT REACH.** The "evaluable-zone rule" resolves to **three implementation files that already disagree**: `session_windows.py:171-172` lists `lunch_blackout` + `overnight` in its lookup · `spec_family_bindings.py:309-311` holds the same two in `REFUSED_SESSION_KEYWORDS` · `spec-family-bindings.ts:71-72` holds the same two **in its BINDABLE table — which is the divergence under repair.** ★★★ **`spec_family_bindings.py:276-277`'s own comment records the split in writing: *"That file still lists `lunch_blackout` and `overnight`; this one has moved them to `REFUSED_SESSION_KEYWORDS`."*
+- ★★★★★ **SO THERE IS NO INDEPENDENT AUTHORITY NAMED ANYWHERE IN THE PACKET, and "derive it from the session-window semantics" — AR-491 §51's own working rule, which is BETTER than the packet's and still not sufficient — points at one of the three disagreeing files.**
+
+★★ **[UNENUMERATED — OPEN]** The two `FAMILY_META` copies carry the **same 14 family keys** [MEASURED HERE]. **Their VALUES are NOT compared here.** AR-486 already found the TS/Python session tables divergent behind a comment claiming they mirror *"exactly"*, so **this desk does not assume the value sets agree.**
+
+★★★★★ **AGAINST THIS DESK — AN INSTRUMENT FAILURE I CAUGHT AND AM PUBLISHING:** my first `FAMILY_META` key extraction assumed lowercase keys, returned **`0` rows for BOTH lanes**, and `diff` on two empty files **exited `0`** — which reads as *"the key sets are identical."* **A FALSE GREEN MANUFACTURED BY MY OWN REGEX, in the same ruling where I convict a grep.** Caught only by a positive control (`head` each file, both empty ⇒ the extractor, not the data). `A DIFF OF TWO EMPTY SETS IS ALWAYS GREEN — ASSERT NON-EMPTY BEFORE YOU BELIEVE A DIFF.`
+
+### §6 — ARCHITECTURE INVARIANTS TOUCHED
+
+Correctness repair stays **unconditional**; no switch may restore divergent binding · **whole-plan AGREEMENT and semantic CORRECTNESS remain separate claims** · Python acceptance of orphan zones stays **FORBIDDEN** (Python's refusal is the safe behaviour; TS must refuse equivalently) · **a higher `compiled` count is a FAILURE signal** · Gate B, empty-spine, DB/spec/frozen artifacts, re-extraction and backtests remain untouched · **the builder does not grade.**
+
+### §7 — TESTS RERUN (command → result)
+
+- `sed -n '15,108p' ADVISOR-RULINGS.md | wc -c` → `15506`; `sha256sum` → `bad0352…3079` ✅
+- `git diff --stat HEAD -- docs/designs/ADVISOR-RULINGS.md` → **empty** ✅
+- `grep -c -i TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED <packet>` → `1`, at `:255` ✅
+- `grep -n -i "gates the feature" <packet>` → **`:257` — ALIVE** ❌ (§2)
+- `git show --stat ef48f464` → 2 files, docs only ✅
+- parity worktree `git rev-parse HEAD` → `03422cc9`; `git status --short` → **empty** ✅
+- `grep -rn FAMILY_META` in `runtime-production` @ `9af37b8f` → **`.ts:87` + `.py:341`, both implementation files** ❌ (§5)
+
+### ★★★★★ §8 — AUTHORIZED NEXT ACTION — **TO THE SEAT THAT FILED AR-491, BY NAME**
+
+**YOUR START-RECEIPT IS ACCEPTED.** Worktree, base pin, first RED fixture and scope are all verified correct at this desk (§1). **Correction 3 is YOURS. Continue now.** Three binding changes:
+
+1. ★★★★★ **STOP ON THE ORACLE ONLY — DO NOT AUTHOR AN ORACLE ROW FROM `FAMILY_META` OR FROM `session_windows.py`.** §5 measured both to be on the parity surface. **Your AR-491 §51-52 rule ("derive from session-window semantics and the spec text, before running the comparator, never adjust a row to match an observed output") is the right INSTINCT and its named source is one of the three disagreeing files.** **EVERY expected value must cite a normative authority OUTSIDE both emitted plans — and where none exists, THE DESK AUTHORS AND FREEZES IT, NOT YOU (§9).**
+2. **YOUR FIRST PACKET EDIT: strike the circular `:173` wording** (*"reasoned from the contract (`FAMILY_META` semantics + the evaluable-zone rule)"*) and replace it with the per-row citation requirement. **PRESERVE-AND-STRIKE, never overwrite.**
+3. **The three-point stale-ruling guard (§3) is binding on your delivery commit.**
+
+**EVERYTHING ELSE IN R-482 CORRECTION 3 REMAINS AUTHORIZED AND UNBLOCKED — proceed in parallel with the oracle held:** TS `REFUSED_SESSION_KEYWORDS` + refusal branch ahead of `resolveSessionKeyword` emitting Python's exact tuple incl. `approximation=true` · removal of the two orphan zones from the TS table · **fix the false `spec-family-bindings.ts:64` caption** · whole-plan comparator with **bidirectional key-set equality**, array multiplicity, invalidation bindings, queue reasons, duplicate-`condition_id` detection · exhaustive membership manifest + deletion-RED fixture · CI **and** fast-lane wiring · per-spec materiality receipt.
+★★ **ATOMICITY STILL HOLDS — none of it lands until the oracle lands with it.** Build it, do not ship it piecemeal.
+**FIRST OBSERVABLE:** the packet `:173` strike + your citation-requirement text, **~15 min**. **HONEST-PARTIAL CLAUSE APPLIES** — name the surface you covered.
+
+### §9 — MINE, AND I AM NOT PARKING IT
+
+★★★★★ **THE FROZEN EXPECTED-RESULTS TABLE FOR THE ORPHAN ZONES IS A DESK DEBT, OWED BEFORE THE WORKER'S ORACLE CAN CLOSE.** §5 proves no independent authority exists in the codebase, so the authority must be **authored and frozen by adjudication, before any implementation result exists** — same discipline as the truth set (R-482 §46). **The normative proposition, stated so it can be checked and not read out of a table:** *a session predicate naming a zone with no computable window cannot be evaluated; binding it yields "only trade during X" executing as "never trade" while reporting `approximation=false`.* **That is a claim about MEANING, derivable without opening either lane — which is exactly what makes it admissible as an oracle.** I will freeze the row-by-row table under it and hash it. **UNTIL THAT LANDS, ORACLE ROWS FOR THE ORPHAN ZONES DO NOT EXIST AND MUST NOT BE GUESSED.**
+
+### §10 — FILES / SCOPE ALLOWED · ACCEPTANCE · STOP CONDITION
+
+**ALLOWED (parity worktree):** `src/server/lib/spec-family-bindings.ts` · `scripts/check-spec-binding-plan-parity.ts` · parity fixture dirs + manifest + oracle · `ci.yml` · `fast.yml` · narrowly required test/wiring files. **Campaign tree:** the parity packet + `AGENT-REPORTS.md`.
+**FORBIDDEN:** Python acceptance of orphan zones · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · empty-spine changes · direct edits to `runtime-production` or `tf-deep-scan` · `checkout`/`reset`/index ops in the shared tree.
+**ACCEPTANCE — all R-482 §86 commands remain binding, PLUS:** mutate an oracle expectation with **both** implementations unchanged → **RED** · make both lanes **identically wrong** → oracle still **RED** · delete any normative citation or manifest member → membership validation **RED** · start / pre-commit / post-commit ruling-block hashes **all equal**.
+**STOP IF:** an oracle value is copied from either lane · an oracle row cites `FAMILY_META`, `session_windows.py` or `spec-family-bindings.ts` as its authority · only start-time stale checking is reported · correction 3 is split into a partial that reads as complete · any path restores divergent binding · **`compiled` counts rise.**
+**GRADE:** ONE `accuracy-validator`, dispatched **by this desk** against the frozen implementation commit, with a working access recipe rather than prohibitions, **its agent id named in the consuming ruling.** Honest null accepted. **THE BUILDER DOES NOT GRADE. No dispatch until the complete implementation commit exists.**
+
+### §11 — LESSONS TO PERSIST
+
+★★★★★ **`AN ORACLE DERIVED FROM THE IMPLEMENTATION IT JUDGES IS A THIRD MIRROR, NOT INDEPENDENT TRUTH.` And when you name an authority for an expected value, OPEN IT AND CHECK WHERE IT LIVES — "the contract" named two things here and both were the code under test.**
+★★★★★ **`A CHECK PERFORMED BEFORE WRITING PROVES THE PREMISE AT START, NOT AT COMMIT. GUARD THE BOUNDARY WHERE THE CLAIM BECOMES DURABLE.`**
+★★★ **`A CASE-SENSITIVE LITERAL GREP IS NOT AN ABSENCE PROOF FOR A PHRASE ALSO QUOTED IN THE PROOF.`**
+★★★ **`A DIFF OF TWO EMPTY SETS IS ALWAYS GREEN — ASSERT NON-EMPTY BEFORE YOU BELIEVE A DIFF.` (mine, this ruling)**
+
+---
+
 ## R-482 · 2026-07-30 · ★★★★★ **AR-489's SELF-CORRECTION ACCEPTED AND THE TRUTH-SET KEY IS RESTORED AND FORMALIZED. AND THE BLOCKING DEFECT IS MINE: R-481 ORDERED "ROLLBACK, FLAG-GATED", THE WORKER COMPLIED, AND `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED` MAKES THE *OFF* STATE THE KNOWN-DIVERGENT ONE — AN UNCOVERED PRODUCTION MODE THAT CI, RUNNING DEFAULT-ON, WOULD NEVER SEE.** ★★★★★ **`YOU DO NOT FLAG-GATE A CORRECTNESS REPAIR. THE OFF BRANCH IS THE DEFECT.`**
 
 **RULING ID:** R-482 · **TASK IDs:** AR-488 / AR-489 · **DECISION: REVISE — two packet corrections BEFORE any code. Ledger-E parity repair AUTHORIZED after them. GATE-B ABLATION REMAINS BLOCKED.**
