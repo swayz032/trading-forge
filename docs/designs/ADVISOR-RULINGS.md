@@ -12,6 +12,72 @@
 
 ---
 
+## R-470 · 2026-07-29 · ★★★★★ **AR-465's HEADLINE IS FALSE AND I MEASURED IT MYSELF: "THE FALSE-GREEN IS CLOSED" CLOSED **ONE** OF **THREE**. THE GUARD'S POSITIVE-CONTROL MECHANISM IS ITSELF SATISFIABLE BY A COMMENT — I POINTED IT AT ITS OWN SOURCE AS THE CONTROL FOR `writeFileSync`, A PYTHON FILE THAT CANNOT IMPORT A NODE `fs` API IN PRINCIPLE, AND GOT `CONTROL HIT (4 matches)` · "ABSENCE OVER THE REMAINDER IS ADMISSIBLE" · **EXIT `0`**.** ★★★★★ **SO THE INSTRUMENT BUILT TO ENFORCE `READ THE EXECUTABLE LINE, NOT THE COMMENT` CERTIFIES CAPABILITY **FROM THE COMMENT**. IT MAY NOT LICENSE ANY ABSENCE CLAIM UNTIL THIS IS FIXED.** ★★★★★ **AND THE BRIDGE-KEY DOC IS WRONG WHILE THE INSTRUMENT IS RIGHT: the ledger says the join key is `condition_id`; [MEASURED HERE] `condition_id` ALONE COLLAPSES `455 → 359`, SILENTLY MERGING `96` ROWS, MAX MULTIPLICITY `28`.** ★★★★★ **MY OWN BLANKET RULE IS WITHDRAWN AS OVER-BROAD — I FORBADE `(video, condition_id)` UNIVERSALLY AFTER PERMITTING IT UNIVERSALLY, AND BOTH WERE WRONG FOR THE SAME REASON: A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY**
+
+**RULING ID:** R-470 · **TASK ID:** AR-465 · **DECISION:** **REJECT the guard and the bridge-key documentation. ACCEPT PROVISIONALLY the conservation repair. NARROW REPAIR AUTHORIZED. The second `accuracy-validator` dispatch is DEFERRED to the NEW commit — NOT `4449764e`.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-465`** — ruled here.
+
+★★★★★ **A DISCLOSURE ABOUT MY OWN LAST TURN, BECAUSE I ANNOUNCED AN ACTION I DID NOT TAKE: I told the operator I was dispatching the second grade "now". **I DID NOT DISPATCH IT** — the turn was interrupted before the call. No agent was launched, nothing is in flight, and the external read then correctly ordered that the second grade must run against the REPAIRED commit rather than `4449764e`. **AN ANNOUNCED INTENT IS NOT AN ACTION, AND SAYING "I AM DOING X" IS A CLAIM THAT NEEDS THE SAME GRADE AS ANY OTHER.** Had I not corrected this, the ledger would carry a phantom dispatch — R-438's convicted shape, which this desk has now twice avoided only by checking.**
+
+### ★★★★★ §1 — THREE FALSE-GREENS. ONE CLOSED, TWO OPEN. ALL THREE MEASURED AT THIS DESK.
+
+| # | defect | status | evidence |
+|---|---|---|---|
+| **(i)** | ANY `await import(...)`/`require(...)` counted for ANY requested capability | ★★ **CLOSED by AR-465** | I measured it RED-before: invented name `CapabilityThatDoesNotExist_7F3A91` → `14 of 130 files matched`, `CONTROL HIT`, **exit 0**. AR-465's fixture A now exits `2`. |
+| **(ii)** | computed member access on a statically-imported namespace | ★★★★★ **OPEN** | **[MEASURED HERE against the REPAIRED guard]** my fixture reaches a real write via `fs[("write"+"File"+"Sync")](p,data)`, `0` literal occurrences → control `HIT`, fixture `.`, **exit 0**, "absence ADMISSIBLE". |
+| **(iii)** | **bare textual occurrence `\b{name}\b` as capability evidence** | ★★★★★ **OPEN — AND IT IS THE ROOT** | **[MEASURED HERE]** guard's own `absence_claim_control.py` as the control for `writeFileSync`: the name appears ONLY at `:38` (a docstring usage example) and `:229/:232/:235` (fixture definitions) — **and it is a PYTHON file, which cannot import a Node `fs` API in principle** → `CONTROL HIT (4 match(es))`, **exit 0**. |
+
+★★★★★ **(iii) IS NOT ONE MORE BUG — IT BREAKS THE MECHANISM THE WHOLE GUARD RESTS ON. The positive control is the thing that licenses every absence verdict, and a comment satisfies it. THEREFORE NO ABSENCE CLAIM MAY CITE THIS GUARD YET, AND ANY THAT ALREADY DOES IS UNSUPPORTED.**
+★★★ **AND (i) vs (ii) PULL IN OPPOSITE DIRECTIONS, WHICH IS WHY PATTERNS ALONE CANNOT FIX THIS: binding every pattern to the requested literal name — the CORRECT fix for (i), and AR-465 did it correctly — is exactly what makes (ii) undetectable. A literal-text search CANNOT decide capability absence in the presence of computed member access. That is a design boundary, not a missing regex.**
+★★★★★ **THE IRONY IS THE LESSON AND IT GOES IN THE LEDGER: this instrument exists to enforce `READ THE EXECUTABLE LINE, NOT THE COMMENT`, and it issues capability verdicts FROM COMMENTS AND FIXTURE STRINGS. `A GUARD INHERITS EVERY WEAKNESS OF THE METHOD IT AUTOMATES` — automating a grep does not make the grep sound, it makes it authoritative.**
+
+### ★★★★★ §2 — REQUIRED GUARD CORRECTION (adopted from the external read, plus my (ii) case)
+
+1. **SEPARATE THE MODES, and the CLAIM each may make:** `--pattern` = text search only, and it may claim ONLY **text presence/absence** · capability mode = syntax-aware, **module-qualified engagement** (`module=fs`, `symbol=writeFileSync`).
+2. **REMOVE bare identifier occurrence as capability evidence** — delete `r"\b{name}\b"` from `CAPABILITY_FORMS`.
+3. **IGNORE comments, docstrings and string literals** when deciding capability.
+4. **DO NOT count unrelated local functions or object properties.**
+5. **PARSE the supported source languages, or FAIL CLOSED** — a regex fallback may NOT issue a capability verdict. ★★★ **Fail-closed here means: emit `VERDICT UNAVAILABLE` and a non-zero exit, never "admissible".**
+6. **PERMANENT FIXTURES, each must exit non-zero:** comment-only mention · string-only mention · same-named local function · unrelated dynamic import · ★★★★★ **computed/concatenated member access on a static namespace (my §1(ii) fixture — it is NOT in the external read's list and it is the one that survives a name-bound repair)**. **Must exit ZERO:** genuine static import from the named module · genuine dynamically-destructured import from the named module. **Must exit `3`:** wrong surface.
+7. **STATE A RUNTIME BOUND.** ★★ **[MEASURED HERE] an unbounded-surface invocation exceeded 120 s twice at this desk and had to be backgrounded. `A GUARD NOBODY CAN AFFORD TO RUN IS NOT A GUARD` — its author wrote that sentence twice and the condition still holds.**
+
+### ★★★★★ §3 — THE BRIDGE KEY: THE DOC IS WRONG, THE INSTRUMENT IS RIGHT, AND MY RULE WAS WRONG TWICE
+
+**[MEASURED HERE, `pop120_classified.json`]** over the `455` non-empty rows: **distinct `condition_id` = `359`** · **duplicated IDs = `32`** · **max multiplicity = `28`** · **`96` rows silently merged** if `condition_id` alone is the key. By contrast **`(video, condition_id)` = `455` distinct, max multiplicity `1`.** Every figure matches the external read exactly.
+★★★★★ **THE LEDGER'S BRIDGE TABLE SAYS THE REFUSAL→SPEC KEY IS `condition_id` WHILE THE INSTRUMENT ACTUALLY USES `(video, condition_id)`. THE INSTRUMENT IS CORRECT AND THE DOCUMENT IS WRONG — a doc-vs-artifact drift, the FOURTH this campaign has caught, and this time the DOC is the liar.** ★★ **A reader who implemented the documented contract would have merged 96 rows and produced a balanced-looking table.**
+**THE THREE-WAY CONTRACT, ADOPTED AS BINDING:**
+- collapsed per-video classified artifact → canonical spec: **`(video, condition_id)`**
+- raw 120-row census → persisted refusal: **`(strategy_id, condition_id)`**
+- **`condition_id` alone: INADMISSIBLE.**
+★★★★★ **AND THE CORRECTION AGAINST MYSELF, WHICH IS THE FOURTH DEFECT IN THIS ONE LINEAGE: R-467 §2 said `(video, condition_id)` was safe "at and after condition creation" — TOO PERMISSIVE (the census payload is 3-way degenerate on it). R-468 §6 and R-469 then said it "REMAINS A DISPLAY LABEL ONLY" — TOO RESTRICTIVE, because on the CLASSIFIED artifact it is unique and it IS the correct key. **I over-corrected my own over-permission, and a worker obeying my second sentence literally would have been driven off the right key.** THAT BLANKET RULE IS WITHDRAWN.**
+★★★★★ **THE LAW, AND IT IS WHY BOTH VERSIONS FAILED IDENTICALLY: `A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY.` I stated it as a property of the key twice, in opposite directions, from measurements of two different artifacts. Every join key must be named WITH the artifact it is admissible on — never alone.**
+
+### §4 — ACCEPTED PROVISIONALLY (not to be re-litigated, pending the second grade)
+
+The repaired conservation buckets — one shared computation, both tables agreeing under mutation (`1` and `1`, not `0` and `1`) · the reconciliation gate firing at **exit `6`** — ★★ **this is the fix to the defect I measured myself: the rejected version detected and NAMED the mutated row and still exited `0`; a mutation reported in prose and green in the exit code is a check with no path to red** · the three input pins (specs, transcripts, classified) · the corrected raw/normalised evidence counts, with AR-465 re-deriving **byte-exact `evidence == slice` = `0 / 232`** itself and calling its own earlier `~26%` an undercount of a contract that fails totally · the ledger's §9 withdrawal of the false refutation, carried **in the artifact** with a `REVISION 2` banner naming its own three defects — ★★★ **that is AR-458 §2's lesson applied by its own author: fix the artifact a later seat opens, not the prose you are holding.**
+
+### ★★★★★ §5 — AUTHORIZED NEXT ACTION
+
+**AR-465's seat CONTINUES — it took the repair unprompted at AR-464 and ownership is not in question.** Scope: **§2's guard correction (all 7 items) and §3's bridge-key documentation correction. NOTHING ELSE.**
+★★★★★ **THE SECOND `accuracy-validator` DISPATCH IS DEFERRED AND ITS TRIGGER IS RE-POINTED: it fires when the NARROW REPAIR COMMIT LANDS — **NOT against `4449764e`.** Grading a commit already known to carry two open false-greens would burn a grade on a superseded artifact. The dispatch remains MINE and I will name the agent id in the ruling that consumes it.**
+**STILL FORBIDDEN:** no model run · no backtest · no DB write · no historical-artifact rewrite · no Gate-B implementation · no parked item.
+**GATE A: procedurally OPEN. GATE B: BLOCKED.** The three-way semantic contract (`decision_condition | execution_context | annotation`) and the deterministic-not-prompt-only requirement stand from R-469 §6.
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#9 holds** — empty-spine refusal untouched. **#6 holds** — `backtests_total = 0`. **#7 holds** — I have not edited `AGENT-REPORTS.md`. **#8 holds** — `-o` commit only, no index operation.
+
+**FAILED OR UNPROVEN CONDITIONS.** Guard false-greens (ii) and (iii) — **[MEASURED HERE, OPEN]** · every absence claim currently citing this guard — **[UNSUPPORTED until §2 lands]** · DB↔census refusal/classification freshness, as distinct from spec freshness — **[UNMEASURED]**, flagged by the grader and by the census manifest · whether `0b0d6617` moves the C8 count — **[UNMEASURED]** · `model_digest` authenticity — **[UNVERIFIABLE without a model run, which is refused]** · ground-truth of the 232 semantic labels — **[OUT OF SCOPE by R-467 §5; neither worker nor grader may author them]** · population OVERLAP MAP — **[UNENUMERATED]** · original transcript identity — **[UNRECOVERABLE AT ORIGIN]**.
+
+**ACCEPTANCE COMMANDS.** All 7 new guard fixtures at their required exit codes, INCLUDING the computed-member-access case · the guard refuses to issue a capability verdict when it cannot parse · a stated runtime bound, demonstrated · the ledger's bridge table names `(video, condition_id)` and `(strategy_id, condition_id)` with the artifact beside each, and marks `condition_id` alone inadmissible · then the second independent grade against the new commit.
+
+**STOP CONDITION.** Any fixture in §2.6 landing on the wrong side → STOP · the guard still issuing "admissible" on a regex fallback → STOP · `backtests_total > 0` → STOP.
+
+**OBSERVABLES.** Receipt within ~2 min; the repaired guard with all 7 fixtures ~30 min. My 15-minute idle watchdog is live.
+
+**LESSON TO PERSIST.** ★★★★★ **`A GUARD INHERITS EVERY WEAKNESS OF THE METHOD IT AUTOMATES.` We answered a false-absence problem by automating the grep that caused it, and the automation made it authoritative: capability certified from a docstring, in the tool built to enforce reading the executable line. Before shipping a guard, ask what its POSITIVE CONTROL can be satisfied by — if prose satisfies it, it licenses nothing.** ★★★★★ **AND: `A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY` — I got this wrong in both directions within three rulings, and the over-correction was more dangerous than the original error because it forbade the right answer.** ★★★ **AND: `AN ANNOUNCED INTENT IS NOT AN ACTION.` I said I was dispatching a grader and did not; only checking kept a phantom out of this ledger.**
+
+---
+
 ## R-469 · 2026-07-29 · ★★★★★ **I COMMITTED THE WRONG-OBJECT ERROR INSIDE THE RULING THAT CONVICTED IT. R-468's REFUTATION OF THE PROMPT HYPOTHESIS IS WITHDRAWN — I GREPPED `WAIT_SESSION` ON THE CENSUS-LANE COPY AND PUBLISHED A CONCLUSION ABOUT "THE ATOMIZER".** ★★★★★ **[MEASURED HERE, PRODUCER BLOB @ `dc8a150`] `WAIT_SESSION` OCCURS `3`× IN THE PRODUCER AND `1`× IN THE CENSUS COPY, AND LINE `60` READS VERBATIM: *`"we trade this on crude oil" / "we're sitting on the 30-minute chart today" -> YES (WAIT_SESSION — execution context: removing it changes what the engine runs on)`*. R-466's LEADING HYPOTHESIS IS RESTORED AND STRENGTHENED: THE ACTUAL PRODUCER EXPLICITLY INSTRUCTS INSTRUMENT/CHART CONTEXT TO PASS THE DECISION GATE AND BECOME `WAIT_SESSION`.** ★★★★★ **ROOT CAUSE NAMED: THE ADMISSION CONTRACT CONFLATES *"CHANGES RUN CONFIGURATION"* WITH *"IS AN ENTRY PREDICATE"*.** ★★★★★ **AND BOTH NEW INSTRUMENTS ARE REJECTED — THE OPERATOR-ORDERED ABSENCE GUARD HAS A FALSE-GREEN THAT REPRODUCES THE EXACT CLASS IT EXISTS TO PREVENT**
 
 **RULING ID:** R-469 · **TASK ID:** AR-463 · **DECISION:** **REVISE AND RETURN. Accept the `232/1` split and the live-population equality substantively. WITHDRAW R-468's refutation. REJECT both instruments pending repair + independent grade. Gate B remains BLOCKED.**
