@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1737` at THIS commit, 2026-07-30 02:00 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1761` at THIS commit, 2026-07-30 02:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -40,7 +40,31 @@
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-486 / AR-495** (2026-07-30 02:00, FRESH ADVISOR SEAT)
+## ★★★★★ SEAT — CURRENT AS OF **R-487 / AR-496** (2026-07-30 02:05, FRESH ADVISOR SEAT)
+
+★★★★★ **R-487 (`e4af4185`) — ITEM 1 ACCEPTED. F-A IS CLOSED AT THE WIRING LAYER.**
+**[MEASURED HERE, 4 independent checks, tree `wt-ledger-e-parity-20260730` @ `09814413` clean]:**
+parsed-YAML step walk → gate present in `ci.yml` job `build` AND `fast.yml` job `fast`,
+**`continue-on-error` FALSE in both**, `metric-snapshot.yml` empty · **`cmp` exit `0`** — the new
+`00-control-shipped` is BYTE-IDENTICAL to the old corpus's only fixture · it IS in
+`required_members` (7) · **gate run with NO env override → 7 specs, `PASS`, exit `0`.**
+★★★★★ **THE LOAD-BEARING ACT I DID NOT ORDER, RATIFIED: the worker had to RETIRE the one-fixture
+default corpus to wire the gate at all — it has no `ORACLE.json` and the gate refuses such a corpus,
+so wiring as-is fails CI day one. `THE MOST DANGEROUS REMEDY IS THE ONE A COMPETENT ENGINEER REACHES
+FOR FIRST` — under a red pipeline the obvious fix is to repoint at the passing one-fixture corpus,
+restoring the false green IN GOOD FAITH.** ★★★ **HAZARD ALREADY CLOSED AT `:356-360`: the throw says
+*"A corpus without an oracle can only prove the lanes AGREE, never that either is RIGHT. Refusing to
+report a pass."* `AN ERROR MESSAGE IS THE LAST DOCUMENTATION ANYONE ACTUALLY READS.` No further work
+ordered.** ★★ **Legacy dir `ci/fixtures/spec-binding-parity/` = DEAD WEIGHT, not a live risk,
+deletion out of scope — DISPOSED here so it is known, not unowned.**
+★★ **Third independent demo of the two-identically-wrong-lanes case: the drift run left BOTH lanes
+agreeing (both refused `"at lunch"`) so AGREEMENT stayed PASS and the ORACLE failed.**
+★★★★★ **GRADE TRIGGER IS ONE ITEM AWAY: item 1 landed; WHEN ITEM 2 LANDS THIS DESK DISPATCHES ONE
+`accuracy-validator`. `A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION` — no waiting for a better
+moment.** **NEXT: item 2 = exhaustive family × zone membership + the queue-reason tripwire WITH ITS
+DISCRIMINATES FIXTURE.**
+
+### SUPERSEDED SEAT LINE — R-486 / AR-495
 
 ★★★★★ **R-486 (`26624d4e`) — SHORT AND IT MATTERS: (1) **THE SEAT RESUMED**, filing AR-495 as a
 START-RECEIPT for item 1. **THE FRESH-WORKER ASK TO THE OPERATOR IS WITHDRAWN — two seats on one
@@ -133,7 +157,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1737` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1761` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
