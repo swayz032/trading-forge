@@ -25,8 +25,23 @@
 
 ## SEAT — CURRENT AS OF R-472 / AR-471
 
-**Ledger `R-472`** (commit `17015b52`). **Newest AR `AR-471` — UNRULED, delivered
-21:22, commit `138f26e9`.**
+**Ledger `R-473`** (commit `73b674ce`). **`AR-471` RULED by R-473: ACCEPTED FOR
+GRADING, NOT RATIFIED, no repair ordered, no fifth round. Newest AR `AR-472` — a
+START-RECEIPT on R-473 §4, nothing to rule.**
+★★★ **[MEASURED] THE RELAY IS PROVEN END-TO-END, NOT ASSUMED: R-473 committed
+`21:37`, worker start-receipt `21:37:50` — **40 seconds**. Its ear is live, and
+the 15-minute quiet window before it was THE DESK OWING A RULING, not a stalled
+worker.**
+
+## AUTHORIZED NOW
+**AR-471's seat: STAGE — NOT IMPLEMENT — the Gate-B ratify packet** (R-473 §4).
+Files: a new `GATE-B-RATIFY-PACKET-2026-07-29.md` under `docs/designs/` +
+`AGENT-REPORTS.md`, **nothing else.** ★★★★★ **`absence_claim_control.py`,
+`c8_provenance_ledger.py` and the absence fixtures are OFF LIMITS — A GRADER IS
+READING THEM RIGHT NOW.** Observables: receipt ~2 min, packet ~30–40 min.
+★★★ **Queued behind it, no round-trip: on a SOUND verdict → Gate-B implementation
+under the staged packet (authorized in the ruling that consumes the grade).**
+★★★★★ **GATE B REMAINS BLOCKED. The packet is DESIGN; it does not open the gate.**
 ★★★★★ **WORKER: SEATED, ALIVE, AND IDLE WAITING ON MY RULING — NOT handed off.
 [MEASURED HERE 21:30] its `claude.exe 15908` is alive (started 18:26), its
 `ADVISOR-RULINGS` ear `2728/10556` is armed, and its conversation `.jsonl`
@@ -87,8 +102,12 @@ stall this campaign convicts.**
 ★★★ **GRADE REGISTER (name the agent id, never "a grade was obtained"):**
 `a5a70a93c66262a61` = `SOUND-WITH-GAPS`, ran against the **PRE-REPAIR** bundle,
 certifies NEITHER the rebuild NOR any repair · `a858339f7a6a7cfb8` = `NOT-SOUND`
-on the AR-469 guard, **UNREACHABLE from this session** · **the follow-up grade on
-`138f26e9` is IN FLIGHT; its agent id goes in the ruling that consumes it.**
+on the AR-469 guard, **UNREACHABLE from this session** · ★★★★★ **`afc644b1bbcb0c742`
+= THE LIVE FOLLOW-UP GRADE against `138f26e9`, dispatched 21:26, IN FLIGHT.
+Carries F-1, F-2, F-3, the four-round history and the prior grade's
+CONFIRMED-SOUND list so none of it is re-litigated, plus all eight attack items.
+NO RULING MAY SAY THE GRADE WAS OBTAINED UNTIL A RULING NAMES THIS ID AND
+CONSUMES ITS VERDICT.**
 
 ## ★★★★★ THE FALSE-POSITIVE LANE — CLOSED BY RETIREMENT, NOT BY REPAIR (R-472)
 
