@@ -12,6 +12,108 @@
 
 ---
 
+## R-478 · 2026-07-29 · ★★★★★ **AR-479: REVISE. THE GRADE IS NOT DISPATCHED. THE EXTERNAL READ FOUND A FIFTH BOUNDARY IN THE FIXTURE THE LAST ROUND SHIPPED, AND I REPRODUCED IT WITH A POSITIVE CONTROL: DUPLICATE EVERY RENDERED `DENIED BY` LINE AND THE VERDICT GOES `11 → 22` LINES WHILE F-5 STILL READS `11` — SUITE GREEN, EXIT `0`.** ★★★★★ **AND AGAINST THIS DESK: MY OWN PUBLISHED `−75 / 233 → 158` IS WRONG. THE MOVEMENT IS `74`, C8 GOES `233 → 159`, AND `158` IS A DIFFERENT OBJECT — THE GATE-B TREATMENT POPULATION. AN OFF-BY-ONE LANDED ON A CORRECT NUMBER UNDER THE WRONG LABEL, WHICH IS THE HARDEST KIND OF WRONG TO CATCH**
+
+**RULING ID:** R-478 · **TASK ID:** AR-479 · **DECISION:** **REVISE. Behaviour of `5a403bed` stands; the instrument is NOT RATIFIED and NO GRADE MAY BE DISPATCHED against it. The pre-registered ablation STOP is UPHELD on corrected arithmetic. GATE B REMAINS BLOCKED.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-479`** — ruled here. Re-checked on disk at `23:24` immediately before writing; it had not moved.
+
+**PROVENANCE OF THE INPUT.** The external read arrived through the operator's channel at ~`23:18`. **It is `[EXTERNAL OPINION]` with ZERO authority (R-450) — every one of its claims below was re-derived at this desk before being adopted.** ★★★ **The operator's own words, in his own voice, were the separate instruction *"WAIT ON GPT OPINON FOR NEXT RULING"* — that IS his order, and it is why R-478 did not exist an hour ago. `A CHANNEL IS NOT AN AUTHOR` cuts both ways: the gate order is the operator's, the technical content is not.**
+
+### ★★★★★ §1 — THE GUARD FALSE-GREEN: CONFIRMED, AND THE FIRST CONTROL I BUILT WAS ITSELF WRONG
+
+**[MEASURED HERE, at the executable line, `absence_claim_control.py:523-526`]:**
+```python
+def _denied_identities(out: str) -> set[str]:
+    return {ln.split("DENIED BY:", 1)[1].strip()
+            for ln in out.splitlines() if "DENIED BY:" in ln}
+```
+**It is a SET comprehension.** F-5 (`:616-620`) then asserts `len(printed) == stated` — so `printed` is the count of **UNIQUE IDENTITIES**, never the count of **RENDERED ENTRIES**.
+
+★★★★★ **REPRODUCED, NOT ACCEPTED [MEASURED HERE]** — mutating the shipped source so every denial prints twice, run through the same in-memory `exec` mechanism the committed harness uses (`__file__` pinned to the real path, nothing on disk touched):
+
+| | rendered `DENIED BY` lines | unique identities | `--self-test` |
+|---|--:|--:|---|
+| baseline | **11** | 11 | exit `0` GREEN |
+| every denial printed twice | **22** | **11** | **exit `0` — STILL GREEN** |
+
+★★★★★ **AND THE HONEST PART, BECAUSE IT IS THE LESSON: MY FIRST REPRODUCTION WAS A FALSE CONFIRMATION.** [MEASURED HERE] v1 counted `DENIED BY` lines in the OUTER buffer and reported `0 rendered lines, duplication actually took: False` — while also reporting `MUTATION SURVIVED`. **`_render` captures F-5's verdict into its OWN buffer, so I was counting a stream the mutation never touched.** Had I stopped there I would have published "the read is confirmed" on a control that proved nothing. ★★★ **`I MEASURED THE NEIGHBOURING OBJECT` — the tenth instance, and the only reason it cost nothing is that the control CONTRADICTED the verdict and I believed the control.** v2 calls `_render` with F-5's exact arguments and counts the lines F-5 itself reads; the `11 → 22 / 11 → 11` table above is that measurement.
+
+**THE ORDERED PROPERTY vs THE IMPLEMENTED ONE — the read states this exactly and it is right:**
+- **ordered (R-477 §3-3):** stated count == number of rendered denial entries == expected identity set
+- **implemented:** stated count == number of **unique** rendered identities
+
+### ★★★★★ §2 — TWO FURTHER HARNESS DEFECTS, BOTH READ AT THE LINE
+
+**[MEASURED HERE, `absence-fixtures/mutation_redproof.py`]:**
+1. `verdict = "RED (caught)" if rc != 0 else ...` and `if rc == 0: bad += 1`. **The `catcher` field is PRINTED and never compared.** So a mutation caught by an unrelated fixture still scores as `ALL MUTATIONS BIT`. ★★ **AR-479 §2 described this as "it pre-names the expected catcher and reports the actual one, so a mutation caught by the WRONG fixture would be visible" — VISIBLE TO A HUMAN READER, yes; ENFORCED, no. I repeated that framing approvingly in `ADVISOR-STATE` and called it "a red-proof WITH ATTRIBUTION, stronger than what R-477 §3 ordered." It is stronger in what it PRINTS and identical in what it FAILS ON.**
+2. `if anchor not in src: … continue` then `src.replace(anchor, repl, 1)`. **Presence is checked; UNIQUENESS is not.** A second occurrence of an anchor makes the mutation partial while the harness reports it as applied.
+
+### ★★★★★ §3 — THE BASELINE ARITHMETIC: THE READ CORRECTS ME, AND I REPRODUCED EVERY FIGURE
+
+**[MEASURED HERE over the frozen `pop120_classified.json`, sha256 `eed65514a1…` — the artifact of record, hash re-verified this session; `456` rows]:**
+
+| | frozen | my published figure (R-477 §5 / `ADVISOR-STATE`) | **CORRECTED** |
+|---|--:|--:|--:|
+| `role=spine` rows | `143` | — | `143` |
+| empty-spine sentinel among them | — | **counted as flipping** | **`1`, DOES NOT FLIP** |
+| spine rows that actually flip | — | `143` | **`142`** |
+| C8 rows moving `C8 → C6` | `—` | **`75`** | **`74`** |
+| **C8 bucket** | `233` | **`233 → 158`** | **`233 → 159`** |
+| C6 bucket | `6` | `149` | **`148`** |
+| Gate-B treatment population | — | *(not distinguished)* | **`158`** = C8 `159` − the protected sentinel |
+| distinct videos carrying ≥1 C8 | `37` | — | **`35`** |
+
+★★★★★ **THE MECHANISM, VERIFIED AT THE EXECUTABLE LINE IN THE TREE THAT RUNS (`runtime-production` @ `9af37b8f`, NOT the campaign tree, which has no such file):**
+- `spec_execution_preflight.py:311` — the ordinary per-condition path calls `resolve_rule_class(b.role, …)`, and `:159-161` reads `if role in _MANDATORY_ROLES: return MANDATORY; return UNKNOWN_REQUIREDNESS` with `:94` now `frozenset({"invalidation"})`. **So every ordinary `spine` condition flips.**
+- `:345-355` — the empty-spine refusal is built at the **PLAN** level in a separate branch with `role="spine"` and **`rule_class=MANDATORY` hardcoded as a literal**. It never reaches `resolve_rule_class`. **So it does not flip, stays `MANDATORY`, and the classifier's `UNKNOWN_REQUIREDNESS → C6` short-circuit never fires for it.**
+
+★★★★★ **THE TWO VIDEOS LEAVING THE C8 POPULATION ENTIRELY, WHICH THE READ NAMED AND I CONFIRMED INDEPENDENTLY: `h6TnE7QClJg` and `jlShztsY3oA`.** ★★★ **`jlShztsY3oA` IS A DISTANCE-0 VIDEO** — one of exactly two, per R-451. **A counterfactual that removes half the distance-0 set from C8 is not a rounding difference to the target manifest; it is a change to the ranker's input.** The ranking itself remains `[UNMEASURED]` and no statement about it is licensed here.
+
+★★★★★ **WHY MY ERROR WAS THE DANGEROUS SHAPE RATHER THAN A TYPO: `233 − 75 = 158` and `159 − 1 = 158`. I reported the CORRECT Gate-B treatment population while LABELLING it the C8 bucket, so the number would have survived a spot-check by anyone who knew the treatment population. `A COMPENSATING ERROR PRODUCES A TRUE NUMBER UNDER A FALSE NAME, AND ONLY THE NAME IS WRONG — WHICH IS THE PART NOBODY RE-DERIVES.`**
+★★★★★ **AND ITS ROOT CAUSE, WHICH IS A LAW: I selected the population by `role == "spine"` — a DISPLAY FIELD — and treated it as proof of the branch those rows travelled. `A FIELD VALUE IS NOT A PROVENANCE PATH.` The sentinel carries `role="spine"` and does not pass through role classification at all.**
+
+### §4 — THE PRE-REGISTERED STOP IS UPHELD, AND THE CORRECTION DOES NOT SOFTEN IT
+
+**R-477 §5 branch 2 (*ANY transition ⇒ STOP*) FIRES on `74` exactly as it fired on `75`.** The frozen `233` no longer represents current semantics either way. ★★ **Recording this explicitly because a correction arriving alongside a stop invites the reading "the finding was overstated, so maybe the stop was too" — it was not. `74 ≠ 0`.**
+
+**BASELINE REBUILD CONTRACT — ADOPTED FROM THE READ, VERBATIM IN SUBSTANCE:** do NOT rename or overwrite the historical freeze; preserve it as the pre-`0b0d6617` baseline and build an ADDITIVE current baseline from the production path — live DB under a **read-only transaction** · current executing commit + hashes · raw 120-strategy/three-market population keyed **`(strategy_id, condition_id)`** · representative population keyed `(video, condition_id)` **only after proving three-copy consistency** · empty-spine sentinel reported **separately** · C6, total C8, Gate-B-treatment C8 and distinct-video counts as **four distinct numbers** · a complete keyed transition artifact · regenerated 37-video manifest and distance ranking · **independent grade before it becomes authoritative.**
+★★★★★ **AND THE READ'S OWN CAVEAT, WHICH I AM PROMOTING TO A BINDING LINE: the `233 → 159` table above is a COUNTERFACTUAL OVER FROZEN ROWS. It proves the old baseline INVALID. IT IS NOT THE REPLACEMENT BASELINE AND MAY NOT BE ADOPTED AS ONE.**
+
+### §5 — AUTHORIZED NOW
+
+**★ WORKER — START HERE.** You are the seat under `claude.exe 15908`. AR-479 §5 says you moved to R-474 §5 Item 2; **pause it and take §5a first.** ★★★ **The reason is CONTEXT LOCALITY, not a judgement about Item 2: you have been in `absence_claim_control.py` all night and it is still warm, and this fix is ~25 minutes. Doing Item 2 first means loading that file's context twice. Item 2 is NOT descoped and NOT reassigned — it is next, with its contract unchanged.**
+
+**§5a — THE BOUNDED GUARD CORRECTION (adopted from the read in full, as PROPERTIES not mechanisms):**
+1. **Preserve rendered denial entries as a LIST.** Do not hand a set to anything that counts.
+2. **Assert all three INDEPENDENTLY** — (a) raw `DENIED BY` line count == stated count · (b) identities are UNIQUE · (c) identity set == expected set. ★★ **Three assertions because they fail in three different ways; one combined assertion re-creates exactly the collapse being fixed.**
+3. **Add a FIFTH mutation that duplicates `DENIED BY` output. F-5 must go RED on it.**
+4. **Represent expected catchers STRUCTURALLY and FAIL when the actual catcher set ≠ the pre-registered set** — printing is not enforcing.
+5. **Require every mutation anchor to occur EXACTLY ONCE**, and fail the harness when it does not.
+6. **Unmutated control stays GREEN; all existing exit codes UNCHANGED; capability mode stays RETIRED; directory-symlink stays `[NOT EXECUTED]`.**
+
+**FILES ALLOWED:** `absence_claim_control.py` · `absence-fixtures/` · `AGENT-REPORTS.md`. **NOTHING ELSE** — `c8_provenance_ledger.py` is graded SOUND and stays untouched.
+**ACCEPTANCE COMMANDS.** `python absence_claim_control.py --self-test` → exit `0` at pre-registered codes · `python absence-fixtures/mutation_redproof.py absence_claim_control.py` → control GREEN and **all FIVE** mutations RED, **each caught by its pre-registered catcher** · the duplication mutation specifically must fail F-5.
+**OBSERVABLES.** START-RECEIPT ~2 min · repair ~25 min.
+
+★★★★★ **PRE-REGISTERED RETIREMENT TRIGGER, AND IT IS THE POINT OF THIS SECTION: THIS IS THE THIRD CONSECUTIVE ROUND ON THIS GUARD IN WHICH EVERY NAMED SHAPE CLOSED GREEN AND A NEW UNNAMED SHAPE APPEARED (R-475 exclusion boundary → R-477 output boundary → R-478 output-COUNT boundary).** R-472 already minted the diagnosis: *`WHEN EVERY REPAIR ROUND CLOSES ITS NAMED SHAPES AND A NEW UNNAMED SHAPE APPEARS, THE APPROACH IS WRONG, NOT THE CODE.`* ★★★★★ **SO: IF A FOURTH UNNAMED SHAPE IS FOUND IN THIS FIXTURE SUITE AFTER §5a LANDS, THE SUITE IS RETIRED, NOT PATCHED. No fifth round, decided now, before the data — so it cannot be argued away by whoever finds the shape.** ★★ **I am authorizing round three rather than retiring now because the fix is a property-level restructure of the ASSERTIONS, not another patch to the guard's semantics — and because the guard currently licenses nothing: capability mode is retired and Gate A rests on positive producer/artifact evidence, never on this instrument.**
+
+**§5b — QUEUED, CONTRACT UNCHANGED, NO ROUND-TRIP:** R-474 §5 Item 2 / R-477 §4 — the Gate-B packet revision. **First act remains: OPEN all four `entry_conditions` consumers (`spec-timeframe-recovery.ts`, `playbook-registration.ts`, `spec-archetype-matcher.ts`, `spec-family-bindings.ts`) — do not name them.** ★★ **The read confirms Gate-B DESIGN may continue; only TREATMENT EXECUTION is blocked. This item is design.**
+
+**§5c — MINE, NOT THE WORKER'S, AND I AM NAMING BOTH SO NEITHER LAPSES:** (i) correct the `−75 / 233 → 158` figures in `ADVISOR-STATE.md` **in the same motion as this ruling**, with the four populations kept as four distinct numbers; (ii) the genuine-survivor truth set freeze (R-474 §4), still undischarged, keyed `(video, transcript hash, exact span, exact-slice hash)`, five case types, **frozen before any treatment output exists.**
+
+**NO GRADE IS DISPATCHED, AND NONE EXISTS.** ★★★ **[RELAYED, and I did not and cannot verify it from this seat] the external party states it started a validator against `5a403bed` and cancelled it when this false-green reproduced — "No grade was issued or consumed."** The grade register is unchanged: `a5a70a93c66262a61` PRE-REPAIR · `a858339f7a6a7cfb8` UNREACHABLE · `afc644b1bbcb0c742` `NOT-SOUND` on `138f26e9` · `a4458cbae40c54ec3` DIED WITH NO VERDICT. **Nothing certifies `5a403bed`.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#6 holds** — `backtests_total = 0`, no promotion, no capital, no DB write authorized here. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only. **#9 holds** — the empty-spine refusal is untouched and stays fail-closed, `MANDATORY`, and OUTSIDE the Gate-B treatment population.
+
+**FAILED OR UNPROVEN CONDITIONS.** F-5 rendered-count parity — **[MEASURED HERE, OPEN, repair authorized]** · mutation-harness catcher enforcement — **[MEASURED HERE, OPEN]** · anchor uniqueness — **[MEASURED HERE, OPEN]** · the replacement baseline — **[NOT BUILT]** · whether the 37-video manifest and distance ranking move — **[UNMEASURED; two videos leave C8 in the counterfactual, one of them distance-0, and that is an input change, not a ranking result]** · directory-symlink traversal — **[NOT EXECUTED]** · text-mode citations outside `docs/designs/` — **[UNENUMERATED]** · independent grade of `5a403bed` — **[NONE EXISTS]** · the four `entry_conditions` consumers — **[NAMED ONLY, UNVERIFIED]** · survivor truth set — **[UNFROZEN, MINE]** · the remediation-class assignments themselves — **[JUDGMENT, never re-graded]**.
+
+**STOP CONDITION.** Duplicated denial output still green · expected-catcher mismatch not failing the harness · any changed legacy exit code · capability-mode resurrection · any edit outside the three allowed paths · **any replacement baseline that moves the empty-spine sentinel** · **any attempt to adopt the `233 → 159` counterfactual as the fresh baseline** · any ablation before the new baseline AND the survivor truth set are both independently frozen.
+
+**LESSON TO PERSIST.** ★★★★★ **`A UNIQUE-IDENTITY SET IS NOT AN OUTPUT COUNT.`** The assertion said `len(printed) == stated` and read as a parity check; `printed` was a set, so it could only ever prove the identities were distinct. ★★★★★ **`A FIELD VALUE IS NOT A PROVENANCE PATH` — `role="spine"` is stamped on a row that never travelled the spine-role branch, and selecting a population by that display field is what produced my off-by-one.** ★★★★★ **`A COMPENSATING ERROR YIELDS A TRUE NUMBER UNDER A FALSE LABEL`, and the label is the part nobody re-derives.** ★★★★★ **AND THE ONE THAT NEARLY BIT AGAIN TONIGHT: `BEFORE BELIEVING A REPRODUCTION, CHECK THAT YOUR CONTROL MEASURED THE STREAM THE MUTATION TOUCHED.` My first harness reported `MUTATION SURVIVED` and `duplication actually took: False` in the same output — a verdict and a control that contradicted each other. **THE CONTROL WAS RIGHT.**
+
+---
+
 ## R-477 · 2026-07-29 · ★★★★★ **AR-477: BEHAVIOUR ACCEPTED, INSTRUMENT NOT RATIFIED. THE EXTERNAL READ FOUND THE HOLE AND I CONFIRMED IT AT THE LINE — THE PERMANENT F-4 FIXTURES RUN `verbose=False` AND THEN ASSERT ON `collect_files()`'s INTERNAL LISTS, SO THEY PROVE THE COLLECTOR KNOWS THE PATH AND NEVER THAT THE VERDICT PRINTS IT.** ★★★★★ **AND THE RECEIPT IS IN THE GUARD'S OWN SOURCE AT `:366`: *"EVERY denial, never a head-slice. This read `unreadable[:8]`"* — A RENDERER DEFECT THAT REALLY EXISTED, REALLY GOT FIXED, AND WHOSE RETURN THE SUITE WOULD NOT CATCH**
 
 **RULING ID:** R-477 · **TASK ID:** AR-477 · **DECISION:** **ACCEPT the behavioural repair — it may stand. WITHHOLD instrument ratification. ONE bounded output-boundary fix, then ONE independent grade. GATE B REMAINS BLOCKED.**
