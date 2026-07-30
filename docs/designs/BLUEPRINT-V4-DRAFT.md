@@ -7,9 +7,9 @@
 > path in **§15**. Until adoption, the already-adopted V4 remains operative;
 > after adoption, **§15 governs wherever §§1, 3, 9, 10, 12 or 14 conflict
 > with it.**
-> Evidence cut: campaign tree through R-491 / AR-501; parity WIP
-> `b23bae87`. The authority-freshness correction below supersedes the earlier
-> R-483 hash carried by this revision.
+> Evidence cut: campaign tree through R-492 / AR-503; parity WIP
+> `48199995`. The executable authority check and P-7 oracle rows have landed;
+> the remaining P0 work is bounded in §15.8.
 
 > ★★★★★ **STATUS: ADOPTED AND OPERATIVE — R-445, 2026-07-29, operator-directed.
 > THIS SUPERSEDES THE "DRAFT — NOT LAW" STATUS BELOW, WHICH THIS FILE CARRIED FOR
@@ -855,12 +855,12 @@ from that spec's measured residual, not from a library-wide housekeeping list.
 > introduced while correcting someone else's staleness. `A FIX THAT CHANGES A TABLE'S SHAPE MUST
 > CHANGE EVERY ROW OF IT.`**
 
-| item | state at R-491 / AR-501 | next admission event |
+| item | state at R-493 / AR-503 | next admission event |
 |---|---|---|
 | Gate-A causal split | **complete** at the historical-artifact layer | preserve as causal evidence; do not reuse as current control |
 | P0 parity packet | staged and corrected | complete the one atomic implementation |
-| P0 semantic oracle authority | ★★★★★ **amended by R-491 to `3494d4bb…` (`16,314` B, adds `P-7` + §4d); parity WIP still pins superseded `9b708e24…` and its gate only ECHOES that assertion — a live false verification** | implement raw-byte authority verification FIRST, then repoint and encode only R-491 §4d's two adjudicated cells |
-| P0 implementation | ★★★★★ **WIP `b23bae87` — REAL PROGRESS, NOT RATIFIABLE: gate green and independently RED-PROVED at the desk · CI **and** fast-lane WIRED (F-A closed, R-487) · queue-reason tripwire with two discriminates proofs (R-488) · family × position axis **30/30** (AR-500) · axis 2 **8/8** (AR-499). **OPEN: authority freshness · axis 3 (3 of 13 non-session families) · axis 4 (duplicate-id + multiplicity, both `[UNPROVEN]` and UNCITABLE) · materiality receipt** | finish A–E, land ONE atomic delivery commit, **then** exactly one independent grade |
+| P0 semantic oracle authority | **current at `3494d4bb…`; WIP `48199995` commits the identical 16,314-byte authority, computes its hash before plan evaluation, and encodes only §4d's authorized P-7 cells** | preserve the four fail-closed authority controls and the agreement-vs-correctness split in the atomic delivery |
+| P0 implementation | **steps A/B complete at WIP `48199995`; family × position is 30/30 (AR-500); zone axis 8/8 (AR-499); generated P-7 property coverage, duplicate-id/multiplicity controls and the materiality receipt remain open.** ★★★ **The duplicate-`condition_id` and array-multiplicity checks remain `[UNPROVEN]` and UNCITABLE per R-488 §3 until a fixture makes each go RED — "open" understates them: they may not be cited as evidence of anything.** | finish C–E; produce one atomic delivery commit; then one independent grade |
 | P1 additive current baseline | **not frozen** | re-authored-producer equivalence control, then current-code artifact |
 | P2 truth rule | **defined**; complete labelled membership not frozen | freeze all members and hash before treatment |
 | P3 runtime graph→spec handoff | **unenumerated** | rule the two-stage transfer path before runtime integration |
