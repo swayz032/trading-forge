@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1898` at THIS commit, 2026-07-30 02:56 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1918` at THIS commit, 2026-07-30 03:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `1898` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `1918` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -226,7 +226,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1898` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1918` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
@@ -1687,7 +1687,27 @@ this bar's output four times tonight without ever reading what it measured.**
 **emits `WORKER RESUMED`** — a clear signal that did not exist before, so a seat starting is
 now observable · watches **AR content-hash** (immune to the pre-commit mtime stamping below)
 **+ parity HEAD + campaign non-ledger commit** · alarms after 3 unreadable-file polls rather
-than going quiet · starts `alarmed=1` because THIS episode is already acknowledged.
+than going quiet.
+
+### ⚠️★★★★★ CORRECTION AGAINST MYSELF (03:12) — I SHIPPED A FALSE MECHANISM CLAIM IN THE LINE ABOVE
+
+⚠️ **STRUCK: *"starts `alarmed=1` because THIS episode is already acknowledged."* **IT DOES
+NOT.** [MEASURED — v2 fired at `03:09:19`, exactly 15 min after arming, which that claim
+predicts should not happen.] **TRACING MY OWN SCRIPT: on the FIRST poll `prev=""`, so
+`h != prev` is TRUE, so the branch runs and sets `alarmed=0` and `last=now`. THE
+INITIALISER IS OVERWRITTEN ONE SECOND AFTER IT IS SET.** It cannot suppress anything.
+★★★★★ **THIS IS THE CAMPAIGN'S MOST-CONVICTED ERROR AND I COMMITTED IT INTO THE RECORD
+THIRTEEN MINUTES AFTER RULING ON IT TWICE: I described HOW A MECHANISM WORKS WITHOUT
+EXECUTING IT. `A WRONG MECHANISM GETS OBEYED` — a later seat would have read that line and
+concluded a first-poll alarm meant the latch was broken.**
+★★ **WHAT ACTUALLY HOLDS, AND IT IS THE PROPERTY THAT MATTERS: the LATCH. One alarm per
+episode, then silence until activity. The single arm-time alarm is harmless — arguably
+correct, a fresh watchdog confirming the state once.**
+★★★★★ **PRE-REGISTERED, SO THIS IS FALSIFIABLE RATHER THAN ASSERTED: IF v2 FIRES A SECOND
+`WORKER QUIET` WITHOUT AN INTERVENING `WORKER RESUMED`, THE LATCH IS BROKEN AND v2 MUST BE
+RETIRED.** Silence from here is the passing result. **NOT re-arming to fix the cosmetic
+first alarm — churn on a live monitor for zero behavioural gain is the trade I just got
+wrong in the other direction.**
 
 ★★★★★ **THE AR CHANGE-DETECTOR MUST BE CONTENT-HASH GATED, NEVER mtime ALONE —
 MEASURED THE HARD WAY 2026-07-29 22:40.** [MEASURED HERE] the desk committed
