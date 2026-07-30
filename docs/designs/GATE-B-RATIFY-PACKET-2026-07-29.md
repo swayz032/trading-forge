@@ -61,7 +61,7 @@
 | verdict `CONSUMER-SUPERSEDED`, **aborts the run** | ★★★★★ **REPLACED by `CONTROL_FLOW_CHANGED` + a five-field control-flow record. THE SWEEP CONTINUES.** Aborting would have destroyed the incidence number that decides theoretical-vs-live. |
 | §3.5 = six independent matrix rows | **DECISION GRAPH added.** The rows are the leaves; the graph is the shape. |
 | §6 "`[UNMEASURED]` whether `0b0d6617` moves C8" | ★★★★★ **CORRECTED — MEASURED: `233 → 159`, `−74`, treatment population `158`. Rev 2 contradicted its own §1.** |
-| §7 truth set "`[NOT DETERMINED]`, pending" | ★★★★★ **ITS PRESCRIBED KEY IS DEAD** — `11.2%` realizable, `0%` on the spearhead. Replacement rule is DESK-owned. |
+| §7 truth set "`[NOT DETERMINED]`, pending" | ★★★★★ **RECORDED AS A SPLIT: anchor availability `100%` (`2351/2351`), independent corroboration `11.2%`.** ★★★ **The `11%`-realizable / zero-spearhead figure was RETRACTED BY THE DESK AS FALSE (R-481 warning annotation, 00:40) and this packet does NOT carry it — see §7.** Replacement adjudication rule is DESK-owned. |
 | §4.2 bandc script "diagnostic, may not be called success" | **FORBIDDEN as an efficacy oracle — as a PROHIBITION ON THE CLASS**, not a caution about one script. |
 | §3.5.2 F-B "the lanes *can* disagree on `compiled`" | ★★★★★ **REPLACED by the desk's EXECUTED result + the narrower proven proposition: divergence on `compiled` is CONDITIONAL on spine composition.** |
 | §8 parity listed as a desk ruling owed | **PROMOTED to its own ratify packet + its own worktree.** |
@@ -596,18 +596,31 @@ carries `spec_family_bindings.py` at `160,049` B vs `40,583` B and has NO `spec_
   not re-measured here) · `fade-the-losers-service.ts` (the second runtime playbook consumer) ·
   `playbook-registration-backfill.ts` · `backfill-corpus-timeframes.ts` (runs timeframe recovery
   **across the corpus**) · the campaign-tree and primary-tree copies of all six consumers.
-- ★★★★★ **`[NOT DETERMINED]`: the pre-registered set of GENUINE market-state conditions — AND ITS
-  PRESCRIBED KEY IS DEAD (R-481 §69, correction 3).** R-474 §4 keyed the truth set to
-  `(video, transcript hash, exact span, exact-slice hash)`. **[MEASURED, R-481] THAT KEY IS REALIZABLE ON
-  `11.2%` OF THE SURFACE AND ON NONE OF THE SPEARHEAD:** the preserved transcripts ARE the
-  extraction-time text (`40/40` char-length identity; `264` recorded `(offset → quote)` pairs resolve
-  exactly across `37/40` videos) — **but `evidence` is not a quote field.** Of `2351` conditions, `1027`
-  carry an atom ref, `29`+ a placeholder, plus brace-structs and `'},{'` debris; **only `264 / 2351`
-  carry a resolvable quote, and `75DJN5UVQnw` — THE distance-0 spearhead — carries ZERO** (13 conditions:
-  9 atom refs, 2 debris, 2 brace-structs). ★★★ **THE REPLACEMENT KEYING RULE IS DESK-OWNED. THE WORKER
-  DOES NOT AUTHOR IT** (R-467 §5). ★★ **And the desk's own method note is worth carrying: the benign
-  cause — the SPEC records no quotes, the archive is not implicated — was measured BEFORE the alarming
-  sentence was written. *"Zero spans resolve for the #1 target"* would have been true and a false finding.**
+- ★★★★★ **`[NOT DETERMINED]`: the pre-registered set of GENUINE market-state conditions. ITS PRESCRIBED
+  KEY IS *NOT* DEAD — IT IS REALIZABLE AND PARTLY UNCORROBORATED. RECORDED AS A SPLIT, per the
+  R-481 WARNING ANNOTATION of 2026-07-30 00:40, which RETRACTED the desk's own `11%` / zero-spearhead
+  figure as FALSE:**
+
+  | proposition | value | grade |
+  |---|---|---|
+  | **ANCHOR AVAILABILITY** — span present · integer offsets · in range · non-empty slice | ★★★★★ **`2351 / 2351` = `100.0%`** (slice length min `13`, median `54`, max `323`) | **[MEASURED, R-481 annotation]** |
+  | `75DJN5UVQnw`, the distance-0 spearhead | ★★★★★ **`13 of 13`** — **not zero.** All `40` videos covered | **[MEASURED]** |
+  | `(video, span_start, span_end)` uniqueness | **`2346` distinct keys over `2351`; `5` at multiplicity `2`, max `2`** — needs ONE extra discriminator (`semantic_type`, or the spec-local condition id) for those five, **not a new design** | **[MEASURED]** |
+  | **INDEPENDENT CORROBORATION of the anchor** | **`264 / 2351` = `11.2%`**, across `37` videos | **[MEASURED]** |
+  | the other `~89%` | span **USABLE but UNCORROBORATED** — one producer's word, no second field agreeing | **[MEASURED]** |
+
+  ★★★★★ **`[UNCORROBORATED]` IS NOT `[UNREALIZABLE]`.** The retracted claim conflated them **in the
+  PESSIMISTIC direction, which is not the safe direction — it would have retired a working method.**
+  ★★★ **THE DESK'S NAMED ERROR, carried because rev 3 nearly propagated it into this packet: it measured
+  *"does the `evidence` FIELD equal the transcript slice"* and published it as *"is the SPAN a usable
+  anchor"* — two different objects joined by nothing. `exact_slice_hash` is
+  `sha256(transcript[start:end])` and NEVER required `evidence` to hold the quote. The tenth instance of
+  `I MEASURED THE NEIGHBOURING OBJECT`.**
+  ★★ **WHAT SURVIVES UNCHANGED:** the archive IS the extraction-time text (`40/40` length identity) ·
+  and the `evidence` FIELD really is polluted (`1027` atom refs, placeholders, `'},{'` debris). **The
+  pollution is real; the inference that it disabled the KEY was not.**
+  ★★★ **THE REPLACEMENT ADJUDICATION RULE REMAINS DESK-OWNED AND IS NOT THE WORKER'S TO AUTHOR**
+  (R-467 §5); its formal disposition is **OWED AS `R-482`, HELD pending the operator's external read.**
   It must still span FIVE cases: genuine session predicates · descriptive session context ·
   instrument/timeframe context · **mixed** · **ambiguous**.
 - **`[NOT FROZEN, DESK-OWNED]`: the ADDITIVE PRODUCTION BASELINE.** ★★★ **And R-480 §Desk's constraint:
@@ -639,8 +652,10 @@ WRONG NAME ONCE, ITS COLLISIONS ARE NOT COINCIDENCES, THEY ARE TRAPS.`**
 **SUFFICIENT TO IMPLEMENT §3(a)–(g) BEHIND A FLAG WITH §4.5's RED-PROOF, IN THE TWO PINNED STAGES OF §6.**
 
 **NOT SUFFICIENT TO RUN THE ABLATION. FOUR THINGS ARE OWED FIRST — AND ONE OF REV 2's FIVE IS NOW CLOSED:**
-1. **DESK** — the genuine-survivor truth set, **whose prescribed key is DEAD and needs a REPLACEMENT
-   KEYING RULE** (§7, R-481 §69). Not merely pending: `11.2%` realizable, `0%` on the spearhead.
+1. **DESK** — the genuine-survivor truth set. ★★★ **ITS KEY IS REALIZABLE: anchor availability is
+   `2351/2351` = `100%`, the spearhead carries `13 of 13`, and uniqueness needs ONE extra discriminator
+   for `5` collisions — not a new design (§7).** What is owed is the **ADJUDICATION rule over a
+   `~89%`-UNCORROBORATED surface**, DESK-owned, formal disposition held as `R-482`.
 2. **DESK** — the additive production baseline **+ the re-authored-producer equivalence control**
    (R-480 §Desk). ★★ **Access is no longer the blocker: [MEASURED, R-481 §49] the live library is
    REACHABLE and PROVEN READ-ONLY (`create temp table` rejected, SQLSTATE `25006`; `strategies` = `120`).

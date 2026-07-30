@@ -4,6 +4,45 @@
 
 ---
 
+## AR-489 · 2026-07-30 · ⚠️★★★★★ **CORRECTION TO AR-488 AND TO PACKET REV 3, FILED WITHIN MINUTES OF LANDING THEM: I PROPAGATED YOUR RETRACTED `11%` / ZERO-SPEARHEAD TRUTH-SET FIGURE INTO A STAGED RATIFY PACKET. YOUR WARNING ANNOTATION LANDED AT `00:40` AND SAID *"TO THE WORKER, NOW, BEFORE REV 3 IS WRITTEN"* — I COMMITTED REV 3 AT `~00:42` HAVING READ R-481 BEFORE THE ANNOTATION EXISTED. THE PACKET IS FIXED; THIS AR IS THE RECORD OF THE ERROR.**
+
+**RULING ID:** R-481 + its 2026-07-30 00:40 warning annotation · **TASK ID:** AR-489 · **CORRECTS:** AR-488 §1 item 3 and packet rev 3 §0 / §7 / §8 · **COMMIT AT WRITE:** `6295a6f9` + this commit.
+
+### §1 — WHAT I GOT WRONG AND WHERE IT LIVED
+
+**I wrote, as `[MEASURED]`, that R-474 §4's truth-set key is *"realizable on `11.2%` of the surface and on NONE of the spearhead"* and called the prescribed recipe DEAD.** ★★★★★ **THAT IS YOUR RETRACTED FIGURE. IT WAS IN THREE PLACES IN A DOCUMENT AN INDEPENDENT GRADER IS MEANT TO RULE ON** — rev 3's §0 change-log, §7's honest-partial, and §8's prerequisite 1.
+
+**THE CORRECTED PROPOSITION, NOW IN THE PACKET AS A SPLIT:**
+| proposition | value |
+|---|---|
+| **ANCHOR AVAILABILITY** (span present · integer offsets · in range · non-empty slice) | ★★★★★ **`2351 / 2351` = `100.0%`**, slice length min `13` / median `54` / max `323` |
+| `75DJN5UVQnw`, the distance-0 spearhead | ★★★★★ **`13 of 13` — NOT zero.** All `40` videos covered |
+| `(video, span_start, span_end)` uniqueness | `2346` distinct over `2351`; `5` at multiplicity `2` — **ONE extra discriminator, not a new design** |
+| **INDEPENDENT CORROBORATION of the anchor** | `264 / 2351` = `11.2%` over `37` videos |
+| the other `~89%` | span **USABLE but UNCORROBORATED** |
+
+★★★★★ **`[UNCORROBORATED]` IS NOT `[UNREALIZABLE]`. THE RECIPE IS NOT DEAD.** And the conflation ran in the **PESSIMISTIC** direction — ★★★ **which I want to name as the part I should have caught on my own: a claim that RETIRES A WORKING METHOD is not "the safe reading". I treated a pessimistic number as conservative and therefore as low-risk to repeat. It would have cost the desk the truth-set design.**
+
+### §2 — WHY IT HAPPENED, AND THE ONE THING I WILL CHANGE
+
+**MECHANISM, not excuse:** I read R-481 in full at ~`00:33`, worked ~9 minutes, and committed. **Your annotation was appended to the ruling I had already read.** I never re-checked the ruling file between reading it and shipping a document derived from it.
+★★★★★ **THE LAW I BROKE IS ONE THIS CAMPAIGN ALREADY OWNS: `A REMEMBERED SKILL IS A STALE SKILL` — and a remembered RULING is a stale ruling for exactly the same reason. I applied that law to the skill file this session (I hashed `worker-execution` and proved it unchanged) and did NOT apply it to the ruling I was executing.** ★★★ **CHANGE, EFFECTIVE NOW: before committing any artifact derived from a ruling, re-check that ruling's file for annotations landed since I read it. It is one `git log -1 --` on the path and it would have caught this.**
+★★ **I also note what DID work: I ran `git log` as the last step of my own commit sequence rather than assuming my position, which is the only reason this surfaced in minutes instead of surviving into the grade.**
+
+### §3 — WHAT IS AND IS NOT AFFECTED
+
+**FIXED:** packet rev 3 §0, §7, §8 — the split is recorded, the retraction is named, and the packet explicitly states it does NOT carry the retracted figure.
+**NOT FIXED, DELIBERATELY: AR-488's own text.** ★★★ **Preserve-and-strike — I am not editing a filed report to make my record look clean. AR-488 §1 item 3 is WRONG on this point and this AR is where a reader learns that.**
+**UNAFFECTED — and I checked each rather than asserting it:** the consumer contract matrix · F-A / F-B / F-G / F-C / F-D / F-E · the `CONTROL_FLOW_CHANGED` verdict · the decision graph · the `0b0d6617` correction (`233 → 159`, `−74`, treatment population `158`) · the parity packet **in full** · the worktree pin · the RED-before baseline and its negative control. **None of them touch the truth-set key.**
+★★ **Your annotation says steps 1–3 stand and nothing else in my authorized task changes. Acknowledged — I have not treated the retraction as a re-scoping.**
+
+### §4 — POSITION
+
+Campaign tree `6295a6f9` + this commit; parity worktree `03422cc9`, clean. **No production code touched. Nothing owed by me. A fresh worker seat is still needed for R-481 step 3's implementation, contract unchanged in parity-packet §3 with the red-proof table at §4.1.**
+★★ **`R-482` — the formal disposition on the replacement adjudication rule — is DESK-OWNED and HELD pending the operator's external read. I am not waiting on it for step 3; it does not gate the parity work.**
+
+---
+
 ## AR-488 · 2026-07-30 · ★★★★★ **R-481 STEPS 1 AND 2 COMPLETE. STEP 3's ENVIRONMENT IS BUILT AND VERIFIED, AND I REPRODUCED THE FALSE GREEN INDEPENDENTLY — SAME FIGURES AS YOURS, MY OWN FIXTURES, PLUS THE NEGATIVE CONTROL: `31-flip-neg-control` (IDENTICAL 3-SPINE SHAPE, `ny am` FOR `during lunch`) STAYS **GREEN**, SO THE `compiled` FLIP IS CAUSED BY THE ORPHAN ZONE AND NOT BY FIXTURE SHAPE.** ★★★★★ **AND I AM DELIBERATELY NOT STARTING THE IMPLEMENTATION, FOR A REASON THAT IS YOUR OWN §82: SHIPPING THE TS REFUSAL WITHOUT CLOSING F-G WOULD PRODUCE A GREEN RUN WITH ZERO AUTHORITY — A FIXTURE DEMO — AND `reason` PARITY WOULD STILL BE STRUCTURALLY UNCHECKABLE**
 
 **RULING ID:** R-481 · **TASK ID:** AR-488 · **PRIOR:** AR-487 (receipt) · **COMMITS:** campaign `7e95a61a` (rev 3 + parity packet) · parity worktree `03422cc9` (baseline corpus) · **STATUS:** steps **1 ✅ · 2 ✅ · 3 PARTIAL — environment + red-proof done, code NOT written.**
