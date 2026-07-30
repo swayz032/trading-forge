@@ -12,6 +12,68 @@
 
 ---
 
+## R-488 · 2026-07-30 · ★★★★★ **ITEM 2 PART 2/2 ACCEPTED — THE TRIPWIRE IS RED-PROOFED TWICE AND PRINTS ITS OWN DISCRIMINATION ON GREEN RUNS, VERIFIED HERE.** ★★★★★ **AND THE GRADE TRIGGER HAS **NOT** FIRED — THE WORKER HELD ME TO MY OWN WORDING AND IT IS RIGHT. I SAID "ITEMS 1 AND 2"; ITEM 2 IS HALF. NO `accuracy-validator` IS DISPATCHED.** ★★★★★ **AND ITS SHARPEST FINDING IS AGAINST ITSELF: IT BUILT DUPLICATE-`condition_id` AND ARRAY-MULTIPLICITY CHECKS THAT **NO FIXTURE MAKES FIRE** — BY ITS OWN STANDARD, UNPROVEN.**
+
+★ **WORKER — START HERE.** Your stop is accepted; **§5** is the contract for whoever resumes. **Nothing below asks you to keep going.**
+
+**RULING ID:** R-488 · **TASK ID:** AR-497 · **DECISION: APPROVE** part 2/2 · **item 2 INCOMPLETE, delivery unratified.**
+**NEWEST AR CHECK (R-416):** newest on disk at write time is **AR-497** — the report being ruled. No later AR exists.
+
+### ★★★★★ §1 — THE TRIGGER DOES NOT FIRE, AND I AM RECORDING THAT I WAS THE ONE AT RISK OF FUDGING IT
+
+**R-487 §6 said the grader fires when "items 1 AND 2 land", and I published to the operator that we were "one item away". [MEASURED — AR-497 §34, cells enumerated] ITEM 2 PART 1/2, THE MEMBERSHIP MATRIX, IS NOT STARTED.**
+★★★★★ **AR-497 §48 tells this desk plainly: *"Do not dispatch the `accuracy-validator` on this commit."* IT IS CORRECT AND I ADOPT IT. NO GRADER IS DISPATCHED. NONE IS OWED.**
+★★★ **THE SHAPE WORTH NAMING: I wrote the trigger, I announced progress against it, and the DOER — the party with the incentive to be graded and be done — is the one who enforced it against me. `A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION` was written to stop a desk waiting for a better moment; here it stopped a desk firing at a WORSE one. It cuts both ways and this is the direction I did not anticipate.**
+
+### §2 — VERIFIED AT THIS DESK — tree `wt-ledger-e-parity-20260730` @ `4f631b2f`, clean
+
+**[MEASURED HERE]** gate run, **no env override**, `$LASTEXITCODE` before filtering → **exit `0`**, `Checked 7 sample specs against 7 declared members`, `PASS`. **The tripwire prints on the GREEN run, both lines:**
+- `✓ tripwire DISCRIMINATES control: planted 1 armed + 1 same-shape safe family; detector returned exactly ["SYNTHETIC_ARMED_FAMILY"] — it CAN fire, and does NOT fire on the safe neighbour`
+- `✓ queue-reason precondition: EMPTY in both lanes across 14 FAMILY_META families (ts armed=0, py armed=0) — the divergence is UNREACHABLE, not fixed`
+★★★★★ **THAT SECOND CLAUSE IS THE CRAFTSMANSHIP: `UNREACHABLE, NOT FIXED` stops a future reader converting a green tripwire into "the divergence was repaired." `A GUARD THAT REPORTS WHAT IT DID *NOT* PROVE IS WORTH MORE THAN ONE THAT ONLY REPORTS PASS.`**
+★★★ **THE SAFE-NEIGHBOUR CONTROL IS WHY I ACCEPT PROOF 1: a control planting only a positive cannot distinguish "catches it" from "flags everything". And PROOF 2 — pulling `unboundReason` off the real `RESET` entry and taking the gate to `EXIT 1` — is what shows the LIVE table reaches the LIVE check. `EXISTENCE IS NOT WIRING` applied to a detector's INPUTS, which is a place I had not thought to apply it.**
+★★ **And it guarded its own guard against my R-483 §68 error — asserting BOTH `FAMILY_META` tables are non-empty (`14`/`14`) before believing any comparison over them. `A DIFF OF TWO EMPTY SETS IS ALWAYS GREEN`, adopted from the ruling where I committed exactly that.**
+★★ **`[UNENUMERATED — OPEN]` correctly preserved: the tripwire compares `FAMILY_META` KEYS, not VALUES, and says so ON THE GREEN RUN so no reader mistakes one for the other.**
+
+### ★★★★★ §3 — THE SELF-CONVICTION IS UPHELD AND PROMOTED TO A BINDING SCOPE LIMIT
+
+**AR-497 §35: duplicate-`condition_id` detection and array-multiplicity comparison were built, and NO FIXTURE MAKES EITHER FIRE. Their only evidence is code review.**
+★★★★★ **RULED: BOTH CHECKS ARE `[UNPROVEN]`. NO RULING, REPORT, PACKET OR GRADE BRIEF MAY CITE THEM AS EVIDENCE OF ANYTHING UNTIL A FIXTURE MAKES EACH GO RED.** They are not removed and not distrusted — **they are simply not yet instruments.** `A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK` applies to them exactly as it applied to the tripwire.
+★★★ **AND THE OBSERVATION THAT GENERALISES, WHICH IS THE WORKER'S NOT MINE: it applied the standard UNEVENLY WITHIN ONE FILE — red-proofing the tripwire twice while shipping two neighbours with no path to red at all. `A LAW YOU HONOUR IN THE PART YOU ARE THINKING ABOUT IS NOT A LAW YOU HAVE APPLIED.` The remedy is a per-check census, not more care.**
+★ **FOLDED INTO PART 1/2: the matrix work must add fixtures that make BOTH fire.**
+
+### ★★★★★ §4 — THE `worker-execution` GUARD: RATIFIED, AND ITS RECOVERY LINE IS NOW A NAMED HAZARD I OWN
+
+**AR-497 §40: blocked four writes, the worker suspected a misfire by the fourth, MEASURED instead of assuming, and found the ledger genuinely newer each time — `sentinel 05:59:48` vs `ledger 06:00:23`. Every block was a real ruling landing mid-write.**
+★★★★★ **`A GUARD THAT FIRES REPEATEDLY IS REPORTING THE WORLD, NOT MALFUNCTIONING` — adopted verbatim. On a shared tree with a live advisor, frequent firing is the system working, and the cause here was MY throughput, not its logic.**
+★★★★★ **AND IT ALREADY PAID FOR ITSELF: the block at R-483 §12's landing stopped the worker ONE WRITE before it authored the oracle from `FAMILY_META` while the real frozen authority sat unread on disk. That single block is worth more than every second it has cost.**
+★★★★★ **NOW THE HAZARD, AND IT IS MINE: THESE GUARDS' MESSAGES NAME *DISABLING THEM* AS THE RECOVERY** (`advisor-ruling-guard.ps1`: *"Recovery if this guard ever misfires: remove its entry from `.claude/settings.json`"* — **[MEASURED HERE]**, I read it when it blocked me twice tonight). **By R-487 §7's own law — `THE MOST DANGEROUS REMEDY IS THE ONE A COMPETENT ENGINEER REACHES FOR FIRST` — a guard whose message offers deletion to a seat under pressure is one bad night from being deleted while correct.** ★★★ **THE WORKER DID NOT TAKE THAT ROUTE AND SAID SO EXPLICITLY. It should not have to be that disciplined for the guard to survive.**
+★★ **DESK-OWNED, AND DELIBERATELY NOT DONE NOW: the fix is to make the message order AUDIT FIRST and disabling last, with the receipt that it has been right every time it fired. **I AM NOT EDITING A LIVE GUARD MID-CAMPAIGN WHILE A WORKER IS MID-SESSION AND THIS DESK IS ABOUT TO HAND OFF** — a message hazard that has cost nothing yet does not justify touching the mechanism that has now saved this campaign twice. **NAMED, OWNED, SCHEDULED — not silently carried.**
+
+### §5 — POSITION · WHAT REMAINS · SCOPE
+
+**`4f631b2f` WIP, tree clean, nothing merged, no Python changed, no `approximation` or queue-reason payload changed, `runtime-production` and `tf-deep-scan` untouched [MEASURED HERE].**
+**REMAINING, IN ORDER — contract already written, nothing to re-derive:**
+1. **Item 2 part 1/2 — the membership matrix.** Named gaps, verbatim from AR-497 §34: **`ny_pm`, `silver_bullet`, `macro_window` have NO fixture (3 of 5 evaluable zones)** · the other **12 condition families** are exercised only inside `00-control-shipped`, which is `[NOT ADJUDICATED]` at plan level · **`invalidations` carry ZERO bindings in every fixture** · **plus fixtures that make duplicate-`condition_id` and array-multiplicity FIRE (§3).**
+2. **Item 3 — per-spec materiality receipt** (`tsc` half already done, exit `0`).
+3. **THEN the grade.** ★★★ **AND THE MATRIX MAY BE DELIVERED IN NAMED BATCHES: a batch that names the cells it covered and the cells it did not is COMPLIANT; the stop condition is SILENT truncation, never partial delivery.**
+**SCOPE UNCHANGED** (R-485 §7 / R-486 §3 / R-487 §6), including: **`git push`, opening a PR, or triggering any remote pipeline remain FORBIDDEN.** **STOP CONDITIONS unchanged.**
+
+### ★★★★★ §6 — THE STOP IS ACCEPTED AS A RECEIPT, AND THE OPERATOR ASK IS RE-RAISED HONESTLY
+
+**AR-497 §49 stops and says so — explicitly as a RECEIPT, explicitly NOT claiming transfer, explicitly leaving the task authorized to itself. That is the protocol honoured precisely, and it is a different act from AR-494's handoff DECLARATION.**
+★★★ **THE TASK REMAINS AUTHORIZED TO THIS SEAT. I am not withdrawing it, and if the seat resumes it needs no new permission.**
+★★★★★ **AND I RECORD MY OWN FLIP-FLOP RATHER THAN QUIETLY RE-ASKING: I asked the operator for a fresh seat (R-485), WITHDREW it ~10 minutes later when this seat resumed (R-486 §1), and am now raising it again. THE DISCRIMINATOR THAT MAKES THIS ONE DIFFERENT IS NOT MY CONFIDENCE — it is that AR-494 declared a handoff and kept working, whereas AR-497 filed a stop receipt AND named a specific piece of work it is declining to begin.** ★★ **THE OPERATOR IS TOLD IT IS SAFE TO IGNORE: nothing degrades if no seat is added, because the work stays assigned and the campaign is not on a clock tonight.**
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`A PRE-REGISTERED TRIGGER CUTS BOTH WAYS — IT ALSO STOPS YOU FIRING EARLY.` And the party who enforced it here was the one who would have benefited from it firing.**
+★★★★★ **`A LAW YOU HONOUR IN THE PART YOU ARE THINKING ABOUT IS NOT A LAW YOU HAVE APPLIED.`** (AR-497 §35 — red-proofed one check twice while two neighbours in the same file had no path to red.)
+★★★ **`A GUARD THAT FIRES REPEATEDLY IS REPORTING THE WORLD, NOT MALFUNCTIONING.`** (AR-497 §41, verbatim.)
+★★★ **`A GUARD WHOSE MESSAGE OFFERS ITS OWN DELETION AS THE RECOVERY IS ONE BAD NIGHT FROM BEING DELETED WHILE CORRECT.`** (mine, §4 — owed against my own hooks.)
+
+---
+
 ## R-487 · 2026-07-30 · ★★★★★ **ITEM 1 ACCEPTED — F-A IS CLOSED AT THE WIRING LAYER, VERIFIED HERE BY FOUR INDEPENDENT CHECKS INCLUDING A PARSED-YAML STEP WALK AND A `cmp` BYTE-COMPARE.** ★★★★★ **AND THE LOAD-BEARING ACT WAS ONE I DID NOT ORDER: THE WORKER HAD TO RETIRE THE ONE-FIXTURE DEFAULT CORPUS TO WIRE THE GATE AT ALL. RATIFIED — WIRING IT AS-IS WOULD HAVE FAILED CI ON DAY ONE, AND THE REPAIR A GOOD-FAITH ENGINEER REACHES FOR UNDER A RED PIPELINE IS THE ONE THAT RESTORES THE FALSE GREEN.**
 
 ★ **WORKER — START HERE.** Your task is **§5**: item 2 — exhaustive membership + the queue-reason tripwire with its DISCRIMINATES fixture. **The grader fires when item 2 lands (§6).**
