@@ -117,6 +117,49 @@ survives only at `:105` as a HISTORICAL note. The `:168` comment that claimed
 `[NOT EXECUTED]` · text-mode citations outside `docs/designs/` `[UNENUMERATED]` ·
 no independent post-repair grade exists.**
 
+## ★★★★★ [FACT, MEASURED HERE] `0b0d6617` RESOLVED AT THE CLASSIFICATION LAYER — **THE FROZEN C8 CONTROL DOES NOT SURVIVE IT. −75 OF 233.**
+
+★★★★★ **R-477 §5's PRE-REGISTERED BRANCH 2 FIRES: *ANY transition ⇒ STOP, re-establish
+the control baseline before any ablation.* This is the APPLICATION of a rule already
+ruled, not a new judgment — that is what pre-registration is for.**
+★★★★★ **BRANCH 3 IS REFUTED FIRST: A REPRODUCIBLE CLASSIFIER EXISTS.** `classify.py`,
+hash `90aedc77cc79…`, `8,831` B, generation command recorded in the census manifest;
+**[RELAYED, manifest :108, I did not re-run the diff] byte-identical to the copy
+published verbatim in the committed `VOCABULARY-LEDGER-POP120-2026-07-29.md:542–698`.**
+★★★★★ **AND ITS VERY FIRST BRANCH IS THE DEFECT [MEASURED HERE, ledger `:656-659`]:**
+```python
+def classify(rule_text, rule_class, reason, semantic_type) -> str:
+    t = rule_text.strip().lower()
+    if rule_class == "UNKNOWN_REQUIREDNESS":
+        return C6
+```
+**`:682` passes `r["rule_class"]` straight in from the row, and [MEASURED] `0b0d6617`
+removes `spine` from `_MANDATORY_ROLES` so every `spine` condition now records
+`UNKNOWN_REQUIREDNESS`. THE CLASSIFIER SHORT-CIRCUITS TO C6 BEFORE IT READS ANYTHING
+ELSE.**
+
+**[MEASURED HERE over the frozen `pop120_classified.json`, `456` rows]:**
+| | frozen (pre-commit) | under `0b0d6617` |
+|---|---|---|
+| `rule_class` | **`MANDATORY` 450** · `UNKNOWN_REQUIREDNESS` 6 | every `spine` row flips |
+| roles | `confluence` 295 · **`spine` 143** · `invalidation` 12 · `trigger` 6 | — |
+| `spine` rows by class | **C8 75** · C2 24 · C3 17 · C7 12 · C1 10 · C4 4 · C9 1 | all → **C6** |
+| **C8 TOTAL** | **`233`** | **`158` — a `−75` / `−32%` COLLAPSE** |
+| C6 total | `6` | `149` |
+
+★★★★★ **AND THE TIMING CONFIRMS THE FREEZE IS PRE-COMMIT, SO THIS IS A REAL DIVERGENCE
+AND NOT A BOOKKEEPING ARTEFACT: [MEASURED] census written `2026-07-28 21:12:43`;
+`0b0d6617` committed `2026-07-28 23:50:11` — **the frozen labels were computed 2h38m
+BEFORE the code that would now relabel them.** The `450 MANDATORY` frozen value is the
+positive control: it could not look like that under today's code.**
+★★★ **[UNMEASURED, AND IT IS THE NEXT QUESTION, NOT A CLAIM]: whether the 37-video
+re-extraction manifest and the distance ranking MOVE. They are keyed to C8 MEMBERSHIP,
+and 75 members leaving is a change to the ranker's INPUT — but which videos those 75
+belong to has not been measured, so no statement about the ranking is licensed yet.**
+★★ **NOTE `trigger` (6 rows) was ALREADY in the else-arm pre-commit — the frozen
+`UNKNOWN_REQUIREDNESS = 6` matches `trigger = 6` exactly. So the flip is precisely the
+`143` spine rows, not 149.**
+
 ## ★★★★★ [FACT, MEASURED, NOT RULED] `0b0d6617` — THE COMMIT'S OWN INVARIANT IS THE WRONG ONE FOR THIS QUESTION
 
 **Desk obligation (2) advanced from `[UNMEASURED]` to a SHARP NAMED QUESTION. No
