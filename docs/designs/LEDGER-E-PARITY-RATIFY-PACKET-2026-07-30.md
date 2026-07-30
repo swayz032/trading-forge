@@ -585,3 +585,79 @@ DECIDES THEORETICAL vs LIVE, and it has not been measured.**
 ★★★★★ **AND THE SCOPE SENTENCE A TIRED SESSION WOULD DROP: this closes a PREREQUISITE. It leaves P0 at
 its final assembly step. It does not complete the compiler, does not produce a trading-ready strategy,
 and P1–P3 and Gate B still follow. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
+
+⚠️★★★★★ **§8 IS SUPERSEDED IN PART BY §9 BELOW. THE DELIVERY IT DESCRIBES — `2011e8de` — WAS GRADED
+`NOT-SOUND` AND IS NOT RATIFIED. §8 IS RETAINED UNCHANGED AS THE REJECTED RECEIPT. DO NOT READ IT AS THE
+CURRENT STATE.**
+
+---
+
+# ⚠️★★★★★ 9 — CORRECTION ADDENDUM · ADDED 2026-07-30 AFTER THE GRADE (R-496 §6)
+
+> ★★★★★ **`2011e8de` WAS GRADED `NOT-SOUND`. TWO NOVEL FALSE-GREENS SURVIVED EVERY REGISTERED FIXTURE
+> — INCLUDING §8, WHICH I WROTE, AND INCLUDING THE GREEN RUN §8 CITES.** §8 is preserved exactly as
+> written and is NOT edited, NOT relabelled, and NOT backdated. **`NEVER BACKDATE AN UPDATE INTO THE
+> ORIGINAL RECEIPT` applies to a receipt that turned out to be WRONG at least as much as to one that
+> held.**
+>
+> ★★★★★ **THE LESSON THAT OUTRANKS BOTH DEFECTS: `REGISTERED FIXTURES PROVE THEIR MEMBERS AND NOTHING
+> OUTSIDE THEM.` Every pre-registered attack in §8 bit, and the object was still unsound. A green suite
+> is a statement about the suite. THE NOVEL HUNT WAS THE LOAD-BEARING HALF OF THE GRADE.**
+
+### 9.1 — WHAT §8 GOT WRONG, NAMED WITHOUT SOFTENING
+
+| §8 said | what was true |
+|---|---|
+| §8.3 *"whole-plan structural comparison … not a selected subset"* | **The comparison ran on a LOSSY PROJECTION.** `tsBindingPlanAsPyShape()` was a hand-written whitelist and `diffDeep()` consumed its OUTPUT, so a TS-only field never reached the bidirectional key-set check. ★★★★★ **`A BIDIRECTIONAL COMPARATOR IS ONLY AS WIDE AS THE OBJECT THAT REACHES IT — A LOSSY PROJECTION MAKES A PERFECT DIFF PERFECTLY BLIND.`** |
+| §8.4 *"`required_members` = 12"* + membership enforced | **`required_members` was never checked for UNIQUENESS.** A duplicated identity replacing a real member, plus deletion of the displaced fixture, left both membership lists EMPTY and the gate exited `0` on an 11-fixture corpus. ★★★★★ **`A MEMBERSHIP ARRAY IS NOT A SET UNTIL DUPLICATES ARE REJECTED. "12 DECLARED" CAN MEAN 11 IDENTITIES.`** |
+| the gate's line *"Checked 12 sample specs against 12 declared members"*, cited as evidence | **It was a `console.log`.** It could print `11` against `12` and still exit `0`. ★★★★★ **`A PRINTED COUNT IS NOT A COMPARED COUNT.`** |
+| two doc comments in the gate | **BOTH FALSIFIED THEIR OWN LINES** — one claimed the projection was *"deliberately TOTAL"*, the other that a deleted fixture *"must DENY the claim, never silently shrink the denominator"*. ★★★ **Both are DELETED AND REPLACED, not reworded. `THE REMEDY IS THE MECHANISM, NEVER A SOFTER CAPTION` — a reader who re-trusts the word "TOTAL" rebuilds the hole.** |
+
+### 9.2 — CORRECTION A: EXHAUSTIVE NORMALIZATION, TWO INDEPENDENT DOORS
+
+**Door 1 — COMPILE TIME.** `PLAN_KEY_MAP` and `BINDING_KEY_MAP` are `as const satisfies Record<keyof BindingPlan|ConditionBinding, string>`. A field added to either interface breaks the BUILD. **`[MEASURED]` `tsc` EXIT `2`, `TS1360`, naming `PLAN_KEY_MAP`.**
+**Door 2 — RUN TIME.** `projectExhaustively()` compares the RAW object's own enumerable keys against the mapping **BEFORE** projecting, and rejects **extra raw key · missing mapped key · duplicate destination · unconsumed mapping entry**, each at an exact path.
+★★★★★ **DOOR 2 EXISTS BECAUSE DOOR 1 IS NOT ENOUGH, AND ASSUMING IT WAS IS HOW THE FIRST HOLE WAS ARGUED FOR: a field added by CAST or SPREAD is invisible to the type system and fully visible at runtime. `satisfies` protects the DECLARED shape; only the runtime check protects the ACTUAL one.**
+
+### 9.3 — CORRECTION B: MEMBERSHIP AS A THREE-WAY BIJECTION
+
+**Duplicates are rejected FIRST — before any `Set` is built, because building the `Set` is exactly the step that destroys the evidence.** Multiplicity is NAMED. **BOTH cardinalities are asserted — array length AND unique count — and neither substitutes for the other**, because the attack holds the array at `12` while the unique count is `11`. Then exact unique-key equality across **three** surfaces: `required_members` ∧ `*.spec.json` on disk ∧ `Object.keys(ORACLE.fixtures)`, each direction reported separately.
+★★★ **THE RIGHT CHECK ALREADY EXISTED IN THE WRONG PLACE:** `duplicateConditionIds()` had counted multiplicity per-lane inside a plan since step D. This is the same idiom applied to corpus membership — deliberately not a second invention.
+★★ **The census line now prints UNCONDITIONALLY and is a COMPARED count: `required_members entries=N unique=N · on disk=N · adjudicated=N · three-way agreement=YES/NO`.**
+
+### 9.4 — RED-PROOF TABLE · PRE-REGISTERED IN `AR-511` BEFORE THE FIRST EDIT
+
+| attack | BEFORE (pre-registered) | BEFORE (measured) | AFTER (measured) |
+|---|---|---|---|
+| **A-1** TS-only TOP-LEVEL field | EXIT `0` | ★★★★★ **EXIT `0`** — false green reproduced | **EXIT `1`**, `tsc` still `0`, path named on **13** surfaces |
+| **A-2** TS-only BINDING field | EXIT `0` | ★★★★★ **EXIT `0`** | **EXIT `1`**, `tsc` still `0`, indexed paths named |
+| **B-1** duplicate member + deleted fixture | EXIT `0` | ★★★★★ **EXIT `0`**, `0` membership lines | **EXIT `1`** — duplicate named **with multiplicity `2x`**, both cardinalities, **and** the cross-surface mismatch |
+| **clean** (the discriminating control) | EXIT `0` | EXIT `0` | ★★★ **EXIT `0` — PROVES THE REPAIR IS NOT ALWAYS-RED** |
+| **delete-only** | RED | EXIT `1` | **EXIT `1`** |
+| **add-only** | RED | EXIT `1` | **EXIT `1`** |
+
+★★★★★ **NO PREVIOUSLY-BITING ATTACK STOPPED BITING — that is an explicit R-496 §9 STOP CONDITION and it was checked, not assumed.**
+**REGRESSION RE-PLANTS:** `C4` two-lane hoist reproduces AR-505 **exactly** — `FAIL: 188`, `CLAIM 1 AGREEMENT: PASS`, `176` P-7 · **all four** authority failures EXIT `1` with **ZERO** plan-witness lines, so the fail-closed ORDERING is intact · an **always-red** duplicate detector is caught by its **clean neighbour**.
+
+### 9.5 — STATUS AFTER THIS ADDENDUM
+
+| | state |
+|---|---|
+| `2011e8de` | ⛔ **`NOT-SOUND`, NOT RATIFIED, PRESERVED AS A REJECTED RECEIPT.** Not amended, not rewritten, not relabelled |
+| corrections A + B | ✅ landed and RED-proofed |
+| replacement delivery | ✅ **exists — see §9.6** |
+| ★★★★★ **INDEPENDENT GRADE OF THE REPLACEMENT** | ❌ **DOES NOT EXIST.** R-496 §10 names it an **UNOWNED PREREQUISITE**: this harness cannot dispatch the validator and its environment is unreachable from this machine. **THE OPERATOR IS THE ONLY PARTY WHO CAN ROUTE IT.** `AN AUTHORIZATION THE HOLDER CANNOT EXECUTE IS AN UNOWNED PREREQUISITE` |
+| CI pipeline execution | ❌ **`[UNPROVEN — REQUIRES A PIPELINE RUN]`**, unchanged from §8.5 |
+| materiality as standing enforcement | ❌ still a **hand-run** receipt, not a CI job (`grep -c materiality` = `0` in both workflows) |
+| Gate-B population incidence | ❌ **`[UNMEASURED]`** |
+
+★★★★★ **AND THE SENTENCE THIS ADDENDUM EXISTS TO PREVENT: that the repair of two named false-greens makes the object sound. IT MAKES IT SOUND AGAINST TWO NAMED ATTACKS. `2011e8de` PASSED EVERY REGISTERED FIXTURE IT HAD AND WAS UNSOUND — SO A GREEN BATTERY IS A STATEMENT ABOUT THE BATTERY, AND THE ONLY THING THAT CHANGES THAT IS ANOTHER INDEPENDENT HUNT.**
+
+### 9.6 — THE REPLACEMENT DELIVERY: HOW IT IS IDENTIFIED
+
+**Built the same way and to the same rules as §8: a NEW worktree pinned to the EXPLICIT base `9af37b8f`, a NEW branch, ONE atomic commit, no rewrite of the WIP branch and no amendment of `2011e8de`.**
+**IDENTIFIED BY CONTENT, because a document inside a commit cannot contain its own commit's SHA:**
+- **base:** `9af37b8f`, asserted as the **PARENT**, not merely an ancestor.
+- **path set:** the same **22** reviewed paths as `2011e8de` plus this packet = **23**. ★★★★★ **VERIFIED AS TWO SEPARATE CHECKS — the 22 by content against the corrected WIP head, this packet by HASH — never as one total. `A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK.`**
+- **this packet's sha256** is recorded in the replacement's worker report together with the commit SHA.
+★★★ **THE COMMIT SHA AND THE FULL ACCEPTANCE TABLE LIVE IN `AGENT-REPORTS.md` (`AR-512`), which is where a value that cannot exist at write time belongs. Anything else would be a number invented to look complete.**
