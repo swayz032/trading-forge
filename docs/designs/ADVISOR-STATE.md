@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2194` at THIS commit, 2026-07-30 04:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2227` at THIS commit, 2026-07-30 05:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2194` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2227` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,7 +82,40 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ **R-494 IS OWED AND HELD — AND THE HOLD NOW *COSTS*.** `AR-504`·`AR-505`·`AR-506` UNRULED
+## ★★★★★ SEAT — CURRENT AS OF **R-494 / AR-506** (2026-07-30 05:05). **DEBT PAID · WORKER UNBLOCKED.**
+
+★★★★★ **R-494 (`6f95e948`) — APPROVE D · REVISE E · `F` STAYS CLOSED. NO GRADER DISPATCHED.**
+★★★★★ **THE HOLD EARNED ITS KEEP AND THIS IS THE CLEAREST CASE YET: THE PASTE CAUGHT A DEFECT I HAD
+VERIFIED PAST, AND MY HELD ANSWER WAS WRONG. `THE PASTE IS THE GATE` — obey it.**
+
+### ⚠️★★★★★ TWO ERRORS OF MINE, BOTH CAUGHT BY THE READ
+1. ★★★★★ **I CHECKED THE MATERIALITY EMITTER CAN *COUNT* AND NEVER THAT IT CAN *FAIL*. [MEASURED
+   HERE] `materiality-receipt-ledger-e.ts` has **`0`** `process.exit` calls; the parity gate has
+   **`5`** (positive control — the grep reaches). `compiledRose` counted `:81`, printed `:141`,
+   pass/warn selected `:144-148`, **then exit `0` EITHER WAY.** ★★★ **`A DECLARED FAILURE SIGNAL
+   THAT RETURNS SUCCESS IS NOT A GATE.` A signal has THREE parts — REACHABLE · DETECTED · STOPS THE
+   RUN — and I audited two. `AN EMITTER SELF-TEST PROVES THE EMITTER, NOT THE ENFORCEMENT PATH.`**
+2. ★★★★★ **MY HELD DELIVERY-SHAPE ANSWER ("the TREE at HEAD is the object") IS WITHDRAWN.
+   [MEASURED HERE] **11 commits** between pinned base `9af37b8f` and `8c6893fc`. That branch is
+   eleven commits of mutation-and-revert churn. `ONE ATOMIC DELIVERY COMMIT IS RELATIVE TO A BASE,
+   NOT A PROPERTY OF A TREE.` **And the adopted method needs NO history rewrite:** second worktree
+   pinned to `9af37b8f` → new branch → squash the NET DIFF there → verify diff-stat against the
+   reviewed delta → run all acceptance commands against it.**
+
+**D APPROVED — both `[UNPROVEN]` checks now FIRE and are CITABLE; R-488 §3's restriction is LIFTED.**
+**E REVISED — needs a dedicated materiality-control spec OUTSIDE the 12-spec population
+(`false→false` normally, `false→true` under ratio-loosening), the receipt must NAME it and EXIT
+NON-ZERO, the main receipt stays separate, and the control is PRE-REGISTERED before running.**
+★★ **DO NOT change either lane's real semantics to manufacture reach.**
+★★★★★ **GRADER RE-PLANT LIST IS NOW FOUR — and AR-506 nominated two of them AGAINST ITSELF:**
+C4 · the four authority controls · **D's "detector reports on everything"** · **E's ratio-loosening**.
+Its reason: *"if a grader re-runs only the happy paths it will reproduce my green and not my
+finding."* ★★★ **`THE BUILDER NAMING WHICH OF ITS OWN GREENS ARE LEAST TRUSTWORTHY IS THE MOST
+USEFUL THING IN AN EVIDENCE BUNDLE.`**
+★★ **Blueprint fully adopted through `f0682b82` (`e1b84842`) — four commits, ladder intact each time.**
+
+### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation)
+## ⚠️★★★★★ ~~R-494 IS OWED AND HELD — AND THE HOLD NOW *COSTS*~~. `AR-504`·`AR-505`·`AR-506` UNRULED
 
 ★★★★★ **RE-CHECKED, AND THE ANSWER CHANGED — `A HOLD'S COST IS NOT A CONSTANT`: at AR-505 the worker
 had D and E authorized. **AT AR-506 IT HAS NOTHING. A–E ARE ALL DONE; `F` IS THE DESK'S ACT.** The
@@ -502,7 +535,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2194` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2227` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
