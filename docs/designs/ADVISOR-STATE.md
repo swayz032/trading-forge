@@ -580,6 +580,20 @@ byte-exact) · the population OVERLAP MAP · original transcript identity
 
 ## KNOWN-BENIGN (do not investigate)
 
+★★★★★ **THE AR CHANGE-DETECTOR MUST BE CONTENT-HASH GATED, NEVER mtime ALONE —
+MEASURED THE HARD WAY 2026-07-29 22:40.** [MEASURED HERE] the desk committed
+`8254358f` at `22:40:42`; the pre-commit hook stamped `AGENT-REPORTS.md`'s mtime at
+`22:40:43`; an mtime-gated detector fired `NEW AGENT REPORT` — and `AR-476` occurred
+exactly ONCE in the file, so **no report had arrived. THE ADVISOR'S OWN LEDGER
+COMMITS MANUFACTURE PHANTOM WORKER REPORTS.** ★★★ **THE RIG IS NOW: cheap mtime poll
+as the TRIGGER, `sha256sum` as the CONFIRM, emit only on a CONTENT change.** ★★
+`advisor-onboarding` §4a says "mtime-based (mtime catches edits and appends; a
+heading poll misses both)" — **that is right about what mtime CATCHES and silent
+about what it FALSELY CATCHES. mtime is the correct TRIGGER and the wrong GATE.**
+★★★ **AND THE REASON THIS IS NOT COSMETIC: a phantom report invites the desk to go
+look, and `NOISE TRAINS THE READER TO SKIM THE ALERTS THAT MATTER` — this file's own
+words about the idle watchdog, earned again by the detector beside it.**
+
 ★★★★★ **FIVE INSTRUMENT LIES IN ONE SESSION, ALL THE DESK'S OWN, NONE A DEFECT IN
 THE WORK UNDER REVIEW:** `| tail` masked a `gh` exit code · a scratch vitest config
 resolved `vitest/config` from outside `node_modules` · a suite run in a tree lacking
