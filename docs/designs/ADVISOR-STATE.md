@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2031` at THIS commit, 2026-07-30 04:00 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2072` at THIS commit, 2026-07-30 04:15 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2031` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2072` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,7 +82,48 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ R-492 IS **OWED AND HELD** — OPERATOR ORDER RE-ASSERTED DIRECTLY, 2026-07-30 ~03:50: *"REMEMBER WAIT ON GPT"*
+## ★★★★★ SEAT — CURRENT AS OF **R-492 / AR-501** (2026-07-30 04:15). **THE HELD DEBT IS PAID.**
+
+★★★★★ **THE PASTE ARRIVED AND R-492 LANDED (`a6721b55`). AR-500 + AR-501 BOTH RULED.**
+★★★★★ **`THE PASTE IS THE GATE` IS BACK IN FORCE AND I WILL NOT DRIFT AGAIN. The hold worked as
+designed and cost nothing [MEASURED]: R-491 §5 already authorized items 1–5.**
+
+**WHAT R-492 DECIDED:** AR-500 **ACCEPTED NARROWLY** — comparator coverage 30/30 including
+`invalidation_bindings` (the array whose structural absence caused the original false green), but
+**NOT semantic correctness: [MEASURED HERE] `checkOracle()` indexes `plan.bindings` only and
+`ORACLE.json` has NO invalidation key — those rows are INEXPRESSIBLE, not merely unadjudicated.
+`INEXPRESSIBLE IS NOT UNADJUDICATED.` THE SCHEMA IS NOT WIDENED.** · AR-501 **UPHELD; the gate's
+present `PASS` is INADMISSIBLE.**
+★★★★★ **THE EXTERNAL READ CORRECTED ME AND I TOOK IT: R-491 §4 offered "ASSERTED-NOT-VERIFIED" as
+acceptable — for a FINAL gate it is not. And my `DO NOT COMMIT A SECOND COPY` objection FAILS ITS
+DISCRIMINATOR: the `classify.py` hazard was a duplicate with nothing verifying the copies agree;
+**a duplicate under a hash checked on every run cannot silently drift.**
+★★★ **RESIDUAL I NAMED THAT IT DID NOT: the parity copy can still drift from the CAMPAIGN
+original. **BINDING ON THIS DESK: any authority amendment re-encodes the parity copy AND the pin
+in the SAME MOTION, or the green is VOID until it does.** I learned that by doing the opposite.**
+
+### ★★★★★ AUTHORIZED ORDER — **A → F** (R-492 §5)
+**A. AUTHORITY FRESHNESS FIRST — commit the artifact into the parity surface; the gate OPENS it,
+COMPUTES sha256, COMPARES to the pin, EXITS NON-ZERO before evaluating any plan.** ★★★ **Expect an
+immediate RED — that red is CORRECT. `FIX THE DETECTOR BEFORE THE DATA.`** ·
+**B.** repoint `ORACLE.json` → `3494d4bb…` and encode ONLY §4d's two `P-7` cells · **C.** axis 3 as
+a GENERATED property check — ★★ **`FAMILY_META` may enumerate MEMBERSHIP, `P-7` supplies SEMANTICS;
+plus a deletion-RED control** · **D.** axis 4 via TRANSIENT in-run controls, never permanent invalid
+members · **E.** materiality receipt · **F.** then ONE `accuracy-validator`, desk-dispatched.
+★★★★★ **GRADE NOT DUE BEFORE F. THE BUILDER DOES NOT GRADE.**
+
+### ⚠️★★★★★ THE AUTHORITY PIN WENT STALE **THREE TIMES TONIGHT** AND THE MIDDLE ONE WAS MINE
+`09e016fd…` (R-483 §12) → `9b708e24…` (R-484) → **`3494d4bb…` (R-491, LIVE, `16,314` B)**.
+**R-489's "correction" pinned the middle value and my own R-491 obsoleted it twenty minutes later.**
+★★★★★ **`A PIN MAINTAINED BY HAND GOES STALE AT THE SPEED OF THE THING IT PINS.` Step A is the only
+real fix — I was maintaining a number when I should have been building a comparison.**
+**Blueprint `50efdbd1` cherry-picked and conflict-resolved at `73ed361c`** (conflicts were both
+parties fixing the same lines). ★★ **It exposed a defect of mine: R-489's §15.8 rewrite declared a
+4-column header over 3-column rows — malformed, introduced WHILE fixing someone else's staleness.
+Now `11/11` rows at 3 columns.** `597721eb` NOT adopted.
+
+### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation for the trail)
+## ⚠️★★★★★ ~~R-492 IS **OWED AND HELD**~~ — OPERATOR ORDER RE-ASSERTED DIRECTLY, 2026-07-30 ~03:50: *"REMEMBER WAIT ON GPT"*
 
 ★★★★★ **THE OPERATOR'S OWN WORDS, NOT A RELAY. `THE PASTE IS THE GATE` STANDS AND I HAD DRIFTED
 FROM IT: R-484 · R-485 · R-486 · R-487 · R-488 · R-490 · R-491 ALL LANDED WITHOUT A PASTE.** R-484
@@ -339,7 +380,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2031` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2072` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
