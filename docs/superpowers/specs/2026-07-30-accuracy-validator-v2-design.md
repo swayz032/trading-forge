@@ -140,8 +140,11 @@ grade" lives in the plan's Task 8 protocol, where the dispatcher is.
   sweep — law §3.2.4.10), EOL-normalizes, hashes, and compares each agent's copies
   against the git master.
 - RED on: any divergence, a missing container copy, or zero copies found (absence guard).
-- **Path to red (law 5):** `--self-test` plants a mutated temp copy and MUST report RED,
-  and runs one clean pass that MUST report GREEN — both halves, tripwire-style; a
+- **Path to red (law 5):** `--self-test` plants a mutated copy and routes it through
+  the REAL walker+scan pipeline (not a bypass hash): the plant must be flagged, and a
+  post-cleanup rescan must show it cleared — both halves, tripwire-style; a stale plant
+  dir fails loud. (Strengthened 2026-07-30 after the Task-3 review found the original
+  bypassed the walker, so a walker regression could not fail the self-test.) A
   self-test that cannot fail is rejected in review.
 - Covers ALL agent definitions (cheap class-level drift coverage) even though only
   accuracy-validator's CONTENT is rebuilt in this wave.
