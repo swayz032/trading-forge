@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`950` at THIS commit, 2026-07-29 23:22 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1007` at THIS commit, 2026-07-29 23:29 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -39,10 +39,13 @@ a heading is a claim too; corrected 23:20)*
 
 ★★★★★ **OPERATOR ORDER, RECEIVED DIRECTLY 2026-07-29 ~23:16, IN THE OPERATOR'S OWN
 WORDS (not a relay, not `[EXTERNAL OPINION]`): *"WAIT ON GPT OPINON FOR NEXT
-RULING."* **R-478 IS HELD. NO RULING MAY BE WRITTEN UNTIL THE EXTERNAL READ ON
-AR-479 ARRIVES.** This re-affirms the standing order recorded in `## OPERATOR-FACING`
-— `THE PASTE IS THE GATE` — so that section's open question is now ANSWERED FOR THIS
-ROUND: the order stands.**
+RULING."* **HONOURED AND NOW DISCHARGED FOR THIS ROUND: the read arrived ~`23:18`,
+R-478 followed at `23:26`. THE ORDER STANDS FOR EVERY FUTURE RULING — `THE PASTE IS
+THE GATE`.** This also ANSWERS the open question in `## OPERATOR-FACING`: keep the
+order, do not re-ask.**
+★★★★★ **AND IT EARNED ITS KEEP ON THE FIRST APPLICATION: the read found a real
+false-green I had verified past, AND corrected an arithmetic error of mine. That is
+three consecutive rounds. `RE-GRADE THE SOURCE, KEEP READING IT.`**
 ★★★ **AND THE HOLD COSTS NOTHING, WHICH IS THE FACT THAT MADE IT SAFE TO OBEY
 WITHOUT ESCALATING [MEASURED HERE, AR-479 §5]: the worker is NOT waiting on R-478. It
 declares *"NEXT: R-474 §5 Item 2 / R-477 §4 … This seat continues; no fresh worker
@@ -50,18 +53,23 @@ needed yet."* **A HELD RULING IS ONLY A STALL WHEN THE WORKER HAS NOTHING
 AUTHORIZED; here R-477 §4 already carries Item 2's full contract.** Check this before
 concluding a hold is harmless — do not assume it.**
 
-**Ledger `R-477`** (commit `22f07905`). **Newest AR `AR-479` — UNRULED (awaiting the
-external read), R-477 §3 delivered at worker commit `5a403bed` and VERIFIED AT THIS
-DESK including its mutation red-proof. AR-477 ruled by R-477: behaviour ACCEPTED,
-instrument NOT RATIFIED.**
-★★★★★ **THE ONE ACTION THE NEXT SEAT OWES IMMEDIATELY: when the external read on
-AR-479 lands clean, DISPATCH ONE `accuracy-validator` AGAINST `5a403bed` and name its
-id. It is deliberately un-dispatched — see the AR-479 block below for why.**
-★★★ **THE GRADE IS HELD TOO, AND FOR THE PRIOR SEAT'S REASON, NOT A NEW ONE. I
-re-examined whether to dispatch it anyway — `A PRE-REGISTERED TRIGGER FIRES ON ITS
-CONDITION` argues for sending — and did not, because the read has found a material
-hole in TWO CONSECUTIVE ROUNDS and the wait is minutes. **RECORDED SO IT IS NOT
-RE-LITIGATED A THIRD TIME.**
+**Ledger `R-478`** (commit `697237c4`). **Newest AR `AR-479` — RULED: REVISE. The
+behaviour of `5a403bed` stands; the instrument is NOT RATIFIED.**
+★★★★★ **THE GRADE WAS NEVER DISPATCHED AND THAT WAS THE RIGHT CALL — HELD FOR THREE
+HOURS, THEN VINDICATED: the external read found a THIRD consecutive material hole, so a
+grade sent on the trigger alone would have been the second wasted one. ★★★ AND THE
+GENERAL RULE IS STILL THE OTHER WAY (`A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION`)
+— what justifies holding HERE is a MEASURED base rate of three-for-three, not a feeling
+that the artifact might be weak. Do not generalise the hold.**
+★★★★★ **NO GRADE EXISTS AGAINST `5a403bed`. [RELAYED, unverifiable from this seat] the
+external party started one and cancelled it when the false-green reproduced.**
+★★★★★ **THE FALSE GREEN, REPRODUCED HERE [MEASURED]: `_denied_identities` (`:523-526`)
+returns a SET, so F-5's `len(printed) == stated` counts UNIQUE identities, never RENDERED
+entries. Print every denial twice → rendered `11 → 22`, unique `11 → 11`, `--self-test`
+**still exit `0`**. ★★★ AND MY FIRST REPRODUCTION WAS A FALSE CONFIRMATION: it counted
+the OUTER buffer, which `_render` never writes to, and printed `MUTATION SURVIVED` beside
+`duplication actually took: False`. **THE CONTROL CONTRADICTED THE VERDICT AND THE CONTROL
+WAS RIGHT.** `CHECK THAT YOUR CONTROL MEASURED THE STREAM THE MUTATION TOUCHED.`**
 
 ### SEAT IDENTITY AND RIG — RE-DERIVED AT THIS SEATING, NOT INHERITED
 **[MEASURED HERE by walking UP from this shell's own `$PID`, the only test that
@@ -80,10 +88,13 @@ monitors, ADOPTED, NOTHING ARMED:**
   command line, not assumed from the note that ordered it.
 ★★ **Armed by a PRIOR CONVERSATION of MY OWN `claude.exe`, so per the decision table:
 ADOPT, ARM NOTHING. A monitor is not an orphan because your conversation is new.**
-★★★★★ **AND THE CAMPAIGN-LEVEL FINDING OF THIS SESSION, ALREADY MEASURED AND
-COMMITTED: THE FROZEN C8 CONTROL DOES NOT SURVIVE `0b0d6617` — `233 → 158`, `−75`.
-R-477 §5's pre-registered STOP has fired. NO ABLATION MAY START until the baseline is
-re-established. See the block below.**
+★★★★★ **AND THE CAMPAIGN-LEVEL FINDING OF THIS SESSION: THE FROZEN C8 CONTROL DOES
+NOT SURVIVE `0b0d6617` — `233 → 159`, `−74`. R-477 §5's pre-registered STOP HAS FIRED.
+NO ABLATION MAY START until the baseline is re-established.**
+★★★★★ **CORRECTED BY R-478 — THIS LINE READ `233 → 158`, `−75` FOR TWO HOURS AND BOTH
+FIGURES WERE WRONG. `158` IS A REAL NUMBER BUT A DIFFERENT OBJECT: the Gate-B TREATMENT
+population (`C8 159` minus the protected sentinel). An off-by-one landed on a correct
+number under the wrong label. See the corrected four-population table below.**
 
 ### SUPERSEDED SEAT LINE (kept one generation for the trail)
 **Ledger `R-475`** (commit `a92f95aa`). **Newest AR `AR-475` — RULED: REVISE. Item 1
@@ -117,7 +128,34 @@ holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`
 pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
 3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
-## AUTHORIZED NOW — R-475 §5, TO THE WORKER SEAT UNDER `claude.exe 15908` (addressee corrected by R-476)
+## AUTHORIZED NOW — R-478 §5a, TO THE WORKER SEAT UNDER `claude.exe 15908`
+
+★★★★★ **§5a — THE OUTPUT-COUNT BOUNDARY, ORDERED AS SIX PROPERTIES:** keep rendered
+denial entries as a **LIST** · assert **three things independently** (raw `DENIED BY`
+line count == stated count · identities UNIQUE · identity set == expected set) · add a
+**FIFTH mutation duplicating `DENIED BY`** that F-5 must catch · make the mutation
+harness **FAIL on catcher mismatch** instead of printing it · require every anchor to
+occur **EXACTLY ONCE** · unmutated control GREEN, all legacy exit codes unchanged,
+capability mode RETIRED, directory-symlink still `[NOT EXECUTED]`.
+**FILES:** `absence_claim_control.py` · `absence-fixtures/` · `AGENT-REPORTS.md`.
+**`c8_provenance_ledger.py` graded SOUND — DO NOT TOUCH.**
+★★★ **ORDERED BEFORE THE QUEUED GATE-B ITEM PURELY FOR CONTEXT LOCALITY — the worker
+has been in that file all night. Item 2 is NOT descoped.**
+★★★★★ **PRE-REGISTERED RETIREMENT TRIGGER (R-478 §5a): this is ROUND THREE in which
+every named shape closed green and a new unnamed shape appeared. IF A FOURTH IS FOUND
+AFTER §5a LANDS, THE FIXTURE SUITE IS RETIRED, NOT PATCHED. Decided before the data.**
+**[MEASURED] START-RECEIPT `AR-480` filed `23:26:58` — the relay carried R-478 in under
+three minutes.**
+
+**§5b QUEUED, CONTRACT UNCHANGED:** R-474 §5 Item 2 / R-477 §4 — the Gate-B packet
+revision. **First act: OPEN the four `entry_conditions` consumers, do not name them.**
+Gate-B DESIGN may proceed; **TREATMENT EXECUTION stays BLOCKED.**
+
+**§5c MINE, BOTH NAMED SO NEITHER LAPSES:** (i) the `−75 → −74` correction — **DONE in
+this file, same motion as R-478**; (ii) the genuine-survivor truth-set freeze (R-474
+§4) — **STILL UNDISCHARGED.**
+
+### SUPERSEDED — R-475 §5 (kept one generation for the trail)
 ★★★★★ **THE §3 BOUNDED CORRECTION, ORDERED AS A PROPERTY:** *"NO PATH MAY LEAVE THE
 SURFACE WITHOUT APPEARING IN THE VERDICT — either a named problem forcing a
 non-zero exit, OR an explicit caller-supplied exclusion whose exact paths are
@@ -228,14 +266,33 @@ removes `spine` from `_MANDATORY_ROLES` so every `spine` condition now records
 `UNKNOWN_REQUIREDNESS`. THE CLASSIFIER SHORT-CIRCUITS TO C6 BEFORE IT READS ANYTHING
 ELSE.**
 
-**[MEASURED HERE over the frozen `pop120_classified.json`, `456` rows]:**
+**[MEASURED HERE over the frozen `pop120_classified.json`, sha256 `eed65514a1…`
+re-verified, `456` rows — CORRECTED BY R-478, FOUR POPULATIONS KEPT AS FOUR NUMBERS]:**
 | | frozen (pre-commit) | under `0b0d6617` |
 |---|---|---|
-| `rule_class` | **`MANDATORY` 450** · `UNKNOWN_REQUIREDNESS` 6 | every `spine` row flips |
+| `rule_class` | **`MANDATORY` 450** · `UNKNOWN_REQUIREDNESS` 6 | `142` of `143` `spine` rows flip |
 | roles | `confluence` 295 · **`spine` 143** · `invalidation` 12 · `trigger` 6 | — |
-| `spine` rows by class | **C8 75** · C2 24 · C3 17 · C7 12 · C1 10 · C4 4 · C9 1 | all → **C6** |
-| **C8 TOTAL** | **`233`** | **`158` — a `−75` / `−32%` COLLAPSE** |
-| C6 total | `6` | `149` |
+| `spine` rows by class | **C8 75** · C2 24 · C3 17 · C7 12 · C1 10 · C4 4 · C9 1 | `142` → **C6** |
+| **C8 TOTAL** | **`233`** | **`159` — a `−74` / `−32%` COLLAPSE** |
+| C6 total | `6` | `148` |
+| **Gate-B TREATMENT population** | — | **`158`** = C8 `159` − the protected sentinel |
+| distinct videos carrying ≥1 C8 | **`37`** | **`35`** |
+
+★★★★★ **THE ONE ROW THAT DOES NOT FLIP, AND IT IS WHY MY FIRST COUNT WAS WRONG: the
+empty-spine sentinel (`75DJN5UVQnw`, `condition_id=""`, `reason=non_executable_empty_spine`)
+displays `role=spine` and carries `C8` — but [MEASURED HERE, `runtime-production`
+`spec_execution_preflight.py:345-355`] it is constructed at the PLAN level in a separate
+branch with **`rule_class=MANDATORY` hardcoded as a literal**, so it never reaches
+`resolve_rule_class` (`:311` → `:159-161`) and the `UNKNOWN_REQUIREDNESS → C6`
+short-circuit never fires for it. **`A FIELD VALUE IS NOT A PROVENANCE PATH.` I selected
+the population by the DISPLAY FIELD `role` and treated it as proof of the branch those
+rows travelled.**
+★★★★★ **THE TWO VIDEOS LEAVING C8 ENTIRELY IN THIS COUNTERFACTUAL: `h6TnE7QClJg` and
+`jlShztsY3oA`. ★★★ `jlShztsY3oA` IS ONE OF THE TWO DISTANCE-0 VIDEOS (R-451).** The
+ranking itself stays `[UNMEASURED]` — this is a change to the ranker's INPUT, not a
+result about its output.
+★★★★★ **THIS TABLE IS A COUNTERFACTUAL OVER FROZEN ROWS. IT PROVES THE OLD BASELINE
+INVALID; IT IS NOT THE REPLACEMENT BASELINE AND MAY NOT BE ADOPTED AS ONE (R-478 §4).**
 
 ★★★★★ **AND THE TIMING CONFIRMS THE FREEZE IS PRE-COMMIT, SO THIS IS A REAL DIVERGENCE
 AND NOT A BOOKKEEPING ARTEFACT: [MEASURED] census written `2026-07-28 21:12:43`;
