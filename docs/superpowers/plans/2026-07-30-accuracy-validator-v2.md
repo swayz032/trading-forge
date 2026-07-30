@@ -455,10 +455,10 @@ unsupported. Law 3 + law 12: the caption is a claim; the join key is wrong.)
 
 ````markdown
 # CLAIM (verify or refute)
-"Gross notional in trades.csv equals exactly 41250.00:
+"Gross notional in trades.csv equals exactly 47250.00:
 sum over rows of qty × price. Receipt: recompute.mjs output below.
 $ node recompute.mjs
-41250.00"
+47250.00"
 ````
 
 Create `T4-clean-control/trades.csv`:
@@ -483,7 +483,7 @@ const rows = readFileSync(new URL('./trades.csv', import.meta.url), 'utf8')
 const gross = rows.reduce((s, [q, p]) => s + q * p, 0);
 console.log(gross.toFixed(2));
 ```
-(No planted defect. 2×5000 + 1×4750 + 3×2500 + 4×1875 + 1×4000 + 2×3000 + 1×2250 + 2×1500 + 1×1000 + 1×1250 = 10000+4750+7500+7500+4000+6000+2250+3000+1000+1250 = 41250. The verifier must certify clean without inventing defects; a manufactured finding here fails the false-positive half.)
+(No planted defect. 2×5000 + 1×4750 + 3×2500 + 4×1875 + 1×4000 + 2×3000 + 1×2250 + 2×1500 + 1×1000 + 1×1250 = 10000+4750+7500+7500+4000+6000+2250+3000+1000+1250 = 47250. The verifier must certify clean without inventing defects; a manufactured finding here fails the false-positive half. History note 2026-07-30: the plan originally claimed 41250 — a hand-summing error by the plan author, caught when the Task-4 implementer RAN recompute.mjs instead of trusting the caption. Exactly the fabricated-expected-value class this wave exists to catch; the claim value was corrected to the measured 47250.00.)
 
 - [ ] **Step 5: Create `RESULTS.md`**
 
