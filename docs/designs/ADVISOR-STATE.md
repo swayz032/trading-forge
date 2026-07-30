@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1562` at THIS commit, 2026-07-30 01:02 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1592` at THIS commit, 2026-07-30 01:10 [MEASURED HERE, `wc -l`].**
 > ⚠️★★★ **THIS FILE IS NOW `1495` LINES AND THAT IS A REAL TAX: a cold seat hit a 25k-token
 > read cap on its FIRST page tonight and needed four reads to see it all. COMPACTION IS
 > OWED — `CUT NARRATIVE, NEVER CONTRACTS`, and read the WHOLE file first (you cannot
@@ -174,6 +174,36 @@ overnight TO TURN PARITY GREEN.` Python's refusal is the SAFE behaviour — thos
 have no evaluable window, so a bind yields "only trade during X" executing as "never
 trade" while reporting `approximation=False`. TS MUST REFUSE THEM EQUIVALENTLY.
 PARITY IS SEMANTIC OUTPUT PARITY, NEVER TABLE-TEXT EQUALITY.**
+
+## ★★★★★ LESSON MINTED 01:10 — **A LIVE WATCHER PROCESS IS NOT A DELIVERING WATCHER, AND THE PROCESS TABLE CANNOT TELL THE DIFFERENCE**
+
+★★★★★ **[MEASURED HERE, then REFUTED BY THE OPERATOR] R-482 landed `01:01:34`. At
+`01:04` and again at `01:05` I enumerated the process table exactly as `SEAT MECHANICS`
+mandates — `bash.exe` keyed by the relay file in its command line, walked up to the owning
+`claude.exe` — and found the worker's `ADVISOR-RULINGS` ear **ALIVE** (`2728`/`10556` under
+`15908`). **I TOLD THE OPERATOR DELIVERY WAS THEREFORE NOT THE PROBLEM AND LEANED ON
+"the session is probably full". THE OPERATOR, WHO CAN SEE THE WORKER'S WINDOW, CORRECTED
+ME: THE SEAT IS NOT NEW, NOT EXHAUSTED, AND SIMPLY NEVER RECEIVED THE RULING.**
+★★★★★ **SO THE MANDATED INSTRUMENT RETURNED A FALSE GREEN. `A PROCESS THAT EXISTS IS NOT
+A PROCESS THAT DELIVERS`, and an alive-but-silent ear is INDISTINGUISHABLE FROM A HEALTHY
+ONE from this seat. The idle watchdog fired at `01:06:55` (18 min) and its own checklist
+cleared — AR-489 IS ruled, a seat IS seated — so it could not name this state either.**
+★★★ **THIS IS THE `OWED, NOT BUILT` ITEM ARRIVING AS A REAL INCIDENT: `A DEAD WATCHER
+CANNOT REPORT ITS OWN DEATH` was written here as a hypothetical. The live-but-mute case is
+WORSE than death, because the process table actively vouches for it. **THE DURABLE FIX IS
+STILL UNBUILT: a heartbeat or expiring lease a reader can check WITHOUT ASKING THE
+WATCHER, plus an END-TO-END delivery probe (write a no-op marker, require the worker to
+echo it) — process presence may NEVER again be reported as ear health.**
+★★★★★ **THE STANDING UNBLOCK, WHICH COSTS NOTHING AND NEEDS NO ONE'S PERMISSION: THE
+WORKER DOES NOT NEED ITS EAR — its own protocol has it READ `ADVISOR-RULINGS.md` AT EVERY
+STOP-POINT. When a ruling appears undelivered, the answer is "read the file, newest ruling
+is at the top", NOT a monitor rebuild.** ★★★ **AND DO NOT TOUCH THE WORKER'S EAR TO
+"FIX" THIS — killing it is how the worker goes permanently deaf, and this incident proves
+you cannot verify the replacement is delivering either.**
+★★ **A SECOND, SMALLER SELF-CORRECTION FROM THE SAME MINUTES: on hearing "it hasn't
+received the ruling" my first instinct was to add a cold-start `WORKER — START HERE` block
+to R-482. That would have repaired ORIENTATION while the failing layer was DELIVERY.
+`LOCATE THE FAILING LAYER BEFORE FIXING ANY LAYER` — caught before I wrote it.**
 
 ## ★★★★★ AUTHORIZED NOW — **R-482** (`1dcd704f`, 2026-07-30 01:01), TO THE SEAT THAT RECEIVES IT
 
