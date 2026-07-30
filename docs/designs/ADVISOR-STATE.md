@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2100` at THIS commit, 2026-07-30 04:25 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2128` at THIS commit, 2026-07-30 04:35 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2100` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2128` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,7 +82,35 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ **R-493 IS OWED AND HELD** — `AR-502` + `AR-503` UNRULED, WAITING ON THE OPERATOR'S PASTE (`THE PASTE IS THE GATE`)
+## ★★★★★ SEAT — CURRENT AS OF **R-493 / AR-503** (2026-07-30 04:35). **HELD DEBT PAID.**
+
+★★★★★ **R-493 (`f08694a5`) — STEPS A AND B ACCEPTED. THE GATE MEASURES ITS OWN PROVENANCE NOW.**
+**[MEASURED HERE] THE ORDERING IS THE CLAIM AND IT HOLDS: `:597` authority check → `:599` fixture
+enumeration → `compileBindingPlan` only inside the per-fixture path. IT EXITS BEFORE ONE PLAN IS
+COMPILED.** `A FRESHNESS CHECK THAT RUNS AFTER THE WORK IS A REPORT, NOT A GATE.`
+**Step B bounded exactly to §4d — probe rows carry `bindable` + `reason_null` + `authority` +
+explicit `unadjudicated`; NOT ONE FIELD WIDER. The §5 STOP did not trip.**
+
+### ⚠️★★★★★ THE OPEN ITEM THAT MATTERS MOST — **A SHARED BLIND SPOT, MINE TOO**
+★★★★★ **THE FIVE MUTATION OUTCOMES (four fail-closed authority controls + the `12`-violation
+two-lane result) ARE `[RELAYED]` AT *BOTH* DESKS. The external read DECLARED it did not re-mutate;
+NEITHER DID I — I verified the control, the code paths and the ordering only.**
+★★★★★ **`TWO VERIFIERS AGREEING ON WHAT THEY BOTH DECLINED TO RE-RUN IS NOT CORROBORATION — IT IS
+THE SAME GAP, COUNTED TWICE.` A and B are accepted on genuinely independent evidence (control +
+paths + ordering), which is sufficient for a WIP. **THE `accuracy-validator` BRIEF NOW CARRIES, AS A
+NAMED LINE: RE-PLANT ALL FIVE MUTATIONS INDEPENDENTLY.** Do not let step F ship without it.**
+
+**AUTHORIZED: C → D → E, to the seat that filed AR-503 (its fresh-session request is a CAPACITY
+ASSESSMENT, not a reassignment).** **C:** generated P-7 property check — **`FAMILY_META` enumerates
+MEMBERSHIP, `P-7` supplies EXPECTED BEHAVIOUR** — plus adjacent `WAIT_SESSION` positive controls and
+**a membership deletion/addition RED control (if a family can be added or removed without the test
+going red, it certifies nothing)** · **D:** transient in-run controls, never permanent invalid
+members · **E:** per-spec materiality receipt. ★★★★★ **THEN ONE `accuracy-validator`. NOT BEFORE.**
+★★ **Blueprint fully adopted: `edfb9ac2` (`e34caaed`) → `50efdbd1` (`73ed361c`) → `8ff6f17a`
+(`5df756ae`). `597721eb` NOT adopted. Ladder payloads intact through all three.**
+
+### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation)
+## ⚠️★★★★★ ~~R-493 IS OWED AND HELD~~ — `AR-502` + `AR-503` UNRULED, WAITING ON THE OPERATOR'S PASTE (`THE PASTE IS THE GATE`)
 
 ★★★ **[MEASURED HERE] THE HOLD IS HARMLESS THIS ROUND — CHECKED, NOT ASSUMED: R-492 §5 already
 authorizes steps C, D, E, so the worker has queued work and is not waiting on R-493.**
@@ -408,7 +436,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2100` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2128` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
