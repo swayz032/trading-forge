@@ -12,6 +12,72 @@
 
 ---
 
+## R-477 · 2026-07-29 · ★★★★★ **AR-477: BEHAVIOUR ACCEPTED, INSTRUMENT NOT RATIFIED. THE EXTERNAL READ FOUND THE HOLE AND I CONFIRMED IT AT THE LINE — THE PERMANENT F-4 FIXTURES RUN `verbose=False` AND THEN ASSERT ON `collect_files()`'s INTERNAL LISTS, SO THEY PROVE THE COLLECTOR KNOWS THE PATH AND NEVER THAT THE VERDICT PRINTS IT.** ★★★★★ **AND THE RECEIPT IS IN THE GUARD'S OWN SOURCE AT `:366`: *"EVERY denial, never a head-slice. This read `unreadable[:8]`"* — A RENDERER DEFECT THAT REALLY EXISTED, REALLY GOT FIXED, AND WHOSE RETURN THE SUITE WOULD NOT CATCH**
+
+**RULING ID:** R-477 · **TASK ID:** AR-477 · **DECISION:** **ACCEPT the behavioural repair — it may stand. WITHHOLD instrument ratification. ONE bounded output-boundary fix, then ONE independent grade. GATE B REMAINS BLOCKED.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-477`** — ruled here.
+
+### ★★★★★ §0 — THE READ'S FIRST CORRECTION RESTS ON A FALSE PREMISE, AND THE AMBIGUITY THAT CAUSED IT IS MINE
+
+**The read states `ADVISOR-STATE.md` "names the wrong exact path" — recording `…\visible\node_modules` where the committed fixture emits `…\absence-fixtures\pruned_case\node_modules`.**
+★★★★★ **BOTH PATHS ARE CORRECT AND THEY ARE TWO DIFFERENT FIXTURES. [MEASURED HERE] I built my OWN convicting fixture at `…\scratchpad\prunerepro\visible\node_modules`, ran the repaired guard against it, and recorded the path IT emitted. The worker's permanent fixture lives at `absence-fixtures\pruned_case\`. The read hedged this correctly — *"If the desk did not use a separate retained fixture under `visible`, correct the state"* — AND I DID USE ONE.**
+★★★ **BUT THE COLLISION IS REAL AND I CAUSED IT: [MEASURED] the committed fixture tree ALSO contains a `visible/` directory (`:542`, `f4_honest` uses `FIX / "visible" / "control.ts"`), so "…\visible\node_modules" reads naturally as the committed tree. **MY STATE LINE NAMED A PATH WITHOUT NAMING ITS TREE, AND A CAREFUL READER RESOLVED IT TO THE WRONG ONE.** `NAME THE TREE` — minted for repos and worktrees, and it governs FIXTURES exactly the same way. **CORRECTED IN `ADVISOR-STATE` IN THE SAME MOTION AS THIS RULING**, not deferred.
+★★ **NO FINDING CHANGES. The desk's measurement stands; only its address was under-specified.**
+
+### ★★★★★ §1 — THE READ'S SECOND CORRECTION IS RIGHT, CONFIRMED AT THE EXECUTABLE LINE, AND IT IS THE REASON RATIFICATION IS WITHHELD
+
+**[MEASURED HERE, `absence_claim_control.py`]:**
+- `:521-522` — `f4_undeclared` calls `run_text_check(…, verbose=False)`. **The verdict is never emitted.**
+- `:527` — it then calls `collect_files([PRUNED_CASE], "*.ts", set())` and asserts the path appears in `probs`.
+- `:533-536` — `f4_declared` has the identical shape: `verbose=False`, then `collect_files(…, {"node_modules"})` asserting on `exc`.
+
+★★★★★ **SO THE SUITE CERTIFIES *"the collector knows the path"* AND NOT *"the user-visible verdict prints the path and narrows the proposition."* A regression could restore `unreadable[:8]`, delete `DENIED BY:`, omit `EXCLUDED`, or drop the `surface MINUS` clause — AND ALL 13 FIXTURES WOULD STAY GREEN.**
+★★★★★ **AND THIS IS NOT HYPOTHETICAL, WHICH IS WHAT MAKES IT DECISIVE: the guard's own source at `:366` records *"★★★ EVERY denial, never a head-slice. This read `unreadable[:8]` while the…"* — AR-477 FOUND AND FIXED EXACTLY THAT RENDERER DEFECT (internal count vs printed identities). **THE SUITE THAT SHIPPED ALONGSIDE THE FIX CANNOT DETECT ITS RETURN.** A fixture that would not have caught the bug you just fixed is not a regression test for it.
+★★★★★ **LAW ADOPTED: `A PATH IN MEMORY IS NOT A PATH IN THE VERDICT. THE OUTPUT CONTRACT MUST BE TESTED AT THE OUTPUT BOUNDARY.`** ★★★ **It is the same species as `PROVING PRESENCE IS NOT PROVING USE` (R-471) and `A REPORT IS A VIEW OF AN ARTIFACT` (R-453): the thing consumed downstream is the RENDERED text, so that is where the assertion belongs.**
+
+### ★★★★★ §2 — AND IT SCOPES MY OWN VERIFICATION, WHICH I OVERSTATED BY OMISSION
+
+★★★★★ **I DID exercise the output boundary — every check in R-475's acceptance table was run by invoking the CLI and READING ITS STDOUT, so today's build genuinely emits `DENIED BY:`, the exact path, and the `NARROWED` clause. That measurement stands.** ★★★★★ **WHAT I DID NOT SAY, AND SHOULD HAVE: `A DESK MEASUREMENT IS A POINT-IN-TIME OBSERVATION; A FIXTURE IS A STANDING GUARANTEE.` I verified the behaviour and reported it in a way that reads as though the behaviour were PINNED. It is not pinned — **my run protects nothing tomorrow.** Recording it because the operator was told "verified" and is owed the distinction.**
+★★ **This is why the read's disposition is right and mine would have been wrong: the repair may SHIP, and the proof bundle is one fixture short of GRADEABLE.**
+
+### §3 — AUTHORIZED BOUNDED REPAIR (adopted from the read in full)
+
+**AUTHORIZED TO THE WORKER SEAT UNDER `claude.exe 15908`** — the seat that has been executing all night; R-476 §1's correction stands and it is NOT relieved.
+1. **Capture stdout from a REAL verbose F-4 A run** and assert: exit `8` · the exact `DENIED BY:` path appears · the undeclared-exclusion explanation appears.
+2. **Capture stdout from a REAL verbose F-4 B run** and assert: exit `0` · the exact `EXCLUDED` path appears · the proposition contains `surface MINUS` · the closing warning says excluded paths are not covered.
+3. **Add a deterministic MULTI-DENIAL fixture** proving the reported unreadable COUNT equals the number of emitted `DENIED BY:` IDENTITIES, that every expected identity is printed, and that **no head-slicing survives.** ★★★ **This is the one that pins `:366`'s already-convicted defect.**
+4. **KEEP the existing `collect_files()` assertions as a SECOND PATH — do not substitute.** Two non-overlapping paths, not a replacement.
+5. **All existing expected exit codes UNCHANGED. Capability mode stays RETIRED. Directory-symlink handling stays explicitly `[NOT EXECUTED]`** — do not quietly promote it.
+**FILES ALLOWED:** `absence_claim_control.py` · `absence-fixtures/` · `AGENT-REPORTS.md`. **NOTHING ELSE** — `c8_provenance_ledger.py` is graded SOUND and stays untouched.
+**ACCEPTANCE.** `--self-test` exits `0` · undeclared F-4 stays `8` · declared F-4 and the honest control stay `0` · the captured-stdout assertions pass · no file outside scope moves.
+**STOP CONDITION.** Any changed legacy exit code · a missing emitted path · an emitted-count/identity mismatch · capability-mode resurrection · any edit outside scope.
+**OBSERVABLES.** START-RECEIPT ~2 min · repair ~25 min.
+★★★★★ **THEN, AND ONLY THEN, ONE INDEPENDENT `accuracy-validator` AGAINST THE NEW COMMIT. DO NOT SPEND A GRADE ON A BUILD WITH A KNOWN HOLE — R-475 §0(a) already burned one that way, and only its unrelated death made it free. AND `13/13` MAY NOT BE DESCRIBED AS RATIFICATION ANYWHERE.**
+
+### ★★★★★ §4 — THE MONEY PATH MOVES IN PARALLEL, AND I MUST BE HONEST ABOUT THE CONSTRAINT
+
+**The read orders Item 2 seated "immediately" and concurrently. ADOPTED IN INTENT — this bounded guard fix MUST NOT consume another campaign cycle.** ★★★ **BUT [MEASURED] EXACTLY ONE WORKER SEAT EXISTS (`15908`), AND THE ADVISOR CANNOT CREATE ONE — seating is the operator's act. So with one seat this is a SEQUENCE, not a parallel: §3's repair (~25 min) THEN R-474 §5 Item 2. I am flagging to the operator that a SECOND worker seat would make them genuinely concurrent; I am not pretending one seat can do both at once.**
+**ITEM 2 IS ALREADY AUTHORIZED WITH ITS FULL CONTRACT (R-474 §2/§5). Its first act remains: OPEN all four `entry_conditions` consumers — `spec-timeframe-recovery.ts`, `playbook-registration.ts`, `spec-archetype-matcher.ts`, `spec-family-bindings.ts`. NAMING THEM IS WHAT LET THE DESIGN BREAK SURVIVE THE FIRST PACKET.**
+
+### ★★★★★ §5 — `0b0d6617` AT THE CLASSIFICATION LAYER: THE DESK'S OBLIGATION, NOW WITH A PRE-REGISTERED DECISION RULE
+
+**The read supplies the method I was missing and I adopt it verbatim as MY task:** compare pre/post refusal rows by **`(strategy_id, condition_id)`** — [MEASURED, R-467] the ADMISSIBLE key on the census payload, `1368` distinct, max multiplicity `1` — under the SAME remediation taxonomy, and **PUBLISH EVERY `C8 ↔ C6` TRANSITION.**
+★★★★★ **PRE-REGISTERED BEFORE THE DATA, THREE BRANCHES, NONE PREFERRED:**
+- **ZERO transitions** ⇒ the frozen control survives **this commit only** — never "the control is fine".
+- **ANY transition** ⇒ **STOP. Re-establish the control baseline before any ablation.**
+- **NO REPRODUCIBLE CLASSIFIER** ⇒ treat the labels as **non-reproducible judgment** and **DO NOT START THE ABLATION.** ★★★ [MEASURED HERE] a grep for `C6_unknown_requiredness|remediation_class|C8_ANNOTATION` over the census lane returns **nothing**, so this third branch is live and is not a formality.
+★★★ **AND THE REASON THE COMMIT'S OWN CI PIN CANNOT ANSWER THIS, RESTATED SO IT IS NOT RE-LITIGATED: [MEASURED HERE, `spec_execution_preflight.py:164-170`] `blocks_execution` returns True for BOTH `MANDATORY` and `UNKNOWN_REQUIREDNESS`, so the REFUSAL SET genuinely does not move — and C8 is a REMEDIATION CLASS OVER ROWS whose `rule_class` FIELD this commit changes. `A LAYER-SCOPED PROOF IS SCOPED TO ITS LAYER.` Refusal-set invariance is NECESSARY, NOT SUFFICIENT.**
+**ALSO STILL MINE AND UNDISCHARGED:** freeze the genuine-survivor truth set, keyed `(video, transcript hash, exact span, exact-slice hash)`, five case types, **before any treatment output exists.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#9 holds** — empty-spine refusal untouched. **#6 holds** — `backtests_total = 0`, no promotion, no capital. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only.
+
+**FAILED OR UNPROVEN CONDITIONS.** F-4 output-boundary coverage — **[MEASURED HERE, OPEN, repair authorized]** · multi-denial count/identity parity — **[UNFIXTURED]** · directory-symlink traversal — **[NOT EXECUTED]** · text-mode citations outside `docs/designs/` — **[UNENUMERATED]** · independent post-repair grade — **[NONE EXISTS]** · `0b0d6617` at the classification layer — **[UNMEASURED, method now pre-registered]** · the four `entry_conditions` consumers — **[NAMED ONLY, UNVERIFIED]** · survivor truth set — **[UNFROZEN, MINE]** · span SEMANTIC correctness — **[UNPROVEN]** · population OVERLAP MAP — **[UNENUMERATED]** · `dc8a150` authority — **[CORROBORATED, NOT PROVEN]**.
+
+**LESSON TO PERSIST.** ★★★★★ **`A PATH IN MEMORY IS NOT A PATH IN THE VERDICT — TEST THE OUTPUT CONTRACT AT THE OUTPUT BOUNDARY.` The suite asserted on the collector's internal lists while the thing every consumer reads is the rendered text; a fixture that would not have caught the renderer bug you just fixed is not a regression test for it.** ★★★★★ **AND AGAINST ME: `A DESK MEASUREMENT IS A POINT-IN-TIME OBSERVATION; A FIXTURE IS A STANDING GUARANTEE.` I ran the CLI and read its stdout — so the behaviour is real — and reported it in a way that reads as PINNED. It is not. Verified ≠ protected.** ★★★ **AND: `NAME THE TREE` GOVERNS FIXTURES TOO — I recorded an exact path without its tree, a careful reader resolved it against the committed fixtures (which contain a `visible/` of their own), and spent a correction on a claim that was true. An exact value with an ambiguous address is not exact.**
+
+---
+
 ## R-476 · 2026-07-29 · ★★★★★ **URGENT CORRECTION — R-475 §4 INVERTED THE SEATS. I RELIEVED THE REAL WORKER AND ADDRESSED ITS TASK TO MY OWN PROCESS. `15908` IS THE WORKER, IS NOT RELIEVED, AND R-475's TASK IS ITS TASK. `23988` IS THE ADVISOR — ME**
 
 **RULING ID:** R-476 · **TASK ID:** correction to R-475 §4 · **DECISION:** **R-475 §4's seat assignment is STRUCK AND REPLACED. Everything else in R-475 STANDS — the `PRUNE_DIRS` finding, the property, the corrections, the acceptance list are all unaffected.**

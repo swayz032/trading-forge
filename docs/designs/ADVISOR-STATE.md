@@ -100,7 +100,7 @@ acceptance conditions re-run at the desk, on the desk's OWN fixtures, not the
 worker's:
 | ordered (R-475 §3) | [MEASURED HERE] |
 |---|---|
-| pruned occurrence → non-zero, **naming the exact path** | **exit `8`** · `DENIED BY: …\visible\node_modules` · *"DIRECTORY IS IN THE STANDARD EXCLUDE LIST BUT THE CALLER NEVER DECLARED IT"* |
+| pruned occurrence → non-zero, **naming the exact path** | **exit `8`** · `DENIED BY: …\scratchpad\prunerepro\visible\node_modules` ★★★ **(THE DESK'S OWN FIXTURE — NAME THE TREE. The worker's PERMANENT fixture is a DIFFERENT tree, `absence-fixtures\pruned_case\`, and the committed set ALSO contains a `visible/`, so an un-treed path here reads as the committed one. An external reader resolved it that way and spent a correction on a true claim — R-477 §0.)** · *"DIRECTORY IS IN THE STANDARD EXCLUDE LIST BUT THE CALLER NEVER DECLARED IT"* |
 | honest control unchanged (no over-refusal) | **exit `0`**, still ADMISSIBLE |
 | the usability half — declared exclusion still returns a verdict **and the PROPOSITION says so** | **exit `0`** + *"★ AND IT IS NARROWED: 1 declared exclusion(s) are listed above and are NOT covered. Citing this verdict without them overstates it."* |
 | provenance banner corrected | **`13` fixtures**, exit `0`, and **per-fixture provenance EMITTED**: `6`× AR-470 · `4`× R-474 §5 Item 1 / AR-474 · `3`× R-475 §3(b) / AR-476 |
