@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2366` at THIS commit, 2026-07-30 06:20 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2396` at THIS commit, 2026-07-30 06:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -82,7 +82,13 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-496 LANDED (`0d6f26f9`)** · `2011e8de` IS **`NOT-SOUND`, NOT RATIFIED** (2026-07-30 06:20, ADVISOR SEAT = `claude.exe 23988`)
+## ⚠️★★★★★ SEAT — **R-497 OWED AND HELD · `AR-512` UNRULED** · repair DELIVERED at `39948d3c`; `2011e8de` stays **`NOT-SOUND`** (2026-07-30 06:45, ADVISOR SEAT = `claude.exe 23988`)
+
+★★★★★ **FIRST WAKE CHECK: `AR-512` IS THE NEWEST AR AND IT IS UNRULED. R-497 is a DEBT held on the
+operator's standing `WAIT ON GPT` order — `A BLOCKED LEDGER WRITE IS AN UNPAID DEBT`.**
+★★★ **[MEASURED] THE HOLD'S COST IS LOW THIS ROUND, AND I CHECKED RATHER THAN ASSUMING: the worker's
+only remaining item is the INDEPENDENT GRADE, which this desk CANNOT dispatch. A ruling would not
+unblock it — the operator is the blocker either way. Do NOT copy this forward; re-derive it.**
 
 ★★★★★ **THE PASTE ARRIVED AND R-496 LANDED. `AR-509` + `AR-510` BOTH RULED — the debt held on the
 operator's direct `WAIT ON GPT` order (verbatim: *"REMEMVER WAIT ON GPT REPSONE BEFORE RULING"*) is
@@ -104,15 +110,39 @@ RIGHT CHECK IN THE WRONG PLACE**; correction B reuses it rather than inventing a
 ★★★ **THE RUNTIME TS REPAIR IS NEITHER APPROVED NOR DISPROVED — its PROOF is inadmissible, which is
 WEAKER than "the repair is wrong". DO NOT "FIX" THE ENGINE IN RESPONSE TO THIS.**
 
-### ★★★★★ AUTHORIZED NOW — `R-496-P0-REPAIR`, CORRECTIONS **A → B → C**, TO THE CURRENT SEAT
-**A** exhaustive camelCase→snake_case bijection, compile-time exhaustive, raw-key comparison BEFORE
-projection, reject extra/missing/duplicate/unconsumed naming the exact path, **and fix the false
-comment** · **B** membership as a THREE-WAY BIJECTION (`required_members` ∧ filenames ∧
-`Object.keys(fixtures)`), duplicates rejected with multiplicity, **both** array and unique cardinality ·
-**C** preserve `2011e8de` unamended, DATED addendum to the packet, new worktree from `9af37b8f`, ONE
-replacement commit. **Each of A/B owes a clean unmutated neighbour proving it is not always-red.**
-**STOP IF** either novel attack still returns `0`, a previously-biting attack stops biting, or the
-repair would need engine/Python semantic changes.
+### ★★★★★ `R-496-P0-REPAIR` IS **DELIVERED** (AR-512, 06:36) — **R-497 OWED AND HELD FOR THE PASTE**
+**REPLACEMENT: `39948d3c` on `hardening/ledger-e-delivery-r496-20260730`, worktree
+`wt-ledger-e-delivery-r496-20260730`. WIP `96ecc6e0` APPENDED to `3dcc6739` (branch NOT rewritten).
+Packet `eef5ec84…`, `663` lines, `+76/−0` — §8 byte-intact, new dated §9 addendum.**
+★★★★★ **[MEASURED HERE] `2011e8de` PRESERVED — intact on its own branch and worktree, dirty `0`. All
+three worktrees clean. `39948d3c` parent = `9af37b8f` exact, `rev-list --count` = `1`, 23 paths.**
+
+### ★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **I RE-PLANTED B-1 MYSELF AND IT BITES**
+**My own scratch corpus, my own mutation, via `TF_SPEC_BINDING_SAMPLES_DIR` — the worker's tree never
+touched (dirty `0` after).** ★★★ **I re-ran it precisely BECAUSE the worker's own first B-1
+measurement was corrupted by a mangled heredoc path (AR-512 §4-2) — `TWO VERIFIERS AGREEING ON WHAT
+ONLY ONE ACTUALLY RAN IS NOT CORROBORATION`.**
+| run | result |
+|---|---|
+| **CLEAN control** (proves my harness, so a RED is not my rig) | **EXIT `0`** · `entries=12 unique=12 · on disk=12 · adjudicated=12 · three-way agreement=YES` |
+| **ATTACK** dup member + deleted fixture | **EXIT `1`** · `unique=11 · on disk=11 · agreement=NO` · **4** named failures: duplicate **with multiplicity `2x`** · array-vs-unique cardinality · **2** cross-surface mismatches |
+★★★★★ **THE ARCHITECTURE IS RIGHT, NOT JUST THE EXIT CODE: `CLAIM 1 AGREEMENT: PASS · CLAIM 2 ORACLE
+CORRECTNESS: PASS · MEMBERSHIP: 4 failure(s)`. Both lanes AGREED and CONFORMED, and membership DENIED
+anyway. `AGREEMENT IS NOT A DEFENCE.`**
+★★ **A's MECHANISM verified by reading, not by exit code: TWO INDEPENDENT DOORS — compile-time
+`satisfies Record<keyof BindingPlan, string>` `:256`/`:270`, and a RUNTIME raw-key check ordered
+BEFORE projection (`:275`). `:237` states why door 1 alone is insufficient (a field on the OBJECT but
+not the TYPE is invisible to it). **Both false captions were PRESERVED-AND-CORRECTED at `:220`/`:1038`,
+not silently deleted** — visible correction, per ledger rule 4.**
+★★ **`[RELAYED]`, NOT re-run by me: A-1/A-2 exit codes, C4's `176`, the four authority failures,
+Axis-D, E-2. AR-512 pre-registered all of them in AR-511 and published TWO of its own instrument
+failures, which raises its credibility but is not my measurement.**
+
+### ⚠️★★★★★ WHAT IS **NOT** ESTABLISHED — DO NOT READ `39948d3c` AS RATIFIED
+★★★★★ **TWO NAMED ATTACKS ARE CLOSED. THAT IS NOT SOUNDNESS — `2011e8de` PASSED EVERY REGISTERED
+FIXTURE IT HAD AND WAS UNSOUND. `REGISTERED FIXTURES PROVE THEIR MEMBERS AND NOTHING OUTSIDE THEM`,
+and only another INDEPENDENT NOVEL HUNT moves this claim. The novel half is what caught both defects.**
+**NO INDEPENDENT GRADE OF `39948d3c` EXISTS. GATE B STAYS BLOCKED. NO INTEGRATION.**
 
 ### ⚠️★★★★★ THE FOLLOW-UP GRADE IS AN **UNOWNED PREREQUISITE** — ONLY THE OPERATOR CAN ROUTE IT
 ★★★★★ **[MEASURED HERE] TWO independent blockers: (1) this session's harness forbids launching
