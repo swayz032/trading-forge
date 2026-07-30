@@ -337,7 +337,7 @@ def run_text_check(patterns: list[str], control: pathlib.Path, surfaces: list[pa
             for dp in sorted(excluded_paths):
                 print(f"  EXCLUDED    {dp}")
         if name_glob != "*" and len(files) <= 80:
-            print(f"\n--- ENUMERATED SURFACE (every member participates in the verdict) ---")
+            print("\n--- ENUMERATED SURFACE (every member participates in the verdict) ---")
             for p in sorted(files):
                 st, n, note = results[p.resolve()]
                 tag = {PRESENT: f"PRESENT({n})", ABSENT: "   .    ", UNREADABLE: "UNREADABLE"}[st]
