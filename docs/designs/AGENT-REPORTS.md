@@ -4,6 +4,43 @@
 
 ---
 
+## AR-511 · 2026-07-30 · **`R-496-P0-REPAIR` START-RECEIPT — PRE-REGISTERED BEFORE ANY EDIT, INCLUDING THE PREDICTION THAT BOTH ATTACKS CURRENTLY RETURN `0`.** ⚠️★★★★★ **R-496 IS ACCEPTED IN FULL. I BUILT THE OBJECT THAT CARRIED BOTH FALSE GREENS, AND I RE-CONFIRMED BOTH AT THE EXECUTABLE LINE MYSELF BEFORE ACCEPTING THE GRADE.**
+
+**RULING ID:** R-496 §6 A→B→C · **TASK ID:** AR-511 · **PRIOR:** AR-510 (the REJECTED delivery) · **GRADED OBJECT:** `2011e8de` — **PRESERVED, NOT AMENDED, NOT RELABELLED.**
+**WORKTREE (repair, isolated):** `C:/Users/tonio/Projects/wt-ledger-e-parity-20260730`, branch `hardening/ledger-e-parity-20260730`, WIP commits APPEND ONLY. **REPLACEMENT BASE:** `9af37b8f` exact, a NEW worktree, ONE atomic commit.
+**ALLOWED FILES (R-496 §7):** `scripts/check-spec-binding-plan-parity.ts` · `ci/fixtures/spec-binding-parity-expanded/**` as the controls require · the packet · this file. **Fault injection touches SCRATCH/TRANSIENT copies only and is restored.**
+
+### ⚠️★★★★★ §1 — BOTH DEFECTS RE-CONFIRMED BY ME AT THE SOURCE, NOT ADOPTED ON AUTHORITY
+
+**F-1 `[MEASURED HERE]`** `tsBindingPlanAsPyShape()` `:223-250` is a literal whitelist — **`10`** binding fields (`:226-235`) and **`11`** plan fields (`:238-248`). `compileBindingPlan()`'s output is projected through it, and `diffDeep()` `:262` consumes the PROJECTION. **A TS field absent from the literal list never reaches the comparator, so the bidirectional key-set check at `:266-271` cannot see it.** ★★★★★ **AND THE COMMENT `:218-221` CALLS THIS FUNCTION *"deliberately TOTAL rather than selective"* — FALSE BY CONSTRUCTION, IN THE SAME FILE AS THE HOLE IT DESCRIBES.**
+**F-2 `[MEASURED HERE]`** `:928-930` — `present = new Set(files)` · `missing = required_members.filter(m => !present.has(m))` · `undeclared = files.filter(f => !required_members.includes(f))`. **No uniqueness check on `required_members` exists anywhere in the file.** A duplicated identity replacing a real one, plus deletion of the displaced fixture, leaves BOTH lists empty. ★★★ **And `:944`'s `declared = N, found = M` line lives INSIDE `if (membership.length > 0)` — in this attack it never executes. `A PRINTED COUNT IS NOT A COMPARED COUNT`, and in this case it is not even printed.**
+★★ **I accept R-496 §0's correction of the desk, and the same correction lands on me: AR-510 §3 cited `Checked 12 sample specs against 12 declared members` as a gate result. It is a `console.log`. I read a rendered sentence as an assertion.**
+
+### ★★★★★ §2 — PRE-REGISTERED OUTCOMES, WRITTEN BEFORE THE FIRST EDIT
+
+★★★★★ **INCLUDING THE PREDICTION THAT THE CURRENT TREE IS GREEN UNDER ATTACK — because a repair that cannot first be shown to be NEEDED is indistinguishable from a repair that changes nothing.**
+
+| # | attack / control | **BEFORE repair (predicted)** | **AFTER repair (predicted)** |
+|---|---|---|---|
+| **A-1** | TS-only **TOP-LEVEL** plan field, transiently injected | `tsc` `0` · gate **EXIT `0`** — **THE FALSE GREEN** | gate **NON-ZERO**, NAMING the unmapped field and its exact path |
+| **A-2** | TS-only **BINDING-LEVEL** field, transiently injected | `tsc` `0` · gate **EXIT `0`** — **THE FALSE GREEN** | gate **NON-ZERO**, NAMING the unmapped field and its exact path |
+| **A-3** | clean unmutated neighbour | gate **EXIT `0`** | gate **EXIT `0`** — ★★★ **proves A is not always-red** |
+| **B-1** | `required_members` duplicate replacing identity `24` + delete fixture `24` | membership **EMPTY**, gate **EXIT `0`** — **THE FALSE GREEN** | **NON-ZERO**, naming the duplicate **WITH ITS MULTIPLICITY** *and* the cross-surface mismatch — **BOTH** |
+| **B-2** | delete-only (no duplicate) | **RED** (already bites) | **RED** — ★★ **a previously-biting attack that stops biting is a §9 STOP** |
+| **B-3** | add-only undeclared fixture | **RED** (already bites) | **RED** — same stop condition |
+| **B-4** | clean corpus | **EXIT `0`** | **EXIT `0`** |
+
+★★ **If a BEFORE cell comes back RED where I predicted `0`, the defect is not what I described and I report that instead of proceeding — a pre-registration is only worth anything if I publish the misses. AR-505 is on record as a miss I reported against myself.**
+
+### §3 — SCOPE I AM HOLDING
+
+**INSTRUMENT REPAIR ONLY.** No committed change to `spec-family-bindings.ts` or `spec_family_bindings.py`, no session semantics, no `FAMILY_META`, **no Python loosening to make parity green.** ★★★★★ **R-496 §4 is explicit and I am obeying it literally: the runtime TS correction is NEITHER approved NOR disproved — its PROOF is inadmissible. I am not "fixing" the engine in response to this ruling.**
+**`2011e8de` is preserved as a REJECTED RECEIPT — not amended, not rewritten, not relabelled.** The packet gets a **DATED CORRECTION ADDENDUM**, never a rewrite of its historical sections.
+**FIRST OBSERVABLE:** this receipt. **INTERIM ~25 min:** A's RED/GREEN proof. **ETA ~60–90 min:** corrected WIP + replacement delivery + report.
+★★★★★ **AND THE PART THAT IS NOT MINE: the follow-up grade of the replacement. R-496 §10 names it an UNOWNED PREREQUISITE — this harness cannot dispatch it and the validator's environment is unreachable from this machine. I will not grade my own repair, and I will say so in the delivery report rather than letting the absence read as a pass.**
+
+---
+
 ## AR-510 · 2026-07-30 · ★★★★★ **§5A · §5B · §5C ALL CLOSED. THE DELIVERY OBJECT EXISTS: `2011e8de`, ONE COMMIT ON THE PINNED BASE `9af37b8f`, 23 FILES, AND EVERY §5C CHECK RE-TAKEN ON THE TREE I SHIP — NOT THE ONE I BUILT.** ★★★★★ **THE 22-vs-23 COUNTING TRAP WAS DISARMED THE WAY R-495 §3 SPECIFIED: TWO SEPARATE CHECKS, NEVER A TOTAL.** ⚠️★★★ **AND TWO NUMBERS IN THE PRIOR RECORD ARE CORRECTED BY MEASUREMENT — NEITHER CHANGES A DIRECTION.**
 
 **RULING ID:** R-495 §5A/§5B/§5C · **TASK ID:** AR-510 · **PRIOR:** AR-509 (start-receipt) · **SEAT:** fresh worker, seated cold on this ruling. **`F` NOT DISPATCHED — see §7.**
