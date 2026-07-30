@@ -44,7 +44,7 @@ import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { compileBindingPlan, FAMILY_META } from "../src/server/lib/spec-family-bindings.js";
+import { compileBindingPlan, FAMILY_META, refusedSessionZone } from "../src/server/lib/spec-family-bindings.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -478,6 +478,228 @@ function checkOracle(
   }
 }
 
+// ─── STEP C (R-492 §5-C / R-493 §5): THE P-7 OVER-REFUSAL PROPERTY CHECK.
+//
+// ★★★★★ THE CIRCULARITY SPLIT, WHICH IS THE WHOLE DESIGN CONSTRAINT:
+//   `FAMILY_META` MAY ENUMERATE MEMBERSHIP — which families exist is an engine
+//   fact. `P-7` SUPPLIES THE EXPECTED SEMANTICS — what they must DO. Reading the
+//   population from the implementation is legitimate; reading the EXPECTATION
+//   from it is the defect the oracle exists to prevent.
+//
+// ★★★ SO BOTH LISTS BELOW ARE FROZEN AND PRE-REGISTERED (AR-504 §2, committed at
+//     `8d676394` BEFORE this code existed). They are not derived at runtime. A
+//     family or phrase that appears or disappears in the implementation without
+//     this list changing must go RED — `A SURFACE IS NOT FAIL-CLOSED UNTIL ITS
+//     ENUMERATION IS`. A generated grid that silently resizes itself certifies
+//     nothing, because it can only ever cover what the code already does.
+
+/** PRE-REGISTERED (AR-504 §1). The 13 families that do NOT require a session keyword. */
+const P7_DECLARED_NON_SESSION_FAMILIES = [
+  "CONFIRM_DIRECTION", "ENABLE_ENTRY", "ENTER", "EXCEPTION", "EXIT_HINT", "FILTER",
+  "INVALIDATE", "RESET", "VERIFY_STRUCTURE", "WAIT_BIAS", "WAIT_CONFIRMATION",
+  "WAIT_RETEST", "WAIT_STRUCTURE",
+] as const;
+
+/** PRE-REGISTERED (AR-504 §1). Phrases that MUST still name a refused zone. */
+const P7_DECLARED_REFUSED_PHRASES = [
+  "lunch", "midday", "noon session", "overnight", "globex", "asia session", "pre market", "premarket",
+] as const;
+
+/** The object text a probe and its adjacent control BOTH carry — identical on purpose. */
+const p7ObjectText = (phrase: string) => `volume ${phrase}`;
+
+/**
+ * The NEUTRAL twin: same sentence frame, NO refused-zone phrase. Asserted to
+ * carry no refusal label before use, so the differential below cannot degenerate
+ * into comparing two refused rows.
+ */
+const P7_NEUTRAL_OBJECT = "volume elevated";
+
+/**
+ * Asserts P-7 over the FULL non-session family × refused-phrase grid, in BOTH
+ * lanes, against an expectation derived from the authority rather than from
+ * either lane.
+ *
+ * ★★★★★ WHY A PROPERTY CHECK AND NOT TEN MORE FIXTURES: a fixture corpus asserts
+ *   CLAIM 1 (the lanes agree) plus whatever the oracle adjudicates. This asserts
+ *   P-7 DIRECTLY on every member of the population, so a defect appearing
+ *   IDENTICALLY IN BOTH LANES still fails. AR-499 measured that the two-lane case
+ *   printed `EXIT 0 · PASS`; `AGREEMENT IS NOT A DEFENCE`.
+ */
+function checkOverRefusalProperty(out: string[], notes: string[]): void {
+  // ─── CONTROL 1: MEMBERSHIP. Addition AND deletion must both DENY.
+  const liveNonSession = Object.entries(FAMILY_META)
+    .filter(([, m]) => !(m as { requiresSessionKeyword?: boolean }).requiresSessionKeyword)
+    .map(([name]) => name)
+    .sort();
+  // Widened to string[] deliberately: the literal-union type would make
+  // `includes` reject any name NOT already declared — i.e. the compiler would
+  // refuse to express the very comparison this control exists to perform.
+  const declared: string[] = [...P7_DECLARED_NON_SESSION_FAMILIES].sort();
+  const added = liveNonSession.filter((f) => !declared.includes(f));
+  const removed = declared.filter((f) => !liveNonSession.includes(f));
+  if (added.length > 0 || removed.length > 0) {
+    out.push(
+      `P-7 PROPERTY MEMBERSHIP FAILURE — the non-session family population changed and the ` +
+        `pre-registered list did not. UNDECLARED (present in FAMILY_META, never probed): ` +
+        `${JSON.stringify(added)} · MISSING (declared, no longer in FAMILY_META): ${JSON.stringify(removed)}. ` +
+        `★ A new family would otherwise enter the engine with ZERO over-refusal coverage while this ` +
+        `check stayed green. Update the pre-registered list in a dated report, never silently.`,
+    );
+    return; // A grid over the wrong population proves nothing; do not run it.
+  }
+
+  // ─── CONTROL 2: THE PROBES MUST STILL PROBE, AND THE NEUTRAL TWIN MUST STAY NEUTRAL.
+  // A phrase that no longer names a refused zone cannot test an OVER-refusal —
+  // the row would pass trivially. This asserts the test's PRECONDITION, which is
+  // a different act from asserting its expected output.
+  const deadPhrases = P7_DECLARED_REFUSED_PHRASES.filter(
+    (p) => refusedSessionZone(p7ObjectText(p)) === null,
+  );
+  if (deadPhrases.length > 0) {
+    out.push(
+      `P-7 PROPERTY PRECONDITION FAILURE — ${JSON.stringify(deadPhrases)} no longer name a refused ` +
+        `zone, so probes built from them would pass VACUOUSLY. A green here would mean "nothing was ` +
+        `refused", not "nothing was over-refused". Fix the phrase list or the table, do not ignore this.`,
+    );
+    return;
+  }
+  if (refusedSessionZone(P7_NEUTRAL_OBJECT) !== null) {
+    out.push(
+      `P-7 PROPERTY PRECONDITION FAILURE — the NEUTRAL twin ${JSON.stringify(P7_NEUTRAL_OBJECT)} now names a ` +
+        `refused zone. The differential below compares "with a refused phrase" against "without one"; if the ` +
+        `twin is itself refused the comparison is two refused rows and passes VACUOUSLY.`,
+    );
+    return;
+  }
+
+  // ─── The generated grid. Probe rows + an ADJACENT positive control per phrase,
+  //     carrying byte-identical object text so the check separates "refuses the
+  //     right thing" from "refuses anything containing the word".
+  interface Row { id: string; type: string; object: string; role: string }
+  const conditions: Row[] = [{ id: "trigger", type: "ENTER", object: "market", role: "spine" }];
+  /** family -> its NEUTRAL-twin row id. One per family, shared by all phrases. */
+  const twinIds = new Map<string, string>();
+  for (const family of [...P7_DECLARED_NON_SESSION_FAMILIES, "WAIT_SESSION"]) {
+    const id = `p7_twin_${family}`;
+    conditions.push({ id, type: family, object: P7_NEUTRAL_OBJECT, role: "confluence" });
+    twinIds.set(family, id);
+  }
+  const probeIds = new Map<string, { family: string; phrase: string }>();
+  const controlIds = new Map<string, { phrase: string; zone: string }>();
+  for (let pi = 0; pi < P7_DECLARED_REFUSED_PHRASES.length; pi++) {
+    const phrase = P7_DECLARED_REFUSED_PHRASES[pi];
+    const object = p7ObjectText(phrase);
+    for (const family of P7_DECLARED_NON_SESSION_FAMILIES) {
+      const id = `p7_${family}_${pi}`;
+      conditions.push({ id, type: family, object, role: "confluence" });
+      probeIds.set(id, { family, phrase });
+    }
+    const cid = `p7_control_${pi}`;
+    conditions.push({ id: cid, type: "WAIT_SESSION", object, role: "confluence" });
+    controlIds.set(cid, { phrase, zone: refusedSessionZone(object)! });
+  }
+  const spec = { entry_trigger_id: "trigger", entry_conditions: conditions, invalidations: [] };
+
+  const lanes: Array<[string, Record<string, unknown>]> = [
+    ["ts", tsBindingPlanAsPyShape(spec)],
+    ["py", pyBindingPlan(spec)],
+  ];
+
+  let probesChecked = 0;
+  let controlsChecked = 0;
+  for (const [lane, plan] of lanes) {
+    const rows = (plan.bindings as Array<Record<string, unknown>>) ?? [];
+    const byId = new Map(rows.map((r) => [String(r.condition_id), r]));
+
+    for (const [id, { family, phrase }] of probeIds) {
+      const got = byId.get(id);
+      if (!got) {
+        out.push(`${lane}: P-7 PROPERTY — generated probe ${id} (${family} / "${phrase}") MISSING from the plan`);
+        continue;
+      }
+      const twin = byId.get(twinIds.get(family)!);
+      if (!twin) {
+        out.push(`${lane}: P-7 PROPERTY — neutral twin for ${family} MISSING from the plan`);
+        continue;
+      }
+      probesChecked++;
+      // ─── P-7 AS AN INDEPENDENCE PROPERTY, WHICH IS WHAT IT ACTUALLY SAYS:
+      //     "its bindability is INDEPENDENT of which zones are evaluable or
+      //     refused". So the assertion is that this row is IDENTICAL to its
+      //     neutral twin in `bindable` and `reason` — the refused phrase must
+      //     make no difference.
+      //
+      // ★★★★★ IT IS DELIBERATELY *NOT* `bindable === true`. That absolute was my
+      //     first formulation and the control run REFUTED IT: `EXCEPTION` and
+      //     `RESET` are `unsupported: true` and emit bindable=false with
+      //     `control_flow_*_unsupported` for a reason that has nothing to do with
+      //     sessions. The engine was right and the expectation was wrong.
+      //     `P-7 CONSTRAINS THE EFFECT OF THE SESSION REFUSAL, NOT THE ROW'S
+      //     ABSOLUTE VALUE` — and an absolute would have forced either a weakened
+      //     test or an invented behaviour change to two innocent families.
+      //
+      // ★★★ AND IT IS NOT CIRCULAR: neither side of this comparison is an
+      //     expected value read out of the implementation. The EXPECTATION is the
+      //     INVARIANCE, and that comes from the authority. An engine that
+      //     over-refuses cannot satisfy it, and — unlike a two-lane diff — it
+      //     cannot satisfy it by being wrong consistently either.
+      if (got.bindable !== twin.bindable || JSON.stringify(got.reason) !== JSON.stringify(twin.reason)) {
+        out.push(
+          `${lane}: P-7 VIOLATION — ${family} is NOT independent of session-zone evaluability. ` +
+            `With the refused phrase "${phrase}": bindable=${JSON.stringify(got.bindable)} ` +
+            `reason=${JSON.stringify(got.reason)} · with neutral text ${JSON.stringify(P7_NEUTRAL_OBJECT)}: ` +
+            `bindable=${JSON.stringify(twin.bindable)} reason=${JSON.stringify(twin.reason)}. ` +
+            `This family never consults a session window, so a session-scoped refusal may not reach it. ` +
+            `[authority §4d / P-7]`,
+        );
+      }
+    }
+
+    // ─── THE ADJACENT POSITIVE CONTROL. Without it `bindable=true` everywhere
+    //     satisfies all 104 probes — including an engine that deleted the refusal
+    //     entirely. The authority mandates this control at §4d.
+    for (const [id, { phrase, zone }] of controlIds) {
+      const got = byId.get(id);
+      if (!got) {
+        out.push(`${lane}: P-7 POSITIVE CONTROL — control row ${id} ("${phrase}") MISSING from the plan`);
+        continue;
+      }
+      controlsChecked++;
+      if (got.bindable !== false || typeof got.reason !== "string" || !got.reason.includes(zone)) {
+        out.push(
+          `${lane}: P-7 POSITIVE CONTROL FAILED — WAIT_SESSION carrying the SAME text "${p7ObjectText(phrase)}" ` +
+            `emitted bindable=${JSON.stringify(got.bindable)} reason=${JSON.stringify(got.reason)}; expected ` +
+            `bindable=false with a reason naming ${JSON.stringify(zone)}. ★ The refusal that MUST happen did ` +
+            `not, so every "no over-refusal" result above is VACUOUS — they pass because nothing is refused ` +
+            `at all. This is a HARD failure, never a warning.`,
+        );
+      }
+      // ★★★ AND THE CONTROL MUST BE MOVED BY THE PHRASE, not merely be refused
+      //     for some standing reason of its own. If WAIT_SESSION emitted the same
+      //     row with and without the phrase, the independence assertions above
+      //     would be comparing a constant against itself and could never fail.
+      const ctlTwin = byId.get(twinIds.get("WAIT_SESSION")!);
+      if (ctlTwin && got.bindable === ctlTwin.bindable && JSON.stringify(got.reason) === JSON.stringify(ctlTwin.reason)) {
+        out.push(
+          `${lane}: P-7 CONTROL DISCRIMINATION FAILED — WAIT_SESSION emits an IDENTICAL row with the refused ` +
+            `phrase "${phrase}" and with neutral text (bindable=${JSON.stringify(got.bindable)} ` +
+            `reason=${JSON.stringify(got.reason)}). The phrase moves nothing, so the differential above has no ` +
+            `signal to detect and every green in it is meaningless. ` +
+            `A CONTROL THAT DOES NOT DISCRIMINATE CANNOT LICENCE THE TEST BESIDE IT.`,
+        );
+      }
+    }
+  }
+
+  notes.push(
+    `P-7 over-refusal property: ${P7_DECLARED_NON_SESSION_FAMILIES.length} declared non-session families × ` +
+      `${P7_DECLARED_REFUSED_PHRASES.length} refused phrases = ${probesChecked} probe assertions and ` +
+      `${controlsChecked} adjacent WAIT_SESSION positive-control assertions across BOTH lanes — expectation ` +
+      `from authority §4d/P-7, population from FAMILY_META, membership frozen against AR-504's list`,
+  );
+}
+
 /** What the authority check COMPUTED — never what ORACLE.json asserted. */
 interface AuthorityProvenance {
   path: string;
@@ -643,6 +865,18 @@ function main() {
     console.error(`QUEUE-REASON TRIPWIRE FAILURE:`);
     for (const m of tripwireFailures) console.error(`  - ${m}`);
     failures.push(...tripwireFailures);
+  }
+
+  // ─── P-7 over-refusal property, over the WHOLE non-session population.
+  // Counted into `oracleFailures` rather than `failures` on purpose: a P-7
+  // violation is a CLAIM 2 CORRECTNESS defect, not a membership or plumbing one,
+  // and the summary line's whole value is that it says WHICH claim failed.
+  const p7Failures: string[] = [];
+  checkOverRefusalProperty(p7Failures, tripwireNotes);
+  if (p7Failures.length > 0) {
+    console.error(`P-7 OVER-REFUSAL PROPERTY FAILURE (authority §4d — CLAIM 2, correctness):`);
+    for (const m of p7Failures) console.error(`  - ${m}`);
+    oracleFailures.push(...p7Failures);
   }
 
   // Collected so cross-fixture reason-distinctness (oracle P-4/P-6) can be
