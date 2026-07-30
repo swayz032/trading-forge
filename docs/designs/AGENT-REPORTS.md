@@ -4,6 +4,41 @@
 
 ---
 
+## AR-501 · 2026-07-30 · ⚠️★★★★★ **STALE-POINTER ALERT, MEASURED, BEFORE ANY SEAT RUNS THE GATE AGAIN: R-491's NEW AUTHORITY IS `3494d4bb…14e2` (16,314 B). MY COMMITTED `ORACLE.json` STILL ASSERTS `9b708e24…312d` (13,525 B). AND THE GATE CANNOT NOTICE — ITS PROVENANCE LINE IS THE UNVERIFIED TRANSCRIPTION I REPORTED IN AR-499 §5, SO IT WILL PRINT THE STALE HASH AND EXIT `0`.**
+
+**RULING ID:** R-491 §3/§4/§5 · **TASK ID:** AR-501 · **PRIOR:** AR-500 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`b23bae87`**, clean. **NO CODE OR FIXTURE CHANGED IN THIS ENTRY — it is a measurement and a warning.**
+
+### ★★★★★ §1 — THE THREE NUMBERS, MEASURED HERE
+
+| | value |
+|---|---|
+| live authority on disk | **`3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2`**, **16,314** B |
+| what my committed `ORACLE.json` asserts | **`9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d`**, was 13,525 B |
+| `P-7` occurrences in the live authority · `§4d` | **4** · present at **`:160`** — *"OVER-REFUSAL BOUNDARY ROWS (added R-491; closes the two-lane blindness AR-499 §2 measured)"* |
+
+### ★★★★★ §2 — WHY THIS IS THE EXACT DEFECT THE DESK RULED ON TWICE, NOW LIVE IN MY OWN ARTIFACT
+
+★★★★★ **R-489 §56 minted `A STALE HASH FAILS SILENTLY BECAUSE THE FILENAME STILL MATCHES`. R-491 struck R-485 §1/§8 for claiming the gate verifies its authority hash. THOSE TWO FACTS COMPOSE INTO A LIVE FALSE VERIFICATION RIGHT NOW: `ORACLE.json` points at a superseded authority, and the one mechanism that would catch it is the very line R-491 §37 ordered repaired.**
+★★★ **CONCRETE CONSEQUENCE FOR THE NEXT SEAT, so nobody learns this from a wrong green: run the gate as it stands and you get `EXIT 0`, `PASS`, and a printed `sha256=9b708e24…` that names an artifact the desk has replaced. Every `[NOT ADJUDICATED]` cell on fixture 40 is now adjudicated by §4d and the corpus does not know it.** ★★ **I did NOT transcribe the §4d rows in this entry — reading and encoding a 16,314 B amended authority is the next seat's task and doing it half-way is how a stale expectation gets sat beside a fresh one.**
+★★★★★ **AND I AM NOT CLAIMING THE ADJUDICATION AS MY OWN WIN: R-491 §3 CLOSED the two-lane blindness with a NEW PROPOSITION. My fixture 40 MEASURED the hole; the desk's `P-7` is what fills it. `MEASURING A GAP IS NOT CLOSING IT.`**
+
+### §3 — SEQUENCE FOR THE NEXT SEAT, AS R-491 §47 ORDERS IT
+
+1. **§4's provenance-line repair** — either hash the authority and **FAIL CLOSED on mismatch**, or label the transcription **ASSERTED-NOT-VERIFIED**. ★★★ **Do this FIRST: it is the check that would have caught item 2 below, and it is currently the only unlabelled false-verification in the gate.**
+2. **Re-point `ORACLE.json` at `3494d4bb…14e2` and encode §4d's two cells** onto fixture `40-overrefusal-boundary` — **within §4d and no wider** (R-491 §50 stop condition).
+3. **Axis 3 completion** — either build the 10 remaining non-session families or MEASURE the shared-`refusedSessionZone`-call mechanism claim. ★★ **R-491 §47 upheld my `[HYPOTHESIS — UNPROVEN]` label and 3-of-13 must NOT be reported as covered.**
+4. **Axis 4** — duplicate-`condition_id` + array-multiplicity, still `[UNPROVEN]` and uncitable. **See AR-500 §4's trap note: not a corpus member.**
+5. **Item 2's materiality receipt.**
+★★ **AXIS 1 IS DONE (AR-500, `b23bae87`) — R-491 §5 lists it as remaining because it was written against AR-499, one report earlier. Not a contradiction, just ordering.**
+
+### §4 — POSITION · GRADE · SEAT
+
+**`b23bae87`, tree clean, nothing merged, neither lane changed, no push/PR/remote pipeline, `runtime-production` and `tf-deep-scan` untouched. No sub-agent dispatched or owed — verified.**
+★★★★★ **GRADE NOT TRIGGERED: item 1 is 3 of 4 axes plus a newly-opened provenance repair, and item 2 is untouched. THE BUILDER DOES NOT GRADE.**
+★★★ **THIS SEAT IS STOPPING HERE. Per R-485 §70 that is self-assessment, not a transfer, and the task stays authorized to it — but the next useful work is the four items above and a fresh seat should take them. I am stopping at a clean boundary with nothing half-done rather than beginning the §4d transcription I cannot finish well.**
+
+---
+
 ## AR-500 · 2026-07-30 · ★★★★★ **AXIS 1 DONE — AND ITS RED-PROOF IS THE SHARPEST ONE I HAVE BUILT: I FIRST *MEASURED* THAT `approximation_used` ON THIS FIXTURE IS DRIVEN SOLELY BY THE INVALIDATIONS ARRAY, THEN PLANTED A DEFECT ONLY THAT FACT MAKES VISIBLE. `EXIT 1`, **EXACTLY ONE** FAILURE, EXACTLY ONE FIXTURE, EXACTLY THE RIGHT FIELD.** ★★★ **AND A THIRD STRUCTURAL FINDING: THE ORACLE SCHEMA CANNOT EXPRESS AN EXPECTATION ABOUT *ANY* INVALIDATION ROW — NOT OUT-OF-SCOPE, INEXPRESSIBLE.** ★★★★★ **HANDOFF: AXIS 4 REMAINS AND A FRESH SEAT SHOULD TAKE IT.**
 
 **RULING ID:** R-490 §3-2 · **TASK ID:** AR-500 · **PRIOR:** AR-499 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`b23bae87`** (`WIP — NOT A DELIVERY`), tree **clean** [MEASURED HERE].
