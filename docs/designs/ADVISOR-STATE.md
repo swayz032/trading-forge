@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1053` at THIS commit, 2026-07-29 23:36 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1082` at THIS commit, 2026-07-29 23:43 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -53,16 +53,17 @@ needed yet."* **A HELD RULING IS ONLY A STALL WHEN THE WORKER HAS NOTHING
 AUTHORIZED; here R-477 §4 already carries Item 2's full contract.** Check this before
 concluding a hold is harmless — do not assume it.**
 
-**Ledger `R-478`** (commit `697237c4`). **Newest AR `AR-479` — RULED: REVISE. The
-behaviour of `5a403bed` stands; the instrument is NOT RATIFIED.**
-★★★★★ **THE GRADE WAS NEVER DISPATCHED AND THAT WAS THE RIGHT CALL — HELD FOR THREE
-HOURS, THEN VINDICATED: the external read found a THIRD consecutive material hole, so a
-grade sent on the trigger alone would have been the second wasted one. ★★★ AND THE
-GENERAL RULE IS STILL THE OTHER WAY (`A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION`)
-— what justifies holding HERE is a MEASURED base rate of three-for-three, not a feeling
-that the artifact might be weak. Do not generalise the hold.**
-★★★★★ **NO GRADE EXISTS AGAINST `5a403bed`. [RELAYED, unverifiable from this seat] the
-external party started one and cancelled it when the false-green reproduced.**
+**Ledger `R-479`** (commit `631b46d0`). **Newest AR `AR-481` — RULED: BLOCKED, and the guard suite is RETIRED. The
+five named repairs at `b67be086` STAND as repairs; the SUITE is retired as an
+instrument.** ★★ **`5a403bed` is superseded by `b67be086`; neither is certified.**
+★★★★★ **THE GRADE WAS NEVER DISPATCHED AND NOW NEVER WILL BE — held ~3 h, then the
+question was removed rather than answered. FOUR consecutive rounds each closed their
+named shapes and produced a new one, so no grade against this suite could have meant
+anything. ★★★ DO NOT GENERALISE THE HOLD: the standing rule is still
+`A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION`. What justified holding HERE was a
+MEASURED four-for-four base rate, never a feeling that an artifact looked weak.**
+★★★★★ **NO GRADE EXISTS AGAINST ANY GUARD COMMIT AND NONE IS OWED. [RELAYED,
+unverifiable from this seat] the external party started one and cancelled it.**
 ★★★★★ **THE FALSE GREEN, REPRODUCED HERE [MEASURED]: `_denied_identities` (`:523-526`)
 returns a SET, so F-5's `len(printed) == stated` counts UNIQUE identities, never RENDERED
 entries. Print every denial twice → rendered `11 → 22`, unique `11 → 11`, `--self-test`
@@ -128,32 +129,48 @@ holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`
 pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
 3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
-## AUTHORIZED NOW — R-478 §5a, TO THE WORKER SEAT UNDER `claude.exe 15908`
+## AUTHORIZED NOW — R-479 §3, TO THE WORKER SEAT UNDER `claude.exe 15908`
 
-★★★★★ **§5a — THE OUTPUT-COUNT BOUNDARY, ORDERED AS SIX PROPERTIES:** keep rendered
-denial entries as a **LIST** · assert **three things independently** (raw `DENIED BY`
-line count == stated count · identities UNIQUE · identity set == expected set) · add a
-**FIFTH mutation duplicating `DENIED BY`** that F-5 must catch · make the mutation
-harness **FAIL on catcher mismatch** instead of printing it · require every anchor to
-occur **EXACTLY ONCE** · unmutated control GREEN, all legacy exit codes unchanged,
-capability mode RETIRED, directory-symlink still `[NOT EXECUTED]`.
-**FILES:** `absence_claim_control.py` · `absence-fixtures/` · `AGENT-REPORTS.md`.
-**`c8_provenance_ledger.py` graded SOUND — DO NOT TOUCH.**
-★★★ **ORDERED BEFORE THE QUEUED GATE-B ITEM PURELY FOR CONTEXT LOCALITY — the worker
-has been in that file all night. Item 2 is NOT descoped.**
-★★★★★ **PRE-REGISTERED RETIREMENT TRIGGER (R-478 §5a): this is ROUND THREE in which
-every named shape closed green and a new unnamed shape appeared. IF A FOURTH IS FOUND
-AFTER §5a LANDS, THE FIXTURE SUITE IS RETIRED, NOT PATCHED. Decided before the data.**
-**[MEASURED] START-RECEIPT `AR-480` filed `23:26:58` — the relay carried R-478 in under
-three minutes.**
+★★★★★ **THE GUARD LANE IS CLOSED. `absence_claim_control.py` AND
+`mutation_redproof.py` ARE RETIRED AS CERTIFICATION INSTRUMENTS (R-479). PATCHING THEM
+IS NOW FORBIDDEN, NOT MERELY UNAUTHORIZED. No grade is owed or permitted on
+`b67be086`.** ★★★ **PRESERVE both files as historical diagnostics — do not delete,
+rewrite or tidy them. ★★★★★ NO FUTURE RULING MAY CITE THEIR EXIT CODES AS PROOF OF
+SURFACE-WIDE ABSENCE; such claims are `[VOID]`, exactly as R-472 voided capability
+mode.**
 
-**§5b QUEUED, CONTRACT UNCHANGED:** R-474 §5 Item 2 / R-477 §4 — the Gate-B packet
-revision. **First act: OPEN the four `entry_conditions` consumers, do not name them.**
-Gate-B DESIGN may proceed; **TREATMENT EXECUTION stays BLOCKED.**
+**THE WORKER'S TASK IS R-474 §5 Item 2 / R-477 §4 — the Gate-B packet revision, DESIGN
+ONLY (treatment execution stays BLOCKED).** ★★★ **First act, non-negotiable: OPEN AND
+READ all four `entry_conditions` consumers — `spec-timeframe-recovery.ts` ·
+`playbook-registration.ts` · `spec-archetype-matcher.ts` · `spec-family-bindings.ts` —
+before revising the packet. AR-473 named them without opening them and that is how the
+design break survived its first packet.** **OBSERVABLES:** START-RECEIPT ~2 min naming
+the first consumer opened · first substantive report ~40 min. **HONEST-PARTIAL CLAUSE
+APPLIES.**
 
-**§5c MINE, BOTH NAMED SO NEITHER LAPSES:** (i) the `−75 → −74` correction — **DONE in
-this file, same motion as R-478**; (ii) the genuine-survivor truth-set freeze (R-474
-§4) — **STILL UNDISCHARGED.**
+★★★★★ **REPLACEMENT POLICY, BINDING — DO NOT BUILD ANOTHER UNIVERSAL REGEX ABSENCE
+CERTIFIER.** For any future literal-text absence question: **(1)** freeze an explicit
+file manifest WITH HASHES · **(2)** task-specific literal search over that manifest only
+· **(3)** a positive control over the same files · **(4)** publish unreadable AND
+excluded members · **(5)** independently grade any load-bearing conclusion.
+★★★★★ **For capability / executable-use questions use the language's REAL PARSER or
+TYPE CHECKER. LITERAL TEXT SEARCH MAY NEVER CERTIFY CAPABILITY AGAIN.**
+
+**MINE, BOTH NOW UNBLOCKED AND NEITHER MAY LAPSE:** **(1)** build the **ADDITIVE
+current-production baseline** (R-478 §4) — live DB under a read-only transaction,
+current executing commit + hashes, keyed `(strategy_id, condition_id)`, sentinel
+reported separately, four counts kept distinct, full transition artifact, regenerated
+manifest + ranking, independent grade before it becomes authoritative. **NEVER overwrite
+the historical freeze.** **(2)** freeze the **genuine-survivor truth set** (R-474 §4)
+keyed `(video, transcript hash, exact span, exact-slice hash)`, five case types,
+**before any treatment result exists.**
+★★ **DONE ALREADY: the `−75 → −74` correction, in this file, same motion as R-478.**
+
+### SUPERSEDED — R-478 §5a (kept one generation for the trail)
+Six-property output-count fix; DELIVERED at `b67be086` and verified real at this desk.
+**[MEASURED] START-RECEIPT `AR-480` `23:26:58`, delivery `AR-481` `23:30:27` — the relay
+carried R-478 in under three minutes.** ★★ **The repairs stand; the INSTRUMENT does
+not.**
 
 ### SUPERSEDED — R-475 §5 (kept one generation for the trail)
 ★★★★★ **THE §3 BOUNDED CORRECTION, ORDERED AS A PROPERTY:** *"NO PATH MAY LEAVE THE
@@ -243,20 +260,32 @@ row is a POSITIVE CONTROL I ran deliberately; I did not infer it from the source
 ★★★ **AR-481's "ACCEPTANCE COMMAND 2 → exit `0`" is TRUE IN ITS ENVIRONMENT AND FALSE
 IN MINE. New law: `AN ACCEPTANCE COMMAND'S EXIT CODE IS A PROPERTY OF THE ENVIRONMENT
 TOO — PIN THE ENCODING OR DO NOT PIN THE CODE.`**
-★★ **Direction matters: this is a FALSE RED, not a false green. It lets no regression
-through. But it is the same species this desk keeps convicting —
-`AN EXIT CODE IS NOT A VERDICT UNTIL YOU KNOW WHAT PRODUCED IT` — and any CI step or
-wrapper reading this command would report permanent failure.**
+★★★★★ **⚠ EVERYTHING BELOW THIS LINE WAS MY REASONING AND IT WAS WRONG. STRUCK BY
+R-479. KEPT VERBATIM AS THE AUDIT TRAIL, PER THE LEDGER'S OWN "corrections are visible,
+never silent" RULE — DO NOT ACT ON IT.**
+> ~~Direction matters: this is a FALSE RED, not a false green. It lets no regression
+> through.~~ · ~~DOES THIS FIRE R-478's RETIREMENT TRIGGER? NO. The trigger names a
+> fourth unnamed shape in the class the three rounds shared — the suite passing when it
+> should fail — whose lesson was that the ASSERTION APPROACH may be unsound. This is a
+> one-line console-encoding bug in a print statement; not an assertion defect, and it
+> fails in the opposite direction.~~
 
-★★★★★ **DOES THIS FIRE R-478's PRE-REGISTERED RETIREMENT TRIGGER? NO — AND THE
-REASONING IS RECORDED HERE BECAUSE A TRIGGER YOU DECLINE TO FIRE NEEDS ITS REASONS ON
-THE RECORD OR IT BECOMES A TRIGGER YOU RATIONALISED AWAY.** The trigger names a
-*fourth unnamed shape* in the class the three rounds shared: **the suite passing when it
-should fail** (silent prune → output boundary → output-count boundary), whose lesson was
-that the ASSERTION APPROACH may be unsound. **This is a one-line console-encoding bug in
-a print statement — it is not an assertion defect, and it fails in the opposite
-direction.** ★★ **It is still a real finding that owes a same-wave close under the
-zero-carry-forward rule; it is not evidence that the approach is wrong.**
+★★★★★ **THE TRIGGER FIRES. THE SUITE IS RETIRED (R-479). WHY I WAS WRONG, BOTH HALVES
+[MEASURED HERE]:**
+- **"NOVEL" IS FALSE.** `ADVISOR-RULINGS.md` R-474 names this defect `F-2`, verbatim:
+  *"the hardcoded `★` crashes the exit-`0` path under `cp1252`."* AR-475 verified it
+  FIXED. **`b67be086` reintroduced the identical codepoint on the identical success
+  path, inside the harness built to prove regressions are caught.**
+- **"LETS NOTHING THROUGH" IS FALSE.** AR-475: *"**F-2 WAS MASKING F-1** … the broken
+  guard was INDISTINGUISHABLE FROM A WORKING ONE."* **This exact crash has already
+  concealed a false green once in this codebase.**
+- **AND THE PROCEDURAL ONE, WHICH IS WORSE:** R-478 pre-registered *"a fourth unnamed
+  shape."* **I narrowed it to "false-green shape" AFTER seeing the data.**
+  ★★★★★ **`A PRE-REGISTERED CRITERION NARROWED AFTER THE DATA IS NOT A CRITERION, IT IS
+  A PREFERENCE WITH A TIMESTAMP.`** I wrote the "or it becomes a trigger you
+  rationalised away" sentence in the same paragraph where I rationalised it away.
+★★★★★ **`BEFORE CALLING A DEFECT NOVEL, GREP YOUR OWN LEDGER FOR IT.` The external read
+did not supply a fact I lacked — it supplied one I already owned and had not looked up.**
 
 ## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-479 — R-477 §3 DELIVERED AND THE FIXTURES NOW BITE
 
