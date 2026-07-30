@@ -1,0 +1,12 @@
+{
+  "video": "30-compiled-flip",
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "sess", "type": "WAIT_SESSION", "object": "during lunch", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" },
+      { "id": "third", "type": "WAIT_SESSION", "object": "regional window", "role": "spine" }
+    ],
+    "invalidations": []
+  }
+}

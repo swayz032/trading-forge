@@ -1,0 +1,12 @@
+{
+  "video": "23-silverbullet-evaluable",
+  "_why": "ZONE-AXIS GAP NAMED IN AR-497 section34: silver_bullet had NO fixture. Authority section2 measures silver_bullet at 180/1440 occupied = EVALUABLE, so this row is FULLY ORACLE-ADJUDICATED by the same derivation as 20-nyam-evaluable. silver_bullet is the ONLY zone with a single keyword phrase, so it is also the zone where a phrase-table deletion is least likely to be caught by a neighbour.",
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "sess", "type": "WAIT_SESSION", "object": "silver bullet", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" }
+    ],
+    "invalidations": []
+  }
+}
