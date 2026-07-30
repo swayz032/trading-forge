@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2297` at THIS commit, 2026-07-30 05:30 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2326` at THIS commit, 2026-07-30 05:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -82,7 +82,74 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-495 / AR-508** (2026-07-30 05:30). **DEBT PAID · WORKER UNBLOCKED.**
+## ⚠️★★★★★ SEAT — **R-496 IS OWED AND HELD** · `AR-509` + `AR-510` UNRULED (2026-07-30 05:50, FRESH ADVISOR SEAT = `claude.exe 23988`)
+
+★★★★★ **OPERATOR ORDER, DIRECT AND VERBATIM THIS SESSION, NOT A RELAY: *"REMEMVER WAIT ON GPT
+REPSONE BEFORE RULING"*. `THE PASTE IS THE GATE.` NO R-496 UNTIL THE PASTE ARRIVES. The ruling is a
+DEBT, not a cancellation — `A BLOCKED LEDGER WRITE IS AN UNPAID DEBT`. FIRST ACT OF THE NEXT WAKE:
+`AR-510` is the newest AR and it is UNRULED.**
+
+### ⚠️★★★★★ THE HOLD **COSTS** THIS ROUND — CHECKED, NOT ASSUMED (`A HOLD'S COST IS NOT A CONSTANT`)
+**[MEASURED HERE] §5A, §5B AND §5C ARE ALL DONE. THE WORKER HAS NOTHING AUTHORIZED LEFT — `F` IS THE
+DESK'S ACT AND IT IS GATED ON ME. THE WORKER IS IDLE ON THIS DESK**, exactly the AR-506 shape.
+Contrast R-492/R-493, where the hold cost nothing because queued work existed. **Do not copy forward
+"the hold is harmless"; re-derive it every round.**
+
+### ⚠️★★★★★ `F` CANNOT BE DISPATCHED BY THIS SEAT — A NEW CONSTRAINT, RECORDED BECAUSE EVERY PRIOR RULING ASSUMES OTHERWISE
+★★★★★ **[MEASURED HERE] This session's harness config forbids launching Agent-tool subagents unless
+the operator asks. R-495 §4 says "ONE `accuracy-validator`, DESK-DISPATCHED" — that instruction is
+NOT EXECUTABLE FROM THIS SEAT. `AN AUTHORIZATION THE HOLDER CANNOT EXECUTE IS AN UNOWNED
+PREREQUISITE` (§0.5: never leave one assigned to nobody). THE OPERATOR HAS BEEN TOLD IN PLAIN WORDS.
+Do not re-plan around it silently and do not route the grade back to this desk — `THE BUILDER DOES
+NOT GRADE`, and neither does the desk that verified it.**
+
+### ★★★★★ [FACT, MEASURED HERE — **NOT RULED**] THE DELIVERY OBJECT IS REAL, AND I VERIFIED IT WITHOUT TAKING THE REPORT
+**Tree named: `C:/Users/tonio/Projects/wt-ledger-e-delivery-20260730` @ `2011e8de`, branch
+`hardening/ledger-e-delivery-20260730`, `git status --porcelain` = `0` before AND after my runs.**
+| check | `[MEASURED HERE]` |
+|---|---|
+| base is the **PARENT**, not merely an ancestor | `git rev-parse HEAD^` = `9af37b8f…` ✓ · `rev-list --count` = **`1`** commit |
+| the 22 WIP paths | `git diff --name-status 3dcc6739..HEAD` = **exactly ONE path, the packet, status `A`** — stronger than 22 hash compares, and it proves membership in BOTH directions at once |
+| packet by hash | `5461086c…` **identical** in campaign source and delivery · `44,231` B · `587` lines |
+| the 22-vs-23 trap | **23 paths, `2477 + 587 = 3064` insertions.** The packet was ADDED, not dropped — the trap resolved the correct way |
+| parity gate, run by me | **EXIT `0`** · `Checked 12 sample specs against 12 declared members` · **`14`** `[NOT ADJUDICATED]` cells · authority *"16314 bytes read, sha256=`3494d4bb…` (**COMPUTED here**, VERIFIED equal to ORACLE.json's pin)"* |
+| materiality receipt, run by me | **EXIT `0`** · `12 → 11` · `false→true` = `0` · control holds `false → false` |
+| push / PR / remote | **NONE** — no upstream, `git branch -r --contains HEAD` EMPTY. WIP history intact, still `12` commits `9af37b8f..3dcc6739` |
+| CI wiring | parity gate at **`ci.yml:370`** + **`fast.yml:153`** ✓ · `materiality` = **`0`** in both — **AR-510 §5's declared CI gap is REAL and honestly declared** |
+
+★★★ **AND THE SHIPPED RECEIPT PRINTS ITS OWN GAP ON A GREEN RUN — *"CORPUS REACH: ZERO … A GREEN
+CHECK WITH NO PATH TO RED IS NOT A CHECK"*. The honest partial survived into the delivered artifact
+instead of being smoothed away at packaging time. That is the single most reassuring thing here.**
+
+### ★★★★★ C-2 ALSO MEASURED HERE — AND ITS REACH CONTROL RUN, WHICH IS WHAT MAKES THE ZERO MEAN ANYTHING
+**Real binary `node --max-old-space-size=8192 node_modules/typescript/bin/tsc --noEmit` (NOT `npx`) in
+the delivery tree: **EXIT `0`**, `0` `error TS` lines.** ★★★★★ **`A ZERO-ERROR tsc IS THE CLASSIC
+FALSE-CLEAN`, so I proved reach: `--listFilesOnly` = `3146` files and **all three changed TS files are
+IN the compilation** (`check-spec-binding-plan-parity.ts` `1` · `materiality-receipt-ledger-e.ts` `1` ·
+`spec-family-bindings.ts` `1`), with a NEGATIVE CONTROL (bogus name → `0`) proving the grep
+discriminates. `npx tsc FALSE-CLEANS IN A WORKTREE` — the real binary is the only admissible form.**
+★★ **`node_modules` in the delivery tree is a REAL directory, not a junction (`LinkType` empty) — so
+`rm -rf` there would not reach a shared target.**
+
+### ⚠️ WHAT I DID **NOT** VERIFY — `[RELAYED]`, AND ALL OF IT IS ON THE GRADER'S RE-PLANT LIST
+**C-4** the transient E-2 red · **C-5/C-6/C-7** restoration + marker sweep. ★★★ **I did NOT re-plant
+C-4 deliberately: mutating a shared worktree to test it would dirty the object under grade.
+`DO NOT TAKE A REAL RISK TO REMOVE AN APPEARANCE.`** **The five re-plants R-495 §4 names are STILL
+OWED and are still the grader's.** ★★ **Tree verified `git status --porcelain` = `0` AFTER every run
+of mine — I left the object exactly as I found it.**
+
+### ⚠️★★★ INSTRUMENT DEFECT FOUND THIS WAKE — THE WATCHDOG WATCHED LAST ROUND'S TREE
+★★★★★ **The idle watchdog (`blvk1mzxw`) reported `WORKER QUIET 15 min` at 05:40 while §5A and §5B had
+landed at 05:35/05:36 — because its two channels are `AGENT-REPORTS.md` + the **PARITY** worktree
+HEAD, and the work had moved to the **DELIVERY** worktree.** `A MONITOR AIMED AT LAST ROUND'S SURFACE
+REPORTS QUIET WHILE THIS ROUND'S WORK LANDS` — same species as `I MEASURED THE NEIGHBOURING OBJECT`.
+★★ **Its AR channel was correct and it self-corrected at 05:41 (`WORKER RESUMED`). NOT re-armed:
+`ONE RIG, NEVER NEW PLUS OLD` — the fix is to add the delivery-tree HEAD to the EXISTING watchdog,
+not to arm a second. Adopted this wake, unchanged: change-detector `b0s4aewbq` (PID `20632`) +
+watchdog `blvk1mzxw` (PID `1556`). ★★★ **PID `2728` under `claude.exe 15908` is the WORKER'S EAR on
+`ADVISOR-RULINGS.md` — NEVER TOUCH IT.**
+
+### ⚠️ SUPERSEDED — R-495 / AR-508 SEAT LINE (kept one generation)
 
 ★★★★★ **R-495 (`b0ae83c8`) — E APPROVED. `F` STILL CLOSED. §5A→§5B→§5C AUTHORIZED.**
 **[MEASURED HERE] the defect I missed last round is closed: `process.exit` in the materiality
@@ -113,44 +180,6 @@ tempting "fix" for a failing count is to drop the packet.**
 DOES NOT COMPLETE THE COMPILER, DOES NOT PRODUCE A TRADING-READY STRATEGY, AND P1–P3 AND GATE B
 STILL FOLLOW. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
 ★★ **Blueprint adopted through `afaf7664` (`4b0095ee`) — five commits, ladder intact each time.**
-
-### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation)
-## ⚠️★★★★★ ~~R-495 OWED AND HELD~~ — `AR-507` + `AR-508` UNRULED, WAITING ON THE PASTE
-
-★★★ **[MEASURED] THE HOLD COSTS: the worker has STOPPED before §5 on a premise I can show is FALSE,
-and §5 is its only remaining task. FIRST WAKE CHECK: `AR-508` is UNRULED.**
-
-### ⚠️★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **THE RATIFY PACKET EXISTS. AR-508 §2 SEARCHED THE WRONG DIRECTORY.**
-
-**AR-508 §2 states *"THERE IS NO RATIFY PACKET FOR THIS WORK … Nothing named for the parity
-prerequisite exists in either tree"*, measured over `docs/ratify-packets/` (21 files, positive
-control run).**
-★★★★★ **[MEASURED HERE] IT EXISTS: `docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`,
-**`29,238` B**, tracked, last committed `05fe528c`. The filename literally contains
-`LEDGER-E-PARITY-RATIFY-PACKET`.** **THE SEARCH SURFACE WAS `docs/ratify-packets/`; THE ARTIFACT IS
-IN `docs/designs/`.**
-★★★ **`I MEASURED THE NEIGHBOURING OBJECT` — this campaign's most-convicted shape, and the positive
-control is exactly what made it feel safe: it proved `docs/ratify-packets/` IS READABLE, which says
-nothing about whether the packet lives elsewhere. `A POSITIVE CONTROL ON THE WRONG SURFACE PROVES
-THE WRONG SURFACE.` The claim "in either tree" is the overclaim — a tree-wide search was never run.**
-★★ **[MEASURED HERE] it carries the five ratify parts (`1` WHAT & WHY · `2` BLAST RADIUS · `3` EXACT
-CHANGE · `4` VERIFICATION PLAN · `5` ROLLBACK) plus `6` LANE/PIN/NOT-DONE and `7` ACCEPTANCE.**
-
-★★★★★ **AND THE WORKER'S INSTINCT IS STILL RIGHT, WHICH IS WHY THIS IS A CORRECTION AND NOT A
-DISMISSAL: [MEASURED HERE] the packet last changed `01:24:39` — **BEFORE EVERY ONE OF STEPS A–E** —
-and contains `P-7` **0** times, `createHash` **0** times, `3494d4bb` **0** times. **IT DESCRIBES THE
-DESIGN, NOT THE DELIVERY.** So R-494 §5's verb `INCLUDE` IS genuinely wrong — **but the honest verb
-is `UPDATE`, not `AUTHOR`.** Stopping to ask was correct; the premise underneath it was not.**
-★★★ **NO DISPOSITION. Whether the update ships inside the delivery commit or is a separate desk
-item is R-495's work, and it waits for the paste.**
-
-### ★★★★★ E IS CLOSED AND THE THREE-PART SIGNAL IS WHOLE (AR-508, `3dcc6739`)
-**REACHABLE** (control outside the efficacy population, `false→false`) · **DETECTED** (transition
-identified, control NAMED) · **STOPS THE RUN** (`process.exit(1)`). **Pre-registered E-1/E-2/E-3 all
-held with no drift.** ★★★ **It asserted the EXIT CODE directly rather than inferring enforcement
-from the banner — the exact error R-494 §1 convicted, and the easy one to repeat while "verifying"
-a fix.** ★★ **Reviewed net delta for §5: `git diff --stat 9af37b8f..3dcc6739` = `22 files, 2477 (+),
-81 (-)`; `12` commits now separate them, not 11 — dated one commit later, not a contradiction.**
 
 ## ★★★★★ SEAT — CURRENT AS OF **R-494 / AR-506** (2026-07-30 05:05). **DEBT PAID · WORKER UNBLOCKED.**
 
