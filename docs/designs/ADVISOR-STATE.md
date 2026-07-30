@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1868` at THIS commit, 2026-07-30 02:35 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1883` at THIS commit, 2026-07-30 02:40 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `1868` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `1883` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -226,7 +226,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1868` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1883` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
@@ -1653,11 +1653,26 @@ newer than the last authorization? If BOTH yes, it is this state — say so and 
 ★★★★★ **THE MONITOR IS NOT AT FAULT AND MUST NOT BE RETIRED TO SILENCE IT. It reports
 SILENCE, which is exactly its contract, and a fresh seat could arrive at any minute —
 `RETIRING COVERAGE TO REDUCE YOUR OWN NOTIFICATION NOISE IS THE WRONG TRADE.`**
-★★ **REAL DESIGN GAP, NAMED NOT FIXED: its checklist cannot name "a stop receipt exists",
-so it cannot distinguish DECLARED-STOP from GENUINELY-STUCK. Same species as the earlier
-finding that it could not name the live-but-mute ear. `A BAR THAT MEASURES SILENCE CANNOT
-READ INTENT` — the fix is to have it read the newest AR for a stop receipt. NOT done
-mid-night while a monitor is live; recorded so it is owned.**
+★★ **DESIGN GAP #1: its checklist cannot name "a stop receipt exists", so it cannot
+distinguish DECLARED-STOP from GENUINELY-STUCK. `A BAR THAT MEASURES SILENCE CANNOT READ
+INTENT` — the fix is to have it read the newest AR for a stop receipt.**
+★★★★★ **CORRECTION TO MY OWN ENTRY ABOVE (02:40): I NAMED THE WEAKER DEFECT. THE SHARPER
+ONE IS THAT IT DOES NOT LATCH.** **[MEASURED HERE] firings at `02:21:57` · `02:26:58` ·
+`02:31:58` · `02:36:58` — a `5`-MINUTE PERIOD, four events in fifteen minutes, each
+re-reporting ONE unchanged condition with only the elapsed counter moving (`17→22→27→32`).**
+★★★ **`A MONITOR THAT RE-EMITS AN UNCHANGED CONDITION IS NOT REPORTING FOUR TIMES — IT IS
+REPORTING ONCE, FOUR TIMES.` The correct shape is EDGE-TRIGGERED: fire on CROSSING the bar,
+then stay silent until the condition CLEARS or MATERIALLY CHANGES (a new AR, a new commit).
+The elapsed counter is not a material change.** ★★ **This is the `alert-flood` species: the
+repetition trains its only reader to skim, which is precisely how a REAL firing gets missed.**
+★★★★★ **STILL NOT FIXED TONIGHT, AND THE REASON IS COVERAGE, NOT CAUTION: fixing it means
+retiring and re-arming a LIVE monitor, which opens a gap, and `advisor-onboarding` §4a's
+`ONE RIG, NEVER TWO` makes a botched swap worse than the noise. THE NOISE COSTS ME ONE CHEAP
+CHECK; A GAP COULD COST A MISSED SEAT. Owned, specified, deferred to a seat that is not
+mid-handover.**
+★★ **AND STOP RE-VERIFYING IT EVERY FIRING: once the two questions above answer yes, a
+repeat event five minutes later carries NO new information. Re-running the checklist each
+time is the reader paying the monitor's bug.**
 
 ★★★★★ **THE AR CHANGE-DETECTOR MUST BE CONTENT-HASH GATED, NEVER mtime ALONE —
 MEASURED THE HARD WAY 2026-07-29 22:40.** [MEASURED HERE] the desk committed
