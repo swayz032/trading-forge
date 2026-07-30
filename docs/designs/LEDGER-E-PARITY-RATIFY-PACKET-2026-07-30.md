@@ -170,8 +170,57 @@ diff can only ever prove agreement — **two identically-wrong lanes compare equ
 carries a hand-authored expected plan derived from the **SOURCE CONTRACT**, not from either lane's output.
 ★★★★★ **AND THE TRAP THAT MAKES THIS DELICATE: copying either lane's emitted JSON into the expected
 table is `HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM` — it would look like an oracle and assert
-nothing. The expected values must be reasoned from the contract (`FAMILY_META` semantics + the
-evaluable-zone rule) and must be reviewable line by line against it.**
+nothing.**
+
+> ⚠️★★★★★ **STRICKEN 2026-07-30 by R-483 §8-2 — PRESERVE-AND-STRIKE, NOT OVERWRITTEN. THE
+> WRONG WORDING IS RETAINED BELOW SO THE AUDIT TRAIL SHOWS WHAT WAS ORDERED AND WHEN.**
+> ~~*"The expected values must be reasoned from the contract (`FAMILY_META` semantics + the
+> evaluable-zone rule) and must be reviewable line by line against it."*~~
+> ★★★★★ **WHY IT IS WRONG — AND IT IS CIRCULAR, NOT MERELY VAGUE. [MEASURED BY THE DESK,
+> R-483 §5, `runtime-production` @ `9af37b8f`, at the executable line] BOTH HALVES OF THAT
+> NAMED AUTHORITY ARE CODE ON THE PARITY SURFACE:**
+> - **`FAMILY_META` IS NOT A CONTRACT.** It is a literal defined in **both lanes'
+>   implementation files** — `spec-family-bindings.ts:87` and `spec_family_bindings.py:341`.
+>   **Those two files ARE the surface under test.** The instruction cannot even say WHICH copy.
+> - **THE "EVALUABLE-ZONE RULE" RESOLVES TO THREE FILES THAT ALREADY DISAGREE:**
+>   `session_windows.py:171-172` lists both orphan zones in its lookup ·
+>   `spec_family_bindings.py:309-311` holds them in `REFUSED_SESSION_KEYWORDS` ·
+>   `spec-family-bindings.ts:71-72` holds them **in its BINDABLE table — the divergence this
+>   packet exists to repair.** `spec_family_bindings.py:276-277` records the split in writing.
+> ★★★★★ **`AN ORACLE DERIVED FROM THE IMPLEMENTATION IT JUDGES IS A THIRD MIRROR, NOT
+> INDEPENDENT TRUTH.`** An oracle built on that wording would have asserted only *"the code
+> agrees with the code"*, while carrying an independence claim in its name — **a stronger
+> false-safety shape than the five-field loop it was meant to replace, because it would have
+> looked like the fix.**
+> ★★★ **AND THIS SEAT WAS ONE STEP FROM SHIPPING IT.** AR-491 §51-52 pre-committed to
+> deriving rows *"from the session-window semantics"* — **which R-483 §64 names as pointing at
+> one of the three disagreeing files.** The instinct (author before observing, never adjust a
+> row to match output) was right; **its named source was not.** `NAMING AN AUTHORITY IS NOT
+> CHECKING WHERE IT LIVES — OPEN THE FILE.`
+
+★★★★★ **REPLACEMENT REQUIREMENT, BINDING (R-483 §8-1): PER-ROW NORMATIVE CITATION.**
+**Every expected value in the oracle MUST cite a normative authority that lives OUTSIDE both
+emitted plans, and the citation is part of the row — a row without one is not an oracle row and
+must not be written.** ★★★★★ **AND WHERE NO SUCH AUTHORITY EXISTS, THE DESK AUTHORS AND FREEZES
+IT — NOT THE IMPLEMENTER (R-483 §9).** A missing authority is a **STOP**, never a licence to
+reason one out from the code that happens to be nearby.
+★★★★★ **CURRENTLY HELD ON EXACTLY THIS GROUND: THE ORPHAN-ZONE ROWS (`lunch_blackout`,
+`overnight`).** R-483 §5 measured that no independent authority for them exists anywhere in the
+codebase, so R-483 §9 makes the frozen row-by-row table a **DESK DEBT owed before the oracle can
+close.** ★★ **UNTIL IT LANDS AND IS HASHED, ORPHAN-ZONE ORACLE ROWS DO NOT EXIST AND MUST NOT BE
+GUESSED.** The normative proposition the desk will freeze under is a claim about MEANING,
+derivable without opening either lane — **which is precisely what makes it admissible**: *a
+session predicate naming a zone with no computable window cannot be evaluated; binding it yields
+"only trade during X" executing as "never trade" while reporting `approximation=false`.*
+★★★ **ADMISSIBLE CITATION CLASSES** (each external to both plans): the frozen desk adjudication
+above · a dated ruling's explicit normative statement · published CME/exchange session
+definitions for a wall-clock zone · the source transcript's own words for a spec-level claim.
+★★★ **INADMISSIBLE, NAMED SO THE IMPLEMENTER CANNOT DRIFT: `FAMILY_META` (either copy) ·
+`session_windows.py` · `spec-family-bindings.ts` · `spec_family_bindings.py` · either lane's
+emitted JSON · this packet's own prose restating any of them.**
+★★ **STOP CONDITION, RESTATED HERE SO IT SITS WITH THE REQUIREMENT (R-483 §105): an oracle row
+citing any inadmissible source above is a HALT, and so is a row whose value was adjusted after
+an implementation output was observed.**
 
 **(c) EXHAUSTIVE MEMBERSHIP FIXTURES.** Every condition family in `FAMILY_META` × every evaluable zone ×
 every refused zone, plus the unbindable-in-both control and the shipped fixture untouched.

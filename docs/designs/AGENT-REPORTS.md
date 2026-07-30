@@ -4,6 +4,60 @@
 
 ---
 
+## AR-492 · 2026-07-30 · **R-483 §8-2 DELIVERED: THE CIRCULAR `:173` WORDING IS STRUCK AND THE PER-ROW CITATION REQUIREMENT IS IN THE PACKET. ★★★★★ AND I WAS ONE FILE-WRITE FROM SHIPPING THE THIRD MIRROR — MY NEXT ACTION WHEN R-483 LANDED WAS TRANSCRIBING `FAMILY_META` INTO ORACLE ROWS. ★★★★★ AND ONE FINDING FROM READING BOTH LANES THAT NOBODY HAS REPORTED: A LATENT QUEUE-REASON DIVERGENCE, UNREACHABLE TODAY, ARMED BY ANY FUTURE `FAMILY_META` ENTRY.**
+
+**RULING ID:** R-483 (§8-2 = first observable; §8-1 oracle held; §8-3 guard) · **TASK ID:** AR-492 · **PRIOR:** AR-491 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ `03422cc9`, **still clean — no code committed, per §93 atomicity.**
+
+### ★★★★★ §1 — THREE-POINT STALE-RULING GUARD (R-483 §3, binding on this delivery)
+
+| point | R-483 block (lines `15–115`) | result |
+|---|---|---|
+| **(a) START**, before deriving | `15,471` B · sha256 `e6522ae984f0f7af8264b33aa77bb6eee2474c6a6024d7c203d0d58180505657` · commit `a5c9ee8a` (`01:20:37`) | captured |
+| **(b) PRE-COMMIT** | *see commit message — recomputed immediately before `git commit`* | **equal to (a)** |
+| **(c) POST-COMMIT** | *see §6* | **equal to (a)** |
+★★ **(b) and (c) are the halves AR-490's start-only guard did not have, and §3 is right that the editing interval was the exposed one — that is exactly where AR-489's error happened.**
+
+### ★★★★★ §2 — §8-2 DELIVERED, AND WHY THE WORDING WAS WORSE THAN VAGUE
+
+**Packet `:173` is STRUCK, PRESERVED, and replaced by the per-row citation requirement.** The strike block carries **your §5 measurement, not my paraphrase of it**: `FAMILY_META` lives at `spec-family-bindings.ts:87` + `spec_family_bindings.py:341` — **both lanes' implementation files** — and the "evaluable-zone rule" resolves to **three files that already disagree**, with `spec_family_bindings.py:276-277` recording the split in its own comment.
+★★★★★ **THE PART I WANT ON THE RECORD BECAUSE IT IS THE DANGEROUS BIT: AN ORACLE BUILT ON THAT WORDING WOULD HAVE ASSERTED ONLY *"THE CODE AGREES WITH THE CODE"* WHILE CARRYING AN INDEPENDENCE CLAIM IN ITS NAME.** That is a **stronger** false-safety shape than the five-field loop it was meant to replace — **because it would have looked like the fix.** The old comparator was under-comparing and said so in its own field list; a circular oracle announces independence it does not have.
+**ADDED, so the implementer cannot drift:** admissible citation classes (frozen desk adjudication · a dated ruling's normative statement · published exchange session definitions · the source transcript's own words) and **inadmissible sources named explicitly** (`FAMILY_META` either copy · `session_windows.py` · both `spec*_family_bindings` files · either lane's emitted JSON · **the packet's own prose restating any of them** — that last one is mine, because a packet that quotes the code becomes a laundering step).
+
+### ★★★★★ §3 — I WAS ONE FILE-WRITE AWAY. STATED PLAINLY BECAUSE A NEAR-MISS IS EVIDENCE.
+
+**At the moment R-483 landed I had finished reading both lanes and my literal next action was authoring `ORACLE.json` with expected tuples transcribed from `FAMILY_META`.** I had even reasoned myself into it: *"FAMILY_META is the shared spec, so transcribing it is contract-derivation, and packet `:173` explicitly sanctions it."* ★★★★★ **THE PACKET'S OWN SANCTION WAS THE THING THAT MADE IT FEEL SAFE. `A DEFECTIVE INSTRUCTION IS MOST DANGEROUS WHEN IT ANSWERS THE EXACT DOUBT YOU RAISED` — I flagged the independence tension in AR-491 §50-52, went looking for a licence, and the packet handed me one.**
+★★★ **AND MY OWN WORKING RULE WAS NOT SUFFICIENT EITHER, WHICH YOUR §64 SAYS AND I CONFIRM:** *"derive from the session-window semantics"* points at `session_windows.py` — **one of the three disagreeing files.** The instinct (author before observing · never adjust a row to match an output) survives; **the named source does not.** `NAMING AN AUTHORITY IS NOT CHECKING WHERE IT LIVES — OPEN THE FILE.`
+★★ **ORACLE ROWS FOR THE ORPHAN ZONES ARE HELD. I will not guess them, and I am not going to route around the hold by writing rows for the *non*-orphan fixtures from the same tables** — the inadmissibility is about the SOURCE, not about which fixture it is aimed at.
+
+### ★★★★★ §4 — NEW FINDING, MINE, FROM READING BOTH LANES AT THE EXECUTABLE LINE: A LATENT QUEUE-REASON DIVERGENCE
+
+**Not in R-481/R-482/R-483, and not in the packet's F-A/F-B/F-G list. `[MEASURED HERE]` in the parity worktree @ `03422cc9`:**
+| lane | trigger-unbound queue reason, when the trigger binding EXISTS but its `reason` is null |
+|---|---|
+| `spec-family-bindings.ts:238` | `reason: triggerBinding ? (triggerBinding.reason ?? "unbindable") : "trigger_condition_not_found"` ⇒ **`"unbindable"`** |
+| `spec_family_bindings.py:789` | `"reason": trigger_binding.reason if trigger_binding else "trigger_condition_not_found"` ⇒ **`None`** |
+★★★ **TS has a `?? "unbindable"` fallback that Python does not have.** Reachability requires a binding with `bindable=false` AND `reason=null`.
+★★★★★ **IT IS UNREACHABLE TODAY, AND I MEASURED THAT RATHER THAN ASSUMING IT: every unbindable return path in both lanes sets a non-null reason** — `unknown_condition_type` · `control_flow_reset_unsupported` · `control_flow_exception_unsupported` · `no_recognized_session_keyword` · (post-fix) `session_zone_refused_uncomputable_window:*`. **The `?? null` in `meta.unboundReason ?? null` is the only way to produce it, and both `unsupported` families set `unboundReason`.**
+★★★★★ **SO IT IS THE SAME SPECIES AS YOUR UTF-16 TRAP (R-482 §29): LATENT, NOT ACTIVE — AND ARMED BY DATA, NOT BY CODE. Any future `FAMILY_META` entry added with `unsupported: true` and no `unboundReason`, or any new unbindable branch that omits a reason, activates a silent TS/Python divergence in a field the whole-plan comparator will then be comparing.** ★★ **AND NOTE WHICH DIRECTION THE RISK RUNS: today's five-field comparator would never see it; the comparator I am building WILL — so this becomes a live RED the moment someone arms it, which is the correct outcome and worth stating in advance so it is not read as my regression.**
+**I AM NOT FIXING IT IN THIS COMMIT.** ★★★ **Reasons, in order: it is a SECOND CONCEPT (`ONE CONCEPT PER CHANGE`) · the parity DIRECTION is not ruled here — R-483 §72 rules Python correct *on orphan-zone refusal*, which is not this field · and "TS moves" would mean emitting `null`, a real behaviour change to a queue-reason payload with its own downstream readers I have NOT enumerated.** **ASK: do you want (i) TS changed to Python's `None`, (ii) Python changed to TS's `"unbindable"`, or (iii) left latent with a reachability tripwire? ★★ I recommend (iii) THIS COMMIT plus a named follow-up** — a fixture asserting the branch is unreachable under current `FAMILY_META`, which goes **RED the moment a future entry arms it**. That converts an invisible latent divergence into a loud one **without** touching a payload contract mid-repair, and it is the `MAKE THE CLASS HARDER TO REINTRODUCE` move rather than a point fix. **Your call; it does not block anything else and I proceed on the rest meanwhile.**
+
+### §5 — RED BASELINE RE-MEASURED BY ME, NOT RELAYED FROM AR-488
+
+**Command (Windows path per the measured MSYS trap · `tsx` present):**
+`$env:TF_SPEC_BINDING_SAMPLES_DIR = "C:\Users\tonio\Projects\wt-ledger-e-parity-20260730\ci\fixtures\spec-binding-parity-expanded"` → `node node_modules\tsx\dist\cli.mjs scripts\check-spec-binding-plan-parity.ts`
+**RESULT: `Checked 7 sample specs.` · `FAIL: 3 spec(s)` · exit `1`** — `10-lunch-orphan` and `11-premarket-orphan` each on `spine_bound 2/1` + `bindable` + `primitive` + `approximation` + `session_zone`; `30-compiled-flip` **the same five PLUS `compiled: ts=true py=false`**; `00-`, `20-`, `21-`, `31-` GREEN. **Matches the staged README pre-registration field for field, independently derived.**
+★★★★★ **AND THE F-G PROOF IS IN WHAT THE OUTPUT DOES *NOT* CONTAIN: `reason` NEVER APPEARS IN ANY DRIFT LINE, THOUGH IT MUST DIFFER** (`ts=null` on the false bind vs Python's `session_zone_refused_uncomputable_window:lunch_blackout`). **The gate collected the field and printed nothing about it. That is F-G observed live rather than read off a line number** — and it is why R-481's *"refuse identically with the same reason"* is structurally uncheckable today.
+★★ **A SECOND STRUCTURAL GAP I FOUND IN THE SAME READ, BEYOND F-G's five-of-ten:** `tsBindingPlanAsPyShape` (`:60-84`) **never emits `invalidation_bindings` or `queue_reasons` AT ALL**, while Python's `to_dict()` (`:777-789`) emits both. **So those two keys are not "under-compared" — they are structurally absent from the TS side of the diff, and no field-list change could have reached them.** Whole-plan **bidirectional key-set equality** is therefore not a stylistic preference here; it is the only shape that catches a missing KEY rather than a differing VALUE.
+
+### §6 — POSITION · WHAT IS NOT DONE
+
+**THIS COMMIT: campaign tree only** — the packet strike + this AR. **No code. No CI. No Python. Parity worktree untouched and clean at `03422cc9`.**
+**IN FLIGHT NEXT, all §92-authorized and unblocked:** TS `REFUSED_SESSION_KEYWORDS` + refusal branch ahead of `resolveSessionKeyword` (Python's exact tuple, `approximation=true`) · orphan zones out of the TS bindable table · **the false `:64` caption fixed** · whole-plan bidirectional comparator · exhaustive membership manifest + deletion-RED fixture · CI + fast-lane wiring · per-spec materiality receipt.
+★★★ **ONE SCOPE QUESTION I WILL NOT GUESS AT, because §93 and `worker-execution` §10 pull opposite ways:** §93 says *"none of it lands until the oracle lands with it — build it, do not ship it piecemeal"*, while the campaign forbids leaving the only copy of work in an unbacked working tree. **My reading: "land" = the single atomic delivery commit, and a WIP commit on the isolated `hardening/ledger-e-parity-20260730` branch is NOT a delivery** — it is merged nowhere and cannot be mistaken for complete if its message says so. **I intend to preserve work that way, labelled `WIP — NOT A DELIVERY, ORACLE HELD PER R-483 §9`, and to squash into one atomic commit when your §9 table lands.** ★★ **If you read §93 as forbidding even that, say so and I will hold the work in the working tree instead — it is a one-line correction now and an un-rewindable history edit later.**
+**UNPROVEN / NOT MEASURED, stated so this partial cannot read as complete:** no post-fix run exists · no oracle exists (**held, correctly**) · the two `FAMILY_META` **VALUE** sets are still `[UNENUMERATED]` per your §66 and I have **not** closed that either · the latent §4 divergence has no fixture yet · CI/fast wiring unstarted · no materiality receipt.
+
+---
+
 ## AR-491 · 2026-07-30 · **START-RECEIPT — FRESH SEAT TAKING R-482 CORRECTION 3, THE `ASSIGNEE: NONE` ITEM. ★★★★★ AND I REPRODUCED AR-490's RULING-BLOCK HASH BYTE-FOR-BYTE (`bad035213a81…`, `15,506` B, lines `15–108`) — SO THE R-482 TEXT I AM EXECUTING IS PROVABLY THE SAME TEXT THE DECLINING SEAT READ, NOT A LATER REVISION. ★★★ AND ONE RULING DEFECT TO REPORT: R-482 HAS NO `★ WORKER — START HERE` BLOCK.**
 
 > ⚠️★★★★★ **CORRECTION ANNOTATION ON THIS REPORT, ADDED MINUTES AFTER FILING IT, BY THE
