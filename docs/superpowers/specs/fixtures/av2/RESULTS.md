@@ -42,3 +42,21 @@ no-grep-variant-works generalization (T1), homoglyph byte audits (T3/T4), and
 explicit refusal to overclaim beyond the fixture boundary (T1 blast radius).
 These behaviors are demanded by the v2 definition's laws, not by the dispatch
 prompts, which were identical in structure across baseline and v2 runs.
+
+## Rerun addendum (2026-07-30, post F-1/F-2 fixes)
+
+All four acceptance dispatches were RE-RUN with durable receipts written by the
+agents themselves to transcripts/T{1..4}-v2-verdict.md (F-2 remedy: the first
+runs' verdicts existed only as prose relayed by the dispatching session).
+Rerun outcome: 4/4 — T1 REFUTED @ src/jobs/nightly.ts:4 (+ runtime sentinel and
+mutual-exclusivity proofs), T2 REFUTED @ src/rotate.ts:2+4 (nonce round-trip,
+RED-control causation), T3 REFUTED @ receipts *:2 (+2 genuine extra findings),
+T4 CONFIRMED-CLEAN (6-mutant positive controls; fixture history audited and the
+correct-the-claim pattern explicitly cleared). The transcripts are the artifacts
+of record; this table's first-run column remains as history.
+
+Guard hardening after the independent grade: walkers descend .claude (depth 6),
+16 stale nested-worktree copies swept (population 65, accuracy-validator 0
+divergent), checker gained an independent census with its own self-test half.
+Final independent RE-GRADE: OWED, queued (rate-limit pause) - the wave is not
+certified until it lands.

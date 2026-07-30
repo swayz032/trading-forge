@@ -157,7 +157,15 @@ grade" lives in the plan's Task 8 protocol, where the dispatcher is.
   bounded file census, no `.claude` special-case, own depth bound) and goes RED with
   `CENSUS MISS` on any copy the scan walker failed to reach. A checker may never
   share its sweeper's enumerator — that is the audit-population law applied to our
-  own tooling.
+  own tooling. The self-test exercises BOTH mechanisms: half 1 plants a mutated
+  copy the walker must flag as DRIFT; half 2 plants a stray copy outside any
+  `.claude/agents` dir — structurally invisible to the walker — that the census
+  must flag as CENSUS MISS (added after the F-1 fix review found the census had no
+  path to red of its own). Stated domain of the whole guard: copies under
+  `C:\Users\tonio\Projects`, outside the SKIP set; both enumerators honor that
+  same boundary BY DESIGN, so a copy inside a SKIP dir or outside the root is
+  invisible to both — that is the guard's declared edge, not a blind spot it
+  claims to cover.
 - Covers ALL agent definitions (cheap class-level drift coverage) even though only
   accuracy-validator's CONTENT is rebuilt in this wave.
 - Wiring into the nightly rail job list is decided at plan time; manual invocation is

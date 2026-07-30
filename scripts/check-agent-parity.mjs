@@ -42,15 +42,15 @@ function findAgentDirs(dir, depth, out, allowSelfTest) {
 // different path: exhaustive bounded FILE walk, no .claude special-case, its
 // own depth bound. RED if it finds a copy the scan's walker did not.
 const CENSUS_MAX_DEPTH = 9;
-function censusFiles(dir, depth, names, out) {
+function censusFiles(dir, depth, names, out, allowSelfTest) {
   if (depth > CENSUS_MAX_DEPTH) return out;
   let entries;
   try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return out; }
   for (const e of entries) {
     const p = join(dir, e.name);
     if (e.isDirectory()) {
-      if (SKIP.has(e.name)) continue;
-      censusFiles(p, depth + 1, names, out);
+      if (SKIP.has(e.name) && !(allowSelfTest && e.name === '.parity-selftest')) continue;
+      censusFiles(p, depth + 1, names, out, allowSelfTest);
     } else if (names.has(e.name)) {
       out.push(p);
     }
@@ -87,7 +87,7 @@ function scan(allowSelfTest = false) {
     if (existsSync(p)) seen.add(p);
   }
   for (const name of masters.keys()) seen.add(join(MASTER_DIR, name));
-  const censused = censusFiles(PROJECTS_ROOT, 0, new Set(masters.keys()), []);
+  const censused = censusFiles(PROJECTS_ROOT, 0, new Set(masters.keys()), [], allowSelfTest);
   for (const p of censused) {
     if (!seen.has(p)) red.push(`CENSUS MISS: ${p} exists but the scan walker never reached it`);
   }
@@ -124,7 +124,28 @@ function selfTest() {
     console.error('SELF-TEST FAILED: planted row persists after cleanup');
     return 2;
   }
-  console.log(`SELF-TEST OK: walker+scan pipeline flagged the planted mutation and cleared after cleanup (baseline red rows: ${baseline.red.length})`);
+  // Half 2 — census path to red: plant a copy where the WALKER structurally
+  // cannot see it (no .claude/agents parent) and require a CENSUS MISS row.
+  const strayDir = join(plantRoot, 'stray');
+  mkdirSync(strayDir, { recursive: true });
+  writeFileSync(join(strayDir, victim), norm(readFileSync(join(MASTER_DIR, victim))));
+  let strayScan;
+  try {
+    strayScan = scan(true);
+  } finally {
+    rmSync(plantRoot, { recursive: true, force: true });
+  }
+  const censusCaught = strayScan.red.some((r) => r.startsWith('CENSUS MISS:') && r.includes('stray'));
+  if (!censusCaught) {
+    console.error('SELF-TEST FAILED: stray plant NOT flagged by the census (census regression)');
+    return 2;
+  }
+  const after2 = scan(true);
+  if (after2.red.some((r) => r.includes('.parity-selftest'))) {
+    console.error('SELF-TEST FAILED: stray plant persists after cleanup');
+    return 2;
+  }
+  console.log(`SELF-TEST OK: walker+scan flagged the planted mutation AND census flagged the walker-invisible stray; both cleared after cleanup (baseline red rows: ${baseline.red.length})`);
   return 0;
 }
 
