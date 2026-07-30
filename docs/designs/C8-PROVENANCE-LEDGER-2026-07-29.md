@@ -12,7 +12,22 @@
 >
 > ★★★ **INSTRUMENT:** `docs/replay-results/h1-battery/c8_provenance_ledger.py` — every
 > number below is its output, not a transcription. Re-run it; do not trust this table.
-> `--mutate` runs the broken-join fixture (§6).
+> `--mutate` runs the broken-join fixture (§6); `--break-reconcile` proves the
+> reconciliation gate can fire.
+>
+> ★★★★★ **REVISION 2 — THIS DOCUMENT AND BOTH ITS INSTRUMENTS WERE REJECTED AND
+> REPAIRED (R-469). Three defects were mine and all three are fixed at the source,
+> not annotated around:** (1) **a FALSE REFUTATION** of R-466's prompt hypothesis,
+> measured on the wrong copy of a 50-copy file — **withdrawn in §9, with the producer's
+> line 60 now carried**; (2) **`JOIN_RESIDUAL = 0` was a HARDCODED STRING LITERAL** in
+> the conservation table while the C8 table computed `1`, and the run exited `0`
+> regardless — **now one shared bucket computation, non-zero exit on any internal
+> disagreement**; (3) **the evidence figures UNDERCOUNTED** a contract that fails
+> `232/232` byte-exact — **corrected in §7 and now EMITTED by the instrument.**
+> ★★★ **The absence-guard shipped with a FALSE-GREEN that confirmed a nonexistent
+> capability — the inverse of the class it exists to catch. Repaired: every pattern is
+> bound to the requested name, and `CapabilityThatDoesNotExist_7F3A91` ships as a
+> permanent fixture that must exit non-zero.**
 
 ---
 
@@ -111,9 +126,19 @@ if not executable_spine:
 | JSON debris (other) | `3` | `{C0203}` · `{0:1}` · `{0199}` |
 
 ★★★ **Population-wide, not C8-specific: across all `455` matched rows — CLAUSE-ID `242`, DEBRIS `121`, PROSE `29`, OTHER `63`.**
-★★★★★ **TWO CONSEQUENCES, AND THE SECOND IS A DEFECT NOBODY HAD RECORDED: (1) `evidence` CANNOT SERVE AS THE INDEPENDENT SECOND RESOLUTION PATH — so the convergence R-467 §3 ordered is **SINGLE-PATH ON THE SPAN**, declared here rather than faked. (2) `~26%` of the field carries JSON SERIALIZATION DEBRIS, which is provenance-layer data corruption in the producer, NOT a classifier or refusal defect.**
-★★★★★ **BUT THE SPAN ITSELF IS SOUND, AND IT IS THE BRIDGE THAT MATTERS: `232/232` spans are numeric and in-bounds against the preserved transcript bytes, and the resolved slices are coherent, on-topic teacher speech —** `'This strategy performs best on the 15minut, 1 hour, and 4hou'` · `'Okay. And this is going to be done on low time frame.'` · `'We can scale down to the low time frames.'` **for conditions whose frozen label is `WAIT_SESSION`/`no_recognized_session_keyword`.**
-★★ **`20/232` resolve EXACT (slice == evidence); the rest diverge for the reason above, NOT because the span is wrong. I did not reconcile that silently and I am not reporting a convergence I do not have.**
+★★★★★ **THE QUOTE CONTRACT FAILS COMPLETELY, AND MY FIRST NUMBER HERE WAS AN UNDERCOUNT (corrected per R-469 §4, then RE-DERIVED by this instrument).** `SPAN`'s declared invariant is `evidence_quote === transcript.slice(start, end)`. Measured over the `232`:
+
+| check | result |
+|---|---|
+| span numeric AND in-bounds | **`232 / 232`** |
+| **INVARIANT HOLDS — byte-exact `evidence == slice`** | ★★★★★ **`0 / 232`** |
+| equal only after whitespace/case normalisation | `20 / 232` |
+| **DIVERGENT even normalised** | **`212 / 232` (91.4%)** |
+
+★★★★★ **AN EARLIER REVISION OF THIS LEDGER SAID `~26%` — COUNTING ONLY THE VISIBLE JSON DEBRIS. THE CONTRACT ACTUALLY FAILS `232/232` BYTE-EXACT. AND THE DISTINCTION THAT PRODUCED MY ERROR IS THE ONE WORTH KEEPING: `IN-BOUNDS PROVES THE ADDRESS IS VALID; IT DOES NOT PROVE THE SPAN IS SEMANTICALLY CORRECT.` I sampled slices, saw coherent on-topic teacher speech, and let NECESSARY read as SUFFICIENT.**
+★★★ **WHAT STILL STANDS: `232/232` addresses are VALID, and the sampled slices ARE coherent on-topic speech —** `'This strategy performs best on the 15minut, 1 hour, and 4hou'` · `'We can scale down to the low time frames.'` **— which is why the span remains the usable bridge. But "the spans are correct" is `[UNPROVEN]`: sampling is not the invariant, and the invariant is the test.**
+★★★★★ **TWO CONSEQUENCES: (1) `evidence` CANNOT SERVE AS THE INDEPENDENT SECOND RESOLUTION PATH, so the convergence R-467 §3 ordered is **SINGLE-PATH ON THE SPAN** — declared, not faked. (2) THE PROVENANCE LAYER OF THE PRODUCER IS BROKEN, not the classifier and not the refusal engine.**
+★★★ **REQUIRED FIX, FORWARD-ONLY (R-469 §4): derive `evidence_quote` DETERMINISTICALLY from `transcript.slice(start, end)` and keep any model-produced hint in a SEPARATE, EXPLICITLY UNTRUSTED field. DO NOT backfill it into historical artifacts (R-463's forward-baseline law).**
 
 ## 8 — PROVENANCE OF THE PRODUCER (recorded, NOT adjudicated)
 
@@ -124,9 +149,15 @@ if not executable_spine:
 
 - ★★★★★ **RAW PASS MEMBERSHIP — `[UNRECOVERABLE]`.** Which of the two union passes introduced each atom is gone; the producer persisted the FINAL SPEC, not the per-pass response arrays. ★★★ **NOT to be confused with ATOM MEMBERSHIP, which §5 establishes.**
 - ★★★★★ **THE SEMANTIC LABELS ARE HAND-CORRECTED JUDGMENT, NOT MEASUREMENT** (`CENSUS-REPRODUCIBILITY-MANIFEST` §7: the mechanical layer NOMINATED and every bucket was hand-corrected). Keying to them removes the WORKER from the grading loop; **it does not make the labels true.** Re-grading them is the `accuracy-validator`'s act.
-- ★★★★★ **`[UNMEASURED]` — THE LIVE DB.** R-468 §6 step 2 (compare each live `compiled_spec`/`spec_hash` against its canonical on-disk spec) **WAS NOT RUN.** This ledger rests on the ON-DISK canonical specs. **If DB and disk disagree, §3–§7 describe disk and not the library.** ★★★ **That comparison is the single largest open risk to this ledger and it is the next task.**
+- ★★★ **THE LIVE DB — NOT MEASURED BY THIS SEAT; CLOSED ON ONE EXTERNAL PATH ONLY.** R-468 §6 step 2 (compare each live `compiled_spec`/`spec_hash` against its canonical on-disk spec) **was NOT run by me.** ★★ **[RELAYED, external read, `[UNVERIFIED BY THIS SEAT]`, inside `BEGIN READ ONLY`] `120` live rows with `compiled_spec` · `40` distinct videos · `40 × 3` multiplicity · `0` missing disk artifacts · `0` `spec_hash` disagreements · `0` canonical inner-spec disagreements · `backtests_total = 0`.** ★★★★★ **SO THE RISK IS SUBSTANTIVELY RETIRED ON ONE PATH AND IS NOT CLOSED: R-469 §3 deliberately did NOT cancel the second path (`accuracy-validator` `a5a70a93c66262a61`, dispatched BEFORE that read existed, with this as its item 1). A single unreplicated read closing a deliverable's largest risk is exactly where this campaign has been burned. TWO PATHS OR IT IS NOT CLOSED.**
 - ★★ **`[UNMEASURED]`** whether `runtime-production`'s post-census commit `0b0d6617` (`record UNKNOWN_REQUIREDNESS`, `+72/−15`, 2 of 3 engine files moved off the manifest's recorded hashes) changes the C8 count. It touches REQUIREDNESS — the census's own `C6` class — so "it leaves C8 alone" would be an unmeasured mechanism claim. **Any Gate-B treatment must be re-verified against the executing lane; lane equivalence NO LONGER HOLDS.**
 - ★★ **`[UNMEASURED]`** the population OVERLAP MAP (`corpus_A` ↔ `POP-120-LIVE` ↔ tier-A) — v4 §0's own gap. **Any sentence joining `0/16` to `51.1%` is a claim about an unenumerated overlap.**
 - ★ **`[UNRECOVERABLE AT ORIGIN]`** original transcript identity · **`[UNRECOVERABLE]`** the DB read timestamp of the census.
 - ★★★ **THE UNREACHABLE `context` ENUM MEMBER IS *NOT* OFFERED AS THE CAUSE.** [MEASURED] `CLASS_MAP` has `13` keys, the schema enum offers `12`, difference exactly `{context}`; the schema is the decision boundary under constrained sampling, so that branch is dead. **BUT `observation`/`explanation`/`justification`/`recap`/`example` all map to the same `"contextual"` disposition and all ARE offerable — the functional outcome stays reachable by five routes. Hygiene defect, not the leak.** Filed so nobody promotes it into a cause later.
-- ★★★ **R-466 §1's LEADING HYPOTHESIS IS REFUTED AS WORDED AND R-468 CONFIRMS IT:** the atomizer does **not** "instruct chart/instrument context to become `WAIT_SESSION`". `WAIT_SESSION` appears only as one of 14 `ATOM_TYPES` members, reaching the prompt via `${ATOM_TYPES.join(", ")}`. **[HYPOTHESIS, NOT A FINDING] none of the 14 types represents non-executable context, so a clause passing the decision gate has no legal way to be typed as context — consistent with `232/233`, and "consistent with" is not "proven by".**
+- ★★★★★ **WITHDRAWN IN FULL, AND THE WITHDRAWAL IS THE MOST IMPORTANT LINE IN THIS DOCUMENT (R-469 §1, §6).** An earlier revision of this ledger stated that R-466 §1's leading hypothesis was *"REFUTED AS WORDED"* — that the atomizer does not instruct chart/instrument context to become `WAIT_SESSION`. **THAT WAS FALSE AND IT IS RETRACTED. It was measured on the CENSUS-LANE copy (`16,565` B) and published as a conclusion about "the atomizer" as a program.** ★★★ **A false refutation left standing in a deliverable is worse than an open question, so it is corrected HERE in the artifact and not only in a report.**
+  ★★★★★ **[MEASURED, tree named IN the command: `git -C .../tf-deep-scan show dc8a150:scripts/atomize-transcript.ts`] THE PRODUCER CONTAINS `WAIT_SESSION` `3`× (`:32`, `:60`, `:61`); THE CENSUS-LANE COPY CONTAINS IT `1`× (the `ATOM_TYPES` array only). PRODUCER LINE `60`, VERBATIM:**
+  > `"we trade this on crude oil" / "we're sitting on the 30-minute chart today"  -> YES (WAIT_SESSION — execution context: removing it changes what the engine runs on)`
+  ★★★★★ **SO R-466's HYPOTHESIS IS RESTORED AND STRENGTHENED: THE ACTUAL PRODUCER EXPLICITLY INSTRUCTS INSTRUMENT AND CHART CONTEXT TO PASS THE DECISION GATE AND BECOME `WAIT_SESSION`.**
+  ★★★★★ **ROOT CAUSE, NOW MECHANISTIC RATHER THAN MERELY LOCATED (R-469 §2): THE ADMISSION CONTRACT CONFLATES *"removing it changes what the engine runs on"* (RUN CONFIGURATION) WITH *"is an entry predicate"* (A PER-BAR CONDITION). Instrument and chart timeframe genuinely matter to execution and are NOT per-bar conditions; `:60` admits them as decisions on the first ground, and `ATOM_TYPES` (`:32`) offers 14 types none of which represents non-executable context — so `WAIT_SESSION` is the FORCED LANDING SPOT.**
+  ★★★ **AND IT IS A DESIGN DEFECT, NOT A TYPO: `:61` draws the opposite boundary carefully on the very next line — *"mark the high and low of the first 30 minutes" … -> YES (WAIT_STRUCTURE / FILTER — a price LEVEL, never `WAIT_SESSION`)*. The same author distinguishes precisely one line later. The conflation at `:60` is reasoned, and the reasoning is the defect.**
+  ★★ **CONSEQUENCE FOR §4/§5, WHICH SURVIVE AND STRENGTHEN: the `232` → `ATOM-ADMISSION` routing is no longer located by elimination — it is EXPLAINED by an instruction anyone can read. The fix target is the ADMISSION CONTRACT itself, and per R-469 §6 Gate B must be DETERMINISTIC: a prompt edit is a request, not a fix.**

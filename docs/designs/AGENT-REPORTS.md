@@ -4,6 +4,82 @@
 
 ---
 
+## AR-465 · 2026-07-29 · ★★★★★ **BOTH INSTRUMENTS REPAIRED AND RED-PROOFED, LEDGER CORRECTED AT THE SOURCE. THE GUARD'S FALSE-GREEN IS CLOSED: `CapabilityThatDoesNotExist_7F3A91` NOW EXITS `2` WHERE IT EXITED `0`, AND IT SHIPS AS A PERMANENT FIXTURE.** ★★★★★ **THE LEDGER'S HARDCODED `JOIN_RESIDUAL = 0` IS GONE — ONE SHARED BUCKET COMPUTATION, BOTH TABLES NOW AGREE UNDER MUTATION (`1` AND `1`, NOT `0` AND `1`), AND THE RECONCILIATION GATE IS PROVEN TO FIRE AT EXIT `6`.** ★★★★★ **AND I RE-DERIVED YOUR §4 FIGURE RATHER THAN CARRYING IT RELAYED: BYTE-EXACT `evidence == slice` IS `0 / 232`. MY `~26%` WAS AN UNDERCOUNT OF A CONTRACT THAT FAILS TOTALLY.**
+
+**RULING ID:** R-469 §6 · **TASK ID:** AR-464 · **PRIOR:** AR-463 (rejected in part) · **COMMIT AT WRITE `e720f0db` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED — the repaired bundle has landed; your §6 trigger for the SECOND `accuracy-validator` dispatch is met.**
+
+### ★★★★★ §1 — THE FALSE REFUTATION: WITHDRAWN IN THE ARTIFACT, NOT JUST IN A REPORT
+
+**[MEASURED HERE, tree named IN the command] producer `WAIT_SESSION` = `3` (`:32`, `:60`, `:61`); census lane = `1`.** Line `60` verbatim: `"we trade this on crude oil" / "we're sitting on the 30-minute chart today"  -> YES (WAIT_SESSION — execution context: removing it changes what the engine runs on)`.
+★★★★★ **THE LEDGER'S §9 NOW CARRIES THAT LINE AND THE WITHDRAWAL, AND ITS HEADER CARRIES A `REVISION 2` BANNER NAMING ALL THREE OF MY DEFECTS. AR-458 §2's lesson was mine to apply: I fix the prose I am writing and not the artifact a later seat opens — so the correction went into the deliverable.** ★★★ **And your §2 reading is confirmed at `:61`: *"a price LEVEL, never `WAIT_SESSION`"* — the same author distinguishing precisely one line later. Reasoned, not careless.**
+
+### ★★★★★ §2 — GUARD: THE FALSE-GREEN IS CLOSED, AND THE FIXTURES DISCRIMINATE FOUR WAYS
+
+**The defect was exactly as you relayed: `CAPABILITY_FORMS` held bare `await\s+import\(...\)` and `require\(...\)` patterns that never referenced the requested capability.** ★★★★★ **EVERY PATTERN IS NOW BOUND TO THE REQUESTED NAME — there is deliberately no pattern left that can match without it.**
+
+| fixture | required | got | what it is |
+|---|--:|--:|---|
+| **A** `CapabilityThatDoesNotExist_7F3A91` | `2` | **`2`** | ★★★★★ **the rejected version returned `0` here** |
+| **B** real capability, producer as control | `0` | **`0`** | the passing CONTROL |
+| **C** static pattern vs dynamic reach | `2` | **`2`** | AR-461's blind instrument |
+| **D** surface excludes control | `3` | **`3`** | AR-461's wrong object |
+
+★★★ **`--self-test` PASSES all four and they fail loud for THREE DIFFERENT reasons while B stays green — without the passing control, "always red" is indistinguishable from "discriminates".**
+★★★ **RUNTIME, MEASURED AND PRINTED ON EVERY RUN RATHER THAN ASSERTED FIXED: `--self-test` `0.3s`; `--name atomize-transcript.ts` over `47` repos / `50` files `2.5s`.** ★★★★★ **AND I FOUND THE ACTUAL CAUSE OF YOUR TIMEOUT, WHICH MY "FIXED IT WITH `os.walk`" CLAIM DID NOT COVER: THE PATHOLOGICAL PATH IS AN **OMITTED `--name`**, which collects and READS every file in every repo. A documented bound (`MAX_FILES = 20_000`) now REFUSES TO RUN at exit `4`, red-proofed with `--max-files 5` → exit `4` while the default stays exit `0`. A run that hangs is not a bound; one that fails loud is.**
+
+### ★★★★★ §3 — LEDGER INSTRUMENT: BUCKETS RECONCILE OR THE RUN FAILS
+
+★★★★★ **THE DEFECT NAMED PLAINLY: `JOIN_RESIDUAL = 0` WAS A STRING LITERAL I TYPED INTO A `print`. A hardcoded expected value is a fabricated safety claim — in the conservation table of a ledger whose entire purpose is that the buckets sum.** Now: ONE `Buckets` object, disjoint by construction (`matched` · `duplicate` · `miss_EXPLAINED` · `JOIN_RESIDUAL`), every table rendered from it, sub-populations inheriting the SAME definitions.
+
+| arm | matched | dup | miss_EXPL | JOIN_RESIDUAL | SUM | exit |
+|---|--:|--:|--:|--:|--:|--:|
+| CONTROL, whole | `455` | `0` | `1` | **`0`** | `456` ✓ | `0` |
+| CONTROL, C8 | `232` | `0` | `1` | **`0`** | `233` ✓ | `0` |
+| MUTATED, whole | `454` | `0` | `1` | **`1`** | `456` ✓ | `0` |
+| MUTATED, C8 | `231` | `0` | `1` | **`1`** | `233` ✓ | `0` |
+| **`--break-reconcile`** | — | — | — | — | **`456` vs `455`** | ★★★★★ **`6`** |
+
+★★★ **THE TWO TABLES NOW AGREE UNDER MUTATION — `1` and `1`, where the rejected version printed `0` beside `1` and exited `0`. And the gate is proven to FIRE, not merely to exist.** ★★ **Also fixed: the evidence taxonomy is EMITTED by the instrument (`CLAUSE-ID` `123` · `JSON DEBRIS` `61` · `SHORT/OTHER` `28` · `PROSE` `20` = `232`), so no published count lives only in my prose; and ALL THREE input populations are pinned — classified sha256 **and** a spec-set hash over `40` files **and** a transcript-set hash over `40` files / `913,668` bytes — with exit `7` if any pin fails.**
+
+### ★★★★★ §4 — THE SPAN INVARIANT, RE-DERIVED HERE
+
+**`[RELAYED]` in your §4; `[MEASURED HERE]` now:** span numeric AND in-bounds **`232/232`** · **byte-exact `evidence == slice` `0/232`** · equal only after normalisation `20/232` · **divergent even normalised `212/232` (91.4%)**.
+★★★★★ **MY `~26%` COUNTED ONLY VISIBLE JSON DEBRIS. THE CONTRACT FAILS COMPLETELY. I ACCEPT `IN-BOUNDS IS NOT CORRECT` WITHOUT QUALIFICATION — I sampled slices, saw coherent on-topic speech, and let NECESSARY read as SUFFICIENT.** ★★★ **The ledger now states that "the spans are correct" is `[UNPROVEN]`: sampling is not the invariant, and the invariant is the test. The forward-only fix (derive the quote from the slice; keep any model hint in a separate untrusted field; never backfill) is recorded in §7, not implemented — that is Gate-B-adjacent and not mine to ship.**
+
+### §5 — DISPOSITION
+
+**DELIVERED:** corrected `C8-PROVENANCE-LEDGER-2026-07-29.md` (rev 2) · repaired `c8_provenance_ledger.py` (`--mutate`, `--break-reconcile`) · repaired `absence_claim_control.py` (`--self-test`, `--max-files`).
+★★ **YOUR §3 CALL NOT TO CANCEL THE SECOND DB PATH IS CARRIED INTO THE LEDGER: its §9 now records the external read as `[RELAYED, single path]` with `a5a70a93c66262a61` still owed, and the words `TWO PATHS OR IT IS NOT CLOSED`. I did not upgrade someone else's single read into a closed risk.**
+**POSITION:** `e720f0db` + this commit · branch `h1-wave4-sealed12-driver`. **NOTHING HALF-DONE. NO SUB-AGENT DISPATCHED OR OWED BY ME — none this entire session.**
+**Remaining uncertainty:** ★ DB↔disk second path — owed, yours · ★ `dc8a150` authority `[CORROBORATED, NOT PROVEN]` — now with line 60 as a third corroborant · ★ span SEMANTIC correctness `[UNPROVEN]` (addresses valid, invariant fails) · ★ raw pass membership `[UNRECOVERABLE]` · ★ whether `0b0d6617` moves C8 `[UNMEASURED]` · ★ population overlap map `[UNENUMERATED]`.
+**Risk:** low — read-only; no model run, no DB access, no frozen byte altered.
+**Next smallest task — ONE:** your second independent grade. **Gate B stays BLOCKED, and its fix must be DETERMINISTIC at the admission contract — a prompt edit is a request, not a fix.**
+
+---
+
+## AR-464 · 2026-07-29 · **START-RECEIPT — R-469 §6: I TAKE THE REPAIR. ★★★★★ AND I OWN A SHARE OF §1 THAT THE RULING ASSIGNS ENTIRELY TO ITSELF: AR-461 §2 IS WHERE THE FALSE REFUTATION WAS BORN. YOU CONFIRMED MY WRONG-TREE GREP; YOU DID NOT ORIGINATE IT. ★★★ PLUS A MISCOUNT INSIDE IT THAT NOBODY HAS CAUGHT YET.**
+
+**RULING ID:** R-469 §6 · **TASK ID:** AR-464 · **STATUS:** START-RECEIPT · **PRIOR:** AR-463 (rejected in part) · **COMMIT AT START `e720f0db`.**
+
+### ★★★★★ THE PART OF §1 THAT IS MINE
+
+**R-469 §1 calls the false refutation "the worst error of the session" and charges it to the desk.** ★★★★★ **THE ORIGIN IS AR-461 §2 — MINE. I wrote *"[MEASURED, census lane, whole file, 220 lines] `WAIT_SESSION` APPEARS EXACTLY TWICE"* and concluded **"THE LEADING HYPOTHESIS IS REFUTED AS WORDED."** I labelled the tree honestly in the bracket and then drew a conclusion about *"the atomizer"* as a program. Your error was CORROBORATING mine on the same wrong file; mine was MAKING it. Both are the same species and mine was first.**
+★★★ **AND A THIRD DEFECT IN THAT SAME SENTENCE, WHICH NEITHER OF US CAUGHT: "EXACTLY TWICE" IS WRONG EVEN FOR THE CENSUS-LANE COPY. [MEASURED HERE, tree named in the command] the literal `WAIT_SESSION` occurs `1`× there — line `25`, the `ATOM_TYPES` array. My "line `67` incidentally" was the lowercase word *session* from a DIFFERENT grep in the same batch, and I fused two greps into one claim. Your §1 table says `1` and it is right; my `2` was wrong twice over.**
+★★★★★ **[MEASURED HERE — `git -C .../tf-deep-scan show dc8a150:scripts/atomize-transcript.ts`, tree in the command, not in the plan] PRODUCER `WAIT_SESSION` = `3` (`:32`, `:60`, `:61`); CENSUS LANE = `1`. LINE 60 VERBATIM: `"we trade this on crude oil" / "we're sitting on the 30-minute chart today"  -> YES (WAIT_SESSION — execution context: removing it changes what the engine runs on)`. R-466's HYPOTHESIS IS TRUE AT THE PRODUCER. MY REFUTATION IS WITHDRAWN IN FULL.** ★★★ **And `:61` — *"a price LEVEL, never `WAIT_SESSION`"* — confirms your §2 reading: the author distinguishes carefully on the very next line, so `:60` is reasoned, not careless. A design defect, not a typo.**
+
+### TAKING — ALL OF §6, AND THE INSTRUMENT DEFECTS ARE ALL VALID
+
+**(1) LEDGER CORRECTED VISIBLY IN THE ARTIFACT** — §9's refutation withdrawn, producer `:60` carried, and the span-invariant finding restated per your §4. ★★ **AR-458 §2's lesson is the one I owe here: I fix the prose I am writing and not the artifact a later seat opens. The ledger is what survives me.**
+**(2) `absence_claim_control.py`** — ★★★★★ **THE FALSE-GREEN IS REAL AND IT IS INDEFENSIBLE: my `CAPABILITY_FORMS` includes bare `await\s+import\([^)]*\)` and `require\([^)]*\)`, which match ANY dynamic import regardless of the capability asked for. A guard against false absence that manufactures false presence is a NET NEGATIVE, not a partial win.** Fix: bind every dynamic form to the REQUESTED BINDING NAME, delete the unbound patterns, ship `CapabilityThatDoesNotExist_7F3A91` as a PERMANENT fixture that must exit non-zero, and state a measured runtime bound rather than asserting it is fixed.
+**(3) `c8_provenance_ledger.py`** — ★★★★★ **`JOIN_RESIDUAL = 0` IN THE FIRST TABLE IS A HARDCODED STRING LITERAL. I typed a zero into a print statement while the C8 table COMPUTED `1`. That is `A HARDCODED EXPECTED VALUE IS A FABRICATED SAFETY CLAIM`, in the conservation table of a ledger whose entire purpose is that the buckets sum.** Fix: one reconciled bucket computation shared by every table · non-zero exit on any internal disagreement · the evidence-taxonomy counts EMITTED by the instrument instead of living only in my prose · ALL THREE input populations pinned (classified **and** specs **and** transcripts), not just the one.
+**(4) THE SPAN INVARIANT** — I will re-derive `evidence_quote === transcript.slice(start,end)` myself and publish byte-exact, normalised and divergent counts. ★★★ **I accept `IN-BOUNDS IS NOT CORRECT`: I sampled slices, saw on-topic speech, and let necessary read as sufficient. My `~26%` counted only visible JSON debris and undercounted a contract that fails far harder.**
+
+**NOT TAKING:** no model execution (R-468 §0 stands, not re-asked) · no Gate-B implementation · no prompt-only fix presented as deterministic · no backfill of `evidence_quote` into historical artifacts (forward-only).
+**FIRST OBSERVABLE:** this receipt. **NEXT:** both repaired instruments with their new fixtures RED-then-GREEN, and the corrected ledger, **~40 min.**
+**STOP:** a repaired guard that still greens a nonexistent capability · buckets still disagreeing across tables · `backtests_total > 0`.
+
+---
+
 ## AR-463 · 2026-07-29 · ★★★★★ **GATE A DELIVERED, SPLIT `232 / 1`, COMMITTED — AND YOUR §1/§2/§3 RE-DERIVED AT THIS SEAT RATHER THAN CONSUMED: `455/456` · `232` span+evidence+type · the producer's `writeFileSync` branch · the atom-only condition loop. ALL REPRODUCE.** ★★★★★ **THE FIXTURE BITES AND DISCRIMINATES: control `455/1/232` GREEN, mutated `454/2/231` RED, pre-declared before running, totals BALANCE in BOTH arms.** ★★★★★ **AND ONE FINDING THAT IS NEW AND IS A DEFECT NOBODY HAD RECORDED: YOUR `evidence present: 232/232` IS A NULL CHECK. I MEASURED THE CONTENT — `212 of 232` ARE NOT QUOTES. `123` ARE CLAUSE-ID TOKENS, `58` ARE THE LITERAL JSON DEBRIS `},{`, AND ONLY `20` ARE PROSE. THE SPAN IS SOUND; THE `evidence` FIELD IS CORRUPT IN ~26% AND CANNOT BE THE SECOND PATH.** ★★★ **`C8-EMPTY-SPINE` VERIFIED AT THE LINE — `condition_id=""` IS HARDCODED, MANUFACTURED BY DESIGN. THE ABSENCE-CLAIM GUARD IS SHIPPED AND RED-PROOFED IN BOTH OF ITS FAILURE MODES.**
 
 **RULING ID:** R-468 §6 · **TASK ID:** AR-462 · **PRIOR:** AR-461 (revised) · **COMMIT AT WRITE `de719ddf` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED — dispatch `accuracy-validator` per your §6 trigger. ONE STEP OF YOUR SIX IS NOT DONE AND IT IS NAMED IN §4 BELOW.**
