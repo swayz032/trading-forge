@@ -105,6 +105,51 @@ Correctness repair stays **unconditional**; no switch may restore divergent bind
 **STOP IF:** an oracle value is copied from either lane · an oracle row cites `FAMILY_META`, `session_windows.py` or `spec-family-bindings.ts` as its authority · only start-time stale checking is reported · correction 3 is split into a partial that reads as complete · any path restores divergent binding · **`compiled` counts rise.**
 **GRADE:** ONE `accuracy-validator`, dispatched **by this desk** against the frozen implementation commit, with a working access recipe rather than prohibitions, **its agent id named in the consuming ruling.** Honest null accepted. **THE BUILDER DOES NOT GRADE. No dispatch until the complete implementation commit exists.**
 
+### ★★★★★ §12 — **§9 IS DISCHARGED. THE ORACLE ROWS ARE UNBLOCKED.** (appended `01:26`, same seat)
+
+**FROZEN:** `docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md` · **`10,600` B** · sha256
+**`09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086`** · authored **before any TS
+implementation result exists.** ★ **WORKER: §8-1's hold is LIFTED — build the oracle from THAT file.**
+
+★★★★★ **WHAT MADE IT NON-CIRCULAR — THE SPLIT I DID NOT HAVE WHEN I WROTE §9.** Two questions, not
+one: **Q1 "WHICH zones have no evaluable window"** is an ENGINE FACT · **Q2 "WHAT must be emitted for
+such a zone"** is SEMANTIC. Q2 needs no lane. **Q1's authority is an OCCUPANCY PROBE that measures
+BEHAVIOUR instead of reading a declaration:** `is_in_killzone()` over all 1440 minutes of a day.
+★★★ **IT NEVER READS `REFUSED_SESSION_KEYWORDS`, `SESSION_KEYWORDS` OR `FAMILY_META` — the three
+tables under repair — so deleting a zone from the table under test does not move one number. The
+table cannot game its own oracle.**
+
+**[MEASURED HERE, `runtime-production` @ `9af37b8f`, Wed `2026-07-29` UTC]** `ny_am` **180**/1440 ·
+`london` **180** · `ny_pm` **150** · `silver_bullet` **180** · `macro_window` **74** ·
+**`lunch_blackout` 0** · **`overnight` 0**. ★★★ **THE POSITIVE CONTROL IS INSIDE THE RUN: five
+non-zero, exactly two zero — a probe miswired to return `0` for everything is caught by the same
+execution that produces the finding.** ★★ `spec_family_bindings.py:294-297` states the same
+`0 of 1440` / `180 of 1440`; **I RAN IT RATHER THAN READING IT** — three false captions were
+convicted at this desk tonight, and a caption is a claim.
+
+★★★★★ **A CORRECTION AGAINST MY OWN §9, STATED PLAINLY:** §9 called the proposition *"derivable
+without opening either lane."* **Q2 is; Q1 is NOT, and I implied both were.** `lunch` is not
+inherently unevaluable — it has an obvious conventional window; **THIS ENGINE has no `_ZONE_CHECKS`
+entry for it.** The refusal is ENGINE-RELATIVE. Saying so is what makes the probe honest instead of
+decorative, and the frozen file leads with the correction.
+
+★★★★★ **AND THE TABLE LANDED ON A VERDICT I DID NOT ARRANGE.** Derived with no reference to either
+lane, fixture `30` gives `spine_bound 1/3 = 0.333 < 0.5` ⇒ **`compiled = false`.** R-481 measured
+**TS `true` / PY `false`.** ★★★ **SO PYTHON WAS RIGHT, TS WAS WRONG, AND THE REPAIR MUST MOVE TS
+`true → false` — THE FIX LOWERS THE `compiled` COUNT.** `A HIGHER compiled COUNT IS A FAILURE
+SIGNAL` (R-482) is not a slogan here; it is this table's arithmetic.
+★★★★★ **THE SHARPEST ROW IS `21` vs `10`: both `bindable=false`, and IF THEIR `reason` STRINGS ARE
+EQUAL, P-4 IS VIOLATED AND THE REPAIR IS INCOMPLETE WITH EVERY OTHER FIELD GREEN** — "we refuse this
+zone deliberately" and "we never recognized this text" need OPPOSITE remedies.
+★★ **THREE ROWS ARE SHAPE-SPECIFIED, NOT STRING-SPECIFIED** (the two unrecognized-vocabulary reasons
+and `⟨orphan:ZONE⟩`): assert non-null, zone-naming, and `21 ≠ 10`. **Do not freeze a literal string
+this desk did not derive.** **IF AN OBSERVED VALUE DISAGREES WITH THE FROZEN TABLE, FILE A FINDING —
+DO NOT EDIT THE TABLE.**
+★ **NOT COVERED, and the packet must say so `[UNENUMERATED — OPEN]`:** non-session families ·
+`invalidations` (all fixtures carry zero) · whether the two `FAMILY_META` copies agree on **VALUES**
+(same 14 KEYS measured; values not compared) · the `0.5` floor's correctness (declared as a
+parameter, not endorsed).
+
 ### §11 — LESSONS TO PERSIST
 
 ★★★★★ **`AN ORACLE DERIVED FROM THE IMPLEMENTATION IT JUDGES IS A THIRD MIRROR, NOT INDEPENDENT TRUTH.` And when you name an authority for an expected value, OPEN IT AND CHECK WHERE IT LIVES — "the contract" named two things here and both were the code under test.**
