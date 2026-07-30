@@ -29,6 +29,19 @@
 
 ## SEAT — CURRENT AS OF R-472 / AR-471
 
+**Ledger `R-477`** (commit `22f07905`). **Newest AR `AR-479` — UNRULED (awaiting the
+external read), R-477 §3 delivered at worker commit `5a403bed` and VERIFIED AT THIS
+DESK including its mutation red-proof. AR-477 ruled by R-477: behaviour ACCEPTED,
+instrument NOT RATIFIED.**
+★★★★★ **THE ONE ACTION THE NEXT SEAT OWES IMMEDIATELY: when the external read on
+AR-479 lands clean, DISPATCH ONE `accuracy-validator` AGAINST `5a403bed` and name its
+id. It is deliberately un-dispatched — see the AR-479 block below for why.**
+★★★★★ **AND THE CAMPAIGN-LEVEL FINDING OF THIS SESSION, ALREADY MEASURED AND
+COMMITTED: THE FROZEN C8 CONTROL DOES NOT SURVIVE `0b0d6617` — `233 → 158`, `−75`.
+R-477 §5's pre-registered STOP has fired. NO ABLATION MAY START until the baseline is
+re-established. See the block below.**
+
+### SUPERSEDED SEAT LINE (kept one generation for the trail)
 **Ledger `R-475`** (commit `a92f95aa`). **Newest AR `AR-475` — RULED: REVISE. Item 1
 is BETTER and is NOT RATIFIED.**
 ★★★★★ **WHY IT IS NOT RATIFIED — A THIRD FLOOR OF THE SAME DEFECT, REPRODUCED HERE
@@ -116,6 +129,39 @@ survives only at `:105` as a HISTORICAL note. The `:168` comment that claimed
 ★★ **STILL OPEN AND NOT CLAIMED BY ANYONE: directory-symlink traversal
 `[NOT EXECUTED]` · text-mode citations outside `docs/designs/` `[UNENUMERATED]` ·
 no independent post-repair grade exists.**
+
+## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-479 — R-477 §3 DELIVERED AND THE FIXTURES NOW BITE
+
+**AWAITING THE EXTERNAL READ. NOT RATIFIED.** [MEASURED HERE, worker commit
+`5a403bed`]:
+- **Fixtures now read the RENDERED verdict:** `:507-509` runs `run_text_check(…,
+  verbose=True)` inside `contextlib.redirect_stdout(io.StringIO())` and asserts on
+  the captured text. The `verbose=False` + `collect_files()` hole is closed.
+- **`--self-test` = `14` fixtures at pre-registered codes, exit `0`** (my run).
+- **CONTAINMENT IN SCOPE:** `absence_claim_control.py` · `absence-fixtures/` ·
+  `AGENT-REPORTS.md` only. ★★ **I first checked `HEAD` and got MY OWN state commit —
+  re-ran against the worker's actual commit. `NAME THE OBJECT`: `HEAD` in a shared
+  tree is whoever committed last, not the change you are grading.**
+- ★★★★★ **THE MUTATION RED-PROOF RUNS AND ALL FOUR MUTATIONS BIT [MEASURED HERE]:**
+  unmutated CONTROL → `0` GREEN · restore `unreadable[:8]` → `5` RED (F-5) · stop
+  printing `DENIED BY` → `5` RED (F-4 A **and** F-5) · stop emitting `EXCLUDED` → `5`
+  RED (F-4 B) · drop `MINUS` from the proposition → `5` RED (F-4 B).
+  ★★★ **IT PRE-NAMES THE EXPECTED CATCHER AND REPORTS THE ACTUAL ONE, so a mutation
+  caught by the WRONG fixture would be visible. That is a red-proof WITH
+  ATTRIBUTION, and it is stronger than what R-477 §3 ordered.**
+★★ **The `USAGE ERROR: invalid --pattern regex` lines are the F-3a fixture exercising
+exit `4` inside each self-test — EXPECTED OUTPUT, not a failure. Do not re-diagnose.**
+
+★★★★★ **THE GRADE IS DELIBERATELY NOT DISPATCHED YET, AND THIS IS A DECISION, NOT AN
+OMISSION.** R-477 §3 pre-registered "then dispatch exactly one grade". The trigger has
+fired and I am holding it until the external read on AR-479 lands, because
+**[MEASURED] that read has found a real, material hole in TWO CONSECUTIVE ROUNDS** —
+the silent prune (R-475) and the output-boundary gap (R-477) — and R-475 §0(a) already
+convicted this desk for spending a grade on a build with an unrepaired known hole.
+★★★ **`A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION, NOT ON THE ARTIFACT BEING
+WORTH THE WORK.` Waiting costs minutes; dispatching early has already cost a grade
+once. **NEXT SEAT: when the read lands clean, dispatch ONE `accuracy-validator`
+against `5a403bed` and NAME ITS ID in the ruling that consumes it.**
 
 ## ★★★★★ [FACT, MEASURED HERE] `0b0d6617` RESOLVED AT THE CLASSIFICATION LAYER — **THE FROZEN C8 CONTROL DOES NOT SURVIVE IT. −75 OF 233.**
 
