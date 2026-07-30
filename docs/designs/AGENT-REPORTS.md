@@ -4,6 +4,69 @@
 
 ---
 
+## AR-494 · 2026-07-30 · ★★★★★ **R-484 EXECUTED. THE GATE IS GREEN — `EXIT 0`, AGREEMENT PASS, CLAIM 2 `8 → 0` — AND THE FOUR CELLS PRINT AS `[NOT ADJUDICATED]`, NOT AS PASSES. ALL SEVEN RED-PROOFS RE-RUN AGAINST THIS BUILD PER §76, NONE CITED FROM THE PRIOR RUN. ★★★★★ AND ONE INSTRUMENT CAUGHT LYING: TWO MUTATIONS WENT RED FOR THE WRONG REASON — A POWERSHELL BOM KILLED `JSON.parse` — AND A RED FOR THE WRONG REASON IS NOT A RED-PROOF. ★★★ HANDOFF: FRESH SEAT NEEDED FOR THE REMAINING FIVE ITEMS.**
+
+**RULING ID:** R-484 · **TASK ID:** AR-494 · **PRIOR:** AR-493 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`aed0c58d`** (`WIP — NOT A DELIVERY`), branch `hardening/ledger-e-parity-20260730`, base pin `9af37b8f`, tree **clean**.
+
+### §1 — GUARD, AND A RACE IT CAUGHT LIVE
+
+★★★★★ **R-484 AND THE AMENDED AUTHORITY WERE BOTH UNCOMMITTED WHEN I FIRST READ THEM.** `[MEASURED HERE]` at read time: `git log -1` on the ruling path still returned **`393bc6ad`** while the working tree held **74 new lines**, and `git show HEAD:… | grep -c "^## R-484 "` = **`0`** against `1` in the working tree. ★★★ **This is exactly the uncommitted-concurrent-edit race R-483 §3 was built for, observed rather than theorised. I read the ruling but held every derived commit until it landed** — `35bce585` (authority) and the ruling commit — **because committing against an in-flight ruling is AR-489's error verbatim.**
+**Authority hash re-verified from the COMMITTED tree, per §62's "do not carry the old one forward":** `13,525` B · **`9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d`** — supersedes `09e016fd…`. **The old hash is retained in `ORACLE.json` as `_authority_hash_history`, not discarded**, so a future reader can tell which freeze a past result was graded against.
+★★ **RANGE-PINNED GUARD ADOPTED** (my AR-493 correction): R-484 block = lines **`15..88`**, boundary derived by the same command that hashes it. **`A HASH WITHOUT ITS RANGE IS NOT A FINGERPRINT.`**
+
+### ★★★★★ §2 — DELIVERED: THE GAP MECHANISM, BUILT TO §63's CONSTRAINT RATHER THAN JUST ITS LETTER
+
+**§36 required "NO EXPECTATION", not "`false`". Implemented as a per-field construct:** a condition row may carry `unadjudicated: { field: reason }`, and such a field is **not compared at all** — it is not silently asserted equal to whatever the lanes emit.
+★★★★★ **AND I ADDED A CONTRADICTION CHECK YOU DID NOT ASK FOR, BECAUSE THE FAILURE MODE IS OBVIOUS ONCE THE MECHANISM EXISTS: a cell that is BOTH expected AND declared-unadjudicated is a HARD FAILURE.** Without it, a future editor adds a gap declaration, forgets to remove the stale expectation, and the row silently keeps asserting the withdrawn value. **`A WITHDRAWN ASSERTION MUST NOT SIT BESIDE THE VALUE IT WITHDREW.`** Red-proofed as M4.
+**§63 — "must not render like a checked row" — implemented as three separate signals, because one is defeatable:** a dedicated banner (`4 ORACLE CELL(S) CARRY *NO EXPECTATION* — NOT ADJUDICATED, NOT VERIFIED, NOT A PASS`) · a per-line `[NOT ADJUDICATED]` prefix · **and the gap count inside the PASS line itself** — `"...CONFORM to the frozen oracle on every ADJUDICATED cell (4 cell(s) explicitly NOT adjudicated)"`. ★★★ **The third is the one that matters: a reader who only ever reads the last line still cannot mistake this for full coverage. `A GREEN THAT DOES NOT NAME ITS GAPS IS THE SHAPE THIS GATE EXISTS TO STOP.`**
+
+### §3 — THE RESULT
+
+| claim | result |
+|---|---|
+| **CLAIM 1 — AGREEMENT** | ★★★ **PASS** — zero drift, all 7 fixtures, whole-plan + bidirectional key sets |
+| **CLAIM 2 — ORACLE CORRECTNESS** | ★★★★★ **0 violations (was 8)** — on every ADJUDICATED cell |
+| **MEMBERSHIP** | **PASS** — 7 of 7 declared members present, none undeclared |
+| **DECLARED GAPS** | **4 cells + 2 fixture-level**, printed on the passing run |
+| **EXIT** | ★★★★★ **`0`** |
+★★ **The orphan rows are untouched and still assert `approximation=true`, `bindable=false`, `primitive=null`, zone-naming reason — the repair's central claim, unchanged.** `compiled` on fixture `30` is **`false`** in both lanes, matching your §4c arithmetic: **the fix LOWERED the `compiled` count**, which is the pre-registered success direction.
+
+### ★★★★★ §4 — ALL SEVEN RED-PROOFS RE-RUN AGAINST THIS BUILD (§76: "do not cite the prior run")
+
+| # | mutation | result |
+|---|---|---|
+| **CONTROL** | unmutated corpus | **GREEN, exit `0`** — ★★★ **the control that makes the rest mean anything: without it a suite cannot tell "catches breakage" from "always red"** |
+| M1 | required member absent | **RED** — member named, *"the claim is DENIED, not re-scoped to the survivors"* |
+| M2 | undeclared member present | **RED** — smuggled fixture named **plus** `NO ORACLE ROW` in both lanes |
+| M3 | ★★★★★ **oracle expectation mutated, BOTH LANES UNCHANGED** | **RED** — `expected="london" observed="ny_am"` in **both** lanes. **This is the proof the oracle is an independent authority and not a mirror: nothing in either implementation moved** |
+| M4 | cell expected **AND** declared-unadjudicated | **RED** — contradiction named |
+| M5 | `reason`-only mutation (**F-G**) | **RED** — incl. `plan.queue_reasons[0].reason`. **The old gate would have printed GREEN** |
+| M6 | field DELETED from one lane | **RED** — `session_zone: ABSENT in ts, PRESENT in py` |
+| M7 | field ADDED to one lane | **RED** — `mutant_extra_field: PRESENT in ts, ABSENT in py` |
+★★ **Residue after reverting every source mutation: `0` hits for `MUTANT|mutant_extra_field`, with a POSITIVE CONTROL (`session_zone_refused_uncomputable_window` → `1`) proving the grep reached the file.**
+
+### ★★★★★ §5 — MY INSTRUMENT LIED AND I CAUGHT IT BY AUDITING A RESULT I WANTED
+
+**M3 and M4 first came back `EXIT=1` — the answer I was hoping for — with NO matching output line.** ★★★★★ **I did not bank it. `[MEASURED HERE]` the mutant `ORACLE.json` files began with bytes `239,187,191` — a UTF-8 BOM written by `Out-File -Encoding utf8` — and the gate had died on `SyntaxError: Unexpected token '﻿' ... is not valid JSON`. Both mutations were RED because the file would not parse, NOT because the mutation bit.**
+★★★★★ **`A RED FOR THE WRONG REASON IS NOT A RED-PROOF — IT IS A GREEN WEARING RED.` And the trap is asymmetric: I check surprising results, and these were UNsurprising, which is exactly why they nearly passed unexamined.** Rewritten with `New-Object System.Text.UTF8Encoding($false)` + `[System.IO.File]::WriteAllText`; both then failed on the intended assertion, quoted in §4.
+★★ **This is the campaign's known `encoding-corrupted fixture` species (memory: an encoding-corrupted script has lied here while the code was fine) recurring in a NEW medium — a hand-built JSON fixture rather than a script. Windows PowerShell 5.1's `Out-File -Encoding utf8` is BOM-emitting and must not be used to author any file a parser will read.**
+
+### §6 — WHAT I DID NOT DO — and this is a HANDOFF, not a completion
+
+★★★★★ **THE PARITY GATE IS GREEN BUT CORRECTION 3 IS NOT COMPLETE, AND I WILL NOT LET A GREEN EXIT CODE IMPLY OTHERWISE.** Five items from your §64 remain, all authorized, none started:
+1. **CI + fast-lane wiring** (`ci.yml` **and** `fast.yml`) — **the F-A defect is still open; the gate exists and does not run.** `EXISTENCE IS NOT WIRING.`
+2. **Exhaustive family × evaluable-zone × refused-zone membership fixtures** — corpus is **still the 7 baseline members**. ★★★ **The gate currently certifies 7 fixtures; the packet's (c) wants the domain. `A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN CERTIFIES ITS FIXTURES, NOT ITS DOMAIN` — that sentence still applies to my own gate.**
+3. **Per-spec materiality receipt** — mandatory at land time, not written.
+4. **AR-492 §4 queue-reason reachability tripwire** — the latent `?? "unbindable"` vs `None` divergence. **Still latent, still unfixtured; your ruling has not disposed of it.**
+5. **`FAMILY_META` VALUE-set comparison** — **`[UNENUMERATED — OPEN]`, and I am explicitly NOT closing it** per your §66.
+**ALSO NOT DONE:** no `tsc` typecheck run on my comparator rewrite · no `accuracy-validator` (correctly — **the builder does not grade**, and `aed0c58d` is WIP, not the frozen implementation commit your §78 requires).
+★★★ **SWAP NOW, AT A CLEAN BOUNDARY.** This seat has run through R-482→R-484, four ARs and two self-corrections; the five remaining items are a fresh seat's cheap start and this seat's expensive finish. **`DO NOT RUN TO EXHAUSTION` — a session near its limit is the one most likely to produce a partial that reads as complete, which is what AR-490 declined this task to avoid.**
+**NEXT TASK, as the rulings define it, so nothing is re-derived:** item 1 (CI + fast wiring) then item 2 (exhaustive membership), in R-484 §64's order. **Contract fully written: parity packet §3(a)-(d) + R-483 §10 + R-484 §76.**
+**NO SUB-AGENT IS DISPATCHED OR OWED — verified, not assumed: I dispatched none this session.** **Nothing merged. Nothing live. `runtime-production` and `tf-deep-scan` untouched. No Python changed.**
+★★ **A FRESH WORKER SESSION IS NEEDED.**
+
+---
+
 ## AR-493 · 2026-07-30 · ★★★★★ **THE ORACLE EARNED ITS KEEP ON ITS FIRST RUN AND IT CONVICTS *BOTH* LANES. AGREEMENT IS FULLY GREEN — TS NOW EMITS PYTHON'S EXACT PLAN — AND CORRECTNESS IS RED ON 4 CONDITIONS × 2 LANES, IDENTICALLY. ★★★★★ YOUR §4a SAYS `approximation=true` FOR UNRECOGNIZED-VOCABULARY ROWS; BOTH IMPLEMENTATIONS EMIT `false`. I AM NOT TOUCHING EITHER — IT IS A FINDING AND IT IS YOURS TO ADJUDICATE.**
 
 > ⚠️★★★★★ **CORRECTION ANNOTATION ON THIS REPORT, BY THE SEAT THAT WROTE IT, MINUTES AFTER
