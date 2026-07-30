@@ -45,6 +45,7 @@ import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { compileBindingPlan, FAMILY_META, refusedSessionZone } from "../src/server/lib/spec-family-bindings.js";
+import type { BindingPlan, ConditionBinding } from "../src/server/lib/spec-family-bindings.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -211,42 +212,151 @@ function pyBindingPlan(spec: unknown): Record<string, unknown> {
   return JSON.parse(result.stdout);
 }
 
+// ─── R-496 CORRECTION A: EXHAUSTIVE NORMALIZATION *BEFORE* COMPARISON ────────
+//
+// ⚠️★★★★★ WHAT WAS HERE BEFORE, AND WHY ITS CAPTION WAS THE DANGEROUS PART.
+//   The previous version of this function was a HAND-WRITTEN WHITELIST — 10
+//   literal binding fields and 11 literal plan fields — and its doc comment
+//   asserted it was "deliberately TOTAL rather than selective", claiming the
+//   bidirectional key-set check turned any omission into a hard failure.
+//
+//   THAT WAS FALSE BY CONSTRUCTION, and this comment replaces it rather than
+//   softening it. `diffDeep()` consumes this function's OUTPUT, so it can only
+//   ever compare keys that SURVIVED the projection. A TS-only field was dropped
+//   here, was absent from Python, the two sides agreed on what remained, and the
+//   gate exited 0. `A BIDIRECTIONAL COMPARATOR IS ONLY AS WIDE AS THE OBJECT
+//   THAT REACHES IT — A LOSSY PROJECTION MAKES A PERFECT DIFF PERFECTLY BLIND.`
+//   `THE REMEDY IS THE MECHANISM, NEVER A SOFTER CAPTION.`
+//
+// THE MECHANISM NOW HAS TWO INDEPENDENT DOORS, AND THEY CATCH DIFFERENT DRIFT:
+//   1. COMPILE TIME — `satisfies Record<keyof …, string>` below. Add a field to
+//      `BindingPlan`/`ConditionBinding` and the BUILD fails until the mapping is
+//      extended. Excess and missing keys are BOTH rejected.
+//   2. RUN TIME — `projectExhaustively()`. A field that appears on the object
+//      WITHOUT being declared on the interface (a cast, a spread, a widened
+//      return) is invisible to door 1. So the RAW object's own enumerable keys
+//      are compared against the mapping's keys BEFORE any projection happens,
+//      and any mismatch is a NAMED failure at an exact path.
+//   ★★★ Door 1 alone is what a reader would assume `satisfies` buys them. It is
+//       not enough, and assuming it is how the first hole was argued for.
+
+/** camelCase (TS) → snake_case (Python wire). EXHAUSTIVE, compile-time checked. */
+const PLAN_KEY_MAP = {
+  bindings: "bindings",
+  invalidationBindings: "invalidation_bindings",
+  triggerConditionId: "trigger_condition_id",
+  triggerBound: "trigger_bound",
+  spineTotal: "spine_total",
+  spineBound: "spine_bound",
+  confluenceTotal: "confluence_total",
+  confluenceBound: "confluence_bound",
+  approximationUsed: "approximation_used",
+  compiled: "compiled",
+  queueReasons: "queue_reasons",
+} as const satisfies Record<keyof BindingPlan, string>;
+
+/** Same, for a single binding row. EXHAUSTIVE, compile-time checked. */
+const BINDING_KEY_MAP = {
+  conditionId: "condition_id",
+  type: "type",
+  role: "role",
+  object: "object",
+  bindable: "bindable",
+  primitive: "primitive",
+  approximation: "approximation",
+  executed: "executed",
+  reason: "reason",
+  sessionZone: "session_zone",
+} as const satisfies Record<keyof ConditionBinding, string>;
+
+/**
+ * Project `raw` through `map`, but ONLY after proving the two agree exactly.
+ *
+ * ★★★ THE ORDER IS THE WHOLE POINT: validate the RAW key set FIRST, project
+ *     SECOND. Projecting first is what made an unknown field unobservable.
+ *
+ * Four rejections, each naming the exact path:
+ *   - EXTRA RAW KEY      — present on the object, absent from the mapping
+ *   - MISSING MAPPED KEY — mapping declares it, the object does not carry it
+ *   - DUPLICATE DESTINATION — two source keys collide on one wire name, which
+ *                             would silently overwrite one of them
+ *   - UNCONSUMED KEY     — a mapping entry that never consumed a source key
+ */
+function projectExhaustively(
+  raw: Record<string, unknown>,
+  map: Record<string, string>,
+  path: string,
+  out: string[],
+): Record<string, unknown> {
+  const rawKeys = Object.keys(raw);
+  const mapKeys = Object.keys(map);
+
+  for (const k of rawKeys) {
+    if (!Object.prototype.hasOwnProperty.call(map, k)) {
+      out.push(
+        `${path}.${k}: UNMAPPED TS FIELD — present on the raw TypeScript object and ABSENT from the ` +
+          `normalization mapping. It would have been DROPPED before comparison, so the lanes would have ` +
+          `agreed about a field one of them never emitted. A NEW FIELD IS A NEW DRIFT BY DEFAULT.`,
+      );
+    }
+  }
+  for (const k of mapKeys) {
+    if (!Object.prototype.hasOwnProperty.call(raw, k)) {
+      out.push(
+        `${path}.${k}: MISSING SOURCE FIELD — the mapping declares it, the raw TypeScript object does not ` +
+          `carry it. The projection would have emitted \`undefined\` under a name Python does populate.`,
+      );
+    }
+  }
+  const seen = new Map<string, string[]>();
+  for (const k of mapKeys) {
+    const dest = map[k]!;
+    seen.set(dest, [...(seen.get(dest) ?? []), k]);
+  }
+  for (const [dest, sources] of seen) {
+    if (sources.length > 1) {
+      out.push(
+        `${path} → ${dest}: DUPLICATE DESTINATION — source keys ${JSON.stringify(sources)} all map to one ` +
+          `wire name. All but one would be silently overwritten.`,
+      );
+    }
+  }
+
+  const projected: Record<string, unknown> = {};
+  const consumed = new Set<string>();
+  for (const k of mapKeys) {
+    if (Object.prototype.hasOwnProperty.call(raw, k)) {
+      projected[map[k]!] = raw[k];
+      consumed.add(k);
+    }
+  }
+  for (const k of mapKeys) {
+    if (!consumed.has(k)) {
+      out.push(`${path}.${k}: UNCONSUMED MAPPING ENTRY — declared in the mapping, never read from the source.`);
+    }
+  }
+  return projected;
+}
+
 /**
  * Emit the TS plan in Python's wire shape.
  *
- * ★ EVERY key Python's to_dict() produces must appear here, including
- *   `invalidation_bindings` and `queue_reasons`. This function is deliberately
- *   TOTAL rather than selective — the bidirectional key-set check below turns any
- *   omission into a hard failure instead of a silent pass, which is exactly what
- *   the previous version's two missing keys demonstrate.
+ * ★★★ EVERY key Python's `to_dict()` produces must appear in `PLAN_KEY_MAP` /
+ *     `BINDING_KEY_MAP`. This function is NOT trusted to be total — it is PROVEN
+ *     total per call by `projectExhaustively()`, which fails the run and names
+ *     the path when the raw object and the mapping disagree in either direction.
  */
-function tsBindingPlanAsPyShape(spec: unknown): Record<string, unknown> {
-  const plan = compileBindingPlan(spec as never);
-  const binding = (b: (typeof plan.bindings)[number]) => ({
-    condition_id: b.conditionId,
-    type: b.type,
-    role: b.role,
-    object: b.object,
-    bindable: b.bindable,
-    primitive: b.primitive,
-    approximation: b.approximation,
-    executed: b.executed,
-    reason: b.reason,
-    session_zone: b.sessionZone,
-  });
-  return {
-    bindings: plan.bindings.map(binding),
-    invalidation_bindings: plan.invalidationBindings.map(binding),
-    trigger_condition_id: plan.triggerConditionId,
-    trigger_bound: plan.triggerBound,
-    spine_total: plan.spineTotal,
-    spine_bound: plan.spineBound,
-    confluence_total: plan.confluenceTotal,
-    confluence_bound: plan.confluenceBound,
-    approximation_used: plan.approximationUsed,
-    compiled: plan.compiled,
-    queue_reasons: plan.queueReasons,
-  };
+function tsBindingPlanAsPyShape(spec: unknown, schemaFailures: string[], label: string): Record<string, unknown> {
+  const plan = compileBindingPlan(spec as never) as unknown as Record<string, unknown>;
+  const binding = (b: unknown, path: string) =>
+    projectExhaustively(b as Record<string, unknown>, BINDING_KEY_MAP, path, schemaFailures);
+
+  const projected = projectExhaustively(plan, PLAN_KEY_MAP, `${label}.plan`, schemaFailures);
+  projected.bindings = (plan.bindings as unknown[]).map((b, i) => binding(b, `${label}.plan.bindings[${i}]`));
+  projected.invalidation_bindings = (plan.invalidationBindings as unknown[]).map((b, i) =>
+    binding(b, `${label}.plan.invalidation_bindings[${i}]`),
+  );
+  return projected;
 }
 
 // ─── CLAIM 1: whole-plan structural comparison ──────────────────────────────
@@ -692,7 +802,7 @@ function checkOverRefusalProperty(out: string[], notes: string[]): void {
   const spec = { entry_trigger_id: "trigger", entry_conditions: conditions, invalidations: [] };
 
   const lanes: Array<[string, Record<string, unknown>]> = [
-    ["ts", tsBindingPlanAsPyShape(spec)],
+    ["ts", tsBindingPlanAsPyShape(spec, out, "p7")],
     ["py", pyBindingPlan(spec)],
   ];
 
@@ -922,26 +1032,94 @@ function main() {
   /** Per-field oracle gaps, collected for mandatory rendering. */
   const declaredGaps: string[] = [];
 
-  // ─── MEMBERSHIP: declared corpus, fail-closed.
-  // `A SURFACE IS NOT FAIL-CLOSED UNTIL ITS ENUMERATION IS` (R-474). A deleted
-  // fixture must DENY the claim, never silently shrink the denominator.
-  const present = new Set(files);
-  const missing = oracle.required_members.filter((m) => !present.has(m));
-  const undeclared = files.filter((f) => !oracle.required_members.includes(f));
+  // ─── MEMBERSHIP: declared corpus, fail-closed, as a THREE-WAY BIJECTION.
+  //
+  // ⚠️★★★★★ R-496 CORRECTION B. THE PREVIOUS COMMENT HERE READ: "A deleted
+  //   fixture must DENY the claim, never silently shrink the denominator." IT
+  //   SILENTLY SHRANK THE DENOMINATOR, and that false caption is replaced rather
+  //   than reworded. The old code built `new Set(files)` and filtered
+  //   `required_members` against it WITHOUT EVER CHECKING THAT
+  //   `required_members` CONTAINS 12 DISTINCT IDENTITIES. Replace member `24`
+  //   with a second copy of `23` and delete fixture `24`: `missing` is empty
+  //   (both copies of `23` are present), `undeclared` is empty, and the gate
+  //   exits 0 on an 11-fixture corpus that claims 12.
+  //   ★★★ `A MEMBERSHIP ARRAY IS NOT A SET UNTIL DUPLICATES ARE REJECTED.
+  //       "12 DECLARED" CAN MEAN 11 IDENTITIES.`
+  //
+  // ★★ THE RIGHT CHECK ALREADY EXISTED IN THE WRONG PLACE: `duplicateConditionIds`
+  //    counts multiplicity per lane and NAMES what it caught. This is the same
+  //    idiom applied to corpus membership — deliberately not a second invention.
+  //
+  // THREE SURFACES MUST AGREE, and each disagreement is printed SEPARATELY:
+  //   declared  = ORACLE.required_members (unique identities)
+  //   onDisk    = *.spec.json actually present
+  //   adjudicated = Object.keys(ORACLE.fixtures)
+  const membership: string[] = [];
+
+  // (1) DUPLICATES FIRST — before any Set is built, because building the Set is
+  //     exactly the step that destroys the evidence.
+  const declaredCounts = new Map<string, number>();
+  for (const m of oracle.required_members) declaredCounts.set(m, (declaredCounts.get(m) ?? 0) + 1);
+  for (const [name, n] of [...declaredCounts].sort()) {
+    if (n > 1) {
+      membership.push(
+        `MEMBERSHIP: DUPLICATE required_members identity ${JSON.stringify(name)} appears ${n}x — the array ` +
+          `declares ${oracle.required_members.length} entries but only ${declaredCounts.size} distinct identities. ` +
+          `A duplicate silently frees a slot: another required fixture can be deleted while the counts still look right.`,
+      );
+    }
+  }
+
+  // (2) BOTH CARDINALITIES, asserted. NEITHER SUBSTITUTES FOR THE OTHER — the
+  //     attack above keeps the ARRAY length at 12 while the UNIQUE count is 11.
+  if (oracle.required_members.length !== declaredCounts.size) {
+    membership.push(
+      `MEMBERSHIP: required_members ARRAY cardinality ${oracle.required_members.length} != UNIQUE cardinality ` +
+        `${declaredCounts.size}. A COUNT OF ENTRIES IS NOT A COUNT OF IDENTITIES.`,
+    );
+  }
+
+  // (3) THREE-WAY EQUALITY over unique keys, each direction reported separately.
+  const declaredSet = new Set(oracle.required_members);
+  const onDiskSet = new Set(files);
+  const adjudicatedSet = new Set(Object.keys(oracle.fixtures ?? {}));
+  const pairs: Array<[string, Set<string>, string, Set<string>]> = [
+    ["declared (ORACLE.required_members)", declaredSet, "on disk (*.spec.json)", onDiskSet],
+    ["declared (ORACLE.required_members)", declaredSet, "adjudicated (ORACLE.fixtures keys)", adjudicatedSet],
+    ["on disk (*.spec.json)", onDiskSet, "adjudicated (ORACLE.fixtures keys)", adjudicatedSet],
+  ];
+  for (const [aName, aSet, bName, bSet] of pairs) {
+    for (const k of [...aSet].sort()) {
+      if (!bSet.has(k)) {
+        membership.push(`MEMBERSHIP: ${JSON.stringify(k)} is in ${aName} but MISSING from ${bName} — the claim is DENIED, not re-scoped to the survivors`);
+      }
+    }
+    for (const k of [...bSet].sort()) {
+      if (!aSet.has(k)) {
+        membership.push(`MEMBERSHIP: ${JSON.stringify(k)} is in ${bName} but MISSING from ${aName} (an unadjudicated or undeclared fixture cannot pass)`);
+      }
+    }
+  }
+
+  // ★★★★★ PRINTED UNCONDITIONALLY, AND IT IS NOW A COMPARED COUNT RATHER THAN A
+  //   RENDERED ONE. R-496 §0: a previous reader cited "Checked 12 … against 12"
+  //   as evidence; it was a console.log that could print 11-against-12 and still
+  //   exit 0. Both cardinalities appear here BECAUSE both are asserted above.
+  console.log(
+    `MEMBERSHIP CENSUS: required_members entries=${oracle.required_members.length} unique=${declaredCounts.size} · ` +
+      `on disk=${onDiskSet.size} · adjudicated=${adjudicatedSet.size} · three-way agreement=${membership.length === 0 ? "YES" : "NO"}`,
+  );
+
   // ★ PRINT every membership failure, do not merely count it. First version of
   //   this script pushed these into `failures` without a console.error, so a
   //   deleted fixture produced `FAIL: 4` while naming only 3 causes — a failure
   //   the reader cannot act on, found by red-proofing this gate rather than by
   //   reading it. `A COUNTED FAILURE THAT IS NOT NAMED IS HALF A GREEN.`
-  const membership: string[] = [];
-  for (const m of missing) {
-    membership.push(`MEMBERSHIP: required corpus member ABSENT: ${m} — the claim is DENIED, not re-scoped to the survivors`);
-  }
-  for (const f of undeclared) {
-    membership.push(`MEMBERSHIP: fixture present but NOT DECLARED in ORACLE.required_members: ${f} (an unadjudicated fixture cannot pass)`);
-  }
   if (membership.length > 0) {
-    console.error(`MEMBERSHIP FAILURE (declared corpus = ${oracle.required_members.length}, found = ${files.length}):`);
+    console.error(
+      `MEMBERSHIP FAILURE (required_members entries = ${oracle.required_members.length}, unique = ${declaredCounts.size}, ` +
+        `on disk = ${files.length}, adjudicated = ${adjudicatedSet.size}):`,
+    );
     for (const m of membership) console.error(`  - ${m}`);
   }
   failures.push(...membership);
@@ -990,8 +1168,17 @@ function main() {
     const spec = raw.spec;
     checked += 1;
 
-    const tsPlan = tsBindingPlanAsPyShape(spec);
+    // ★★★★★ R-496 CORRECTION A: the schema sink is per-fixture and its messages
+    //   are NAMED and pushed into `failures`, so an unmapped TS field cannot be
+    //   swallowed by the projection it would otherwise have been dropped by.
+    const schemaFails: string[] = [];
+    const tsPlan = tsBindingPlanAsPyShape(spec, schemaFails, file);
     const pyPlan = pyBindingPlan(spec);
+    if (schemaFails.length > 0) {
+      console.error(`TS PLAN SCHEMA EXHAUSTIVENESS FAILURE in ${file}:`);
+      for (const m of schemaFails) console.error(`  - ${m}`);
+      failures.push(...schemaFails.map((m) => `${file}: ${m}`));
+    }
 
     // CLAIM 1 — agreement.
     const drift: string[] = [];
