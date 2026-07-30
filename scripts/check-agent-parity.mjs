@@ -4,8 +4,8 @@
 // match it byte-for-byte after EOL normalization (the June split was CRLF-only).
 // Exit: 0 GREEN, 1 RED, 2 self-test failure.
 import { createHash } from 'node:crypto';
-import { readFileSync, readdirSync, statSync, mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { readFileSync, readdirSync, mkdirSync, writeFileSync, rmSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 const PROJECTS_ROOT = 'C:\\Users\\tonio\\Projects';
 const MASTER_DIR = join(PROJECTS_ROOT, 'trading-forge', 'trading-forge', '.claude', 'agents');
@@ -16,30 +16,31 @@ const MAX_DEPTH = 4; // Projects/<a>/<b>/<c>/.claude/agents reaches container-ne
 const norm = (buf) => buf.toString('utf8').replace(/\r\n/g, '\n');
 const hash = (p) => createHash('sha256').update(norm(readFileSync(p))).digest('hex').slice(0, 16);
 
-function findAgentDirs(dir, depth, out) {
+function findAgentDirs(dir, depth, out, allowSelfTest) {
   if (depth > MAX_DEPTH) return out;
   let entries;
   try { entries = readdirSync(dir, { withFileTypes: true }); } catch { return out; }
   for (const e of entries) {
-    if (!e.isDirectory() || SKIP.has(e.name)) continue;
+    if (!e.isDirectory()) continue;
+    if (SKIP.has(e.name) && !(allowSelfTest && e.name === '.parity-selftest')) continue;
     const p = join(dir, e.name);
     if (e.name === '.claude') {
       const agents = join(p, 'agents');
       if (existsSync(agents)) out.push(agents);
       continue; // do not descend into .claude further
     }
-    findAgentDirs(p, depth + 1, out);
+    findAgentDirs(p, depth + 1, out, allowSelfTest);
   }
   return out;
 }
 
-function scan() {
+function scan(allowSelfTest = false) {
   if (!existsSync(MASTER_DIR)) return { red: [`MASTER MISSING: ${MASTER_DIR}`], rows: [] };
   const masters = new Map(); // basename -> hash
   for (const f of readdirSync(MASTER_DIR).filter((f) => f.endsWith('.md')))
     masters.set(f, hash(join(MASTER_DIR, f)));
   if (masters.size === 0) return { red: ['MASTER DIR HAS ZERO AGENT FILES (absence guard)'], rows: [] };
-  const dirs = findAgentDirs(PROJECTS_ROOT, 0, []);
+  const dirs = findAgentDirs(PROJECTS_ROOT, 0, [], allowSelfTest);
   const red = [];
   const rows = [];
   if (!dirs.includes(CONTAINER_DIR)) red.push(`CONTAINER COPY DIR MISSING: ${CONTAINER_DIR}`);
@@ -59,27 +60,36 @@ function scan() {
 }
 
 function selfTest() {
-  // Half 1: clean pass must be reproducible (record baseline).
-  const before = scan();
-  // Half 2: plant a mutated copy; the scan MUST go RED on it.
-  const plantDir = join(PROJECTS_ROOT, '.parity-selftest', '.claude', 'agents');
+  // Discriminating fixture routed through the REAL pipeline (walker + scan),
+  // not a bypass hash — a walker regression must fail this test.
+  const plantRoot = join(PROJECTS_ROOT, '.parity-selftest');
+  const plantDir = join(plantRoot, '.claude', 'agents');
   const victim = readdirSync(MASTER_DIR).find((f) => f.endsWith('.md'));
   if (!victim) { console.error('SELF-TEST: no master agent file to mutate'); return 2; }
+  const baseline = scan(true); // plant absent — self-test dir must not appear
+  if (baseline.red.some((r) => r.includes('.parity-selftest'))) {
+    console.error('SELF-TEST FAILED: stale .parity-selftest dir present — remove it and rerun');
+    return 2;
+  }
   mkdirSync(plantDir, { recursive: true });
-  const mutated = norm(readFileSync(join(MASTER_DIR, victim))) + '\n<!-- parity-selftest mutation -->\n';
-  writeFileSync(join(plantDir, victim), mutated);
+  writeFileSync(join(plantDir, victim), norm(readFileSync(join(MASTER_DIR, victim))) + '\n<!-- parity-selftest mutation -->\n');
   let planted;
   try {
-    // The planted dir is normally SKIPped; scan it explicitly to keep the
-    // self-test from polluting real reports while still proving detection.
-    const ph = hash(join(plantDir, victim));
-    const mh = hash(join(MASTER_DIR, victim));
-    planted = ph !== mh;
+    planted = scan(true); // walker must DISCOVER the plant and the scan must flag it
   } finally {
-    rmSync(join(PROJECTS_ROOT, '.parity-selftest'), { recursive: true, force: true });
+    rmSync(plantRoot, { recursive: true, force: true });
   }
-  if (!planted) { console.error('SELF-TEST FAILED: mutated copy hashed equal to master — detector cannot go RED'); return 2; }
-  console.log(`SELF-TEST OK: planted mutation detected (RED half), clean scan reported ${before.red.length} pre-existing issue(s) (GREEN half is the live scan's job)`);
+  const caught = planted.red.some((r) => r.startsWith(`DRIFT ${victim}`) && r.includes('.parity-selftest'));
+  if (!caught) {
+    console.error('SELF-TEST FAILED: planted mutation NOT flagged by the walker+scan pipeline (walker or hash regression)');
+    return 2;
+  }
+  const after = scan(true);
+  if (after.red.some((r) => r.includes('.parity-selftest'))) {
+    console.error('SELF-TEST FAILED: planted row persists after cleanup');
+    return 2;
+  }
+  console.log(`SELF-TEST OK: walker+scan pipeline flagged the planted mutation and cleared after cleanup (baseline red rows: ${baseline.red.length})`);
   return 0;
 }
 
