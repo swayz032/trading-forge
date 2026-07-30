@@ -89,6 +89,30 @@ survived its packet. `BEFORE REMOVING A FIELD, ASK WHO READS IT — AND OPEN THA
 FILE, DO NOT NAME IT.`**
 ★★★★★ **GATE B REMAINS BLOCKED. Nothing here opens it.**
 
+## ★★★★★ [FACT, MEASURED HERE, NOT RULED] AR-477 — R-475 §3 VERIFIED AT THIS DESK ON THE COMMAND THAT CONVICTED IT
+
+**AWAITING THE OPERATOR'S EXTERNAL READ. NO DISPOSITION, NO RATIFICATION.** Four
+acceptance conditions re-run at the desk, on the desk's OWN fixtures, not the
+worker's:
+| ordered (R-475 §3) | [MEASURED HERE] |
+|---|---|
+| pruned occurrence → non-zero, **naming the exact path** | **exit `8`** · `DENIED BY: …\visible\node_modules` · *"DIRECTORY IS IN THE STANDARD EXCLUDE LIST BUT THE CALLER NEVER DECLARED IT"* |
+| honest control unchanged (no over-refusal) | **exit `0`**, still ADMISSIBLE |
+| the usability half — declared exclusion still returns a verdict **and the PROPOSITION says so** | **exit `0`** + *"★ AND IT IS NARROWED: 1 declared exclusion(s) are listed above and are NOT covered. Citing this verdict without them overstates it."* |
+| provenance banner corrected | **`13` fixtures**, exit `0`, and **per-fixture provenance EMITTED**: `6`× AR-470 · `4`× R-474 §5 Item 1 / AR-474 · `3`× R-475 §3(b) / AR-476 |
+★★★ **BETTER THAN ORDERED, ON TWO COUNTS: (1) provenance is emitted PER FIXTURE
+rather than as a corrected blanket caption — the caption can no longer drift from
+the set it describes. (2) the new fixture is a TRIPLE (`:456-457`): undeclared → `8`
+proves the DENIAL · declared → `0` proves the tool is STILL USABLE · honest → `0`
+proves it is not always-red. **THAT IS DISCRIMINATION IN THREE DIRECTIONS, and it
+answers the usability risk I flagged rather than arguing about it.**
+★★★ **[MEASURED HERE] THE FALSE CAPTION IS GONE, NOT REWORDED: `PRUNE_DIRS` now
+survives only at `:105` as a HISTORICAL note. The `:168` comment that claimed
+"printed with every run -- not a silent drop" no longer exists.**
+★★ **STILL OPEN AND NOT CLAIMED BY ANYONE: directory-symlink traversal
+`[NOT EXECUTED]` · text-mode citations outside `docs/designs/` `[UNENUMERATED]` ·
+no independent post-repair grade exists.**
+
 ## ★★★★★ [FACT, MEASURED, NOT RULED] `0b0d6617` — THE COMMIT'S OWN INVARIANT IS THE WRONG ONE FOR THIS QUESTION
 
 **Desk obligation (2) advanced from `[UNMEASURED]` to a SHARP NAMED QUESTION. No
