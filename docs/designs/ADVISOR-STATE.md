@@ -25,13 +25,22 @@
 
 ## SEAT — CURRENT AS OF R-472 / AR-471
 
-**Ledger `R-473`** (commit `73b674ce`). **`AR-471` RULED by R-473: ACCEPTED FOR
-GRADING, NOT RATIFIED, no repair ordered, no fifth round. Newest AR `AR-472` — a
-START-RECEIPT on R-473 §4, nothing to rule.**
-★★★ **[MEASURED] THE RELAY IS PROVEN END-TO-END, NOT ASSUMED: R-473 committed
-`21:37`, worker start-receipt `21:37:50` — **40 seconds**. Its ear is live, and
-the 15-minute quiet window before it was THE DESK OWING A RULING, not a stalled
-worker.**
+**Ledger `R-474`** (commit `3a437568`). **`AR-471` NOT RATIFIED · `AR-473`'s causal
+finding ACCEPTED, packet returned for revision. Newest AR `AR-475` — UNRULED,
+Item 1 delivered at commit `8838183f`.**
+★★★★★ **AR-475 IS UNRULED FOR TWO REASONS, NEITHER A STALL: the operator's standing
+order puts the EXTERNAL READ before every ruling, and the follow-up grade
+`a4458cbae40c54ec3` is IN FLIGHT against `8838183f`. Item 2 is already authorized
+in full (below), so no seat is blocked by the delay.**
+★★★ **[MEASURED HERE] THE RELAY IS PROVEN END-TO-END: R-473 committed `21:37`,
+worker start-receipt `21:37:50` — **40 seconds**. A quiet window before a ruling
+lands is THE DESK OWING A RULING, not a stalled worker.**
+★★★★★ **[VERIFIED AT THIS DESK, not accepted from the report] Item 1's red-proof
+holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`,
+"ALL 3 surface members were readable"; run B (`hidden`→`hiddne`) exit `8`,
+`DENIED BY: …\hiddne — SURFACE DOES NOT EXIST`. `--self-test` `10/10` at
+pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
+3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
 ## AUTHORIZED NOW — R-474 §5, TWO ITEMS IN ORDER
 ★★★★★ **ITEM 1 — THE BOUNDED F-1 REPAIR, ORDERED AS A PROPERTY:** *"EVERY MEMBER
@@ -59,10 +68,18 @@ descriptive session context · instrument/timeframe context · **mixed clauses**
 **ambiguous cases**. ★★★★★ **FROZEN BEFORE ANY TREATMENT RESULT EXISTS — a
 survivor set chosen after seeing the outcome is a rationalisation, not a
 pre-registration.** The worker may enumerate candidates; the desk freezes labels.
-★★★★★ **WORKER: SEATED, ALIVE, AND IDLE WAITING ON MY RULING — NOT handed off.
-[MEASURED HERE 21:30] its `claude.exe 15908` is alive (started 18:26), its
-`ADVISOR-RULINGS` ear `2728/10556` is armed, and its conversation `.jsonl`
-(`b856263e…`, 2.69 MB) grew at 21:27, five minutes AFTER AR-471 landed.**
+★★★★★ **WORKER: HANDOFF DECLARED IN AR-475 §4 — A FRESH WORKER SESSION IS NEEDED
+(`worker-onboarding`). THE ADVISOR CANNOT SEAT ONE; THE OPERATOR OPENS IT.** That
+seat ran `AR-459 → AR-475` (17 reports, 9 rulings) and stopped at a clean boundary:
+every fixture green at a pre-registered code, everything committed, nothing
+pending, one fully-specified next task waiting.
+★★★ **[MEASURED HERE 22:14] AND THE TWO FACTS ARE DIFFERENT, SO BOTH ARE RECORDED:
+its `claude.exe 15908` is STILL ALIVE and its `ADVISOR-RULINGS` ear is STILL ARMED
+(2 processes = one rig), conversation last written `22:13`. **A DECLARED HANDOFF IS
+NOT A DEAD PROCESS.** The seat will still HEAR a ruling; it has said it will not
+TAKE new work. Do not infer either fact from the other — this desk got it wrong in
+the opposite direction at 21:2x, reading a CONDITIONAL capacity note as a
+declaration.**
 ★★★★★ **A CORRECTION AGAINST THIS DESK, MADE BEFORE IT COULD COST ANYTHING: the
 first draft of this block said `HANDED OFF at a clean boundary`. AR-471 §4 says no
 such thing — it says *"IF the follow-up grade returns further repairs, a FRESH SEAT
@@ -120,7 +137,10 @@ stall this campaign convicts.**
 `a5a70a93c66262a61` = `SOUND-WITH-GAPS`, ran against the **PRE-REPAIR** bundle,
 certifies NEITHER the rebuild NOR any repair · `a858339f7a6a7cfb8` = `NOT-SOUND`
 on the AR-469 guard, **UNREACHABLE from this session** · ★★★★★ **`afc644b1bbcb0c742`
-= THE LIVE FOLLOW-UP GRADE against `138f26e9`, dispatched 21:26, IN FLIGHT.
+= `NOT-SOUND` on `138f26e9`, DELIVERED — it found F-1 (enumeration silently drops
+members) and the advisor reproduced it independently · ★★★★★ **`a4458cbae40c54ec3`
+= THE LIVE GRADE against the REPAIRED `8838183f`, dispatched 22:14, IN FLIGHT.
+Superseded register entry follows, kept for the trail: it was dispatched 21:26.
 Carries F-1, F-2, F-3, the four-round history and the prior grade's
 CONFIRMED-SOUND list so none of it is re-litigated, plus all eight attack items.
 NO RULING MAY SAY THE GRADE WAS OBTAINED UNTIL A RULING NAMES THIS ID AND
