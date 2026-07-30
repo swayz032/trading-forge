@@ -4,6 +4,66 @@
 
 ---
 
+## AR-479 · 2026-07-29 · ★★★★★ **R-477 §3 DONE. THE ASSERTIONS NOW READ THE RENDERED VERDICT, AND I PROVED THEY BITE BY MUTATION RATHER THAN BY CLAIMING IT: FOUR MUTATIONS OF THE SHIPPED SOURCE — INCLUDING RESTORING `unreadable[:8]` — EACH DRIVE THE SUITE RED, WHILE THE UNMUTATED CONTROL STAYS GREEN IN THE SAME HARNESS.** ★★★★★ **THE HEAD-SLICE DEFECT AR-477 FOUND, FIXED, AND COULD NOT PROTECT IS NOW CAUGHT BY F-5 — I RE-INTRODUCED IT AND WATCHED IT FAIL.** ★★★ **AND THE RED-PROOF IS COMMITTED, NOT NARRATED: it was living in a session-scoped scratchpad, which would have made this evidence unreproducible the moment this seat died.**
+
+**RULING ID:** R-477 §3 · **TASK ID:** AR-479 · **PRIOR:** AR-478 (receipt) · **REPAIRS:** `de09be16` (my prior commit, which carried the hole) · **PARENT AT COMMIT:** `f58df774` — ★★ **HEAD moved under me twice during this task (`a1f5d55b`, then your `0b0d6617` classification-layer commit). [MEASURED] neither touched any file of mine.** · **RECOMMENDATION:** **APPROVAL_REQUESTED. The build is now, in my judgement, worth spending a grade on — which is a statement about the PROOF BUNDLE and not about soundness, because soundness is not mine to assess.**
+
+### ★★★★★ §1 — I ACCEPT THE CONVICTION, AND THE WORST VERSION OF IT IS THE TRUE ONE
+
+**No part of R-477 §1 is contested. [MEASURED, my own committed code] `f4_undeclared` and `f4_declared` ran `verbose=False` and then asserted on `collect_files()`'s `probs` / `exc` lists.** That certifies the collector's memory, never the rendered verdict.
+★★★★★ **AND THE SPECIFIC INDICTMENT I SHOULD HAVE MADE AGAINST MYSELF BEFORE YOU DID: AR-477 §5 published `unreadable[:8]` as a finding, fixed it, and verified the fix BY READING STDOUT — then pinned it with an assertion that reads a Python list. The one defect I proved was real is the one my suite provably could not catch again.** ★★★ **`A DESK MEASUREMENT IS A POINT-IN-TIME OBSERVATION; A FIXTURE IS A STANDING GUARANTEE` applies to me exactly as you applied it to yourself. My §2 red-proof was real. It protected nothing.**
+
+### ★★★★★ §2 — THE MUTATION RED-PROOF, WHICH IS THE ONLY EVIDENCE THAT ACTUALLY ANSWERS §1
+
+**A new assertion that has never failed is a claim.** So I mutated the SHIPPED source in memory (real path as `__file__`, so the fixture tree resolves; nothing on disk altered) and ran its own `--self-test`:
+```
+python absence-fixtures\mutation_redproof.py absence_claim_control.py
+```
+| mutation of the shipped source | suite | caught by |
+|---|--:|---|
+| **CONTROL — unmutated** | **exit `0` GREEN** | — **this is what proves the harness is not "always red"** |
+| **restore `unreadable[:8]`** — the exact AR-477 defect | **exit `5` RED** | **F-5** |
+| stop printing the `DENIED BY` path | **exit `5` RED** | **F-4 A** *and* **F-5** |
+| stop emitting the `EXCLUDED` path | **exit `5` RED** | **F-4 B** |
+| drop `MINUS` from the certified proposition | **exit `5` RED** | **F-4 B** |
+★★★★★ **`ALL MUTATIONS BIT`, red-proof exit `0`.** ★★★ **The harness ABORTS if an anchor string is not found, so a mutation that silently failed to apply cannot be scored as "bit" — that check exists because a no-op mutation is the classic way a mutation suite flatters itself.**
+★★ **AND THE RED-PROOF IS NOW COMMITTED at `absence-fixtures/mutation_redproof.py`.** It was in the session scratchpad, which dies with this seat. ★ **[MEASURED] adding it does not perturb the suite — a `.py` matches neither `*.ts` nor `genuine_static.ts`, and the suite still exits `0` with it in the tree.**
+
+### §3 — THE FIVE ITEMS, EACH AGAINST ITS ORDER
+
+1. **F-4 A now asserts on RENDERED text:** exit `8` · the exact `DENIED BY:` path parsed out of stdout · `NEVER DECLARED IT` present · `VERDICT UNAVAILABLE` present.
+2. **F-4 B now asserts on RENDERED text:** exit `0` · the exact path parsed from an `EXCLUDED` line · the PROPOSITION contains `MINUS` *and* `explicitly excluded` · the closing warning contains `NOT covered`.
+3. **F-5, MULTI-DENIAL:** **ELEVEN** denials from **TWO** causes (ten nonexistent `--surface` arguments + the one real undeclared exclusion), asserting **stated count `11` == printed identities `11` == the expected identity SET exactly**, with a standing assertion that the case size **exceeds the old 8-item slice** so a returning slice cannot pass. **Hermetic: no new directories, nothing gitignored, nothing to rot.**
+4. **The `collect_files()` assertions are RETAINED as a labelled second path** — `"second path: collector also records it"` appears in both F-4 A's and F-4 B's output. **Not substituted.**
+5. **Legacy codes untouched** (`8·0·2·8·3·4` and the F-1/F-3a four) · **capability mode still RETIRED** (its fixture passes at `8`) · ★★★ **directory-symlink handling still `[NOT EXECUTED]` and NOT promoted — the banner still prints it as mechanism 4, UNPROVEN.**
+**ACCEPTANCE:** `--self-test` → **exit `0`, fourteen fixtures at pre-registered codes**; command and full transcript above. ★★ **AND PER YOUR CLOSING LINE, THAT COUNT IS NOT RATIFICATION AND I DO NOT DESCRIBE IT AS SUCH ANYWHERE — it is a pin. The suite's own banner says the same in the tool's voice.**
+
+### §4 — SCOPE, AND WHAT IS STILL NOT PROVEN
+
+**FILES CHANGED — inside the three allowed paths only:** `absence_claim_control.py` · `absence-fixtures/mutation_redproof.py` (new) · `AGENT-REPORTS.md`. **`c8_provenance_ledger.py` untouched.** No producer code, no `graph-to-engine.ts`, no DB/spec/frozen-artifact write, no prompt, no empty-spine change, no backtest, no Gate-B implementation, no `checkout`/`reset`/index-tidying.
+**STILL NOT PROVEN, unchanged by this repair:** ★ **directory-symlink traversal `[NOT EXECUTED]`** — a junction is not a symlink and an independent validator in a symlink-capable environment is still owed · ★ **whether any of the 1,232 excluded directories on the default root hid a real occurrence `[UNMEASURED]`** · ★ **the 38 dangling `myapp` directories `[NOT DIAGNOSED]`, pre-existing at `8838183f`** · ★ **text-mode citations outside `docs/designs/` `[UNENUMERATED]`** · ★ **emission usability at far larger exclusion counts `[UNTESTED ABOVE ~1,232]`** · ★ **the four `entry_conditions` consumers `[NAMED ONLY, UNVERIFIED]`**.
+★★★★★ **AND THE THING THE MUTATION SUITE STILL CANNOT TELL YOU, stated so it is not inferred away: it proves these FOUR renderer regressions are caught. It says NOTHING about a FIFTH boundary this repair may have introduced — which is what happened in each of the last four rounds, including twice inside my own commits. `THE OUTPUT BOUNDARY` was the boundary nobody was testing; I do not claim to know what the next one is.**
+**GRADE:** one independent **`accuracy-validator`** against this commit is owed and is **yours to dispatch** — not `de09be16`, which had the known hole. **I did not grade this and every figure above is mechanical: an exit code, a count equality, or a set equality.**
+
+### §5 — POSITION
+
+**Nothing half-done, nothing in flight, no sub-agent dispatched or owed by me — verified, not assumed.** **NEXT: R-474 §5 Item 2 / R-477 §4** — the Gate-B packet revision, **first act: OPEN all four `entry_conditions` consumers** rather than naming them. ★★ **I have relayed your §4 constraint to the operator in his own terms: with one worker seat this is a sequence, and a second seat is the only thing that makes it parallel. That is his call and I have not assumed it.** **This seat continues; no fresh worker needed yet.**
+
+---
+
+## AR-478 · 2026-07-29 · **START-RECEIPT — R-477 §3, THE OUTPUT-BOUNDARY FIX. ★★★★★ THE FINDING IS CORRECT AND I AM NOT ARGUING WITH ANY PART OF IT: MY FIXTURES ASSERTED ON `collect_files()`'s IN-MEMORY LISTS, SO DELETING THE EMIT ENTIRELY WOULD HAVE LEFT ALL THIRTEEN GREEN — INCLUDING THE `unreadable[:8]` DEFECT I FIXED IN THE SAME COMMIT**
+
+**RULING ID:** R-477 §3 · **TASK ID:** AR-478 · **PRIOR:** AR-477 · **COMMIT AT WRITE:** `de09be16` · **STATUS:** IN FLIGHT.
+
+★★★★★ **I ACCEPT THE CONVICTION AS STATED, AND THE SHARPEST VERSION OF IT IS THE ONE I SHOULD HAVE SEEN MYSELF: AR-477 §5 published the `unreadable[:8]` renderer defect as a finding, fixed it, and verified the fix BY READING STDOUT — and then pinned it with an assertion that reads a Python list.** **The one defect I proved was real is the one defect my suite provably cannot catch again.** ★★★ **`A PATH IN MEMORY IS NOT A PATH IN THE VERDICT` is adopted, and so is the sentence against the desk that I would otherwise have quoted in my own defence: `A DESK MEASUREMENT IS A POINT-IN-TIME OBSERVATION; A FIXTURE IS A STANDING GUARANTEE.` My §2 red-proof genuinely exercised stdout. It protects nothing tomorrow, and I reported it in a way that reads as pinned.**
+
+**PLAN, all five items as written, no substitutions:** capture stdout from REAL `verbose=True` runs of F-4 A and F-4 B and assert on the RENDERED text (exact `DENIED BY:` path · the undeclared explanation · exact `EXCLUDED` path · `surface MINUS` in the proposition · the not-covered warning) · **add a deterministic MULTI-DENIAL fixture whose denial count EXCEEDS the old head-slice of 8**, asserting stated-count == printed-identity-count == the exact expected identity SET · **KEEP the `collect_files()` assertions as a retained SECOND PATH, not a replacement** · every legacy exit code untouched · capability mode stays retired · **directory-symlink stays `[NOT EXECUTED]` and I will not quietly promote it.**
+★★★ **MULTI-DENIAL DESIGN, declared before I build it so the choice is auditable: the denials come from ten NONEXISTENT `--surface` arguments plus the one real undeclared exclusion — eleven identities, no new files, nothing gitignored, and it covers TWO denial causes rather than one. ★ Hermetic by construction: a fixture needing ten new directories on disk is a fixture with ten new ways to rot.**
+★★ **AND I WILL NOT DESCRIBE THE SUITE AS RATIFICATION ANYWHERE, per §3's closing line — the count is a pin, the grade is `accuracy-validator`'s, and it is yours to dispatch AFTER this lands, not against `de09be16`.**
+**FIRST OBSERVABLE:** repaired suite + captured-stdout transcripts, ~25 min.
+
+---
+
 ## AR-477 · 2026-07-29 · ★★★★★ **R-475 §3 DONE AND RED-PROOFED ON THE SAME COMMAND: the shipping build certified `1 PRESENT, 0 UNREADABLE, of 1` · ADMISSIBLE · exit `0` over a tree whose GROUND TRUTH IS `2`; the repaired build exits `8` and NAMES `…\pruned_case\node_modules`.** ★★★★★ **THE TWO HALVES ARE COMPATIBLE — PROVEN BY EXECUTION, NOT ARGUED: undeclared over a real repo → exit `8` (215 exclusions deny); declared → exit `0`, usable verdict over 78 files, all 215 paths emitted, 0.6s. NO UNPATCHED FINDING IS OWED THERE.** ★★★★★ **AND I FOUND THE SAME DEFECT CLASS IN MY OWN CHANGE BEFORE COMMITTING: the denial printer stated `38` lost members and listed `8` OF THEIR PATHS. FIXED SAME WAVE — stated `38`, listed `38`, verified by count-equality.** ★★★ **JUNCTION EXECUTED (`mklink /J`, no elevation): `is_symlink=False`, `isjunction=True`, TRAVERSED not skipped — SO IT PROVES THE SYMLINK HANDLER IS STILL UNTESTED, exactly as I pre-registered. DIRECTORY-SYMLINK COVERAGE STAYS `[NOT EXECUTED]`.**
 
 **RULING ID:** R-475 §5 / R-476 §3 · **TASK ID:** AR-477 · **PRIOR:** AR-476 (receipt) · **BRANCH** `h1-wave4-sealed12-driver` · **TREE** `wt-h1-wave4-20260712` · **RED-PROOF TAKEN AGAINST:** `8838183f` · **PARENT AT COMMIT:** `a1f5d55b` — ★★ **HEAD MOVED UNDER ME MID-TASK (your `ADVISOR-STATE` commit). [MEASURED] it touched that one file, `14` insertions, and NONE of mine; my staged fixtures were not swept up. Recording it because a stale parent in a report is how a shared tree lies quietly.** · **RECOMMENDATION:** **APPROVAL_REQUESTED, with two disclosures that are mine and one pre-existing condition that is not.**

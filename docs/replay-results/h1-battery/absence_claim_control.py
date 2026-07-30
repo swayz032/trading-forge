@@ -94,7 +94,9 @@ EXIT CODES
 from __future__ import annotations
 
 import argparse
+import contextlib
 import fnmatch
+import io
 import os
 import pathlib
 import re
@@ -472,7 +474,56 @@ FIXTURES = [
      "THE DISCRIMINATION HALF: proves F-4 A's exit 8 is caused by the EXCLUSION and "
      "not by the new code refusing everything it sees.",
      "R-475 §3(b) / AR-476"),
+    # ---- F-5 (R-477 §1). THE OUTPUT BOUNDARY. F-4 A and F-4 B now assert on the
+    #      RENDERED verdict as well; this one pins the renderer defect that AR-477
+    #      found, fixed, and then failed to protect.
+    ("F-5: MULTI-DENIAL count/identity parity in the RENDERED verdict", "f4_multi", 8,
+     "R-477 §1: the suite asserted on collect_files()'s internal lists, so restoring "
+     "`unreadable[:8]` -- the exact defect AR-477 §5 found and fixed -- would have kept "
+     "every fixture green. ELEVEN denials from TWO causes, more than the old 8-item "
+     "slice, asserting stated-count == printed-identity-count == the expected SET. "
+     "A PATH IN MEMORY IS NOT A PATH IN THE VERDICT.",
+     "R-477 §3-3 / AR-478"),
 ]
+
+
+def _render(*args, **kw) -> tuple[int, str]:
+    """★★★★★ RUN THE REAL VERDICT AT verbose=True AND RETURN ITS RENDERED TEXT.
+
+    R-477 §1, and it convicted this suite: the F-4 fixtures ran `verbose=False` and
+    then asserted on `collect_files()`'s internal lists. That certifies "the
+    COLLECTOR knows the path" and never "the VERDICT prints it". A regression that
+    restored `unreadable[:8]`, deleted `DENIED BY:`, omitted `EXCLUDED`, or dropped
+    the `surface MINUS` clause would have left every fixture GREEN.
+
+        `A PATH IN MEMORY IS NOT A PATH IN THE VERDICT.`
+        `THE OUTPUT CONTRACT MUST BE TESTED AT THE OUTPUT BOUNDARY.`
+
+    ★★★ The sharpest form: AR-477 found, published and FIXED the `unreadable[:8]`
+    renderer defect (see the comment at the denial loop) and then pinned it with an
+    assertion that reads a Python list -- so the one defect proven real was the one
+    the suite could not catch again. THIS function is what closes that.
+    """
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        rc = run_text_check(*args, verbose=True, **kw)
+    return rc, buf.getvalue()
+
+
+def _boundary(checks: list[tuple[bool, str]]) -> tuple[bool, str]:
+    """Reduce output-boundary assertions to (all_passed, human-readable detail).
+    Reports WHICH assertion failed -- a boundary check that says only 'failed'
+    sends the next session back to re-derive what it was checking."""
+    failed = [d for ok_, d in checks if not ok_]
+    if failed:
+        return False, "OUTPUT-BOUNDARY FAILED -> " + " | ".join(failed)
+    return True, "output boundary verified: " + " · ".join(d for _o, d in checks)
+
+
+def _denied_identities(out: str) -> set[str]:
+    """The exact paths the RENDERED verdict blamed."""
+    return {ln.split("DENIED BY:", 1)[1].strip()
+            for ln in out.splitlines() if "DENIED BY:" in ln}
 
 
 def self_test() -> int:
@@ -518,26 +569,61 @@ def self_test() -> int:
                                  "*.ts", DEFAULT_ROOT, verbose=False,
                                  excluded_names=STANDARD_EXCLUDE_DIRS)
         elif kind == "f4_undeclared":
-            got = run_text_check([r"writeFileSync"], PRUNED_CASE / "control.ts", [PRUNED_CASE],
-                                 "*.ts", DEFAULT_ROOT, verbose=False)
-            # ★★★★★ AND THE CODE ALONE IS NOT THE REQUIREMENT. R-475 §3 demands the
-            # EXACT EXCLUDED PATH in the verdict, so the fixture asserts the NAMING
-            # too -- otherwise it would still pass if the path were dropped from the
-            # message, which is the exact class of defect being repaired.
+            # PATH 1 (R-477 §3-1): the REAL rendered verdict.
+            got, out = _render([r"writeFileSync"], PRUNED_CASE / "control.ts", [PRUNED_CASE],
+                               "*.ts", DEFAULT_ROOT)
+            # PATH 2 (R-477 §3-4): the collector, RETAINED not replaced.
             _f, probs, _e = collect_files([PRUNED_CASE], "*.ts", set())
-            if not any(p == PRUNED_DIR for p, _w in probs):
-                got, extra = -1, f"PATH NOT NAMED: expected {PRUNED_DIR} among the problems"
-            else:
-                extra = f"names the exact path: {PRUNED_DIR}"
+            ok_b, extra = _boundary([
+                (str(PRUNED_DIR) in _denied_identities(out),
+                 "verdict PRINTS the exact DENIED BY path"),
+                ("NEVER DECLARED IT" in out,
+                 "verdict EXPLAINS that the exclusion was undeclared"),
+                ("VERDICT UNAVAILABLE" in out, "verdict announces fail-closed"),
+                (any(p == PRUNED_DIR for p, _w in probs),
+                 "second path: collector also records it"),
+            ])
+            if not ok_b:
+                got = -1
         elif kind == "f4_declared":
-            got = run_text_check([r"writeFileSync"], PRUNED_CASE / "control.ts", [PRUNED_CASE],
-                                 "*.ts", DEFAULT_ROOT, verbose=False,
-                                 excluded_names={"node_modules"})
+            got, out = _render([r"writeFileSync"], PRUNED_CASE / "control.ts", [PRUNED_CASE],
+                               "*.ts", DEFAULT_ROOT, excluded_names={"node_modules"})
             _f, _p, exc = collect_files([PRUNED_CASE], "*.ts", {"node_modules"})
-            if PRUNED_DIR not in exc:
-                got, extra = -1, f"EXCLUDED PATH NOT EMITTED: expected {PRUNED_DIR}"
-            else:
-                extra = f"emits the exact excluded path: {PRUNED_DIR}"
+            emitted = {ln.strip()[len("EXCLUDED"):].strip()
+                       for ln in out.splitlines() if ln.strip().startswith("EXCLUDED")}
+            ok_b, extra = _boundary([
+                (str(PRUNED_DIR) in emitted, "verdict EMITS the exact excluded path"),
+                ("MINUS" in out and "explicitly excluded" in out,
+                 "PROPOSITION itself says 'surface MINUS ...'"),
+                ("NOT covered" in out, "closing warning states the exclusions are not covered"),
+                (PRUNED_DIR in exc, "second path: collector also records it"),
+            ])
+            if not ok_b:
+                got = -1
+        elif kind == "f4_multi":
+            # ★★★★★ THE HEAD-SLICE PIN (R-477 §3-3). ELEVEN denials, deliberately more
+            # than the 8 the old renderer printed, from TWO different causes: ten
+            # nonexistent --surface arguments plus the one real undeclared exclusion.
+            # Hermetic on purpose -- no new files, nothing gitignored, nothing to rot.
+            missing = [PRUNED_CASE / f"no_such_dir_{i}_AR478" for i in range(10)]
+            got, out = _render([r"writeFileSync"], PRUNED_CASE / "control.ts",
+                               [PRUNED_CASE] + missing, "*.ts", DEFAULT_ROOT)
+            expected = {str(PRUNED_DIR)} | {str(m) for m in missing}
+            printed = _denied_identities(out)
+            m = re.search(r"exit 8 \(FAIL CLOSED\): (\d+) intended", out)
+            stated = int(m.group(1)) if m else -1
+            ok_b, extra = _boundary([
+                (stated == len(expected),
+                 f"COUNT the verdict states ({stated}) == expected ({len(expected)})"),
+                (len(printed) == stated,
+                 f"IDENTITIES printed ({len(printed)}) == count stated ({stated})"),
+                (printed == expected,
+                 "every expected identity printed, and no extras -- SET equality"),
+                (len(expected) > 8, "the case EXCEEDS the old 8-item head-slice, so a "
+                                    "returning slice cannot pass"),
+            ])
+            if not ok_b:
+                got = -1
         elif kind == "f4_honest":
             got = run_text_check([r"writeFileSync"], FIX / "visible" / "control.ts",
                                  [FIX / "visible"], "*.ts", DEFAULT_ROOT, verbose=False)
