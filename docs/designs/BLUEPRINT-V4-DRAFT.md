@@ -1,4 +1,13 @@
-# BLUEPRINT v4 — DRAFT (money-path acceleration plan)
+# BLUEPRINT v4 — REVISION 4 (money-path acceleration plan)
+
+> ★★★★★ **REVISION 4 STATUS — PROPOSED 2026-07-30 AT THE OPERATOR'S DIRECT
+> REQUEST; AWAITS THE SEATED ADVISOR'S ADOPTION.** This revision does **not**
+> create V5, change the mission, relax a refusal, or alter the Phase-1 exit.
+> It replaces the now-falsified Phase-1 execution premises with the measured
+> path in **§15**. Until adoption, the already-adopted V4 remains operative;
+> after adoption, **§15 governs wherever §§1, 3, 9, 10, 12 or 14 conflict
+> with it.**
+> Evidence cut: campaign tree `ad7fa571`, through R-483 §12 / AR-492.
 
 > ★★★★★ **STATUS: ADOPTED AND OPERATIVE — R-445, 2026-07-29, operator-directed.
 > THIS SUPERSEDES THE "DRAFT — NOT LAW" STATUS BELOW, WHICH THIS FILE CARRIED FOR
@@ -60,6 +69,10 @@ three populations — any task below that spans populations must state its own.
 ---
 
 ## §1 — THE CRITICAL PATH, NAMED (why the wall has not moved)
+
+> ⚠️ **REVISION-4 READ ORDER:** the Phase-1 exit sentence below remains
+> binding. The old C8 baseline, prerequisite status, fix mechanism and task
+> sequence in items 3–5 are historical. **Read §15 before acting on them.**
 
 **Phase-1 exit (R-055 §5, verbatim, BOTH legs):** *"≥1 tier-A spec compiles with
 ALL load-bearing conditions concretely bound AND the compile-fidelity forensics
@@ -151,6 +164,10 @@ never from loosening.
 > promising a gate."* Each task below names its layer.
 
 ### 1A — C8 prerequisite burndown (seven items, R-429 L942 — assign ALL now)
+
+> ⚠️ **HISTORICAL REGISTER.** It records the seven-gate design that exposed the
+> real producer and consumer defects. Its “all open” status and its frozen
+> `~51%` control are superseded by §15. Do not dispatch from this table.
 
 | # | Prerequisite (verbatim intent) | Proposed owner | Shape |
 |---|---|---|---|
@@ -344,6 +361,10 @@ owned by the ops lane) is required **before Phase-4 scale**.
 
 ## §9 — PARALLEL LANES REGISTER (bounded; NONE may block the spearhead)
 
+> ⚠️ **HISTORICAL STATE SNAPSHOT.** Current ownership and ordering live in
+> §15 plus `ADVISOR-STATE.md`; no row below may pre-empt P0–P3 or be read as a
+> current assignee.
+
 | Lane | State | Bound |
 |---|---|---|
 | CI honesty (ubuntu-only failures → order-dependent test → plugin-presence step → pytest BLOCKING) | in flight at the seated desk; order already correct | governance; AR-414 preconditions; **never a merge gate for spearhead packets** (R-440 anti-gate-creep) |
@@ -378,6 +399,10 @@ the STRANDED-CAPABILITY-REGISTER is consulted in the authorizing ruling.
 6. **Carrier discipline** (§2.5): ladders duplicated verbatim, detail pointed
    at, never re-paraphrased.
 
+> **REVISION-4 INTERPRETATION OF ITEM 3:** “C8 first” now means §15's ordered
+> parity → baseline/truth/lane → deterministic Gate-B sequence. It does not
+> authorize a direct prompt, binder or preflight patch.
+
 ---
 
 ## §11 — WHAT THIS PLAN DOES NOT PROMISE
@@ -391,6 +416,10 @@ every claim carries its grade, and the first battery wave — when it fires — 
 believable.** That is the breakthrough available by engineering.
 
 ## §12 — OPEN / UNVERIFIED (named so they cannot masquerade as settled)
+
+> ⚠️ **HISTORICAL OPEN LIST.** Several entries were closed or reframed after
+> this list was written. §15.8 is the current bounded list at the Revision-4
+> evidence cut.
 
 - The per-video decomposition of R-426's "C8 alone unlocks 6" **[UNVERIFIED]** —
   1B computes it.
@@ -446,6 +475,12 @@ a later reader inherits those as open, not as cleared.
 
 ## §14 — REPOINTING (2026-07-29, after the seated desk's R-456→R-458 measurement chain)
 
+> ⚠️ **HISTORICAL REPOINTING.** This section correctly moved the target from
+> the legacy prompt to the atomizer, then stopped before the Gate-A trace,
+> current-code reclassification and downstream-consumer reads landed. Its
+> “geometry survives unchanged” and prompt-amendment candidate are superseded
+> by §15; they must not drive implementation.
+
 **What the desk measured, executing this plan's own 1A step:** the worker took
 prerequisite #1, stopped on a premise defect instead of publishing, and the
 chain that followed proved: **the census corpus was produced by a THIRD
@@ -458,7 +493,11 @@ trees. **§1.4's attribution is UNSUPPORTED for this corpus — not refuted
 a pipeline is not one prompt).** This is the plan working as designed: verify
 the premise before spending the ablation and the respin on it.
 
-**What survives unchanged:** C8's size and unlock geometry (51.1%, only class
+> **REVISION-4 CORRECTION:** the next paragraph is true only of the frozen
+> pre-`0b0d6617` classification. It is **not** the current control and its size
+> did not survive unchanged. See §15.1.
+
+**What survived at that historical snapshot:** C8's size and unlock geometry (51.1%, only class
 unlocking anything alone, 37/40 videos) are CORPUS-side measurements,
 independent of which prompt wrote the conditions. The critical-path SHAPE
 (clear C8 → targeted respin → bind → lane ruling → forensics → exit) stands.
@@ -503,7 +542,12 @@ Prerequisites #2–#7 (ablation pre-reg, independent grader, control/treatment
 arms, annotation storage, immutability) transfer to the new target unchanged —
 the machinery was always target-agnostic.
 
-**Candidate fix class (extractor-side, for the packet — NOT authorized here):**
+> ★★★★★ **REVISION-4 STOP: DO NOT IMPLEMENT THE PROMPT-ONLY CANDIDATE BELOW.**
+> Gate A, the two-pass UNION property and the consumer reads proved it
+> insufficient. The binding replacement is §15.2's deterministic admission
+> contract with an immutable source record and typed projections.
+
+**Historical candidate fix class (extractor-side, never implemented):**
 amend the atomizer prompt so execution-context clauses (chart resolution,
 instrument) route to a non-atom classification with the market/timeframe
 captured as spec METADATA rather than entry conditions — the prompt already has
@@ -517,3 +561,277 @@ unmoved.
 before any trace over that population. And per AR-442: prerequisites #2/#3
 remain advisor-owned and unowned; a fresh worker seat needs its allowed-list
 stated or it re-derives the wall.
+
+---
+
+## §15 — REVISION 4: THE COMPILER BREAKTHROUGH PATH (2026-07-30)
+
+> **This section is the proposed operative replacement for the Phase-1 task
+> sequence in §§1, 3 and 14.** It incorporates the Gate-A provenance ledger,
+> the post-`0b0d6617` classification change, the six-consumer read, the
+> Ledger-E false-green, the truth-set correction and R-483's frozen orphan-zone
+> oracle authority. It does not rewrite the historical record above.
+
+**Revision evidence:** R-478, R-480, R-481, R-482, R-483 §12, AR-492,
+`C8-PROVENANCE-LEDGER-2026-07-29.md`, Gate-B packet rev 3 and
+`LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`. Values here are
+artifact/ruling-sourced unless explicitly labelled as a future measurement.
+
+### 15.0 — THE GOAL DID NOT MOVE
+
+**Phase-1 exit remains verbatim:** *“≥1 tier-A spec compiles with ALL
+load-bearing conditions concretely bound AND the compile-fidelity forensics
+gate passes calibration.”* Gate B is a blocker-removal milestone, **not** the
+exit. A lower C8 count, a green parity script or a targeted re-extraction is
+not a compiled strategy.
+
+**Trading-ready remains later:** the Phase-1 compiler exit must still be
+followed by Phase 2's battery / walk-forward / Monte Carlo evidence and Phase
+3's paper + shadow parity evidence. Revision 4 does not collapse those phases
+or promise profitability before they run.
+
+### 15.1 — THE PREMISES THAT CHANGED
+
+| object | historical statement | Revision-4 statement |
+|---|---|---|
+| **Gate-A cause** | one global C8 problem | **Split `232 / 1`:** `232` annotation/context clauses were admitted as executable atoms; the `1` empty-spine refusal is a separately manufactured safety sentinel and stays untouched. No global C8 remedy. |
+| **C8 control** | frozen `233`, `37` videos, ~`51%` | **Historical only.** Under the post-`0b0d6617` classifier the same frozen payload gives `159`, `35` videos, movement `−74`. This is a counterfactual measurement, not yet the additive current-production baseline. |
+| **treatment population** | select current C8 members | The presently named sentinel-excluded population is **`158`**, but membership must be frozen by **source identity**, never by a mutable C8/C6 outcome. Always name which `158`; three different objects share that value. |
+| **producer evidence** | model `evidence` is the teacher's quote | False. All `2,351/2,351` conditions have usable in-range transcript anchors, but only `264/2,351` independently corroborate the stored quote. The `evidence` field is not an authority. |
+| **fix mechanism** | amend the atomizer prompt | Insufficient. Two-pass UNION preserves a false positive from either pass. The binding repair is a deterministic admission contract; prompt wording may assist but cannot certify the boundary. |
+| **clause handling** | remove/demote the offending entry condition | Unsafe. Physical removal can change timeframe recovery, archetype selection, the binding denominator, onboarding control flow, playbook category and regime eligibility. Preserve one immutable source record and derive typed projections. |
+| **parity protection** | Ledger-E script passes, therefore TS/Python are protected | False green. The shipped corpus had one fixture, omitted load-bearing fields and was not wired into CI. Parity correction is a prerequisite, not a parallel cleanup. |
+| **success metric** | fewer refusals / more compiled or mapped specs | Forbidden as efficacy. Those aggregates can improve mechanically while semantics worsen. Source fidelity and record-level behavioral invariants grade Gate B. |
+
+**Scope:** `456 / 233 / 232 / 1` remains valid evidence about the frozen
+pre-`0b0d6617` causal chain. It may be reproduced as a historical control, but
+it may not be cited as what current code produces. Historical validity and
+current baseline are two different claims.
+
+### 15.2 — THE REPLACEMENT COMPILER CONTRACT
+
+Every extracted clause has **one immutable source record** containing its raw
+transcript identity, exact offsets, exact slice hash, extraction provenance and
+the pre-treatment condition identity. The quote used as evidence is derived
+deterministically from `transcript[start:end]`; any model-supplied quote is kept
+separately as an untrusted hint and is never backfilled into history.
+
+The admission boundary emits one or more typed projections:
+
+1. **`decision_condition`** — executable source-owned trading logic.
+2. **`execution_context`** — instrument, chart timeframe, platform or
+   descriptive market-session metadata; never executable merely because
+   removing context would change where the engine runs.
+3. **`annotation`** — explanation, recap, example or other non-executable prose.
+4. **`unresolved`** — disagreement or ambiguity; preserved and fail-closed,
+   excluded from efficacy credit.
+
+**Mixed clauses produce multiple projections sharing the same source
+identity.** They are never forced into one label and never physically deleted.
+A genuine predicate such as “trade only 09:30–11:00 ET” stays executable; “we
+are on the 30-minute chart” becomes structured context. If pass A says context
+and pass B says decision, UNION may not admit it: the result is `unresolved`
+until a deterministic rule settles it.
+
+The hardcoded empty-spine refusal remains byte-for-byte unchanged. A strategy
+with no executable entry after projection still fails closed; metadata cannot
+manufacture an entry.
+
+### 15.3 — THE CONSUMER CONTRACT: MEASURE BEHAVIOR, NOT COUNTS
+
+Gate B must carry a source-keyed transition ledger through the full onboarding
+decision graph. For every member it records before/after consumer **inputs**,
+whether each computation ran, consumer **outputs**, and any numerator and
+denominator separately.
+
+The minimum invariants are:
+
+- timeframe recovery prefers structured context; structured-vs-legacy
+  conflict fails closed, and partial removal may not silently select a
+  surviving but wrong timeframe;
+- binding uses executable-required projections and a stable source
+  denominator; `compiled=false→true` with unchanged `spineBound` earns zero
+  efficacy credit;
+- archetype matching sees only an explicitly authorized semantic projection;
+  Gate B may not break a tie merely by deleting prose;
+- playbook category and the resulting allowed-regime membership remain stable
+  unless a frozen source judgment explicitly requires a change;
+- source mutation by playbook registration is part of rollback and the
+  materiality receipt, not an invisible side effect;
+- before comparing outputs, the ledger records whether the archetype branch or
+  binding branch actually executed.
+
+Each transition receives exactly one verdict:
+
+| verdict | treatment |
+|---|---|
+| `SOURCE-JUSTIFIED` | eligible for efficacy credit |
+| `DENOMINATOR_ONLY` | zero efficacy credit; adjudicate by source identity |
+| `CONTROL_FLOW_CHANGED` | exclude from efficacy; invalidate a success verdict; continue collecting the sweep |
+| `UNEXPLAINED` | exclude from efficacy; invalidate a success verdict; continue collecting the sweep |
+
+**Fail closed at the verdict boundary, not at evidence collection.** The sweep
+continues so population incidence is measured; the run cannot declare success
+while either invalidating verdict exists.
+
+Aggregate compiled coverage, mapped count, queue rate, C8 count and C6 count
+are diagnostics only. No aggregate substitute may be introduced under a new
+name.
+
+### 15.4 — PREREQUISITE P0: CLOSE LEDGER-E PARITY ATOMICALLY
+
+Before any Gate-B result is admissible, the isolated worktree pinned to
+`runtime-production` must deliver one atomic parity correction containing:
+
+1. TypeScript refusal of `lunch_blackout` and `overnight` with Python's safe
+   semantics; Python must **not** be loosened to turn the test green.
+2. Bidirectional whole-plan key-set equality, including `reason`, order and
+   multiplicity, invalidation bindings, queue reasons and duplicate condition
+   identities — not another selected-field loop.
+3. An expected-results oracle independent of both implementations. For the
+   orphan zones its authority is frozen in
+   `ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md`, sha256
+   `09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086`:
+   zone membership comes from an all-`1,440`-minute occupancy probe that reads
+   none of the tables under repair; emitted behavior comes from the frozen
+   semantic propositions. No row may cite `FAMILY_META`, either emitted plan,
+   or packet prose copied from them.
+4. Exhaustive membership manifests and deletion-RED fixtures. Counts alone do
+   not protect membership.
+5. CI and fast-lane wiring, plus a per-spec materiality receipt. Existence is
+   not wiring.
+6. One adversarial `accuracy-validator` grade against the complete delivery
+   commit. Designer and builder are disqualified from grading it.
+
+**Direction check:** fixture `30` must move TypeScript `compiled=true→false`.
+A higher compiled count is a failure signal, not an improvement.
+
+**Latent queue-reason divergence (AR-492):** do not choose a new payload
+semantic inside this atomic repair. Add a reachability tripwire asserting that
+every unbindable result has a non-null reason and that queue-reason equality is
+checked. It must go RED if a future family entry arms the currently unreachable
+null path. Resolve which lane's fallback is normative only in a separately
+scoped change after its downstream readers are enumerated.
+
+**Work preservation vs delivery atomicity:** WIP commits are allowed only on
+the isolated, non-integrated parity branch, labelled `WIP — NOT A DELIVERY` and
+never cited as green evidence. No stash. The reviewable delivery is produced as
+one atomic commit without rewriting shared history; before integration its
+diff-stat must match the reviewed delta.
+
+### 15.5 — PREREQUISITES P1–P3: BASELINE, TRUTH AND LANE
+
+**P1 — additive current baseline.** Rebuild the classification baseline on the
+then-current executable code. Because the original census producer is gone, a
+re-authored producer is a new instrument: over the same snapshot it must first
+reproduce the frozen classified artifact before its current-code output is
+admitted. The result is added beside the historical freeze, never overwritten
+into it.
+
+**P2 — frozen truth membership.** Before any treatment result exists, freeze
+the complete membership and adjudication labels under this key:
+
+`(video, raw_transcript_sha256, span_start, span_end,
+exact_slice_sha256, condition_id)`
+
+Offsets are JavaScript UTF-16 code-unit indices. This corpus has no non-BMP
+characters, but the format must assert that condition or convert explicitly;
+one emoji otherwise shifts every later Python slice. `evidence` is excluded
+from identity and adjudication. The five labels are:
+
+- `GENUINE_SESSION_PREDICATE`
+- `DESCRIPTIVE_SESSION_CONTEXT`
+- `INSTRUMENT_CHART_PLATFORM_CONTEXT`
+- `MIXED`
+- `AMBIGUOUS`
+
+`AMBIGUOUS` is the explicit residual: preserve it, exclude it from treatment
+and efficacy, and never force a convenient label. A stable source identity
+derived from the frozen key travels through every projection, so downstream
+joins do not depend on mutable C8/C6 membership or a regenerated condition id.
+
+**P3 — two-stage lane authority.** No current tree contains the complete
+producer and consumer path:
+
+- **producer proof:** isolated worktree pinned to the producer SHA; claims
+  producer behavior only;
+- **deployable integration:** separate isolated worktree pinned to
+  `runtime-production` at its then-current SHA; enumerate its actual
+  graph→spec handoff, port the graded contract, update consumers, run CI;
+- **transfer receipt:** both SHAs, schema version, changed-file manifest and
+  repeated fixtures.
+
+Neither `tf-deep-scan` nor `runtime-production` is edited directly. The
+campaign tree is not a valid implementation lane.
+
+### 15.6 — THE REVISED PHASE-1 CRITICAL PATH
+
+The ordered path is now:
+
+1. **Finish P0** — atomic Ledger-E parity correction.
+2. **Grade P0 once** — independent adversarial grade; repair only a real
+   finding, never add green ceremony.
+3. **Freeze P1 + P2** — current additive baseline and complete source-keyed
+   truth membership.
+4. **Rule P3** — producer-proof lane, runtime integration lane and transfer
+   receipt.
+5. **Implement deterministic Gate B** — immutable source record, typed
+   projections, exact-slice provenance, protected sentinel.
+6. **Run the source-keyed control/treatment sweep** — include every consumer
+   transition and incidence; reject proxy improvements.
+7. **Re-rank the Tier-A spearheads on the current output** — never inherit the
+   historical “C8 unlocks six” ranking as today's target list.
+8. **Targeted corpus_B respin only** — the smallest named video set expected to
+   complete one Tier-A spec; run `transcript-audit` per video.
+9. **Complete the target's SMC/load-bearing binding lane** — every condition is
+   concrete or honestly refused; no count-only claim.
+10. **Re-affirm compile-fidelity calibration in the authoritative runtime
+    lane**, then declare Phase-1 exit only if both original legs pass.
+
+Gate B removes the largest known extraction blocker; it does not guarantee step
+9. If the targeted spec retains a non-Gate-B blocker, the next fix is selected
+from that spec's measured residual, not from a library-wide housekeeping list.
+
+### 15.7 — BREAKTHROUGH-MODE OPERATING RULES
+
+- At most **one money-path implementation and one independent grade** are in
+  flight. Everything else is explicitly parallel or parked.
+- No new checker is built when an existing authoritative artifact or direct
+  execution can answer the claim. An instrument must remove a named blocker,
+  not merely describe one more safely.
+- A latent, currently unreachable defect receives a tripwire and a named
+  follow-up; it blocks only if it can activate on the current population or
+  invalidate the current measurement.
+- Two failed patch rounds on the same instrument trigger replacement or
+  retirement, not a third regex-shaped patch.
+- Checksums, backups, monitor work and prose corrections may pre-empt the money
+  path only when they invalidate evidence the next critical-path step would
+  consume.
+- Every task ends with a measured movement toward the next numbered gate. A
+  ruling that closes work must authorize the next existing seat, never a
+  hypothetical future worker.
+
+### 15.8 — STATUS AT THIS REVISION'S EVIDENCE CUT
+
+| item | state at campaign commit `ad7fa571` | next admission event |
+|---|---|---|
+| Gate-A causal split | **complete** at the historical-artifact layer | preserve as causal evidence; do not reuse as current control |
+| P0 parity packet | staged and corrected | complete the one atomic implementation |
+| P0 semantic oracle authority | **frozen by R-483 §12** | derive oracle rows from the frozen authority; never from either lane |
+| P0 implementation | **in progress in the named isolated seat/worktree** | complete delivery commit, then one independent grade |
+| P1 additive current baseline | **not frozen** | re-authored-producer equivalence control, then current-code artifact |
+| P2 truth rule | **defined**; complete labelled membership not frozen | freeze all members and hash before treatment |
+| P3 runtime graph→spec handoff | **unenumerated** | rule the two-stage transfer path before runtime integration |
+| Gate-B implementation / ablation | **not started; blocked on P0–P3** | deterministic producer proof, integration, then source-keyed sweep |
+| fully bound Tier-A strategy | **zero** | targeted respin and SMC completion after Gate B |
+
+Bounded open items that may affect this path: population incidence of the
+consumer transitions; the exact population overlap among Tier-A, corpus_A and
+POP-120; non-session-family parity outside P0's admitted scope; and semantic
+adjudication of the mostly uncorroborated truth surface. They are not permission
+for a library-wide audit. Each is measured only when its numbered gate needs it.
+
+**The breakthrough is deliberately narrow:** one source-faithful Tier-A spec,
+fully bound in the lane that will run it, with calibrated compile-fidelity
+forensics. Once that exists, Phase 2 starts. Until it exists, no cleaner-looking
+aggregate is progress toward the Phase-1 exit.
