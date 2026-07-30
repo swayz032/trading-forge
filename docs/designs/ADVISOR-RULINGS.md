@@ -12,6 +12,65 @@
 
 ---
 
+## R-472 · 2026-07-29 · ★★★★★ **AR-469 NOT RATIFIED. CAPABILITY MODE IS RETIRED — WE ARE DONE TEACHING A REGEX TO UNDERSTAND TYPESCRIPT.** ★★★★★ **AND THE FINDING THAT DIAGNOSES ALL FOUR ROUNDS AT ONCE, [MEASURED HERE]: THE GUARD'S FAIL-CLOSED BEHAVIOUR WAS SCOPED TO ITS **CONTROL**, NEVER TO ITS **CLAIM**. A surface of 2 files — one `UNDECIDABLE`, one `ENGAGED` — returns `CONTROL ENGAGED`, absence over the remainder **ADMISSIBLE**, **EXIT `0`**. IT LICENSES AN ABSENCE CLAIM OVER A FILE IT HAS EXPLICITLY DECLARED IT CANNOT DECIDE.** ★★★★★ **`17/17` PROVES SEVENTEEN REGISTERED SHAPES AND NOTHING ELSE — grade `NOT-SOUND`, agent `a858339f7a6a7cfb8`.** ★★★★★ **AND ERROR EIGHT AGAINST MYSELF: R-470 §4 CREDITED THE `--break-reconcile` EXIT `6` AS THE FIX FOR THE `--mutate` EXIT `0`. TWO DIFFERENT PATHS. [MEASURED HERE] `--mutate` STILL PRINTS `JOIN_RESIDUAL = 1 … [UNEXPLAINED — a real one is a BROKEN JOIN]` AND EXITS `0`**
+
+**RULING ID:** R-472 · **TASK ID:** AR-469 · **DECISION:** **REVISE — NOT RATIFIED. RETIRE capability mode (do NOT patch F-1/F-2 individually). Keep text mode with one certifiable proposition. Ledger takes OPTION A. Authorized immediately.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-469`** — ruled here.
+
+### ★★★★★ §0 — THE DIAGNOSIS OF THE WHOLE SAGA, AND IT IS NOT "MORE SHAPES"
+
+**[MEASURED HERE] surface = 2 files.** `cast.ts` → `UNDECID`. `control.ts` → `ENGAGED`. Output: `1 ENGAGED, 1 UNDECIDABLE, of 2 files` · `CONTROL ENGAGED` · *"An absence over the remainder of the surface above is ADMISSIBLE"* · **EXIT `0`**.
+★★★★★ **THE GUARD ASKED ONLY *"is my CONTROL decidable?"* WHEN THE CLAIM IT LICENSES IS ABOUT THE WHOLE SURFACE. An `UNDECIDABLE` file inside the surface is silently tolerated, so the tool certifies absence over a file it has just said it cannot read. THAT IS NOT A MISSING FIXTURE — IT IS THE WRONG QUANTIFIER.**
+★★★★★ **`A FAIL-CLOSED CLASSIFIER IS NOT FAIL-CLOSED WHEN ONLY ITS CONTROL MUST BE DECIDABLE. SURFACE-WIDE ABSENCE REQUIRES SURFACE-WIDE DECIDABILITY.` This single sentence explains why four rounds of correct, faithful, well-fixtured repairs kept producing a tool that lies just outside its test list.**
+
+### ★★★★★ §1 — CAPABILITY MODE IS RETIRED. THIS IS THE DECISION, NOT A DEFERRAL.
+
+★★★★★ **`--module/--symbol` MUST STOP ISSUING CAPABILITY VERDICTS. Every such invocation returns `VERDICT UNAVAILABLE — CAPABILITY MODE RETIRED`, exit `8`. The CLI survives only as a fail-safe compatibility surface so an old command line cannot silently mean something new.** ★★★★★ **DO NOT PATCH THE PARAMETER-SHADOW OR TYPE-POSITION CASES INDIVIDUALLY. A fifth patch round is forbidden.**
+**WHY, ON THE RECORD:** this Python regex analyser was attempting to reproduce JS/TS **parsing, lexical scope, binding resolution, shadowing, type erasure, and executable-reference analysis.** [MEASURED across four rounds] each round closed every named shape, its own suite went green, and a new unnamed shape appeared: unrelated dynamic import → bare textual occurrence → comment-provenance ANDed with stripped-code usage → parameter/catch/destructured shadowing and `typeof` type-position. **THAT STATE SPACE IS NOT REASONABLY ENUMERABLE WITH FIXTURES, AND FOUR ROUNDS IS SUFFICIENT EVIDENCE.**
+
+### ★★★★★ §2 — WHAT SURVIVES: ONE HONEST PROPOSITION
+
+**`--pattern` is RETAINED and may certify EXACTLY ONE thing:**
+> *"This literal pattern was PRESENT / ABSENT over this explicitly enumerated surface."*
+★★★★★ **IT MAY NEVER BE CITED AS PROOF THAT A CAPABILITY OR A PERSISTENCE PATH EXISTS OR DOES NOT EXIST.** (The original question that started this lane — "does the atomizer persist?" — is now answered by POSITIVE producer evidence at `dc8a150:229`, not by any absence tool.)
+**TEXT MODE MUST EXIT NON-ZERO IF:** any enumerated file is unreadable · enumeration exceeds its bound · the positive control is outside the surface · the positive control does not contain the pattern. ★★★ **Every enumerated surface member must PARTICIPATE IN THE FINAL VERDICT — that is §0's law applied to the mode we are keeping.**
+★★ **A purpose-built semantic instrument on the TypeScript compiler API + symbol/type checker is the RIGHT tool for this question, and it is NOT AUTHORIZED NOW. Gate A does not need it. Recording the correct answer without building it is the discipline; building it would be the fifth round wearing a better hat.**
+
+### ★★★★★ §3 — THE LEDGER TAKES OPTION A, AND THE REASON IS THE THREE MARKET COPIES
+
+**[MEASURED HERE, and the grader independently reproduced every figure] the header states four bridge-key facts; the instrument reads ONLY `pop120_classified.json` and joins `(video, condition_id)`. `strategy_id` occurs in header PROSE ONLY. Specs are "pinned" by COUNT; transcripts by COUNT AND AGGREGATE BYTES — neither is content-pinned.**
+★★★★★ **OPTION A IS ORDERED, NOT OPTION B: LOAD AND CONTENT-PIN the raw census, the COMPLETE spec set and the COMPLETE transcript set, then EMIT every bridge-key figure (`1368` · `456` · `{3: 456}` · `359` · `32` · `28` · `96`). ★★★ Because these keys govern WHETHER THREE MARKET COPIES ARE SILENTLY FUSED, and `1368/3 = 456` is the number a reader expects — a wrong key here produces a BALANCED table. A governing number may not be prose. `A COUNT IS NOT A PIN.`**
+
+### ★★★★★ §4 — `--mutate` MUST EXIT NON-ZERO, AND R-470 §4's CREDIT IS WITHDRAWN
+
+**[MEASURED HERE]** `--mutate` → `JOIN_RESIDUAL = 1`, printed as **`[UNEXPLAINED — a real one is a BROKEN JOIN]`**, `SUM 456 BALANCES`, **exit `0`**. `--break-reconcile` → exit `6`.
+★★★★★ **A REAL UNEXPLAINED JOIN RESIDUAL INVALIDATES THE LEDGER. The instrument NAMES it a broken join and returns success. ORDERED: that path exits NON-ZERO. `--break-reconcile → 6` is retained as the SEPARATE conservation-gate control.**
+★★★★★ **AND THE ERROR IS MINE: R-470 §4 accepted "the reconciliation gate firing at exit `6`" as *"the fix to the defect I measured myself: the rejected version detected and NAMED the mutated row and still exited `0`."* **THOSE ARE TWO DIFFERENT CODE PATHS.** I measured `--break-reconcile`, credited it against `--mutate`, and closed a defect that was never touched. `I MEASURED THE NEIGHBOURING OBJECT` — eighth instance, and the fifth of that exact species tonight.**
+
+### §5 — WHAT IS NOT IN DOUBT, AND MUST NOT BE RE-LITIGATED
+
+★★★★★ **GATE A's SUBSTANTIVE FINDING IS INTACT AND IS NOT CONTAMINATED BY ANY OF THIS: `232` annotation-admission + `1` empty-spine, totals `456 / 233 / 232 / 1`. It rests on POSITIVE producer and artifact evidence — the producer's `:60` instruction, the `455/456` join, `232/232` span+evidence+type, the two-hop entailment, DB↔disk equality on two paths — NOT on this generic absence guard. The tool's failure costs us procedural closure, not the causal finding.**
+★★★ **ALSO CONFIRMED SOUND BY THE GRADER AND BY THE READ, do not re-open: the `17/17` suite genuinely passes with real positive AND negative controls · the `16/17` first-run deviation was handled correctly (the PREDICTION stayed fixed and the ANALYSER changed — that is pre-registration working) · 3-way and decoy-laden compositions · no over-refusal · module identity (`fs/promises`, `fsx` rejected; `node:fs`≡`fs` for the namespace form) · the runtime bound refuses at exit `4` BEFORE enumerating, so no silent-truncation-then-admissible path exists.**
+
+### ★★★★★ §6 — AUTHORIZED NEXT ACTION
+
+**AR-469's seat is AUTHORIZED NOW** to stage the ratify receipt and perform this **DELETION AND SIMPLIFICATION**.
+**FILES ALLOWED:** `absence_claim_control.py` · `absence-fixtures/` · `c8_provenance_ledger.py` · its ledger document and ratify/report receipts. **NOTHING ELSE.**
+**FORBIDDEN:** producer or prompt changes · extraction, model execution, re-extraction, backfill · DB / spec / frozen-artifact writes · **any change to the legitimate empty-spine refusal** · backtests · Gate-B implementation.
+**ACCEPTANCE.** Every `--module/--symbol` invocation exits `8` · text-mode positive and negative controls DISCRIMINATE · an unreadable surface member PREVENTS an admissible absence · ledger control exits `0` · **`--mutate` yields `JOIN_RESIDUAL=1` AND EXITS NON-ZERO** · `--break-reconcile` exits `6` · raw census, spec set and transcript set are CONTENT-HASH pinned · all four artifact-specific key measurements EMITTED · Gate-A totals remain `456 / 233 / 232 / 1`.
+**STOP CONDITION.** Another semantic regex patch attempt · needing to touch executing extraction code · changing frozen evidence · **or being unable to make every enumerated surface member participate in the final verdict.**
+**OBSERVABLES.** START-RECEIPT ~2 min · capability-mode retirement fixture ~15 min.
+★★★★★ **GRADE DISPOSITION — AND IT IS A CHANGE OF METHOD I ADOPT: DO NOT DISPATCH A THIRD CONCURRENT GRADER. RETURN the completed architectural repair to the EXISTING validator `a858339f7a6a7cfb8` as a FOLLOW-UP, so the grade is continuous with the one that found F-1/F-2 rather than starting a fresh reader on a superseded picture. `ONE RIG PER CHANNEL` applied to graders. **GATE B REMAINS BLOCKED until that follow-up is sound.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#9 CENTRAL** — the empty-spine refusal is explicitly forbidden from change. **#6 holds** — `backtests_total = 0`; no promotion. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only.
+
+**FAILED OR UNPROVEN CONDITIONS.** Surface-wide decidability · parameter/catch/destructured shadowing · `typeof` type-position · `--mutate` exit code — **[MEASURED HERE, OPEN, and being retired or fixed rather than patched]** · `import fs = require(...)` and re-export chains — **[REASONED BY THE GRADER, NOT EXECUTED]**, moot under retirement · `.js/.jsx/.mjs/.cjs/.tsx/.mts/.cts` behaviour — **[UNTESTED]**, moot under retirement · **every absence claim citing capability mode — `[VOID]`** · DB↔census refusal/classification freshness — **[UNMEASURED]** · whether `0b0d6617` moves C8 — **[UNMEASURED]** · population OVERLAP MAP — **[UNENUMERATED]** · original transcript identity — **[UNRECOVERABLE AT ORIGIN]**.
+
+**LESSON TO PERSIST.** ★★★★★ **`A FAIL-CLOSED CLASSIFIER IS NOT FAIL-CLOSED WHEN ONLY ITS CONTROL MUST BE DECIDABLE. SURFACE-WIDE ABSENCE REQUIRES SURFACE-WIDE DECIDABILITY.` Check the QUANTIFIER of the claim against the quantifier of the evidence — four rounds of shape-hunting were all downstream of one wrong quantifier.** ★★★★★ **AND: `WHEN EVERY REPAIR ROUND CLOSES ITS NAMED SHAPES AND A NEW UNNAMED SHAPE APPEARS, THE APPROACH IS WRONG, NOT THE CODE.` The correct move is to RETIRE THE CLAIM, not to enumerate harder. `17/17` proves seventeen shapes; registered-fixture closure establishes nothing about unregistered shapes.** ★★★ **AND, EIGHTH INSTANCE: I credited a fix measured on `--break-reconcile` against a defect living in `--mutate`. TWO FLAGS ARE TWO CODE PATHS — verify the fix on the PATH THAT CARRIED THE DEFECT.**
+
+---
+
 ## R-471 · 2026-07-29 · ★★★★★ **APPROVAL DENIED. THE GUARD'S "SYNTAX-AWARE" CLAIM IS FALSE — [MEASURED HERE] IT PROVES BINDING **PRESENCE**, NOT **ENGAGEMENT**, AND NINE FIXTURES THAT EACH PASS IN ISOLATION GREEN A COMPOSITION OF TWO OF THEM.** ★★★★★ **A FILE WHOSE ONLY `fs` IMPORT IS INSIDE A `//` COMMENT, WITH `writeFileSync` AS AN UNRELATED **LOCAL FUNCTION**, RETURNS `1 ENGAGED` · *"destructured from 'fs' and referenced in code"* · ABSENCE **ADMISSIBLE** · **EXIT `0`**. THE VERDICT STRING ITSELF IS FALSE: THERE IS NO IMPORT.** ★★★★★ **AND AN IMPORT THAT IS NEVER USED (`import { writeFileSync } from "fs"; const inert = 1;`) ALSO RETURNS `1 ENGAGED`, EXIT `0` — THE REFERENCE CHECK IS SEEING THE IDENTIFIER INSIDE THE IMPORT DECLARATION.** ★★★★★ **AND I MUST CORRECT MYSELF AGAIN: I TOLD THE OPERATOR "THE TOOL IS NOW GENUINELY WORKING" ON A TEST THAT ONLY EXERCISED THE UNSUPPORTED-LANGUAGE PATH. THE COMMENT DEFECT IS **OPEN** ON THE PARSED PATH, WHICH IS THE PATH THAT MATTERS**
 
 **RULING ID:** R-471 · **TASK ID:** AR-467 · **DECISION:** **REVISE — APPROVAL DENIED on `d27e7a79`. Ledger arithmetic and the Gate-A causal finding stand untouched. REPAIR AUTHORIZED IMMEDIATELY under the existing ratify packet — no operator wait.**
