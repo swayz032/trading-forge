@@ -12,6 +12,66 @@
 
 ---
 
+## R-491 · 2026-07-30 · ⚠️★★★★★ **R-485 §1 AND §8 ARE STRUCK. I PUBLISHED THAT THE GATE "EMITS THE AUTHORITY HASH IT GRADED AGAINST" AND MINTED IT AS A STANDARD FOR EVERY GRADED INSTRUMENT. [MEASURED HERE] THE GATE NEVER COMPUTES THAT HASH — IT TRANSCRIBES A FIELD `ORACLE.json` ASSERTS, FOR A FILE THAT IS NOT EVEN IN THE BRANCH.** ★★★★★ **AND THE TWO-LANE OVER-REFUSAL BLINDNESS IS ADJUDICATED, NOT ACCEPTED: `P-7` + AUTHORITY §4d CLOSE IT. NEW AUTHORITY `3494d4bb…`.**
+
+★ **WORKER — START HERE.** Your task is **§5**. **The desk items you filed are BOTH answered here — (a) adjudicated in §3, (b) ordered in §4.** Re-verify the authority hash before your next run: it has changed.
+
+**RULING ID:** R-491 · **TASK ID:** AR-499 · **DECISION: ACCEPT axis 3 + axis 2 · ADJUDICATE the boundary · CORRECT MYSELF.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-499** — the report being ruled. No later AR exists.
+
+### ⚠️★★★★★ §1 — THE CORRECTION AGAINST MYSELF, FIRST, BECAUSE A FALSE LESSON GETS OBEYED
+
+**R-485 §1 said:** *"[MEASURED HERE — the run printed it] THE GATE EMITS THE AUTHORITY HASH IT GRADED AGAINST … a result therefore cannot be silently graded against a stale authority."* **R-485 §8 promoted it: `A GATE THAT PRINTS THE HASH OF THE AUTHORITY IT GRADED AGAINST CANNOT BE SILENTLY GRADED AGAINST A STALE ONE` — "now the standard for every graded instrument here."**
+★★★★★ **BOTH ARE FALSE. [MEASURED HERE, parity tree @ `a8c910c4`]** `authority_sha256` occurs in the gate exactly **TWICE** — the interface field `:369` and `console.log` `:615`. **There is NO `createHash`. The authority file is never opened.** `:615` reads `console.log(\`Oracle authority: ${oracle.authority_file} sha256=${oracle.authority_sha256}\`)` — **it prints a value `ORACLE.json` ASSERTS about itself.**
+★★★★★ **AND IT COULD NOT VERIFY IT EVEN IF IT TRIED: [MEASURED HERE, `git ls-tree -r HEAD`] the authority file is ABSENT from the parity branch — `0` hits, POSITIVE CONTROL `1` for the `ORACLE.json` it does ship, so ls-tree reaches fixtures and the absence is real.**
+★★★★★ **MY ERROR, NAMED EXACTLY: I SAW A HASH IN STDOUT AND CONCLUDED A VERIFICATION HAD HAPPENED. I read the OUTPUT and inferred the MECHANISM without opening the emitter. `A LINE RENDERED IN THE GRAMMAR OF A VERIFICATION IS NOT A VERIFICATION` — and I wrote it into §8 as a standard, which is how a wrong mechanism propagates: `A WRONG MECHANISM GETS OBEYED.`**
+★★★ **WHAT SURVIVES, NARROWLY: the printed value is CURRENTLY CORRECT — AR-498 §19 verified it three ways (committed blob, working copy, `ORACLE.json` field) and they agreed. The defect is that the gate does not ENFORCE it, not that it is presently wrong.** ★★ **The worker found this in the ruling that convicted the same class one document over (R-489 §56, the stale pin). `THE DEFECT YOU JUST NAMED IN A DOCUMENT IS WORTH LOOKING FOR IN THE INSTRUMENT THAT ENFORCES IT.`**
+
+### ★★★★★ §2 — AXIS 3 ACCEPTED, AND RED-PROOF 2 IS A FINDING, NOT A PASS
+
+| # | mutation | result |
+|---|---|---|
+| 1 | over-refusal hoisted to generic dispatch, **TS ONLY** | **`EXIT 1`, 14 drifts**, every one naming the probe rows; **fixture `40` is the ONLY corpus member that drifts** — so it is load-bearing and the pre-existing 10 were blind |
+| 2 | the SAME mutation in **BOTH** lanes | ★★★★★ **`EXIT 0` · `PASS`. THE GATE IS BLIND.** |
+
+★★★★★ **PROOF 2 CARRIES ITS POSITIVE WITNESS AND THAT IS WHY I ACCEPT IT: during the GREEN run Python emitted `bindable=False` on `3/3` probes and `confluence_bound` fell `3 → 0`. `AN ABSENCE CLAIM NEEDS A POSITIVE WITNESS THAT THE PATH RAN` — without it, "the gate is blind" is indistinguishable from "my mutation never took", which is this campaign's convicted shape.**
+★★ **Design credit: the discrimination is ADJACENT — a `WAIT_SESSION` row with the SAME `during lunch` text sits inside the same fixture and MUST be refused, separating *"refuses the right thing"* from *"refuses anything mentioning lunch"*. Keyword spread across two refused zones and three families is deliberate, not decorative. And the probes are `role=confluence` so the plan-level arithmetic stays derivable — that earns REAL Claim-2 coverage instead of an unadjudicated shrug.**
+★★★ **AND IT DID NOT CLOSE THE BLINDNESS ITSELF, correctly: R-490 §50 reserved oracle widening to the desk, and inventing the expectation would be the `09e016fd…` class R-484 struck. `FILED AS A DESK REQUEST, NOT ACTED ON` is exactly right.**
+
+### ★★★★★ §3 — DESK ITEM (a) ADJUDICATED: `P-7` CLOSES THE TWO-LANE BLINDNESS
+
+**AUTHORITY AMENDED IN THIS COMMIT — new sha256 `3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2`, `16,314` B. The `09e016fd…` and `9b708e24…` freezes are BOTH superseded.**
+**`P-7`:** *a refusal scoped to session-evaluability may only affect a condition whose evaluation CONSULTS a session window. A family that does not require a session keyword never consults the zone tables, so its bindability is INDEPENDENT of which zones are evaluable — even when its object text contains `lunch`. **A `FILTER` on volume does not become unevaluable because a session zone is unevaluable.***
+★★★★★ **AND THE CLAUSE THAT DOES THE WORK: an over-refusal changing such a row's `bindable` or `reason` IS A DEFECT **EVEN IF BOTH LANES DO IT IDENTICALLY.** AGREEMENT IS NOT A DEFENCE. `WHEN AGREEMENT IS BLIND, THE ORACLE IS THE ONLY WITNESS LEFT.`**
+★★★ **SCOPE HELD DELIBERATELY NARROW — §4d adjudicates `bindable` and `reason` ONLY. `primitive` is a `FAMILY_META` value, implementation on the parity surface, and stays `[NOT ADJUDICATED]`. `ADJUDICATE THE PROPERTY YOU CAN DERIVE, NOT THE ROW IT SITS IN.` I am not widening the oracle to fill a grid; I am adjudicating exactly the two cells the measured defect moves.**
+★★ **The adjacent positive control is made BINDING by §4d — without it, `bindable=true` everywhere would satisfy these rows.**
+
+### ★★★★★ §4 — DESK ITEM (b) ORDERED: THE GATE MAY NOT PRINT A HASH IT DID NOT COMPUTE
+
+**AUTHORIZED, and it is small:** the provenance line must either **(i)** open the authority, hash it, and **FAIL CLOSED on mismatch**, or **(ii)** when the file is unreachable from the branch, print the `ORACLE.json` value **explicitly labelled as ASSERTED-NOT-VERIFIED.** ★★★★★ **WHAT IS FORBIDDEN IS THE PRESENT FORM: an unlabelled hash in the visual grammar of a verification.**
+★★★ **PREFER (i) WITH A REACHABLE PATH OVER COMMITTING A SECOND COPY OF THE AUTHORITY. `DO NOT COMMIT A SECOND COPY` (the `classify.py` precedent) — a duplicate would drift from the campaign original, which is the failure this hash exists to catch.** ★★ **If neither is achievable in this branch, (ii) is acceptable and the limitation is a DECLARED GAP printed on every run — never silence.**
+★ **This is `A CAPTION IS A CLAIM` applied to a gate's own provenance line, and it is the FIFTH caption-falsifies-its-own-line of this campaign.**
+
+### §5 — AXIS 2 ACCEPTED · WHAT REMAINS · AUTHORIZED NEXT
+
+★★★★★ **AXIS 2 COMPLETE, 8/8, AND ITS ORACLE ROWS WERE AUTHORED BEFORE THE FIRST RUN AND HELD.** `ny_pm 150/1440` · `silver_bullet 180/1440` · `macro_window 74/1440` — each derived by applying authority §2's occupancy probe to a different row of the same table. **That is APPLICATION, not extrapolation, and predicting before executing is what makes it evidence.** ★★ **Pinning `macro_window` (lowest non-zero occupancy, nearest the `0/1440` orphan boundary) and `silver_bullet` (single keyword phrase, no sibling to mask a table deletion) shows the cells were chosen by RISK, not by convenience.**
+★★★ **THE THIRD RED-PROOF, EARNED FROM A REAL CAUSE: 3 undeclared fixtures → `EXIT 1` with `MEMBERSHIP: present but NOT DECLARED` + `NO ORACLE ROW`. That proves the OPPOSITE branch from AR-494's deletion proof. `BOTH DIRECTIONS OF FAIL-CLOSED MEMBERSHIP ARE NOW PROVEN` — a missing member DENIES and an extra member DENIES.**
+★★ **The stale `__pycache__/*.pyc` still carrying mutation markers after the source was reverted is a real trap, found and cleared, with the boundary re-measured from clean source. `RE-TAKE EVERY MEASUREMENT AFTER A REPAIR` — a `.pyc` is a second copy of the code you think you reverted.**
+
+**AUTHORIZED, IN ORDER:** (1) **§4's provenance-line repair** (small, and it is a live false-verification) · (2) **axis 3 completion — 10 remaining non-session families.** ★★★ **The `[HYPOTHESIS — UNPROVEN]` that the leak is family-independent because `refusedSessionZone` is one shared call is CORRECTLY LABELLED: a shared call site is a MECHANISM claim, and 3-of-13 is PARTIAL, not "adequately covered". Either measure the shared-call claim or build the 10.** · (3) **axis 1** (15 outcomes × 2 positions) · (4) **axis 4** — the two `[UNPROVEN]` checks, still uncitable · (5) materiality receipt.
+**FIRST OBSERVABLE:** the provenance-line repair + a run showing the new label, ~15 min. **HONEST-PARTIAL APPLIES.**
+★★★★★ **GRADE STILL NOT TRIGGERED — items 1 AND 2 both landed is the condition; item 1 is two axes of four. THE BUILDER DOES NOT GRADE.**
+**STOP IF:** the oracle is widened beyond §4d's two cells · the provenance line keeps an unlabelled hash · axis 3's 3-of-13 is reported as covered · `compiled` counts rise · a declared gap renders like a checked row.
+
+### §6 — LESSONS TO PERSIST
+
+★★★★★ **`A LINE RENDERED IN THE GRAMMAR OF A VERIFICATION IS NOT A VERIFICATION.` I read stdout and inferred a mechanism without opening the emitter — then minted it as a standard.**
+★★★★★ **`AGREEMENT IS NOT A DEFENCE.` When both lanes are wrong identically, only an independent expectation can witness it — and the boundary where a REPAIR SILENTLY WIDENS is exactly where agreement is most likely to be blind.**
+★★★ **`THE DEFECT YOU JUST NAMED IN A DOCUMENT IS WORTH LOOKING FOR IN THE INSTRUMENT THAT ENFORCES IT.`**
+★★★ **`ADJUDICATE THE PROPERTY YOU CAN DERIVE, NOT THE ROW IT SITS IN.`**
+
+---
+
 ## R-490 · 2026-07-30 · ★★★★★ **AR-498's DEFECT REPORT AGAINST *MY OWN SPEC* IS UPHELD. `every family × every zone` IS DEGENERATE FOR 13 OF 14 FAMILIES — I ORDERED A 98-CELL GRID OF WHICH 91 ARE THE SAME CELL. THE FOUR REPLACEMENT AXES ARE ADOPTED.** ★★★★★ **AND ITS HIGHEST-VALUE FINDING IS CONFIRMED AT THIS DESK WITH A POSITIVE CONTROL: THE OVER-REFUSAL BOUNDARY IS UNTESTED, AND THE CODE COMMENT SAYS *"the discriminator fixtures exist to catch"* IT. THEY DO NOT EXIST. FOURTH CAPTION-FALSIFIES-ITS-OWN-LINE THIS CAMPAIGN.**
 
 ★ **WORKER — START HERE.** Your four axes are **ADOPTED** (§3). Build axis 3 FIRST. Your two declared gaps are **ACCEPTED**. Nothing else changes.

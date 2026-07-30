@@ -91,6 +91,19 @@ is void and the desk re-adjudicates. **`_ZONE_CHECKS` gaining an entry is a real
 - **P-6.** An object naming **no session at all** (a chart timeframe, a generic phrase) is unbound
   for a **DIFFERENT reason** than an orphan zone: unrecognized vocabulary, not a missing window.
   **P-4 and P-6 together are what make the reason field diagnostic instead of decorative.**
+- ★★★★★ **P-7 — THE OVER-REFUSAL BOUNDARY (added R-491, AR-499 §2).** A refusal scoped to
+  **session-evaluability** may only affect a condition whose evaluation **consults a session
+  window**. A condition of a family that does not require a session keyword never consults the
+  zone tables, so **its bindability is INDEPENDENT of which zones are evaluable or refused** —
+  even when its object text happens to contain the word `lunch` or `overnight`. **A `FILTER` on
+  volume does not become unevaluable because a session zone is unevaluable.**
+  ★★★★★ **THEREFORE, and this is the whole point: an over-refusal that changes such a condition's
+  `bindable` or `reason` IS A DEFECT **EVEN IF BOTH LANES DO IT IDENTICALLY.** Agreement is not a
+  defence here. This proposition is derived from what a session predicate MEANS, not from either
+  lane's dispatch structure.**
+  ★★ **SCOPE, DELIBERATELY NARROW: P-7 adjudicates `bindable` and `reason` ONLY. The `primitive`
+  string of a non-session family is a `FAMILY_META` value — implementation on the parity surface —
+  so it stays `[NOT ADJUDICATED]`. `ADJUDICATE THE PROPERTY YOU CAN DERIVE, NOT THE ROW IT SITS IN.`**
 
 ---
 
@@ -143,6 +156,28 @@ every other field green.** This is the row that makes the oracle worth building.
 | `21-fivemin-chart` | 2 | **1** |
 | `30-compiled-flip` | 3 | **1** |
 | `31-flip-neg-control` | 3 | **2** |
+
+### ★★★★★ 4d — OVER-REFUSAL BOUNDARY ROWS (added R-491; closes the two-lane blindness AR-499 §2 measured)
+
+**Applies to any condition of a family that does NOT require a session keyword, whose object text
+contains a refused-zone phrase (`lunch` · `midday` · `noon session` · `overnight` · `globex` ·
+`asia session` · `pre market` · `premarket`).**
+
+| field | expectation | derived from |
+|---|---|---|
+| `bindable` | ★★★★★ **true** | **P-7** — it never consults a session window |
+| `reason` | ★★★★★ **null** | **P-7** — a session-scoped refusal may not attach a reason here |
+| `primitive` · everything else | **NO EXPECTATION — DECLARED GAP** | `FAMILY_META`-sourced; implementation on the parity surface |
+
+★★★★★ **THIS IS A CLAIM-2 EXPECTATION AND IT IS THE POINT: AR-499 §2 measured that with BOTH lanes
+over-refusing identically the gate printed `EXIT 0 · PASS` while Python emitted `bindable=False` on
+`3/3` probes and `confluence_bound` fell `3 → 0`. AGREEMENT COULD NOT SEE IT. These two cells can.**
+★★★ **A one-lane over-refusal was already caught by CLAIM 1; a TWO-lane one was invisible until now.
+`WHEN AGREEMENT IS BLIND, THE ORACLE IS THE ONLY WITNESS LEFT.`**
+★★ **AND THE POSITIVE CONTROL MUST STAY ADJACENT (AR-499 §14 built it correctly): the same fixture
+carries a `WAIT_SESSION` row with the SAME `during lunch` text that MUST be refused. Without it,
+`bindable=true` everywhere would satisfy these rows — `A NEGATIVE ASSERTION NEEDS A POSITIVE
+WITNESS THAT THE REFUSAL PATH STILL RUNS.`**
 
 ### 4c — `compiled` is **DERIVED, NOT INDEPENDENT** — and it is labelled so on purpose
 
