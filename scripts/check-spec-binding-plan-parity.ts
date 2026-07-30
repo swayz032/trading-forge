@@ -359,6 +359,160 @@ function tsBindingPlanAsPyShape(spec: unknown, schemaFailures: string[], label: 
   return projected;
 }
 
+// ─── R-497: THE ORACLE CONTRACT, VALIDATED AT RUNTIME AND FAILING CLOSED ─────
+//
+// Runs at LOAD, before a single plan is compiled — `A FRESHNESS CHECK THAT RUNS
+// AFTER THE WORK IS A REPORT, NOT A GATE` (R-493), and the same is true of a
+// schema check.
+//
+// ★★★ SCOPE NOTE, so this is not read as wider than it is: this validates the
+//     ORACLE's own CONTRACT — the shape the gate relies on. It does NOT
+//     adjudicate any expectation VALUE. Deliberately validating the WHOLE
+//     contract rather than only the two fields the reported attacks named:
+//     `FIX THE PATTERN CLASS, NOT THE INSTANCE.`
+function validateOracleContractOrExit(raw: unknown, oraclePath: string): void {
+  const bad: string[] = [];
+  const str = (v: unknown) => typeof v === "string" && v.trim().length > 0;
+  const obj = (v: unknown): v is Record<string, unknown> =>
+    typeof v === "object" && v !== null && !Array.isArray(v);
+
+  if (!obj(raw)) {
+    bad.push(`ORACLE root is not an object (got ${Array.isArray(raw) ? "array" : typeof raw})`);
+  } else {
+    if (!str(raw.authority_file)) bad.push(`ORACLE.authority_file is absent or not a non-empty string`);
+    if (!str(raw.authority_sha256)) bad.push(`ORACLE.authority_sha256 is absent or not a non-empty string`);
+    if (!Array.isArray(raw.required_members) || raw.required_members.length === 0) {
+      bad.push(`ORACLE.required_members is absent, not an array, or empty`);
+    } else {
+      raw.required_members.forEach((m, i) => {
+        if (!str(m)) bad.push(`ORACLE.required_members[${i}] is not a non-empty string: ${JSON.stringify(m)}`);
+      });
+    }
+    if (!obj(raw.fixtures)) {
+      bad.push(`ORACLE.fixtures is absent or not an object`);
+    } else {
+      for (const [fname, fx] of Object.entries(raw.fixtures)) {
+        const at = `ORACLE.fixtures[${JSON.stringify(fname)}]`;
+        if (!obj(fx)) { bad.push(`${at} is not an object`); continue; }
+        // ★★★★★ THE CITATION IS THE CONTRACT. An expectation with no authority
+        //   is an assertion with no source, and it read as enforced because the
+        //   TYPE said `authority: string`.
+        if (!str(fx.authority)) bad.push(`${at}.authority is absent or empty — an expectation with NO AUTHORITY CITATION cannot adjudicate anything`);
+        if (fx.conditions !== undefined) {
+          if (!obj(fx.conditions)) bad.push(`${at}.conditions is not an object`);
+          else {
+            for (const [cid, row] of Object.entries(fx.conditions)) {
+              const rat = `${at}.conditions[${JSON.stringify(cid)}]`;
+              if (!obj(row)) { bad.push(`${rat} is not an object`); continue; }
+              if (!str(row.authority)) bad.push(`${rat}.authority is absent or empty — this ROW cites no authority`);
+              if (row.unadjudicated !== undefined && !obj(row.unadjudicated)) bad.push(`${rat}.unadjudicated is not an object`);
+            }
+          }
+        }
+        if (fx.conditions_unadjudicated_ids !== undefined) {
+          if (!Array.isArray(fx.conditions_unadjudicated_ids)) bad.push(`${at}.conditions_unadjudicated_ids is not an array`);
+          else fx.conditions_unadjudicated_ids.forEach((v, i) => {
+            if (!str(v)) bad.push(`${at}.conditions_unadjudicated_ids[${i}] is not a non-empty string`);
+          });
+        }
+        for (const [k, label] of [["scalars_unadjudicated", "scalars"], ["conditions_unadjudicated", "conditions"]] as const) {
+          if (fx[k] !== undefined && !str(fx[k])) bad.push(`${at}.${k} is present but not a non-empty reason string (${label} gaps must SAY WHY)`);
+        }
+        if (fx.reasons_must_differ_from !== undefined) {
+          if (!Array.isArray(fx.reasons_must_differ_from)) bad.push(`${at}.reasons_must_differ_from is not an array`);
+          else fx.reasons_must_differ_from.forEach((pair, i) => {
+            const pat = `${at}.reasons_must_differ_from[${i}]`;
+            if (!obj(pair)) { bad.push(`${pat} is not an object`); return; }
+            for (const key of ["condition", "fixture", "other_condition"]) {
+              if (!str(pair[key])) bad.push(`${pat}.${key} is absent or not a non-empty string`);
+            }
+          });
+        }
+      }
+    }
+  }
+
+  if (bad.length > 0) {
+    console.error(`ORACLE CONTRACT FAILURE (${bad.length}) — ${oraclePath}`);
+    for (const b of bad) console.error(`  - ${b}`);
+    console.error(
+      `\nThe oracle is the thing every CORRECTNESS claim is measured against. A malformed or ` +
+        `uncited oracle cannot adjudicate, and a gate that reports PASS against one is reporting ` +
+        `about nothing. Refusing to compile a single plan.`,
+    );
+    process.exit(1);
+  }
+}
+
+/**
+ * R-497 §7.2 — DECLARED-vs-PRESENT ROW CENSUS, asserted as MEMBERSHIP.
+ *
+ * ★★★★★ NOT A COUNT. `A COUNT-SHAPED CHECK IS SATISFIED BY DELETING A ROW AND
+ *     ADDING A JUNK ONE`, which is the same shape as the `required_members`
+ *     duplicate hole. Every entry condition a fixture DECLARES must be either
+ *     ADJUDICATED or NAMED as unadjudicated, and the union must be TOTAL in both
+ *     directions.
+ *
+ * ★★★ POPULATION, AND WHY IT IS THE FIXTURE INPUT: the ids come from the
+ *     fixture's own `entry_conditions` — AUTHORED INPUT, not engine output.
+ *     Deriving the expected set from the compiled plan would read the
+ *     expectation out of the code under test.
+ * ★★ DECLARED SCOPE LIMIT: `invalidations` are NOT in this population, because
+ *     `checkOracle()` can only index `plan.bindings`. That gap is pre-existing
+ *     and separately declared; this census does not silently widen to cover it.
+ */
+function checkOracleRowCensus(
+  files: string[],
+  oracle: Oracle,
+  samplesDir: string,
+  out: string[],
+): void {
+  for (const file of files.sort()) {
+    const fx = oracle.fixtures[file];
+    if (!fx) continue; // membership already denies an undeclared fixture, by name
+    const spec = JSON.parse(readFileSync(join(samplesDir, file), "utf-8")).spec;
+    const declared: string[] = (spec.entry_conditions ?? []).map((c: { id: string }) => c.id);
+    const adjudicated = new Set(Object.keys(fx.conditions ?? {}));
+    const namedGaps = new Set(fx.conditions_unadjudicated_ids ?? []);
+
+    for (const id of declared) {
+      const inAdj = adjudicated.has(id);
+      const inGap = namedGaps.has(id);
+      if (!inAdj && !inGap) {
+        out.push(
+          `ORACLE ROW CENSUS: ${file} declares entry condition ${JSON.stringify(id)} which is NEITHER ` +
+            `adjudicated in ORACLE.fixtures[${JSON.stringify(file)}].conditions NOR named in ` +
+            `conditions_unadjudicated_ids. IT HAS LEFT BOTH SIDES OF THE LEDGER — deleting an adjudicated ` +
+            `row must DENY the claim, never silently shrink CLAIM 2.`,
+        );
+      }
+      if (inAdj && inGap) {
+        out.push(
+          `ORACLE ROW CENSUS: ${file} condition ${JSON.stringify(id)} is BOTH adjudicated AND named ` +
+            `unadjudicated. A row cannot be judged and unjudged at once.`,
+        );
+      }
+    }
+    const declaredSet = new Set(declared);
+    for (const id of [...adjudicated].sort()) {
+      if (!declaredSet.has(id)) {
+        out.push(
+          `ORACLE ROW CENSUS: ${file} adjudicates ${JSON.stringify(id)}, which the fixture does not declare ` +
+            `as an entry condition. An expectation about a row that does not exist can never fail.`,
+        );
+      }
+    }
+    for (const id of [...namedGaps].sort()) {
+      if (!declaredSet.has(id)) {
+        out.push(
+          `ORACLE ROW CENSUS: ${file} names ${JSON.stringify(id)} as unadjudicated, but the fixture does not ` +
+            `declare it. A declared gap must point at something real.`,
+        );
+      }
+    }
+  }
+}
+
 // ─── CLAIM 1: whole-plan structural comparison ──────────────────────────────
 //
 // Recurses. Reports the first divergence per path rather than a summary. Arrays
@@ -466,6 +620,13 @@ interface OracleFixture {
   scalars_unadjudicated?: string;
   /** Conditions the authority does NOT adjudicate, named so the gap is explicit. */
   conditions_unadjudicated?: string;
+  /**
+   * R-497 §7.2 — the ENUMERATION behind `conditions_unadjudicated`'s prose.
+   * ★★★ The prose says WHY a gap exists; this says WHICH ROWS it covers, and it
+   *     is what makes the census a MEMBERSHIP assertion instead of a count. A
+   *     row absent from BOTH `conditions` and this list has left the ledger.
+   */
+  conditions_unadjudicated_ids?: string[];
   conditions: Record<string, OracleRow>;
   /**
    * Pairs of condition keys whose `reason` strings MUST differ. Encodes oracle
@@ -1011,7 +1172,19 @@ function main() {
         `A corpus without an oracle can only prove the lanes AGREE, never that either is RIGHT. Refusing to report a pass.`,
     );
   }
-  const oracle = JSON.parse(readFileSync(oraclePath, "utf-8")) as Oracle;
+  // ⚠️★★★★★ R-497 CORRECTION: THIS LINE USED TO BE A BARE CAST.
+  //   `JSON.parse(...) as Oracle` validates NOTHING. `Oracle.authority: string`
+  //   is a COMPILE-TIME type over a runtime `any`, and `checkOracle()` iterates
+  //   the rows that SURVIVED PARSING — so a row that is ABSENT is a row that is
+  //   never checked. Measured on the shipped tree: deleting a fully adjudicated
+  //   row, or stripping its `authority` citation, left the gate's output
+  //   BYTE-IDENTICAL and exiting 0, while a WRONG VALUE in the same row was
+  //   caught and named. `A TYPE ANNOTATION OVER A BARE CAST IS A CAPTION, NOT A
+  //   CHECK` — and this gate enforced its authority DOCUMENT at runtime while
+  //   leaving its per-row CITATIONS unvalidated.
+  const oracleRaw: unknown = JSON.parse(readFileSync(oraclePath, "utf-8"));
+  validateOracleContractOrExit(oracleRaw, oraclePath);
+  const oracle = oracleRaw as Oracle;
 
   // ★★★ FIRST, BEFORE A SINGLE PLAN IS COMPILED. Placed here on purpose: a
   //     result graded against a stale authority is not a weaker result, it is an
@@ -1123,6 +1296,17 @@ function main() {
     for (const m of membership) console.error(`  - ${m}`);
   }
   failures.push(...membership);
+
+  // ─── R-497: ROW CENSUS. Runs BEFORE any plan is compiled, for the same reason
+  //   the authority check does: a result adjudicated against a shrunken oracle
+  //   is not a weaker result, it is an uninterpretable one.
+  const rowCensus: string[] = [];
+  checkOracleRowCensus(files, oracle, SAMPLES_DIR, rowCensus);
+  if (rowCensus.length > 0) {
+    console.error(`ORACLE ROW CENSUS FAILURE (${rowCensus.length}):`);
+    for (const m of rowCensus) console.error(`  - ${m}`);
+  }
+  failures.push(...rowCensus);
 
   // ─── Queue-reason divergence tripwire, with its DISCRIMINATES control inside.
   // Asserts a PRECONDITION over both lanes' FAMILY_META, not that fixtures pass.
