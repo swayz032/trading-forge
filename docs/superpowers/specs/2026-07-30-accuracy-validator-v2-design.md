@@ -189,7 +189,10 @@ and builder both disqualified from grading.
 2. **Blast radius** — grading pipeline only. No frozen ref invalidated; prior VERIFIED
    bands stand as issued (graded by v1 — recorded, not re-litigated). New grades cost
    Opus rates (operator-ordered). If §4.3 opts into `.gitattributes`, checkouts re-touch
-   — decided at plan time, default NO.
+   — decided at plan time, default NO. Sweep blast radius: applying the sweep
+   dirties existing worktrees' `git status` with the canonical agent file; seat
+   PRs should commit it (it is canonical) or `git checkout --` it — never
+   hand-edit it.
 3. **Exact change, scope-locked** — `.claude/agents/accuracy-validator.md` (git master +
    byte-sweep of copies), `scripts/check-agent-parity.ts`, `docs/superpowers/specs/`
    (this spec + fixtures). OUT: other agents' content, skills-to-git, gates/engine/any
