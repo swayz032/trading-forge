@@ -4,6 +4,109 @@
 
 ---
 
+## AR-499 · 2026-07-30 · ★★★★★ **AXIS 3 DELIVERED AND RED-PROOFED IN *BOTH* DIRECTIONS — AND THE SECOND PROOF IS THE FINDING: WITH BOTH LANES OVER-REFUSING IDENTICALLY THE GATE REPORTS `EXIT 0 · PASS`. IT IS BLIND, AND I HAVE THE POSITIVE WITNESS THAT THE MUTATION WAS LIVE WHILE IT SAID PASS.** ★★★★★ **AXIS 2 IS COMPLETE, 8 OF 8 CELLS.** ★★★ **AXES 1 AND 4 NOT STARTED — HONEST PARTIAL, CELLS NAMED. ★★ AND A SECOND FINDING AGAINST THE GATE'S OWN OUTPUT LINE: IT PRINTS AN AUTHORITY sha256 IT NEVER COMPUTES, FOR A FILE THAT IS NOT IN THIS BRANCH.**
+
+**RULING ID:** R-490 §3/§6 · **TASK ID:** AR-499 · **PRIOR:** AR-498 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`a8c910c4`** (`WIP — NOT A DELIVERY`), tree **clean** [MEASURED HERE].
+**GUARD:** R-490 block lines `15,68` · re-derived boundaries rather than reusing AR-498's, per my own §52 lesson. **`worker-execution` re-loaded twice this session; it BLOCKED my first TS mutation because R-490 landed mid-write — right again, third consecutive time.**
+
+### ★★★★★ §1 — AXIS 3: THE OVER-REFUSAL BOUNDARY. THE CAPTION IS NOW TRUE
+
+**`40-overrefusal-boundary.spec.json`.** Three refused-zone keywords on THREE **non-session** families — `FILTER`/`'volume during lunch'` · `WAIT_BIAS`/`'overnight range bias'` · `WAIT_RETEST`/`'midday level retest'` — beside a `WAIT_SESSION` positive control carrying the **SAME** `'during lunch'` text that MUST be refused. **The discrimination is ADJACENT, inside one fixture: it separates *"refuses the right thing"* from *"refuses anything mentioning lunch"*.**
+★★★ **KEYWORD SPREAD IS DELIBERATE, NOT DECORATIVE: `'during lunch'` and `'midday'` are two DIFFERENT `lunch_blackout` phrases and `'overnight'` is an `overnight` phrase — so both refused zones and three distinct families are probed, never one keyword three times.** ★★ **All three probes are `role=confluence` ON PURPOSE: that keeps `spine_total`/`spine_bound`/`compiled` derivable from the session row + P-5 alone (the §4b/§4c row-10 arithmetic), so this fixture gets REAL CLAIM 2 coverage at plan level instead of an unadjudicated shrug.**
+**CURRENT BEHAVIOUR IS CORRECT [MEASURED HERE, both lanes]:** the three probes emit `bindable=true, reason=null`, `confluence_bound=3`; `sess` is refused with `session_zone_refused_uncomputable_window:lunch_blackout`. **The refusal is properly scoped. Neither lane changed.**
+
+### ★★★★★ §2 — BOTH RED-PROOFS, AND PROOF 2 IS A FINDING AGAINST THE GATE
+
+| # | mutation | result |
+|---|---|---|
+| **1** | over-refusal hoisted into generic dispatch, **TS ONLY** | ★★★ **`EXIT 1`, 14 drifts, and EVERY ONE names the probe rows** — `bindings[2..4].bindable/executed/primitive/reason` + `plan.confluence_bound: ts=0 py=3` + `approximation_used`. **Fixture 40 is the ONLY fixture in the corpus that drifts** — so it is load-bearing, and the pre-existing 10 members are blind to this defect |
+| **2** | the SAME mutation in **BOTH** lanes | ★★★★★ **`EXIT 0` · `PASS`. THE GATE DOES NOT SEE IT.** |
+
+★★★★★ **PROOF 2 IS AN ABSENCE CLAIM SO IT CARRIES A POSITIVE WITNESS, MEASURED DURING THE GREEN RUN: the Python lane emitted `bindable=False` on **3 of 3** probe rows and `confluence_bound` fell **3 → 0** — WHILE THE GATE PRINTED `PASS`. The mutation was live and the gate reported clean.** ★★★ **Without that witness "the gate is blind" would be indistinguishable from "my mutation never took effect", which is the shape that has burned this desk repeatedly.**
+★★★★★ **SO THE HONEST SCOPE OF AXIS 3, STATED IN THE ORACLE ROW ITSELF SO NO READER CAN OVERCLAIM IT: it catches a ONE-LANE over-refusal via CLAIM 1 and is BLIND to a TWO-LANE one. This is the two-identically-wrong-lanes case on a LIVE boundary — the fourth independent demonstration of that class this packet has produced, and the first on a surface where the defect would be a silent WIDENING of a repair rather than a failure of one.**
+★★★ **I DID NOT CLOSE IT, DELIBERATELY: closing it needs a CLAIM 2 expectation on a non-session family, and R-490 §50 reserves that to the desk — *"DO NOT WIDEN THE ORACLE TO FILL THE GRID."* **FILED AS A DESK REQUEST, NOT ACTED ON.** Inventing the expectation myself is precisely the `09e016fd…` class R-484 had to strike.**
+**Both mutations REVERTED. `git diff --quiet HEAD` clean on BOTH lanes, with a POSITIVE CONTROL that the same command still reports the 5 fixture/oracle files. ★★ AND A RESIDUE I FOUND AND CLEARED RATHER THAN LEFT: a stale `__pycache__/spec_family_bindings.cpython-313.pyc` still contained the mutation markers after the source was clean — deleted, then the boundary re-measured from the reverted source (`3/3 bindable=true`, `confluence_bound=3`).** `RE-TAKE EVERY MEASUREMENT AFTER A REPAIR.`
+
+### §3 — AXIS 2: COMPLETE, 8 OF 8 CELLS
+
+**Adds the three evaluable zones AR-497 §34 named as having NO fixture: `22-nypm` · `23-silverbullet` · `24-macrowindow`.**
+★★★★★ **THEIR ORACLE ROWS ARE AUTHORITY-DERIVED, NOT LANE-COPIED, AND I WROTE THEM BEFORE THE FIRST RUN: authority §2's occupancy probe measures `ny_pm 150/1440`, `silver_bullet 180/1440`, `macro_window 74/1440` — all EVALUABLE — so each row uses the SAME derivation §4a applies to row 20, on a different row of the same probe table. That is application, not extrapolation. THE PREDICTION HELD ON FIRST EXECUTION IN BOTH LANES.**
+★★ **`macro_window` at `74/1440` is the LOWEST non-zero occupancy in the whole table — the evaluable zone nearest the `0/1440` orphan boundary, and therefore the one whose verdict is most worth pinning. Authority §64 already orders the probe re-run as a guard for exactly that event.** ★ **`silver_bullet` is the only zone with a SINGLE keyword phrase, so it has no sibling phrase to mask a table deletion.**
+**CELL LEDGER — 8/8:** 5 evaluable (`london` 00 · `ny_am` 20/31 · `ny_pm` **22 NEW** · `silver_bullet` **23 NEW** · `macro_window` **24 NEW**) · 2 refused (`lunch_blackout` 10/30/40 · `overnight` 11) · 1 unrecognised-vocabulary (21, plus `regional window` in 00/30/31).
+
+### §4 — A THIRD RED-PROOF I GOT FOR FREE, FROM A REAL CAUSE
+
+**En route, with the 3 new fixtures present but NOT yet declared, the gate went `EXIT 1`: 3 `MEMBERSHIP: fixture present but NOT DECLARED` + 6 `NO ORACLE ROW` failures.** ★★★ **That red-proofs the membership check's `undeclared` branch — the OPPOSITE branch from the one AR-494 proved by DELETING a required member — and it did so by a REAL CAUSE rather than a planted mutation.** ★★ **Both directions of fail-closed membership are now proven: a missing member DENIES, and an extra member DENIES.**
+
+### ★★★★★ §5 — SECOND FINDING: THE GATE PRINTS AN AUTHORITY HASH IT NEVER COMPUTES
+
+**Every run prints `Oracle authority: docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md sha256=9b708e24…312d`. [MEASURED HERE] `authority_sha256` occurs in that script exactly TWICE — the interface field `:369` and the `console.log` `:615`. There is NO `createHash`, and the authority file is never opened. The line is a TRANSCRIPTION FROM `ORACLE.json`, rendered in the visual grammar of a verification.**
+★★★★★ **AND IT CANNOT BE VERIFIED FROM ITS OWN TREE: [MEASURED HERE, `git ls-tree -r HEAD`] the authority file is ABSENT from the parity branch — `0` hits, against a POSITIVE CONTROL of `1` for the `ORACLE.json` it does ship. I could only hash it from the campaign tree and from `git show 35bce585:`.**
+★★★ **WHY THIS IS TIMELY RATHER THAN PEDANTIC: R-489 §56 ruled `A STALE HASH FAILS SILENTLY BECAUSE THE FILENAME STILL MATCHES` on a document pinning this exact artifact — and the gate that enforces that artifact has the same defect in its own output line. If `ORACLE.json`'s rows were amended without updating its hash field, the gate would keep printing an authoritative-looking hash and keep passing.** ★★ **NOT FIXED — the repair is either committing the authority into this branch or hashing it out of the git object store, and both are scope decisions. `A CAPTION IS A CLAIM` applied to a gate's own provenance line.**
+
+### §6 — WHAT IS *NOT* DONE — NAMED, NOT SILENTLY TRUNCATED
+
+★★★★★ **AXIS 1 (family axis, 15 outcomes × 2 positions) — NOT STARTED.** ★★★★★ **AXIS 4 (fixtures making duplicate-`condition_id` and array-multiplicity FIRE) — NOT STARTED; both checks therefore REMAIN `[UNPROVEN]` and UNCITABLE per R-488 §41.**
+★★★ **AXIS 3 IS ITSELF PARTIAL AND I WILL NOT LET IT READ AS COMPLETE: I probed **3 of 13** non-session families (`FILTER`, `WAIT_BIAS`, `WAIT_RETEST`). The remaining 10 are unprobed for over-refusal. `[HYPOTHESIS — UNPROVEN]` the leak would be family-independent because `refusedSessionZone` is one shared call, so 3 may be sufficient — **but that is a MECHANISM claim and I have not measured it**, so the axis is PARTIAL, not "adequately covered".**
+**DECLARED GAPS, unchanged and accepted at R-490 §5:** non-session families carry NO CLAIM 2 expectation (7 cells print `[NOT ADJUDICATED]`) · phrase-level coverage is 7 zones not 25 phrases · `sessionPhraseHit`'s three match modes still have no dedicated fixture each — **I did not add those and am not claiming them.** · **`[UNENUMERATED — OPEN]` the two `FAMILY_META` VALUE sets: still open, still not mine.**
+
+### §7 — POSITION · NEXT · GRADE
+
+**`a8c910c4` WIP, tree clean. Gate `EXIT 0`, `Checked 11 sample specs against 11 declared members`, 7 cells `[NOT ADJUDICATED]`. Neither lane changed. No `approximation` or queue-reason payload touched. No `git push`, no PR, no remote pipeline. `runtime-production` and `tf-deep-scan` untouched.**
+**REMAINING, in R-490's order:** axis 1 (family × position) · axis 4 (the two red-proofs) · then item 2's per-spec materiality receipt.
+**No sub-agent dispatched or owed — verified by checking, not assumed.** ★★★★★ **GRADE NOT TRIGGERED: the condition is items 1 AND 2 both landed; item 1 is two axes in of four. DO NOT dispatch the `accuracy-validator` on this commit. THE BUILDER DOES NOT GRADE.**
+★★ **TWO DESK ITEMS OWED FROM THIS REPORT, neither actionable by me: (a) §2's two-lane over-refusal blindness — adjudicate the boundary or accept the gap; (b) §5's unverified authority hash.**
+
+---
+
+## AR-498 · 2026-07-30 · **START-RECEIPT — R-488 §5 ITEM 1, THE MEMBERSHIP MATRIX. ★★★★★ AND I AM RAISING A DEFECT IN THE MATRIX AS SPECIFIED *BEFORE* BUILDING IT: `every condition family × every evaluable zone × every refused zone` IS A CROSS PRODUCT THAT IS DEGENERATE FOR 13 OF THE 14 FAMILIES — ONLY `WAIT_SESSION` CARRIES `requiresSessionKeyword`, SO THE ZONE AXIS CANNOT VARY THE OTHER 13. ★★★ THE CELLS THAT AXIS *SHOULD* HAVE BEEN IS WHERE THE REAL RISK LIVES, AND I NAME IT BELOW.**
+
+**RULING ID:** R-488 §5 item 1 (re-confirmed UNCHANGED by R-489 §17/§51) · **TASK ID:** AR-498 · **PRIOR:** AR-497 · **SEAT:** FRESH — the operator seated me; AR-497 filed a stop receipt and declined to open this item.
+**PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`4f631b2f`**, branch `hardening/ledger-e-parity-20260730`, tree **clean** [MEASURED HERE].
+**GUARD:** R-489 block lines `15,62` sha256 **`18de6aa3…1e58`** · R-488 block lines `63,124` sha256 **`e8b33674…1586`**. ★★ **My FIRST hash attempt was WRONG and I am recording it rather than quietly fixing it: I hashed `15,74` from AR-497's line numbers before checking the boundaries, and R-489 had landed mid-investigation and shifted every offset. `A LINE RANGE IS A POINTER, AND AN APPEND-ONLY FILE INVALIDATES IT SILENTLY` — same species as R-489 §40's stale hash, committed by me against the very ruling that names it.**
+
+### §1 — READ ORDER COMPLETE · NO UNRULED GAP
+
+**Newest ruling on disk = R-489; newest AR = AR-497, ruled by R-488 [MEASURED HERE].** R-489 §17 states my task is unchanged and *"opens no new work and closes none"*. **No `accuracy-validator` is owed or dispatched — the trigger is still items 1 AND 2, and item 2 part 1/2 is what I am starting.** THE BUILDER DOES NOT GRADE.
+
+### ★★★★★ §2 — AUTHORITY HASH RE-DERIVED INDEPENDENTLY, AND IT CORROBORATES R-489 §38
+
+I verified the oracle authority BEFORE reading it, because I am about to transcribe expectations from it and R-483 §12 nearly had a seat author the oracle from `FAMILY_META` instead. **THREE paths agree [MEASURED HERE]:** committed blob `git show 35bce585:docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md` → **`9b708e24…312d`, 13,525 B** · campaign-tree working copy → **identical hash and byte count** · `ORACLE.json.authority_sha256` → **identical**.
+★★★ **This was derived before I read R-489, and it lands on R-489 §38's live hash rather than §15.4's struck `09e016fd…`. Independent arrival, not an echo — I had no way to know the stale pointer existed.** ★★ **The working copy being byte-identical to the committed blob is the part that mattered: the campaign tree is DIRTY (8 modified files), so a working-tree read was not safe to assume.**
+
+### §3 — THE MATRIX DIMENSIONS, MEASURED FROM EXECUTABLE LINES (NOT FROM AR-497's SUMMARY)
+
+**14 `FAMILY_META` families** [`spec-family-bindings.ts:138-158`], of which **exactly ONE — `WAIT_SESSION` — sets `requiresSessionKeyword`** [`:141`]: `WAIT_SESSION` · `WAIT_STRUCTURE` · `VERIFY_STRUCTURE` · `WAIT_BIAS` · `CONFIRM_DIRECTION` · `WAIT_RETEST` · `FILTER` · `WAIT_CONFIRMATION` · `INVALIDATE` · `ENABLE_ENTRY` · `ENTER` · `EXIT_HINT` (`executed:false`) · `RESET` + `EXCEPTION` (`unsupported:true`). **Plus a 15th outcome that is NOT a family: an unknown `type` → `unknown_condition_type` [`:221-234`].**
+**5 evaluable zones** [`SESSION_KEYWORDS`, `:93-99`]: `london` · `ny_am` · `ny_pm` · `silver_bullet` · `macro_window` — **17 phrases total.**
+**2 refused zones** [`REFUSED_SESSION_KEYWORDS`, `:121-124`]: `lunch_blackout` · `overnight` — **8 phrases total.**
+
+### ★★★★★ §4 — THE DEFECT IN THE SPEC, AND THE AXIS I INTEND TO BUILD INSTEAD
+
+**A literal `14 × 7` cross product is 98 cells of which 91 are the SAME cell**: for the 13 non-session families the object text is never consulted by any zone table, so varying the zone cannot change the emitted row. **Building 98 fixtures would produce a large green grid that proves 13 families once each and reads as if it proved them seven times.** `A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN CERTIFIES ITS FIXTURES, NOT ITS DOMAIN` — and a padded matrix is the same false green wearing more rows.
+★★★★★ **BUT THE CROSS PRODUCT IS NOT EMPTY, AND THE ONE PLACE IT BITES IS ALREADY NAMED IN THE CODE I AM TESTING [`:258-260`]:** *"A refusal in the generic dispatch would also reject e.g. a FILTER whose object merely mentions 'lunch' — an over-refusal the discriminator fixtures exist to catch."* **[MEASURED HERE] that comment claims discriminator fixtures exist for it. `grep`ping the corpus, NO fixture puts a refused-zone keyword on a non-session family — so the OVER-REFUSAL BOUNDARY IS UNTESTED and the comment asserting otherwise is a caption ahead of its evidence.** ★★★ **`A CAPTION IS A CLAIM.` This is the highest-value cell the specified matrix would have found only by accident, and it is the one I am putting first.**
+
+**SO THE AXES I WILL BUILD, and I am pre-registering them so a later reader can hold me to them:**
+1. **Family axis — 15 outcomes × 2 positions:** every family once in `entry_conditions` AND once in `invalidations`.
+   ★★★★★ **CORRECTION TO MY OWN §4 ABOVE, AND TO AR-497 §34, MEASURED AFTER I WROTE IT: AR-497 §34 says *"`invalidations` carry ZERO bindings in every fixture"* and I REPEATED IT. IT IS FALSE. [MEASURED HERE, per-fixture count] `00-control-shipped.spec.json` carries `invalidations=1` — an `INVALIDATE` / `'structure break'` row, which is `bindable=true`. The other **6 of 7** carry `0`.**
+   ★★★ **THE HONEST STATEMENT IS NARROWER AND MORE USEFUL: `invalidation_bindings` is exercised by exactly ONE fixture, with exactly ONE row, of ONE family, oracle-UNADJUDICATED — so it has never held 2+ elements, never held a refused zone, never held an unknown type, and array-multiplicity inside it is untested. `A NEAR-ABSOLUTE IS NOT AN ABSOLUTE`, and I relayed a prior seat's absolute as measured before checking the join key.**
+2. **Zone axis — `WAIT_SESSION` × 8:** 5 evaluable + 2 refused + 1 unrecognised-vocabulary.
+3. **★★★ Boundary axis — the over-refusal control:** refused-zone keywords (`lunch`, `overnight`) placed on NON-session families, which must bind NORMALLY. `A BOUNDED SCOPE IS PROVEN BY WHAT IT EXCLUDES.`
+4. **Red-proof axis — the two `[UNPROVEN]` checks R-488 §3 froze:** fixtures that make duplicate-`condition_id` and array-multiplicity actually FIRE.
+
+### §5 — WHAT I WILL *NOT* CLAIM, DECLARED NOW RATHER THAN AT DELIVERY
+
+★★★★★ **ORACLE SCOPE IS THE HARD LIMIT AND IT IS NOT MINE TO WIDEN. Authority §6 adjudicates SESSION-family rows only. So for every new non-session fixture I can assert CLAIM 1 (agreement) but NOT CLAIM 2 (correctness) — those rows ship as `scalars_unadjudicated` + `conditions_unadjudicated` DECLARED GAPS, printed `[NOT ADJUDICATED]`.** ★★★ **I am not inventing authority to make the grid look adjudicated. `ASSERTING THE IMPLEMENTATION'S VALUE AND ASSERTING NOTHING ARE DIFFERENT ACTS` — and the tempting error here is to transcribe what the lanes emit and call it an expectation, which is exactly the `09e016fd…` class of defect R-484 had to strike.**
+★★ **PHRASE-LEVEL COVERAGE IS OUT: I will cover 7 zones, not all 25 keyword phrases, and `sessionPhraseHit`'s three match modes (`includes`/`startsWith`/`endsWith`, `:170-174`) get one fixture each rather than 25. Named as a declared gap, not silently dropped.**
+★★ **`[UNENUMERATED — OPEN]` stays open and is not mine to close: the two `FAMILY_META` VALUE sets.**
+
+### §6 — FIRST OBSERVABLE · ETA
+
+**This is read-then-write work and the next ~25 min writes nothing observable.** **FIRST OBSERVABLE:** the authority §6 scope read + batch 1 (zone axis, `WAIT_SESSION` × 8, with oracle rows only where §2's occupancy probe authorises them) — **~30 min.** Then the family/invalidation axis, then the boundary axis, then the two red-proofs.
+★★★ **HONEST-PARTIAL / NAMED-BATCH CLAUSE INVOKED IN ADVANCE (R-488 §59): I will deliver in batches that NAME the cells covered and the cells not covered. If I run out of seat mid-axis I will say which axis and which cells, never a silent truncation.**
+**SCOPE ACKNOWLEDGED UNCHANGED (R-489 §52):** no `git push` · no PR · no remote pipeline · no `approximation` or queue-reason payload change in either lane · no Python acceptance of orphan zones · no Gate-B treatment · no DB/spec/frozen writes · no edits to `runtime-production` or `tf-deep-scan`.
+
+---
+
 ## AR-497 · 2026-07-30 · ★★★★★ **ITEM 2 PART 2/2 DONE — THE QUEUE-REASON TRIPWIRE SHIPS WITH *TWO* DISCRIMINATES PROOFS: A SELF-CONTROL INSIDE EVERY RUN, AND A LIVE-PATH PLANT THAT TOOK THE GATE TO `EXIT 1` NAMING `RESET`. ★★★ HONEST PARTIAL, INVOKING YOUR §5's CLAUSE: **THE MEMBERSHIP MATRIX IS NOT STARTED.** ★★★★★ AND THE `worker-execution` GUARD BLOCKED ME FOUR TIMES; I MEASURED IT SUSPECTING A DEFECT AND IT WAS RIGHT EVERY TIME — YOU ARE RULING FASTER THAN I AM WRITING CODE.**
 
 **RULING ID:** R-487 §5 item 2 · **TASK ID:** AR-497 · **PRIOR:** AR-496 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`4f631b2f`** (`WIP — NOT A DELIVERY`), tree **clean**.
