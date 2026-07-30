@@ -14,6 +14,100 @@
 
 ## R-481 · 2026-07-30 · ★★★★★ **AR-486 ACCEPTED AT THE MECHANISM LAYER — PACKET REV 2 IS A STRONG DESIGN RECEIPT AND IS NOT RATIFIED. THE LEDGER-E PARITY GATE IS A FALSE GREEN, AND I PROVED IT WITH THE GATE'S OWN COMPARATOR: FED A `during lunch` SPEC IT GOES RED ON FIVE FIELDS INCLUDING `compiled`, WHILE ITS SHIPPED ONE-FIXTURE CORPUS PRINTS `PASS`.** ★★★★★ **AND A CORRECTION AGAINST THE EXTERNAL READ THAT SUPPLIED THE LEAD: ITS `compiled: ts=true py=false` DOES **NOT** REPRODUCE ON A PLAIN SAME-INPUT FIXTURE — IT REQUIRES A SPINE COMPOSITION THAT DROPS PYTHON BELOW `MIN_SPINE_BOUND_RATIO = 0.5`. I BUILT THAT INPUT AND PROVED THE CAUSE WITH A SAME-SHAPE NEGATIVE CONTROL. PASTING THE READ VERBATIM WOULD HAVE PUBLISHED AN UNCONDITIONAL CLAIM ABOUT THE EXACT FIELD GATE-B'S TRIPWIRE READS.**
 
+## R-482 · 2026-07-30 · ★★★★★ **AR-489's SELF-CORRECTION ACCEPTED AND THE TRUTH-SET KEY IS RESTORED AND FORMALIZED. AND THE BLOCKING DEFECT IS MINE: R-481 ORDERED "ROLLBACK, FLAG-GATED", THE WORKER COMPLIED, AND `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED` MAKES THE *OFF* STATE THE KNOWN-DIVERGENT ONE — AN UNCOVERED PRODUCTION MODE THAT CI, RUNNING DEFAULT-ON, WOULD NEVER SEE.** ★★★★★ **`YOU DO NOT FLAG-GATE A CORRECTNESS REPAIR. THE OFF BRANCH IS THE DEFECT.`**
+
+**RULING ID:** R-482 · **TASK IDs:** AR-488 / AR-489 · **DECISION: REVISE — two packet corrections BEFORE any code. Ledger-E parity repair AUTHORIZED after them. GATE-B ABLATION REMAINS BLOCKED.**
+
+**NEWEST AR NAMED (stale-premise guard):** **AR-489**, read from the committed tree. ★★ **[MEASURED HERE] `grep -c "^## AR-489"` = `1` — the duplicated/truncated copy in the operator relay was TRANSPORT NOISE, not a torn file. Verified rather than assumed, because a doubled AR is also what a mid-write read looks like.**
+
+★★★★★ **PROVENANCE: this round's lead again arrived through the OPERATOR'S CHANNEL as a pre-formatted `RECOMMENDED R-482`. Per R-450 `A CHANNEL IS NOT AN AUTHOR` it is `[EXTERNAL OPINION]`, ZERO authority, premises audited. **THREE of its claims are ADOPTED ON MERIT because I re-derived them here, and its truth-set key is BETTER THAN MINE — I am taking its version over my own.** This desk wrote this ruling; nothing was copied in.**
+
+### CLAIMS VERIFIED (and how)
+
+1. ★★★★★ **THE FLAG DEFECT IS REAL AND IT IS MINE.** [MEASURED HERE, `LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md:242-245`] the TS refusal ships behind `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED`, **default ON**, "with the flag as the documented one-line rollback". **WITH THE FLAG OFF, TYPESCRIPT RESUMES BINDING `lunch`/`overnight` WHILE PYTHON STILL REFUSES THEM — the lanes are divergent again, and CI (default-ON) is GREEN throughout. THE OFF STATE IS A PRODUCTION MODE NO PROOF COVERS.**
+   ★★★★★ **AND THE CAPTION AT `:242` ASSERTS THE OPPOSITE OF WHAT ITS OWN SENTENCE DOES: *"THE FLAG GATES THE FEATURE, NEVER THE FIX"* — and the thing behind the flag IS the fix. **THIRD INSTANCE OF THIS EXACT SHAPE TONIGHT** (`spec-family-bindings.ts:64` "mirror EXACTLY"; `absence_claim_control.py:168` "printed with every run"). `A CAPTION IS A CLAIM, AND THE MOST DANGEROUS ONE SITS ON THE LINE THAT FALSIFIES IT.`**
+   ★★★ **FAULT ASSIGNMENT, PLAINLY: R-481 §AUTHORIZED step 2 ordered *"rollback, flag-gated"*. I lifted that from `ratify-packet`'s *"Env/flag-gate any change that alters a live default"* and applied it MECHANICALLY to a CORRECTNESS repair. The worker obeyed a wrong order and even tried to draw the feature/fix line itself. **THE ORDER WAS MINE AND IT WAS WRONG.**
+2. **AR-489's correction is correct, and now CORROBORATED BY A SECOND DECOMPOSITION.** [MEASURED HERE] `entry_conditions = 2150` · `invalidations = 201` · `total = 2351` — **exactly the external read's split.** I had counted the union; it counted the sections. Same total by two paths. **`2351 / 2351` usable anchors · `40/40` videos · spearhead `13/13` · `2346` distinct `(video,start,end)`, `5` at multiplicity `2` · slice length min `13` / median `54` / max `323`.**
+3. ★★★★★ **THE UTF-16 TRAP IS REAL AND IT IS LATENT, NOT ACTIVE — A POINT I HAD NOT CONSIDERED.** [MEASURED HERE across all 40 transcripts, `865,630` chars] **NON-BMP codepoints = `0`; highest codepoint `U+200B`; Python codepoint length == UTF-16 length for `40/40` files.** So my Python-based span measurement agrees with a TypeScript producer's indices **only because this corpus happens to contain no astral characters.** ★★★ **ONE EMOJI IN A FUTURE TRANSCRIPT SILENTLY SHIFTS EVERY SUBSEQUENT OFFSET BETWEEN THE TWO LANGUAGES. THE CONTRACT MUST PIN THE BASIS.**
+   ★★ **AND A SECOND HAZARD I FOUND WHILE TESTING IT: `U+200B` (ZERO-WIDTH SPACE) IS PRESENT IN THE CORPUS. An invisible character changes `exact_slice_sha256` while changing nothing a human reviewer can see — so a label and its hash can disagree with no visible cause.**
+4. **The correction reached the artifact, contained.** [MEASURED HERE] `be69d7b5` (`00:47:56`) touches exactly `AGENT-REPORTS.md` and `GATE-B-RATIFY-PACKET-2026-07-29.md`, `+69/−15`. **AR-488 stays historically wrong and is corrected ADDITIVELY by AR-489 — preserve-and-strike, per the clause I withdrew earlier tonight.**
+5. **The stale-read mechanism is confirmed** — annotation `00:40:16`, rev 3 `00:42:07`, worker read R-481 at ~`00:33`. **`git log` alone cannot catch an UNCOMMITTED concurrent edit**, so a history check is necessary and insufficient. **ADOPTED: the guard must re-read and hash the exact ruling BLOCK from the WORKING TREE immediately before commit.**
+6. **The RED baseline and the executable defect** — independently reproduced by the worker on its own fixtures with its own negative control, and by me earlier. `[CORROBORATED BY TWO NON-OVERLAPPING PATHS]`.
+
+### TESTS RERUN (command + result)
+
+| command | result |
+|---|---|
+| `sed -n '236,252p' <parity packet>` | flag block present at `:242-245`, default ON, "flag as the documented one-line rollback" — **defect CONFIRMED at the line** |
+| non-BMP sweep over 40 transcripts (Python) | `0` non-BMP · max codepoint `U+200B` · Python-len == UTF-16-len **`40/40`** |
+| condition census over `tf-deep-scan/corpus/specs` | `2150` entry + `201` invalidation = **`2351`** — matches the read exactly |
+| `git show --stat be69d7b5` | 2 files, `+69/−15`, both allowed |
+| `grep -c "^## AR-489"` | **`1`** — relay duplication was transport noise |
+
+### ARCHITECTURE INVARIANTS TOUCHED
+
+**#1, #2, #4, #6, #9 all HOLD** — no promotion, no capital, empty-spine untouched, Gate-B treatment still separate from the Ledger-E repair. **TS/Python parity remains SEMANTIC OUTPUT parity, never table-text equality; Python may NOT be weakened to accept an unevaluable zone.** ★★★★★ **NEW INVARIANT MINTED HERE: `A CORRECTNESS REPAIR SHIPS UNCONDITIONALLY. ROLLBACK IS REVERT. IF AN EMERGENCY SWITCH IS RETAINED IT MUST HALT OR QUARANTINE, NEVER RESTORE THE DEFECT.` A switch whose OFF branch is the known-wrong behaviour multiplies production modes and the proof covers only one of them.**
+
+### FAILED OR UNPROVEN CONDITIONS
+
+- **`2351/2351` proves ANCHOR AVAILABILITY, never SEMANTIC CORRECTNESS.** Every survivor still needs adjudication from the exact slice plus frozen context. `[UNMEASURED]`
+- **Seven fixtures prove seven cases, not domain closure.** Exhaustive family/zone membership plus an oracle independent of BOTH implementations remain required. `[UNMEASURED]`
+- Population INCIDENCE of every control-flow transition and of the parity divergence over the exact Gate-B population — **still `[UNMEASURED]`, still the number that decides theoretical-vs-live.**
+- Additive current-production baseline — **NOT BUILT, DESK-OWNED.** Live library proven reachable and read-only-safe `[MEASURED HERE]`; blocker is the re-authored producer.
+- Re-authored census producer equivalence — `[UNPROVEN]`; control is reproduction of sha256 `eed65514a126…`.
+- No independent grade exists for any parity repair **because none has been written.**
+
+### ★★★★★ FORMAL TRUTH-SET DISPOSITION — THE `R-482` DEBT, NOW PAID
+
+**KEY, BINDING (adopting the external read's form over my own, because mine was worse):**
+`(video, raw_transcript_sha256, span_start, span_end, exact_slice_sha256, condition_id)`
+★★★★★ **`condition_id` IS ALWAYS IN THE KEY — NOT added only for the `5` collisions. My "add one discriminator for those five" was a CONDITIONAL KEY, and `A CONDITIONAL KEY IS TWO KEYS`; which one applied would depend on the data it was meant to identify.** ★★★ **`span_start`/`span_end` ARE DEFINED AS JAVASCRIPT UTF-16 CODE-UNIT INDICES** (the producer is TS). Any Python consumer must convert, or assert non-BMP `== 0` **as a guard, not as an assumption** — today it is `0`, and that is a property of this corpus, not of the format. **The polluted `evidence` field is EXCLUDED from identity and from adjudication.**
+**LABELS — five, adjudicated by THE DESK from the exact slice plus a fixed `±250`-character context window from the same frozen transcript:**
+1. **`GENUINE_SESSION_PREDICATE`** — explicit, computable session/time constraint that changes permitted trading behaviour. **MUST survive as executable.**
+2. **`DESCRIPTIVE_SESSION_CONTEXT`** — session narrative with no deterministic constraint. Retain as `execution_context.market_session`.
+3. **`INSTRUMENT_CHART_PLATFORM_CONTEXT`** — instrument / market / platform / chart-timeframe identity. Retain as structured execution metadata.
+4. **`MIXED`** — executable predicate and context coexist. **Emit SEPARATE projections; never delete, never classify the whole clause as one thing.**
+5. **`AMBIGUOUS`** — evidence insufficient. **Preserve unchanged, exclude from treatment AND from efficacy credit, and count explicitly as the residual.** ★★★ **`EVERY ORDERED TAXONOMY OWES A RESIDUAL CATEGORY`, and this is it.**
+★★★★★ **THE SOURCE SLICE IS AUTHORITATIVE; CONTEXT AIDS INTERPRETATION AND NEVER ALTERS THE KEY. FREEZE THE COMPLETE LABELLED MEMBERSHIP AND ITS HASH BEFORE ANY TREATMENT RESULT EXISTS. DISAGREEMENT WITH AN INDEPENDENT AUDIT RESOLVES TO `AMBIGUOUS`, NEVER TO A CONVENIENT FORCED LABEL.`** **The worker MAY emit slices and validate membership mechanically; THE DESK owns the adjudication rule and the labels.**
+
+### REQUIRED CORRECTIONS — BOTH BEFORE ANY CODE
+
+1. ★★★★★ **REVISE THE PARITY PACKET §5:** **REMOVE `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED`. The parity correction is UNCONDITIONAL. Rollback is `git revert` of the single commit.** If an emergency switch is retained at all, **OFF must HALT or QUARANTINE onboarding — never restore divergent binding.** **Every receipt names the effective configuration.** ★★ **Delete the false `:242` caption rather than reword it.**
+2. **REPLACE THE STALE-RULING GUARD** with an immediate **working-tree re-read + hash of the exact ruling block**, plus the latest ruling commit identity. `git log` catches a committed annotation and misses an uncommitted concurrent edit.
+3. **LAND THE PARITY REPAIR ATOMICALLY** — TS orphan refusal emitting Python's exact tuple (incl. `approximation=true`) · whole-plan comparator with **bidirectional key-set equality**, array multiplicity, invalidation bindings, queue reasons, duplicate detection · exhaustive membership manifest + deletion-RED fixture · **a semantic expected-results oracle independent of BOTH implementations** · CI **and** fast-lane execution · per-spec materiality receipt. ★★★★★ **DO NOT LAND A SEMANTIC FIX THAT MERELY TURNS SEVEN FIXTURES GREEN WHILE THE COMPARATOR REMAINS INCOMPLETE.**
+
+### FILES / SCOPE ALLOWED
+
+**Parity worktree only:** `src/server/lib/spec-family-bindings.ts` · `scripts/check-spec-binding-plan-parity.ts` · parity fixture dirs + manifest · `ci.yml` · `fast.yml` · narrowly required test/wiring files.
+**Campaign tree:** the parity packet correction · `AGENT-REPORTS.md`.
+**FORBIDDEN:** changing Python to accept orphan zones · Gate-B implementation · DB / spec / frozen-artifact writes · re-extraction · backtests · empty-spine changes · direct edits in `runtime-production` or `tf-deep-scan` · `git checkout`/`reset`/index ops in the shared tree.
+★★★★★ **AND THE TWO MEASURED OPERATIONAL TRAPS: the parity worktree's `node_modules` IS A JUNCTION — `Remove-Item -Recurse` FOLLOWS IT AND DELETES `runtime-production`'s REAL DEPENDENCIES; use `[System.IO.Directory]::Delete($p,$false)` first. Pass `TF_SPEC_BINDING_SAMPLES_DIR` as a WINDOWS path, never MSYS `/c/...`.**
+
+### ACCEPTANCE COMMANDS
+
+shipped corpus → GREEN exit `0` · expanded corpus → **all seven GREEN** exit `0` · **reason-only mutation → RED** (the F-G proof) · field ADDITION and field DELETION in either lane → RED · required-fixture deletion → **RED naming the missing member** · orphan-zone refusal emits Python's **exact tuple** · `ny am`, five-minute-chart and shipped controls stay GREEN · a deliberately drifted corpus fails in **both** CI and fast lane, then the unmodified corpus passes · materiality receipt enumerates every changed spec and all route/category/`compiled` movements — ★★★★★ **A HIGHER `compiled` COUNT IS A FAILURE SIGNAL** · **final independent `accuracy-validator` against the frozen implementation commit; THE BUILDER DOES NOT GRADE.**
+
+### STOP CONDITION
+
+STOP if: the packet retains any switch that can run the known-divergent behaviour · any plan field is omitted from the comparison · a mutation stays green · corpus membership can shrink silently · Python is changed to make a test pass · any spec flips `compiled false → true` without gaining a genuinely bindable spine member · or Gate-B treatment code is touched before these prerequisites and the two desk-owned freezes land.
+
+### AUTHORIZED NEXT ACTION
+
+★★★ **AUTHORIZED TO THE WORKER SEAT THAT RECEIVES THIS RULING — not to "a fresh future seat".** AR-488 declared a fresh seat is needed; **that is SELF-ASSESSMENT, not a transfer of authorization**, and this seat then filed AR-489 after declaring handoff, so the declaration is not self-executing. **Corrections 1 and 2 are small and bounded; correction 3 is the large one.** ★★★★★ **IF THIS SEAT GENUINELY CANNOT TAKE CORRECTION 3, FILE A DECLINE-RECEIPT AND I RELABEL THE TASK UNASSIGNED IN THE SAME MOTION — a declined-but-ACTIVE label is a stall with extra steps. Doing corrections 1–2 and declining 3 is a legitimate, useful outcome.**
+**FIRST OBSERVABLE:** START-RECEIPT within ~2 min naming the exact worktree SHA, the files, and the first RED fixture · corrections 1–2 ~10 min · implementation ~45–60 min. **HONEST-PARTIAL CLAUSE APPLIES.**
+**THEN THIS DESK dispatches the `accuracy-validator`** with the working access recipe (Python execution, the corpus-override recipe, permission to author its own fixtures) — **packet §4.3 already lists which claim dies per withheld capability — and I will NAME ITS AGENT ID in the ruling that consumes it.**
+
+### LESSON TO PERSIST
+
+★★★★★ **`YOU DO NOT FLAG-GATE A CORRECTNESS REPAIR. THE OFF BRANCH IS THE DEFECT, AND A DEFAULT-ON FLAG MEANS CI PROVES ONLY THE BRANCH IT RUNS.` Flag-gate a POLICY default; never a correctness fix. ROLLBACK IS REVERT.**
+★★★★★ **`A ROLLBACK THAT REINSTATES A KNOWN DEFECT IS NOT ROLLBACK — IT IS A SECOND PRODUCTION MODE THE PROOF DOES NOT COVER.`**
+★★★★★ **`PESSIMISM IS NOT AUTOMATICALLY CONSERVATIVE.` A false measurement that RETIRES A VALID EVIDENCE METHOD is destructive, and it does not feel like a risk while you are making it.**
+★★★★★ **`A CONDITIONAL KEY IS TWO KEYS.` "Add a discriminator for the five collisions" makes the identity of a record depend on the data it is meant to identify.**
+★★★★★ **`AN AGREEMENT BETWEEN TWO LANGUAGES CAN BE A PROPERTY OF YOUR DATA RATHER THAN OF YOUR FORMAT.` Python codepoint indices match JS UTF-16 indices here because non-BMP `= 0` — measured, not assumed. PIN THE BASIS, THEN GUARD IT.**
+★★★ **`I APPLIED A SKILL'S RULE MECHANICALLY AND SHIPPED ITS EXCEPTION.` `ratify-packet` says flag-gate a live default; this was a correctness repair, and the rule's own reason did not apply.**
+
+---
+
 > ⚠️★★★★★ **WARNING ANNOTATION ON THIS RULING (ledger rule 4), ADDED 2026-07-30 00:40 BY
 > THE SAME DESK THAT WROTE IT. ONE MEASUREMENT IN §DESK-OWNED BELOW IS FALSE AND IS
 > RETRACTED HERE. THE WRONG TEXT IS LEFT IN PLACE, NOT DELETED.**
