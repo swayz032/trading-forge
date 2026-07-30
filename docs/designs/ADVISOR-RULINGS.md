@@ -12,6 +12,74 @@
 
 ---
 
+## R-471 · 2026-07-29 · ★★★★★ **APPROVAL DENIED. THE GUARD'S "SYNTAX-AWARE" CLAIM IS FALSE — [MEASURED HERE] IT PROVES BINDING **PRESENCE**, NOT **ENGAGEMENT**, AND NINE FIXTURES THAT EACH PASS IN ISOLATION GREEN A COMPOSITION OF TWO OF THEM.** ★★★★★ **A FILE WHOSE ONLY `fs` IMPORT IS INSIDE A `//` COMMENT, WITH `writeFileSync` AS AN UNRELATED **LOCAL FUNCTION**, RETURNS `1 ENGAGED` · *"destructured from 'fs' and referenced in code"* · ABSENCE **ADMISSIBLE** · **EXIT `0`**. THE VERDICT STRING ITSELF IS FALSE: THERE IS NO IMPORT.** ★★★★★ **AND AN IMPORT THAT IS NEVER USED (`import { writeFileSync } from "fs"; const inert = 1;`) ALSO RETURNS `1 ENGAGED`, EXIT `0` — THE REFERENCE CHECK IS SEEING THE IDENTIFIER INSIDE THE IMPORT DECLARATION.** ★★★★★ **AND I MUST CORRECT MYSELF AGAIN: I TOLD THE OPERATOR "THE TOOL IS NOW GENUINELY WORKING" ON A TEST THAT ONLY EXERCISED THE UNSUPPORTED-LANGUAGE PATH. THE COMMENT DEFECT IS **OPEN** ON THE PARSED PATH, WHICH IS THE PATH THAT MATTERS**
+
+**RULING ID:** R-471 · **TASK ID:** AR-467 · **DECISION:** **REVISE — APPROVAL DENIED on `d27e7a79`. Ledger arithmetic and the Gate-A causal finding stand untouched. REPAIR AUTHORIZED IMMEDIATELY under the existing ratify packet — no operator wait.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-467`** — ruled here.
+
+### ★★★★★ §0 — A PREMISE IN THE EXTERNAL READ IS FALSE, AND IT IS THE ONE SHAPE THIS DESK HAS ALREADY BEEN BURNED BY TWICE
+
+**The read states: *"The grade already dispatched against `d27e7a79` cannot certify a later repair."*** ★★★★★ **NO GRADE WAS EVER DISPATCHED AGAINST `d27e7a79`. [MEASURED HERE — my own dispatch record for this session] EXACTLY ONE `accuracy-validator` has run: agent `a5a70a93c66262a61`, against the **PRE-REPAIR** bundle, returning `SOUND-WITH-GAPS`. I explicitly DECLINED to dispatch against `4449764e` (R-470 §5) and DECLINED again against the AR-467 commit, and I disclosed the second decline to the operator in the same turn.**
+★★★ **THE CONCLUSION IS ADOPTED ANYWAY, because it is right on its own terms and does not depend on the false premise: the existing grade certifies NEITHER the repaired guard NOR the rebuild. A fresh grade must run against the repaired commit.** ★★★★★ **BUT THE PREMISE IS STRUCK ON THE RECORD. R-460 refuted an identical "already-dispatched" claim; R-470 §0 disclosed my own announced-but-unmade dispatch. THIS IS THE THIRD TIME A PHANTOM DISPATCH HAS ENTERED THE CHANNEL, AND EVERY TIME IT WAS CAUGHT BY CHECKING RATHER THAN BY REMEMBERING.**
+
+### ★★★★★ §1 — THREE MEASURED DEFECTS, AND THEY ARE ONE DESIGN BOUNDARY
+
+| case | expected | **[MEASURED HERE]** |
+|---|---|---|
+| **COMPOSED** — `// import { writeFileSync } from "fs";` + `function writeFileSync() {}` + call | non-zero | ★★★★★ **`1 ENGAGED, 0 UNDECIDABLE` · "destructured from 'fs' and referenced in code" · ADMISSIBLE · exit `0`** |
+| **UNUSED IMPORT** — imported, never referenced | non-zero | ★★★★★ **`1 ENGAGED` · exit `0`** |
+| **`(ns as any)[computed]`** — idiomatic TS cast | UNDECIDABLE | ★★★ **`0 ENGAGED, 0 UNDECIDABLE` — invisible.** Bare `fs[m]` IS caught (`1 UNDECIDABLE`), so the machinery works and the matcher is too narrow |
+
+★★★★★ **THE MECHANISM, NAMED AT THE LINE PER THE READ AND CONSISTENT WITH WHAT I MEASURED: `absence_claim_control.py:151` matches imports against **RAW** text, so a COMMENT supplies module provenance; `:184` then finds an unrelated identifier in **STRIPPED** code and supplies "usage"; the guard ANDs two facts that were never about the same object. `MODULE PROVENANCE AND EXECUTABLE USE MUST RESOLVE TO THE SAME BINDING` — they are computed over two different texts here, so they cannot.**
+★★★★★ **THEREFORE THE `syntax-aware` CLAIM IS FALSE AND MUST BE WITHDRAWN FROM THE INSTRUMENT'S OWN DOCSTRING. WHAT IT ACTUALLY PROVES IS BINDING PRESENCE. `A CAPTION IS A CLAIM`, and this one is the instrument's headline.**
+★★★ **[RELAYED, external read, NOT re-derived here] two further cases: a template-interpolated executable call `` `${fs.writeFileSync("x","y")}` `` returns exit `2` NOT ENGAGED because the hand-written stripper deletes `${…}` with the template text — a FALSE ABSENCE on executing code; and `--module node:fs` against `from "fs"` returns exit `2` because `norm_module()` is display-only, not used for matching.**
+
+### ★★★★★ §2 — THE CORRECTION AGAINST MYSELF: I CERTIFIED A FIX BY TESTING THE NEIGHBOURING PATH
+
+**I reported to the operator: *"The tool is now genuinely working… pointed at a language it can't parse, it refuses to answer at all."*** ★★★★★ **THAT SENTENCE IS TRUE AND IT PROVED THE WRONG THING. My test for defect (iii) — the comment/bare-occurrence false-green — used the guard's own `.py` file as the control, so it exited `8` on the **UNSUPPORTED-LANGUAGE** branch and never reached the comment logic at all. [MEASURED HERE] on a `.ts` file, which IS parsed, A COMMENT STILL SUPPLIES PROVENANCE. I declared (iii) closed having exercised a path that closes for a different reason.**
+★★★★★ **THAT IS ERROR SEVEN, AND IT IS THE SAME SPECIES AS FOUR OF THE FIRST SIX: `A CONTROL MUST REPRODUCE THE SHAPE OF THE REAL INPUT.` My control was an unparsed language; the claim was about parsed languages. I have now made this error against a WORKER's file, against a PRODUCER's file, and against a GUARD's own code path — three different objects, one habit.**
+★★★ **AND THE SECOND-ORDER LESSON, WHICH IS THE ONE WORTH KEEPING: A FIXTURE SUITE THAT PASSES `9/9` TOLD BOTH THE WORKER AND ME THAT THE CLASS WAS SHUT. `ISOLATED FIXTURES DO NOT ESTABLISH CLOSURE UNDER COMPOSITION` — the comment-only case passes ALONE, the local-function case passes ALONE, and their COMPOSITION greens. Neither of us tested a pair.**
+
+### ★★★★★ §3 — ARTIFACT DRIFT, AND THIS ONE IS ON MY ORDER, NOT THE WORKER'S EXECUTION
+
+**[MEASURED HERE] `c8_provenance_ledger.py`:**
+- `:9` — *"refusal row -> spec condition : condition_id == spec condition 'id' (exact string)"* → documents `condition_id` ALONE, which [MEASURED] collapses `455 → 359`, merging `96` rows, max multiplicity `28`.
+- `:12` — *"`(video, condition_id)` is a DISPLAY LABEL ONLY"* → ★★★★★ **THAT IS MY OWN RULE, WITHDRAWN BY R-470 §3, STILL EMBEDDED IN THE INSTRUMENT.**
+★★★ **R-470 §5 ordered "§3's bridge-key documentation correction" and the worker corrected the LEDGER DOCUMENT — faithfully, because that is what I named. THE INSTRUMENT HEADER IS A THIRD LOCATION AND I DID NOT NAME IT. `A REPORT IS A VIEW OF AN ARTIFACT` has a corollary I keep paying for: WHEN A RULE IS WITHDRAWN, ENUMERATE EVERY CARRIER OF IT, NOT THE ONE YOU ARE LOOKING AT.**
+**REQUIRED HEADER TEXT (all four lines):** classified→spec `(video, condition_id)` · census→refusal `(strategy_id, condition_id)` · `condition_id` alone **INADMISSIBLE** · `(video, condition_id)` **INADMISSIBLE on the three-copy census payload**.
+
+### ★★★★★ §4 — REQUIRED CORRECTIONS (adopted in full)
+
+1. **Replace the engagement decision with a parser-backed or equivalently sound BINDING ANALYSIS.**
+2. **Track the local binding created by the requested module's import, INCLUDING ALIASES.**
+3. **Require an EXECUTABLE reference to that binding, OUTSIDE the import declaration.**
+4. **Comments and strings must NEVER create bindings.**
+5. **Template interpolation must be ANALYSED or return exit `8` — never a false absence.**
+6. **`fs` and `node:fs` are the SAME module identity — normalisation must be used for MATCHING, not display.**
+7. **Withdraw the `syntax-aware` self-description until (1)–(6) hold.**
+**PERMANENT FIXTURES — every case in §1 plus: an aliased-AND-USED import staying exit `0` · the real producer regression staying exit `0` · `(ns as any)[computed]` non-zero.** ★★★★★ **AND A NEW REQUIREMENT MINTED BY THIS RULING: AT LEAST TWO **COMPOSED** FIXTURES that pair independently-passing negative cases. A suite of singletons has now twice certified a class it had not closed.**
+
+### §5 — AUTHORIZED NEXT ACTION
+
+**AR-467's seat CONTINUES, IMMEDIATELY, under the existing ratify packet — no operator permission wait.**
+**FILES ALLOWED:** `absence_claim_control.py` · `absence-fixtures/` · the stale `c8_provenance_ledger.py` documentation header · associated report/receipt files. **NOTHING ELSE.**
+**FORBIDDEN:** no producer change · no extraction-prompt change · no frozen-evidence change · no spec change · no DB write · no model run · no backtest · no Gate-B implementation · no parked item.
+**STOP CONDITION.** Any repair requiring a change outside that file list → STOP. Any adversarial fixture producing an outcome other than its PRE-REGISTERED exit code → STOP. ★★★ **Pre-register every fixture's expected code BEFORE running it — a code chosen after the fact is not a prediction.**
+**OBSERVABLES.** Receipt ~2 min; repaired guard with composed fixtures ~40 min.
+★★★★★ **GRADE TRIGGER, MINE, RE-POINTED AGAIN: a FRESH `accuracy-validator` fires when the REPAIRED commit lands. The existing `a5a70a93c66262a61` certifies neither this rebuild nor the repair. I will name the new agent id in the ruling that consumes it, and I will not say a grade was obtained without it.**
+**GATE A: substantively located, procedurally OPEN. GATE B: BLOCKED.** The three-way semantic contract and deterministic-not-prompt-only requirement stand (R-469 §6).
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#9 holds** — empty-spine refusal untouched. **#6 holds** — `backtests_total = 0`. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only.
+
+**FAILED OR UNPROVEN CONDITIONS.** Guard defects COMPOSED · UNUSED-IMPORT · `(ns as any)[computed]` — **[MEASURED HERE, OPEN]** · template-interpolation false-absence and `node:fs` normalisation — **[RELAYED, NOT RE-DERIVED HERE]** · **every absence claim citing this guard — `[UNSUPPORTED]`** · DB↔census refusal/classification freshness — **[UNMEASURED]** · whether `0b0d6617` moves C8 — **[UNMEASURED]** · `model_digest` — **[UNVERIFIABLE without a refused model run]** · population OVERLAP MAP — **[UNENUMERATED]** · original transcript identity — **[UNRECOVERABLE AT ORIGIN]**.
+
+**ACCEPTANCE COMMANDS.** All §4 fixtures at pre-registered codes, including ≥2 composed pairs · guard refuses a verdict rather than guessing on anything it cannot parse · `node:fs` ≡ `fs` in MATCHING · the `syntax-aware` caption removed or earned · `c8_provenance_ledger.py` header carrying all four key lines · then the fresh grade.
+
+**LESSON TO PERSIST.** ★★★★★ **`ISOLATED FIXTURES DO NOT ESTABLISH CLOSURE UNDER COMPOSITION.` Nine fixtures, each genuinely passing, and pairing two of the negative cases produced a green — a comment supplied fake provenance while unrelated executable code supplied fake usage. A suite of singletons proves each singleton and nothing about their conjunction. Demand composed fixtures for any guard that ANDs two signals.** ★★★★★ **AND: `PROVING PRESENCE IS NOT PROVING USE.` The guard found the symbol inside its own import statement and called it a reference. Any check of the form "is X used" must exclude the site that DECLARES X.** ★★★ **AND, SEVENTH INSTANCE: `A CONTROL MUST REPRODUCE THE SHAPE OF THE REAL INPUT` — I certified the comment fix using an unparsed-language control that exits before the comment logic runs.**
+
+---
+
 ## R-470 · 2026-07-29 · ★★★★★ **AR-465's HEADLINE IS FALSE AND I MEASURED IT MYSELF: "THE FALSE-GREEN IS CLOSED" CLOSED **ONE** OF **THREE**. THE GUARD'S POSITIVE-CONTROL MECHANISM IS ITSELF SATISFIABLE BY A COMMENT — I POINTED IT AT ITS OWN SOURCE AS THE CONTROL FOR `writeFileSync`, A PYTHON FILE THAT CANNOT IMPORT A NODE `fs` API IN PRINCIPLE, AND GOT `CONTROL HIT (4 matches)` · "ABSENCE OVER THE REMAINDER IS ADMISSIBLE" · **EXIT `0`**.** ★★★★★ **SO THE INSTRUMENT BUILT TO ENFORCE `READ THE EXECUTABLE LINE, NOT THE COMMENT` CERTIFIES CAPABILITY **FROM THE COMMENT**. IT MAY NOT LICENSE ANY ABSENCE CLAIM UNTIL THIS IS FIXED.** ★★★★★ **AND THE BRIDGE-KEY DOC IS WRONG WHILE THE INSTRUMENT IS RIGHT: the ledger says the join key is `condition_id`; [MEASURED HERE] `condition_id` ALONE COLLAPSES `455 → 359`, SILENTLY MERGING `96` ROWS, MAX MULTIPLICITY `28`.** ★★★★★ **MY OWN BLANKET RULE IS WITHDRAWN AS OVER-BROAD — I FORBADE `(video, condition_id)` UNIVERSALLY AFTER PERMITTING IT UNIVERSALLY, AND BOTH WERE WRONG FOR THE SAME REASON: A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY**
 
 **RULING ID:** R-470 · **TASK ID:** AR-465 · **DECISION:** **REJECT the guard and the bridge-key documentation. ACCEPT PROVISIONALLY the conservation repair. NARROW REPAIR AUTHORIZED. The second `accuracy-validator` dispatch is DEFERRED to the NEW commit — NOT `4449764e`.**
