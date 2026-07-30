@@ -4,6 +4,62 @@
 
 ---
 
+## AR-488 · 2026-07-30 · ★★★★★ **R-481 STEPS 1 AND 2 COMPLETE. STEP 3's ENVIRONMENT IS BUILT AND VERIFIED, AND I REPRODUCED THE FALSE GREEN INDEPENDENTLY — SAME FIGURES AS YOURS, MY OWN FIXTURES, PLUS THE NEGATIVE CONTROL: `31-flip-neg-control` (IDENTICAL 3-SPINE SHAPE, `ny am` FOR `during lunch`) STAYS **GREEN**, SO THE `compiled` FLIP IS CAUSED BY THE ORPHAN ZONE AND NOT BY FIXTURE SHAPE.** ★★★★★ **AND I AM DELIBERATELY NOT STARTING THE IMPLEMENTATION, FOR A REASON THAT IS YOUR OWN §82: SHIPPING THE TS REFUSAL WITHOUT CLOSING F-G WOULD PRODUCE A GREEN RUN WITH ZERO AUTHORITY — A FIXTURE DEMO — AND `reason` PARITY WOULD STILL BE STRUCTURALLY UNCHECKABLE**
+
+**RULING ID:** R-481 · **TASK ID:** AR-488 · **PRIOR:** AR-487 (receipt) · **COMMITS:** campaign `7e95a61a` (rev 3 + parity packet) · parity worktree `03422cc9` (baseline corpus) · **STATUS:** steps **1 ✅ · 2 ✅ · 3 PARTIAL — environment + red-proof done, code NOT written.**
+
+### §1 — STEP 1: GATE-B PACKET REV 3 (`7e95a61a`)
+
+All four corrections landed, each as a change I can point at:
+1. **`CONSUMER-SUPERSEDED` → `CONTROL_FLOW_CHANGED`** + the five-field control-flow record (`archetype_engaged` · `binding_engaged` · `route` · `category_function` · `onboarding_outcome`), **excluded from efficacy, run marked invalid, SWEEP CONTINUES.** ★★★ **Rev 2 had it ABORT. You were right that this was the expensive direction — aborting destroys the incidence number that decides theoretical-vs-live. `FAIL CLOSED AT THE VERDICT BOUNDARY, NEVER AT THE EVIDENCE-COLLECTION BOUNDARY` is now written into the packet as the rule.**
+2. **The onboarding DECISION GRAPH** added to §3.5 as an ASCII graph — the six consumers are the LEAVES, the branch at `:454` is the shape.
+3. **The stale `0b0d6617` line CORRECTED** to `233 → 159`, `−74`, treatment population `158` (§7.1 names which `158`), **and the truth-set entry rewritten to your §69 finding: the prescribed key is realizable on `11.2%` and on `0%` of the spearhead; the replacement rule is DESK-owned.**
+4. **`bandc-measure-mapped-queued-split.ts` FORBIDDEN as an efficacy oracle** — stated as a prohibition on the CLASS, not a caution about one script, because naming one script invites substituting another.
+★★ Also: §3.5.2's F-B rewritten to your **executed** result and your **narrower proven proposition** (divergence on `compiled` is CONDITIONAL on spine composition), replacing my vaguer "can disagree" — and the `src/server/lib/` path correction carried.
+
+### §2 — STEP 2: `LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`, ALL FIVE PARTS
+
+**1 what & why now** (the three defects at `file:line` + your executed false-green table) · **2 blast radius** · **3 the exact change, scope-locked** · **4 verification plan** · **5 rollback, flag-gated**. Property stated verbatim as a PROPERTY. **PIN RECORDED IN THE PACKET: `9af37b8ff36a13c05fb0ec26752c42a97fc300d7`.**
+★★★★★ **THE BLAST-RADIUS SECTION IS THE ONE I WANT YOU TO READ, BECAUSE IT SAYS SOMETHING A "PARITY FIX" NORMALLY DOESN'T: THIS IS A REAL TS BEHAVIOUR CHANGE, NOT A TEST-ONLY FIX.** After it, an orphan-zone clause stops binding in TS, so `compiled` **CAN FLIP `true → false`**, the onboarding route can move `CONDITION_COMPILED → NEEDS_ARCHETYPE`, the category function can change, and the playbook regime set with it. **PRE-REGISTERED SO IT CANNOT BE RE-READ LATER: `compiled` GOING DOWN IS THE FIX WORKING. A HIGHER COMPILED COUNT AFTER THIS IS A FAILURE SIGNAL.** A materiality count receipt per spec is mandatory at land time.
+
+### ★★★★★ §3 — STEP 3: ENVIRONMENT VERIFIED, AND THE FALSE GREEN REPRODUCED INDEPENDENTLY
+
+**WORKTREE:** `C:\Users\tonio\Projects\wt-ledger-e-parity-20260730`, branch `hardening/ledger-e-parity-20260730`, **pinned to the explicit SHA** — and I **re-confirmed `git rev-parse HEAD` equalled the pin in the same breath as creating it**, then confirmed the worktree's own HEAD equals it after. `[MEASURED]` **Not a branch-name base.**
+**THE TWO FALSE-CLEAN TRAPS, BOTH CLEARED BY POSITIVE CONTROL:**
+| trap | probe | result |
+|---|---|---|
+| troll `npx tsc` exits `0` checking nothing | junctioned `node_modules`, ran the **real binary**, then fed it a deliberate `const n: number = "…"` | ★★★★★ **`error TS2322`, exit `2` — the checker genuinely checks** |
+| MSYS `/c/...` paths break Windows `node`/`python` (your §51b) | passed a **Windows-style** `TF_SPEC_BINDING_SAMPLES_DIR` via PowerShell | ran clean; `python 3.13.0` present for the subprocess lane |
+
+**BASELINE, SHIPPED CORPUS, MY WORKTREE:** `Checked 1 sample specs.` · `PASS` · **exit `0`.** Your §44 reproduces.
+**BASELINE, MY OWN 7-FIXTURE CORPUS, PRE-FIX — `FAIL: 3 spec(s)`, exit `1`:**
+| fixture | result |
+|---|---|
+| `10-lunch-orphan` | **RED** — `spine_bound ts=2 py=1` · `bindable ts=true py=false` · `primitive ts="session_windows" py=null` · `approximation ts=false py=true` · `session_zone ts="lunch_blackout" py=null` |
+| `11-premarket-orphan` | **RED** — same shape, `session_zone ts="overnight"` |
+| `30-compiled-flip` | **RED** — the above **plus `compiled: ts=true py=false`** |
+| `00-control-shipped` · `20-nyam-evaluable` · `21-fivemin-chart` | **GREEN** |
+| ★★★★★ **`31-flip-neg-control`** | ★★★★★ **GREEN — identical 3-spine shape to `30-`, `ny am` substituted for `during lunch`** |
+★★★★★ **EVERY FIGURE MATCHES YOURS, FROM FIXTURES I WROTE MYSELF — that is two non-overlapping paths to the same result, not me re-running your query.** ★★★ **AND THE NEGATIVE CONTROL IS THE PART THAT MAKES IT A FINDING RATHER THAN AN ANECDOTE: `31-` proves the `compiled` flip is caused by the ORPHAN ZONE, not by my three-spine shape. I built the control before I published the claim.**
+★★ **Committed to the worktree as `ci/fixtures/spec-binding-parity-expanded/` (`03422cc9`, `+129`, diff-stat matches the reviewed delta) with a README carrying the pre-fix AND post-fix expectations, the Windows-path warning, and an explicit line saying a green run here does NOT establish parity while F-G is open.** It no longer lives in a temp dir that dies with this seat.
+
+### ★★★★★ §4 — WHY I STOPPED BEFORE THE CODE, AS A JUDGEMENT I OWN
+
+**I did NOT write the TS refusal, the comparator rewrite, the exhaustive membership fixtures, or the CI wiring.**
+★★★★★ **THE REASON IS YOUR §82, AND IT IS NOT A CAPACITY EXCUSE: `F-G MUST CLOSE BEFORE ANY PARITY RESULT MAY BE ADMITTED.` The TS refusal alone is small and I have read both lanes closely enough to write it. But shipping (a) without (b) makes my seven fixtures go GREEN while `reason` is STILL never compared — so "the lanes refuse identically WITH THE SAME REASON", your own acceptance command #1, would remain structurally uncheckable, and I would be handing you a green run that your §84 forbids anyone from citing.** ★★★ **A GREEN I KNOW HAS NO AUTHORITY IS WORSE THAN NO GREEN, because the next seat inherits it as evidence.** So (a) and (b) land together or not at all — and that pair, plus exhaustive membership fixtures and dual-lane CI wiring, is more than I should begin at this context depth. **`DO NOT START WHAT YOU CANNOT FINISH.`**
+★★ **What I deliberately did instead was everything that makes the next seat's first hour free: a verified environment with both false-clean traps cleared, and a matched RED baseline it can diff a GREEN against.**
+
+### §5 — POSITION AND HANDOFF
+
+**POSITION:** campaign tree `wt-h1-wave4-20260712` @ `7e95a61a` + this commit, all writes `-o` path-scoped · parity worktree @ `03422cc9`, clean. **Nothing half-done: no production code touched, `runtime-production` and `tf-deep-scan` unedited, no DB/spec/frozen-artifact write, no extraction, no backtest, no model run. NO sub-agent dispatched or owed by me this seat.**
+★★★ **THE NEXT SEAT'S TASK IS R-481 STEP 3's IMPLEMENTATION, CONTRACT ALREADY WRITTEN IN THE PARITY PACKET §3 — nothing to re-derive:** (a) TS `REFUSED_SESSION_KEYWORDS` + refusal branch **ahead of** `resolveSessionKeyword`, emitting Python's exact tuple incl. **`approximation=true`**, remove the two orphan zones from the TS table, **correct the false `:64` caption** · (b) **complete normalized-plan comparison with key-set equality in BOTH directions — not another field list** · (c) exhaustive membership fixtures + a membership assertion that goes RED on a deleted member · (d) CI **and** fast-lane wiring. **Red-proof table with pre-registered exit codes is packet §4.1, fixtures 1–10; fixture 7 (REASON-ONLY mutation) is the F-G red-proof and is the one that decides whether the central claim is proven.**
+★★★★★ **TWO OPERATIONAL WARNINGS FOR WHOEVER TAKES IT:** the worktree has a **node_modules JUNCTION** — **NEVER `Remove-Item -Recurse`** on it, that follows the link and deletes the REAL `runtime-production` dependencies (use `[System.IO.Directory]::Delete($path,$false)` before `git worktree remove`) · and **pass `TF_SPEC_BINDING_SAMPLES_DIR` as a WINDOWS path**, never MSYS `/c/...`.
+★★★ **FORBIDDEN AND WORTH REPEATING BECAUSE IT IS THE CHEAP WAY TO A GREEN: do NOT make Python accept `lunch` or `overnight`. TypeScript is the side that moves.**
+★★ **I am the DOER on step 3 and will not grade it. The grader is the fresh `accuracy-validator` YOU dispatch at §92 — and packet §4.3 lists, per restriction, which claim dies if its brief withholds Python execution, the corpus-override recipe, or permission to author its own fixtures.**
+★★★★★ **A FRESH WORKER SEAT IS NEEDED.** This seat ran `AR-485 → AR-488` across R-480 and R-481: the caller-surface read, the consumer contract matrix, packet rev 2, packet rev 3, the parity packet, and the verified worktree with its RED baseline. **It is handing off at a clean boundary with one fully-specified next task and zero owed work.**
+
+---
+
 ## AR-487 · 2026-07-30 · **START-RECEIPT — R-481 STEPS 1–3, SAME SEAT. ★★★★★ AND ONE SELF-CONVICTION BEFORE I START, BECAUSE CORRECTION 3 IS RIGHT AND SHARPER THAN IT NEEDED TO BE: PACKET REV 2 CONTRADICTED ITSELF. §1 PUBLISHED THE MEASURED `0b0d6617` MOVEMENT (`74` ROWS, C8 `233 → 159`) AND §6 CARRIED A REV-1 LINE CALLING THE SAME QUESTION `[UNMEASURED]`. I CARRIED A STALE PREREQUISITE FORWARD PAST MY OWN MEASUREMENT, ONE SECTION APART.**
 
 **RULING ID:** R-481 · **TASK ID:** AR-487 · **PRIOR:** AR-486 (accepted at the mechanism layer; rev 2 NOT ratified) · **COMMIT AT WRITE:** `6eff69ff` · **STATUS:** STARTING steps 1 → 3.
