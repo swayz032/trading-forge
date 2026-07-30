@@ -31,8 +31,12 @@
     "11-premarket-orphan.spec.json",
     "20-nyam-evaluable.spec.json",
     "21-fivemin-chart.spec.json",
+    "22-nypm-evaluable.spec.json",
+    "23-silverbullet-evaluable.spec.json",
+    "24-macrowindow-evaluable.spec.json",
     "30-compiled-flip.spec.json",
-    "31-flip-neg-control.spec.json"
+    "31-flip-neg-control.spec.json",
+    "40-overrefusal-boundary.spec.json"
   ],
 
   "fixtures": {
@@ -176,6 +180,84 @@
       }
     },
 
+    "22-nypm-evaluable.spec.json": {
+      "authority": "authority section 2 (ny_pm = 150/1440, evaluable) + P-1, P-5; counts by section 4b arithmetic; compiled by section 4c",
+      "_note": "ZONE-AXIS CLOSURE (AR-497 section34 named ny_pm as having NO fixture). THE DERIVATION IS THE SAME ONE section4a USES FOR ROW 20, APPLIED TO A DIFFERENT ROW OF THE SAME section2 PROBE TABLE -- not an extrapolation and not copied from either lane: section2 measures ny_pm at 150/1440 OCCUPIED, the probe reads none of the three tables under repair, and P-1 says a zone WITH a computable window is evaluable. spine 2/2 = 1.000 >= the 0.5 floor section4c declares, so compiled=true.",
+      "spine_total": 2,
+      "spine_bound": 2,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (ny_pm = 150/1440, evaluable) + P-1 — binds, exactly",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": "ny_pm",
+          "approximation": false,
+          "reason_null": true
+        },
+        "enter": {
+          "authority": "authority P-5 — ENTER names the ACT of entering, satisfied by spine completion",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        }
+      }
+    },
+
+    "23-silverbullet-evaluable.spec.json": {
+      "authority": "authority section 2 (silver_bullet = 180/1440, evaluable) + P-1, P-5; counts by section 4b arithmetic; compiled by section 4c",
+      "_note": "ZONE-AXIS CLOSURE (AR-497 section34 named silver_bullet as having NO fixture). silver_bullet is the ONLY zone carrying a SINGLE keyword phrase in both lanes (measured: 1 phrase, vs 6 for ny_am), so it is the zone where deleting the phrase table entry has no sibling phrase to mask it. Same section2-derived tuple as row 20.",
+      "spine_total": 2,
+      "spine_bound": 2,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (silver_bullet = 180/1440, evaluable) + P-1 — binds, exactly",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": "silver_bullet",
+          "approximation": false,
+          "reason_null": true
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        }
+      }
+    },
+
+    "24-macrowindow-evaluable.spec.json": {
+      "authority": "authority section 2 (macro_window = 74/1440, evaluable) + P-1, P-5; counts by section 4b arithmetic; compiled by section 4c",
+      "_note": "ZONE-AXIS CLOSURE (AR-497 section34 named macro_window as having NO fixture). 74/1440 IS THE LOWEST NON-ZERO OCCUPANCY IN THE WHOLE section2 TABLE -- the evaluable zone nearest the 0/1440 orphan boundary. That makes it the most load-bearing 'evaluable' verdict to pin: a future _ZONE_CHECKS regression that empties macro_window would move it to 0/1440 and this row is what would notice. Authority section64 already orders the probe re-run as a GUARD for exactly this event.",
+      "spine_total": 2,
+      "spine_bound": 2,
+      "compiled": true,
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (macro_window = 74/1440, evaluable) + P-1 — binds, exactly",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": "macro_window",
+          "approximation": false,
+          "reason_null": true
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        }
+      }
+    },
+
     "30-compiled-flip.spec.json": {
       "authority": "authority section 4a/4b/4c row '30-compiled-flip'",
       "_note": "compiled=FALSE is the load-bearing expectation. Authority section 4c derives 1/3 = 0.333 < 0.5 with no reference to either lane; R-481 measured TS true / PY false, so PYTHON WAS RIGHT AND TS WAS WRONG and this repair moves TS true -> false. THE FIX LOWERS THE compiled COUNT — a higher count here is a FAILURE SIGNAL, which is this table's arithmetic and not a slogan.",
@@ -246,6 +328,52 @@
           "reason_excludes": "session_zone_refused_uncomputable_window",
           "unadjudicated": {
             "approximation": "R-484 §36 — NO EXPECTATION. See row 21: the `true` cited P-6, which derives no approximation value. Asserting `false` would copy both lanes. OPEN, DESK-OWNED (authority §6)."
+          }
+        }
+      }
+    },
+
+    "40-overrefusal-boundary.spec.json": {
+      "authority": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4, P-5; counts by section 4b; compiled by section 4c (1/2 = 0.500 >= 0.5, the row-10 arithmetic)",
+      "_note": "AXIS 3 — THE OVER-REFUSAL BOUNDARY (R-490 §3-1, ordered FIRST; the caption at spec-family-bindings.ts:258-260 promised these fixtures and R-490 §2 measured that ZERO existed). THE THREE confluence ROWS ARE THE PROBE: refused-zone keywords on NON-session families, which must bind NORMALLY. THE sess ROW IS THE POSITIVE CONTROL, carrying the SAME 'during lunch' text on WAIT_SESSION and refused. Both live in ONE fixture so the discrimination is adjacent: 'refuses the right thing' vs 'refuses anything mentioning lunch'. ★ WHAT THIS FIXTURE CANNOT DO, STATED HERE SO NO READER OVERCLAIMS IT: authority §6 does not adjudicate non-session families, so the probe rows carry NO correctness expectation. It therefore catches an over-refusal that appears in ONE lane (via CLAIM 1 drift) but is BLIND to an over-refusal appearing IDENTICALLY IN BOTH — the two-identically-wrong-lanes case. Closing that needs a DESK adjudication of the boundary, which is a desk request and not a builder decision (R-490 §5).",
+      "spine_total": 2,
+      "spine_bound": 1,
+      "compiled": true,
+      "conditions_unadjudicated": "3 of 5 conditions — filter_lunch (FILTER), bias_overnight (WAIT_BIAS), retest_midday (WAIT_RETEST). Authority §6 adjudicates SESSION-family rows only, so their field values carry NO expectation. Their PRESENCE in the plan IS asserted (a missing row fails) and AGREEMENT between the lanes is fully enforced; CORRECTNESS is not claimed.",
+      "conditions": {
+        "sess": {
+          "authority": "authority section 2 (lunch_blackout = 0/1440 ORPHAN) + P-1, P-3, P-4 — the refusal that MUST happen",
+          "bindable": false,
+          "primitive_null": true,
+          "session_zone": null,
+          "approximation": true,
+          "reason_null": false,
+          "reason_names": "lunch_blackout"
+        },
+        "enter": {
+          "authority": "authority P-5",
+          "bindable": true,
+          "primitive_null": false,
+          "session_zone": null,
+          "approximation": false,
+          "reason_null": true
+        },
+        "filter_lunch": {
+          "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
+          "unadjudicated": {
+            "bindable": "NO EXPECTATION. FILTER is a non-session family and authority §6 adjudicates session-family rows only. The over-refusal hazard this row probes is REAL (a generic-dispatch refusal would flip it to false) but asserting `true` here would be MY value, not the desk's — and asserting the implementation's value and asserting nothing are different acts. AGREEMENT is enforced; correctness is a DESK REQUEST (R-490 §5)."
+          }
+        },
+        "bias_overnight": {
+          "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
+          "unadjudicated": {
+            "bindable": "NO EXPECTATION. WAIT_BIAS carrying the `overnight` refused-zone phrase. Same §6 limit as filter_lunch — probes the second refused zone rather than repeating the first."
+          }
+        },
+        "retest_midday": {
+          "authority": "authority section 6 — NON-SESSION FAMILY, EXPLICITLY OUT OF ORACLE SCOPE",
+          "unadjudicated": {
+            "bindable": "NO EXPECTATION. WAIT_RETEST carrying `midday` — a DIFFERENT lunch_blackout phrase from the sess row's `during lunch`, so a phrase-specific leak cannot hide behind the one keyword. Same §6 limit."
           }
         }
       }
