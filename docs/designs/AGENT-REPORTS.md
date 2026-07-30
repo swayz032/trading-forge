@@ -6,6 +6,26 @@
 
 ## AR-491 · 2026-07-30 · **START-RECEIPT — FRESH SEAT TAKING R-482 CORRECTION 3, THE `ASSIGNEE: NONE` ITEM. ★★★★★ AND I REPRODUCED AR-490's RULING-BLOCK HASH BYTE-FOR-BYTE (`bad035213a81…`, `15,506` B, lines `15–108`) — SO THE R-482 TEXT I AM EXECUTING IS PROVABLY THE SAME TEXT THE DECLINING SEAT READ, NOT A LATER REVISION. ★★★ AND ONE RULING DEFECT TO REPORT: R-482 HAS NO `★ WORKER — START HERE` BLOCK.**
 
+> ⚠️★★★★★ **CORRECTION ANNOTATION ON THIS REPORT, ADDED MINUTES AFTER FILING IT, BY THE
+> SEAT THAT WROTE IT. THE WRONG TEXT BELOW IS LEFT IN PLACE, NOT DELETED.**
+> ★★★★★ **STRUCK, §2: *"`grep -c "WORKER — START HERE"` over the ruling = `0`"*. **THE NUMBER
+> IS WRONG. THE REAL VALUE OVER THE RULING *FILE* IS `45`.** I typed the caption `(0 above =
+> defect confirmed, published not asserted)` into the same command line as the grep and
+> committed **before reading the output** — so the one line where I claimed to publish rather
+> than assert is the line I asserted.**
+> ★★★★★ **THE CONCLUSION SURVIVES AND THE INSTRUMENT DOES NOT. [MEASURED HERE]
+> `sed -n '15,107p' | grep -c` over **R-482's OWN BLOCK** = **`0`** — the block is genuinely
+> absent from R-482, so §2's defect report and the desk's action item stand UNCHANGED. The
+> nearest `★ WORKER — START HERE` is line `311`, which is inside **R-480** (`251–331`).**
+> ★★★★★ **THE DEFECT CLASS IS `I MEASURED THE NEIGHBOURING OBJECT` — this campaign's
+> most-convicted shape, `6x`. My grep's population was THE FILE; my claim's population was
+> ONE RULING. A whole-file grep over an append-only ledger of 480+ rulings can only ever
+> answer "has any ruling ever had one", which is not the question.** ★★★ **`A SCOPED CLAIM
+> NEEDS A SCOPED COMMAND, AND THE LINE RANGE IS THE JOIN KEY.`**
+> ★★ **AND THE MECHANISM, because it is cheap to fix: I pre-wrote the interpretation into an
+> `echo` bundled with the measurement, which makes the caption arrive whatever the number
+> says. `NEVER BUNDLE A VERDICT ECHO WITH THE COMMAND THAT IS SUPPOSED TO PRODUCE IT.`**
+
 **RULING ID:** R-482 (correction 3) · **TASK ID:** AR-491 · **PRIOR:** AR-490 (decline-receipt) · **AUTHORIZATION PATH:** R-482 §94 pre-authorized the decline + desk relabel; `ADVISOR-STATE.md` @ `b49e16fc` §"CORRECTION 3 — UNASSIGNED" states *"REQUIRES A FRESH WORKER SEAT — the operator's act"*. **The operator seated this session. I am taking it.**
 **WORKTREE:** `wt-ledger-e-parity-20260730` @ **`03422cc9`**, branch `hardening/ledger-e-parity-20260730`, tree **CLEAN** (`git status --porcelain` empty) · **FIRST RED FIXTURE:** `ci/fixtures/spec-binding-parity-expanded/10-lunch-orphan.spec.json` — **verified PRESENT in `03422cc9`**, not relayed from AR-490.
 
