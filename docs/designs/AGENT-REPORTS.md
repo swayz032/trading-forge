@@ -4,6 +4,49 @@
 
 ---
 
+## AR-507 · 2026-07-30 · **PRE-REGISTRATION FOR THE R-494 §4 MATERIALITY CONTROL — COMMITTED BEFORE THE FIXTURE EXISTS.** ★★★★★ **R-494 §1 IS UPHELD AGAINST ME: I PROVED MY FAILURE SIGNAL COULD *COUNT* AND NEVER PROVED IT COULD *STOP THE RUN*. `0` `process.exit` CALLS IN THE EMITTER — I BUILT A BANNER, NOT A GATE.**
+
+**RULING ID:** R-494 §4 · **TASK ID:** AR-507 · **PRIOR:** AR-506 · **PARITY:** `wt-ledger-e-parity-20260730` @ **`8c6893fc`**, clean. **NO CODE CHANGED IN THIS ENTRY.**
+
+### ⚠️★★★★★ §1 — TAKING THE FINDING
+
+**I wrote a receipt that selects between a pass line and `STOP AND FILE IT`, then returns `0` either way.** ★★★★★ **My AR-506 §2 self-control tested the COUNTER and I presented it as evidence the signal worked. It was evidence of one third of the signal.** `A FAILURE SIGNAL HAS THREE PARTS — REACHABLE · DETECTED · STOPS THE RUN` — **I proved (2), honestly declared (1) missing, and never asked (3).** ★★★ **`AN EMITTER SELF-TEST PROVES THE EMITTER, NOT THE ENFORCEMENT PATH.` The gap between "my artifact says FAIL" and "my artifact fails" is the whole distance between a report and a gate, and I had already written that distinction into the step-A code four reports ago without applying it here.**
+
+### ★★★★★ §2 — THE CONTROL'S COMPOSITION, DERIVED FROM THE ARITHMETIC AND PRE-REGISTERED
+
+**Location: OUTSIDE the 12-spec efficacy population** (a new `ci/fixtures/materiality-control/` — putting it in the declared corpus would trip the membership check and, worse, contaminate the population the receipt measures).
+**Composition — 3 spine rows, `entry_trigger_id = "enter"`:**
+| id | type | binds? | why |
+|---|---|---|---|
+| `enter` | `ENTER` | **yes** | ordinary binding family |
+| `exc_a` | `EXCEPTION` | **no** | `unsupported: true` |
+| `exc_b` | `EXCEPTION` | **no** | `unsupported: true` |
+
+**ARITHMETIC:** `spineBound / spine.length = 1/3 = 0.3333`. Gate at `:382` is `compiled = false` iff `spineRatio < MIN_SPINE_BOUND_RATIO`. **`0.3333 < 0.5` → `compiled = false`.** Under the transient loosening `MIN → 0.0`: **`0.3333 < 0.0` is FALSE → `compiled = true`.**
+★★★★★ **AND THE CRITICAL POINT AGAINST R-494 §4-6's TRAP — I AM NOT MANUFACTURING REACH BY CHANGING SEMANTICS: [MEASURED HERE] `EXCEPTION` is `unsupported: true` with `control_flow_exception_unsupported` in the **BEFORE** lane (`git show 926fe9a1~1`) **AND** in the current lane, identically. **The control is built entirely from behaviour that predates the repair and that neither lane's semantics are altered to produce.** No session zone, no orphan phrase, no `approximation` or queue-reason payload is involved.**
+★★ **Why an unsupported family and not an orphan zone: an orphan-zone spine row would entangle the control with the very repair the receipt measures. This control must move for a reason the repair does not own.**
+
+### ★★★★★ §3 — PRE-REGISTERED OUTCOMES
+
+| # | state | **PREDICTED** `BEFORE`→`AFTER` `compiled` | **PREDICTED** receipt behaviour |
+|---|---|---|---|
+| **E-1** | normal (`MIN = 0.5`) | **`false` → `false`** | control SATISFIED · receipt **exit `0`** |
+| **E-2** | `MIN 0.5 → 0.0` in the **AFTER lane only** | ★★★★★ **`false` → `true`** | ★★★★★ **receipt NAMES this exact control and EXITS NON-ZERO** |
+| **E-3** | main 12-spec receipt, both states | unchanged: 4 of 12 moved, aggregate `12 → 11` | preserved separately; may honestly keep reporting natural reach `0` |
+
+★★★ **`BEFORE` STAYS `false` IN E-2 BY CONSTRUCTION, and this is the part worth checking: the BEFORE lane is materialised from git at `926fe9a1~1`, so a mutation to the working tree cannot reach it. That asymmetry is what makes a one-sided loosening observable as a transition rather than as a wash.**
+★★★★★ **E-2 IS THE PREDICTION TO HOLD ME TO. If the receipt prints the transition and still exits `0`, the repair has failed and R-494 §6's stop condition — *"the mutated receipt still exits `0`"* — has tripped. I will report that as a failure, not narrate around it.**
+★★ **I will also assert the exit code EXPLICITLY in the evidence rather than inferring it from the banner text — inferring enforcement from output is precisely the error R-494 §1 convicted.**
+
+### §4 — SCOPE · STOP · GRADE
+
+**Then §5's delivery object: a SECOND worktree pinned to `9af37b8f`, new branch, the net diff squashed into ONE commit. ★★★ NO rewrite or squash of the WIP branch — R-494 §6 forbids it and it is why this method needs no history rewrite at all.**
+**FORBIDDEN HELD:** no push/PR/remote · no WIP-branch rewrite · no payload changes · no lane-semantics change to manufacture reach · `runtime-production`/`tf-deep-scan` untouched.
+**FIRST OBSERVABLE:** the control fixture + its E-1 and E-2 runs with exit codes printed, **~15 min.**
+★★★★★ **`F` NOT DISPATCHED AND NOT DUE — it fires only after E closes AND the atomic delivery object exists. THE BUILDER DOES NOT GRADE.**
+
+---
+
 ## AR-506 · 2026-07-30 · ★★★★★ **STEPS D AND E LANDED — A THROUGH E ARE ALL PRESENT IN THE TREE AT `8c6893fc`. R-488 §3's TWO `[UNPROVEN]` CHECKS NOW FIRE AND ARE CITABLE.** ⚠️★★★★★ **AND STEP E's OWN FAILURE SIGNAL IS UNREACHABLE ON THIS CORPUS — I FOUND IT BY RED-PROOFING THE RECEIPT, AND IT IS DECLARED IN THE ARTIFACT RATHER THAN HIDDEN BEHIND ITS PASS.** ★★★ **ONE DELIVERY-SHAPE QUESTION FOR THE DESK BEFORE F.**
 
 **RULING ID:** R-493 §5-D, §5-E · **TASK ID:** AR-506 · **PRIOR:** AR-505 · **PARITY:** `wt-ledger-e-parity-20260730` @ **`8c6893fc`**, `git status --porcelain` **EMPTY**. **Gate `EXIT 0`.**
