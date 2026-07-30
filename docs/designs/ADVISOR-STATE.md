@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2264` at THIS commit, 2026-07-30 05:15 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2297` at THIS commit, 2026-07-30 05:30 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2264` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2297` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -82,7 +82,40 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ **R-495 OWED AND HELD** — `AR-507` + `AR-508` UNRULED, WAITING ON THE PASTE
+## ★★★★★ SEAT — CURRENT AS OF **R-495 / AR-508** (2026-07-30 05:30). **DEBT PAID · WORKER UNBLOCKED.**
+
+★★★★★ **R-495 (`b0ae83c8`) — E APPROVED. `F` STILL CLOSED. §5A→§5B→§5C AUTHORIZED.**
+**[MEASURED HERE] the defect I missed last round is closed: `process.exit` in the materiality
+emitter went `0` → `3`, with `:244 process.exit(1)` inside `if (violations.length > 0)`. All three
+parts present — REACHABLE (control outside the efficacy corpus, `false→false`) · DETECTED (named)
+· STOPS THE RUN.** ★★ **Net delta confirmed `22 files, +2477/−81`.**
+★★★ **The worker asserted the EXIT CODE directly instead of inferring enforcement from the banner —
+the exact error R-494 §1 convicted ME of. `THE FIX FOR AN INFERENCE ERROR IS A MEASUREMENT, NOT A
+MORE CONFIDENT INFERENCE.`**
+
+### ★★★★★ AR-508 §2 CORRECTED — THE PACKET EXISTS
+**`docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` — `29,238` B · `386` lines · sha256
+`953c9781…` · five required sections.** The worker searched `docs/ratify-packets/`.
+★★★★★ **`A POSITIVE CONTROL ON THE WRONG SURFACE PROVES THE WRONG SURFACE.`** ★★ **The external
+read derived the SAME hash independently — `TWO PATHS TO ONE HASH IS CORROBORATION; TWO READERS
+QUOTING ONE REPORT IS NOT.`**
+★★★★★ **ITS CONCERN SURVIVES: the packet predates A–E and contains `P-7`/`createHash`/`3494d4bb`
+ZERO times. `EXISTS DOES NOT MEAN CURRENT.` VERB IS `UPDATE`, NOT `AUTHOR` — and NEVER BACKDATE
+today's evidence into a document written before the implementation.**
+
+### ★★★★★ THE COUNTING TRAP — CARRY THIS INTO §5B
+**DO NOT compare the final delivery mechanically to "22 files": adding the previously-absent packet
+makes it 23. VERIFY THE 22 WIP PATHS SEPARATELY AGAINST `3dcc6739`, THEN THE PACKET BY HASH.**
+★★★ **`A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK` — the
+tempting "fix" for a failing count is to drop the packet.**
+★★ **`VERIFY THE TREE YOU SHIP, NOT THE ONE YOU BUILT` (§5C).**
+★★★★★ **SCOPE, KEPT BECAUSE A TIRED SESSION WOULD DROP IT: THIS IS P0'S FINAL ASSEMBLY STEP. IT
+DOES NOT COMPLETE THE COMPILER, DOES NOT PRODUCE A TRADING-READY STRATEGY, AND P1–P3 AND GATE B
+STILL FOLLOW. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
+★★ **Blueprint adopted through `afaf7664` (`4b0095ee`) — five commits, ladder intact each time.**
+
+### ⚠️ SUPERSEDED — THE HELD BLOCK (kept one generation)
+## ⚠️★★★★★ ~~R-495 OWED AND HELD~~ — `AR-507` + `AR-508` UNRULED, WAITING ON THE PASTE
 
 ★★★ **[MEASURED] THE HOLD COSTS: the worker has STOPPED before §5 on a premise I can show is FALSE,
 and §5 is its only remaining task. FIRST WAKE CHECK: `AR-508` is UNRULED.**
@@ -572,7 +605,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2264` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2297` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
