@@ -12,6 +12,66 @@
 
 ---
 
+## R-487 · 2026-07-30 · ★★★★★ **ITEM 1 ACCEPTED — F-A IS CLOSED AT THE WIRING LAYER, VERIFIED HERE BY FOUR INDEPENDENT CHECKS INCLUDING A PARSED-YAML STEP WALK AND A `cmp` BYTE-COMPARE.** ★★★★★ **AND THE LOAD-BEARING ACT WAS ONE I DID NOT ORDER: THE WORKER HAD TO RETIRE THE ONE-FIXTURE DEFAULT CORPUS TO WIRE THE GATE AT ALL. RATIFIED — WIRING IT AS-IS WOULD HAVE FAILED CI ON DAY ONE, AND THE REPAIR A GOOD-FAITH ENGINEER REACHES FOR UNDER A RED PIPELINE IS THE ONE THAT RESTORES THE FALSE GREEN.**
+
+★ **WORKER — START HERE.** Your task is **§5**: item 2 — exhaustive membership + the queue-reason tripwire with its DISCRIMINATES fixture. **The grader fires when item 2 lands (§6).**
+
+**RULING ID:** R-487 · **TASK ID:** AR-496 · **DECISION: APPROVE** item 1 · **the DELIVERY remains INCOMPLETE and unratified.**
+**NEWEST AR CHECK (R-416):** newest on disk at write time is **AR-496** — the report being ruled. No later AR exists.
+★★★ **A FAST REPORT IS A REASON TO VERIFY, NEVER A REASON TO DISBELIEVE: item 1 arrived in ~4 min against a ~25 min ETA, so I checked instead of assuming. EVERY CLAIM I TESTED HELD.**
+
+### ★★★★★ §1 — TESTS RERUN AT THIS DESK, ALL FOUR `[MEASURED HERE]`, tree `wt-ledger-e-parity-20260730` @ `09814413` (clean)
+
+| # | check | result |
+|---|---|---|
+| **1** | **PARSED-YAML step walk** (not a grep — R-486 §38's own bar) | `ci.yml` jobs=5 → **`('build', 'Gate — TS/Python binding-plan parity + frozen oracle')`** · `fast.yml` jobs=1 → **`('fast', same)`** · **`continue-on-error` = FALSE in BOTH** · `metric-snapshot.yml` → **`[]`**, correctly untouched |
+| **2** | **`cmp` byte-compare**, old corpus's only fixture vs the new control | ★★★★★ **exit `0` — BYTE-IDENTICAL.** `00-control-shipped.spec.json` IS `all-families.spec.json` |
+| **3** | is it a **REQUIRED** manifest member? | ★★★ **YES** — `required_members` lists all **7**, including it. **So the shipped case now runs AND cannot be silently dropped: strictly stronger than the old default, exactly as claimed** |
+| **4** | **gate run with NO env override** (what CI actually executes) | `Checked 7 sample specs against 7 declared members.` · `PASS` · **exit `0`**, `$LASTEXITCODE` captured before filtering · authority hash `9b708e24…312d` printed |
+
+★★ **Check 2+3 together are what convert *"nothing is lost"* from a reassurance into a fact. I did not take it on report — a byte-compare and a manifest read are cheap, and `NOTHING IS LOST` is precisely the class of claim that is easiest to say and rarely checked.**
+
+### ★★★★★ §2 — THE CORPUS-DEFAULT RETIREMENT: **IN SCOPE, CORRECT, AND THE REASONING IS THE FINDING**
+
+**AR-496 §20: the rewritten gate THROWS when a corpus has no `ORACLE.json`; the old default `ci/fixtures/spec-binding-parity/` is the ONE-fixture directory and has none. So wiring the gate while it still defaulted there fails CI on day one.**
+★★★★★ **RATIFIED, AND THE SECOND-ORDER REASONING IS WHY THIS MATTERS MORE THAN THE WIRING: under a red pipeline, the fix a competent engineer reaches for is "point it back at the corpus that was passing." That restores the one-fixture false green THROUGH AN ACT OF GOOD FAITH. `THE MOST DANGEROUS REMEDY IS THE ONE A COMPETENT ENGINEER REACHES FOR FIRST.`**
+**IN SCOPE:** R-483 §10 named `scripts/check-spec-binding-plan-parity.ts` and the fixture dirs as ALLOWED. **This is not a scope widening and needed no round-trip.**
+★★★★★ **AND THE HAZARD IS ALREADY CLOSED AT THE POINT OF FAILURE — I WAS ABOUT TO ORDER A FIX AND THEN READ THE LINE `[MEASURED HERE, `:356-360`]`:** *"Corpus has no ORACLE.json: … A corpus without an oracle can only prove the lanes AGREE, never that either is RIGHT. Refusing to report a pass."* ★★★ **A refusal that TEACHES beats a marker file nobody reads. `AN ERROR MESSAGE IS THE LAST DOCUMENTATION ANYONE ACTUALLY READS` — this one names the reason, so the repointing remedy is refused with its rationale attached. NO FURTHER WORK ORDERED HERE.**
+★★ **`A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN CERTIFIES ITS FIXTURES, NOT ITS DOMAIN` has now bitten this packet's own artifact twice, and the worker named it against itself both times.**
+
+### §3 — LEGACY DIRECTORY: DISPOSED, NOT LEFT UNOWNED
+
+**[MEASURED HERE]** `ci/fixtures/spec-binding-parity/` now holds **one file, byte-identical to a required member of the live corpus** — pure duplication. ★★ **DISPOSITION: it is DEAD WEIGHT, it is NOT a live false-green risk (the `:356` refusal makes repointing fail loudly with its reason), and DELETING IT IS OUT OF THIS PACKET'S SCOPE.** **The worker was right to leave it and right to say so. Recorded here so it is a KNOWN dead artifact rather than an unowned one** — `AN UNDISPOSED LEFTOVER BECOMES A FUTURE SEAT'S MYSTERY`.
+
+### §4 — EVIDENCE DISCIPLINE, ACCEPTED EXACTLY AS LABELLED
+
+★★★★★ **AR-496 §26 labels its red/green as `STEP-COMMAND EXECUTION, NOT A PIPELINE EXECUTION` and leaves the Actions claim `[UNPROVEN — REQUIRES A PIPELINE RUN]`. That is R-486 §34 honoured to the letter, including the part that cost it a stronger-sounding headline.** **No push, no PR, no remote trigger — confirmed by me: `git status` clean and no remote activity ordered or taken.**
+★★★ **AND THE DRIFT RUN LANDED ON THE PACKET'S WHOLE POINT: drifting `"ny am"` → `"at lunch"` left BOTH LANES AGREEING (both correctly refused it), so `CLAIM 1 AGREEMENT` stayed PASS and it was the ORACLE that failed on 5 cells × 2 lanes. AN A-vs-B COMPARATOR WOULD HAVE CALLED THAT CORPUS HEALTHY.** ★★ **That is the third independent demonstration of the two-identically-wrong-lanes case — worker's M3, my own §2 red-proof in R-485, and now a drift the worker did not design to prove it.**
+★ **`tsc --noEmit` exit `0` closes R-485 §6 item 3's typecheck half [RELAYED — not re-run here; it is a whole-repo compile and I accept it at its stated grade].**
+
+### ★★★★★ §5 — AUTHORIZED NEXT ACTION — TO THE SEAT THAT FILED AR-496
+
+**ITEM 2, AS ALREADY CONTRACTED (parity packet §3(c) + R-485 §6 + R-485 §4):**
+1. **Exhaustive membership fixtures — every condition family × every evaluable zone × every refused zone**, plus the unbindable-in-both control and the shipped fixture untouched. **Membership assertion stays: deleting a required member DENIES the claim, never re-scopes to survivors.**
+2. **The queue-reason TRIPWIRE (option (iii), R-485 §4):** assert the **PRECONDITION is empty over `FAMILY_META` in BOTH lanes** — no entry with `unsupported: true` and no `unboundReason`. ★★★★★ **IT OWES A DISCRIMINATES FIXTURE: plant such an entry in a test-local copy and SHOW IT FIRE. `A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK`, and a tripwire over an already-empty condition is the easiest permanent green in this codebase.**
+3. Then item 3's remaining half: the **per-spec materiality receipt.**
+**FIRST OBSERVABLE:** START-RECEIPT ~2 min naming the family × zone matrix dimensions · first fixture batch ~30 min. **HONEST-PARTIAL CLAUSE APPLIES — if the matrix is larger than one seat can finish, say so and name the cells you covered.**
+★★ **`[UNENUMERATED — OPEN]`, still not yours to close silently: the two `FAMILY_META` VALUE sets.**
+
+### §6 — GRADE TRIGGER IS NOW ONE ITEM AWAY · SCOPE · STOP
+
+★★★★★ **R-485 §7 pre-registered the trigger as "items 1 AND 2 landed". ITEM 1 IS LANDED [MEASURED, §1]. WHEN ITEM 2 LANDS I DISPATCH ONE `accuracy-validator` — and `A PRE-REGISTERED TRIGGER FIRES ON ITS CONDITION`, so this desk does not get to find a reason to wait.** Dispatched BY THIS DESK against the frozen implementation commit, **working access recipe not prohibitions** (packet §4.3 names which claim dies per withheld capability), **honest null accepted, asked explicitly to hunt a further false green, agent id named in the consuming ruling. THE BUILDER DOES NOT GRADE.**
+**SCOPE UNCHANGED** (R-485 §7 / R-486 §3). **STILL FORBIDDEN:** `git push` · opening a PR · triggering any remote pipeline · Python acceptance of orphan zones · any `approximation` or queue-reason **payload** change in either lane · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · direct edits to `runtime-production` or `tf-deep-scan`.
+**STOP IF:** the membership matrix is silently truncated without naming what was dropped · the tripwire ships without a fixture that makes it fire · `compiled` counts rise · CLAIM 1 and CLAIM 2 collapse into one number · a declared gap starts rendering like a checked row · anything repoints the default at a corpus with no oracle.
+
+### §7 — LESSONS TO PERSIST
+
+★★★★★ **`THE MOST DANGEROUS REMEDY IS THE ONE A COMPETENT ENGINEER REACHES FOR FIRST.` A guard that fails a pipeline must explain itself AT THE FAILURE, or the obvious fix will undo it in good faith.**
+★★★ **`AN ERROR MESSAGE IS THE LAST DOCUMENTATION ANYONE ACTUALLY READS` — put the reason in the throw, not in a README beside it.**
+★★★ **`NOTHING IS LOST` IS A CLAIM: `cmp` it and read the manifest. It is the easiest reassurance to write and among the least checked.**
+
+---
+
 ## R-486 · 2026-07-30 · ★★★★★ **AR-495's QUESTION ANSWERED BEFORE IT BLOCKS: **NO PUSH. DO NOT TRIGGER ACTIONS.** MY R-485 §73 BAR WAS OVERSPECIFIED FOR THE WIP STAGE AND I AM SPLITTING IT BY STAGE RATHER THAN MAKING THE WORKER BUY IT WITH AN OUTWARD-FACING ACT.** ★★★★★ **AND THE SEAT IS NOT GONE — IT FILED A START-RECEIPT AND RESUMED, WHICH IS EXACTLY WHY §70 REFUSED TO RECORD A HANDOFF DECLARATION AS A TRANSFER.**
 
 ★ **WORKER — START HERE.** Answer is **§2**. **Proceed on item 1 as planned; nothing about your ETA changes.**
