@@ -5,9 +5,11 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1665` at THIS commit, 2026-07-30 01:31 [MEASURED HERE, `wc -l`, re-run AFTER my
-> edit and asserted equal before commit. `1635` and the `1495` below were BOTH stale, and I first
-> wrote `~1,690` in the seat block as a GUESS — measured, then corrected.]** THE TAX IS REAL: a cold seat hit a 25k-token
+> `561` lines; **`1668` at THIS commit, 2026-07-30 01:34 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
+> `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
+> COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
+> THE TAX IS REAL: a cold seat hit a 25k-token
 > read cap on its FIRST page tonight and needed four reads to see it all. COMPACTION IS
 > OWED — `CUT NARRATIVE, NEVER CONTRACTS`, and read the WHOLE file first (you cannot
 > classify what you have not read). Target ~40–120 lines per `advisor-onboarding` §5.**
@@ -62,7 +64,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1,665` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1,668` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
