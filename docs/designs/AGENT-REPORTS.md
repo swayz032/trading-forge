@@ -4,6 +4,76 @@
 
 ---
 
+## AR-503 · 2026-07-30 · ★★★★★ **STEPS A AND B LANDED AT `48199995`. THE GATE NOW COMPUTES THE HASH IT PRINTS, AND ITS FIRST RED WAS AGAINST THE *REAL* STALE PIN, NOT A PLANTED ONE.** ★★★★★ **AND §4d BITES: THE TWO-LANE OVER-REFUSAL THAT PRINTED `EXIT 0 · PASS` FOR AR-499 NOW PRINTS `CLAIM 1 AGREEMENT: PASS · CLAIM 2 ORACLE CORRECTNESS: 12 violation(s)`. AGREEMENT PASSED AND THE ORACLE CAUGHT IT.** ★★★ **STEPS C, D, E NOT STARTED — HONEST PARTIAL. NO GRADE CLAIMED OR DUE.**
+
+**RULING ID:** R-492 §5-A, §5-B · **TASK ID:** AR-503 · **PRIOR:** AR-502 (my start-receipt) · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`48199995`**, `git status --porcelain` **EMPTY** [MEASURED HERE].
+
+### ★★★★★ §1 — STEP A: THE PROVENANCE LINE NOW REPORTS A MEASUREMENT INSTEAD OF A TRANSCRIPTION
+
+**BEFORE → AFTER, the same command, both lines quoted verbatim from stdout:**
+```
+BEFORE  Oracle authority: docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md sha256=9b708e24…312d
+        EXIT=0 · PASS                                   ← the file was not in the branch and was never opened
+AFTER   Oracle authority: docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md — 16314 bytes read,
+        sha256=3494d4bb…14e2 (COMPUTED here, VERIFIED equal to ORACLE.json's pin)
+```
+**`verifyAuthorityFreshnessOrExit()` runs immediately after the oracle is parsed and BEFORE the fixture loop.** The authority artifact is committed into the parity branch at the path `authority_file` already named — **so that field stays true and no second pointer is minted**, which was AR-502 §2's declared reason and it is unchanged.
+★★ **THE WORD `VERIFIED` IN THAT LINE IS LOAD-BEARING AND I GUARDED IT IN THE CODE:** the comment above it says the word is only legible because the function already exited non-zero on mismatch, and *"if you ever weaken that function, delete this word in the same edit."* **`A CAPTION IS A CLAIM` applied to the caption this campaign was burned by.**
+
+### ★★★★★ §2 — STEP A RED-PROOFED **FOUR** WAYS, EACH WITH THE `BEFORE ANY PLAN` WITNESS
+
+| # | mutation | exit | `Checked 12 sample specs` line |
+|---|---|---|---|
+| **control** | none | **`0`** · `PASS` | ★★ **present — this is the POSITIVE CONTROL that the line CAN be emitted** |
+| 1 | authority file **missing** | **`1`** | **`0`** |
+| 2 | authority **unreadable** (directory at the path) | **`1`** | **`0`** |
+| 3 | **one byte appended** (hash mismatch) | **`1`** | **`0`** |
+| 4 | **pin blanked** in `ORACLE.json` | **`1`** | **`0`** |
+
+★★★★★ **THE `0`s ARE AN ABSENCE CLAIM AND THE CONTROL ROW IS WHAT MAKES THEM READABLE:** "no plan was compiled" is otherwise indistinguishable from "the counting grep was wrong". The same grep finds the line exactly once on the control. `AN ABSENCE CLAIM NEEDS A POSITIVE WITNESS THAT THE PATH RAN.`
+★★★★★ **AND THE PROOF I VALUE MOST IS THE ONE I DID NOT PLANT: with step A in and step B deliberately NOT yet done, the gate met the REAL stale pin and printed `COMPUTED 3494d4bb… / PINNED 9b708e24… / EXIT=1`.** ★★★ **I ran it in that order ON PURPOSE — `FIX THE DETECTOR BEFORE THE DATA, SO THE DATA FIX IS VERIFIED BY THE DETECTOR` (R-492 §5-A). A detector witnessed catching a live defect is worth more than one witnessed catching my own mutation.**
+★★ **The mismatch message refuses to name a cause it cannot distinguish** — stale pin vs drifted copy — and says so, then forbids the tempting repair: *"DO NOT edit the pin to match the file."*
+
+### ★★★★★ §3 — STEP B: §4d ENCODED, AND THE PROOF THAT IT CLOSES THE BLINDNESS
+
+**Pin repointed `9b708e24…` → `3494d4bb…`; `_authority_hash_history` gained the supersession entry AND the R-492 §2 residual, written down rather than implied.**
+**§4d's two cells on all three non-session probe rows: `bindable: true`, `reason_null: true`.** `primitive` · `session_zone` · `approximation` are **declared gaps**, per 4d's `everything else` clause — **9 new `[NOT ADJUDICATED]` lines, so declared gaps rose 8 → 14 while 6 new EXPECTATIONS appeared.** ★★★ **NOTHING BEYOND §4d. I encoded from the authority's own §4d table read at `:160`, NOT from R-492's paraphrase of it.**
+
+**THE MUTATION THAT MATTERS — AR-499's over-refusal hoisted into generic dispatch in BOTH lanes IDENTICALLY:**
+| | AR-499 (before §4d) | **now** |
+|---|---|---|
+| exit | `0` | **`1`** |
+| summary | `PASS` | ★★★★★ **`FAIL: 12 — CLAIM 1 AGREEMENT: PASS (lanes emit identical plans) · CLAIM 2 ORACLE CORRECTNESS: 12 violation(s) · MEMBERSHIP: PASS`** |
+
+★★★★★ **READ THE SUMMARY LINE CLOSELY, BECAUSE IT IS THE WHOLE POINT: CLAIM 1 STILL SAYS `PASS`. The lanes agreed perfectly — they were identically wrong. The only thing that saw it was the oracle. `WHEN AGREEMENT IS BLIND, THE ORACLE IS THE ONLY WITNESS LEFT`, now demonstrated rather than asserted.** ★★ **6 violations per lane × 2 lanes, each naming the row and citing §4d.** ★★★ **The adjacent `sess` positive control stayed refused throughout — without it, `bindable=true` everywhere would satisfy these rows (authority §4d says so explicitly).**
+**REVERTED:** both lanes restored from pre-mutation copies · **`0`** `RED-PROOF MUTATION` markers in either lane · `git diff --stat` on the two lane files **EMPTY**, with a POSITIVE CONTROL that the same command still reports the 2 files I did change · `__pycache__` cleared (`A .pyc IS A SECOND COPY OF THE CODE YOU THINK YOU REVERTED`, AR-499's trap) · **control re-run after revert: `EXIT 0`, `PASS`** — re-taken, not carried.
+**`NODE_OPTIONS=--max-old-space-size=8192 npx tsc --noEmit` → `EXIT 0`.**
+
+### ★★★ §4 — THE AR-502 HYPOTHESIS, NOW MEASURED — AND MY INSTRUMENT LIED TWICE ON THE WAY
+
+AR-502 §2 labelled `[HYPOTHESIS — UNPROVEN]` the claim that a same-path copy makes drift visible at merge. **MEASURED with `git merge-tree --write-tree --name-only`:**
+| case | authority path in the conflicted-name block? |
+|---|---|
+| copies **IDENTICAL** (campaign HEAD vs parity HEAD) | **NO** — merges silently, which is correct |
+| copies **DRIFTED** (campaign at `71303b2d~1`, the pre-R-491 content) | ★★★ **YES — `CONFLICT (add/add): Merge conflict in docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md`** |
+**THE HYPOTHESIS HOLDS.** ★★ **SCOPED HONESTLY: it fires only at merge time and only if parity is ever merged into the campaign branch — the two branches are DIVERGENT, `merge-base a9d7a71a`, parity is NOT an ancestor. It does NOT discharge R-492 §2's residual, which is about the gate being green while the campaign original drifts. That stays closed by the desk's same-motion rule alone.**
+★★★★★ **TWO INSTRUMENT FAILURES, DISCLOSED BECAUSE THEY BOTH ALMOST BECAME FINDINGS:**
+1. **`ORACLE.json` looked like mojibake** (`§` → `Â§`). **The file is valid UTF-8; my `open()` defaulted to `cp1252`.** Had I "repaired" it I would have corrupted a clean artifact. `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST.`
+2. **`git merge-tree` returned `129` on both cases** — I read it as a result before noticing `129` is a USAGE error: `--write-tree` takes two branches and computes its own base, and I had passed one. **An exit code I had not earned would have made both cases look identical.**
+
+### §5 — POSITION · WHAT IS **NOT** DONE · GRADE
+
+**`48199995`, tree clean. Nothing merged. No `git push` — [MEASURED] the branch has NO upstream configured. No PR, no remote pipeline. No `approximation` or queue-reason PAYLOAD changed. No DB/spec/frozen write, no re-extraction, no backtest, no Gate-B treatment.** ★★ **`runtime-production` and `tf-deep-scan`: ZERO tracked files modified — their `??` entries (`.playwright-cli/`, `output/`, `old_spec.json`) are pre-existing untracked artifacts I did not author. I am stating that rather than calling the trees "clean", because they are not clean and the difference is someone else's work, not mine.**
+**STEP LEDGER:** ✅ **A** (executable authority check, 4-way red-proof) · ✅ **B** (repoint + §4d, red-proofed by the two-lane mutation) · ❌ **C** axis-3 generated property check + membership/deletion RED control · ❌ **D** axis-4 transient in-run controls · ❌ **E** per-spec materiality receipt · ⛔ **F** desk-only.
+★★★★★ **GRADE NOT TRIGGERED AND I AM NOT NEAR IT. R-492 §5-F conditions the single `accuracy-validator` on A–E landing TOGETHER in the atomic delivery commit; three of five are untouched. I dispatched no sub-agent and none is owed — verified by checking, not assumed. THE BUILDER DOES NOT GRADE.**
+★★★ **ONE NOTE FOR WHOEVER TAKES C, so it is not re-derived: R-492 §5-C's circularity guard is the binding constraint — `FAMILY_META` may enumerate WHICH families exist, but the expected semantics must come from `P-7`. Reading the population from the implementation is fine; reading the EXPECTATION from it is the defect the whole oracle exists to avoid.**
+
+### §6 — HANDOFF: A FRESH WORKER SESSION IS NEEDED
+
+★★★ **I am stopping at a CLEAN BOUNDARY — A and B complete and red-proofed, report filed, tree clean, nothing half-built, no measurement mid-flight.** Per R-485 §70 this is SELF-ASSESSMENT, not a transfer. **But plainly: steps C, D and E are a substantial build and I would rather hand them to a fresh seat than start C and leave it partial — `A PARTIAL RESULT THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE`, and the cheap moment to swap is now, not at exhaustion.** The contract for C–E is R-492 §5 verbatim with nothing to re-derive.
+
+---
+
 ## AR-502 · 2026-07-30 · **START-RECEIPT — FRESH WORKER SEAT, TAKING R-492 §5 STEP A.** ★★★ **BASELINE CAPTURED BEFORE ANY EDIT: the gate is `EXIT 0 · PASS` while printing `sha256=9b708e24…312d`, an artifact the desk replaced two rulings ago. R-492 §1's measurement reproduces here exactly.** ★★ **ONE DESIGN DECISION DECLARED BEFORE I BUILD IT, so the desk can veto it cheaply rather than after the code exists.**
 
 **RULING ID:** R-492 §5-A · **TASK ID:** AR-502 · **PRIOR:** AR-501 (a different seat; it stopped at a clean boundary). **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`b23bae87`**, `git status --porcelain` **EMPTY**. **THIS ENTRY CHANGES NO CODE.**
