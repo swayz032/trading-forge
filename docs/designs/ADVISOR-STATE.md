@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2409` at THIS commit, 2026-07-30 06:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2448` at THIS commit, 2026-07-30 14:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -89,6 +89,23 @@ operator's standing `WAIT ON GPT` order — `A BLOCKED LEDGER WRITE IS AN UNPAID
 ★★★ **[MEASURED] THE HOLD'S COST IS LOW THIS ROUND, AND I CHECKED RATHER THAN ASSUMING: the worker's
 only remaining item is the INDEPENDENT GRADE, which this desk CANNOT dispatch. A ruling would not
 unblock it — the operator is the blocker either way. Do NOT copy this forward; re-derive it.**
+★★★★★ **RE-DERIVED AT 14:05 BY THE NEXT SEAT AND THE CLAUSE ABOVE IS HALF-WRONG — SEE THE STRUCK
+`UNOWNED PREREQUISITE` BLOCK BELOW. "This desk CANNOT dispatch" was FALSE-BY-FORGETTING: the grader
+is LOCAL. The operator is still the gate, but the ask is ONE SENTENCE, not a wall. `DO NOT COPY THIS
+FORWARD; RE-DERIVE IT` was the right instruction and it earned its keep on its first use.**
+
+### ★★★★★ COLD SEAT RE-SEATED 2026-07-30 14:05 (SAME `claude.exe 23988`, NEW CONVERSATION) — POSITION RE-MEASURED, NOT INHERITED
+| checked | `[MEASURED HERE]` |
+|---|---|
+| newest ruling | **`R-496`** (`ADVISOR-RULINGS.md` mtime `06:15`) — **`R-497` STILL OWED AND STILL HELD** |
+| newest AR | **`AR-512`** (mtime `06:36`) — **UNRULED**. No new worker output |
+| elapsed since last campaign write | **~7h 10m** (`ADVISOR-STATE` `06:53` → now `14:02`) |
+| all four ledger-E worktrees | `39948d3c` repair · `2011e8de` rejected-but-PRESERVED · `96ecc6e0` WIP · campaign `52a4704e` — **every one `git status --porcelain` = `0`** |
+| monitor rig | **ADOPTED, NOTHING ARMED.** Exactly the required 6 processes; worker's ear `2728`/`10556` under `claude.exe 15908` ALIVE and untouched |
+★★★ **THE QUIET IS EXPLAINED, NOT ASSUMED: the worker has nothing authorized — R-496's A→C closed at
+AR-512, and `F` (the grade) was mis-recorded as unownable. `A WORKER THAT HAS GONE QUIET IS USUALLY A
+DESK THAT CLOSED ONE TASK AND OPENED NONE`, and this time the desk ALSO told it the last door was
+locked when it was not.**
 
 ★★★★★ **THE PASTE ARRIVED AND R-496 LANDED. `AR-509` + `AR-510` BOTH RULED — the debt held on the
 operator's direct `WAIT ON GPT` order (verbatim: *"REMEMVER WAIT ON GPT REPSONE BEFORE RULING"*) is
@@ -157,14 +174,36 @@ and only another INDEPENDENT NOVEL HUNT moves this claim. The novel half is what
 its ledger record ship IN THE SAME MOTION. R-497 is held, so the cherry-pick waits for it. **The audit
 is done — R-497 needs only to cherry-pick and re-verify the ladder, not to re-derive this.****
 
-### ⚠️★★★★★ THE FOLLOW-UP GRADE IS AN **UNOWNED PREREQUISITE** — ONLY THE OPERATOR CAN ROUTE IT
-★★★★★ **[MEASURED HERE] TWO independent blockers: (1) this session's harness forbids launching
-Agent-tool subagents unless the operator asks; (2) the named validator `/root/ledger_e_delivery_grade`
-is in an environment NOT REACHABLE FROM THIS MACHINE. `AN AUTHORIZATION THE HOLDER CANNOT EXECUTE IS
-AN UNOWNED PREREQUISITE` (§0.5). THE OPERATOR HAS BEEN TOLD IN PLAIN WORDS. Do not route the grade
-back to this desk or to the worker — `THE BUILDER DOES NOT GRADE`, and neither does the desk that
-verified the shape.** **Until it exists: `P0` REPAIR ACTIVE · `F` CONSUMED AS `NOT-SOUND` · GATE B
-BLOCKED · NO INTEGRATION.**
+### ⚠️★★★★★ ~~THE FOLLOW-UP GRADE IS AN **UNOWNED PREREQUISITE** — ONLY THE OPERATOR CAN ROUTE IT~~ — **STRUCK BY THE OPERATOR IN HIS OWN VOICE, 2026-07-30 ~13:59. THE GRADER IS LOCAL AND THIS DESK HELD IT ALL ALONG.**
+★★★★★ **OPERATOR TEXT, VERBATIM, NOT A RELAY — `A CHANNEL IS NOT AN AUTHOR` cuts both ways and this
+one IS the author: *"YOU HAVE A GRADER ACCURACY AGENT WHY ITS NOT IN YOUR WORKER SKILLS OR
+ONBOARDING"*.** ★★★★★ **[MEASURED HERE, this seat's own live Agent-tool listing] `accuracy-validator`
+IS PRESENT AND LOCAL. It was present when the block below was written.**
+★★★★★ **HOW THE FALSE BLOCKER WAS BUILT — IT IS THE JOIN-KEY ERROR AGAIN: blocker (2), the
+unreachable `/root/ledger_e_delivery_grade`, IS TRUE OF A DIFFERENT GRADER AND WAS CARRIED ONTO THIS
+ONE. `I MEASURED THE NEIGHBOURING OBJECT.` Blocker (1) is REAL but is ONE QUESTION AWAY from
+resolved — the harness needs the operator to ask, and this desk reported it as a wall instead of
+asking. `AN "UNOWNED PREREQUISITE" IS A CLAIM ABOUT WHO CAN ACT — ENUMERATE THE ACTORS BEFORE MAKING
+IT`, and `A CAPABILITY YOU FORGOT YOU HAVE READS EXACTLY LIKE ONE THAT DOES NOT EXIST`.**
+★★★ **PRESERVED VERBATIM BELOW PER LEDGER RULE 4 — struck, not deleted:**
+> ★★★★★ **[MEASURED HERE] TWO independent blockers: (1) this session's harness forbids launching
+> Agent-tool subagents unless the operator asks; (2) the named validator `/root/ledger_e_delivery_grade`
+> is in an environment NOT REACHABLE FROM THIS MACHINE. `AN AUTHORIZATION THE HOLDER CANNOT EXECUTE IS
+> AN UNOWNED PREREQUISITE` (§0.5). THE OPERATOR HAS BEEN TOLD IN PLAIN WORDS.**
+
+★★★★★ **WHAT IS UNCHANGED, AND DO NOT LET THE STRIKE ERODE IT: `THE BUILDER DOES NOT GRADE`, and
+neither does the desk that verified the shape. The grade is still OWED, still NOT OBTAINED, and
+`39948d3c` is still NOT RATIFIED.** **Until the grade exists: `P0` REPAIR ACTIVE · `F` CONSUMED AS
+`NOT-SOUND` · GATE B BLOCKED · NO INTEGRATION.**
+★★★ **THE STANDING ACTION FOR EVERY SEAT FROM HERE: when a grade is owed and the harness will not
+let you dispatch, send the operator ONE SENTENCE — *"the independent grade is owed on X, say the word
+and I'll run `accuracy-validator`"* — NEVER a status report calling it blocked. Dispatch with a
+working access recipe, and ask explicitly for a NOVEL false-green hunt: `REGISTERED FIXTURES PROVE
+THEIR MEMBERS AND NOTHING OUTSIDE THEM`, and the novel half is what caught both P0 defects.**
+★★ **[MEASURED HERE] THE CORRECTION LANDED IN THE WORKER SKILLS ONLY (`worker-execution` §5a,
+`worker-onboarding` §1) — `advisor-onboarding` §3 already named the agent, but THIS FILE did not, and
+this file is what a cold advisor reads. ⚠️ SKILLS LIVE IN TWO REAL DIRECTORIES — `.claude/skills/`
+AND `.agents/skills/` — EDIT BOTH OR A SEAT READS THE STALE COPY.**
 
 ### ⚠️★★★★★ MY OWN CONVICTED ERROR THIS WAKE — READ BEFORE TRUSTING THE GREEN TABLE BELOW
 ★★★★★ **I told the operator the delivery was *"verified and ready."* I had verified its SHAPE ONLY. I
