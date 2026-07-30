@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2550` at THIS commit, 2026-07-30 14:22 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2580` at THIS commit, 2026-07-30 14:40 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -82,7 +82,37 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **R-497 OWED AND HELD · `AR-512` UNRULED** · repair DELIVERED at `39948d3c`; `2011e8de` stays **`NOT-SOUND`** (2026-07-30 06:45, ADVISOR SEAT = `claude.exe 23988`)
+## ⚠️★★★★★ SEAT — **R-497 LANDED (`27ebaddb`) · `AR-515` UNRULED · R-498 OWED AND HELD FOR THE PASTE** · live delivery is now **`c304b098`** (2026-07-30 14:40, ADVISOR SEAT = `claude.exe 23988`)
+
+★★★★★ **FIRST WAKE CHECK: `AR-515` IS THE NEWEST AR AND IT IS UNRULED. R-498 is a DEBT held on the
+operator's standing `WAIT ON GPT` order — `A BLOCKED LEDGER WRITE IS AN UNPAID DEBT`.**
+★★★ **[MEASURED] THE HOLD COSTS NOTHING EXTRA THIS ROUND, CHECKED NOT ASSUMED: AR-515 §5 declares
+`nothing in flight, no sub-agent owed`, and R-497 §7's next step is the DESK-DISPATCHED grade, which
+this harness cannot launch without the operator's word anyway. **THE OPERATOR IS THE BLOCKER ON BOTH
+CHANNELS, SO THE PASTE-HOLD ADDS NO DELAY.** Do NOT copy this forward — re-derive it; it was
+half-wrong once already today.**
+
+### ★★★★★ OBJECT LINEAGE — **FOUR DELIVERIES; ONLY THE LAST IS LIVE. DO NOT CITE THE OLD SHAs.**
+`2011e8de` **NOT-SOUND** (R-496) → `39948d3c` **NOT-SOUND** (graded; 2 findings AR-513, 2 more from
+the external validator) → `8187b730` **NOT-SOUND** (R-497 — I reproduced both external attacks on it
+myself) → ★★★★★ **`c304b098` — CURRENT, R-497-ORACLE-CONTRACT CLOSED, UNGRADED.**
+**All earlier deliveries PRESERVED on their own branches. Nothing pushed, merged or deployed.**
+
+### ★★★ [FACT, MEASURED BY GRADED INSTRUMENT — **NOT RULED**] AR-515's SIX PRE-REGISTERED OUTCOMES ALL HELD
+`O-1` clean control **`0`** (not always-red) · `O-2` stripped `authority` **`1`** *at LOAD*, named ·
+`O-3` deleted row **`1`**, named as *"NEITHER adjudicated … NOR named"* · `O-4` reach probe **`1`**,
+still bites · `R-1` AR-513's typo regression **`1`** · `R-2` all twelve §8 commands on the shipped
+tree. ★★★ **`[RELAYED]` — I have NOT re-run these on `c304b098`; my own measurements were on
+`8187b730`. THE GRADE IS STILL OWED AND IS STILL THE DESK'S ACT.**
+★★★★★ **THE BEST THING IN AR-515 IS §3, AND IT IS A DEFECT IT FOUND IN ITS OWN EVIDENCE: its clean
+control went RED, and the cause was that its scratch corpora predated the oracle's new
+`conditions_unadjudicated_ids` — **so the three ATTACK corpora were stale too and their RED WAS
+OVER-DETERMINED.** Rebuilt from the shipped fixtures: clean `0`, each attack `1` with
+`rowcensus-failures=0`, which ATTRIBUTES each red to its own cause. `A RED WITH TWO POSSIBLE CAUSES
+IS NOT EVIDENCE FOR EITHER` — it would have passed unnoticed as four correct-looking results.**
+
+### ⚠️ SUPERSEDED — PRIOR SEAT LINE (kept one generation)
+## ⚠️★★★★★ ~~SEAT — R-497 OWED AND HELD · `AR-512` UNRULED~~ · repair DELIVERED at `39948d3c`; `2011e8de` stays **`NOT-SOUND`** (2026-07-30 06:45, ADVISOR SEAT = `claude.exe 23988`)
 
 ★★★★★ **FIRST WAKE CHECK: `AR-512` IS THE NEWEST AR AND IT IS UNRULED. R-497 is a DEBT held on the
 operator's standing `WAIT ON GPT` order — `A BLOCKED LEDGER WRITE IS AN UNPAID DEBT`.**
