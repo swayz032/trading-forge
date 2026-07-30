@@ -37,7 +37,55 @@
 > never contracts.** ★★★ Verify the PAYLOAD of each v3 upgrade, not its tag: a
 > tag-presence check is what missed the dropped fourth attribution bin.
 
-## ★★★★★ SEAT — CURRENT AS OF R-467 (supersedes every SEAT block below)
+## ★★★★★ SEAT — CURRENT AS OF R-470. **READ LINES 1–130 AND YOU CAN ACT. EVERYTHING BELOW :130 IS HISTORY + THE CANONICAL CONTRACT BLOCKS.**
+**Ledger `R-470`** (commit `be294625`). **Newest AR `AR-466` — a START-RECEIPT on R-470, nothing to rule.**
+**Worker: ACTIVE**, AR-465/466's seat, on R-470 §2 (7 guard fixtures) + §3 (bridge-key doc). Ownership NOT in question — it took the repair unprompted.
+★★★★★ **MY ONE OWED ACTION, AND ITS TRIGGER: DISPATCH THE SECOND `accuracy-validator` WHEN THE NARROW-REPAIR COMMIT LANDS — **NOT** against `4449764e`, which carries two known-open false-greens. The dispatch is MINE. Name the agent id in the ruling that consumes it. FIRST GRADE ALREADY DONE: agent `a5a70a93c66262a61`, `SOUND-WITH-GAPS`.**
+★★★★★ **STANDING OPERATOR ORDER, RESTATED TO THIS SEAT 2026-07-29: THE EXTERNAL (GPT) READ ARRIVES BEFORE EVERY RULING. `THE PASTE IS THE GATE.` Measure and relay freely; JUDGE nothing. A state-file write that would change what the next seat DOES is a ruling wherever you write it.**
+★★★ **`advisor-ruling` MUST BE INVOKED BEFORE **EVERY** RULING — the sentinel is consumed per write, not per session. It blocked me once tonight and it was right.**
+
+## ★★★★★ WHERE GATE A ACTUALLY STANDS (substantively located, procedurally open)
+★★★★★ **ROOT CAUSE FOUND AND IT IS MECHANISTIC, NOT INFERRED: [MEASURED HERE] the STAMPED PRODUCER `tf-deep-scan` @ `dc8a150`, `scripts/atomize-transcript.ts:60` reads verbatim —**
+`"we trade this on crude oil" / "we're sitting on the 30-minute chart today"  -> YES (WAIT_SESSION — execution context: removing it changes what the engine runs on)`
+★★★★★ **THE ADMISSION CONTRACT CONFLATES *"changes run configuration"* WITH *"is an entry predicate"*. `WAIT_SESSION` occurs `3`× in the producer, `1`× in the census-lane copy. `:61` shows the same author drawing the boundary correctly one line later (*"a price LEVEL, never WAIT_SESSION"*) — DESIGN DEFECT, NOT A TYPO. R-466's hypothesis is RESTORED; R-468's refutation of it is WITHDRAWN (I had grepped the wrong copy).**
+★★★ **C8 SPLIT, BINDING: `232` `C8-ANNOTATION` → **ATOM-ADMISSION** boundary · `1` `C8-EMPTY-SPINE` (`75DJN5UVQnw`, `condition_id=""` hardcoded at `spec_execution_preflight.py:293-307`) → **PREFLIGHT safety path, FAIL-CLOSED, MUST NOT BE "FIXED AWAY"**, and it belongs to a distance-0 target video so a global remedy would have hit a spearhead candidate first. **NO GLOBAL C8 REMEDY.**
+★★★ **CLOSED ON TWO INDEPENDENT PATHS: DB↔disk freshness — `120` rows · `40` videos · `spec_hash` `120/120` · `graph_canonical_hash` `40/40` · `strategy_id` set `0` drift. The ledger's own "largest open risk" is retired.**
+★★★ **ENTAILMENT MEASURED AT BOTH HOPS: atom creation gated on `is_decision` (`dc8a150:112`); conditions built ONLY inside `for (const a of sourceAtoms)` (`graph-to-engine.ts:76`, all pushes inside). Backfill `895ce11e` diffed — metadata only, NO backfill wrote conditions.**
+★★ **`prompt_sha256` PROVEN non-authoritative as a runtime fingerprint: the UNEVALUATED template source hashes `c75a2da8…` (= the stamp); the EVALUATED string hashes `3edc1167…`. Template literals evaluate eagerly, so a real emitter can only hash the evaluated form ⇒ the stamp can only be a static source-text hash. `[CORROBORATED, NOT PROVEN]` on producer identity still stands.**
+★★★★★ **GATE B: `BLOCKED` until the second grade lands. Its design is FIXED: three-way contract `decision_condition | execution_context | annotation`, **DETERMINISTIC NOT PROMPT-ONLY** (a prompt edit is a request, not a fix). Instrument/chart-timeframe → RETAINED METADATA (it genuinely configures the run) · genuine market-session predicates stay EXECUTABLE · empty-spine refusal UNTOUCHED.** ★★ **R-466 §2's pre-registered trap governs: conditions-per-strategy WILL DROP and that is the fix working; a HIGHER count is FAILURE; every pre-registered genuine market-state condition must SURVIVE. FIDELITY OUTRANKS COUNT.**
+
+## ★★★★★ THE JOIN-KEY CONTRACT — THREE-WAY, AND MY BLANKET RULES ARE BOTH WITHDRAWN
+- collapsed per-video **classified** artifact → canonical spec: **`(video, condition_id)`** — [MEASURED] `455` distinct, max mult `1`
+- raw 120-row **census** → persisted refusal: **`(strategy_id, condition_id)`** — [MEASURED] `1368` distinct, max mult `1`
+- **`condition_id` ALONE: INADMISSIBLE** — [MEASURED] collapses `455 → 359`, merges `96` rows, max multiplicity `28`
+- **`(video, condition_id)` on the CENSUS payload: INADMISSIBLE** — [MEASURED] `{3: 456}`, fuses the `_mcl_/_mes_/_mnq_` triple, and `1368/3 = 456` is the expected number so the table BALANCES while merging three copies
+★★★★★ **`A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY.` R-467 permitted `(video, condition_id)` universally (too loose); R-468/469 forbade it universally (too strict — it is the RIGHT key for classified→spec). Both wrong the same way. **NEVER NAME A JOIN KEY WITHOUT THE ARTIFACT IT IS ADMISSIBLE ON.**
+
+## ★★★★★ THE FALSE-POSITIVE LANE (operator-ordered: *"fix false positive problem too"*) — 1 OF 3 CLOSED
+**`docs/replay-results/h1-battery/absence_claim_control.py`** — **MAY NOT LICENSE ANY ABSENCE CLAIM YET.**
+- **(i) CLOSED** — any `await import`/`require` counted for any requested capability. Invented name → was `14/130 matched`, `CONTROL HIT`, exit `0`; now exits `2`.
+- **(ii) OPEN** — computed member access `fs[("write"+"File"+"Sync")]`: [MEASURED HERE vs the REPAIRED guard] control HIT, real capability MISSED, **exit 0**, "absence ADMISSIBLE".
+- **(iii) OPEN, AND IT IS THE ROOT** — `CAPABILITY_FORMS` still leads with `r"\b{name}\b"`, bare textual occurrence. [MEASURED HERE] the guard's OWN Python source as the control for `writeFileSync` — a file that cannot import a Node `fs` API in principle, mentioning the name only in a docstring and its own fixture list — returns `CONTROL HIT (4 matches)`, exit `0`. **THE POSITIVE-CONTROL MECHANISM IS SATISFIABLE BY A COMMENT.**
+★★★★★ **(i) AND (ii) PULL IN OPPOSITE DIRECTIONS: binding patterns to the requested literal name is the correct fix for (i) and is exactly what makes (ii) undetectable. A literal-text search CANNOT decide capability absence. This needs syntax-awareness or a narrowed CLAIM ("absence of the literal form over this surface"), not more regexes.**
+★★★ **`A GUARD INHERITS EVERY WEAKNESS OF THE METHOD IT AUTOMATES` — we automated the grep that caused the problem and made it authoritative. Before shipping a guard, ask what its POSITIVE CONTROL can be satisfied by.**
+
+## ★★★★★ THIS SEAT'S OWN ERROR CENSUS — SIX, PUBLISHED SO THE PATTERN IS COUNTABLE
+1. R-467 §2 licensed the 3-way-degenerate census key. 2. R-467 §2's occurrence-ordinal defeater INERT (`{0: 455}`, never increments). 3. **Corroborated AR-461's write-surface grep on AR-461's wrong file and told the operator it confirmed** — corroboration by re-running someone else's query is NOT independence; it gave a false finding two witnesses. 4. `evidence present: 232/232` was a NULL CHECK read as content (true count: byte-exact `0/232`). 5. **Grepped `WAIT_SESSION` on the census-lane copy and published a false refutation of the campaign's leading hypothesis — inside the ruling that convicted AR-461 for that same error, one paragraph after minting the law against it.** 6. Over-corrected #1 into a blanket prohibition that forbade the correct key.
+★★★★★ **FOUR OF SIX ARE ONE SPECIES: I MEASURED PRESENCE, OR MEASURED A NEIGHBOUR, AND PUBLISHED MEANING.** ★★★★★ **`A LAW IS NOT IN FORCE FOR ITS AUTHOR UNTIL AN INSTRUMENT ENFORCES IT` — discipline did not survive one document.** ★★★ **`A SHELL SITTING IN THE WRONG TREE IS A STANDING FALSE-MEASUREMENT GENERATOR` — NAME THE TREE IN THE COMMAND, not in the plan.** ★★★ **`AN ANNOUNCED INTENT IS NOT AN ACTION` — I told the operator I was dispatching a grader and had not; only checking kept a phantom out of the ledger.**
+
+## ★★★ TREES AND ARTIFACTS — NAME THESE IN EVERY COMMAND
+- campaign relay tree: `C:/Users/tonio/Projects/wt-h1-wave4-20260712` (branch `h1-wave4-sealed12-driver`)
+- **`trading-forge/tf-deep-scan` IS ITS OWN GIT REPO** — holds `corpus/specs/` (40 specs, 2,351 conditions) and the producer at `dc8a150`. **`git grep` from the campaign tree CANNOT see it. This caused two false negatives tonight.**
+- census artifacts, OUTSIDE every git tree: `trading-forge/backups/h1-census/unknown-dbtime-ad4335f0/` (`pop120_classified.json` sha256 `eed65514a1…`, `pop120_census.json`)
+- preserved transcripts: `trading-forge/backups/h1-shadow-eval/transcripts-78fe8ea7/transcripts/` — 40 files, `913,668` B
+- census lane `C:/Users/tonio/Projects/wt-preflight-blockers-20260729` @ `83efd34e` · production `trading-forge/runtime-production` @ `9af37b8f`
+- ★★★ **50 copies of `atomize-transcript.ts` exist at 4 on-disk sizes (`16,565`×17 · `16,785`×31 · `22,903`×1 · `26,423`×1). The PRODUCER version is a GIT BLOB (`21,518` B) on NO disk — reachable only through `tf-deep-scan`'s history.**
+- ★★★★★ **THE CAMPAIGN TREE'S OWN `.env` `DATABASE_URL` IS DEAD (`switchback…:36475`, connection refused). The live library is ONLY at `runtime-production/.env` (`sakura…:34357`). A DB check run from the campaign tree fails in a way that reads like a result — a FOURTH surface of "a search that cannot succeed reports failure".**
+
+## ★★ COMPACTION STILL OWED (advisor's own job)
+**[MEASURED] this file is `1,114` lines.** Everything above is current and self-sufficient. Below: superseded seat notes (`:412`–`:846`) which are CUTTABLE, and the CANONICAL CONTRACT BLOCKS which are **NOT**: `THE PLAN` ladder `:847` · `QUEUE` `:885` · `FIDELITY LEDGER` `:902` · `POPULATIONS` `:926` · `NOT AUTHORIZED` `:937` · `STATE w/ GRADES` `:948` · `KNOWN-BENIGN` `:979` · `SEAT'S CONVICTED ERROR` `:1025` · `SEAT MECHANICS` `:1050` · `OPERATOR-FACING` `:1102`. ★★★ **I did NOT compact because I have not READ :847–:1114 this session, and this campaign lost three of BLUEPRINT v3's five upgrades to exactly that. `CUT NARRATIVE, NEVER CONTRACTS` — and you cannot classify what you have not read.** ★★ Line numbers decay on every edit: re-derive with `grep -n "^## "`.
+
+## SUPERSEDED — SEAT BLOCK AS WRITTEN AT R-467
 **Ledger at `R-467`** (commit `9fd4fd28`). **Newest AR: `AR-460` — UNRULED.**
 **Worker: ACTIVE** — AR-459's seat, Gate A, under R-467's revised contract.
 ★★★★★ **WHY AR-460 IS UNRULED, AND IT IS NOT A STALL: the operator's standing
