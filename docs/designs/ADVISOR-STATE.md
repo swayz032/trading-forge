@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2072` at THIS commit, 2026-07-30 04:15 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2100` at THIS commit, 2026-07-30 04:25 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2072` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2100` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -81,6 +81,34 @@ grep `ADVISOR-RULINGS.md` for its finding; if the ledger carries it, the block i
 if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
+
+## ⚠️★★★★★ **R-493 IS OWED AND HELD** — `AR-502` + `AR-503` UNRULED, WAITING ON THE OPERATOR'S PASTE (`THE PASTE IS THE GATE`)
+
+★★★ **[MEASURED HERE] THE HOLD IS HARMLESS THIS ROUND — CHECKED, NOT ASSUMED: R-492 §5 already
+authorizes steps C, D, E, so the worker has queued work and is not waiting on R-493.**
+**FIRST WAKE CHECK: `AR-503` is the newest AR and it is UNRULED.**
+
+### ★★★★★ [FACT, MEASURED HERE — **NOT RULED**] STEPS A AND B ARE REAL. THE GATE NOW MEASURES ITS OWN PROVENANCE.
+
+**Verified at this desk, parity @ `48199995`, tree clean — I ran it, I did not take the report:**
+- **`createHash` at `:46`/`:561`** — it genuinely computes over the bytes. The provenance line now reads
+  *"**16314 bytes read**, sha256=`3494d4bb…` (**COMPUTED here, VERIFIED equal to ORACLE.json's pin**)"*
+  where one hour ago it transcribed a field. ★★★ **A MEASUREMENT WHERE THERE WAS A TRANSCRIPTION.**
+- **The authority IS committed into the parity branch** at the path `authority_file` already named —
+  **so no second pointer was minted**, which was the worker's own declared reason (AR-502 §2).
+- ★★★★★ **THE COMMITTED COPY IS BYTE-IDENTICAL TO THE CAMPAIGN ORIGINAL (both `3494d4bb…`), so
+  R-492 §2's drift residual is CURRENTLY CLOSED BY IDENTITY — but only currently. The desk's binding
+  rule (amend both in the same motion) is still what keeps it closed.**
+- **`ORACLE.json` repointed to `3494d4bb…`** ✓ · gate **`EXIT 0`**, 12 specs / 12 declared members,
+  **14** cells `[NOT ADJUDICATED]`.
+- ★★★★★ **STEP B IS BOUNDED CORRECTLY — the §5 STOP CONDITION DID NOT TRIP: the three over-refusal
+  probe rows carry exactly `bindable` + `reason_null` (§4d's two cells) plus `authority` and an
+  explicit `unadjudicated` list. NOT ONE FIELD WIDER.**
+- ★★ **The gate now states outright that invalidation rows are `not even addressable` — the
+  `INEXPRESSIBLE IS NOT UNADJUDICATED` distinction is printed on every run, not just ruled.**
+
+★★★ **NO DISPOSITION RECORDED. Acceptance of AR-502/AR-503, and any credit for the detector-before-data
+sequencing or the four-way red-proof, is R-493's work and it waits for the paste.**
 
 ## ★★★★★ SEAT — CURRENT AS OF **R-492 / AR-501** (2026-07-30 04:15). **THE HELD DEBT IS PAID.**
 
@@ -380,7 +408,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2072` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2100` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
