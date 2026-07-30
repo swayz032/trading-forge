@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2448` at THIS commit, 2026-07-30 14:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2498` at THIS commit, 2026-07-30 14:16 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -106,6 +106,56 @@ FORWARD; RE-DERIVE IT` was the right instruction and it earned its keep on its f
 AR-512, and `F` (the grade) was mis-recorded as unownable. `A WORKER THAT HAS GONE QUIET IS USUALLY A
 DESK THAT CLOSED ONE TASK AND OPENED NONE`, and this time the desk ALSO told it the last door was
 locked when it was not.**
+
+### ★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **`F` HAPPENED AT 14:10 WHILE THE DESK WAS COLD. THE GRADE RAN, RETURNED `SOUND` ON BOTH ATTACKS, AND FOUND TWO MORE DEFECTS.**
+★★★★★ **THE WORKER RESUMED AT `14:10:55` (watchdog `bqjjrt771`, 454 min quiet) AND THE CHANNEL THAT
+MOVED WAS THE **PARITY HEAD**, NOT THE AR FILE — v5's third channel earned its keep on its first
+real event. v4 would have been blind to this exactly as it was at 05:40.**
+| measured | value |
+|---|---|
+| grade workspace | `.audit-ledger-e-r496-39948d3c/` — a **NON-GIT COPY** of the graded tree, file mtimes `06:32` = `39948d3c`'s commit time. **THE RIGHT OBJECT, and un-mutatable by the grader** |
+| findings repaired on | `bbd63ac8` on **`hardening/ledger-e-parity-20260730`** (WIP), `14:10:52`, `+35/−2`, one file |
+| new delivery object | ★★★★★ **`8187b730`** on **`hardening/ledger-e-delivery-r496b-20260730`**, `14:12:35` — **parent `9af37b8f` EXACT · `rev-list --count` = `1` · dirty `0`.** The R-494-adopted shape, executed correctly |
+| does the fix reach the delivery? | ★★★★★ **VERIFIED BY OPPOSITION, NOT BY ASSERTION: `ORACLE REFERENCE UNRESOLVABLE` = `1` in `8187b730`, **`0` in the graded `39948d3c`**. The repair is in the new object and provably absent from the old one** |
+★★★★★ **I READ BOTH REMEDIES IN THE DIFF AND THEY ARE THE RIGHT SHAPE, NOT JUST GREEN. FINDING 4 IS
+THE REAL ONE: `if (a === undefined || b === undefined) continue; // membership already reported it`
+— the comment was FALSE (membership is FIXTURE-FILE granular and says nothing about a
+`condition_id`), so a typo'd or renamed id silently disarmed the file's self-described sharpest
+assertion and the gate exited `0`. It is now a NAMED failure in both lanes. **THE FALSE COMMENT IS
+DELETED, NOT REWORDED, WITH THE ORIGINAL LINE PRESERVED VERBATIM ABOVE IT.** `A CHECK THAT CANNOT RUN
+IS NOT A CHECK THAT PASSED` — and it is the SAME species as the membership hole this whole delivery
+exists to close: **a check satisfied by ABSENCE rather than by verification.** EIGHTH
+caption-falsifies-its-own-line.** ★★ **Finding 3 is a real but lesser defect: the `MEMBERSHIP:`
+bucket is fed by FIVE checks, so a schema leak printed `MEMBERSHIP: 12` and aimed a triager at the
+wrong subsystem. Never a false PASS — the count was right and the NOUN was wrong. Relabelled to name
+all five.**
+
+### ⚠️★★★★★ FOUR THINGS ARE OWED ON THIS, AND THE NEXT SEAT MUST NOT READ THE ABOVE AS RATIFICATION
+1. ★★★★★ **`8187b730` IS ITSELF UNGRADED.** `TWO NAMED ATTACKS CLOSED IS NOT SOUNDNESS` was the
+   R-496 lesson; it is now FOUR findings closed and **the same sentence still applies.** A repair
+   produced in answer to a grade inherits none of that grade's authority.
+2. ⚠️★★★★★ **THE GRADE RAN ON A MODEL WEAKER THAN THE ONE THE OPERATOR ORDERED, AND THE TIMESTAMPS
+   PROVE IT: `/Projects/trading-forge/.claude/agents/accuracy-validator.md` was set to `model: opus`
+   at **`14:11:10`** — **18 SECONDS AFTER** the `14:10:52` commit. **THE PIN DOES NOT COVER THIS
+   GRADE.** The worker disclosed this against itself in the commit body, which is the only reason it
+   is visible. `A CAVEAT THE BUILDER VOLUNTEERS IS WORTH MORE THAN A GREEN IT ASSERTS.`
+3. ⚠️★★★★★ **NO GRADE REPORT EXISTS AS AN ARTIFACT [MEASURED HERE — searched every `.md`/`.json`/
+   `.txt` written `13:50–14:16` under both trees; the ONLY hit was the agent definition itself].**
+   The findings survive in CODE and in a commit message; **the grade document exists only in a
+   session transcript.** ★★★ **SO THE GRADE IS `[RELAYED]` AT THIS DESK, NOT `[ARTIFACT-SOURCED]` —
+   `AN INSTRUMENT THAT EXISTS ONLY IN A TRANSCRIPT IS A RUMOUR.` Its findings ARE independently
+   corroborated by my own read of the diff; its VERDICT (`SOUND` on the two attacks) is NOT.**
+4. ⚠️★★★ **NO AR YET** (`AGENT-REPORTS.md` still `06:36`; newest is `AR-512`). `AN AR SHIPS IN THE
+   WORK COMMIT` is convicted 3× — but the worker is MID-FLIGHT (three commits in 100 seconds), so
+   this is NOTED, NOT CHARGED. Re-check before treating it as a violation.
+★★★ **AND A SECOND SHELL-FORM DEFECT IN THE SAME HOUR, AT THE OTHER DESK: `bbd63ac8`'s message has
+HOLES where every backtick-quoted literal should be — *"planted  in a scratch corpus"*, *"pins ,
+so"*, *"labelled its third bucket "*. Backticks inside a double-quoted shell string were
+COMMAND-SUBSTITUTED TO EMPTY. **The values are intact in the CODE, so nothing is lost — but the
+commit message is not a usable record of the red-proof.** Mine broke the same way (a PowerShell
+here-string in the Bash tool put a bare `@` on the subject line of `6fe2389c`). **NEITHER WAS
+AMENDED: `DO NOT TAKE A REAL RISK TO REMOVE AN APPEARANCE` on a shared tree.** `THE INSTRUMENT LIED
+WHILE THE CONTENT WAS FINE` — twice, in one hour, at two desks.**
 
 ★★★★★ **THE PASTE ARRIVED AND R-496 LANDED. `AR-509` + `AR-510` BOTH RULED — the debt held on the
 operator's direct `WAIT ON GPT` order (verbatim: *"REMEMVER WAIT ON GPT REPSONE BEFORE RULING"*) is
