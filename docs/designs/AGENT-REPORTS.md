@@ -4,6 +4,96 @@
 
 ---
 
+## AR-469 · 2026-07-29 · ★★★★★ **ALL `17` FIXTURES NOW AT THEIR PRE-REGISTERED CODES, EXIT `0` — INCLUDING BOTH OF YOUR OPEN DEFECTS, BOTH COMPOSED PAIRS, THE UNUSED IMPORT, THE `(fs as any)[m]` CAST, THE TEMPLATE CALL AND `node:fs` NORMALISATION.** ★★★★★ **BUT THE FIRST RUN WAS `16/17` AND I AM LEADING WITH THAT, NOT WITH THE GREEN: `genuine_dynamic` PRE-REGISTERED `0` AND RETURNED `2`. YOUR STOP CONDITION FIRED, AND IT CAUGHT A REAL BUG IN MY ANALYSER — NOT A BAD PREDICTION. I FIXED THE INSTRUMENT AND LEFT THE PREDICTION ALONE.** ★★★ **AND THE BUG IS THE BEST ARGUMENT FOR YOUR OWN COMPOSED-FIXTURE LAW THAT I COULD HAVE PRODUCED BY ACCIDENT.**
+
+**RULING ID:** R-471 §4/§5 · **TASK ID:** AR-468 · **PRIOR:** AR-467 (DENIED) · **COMMIT AT WRITE `d27e7a79` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED. Fresh grade fires on THIS commit.**
+
+### ★★★★★ §1 — THE DEVIATION, ITS CAUSE, AND WHY IT MATTERS MORE THAN THE PASS
+
+**First run: `16/17`. `genuine_dynamic.ts` — a plainly correct `const { writeFileSync } = await import("fs"); writeFileSync(p, data);` — returned `2 NOT ENGAGED`, verdict *"NO binding of 'fs' exists in executable code"*. That verdict was FALSE and the binding is right there.**
+★★★★★ **CAUSE, MEASURED BY DUMPING BOTH DERIVED TEXTS RATHER THAN GUESSING: my clause capture was `\{([^}]*)\}` — it excludes `}` but PERMITS `{`. Starting at the FUNCTION-BODY brace, the capture swallowed `\n  const { writeFileSync ` as the "import clause", matched `\}\s*=\s*await\s+import\("fs"\)` successfully, and `_clause_local` then found no symbol in that garbage. `re.finditer` returns NON-OVERLAPPING matches left-to-right, so having consumed that span it NEVER TRIED the real inner `{ writeFileSync }`. Fix: `[^{}]*` in both clause patterns.**
+★★★★★ **AND HERE IS THE PART THAT SHOULD DISTURB US BOTH: THE REAL PRODUCER PASSED THE WHOLE TIME. It passed because its first candidate span (`{` of the `if (…--emit-spec…)` block, capturing `const { createHash }`) FAILED the module check on `"crypto"`, which let the engine retry from a later position and find the true `{ writeFileSync }`. **THE SAME BUG IS INVISIBLE OR FATAL DEPENDING ON WHETHER AN UNRELATED IMPORT HAPPENS TO SIT NEARBY.** A regression test on the real file alone would have certified this build. That is your `ISOLATED FIXTURES DO NOT ESTABLISH CLOSURE` law arriving from a direction neither of us aimed at.**
+★★★ **WHAT I DID NOT DO: I did not touch the pre-registration. The prediction `0` was correct; the instrument was wrong. Adjusting the expected code to match a deviating run is the goalpost move this campaign convicts, and the whole point of writing the table in AR-468 before running was to make that impossible for me.**
+
+### ★★★★★ §2 — THE MATRIX, RE-RUN, ALL AT THE CODES PUBLISHED IN AR-468
+
+| # | fixture | PRE-REG | got |
+|---|---|--:|--:|
+| 1–4 | comment-only · string-only · same-named local · unrelated dynamic | `2` | **`2`** ✓ |
+| 5 | bare computed `fs[m]` | `8` | **`8`** ✓ |
+| 6 | ★★★★★ **COMPOSED-1: commented-out import + same-named local + call** (your case, v3 gave `0`) | `2` | **`2`** ✓ |
+| 7 | ★★★★★ **COMPOSED-2: block-comment import + string-literal usage** | `2` | **`2`** ✓ |
+| 8 | **UNUSED import** (v3 gave `0`) | `2` | **`2`** ✓ |
+| 9 | **`(fs as any)[computed]`** (v3: invisible) | `8` | **`8`** ✓ |
+| 10 | **template-interpolated executable call** (v3: false absence) | `0` | **`0`** ✓ |
+| 11 | aliased AND used | `0` | **`0`** ✓ |
+| 12 | **`node:fs` queried as `--module fs`** | `0` | **`0`** ✓ |
+| 13–14 | genuine static · genuine dynamic | `0` | **`0`** ✓ |
+| 15 | wrong surface | `3` | **`3`** ✓ |
+| 16 | unsupported language (`.py`) | `8` | **`8`** ✓ |
+| 17 | **REGRESSION: real producer** | `0` | **`0`** ✓ |
+
+★★★ **`17/17`, exit `0`, discriminating across FOUR outcomes: `6` engaged · `7` not-engaged · `1` wrong-surface · `3` fail-closed. `--self-test` runs in ~0.4s; the producer query over `47` repos / `50` files in ~2.6s; `MAX_FILES=20_000` refuses at exit `4`.**
+
+### ★★★★★ §3 — WHAT CHANGED STRUCTURALLY, AND THE CAPTION I WITHDREW
+
+**ONE pass produces TWO length-preserving views: `no_comments` (comments blanked, STRINGS KEPT — **bindings are resolved ONLY here**, so a commented-out import creates nothing) and `code` (comments AND string content blanked, **but template `${…}` EXPRESSIONS PRESERVED**, which kills your relayed false-absence).** Bindings resolve to LOCAL names including aliases · **the declaration's own span is BLANKED before the usage search**, so an unused import can no longer match itself · a local `function`/`const`/`let`/`var`/`class` shadowing an imported name ⇒ `8` rather than a guess · computed access including `(ns as any)[…]` ⇒ `8` · `norm_module` is now used in the MATCHING regex, not just the printout.
+★★★★★ **AND `syntax-aware` IS GONE FROM THE DOCSTRING. The tool is described as what it is: a CONSERVATIVE BINDING ANALYSIS THAT FAILS CLOSED. It is regex-backed, not a parser, and it says so — `A CAPTION IS A CLAIM`, and that one was the headline.**
+
+### ★★★ §4 — §3's THIRD CARRIER, CLOSED
+
+**`c8_provenance_ledger.py`'s header carried BOTH the wrong `condition_id`-alone contract AND your withdrawn "display label only" rule.** It now carries all four required lines — classified→spec `(video, condition_id)` · census→refusal `(strategy_id, condition_id)` · `condition_id` alone INADMISSIBLE (`359` distinct, `32` duplicated, max `28`, **`96` merged**) · `(video, condition_id)` INADMISSIBLE on the three-copy payload — under the law `A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY`, plus the note that this header was the third carrier and the general rule: **WHEN A RULE IS WITHDRAWN, ENUMERATE EVERY CARRIER.**
+★★ **Re-verified after the header edit rather than assumed: ledger control exit `0` (buckets reconcile), `--break-reconcile` exit `6`.**
+
+### §5 — DISPOSITION
+
+**POSITION:** `d27e7a79` + this commit · branch `h1-wave4-sealed12-driver`. **NOTHING HALF-DONE. NO SUB-AGENT DISPATCHED OR OWED BY ME — none this entire session.**
+★★★ **NO GRADE CLAIMED. `a5a70a93c66262a61` ran pre-repair and certifies neither the rebuild nor this repair; nothing has been dispatched against `d27e7a79` or this commit. The fresh dispatch is yours.**
+★★ **AND I AM NOT CALLING THE CLASS CLOSED THIS TIME. What I can say: the three defects you measured, the two you relayed, and one I found myself are each covered by a fixture at a pre-registered code. What I cannot say is that no seventh composition exists — a suite of seventeen proves seventeen. The tool now fails CLOSED on anything it cannot decide, which is the only property that makes the unknown remainder safe rather than silent.**
+**Remaining uncertainty:** ★ unknown further compositions — bounded only by fail-closed behaviour, not eliminated · ★ DB↔census refusal/classification freshness `[UNMEASURED]` · ★ span SEMANTIC correctness `[UNPROVEN]` · ★ `dc8a150` authority `[CORROBORATED, NOT PROVEN]` · ★ whether `0b0d6617` moves C8 `[UNMEASURED]` · ★ population overlap map `[UNENUMERATED]`.
+**Risk:** low — read-only; no model run, no DB access, no frozen byte altered, nothing outside your allowed file list.
+**Next smallest task — ONE:** your fresh `accuracy-validator` against this commit. **Gate B stays BLOCKED; deterministic at the admission contract.**
+
+---
+
+## AR-468 · 2026-07-29 · **START-RECEIPT — R-471 §4/§5. ★★★★★ AND I CAN NAME MY OWN BUG FROM YOUR HEADLINE ALONE, BECAUSE I WROTE A CODE COMMENT ADMITTING IT: `:151` MATCHES MODULE SPECIFIERS AGAINST **RAW** TEXT "so module specifiers are matched on the RAW text" — I NOTICED THE TWO-TEXT PROBLEM, WROTE IT DOWN AS A NOTE, AND SHIPPED IT AS A DESIGN.**
+
+**RULING ID:** R-471 §4/§5 · **TASK ID:** AR-468 · **STATUS:** START-RECEIPT · **PRIOR:** AR-467 (approval DENIED) · **COMMIT AT START `d27e7a79`.**
+
+★★★★★ **THE DEFECT IN ONE SENTENCE, AND IT IS EXACTLY YOUR §1: MODULE PROVENANCE IS COMPUTED OVER `raw` AND EXECUTABLE USE OVER `code`, SO THE GUARD `AND`s TWO FACTS THAT WERE NEVER ABOUT THE SAME BINDING. A comment supplies the import; an unrelated local supplies the usage; the verdict string then asserts an import that does not exist.**
+★★★★★ **AND `PROVING PRESENCE IS NOT PROVING USE` LANDS SQUARELY: my reference check searched `code` for the symbol while the IMPORT DECLARATION IS ITSELF IN `code` — so an unused import matched its own declaration. Any "is X used" check must exclude the site that DECLARES X, and mine did not.**
+★★★ **`syntax-aware` IS WITHDRAWN FROM THE DOCSTRING RATHER THAN DEFENDED. What the tool does is a CONSERVATIVE BINDING ANALYSIS that fails closed; calling it syntax-aware was a caption claiming a property it did not have, and the caption was its headline.**
+★★ **I ACCEPT YOUR §2 CORRECTION AS ALSO MINE: fixture 9 used a `.py` control, so it exited on the UNSUPPORTED-LANGUAGE branch and never reached the comment logic. I wrote that fixture and read its PASS as closing the comment defect on the parsed path. `A CONTROL MUST REPRODUCE THE SHAPE OF THE REAL INPUT` — a `.ts` control was required and I did not use one.**
+
+### ★★★★★ PRE-REGISTERED EXIT CODES — WRITTEN BEFORE ANY RUN (R-471 §5: "a code chosen after the fact is not a prediction")
+
+| # | fixture | PRE-REG |
+|---|---|--:|
+| 1 | comment-only mention | `2` |
+| 2 | string-literal-only mention | `2` |
+| 3 | same-named LOCAL function, no import | `2` |
+| 4 | unrelated dynamic import | `2` |
+| 5 | bare computed access `fs[m]` | `8` |
+| 6 | ★★★★★ **COMPOSED-1: commented-out `fs` import + same-named local function + call** (your case) | `2` |
+| 7 | ★★★★★ **COMPOSED-2: block-comment import + string-literal "usage"** — comment provenance paired with string usage | `2` |
+| 8 | **UNUSED IMPORT** — imported, never referenced | `2` |
+| 9 | **`(fs as any)[computed]`** — idiomatic TS cast | `8` |
+| 10 | **template-interpolated executable call** `` `${fs.writeFileSync("x","y")}` `` | `0` |
+| 11 | **aliased AND USED** `import { writeFileSync as wfs }` + `wfs(...)` | `0` |
+| 12 | **`node:fs` specifier queried as `--module fs`** | `0` |
+| 13 | genuine static named import | `0` |
+| 14 | genuine dynamic destructured import | `0` |
+| 15 | wrong surface | `3` |
+| 16 | unsupported language (`.py` control) | `8` |
+| 17 | **REGRESSION: the real producer** | `0` |
+
+**REPAIR SHAPE:** ONE text for provenance (comments stripped, strings KEPT) and ONE for use (comments AND string literals stripped, **but `${…}` template EXPRESSIONS PRESERVED** — your relayed false-absence case) · bindings resolved to LOCAL NAMES INCLUDING ALIASES · the import declaration's own span BLANKED before the usage search · same-named local declaration alongside a real import ⇒ shadow ⇒ `8`, not a guess · `fs` ≡ `node:fs` normalised for MATCHING not display · anything unparseable ⇒ `8`.
+**AND §3, THE THIRD CARRIER I MISSED:** `c8_provenance_ledger.py`'s header still documents `condition_id` alone AND still carries your withdrawn "display label only" rule. ★★★ **You named the ledger document and I corrected exactly what you named. All four key lines go into the instrument header too — and the general fix is: WHEN A RULE IS WITHDRAWN, ENUMERATE EVERY CARRIER.**
+★★ **NOTED: no grade exists against `d27e7a79`; `a5a70a93c66262a61` ran pre-repair and certifies neither. I claim no grade.**
+**FIRST OBSERVABLE:** this receipt. **NEXT:** all 17 at their pre-registered codes, ~40 min. **STOP:** any fixture deviating from the table above.
+
+---
+
 ## AR-467 · 2026-07-29 · ★★★★★ **GUARD REBUILT, NOT PATCHED. ALL `9` PERMANENT FIXTURES PASS AND THEY DISCRIMINATE ACROSS FOUR OUTCOMES. BOTH OPEN FALSE-GREENS ARE CLOSED BY MEASUREMENT: YOUR OWN `.py`-AS-CONTROL CASE NOW EXITS `8` WHERE IT EXITED `0` WITH `CONTROL HIT (4 matches)`, AND `fs[("write"+"File"+"Sync")]` EXITS `8` INSTEAD OF `0`.** ★★★★★ **AND THE REGRESSION THAT MATTERED: THE REAL PRODUCER STILL PASSES — `CONTROL ENGAGED · 'writeFileSync' destructured from 'fs' · exit 0 · 2.6s`. A guard that fails everything is not a repair.** ★★★★★ **YOUR §3 FIGURES RE-DERIVED, NOT TRANSCRIBED: `455 → 359` DISTINCT · `32` DUPLICATED · MAX MULTIPLICITY `28` · **`96` ROWS SILENTLY MERGED**. EVERY NUMBER MATCHES.**
 
 **RULING ID:** R-470 §2/§3 · **TASK ID:** AR-466 · **PRIOR:** AR-465 (rejected) · **COMMIT AT WRITE `4449764e` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED. This is the commit your deferred second `accuracy-validator` dispatch should fire against.**

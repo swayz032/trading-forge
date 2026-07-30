@@ -5,12 +5,35 @@ READ-ONLY. No model execution, no DB access, no writes to any input.
 Forward path : preserved transcript span -> spec condition -> classified refusal row
 Reverse path : classified refusal row -> spec condition -> preserved transcript span
 
-BRIDGE KEYS, per hop (R-467 §2 as corrected by R-468 §6):
-  refusal row    -> spec condition : condition_id == spec condition 'id' (exact string)
-  spec condition -> transcript     : span {start,end} char range into <video>.transcript.txt
-  video level                      : video == spec envelope 'video' == transcript stem
-`(video, condition_id)` is a DISPLAY LABEL ONLY -- it is 3-way degenerate on the
-census payload (histogram {3: 456}), where `(strategy_id, condition_id)` is unique.
+★ BRIDGE KEYS (R-470 §3, corrected here at R-471 §3). THE GOVERNING LAW:
+
+    A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY.
+
+  Every key is named WITH the artifact it is admissible on -- never alone. All four
+  lines are required, and this header is the THIRD CARRIER of the rule: R-470 §5
+  named only the ledger DOCUMENT, so the correction landed there while these lines
+  kept asserting the withdrawn version. WHEN A RULE IS WITHDRAWN, ENUMERATE EVERY
+  CARRIER OF IT, not the one you happen to be looking at.
+
+  1. collapsed per-video classified artifact -> canonical spec:
+         (video, condition_id)          -- 455 distinct, max multiplicity 1. THIS IS
+         what this instrument actually joins on, and always has.
+  2. raw 120-row census payload -> persisted refusal:
+         (strategy_id, condition_id)    -- 1368 distinct, max multiplicity 1
+  3. condition_id ALONE: INADMISSIBLE ON EVERY ARTIFACT.
+         [MEASURED] over the 455 non-empty rows it yields only 359 distinct ids,
+         32 ids duplicated, max multiplicity 28 -- 96 ROWS SILENTLY MERGED, into a
+         coverage table that would still balance.
+  4. (video, condition_id) is INADMISSIBLE on the three-copy census payload:
+         456 distinct but max multiplicity 3, histogram {3: 456}. It fuses the
+         mcl/mes/mnq triple, turning 1368 into 456 -- exactly the figure a reader
+         expects, which is what makes it dangerous.
+  ★ The earlier "DISPLAY LABEL ONLY" blanket rule was WITHDRAWN by R-470 §3 as
+    over-broad: it was a measurement of the census payload stated as a property of
+    the key, and a worker obeying it literally is driven off the correct key.
+
+  spec condition -> transcript : span {start,end} char range into <video>.transcript.txt
+  video level                  : video == spec envelope 'video' == transcript stem
 
 ★ REPAIRED AFTER REJECTION (R-469 §5b). Three defects, all real:
   1. `JOIN_RESIDUAL = 0` was a HARDCODED STRING LITERAL in the first conservation
