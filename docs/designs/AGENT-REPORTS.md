@@ -4,6 +4,53 @@
 
 ---
 
+## AR-509 · 2026-07-30 · **R-495 §5 START-RECEIPT — EVERY PRE-REGISTERED VALUE MEASURED AND PINNED.** ⚠️★★★★★ **MY AR-508 §2 CLAIM WAS WRONG AND R-495 §2 IS ACCEPTED IN FULL: I RAN A DIRECTORY-SCOPED SEARCH AND REPORTED A TREE-WIDE ABSENCE. THE PACKET EXISTS.** ★★★ **AND I AM HOLDING THE CAPACITY STOP I DECLARED IN AR-508 §3 — THE PREMISE IS UNBLOCKED, MY CONTEXT IS NOT.**
+
+**RULING ID:** R-495 §5A/§5B/§5C · **TASK ID:** AR-509 · **PRIOR:** AR-508 · **R-495 BLOCK PIN:** `9,447` B · sha256 **`03ee3012c6bed09461e8d915794e1240e34921d3e9aff71ce0e581cb3cac557f`** (heading → next divider). **PARITY:** `3dcc6739`, clean. **NO CODE OR PACKET CHANGED IN THIS ENTRY.**
+
+### ⚠️★★★★★ §1 — THE CORRECTION, MINE
+
+**I wrote: *"Nothing named for the parity prerequisite exists in either tree."* I searched `docs/ratify-packets/` only. The packet is at `docs/designs/`. [MEASURED HERE, tree-wide `git ls-files` this time] it is there, and it is exactly what R-495 §2 says it is.**
+★★★★★ **THE POSITIVE CONTROL IS WHAT MADE IT FEEL SAFE, AND THAT IS THE LESSON: proving `docs/ratify-packets/` readable and non-empty licensed NOTHING about `docs/designs/`. `A POSITIVE CONTROL ON THE WRONG SURFACE PROVES THE WRONG SURFACE` — and it is worse than no control, because it converts an unchecked assumption into a confident one.** ★★★ **The defect is not the narrow search; it is that I widened the CLAIM to "either tree" while the EVIDENCE stayed one directory wide. `I MEASURED THE NEIGHBOURING OBJECT`, sixth conviction of this shape, this time by me.**
+★★ **What survives, per R-495 §2, and I am not claiming it as a save: the packet is STALE, not absent. `EXISTS DOES NOT MEAN CURRENT`, the verb is `UPDATE`, and stopping rather than authoring one inside a delivery step was right for a reason that was only half the reason I gave.**
+
+### ★★★★★ §2 — THE PINNED VALUES, ALL `[MEASURED HERE]`
+
+| | value |
+|---|---|
+| packet canonical path | **`docs/designs/LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`** ★★ **in the CAMPAIGN tree — NOT in the parity worktree, which is the second reason my search missed it** |
+| packet size · lines · sha256 | **`29,238` B · `386` lines · `953c978105f74e3c830d74a84405e4d4bad06fb7d4196ab8e0636634cb20312d`** — **matches the desk's and the external read's independently derived value EXACTLY** |
+| staleness [MEASURED] | `P-7` **0** · `createHash` **0** · `3494d4bb` **0** · `materiality-control` **0** · `process.exit` **0** · **POSITIVE CONTROL `parity` = 23**, so the grep reaches and the absences are real |
+| pinned base | **`9af37b8f`** — confirmed ANCESTOR of the WIP branch |
+| WIP source | **`3dcc6739`** |
+| reviewed net delta | **`22 files changed, 2477 insertions(+), 81 deletions(-)`** |
+| **expected path set (22), sha256 of the sorted list** | **`9057df03531ff94cbb5f55a5ab3c6a2dc9ee6a662c5bf9ab3c2c4439c8e530e6`** |
+| planned delivery worktree · branch | `C:/Users/tonio/Projects/wt-ledger-e-delivery-20260730` · `hardening/ledger-e-delivery-20260730` **(planned, NOT created — nothing exists yet)** |
+
+**THE 22 PATHS:** `.github/workflows/ci.yml` · `.github/workflows/fast.yml` · `ci/fixtures/materiality-control/00-compiled-false-baseline.spec.json` · the 12 `spec-binding-parity-expanded/*.spec.json` + `ORACLE.json` + `README.md` · `docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md` · `docs/ratify-packets/ledger-e-materiality-receipt-2026-07-30.md` · `scripts/check-spec-binding-plan-parity.ts` · `scripts/materiality-receipt-ledger-e.ts` · `src/server/lib/spec-family-bindings.ts`.
+
+### ★★★★★ §3 — THE 22-vs-23 COUNTING TRAP, ARMED WITH ITS MEASUREMENT
+
+**[MEASURED HERE] the packet is present at pinned base `9af37b8f`: `0`. In WIP `3dcc6739`: `0`. POSITIVE CONTROL — `src/server/lib/spec-family-bindings.ts` at that base: `1`.**
+★★★★★ **SO THE DELIVERY IS NECESSARILY `23` PATHS, AND `23 ≠ 22` IS THE CORRECT RESULT, NOT A DEFECT.** ★★★ **The trap R-495 §3 names is exact: a mechanical total-count check fails here, and the tempting repair is to DROP THE PACKET so the number matches. `A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK.` **Verify the 22 WIP paths against `3dcc6739` SEPARATELY, then verify the packet BY HASH — two checks, never one total.**
+
+### ★★★ §4 — CAPACITY: THE STOP STANDS. THIS RECEIPT IS THE HANDOFF
+
+★★★★★ **R-495 removed the PREMISE blocker, not the capacity one, and those are different things. I declared the stop in AR-508 §3 while §5 was the highest-stakes artifact of the campaign; it still is, and I am now materially longer into this session than when I declared it. Restarting a three-part assembly here would be choosing the exact conditions the desk has convicted six times tonight.**
+★★ **R-495's own FIRST OBSERVABLE is a start-receipt, not a build — so this entry IS the deliverable it asked for, with every value pre-measured. A fresh seat opens §5A with nothing to re-derive: the packet path, its current hash, its five measured staleness gaps, the base, the WIP source, the 22-path set and its hash, and the counting trap already disarmed.**
+**NOT STARTED, IN ORDER:** **§5A** revise the canonical packet — *visible revision + a clearly DATED delivery addendum; `NEVER BACKDATE TODAY'S EVIDENCE INTO A DOCUMENT WRITTEN BEFORE THE IMPLEMENTATION`; commit that explicit path only, **no `git add -A`*** · **§5B** the pinned delivery worktree and single commit · **§5C** re-verify against the shipped tree, including **real `node_modules/typescript/bin/tsc`**, not `npx`.
+★★ **NOTHING IS IN FLIGHT: no worktree created, no branch created, no packet edit begun, no sub-agent dispatched or owed — verified by checking.**
+
+### §5 — POSITION · GRADE
+
+**Parity `3dcc6739`, tree clean. No `git push` (no upstream), no PR, no remote pipeline, no WIP history rewrite, no `git add -A`, no payload or lane-semantics change. `runtime-production` and `tf-deep-scan` untouched.**
+**LEDGER:** ✅ A · ✅ B · ✅ C · ✅ D · ✅ E · ❌ **§5A/§5B/§5C** · ⛔ **F.**
+★★★★★ **`F` NOT DISPATCHED AND NOT DUE — R-495 §4 fires it only after the delivery object exists AND §5C passes ON IT. Its brief is now FIVE independent re-plants plus a novel false-green hunt. THE BUILDER DOES NOT GRADE.**
+★★★ **AND THE SCOPE SENTENCE I AM CARRYING FORWARD BECAUSE R-495 §5 SAYS A TIRED SESSION WOULD DROP IT: this leaves P0 at its FINAL ASSEMBLY STEP. It does not complete the compiler, does not produce a trading-ready strategy, and P1–P3 and Gate B still follow. `A PREREQUISITE CLOSING IS NOT THE PHASE EXITING.`**
+**A FRESH WORKER SESSION IS NEEDED.**
+
+---
+
 ## AR-508 · 2026-07-30 · ★★★★★ **R-494 §4 CLOSED AT `3dcc6739` — THE MATERIALITY SIGNAL NOW HAS ALL THREE PARTS, AND E-2 EXITS `1`, NOT MERELY PRINTS. BOTH PRE-REGISTERED OUTCOMES HELD EXACTLY.** ⚠️★★★★★ **AND A DEFECT IN §5's PREMISE, MEASURED: THE "five-part ratify packet" IT SAYS TO *INCLUDE* DOES NOT EXIST. IT MUST BE AUTHORED, AND THAT IS NOT WHAT §5 DESCRIBES.** ★★★ **I AM STOPPING BEFORE §5 AND SAYING WHY.**
 
 **RULING ID:** R-494 §4 · **TASK ID:** AR-508 · **PRIOR:** AR-507 (my pre-registration, `52c5df92`) · **PARITY:** `wt-ledger-e-parity-20260730` @ **`3dcc6739`**, `git status --porcelain` **EMPTY**.
