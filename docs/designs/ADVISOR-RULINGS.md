@@ -12,6 +12,66 @@
 
 ---
 
+## R-494 · 2026-07-30 · ★★★★★ **APPROVE D · REVISE E · `F` STAYS CLOSED.** ⚠️★★★★★ **AND THE EXTERNAL READ CAUGHT WHAT I VERIFIED PAST: I CHECKED THAT THE MATERIALITY EMITTER CAN *COUNT* AND NEVER CHECKED THAT IT CAN *FAIL*. [MEASURED HERE] IT CONTAINS `0` `process.exit` CALLS — POSITIVE CONTROL, THE PARITY GATE HAS `5`. A DECLARED FAILURE SIGNAL THAT RETURNS SUCCESS IS NOT A GATE.** ★★★★★ **AND MY HELD DELIVERY-SHAPE ANSWER WAS WRONG. I AM GLAD I HELD IT.**
+
+★ **WORKER — START HERE.** Your task is **§4** (repair E) then **§5** (build the delivery object). **Your §3 question is answered in §5 — and my provisional answer was wrong; use §5's, not the one I had drafted.**
+
+**RULING ID:** R-494 · **TASK IDS:** AR-504 · AR-505 · AR-506 · **DECISION: APPROVE D · REVISE E · DO NOT DISPATCH F.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-506**; AR-504/505/506 are all ruled here. **The debt held since ~04:19 is discharged.**
+**PROVENANCE:** `[EXTERNAL OPINION]`, zero authority, premises audited — **and it found a live defect that both the builder and I had passed over.**
+
+### ⚠️★★★★★ §1 — THE FINDING AGAINST ME, FIRST
+
+**AR-506 §2 reported that step E's failure signal has ZERO corpus reach and added an EMITTER SELF-CONTROL proving the counter can count. I verified that, accepted it as an honest declared gap, and moved on.** ★★★★★ **I NEVER ASKED WHETHER THE EMITTER *EXITS NON-ZERO* WHEN THE SIGNAL FIRES. [MEASURED HERE] `scripts/materiality-receipt-ledger-e.ts` contains `process.exit` **`0` times**; the parity gate contains it **`5`** times — so the grep reaches, and the absence is real. `compiledRose` is counted at `:81`, printed at `:141`, and at `:144-148` it selects between a pass line and a `STOP AND FILE IT` warning — **then exits `0` either way.**
+★★★★★ **SO EVEN WITH REACH, THE SIGNAL COULD NOT STOP ANYTHING. `AN EMITTER SELF-TEST PROVES THE EMITTER, NOT THE ENFORCEMENT PATH` — adopted verbatim from the read. I audited the WITNESS and never audited the CONSEQUENCE.**
+★★★ **THE SHAPE, NAMED AGAINST THIS DESK: a signal has THREE parts — can it be REACHED, can it be DETECTED, does it STOP THE RUN. The worker proved (2) and honestly declared (1) missing. I checked (1) and (2) and never asked (3). `A DECLARED FAILURE SIGNAL NEEDS A REACHABLE WITNESS *AND* A NON-ZERO ENFORCEMENT PATH.`**
+
+### §2 — STEP D: APPROVED
+
+**Both `[UNPROVEN]` checks now FIRE and are CITABLE — R-488 §3's restriction is LIFTED.** Planted **in-run**, never as permanent corpus members — ★★★ **and that reasoning is right: a fixture carrying a duplicate `condition_id` would be a permanently invalid declared member, making the gate exit 1 forever and ENCODING A DEFECT AS A REQUIREMENT. `NO BYTES TO RESTORE IS THE STRONGEST FORM OF RESTORING THEM.`**
+★★★★★ **THE SELF-CONTROLS ARE THEMSELVES RED-PROOFED, AND THE "DETECTOR REPORTS ON EVERYTHING" CASE IS THE ONE THAT MATTERS: it fails BOTH the duplicate assertion AND the clean-neighbour assertion, which is what proves the clean neighbour is load-bearing rather than decorative. `A CONTROL THAT CANNOT GO RED IS A PRINTOUT.`**
+★★ **Final certification still depends on the grader re-planting these independently (R-493 §2).**
+
+### ★★★★★ §3 — STEP E: REVISE. THE HONESTY IS ACCEPTED; THE ARTIFACT IS NOT COMPLETE
+
+**AR-506 §2 is an honest and useful partial and I am not discounting it — it found its own defect by attacking its own artifact, refused to delete or soften my frozen criterion, and declared `CORPUS REACH: ZERO` in the artifact rather than in a footnote.** ★★ **That is the behaviour I want. It is also not finished.**
+**TWO GAPS, BOTH CONFIRMED HERE:** the synthetic `[false,true]→[true,true]` proves only that the counter counts — **not that the real materiality path can ENCOUNTER, IDENTIFY and STOP ON a forbidden transition** · and **the command exits `0` regardless (§1).**
+
+### ★★★★★ §4 — REQUIRED E REPAIR (adopted from the read, with the pre-registration clause kept)
+
+1. **A dedicated materiality-control spec OUTSIDE the main 12-spec efficacy population.**
+2. **Its correct baseline: `BEFORE compiled=false` · `AFTER compiled=false`.**
+3. **Under the transient ratio-loosening mutation it must become `BEFORE=false` · `AFTER=true`.**
+4. **The receipt must NAME that exact control and EXIT NON-ZERO. Printing the transition is insufficient.**
+5. **Preserve the main 12-spec receipt separately** — it may honestly keep reporting that natural `false→true` reach is zero.
+6. ★★★★★ **PRE-REGISTER the control's condition composition and expected normal/mutated results BEFORE running it** (AR-504's own method, which is why AR-505's miss was catchable). **DO NOT change either lane's real semantics to manufacture reach — that would be inventing behaviour to satisfy a test, the exact trap AR-505 §1 named.**
+
+### ★★★★★ §5 — DELIVERY SHAPE: **MY HELD ANSWER WAS WRONG.** THE READ'S METHOD IS ADOPTED
+
+**I had drafted: *"the TREE — grading a commit grades its tree, not its diff."* ★★★★★ THAT IS INSUFFICIENT AND I WITHDRAW IT. [MEASURED HERE] there are **11 commits** between pinned base `9af37b8f` and `8c6893fc` (`9af37b8f` confirmed an ancestor). Handing a grader that branch hands it eleven commits of mutation-and-revert churn and calls it an atomic delivery.**
+★★★★★ **`ONE ATOMIC DELIVERY COMMIT` MEANS ONE COMMIT RELATIVE TO PINNED BASE `9af37b8f` — NOT A HEAD TREE THAT HAPPENS TO CONTAIN EVERYTHING.**
+**AND IT REQUIRES NO HISTORY REWRITE, WHICH IS WHY IT IS BETTER THAN BOTH MY ANSWER AND A SQUASH:**
+- **DO NOT rewrite or squash the existing WIP branch.** After E closes: **create a SECOND WORKTREE pinned explicitly to `9af37b8f`** · new delivery branch there · **squash the complete NET DIFF from the WIP branch into ONE commit** · include the five-part ratify packet, frozen authority, fixtures, gate, generated receipt, CI wiring and runtime change · **verify the final diff-stat against the reviewed `9af37b8f`→WIP delta** · run ALL acceptance commands against that final commit.
+★★★ **THE WORKER WAS RIGHT TO ASK AND RIGHT NOT TO ACT: it refused to rewrite shared-branch history on its own initiative and said so. `A QUESTION ASKED BEFORE THE IRREVERSIBLE ACT IS WORTH MORE THAN A CORRECTION AFTER IT.`**
+
+### §6 — `F`: STILL CLOSED · GRADER BRIEF · SCOPE · STOP
+
+★★★★★ **NO `accuracy-validator` IS DISPATCHED AND NONE IS DUE.** The trigger fires only after **E closes AND the atomic delivery object exists**. **THE BUILDER DOES NOT GRADE.**
+**BRIEF, when it fires — the re-plant list is now FOUR, adopting AR-506 §4's own nomination:** **(1)** `C4`, the two-lane hoist · **(2)** the four authority fail-closed controls · **(3)** `D`'s "detector reports on everything" case · **(4)** `E`'s ratio-loosening control. ★★★★★ **AR-506 NOMINATED (3) AND (4) AGAINST ITSELF, WITH THE REASON: *"if a grader re-runs only the happy paths it will reproduce my green and not my finding."* `THE BUILDER NAMING WHICH OF ITS OWN GREENS ARE LEAST TRUSTWORTHY IS THE MOST USEFUL THING IN AN EVIDENCE BUNDLE.`** Plus: hunt a further false green · working access recipe not prohibitions · honest null accepted · agent id named in the consuming ruling.
+**SCOPE:** unchanged, plus **creating a second worktree pinned to `9af37b8f` is NEWLY AUTHORIZED** for §5. **STILL FORBIDDEN:** `git push` / PR / remote pipeline · rewriting or squashing the WIP branch · Python acceptance of orphan zones · `approximation` or queue-reason payload changes · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · direct edits to `runtime-production` or `tf-deep-scan`.
+**FIRST OBSERVABLE:** ~15 min — the **pre-registered** materiality-control fixture with its expected normal and mutated outcomes.
+**STOP IF:** the control is not `false→false` normally · ratio loosening does not produce `false→true` · **the mutated receipt still exits `0`** · the final commit omits the ratify packet or the generated receipt · the final net diff differs unexpectedly from the reviewed WIP delta · either lane's real semantics are changed to manufacture reach.
+
+### §7 — BLUEPRINT `f0682b82` ADOPTED (`e1b84842`) · LESSONS
+
+**Fourth adoption commit, cherry-picked and conflict-resolved; my §15.8 P0 row had gone stale again. Merged the incoming's current status with the axis credits and the R-488 §3 lift it dropped. Ladder payloads intact, `11/11` rows at 3 columns.**
+★★★★★ **`AN EMITTER SELF-TEST PROVES THE EMITTER, NOT THE ENFORCEMENT PATH.` A failure signal has three parts — REACHABLE, DETECTED, STOPS THE RUN — and I audited two of them.**
+★★★★★ **`A DECLARED FAILURE SIGNAL THAT RETURNS SUCCESS IS NOT A GATE.`**
+★★★ **`ONE ATOMIC DELIVERY COMMIT` IS RELATIVE TO A BASE, NOT A PROPERTY OF A TREE.**
+★★★ **`A QUESTION ASKED BEFORE THE IRREVERSIBLE ACT IS WORTH MORE THAN A CORRECTION AFTER IT.`**
+
+---
+
 ## R-493 · 2026-07-30 · ★★★★★ **STEPS A AND B ACCEPTED. THE GATE NOW MEASURES ITS OWN PROVENANCE INSTEAD OF ASSERTING IT — AND I VERIFIED THE ONE THING THAT MAKES IT FAIL CLOSED RATHER THAN DECORATIVE: `:597` RUNS THE AUTHORITY CHECK, `:599` ENUMERATES FIXTURES. IT EXITS BEFORE ANY PLAN IS COMPILED.** ★★★★★ **AND A SHARED BLIND SPOT I AM NAMING BECAUSE NEITHER VERIFIER CLOSED IT: THE FIVE MUTATION OUTCOMES ARE `[RELAYED]` AT *BOTH* DESKS. THE EXTERNAL READ DECLARED THAT; I MUST DECLARE IT TOO.**
 
 ★ **WORKER — START HERE.** Your task is **§5: steps C → D → E**, in that order. **C's membership/deletion RED control is not optional.**
