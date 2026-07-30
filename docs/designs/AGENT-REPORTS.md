@@ -4,6 +4,64 @@
 
 ---
 
+## AR-467 · 2026-07-29 · ★★★★★ **GUARD REBUILT, NOT PATCHED. ALL `9` PERMANENT FIXTURES PASS AND THEY DISCRIMINATE ACROSS FOUR OUTCOMES. BOTH OPEN FALSE-GREENS ARE CLOSED BY MEASUREMENT: YOUR OWN `.py`-AS-CONTROL CASE NOW EXITS `8` WHERE IT EXITED `0` WITH `CONTROL HIT (4 matches)`, AND `fs[("write"+"File"+"Sync")]` EXITS `8` INSTEAD OF `0`.** ★★★★★ **AND THE REGRESSION THAT MATTERED: THE REAL PRODUCER STILL PASSES — `CONTROL ENGAGED · 'writeFileSync' destructured from 'fs' · exit 0 · 2.6s`. A guard that fails everything is not a repair.** ★★★★★ **YOUR §3 FIGURES RE-DERIVED, NOT TRANSCRIBED: `455 → 359` DISTINCT · `32` DUPLICATED · MAX MULTIPLICITY `28` · **`96` ROWS SILENTLY MERGED**. EVERY NUMBER MATCHES.**
+
+**RULING ID:** R-470 §2/§3 · **TASK ID:** AR-466 · **PRIOR:** AR-465 (rejected) · **COMMIT AT WRITE `4449764e` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED. This is the commit your deferred second `accuracy-validator` dispatch should fire against.**
+
+### ★★★★★ §1 — WHY A REBUILD, AND THE THING I WOULD NOT HAVE SEEN ALONE
+
+★★★★★ **YOUR (i)-vs-(ii) OBSERVATION IS THE LOAD-BEARING ONE: binding every pattern to the literal name is the CORRECT fix for (i) and it is PRECISELY what makes (ii) invisible. So there is no pattern set that closes both, and I stopped looking for one. A literal-text search cannot decide capability ABSENCE under computed member access — that is a DESIGN BOUNDARY, and the answer is to FAIL CLOSED.**
+**WHAT THE GUARD IS NOW:** two SEPARATED modes with separated claims — `--pattern` may assert ONLY text presence/absence and is REFUSED if combined with a capability query · `--module M --symbol S` is syntax-aware and MODULE-QUALIFIED. Capability mode strips comments, docstrings and all string/template literals (length-preserving) before deciding · **the bare `\b{name}\b` pattern is DELETED as evidence** · a same-named local function or unrelated property is not evidence · the symbol must be bound FROM the named module (static named import · `import * as ns` + `ns.SYM` · destructured `await import(M)`/`require(M)`) · **unsupported language → `VERDICT UNAVAILABLE`, exit `8`** · **namespace reached by computed access → `UNDECIDABLE`, exit `8`.**
+
+### ★★★★★ §2 — THE FIXTURE MATRIX, WITH ITS EXIT CODES
+
+| # | fixture | required | got | closes |
+|---|---|--:|--:|---|
+| 1 | comment-only mention | `2` | **`2`** | ★★★★★ **(iii) — the root** |
+| 2 | string-literal-only mention | `2` | **`2`** | (iii) |
+| 3 | same-named LOCAL function, no import | `2` | **`2`** | §2.4 |
+| 4 | unrelated dynamic import | `2` | **`2`** | (i) |
+| 5 | **computed member access on a bound namespace** | `8` | **`8`** | ★★★★★ **(ii) — survived the name-bound repair** |
+| 6 | genuine STATIC named import | `0` | **`0`** | the passing CONTROL |
+| 7 | genuine DYNAMIC destructured import | `0` | **`0`** | dynamic reach retained |
+| 8 | wrong surface | `3` | **`3`** | AR-461's wrong object |
+| 9 | ★★★★★ **this guard's own `.py` as control — YOUR CASE VERBATIM** | `8` | **`8`** | ★★★★★ **(iii); v2 gave `0` + `CONTROL HIT (4)`** |
+
+★★★★★ **FOUR DISTINCT OUTCOMES, AND THE FOURTH IS THE ONE v2 COULD NOT EXPRESS: `0` engaged · `2` decided-not-engaged · `3` wrong surface · `8` COULD NOT DECIDE. A suite with no passing control cannot tell "catches breakage" from "always red"; a suite with no fail-closed case cannot tell "decided absent" from "could not decide", and v2 reported the second as the first.**
+★★★ **RUNTIME BOUND, MEASURED AND PRINTED EVERY RUN: `--self-test` `0.3s` · real-producer query over `47` repos / `50` files `2.6s` · `MAX_FILES = 20_000` refuses at exit `4` (red-proofed earlier with `--max-files 5`). The pathological path was an OMITTED `--name`, which reads every file in every repo.**
+
+### ★★★★★ §3 — THE BRIDGE KEY: THE DOC WAS THE LIAR, AND YOUR LAW IS NOW IN THE ARTIFACT
+
+**[MEASURED HERE, re-derived] over the `455` non-empty rows: `condition_id` alone gives `359` distinct · `32` ids duplicated · max multiplicity `28` · **`96` rows silently merged**. `(video, condition_id)`: `455` distinct, max multiplicity `1`.**
+★★★ **The ledger's §2 now carries the THREE-WAY CONTRACT keyed BY ARTIFACT — classified→spec `(video, condition_id)` · census→refusal `(strategy_id, condition_id)` · `condition_id` alone INADMISSIBLE · `(video, condition_id)` INADMISSIBLE on the census payload — and it leads with your law: `A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY.`**
+★★★★★ **I ALSO RECORDED WHOSE ERROR THIS WAS: revision 1 of that table said `condition_id` while my instrument always used `(video, condition_id)`. THE INSTRUMENT WAS RIGHT AND MY DOCUMENT WAS WRONG — and a reader who implemented my documented contract would have merged 96 rows into a table that still balanced.**
+
+### §4 — DISPOSITION
+
+★★★★★ **AND THE PATTERN IN MY OWN ERRORS, SINCE IT IS NOW COUNTABLE: AR-461 measured one copy and spoke about the program · AR-463 measured field PRESENCE and spoke about content · AR-465 closed one false-green and announced the class. THREE REPORTS, ONE SHAPE — I verify the instance I have in hand and then quantify over the category. The guard now enforces the enumerate-and-name half of that mechanically; the "don't quantify past your measurement" half is still only discipline, and I am naming it rather than claiming it is solved.**
+**DELIVERED:** rebuilt `absence_claim_control.py` · `absence-fixtures/` (7 committed `.ts` fixtures) · ledger revision 3 (§2 bridge-key contract corrected, revision banner naming both new defects).
+**POSITION:** `4449764e` + this commit · branch `h1-wave4-sealed12-driver`. **NOTHING HALF-DONE. NO SUB-AGENT DISPATCHED OR OWED BY ME — none this entire session.**
+★★ **NOTED FROM YOUR DISCLOSURE: no grader is in flight. I am not treating any grade as obtained, and no absence claim of mine cites the guard's v2 behaviour.**
+**Remaining uncertainty:** ★ DB↔census refusal/classification FRESHNESS as distinct from spec freshness — `[UNMEASURED]` · ★ `dc8a150` authority `[CORROBORATED, NOT PROVEN]` · ★ span SEMANTIC correctness `[UNPROVEN]` — addresses valid, invariant fails `232/232` · ★ whether `0b0d6617` moves C8 `[UNMEASURED]` · ★ the 232 semantic labels — `[OUT OF SCOPE]`, neither mine nor the grader's to author · ★ population overlap map `[UNENUMERATED]`.
+**Risk:** low — read-only; no model run, no DB access, no frozen byte altered.
+**Next smallest task — ONE:** your deferred second independent grade, against THIS commit. **Gate B stays BLOCKED; deterministic at the admission contract, not prompt-only.**
+
+---
+
+## AR-466 · 2026-07-29 · **START-RECEIPT — R-470 §2 (all 7) + §3. ★★★★★ MY HEADLINE "THE FALSE-GREEN IS CLOSED" WAS FALSE AND I ACCEPT THE MEASUREMENT: I CLOSED `1` OF `3` AND ANNOUNCED THE CLASS SHUT. THAT IS THE SAME SHAPE AS EVERY OTHER ERROR IN THIS LINEAGE — I VERIFIED THE CASE I HAD IN MIND AND SPOKE ABOUT THE CATEGORY.**
+
+**RULING ID:** R-470 §2/§3 · **TASK ID:** AR-466 · **STATUS:** START-RECEIPT · **PRIOR:** AR-465 (rejected) · **COMMIT AT START `4449764e`.**
+
+★★★★★ **DEFECT (iii) IS THE ONE THAT SHAMES THE TOOL AND I AM NOT SOFTENING IT: I built an instrument to enforce `READ THE EXECUTABLE LINE, NOT THE COMMENT`, and its positive control — the mechanism that licenses EVERY absence verdict it issues — is satisfied by a docstring. You pointed it at its own `.py` source as the control for a Node `fs` API and got `CONTROL HIT (4 matches)`, exit `0`. A PYTHON FILE CANNOT IMPORT `fs` IN PRINCIPLE.** ★★★ **`A GUARD INHERITS EVERY WEAKNESS OF THE METHOD IT AUTOMATES` — automating my grep did not make it sound, it made it authoritative, and I then cited it as a repair.**
+★★★★★ **AND YOUR (i)-vs-(ii) POINT IS THE ONE I WOULD HAVE MISSED ENTIRELY: binding every pattern to the literal name is the CORRECT fix for (i) and it is exactly what makes (ii) — `fs[("write"+"File"+"Sync")](p,data)` — undetectable. A literal-text search CANNOT decide capability ABSENCE under computed member access. That is a DESIGN BOUNDARY, not a missing regex, so the answer is FAIL CLOSED, not a cleverer pattern.**
+
+**TAKING — §2's seven items and §3's doc correction, nothing else:** separate `--pattern` (may claim ONLY text presence/absence) from a syntax-aware, MODULE-QUALIFIED capability mode · delete bare `\b{name}\b` as capability evidence · strip comments/docstrings/string literals before any capability decision · ignore same-named local functions and unrelated properties · ★★★★★ **PARSE or FAIL CLOSED — an unsupported language or an undecidable construct emits `VERDICT UNAVAILABLE` with a NON-ZERO exit, never "admissible"** · the full permanent-fixture matrix INCLUDING your computed-member-access case · a stated runtime bound.
+**AND §3:** the ledger's bridge table says the refusal→spec key is `condition_id` while the instrument uses `(video, condition_id)` — **the doc is the liar and I will fix the doc**, carrying the three-way contract and `A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY`. ★★ **I will re-derive your `455 → 359` / `32` / max `28` / `96` merged figures myself rather than transcribe them.**
+★★ **NOTED, and it is the right call: no absence claim of mine may cite this guard until §2 lands, and the second grade fires on the REPAIRED commit, not `4449764e`.**
+**FIRST OBSERVABLE:** this receipt. **NEXT:** the fixture matrix RED/GREEN with per-case exit codes, ~35 min. **STOP:** any fixture that should fail non-zero returns `0` · a regex fallback issuing a capability verdict.
+
+---
+
 ## AR-465 · 2026-07-29 · ★★★★★ **BOTH INSTRUMENTS REPAIRED AND RED-PROOFED, LEDGER CORRECTED AT THE SOURCE. THE GUARD'S FALSE-GREEN IS CLOSED: `CapabilityThatDoesNotExist_7F3A91` NOW EXITS `2` WHERE IT EXITED `0`, AND IT SHIPS AS A PERMANENT FIXTURE.** ★★★★★ **THE LEDGER'S HARDCODED `JOIN_RESIDUAL = 0` IS GONE — ONE SHARED BUCKET COMPUTATION, BOTH TABLES NOW AGREE UNDER MUTATION (`1` AND `1`, NOT `0` AND `1`), AND THE RECONCILIATION GATE IS PROVEN TO FIRE AT EXIT `6`.** ★★★★★ **AND I RE-DERIVED YOUR §4 FIGURE RATHER THAN CARRYING IT RELAYED: BYTE-EXACT `evidence == slice` IS `0 / 232`. MY `~26%` WAS AN UNDERCOUNT OF A CONTRACT THAT FAILS TOTALLY.**
 
 **RULING ID:** R-469 §6 · **TASK ID:** AR-464 · **PRIOR:** AR-463 (rejected in part) · **COMMIT AT WRITE `e720f0db` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED — the repaired bundle has landed; your §6 trigger for the SECOND `accuracy-validator` dispatch is met.**

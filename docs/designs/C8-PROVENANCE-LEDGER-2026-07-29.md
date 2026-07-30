@@ -25,9 +25,22 @@
 > disagreement**; (3) **the evidence figures UNDERCOUNTED** a contract that fails
 > `232/232` byte-exact — **corrected in §7 and now EMITTED by the instrument.**
 > ★★★ **The absence-guard shipped with a FALSE-GREEN that confirmed a nonexistent
-> capability — the inverse of the class it exists to catch. Repaired: every pattern is
-> bound to the requested name, and `CapabilityThatDoesNotExist_7F3A91` ships as a
-> permanent fixture that must exit non-zero.**
+> capability — the inverse of the class it exists to catch.**
+>
+> ★★★★★ **REVISION 3 (R-470). TWO FURTHER CORRECTIONS, BOTH MEASURED AGAINST ME:**
+> **(a) MY "THE FALSE-GREEN IS CLOSED" WAS FALSE — I CLOSED `1` OF `3` AND ANNOUNCED THE
+> CLASS SHUT.** The guard's POSITIVE CONTROL, the mechanism licensing every absence
+> verdict it issues, was satisfiable **BY A COMMENT**: pointed at its own `.py` source as
+> the control for the Node API `writeFileSync` it returned `CONTROL HIT (4 matches)`,
+> exit `0` — and a Python file cannot import `fs` in principle. A second false-green
+> survived my name-binding repair entirely: `fs[("write"+"File"+"Sync")](p,data)`, which
+> has **zero literal occurrences** of the symbol. ★★★ **The guard is therefore REBUILT,
+> not patched: capability mode is now syntax-aware and MODULE-QUALIFIED, comments and
+> string literals are stripped, a bare identifier is no longer evidence, and an
+> unsupported language or undecidable construct FAILS CLOSED (`VERDICT UNAVAILABLE`,
+> non-zero) instead of reporting an admissible absence. `A GUARD INHERITS EVERY WEAKNESS
+> OF THE METHOD IT AUTOMATES.`**
+> **(b) THE BRIDGE-KEY TABLE IN §2 WAS WRONG WHILE THE INSTRUMENT WAS RIGHT** — see §2.
 
 ---
 
@@ -47,11 +60,22 @@
 
 ## 2 — BRIDGE KEY, WRITTEN DOWN PER HOP
 
-★★★★★ **`(video, condition_id)` IS A DISPLAY LABEL ONLY.** [MEASURED] it is unique on the classified artifact but **3-way degenerate on the census payload** — `456` distinct keys, max multiplicity `3`, histogram `{3: 456}`. It fuses the `_mcl_`/`_mes_`/`_mnq_` triple and turns `1368` into `456`, **which is exactly the figure the desk expects, so a coverage table built on it would balance while silently merging three copies.**
+★★★★★ **THE GOVERNING LAW, AND IT COST FOUR WRONG RULES IN ONE LINEAGE TO REACH IT (R-470 §3): `A KEY'S SAFETY IS A PROPERTY OF THE ARTIFACT, NOT OF THE KEY.` Every join key below is named WITH the artifact it is admissible on — never alone. `(video, condition_id)` was first permitted universally, then forbidden universally, and BOTH were wrong for the same reason: each was a measurement of one artifact stated as a property of the key.**
+
+**THE THREE-WAY CONTRACT, BINDING:**
+
+| artifact | admissible key | [MEASURED] |
+|---|---|---|
+| **collapsed per-video classified artifact** (456 rows) → canonical spec | ★★★ **`(video, condition_id)`** | `455` distinct, max multiplicity **`1`** |
+| **raw 120-row census payload** → persisted refusal | ★★★ **`(strategy_id, condition_id)`** | `1368` distinct, max multiplicity **`1`** |
+| any artifact | ★★★★★ **`condition_id` ALONE — INADMISSIBLE** | over the `455` non-empty rows: only **`359`** distinct · **`32`** ids duplicated · max multiplicity **`28`** · ★★★★★ **`96` ROWS SILENTLY MERGED** |
+| census payload | ★★★★★ **`(video, condition_id)` — INADMISSIBLE THERE** | `456` distinct but max multiplicity **`3`**, histogram `{3: 456}` — fuses the `_mcl_`/`_mes_`/`_mnq_` triple, turning `1368` into `456`, **exactly the figure the desk expects, so the table would BALANCE while merging three copies** |
+
+★★★★★ **DOC-vs-ARTIFACT DRIFT, CORRECTED (R-470 §3): revision 1 of this table said the refusal→spec key was `condition_id`, while the instrument has always actually used `(video, condition_id)`. THE INSTRUMENT WAS RIGHT AND THIS DOCUMENT WAS THE LIAR — the fourth doc/artifact drift this campaign has caught and the first where the DOC was wrong. A reader who implemented the documented contract would have merged `96` rows and produced a balanced-looking table.**
 
 | hop | bridge key | status |
 |---|---|---|
-| refusal row → canonical spec condition | `condition_id` ≡ spec condition `id` (exact string) | **`455/456`** |
+| refusal row → canonical spec condition | ★★★ **`(video, condition_id)`** ≡ (spec envelope `video`, condition `id`) | **`455/456`** |
 | spec condition → preserved transcript | `span {start,end}` char range into `<video>.transcript.txt` | **`232/232`** in-bounds for C8 |
 | video-level | `video` ≡ spec envelope `video` ≡ transcript filename stem | `40/40` |
 | at/after condition creation (census payload) | **`(strategy_id, condition_id)`** — unique, `1368`, multiplicity `1` | binding |
