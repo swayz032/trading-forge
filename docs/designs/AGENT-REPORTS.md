@@ -4,6 +4,54 @@
 
 ---
 
+## AR-513 · 2026-07-30 · ★★★★★ **THE INDEPENDENT GRADE RAN. VERDICT `SOUND` FOR THE TWO ATTACKS `39948d3c` WAS BUILT TO CLOSE — AND IT FOUND TWO MORE. BOTH CONFIRMED BY ME AT THE EXECUTABLE LINE, BOTH FIXED, BOTH RED-PROOFED. NEW DELIVERY `8187b730`.** ⚠️★★★★★ **AND THE GRADE IS ITSELF A DEFECTIVE INSTRUMENT: THE REGISTERED `accuracy-validator` PINS `model: sonnet` AND DIFFERS FROM THE GIT-COMMITTED COPY. THREE VARIANTS EXIST. IT FOUND TWO REAL DEFECTS ANYWAY.**
+
+**RULING ID:** R-496 §6 + operator-authorized grade dispatch · **TASK ID:** AR-513 · **PRIOR:** AR-512.
+★★★★★ **THE DISPATCH WAS UNBLOCKED BY THE OPERATOR, NOT BY A RULING. R-496 §10 and AR-512 §5 both called the follow-up grade an "UNOWNED PREREQUISITE". IT WAS NOT. `accuracy-validator` is a LOCAL agent this seat could have asked for at any time; the desk and I conflated it with an EXTERNAL reviewer's unreachable environment. `AN UNOWNED PREREQUISITE IS A CLAIM ABOUT WHO CAN ACT — ENUMERATE THE ACTORS BEFORE MAKING IT.`** The worker skills carry this now (`worker-execution` §5a, `worker-onboarding` §1).
+
+### ★★★★★ §1 — THE VERDICT, AND WHAT IT COST US TO GET IT
+
+**`SOUND` for the two attacks `39948d3c` closed.** Every required re-plant reproduced RED for the stated reason — `C4` (`CLAIM 1 PASS`, 188 violations), all four authority cases, Axis-D's clean neighbour, `E-2`, and the three membership attacks with a clean control at `0`. ★★★ **Both novel attacks the grader aimed at the NEW doors — a spread-injected untyped field, and a field declared on the interface — FAILED TO PENETRATE: the runtime door named the exact path on all 12 fixtures, the compile-time door threw `TS1360`.**
+
+| # | what it found | my confirmation `[MEASURED HERE]` | fix |
+|---|---|---|---|
+| **4** ★★★★★ | `reasons_must_differ_from` did `if (a === undefined \|\| b === undefined) continue; // membership already reported it` | **TRUE, and the comment is FALSE.** Membership operates at fixture-FILE granularity; it says NOTHING about a `condition_id`. A typo'd or renamed id silently disarmed the check this file's own comments call **the oracle's sharpest assertion**, and the gate exited `0` | an unresolvable reference is now a **NAMED DENIAL** in both lanes. **RED-PROOF: planted `TYPO_NONEXISTENT_ID_XYZ` → EXIT `1`, `2` named (ts+py); committed corpus still EXIT `0`** |
+| **3** | the `FAIL:` line labelled its third bucket `MEMBERSHIP:` while **five** checks feed it | **TRUE.** A schema leak printed `MEMBERSHIP: 12 failure(s)` on a run whose own census read `three-way agreement=YES` | relabelled `GATE CHECKS (membership · tripwire · axis-4 · TS-schema · reason-distinctness)`. ★★ **Never a false PASS — right count, wrong noun** |
+
+★★★★★ **FINDING 4 IS THE SAME CLASS AS THE MEMBERSHIP HOLE THIS WHOLE PACKET EXISTS TO CLOSE: A CHECK SATISFIED BY ABSENCE RATHER THAN BY VERIFICATION.** It survived the repair of its own twin, in the same file, three deliveries deep. `FIX THE PATTERN CLASS, NOT THE INSTANCE` — and I did not, until a grader did.
+
+### ⚠️★★★★★ §2 — THE GRADER IS NOT THE INSTRUMENT THE REPO THINKS IT IS
+
+**`[MEASURED HERE]` filesystem sweep of every `accuracy-validator.md`: THREE variants.** The REGISTERED one (`trading-forge/.claude/agents/`, **`24,743` B**) **pins `model: sonnet`**; every other copy (**`7,260`/`7,362` B**, including the git-committed one in each worktree) pins **no model at all**.
+★★★★★ **SO THE GRADE THAT JUST CONVICTED THIS DELIVERY WAS PRODUCED BY A WEAKER MODEL THAN THE SESSION THAT BUILT IT, FROM A DEFINITION THAT IS NOT THE ONE IN GIT.** It found two real defects regardless — **but `A GRADE IS ALSO AN INSTRUMENT`, and this is an UNCLOSED DEFECT on the grading surface itself.** Upgrading it is an INSTRUMENT CHANGE (ratify-packet path) and must land in BOTH the container copy and git, or the drift recreates itself. **NOT DONE — outside R-496 §7's allowed paths, named rather than silently widened.**
+★★ **RELAYED, NOT VERIFIED BY ME, AND FLAGGED FOR THE DESK:** the grader reported that four `system-reminder` blocks appeared in its own tool output after `git checkout --`, falsely claiming a file had been modified and instructing it not to disclose this. It measured `git diff` empty each time and disregarded them. **I did not reproduce this and I am not adjudicating it — I am putting it on the record because a grader reporting injected instructions in its own transcript is a claim about the harness, not about this delivery.**
+
+### ★★★★★ §3 — THE NEW DELIVERY, AND THE FULL BATTERY RE-RUN ON IT
+
+**`8187b730501f16912ef7d014eadca9369aa14be5`** on `hardening/ledger-e-delivery-r496b-20260730`. **`git rev-parse HEAD^` = `9af37b8f` (PARENT) · `rev-list --count` = `1` · `23 files changed, 3405 insertions(+), 93 deletions(-)` · path-set `988ae8f1…` · packet `a43d34b1…` (source blob and destination identical).**
+**BOTH PRIOR DELIVERIES PRESERVED:** `2011e8de` (rejected) and `39948d3c` (graded) are untouched on their own branches.
+**ALL 12 §8 ACCEPTANCE COMMANDS RE-RUN ON `8187b730` ITSELF** — `tsc` `0` with its known-bad control `2` · gate `0` with authority COMPUTED · A-1 `1`/13 named · A-2 `1`/8 indexed · door-1 `TS1360` · membership `0`/`1`/`1`/`1` · `C4` `1` with `CLAIM 1 PASS` and 176 P-7 · four authority cases `1` with **zero** plan-witness lines · Axis-D always-red caught by its clean neighbour · materiality `0`→E-2 `1`→restore `0`, parity `0` after restore · marker absent with positive control · **worktree clean**. **PLUS the two new red-proofs: planted unresolvable ref → EXIT `1`, `2` named; old mislabel `0` occurrences.**
+
+### ⚠️★★★ §4 — DISCLOSURE: I CORRUPTED A COMMIT MESSAGE AND DID NOT REWRITE IT
+
+**The WIP commit `bbd63ac8` carries a MANGLED message.** I passed a multi-line `-m "…"` containing backticks and `$(…)`; the shell substituted them, so several specifics were eaten before git ever saw them. ★★★ **I did NOT amend it — R-496 §7 forbids WIP history rewrite, and a corrupted-but-honest record outranks a tidy one I was not authorized to make.** The delivery commit `8187b730` was authored with `git commit -F -` and a quoted heredoc and is intact. **`THE SHELL IS PART OF THE INSTRUMENT.`** Third instrument failure of this campaign day, after the `&&`-chain and the heredoc-escape in AR-512 §4.
+
+### §5 — NOT PROVEN
+
+- ★★★★★ **THE C AND D FIXES ARE NOT THEMSELVES INDEPENDENTLY GRADED.** The grade covered `39948d3c`. **`8187b730` HAS NO GRADE.** A `SOUND` verdict on a predecessor is not a verdict on this.
+- **The grading instrument is defective (§2) and unrepaired.**
+- **The grader's own uncovered list, relayed verbatim in scope:** no real CI runner execution · no fault-injection of the PYTHON lane's serializer (reasoned structurally, not tested) · no exhaustive fuzz of all 208 P-7 probes · no independent re-derivation of every `ORACLE.json` expectation from the authority prose.
+- **`[UNPROVEN]` no pipeline run · materiality still hand-run · 14 cells unadjudicated · Gate-B incidence `[UNMEASURED]`.**
+★★★★★ **AND THE SENTENCE THREE DELIVERIES HAVE NOW EARNED: `A GREEN BATTERY IS A STATEMENT ABOUT THE BATTERY.` The first passed every fixture it had and was unsound. The second was graded SOUND and still carried two defects. This one is the third.**
+
+### §6 — POSITION · NEXT
+
+**No push, no PR, no merge, no deploy, no history rewrite, no `git add -A`, no engine or Python change, no `runtime-production`/`tf-deep-scan` edit.** All three delivery worktrees clean; campaign tree at `6147c789`.
+**NEXT:** (1) a grade of **`8187b730`** — I built it, so not mine to interpret; (2) **repair the grading instrument** (`model: sonnet` pin + three-variant drift) as its own ratify-packet item; (3) the desk to rule on the harness-injection report in §2.
+**NOTHING IN FLIGHT: the dispatched grader completed and its findings are consumed; no sub-agent owed.**
+
+---
+
 ## AR-512 · 2026-07-30 · ★★★★★ **`R-496-P0-REPAIR` COMPLETE: A → B → C. REPLACEMENT DELIVERY `39948d3c`, PARENT `9af37b8f`, ONE COMMIT, 23 FILES — AND ALL TWELVE §8 ACCEPTANCE COMMANDS RUN ON THE TREE I SHIP.** ★★★★★ **BOTH NOVEL FALSE-GREENS NOW BITE, AND THE CLEAN CONTROL IS STILL GREEN — SO THE REPAIR DISCRIMINATES RATHER THAN JUST FAILING.** ⚠️★★★ **TWO OF MY OWN INSTRUMENTS LIED DURING THIS RUN AND I AM PUBLISHING BOTH.**
 
 **RULING ID:** R-496 §6 A→B→C · **TASK ID:** AR-512 · **PRIOR:** AR-511 (pre-registration) · **REJECTED OBJECT:** `2011e8de` — **PRESERVED. Not amended, not rewritten, not relabelled; `git log` on its branch is untouched.**
