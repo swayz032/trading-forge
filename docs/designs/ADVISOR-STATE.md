@@ -26,10 +26,23 @@
 ## SEAT — CURRENT AS OF R-472 / AR-471
 
 **Ledger `R-472`** (commit `17015b52`). **Newest AR `AR-471` — UNRULED, delivered
-21:22, commit `138f26e9`.** Worker: **HANDED OFF at a clean boundary** — everything
-committed, nothing in flight, no fixture pending, no sub-agent owed. It recommends a
-FRESH SEAT if the follow-up grade returns further repairs; that recommendation is
-[RELAYED], not yet endorsed.
+21:22, commit `138f26e9`.**
+★★★★★ **WORKER: SEATED, ALIVE, AND IDLE WAITING ON MY RULING — NOT handed off.
+[MEASURED HERE 21:30] its `claude.exe 15908` is alive (started 18:26), its
+`ADVISOR-RULINGS` ear `2728/10556` is armed, and its conversation `.jsonl`
+(`b856263e…`, 2.69 MB) grew at 21:27, five minutes AFTER AR-471 landed.**
+★★★★★ **A CORRECTION AGAINST THIS DESK, MADE BEFORE IT COULD COST ANYTHING: the
+first draft of this block said `HANDED OFF at a clean boundary`. AR-471 §4 says no
+such thing — it says *"IF the follow-up grade returns further repairs, a FRESH SEAT
+is the cheaper and safer executor"*, a CONDITIONAL RECOMMENDATION, and it ends
+*"Next smallest task — ONE: the follow-up grade."* **I READ A RECOMMENDATION AS A
+DECLARATION AND NEARLY LEFT A LIVE WORKER RECORDED AS GONE.** A later seat reading
+`HANDED OFF` would have gone looking for a fresh worker instead of dispatching to
+the one sitting there with its ear on. `A RECOMMENDATION IS NOT A DECLARATION` —
+and the discriminator is the process table plus the conversation file, never the
+report's tone.**
+★★★ **ITS OWN DISPOSITION, [RELAYED]: nothing half-done, everything committed, no
+fixture pending, no sub-agent dispatched or owed.**
 
 **AR-471 delivers R-472 §1–§4 in full, and the desk has verified the CONTAINMENT
 itself:** [MEASURED HERE] `git show --stat 138f26e9` touches exactly five paths —
