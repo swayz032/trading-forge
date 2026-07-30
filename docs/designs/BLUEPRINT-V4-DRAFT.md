@@ -7,7 +7,9 @@
 > path in **§15**. Until adoption, the already-adopted V4 remains operative;
 > after adoption, **§15 governs wherever §§1, 3, 9, 10, 12 or 14 conflict
 > with it.**
-> Evidence cut: campaign tree `ad7fa571`, through R-483 §12 / AR-492.
+> Evidence cut: campaign tree through R-491 / AR-501; parity WIP
+> `b23bae87`. The authority-freshness correction below supersedes the earlier
+> R-483 hash carried by this revision.
 
 > ★★★★★ **STATUS: ADOPTED AND OPERATIVE — R-445, 2026-07-29, operator-directed.
 > THIS SUPERSEDES THE "DRAFT — NOT LAW" STATUS BELOW, WHICH THIS FILE CARRIED FOR
@@ -689,30 +691,43 @@ Before any Gate-B result is admissible, the isolated worktree pinned to
    multiplicity, invalidation bindings, queue reasons and duplicate condition
    identities — not another selected-field loop.
 3. An expected-results oracle independent of both implementations. For the
-   orphan zones its authority is frozen in
+   orphan zones its current authority is
    `ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md`, sha256
-   ~~`09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086`~~
-   → ★★★★★ **`9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d`
-   (`13,525` B) — CORRECTED ON ADOPTION, R-489**:
-   zone membership comes from an all-`1,440`-minute occupancy probe that reads
-   none of the tables under repair; emitted behavior comes from the frozen
-   semantic propositions. No row may cite `FAMILY_META`, either emitted plan,
+   `3494d4bbe6f10a9da3c6d79d594212b5542f904bae17209cfe3d68c0ea2214e2`
+   (`16,314` bytes, R-491). The earlier `09e016fd…` and `9b708e24…`
+   authorities are superseded. Zone membership comes from an all-`1,440`-
+   minute occupancy probe that reads none of the tables under repair; emitted
+   behavior comes from the frozen semantic propositions, including P-7's
+   over-refusal boundary. No row may cite `FAMILY_META`, either emitted plan,
    or packet prose copied from them.
-   > ⚠️★★★★★ **STALE-POINTER CORRECTION (R-489, adoption of this revision).** The
-   > struck hash is the **R-483 §12** freeze (`393bc6ad`). **R-484 AMENDED THAT
-   > AUTHORITY AFTER THIS REVISION WAS AUTHORED** — this section's evidence cut is
-   > `ad7fa571` (§15.8) and R-484..R-488 landed after it. **[MEASURED HERE] the
-   > struck hash reproduces exactly from `git show 393bc6ad:<authority>`; the live
-   > file is `9b708e24…`.**
-   > ★★★★★ **WHY IT IS LOAD-BEARING AND NOT A TYPO: the superseded freeze carries
-   > `approximation=true` on the two UNRECOGNISED-VOCABULARY rows. R-484 struck
-   > those as **UNDERIVED** — they cited P-6, which derives no `approximation`
-   > value — and replaced them with `NO EXPECTATION — DECLARED GAP`. A seat
-   > verifying against `09e016fd…` would REBUILD THE FOUR STRUCK EXPECTATIONS, see
-   > 8 oracle violations, and conclude both lanes were wrong when the TABLE was.**
-   > ★★★ **SO ADD, PER R-484: four cells carry NO EXPECTATION and must render as
-   > `[NOT ADJUDICATED]` — never as passes, never as `false`. `ASSERTING THE
-   > IMPLEMENTATION'S VALUE AND ASSERTING NOTHING ARE DIFFERENT ACTS.`**
+
+   **Authority freshness is executable, not decorative:** before reading an
+   oracle row, the gate must open the named authority, hash its raw bytes and
+   compare that value with the oracle pin. Missing, unreadable or mismatched
+   authority exits non-zero before any parity or correctness verdict. Echoing
+   `ORACLE.json.authority_sha256` is an assertion, not verification. The
+   authority path, measured byte count and computed hash appear in every run.
+
+   The current oracle schema adjudicates `plan.bindings` only.
+   `invalidation_bindings` and `queue_reasons` may be claimed as whole-plan
+   structural parity, but not semantic correctness, unless an independently
+   authorized schema extension makes those rows addressable. Do not widen the
+   oracle merely to turn an agreement result into a correctness claim; narrow
+   the claim unless the money-path decision actually needs that adjudication.
+
+   > ⚠️★★★★★ **THIS PIN HAS NOW GONE STALE THREE TIMES — `09e016fd…` (R-483 §12)
+   > → `9b708e24…` (R-484) → `3494d4bb…` (R-491) — AND MY OWN R-489 "CORRECTION"
+   > IS THE MIDDLE ONE. I fixed the pointer at adoption and my own R-491
+   > amendment obsoleted my fix twenty minutes later.**
+   > ★★★★★ **WHY EACH SUPERSESSION IS LOAD-BEARING, NOT COSMETIC: `09e016fd…`
+   > carries `approximation=true` on the two UNRECOGNISED-VOCABULARY rows, which
+   > R-484 struck as UNDERIVED (they cited P-6, which derives no `approximation`
+   > value) and replaced with `NO EXPECTATION — DECLARED GAP`. A seat verifying
+   > against it REBUILDS four struck expectations, sees 8 violations, and blames
+   > the LANES instead of the TABLE. `9b708e24…` predates P-7 and §4d entirely.**
+   > ★★★★★ **THE RULE THAT ACTUALLY FIXES THIS IS THE EXECUTABLE CHECK ABOVE, NOT
+   > A BETTER-MAINTAINED NUMBER: `A PIN MAINTAINED BY HAND GOES STALE AT THE SPEED
+   > OF THE THING IT PINS.` Three hand-corrections in one night is the proof.**
 4. Exhaustive membership manifests and deletion-RED fixtures. Counts alone do
    not protect membership.
 5. CI and fast-lane wiring, plus a per-spec materiality receipt. Existence is
@@ -830,19 +845,22 @@ from that spec's measured residual, not from a library-wide housekeeping list.
 
 ### 15.8 — STATUS AT THIS REVISION'S EVIDENCE CUT
 
-> ★★★★★ **THE EVIDENCE CUT IS HONESTLY DECLARED AND IT IS FIVE RULINGS STALE — SUPERSEDING
-> COLUMN ADDED ON ADOPTION (R-489).** This revision was authored `01:36`, nine minutes after
-> forking at `ad7fa571` (`01:27`); **R-484 · R-485 · R-486 · R-487 · R-488 landed on the
-> campaign branch afterwards [MEASURED HERE by ancestry, not by clock].** ★★★ **Declaring
-> its own cut is why this table is CORRECTABLE rather than misleading — `A DOCUMENT THAT
-> NAMES ITS EVIDENCE CUT CAN BE UPDATED; ONE THAT CLAIMS CURRENCY CANNOT.`**
+> ★★★★★ **THE EVIDENCE CUT IS DECLARED, AND THAT IS WHY THIS TABLE IS CORRECTABLE RATHER THAN
+> MISLEADING — `A DOCUMENT THAT NAMES ITS EVIDENCE CUT CAN BE UPDATED; ONE THAT CLAIMS CURRENCY
+> CANNOT.`** The revision was authored `01:36`, nine minutes after forking at `ad7fa571` (`01:27`),
+> so **R-484..R-488 landed after it [MEASURED, by ancestry not clock]**. **THE ROWS BELOW ARE NOW
+> MAINTAINED THROUGH R-491 / AR-501 and no longer describe the `ad7fa571` cut.**
+> ⚠️ **R-489's four-column "SUPERSEDING STATE" table is REPLACED: [MEASURED HERE] its header
+> declared 4 columns while the `P1`…`fully bound` rows below it stayed at 3 — a MALFORMED TABLE I
+> introduced while correcting someone else's staleness. `A FIX THAT CHANGES A TABLE'S SHAPE MUST
+> CHANGE EVERY ROW OF IT.`**
 
-| item | state at cut `ad7fa571` | ★ SUPERSEDING STATE (campaign HEAD, R-489) | next admission event |
-|---|---|---|---|
-| Gate-A causal split | **complete** at the historical-artifact layer | unchanged | preserve as causal evidence; do not reuse as current control |
-| P0 parity packet | staged and corrected | unchanged | complete the one atomic implementation |
-| P0 semantic oracle authority | **frozen by R-483 §12** | ★★★★★ **AMENDED BY R-484 → `9b708e24…`. Four cells are `NO EXPECTATION — DECLARED GAP`; the `09e016fd…` freeze is SUPERSEDED** | derive oracle rows from the AMENDED authority; never from either lane |
-| P0 implementation | **in progress in the named isolated seat/worktree** | ★★★★★ **SUBSTANTIALLY LANDED, NOT COMPLETE: gate GREEN `exit 0` and INDEPENDENTLY RED-PROVED at the desk (oracle mutated, BOTH lanes untouched → `exit 1`, `AGREEMENT: PASS` beside `CORRECTNESS: 4 violations`) · CI **and** fast-lane WIRED, F-A closed (R-487) · queue-reason tripwire shipped with two discriminates proofs (R-488). **STILL OPEN: the exhaustive membership matrix (3 of 5 evaluable zones have NO fixture; 12 families unexercised), the materiality receipt, and TWO comparator checks ruled `[UNPROVEN]` — duplicate-`condition_id` and array-multiplicity, which NO fixture makes fire (R-488 §3)** | finish the matrix, then ONE `accuracy-validator` — **the grade trigger has NOT fired** |
+| item | state at R-491 / AR-501 | next admission event |
+|---|---|---|
+| Gate-A causal split | **complete** at the historical-artifact layer | preserve as causal evidence; do not reuse as current control |
+| P0 parity packet | staged and corrected | complete the one atomic implementation |
+| P0 semantic oracle authority | ★★★★★ **amended by R-491 to `3494d4bb…` (`16,314` B, adds `P-7` + §4d); parity WIP still pins superseded `9b708e24…` and its gate only ECHOES that assertion — a live false verification** | implement raw-byte authority verification FIRST, then repoint and encode only R-491 §4d's two adjudicated cells |
+| P0 implementation | ★★★★★ **WIP `b23bae87` — REAL PROGRESS, NOT RATIFIABLE: gate green and independently RED-PROVED at the desk · CI **and** fast-lane WIRED (F-A closed, R-487) · queue-reason tripwire with two discriminates proofs (R-488) · family × position axis **30/30** (AR-500) · axis 2 **8/8** (AR-499). **OPEN: authority freshness · axis 3 (3 of 13 non-session families) · axis 4 (duplicate-id + multiplicity, both `[UNPROVEN]` and UNCITABLE) · materiality receipt** | finish A–E, land ONE atomic delivery commit, **then** exactly one independent grade |
 | P1 additive current baseline | **not frozen** | re-authored-producer equivalence control, then current-code artifact |
 | P2 truth rule | **defined**; complete labelled membership not frozen | freeze all members and hash before treatment |
 | P3 runtime graph→spec handoff | **unenumerated** | rule the two-stage transfer path before runtime integration |
