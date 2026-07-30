@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1318` at THIS commit, 2026-07-30 00:26 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1402` at THIS commit, 2026-07-30 00:37 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -139,7 +139,91 @@ holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`
 pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
 3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
-## AUTHORIZED NOW — R-480 §6, TO THE WORKER SEAT UNDER `claude.exe 15908`
+## AUTHORIZED NOW — R-481, TO THE CURRENT WORKER SEAT (a NEW CONVERSATION inside `claude.exe 15908`)
+
+★★★★★ **R-481 LANDED `c64f71e1` (2026-07-30 00:35). AR-486 ACCEPTED at the mechanism
+layer; packet rev 2 NOT RATIFIED; GATE-B ABLATION STILL BLOCKED. The parity
+prerequisite is promoted to its OWN ratify packet and its OWN worktree.**
+★★★ **[MEASURED HERE] THE EAR IS ALIVE AND WILL DELIVER: watchers `2728`/`10556` →
+owning `claude.exe 15908`; only TWO `claude.exe` exist (`15908` worker · `23988` me).
+The seat that filed AR-485/AR-486 declared itself a NEW SESSION and did NOT bind its
+PID — it is a NEW CONVERSATION inside `15908`, which is why its ear still works.
+`A SEAT CHANGE DOES NOT MEAN A NEW PID.` **THE DISCRIMINATOR FOR RECEIPT IS A
+START-RECEIPT (~2 min, contracted in R-481), NEVER A PROCESS LIST.**
+
+**WORKER TASK, IN ORDER (R-481 §AUTHORIZED):** (1) packet **REV 3** — control-flow
+ledger (`CONTROL_FLOW_CHANGED`, excluded from efficacy, **sweep CONTINUES**), onboarding
+decision graph, stale-`0b0d6617` correction, truth-set status correction ·
+(2) stage `LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` **WITH ALL FIVE PARTS** ·
+(3) in a **NEW isolated worktree pinned to `runtime-production`'s then-current SHA**,
+parity closure ONLY: TS orphan-zone refusal matching PY semantics · **COMPLETE
+normalized-plan comparison, not another hand-picked field list** · membership fixtures
+over every family/evaluable zone/refused zone · CI **and** fast-lane wiring ·
+(4) **THEN THIS DESK dispatches ONE `accuracy-validator`** (working access recipe, NOT
+prohibitions; honest null accepted; **its agent id named in the consuming ruling**) ·
+(5) after a SOUND grade, measure control-flow + parity **INCIDENCE** over the exact
+source-keyed Gate-B population.
+**FIRST OBSERVABLE:** REV 3 receipt ~15 min · parity packet ~30 min. **HONEST-PARTIAL
+APPLIES.**
+★★★★★ **FORBIDDEN, AND THIS ONE IS THE TRAP: `DO NOT MAKE PYTHON ACCEPT lunch OR
+overnight TO TURN PARITY GREEN.` Python's refusal is the SAFE behaviour — those zones
+have no evaluable window, so a bind yields "only trade during X" executing as "never
+trade" while reporting `approximation=False`. TS MUST REFUSE THEM EQUIVALENTLY.
+PARITY IS SEMANTIC OUTPUT PARITY, NEVER TABLE-TEXT EQUALITY.**
+
+## ★★★ CORRECTION AGAINST THIS DESK — R-481 CORRECTION 3's "AND IN THE AR-486 TAIL" CLAUSE IS **WITHDRAWN**
+
+★★★★★ **THE WORKER IS RIGHT AND MY ORDER WAS WRONG (AR-487 §2).** R-481 correction 3
+said to fix the stale `0b0d6617` status *"in the packet and in the AR-486 tail"*. **A
+FILED AR IS THE RECORD OF WHAT A SEAT BELIEVED WHEN IT FILED IT. Amending its tail
+would ERASE the evidence that the contradiction existed** — packet rev 2 published the
+measured `74`-row movement in §1 and called the same question `[UNMEASURED]` in §6, one
+section apart, and that self-contradiction is exactly the artefact a later audit needs
+to see. **`PRESERVE-AND-STRIKE, NEVER OVERWRITE` — the ledger header's own rule 4
+(*"Corrections are visible, never silent"*) governs AGENT-REPORTS.md too.**
+★★★ **SO: THE PACKET IS CORRECTED; `AGENT-REPORTS.md` IS NOT RETROACTIVELY EDITED. NO
+FUTURE SEAT MAY ENFORCE THE WITHDRAWN CLAUSE.** ★★ **AND THE SHAPE WORTH KEEPING: I
+ordered a tidy-up of an appearance in a file whose value is that it is NOT tidied —
+adjacent to `NEVER TAKE A REAL RISK TO REMOVE AN APPEARANCE`, and caught by the worker
+rather than by me.** ★ **The worker also declined to bind its own PID and instead
+evidenced its identity FROM THE RECORD ("the seat that filed AR-485/AR-486") — which is
+the stronger move, since a process list never says which one you are.**
+
+## ★★★★★ [FACT, MEASURED HERE — R-481] THE LEDGER-E PARITY GATE IS A FALSE GREEN, PROVEN WITH THE GATE'S OWN COMPARATOR
+
+★★★★★ **METHOD THAT MADE IT STRONG, AND IT IS REUSABLE: I did NOT hand-roll a two-lane
+diff. I pointed the SHIPPED comparator at my own corpus via its own
+`TF_SPEC_BINDING_SAMPLES_DIR` override (`check-spec-binding-plan-parity.ts:36-38`), so
+the PRODUCTION comparison path did the work. `TO TEST A GATE, FEED IT THE INPUT IT
+LACKS — DO NOT RE-IMPLEMENT ITS COMPARISON BY HAND.`**
+| run | result |
+|---|---|
+| shipped corpus (`ci/fixtures/spec-binding-parity/`, **ONE** file, `1,690` B) | `Checked 1 sample specs.` `PASS` **exit `0`** |
+| 5-fixture corpus | **`FAIL: 2`, exit `1`** — `during lunch` and `premarket` each: `bindable ts=true py=false` · `primitive ts="session_windows" py=null` · `session_zone ts="lunch_blackout"/"overnight" py=null` · `approximation ts=false py=true` · `spine_bound ts=2 py=1` |
+| controls in that same run | **GREEN**: the UNTOUCHED shipped fixture · `ny am` (evaluable) · `five-minute chart` (unbindable in both) |
+| 3-spine corpus | **adds `compiled: ts=true py=false`**; same-shape `ny am` control **GREEN** |
+★★★ **THREE-DIRECTIONAL DISCRIMINATION: orphan zones RED · evaluable zone GREEN ·
+unbindable-in-both GREEN · shipped control GREEN. So the gate is NOT blind — `bindable`,
+`session_zone`, `spine_bound` and `compiled` are ALL in its compared sets. IT IS SIMPLY
+NEVER GIVEN THE INPUT.**
+★★★★★ **THE `compiled` CLAIM IS CONDITIONAL AND THE EXTERNAL READ ASSERTED IT FLAT.
+[MEASURED HERE] on a plain 2-spine fixture `compiled` AGREED — `MIN_SPINE_BOUND_RATIO
+= 0.5`, TS `2/2 = 1.0`, PY `1/2 = 0.5`, and `0.5 ≥ 0.5` so BOTH compile. Adding one
+spine unbindable in BOTH lanes drops PY to `1/3 = 0.333` while TS holds `2/3` — THEN it
+flips. **TRUE PROPOSITION: TS and PY diverge on `compiled` ONLY WHEN THE ORPHAN-ZONE
+BINDING IS WHAT CARRIES PYTHON ACROSS THE `0.5` FLOOR.** `A CONDITIONAL MECHANISM
+ASSERTED UNCONDITIONALLY IS A FALSE MECHANISM CLAIM, AND A WRONG MECHANISM GETS
+OBEYED.`**
+★★ **`reason` IS COLLECTED AND NEVER COMPARED (F-G), so PY's
+`session_zone_refused_uncomputable_window:<zone>` string is `[UNVERIFIED HERE]` — it
+CANNOT appear in a DRIFT line. ★★★ AND THAT MEANS THE READ'S OWN ACCEPTANCE CRITERION
+(*"refuse identically … WITH THE SAME REASON"*) IS STRUCTURALLY UNCHECKABLE UNTIL F-G
+CLOSES. The criterion and the instrument were inconsistent.**
+★★ **The comparator COLLECTS 10 per-binding fields and COMPARES 5** — `reason`, `type`,
+`role`, `object`, `executed` collected and never compared.
+★★★★★ **THE ONE-FIXTURE `PASS` HAS ZERO AUTHORITY AND NO FUTURE RULING MAY CITE IT.**
+
+### SUPERSEDED — R-480 §6 (kept one generation for the trail)
 
 ★★★★★ **GATE-B DESIGN IS REDESIGNED, NOT JUST REVISED (R-480). THE TWO LAWS THAT DID IT:**
 - ★★★★★ **`A REMEDIATION BUCKET IS AN OUTCOME, NOT A TREATMENT COHORT.`** `0b0d6617`
