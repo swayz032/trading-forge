@@ -4,6 +4,66 @@
 
 ---
 
+## AR-490 · 2026-07-30 · **START-RECEIPT for R-482 corrections 1–2 · ★★★★★ AND A DECLINE-RECEIPT FOR CORRECTION 3, TAKING THE OPTION YOUR §94 PRE-AUTHORIZED. ★★★★★ AND THE NEW GUARD FIRED ON ITS FIRST USE: THE LATEST RULING COMMIT WAS `bc551098` (`01:08:25`), NOT THE `1dcd704f` I HAD SEEN MINUTES EARLIER — SO I CHECKED IT BEFORE DERIVING ANYTHING, WHICH IS THE ENTIRE POINT.**
+
+**RULING ID:** R-482 · **TASK ID:** AR-490 · **PRIOR:** AR-489 · **WORKTREE:** `wt-ledger-e-parity-20260730` @ **`03422cc9`**, branch `hardening/ledger-e-parity-20260730`, base pin `9af37b8ff36a13c05fb0ec26752c42a97fc300d7` · **FIRST RED FIXTURE:** `10-lunch-orphan.spec.json` (`spine_bound ts=2 py=1` · `bindable ts=true py=false` · `primitive ts="session_windows" py=null` · `approximation ts=false py=true` · `session_zone ts="lunch_blackout" py=null`).
+
+### ★★★★★ §1 — THE FLAG DEFECT: CONCEDED WITHOUT QUALIFICATION, AND THE SHARE THAT IS MINE
+
+**You assign the order to yourself. I am not taking the whole thing, but I am taking my part, because §26 names it exactly: I WROTE THE CAPTION THAT FALSIFIED ITSELF.** Packet `:242` reads *"THE FLAG GATES THE FEATURE, NEVER THE FIX"* — **and the thing I put behind the flag WAS the fix.** ★★★ **I invoked the right law and then did the opposite of what it says, in the same sentence. Third instance of that shape tonight, and the other two I found in someone else's code — `spec-family-bindings.ts:64` and `absence_claim_control.py:168`. I flagged both as false captions and then wrote one.**
+★★★★★ **AND THE MECHANISM I WANT ON THE RECORD BECAUSE IT WILL RECUR: I had an OFF branch whose behaviour I had MEASURED AS DIVERGENT — my own RED baseline IS the OFF state — and I still shipped it as the rollback path. `A ROLLBACK THAT REINSTATES A KNOWN DEFECT IS NOT ROLLBACK.` The evidence that the OFF branch was broken was sitting in the same worktree, committed by me, twenty minutes earlier.**
+★★ **ACCEPTED, all of it:** the correction is UNCONDITIONAL · rollback is `git revert` of the single commit · if any emergency switch survives, **OFF must HALT or QUARANTINE onboarding, never restore divergent binding** · every receipt names the effective configuration · **the false `:242` caption gets DELETED, not reworded.**
+
+### §2 — CORRECTION 2, AND IT IS ALREADY DEMONSTRATED RATHER THAN PROMISED
+
+**My AR-489 guard was `git log` on the ruling path. You are right that it is necessary and insufficient — it cannot see an UNCOMMITTED concurrent edit.** **REPLACED, and run against R-482 before I wrote a word of this:**
+| step | R-482 result |
+|---|---|
+| latest ruling commit identity | ★★★★★ **`bc551098cf8e0ed3711eef72d2be1fbc46bac61d`, `2026-07-30 01:08:25`** — **NOT `1dcd704f`; a commit had landed since my read** |
+| **WORKING-TREE** re-read + hash of the exact ruling block | lines `15–108`, **`15,506` B, sha256 `bad035213a81ed1941df0c3c2d62e5de…`** |
+| working tree vs `HEAD` on that path | **no diff** — so no uncommitted edit was in flight. ★★★ **`git log` alone could not have told me this half** |
+| what `bc551098` actually was | a ledger-ORDER fix (R-482 had been inserted inside R-481's section). **No new substance, no annotation on R-482 — so its text stands as I read it.** My block hash is post-reorder. |
+★★ **The guard's value showed up on use number one: it surfaced an unexpected newer commit, and the cheap check told me it was structural rather than substantive — instead of me either ignoring it or re-reading everything.**
+
+### ★★★★★ §3 — DECLINE-RECEIPT: CORRECTION 3 IS NOT MINE TO START
+
+**I am DECLINING correction 3 and taking corrections 1–2. Your §94 names this a legitimate outcome and says you relabel the task UNASSIGNED in the same motion — please do, so it is not a declined-but-ACTIVE label, which you correctly call a stall with extra steps.**
+**WHY, as a judgement I own rather than a capacity complaint:** correction 3 is an ATOMIC landing of six coupled pieces — TS refusal emitting Python's exact tuple · whole-plan comparator with bidirectional key-set equality, array multiplicity, invalidation bindings, queue reasons and duplicate detection · exhaustive membership manifest + deletion-RED fixture · **a semantic oracle independent of BOTH implementations** · CI and fast-lane execution · per-spec materiality receipt.
+★★★★★ **YOUR OWN §75 FORBIDS THE EXACT PARTIAL A THINNING SEAT WOULD PRODUCE: *"DO NOT LAND A SEMANTIC FIX THAT MERELY TURNS SEVEN FIXTURES GREEN WHILE THE COMPARATOR REMAINS INCOMPLETE."* That is precisely the shape I would deliver if I started this now and ran out mid-way — and it would arrive looking finished, because seven green fixtures LOOK like a closed repair. `A PARTIAL RESULT THAT READS AS COMPLETE` is this campaign's most-convicted shape and I am not manufacturing another instance of it on the surface Gate B depends on.**
+★★★ **AND THE INDEPENDENT-ORACLE REQUIREMENT IS THE PART I AM LEAST WILLING TO RUSH: an expected-results table independent of BOTH lanes is the one artifact that could turn this from "the two implementations agree" into "the two implementations are RIGHT". Hand-copying either lane's output into it would be `HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM`. It deserves a fresh seat's full attention.**
+**ETA for what I AM doing: corrections 1–2, ~10 min, one commit.**
+
+### §4 — DELIVERED IN THIS COMMIT (receipt and delivery combined, declared rather than back-dated)
+
+**CORRECTION 1 — parity packet §5 REPLACED.** `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED` **removed** · the
+correction is **UNCONDITIONAL** · **rollback = `git revert` of the single commit**, no partial rollback and
+no runtime switch · any future emergency switch **must HALT or QUARANTINE onboarding, never restore
+divergent binding** · **every receipt names the effective configuration** · the minted invariant quoted in
+place · **a higher `compiled` count is a failure signal.**
+★★★★★ **THE FALSE CAPTION IS DELETED, NOT REWORDED — `grep -c "THE FLAG GATES THE FEATURE, NEVER THE FIX"` = `0`.**
+★★ **STOP-CONDITION SELF-CHECK RUN BEFORE COMMITTING** (your §90: *"the packet retains any switch that
+can run the known-divergent behaviour"*): the only surviving mention of the env var is the sentence saying
+it is removed. **`grep` published above rather than asserted.**
+
+**ALSO STRENGTHENED IN §3, so the seat that takes correction 3 implements from the packet and not from
+this AR:** the compared surface now explicitly names **`reason` · array MULTIPLICITY (reorder/duplicate
+must not compare equal) · `invalidations` bindings, which the old five-field loop never reached · queue
+reasons · duplicate-`condition_id` detection** — and a new **§3(b2)** requires the **semantic
+expected-results oracle independent of BOTH lanes**, with the warning that copying either lane's JSON into
+it is `HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM`. ★★★ **Two identically-wrong lanes compare equal;
+a whole-plan diff proves AGREEMENT, never CORRECTNESS. That distinction is now in the packet, not just in
+your ruling.**
+
+**CORRECTION 2 — delivered as a demonstration, not a promise: see §2's table.** The guard is now
+*(a)* latest ruling commit identity, *(b)* **working-tree** re-read + hash of the exact ruling block,
+*(c)* working-tree-vs-`HEAD` diff on that path to catch an uncommitted concurrent edit.
+
+**WHAT I DID NOT TOUCH:** no code, no worktree change (still `03422cc9`), no Python, no CI file, no
+Gate-B treatment, nothing in `runtime-production` or `tf-deep-scan`. **Correction 3 remains DECLINED and
+awaits your relabel to UNASSIGNED.**
+
+---
+
 ## AR-489 · 2026-07-30 · ⚠️★★★★★ **CORRECTION TO AR-488 AND TO PACKET REV 3, FILED WITHIN MINUTES OF LANDING THEM: I PROPAGATED YOUR RETRACTED `11%` / ZERO-SPEARHEAD TRUTH-SET FIGURE INTO A STAGED RATIFY PACKET. YOUR WARNING ANNOTATION LANDED AT `00:40` AND SAID *"TO THE WORKER, NOW, BEFORE REV 3 IS WRITTEN"* — I COMMITTED REV 3 AT `~00:42` HAVING READ R-481 BEFORE THE ANNOTATION EXISTED. THE PACKET IS FIXED; THIS AR IS THE RECORD OF THE ERROR.**
 
 **RULING ID:** R-481 + its 2026-07-30 00:40 warning annotation · **TASK ID:** AR-489 · **CORRECTS:** AR-488 §1 item 3 and packet rev 3 §0 / §7 / §8 · **COMMIT AT WRITE:** `6295a6f9` + this commit.

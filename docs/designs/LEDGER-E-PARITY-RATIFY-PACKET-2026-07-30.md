@@ -157,8 +157,21 @@ so it describes the real contract rather than denying the divergence.
 ★★★★★ **THE LOAD-BEARING REQUIREMENT. R-481's STOP CONDITION NAMES "another hand-selected
 comparison-field list" AS A HALT.** So the comparator must not enumerate fields at all: it must
 canonicalize both plans into one normalized structure and compare them **whole** — deep equality over
-the full object, with **key-set equality asserted in both directions**, so a field ADDED to either lane
+the full object, with **key-set equality asserted in BOTH directions**, so a field ADDED to either lane
 and not the other is itself a drift. **A new field must be a NEW DRIFT by default, never a silent pass.**
+**EXPLICITLY IN THE COMPARED SURFACE (R-482 correction 3), because each was omitted by the old
+five-field loop:** every per-binding field incl. **`reason`** · **array MULTIPLICITY** (not just length —
+a reordered or duplicated binding must not compare equal) · **`invalidations` bindings**, which the old
+comparator never reached · **queue reasons** · **duplicate-`condition_id` detection.**
+
+**(b2) ★★★★★ A SEMANTIC EXPECTED-RESULTS ORACLE, INDEPENDENT OF BOTH IMPLEMENTATIONS (R-482 correction 3).**
+**THIS IS THE DIFFERENCE BETWEEN *"THE TWO LANES AGREE"* AND *"THE TWO LANES ARE RIGHT".`** A whole-plan
+diff can only ever prove agreement — **two identically-wrong lanes compare equal.** So each fixture
+carries a hand-authored expected plan derived from the **SOURCE CONTRACT**, not from either lane's output.
+★★★★★ **AND THE TRAP THAT MAKES THIS DELICATE: copying either lane's emitted JSON into the expected
+table is `HARDCODED TEST COPY IS A FABRICATED SAFETY CLAIM` — it would look like an oracle and assert
+nothing. The expected values must be reasoned from the contract (`FAMILY_META` semantics + the
+evaluable-zone rule) and must be reviewable line by line against it.**
 
 **(c) EXHAUSTIVE MEMBERSHIP FIXTURES.** Every condition family in `FAMILY_META` × every evaluable zone ×
 every refused zone, plus the unbindable-in-both control and the shipped fixture untouched.
@@ -236,17 +249,36 @@ not."*** ★★★ **ASK IT EXPLICITLY TO HUNT A SIXTH FALSE GREEN.** The retire
 
 ## 5 — ROLLBACK
 
-- **Code:** revert the single parity commit. The change is **additive** in TS (a refusal table + a branch
-  ahead of an existing resolver) plus a comparator rewrite plus two CI lines. **No historical artifact is
-  mutated, so revert restores prior behaviour exactly.**
-- ★★★★★ **FLAG-GATED, AND THE FLAG GATES THE *FEATURE*, NEVER THE *FIX*:** the TS refusal ships behind
-  `TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED`, **default ON** to match Python (the safe lane), with the flag as
-  the documented one-line rollback if the materiality receipt surprises the desk. ★★★ **The comparator's
-  completeness and the CI wiring are NOT flagged — a gate you can silently disable is not a gate.**
+### ★★★★★ THERE IS NO FLAG. THE CORRECTION SHIPS UNCONDITIONALLY. (R-482 correction 1)
+
+★★★★★ **`YOU DO NOT FLAG-GATE A CORRECTNESS REPAIR. THE OFF BRANCH IS THE DEFECT.`**
+**`TF_TS_ORPHAN_ZONE_REFUSAL_ENABLED` IS REMOVED FROM THIS PACKET.** Rev 1 of this file proposed it
+default-ON "as the documented one-line rollback". ★★★★★ **THAT WAS A DEFECT, AND ITS FALSE CAPTION —
+*"the flag gates the FEATURE, never the FIX"* — HAS BEEN DELETED RATHER THAN REWORDED, because the thing
+behind the flag WAS the fix.** With the flag OFF, TypeScript resumes binding `lunch`/`overnight` while
+Python still refuses them: **the lanes are divergent again and CI, running default-ON, is green
+throughout. THE OFF STATE WOULD HAVE BEEN A PRODUCTION MODE NO PROOF COVERS.**
+★★★ **AND THE EVIDENCE THAT IT WAS BROKEN ALREADY EXISTED WHEN IT WAS PROPOSED: the RED baseline in
+`ci/fixtures/spec-binding-parity-expanded/` IS the OFF state, measured and committed.**
+★★★★★ **MINTED INVARIANT (R-482 §47), NOW BINDING ON THIS PACKET: `A CORRECTNESS REPAIR SHIPS
+UNCONDITIONALLY. ROLLBACK IS REVERT. IF AN EMERGENCY SWITCH IS RETAINED IT MUST HALT OR QUARANTINE,
+NEVER RESTORE THE DEFECT.`**
+
+- **ROLLBACK = `git revert` of the single parity commit.** The change is **additive** in TS (a refusal
+  table + a branch ahead of an existing resolver) plus a comparator rewrite plus two CI lines.
+  **No historical artifact is mutated, so revert restores prior behaviour exactly.** There is no partial
+  rollback and no runtime switch.
+- ★★★ **IF AN EMERGENCY SWITCH IS EVER ADDED, ITS OFF STATE MUST HALT OR QUARANTINE ONBOARDING — NEVER
+  RESTORE DIVERGENT BINDING.** A switch that can run the known-wrong behaviour multiplies production
+  modes and the proof covers only one of them. **The comparator's completeness and the CI wiring are
+  likewise unswitchable — a gate you can silently disable is not a gate.**
+- ★★★★★ **EVERY RECEIPT THIS WORK EMITS NAMES THE EFFECTIVE CONFIGURATION** — so no future reader has to
+  infer which mode produced a number.
 - **No frozen artifact, DB row, or emitted spec is written by this change.** Nothing to un-write.
 - **No live default in effect during live trading is altered** — `backtests_total = 0`, nothing live.
-- ★★ **The materiality receipt is what makes rollback an informed choice rather than a panic:** it names,
+- ★★ **The materiality receipt is what makes revert an informed choice rather than a panic:** it names,
   per spec, every `compiled` / route / category movement **before** anyone decides to keep it.
+  ★★★★★ **A HIGHER `compiled` COUNT AFTER THIS CHANGE IS A FAILURE SIGNAL.**
 
 ---
 
