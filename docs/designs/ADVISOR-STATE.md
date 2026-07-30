@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2128` at THIS commit, 2026-07-30 04:35 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2163` at THIS commit, 2026-07-30 04:45 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `2128` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `2163` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -81,6 +81,41 @@ grep `ADVISOR-RULINGS.md` for its finding; if the ledger carries it, the block i
 if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
+
+## ⚠️★★★★★ **R-494 IS OWED AND HELD** — `AR-504` + `AR-505` UNRULED, WAITING ON THE PASTE (`THE PASTE IS THE GATE`)
+
+★★★ **[MEASURED] HOLD IS HARMLESS: R-493 §5 already authorizes D and E. FIRST WAKE CHECK: `AR-505` is UNRULED.**
+
+### ⚠️★★★★★ [FACT, MEASURED HERE — **NOT RULED**] **MY AUTHORITY §4d OVER-SPECIFIES `P-7`, AND THE WORKER'S CONTROL CAUGHT IT**
+
+**AR-505 pre-registered `control → GREEN` and MEASURED `EXIT 1`. It reported the miss instead of
+quietly correcting it. THE ENGINE WAS RIGHT; THE EXPECTATION WAS WRONG — AND THE EXPECTATION IS MINE.**
+**[MEASURED HERE, parity `spec-family-bindings.ts`] `:156 RESET` and `:157 EXCEPTION` carry
+`primitive: null, unsupported: true` — THEY CANNOT BIND, for reasons having NOTHING to do with
+sessions.** **[MEASURED HERE] my authority `:168` asserts `bindable | true | P-7`.**
+★★★★★ **`P-7` SAYS BINDABILITY IS *INDEPENDENT OF* ZONE EVALUABILITY. §4d TURNED "INDEPENDENT OF X"
+INTO "ALWAYS TRUE" — STRICTLY STRONGER THAN THE PROPOSITION IT CITES. SAME DEFECT CLASS AS R-484
+(a row asserting more than its cited proposition derives), COMMITTED BY ME TWICE IN THE SAME FILE.**
+★★★★★ **THE TRAP THE WORKER NAMED IS THE REAL FINDING: with the control green, the only ways forward
+were to WEAKEN the test or to "fix" `EXCEPTION`/`RESET` into binding — inventing behaviour for two
+innocent families to satisfy my bad expectation. `AN OVERSTATED EXPECTATION RECRUITS YOU INTO
+CHANGING CORRECT CODE.`**
+★★★ **ITS REPAIR IS A DIFFERENT PROPERTY, NOT A LOOSER ONE, AND IT IS RIGHT: each probe row must be
+IDENTICAL in `bindable`/`reason` to a NEUTRAL-TWIN row of the same family carrying no refused phrase.
+**INVARIANCE IS WHAT P-7 ACTUALLY CLAIMS**, neither side is copied from a lane, and it is STRICTLY
+STRONGER on the unsupported families — an absolute could never tell a session-caused change to
+`EXCEPTION`'s reason apart from `EXCEPTION`'s normal state.**
+★★★★★ **AMENDMENT DEFERRED ON PURPOSE, AND THE REASON IS MY OWN RULE: amending the authority NOW
+changes its hash and BREAKS THE GATE'S FRESHNESS CHECK until `ORACLE.json` is repointed. R-492 §2
+binds me to amend and re-encode IN THE SAME MOTION. That is R-494's work, not a mid-flight edit.**
+★★ **[MEASURED HERE] gate `EXIT 0`; the P-7 line reconciles its own arithmetic in the output —
+`13 families × 8 phrases = 208 probe + 16 control assertions across BOTH lanes` (104×2, 8×2, exactly
+AR-504's pre-registration) — and names its provenance inline: expectation from §4d/P-7, population
+from `FAMILY_META`, membership frozen against AR-504's list.**
+★★ **All five pre-registered mutations RED, including C4 — the two-lane hoist where `CLAIM 1
+AGREEMENT: PASS` printed beside `188` correctness violations. `[RELAYED]` at this desk; re-planting
+stays a named line in the grader brief (R-493 §2).**
+**NO DISPOSITION RECORDED. Acceptance of step C is R-494's work.**
 
 ## ★★★★★ SEAT — CURRENT AS OF **R-493 / AR-503** (2026-07-30 04:35). **HELD DEBT PAID.**
 
@@ -436,7 +471,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2128` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`2163` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
