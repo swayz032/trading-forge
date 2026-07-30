@@ -4,6 +4,44 @@
 
 ---
 
+## AR-496 · 2026-07-30 · ★★★★★ **ITEM 1 DONE — F-A IS CLOSED AT THE WIRING LAYER. GATE IS IN `ci.yml` AND `fast.yml`, RED `EXIT 1` ON A DRIFTED CORPUS AND GREEN `EXIT 0` ON THE REAL ONE VIA THE STEP'S OWN COMMAND WITH NO ENV OVERRIDE. `tsc --noEmit` EXIT `0`. ★★★★★ AND I HAD TO RETIRE THE ONE-FIXTURE DEFAULT CORPUS TO WIRE IT AT ALL — WIRING IT AS-IS WOULD HAVE FAILED CI ON DAY ONE, AND A GREEN THERE WOULD HAVE PROVEN ONE FIXTURE.**
+
+**RULING ID:** R-485 §6 item 1 + R-486 §2 · **TASK ID:** AR-496 · **PRIOR:** AR-495 · **PARITY WORKTREE:** `wt-ledger-e-parity-20260730` @ **`09814413`** (`WIP — NOT A DELIVERY`), tree **clean**.
+**GUARD:** R-486 block lines **`15,53`** · `5,157` B · sha256 **`cf093cea496602f05bd2250184f3ddf3e7d0bb81a7f15f542efb6d8474926a99`** · commit `26624d4e` · **(a)=(b)=(c) all equal**, no worktree diff on the ruling path.
+
+### §1 — WHAT WAS WIRED
+
+**`ci.yml` job `build`** — inside the existing `Hard gates (fail-closed): TS<->Python parity` block, beside its five wired siblings. **`fast.yml` job `fast`** — **NOT `continue-on-error`.** ★★ **Both lanes on purpose: CI-only is the shape that let this rot for its entire life (R-481 §91).** `metric-snapshot.yml` untouched.
+★★★ **STEP PRESENCE ASSERTED BY WALKING THE PARSED YAML STEP LIST, NOT BY GREPPING TEXT** — because your §38 says a name in `ci.yml` proves only that the name is there. **`[MEASURED HERE]` `ci.yml PARSED OK, jobs=5 | gate steps: [('build', 'Gate — TS/Python binding-plan parity + frozen oracle')]` · `fast.yml PARSED OK, jobs=1 | gate steps: [('fast', …)]`.** A step buried under an unreachable job or a malformed key could not produce those tuples.
+
+### ★★★★★ §2 — THE THING I DID NOT EXPECT, AND IT WAS LOAD-BEARING
+
+**I could not wire the gate without retiring the default corpus, and I want the reasoning on the record rather than buried in a diff.**
+**`[MEASURED HERE]` the rewritten gate THROWS when a corpus has no `ORACLE.json`. The old default — `ci/fixtures/spec-binding-parity/` — is the ONE-fixture directory and has none.** ★★★★★ **SO WIRING THE GATE WHILE IT STILL DEFAULTED THERE WOULD HAVE FAILED CI ON DAY ONE — and the "fix" anyone would reach for under a red pipeline is to point it back at a corpus that certifies nothing. That is how a false green gets restored by someone acting in good faith.**
+**CHANGED:** default → `spec-binding-parity-expanded/` (7 declared members + oracle). ★★ **NOTHING IS LOST, and I checked rather than assuming: `00-control-shipped.spec.json` is a byte copy of the old corpus's single fixture AND is a REQUIRED manifest member — so the shipped case still runs and can no longer be silently dropped, which is strictly stronger than before.** **The legacy directory is LEFT IN PLACE, untouched — deleting it is not my scope.**
+★★★ **This is the second time this packet's own law bit its own artifact: `A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN CERTIFIES ITS FIXTURES, NOT ITS DOMAIN` was written about the old gate, and it applied to my wiring of the new one.**
+
+### §3 — EVIDENCE, IN YOUR §34 SHAPE, LABELLED AS YOU REQUIRED
+
+★★★★★ **(c) THIS IS A STEP-COMMAND EXECUTION, NOT A PIPELINE EXECUTION. I am not reporting it as one.**
+| # | run | result |
+|---|---|---|
+| **(b) DRIFTED** | `npm run check:spec-binding-plan-parity`, **no env override**, repo root | ★★★★★ **`EXIT=1`, captured BEFORE any filtering.** Drift = `20-nyam-evaluable`'s object `"ny am"` → `"at lunch"`. **RED on 5 cells × 2 lanes** — `bindable expected=true observed=false` · `primitive expected non-null observed=null` · `session_zone expected="ny_am" observed=null` · `approximation expected=false observed=true` · `reason expected null observed="session_zone_refused_uncomputable_window:lunch_blackout"` |
+| **(b) REAL** | same command, same absence of override | **`EXIT=0`**, `PASS` naming its **4** unadjudicated cells |
+| revert proof | `git diff HEAD` on the fixture | **EMPTY** — byte-identical; residue grep for `"at lunch"` = **0**, with a positive control (`"ny am"` → `1`) proving the grep reached the file |
+| **`tsc --noEmit`** | whole repo, `--max-old-space-size=8192` | ★★★ **`EXIT=0`** — closes your item 3 typecheck; **zero diagnostics naming either file I touched** |
+★★★★★ **AND NOTE *WHICH LAYER* WENT RED IN THE DRIFT, because it is the point of the whole packet: BOTH LANES AGREED — both correctly refused `"at lunch"` — so `CLAIM 1 AGREEMENT` stayed PASS and it was the ORACLE that failed. An A-vs-B comparator would have called that corpus healthy.**
+**`[UNPROVEN — REQUIRES A PIPELINE RUN]`** — the claim that these steps execute *in GitHub Actions*. Per your §29/§44 I have **not** pushed, **not** opened a PR, and **not** triggered any remote run. **It arrives free via the PR before ratification.**
+
+### §4 — POSITION · WHAT REMAINS
+
+**`09814413` WIP, tree clean, nothing merged, no Python changed, `runtime-production` and `tf-deep-scan` untouched.**
+**REMAINING (R-485 §6):** **item 2** — exhaustive family × evaluable-zone × refused-zone membership fixtures **+ the §4 queue-reason tripwire with its DISCRIMINATES fixture** (option (iii) adopted; the tripwire asserts the PRECONDITION is empty over `FAMILY_META` in both lanes, and must be shown to FIRE against a planted entry — `A GREEN CHECK WITH NO PATH TO RED IS NOT A CHECK`) · **item 3** — per-spec materiality receipt (`tsc` half now done).
+★★ **`[UNENUMERATED — OPEN]` and not closed by me: the two `FAMILY_META` VALUE sets.**
+**No sub-agent dispatched or owed. No `accuracy-validator` — your §7 trigger is items 1 AND 2 landed; only item 1 is.** **This seat continues on item 2 next; if it stops it will file a receipt, not a declaration.**
+
+---
+
 ## AR-495 · 2026-07-30 · **START-RECEIPT — R-485 §6 ITEM 1 (CI + FAST-LANE WIRING). ★★★ THIS SEAT IS NOT EXHAUSTED AND IS RESUMING: PER YOUR §70 MY AR-494 HANDOFF WAS SELF-ASSESSMENT AND `THE DISCRIMINATOR IS A START-RECEIPT, NEVER A DECLARATION` — SO HERE IS THE RECEIPT. ★★★★★ AND F-A RE-CONFIRMED WITH A POSITIVE CONTROL BEFORE I TOUCH A WORKFLOW.**
 
 **RULING ID:** R-485 §6 item 1 · **TASK ID:** AR-495 · **PRIOR:** AR-494 · **WORKTREE:** `wt-ledger-e-parity-20260730` @ **`aed0c58d`**, tree **clean** · **GUARD (a) START:** R-485 block lines **`15,93`** (range pinned by the same command that hashes it) · **`12,351` B** · sha256 **`d0a2a68aa0eeadca01ced36015c7b7656e13dc84d7c23e03ab8056e7e188e3f4`** · ruling commit **`5c2d9159`** (`01:52:48`), working tree vs `HEAD` on the ruling path: **no diff**.
