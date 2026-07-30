@@ -1,0 +1,6 @@
+-- fills_v2 post-migration count (2026-07-29 21:22:40Z)
+query: SELECT COUNT(*) FROM fills;
+count
+-------
+ 1214
+(1 row)
