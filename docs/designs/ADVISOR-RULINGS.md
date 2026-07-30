@@ -12,6 +12,112 @@
 
 ---
 
+## R-481 · 2026-07-30 · ★★★★★ **AR-486 ACCEPTED AT THE MECHANISM LAYER — PACKET REV 2 IS A STRONG DESIGN RECEIPT AND IS NOT RATIFIED. THE LEDGER-E PARITY GATE IS A FALSE GREEN, AND I PROVED IT WITH THE GATE'S OWN COMPARATOR: FED A `during lunch` SPEC IT GOES RED ON FIVE FIELDS INCLUDING `compiled`, WHILE ITS SHIPPED ONE-FIXTURE CORPUS PRINTS `PASS`.** ★★★★★ **AND A CORRECTION AGAINST THE EXTERNAL READ THAT SUPPLIED THE LEAD: ITS `compiled: ts=true py=false` DOES **NOT** REPRODUCE ON A PLAIN SAME-INPUT FIXTURE — IT REQUIRES A SPINE COMPOSITION THAT DROPS PYTHON BELOW `MIN_SPINE_BOUND_RATIO = 0.5`. I BUILT THAT INPUT AND PROVED THE CAUSE WITH A SAME-SHAPE NEGATIVE CONTROL. PASTING THE READ VERBATIM WOULD HAVE PUBLISHED AN UNCONDITIONAL CLAIM ABOUT THE EXACT FIELD GATE-B'S TRIPWIRE READS.**
+
+**RULING ID:** R-481 · **TASK ID:** AR-486 · **DECISION: REVISE.** Consumer contract matrix and the source-record/projection design ACCEPTED. Packet rev 2 NOT RATIFIED. **GATE-B ABLATION REMAINS BLOCKED.** The parity prerequisite is promoted to its own ratify packet and its own worktree.
+
+**NEWEST AR NAMED (stale-premise guard):** **AR-486**, read in full. ★★ **Its cited commit `6eff69ff` was OPENED, not assumed: `git cat-file -t` → `commit`, and `git log -- docs/designs/AGENT-REPORTS.md` shows `6eff69ff` IS the commit carrying AR-486 + packet rev 2. The citation is exact.** Nothing newer than AR-486 exists at write time (`grep -m2 "^## AR-"`).
+
+★★★★★ **PROVENANCE OF THE LEAD, STATED PLAINLY BECAUSE THE CAMPAIGN RESERVES POWERS ON IT: the parity-divergence lead arrived through the OPERATOR'S CHANNEL as a pre-formatted ruling draft labelled `R-481`. Per R-450 `A CHANNEL IS NOT AN AUTHOR`, it is `[EXTERNAL OPINION]` with ZERO authority. It is ADOPTED ON MERIT here because I re-derived its core myself — and two of its specific figures are corrected below. THIS DESK WROTE THIS RULING; THE PASTE WAS NOT COPIED INTO THE LEDGER.**
+
+### CLAIMS VERIFIED (and how) — every figure `[MEASURED HERE]`, tree named
+
+**All reads in `runtime-production` @ `9af37b8f` — the tree that EXECUTES.**
+
+1. **F-C — the consumer branches are ONE branch, not four surfaces.** `spec-onboarding-service.ts:437` `matchArchetype(...)` UNCONDITIONAL · `:452` `let bindingPlan: BindingPlan | null = null` · `:454` `if (!archetypeMatch.matched) {` · `:455` `compileBindingPlan({...})` · `:460` `conditionCompiled = bindingPlan.compiled`. **So an archetype `false→true` transition does not CHANGE the binding plan — it PREVENTS IT FROM RUNNING, leaving `spineBound`/`spine.length`/`spineRatio`/`compiled` NULL.** A record-for-record tripwire reads that blank as "left the queue". **CONFIRMED.**
+2. **F-A — the parity gate is NOT CI-wired.** `package.json:28` defines `check:spec-binding-plan-parity`; `.github/workflows/` holds exactly `ci.yml` · `fast.yml` · `metric-snapshot.yml`; a grep for `spec-binding-plan-parity` across all three returns **exit `1`, ZERO matches.** ★★ **FOUR POSITIVE CONTROLS, so this is a measured absence and not a failed search: `check:ts-python-exit-parity` → 1 workflow (read at `ci.yml:343`) · `check:2026-compliance` · `check:production-isolation` · `system-map:check` → 2 each.** **CONFIRMED. `EXISTENCE IS NOT WIRING.`**
+3. **F-G — the comparator under-compares, and it is worse than "a field subset".** `check-spec-binding-plan-parity.ts` COLLECTS ten per-binding fields (`condition_id · type · role · object · bindable · primitive · approximation · executed · reason · session_zone`) and COMPARES **five** (`condition_id · bindable · primitive · approximation · session_zone`). **`reason`, `type`, `role`, `object`, `executed` are collected and never compared.** **CONFIRMED at the loop.**
+4. **F-B — the tables have diverged and the TS caption denies it.** `src/server/lib/spec-family-bindings.ts:64` reads *"mirror `src/engine/spec_family_bindings.py::SESSION_KEYWORDS` EXACTLY"* directly above a **SEVEN**-zone table carrying `lunch_blackout` and `overnight`; `REFUSED_SESSION_KEYWORDS` **grep exit `1` — ABSENT from TS**; Python carries **FIVE** zones plus the refusal table under its own caption *"DELIBERATELY NO LONGER MATCHES … do not resync"* and a declared carry-forward *"it (and the TS mirror) are reported as adjacent work"*. **CONFIRMED. A FALSE CAPTION AT THE LINE, ON THE EXACT SURFACE GATE B MODIFIES.** ★★ **PATH CORRECTION: the file is `src/server/lib/`, NOT `src/server/services/` — my own first guess returned `No such file or directory`, which reads exactly like a missing artifact. `LOCATE, DO NOT ASSUME, THE DIRECTORY.`**
+5. ★★★★★ **THE FALSE GREEN, ESTABLISHED WITH THE GATE'S OWN INSTRUMENT — the strongest available form.** I did not hand-call each lane. I pointed the SHIPPED comparator at a corpus via its own `TF_SPEC_BINDING_SAMPLES_DIR` override (`:36-38`), so the production comparison path did the work. **THREE-DIRECTIONAL DISCRIMINATION:** the two orphan-zone fixtures go RED; an evaluable zone, an unbindable-in-both phrase, and the **untouched shipped fixture** all stay GREEN. **The gate is NOT blind to this divergence — `bindable`, `session_zone`, `spine_bound` and `compiled` are all in its compared sets. IT IS SIMPLY NEVER GIVEN THE INPUT.**
+6. **F-E — the routing consequence is real.** `playbook_router.py` consumes each category list INDIVIDUALLY as `allowed_strategies` (CONTINUATION `:138 :145 :198 :211 :224` · REVERSAL `:152 :159 :240` · MEAN_REV `:166 :173 :240` · ORB `:180 :187 :211`); `ALL_STRATS` (`:105`) is their union and is used nowhere else. **A re-bucket changes which regime/playbook blocks may trade the strategy.** ACCEPTED from AR-486 as `[CORROBORATED]` — I did not re-open the router myself this round.
+
+### EVIDENCE INDEPENDENTLY CHECKED — AND TWO CORRECTIONS TO THE EXTERNAL READ
+
+★★★★★ **CORRECTION 1 — `compiled` IS CONDITIONAL, NOT UNCONDITIONAL. The read asserted TS `compiled:true` vs PY `compiled:false` as a flat same-input result. [MEASURED HERE] ON A PLAIN 2-SPINE `during lunch` FIXTURE `compiled` AGREED — it is absent from the DRIFT list. Arithmetic: `MIN_SPINE_BOUND_RATIO = 0.5`; TS binds 2 of 2 (`1.0`), PY binds 1 of 2 (`0.5`) — and `0.5 ≥ 0.5`, so BOTH compile.** ★★★ **I THEN CONSTRUCTED THE INPUT WHERE IT DOES FLIP** — a third spine unbindable in both lanes (`WAIT_SESSION "regional window"`) drops PY to `1/3 = 0.333 < 0.5` while TS holds `2/3 = 0.667` — **and the gate reported `compiled: ts=true py=false`.** ★★★★★ **THE NEGATIVE CONTROL IS WHAT MAKES IT A FINDING: the SAME three-spine shape with `ny am` instead of `during lunch` stays GREEN. So the flip is caused by the ORPHAN ZONE, not by my fixture shape.** **THE TRUE PROPOSITION IS NARROWER AND SHARPER THAN THE READ'S: TS and Python diverge on `compiled` WHENEVER THE ORPHAN-ZONE BINDING IS WHAT CARRIES PYTHON ACROSS THE `0.5` SPINE-RATIO FLOOR.** `AN UNCONDITIONAL CLAIM ABOUT A CONDITIONAL MECHANISM IS A FALSE MECHANISM CLAIM, AND A WRONG MECHANISM GETS OBEYED.`
+★★★ **CORRECTION 2 — `spineBound`. The read said ts=`1` py=`0`; I measure ts=`2` py=`1`. The DIRECTION and the gap of exactly one reproduce; the absolutes are fixture-dependent (their fixture had one spine, mine two). Not a defect in the read — but it means NO absolute from that paste may be copied into an artifact.**
+★★ **NOT VERIFIED HERE, AND IT MATTERS: the Python reason string `session_zone_refused_uncomputable_window:lunch_blackout`. `reason` is COLLECTED AND NEVER COMPARED (§F-G), so it CANNOT appear in a DRIFT line and my run did not print it. `[UNVERIFIED HERE — RELAYED]`.** ★★★★★ **AND THAT EXPOSES A DEFECT IN THE READ'S OWN ACCEPTANCE COMMAND: it requires *"refuse identically in both lanes WITH THE SAME REASON"* — a property the current comparator STRUCTURALLY CANNOT CHECK. The acceptance criterion and the instrument are inconsistent, and closing F-G is a PREREQUISITE to that criterion being meaningful, not a parallel item.**
+
+### TESTS RERUN (command + result)
+
+| command | result |
+|---|---|
+| `npm run check:spec-binding-plan-parity` (shipped corpus, `runtime-production`) | `Checked 1 sample specs.` / `PASS: TS and Python binding plans agree on every sample spec.` **exit `0`** |
+| `ls ci/fixtures/spec-binding-parity/` | **ONE file**, `all-families.spec.json`, `1,690` B — against the script's docstring claiming a 25-sample corpus |
+| `TF_SPEC_BINDING_SAMPLES_DIR=<5-fixture corpus> npx tsx scripts/check-spec-binding-plan-parity.ts` | **`FAIL: 2 spec(s)`, exit `1`.** `10-lunch-orphan`: `spine_bound ts=2 py=1` · `bindable ts=true py=false` · `primitive ts="session_windows" py=null` · `approximation ts=false py=true` · `session_zone ts="lunch_blackout" py=null`. `11-premarket-orphan`: same shape, `session_zone ts="overnight"`. **GREEN: `00-control-shipped` (untouched), `20-nyam-evaluable`, `21-fivemin-chart`** |
+| `TF_SPEC_BINDING_SAMPLES_DIR=<compiled-flip corpus>` (3-spine) | **`FAIL: 1 spec(s)`, exit `1`** — adds **`compiled: ts=true py=false`**. **Same-shape negative control with `ny am` → GREEN** |
+| `git cat-file -t 6eff69ff` | `commit` — the read's cited SHA exists and carries AR-486 |
+| read-only live-library probe (`postgres.js`, `runtime-production/.env`) | `CONNECTED db=railway`; **READ-ONLY PROVEN BY POSITIVE CONTROL — `create temp table` rejected, SQLSTATE `25006`**; `strategies` = `120` |
+
+★★★ **INSTRUMENT AUDITS AGAINST MYSELF, all pre-publication: (a) my first DB probe reported `PROBE FAILED` exit `1` while actually PROVING read-only — the aborted transaction poisoned the follow-up statements. `AN EXIT CODE IS NOT A VERDICT UNTIL YOU KNOW WHAT PRODUCED IT.` (b) An MSYS `/c/...` path made Windows `node`/`python` raise `MODULE_NOT_FOUND`/`FileNotFoundError` on files `ls` had just listed — twice. (c) `grep -P` died on locale (`-P supports only unibyte and UTF-8 locales`). NONE of these were defects in the code under review.**
+
+### ARCHITECTURE INVARIANTS TOUCHED
+
+**#1 HOLDS** — no downstream count may justify altering extracted meaning; aggregate compiled-coverage is explicitly barred from meaning success. **#2 CENTRAL** — source clause / executable decision / execution context stay distinct. **#4 HOLDS** — this is a binding-lane parity fix, not a risk or sizing change. **#6 HOLDS** — no promotion, no live capital, nothing connected. **#9 CENTRAL** — the empty-spine refusal is UNTOUCHED. ★★★ **AND THE ONE THIS RULING ADDS: TS/PYTHON PARITY IS SEMANTIC OUTPUT PARITY, NEVER TABLE-TEXT EQUALITY. `DO NOT "RESTORE PARITY" BY TEACHING PYTHON TO ACCEPT `lunch` OR `overnight`.` Python's refusal is the SAFE behaviour — those zones have no evaluable window, so a bind produces a rule that says "only trade during X" and executes as "never trade" while reporting `approximation=False`. TYPESCRIPT MUST REFUSE THEM EQUIVALENTLY.**
+
+### FAILED OR UNPROVEN CONDITIONS
+
+- **Population incidence of every control-flow transition and of the parity divergence over the exact source-keyed Gate-B population — `[UNMEASURED]`. This is the number that decides THEORETICAL vs LIVE, and no mechanism proof substitutes for it.**
+- Python's exact refusal reason string — `[UNVERIFIED HERE — RELAYED]` (see Correction 2).
+- Additive current-production baseline — **NOT BUILT, DESK-OWNED.** The live library is now proven REACHABLE and READ-ONLY-SAFE from this desk `[MEASURED HERE]`, so the remaining blocker is the re-authored producer, not access.
+- Re-authored census producer equivalence — `[UNPROVEN]`. `pop120_census.py` is unrecoverable; the control is: re-authored producer + recovered `classify.py` over the SAME snapshot must reproduce sha256 `eed65514a126…`.
+- Whether the Band-C instrument's hardcoded `.claude/worktrees/extraction-100/tmp/generalization` path still names the intended population — `[UNVERIFIED]`.
+- `playbook-registration.ts` itself — AR-486 §6 declares its packet row CARRIED FROM AR-483, NOT RE-MEASURED. **Accepted as an honest partial; it is named, not hidden.**
+- No independent grade exists for a parity repair **because no repair exists yet.**
+
+### ★★★★★ DESK-OWNED, AND ONE OF THEM CHANGED TONIGHT
+
+**THE SURVIVOR TRUTH SET IS NOT MERELY PENDING — ITS PRESCRIBED RECIPE IS DEAD, AND THAT IS MY FINDING, NOT THE WORKER'S** `[MEASURED HERE]`: the preserved transcripts **ARE** the extraction-time text (`40/40` char-length identity against each spec's own `transcript_chars`; **`264` recorded `(offset → quote)` pairs resolve exactly across `37` of `40` videos**). **BUT `evidence` IS NOT A QUOTE FIELD** — of `2351` conditions, `1027` carry an atom ref, `29`+ a placeholder, plus brace-structs and the known `'},{'` debris; **only `264 / 2351` = `11.2%` carry a resolvable quote, and `75DJN5UVQnw` — THE distance-0 spearhead — carries ZERO** (13 conditions: 9 atom refs, 2 debris, 2 brace-structs). ★★★ **`"ZERO SPANS RESOLVE FOR THE #1 TARGET"` WOULD HAVE BEEN A TRUE SENTENCE AND A FALSE FINDING — the benign cause (the SPEC records no quotes; the archive is not implicated) was measured BEFORE the alarming one was written.** **SO R-474 §4's `(video, transcript hash, exact span, exact-slice hash)` KEY IS REALIZABLE ON 11% OF THE SURFACE AND ON NONE OF THE SPEARHEAD. THE REPLACEMENT RULE IS MINE. THE WORKER DOES NOT AUTHOR IT.**
+**AND THE STALE-STATE CORRECTION, OWED TO THE PACKET AND TO AR-486's TAIL: "whether `0b0d6617` moves C8" IS MEASURED, NOT OPEN** — frozen C8 `233` · counterfactual under current code `159` · movement **`−74`** · sentinel-excluded treatment population `158`. **What remains open is the ADDITIVE baseline, not the question.** `AN ANSWERED UNKNOWN REPEATED AS OPEN IS STALE STATE RESURRECTING WORK.`
+
+### REQUIRED CORRECTIONS
+
+1. **Replace `CONSUMER-SUPERSEDED` with an explicit CONTROL-FLOW RECORD, verdict `CONTROL_FLOW_CHANGED`.** Emit `archetype_engaged` before/after · `binding_engaged` before/after · route before/after · category-function before/after · onboarding outcome before/after. **Binding outputs are comparable ONLY when binding engaged in BOTH arms.** The verdict must **exclude the record from efficacy scoring**, **mark the run invalid for a success verdict**, and ★★★★★ **CONTINUE THE SWEEP — do NOT abort on the first row. FAIL CLOSED AT THE VERDICT BOUNDARY, NEVER AT THE EVIDENCE-COLLECTION BOUNDARY; aborting early destroys the incidence number this ruling names as the deciding one.** `BEFORE COMPARING OUTPUTS, RECORD WHETHER THE COMPUTATION RAN. A BRANCH-GENERATED NULL IS AN OUTCOME, NOT MISSING DATA.`
+2. **Add the onboarding DECISION GRAPH to packet §3.5** — the six consumers are not independent rows: `matchArchetype` → matched: archetype category, NO binding plan · unmatched: binding plan → compiled: condition-derived category · uncompiled: queue/default category → timeframe recovery → strategy-name derivation → source-writing playbook registration.
+3. **Correct the stale `0b0d6617` status and the truth-set status** in the packet and in the AR-486 tail, per §DESK-OWNED above.
+4. **`bandc-measure-mapped-queued-split.ts` IS FORBIDDEN AS AN EFFICACY ORACLE** — both its success buckets are treatment-movable and it reads a hardcoded fourth-tree path. DIAGNOSTIC ONLY. **No mapped-count, compiled-count, C8-count or queue-rate may establish Gate-B success. The source-keyed transition ledger is the instrument.**
+
+### F-A / F-B / F-G DISPOSITION — ruled, not deferred
+
+- **F-B semantic divergence: MUST CLOSE BEFORE THE ABLATION**, unless a graded complete-plan comparison proves the exact frozen Gate-B population is DISJOINT from it.
+- **F-G incomplete comparison: MUST CLOSE BEFORE ANY PARITY RESULT MAY BE ADMITTED** — and it gates the "same reason" acceptance criterion, which today is uncheckable.
+- **F-A CI wiring: NOT required to write isolated producer code; REQUIRED before merge, deployment, or any reliance on parity as continuing protection.**
+- ★★★★★ **THE CURRENT ONE-FIXTURE `PASS` HAS ZERO AUTHORITY AND MAY NOT BE CITED BY ANY FUTURE RULING. `A PARITY GATE THAT PASSES ITS FIXTURE WHILE ITS DECLARED DOMAIN CONTAINS A COUNTEREXAMPLE IS A FIXTURE DEMO, NOT A PARITY GATE.`**
+
+### AUTHORIZED NEXT ACTION — **TO THE CURRENT WORKER SEAT** (the seat that filed AR-485/AR-486; it declared context remaining and did not request a swap)
+
+**IN ORDER:**
+1. **Packet REV 3** — corrections 1–4 above.
+2. **Stage `LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` WITH ALL FIVE PARTS** (`ratify-packet`): what & why now with receipts · **blast radius** (which certifications/baselines this invalidates, which downstream consumers change behaviour) · the exact change scope-locked with OUT-of-scope named · verification plan · **rollback, flag-gated**. **Required property, stated as a PROPERTY not a mechanism:** *"For identical input, TypeScript and Python emit the same COMPLETE normalized binding plan, and no session token is bindable unless the runtime has an evaluable implementation."*
+3. **In a NEW isolated worktree pinned to `runtime-production`'s then-current SHA** (record the SHA in the packet), implement ONLY the parity closure: TS orphan-zone refusal matching Python semantics · **complete normalized-plan comparison, NOT another hand-picked field list** · exhaustive MEMBERSHIP fixtures across every condition family, every evaluable zone and every refused zone · CI **and** fast-lane wiring.
+4. **THEN this desk dispatches ONE fresh `accuracy-validator`** against that commit, adversarially tasked to find another false green. ★★ **Its brief will carry the WORKING ACCESS RECIPE, not prohibitions — a restriction in the brief is a hole in the result — and will explicitly accept the honest null.** **I will name its agent id in the ruling that consumes it.**
+5. **After a SOUND grade:** measure control-flow and parity INCIDENCE over the exact source-keyed Gate-B population.
+
+**FIRST OBSERVABLE + ETA (so silence is readable):** REV 3 receipt **~15 min**; parity packet **~30 min**. **START-RECEIPT required within ~2 min naming the first artifact.** **HONEST-PARTIAL CLAUSE APPLIES — if you cannot make a step exhaustive, say so and name the surface you covered.**
+
+### FILES / SCOPE ALLOWED
+
+**Documentation (campaign tree):** the Gate-B packet · the new Ledger-E parity packet · `AGENT-REPORTS.md`.
+**Parity worktree ONLY:** `spec-family-bindings.ts` · `spec_family_bindings.py` **only if contract alignment genuinely requires it** · `check-spec-binding-plan-parity.ts` · parity fixtures · CI workflow files · directly associated tests.
+**FORBIDDEN:** Gate-B treatment code · model execution · extraction or re-extraction · DB / spec / frozen-artifact writes · backtests · empty-spine changes · direct edits to `runtime-production` or `tf-deep-scan` · `git checkout`/`reset`/index ops in the shared tree · ★★★★★ **changing Python to accept an unevaluable orphan zone in order to make parity green.**
+
+### ACCEPTANCE COMMANDS
+
+`during lunch` **and** `premarket` refuse identically in BOTH lanes **with the same reason** (requires F-G closed first) · `ny am` remains bindable in both · `five-minute chart` remains unbindable in both · **a REASON-ONLY mutation turns parity RED** · deleting any required fixture turns MEMBERSHIP red · the FULL normalized plan compares equal, not a selected subset · the gate executes in CI **and** fast lane · unmutated controls stay GREEN · **the shipped `all-families.spec.json` still passes** · an independent grader re-derives through two non-overlapping paths.
+
+### STOP CONDITION
+
+STOP on: any attempt to make Python accept an unevaluable session · another hand-selected comparison-field list · another count-only fixture assertion · treating a missing binding output as success · **aborting evidence collection before transition incidence is complete** · citing the current one-fixture `PASS` · repeating `0b0d6617` as unmeasured · using mapped/compiled/queue counts as efficacy · touching Gate-B treatment code before these prerequisites and the two desk-owned freezes land.
+
+### LESSON TO PERSIST
+
+★★★★★ **`BEFORE COMPARING OUTPUTS, RECORD WHETHER THE COMPUTATION RAN.`**
+★★★★★ **`A BRANCH-GENERATED NULL IS AN OUTCOME, NOT MISSING DATA.`**
+★★★★★ **`A GATE THAT PASSES EVERY FIXTURE IT WAS GIVEN CERTIFIES ITS FIXTURES, NOT ITS DOMAIN.` "PASS on the specs I selected" and "the implementations are equivalent" are different propositions, and only one of them was measured.**
+★★★★★ **`TO TEST A GATE, FEED IT THE INPUT IT LACKS — DO NOT RE-IMPLEMENT ITS COMPARISON BY HAND.` Using the shipped comparator via its own corpus override proved the divergence AND the gate's discrimination in one run; a hand-rolled two-lane diff would have proved neither.**
+★★★★★ **`AN EXTERNAL READ'S CORE CAN BE RIGHT WHILE ITS NUMBERS ARE CONDITIONAL.` Adopt the lead, re-derive every figure, and publish the narrower true proposition — a conditional mechanism asserted unconditionally is a false mechanism claim, and a wrong mechanism gets obeyed.**
+
+---
+
 ## R-480 · 2026-07-29 · ★★★★★ **AR-483 ACCEPTED AT THE MECHANISM LAYER, AND IT CHANGES THE GATE-B DESIGN: THE ABLATION MAY NOT DELETE CLAUSES AND THEN GRADE ITSELF ON DOWNSTREAM STATES WHOSE INPUTS OR DENOMINATORS THAT DELETION CHANGED.** ★★★★★ **[MEASURED HERE AT THE EXECUTABLE LINE] `spec-family-bindings.ts:219` NUMERATOR `spineBound`, `:257` DENOMINATOR `spine.length`, `:258` THRESHOLD `0.5` — SO DELETING UNBINDABLE SPINE CLAUSES RAISES THE RATIO WITH THE NUMERATOR UNTOUCHED AND CAN FLIP `compiled` FALSE→TRUE. THE INTERVENTION MOVES ITS OWN SCORE.**
 
 **RULING ID:** R-480 · **TASK ID:** AR-483 · **DECISION:** **REVISE. The four-consumer read is ACCEPTED. Packet revision AUTHORIZED under the corrected contract. Gate-B implementation, extraction and ablation remain BLOCKED. No code, no worktree.**
