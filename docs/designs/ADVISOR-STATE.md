@@ -3,7 +3,11 @@
 > **Rewritten in place, never appended.** Cold read: this file → last 3–5 rulings
 > → newest 1–2 ARs. **Never read the ledger from the top.**
 >
-> **COMPACTED 2026-07-29 at R-472/AR-471: `1,186` lines → this.** [MEASURED HERE]
+> **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
+> ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
+> `561` lines; now `~750` after a night of genuine new content through R-476.
+> If you are reading a stale figure here, `grep -c ""` it and fix this line —
+> the previous header claimed `313` while the file was `997`.** [MEASURED HERE]
 > the pre-compaction file was `1,186` lines / `102,513` bytes while its own header
 > claimed "compacted 450→313, current through R-453" — a self-description nobody
 > re-measured, and a cold seat trusting it under-read the file by two thirds.
