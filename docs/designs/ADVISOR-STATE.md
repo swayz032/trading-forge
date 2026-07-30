@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1695` at THIS commit, 2026-07-30 01:47 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1724` at THIS commit, 2026-07-30 01:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -40,7 +40,36 @@
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-484 / AR-493** (2026-07-30 01:45, FRESH ADVISOR SEAT)
+## ★★★★★ SEAT — CURRENT AS OF **R-485 / AR-494** (2026-07-30 01:55, FRESH ADVISOR SEAT)
+
+★★★★★ **R-485 (`5c2d9159`) — THE PARITY GATE IS GREEN AND I PROVED BOTH HALVES MYSELF.**
+**[MEASURED HERE] GREEN:** `Checked 7 sample specs against 7 declared members` · **exit `0`** · the run
+**PRINTS THE AUTHORITY HASH IT GRADED AGAINST** (`9b708e24…312d`) · 4 cells render `[NOT ADJUDICATED]`
+in a banner AND inside the PASS line.
+★★★★★ **[MEASURED HERE] RED, WHICH IS THE HALF THAT MATTERS:** I copied the corpus to scratch,
+mutated ONE oracle expectation, **touched NEITHER lane** — gate **exit `1`**, `expected="london"
+observed="ny_am"` in **both** lanes, summary **`CLAIM 1 AGREEMENT: PASS · CLAIM 2: 4 violation(s)`**.
+**THE ORACLE IS A THIRD AUTHORITY, NOT A MIRROR — executed, not argued.** ★★ **The worker's tree
+stayed `git status --porcelain` EMPTY: `TO RED-PROOF SOMEONE ELSE'S GATE, FEED IT YOUR OWN CORPUS.`**
+★★★★★ **CORRECTION 3 IS *NOT* COMPLETE — 5 ITEMS REMAIN.** Order: **(1) CI + fast-lane wiring** (F-A
+still live: script defined, ZERO workflow hits — **proof is an OBSERVED pipeline non-zero exit, a
+`grep` hit is NOT sufficient**) · **(2) exhaustive family × zone membership + the queue-reason
+tripwire** · (3) materiality receipt + `tsc`.
+★★★★★ **GRADE HELD WITH A PRECISE TRIGGER: dispatch ONE `accuracy-validator` once items 1 AND 2 land**
+— they change what the gate certifies; items 3+ do not. **Grading now grades a corpus about to be
+replaced.** `aed0c58d` is WIP, not the frozen commit.
+★★★ **QUEUE-REASON DIVERGENCE ADJUDICATED (asked twice, unanswered twice — desk defect, now closed):
+option (iii). NEITHER LANE CHANGES — the direction is UNRULED and the payload's readers are
+`[UNENUMERATED]`. Tripwire asserts the PRECONDITION is empty over `FAMILY_META` in both lanes, and
+OWES A DISCRIMINATES FIXTURE.**
+★★★★★ **LAW ADOPTED FROM AR-494, above the green in importance: `A RED FOR THE WRONG REASON IS NOT A
+RED-PROOF — IT IS A GREEN WEARING RED.` Two mutations went red on a PowerShell BOM killing
+`JSON.parse`, not on the mutation. ★★★ `AN EXPECTED RESULT IS THE LEAST-AUDITED RESULT.`**
+★★ **AR-494 declares HANDOFF. Acknowledged as SELF-ASSESSMENT — the task STAYS AUTHORIZED to the
+seat. A FRESH WORKER SESSION IS THE OPERATOR'S ACT; they have been told. `THE DISCRIMINATOR IS A
+START-RECEIPT, NEVER A DECLARATION` (AR-475 declared handoff then filed NINE more reports).**
+
+### SUPERSEDED SEAT LINE — R-484 / AR-493
 
 ★★★★★ **R-484 (`35bce585`) — THE ORACLE FIRED ON ITS FIRST RUN AND CONVICTED *BOTH LANES AT ONCE*,
 WHICH IS THE CASE AN A-vs-B COMPARATOR STRUCTURALLY CANNOT SEE. AND THE DEFECT WAS MINE:**
@@ -91,7 +120,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1,695` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1724` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
