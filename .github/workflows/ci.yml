@@ -349,6 +349,25 @@ jobs:
         run: npm run check:ts-python-pm-factor-parity
       - name: Gate — TS/Python stop-geometry parity
         run: npm run check:ts-python-stop-geometry-parity
+      # Ledger-E binding-plan parity. Was script-only for its whole life: the
+      # script existed at package.json and executed in ZERO workflows, so a
+      # one-sided edit to either lane's session tables could not fail anything.
+      # EXISTENCE IS NOT WIRING.
+      #
+      # This gate asserts TWO SEPARATE claims and prints them separately:
+      #   CLAIM 1 AGREEMENT  — TS and Python emit byte-identical binding plans
+      #                        (whole-plan deep equality, key-set equality in
+      #                        BOTH directions, so a field added to one lane is
+      #                        itself a drift).
+      #   CLAIM 2 CORRECTNESS — both lanes conform to a desk-frozen oracle whose
+      #                        authority is external to both
+      #                        (docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md).
+      #                        Two identically-wrong lanes compare equal, so
+      #                        agreement alone can never establish correctness.
+      # It also fails closed on corpus membership: a deleted fixture DENIES the
+      # claim rather than shrinking the denominator.
+      - name: Gate — TS/Python binding-plan parity + frozen oracle
+        run: npm run check:spec-binding-plan-parity
       # deep-scan re-verify: wire the two new contract/schema gates into CI (were script-only —
       # Paper re-verify Finding 1 caught gate-contract-keys shipped unwired, so drift wasn't caught).
       - name: Gate — JSONB gate-input contract keys (producer↔consumer)

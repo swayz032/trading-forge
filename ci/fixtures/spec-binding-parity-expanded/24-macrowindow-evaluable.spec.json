@@ -1,0 +1,12 @@
+{
+  "video": "24-macrowindow-evaluable",
+  "_why": "ZONE-AXIS GAP NAMED IN AR-497 section34: macro_window had NO fixture. Authority section2 measures macro_window at 74/1440 occupied = EVALUABLE, so this row is FULLY ORACLE-ADJUDICATED by the same derivation as 20-nyam-evaluable. 74/1440 is the LOWEST non-zero occupancy in section2 -- the closest evaluable zone to the 0/1440 orphan boundary, and therefore the one whose 'evaluable' verdict is most worth pinning.",
+  "spec": {
+    "entry_trigger_id": "enter",
+    "entry_conditions": [
+      { "id": "sess", "type": "WAIT_SESSION", "object": "macro window", "role": "spine" },
+      { "id": "enter", "type": "ENTER", "object": "market", "role": "spine" }
+    ],
+    "invalidations": []
+  }
+}
