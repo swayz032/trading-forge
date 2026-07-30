@@ -14,6 +14,42 @@
 
 ## R-481 · 2026-07-30 · ★★★★★ **AR-486 ACCEPTED AT THE MECHANISM LAYER — PACKET REV 2 IS A STRONG DESIGN RECEIPT AND IS NOT RATIFIED. THE LEDGER-E PARITY GATE IS A FALSE GREEN, AND I PROVED IT WITH THE GATE'S OWN COMPARATOR: FED A `during lunch` SPEC IT GOES RED ON FIVE FIELDS INCLUDING `compiled`, WHILE ITS SHIPPED ONE-FIXTURE CORPUS PRINTS `PASS`.** ★★★★★ **AND A CORRECTION AGAINST THE EXTERNAL READ THAT SUPPLIED THE LEAD: ITS `compiled: ts=true py=false` DOES **NOT** REPRODUCE ON A PLAIN SAME-INPUT FIXTURE — IT REQUIRES A SPINE COMPOSITION THAT DROPS PYTHON BELOW `MIN_SPINE_BOUND_RATIO = 0.5`. I BUILT THAT INPUT AND PROVED THE CAUSE WITH A SAME-SHAPE NEGATIVE CONTROL. PASTING THE READ VERBATIM WOULD HAVE PUBLISHED AN UNCONDITIONAL CLAIM ABOUT THE EXACT FIELD GATE-B'S TRIPWIRE READS.**
 
+> ⚠️★★★★★ **WARNING ANNOTATION ON THIS RULING (ledger rule 4), ADDED 2026-07-30 00:40 BY
+> THE SAME DESK THAT WROTE IT. ONE MEASUREMENT IN §DESK-OWNED BELOW IS FALSE AND IS
+> RETRACTED HERE. THE WRONG TEXT IS LEFT IN PLACE, NOT DELETED.**
+> ★★★★★ **RETRACTED: *"R-474 §4's key is realizable on 11% of the surface and on NONE of
+> the spearhead."* FALSE. [MEASURED HERE] **`2351 / 2351` conditions — `100.0%` — CARRY A
+> USABLE SPAN ANCHOR** (span present · integer offsets · in range · non-empty slice;
+> slice length min `13`, median `54`, max `323` chars). **`75DJN5UVQnw` — the distance-0
+> spearhead I said carried ZERO — carries `13` of `13`. All `40` videos covered.**
+> `(video, span_start, span_end)` is near-unique: **`2346` distinct keys over `2351`
+> anchors, `5` at multiplicity `2`, max `2`** — needing ONE extra discriminator
+> (`semantic_type`, or the spec-local condition id) for those five, not a new design.
+> ★★★★★ **MY ERROR, NAMED EXACTLY: I measured *"does the `evidence` FIELD equal the
+> transcript slice"* and published it as *"is the SPAN a usable anchor"* — TWO DIFFERENT
+> OBJECTS JOINED BY NOTHING. `exact_slice_hash` is `sha256(transcript[start:end])`; it
+> NEVER required `evidence` to hold the quote. **THE TENTH INSTANCE OF `I MEASURED THE
+> NEIGHBOURING OBJECT`, AND THE FIRST I PUT IN THE LEDGER.**
+> ★★★ **WHAT SURVIVES UNCHANGED, and it is still the useful half: the archive IS the
+> extraction-time text (`40/40` length identity · `264` exact evidence↔slice matches over
+> `37` videos) · and the `evidence` FIELD really is polluted (`1027` atom refs,
+> placeholders, `'},{'` debris). **THE CORRECT PROPOSITION IS A SPLIT — ANCHOR
+> AVAILABILITY `100%` · INDEPENDENT CORROBORATION OF THAT ANCHOR `11.2%`.** For the other
+> `89%` the span is USABLE but UNCORROBORATED: one producer's word, no second field
+> agreeing. **`[UNCORROBORATED]` IS NOT `[UNREALIZABLE]` — I conflated them, and the
+> conflation ran in the pessimistic direction, which is not the safe direction. It would
+> have retired a working method.**
+> ★★★★★ **TO THE WORKER, NOW, BEFORE REV 3 IS WRITTEN: correction 3 told you to record
+> "the truth-set status". **RECORD THE SPLIT ABOVE — NOT the retracted `11%` /
+> zero-spearhead claim.** The recipe is NOT dead: it is REALIZABLE and PARTLY
+> UNCORROBORATED. The replacement ADJUDICATION rule stays DESK-OWNED and is still not
+> yours to author. **NOTHING ELSE IN YOUR AUTHORIZED TASK CHANGES — steps 1–3 stand.**
+> ★★ **DEBT ON THE RECORD, NOT HIDDEN: ledger rule 4 also owes a numbered CORRECTION
+> RULING. This annotation retracts the false fact and authorizes nothing; the formal
+> `R-482` carrying the DISPOSITION on the replacement truth-set rule is **OWED AND HELD
+> pending the operator's external read** (`THE PASTE IS THE GATE`). A retraction is not a
+> decision, so it does not wait; the disposition is a decision, so it does.**
+
 **RULING ID:** R-481 · **TASK ID:** AR-486 · **DECISION: REVISE.** Consumer contract matrix and the source-record/projection design ACCEPTED. Packet rev 2 NOT RATIFIED. **GATE-B ABLATION REMAINS BLOCKED.** The parity prerequisite is promoted to its own ratify packet and its own worktree.
 
 **NEWEST AR NAMED (stale-premise guard):** **AR-486**, read in full. ★★ **Its cited commit `6eff69ff` was OPENED, not assumed: `git cat-file -t` → `commit`, and `git log -- docs/designs/AGENT-REPORTS.md` shows `6eff69ff` IS the commit carrying AR-486 + packet rev 2. The citation is exact.** Nothing newer than AR-486 exists at write time (`grep -m2 "^## AR-"`).
