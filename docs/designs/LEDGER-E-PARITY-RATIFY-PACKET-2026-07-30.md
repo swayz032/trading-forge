@@ -661,3 +661,36 @@ CURRENT STATE.**
 - **path set:** the same **22** reviewed paths as `2011e8de` plus this packet = **23**. ★★★★★ **VERIFIED AS TWO SEPARATE CHECKS — the 22 by content against the corrected WIP head, this packet by HASH — never as one total. `A CHECK THAT CAN BE SATISFIED BY REMOVING THE RIGHT ANSWER IS THE WRONG CHECK.`**
 - **this packet's sha256** is recorded in the replacement's worker report together with the commit SHA.
 ★★★ **THE COMMIT SHA AND THE FULL ACCEPTANCE TABLE LIVE IN `AGENT-REPORTS.md` (`AR-512`), which is where a value that cannot exist at write time belongs. Anything else would be a number invented to look complete.**
+
+---
+
+# ★★★★★ 10 — THE INDEPENDENT GRADE ARRIVED, AND IT FOUND TWO MORE · 2026-07-30
+
+> ★★★★★ **THE GRADE EXISTS NOW. §9.5 SAID IT DID NOT — THAT ROW IS SUPERSEDED BY THIS SECTION, NOT
+> EDITED.** The operator authorized the dispatch after pointing out that `accuracy-validator` is a LOCAL
+> agent this seat could have asked for at any time. **`AN UNOWNED PREREQUISITE IS A CLAIM ABOUT WHO CAN
+> ACT — ENUMERATE THE ACTORS BEFORE MAKING IT.`**
+
+**GRADED OBJECT:** `39948d3c` · **VERDICT: `SOUND` for the two attacks it was built to close** — every
+required re-plant reproduced RED for the stated reason, and **both novel attacks aimed at the new
+compile-time and runtime doors FAILED TO PENETRATE THEM.**
+★★★★★ **AND IT FOUND TWO DEFECTS NOBODY HAD NAMED. I CONFIRMED BOTH AT THE EXECUTABLE LINE BEFORE
+ACCEPTING THEM — `A RELAYED FINDING IS A CLAIM.`**
+
+| # | finding | status |
+|---|---|---|
+| **4** ★★★★★ | `reasons_must_differ_from` did `if (a === undefined \|\| b === undefined) continue; // membership already reported it`. **The comment was FALSE:** membership works at fixture-FILE granularity and says nothing about a `condition_id`. A typo'd or renamed id silently disarmed the check this file's own comments call **the oracle's sharpest assertion**, and the gate exited `0`. ★★★ **Same class as the membership hole this packet exists to close: a check satisfied by ABSENCE rather than verification** | **FIXED** — an unresolvable reference is now a NAMED failure in both lanes. **RED-PROOF: planted `TYPO_NONEXISTENT_ID_XYZ` → EXIT `1`, named in `ts` and `py`; the committed corpus still EXIT `0`, which also proves no legitimate unresolvable pair exists today** |
+| **3** | the `FAIL:` summary labelled its third bucket `MEMBERSHIP:` while that bucket is fed by **five** checks. A schema leak printed `MEMBERSHIP: 12 failure(s)` on a run whose own census said `three-way agreement=YES` | **FIXED** — relabelled `GATE CHECKS (membership · tripwire · axis-4 · TS-schema · reason-distinctness)`. ★★ **It never produced a false PASS: the COUNT was right and the NOUN was wrong. `A COUNT UNDER THE WRONG NOUN IS A FALSE CAPTION`** |
+
+⚠️★★★ **A CAVEAT ON THE GRADE'S WEIGHT, MEASURED HERE AND NOT SUPPLIED BY THE GRADER: the registered
+`accuracy-validator` definition (`trading-forge/.claude/agents/`, `24,743` B) pins `model: sonnet`, while
+every other copy on this machine (`7,260`/`7,362` B) pins no model at all — THREE variants, one
+registered. So this grade was produced by a WEAKER model than the session that built the object, and by a
+definition that differs from the git-committed one.** ★★ **It found two real defects anyway. But `A
+GRADE IS ALSO AN INSTRUMENT`, and this one is not the instrument the repo thinks it is — that is a
+separate, unclosed defect.**
+★★★★★ **STILL TRUE AND NOT SOFTENED BY A `SOUND` VERDICT: the grader itself lists what it did NOT cover —
+no real CI run, no fault-injection of the PYTHON lane's own serializer, no exhaustive fuzz of the 208
+P-7 probes, and no independent re-derivation of every `ORACLE.json` expectation from the authority prose.
+`A GREEN BATTERY IS A STATEMENT ABOUT THE BATTERY.` The fixes above are NOT themselves independently
+graded.**
