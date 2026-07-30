@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1761` at THIS commit, 2026-07-30 02:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1788` at THIS commit, 2026-07-30 02:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -40,7 +40,34 @@
 
 ---
 
-## ★★★★★ SEAT — CURRENT AS OF **R-487 / AR-496** (2026-07-30 02:05, FRESH ADVISOR SEAT)
+## ★★★★★ SEAT — CURRENT AS OF **R-488 / AR-497** (2026-07-30 02:12, FRESH ADVISOR SEAT)
+
+★★★★★ **R-488 (`f9ba9f93`) — ITEM 2 PART 2/2 ACCEPTED. WORKER HAS FILED A STOP RECEIPT.**
+★★★★★ **THE GRADE TRIGGER DOES *NOT* FIRE. NO `accuracy-validator` IS DISPATCHED OR OWED.** I said
+"items 1 AND 2"; **item 2 part 1/2 (the membership matrix) IS NOT STARTED**, and the WORKER — the
+party who benefits from being graded and done — is the one who enforced my own wording against me.
+`A PRE-REGISTERED TRIGGER CUTS BOTH WAYS; IT ALSO STOPS YOU FIRING EARLY.`
+**[MEASURED HERE, tree @ `4f631b2f` clean, no env override, exit `0`]** the tripwire prints on GREEN:
+*"planted 1 armed + 1 same-shape safe family; detector returned exactly `["SYNTHETIC_ARMED_FAMILY"]`
+— it CAN fire, and does NOT fire on the safe neighbour"* · *"precondition EMPTY in both lanes across
+14 families — **the divergence is UNREACHABLE, not fixed**"*. ★★ **That last clause stops a future
+reader converting a green tripwire into "it was repaired."**
+★★★★★ **BINDING SCOPE LIMIT (R-488 §3): `duplicate-condition_id` detection and array-multiplicity
+comparison are `[UNPROVEN]` — NO FIXTURE MAKES EITHER FIRE. NO RULING, PACKET OR GRADE BRIEF MAY
+CITE THEM UNTIL ONE DOES.** Worker's own finding against itself; `A LAW YOU HONOUR IN THE PART YOU
+ARE THINKING ABOUT IS NOT A LAW YOU HAVE APPLIED.`
+**REMAINING:** (1) **membership matrix** — named gaps: `ny_pm`/`silver_bullet`/`macro_window` have NO
+fixture (3 of 5 evaluable zones) · 12 families exercised only inside the `[NOT ADJUDICATED]` shipped
+control · `invalidations` ZERO bindings everywhere · **plus fixtures that fire the two UNPROVEN
+checks** · (2) materiality receipt · (3) **THEN the grade.** ★★ **BATCHES ARE COMPLIANT — the stop
+condition is SILENT truncation, never partial delivery.**
+★★★ **DESK-OWNED, NAMED, NOT DONE ON PURPOSE: the ruling/worker guards' messages offer *disabling
+them* as the recovery. By my own R-487 law that is `THE REMEDY A COMPETENT ENGINEER REACHES FOR
+FIRST`. Fix = reorder the message to AUDIT FIRST. **NOT edited mid-campaign** — that guard stopped
+the worker ONE WRITE before it authored the oracle from `FAMILY_META`, and it has been right every
+time it fired.**
+
+### SUPERSEDED SEAT LINE — R-487 / AR-496
 
 ★★★★★ **R-487 (`e4af4185`) — ITEM 1 ACCEPTED. F-A IS CLOSED AT THE WIRING LAYER.**
 **[MEASURED HERE, 4 independent checks, tree `wt-ledger-e-parity-20260730` @ `09814413` clean]:**
@@ -157,7 +184,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1761` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1788` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
