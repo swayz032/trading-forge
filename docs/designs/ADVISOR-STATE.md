@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1173` at THIS commit, 2026-07-29 23:55 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1210` at THIS commit, 2026-07-30 00:00 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -53,19 +53,15 @@ needed yet."* **A HELD RULING IS ONLY A STALL WHEN THE WORKER HAS NOTHING
 AUTHORIZED; here R-477 §4 already carries Item 2's full contract.** Check this before
 concluding a hold is harmless — do not assume it.**
 
-★★★★★ **⚠ WORKER IS NOW GENUINELY BLOCKED — THIS IS A CHANGE FROM EVERY EARLIER HOLD
-TONIGHT, AND IT MUST NOT BE MISREAD AS "IDLE WITH QUEUED WORK." [MEASURED HERE,
-`AR-483` header]: *"consumers COMPLETE; packet revision NOT STARTED … RECOMMENDATION:
-BLOCKED pending your ruling on §3."* It has NO authorized next task, because §6 makes the
-packet revision CONDITIONAL on that ruling.**
-★★★★★ **AND THE RULING IS GATED ON THE OPERATOR'S EXTERNAL READ, SO THE READ IS NOW ON
-THE CRITICAL PATH. THE OPERATOR HAS BEEN TOLD IN PLAIN TERMS. ★★★ EARLIER TONIGHT I
-VERIFIED EACH HOLD COST NOTHING BY READING THE WORKER'S OWN "NEXT" LINE — THAT CHECK IS
-WHAT JUST CHANGED ITS ANSWER. RE-RUN IT EVERY TIME; A HOLD'S COST IS NOT A CONSTANT.**
-★★ **Pointing the worker at different work would ITSELF be a ruling, so there is no
-"just reassign it" escape here.**
+★★★ **THE BLOCK IS CLEARED. `AR-483` was RULED by R-480 and the worker is authorized
+again. ★★ KEEP THE LESSON: earlier holds tonight cost nothing because the worker had
+queued work, and I verified that each time by reading its own "NEXT" line — AR-483 is
+where that check changed its answer. `A HOLD'S COST IS NOT A CONSTANT — RE-RUN THE
+CHECK EVERY TIME.` And pointing a blocked worker at different work would itself be a
+ruling, so there is no "just reassign it" escape.**
 
-**Newest AR `AR-483` — UNRULED (worker blocked on it).** **Ledger `R-479`** (commit `631b46d0`). **`AR-481` — RULED: BLOCKED, and the guard suite is RETIRED. The
+**Newest AR `AR-483` — RULED by R-480: REVISE, packet revision AUTHORIZED, code and
+worktree still BLOCKED.** **Ledger `R-480`** (commit `0b25edce`). **`AR-481` — RULED: BLOCKED, and the guard suite is RETIRED. The
 five named repairs at `b67be086` STAND as repairs; the SUITE is retired as an
 instrument.** ★★ **`5a403bed` is superseded by `b67be086`; neither is certified.**
 ★★★★★ **THE GRADE WAS NEVER DISPATCHED AND NOW NEVER WILL BE — held ~3 h, then the
@@ -141,7 +137,45 @@ holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`
 pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
 3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
-## AUTHORIZED NOW — R-479 §3, TO THE WORKER SEAT UNDER `claude.exe 15908`
+## AUTHORIZED NOW — R-480 §6, TO THE WORKER SEAT UNDER `claude.exe 15908`
+
+★★★★★ **GATE-B DESIGN IS REDESIGNED, NOT JUST REVISED (R-480). THE TWO LAWS THAT DID IT:**
+- ★★★★★ **`A REMEDIATION BUCKET IS AN OUTCOME, NOT A TREATMENT COHORT.`** `0b0d6617`
+  moved `74` rows C8→C6 without touching the upstream extraction error, so selecting by
+  C8 membership makes the population move when downstream logic moves. **SELECT BY
+  `(video, transcript_hash, exact_span, exact_slice_hash)`. C8/C6 is a REPORTED
+  PROJECTION, never a selector.**
+- ★★★★★ **`A MUTABLE DENOMINATOR CANNOT GRADE THE INTERVENTION THAT MUTATES IT.`**
+  [MEASURED HERE, `runtime-production` `spec-family-bindings.ts`] `:219` numerator
+  `spineBound` · `:257` denominator `spine.length` · `:75/:258` floor `0.5`. Deleting
+  unbindable spine clauses shrinks the DENOMINATOR only ⇒ `compiled` can flip
+  `false→true` with zero bindable gain. **`compiled`, queue-rate, C8 and C6 are
+  DIAGNOSTIC ONLY. A numerator-unchanged flip is `DENOMINATOR_ONLY`: zero efficacy
+  credit, source-keyed adjudication required, neither success nor regression.**
+★★★ **NO PHYSICAL DELETION: one immutable source-keyed clause record, typed projections
+(`decision_condition` · `execution_context` · `annotation` · `unresolved`), mixed clauses
+SPLIT keeping one identity, empty-spine untouched. `RETAINED METADATA` = consumed THROUGH
+an explicit contract, NOT bytes beside code that still reads the old field.**
+★★★★★ **AGGREGATE COMPILED COVERAGE OR QUEUE IMPROVEMENT MAY NEVER BE CALLED GATE-B
+SUCCESS. FIDELITY OUTRANKS COUNT (R-466 §2).**
+
+★★★★★ **THE THREE `158`s — NAME WHICH ONE, ALWAYS.** [MEASURED HERE] `confluence ∩ C8 =
+158` · the Gate-B TREATMENT POPULATION = `158` · and my own R-477-era mislabel published
+`158` as "C8 after" when C8-after is `159`. **THREE OBJECTS, ONE VALUE. A COLLIDING VALUE
+IS A LATENT MISLABEL, and this one has already been published wrong once.**
+
+**WORKER TASK, IN ORDER:** (1) OPEN `src/engine/spec_family_bindings.py` ·
+`src/engine/context/playbook_router.py` · `spec-onboarding-service.ts` · **every non-test
+caller of the four consumers**, naming the executing tree beside every citation ·
+(2) produce a CONSUMER CONTRACT MATRIX (input projection · decision · silent-transition
+risk · parity obligation · required fixture) · (3) revise
+`GATE-B-RATIFY-PACKET-2026-07-29.md` · (4) **STOP FOR RULING before any code or worktree.**
+**WRITE-ALLOWED:** the packet + `AGENT-REPORTS.md` ONLY. **FORBIDDEN:** producer or
+consumer code changes · creating either worktree · model execution · extraction ·
+DB/spec/frozen writes · backtests · empty-spine changes · direct edits to
+`runtime-production` or `tf-deep-scan`.
+
+### SUPERSEDED — R-479 §3 (kept one generation for the trail)
 
 ★★★★★ **THE GUARD LANE IS CLOSED. `absence_claim_control.py` AND
 `mutation_redproof.py` ARE RETIRED AS CERTIFICATION INSTRUMENTS (R-479). PATCHING THEM
@@ -952,7 +986,10 @@ byte-exact) · the population OVERLAP MAP · original transcript identity
 - campaign relay tree: `C:/Users/tonio/Projects/wt-h1-wave4-20260712` (branch `h1-wave4-sealed12-driver`)
 - ★★★★★ **`trading-forge/tf-deep-scan` IS A LINKED WORKTREE OF `trading-forge/trading-forge` — *NOT* ITS OWN REPO. THIS LINE SAID THE OPPOSITE IN BOLD FOR A DAY AND WAS CORRECTED BY AN OUTSIDE READER (R-474 §0).** [MEASURED HERE] `git -C tf-deep-scan rev-parse --git-dir` → `…/trading-forge/trading-forge/.git/worktrees/tf-deep-scan`; `--git-common-dir` → `…/trading-forge/trading-forge/.git`. **They DIFFER and git-dir is under `.git/worktrees/` — that is the discriminator.** ★★★★★ **`rev-parse --show-toplevel` CANNOT TELL THE DIFFERENCE — it returns the worktree root for both. Do not use it for this question.**
   - **THE SYMPTOM WAS RIGHT, THE MECHANISM WAS WRONG:** `git grep` from the campaign tree still cannot see it — because it is a different WORKING DIRECTORY, not a different object store. **THE COST OF THE WRONG MECHANISM: its objects ARE reachable from the main repo's store, so `git -C trading-forge/trading-forge log --all` / `cat-file` CAN read the producer's history. The desk denied itself that for a day.** `A WRONG MECHANISM GETS OBEYED.`
-  - It holds `corpus/specs/` (40 specs, 2,351 conditions) and the producer at `dc8a150`. ★★★ **IT MAY NOT BE EDITED (R-474 §3): it is the producer of record, and Gate-B implementation goes in a NEW worktree pinned to `4f3b5cd075a15dab33e08d1c57340dd6a011141b`** — [MEASURED] that commit's tree carries BOTH `scripts/atomize-transcript.ts` and `src/server/lib/graph-to-engine.ts`.
+  - It holds `corpus/specs/` (40 specs, 2,351 conditions) and the producer at `dc8a150`. ★★★ **IT MAY NOT BE EDITED (R-474 §3): it is the producer of record.**
+  - ★★★★★ **CORRECTED BY R-480 — THIS LINE USED TO END *"Gate-B implementation goes in a NEW worktree pinned to `4f3b5cd0…` — that commit's tree carries BOTH `atomize-transcript.ts` and `graph-to-engine.ts`."* TRUE, AND IT MISLED ME. [MEASURED HERE] `4f3b5cd0…` HOLDS ZERO OF THE FOUR `entry_conditions` CONSUMERS. `NAMING WHAT A TREE CONTAINS IS NOT ESTABLISHING THAT IT CONTAINS ENOUGH.`**
+  - ★★★★★ **NO SINGLE TREE HOLDS THE END-TO-END PATH [MEASURED HERE]:** `4f3b5cd0…` = atomizer + `graph-to-engine.ts` + `playbook_router.py`, **all four consumers ABSENT, `spec_family_bindings.py` ABSENT** · `runtime-production` @ `9af37b8f` = atomizer + **all four consumers** + both Python files, **`graph-to-engine.ts` ABSENT**. **Diverged; merge-base `a5b74619da6175e4111f5c9e8f9129c59bbd6187`; neither is an ancestor of the other.**
+  - ★★★ **SO GATE-B IS TWO SEPARATELY PINNED STAGES (R-480 §5-5): PRODUCER PROOF in a worktree pinned to `4f3b5cd0…`, and DEPLOYABLE INTEGRATION in a SEPARATE worktree pinned to `runtime-production` at its then-current SHA, with a transfer receipt naming BOTH SHAs, the schema version, the changed-file manifest and the re-run fixtures.**
   - ★★ **NAMING TRAP: the repo is `Projects/trading-forge/trading-forge` (INNER). `Projects/trading-forge` is the ~90-worktree CONTAINER and is not a repo — `git -C` against it returns `fatal: not a git repository`, which reads like a broken command rather than a category error.**
 - census artifacts, OUTSIDE every git tree: `trading-forge/backups/h1-census/unknown-dbtime-ad4335f0/` (`pop120_classified.json` sha256 `eed65514a1…`, `pop120_census.json`)
 - preserved transcripts: `trading-forge/backups/h1-shadow-eval/transcripts-78fe8ea7/transcripts/` — 40 files, `913,668` B
