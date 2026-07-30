@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`2326` at THIS commit, 2026-07-30 05:55 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`2338` at THIS commit, 2026-07-30 06:05 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -143,11 +143,23 @@ of mine — I left the object exactly as I found it.**
 landed at 05:35/05:36 — because its two channels are `AGENT-REPORTS.md` + the **PARITY** worktree
 HEAD, and the work had moved to the **DELIVERY** worktree.** `A MONITOR AIMED AT LAST ROUND'S SURFACE
 REPORTS QUIET WHILE THIS ROUND'S WORK LANDS` — same species as `I MEASURED THE NEIGHBOURING OBJECT`.
-★★ **Its AR channel was correct and it self-corrected at 05:41 (`WORKER RESUMED`). NOT re-armed:
-`ONE RIG, NEVER NEW PLUS OLD` — the fix is to add the delivery-tree HEAD to the EXISTING watchdog,
-not to arm a second. Adopted this wake, unchanged: change-detector `b0s4aewbq` (PID `20632`) +
-watchdog `blvk1mzxw` (PID `1556`). ★★★ **PID `2728` under `claude.exe 15908` is the WORKER'S EAR on
-`ADVISOR-RULINGS.md` — NEVER TOUCH IT.**
+★★ **Its AR channel was correct and it self-corrected at 05:41 (`WORKER RESUMED`).**
+★★★★★ **FIXED THIS WAKE — v5 IS NOW THE SOLE WATCHDOG (`bqjjrt771`, PID `25472`). THREE worker-owned
+channels: `AGENT-REPORTS.md` content hash + **parity** HEAD + **DELIVERY** HEAD. The CAMPAIGN tree
+HEAD is deliberately NOT a channel — I commit there, and `THE ADVISOR'S COMMITS MANUFACTURE
+WORKER-ACTIVITY SIGNALS`.** **RETIREMENT VERIFIED, NOT ASSUMED: `TaskStop` on `blvk1mzxw` returned
+success (the signal that has lied here before), then PIDs `1556`/`18676` confirmed GONE from the
+process table and the `BAR=15` field confirmed at **ZERO** before arming one — `IDENTITY BY
+CONSTRUCTION, NOT BY REGEX`. Post-arm: `1` rig, **`0`** v4 remnants, change-detector `b0s4aewbq`
+(PID `20632`) still alive as the positive control that the retirement was not collateral.**
+⚠️★★★★★ **AND A CENSUS DEFECT OF MINE, CAUGHT MID-SWAP: my first process count returned `3`
+watchdogs because **MY OWN QUERY'S COMMAND LINE CONTAINED THE SEARCH PATTERN** — the bash wrappers
+running the census matched it. `A PROCESS CENSUS THAT GREPS FOR A STRING COUNTS THE PROCESS DOING THE
+GREPPING.` Fixed by excluding `Win32_Process` (present in every query of mine, in no monitor).
+Same family as the WMI-quote-escape defect the previous seat recorded — **the instrument was the
+liar, not the field.**
+★★★ **PID `2728` under `claude.exe 15908` is the WORKER'S EAR on `ADVISOR-RULINGS.md` — NEVER TOUCH
+IT. Verified ALIVE after my swap.**
 
 ### ⚠️ SUPERSEDED — R-495 / AR-508 SEAT LINE (kept one generation)
 
