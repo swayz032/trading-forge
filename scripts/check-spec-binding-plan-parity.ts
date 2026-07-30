@@ -1226,7 +1226,31 @@ function main() {
       for (const lane of ["ts", "py"]) {
         const a = observedReasons.get(`${lane}|${fixtureName}|${pair.condition}`);
         const b = observedReasons.get(`${lane}|${pair.fixture}|${pair.other_condition}`);
-        if (a === undefined || b === undefined) continue; // membership already reported it
+        // ⚠️★★★★★ R-496 GRADE FINDING 4. THIS LINE USED TO READ:
+        //     `if (a === undefined || b === undefined) continue; // membership already reported it`
+        //   THAT COMMENT WAS FALSE AND IT IS DELETED, NOT REWORDED. Membership
+        //   operates at FIXTURE-FILE granularity and never at `condition_id`
+        //   granularity, so it reports NOTHING about a pair naming a condition
+        //   that does not exist. A typo'd or renamed `condition_id` made the
+        //   file's self-described "sharpest assertion" silently do nothing and
+        //   the gate exited 0.
+        //   ★★★ `A CHECK THAT CANNOT RUN IS NOT A CHECK THAT PASSED`, and this is
+        //       the same class as the membership hole this delivery exists to
+        //       close: a check satisfied by ABSENCE rather than by verification.
+        if (a === undefined || b === undefined) {
+          const missing = [
+            a === undefined ? `${fixtureName}.${pair.condition}` : null,
+            b === undefined ? `${pair.fixture}.${pair.other_condition}` : null,
+          ].filter(Boolean);
+          const m =
+            `${lane}: ORACLE REFERENCE UNRESOLVABLE — reasons_must_differ_from names ${JSON.stringify(missing)}, ` +
+            `which produced NO observed reason in this lane. The P-4/P-6 distinctness assertion for ` +
+            `${fixtureName}.${pair.condition} therefore never executed. A typo, a renamed condition_id or a ` +
+            `dropped row silently disarms this check; it is DENIED rather than skipped. [${expect.authority}]`;
+          console.error(`  - ${m}`);
+          failures.push(m);
+          continue;
+        }
         if (a === b) {
           const m =
             `${lane}: ORACLE P-4/P-6 VIOLATION — ${fixtureName}.${pair.condition} and ` +
@@ -1298,7 +1322,16 @@ function main() {
       `FAIL: ${total} failure(s) — ` +
         `CLAIM 1 AGREEMENT: ${driftFailures.length === 0 ? "PASS (lanes emit identical plans)" : `${driftFailures.length} drift(s)`} · ` +
         `CLAIM 2 ORACLE CORRECTNESS: ${oracleFailures.length === 0 ? "PASS" : `${oracleFailures.length} violation(s)`} · ` +
-        `MEMBERSHIP: ${failures.length === 0 ? "PASS" : `${failures.length} failure(s)`}`,
+        // ⚠️★★★★★ R-496 GRADE FINDING 3: this bucket was labelled `MEMBERSHIP`,
+        //   but it is fed by FIVE checks — membership, the queue-reason tripwire,
+        //   the axis-4 self-controls, TS-schema exhaustiveness, and P-4/P-6
+        //   reason-distinctness. A schema leak printed `MEMBERSHIP: 12 failure(s)`
+        //   on a run whose own census said `three-way agreement=YES`, sending a
+        //   reader to the wrong subsystem. It never produced a false PASS — the
+        //   count was right and the NOUN was wrong. `A CAPTION IS A CLAIM, AND A
+        //   COUNT UNDER THE WRONG NOUN IS A FALSE ONE.`
+        `GATE CHECKS (membership · tripwire · axis-4 · TS-schema · reason-distinctness): ` +
+        `${failures.length === 0 ? "PASS" : `${failures.length} failure(s)`}`,
     );
     if (driftFailures.length === 0 && oracleFailures.length > 0) {
       console.error(
