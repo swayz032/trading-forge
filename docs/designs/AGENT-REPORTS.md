@@ -4,6 +4,48 @@
 
 ---
 
+## AR-514 · 2026-07-30 · **`R-497-ORACLE-CONTRACT` START-RECEIPT — BOTH EXTERNAL ATTACKS REPRODUCED BY ME BEFORE ANY EDIT, WITH THE REACH PROBE THAT MAKES THE TWO ZEROES MEAN SOMETHING.** ⚠️★★★★★ **R-497 ACCEPTED IN FULL. I SHIPPED `8187b730` AND ITS ORACLE CONTRACT WAS NEVER VALIDATED AT RUNTIME.**
+
+**RULING ID:** R-497 §7 · **TASK ID:** AR-514 · **PRIOR:** AR-513 · **TREE:** repair on `hardening/ledger-e-parity-20260730` (APPEND ONLY); replacement delivery from base `9af37b8f` in a NEW worktree. **`8187b730` and both earlier deliveries PRESERVED.**
+
+### ★★★★★ §1 — REPRODUCED HERE, INDEPENDENTLY, ON THE SHIPPED TREE `8187b730`
+
+**All four on SCRATCH COPIES via `TF_SPEC_BINDING_SAMPLES_DIR` (forward slashes, no escaping — R-497 §4's minted rule). Delivery tree never written; `git status --porcelain` = `0`.**
+
+| corpus (`00-control-shipped.spec.json` :: `conditions.london`) | EXIT | output vs control |
+|---|---|---|
+| **CONTROL** unmutated | **`0`** | — `6802` B |
+| **ATTACK A** — delete the row's `authority` CITATION, all values byte-identical | ⚠️★★★★★ **`0`** | ⚠️ **BYTE-IDENTICAL**, `6802` B |
+| **ATTACK B** — DELETE the fully adjudicated row (NOT declared unadjudicated) | ⚠️★★★★★ **`0`** | ⚠️ **BYTE-IDENTICAL**, `6802` B |
+| ★★★ **REACH PROBE** — flip `bindable` on the SAME row | **`1`** | **DIFFERS**, `7382` B |
+
+★★★★★ **THE PROBE IS THE POINT AND I RAN IT BEFORE BELIEVING EITHER ZERO. Same file, same fixture, same row, same command shape: a WRONG VALUE in `london` is caught; `london` VANISHING is not. Without it, byte-identical output is equally consistent with "the gate is blind" and "the gate never opened my corpus" — and R-497 §4 records the desk's own instrument failing in exactly that second way.**
+★★★ **AND THE CENSUS DOES NOT MOVE: `★ 14 ORACLE CELL(S)` prints identically under ATTACK B. The deleted row is neither ADJUDICATED nor DECLARED UNADJUDICATED — it left BOTH sides of the ledger silently. `CLAIM 2 CAN SILENTLY SHRINK.`**
+**ROOT CAUSE, READ NOT INFERRED:** `scripts/check-spec-binding-plan-parity.ts:1014` — `JSON.parse(...) as Oracle`. **A BARE CAST.** `authority: string` at `:423` and `:454` is a COMPILE-TIME type over a runtime `any`. `checkOracle()` iterates the rows that SURVIVED PARSING, so **an absent row is a row that is never checked.** ★★ **The asymmetry is real: `authority_file`/`authority_sha256` ARE runtime-enforced and fail closed. The gate validates its authority DOCUMENT and not its per-row CITATIONS.**
+
+### ★★★★★ §2 — PRE-REGISTERED OUTCOMES, WRITTEN BEFORE THE FIRST EDIT
+
+| # | case | **predicted AFTER the repair** |
+|---|---|---|
+| **O-1** | CONTROL, unmutated | ★★★ **EXIT `0`** — a repair that is always-red is not a repair |
+| **O-2** | ATTACK A, missing per-row `authority` | **EXIT `1`**, NAMING fixture + row, at LOAD time |
+| **O-3** | ATTACK B, deleted adjudicated row | **EXIT `1`**, NAMING the row that left the ledger — from a MEMBERSHIP assertion, not a count |
+| **O-4** | REACH PROBE | **EXIT `1`** — must STILL bite; a previously-biting check that stops biting is a §STOP |
+| **R-1** | AR-513's planted `TYPO_NONEXISTENT_ID_XYZ` | **EXIT `1`** (regression) |
+| **R-2** | all twelve §8 commands on the SHIPPED tree | as AR-512/513 |
+
+★★★★★ **DESIGN COMMITMENT, FROM R-497 §7.2 AND §8, MADE BEFORE CODING: THE CENSUS ASSERTS *MEMBERSHIP*, NOT CARDINALITY. Every condition present in a fixture must be either ADJUDICATED or NAMED in `conditions_unadjudicated`, and the union must be TOTAL. `A COUNT-SHAPED CHECK IS SATISFIED BY DELETING A ROW AND ADDING A JUNK ONE` — the same shape as the `required_members` duplicate hole two deliveries ago.**
+★★★ **AND I AM NOT ASSUMING TWO IS THE WHOLE CLASS (R-497 §8): the load-time validator will validate the ORACLE CONTRACT AS A WHOLE — `required_members`, `fixtures`, per-row keys — not just the `authority` string the attacks happened to name. `FIX THE PATTERN CLASS, NOT THE INSTANCE.`**
+
+### §3 — SCOPE · STOP · ETA
+
+**ALLOWED:** `scripts/check-spec-binding-plan-parity.ts` · `ci/fixtures/spec-binding-parity-expanded/**` · a new delivery worktree pinned `9af37b8f`. **FORBIDDEN:** engine/Python semantics · `runtime-production` · `tf-deep-scan` · history rewrite · push/PR/merge/deploy · `git add -A`. **NO EXISTING CHECK WEAKENED OR DELETED.**
+★★★★★ **STOP CONDITION I AM CARRYING EXPLICITLY: if closing ATTACK B requires changing what any LANE EMITS rather than what the ORACLE DECLARES, I STOP AND REPORT — that would be moving the target.**
+**FIRST OBSERVABLE:** this receipt. **ETA ~45–70 min** to repair + red-proof + replacement delivery + report.
+★★ **THE GRADE STAYS BLOCKED AND THAT IS THE DESK'S CALL, NOT MINE.** When R-497 §7 releases it, it is `accuracy-validator`, **DESK-DISPATCHED, model pinned AT THE CALL SITE** (R-497 §5a: the container file's pin changed `sonnet`→`opus` 18 s after my grade ran — **so my AR-513 §2 measurement was true when taken and is now stale; the fix is to pin at dispatch and never trust the unversioned file**).
+
+---
+
 ## AR-513 · 2026-07-30 · ★★★★★ **THE INDEPENDENT GRADE RAN. VERDICT `SOUND` FOR THE TWO ATTACKS `39948d3c` WAS BUILT TO CLOSE — AND IT FOUND TWO MORE. BOTH CONFIRMED BY ME AT THE EXECUTABLE LINE, BOTH FIXED, BOTH RED-PROOFED. NEW DELIVERY `8187b730`.** ⚠️★★★★★ **AND THE GRADE IS ITSELF A DEFECTIVE INSTRUMENT: THE REGISTERED `accuracy-validator` PINS `model: sonnet` AND DIFFERS FROM THE GIT-COMMITTED COPY. THREE VARIANTS EXIST. IT FOUND TWO REAL DEFECTS ANYWAY.**
 
 **RULING ID:** R-496 §6 + operator-authorized grade dispatch · **TASK ID:** AR-513 · **PRIOR:** AR-512.
