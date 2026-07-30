@@ -7,7 +7,7 @@ import { join } from 'node:path';
 const PROJECTS_ROOT = 'C:\\Users\\tonio\\Projects';
 const MASTER = join(PROJECTS_ROOT, 'trading-forge', 'trading-forge', '.claude', 'agents', 'accuracy-validator.md');
 const SKIP = new Set(['node_modules', '.git', '.parity-selftest', '.pytest_cache', '.ruff_cache']);
-const MAX_DEPTH = 4;
+const MAX_DEPTH = 6; // .claude/worktrees/<wt>/.claude/agents nests six dirs below PROJECTS_ROOT (F-1)
 const APPLY = process.argv.includes('--apply');
 
 function findAgentDirs(dir, depth, out) {
@@ -20,6 +20,9 @@ function findAgentDirs(dir, depth, out) {
     if (e.name === '.claude') {
       const agents = join(p, 'agents');
       if (existsSync(agents)) out.push(agents);
+      // F-1 fix: DESCEND into .claude too — registered worktrees under
+      // .claude/worktrees/<wt>/ carry their own nested .claude/agents.
+      findAgentDirs(p, depth + 1, out);
       continue;
     }
     findAgentDirs(p, depth + 1, out);
