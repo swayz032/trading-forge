@@ -1,5 +1,21 @@
 # GATE-B RATIFY PACKET — the deterministic admission-contract fix · 2026-07-29
-### REV 2 · revised 2026-07-30 under R-480 §5 + §6 (AR-486). Supersedes rev 1 in §2, §3, §3.5, §4, §6, §7.
+### REV 3 · revised 2026-07-30 under R-481 corrections 1–4 (AR-488). Rev 2 was NOT RATIFIED.
+### Rev-2 lineage: revised under R-480 §5 + §6 (AR-486). Supersedes rev 1 in §2, §3, §3.5, §4, §6, §7.
+
+> ★★★★★ **REV-3 HEADLINE — THE PARITY PREREQUISITE IS NO LONGER A LINE IN THIS PACKET'S §8. IT IS ITS
+> OWN RATIFY PACKET AND ITS OWN WORKTREE** (`LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md`, R-481 §90-91).
+> **F-B MUST CLOSE BEFORE THE ABLATION. F-G MUST CLOSE BEFORE ANY PARITY RESULT MAY BE ADMITTED.**
+>
+> ★★★★★ **AND THE FALSE GREEN IS NO LONGER A MECHANISM READ — IT IS AN EXECUTED RESULT, PRODUCED BY
+> THE DESK WITH THE GATE'S OWN COMPARATOR [MEASURED, R-481 §5 / §46-47]: pointed at a 5-fixture corpus
+> via its own `TF_SPEC_BINDING_SAMPLES_DIR` override, `check-spec-binding-plan-parity.ts` returns
+> `FAIL: 2 spec(s)`, exit `1`, RED on `spine_bound` · `bindable` · `primitive` · `approximation` ·
+> `session_zone` — while its SHIPPED one-fixture corpus prints `Checked 1 sample specs. / PASS`, exit `0`.
+> THE GATE IS NOT BLIND TO THE DIVERGENCE. IT IS NEVER GIVEN THE INPUT.**
+>
+> ★★★ **MY OWN F-B WAS THE WEAKER FORM OF THIS CLAIM.** AR-486 read both lanes at the line and said they
+> *can* disagree. **`TO TEST A GATE, FEED IT THE INPUT IT LACKS — DO NOT RE-IMPLEMENT ITS COMPARISON BY
+> HAND.`** The proven proposition below is the desk's narrower one, adopted verbatim, not my vaguer one.
 
 > **STAGED, NOT IMPLEMENTED.** Deliverable of **R-473 §4**, revised under **R-474 §2** (six requirements)
 > and **R-480 §5** (five corrections). ★★★★★ **NO CODE HAS BEEN WRITTEN AND NONE MAY BE UNTIL A RULING
@@ -37,6 +53,18 @@
 | "the Ledger-E parity gate is enforced in CI" (AR-484 §1) | ★★★★★ **REFUTED at the enforcement half — see F-A.** |
 | AR-484 §1 cited `:43/:44/:50/:54` as consumption sites | **CORRECTED — those are IMPORT lines.** Real call sites: `:437`, `:455`, `:487`, `:765`. |
 | AR-483 §4 left per-category routing `[NOT VERIFIED]` | ★★★★★ **ANSWERED AND INVERTED — it HAS a behavioural consequence. See F-E.** |
+
+**AND WHAT REV 3 CHANGED (R-481 corrections 1–4):**
+
+| rev-2 statement | rev-3 disposition |
+|---|---|
+| verdict `CONSUMER-SUPERSEDED`, **aborts the run** | ★★★★★ **REPLACED by `CONTROL_FLOW_CHANGED` + a five-field control-flow record. THE SWEEP CONTINUES.** Aborting would have destroyed the incidence number that decides theoretical-vs-live. |
+| §3.5 = six independent matrix rows | **DECISION GRAPH added.** The rows are the leaves; the graph is the shape. |
+| §6 "`[UNMEASURED]` whether `0b0d6617` moves C8" | ★★★★★ **CORRECTED — MEASURED: `233 → 159`, `−74`, treatment population `158`. Rev 2 contradicted its own §1.** |
+| §7 truth set "`[NOT DETERMINED]`, pending" | ★★★★★ **ITS PRESCRIBED KEY IS DEAD** — `11.2%` realizable, `0%` on the spearhead. Replacement rule is DESK-owned. |
+| §4.2 bandc script "diagnostic, may not be called success" | **FORBIDDEN as an efficacy oracle — as a PROHIBITION ON THE CLASS**, not a caution about one script. |
+| §3.5.2 F-B "the lanes *can* disagree on `compiled`" | ★★★★★ **REPLACED by the desk's EXECUTED result + the narrower proven proposition: divergence on `compiled` is CONDITIONAL on spine composition.** |
+| §8 parity listed as a desk ruling owed | **PROMOTED to its own ratify packet + its own worktree.** |
 
 ★★ **UNCHANGED AND NOT RE-OPENED: §1's causal finding.** It rests on positive producer + artifact
 evidence, was confirmed at the executable line by the desk (R-474 §2), and is not affected by its own remedy.
@@ -205,6 +233,48 @@ single file through which all six surfaces are reached. **Real call sites, not i
 :765   registerStrategiesInPlaybook(opts.playbookRouterPath, [strategyName], category);
 ```
 
+### ★★★★★ THE ONBOARDING DECISION GRAPH (R-481 correction 2) — the six consumers are NOT independent rows
+
+```
+                       spec.entry_conditions
+                                │
+                    :437  matchArchetype(...)
+                    ┌───────────┴───────────┐
+             matched = TRUE            matched = FALSE
+                    │                       │
+   ┌────────────────┴──────┐     :455  compileBindingPlan(...)
+   │ ★ NO BINDING PLAN     │        ┌──────────┴──────────┐
+   │   bindingPlan = null  │   compiled = TRUE      compiled = FALSE
+   │   spineBound   = null │        │                     │
+   │   spine.length = null │        │                     │
+   │   spineRatio   = null │        │                     │
+   │   compiled     = null │        │                     │
+   └────────────┬──────────┘        │                     │
+        :527 category from      :529 category from   :530 category from
+        ARCHETYPE KEY          CONDITION SPEC       deriveCategoryFromArchetype(null)
+        route=ARCHETYPE_MAPPED route=CONDITION_     route=NEEDS_ARCHETYPE
+                               COMPILED             (blanket CONTINUATION default)
+                    └───────────┬───────────┘
+                                │
+                  :487  recoverSpecTimeframe(artifact)
+                    ┌───────────┴───────────┐
+        !recovered / no exec_tf        recovered = TRUE
+                    │                       │
+        :503 HARD QUARANTINE          :514 timeframe = rec.exec_timeframe
+        return { ok:false,                  │   ★ partial removal lands HERE
+          "timeframe_unrecoverable" }       │     with a WRONG value
+                                    :535 deriveStrategyName(concept, symbol, timeframe)
+                                            │   ★ the NAME encodes the timeframe
+                                    :765 registerStrategiesInPlaybook(path, [name], category)
+                                            │   ★ WRITES playbook_router.py SOURCE
+                                            ▼
+                              playbook_router.py allowed_strategies
+                              → WHICH REGIMES MAY TRADE THIS STRATEGY
+```
+
+★★★★★ **READ THE GRAPH, NOT THE ROW LIST: a single clause removal can move the FIRST branch, and every
+consumer below it inherits a different path. The matrix rows are the LEAVES; this is the shape.**
+
 ★★★★★ **F-C — `matchArchetype` GATES `compileBindingPlan` AT `:454`.** AR-483 §3's denominator flip
 and §4's archetype tie-break are **NOT two independent hazards. They are mutually exclusive branches of
 one `if`.** If clause removal flips `matched` `false → true`, **`compileBindingPlan` never runs**,
@@ -275,11 +345,37 @@ binding record" is wrong about the one field this packet's population is defined
 | WAIT_SESSION bind path | `:159-160` `if (meta.requiresSessionKeyword) { const zone = resolveSessionKeyword(object); }` → 7-zone table ⇒ **"during lunch" BINDS** | `:572-600` checks `refused_session_zone(obj)` **FIRST** ⇒ `bindable=False`, `primitive=None`, `approximation=True`, `executed=False`, `reason=session_zone_refused_uncomputable_window:<zone>`, `session_zone=None` |
 | the caption | ★★★★★ **`:64` — *"mirror `src/engine/spec_family_bindings.py::SESSION_KEYWORDS` EXACTLY"*. IT DOES NOT.** | `:274-279` — *"THIS TABLE DELIBERATELY NO LONGER MATCHES… The divergence is the FIX, not drift — do not resync"* |
 
-★★★★★ **THE DIVERGENT FIELDS ARE EXACTLY THE ONES THE (UNWIRED) PARITY GATE COMPARES: `bindable`,
-`session_zone`, `spine_bound`, `compiled`.** A `WAIT_SESSION` clause whose object contains
-`lunch`/`midday`/`noon session`/`overnight`/`globex`/`asia session`/`pre market`/`premarket` **counts
-toward `spineBound` in TS and does not in Python** — so `spineRatio` and `compiled` can disagree
-between the two lanes on the same spec.
+★★★★★ **NO LONGER A MECHANISM READ — AN EXECUTED RESULT FROM THE GATE'S OWN COMPARATOR
+[MEASURED, R-481 §46-47], and the exact path is `src/server/lib/spec-family-bindings.ts`, NOT
+`src/server/services/` (R-481 §30: the desk's first guess returned `No such file or directory`, which
+reads exactly like a missing artifact — `LOCATE, DO NOT ASSUME, THE DIRECTORY`):**
+
+| corpus fed via `TF_SPEC_BINDING_SAMPLES_DIR` (`:36-38`) | result |
+|---|---|
+| **SHIPPED** `ci/fixtures/spec-binding-parity/` (1 fixture) | `Checked 1 sample specs.` · `PASS` · **exit `0`** |
+| 5-fixture corpus incl. two orphan-zone specs | **`FAIL: 2 spec(s)`, exit `1`.** `10-lunch-orphan`: `spine_bound ts=2 py=1` · `bindable ts=true py=false` · `primitive ts="session_windows" py=null` · `approximation ts=false py=true` · `session_zone ts="lunch_blackout" py=null`. `11-premarket-orphan`: same shape, `session_zone ts="overnight"` |
+| GREEN in the same run | `00-control-shipped` (untouched) · `20-nyam-evaluable` · `21-fivemin-chart` |
+| 3-spine corpus (third spine unbindable in BOTH lanes) | **adds `compiled: ts=true py=false`** |
+| **same-shape NEGATIVE CONTROL**, `ny am` instead of `during lunch` | ★★★★★ **GREEN — so the flip is caused by the ORPHAN ZONE, not by fixture shape** |
+
+★★★★★ **THE PROVEN PROPOSITION, NARROWER AND SHARPER THAN "THEY CAN DISAGREE": TS AND PYTHON DIVERGE ON
+`compiled` WHENEVER THE ORPHAN-ZONE BINDING IS WHAT CARRIES PYTHON ACROSS THE `0.5` SPINE-RATIO FLOOR.**
+On a plain 2-spine `during lunch` fixture `compiled` **AGREES** — TS binds `2/2 = 1.0`, PY binds
+`1/2 = 0.5`, and `0.5 ≥ 0.5`, so both compile. **`compiled` divergence is CONDITIONAL on spine
+composition.** ★★★ **`AN UNCONDITIONAL CLAIM ABOUT A CONDITIONAL MECHANISM IS A FALSE MECHANISM CLAIM,
+AND A WRONG MECHANISM GETS OBEYED.`** The always-divergent fields are `bindable`, `primitive`,
+`approximation`, `session_zone`, `spine_bound`.
+★★ **`[UNVERIFIED HERE — RELAYED]`: Python's exact reason string
+`session_zone_refused_uncomputable_window:lunch_blackout`. `reason` is COLLECTED AND NEVER COMPARED
+(F-G), so it CANNOT appear in a DRIFT line and no run has printed it.** ★★★★★ **THAT EXPOSES A
+CIRCULARITY IN THE ACCEPTANCE CRITERION ITSELF: "refuse identically in both lanes WITH THE SAME REASON"
+is a property the current comparator STRUCTURALLY CANNOT CHECK. Closing F-G is a PREREQUISITE to that
+criterion being meaningful, not a parallel item.**
+★★★★★ **AND THE INVARIANT R-481 §55 ADDS, WHICH GOVERNS THE REPAIR: `TS/PYTHON PARITY IS SEMANTIC
+OUTPUT PARITY, NEVER TABLE-TEXT EQUALITY.` **DO NOT "RESTORE PARITY" BY TEACHING PYTHON TO ACCEPT
+`lunch` OR `overnight`.** Python's refusal is the SAFE behaviour — those zones have no evaluable window,
+so a bind produces a rule that says *"only trade during X"* and executes as *"never trade"* while
+reporting `approximation=False`, an exactness claim. **TYPESCRIPT IS THE SIDE THAT MUST MOVE.**
 ★★★ **AND IT IS A DECLARED, KNOWN CARRY-FORWARD, NOT A DISCOVERY: Python `:283-284` reads
 *"[MEASURED 2026-07-28] … it (and the TS mirror) are reported as adjacent work rather than changed
 here, to keep this release to one concept."* The author knew. It is un-closed.**
@@ -323,11 +419,18 @@ INTERVENTION THAT MUTATES IT.`
 `scripts/bandc-measure-mapped-queued-split.ts` IS THE MAPPED-vs-QUEUED MEASUREMENT INSTRUMENT, AND
 BOTH OF ITS SUCCESS BUCKETS ARE MOVABLE BY CLAUSE REMOVAL ALONE:** `:32` `matchArchetype(...)` →
 `:34-38` `ARCHETYPE_MAPPED` (movable by F-C/#4's tie-break) → else `:40-52` `compileBindingPlan` →
-`CONDITION_COMPILED` (movable by #2's denominator). ★★★ **So the one script that would naturally be
-reached for to "show Gate B worked" reports exactly the two artifacts R-480 §3-ii forbids as efficacy.
-IT MAY BE RUN AS A DIAGNOSTIC AND ITS OUTPUT MAY NEVER BE CALLED GATE-B SUCCESS.** ★★ Also noted: its
-`SAMPLES_DIR` (`:17-18`) is a **hardcoded absolute path** into `.claude/worktrees/extraction-100/tmp/generalization`
-— a fourth lane, outside all three trees this packet names. `[UNVERIFIED]` whether that directory still exists.
+`CONDITION_COMPILED` (movable by #2's denominator). ★★ Also: its `SAMPLES_DIR` (`:17-18`) is a
+**hardcoded absolute path** into `.claude/worktrees/extraction-100/tmp/generalization` — a fourth lane,
+outside all three trees this packet names. `[UNVERIFIED]` whether that directory still names the
+intended population.
+
+★★★★★ **RULED (R-481 correction 4): `bandc-measure-mapped-queued-split.ts` IS FORBIDDEN AS AN EFFICACY
+ORACLE. DIAGNOSTIC ONLY. NO MAPPED-COUNT, COMPILED-COUNT, C8-COUNT OR QUEUE-RATE MAY ESTABLISH GATE-B
+SUCCESS. THE SOURCE-KEYED TRANSITION LEDGER OF §4.4 IS THE INSTRUMENT.**
+★★★ **Rev 2 said "permitted as a diagnostic, may not be called success". Rev 3 states it as a
+PROHIBITION on the class, not a caution about one script — because the failure mode is reaching for
+*any* aggregate count, and naming one script invites substituting another.** `OPTIMIZING THE PROXY
+DESTROYS WHAT IT STOOD FOR.`
 
 ### 4.3 — THE PRE-REGISTERED TRAP, RESTATED IN FORCE
 
@@ -347,11 +450,26 @@ INPUTS · before/after consumer OUTPUT · **numerator and denominator SEPARATELY
 |---|---|---|
 | **`SOURCE-JUSTIFIED`** | the transition follows from the source clause's truth label | counts |
 | **`DENOMINATOR_ONLY`** | `compiled` flipped with `spineBound` UNCHANGED | ★★★★★ **ZERO efficacy credit; requires source-keyed adjudication; neither automatically success nor automatically regression** (R-480 §3-ii) |
-| **`CONSUMER-SUPERSEDED`** | ★★★★★ **NEW IN REV 2, and it exists because of F-C.** The archetype matched, so `compileBindingPlan` never ran and the binding tuple has **no after-value**. **A NULL AFTER-CELL IS THIS CODE, NEVER A BLANK, AND NEVER "left the queue"** | **STOPS THE RUN** pending adjudication |
-| **`UNEXPLAINED`** | anything else | ★★★★★ **STOPS THE RUN** |
+| **`CONTROL_FLOW_CHANGED`** | ★★★★★ **R-481 correction 1. The archetype matched, so `compileBindingPlan` never ran and the binding tuple has NO after-value.** **A NULL AFTER-CELL IS THIS CODE, NEVER A BLANK, AND NEVER "left the queue"** | **EXCLUDED from efficacy scoring · MARKS THE RUN INVALID for a success verdict · ★★★★★ THE SWEEP CONTINUES** |
+| **`UNEXPLAINED`** | anything else | **EXCLUDED from efficacy · MARKS THE RUN INVALID · THE SWEEP CONTINUES** |
 
-★★★ **`CONSUMER-SUPERSEDED` is the verdict a naive tripwire would have silently scored as success.
-Adding it is the fixture-class improvement this revision owes (worker-execution §12).**
+**`CONTROL_FLOW_CHANGED` REQUIRES AN EXPLICIT CONTROL-FLOW RECORD — five before/after pairs, emitted
+whether or not the binding outputs are comparable:**
+
+| field | before | after | source |
+|---|---|---|---|
+| `archetype_engaged` | ● | ● | `spec-onboarding-service.ts:437` result `matched` |
+| `binding_engaged` | ● | ● | whether `:454`'s branch entered and `:455` ran |
+| `route` | ● | ● | `ARCHETYPE_MAPPED` \| `CONDITION_COMPILED` \| `NEEDS_ARCHETYPE` |
+| `category_function` | ● | ● | which of `:527` / `:529` / `:530` decided the category |
+| `onboarding_outcome` | ● | ● | `ok:true` \| `timeframe_unrecoverable` \| other refusal |
+
+★★★★★ **`BEFORE COMPARING OUTPUTS, RECORD WHETHER THE COMPUTATION RAN. A BRANCH-GENERATED NULL IS AN
+OUTCOME, NOT MISSING DATA.` BINDING OUTPUTS ARE COMPARABLE ONLY WHEN `binding_engaged` IS TRUE IN BOTH ARMS.**
+★★★★★ **AND THE CORRECTION AGAINST REV 2, WHICH GOT THIS WRONG IN THE EXPENSIVE DIRECTION: rev 2 had
+this verdict ABORT THE RUN. That would have destroyed the population-incidence number R-481 names as
+the deciding one between THEORETICAL and LIVE. `FAIL CLOSED AT THE VERDICT BOUNDARY, NEVER AT THE
+EVIDENCE-COLLECTION BOUNDARY.` The sweep runs to completion; the VERDICT is what fails closed.**
 
 ### 4.5 — RED-PROOF: WHAT MAKES IT GO RED WITHOUT THE FIX
 
@@ -445,9 +563,17 @@ claim.** `[HYPOTHESIS, UNTESTED]` — that the absence is a plain ancestry gap r
 ★★★★★ **DO NOT EDIT `tf-deep-scan` — it is a LINKED WORKTREE sharing the main object store and is the
 producer of record for `dc8a150`. DO NOT EDIT `runtime-production` DIRECTLY.**
 
-**AND THE CONTROL-ARM PREREQUISITE:** ★★★ **`[UNMEASURED]` whether `0b0d6617` moves the C8 count.**
-It touches REQUIREDNESS — the census's own C6 class — and [MEASURED, R-478] it moved `74` rows.
-**MEASURE IT BEFORE THE ABLATION, or the CONTROL arm is not the frozen control.**
+### ★★★★★ THE CONTROL ARM — CORRECTED (R-481 correction 3). THIS QUESTION IS **MEASURED, NOT OPEN.**
+
+**[MEASURED, R-481 §70]** frozen C8 = **`233`** · counterfactual under current code = **`159`** · movement =
+**`−74`** · **sentinel-excluded GATE-B TREATMENT POPULATION = `158`** (§7.1: *this* `158`, the treatment
+population — not `confluence ∩ C8`, not R-478 §3's mislabelled figure).
+★★★★★ **WHAT REMAINS OPEN IS THE ADDITIVE BASELINE, NOT THE QUESTION.**
+★★★★★ **AND THIS IS A CORRECTION AGAINST REV 2, OWNED PLAINLY: rev 2's §1 published the measured
+`74`-row movement and rev 2's §6 carried a rev-1 line calling the same question `[UNMEASURED]` — a
+direct self-contradiction, one section apart, inside one document. `AN ANSWERED UNKNOWN REPEATED AS OPEN
+IS STALE STATE RESURRECTING WORK.` A prerequisite list is a CLAIM and must be re-derived on every
+revision, not carried.**
 ★★ **A FOURTH LANE EXISTS AND IS NOT VALID FOR THIS WORK:** the campaign tree `wt-h1-wave4-20260712`
 carries `spec_family_bindings.py` at `160,049` B vs `40,583` B and has NO `spec_execution_preflight.py`
 (R-415 / v4 §3-1E). ★★ **A FIFTH is referenced by a hardcoded path in §4.2's instrument.**
@@ -470,16 +596,25 @@ carries `spec_family_bindings.py` at `160,049` B vs `40,583` B and has NO `spec_
   not re-measured here) · `fade-the-losers-service.ts` (the second runtime playbook consumer) ·
   `playbook-registration-backfill.ts` · `backfill-corpus-timeframes.ts` (runs timeframe recovery
   **across the corpus**) · the campaign-tree and primary-tree copies of all six consumers.
-- **`[NOT DETERMINED]`: the pre-registered set of GENUINE market-state conditions** that must survive.
-  The co-primary cannot be scored until that set is frozen, and ★★★ **it is a GROUND-TRUTH judgment,
-  NOT the worker's to author** (R-467 §5). **DESK-OWNED, R-474 §4** — keyed to
-  `(video, transcript hash, exact span, exact-slice hash)`, spanning FIVE cases: genuine session
-  predicates · descriptive session context · instrument/timeframe context · **mixed** · **ambiguous**.
+- ★★★★★ **`[NOT DETERMINED]`: the pre-registered set of GENUINE market-state conditions — AND ITS
+  PRESCRIBED KEY IS DEAD (R-481 §69, correction 3).** R-474 §4 keyed the truth set to
+  `(video, transcript hash, exact span, exact-slice hash)`. **[MEASURED, R-481] THAT KEY IS REALIZABLE ON
+  `11.2%` OF THE SURFACE AND ON NONE OF THE SPEARHEAD:** the preserved transcripts ARE the
+  extraction-time text (`40/40` char-length identity; `264` recorded `(offset → quote)` pairs resolve
+  exactly across `37/40` videos) — **but `evidence` is not a quote field.** Of `2351` conditions, `1027`
+  carry an atom ref, `29`+ a placeholder, plus brace-structs and `'},{'` debris; **only `264 / 2351`
+  carry a resolvable quote, and `75DJN5UVQnw` — THE distance-0 spearhead — carries ZERO** (13 conditions:
+  9 atom refs, 2 debris, 2 brace-structs). ★★★ **THE REPLACEMENT KEYING RULE IS DESK-OWNED. THE WORKER
+  DOES NOT AUTHOR IT** (R-467 §5). ★★ **And the desk's own method note is worth carrying: the benign
+  cause — the SPEC records no quotes, the archive is not implicated — was measured BEFORE the alarming
+  sentence was written. *"Zero spans resolve for the #1 target"* would have been true and a false finding.**
+  It must still span FIVE cases: genuine session predicates · descriptive session context ·
+  instrument/timeframe context · **mixed** · **ambiguous**.
 - **`[NOT FROZEN, DESK-OWNED]`: the ADDITIVE PRODUCTION BASELINE.** ★★★ **And R-480 §Desk's constraint:
   `pop120_census.py` — the census PRODUCER — IS GONE. A re-authored producer is a DIFFERENT INSTRUMENT
   and owes a control: re-authored producer + recovered `classify.py` over the SAME snapshot must
   reproduce `eed65514a126…`, or it is not a substitute. `[HYPOTHESIS, UNTESTED]`.**
-- **`[UNMEASURED]`:** whether `0b0d6617` moves C8 · **POPULATION INCIDENCE of every §3.5 transition** —
+- **`[UNMEASURED]`:** ★★ **NOT `0b0d6617`→C8 — that is MEASURED, see §6** · **POPULATION INCIDENCE of every §3.5 transition** —
   each risk is a MECHANISM proven at the executable line; **how many real specs exhibit it is not
   measured, and that is the number deciding theoretical vs live** · DB↔census refusal/classification
   FRESHNESS as distinct from spec freshness · the population OVERLAP MAP · whether §4.2's hardcoded
@@ -503,14 +638,24 @@ WRONG NAME ONCE, ITS COLLISIONS ARE NOT COINCIDENCES, THEY ARE TRAPS.`**
 
 **SUFFICIENT TO IMPLEMENT §3(a)–(g) BEHIND A FLAG WITH §4.5's RED-PROOF, IN THE TWO PINNED STAGES OF §6.**
 
-**NOT SUFFICIENT TO RUN THE ABLATION. FIVE THINGS ARE OWED FIRST, AND FOUR ARE NOT THE WORKER'S:**
-1. **DESK** — the frozen genuine-survivor truth set (R-474 §4).
-2. **DESK** — the additive production baseline **+ the re-authored-producer equivalence control** (R-480 §Desk).
-3. **DESK** — a ruling on whether the **F-A / F-B / F-G prerequisites** are closed before the ablation,
-   deferred, or explicitly accepted as a named risk. ★★★ **They are NOT in this packet's treatment and
-   I did not touch them.**
-4. **MEASUREMENT** — whether `0b0d6617` moves C8, or the CONTROL arm is not the frozen control.
-5. **RULING** — the runtime graph→spec handoff is `[UNENUMERATED]`; stage 2 cannot start without it.
+**NOT SUFFICIENT TO RUN THE ABLATION. FOUR THINGS ARE OWED FIRST — AND ONE OF REV 2's FIVE IS NOW CLOSED:**
+1. **DESK** — the genuine-survivor truth set, **whose prescribed key is DEAD and needs a REPLACEMENT
+   KEYING RULE** (§7, R-481 §69). Not merely pending: `11.2%` realizable, `0%` on the spearhead.
+2. **DESK** — the additive production baseline **+ the re-authored-producer equivalence control**
+   (R-480 §Desk). ★★ **Access is no longer the blocker: [MEASURED, R-481 §49] the live library is
+   REACHABLE and PROVEN READ-ONLY (`create temp table` rejected, SQLSTATE `25006`; `strategies` = `120`).
+   The remaining blocker is the re-authored producer.**
+3. ★★★★★ **PARITY — RULED, NOT DEFERRED, AND NO LONGER THIS PACKET'S ITEM.** R-481 §81-84 promoted it
+   to `LEDGER-E-PARITY-RATIFY-PACKET-2026-07-30.md` + its own worktree:
+   **F-B MUST CLOSE BEFORE THE ABLATION** (unless a graded complete-plan comparison proves the exact
+   frozen Gate-B population is DISJOINT from it) · **F-G MUST CLOSE BEFORE ANY PARITY RESULT MAY BE
+   ADMITTED** · **F-A CI wiring REQUIRED before merge/deploy or any reliance on parity as continuing
+   protection.** ★★★★★ **AND: THE CURRENT ONE-FIXTURE `PASS` HAS ZERO AUTHORITY AND MAY NOT BE CITED BY
+   ANY FUTURE RULING.**
+4. **RULING** — the runtime graph→spec handoff is `[UNENUMERATED]`; stage 2 cannot start without it.
+
+★★★ **CLOSED SINCE REV 2:** whether `0b0d6617` moves C8 — **MEASURED** (§6: `233 → 159`, `−74`,
+treatment population `158`). **It was never open at rev 2 either; rev 2 carried a stale line past its own §1.**
 
 ★★★★★ **AND THE ONE SENTENCE THIS PACKET REFUSES TO WRITE: that a rise in compiled coverage, mapped
 count or queue-rate would show Gate B worked. [MEASURED] the instrument that reports those numbers has
