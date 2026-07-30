@@ -115,6 +115,12 @@ keys — every rule lives in the body, killing the unknown-key risk class outrig
    tree it ran in (container dir is primary; worktree memories may vanish with the tree —
    durable findings also go in the report).
 
+Note (2026-07-30, caught by the T2 implementer): §1 renders as the untitled opening
+paragraph and §6's independence rules are distributed into §3 (lineage bar) and §5
+(pin/verdict-hash duties) — the artifact carries 8 `##` headers, not 9, and the plan's
+sanity check counts 8. The dispatcher-side rule "the dispatcher never interprets the
+grade" lives in the plan's Task 8 protocol, where the dispatcher is.
+
 ## 4. Propagation — one master copy
 
 1. Land v2 in `trading-forge/trading-forge` on the hardening branch via a dedicated

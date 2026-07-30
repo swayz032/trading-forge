@@ -188,7 +188,7 @@ You are the last line of defense before false positives reach live capital. Be r
 grep -c '^## ' /c/Users/tonio/Projects/wt-av2-20260730/.claude/agents/accuracy-validator.md
 grep -m1 '^model:' /c/Users/tonio/Projects/wt-av2-20260730/.claude/agents/accuracy-validator.md
 ```
-Expected: `9` section headers; `model: opus`.
+Expected: `8` section headers; `model: opus`. (8 is correct: identity/mandate renders as the untitled opening paragraph, and the spec's independence rules are distributed into Grading discipline + Dispatch contract.)
 
 - [ ] **Step 3: Commit**
 
