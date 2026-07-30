@@ -89,6 +89,40 @@ survived its packet. `BEFORE REMOVING A FIELD, ASK WHO READS IT — AND OPEN THA
 FILE, DO NOT NAME IT.`**
 ★★★★★ **GATE B REMAINS BLOCKED. Nothing here opens it.**
 
+## ★★★★★ [FACT, MEASURED, NOT RULED] `0b0d6617` — THE COMMIT'S OWN INVARIANT IS THE WRONG ONE FOR THIS QUESTION
+
+**Desk obligation (2) advanced from `[UNMEASURED]` to a SHARP NAMED QUESTION. No
+disposition, no severity — this is measurement only.**
+★★★ **[MEASURED HERE] `0b0d6617` = *"spine is not source-mandatory — record
+UNKNOWN_REQUIREDNESS"*. It removes `spine` from `_MANDATORY_ROLES`
+(`spec_execution_preflight.py:94`), so every `spine` condition now falls to the
+else-arm and RECORDS `UNKNOWN_REQUIREDNESS` instead of `MANDATORY`.**
+★★★★★ **[MEASURED HERE, at the executable line, `:164-170`] its central claim
+HOLDS: `def blocks_execution(rule_class): return rule_class in (MANDATORY,
+UNKNOWN_REQUIREDNESS)`. Both classes block. **THE REFUSAL SET DOES NOT MOVE**, and
+the commit pins that in CI as a SET comparison with a control.**
+★★★★★ **AND THAT IS NOT THE QUESTION. `C8` IS NOT A REFUSAL SET — IT IS A
+REMEDIATION CLASS OVER REFUSAL *ROWS*, AND [MEASURED, AR-460] THOSE ROWS CARRY A
+`rule_class` FIELD, WHICH THIS COMMIT CHANGES FOR EVERY `spine` CONDITION. The
+frozen taxonomy contains a class literally named `C6_unknown_requiredness`. So the
+same rows, unchanged in membership, can carry DIFFERENT class values into the
+remediation classifier — and a row moving `C8 → C6` changes the C8 count WITHOUT
+moving the refusal set.**
+★★★★★ **`A LAYER-SCOPED PROOF IS SCOPED TO ITS LAYER.` The commit proves invariance
+at the REFUSAL layer and is silent at the CLASSIFICATION layer; its CI pin cannot
+answer the C8 question and must not be cited as if it did. **REFUSAL-SET INVARIANCE
+IS NECESSARY, NOT SUFFICIENT.**
+★★★ **THE QUESTION, NOW EXACT AND STILL `[UNMEASURED]`: IS THE REMEDIATION
+CLASSIFICATION A FUNCTION OF `rule_class`?** [MEASURED HERE] the classifier is NOT
+in the census lane — `grep` for `C6_unknown_requiredness|remediation_class|
+C8_ANNOTATION` over `wt-preflight-blockers-20260729` returns **nothing**, so it is
+not cheaply reachable and I did not invent an answer. ★★ **If it IS a function of
+`rule_class`, the CONTROL arm is not the frozen control and the ablation cannot
+start. If the classification is a human JUDGMENT over rows (as R-451 recorded —
+"the remediation-class assignments themselves: JUDGMENT, never re-graded"), then a
+re-run census presents CHANGED INPUTS to that judgment, which is a different
+problem and not a smaller one.**
+
 ## ★★★★★ THE DESK'S OWN OPEN OBLIGATION — DO NOT LET THIS LAPSE AGAIN
 **FREEZE THE GENUINE-SURVIVOR TRUTH SET (R-474 §4).** Mine, not the worker's, not
 "a fresh session". **Keyed to `(video, transcript hash, exact span, exact-slice
