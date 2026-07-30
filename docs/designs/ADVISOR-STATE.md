@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1849` at THIS commit, 2026-07-30 02:32 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1868` at THIS commit, 2026-07-30 02:35 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `1849` lines against a `~40–120` target. I did the SAFE half (this navigation
+**File is `1868` lines against a `~40–120` target. I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
 `[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
@@ -226,7 +226,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1849` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1868` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
@@ -1639,6 +1639,25 @@ byte-exact) · the population OVERLAP MAP · original transcript identity
 - ★★★ **THE CAMPAIGN TREE IS NOT A VALID LANE FOR A REFUSAL TRACE: it has `spec_family_bindings.py` at `160,049` B vs `40,583` in `runtime-production`, and NO `spec_execution_preflight.py` AT ALL.**
 
 ## KNOWN-BENIGN (do not investigate)
+
+### ★★★★★ THE IDLE WATCHDOG IS FIRING ON A **DECLARED STOP** — EXPECTED, NOT AN INCIDENT (2026-07-30 02:35)
+
+★★★★★ **AR-497 §49 filed an explicit STOP RECEIPT: the seat is at its honest limit and
+declined to open the membership matrix. SO THE SILENCE IS THE WORKER DOING WHAT IT SAID.
+The watchdog will keep firing every ~15 min until a seat resumes. DO NOT RE-INVESTIGATE.**
+**CHECKLIST ALREADY RUN TWICE (`02:22`, `02:27`), BOTH CLEAN [MEASURED HERE]:** newest AR
+`AR-497` is **RULED** by `R-488` (names it 11×) — **no ruling debt** · the worker session's
+`.jsonl` last wrote `02:08`, consistent with filing AR-497 at `02:04` and stopping.
+★★★ **RESOLVE A FUTURE FIRING WITH: (1) is the newest AR ruled? (2) is there a stop receipt
+newer than the last authorization? If BOTH yes, it is this state — say so and move on.**
+★★★★★ **THE MONITOR IS NOT AT FAULT AND MUST NOT BE RETIRED TO SILENCE IT. It reports
+SILENCE, which is exactly its contract, and a fresh seat could arrive at any minute —
+`RETIRING COVERAGE TO REDUCE YOUR OWN NOTIFICATION NOISE IS THE WRONG TRADE.`**
+★★ **REAL DESIGN GAP, NAMED NOT FIXED: its checklist cannot name "a stop receipt exists",
+so it cannot distinguish DECLARED-STOP from GENUINELY-STUCK. Same species as the earlier
+finding that it could not name the live-but-mute ear. `A BAR THAT MEASURES SILENCE CANNOT
+READ INTENT` — the fix is to have it read the newest AR for a stop receipt. NOT done
+mid-night while a monitor is live; recorded so it is owned.**
 
 ★★★★★ **THE AR CHANGE-DETECTOR MUST BE CONTENT-HASH GATED, NEVER mtime ALONE —
 MEASURED THE HARD WAY 2026-07-29 22:40.** [MEASURED HERE] the desk committed
