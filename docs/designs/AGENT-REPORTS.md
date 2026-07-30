@@ -4,6 +4,63 @@
 
 ---
 
+## AR-471 · 2026-07-29 · ★★★★★ **RETIREMENT DONE. CAPABILITY MODE REFUSES — every `--module/--symbol` invocation exits `8`, CHECKED BEFORE USAGE VALIDATION so an old command line cannot be answered as though it meant something new. The guard is now `~340` lines certifying ONE proposition, and THE SHRINKING IS THE FIX.** ★★★★★ **YOUR §0 LAW IS ENFORCED STRUCTURALLY, NOT BY A FIXTURE: an UNREADABLE surface member DENIES THE CLAIM even when the control is perfect — and I made the decode STRICT on purpose, because `errors="replace"` was manufacturing a searchable text and hiding exactly that.** ★★★★★ **OPTION A DONE: all FOUR inputs CONTENT-pinned and asserted, all SEVEN governing figures EMITTED — `1368` · `456` · `{3: 456}` · `359` · `32` · `28` · `96`.** ★★★★★ **AND `--mutate` NOW EXITS `9`, NOT `0`.** ★★★ **GATE-A TOTALS RE-VERIFIED AFTER EVERYTHING: `456 / 233 / 232 / 1`.**
+
+**RULING ID:** R-472 §1–§4 · **TASK ID:** AR-470 · **PRIOR:** AR-469 (NOT RATIFIED) · **COMMIT AT WRITE `2dfb0880` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED — return to `a858339f7a6a7cfb8` as the follow-up, per your one-rig-per-channel change of method.**
+
+### ★★★★★ §1 — ACCEPTANCE, ITEM BY ITEM, WITH THE MEASURED CODE
+
+| your acceptance condition | result |
+|---|---|
+| every `--module/--symbol` invocation exits `8` | **`8`** — and the check runs BEFORE `--control`/usage validation, so no old command line can be re-interpreted |
+| text-mode positive and negative controls DISCRIMINATE | positive **`0`** · negative (`ThisTokenAppearsNowhere_5B2C77`) **`2`** |
+| an unreadable surface member PREVENTS an admissible absence | **`8`** — surface containing an invalid-UTF-8 member, control itself perfectly fine |
+| control outside surface · bound breach | **`3`** · **`4`** (refused BEFORE reading — no truncate-then-admit path) |
+| ledger control exits `0` | **`0`** |
+| **`--mutate` yields `JOIN_RESIDUAL=1` AND EXITS NON-ZERO** | **`9`**, row NAMED in the output |
+| `--break-reconcile` exits `6` | **`6`** — retained as the SEPARATE conservation control |
+| raw census · spec set · transcript set CONTENT-pinned | **4 of 4 MATCH** (`ad4335f0…` · `eed65514…` · spec-set `a5adbf6c…` · transcript-set `4b0ab4da…`) |
+| all four artifact-specific key measurements EMITTED | ✓ see §3 |
+| Gate-A totals `456 / 233 / 232 / 1` | **unchanged, re-measured after the edits rather than assumed** |
+
+**All 6 guard fixtures pass at codes PRE-REGISTERED in AR-470, discriminating across FIVE outcomes: `0` admissible · `2` control-cannot-find · `3` off-surface · `4` bound-refused · `8` fail-closed (retired mode AND unreadable member).**
+
+### ★★★★★ §2 — WHY THE STRICT DECODE IS THE INTERESTING PART
+
+★★★★★ **Implementing your §0 law exposed a defect the law predicts but nobody had named: my scanner read every file with `errors="replace"`. That SILENTLY MANUFACTURES a searchable text out of bytes it cannot decode — so an undecodable file would have been scanned, found not to contain the pattern, and counted as evidence of ABSENCE. The lenient decode was itself a false-absence generator.** ★★★ **`read_bytes().decode("utf-8")` STRICT now, and an undecodable member is `UNREADABLE` and denies the whole claim. I would not have found that by adding shapes; it fell out of asking the quantifier question you asked.**
+
+### ★★★★★ §3 — THE SEVEN FIGURES, EMITTED, EACH KEYED TO ITS ARTIFACT
+
+**raw census payload:** refusal rows **`1368`** · `(strategy_id, condition_id)` **`1368` distinct, max multiplicity `1`** → ADMISSIBLE here · `(video, condition_id)` **`456` distinct, max multiplicity `3`**, histogram **`{3: 456}`** → INADMISSIBLE here.
+**classified artifact:** non-empty rows `455` · `(video, condition_id)` **`455` distinct, max `1`** → ADMISSIBLE here · `condition_id` ALONE **`359` distinct · `32` duplicated · max `28` · `96` ROWS SILENTLY MERGED** → INADMISSIBLE on every artifact.
+★★★ **`A COUNT IS NOT A PIN` accepted and acted on: the previous version asserted spec COUNT and transcript COUNT+AGGREGATE BYTES — which ANY same-sized substitution satisfies. Both sets are now hashed over `(filename, sha256)` of every member and compared to an embedded pin, and the raw census is LOADED rather than described, because `1368` and `{3: 456}` cannot be derived without it.**
+
+### §4 — DISPOSITION
+
+★★★ **AND I ACCEPT §4's CORRECTION AS SHARED: I built `--break-reconcile`, ran it, reported exit `6`, and never noticed that `--mutate` printed `[UNEXPLAINED — a real one is a BROKEN JOIN]` and returned success. You credited one path against the other; I had both paths in my own hands and tested only the one I had just written. `A CHECK WITH NO PATH TO RED` is the law I quoted at this desk all session, in a check I shipped.**
+★★★★★ **WHAT I WILL NOT SAY: that the absence-claim class is closed. It is RETIRED, which is different and better — the tool no longer makes the kind of claim it kept getting wrong. The correct instrument (TypeScript compiler API + type checker) is recorded in the file's own docstring as the right answer and explicitly NOT built, because building it now would be the fifth round in a better hat.**
+**POSITION:** `2dfb0880` + this commit · branch `h1-wave4-sealed12-driver`. **NOTHING HALF-DONE. NO SUB-AGENT DISPATCHED OR OWED BY ME — none this entire session. No third grader; the repair returns to `a858339f7a6a7cfb8`.**
+★★ **SESSION NOTE, MY OWN ASSESSMENT AND NOT A REQUEST: this seat has run `AR-459 → AR-471` (13 reports, 7 rulings). The work is at a clean boundary — everything committed, nothing in flight, no fixture pending. If the follow-up grade returns further repairs, a FRESH SEAT is the cheaper and safer executor, and the ledger plus these instruments are self-describing enough for one to start without re-deriving.**
+**Remaining uncertainty:** ★ DB↔census refusal/classification FRESHNESS (distinct from spec freshness) `[UNMEASURED]` · ★ span SEMANTIC correctness `[UNPROVEN]` — addresses valid, invariant fails `232/232` byte-exact · ★ `dc8a150` authority `[CORROBORATED, NOT PROVEN]` · ★ whether `0b0d6617` moves C8 `[UNMEASURED]` · ★ the 232 semantic labels `[OUT OF SCOPE]` · ★ population overlap map `[UNENUMERATED]`.
+**Risk:** low — read-only; no model run, no DB access, no frozen byte altered, nothing outside your file list; the empty-spine refusal untouched.
+**Next smallest task — ONE:** the follow-up grade by `a858339f7a6a7cfb8`. **Gate B stays BLOCKED; deterministic at the admission contract, three-way contract per R-469 §6.**
+
+---
+
+## AR-470 · 2026-07-29 · **START-RECEIPT — R-472 §1–§4: RETIRE, SIMPLIFY, CONTENT-PIN. ★★★★★ YOUR §0 IS THE CORRECT DIAGNOSIS AND IT INDICTS EVERY ROUND INCLUDING MY LAST ONE: I MADE THE VERDICT FAIL CLOSED ON THE **CONTROL** WHILE THE CLAIM IT LICENSES IS ABOUT THE **WHOLE SURFACE**. THAT IS A WRONG QUANTIFIER, NOT A MISSING FIXTURE, AND NO NUMBER OF FIXTURES WOULD HAVE FOUND IT.**
+
+**RULING ID:** R-472 §1–§4 · **TASK ID:** AR-470 · **STATUS:** START-RECEIPT · **PRIOR:** AR-469 (NOT RATIFIED) · **COMMIT AT START `2dfb0880`.**
+
+★★★★★ **I ACCEPT THE RETIREMENT AND I AM NOT ARGUING FOR A FIFTH ROUND. The evidence is mine as much as yours: four rounds, each closing every named shape, each with a green suite, each followed by a new unnamed shape. I was reproducing JS/TS parsing, lexical scope, binding resolution, shadowing and type erasure in Python regexes and calling the result conservative. `17/17` proves seventeen registered shapes and I said so in AR-469 — but I still shipped it as a repair rather than concluding the approach was wrong.**
+★★★ **AND YOUR §4 ERROR IS ALSO PARTLY MINE TO HAVE CAUGHT: I built `--break-reconcile`, I ran it, I reported exit `6`, and I never noticed that `--mutate` — the arm that detects a REAL broken join — still exits `0` while printing `[UNEXPLAINED — a real one is a BROKEN JOIN]`. An instrument that names an invalidating defect and returns success is a check with no path to red, which is the law I have quoted at this desk all session.**
+
+**TAKING, ALL OF IT:** (1) `--module/--symbol` → `VERDICT UNAVAILABLE — CAPABILITY MODE RETIRED`, exit `8`, CLI kept only as a fail-safe so an old command line cannot silently mean something new · (2) text mode keeps ONE proposition — *"this literal pattern was PRESENT/ABSENT over this explicitly enumerated surface"* — and **every enumerated member must PARTICIPATE in the final verdict**: any unreadable member, bound breach, control-outside-surface, or control-without-the-pattern exits NON-ZERO · (3) **`--mutate` exits NON-ZERO** on a real unexplained `JOIN_RESIDUAL`, with `--break-reconcile → 6` retained as the SEPARATE conservation control · (4) **LEDGER OPTION A** — load and CONTENT-PIN the raw census, the COMPLETE spec set and the COMPLETE transcript set, and EMIT all seven governing figures (`1368` · `456` · `{3: 456}` · `359` · `32` · `28` · `96`), because `A COUNT IS NOT A PIN` and a wrong key here produces a BALANCED table.
+**NOT DOING:** no semantic regex patch · no TypeScript-compiler instrument (correct tool, NOT authorized, and building it now would be the fifth round in a better hat) · nothing outside your file list · no third grader — the repair returns to `a858339f7a6a7cfb8` as a follow-up.
+★★ **AND I WILL NOT RE-LITIGATE §5: Gate A's `456 / 233 / 232 / 1` rests on POSITIVE producer and artifact evidence, not on this guard. I will re-verify those four totals after the ledger changes rather than assume they survived.**
+**FIRST OBSERVABLE:** this receipt. **NEXT:** capability-retirement fixture + text-mode discrimination, ~15 min; then Option A. **STOP:** any need for another semantic regex patch · inability to make every enumerated member participate in the verdict.
+
+---
+
 ## AR-469 · 2026-07-29 · ★★★★★ **ALL `17` FIXTURES NOW AT THEIR PRE-REGISTERED CODES, EXIT `0` — INCLUDING BOTH OF YOUR OPEN DEFECTS, BOTH COMPOSED PAIRS, THE UNUSED IMPORT, THE `(fs as any)[m]` CAST, THE TEMPLATE CALL AND `node:fs` NORMALISATION.** ★★★★★ **BUT THE FIRST RUN WAS `16/17` AND I AM LEADING WITH THAT, NOT WITH THE GREEN: `genuine_dynamic` PRE-REGISTERED `0` AND RETURNED `2`. YOUR STOP CONDITION FIRED, AND IT CAUGHT A REAL BUG IN MY ANALYSER — NOT A BAD PREDICTION. I FIXED THE INSTRUMENT AND LEFT THE PREDICTION ALONE.** ★★★ **AND THE BUG IS THE BEST ARGUMENT FOR YOUR OWN COMPOSED-FIXTURE LAW THAT I COULD HAVE PRODUCED BY ACCIDENT.**
 
 **RULING ID:** R-471 §4/§5 · **TASK ID:** AR-468 · **PRIOR:** AR-467 (DENIED) · **COMMIT AT WRITE `d27e7a79` + this commit** · **RECOMMENDATION:** **APPROVAL_REQUESTED. Fresh grade fires on THIS commit.**

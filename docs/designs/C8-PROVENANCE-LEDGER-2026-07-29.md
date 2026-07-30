@@ -41,6 +41,27 @@
 > non-zero) instead of reporting an admissible absence. `A GUARD INHERITS EVERY WEAKNESS
 > OF THE METHOD IT AUTOMATES.`**
 > **(b) THE BRIDGE-KEY TABLE IN §2 WAS WRONG WHILE THE INSTRUMENT WAS RIGHT** — see §2.
+>
+> ★★★★★ **REVISION 4 (R-472). THE ABSENCE GUARD'S CAPABILITY MODE IS RETIRED, AND
+> NOTHING IN THIS LEDGER EVER DEPENDED ON IT.** Four repair rounds each closed every
+> named shape, went green on its own fixtures, and then failed on a new unnamed one;
+> the diagnosing defect was that its fail-closed behaviour was scoped to its CONTROL
+> and never to its CLAIM — it certified absence over files it had declared it could
+> not read. ★★★ **`A FAIL-CLOSED CLASSIFIER IS NOT FAIL-CLOSED WHEN ONLY ITS CONTROL
+> MUST BE DECIDABLE.`** The tool now certifies exactly one proposition — literal text
+> present/absent over an enumerated surface — and refuses capability verdicts outright.
+> ★★★★★ **THE QUESTION THAT STARTED THAT LANE IS ANSWERED BY POSITIVE EVIDENCE, NOT BY
+> AN ABSENCE TOOL: the producer persists at `dc8a150:229`,
+> `const { writeFileSync } = await import("fs")` inside the `--emit-spec` branch.**
+> ★★★ **AND THE PINS ARE NOW REAL: `A COUNT IS NOT A PIN.` All four inputs — raw census,
+> classified artifact, the complete spec set and the complete transcript set — are
+> CONTENT-hashed and asserted (the previous version checked spec COUNT and transcript
+> COUNT+BYTES, which any same-sized substitution satisfies). Every governing bridge-key
+> figure is now EMITTED by the instrument: `1368` · `456` · `{3: 456}` · `359` · `32` ·
+> `28` · `96`. ★★ And `--mutate` now EXITS NON-ZERO (`9`) — it previously printed
+> *"[UNEXPLAINED — a real one is a BROKEN JOIN]"* and returned success.**
+> ★★★★★ **GATE A's TOTALS ARE RE-VERIFIED AFTER ALL OF IT, NOT ASSUMED: `456 / 233 /
+> 232 / 1`.**
 
 ---
 

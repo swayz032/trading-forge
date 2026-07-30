@@ -69,8 +69,17 @@ SPECS = pathlib.Path(r"C:\Users\tonio\Projects\trading-forge\tf-deep-scan\corpus
 TRANSCRIPTS = pathlib.Path(r"C:\Users\tonio\Projects\trading-forge\backups\h1-shadow-eval\transcripts-78fe8ea7\transcripts")
 
 CLASSIFIED = CENSUS_DIR / "pop120_classified.json"
+RAW_CENSUS = CENSUS_DIR / "pop120_census.json"
+
+# ★★★★★ CONTENT PINS (R-472 §3, OPTION A). `A COUNT IS NOT A PIN.` The previous
+# version asserted spec COUNT and transcript COUNT+AGGREGATE BYTES, which any
+# same-sized substitution satisfies. Each set is now pinned by a hash over
+# (filename, sha256) of EVERY member, and the raw census is loaded and pinned too
+# because the 1368 / {3: 456} figures cannot be derived without it.
 PIN_CLASSIFIED = "eed65514a126adb136b5430939223965a12909b6e21cda4fba87d547326051d1"
-# Body hash of the preserved transcript manifest (R-464/R-467: 40 rows, 913,668 B).
+PIN_RAW_CENSUS = "ad4335f0cdf8b3b9e2b9987b4497ea60cebf07cac6fa2aae0a4b6adfc30a413c"
+PIN_SPEC_SET = "a5adbf6ce563f1928d3af6fcb26280fca2ba00c99f0c1ce8de73d0d7059806f4"
+PIN_TRANSCRIPT_SET = "4b0ab4da4d61831f84d1c237aa74910bffb128f6b82b8322afb5dce8868b5df0"
 PIN_TRANSCRIPT_BYTES = 913_668
 PIN_TRANSCRIPT_COUNT = 40
 PIN_SPEC_COUNT = 40
@@ -84,45 +93,95 @@ def sha256_of(p: pathlib.Path) -> str:
 
 
 # ---------------------------------------------------------------- input pinning
-def pin_inputs() -> dict[str, str]:
-    """(3) ALL THREE populations pinned, not just the classified artifact."""
-    print("=== INPUT PINNING (all three populations) ===")
-    facts: dict[str, str] = {}
+def set_pin(paths: list[pathlib.Path]) -> str:
+    h = hashlib.sha256()
+    for f in sorted(paths):
+        h.update(f.name.encode())
+        h.update(sha256_of(f).encode())
+    return h.hexdigest()
 
-    got = sha256_of(CLASSIFIED)
-    ok = got == PIN_CLASSIFIED
-    print(f"  classified : {CLASSIFIED.name}  sha256 {'MATCH' if ok else 'MISMATCH'}  {got[:16]}...")
-    if not ok:
-        sys.exit(7)
-    facts["classified_sha256"] = got
+
+def pin_inputs() -> dict[str, str]:
+    """R-472 §3 OPTION A: FOUR inputs, every one CONTENT-pinned. `A COUNT IS NOT A
+    PIN` -- counts and aggregate byte totals are retained as extra checks, never as
+    the pin."""
+    print("=== INPUT PINNING -- CONTENT hashes, not counts (R-472 §3, Option A) ===")
+    facts: dict[str, str] = {}
+    bad: list[str] = []
+
+    for label, path, expect in (("classified ", CLASSIFIED, PIN_CLASSIFIED),
+                                ("raw census ", RAW_CENSUS, PIN_RAW_CENSUS)):
+        got = sha256_of(path)
+        ok = got == expect
+        print(f"  {label}: {path.name:24s} sha256 {'MATCH' if ok else 'MISMATCH'}  {got[:16]}...")
+        facts[label.strip()] = got
+        if not ok:
+            bad.append(f"{path.name}: got {got}, pinned {expect}")
 
     spec_files = sorted(SPECS.glob("*.spec.json"))
-    # Set-level pin: a stable hash over (name, sha256) of every spec file, so the
-    # population is pinned as a SET rather than one representative file.
-    h = hashlib.sha256()
-    for f in spec_files:
-        h.update(f.name.encode()); h.update(sha256_of(f).encode())
-    spec_set = h.hexdigest()
-    print(f"  specs      : {len(spec_files)} files  set-hash {spec_set[:16]}...  "
-          f"{'OK' if len(spec_files) == PIN_SPEC_COUNT else f'COUNT MISMATCH (want {PIN_SPEC_COUNT})'}")
-    if len(spec_files) != PIN_SPEC_COUNT:
-        sys.exit(7)
-    facts["spec_set_hash"] = spec_set
+    got = set_pin(spec_files)
+    ok = got == PIN_SPEC_SET and len(spec_files) == PIN_SPEC_COUNT
+    print(f"  specs      : {len(spec_files)} files  SET-CONTENT-PIN "
+          f"{'MATCH' if got == PIN_SPEC_SET else 'MISMATCH'}  {got[:16]}...")
+    facts["spec_set"] = got
+    if not ok:
+        bad.append(f"spec set: got {got} n={len(spec_files)}, pinned {PIN_SPEC_SET} n={PIN_SPEC_COUNT}")
 
     t_files = sorted(TRANSCRIPTS.glob("*.transcript.txt"))
     total = sum(f.stat().st_size for f in t_files)
-    h = hashlib.sha256()
-    for f in t_files:
-        h.update(f.name.encode()); h.update(sha256_of(f).encode())
-    t_set = h.hexdigest()
-    ok = len(t_files) == PIN_TRANSCRIPT_COUNT and total == PIN_TRANSCRIPT_BYTES
-    print(f"  transcripts: {len(t_files)} files, {total:,} bytes  set-hash {t_set[:16]}...  "
-          f"{'OK' if ok else 'PIN MISMATCH'}")
+    got = set_pin(t_files)
+    ok = (got == PIN_TRANSCRIPT_SET and len(t_files) == PIN_TRANSCRIPT_COUNT
+          and total == PIN_TRANSCRIPT_BYTES)
+    print(f"  transcripts: {len(t_files)} files, {total:,} bytes  SET-CONTENT-PIN "
+          f"{'MATCH' if got == PIN_TRANSCRIPT_SET else 'MISMATCH'}  {got[:16]}...")
+    facts["transcript_set"] = got
     if not ok:
+        bad.append(f"transcript set: got {got} n={len(t_files)} bytes={total}")
+
+    print("  trees: specs=tf-deep-scan (SEPARATE git repo) · "
+          "classified+raw census+transcripts=backups (outside every git tree)")
+    if bad:
+        print("\nINPUT PIN FAILED -- exit 7. The ledger describes inputs it cannot identify:")
+        for b in bad:
+            print(f"  {b}")
         sys.exit(7)
-    facts["transcript_set_hash"] = t_set
-    print(f"  tree: specs=tf-deep-scan (separate git repo) · classified+transcripts=backups (outside git)")
     return facts
+
+
+def emit_bridge_key_figures() -> None:
+    """R-472 §3: every governing bridge-key number EMITTED, never prose. These keys
+    decide WHETHER THE THREE MARKET COPIES ARE SILENTLY FUSED, and 1368/3 = 456 is
+    the figure a reader expects -- so a wrong key here yields a BALANCED table."""
+    cl = json.loads(CLASSIFIED.read_text(encoding="utf-8"))
+    cen = json.loads(RAW_CENSUS.read_text(encoding="utf-8"))
+
+    raw_pairs = [(s.get("video"), r["condition_id"], r["strategy_id"])
+                 for s in cen["strategies"] for r in (s.get("refusals") or [])]
+    raw_total = len(raw_pairs)
+    vc_raw = collections.Counter((v, c) for v, c, _ in raw_pairs)
+    sc_raw = collections.Counter((sid, c) for _, c, sid in raw_pairs)
+
+    nonempty = [r for r in cl if r["condition_id"] != ""]
+    cid_only = collections.Counter(r["condition_id"] for r in nonempty)
+    vc_cl = collections.Counter((r["video"], r["condition_id"]) for r in nonempty)
+
+    print("\n=== BRIDGE-KEY MEASUREMENTS, PER ARTIFACT (emitted, never prose) ===")
+    print(f"  raw census payload  : refusal rows                       = {raw_total}")
+    print(f"                        (strategy_id, condition_id) distinct = {len(sc_raw)}, "
+          f"max multiplicity = {max(sc_raw.values())}   <- ADMISSIBLE here")
+    print(f"                        (video, condition_id) distinct       = {len(vc_raw)}, "
+          f"max multiplicity = {max(vc_raw.values())}   <- INADMISSIBLE here")
+    print(f"                        (video,cid) multiplicity histogram   = "
+          f"{dict(collections.Counter(vc_raw.values()))}")
+    print(f"  classified artifact : non-empty rows                      = {len(nonempty)}")
+    print(f"                        (video, condition_id) distinct       = {len(vc_cl)}, "
+          f"max multiplicity = {max(vc_cl.values())}   <- ADMISSIBLE here")
+    print(f"                        condition_id ALONE distinct          = {len(cid_only)}")
+    print(f"                        condition_ids duplicated             = "
+          f"{sum(1 for n in cid_only.values() if n > 1)}")
+    print(f"                        max multiplicity                     = {max(cid_only.values())}")
+    print(f"                        ROWS SILENTLY MERGED by cid alone    = "
+          f"{len(nonempty) - len(cid_only)}   <- INADMISSIBLE on every artifact")
 
 
 # ------------------------------------------------------------- reconciled buckets
@@ -180,6 +239,7 @@ def reconcile(label: str, b: Buckets) -> None:
 
 def main() -> int:
     pin_inputs()
+    emit_bridge_key_figures()
 
     rows = json.loads(CLASSIFIED.read_text(encoding="utf-8"))
     print(f"\n[population] classified rows = {len(rows)}  (POP-120-LIVE, per-video)")
@@ -334,6 +394,20 @@ def main() -> int:
 
     # ---- final reconciliation gate
     print("\n" + "=" * 70)
+    # R-472 §4: the rejected version PRINTED "[UNEXPLAINED -- a real one is a BROKEN
+    # JOIN]" and exited 0. An instrument that NAMES an invalidating defect and then
+    # returns success is a check with no path to red. This is a SEPARATE code path
+    # from the conservation gate (--break-reconcile -> 6); R-470 §4 credited that
+    # gate's exit 6 against THIS defect, which is how it survived a whole round.
+    if b.join_residual:
+        print("UNEXPLAINED JOIN RESIDUAL -- exit 9. The ledger is NOT admissible:")
+        print(f"  {len(b.join_residual)} row(s) failed the join with no manufactured")
+        print("  explanation. A real one of these IS a broken join, and a broken join")
+        print("  invalidates every downstream count in this run.")
+        for r in b.join_residual:
+            print(f"    video={r['video']} cond_id={r['condition_id']!r} reason={r['reason']!r}")
+        print("=" * 70)
+        return 9
     if RECONCILE_FAILURES:
         print("INTERNAL DISAGREEMENT -- exit 6. The ledger is NOT admissible:")
         for f in RECONCILE_FAILURES:
