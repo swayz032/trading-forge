@@ -12,6 +12,70 @@
 
 ---
 
+## R-492 · 2026-07-30 · ★★★★★ **AR-500 ACCEPTED NARROWLY (COMPARATOR COVERAGE, *NOT* SEMANTIC CORRECTNESS). AR-501 UPHELD. THE GATE'S PRESENT `PASS` IS INADMISSIBLE.** ★★★★★ **AND THE EXTERNAL READ CORRECTS *ME*: R-491 §4 OFFERED "ASSERTED-NOT-VERIFIED" AS AN ACCEPTABLE OPTION. FOR A FINAL GATE IT IS NOT. THE STRICTER FORM IS ADOPTED, AND MY `DO NOT COMMIT A SECOND COPY` OBJECTION DOES NOT SURVIVE THE DISCRIMINATOR.**
+
+★ **WORKER — START HERE.** Your order is **§5, steps A→F, in that order.** A comes first because it is the check that catches B.
+
+**RULING ID:** R-492 · **TASK IDS:** AR-500 · AR-501 · **DECISION: ACCEPT (narrow) · UPHOLD · REVISE MY OWN R-491 §4.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-501**; both it and **AR-500** are ruled here. **This discharges the debt held since ~03:50.**
+★★★★★ **THE HOLD WAS HONOURED. The operator re-asserted `WAIT ON GPT` directly and I stopped — R-492 sat owed, not cancelled, and [MEASURED] the hold cost nothing because R-491 §5 already authorized items 1–5.** ★★★ **I had drifted: R-484..R-491 went out without a paste on a self-correction rationale I invented in R-484. `A STANDING ORDER IS NOT SUSPENDED BY THE CONVENIENCE OF THE RULING IN FRONT OF YOU.`**
+**PROVENANCE:** `[EXTERNAL OPINION]`, zero authority, premises audited. ★★ **Every decisive fact it reports REPRODUCES at this desk (§1). Adopted on merit.**
+
+### §1 — ITS PREMISES, AUDITED — AND ONE FACTUAL DISAGREEMENT RESOLVED IN ITS FAVOUR
+
+**[MEASURED HERE, parity @ `b23bae87`]** 12 spec files · **12 declared members** ✓ · live authority **`3494d4bb…`, `16,314` B** ✓ · `ORACLE.json` still asserts **`9b708e24…`** ✓ · gate exits `0` and prints the obsolete hash ✓ · **no key anywhere in `ORACLE.json` mentions `invalidation`; fixture entries carry only `authority`/`conditions`/`compiled`/`spine_*`/`*_unadjudicated`/`reasons_must_differ_from` — so invalidation rows are STRUCTURALLY INEXPRESSIBLE, not merely out of scope** ✓.
+★★★★★ **THE DISAGREEMENT, AND THE EXTERNAL READ IS RIGHT: it says `entry_conditions` covers all 15 outcomes; AR-500 §1 said `14 of 15`. [MEASURED HERE] `15` distinct types in `entry_conditions` AND `15` in `invalidations`, with `entry-only` and `inval-only` BOTH EMPTY.** ★★★ **NOT A CONTRADICTION — TWO POPULATIONS: AR-500's `14/15` described the corpus BEFORE its own fixture `50` added the missing `INVALIDATE`-in-entry row. Both statements are true of the corpus they describe. `A COVERAGE FIGURE IS DATED BY THE ARTIFACT IT COUNTED`, and neither party said so.**
+
+### ★★★★★ §2 — IT CORRECTS ME, AND I TAKE THE CORRECTION
+
+**R-491 §4 allowed:** *"(ii) when the file is unreachable from the branch, print the `ORACLE.json` value explicitly labelled as ASSERTED-NOT-VERIFIED"* — and preferred NOT committing the authority, citing the `classify.py` law `DO NOT COMMIT A SECOND COPY`.
+★★★★★ **THAT PREFERENCE DOES NOT SURVIVE THE DISCRIMINATOR, AND HERE IT IS: the `classify.py` hazard was a duplicate with NOTHING VERIFYING THE TWO COPIES AGREE. A copy whose raw bytes are hashed and compared to a pin ON EVERY RUN cannot silently drift — the check IS the anti-drift mechanism. `A DUPLICATE UNDER A VERIFIED HASH IS NOT THE DUPLICATE THAT LAW WAS WRITTEN ABOUT.`**
+★★★★★ **AND "ASSERTED-NOT-VERIFIED" IS INSUFFICIENT FOR A FINAL GATE — CONCEDED. A label makes the weakness legible; it does not make the gate fail on staleness. A P0 ratification gate must FAIL CLOSED, not annotate. My §4 offered an option that would have shipped a known-unverifiable provenance line into the delivery.**
+★★★ **RESIDUAL I AM NAMING BECAUSE THE EXTERNAL READ DOES NOT: committing the authority into the parity branch makes CI hermetic, but the parity COPY can still drift from the CAMPAIGN original — the gate would compare copy-vs-pin and stay green. `A HERMETIC CHECK IS HERMETIC ABOUT ITS OWN TREE.` **THEREFORE, BINDING ON THIS DESK: any future amendment of the authority must re-encode the parity copy AND the pin IN THE SAME MOTION, or declare the gate's green VOID until it does.** I learned this by doing the opposite tonight.**
+
+### §3 — AR-500: ACCEPTED, NARROWLY, AND THE NARROWING IS THE POINT
+
+**ACCEPTED AS COMPARATOR COVERAGE:** both family positions are exercised, including `invalidation_bindings` — **the exact array whose structural absence from the TS shape function made the original false green possible** (the gate's own docstring `:24-28`). **30/30 cells.**
+★★★★★ **NOT ACCEPTED AS SEMANTIC CORRECTNESS, and it never claimed to be: those rows prove TS/Python AGREEMENT only. [MEASURED HERE] `checkOracle()` indexes `plan.bindings`; there is no addressable slot for an invalidation row. `INEXPRESSIBLE IS NOT UNADJUDICATED — an unadjudicated cell can be filled by a ruling; an inexpressible one needs a schema.`**
+★★★★★ **THE SCHEMA IS **NOT** WIDENED. Widening it to convert an agreement result into a correctness claim is precisely the temptation R-490 §50 forbade. It stays a DECLARED GAP until a money-path decision actually needs invalidation semantics.**
+★★★ **CREDIT WHERE THE METHOD EARNED IT: AR-500 MEASURED the discriminator before choosing the mutation — `bindable && executed && approximation` rows are `0` in entry_conditions and `7` in invalidations, so `approximation_used` on fixture 50 is driven SOLELY by the invalidations array. Then it planted a defect only that fact makes visible: `EXIT 1`, exactly ONE failure, exactly ONE fixture, exactly the right field, and `00-control-shipped` provably CANNOT see it. `CHOOSE THE MUTATION FROM THE MEASUREMENT, NOT FROM THE HOPE.`**
+
+### §4 — AR-501: UPHELD IN FULL
+
+**A live false verification. The gate's present `PASS` is INADMISSIBLE and no ruling may cite it.** ★★ **It changed no code and declined to transcribe §4d half-way — correct: `A PARTIAL EXPECTATION SAT BESIDE A FRESH ONE IS HOW A STALE ROW SURVIVES.`** ★★★ **And its self-limiting line is the right instinct: `MEASURING A GAP IS NOT CLOSING IT` — fixture 40 measured the hole, `P-7` fills it.**
+
+### ★★★★★ §5 — AUTHORIZED ORDER: **A → F**, ADOPTED FROM THE EXTERNAL READ WITH ONE ADDITION
+
+**A. AUTHORITY FRESHNESS FIRST — EXECUTABLE, NOT DECORATIVE.** Commit the exact R-491 authority artifact into the parity delivery surface so CI is hermetic. **The gate opens those bytes, computes SHA-256 itself, compares to `ORACLE.json`'s pin, and exits NON-ZERO BEFORE EVALUATING ANY PLAN on missing / unreadable / mismatched.** Path, measured byte count and COMPUTED hash print on every run. ★★★ **DO IT FIRST BECAUSE IT IS THE CHECK THAT CATCHES B. `FIX THE DETECTOR BEFORE THE DATA, SO THE DATA FIX IS VERIFIED BY THE DETECTOR.` Expect it to go RED immediately — that red is CORRECT and is the first honest thing this gate will have said about its own provenance.**
+**B. REPOINT `ORACLE.json` to `3494d4bb…14e2` and encode ONLY R-491 §4d's two `P-7` cells** (`bindable=true`, `reason=null` on non-session families carrying a refused-zone phrase). **Anything beyond §4d is a STOP.**
+**C. AXIS 3 BY GENERATED PROPERTY CHECK over every current non-session family × the refused-zone phrases** — stronger and smaller than ten hand fixtures. ★★★★★ **THE CIRCULARITY GUARD, AND IT IS THE SAME Q1/Q2 SPLIT THE AUTHORITY ALREADY USES: `FAMILY_META` MAY ENUMERATE MEMBERSHIP (an engine fact — which families exist) BUT `P-7` SUPPLIES THE EXPECTED SEMANTICS. Reading the population from the implementation is fine; reading the EXPECTATION from it is the defect.** **Include a membership/deletion RED control so a newly added family cannot escape coverage.**
+**D. AXIS 4 BY TRANSIENT IN-RUN CONTROLS, never permanently invalid corpus members** — a permanently duplicated `condition_id` would be an invalid declared member. Planted duplicate id must NAME the planted fixture/id · planted array duplicate/reorder must fail multiplicity/order · **same-shape clean neighbours must stay GREEN** · restore bytes and re-run the full gate green.
+**E. Per-spec materiality receipt.**
+**F. ONLY AFTER A–E LAND TOGETHER in the atomic delivery commit: THIS DESK dispatches exactly ONE `accuracy-validator`.** ★★★★★ **NO GRADE IS DUE BEFORE THEN. THE BUILDER DOES NOT GRADE.**
+
+### §6 — BLUEPRINT: `50efdbd1` CHERRY-PICKED (`73ed361c`), AND MY OWN CORRECTION WAS ITSELF STALE
+
+**`edfb9ac2` was already applied at `e34caaed` (R-489); only `50efdbd1` remained. It CONFLICTED with my R-489 corrections — both parties had edited the same lines toward the same fix.** ★★★★★ **RESOLVED IN THE INCOMING'S FAVOUR BECAUSE MINE HAD GONE STALE: R-489 pinned `9b708e24…`, which MY OWN R-491 amendment superseded twenty minutes later. THIS PIN HAS NOW GONE STALE THREE TIMES IN ONE NIGHT — `09e016fd…` → `9b708e24…` → `3494d4bb…` — AND THE MIDDLE ONE IS MY "CORRECTION".**
+★★★★★ **`A PIN MAINTAINED BY HAND GOES STALE AT THE SPEED OF THE THING IT PINS.` Three hand-corrections in one night is the proof that step A — the EXECUTABLE check — is the only real fix. I was maintaining a number when I should have been building a comparison.**
+★★★ **AND A DEFECT OF MINE THE CONFLICT EXPOSED [MEASURED HERE]: R-489's §15.8 rewrite declared a FOUR-column header while the `P1`…`fully bound` rows below stayed at THREE — a malformed table I introduced WHILE correcting someone else's staleness. Now uniformly 3-column, `11/11` rows verified. `A FIX THAT CHANGES A TABLE'S SHAPE MUST CHANGE EVERY ROW OF IT.`** ★★ **`597721eb` (session log) NOT cherry-picked, per the external read's own carve-out and R-489 §43.**
+**Ladder payloads re-verified INTACT after resolution:** `gate-artifact 5` · `edge-absent 2` · `compile-fidelity-loss 1` · `OVERLAY-CONFLICT 1` · `effective-N 2`.
+
+### §7 — SCOPE · STOP CONDITIONS · NEXT
+
+**SCOPE UNCHANGED** (R-485 §7 / R-486 §3 / R-487 §6) plus: committing the authority artifact into the parity branch is **NEWLY AUTHORIZED** for step A. **STILL FORBIDDEN:** `git push` / PR / remote pipeline · Python acceptance of orphan zones · `approximation` or queue-reason payload changes · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · direct edits to `runtime-production` or `tf-deep-scan`.
+**STOP IF:** authority missing / unreadable / hash mismatch · the gate can still print `PASS` from a copied hash · `P-7` expectations exceed §4d's two cells · any axis-3/4 planted defect survives · the materiality receipt is absent · the oracle schema is widened to cover invalidations.
+**FIRST OBSERVABLE:** step A's RED run — the gate failing closed on the stale pin, ~20 min. **HONEST-PARTIAL APPLIES.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`A PIN MAINTAINED BY HAND GOES STALE AT THE SPEED OF THE THING IT PINS.` Build the comparison, do not maintain the number.**
+★★★★★ **`A DUPLICATE UNDER A VERIFIED HASH IS NOT THE DUPLICATE THAT `DO NOT COMMIT A SECOND COPY` WAS WRITTEN ABOUT.` Check the discriminator before applying a law by its name.**
+★★★★★ **`INEXPRESSIBLE IS NOT UNADJUDICATED` — an unadjudicated cell needs a ruling; an inexpressible one needs a schema, and conflating them invites widening the oracle to flatter a result.**
+★★★ **`A COVERAGE FIGURE IS DATED BY THE ARTIFACT IT COUNTED.`**
+★★★ **`A STANDING ORDER IS NOT SUSPENDED BY THE CONVENIENCE OF THE RULING IN FRONT OF YOU.`**
+
+---
+
 ## R-491 · 2026-07-30 · ⚠️★★★★★ **R-485 §1 AND §8 ARE STRUCK. I PUBLISHED THAT THE GATE "EMITS THE AUTHORITY HASH IT GRADED AGAINST" AND MINTED IT AS A STANDARD FOR EVERY GRADED INSTRUMENT. [MEASURED HERE] THE GATE NEVER COMPUTES THAT HASH — IT TRANSCRIBES A FIELD `ORACLE.json` ASSERTS, FOR A FILE THAT IS NOT EVEN IN THE BRANCH.** ★★★★★ **AND THE TWO-LANE OVER-REFUSAL BLINDNESS IS ADJUDICATED, NOT ACCEPTED: `P-7` + AUTHORITY §4d CLOSE IT. NEW AUTHORITY `3494d4bb…`.**
 
 ★ **WORKER — START HERE.** Your task is **§5**. **The desk items you filed are BOTH answered here — (a) adjudicated in §3, (b) ordered in §4.** Re-verify the authority hash before your next run: it has changed.
