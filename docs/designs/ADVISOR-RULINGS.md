@@ -12,6 +12,68 @@
 
 ---
 
+## R-493 · 2026-07-30 · ★★★★★ **STEPS A AND B ACCEPTED. THE GATE NOW MEASURES ITS OWN PROVENANCE INSTEAD OF ASSERTING IT — AND I VERIFIED THE ONE THING THAT MAKES IT FAIL CLOSED RATHER THAN DECORATIVE: `:597` RUNS THE AUTHORITY CHECK, `:599` ENUMERATES FIXTURES. IT EXITS BEFORE ANY PLAN IS COMPILED.** ★★★★★ **AND A SHARED BLIND SPOT I AM NAMING BECAUSE NEITHER VERIFIER CLOSED IT: THE FIVE MUTATION OUTCOMES ARE `[RELAYED]` AT *BOTH* DESKS. THE EXTERNAL READ DECLARED THAT; I MUST DECLARE IT TOO.**
+
+★ **WORKER — START HERE.** Your task is **§5: steps C → D → E**, in that order. **C's membership/deletion RED control is not optional.**
+
+**RULING ID:** R-493 · **TASK IDS:** AR-502 · AR-503 · **DECISION: APPROVE A and B · CONTINUE C–E · NO GRADE.**
+**NEWEST AR CHECK (R-416):** newest on disk is **AR-503**; it and **AR-502** are ruled here. **The debt held since ~04:11 is discharged.**
+**PROVENANCE:** `[EXTERNAL OPINION]`, zero authority, premises audited — **and every claim I tested reproduced.** Adopted on merit.
+
+### §1 — VERIFIED AT THIS DESK (I ran it; I did not take the report)
+
+**[MEASURED HERE, parity @ `48199995`, tree clean]**
+- ★★★★★ **THE ORDERING, WHICH IS THE WHOLE CLAIM: `:597 const authority = verifyAuthorityFreshnessOrExit(oracle)` · `:599 readdirSync(SAMPLES_DIR)` · `compileBindingPlan` at `:224` is reached only inside the per-fixture path. SO THE CHECK EXITS BEFORE ONE PLAN IS COMPILED.** A freshness check that ran *after* compilation would be a report, not a gate.
+- **`createHash` at `:46`/`:561`** — it computes over the bytes. Provenance line: *"**16314 bytes read**, sha256=`3494d4bb…` (**COMPUTED here, VERIFIED equal to ORACLE.json's pin**)"*.
+- **The authority is committed into the parity branch at the path `authority_file` ALREADY NAMED** — no second pointer minted (AR-502 §2's declared reason, and it is the right one).
+- ★★★ **THE COMMITTED COPY IS BYTE-IDENTICAL TO THE CAMPAIGN ORIGINAL — both `3494d4bb…`. So R-492 §2's drift residual is CLOSED BY IDENTITY *TODAY*, and by nothing structural. `IDENTITY IS A STATE, NOT A GUARANTEE` — the desk's same-motion rule remains what keeps it closed.**
+- **`ORACLE.json` repointed** ✓ · gate `EXIT 0`, `12/12` members, **14** cells `[NOT ADJUDICATED]`.
+- ★★★★★ **STEP B IS BOUNDED AND THE §5 STOP DID NOT TRIP [MEASURED HERE]: the three probe rows carry exactly `bindable` + `reason_null` + `authority` + an explicit `unadjudicated` list. `primitive`, `session_zone`, `approximation` remain unadjudicated. NOT ONE FIELD WIDER THAN §4d.**
+
+### ★★★★★ §2 — THE SHARED BLIND SPOT, AND IT IS MINE AS MUCH AS THE EXTERNAL READ'S
+
+**The external read states plainly: *"The four authority mutations and the identical-two-lane mutation are artifact-sourced rather than independently re-mutated by this external seat."* ★★★★★ NEITHER DID I. I verified the CONTROL (green), the CODE PATHS and the ORDERING — I did not re-plant one mutation.**
+★★★★★ **SO THE FIVE MUTATION OUTCOMES — four fail-closed authority controls and the `12`-violation two-lane result — ARE `[RELAYED]` AT BOTH DESKS. THEY REST ON THE BUILDER'S REPORT, AND THE BUILDER DOES NOT GRADE.** ★★★ **TWO VERIFIERS AGREEING ON WHAT THEY BOTH DECLINED TO RE-RUN IS NOT CORROBORATION — IT IS THE SAME GAP, COUNTED TWICE.** This is the `AUDIT-POPULATION-AND-GRADER-INDEPENDENCE` shape: a second reader reproducing the first reader's *coverage* adds no path.
+★★ **DISPOSITION — NOT A BLOCKER, A BRIEF ITEM: A and B are accepted on the control + code-path + ordering evidence, which is genuinely independent and sufficient for a WIP acceptance. **BUT THE `accuracy-validator` BRIEF AT STEP F MUST REQUIRE RE-PLANTING ALL FIVE MUTATIONS ITSELF** — that is now a named line in the brief, not a hope.**
+★ **The external read's own honesty is why this is catchable: it declared what it did not run. `A VERIFIER THAT NAMES ITS UNRUN CHECKS LETS THE NEXT ONE CLOSE THEM.`**
+
+### §3 — WHAT MAKES STEP B's ACCEPTANCE STRONG
+
+★★★★★ **THE TWO-LANE RESULT IS THE PROOF THE ORACLE EARNED ITS EXISTENCE: the same mutation that printed `EXIT 0 · PASS` for AR-499 now prints `CLAIM 1 AGREEMENT: PASS · CLAIM 2 ORACLE CORRECTNESS: 12 violation(s)`. AGREEMENT STILL PASSES — AND THAT IS THE POINT. `P-7` closes exactly the blindness it was written for, and the separated verdicts are what make it legible.** `[RELAYED per §2 — re-plant at F.]`
+★★★ **AND THE SEQUENCING CREDIT IS REAL: the worker ran step A with step B deliberately NOT done, so the new detector met the REAL stale pin and printed `COMPUTED 3494d4bb… / PINNED 9b708e24… / EXIT=1`. `A DETECTOR WITNESSED CATCHING A LIVE DEFECT IS WORTH MORE THAN ONE WITNESSED CATCHING ITS AUTHOR'S MUTATION.` It chose that order on purpose and said why.**
+★★ **It also guarded the word `VERIFIED` in its own output with a comment telling a future editor to delete the word if the function is ever weakened — `A CAPTION IS A CLAIM`, applied pre-emptively to the exact caption class this campaign was burned by five times.**
+
+### §4 — THE MERGE-CONFLICT FINDING: ACCEPTED AT ITS STATED SCOPE ONLY
+
+**Adopted as the external read frames it: the same-path placement protects a FUTURE MERGE WHEN THE COPIES DIFFER.** ★★★★★ **IT DOES NOT REPLACE THE SAME-MOTION AUTHORITY-UPDATE RULE (R-492 §2), AND NOTHING IN THIS RULING WEAKENS THAT RULE.** ★★ **AR-502 labelled the merge property `[HYPOTHESIS — UNPROVEN]` and rested its choice on row 1 (no second pointer) instead — correct, and it means the decision survives even if the merge behaviour does not reproduce.**
+
+### ★★★★★ §5 — AUTHORIZED NEXT ACTION — TO THE SEAT THAT FILED AR-503, BY NAME
+
+★★★ **ITS REQUEST FOR A FRESH SESSION IS A CAPACITY ASSESSMENT, NOT A REASSIGNMENT. The task stays authorized to it; if it stops it files a receipt. `A HANDOFF DECLARATION IS SELF-ASSESSMENT.`**
+**C. GENERATED P-7 PROPERTY CHECK.** Every remaining non-session family × the refused-zone phrases, plus the three existing probes and **adjacent `WAIT_SESSION` positive controls**. ★★★★★ **THE CIRCULARITY SPLIT IS BINDING: `FAMILY_META` ENUMERATES MEMBERSHIP; `P-7` SUPPLIES EXPECTED BEHAVIOUR. Reading the population from the implementation is legitimate; reading the EXPECTATION from it is the defect.** **INCLUDE A MEMBERSHIP DELETION/ADDITION RED CONTROL — if a family can be added or removed without the property test going red, the check certifies nothing.**
+**D. TRANSIENT IN-RUN CONTROLS, never permanently invalid corpus members.** Planted duplicate `condition_id` must NAME the planted fixture/id · planted duplicate/reorder must fail multiplicity/order · **same-shape clean neighbours stay GREEN** · restore bytes, re-run full green.
+**E. Per-spec before/after materiality receipt.**
+**FIRST OBSERVABLE:** ~10 min after starting C — the generated non-session-family membership set, its **pre-registered** expected membership, and the pre-registered mutation outcomes. **HONEST-PARTIAL APPLIES.**
+
+### §6 — GRADE · SCOPE · STOP
+
+★★★★★ **AFTER C–E LAND TOGETHER IN ONE ATOMIC DELIVERY COMMIT, THIS DESK DISPATCHES EXACTLY ONE ADVERSARIAL `accuracy-validator`. NOT BEFORE. THE BUILDER DOES NOT GRADE.** **ITS BRIEF CARRIES, AS NAMED LINES: (1) RE-PLANT ALL FIVE MUTATIONS FROM §2 INDEPENDENTLY · (2) hunt a further false green · (3) working access recipe, not prohibitions · (4) honest null accepted · (5) its agent id named in the consuming ruling.**
+**SCOPE UNCHANGED** (R-485 §7 / R-486 §3 / R-487 §6 / R-492 §7). **STILL FORBIDDEN:** `git push` / PR / remote pipeline · Python acceptance of orphan zones · `approximation` or queue-reason payload changes · Gate-B treatment · DB/spec/frozen writes · re-extraction · backtests · direct edits to `runtime-production` or `tf-deep-scan`.
+**STOP IF:** any expectation is copied from either implementation · family membership can change without the property test going red · duplicate ids or changed multiplicity/order survive · either lane's `approximation` or queue-reason payload changes · materiality cannot be attributed per spec · the oracle is widened beyond §4d.
+
+### §7 — BLUEPRINT: `8ff6f17a` ADOPTED (`5df756ae`)
+
+**Third and final adoption commit, cherry-picked and conflict-resolved.** My §15.8 rows had gone stale again (they described `b23bae87`); I took the incoming and **preserved one constraint it drops: the duplicate-id and array-multiplicity checks are `[UNPROVEN]` and UNCITABLE per R-488 §3 — "remain open" understates them.** `597721eb` not adopted. **Ladder payloads re-verified intact; `11/11` table rows at 3 columns.**
+
+### §8 — LESSONS TO PERSIST
+
+★★★★★ **`TWO VERIFIERS AGREEING ON WHAT THEY BOTH DECLINED TO RE-RUN IS NOT CORROBORATION — IT IS THE SAME GAP, COUNTED TWICE.`**
+★★★★★ **`A DETECTOR WITNESSED CATCHING A LIVE DEFECT IS WORTH MORE THAN ONE WITNESSED CATCHING ITS AUTHOR'S MUTATION.`**
+★★★ **`A FRESHNESS CHECK THAT RUNS AFTER THE WORK IS A REPORT, NOT A GATE` — verify the ORDER, not just the presence, of a fail-closed check.**
+★★★ **`IDENTITY IS A STATE, NOT A GUARANTEE.` Two files being byte-identical today closes nothing structurally.**
+
+---
+
 ## R-492 · 2026-07-30 · ★★★★★ **AR-500 ACCEPTED NARROWLY (COMPARATOR COVERAGE, *NOT* SEMANTIC CORRECTNESS). AR-501 UPHELD. THE GATE'S PRESENT `PASS` IS INADMISSIBLE.** ★★★★★ **AND THE EXTERNAL READ CORRECTS *ME*: R-491 §4 OFFERED "ASSERTED-NOT-VERIFIED" AS AN ACCEPTABLE OPTION. FOR A FINAL GATE IT IS NOT. THE STRICTER FORM IS ADOPTED, AND MY `DO NOT COMMIT A SECOND COPY` OBJECTION DOES NOT SURVIVE THE DISCRIMINATOR.**
 
 ★ **WORKER — START HERE.** Your order is **§5, steps A→F, in that order.** A comes first because it is the check that catches B.
