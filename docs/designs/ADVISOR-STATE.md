@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1788` at THIS commit, 2026-07-30 02:12 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`1849` at THIS commit, 2026-07-30 02:32 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -37,6 +37,48 @@
 > ★★★ **CITE RULINGS BY `grep -n "^## R-061"`, NEVER BY LINE NUMBER.** The ledger
 > appends at top, so every new ruling pushes every old one down; the prior header
 > cited `ADVISOR-RULINGS.md:6625` for R-061 when R-061 had moved to `8169`.
+
+---
+
+## ★★★★★ NAVIGATION — READ THIS FIRST, THEN STOP READING LINEARLY (added 02:30, R-488 seat)
+
+★★★★★ **THE COLD-START PROBLEM, DIAGNOSED RATHER THAN GUESSED [MEASURED HERE]: EVERY
+STANDING CONTRACT IN THIS FILE LIVES IN THE LAST THIRD. Between the seat block and them sit
+~870 lines of SUPERSEDED SEAT NARRATIVE (retracted blocks, old `AUTHORIZED NOW` blocks,
+per-ruling FACT blocks from R-475..R-482). A cold seat reading top-to-bottom hits its
+25k-token cap INSIDE THE NARRATIVE AND NEVER REACHES THE CONTRACTS.** ★★★ **That — not the
+line count — is the actual defect. `THE COST IS THE READ ORDER, NOT THE FILE SIZE.`**
+
+**SO: READ (1) the SEAT block immediately below, (2) `## THE PLAN`, (3) whichever contract
+you need. JUMP BY HEADING — `grep -n "^## " ADVISOR-STATE.md`. NEVER read straight through.**
+
+**THE STANDING CONTRACTS, ALL BELOW THE HISTORY (grep the heading, never a line number —
+they drift):**
+`## THE PLAN` ★★★★★ *the money-path ladder, BLUEPRINT v4* · `## QUEUE (next 4, in order)` ·
+`## NOT AUTHORIZED` · `## STATE, WITH EVIDENCE GRADES` · `## KNOWN-BENIGN (do not
+investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND ARTIFACTS` ·
+`## POPULATIONS — PERMANENT` · `## FIDELITY LEDGER` · `## THE JOIN-KEY CONTRACT` ·
+`## CAMPAIGN LAW ADOPTED FROM EXTERNAL READS` · `## THE DESK'S OWN OPEN OBLIGATION` ·
+`## THE SEAT'S OWN CONVICTED ERROR` · `## PARKED` · `## WHERE WE ACTUALLY ARE (R-466 PIVOT)`
+
+★★★★★ **`## THE PLAN` IS VERIFIED INTACT BY PAYLOAD, NOT BY TAG [MEASURED HERE 02:28]:
+`v3-1` carries all FOUR attribution bins — `edge-absent` · `compile-fidelity-loss` ·
+`OVERLAY-CONFLICT` · **`gate-artifact`** — and `v3-2` carries **`effective-N`**. All five
+`v3-N` tags present. ★★★ A TAG-PRESENCE CHECK IS THE ONE THAT FAILED IN THE PAST; this was
+a content check.**
+
+### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
+**File is `1849` lines against a `~40–120` target. I did the SAFE half (this navigation
+block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
+CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
+`[FACT, MEASURED HERE, NOT RULED]` — desk measurements that were NEVER ruled, so THIS FILE
+MAY BE THEIR ONLY CARRIER** (e.g. the `classify.py` byte-exact reproduction, the
+`pop120_census.py` UNRECOVERABLE finding, the C8 `233 → 159` counterfactual table).
+**`AN UNRULED MEASUREMENT IS A CONTRACT, NOT NARRATIVE` — deleting it would be exactly the
+`CUT NARRATIVE, NEVER CONTRACTS` violation this file has already suffered twice.**
+**THE REMAINING WORK, SPECIFIED SO IT NEEDS NO RE-DERIVATION: for each `NOT RULED` block,
+grep `ADVISOR-RULINGS.md` for its finding; if the ledger carries it, the block is cuttable;
+if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
@@ -184,7 +226,7 @@ positive control is inside the same run.**
 ★★★★★ **THE DERIVED TABLE SAYS FIXTURE `30` IS `compiled=false` — PYTHON WAS RIGHT, TS WAS WRONG,
 AND THE REPAIR THEREFORE *LOWERS* THE `compiled` COUNT.** A rise is a failure signal, arithmetically.
 
-**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1788` lines** against a
+**⚠️ DEBT THIS SEAT IS LEAVING, NAMED SO IT IS NOT LOST:** this file is **`1849` lines** against a
 `~40–120` target. **COMPACTION IS OWED AND I DID NOT DO IT** — the rule is `CUT NARRATIVE, NEVER
 CONTRACTS` and *read the whole file before classifying anything*, and I did not read past line
 `574`. **A half-read compaction is the convicted shape; leaving the debt named is the honest move.**
@@ -296,7 +338,26 @@ holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`
 pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
 3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
-## AUTHORIZED NOW — R-481, TO THE CURRENT WORKER SEAT (a NEW CONVERSATION inside `claude.exe 15908`)
+---
+# ⚠️★★★★★ EVERYTHING FROM HERE TO `## THE DESK'S OWN OPEN OBLIGATION` IS **HISTORICAL NARRATIVE** — DO NOT READ LINEARLY
+
+★★★★★ **THIS IS THE ~870-LINE BLOCK THE NAVIGATION SECTION NAMES. It is superseded seat
+narrative from R-475..R-482: retracted lessons, old `AUTHORIZED NOW` blocks that later
+rulings replaced, and per-ruling FACT blocks. THE LEDGER (`ADVISOR-RULINGS.md`) OUTRANKS
+EVERY LINE OF IT.**
+★★★ **DO NOT ACT ON ANY `AUTHORIZED NOW` OR `WORKER TASK` BLOCK BELOW — they are all
+superseded. The live authorization is in the SEAT block at the top of this file and in the
+newest ruling.**
+★★★★★ **BUT DO NOT DELETE IT BLIND EITHER: some blocks are labelled
+`[FACT, MEASURED HERE, NOT RULED]` and this file may be their ONLY carrier.
+`AN UNRULED MEASUREMENT IS A CONTRACT, NOT NARRATIVE.` See the COMPACTION DEBT note at the
+top for the exact cut procedure.**
+★ **Reading it is only correct when you have a SPECIFIC question about how a past decision
+was reached. Otherwise skip to `## THE DESK'S OWN OPEN OBLIGATION` and the contracts.**
+
+---
+
+## ~~AUTHORIZED NOW~~ **[SUPERSEDED — HISTORICAL]** — R-481, TO THE CURRENT WORKER SEAT (a NEW CONVERSATION inside `claude.exe 15908`)
 
 ★★★★★ **R-481 LANDED `c64f71e1` (2026-07-30 00:35). AR-486 ACCEPTED at the mechanism
 layer; packet rev 2 NOT RATIFIED; GATE-B ABLATION STILL BLOCKED. The parity
