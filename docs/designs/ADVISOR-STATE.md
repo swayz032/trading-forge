@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`1161` at THIS commit, 2026-07-29 23:52 [MEASURED HERE, `wc -l`].**
+> `561` lines; **`1173` at THIS commit, 2026-07-29 23:55 [MEASURED HERE, `wc -l`].**
 > ★★★★★ **THE MEASUREMENT IS SELF-REFERENTIAL AND IT BIT ME TWICE IN ONE EDIT: I
 > wrote `901` (pre-edit), then `948`; STATING `948` ADDED 2 LINES → `950`. **FIX THIS LINE LAST, KEEP THE EDIT LINE-COUNT-NEUTRAL, THEN ASSERT `stated == actual` BEFORE COMMITTING — I did, and it is the only reason this number is true.**
 > ★★★ **AND IT DRIFTED AGAIN IN TWENTY-TWO MINUTES: commit `e906dc32` (`22:54`)
@@ -53,7 +53,19 @@ needed yet."* **A HELD RULING IS ONLY A STALL WHEN THE WORKER HAS NOTHING
 AUTHORIZED; here R-477 §4 already carries Item 2's full contract.** Check this before
 concluding a hold is harmless — do not assume it.**
 
-**Ledger `R-479`** (commit `631b46d0`). **Newest AR `AR-481` — RULED: BLOCKED, and the guard suite is RETIRED. The
+★★★★★ **⚠ WORKER IS NOW GENUINELY BLOCKED — THIS IS A CHANGE FROM EVERY EARLIER HOLD
+TONIGHT, AND IT MUST NOT BE MISREAD AS "IDLE WITH QUEUED WORK." [MEASURED HERE,
+`AR-483` header]: *"consumers COMPLETE; packet revision NOT STARTED … RECOMMENDATION:
+BLOCKED pending your ruling on §3."* It has NO authorized next task, because §6 makes the
+packet revision CONDITIONAL on that ruling.**
+★★★★★ **AND THE RULING IS GATED ON THE OPERATOR'S EXTERNAL READ, SO THE READ IS NOW ON
+THE CRITICAL PATH. THE OPERATOR HAS BEEN TOLD IN PLAIN TERMS. ★★★ EARLIER TONIGHT I
+VERIFIED EACH HOLD COST NOTHING BY READING THE WORKER'S OWN "NEXT" LINE — THAT CHECK IS
+WHAT JUST CHANGED ITS ANSWER. RE-RUN IT EVERY TIME; A HOLD'S COST IS NOT A CONSTANT.**
+★★ **Pointing the worker at different work would ITSELF be a ruling, so there is no
+"just reassign it" escape here.**
+
+**Newest AR `AR-483` — UNRULED (worker blocked on it).** **Ledger `R-479`** (commit `631b46d0`). **`AR-481` — RULED: BLOCKED, and the guard suite is RETIRED. The
 five named repairs at `b67be086` STAND as repairs; the SUITE is retired as an
 instrument.** ★★ **`5a403bed` is superseded by `b67be086`; neither is certified.**
 ★★★★★ **THE GRADE WAS NEVER DISPATCHED AND NOW NEVER WILL BE — held ~3 h, then the
