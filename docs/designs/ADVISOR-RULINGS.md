@@ -12,6 +12,87 @@
 
 ---
 
+## R-480 · 2026-07-29 · ★★★★★ **AR-483 ACCEPTED AT THE MECHANISM LAYER, AND IT CHANGES THE GATE-B DESIGN: THE ABLATION MAY NOT DELETE CLAUSES AND THEN GRADE ITSELF ON DOWNSTREAM STATES WHOSE INPUTS OR DENOMINATORS THAT DELETION CHANGED.** ★★★★★ **[MEASURED HERE AT THE EXECUTABLE LINE] `spec-family-bindings.ts:219` NUMERATOR `spineBound`, `:257` DENOMINATOR `spine.length`, `:258` THRESHOLD `0.5` — SO DELETING UNBINDABLE SPINE CLAUSES RAISES THE RATIO WITH THE NUMERATOR UNTOUCHED AND CAN FLIP `compiled` FALSE→TRUE. THE INTERVENTION MOVES ITS OWN SCORE.**
+
+**RULING ID:** R-480 · **TASK ID:** AR-483 · **DECISION:** **REVISE. The four-consumer read is ACCEPTED. Packet revision AUTHORIZED under the corrected contract. Gate-B implementation, extraction and ablation remain BLOCKED. No code, no worktree.**
+
+**NEWEST AR NAMED (R-416 guard): `AR-483`** — read in full, including its §6 tail.
+
+**PROVENANCE.** External read via the operator's channel, `[EXTERNAL OPINION]`, zero authority. **Its design correction is ADOPTED ON MERIT after independent verification below. The worker found the hazards; the read generalised them correctly; this desk checked the load-bearing mechanism and the artifact counts itself.**
+
+### §1 — CLAIMS VERIFIED, WITH HONEST GRADES
+
+**[MEASURED HERE, `runtime-production` @ `9af37b8f`, at the executable line]** — the breakthrough's foundation:
+`:75 MIN_SPINE_BOUND_RATIO = 0.5` · `:219 const spineBound = spine.filter(b => b.bindable).length` · `:257 spineRatio = spineBound / spine.length` · `:258-259 if (spineRatio < MIN_SPINE_BOUND_RATIO) compiled = false`.
+★★★★★ **THE DENOMINATOR IS `spine.length` AND THE NUMERATOR IS THE BINDABLE COUNT. Removing an unbindable spine clause shrinks the denominator ONLY. `compiled` can therefore flip `false → true` with ZERO gain in bindable content. CONFIRMED BY ME, not accepted from either report.**
+
+**[MEASURED HERE, frozen `pop120_classified.json`, sha256 `eed65514a126…`]** — every count the read published:
+| read's claim | mine |
+|---|---|
+| C8 = `233` | **`233`** |
+| `158` confluence + `75` spine | **exactly, and NOTHING else** — no `invalidation`, no `trigger` in C8 |
+| `232` `no_recognized_session_keyword` + `1` sentinel | **`232` + `1`** |
+
+**[MEASURED HERE, `git` in `trading-forge/trading-forge`]** — the tree claim, and it is the one that corrects MY OWN state file:
+| | `4f3b5cd0…` | `9af37b8f` (runtime-production) |
+|---|---|---|
+| `scripts/atomize-transcript.ts` | PRESENT | PRESENT |
+| `src/server/lib/graph-to-engine.ts` | **PRESENT** | **absent** |
+| all four consumers (`spec-timeframe-recovery` · `playbook-registration` · `spec-archetype-matcher` · `spec-family-bindings`) | ★★★★★ **ALL FOUR ABSENT** | **ALL FOUR PRESENT** |
+| `src/engine/spec_family_bindings.py` | absent | PRESENT |
+| `src/engine/context/playbook_router.py` | PRESENT | PRESENT |
+**merge-base `a5b74619da6175e4111f5c9e8f9129c59bbd6187`; NEITHER is an ancestor of the other** — both directions of `--is-ancestor` fail. ★★★★★ **CONFIRMED: NO SINGLE TREE HOLDS THE END-TO-END PATH.**
+
+**[CORROBORATED — AR-483 and the external read independently; NOT RUN AT THIS DESK]** the four behavioural `tsx` probes (timeframe `[5m,15m]`→`5m` then `15m` on partial removal · denominator flip `compiled:false`→`true` · archetype tie UNMAPPED→`order_block` · playbook MEAN_REV→ORB). ★★ **I read the denominator mechanism at the line and did not execute the probes. Two independent parties measured them and I am not manufacturing a third grade I did not earn.**
+★★ **AND THE READ IS RIGHT THAT THESE ARE SYNTHETIC MECHANISM PROOFS, NOT POPULATION-INCIDENCE PROOFS. Current-population incidence stays `[UNMEASURED]`.**
+
+### ★★★★★ §2 — A CORRECTION TO R-474, AND ONE TO MY OWN STATE FILE
+
+**(a) R-474 §2 said removal *"surfaces as UNRECOVERED rather than as a WRONG timeframe. Fail-closed, but still a regression."* THAT IS TOO GENEROUS AND IS CORRECTED: it holds only when EVERY timeframe-bearing clause is removed. **PARTIAL removal returns a DIFFERENT SUPPORTED timeframe with `recovered:true` — fail-OPEN and silent.** `A FAIL-CLOSED PROPERTY PROVEN ON TOTAL REMOVAL DOES NOT EXTEND TO PARTIAL REMOVAL` — same species as `A LAYER-SCOPED PROOF IS SCOPED TO ITS LAYER`.
+**(b) `ADVISOR-STATE` says `4f3b5cd0…` "carries BOTH `scripts/atomize-transcript.ts` and `src/server/lib/graph-to-engine.ts`" and names it the Gate-B implementation base. THAT SENTENCE IS TRUE AND IT MISLED ME:** [MEASURED HERE] **that commit holds ZERO of the four consumers.** A base chosen for what it contains, never checked for what it lacks. ★★★ **`NAMING WHAT A TREE CONTAINS IS NOT ESTABLISHING THAT IT CONTAINS ENOUGH.` Corrected in `ADVISOR-STATE` in the same motion as this ruling.**
+
+### ★★★★★ §3 — THE TWO LAWS, ADOPTED
+
+**(i) `A REMEDIATION BUCKET IS AN OUTCOME, NOT A TREATMENT COHORT.`** `0b0d6617` moved rows between C8 and C6 **without touching the upstream extraction error** — [MEASURED, R-478] `74` rows, C8 `233 → 159`. **Selecting Gate-B members by current C8 membership makes the experimental population move when downstream classification moves.** Members are selected by **`(video, transcript_hash, exact_span, exact_slice_hash)`** — source identity plus frozen truth labels. **C8/C6 membership is REPORTED as a downstream projection and never used to select.**
+**(ii) `A MUTABLE DENOMINATOR CANNOT GRADE THE INTERVENTION THAT MUTATES IT.`** `compiled`, queue-rate, C8 count and C6 count are **DIAGNOSTIC OUTCOMES ONLY.**
+★★★ **AND THE READ SHARPENS AR-483 CORRECTLY, WHICH I ADOPT OVER THE WORKER'S VERSION: AR-483 proposed "false→true is FORBIDDEN unless `spineBound` increases." TOO BROAD — removing a clause that was never an executable requirement can LEGITIMATELY shrink the denominator. So a numerator-unchanged flip is labelled **`DENOMINATOR_ONLY`**, earns **ZERO efficacy credit**, requires **source-keyed adjudication**, and is **neither automatically success nor automatically regression.** `A CORRECT COMPILER CHANGE AND AN INVALID SUCCESS METRIC ARE NOT MUTUALLY EXCLUSIVE.`**
+
+### ★★★★★ §4 — A HAZARD I AM ADDING, BECAUSE IT HAS ALREADY BITTEN ONCE TONIGHT: THE THREE `158`s
+
+**[MEASURED HERE] `confluence ∩ C8 = 158`. [MEASURED HERE, R-478] the Gate-B TREATMENT POPULATION = `158` (C8-after `159` minus the protected sentinel). THESE ARE DIFFERENT OBJECTS WITH THE SAME VALUE.** And R-478 §3 already records a THIRD: my own erroneous "C8 after = 158", which was numerically the treatment population under the wrong label.
+★★★★★ **STANDING REQUIREMENT: NO REPORT, PACKET OR RULING MAY WRITE `158` WITHOUT NAMING WHICH OF THE THREE IT IS.** ★★★ **`A COLLIDING VALUE IS A LATENT MISLABEL — AND WHEN A NUMBER HAS ALREADY BEEN PUBLISHED UNDER THE WRONG NAME ONCE, ITS COLLISIONS ARE NOT COINCIDENCES, THEY ARE TRAPS.**
+
+### §5 — REQUIRED CORRECTIONS TO THE PACKET (adopted from the read, in full)
+
+1. **NO PHYSICAL DELETION AS THE CORE DESIGN.** One immutable, source-keyed clause record; derive typed projections — `decision_condition` · `execution_context` · `annotation` · `unresolved`. **Mixed clauses SPLIT, both outputs retaining the same source identity. The empty-spine sentinel untouched and outside treatment.**
+2. **ONE LOSSLESS SOURCE, FOUR CONSUMER-SPECIFIC CONTRACTS** — *not* "all four read `execution_context`": timeframe recovery reads structured timeframe context first, legacy prose only for old schema versions, **conflicts FAIL CLOSED** · family binding consumes executable-required conditions and reports **numerator and a STABLE SOURCE DENOMINATOR separately** · archetype matching consumes an explicitly authorized semantic projection, never a prose set Gate B altered · playbook categorization consumes a stable semantic projection, and deletion alone may not silently re-bucket it. ★★★ **`RETAINED METADATA` MEANS CONSUMED THROUGH AN EXPLICIT CONTRACT — NOT BYTES STORED BESIDE CODE THAT STILL READS THE OLD FIELD.**
+3. **CORRECTED OUTCOMES.** *Primary:* truth-labelled non-executable context excluded from the executable projection · frozen genuine session predicates SURVIVE · mixed clauses keep their executable half · ambiguous cases remain UNRESOLVED · empty-spine byte-for-byte unchanged. *Co-primary:* exact transcript-slice evidence · stable source identity and full-envelope provenance. *Safety tripwires, record-for-record:* timeframe value/confidence · `spineBound`, denominator, ratio, `compiled`, queue-state · archetype unmapped→mapped or class change · playbook category change. ★★★★★ **AGGREGATE COMPILED COVERAGE OR QUEUE IMPROVEMENT MAY NEVER BE CALLED GATE-B SUCCESS.** ★★ Consistent with R-466 §2's standing trap: **FIDELITY OUTRANKS COUNT.**
+4. **EVERY CONSUMER TRANSITION EXPLAINED, NOT COUNTED:** source clause keys removed from the executable projection · before/after consumer inputs · before/after output · numerator and denominator SEPARATELY · classified `SOURCE-JUSTIFIED` | `DENOMINATOR_ONLY` | `UNEXPLAINED`. **Any `UNEXPLAINED` transition STOPS THE RUN.**
+5. **TWO SEPARATELY PINNED STAGES, because no single tree holds the path (§1):** **producer proof** in a new isolated worktree pinned to `4f3b5cd0…` (as R-474 ruled) · **deployable integration** in a SEPARATE isolated worktree pinned to `runtime-production` at its then-current SHA — port the graded producer contract, identify the ACTUAL runtime graph→spec handoff, update consumers, then PR/CI/deploy separately. **A transfer receipt names BOTH SHAs, the schema version, the changed-file manifest and the re-run fixtures.** **DO NOT edit `tf-deep-scan`. DO NOT edit `runtime-production` directly.**
+
+### §6 — AUTHORIZED NEXT ACTION
+
+**★ WORKER — START HERE.** Seat under `claude.exe 15908`. ★★ **YOUR SEAT REMAINS AUTHORIZED; a handoff self-assessment does not withdraw the task (R-370 lesson). You are unblocked as of this ruling.** In order:
+1. **OPEN** `src/engine/spec_family_bindings.py` · `src/engine/context/playbook_router.py` · `spec-onboarding-service.ts` · **every non-test caller of the four consumers.** ★★★ **NAME THE EXECUTING TREE BESIDE EVERY CITATION** — and note [MEASURED HERE] the Python mirror `spec_family_bindings.py` exists in `runtime-production` but **NOT** in `4f3b5cd0…`.
+2. **Produce a CONSUMER CONTRACT MATRIX:** input projection · decision made · silent-transition risk · parity obligation · required fixture.
+3. **REVISE `GATE-B-RATIFY-PACKET-2026-07-29.md`** to the source-record/projection design above plus all six prior R-474 requirements.
+4. **STOP FOR RULING before any code or worktree creation.**
+**FILES ALLOWED TO WRITE:** `GATE-B-RATIFY-PACKET-2026-07-29.md` · `AGENT-REPORTS.md`. **Reads allowed across the named consumers, callers, Python mirror and router.**
+**FORBIDDEN:** producer code changes · consumer code changes · creating either implementation worktree · model execution · extraction/re-extraction · DB/spec/frozen-artifact writes · backtests · empty-spine changes · direct edits to `runtime-production` or `tf-deep-scan`.
+**OBSERVABLES.** START-RECEIPT ~2 min · consumer/caller matrix ~30–40 min · revised packet after that. **HONEST-PARTIAL CLAUSE APPLIES:** if the caller set cannot be made exhaustive, say so and NAME THE SURFACE YOU COVERED.
+
+**DESK — MINE, and both now gate the ablation:** the **ADDITIVE production baseline** and the **survivor truth-set freeze**. ★★★★★ **AND A CONSTRAINT I MEASURED TONIGHT THAT THE READ'S BASELINE CONTRACT DOES NOT YET ACCOUNT FOR: [MEASURED HERE] `pop120_census.py` — the census PRODUCER — IS GONE (not on disk, not in git history, not published in any of 649 fenced blocks across 271 committed markdown files; positive control `classify.py` FOUND). `classify.py` recovers byte-exactly and reproduces the frozen artifact byte-for-byte, but THE PRODUCER MUST BE RE-AUTHORED, AND A RE-AUTHORED PRODUCER IS A DIFFERENT INSTRUMENT.** ★★★ **So the new baseline owes a control: re-authored producer + recovered `classify.py` over the SAME snapshot must reproduce `eed65514a126…`, or it is not a substitute. `[HYPOTHESIS, UNTESTED]`, and it is mine.**
+
+**ARCHITECTURE INVARIANTS TOUCHED.** **#2 CENTRAL** — context / setup / trigger / executable conditions stay DISTINCT; the projection design strengthens this rather than trading it. **#6 holds** — no promotion, no capital, `backtests_total = 0`. **#7 holds** — `AGENT-REPORTS.md` untouched by me. **#8 holds** — `-o` commit only. **#9 CENTRAL** — empty-spine refusal unchanged and outside treatment. **Compiler correctness stays separate from whether compiled coverage rises.**
+
+**FAILED OR UNPROVEN CONDITIONS.** Current-population incidence of each consumer transition — **[UNMEASURED]** · the four behavioural probes — **[CORROBORATED, NOT MEASURED HERE]** · additive production baseline — **[NOT FROZEN, MINE]** · survivor truth set — **[NOT FROZEN, MINE]** · re-authored-producer equivalence control — **[HYPOTHESIS, UNTESTED, MINE]** · `playbook_router.py` downstream consequence — **[UNVERIFIED]** · Python binding mirror and runtime callers — **[UNOPENED]** · the actual runtime graph→spec handoff — **[UNENUMERATED]** · whether each of the `232` candidate rows is truly context rather than a genuine session predicate — **[NOT ADJUDICATED; the survivor set decides it]** · retired absence suite — **[VOID for certification]**.
+
+**STOP CONDITION.** The packet selects treatment members by C8/C6 membership · uses compiled coverage or queue-rate as efficacy · physically deletes the only source representation · treats a `DENOMINATOR_ONLY` flip as improvement · claims one tree contains the end-to-end path · cannot explain a consumer transition record-for-record · writes `158` without saying which `158` · or requires any code change before the packet is ruled.
+
+**LESSON TO PERSIST.** ★★★★★ **`A REMEDIATION BUCKET IS AN OUTCOME, NOT A COHORT.`** ★★★★★ **`A MUTABLE DENOMINATOR CANNOT GRADE THE INTERVENTION THAT MUTATES IT.`** ★★★★★ **`REMOVING A CLAUSE IS NOT A LOCAL COMPILER EDIT — IT IS A FOUR-CONSUMER STATE TRANSITION.`** ★★★ **`A FAIL-CLOSED PROPERTY PROVEN ON TOTAL REMOVAL DOES NOT EXTEND TO PARTIAL REMOVAL`** — R-474 said removal degrades to UNRECOVERED; partial removal returns a WRONG timeframe with `recovered:true`. ★★★ **AND AGAINST ME: `NAMING WHAT A TREE CONTAINS IS NOT ESTABLISHING THAT IT CONTAINS ENOUGH.` My state file called `4f3b5cd0…` the implementation base on the strength of two files it has, and it holds ZERO of the four consumers that the change must not break.**
+
+---
+
 ## R-479 · 2026-07-29 · ★★★★★ **AR-481: RATIFICATION BLOCKED. THE RETIREMENT TRIGGER FIRES. `absence_claim_control.py` AND `mutation_redproof.py` ARE RETIRED AS CERTIFICATION INSTRUMENTS — NO PATCH, NO GRADE.** ★★★★★ **AND THE READ REFUTED MY REASONING AT THE ARTIFACT: I CALLED THE `★`/`cp1252` CRASH A NOVEL ONE-LINE BUG AND DECLINED TO FIRE. [MEASURED HERE] R-474 NAMED IT AS `F-2` IN THESE EXACT WORDS — *"the hardcoded `★` crashes the exit-`0` path under `cp1252`"* — AND AR-475 VERIFIED IT FIXED. THE REPAIR HARNESS REINTRODUCED THE IDENTICAL DEFECT, SAME CODEPOINT, SAME SUCCESS PATH**
 
 **RULING ID:** R-479 · **TASK ID:** AR-481 · **DECISION:** **BLOCK ratification. FIRE the pre-registered retirement trigger. The five named repairs STAND as repairs; the suite is retired as an INSTRUMENT. GATE B REMAINS BLOCKED.**
