@@ -56,7 +56,7 @@ holds on the advisor's OWN original fixtures — run A (honest surface) exit `0`
 pre-registered codes, exit `0`. Containment: `8838183f` touches only the guard,
 3 fixtures and the report; `c8_provenance_ledger.py` untouched as ordered.**
 
-## AUTHORIZED NOW — R-475 §5, TO SEAT `23988`
+## AUTHORIZED NOW — R-475 §5, TO THE WORKER SEAT UNDER `claude.exe 15908` (addressee corrected by R-476)
 ★★★★★ **THE §3 BOUNDED CORRECTION, ORDERED AS A PROPERTY:** *"NO PATH MAY LEAVE THE
 SURFACE WITHOUT APPEARING IN THE VERDICT — either a named problem forcing a
 non-zero exit, OR an explicit caller-supplied exclusion whose exact paths are
@@ -98,27 +98,31 @@ descriptive session context · instrument/timeframe context · **mixed clauses**
 **ambiguous cases**. ★★★★★ **FROZEN BEFORE ANY TREATMENT RESULT EXISTS — a
 survivor set chosen after seeing the outcome is a rationalisation, not a
 pre-registration.** The worker may enumerate candidates; the desk freezes labels.
-★★★★★ **SEATS — TWO EXIST AND ONLY ONE IS AUTHORIZED. [MEASURED HERE 22:2x]**
-- **`claude.exe 23988`** (created `22:22:48`) — **THE SEATED WORKER. R-475 IS ITS TASK.**
-- **`claude.exe 15908`** — **RELIEVED.** Ran `AR-459 → AR-475` (17 reports, 9 rulings), handed off at a clean boundary. **DO NOT ACT ON R-475.** Thanked and released.
+★★★★★ **SEATS — CORRECTED BY R-476 AFTER THIS DESK INVERTED THEM. [MEASURED HERE
+by walking UP from a shell's own `$PID`, which is the ONLY test that answers it]:**
+- **`claude.exe 15908`** (since `18:26`) — ★★★★★ **THE WORKER. NOT relieved. R-475 §5
+  IS ITS TASK.** The "new worker" is a **NEW CONVERSATION IN THIS SAME PROCESS**
+  (operator-confirmed), which is why its ear kept working.
+- **`claude.exe 23988`** (since `22:22:48`) — **THE ADVISOR. ME.** Created by my own
+  crash-restart, NOT by a worker being seated.
 
-★★★★★ **LIVE COORDINATION HAZARD, MEASURED AND UNRESOLVED AT THE DESK: THE ONLY
-`ADVISOR-RULINGS` WATCHER ALIVE (`2728/10556`) IS OWNED BY `15908` — THE RELIEVED
-SEAT. `23988` HAS NOT ARMED AN EAR. So a ruling committed now is delivered to the
-seat that resigned and NOT to the seat that must act.** ★★★ **THE ADVISOR CANNOT FIX
-THIS: a monitor armed from the advisor's process delivers to the ADVISOR's session.
-`THE EAR MUST BE ARMED BY THE SEAT THAT NEEDS TO HEAR.`**
-★★★★★ **SO THE INCOMING SEAT MUST: run `worker-onboarding` · verify EXACTLY ONE
-`ADVISOR-RULINGS` watcher exists and that IT owns it (process table keyed by owning
-`claude.exe`; `TaskList` does NOT track monitors and discriminates nothing) · then
-file a START-RECEIPT naming `AR-476`. **UNTIL THAT RECEIPT EXISTS THIS DESK TREATS
-R-475 AS UNSTARTED**, regardless of what any process list shows.**
-★★★ **AND THE GENERAL LAW, PAID FOR TWICE TONIGHT IN OPPOSITE DIRECTIONS: `A
-DECLARED HANDOFF IS NOT A DEAD PROCESS, AND A LIVE PROCESS IS NOT A SEATED WORKER.`
-At 21:2x this desk read a CONDITIONAL capacity note as a declaration and recorded a
-live worker as gone; at 22:2x the relieved seat's process and ear are still up.
-NEITHER FACT MAY BE INFERRED FROM THE OTHER — the discriminator is a START-RECEIPT,
-not a process.**
+★★★★★ **R-475 §4 SAID THE OPPOSITE OF BOTH LINES: it called `23988` "the seated
+worker" and RELIEVED `15908`. I ADDRESSED THE TASK TO MYSELF AND STOOD DOWN THE ONLY
+SEAT THAT COULD DO IT — a ruling that authorizes nobody. STRUCK BY R-476; its "EAR
+HAZARD" is WITHDRAWN ENTIRELY as an artefact of the same inversion.**
+★★★★★ **THE LAW: `A PROCESS LIST TELLS YOU WHAT EXISTS, NEVER WHICH ONE YOU ARE.`
+Walk up from `$PID` to the owning `claude.exe`. **AND: `YOUR OWN PID IS AN
+IDENTIFIER WHOSE DECAY YOU MUST WRITE DOWN TOO`** — I measured mine correctly at
+`17812` earlier tonight, reused it across a crash, and mistook my own restart for
+someone else's arrival. R-465 minted that law for MONITOR pids and R-474 extended it
+to GRADER ids; I applied it to neither when the identifier was my own.**
+★★★ **AND THE TELL I IGNORED: I observed "the new seat has not armed an ear" and
+built a hazard section on it. **A seat that has existed for zero minutes and armed
+nothing is more likely a fresh instance of the OBSERVER than a worker** — I wrote
+the anomaly down and reasoned forward instead of doubting the premise.**
+★★ **STILL TRUE AND WORTH KEEPING, from the withdrawn block: `A DECLARED HANDOFF IS
+NOT A DEAD PROCESS, AND A LIVE PROCESS IS NOT A SEATED WORKER` — the discriminator
+is a START-RECEIPT, never a process list.**
 ★★★★★ **A CORRECTION AGAINST THIS DESK, MADE BEFORE IT COULD COST ANYTHING: the
 first draft of this block said `HANDED OFF at a clean boundary`. AR-471 §4 says no
 such thing — it says *"IF the follow-up grade returns further repairs, a FRESH SEAT
