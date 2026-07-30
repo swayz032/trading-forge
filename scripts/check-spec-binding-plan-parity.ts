@@ -185,6 +185,19 @@ interface OracleRow {
    * refusal without this repo freezing a literal the desk never derived.
    */
   reason_excludes?: string;
+  /**
+   * PER-FIELD DECLARED GAPS: { fieldName: reason }.
+   *
+   * ★★★ "ASSERTING THE IMPLEMENTATION'S VALUE AND ASSERTING NOTHING ARE
+   *      DIFFERENT ACTS." A field named here carries NO expectation — it is not
+   *      asserted equal to whatever the lanes emit, it is declared UNADJUDICATED
+   *      and printed as such on every run.
+   *
+   * ★ A field may not be BOTH expected and declared-unadjudicated. That
+   *   contradiction is itself a hard failure below, because a row quietly holding
+   *   both would let a stale expectation sit next to its own withdrawal.
+   */
+  unadjudicated?: Record<string, string>;
 }
 
 interface OracleFixture {
@@ -225,6 +238,7 @@ function checkOracle(
   plan: Record<string, unknown>,
   lane: string,
   out: string[],
+  declaredGaps: string[],
 ): void {
   const expect = oracle.fixtures[fixtureName];
   if (!expect) {
@@ -262,7 +276,31 @@ function checkOracle(
       continue;
     }
     const cite = `[${want.authority}]`;
-    if (want.bindable !== undefined && got.bindable !== want.bindable) {
+
+    // ─── Declared per-field gaps. Recorded for printing, and CONTRADICTION with
+    // a live expectation is a hard failure: a withdrawn assertion must not sit
+    // beside the value it withdrew.
+    const gapFields = Object.keys(want.unadjudicated ?? {});
+    for (const f of gapFields) {
+      const hasExpectation =
+        (f === "approximation" && want.approximation !== undefined) ||
+        (f === "bindable" && want.bindable !== undefined) ||
+        (f === "session_zone" && want.session_zone !== undefined) ||
+        (f === "primitive" && want.primitive_null !== undefined) ||
+        (f === "reason" && (want.reason_null !== undefined || want.reason_names !== undefined || want.reason_excludes !== undefined));
+      if (hasExpectation) {
+        out.push(
+          `${lane}: ORACLE ${condId}.${f} is declared UNADJUDICATED *and* carries an expectation — ` +
+            `contradiction. Asserting a value and asserting nothing are different acts; pick one. ${cite}`,
+        );
+      }
+      if (lane === "ts") {
+        // Record once, not per lane — a gap is a property of the oracle, not of a run.
+        declaredGaps.push(`${fixtureName} · ${condId}.${f} — ${want.unadjudicated![f]}`);
+      }
+    }
+    const isGap = (f: string) => gapFields.includes(f);
+    if (!isGap("bindable") && want.bindable !== undefined && got.bindable !== want.bindable) {
       out.push(`${lane}: ORACLE ${condId}.bindable: expected=${want.bindable} observed=${JSON.stringify(got.bindable)} ${cite}`);
     }
     if (want.primitive_null !== undefined) {
@@ -274,7 +312,7 @@ function checkOracle(
     if (want.session_zone !== undefined && JSON.stringify(got.session_zone) !== JSON.stringify(want.session_zone)) {
       out.push(`${lane}: ORACLE ${condId}.session_zone: expected=${JSON.stringify(want.session_zone)} observed=${JSON.stringify(got.session_zone)} ${cite}`);
     }
-    if (want.approximation !== undefined && got.approximation !== want.approximation) {
+    if (!isGap("approximation") && want.approximation !== undefined && got.approximation !== want.approximation) {
       out.push(`${lane}: ORACLE ${condId}.approximation: expected=${want.approximation} observed=${JSON.stringify(got.approximation)} ${cite}`);
     }
     if (want.reason_null === true && got.reason !== null) {
@@ -324,6 +362,8 @@ function main() {
   const driftFailures: string[] = [];
   const oracleFailures: string[] = [];
   const failures: string[] = [];
+  /** Per-field oracle gaps, collected for mandatory rendering. */
+  const declaredGaps: string[] = [];
 
   // ─── MEMBERSHIP: declared corpus, fail-closed.
   // `A SURFACE IS NOT FAIL-CLOSED UNTIL ITS ENUMERATION IS` (R-474). A deleted
@@ -372,8 +412,8 @@ function main() {
     // Checking only one lane would let a wrong-but-agreeing pair through on the
     // unchecked side.
     const oracleFails: string[] = [];
-    checkOracle(file, oracle, tsPlan, "ts", oracleFails);
-    checkOracle(file, oracle, pyPlan, "py", oracleFails);
+    checkOracle(file, oracle, tsPlan, "ts", oracleFails, declaredGaps);
+    checkOracle(file, oracle, pyPlan, "py", oracleFails, declaredGaps);
 
     for (const lane of [
       ["ts", tsPlan],
@@ -436,6 +476,24 @@ function main() {
     console.log(`DECLARED ORACLE COVERAGE GAPS (agreement still enforced on these; CORRECTNESS is not):`);
     for (const g of gaps) console.log(g);
   }
+
+  // ─── PER-FIELD gaps, rendered so they CANNOT be mistaken for checked rows.
+  //
+  // ★★★ A declared gap must not render like a verified row. These are prefixed
+  //     [NOT ADJUDICATED], grouped under their own banner, and counted in the
+  //     final line — because a reader who cannot tell "verified correct" from
+  //     "nobody has ruled on this" has been handed a false green with extra
+  //     words. "NO EXPECTATION" is a different state from "expectation met".
+  if (declaredGaps.length > 0) {
+    console.log(
+      `\n★ ${declaredGaps.length} ORACLE CELL(S) CARRY *NO EXPECTATION* — NOT ADJUDICATED, NOT VERIFIED, NOT A PASS:`,
+    );
+    for (const g of declaredGaps) console.log(`  [NOT ADJUDICATED] ${g}`);
+    console.log(
+      `  ^ these cells were NOT compared against any authority. Whatever the lanes emit there is` +
+        ` UNJUDGED — the lanes are still required to AGREE on them, which is a separate and weaker claim.`,
+    );
+  }
   const total = failures.length + driftFailures.length + oracleFailures.length;
   if (total > 0) {
     // Report the two claims SEPARATELY. `AGREEMENT ok / CORRECTNESS failed` is a
@@ -455,7 +513,12 @@ function main() {
     }
     process.exit(1);
   }
-  console.log("PASS: TS and Python binding plans AGREE, and both CONFORM to the frozen oracle.");
+  // ★ The pass line states its own limits. A green that does not name its gaps
+  //   is the shape this gate exists to stop.
+  console.log(
+    `PASS: TS and Python binding plans AGREE, and both CONFORM to the frozen oracle ` +
+      `on every ADJUDICATED cell (${declaredGaps.length} cell(s) explicitly NOT adjudicated — see above).`,
+  );
 }
 
 main();

@@ -19,7 +19,11 @@
     "does not freeze a literal string the desk never derived."
   ],
   "authority_file": "docs/designs/ORACLE-AUTHORITY-ORPHAN-ZONES-2026-07-30.md",
-  "authority_sha256": "09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086",
+  "authority_sha256": "9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d",
+  "_authority_hash_history": [
+    "09e016fd8b4cfc6739f33ecc49e300cb3d06e5f5e8d8813446cb31b62a8cf086 (10,600 B) — R-483 §12 original freeze. SUPERSEDED by R-484's preserve-and-strike amendment after AR-493's first oracle run went RED against BOTH lanes and exposed that the approximation=true cells on the two unrecognised-vocabulary rows had no derivation.",
+    "9b708e248825a1793b2c78f8ab1c95b6267894ff4d9e9d5f68e1b57221fe312d (13,525 B) — CURRENT, commit 35bce585, verified from the committed tree (not a working-tree read)."
+  ],
 
   "required_members": [
     "00-control-shipped.spec.json",
@@ -46,13 +50,15 @@
           "reason_null": true
         },
         "unknown-session": {
-          "authority": "authority section 4a row 'regional window' (approximation=true) + P-3, P-6",
+          "authority": "authority section 4a row 'regional window' + P-6",
           "bindable": false,
           "primitive_null": true,
           "session_zone": null,
-          "approximation": true,
           "reason_null": false,
-          "reason_excludes": "session_zone_refused_uncomputable_window"
+          "reason_excludes": "session_zone_refused_uncomputable_window",
+          "unadjudicated": {
+            "approximation": "R-484 §36 — NO EXPECTATION. See row 21: the `true` cited P-6, which derives no approximation value. Asserting `false` would copy both lanes. OPEN, DESK-OWNED (authority §6)."
+          }
         }
       }
     },
@@ -149,13 +155,15 @@
       "compiled": true,
       "conditions": {
         "sess": {
-          "authority": "authority section 4a row '21-fivemin-chart' (approximation=true) + P-3, P-6 — unrecognized vocabulary, NOT an orphan reason",
+          "authority": "authority section 4a row '21-fivemin-chart' + P-6 (bindability + reason-distinctness only)",
           "bindable": false,
           "primitive_null": true,
           "session_zone": null,
-          "approximation": true,
           "reason_null": false,
-          "reason_excludes": "session_zone_refused_uncomputable_window"
+          "reason_excludes": "session_zone_refused_uncomputable_window",
+          "unadjudicated": {
+            "approximation": "R-484 §36 — NO EXPECTATION. The authority's earlier `true` had NO derivation: it cited P-6, and P-6 speaks only to bindability and reason-distinctness. P-3 does not reach unrecognised vocabulary because P-4 defines 'refused' as the DELIBERATE act (P-3 scope note, R-484). Asserting `false` instead would copy the value both lanes emit — asserting the implementation's value and asserting nothing are different acts. Whether `false` is honest here is OPEN and DESK-OWNED (authority §6)."
+          }
         },
         "enter": {
           "authority": "authority P-5",
@@ -193,13 +201,15 @@
           "reason_null": true
         },
         "third": {
-          "authority": "authority section 4a row 'regional window' (approximation=true) + P-3, P-6 — names no identifiable session",
+          "authority": "authority section 4a row 'regional window' + P-6 — names no identifiable session",
           "bindable": false,
           "primitive_null": true,
           "session_zone": null,
-          "approximation": true,
           "reason_null": false,
-          "reason_excludes": "session_zone_refused_uncomputable_window"
+          "reason_excludes": "session_zone_refused_uncomputable_window",
+          "unadjudicated": {
+            "approximation": "R-484 §36 — NO EXPECTATION. Same defect as row 21: the `true` cited P-6, which derives no approximation value. P-3 does not reach unrecognised vocabulary (P-4 defines 'refused' as deliberate). Asserting `false` would copy both lanes. OPEN, DESK-OWNED (authority §6)."
+          }
         }
       }
     },
@@ -228,13 +238,15 @@
           "reason_null": true
         },
         "third": {
-          "authority": "authority section 4a row 'regional window' (approximation=true) + P-3, P-6",
+          "authority": "authority section 4a row 'regional window' + P-6",
           "bindable": false,
           "primitive_null": true,
           "session_zone": null,
-          "approximation": true,
           "reason_null": false,
-          "reason_excludes": "session_zone_refused_uncomputable_window"
+          "reason_excludes": "session_zone_refused_uncomputable_window",
+          "unadjudicated": {
+            "approximation": "R-484 §36 — NO EXPECTATION. See row 21: the `true` cited P-6, which derives no approximation value. Asserting `false` would copy both lanes. OPEN, DESK-OWNED (authority §6)."
+          }
         }
       }
     }
