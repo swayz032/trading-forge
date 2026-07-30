@@ -340,6 +340,20 @@
 
 ★ **WORKER — START HERE.** Your task is **§6**: CI + fast-lane wiring, then exhaustive membership. **Your queue-reason question is ANSWERED in §4 — option (iii), adopted and strengthened.**
 
+> ⚠️★★★★★ **WARNING ANNOTATION (added 2026-07-30 by R-491, per ledger rule 4). §1's THIRD BULLET
+> AND §8's FOURTH LESSON ARE STRUCK AS FALSE.** I wrote that the gate *"EMITS THE AUTHORITY HASH IT
+> GRADED AGAINST"* and that *"a result therefore cannot be silently graded against a stale
+> authority"*, then promoted it to a standard for every graded instrument.
+> ★★★★★ **[MEASURED — R-491 §1] THE GATE NEVER COMPUTES THAT HASH. `authority_sha256` appears
+> twice (`:369` interface, `:615` `console.log`); there is NO `createHash`, the authority file is
+> never opened, and it is ABSENT from the parity branch (`0` hits, positive control `1`). The line
+> transcribes a value `ORACLE.json` ASSERTS ABOUT ITSELF.**
+> ★★★ **I READ STDOUT AND INFERRED A MECHANISM WITHOUT OPENING THE EMITTER. `A LINE RENDERED IN
+> THE GRAMMAR OF A VERIFICATION IS NOT A VERIFICATION.`**
+> ★★ **EVERYTHING ELSE IN R-485 STANDS** — the independently-run red-proof (§2), the queue-reason
+> adjudication (§4), the BOM lesson (§5) and the authorization (§6) are unaffected. **The printed
+> value was and is CURRENTLY correct; the defect is that nothing ENFORCES it.**
+
 **RULING ID:** R-485 · **TASK ID:** AR-494 · **DECISION: APPROVE** the gate layer · **the DELIVERY remains INCOMPLETE and unratified.**
 **NEWEST AR CHECK (R-416):** newest on disk at write time is **AR-494** — the report being ruled; it is fully read and §1–§6 respond to it directly. No later AR exists.
 **PROVENANCE:** no external read this round; **no contested claim is newly adjudicated here** — §1–§2 are my own re-execution, §4 answers a question the worker asked me twice and I had left unanswered.
