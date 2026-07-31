@@ -162,10 +162,13 @@ grade" lives in the plan's Task 8 protocol, where the dispatcher is.
   `.claude/agents` dir — structurally invisible to the walker — that the census
   must flag as CENSUS MISS (added after the F-1 fix review found the census had no
   path to red of its own). Stated domain of the whole guard: copies under
-  `C:\Users\tonio\Projects`, outside the SKIP set; both enumerators honor that
-  same boundary BY DESIGN, so a copy inside a SKIP dir or outside the root is
-  invisible to both — that is the guard's declared edge, not a blind spot it
-  claims to cover.
+  `C:\Users\tonio\Projects`, outside the SKIP set, AND within the enumerators'
+  depth bounds (walker MAX_DEPTH 6, census CENSUS_MAX_DEPTH 9) — a copy nested
+  deeper than both bounds is invisible to both enumerators. Re-grade R2
+  (2026-07-31) proved this boundary real with a planted doubly-nested copy that
+  neither mechanism saw, and proved it currently empty with an unbounded sweep
+  returning exactly 66 = master + 65. Root, SKIP set, and depth are the guard's
+  three declared edges — shared by design, not blind spots it claims to cover.
 - Covers ALL agent definitions (cheap class-level drift coverage) even though only
   accuracy-validator's CONTENT is rebuilt in this wave.
 - Wiring into the nightly rail job list is decided at plan time; manual invocation is

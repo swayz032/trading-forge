@@ -375,7 +375,7 @@ process.exit(0);
 - [ ] **Step 2: Run the self-test — it must pass**
 
 Run: `node /c/Users/tonio/Projects/wt-av2-20260730/scripts/check-agent-parity.mjs --self-test`
-Expected: `SELF-TEST OK: walker+scan flagged the planted mutation AND census flagged the walker-invisible stray; both cleared after cleanup` and exit 0. If it prints `SELF-TEST FAILED`, the detector cannot go RED — fix before proceeding (law 5). (Strengthened 2026-07-30 after Task-3 review: the plant now routes through the REAL findAgentDirs/scan pipeline, so a walker regression — broken SKIP, MAX_DEPTH off-by-one, .claude descent bug — fails the self-test instead of printing OK.)
+Expected: `SELF-TEST OK: walker+scan flagged the planted mutation AND census flagged the walker-invisible stray; both cleared after cleanup` and exit 0. If it prints `SELF-TEST FAILED`, the detector cannot go RED — fix before proceeding (law 5). (Strengthened 2026-07-30 after Task-3 review: the plant routes through the REAL findAgentDirs/scan pipeline. MEASURED SCOPE — corrected 2026-07-31 per re-grade R1, which falsified the original caption here by fault injection: the self-test discriminates hash-compare and census-wiring regressions (M2/M3 injections fail loud) but does NOT discriminate .claude-descent or MAX_DEPTH regressions — its plants sit only one .claude level deep. Those F-1-class regressions are caught by the LIVE SCAN's census instead, measured: both such mutants emit 48 CENSUS MISS rows and exit 1. The guard as a whole has a path to red for that class; the self-test alone does not, and this caption must never claim otherwise.)
 
 - [ ] **Step 3: Run the live scan — it must currently be RED**
 
