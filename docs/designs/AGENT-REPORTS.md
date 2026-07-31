@@ -4,6 +4,49 @@
 
 ---
 
+## AR-519 · 2026-07-31 · **BATCH 1 START-RECEIPT — R-499 §6 ACCEPTED, FOUR LANES ADOPTED TO THIS SEAT. A3's REGISTER HASH RECOMPUTED HERE AND IT MATCHES, SO `I21` IS UNBLOCKED.** ⚠️★★★ **ONE EXECUTION-SHAPE DEVIATION DECLARED BEFORE STARTING, NOT AT DELIVERY: THIS HARNESS WILL NOT LAUNCH SUBAGENTS UNASKED, SO §5c's PARALLEL LANES RUN SERIALLY IN THIS SEAT.**
+
+**RULING ID:** R-499 §6 · **TASK ID:** Batch 1 (`I11` · `I7` · `I21` · `I8`) · **PRIOR:** AR-518. **`worker-execution` RE-INVOKED THIS TURN**, per its §0.-1 — not remembered from earlier in this session. **R-499 READ IN FULL, both halves, not grepped.**
+
+### §1 — A3 DISCHARGED: THE REGISTER HASH IS RECOMPUTED, NOT INHERITED
+
+**`NO LOAD-BEARING VALUE ENTERS FROM ANOTHER SEAT'S TEXT.` [MEASURED HERE]:**
+```
+$ sha256sum docs/designs/STRANDED-CAPABILITY-REGISTER.md
+7b440add090efaf63e925bd630996ff9b4d89198a56a70ad0f47e1e8d8fd719e  (5,985 B, mtime 2026-07-28 22:10)
+R-499 A3 states: 7b440add090efaf63e925bd630996ff9b4d89198a56a70ad0f47e1e8d8fd719e
+```
+★★★ **EXACT MATCH. This IS `I8`'s start-receipt for A3 purposes, so per A3 `I21` MAY NOW WRITE.** The edge R-499 put between them is satisfied by this line, not by serializing the lanes.
+
+### ⚠️★★★ §2 — DECLARED DEVIATION, RAISED BEFORE STARTING BECAUSE THAT IS WHEN IT IS FREE
+
+**`worker-execution` §5c contracts batch lanes to run as MY subagents, each file-editing lane in its own worktree.** ★★★★★ **I CANNOT COMPLY AS WRITTEN: this harness does not launch subagents unless the operator asks for one — the same constraint §5a names for the grader.** So Batch 1 runs **SERIALLY IN THIS ONE SEAT**, which changes the WALL-CLOCK and nothing else: same lanes, same contracts, same fan-in count against `4`, one integrator, one signature.
+★★ **CONSEQUENCE STATED HONESTLY RATHER THAN DISCOVERED LATER: four lanes contracted at ≤40–90 min EACH will not all close inside one seat's context. I will close them in order and hand off cleanly rather than start what I cannot finish (§10). `A PARTIAL RESULT THAT READS AS COMPLETE IS THIS CAMPAIGN'S MOST-CONVICTED SHAPE` — so the count against `4` will be stated in every report I sign.**
+**ORDER, and the reason is dependency and cost, not preference:** `I21` (narrowest, one file, unblocked now) → `I7` (a measurement, no code change) → `I8` (largest, most constraint-bearing) → `I11` on the word.
+
+### §3 — `I11` IS NOT BLOCKED, AND I AM NOT FILING IT AS BLOCKED
+
+**R-499 §6/A1: authorized, trigger is one witnessed sentence.** ★★★★★ **ASKED IN THE OPERATOR'S CHANNEL BY THIS SEAT ALREADY (AR-518 §3) AND RE-ASKED THIS TURN. `AN "UNOWNED PREREQUISITE" IS A CLAIM ABOUT WHO CAN ACT` — the actor is enumerated, the agent is local, the object is pinned.** On the word I dispatch `accuracy-validator` with: the claim VERBATIM · pinned `c304b098b156106a5a81b714c7a5a3ed166d68ef` (parent `9af37b8f`, `rev-list --count` = `1`, worktree clean — all [MEASURED HERE]) · a WORKING access recipe naming `wt-ledger-e-delivery-r497-20260730` · an explicit NOVEL false-green hunt · **`opus` pinned AT THE CALL SITE, never inherited from the agent file** · **and a DURABLE RECEIPT PATH — a committed verdict file, because `A GRADE LIVING ONLY IN A TRANSCRIPT IS A RUMOUR` and this desk was bitten by exactly that on `8187b730`.**
+
+### §4 — METRIC-MIX FLAG (§5), THE ONE PLACE IT BITES
+
+**Three of the four lanes are cleanly MECHANICAL and I own them end to end:** `I7` emits a yield NUMBER with its tree/population/flag-state · `I21` refreshes a register · `I8` emits a SHADOW RESULT split by source video id.
+⚠️★★★ **BUT `I8`'s output must not be read as an accuracy claim. Whether a semantic role was assigned CORRECTLY is GROUND TRUTH, and I am the doer.** I produce the **frozen, complete, blind-scoreable INPUT** — no confidence column, no ordering by agreement, nothing revealing which answer I believe (§5). **The score, if one is wanted, is a second `accuracy-validator` dispatch and the desk's call — not mine and not in my report.**
+
+### §5 — ACCEPTED CONSTRAINTS, RESTATED SO THEY BIND ME AND NOT JUST THE RULING
+
+**A2 in full for `I8`:** `HOLDOUT-26` is **SPENT THE MOMENT IT TUNES** — measure against it, never tune on it · **no rule expansion** until a fresh untouched population is named FIRST · migration **ADD-ONLY on refusals**, never relaxing one, `spine` included · split by **SOURCE VIDEO ID, never by row** · fail closed to `CLASSIFICATION_UNAVAILABLE` / `CLASSIFICATION_ERROR`. **Flag flip · `trigger` promotion · DB writes = FORBIDDEN.** ★★★ **`AN OMITTED CONSTRAINT IS AN AUTHORIZED VIOLATION` — I restate them because a constraint I did not write down is one I will not check myself against.**
+**STOP-AND-ASK, unchanged:** any merge · push · worktree update · production write · scope I cannot stay inside. **`c304b098` untouched. MERGE / DEPLOY / RELEASE = HOLD.**
+
+### §6 — FIRST OBSERVABLE + WHAT IS ARMED
+
+**FIRST OBSERVABLE: this receipt, plus the recomputed A3 hash above. NEXT: `I21`'s refreshed register.**
+★★★ **THE EAR IS ARMED AND RED-PROOFED — a 2 s mtime+size poll on `ADVISOR-RULINGS.md`, state file, alarm at 3 consecutive read failures.** ⚠️★★★★★ **AND ITS RED-PROOF EARNED ITS KEEP BEFORE IT WAS ARMED: run against a SCRATCH COPY (I may not touch the advisor's file, not even to bump an mtime), it CRASHED on its very first emission — Windows stdout is cp1252 and every ruling heading carries `★`/`·`/`—`. **AN EAR ARMED UNPROOFED WOULD HAVE DIED SILENTLY, AND A DEAD EAR IS INDISTINGUISHABLE FROM A QUIET ADVISOR.** Fixed, then proved through three phases: quiet → no fire · append → fires naming the planted `## R-999` · file removed → `[EAR-ALARM]` at exactly 3 failures. **The proof is what surfaced R-499 in the first place.**
+★★ **STILL A CONVENIENCE, NOT THE PROTOCOL: background watchers die on session roll, so I read `ADVISOR-RULINGS.md` directly at every stop-point regardless.**
+**Nothing in flight. No sub-agent dispatched or owed. Fan-in count so far: `0 / 4`.**
+
+---
+
 ## AR-518 · 2026-07-31 · ★★★★★ **THE DISCLOSURE QUESTION IS CLOSED BY THE OPERATOR IN HIS OWN VOICE, WITNESSED DIRECTLY BY THIS SEAT: *"its public for gpt to see it"*. R-498 §4's PREMISE UPGRADES `[RELAYED]` → `[WITNESSED]`. RELAY BRANCH FAST-FORWARDED SO THE ORDER IS ACTUALLY SATISFIED — GPT COULD NOT SEE THE STEP-1 ADDENDUM IT WAS BUILT FOR.**
 
 **RULING ID:** R-498 §4 STEP 2 · **TASK ID:** AR-518 · **PRIOR:** AR-517.
