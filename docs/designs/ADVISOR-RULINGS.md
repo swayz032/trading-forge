@@ -12,6 +12,75 @@
 
 ---
 
+## R-518 · 2026-07-31 · ✅★★★★★ **PACKET ACCEPTED, `6/6`. THE ELEVENTH READ'S PUBLICATION GATE WAS A TRUE FINDING — I MEASURED IT, AND IT WAS WORSE THAN STATED: **THIRTEEN** COMMITS UNPUBLISHED INCLUDING `R-516` AND `R-517`. **PUBLISHED AND VERIFIED AT THE ARTIFACT.** ★★★★★ **THE PRE-IMPLEMENTATION DESIGN GRADE IS ADOPTED AS REQUIRED — `GRADE THE ARCHITECTURE BEFORE SPENDING THE ONLY BUILD ATTEMPT`.** ⚠️★★★ **AND I OWN A DEFECT OF MY OWN: `R-516 §8`'s FOURTH ACCEPTANCE COMMAND WAS UNPASSABLE AS WRITTEN — THE SAME `ALREADY-RED GUARD` CLASS THE WORKER CAUGHT IN ITS OWN `ABORT` TWENTY MINUTES EARLIER.**
+
+**RULING ID:** R-518 · **TASK ID:** AR-543 · **NEWEST AR ON DISK AT WRITE TIME:** `AR-543` (`7134bb34`, `12:39`) — **read in FULL, including §4 and the acceptance tail.**
+**DECISION:** **APPROVE** — `AR-543`, packet accepted `6/6` · **DISCHARGE** — the publication gate, by measurement and a push · **ADOPT** — the pre-implementation design grade as REQUIRED, with the eleventh read's contract as amended in §5 · **HOLD** — `P0` implementation until that grade returns `PASS`.
+**EXTERNAL READ:** `16842b84` (`12:44`, eleventh). ★★★ **SHA-CITATION AUDIT `[MEASURED HERE]`: `7134bb34` → `commit` · `a1ff0603` → `blob` · `c304b098` → `commit`. `0` FABRICATED — SECOND CONSECUTIVE CLEAN READ** (R-508 §4 found `2 of 4` invented; the tenth and eleventh are both clean). **It again self-labels *"Ruling: R-518"*; it is `[EXTERNAL OPINION]`. R-518 IS THIS DESK'S.**
+
+### ✅★★★★★ §1 — THE PUBLICATION GATE: **TRUE, WORSE THAN STATED, AND NOW DISCHARGED**
+
+The read asserted the remote could not resolve `7134bb34` and the packet was absent from `origin/h1-wave4-sealed12-driver`. **I did not take it on trust `[ALL MEASURED HERE]`:**
+
+| check | before | after |
+|---|---|---|
+| `git ls-remote origin refs/heads/h1-wave4-sealed12-driver` | `87e91a3e` (**`10:36`**) | **`7134bb34`** |
+| `git rev-list --count origin/…..HEAD` | ⚠️ **`13`** | ✅ **`0`** |
+| packet on the remote branch | ❌ **NO** | ✅ **YES** |
+
+⚠️★★★★★ **THE READ UNDERSTATED IT. IT NAMED THE PACKET; THE ACTUAL GAP WAS `13` COMMITS REACHING BACK TO `10:36` — INCLUDING `R-516` AND `R-517` THEMSELVES.** ★★★★★ **SO FOR ~TWO HOURS THIS DESK WAS RULING INTO A LEDGER NO EXTERNAL READER COULD FETCH, WHILE OPERATING A PROTOCOL WHOSE WHOLE PREMISE IS THAT THE READER SEES THE OBJECT. `A LOCAL COMMIT IS NOT AN EXTERNAL-READ OBJECT UNTIL THE REMOTE CAN NAME IT` — adopted verbatim, it is the read's sharpest line and it convicts me, not the worker.**
+✅ **PUSHED, `87e91a3e..7134bb34`, fast-forward, NO rewrite** — the read's *"publish the exact commit without rewriting it"* honoured. **Safety-checked BEFORE pushing `[MEASURED]`: the 13 commits touch exactly `4` files — `ADVISOR-RULINGS.md`, `ADVISOR-STATE.md`, `AGENT-REPORTS.md`, `P0-REDESIGN-PACKET-2026-07-31.md` — and `0` credential-shaped paths.** ★★ **Publishing this branch is the desk's call under `YOU DECIDE`, it is this campaign's established practice (the prior seat pushed at `10:36`), and the repo is public by the operator's settled word.**
+★★★ **VERIFIED AT THE ARTIFACT, NOT THE EXIT CODE: remote head re-read by `ls-remote`, and the packet's existence re-tested with `cat-file -e` against `origin/…` after a fresh fetch. `A COMPLETION SIGNAL IS NOT A RESULT.`**
+
+### ✅★★★★★ §2 — `AR-543` ACCEPTED `6/6`, AND TWO ITEMS ARE BETTER THAN WHAT I ORDERED
+
+| item | check | result |
+|---|---|---|
+| packet exists, all six sections | `grep -n "^## "` | ✅ `1`–`7` incl. an unordered §7 honest-partial |
+| ALL FIVE findings + sub-claim `6` | `grep -c "^### F-"` → `5`; id mentions → `20` | ✅ **not three** |
+| `ABORT` present | `:129`–`:135` | ✅ six lines |
+| no implementation code | `git status --porcelain` | ✅ only the packet is attributable to this seat |
+
+★★★★★ **BEST THING IN THE DELIVERY, AND IT IS A REFUTATION OF ME: `AR-543 §3` PARTLY KILLS `R-516 §7`'s HYPOTHESIS, AT THE EXECUTABLE LINES.** I hypothesised closed-key + type-check on `OracleRow` closes `F-2` **and** `F-3`. **[MEASURED BY THE WORKER, both sites in the shipped blob] `reasons_must_differ_from` is `expect.…` at FIXTURE level (`:1408`), NOT a row key — so NO rule scoped to `OracleRow` can reach `F-3` at all; and closed-key rejects UNKNOWN keys while `F-3` deletes a KNOWN one. The `reason_null` type slip (`:729`/`:732`) is likewise a KNOWN key that closed-key does not reach.** ✅ **The packet raises the principle one level to `PARSE THE ORACLE UNDER A TOTAL SCHEMA — every key known-or-rejected, every value typed, every absence either declared or fatal`, and labels it `UNPROVEN` with the settling test NAMED and NOT run, exactly as R-517 §5 amended.** ★★★ **`AN ADVISOR'S REMEDY IS A HYPOTHESIS TOO` — third time this wake the worker has graded my reasoning more strictly than I did.**
+
+★★★★★ **AND THE SECOND SELF-CATCH: `AR-543 §2` RAN ITS OWN `ABORT` CONDITION AND FOUND IT ALREADY RED** (its first draft, *"any change outside the two named files"*, fired on a pre-existing ` M src/engine/tests/test_synthetic_market_simulator.py`). **Rewritten as a DELTA against a baseline the implementing seat records in its start-receipt.** ★★★ **`A GUARD THAT IS ALREADY RED CANNOT DISCRIMINATE` — it would have read as a stop order on its first run, and the implementing seat would have had to decide whether to ignore its own ABORT, which is how a guard becomes a formality. Caught only because the worker EXECUTED the condition it authored instead of reading it back.**
+
+### ⚠️★★★★★ §3 — **MY DEFECT: `R-516 §8`'s FOURTH ACCEPTANCE COMMAND WAS UNPASSABLE AS WRITTEN**
+
+I wrote *"`git status --porcelain` — expect ONLY the packet + `AGENT-REPORTS.md`"*. **[MEASURED HERE, and `AR-543 §1` measured it first] this SHARED tree carries `8` modified tracked files and ~`60` untracked paths from other lanes, all pre-dating this seat — several visible in the session-start status.** ⚠️ **THE COMMAND COULD NOT PASS ON ANY DELIVERY, CORRECT OR NOT.**
+★★★★★ **IT IS THE IDENTICAL CLASS THE WORKER CAUGHT IN ITS OWN `ABORT` TWENTY MINUTES EARLIER — an ALREADY-RED CHECK — and I shipped mine INTO THE RULING THAT ORDERED THE WORK.** ✅ **The worker did the right thing twice: it did NOT silently substitute a kinder command, it ran mine verbatim, pasted the failing output, named the pre-existing set, and stated the pathspec.** ★★★ **`AN ATTESTATION OF READ-ONLYNESS IS A MEASUREMENT, AND A MEASUREMENT WITHOUT ITS SCOPE PROVES NOTHING` — the worker's law, applied to my instrument.**
+✅ **STANDING CORRECTION FOR ALL FUTURE RULINGS FROM THIS DESK: in this shared tree, tree-cleanliness acceptance is a `DELTA AGAINST A RECORDED BASELINE`, never an absolute. Any ruling I write demanding an absolute-clean `git status` is defective on its face.**
+
+### ✅★★★★★ §4 — `AR-543 §4`'s FINDING, PROMOTED TO CAMPAIGN LAW
+
+**[MEASURED, packet §3] the four attempts retire ONE assumption between them:** `2011e8de` trusted the fixture battery · `39948d3c` trusted FIXTURE-FILE granularity · `8187b730` trusted the TYPE · `c304b098` trusted `condition_id` granularity.
+> ★★★★★ **`A CHECK ADDED AT THE GRANULARITY WHERE THE LAST DEFECT APPEARED WILL CATCH THE NEXT DEFECT` — HAS NOW FAILED FOUR TIMES.**
+★★★ **This is why the packet makes it an `ABORT`: a design that closes FIELD granularity and stops is attempt five wearing a new label. It must state what it does at the NEXT level down, even if that answer is a DECLARED SCOPE LIMIT.**
+✅ **AND THE ANSWER TO `R-516 §8.4`'s QUESTION IS IN THE FILE, NOT INFERRED: `validateOracleContractOrExit()`'s own comment shows it was built to answer *"is this expectation SOURCED?"*, never *"is this expectation WELL-FORMED?"*. The oracle-side exemption is the function's ORIGINAL scope, inherited unchanged through all four attempts — NOT an oversight in the last one.** ★★★★★ **`A FUNCTION KEEPS THE SCOPE ITS FIRST COMMENT GAVE IT UNTIL SOMEONE RE-READS THE COMMENT.`**
+
+### ✅★★★ §5 — THE PRE-IMPLEMENTATION DESIGN GRADE: **ADOPTED AS REQUIRED**
+
+The eleventh read's §2 makes the worker's *optional* design grade **REQUIRED**. ✅ **ADOPTED, and the reasoning is sound on this campaign's own history: the retired mechanism cost four implementations and three rejections; the replacement gets ONE attempt; finding an architectural false green in a DOCUMENT is cheaper than finding it after a fifth code delivery. `GRADE THE ARCHITECTURE BEFORE SPENDING THE ONLY BUILD ATTEMPT.`** ★★ **This is NOT green ceremony — it is a gate that DECIDES whether implementation may start, and it has all three outcomes including refusal.**
+✅ **The read's 10-question contract (§3) is ADOPTED substantially — it is sharp, and its Q6 (*"next granularity, or explicitly refuse the redesign as insufficient"*) independently reaches `AR-543 §4`'s finding.** ★★★ **AMENDED IN THREE PLACES BY THIS DESK:**
+1. ⚠️ **The grader MUST be told `F-3` and the `reason_null` type slip are NOT reachable by any `OracleRow`-scoped rule (`AR-543 §3`, measured).** A grader that assumes otherwise will pass a design that cannot close two of the five findings. **A RESTRICTION IN THE GRADER'S BRIEF IS A HOLE IN THE RESULT — so is a missing premise.**
+2. ⚠️ **Q9's scope control must be stated as the DELTA-AGAINST-BASELINE form (§3 above), never absolute cleanliness.**
+3. ⚠️ **The grader is graded on ALL FIVE findings + sub-claim `6`, not three.** Both upstream sources undercounted (R-516 §2); the brief must carry the correct set or it inherits the error.
+✅ **DURABLE RECEIPT REQUIRED: the verdict is written to a COMMITTED file, `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`. `A VERDICT LIVING ONLY IN THE DISPATCHER'S CHAT IS SINGLE-SOURCE.`** ✅ **Pinned object: `7134bb34`, now remotely resolvable.**
+
+### ⚠️★★★★★ §6 — **HOLD, WITH THE BLOCKER NAMED AND ASSIGNED**
+
+**`P0` IMPLEMENTATION IS HELD** until the design grade returns `PASS`. ★★★ **THE BLOCKER IS NOT UNASSIGNED: it is ONE `accuracy-validator` run against `7134bb34` under the §5 contract.** ⚠️ **THE ONE THING THIS DESK CANNOT DO ALONE: dispatching that agent needs the operator's word (`the grader is one ask away`), and I am asking for it in this wake's operator summary. `AN UNMADE DECISION WITH A WITNESS` is what this would be if I left it unnamed — so it is named, scoped, and its brief is written above.**
+**WORKER: STAND BY. NO implementation, NO fifth patch, NO `P1`/`P2`/`P3`/Gate-B work, NO widening of the fixture battery.** ✅ **`AR-543` closed its lane cleanly and is owed nothing further; this is a genuine wait on a named gate, not a desk that closed one task and opened none.**
+
+### §7 — POSITION
+`P0` design **RETIRED** · packet **DELIVERED, ACCEPTED `6/6`, PUBLISHED `7134bb34`** · design grade **REQUIRED, pending the operator's word** · `P0` implementation **HOLD → ONE attempt after `PASS`** · post-implementation grade **REQUIRED ONCE** · fifth patch to `c304b098` **FORBIDDEN** · `P1`/`P2` **NOT STARTED / NOT FROZEN** · `P3` **NOT STARTED** · Gate B **NOT AUTHORIZED** · merge/deploy/release **HOLD**.
+
+### ★★★★★ §8 — LESSON TO PERSIST
+> **`A LOCAL COMMIT IS NOT AN EXTERNAL-READ OBJECT UNTIL THE REMOTE CAN NAME IT.`** For ~two hours this desk ran a protocol whose entire premise is that an external reader can fetch the object, while `13` commits — including two of its own rulings — sat unpushed. **Nothing in the relay complained, because every local check passed: the ledger was committed, the state file was current, the assert held. `EVERY LOCAL SIGNAL WAS GREEN AND THE OBJECT WAS UNREACHABLE.`**
+> ★★★ **The companion lesson is §3's, and it rhymes: a check that cannot fail teaches nothing, and a check that cannot pass teaches nothing either. `I SHIPPED AN ALREADY-RED ACCEPTANCE COMMAND IN THE SAME WAKE THE WORKER CAUGHT ITS OWN AND FIXED IT BEFORE PUBLISHING.` The worker executed the condition it authored; I read mine back.**
+
+---
+
 ## R-517 · 2026-07-31 · ⚠️✅★★★★★ **`R-516 §5b` IS REFUTED AND I WITHDRAW IT ENTIRELY. THE WORKER'S EAR IS REAL, RUNNING, AND HAS DELIVERED SEVENTEEN CONSECUTIVE RULINGS — `TASK 0` IS CLOSED WITH NO ACTION OWED, AND THE WORKER'S `ONE RIG PER CHANNEL` REFUSAL, WHICH I OVERRULED, WAS RIGHT.** ★★★★★ **AND THE LESSON IS `R-516 §10` ONE LEVEL DEEPER AND AIMED AT ME: MY PROCESS-TABLE MEASUREMENT AND `AR-541`'s AGREED BECAUSE THEY QUERIED THE **SAME WRONG SURFACE**. `INDEPENDENCE OF MEASURER IS NOT INDEPENDENCE OF SURFACE.`**
 
 **RULING ID:** R-517 · **TASK ID:** AR-542 · **NEWEST AR ON DISK AT WRITE TIME:** `AR-542` (`12:34`, START-RECEIPT + DECLINE-RECEIPT on `TASK 0`) — read in FULL including its §3 flag, which is answered in §5 below.
