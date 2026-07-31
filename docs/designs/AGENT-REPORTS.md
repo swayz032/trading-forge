@@ -4,6 +4,30 @@
 
 ---
 
+## AR-534 · 2026-07-31 · **START-RECEIPT — R-511 §6 ACCEPTED AND STARTED (8 items).** ★★★★★ **AND IT CARRIES `M13`'s PRE-REGISTERED READ, WRITTEN BEFORE THE MUTATION EXISTS — INCLUDING THE ONE WAY `M13` COULD *FALSELY* PASS, WHICH IS THE `M8` DEFECT WEARING A NEW NAME.**
+
+**RULING ID:** R-511 §6 · **TASK ID:** AR-534 · **PRIOR:** AR-533 · **SEAT:** the seat that filed AR-533 (identified by DISPATCH, per R-511's own header).
+**FIRST OBSERVABLE + ETA:** the publication-pair case appended to `results` ABOVE the `all_ok` line, and `M12` RED on a dirty artifact worktree — **~25–40 min from `08:35`.**
+
+### §1 — RULING-DEFECT CHECK, RUN BEFORE STARTING (the check `worker-execution` §5/§5c says is free now and expensive later)
+✅ **NO METRIC MIX.** Every R-511 §6 acceptance criterion is MECHANICAL — a colour, an exit code, a line number, a count. **None needs ground truth, so none is a grading act and no `accuracy-validator` dispatch is owed by this contract.** `[The band/soundness grade for the lane is a separate question and remains the desk's to dispatch.]`
+✅ **NO FAKE EDGE — THE SERIAL ORDER IS REAL.** Items 1→2 pass data (`M12` tests the gate item 1 creates); 3–6 edit the same two files; 7 consumes all of them. **`§8a` correctly finds a genuine edge, so this batch may NOT run wide, and R-511 §4 already queued the CI build behind it for the same reason.** No lane is being serialized without cause.
+⚠️★★★ **ONE FLAG, RAISED BEFORE I START AND NOT AT DELIVERY:** item 1 says *"artifact ∧ generator ∧ harness IDENTICAL = OK"*, and item 8 asks whether the RECEIPT needs to join that set. **If `M13` says the receipt is uncovered, item 1's tuple is the remedy R-511 §6.8 itself names — so item 1 may need re-opening AFTER item 8 answers.** I will build item 1 with the membership set in ONE named constant so widening it is a one-line change, **and I will NOT widen it before the mutation speaks** (§6.8's own prohibition).
+
+### ⚠️★★★★★ §2 — `M13_RECEIPT_UNCOVERED`: **PRE-REGISTERED READ, WRITTEN NOW, RESULT UNKNOWN**
+**THE MUTATION:** in a git fixture — commit a receipt · then change the HARNESS **and COMMIT that change too** · leave every existing assertion green · run · observe.
+★★★★★ **PREDICTION, RECORDED BEFORE THE FACT: NOTHING WILL REDDEN.** Basis `[MEASURED in AR-533 §3, re-derived at the desk in R-511 §1b]`: the receipt has **ZERO executable consumers** — its filename appears `0` times in the generator and exactly `1` time in the harness, and that one is its own write.
+**THE TWO OUTCOMES, BOTH BOUND IN ADVANCE:**
+- **NOTHING REDDENS** → the receipt is a **DECORATION**; remedy is R-511 §6.8's own — put it in item 1's membership set and give it a reader. **I will report this even though it convicts four rulings of this lane, mine included.**
+- **SOMETHING REDDENS** → I name the assertion **and the causal path**, and the finding closes as **ALREADY-COVERED**. AR-533 §3 was then an over-call and I will say so in one line.
+⚠️★★★★★ **THE FALSE-PASS I AM PRE-COMMITTING TO EXCLUDE — THIS IS THE WHOLE REASON THE PRE-REGISTRATION IS WORTH WRITING:** an UNCOMMITTED harness edit reddens `PUBLICATION_harness_worktree_blob_equals_HEAD_blob` — the desk watched exactly that happen by accident at `07:47` (R-511 §1). **That is the DIRTY-TREE assertion firing, NOT the receipt being covered.** If `M13` left the change uncommitted it would go RED, I would score the colour, and I would certify the receipt as guarded when nothing had read it. ★★★ **That is `M8`'s defect precisely — `A TEST THAT TURNS RED BEFORE READING THE MUTATION HAS NOT TESTED THE MUTATION` — one ruling later and wearing a different name. `M13` therefore COMMITS the harness change, and its record must state that the harness pair was GREEN when the verdict was taken; if that pair is RED, the run is VOID, not a pass.**
+
+### §3 — SCOPE I AM HOLDING MYSELF TO
+**EDITING ONLY:** `session_role_resolver_yield_REDPROOF.py` · `session_role_resolver_yield.py` · the two generated objects — the four R-511 §6 names. **NOT TOUCHING** `PROVENANCE_RAW_closure_INCLUDING_generator_and_any_harness_is_clean` (§3-4: it is the compensating control, and the read that attacked it was rejected). **NO** engine · extraction · migration · `.env` · `runtime-production` · DB · census re-run · `HOLDOUT-26` · refusal-rule widening · campaign-measurement change.
+⚠️ **STOP CONDITION ARMED AND I WILL RE-CHECK IT AT EVERY REGENERATION:** `binding 0/0` · `A reason 17` · `B reason 45` · `18/17/9` · `closure_size 22` · `7/33`. **If any moves I STOP AND REPORT rather than reconcile in prose.**
+
+---
+
 ## AR-533 · 2026-07-31 · ★★★★★ **SEAT RE-SEATED WITH A FRESH CONTEXT IN THE SAME PROCESS — AND I AM REPORTING *NO OPEN AUTHORIZATION* RATHER THAN INVENTING ONE. R-510 §6 IS DELIVERED (AR-532) AND UNRULED.** ⚠️★★★ **ONE NEW MEASURED FINDING WHILE VERIFYING MY OWN POSITION: THE RED-PROOF *RECEIPT* IS THE ONE PUBLICATION OBJECT NOTHING CHECKS — IT IS OUTSIDE `ALL_CLEAN` AND IS NEVER READ BACK. THAT IS R-509 §3's SPECIES ONE LEVEL OUT.**
 
 **RULING ID:** none open — this is a SEAT + POSITION report · **TASK ID:** AR-533 · **PRIOR:** AR-532 · **SEAT:** the seat that filed AR-525 / AR-531 / AR-532, context cleared and re-seated via `/worker-onboarding`.
