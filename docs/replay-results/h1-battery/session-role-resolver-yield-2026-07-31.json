@@ -7,7 +7,7 @@
   "ruling": "R-503 \u00a75 items A-H + \u00a73 reconciliation (supersedes R-502 \u00a74, R-501 \u00a76)",
   "TREE": {
     "path": "C:\\Users\\tonio\\Projects\\wt-h1-wave4-20260712",
-    "head": "e64f1ae1f1de9c27ad70baf7b5680c37772504c2",
+    "head": "12af119f62ccf926a18a078fde01c1ed0772caf6",
     "branch": "h1-wave4-sealed12-driver",
     "dirty_paths": 93
   },
@@ -241,8 +241,8 @@
         "PASS": true,
         "detail": {
           "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-          "worktree_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
-          "head_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
+          "worktree_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
+          "head_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
           "IDENTICAL": true
         }
       },
@@ -251,8 +251,8 @@
         "PASS": true,
         "detail": {
           "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
-          "worktree_blob": "0e2316b22417f81e41a304ae94b51d6031f23729",
-          "head_blob": "0e2316b22417f81e41a304ae94b51d6031f23729",
+          "worktree_blob": "391e500c1bc2d783bb9f58e7324b106c1ee3407e",
+          "head_blob": "391e500c1bc2d783bb9f58e7324b106c1ee3407e",
           "IDENTICAL": true
         }
       },
@@ -345,20 +345,20 @@
   "PUBLICATION_PATHS": {
     "artifact": {
       "path": "docs/replay-results/h1-battery/session-role-resolver-yield-2026-07-31.json",
-      "worktree_blob": "e7179e8b834cc5c112b8ecb2f0fb9b046bcf869a",
-      "head_blob": "e7179e8b834cc5c112b8ecb2f0fb9b046bcf869a",
+      "worktree_blob": "c856eb6f78098b053977355d2d0d5aa6ee3a5fed",
+      "head_blob": "c856eb6f78098b053977355d2d0d5aa6ee3a5fed",
       "IDENTICAL": true
     },
     "generator": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-      "worktree_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
-      "head_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
+      "worktree_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
+      "head_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
       "IDENTICAL": true
     },
     "harness": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield_REDPROOF.py",
-      "worktree_blob": "0e2316b22417f81e41a304ae94b51d6031f23729",
-      "head_blob": "0e2316b22417f81e41a304ae94b51d6031f23729",
+      "worktree_blob": "391e500c1bc2d783bb9f58e7324b106c1ee3407e",
+      "head_blob": "391e500c1bc2d783bb9f58e7324b106c1ee3407e",
       "IDENTICAL": true
     },
     "\u26a0\ufe0f_THE_ARTIFACT_PAIR_DESCRIBES_THE_PRE_RUN_STATE": "It is computed BEFORE this run overwrites the artifact, so it reports on the PREVIOUS published object and this run is about to make the path dirty. IT IS THEREFORE RECORDED AS DATA AND **NOT** ASSERTED HERE -- asserting it would claim 'the artifact is committed' in the same breath as replacing it, which is the caption-falsifies-its-own-line defect this lane keeps producing. THE REAL PUBLICATION ASSERTION LIVES IN THE HARNESS (R-509 \u00a76.2), which runs AFTER the commit and reads the COMMITTED blob. The generator and harness pairs ARE asserted below -- they are inputs to this run, not its output."
@@ -371,19 +371,19 @@
       "PROVENANCE_SOURCE_CLOSURE",
       "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.generated_at_utc",
       "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE.SNAPSHOT_RECORD.campaign_commit",
-      "ASSERTIONS.checks[name starts with 'PROVENANCE_'].detail",
+      "ASSERTIONS.checks[name starts with 'PROVENANCE_' or 'PUBLICATION_'].detail",
       "PUBLICATION_PATHS",
       "DIGEST_COVERAGE.value"
     ],
-    "value": "4b9dca7825aaa3a6ee1b2d4a1f8d7be874955254b719e1a2dd3c11f013d60b62"
+    "value": "2c8dbbede7eff014ac54c808572b201f6462d2b969d761c44dda73c48b08748a"
   },
   "DEPLOYED_LANE_SCOPE__READ_BEFORE_QUOTING_ANY_NUMBER_HERE": {
     "STATUS": "MEASURED",
     "SNAPSHOT_RECORD": {
-      "generated_at_utc": "2026-07-31T11:08:17Z",
-      "campaign_commit": "e64f1ae1f1de9c27ad70baf7b5680c37772504c2",
+      "generated_at_utc": "2026-07-31T11:09:56Z",
+      "campaign_commit": "12af119f62ccf926a18a078fde01c1ed0772caf6",
       "campaign_binder_blob": "7c9e69a15b03b4bf566d37abbf04fa592848e925",
-      "generator_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
+      "generator_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
       "deployed_path": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production\\src\\engine\\spec_family_bindings.py",
       "deployed_repo_root": "C:\\Users\\tonio\\Projects\\trading-forge\\runtime-production",
       "deployed_repo_head": "9af37b8ff36a13c05fb0ec26752c42a97fc300d7",
@@ -8538,7 +8538,7 @@
   },
   "PROVENANCE_SOURCE_CLOSURE": {
     "WHY_THIS_EXISTS": "R-502 \u00a74: `A PINNED SHA BESIDE A DIRTY TREE IS A LABEL, NOT A PROVENANCE.` Deterministic repeated execution proves repeatability INSIDE the checkout; it does NOT prove the binder that ran equals the named commit. This manifest does, by comparing worktree bytes to the HEAD blob for every file in the EXECUTED source+population closure.",
-    "head": "e64f1ae1f1de9c27ad70baf7b5680c37772504c2",
+    "head": "12af119f62ccf926a18a078fde01c1ed0772caf6",
     "closure_size": 22,
     "binder_blob": {
       "path": "src/engine/spec_family_bindings.py",
@@ -8548,8 +8548,8 @@
     },
     "generator_blob": {
       "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-      "worktree_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
-      "head_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
+      "worktree_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
+      "head_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
       "IDENTICAL": true
     },
     "pinned_baseline_blob": {
@@ -8587,8 +8587,8 @@
       },
       {
         "path": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
-        "worktree_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
-        "head_blob": "df2867eaeef6f8ea1401c8041b3c16d1fb0b40ae",
+        "worktree_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
+        "head_blob": "bb6b1c5537f8f184b0f70c86b475f911429bf903",
         "IDENTICAL": true
       },
       {
