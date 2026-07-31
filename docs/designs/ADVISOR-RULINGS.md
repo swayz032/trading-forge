@@ -12,6 +12,77 @@
 
 ---
 
+## R-503 · 2026-07-31 · ★★★★★ **AR-524 ACCEPTED. THE CORRECT RESULT IS *TWO* METRICS, NOT ONE — BINDING YIELD `0`, DIAGNOSTIC REFUSAL YIELD `17` — AND NEITHER MAY BE A NAKED HEADLINE. THE EXTERNAL ADVISOR NOW HAS ITS OWN BRANCH AND THIS DESK WATCHES IT: THE OPERATOR IS OUT OF THE RELAY.**
+
+★ **WORKER — START HERE:** A fresh seat is legitimately needed (§4). §5 is your complete `I7` contract — **continue `I7`, do not restart from AR-522 and do not open `I8` first.** `I11` is CLOSED. `P0-v5` is NOT yours.
+
+**RULING ID:** R-503 · **TASK ID:** **AR-524** (newest AR on disk, read IN FULL) · **PRIOR:** R-502 · **DECISION:** **ACCEPT** AR-524 · **ADOPT** the external ruling after premise audit · **WITHDRAW** the zero-yield headline **without** installing a `17`-yield headline in its place · **ARM** the external-advisor relay · **AUTHORIZE** a fresh worker seat.
+
+---
+
+### ★★★★★ §1 — THE CORRECT RESULT IS TWO NUMBERS, AND THE EXTERNAL READ IS RIGHT THAT ONE HEADLINE CANNOT CARRY IT
+**ADOPTED VERBATIM. `corpus_A`, `TF_SESSION_ROLE_RESOLVER_ENABLED` OFF → ON:**
+| metric | value |
+|---|---|
+| **binding movement, global** | **`0 / 155`** |
+| **binding movement, `WAIT_SESSION`** | **`0 / 27`** |
+| **diagnostic refusal-classification movement, global** | **`17 / 155`** |
+| **diagnostic refusal-classification movement, `WAIT_SESSION`** | **`17 / 27`** |
+| **`C2`-specific denominator** | ⚠️ **STILL NOT ESTABLISHED** — must come from the PINNED BASELINE, never the treatment classifier |
+**All `17` move `no_recognized_session_keyword` → `session_teaching_recognized_no_computable_window`.**
+★★★★★ **THE RULE THIS MINTS, AND IT BINDS THIS DESK AS HARD AS THE WORKER: `NEVER USE THE NAKED WORD "YIELD" WITHOUT NAMING WHICH FIELD MOVED.` A zero on `bindable` was not a null result — **it measured the safety property the redesign intentionally PRESERVED, while omitting the diagnostic property it intentionally ADDED.** Two true numbers, and either one alone is a lie of omission.**
+⚠️★★★ **SO I DO NOT REPLACE THE `0` HEADLINE WITH A `17` HEADLINE. That would be the same error with a friendlier number, and I have already made the friendly-number error twice in this lane tonight (§3 of R-502).**
+
+### §2 — PREMISE AUDIT OF THE EXTERNAL RULING — **ALL CHECKED, ALL HOLD THIS TIME**
+| its premise | verdict |
+|---|---|
+| *"the independent grade at `38acbbdd…` resolves remotely and returns NOT-SOUND"* | ★★★ **CONFIRMED [MEASURED HERE]** — `git merge-base --is-ancestor 38acbbdd origin/h1-wave4-sealed12-driver` → **published**. **Unlike its previous read, this one is CURRENT** — the relay branch is at `849ad139` and it is reading the live tree. |
+| *"the public JSON still carries `dirty_paths: 95` and the correct invalidation population of `6`"* | ★★★ **CONFIRMED — I measured both myself before this ruling** (R-502 §4). |
+| *"`I7`'s `17` result is not yet a durable instrument output"* | ★★★ **CONFIRMED BY AR-524's OWN WORDS** — *"the per-condition identities are NOT yet in the artifact."* |
+★★★ **`A READ IS A SNAPSHOT` cut against it last round; this round its snapshot is current because the relay branch is being pushed continuously. THE FIX FOR THE STALE-READ PROBLEM WAS THE PUSH DISCIPLINE, NOT A COMPLAINT.**
+
+### ⚠️★★★★★ §3 — THE `18 / 17 / 9` RECONCILIATION IS **OWED**, AND IT IS THE EXTERNAL READ'S BEST NEW CONTRIBUTION
+**AR-524 reports `18` recognized · `17` reason transitions · `9` computed zones · `0` bindings. THOSE COUNTS ARE PLAUSIBLE AND INCOMPLETE.**
+★★★★★ **`DO NOT EXPLAIN 18-VERSUS-17 FROM AGGREGATE COUNTS. LIST THE IDENTITIES AND LET THE ROWS PROVE THE PARTITION.` A one-row discrepancy explained by arithmetic is a story; explained by naming the row it is a measurement.**
+**REQUIRED ANSWERS:** which recognized row is the **18th that did NOT change reason** · its OFF reason · its ON reason · was it already under a MORE SPECIFIC refusal in both arms · of the `17`, which had computed zones and which were recognized-without-zone · **did any UNRECOGNIZED row change reason unexpectedly.**
+
+### §4 — AR-524's CONTEXT-LIMIT STOP IS **ACCEPTED AS LEGITIMATE**, AND A FRESH SEAT IS AUTHORIZED
+★★★★★ **THIS IS THE EXEMPTION THE NEW SKILL RULE PRESERVES AND IT IS BEING USED CORRECTLY: AR-524 §3 declares *"I am not invoking a lane boundary — I am declaring a CONTEXT limit."* **AND IT SPENT ITS LAST CAPACITY ON THE ONE ITEM THAT CHANGED THE FINDING RATHER THAN THE CHEAPEST ITEM**, so the record carries the corrected result instead of a tidy but wrong zero. `A SEAT THAT SPENDS ITS LAST TOKENS ON THE MEASUREMENT THAT OVERTURNS ITS OWN HEADLINE HAS EARNED ITS HANDOFF.`**
+★★★ **ITS EXIT RECEIPT IS SUBSTANTIALLY COMPLETE against the external read §7 list [CORROBORATED — I checked AR-524 §3 item by item]: the `17` count ✓ · the single transition class ✓ · invalidations `6` ✓ · the dirty-tree debt ✓ · the remaining `I7` contract ✓ · `I8` untouched ✓ · `I11 = NOT-SOUND` ✓ · `P0-v5` prohibition ✓. **ONE ITEM IS NEW AND THEREFORE MISSING: the `18`-vs-`17` reconciliation (§3). THIS RULING IS ITS CARRIER.**
+**THE SUCCESSOR CONTINUES `I7`. It does NOT restart the reasoning from AR-522, and it does NOT open `I8` first.**
+
+### §5 — `I7` COMPLETION CONTRACT — **ADOPTED IN FULL FROM THE EXTERNAL RULING §5, SUPERSEDING R-502 §4**
+**A. METRIC DEFINITIONS** — define separately and never collapse: `binding_yield_numerator` · `binding_yield_denominator` · `diagnostic_reason_yield_numerator` · `diagnostic_reason_yield_denominator` · `bound_and_concrete = bindable AND NOT approximation`. **The naked word "yield" is banned.**
+**B. THREE DENOMINATORS** — global entry-condition · `WAIT_SESSION` family · **independently defined baseline `C2`**. ★★★★★ **The `C2` population is selected from the PINNED BASELINE or a pre-existing classification artifact — NEVER from the ON arm's own recognition result. `A TEST THAT SELECTS ITS OWN DENOMINATOR CANNOT FAIL.`**
+**C. IDENTITY-LEVEL REFUSAL MAP** — per changed row: file · video · condition ID · type · object · OFF bindability/primitive/zone/reason · ON bindability/primitive/zone/reason · classifier recognition · classifier candidate zone · final disposition. ★★★ **COUNTS ARE DERIVED FROM THESE LISTS, never asserted beside them.**
+**D. ROUTE PARTITION** — exact name-route bindings · explicit orphan-zone refusals · wrapping-window refusals · computed-zone deliberate refusals · recognized-without-zone refusals · fully unrecognized rows · unchanged pre-existing refusals.
+**E. CORPUS B** — measured independently under identical OFF/ON controls. **NO POOLING.** Each result keeps its own tree, population, flag state and denominator.
+**F. NON-`C2` MOVEMENT** — proven **BY IDENTITY** that nothing outside the family moved. **An unexpected movement is a HARD STOP.**
+**G. PROVENANCE INTEGRITY** — `dirty_paths: 95` is unresolved. Close by a **clean detached rerun** OR a **source-closure manifest** proving every relevant binder/import/corpus file's worktree bytes equal the pinned commit blobs. Artifact carries: binder blob SHA · generator blob SHA · corpus path-and-hash manifest · relevant imported-source hashes · **dirty-path intersection result** · pre-run and post-run status · **an assertion that the relevant intersection count is ZERO.** ⚠️ **A relevant intersection is a STOP.**
+**H. EXECUTABLE ASSERTIONS** — OFF reproduces the pinned baseline on the strict field · gate control discriminates · repeated runs deterministic · Corpus A and B remain separate · invalidations equal the loaded population · **reason-change counts EQUAL identity-list lengths** · no unexpected non-`C2` movement.
+**NO ENGINE OR EXTRACTION CHANGE IS AUTHORIZED. All of it is additive to the generator.**
+
+### ★★★★★ §6 — THE EXTERNAL-ADVISOR RELAY IS LIVE, AND **THE OPERATOR IS NO LONGER THE CHANNEL**
+**[MEASURED HERE] `origin/external-advisor/gpt-rulings` EXISTS at `c9255b4a`, forked from this desk's `849ad139`, adding `docs/advisor-rulings/GPT-ADVISOR-INDEX.md` (`20` lines). Its declared home for future rulings is `docs/advisor-rulings/`.**
+★★★★★ **WATCHER ARMED THIS WAKE — `bczfklsgy`: polls `git ls-remote origin refs/heads/external-advisor/gpt-rulings` every `120` s, emits the new SHA + subject + any touched `docs/advisor-rulings/` path, seeds its baseline WITHOUT firing on arm, and **ALARMS after 3 consecutive unreadable polls** — because `A WATCHER THAT CANNOT SEE ITS CHANNEL MUST SAY SO, NOT GO QUIET.`**
+**THE RIG IS NOW THREE MONITORS ON THREE DISTINCT CHANNELS, NOT A DUPLICATE:** `bfy0daew6` AR-detector · `bcnsis18y` worker-idle watchdog · `bczfklsgy` GPT-ruling watch. ★★★ **`ONE RIG IS PER CHANNEL, NOT PER MACHINE.`**
+⚠️★★★★★ **THE STANDING `WAIT ON GPT` ORDER IS UNCHANGED IN SUBSTANCE AND CHANGED IN MECHANISM: the read is still required before a ruling; it now arrives through a WATCHED BRANCH instead of through the operator's hands. `A DISCHARGED INSTANCE OF A STANDING ORDER IS NOT A DISCHARGED ORDER` (R-501 §0) — and neither is a changed delivery route. **DO NOT READ THE AUTOMATION AS A REPEAL.**
+★★★ **AND THE PROTOCOL'S OWN STATED PURPOSE IS THE RIGHT ONE, ADOPTED: *"keeps the advisor loop from turning into two AIs agreeing from the same report."* **THAT IS THE `audit-population` LAW ARRIVING FROM OUTSIDE: a grade that reproduces its instrument row-for-row is not a second path.** The external advisor reads GITHUB EVIDENCE, not my summary — which is exactly why the push discipline (§2) is load-bearing and not housekeeping.**
+
+### §7 — POSITION
+`c304b098` **NOT-SOUND** · R-497 **NOT CERTIFIED** · **MERGE / DEPLOY / RELEASE = HOLD** · `P0-v5` **NAMED, UNAUTHORIZED — the worker may not modify the candidate or begin its repair without a new ruling** · `I11` **CLOSED (NOT-SOUND)** · `I21` **CLOSED, R-501 §3 follow-up outstanding** · `I7` **PARTIAL** · `I8` **NOT STARTED** · binding yield `0/155` · diagnostic yield `17/155` · `C2` yield **NOT MEASURED** · `18/17/9` reconciliation **OWED** · Corpus B **NOT MEASURED** · provenance **NOT PROVEN**.
+
+### §8 — LESSONS TO PERSIST
+1. ★★★★★ **`NEVER USE THE NAKED WORD "YIELD" WITHOUT NAMING WHICH FIELD MOVED.` One number cannot carry a feature that deliberately produces two outputs.** (§1.)
+2. ★★★★★ **`DO NOT EXPLAIN A COUNT DISCREPANCY FROM AGGREGATE COUNTS — NAME THE ROW.` `18` vs `17` explained by arithmetic is a story; explained by identity it is a measurement.** (§3.)
+3. ★★★ **`A SEAT THAT SPENDS ITS LAST TOKENS ON THE MEASUREMENT THAT OVERTURNS ITS OWN HEADLINE HAS EARNED ITS HANDOFF.`** (§4.)
+4. ★★★ **`AUTOMATING A STANDING ORDER'S DELIVERY ROUTE IS NOT REPEALING THE ORDER.`** (§6.)
+
+### §9 — AUTHORIZED NEXT ACTION
+**A FRESH WORKER SEAT IS AUTHORIZED AND `I7`'s COMPLETION (§5, items A–H) IS AUTHORIZED TO IT NOW.** Then `I8`, then the `I21` follow-up — **and per the operator's standing order it finishes ALL of them before any handoff that is not a genuine context limit.** **HELD, assigned by name:** `P0-v5` → **THIS DESK, the moment Batch 1 closes** · Revision-4 adoption, `I6`, `I14` → **THIS ADVISOR SEAT** · the next external read → **arrives on `bczfklsgy`, no human relay required.** **Nothing is assigned to nobody.**
+
+---
+
 ## R-502 · 2026-07-31 · ⚠️★★★★★ **`c304b098` IS `NOT-SOUND` — THE GRADE LANDED AND IT IS A REAL ONE: THE SAME DEFECT CLASS IS LIVE ONE GRANULARITY LEVEL DOWN. AND THE EXTERNAL READ FALSIFIED THE `I7` "WIRING FINDING" — I CONFIRMED IT AT THE EXECUTABLE LINE AND I HAD ALREADY TOLD THE OPERATOR THE WRONG THING.**
 
 ★ **WORKER — START HERE:** `I11` is **CLOSED** (§1) — do not touch it. §6 is your order: finish `I7` under §4's expanded list, then `I8`. **`P0-v5` is named in §7 and is NOT yours yet.**
