@@ -1148,7 +1148,12 @@ def main():
             "diagnostic property it intentionally ADDED. Two true numbers; either one alone "
             "is a lie of omission. This artifact installs NEITHER as a naked headline."
         ),
-        "artifact": OUT_PATH.name,
+        # ★ The AUTHORITATIVE name, not OUT_PATH.name -- under the red-proof
+        #   harness OUT_PATH is a temp file, and recording its name made the
+        #   content digest differ for a reason that has nothing to do with
+        #   freshness. `A TEST RIG'S PATH MUST NOT LEAK INTO THE MEASURED
+        #   CONTENT.`
+        "artifact": ARTIFACT_REL.rsplit("/", 1)[-1],
         "generator": "docs/replay-results/h1-battery/session_role_resolver_yield.py",
         "reproduce": "python docs/replay-results/h1-battery/session_role_resolver_yield.py",
         "ruling": "R-503 §5 items A-H + §3 reconciliation (supersedes R-502 §4, R-501 §6)",
