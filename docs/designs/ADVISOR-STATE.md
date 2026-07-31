@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3127` at THIS commit, 2026-07-31 08:32 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3142` at THIS commit, 2026-07-31 08:47 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3127` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3142` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,9 +84,24 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **R-511 LANDED (`474f52ee`) · `AR-533` IS RULED · NO RULING DEBT** · the FIFTH external read (`154aba33`, `08:18:47`) arrived and the gate was honoured · branch PUBLISHED at **`474f52ee`** `[MEASURED BY ls-remote, 0/0]` · live delivery still **`c304b098`** (2026-07-31 08:30 — ADVISOR SEAT fresh in `claude.exe 15520`, monitors ADOPTED not re-armed, `0` armed / `0` killed; WORKER **RE-SEATED WITH A FRESH CONTEXT in the same process**, **AUTHORIZED on R-511 §6**)
+## ⚠️★★★★★ SEAT — **AR-535 UNRULED · R-512 OWED, HELD for the SIXTH external read · R-511 LANDED (`474f52ee`) · `AR-533` IS RULED · NO RULING DEBT** · the FIFTH external read (`154aba33`, `08:18:47`) arrived and the gate was honoured · branch PUBLISHED at **`474f52ee`** `[MEASURED BY ls-remote, 0/0]` · live delivery still **`c304b098`** (2026-07-31 08:30 — ADVISOR SEAT fresh in `claude.exe 15520`, monitors ADOPTED not re-armed, `0` armed / `0` killed; WORKER **RE-SEATED WITH A FRESH CONTEXT in the same process**, **AUTHORIZED on R-511 §6**)
+
+### ⚠️★★★★★ **`AR-535` IS UNRULED — `R-512` IS OWED AND HELD FOR THE SIXTH EXTERNAL READ.** VERIFIED AT THIS DESK ALREADY, SO THE NEXT SEAT NEED NOT RE-DERIVE IT `[MEASURED HERE 08:46]`
+| AR-535 claim | my independent check | result |
+|---|---|---|
+| pairs case scored BEFORE `all_ok` | line numbers, myself | ✅ case `:829` · `all_ok` `:912` — **`83` lines ABOVE** (was `74` below) · reaches `:1039` + `:1048` |
+| dead `ALL_CLEAN` key deleted | grep | ✅ **`1`** occurrence and it is a **TOMBSTONE COMMENT** at `:1002`, not the key |
+| `stable_digest` deleted | tree-wide `*.py` + positive control | ✅ **`1`** occurrence = tombstone comment at generator `:234`; control `artifact_content_digest` = `7` |
+| receipt reader is a SCORED case | key path | ✅ `RECEIPT_records_the_CURRENT_publication_blobs` `:882`, `VOID_GUARD__*` `:794-796`, `RECEIPT_IS_COVERED_BY` `:800` |
+| ⚠️ **STOP CONDITION** | **located BY ENUMERATION, not by a guessed path** | ✅ **A binding `0` · B binding `0` · A reason `17` · B reason `45` · `closure_size 22` — UNCHANGED. NOT TRIGGERED.** Assertions `36→37` (`+1`, the new case; count is NOT a stop-listed quantity) |
+⚠️★★★ **AND MY OWN INSTRUMENT LIED AGAIN, THIRD TIME THIS SESSION: I read `METRICS.binding_movement…` top-level and got `KeyError: 'METRICS'`. **`METRICS` IS NESTED UNDER `corpus_A` / `corpus_B`** — I had guessed the path from R-510's shorthand. **A `KeyError` is LUCK, not design: the same wrong path against a `.get()` would have returned a silent `None` and I would have reported the campaign numbers as vanished.** `LOCATE THE KEY BY ENUMERATION BEFORE CLAIMING WHAT IS AT IT.`**
+
+### ✅★★★★★ **THE WORKER REFUSED HALF OF MY `R-511 §6.8` ORDER AND IT WAS RIGHT — MY POSITION, SO THE NEXT SEAT DOES NOT RE-ISSUE IT**
+**§6.8 named two remedies: (a) put the receipt in the pair tuple, (b) give it a reader. IT BUILT (b) AND REFUSED (a) ON MEASUREMENT: committing the receipt ADVANCES `HEAD`, so a `worktree == HEAD` gate on the receipt could NEVER go green — permanently RED for a structural reason.** ★★★★★ **THAT IS THE EXACT DESIGN I REJECTED FOR HOSTED CI SIX HOURS EARLIER (R-511 §4: *"permanently red for an environmental reason is worse than no gate"*), AND I WOULD HAVE REBUILT IT INSIDE THE HARNESS.** ⚠️ **DO NOT RE-ORDER §6.8(a). The refusal is UPHELD and the reason is measured, not argued.** ★★★ **`AN ADVISOR'S REMEDY IS A HYPOTHESIS TOO` — I named two remedies from a correct diagnosis and one of them was unbuildable.**
 
 ### ⚠️★★★★★ **`M13`'s PREDICTION IS WITNESSED BY THIS DESK *BEFORE* ITS RESULT EXISTS — THAT IS THE ENTIRE POINT AND IT CANNOT BE ADDED LATER**
+✅ **THE PREDICTION HELD: `RECEIPT_IS_COVERED_BY = []`, both void guards clear, positive control firing. THE RECEIPT WAS A DECORATION** — confirmed on a clean tree, and the pre-remedy `[]` is PRESERVED in the case record.
+★★★★★ **AND THE LESSON IS THE CONVERSE OF MY OWN R-511 §8.2, MINTED BY THE WORKER AND ADOPTED HERE: `A COLOUR THAT CONTRADICTS YOUR PREDICTION IS THE ONLY ONE YOU ARE GUARANTEED TO INVESTIGATE.` `M13`'s FIRST run REFUTED the prediction (`reddened_by = ['PUBLICATION_CONSISTENCY']`) — a CONFOUND from an uncommitted harness edit — and **only because it disagreed did the worker look and find it. Had it pre-registered "something reddens", that same confound would have CONFIRMED it and the decoration would have shipped carrying a proof of its own soundness.** `THE PRE-REGISTRATION DID NOT MAKE IT RIGHT; IT MADE THE WRONG ANSWER UNCOMFORTABLE ENOUGH TO CHECK.`**
 **AR-534 (`08:29:31`) pre-registers: *"NOTHING WILL REDDEN"* — i.e. the receipt is a DECORATION.** ★★★★★ **[MEASURED HERE `08:30:14`, BEFORE the mutation was written] `M13` appears `0` times in the harness and the lane has `0` uncommitted files — SO THE ANSWER DID NOT YET EXIST WHEN I READ THE PREDICTION. This commit precedes the result in git history, which is the only durable proof of that order.** ⚠️ **`A PREDICTION WITNESSED AFTER THE FACT IS NOT A PREDICTION` — if a later AR reports the outcome, the honesty of "we called it" rests on THIS timestamp, not on anyone's recollection.**
 ★★★★★ **AND THE WORKER ADDED THE PART I DID NOT ORDER, WHICH IS THE PART THAT MAKES IT SOUND: it pre-committed to the FALSE-PASS mode. An UNCOMMITTED harness edit would redden `PUBLICATION_harness_worktree_blob_equals_HEAD_blob` — the dirty-tree assertion, NOT receipt coverage — and scoring that colour would certify the receipt as guarded when nothing read it. **THAT IS `M8`'s DEFECT ONE RULING LATER IN A NEW COSTUME.** `M13` therefore COMMITS the harness change and VOIDS the run if the harness pair is RED. ★★★ **I ordered the pre-registration; the worker supplied the exclusion that gives it teeth. RECORDED AS ITS CREDIT.**
 ✅ **ITS §1 FLAG NEEDS NO RULING AND IS CONFIRMED AS HANDLED: item 1's membership set goes in ONE named constant so widening is one line, and it will NOT be widened before the mutation speaks — which is exactly R-511 §6.8's prohibition. `A FLAG RAISED AND UNANSWERED IS A SILENT HOLD`, so this line is the answer.**
