@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3169` at THIS commit, 2026-07-31 09:36 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3172` at THIS commit, 2026-07-31 09:47 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3169` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3172` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,10 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **`AR-536` IS UNRULED · `R-513` OWED, HELD FOR THE SEVENTH EXTERNAL READ** (branch still `5aa30ff5` = the sixth) · R-512 LANDED (`71fe2a44`) · branch PUBLISHED at **`3e3aa518`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 09:36)
+## ✅★★★★★ SEAT — **R-513 LANDED (`7770f1ee`) · `AR-536` IS RULED · **NO RULING DEBT** · the SEVENTH external read (`33d9968b`, `09:43:01`) arrived and the gate was honoured** · branch PUBLISHED at **`7770f1ee`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 09:47 — WORKER **AUTHORIZED on R-513 §6**)
+
+### ★★★ **R-513's HEADLINE**
+⚠️★★★★★ **`M13` AND THE LIVE CASE ARE TWO IMPLEMENTATIONS OF ONE CLAIM (`:808` vs `:991-998`) — weaken the shipped reader and its own red-proof still passes. `A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS.`** ★★★★★ **AND THE SYNTHESIS: FOUR BOUNDARIES, ONE FAMILY — R-510 red-before-plant · R-511 `ALL_CLEAN` outside the verdict · R-512 reader-bool outside `m13_ok` + `M10`/`M11` colour-only · R-513 proof joined to target by a CLAIM, not a CALL. **EVERY ONE IS AN UNEXECUTED JOIN** — the desk's own `NAME THE JOIN KEY` law, appearing in CODE.**
 
 ### ✅★★★★★ **AR-536 VERIFIED AT THIS DESK BEFORE ANY RULING — AND I CHECKED THE ITEM MOST EASILY CLAIMED WITHOUT DOING** `[MEASURED HERE 09:35]`
 | R-512 §6 item | my independent check | result |
@@ -98,7 +101,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 | ⚠️ **STOP CONDITION** | key paths, both corpora | ✅ **`0` · `17` · `0` · `45` · closure `22` · assertions `37/0` — UNCHANGED, NOT TRIGGERED** |
 ★★★★★ **THE NOTABLE RESULT IS A NEGATIVE ONE: for three rulings this lane produced `COMPUTED AND RECORDED BUT NOT IN THE VERDICT` (R-510 `M8` · R-511 `ALL_CLEAN` · R-512 `m13_reader_red`). **THIS DELIVERY HAD THE OBVIOUS PLACE TO DO IT A FOURTH TIME — record `VERDICT_IS_LOAD_BEARING` beside `OK` — AND SCORED IT INSTEAD.** `THE SWEEP IS THE FIRST THING IN THIS LANE THAT CLOSED A CLASS RATHER THAN AN INSTANCE.`**
 
-### ⚠️★★★★★ **THE EXTERNAL-READ GATE IS NOW THE CAMPAIGN'S RATE LIMITER — MEASURED SERIES, NOT AN IMPRESSION** `[MEASURED HERE 09:16, arrival times from the `external-advisor/gpt-rulings` branch vs the commit that landed each AR]`
+### ⚠️★★★★★ ~~**THE EXTERNAL-READ GATE IS NOW THE CAMPAIGN'S RATE LIMITER**~~ — **THE `REGIME` READING IS WITHDRAWN. VARIANCE, NOT A STEP CHANGE.** `[MEASURED HERE 09:16, arrival times from the `external-advisor/gpt-rulings` branch vs the commit that landed each AR]`
 | AR | landed | read arrived | latency |
 |---|---|---|---|
 | AR-529 | `03:12:26` | `03:21:37` | **`9m`** |
@@ -106,7 +109,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 | AR-531 | `07:13:11` | `07:24:25` | **`11m`** |
 | AR-532 | `07:37:12` | `08:18:32` | ⚠️ **`41m`** |
 | AR-535 | `08:44:48` | — | ⚠️ **`>30m`, RUNNING** |
-★★★★★ **THAT IS A STEP CHANGE, NOT DRIFT: `5–11m` for three consecutive rounds, then `41m` and counting. `~4x`, arriving between the fourth and fifth reads.** ⚠️★★★ **HONEST LIMIT, AND IT IS A REAL ONE: I measure ARRIVAL, which conflates *how long the external reader took* with *when anyone relayed it*. I have NO visibility into that process, so I can name the COST and not the CAUSE.** `A LATENCY I CAN SEE THE END OF BUT NOT THE START OF IS A COST, NOT A DIAGNOSIS.`
+⚠️★★★★★ **WITHDRAWN 09:45 — THE NEXT ROUND WAS `9m` (AR-536 `09:34:13` → `09:43:01`). FULL SERIES: `9 · 5 · 11 · 41 · 38 · 9` = VARIANCE. I called a regime on TWO points and shipped it to the operator inside a `[MEASURED]` sentence; the arrival times were real and the SHAPE I DREW ON THEM WAS NOT. `TWO POINTS ARE A LINE ONLY IF YOU HAVE ALREADY DECIDED WHAT SHAPE YOU ARE DRAWING.`** ~~**THAT IS A STEP CHANGE, NOT DRIFT: `5–11m` for three consecutive rounds, then `41m` and counting. `~4x`, arriving between the fourth and fifth reads.** ⚠️★★★ **HONEST LIMIT, AND IT IS A REAL ONE: I measure ARRIVAL, which conflates *how long the external reader took* with *when anyone relayed it*. I have NO visibility into that process, so I can name the COST and not the CAUSE.** `A LATENCY I CAN SEE THE END OF BUT NOT THE START OF IS A COST, NOT A DIAGNOSIS.`
 ★★★★★ **AND THE OTHER HALF OF THE LEDGER, WHICH MUST TRAVEL WITH THE COST OR THIS BECOMES AN ARGUMENT WEARING A MEASUREMENT'S CLOTHES: THE HOLD KEEPS PAYING. R-510 §0 recorded that it bought the single best finding of that wake (`M8` reddening without reading its plant — neither I nor the worker caught it). The FIFTH read bought `ALL_CLEAN`-is-not-a-gate, also real, also missed by both of us.** ⚠️ **SO: cost UP `4x`, value STILL POSITIVE. That trade is the OPERATOR'S to price — it is his standing order — and this table exists so he prices it on numbers instead of on my summary of them.** ★★ **DO NOT USE THIS TABLE TO ARGUE FOR BREAKING THE ORDER. `A CHANNEL IS NOT AN AUTHOR`, and this desk has already violated it twice (R-499/R-500).**
 
 ### ★★★ **R-512's HEADLINE — SO A COLD SEAT NEED NOT OPEN THE LEDGER**
