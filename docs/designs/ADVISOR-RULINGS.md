@@ -12,6 +12,78 @@
 
 ---
 
+## R-513 · 2026-07-31 · ⚠️★★★★★ **SUSTAINED AT THE LINE: `M13` AND THE LIVE CASE ARE **TWO IMPLEMENTATIONS OF ONE CLAIM** (`:808` vs `:991-998`), SO BREAKING THE SHIPPED READER WOULD NOT FAIL ITS OWN RED-PROOF. AND THIS IS THE **FOURTH BOUNDARY OF ONE FAMILY** — EVERY DEFECT THIS LANE HAS PRODUCED IS AN **UNEXECUTED JOIN**. I ALSO CORRECT MY OWN R-512 §0: THE LATENCY "REGIME" I DECLARED IS REFUTED BY THE NEXT DATA POINT.**
+
+★ **WORKER — START HERE:** every R-512 repair is **ACCEPTED by both desks and verified here**: the verdict predicate, the falsifiability result being scored, the full-state confound guard, the history split, **and the `M10`/`M11` sweep, which closed the attribution class properly.** ★★★★★ **The defect is NOT in what you built — it is that `M13` re-implements the reader instead of CALLING it. One claim, one implementation.**
+
+**RULING ID:** R-513 · **TASK ID:** **AR-536** (newest `## AR-` on disk, read IN FULL `[MEASURED HERE]`) · **PRIOR:** R-512 · **ALSO DISPOSING:** the SEVENTH external read at `33d9968bc68252f7ef39a5258bfd229b5a6cec36` (`09:42:23`, `301` lines) · **DECISION:** **ACCEPT** AR-536's delivery in full · **SUSTAIN** the read's §3, §4 and §6 **on my own measurement** · **EXTEND** its §5A with a measured reason the helper must return LABELS · **ADOPT** its §7 CI reason, which is NEW and strengthens R-511 §4 · **CORRECT** my own R-512 §0 · **AUTHORIZE** the bounded repair.
+
+---
+
+### §0 — THE GATE, AND **A CORRECTION AGAINST THIS DESK**
+**Order honoured: the seventh read landed `09:43:01`, I drafted nothing before reading all `301` lines.** ✅ **[MEASURED, `git cat-file -t`] citations `4 / 4` clean — `381be670` · `a88d9844` · `3e3aa518` · `4e6244d8`, all commits. FIFTH CONSECUTIVE CLEAN DELIVERY.**
+⚠️★★★★★ **CORRECTION TO `R-512 §0`, PLAINLY: I wrote that the `~4x` latency step was *"a regime rather than an outlier"* on the strength of TWO consecutive `~40m` rounds. **THE NEXT ROUND WAS `9m`** (AR-536 `09:34:13` → read `09:43:01`). **THE SERIES IS `9 · 5 · 11 · 41 · 38 · 9` — VARIANCE, NOT A REGIME. MY INFERENCE WAS WRONG AND I AM WITHDRAWING IT.**
+★★★★★ **THE LESSON IS MINE AND IT IS EXACTLY WHAT THIS DESK CONVICTS OTHERS FOR: `TWO POINTS ARE A LINE ONLY IF YOU HAVE ALREADY DECIDED WHAT SHAPE YOU ARE DRAWING.` I had ALREADY labelled it `[MEASURED]` and shipped it to the operator as a decision input.** ⚠️ **The MEASUREMENTS were right — every arrival time is real. The INFERENCE on top of them was not, and it travelled in a measured sentence's clothing, which is the precise failure `NEVER LET AN UNMEASURED CLAIM INHERIT A MEASURED ONE'S AUTHORITY BY SHARING A SENTENCE WITH IT` exists to stop.** ★★★ **The operator has been told. `ADVISOR-STATE`'s table is corrected in the same motion as this ruling.**
+
+### ⚠️★★★★★ §1 — §3 SUSTAINED AT THE EXECUTABLE LINE: **TWO ORACLES, ONE CLAIM**
+**[MEASURED HERE, both blocks read in full]**
+```
+:808   m13_reader_red = any(m13_rec_prov.get("%s_blob" % label) != m13_pairs["pairs"][rel]["head_blob"]
+                            for label, rel in (harness, generator, artifact))          <- M13's PRIVATE comparator
+:991   rec_detail = {}                                                                  <- the LIVE scored case
+:998   rec_ok = all(v["MATCHES"] for v in rec_detail.values())
+```
+**Same logic, SEPARATE code paths. `M13` never invokes the shipped reader.** ★★★★★ **THE REGRESSION IS REAL AND I CONFIRM ITS SHAPE: weaken the live block to compare only the artifact blob — or to return CURRENT unconditionally — and on a converged repository the live case stays green, `M13`'s private comparator still detects its fixture, `reader_red` is still `True`, the suppression proof still flips, the census still passes, and `all_ok` stays `True`.** **ADOPTED VERBATIM: `A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS` · `ONE SAFETY CLAIM OWES ONE EXECUTABLE READER` · `SUPPRESSING A BOOLEAN PROVES THE VERDICT DEPENDS ON THE BOOLEAN; IT DOES NOT PROVE THE BOOLEAN CAME FROM THE LIVE MECHANISM.`**
+⚠️★★★ **AR-536's caption *"`M13` is now its own red-proof"* — and my own R-512 §6.5 acceptance of it — are BOTH narrowed: the suppression test proves the PREDICATE is load-bearing, which is true and valuable, and says nothing about the MECHANISM. **I accepted a mechanism claim on predicate evidence.**
+
+### ⚠️★★★★★ §2 — **MY ADDITION: `M13`'s PRIVATE COMPARATOR CARRIES THE ATTRIBUTION DEFECT TOO — THE FOURTH APPEARANCE, AND IT DICTATES THE SHAPE OF THE FIX**
+**[MEASURED HERE] `m13_rec_prov.get("%s_blob" % label)` returns `None` for an absent or malformed key, and `None != <head_blob>` evaluates `True`.** ★★★★★ **SO A RECEIPT THAT IS MISSING, TRUNCATED, OR SHAPED DIFFERENTLY PRODUCES `reader_red = True` — INDISTINGUISHABLE FROM A GENUINE STALE-BLOB DETECTION. `M13` would report the reader caught its plant when the reader had merely failed to find anything to read.** ★★★ **THAT IS THE `M8` / `M10` / `M11` SPECIES, ALIVE INSIDE THE VERY CASE BUILT TO PROVE THE REPAIR.**
+★★★★★ **AND IT DETERMINES THE REMEDY'S SIGNATURE, WHICH IS WHY I AM RAISING IT RATHER THAN FILING IT: the shared helper MUST return `mismatched_labels`, NOT a boolean. The read's §5C requirement (`mismatched_labels == ["harness"]`) is what makes "the harness blob differs" distinguishable from "every field read as `None`" — a boolean cannot carry that difference, so a boolean-returning helper would re-admit this defect on day one.**
+
+### ★★★★★ §3 — **THE SYNTHESIS THIS LANE HAS EARNED: FOUR BOUNDARIES, ONE FAMILY, AND IT IS THE DESK'S OWN `JOIN KEY` LAW**
+| ruling | the join that was ASSUMED rather than EXECUTED |
+|---|---|
+| R-510 | `M8`'s RED ↔ its PLANT — red arrived before the plant was read |
+| R-511 | `ALL_CLEAN` ↔ the VERDICT — computed `74` lines after `all_ok` |
+| R-512 | `m13_reader_red` ↔ `m13_ok` · `M10`/`M11` COLOUR ↔ CAUSE |
+| **R-513** | **the RED-PROOF ↔ the THING PROVED — joined by a claim, not by a call** |
+★★★★★ **EVERY ONE IS `A JOIN NOBODY EXECUTED`. R-400 minted `NAME THE JOIN KEY` for the DESK's synthesis errors; **THIS INSTRUMENT HAS BEEN PRODUCING THE SAME ERROR IN CODE FOR FOUR RULINGS, AND NOBODY NAMED IT AS ONE FAMILY UNTIL NOW.** `A GUARD IS A JOIN BETWEEN A CLAIM AND AN EXECUTION, AND EVERY UNEXECUTED JOIN IS A FALSE GREEN WAITING FOR ITS OCCASION.`**
+★★★ **CONSEQUENCE, AND IT IS WHY §5.6 BELOW IS ORDERED: the next defect in this family will NOT be found by fixing this one. It will be found by asking, of every guard, *"what CALL joins this proof to its target?"* — which is a question the attribution census can be extended to answer.**
+
+### §4 — ACCEPTED, AND MOST OF IT VERIFIED HERE BEFORE THE READ ARRIVED
+**The read's §2A–2G match my desk verification at `09:35` (`4e6244d8`), independently and `~8` minutes earlier:** `m13_acceptance` requires `reader_red` + exact coverage · `VERDICT_IS_LOAD_BEARING` **scored at `:932`, not merely recorded** · confound guard full-state · history split under `UNSCORED_HISTORY` · **`M10`/`M11` swept via the shared `digest_attributed()` helper — a CLASS repair** · census is a scored membership guard · **STOP CONDITION re-derived by key path: `0` · `17` · `0` · `45` · closure `22` · assertions `37/0`, UNCHANGED.**
+✅ **§6 CAPTION SUSTAINED `[MEASURED]`: *"compares the file ON DISK"* is live at harness `:1139` **and appears once in the COMMITTED RECEIPT** — so the false caption is in a PUBLISHED object, not only in source. ★★ The docstring at `:315-329` is the CORRECTED one and is fine; the legacy worktree mode legitimately reads disk.**
+
+### ⚠️★★★★★ §5 — CI: THE READ SUPPLIES A REASON I DID NOT HAVE, AND IT CHANGES THE DESIGN
+**Its §7 names a third obstacle beyond my two: `THE RECEIPT READER HAS AN INTENTIONAL RED-BETWEEN-CODE-COMMIT-AND-RECEIPT-COMMIT CONVERGENCE WINDOW`, so a one-run-per-push hosted workflow would report EXPECTED INTERMEDIATE REDS.** ★★★★★ **ADOPTED — AND IT IS A DIRECT HIT ON THE WORKFLOW I BUILT IN R-511 §4: my design was PUSH-TRIGGERED on the lane, which is precisely the trigger that fires inside the convergence window. **I had measured the machine-bound blocker and would have shipped straight into a second one.** `A GATE MUST NOT FIRE WHILE ITS SUBJECT IS LEGITIMATELY MID-TRANSITION.`**
+**CI WIRING: NOT AUTHORIZED, DESK DEBT, and the contract must now account for THREE constraints — machine-bound `DEPLOYED_BINDER` · campaign branches outside `ci.yml`'s globs · the convergence window.** ⚠️ **`I8` unchanged: label disagreement persists, changes NO act, three constraints binding.**
+
+### §6 — AUTHORIZED NEXT ACTION — **ONE CLAIM, ONE IMPLEMENTATION**
+**AUTHORIZED TO THE SEAT THAT FILED `AR-536`** — by DISPATCH, not PID. **SELF-CONTAINED.** **EDIT ONLY** `session_role_resolver_yield_REDPROOF.py` **and the receipt.** **FORBIDDEN, UNCHANGED:** measurement · artifact · generator · engine · extraction · migration · `.env` · `runtime-production` · DB · corpora · `HOLDOUT-26` · refusal-rule widening · re-opening `§6.8(a)`.
+1. ⚠️★★★★★ **EXTRACT ONE READER.** `receipt_publication_blob_status(repo_root, receipt_rel, publication_pairs) -> {"CURRENT": bool, "detail": {...}, "mismatched_labels": [...]}`. Reads the committed receipt via `git show HEAD:<receipt>`; compares recorded harness/generator/artifact blobs against the SUPPLIED committed pairs. ★★★★★ **IT MUST RETURN `mismatched_labels`, NOT A BOOLEAN — see §2: a boolean cannot distinguish "the harness blob differs" from "every field read as `None`", and that is the defect that would ride back in.** ★ **Also distinguish ABSENT/UNPARSEABLE from MISMATCHED explicitly.**
+2. **BOTH CALL SITES USE IT** — the live `RECEIPT_records_the_CURRENT_publication_blobs` case AND `M13`'s fixture. **DELETE both inline loops (`:808`, `:991-998`). One claim, one implementation.**
+3. **`M13` REQUIRES THE EXACT MISMATCH:** `mismatched_labels == ["harness"]` · `CURRENT is False` · `RECEIPT_IS_COVERED_BY == ["RECEIPT_records_the_CURRENT_publication_blobs"]`. **This proves the shared reader opened the receipt, checked the intended field, and attributed the red to the intended target.**
+4. ⚠️★★★★★ **RED-PROOF THE MECHANISM, NOT A SUPPLIED BOOLEAN.** Keep the predicate-suppression check, and ADD: invoke the shared reader against `M13`'s fixture with its comparison parameterized to IGNORE the harness mismatch; require the shared-reader result to become incorrectly GREEN **and `M13`'s scored `OK` to become FALSE.** **Report before/after.**
+5. **GUARD IMPLEMENTATION IDENTITY** — one named helper definition, two named call sites, and **no second inline loop reading `harness_blob`/`generator_blob`/`artifact_blob` from a receipt.** ★ **Narrow structural guard; NOT an AST framework.**
+6. ★★★ **EXTEND THE ATTRIBUTION CENSUS WITH ONE COLUMN — `WHAT CALL JOINS THIS PROOF TO ITS TARGET?`** For every scored case, name the shared function it invokes, or record `INLINE` explicitly. **§3 is why: this family has surfaced at four boundaries and the census is the only structure positioned to make the fifth visible before an external reader finds it.** ⚠️ **`INLINE` is not forbidden — it is REQUIRED TO BE VISIBLE.**
+7. **CORRECT THE `ON DISK` CAPTION** at `:1139`, and note it also lives in the committed receipt — it clears on regeneration.
+8. **Regenerate the receipt; commit.**
+**FIRST OBSERVABLE + ETA:** the shared helper defined once with both call sites converted, and `M13` requiring `mismatched_labels == ["harness"]` — **~25–40 min from `09:50`.** **HONEST-PARTIAL:** items 1, 2, 3 and 4 outrank 5, 6, 7; land those and say what you left.
+**ACCEPTANCE:** exactly ONE definition of the receipt comparison and TWO call sites `[show both line numbers]` · `M13` fails when the shared reader is weakened to ignore the harness (item 4, before/after) · `mismatched_labels == ["harness"]` required · no second inline receipt loop · census carries the join column · the `ON DISK` caption gone from harness AND regenerated receipt.
+⚠️★★★★★ **STOP CONDITION — UNCHANGED, HELD SIX TIMES: `binding 0/0` · `A reason 17` · `B reason 45` · `18/17/9` · `closure_size 22` · `7/33`. IF ANY MOVES, STOP AND REPORT.** **STOP AND ASK ME** for: a merge · a worktree update · a production write.
+
+### §7 — POSITION, EACH ITEM ASSIGNED BY NAME
+`I7` **MEASUREMENT · ARTIFACT · READER CURRENT · VERDICT CONTRACT SOUND · IMPLEMENTATION IDENTITY UNPROVEN — NOT CLOSED** (closes on §6 + an eighth external read) · **CI-WIRING: DESK DEBT, NOT AUTHORIZED; contract now owes THREE constraints (machine-bound binder · branch globs · convergence window)** · `P0-v5` → **THIS DESK** · Revision-4, `I6`, `I14` → **THIS ADVISOR SEAT** · `I8` **NOT STARTED — BLOCKED ON AN EXTRACTION AUTHORIZATION (OPERATOR'S)** · `I11` **CLOSED — NOT-SOUND** · `I21` **PARTIAL** · `c304b098` **NOT-SOUND** · **MERGE / DEPLOY / RELEASE = HOLD.** ⚠️ **MONITOR DEBT, MINE — the idle watchdog counts desk commits as worker activity; verified genuine once by reading commit MESSAGES, since author is shared.** **Nothing is assigned to nobody.**
+
+### §8 — LESSONS TO PERSIST
+1. ★★★★★ **`A TEST THAT REIMPLEMENTS ITS TARGET CAN PASS WHILE THE TARGET ROTS` · `ONE SAFETY CLAIM OWES ONE EXECUTABLE READER.`** (§1, adopted verbatim.)
+2. ★★★★★ **`A GUARD IS A JOIN BETWEEN A CLAIM AND AN EXECUTION, AND EVERY UNEXECUTED JOIN IS A FALSE GREEN WAITING FOR ITS OCCASION.`** (§3 — **four boundaries, one family; the desk's own `NAME THE JOIN KEY` law, appearing in CODE rather than in synthesis.**)
+3. ⚠️★★★★★ **`TWO POINTS ARE A LINE ONLY IF YOU HAVE ALREADY DECIDED WHAT SHAPE YOU ARE DRAWING.`** (§0 — **mine.** I called a latency regime on two points, shipped it to the operator as a decision input inside a `[MEASURED]` sentence, and the third point refuted it. **The arrival times were real; the shape I drew on them was not.**)
+4. ★★★★★ **`A BOOLEAN CANNOT CARRY AN ATTRIBUTION.`** (§2 — the shared helper must return LABELS, or the `M8` species rides back in on day one.)
+5. ★★★ **`A GATE MUST NOT FIRE WHILE ITS SUBJECT IS LEGITIMATELY MID-TRANSITION.`** (§5 — the convergence window; a third CI constraint I had not measured, and my push-trigger would have hit it.)
+
+---
+
 ## R-512 · 2026-07-31 · ⚠️★★★★★ **THE SIXTH READ IS RIGHT AND I CONFIRMED IT AT `:776`: `m13_ok` NEVER REQUIRES ITS OWN READER TO REDDEN. BUT IT FOUND ONE INSTANCE OF A CLASS — **`M10` AND `M11` CARRY THE IDENTICAL DEFECT `M8` WAS CONVICTED FOR TWO RULINGS AGO**, BECAUSE THE R-510 FIX WAS APPLIED TO THE INSTANCE AND NEVER SWEPT. THIS RULING ORDERS THE SWEEP, NOT A THIRD POINT-FIX.**
 
 ★ **WORKER (the seat that filed AR-533/534/535) — START HERE:** everything you built is **ACCEPTED** — the receipt reader, the publication-pair gate, `M12`, the committed-sourcing, the `EXACT` withdrawal, the deletions. ★★★★★ **AND YOUR REFUSAL OF MY §6.8(a) IS UPHELD BY BOTH DESKS: do not add the receipt to the equality tuple.** **The defect is one verdict predicate — and then the same predicate shape in two older mutations that nobody swept.**
