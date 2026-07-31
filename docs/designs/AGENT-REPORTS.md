@@ -4,6 +4,66 @@
 
 ---
 
+## AR-531 · 2026-07-31 · ★★★★★ **R-509 §6 DELIVERED — ALL FIVE ITEMS. `M9` DISCRIMINATES IN **BOTH DIRECTIONS**: THE OLD WORKTREE READ IS **BLIND** TO A STALE COMMIT AND THE NEW COMMITTED READ **CATCHES** IT. THE DIGEST IS NOW OPTION **(a)** — FULL ARTIFACT MINUS AN ENUMERATED LIST — AND `M10` PROVES IT SEES THE `17` IDENTITIES THE OLD ALLOW-LIST COULD NOT.**
+
+**RULING ID:** R-509 §6 · **TASK ID:** AR-531 · **PRIOR:** AR-530 · **SEAT:** the seat that filed AR-525.
+
+### §1 — §6.1 THE HELPER IS NOW POINTED AT THE OUTPUT, WITH ONE DEVIATION I AM NAMING
+**`blob_pair()` now runs on all three PUBLICATION paths (artifact · generator · harness) and the pairs are recorded in a `PUBLICATION_PATHS` block.** **ASSERTED IN THE GENERATOR: generator and harness — they are INPUTS to the run, so no self-reference.**
+⚠️★★★ **DEVIATION, DELIBERATE AND DECLARED: the ARTIFACT's own pair is RECORDED BUT NOT ASSERTED IN THE GENERATOR.** It is computed BEFORE the run overwrites the artifact, so it describes the PREVIOUS published object while this run is about to make the path dirty. **Asserting it would print "the artifact is committed" in the same breath as replacing it — the exact caption-falsifies-its-own-line species this instrument keeps producing.** ★★★ **THE REAL PUBLICATION ASSERTION LIVES IN THE HARNESS (§6.2), which runs AFTER the commit and reads the COMMITTED blob. Same reasoning R-508 §5.6(a) applied to the freshness check, applied one level further.**
+
+### ★★★★★ §2 — §6.2/§6.3 THE FIX, AND `M9` PROVING IT WAS NEEDED
+**`publication_consistency()` now reads the published content through `git show HEAD:<path>` — the PUBLISHED TREE, not my desk. The worktree reader is RETAINED, solely so `M9` can demonstrate its blindness.**
+```
+[OK ] M9_committed_stale/worktree_fresh -> worktree-read GREEN(blind)=True | committed-read RED(catches)=True
+```
+★★★★★ **BOTH DIRECTIONS IN ONE PASS, IN A THROWAWAY FIXTURE REPO (`git init`, STALE artifact COMMITTED, FRESH artifact placed in the working tree only). The pre-R-509 reader says CURRENT — it is comparing fresh against fresh and cannot see the commit at all. The committed reader says STALE.** **`A MUTATION THAT ONLY EVER PASSED IS NOT A RED-PROOF`** — the fix's necessity is demonstrated, not asserted. ⚠️ **The real artifact is never touched; fixture only, as `M8` did it.**
+★★★ **THE EXTERNAL READ'S PREMISE WAS FALSE AND ITS CONCLUSION WAS RIGHT, EXACTLY AS R-509 §3 FOUND: `blob_pair()` — `git rev-parse HEAD:<path>` — was already in my generator, called five times, asserted three ways, **on every input and never on the output.** `A DISCIPLINE APPLIED TO EVERY INPUT AND NOT TO THE OUTPUT READS AS A DISCIPLINE APPLIED EVERYWHERE`, and that is why I did not see it either.**
+
+### ★★★★★ §3 — §6.4: I CHOSE **(a)**, AND §6.5 (`M10`) PROVES THE BLIND SPOT IS CLOSED
+**`stable_digest` was an ALLOW-LIST wearing a strip-list's docstring — `11` of `16` top-level blocks and `30` of `34` assertion details invisible. REPLACED BY `artifact_content_digest`: the canonicalised FULL artifact minus `VOLATILE_EXCLUSIONS`, which is a named constant RECORDED IN THE ARTIFACT under `DIGEST_COVERAGE`.**
+```
+[OK ] M10_identity_block_silently_altered -> PUBLICATION_CONSISTENCY RED=True
+```
+★★★★★ **`M10` CHANGES ONE `IDENTITY_REFUSAL_MAP` ROW'S `object` TEXT AND LEAVES EVERY ASSERTION NAME, EVERY PASS VALUE, EVERY COUNT AND EVERY SUMMARY METRIC IDENTICAL. The old digest would have certified that CURRENT. It now goes RED.** ★★★ **These are the `17` per-condition identities R-502 §4 specifically demanded be IN the artifact — the deliverable itself was outside the guard that certifies the deliverable.**
+⚠️★★★ **I EXTENDED R-509 §6.4(a)'s FOUR NAMED EXCLUSIONS TO SEVEN, AND I AM NAMING EACH RATHER THAN WIDENING SILENTLY** (`SILENTLY NARROW IS THE ONLY UNACCEPTABLE OPTION`): the `detail` payloads of `PROVENANCE_*` **and** `PUBLICATION_*` assertions (they are worktree-vs-HEAD blob pairs and dirty-path counts — run provenance, and leaving them in coupled artifact freshness to every edit of the TEST HARNESS), plus `PUBLICATION_PATHS` (same reason) and `DIGEST_COVERAGE.value` (a digest cannot contain itself). **Every exclusion is in `VOLATILE_EXCLUSIONS` with its reason in the docstring.**
+
+### ⚠️★★★★★ §4 — THREE DEFECTS THE HARNESS FOUND IN MY OWN NEW CODE, ALL RIG-LEAKAGE, ALL FIXED
+1. **`PUBLICATION_PATHS` derived the artifact path from `OUT_PATH`** — which the harness redirects to a temp file — and raised `ValueError` on `relative_to`. Fixed to a new `ARTIFACT_REL` constant.
+2. **`"artifact": OUT_PATH.name` LEAKED THE TEMP FILENAME INTO THE MEASURED CONTENT.** ★★★★★ **This one is instructive: it made `M9`'s worktree branch report STALE for a reason that had nothing to do with staleness, and I nearly "fixed" it by adjusting exclusions. I diffed the two stripped documents key-by-key instead and the answer was one field: `_redproof_discard.json` vs the real name. `A TEST RIG'S PATH MUST NOT LEAK INTO MEASURED CONTENT`, and `A SURPRISING RESULT ACCUSES YOUR TOOLING FIRST` — I stopped iterating and measured.**
+3. **A function-local `import subprocess` shadowed the module-level import**, leaving it unbound for the earlier `M9` block.
+★★ **None reached a published number; all three were caught because the harness FAILS LOUD rather than counting passes.**
+
+### §5 — ACCEPTANCE EVIDENCE, PASTED
+```
+[OK ] CONTROL_unmutated -- exit=0, 36/36 assertions pass
+[OK ] M1 .. M7   RED=True exit=1                      (unchanged, still discriminating)
+[OK ] M9_committed_stale/worktree_fresh   worktree GREEN(blind)=True | committed RED(catches)=True
+[OK ] M10_identity_block_silently_altered -> PUBLICATION_CONSISTENCY RED=True
+[OK ] PUBLICATION_CONSISTENCY_live -- published artifact is current: True
+[OK ] M8_stale_artifact_planted           -> PUBLICATION_CONSISTENCY RED=True
+ALL CASES DISCRIMINATE: True
+
+receipt blobs vs COMMITTED blobs (git rev-parse HEAD:<path>):
+  artifact_blob   receipt=ab432bb3b8ac  HEAD=ab432bb3b8ac  EQUAL=True
+  generator_blob  receipt=2ea0b8ac1d81  HEAD=2ea0b8ac1d81  EQUAL=True
+  harness_blob    receipt=201f22289352  HEAD=201f22289352  EQUAL=True
+```
+
+### ⚠️★★★★★ §6 — PRE-REGISTERED STOP CONDITION: **NOT TRIGGERED**
+```
+corpus_A binding 0 · reason 17 / 155      corpus_B binding 0 · reason 45 / 6450
+reconciliation 18 recognized / 17 changed / 9 zones
+```
+★★★ **BYTE-IDENTICAL across every regeneration in this lane. Checked at each rebuild, not once at the end.**
+
+### §7 — POSITION
+`I7` **COMMITTED-OBJECT GUARD COMPLETE — NOT CLOSED**; R-509 §7 puts closure behind a FOURTH external read and **I do not close my own work.** · `I8` **CLOSED-AS-UNREACHABLE** (reopening condition = an extraction authorization, the OPERATOR's to grant — I adopt the corrected label; `CLOSED` did read as "never revisit") · `I21` semantic follow-up **PARTIAL — behaviour still `[UNMEASURED]`** · `I11` CLOSED · `c304b098` NOT-SOUND · `P0-v5` NOT MINE · **CI-wiring NOT MINE** — and R-509 §7 is right that it is overdue: **everything I built still runs only when a human runs it. `A WARNING IS NOT A MECHANISM`, and neither is a guard nobody schedules.**
+**NO ENGINE, EXTRACTION, MIGRATION, `.env`, `runtime-production` OR DB CHANGE · no census re-run · `HOLDOUT-26` untouched · no refusal rule widened · no campaign measurement altered · none of the accepted source corrections re-opened.**
+★★ **NOT A HANDOFF — context is not exhausted and I remain the assigned seat.**
+
+---
+
 ## AR-530 · 2026-07-31 · ⚠️★★★★★ **R-508 IS RIGHT AND THE DEFECT IS MINE: I PASTED `34/34` FROM A RUN THAT WRITES TO A THROWAWAY PATH AND COMMITTED A `33`-ASSERTION OBJECT WITH THE ERROR STRING I HAD JUST REPORTED FIXING. REPAIRED, AND THE NEW CONSISTENCY CHECK **CAUGHT A SECOND STALENESS ON ITS FIRST LIVE RUN — MINE, MINUTES OLD.**
 
 **RULING ID:** R-508 §5 · **TASK ID:** AR-530 · **PRIOR:** AR-529 · **SEAT:** the seat that filed AR-525 · **COMMITS:** `7df5d065`, `f89851f3`, `bbc8440a`.
