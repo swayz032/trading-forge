@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3243` at THIS commit, 2026-07-31 12:52 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3243` at THIS commit, 2026-07-31 13:02 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -84,7 +84,7 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ✅★★★★★ SEAT — **`R-518` LANDED `1541ee8a`, PUBLISHED. ⚠★★★★★ **THE PRE-IMPLEMENTATION DESIGN GRADE IS **DISPATCHED AND IN FLIGHT** (2026-07-31 12:52) — `accuracy-validator`, opus, adversarial, pinned to `7134bb34`, ten-question contract per R-518 §5 with all three desk amendments carried, durable receipt owed at `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`. **OPERATOR GAVE THE WORD IN HIS OWN VOICE: *“RUN IT”*.** ⚠★★★★★ **DO NOT DISPATCH A SECOND ONE — IF THAT RECEIPT FILE IS ABSENT THE FIRST IS STILL RUNNING, NOT MISSING. `A DUPLICATE GRADE IS NOT A SECOND OPINION, IT IS TWO GRADERS SPLITTING ONE MANDATE.`** Worker: **STANDING BY** (`AR-544` hold-receipt, starting nothing, correct). Packet **ACCEPTED `6/6` @ `7134bb34`**. ⚠ **PUBLISH-AFTER-EVERY-RULING STANDING: check `git rev-list --count origin/h1-wave4-sealed12-driver..HEAD` == `0` at every wake — note a non-zero count may be the WORKER's commit in this SHARED tree, not a failed push of yours.**
+## ⚠★★★★★ SEAT — **THE DESIGN GRADE LANDED `FAIL — NAMED DESIGN DEFECT` (`48e50d80`, `13:00`, receipt `docs/designs/GRADE-P0-REDESIGN-PACKET-2026-07-31.md`, `238` lines). `1 CRITICAL · 1 MEDIUM · 1 LOW`. **THE FIX IS THREE DOCUMENT EDITS, NOT A RE-ARCHITECTURE.** `R-519` is **OWED AND HELD FOR THE TWELFTH EXTERNAL READ** (`THE PASTE IS THE GATE`). Worker STANDING BY. ✅★★★★★ **`D-1` CONFIRMED AT THIS DESK, BOTH HALVES, IN THE SHIPPED BLOB `c304b098`: `OracleRow` (`:576`) has `authority: string` REQUIRED and **EVERY expectation field OPTIONAL** (`bindable?` … `reason_excludes?`), and the file's **SOLE** `omitted` block (`:667-672`) is scoped to the three PLAN SCALARS with no row-level equivalent. **SO DELETING `bindable` OUTRIGHT IS TYPE-VALID, RAISES NO UNKNOWN KEY, AND ASSERTS NOTHING.** ⚠★★★★★ **THE DESIGN IS CLOSED UNDER *TYPO* AND OPEN UNDER *DELETE* AT THE SAME GRANULARITY — `F-2`'s OWN SYMPTOM VIA A SMALLER EDIT.** ★★★ **AND IT LANDS EXACTLY WHERE `R-516 §5` NAMED THE EXEMPTION: I identified BOTH in-file precedents; the packet cites both (`:92`, `:94`) and applied `Precedent B`'s *declared-or-fatal* clause at the FIXTURE/pair surface (`:1408`) and NOT at the ROW surface.** ⚠ **THE GRADER DECLARED, UNPROMPTED, THAT `D-1` IS A GAP IN ITS OWN PRIOR GRADE'S MUTATION COVERAGE — `5` typos + `1` type slip, `0` DELETIONS — which the packet faithfully inherited. `A REPAIR SET INHERITS ITS GRADE'S BLIND SPOTS.`** ⚠ **IT DID NOT EXECUTE THE GATE: this tree's script blob is `d9f014d3`, not `c304b098`'s `48d5cc95`, and the fixtures dir is absent here — declared, not hidden.**
 
 ### ✅⚠️★★★★★ **AR-540 VERIFIED AT THIS DESK — MEASUREMENTS ONLY. NO DISPOSITION: `R-516` IS HELD FOR THE PASTE.** `[MEASURED HERE 10:44]`
 
