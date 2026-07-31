@@ -12,6 +12,77 @@
 
 ---
 
+## R-519 · 2026-07-31 · ✅⚠️★★★★★ **GRADE FAILURE ACCEPTED. THREE DOCUMENT EDITS AUTHORIZED — ALL THREE FINDINGS CONFIRMED AT THIS DESK IN THE SHIPPED BLOB, NOT RELAYED. IMPLEMENTATION STAYS HELD.** ★★★★★ **AND I REVERSE MYSELF ON THE REGRADE: `R-518 §5` BOUND THE PACKET TO *ONE* GRADE AND I HAD DRAFTED "THE SLOT IS SPENT". THE THIRTEENTH READ IS RIGHT AND I ADOPT IT — BUT BOUNDED, AT EXACTLY ONE MORE, WITH THE STOP PRE-COMMITTED.** ⚠️★★★ **ITS THIRD EDIT IS A HOLE IN MY OWN DISPATCH: A REQUIREDNESS RULE READ OFF THE ORACLE IT VALIDATES IS SELF-AUTHORIZING, AND I HAD NOT SEEN IT.**
+
+**RULING ID:** R-519 · **TASK ID:** the grade `48e50d80` · **NEWEST AR ON DISK AT WRITE TIME:** `AR-544` (`12:48`, HOLD-RECEIPT — worker standing by, starting nothing, correct). It bears on this ruling by confirming the seat is free to receive the dispatch in §5.
+**DECISION:** **ACCEPT** — the grade's `FAIL — NAMED DESIGN DEFECT` · **AUTHORIZE** — exactly three document edits, to the standing-by seat · **HOLD** — `P0` implementation · **ADOPT (reversing R-518 §5)** — one regrade of the amended packet, bounded and stop-committed.
+
+### §0 — THE READS, AUDITED. **THREE ARRIVED IN `100` SECONDS AFTER A `121`-MINUTE GAP.**
+| read | time | subject | SHA audit |
+|---|---|---|---|
+| `2ea0f3b6` | `15:01:12` | authorize the packet grade | ✅ `7134bb34`·`c304b098`·`d2f80301` all resolve, `0` fabricated |
+| `62a27935` | `15:01:39` | same subject, `+25` lines to the same file | — supersedes/extends the above |
+| **`608a6e24`** | **`15:02:51`** | **reads the GRADE; authorizes three edits** | ✅ `c304b098`·`1cd4af0b` resolve, `0` fabricated |
+★★★ **FOURTH, FIFTH AND SIXTH CONSECUTIVE CLEAN CITATION AUDITS** (R-508 §4 once found `2 of 4` tails invented; the pattern has not recurred in six reads).
+
+### ⚠️★★★ §1 — THE TWELFTH READ WAS LAGGED; THE THIRTEENTH CORRECTED IT IN `100` SECONDS
+`2ea0f3b6` says *"**AUTHORIZED — RUN THE GRADE NOW**"*. **[MEASURED HERE] that grade ran and finished at `13:00`, `121` minutes earlier, returning `FAIL`.** ⚠️ **I had drafted a ruling recording condition 3 (*"externally read"*) as OUTSTANDING — and `608a6e24` landed while I was drafting and DISCHARGED it. `A RULING IS NOT SEALED WHEN IT IS COMMITTED, AND THIS ONE WAS NOT EVEN COMMITTED YET.` The draft claim was false before it existed; the only reason it never entered the ledger is that I re-read the channel before writing.**
+★★★ **SO THE LAG IS RECORDED WITHOUT INFLATION: a `100`-second ordering artifact inside a burst, not a systemic failure. The standing defence is still worth having — `BEFORE OBEYING AN INSTRUCTION, MEASURE WHETHER IT IS STILL ABOUT THE PRESENT` — but it cost nothing here.**
+✅ **AND `2ea0f3b6` EARNED ITS PLACE ANYWAY: its required premise — *"`F-3` and the `reason_null` wrong-type failure are not closable by an `OracleRow`-scoped rule alone"* — is EXACTLY `R-518 §5.1`'s amendment, arrived at independently. INDEPENDENT CONVERGENCE ON THE LOAD-BEARING PREMISE.**
+
+### ✅★★★ §2 — THE PRE-IMPLEMENTATION GATE'S THREE CONDITIONS: **ALL DISCHARGED**
+| condition | check | state |
+|---|---|---|
+| grade **COMMITTED** | `48e50d80`, `1` file, `238` lines | ✅ |
+| grade **PUBLISHED** | `cat-file -e origin/h1-wave4-sealed12-driver:…GRADE-P0-REDESIGN-PACKET…` present · `rev-list --count origin/…..HEAD` = `0` | ✅ |
+| grade **EXTERNALLY READ** | `608a6e24` reads it and accepts the failure | ✅ |
+
+### ✅★★★★★ §3 — THE THREE FINDINGS, **CONFIRMED AT THIS DESK**, IN THE SHIPPED BLOB `c304b098`
+**`[MEASURED HERE — git show c304b098:scripts/check-spec-binding-plan-parity.ts, read-only; no checkout in this shared tree]`**
+- ⚠️ **`D-1` CRITICAL — CONFIRMED, BOTH HALVES.** `OracleRow` (`:576`) declares `authority: string` **REQUIRED** and **EVERY** expectation field **OPTIONAL** (`bindable?` · `primitive_null?` · `session_zone?` · `approximation?` · `reason_null?` · `reason_names?` · `reason_excludes?`) — `{"authority":"…"}` is type-valid and asserts nothing. **AND the file's SOLE `omitted` block (`:667-672`) is scoped to the three PLAN SCALARS, with NO row-level equivalent.** ★★★★★ **SO DELETING `bindable` OUTRIGHT RAISES NO UNKNOWN KEY, NO TYPE ERROR AND NO OMISSION COMPLAINT: THE DESIGN IS CLOSED UNDER *TYPO*, OPEN UNDER *DELETE*, AT THE SAME GRANULARITY — `F-2`'s own symptom at a SMALLER mutation radius.**
+- ⚠️ **`D-2` MEDIUM — CONFIRMED ON THE PACKET'S OWN TEXT (`:133`).** `ABORT 3` requires the design to *"state what it does at"* the rung below FIELD; **the packet imposes that on the implementer and never discharges it itself.**
+- ⚠️ **`D-3` LOW — CONFIRMED AND SHARPER THAN STATED.** `OracleFixture` (`:607-620`) carries the very discipline the row surface lacks — `scalars_unadjudicated?`, commented *"omitting them requires `scalars_unadjudicated` to say WHY, so a gap is always DECLARED and printed rather than read as coverage."*
+★★★★★ **THE ROOT IN ONE SENTENCE — THIRD INSTANCE OF THE `R-516 §5` ASYMMETRY: THE FILE ALREADY KNOWS THE CORRECT RULE AND ENFORCES IT AT PLAN-SCALAR LEVEL (`:667`) AND DECLARES IT AT FIXTURE LEVEL (`:607`), AND NOBODY CARRIED IT TO ROWS.** ★★★ **The packet CITES both precedents (`:92`, `:94`) and applies Precedent B's *declared-or-fatal* clause at the fixture/pair surface (`:1408`) and NOT at the row surface. `CITING A PRECEDENT IS NOT APPLYING IT.`**
+
+### ⚠️★★★★★ §4 — **THE READ'S THIRD EDIT IS A HOLE IN MY OWN DISPATCH, AND IT IS THE DEEPEST POINT IN THIS EXCHANGE**
+`608a6e24` edit 3: *"if requiredness is inferred from field presence in the same oracle being validated, the design is **self-authorizing** and must not be implemented. Required-vs-optional membership must come from the frozen schema contract, not from whichever keys happen to exist in `ORACLE.json`."*
+★★★★★ **I HAD ORDERED *"carry declared-or-fatal down to `OracleRow`"* AND STOPPED THERE. THAT IS INSUFFICIENT AND I DID NOT SEE WHY: if the rule derives WHICH keys are required by looking at the oracle it is validating, then deleting a key deletes its own requiredness and the check passes — `D-1` REAPPEARS INSIDE ITS OWN FIX.** ⚠️ **A REMEDY THAT READS ITS EXPECTATIONS FROM THE ARTIFACT UNDER TEST IS NOT A CHECK, IT IS A MIRROR.** ✅ **ADOPTED VERBATIM INTO §5 CORRECTION 1. `AN ADVISOR'S REMEDY IS A HYPOTHESIS TOO` — and this desk's was incomplete in the one direction that would have reproduced the defect it was written to close.**
+
+### ✅⚠️★★★★★ §5 — **WORKER — START HERE** (cold-start-complete; DISPATCH beats RECORD)
+**TREE:** `C:/Users/tonio/Projects/wt-h1-wave4-20260712`, branch `h1-wave4-sealed12-driver`.
+**GOAL:** apply **EXACTLY THREE DOCUMENT EDITS** to `docs/designs/P0-REDESIGN-PACKET-2026-07-31.md`. ⚠️ **DOCUMENT ONLY. NO IMPLEMENTATION CODE. The grade itself says three edits, no re-architecture.**
+**ALLOWED FILES:** `docs/designs/P0-REDESIGN-PACKET-2026-07-31.md` · `AGENT-REPORTS.md`. **NOTHING ELSE.**
+**FORBIDDEN:** any code change · a fifth patch to `c304b098` · `P1`/`P2`/`P3`/Gate-B · scope widening · the retired `I7` harness · editing the grade receipt (`48e50d80` is the grader's object) · `git checkout`/`reset`/index ops in this shared tree.
+
+**EDIT 1 — SCHEMA CONTRACT (closes `D-1`).** Replace *"known keys are typed"* with a **TOTAL PRESENCE CONTRACT**. For every expectation object the schema must distinguish **required key · explicitly optional key WITH DECLARED ABSENCE SEMANTICS · forbidden/unknown key.** **A missing REQUIRED expectation must be FATAL. No expectation may disappear through optional-property syntax alone.** ⚠️★★★★★ **AND THE CLAUSE THAT MAKES IT NON-CIRCULAR — DO NOT DROP IT: REQUIRED-VS-OPTIONAL MEMBERSHIP COMES FROM THE FROZEN SCHEMA CONTRACT, **NEVER** FROM WHICHEVER KEYS HAPPEN TO EXIST IN `ORACLE.json`. A requiredness rule read off the artifact under test is SELF-AUTHORIZING and reproduces `D-1` inside its own fix.**
+**EDIT 2 — PRE-REGISTERED RED PATHS (closes the blind spot that hid `D-1`).** Add a **SCORED** mutation: **delete one known REQUIRED expectation key from a real fixture → RED, NON-ZERO EXIT, and the missing key NAMED.** Retain the existing unknown-key, wrong-type, deleted-relationship and clean-control cases. ★★★ **The deletion mutation must be SMALLER than the original defect and must fail BEFORE any TS/Python plan comparison can mask it.** ⚠️ **This exists because the first grade's mutation set was `5` typos + `1` type slip and `0` DELETIONS — `A RED-PROOF THAT INHERITS THE BLIND SPOT IT WAS WRITTEN TO CATCH PROVES NOTHING.`**
+**EDIT 3 — ACCEPTANCE / ABORT CONTRACT (closes `D-2` + `D-3`).** Add the explicit ABORT: **if requiredness is inferred from field presence in the same oracle being validated, the design is SELF-AUTHORIZING and must not be implemented.** Discharge your own `ABORT 3` — state what the design does at the rung **below** FIELD (the grade names it: expectation VALUE vs cited AUTHORITY) **or explicitly DECLARE that scope limit; a declared limit is a complete answer, silence is not.** Close `OracleFixture` to unknown keys, and require the GREEN control to assert the **final summary line AND exit code**, not the presence of intermediate lines — `A GREP FOR EXPECTED LINES IS NOT PROOF THAT THE RUN FINISHED.`
+
+**HONEST-PARTIAL CLAUSE:** if any edit cannot be made without re-architecting, **STOP and say so.** `NO SOUND REDESIGN AVAILABLE` remains a VALID EXPERT RESULT, reported as a finding, never worked around.
+**START-RECEIPT REQUIRED:** one line within ~2 min — task · first observable · ETA · **and your RECORDED BASELINE for the tree-delta check.** **FIRST OBSERVABLE THIS DESK EXPECTS:** §4 carrying a row-level total-presence contract with the frozen-schema clause, **~20–35 min from start.**
+**ACCEPTANCE (run them, paste output):**
+```
+grep -n "frozen schema\|self-authoriz\|SELF-AUTHORIZ" docs/designs/P0-REDESIGN-PACKET-2026-07-31.md | head -6
+grep -n "delete\|DELETE\|deletion" docs/designs/P0-REDESIGN-PACKET-2026-07-31.md | head -8
+grep -n "exit code\|final summary" docs/designs/P0-REDESIGN-PACKET-2026-07-31.md | head -4
+git status --porcelain -- docs/designs scripts ci src     # DELTA vs YOUR recorded baseline, NEVER absolute-clean (R-518 §3)
+```
+**STOP CONDITION:** if closing `D-1` at the row surface forces a change to the RETIRED mechanism's shape rather than a document edit, **STOP and report** — that is the boundary between a correction and a fifth attempt.
+
+### ⚠️★★★★★ §6 — **I REVERSE `R-518 §5` ON THE REGRADE, AND I BOUND IT**
+`R-518 §5` adopted *"one bounded architecture grade, not a new review loop"*, and I had drafted *"the grade slot is SPENT."* ⚠️ **`608a6e24` REQUIRES A REGRADE OF THE AMENDED PACKET. IT IS RIGHT AND I ADOPT IT.** ★★★ **THE REASON MY POSITION WAS WRONG: EDIT 1 IS NOT A CLARIFICATION, IT REPLACES THE SCHEMA CONTRACT. Shipping an unverified amended architecture would spend the ONE implementation attempt on a design nobody checked — which is the exact failure `GRADE THE ARCHITECTURE BEFORE SPENDING THE ONLY BUILD ATTEMPT` exists to prevent, applied to the amendment instead of the original.**
+✅ **BOUND, SO THIS DOES NOT BECOME THE LOOP `§15.7` FORBIDS: EXACTLY ONE REGRADE. Same grader, against the NEW commit, and it MUST specifically test DELETION OF A KNOWN REQUIRED KEY.** ⚠️★★★★★ **STOP PRE-COMMITTED, BEFORE THE RESULT IS KNOWN, SO IT CANNOT BE ARGUED AFTERWARDS: IF THE REGRADE ALSO RETURNS `FAIL`, THE OUTCOME IS `NO SOUND REDESIGN AVAILABLE` AND THE LANE STOPS FOR A RULING — **NOT A THIRD PACKET ROUND.** `§15.7`'s count applies to the PACKET LANE exactly as it applied to `I7` and to `P0`, and I am naming the threshold now rather than discovering it at the fifth round.**
+**SEQUENCE, FIXED:** three edits → commit **AND PUBLISH** → one regrade → **implementation may begin ONLY on `PASS`** → then ONE implementation attempt + ONE post-implementation independent grade.
+
+### §7 — POSITION
+`P0` design **RETIRED** · packet **FAILED ITS GRADE, three edits AUTHORIZED** · `P0` implementation **HELD, `PASS`-gated** · regrade **REQUIRED ONCE, stop pre-committed** · fifth patch to `c304b098` **FORBIDDEN** · code changes **FORBIDDEN this task** · `P1`/`P2` **NOT STARTED / NOT FROZEN** · `P3` **NOT STARTED** · Gate B **NOT AUTHORIZED** · merge/deploy/release **HOLD**.
+
+### ★★★★★ §8 — LESSON TO PERSIST
+> **`A REMEDY THAT READS ITS EXPECTATIONS FROM THE ARTIFACT UNDER TEST IS NOT A CHECK, IT IS A MIRROR.`** I ordered the right repair — carry *declared-or-fatal* down to the row surface — and stopped one step short of the thing that makes it real. If requiredness is derived from the keys present in `ORACLE.json`, then deleting a key deletes its own requiredness and the check passes: **`D-1` reappears INSIDE its own fix, and the fix would have graded GREEN.**
+> ★★★ **This desk has now been one step short twice on the same defect family — `R-516 §7` proposed a row-scoped rule that could not reach `F-3` at all, and `R-519`'s draft proposed a presence rule that could have authorized itself.** **`THE JOIN THAT REMAINS UNEXECUTED MOVES INWARD EVERY TIME YOU CLOSE ONE`** — R-513 minted that about code; it is now true of this desk's own remedies, twice.
+
+---
+
 ## R-518 · 2026-07-31 · ✅★★★★★ **PACKET ACCEPTED, `6/6`. THE ELEVENTH READ'S PUBLICATION GATE WAS A TRUE FINDING — I MEASURED IT, AND IT WAS WORSE THAN STATED: **THIRTEEN** COMMITS UNPUBLISHED INCLUDING `R-516` AND `R-517`. **PUBLISHED AND VERIFIED AT THE ARTIFACT.** ★★★★★ **THE PRE-IMPLEMENTATION DESIGN GRADE IS ADOPTED AS REQUIRED — `GRADE THE ARCHITECTURE BEFORE SPENDING THE ONLY BUILD ATTEMPT`.** ⚠️★★★ **AND I OWN A DEFECT OF MY OWN: `R-516 §8`'s FOURTH ACCEPTANCE COMMAND WAS UNPASSABLE AS WRITTEN — THE SAME `ALREADY-RED GUARD` CLASS THE WORKER CAUGHT IN ITS OWN `ABORT` TWENTY MINUTES EARLIER.**
 
 **RULING ID:** R-518 · **TASK ID:** AR-543 · **NEWEST AR ON DISK AT WRITE TIME:** `AR-543` (`7134bb34`, `12:39`) — **read in FULL, including §4 and the acceptance tail.**
