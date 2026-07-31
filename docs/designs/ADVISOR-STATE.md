@@ -5,7 +5,7 @@
 >
 > **[RE-MEASURED AT EVERY WRITE — THIS NUMBER IS THE ONE THING THIS FILE HAS
 > ALREADY LIED ABOUT ONCE.] Compacted 2026-07-29 at R-472/AR-471 from `1,186` to
-> `561` lines; **`3197` at THIS commit, 2026-07-31 10:22 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
+> `561` lines; **`3207` at THIS commit, 2026-07-31 10:38 [MEASURED HERE, `wc -l`]. ★★★★★ AND IT BIT
 > ME EXACTLY AS THE LINE BELOW WARNS: I stated `1665`, my own edit ADDED A LINE, the assert caught
 > `1666` — AND I HAD CHAINED IT WITH `&&` AFTER AN `echo`, SO THE FAILED ASSERT DID NOT STOP THE
 > COMMIT. `AN ASSERT THAT CANNOT FAIL THE COMMAND IS A PRINTOUT.` Corrected here at `ad7fa571+1`.]**
@@ -54,7 +54,7 @@ you need. JUMP BY HEADING — `grep -n "^## " ADVISOR-STATE.md`. NEVER read stra
 
 **THE STANDING CONTRACTS, ALL BELOW THE HISTORY (grep the heading, never a line number —
 they drift):**
-`## THE PLAN` ★★★★★ *the money-path ladder, BLUEPRINT v4* · `## QUEUE (next 4, in order)` ·
+`## THE PLAN` ★★★★★ *the money-path ladder, BLUEPRINT v4* · `## QUEUE` *(now BLUEPRINT REV-4 §15.6)* ·
 `## NOT AUTHORIZED` · `## STATE, WITH EVIDENCE GRADES` · `## KNOWN-BENIGN (do not
 investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND ARTIFACTS` ·
 `## POPULATIONS — PERMANENT` · `## FIDELITY LEDGER` · `## THE JOIN-KEY CONTRACT` ·
@@ -68,7 +68,7 @@ investigate)` · `## OPERATOR-FACING` · `## SEAT MECHANICS` · `## TREES AND AR
 a content check.**
 
 ### ⚠️ COMPACTION DEBT — HONEST PARTIAL, NOT DISCHARGED
-**File is `3197` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
+**File is `3207` lines against a `~40–120` target (this line read `2297` while the file was `2908` — a
 SECOND self-description of the same quantity, and it had ALREADY drifted; corrected 03:01). I did the SAFE half (this navigation
 block + the divider below) and NOT the deletion.** ★★★★★ **WHY I STOPPED, AND IT IS NOT
 CAUTION FOR ITS OWN SAKE: the ~870 narrative lines contain blocks labelled
@@ -84,7 +84,15 @@ if not, PROMOTE it into a contract section first, THEN cut.**
 
 ---
 
-## ⚠️★★★★★ SEAT — **`AR-538` IS UNRULED · `R-515` OWED, HELD FOR THE NINTH EXTERNAL READ** · R-514 LANDED (`d6a96876`) · PUBLISHED at **`f76db28f`** `[ls-remote]` · live delivery still **`c304b098`** (2026-07-31 10:22)
+## ✅⚠️★★★★★ SEAT — **`I7` CLOSED (R-515, `cab9197b`) · `AR-539` is a START-RECEIPT, no ruling owed · PUBLISHED `3e63bc50`** (2026-07-31 10:38 — WORKER **AUTHORIZED on R-515 §5: READ-ONLY map of `P0`–`P3`. NO new instrument, NO harness work.**)
+
+### ⚠️★★★★★ **R-515's HEADLINE — READ BEFORE PLANNING ANYTHING**
+✅ **`I7 CLOSED — NARROW MEASUREMENT SOUND.` Substantive result: **the `C2` session-role resolver produces `0` BINDING movement on both corpora** — a real negative that kills a hoped-for multiplier. Certifies the MEASUREMENT chain, never the DEPLOYMENT chain.**
+⚠️★★★★★ **THE FINDING AGAINST THIS DESK: the lane this file's own QUEUE called *"advisor-owned, parallel, **cheap**"* consumed **R-506→R-515 = TEN RULINGS, NINE EXTERNAL READS**, with **`0`** money-path items advanced. Revision 4 §15.7 retires an instrument after **TWO** failed patch rounds; **I ran FIVE** (R-510→R-514). Every round found a REAL defect — which is exactly why the rule is a COUNT and not a judgement.**
+✅ **REVISION 4 ADOPTED as the operative Phase-1 path; §15.7 in force: ONE money-path implementation + ONE grade in flight; an instrument must REMOVE a named blocker, not describe one more safely.**
+
+### ⚠️★★★ **A DESK ERROR THIS WAKE, RECORDED BECAUSE IT NEARLY DESTROYED THIS FILE**
+**Rewriting the QUEUE, I anchored a Python `t.index("## QUEUE (next 4, in order)")` — and that text occurs TWICE: once as a BACKTICKED REFERENCE in the NAVIGATION block (`:57`) and once as the real heading (`:2765`). `index()` took the FIRST, and the replacement deleted ~`2,700` lines.** ✅ **THE `stated == actual` LINE-COUNT ASSERT CAUGHT IT AND ABORTED THE COMMIT — nothing was published; the file was restored byte-identical from `git show HEAD:<path>`.** ★★★★★ **`A FILE THAT DOCUMENTS ITS OWN HEADINGS CONTAINS EVERY HEADING TWICE — ANCHOR ON A MATCH YOU HAVE COUNTED, NEVER ON THE FIRST ONE.` The re-do asserts `count(anchor) == 1` before touching anything. `THE ASSERT I ADDED FOR A DIFFERENT REASON IS THE ONLY THING THAT SAVED THE FILE.`**
 
 ### ✅★★★★★ **AR-538 VERIFIED HERE — INCLUDING THE RISK I NAMED IN ADVANCE** `[MEASURED HERE 10:22]`
 | R-514 §5 item | check | result |
@@ -2762,21 +2770,23 @@ within one user: ALLOWED". **v4 §8 STANDS. A CONFIDENT SOURCE CITING A DOCUMENT
 THAT DOES NOT EXIST IS THE MOST DANGEROUS INPUT A DESK RECEIVES — OPEN THE ARTIFACT
 IT CITES.**
 
-## QUEUE (next 4, in order)
+## QUEUE — **BLUEPRINT REVISION 4 §15.6, THE REVISED PHASE-1 CRITICAL PATH** (adopted R-515)
 
-1. ★★★★★ **v4 §3-1A — THE SEVEN C8 PREREQUISITES.** #2 (two-arm ablation
-   pre-registration) and #3 (name `accuracy-validator`) are **DISCHARGED in R-466**.
-   **#1, #4–#7 remain the worker's and are OPEN.** ★★ **#1 = the ≥3-quota consumer
-   census: compute the TRANSITIVE CLOSURE, not the grep; publish surfaces AND
-   exclusions.** ★★★ **A prerequisite assigned to nobody is a stall order.**
-2. **v4 §3-1E — LANE AUTHORITY (R-415)**, pulled EARLIER than the corpus_B binding
-   measurement. This desk rules which binding lane is authoritative **on COMPILER
-   CORRECTNESS, never on which lane produces better numbers.**
-3. **Advisor-owned, parallel, cheap:** the `C2` session-role resolver yield (a
-   post-C8 multiplier) · maintain `STRANDED-CAPABILITY-REGISTER.md`.
-4. **Semantic-role-classifier migration (HOLDOUT-26 two-arm shadow, R-434/435) —
-   v4 §9 puts it OFF the Phase-1 critical path and NEVER a Phase-2 gate.** The
-   frozen rubric stays advisor-owned and unspent.
+⚠️★★★★★ **THIS REPLACES THE OLD `v4 §3-1A` QUEUE, WHICH IS SUPERSEDED, NOT DEFERRED. [MEASURED] old item `3` (the `C2` yield) is DONE; old item `1` is superseded. I dispatched against the stale list for ten rulings — `AN UNADOPTED PLAN REVISION IS A PLAN NOBODY IS FOLLOWING, INCLUDING ITS AUTHOR.`**
+
+1. **Finish `P0`** — atomic Ledger-E parity correction.
+2. **Grade `P0` once** — independent adversarial grade; repair only a real finding, never add green ceremony.
+3. **Freeze `P1` + `P2`** — additive baseline + complete source-keyed truth membership.
+4. **Rule `P3`** — producer-proof lane, runtime integration lane, transfer receipt.
+5. **Deterministic Gate B** — immutable source record, typed projections, exact-slice provenance, protected sentinel.
+6. **Source-keyed control/treatment sweep** — every consumer transition and incidence; reject proxy improvements.
+7. **Re-rank Tier-A spearheads on CURRENT output** — never inherit the historical "C8 unlocks six" ranking.
+8. **Targeted `corpus_B` respin only** — smallest named video set expected to complete ONE Tier-A spec; `transcript-audit` per video.
+9. **Complete the target's SMC/load-bearing binding lane** — every condition concrete or honestly refused; no count-only claim.
+10. **Re-affirm compile-fidelity calibration in the authoritative runtime lane**, then declare Phase-1 exit only if BOTH legs pass.
+
+⚠️ **STEPS 1–4 ARE `[UNENUMERATED]` — nobody has measured where they stand. R-515 §5 authorizes exactly that map, READ-ONLY (AR-539 start-receipt filed `10:35`).**
+★★ **§15.7: Gate B removes the largest known extraction blocker; it does NOT guarantee step 9. If the target keeps a non-Gate-B blocker, the next fix comes from THAT SPEC'S measured residual, never a library-wide housekeeping list.**
 
 ## PARKED — MAY NOT PRE-EMPT THE MONEY PATH UNLESS IT INVALIDATES C8 EVIDENCE
 
