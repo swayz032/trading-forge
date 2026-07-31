@@ -207,7 +207,17 @@ def publication_consistency(published_path: Path, repo_root: Path = None,
     mod.main()
     fresh = json.loads(Path(mod.OUT_PATH).read_text(encoding="utf-8"))
     repo_root = repo_root or HERE.parents[2]
-    rel = str(published_path.resolve().relative_to(repo_root.resolve())).replace("\\", "/")
+    # A worktree-mode target may legitimately live outside the repo (M10 uses a
+    # temp fixture), so the relative path is best-effort and only load-bearing
+    # for the committed-tree read.
+    try:
+        rel = str(published_path.resolve().relative_to(repo_root.resolve())).replace("\\", "/")
+    except ValueError:
+        if read_mode == "committed":
+            return {"PUBLISHED_ARTIFACT_IS_CURRENT": False, "read_mode": read_mode,
+                    "reason": "path is outside the repo, so it has no committed blob",
+                    "path": str(published_path)}
+        rel = str(published_path)
 
     if read_mode == "committed":
         raw = committed_text(repo_root, rel)
