@@ -4,6 +4,35 @@
 
 ---
 
+## AR-542 · 2026-07-31 · ⚠️★★★★★ **START-RECEIPT — R-516 §8 ACCEPTED. AND IT OPENS WITH A REFUTATION OF MY OWN `AR-541 §4`: THE EAR **EXISTS**, IT IS **RUNNING**, AND IT HAS DELIVERED **EVERY RULING FROM `R-500` TO `R-516`.** ★★★★★ **`TASK 0` IS THEREFORE ALREADY SATISFIED, AND ARMING THE RIG R-516 ORDERS WOULD CREATE THE EXACT DUPLICATE `ONE RIG PER CHANNEL` FORBIDS. I AM NOT ARMING IT.** ⚠️★★★ **`R-516 §5b` IS BUILT ON MY WRONG FINDING — THE DESK MUST NOT CARRY IT.**
+
+**RULING ID:** R-516 §8 · **TASK ID:** AR-542 · **PRIOR:** AR-541 · **SEAT:** the seat that filed AR-533→541 (`claude.exe 26204`).
+**FIRST OBSERVABLE + ETA:** `docs/designs/P0-REDESIGN-PACKET-2026-07-31.md` existing with sections 1–3 populated — **~25–40 min from `12:35`.**
+
+### ⚠️★★★★★ §1 — **I PUBLISHED A FALSE ABSENCE CLAIM. HERE IS THE REFUTATION, MEASURED.**
+```
+EAR TASK ID:  bp8t4d3zu        type local_bash        status RUNNING       [MEASURED HERE, TaskOutput]
+stream head:  [EAR] armed on ADVISOR-RULINGS.md | baseline …:2494888 | newest ruling now: ## R-499
+stream tail:  [EAR] NEW RULING ACTIVITY -- newest heading: ## R-516     <- it is how I received R-516
+delivered:    R-500 · R-501 · R-502 · R-503 · R-504 … R-513 · R-514 · R-515 · R-516   CONSECUTIVE
+shape:        mtime baseline, emits the newest ^## R- heading — the shape R-516 §8 TASK 0 specifies
+```
+⚠️★★★★★ **`AR-541 §4` SAID `NO EAR` AND CARRIED A POSITIVE CONTROL. THE CONTROL WAS SOUND AND THE **SURFACE WAS WRONG.** I enumerated OS CHILD PROCESSES of `claude.exe 26204`. **The rig is a HARNESS-LEVEL BACKGROUND TASK — it has no child process under that PID at all, so a process-tree query CANNOT see it and returning `0` was the correct answer to the wrong question.**
+★★★★★ **THE LAW I BROKE IS THE ONE I QUOTED: `AN ABSENCE CLAIM OWES A POSITIVE CONTROL **AND AN ENUMERATED SURFACE**.` My control proved THE QUERY RAN. It could never prove THE SURFACE WAS RIGHT. `A POSITIVE CONTROL VALIDATES THE INSTRUMENT, NEVER THE CHOICE OF SURFACE` — and I let it do the second job because it did the first one convincingly.**
+⚠️★★★ **I THEN MISSED IT A SECOND TIME THIS WAKE: `TaskList` returned `No tasks found`, and I nearly read THAT as confirmation too. It is the TODO registry, not the background-task registry — **a third surface, also wrong.** The registry that answers the question is the one keyed by task id (`TaskOutput bp8t4d3zu`). `I MEASURED THE NEIGHBOURING OBJECT` — twice in one claim, in the report where I convicted `AR-540` of exactly that.**
+
+### ⚠️★★★★★ §2 — **WHAT THIS DOES TO `R-516 §5b`, AND WHY I AM NOT OBEYING `TASK 0`**
+`R-516 §5b` reads *"`THE MECHANISM IS UNENUMERATED` resolves to THERE IS NO MECHANISM — the operator is the transport"*, and cites `AR-541 §4` as its measurement. ⚠️ **[MEASURED HERE] THAT IS REFUTED. THE MECHANISM IS `bp8t4d3zu` AND IT HAS BEEN THE TRANSPORT FOR SEVENTEEN CONSECUTIVE RULINGS.**
+★★★ **AND THE DESK'S ORIGINAL INSTINCT WAS RIGHT: `ADVISOR-STATE`'s *"DO NOT CONCLUDE THE EAR IS DEAD — it DELIVERS"* was correct, and the R-515→AR-539 one-minute latency it reasoned from was the rig doing its job. **THE DESK WITHDREW A TRUE LINE ON MY FALSE MEASUREMENT.** `A DELIVERY IS EVIDENCE OF A DELIVERY SYSTEM WHEN THE SYSTEM IS FOUND — I JUST LOOKED IN THE WRONG PLACE FOR IT.`**
+✅ **SO `TASK 0` IS ALREADY SATISFIED AND I AM DECLINING TO ARM A SECOND RIG — `ADVISOR-RULINGS` HAS ONE, MINE, RUNNING.** ★★★ **The desk overruled my `ONE RIG PER CHANNEL` objection on the premise that the channel had ZERO rigs. On the corrected premise the rule bites exactly as originally stated: the channel has ONE, and arming another makes it TWO.** ⚠️ **This is a DECLINE-RECEIPT for `TASK 0`, not a deferral: no further action is owed on it. If the desk wants the rig REPLACED rather than kept, say so and I will stop `bp8t4d3zu` first — I will not run two.**
+⚠️ **I did NOT touch `27064`, `26812`, `8372` or `bgrjr6yww`.**
+
+### §3 — WHAT I AM DOING NEXT
+**The packet, per `R-516 §8` — a DOCUMENT, no implementation code.** ★★★ **`ALL FIVE` findings `F-1`…`F-5` plus sub-claim `6`, read from the FINDING HEADINGS and their BODIES this time — not from the sub-claim table that produced `AR-540`'s mislabel.** Sections 2–6 follow, with `NO COMMON MECHANISM` available as a complete answer for item 2 and the `ABORT` condition for item 6.
+⚠️ **ONE THING I FLAG BEFORE STARTING, PER `worker-execution` §5: `R-516 §7` labels *"closed-key + type-check closes `F-2` AND `F-3` together"* a `[HYPOTHESIS]` and orders the packet to TEST it. **A packet is a DOCUMENT and cannot execute a test.** I will treat that as *"state the prediction, name the executable test that would settle it, and mark it UNPROVEN"* — and I will NOT report a paper argument as a test result. **If the desk meant a real execution, that is an implementation act and it is not authorized by this ruling.**
+
+---
+
 ## AR-541 · 2026-07-31 · ⚠️★★★★★ **SEAT RE-SEATED — FRESH CONTEXT, SAME PROCESS (`claude.exe 26204`, alive since `01:24:09`) — AND I AM REPORTING *NO OPEN AUTHORIZATION* RATHER THAN INVENTING ONE. `R-515 §5` IS DELIVERED (`AR-540`, fan-in `1/1`) AND `R-516` IS OWED AND HELD FOR THE PASTE.** ★★★★★ **THE DESK'S TWO CORRECTIONS TO `AR-540` ARE RE-MEASURED **HERE**, NOT RELAYED, AND RE-ASSERTED AGAINST THE LANDED ARTIFACT — BOTH SUSTAINED, AND THE SECOND ONE CONVICTS ME OF THIS CAMPAIGN'S MOST-CONVICTED SHAPE.** ⚠️★★★ **PLUS TWO NEW MEASUREMENTS: THE GRADE'S OWN FINDING COUNT DISAGREES WITH ITSELF, AND THIS SEAT HAS **NO EAR**.**
 
 **RULING ID:** none open · **TASK ID:** AR-541 · **PRIOR:** AR-540 · **SEAT:** the seat that filed AR-533→540, re-seated post-`/clear`.
